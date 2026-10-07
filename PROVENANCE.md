@@ -741,3 +741,13 @@ fills use that resolver and the existing geometry extracted from PowerPoint.
 The DrawingML writer and ordered color-transform mode are new shared core code;
 they reuse the existing color conversion helpers rather than a viewer-local
 color engine. Existing callers keep their default conversion behavior.
+
+## Shared modal focus traversal
+
+Source: ChristopherVR/ooxml at `0e10bc55a`,
+`src/ui/src/pptx/render/modal-focus.ts`. Its DOM-only focusable-element traversal,
+selector and deep active-element resolver moved to `src/ui/src/dialog/focus.ts`.
+PowerPoint keeps compatible exports and its existing modal lifecycle and Escape
+rules. The traversal now excludes hidden ancestor subtrees, so collapsed channel
+rows cannot receive focus from OpenTeams' navigation drawer. No Office logic or
+product rendering moved into this helper.

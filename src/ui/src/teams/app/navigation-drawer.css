@@ -1,0 +1,60 @@
+:host {
+	font: var(--office-font-size) var(--office-font);
+	color: var(--office-foreground);
+}
+dialog {
+	box-sizing: border-box;
+	inset: 0 auto 0 0;
+	margin: 0;
+	width: min(24em, 92vw);
+	max-width: 92vw;
+	height: 100dvh;
+	max-height: 100dvh;
+	padding: 0;
+	border: 0;
+	border-inline-end: var(--office-border-width) solid var(--office-teams-divider);
+	background: var(--office-teams-panel);
+	color: inherit;
+	box-shadow: var(--office-shadow-teams);
+}
+dialog[open] {
+	display: flex;
+	flex-direction: column;
+}
+dialog::backdrop {
+	background: var(--office-overlay);
+}
+header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3) var(--office-space-4);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+}
+button {
+	padding: var(--office-space-2) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	font: inherit;
+	background: var(--office-background);
+	color: inherit;
+	cursor: pointer;
+}
+button:hover {
+	background: var(--office-selected);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+nav {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	overscroll-behavior: contain;
+}

@@ -41,6 +41,7 @@ import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
+import { defineTeamsNavigationDrawer } from './navigation-drawer';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -92,6 +93,7 @@ export class TeamsApp extends LitElement {
 		panel: { state: true },
 		meeting: { state: true },
 		settingsOpen: { state: true },
+		navigationOpen: { state: true },
 		toast: { state: true },
 		identity: { state: true },
 		followedUnreadOnly: { state: true },
@@ -119,6 +121,7 @@ export class TeamsApp extends LitElement {
 	declare panel: Panel;
 	declare meeting: boolean;
 	declare settingsOpen: boolean;
+	declare navigationOpen: boolean;
 	declare toast: string;
 	declare identity: Identity | null;
 	declare followedUnreadOnly: boolean;
@@ -158,6 +161,7 @@ export class TeamsApp extends LitElement {
 		this.panel = '';
 		this.meeting = false;
 		this.settingsOpen = false;
+		this.navigationOpen = false;
 		this.toast = '';
 		this.identity = null;
 		this.followedUnreadOnly = false;
@@ -183,6 +187,7 @@ export class TeamsApp extends LitElement {
 		defineTeamsFilesPanel();
 		defineTeamsProfileMenu();
 		defineTeamsAddTabDialog();
+		defineTeamsNavigationDrawer();
 		super.connectedCallback();
 	}
 
@@ -213,6 +218,7 @@ export class TeamsApp extends LitElement {
 		this.preview = null;
 		this.tab = 'posts';
 		this.addingTab = false;
+		this.navigationOpen = false;
 		this.openRequest++;
 		const named = this.userName
 			? { id: this.userId || loadIdentity()?.id || crypto.randomUUID(), name: this.userName }
@@ -360,6 +366,7 @@ export class TeamsApp extends LitElement {
 		if (name) {
 			if (!this.closePreview()) return;
 			this.teams.client?.createChannel(name);
+			void this.closeNavigation(true);
 			this.tab = 'posts';
 			this.rail = 'teams';
 			this.meeting = false;
@@ -383,6 +390,7 @@ export class TeamsApp extends LitElement {
 	private startMeeting(channelId?: string): void {
 		if (!this.closePreview()) return;
 		void this.teams.client?.openCall(channelId);
+		void this.closeNavigation(true);
 		this.meeting = true;
 		this.rail = 'teams';
 	}
@@ -395,7 +403,26 @@ export class TeamsApp extends LitElement {
 		this.meeting = false;
 		this.tab = 'posts';
 		this.rail = 'teams';
+		void this.closeNavigation(true);
 		return true;
+	}
+
+	private async closeNavigation(navigated = false): Promise<void> {
+		if (!this.navigationOpen) return;
+		this.navigationOpen = false;
+		await this.updateComplete;
+		const drawer = this.renderRoot.querySelector<LitElement>('teams-navigation-drawer');
+		await drawer?.updateComplete;
+		if (this.navigationOpen || !this.isConnected) return;
+		const trigger = this.renderRoot.querySelector<HTMLButtonElement>('[data-open-navigation]');
+		const heading =
+			this.renderRoot.querySelector<HTMLElement>('main h1') ??
+			this.renderRoot.querySelector<HTMLElement>('main');
+		if (!navigated && trigger?.getClientRects().length) trigger.focus();
+		else if (heading) {
+			heading.tabIndex = -1;
+			heading.focus();
+		}
 	}
 
 	private askSettings(): void {
@@ -444,6 +471,13 @@ export class TeamsApp extends LitElement {
 					<aside class="side">${this.sidebar(s)}</aside>
 					<main class="main">${this.main(s)}</main>
 				</div>
+				<teams-navigation-drawer
+					.heading=${this.rail === 'calls' ? 'Calls' : 'Teams and channels'}
+					?open=${this.navigationOpen}
+					@teams-navigation-close=${() => void this.closeNavigation()}
+				>
+					${this.navigationOpen ? this.sidebar(s) : nothing}
+				</teams-navigation-drawer>
 				${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
 				<teams-settings
 					?open=${this.settingsOpen}
@@ -563,7 +597,21 @@ export class TeamsApp extends LitElement {
 	private topbar(s: TeamsState) {
 		return html`
 			<header class="topbar">
-				<div class="brand"><span class="logo">T</span><span>Teams</span></div>
+				<div class="brand">
+					<button
+						type="button"
+						class="navigation-toggle"
+						data-open-navigation
+						aria-label="Open navigation"
+						title="Open navigation"
+						aria-haspopup="dialog"
+						aria-expanded=${String(this.navigationOpen)}
+						@click=${() => (this.navigationOpen = true)}
+					>
+						${icon('navigation')}
+					</button>
+					<span class="logo">T</span><span>Teams</span>
+				</div>
 				<div class="search">
 					<input
 						type="search"

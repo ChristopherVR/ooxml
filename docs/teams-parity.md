@@ -434,6 +434,20 @@ preference restoration workflows across all six bindings. The category list
 still covers only implemented OpenTeams preferences; this does not establish
 full Teams settings parity.
 
+## Twenty-third slice: compact channel navigation
+
+Compact windows retain access to channel and call navigation through a modal
+navigation drawer. It reuses the desktop sidebar actions, preserves channel
+drafts, checks dirty Office content before switching or creating channels,
+and closes after successful navigation. Escape, the close button and backdrop
+return focus to the opener; resizing to the desktop layout restores the sidebar.
+Tab cycles through visible controls, including nested shadow roots, and excludes
+collapsed channel lists. Acceptance covers channel creation, call entries,
+draft restoration, keyboard focus, resizing, and cancellation with a real edited
+XLSX across all six bindings. This restores navigation in OpenTeams' compact
+web shell; the native Teams mobile app, combined chat/channel navigation,
+favorites and authenticated chat membership remain separate outstanding work.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

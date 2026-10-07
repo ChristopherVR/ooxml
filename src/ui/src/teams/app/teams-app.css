@@ -55,6 +55,24 @@ button {
 	background: var(--office-teams-rail);
 	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
 }
+.navigation-toggle {
+	display: none;
+	padding: var(--office-space-2);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: transparent;
+}
+.navigation-toggle:hover {
+	background: var(--office-selected);
+}
+.navigation-toggle svg {
+	width: 1.3em;
+	height: 1.3em;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+}
 .brand {
 	display: flex;
 	align-items: center;
@@ -515,7 +533,14 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	flex: 1 1 16em;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 56.25em) {
+	.navigation-toggle {
+		display: inline-flex;
+	}
+	.brand > .logo,
+	.brand > span:last-child {
+		display: none;
+	}
 	.channel-head .topic,
 	.channel-head .people {
 		display: none;
