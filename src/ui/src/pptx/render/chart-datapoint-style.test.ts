@@ -69,6 +69,8 @@ describe('chart-datapoint-style', () => {
 				symbol: 'star',
 				size: 14,
 				fill: '#FF0000',
+				stroke: undefined,
+				strokeWidth: undefined,
 			});
 		});
 
@@ -77,6 +79,8 @@ describe('chart-datapoint-style', () => {
 				symbol: 'square',
 				size: 6,
 				fill: '#4472C4',
+				stroke: undefined,
+				strokeWidth: undefined,
 			});
 		});
 
@@ -85,11 +89,15 @@ describe('chart-datapoint-style', () => {
 				symbol: 'circle',
 				size: 6,
 				fill: '#4472C4',
+				stroke: undefined,
+				strokeWidth: undefined,
 			});
 			expect(resolveDataPointMarker(markerSeries, 99)).toStrictEqual({
 				symbol: 'circle',
 				size: 6,
 				fill: '#4472C4',
+				stroke: undefined,
+				strokeWidth: undefined,
 			});
 		});
 
@@ -98,6 +106,26 @@ describe('chart-datapoint-style', () => {
 				symbol: undefined,
 				size: undefined,
 				fill: undefined,
+				stroke: undefined,
+				strokeWidth: undefined,
+			});
+		});
+
+		it('resolves the marker outline field by field, the point over the series', () => {
+			const outlined = {
+				marker: {
+					symbol: 'circle' as const,
+					spPr: { fillColor: '#FFFFFF', strokeColor: '#05507D', strokeWidth: 1 },
+				},
+				dataPoints: [{ idx: 1, marker: { symbol: 'circle' as const, spPr: { strokeWidth: 2 } } }],
+			};
+			expect(resolveDataPointMarker(outlined, 0)).toMatchObject({
+				stroke: '#05507D',
+				strokeWidth: 1,
+			});
+			expect(resolveDataPointMarker(outlined, 1)).toMatchObject({
+				stroke: '#05507D',
+				strokeWidth: 2,
 			});
 		});
 

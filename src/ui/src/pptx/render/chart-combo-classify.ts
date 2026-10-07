@@ -23,10 +23,11 @@
  */
 import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 
+import { clusteredBarGeometry } from './chart-bar-cluster-geometry';
+import { comboDataLabel } from './chart-combo-series';
 import { resolveBarLabelPlacement } from './chart-data-label-anchor';
-import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
 import type { ChartPartRef, PlotLayout, SvgRect, SvgText, ValueRange } from './chart-view-model';
-import { formatAxisValue, seriesColor, valueToY } from './chart-view-model';
+import { seriesColor, valueToY } from './chart-view-model';
 
 export type ComboSeriesKind = 'bar' | 'line' | 'area';
 
@@ -73,8 +74,8 @@ export function groupComboSeriesIndices(series: ReadonlyArray<PptxChartSeries>):
 /**
  * Clustered bar rects for an arbitrary subset of `chartData.series` (their
  * ORIGINAL indices, so colour/legend stay keyed to the whole series list, not
- * the subset). With exactly one index this reduces to the previous
- * single-bar-per-category geometry byte-for-byte.
+ * the subset). With exactly one index and no `c:gapWidth` this reduces to the
+ * previous single-bar-per-category geometry byte-for-byte.
  */
 export function computeComboBarCluster(
 	barIndices: ReadonlyArray<number>,
@@ -92,8 +93,12 @@ export function computeComboBarCluster(
 	}
 	const seriesCount = barIndices.length,
 		barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-		singleBarWidth = (barGroupWidth * 0.7) / seriesCount,
-		clusterWidth = singleBarWidth * seriesCount,
+		// Sized from c:gapWidth / c:overlap, as a plain bar chart is.
+		{ singleBarWidth, step, clusterWidth } = clusteredBarGeometry(
+			barGroupWidth,
+			seriesCount,
+			chartData,
+		),
 		rects: SvgRect[] = [];
 
 	for (let displayIndex = 0; displayIndex < catCount; displayIndex++) {
@@ -116,7 +121,7 @@ export function computeComboBarCluster(
 				};
 			rects.push({
 				kind: 'rect',
-				x: clusterLeft + singleBarWidth * si,
+				x: clusterLeft + step * si,
 				y: Math.min(zeroY, valY),
 				w: singleBarWidth,
 				h: Math.max(Math.abs(zeroY - valY), 1),
@@ -147,8 +152,11 @@ export function appendComboBarClusterLabels(
 	}
 	const seriesCount = barIndices.length,
 		barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-		singleBarWidth = (barGroupWidth * 0.7) / seriesCount,
-		clusterWidth = singleBarWidth * seriesCount;
+		{ singleBarWidth, step, clusterWidth } = clusteredBarGeometry(
+			barGroupWidth,
+			seriesCount,
+			chartData,
+		);
 
 	for (let displayIndex = 0; displayIndex < catCount; displayIndex++) {
 		const sourceIndex = sourceIndices[displayIndex] ?? displayIndex,
@@ -163,7 +171,7 @@ export function appendComboBarClusterLabels(
 					secondaryIndexes.has(originalIndex) && secondaryRange ? secondaryRange : primaryRange,
 				zeroY = valueToY(0, range, layout.plotTop, layout.plotBottom),
 				valY = valueToY(value, range, layout.plotTop, layout.plotBottom),
-				x = clusterLeft + singleBarWidth * si,
+				x = clusterLeft + step * si,
 				barY = Math.min(zeroY, valY),
 				barH = Math.max(Math.abs(zeroY - valY), 1),
 				anchor = resolveBarLabelPlacement(
@@ -175,16 +183,10 @@ export function appendComboBarClusterLabels(
 					'vertical',
 					{ width: layout.svgWidth, height: layout.svgHeight },
 				);
-			labels.push({
-				kind: 'text',
-				x: anchor.x,
-				y: anchor.y,
-				text: formatAxisValue(value, series.numberFormat),
-				fontSize: DEFAULT_CHART_DATA_LABEL_PX,
-				fill: '#334155',
-				textAnchor: anchor.textAnchor,
-				...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
-			});
+			const label = comboDataLabel(chartData, series, sourceIndex, value, anchor);
+			if (label) {
+				labels.push(label);
+			}
 		});
 	}
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { automaticMarkerSymbol, buildMarkerPrimitive } from './chart-marker-shape';
+import { automaticMarkerSymbol, buildMarkerPrimitive, markerOutline } from './chart-marker-shape';
 
 // COM-measured ground truth: a stacked Line-with-Markers chart, 9 series each
 // carrying `<c:marker><c:spPr>.../></c:marker>` with no `c:symbol`
@@ -69,5 +69,48 @@ describe('buildMarkerPrimitive shape mapping', () => {
 			defaultRadius: 3,
 		});
 		expect(marker?.kind).toBe('polygon');
+	});
+});
+
+describe('marker outline', () => {
+	const base = { size: 5, cx: 0, cy: 0, fill: '#FFFFFF', defaultRadius: 2.5 };
+
+	it.each(['circle', 'dot', 'square', 'dash', 'diamond', 'triangle', 'star'] as const)(
+		'outlines a %s marker when a stroke is given',
+		(symbol) => {
+			const marker = buildMarkerPrimitive({
+				...base,
+				symbol,
+				stroke: '#05507D',
+				strokeWidth: 1.5,
+			});
+			expect(marker).toMatchObject({ fill: '#FFFFFF', stroke: '#05507D', strokeWidth: 1.5 });
+		},
+	);
+
+	it.each(['x', 'plus'] as const)('draws a %s marker in the outline colour', (symbol) => {
+		const marker = buildMarkerPrimitive({ ...base, symbol, stroke: '#05507D', strokeWidth: 1.5 });
+		expect(marker).toMatchObject({ kind: 'path', stroke: '#05507D' });
+	});
+
+	it('keeps the plain dot when no stroke is given', () => {
+		const marker = buildMarkerPrimitive({ ...base, symbol: 'circle', fill: '#05507D' });
+		expect(marker).not.toHaveProperty('stroke');
+	});
+
+	it('keeps an unoutlined square a rect', () => {
+		expect(buildMarkerPrimitive({ ...base, symbol: 'square' })?.kind).toBe('rect');
+	});
+
+	it('converts the outline width from points and falls back to 0.75pt', () => {
+		expect(markerOutline({ stroke: '#000000', strokeWidth: 1.5 })).toStrictEqual({
+			stroke: '#000000',
+			strokeWidth: 2,
+		});
+		expect(markerOutline({ stroke: '#000000' })).toStrictEqual({
+			stroke: '#000000',
+			strokeWidth: 1,
+		});
+		expect(markerOutline({})).toStrictEqual({});
 	});
 });

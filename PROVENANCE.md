@@ -474,6 +474,15 @@ references follow the moved tests, and shared palette/grid policy is reused.
 The private shared package retains compatibility exports. Angular consumes
 public UI entries instead of copying the renderer into its published output.
 
+The combo-chart and table-subscript follow-up in PR #15 adds five modules from
+`IHAGI-c/ooxml` at `824b9366dae65664316082dcfce4b7aebdfe44f7`:
+`chart-bar-cluster-geometry.ts`, `chart-combo-format.test.ts`,
+`chart-series-line-style.ts`, `chart-series-line-style.test.ts` and
+`table-cell-padding.ts`. Their source directory was
+`viewers/pptx/packages/shared/src/render`; they now live in
+`src/ui/src/pptx/render`. Type imports use `ooxml-core/pptx`, matching the
+renderer migration; their implementations and regression assertions are preserved.
+
 ## Word pagination page fields
 
 Source: ChristopherVR/ooxml at `b0343f441fbaa6b211b02a712ad1c81ab983ed29`,

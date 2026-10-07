@@ -7,8 +7,16 @@
  */
 import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 
+import { pushMarker } from './chart-cartesian-plots';
+import type { LabelAnchor } from './chart-data-label-anchor';
 import { resolveBarLabelPlacement, resolveMarkerLabelPlacement } from './chart-data-label-anchor';
+import {
+	buildDataLabelText,
+	dataLabelFontOverride,
+	resolveDataLabelTextStyle,
+} from './chart-data-label-text';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
+import { seriesLineStroke } from './chart-series-line-style';
 import type {
 	ChartPartRef,
 	PlotLayout,
@@ -18,7 +26,36 @@ import type {
 	SvgText,
 	ValueRange,
 } from './chart-view-model';
-import { formatAxisValue, seriesColor, valueToY } from './chart-view-model';
+import { seriesColor, valueToY } from './chart-view-model';
+
+/**
+ * A combo data label, built like the bar and line builders' labels: text from
+ * the `c:dLbls` flags and number format, font from the label `txPr`.
+ * `undefined` when the flags leave nothing to show.
+ */
+export function comboDataLabel(
+	chartData: PptxChartData,
+	series: PptxChartSeries,
+	pointIndex: number,
+	value: number,
+	anchor: LabelAnchor,
+): SvgText | undefined {
+	const label = buildDataLabelText({ chartData, series, pointIndex, value });
+	if (label === undefined) {
+		return undefined;
+	}
+	return {
+		kind: 'text',
+		x: anchor.x,
+		y: anchor.y,
+		text: label.text,
+		fontSize: DEFAULT_CHART_DATA_LABEL_PX,
+		fill: label.color ?? '#334155',
+		textAnchor: anchor.textAnchor,
+		...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
+		...dataLabelFontOverride(resolveDataLabelTextStyle(chartData, series, pointIndex)),
+	};
+}
 
 /** Bar-series data labels, honouring `c:dLblPos` and any per-point manual drag. */
 export function appendBarLabels(
@@ -57,16 +94,10 @@ export function appendBarLabels(
 			'vertical',
 			{ width: layout.svgWidth, height: layout.svgHeight },
 		);
-		labels.push({
-			kind: 'text',
-			x: anchor.x,
-			y: anchor.y,
-			text: formatAxisValue(value, series.numberFormat),
-			fontSize: DEFAULT_CHART_DATA_LABEL_PX,
-			fill: '#334155',
-			textAnchor: anchor.textAnchor,
-			...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
-		});
+		const label = comboDataLabel(chartData, series, sourceIndex, value, anchor);
+		if (label) {
+			labels.push(label);
+		}
 	});
 }
 
@@ -98,26 +129,23 @@ export function appendLineSeries(
 			value,
 		};
 	});
-	primitives.push({
-		kind: 'polyline',
-		points: points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' '),
-		stroke: fill,
-		strokeWidth: 2.4,
-		fill: 'none',
-	} satisfies SvgPolyline);
-	primitives.push(
-		...points.map(
-			(point) =>
-				({
-					kind: 'circle',
-					cx: point.x,
-					cy: point.y,
-					r: 2.5,
-					fill,
-					part: { role: 'dataPoint', seriesIndex, pointIndex: point.sourceIndex },
-				}) satisfies SvgCircle,
-		),
-	);
+	// Same stroke and markers as buildLines.
+	if (!series.lineNoFill) {
+		primitives.push({
+			kind: 'polyline',
+			points: points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' '),
+			stroke: fill,
+			fill: 'none',
+			...seriesLineStroke(chartData, series),
+		} satisfies SvgPolyline);
+	}
+	for (const point of points) {
+		pushMarker(primitives, series, point.sourceIndex, point.x, point.y, fill, 2.5, {
+			role: 'dataPoint',
+			seriesIndex,
+			pointIndex: point.sourceIndex,
+		});
+	}
 	if (!chartData.style?.hasDataLabels) {
 		return;
 	}
@@ -132,16 +160,10 @@ export function appendLineSeries(
 			{ width: layout.svgWidth, height: layout.svgHeight },
 			7,
 		);
-		dataLabels.push({
-			kind: 'text',
-			x: anchor.x,
-			y: anchor.y,
-			text: formatAxisValue(point.value, series.numberFormat),
-			fontSize: DEFAULT_CHART_DATA_LABEL_PX,
-			fill: '#334155',
-			textAnchor: anchor.textAnchor,
-			...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
-		});
+		const label = comboDataLabel(chartData, series, point.sourceIndex, point.value, anchor);
+		if (label) {
+			dataLabels.push(label);
+		}
 	});
 }
 
@@ -226,15 +248,9 @@ export function appendAreaSeries(
 			{ width: layout.svgWidth, height: layout.svgHeight },
 			7,
 		);
-		dataLabels.push({
-			kind: 'text',
-			x: anchor.x,
-			y: anchor.y,
-			text: formatAxisValue(point.value, series.numberFormat),
-			fontSize: DEFAULT_CHART_DATA_LABEL_PX,
-			fill: '#334155',
-			textAnchor: anchor.textAnchor,
-			...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
-		});
+		const label = comboDataLabel(chartData, series, point.sourceIndex, point.value, anchor);
+		if (label) {
+			dataLabels.push(label);
+		}
 	});
 }

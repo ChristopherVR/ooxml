@@ -128,6 +128,7 @@ function renderPrimitive(prim: SvgPrimitive, key: string): React.ReactNode {
 					points={p.points}
 					stroke={p.stroke}
 					strokeWidth={p.strokeWidth}
+					strokeDasharray={p.dashArray}
 					fill={p.fill}
 					opacity={p.opacity ?? 1}
 					{...partAttrs(p.part)}
@@ -145,6 +146,8 @@ function renderPrimitive(prim: SvgPrimitive, key: string): React.ReactNode {
 					cy={c.cy}
 					r={c.r}
 					fill={c.fill}
+					stroke={c.stroke}
+					strokeWidth={c.strokeWidth}
 					opacity={c.opacity ?? 1}
 					{...partAttrs(c.part)}
 				>

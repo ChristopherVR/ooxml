@@ -12,6 +12,7 @@
  */
 import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 
+import { clusteredBarGeometry } from './chart-bar-cluster-geometry';
 import { buildPercentStackedBars } from './chart-cartesian-percent-stacked';
 import type { SeriesPlotResult } from './chart-cartesian-plots';
 import { pushClusteredStackedLabels } from './chart-cartesian-stacked-labels';
@@ -102,47 +103,11 @@ export function buildBars(
 	if (grouping === 'clustered') {
 		const seriesCount = Math.max(series.length, 1),
 			barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-			// Honour c:overlap (% overlap between adjacent series). overlap=0 reproduces
-			// the original side-by-side layout exactly. Read before singleBarWidth: a
-			// gapWidth-based bar width must size itself so the OVERLAPPED cluster (not
-			// seriesCount side-by-side bars) fills the gap-reduced group width; see the
-			// comment below.
-			overlap = chartData.barOverlap ?? 0,
-			// Honour c:gapWidth (gap between clusters, % of a bar width) when parsed;
-			// otherwise keep the legacy 0.7-of-group heuristic byte-for-byte.
-			//
-			// COM-verified ground truth (PowerPoint Object 16, single category, six
-			// series, gapWidth=5, overlap=23): dividing by seriesCount alone (the
-			// pre-existing formula) sizes every bar as if the cluster were laid out
-			// SIDE BY SIDE, then shrinks it further by overlap when computing `step`
-			// below - so at high overlap the bars render far too NARROW (in the
-			// limit, overlap=100 should make every bar in a cluster the same width
-			// as a single-series bar, independent of seriesCount, since they fully
-			// coincide; the old formula kept shrinking by 1/seriesCount regardless).
-			// `overlapSpan` is how many bar-widths wide the OVERLAPPED cluster spans;
-			// `clusterWidth` below re-derives the same relationship from `step`.
-			overlapSpan = 1 + (seriesCount - 1) * (1 - overlap / 100),
-			// COM-verified ground truth (PowerPoint's own Office-default 3-series
-			// clustered column chart, gapWidth=219, overlap=-27, four categories):
-			// the rendered bar is 17.6% of the category pitch. ECMA-376's own wording
-			// for c:gapWidth is "the amount of space between bar or column clusters,
-			// AS A PERCENTAGE OF THE BAR OR COLUMN WIDTH" - i.e. the gap between
-			// clusters is `gapWidth% * singleBarWidth`, not a percentage of the pitch
-			// or of the cluster width. So `pitch = clusterWidth + gap = barWidth *
-			// overlapSpan + barWidth * gapWidth / 100 = barWidth * (overlapSpan +
-			// gapWidth / 100)`. The previous formula divided the gap-shrunk group
-			// width by `overlapSpan` (`pitch / ((1 + gapWidth / 100) * overlapSpan)`),
-			// which treats the gap as a percentage of the PITCH and then shrinks the
-			// cluster a second time, rendering every bar roughly half its correct
-			// width whenever gapWidth and overlap are both non-trivial (this fixture:
-			// 8.9% computed vs. 17.6% measured). Single-series charts are unaffected:
-			// `overlapSpan` is 1 regardless of `overlap`, so both formulas agree.
-			singleBarWidth =
-				chartData.barGapWidth !== undefined
-					? barGroupWidth / (overlapSpan + Math.max(chartData.barGapWidth, 0) / 100)
-					: (barGroupWidth * 0.7) / seriesCount,
-			step = singleBarWidth * (1 - overlap / 100),
-			clusterWidth = singleBarWidth + step * (seriesCount - 1),
+			{ singleBarWidth, step, clusterWidth } = clusteredBarGeometry(
+				barGroupWidth,
+				seriesCount,
+				chartData,
+			),
 			groupOffset = (barGroupWidth - clusterWidth) / 2;
 
 		for (let displayIndex = 0; displayIndex < catCount; displayIndex++) {
