@@ -72,6 +72,34 @@ const registry = (versions) => (name) => versions[name] ?? null;
 const bothPublished = registry({ [CORE]: '0.1.0', [UI]: '0.1.0' });
 const released = (p) => p.order.filter((k) => p.packages[k].release);
 
+test('the PowerPoint editor bundle configuration releases all five bindings', () => {
+	const r = repo({ ui: false, tagged: ['core'] });
+	const keys = ['react', 'vue', 'angular', 'svelte', 'vanilla'].map((binding) => `pptx-${binding}`);
+	const manifests = Object.fromEntries(
+		keys.map((key) => [
+			`${PACKAGES[key].dir}/package.json`,
+			json({ name: PACKAGES[key].npm, version: '0.1.0' }),
+		]),
+	);
+	r.commit('chore: add framework packages', manifests);
+	for (const key of keys) r.git('tag', `${PACKAGES[key].npm}@0.1.0`);
+	r.commit(
+		'fix(pptx): preserve editor bundle state',
+		r.touch('src/core/tsup.pptx-editor.config.ts'),
+	);
+	const p = r.plan(
+		registry(
+			Object.fromEntries(
+				[CORE, ...keys.map((key) => PACKAGES[key].npm)].map((name) => [name, '0.1.0']),
+			),
+		),
+	);
+	for (const key of keys) {
+		assert.equal(p.packages[key].release, true, key);
+		assert.equal(p.packages[key].reason, 'bundled internal package changed', key);
+	}
+});
+
 test('core is ordered before ui and a tagged HEAD releases nothing', () => {
 	const r = repo();
 	const p = r.plan(bothPublished);
