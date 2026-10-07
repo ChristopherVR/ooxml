@@ -46,6 +46,41 @@ function mount(state: OfficeGalleryState = STYLES, inline = true): Gallery {
 }
 
 describe('office-ui-gallery', () => {
+	it('reuses labelled tiles in a panel and keeps focus while the selection refreshes', () => {
+		const gallery = mount();
+		gallery.setAttribute('mode', 'panel');
+		gallery.open = true;
+		expect(gallery.open).toBe(false);
+		expect(gallery.querySelector('.trigger')).toBeNull();
+		expect(gallery.querySelector('.tile-label')?.textContent).toBe('Style 0');
+		const picked = vi.fn();
+		gallery.addEventListener('office-gallery-pick', (event) => {
+			const detail = (event as CustomEvent<{ itemId: string }>).detail;
+			picked(detail.itemId);
+			gallery.state = {
+				...STYLES,
+				sections: STYLES.sections.map((section) => ({
+					...section,
+					items: section.items.map((item) => ({ ...item, applied: item.id === detail.itemId })),
+				})),
+			};
+		});
+		gallery.querySelector<HTMLButtonElement>('[data-gallery-item="style0"]')!.focus();
+		for (const [key, expected] of [
+			['ArrowDown', 'style3'],
+			['End', 'style5'],
+			['Home', 'style0'],
+			['ArrowLeft', 'style5'],
+		] as const) {
+			document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+			expect(document.activeElement?.getAttribute('data-gallery-item')).toBe(expected);
+			expect(document.activeElement?.getAttribute('aria-pressed')).toBe('true');
+		}
+		expect(picked.mock.calls.flat()).toEqual(['style3', 'style5', 'style0', 'style5']);
+		gallery.disabled = true;
+		gallery.querySelector<HTMLButtonElement>('[data-gallery-item="style2"]')!.click();
+		expect(picked).toHaveBeenCalledTimes(4);
+	});
 	it('stamps the popup hook on the closed placeholder', () => {
 		const gallery = mount();
 		expect(gallery.contains(gallery.popup)).toBe(false);

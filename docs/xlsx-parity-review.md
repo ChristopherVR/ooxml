@@ -406,6 +406,50 @@ axis gaps and print quantization. Other threshold configurations, gradient
 endpoint intensity, pixel-level insets/dashes and dedicated editor controls
 still need work; these checks do not establish whole-workbook Excel parity.
 
+## Shared chart UI and SmartArt review
+
+The XLSX Insert Chart / Change Chart Type picker now uses `office-ui-gallery`,
+the same component behind PowerPoint's `pptx-ui-ribbon-gallery`, with labelled
+visual tiles and keyboard selection. A new panel mode reuses its tile rendering,
+selection contract, theme styles and safe SVG parser. Chart data and SVG generation
+remain in the strict XLSX core. No PowerPoint engine or model was copied into XLSX.
+
+Existing column/bar charts can now change between clustered, stacked and 100%
+stacked through the dialog. Previously the grouping control was hidden while
+editing, and submission only changed the chart family. Undo restores the original
+chart and redo/save/reopen retain the edited grouping, title and series.
+
+`scripts/record-xlsx-chart-types.ps1` records six transitions in an isolated hidden
+Excel instance. The committed Excel 16.0 build 20430 fixture retains native chart
+XML, series formulas, names and values. Six regression tests check reading those
+parts and all 36 source-to-target edits through save/reload and undo. Native Excel
+also opened and saved six library-authored variants; the library reloaded each with
+the expected family, grouping, title and values. Regenerating a changed chart type
+can materialize default theme colors and does not establish full style fidelity.
+
+Playwright MCP reviewed the chart dialog and its keyboard selection, plus its fit
+inside a 390 px viewport. Browser coverage exercises insertion, grouping changes,
+undo/redo and save/reopen. The existing native SmartArt fixture was inspected
+through COM and Playwright MCP: Basic Block List, three nodes, labels Plan/Build/Ship,
+rendered by `office-ui-smartart`. This checks those labels and cached drawing
+display, not pixel equivalence or SmartArt editing.
+
+Next shared UI targets are Chart Design's color/style/layout galleries and
+SmartArt's layout/color/style galleries and text pane. Their PowerPoint operations
+currently depend on its product model; extract format-neutral behavior into shared
+`chart` / `diagram` core areas and shared UI, then add XLSX adapters and native
+fixtures. SmartArt insertion/reflow/text editing, effects and typography fidelity,
+advanced chart types/axes/labels, recommended-chart behavior and whole-workbook
+visual equivalence remain unverified or unsupported. The data-bar rule editor also
+needs controls for the advanced settings already preserved by core.
+
+Verification: 314 XLSX UI tests plus ten shared gallery tests, 14 focused PowerPoint
+gallery tests, 47 binding tests and six native chart tests passed. Core/UI/viewer
+typechecks, core and UI builds, viewer package builds, published-import guards,
+script tests and clean-consumer package smoke checks passed. The new browser test
+covers keyboard selection, narrow-screen fit, grouping edits and save/reopen;
+all 62 browser tests passed, including the six-framework matrix.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained
