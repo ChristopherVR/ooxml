@@ -47,7 +47,7 @@ export type BorderPreset =
 /** What `clearRange` removes. */
 export type ClearWhat = 'all' | 'contents' | 'formats' | 'comments' | 'hyperlinks';
 
-export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'transpose';
+export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'noBorders' | 'transpose';
 export type PasteOperation = 'none' | 'add' | 'subtract' | 'multiply' | 'divide';
 
 /** Paste content and independent modifiers. Legacy string modes remain supported. */

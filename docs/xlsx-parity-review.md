@@ -94,7 +94,7 @@ including one with formatting, leaves destination content and formatting untouch
 skipped. A formula returning an empty string, zero and FALSE still paste. Cut with Skip Blanks
 is rejected before edits, matching a separate native check. Empty string constants produced
 by Paste Values now survive cell pruning and save/reload. Tests cover tiled selections and
-one-step undo/redo. Column widths, all except borders and full
+one-step undo/redo. Column widths and full
 clipboard metadata remain unsupported.
 
 Reproduce the fixture with `scripts/record-xlsx-paste-options.ps1 -OutputFile <temporary-json-path>`
@@ -144,6 +144,34 @@ All 54 browser tests and 47 viewer/binding tests passed, along with viewer typec
 seven package builds, published-import guards and clean-consumer package smoke checks.
 
 Primary reference: [Microsoft Paste options](https://support.microsoft.com/en-au/excel/paste-options).
+
+### All Except Borders and transpose references
+
+The `noBorders` paste mode copies content and supported formatting while retaining the complete
+destination border model, including edge colors and diagonal directions. A truly empty copied
+cell clears destination content and other formatting while keeping its borders. Skip Blanks
+preserves the entire destination cell. The shared dialog enables All Except Borders; column
+width paste and complete clipboard metadata support remain outstanding.
+
+Twenty native Excel 16.0 build 20430 cases compare four destination cells across transpose,
+Skip Blanks and all five arithmetic-operation choices. They verify values, formulas, fonts,
+fills, number formats and six border directions with undo/redo. Reproduce them with
+`scripts/record-xlsx-paste-borders.ps1 -OutputFile <temporary-json-path>` in a fresh hidden
+Excel instance. Additional regressions cover truly empty source cells, tiled merges and border
+save/reload. The browser test uses native copy, the shared dialog and keyboard undo.
+
+The corpus also exposed incorrect reference translation during transpose. Excel applies the
+copied block's top-left offset to every formula while transposing cell positions. The core now
+uses that offset for each tile. Live native checks confirmed the same reference behavior for
+All, Formulas and All Except Borders. The earlier transposed-arithmetic regression had asserted
+the implementation's incorrect references; its expectations now follow this native evidence.
+
+Validation: the full core XLSX suite passed 4,865 tests, the shared XLSX UI suite passed 308,
+the viewer/binding suite passed 47 and all 55 browser tests passed. Core/UI/viewer typechecks,
+core/UI builds, seven package builds, published-import guards and clean-consumer package smoke
+checks passed. A subsequent native
+check confirmed All Except Borders rejects cut cells; the atomic rejection regression and
+the full 26-test border suite passed after adding that guard.
 
 ## Evidence required for parity
 

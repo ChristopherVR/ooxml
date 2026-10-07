@@ -26,7 +26,7 @@ export function writeClip(
 		return;
 	}
 	const existing = getCell(sheet, row, col);
-	if (!clip && operation === 'none') {
+	if (!clip && operation === 'none' && mode !== 'noBorders') {
 		if (mode === 'all' || mode === 'transpose') deleteCell(sheet, row, col);
 		else if (existing) {
 			clearContents(existing);
@@ -35,7 +35,17 @@ export function writeClip(
 		return;
 	}
 	const keepStyle = mode === 'values' || mode === 'formulas' || (clip && !clip.style);
-	const styleId = keepStyle ? existing?.styleId : clip ? styleOf(clip) : 0;
+	const styleId =
+		mode === 'noBorders'
+			? internStyle(workbook, {
+					...structuredClone(clip?.style ?? styleAt(workbook, 0)),
+					border: structuredClone(styleAt(workbook, existing?.styleId).border),
+				})
+			: keepStyle
+				? existing?.styleId
+				: clip
+					? styleOf(clip)
+					: 0;
 	const source = {
 		value:
 			operation !== 'none' &&

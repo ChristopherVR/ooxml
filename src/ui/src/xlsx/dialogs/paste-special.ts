@@ -22,8 +22,7 @@ const OPERATIONS: ReadonlyArray<readonly [string, string]> = [
 
 export function openPasteSpecial(ctx: EditorContext): Promise<PasteOptions | undefined> {
 	const paste = radios(ctx, 'Paste', PASTE, 'all');
-	for (const input of paste.inputs)
-		if (input.value === 'noBorders' || input.value === 'widths') input.disabled = true;
+	for (const input of paste.inputs) if (input.value === 'widths') input.disabled = true;
 	const operation = radios(ctx, 'Operation', OPERATIONS, 'none');
 	const skip = checkbox(ctx, 'Skip blanks');
 	const transpose = checkbox(ctx, 'Transpose');
@@ -33,7 +32,7 @@ export function openPasteSpecial(ctx: EditorContext): Promise<PasteOptions | und
 		body: [
 			row(ctx, paste.element, operation.element),
 			row(ctx, skip.wrapper, transpose.wrapper),
-			text(ctx, 'All except borders and column widths are not supported yet.'),
+			text(ctx, 'Column widths are not supported yet.'),
 		],
 		opened: () => paste.inputs[0]?.focus(),
 		submit: () => {

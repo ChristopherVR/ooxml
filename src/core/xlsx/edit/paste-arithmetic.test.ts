@@ -42,15 +42,15 @@ describe('paste arithmetic recorded in Microsoft Excel', () => {
 			skipBlanks: true,
 		});
 		expect(getCell(sheet, 3, 2)?.value).toBe(10);
-		expect(getCell(sheet, 3, 3)?.formula).toBe('10+(E4+$B$1)');
-		expect(getCell(sheet, 4, 5)?.formula).toBe('10+(G5+$B$1)');
-		expect(getCell(sheet, 3, 3)?.value).toBe(21);
+		expect(getCell(sheet, 3, 3)?.formula).toBe('10+(D5+$B$1)');
+		expect(getCell(sheet, 4, 5)?.formula).toBe('10+(F6+$B$1)');
+		expect(getCell(sheet, 3, 3)?.value).toBe(22);
 		session.undo();
 		expect(getCell(sheet, 3, 3)?.value).toBe(10);
 		session.redo();
 		const loaded = await loadXlsx(await saveXlsx(workbook));
-		expect(getCell(loaded.sheets[0]!, 3, 3)?.formula).toBe('10+(E4+$B$1)');
-		expect(getCell(loaded.sheets[0]!, 3, 3)?.value).toBe(21);
+		expect(getCell(loaded.sheets[0]!, 3, 3)?.formula).toBe('10+(D5+$B$1)');
+		expect(getCell(loaded.sheets[0]!, 3, 3)?.value).toBe(22);
 	});
 	it('rejects operations for cut cells without changing the move payload', () => {
 		const workbook = createWorkbook();

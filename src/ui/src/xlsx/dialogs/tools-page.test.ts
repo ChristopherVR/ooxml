@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createWorkbook, getCell } from 'ooxml-core/xlsx';
+import { createWorkbook, getCell, styleAt } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clipState, clipboardCommands } from 'ooxml-core/xlsx/ui';
 import {
@@ -26,6 +26,38 @@ function setup(grid?: { zoom: number }) {
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it('copies all except destination borders through the shared dialog', async () => {
+		const ctx = setup();
+		const session = ctx.session()!;
+		const source = { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } };
+		const dest = { start: { row: 0, col: 2 }, end: { row: 0, col: 2 } };
+		session.setCellValue(0, 0, 0, 2);
+		session.setCellValue(0, 0, 2, 9);
+		session.applyStyle(0, [source], {
+			font: { bold: true },
+			border: { bottom: { style: 'thin', color: { rgb: 'FFFF0000' } } },
+		});
+		session.applyStyle(0, [dest], {
+			border: { bottom: { style: 'double', color: { rgb: 'FF0000FF' } } },
+		});
+		clipState(ctx).payload = session.copy(0, source);
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, 'All except borders').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const workbook = ctx.workbook()!;
+		const cell = getCell(workbook.sheets[0]!, 0, 2);
+		expect(cell?.value).toBe(2);
+		expect(styleAt(workbook, cell?.styleId).font.bold).toBe(true);
+		expect(styleAt(workbook, cell?.styleId).border.bottom).toEqual({
+			style: 'double',
+			color: { rgb: 'FF0000FF' },
+		});
+		session.undo();
+		expect(getCell(workbook.sheets[0]!, 0, 2)?.value).toBe(9);
+	});
 	it('multiplies a selection and retains destination formulas with Values', async () => {
 		const ctx = setup();
 		const s = ctx.session()!;
@@ -80,7 +112,7 @@ describe('Paste Special', () => {
 		expect(getCell(ctx.workbook()!.sheets[0]!, 2, 1)).toBeUndefined();
 		const result = ctx.commands.run('home.paste-special');
 		const dialog = dialogEl(ctx, 'paste-special');
-		expect(radio(dialog, 'All except borders').disabled).toBe(true);
+		expect(radio(dialog, 'All except borders').disabled).toBe(false);
 		radio(dialog, 'Values').click();
 		clickButton(dialog, 'OK');
 		expect(await result).toBe(true);

@@ -124,6 +124,8 @@ export function pasteAt(
 	const dest: CellRange = { start: at, end: { row: at.row + height - 1, col: at.col + width - 1 } };
 	const cut = typeof payload !== 'string' && payload.cut && cells.source ? cells.source : undefined;
 	if (cut && skipBlanks) throw new RangeError('Skip blanks is not available for cut cells.');
+	if (cut && mode === 'noBorders')
+		throw new RangeError('All except borders is not available for cut cells.');
 	if (cut && operation !== 'none')
 		throw new RangeError('Paste operations are not available for cut cells.');
 	// A move rewrites references anywhere in the workbook: it records the references that change
@@ -175,10 +177,7 @@ export function pasteAt(
 							: copied;
 					const row = at.row + (transpose ? c : r);
 					const col = at.col + (transpose ? r : c);
-					const origin = cells.source && {
-						row: cells.source.range.start.row + r,
-						col: cells.source.range.start.col + c,
-					};
+					const origin = cells.source?.range.start;
 					const formula =
 						clip?.formula === undefined
 							? undefined
@@ -186,10 +185,10 @@ export function pasteAt(
 								? moveReferencesInFormula(clip.formula, move.fromSheet, move, move.toSheet)
 								: !origin
 									? clip.formula
-									: moveFormula(clip.formula, row - origin.row, col - origin.col);
+									: moveFormula(clip.formula, at.row - origin.row, at.col - origin.col);
 					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf, operation);
 				}
-			if (mode === 'all' || mode === 'formats') {
+			if (mode === 'all' || mode === 'noBorders' || mode === 'formats') {
 				sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, dest));
 				for (const m of cells.merges)
 					sheet.merges.push(

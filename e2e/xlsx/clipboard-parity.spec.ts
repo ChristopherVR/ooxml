@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { editor, goToCell, grid, newWorkbook, typeInActiveCell } from './helpers';
+import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
 test('native clipboard repeats one copied cell across the selected rectangle', async ({ page }) => {
 	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -30,6 +30,49 @@ test('native clipboard repeats one copied cell across the selected rectangle', a
 			}),
 		)
 		.toEqual(['Monday', 'Monday', 'Monday', 'Monday']);
+});
+
+test('All Except Borders copies font and value while retaining the destination border', async ({
+	page,
+}) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	await typeInActiveCell(page, '2');
+	await goToCell(page, 'A1');
+	await ribbon(page).locator('[data-command="home.bold"]').first().click();
+	await goToCell(page, 'C1');
+	await typeInActiveCell(page, '9');
+	await goToCell(page, 'C1');
+	await ribbon(page).locator('[data-command="home.borders"]').first().click();
+	const result = () =>
+		editor(page).evaluate((node) => {
+			const book = (
+				node as unknown as {
+					workbook: {
+						styles: { font: { bold?: boolean }; border: { bottom?: { style: string } } }[];
+						sheets: { rows: Map<number, Map<number, { value: unknown; styleId?: number }>> }[];
+					};
+				}
+			).workbook;
+			const cell = book.sheets[0]!.rows.get(0)?.get(2);
+			const style = book.styles[cell?.styleId ?? 0]!;
+			return {
+				value: cell?.value,
+				bold: style.font.bold ?? false,
+				border: style.border.bottom?.style,
+			};
+		});
+	await expect.poll(result).toEqual({ value: 9, bold: false, border: 'thin' });
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+Alt+V');
+	const dialog = editor(page).locator('[data-dialog="paste-special"]');
+	await dialog.getByLabel('All except borders', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await expect.poll(result).toEqual({ value: 2, bold: true, border: 'thin' });
+	await page.keyboard.press('Control+Z');
+	await expect.poll(result).toEqual({ value: 9, bold: false, border: 'thin' });
 });
 
 test('Paste Special Multiply applies native clipboard values and undoes once', async ({ page }) => {
