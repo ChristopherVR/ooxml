@@ -42,6 +42,7 @@ import {
 } from './table-style-fill';
 import { cellImageFillCss } from './table-style-image';
 import { styleDeclaresFills } from './table-style-scheme';
+import { isKoreanLanguage } from './text-east-asian-breaks';
 
 export { resolveStyleDiagonalBorders } from './table-style-borders';
 export { resolveTableStyleCell3D } from './table-style-cell3d';
@@ -83,6 +84,8 @@ export interface CellTextRun {
 	fontSize?: number;
 	/** Font family name. */
 	fontFamily?: string;
+	/** Run language (`a:rPr/@lang`), such as `ko-KR`. */
+	language?: string;
 }
 
 /**
@@ -115,6 +118,11 @@ export function cellRunStyle(run: CellTextRun): TableCellCss {
 	}
 	if (deco.length > 0) {
 		css.textDecoration = deco.join(' ');
+	}
+	// Same rule as shape text (`segmentStyleToCss`): PowerPoint wraps Korean
+	// between words, a browser between any two Hangul syllables.
+	if (isKoreanLanguage(run.language)) {
+		css.wordBreak = 'keep-all';
 	}
 	return css;
 }

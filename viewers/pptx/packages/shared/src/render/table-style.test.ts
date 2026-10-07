@@ -7,6 +7,7 @@ import type {
 import { describe, it, expect } from 'vitest';
 
 import {
+	cellRunStyle,
 	cellStyleToCss,
 	getCellDiagonalBorders,
 	getDiagonalBorders,
@@ -176,6 +177,14 @@ describe('cellStyleToCss', () => {
 			expect(css.backgroundImage).toBeUndefined();
 			expect(css.backgroundColor).toBe('#112233');
 		});
+	});
+});
+
+describe('cellRunStyle', () => {
+	it('keeps Korean words together (word-break: keep-all) only for a Korean run', () => {
+		expect(cellRunStyle({ text: '회의 일정', language: 'ko-KR' }).wordBreak).toBe('keep-all');
+		expect(cellRunStyle({ text: '温室効果ガス', language: 'ja-JP' }).wordBreak).toBeUndefined();
+		expect(cellRunStyle({ text: 'Schedule' }).wordBreak).toBeUndefined();
 	});
 });
 
