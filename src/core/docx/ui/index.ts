@@ -17,6 +17,7 @@ export * from './header-footer-history';
 export * from './inline-content-schema';
 export * from './ligature-style';
 export * from './node-numbering';
+export * from './paragraph-attributes';
 export * from './review-schema';
 export * from './review-settings';
 export * from './command-history';

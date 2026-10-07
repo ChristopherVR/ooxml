@@ -15,7 +15,11 @@ import {
 	numberNotesInOrder,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
-import { paragraphTwipsFromAttrs } from 'ooxml-core/docx';
+import {
+	paragraphAttrs,
+	paragraphFromAttrs,
+	PARAGRAPH_KEEP_KEYS as KEEP_KEYS,
+} from 'ooxml-core/docx/ui';
 import { sameJson, sameRuns } from 'ooxml-core/docx/ui';
 import { appendInlineNode, runToInlineNodes, type NoteNumberLookup } from './run-adapter';
 import {
@@ -37,56 +41,16 @@ function paragraphNode(paragraph: Paragraph, labels: ListLabels, noteNumber?: No
 	return schema.node(
 		'paragraph',
 		{
-			id: paragraph.id,
-			markRevision: paragraph.markRevision ?? null,
-			formatRevision: paragraph.formatRevision ?? null,
-			restoredParagraphPropertiesXml: paragraph.restoredParagraphPropertiesXml ?? null,
-			align: paragraph.align ?? null,
-			justification: paragraph.justification ?? null,
-			outlineLevel: paragraph.outlineLevel ?? null,
-			direction: paragraph.direction ?? null,
-			style: paragraph.style || '',
-			spacingBeforeTwips: paragraph.spacingBeforeTwips ?? null,
-			spacingAfterTwips: paragraph.spacingAfterTwips ?? null,
-			lineSpacingTwips: paragraph.lineSpacingTwips ?? null,
-			lineSpacingRule: paragraph.lineSpacingRule ?? null,
-			indentLeftTwips: paragraph.indentLeftTwips ?? null,
-			indentRightTwips: paragraph.indentRightTwips ?? null,
-			indentStartTwips: paragraph.indentStartTwips ?? null,
-			indentEndTwips: paragraph.indentEndTwips ?? null,
-			firstLineTwips: paragraph.firstLineTwips ?? null,
-			hangingTwips: paragraph.hangingTwips ?? null,
-			numId: paragraph.numbering?.numId ?? null,
-			ilvl: paragraph.numbering ? paragraph.numbering.level : null,
+			...paragraphAttrs(paragraph),
 			listLabelText: label ? displayListLabel(label.text) : null,
 			listSuffix: label?.suffix ?? null,
 			listIndentLeftTwips: label?.indentLeftTwips ?? null,
 			listHangingTwips: label?.hangingTwips ?? null,
 			listFirstLineTwips: label?.firstLineTwips ?? null,
-			pageBreakBefore: paragraph.pageBreakBefore ?? false,
-			tabStops: paragraph.tabStops?.length ? paragraph.tabStops : null,
-			keepNext: paragraph.keepNext ?? null,
-			keepLines: paragraph.keepLines ?? null,
-			widowControl: paragraph.widowControl ?? null,
-			contextualSpacing: paragraph.contextualSpacing ?? null,
-			suppressLineNumbers: paragraph.suppressLineNumbers ?? null,
-			dropCap: paragraph.dropCap ?? null,
-			borders: paragraph.borders ?? null,
-			shadingFill: paragraph.shadingFill ?? null,
-			bookmarks: paragraph.bookmarks ?? [],
 		},
 		children,
 	);
 }
-
-/** Paragraph pagination toggles carried through the editor as node attributes. */
-const KEEP_KEYS = [
-	'keepNext',
-	'keepLines',
-	'widowControl',
-	'contextualSpacing',
-	'suppressLineNumbers',
-] as const;
 
 export function modelToDoc(model: DocumentModel) {
 	const labels = computeListLabels(model);
@@ -225,41 +189,7 @@ export function docToModel(
 			sameJson(previous.bookmarks ?? [], node.attrs.bookmarks ?? [])
 		)
 			return previous;
-		return {
-			type: 'paragraph',
-			id,
-			runs,
-			...(node.attrs.restoredParagraphPropertiesXml
-				? { restoredParagraphPropertiesXml: String(node.attrs.restoredParagraphPropertiesXml) }
-				: {}),
-			...(node.attrs.markRevision
-				? { markRevision: structuredClone(node.attrs.markRevision) }
-				: {}),
-			...(node.attrs.formatRevision
-				? { formatRevision: structuredClone(node.attrs.formatRevision) }
-				: {}),
-			...(node.attrs.align != null ? { align: node.attrs.align } : {}),
-			...(node.attrs.justification != null ? { justification: node.attrs.justification } : {}),
-			...(node.attrs.outlineLevel != null ? { outlineLevel: Number(node.attrs.outlineLevel) } : {}),
-			...(node.attrs.direction != null ? { direction: node.attrs.direction } : {}),
-			...(node.attrs.style ? { style: node.attrs.style } : {}),
-			...paragraphTwipsFromAttrs(node.attrs),
-			...(node.attrs.lineSpacingRule != null
-				? { lineSpacingRule: node.attrs.lineSpacingRule }
-				: {}),
-			...(node.attrs.numId != null
-				? { numbering: { numId: node.attrs.numId, level: node.attrs.ilvl ?? 0 } }
-				: {}),
-			...(node.attrs.pageBreakBefore ? { pageBreakBefore: true } : {}),
-			...(node.attrs.tabStops?.length ? { tabStops: structuredClone(node.attrs.tabStops) } : {}),
-			...Object.fromEntries(
-				KEEP_KEYS.filter((key) => node.attrs[key] != null).map((key) => [key, node.attrs[key]]),
-			),
-			...(node.attrs.dropCap ? { dropCap: { ...node.attrs.dropCap } } : {}),
-			...(node.attrs.borders ? { borders: structuredClone(node.attrs.borders) } : {}),
-			...(node.attrs.shadingFill ? { shadingFill: node.attrs.shadingFill } : {}),
-			...(node.attrs.bookmarks?.length ? { bookmarks: [...node.attrs.bookmarks] } : {}),
-		};
+		return paragraphFromAttrs(node.attrs, id, runs);
 	};
 
 	const blocks: Block[] = [];

@@ -676,6 +676,18 @@ mapping. The Word UI imports them through the core subpath; schema construction
 and inline DOM views stay in UI. Existing editor conversion and review/Yjs tests
 cover the caller, and core tests cover an independent caller-provided schema.
 
+## Shared Word paragraph attribute mapping
+
+Source: ChristopherVR/ooxml at `98cb8e365a792352a2123a52d57ad6fc5bdcfb1a`,
+`src/ui/src/docx/model-adapter.ts`, the paragraph attributes in `paragraphNode`,
+the object construction in `convertParagraph`, and `KEEP_KEYS`. They moved
+unchanged into strict, DOM-free `src/core/docx/ui/paragraph-attributes.ts`.
+UI keeps schema construction, inline DOM adapters, list labels and its existing
+unchanged-paragraph identity check. The shared mapping reuses the existing
+branded twip attribute conversion. Native before/tracked/rejected paragraph
+references cover both directions without a DOM; existing editor conversion,
+review, list and table tests cover the UI caller.
+
 ## Shared chart gradient geometry and workbook font stacks
 
 Source: ChristopherVR/ooxml at `3ad172db60523a8a4d49b16e9b75b2f80a351e7f`,
