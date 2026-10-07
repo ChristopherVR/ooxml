@@ -1,5 +1,5 @@
-import { OFFICE_UI_TAGS, registerOfficeUi, THEME_CSS, installOfficeUiTheme } from './index.js';
-import { CONTRACT_REVISION, assertContract, defineOnce } from './registry.js';
+import { OFFICE_UI_TAGS, registerOfficeUi, THEME_CSS, installOfficeUiTheme } from './index';
+import { CONTRACT_REVISION, assertContract, defineOnce } from './registry';
 
 describe('registration', () => {
 	it('defines every tag, idempotently, and installs the theme once', () => {

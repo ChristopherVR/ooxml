@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { book, calc, calcArray, E, engine, get, set } from './test-helpers.js';
+import { book, calc, calcArray, E, engine, get, set } from './test-helpers';
 
 describe('operators and coercion', () => {
 	it('evaluates arithmetic with Excel precedence', () => {

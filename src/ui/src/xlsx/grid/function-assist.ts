@@ -1,8 +1,8 @@
 // Function autocomplete list and argument tooltip, shared by the in-cell editor and the formula
 // bar. Pure text logic lives in ooxml-core (xlsx/formula/editor-text); this module owns the popup DOM and its keys.
 import { FUNCTION_CATALOG, type FunctionInfo } from 'ooxml-core/xlsx';
-import { ensureStyle, h } from './dom.js';
-import type { FormulaField } from './formula-field.js';
+import { ensureStyle, h } from './dom';
+import type { FormulaField } from './formula-field';
 import {
 	activeParam,
 	callAtCaret,

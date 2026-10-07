@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ensureListDefinition } from './numbering-editing.js';
-import { at, must } from './test-support/access.js';
+import { ensureListDefinition } from './numbering-editing';
+import { at, must } from './test-support/access';
 
 describe('ensureListDefinition', () => {
 	it('creates a fresh bulleted definition from an empty catalog', () => {

@@ -1,6 +1,6 @@
 // Insert and Page Layout tabs.
 import type { RibbonMenuItem, RibbonTab } from 'ooxml-core/xlsx/ui';
-import { CHART_TYPES } from '../../commands/insert.js';
+import { CHART_TYPES } from '../../commands/insert';
 import { MARGIN_PRESETS, PAPER_SIZES } from 'ooxml-core/xlsx/ui';
 import { themePaletteItems } from 'ooxml-core/xlsx/ui';
 

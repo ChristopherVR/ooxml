@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { decryptOoxmlPackage, isEncryptedOoxmlPackage } from '../../crypto/index.js';
-import { getCell, putCell } from '../cells.js';
-import { createWorkbook } from '../workbook.js';
-import { detectWorkbookFormat, loadWorkbook, saveWorkbook } from './detect.js';
+import { decryptOoxmlPackage, isEncryptedOoxmlPackage } from '../../crypto/index';
+import { getCell, putCell } from '../cells';
+import { createWorkbook } from '../workbook';
+import { detectWorkbookFormat, loadWorkbook, saveWorkbook } from './detect';
 import {
 	IncorrectPasswordError,
 	PasswordRequiredError,
 	UnsupportedWorkbookError,
-} from './errors.js';
-import { LegacyXlsError } from './legacy-xls.js';
+} from './errors';
+import { LegacyXlsError } from './legacy-xls';
 
 const fixture = async (path: string): Promise<Uint8Array> =>
 	new Uint8Array(await readFile(new URL(`../__fixtures__/${path}`, import.meta.url)));

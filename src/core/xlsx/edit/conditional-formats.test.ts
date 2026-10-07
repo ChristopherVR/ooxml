@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { putCell } from '../cells.js';
-import { createConditionalFormatEvaluator } from '../layout/index.js';
-import type { ConditionalFormat, Workbook } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/index.js';
-import { createEditSession } from './session.js';
+import { parseRange } from '../address';
+import { putCell } from '../cells';
+import { createConditionalFormatEvaluator } from '../layout/index';
+import type { ConditionalFormat, Workbook } from '../model';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/index';
+import { createEditSession } from './session';
 
 const R = (ref: string) => {
 	const r = parseRange(ref);

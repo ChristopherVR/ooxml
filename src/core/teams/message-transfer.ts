@@ -1,9 +1,9 @@
-import { createClientId } from '../collab/identity.js';
-import { MAX_ATTACHMENTS, type Attachment } from './model.js';
-import type { DraftContext } from './drafts.js';
-import { checkFileAbort, type FileTransferProgress } from './file-transfer.js';
-import { storeAttachment, storageFileName, validateStorageFile } from './stored-file.js';
-import type { UploadableFile } from './store.js';
+import { createClientId } from '../collab/identity';
+import { MAX_ATTACHMENTS, type Attachment } from './model';
+import type { DraftContext } from './drafts';
+import { checkFileAbort, type FileTransferProgress } from './file-transfer';
+import { storeAttachment, storageFileName, validateStorageFile } from './stored-file';
+import type { UploadableFile } from './store';
 
 export interface MessageTransfer {
 	id: string;

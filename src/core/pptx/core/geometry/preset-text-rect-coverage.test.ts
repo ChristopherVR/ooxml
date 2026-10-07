@@ -11,20 +11,20 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { ACTION_BUTTON_TEXT_RECTS } from '../../../geometry/preset-text-rect-action-buttons.js';
-import { ARROW_TEXT_RECTS } from '../../../geometry/preset-text-rect-arrows.js';
-import { BRACE_TEXT_RECTS } from '../../../geometry/preset-text-rect-braces.js';
-import { CALLOUT_TEXT_RECTS } from '../../../geometry/preset-text-rect-callouts.js';
-import { CIRCULAR_ARROW_TEXT_RECTS } from '../../../geometry/preset-text-rect-circular-arrows.js';
-import { FLOWCHART_TEXT_RECTS } from '../../../geometry/preset-text-rect-flowchart.js';
-import { MISC_TEXT_RECTS_A } from '../../../geometry/preset-text-rect-misc-a.js';
-import { MISC_TEXT_RECTS_B } from '../../../geometry/preset-text-rect-misc-b.js';
-import { POLYGON_TEXT_RECTS } from '../../../geometry/preset-text-rect-polygons.js';
-import { QUAD_TEXT_RECTS } from '../../../geometry/preset-text-rect-quads.js';
-import { RIBBON_TEXT_RECTS } from '../../../geometry/preset-text-rect-ribbons.js';
-import { STAR_TEXT_RECTS } from '../../../geometry/preset-text-rect-stars.js';
-import { getPresetTextRect } from '../../../geometry/preset-text-rect-table.js';
-import { TAB_TEXT_RECTS } from '../../../geometry/preset-text-rect-tabs.js';
+import { ACTION_BUTTON_TEXT_RECTS } from '../../../geometry/preset-text-rect-action-buttons';
+import { ARROW_TEXT_RECTS } from '../../../geometry/preset-text-rect-arrows';
+import { BRACE_TEXT_RECTS } from '../../../geometry/preset-text-rect-braces';
+import { CALLOUT_TEXT_RECTS } from '../../../geometry/preset-text-rect-callouts';
+import { CIRCULAR_ARROW_TEXT_RECTS } from '../../../geometry/preset-text-rect-circular-arrows';
+import { FLOWCHART_TEXT_RECTS } from '../../../geometry/preset-text-rect-flowchart';
+import { MISC_TEXT_RECTS_A } from '../../../geometry/preset-text-rect-misc-a';
+import { MISC_TEXT_RECTS_B } from '../../../geometry/preset-text-rect-misc-b';
+import { POLYGON_TEXT_RECTS } from '../../../geometry/preset-text-rect-polygons';
+import { QUAD_TEXT_RECTS } from '../../../geometry/preset-text-rect-quads';
+import { RIBBON_TEXT_RECTS } from '../../../geometry/preset-text-rect-ribbons';
+import { STAR_TEXT_RECTS } from '../../../geometry/preset-text-rect-stars';
+import { getPresetTextRect } from '../../../geometry/preset-text-rect-table';
+import { TAB_TEXT_RECTS } from '../../../geometry/preset-text-rect-tabs';
 
 const ALL_FAMILIES: Record<string, Record<string, unknown>> = {
 	ACTION_BUTTON_TEXT_RECTS,

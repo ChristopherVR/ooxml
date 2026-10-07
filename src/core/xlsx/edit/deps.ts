@@ -6,7 +6,7 @@ export {
 	isDateFormat,
 	parseCellInput,
 	serialToDate,
-} from '../numfmt/index.js';
+} from '../numfmt/index';
 export {
 	createCalcEngine,
 	deleteSheetInFormula,
@@ -18,5 +18,5 @@ export {
 	shiftFormula,
 	tokenize,
 	translateFormula,
-} from '../formula/index.js';
-export type { CalcEngine, RefSpec, ShiftSpec, Token } from '../formula/index.js';
+} from '../formula/index';
+export type { CalcEngine, RefSpec, ShiftSpec, Token } from '../formula/index';

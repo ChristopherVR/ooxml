@@ -1,6 +1,6 @@
-import { createWorksheet, MAX_COL, MAX_ROW } from '../../index.js';
+import { createWorksheet, MAX_COL, MAX_ROW } from '../../index';
 import { describe, expect, it } from 'vitest';
-import type { Selection } from '../context.js';
+import type { Selection } from '../context';
 import {
 	addRange,
 	colSelected,
@@ -15,7 +15,7 @@ import {
 	selectCell,
 	selectionRef,
 	spanRange,
-} from './selection-ops.js';
+} from './selection-ops';
 
 const sel = (ranges: Selection['ranges'], active = ranges[0]!.start): Selection => ({
 	sheet: 0,

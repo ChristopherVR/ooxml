@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
 import { describe, expect, it, vi } from 'vitest';
-import { openProtectSheet } from '../dialogs/protect-sheet.js';
+import { openProtectSheet } from '../dialogs/protect-sheet';
 import { activeChart, activeTable } from 'ooxml-core/xlsx/ui';
-import { allCommands } from './index.js';
+import { allCommands } from './index';
 import {
 	clickButton,
 	createTestContext,
@@ -11,7 +11,7 @@ import {
 	inputByLabel,
 	setValue,
 	tick,
-} from './test-support.js';
+} from './test-support';
 
 function setup(sheets = ['Sheet1']) {
 	const ctx = createTestContext(createWorkbook({ sheets }));

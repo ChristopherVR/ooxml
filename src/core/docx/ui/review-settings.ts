@@ -1,5 +1,5 @@
 import type { Command } from 'prosemirror-state';
-import { dispatchIsolatedCommand } from './command-history.js';
+import { dispatchIsolatedCommand } from './command-history';
 
 /** Document-wide recording state belongs in transactions for sync and undo. */
 export const toggleTrackChanges: Command = (state, dispatch, view) => {

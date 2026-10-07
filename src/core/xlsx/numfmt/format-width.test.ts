@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatValue } from './format.js';
-import { formatGeneral } from './general.js';
+import { formatValue } from './format';
+import { formatGeneral } from './general';
 
 describe('formatGeneral width', () => {
 	it.each([

@@ -4,7 +4,7 @@ import {
 	elbowCurveSegments,
 	elbowWaypoints,
 	isHorizontalPrimaryAxis,
-} from './connector-elbow-geometry.js';
+} from './connector-elbow-geometry';
 
 describe('isHorizontalPrimaryAxis', () => {
 	it('picks horizontal when the box is wider than it is tall (shapes side by side)', () => {

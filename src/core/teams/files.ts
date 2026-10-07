@@ -1,11 +1,11 @@
-import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
+import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
 import {
 	storeAttachment,
 	storageFileName as fileName,
 	validateStorageFile,
-} from './stored-file.js';
-import { MAX_ATTACHMENTS, type Attachment } from './model.js';
-import type { TeamsClient, UploadableFile } from './store.js';
+} from './stored-file';
+import { MAX_ATTACHMENTS, type Attachment } from './model';
+import type { TeamsClient, UploadableFile } from './store';
 
 type FileBlob = UploadableFile & Blob;
 interface FileContext {
@@ -99,8 +99,8 @@ export function createFileActions(
 			checkFileAbort(options?.signal);
 			// SpreadsheetML creation and serialization remain in the Excel engine.
 			const [{ createWorkbook }, { saveXlsx }] = await Promise.all([
-				import('../xlsx/workbook.js'),
-				import('../xlsx/write/index.js'),
+				import('../xlsx/workbook'),
+				import('../xlsx/write/index'),
 			]);
 			checkFileAbort(options?.signal);
 			const bytes = await withFileAbort(() => saveXlsx(createWorkbook()), options?.signal);

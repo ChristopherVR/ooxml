@@ -1,10 +1,10 @@
 // Page Layout tab: theme colours (read-only), margins, orientation, paper size, print area, the
 // Page Setup dialog and the Sheet Options (gridlines and headings, view and print).
-import type { PageSetup } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { editing, target, viewing } from './util.js';
+import type { PageSetup } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { editing, target, viewing } from './util';
 
 type Margins = NonNullable<PageSetup['margins']>;
 

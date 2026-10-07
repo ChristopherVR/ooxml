@@ -1,7 +1,7 @@
-import { mergePresentation, diffPresentations } from '../../index.js';
-import type { PresentationDiff, MergeOptions, PptxData } from '../../index.js';
+import { mergePresentation, diffPresentations } from '../../index';
+import type { PresentationDiff, MergeOptions, PptxData } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── mergePresentationT ───────────────────────────────────────────────────────
 

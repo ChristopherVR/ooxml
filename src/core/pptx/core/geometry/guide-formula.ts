@@ -16,12 +16,12 @@
  * @module guide-formula
  */
 
-export type { GeometryGuide, GeometryContext } from '../../../geometry/guide-formula-eval.js';
+export type { GeometryGuide, GeometryContext } from '../../../geometry/guide-formula-eval';
 export {
 	createBuiltinVariables,
 	evaluateGuides,
 	parseGuideDefinitions,
 	parseAdjustmentValues,
 	resolveCoordinate,
-} from '../../../geometry/guide-formula-api.js';
+} from '../../../geometry/guide-formula-api';
 export { evaluateGeometryPaths, ooxmlArcToSvg } from './guide-formula-paths';

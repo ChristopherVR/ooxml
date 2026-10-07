@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluateGuides } from './guide-formula-api.js';
-import { evaluateFormula, parseFormula } from './guide-formula-eval.js';
-import { ST_SHAPE_TYPE_VALUES } from './preset-geometry-names.js';
-import { FLOWCHART_PRESET_DEFINITIONS } from './preset-shape-definitions-flowchart.js';
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import { evaluateGuides } from './guide-formula-api';
+import { evaluateFormula, parseFormula } from './guide-formula-eval';
+import { ST_SHAPE_TYPE_VALUES } from './preset-geometry-names';
+import { FLOWCHART_PRESET_DEFINITIONS } from './preset-shape-definitions-flowchart';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 const REQUIRED_FLOWCHART_SHAPES = [
 	'flowChartProcess',

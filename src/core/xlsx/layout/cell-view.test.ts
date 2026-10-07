@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import type { CellStyle, Workbook } from '../model.js';
-import { internStyle } from '../styles.js';
-import { createWorkbook, defaultCellStyle } from '../workbook.js';
-import { cellView, effectiveStyleId, generalAlignment, rotationDegrees } from './cell-view.js';
-import { BORDER_STYLES, fillView } from './style-view.js';
-import type { ConditionalFormatEvaluator } from './types.js';
+import { putCell } from '../cells';
+import type { CellStyle, Workbook } from '../model';
+import { internStyle } from '../styles';
+import { createWorkbook, defaultCellStyle } from '../workbook';
+import { cellView, effectiveStyleId, generalAlignment, rotationDegrees } from './cell-view';
+import { BORDER_STYLES, fillView } from './style-view';
+import type { ConditionalFormatEvaluator } from './types';
 
 function book(): Workbook {
 	return createWorkbook();

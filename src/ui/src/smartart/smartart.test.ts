@@ -2,10 +2,10 @@ import type { DiagramDrawing, DiagramDrawingShape } from 'ooxml-core/diagram';
 import { readFileSync } from 'node:fs';
 import { URL as NodeURL } from 'node:url';
 import { loadXlsx } from 'ooxml-core/xlsx';
-import { createTestContext } from '../xlsx/commands/test-support.js';
-import { paintSmartArt } from '../xlsx/grid/smartart.js';
-import { colorToCss } from './smartart-svg.js';
-import { registerOfficeUi, type SmartArtRenderReport } from '../index.js';
+import { createTestContext } from '../xlsx/commands/test-support';
+import { paintSmartArt } from '../xlsx/grid/smartart';
+import { colorToCss } from './smartart-svg';
+import { registerOfficeUi, type SmartArtRenderReport } from '../index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { OfficeStatusBarState, OfficeStatusButton } from '../controls.js';
-import { registerOfficeUi } from '../index.js';
+import type { OfficeStatusBarState, OfficeStatusButton } from '../controls';
+import { registerOfficeUi } from '../index';
 
 // Adapted from pptx-viewer's status-bar tests (`packages/shared/src/web-components/status-bar.test.ts`).
 beforeAll(() => registerOfficeUi());

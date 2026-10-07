@@ -1,10 +1,10 @@
 // Pure helpers for the formula editor: which references to colour, whether the caret accepts a
 // pointed reference, the function name being typed (autocomplete) and the call the caret is in
 // (argument tooltip). Formula text here includes the leading '='.
-import { MAX_COL, MAX_ROW, columnIndex, parseRange, type CellRange } from '../address.js';
-import { FUNCTION_CATALOG } from './functions/registry.js';
-import type { FunctionInfo } from './functions/types.js';
-import { referenceSpans } from './transform.js';
+import { MAX_COL, MAX_ROW, columnIndex, parseRange, type CellRange } from '../address';
+import { FUNCTION_CATALOG } from './functions/registry';
+import type { FunctionInfo } from './functions/types';
+import { referenceSpans } from './transform';
 
 /** Excel-like colours for references in a formula, in order of first appearance. */
 export const REFERENCE_COLORS = [

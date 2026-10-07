@@ -9,8 +9,8 @@ import {
 	pressKey,
 	setValue,
 	tick,
-} from '../commands/test-support.js';
-import { registerRuleDialogs } from './register-rules.js';
+} from '../commands/test-support';
+import { registerRuleDialogs } from './register-rules';
 
 afterEach(() => (document.body.innerHTML = ''));
 

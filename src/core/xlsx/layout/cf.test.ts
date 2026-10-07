@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import type { CellRange } from '../address.js';
-import { getValue, putCell } from '../cells.js';
-import type { CellValue, ConditionalRule, DifferentialStyle, Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
+import type { CellRange } from '../address';
+import { getValue, putCell } from '../cells';
+import type { CellValue, ConditionalRule, DifferentialStyle, Workbook } from '../model';
+import { createWorkbook } from '../workbook';
 import {
 	createConditionalFormatEvaluator,
 	scaleColor,
 	type FormulaEvaluator,
-} from './cf-evaluator.js';
-import { compareValues, percentile, testOperator } from './cf-values.js';
+} from './cf-evaluator';
+import { compareValues, percentile, testOperator } from './cf-values';
 
 const range = (r1: number, c1: number, r2: number, c2: number): CellRange => ({
 	start: { row: r1, col: c1 },
@@ -466,7 +466,7 @@ describe('conditional format rules', () => {
 
 describe('conditional formats with the real calc engine', () => {
 	it('translates relative references with the formula module by default', async () => {
-		const { createCalcEngine } = await import('../formula/index.js');
+		const { createCalcEngine } = await import('../formula/index');
 		const wb = column(
 			[1, 5, 10],
 			[{ type: 'expression', formula: 'A1>4', style: GREEN, priority: 1 }],

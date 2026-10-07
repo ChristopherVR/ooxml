@@ -1,7 +1,7 @@
-import { NS, elements, first, parseXml } from '../../xml/index.js';
-import type { ThemePalette } from '../model.js';
-import { DEFAULT_THEME } from '../workbook.js';
-import { att } from './xml-util.js';
+import { NS, elements, first, parseXml } from '../../xml/index';
+import type { ThemePalette } from '../model';
+import { DEFAULT_THEME } from '../workbook';
+import { att } from './xml-util';
 
 /** Theme colour slots in `a:clrScheme` document order. */
 export const SCHEME_ORDER = [

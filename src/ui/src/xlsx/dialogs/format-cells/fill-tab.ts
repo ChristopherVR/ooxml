@@ -2,8 +2,8 @@
 // fills store a solid colour as fgColor; conditional-format (dxf) fills store it as bgColor.
 import type { Color, Fill, PatternType } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
-import { el, field, fieldset, row, select } from '../fields.js';
-import { swatchGrid } from './color-swatches.js';
+import { el, field, fieldset, row, select } from '../fields';
+import { swatchGrid } from './color-swatches';
 import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 export const PATTERNS: ReadonlyArray<readonly [PatternType, string]> = [

@@ -2,27 +2,27 @@
 // Rebuilds a paragraph's inline content (runs, pictures, hyperlinks, tracked-change wrappers and
 // comment/move range markers) from the model's flat run list: hyperlink and field grouping plus
 // the revision wrappers from write-revisions.ts and range markers from write-ranges.ts.
-import { expectDefined } from './expect-defined.js';
-import type { HyperlinkInfo, TextRun } from './model.js';
-import type { RelationshipAllocator } from './relationship-allocator.js';
+import { expectDefined } from './expect-defined';
+import type { HyperlinkInfo, TextRun } from './model';
+import type { RelationshipAllocator } from './relationship-allocator';
 import {
 	rangeEdges,
 	rangeEndNodes,
 	rangeStartNodes,
 	type ParagraphRanges,
 	type RangeEdge,
-} from './write-ranges.js';
+} from './write-ranges';
 
-import { createRun } from './write-run.js';
-import { isEquationElement, preserveEquation } from './equation.js';
-import { hasSpecialBreak, isModeledBreak } from './breaks.js';
-import { isCommentReferenceRun } from './parse-revisions.js';
+import { createRun } from './write-run';
+import { isEquationElement, preserveEquation } from './equation';
+import { hasSpecialBreak, isModeledBreak } from './breaks';
+import { isCommentReferenceRun } from './parse-revisions';
 import {
 	convertToDeleteText,
 	isCommentAnchorElement,
 	isRevisionWrapperElement,
 	revisionWrapper,
-} from './write-revisions.js';
+} from './write-revisions';
 import {
 	getW,
 	isElement,
@@ -32,7 +32,7 @@ import {
 	WORD_NS,
 	type XmlDocument,
 	type XmlElement,
-} from './xml.js';
+} from './xml';
 
 /**
  * One modeled run's source element, with the hyperlink or simple field that wrapped it (if any).

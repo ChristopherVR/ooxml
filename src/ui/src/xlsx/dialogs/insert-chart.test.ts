@@ -8,9 +8,9 @@ import {
 	inputByLabel,
 	pressKey,
 	setValue,
-} from '../commands/test-support.js';
+} from '../commands/test-support';
 import { buildChart } from 'ooxml-core/xlsx/ui';
-import { registerToolDialogs } from './register-tools.js';
+import { registerToolDialogs } from './register-tools';
 
 afterEach(() => (document.body.innerHTML = ''));
 

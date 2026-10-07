@@ -3,8 +3,8 @@
 import { dateToSerial, getCell, serialToDate, styleAt } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, field, radios, row, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { checkbox, field, radios, row, textInput } from './fields';
+import { showDialog } from './frame';
 
 export type SeriesType = 'linear' | 'growth' | 'date';
 export type DateUnit = 'day' | 'weekday' | 'month' | 'year';

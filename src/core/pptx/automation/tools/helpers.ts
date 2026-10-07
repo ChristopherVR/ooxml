@@ -1,5 +1,5 @@
-import { hasTextProperties, resolveDisplayedChartTypeName } from '../../index.js';
-import type { PptxSlide, PptxElement, TablePptxElement } from '../../index.js';
+import { hasTextProperties, resolveDisplayedChartTypeName } from '../../index';
+import type { PptxSlide, PptxElement, TablePptxElement } from '../../index';
 
 export function generateElementId(): string {
 	return `el-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

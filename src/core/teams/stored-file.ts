@@ -1,8 +1,8 @@
-import { createClientId } from '../collab/identity.js';
-import { contentUrl } from './content.js';
-import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
-import { sanitizeAttachment, sanitizeChannelName, type Attachment } from './model.js';
-import type { UploadableFile } from './store.js';
+import { createClientId } from '../collab/identity';
+import { contentUrl } from './content';
+import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
+import { sanitizeAttachment, sanitizeChannelName, type Attachment } from './model';
+import type { UploadableFile } from './store';
 
 export const storageFileName = (raw: string): string =>
 	sanitizeChannelName(raw).replace(/[\/\\\u0000-\u001f\u007f]/gu, '');

@@ -4,8 +4,8 @@ import {
 	createMemoryHub,
 	transportProvider,
 	type CollabSession,
-} from '../../collab/index.js';
-import { WordYjsMedia } from './yjs-media.js';
+} from '../../collab/index';
+import { WordYjsMedia } from './yjs-media';
 
 const sessions: CollabSession[] = [];
 afterEach(() => {

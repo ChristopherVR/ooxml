@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type JSZip from 'jszip';
-import type { DocumentModel } from './model.js';
+import type { DocumentModel } from './model';
 import type {
 	AbstractNumDefinition,
 	NumberingLevelDefinition,
 	NumDefinition,
-} from './numbering-model.js';
+} from './numbering-model';
 import {
 	buildXml,
 	children,
@@ -14,8 +14,8 @@ import {
 	type XmlDocument,
 	type XmlElement,
 	WORD_NS,
-} from './xml.js';
-import { registerNumberingPart } from './numbering-parts.js';
+} from './xml';
+import { registerNumberingPart } from './numbering-parts';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

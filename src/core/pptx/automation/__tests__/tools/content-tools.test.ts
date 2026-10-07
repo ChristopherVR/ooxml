@@ -1,8 +1,8 @@
-import type { PptxData } from '../../../index.js';
+import type { PptxData } from '../../../index';
 import { describe, it, expect } from 'vitest';
 
-import { findText, replaceText, manageComments } from '../../tools/content-tools.js';
-import type { ToolContext } from '../../types.js';
+import { findText, replaceText, manageComments } from '../../tools/content-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(): PptxData {
 	return {

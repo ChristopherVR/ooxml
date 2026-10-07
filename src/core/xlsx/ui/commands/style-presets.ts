@@ -8,7 +8,7 @@ import {
 	type Font,
 	type ThemePalette,
 	type Workbook,
-} from '../../index.js';
+} from '../../index';
 
 export interface TableStyleInfo {
 	name: string;

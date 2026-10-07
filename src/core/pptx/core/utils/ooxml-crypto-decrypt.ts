@@ -5,4 +5,4 @@ export {
 	verifyAgileDataIntegrity,
 	verifyAgilePassword,
 	verifyStandardPassword,
-} from '../../../crypto/decrypt.js';
+} from '../../../crypto/decrypt';

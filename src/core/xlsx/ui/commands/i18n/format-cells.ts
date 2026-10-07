@@ -1,5 +1,5 @@
 // Format Cells and Tab Color dialog strings: English -> [fr, de, es, zh-CN].
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const FORMAT_CELLS_STRINGS: Translations = {
 	'Format Cells': [

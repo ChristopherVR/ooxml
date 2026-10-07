@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Word validates property children against their schema sequence; edits must keep that order.
-import { isElement, WORD_NS, type XmlElement } from './xml.js';
+import { isElement, WORD_NS, type XmlElement } from './xml';
 
 /** `CT_RPr` child order (ECMA-376 §17.3.2.28). */
 export const RPR_ORDER = [

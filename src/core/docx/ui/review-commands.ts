@@ -1,13 +1,13 @@
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { dispatchIsolatedCommand } from './command-history.js';
-import { moveName } from './review-schema.js';
-import { trackChangesPluginKey } from './track-changes-mode.js';
-import { formattingRevision, resolveFormattingRange } from './review-formatting.js';
+import { dispatchIsolatedCommand } from './command-history';
+import { moveName } from './review-schema';
+import { trackChangesPluginKey } from './track-changes-mode';
+import { formattingRevision, resolveFormattingRange } from './review-formatting';
 import {
 	paragraphFormattingRevision,
 	resolveParagraphFormatting,
-} from './review-paragraph-formatting.js';
+} from './review-paragraph-formatting';
 
 export interface RevisionRange {
 	id: string;

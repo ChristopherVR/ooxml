@@ -2,12 +2,12 @@
 // Writes edited footnote/endnote text back into word/footnotes.xml and word/endnotes.xml, one
 // note element at a time. Unedited notes and the separator notes stay byte-identical.
 import type JSZip from 'jszip';
-import type { DocumentModel, Note, PendingMediaPart } from './model.js';
-import { allocatorForPart, writeNewRelationships } from './part-relationships.js';
-import type { DocPrIdAllocator } from './docpr-ids.js';
-import { buildXml, children, getW, parseXml } from './xml.js';
-import { applyBlocks } from './write.js';
-import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts.js';
+import type { DocumentModel, Note, PendingMediaPart } from './model';
+import { allocatorForPart, writeNewRelationships } from './part-relationships';
+import type { DocPrIdAllocator } from './docpr-ids';
+import { buildXml, children, getW, parseXml } from './xml';
+import { applyBlocks } from './write';
+import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 const PARTS = {
 	footnote: { part: 'word/footnotes.xml', key: 'footnotes' },

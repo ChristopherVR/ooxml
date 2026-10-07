@@ -1,5 +1,5 @@
 // Pure statistics on number lists, shared by the statistical functions, SUBTOTAL and AGGREGATE.
-import { ERR, fail } from '../values.js';
+import { ERR, fail } from '../values';
 
 export const sum = (values: readonly number[]): number => {
 	let total = 0;

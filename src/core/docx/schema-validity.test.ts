@@ -1,4 +1,4 @@
-import { eighthPoints, halfPoints, signedTwips, twips } from './units.js';
+import { eighthPoints, halfPoints, signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import {
@@ -12,13 +12,13 @@ import {
 	withTocBookmarks,
 	type DocumentModel,
 	type Paragraph,
-} from './index.js';
+} from './index';
 import {
 	packageSchemaErrors,
 	schemaErrors,
 	withoutExtensions,
-} from './test-support/schema-validation.js';
-import { at, expectParagraph, must } from './test-support/access.js';
+} from './test-support/schema-validation';
+import { at, expectParagraph, must } from './test-support/access';
 
 function kitchenSink(): DocumentModel {
 	const model = createDocument();

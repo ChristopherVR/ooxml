@@ -1,9 +1,9 @@
-import { definedProps } from '../defined-props.js';
-import type { LayoutFontSpec, TextMeasurer } from './measure.js';
-import type { LayoutFragment } from './result.js';
-import { appendBreakMarker, tokenizeRun, type BreakToken } from './text-breaks.js';
-import type { LayoutParagraph, LayoutRun } from './input.js';
-import { NO_TWIPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units.js';
+import { definedProps } from '../defined-props';
+import type { LayoutFontSpec, TextMeasurer } from './measure';
+import type { LayoutFragment } from './result';
+import { appendBreakMarker, tokenizeRun, type BreakToken } from './text-breaks';
+import type { LayoutParagraph, LayoutRun } from './input';
+import { NO_TWIPS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units';
 
 /** Word draws superscript and subscript text at about two thirds of the run's size. */
 export const SCRIPT_SCALE = 0.65;

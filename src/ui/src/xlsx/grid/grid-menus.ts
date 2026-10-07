@@ -6,8 +6,8 @@ import {
 	columnHeaderMenu,
 	openContextMenu,
 	rowHeaderMenu,
-} from '../context-menu/index.js';
-import type { GridView } from './grid-view.js';
+} from '../context-menu/index';
+import type { GridView } from './grid-view';
 
 export type MenuKind = 'cell' | 'row' | 'col';
 

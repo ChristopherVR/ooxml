@@ -1,6 +1,6 @@
-import { ERR, fail, type Value } from '../values.js';
-import { int, optNum, spec, str } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail, type Value } from '../values';
+import { int, optNum, spec, str } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Text';
 

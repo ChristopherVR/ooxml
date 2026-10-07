@@ -1,4 +1,4 @@
-import type { EditorTheme } from './types.js';
+import type { EditorTheme } from './types';
 
 /** Every token key; each becomes the kebab-case `--dve-*` custom property. */
 export const THEME_KEYS = [

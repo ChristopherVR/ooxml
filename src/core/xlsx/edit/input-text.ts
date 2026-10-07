@@ -1,11 +1,11 @@
 // The text the formula bar (and the in-cell editor on F2) shows for a cell: what the user would
 // type to recreate it. Moved from xlsx-viewer packages/web-component/src/formula-bar/
 // cell-input-text.ts so find and replace work on the same text the formula bar shows.
-import { getCell } from '../cells.js';
-import type { Cell, Workbook } from '../model.js';
-import { isCellError } from '../model.js';
-import { styleAt } from '../styles.js';
-import { formatValue, isDateFormat, parseCellInput } from './deps.js';
+import { getCell } from '../cells';
+import type { Cell, Workbook } from '../model';
+import { isCellError } from '../model';
+import { styleAt } from '../styles';
+import { formatValue, isDateFormat, parseCellInput } from './deps';
 
 /** Excel shows 15 significant digits in the formula bar. */
 const plainNumber = (value: number): string => String(Number(value.toPrecision(15)));

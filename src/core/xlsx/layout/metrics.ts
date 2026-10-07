@@ -1,13 +1,13 @@
-import { MAX_COL, MAX_ROW } from '../address.js';
-import { usedRange } from '../cells.js';
-import type { Worksheet } from '../model.js';
-import { AxisMetrics } from './axis-metrics.js';
+import { MAX_COL, MAX_ROW } from '../address';
+import { usedRange } from '../cells';
+import type { Worksheet } from '../model';
+import { AxisMetrics } from './axis-metrics';
 import {
 	DEFAULT_MAX_DIGIT_WIDTH,
 	columnWidthToPixels,
 	defaultColumnPixels,
 	pointsToPixels,
-} from './units.js';
+} from './units';
 
 /** Pixel geometry of a sheet's grid at a zoom level (cell area only, no headers). */
 export interface GridMetrics {

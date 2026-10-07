@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calc, E } from './test-helpers.js';
-import { findNearest } from './functions/lookup-core.js';
+import { calc, E } from './test-helpers';
+import { findNearest } from './functions/lookup-core';
 
 // Recorded independently with Excel 16.0 build 20430, 2026-10-07.
 describe('modern approximate lookup ordering', () => {

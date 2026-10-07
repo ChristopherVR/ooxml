@@ -1,4 +1,4 @@
-import { elements, type XmlDocument, type XmlElement } from './xml.js';
+import { elements, type XmlDocument, type XmlElement } from './xml';
 
 export const LIGATURE_VALUES = [
 	'none',

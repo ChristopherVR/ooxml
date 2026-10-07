@@ -1,6 +1,6 @@
 // Strings of the navigation, names and information dialogs (find-replace, go-to, insert-function,
 // name-manager, define-name, create-names, statistics, comments-list, help-dialogs).
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const NAVIGATION_STRINGS: Translations = {
 	OK: ['OK', 'OK', 'Aceptar', '确定'],

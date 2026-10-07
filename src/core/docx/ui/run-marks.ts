@@ -1,7 +1,7 @@
-import type { TextRun } from '../model.js';
+import type { TextRun } from '../model';
 import type { Mark, Schema } from 'prosemirror-model';
-import { expectDefined } from './defined.js';
-import { extraRunProperties } from './run-extra-mark.js';
+import { expectDefined } from './defined';
+import { extraRunProperties } from './run-extra-mark';
 
 /** ProseMirror marks carrying a text run's character formatting, links, fields and revisions. */
 export function marksForRun(run: TextRun, schema: Schema): Mark[] {

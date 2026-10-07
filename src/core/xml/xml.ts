@@ -1,5 +1,5 @@
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { NS } from './namespaces.js';
+import { NS } from './namespaces';
 
 export type XmlDocument = Document;
 export type XmlElement = Element;

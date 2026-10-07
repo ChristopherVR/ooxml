@@ -1,4 +1,4 @@
-import { createDraftStore } from './drafts.js';
+import { createDraftStore } from './drafts';
 
 const context = { channelId: 'channel' };
 const blank = { text: '', files: [], missingFiles: [] };

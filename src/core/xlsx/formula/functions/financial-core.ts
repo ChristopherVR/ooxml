@@ -1,5 +1,5 @@
 // Time-value-of-money formulas shared by the financial functions.
-import { ERR, fail } from '../values.js';
+import { ERR, fail } from '../values';
 
 export function pmt(rate: number, nper: number, pv: number, fv = 0, type = 0): number {
 	if (nper === 0) fail(ERR.NUM);

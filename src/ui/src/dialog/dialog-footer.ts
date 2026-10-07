@@ -1,9 +1,9 @@
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { OfficeElement, controlStyles } from '../base.js';
-import { glyph } from '../glyph.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { glyph } from '../glyph';
+import { definer } from '../registry';
 import css from './dialog-footer.css?raw';
 
 export type OfficeDialogFooterVariant = 'secondary' | 'primary' | 'warning' | 'danger';

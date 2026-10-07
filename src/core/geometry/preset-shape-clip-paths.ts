@@ -6,8 +6,8 @@
  * files (`preset-clip-paths-core` and `preset-clip-paths-extended`)
  * to keep individual file sizes manageable.
  */
-import { CLIP_PATHS_CORE } from './preset-clip-paths-core.js';
-import { CLIP_PATHS_EXTENDED } from './preset-clip-paths-extended.js';
+import { CLIP_PATHS_CORE } from './preset-clip-paths-core';
+import { CLIP_PATHS_EXTENDED } from './preset-clip-paths-extended';
 
 /**
  * Master lookup: lowercase OOXML preset name → CSS `clip-path` value.

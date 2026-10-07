@@ -5,14 +5,14 @@
  * and coordinate resolution.
  */
 
-import type { GeometryGuide, GeometryContext } from './guide-formula-eval.js';
+import type { GeometryGuide, GeometryContext } from './guide-formula-eval';
 import {
 	ANGLE_SCALE,
 	parseFormula,
 	evaluateFormula,
 	resolveOperand,
-} from './guide-formula-eval.js';
-import { at } from './indexed.js';
+} from './guide-formula-eval';
+import { at } from './indexed';
 
 // ---------------------------------------------------------------------------
 // Built-in variables

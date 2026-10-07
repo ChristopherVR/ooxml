@@ -2,7 +2,7 @@ import { Readable } from 'node:stream';
 import { createDeflateRaw } from 'node:zlib';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { readZipParts } from './package.js';
+import { readZipParts } from './package';
 
 /** Raw-deflates `size` zero bytes without ever holding them in memory. */
 async function deflateZeros(size: number): Promise<Buffer> {

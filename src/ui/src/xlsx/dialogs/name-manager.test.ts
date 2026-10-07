@@ -9,8 +9,8 @@ import {
 	pressKey,
 	setValue,
 	tick,
-} from '../commands/test-support.js';
-import { registerNavigationDialogs } from './register-navigation.js';
+} from '../commands/test-support';
+import { registerNavigationDialogs } from './register-navigation';
 
 afterEach(() => (document.body.innerHTML = ''));
 

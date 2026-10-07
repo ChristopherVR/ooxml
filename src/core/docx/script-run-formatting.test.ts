@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { loadDocx, saveDocx, resolveRunFormatting } from './index.js';
-import { parseXml, WORD_NS } from './xml.js';
-import { runHasUnknownProperties } from './write-run-validation.js';
-import { expectParagraph } from './test-support/access.js';
-import { rejectRevision, rejectAllRevisions } from './revision-commands.js';
+import { loadDocx, saveDocx, resolveRunFormatting } from './index';
+import { parseXml, WORD_NS } from './xml';
+import { runHasUnknownProperties } from './write-run-validation';
+import { expectParagraph } from './test-support/access';
+import { rejectRevision, rejectAllRevisions } from './revision-commands';
 
 const properties =
 	'<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Yu Mincho" w:cs="Amiri"/><w:szCs w:val="29"/><w:bCs w:val="0"/><w:iCs/>';

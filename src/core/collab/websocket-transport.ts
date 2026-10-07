@@ -2,8 +2,8 @@
 // The WebSocket constructor is injectable, so it works in browsers, Bun, Node (`ws`) and tests, and
 // the mixed-content check fails fast instead of waiting out a socket the browser will never open.
 // New code written for the collab area; the reconnect policy mirrors y-websocket's.
-import type { Transport, TransportHandlers } from './provider.js';
-import { isMixedContentBlocked } from './validation.js';
+import type { Transport, TransportHandlers } from './provider';
+import { isMixedContentBlocked } from './validation';
 
 /** The structural slice of `WebSocket` this transport uses. */
 export interface WebSocketLike {

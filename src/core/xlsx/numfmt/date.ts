@@ -1,4 +1,4 @@
-import type { Token } from './types.js';
+import type { Token } from './types';
 
 const MS_PER_DAY = 86_400_000;
 const EPOCH_1900 = Date.UTC(1899, 11, 30);

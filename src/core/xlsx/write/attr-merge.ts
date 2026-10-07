@@ -1,5 +1,5 @@
-import type { XmlElement } from '../../xml/index.js';
-import { attrs, escapeAttr, type AttrValue } from './xml-out.js';
+import type { XmlElement } from '../../xml/index';
+import { attrs, escapeAttr, type AttrValue } from './xml-out';
 
 /**
  * The attributes of a regenerated element: every attribute of the source element (unknown ones

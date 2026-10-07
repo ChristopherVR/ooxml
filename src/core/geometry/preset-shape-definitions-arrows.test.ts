@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows.js';
+import { ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows';
 
 const REQUIRED_SHAPES = [
 	// Containers / 3-D primitives

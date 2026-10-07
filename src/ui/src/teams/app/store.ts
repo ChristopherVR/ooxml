@@ -5,7 +5,7 @@
 //   const stop = teams.subscribe(() => render(teams.getState()));
 //   teams.send({ text: 'hello' });
 import { type TeamsClient, type TeamsClientOptions, createTeamsClient } from 'ooxml-core/teams';
-import { safeStorage } from './storage.js';
+import { safeStorage } from './storage';
 
 export {
 	type CallView,

@@ -1,14 +1,14 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { orderChildren, RPR_ORDER } from './element-order.js';
-import type { TextRun } from './model.js';
-import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
-import { setExtendedRunProperties } from './write-run-extra.js';
-import { fractionToThemeByte } from './theme-color.js';
-import { createImageRun } from './write-drawing.js';
-import type { RelationshipAllocator } from './relationship-allocator.js';
-import { writeRunFormatRevision } from './write-revisions.js';
-import { parseRunPropertiesSnapshot } from './restore-run-format.js';
-import { parseDirectRunProperties, runPropertyChanged } from './run-properties.js';
+import { orderChildren, RPR_ORDER } from './element-order';
+import type { TextRun } from './model';
+import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import { setExtendedRunProperties } from './write-run-extra';
+import { fractionToThemeByte } from './theme-color';
+import { createImageRun } from './write-drawing';
+import type { RelationshipAllocator } from './relationship-allocator';
+import { writeRunFormatRevision } from './write-revisions';
+import { parseRunPropertiesSnapshot } from './restore-run-format';
+import { parseDirectRunProperties, runPropertyChanged } from './run-properties';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

@@ -4,10 +4,10 @@
 import { type ConditionalFormat, rangesIntersect } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { describeRule, formatRefs, hasStopIfTrue, parseRefs, previewBox } from './cf-common.js';
-import { type RuleEdit, editRuleDialog } from './cf-rule.js';
-import { el, field, invalid, row, select } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { describeRule, formatRefs, hasStopIfTrue, parseRefs, previewBox } from './cf-common';
+import { type RuleEdit, editRuleDialog } from './cf-rule';
+import { el, field, invalid, row, select } from './fields';
+import { button, showDialog } from './frame';
 
 /** Flattens a sheet's formats into one entry per rule, sorted by priority. */
 export function stageRules(formats: ConditionalFormat[]): RuleEdit[] {

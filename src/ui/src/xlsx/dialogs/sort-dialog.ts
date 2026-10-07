@@ -3,8 +3,8 @@
 import { type CellRange, columnLabel, getCell } from 'ooxml-core/xlsx';
 import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, el, row, select } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { checkbox, el, row, select } from './fields';
+import { button, showDialog } from './frame';
 
 export interface SortKeySpec {
 	col: number;

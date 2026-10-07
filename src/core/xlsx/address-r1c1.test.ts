@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_COL, MAX_ROW } from './address.js';
-import { parseR1C1Range } from './address-r1c1.js';
+import { MAX_COL, MAX_ROW } from './address';
+import { parseR1C1Range } from './address-r1c1';
 
 describe('parseR1C1Range', () => {
 	it('normalizes relative cell ranges and case', () => {

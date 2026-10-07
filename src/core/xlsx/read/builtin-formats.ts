@@ -1,6 +1,6 @@
 // Built-in number formats as the package reader and writer need them: thin wrappers over the
 // number-format module's table so there is a single list.
-import { BUILTIN_NUMBER_FORMATS, builtinFormatId } from '../numfmt/builtins.js';
+import { BUILTIN_NUMBER_FORMATS, builtinFormatId } from '../numfmt/builtins';
 
 /** The built-in number formats by id (en-US forms); the numfmt module's table. */
 export const BUILTIN_FORMATS: Readonly<Record<number, string>> = BUILTIN_NUMBER_FORMATS;

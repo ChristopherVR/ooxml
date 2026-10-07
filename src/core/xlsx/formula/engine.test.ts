@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { deleteCell, getCell, putCell } from '../cells.js';
-import { CIRCULAR_REFERENCE_WARNING } from './engine.js';
-import { isSpilledCell, spillAnchorOf } from './spill.js';
-import { book, E, engine, get, grid, locate, set } from './test-helpers.js';
+import { deleteCell, getCell, putCell } from '../cells';
+import { CIRCULAR_REFERENCE_WARNING } from './engine';
+import { isSpilledCell, spillAnchorOf } from './spill';
+import { book, E, engine, get, grid, locate, set } from './test-helpers';
 
 const at = (wb: Parameters<typeof locate>[0], key: string) => locate(wb, key);
 

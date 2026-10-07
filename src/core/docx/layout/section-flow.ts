@@ -1,14 +1,14 @@
-import { PageCursor } from './page-cursor.js';
-import { placeParagraph } from './flow-paragraph.js';
-import { placeTable } from './flow-table.js';
-import { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout.js';
-import { layoutRow, stackParagraphs } from './table-layout.js';
-import { suppressesSpacing } from './keep-rules.js';
-import type { TextMeasurer } from './measure.js';
-import type { LayoutBlock, LayoutSection } from './input.js';
-import type { LayoutPageBox } from './result.js';
-import { lineBoxesFor, type Exclusion } from './wrap.js';
-import { expectDefined } from '../expect-defined.js';
+import { PageCursor } from './page-cursor';
+import { placeParagraph } from './flow-paragraph';
+import { placeTable } from './flow-table';
+import { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout';
+import { layoutRow, stackParagraphs } from './table-layout';
+import { suppressesSpacing } from './keep-rules';
+import type { TextMeasurer } from './measure';
+import type { LayoutBlock, LayoutSection } from './input';
+import type { LayoutPageBox } from './result';
+import { lineBoxesFor, type Exclusion } from './wrap';
+import { expectDefined } from '../expect-defined';
 
 export class SectionFlow {
 	readonly cursor: PageCursor;

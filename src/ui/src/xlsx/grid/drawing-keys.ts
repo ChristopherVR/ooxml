@@ -1,7 +1,7 @@
 // Keyboard for a selected picture or chart (the grid's focus sink receives the keys): Delete,
 // Escape and arrow-key nudging.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import type { DrawingLayer } from './drawings.js';
+import type { DrawingLayer } from './drawings';
 
 const NUDGE: Record<string, [number, number]> = {
 	ArrowUp: [0, -1],

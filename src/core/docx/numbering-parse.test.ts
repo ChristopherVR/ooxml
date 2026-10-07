@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseNumberingCatalog, resolveNumberingLevel } from './numbering-parse.js';
-import { at, must } from './test-support/access.js';
+import { parseNumberingCatalog, resolveNumberingLevel } from './numbering-parse';
+import { at, must } from './test-support/access';
 
 const WORD_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
 

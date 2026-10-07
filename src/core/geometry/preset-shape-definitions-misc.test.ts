@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-misc.js';
+import { MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-misc';
 
 const REQUIRED_SHAPES = [
 	// Stars

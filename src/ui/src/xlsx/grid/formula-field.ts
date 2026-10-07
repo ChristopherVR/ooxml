@@ -2,7 +2,7 @@
 // formula bar. A transparent <textarea> (which owns the caret, IME and native undo) sits over a
 // backdrop that paints the same text with coloured reference spans.
 import { coloredReferences, isFormulaText, type ColoredReference } from 'ooxml-core/xlsx';
-import { h } from './dom.js';
+import { h } from './dom';
 
 export interface FormulaField {
 	readonly root: HTMLElement;

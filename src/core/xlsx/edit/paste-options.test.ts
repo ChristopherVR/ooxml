@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { parseRange } from '../address.js';
-import { styleAt } from '../styles.js';
-import { createWorkbook } from '../workbook.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { resolvePasteOptions } from './paste-options.js';
-import { createEditSession } from './session.js';
-import type { PasteOptions } from './types.js';
+import { getCell } from '../cells';
+import { parseRange } from '../address';
+import { styleAt } from '../styles';
+import { createWorkbook } from '../workbook';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { resolvePasteOptions } from './paste-options';
+import { createEditSession } from './session';
+import type { PasteOptions } from './types';
 
 interface NativeCell {
 	value: unknown;

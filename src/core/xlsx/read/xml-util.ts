@@ -1,4 +1,4 @@
-import { NS, children, elements, first, type XmlElement } from '../../xml/index.js';
+import { NS, children, elements, first, type XmlElement } from '../../xml/index';
 import { XMLSerializer } from '@xmldom/xmldom';
 
 type XmldomNode = Parameters<InstanceType<typeof XMLSerializer>['serializeToString']>[0];

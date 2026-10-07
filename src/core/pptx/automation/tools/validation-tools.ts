@@ -1,5 +1,5 @@
-import { validatePptx, repairPptx } from '../../index.js';
-import type { ValidationResult, RepairResult } from '../../index.js';
+import { validatePptx, repairPptx } from '../../index';
+import type { ValidationResult, RepairResult } from '../../index';
 
 // ── validatePresentation ─────────────────────────────────────────────────────
 

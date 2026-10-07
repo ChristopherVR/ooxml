@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, type Paragraph } from './index.js';
-import { at } from './test-support/access.js';
+import { loadDocx, type Paragraph } from './index';
+import { at } from './test-support/access';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const NS = `xmlns:w="${W}" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`;

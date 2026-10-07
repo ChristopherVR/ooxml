@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_STYLES, miniPackage, roundTrip, ws } from './mini-package-fixtures.js';
+import { DEFAULT_STYLES, miniPackage, roundTrip, ws } from './mini-package-fixtures';
 
 // The review's t1: A1 typed as '123 in Excel (text format, quotePrefix), B1 a pivot button.
 const STYLES = DEFAULT_STYLES.replace(

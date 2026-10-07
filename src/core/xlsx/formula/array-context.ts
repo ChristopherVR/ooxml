@@ -1,10 +1,10 @@
 // Static check for formulas whose result depends on dynamic-array evaluation, so a writer can
 // store them as dynamic arrays and a pre-dynamic-array reader does not reduce them by implicit
 // intersection.
-import { FormulaError, type FormulaAst } from './ast.js';
-import { getFunction } from './functions/registry.js';
-import { paramKind } from './functions/types.js';
-import { parseFormula } from './parser.js';
+import { FormulaError, type FormulaAst } from './ast';
+import { getFunction } from './functions/registry';
+import { paramKind } from './functions/types';
+import { parseFormula } from './parser';
 
 /** Functions that evaluate their arguments as arrays even in pre-dynamic-array Excel. */
 const NATIVE_ARRAY = new Set(['SUMPRODUCT', 'MMULT', 'TRANSPOSE', 'LOOKUP', 'INDEX', 'MATCH']);

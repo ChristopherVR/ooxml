@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { createDocument, createListDefinition, twips } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
+import { createDocument, createListDefinition, twips } from '../index';
+import { adaptDocumentModel } from './adapter';
 
 it('formats the Print Layout marker run from the level, not the paragraph text', () => {
 	const model = createDocument();

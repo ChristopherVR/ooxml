@@ -1,4 +1,4 @@
-import type { WordUnderlineStyle } from './theme-model.js';
+import type { WordUnderlineStyle } from './theme-model';
 
 /** WordprocessingML `ST_Underline` tokens, including `none` for clearing. */
 export const WORD_UNDERLINE_TOKENS = [

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { at } from './indexed.js';
+import { at } from './indexed';
 import {
 	svgPathToPolygons,
 	polygonsToSvgPath,
@@ -16,7 +16,7 @@ import {
 	unionSvgPaths,
 	intersectSvgPaths,
 	subtractSvgPaths,
-} from './shape-boolean.js';
+} from './shape-boolean';
 
 // ---------------------------------------------------------------------------
 // Helper: simple rectangle SVG path from bounds

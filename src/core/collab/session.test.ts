@@ -1,10 +1,10 @@
 import * as Y from 'yjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyUpdateSafe } from './codec.js';
-import { adaptYjsProvider } from './external-provider.js';
-import { createMemoryHub } from './memory-transport.js';
-import { createCollabSession, type CollabSession } from './session.js';
-import { transportProvider } from './transport-provider.js';
+import { applyUpdateSafe } from './codec';
+import { adaptYjsProvider } from './external-provider';
+import { createMemoryHub } from './memory-transport';
+import { createCollabSession, type CollabSession } from './session';
+import { transportProvider } from './transport-provider';
 
 interface Cursor {
 	page: number;

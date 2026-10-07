@@ -1,11 +1,11 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, type Value } from '../values.js';
-import { chiCdf, normCdf, tCdf } from './dist-core.js';
-import { fCdf } from './distributions-f.js';
-import { collectNumbers, int, num, spec } from './helpers.js';
-import { pairedNumbers } from './statistical-more.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, type Value } from '../values';
+import { chiCdf, normCdf, tCdf } from './dist-core';
+import { fCdf } from './distributions-f';
+import { collectNumbers, int, num, spec } from './helpers';
+import { pairedNumbers } from './statistical-more';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Statistical';
 const ARRAYS = ['any'] as const;

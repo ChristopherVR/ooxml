@@ -1,6 +1,6 @@
 // Values follow Microsoft's CONVERT examples and the unit definitions they cite.
 import { describe, expect, it } from 'vitest';
-import { calc, E } from '../test-helpers.js';
+import { calc, E } from '../test-helpers';
 
 const close = (formula: string, expected: number, digits = 6) =>
 	expect(calc(formula) as number).toBeCloseTo(expected, digits);

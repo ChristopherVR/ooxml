@@ -1,10 +1,10 @@
-import { formatAddress, formatRange } from '../address.js';
-import { isCellError, type Cell, type RowInfo, type Worksheet } from '../model.js';
-import { isSpilledCell } from '../formula/spill.js';
-import { addFuturePrefixes } from '../read/formula-text.js';
-import { SpillPlan } from './dynamic-array.js';
-import type { SharedStringTable } from './shared-strings.js';
-import { attrs, encodeEscapes, escapeText, num } from './xml-out.js';
+import { formatAddress, formatRange } from '../address';
+import { isCellError, type Cell, type RowInfo, type Worksheet } from '../model';
+import { isSpilledCell } from '../formula/spill';
+import { addFuturePrefixes } from '../read/formula-text';
+import { SpillPlan } from './dynamic-array';
+import type { SharedStringTable } from './shared-strings';
+import { attrs, encodeEscapes, escapeText, num } from './xml-out';
 
 /** Excel's longest cell text. */
 const MAX_CELL_TEXT = 32_767;

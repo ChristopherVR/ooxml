@@ -1,7 +1,7 @@
 import { LitElement, html, unsafeCSS, type PropertyValues } from 'lit';
 import type { ChannelTab, TeamsClient } from 'ooxml-core/teams';
-import type { FileEmbeds, SaveFileCopy } from './content-preview.js';
-import type { OpenFileDetail } from './teams-app.js';
+import type { FileEmbeds, SaveFileCopy } from './content-preview';
+import type { OpenFileDetail } from './teams-app';
 import css from './channel-tab.css?raw';
 
 /** Resolves shared tab references to local, short-lived preview URLs. */

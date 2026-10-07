@@ -3,8 +3,8 @@
 import { type CellAddress, formatAddress, getCell, parseAddress } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, el, field, fieldset, row, select, text, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { checkbox, el, field, fieldset, row, select, text, textInput } from './fields';
+import { showDialog } from './frame';
 
 export interface SplitOptions {
 	delimiters: string[];

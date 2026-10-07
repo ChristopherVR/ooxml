@@ -1,12 +1,12 @@
-import { OFFICE_TOKENS, TOUCH } from './tokens.js';
+import { OFFICE_TOKENS, TOUCH } from './tokens';
 
 export {
 	shadcnBridge,
 	themeBridge,
 	type ShadcnBridgeOptions,
 	type ThemeBridgeMap,
-} from './theme-bridge.js';
-export { COMPACT, FOCUS_RING, OFFICE_TOKENS, tok, TOUCH, type OfficeToken } from './tokens.js';
+} from './theme-bridge';
+export { COMPACT, FOCUS_RING, OFFICE_TOKENS, tok, TOUCH, type OfficeToken } from './tokens';
 
 /**
  * Theme-token foundation. Custom properties cross shadow boundaries, so one `<style>` in the

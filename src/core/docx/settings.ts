@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { onOffElement } from './simple-types.js';
+import { onOffElement } from './simple-types';
 import type JSZip from 'jszip';
-import { buildXml, children, makeW, parseXml, type XmlElement, WORD_NS } from './xml.js';
-import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts.js';
+import { buildXml, children, makeW, parseXml, type XmlElement, WORD_NS } from './xml';
+import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 const SETTINGS_PATH = 'word/settings.xml';
 const SETTINGS_CONTENT_TYPE =

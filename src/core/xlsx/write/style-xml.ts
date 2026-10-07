@@ -1,5 +1,5 @@
-import type { Alignment, Border, Color, Fill, Font, Protection } from '../model.js';
-import { attrs, el, escapeAttr } from './xml-out.js';
+import type { Alignment, Border, Color, Fill, Font, Protection } from '../model';
+import { attrs, el, escapeAttr } from './xml-out';
 
 /** `RRGGBB` becomes `FFRRGGBB`; SpreadsheetML colours are ARGB. */
 const argb = (rgb: string): string => (rgb.length === 6 ? `FF${rgb}` : rgb).toUpperCase();

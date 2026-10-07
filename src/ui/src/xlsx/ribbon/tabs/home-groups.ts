@@ -7,7 +7,7 @@ import {
 	QUICK_RULES,
 	cellStyleGalleryItems,
 	tableStyleGalleryItems,
-} from '../../commands/styles.js';
+} from '../../commands/styles';
 import { AUTOSUM_FUNCTIONS } from 'ooxml-core/xlsx/ui';
 
 export const sep: RibbonMenuItem = { separator: true };

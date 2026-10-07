@@ -1,12 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { RunFormatting } from './run-style-model.js';
-import type { TextRun } from './model.js';
+import type { RunFormatting } from './run-style-model';
+import type { TextRun } from './model';
 import {
 	isStHighlightColor,
 	isStThemeColor,
 	isStVerticalAlignRun,
-} from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
+} from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
 import {
 	onOffElement,
 	parseHalfPoints,
@@ -15,10 +15,10 @@ import {
 	parseSignedHalfPoints,
 	parseTextScale,
 	parseTintShade,
-} from './simple-types.js';
-import { first, getW, type XmlElement } from './xml.js';
-import { isWordUnderlineStyle } from './underline.js';
-import { parseLigatures } from './ligatures.js';
+} from './simple-types';
+import { first, getW, type XmlElement } from './xml';
+import { isWordUnderlineStyle } from './underline';
+import { parseLigatures } from './ligatures';
 
 /** Parsed snapshots allocate fresh objects; compare values before rewriting opaque XML. */
 export function runPropertyChanged(

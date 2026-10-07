@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createOfficeGuid } from './uuid.js';
+import { createOfficeGuid } from './uuid';
 const GUID_RE = /^\{[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}\}$/;
 
 describe('createOfficeGuid', () => {

@@ -7,10 +7,10 @@
  * Every construct `omml-to-mathml.ts` renders has a spelling here; anything
  * else degrades to its text content (never to an empty string).
  */
-import { stripXmlOrderSuffix } from './omml-node.js';
+import { stripXmlOrderSuffix } from './omml-node';
 
-import { ACCENT_ALIASES, FUNC_NAMES, REVERSE_ACCENT } from './latex-omml-symbols.js';
-import type { XmlRecord } from './omml-to-latex-helpers.js';
+import { ACCENT_ALIASES, FUNC_NAMES, REVERSE_ACCENT } from './latex-omml-symbols';
+import type { XmlRecord } from './omml-to-latex-helpers';
 import {
 	attrVal,
 	childNode,
@@ -23,14 +23,14 @@ import {
 	isSingleAtom,
 	readRunText,
 	soleChild,
-} from './omml-to-latex-helpers.js';
-import type { LatexEmitter } from './omml-to-latex-layout.js';
+} from './omml-to-latex-helpers';
+import type { LatexEmitter } from './omml-to-latex-layout';
 import {
 	delimiterToLatex,
 	eqArrToLatex,
 	matrixToLatex,
 	naryToLatex,
-} from './omml-to-latex-layout.js';
+} from './omml-to-latex-layout';
 
 function childrenToLatex(node: XmlRecord | undefined): string {
 	if (!node || typeof node !== 'object') {

@@ -1,7 +1,7 @@
 // Row and column headers of one pane (frozen or scrolling part), keyed by index and recycled.
 // Headers of selected rows/columns are highlighted ('part'), fully selected ones darker ('full').
 import { columnLabel, type GridMetrics } from 'ooxml-core/xlsx';
-import { h } from './dom.js';
+import { h } from './dom';
 
 export type HeaderAxis = 'row' | 'col';
 export type HeaderState = 'none' | 'part' | 'full';

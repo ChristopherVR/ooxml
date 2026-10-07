@@ -1,11 +1,11 @@
 // COUNT, COUNTA, COUNTBLANK, COUNTIF and COUNTIFS.
-import { parseNumberText } from '../text-number.js';
-import { RefValue, type Value } from '../values.js';
-import type { CallContext } from '../context.js';
-import { criteriaPairs, liftCriteria, matchingCells } from './criteria.js';
-import { collectNumbers, makeCriteria, scalar, spec } from './helpers.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+import { parseNumberText } from '../text-number';
+import { RefValue, type Value } from '../values';
+import type { CallContext } from '../context';
+import { criteriaPairs, liftCriteria, matchingCells } from './criteria';
+import { collectNumbers, makeCriteria, scalar, spec } from './helpers';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Statistical';
 

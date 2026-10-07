@@ -1,6 +1,6 @@
 import { html } from 'lit';
-import { OfficeElement, flag, valueOn } from '../base.js';
-import { present } from '../registry.js';
+import { OfficeElement, flag, valueOn } from '../base';
+import { present } from '../registry';
 
 /**
  * Shared implementation of the two-state controls (checkbox, switch). `checked`, `disabled` and

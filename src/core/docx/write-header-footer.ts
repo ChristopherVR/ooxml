@@ -8,16 +8,16 @@ import type {
 	HeaderFooterSlots,
 	PendingMediaPart,
 	SectionProperties,
-} from './model.js';
+} from './model';
 import {
 	allocatorForPart,
 	relationshipsPartFor,
 	writeNewRelationships,
-} from './part-relationships.js';
-import type { DocPrIdAllocator } from './docpr-ids.js';
-import { buildXml, parseXml } from './xml.js';
-import { applyBlocks } from './write.js';
-import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts.js';
+} from './part-relationships';
+import type { DocPrIdAllocator } from './docpr-ids';
+import { buildXml, parseXml } from './xml';
+import { applyBlocks } from './write';
+import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 type Kind = 'headers' | 'footers';
 const KINDS: Kind[] = ['headers', 'footers'];

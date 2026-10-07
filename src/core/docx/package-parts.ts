@@ -9,7 +9,7 @@ export {
 	parseRelationships,
 	type ContentTypes,
 	type Relationship,
-} from '../opc/index.js';
+} from '../opc/index';
 
 /** Resolves a relationship target that is relative to `word/` (the only base part this codec writes into). */
 export function resolveInternalTarget(target: string): string {

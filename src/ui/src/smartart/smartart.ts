@@ -1,17 +1,17 @@
 import { html, type PropertyValues } from 'lit';
 import type { DiagramDrawing } from 'ooxml-core/diagram';
-import { OfficeElement, controlStyles } from '../base.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { definer } from '../registry';
 import {
 	renderDiagramDrawing,
 	type SchemeColors,
 	type SchemeFonts,
 	type SmartArtRenderReport,
-} from './smartart-svg.js';
+} from './smartart-svg';
 import css from './smartart.css?raw';
 
-export type { SchemeColors, SchemeFonts, SmartArtRenderReport } from './smartart-svg.js';
-export { renderDiagramDrawing } from './smartart-svg.js';
+export type { SchemeColors, SchemeFonts, SmartArtRenderReport } from './smartart-svg';
+export { renderDiagramDrawing } from './smartart-svg';
 export type OfficeSmartArtRenderEvent = CustomEvent<SmartArtRenderReport>;
 
 /**

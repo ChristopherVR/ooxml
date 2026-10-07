@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Paragraph } from './model.js';
-import type { RunFormatting } from './run-style-model.js';
-import type { ThemeColorReference, ThemeColorToken } from './theme-model.js';
-import type { StBorder, StVerticalJc } from './generated/wml-simple-types.js';
-import type { EighthPoints, SignedTwips, Twips } from './units.js';
+import type { Paragraph } from './model';
+import type { RunFormatting } from './run-style-model';
+import type { ThemeColorReference, ThemeColorToken } from './theme-model';
+import type { StBorder, StVerticalJc } from './generated/wml-simple-types';
+import type { EighthPoints, SignedTwips, Twips } from './units';
 
 export interface TableBorderSide {
 	style?: StBorder;

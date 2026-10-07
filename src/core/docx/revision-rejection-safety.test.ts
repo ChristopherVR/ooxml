@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createDocument, type Paragraph, type Revision } from './model.js';
-import { acceptAllRevisions, rejectAllRevisions } from './revision-commands.js';
+import { createDocument, type Paragraph, type Revision } from './model';
+import { acceptAllRevisions, rejectAllRevisions } from './revision-commands';
 
 const wordNamespace = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

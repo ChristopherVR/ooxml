@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, DocumentModel, Paragraph } from './model.js';
-import { restoreRunFormatting } from './restore-run-format.js';
-import { restoreParagraphFormatting } from './restore-paragraph-format.js';
-import { documentBlockLists } from './document-paragraphs.js';
+import type { Block, DocumentModel, Paragraph } from './model';
+import { restoreRunFormatting } from './restore-run-format';
+import { restoreParagraphFormatting } from './restore-paragraph-format';
+import { documentBlockLists } from './document-paragraphs';
 
 export interface RevisionEntry {
 	id: string;

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	getPresetConnectionSites,
 	lookupPresetConnectionSites,
-} from './preset-connection-sites-table.js';
+} from './preset-connection-sites-table';
 
 describe('getPresetConnectionSites', () => {
 	it('returns undefined for a preset whose ECMA cxnLst genuinely has no entries (straightConnector1: connectors attach by endpoint, not cxnLst)', () => {

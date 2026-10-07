@@ -4,7 +4,7 @@ import type {
 	TableLook,
 	TableStyleCatalog,
 	TableStyleConditionalFormatting,
-} from './table-model.js';
+} from './table-model';
 
 function styleChain(styleId: string | undefined, catalog: TableStyleCatalog | undefined) {
 	if (!styleId || !catalog) return [];

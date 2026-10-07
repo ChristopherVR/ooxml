@@ -1,6 +1,6 @@
-import { type CellValue, cellError, isErrorCode } from '../model.js';
-import { parseDateTimeInput } from './input-date.js';
-import type { FormatOptions } from './types.js';
+import { type CellValue, cellError, isErrorCode } from '../model';
+import { parseDateTimeInput } from './input-date';
+import type { FormatOptions } from './types';
 
 /** What typing `text` into a cell produces. */
 export interface ParsedInput {

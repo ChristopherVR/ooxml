@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { ANGLE_SCALE } from '../../../geometry/guide-formula-eval.js';
+import { ANGLE_SCALE } from '../../../geometry/guide-formula-eval';
 import { evaluateGeometryPaths, ooxmlArcToSvg } from './guide-formula-paths';
 
 // ---------------------------------------------------------------------------

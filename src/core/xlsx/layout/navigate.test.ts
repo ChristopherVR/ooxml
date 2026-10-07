@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_COL, MAX_ROW } from '../address.js';
-import { putCell } from '../cells.js';
-import type { Worksheet } from '../model.js';
-import { createWorksheet } from '../workbook.js';
-import { navigate } from './navigate.js';
+import { MAX_COL, MAX_ROW } from '../address';
+import { putCell } from '../cells';
+import type { Worksheet } from '../model';
+import { createWorksheet } from '../workbook';
+import { navigate } from './navigate';
 
 /** Column A: rows 2-4 filled, row 7, rows 10-11. Row 0 col B..D filled. */
 function sheet(): Worksheet {

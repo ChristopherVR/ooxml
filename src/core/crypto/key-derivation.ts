@@ -14,7 +14,7 @@ import {
 	hash,
 	uint32LE,
 } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
-import { digestFunction } from '../digest/digest.js';
+import { digestFunction } from '../digest/digest';
 
 /** Well-known block keys for agile encryption as defined in [MS-OFFCRYPTO]. */
 export const BLOCK_KEYS = {

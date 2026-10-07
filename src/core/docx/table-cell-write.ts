@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Serializes cell (`w:tcPr`) and row (`w:trPr`) properties for tables the editor creates, so
 // nothing the model records about a new table is silently dropped.
-import type { TableCell } from './model.js';
-import type { TableRowProperties } from './table-model.js';
-import { fractionToThemeByte } from './theme-color.js';
-import { buildBorders, buildMargins } from './table-defaults.js';
-import { makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { TableCell } from './model';
+import type { TableRowProperties } from './table-model';
+import { fractionToThemeByte } from './theme-color';
+import { buildBorders, buildMargins } from './table-defaults';
+import { makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 const setW = (element: XmlElement, name: string, value: string): void =>
 	element.setAttributeNS(WORD_NS, `w:${name}`, value);

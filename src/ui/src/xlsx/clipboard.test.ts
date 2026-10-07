@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { getCell, parseRange } from 'ooxml-core/xlsx';
-import { createGridClipboard } from './clipboard.js';
-import { createTestContext } from './grid/test-context.js';
+import { createGridClipboard } from './clipboard';
+import { createTestContext } from './grid/test-context';
 
 const range = (ref: string) => {
 	const result = parseRange(ref);

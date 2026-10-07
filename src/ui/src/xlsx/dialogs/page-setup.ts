@@ -2,9 +2,9 @@
 import type { PageSetup, PrintOptions } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { tabs } from './fields.js';
-import { showDialog } from './frame.js';
-import { headerTab, marginsTab, pageTab, sheetTab } from './page-setup-tabs.js';
+import { tabs } from './fields';
+import { showDialog } from './frame';
+import { headerTab, marginsTab, pageTab, sheetTab } from './page-setup-tabs';
 
 export interface PageSetupProps {
 	tab?: 'page' | 'margins' | 'header' | 'sheet';

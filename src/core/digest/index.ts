@@ -5,15 +5,15 @@ export {
 	normalizeDigestAlgorithmName,
 	type DigestAlgorithmName,
 	type SupportedDigestName,
-} from './algorithm-names.js';
-export { decodeBase64, encodeBase64 } from './base64.js';
-export { digestFunction, digestSync, type DigestFunction } from './digest.js';
+} from './algorithm-names';
+export { decodeBase64, encodeBase64 } from './base64';
+export { digestFunction, digestSync, type DigestFunction } from './digest';
 export {
 	MAX_SPIN_COUNT,
 	hashPassword,
 	verifyPasswordHash,
 	type PasswordHash,
-} from './password-hash.js';
-export { sha1 } from './sha1.js';
-export { sha256 } from './sha256.js';
-export { sha384, sha512 } from './sha512.js';
+} from './password-hash';
+export { sha1 } from './sha1';
+export { sha256 } from './sha256';
+export { sha384, sha512 } from './sha512';

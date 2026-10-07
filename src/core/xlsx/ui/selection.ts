@@ -10,8 +10,8 @@ import {
 	type CellRange,
 	type Workbook,
 	type Worksheet,
-} from '../index.js';
-import type { Selection, SelectionModel } from './context.js';
+} from '../index';
+import type { Selection, SelectionModel } from './context';
 
 const A1: CellAddress = { row: 0, col: 0 };
 const cellRange = (at: CellAddress): CellRange => ({ start: { ...at }, end: { ...at } });

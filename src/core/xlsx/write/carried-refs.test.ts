@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SourceIndex } from '../read/package.js';
-import { createWorkbook } from '../workbook.js';
+import { SourceIndex } from '../read/package';
+import { createWorkbook } from '../workbook';
 import {
 	type CarriedRefEdits,
 	carriedRefEdits,
@@ -8,8 +8,8 @@ import {
 	patchCarriedPart,
 	patchCarriedParts,
 	workbookRefEdits,
-} from './carried-refs.js';
-import { PackageWriter } from './package-writer.js';
+} from './carried-refs';
+import { PackageWriter } from './package-writer';
 
 const none: CarriedRefEdits = { shifts: [], deleted: [], renamed: [] };
 const insertRows = (sheet: string, at: number, count: number): CarriedRefEdits => ({

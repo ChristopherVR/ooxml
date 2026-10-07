@@ -1,6 +1,6 @@
-import { createGridMetrics, createWorksheet } from '../../index.js';
+import { createGridMetrics, createWorksheet } from '../../index';
 import { describe, expect, it } from 'vitest';
-import { GridGeometry, rowHeaderWidth, scrollToReveal } from './geometry.js';
+import { GridGeometry, rowHeaderWidth, scrollToReveal } from './geometry';
 
 const metrics = () => createGridMetrics(createWorksheet('S', 1), { zoom: 100 });
 

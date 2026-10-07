@@ -1,4 +1,4 @@
-import type { PptxData } from '../../../index.js';
+import type { PptxData } from '../../../index';
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -10,8 +10,8 @@ import {
 	updateSlideProperties,
 	setSlideTransition,
 	setCanvasSize,
-} from '../../tools/slide-tools.js';
-import type { ToolContext } from '../../types.js';
+} from '../../tools/slide-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(slideCount = 3): PptxData {
 	return {

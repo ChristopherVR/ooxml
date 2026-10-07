@@ -1,5 +1,5 @@
-import type { TextRun } from '../index.js';
-import { extraRunProperties } from './run-extra-mark.js';
+import type { TextRun } from '../index';
+import { extraRunProperties } from './run-extra-mark';
 
 export const sameJson = (left: unknown, right: unknown): boolean =>
 	JSON.stringify(left ?? null) === JSON.stringify(right ?? null);

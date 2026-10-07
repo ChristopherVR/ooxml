@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { EMU_PER_PIXEL } from '../../units/constants.js';
-import type { DrawingAnchor } from '../model.js';
-import { createWorksheet } from '../workbook.js';
+import { EMU_PER_PIXEL } from '../../units/constants';
+import type { DrawingAnchor } from '../model';
+import { createWorksheet } from '../workbook';
 import {
 	DEFAULT_ANCHOR_EXTENT_EMU,
 	anchorKind,
@@ -9,8 +9,8 @@ import {
 	pictureAnchorAt,
 	pixelBoxToAnchor,
 	pixelSizeToExtent,
-} from './anchors.js';
-import { createGridMetrics } from './metrics.js';
+} from './anchors';
+import { createGridMetrics } from './metrics';
 
 const E = EMU_PER_PIXEL;
 const at = (row: number, col: number, rowPx = 0, colPx = 0) => ({

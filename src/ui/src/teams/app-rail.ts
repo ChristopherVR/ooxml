@@ -1,7 +1,7 @@
 import { html } from 'lit';
-import { definer } from '../registry.js';
-import { TeamsElement, withStyles } from './base.js';
-import { icon } from './icons.js';
+import { definer } from '../registry';
+import { TeamsElement, withStyles } from './base';
+import { icon } from './icons';
 import css from './app-rail.css?raw';
 
 export interface RailItem {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeSpreadsheetText } from './text-decode.js';
+import { decodeSpreadsheetText } from './text-decode';
 
 describe('decodeSpreadsheetText', () => {
 	it('decodes valid UTF-8 and strips a UTF-8 byte-order mark', () => {

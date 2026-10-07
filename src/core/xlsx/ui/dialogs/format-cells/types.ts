@@ -1,7 +1,7 @@
 // Shared shapes of the Format Cells tabs.
-import type { CellStyle, CellValue, DifferentialStyle, StylePatch } from '../../../index.js';
-import type { Target } from '../../commands/util.js';
-import type { EditorContext } from '../../context.js';
+import type { CellStyle, CellValue, DifferentialStyle, StylePatch } from '../../../index';
+import type { Target } from '../../commands/util';
+import type { EditorContext } from '../../context';
 
 export type FormatTabId = 'number' | 'alignment' | 'font' | 'border' | 'fill' | 'protection';
 

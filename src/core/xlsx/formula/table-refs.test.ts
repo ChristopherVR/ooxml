@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renameTableInFormula } from './table-refs.js';
+import { renameTableInFormula } from './table-refs';
 
 describe('renameTableInFormula', () => {
 	it('renames structured references and bare table names', () => {

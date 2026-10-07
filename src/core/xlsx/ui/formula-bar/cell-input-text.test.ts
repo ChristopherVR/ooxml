@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createWorkbook, internStyle, putCell, styleAt, cellError } from '../../index.js';
-import { cellInputText } from '../../index.js';
+import { createWorkbook, internStyle, putCell, styleAt, cellError } from '../../index';
+import { cellInputText } from '../../index';
 
 const setup = () => {
 	const wb = createWorkbook();

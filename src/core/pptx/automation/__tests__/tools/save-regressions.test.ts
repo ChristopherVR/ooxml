@@ -1,12 +1,12 @@
 import JSZip from 'jszip';
-import { createLayout, hasTextProperties, PptxHandler } from '../../../index.js';
+import { createLayout, hasTextProperties, PptxHandler } from '../../../index';
 import { describe, expect, it } from 'vitest';
 
-import { replaceText } from '../../tools/content-tools.js';
-import { updateElement } from '../../tools/element-tools.js';
-import { applyLayout } from '../../tools/layout-tools.js';
-import { addSlide } from '../../tools/slide-tools.js';
-import { createTestPptxBytes } from '../helpers/create-test-pptx.js';
+import { replaceText } from '../../tools/content-tools';
+import { updateElement } from '../../tools/element-tools';
+import { applyLayout } from '../../tools/layout-tools';
+import { addSlide } from '../../tools/slide-tools';
+import { createTestPptxBytes } from '../helpers/create-test-pptx';
 
 async function bulletDeck() {
 	const zip = await JSZip.loadAsync(await createTestPptxBytes(1));

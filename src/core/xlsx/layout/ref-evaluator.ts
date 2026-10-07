@@ -1,10 +1,10 @@
 // Resolves reference text (chart series, list sources) to the values it covers.
-import { type CellRange, normalizeRange } from '../address.js';
-import { getValue, usedRange } from '../cells.js';
-import { type CalcEngine, type Token, tokenize } from '../formula/index.js';
-import type { CellValue, Workbook } from '../model.js';
-import { sheetByName } from '../workbook.js';
-import type { EvaluateRef } from './chart-view.js';
+import { type CellRange, normalizeRange } from '../address';
+import { getValue, usedRange } from '../cells';
+import { type CalcEngine, type Token, tokenize } from '../formula/index';
+import type { CellValue, Workbook } from '../model';
+import { sheetByName } from '../workbook';
+import type { EvaluateRef } from './chart-view';
 
 /** Largest number of cells a direct read returns (whole columns are clipped to the used area). */
 const MAX_CELLS = 1_000_000;

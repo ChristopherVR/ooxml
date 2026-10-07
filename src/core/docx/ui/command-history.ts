@@ -1,6 +1,6 @@
 import { closeHistory } from 'prosemirror-history';
 import type { EditorState, Transaction } from 'prosemirror-state';
-import { wordYjsPluginKey } from './yjs-collaboration.js';
+import { wordYjsPluginKey } from './yjs-collaboration';
 
 /** Keep one explicit command separate from surrounding typing in both history modes. */
 export function dispatchIsolatedCommand(

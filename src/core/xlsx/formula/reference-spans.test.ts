@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_COL, MAX_ROW } from '../address.js';
-import { referenceSpans } from './transform.js';
+import { MAX_COL, MAX_ROW } from '../address';
+import { referenceSpans } from './transform';
 
 describe('referenceSpans', () => {
 	it('gives offsets of cell, area and qualified references', () => {

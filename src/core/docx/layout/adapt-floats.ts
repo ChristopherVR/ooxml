@@ -1,5 +1,5 @@
-import type { Paragraph } from '../index.js';
-import type { LayoutFloat } from './input.js';
+import type { Paragraph } from '../index';
+import type { LayoutFloat } from './input';
 
 /** Floating pictures anchored in a paragraph, with their `wp:positionH`/`wp:positionV` placement. */
 export function paragraphFloats(paragraph: Paragraph): LayoutFloat[] {

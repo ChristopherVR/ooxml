@@ -1,4 +1,4 @@
-import { dateToSerial } from '../numfmt/date.js';
+import { dateToSerial } from '../numfmt/date';
 
 const DAY_MS = 86_400_000;
 const EPOCH_1900 = Date.UTC(1899, 11, 30);

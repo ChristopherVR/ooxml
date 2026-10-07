@@ -10,11 +10,11 @@ import {
 	isStTabTlc,
 	isStUnderline,
 	isStVerticalAlignRun,
-} from './generated/wml-simple-types.js';
-import type { Paragraph, Revision, TabStop, TextRun } from './model.js';
-import type { ThemeColorReference } from './theme-model.js';
-import { Checker } from './validate-issues.js';
-import { isLigatures } from './ligatures.js';
+} from './generated/wml-simple-types';
+import type { Paragraph, Revision, TabStop, TextRun } from './model';
+import type { ThemeColorReference } from './theme-model';
+import { Checker } from './validate-issues';
+import { isLigatures } from './ligatures';
 
 const isFraction = (value: unknown): boolean =>
 	typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;

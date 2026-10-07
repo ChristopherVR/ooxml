@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { ParagraphStyleCatalog, TextRun } from './model.js';
-import type { RunFormatting, RunStyleCatalog } from './run-style-model.js';
+import type { ParagraphStyleCatalog, TextRun } from './model';
+import type { RunFormatting, RunStyleCatalog } from './run-style-model';
 
 /**
  * Word "toggle" run properties (ECMA-376 17.7.3): each level in the formatting

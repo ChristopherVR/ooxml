@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { decryptOoxmlPackage } from '../../crypto/index.js';
-import { createDocument, saveDocx } from '../index.js';
-import { detectDocumentFormat, loadDocument } from './detect.js';
-import { IncorrectPasswordError, PasswordRequiredError, encryptOoxmlPackage } from './index.js';
-import { LegacyDocError, loadLegacyDoc } from './legacy-doc.js';
+import { decryptOoxmlPackage } from '../../crypto/index';
+import { createDocument, saveDocx } from '../index';
+import { detectDocumentFormat, loadDocument } from './detect';
+import { IncorrectPasswordError, PasswordRequiredError, encryptOoxmlPackage } from './index';
+import { LegacyDocError, loadLegacyDoc } from './legacy-doc';
 
 // word-encrypted.docx: saved by Word 16 with the password to open 'open sesame'
 // (generate-word-encrypted.ps1).

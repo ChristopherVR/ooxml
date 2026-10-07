@@ -1,11 +1,11 @@
 // CSV (RFC 4180) reading and writing for the workbook model: quoted fields with doubled quotes,
 // embedded line breaks, CRLF/LF/CR line endings, a leading byte-order mark and delimiter
 // detection between comma, semicolon and tab.
-import { usedRange } from '../cells.js';
-import type { Cell, Workbook } from '../model.js';
-import { formatValue, parseCellInput, type ParsedInput } from '../numfmt/index.js';
-import { styleAt, internStyle } from '../styles.js';
-import { createWorkbook } from '../workbook.js';
+import { usedRange } from '../cells';
+import type { Cell, Workbook } from '../model';
+import { formatValue, parseCellInput, type ParsedInput } from '../numfmt/index';
+import { styleAt, internStyle } from '../styles';
+import { createWorkbook } from '../workbook';
 
 export interface CsvOptions {
 	/** Field delimiter; detected from the text when omitted. */

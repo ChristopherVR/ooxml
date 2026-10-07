@@ -1,7 +1,7 @@
-import { cartesianSvg } from './chart-svg-cartesian.js';
-import { pieSvg, radarSvg } from './chart-svg-radial.js';
-import { esc, fit, n, rect, text, textWidth, type Rect } from './chart-svg-util.js';
-import type { ChartViewModel } from './chart-view.js';
+import { cartesianSvg } from './chart-svg-cartesian';
+import { pieSvg, radarSvg } from './chart-svg-radial';
+import { esc, fit, n, rect, text, textWidth, type Rect } from './chart-svg-util';
+import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes, chartGradientPaint } from './chart-svg-appearance';
 
 const FONT_FAMILY = 'Calibri, Carlito, Arial, sans-serif';

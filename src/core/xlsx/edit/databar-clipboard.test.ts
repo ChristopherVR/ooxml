@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { elements, NS, parseXml, type XmlElement } from '../../xml/index.js';
-import { formatRange, parseRange } from '../address.js';
-import type { Worksheet } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { createCalcEngine } from '../formula/index.js';
-import { createConditionalFormatEvaluator } from '../layout/cf-evaluator.js';
-import { createEditSession } from './session.js';
+import { elements, NS, parseXml, type XmlElement } from '../../xml/index';
+import { formatRange, parseRange } from '../address';
+import type { Worksheet } from '../model';
+import { createWorkbook } from '../workbook';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { createCalcEngine } from '../formula/index';
+import { createConditionalFormatEvaluator } from '../layout/cf-evaluator';
+import { createEditSession } from './session';
 
 interface NativeCase {
 	variant: number;

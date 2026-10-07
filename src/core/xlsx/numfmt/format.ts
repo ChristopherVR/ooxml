@@ -1,10 +1,10 @@
-import { type CellValue, isCellError } from '../model.js';
-import { chooseSection, type CompiledSection, compileFormat } from './compile.js';
-import { isElapsedOnly, renderDate, renderElapsedOnly } from './date.js';
-import { renderFraction } from './fraction.js';
-import { formatGeneral } from './general.js';
-import { renderNumber } from './number.js';
-import type { FormatOptions, FormattedValue, Token } from './types.js';
+import { type CellValue, isCellError } from '../model';
+import { chooseSection, type CompiledSection, compileFormat } from './compile';
+import { isElapsedOnly, renderDate, renderElapsedOnly } from './date';
+import { renderFraction } from './fraction';
+import { formatGeneral } from './general';
+import { renderNumber } from './number';
+import type { FormatOptions, FormattedValue, Token } from './types';
 
 /** What Excel shows when a value does not fit its format (negative date, no matching section). */
 export const OVERFLOW_TEXT = '########';

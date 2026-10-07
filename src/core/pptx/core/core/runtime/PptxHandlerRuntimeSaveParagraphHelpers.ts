@@ -1,4 +1,4 @@
-import { EMU_PER_PIXEL } from '../../../../units/index.js';
+import { EMU_PER_PIXEL } from '../../../../units/index';
 import { themeColorRefToSolidFillWithOpacity } from '../../color/theme-color-ref';
 import { XmlObject, TextStyle } from '../../types';
 import type { BulletInfo } from '../../types';

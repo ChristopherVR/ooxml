@@ -1,9 +1,9 @@
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
 import { describe, expect, it, vi } from 'vitest';
 import { autoSumRange, fillSource } from 'ooxml-core/xlsx/ui';
-import { allCommands } from './index.js';
+import { allCommands } from './index';
 import { findSpecial } from 'ooxml-core/xlsx/ui';
-import { createTestContext } from './test-support.js';
+import { createTestContext } from './test-support';
 import { target } from 'ooxml-core/xlsx/ui';
 
 function setup(sheets = ['Sheet1']) {

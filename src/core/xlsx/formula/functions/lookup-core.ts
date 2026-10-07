@@ -1,8 +1,8 @@
 // Vector access and search shared by MATCH, XMATCH, VLOOKUP, HLOOKUP, LOOKUP and XLOOKUP.
-import { compareScalars } from '../coerce.js';
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values.js';
-import { hasWildcards, wildcardRegex } from './helpers.js';
+import { compareScalars } from '../coerce';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values';
+import { hasWildcards, wildcardRegex } from './helpers';
 
 /** A lazily read row or column of values. */
 export interface Vector {

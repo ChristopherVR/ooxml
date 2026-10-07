@@ -1,7 +1,7 @@
-import { hslToRgb, rgbToHsl } from '../../color/index.js';
-import type { ThemePalette } from '../model.js';
-import { themeColor } from './colors.js';
-import { parseHex, toHexColor } from './tint.js';
+import { hslToRgb, rgbToHsl } from '../../color/index';
+import type { ThemePalette } from '../model';
+import { themeColor } from './colors';
+import { parseHex, toHexColor } from './tint';
 import {
 	chartPaletteSeriesColor,
 	findChartColorPalette,

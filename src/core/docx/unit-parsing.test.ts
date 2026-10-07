@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type Paragraph, type Table } from './index.js';
-import { at, must } from './test-support/access.js';
+import { loadDocx, type Paragraph, type Table } from './index';
+import { at, must } from './test-support/access';
 
 const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
 async function load(body: string) {

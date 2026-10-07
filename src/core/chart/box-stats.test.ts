@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeBoxStats, groupRowsByCategory } from './box-stats.js';
+import { computeBoxStats, groupRowsByCategory } from './box-stats';
 
 describe('category observation grouping', () => {
 	it('keeps first appearance order and groups noncontiguous and empty category labels', () => {

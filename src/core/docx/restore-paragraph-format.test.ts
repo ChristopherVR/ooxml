@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { rejectRevision } from './revision-commands.js';
-import { restoreParagraphFormatting } from './restore-paragraph-format.js';
-import { expectParagraph } from './test-support/access.js';
-import type { Paragraph } from './model.js';
-import { twips } from './units.js';
+import { loadDocx } from './parse';
+import { rejectRevision } from './revision-commands';
+import { restoreParagraphFormatting } from './restore-paragraph-format';
+import { expectParagraph } from './test-support/access';
+import type { Paragraph } from './model';
+import { twips } from './units';
 
 describe('complete paragraph formatting restoration', () => {
 	it('retains opaque properties, text, bookmarks and paragraph-mark history while restoring formatting', async () => {

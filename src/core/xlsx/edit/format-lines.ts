@@ -3,9 +3,9 @@
 // (or a row over styled columns) must create the cells where the two meet, or B3 would show only
 // one of the two formats. Checked by saving from Excel: with row 3 filled yellow, bolding
 // column B writes `<c r="B3" s=".."/>` with bold and yellow.
-import { type CellRange, MAX_COL } from '../address.js';
-import { getCell, putCell } from '../cells.js';
-import type { Worksheet } from '../model.js';
+import { type CellRange, MAX_COL } from '../address';
+import { getCell, putCell } from '../cells';
+import type { Worksheet } from '../model';
 
 type Patcher = (id: number | undefined) => number;
 

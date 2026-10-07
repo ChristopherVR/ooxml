@@ -1,12 +1,12 @@
-import type { Workbook, Worksheet } from '../model.js';
-import { cellView } from './cell-view.js';
-import type { FontView } from './types.js';
+import type { Workbook, Worksheet } from '../model';
+import { cellView } from './cell-view';
+import type { FontView } from './types';
 import {
 	COLUMN_PADDING_PX,
 	DEFAULT_MAX_DIGIT_WIDTH,
 	defaultColumnPixels,
 	pixelsToColumnWidth,
-} from './units.js';
+} from './units';
 
 /** Measures `text` in `font`, in CSS pixels at 100% zoom (injected: canvas, DOM or a font table). */
 export type MeasureText = (text: string, font: FontView) => number;

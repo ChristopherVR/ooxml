@@ -1,5 +1,5 @@
-import type { LayoutDocumentInput, LayoutFloat } from './input.js';
-import type { LayoutColumnBox, LayoutFloatBox, LayoutPageBox } from './result.js';
+import type { LayoutDocumentInput, LayoutFloat } from './input';
+import type { LayoutColumnBox, LayoutFloatBox, LayoutPageBox } from './result';
 
 export const FLOAT_WRAP_NOTE =
 	'Text wraps around floating pictures on their largest side (square, tight and through wrapping use the picture’s rectangle, not its outline); lines continuing onto a later page keep their wrapped widths.';

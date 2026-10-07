@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { dateParts } from './date.js';
-import { dateToSerial, serialToDate } from './index.js';
+import { dateParts } from './date';
+import { dateToSerial, serialToDate } from './index';
 
 const utc = (y: number, m: number, d: number, h = 0, min = 0): Date =>
 	new Date(Date.UTC(y, m - 1, d, h, min));

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
-import { createCollaborationIdGenerator } from './collaboration-identity.js';
-import { reviewMarks } from './review-schema.js';
-import { collectRevisionRanges } from './review-commands.js';
-import { REMOTE_TRANSACTION_META, trackChangesPlugin } from './track-changes-mode.js';
+import { createCollaborationIdGenerator } from './collaboration-identity';
+import { reviewMarks } from './review-schema';
+import { collectRevisionRanges } from './review-commands';
+import { REMOTE_TRANSACTION_META, trackChangesPlugin } from './track-changes-mode';
 
 const schema = new Schema({
 	nodes: { doc: { content: 'paragraph+' }, paragraph: { content: 'text*' }, text: {} },

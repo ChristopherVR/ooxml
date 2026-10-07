@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit';
-import { definer } from '../registry.js';
-import { TeamsElement, dayLabel, formatSize, formatTime, withStyles } from './base.js';
-import { icon } from './icons.js';
+import { definer } from '../registry';
+import { TeamsElement, dayLabel, formatSize, formatTime, withStyles } from './base';
+import { icon } from './icons';
 import css from './chat-list.css?raw';
 
 export interface ChatAttachment {

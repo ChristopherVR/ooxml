@@ -1,8 +1,8 @@
-import { toText } from '../coerce.js';
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, type Scalar, type Value } from '../values.js';
-import { num, scalar, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { toText } from '../coerce';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, type Scalar, type Value } from '../values';
+import { num, scalar, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Engineering';
 

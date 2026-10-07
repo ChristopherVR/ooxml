@@ -7,8 +7,8 @@
 
 import type { XmlObject } from '../types';
 import { orderedPathCommandEntries } from './custom-geometry-command-order';
-import { resolveCoordinate } from '../../../geometry/guide-formula-api.js';
-import { angleToRadians } from '../../../geometry/guide-formula-eval.js';
+import { resolveCoordinate } from '../../../geometry/guide-formula-api';
+import { angleToRadians } from '../../../geometry/guide-formula-eval';
 
 // ---------------------------------------------------------------------------
 // Public API

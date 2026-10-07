@@ -1,10 +1,10 @@
 // Applying a named cell style (Home > Cell Styles) to ranges.
-import { type CellRange, normalizeRange } from '../address.js';
-import { applyBuiltinStyle, type BuiltinCellStyle, builtinCellStyle } from '../cell-styles.js';
-import type { CellStyle, Workbook } from '../model.js';
-import { internStyle, styleAt } from '../styles.js';
-import { type EditContext, sheetAt } from './context.js';
-import { formatScopes, patchRangeWith } from './format.js';
+import { type CellRange, normalizeRange } from '../address';
+import { applyBuiltinStyle, type BuiltinCellStyle, builtinCellStyle } from '../cell-styles';
+import type { CellStyle, Workbook } from '../model';
+import { internStyle, styleAt } from '../styles';
+import { type EditContext, sheetAt } from './context';
+import { formatScopes, patchRangeWith } from './format';
 
 /** The named style entry, added to `workbook.namedStyles` from the catalogue when missing. */
 function ensureNamedStyle(workbook: Workbook, name: string): Workbook['namedStyles'][number] {

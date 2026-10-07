@@ -1,5 +1,5 @@
-import type { FormulaNode } from './graph.js';
-import { stronglyConnected } from './scc.js';
+import type { FormulaNode } from './graph';
+import { stronglyConnected } from './scc';
 
 /** A validated dependency order; formula results are still evaluated on every pass. */
 export interface FormulaOrder {

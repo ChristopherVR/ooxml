@@ -11,7 +11,7 @@ import {
 	parseXml,
 	relAttr,
 	textContent,
-} from './index.js';
+} from './index';
 
 const DOC = `<w:document xmlns:w="${NS.w}" xmlns:r="${NS.r}"><w:body><w:p w:rsidR="1"><w:r><w:t>Hi</w:t></w:r></w:p><w:p/><x:other xmlns:x="urn:x"/></w:body></w:document>`;
 

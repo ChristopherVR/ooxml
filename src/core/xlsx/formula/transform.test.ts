@@ -4,7 +4,7 @@ import {
 	renameSheetInFormula,
 	shiftFormula,
 	translateFormula,
-} from './transform.js';
+} from './transform';
 
 describe('translateFormula', () => {
 	it.each([

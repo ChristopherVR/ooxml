@@ -1,11 +1,11 @@
-import { columnLabel, MAX_COL, MAX_ROW, quoteSheetName } from '../../address.js';
-import { parseR1C1Range } from '../../address-r1c1.js';
-import type { CallContext } from '../context.js';
-import { sheetIndex } from '../references.js';
-import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values.js';
-import { bool, int, optNum, spec, str } from './helpers.js';
-import { shape } from './lookup-core.js';
-import type { FunctionSpec } from './types.js';
+import { columnLabel, MAX_COL, MAX_ROW, quoteSheetName } from '../../address';
+import { parseR1C1Range } from '../../address-r1c1';
+import type { CallContext } from '../context';
+import { sheetIndex } from '../references';
+import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values';
+import { bool, int, optNum, spec, str } from './helpers';
+import { shape } from './lookup-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Lookup & Reference';
 

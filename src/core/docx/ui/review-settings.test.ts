@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { history, undo } from 'prosemirror-history';
-import { toggleTrackChanges } from './review-settings.js';
+import { toggleTrackChanges } from './review-settings';
 
 describe('document-wide review recording', () => {
 	it('toggles through a document attribute step and supports undo', () => {

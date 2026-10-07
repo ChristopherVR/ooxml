@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type CellRange, rangesIntersect } from '../address.js';
-import { AreaIndex } from './area-index.js';
+import { type CellRange, rangesIntersect } from '../address';
+import { AreaIndex } from './area-index';
 
 const range = (row: number, col: number, endRow = row, endCol = col): CellRange => ({
 	start: { row, col },

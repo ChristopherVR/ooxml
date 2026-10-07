@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, Note, Paragraph } from './model.js';
-import { children, getW, parseXml, type XmlElement } from './xml.js';
+import type { Block, Note, Paragraph } from './model';
+import { children, getW, parseXml, type XmlElement } from './xml';
 
 const skippedTypes = new Set(['separator', 'continuationSeparator']);
 

@@ -5,11 +5,11 @@ import {
 	createGridMetrics,
 	internStyle,
 	defaultCellStyle,
-} from '../../index.js';
+} from '../../index';
 import { describe, expect, it } from 'vitest';
-import { buildItems } from './cell-items.js';
-import { cssFont, edgeCss, fillPaint, hashes, patternImage } from './cell-paint.js';
-import { iconSvg } from './icon-sets.js';
+import { buildItems } from './cell-items';
+import { cssFont, edgeCss, fillPaint, hashes, patternImage } from './cell-paint';
+import { iconSvg } from './icon-sets';
 
 describe('cell paint', () => {
 	it('builds font shorthands with fallbacks and zoom', () => {

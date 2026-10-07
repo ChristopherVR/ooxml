@@ -1,8 +1,8 @@
 import { html, type PropertyValues, type TemplateResult } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { defineDialog } from './dialog.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { defineDialog } from './dialog';
+import { definer, present } from '../registry';
 import css from './options-dialog.css?raw';
 
 /**

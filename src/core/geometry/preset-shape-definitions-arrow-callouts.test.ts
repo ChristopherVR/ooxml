@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { ARROW_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-arrow-callouts.js';
+import { ARROW_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-arrow-callouts';
 
 const REQUIRED_SHAPES = [
 	'leftArrowCallout',

@@ -7,16 +7,16 @@ export {
 	type SheetPrefix,
 	type StructuredRef,
 	type StructuredSpecial,
-} from './ast.js';
-export { parseFormula } from './parser.js';
-export { tokenize, type Token, type TokenKind } from './tokenizer.js';
+} from './ast';
+export { parseFormula } from './parser';
+export { tokenize, type Token, type TokenKind } from './tokenizer';
 export {
 	CIRCULAR_REFERENCE_WARNING,
 	createCalcEngine,
 	type CalcEngine,
 	type CalcEngineOptions,
 	type CellPosition,
-} from './engine.js';
+} from './engine';
 export {
 	formatRefSpec,
 	referencedRanges,
@@ -26,13 +26,13 @@ export {
 	shiftFormula,
 	translateFormula,
 	type ShiftSpec,
-} from './transform.js';
-export { FUNCTION_CATALOG } from './functions/registry.js';
-export type { FunctionInfo } from './functions/types.js';
-export { isSpilledCell, spillAnchorOf, type SpilledCell } from './spill.js';
-export { numberToText, parseNumberText } from './text-number.js';
-export { deleteSheetInFormula, moveReferencesInFormula, type MoveSpec } from './move.js';
-export { renameTableInFormula } from './table-refs.js';
-export { structuredToA1, type StructuredTarget } from './structured-to-a1.js';
-export { needsArrayEvaluation } from './array-context.js';
-export * from './editor-text.js';
+} from './transform';
+export { FUNCTION_CATALOG } from './functions/registry';
+export type { FunctionInfo } from './functions/types';
+export { isSpilledCell, spillAnchorOf, type SpilledCell } from './spill';
+export { numberToText, parseNumberText } from './text-number';
+export { deleteSheetInFormula, moveReferencesInFormula, type MoveSpec } from './move';
+export { renameTableInFormula } from './table-refs';
+export { structuredToA1, type StructuredTarget } from './structured-to-a1';
+export { needsArrayEvaluation } from './array-context';
+export * from './editor-text';

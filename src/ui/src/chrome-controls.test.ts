@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { OFFICE_TOAST_VISIBLE_LIMIT, type OfficeToast } from './controls.js';
-import { registerOfficeUi } from './index.js';
+import { OFFICE_TOAST_VISIBLE_LIMIT, type OfficeToast } from './controls';
+import { registerOfficeUi } from './index';
 
 // Adapted from pptx-viewer's control-primitives and chrome-controls tests (the elements moved here).
 beforeAll(() => registerOfficeUi());

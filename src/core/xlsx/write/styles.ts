@@ -1,10 +1,10 @@
-import { NS, parseXml } from '../../xml/index.js';
-import type { CellStyle, DifferentialStyle, Workbook } from '../model.js';
-import { styleKey } from '../styles.js';
-import { defaultCellStyle } from '../workbook.js';
-import { builtinFormatIdOf } from '../read/builtin-formats.js';
-import { parseStyles } from '../read/styles.js';
-import { att, numAttr, outerXml, xChildren, xFirst } from '../read/xml-util.js';
+import { NS, parseXml } from '../../xml/index';
+import type { CellStyle, DifferentialStyle, Workbook } from '../model';
+import { styleKey } from '../styles';
+import { defaultCellStyle } from '../workbook';
+import { builtinFormatIdOf } from '../read/builtin-formats';
+import { parseStyles } from '../read/styles';
+import { att, numAttr, outerXml, xChildren, xFirst } from '../read/xml-util';
 import {
 	alignmentXml,
 	borderXml,
@@ -12,8 +12,8 @@ import {
 	fontXml,
 	numFmtXml,
 	protectionXml,
-} from './style-xml.js';
-import { XML_HEADER, el, inlineFragment } from './xml-out.js';
+} from './style-xml';
+import { XML_HEADER, el, inlineFragment } from './xml-out';
 
 /** What a save keeps from the source `styles.xml` so carried parts keep valid references. */
 interface SourceStyles {

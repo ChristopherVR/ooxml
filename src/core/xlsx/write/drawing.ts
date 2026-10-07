@@ -1,13 +1,13 @@
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import { NS, buildXml, first, parseXml } from '../../xml/index.js';
-import type { ChartObject, DrawingAnchor, DrawingObject, ImageObject } from '../model.js';
-import { CONTENT_TYPES } from '../read/package.js';
-import { chartXml } from './chart.js';
-import { patchChartPart } from './chart-patch.js';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import { NS, buildXml, first, parseXml } from '../../xml/index';
+import type { ChartObject, DrawingAnchor, DrawingObject, ImageObject } from '../model';
+import { CONTENT_TYPES } from '../read/package';
+import { chartXml } from './chart';
+import { patchChartPart } from './chart-patch';
 import { readChartPaletteId } from '../read/chart-colors';
 import { writeChartColorStyle } from './chart-colors';
-import { RelationshipSet, type PackageWriter } from './package-writer.js';
-import { XML_HEADER, escapeAttr } from './xml-out.js';
+import { RelationshipSet, type PackageWriter } from './package-writer';
+import { XML_HEADER, escapeAttr } from './xml-out';
 
 /** A relationship target from `fromPart` to `toPart` (both package part names). */
 export function relativeTarget(fromPart: string, toPart: string): string {

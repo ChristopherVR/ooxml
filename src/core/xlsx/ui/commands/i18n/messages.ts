@@ -1,6 +1,6 @@
 // Command messages, number format presets, cell and table style names, the one-field dialogs and
 // the core's validation messages the commands surface.
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const MESSAGE_STRINGS: Translations = {
 	OK: ['OK', 'OK', 'Aceptar', '确定'],

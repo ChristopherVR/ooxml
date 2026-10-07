@@ -11,16 +11,16 @@ import {
 	hmac,
 	uint32LE,
 } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
-import { aesEcbDecrypt } from './aes-ecb.js';
-import { DataIntegrityError } from './errors.js';
+import { aesEcbDecrypt } from './aes-ecb';
+import { DataIntegrityError } from './errors';
 import {
 	BLOCK_KEYS,
 	computeAgileKeyBase,
 	deriveAgileKeyFromBase,
 	deriveStandardKey,
 	generateIV,
-} from './key-derivation.js';
-import type { EncryptionInfo, StandardEncryptionInfo } from './types.js';
+} from './key-derivation';
+import type { EncryptionInfo, StandardEncryptionInfo } from './types';
 
 // ---------------------------------------------------------------------------
 // Agile Password Verification

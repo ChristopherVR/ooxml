@@ -1,5 +1,5 @@
-import { toNumber } from '../coerce.js';
-import type { CallContext } from '../context.js';
+import { toNumber } from '../coerce';
+import type { CallContext } from '../context';
 import {
 	ERR,
 	ErrorSignal,
@@ -9,11 +9,11 @@ import {
 	RefValue,
 	type Scalar,
 	type Value,
-} from '../values.js';
-import { criteriaPairs, liftCriteria, matchingValues } from './criteria.js';
-import { collectNumbers, int, spec } from './helpers.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+} from '../values';
+import { criteriaPairs, liftCriteria, matchingValues } from './criteria';
+import { collectNumbers, int, spec } from './helpers';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Math & Trig';
 

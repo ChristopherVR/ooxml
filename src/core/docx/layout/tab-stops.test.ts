@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { DocumentModel } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import type { LayoutParagraph } from './input.js';
-import type { TextMeasurer } from './measure.js';
-import { layoutParagraph } from './paragraph-layout.js';
-import { placeTab } from './tab-stops.js';
-import { at } from './test-helpers.js';
+import type { DocumentModel } from '../index';
+import { adaptDocumentModel } from './adapter';
+import type { LayoutParagraph } from './input';
+import type { TextMeasurer } from './measure';
+import { layoutParagraph } from './paragraph-layout';
+import { placeTab } from './tab-stops';
+import { at } from './test-helpers';
 
 // 10px per character, 20px lines.
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };

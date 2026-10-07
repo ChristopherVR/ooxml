@@ -10,7 +10,7 @@ export {
 	type LoadWorkbookOptions,
 	type SaveWorkbookOptions,
 	type WorkbookFormat,
-} from './detect.js';
+} from './detect';
 export {
 	DataIntegrityError,
 	IncorrectPasswordError,
@@ -19,9 +19,9 @@ export {
 	isOoxmlCryptoError,
 	type OoxmlCryptoErrorCode,
 	type UnsupportedWorkbookErrorCode,
-} from './errors.js';
-export { isEncryptedOoxmlPackage, type EncryptionOptions } from '../../crypto/index.js';
-export { LegacyXlsError, loadLegacyXls, type LegacyXlsErrorCode } from './legacy-xls.js';
+} from './errors';
+export { isEncryptedOoxmlPackage, type EncryptionOptions } from '../../crypto/index';
+export { LegacyXlsError, loadLegacyXls, type LegacyXlsErrorCode } from './legacy-xls';
 export {
 	csvToWorkbook,
 	detectDelimiter,
@@ -32,5 +32,5 @@ export {
 	type CsvOptions,
 	type CsvWorkbookOptions,
 	type CsvWriteOptions,
-} from './csv.js';
-export { decodeSpreadsheetText } from './text-decode.js';
+} from './csv';
+export { decodeSpreadsheetText } from './text-decode';

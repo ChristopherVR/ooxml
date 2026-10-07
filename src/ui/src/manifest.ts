@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
-import { OFFICE_UI_TAGS } from './index.js';
+import { OFFICE_UI_TAGS } from './index';
 
 /**
  * Builds the Custom Elements Manifest of this package, the machine-readable list of every element,

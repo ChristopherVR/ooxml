@@ -1,9 +1,9 @@
 // Rewriting structured (table) references as A1 references, as "Convert to Range" does.
-import { columnLabel, quoteSheetName } from '../address.js';
-import type { Table } from '../model.js';
-import { FormulaError, type StructuredRef } from './ast.js';
-import { parseStructured } from './structured.js';
-import { joinTokens, type Token, tokenize } from './tokenizer.js';
+import { columnLabel, quoteSheetName } from '../address';
+import type { Table } from '../model';
+import { FormulaError, type StructuredRef } from './ast';
+import { parseStructured } from './structured';
+import { joinTokens, type Token, tokenize } from './tokenizer';
 
 export interface StructuredTarget {
 	table: Table;

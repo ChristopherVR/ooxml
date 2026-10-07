@@ -1,8 +1,8 @@
-import { signedTwips, twips } from '../units/units.js';
-import type { DocumentModel } from './model.js';
-import { pageSizeOf } from './page-size.js';
-import { withSection } from './section-edit.js';
-import type { SectionProperties } from './section-model.js';
+import { signedTwips, twips } from '../units/units';
+import type { DocumentModel } from './model';
+import { pageSizeOf } from './page-size';
+import { withSection } from './section-edit';
+import type { SectionProperties } from './section-model';
 
 const TWIPS_PER_INCH = 1440;
 

@@ -1,8 +1,8 @@
-import { fontMetrics, type LayoutFontSpec, type TextMeasurer } from './measure.js';
-import type { BreakToken } from './text-breaks.js';
-import type { LayoutParagraph } from './input.js';
-import { DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units.js';
-import { fontOf, type PlacedToken } from './paragraph-tokens.js';
+import { fontMetrics, type LayoutFontSpec, type TextMeasurer } from './measure';
+import type { BreakToken } from './text-breaks';
+import type { LayoutParagraph } from './input';
+import { DEFAULT_FONT_SIZE_PT, ptToPx, twipsToPx } from './units';
+import { fontOf, type PlacedToken } from './paragraph-tokens';
 
 /** How far superscript text is raised and subscript lowered, as a share of the run's size. */
 const SUPER_RAISE = 0.33;

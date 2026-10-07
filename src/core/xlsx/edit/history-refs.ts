@@ -1,10 +1,10 @@
 // Undo snapshots for edits that rewrite references across the workbook (row and column shifts,
 // moves). Instead of copying every cell they record the sheet metadata, the defined names and
 // only the cell formulas that changed, plus the cells a shift destroyed or created.
-import type { CellRange } from '../address.js';
-import { getCell, putCell } from '../cells.js';
-import type { Cell, DefinedName, Workbook, Worksheet } from '../model.js';
-import { type AxisShift, shiftIndex } from './range-math.js';
+import type { CellRange } from '../address';
+import { getCell, putCell } from '../cells';
+import type { Cell, DefinedName, Workbook, Worksheet } from '../model';
+import { type AxisShift, shiftIndex } from './range-math';
 
 /** Limits a shift to the cells between `lo` and `hi` on the other axis. */
 export interface ShiftBand {

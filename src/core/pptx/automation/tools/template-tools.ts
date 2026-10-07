@@ -1,7 +1,7 @@
-import { applyTemplate, findPlaceholders } from '../../index.js';
-import type { TemplateData } from '../../index.js';
+import { applyTemplate, findPlaceholders } from '../../index';
+import type { TemplateData } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── findPlaceholdersT ────────────────────────────────────────────────────────
 

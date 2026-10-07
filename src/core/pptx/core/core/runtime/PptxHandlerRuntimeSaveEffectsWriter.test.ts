@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { clampUnitInterval } from '../../../../color/color-primitives.js';
+import { clampUnitInterval } from '../../../../color/color-primitives';
 import type { XmlObject, ShapeStyle } from '../../types';
 import { PptxShapeEffectXmlBuilder } from '../builders/PptxShapeEffectXmlBuilder';
 import { PptxShapeStyleExtractor } from '../builders/PptxShapeStyleExtractor';

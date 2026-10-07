@@ -3,8 +3,8 @@
 import { getCell } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el, field, select, text } from './fields.js';
-import { showDialog } from './frame.js';
+import { el, field, select, text } from './fields';
+import { showDialog } from './frame';
 
 const range = (from: number, to: number, skip: number[] = []): string[] => {
 	const out: string[] = [];

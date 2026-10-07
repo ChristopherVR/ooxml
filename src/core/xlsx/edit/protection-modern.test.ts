@@ -1,6 +1,6 @@
-import { NS, parseXml, type XmlElement } from '../../xml/index.js';
-import { readProtection } from '../read/sheet-props.js';
-import { modernPasswordHash, verifySheetPassword, verifySheetPasswordAsync } from './protection.js';
+import { NS, parseXml, type XmlElement } from '../../xml/index';
+import { readProtection } from '../read/sheet-props';
+import { modernPasswordHash, verifySheetPassword, verifySheetPasswordAsync } from './protection';
 
 // Written by Excel 16 for `Worksheet.Protect('open sesame')`: the modern hash only, no legacy one.
 const EXCEL_XML =

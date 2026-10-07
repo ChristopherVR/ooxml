@@ -8,9 +8,9 @@ import {
 	type CellAddress,
 	type CellRange,
 	type Worksheet,
-} from '../../index.js';
-import type { Selection } from '../context.js';
-import { isWholeCols, isWholeRows } from '../selection.js';
+} from '../../index';
+import type { Selection } from '../context';
+import { isWholeCols, isWholeRows } from '../selection';
 
 export const cellRange = (at: CellAddress): CellRange => ({ start: { ...at }, end: { ...at } });
 
@@ -29,7 +29,7 @@ export const ALL_RANGE: CellRange = {
 };
 
 // One A1 formatter for the whole editor (events, getSelection, announcements): see selection.ts.
-export { isWholeCols, isWholeRows, rangeRef, selectionRef } from '../selection.js';
+export { isWholeCols, isWholeRows, rangeRef, selectionRef } from '../selection';
 
 export const isSingleCell = (range: CellRange): boolean =>
 	range.start.row === range.end.row && range.start.col === range.end.col;

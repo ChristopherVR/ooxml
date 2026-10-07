@@ -8,8 +8,8 @@ import {
 	parseTheme,
 	resolveThemeColorReference,
 	resolveThemeColorToken,
-} from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+} from './index';
+import { at, expectParagraph } from './test-support/access';
 
 const a = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';

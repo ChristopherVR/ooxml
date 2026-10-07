@@ -2,7 +2,7 @@
 // Occurring" rules, the full built-in cell style list, print centring, protection passwords,
 // outline axes) and the core's own edit error messages, which the UI shows translated:
 // English key -> [fr, de, es, zh-CN].
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 const ACCENT: readonly [fr: string, de: string, es: string, zhCN: string] = [
 	'Accent',

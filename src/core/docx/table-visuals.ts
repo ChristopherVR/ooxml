@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Display borders and shading for table cells, shared by the editor and Print Layout.
-import type { Table } from './model.js';
-import { resolveTableStyleFormatting } from './resolve-table.js';
-import type { TableBorderSide, TableBorders, TableStyleCatalog } from './table-model.js';
+import type { Table } from './model';
+import { resolveTableStyleFormatting } from './resolve-table';
+import type { TableBorderSide, TableBorders, TableStyleCatalog } from './table-model';
 
 type Side = 'top' | 'bottom' | 'left' | 'right';
 const NONE: TableBorderSide = { style: 'none' };

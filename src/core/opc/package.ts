@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
-import { RELATIONSHIP_TYPES } from './relationship-types.js';
-import { nextRelationshipId } from './relationships.js';
+import { RELATIONSHIP_TYPES } from './relationship-types';
+import { nextRelationshipId } from './relationships';
 
 const CONTENT_TYPES_PATH = '[Content_Types].xml';
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';

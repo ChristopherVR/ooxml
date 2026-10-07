@@ -1,9 +1,9 @@
 // A minimal EditContext for testing command modules outside a full session.
-import type { Workbook } from '../model.js';
-import type { EditContext } from './context.js';
-import { createCalcEngine } from './deps.js';
-import { captureScope, type HistoryEntry, restoreSnapshot } from './history.js';
-import type { WorkbookChangeKind } from './types.js';
+import type { Workbook } from '../model';
+import type { EditContext } from './context';
+import { createCalcEngine } from './deps';
+import { captureScope, type HistoryEntry, restoreSnapshot } from './history';
+import type { WorkbookChangeKind } from './types';
 
 export interface TestContext extends EditContext {
 	readonly steps: { label: string; kind: WorkbookChangeKind; entries: HistoryEntry[] }[];

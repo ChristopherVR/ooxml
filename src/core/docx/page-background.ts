@@ -1,4 +1,4 @@
-import { children, first, getW, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import { children, first, getW, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 /** `w:background` colours are six hex digits; `auto` and theme-only fills are not modeled. */
 const HEX = /^[0-9a-fA-F]{6}$/;

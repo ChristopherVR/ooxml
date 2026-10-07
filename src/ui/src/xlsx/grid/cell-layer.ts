@@ -14,7 +14,7 @@ import {
 	textDecoration,
 } from 'ooxml-core/xlsx/ui';
 import type { CellItem } from 'ooxml-core/xlsx/ui';
-import { h, svgNode } from './dom.js';
+import { h, svgNode } from './dom';
 import { iconSvg } from 'ooxml-core/xlsx/ui';
 
 interface CellNode extends HTMLDivElement {

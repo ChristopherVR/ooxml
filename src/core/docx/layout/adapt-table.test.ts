@@ -1,12 +1,12 @@
-import { eighthPoints, twips } from '../index.js';
+import { eighthPoints, twips } from '../index';
 import { describe, expect, it } from 'vitest';
-import { createDocument, type DocumentModel, type Table } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import { layoutDocument } from './layout.js';
-import type { LayoutTable } from './input.js';
-import type { LayoutTableBox } from './result.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+import { createDocument, type DocumentModel, type Table } from '../index';
+import { adaptDocumentModel } from './adapter';
+import { layoutDocument } from './layout';
+import type { LayoutTable } from './input';
+import type { LayoutTableBox } from './result';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };
 const cell = (text: string, extra: Partial<Table['rows'][number][number]> = {}) => ({

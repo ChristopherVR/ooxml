@@ -1,7 +1,7 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, MAX_ARRAY_SIDE, type Scalar, type Value } from '../values.js';
-import { num, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, MAX_ARRAY_SIDE, type Scalar, type Value } from '../values';
+import { num, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Lookup & Reference';
 

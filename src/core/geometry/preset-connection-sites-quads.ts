@@ -9,8 +9,8 @@
  *
  * @module render/preset-connection-sites-quads
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types';
 
 export const QUAD_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	rect: { sites: CARDINAL_SITES },

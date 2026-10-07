@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes.js';
+import { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes';
 import { getAdjustmentAwareShapeClipPath } from './shape-geometry';
 
 const W = 200;

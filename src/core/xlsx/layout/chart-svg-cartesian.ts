@@ -1,6 +1,6 @@
-import { formatAxisValue, type AxisScale } from './chart-scale.js';
-import { fit, line, n, rect, text, textWidth, type Rect } from './chart-svg-util.js';
-import { categoryTotals, type ChartViewModel } from './chart-view.js';
+import { formatAxisValue, type AxisScale } from './chart-scale';
+import { fit, line, n, rect, text, textWidth, type Rect } from './chart-svg-util';
+import { categoryTotals, type ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
 
 /** Gap between bar clusters as a fraction of one bar (Excel's default `gapWidth` 150%). */

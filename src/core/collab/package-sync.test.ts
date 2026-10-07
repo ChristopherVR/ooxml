@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { bindDocument } from './binding.js';
+import { bindDocument } from './binding';
 import {
 	createBroadcastTransport,
 	type BroadcastChannelConstructor,
 	type BroadcastChannelLike,
-} from './broadcast-transport.js';
-import { packageAdapter, type SharedPackage } from './package-adapter.js';
-import { createCollabSession, type CollabSession } from './session.js';
-import { transportProvider } from './transport-provider.js';
+} from './broadcast-transport';
+import { packageAdapter, type SharedPackage } from './package-adapter';
+import { createCollabSession, type CollabSession } from './session';
+import { transportProvider } from './transport-provider';
 
 /** An in-process BroadcastChannel: delivers to every other channel of the same name, async. */
 function fakeChannels(): BroadcastChannelConstructor {

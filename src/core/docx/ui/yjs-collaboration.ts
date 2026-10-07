@@ -1,11 +1,11 @@
 import type { Node, Schema } from 'prosemirror-model';
 import { Plugin, PluginKey, type Command, type Transaction } from 'prosemirror-state';
-import type { CollabSession } from '../../collab/index.js';
+import type { CollabSession } from '../../collab/index';
 import * as Y from 'yjs';
-import { WordYjsMedia } from './yjs-media.js';
-import type { Comment, PendingMediaPart } from '../model.js';
-import { WordYjsComments } from './yjs-comments.js';
-import { commentIdsFromMarks } from './comment-anchors.js';
+import { WordYjsMedia } from './yjs-media';
+import type { Comment, PendingMediaPart } from '../model';
+import { WordYjsComments } from './yjs-comments';
+import { commentIdsFromMarks } from './comment-anchors';
 import type { EditorView } from 'prosemirror-view';
 import {
 	initProseMirrorDoc,

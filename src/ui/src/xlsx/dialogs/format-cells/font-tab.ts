@@ -4,8 +4,8 @@ import type { Color, Font, UnderlineStyle } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
 import { FONT_NAMES, FONT_SIZES } from 'ooxml-core/xlsx/ui';
 import { UNSET } from 'ooxml-core/xlsx/ui';
-import { checkbox, el, field, fieldset, nextId, row, select, textInput } from '../fields.js';
-import { swatchGrid } from './color-swatches.js';
+import { checkbox, el, field, fieldset, nextId, row, select, textInput } from '../fields';
+import { swatchGrid } from './color-swatches';
 import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 const STYLES: ReadonlyArray<readonly [string, string]> = [

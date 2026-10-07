@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, resolveParagraphFormatting, type Paragraph } from './index.js';
+import { createDocument, loadDocx, resolveParagraphFormatting, type Paragraph } from './index';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

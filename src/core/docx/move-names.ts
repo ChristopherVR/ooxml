@@ -1,9 +1,9 @@
-import type { DocumentModel, Paragraph } from './model.js';
+import type { DocumentModel, Paragraph } from './model';
 import {
 	documentBlockLists,
 	mapBlockParagraphs,
 	mapDocumentParagraphs,
-} from './document-paragraphs.js';
+} from './document-paragraphs';
 
 const WORD_MOVE_NAME = /^move([1-9]\d{0,8})$/;
 

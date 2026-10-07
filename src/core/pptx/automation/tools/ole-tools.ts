@@ -9,17 +9,17 @@ import {
 	replaceOleFile,
 	resolveOleEditorKindFromPayload,
 	setOleObjectName,
-} from '../../index.js';
+} from '../../index';
 import type {
 	OleNestedDeckSlideDetail,
 	OlePayloadEditorKind,
 	OlePptxElement,
 	OleSheetGrid,
 	PptxSlide,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 /**
  * Locate an OLE element on a slide by id, or throw a descriptive error.

@@ -2,7 +2,7 @@
 // document meets a non-empty room, and broadcast auto-follow. Extracted from pptx-viewer
 // `collaboration-sync-gate.ts`, `collaboration-load-origin.ts` and `collaboration-broadcast-follow.ts`;
 // see PROVENANCE.md.
-import type { CollaborationRole } from './identity.js';
+import type { CollaborationRole } from './identity';
 
 /**
  * Grace period (ms) before the first local write when the provider has not signalled initial sync.

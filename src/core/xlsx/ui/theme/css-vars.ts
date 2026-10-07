@@ -1,4 +1,4 @@
-import type { XlsxTheme } from './types.js';
+import type { XlsxTheme } from './types';
 
 /** Every token key; each becomes the kebab-case `--xve-*` custom property. */
 export const THEME_KEYS = [

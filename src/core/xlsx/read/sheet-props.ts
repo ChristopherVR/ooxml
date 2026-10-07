@@ -1,4 +1,4 @@
-import { parseAddress, parseRange, type CellRange } from '../address.js';
+import { parseAddress, parseRange, type CellRange } from '../address';
 import type {
 	AutoFilter,
 	Color,
@@ -7,11 +7,11 @@ import type {
 	SheetFormat,
 	SheetProtection,
 	SheetView,
-} from '../model.js';
-import type { XmlElement } from '../../xml/index.js';
-import { readModernHash } from './password-hash.js';
-import { parseColor } from './style-parts.js';
-import { att, boolAttr, numAttr, outerXml, xChildren, xFirst, xText } from './xml-util.js';
+} from '../model';
+import type { XmlElement } from '../../xml/index';
+import { readModernHash } from './password-hash';
+import { parseColor } from './style-parts';
+import { att, boolAttr, numAttr, outerXml, xChildren, xFirst, xText } from './xml-util';
 
 export const defaultSheetView = (): SheetView => ({
 	showGridLines: true,

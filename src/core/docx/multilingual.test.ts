@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+import { loadDocx } from './index';
+import { at, expectParagraph } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const unicodeText = 'مرحبا עברית 中文 e\u0301 😀';

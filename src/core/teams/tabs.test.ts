@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import { createTabStore } from './tabs.js';
+import { createTabStore } from './tabs';
 
 const website = { type: 'website' as const, url: 'https://example.com/' };
 const docs: Y.Doc[] = [];

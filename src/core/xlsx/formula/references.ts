@@ -1,8 +1,8 @@
 // Turning reference syntax into areas, and areas into values.
-import { type CellRange, MAX_COL, MAX_ROW, normalizeRange } from '../address.js';
-import type { Table } from '../model.js';
-import type { FormulaAst, RefSpec, SheetPrefix, StructuredRef } from './ast.js';
-import type { EvalHost, Frame } from './context.js';
+import { type CellRange, MAX_COL, MAX_ROW, normalizeRange } from '../address';
+import type { Table } from '../model';
+import type { FormulaAst, RefSpec, SheetPrefix, StructuredRef } from './ast';
+import type { EvalHost, Frame } from './context';
 import {
 	type Area,
 	ERR,
@@ -13,7 +13,7 @@ import {
 	RefValue,
 	type Scalar,
 	type Value,
-} from './values.js';
+} from './values';
 
 /** Sheet index for a name (case-insensitive), or -1. */
 export function sheetIndex(host: EvalHost, name: string): number {

@@ -10,7 +10,7 @@ import {
 	WORD_NS,
 	type XmlDocument,
 	type XmlElement,
-} from './xml.js';
+} from './xml';
 
 /** Bookmark names starting directly inside this paragraph (`w:bookmarkStart/@w:name`, direct children only). */
 export function paragraphBookmarkNames(node: XmlElement): string[] {

@@ -1,7 +1,7 @@
-import type { PptxElementWithText } from '../../index.js';
+import type { PptxElementWithText } from '../../index';
 import { describe, expect, it } from 'vitest';
 
-import { replaceElementText, setElementText } from './text-editing.js';
+import { replaceElementText, setElementText } from './text-editing';
 
 function element(): PptxElementWithText {
 	return {

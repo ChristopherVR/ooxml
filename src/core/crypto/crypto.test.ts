@@ -22,7 +22,7 @@ import {
 	verifyOoxmlPackagePassword,
 	type EncryptionInfo,
 	type StandardEncryptionInfo,
-} from './index.js';
+} from './index';
 
 /** parseOle2 over bytes or a buffer. */
 const parseOle2 = (input: Uint8Array | ArrayBuffer) =>

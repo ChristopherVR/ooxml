@@ -1,9 +1,9 @@
-import { formatValue } from '../../numfmt/index.js';
-import { parseNumberText } from '../text-number.js';
-import { ERR, fail, isError } from '../values.js';
-import { bool, int, num, optNum, scalar, spec, str } from './helpers.js';
-import { roundTo } from './math.js';
-import type { FunctionSpec } from './types.js';
+import { formatValue } from '../../numfmt/index';
+import { parseNumberText } from '../text-number';
+import { ERR, fail, isError } from '../values';
+import { bool, int, num, optNum, scalar, spec, str } from './helpers';
+import { roundTo } from './math';
+import type { FunctionSpec } from './types';
 
 const C = 'Text';
 

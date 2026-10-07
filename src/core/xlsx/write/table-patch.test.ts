@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HEAD, R, X, miniPackage, roundTrip, ws } from './mini-package-fixtures.js';
+import { HEAD, R, X, miniPackage, roundTrip, ws } from './mini-package-fixtures';
 
 const TABLE_SHEET = ws(
 	'<row r="1"><c r="A1" t="inlineStr"><is><t>Item</t></is></c><c r="B1" t="inlineStr"><is><t>Amt</t></is></c></row>' +

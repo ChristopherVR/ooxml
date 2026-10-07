@@ -1,5 +1,5 @@
 // Review, View and Help tabs.
-import type { RibbonTab } from '../parts.js';
+import type { RibbonTab } from '../parts';
 
 export function reviewTab(): RibbonTab {
 	return {

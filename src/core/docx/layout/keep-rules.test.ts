@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adjustForWidowOrphan, suppressesSpacing, widowControlEnabled } from './keep-rules.js';
+import { adjustForWidowOrphan, suppressesSpacing, widowControlEnabled } from './keep-rules';
 
 describe('widowControlEnabled', () => {
 	it('defaults on when unspecified', () => {

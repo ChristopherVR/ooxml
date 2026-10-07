@@ -1,4 +1,4 @@
-import type { LegacyRibbonLabel } from './ribbon-legacy-labels.js';
+import type { LegacyRibbonLabel } from './ribbon-legacy-labels';
 
 /**
  * Stable, locale-independent ids of every ribbon control. `hiddenActions` is keyed on these ids;

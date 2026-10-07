@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { OFFICE_UI_TAGS, registerOfficeUi } from './index.js';
-import { buildManifest } from './manifest.js';
+import { OFFICE_UI_TAGS, registerOfficeUi } from './index';
+import { buildManifest } from './manifest';
 
 const FILE = resolve(process.cwd(), 'custom-elements.json');
 

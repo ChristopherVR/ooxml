@@ -9,16 +9,16 @@
  * output is byte-compatible with the existing custom-geometry pipeline.
  */
 
-import { evaluateGuides } from '../../../geometry/guide-formula-api.js';
+import { evaluateGuides } from '../../../geometry/guide-formula-api';
 import {
 	evaluateFormula,
 	parseFormula,
 	resolveOperand,
-} from '../../../geometry/guide-formula-eval.js';
+} from '../../../geometry/guide-formula-eval';
 import { ooxmlArcToSvg } from './guide-formula-paths';
-import type { PresetShapeGeometryDefinition } from '../../../geometry/preset-shape-definitions-table.js';
-import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table.js';
-import { getPresetTextRect } from '../../../geometry/preset-text-rect-table.js';
+import type { PresetShapeGeometryDefinition } from '../../../geometry/preset-shape-definitions-table';
+import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table';
+import { getPresetTextRect } from '../../../geometry/preset-text-rect-table';
 
 // ---------------------------------------------------------------------------
 // Types

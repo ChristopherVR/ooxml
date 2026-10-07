@@ -1,6 +1,6 @@
-import { check, compareScalars, finite, toBool, toNumber, toText } from '../coerce.js';
-import type { CallContext } from '../context.js';
-import { parseNumberText } from '../text-number.js';
+import { check, compareScalars, finite, toBool, toNumber, toText } from '../coerce';
+import type { CallContext } from '../context';
+import { parseNumberText } from '../text-number';
 import {
 	ERR,
 	ErrorSignal,
@@ -10,8 +10,8 @@ import {
 	Matrix,
 	type Scalar,
 	type Value,
-} from '../values.js';
-import type { FunctionSpec, ParamKind } from './types.js';
+} from '../values';
+import type { FunctionSpec, ParamKind } from './types';
 
 /** A scalar argument (lifting already happened); anything else is `#VALUE!`. */
 export function scalar(value: Value | undefined): Scalar {

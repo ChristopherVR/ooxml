@@ -4,9 +4,9 @@
 // Extracted from pptx-viewer `collaboration-external-session.ts` (subscription semantics) and the
 // per-binding provider wiring; see PROVENANCE.md.
 import type * as Y from 'yjs';
-import { Emitter } from './emitter.js';
-import type { HostAwareness } from './awareness.js';
-import type { ConnectionStatus, ProviderEvents, SyncProvider } from './provider.js';
+import { Emitter } from './emitter';
+import type { HostAwareness } from './awareness';
+import type { ConnectionStatus, ProviderEvents, SyncProvider } from './provider';
 
 /** The event surface shared by y-websocket and y-webrtc providers. */
 export interface YjsProviderLike {

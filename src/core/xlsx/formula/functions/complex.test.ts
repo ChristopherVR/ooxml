@@ -1,6 +1,6 @@
 // Expected strings are the worked examples in Microsoft's function reference.
 import { describe, expect, it } from 'vitest';
-import { calc, E } from '../test-helpers.js';
+import { calc, E } from '../test-helpers';
 
 describe('complex numbers', () => {
 	it('COMPLEX builds the text form, omitting a coefficient of 1', () => {

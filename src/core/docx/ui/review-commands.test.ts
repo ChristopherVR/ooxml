@@ -3,14 +3,14 @@ import { Schema } from 'prosemirror-model';
 import { EditorState, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { history, undo, redo } from 'prosemirror-history';
-import { trackChangesPlugin } from './track-changes-mode.js';
-import { reviewMarks } from './review-schema.js';
+import { trackChangesPlugin } from './track-changes-mode';
+import { reviewMarks } from './review-schema';
 import {
 	acceptAllChanges,
 	acceptRevisionRange,
 	collectRevisionRanges,
 	rejectRevisionRange,
-} from './review-commands.js';
+} from './review-commands';
 
 const schema = new Schema({
 	nodes: { doc: { content: 'paragraph+' }, paragraph: { content: 'text*' }, text: {} },

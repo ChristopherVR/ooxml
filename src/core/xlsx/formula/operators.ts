@@ -1,6 +1,6 @@
 // Scalar operators and Excel's array broadcasting.
-import { compareScalars, toNumber, toText } from './coerce.js';
-import { ERR, ErrorSignal, isError, Matrix, type Scalar } from './values.js';
+import { compareScalars, toNumber, toText } from './coerce';
+import { ERR, ErrorSignal, isError, Matrix, type Scalar } from './values';
 
 export type ScalarOp = (a: Scalar, b: Scalar) => Scalar;
 

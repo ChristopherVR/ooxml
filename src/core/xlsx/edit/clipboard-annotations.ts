@@ -1,12 +1,12 @@
-import { rangeContains, rangesIntersect, type CellAddress, type CellRange } from '../address.js';
-import type { Worksheet } from '../model.js';
+import { rangeContains, rangesIntersect, type CellAddress, type CellRange } from '../address';
+import type { Worksheet } from '../model';
 import {
 	removeValidationArea,
 	rebaseValidation,
 	validationAnchor,
 	moveValidationFormula,
-} from './validation-ranges.js';
-import type { ClipboardCells, PasteMode } from './types.js';
+} from './validation-ranges';
+import type { ClipboardCells, PasteMode } from './types';
 
 export function copyAnnotations(
 	sheet: Worksheet,

@@ -3,4 +3,4 @@ export {
 	EncryptedFileError,
 	detectFileFormat,
 	type FileFormatDetection,
-} from '../../../crypto/detect.js';
+} from '../../../crypto/detect';

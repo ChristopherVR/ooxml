@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { adaptYjsProvider, type YjsProviderLike } from './external-provider.js';
+import { adaptYjsProvider, type YjsProviderLike } from './external-provider';
 
 function mockProvider(initial: Partial<YjsProviderLike> = {}) {
 	const listeners = new Map<string, Set<(payload: never) => void>>();

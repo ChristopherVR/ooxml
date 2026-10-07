@@ -13,7 +13,7 @@ import {
 	toHex,
 	rgbToHsl,
 	hslToRgb,
-} from './color-primitives.js';
+} from './color-primitives';
 
 // ---------------------------------------------------------------------------
 // clampUnitInterval

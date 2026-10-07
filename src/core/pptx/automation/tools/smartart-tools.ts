@@ -1,4 +1,4 @@
-import type { SmartArtPptxElement, PptxSmartArtData } from '../../index.js';
+import type { SmartArtPptxElement, PptxSmartArtData } from '../../index';
 import {
 	addSmartArtNode,
 	removeSmartArtNode,
@@ -7,10 +7,10 @@ import {
 	promoteSmartArtNode,
 	demoteSmartArtNode,
 	decomposeSmartArt,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── manageSmartArt ───────────────────────────────────────────────────────────
 

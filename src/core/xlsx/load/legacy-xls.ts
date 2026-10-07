@@ -6,11 +6,11 @@ import {
 	type XlsWorkbook,
 } from '@christophervr/ole2/legacy-excel-workbook';
 import { readLegacyOfficeMetadata } from '@christophervr/ole2/legacy-office-metadata';
-import type { DefinedName, Workbook, WorkbookProperties } from '../model.js';
-import { internStyle } from '../styles.js';
-import { createWorkbook, createWorksheet } from '../workbook.js';
-import { mapSheet } from './legacy-xls-sheet.js';
-import { defaultXfIndex, xfToCellStyle } from './legacy-xls-styles.js';
+import type { DefinedName, Workbook, WorkbookProperties } from '../model';
+import { internStyle } from '../styles';
+import { createWorkbook, createWorksheet } from '../workbook';
+import { mapSheet } from './legacy-xls-sheet';
+import { defaultXfIndex, xfToCellStyle } from './legacy-xls-styles';
 
 export type LegacyXlsErrorCode = 'encrypted' | 'unsupported-version' | 'corrupt';
 

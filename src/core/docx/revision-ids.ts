@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Word requires decimal revision ids (`w:ins/@w:id`, `w:del/@w:id`, …; ST_DecimalNumber).
-import type { DocumentModel, Paragraph, Revision } from './model.js';
+import type { DocumentModel, Paragraph, Revision } from './model';
 import {
 	documentBlockLists,
 	mapBlockParagraphs,
 	mapDocumentParagraphs,
-} from './document-paragraphs.js';
+} from './document-paragraphs';
 
 const DECIMAL_ID = /^\d{1,9}$/;
 

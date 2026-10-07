@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { acceptRevision, listRevisions, rejectRevision } from './revision-commands.js';
+import { loadDocx } from './parse';
+import { acceptRevision, listRevisions, rejectRevision } from './revision-commands';
 
 const fixture = (name: string) =>
 	readFile(new URL(`./__fixtures__/review-moves/${name}`, import.meta.url));

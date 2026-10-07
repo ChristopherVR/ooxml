@@ -1,5 +1,5 @@
-import { parseVsdx } from '../visio/parser.js';
-import type { VisioShape } from '../visio/model.js';
+import { parseVsdx } from '../visio/parser';
+import type { VisioShape } from '../visio/model';
 
 /** JSON-safe scene inspection without embedding binary images in tool responses. */
 export interface VisioShapeSummary {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_NUMBER_FORMATS, builtinFormatId, FORMAT_PRESETS, formatValue } from './index.js';
+import { BUILTIN_NUMBER_FORMATS, builtinFormatId, FORMAT_PRESETS, formatValue } from './index';
 
 describe('built-in number formats', () => {
 	it('round-trips every id through builtinFormatId', () => {

@@ -2,11 +2,11 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import type { CellValue } from '../model.js';
-import { isCellError } from '../model.js';
-import { book, engine, get } from './test-helpers.js';
-import { parseAddress } from '../address.js';
+import { putCell } from '../cells';
+import type { CellValue } from '../model';
+import { isCellError } from '../model';
+import { book, engine, get } from './test-helpers';
+import { parseAddress } from '../address';
 
 interface ExcelResult {
 	formula: string;

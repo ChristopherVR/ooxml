@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
+import { loadDocx } from './parse';
 import {
 	acceptRevision,
 	listRevisions,
 	rejectRevision,
 	acceptAllRevisions,
-} from './revision-commands.js';
-import { at, expectParagraph } from './test-support/access.js';
+} from './revision-commands';
+import { at, expectParagraph } from './test-support/access';
 
 const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
 

@@ -1,8 +1,8 @@
 // Hand-written test packages for round-trip tests (the shape of the review's `mk.py`).
 import JSZip from 'jszip';
-import type { Workbook } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from './index.js';
+import type { Workbook } from '../model';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from './index';
 
 export const X = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 export const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

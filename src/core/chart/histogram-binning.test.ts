@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateByCategory, computeHistogramBins, scottBinCount } from './histogram-binning.js';
+import { aggregateByCategory, computeHistogramBins, scottBinCount } from './histogram-binning';
 
 describe('scottBinCount', () => {
 	it('is one bin for degenerate samples', () => {

@@ -4,8 +4,8 @@
  * child emitter is injected so this module stays free of import cycles with
  * `omml-to-latex.ts`.
  */
-import { MATRIX_ENVS, REVERSE_DELIM, REVERSE_NARY } from './latex-omml-symbols.js';
-import type { XmlRecord } from './omml-to-latex-helpers.js';
+import { MATRIX_ENVS, REVERSE_DELIM, REVERSE_NARY } from './latex-omml-symbols';
+import type { XmlRecord } from './omml-to-latex-helpers';
 import {
 	attrVal,
 	childNode,
@@ -14,7 +14,7 @@ import {
 	hasAttr,
 	isOn,
 	soleChild,
-} from './omml-to-latex-helpers.js';
+} from './omml-to-latex-helpers';
 
 /** Recursive emitters supplied by `omml-to-latex.ts`. */
 export interface LatexEmitter {

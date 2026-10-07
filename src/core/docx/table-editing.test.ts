@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './index.js';
-import { at, expectTable } from './test-support/access.js';
+import { loadDocx } from './index';
+import { at, expectTable } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const cell = (text: string, fill: string, width: number) =>

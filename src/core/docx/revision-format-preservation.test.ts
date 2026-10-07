@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { saveDocx } from './save.js';
-import { acceptRevision, rejectRevision, rejectAllRevisions } from './revision-commands.js';
-import { expectParagraph } from './test-support/access.js';
+import { loadDocx } from './parse';
+import { saveDocx } from './save';
+import { acceptRevision, rejectRevision, rejectAllRevisions } from './revision-commands';
+import { expectParagraph } from './test-support/access';
 
 const fixture = (name: string) =>
 	readFile(new URL(`./__fixtures__/review-formatting/${name}-tracked.docx`, import.meta.url));

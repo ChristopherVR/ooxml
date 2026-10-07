@@ -1,6 +1,6 @@
-import type { PptxCoreProperties, PptxAppProperties, PptxCustomProperty } from '../../index.js';
+import type { PptxCoreProperties, PptxAppProperties, PptxCustomProperty } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── getMetadata ──────────────────────────────────────────────────────────────
 

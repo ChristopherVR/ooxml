@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { attachKeyTips, registerOfficeUi } from './index.js';
+import { attachKeyTips, registerOfficeUi } from './index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => {

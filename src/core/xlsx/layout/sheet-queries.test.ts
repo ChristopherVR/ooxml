@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ROW } from '../address.js';
-import { putCell } from '../cells.js';
-import type { CellStyle } from '../model.js';
-import { internStyle } from '../styles.js';
-import { createWorkbook, defaultCellStyle } from '../workbook.js';
-import { autoFitColumnWidth } from './autofit.js';
-import { createGridMetrics } from './metrics.js';
-import { isOverflowTarget, mergeView, overflowExtent, selectionStats } from './sheet-queries.js';
-import { columnWidthToPixels } from './units.js';
+import { MAX_ROW } from '../address';
+import { putCell } from '../cells';
+import type { CellStyle } from '../model';
+import { internStyle } from '../styles';
+import { createWorkbook, defaultCellStyle } from '../workbook';
+import { autoFitColumnWidth } from './autofit';
+import { createGridMetrics } from './metrics';
+import { isOverflowTarget, mergeView, overflowExtent, selectionStats } from './sheet-queries';
+import { columnWidthToPixels } from './units';
 
 const range = (r1: number, c1: number, r2: number, c2: number) => ({
 	start: { row: r1, col: c1 },

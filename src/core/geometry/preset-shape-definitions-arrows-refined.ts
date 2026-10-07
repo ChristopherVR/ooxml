@@ -41,7 +41,7 @@
  *     context (no premature conversion to numbers).
  */
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 // ---------------------------------------------------------------------------
 // Helpers (mirrors the helper in preset-shape-definitions-table.ts so this

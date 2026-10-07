@@ -1,17 +1,17 @@
-import { NS } from '../../xml/index.js';
-import { formatAddress, formatRange } from '../address.js';
-import { dataBarBaseLengths } from '../conditional-extensions.js';
+import { NS } from '../../xml/index';
+import { formatAddress, formatRange } from '../address';
+import { dataBarBaseLengths } from '../conditional-extensions';
 import type {
 	CfvoThreshold,
 	ConditionalFormat,
 	ConditionalRule,
 	DataValidation,
-} from '../model.js';
-import { addFuturePrefixes } from '../read/formula-text.js';
-import { timePeriodFormula } from '../time-period.js';
-import { colorXml } from './style-xml.js';
-import type { StyleWriter } from './styles.js';
-import { attrs, el, escapeText } from './xml-out.js';
+} from '../model';
+import { addFuturePrefixes } from '../read/formula-text';
+import { timePeriodFormula } from '../time-period';
+import { colorXml } from './style-xml';
+import type { StyleWriter } from './styles';
+import { attrs, el, escapeText } from './xml-out';
 
 const cfvoXml = (threshold: CfvoThreshold) =>
 	el('cfvo', {

@@ -5,7 +5,7 @@ import {
 	extractTagAttribute,
 	extractFirstTagText,
 	extractAllTagText,
-} from './xml-utils.js';
+} from './xml-utils';
 
 describe('escapeXmlAttr', () => {
 	it('escapes ampersands', () => {

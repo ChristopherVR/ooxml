@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRibbonOverflow } from './overflow.js';
+import { createRibbonOverflow } from './overflow';
 
 const overflow = createRibbonOverflow({
 	icon: (doc, name) => Object.assign(doc.createElement('i'), { textContent: name }),

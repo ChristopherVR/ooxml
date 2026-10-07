@@ -1,28 +1,28 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
-import type { DocumentModel, PendingMediaPart } from './model.js';
-import { buildXml, parseXml, type XmlDocument } from './xml.js';
-import type { PackageContext } from './parse.js';
-import { applyModel } from './write.js';
-import { DocPrIdAllocator } from './docpr-ids.js';
-import { assertValidDocumentModel } from './validate-model.js';
-import { applyCoreProperties } from './core-properties.js';
-import { applyNumberingCatalog } from './numbering-package.js';
-import { applyStyleNumbering, differsOnlyByStyleNumbering } from './style-numbering-package.js';
-import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer.js';
-import { applyNoteEdits } from './write-notes.js';
-import { writeNewRelationships } from './part-relationships.js';
-import { applySettingsFlag, applyTrackChangesSetting } from './settings.js';
-import { applyPageBackground } from './page-background.js';
-import { applyComments } from './write-comments.js';
-import { numberCommentIds } from './comment-spans.js';
-import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles.js';
-import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts.js';
+import type { DocumentModel, PendingMediaPart } from './model';
+import { buildXml, parseXml, type XmlDocument } from './xml';
+import type { PackageContext } from './parse';
+import { applyModel } from './write';
+import { DocPrIdAllocator } from './docpr-ids';
+import { assertValidDocumentModel } from './validate-model';
+import { applyCoreProperties } from './core-properties';
+import { applyNumberingCatalog } from './numbering-package';
+import { applyStyleNumbering, differsOnlyByStyleNumbering } from './style-numbering-package';
+import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer';
+import { applyNoteEdits } from './write-notes';
+import { writeNewRelationships } from './part-relationships';
+import { applySettingsFlag, applyTrackChangesSetting } from './settings';
+import { applyPageBackground } from './page-background';
+import { applyComments } from './write-comments';
+import { numberCommentIds } from './comment-spans';
+import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
+import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
-import { maxWordId, numberRevisionIds } from './revision-ids.js';
-import { numberMoveNames } from './move-names.js';
-import { parseRelationships } from './package-parts.js';
+import { maxWordId, numberRevisionIds } from './revision-ids';
+import { numberMoveNames } from './move-names';
+import { parseRelationships } from './package-parts';
 
 const RELS_PART = 'word/_rels/document.xml.rels';
 

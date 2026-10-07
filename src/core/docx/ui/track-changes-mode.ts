@@ -1,9 +1,9 @@
-import { expectDefined } from './defined.js';
+import { expectDefined } from './defined';
 import { Plugin, PluginKey, type Transaction } from 'prosemirror-state';
 import { Mapping, ReplaceStep, Transform } from 'prosemirror-transform';
 import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
-import { createClientId } from '../../collab/identity.js';
-import { createCollaborationIdGenerator } from './collaboration-identity.js';
+import { createClientId } from '../../collab/identity';
+import { createCollaborationIdGenerator } from './collaboration-identity';
 import { isHistoryTransaction } from 'prosemirror-history';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */

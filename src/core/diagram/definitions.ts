@@ -1,7 +1,7 @@
 // DOM parsers for the three definition parts of a diagram: colours (`dgm:colorsDef`), quick style
 // (`dgm:styleDef`) and layout (`dgm:layoutDef`, header and root algorithm only).
-import { parseXml, type XmlDocument } from '../xml/index.js';
-import { parseDrawingColorIn, parseDrawingColorList } from './drawing-color.js';
+import { parseXml, type XmlDocument } from '../xml/index';
+import { parseDrawingColorIn, parseDrawingColorList } from './drawing-color';
 import {
 	NS,
 	children,
@@ -10,8 +10,8 @@ import {
 	first,
 	stringAttribute,
 	type XmlElement,
-} from './dom.js';
-import { resolveDiagramLayoutCategory } from './layout-category.js';
+} from './dom';
+import { resolveDiagramLayoutCategory } from './layout-category';
 import type {
 	DiagramColorList,
 	DiagramColorStyleLabel,
@@ -21,7 +21,7 @@ import type {
 	DiagramQuickStyleDefinition,
 	DiagramStyleLabel,
 	DiagramStyleRef,
-} from './types.js';
+} from './types';
 
 const rootOf = (source: string | XmlDocument): XmlElement =>
 	(typeof source === 'string' ? parseXml(source, { label: 'DiagramML' }) : source).documentElement;

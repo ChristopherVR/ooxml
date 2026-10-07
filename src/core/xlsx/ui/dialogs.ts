@@ -1,6 +1,6 @@
 // Dialog registry: dialogs are opened by name so commands, the grid and the shell share them
 // without importing one another. Implementations live in `dialogs/` (UI-COMMANDS).
-import type { EditorContext } from './context.js';
+import type { EditorContext } from './context';
 
 export type DialogOpener = (ctx: EditorContext, props?: unknown) => Promise<unknown>;
 

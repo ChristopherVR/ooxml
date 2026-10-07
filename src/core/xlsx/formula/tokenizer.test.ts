@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { FormulaError } from './ast.js';
-import { joinTokens, numberLiteral, tokenize } from './tokenizer.js';
+import { FormulaError } from './ast';
+import { joinTokens, numberLiteral, tokenize } from './tokenizer';
 
 const kinds = (formula: string): string[] =>
 	tokenize(formula)

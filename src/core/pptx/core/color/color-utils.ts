@@ -15,7 +15,7 @@ import {
 	scrgbLinearToSrgb8,
 	toHex,
 	hslToRgb,
-} from '../../../color/color-primitives.js';
+} from '../../../color/color-primitives';
 import { applyDrawingColorTransforms } from './color-transforms';
 
 // ---------------------------------------------------------------------------

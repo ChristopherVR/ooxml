@@ -5,7 +5,7 @@
  * Works in both browser and Node.js (18+) environments via `crypto.subtle`.
  */
 
-import { DIGEST_ALGORITHM_TO_WEB_CRYPTO } from './constants.js';
+import { DIGEST_ALGORITHM_TO_WEB_CRYPTO } from './constants';
 
 /**
  * Compute a Base64-encoded digest of the given content using Web Crypto.

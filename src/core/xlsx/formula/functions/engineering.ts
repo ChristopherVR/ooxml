@@ -1,9 +1,9 @@
-import { toText } from '../coerce.js';
-import { ERR, fail, type Value } from '../values.js';
-import { COMPLEX_FUNCTIONS } from './complex.js';
-import { CONVERT_FUNCTIONS } from './convert.js';
-import { int, num, numeric, optNum, scalar, spec, str } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { toText } from '../coerce';
+import { ERR, fail, type Value } from '../values';
+import { COMPLEX_FUNCTIONS } from './complex';
+import { CONVERT_FUNCTIONS } from './convert';
+import { int, num, numeric, optNum, scalar, spec, str } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Engineering';
 const BASES = { BIN: 2, OCT: 8, DEC: 10, HEX: 16 } as const;

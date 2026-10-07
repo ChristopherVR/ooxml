@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes paragraph shading (`w:shd`) and borders (`w:pBdr`) when a paragraph's values changed.
 // Unchanged paragraphs keep their source elements untouched.
-import type { Paragraph } from './model.js';
-import type { ParagraphBorders, TableBorderSide } from './table-model.js';
-import { children, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { Paragraph } from './model';
+import type { ParagraphBorders, TableBorderSide } from './table-model';
+import { children, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 /** `CT_PBdr` child order (ECMA-376 §17.3.1.24). */
 const SIDES = ['top', 'left', 'bottom', 'right', 'between'] as const;

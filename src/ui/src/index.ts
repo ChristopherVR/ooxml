@@ -1,18 +1,18 @@
-import { registerControls } from './controls.js';
-import { definePresence } from './presence.js';
-import { defineSmartArt } from './smartart.js';
-import { TEAMS_TAGS, registerTeams } from './teams/index.js';
-import { installOfficeUiTheme } from './theme.js';
+import { registerControls } from './controls';
+import { definePresence } from './presence';
+import { defineSmartArt } from './smartart';
+import { TEAMS_TAGS, registerTeams } from './teams/index';
+import { installOfficeUiTheme } from './theme';
 
-export * from './base.js';
-export * from './controls.js';
-export * from './glyph.js';
-export * from './icons.js';
-export * from './presence.js';
-export * from './smartart.js';
-export * from './teams/index.js';
-export * from './theme.js';
-export { CONTRACT_REVISION, type Definer } from './registry.js';
+export * from './base';
+export * from './controls';
+export * from './glyph';
+export * from './icons';
+export * from './presence';
+export * from './smartart';
+export * from './teams/index';
+export * from './theme';
+export { CONTRACT_REVISION, type Definer } from './registry';
 
 /** Every ooxml-ui tag this package defines, in registration order. */
 export const OFFICE_UI_TAGS = [

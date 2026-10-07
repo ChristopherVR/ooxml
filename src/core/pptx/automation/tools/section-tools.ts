@@ -4,9 +4,9 @@ import {
 	reorderSections,
 	getSectionForSlide,
 	moveSlidesToSection,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── manageSections ───────────────────────────────────────────────────────────
 

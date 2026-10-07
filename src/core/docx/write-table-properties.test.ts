@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, signedTwips, type Table } from './index.js';
+import { loadDocx, signedTwips, type Table } from './index';
 
 describe('existing table property edits', () => {
 	it('patches modeled row and margin fields, keeping unrelated source XML', async () => {

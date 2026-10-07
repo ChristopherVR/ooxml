@@ -1,8 +1,8 @@
 import { LitElement, html, nothing } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { OfficeElement, controlStyles, flag, triState } from '../base.js';
-import { glyph } from '../glyph.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag, triState } from '../base';
+import { glyph } from '../glyph';
+import { definer, present } from '../registry';
 import css from './button.css?raw';
 
 export type OfficeCommandEvent = CustomEvent<{ command: string }>;

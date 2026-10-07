@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { escapeTextArgument } from './omml-to-latex-helpers.js';
+import { escapeTextArgument } from './omml-to-latex-helpers';
 
 describe('escapeTextArgument', () => {
 	it('escapes braces so they cannot close the \\text{} argument', () => {

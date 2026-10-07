@@ -1,7 +1,7 @@
-import type { ChartPptxElement } from '../../../index.js';
+import type { ChartPptxElement } from '../../../index';
 import { describe, it, expect } from 'vitest';
 
-import { describeElement } from '../../tools/helpers.js';
+import { describeElement } from '../../tools/helpers';
 
 function makeChartElement(
 	overrides: Partial<ChartPptxElement['chartData']> = {},

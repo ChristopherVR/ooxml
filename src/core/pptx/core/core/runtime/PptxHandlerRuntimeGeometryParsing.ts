@@ -1,4 +1,4 @@
-import { parseOoxmlPercent } from '../../../../color/color-primitives.js';
+import { parseOoxmlPercent } from '../../../../color/color-primitives';
 import { parseStructuredCustomGeometry } from '../../geometry/custom-geometry-parser';
 import {
 	parseGuideDefinitions,

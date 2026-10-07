@@ -1,6 +1,6 @@
 // Small DOM helpers for the diagram parsers, over the shared `xml` area.
-import { NS, children, elements, first, isElement, type XmlElement } from '../xml/index.js';
-import type { AttributeReader } from './types.js';
+import { NS, children, elements, first, isElement, type XmlElement } from '../xml/index';
+import type { AttributeReader } from './types';
 
 export { children, elements, first, isElement, NS };
 export type { XmlElement };

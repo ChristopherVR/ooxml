@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { at } from './indexed.js';
-import { flattenSvgPath } from './svg-path-flatten.js';
+import { at } from './indexed';
+import { flattenSvgPath } from './svg-path-flatten';
 
 describe('flattenSvgPath', () => {
 	it('flattens a rectangle path (M L L L Z) to its 4 corners', () => {

@@ -2,13 +2,13 @@
 // symmetrical: `docx` and `pptx` are each imported through their own subpaths
 // (`ooxml-core/docx`, `ooxml-core/pptx`), so importing the root never
 // pulls in a format and its dependencies.
-export * as color from './color/index.js';
-export * as chart from './chart/index.js';
-export * as text from './text/index.js';
-export * as diagram from './diagram/index.js';
-export * as digest from './digest/index.js';
-export * as geometry from './geometry/index.js';
-export * as opc from './opc/index.js';
-export * as units from './units/index.js';
-export * as xml from './xml/index.js';
-export * as math from './math/index.js';
+export * as color from './color/index';
+export * as chart from './chart/index';
+export * as text from './text/index';
+export * as diagram from './diagram/index';
+export * as digest from './digest/index';
+export * as geometry from './geometry/index';
+export * as opc from './opc/index';
+export * as units from './units/index';
+export * as xml from './xml/index';
+export * as math from './math/index';

@@ -1,4 +1,4 @@
-import type { ErrorCode } from '../model.js';
+import type { ErrorCode } from '../model';
 
 /** Thrown by {@link parseFormula} (and the tokenizer) for malformed formulas. */
 export class FormulaError extends Error {

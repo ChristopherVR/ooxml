@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type DocumentModel } from './index.js';
+import { loadDocx, type DocumentModel } from './index';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const load = async (sectPr: string) => {

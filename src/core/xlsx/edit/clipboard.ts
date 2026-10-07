@@ -6,31 +6,31 @@ import {
 	normalizeRange,
 	rangeContains,
 	rangesIntersect,
-} from '../address.js';
-import { deleteCell, forEachCellInRange, usedRange } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { internStyle, styleAt } from '../styles.js';
-import { toHtml } from './clipboard-html.js';
-import { parseHtmlTable } from './clipboard-html-parse.js';
-import { parseTsv, toTsv } from './clipboard-text.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
-import { isSpilledCell, moveReferencesInFormula, parseCellInput } from './deps.js';
-import { rewriteFormulas } from './shift-formulas.js';
-import { moveFormula } from './fill.js';
-import type { EditScope } from './history.js';
-import { rangeWithin } from './range-math.js';
-import type { ClipboardCell, ClipboardCells, ClipboardPayload, PasteRequest } from './types.js';
-import { resolvePasteOptions } from './paste-options.js';
-import { writeClip } from './paste-cell.js';
-import { copyColumnWidths } from './columns.js';
-import { pasteWidths } from './paste-widths.js';
-import { copyAnnotations, clearAnnotations, pasteAnnotations } from './clipboard-annotations.js';
-import { copyHyperlinks, clearHyperlinks, pasteHyperlinks } from './clipboard-links.js';
+} from '../address';
+import { deleteCell, forEachCellInRange, usedRange } from '../cells';
+import type { Workbook } from '../model';
+import { internStyle, styleAt } from '../styles';
+import { toHtml } from './clipboard-html';
+import { parseHtmlTable } from './clipboard-html-parse';
+import { parseTsv, toTsv } from './clipboard-text';
+import { type EditContext, displayText, sheetAt } from './context';
+import { isSpilledCell, moveReferencesInFormula, parseCellInput } from './deps';
+import { rewriteFormulas } from './shift-formulas';
+import { moveFormula } from './fill';
+import type { EditScope } from './history';
+import { rangeWithin } from './range-math';
+import type { ClipboardCell, ClipboardCells, ClipboardPayload, PasteRequest } from './types';
+import { resolvePasteOptions } from './paste-options';
+import { writeClip } from './paste-cell';
+import { copyColumnWidths } from './columns';
+import { pasteWidths } from './paste-widths';
+import { copyAnnotations, clearAnnotations, pasteAnnotations } from './clipboard-annotations';
+import { copyHyperlinks, clearHyperlinks, pasteHyperlinks } from './clipboard-links';
 import {
 	copyConditionalFormats,
 	removeConditionalArea,
 	pasteConditionalFormats,
-} from './clipboard-conditional.js';
+} from './clipboard-conditional';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {

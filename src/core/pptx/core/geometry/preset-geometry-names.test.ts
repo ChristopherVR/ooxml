@@ -17,8 +17,8 @@ import {
 	ST_SHAPE_TYPE_VALUES,
 	isStShapeType,
 	normalizeStShapeType,
-} from '../../../geometry/preset-geometry-names.js';
-import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table.js';
+} from '../../../geometry/preset-geometry-names';
+import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table';
 import { evaluatePresetShape } from './preset-shape-evaluator';
 
 describe('sT_ShapeType enumeration', () => {

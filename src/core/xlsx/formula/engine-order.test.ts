@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { createCalcEngine } from './engine.js';
-import { book, engine, get, locate, set } from './test-helpers.js';
+import { getCell } from '../cells';
+import { createCalcEngine } from './engine';
+import { book, engine, get, locate, set } from './test-helpers';
 
 describe('full recalculation dependency order reuse', () => {
 	it('evaluates every formula again, including volatile functions and unchanged spill shapes', () => {

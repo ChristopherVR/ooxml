@@ -1,11 +1,11 @@
-import type { Token } from './latex-omml-siblings.js';
+import type { Token } from './latex-omml-siblings';
 /**
  * latex-to-omml-constructs: the LaTeX -> OMML construct builders for scripts,
  * n-ary operators, delimiters, function application and `\text{}`. Each takes
  * the parser context so it can pull its own arguments off the token stream.
  */
-import { DELIM_MAP, ESCAPE_MAP, LIMIT_FUNC_NAMES, OPERATOR_MAP } from './latex-omml-symbols.js';
-import type { OmmlNode } from './omml-to-mathml.js';
+import { DELIM_MAP, ESCAPE_MAP, LIMIT_FUNC_NAMES, OPERATOR_MAP } from './latex-omml-symbols';
+import type { OmmlNode } from './omml-to-mathml';
 
 export interface LatexParserContext {
 	peek: () => Token | undefined;

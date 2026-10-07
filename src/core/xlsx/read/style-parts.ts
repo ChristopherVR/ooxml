@@ -1,4 +1,4 @@
-import { elements, type XmlElement } from '../../xml/index.js';
+import { elements, type XmlElement } from '../../xml/index';
 import type {
 	Alignment,
 	Border,
@@ -13,8 +13,8 @@ import type {
 	Protection,
 	UnderlineStyle,
 	VerticalAlignment,
-} from '../model.js';
-import { att, boolAttr, childVal, numAttr, xChildren, xFirst } from './xml-util.js';
+} from '../model';
+import { att, boolAttr, childVal, numAttr, xChildren, xFirst } from './xml-util';
 
 /** Reads a `CT_Color`; `palette` resolves overridden legacy indexed colours to RGB. */
 export function parseColor(

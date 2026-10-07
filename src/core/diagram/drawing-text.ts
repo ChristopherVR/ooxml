@@ -1,8 +1,8 @@
 // DrawingML text body reader (`dsp:txBody`, `a:txBody`) over the DOM. Diagram-independent;
 // destined for `drawingml`.
-import { parseDrawingColorIn } from './drawing-color.js';
-import { NS, booleanAttribute, children, first, type XmlElement } from './dom.js';
-import type { DiagramTextBody, DiagramTextParagraph, DiagramTextRun } from './types.js';
+import { parseDrawingColorIn } from './drawing-color';
+import { NS, booleanAttribute, children, first, type XmlElement } from './dom';
+import type { DiagramTextBody, DiagramTextParagraph, DiagramTextRun } from './types';
 
 function parseRun(run: XmlElement): DiagramTextRun {
 	const properties = first(run, 'rPr', NS.a);

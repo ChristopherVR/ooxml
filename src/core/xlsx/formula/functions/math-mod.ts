@@ -1,5 +1,5 @@
 // MOD and MROUND with Excel's precision and limits.
-import { ERR, fail } from '../values.js';
+import { ERR, fail } from '../values';
 
 const SPLIT = 134217729; // 2^27 + 1
 

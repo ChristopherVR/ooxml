@@ -9,7 +9,7 @@ import {
 	referenceTarget,
 	syntaxParams,
 	toggleAbsolute,
-} from './editor-text.js';
+} from './editor-text';
 
 describe('formula text helpers', () => {
 	it('colours references outside strings and skips function names', () => {

@@ -34,7 +34,7 @@ import type {
 	PresetPath,
 	PresetPathCommand,
 	PresetShapeGeometryDefinition,
-} from './preset-shape-definitions-table.js';
+} from './preset-shape-definitions-table';
 
 // ---------------------------------------------------------------------------
 // Helpers

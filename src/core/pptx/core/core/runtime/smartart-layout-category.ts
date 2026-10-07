@@ -7,7 +7,7 @@
  * `dgm:catLst/dgm:cat/@type` (canonical gallery categories) and the
  * `@uniqueId` URN (e.g. `urn:microsoft.com/office/officeart/2005/8/layout/orgChart1`).
  */
-import { resolveDiagramLayoutCategory } from '../../../../diagram/index.js';
+import { resolveDiagramLayoutCategory } from '../../../../diagram/index';
 import type { SmartArtLayoutType } from '../../types';
 
 /**

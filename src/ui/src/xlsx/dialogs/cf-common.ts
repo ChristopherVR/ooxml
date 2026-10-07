@@ -11,7 +11,7 @@ import {
 } from 'ooxml-core/xlsx';
 import { dxfCss } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el } from './fields.js';
+import { el } from './fields';
 
 /** A rule operand as typed: `=...` is a formula, a number stays, other text becomes a literal. */
 export function operand(text: string): string {

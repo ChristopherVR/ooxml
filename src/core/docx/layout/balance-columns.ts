@@ -1,5 +1,5 @@
-import type { LayoutPageBox } from './result.js';
-import type { LayoutBlock } from './input.js';
+import type { LayoutPageBox } from './result';
+import type { LayoutBlock } from './input';
 
 /** Only layouts whose trial flow can preserve every indivisible unit are balanced. */
 export function canBalanceBlock(block: LayoutBlock): boolean {

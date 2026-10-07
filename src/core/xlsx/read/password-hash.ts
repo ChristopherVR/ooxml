@@ -1,6 +1,6 @@
-import type { XmlElement } from '../../xml/index.js';
-import type { ModernPasswordHash } from '../model.js';
-import { att } from './xml-util.js';
+import type { XmlElement } from '../../xml/index';
+import type { ModernPasswordHash } from '../model';
+import { att } from './xml-util';
 
 /** The attribute names of an agile hash: `algorithmName`, or `workbookAlgorithmName` with a prefix. */
 export function modernHashAttributeNames(prefix = '') {

@@ -1,8 +1,8 @@
 import { html, type PropertyValues, type TemplateResult } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { glyph } from '../glyph.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { glyph } from '../glyph';
+import { definer, present } from '../registry';
 import {
 	clampFlyoutPosition,
 	EMPTY_MENU_STATE,
@@ -11,7 +11,7 @@ import {
 	type OfficeMenuCloseReason,
 	type OfficeMenuItem,
 	type OfficeMenuState,
-} from './menu-model.js';
+} from './menu-model';
 import css from './context-menu.css?raw';
 
 type Item = HTMLElement & { disabled: boolean };

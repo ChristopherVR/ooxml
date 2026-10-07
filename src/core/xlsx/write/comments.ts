@@ -1,7 +1,7 @@
-import { NS } from '../../xml/index.js';
-import { formatAddress } from '../address.js';
-import type { Comment } from '../model.js';
-import { XML_HEADER, escapeAttr, escapeText, tElement } from './xml-out.js';
+import { NS } from '../../xml/index';
+import { formatAddress } from '../address';
+import type { Comment } from '../model';
+import { XML_HEADER, escapeAttr, escapeText, tElement } from './xml-out';
 
 /** A deterministic GUID-shaped id (`{XXXXXXXX-XXXX-...}`) from a seed string. */
 export function guidFrom(seed: string): string {

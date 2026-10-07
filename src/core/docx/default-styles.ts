@@ -2,10 +2,10 @@
 // Word's modern Normal-template defaults for documents created here. Without a styles.xml, Word
 // falls back to its application defaults (Times New Roman 10pt, no spacing), so new documents
 // would open looking different from how they were edited.
-import type { DocumentModel } from './model.js';
-import { parseRunStyleCatalog } from './character-styles.js';
-import { parseParagraphStyleCatalog } from './paragraph-styles.js';
-import { parseTableStyleCatalog } from './table-styles.js';
+import type { DocumentModel } from './model';
+import { parseRunStyleCatalog } from './character-styles';
+import { parseParagraphStyleCatalog } from './paragraph-styles';
+import { parseTableStyleCatalog } from './table-styles';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

@@ -1,4 +1,4 @@
-import { parseConnectionAttributes, parseCustomLayoutAttributes } from '../../../diagram/index.js';
+import { parseConnectionAttributes, parseCustomLayoutAttributes } from '../../../diagram/index';
 import type {
 	PptxSmartArtConnection,
 	PptxSmartArtNode,

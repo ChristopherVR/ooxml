@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type HeaderFooterContent } from '../index.js';
-import { layoutDocumentModel } from './layout.js';
-import { createFakeMeasurer } from './measure.js';
+import { loadDocx, type HeaderFooterContent } from '../index';
+import { layoutDocumentModel } from './layout';
+import { createFakeMeasurer } from './measure';
 import {
 	headerFooterForPage,
 	pageNumbers,
 	pageNumberValues,
 	sectionPageCounts,
 	fieldDisplayText,
-} from './page-fields.js';
+} from './page-fields';
 
 const fixture = (name: string) =>
 	new URL(`./fixtures/continuous-page-fields/${name}`, import.meta.url);

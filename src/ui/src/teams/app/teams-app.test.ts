@@ -1,6 +1,6 @@
-import { applyTeamsProps, listenTeamsEvents } from './bind.js';
-import { iceToText, parseIceLines } from './teams-settings.js';
-import { defineTeamsApp, TeamsApp } from './teams-app.js';
+import { applyTeamsProps, listenTeamsEvents } from './bind';
+import { iceToText, parseIceLines } from './teams-settings';
+import { defineTeamsApp, TeamsApp } from './teams-app';
 
 const LOCAL = JSON.stringify({ mode: 'local', iceServers: [] });
 const tick = (ms = 0): Promise<void> => new Promise((r) => setTimeout(r, ms));

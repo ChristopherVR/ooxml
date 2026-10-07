@@ -1,4 +1,4 @@
-import type { PptxElementWithText, TextSegment } from '../../index.js';
+import type { PptxElementWithText, TextSegment } from '../../index';
 
 function editRange(segments: TextSegment[], start: number, end: number, replacement: string): void {
 	let offset = 0;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import type { Table, TableCell } from './model.js';
+import { loadDocx } from './parse';
+import type { Table, TableCell } from './model';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 async function fixture(align: TableCell['verticalAlign'] = 'bottom') {

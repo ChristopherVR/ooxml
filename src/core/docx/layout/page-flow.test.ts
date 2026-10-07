@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { layoutSections } from './page-flow.js';
+import { layoutSections } from './page-flow';
 import type {
 	LayoutDocumentInput,
 	LayoutPageGeometry,
 	LayoutParagraph,
 	LayoutTable,
-} from './input.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+} from './input';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 // 10px/char, 20px lines: a 100px-tall, 0-margin page holds exactly 5 lines.
 const measurer: TextMeasurer = {

@@ -1,10 +1,10 @@
 // Dynamic-array formulas on save: which formula cells are written as `t="array"` anchors with
 // XLDAPR cell metadata, the spill range each records, and the `xl/metadata.xml` part.
-import { type CellRange, cellKey } from '../address.js';
-import { needsArrayEvaluation } from '../formula/array-context.js';
-import { isSpilledCell, type SpilledCell } from '../formula/spill.js';
-import { type Cell, isCellError, type Worksheet } from '../model.js';
-import { XML_HEADER } from './xml-out.js';
+import { type CellRange, cellKey } from '../address';
+import { needsArrayEvaluation } from '../formula/array-context';
+import { isSpilledCell, type SpilledCell } from '../formula/spill';
+import { type Cell, isCellError, type Worksheet } from '../model';
+import { XML_HEADER } from './xml-out';
 
 /** Spill footprints of a sheet, computed from the spilled cells the calc engine left. */
 export class SpillPlan {

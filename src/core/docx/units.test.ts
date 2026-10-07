@@ -12,7 +12,7 @@ import {
 	type Table,
 	type TableBorderSide,
 	type Twips,
-} from './index.js';
+} from './index';
 
 // The unit types themselves are tested in ooxml-core (`units` area); these checks
 // cover that the Word model's fields carry the brands.

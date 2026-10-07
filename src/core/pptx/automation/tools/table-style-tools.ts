@@ -4,7 +4,7 @@ import {
 	deleteTableStyleFromMap,
 	normalizeTableStyleGuid,
 	TABLE_STYLE_PART_SEQUENCE,
-} from '../../index.js';
+} from '../../index';
 import type {
 	ParsedTableStyleBorders,
 	ParsedTableStyleFill,
@@ -12,10 +12,10 @@ import type {
 	PptxTableCell3D,
 	TablePptxElement,
 	TableStylePartName,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 function findTableElement(
 	ctx: ToolContext,

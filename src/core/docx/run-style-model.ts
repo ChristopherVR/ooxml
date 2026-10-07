@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { TextRun } from './model.js';
+import type { TextRun } from './model';
 
 /** Direct run properties supported by the editor for style/default resolution, in native Word units. */
 export type RunFormatting = Pick<

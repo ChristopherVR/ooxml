@@ -1,6 +1,6 @@
 import { XMLSerializer } from '@xmldom/xmldom';
-import type { TextRun } from './model.js';
-import type { XmlElement } from './xml.js';
+import type { TextRun } from './model';
+import type { XmlElement } from './xml';
 
 const MATH_NAMESPACES = new Set([
 	'http://schemas.openxmlformats.org/officeDocument/2006/math',

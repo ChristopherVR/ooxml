@@ -3,7 +3,7 @@
 // co-editing and local-first prototypes. Delivery is synchronous by default and can be made
 // asynchronous (one microtask) to exercise ordering; `link` simulates a network partition.
 // New code written for the collab area.
-import type { Transport, TransportHandlers } from './provider.js';
+import type { Transport, TransportHandlers } from './provider';
 
 export interface MemoryTransport extends Transport {
 	/** Whether this endpoint is currently attached to its room. */

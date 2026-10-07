@@ -16,7 +16,7 @@
    blocks into shared statements would hurt readability, not help it. */
 
 import type { XmlObject } from '../types';
-import { linearToSrgb255, srgb255ToLinear } from '../../../color/color-linear.js';
+import { linearToSrgb255, srgb255ToLinear } from '../../../color/color-linear';
 import {
 	clampUnitInterval,
 	hexToRgbChannels,
@@ -26,7 +26,7 @@ import {
 	parseDrawingPercent,
 	parseDrawingFraction,
 	parseDrawingHueDegrees,
-} from '../../../color/color-primitives.js';
+} from '../../../color/color-primitives';
 
 // ---------------------------------------------------------------------------
 // Colour transforms — all 26 OOXML drawing colour transforms

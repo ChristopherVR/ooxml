@@ -2,7 +2,7 @@
 // awareness lease for host-owned sessions, and the helpers that make a departing peer disappear.
 // Extracted from pptx-viewer `collaboration-presence-publisher.ts`, `collaboration-external-session.ts`
 // and `collaboration-departure.ts` / `collaboration-teardown.ts`; see PROVENANCE.md.
-import { type PresenceIdentity, BROADCAST_THROTTLE_MS, PRESENCE_FIELD } from './presence.js';
+import { type PresenceIdentity, BROADCAST_THROTTLE_MS, PRESENCE_FIELD } from './presence';
 
 /** The slice of y-protocols `Awareness` the publisher needs; the real class satisfies it. */
 export interface AwarenessLike {

@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { createListDefinition, ensureListDefinition } from './numbering-editing.js';
+import { createListDefinition, ensureListDefinition } from './numbering-editing';
 
 it('copies custom levels and preserves existing independent list definitions', () => {
 	const prior = ensureListDefinition(undefined, 'outline').catalog;

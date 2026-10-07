@@ -1,6 +1,6 @@
-import { formatAxisValue } from './chart-scale.js';
-import { fit, line, n, text, type Rect } from './chart-svg-util.js';
-import type { ChartViewModel } from './chart-view.js';
+import { formatAxisValue } from './chart-scale';
+import { fit, line, n, text, type Rect } from './chart-svg-util';
+import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
 
 const polar = (cx: number, cy: number, r: number, angle: number): [number, number] => [

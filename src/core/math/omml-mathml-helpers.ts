@@ -1,4 +1,4 @@
-import type { OmmlNode } from './omml-node.js';
+import type { OmmlNode } from './omml-node';
 export type ChildrenConverter = (node: OmmlNode) => string;
 // ── Helpers ────────────────────────────────────────────────────────────────
 

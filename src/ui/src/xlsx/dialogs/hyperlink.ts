@@ -12,8 +12,8 @@ import {
 import { hyperlinkPolicy, type HyperlinkRejection } from 'ooxml-core/opc';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { field, invalid, panel, radios, select, textInput } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { field, invalid, panel, radios, select, textInput } from './fields';
+import { button, showDialog } from './frame';
 
 /** The English message shown when the policy refuses to store an address, by reason. */
 export const HYPERLINK_REJECTIONS: Readonly<Record<HyperlinkRejection, string>> = {

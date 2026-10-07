@@ -1,4 +1,4 @@
-import type { DigitChar, Token } from './types.js';
+import type { DigitChar, Token } from './types';
 
 type FracToken =
 	| { r: 'lit'; v: string }

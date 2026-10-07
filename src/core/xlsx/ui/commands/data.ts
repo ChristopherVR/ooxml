@@ -1,8 +1,8 @@
 // Data tab: Data Tools (Text to Columns, Remove Duplicates, Data Validation) and Outline (group
 // and ungroup rows or columns). Sort & Filter commands live in sort-filter.ts.
-import type { Command } from '../commands.js';
-import { icon } from './icons.js';
-import { editing, rowsOf, target, wholeColumns, wholeRows } from './util.js';
+import type { Command } from '../commands';
+import { icon } from './icons';
+import { editing, rowsOf, target, wholeColumns, wholeRows } from './util';
 
 export function dataCommands(): Command[] {
 	return [

@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { expectDefined } from './expect-defined.js';
-import type { Revision, TextRun } from './model.js';
+import { expectDefined } from './expect-defined';
+import type { Revision, TextRun } from './model';
 import {
 	buildXml,
 	first,
@@ -10,7 +10,7 @@ import {
 	type XmlElement,
 	WORD_NS,
 	WORD_DATE_UTC_NS,
-} from './xml.js';
+} from './xml';
 
 const REVISION_WRAPPERS: Record<string, Revision['kind']> = {
 	ins: 'insert',

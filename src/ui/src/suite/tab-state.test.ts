@@ -13,7 +13,7 @@ import {
 	parseSuiteState,
 	setSuiteTabFramework,
 	suiteTabTitles,
-} from './tab-state.js';
+} from './tab-state';
 
 function three() {
 	let state = openSuiteTab(EMPTY_SUITE_STATE, 'word', 'react', 't1');

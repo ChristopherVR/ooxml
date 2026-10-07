@@ -9,8 +9,8 @@
  *
  * @module render/preset-connection-sites-action-buttons
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { cxn } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { cxn } from './preset-connection-sites-types';
 
 export const ACTION_BUTTON_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	actionButtonBackPrevious: {

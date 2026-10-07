@@ -8,12 +8,12 @@ import {
 	isStPageOrientation,
 	isStSectionMark,
 	isStVerticalJc,
-} from './generated/wml-simple-types.js';
-import type { NumberingCatalog } from './numbering-model.js';
-import type { SectionProperties, Table } from './model.js';
-import type { TableBorderSide, TableBorders, TableCell } from './table-model.js';
-import { validateThemeReference } from './validate-paragraph.js';
-import { Checker } from './validate-issues.js';
+} from './generated/wml-simple-types';
+import type { NumberingCatalog } from './numbering-model';
+import type { SectionProperties, Table } from './model';
+import type { TableBorderSide, TableBorders, TableCell } from './table-model';
+import { validateThemeReference } from './validate-paragraph';
+import { Checker } from './validate-issues';
 
 function validateBorderSide(c: Checker, side: TableBorderSide | undefined): void {
 	if (!side) return;

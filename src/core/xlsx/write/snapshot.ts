@@ -1,6 +1,6 @@
-import { parseXml, type XmlElement } from '../../xml/index.js';
-import type { Worksheet } from '../model.js';
-import { snapshotKey } from '../read/worksheet.js';
+import { parseXml, type XmlElement } from '../../xml/index';
+import type { Worksheet } from '../model';
+import { snapshotKey } from '../read/worksheet';
 
 function stable(value: unknown): unknown {
 	if (value instanceof Map) return [...value.entries()].map(([k, v]) => [stable(k), stable(v)]);

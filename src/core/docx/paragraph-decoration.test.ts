@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type DocumentModel, type Paragraph } from './index.js';
-import { expectParagraph, must } from './test-support/access.js';
+import { loadDocx, type DocumentModel, type Paragraph } from './index';
+import { expectParagraph, must } from './test-support/access';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

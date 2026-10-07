@@ -1,10 +1,10 @@
-import type { TextRun } from './model.js';
-import { DIRECT_RUN_PROPERTY_KEYS } from './run-formatting.js';
-import { parseDirectRunProperties } from './run-properties.js';
-import type { XmlElement } from './xml.js';
-import { parsePropertiesSnapshot } from './revision-properties.js';
-import { runPropertiesHaveUnknownContent } from './write-run-validation.js';
-import { buildXml } from './xml.js';
+import type { TextRun } from './model';
+import { DIRECT_RUN_PROPERTY_KEYS } from './run-formatting';
+import { parseDirectRunProperties } from './run-properties';
+import type { XmlElement } from './xml';
+import { parsePropertiesSnapshot } from './revision-properties';
+import { runPropertiesHaveUnknownContent } from './write-run-validation';
+import { buildXml } from './xml';
 
 export function parseRunPropertiesSnapshot(xml: string): XmlElement {
 	return parsePropertiesSnapshot(xml, 'rPr');

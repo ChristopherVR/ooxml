@@ -1,4 +1,4 @@
-import { named, parseXml, type XmlElement } from './xml.js';
+import { named, parseXml, type XmlElement } from './xml';
 
 /** Validate an immutable prior-properties subtree using the shared XML parser. */
 export function parsePropertiesSnapshot(xml: string, local: 'rPr' | 'pPr'): XmlElement {

@@ -6,7 +6,7 @@
  */
 
 import { base64Encode } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
-import type { EncryptionInfo } from './types.js';
+import type { EncryptionInfo } from './types';
 
 /**
  * Generate EncryptionInfo XML for agile encryption.

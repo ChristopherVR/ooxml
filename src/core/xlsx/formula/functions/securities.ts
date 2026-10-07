@@ -1,10 +1,10 @@
 // Discount securities and Treasury bills: DISC, PRICEDISC, YIELDDISC, INTRATE, RECEIVED,
 // PRICEMAT, YIELDMAT and the TBILL functions.
-import type { CallContext } from '../context.js';
-import { ERR, fail, type Value } from '../values.js';
-import { serialArg, yearFrac } from './date-calc.js';
-import { int, num, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, type Value } from '../values';
+import { serialArg, yearFrac } from './date-calc';
+import { int, num, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Financial';
 

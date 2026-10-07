@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeDiagramDrawingBounds } from './drawing-bounds.js';
+import { computeDiagramDrawingBounds } from './drawing-bounds';
 
 describe('cached drawing bounds', () => {
 	it('fits shape frames with negative coordinates', () => {

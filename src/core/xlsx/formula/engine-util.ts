@@ -1,6 +1,6 @@
-import type { CellRange } from '../address.js';
-import type { EvalHost } from './context.js';
-import { toMatrix } from './references.js';
+import type { CellRange } from '../address';
+import type { EvalHost } from './context';
+import { toMatrix } from './references';
 import {
 	type Area,
 	ERR,
@@ -9,7 +9,7 @@ import {
 	RefValue,
 	type Scalar,
 	type Value,
-} from './values.js';
+} from './values';
 
 /** The value a formula cell shows: one value, or an array to spill. Blanks become 0. */
 export function finalize(value: Value, host: EvalHost): Scalar | Matrix {

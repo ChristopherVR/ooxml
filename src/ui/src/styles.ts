@@ -1,4 +1,4 @@
-import { TOUCH, tok } from './tokens.js';
+import { TOUCH, tok } from './tokens';
 
 /**
  * Rules every control repeats: `hidden`, the coarse-pointer touch target and the forced-colors

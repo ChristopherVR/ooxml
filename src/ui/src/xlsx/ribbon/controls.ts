@@ -3,7 +3,7 @@
  * icon, tooltip and state from its command, and registers an `update` hook the ribbon calls on
  * `requestRender` to refresh enabled, pressed and value states.
  */
-import { setLargeCaption } from './caption.js';
+import { setLargeCaption } from './caption';
 import type { Color } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';

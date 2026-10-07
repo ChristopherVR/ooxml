@@ -5,7 +5,7 @@ export interface LayoutFontSpec {
 	bold?: boolean;
 	italic?: boolean;
 	kerning?: 'normal' | 'none';
-	ligatures?: import('../ligatures.js').Ligatures;
+	ligatures?: import('../ligatures').Ligatures;
 	smallCaps?: boolean;
 }
 

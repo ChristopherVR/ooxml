@@ -1,6 +1,6 @@
 import type { Schema } from 'prosemirror-model';
 import { Step } from 'prosemirror-transform';
-import { freezeDeep, isValidId } from '../../collab/index.js';
+import { freezeDeep, isValidId } from '../../collab/index';
 
 export interface CollaborationConfig {
 	sessionId: string;

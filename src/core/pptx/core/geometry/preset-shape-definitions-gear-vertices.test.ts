@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluateGuides } from '../../../geometry/guide-formula-api.js';
-import { gear6 } from '../../../geometry/preset-shape-definitions-gear6.js';
-import { gear9 } from '../../../geometry/preset-shape-definitions-gear9.js';
+import { evaluateGuides } from '../../../geometry/guide-formula-api';
+import { gear6 } from '../../../geometry/preset-shape-definitions-gear6';
+import { gear9 } from '../../../geometry/preset-shape-definitions-gear9';
 
 /**
  * Pins the evaluated coordinates of the first tooth's four silhouette

@@ -1,11 +1,11 @@
 // Home > Editing: AutoSum, Fill, Clear, Sort & Filter and Find & Select.
-import { type CellRange, formatRange, getCell } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { type Target, editing, target, viewing } from './util.js';
-import { sortCommands } from './sort-filter.js';
-import { selectSpecial } from './select-special.js';
+import { type CellRange, formatRange, getCell } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { type Target, editing, target, viewing } from './util';
+import { sortCommands } from './sort-filter';
+import { selectSpecial } from './select-special';
 
 export const AUTOSUM_FUNCTIONS: ReadonlyArray<readonly [fn: string, label: string]> = [
 	['SUM', 'Sum'],

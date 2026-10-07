@@ -1,4 +1,4 @@
-import type { OmmlNode } from './omml-node.js';
+import type { OmmlNode } from './omml-node';
 import {
 	child,
 	val,
@@ -12,7 +12,7 @@ import {
 	DELIM_BEGIN_MAP,
 	DELIM_END_MAP,
 	type ChildrenConverter,
-} from './omml-mathml-helpers.js';
+} from './omml-mathml-helpers';
 // ── Element converters ──────────────────────────────────────────────────────
 
 /** m:r : text run: classify as identifier, number, or operator. */

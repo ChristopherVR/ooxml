@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Paragraph } from './model.js';
-import { children, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
+import type { Paragraph } from './model';
+import { children, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

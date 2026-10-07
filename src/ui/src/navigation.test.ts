@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { registerOfficeUi, type OfficeTab } from './index.js';
+import { registerOfficeUi, type OfficeTab } from './index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

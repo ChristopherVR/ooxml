@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createTestContext } from '../commands/test-support.js';
-import { showDialog } from './frame.js';
+import { createTestContext } from '../commands/test-support';
+import { showDialog } from './frame';
 
 afterEach(() => (document.body.innerHTML = ''));
 

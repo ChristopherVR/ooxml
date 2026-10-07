@@ -9,9 +9,9 @@ import {
 	type CellAddress,
 	type CellRange,
 } from 'ooxml-core/xlsx';
-import { showValidationAlert } from './alert.js';
+import { showValidationAlert } from './alert';
 import { cssFont } from 'ooxml-core/xlsx/ui';
-import { h, place } from './dom.js';
+import { h, place } from './dom';
 import {
 	editBridge,
 	type BeginOptions,
@@ -19,11 +19,11 @@ import {
 	type EditBridge,
 	type EditDriver,
 } from 'ooxml-core/xlsx/ui';
-import { createFormulaField, type FormulaField } from './formula-field.js';
+import { createFormulaField, type FormulaField } from './formula-field';
 import { closeParens, isFormulaText, referenceTarget } from 'ooxml-core/xlsx';
-import { createFunctionAssist, type FunctionAssist } from './function-assist.js';
-import type { GridView } from './grid-view.js';
-import { PointMode } from './point-mode.js';
+import { createFunctionAssist, type FunctionAssist } from './function-assist';
+import type { GridView } from './grid-view';
+import { PointMode } from './point-mode';
 
 const MAX_FILL_CELLS = 20_000;
 

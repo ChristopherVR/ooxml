@@ -6,12 +6,12 @@ import type {
 	NumberingMarkerFormat,
 	NumDefinition,
 	NumLevelOverride,
-} from './numbering-model.js';
-import { children, first, getW, named, parseXml, type XmlElement } from './xml.js';
-import { isStNumberFormat } from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
-import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types.js';
-import { signedTwips, twips } from './units.js';
+} from './numbering-model';
+import { children, first, getW, named, parseXml, type XmlElement } from './xml';
+import { isStNumberFormat } from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
+import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types';
+import { signedTwips, twips } from './units';
 
 const integer = (value: string | undefined, fallback: number): number =>
 	parseInteger(value) ?? fallback;

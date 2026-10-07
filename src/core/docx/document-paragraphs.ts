@@ -1,4 +1,4 @@
-import type { Block, DocumentModel, Paragraph } from './model.js';
+import type { Block, DocumentModel, Paragraph } from './model';
 
 /** All editable block lists, including section stories and notes. */
 export function documentBlockLists(model: DocumentModel): Block[][] {

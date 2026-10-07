@@ -1,9 +1,9 @@
 // Evaluates a formula syntax tree to a value.
-import type { DefinedName } from '../model.js';
-import { FormulaError, type FormulaAst, normalizeLocalName } from './ast.js';
-import { callFunction } from './call.js';
-import type { EvalHost, Frame } from './context.js';
-import { broadcast1, broadcast2, scalarBinary, scalarUnary } from './operators.js';
+import type { DefinedName } from '../model';
+import { FormulaError, type FormulaAst, normalizeLocalName } from './ast';
+import { callFunction } from './call';
+import type { EvalHost, Frame } from './context';
+import { broadcast1, broadcast2, scalarBinary, scalarUnary } from './operators';
 import {
 	implicitIntersection,
 	intersectOperator,
@@ -13,7 +13,7 @@ import {
 	sheetIndex,
 	toMatrix,
 	unionOperator,
-} from './references.js';
+} from './references';
 import {
 	err,
 	ERR,
@@ -25,7 +25,7 @@ import {
 	type Scalar,
 	type Scope,
 	type Value,
-} from './values.js';
+} from './values';
 
 const MAX_NAME_DEPTH = 32;
 

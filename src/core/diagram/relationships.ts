@@ -1,7 +1,7 @@
 // Finds the cached `dsp:drawing` part of a diagram. Extracted from
 // `pptx/core/core/runtime/smartart-drawing-part.ts` and made host-neutral: the host (a slide, a
 // Word document, ...) supplies its relationship lookup instead of a presentation runtime.
-import { RELATIONSHIP_TYPES } from '../opc/index.js';
+import { RELATIONSHIP_TYPES } from '../opc/index';
 
 /** One entry of a `.rels` part. */
 export interface DiagramRelationshipEntry {

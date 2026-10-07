@@ -8,7 +8,7 @@ import {
 	type NavigationKey,
 } from 'ooxml-core/xlsx';
 import type { Selection } from 'ooxml-core/xlsx/ui';
-import type { GridView } from './grid-view.js';
+import type { GridView } from './grid-view';
 import {
 	ALL_RANGE,
 	clampAddress,

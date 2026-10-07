@@ -2,9 +2,9 @@
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
 import { NAVIGATION_STRINGS } from 'ooxml-core/xlsx/ui';
-import { SHORTCUTS } from '../keyboard.js';
-import { clickButton, createTestContext, dialogEl } from '../commands/test-support.js';
-import { registerNavigationDialogs } from './register-navigation.js';
+import { SHORTCUTS } from '../keyboard';
+import { clickButton, createTestContext, dialogEl } from '../commands/test-support';
+import { registerNavigationDialogs } from './register-navigation';
 
 afterEach(() => (document.body.innerHTML = ''));
 

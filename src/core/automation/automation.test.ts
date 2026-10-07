@@ -1,11 +1,11 @@
 import JSZip from 'jszip';
-import { createDocx, inspectDocx, setDocxRunText } from './docx.js';
-import { createXlsx, readXlsxRange, setXlsxCells } from './xlsx.js';
-import { createDocument } from '../docx/model.js';
-import { saveDocx } from '../docx/save.js';
-import { loadDocx } from '../docx/parse.js';
-import { fixture, shape } from '../visio/test-fixtures.js';
-import { editVisio, inspectVisio } from './index.js';
+import { createDocx, inspectDocx, setDocxRunText } from './docx';
+import { createXlsx, readXlsxRange, setXlsxCells } from './xlsx';
+import { createDocument } from '../docx/model';
+import { saveDocx } from '../docx/save';
+import { loadDocx } from '../docx/parse';
+import { fixture, shape } from '../visio/test-fixtures';
+import { editVisio, inspectVisio } from './index';
 
 test('Word edits retain formatting and unmodeled package parts on reload', async () => {
 	const model = createDocument();

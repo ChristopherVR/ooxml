@@ -1,7 +1,7 @@
-import type { CellRange } from '../address.js';
-import type { Workbook } from '../model.js';
-import type { FormulaAst, FormulaError } from './ast.js';
-import type { Matrix, RefValue, Scalar, Scope, Value } from './values.js';
+import type { CellRange } from '../address';
+import type { Workbook } from '../model';
+import type { FormulaAst, FormulaError } from './ast';
+import type { Matrix, RefValue, Scalar, Scope, Value } from './values';
 
 /** What the evaluator needs from its environment; the calc engine implements it. */
 export interface EvalHost {

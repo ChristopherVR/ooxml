@@ -1,7 +1,7 @@
-import type { CellAddress, CellRange } from '../address.js';
-import type { DataValidation } from '../model.js';
-import { moveFormula } from './fill.js';
-import { subtractRange } from './range-math.js';
+import type { CellAddress, CellRange } from '../address';
+import type { DataValidation } from '../model';
+import { moveFormula } from './fill';
+import { subtractRange } from './range-math';
 
 /** Validation formulas are relative to the top-left of their ranges' bounding box. */
 export function validationAnchor(ranges: CellRange[]): CellAddress {

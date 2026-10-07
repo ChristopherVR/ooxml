@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { loadXlsx } from '../read/load.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/save.js';
-import { createEditSession } from './session.js';
+import { parseRange } from '../address';
+import { getCell } from '../cells';
+import type { Workbook } from '../model';
+import { loadXlsx } from '../read/load';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/save';
+import { createEditSession } from './session';
 
 const R = (ref: string) => {
 	const r = parseRange(ref);

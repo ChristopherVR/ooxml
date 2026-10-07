@@ -1,9 +1,9 @@
-import { toText } from '../coerce.js';
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values.js';
-import { optBool, optNum, scalar, spec, str } from './helpers.js';
-import { TEXT_REGEX_FUNCTIONS } from './text-regex.js';
-import type { FunctionSpec } from './types.js';
+import { toText } from '../coerce';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
+import { optBool, optNum, scalar, spec, str } from './helpers';
+import { TEXT_REGEX_FUNCTIONS } from './text-regex';
+import type { FunctionSpec } from './types';
 
 const C = 'Text';
 

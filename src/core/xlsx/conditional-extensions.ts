@@ -6,11 +6,11 @@ import {
 	first,
 	parseXml,
 	type XmlElement,
-} from '../xml/index.js';
-import type { ConditionalRule, Worksheet } from './model.js';
-import { formatRange } from './address.js';
-import { descendants, selfContainedXml, numAttr } from './read/xml-util.js';
-import { inlineFragment } from './write/xml-out.js';
+} from '../xml/index';
+import type { ConditionalRule, Worksheet } from './model';
+import { formatRange } from './address';
+import { descendants, selfContainedXml, numAttr } from './read/xml-util';
+import { inlineFragment } from './write/xml-out';
 
 const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
 const URI = '{78C0D931-6437-407d-A8EE-F0AAD7539E65}';

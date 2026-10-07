@@ -1,8 +1,8 @@
-import { type CellRange, normalizeRange } from '../address.js';
-import type { Border, BorderEdge } from '../model.js';
-import { ensureCell, type EditContext, forEachPosition, pruneCell, sheetAt } from './context.js';
-import { stylePatcher } from './format.js';
-import type { BorderPreset } from './types.js';
+import { type CellRange, normalizeRange } from '../address';
+import type { Border, BorderEdge } from '../model';
+import { ensureCell, type EditContext, forEachPosition, pruneCell, sheetAt } from './context';
+import { stylePatcher } from './format';
+import type { BorderPreset } from './types';
 
 type Side = 'top' | 'bottom' | 'left' | 'right';
 

@@ -10,8 +10,8 @@
  *
  * @module render/preset-text-rect-misc-a
  */
-import { gd } from './preset-connection-sites-types.js';
-import type { PresetTextRectDefinition } from './preset-text-rect-types.js';
+import { gd } from './preset-connection-sites-types';
+import type { PresetTextRectDefinition } from './preset-text-rect-types';
 
 export const MISC_TEXT_RECTS_A: Record<string, PresetTextRectDefinition> = {
 	blockArc: {

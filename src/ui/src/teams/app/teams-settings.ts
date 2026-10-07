@@ -7,10 +7,10 @@ import {
 	parseServerConfig,
 } from 'ooxml-core/teams';
 import css from './teams-settings.css?raw';
-import { iceToText, parseIceLines } from './settings-connection.js';
-import { densityChoices, type ChatDensity } from './settings-density.js';
-import { SETTINGS_CATEGORIES as CATEGORIES, settingsSearch } from './settings-search.js';
-export { iceToText, parseIceLines } from './settings-connection.js';
+import { iceToText, parseIceLines } from './settings-connection';
+import { densityChoices, type ChatDensity } from './settings-density';
+import { SETTINGS_CATEGORIES as CATEGORIES, settingsSearch } from './settings-search';
+export { iceToText, parseIceLines } from './settings-connection';
 
 export type TeamsTheme = 'system' | 'light' | 'dark';
 

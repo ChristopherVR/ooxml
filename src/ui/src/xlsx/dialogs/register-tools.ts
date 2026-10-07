@@ -1,18 +1,18 @@
 // Registers the tool dialogs: charts, paste special, page setup, zoom, sheets, protection, cell
 // shifting, data tools, symbols, series and tables.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { openCellShift, openOutlineAxis } from './cell-shift.js';
-import { type CreateTableProps, openCreateTable } from './create-table.js';
-import { openFillSeries } from './fill-series.js';
-import { type InsertChartProps, openInsertChart } from './insert-chart.js';
-import { openMoveCopySheet } from './move-copy-sheet.js';
-import { type PageSetupProps, openPageSetup } from './page-setup.js';
-import { openPasteSpecial } from './paste-special.js';
-import { openProtectSheet } from './protect-sheet.js';
-import { openRemoveDuplicates } from './remove-duplicates.js';
-import { openSymbol } from './symbol.js';
-import { openTextToColumns } from './text-to-columns.js';
-import { openZoom } from './zoom.js';
+import { openCellShift, openOutlineAxis } from './cell-shift';
+import { type CreateTableProps, openCreateTable } from './create-table';
+import { openFillSeries } from './fill-series';
+import { type InsertChartProps, openInsertChart } from './insert-chart';
+import { openMoveCopySheet } from './move-copy-sheet';
+import { type PageSetupProps, openPageSetup } from './page-setup';
+import { openPasteSpecial } from './paste-special';
+import { openProtectSheet } from './protect-sheet';
+import { openRemoveDuplicates } from './remove-duplicates';
+import { openSymbol } from './symbol';
+import { openTextToColumns } from './text-to-columns';
+import { openZoom } from './zoom';
 
 const props = <T>(value: unknown): T =>
 	value && typeof value === 'object' ? (value as T) : ({} as T);

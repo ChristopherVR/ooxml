@@ -12,8 +12,8 @@ import {
 	type EditSession,
 	type Workbook,
 	type Worksheet,
-} from '../../index.js';
-import { isBlankView } from './cell-items.js';
+} from '../../index';
+import { isBlankView } from './cell-items';
 
 export interface ViewSource {
 	workbook(): Workbook | undefined;

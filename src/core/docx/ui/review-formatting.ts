@@ -1,8 +1,8 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { Transaction } from 'prosemirror-state';
-import type { Revision, TextRun } from '../model.js';
-import { restoreRunFormatting } from '../restore-run-format.js';
-import { marksForRun } from './run-marks.js';
+import type { Revision, TextRun } from '../model';
+import { restoreRunFormatting } from '../restore-run-format';
+import { marksForRun } from './run-marks';
 
 /** Imported formatting history travels with the opaque run properties mark. */
 export function formattingRevision(node: ProseMirrorNode): Revision | undefined {

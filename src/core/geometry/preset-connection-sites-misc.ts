@@ -9,8 +9,8 @@
  *
  * @module render/preset-connection-sites-misc
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types';
 
 export const MISC_SHAPE_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	halfFrame: {

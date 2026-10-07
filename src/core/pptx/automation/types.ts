@@ -1,4 +1,4 @@
-import type { PptxData, PptxSlide, PptxElement } from '../index.js';
+import type { PptxData, PptxSlide, PptxElement } from '../index';
 import type { Doc as YDoc } from 'yjs';
 
 /**

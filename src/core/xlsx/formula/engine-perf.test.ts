@@ -1,9 +1,9 @@
 // Recalculation cost on large inputs: criteria ranges shared by many formulas, many spills, and
 // aggregates over long lists.
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { book, engine, get } from './test-helpers.js';
+import { putCell } from '../cells';
+import type { Workbook } from '../model';
+import { book, engine, get } from './test-helpers';
 
 /** CI runners share cores and run other test files in parallel, so the budgets get headroom there. */
 const SLACK = process.env.CI ? 3 : 1;

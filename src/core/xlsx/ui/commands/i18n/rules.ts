@@ -1,6 +1,6 @@
 // Strings of the rule dialogs (conditional formatting, data validation, sort, hyperlink) and the
 // conditional formatting presets: English -> [fr, de, es, zh-CN].
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const RULES_STRINGS: Translations = {
 	OK: ['OK', 'OK', 'Aceptar', '确定'],

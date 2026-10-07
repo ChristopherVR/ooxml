@@ -1,6 +1,6 @@
-import type { ModernPasswordHash, SheetProtection, Workbook, Worksheet } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
-import { hashPassword, verifyPasswordHash } from '../../digest/index.js';
+import type { ModernPasswordHash, SheetProtection, Workbook, Worksheet } from '../model';
+import { type EditContext, sheetAt } from './context';
+import { hashPassword, verifyPasswordHash } from '../../digest/index';
 
 /**
  * Excel's legacy 16-bit password verifier (ECMA-376 Part 4, 14.7.1), upper-case hex as the

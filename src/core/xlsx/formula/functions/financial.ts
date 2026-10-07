@@ -1,13 +1,13 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, type Value } from '../values.js';
-import { collectNumbers, num, numeric, optNum, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
-import { BOND_FUNCTIONS } from './bonds.js';
-import { AMORLINC } from './amorlinc.js';
-import { COUPON_FUNCTIONS } from './coupons.js';
-import { DEPRECIATION_FUNCTIONS } from './depreciation.js';
-import { SECURITY_FUNCTIONS } from './securities.js';
-import { fv, ipmt, pmt, pv, solve } from './financial-core.js';
+import type { CallContext } from '../context';
+import { ERR, fail, type Value } from '../values';
+import { collectNumbers, num, numeric, optNum, spec } from './helpers';
+import type { FunctionSpec } from './types';
+import { BOND_FUNCTIONS } from './bonds';
+import { AMORLINC } from './amorlinc';
+import { COUPON_FUNCTIONS } from './coupons';
+import { DEPRECIATION_FUNCTIONS } from './depreciation';
+import { SECURITY_FUNCTIONS } from './securities';
+import { fv, ipmt, pmt, pv, solve } from './financial-core';
 
 const C = 'Financial';
 

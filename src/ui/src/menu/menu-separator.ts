@@ -1,5 +1,5 @@
-import { OfficeElement, controlStyles } from '../base.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { definer } from '../registry';
 import css from './menu-separator.css?raw';
 
 /** A `role="separator"` rule between groups of menu items. */

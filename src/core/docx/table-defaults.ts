@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Properties for tables created by the editor: Word requires `w:tblPr` and `w:tblGrid` on every
 // table, and "Insert Table" gives new tables single-line borders on every edge.
-import type { Table } from './model.js';
-import type { StJcTable } from './generated/wml-simple-types.js';
-import type { TableBorderSide, TableBorders, TableCellMargins } from './table-model.js';
-import { eighthPoints } from './units.js';
-import { makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { Table } from './model';
+import type { StJcTable } from './generated/wml-simple-types';
+import type { TableBorderSide, TableBorders, TableCellMargins } from './table-model';
+import { eighthPoints } from './units';
+import { makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 const SINGLE: TableBorderSide = { style: 'single', sizeEighthPoints: eighthPoints(4) };
 

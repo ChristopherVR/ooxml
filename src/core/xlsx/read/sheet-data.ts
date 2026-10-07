@@ -1,12 +1,12 @@
-import { type CellRange, parseAddress, parseRange } from '../address.js';
-import type { SpilledCell } from '../formula/spill.js';
-import { translateFormula } from '../formula/transform.js';
-import { cellError, isErrorCode, type Cell, type RowInfo, type Worksheet } from '../model.js';
-import { elements, type XmlElement } from '../../xml/index.js';
-import { isoToSerial } from './dates.js';
-import { stripFuturePrefixes } from './formula-text.js';
-import { parseRichString, type SharedString } from './shared-strings.js';
-import { att, boolAttr, numAttr, xFirst, xText } from './xml-util.js';
+import { type CellRange, parseAddress, parseRange } from '../address';
+import type { SpilledCell } from '../formula/spill';
+import { translateFormula } from '../formula/transform';
+import { cellError, isErrorCode, type Cell, type RowInfo, type Worksheet } from '../model';
+import { elements, type XmlElement } from '../../xml/index';
+import { isoToSerial } from './dates';
+import { stripFuturePrefixes } from './formula-text';
+import { parseRichString, type SharedString } from './shared-strings';
+import { att, boolAttr, numAttr, xFirst, xText } from './xml-util';
 
 export interface CellContext {
 	sharedStrings: readonly SharedString[];

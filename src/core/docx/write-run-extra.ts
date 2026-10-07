@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { TextRun } from './model.js';
-import { children, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
-import { fractionToThemeByte } from './theme-color.js';
-import { writeLigatures } from './ligatures.js';
-import { runPropertyChanged } from './run-properties.js';
+import type { TextRun } from './model';
+import { children, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import { fractionToThemeByte } from './theme-color';
+import { writeLigatures } from './ligatures';
+import { runPropertyChanged } from './run-properties';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

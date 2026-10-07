@@ -1,8 +1,8 @@
-import { type CellAddress, type CellRange, normalizeRange, rangeContains } from '../address.js';
-import { getCell } from '../cells.js';
-import type { AutoFilter, Worksheet } from '../model.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
-import { sortRows } from './sort.js';
+import { type CellAddress, type CellRange, normalizeRange, rangeContains } from '../address';
+import { getCell } from '../cells';
+import type { AutoFilter, Worksheet } from '../model';
+import { type EditContext, displayText, sheetAt } from './context';
+import { sortRows } from './sort';
 
 /**
  * The current region around a cell (Ctrl+A / Ctrl+Shift+8): the smallest rectangle bounded by

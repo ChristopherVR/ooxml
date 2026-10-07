@@ -5,10 +5,10 @@
 // inside the editor.
 import { rangeContains, sheetByName, type CellAddress } from 'ooxml-core/xlsx';
 import { hyperlinkPolicy } from 'ooxml-core/opc';
-import { h, viewOf } from './dom.js';
+import { h, viewOf } from './dom';
 import { referenceTarget } from 'ooxml-core/xlsx';
-import type { GridSelection } from './grid-selection.js';
-import type { GridView } from './grid-view.js';
+import type { GridSelection } from './grid-selection';
+import type { GridView } from './grid-view';
 import { selectCell } from 'ooxml-core/xlsx/ui';
 
 const HOVER_MS = 350;

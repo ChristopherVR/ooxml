@@ -5,9 +5,9 @@ import {
 	resolveDrawingColor,
 	type DrawingColorTheme,
 	type ResolvedDrawingColor,
-} from '../diagram/index.js';
-import type { DiagramColor } from '../diagram/index.js';
-import type { ThemeCatalog, ThemeColorSlot } from './theme-model.js';
+} from '../diagram/index';
+import type { DiagramColor } from '../diagram/index';
+import type { ThemeCatalog, ThemeColorSlot } from './theme-model';
 
 const DEFAULT_MAPPING: Record<'bg1' | 'tx1' | 'bg2' | 'tx2', ThemeColorSlot> = {
 	bg1: 'lt1',

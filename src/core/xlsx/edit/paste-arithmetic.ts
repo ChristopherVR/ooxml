@@ -1,7 +1,7 @@
-import type { Cell, CellValue } from '../model.js';
-import { scalarBinary } from '../formula/operators.js';
-import { parseNumberText } from '../formula/text-number.js';
-import type { PasteOperation } from './types.js';
+import type { Cell, CellValue } from '../model';
+import { scalarBinary } from '../formula/operators';
+import { parseNumberText } from '../formula/text-number';
+import type { PasteOperation } from './types';
 
 const OPS = { add: '+', subtract: '-', multiply: '*', divide: '/' } as const;
 const participates = (value: CellValue): boolean =>

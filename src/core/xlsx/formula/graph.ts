@@ -1,12 +1,12 @@
 // Static dependency extraction: which areas each formula reads (graph-index.ts indexes them).
-import type { CellRange } from '../address.js';
-import type { CellError } from '../model.js';
-import { FormulaError, type FormulaAst } from './ast.js';
-import type { EvalHost } from './context.js';
-import { findDefinedName } from './evaluator.js';
-import { getFunction } from './functions/registry.js';
-import { prefixSheets, resolveStructured, specRange } from './references.js';
-import { type Area, RefValue } from './values.js';
+import type { CellRange } from '../address';
+import type { CellError } from '../model';
+import { FormulaError, type FormulaAst } from './ast';
+import type { EvalHost } from './context';
+import { findDefinedName } from './evaluator';
+import { getFunction } from './functions/registry';
+import { prefixSheets, resolveStructured, specRange } from './references';
+import { type Area, RefValue } from './values';
 
 /** A formula cell known to the engine. */
 export interface FormulaNode {

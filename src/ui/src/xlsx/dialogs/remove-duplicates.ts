@@ -2,8 +2,8 @@
 import { columnLabel, getCell } from 'ooxml-core/xlsx';
 import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, el, fieldset, row } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { checkbox, el, fieldset, row } from './fields';
+import { button, showDialog } from './frame';
 
 export function openRemoveDuplicates(ctx: EditorContext): Promise<number | undefined> {
 	const t = target(ctx);

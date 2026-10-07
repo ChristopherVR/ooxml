@@ -1,40 +1,40 @@
-export { createEditSession } from './session.js';
+export { createEditSession } from './session';
 export {
 	DEFAULT_VALIDATION_MESSAGE,
 	listValidationOptions,
 	validateCellInput,
 	validationAt,
 	type ValidationOptions,
-} from './validation.js';
-export { compareCellValues } from './sort.js';
-export { detectSeries, type SeriesGenerator, type SeriesStep } from './fill-series.js';
-export { parseTsv, toTsv } from './clipboard-text.js';
-export { parseHtmlTable } from './clipboard-html-parse.js';
-export { toHtml } from './clipboard-html.js';
-export { cellsFromText } from './clipboard.js';
-export { resolvePasteOptions } from './paste-options.js';
-export { currentRegion } from './filter.js';
-export { mergeWouldDiscard } from './merge.js';
-export { queryPattern, replaceText } from './find.js';
-export { cellInputText, formulaBarText, numberInputText } from './input-text.js';
-export { presetEdges } from './borders.js';
-export { validateDefinedName } from './view.js';
-export { uniqueHeaders } from './tables.js';
-export { IMAGE_EXTENSIONS, newMediaPart, type ChartPatch } from './charts.js';
-export { validateTableName, type TablePatch, type TableRef } from './table-edits.js';
-export { autoGrowRows, rowsToRefit } from './row-autofit.js';
+} from './validation';
+export { compareCellValues } from './sort';
+export { detectSeries, type SeriesGenerator, type SeriesStep } from './fill-series';
+export { parseTsv, toTsv } from './clipboard-text';
+export { parseHtmlTable } from './clipboard-html-parse';
+export { toHtml } from './clipboard-html';
+export { cellsFromText } from './clipboard';
+export { resolvePasteOptions } from './paste-options';
+export { currentRegion } from './filter';
+export { mergeWouldDiscard } from './merge';
+export { queryPattern, replaceText } from './find';
+export { cellInputText, formulaBarText, numberInputText } from './input-text';
+export { presetEdges } from './borders';
+export { validateDefinedName } from './view';
+export { uniqueHeaders } from './tables';
+export { IMAGE_EXTENSIONS, newMediaPart, type ChartPatch } from './charts';
+export { validateTableName, type TablePatch, type TableRef } from './table-edits';
+export { autoGrowRows, rowsToRefit } from './row-autofit';
 export {
 	legacyPasswordHash,
 	modernPasswordHash,
 	verifySheetPassword,
 	verifySheetPasswordAsync,
 	verifyWorkbookPassword,
-} from './protection.js';
-export { MAX_OUTLINE_LEVEL } from './outline.js';
-export type { RemoveDuplicatesResult } from './duplicates.js';
-export { calcModeOf, type CalcMode } from './calc-mode.js';
-export type { DocumentPropertiesPatch } from './doc-properties.js';
-export { shiftRange, shiftSpan, subtractRange, type Axis, type AxisShift } from './range-math.js';
+} from './protection';
+export { MAX_OUTLINE_LEVEL } from './outline';
+export type { RemoveDuplicatesResult } from './duplicates';
+export { calcModeOf, type CalcMode } from './calc-mode';
+export type { DocumentPropertiesPatch } from './doc-properties';
+export { shiftRange, shiftSpan, subtractRange, type Axis, type AxisShift } from './range-math';
 export type {
 	BorderPreset,
 	ClearWhat,
@@ -55,5 +55,5 @@ export type {
 	ValidationResult,
 	WorkbookChange,
 	WorkbookChangeKind,
-} from './types.js';
+} from './types';
 export * from './chart-colors';

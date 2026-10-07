@@ -1,7 +1,7 @@
-import type { PptxAction } from '../../index.js';
+import type { PptxAction } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── manageHyperlinks ─────────────────────────────────────────────────────────
 

@@ -1,12 +1,12 @@
-import { type CellRange, normalizeRange, rangesIntersect } from '../address.js';
-import { getCell } from '../cells.js';
-import type { Table, TableColumn, Workbook } from '../model.js';
-import { writeValue } from './cell-values.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
-import { currentRegion } from './filter.js';
-import { shiftFormulaInBand } from './band-formulas.js';
-import { rewriteFormulas } from './shift-formulas.js';
-import { shiftSheetContent } from './shift-sheet.js';
+import { type CellRange, normalizeRange, rangesIntersect } from '../address';
+import { getCell } from '../cells';
+import type { Table, TableColumn, Workbook } from '../model';
+import { writeValue } from './cell-values';
+import { type EditContext, displayText, sheetAt } from './context';
+import { currentRegion } from './filter';
+import { shiftFormulaInBand } from './band-formulas';
+import { rewriteFormulas } from './shift-formulas';
+import { shiftSheetContent } from './shift-sheet';
 
 function nextTableName(workbook: Workbook): string {
 	const taken = new Set(workbook.sheets.flatMap((s) => s.tables.map((t) => t.name.toLowerCase())));

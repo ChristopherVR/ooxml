@@ -1,8 +1,8 @@
-import type { CellRange } from '../address.js';
-import { putCell } from '../cells.js';
-import type { Cell, DrawingAnchor, Table, TableColumn, Worksheet } from '../model.js';
-import { normalizeColumns } from './columns.js';
-import { shiftPreservedXml } from './shift-preserved.js';
+import type { CellRange } from '../address';
+import { putCell } from '../cells';
+import type { Cell, DrawingAnchor, Table, TableColumn, Worksheet } from '../model';
+import { normalizeColumns } from './columns';
+import { shiftPreservedXml } from './shift-preserved';
 import {
 	type AxisShift,
 	shiftIndex,
@@ -10,7 +10,7 @@ import {
 	shiftRange,
 	shiftRangeInBand,
 	shiftSpan,
-} from './range-math.js';
+} from './range-math';
 
 /** Limits a shift to the cells between `lo` and `hi` on the other axis (insert/delete cells). */
 export interface Band {

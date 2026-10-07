@@ -1,13 +1,13 @@
 // Function calls: argument evaluation, dynamic-array lifting and the context implementations see.
-import { FormulaError, type FormulaAst, normalizeLocalName } from './ast.js';
-import type { CallContext, Frame, LazyArg } from './context.js';
-import { currentDate1904 } from './date-serial.js';
-import { evaluateDefinedName, evaluateNode, invokeLambda } from './evaluator.js';
-import { getFunction } from './functions/registry.js';
-import { type FunctionSpec, paramKind } from './functions/types.js';
-import { broadcastShape, pick } from './operators.js';
-import { parseFormula } from './parser.js';
-import { implicitIntersection, toMatrix } from './references.js';
+import { FormulaError, type FormulaAst, normalizeLocalName } from './ast';
+import type { CallContext, Frame, LazyArg } from './context';
+import { currentDate1904 } from './date-serial';
+import { evaluateDefinedName, evaluateNode, invokeLambda } from './evaluator';
+import { getFunction } from './functions/registry';
+import { type FunctionSpec, paramKind } from './functions/types';
+import { broadcastShape, pick } from './operators';
+import { parseFormula } from './parser';
+import { implicitIntersection, toMatrix } from './references';
 import {
 	ERR,
 	err,
@@ -18,7 +18,7 @@ import {
 	type Scalar,
 	type Scope,
 	type Value,
-} from './values.js';
+} from './values';
 
 const guard = (fn: () => Value): Value => {
 	try {

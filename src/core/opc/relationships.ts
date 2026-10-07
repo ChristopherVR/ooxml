@@ -1,4 +1,4 @@
-import { NS, elements, parseXml, relAttr, type XmlElement } from '../xml/index.js';
+import { NS, elements, parseXml, relAttr, type XmlElement } from '../xml/index';
 
 export interface Relationship {
 	id: string;

@@ -9,12 +9,12 @@
  * - **shape-definitions-primary** — Basic shapes, rectangles, stars, math, and other
  * - **shape-definitions-extended** — Arrows, callouts, flowchart, and action buttons
  */
-import type { PresetShapeCategory, PresetShapeDefinition } from './preset-shape-types.js';
-import { EXTENDED_SHAPE_DEFINITIONS } from './shape-definitions-extended.js';
-import { PRIMARY_SHAPE_DEFINITIONS } from './shape-definitions-primary.js';
+import type { PresetShapeCategory, PresetShapeDefinition } from './preset-shape-types';
+import { EXTENDED_SHAPE_DEFINITIONS } from './shape-definitions-extended';
+import { PRIMARY_SHAPE_DEFINITIONS } from './shape-definitions-primary';
 
-export { PRIMARY_SHAPE_DEFINITIONS } from './shape-definitions-primary.js';
-export { EXTENDED_SHAPE_DEFINITIONS } from './shape-definitions-extended.js';
+export { PRIMARY_SHAPE_DEFINITIONS } from './shape-definitions-primary';
+export { EXTENDED_SHAPE_DEFINITIONS } from './shape-definitions-extended';
 
 /**
  * Complete list of all preset shape definitions, combining primary and extended sets.

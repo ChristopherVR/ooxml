@@ -1,13 +1,13 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StHighlightColor } from './generated/wml-simple-types.js';
-import type { HyperlinkInfo, InlineImage } from './inline-model.js';
+import type { StHighlightColor } from './generated/wml-simple-types';
+import type { HyperlinkInfo, InlineImage } from './inline-model';
 import type {
 	ThemeColorReference,
 	ThemeFontRole,
 	ThemeFontScript,
 	WordUnderlineStyle,
-} from './theme-model.js';
-import type { HalfPoints, SignedTwips } from './units.js';
+} from './theme-model';
+import type { HalfPoints, SignedTwips } from './units';
 
 /** A tracked-change revision recorded on a run or paragraph mark. */
 export interface Revision {
@@ -112,7 +112,7 @@ export interface TextRun {
 	/** `w:w` horizontal text scaling, in whole percent; 100 explicitly cancels inherited scaling. */
 	textScalePercent?: number;
 	/** Office 2010 OpenType ligature selection; undefined inherits. */
-	ligatures?: import('./ligatures.js').Ligatures;
+	ligatures?: import('./ligatures').Ligatures;
 	/** `w:kern` minimum font size for kerning, in half-points; zero explicitly disables it. */
 	kerningHalfPoints?: HalfPoints;
 	/** `w:position` baseline displacement, in signed half-points; positive raises, negative lowers. */

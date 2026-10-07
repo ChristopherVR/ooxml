@@ -1,4 +1,4 @@
-import type { Alignment, Border, CellStyle, Fill, Font, Protection, Workbook } from './model.js';
+import type { Alignment, Border, CellStyle, Fill, Font, Protection, Workbook } from './model';
 
 /** A stable key for a style, so equal formats share one `cellXfs` entry. */
 export function styleKey(style: CellStyle): string {

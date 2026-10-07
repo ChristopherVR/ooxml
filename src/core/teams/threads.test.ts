@@ -1,5 +1,5 @@
-import { channelThreads } from './threads.js';
-import type { Message } from './model.js';
+import { channelThreads } from './threads';
+import type { Message } from './model';
 
 function message(id: string, replyTo?: string, deleted = false): Message {
 	return {

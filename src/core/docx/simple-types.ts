@@ -10,8 +10,8 @@ import {
 	type HalfPoints,
 	type SignedTwips,
 	type Twips,
-} from './units.js';
-import { getW, type XmlElement } from './xml.js';
+} from './units';
+import { getW, type XmlElement } from './xml';
 
 /** `ST_OnOff`: exactly true|false|on|off|1|0. */
 export function parseOnOff(value: string | null | undefined): boolean | undefined {

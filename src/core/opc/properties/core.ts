@@ -1,5 +1,5 @@
-import { NS, buildXml, first, parseXml, type XmlElement } from '../../xml/index.js';
-import type { CoreProperties } from './types.js';
+import { NS, buildXml, first, parseXml, type XmlElement } from '../../xml/index';
+import type { CoreProperties } from './types';
 
 const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
 

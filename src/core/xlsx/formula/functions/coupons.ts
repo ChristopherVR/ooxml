@@ -1,10 +1,10 @@
 // Coupon schedules for bonds (the COUP* functions) and the day counts the bond prices share.
-import type { CallContext } from '../context.js';
-import { daysInMonth, serialToYmd } from '../date-serial.js';
-import { ERR, fail, type Value } from '../values.js';
-import { addMonths, days360, serialArg } from './date-calc.js';
-import { int, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { daysInMonth, serialToYmd } from '../date-serial';
+import { ERR, fail, type Value } from '../values';
+import { addMonths, days360, serialArg } from './date-calc';
+import { int, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Financial';
 

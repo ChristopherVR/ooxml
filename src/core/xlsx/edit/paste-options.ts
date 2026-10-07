@@ -1,4 +1,4 @@
-import type { PasteOptions } from './types.js';
+import type { PasteOptions } from './types';
 
 const MODES = [
 	'all',

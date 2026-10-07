@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { saveDocx } from './save.js';
-import { createDocument } from './index.js';
-import { acceptRevision, linkedRevisionIds, rejectRevision } from './revision-commands.js';
-import type { DocumentModel, Paragraph } from './model.js';
+import { loadDocx } from './parse';
+import { saveDocx } from './save';
+import { createDocument } from './index';
+import { acceptRevision, linkedRevisionIds, rejectRevision } from './revision-commands';
+import type { DocumentModel, Paragraph } from './model';
 
 const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
 const A = 'w:author="Ada" w:date="2024-01-01T00:00:00Z"';

@@ -1,4 +1,4 @@
-import type { CellRange } from '../address.js';
+import type { CellRange } from '../address';
 import type {
 	CellStyle,
 	CellValue,
@@ -6,11 +6,11 @@ import type {
 	HorizontalAlignment,
 	Hyperlink,
 	VerticalAlignment,
-} from '../model.js';
-import { type StylePatch, patchStyle } from '../styles.js';
-import { parseCellInput } from './deps.js';
-import type { ClipboardCell, ClipboardCells } from './types.js';
-import { hyperlinkFromHtmlAttributes } from './clipboard-links.js';
+} from '../model';
+import { type StylePatch, patchStyle } from '../styles';
+import { parseCellInput } from './deps';
+import type { ClipboardCell, ClipboardCells } from './types';
+import { hyperlinkFromHtmlAttributes } from './clipboard-links';
 
 const NAMED_COLORS: Record<string, string> = {
 	black: '000000',

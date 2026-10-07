@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { DocumentModel } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import { cssFontStack } from './fonts.js';
-import type { LayoutParagraph } from './input.js';
-import { at } from './test-helpers.js';
+import type { DocumentModel } from '../index';
+import { adaptDocumentModel } from './adapter';
+import { cssFontStack } from './fonts';
+import type { LayoutParagraph } from './input';
+import { at } from './test-helpers';
 
 describe('font fidelity', () => {
 	it('adds metric-compatible substitutes and a generic family', () => {

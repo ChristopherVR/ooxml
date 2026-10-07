@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import type { DataValidation } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/index.js';
-import { loadXlsx } from '../read/index.js';
-import { createEditSession } from './session.js';
-import { validationAt } from './validation.js';
-import type { PasteOptions } from './types.js';
+import { parseRange } from '../address';
+import { getCell } from '../cells';
+import type { DataValidation } from '../model';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/index';
+import { loadXlsx } from '../read/index';
+import { createEditSession } from './session';
+import { validationAt } from './validation';
+import type { PasteOptions } from './types';
 
 interface NativeValidation {
 	type: number;

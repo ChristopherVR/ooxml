@@ -3,8 +3,8 @@
 import { FUNCTION_CATALOG, type FunctionInfo } from 'ooxml-core/xlsx';
 import { insertFunctionCall, recentFunctions } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el, field, listBox, row, select, text, textInput } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { el, field, listBox, row, select, text, textInput } from './fields';
+import { button, showDialog } from './frame';
 
 export interface InsertFunctionProps {
 	category?: string;

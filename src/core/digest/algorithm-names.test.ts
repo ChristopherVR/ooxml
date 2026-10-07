@@ -1,4 +1,4 @@
-import { normalizeDigestAlgorithmName } from './algorithm-names.js';
+import { normalizeDigestAlgorithmName } from './algorithm-names';
 
 // Ported from src/core/pptx/core/utils/digests/algorithm-names.test.ts, plus the Excel spellings.
 describe('normalizeDigestAlgorithmName', () => {

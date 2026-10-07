@@ -1,12 +1,12 @@
-import { type CellRange, normalizeRange, rangesIntersect } from '../address.js';
-import { forEachCellInRange, getCell, putCell } from '../cells.js';
-import type { Cell, Worksheet } from '../model.js';
-import { type EditContext, pruneCell, sheetAt } from './context.js';
-import { clearContents } from './cell-values.js';
-import { isSpilledCell } from './deps.js';
-import { patchRange } from './format.js';
-import { cellRange } from './range-math.js';
-import type { MergeMode } from './types.js';
+import { type CellRange, normalizeRange, rangesIntersect } from '../address';
+import { forEachCellInRange, getCell, putCell } from '../cells';
+import type { Cell, Worksheet } from '../model';
+import { type EditContext, pruneCell, sheetAt } from './context';
+import { clearContents } from './cell-values';
+import { isSpilledCell } from './deps';
+import { patchRange } from './format';
+import { cellRange } from './range-math';
+import type { MergeMode } from './types';
 
 const hasContent = (cell: Cell | undefined): cell is Cell =>
 	!!cell &&

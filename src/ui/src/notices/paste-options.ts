@@ -1,8 +1,8 @@
 import { html } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
-import { OfficeElement, controlStyles } from '../base.js';
-import { definer } from '../registry.js';
-import { tok } from '../tokens.js';
+import { OfficeElement, controlStyles } from '../base';
+import { definer } from '../registry';
+import { tok } from '../tokens';
 import css from './paste-options.css?raw';
 
 export interface OfficePasteOption {

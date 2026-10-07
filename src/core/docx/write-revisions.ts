@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Paragraph, Revision } from './model.js';
+import type { Paragraph, Revision } from './model';
 import {
 	children,
 	first,
@@ -8,8 +8,8 @@ import {
 	type XmlElement,
 	WORD_NS,
 	WORD_DATE_UTC_NS,
-} from './xml.js';
-import { parsePropertiesSnapshot } from './revision-properties.js';
+} from './xml';
+import { parsePropertiesSnapshot } from './revision-properties';
 
 const REVISION_WRAPPER_NAMES = ['ins', 'del', 'moveFrom', 'moveTo'];
 /** Range markers the writer regenerates from the model: comment anchors and move ranges. */

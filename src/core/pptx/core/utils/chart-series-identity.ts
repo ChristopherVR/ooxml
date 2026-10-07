@@ -1,4 +1,4 @@
-import { createOfficeGuid as generateChartUniqueId } from '../../../crypto/uuid.js';
+import { createOfficeGuid as generateChartUniqueId } from '../../../crypto/uuid';
 /**
  * chart-series-identity.ts: `c16:uniqueId` (CT_UniqueId, the Office 2014+
  * `{C3380CC4-5D6E-409C-BE32-E72D297353CC}` chart extension), the GUID

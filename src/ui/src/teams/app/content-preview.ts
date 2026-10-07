@@ -8,11 +8,11 @@ import {
 	type OfficeKind,
 	type FileOperationOptions,
 } from 'ooxml-core/teams';
-import type { OpenFileDetail } from './teams-app.js';
+import type { OpenFileDetail } from './teams-app';
 import css from './content-preview.css?raw';
-import { blobFor, downloadBytes, saveExtension, withExtension } from '../../xlsx/file-commands.js';
-import { workbookActions } from './workbook-actions.js';
-import { markdownPreview } from './markdown-preview.js';
+import { blobFor, downloadBytes, saveExtension, withExtension } from '../../xlsx/file-commands';
+import { workbookActions } from './workbook-actions';
+import { markdownPreview } from './markdown-preview';
 
 /** Trusted host adapters return an embedding page URL, not an Office file URL. */
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
@@ -154,11 +154,11 @@ export class TeamsContentPreview extends LitElement {
 			if (kind === 'markdown' || kind === 'text') {
 				this.text = new TextDecoder().decode(bytes);
 			} else {
-				if (kind === 'docx') (await import('../../docx/index.js')).registerDocxEditor();
-				if (kind === 'xlsx') (await import('../../xlsx/index.js')).defineXlsxEditor();
-				if (kind === 'vsdx') (await import('../../visio/index.js')).registerVisioViewer();
+				if (kind === 'docx') (await import('../../docx/index')).registerDocxEditor();
+				if (kind === 'xlsx') (await import('../../xlsx/index')).defineXlsxEditor();
+				if (kind === 'vsdx') (await import('../../visio/index')).registerVisioViewer();
 				if (kind === 'pptx')
-					(await import('./presentation-preview.js')).defineTeamsPresentationPreview();
+					(await import('./presentation-preview')).defineTeamsPresentationPreview();
 				if (request.signal.aborted) return;
 				this.native = kind;
 				await this.updateComplete;

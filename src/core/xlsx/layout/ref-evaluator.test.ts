@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import { createCalcEngine } from '../formula/index.js';
-import { createWorkbook, createWorksheet } from '../workbook.js';
-import { createRefEvaluator } from './ref-evaluator.js';
+import { putCell } from '../cells';
+import { createCalcEngine } from '../formula/index';
+import { createWorkbook, createWorksheet } from '../workbook';
+import { createRefEvaluator } from './ref-evaluator';
 
 function book() {
 	const wb = createWorkbook();

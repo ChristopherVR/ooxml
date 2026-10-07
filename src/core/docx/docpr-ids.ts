@@ -2,7 +2,7 @@
 // Package-level allocator for `wp:docPr/@id`. Word expects drawing ids to be unique across the
 // document, headers, footers and notes, so one allocator is shared by every part in a save.
 import type JSZip from 'jszip';
-import type { XmlDocument } from './xml.js';
+import type { XmlDocument } from './xml';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const DOC_PR_ID = /<(?:[\w.-]+:)?docPr\b[^>]*?\sid\s*=\s*["'](\d+)["']/g;

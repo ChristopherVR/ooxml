@@ -1,8 +1,8 @@
-import type { ShapePptxElement } from '../../index.js';
-import { replaceShapeGeometry, replaceWithCustomGeometry } from '../../index.js';
+import type { ShapePptxElement } from '../../index';
+import { replaceShapeGeometry, replaceWithCustomGeometry } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── replaceGeometry ──────────────────────────────────────────────────────────
 

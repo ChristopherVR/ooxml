@@ -1,4 +1,4 @@
-import type { ChartPptxElement, PptxChartErrBars, PptxChartMarkerSymbol } from '../../index.js';
+import type { ChartPptxElement, PptxChartErrBars, PptxChartMarkerSymbol } from '../../index';
 import {
 	setChartColorMapOverride,
 	setChartDataPointExplosion,
@@ -9,10 +9,10 @@ import {
 	setChartSeriesErrorBars,
 	setChartSeriesMarker,
 	setChartSeriesTrendline,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 /**
  * MCP tools for the chart formatting constructs W3-D1 moved from

@@ -8,7 +8,7 @@ import {
 	resolvePartPath,
 	type ContentTypes,
 	type Relationship,
-} from '../../opc/index.js';
+} from '../../opc/index';
 
 /** Largest accepted package (compressed). */
 export const MAX_INPUT_BYTES = 50 * 1024 * 1024;

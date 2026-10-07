@@ -4,8 +4,8 @@
  * command that needs a value (font, size, number format, colour) takes the user to its ribbon
  * control instead (see title-bar.ts).
  */
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
 
 export interface TellMeHandlers {
 	isHidden(id: string): boolean;

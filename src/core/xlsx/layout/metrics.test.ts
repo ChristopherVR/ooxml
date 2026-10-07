@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ROW } from '../address.js';
-import { putCell } from '../cells.js';
-import { createWorksheet } from '../workbook.js';
-import { AxisMetrics } from './axis-metrics.js';
-import { createGridMetrics, zoomPercent } from './metrics.js';
-import { visibleCells } from './viewport.js';
+import { MAX_ROW } from '../address';
+import { putCell } from '../cells';
+import { createWorksheet } from '../workbook';
+import { AxisMetrics } from './axis-metrics';
+import { createGridMetrics, zoomPercent } from './metrics';
+import { visibleCells } from './viewport';
 
 /** Brute-force reference for an axis. */
 function reference(defaultSize: number, count: number, overrides: Map<number, number>) {

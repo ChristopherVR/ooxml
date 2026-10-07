@@ -1,7 +1,7 @@
-import { twips, twipsToPixels, type Twips } from '../units/units.js';
-import type { DocumentModel } from './model.js';
-import { sectionsOf } from './section-layout.js';
-import type { SectionProperties } from './section-model.js';
+import { twips, twipsToPixels, type Twips } from '../units/units';
+import type { DocumentModel } from './model';
+import { sectionsOf } from './section-layout';
+import type { SectionProperties } from './section-model';
 
 const px = twipsToPixels;
 

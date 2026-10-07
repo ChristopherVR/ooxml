@@ -6,5 +6,5 @@ export {
 	deriveStandardKey,
 	deriveStandardKeyFromBase,
 	generateIV,
-} from '../../../crypto/key-derivation.js';
-export { RC4_ALG_ID, parseEncryptionInfo } from '../../../crypto/encryption-info.js';
+} from '../../../crypto/key-derivation';
+export { RC4_ALG_ID, parseEncryptionInfo } from '../../../crypto/encryption-info';

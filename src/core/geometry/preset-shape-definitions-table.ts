@@ -43,20 +43,20 @@
 // Batch shape additions authored by parallel agents — aggregated into
 // PRESET_SHAPE_GEOMETRY_TABLE below. Each batch file owns its own shape group
 // and is independently testable.
-import { ACTION_BUTTON_PRESET_DEFINITIONS } from './preset-shape-definitions-action-buttons.js';
-import { ARROW_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-arrow-callouts.js';
-import { ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows.js';
-import { REFINED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows-refined.js';
-import { CHART_MARK_PRESET_DEFINITIONS } from './preset-shape-definitions-chart-marks.js';
-import { CLOUD_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-cloud-callout.js';
-import { CONNECTORS_BRACKETS_PRESET_DEFINITIONS } from './preset-shape-definitions-connectors-brackets.js';
-import { CURVED_ARROWS_CONNECTORS_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-connectors.js';
-import { EXACT_CURVED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-exact.js';
-import { FLOWCHART_PRESET_DEFINITIONS } from './preset-shape-definitions-flowchart.js';
-import { MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-misc.js';
-import { RECTS_SNIPS_PRESET_DEFINITIONS } from './preset-shape-definitions-rects-snips.js';
-import { SCROLLS_ACCENT_CALLOUTS_PRESET_DEFINITIONS } from './preset-shape-definitions-scrolls-accent-callouts.js';
-import { TABS_DECORATIONS_PRESET_DEFINITIONS } from './preset-shape-definitions-tabs-decorations.js';
+import { ACTION_BUTTON_PRESET_DEFINITIONS } from './preset-shape-definitions-action-buttons';
+import { ARROW_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-arrow-callouts';
+import { ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows';
+import { REFINED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows-refined';
+import { CHART_MARK_PRESET_DEFINITIONS } from './preset-shape-definitions-chart-marks';
+import { CLOUD_CALLOUT_PRESET_DEFINITIONS } from './preset-shape-definitions-cloud-callout';
+import { CONNECTORS_BRACKETS_PRESET_DEFINITIONS } from './preset-shape-definitions-connectors-brackets';
+import { CURVED_ARROWS_CONNECTORS_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-connectors';
+import { EXACT_CURVED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-exact';
+import { FLOWCHART_PRESET_DEFINITIONS } from './preset-shape-definitions-flowchart';
+import { MISC_PRESET_DEFINITIONS } from './preset-shape-definitions-misc';
+import { RECTS_SNIPS_PRESET_DEFINITIONS } from './preset-shape-definitions-rects-snips';
+import { SCROLLS_ACCENT_CALLOUTS_PRESET_DEFINITIONS } from './preset-shape-definitions-scrolls-accent-callouts';
+import { TABS_DECORATIONS_PRESET_DEFINITIONS } from './preset-shape-definitions-tabs-decorations';
 
 /**
  * A single command inside a preset path. Coordinates / radii / angles are

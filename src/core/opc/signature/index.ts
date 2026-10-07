@@ -16,7 +16,7 @@ export {
 	type SignatureDetectionResult,
 	type SignatureReference,
 	type SignatureStatus,
-} from './detection.js';
+} from './detection';
 export {
 	DIGEST_ALGORITHM_TO_HASH,
 	DIGEST_ALGORITHM_TO_WEB_CRYPTO,
@@ -32,7 +32,7 @@ export {
 	SUPPORTED_XML_CANON_TRANSFORMS,
 	XMLDSIG_NS,
 	XML_TRANSFORM_ENVELOPED_SIGNATURE,
-} from './constants.js';
+} from './constants';
 export type {
 	CertificateRevocationStatus,
 	DigitalSignatureReport,
@@ -49,7 +49,7 @@ export type {
 	SignOptions,
 	SignResult,
 	TimestampAuthorityStatus,
-} from './types.js';
+} from './types';
 export {
 	escapeXmlAttr,
 	escapeXmlText,
@@ -57,7 +57,7 @@ export {
 	extractFirstTagText,
 	extractTagAttribute,
 	isValidBase64,
-} from './xml-utils.js';
-export { normalizePartPath, resolveReferenceUriToPart } from './reference-utils.js';
-export { computeDigestBase64 } from './digest.js';
-export { computeDetailStatus, computeVerificationStatus } from './inspection-status.js';
+} from './xml-utils';
+export { normalizePartPath, resolveReferenceUriToPart } from './reference-utils';
+export { computeDigestBase64 } from './digest';
+export { computeDetailStatus, computeVerificationStatus } from './inspection-status';

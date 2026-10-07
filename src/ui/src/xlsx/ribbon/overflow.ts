@@ -3,7 +3,7 @@
  * `createRibbonOverflow` of ooxml-ui; this supplies Excel's icons and command selector.
  */
 import { createRibbonOverflow } from '../../controls';
-import { setLargeCaption } from './caption.js';
+import { setLargeCaption } from './caption';
 import { ribbonIcon } from './icons';
 
 /** Icon on a collapsed group's button, by the group's English label. */

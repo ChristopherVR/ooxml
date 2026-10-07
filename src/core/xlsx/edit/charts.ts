@@ -1,6 +1,6 @@
 // Inserting and editing charts and pictures.
-import type { ChartObject, DrawingAnchor, ImageObject, Workbook } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
+import type { ChartObject, DrawingAnchor, ImageObject, Workbook } from '../model';
+import { type EditContext, sheetAt } from './context';
 
 /** File extensions for the picture types Excel accepts. */
 export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {

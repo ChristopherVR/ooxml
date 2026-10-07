@@ -1,7 +1,7 @@
 import type { Plugin, EditorState, Transaction } from 'prosemirror-state';
 import type { DecorationAttrs } from 'prosemirror-view';
 import { yCursorPlugin, yCursorPluginKey } from 'y-prosemirror';
-import type { CollabSession } from '../../collab/index.js';
+import type { CollabSession } from '../../collab/index';
 
 export interface WordYjsPresenceOptions {
 	cursorBuilder(user: unknown, clientId: number): HTMLElement;

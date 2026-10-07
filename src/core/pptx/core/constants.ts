@@ -2,7 +2,7 @@
  * Shared constants for the PPTX editor engine.
  * Framework-agnostic -- safe to use from any UI layer (React, Vue, Angular, etc.).
  */
-import { EMU_PER_PIXEL } from '../../units/index.js';
+import { EMU_PER_PIXEL } from '../../units/index';
 import type { ConnectorArrowType, StrokeDashType } from './types';
 
 // Re-export colour maps from dedicated module

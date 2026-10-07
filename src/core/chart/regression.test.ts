@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeLinearRegression, computeRSquared, fitPolynomial } from './regression.js';
+import { computeLinearRegression, computeRSquared, fitPolynomial } from './regression';
 
 describe('computeLinearRegression', () => {
 	it('returns slope=1 intercept=0 for y=x data', () => {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
-import type { TextRun } from '../model.js';
-import { marksForRun } from './run-marks.js';
-import { applyMarkFormatting, linkFromMarks } from './run-mark-properties.js';
-import { markSpecs } from './schema-marks.js';
+import type { TextRun } from '../model';
+import { marksForRun } from './run-marks';
+import { applyMarkFormatting, linkFromMarks } from './run-mark-properties';
+import { markSpecs } from './schema-marks';
 
 const schema = new Schema({ nodes: { doc: { content: 'text*' }, text: {} }, marks: markSpecs });
 

@@ -1,8 +1,8 @@
-import { ERR, fail } from '../values.js';
-import { bool, collectNumbers, num, numeric, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail } from '../values';
+import { bool, collectNumbers, num, numeric, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
-import { cumulative } from './financial-core.js';
+import { cumulative } from './financial-core';
 
 const C = 'Financial';
 

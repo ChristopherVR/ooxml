@@ -1,13 +1,13 @@
-import type { ErrorCode } from '../model.js';
+import type { ErrorCode } from '../model';
 import {
 	type ArrayConstant,
 	type BinaryOperator,
 	FormulaError,
 	type FormulaAst,
 	normalizeFunctionName,
-} from './ast.js';
-import { parseStructured } from './structured.js';
-import { type Token, tokenize } from './tokenizer.js';
+} from './ast';
+import { parseStructured } from './structured';
+import { type Token, tokenize } from './tokenizer';
 
 interface Cursor {
 	tokens: Token[];

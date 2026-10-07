@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import type { Table } from './model.js';
-import { resolveCellVisuals } from './table-visuals.js';
+import { loadDocx } from './parse';
+import type { Table } from './model';
+import { resolveCellVisuals } from './table-visuals';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 async function fixture() {

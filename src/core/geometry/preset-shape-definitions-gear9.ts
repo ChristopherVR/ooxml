@@ -20,7 +20,7 @@
  * the source XML while keeping the file short.
  */
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 function gd(name: string, formula: string): { name: string; formula: string; args: string[] } {
 	const parts = formula.trim().split(/\s+/);

@@ -4,8 +4,8 @@ import {
 	buildRelationshipsXml,
 	relationshipsPartFor,
 	type RelationshipInput,
-} from '../../opc/index.js';
-import { CONTENT_TYPES, type SourceIndex } from '../read/package.js';
+} from '../../opc/index';
+import { CONTENT_TYPES, type SourceIndex } from '../read/package';
 
 /** Content types by extension for binary parts that may lack a source declaration. */
 const EXTENSION_TYPES: Record<string, string> = {

@@ -2,9 +2,9 @@
  * latex-omml-siblings: the LaTeX tokenizer and the OMML sibling merger used by
  * `latex-to-omml.ts`.
  */
-import { orderedXmlKey } from './omml-node.js';
+import { orderedXmlKey } from './omml-node';
 
-import type { OmmlNode } from './omml-to-mathml.js';
+import type { OmmlNode } from './omml-to-mathml';
 
 // ── Tokenizer ────────────────────────────────────────────────────────────────
 

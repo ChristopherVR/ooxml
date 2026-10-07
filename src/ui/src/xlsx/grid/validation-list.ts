@@ -7,8 +7,8 @@ import {
 	validationAt,
 	type CellValue,
 } from 'ooxml-core/xlsx';
-import { h, place } from './dom.js';
-import type { GridView } from './grid-view.js';
+import { h, place } from './dom';
+import type { GridView } from './grid-view';
 
 const textOf = (value: CellValue): string =>
 	value === null

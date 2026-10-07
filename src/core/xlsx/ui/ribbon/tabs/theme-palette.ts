@@ -1,6 +1,6 @@
 // Page Layout > Themes > Colors: a read-only swatch of the workbook theme palette.
-import { THEME_SLOTS } from '../../../index.js';
-import type { EditorContext } from '../../context.js';
+import { THEME_SLOTS } from '../../../index';
+import type { EditorContext } from '../../context';
 
 const hex = (value: string | undefined): string =>
 	`#${(value ?? '000000').replace(/[^0-9A-Fa-f]/g, '').slice(-6)}`;

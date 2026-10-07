@@ -1,7 +1,7 @@
 // Excel's built-in cell styles (Home > Cell Styles), as Excel 2013 and later define them for the
 // Office theme. Each style lists only the format aspects it includes; applying it replaces those
 // aspects and keeps the rest of the cell's format.
-import type { Alignment, Border, CellStyle, Color, Fill, Font, Protection } from './model.js';
+import type { Alignment, Border, CellStyle, Color, Fill, Font, Protection } from './model';
 
 export interface BuiltinCellStyle {
 	name: string;

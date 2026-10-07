@@ -1,11 +1,11 @@
-import { rangesIntersect, type CellRange, type CellAddress } from '../address.js';
-import type { ConditionalFormat, Worksheet } from '../model.js';
-import type { ClipboardCells } from './types.js';
-import { rewriteConditionalRule } from './conditional-formulas.js';
-import { rulesByPriority, renumber } from './conditional-formats.js';
-import { moveValidationFormula } from './validation-ranges.js';
-import { subtractRange } from './range-math.js';
-import { createOfficeGuid } from '../../crypto/uuid.js';
+import { rangesIntersect, type CellRange, type CellAddress } from '../address';
+import type { ConditionalFormat, Worksheet } from '../model';
+import type { ClipboardCells } from './types';
+import { rewriteConditionalRule } from './conditional-formulas';
+import { rulesByPriority, renumber } from './conditional-formats';
+import { moveValidationFormula } from './validation-ranges';
+import { subtractRange } from './range-math';
+import { createOfficeGuid } from '../../crypto/uuid';
 
 /** Rebase relative formulas when clipping or splitting changes a rule's first range. */
 export function rebaseConditionalFormat(

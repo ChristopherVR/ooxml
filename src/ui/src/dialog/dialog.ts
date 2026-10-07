@@ -1,7 +1,7 @@
 import { html, type PropertyValues } from 'lit';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { glyph } from '../glyph.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { glyph } from '../glyph';
+import { definer } from '../registry';
 import css from './dialog.css?raw';
 
 export type OfficeDialogCloseReason = 'escape' | 'close-button' | 'backdrop' | 'api';

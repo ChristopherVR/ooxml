@@ -1,5 +1,5 @@
-import type { Block, DocumentModel } from './model.js';
-import type { Paragraph } from './model-paragraph.js';
+import type { Block, DocumentModel } from './model';
+import type { Paragraph } from './model-paragraph';
 
 export interface DocumentStats {
 	paragraphs: number;

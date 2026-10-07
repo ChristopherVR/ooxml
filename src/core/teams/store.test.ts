@@ -1,6 +1,6 @@
-import { createTeamsClient, type TeamsClient } from './store.js';
-import { searchMessages, channelViews, filesOf, filterFiles } from './view.js';
-import type { Channel, Message } from './model.js';
+import { createTeamsClient, type TeamsClient } from './store';
+import { searchMessages, channelViews, filesOf, filterFiles } from './view';
+import type { Channel, Message } from './model';
 
 const tick = (ms = 0): Promise<void> => new Promise((r) => setTimeout(r, ms));
 const clients: TeamsClient[] = [];

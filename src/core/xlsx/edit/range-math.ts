@@ -1,4 +1,4 @@
-import { MAX_COL, MAX_ROW, type CellAddress, type CellRange, rangesIntersect } from '../address.js';
+import { MAX_COL, MAX_ROW, type CellAddress, type CellRange, rangesIntersect } from '../address';
 
 export type Axis = 'row' | 'col';
 

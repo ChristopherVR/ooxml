@@ -1,6 +1,6 @@
-import { parseAddress } from '../address.js';
-import type { DefinedName, FreezePane, SheetView } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
+import { parseAddress } from '../address';
+import type { DefinedName, FreezePane, SheetView } from '../model';
+import { type EditContext, sheetAt } from './context';
 
 /** Freezes the top `rows` and left `cols` (both zero, or undefined, unfreezes). */
 export function setFreeze(ctx: EditContext, s: number, freeze: FreezePane | undefined): void {

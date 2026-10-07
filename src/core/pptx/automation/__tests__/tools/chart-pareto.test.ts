@@ -1,7 +1,7 @@
-import type { ChartPptxElement } from '../../../index.js';
+import type { ChartPptxElement } from '../../../index';
 import { describe, it, expect } from 'vitest';
 
-import { applyParetoChartTypeAlias } from '../../tools/chart-pareto.js';
+import { applyParetoChartTypeAlias } from '../../tools/chart-pareto';
 
 function makeChart(values: number[]): ChartPptxElement {
 	return {

@@ -1,4 +1,4 @@
-import { twips } from './units.js';
+import { twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import {
@@ -15,8 +15,8 @@ import {
 	saveDocx,
 	type DocumentModel,
 	type Paragraph,
-} from './index.js';
-import { at } from './test-support/access.js';
+} from './index';
+import { at } from './test-support/access';
 
 function sample(): DocumentModel {
 	const model = createDocument();
@@ -116,7 +116,7 @@ describe('table of contents', () => {
 		model.blocks.unshift(
 			...buildTableOfContents(model, { newId, pageNumbers: new Map([['h1', '1']]) }),
 		);
-		const { saveDocx } = await import('./index.js');
+		const { saveDocx } = await import('./index');
 		const saved = await saveDocx(model);
 		const xml = await (await JSZip.loadAsync(saved)).file('word/document.xml')!.async('string');
 		expect(xml).toContain(

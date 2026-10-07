@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import type { FunctionInfo } from 'ooxml-core/xlsx';
-import { createFormulaField } from './formula-field.js';
-import { createFunctionAssist } from './function-assist.js';
+import { createFormulaField } from './formula-field';
+import { createFunctionAssist } from './function-assist';
 
 const catalog: FunctionInfo[] = [
 	{

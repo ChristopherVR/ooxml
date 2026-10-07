@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { createDocument } from './model.js';
+import { createDocument } from './model';
 import {
 	applyPageSetup,
 	presetOf,
 	readPageSetup,
 	validatePageSetup,
 	type PageSetupValues,
-} from './page-setup-model.js';
-import { PAGE_SIZES, pageSizeOf, setPageSize } from './page-size.js';
-import { sectionsOf } from './section-layout.js';
-import { setLineNumbering, setMargins, setOrientation } from './section-edit.js';
-import { twips } from '../units/units.js';
+} from './page-setup-model';
+import { PAGE_SIZES, pageSizeOf, setPageSize } from './page-size';
+import { sectionsOf } from './section-layout';
+import { setLineNumbering, setMargins, setOrientation } from './section-edit';
+import { twips } from '../units/units';
 
 const model = () => createDocument();
 const values = (): PageSetupValues => readPageSetup(sectionsOf(model())[0]!);

@@ -1,9 +1,9 @@
-import { type CellRange, normalizeRange } from '../address.js';
-import { forEachCellInRange } from '../cells.js';
-import type { Workbook, Worksheet } from '../model.js';
-import { type StylePatch, applyStylePatch } from '../styles.js';
-import { editColumns } from './columns.js';
-import { addColumnIntersections, addRowIntersections, rowBaseStyle } from './format-lines.js';
+import { type CellRange, normalizeRange } from '../address';
+import { forEachCellInRange } from '../cells';
+import type { Workbook, Worksheet } from '../model';
+import { type StylePatch, applyStylePatch } from '../styles';
+import { editColumns } from './columns';
+import { addColumnIntersections, addRowIntersections, rowBaseStyle } from './format-lines';
 import {
 	type EditContext,
 	ensureCell,
@@ -12,8 +12,8 @@ import {
 	isWholeRows,
 	pruneCell,
 	sheetAt,
-} from './context.js';
-import type { EditScope } from './history.js';
+} from './context';
+import type { EditScope } from './history';
 
 /** A memoised `applyStylePatch`, so a large range interns each distinct result once. */
 export function stylePatcher(

@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Sections, headers/footers and footnotes/endnotes.
-import type { Block } from './model.js';
-import type { StNumberFormat, StSectionMark, StVerticalJc } from './generated/wml-simple-types.js';
-import type { TableBorderSide } from './table-model.js';
-import type { SignedTwips, Twips } from './units.js';
+import type { Block } from './model';
+import type { StNumberFormat, StSectionMark, StVerticalJc } from './generated/wml-simple-types';
+import type { TableBorderSide } from './table-model';
+import type { SignedTwips, Twips } from './units';
 
 /** A page border line; `spacePoints` is its `w:space` distance from the measured edge. */
 export type PageBorderSide = TableBorderSide;

@@ -3,12 +3,12 @@
 // BroadcastChannel mesh and a WebSocket client for a bring-your-own relay server. The relay never
 // needs to understand a message: it forwards JSON to the other sockets of the room (see
 // docs/teams-area.md for the three-rule server contract). DOM-free. New code.
-import { isValidId } from '../collab/validation.js';
+import { isValidId } from '../collab/validation';
 import type {
 	BroadcastChannelConstructor,
 	BroadcastChannelLike,
-} from '../collab/broadcast-transport.js';
-import type { WebSocketConstructor } from '../collab/websocket-transport.js';
+} from '../collab/broadcast-transport';
+import type { WebSocketConstructor } from '../collab/websocket-transport';
 
 export interface SessionDescription {
 	type: 'offer' | 'answer';

@@ -1,5 +1,5 @@
-import type { Workbook } from '../model.js';
-import type { EditContext } from './context.js';
+import type { Workbook } from '../model';
+import type { EditContext } from './context';
 
 export type CalcMode = 'auto' | 'manual';
 

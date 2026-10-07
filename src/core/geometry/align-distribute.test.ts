@@ -5,8 +5,8 @@ import {
 	computeAlign,
 	computeDistribute,
 	distributeElements,
-} from './align-distribute.js';
-import type { AlignBox, BoundingBoxElement } from './align-distribute.js';
+} from './align-distribute';
+import type { AlignBox, BoundingBoxElement } from './align-distribute';
 
 function box(id: string, x: number, y: number, width = 100, height = 50): BoundingBoxElement {
 	return { id, x, y, width, height };

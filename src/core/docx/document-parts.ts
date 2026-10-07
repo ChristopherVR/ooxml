@@ -2,17 +2,17 @@
 // Orchestrates section, header/footer and footnote/endnote parsing on top of block-parser.ts,
 // sections.ts and notes.ts. Kept out of parse.ts so the hub file only needs one hook call.
 import type JSZip from 'jszip';
-import type { Block, HeaderFooterSlots, Note, SectionProperties } from './model.js';
-import { first, getW, parseXml, type XmlElement } from './xml.js';
-import { onOffElement } from './simple-types.js';
-import { isStNumberFormat, type StNumberFormat } from './generated/wml-simple-types.js';
-import { enumValue, withParseWarnings } from './parse-diagnostics.js';
-import { parseRelationships, resolvePartPath, type Relationship } from './relationships.js';
-import { parseRawSections, type RawHeaderFooterRef } from './sections.js';
-import { parseNotesPart } from './notes.js';
-import { parseBlocksFromContainer } from './block-parser.js';
-import type { DrawingContext } from './drawing.js';
-import { parseRelationships as parsePackageRelationships } from './package-parts.js';
+import type { Block, HeaderFooterSlots, Note, SectionProperties } from './model';
+import { first, getW, parseXml, type XmlElement } from './xml';
+import { onOffElement } from './simple-types';
+import { isStNumberFormat, type StNumberFormat } from './generated/wml-simple-types';
+import { enumValue, withParseWarnings } from './parse-diagnostics';
+import { parseRelationships, resolvePartPath, type Relationship } from './relationships';
+import { parseRawSections, type RawHeaderFooterRef } from './sections';
+import { parseNotesPart } from './notes';
+import { parseBlocksFromContainer } from './block-parser';
+import type { DrawingContext } from './drawing';
+import { parseRelationships as parsePackageRelationships } from './package-parts';
 
 /** A part's own relationships (word/_rels/<part>.rels) for resolving its pictures and links. */
 async function partContext(

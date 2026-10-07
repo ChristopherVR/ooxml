@@ -1,11 +1,11 @@
-import { MAX_COL, MAX_ROW, normalizeRange, type CellRange } from '../address.js';
-import { cellsFromText, pasteAt } from './clipboard.js';
-import type { EditContext } from './context.js';
-import type { ClipboardPayload, PasteRequest } from './types.js';
-import { resolvePasteOptions } from './paste-options.js';
-import { pasteWidths } from './paste-widths.js';
-import { pasteConditionalFormats } from './clipboard-conditional.js';
-import { sheetAt } from './context.js';
+import { MAX_COL, MAX_ROW, normalizeRange, type CellRange } from '../address';
+import { cellsFromText, pasteAt } from './clipboard';
+import type { EditContext } from './context';
+import type { ClipboardPayload, PasteRequest } from './types';
+import { resolvePasteOptions } from './paste-options';
+import { pasteWidths } from './paste-widths';
+import { pasteConditionalFormats } from './clipboard-conditional';
+import { sheetAt } from './context';
 
 /** Repeat a copied block over a compatible selection, using one undoable paste. */
 export function pasteSelection(

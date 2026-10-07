@@ -1,5 +1,5 @@
-import { createDocument } from '../model.js';
-import type { DocumentModel, LoadedDocument, Paragraph } from '../model.js';
+import { createDocument } from '../model';
+import type { DocumentModel, LoadedDocument, Paragraph } from '../model';
 import {
 	readOleDocParagraphs,
 	writeOleDocParagraphEdit,

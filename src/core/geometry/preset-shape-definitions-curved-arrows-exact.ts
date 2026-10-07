@@ -21,7 +21,7 @@
  * win over any earlier simplified/refined registrations for the same names.
  */
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 function gd(name: string, formula: string): { name: string; formula: string; args: string[] } {
 	const parts = formula.trim().split(/\s+/);

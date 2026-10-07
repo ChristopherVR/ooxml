@@ -1,6 +1,6 @@
-import { isValidId } from '../collab/validation.js';
-import { MAX_MESSAGE_CHARS, MAX_ATTACHMENTS } from './model.js';
-import type { StorageLike, UploadableFile } from './store.js';
+import { isValidId } from '../collab/validation';
+import { MAX_MESSAGE_CHARS, MAX_ATTACHMENTS } from './model';
+import type { StorageLike, UploadableFile } from './store';
 
 export interface DraftContext {
 	channelId: string;

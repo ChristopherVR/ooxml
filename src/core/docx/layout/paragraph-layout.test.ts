@@ -1,9 +1,9 @@
-import { signedTwips, twips } from '../index.js';
+import { signedTwips, twips } from '../index';
 import { describe, expect, it } from 'vitest';
-import { layoutParagraph } from './paragraph-layout.js';
-import type { LayoutParagraph, LayoutRun } from './input.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+import { layoutParagraph } from './paragraph-layout';
+import type { LayoutParagraph, LayoutRun } from './input';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 // A measurer with clean, font-agnostic numbers: 10px per character, 20px lines.
 const measurer: TextMeasurer = {

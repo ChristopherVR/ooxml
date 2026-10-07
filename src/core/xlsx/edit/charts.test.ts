@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import type { ChartObject, DrawingAnchor } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/index.js';
-import { createEditSession } from './session.js';
+import type { ChartObject, DrawingAnchor } from '../model';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/index';
+import { createEditSession } from './session';
 
 const fixture = (name: string) =>
 	new Uint8Array(readFileSync(path.join(import.meta.dirname, '..', '__fixtures__', name)));

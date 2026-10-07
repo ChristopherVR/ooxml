@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Page borders (`w:sectPr/w:pgBorders`): parsed into the section model and patched back side by
 // side, so art borders and other attributes the model does not edit stay as they were.
-import type { PageBorders, PageBorderSide } from './section-model.js';
-import { borderSide } from './table-borders.js';
-import { orderChildren } from './element-order.js';
-import { parseUnsignedInteger } from './simple-types.js';
-import { children, first, getW, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { PageBorders, PageBorderSide } from './section-model';
+import { borderSide } from './table-borders';
+import { orderChildren } from './element-order';
+import { parseUnsignedInteger } from './simple-types';
+import { children, first, getW, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 const SIDES = ['top', 'left', 'bottom', 'right'] as const;
 const ATTRIBUTES = ['offsetFrom', 'display', 'zOrder'] as const;

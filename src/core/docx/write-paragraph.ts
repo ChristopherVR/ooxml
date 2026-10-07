@@ -1,23 +1,23 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Paragraph } from './model.js';
-import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
-import { writeParagraphProperties } from './write-paragraph-properties.js';
-import { orderParagraphProperties, writeTabStops } from './tab-stops.js';
-import { continuationKey } from './comment-spans.js';
-import type { CommentSpans } from './write-ranges.js';
-import { reconcileBookmarks } from './bookmarks.js';
-import { writeNumberingProperties } from './numbering-write.js';
-import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions.js';
-import { paragraphJustification } from './paragraph-alignment.js';
-import { runHasUnknownProperties } from './write-run-validation.js';
+import type { Paragraph } from './model';
+import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+import { writeParagraphProperties } from './write-paragraph-properties';
+import { orderParagraphProperties, writeTabStops } from './tab-stops';
+import { continuationKey } from './comment-spans';
+import type { CommentSpans } from './write-ranges';
+import { reconcileBookmarks } from './bookmarks';
+import { writeNumberingProperties } from './numbering-write';
+import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
+import { paragraphJustification } from './paragraph-alignment';
+import { runHasUnknownProperties } from './write-run-validation';
 import {
 	buildInlineContent,
 	collectInlineSlots,
 	replaceableInlineChildren,
-} from './write-inline.js';
-import type { RelationshipAllocator } from './relationship-allocator.js';
-import { parseDirectParagraphProperties } from './paragraph-properties.js';
-import { parsePropertiesSnapshot } from './revision-properties.js';
+} from './write-inline';
+import type { RelationshipAllocator } from './relationship-allocator';
+import { parseDirectParagraphProperties } from './paragraph-properties';
+import { parsePropertiesSnapshot } from './revision-properties';
 
 export function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

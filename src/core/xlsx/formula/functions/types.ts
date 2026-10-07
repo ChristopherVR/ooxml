@@ -1,6 +1,6 @@
-import type { CallContext, LazyArg } from '../context.js';
-import type { Scalar, Value } from '../values.js';
-import type { ErrorCode } from '../../model.js';
+import type { CallContext, LazyArg } from '../context';
+import type { Scalar, Value } from '../values';
+import type { ErrorCode } from '../../model';
 
 /**
  * `value` parameters take one value: a multi-cell range or array lifts the call over its

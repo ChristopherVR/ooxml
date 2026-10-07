@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { calc, E } from './test-helpers.js';
-import { findExact } from './functions/lookup-core.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from '../edit/index.js';
-import { getCell } from '../cells.js';
-import { saveXlsx } from '../write/index.js';
-import { loadXlsx } from '../read/index.js';
+import { calc, E } from './test-helpers';
+import { findExact } from './functions/lookup-core';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from '../edit/index';
+import { getCell } from '../cells';
+import { saveXlsx } from '../write/index';
+import { loadXlsx } from '../read/index';
 
 // Scalar results independently checked in Excel 16.0 build 20430, 2026-10-07.
 // A blank lookup reference differs from an explicit "" string or zero.

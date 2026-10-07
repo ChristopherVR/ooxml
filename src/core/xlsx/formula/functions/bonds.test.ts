@@ -1,6 +1,6 @@
 // Expected values are the worked examples in Microsoft's function reference for each function.
 import { describe, expect, it } from 'vitest';
-import { calc, E } from '../test-helpers.js';
+import { calc, E } from '../test-helpers';
 
 const close = (formula: string, expected: number, digits: number) =>
 	expect(calc(formula) as number).toBeCloseTo(expected, digits);

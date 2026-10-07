@@ -6,12 +6,12 @@ import {
 	parseGuideDefinitions,
 	parseAdjustmentValues,
 	resolveCoordinate,
-} from '../../../geometry/guide-formula-api.js';
+} from '../../../geometry/guide-formula-api';
 import {
 	evaluateFormula,
 	parseFormula,
 	ANGLE_SCALE,
-} from '../../../geometry/guide-formula-eval.js';
+} from '../../../geometry/guide-formula-eval';
 import { evaluateGeometryPaths, ooxmlArcToSvg } from './guide-formula-paths';
 
 // Shorthand: evaluate a formula string with a given variable context.

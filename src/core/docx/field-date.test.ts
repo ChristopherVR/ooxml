@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dateFieldResult, datePicture, formatWordDate } from './index.js';
+import { dateFieldResult, datePicture, formatWordDate } from './index';
 
 const date = new Date(2026, 8, 7, 14, 5, 9); // Monday 7 September 2026, 2:05:09 pm
 

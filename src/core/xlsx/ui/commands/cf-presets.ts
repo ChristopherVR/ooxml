@@ -1,6 +1,6 @@
 // Conditional formatting presets of Excel's Home > Conditional Formatting gallery: highlight
 // formats, data bar colours, colour scales and icon sets, built as core `ConditionalRule`s.
-import type { CfvoThreshold, ConditionalRule, DifferentialStyle } from '../../index.js';
+import type { CfvoThreshold, ConditionalRule, DifferentialStyle } from '../../index';
 
 const argb = (hex: string) => ({ rgb: `FF${hex}` });
 

@@ -1,8 +1,8 @@
-import { NS } from '../../xml/index.js';
-import { formatRange } from '../address.js';
-import type { Table, Worksheet } from '../model.js';
-import { addFuturePrefixes } from '../read/formula-text.js';
-import { XML_HEADER, attrs, escapeText } from './xml-out.js';
+import { NS } from '../../xml/index';
+import { formatRange } from '../address';
+import type { Table, Worksheet } from '../model';
+import { addFuturePrefixes } from '../read/formula-text';
+import { XML_HEADER, attrs, escapeText } from './xml-out';
 
 /** Excel's own text for a header cell value. */
 const headerTextOf = (value: unknown): string | undefined =>

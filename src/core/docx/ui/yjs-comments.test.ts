@@ -5,8 +5,8 @@ import {
 	createMemoryHub,
 	transportProvider,
 	type CollabSession,
-} from '../../collab/index.js';
-import { WordYjsCollaboration } from './yjs-collaboration.js';
+} from '../../collab/index';
+import { WordYjsCollaboration } from './yjs-collaboration';
 
 const schema = new Schema({
 	nodes: { doc: { content: 'paragraph+' }, paragraph: { content: 'text*' }, text: {} },

@@ -1,6 +1,6 @@
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { field, invalid, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { field, invalid, textInput } from './fields';
+import { showDialog } from './frame';
 
 /** Passwords stay in memory for the current workbook and are never persisted in settings. */
 export function packagePassword(ctx: EditorContext, saving = false): Promise<string | undefined> {

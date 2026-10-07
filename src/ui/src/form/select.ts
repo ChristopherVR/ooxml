@@ -1,8 +1,8 @@
 import { LitElement, html, type PropertyValues } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { keyed } from 'lit/directives/keyed.js';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { definer, present } from '../registry';
 import {
 	collectSelectChoices,
 	nextSelectActive,
@@ -10,7 +10,7 @@ import {
 	positionSelectMenu,
 	SELECT_OPTION_ATTRIBUTES,
 	type SelectChoice,
-} from './select-menu.js';
+} from './select-menu';
 import css from './select.css?raw';
 
 /** A programmatic choice; `<option>` elements satisfy the same shape. */

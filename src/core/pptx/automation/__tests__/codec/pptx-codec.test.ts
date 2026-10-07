@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
-import { ELEMENT_FIELD_KIND, PptxHandler, SLIDE_FIELD_KIND } from '../../../index.js';
-import type { TextSegment, TextStyle } from '../../../index.js';
+import { ELEMENT_FIELD_KIND, PptxHandler, SLIDE_FIELD_KIND } from '../../../index';
+import type { TextSegment, TextStyle } from '../../../index';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 import { Doc as YDoc, Array as YArray, Map as YMap, Text as YText } from 'yjs';
 
@@ -11,9 +11,9 @@ import {
 	PptxCodec,
 	SCALAR_ELEMENT_KEYS,
 	SCALAR_SLIDE_KEYS,
-} from '../../codec/index.js';
-import { decodeTextBodyFromYText, encodeTextBodyToYText } from '../../codec/text-body-codec.js';
-import { createTestPptxBytes } from '../helpers/create-test-pptx.js';
+} from '../../codec/index';
+import { decodeTextBodyFromYText, encodeTextBodyToYText } from '../../codec/text-body-codec';
+import { createTestPptxBytes } from '../helpers/create-test-pptx';
 
 describe('text body codec', () => {
 	it('preserves paragraph formatting without inheriting it into following runs', () => {

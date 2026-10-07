@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import { styleAt } from '../styles.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
+import { parseRange } from '../address';
+import { getCell } from '../cells';
+import { styleAt } from '../styles';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
 
 const range = (ref: string) => {
 	const result = parseRange(ref);

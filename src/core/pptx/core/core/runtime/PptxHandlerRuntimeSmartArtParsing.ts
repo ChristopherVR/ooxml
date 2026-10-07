@@ -1,4 +1,4 @@
-import { connectionLabel } from '../../../../diagram/index.js';
+import { connectionLabel } from '../../../../diagram/index';
 import { XmlObject } from '../../types';
 import type {
 	PptxSmartArtConnection,

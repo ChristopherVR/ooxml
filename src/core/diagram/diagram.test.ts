@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseRelationships, relationshipsPartFor, resolvePartPath } from '../opc/index.js';
-import { parseXml } from '../xml/index.js';
+import { parseRelationships, relationshipsPartFor, resolvePartPath } from '../opc/index';
+import { parseXml } from '../xml/index';
 import {
 	attributeReader,
 	collectTransitionText,
@@ -20,7 +20,7 @@ import {
 	resolveDiagramLayoutCategory,
 	resolveDrawingColor,
 	type DiagramPackageHost,
-} from './index.js';
+} from './index';
 
 const fixtures = path.join(import.meta.dirname, '../pptx/__tests__/fixtures');
 const deck = async (...segments: string[]) =>

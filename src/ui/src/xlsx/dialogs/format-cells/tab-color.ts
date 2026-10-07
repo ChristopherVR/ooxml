@@ -1,8 +1,8 @@
 // The Tab Color dialog (sheet tab context menu and Home > Format > Tab Color).
 import type { Color } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { showDialog } from '../frame.js';
-import { swatchGrid } from './color-swatches.js';
+import { showDialog } from '../frame';
+import { swatchGrid } from './color-swatches';
 
 /** Resolves with `{ color }` (color undefined for No Color); undefined when cancelled. */
 export function openTabColorDialog(

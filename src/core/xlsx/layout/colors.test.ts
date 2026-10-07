@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_THEME } from '../workbook.js';
-import { INDEXED_COLORS, mixColors, resolveColor, themeColor } from './colors.js';
-import { applyTint, hls240ToRgb, parseHex, rgbToHls240 } from './tint.js';
+import { DEFAULT_THEME } from '../workbook';
+import { INDEXED_COLORS, mixColors, resolveColor, themeColor } from './colors';
+import { applyTint, hls240ToRgb, parseHex, rgbToHls240 } from './tint';
 
 /** Theme tints exactly as Excel stores them (multiples of 1/32767). */
 const LIGHTER_40 = 0.39997558519241921;

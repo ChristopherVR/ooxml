@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { parseAddress, parseRange } from '../address.js';
-import type { DataValidation } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
+import { parseAddress, parseRange } from '../address';
+import type { DataValidation } from '../model';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
 import {
 	DEFAULT_VALIDATION_MESSAGE,
 	listValidationOptions,
 	validateCellInput,
-} from './validation.js';
+} from './validation';
 
 const A = (ref: string) => {
 	const a = parseAddress(ref);

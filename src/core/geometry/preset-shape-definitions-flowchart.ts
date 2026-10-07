@@ -16,7 +16,7 @@
  * `ss`, `ssd2`, ...) and inline literals.
  */
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 // ---------------------------------------------------------------------------
 // Helpers (kept private — table file owns the public symbols)

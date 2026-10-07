@@ -1,14 +1,14 @@
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import { elements, parseXml, relAttr, type XmlElement } from '../../xml/index.js';
-import { parseRange } from '../address.js';
-import type { DifferentialStyle, Hyperlink, Worksheet } from '../model.js';
-import { createWorksheet } from '../workbook.js';
-import { mergeComments, parseLegacyComments, parseThreadedComments } from './comments.js';
-import { readConditionalFormats, readDataValidations } from './conditional.js';
-import { readConditionalExtensions } from '../conditional-extensions.js';
-import { parseDrawing } from './drawing.js';
-import type { SourceIndex } from './package.js';
-import { readSheetData, type CellContext } from './sheet-data.js';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import { elements, parseXml, relAttr, type XmlElement } from '../../xml/index';
+import { parseRange } from '../address';
+import type { DifferentialStyle, Hyperlink, Worksheet } from '../model';
+import { createWorksheet } from '../workbook';
+import { mergeComments, parseLegacyComments, parseThreadedComments } from './comments';
+import { readConditionalFormats, readDataValidations } from './conditional';
+import { readConditionalExtensions } from '../conditional-extensions';
+import { parseDrawing } from './drawing';
+import type { SourceIndex } from './package';
+import { readSheetData, type CellContext } from './sheet-data';
 import {
 	readAutoFilter,
 	readColumns,
@@ -18,10 +18,10 @@ import {
 	readSheetFormat,
 	readSheetView,
 	readTabColor,
-} from './sheet-props.js';
-import { readPrintOptions } from './print-options.js';
-import { parseTable } from './tables.js';
-import { att, outerXml, selfContainedXml, xChildren } from './xml-util.js';
+} from './sheet-props';
+import { readPrintOptions } from './print-options';
+import { parseTable } from './tables';
+import { att, outerXml, selfContainedXml, xChildren } from './xml-util';
 
 export interface SheetContext extends CellContext {
 	source: SourceIndex;

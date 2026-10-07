@@ -1,12 +1,12 @@
-import { registerOfficeUi } from '../index.js';
-import type { OfficeUiCallControls } from './call-controls.js';
-import type { OfficeUiCallGrid } from './call-grid.js';
-import type { OfficeUiChannelList } from './channel-list.js';
-import type { OfficeUiChatComposer } from './chat-composer.js';
-import type { ChatMessage, OfficeUiChatList } from './chat-list.js';
-import { initialsOf } from '../presence.js';
-import { dayLabel, formatSize } from './base.js';
-import { formatElapsed } from './call-controls.js';
+import { registerOfficeUi } from '../index';
+import type { OfficeUiCallControls } from './call-controls';
+import type { OfficeUiCallGrid } from './call-grid';
+import type { OfficeUiChannelList } from './channel-list';
+import type { OfficeUiChatComposer } from './chat-composer';
+import type { ChatMessage, OfficeUiChatList } from './chat-list';
+import { initialsOf } from '../presence';
+import { dayLabel, formatSize } from './base';
+import { formatElapsed } from './call-controls';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

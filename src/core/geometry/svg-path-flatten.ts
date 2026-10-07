@@ -13,10 +13,10 @@
  * @module render/svg-path-flatten
  */
 
-import type { Point2 } from './svg-path-types.js';
-export type { Point2 } from './svg-path-types.js';
-import { sampleCubic, sampleQuadratic, sampleArc } from './svg-path-curves.js';
-import { at } from './indexed.js';
+import type { Point2 } from './svg-path-types';
+export type { Point2 } from './svg-path-types';
+import { sampleCubic, sampleQuadratic, sampleArc } from './svg-path-curves';
+import { at } from './indexed';
 
 const COMMAND_RE = /[MLCQZAHVSmlcqzahvs][^MLCQZAHVSmlcqzahvs]*/gu;
 const NUMBER_RE = /-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/gu;

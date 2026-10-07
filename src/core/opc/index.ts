@@ -1,7 +1,7 @@
-export * from './relationship-types.js';
-export * from './relationships.js';
-export * from './content-types.js';
-export * from './package.js';
-export * from './safe-href.js';
-export * from './properties/index.js';
-export * as signature from './signature/index.js';
+export * from './relationship-types';
+export * from './relationships';
+export * from './content-types';
+export * from './package';
+export * from './safe-href';
+export * from './properties/index';
+export * as signature from './signature/index';

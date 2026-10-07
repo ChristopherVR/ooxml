@@ -4,10 +4,10 @@ import {
 	parseDiagramColors,
 	parseDiagramLayoutSummary,
 	parseDiagramQuickStyle,
-} from './definitions.js';
-import { parseDiagramDataModel } from './data-model.js';
-import { parseDiagramDrawing } from './drawing.js';
-import { resolveDiagramDrawingPart, type DiagramPartHost } from './relationships.js';
+} from './definitions';
+import { parseDiagramDataModel } from './data-model';
+import { parseDiagramDrawing } from './drawing';
+import { resolveDiagramDrawingPart, type DiagramPartHost } from './relationships';
 import type {
 	DiagramColorsDefinition,
 	DiagramDataModel,
@@ -16,7 +16,7 @@ import type {
 	DiagramLayoutSummary,
 	DiagramQuickStyleDefinition,
 	DiagramRelationshipIds,
-} from './types.js';
+} from './types';
 
 /** A part host that can also read part text. */
 export interface DiagramPackageHost extends DiagramPartHost {

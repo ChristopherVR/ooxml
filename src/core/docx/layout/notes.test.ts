@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { DocumentModel, Paragraph } from '../index.js';
-import { layoutDocumentModel } from './layout.js';
-import type { LayoutParagraphBox } from './result.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+import type { DocumentModel, Paragraph } from '../index';
+import { layoutDocumentModel } from './layout';
+import type { LayoutParagraphBox } from './result';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 // 10px per character; every line is 20px tall.
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };

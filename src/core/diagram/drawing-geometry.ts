@@ -1,7 +1,7 @@
 // DrawingML transform and geometry readers over the DOM. Diagram-independent; destined for
 // `drawingml` (preset evaluation itself lives in the `geometry` area).
-import { NS, booleanAttribute, children, first, type XmlElement } from './dom.js';
-import type { DiagramFrame, DiagramPath, DiagramPathCommand } from './types.js';
+import { NS, booleanAttribute, children, first, type XmlElement } from './dom';
+import type { DiagramFrame, DiagramPath, DiagramPathCommand } from './types';
 
 const int = (element: XmlElement | null | undefined, name: string): number =>
 	Number.parseInt(element?.getAttribute(name) ?? '', 10);

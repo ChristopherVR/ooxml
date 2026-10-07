@@ -1,13 +1,13 @@
 import { html } from 'lit';
-import { OfficeElement, controlStyles } from '../base.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { definer } from '../registry';
 import {
 	DEFAULT_OFFICE_PROFILE,
 	OFFICE_AVATAR_SWATCHES,
 	profileInitials,
 	sanitizeOfficeProfile,
 	type OfficeProfile,
-} from './account-profile.js';
+} from './account-profile';
 import css from './account.css?raw';
 
 /**

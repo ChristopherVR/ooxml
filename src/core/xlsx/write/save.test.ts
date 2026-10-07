@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { internStyle } from '../styles.js';
-import { createWorkbook, defaultCellStyle } from '../workbook.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from './index.js';
+import { putCell } from '../cells';
+import type { Workbook } from '../model';
+import { internStyle } from '../styles';
+import { createWorkbook, defaultCellStyle } from '../workbook';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from './index';
 
 const FIXTURES = [
 	'excel-features.xlsx',

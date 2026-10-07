@@ -1,8 +1,8 @@
 // The shared in-cell / formula-bar edit state. The grid owns editing (it validates and commits);
 // the formula bar reads the same text and caret and forwards what the user types. One bridge per
 // editor context, created on first use so mount order does not matter.
-import type { CellAddress } from '../../index.js';
-import type { EditorContext } from '../context.js';
+import type { CellAddress } from '../../index';
+import type { EditorContext } from '../context';
 
 /** Excel's status-bar modes: Ready, Enter (typing replaces), Edit (F2, arrows move the caret), Point. */
 export type EditMode = 'ready' | 'enter' | 'edit' | 'point';

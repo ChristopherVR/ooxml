@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { computeListLabels } from './numbering-format.js';
-import { restartCases, restartFixture } from './test-support/restart-fixture.js';
+import { loadDocx } from './parse';
+import { computeListLabels } from './numbering-format';
+import { restartCases, restartFixture } from './test-support/restart-fixture';
 
 for (const { name, restart, expected } of restartCases) {
 	it(`renders Word's ${name} restart rule and preserves source definitions during text editing`, async () => {

@@ -1,10 +1,10 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Comment and move range markers around rewritten runs. A range may span paragraphs, so each
 // paragraph only opens the ranges that start in it and closes the ones that end in it.
-import type { Block, Paragraph, TextRun } from './model.js';
-import { rangeKeys, type CommentContinuation } from './comment-spans.js';
-import { commentRangeEndNodes, commentRangeStartNode } from './write-comments.js';
-import { getW, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { Block, Paragraph, TextRun } from './model';
+import { rangeKeys, type CommentContinuation } from './comment-spans';
+import { commentRangeEndNodes, commentRangeStartNode } from './write-comments';
+import { getW, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 function setW(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

@@ -1,5 +1,5 @@
-import type { DrawingAnchor, DrawingObject } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
+import type { DrawingAnchor, DrawingObject } from '../model';
+import { type EditContext, sheetAt } from './context';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
 	const drawing = sheetAt(ctx.workbook, s).drawings[index];

@@ -1,5 +1,5 @@
-import type { Block, SectionProperties } from '../index.js';
-import { sectionLayoutJson, sectionsFromLayout } from '../index.js';
+import type { Block, SectionProperties } from '../index';
+import { sectionLayoutJson, sectionsFromLayout } from '../index';
 import { DocAttrStep, StepMap } from 'prosemirror-transform';
 import type { Node } from 'prosemirror-model';
 

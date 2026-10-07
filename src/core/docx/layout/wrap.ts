@@ -1,5 +1,5 @@
-import type { LineBoxFn } from './paragraph-layout.js';
-import type { LayoutPageBox } from './result.js';
+import type { LineBoxFn } from './paragraph-layout';
+import type { LayoutPageBox } from './result';
 
 /** Word's default distance between wrapped text and a picture's sides (`distL`/`distR`, 1/8 in). */
 const SIDE_DISTANCE_PX = 12;

@@ -1,8 +1,8 @@
-import type { CallContext } from '../context.js';
-import { weekdayOf } from '../date-serial.js';
-import { ERR, fail, isError, type Value } from '../values.js';
-import { num, scalar, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { weekdayOf } from '../date-serial';
+import { ERR, fail, isError, type Value } from '../values';
+import { num, scalar, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Date & Time';
 

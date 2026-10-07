@@ -1,7 +1,7 @@
 // Records and criteria in the layout of Microsoft's database-function examples; the expected
 // values are worked out by hand from the six rows below.
 import { describe, expect, it } from 'vitest';
-import { calc, E } from '../test-helpers.js';
+import { calc, E } from '../test-helpers';
 
 const rows = [
 	['Tree', 'Height', 'Age', 'Yield', 'Profit'],

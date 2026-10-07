@@ -1,11 +1,11 @@
-import { MAX_COL, MAX_ROW } from '../address.js';
-import { getCell, putCell } from '../cells.js';
-import type { Worksheet } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
-import { shiftFormula } from './deps.js';
-import type { Axis, AxisShift } from './range-math.js';
-import { rewriteFormulas } from './shift-formulas.js';
-import { shiftSheetContent } from './shift-sheet.js';
+import { MAX_COL, MAX_ROW } from '../address';
+import { getCell, putCell } from '../cells';
+import type { Worksheet } from '../model';
+import { type EditContext, sheetAt } from './context';
+import { shiftFormula } from './deps';
+import type { Axis, AxisShift } from './range-math';
+import { rewriteFormulas } from './shift-formulas';
+import { shiftSheetContent } from './shift-sheet';
 
 function checkSpan(axis: Axis, at: number, count: number): void {
 	const max = axis === 'row' ? MAX_ROW : MAX_COL;

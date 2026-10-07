@@ -1,7 +1,7 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, type Value } from '../values.js';
-import { int, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, type Value } from '../values';
+import { int, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Math & Trig';
 

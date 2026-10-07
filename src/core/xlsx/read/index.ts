@@ -1,2 +1,2 @@
-export { loadXlsx } from './load.js';
-export { translateReferences, stripFuturePrefixes, addFuturePrefixes } from './formula-text.js';
+export { loadXlsx } from './load';
+export { translateReferences, stripFuturePrefixes, addFuturePrefixes } from './formula-text';

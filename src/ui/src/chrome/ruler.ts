@@ -1,7 +1,7 @@
 import { html } from 'lit';
-import { OfficeElement, controlStyles } from '../base.js';
-import { definer } from '../registry.js';
-import { OFFICE_TOKENS } from '../tokens.js';
+import { OfficeElement, controlStyles } from '../base';
+import { definer } from '../registry';
+import { OFFICE_TOKENS } from '../tokens';
 import css from './ruler.css?raw';
 
 /** Tick subdivisions per unit for a given unit length in CSS pixels, finer as it grows. */

@@ -3,7 +3,7 @@
 import type { CellRange, ConditionalRule, DifferentialStyle } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { customFormat, hasStyle, previewBox } from './cf-common.js';
+import { customFormat, hasStyle, previewBox } from './cf-common';
 import {
 	type RulePanel,
 	averagePanel,
@@ -11,10 +11,10 @@ import {
 	formulaPanel,
 	topPanel,
 	uniquePanel,
-} from './cf-rule-panels.js';
-import { valuesPanel } from './cf-rule-scale.js';
-import { el, invalid, listBox, row, text } from './fields.js';
-import { button, showDialog } from './frame.js';
+} from './cf-rule-panels';
+import { valuesPanel } from './cf-rule-scale';
+import { el, invalid, listBox, row, text } from './fields';
+import { button, showDialog } from './frame';
 
 export interface RuleEdit {
 	rule: ConditionalRule;

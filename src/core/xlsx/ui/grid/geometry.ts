@@ -1,7 +1,7 @@
 // Pure pane geometry: where the frozen and scrolling quadrants sit, how a cell maps to view
 // pixels and back (hit testing), and header sizes. View coordinates have (0,0) at the top-left of
 // the grid element, headers included. Cell coordinates come from the core's GridMetrics.
-import type { CellRange, FreezePane, GridMetrics } from '../../index.js';
+import type { CellRange, FreezePane, GridMetrics } from '../../index';
 
 export type Quadrant = 'corner' | 'top' | 'left' | 'main';
 export const QUADRANTS: readonly Quadrant[] = ['main', 'top', 'left', 'corner'];

@@ -1,5 +1,5 @@
 import { contentUrl, sanitizeAttachment } from 'ooxml-core/teams';
-import type { OpenFileDetail } from './teams-app.js';
+import type { OpenFileDetail } from './teams-app';
 
 const MARKER = 'openteams-file';
 /** A separate tab runs the same UI bundle and reuses the native content renderer. */

@@ -8,7 +8,7 @@ import {
 	pixelsToColumnWidth,
 	pixelsToPoints,
 	pointsToPixels,
-} from './units.js';
+} from './units';
 
 describe('column width conversions', () => {
 	it.each([

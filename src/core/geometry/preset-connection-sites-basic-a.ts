@@ -7,8 +7,8 @@
  *
  * @module render/preset-connection-sites-basic-a
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { cxn, gd } from './preset-connection-sites-types';
 
 export const BASIC_SHAPE_CONNECTION_SITES_A: Record<string, PresetConnectionSiteDefinition> = {
 	arc: {

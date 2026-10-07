@@ -17,7 +17,7 @@ import type {
 	Fill,
 	Font,
 	Protection,
-} from '../model.js';
+} from '../model';
 
 /** A model colour, or undefined for automatic/system colours. */
 export function mapColor(color: XlsColor | undefined): Color | undefined {

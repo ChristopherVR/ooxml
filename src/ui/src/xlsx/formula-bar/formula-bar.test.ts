@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWorkbook, createWorksheet, putCell, type Workbook } from 'ooxml-core/xlsx';
-import { createTestContext, type TestContext } from '../grid/test-context.js';
+import { createTestContext, type TestContext } from '../grid/test-context';
 import { editBridge, type BeginOptions, type EditDriver } from 'ooxml-core/xlsx/ui';
-import { mountFormulaBar } from './index.js';
+import { mountFormulaBar } from './index';
 import { absoluteReference, resolveNameBox } from 'ooxml-core/xlsx/ui';
 
 const disposers: (() => void)[] = [];

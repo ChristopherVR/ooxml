@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type JSZip from 'jszip';
-import { ensureContentTypeOverride } from './zip-parts.js';
-import { buildXml, elements, parseXml, textContent, type XmlElement } from './xml.js';
+import { ensureContentTypeOverride } from './zip-parts';
+import { buildXml, elements, parseXml, textContent, type XmlElement } from './xml';
 
 /** Direct child by local name; core properties live in the cp/dc namespaces, not `w:`. */
 const child = (parent: XmlElement, local: string): XmlElement | undefined =>

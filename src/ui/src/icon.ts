@@ -1,6 +1,6 @@
-import { OfficeElement, controlStyles } from './base.js';
-import { glyph } from './glyph.js';
-import { definer } from './registry.js';
+import { OfficeElement, controlStyles } from './base';
+import { glyph } from './glyph';
+import { definer } from './registry';
 import css from './icon.css?raw';
 
 /** `<office-ui-icon name="check" label="Done">`: decorative unless `label` is set. */

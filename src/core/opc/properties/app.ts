@@ -1,5 +1,5 @@
-import { NS, buildXml, elements, first, parseXml, type XmlDocument } from '../../xml/index.js';
-import type { AppProperties, HeadingPair } from './types.js';
+import { NS, buildXml, elements, first, parseXml, type XmlDocument } from '../../xml/index';
+import type { AppProperties, HeadingPair } from './types';
 
 type Kind = 'text' | 'int' | 'bool' | 'pairs' | 'titles';
 type AppField = keyof AppProperties;

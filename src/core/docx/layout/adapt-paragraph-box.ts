@@ -1,6 +1,6 @@
-import type { DocumentModel, ParagraphFormatting } from '../index.js';
-import { border, cssHex } from './adapt-table.js';
-import type { LayoutBlock, LayoutParagraph, LayoutParagraphBorders } from './input.js';
+import type { DocumentModel, ParagraphFormatting } from '../index';
+import { border, cssHex } from './adapt-table';
+import type { LayoutBlock, LayoutParagraph, LayoutParagraphBorders } from './input';
 
 const pointsToPx = (points: number) => (points * 96) / 72;
 

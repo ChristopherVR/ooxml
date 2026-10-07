@@ -14,8 +14,8 @@
  *
  * @module render/preset-connection-sites-flowchart
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types';
 
 /** `il`/`it`/`ir`/`ib` for the circular flowchart connectors (same as `ellipse`). */
 const CIRCLE_GUIDES = [

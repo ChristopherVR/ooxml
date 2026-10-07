@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { formatValue } from './index.js';
+import { formatValue } from './index';
 
 /**
  * Every row was recorded from Excel 16 (en-US) by `__fixtures__/generate-excel-cases.ps1`:

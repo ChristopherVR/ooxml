@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { loadDocx, type Paragraph } from './index.js';
+import { loadDocx, type Paragraph } from './index';
 
 /** Embedded-document API shared with PowerPoint. Only direct body paragraphs are exposed. */
 export async function readOleDocumentParagraphs(bytes: Uint8Array): Promise<string[] | undefined> {

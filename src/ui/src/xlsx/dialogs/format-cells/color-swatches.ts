@@ -3,8 +3,8 @@
 import type { Color } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { STANDARD_COLORS, themeTints } from '../../ribbon/color-grid.js';
-import { el } from '../fields.js';
+import { STANDARD_COLORS, themeTints } from '../../ribbon/color-grid';
+import { el } from '../fields';
 
 const THEME_NAMES: ReadonlyArray<readonly [number, string]> = [
 	[0, 'Background 1'],

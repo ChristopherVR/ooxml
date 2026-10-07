@@ -1,6 +1,6 @@
 // Sparse cell iteration helpers for the calc engine.
-import type { CellRange } from '../address.js';
-import type { Cell, Worksheet } from '../model.js';
+import type { CellRange } from '../address';
+import type { Cell, Worksheet } from '../model';
 
 /** Visits stored cells inside a range in row-major order, touching only cells that exist. */
 export function scanRange(

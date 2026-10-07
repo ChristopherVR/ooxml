@@ -6,8 +6,8 @@ import {
 	roundDecimals,
 	shift,
 	toDigits,
-} from './decimal.js';
-import type { DigitChar, Token } from './types.js';
+} from './decimal';
+import type { DigitChar, Token } from './types';
 
 /** A number-section token with its role resolved at compile time. */
 export type PlanToken =

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { blendColorOntoWhite } from '../../../../color/color-primitives.js';
+import { blendColorOntoWhite } from '../../../../color/color-primitives';
 
 // Since extractBackgroundColor is a protected method on a deeply chained mixin,
 // we extract its pure-logic portion and test it directly.

@@ -1,5 +1,5 @@
-import { decodeBase64, encodeBase64 } from './base64.js';
-import { digestFunction } from './digest.js';
+import { decodeBase64, encodeBase64 } from './base64';
+import { digestFunction } from './digest';
 
 /**
  * An ECMA-376 agile password hash as Office stores it on protection elements (`sheetProtection`,

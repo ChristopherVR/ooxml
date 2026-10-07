@@ -1,13 +1,13 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import { BUILTIN_CELL_STYLES, builtinCellStyle } from '../cell-styles.js';
-import { loadXlsx } from '../read/index.js';
-import { patchStyle, styleAt } from '../styles.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/index.js';
-import { createEditSession } from './session.js';
+import { parseRange } from '../address';
+import { getCell } from '../cells';
+import { BUILTIN_CELL_STYLES, builtinCellStyle } from '../cell-styles';
+import { loadXlsx } from '../read/index';
+import { patchStyle, styleAt } from '../styles';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/index';
+import { createEditSession } from './session';
 
 const R = (ref: string) => {
 	const r = parseRange(ref);

@@ -1,7 +1,7 @@
-import { normalizeLocalName } from '../ast.js';
-import { compareScalars, toBool } from '../coerce.js';
-import type { CallContext, LazyArg } from '../context.js';
-import { broadcastShape, pick } from '../operators.js';
+import { normalizeLocalName } from '../ast';
+import { compareScalars, toBool } from '../coerce';
+import type { CallContext, LazyArg } from '../context';
+import { broadcastShape, pick } from '../operators';
 import {
 	ERR,
 	ErrorSignal,
@@ -12,9 +12,9 @@ import {
 	RefValue,
 	type Scalar,
 	type Value,
-} from '../values.js';
-import { LAMBDA_HELPERS } from './lambda.js';
-import type { FunctionSpec } from './types.js';
+} from '../values';
+import { LAMBDA_HELPERS } from './lambda';
+import type { FunctionSpec } from './types';
 
 const C = 'Logical';
 

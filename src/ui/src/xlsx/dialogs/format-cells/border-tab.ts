@@ -4,8 +4,8 @@
 import type { Border, BorderEdge, BorderStyle, CellRange } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
 import { type Target, UNSET } from 'ooxml-core/xlsx/ui';
-import { el, fieldset, row } from '../fields.js';
-import { swatchGrid } from './color-swatches.js';
+import { el, fieldset, row } from '../fields';
+import { swatchGrid } from './color-swatches';
 import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 type EdgeId =

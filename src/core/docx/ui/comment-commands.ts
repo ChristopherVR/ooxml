@@ -1,8 +1,8 @@
-import type { Comment } from '../model.js';
+import type { Comment } from '../model';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { TextSelection } from 'prosemirror-state';
-import { commentIdsFromMarks } from './comment-anchors.js';
+import { commentIdsFromMarks } from './comment-anchors';
 
 let commentSerial = 0;
 function nextCommentId(idGenerator?: (kind: string) => string): string {

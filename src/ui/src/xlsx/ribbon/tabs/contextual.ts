@@ -2,8 +2,8 @@
 // a chart).
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
 import { activeChart, activeTable } from 'ooxml-core/xlsx/ui';
-import { CHART_TYPES } from '../../commands/insert.js';
-import { tableStyleGalleryItems } from '../../commands/styles.js';
+import { CHART_TYPES } from '../../commands/insert';
+import { tableStyleGalleryItems } from '../../commands/styles';
 import { chartColorGalleryItems, chartColorGallerySections } from '../../commands/chart-colors';
 
 export function tableDesignTab(): RibbonTab {

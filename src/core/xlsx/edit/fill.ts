@@ -1,10 +1,10 @@
-import { type CellRange, normalizeRange } from '../address.js';
-import { deleteCell, getCell, putCell } from '../cells.js';
-import type { Cell } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
-import { translateFormula } from './deps.js';
-import { detectSeries, mod } from './fill-series.js';
-import type { FillMode } from './types.js';
+import { type CellRange, normalizeRange } from '../address';
+import { deleteCell, getCell, putCell } from '../cells';
+import type { Cell } from '../model';
+import { type EditContext, sheetAt } from './context';
+import { translateFormula } from './deps';
+import { detectSeries, mod } from './fill-series';
+import type { FillMode } from './types';
 
 /** A formula moved by (`dRow`, `dCol`); unparseable formulas are kept as they are. */
 export function moveFormula(formula: string, dRow: number, dCol: number): string {

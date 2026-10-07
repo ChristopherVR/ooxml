@@ -1,12 +1,12 @@
 // `xl/metadata.xml` on save: the source part is kept (so `vm` value metadata and other `cm`
 // cell metadata indices stay valid) and the dynamic-array (XLDAPR) block is merged into it.
-import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/index.js';
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import { DYNAMIC_ARRAY_TYPE, parseDynamicArrayMetadata } from '../read/metadata.js';
-import { CONTENT_TYPES } from '../read/package.js';
-import { relativeTarget } from './drawing.js';
-import { DYNAMIC_ARRAY_METADATA_XML } from './dynamic-array.js';
-import type { PackageWriter, RelationshipSet } from './package-writer.js';
+import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/index';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import { DYNAMIC_ARRAY_TYPE, parseDynamicArrayMetadata } from '../read/metadata';
+import { CONTENT_TYPES } from '../read/package';
+import { relativeTarget } from './drawing';
+import { DYNAMIC_ARRAY_METADATA_XML } from './dynamic-array';
+import type { PackageWriter, RelationshipSet } from './package-writer';
 
 const NS_XDA = 'http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray';
 const XLDAPR_EXT = '{bdbb8cdc-fa1e-496e-a857-3c3f30c029c3}';

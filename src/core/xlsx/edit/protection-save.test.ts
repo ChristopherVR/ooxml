@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 import JSZip from 'jszip';
-import type { Workbook } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/index.js';
-import { verifySheetPassword, verifyWorkbookPassword } from './protection.js';
-import { createEditSession } from './session.js';
+import type { Workbook } from '../model';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/index';
+import { verifySheetPassword, verifyWorkbookPassword } from './protection';
+import { createEditSession } from './session';
 
 // Written by Excel 16: `Worksheet.Protect('open sesame')` and `Workbook.Protect('open sesame', True)`.
 const SHEET_HASH =

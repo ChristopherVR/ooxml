@@ -10,8 +10,8 @@ import {
 } from 'ooxml-core/xlsx';
 import { guessHeader, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, fieldset } from './fields.js';
-import { showDialog } from './frame.js';
+import { checkbox, fieldset } from './fields';
+import { showDialog } from './frame';
 
 export type LabelEdge = 'top' | 'left' | 'bottom' | 'right';
 

@@ -1,7 +1,7 @@
 // Token-level formula rewriting: everything except the touched references keeps the user's text.
-import { type CellRange, columnLabel, MAX_COL, MAX_ROW, normalizeRange } from '../address.js';
-import { FormulaError, type RefCorner, type RefSpec, type SheetPrefix } from './ast.js';
-import { joinTokens, type Token, tokenize } from './tokenizer.js';
+import { type CellRange, columnLabel, MAX_COL, MAX_ROW, normalizeRange } from '../address';
+import { FormulaError, type RefCorner, type RefSpec, type SheetPrefix } from './ast';
+import { joinTokens, type Token, tokenize } from './tokenizer';
 
 export interface ShiftSpec {
 	/** Sheet whose rows or columns are inserted or deleted. */

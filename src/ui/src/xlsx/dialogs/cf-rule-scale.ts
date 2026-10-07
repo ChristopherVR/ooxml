@@ -3,8 +3,8 @@
 import type { CfvoThreshold, Color, ConditionalRule } from 'ooxml-core/xlsx';
 import { ICON_SETS, iconCount, iconThresholds } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import type { PanelRead, RulePanel } from './cf-rule-panels.js';
-import { checkbox, el, field, row, select, textInput } from './fields.js';
+import type { PanelRead, RulePanel } from './cf-rule-panels';
+import { checkbox, el, field, row, select, textInput } from './fields';
 
 type Style = '2color' | '3color' | 'dataBar' | 'iconSet';
 type CfvoType = CfvoThreshold['type'];

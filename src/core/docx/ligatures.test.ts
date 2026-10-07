@@ -6,12 +6,12 @@ import {
 	saveDocx,
 	resolveRunFormatting,
 	type Ligatures,
-} from './index.js';
-import { LIGATURE_VALUES, WORD_2010_NS, writeLigatures } from './ligatures.js';
-import { parseXml, WORD_NS } from './xml.js';
-import { runHasUnknownProperties } from './write-run-validation.js';
-import { parseRunProperties } from './run-properties.js';
-import { expectParagraph } from './test-support/access.js';
+} from './index';
+import { LIGATURE_VALUES, WORD_2010_NS, writeLigatures } from './ligatures';
+import { parseXml, WORD_NS } from './xml';
+import { runHasUnknownProperties } from './write-run-validation';
+import { parseRunProperties } from './run-properties';
+import { expectParagraph } from './test-support/access';
 
 const xmlRun = (value: string) =>
 	parseXml(

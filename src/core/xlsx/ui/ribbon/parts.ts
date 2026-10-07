@@ -14,7 +14,7 @@
 //   text; a `color` control calls `run(ctx, color)` with a `Color` (`{ rgb: 'RRGGBB' }`,
 //   `{ theme, tint }`) or `undefined` for Automatic / No Fill;
 // - a `menu` or `split` item calls `run(ctx, item.arg)`; a gallery calls `run(ctx, item.id)`.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from '../context';
 
 export interface RibbonOption {
 	value: string;

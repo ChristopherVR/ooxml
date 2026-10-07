@@ -1,6 +1,6 @@
 // Drag a tab to reorder sheets: after a 5px threshold an insertion marker follows the pointer;
 // dropping moves the sheet with the core's `moveSheet` and keeps it active.
-import { h } from '../grid/dom.js';
+import { h } from '../grid/dom';
 
 const THRESHOLD = 5;
 

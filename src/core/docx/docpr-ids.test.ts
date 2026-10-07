@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx, type DocumentModel, type Paragraph } from './index.js';
-import { DocPrIdAllocator } from './docpr-ids.js';
+import { createDocument, loadDocx, saveDocx, type DocumentModel, type Paragraph } from './index';
+import { DocPrIdAllocator } from './docpr-ids';
 
 const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 const picture = (name: string) => ({

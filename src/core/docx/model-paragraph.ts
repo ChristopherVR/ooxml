@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StJc, StTabJc, StTabTlc } from './generated/wml-simple-types.js';
-import type { Revision, TextRun } from './model-run.js';
-import type { SignedTwips, Twips } from './units.js';
+import type { StJc, StTabJc, StTabTlc } from './generated/wml-simple-types';
+import type { Revision, TextRun } from './model-run';
+import type { SignedTwips, Twips } from './units';
 
 /** A paragraph tab stop (`w:tab`): position from the text margin, alignment and leader fill. */
 export interface TabStop {
@@ -69,7 +69,7 @@ export interface Paragraph {
 	 */
 	dropCap?: { style: 'drop' | 'margin'; lines: number; distanceTwips?: Twips };
 	/** `w:pBdr`; read-only (preserved in the source XML, not written for new paragraphs). */
-	borders?: import('./table-model.js').ParagraphBorders;
+	borders?: import('./table-model').ParagraphBorders;
 	/** `w:shd/@w:fill` as `#rrggbb`; read-only like `borders`. */
 	shadingFill?: string;
 	/**

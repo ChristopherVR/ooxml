@@ -2,11 +2,11 @@ import { html, type PropertyValues, type TemplateResult } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
-import { OfficeElement, controlStyles } from '../base.js';
-import { glyph } from '../glyph.js';
-import { defineSearchField } from '../form/search-field.js';
-import { defineSwitch } from '../form/switch.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { glyph } from '../glyph';
+import { defineSearchField } from '../form/search-field';
+import { defineSwitch } from '../form/switch';
+import { definer } from '../registry';
 import {
 	matchTitleBarCommands,
 	OFFICE_TITLE_BAR_SEARCH_LIMIT,
@@ -14,10 +14,10 @@ import {
 	type OfficeTitleBarCommand,
 	type OfficeTitleBarPlacement,
 	type OfficeTitleBarState,
-} from './title-bar-types.js';
+} from './title-bar-types';
 import css from './title-bar.css?raw';
 
-export * from './title-bar-types.js';
+export * from './title-bar-types';
 
 const EMPTY: OfficeTitleBarState = { fileName: '' };
 type Statics = {

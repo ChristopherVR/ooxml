@@ -8,10 +8,10 @@ import {
 	inputByLabel,
 	pressKey,
 	setValue,
-} from '../commands/test-support.js';
-import { seriesValues } from './fill-series.js';
-import { registerToolDialogs } from './register-tools.js';
-import { splitLine } from './text-to-columns.js';
+} from '../commands/test-support';
+import { seriesValues } from './fill-series';
+import { registerToolDialogs } from './register-tools';
+import { splitLine } from './text-to-columns';
 
 afterEach(() => (document.body.innerHTML = ''));
 

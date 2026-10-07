@@ -1,8 +1,8 @@
 // Moved with the controlled menu from pptx-viewer (context-menu.test.ts).
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { typeAheadIndex, type OfficeMenuState } from './menu-model.js';
-import { registerOfficeUi } from '../index.js';
+import { typeAheadIndex, type OfficeMenuState } from './menu-model';
+import { registerOfficeUi } from '../index';
 
 type Menu = HTMLElement & { state: OfficeMenuState };
 

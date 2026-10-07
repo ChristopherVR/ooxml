@@ -4,12 +4,12 @@ import type {
 	NumberingCatalog,
 	NumberingLevelDefinition,
 	NumDefinition,
-} from './numbering-model.js';
-import type { ParagraphStyleCatalog } from './model-paragraph.js';
-import { expectDefined } from './expect-defined.js';
-import { signedTwips, twips } from './units.js';
-import { Checker, DocxModelValidationError, type ValidationIssue } from './validate-issues.js';
-import { validateNumberingCatalog } from './validate-structure.js';
+} from './numbering-model';
+import type { ParagraphStyleCatalog } from './model-paragraph';
+import { expectDefined } from './expect-defined';
+import { signedTwips, twips } from './units';
+import { Checker, DocxModelValidationError, type ValidationIssue } from './validate-issues';
+import { validateNumberingCatalog } from './validate-structure';
 
 /**
  * `multilevel` numbers 1., 1.1., 1.1.1. (every level shows its ancestors); `outline` cycles

@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Inline pictures and hyperlink targets carried by text runs.
-import type { DocxDiagram } from './diagram.js';
-import type { StRelFromH, StRelFromV } from './generated/wml-simple-types.js';
+import type { DocxDiagram } from './diagram';
+import type { StRelFromH, StRelFromV } from './generated/wml-simple-types';
 
 /** An inline drawing (`w:drawing` or legacy `w:pict`) modeled at run granularity. */
 export interface InlineImage {

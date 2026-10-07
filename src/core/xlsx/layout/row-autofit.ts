@@ -1,9 +1,9 @@
 // Automatic row height: the tallest line stack of a row's cells, like Excel's AutoFit.
-import type { Workbook } from '../model.js';
-import type { MeasureText } from './autofit.js';
-import { cellView } from './cell-view.js';
-import { createGridMetrics } from './metrics.js';
-import { COLUMN_PADDING_PX } from './units.js';
+import type { Workbook } from '../model';
+import type { MeasureText } from './autofit';
+import { cellView } from './cell-view';
+import { createGridMetrics } from './metrics';
+import { COLUMN_PADDING_PX } from './units';
 
 /** Excel's row heights (points) for Calibri at common font sizes (points). */
 const LINE_HEIGHTS: readonly [number, number][] = [

@@ -6,7 +6,7 @@ import type {
 	DiagramConnection,
 	DiagramNodeCustomLayout,
 	DiagramRelationshipIds,
-} from './types.js';
+} from './types';
 
 const optionalString = (value: string | undefined): string | undefined => {
 	const text = (value ?? '').trim();

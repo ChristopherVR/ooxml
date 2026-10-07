@@ -2,9 +2,9 @@
 // EMU offsets, or a one-cell marker with an EMU extent) to plane pixel rectangles at the metrics'
 // zoom, and back. Ported from xlsx-viewer `packages/web-component/src/grid/drawings.ts`
 // (`anchorBox`, `boxAnchor`) and the extent maths of `commands/insert.ts`.
-import { EMU_PER_PIXEL } from '../../units/constants.js';
-import type { DrawingAnchor, Worksheet } from '../model.js';
-import { createGridMetrics, type GridMetrics } from './metrics.js';
+import { EMU_PER_PIXEL } from '../../units/constants';
+import type { DrawingAnchor, Worksheet } from '../model';
+import { createGridMetrics, type GridMetrics } from './metrics';
 
 /** A rectangle on the grid plane in pixels at the metrics' zoom (origin: top-left of A1). */
 export interface PixelBox {

@@ -2,12 +2,12 @@ import {
 	parseAppProperties,
 	parseCoreProperties,
 	parseCustomProperties,
-} from '../../opc/properties/index.js';
-import { parseXml, relAttr } from '../../xml/index.js';
-import type { DefinedName, ModernPasswordHash, SheetState, WorkbookProperties } from '../model.js';
-import { stripFuturePrefixes } from './formula-text.js';
-import { readModernHash } from './password-hash.js';
-import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util.js';
+} from '../../opc/properties/index';
+import { parseXml, relAttr } from '../../xml/index';
+import type { DefinedName, ModernPasswordHash, SheetState, WorkbookProperties } from '../model';
+import { stripFuturePrefixes } from './formula-text';
+import { readModernHash } from './password-hash';
+import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
 
 export interface SheetEntry {
 	name: string;

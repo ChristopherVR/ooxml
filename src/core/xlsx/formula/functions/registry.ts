@@ -1,18 +1,18 @@
-import { ARRAY_FUNCTIONS } from './array.js';
-import { DATABASE_FUNCTIONS } from './database.js';
-import { DATETIME_FUNCTIONS } from './datetime.js';
-import { ENGINEERING_FUNCTIONS } from './engineering.js';
-import { FINANCIAL_FUNCTIONS } from './financial.js';
-import { INFO_FUNCTIONS } from './info.js';
-import { LOGICAL_FUNCTIONS } from './logical.js';
-import { LOOKUP_FUNCTIONS } from './lookup.js';
-import { MATH_FUNCTIONS } from './math.js';
-import { MATRIX_FUNCTIONS } from './matrix.js';
-import { STATISTICAL_FUNCTIONS } from './statistical.js';
-import { DISTRIBUTION_FUNCTIONS } from './distributions.js';
-import { TEXT_FUNCTIONS } from './text.js';
-import { TEXT_EXTRA_FUNCTIONS } from './text-extra.js';
-import type { FunctionInfo, FunctionSpec } from './types.js';
+import { ARRAY_FUNCTIONS } from './array';
+import { DATABASE_FUNCTIONS } from './database';
+import { DATETIME_FUNCTIONS } from './datetime';
+import { ENGINEERING_FUNCTIONS } from './engineering';
+import { FINANCIAL_FUNCTIONS } from './financial';
+import { INFO_FUNCTIONS } from './info';
+import { LOGICAL_FUNCTIONS } from './logical';
+import { LOOKUP_FUNCTIONS } from './lookup';
+import { MATH_FUNCTIONS } from './math';
+import { MATRIX_FUNCTIONS } from './matrix';
+import { STATISTICAL_FUNCTIONS } from './statistical';
+import { DISTRIBUTION_FUNCTIONS } from './distributions';
+import { TEXT_FUNCTIONS } from './text';
+import { TEXT_EXTRA_FUNCTIONS } from './text-extra';
+import type { FunctionInfo, FunctionSpec } from './types';
 
 const ALL: readonly FunctionSpec[] = [
 	...MATH_FUNCTIONS,

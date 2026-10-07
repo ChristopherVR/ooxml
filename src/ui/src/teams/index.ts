@@ -1,22 +1,22 @@
-import { defineAppRail } from './app-rail.js';
-import { defineAvatar } from './avatar.js';
-import { defineCallControls } from './call-controls.js';
-import { defineCallGrid } from './call-grid.js';
-import { defineChannelList } from './channel-list.js';
-import { defineChatComposer } from './chat-composer.js';
-import { defineChatList } from './chat-list.js';
-import { definePrejoin } from './prejoin.js';
+import { defineAppRail } from './app-rail';
+import { defineAvatar } from './avatar';
+import { defineCallControls } from './call-controls';
+import { defineCallGrid } from './call-grid';
+import { defineChannelList } from './channel-list';
+import { defineChatComposer } from './chat-composer';
+import { defineChatList } from './chat-list';
+import { definePrejoin } from './prejoin';
 
-export * from './app-rail.js';
-export * from './avatar.js';
-export * from './base.js';
-export * from './call-controls.js';
-export * from './call-grid.js';
-export * from './channel-list.js';
-export * from './chat-composer.js';
-export * from './chat-list.js';
-export * from './icons.js';
-export * from './prejoin.js';
+export * from './app-rail';
+export * from './avatar';
+export * from './base';
+export * from './call-controls';
+export * from './call-grid';
+export * from './channel-list';
+export * from './chat-composer';
+export * from './chat-list';
+export * from './icons';
+export * from './prejoin';
 
 /** Every tag the team-workspace elements define. */
 export const TEAMS_TAGS = [
@@ -42,4 +42,4 @@ export function registerTeams(): void {
 	defineCallControls();
 }
 
-export * from './app/index.js';
+export * from './app/index';

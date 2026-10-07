@@ -2,9 +2,9 @@
 // Inline text boxes (`wp:inline` > `wps:wsp` with `wps:txbx`) the editor creates and edits. Only the
 // simple form written here is editable: plain paragraphs of plain runs. Any other text box keeps
 // its XML untouched.
-import type { InlineImage } from './model.js';
-import { EMU_PER_PIXEL } from './drawing.js';
-import { isElement, makeNS, makeW, type XmlDocument, type XmlElement } from './xml.js';
+import type { InlineImage } from './model';
+import { EMU_PER_PIXEL } from './drawing';
+import { isElement, makeNS, makeW, type XmlDocument, type XmlElement } from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';

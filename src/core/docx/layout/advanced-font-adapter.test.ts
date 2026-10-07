@@ -1,6 +1,6 @@
-import { createDocument, halfPoints } from '../index.js';
+import { createDocument, halfPoints } from '../index';
 import { describe, expect, it } from 'vitest';
-import { adaptDocumentModel } from './adapter.js';
+import { adaptDocumentModel } from './adapter';
 
 describe('advanced font layout adaptation', () => {
 	it('keeps explicit baseline full size even with inherited superscript', () => {

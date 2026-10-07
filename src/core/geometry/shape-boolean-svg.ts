@@ -8,9 +8,9 @@
  * @module geometry/shape-boolean-svg
  */
 
-import { at } from './indexed.js';
-import type { Vec2 } from './shape-boolean-types.js';
-import { dedupPoly, fmtNum } from './shape-boolean-types.js';
+import { at } from './indexed';
+import type { Vec2 } from './shape-boolean-types';
+import { dedupPoly, fmtNum } from './shape-boolean-types';
 
 // ---------------------------------------------------------------------------
 // SVG path → Polygons

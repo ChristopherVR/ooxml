@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { computeStackedSeriesPlots } from './stacked-series.js';
+import { computeStackedSeriesPlots } from './stacked-series';
 
 describe('computeStackedSeriesPlots', () => {
 	it('accumulates plain stacked values bottom-up in series order', () => {

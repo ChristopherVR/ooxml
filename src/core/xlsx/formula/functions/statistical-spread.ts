@@ -1,7 +1,7 @@
-import { collectNumbers, num, spec } from './helpers.js';
-import { all } from './helpers.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+import { collectNumbers, num, spec } from './helpers';
+import { all } from './helpers';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Statistical';
 

@@ -1,4 +1,4 @@
-import { NS, first, type XmlElement } from '../../xml/index.js';
+import { NS, first, type XmlElement } from '../../xml/index';
 import type {
 	CfvoThreshold,
 	Color,
@@ -9,12 +9,12 @@ import type {
 	DifferentialStyle,
 	TimePeriod,
 	ValidationType,
-} from '../model.js';
-import { TIME_PERIODS } from '../model.js';
-import { stripFuturePrefixes } from './formula-text.js';
-import { parseSqref } from './sheet-props.js';
-import { parseColor } from './style-parts.js';
-import { att, boolAttr, numAttr, xChildren, xFirst } from './xml-util.js';
+} from '../model';
+import { TIME_PERIODS } from '../model';
+import { stripFuturePrefixes } from './formula-text';
+import { parseSqref } from './sheet-props';
+import { parseColor } from './style-parts';
+import { att, boolAttr, numAttr, xChildren, xFirst } from './xml-util';
 
 const CFVO_TYPES = new Set(['min', 'max', 'num', 'percent', 'percentile', 'formula']);
 

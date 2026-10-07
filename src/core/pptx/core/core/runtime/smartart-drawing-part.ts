@@ -1,7 +1,7 @@
 import {
 	resolveDiagramDrawingPart,
 	type DiagramRelationshipEntry,
-} from '../../../../diagram/index.js';
+} from '../../../../diagram/index';
 import type { XmlObject } from '../../types';
 
 interface DrawingPartDeps {

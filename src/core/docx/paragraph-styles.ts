@@ -3,17 +3,17 @@ import type {
 	ParagraphFormatting,
 	ParagraphStyleCatalog,
 	ParagraphStyleDefinition,
-} from './model.js';
-import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml.js';
-import { parseParagraphBorders, parseShadingFill } from './table-borders.js';
-import { alignFromJustification, parseJustification } from './paragraph-alignment.js';
+} from './model';
+import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
+import { parseParagraphBorders, parseShadingFill } from './table-borders';
+import { alignFromJustification, parseJustification } from './paragraph-alignment';
 import {
 	onOffElement,
 	parseInteger,
 	parseOnOff,
 	parseSignedTwips,
 	parseTwips,
-} from './simple-types.js';
+} from './simple-types';
 
 const signedTwipValue = parseSignedTwips;
 const twipValue = parseTwips;

@@ -1,5 +1,5 @@
-import { expectDefined } from './expect-defined.js';
-import type { Paragraph, Table, TableCell } from './model.js';
+import { expectDefined } from './expect-defined';
+import type { Paragraph, Table, TableCell } from './model';
 import {
 	patchCellBorders,
 	patchCellShading,
@@ -7,7 +7,7 @@ import {
 	patchCellVerticalAlignment,
 	patchRowProperties,
 	patchTableMargins,
-} from './write-table-properties.js';
+} from './write-table-properties';
 import {
 	children,
 	first,
@@ -16,7 +16,7 @@ import {
 	named,
 	type XmlDocument,
 	type XmlElement,
-} from './xml.js';
+} from './xml';
 
 type ParagraphWriter = (
 	doc: XmlDocument,

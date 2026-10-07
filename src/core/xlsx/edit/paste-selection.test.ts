@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ROW, parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
+import { MAX_ROW, parseRange } from '../address';
+import { getCell } from '../cells';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
 
 const range = (ref: string) => {
 	const result = parseRange(ref);

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import type { Paragraph } from './model.js';
-import { parseXml } from './xml.js';
-import { parseOmml, convertOmmlToMathMl } from '../math/index.js';
+import { loadDocx } from './parse';
+import type { Paragraph } from './model';
+import { parseXml } from './xml';
+import { parseOmml, convertOmmlToMathMl } from '../math/index';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';

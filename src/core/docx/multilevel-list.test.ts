@@ -4,7 +4,7 @@ import {
 	createDocument,
 	ensureListDefinition,
 	type Paragraph,
-} from './index.js';
+} from './index';
 
 describe('multilevel list definitions', () => {
 	it('numbers 1., 1.1. and 1.1.1. for the multilevel kind and 1. a) i. for outline', () => {

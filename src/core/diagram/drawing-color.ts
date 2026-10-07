@@ -10,10 +10,10 @@ import {
 	rgbToHsl,
 	scrgbLinearToSrgb8,
 	toHex,
-} from '../color/index.js';
-import { linearToSrgb255, srgb255ToLinear } from '../color/color-linear.js';
-import { NS, elements, type XmlElement } from './dom.js';
-import type { DiagramColor } from './types.js';
+} from '../color/index';
+import { linearToSrgb255, srgb255ToLinear } from '../color/color-linear';
+import { NS, elements, type XmlElement } from './dom';
+import type { DiagramColor } from './types';
 
 const COLOR_ELEMENTS: Record<string, DiagramColor['kind']> = {
 	srgbClr: 'srgb',

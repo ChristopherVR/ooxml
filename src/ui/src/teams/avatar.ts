@@ -1,7 +1,7 @@
 import { html, type PropertyValues } from 'lit';
-import { definer } from '../registry.js';
-import { initialsOf } from '../presence.js';
-import { TeamsElement, colorFor, withStyles } from './base.js';
+import { definer } from '../registry';
+import { initialsOf } from '../presence';
+import { TeamsElement, colorFor, withStyles } from './base';
 import css from './avatar.css?raw';
 
 export type Presence = 'available' | 'busy' | 'away' | 'offline';

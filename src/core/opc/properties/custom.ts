@@ -1,5 +1,5 @@
-import { NS, buildXml, children, elements, parseXml } from '../../xml/index.js';
-import { CUSTOM_PROPERTIES_FMTID, type CustomProperty } from './types.js';
+import { NS, buildXml, children, elements, parseXml } from '../../xml/index';
+import { CUSTOM_PROPERTIES_FMTID, type CustomProperty } from './types';
 
 const escape = (text: string, attribute = false): string => {
 	const out = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

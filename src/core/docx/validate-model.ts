@@ -2,13 +2,13 @@
 // Pre-save model validation: walks a DocumentModel and reports every value the serializer
 // could not write as schema-valid WordprocessingML, so `saveDocx` fails loudly instead of
 // emitting a file Word rejects. Rules reuse the generated ECMA-376 guards.
-import { isStNumberFormat } from './generated/wml-simple-types.js';
-import type { Block, DocumentModel } from './model.js';
-import { Checker, DocxModelValidationError, type ValidationIssue } from './validate-issues.js';
-import { validateParagraph } from './validate-paragraph.js';
-import { validateNumberingCatalog, validateSection, validateTable } from './validate-structure.js';
+import { isStNumberFormat } from './generated/wml-simple-types';
+import type { Block, DocumentModel } from './model';
+import { Checker, DocxModelValidationError, type ValidationIssue } from './validate-issues';
+import { validateParagraph } from './validate-paragraph';
+import { validateNumberingCatalog, validateSection, validateTable } from './validate-structure';
 
-export { DocxModelValidationError, type ValidationIssue } from './validate-issues.js';
+export { DocxModelValidationError, type ValidationIssue } from './validate-issues';
 
 function validateBlocks(c: Checker, blocks: Block[] | undefined): void {
 	blocks?.forEach((block, index) => {

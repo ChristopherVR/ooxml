@@ -5,5 +5,5 @@ export {
 	COMPLEX_FIELD_MAP,
 	SCALAR_SLIDE_KEYS,
 	COMPLEX_SLIDE_FIELD_MAP,
-} from './pptx-codec.js';
-export type { FormatCodec } from './pptx-codec.js';
+} from './pptx-codec';
+export type { FormatCodec } from './pptx-codec';

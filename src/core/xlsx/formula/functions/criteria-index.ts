@@ -1,9 +1,9 @@
 // Equality lookups for criteria over ranges many formulas share: SUMIF(A:A,A2,B:B) filled down a
 // column asks the same cached block for a different value each time, so the block is indexed once
 // by value instead of being scanned by every formula.
-import { round15, parseNumberText } from '../text-number.js';
-import type { Matrix, Scalar } from '../values.js';
-import { hasWildcards } from './helpers.js';
+import { round15, parseNumberText } from '../text-number';
+import type { Matrix, Scalar } from '../values';
+import { hasWildcards } from './helpers';
 
 const uses = new WeakMap<Matrix, number>();
 const indexes = new WeakMap<Matrix, Map<string, number[]>>();

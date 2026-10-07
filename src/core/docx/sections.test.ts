@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './index.js';
+import { loadDocx } from './index';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

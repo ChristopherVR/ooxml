@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { LayoutParagraph } from './input.js';
-import type { TextMeasurer } from './measure.js';
-import { fontOf, runTextWidth } from './paragraph-tokens.js';
-import { layoutParagraph } from './paragraph-layout.js';
+import type { LayoutParagraph } from './input';
+import type { TextMeasurer } from './measure';
+import { fontOf, runTextWidth } from './paragraph-tokens';
+import { layoutParagraph } from './paragraph-layout';
 
 const measurer: TextMeasurer = {
 	widthOf: (text) => [...text].length * 10,

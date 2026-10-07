@@ -2,9 +2,9 @@
 // freeze-pane lines for one frame.
 import type { GridMetrics, VisibleCells } from 'ooxml-core/xlsx';
 import type { Selection } from 'ooxml-core/xlsx/ui';
-import { place } from './dom.js';
+import { place } from './dom';
 import type { GridGeometry } from 'ooxml-core/xlsx/ui';
-import type { HeaderLayer } from './headers.js';
+import type { HeaderLayer } from './headers';
 import { colSelected, rowSelected } from 'ooxml-core/xlsx/ui';
 
 export interface HeaderPane {

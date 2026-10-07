@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { layoutDocument } from './layout.js';
-import { FLOAT_WRAP_NOTE } from './floats.js';
-import type { LayoutDocumentInput, LayoutFloat, LayoutParagraph } from './input.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+import { layoutDocument } from './layout';
+import { FLOAT_WRAP_NOTE } from './floats';
+import type { LayoutDocumentInput, LayoutFloat, LayoutParagraph } from './input';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };
 const picture = {

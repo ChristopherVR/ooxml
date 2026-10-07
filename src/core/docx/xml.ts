@@ -17,7 +17,7 @@ import {
 	type XmlDocument,
 	type XmlElement,
 	type XmlNode,
-} from '../xml/index.js';
+} from '../xml/index';
 
 export const WORD_NS = NS.w;
 /** Word 2023 revision timestamps, separate from legacy `w:date`. */

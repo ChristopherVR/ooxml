@@ -2,7 +2,7 @@ import { Schema } from 'prosemirror-model';
 import { EditorState, TextSelection, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { describe, expect, it } from 'vitest';
-import { reviewMarks } from './review-schema.js';
+import { reviewMarks } from './review-schema';
 import {
 	addComment,
 	commentAnchors,
@@ -11,7 +11,7 @@ import {
 	removeCommentAnchor,
 	replyToComment,
 	resolveComment,
-} from './comment-commands.js';
+} from './comment-commands';
 
 const schema = new Schema({
 	nodes: { doc: { content: 'paragraph+' }, paragraph: { content: 'text*' }, text: {} },

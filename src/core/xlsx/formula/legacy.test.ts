@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { isSpilledCell } from './spill.js';
-import { book, engine, get, locate } from './test-helpers.js';
+import { getCell } from '../cells';
+import { isSpilledCell } from './spill';
+import { book, engine, get, locate } from './test-helpers';
 
 const legacy = (wb: ReturnType<typeof book>, key: string): void => {
 	const at = locate(wb, key);

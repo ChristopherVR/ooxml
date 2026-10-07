@@ -13,10 +13,10 @@ import {
 	type DiagramIssue,
 	type DiagramLayoutType,
 	type DiagramRelationshipIds,
-} from '../diagram/index.js';
-import { parseRelationships, resolvePartPath } from '../opc/index.js';
-import type { Relationship } from './package-parts.js';
-import type { XmlElement } from './xml.js';
+} from '../diagram/index';
+import { parseRelationships, resolvePartPath } from '../opc/index';
+import type { Relationship } from './package-parts';
+import type { XmlElement } from './xml';
 
 /** The `a:graphicData/@uri` of a SmartArt graphic. */
 export const DIAGRAM_GRAPHIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/diagram';

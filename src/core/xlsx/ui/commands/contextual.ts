@@ -1,10 +1,10 @@
 // Contextual Table Design and Chart Design commands. A table is "selected" when the active cell is
 // inside it; a chart when it is the selected drawing (`selection.drawing`, set by clicking it).
-import { type ChartObject, type ChartPatch, type ChartType, type Table } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { editing, tableAt, target } from './util.js';
+import { type ChartObject, type ChartPatch, type ChartType, type Table } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { editing, tableAt, target } from './util';
 import { chartColorPalettePatch } from '../../edit/chart-colors';
 
 export const activeTable = (ctx: EditorContext): Table | undefined => {

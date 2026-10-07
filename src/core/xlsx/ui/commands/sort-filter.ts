@@ -1,9 +1,9 @@
 // Sort & Filter (shared by Home > Editing and the Data tab): sort A to Z / Z to A, custom sort,
 // the auto-filter toggle, clear and reapply.
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { editing, guessHeader, regionOf, tableAt, target } from './util.js';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { editing, guessHeader, regionOf, tableAt, target } from './util';
 
 function sortBy(ctx: EditorContext, descending: boolean): void {
 	const t = target(ctx);

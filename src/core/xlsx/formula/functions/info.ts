@@ -1,6 +1,6 @@
-import { columnLabel } from '../../address.js';
-import type { ErrorCode } from '../../model.js';
-import { sheetIndex } from '../references.js';
+import { columnLabel } from '../../address';
+import type { ErrorCode } from '../../model';
+import { sheetIndex } from '../references';
 import {
 	ERR,
 	fail,
@@ -10,9 +10,9 @@ import {
 	RefValue,
 	type Scalar,
 	type Value,
-} from '../values.js';
-import { num, scalar, spec, str } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+} from '../values';
+import { num, scalar, spec, str } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Information';
 

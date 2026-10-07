@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { axisTargetIntervals, niceAxisStep, niceValueAxisBounds } from './axis-nice.js';
+import { axisTargetIntervals, niceAxisStep, niceValueAxisBounds } from './axis-nice';
 
 describe('niceAxisStep', () => {
 	it('rounds up to the 1 / 2 / 2.5 / 5 ladder', () => {

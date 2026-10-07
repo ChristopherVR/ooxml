@@ -1,4 +1,4 @@
-import type { XlsxTheme } from './types.js';
+import type { XlsxTheme } from './types';
 
 /** Light preset: the Word editor's neutral chrome with Excel green as primary. */
 export const lightTheme: XlsxTheme = {

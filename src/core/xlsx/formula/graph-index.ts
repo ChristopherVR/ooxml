@@ -1,8 +1,8 @@
 // The indexes the calc engine uses to order and propagate work: formulas by position, and
 // formulas by the areas they read.
-import { AreaIndex } from './area-index.js';
-import type { FormulaNode } from './graph.js';
-import type { Area } from './values.js';
+import { AreaIndex } from './area-index';
+import type { FormulaNode } from './graph';
+import type { Area } from './values';
 
 /** Formula nodes by sheet and column, rows sorted, for "which formulas are inside this range". */
 export class ColumnIndex {

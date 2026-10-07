@@ -1,6 +1,6 @@
-import { NS, buildXml, children, elements, first, parseXml } from '../../xml/index.js';
-import type { ChartObject, ChartSeries } from '../model.js';
-import { XML_HEADER, escapeAttr, escapeText } from './xml-out.js';
+import { NS, buildXml, children, elements, first, parseXml } from '../../xml/index';
+import type { ChartObject, ChartSeries } from '../model';
+import { XML_HEADER, escapeAttr, escapeText } from './xml-out';
 import { chartSeriesFill } from './chart-colors';
 import { drawingColorXml } from '../../diagram/write-color';
 

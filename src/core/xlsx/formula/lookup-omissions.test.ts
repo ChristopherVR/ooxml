@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calc, calcArray, E } from './test-helpers.js';
+import { calc, calcArray, E } from './test-helpers';
 
 // Recorded independently with Excel 16.0 build 20430, 2026-10-07.
 describe('lookup omitted arguments and blank references', () => {

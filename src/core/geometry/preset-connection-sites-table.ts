@@ -9,32 +9,32 @@
  *
  * @module render/preset-connection-sites-table
  */
-import { evaluateGuides } from './guide-formula-api.js';
-import { resolveOperand } from './guide-formula-eval.js';
-import { ACTION_BUTTON_CONNECTION_SITES } from './preset-connection-sites-action-buttons.js';
-import { ARROW_CONNECTION_SITES } from './preset-connection-sites-arrows.js';
-import { CURVED_ARROW_CONNECTION_SITES } from './preset-connection-sites-arrows-curved.js';
-import { MISC_ARROW_CONNECTION_SITES } from './preset-connection-sites-arrows-misc.js';
-import { BASIC_SHAPE_CONNECTION_SITES_A } from './preset-connection-sites-basic-a.js';
-import { BASIC_SHAPE_CONNECTION_SITES_B } from './preset-connection-sites-basic-b.js';
-import { BRACE_CONNECTION_SITES } from './preset-connection-sites-braces.js';
-import { ARROW_CALLOUT_CONNECTION_SITES } from './preset-connection-sites-callouts-arrow.js';
-import { CALLOUT_CONNECTION_SITES } from './preset-connection-sites-callouts-basic.js';
-import { CIRCULAR_ARROW_CONNECTION_SITES } from './preset-connection-sites-circular-arrow.js';
-import { FLOWCHART_CONNECTION_SITES } from './preset-connection-sites-flowchart.js';
-import { GEAR9_CONNECTION_SITES } from './preset-connection-sites-gear9.js';
-import { LEFT_CIRCULAR_ARROW_CONNECTION_SITES } from './preset-connection-sites-left-circular-arrow.js';
-import { LEFT_RIGHT_CIRCULAR_ARROW_CONNECTION_SITES } from './preset-connection-sites-left-right-circular-arrow.js';
-import { MATH_SYMBOL_CONNECTION_SITES } from './preset-connection-sites-math.js';
-import { MISC_SHAPE_CONNECTION_SITES } from './preset-connection-sites-misc.js';
-import { POLYGON_CONNECTION_SITES } from './preset-connection-sites-polygons.js';
-import { QUAD_CONNECTION_SITES } from './preset-connection-sites-quads.js';
-import { RECT_VARIANT_CONNECTION_SITES } from './preset-connection-sites-rects.js';
-import { RIBBON_CONNECTION_SITES } from './preset-connection-sites-ribbons.js';
-import { STAR_CONNECTION_SITES } from './preset-connection-sites-stars.js';
-import { TAB_CONNECTION_SITES } from './preset-connection-sites-tabs.js';
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { normalizeStShapeType } from './preset-geometry-names.js';
+import { evaluateGuides } from './guide-formula-api';
+import { resolveOperand } from './guide-formula-eval';
+import { ACTION_BUTTON_CONNECTION_SITES } from './preset-connection-sites-action-buttons';
+import { ARROW_CONNECTION_SITES } from './preset-connection-sites-arrows';
+import { CURVED_ARROW_CONNECTION_SITES } from './preset-connection-sites-arrows-curved';
+import { MISC_ARROW_CONNECTION_SITES } from './preset-connection-sites-arrows-misc';
+import { BASIC_SHAPE_CONNECTION_SITES_A } from './preset-connection-sites-basic-a';
+import { BASIC_SHAPE_CONNECTION_SITES_B } from './preset-connection-sites-basic-b';
+import { BRACE_CONNECTION_SITES } from './preset-connection-sites-braces';
+import { ARROW_CALLOUT_CONNECTION_SITES } from './preset-connection-sites-callouts-arrow';
+import { CALLOUT_CONNECTION_SITES } from './preset-connection-sites-callouts-basic';
+import { CIRCULAR_ARROW_CONNECTION_SITES } from './preset-connection-sites-circular-arrow';
+import { FLOWCHART_CONNECTION_SITES } from './preset-connection-sites-flowchart';
+import { GEAR9_CONNECTION_SITES } from './preset-connection-sites-gear9';
+import { LEFT_CIRCULAR_ARROW_CONNECTION_SITES } from './preset-connection-sites-left-circular-arrow';
+import { LEFT_RIGHT_CIRCULAR_ARROW_CONNECTION_SITES } from './preset-connection-sites-left-right-circular-arrow';
+import { MATH_SYMBOL_CONNECTION_SITES } from './preset-connection-sites-math';
+import { MISC_SHAPE_CONNECTION_SITES } from './preset-connection-sites-misc';
+import { POLYGON_CONNECTION_SITES } from './preset-connection-sites-polygons';
+import { QUAD_CONNECTION_SITES } from './preset-connection-sites-quads';
+import { RECT_VARIANT_CONNECTION_SITES } from './preset-connection-sites-rects';
+import { RIBBON_CONNECTION_SITES } from './preset-connection-sites-ribbons';
+import { STAR_CONNECTION_SITES } from './preset-connection-sites-stars';
+import { TAB_CONNECTION_SITES } from './preset-connection-sites-tabs';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { normalizeStShapeType } from './preset-geometry-names';
 
 /**
  * Every preset this repo carries an ECMA `cxnLst` transcription for. 174 of

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Table } from '../model.js';
-import { structuredToA1 } from './structured-to-a1.js';
+import type { Table } from '../model';
+import { structuredToA1 } from './structured-to-a1';
 
 const table: Table = {
 	id: 1,

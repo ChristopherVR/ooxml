@@ -3,7 +3,7 @@
 // The wire format is a single nested `presence` awareness field, compatible with pptx-viewer's.
 // Extracted from pptx-viewer `collaboration-presence.ts`; generalised so Word/Excel can supply
 // their own location payload instead of slide index and cursor pixels. See PROVENANCE.md.
-import { type CollaborationRole, sanitizeRole } from './identity.js';
+import { type CollaborationRole, sanitizeRole } from './identity';
 import {
 	clampCoordinate,
 	DEFAULT_COLOR,
@@ -11,7 +11,7 @@ import {
 	sanitizeColor,
 	sanitizeIndex,
 	sanitizeUserName,
-} from './validation.js';
+} from './validation';
 
 /** The awareness field every client publishes its presence under. */
 export const PRESENCE_FIELD = 'presence';

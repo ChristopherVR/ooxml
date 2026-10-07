@@ -9,24 +9,24 @@ import {
 	type AwarenessLike,
 	type PresencePublisher,
 	createPresencePublisher,
-} from './awareness.js';
-import { Emitter } from './emitter.js';
-import { type CollaborationRole, assignUserColor, canWrite as roleCanWrite } from './identity.js';
-import { createDepartureChannel, registerTeardown, type TeardownOptions } from './lifecycle.js';
-import { INITIAL_SYNC_GRACE_MS, createSyncGate, type SyncGate } from './policy.js';
+} from './awareness';
+import { Emitter } from './emitter';
+import { type CollaborationRole, assignUserColor, canWrite as roleCanWrite } from './identity';
+import { createDepartureChannel, registerTeardown, type TeardownOptions } from './lifecycle';
+import { INITIAL_SYNC_GRACE_MS, createSyncGate, type SyncGate } from './policy';
 import {
 	PRESENCE_HEARTBEAT_MS,
 	type PresenceIdentity,
 	type RemotePresence,
 	derivePresence,
-} from './presence.js';
+} from './presence';
 import {
 	CONNECTION_TIMEOUT_MS,
 	type ConnectionStatus,
 	type ProviderFactory,
 	type SyncProvider,
-} from './provider.js';
-import { sanitizeColor, sanitizeUserName, validateRoomId } from './validation.js';
+} from './provider';
+import { sanitizeColor, sanitizeUserName, validateRoomId } from './validation';
 
 export interface SessionOptions<P extends object = object> {
 	roomId: string;

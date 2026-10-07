@@ -1,2 +1,2 @@
-export * from './units.js';
-export * from './constants.js';
+export * from './units';
+export * from './constants';

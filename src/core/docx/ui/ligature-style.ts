@@ -1,6 +1,6 @@
-import { isLigatures } from '../index.js';
-import { ligatureCss } from '../layout/index.js';
-export { ligatureCss } from '../layout/index.js';
+import { isLigatures } from '../index';
+import { ligatureCss } from '../layout/index';
+export { ligatureCss } from '../layout/index';
 
 /** Explicitly sets every optional class so a direct None cancels inherited font features. */
 export const ligatureStyle = (value: unknown): string =>

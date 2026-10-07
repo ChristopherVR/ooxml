@@ -1,8 +1,8 @@
-import type { CallContext } from '../context.js';
-import { pick } from '../operators.js';
-import { ERR, fail, LambdaValue, Matrix, RefValue, type Scalar, type Value } from '../values.js';
-import { int, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { pick } from '../operators';
+import { ERR, fail, LambdaValue, Matrix, RefValue, type Scalar, type Value } from '../values';
+import { int, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Logical';
 

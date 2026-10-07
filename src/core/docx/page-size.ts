@@ -1,7 +1,7 @@
-import { twips } from '../units/units.js';
-import type { DocumentModel } from './model.js';
-import { withSection } from './section-edit.js';
-import type { SectionProperties } from './section-model.js';
+import { twips } from '../units/units';
+import type { DocumentModel } from './model';
+import { withSection } from './section-edit';
+import type { SectionProperties } from './section-model';
 
 /** Word's Layout > Size presets, portrait width by height in twips (1/1440 inch). */
 export const PAGE_SIZES: Record<string, readonly [width: number, height: number]> = {

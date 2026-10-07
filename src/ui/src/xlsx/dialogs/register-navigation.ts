@@ -1,14 +1,14 @@
 // Registers the navigation, names and information dialogs.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { openCommentsList } from './comments-list.js';
-import { openCreateNames } from './create-names.js';
-import { type DefineNameProps, openDefineName } from './define-name.js';
-import { type FindReplaceProps, openFindReplace } from './find-replace.js';
-import { openGoTo, openGoToSpecial } from './go-to.js';
-import { openFeatureStatus, openShortcutHelp } from './help-dialogs.js';
-import { type InsertFunctionProps, openInsertFunction } from './insert-function.js';
-import { openNameManager } from './name-manager.js';
-import { openStatistics } from './statistics.js';
+import { openCommentsList } from './comments-list';
+import { openCreateNames } from './create-names';
+import { type DefineNameProps, openDefineName } from './define-name';
+import { type FindReplaceProps, openFindReplace } from './find-replace';
+import { openGoTo, openGoToSpecial } from './go-to';
+import { openFeatureStatus, openShortcutHelp } from './help-dialogs';
+import { type InsertFunctionProps, openInsertFunction } from './insert-function';
+import { openNameManager } from './name-manager';
+import { openStatistics } from './statistics';
 
 const obj = <T>(props: unknown): T =>
 	props && typeof props === 'object' ? (props as T) : ({} as T);

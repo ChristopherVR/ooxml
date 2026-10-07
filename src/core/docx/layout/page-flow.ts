@@ -1,9 +1,9 @@
-import { SectionFlow } from './section-flow.js';
-import { balanceColumns, canBalanceBlock } from './balance-columns.js';
-import type { TextMeasurer } from './measure.js';
-import type { LayoutDocumentInput, LayoutSection } from './input.js';
-import type { LayoutPageBox, LayoutResult } from './result.js';
-import type { Exclusion } from './wrap.js';
+import { SectionFlow } from './section-flow';
+import { balanceColumns, canBalanceBlock } from './balance-columns';
+import type { TextMeasurer } from './measure';
+import type { LayoutDocumentInput, LayoutSection } from './input';
+import type { LayoutPageBox, LayoutResult } from './result';
+import type { Exclusion } from './wrap';
 
 /**
  * Word starts an even-page (odd-page) section on the next even (odd) page, leaving a blank page

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { createListDefinition, linkStylesToList } from './numbering-editing.js';
-import { computeListLabels } from './numbering-format.js';
-import type { Paragraph } from './model.js';
+import { loadDocx } from './parse';
+import { createListDefinition, linkStylesToList } from './numbering-editing';
+import { computeListLabels } from './numbering-format';
+import type { Paragraph } from './model';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

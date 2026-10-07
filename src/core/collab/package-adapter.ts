@@ -3,7 +3,7 @@
 // edits produce a new package rather than a model a CRDT can merge field by field. Concurrent
 // changes do not merge: the last package written wins. New code written for the collab area.
 import type * as Y from 'yjs';
-import type { DocumentAdapter } from './binding.js';
+import type { DocumentAdapter } from './binding';
 
 export interface PackageAdapterOptions {
 	/** Y.Map name. Default `package`. */

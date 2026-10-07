@@ -1,7 +1,7 @@
 // Glyphs the team elements draw, registered in the shared ooxml-ui icon registry (20x20 stroke
 // paths). `icon(name)` renders one inline so a template can place it anywhere.
 import { html, svg, type TemplateResult } from 'lit';
-import { getIcon, registerIcon } from '../icons.js';
+import { getIcon, registerIcon } from '../icons';
 
 const GLYPHS: Record<string, string> = {
 	send: 'M3 10 17 3l-4 14-3-6Zm7 1 7-8',

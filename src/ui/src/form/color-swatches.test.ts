@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { OFFICE_COLOR_SWATCH_HEXES, OFFICE_COLOR_SWATCHES } from './color-swatches.js';
+import { OFFICE_COLOR_SWATCH_HEXES, OFFICE_COLOR_SWATCHES } from './color-swatches';
 
 const HEX_RE = /^#[0-9a-f]{6}$/u;
 

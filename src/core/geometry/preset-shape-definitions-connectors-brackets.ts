@@ -29,7 +29,7 @@
  * `preset-shape-definitions-table.ts` once batch agents return.
  */
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 // ---------------------------------------------------------------------------
 // Helpers

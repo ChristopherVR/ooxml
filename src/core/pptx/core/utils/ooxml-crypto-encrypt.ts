@@ -1,13 +1,13 @@
 // Compatibility entry point. The implementation moved to the shared crypto area (src/core/crypto).
-import { encryptOoxmlPackage } from '../../../crypto/index.js';
-import type { EncryptionOptions } from '../../../crypto/types.js';
+import { encryptOoxmlPackage } from '../../../crypto/index';
+import type { EncryptionOptions } from '../../../crypto/types';
 
-export { encryptAgilePackage, encryptStandardPackage } from '../../../crypto/encrypt.js';
+export { encryptAgilePackage, encryptStandardPackage } from '../../../crypto/encrypt';
 export {
 	buildAgileEncryptionInfoXml,
 	buildEncryptionInfoStream,
 	buildStandardEncryptionInfoStream,
-} from '../../../crypto/encryption-info-write.js';
+} from '../../../crypto/encryption-info-write';
 
 /** Former name of `encryptOoxmlPackage(bytes, password, { encryptionScheme: 'standard' })`. */
 export async function encryptPptxStandard(

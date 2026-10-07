@@ -7,7 +7,7 @@ import {
 	resolvePasteOptions,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
-import type { GridClipboard } from '../clipboard.js';
+import type { GridClipboard } from '../clipboard';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext, Selection } from 'ooxml-core/xlsx/ui';
 

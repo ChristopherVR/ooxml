@@ -5,7 +5,7 @@ import {
 	resolveOperand,
 	ANGLE_SCALE,
 	angleToRadians,
-} from '../../../geometry/guide-formula-eval.js';
+} from '../../../geometry/guide-formula-eval';
 
 // ---------------------------------------------------------------------------
 // parseFormula

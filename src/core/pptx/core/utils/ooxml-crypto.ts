@@ -5,8 +5,8 @@ import {
 	decryptOoxmlPackage,
 	encryptOoxmlPackage,
 	verifyOoxmlPackagePassword,
-} from '../../../crypto/index.js';
-import type { EncryptionOptions } from '../../../crypto/types.js';
+} from '../../../crypto/index';
+import type { EncryptionOptions } from '../../../crypto/types';
 
 export type {
 	EncryptionAlgorithm,
@@ -14,12 +14,12 @@ export type {
 	StandardEncryptionInfo,
 	EncryptionOptions,
 	EncryptionScheme,
-} from '../../../crypto/types.js';
-export { IncorrectPasswordError, DataIntegrityError } from '../../../crypto/errors.js';
+} from '../../../crypto/types';
+export { IncorrectPasswordError, DataIntegrityError } from '../../../crypto/errors';
 export {
 	parseEncryptionInfo as _parseEncryptionInfo,
 	deriveAgileKey as _deriveAgileKey,
-} from '../../../crypto/index.js';
+} from '../../../crypto/index';
 export {
 	base64Decode as _base64Decode,
 	base64Encode as _base64Encode,

@@ -1,6 +1,6 @@
-import { createThreadFollows } from './followed-threads.js';
-import { channelThreads } from './threads.js';
-import type { Channel, Message } from './model.js';
+import { createThreadFollows } from './followed-threads';
+import { channelThreads } from './threads';
+import type { Channel, Message } from './model';
 
 const channel: Channel = {
 	id: 'channel',

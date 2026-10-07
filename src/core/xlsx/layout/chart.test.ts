@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { CellValue, ChartObject, ChartType } from '../model.js';
-import { createWorkbook, DEFAULT_THEME } from '../workbook.js';
-import { autoSeriesColor, modulateLuminance } from './chart-colors.js';
-import { formatAxisValue, niceScale } from './chart-scale.js';
-import { renderChartSvg } from './chart-svg.js';
-import { esc } from './chart-svg-util.js';
-import { chartView, type ChartViewModel } from './chart-view.js';
+import type { CellValue, ChartObject, ChartType } from '../model';
+import { createWorkbook, DEFAULT_THEME } from '../workbook';
+import { autoSeriesColor, modulateLuminance } from './chart-colors';
+import { formatAxisValue, niceScale } from './chart-scale';
+import { renderChartSvg } from './chart-svg';
+import { esc } from './chart-svg-util';
+import { chartView, type ChartViewModel } from './chart-view';
 
 const anchor = { from: { row: 0, col: 0, colOffset: 0, rowOffset: 0 } };
 

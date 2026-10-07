@@ -6,8 +6,8 @@ import {
 	parseGuideDefinitions,
 	parseAdjustmentValues,
 	resolveCoordinate,
-} from './guide-formula-api.js';
-import { ANGLE_SCALE } from './guide-formula-eval.js';
+} from './guide-formula-api';
+import { ANGLE_SCALE } from './guide-formula-eval';
 
 // ---------------------------------------------------------------------------
 // createBuiltinVariables — comprehensive coverage

@@ -3,11 +3,11 @@
  * templates); each locale folder merges the shell, grid and command string files of that locale.
  * This locale never changes the workbook's own language or number formats.
  */
-import { de } from './locales/de/index.js';
-import { en } from './locales/en/index.js';
-import { es } from './locales/es/index.js';
-import { fr } from './locales/fr/index.js';
-import { zhCN } from './locales/zh-CN/index.js';
+import { de } from './locales/de/index';
+import { en } from './locales/en/index';
+import { es } from './locales/es/index';
+import { fr } from './locales/fr/index';
+import { zhCN } from './locales/zh-CN/index';
 
 export type EditorLocale = 'en' | 'fr' | 'de' | 'es' | 'zh-CN';
 /** A supported locale or any BCP 47 tag that maps onto one (`de-DE`, `zh-Hans`). */

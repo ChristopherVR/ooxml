@@ -17,10 +17,10 @@
  */
 
 // Types & point helpers
-export type { Vec2 } from './shape-boolean-types.js';
+export type { Vec2 } from './shape-boolean-types';
 
 // SVG path parsing / serialization
-export { svgPathToPolygons, polygonsToSvgPath } from './shape-boolean-svg.js';
+export { svgPathToPolygons, polygonsToSvgPath } from './shape-boolean-svg';
 
 // Public boolean operations on SVG path strings
 export {
@@ -36,5 +36,5 @@ export {
 	unionSvgPaths,
 	intersectSvgPaths,
 	subtractSvgPaths,
-} from './shape-boolean-ops.js';
-export type { MergeShapeOperation } from './shape-boolean-ops.js';
+} from './shape-boolean-ops';
+export type { MergeShapeOperation } from './shape-boolean-ops';

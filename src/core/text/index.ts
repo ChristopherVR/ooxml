@@ -6,6 +6,6 @@ export {
 	hasDistinctScriptFonts,
 	type FontScriptCategory,
 	type ScriptRun,
-} from './unicode-script-detection.js';
-export * from './tab-leader.js';
-export * from './decimal-tab.js';
+} from './unicode-script-detection';
+export * from './tab-leader';
+export * from './decimal-tab';

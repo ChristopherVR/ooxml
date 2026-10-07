@@ -9,13 +9,13 @@
  */
 import { describe, it, expect } from 'vitest';
 
-import { CLIP_PATHS_CORE } from '../../../geometry/preset-clip-paths-core.js';
-import { CLIP_PATHS_EXTENDED } from '../../../geometry/preset-clip-paths-extended.js';
+import { CLIP_PATHS_CORE } from '../../../geometry/preset-clip-paths-core';
+import { CLIP_PATHS_EXTENDED } from '../../../geometry/preset-clip-paths-extended';
 import {
 	PRESET_SHAPE_CLIP_PATHS,
 	getPresetShapeClipPath,
-} from '../../../geometry/preset-shape-clip-paths.js';
-import { PRESET_SHAPE_DEFINITIONS } from '../../../geometry/preset-shape-definitions.js';
+} from '../../../geometry/preset-shape-clip-paths';
+import { PRESET_SHAPE_DEFINITIONS } from '../../../geometry/preset-shape-definitions';
 
 // ---------------------------------------------------------------------------
 // Full OOXML ST_ShapeType enumeration (ECMA-376 Section 20.1.10.56)

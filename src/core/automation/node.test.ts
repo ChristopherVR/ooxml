@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile, symlink, mkdir, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createFileOperations } from './node.js';
+import { createFileOperations } from './node';
 
 test('file operations scope paths, preserve originals on failure and serialize concurrent edits', async () => {
 	const root = await mkdtemp(join(tmpdir(), 'ooxml-files-'));

@@ -1,8 +1,8 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values.js';
-import { bool, omitted, spec } from './helpers.js';
-import { fitLeastSquares, fitStatistics, type Fit } from './regression-core.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
+import { bool, omitted, spec } from './helpers';
+import { fitLeastSquares, fitStatistics, type Fit } from './regression-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Statistical';
 

@@ -1,8 +1,8 @@
 import { html, nothing, type PropertyValues } from 'lit';
 import { live } from 'lit/directives/live.js';
-import { definer } from '../registry.js';
-import { TeamsElement, withStyles } from './base.js';
-import { icon } from './icons.js';
+import { definer } from '../registry';
+import { TeamsElement, withStyles } from './base';
+import { icon } from './icons';
 import css from './chat-composer.css?raw';
 import { MAX_ATTACHMENTS, type ChatDraft } from 'ooxml-core/teams';
 

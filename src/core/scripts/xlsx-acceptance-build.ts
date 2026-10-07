@@ -6,13 +6,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { cellError, type CellStyle, type Workbook } from '../xlsx/model.js';
-import { putCell } from '../xlsx/cells.js';
-import { internStyle } from '../xlsx/styles.js';
-import { createWorkbook, createWorksheet, defaultCellStyle } from '../xlsx/workbook.js';
-import { loadXlsx } from '../xlsx/read/index.js';
-import { saveXlsx } from '../xlsx/write/index.js';
-import { type CellCheck, sessionBuilds } from './xlsx-acceptance-session.js';
+import { cellError, type CellStyle, type Workbook } from '../xlsx/model';
+import { putCell } from '../xlsx/cells';
+import { internStyle } from '../xlsx/styles';
+import { createWorkbook, createWorksheet, defaultCellStyle } from '../xlsx/workbook';
+import { loadXlsx } from '../xlsx/read/index';
+import { saveXlsx } from '../xlsx/write/index';
+import { type CellCheck, sessionBuilds } from './xlsx-acceptance-session';
 
 const out = process.argv[2];
 if (!out) throw new Error('usage: bun scripts/xlsx-acceptance-build.ts <output folder>');

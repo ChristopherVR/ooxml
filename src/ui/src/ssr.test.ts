@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { OFFICE_UI_TAGS, registerOfficeUi, installOfficeUiTheme, defineButton } from './index.js';
+import { OFFICE_UI_TAGS, registerOfficeUi, installOfficeUiTheme, defineButton } from './index';
 
 describe('server-side import', () => {
 	it('imports without a DOM and registering is a no-op', () => {

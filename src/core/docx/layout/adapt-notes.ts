@@ -4,8 +4,8 @@ import {
 	type DocumentModel,
 	type Note,
 	type Paragraph,
-} from '../index.js';
-import type { LayoutNote, LayoutParagraph } from './input.js';
+} from '../index';
+import type { LayoutNote, LayoutParagraph } from './input';
 
 type NoteKind = 'footnote' | 'endnote';
 

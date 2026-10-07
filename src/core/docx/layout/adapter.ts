@@ -1,4 +1,4 @@
-import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun } from '../index.js';
+import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun } from '../index';
 import {
 	computeListLabels,
 	dateFieldResult,
@@ -10,13 +10,13 @@ import {
 	resolveThemeColorReference,
 	twips,
 	twipsToPixels,
-} from '../index.js';
-import { floatsOf } from './adapt-floats.js';
-import { definedProps } from '../defined-props.js';
-import { adaptTable } from './adapt-table.js';
-import { foldDropCaps } from './adapt-drop-cap.js';
-import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box.js';
-import { endnoteParagraphs, noteLabels, paragraphFootnotes } from './adapt-notes.js';
+} from '../index';
+import { floatsOf } from './adapt-floats';
+import { definedProps } from '../defined-props';
+import { adaptTable } from './adapt-table';
+import { foldDropCaps } from './adapt-drop-cap';
+import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
+import { endnoteParagraphs, noteLabels, paragraphFootnotes } from './adapt-notes';
 import type {
 	LayoutBlock,
 	LayoutDocumentInput,
@@ -24,7 +24,7 @@ import type {
 	LayoutParagraphBorders,
 	LayoutRun,
 	LayoutSection,
-} from './input.js';
+} from './input';
 
 const TABLE_ROW_NOTE =
 	'Table rows with an exact height clip content that does not fit; text in them is not shrunk.';

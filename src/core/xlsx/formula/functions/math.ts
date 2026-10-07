@@ -1,13 +1,13 @@
-import { round15 } from '../text-number.js';
-import { ERR, fail } from '../values.js';
-import { numeric } from './helpers.js';
-import { domain } from './helpers.js';
-import { SUM_FUNCTIONS } from './math-sum.js';
-import type { FunctionSpec } from './types.js';
-import { MATH_MORE } from './math-more.js';
-import { combin, COMBINATORIC_FUNCTIONS } from './math-combin.js';
-import { excelMod, mround } from './math-mod.js';
-import { power } from '../operators.js';
+import { round15 } from '../text-number';
+import { ERR, fail } from '../values';
+import { numeric } from './helpers';
+import { domain } from './helpers';
+import { SUM_FUNCTIONS } from './math-sum';
+import type { FunctionSpec } from './types';
+import { MATH_MORE } from './math-more';
+import { combin, COMBINATORIC_FUNCTIONS } from './math-combin';
+import { excelMod, mround } from './math-mod';
+import { power } from '../operators';
 
 export { combin };
 

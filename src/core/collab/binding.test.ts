@@ -1,9 +1,9 @@
 import * as Y from 'yjs';
 import { afterEach, describe, expect, it } from 'vitest';
-import { bindDocument, type DocumentAdapter } from './binding.js';
-import { createMemoryHub } from './memory-transport.js';
-import { createCollabSession, type CollabSession } from './session.js';
-import { transportProvider } from './transport-provider.js';
+import { bindDocument, type DocumentAdapter } from './binding';
+import { createMemoryHub } from './memory-transport';
+import { createCollabSession, type CollabSession } from './session';
+import { transportProvider } from './transport-provider';
 
 // A toy product mapping: the model is a list of titles in a Y.Array.
 const adapter: DocumentAdapter<string[]> = {

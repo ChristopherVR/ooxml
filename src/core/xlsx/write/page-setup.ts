@@ -1,14 +1,14 @@
-import type { PageSetup, Worksheet } from '../model.js';
+import type { PageSetup, Worksheet } from '../model';
 import {
 	HEADER_FOOTER_FLAGS,
 	HEADER_FOOTER_TEXT,
 	readHeaderFooter,
 	readPageSetup,
 	type HeaderFooterFields,
-} from '../read/sheet-props.js';
-import { mergedAttrs } from './attr-merge.js';
-import { sameModel, snapshotElement, snapshotXml } from './snapshot.js';
-import { el, encodeEscapes, escapeText } from './xml-out.js';
+} from '../read/sheet-props';
+import { mergedAttrs } from './attr-merge';
+import { sameModel, snapshotElement, snapshotXml } from './snapshot';
+import { el, encodeEscapes, escapeText } from './xml-out';
 
 const headerFooterOf = (page: PageSetup): HeaderFooterFields => {
 	const out: HeaderFooterFields = {};

@@ -1,5 +1,5 @@
-import type { Color, ThemePalette } from '../model.js';
-import { applyTint, parseHex, toHexColor } from './tint.js';
+import type { Color, ThemePalette } from '../model';
+import { applyTint, parseHex, toHexColor } from './tint';
 
 /**
  * The legacy 64-colour palette (`indexed` 0-63) as `RRGGBB`, followed by the system foreground

@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Document-level SmartArt handling: completes every diagram found in the parsed blocks and reports
 // what the model does and does not provide for them.
-import { resolveDiagramParts, type DocxDiagram } from './diagram.js';
-import type { Block } from './model.js';
-import { forEachParagraph } from './parse-warnings.js';
+import { resolveDiagramParts, type DocxDiagram } from './diagram';
+import type { Block } from './model';
+import { forEachParagraph } from './parse-warnings';
 
 /** Every diagram in the given blocks, in document order. */
 export function diagramsIn(blocks: Block[]): DocxDiagram[] {

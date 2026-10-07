@@ -1,13 +1,13 @@
-import { REGRESSION_FUNCTIONS } from './regression.js';
-import { HYPOTHESIS_TESTS } from './hypothesis-tests.js';
-import { ERR, fail, type Scalar } from '../values.js';
-import { criteriaPairs, liftCriteria, matchingValues } from './criteria.js';
-import { all, collectNumbers, num, spec } from './helpers.js';
-import { STATISTICAL_MORE } from './statistical-more.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
-import { STATISTICAL_SPREAD } from './statistical-spread.js';
-import { COUNT_FUNCTIONS } from './statistical-count.js';
+import { REGRESSION_FUNCTIONS } from './regression';
+import { HYPOTHESIS_TESTS } from './hypothesis-tests';
+import { ERR, fail, type Scalar } from '../values';
+import { criteriaPairs, liftCriteria, matchingValues } from './criteria';
+import { all, collectNumbers, num, spec } from './helpers';
+import { STATISTICAL_MORE } from './statistical-more';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
+import { STATISTICAL_SPREAD } from './statistical-spread';
+import { COUNT_FUNCTIONS } from './statistical-count';
 
 const C = 'Statistical';
 

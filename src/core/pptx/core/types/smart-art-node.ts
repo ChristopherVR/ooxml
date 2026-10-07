@@ -8,7 +8,7 @@
  * @module pptx-types/smart-art-node
  */
 
-import type { DiagramNodeCustomLayout } from '../../../diagram/index.js';
+import type { DiagramNodeCustomLayout } from '../../../diagram/index';
 import type { TextStyle } from './text';
 
 /**

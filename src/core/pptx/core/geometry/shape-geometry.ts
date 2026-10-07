@@ -6,13 +6,13 @@ import type { SupportedShapeType } from '../constants';
  * generates CSS clip-paths, and calculates round-rect radii.
  */
 import type { PptxElementWithShapeStyle } from '../types';
-import { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes.js';
-import { getCloudCalloutClipPath, getCloudClipPath } from '../../../geometry/cloud-bezier-paths.js';
+import { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes';
+import { getCloudCalloutClipPath, getCloudClipPath } from '../../../geometry/cloud-bezier-paths';
 import { evaluatePresetShape } from './preset-shape-evaluator';
 import {
 	PRESET_SHAPE_CLIP_PATHS,
 	getPresetShapeClipPath,
-} from '../../../geometry/preset-shape-paths.js';
+} from '../../../geometry/preset-shape-paths';
 
 // ---------------------------------------------------------------------------
 // Shape type mapping

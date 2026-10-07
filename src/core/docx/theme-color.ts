@@ -4,8 +4,8 @@ import type {
 	ThemeColorReference,
 	ThemeColorSlot,
 	ThemeColorToken,
-} from './theme-model.js';
-import { isStThemeColor, ST_ThemeColor } from './generated/wml-simple-types.js';
+} from './theme-model';
+import { isStThemeColor, ST_ThemeColor } from './generated/wml-simple-types';
 
 export const THEME_COLOR_TOKENS = ST_ThemeColor;
 export function isThemeColorToken(value: string): value is ThemeColorToken {

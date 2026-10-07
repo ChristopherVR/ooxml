@@ -2,8 +2,8 @@
 import { type Table, formatRange, parseRange } from 'ooxml-core/xlsx';
 import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, field, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { checkbox, field, textInput } from './fields';
+import { showDialog } from './frame';
 
 export interface CreateTableProps {
 	styleName?: string;

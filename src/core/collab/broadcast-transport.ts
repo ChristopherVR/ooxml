@@ -2,8 +2,8 @@
 // the same room hears every other, with no server and nothing leaving the device. Useful for
 // local-first viewers (documents stay local) and demos. New code written for the collab area,
 // following the mesh contract of memory-transport.ts.
-import type { Transport, TransportHandlers } from './provider.js';
-import { validateRoomId } from './validation.js';
+import type { Transport, TransportHandlers } from './provider';
+import { validateRoomId } from './validation';
 
 /** Structural BroadcastChannel, so the area needs no DOM types. */
 export interface BroadcastChannelLike {

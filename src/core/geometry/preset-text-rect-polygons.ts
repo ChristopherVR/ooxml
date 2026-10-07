@@ -8,8 +8,8 @@
  *
  * @module render/preset-text-rect-polygons
  */
-import { gd } from './preset-connection-sites-types.js';
-import type { PresetTextRectDefinition } from './preset-text-rect-types.js';
+import { gd } from './preset-connection-sites-types';
+import type { PresetTextRectDefinition } from './preset-text-rect-types';
 
 export const POLYGON_TEXT_RECTS: Record<string, PresetTextRectDefinition> = {
 	heptagon: {

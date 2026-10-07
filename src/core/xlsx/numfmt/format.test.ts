@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { cellError } from '../model.js';
-import { BUILTIN_NUMBER_FORMATS, formatValue, isDateFormat, OVERFLOW_TEXT } from './index.js';
+import { cellError } from '../model';
+import { BUILTIN_NUMBER_FORMATS, formatValue, isDateFormat, OVERFLOW_TEXT } from './index';
 
 const fmt = (value: number | string, format: string): string => formatValue(value, format).text;
 

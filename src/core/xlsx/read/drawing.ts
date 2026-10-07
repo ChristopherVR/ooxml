@@ -1,10 +1,10 @@
-import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../xml/index.js';
-import type { DrawingAnchor, DrawingObject } from '../model.js';
-import { parseChart } from './chart.js';
+import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../xml/index';
+import type { DrawingAnchor, DrawingObject } from '../model';
+import { parseChart } from './chart';
 import { readChartPaletteId, readChartStylePart } from './chart-colors';
-import type { SourceIndex } from './package.js';
-import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art.js';
-import { att, selfContainedXml } from './xml-util.js';
+import type { SourceIndex } from './package';
+import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
+import { att, selfContainedXml } from './xml-util';
 
 const xdr = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.xdr);
 const int = (parent: XmlElement | undefined, local: string): number =>

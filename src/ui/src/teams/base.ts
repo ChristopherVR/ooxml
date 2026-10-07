@@ -3,7 +3,7 @@
 // are declared with `declare` and set in the constructor so class fields never shadow Lit's
 // accessors. Events are plain bubbling, composed CustomEvents, like every other ooxml-ui control.
 import { unsafeCSS, type CSSResult } from 'lit';
-import { OfficeElement, controlStyles } from '../base.js';
+import { OfficeElement, controlStyles } from '../base';
 import resetCss from './reset.css?raw';
 
 /** An element's style list: the shared control base, the team reset and its own .css file. */

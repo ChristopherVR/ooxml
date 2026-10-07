@@ -1,21 +1,21 @@
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import { NS } from '../../xml/index.js';
-import { formatRange } from '../address.js';
-import type { Worksheet } from '../model.js';
-import { CONTENT_TYPES } from '../read/package.js';
-import { printOptionsXml } from '../read/print-options.js';
-import { conditionalFormatsXml, dataValidationsXml } from './conditional.js';
-import { conditionalExtensionsXml } from '../conditional-extensions.js';
-import { RelationshipSet } from './package-writer.js';
-import { pageXml } from './page-setup.js';
-import { sheetDataXml } from './sheet-data.js';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import { NS } from '../../xml/index';
+import { formatRange } from '../address';
+import type { Worksheet } from '../model';
+import { CONTENT_TYPES } from '../read/package';
+import { printOptionsXml } from '../read/print-options';
+import { conditionalFormatsXml, dataValidationsXml } from './conditional';
+import { conditionalExtensionsXml } from '../conditional-extensions';
+import { RelationshipSet } from './package-writer';
+import { pageXml } from './page-setup';
+import { sheetDataXml } from './sheet-data';
 import {
 	sourceRelIds,
 	writeComments,
 	writeSheetDrawing,
 	writeTables,
 	type SaveContext,
-} from './sheet-parts.js';
+} from './sheet-parts';
 import {
 	autoFilterXml,
 	colsXml,
@@ -25,10 +25,10 @@ import {
 	sheetFormatXml,
 	sheetPrXml,
 	sheetViewsXml,
-} from './sheet-props.js';
-import { XML_HEADER, attrs, inlineFragment } from './xml-out.js';
+} from './sheet-props';
+import { XML_HEADER, attrs, inlineFragment } from './xml-out';
 
-export type { SaveContext } from './sheet-parts.js';
+export type { SaveContext } from './sheet-parts';
 
 /** CT_Worksheet child order; kept elements are slotted in by local name. */
 const ORDER = [

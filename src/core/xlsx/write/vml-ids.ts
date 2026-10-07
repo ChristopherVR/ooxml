@@ -1,4 +1,4 @@
-import type { SourceIndex } from '../read/package.js';
+import type { SourceIndex } from '../read/package';
 
 /**
  * Legacy VML shape ids. Excel numbers the shapes of a VML drawing `1024 * block + k`, where

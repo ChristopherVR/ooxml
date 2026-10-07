@@ -1,12 +1,12 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import native from '../__fixtures__/excel-chart-types.json';
-import { createWorkbook } from '../workbook.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import type { ChartObject } from '../model.js';
-import { buildChart } from '../ui/dialogs/insert-chart-model.js';
-import { createEditSession } from './session.js';
+import { createWorkbook } from '../workbook';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import type { ChartObject } from '../model';
+import { buildChart } from '../ui/dialogs/insert-chart-model';
+import { createEditSession } from './session';
 
 async function nativeWorkbook(xml: string) {
 	const workbook = createWorkbook();

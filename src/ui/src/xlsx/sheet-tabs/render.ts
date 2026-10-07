@@ -1,6 +1,6 @@
 // Builds the tab buttons for the visible sheets (hidden and very hidden sheets are left out).
 import { resolveColor, type Workbook } from 'ooxml-core/xlsx';
-import { h } from '../grid/dom.js';
+import { h } from '../grid/dom';
 
 /** Indices of the sheets that get a tab. */
 export const visibleSheetIndices = (workbook: Workbook): number[] =>

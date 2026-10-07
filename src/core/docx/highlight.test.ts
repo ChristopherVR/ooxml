@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { isWordHighlightToken, loadDocx, saveDocx, WORD_HIGHLIGHT_TOKENS } from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+import { isWordHighlightToken, loadDocx, saveDocx, WORD_HIGHLIGHT_TOKENS } from './index';
+import { at, expectParagraph } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

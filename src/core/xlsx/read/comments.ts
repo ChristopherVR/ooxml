@@ -1,7 +1,7 @@
-import { NS, children, parseXml } from '../../xml/index.js';
-import { parseAddress } from '../address.js';
-import type { Comment } from '../model.js';
-import { att, xChildren, xFirst, xText } from './xml-util.js';
+import { NS, children, parseXml } from '../../xml/index';
+import { parseAddress } from '../address';
+import type { Comment } from '../model';
+import { att, xChildren, xFirst, xText } from './xml-util';
 
 /** Legacy comments (notes): the author list and each comment's plain text. */
 export function parseLegacyComments(xml: string | undefined): Comment[] {

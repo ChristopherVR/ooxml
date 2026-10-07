@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseAddress, parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import type { ConditionalFormat, Workbook, Worksheet } from '../model.js';
-import { styleAt } from '../styles.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
-import { uniqueHeaders } from './tables.js';
-import { validateDefinedName } from './view.js';
+import { parseAddress, parseRange } from '../address';
+import { getCell } from '../cells';
+import type { ConditionalFormat, Workbook, Worksheet } from '../model';
+import { styleAt } from '../styles';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
+import { uniqueHeaders } from './tables';
+import { validateDefinedName } from './view';
 
 const A = (ref: string) => {
 	const a = parseAddress(ref);

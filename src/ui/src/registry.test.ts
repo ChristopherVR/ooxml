@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { OFFICE_UI_TAGS } from './index.js';
-import { defineTitleBar } from './chrome/title-bar.js';
-import { definer } from './registry.js';
+import { OFFICE_UI_TAGS } from './index';
+import { defineTitleBar } from './chrome/title-bar';
+import { definer } from './registry';
 
 /** A registry stand-in that records the order tags are defined in. */
 function fakeRegistry() {

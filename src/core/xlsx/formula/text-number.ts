@@ -1,6 +1,6 @@
 // Text-to-number coercion (`="10%"+0`, `="$1,000"*2`, `="2020-01-15"+1`) and Excel's
 // number-to-text conversion (`=""&1/3` is `0.333333333333333`).
-import { currentDate1904, ymdToSerial } from './date-serial.js';
+import { currentDate1904, ymdToSerial } from './date-serial';
 
 const MONTHS = [
 	'jan',

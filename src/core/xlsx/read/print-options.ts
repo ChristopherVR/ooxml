@@ -1,6 +1,6 @@
-import type { XmlElement } from '../../xml/index.js';
-import type { PrintOptions } from '../model.js';
-import { boolAttr } from './xml-util.js';
+import type { XmlElement } from '../../xml/index';
+import type { PrintOptions } from '../model';
+import { boolAttr } from './xml-util';
 
 const KEYS = ['gridLines', 'headings', 'horizontalCentered', 'verticalCentered'] as const;
 

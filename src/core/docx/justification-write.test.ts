@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx, type Paragraph } from './index.js';
-import { paragraphJustification } from './paragraph-alignment.js';
-import { at } from './test-support/access.js';
+import { createDocument, loadDocx, saveDocx, type Paragraph } from './index';
+import { paragraphJustification } from './paragraph-alignment';
+import { at } from './test-support/access';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

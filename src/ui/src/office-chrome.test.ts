@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { attachKeyTips, rulerDivisions, type OfficeBackstageItem } from './controls.js';
-import { registerOfficeUi } from './index.js';
+import { attachKeyTips, rulerDivisions, type OfficeBackstageItem } from './controls';
+import { registerOfficeUi } from './index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => {

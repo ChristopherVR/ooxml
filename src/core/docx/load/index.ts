@@ -7,17 +7,17 @@ export {
 	loadDocument,
 	type DocumentFormat,
 	type LoadDocumentOptions,
-} from './detect.js';
-export { LegacyDocError, loadLegacyDoc } from './legacy-doc.js';
+} from './detect';
+export { LegacyDocError, loadLegacyDoc } from './legacy-doc';
 export {
 	DataIntegrityError,
 	IncorrectPasswordError,
 	PasswordRequiredError,
 	isOoxmlCryptoError,
 	type OoxmlCryptoErrorCode,
-} from '../../crypto/errors.js';
+} from '../../crypto/errors';
 export {
 	encryptOoxmlPackage,
 	isEncryptedOoxmlPackage,
 	type EncryptionOptions,
-} from '../../crypto/index.js';
+} from '../../crypto/index';

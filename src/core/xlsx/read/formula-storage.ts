@@ -1,8 +1,8 @@
 // Dynamic-array syntax as SpreadsheetML stores it: the spill operator `A1#` is written as
 // `ANCHORARRAY(A1)` and the implicit-intersection operator `@x` as `SINGLE(x)` (both with the
 // `_xlfn.` prefix the caller adds or strips).
-import { FormulaError } from '../formula/ast.js';
-import { joinTokens, type Token, tokenize } from '../formula/tokenizer.js';
+import { FormulaError } from '../formula/ast';
+import { joinTokens, type Token, tokenize } from '../formula/tokenizer';
 
 function tokens(formula: string): Token[] | undefined {
 	try {

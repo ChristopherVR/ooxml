@@ -7,8 +7,8 @@ import {
 	twips,
 	type DocumentModel,
 	type Paragraph,
-} from './index.js';
-import { at, expectParagraph, must } from './test-support/access.js';
+} from './index';
+import { at, expectParagraph, must } from './test-support/access';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

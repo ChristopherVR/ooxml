@@ -4,7 +4,7 @@
 // with `replaceTrack`, so muting, turning the camera off and sharing the screen never renegotiate.
 // The connection and stream types are structural (no DOM lib), so it runs against fakes in tests.
 // New code.
-import type { IceCandidateInit, SessionDescription } from './signaling.js';
+import type { IceCandidateInit, SessionDescription } from './signaling';
 
 export interface TrackLike {
 	kind: string;

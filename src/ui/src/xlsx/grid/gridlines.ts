@@ -1,7 +1,7 @@
 // Gridlines of one quadrant: one thin line per visible row and column (a few dozen nodes),
 // reused by index. Filled and merged cells paint over them, as in Excel.
 import type { GridMetrics } from 'ooxml-core/xlsx';
-import { h } from './dom.js';
+import { h } from './dom';
 
 export class GridlineLayer {
 	readonly element: HTMLDivElement;

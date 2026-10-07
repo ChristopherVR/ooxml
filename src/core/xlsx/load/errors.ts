@@ -7,7 +7,7 @@ export {
 	PasswordRequiredError,
 	isOoxmlCryptoError,
 	type OoxmlCryptoErrorCode,
-} from '../../crypto/errors.js';
+} from '../../crypto/errors';
 
 export type UnsupportedWorkbookErrorCode = 'xlsb-unsupported';
 

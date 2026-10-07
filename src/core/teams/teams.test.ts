@@ -1,10 +1,10 @@
 import * as Y from 'yjs';
-import { createCallSession } from './call.js';
-import { createChatStore } from './chat.js';
-import { detectOfficeKind, sanitizeAttachment, sanitizeMessageText } from './model.js';
-import type { PeerConnectionLike, StreamLike, TrackLike } from './peer.js';
-import { endpointUrl, parseServerConfig } from './server-config.js';
-import { createMemorySignalingHub, parseSignal } from './signaling.js';
+import { createCallSession } from './call';
+import { createChatStore } from './chat';
+import { detectOfficeKind, sanitizeAttachment, sanitizeMessageText } from './model';
+import type { PeerConnectionLike, StreamLike, TrackLike } from './peer';
+import { endpointUrl, parseServerConfig } from './server-config';
+import { createMemorySignalingHub, parseSignal } from './signaling';
 
 const sync = (a: Y.Doc, b: Y.Doc): void => {
 	Y.applyUpdate(a, Y.encodeStateAsUpdate(b));

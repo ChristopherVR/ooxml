@@ -1,4 +1,4 @@
-import type { ParsedTableStyleMap, PptxData } from '../../../index.js';
+import type { ParsedTableStyleMap, PptxData } from '../../../index';
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -6,9 +6,9 @@ import {
 	createTableStyle,
 	deleteTableStyle,
 	setTableStyleSection,
-} from '../../tools/table-style-tools.js';
-import type { ToolContext } from '../../types.js';
-import { makeTablePresentation } from '../helpers/create-test-pptx.js';
+} from '../../tools/table-style-tools';
+import type { ToolContext } from '../../types';
+import { makeTablePresentation } from '../helpers/create-test-pptx';
 
 const STYLE_ID = '{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}';
 

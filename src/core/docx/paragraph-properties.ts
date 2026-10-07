@@ -1,10 +1,10 @@
-import type { Paragraph } from './model.js';
-import { first, getW, type XmlElement } from './xml.js';
-import { parseTabStops } from './tab-stops.js';
-import { parseJustification } from './paragraph-alignment.js';
-import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types.js';
-import { PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles.js';
-import { parseParagraphBorders, parseShadingFill } from './table-borders.js';
+import type { Paragraph } from './model';
+import { first, getW, type XmlElement } from './xml';
+import { parseTabStops } from './tab-stops';
+import { parseJustification } from './paragraph-alignment';
+import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types';
+import { PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles';
+import { parseParagraphBorders, parseShadingFill } from './table-borders';
 
 export type DirectParagraphProperties = Omit<
 	Paragraph,

@@ -1,8 +1,8 @@
-import { twips } from '../index.js';
+import { twips } from '../index';
 import { describe, expect, it } from 'vitest';
-import { layoutSections } from './page-flow.js';
-import { createFakeMeasurer } from './measure.js';
-import type { LayoutDocumentInput, LayoutParagraph } from './input.js';
+import { layoutSections } from './page-flow';
+import { createFakeMeasurer } from './measure';
+import type { LayoutDocumentInput, LayoutParagraph } from './input';
 
 describe('layoutSections performance smoke test', () => {
 	it('paginates 2,000 paragraphs in well under 2 seconds', () => {

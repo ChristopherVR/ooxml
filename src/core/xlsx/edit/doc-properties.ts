@@ -1,5 +1,5 @@
-import type { WorkbookProperties } from '../model.js';
-import type { EditContext } from './context.js';
+import type { WorkbookProperties } from '../model';
+import type { EditContext } from './context';
 
 /** A change to the document properties: a value sets the field, `null` clears it. */
 export type DocumentPropertiesPatch = {

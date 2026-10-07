@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import type { ConditionalRule, DifferentialStyle, Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { createConditionalFormatEvaluator } from './cf-evaluator.js';
+import { putCell } from '../cells';
+import type { ConditionalRule, DifferentialStyle, Workbook } from '../model';
+import { createWorkbook } from '../workbook';
+import { createConditionalFormatEvaluator } from './cf-evaluator';
 
 const RED: DifferentialStyle = {
 	fill: { type: 'pattern', pattern: 'solid', bgColor: { rgb: 'FFFF0000' } },

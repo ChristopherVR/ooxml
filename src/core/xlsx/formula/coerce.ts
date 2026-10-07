@@ -1,7 +1,7 @@
 // Excel's scalar coercion rules.
-import type { CellError } from '../model.js';
-import { numberToText, parseNumberText, round15 } from './text-number.js';
-import { ERR, ErrorSignal, isError, type Scalar } from './values.js';
+import type { CellError } from '../model';
+import { numberToText, parseNumberText, round15 } from './text-number';
+import { ERR, ErrorSignal, isError, type Scalar } from './values';
 
 /** A number as arithmetic sees it: blank is 0, TRUE is 1, numeric text converts. Throws on errors. */
 export function toNumber(value: Scalar): number {

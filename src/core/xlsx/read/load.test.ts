@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseAddress } from '../address.js';
-import { getCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { styleAt } from '../styles.js';
-import { loadXlsx } from './index.js';
+import { parseAddress } from '../address';
+import { getCell } from '../cells';
+import type { Workbook } from '../model';
+import { styleAt } from '../styles';
+import { loadXlsx } from './index';
 
 const fixture = (name: string) =>
 	new Uint8Array(readFileSync(path.join(import.meta.dirname, '..', '__fixtures__', name)));

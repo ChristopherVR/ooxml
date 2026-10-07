@@ -1,20 +1,20 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, DocumentModel, Paragraph, SectionProperties } from './model.js';
-import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
-import { commentContinuations } from './comment-spans.js';
-import { annotationIdAllocator, newMoveRangeIds, type CommentSpans } from './write-ranges.js';
-import { writeTable as writeTableContent } from './write-table.js';
-import { buildNewTableProperties, tableColumnCount } from './table-defaults.js';
-import { buildCellProperties, buildRowProperties } from './table-cell-write.js';
-import { orderSectionProperties } from './element-order.js';
-import { applySectionEdits } from './write-sections.js';
-import { createParagraph, setAttribute, writeParagraphImpl } from './write-paragraph.js';
-import type { DocPrIdAllocator } from './docpr-ids.js';
+import type { Block, DocumentModel, Paragraph, SectionProperties } from './model';
+import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import { commentContinuations } from './comment-spans';
+import { annotationIdAllocator, newMoveRangeIds, type CommentSpans } from './write-ranges';
+import { writeTable as writeTableContent } from './write-table';
+import { buildNewTableProperties, tableColumnCount } from './table-defaults';
+import { buildCellProperties, buildRowProperties } from './table-cell-write';
+import { orderSectionProperties } from './element-order';
+import { applySectionEdits } from './write-sections';
+import { createParagraph, setAttribute, writeParagraphImpl } from './write-paragraph';
+import type { DocPrIdAllocator } from './docpr-ids';
 import {
 	RelationshipAllocator,
 	scanUsedRelationshipIds,
 	type NewRelationship,
-} from './relationship-allocator.js';
+} from './relationship-allocator';
 
 const twips = (pixels: number): string => String(Math.round(pixels * 15));
 function createTable(

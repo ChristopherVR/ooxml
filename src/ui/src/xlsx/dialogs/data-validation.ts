@@ -10,9 +10,9 @@ import {
 } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { OPERATORS } from './cf-common.js';
-import { checkbox, field, invalid, panel, select, tabs, textArea, textInput } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { OPERATORS } from './cf-common';
+import { checkbox, field, invalid, panel, select, tabs, textArea, textInput } from './fields';
+import { button, showDialog } from './frame';
 
 const ALLOW: ReadonlyArray<readonly [ValidationType, string]> = [
 	['none', 'Any value'],

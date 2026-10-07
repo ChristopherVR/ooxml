@@ -5,7 +5,7 @@
  * a caller-supplied number formatter, so the viewer keeps its own axis
  * formatting.
  */
-import { groupRowsByCategory } from './box-stats.js';
+import { groupRowsByCategory } from './box-stats';
 
 /** The `cx:layoutPr/cx:binning` properties that drive numeric binning. */
 export interface HistogramOptions {

@@ -1,4 +1,4 @@
-import { registerOfficeUi } from './index.js';
+import { registerOfficeUi } from './index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

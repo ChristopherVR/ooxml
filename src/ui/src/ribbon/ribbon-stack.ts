@@ -1,6 +1,6 @@
 import { html } from 'lit';
-import { OfficeElement, controlStyles } from '../base.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { definer } from '../registry';
 import css from './ribbon-stack.css?raw';
 
 /**

@@ -1,8 +1,8 @@
-import type { TextMeasurer } from './measure.js';
-import { layoutParagraph } from './paragraph-layout.js';
-import type { LayoutParagraph, LayoutTableRow } from './input.js';
-import type { LayoutCellGeometry, LayoutParagraphBox } from './result.js';
-import { expectDefined } from '../expect-defined.js';
+import type { TextMeasurer } from './measure';
+import { layoutParagraph } from './paragraph-layout';
+import type { LayoutParagraph, LayoutTableRow } from './input';
+import type { LayoutCellGeometry, LayoutParagraphBox } from './result';
+import { expectDefined } from '../expect-defined';
 
 export interface RowLayout {
 	heightPx: number;

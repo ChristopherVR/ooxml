@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { hexToRgbUnit } from './unit-rgb.js';
+import { hexToRgbUnit } from './unit-rgb';
 
 describe('hexToRgbUnit', () => {
 	it('parses a 6-digit hex colour with a leading #', () => {

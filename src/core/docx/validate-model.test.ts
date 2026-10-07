@@ -1,4 +1,4 @@
-import { signedTwips, twips } from './units.js';
+import { signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import {
 	createDocument,
@@ -10,9 +10,9 @@ import {
 	type Paragraph,
 	type SectionProperties,
 	type TextRun,
-} from './index.js';
-import { isXsdDateTime } from './validate-issues.js';
-import { at } from './test-support/access.js';
+} from './index';
+import { isXsdDateTime } from './validate-issues';
+import { at } from './test-support/access';
 
 const cell = (id: string, extra: object = {}) => ({
 	paragraphs: [{ type: 'paragraph' as const, id, runs: [{ text: id }] }],

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { layoutRow, splitRowAtHeight } from './table-layout.js';
-import type { LayoutParagraph, LayoutTableRow } from './input.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+import { layoutRow, splitRowAtHeight } from './table-layout';
+import type { LayoutParagraph, LayoutTableRow } from './input';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 const measurer: TextMeasurer = {
 	widthOf: (text) => text.length * 10,

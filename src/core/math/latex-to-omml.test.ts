@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convertLatexToOmml, convertOmmlToLatex } from './latex-to-omml.js';
+import { convertLatexToOmml, convertOmmlToLatex } from './latex-to-omml';
 
 /** Helper: extract the m:oMath node from a convertLatexToOmml result. */
 function getOmml(latex: string): Record<string, unknown> {

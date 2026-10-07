@@ -7,8 +7,8 @@
  *
  * @module render/preset-connection-sites-polygons
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { cxn, gd } from './preset-connection-sites-types';
 
 export const POLYGON_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	pentagon: {

@@ -1,8 +1,8 @@
 import type { MarkSpec } from 'prosemirror-model';
-import { isWordHighlightToken, type WordHighlightToken } from '../index.js';
-import { reviewMarks } from './review-schema.js';
-import { runPropertiesMark } from './run-extra-mark.js';
-import { linkMarkSpec } from './inline-content-schema.js';
+import { isWordHighlightToken, type WordHighlightToken } from '../index';
+import { reviewMarks } from './review-schema';
+import { runPropertiesMark } from './run-extra-mark';
+import { linkMarkSpec } from './inline-content-schema';
 
 const safeCssValue = (value: unknown): string => String(value ?? '').replace(/[;{}]/g, '');
 

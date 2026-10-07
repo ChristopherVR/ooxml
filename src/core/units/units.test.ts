@@ -31,7 +31,7 @@ import {
 	EMU_PER_POINT,
 	TWIPS_PER_INCH,
 	TWIPS_PER_POINT,
-} from './index.js';
+} from './index';
 
 describe('strict constructors', () => {
 	it('twips rejects negatives and fractions; signedTwips allows negatives only', () => {

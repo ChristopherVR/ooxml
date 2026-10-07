@@ -1,5 +1,5 @@
-import { translateFormula } from '../formula/transform.js';
-import { fromStoredSyntax, toStoredSyntax } from './formula-storage.js';
+import { translateFormula } from '../formula/transform';
+import { fromStoredSyntax, toStoredSyntax } from './formula-storage';
 
 /**
  * Functions added after Excel 2007. Files store them with an `_xlfn.` prefix (FILTER and SORT

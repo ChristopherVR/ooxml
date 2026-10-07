@@ -1,7 +1,7 @@
 // Lexical building blocks of the tokenizer: names, references, sheet prefixes, literals.
-import { columnIndex, MAX_COL, MAX_ROW } from '../address.js';
-import { ERROR_CODES, type ErrorCode } from '../model.js';
-import { FormulaError, type RefCorner, type RefSpec, type SheetPrefix } from './ast.js';
+import { columnIndex, MAX_COL, MAX_ROW } from '../address';
+import { ERROR_CODES, type ErrorCode } from '../model';
+import { FormulaError, type RefCorner, type RefSpec, type SheetPrefix } from './ast';
 
 export const ERRORS_BY_LENGTH = [...ERROR_CODES].sort((a, b) => b.length - a.length);
 export const NAME_START = /[A-Za-z_\\\u00A1-\uFFFF]/;

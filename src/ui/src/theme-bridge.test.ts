@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shadcnBridge, themeBridge } from './theme-bridge.js';
+import { shadcnBridge, themeBridge } from './theme-bridge';
 
 describe('themeBridge', () => {
 	it('declares each mapped token on the selector and skips empty ones', () => {

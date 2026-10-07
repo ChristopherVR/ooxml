@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { cellView } from '../layout/cell-view.js';
-import { loadXlsx } from '../read/load.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/save.js';
-import { createEditSession } from './session.js';
+import { getCell } from '../cells';
+import { cellView } from '../layout/cell-view';
+import { loadXlsx } from '../read/load';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/save';
+import { createEditSession } from './session';
 
 const setup = () => {
 	const wb = createWorkbook({ sheets: ['Sheet1', 'Sheet2'] });

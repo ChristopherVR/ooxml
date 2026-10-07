@@ -1,10 +1,10 @@
 // Dynamic-array spilling: results written into neighbouring cells, marked so they are not
 // mistaken for user data (and not persisted as constants on save).
-import { type CellAddress, type CellRange, MAX_COL, MAX_ROW, rangesIntersect } from '../address.js';
-import { deleteCell, getCell, putCell } from '../cells.js';
-import type { Cell, CellValue, Worksheet } from '../model.js';
-import { pick } from './operators.js';
-import type { Matrix } from './values.js';
+import { type CellAddress, type CellRange, MAX_COL, MAX_ROW, rangesIntersect } from '../address';
+import { deleteCell, getCell, putCell } from '../cells';
+import type { Cell, CellValue, Worksheet } from '../model';
+import { pick } from './operators';
+import type { Matrix } from './values';
 
 /** A cell whose value was written by a spilling formula anchored at `spillAnchor`. */
 export interface SpilledCell extends Cell {

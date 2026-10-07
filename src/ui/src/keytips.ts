@@ -1,4 +1,4 @@
-import { tok } from './tokens.js';
+import { tok } from './tokens';
 /**
  * Office KeyTips: press and release Alt to show letter badges on ribbon controls, then type a
  * badge to activate it. Products annotate controls only:

@@ -1,8 +1,8 @@
-import { twips } from './units.js';
+import { twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, parseTableStyleCatalog, resolveTableStyleFormatting } from './index.js';
-import { at, expectTable, must } from './test-support/access.js';
+import { loadDocx, parseTableStyleCatalog, resolveTableStyleFormatting } from './index';
+import { at, expectTable, must } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 

@@ -1,7 +1,7 @@
 import { createWorkbook, getCell, styleAt, type Workbook } from 'ooxml-core/xlsx';
 import { describe, expect, it } from 'vitest';
-import { allCommands } from './index.js';
-import { createTestContext } from './test-support.js';
+import { allCommands } from './index';
+import { createTestContext } from './test-support';
 
 function setup(workbook: Workbook = createWorkbook()) {
 	const ctx = createTestContext(workbook);

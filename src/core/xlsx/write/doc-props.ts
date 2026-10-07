@@ -7,10 +7,10 @@ import {
 	writeCustomProperties,
 	type AppProperties,
 	type HeadingPair,
-} from '../../opc/index.js';
-import type { Workbook } from '../model.js';
-import { CONTENT_TYPES, SourceIndex } from '../read/package.js';
-import type { PackageWriter, RelationshipSet } from './package-writer.js';
+} from '../../opc/index';
+import type { Workbook } from '../model';
+import { CONTENT_TYPES, SourceIndex } from '../read/package';
+import type { PackageWriter, RelationshipSet } from './package-writer';
 
 /** `HeadingPairs` groups whose titles are sheet names (Excel writes these English names). */
 const SHEET_GROUPS = new Set(['worksheets', 'charts', 'dialogs', 'macros', 'excel 4.0 macros']);

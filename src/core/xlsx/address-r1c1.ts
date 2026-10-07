@@ -1,4 +1,4 @@
-import { MAX_COL, MAX_ROW, normalizeRange, type CellAddress, type CellRange } from './address.js';
+import { MAX_COL, MAX_ROW, normalizeRange, type CellAddress, type CellRange } from './address';
 
 interface Corner {
 	kind: 'cell' | 'row' | 'col';

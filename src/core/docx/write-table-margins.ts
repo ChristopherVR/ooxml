@@ -1,6 +1,6 @@
-import type { TableCellMargins } from './table-model.js';
-import { orderChildren } from './element-order.js';
-import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { TableCellMargins } from './table-model';
+import { orderChildren } from './element-order';
+import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 const SIDES = ['top', 'left', 'bottom', 'right'] as const;
 const ORDER = ['top', 'start', 'left', 'bottom', 'end', 'right'];

@@ -1,9 +1,9 @@
 // When an edit session recalculates: incrementally after cell edits, fully after structural
 // ones, and not at all in manual calculation mode until calculateNow / calculateSheet.
-import type { Workbook } from '../model.js';
-import { calcModeOf } from './calc-mode.js';
-import type { CalcEngine } from './deps.js';
-import { type HistoryStep, touchedCells } from './history.js';
+import type { Workbook } from '../model';
+import { calcModeOf } from './calc-mode';
+import type { CalcEngine } from './deps';
+import { type HistoryStep, touchedCells } from './history';
 
 const isStructural = (step: HistoryStep): boolean =>
 	step.structural || step.entries.some((entry) => entry.before.kind !== 'cells');

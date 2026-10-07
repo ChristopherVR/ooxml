@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { layoutSections } from './page-flow.js';
-import { createFakeMeasurer } from './measure.js';
-import type { LayoutTableRow } from './input.js';
-import type { LayoutTableBox } from './result.js';
+import { layoutSections } from './page-flow';
+import { createFakeMeasurer } from './measure';
+import type { LayoutTableRow } from './input';
+import type { LayoutTableBox } from './result';
 
 const measurer = { widthOf: (text: string) => text.length * 5, lineHeightOf: () => 20 };
 function row(id: string, isHeader: boolean, text = id): LayoutTableRow {

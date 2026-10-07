@@ -3,24 +3,24 @@
 // signaling chosen the same way. This is what a viewer binding instantiates; everything above it is
 // UI. DOM-free; browser classes are injectable. New code.
 import type * as Y from 'yjs';
-import { createBroadcastTransport } from '../collab/broadcast-transport.js';
-import type { BroadcastChannelConstructor } from '../collab/broadcast-transport.js';
-import { createClientId } from '../collab/identity.js';
-import type { Transport } from '../collab/provider.js';
-import { type CollabSession, createCollabSession } from '../collab/session.js';
-import { transportProvider } from '../collab/transport-provider.js';
-import { createWebSocketTransport } from '../collab/websocket-transport.js';
-import type { WebSocketConstructor } from '../collab/websocket-transport.js';
-import { type CallSession, type MediaDevicesLike, createCallSession } from './call.js';
-import { type ChatStore, createChatStore } from './chat.js';
-import { createTabStore, type TabStore } from './tabs.js';
-import type { PeerConnectionFactory, StreamFactory } from './peer.js';
-import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config.js';
+import { createBroadcastTransport } from '../collab/broadcast-transport';
+import type { BroadcastChannelConstructor } from '../collab/broadcast-transport';
+import { createClientId } from '../collab/identity';
+import type { Transport } from '../collab/provider';
+import { type CollabSession, createCollabSession } from '../collab/session';
+import { transportProvider } from '../collab/transport-provider';
+import { createWebSocketTransport } from '../collab/websocket-transport';
+import type { WebSocketConstructor } from '../collab/websocket-transport';
+import { type CallSession, type MediaDevicesLike, createCallSession } from './call';
+import { type ChatStore, createChatStore } from './chat';
+import { createTabStore, type TabStore } from './tabs';
+import type { PeerConnectionFactory, StreamFactory } from './peer';
+import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config';
 import {
 	type SignalingChannel,
 	createBroadcastSignaling,
 	createWebSocketSignaling,
-} from './signaling.js';
+} from './signaling';
 
 export type Availability = 'available' | 'busy' | 'away';
 

@@ -1,6 +1,6 @@
-import { detectOfficeKind, type OfficeKind } from './model.js';
-import { markdownTable, type MarkdownTable } from './markdown-table.js';
-export type { MarkdownTable } from './markdown-table.js';
+import { detectOfficeKind, type OfficeKind } from './model';
+import { markdownTable, type MarkdownTable } from './markdown-table';
+export type { MarkdownTable } from './markdown-table';
 
 export type ContentKind = OfficeKind | 'markdown' | 'website' | 'text';
 

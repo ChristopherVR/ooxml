@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calc } from './test-helpers.js';
-import { xsearch } from './functions/lookup-core.js';
+import { calc } from './test-helpers';
+import { xsearch } from './functions/lookup-core';
 
 // Recorded independently with Excel 16.0 build 20430, 2026-10-07.
 describe('modern binary lookup search', () => {

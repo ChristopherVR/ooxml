@@ -1,8 +1,8 @@
-import { MAX_COL, type CellRange } from '../address.js';
-import { forEachCellInRange, getCell, mergeAt } from '../cells.js';
-import type { Workbook, Worksheet } from '../model.js';
-import type { GridMetrics } from './metrics.js';
-import type { HAlignView, MergeView } from './types.js';
+import { MAX_COL, type CellRange } from '../address';
+import { forEachCellInRange, getCell, mergeAt } from '../cells';
+import type { Workbook, Worksheet } from '../model';
+import type { GridMetrics } from './metrics';
+import type { HAlignView, MergeView } from './types';
 
 /** How a cell takes part in a merge. */
 export function mergeView(sheet: Worksheet, row: number, col: number): MergeView {

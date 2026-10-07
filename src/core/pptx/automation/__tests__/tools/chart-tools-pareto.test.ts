@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
-import type { ChartPptxElement, PptxData } from '../../../index.js';
-import { PptxHandler } from '../../../index.js';
+import type { ChartPptxElement, PptxData } from '../../../index';
+import { PptxHandler } from '../../../index';
 import { describe, it, expect } from 'vitest';
 
-import { createChart, updateChart } from '../../tools/chart-tools.js';
-import type { ToolContext } from '../../types.js';
+import { createChart, updateChart } from '../../tools/chart-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(): PptxData {
 	return {

@@ -1,5 +1,5 @@
-import type { CellRange } from '../address.js';
-import type { CellValue } from '../model.js';
+import type { CellRange } from '../address';
+import type { CellValue } from '../model';
 
 export interface CellPosition {
 	sheet: number;

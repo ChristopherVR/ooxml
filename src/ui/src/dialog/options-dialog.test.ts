@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { clampOptionNumber, type OfficeOptionCategory } from '../controls.js';
-import { registerOfficeUi } from '../index.js';
+import { clampOptionNumber, type OfficeOptionCategory } from '../controls';
+import { registerOfficeUi } from '../index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

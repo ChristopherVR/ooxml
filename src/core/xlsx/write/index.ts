@@ -1,1 +1,1 @@
-export { saveXlsx } from './save.js';
+export { saveXlsx } from './save';

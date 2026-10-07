@@ -9,9 +9,9 @@ import {
 	parseSignedTwips,
 	parseTwips,
 	universalMeasureToTwips,
-} from './simple-types.js';
-import { emu, halfPoints, twips } from './units.js';
-import { parseXml } from './xml.js';
+} from './simple-types';
+import { emu, halfPoints, twips } from './units';
+import { parseXml } from './xml';
 
 const element = (attributes: string) =>
 	parseXml(

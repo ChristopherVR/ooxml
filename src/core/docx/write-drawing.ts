@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes inline picture runs: reuses original wp:inline/pic:pic XML verbatim (only patching
 // extent/alt text) for unchanged pictures, and synthesizes a minimal valid drawing for insertions.
-import type { InlineImage } from './model.js';
-import { EMU_PER_PIXEL } from './drawing.js';
-import { buildWatermarkRun } from './watermark.js';
-import { buildTextBoxDrawing, patchTextBox } from './write-text-box.js';
-import type { RelationshipAllocator } from './relationship-allocator.js';
+import type { InlineImage } from './model';
+import { EMU_PER_PIXEL } from './drawing';
+import { buildWatermarkRun } from './watermark';
+import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
+import type { RelationshipAllocator } from './relationship-allocator';
 import {
 	isElement,
 	makeNS,
@@ -14,7 +14,7 @@ import {
 	REL_NS,
 	type XmlDocument,
 	type XmlElement,
-} from './xml.js';
+} from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';

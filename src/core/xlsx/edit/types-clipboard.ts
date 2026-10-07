@@ -1,5 +1,5 @@
 // Clipboard and find/replace payload types of the edit session.
-import type { CellRange } from '../address.js';
+import type { CellRange } from '../address';
 import type {
 	CellStyle,
 	CellValue,
@@ -8,7 +8,7 @@ import type {
 	DataValidation,
 	Hyperlink,
 	RichTextRun,
-} from '../model.js';
+} from '../model';
 
 /** One copied cell, self-contained so it can be pasted into another workbook. */
 export interface ClipboardCell {

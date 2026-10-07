@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { loadDocx } from '../index.js';
-import { createFakeMeasurer, type TextMeasurer } from './measure.js';
-import { layoutDocumentModel } from './layout.js';
-import { layoutSections } from './page-flow.js';
-import type { LayoutPageGeometry, LayoutParagraph } from './input.js';
+import { loadDocx } from '../index';
+import { createFakeMeasurer, type TextMeasurer } from './measure';
+import { layoutDocumentModel } from './layout';
+import { layoutSections } from './page-flow';
+import type { LayoutPageGeometry, LayoutParagraph } from './input';
 
 const fixture = (name: string) =>
 	new URL(`./fixtures/continuous-sections/${name}`, import.meta.url);

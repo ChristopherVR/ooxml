@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import type { Table } from './model.js';
-import { eighthPoints } from './units.js';
+import { loadDocx } from './parse';
+import type { Table } from './model';
+import { eighthPoints } from './units';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const cell = (text: string, props = '') =>

@@ -1,6 +1,6 @@
-import { createDocument, type DocumentModel } from './index.js';
+import { createDocument, type DocumentModel } from './index';
 import { describe, expect, it } from 'vitest';
-import { documentStats, plainText } from './document-stats.js';
+import { documentStats, plainText } from './document-stats';
 
 function model(): DocumentModel {
 	const doc = createDocument();

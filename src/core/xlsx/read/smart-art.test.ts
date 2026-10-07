@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { createEditSession } from '../edit/index.js';
-import { anchorToPixelBox } from '../layout/index.js';
-import type { SmartArtObject, Workbook } from '../model.js';
-import { saveXlsx } from '../write/index.js';
-import { loadXlsx } from './index.js';
+import { createEditSession } from '../edit/index';
+import { anchorToPixelBox } from '../layout/index';
+import type { SmartArtObject, Workbook } from '../model';
+import { saveXlsx } from '../write/index';
+import { loadXlsx } from './index';
 
 const fixture = () =>
 	new Uint8Array(

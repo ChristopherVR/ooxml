@@ -6,7 +6,7 @@
  *
  * @module color-linear
  */
-import { clampUnitInterval } from './color-primitives.js';
+import { clampUnitInterval } from './color-primitives';
 
 /** An sRGB channel (0-255) as linear light (0-1). */
 export function srgb255ToLinear(channel: number): number {

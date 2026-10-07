@@ -1,5 +1,5 @@
-import type { ModernPasswordHash } from '../model.js';
-import { modernHashAttributeNames } from '../read/password-hash.js';
+import type { ModernPasswordHash } from '../model';
+import { modernHashAttributeNames } from '../read/password-hash';
 
 /**
  * The attribute values of an agile hash, keyed by their XML names (`algorithmName`, or

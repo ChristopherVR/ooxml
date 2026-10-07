@@ -1,7 +1,7 @@
-import { parseXml, type XmlElement } from '../../xml/index.js';
-import type { RichTextRun } from '../model.js';
-import { parseFont } from './style-parts.js';
-import { xChildren, xFirst, xText } from './xml-util.js';
+import { parseXml, type XmlElement } from '../../xml/index';
+import type { RichTextRun } from '../model';
+import { parseFont } from './style-parts';
+import { xChildren, xFirst, xText } from './xml-util';
 
 export interface SharedString {
 	text: string;

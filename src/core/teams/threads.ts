@@ -1,4 +1,4 @@
-import type { Message } from './model.js';
+import type { Message } from './model';
 
 export interface MessageThread {
 	root: Message;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LABEL_COLLISION_GAP, nudgeOutsideLabels } from './pie-label-collision.js';
+import { LABEL_COLLISION_GAP, nudgeOutsideLabels } from './pie-label-collision';
 
 const DISC = { cx: 100, cy: 150, r: 20 };
 const box = (id: number, x: number, y: number, w = 40, h = 14) => ({ id, x, y, w, h });

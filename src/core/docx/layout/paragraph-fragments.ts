@@ -1,7 +1,7 @@
-import { definedProps } from '../defined-props.js';
-import type { LayoutFragment } from './result.js';
-import type { LayoutParagraph } from './input.js';
-import type { PlacedToken } from './paragraph-tokens.js';
+import { definedProps } from '../defined-props';
+import type { LayoutFragment } from './result';
+import type { LayoutParagraph } from './input';
+import type { PlacedToken } from './paragraph-tokens';
 
 export function buildFragments(
 	tokensOnLine: PlacedToken[],

@@ -1,8 +1,8 @@
 // Small helpers of the conditional-format evaluator.
-import type { CellValue, CfvoThreshold, DifferentialStyle } from '../model.js';
-import { mixColors } from './colors.js';
-import { dateToSerial } from '../numfmt/date.js';
-import { mergeBorder, mergeFont } from './style-view.js';
+import type { CellValue, CfvoThreshold, DifferentialStyle } from '../model';
+import { mixColors } from './colors';
+import { dateToSerial } from '../numfmt/date';
+import { mergeBorder, mergeFont } from './style-view';
 
 /** A literal number or string operand, evaluated without the formula engine. */
 export function literal(formula: string): CellValue | undefined {

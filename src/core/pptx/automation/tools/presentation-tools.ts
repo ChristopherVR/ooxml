@@ -1,6 +1,6 @@
-import type { PptxPresentationProperties } from '../../index.js';
+import type { PptxPresentationProperties } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── getPresentationProperties ────────────────────────────────────────────────
 

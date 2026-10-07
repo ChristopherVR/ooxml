@@ -1,5 +1,5 @@
-import { diagramColorTheme, resolveDiagramColor, type DocxDiagram } from '../index.js';
-import type { ThemeCatalog } from '../index.js';
+import { diagramColorTheme, resolveDiagramColor, type DocxDiagram } from '../index';
+import type { ThemeCatalog } from '../index';
 
 type Drawing = NonNullable<DocxDiagram['drawing']>;
 

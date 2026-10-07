@@ -1,8 +1,8 @@
-import { signedTwips, twips } from '../index.js';
+import { signedTwips, twips } from '../index';
 import { describe, expect, it } from 'vitest';
-import type { DocumentModel, ParagraphStyleCatalog, SectionProperties } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import { at } from './test-helpers.js';
+import type { DocumentModel, ParagraphStyleCatalog, SectionProperties } from '../index';
+import { adaptDocumentModel } from './adapter';
+import { at } from './test-helpers';
 
 function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 	return {

@@ -1,6 +1,6 @@
-import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types.js';
-import type { DiagramColor, DiagramDrawing, DiagramIssue } from '../diagram/types.js';
-import type { CellAddress, CellRange } from './address.js';
+import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
+import type { DiagramColor, DiagramDrawing, DiagramIssue } from '../diagram/types';
+import type { CellAddress, CellRange } from './address';
 import type { ChartStyleDefinition } from '../chart/style-definition';
 
 /** Excel error values. */
@@ -839,4 +839,4 @@ export type {
 	CustomProperty,
 	CustomPropertyType,
 	HeadingPair,
-} from '../opc/properties/types.js';
+} from '../opc/properties/types';

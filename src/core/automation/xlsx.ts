@@ -1,9 +1,9 @@
-import { createWorkbook, validateSheetName } from '../xlsx/workbook.js';
-import { loadXlsx } from '../xlsx/read/load.js';
-import { saveXlsx } from '../xlsx/write/save.js';
-import { createEditSession } from '../xlsx/edit/session.js';
-import { parseAddress, parseRange, MAX_COL, MAX_ROW, formatAddress } from '../xlsx/address.js';
-import { getCell } from '../xlsx/cells.js';
+import { createWorkbook, validateSheetName } from '../xlsx/workbook';
+import { loadXlsx } from '../xlsx/read/load';
+import { saveXlsx } from '../xlsx/write/save';
+import { createEditSession } from '../xlsx/edit/session';
+import { parseAddress, parseRange, MAX_COL, MAX_ROW, formatAddress } from '../xlsx/address';
+import { getCell } from '../xlsx/cells';
 
 export async function inspectXlsx(bytes: Uint8Array) {
 	const workbook = await loadXlsx(bytes);

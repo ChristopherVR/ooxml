@@ -10,7 +10,7 @@
  * half (arrows, callouts, flowchart, action buttons) lives in
  * `shape-definitions-extended.ts`.
  */
-import type { PresetShapeDefinition } from './preset-shape-types.js';
+import type { PresetShapeDefinition } from './preset-shape-types';
 
 /**
  * Shape definitions for basic shapes, rectangle variants, stars and banners,

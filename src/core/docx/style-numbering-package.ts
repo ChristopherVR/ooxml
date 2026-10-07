@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type JSZip from 'jszip';
-import type { DocumentModel } from './model.js';
-import type { ParagraphStyleCatalog } from './model-paragraph.js';
-import { orderParagraphProperties } from './tab-stops.js';
+import type { DocumentModel } from './model';
+import type { ParagraphStyleCatalog } from './model-paragraph';
+import { orderParagraphProperties } from './tab-stops';
 import {
 	buildXml,
 	children,
@@ -12,7 +12,7 @@ import {
 	parseXml,
 	WORD_NS,
 	type XmlElement,
-} from './xml.js';
+} from './xml';
 
 const STYLES_PART = 'word/styles.xml';
 /** Children of `w:style` that follow `w:pPr` in the schema sequence. */

@@ -5,8 +5,8 @@ import {
 	markdownInline,
 	markdownUrl,
 	readContent,
-} from './content.js';
-import { filesOf } from './view.js';
+} from './content';
+import { filesOf } from './view';
 
 describe('content routing', () => {
 	it.each([

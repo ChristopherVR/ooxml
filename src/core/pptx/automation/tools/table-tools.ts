@@ -1,8 +1,8 @@
-import { rebuildTableStructureInRawXml } from '../../index.js';
-import type { TablePptxElement, TableStructureEdit } from '../../index.js';
+import { rebuildTableStructureInRawXml } from '../../index';
+import type { TablePptxElement, TableStructureEdit } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── updateTableCells ─────────────────────────────────────────────────────────
 

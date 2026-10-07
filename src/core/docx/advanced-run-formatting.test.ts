@@ -8,13 +8,13 @@ import {
 	parseRunStyleCatalog,
 	parseParagraphStyleCatalog,
 	type TextRun,
-} from './index.js';
-import { halfPoints } from './units.js';
-import { parseRunProperties } from './run-properties.js';
-import { parseSignedHalfPoints, parseTextScale } from './simple-types.js';
-import { parseXml, WORD_NS } from './xml.js';
-import { runHasUnknownProperties } from './write-run-validation.js';
-import { expectParagraph } from './test-support/access.js';
+} from './index';
+import { halfPoints } from './units';
+import { parseRunProperties } from './run-properties';
+import { parseSignedHalfPoints, parseTextScale } from './simple-types';
+import { parseXml, WORD_NS } from './xml';
+import { runHasUnknownProperties } from './write-run-validation';
+import { expectParagraph } from './test-support/access';
 
 const rPr = '<w:w w:val="125"/><w:kern w:val="24"/><w:position w:val="-6"/>';
 const run = (properties: string) =>

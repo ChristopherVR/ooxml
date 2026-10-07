@@ -5,12 +5,12 @@ import {
 	FORMAT_PRESETS,
 	getCell,
 	stepDecimals,
-} from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { style } from './font.js';
-import { icon } from './icons.js';
-import { activeStyle, editing, target } from './util.js';
+} from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { style } from './font';
+import { icon } from './icons';
+import { activeStyle, editing, target } from './util';
 
 /** Accounting formats by currency (the Accounting split's menu). */
 export const ACCOUNTING_FORMATS: ReadonlyArray<

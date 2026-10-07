@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { registerOfficeUi } from './index.js';
+import { registerOfficeUi } from './index';
 
 // Products (pptx-viewer's `pptx-ui-*` tags) register subclasses of these elements and rely on more
 // than the documented hooks. These tests pin the behaviour the Lit port has to keep.

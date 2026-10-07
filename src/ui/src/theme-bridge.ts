@@ -1,4 +1,4 @@
-import type { OfficeToken } from './tokens.js';
+import type { OfficeToken } from './tokens';
 
 /**
  * Feeds the `--office-*` tokens from a product's own theme, so the shared elements follow it.

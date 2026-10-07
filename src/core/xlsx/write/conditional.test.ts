@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import type { ConditionalRule, DifferentialStyle } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from './index.js';
+import { putCell } from '../cells';
+import type { ConditionalRule, DifferentialStyle } from '../model';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from './index';
 
 const RED: DifferentialStyle = {
 	fill: { type: 'pattern', pattern: 'solid', bgColor: { rgb: 'FFFF0000' } },

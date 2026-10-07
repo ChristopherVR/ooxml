@@ -1,4 +1,4 @@
-import { getW, WORD_NS, type XmlElement } from './xml.js';
+import { getW, WORD_NS, type XmlElement } from './xml';
 
 /** Only ordinary text-wrapping breaks are represented by a model newline. */
 export function hasSpecialBreak(element: XmlElement): boolean {

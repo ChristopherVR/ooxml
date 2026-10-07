@@ -1,7 +1,7 @@
-import type { CellRange } from '../address.js';
-import type { CellStyle, Color, Hyperlink, ThemePalette } from '../model.js';
-import { htmlHref } from './clipboard-links.js';
-import type { ClipboardCells } from './types.js';
+import type { CellRange } from '../address';
+import type { CellStyle, Color, Hyperlink, ThemePalette } from '../model';
+import { htmlHref } from './clipboard-links';
+import type { ClipboardCells } from './types';
 
 export const escapeHtml = (text: string): string =>
 	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

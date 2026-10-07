@@ -1,8 +1,8 @@
 // Small one-field dialogs: confirm, text and number prompts, and list pickers. Larger dialogs
 // build on the same frame.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { field, invalid, listBox, numberInput, text, textArea, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { field, invalid, listBox, numberInput, text, textArea, textInput } from './fields';
+import { showDialog } from './frame';
 
 export interface ConfirmProps {
 	heading: string;

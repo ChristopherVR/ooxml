@@ -1,9 +1,9 @@
-import { hasTextProperties } from '../../index.js';
-import type { PptxElementWithText, TablePptxElement } from '../../index.js';
+import { hasTextProperties } from '../../index';
+import type { PptxElementWithText, TablePptxElement } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
-import { replaceElementText } from './text-editing.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
+import { replaceElementText } from './text-editing';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

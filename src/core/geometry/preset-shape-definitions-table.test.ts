@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
-import { PRESET_SHAPE_GEOMETRY_TABLE } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
+import { PRESET_SHAPE_GEOMETRY_TABLE } from './preset-shape-definitions-table';
 
 const REQUIRED_SHAPES = [
 	'rect',

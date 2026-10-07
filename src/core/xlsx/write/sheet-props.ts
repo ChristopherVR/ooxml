@@ -1,7 +1,7 @@
-import { NS, elements, parseXml } from '../../xml/index.js';
-import { formatAddress, formatRange, type CellAddress } from '../address.js';
-import { usedRange } from '../cells.js';
-import type { AutoFilterColumn, ColumnInfo, Worksheet } from '../model.js';
+import { NS, elements, parseXml } from '../../xml/index';
+import { formatAddress, formatRange, type CellAddress } from '../address';
+import { usedRange } from '../cells';
+import type { AutoFilterColumn, ColumnInfo, Worksheet } from '../model';
 import {
 	readAutoFilter,
 	readFitToPage,
@@ -9,13 +9,13 @@ import {
 	readSheetFormat,
 	readSheetView,
 	readTabColor,
-} from '../read/sheet-props.js';
-import { outerXml } from '../read/xml-util.js';
-import { mergedAttrs } from './attr-merge.js';
-import { modernHashValues } from './password-hash.js';
-import { sameModel, snapshotElement, snapshotXml } from './snapshot.js';
-import { colorXml } from './style-xml.js';
-import { attrs, el, escapeAttr } from './xml-out.js';
+} from '../read/sheet-props';
+import { outerXml } from '../read/xml-util';
+import { mergedAttrs } from './attr-merge';
+import { modernHashValues } from './password-hash';
+import { sameModel, snapshotElement, snapshotXml } from './snapshot';
+import { colorXml } from './style-xml';
+import { attrs, el, escapeAttr } from './xml-out';
 
 const sqref = (ranges: readonly { start: CellAddress; end: CellAddress }[]) =>
 	ranges.map((range) => formatRange(range)).join(' ');

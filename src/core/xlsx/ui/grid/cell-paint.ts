@@ -1,6 +1,6 @@
 // Pure translation of the core's CellView into CSS values (font shorthand, fills, pattern tiles,
 // borders, alignment). The DOM painter only copies these onto recycled nodes.
-import type { BordersView, EdgeView, FillView, FontView, PatternType } from '../../index.js';
+import type { BordersView, EdgeView, FillView, FontView, PatternType } from '../../index';
 
 import { cssFontFamily } from '../../layout/font-family';
 export { cssFontFamily };

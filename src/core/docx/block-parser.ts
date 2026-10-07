@@ -1,25 +1,25 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Paragraph/table/run parsing shared by the main document body, headers, footers, footnotes and
 // endnotes (moved out of parse.ts so every container can reuse the identical parser).
-import type { Block, Paragraph, Revision, Table, TextRun } from './model.js';
-import { first, getW, isElement, named, textContent, buildXml, type XmlElement } from './xml.js';
-import { runPropertiesHaveUnknownContent } from './write-run-validation.js';
-import { classifyBreak } from './breaks.js';
-import { parseDirectRunProperties } from './run-properties.js';
-import { parseDirectParagraphProperties } from './paragraph-properties.js';
-import { parseTable as parseTableWithFidelity } from './parse-table.js';
-import { parseDrawing, type DrawingContext } from './drawing.js';
-import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink.js';
-import { paragraphBookmarkNames } from './bookmarks.js';
-import { createFieldTracker } from './field-runs.js';
-import { parseEquation } from './equation.js';
+import type { Block, Paragraph, Revision, Table, TextRun } from './model';
+import { first, getW, isElement, named, textContent, buildXml, type XmlElement } from './xml';
+import { runPropertiesHaveUnknownContent } from './write-run-validation';
+import { classifyBreak } from './breaks';
+import { parseDirectRunProperties } from './run-properties';
+import { parseDirectParagraphProperties } from './paragraph-properties';
+import { parseTable as parseTableWithFidelity } from './parse-table';
+import { parseDrawing, type DrawingContext } from './drawing';
+import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink';
+import { paragraphBookmarkNames } from './bookmarks';
+import { createFieldTracker } from './field-runs';
+import { parseEquation } from './equation';
 import {
 	collectParagraphRuns,
 	type OpenMoves,
 	paragraphFormatRevision,
 	paragraphMarkRevision,
 	runFormatRevision,
-} from './parse-revisions.js';
+} from './parse-revisions';
 
 const FIELD_PLACEHOLDERS: Record<string, string> = {
 	PAGE: '[Page #]',

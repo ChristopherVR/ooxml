@@ -5,4 +5,4 @@ export type {
 	EncryptionOptions,
 	EncryptionScheme,
 	StandardEncryptionInfo,
-} from '../../../crypto/types.js';
+} from '../../../crypto/types';

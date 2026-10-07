@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { transformCase } from './case-transform.js';
+import { transformCase } from './case-transform';
 
 describe('transformCase', () => {
 	it('handles every Word mode', () => {

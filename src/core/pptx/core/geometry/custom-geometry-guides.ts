@@ -24,12 +24,12 @@ import {
 	evaluateGuides,
 	parseAdjustmentValues,
 	parseGuideDefinitions,
-} from '../../../geometry/guide-formula-api.js';
+} from '../../../geometry/guide-formula-api';
 import {
 	evaluateFormula,
 	parseFormula,
 	resolveOperand,
-} from '../../../geometry/guide-formula-eval.js';
+} from '../../../geometry/guide-formula-eval';
 
 /** The `a:gd` node array under a raw `a:avLst`/`a:gdLst` XML blob (or none). */
 function gdNodesOf(listXml: unknown): Array<Record<string, unknown>> {

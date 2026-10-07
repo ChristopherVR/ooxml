@@ -1,6 +1,6 @@
 // Array size limits and whole-column arrays.
 import { describe, expect, it } from 'vitest';
-import { book, calc, E, engine, get, grid, set } from './test-helpers.js';
+import { book, calc, E, engine, get, grid, set } from './test-helpers';
 
 describe('array size limits', () => {
 	it.each([

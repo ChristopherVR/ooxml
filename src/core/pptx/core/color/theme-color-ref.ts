@@ -8,7 +8,7 @@
  * @module color/theme-color-ref
  */
 import type { PptxThemeColorRef, PptxThemeColorSchemeName, XmlObject } from '../types';
-import { normalizeHexColor } from '../../../color/color-primitives.js';
+import { normalizeHexColor } from '../../../color/color-primitives';
 import { applyDrawingColorTransforms } from './color-transforms';
 
 const SCHEME_NAMES: ReadonlySet<string> = new Set<PptxThemeColorSchemeName>([

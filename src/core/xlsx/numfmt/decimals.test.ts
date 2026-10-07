@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stepDecimals } from './decimals.js';
+import { stepDecimals } from './decimals';
 
 describe('stepDecimals', () => {
 	it.each([

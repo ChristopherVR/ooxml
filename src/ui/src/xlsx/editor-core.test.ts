@@ -3,7 +3,7 @@
 // one selection formatter, and sheet-change after sheets are inserted, moved or deleted.
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { allCommands } from './commands/index.js';
+import { allCommands } from './commands/index';
 import { flush, shellFixture } from './test-support/shell';
 
 afterEach(() => document.body.replaceChildren());

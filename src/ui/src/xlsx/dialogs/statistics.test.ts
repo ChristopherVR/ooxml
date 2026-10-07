@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickButton, createTestContext, dialogEl, pressKey } from '../commands/test-support.js';
-import { registerNavigationDialogs } from './register-navigation.js';
+import { clickButton, createTestContext, dialogEl, pressKey } from '../commands/test-support';
+import { registerNavigationDialogs } from './register-navigation';
 
 afterEach(() => (document.body.innerHTML = ''));
 

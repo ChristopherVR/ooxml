@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { formatNoteNumber, loadDocx, numberNotesInOrder, saveDocx } from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+import { formatNoteNumber, loadDocx, numberNotesInOrder, saveDocx } from './index';
+import { at, expectParagraph } from './test-support/access';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

@@ -1,4 +1,4 @@
-import { parseRelationshipIdAttributes } from '../../../diagram/index.js';
+import { parseRelationshipIdAttributes } from '../../../diagram/index';
 import type { PptxSmartArtData, XmlObject } from '../types';
 
 /** Typed view of the four required relationship attributes on `dgm:relIds`. */

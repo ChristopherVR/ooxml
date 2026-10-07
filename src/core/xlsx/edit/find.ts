@@ -1,12 +1,12 @@
-import { rangeContains } from '../address.js';
-import { forEachCell, getCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { syncTableHeader, writeInput } from './cell-values.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
-import { isSpilledCell } from './deps.js';
-import type { EditScope } from './history.js';
-import { formulaBarText } from './input-text.js';
-import type { FindMatch, FindQuery } from './types.js';
+import { rangeContains } from '../address';
+import { forEachCell, getCell } from '../cells';
+import type { Workbook } from '../model';
+import { syncTableHeader, writeInput } from './cell-values';
+import { type EditContext, displayText, sheetAt } from './context';
+import { isSpilledCell } from './deps';
+import type { EditScope } from './history';
+import { formulaBarText } from './input-text';
+import type { FindMatch, FindQuery } from './types';
 
 /** A regular expression for a find query (Excel wildcards `*`, `?`, `~` unless turned off). */
 export function queryPattern(query: FindQuery, global = false): RegExp | undefined {

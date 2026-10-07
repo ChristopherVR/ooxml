@@ -1,10 +1,10 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Paragraph tab stops (`w:pPr/w:tabs`) and the canonical `w:pPr` child order Word requires.
-import type { Paragraph, TabStop } from './model.js';
-import { orderChildren } from './element-order.js';
-import { isStTabJc, isStTabTlc } from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
-import { parseSignedTwips } from './simple-types.js';
+import type { Paragraph, TabStop } from './model';
+import { orderChildren } from './element-order';
+import { isStTabJc, isStTabTlc } from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
+import { parseSignedTwips } from './simple-types';
 import {
 	children,
 	getW,
@@ -12,7 +12,7 @@ import {
 	WORD_NS,
 	type XmlDocument,
 	type XmlElement,
-} from './xml.js';
+} from './xml';
 
 export function parseTabStops(tabs: XmlElement | undefined): TabStop[] {
 	const stops: TabStop[] = [];

@@ -1,6 +1,6 @@
-import { type CellRange, normalizeRange } from '../address.js';
-import { deleteCell, forEachCellInRange, getCell, putCell } from '../cells.js';
-import type { Cell, DefinedName, Workbook, Worksheet } from '../model.js';
+import { type CellRange, normalizeRange } from '../address';
+import { deleteCell, forEachCellInRange, getCell, putCell } from '../cells';
+import type { Cell, DefinedName, Workbook, Worksheet } from '../model';
 import {
 	type RefsData,
 	type ShiftSpec,
@@ -9,7 +9,7 @@ import {
 	moveCellsRaw,
 	restoreRefs,
 	shiftEdgeCells,
-} from './history-refs.js';
+} from './history-refs';
 
 /** Worksheet properties a `parts` scope can record (everything but the cells). */
 export type SheetPart = Exclude<keyof Worksheet, 'rows'>;

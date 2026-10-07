@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseAddress, parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import type { CellValue, Workbook, Worksheet } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { currentRegion } from './filter.js';
-import { createEditSession } from './session.js';
-import { compareCellValues } from './sort.js';
+import { parseAddress, parseRange } from '../address';
+import { getCell } from '../cells';
+import type { CellValue, Workbook, Worksheet } from '../model';
+import { createWorkbook } from '../workbook';
+import { currentRegion } from './filter';
+import { createEditSession } from './session';
+import { compareCellValues } from './sort';
 
 const A = (ref: string) => {
 	const a = parseAddress(ref);

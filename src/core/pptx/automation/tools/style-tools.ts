@@ -1,14 +1,14 @@
-import { hasTextProperties, resolveThemeColorRef } from '../../index.js';
+import { hasTextProperties, resolveThemeColorRef } from '../../index';
 import type {
 	ImagePptxElement,
 	PptxElement,
 	PptxElementWithText,
 	PptxThemeColorRef,
 	ShapeStyle,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── updateElementStyle ────────────────────────────────────────────────────────
 

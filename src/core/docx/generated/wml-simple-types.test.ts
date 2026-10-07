@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { generate, OUTPUT_PATH, schemaFingerprint } from '../../scripts/gen-schema-types.js';
-import { isStJc, isStJcTable, isStRelFromV, ST_Jc, ST_RelFromH } from './wml-simple-types.js';
+import { generate, OUTPUT_PATH, schemaFingerprint } from '../../scripts/gen-schema-types';
+import { isStJc, isStJcTable, isStRelFromV, ST_Jc, ST_RelFromH } from './wml-simple-types';
 
 describe('generated schema simple types', () => {
 	it('keeps provenance stable when Git checks schemas out with Windows line endings', () => {

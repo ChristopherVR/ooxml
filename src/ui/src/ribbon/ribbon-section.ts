@@ -1,9 +1,9 @@
 import { html } from 'lit';
-import { OfficeElement, controlStyles } from '../base.js';
-import { defineButton } from './button.js';
-import { defineRibbonGroup } from './ribbon-group.js';
-import { definer } from '../registry.js';
-import { tok } from '../tokens.js';
+import { OfficeElement, controlStyles } from '../base';
+import { defineButton } from './button';
+import { defineRibbonGroup } from './ribbon-group';
+import { definer } from '../registry';
+import { tok } from '../tokens';
 import css from './ribbon-section.css?raw';
 
 /** One ribbon command, translated. Booleans map to the command element's attributes. */

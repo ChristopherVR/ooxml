@@ -1,9 +1,9 @@
-import { localDateToSerial, serialSeconds, serialToYmd } from '../date-serial.js';
-import { parseNumberText } from '../text-number.js';
-import { ERR, fail, isError } from '../values.js';
-import { num, optNum, scalar, spec, str } from './helpers.js';
-import { WORKDAY_FUNCTIONS } from './workdays.js';
-import type { FunctionSpec } from './types.js';
+import { localDateToSerial, serialSeconds, serialToYmd } from '../date-serial';
+import { parseNumberText } from '../text-number';
+import { ERR, fail, isError } from '../values';
+import { num, optNum, scalar, spec, str } from './helpers';
+import { WORKDAY_FUNCTIONS } from './workdays';
+import type { FunctionSpec } from './types';
 
 const C = 'Date & Time';
 import {
@@ -16,7 +16,7 @@ import {
 	weekNum,
 	weekday,
 	yearFrac,
-} from './date-calc.js';
+} from './date-calc';
 
 export const DATETIME_FUNCTIONS: FunctionSpec[] = [
 	...WORKDAY_FUNCTIONS,

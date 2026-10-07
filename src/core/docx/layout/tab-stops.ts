@@ -1,5 +1,5 @@
-import type { LayoutTabStop } from './input.js';
-import { DEFAULT_TAB_STOP_PX } from './units.js';
+import type { LayoutTabStop } from './input';
+import { DEFAULT_TAB_STOP_PX } from './units';
 
 export interface TabPlacement {
 	widthPx: number;

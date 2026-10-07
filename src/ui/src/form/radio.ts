@@ -1,6 +1,6 @@
 import { html } from 'lit';
-import { OfficeElement, controlStyles, flag, valueOn } from '../base.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag, valueOn } from '../base';
+import { definer, present } from '../registry';
 import css from './radio.css?raw';
 
 interface RadioLike extends HTMLElement {

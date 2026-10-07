@@ -1,5 +1,5 @@
-import type { ColumnInfo, Worksheet } from '../model.js';
-import { DEFAULT_COL_WIDTH } from '../workbook.js';
+import type { ColumnInfo, Worksheet } from '../model';
+import { DEFAULT_COL_WIDTH } from '../workbook';
 
 /** Copy visible metrics from spans without searching the column list for every column. */
 export function copyColumnWidths(sheet: Worksheet, start: number, end: number): number[] {

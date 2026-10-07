@@ -2,7 +2,7 @@
 // `validateSheetName` and `renameSheet`; an invalid name shows a toast and keeps editing; Escape cancels.
 import { validateSheetName } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { h } from '../grid/dom.js';
+import { h } from '../grid/dom';
 
 export interface RenameHandle {
 	input: HTMLInputElement;

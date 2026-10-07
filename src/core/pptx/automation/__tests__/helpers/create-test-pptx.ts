@@ -1,7 +1,7 @@
-import { PptxHandler } from '../../../index.js';
-import type { PptxData } from '../../../index.js';
+import { PptxHandler } from '../../../index';
+import type { PptxData } from '../../../index';
 
-import type { ToolContext } from '../../types.js';
+import type { ToolContext } from '../../types';
 
 /**
  * Create a real PPTX as Uint8Array using PptxHandler.createBlank().

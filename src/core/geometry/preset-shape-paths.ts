@@ -7,9 +7,9 @@
  *
  * @module preset-shape-paths
  */
-export { type PresetShapeDefinition, type PresetShapeCategory } from './preset-shape-types.js';
-export { PRESET_SHAPE_CLIP_PATHS, getPresetShapeClipPath } from './preset-shape-clip-paths.js';
+export { type PresetShapeDefinition, type PresetShapeCategory } from './preset-shape-types';
+export { PRESET_SHAPE_CLIP_PATHS, getPresetShapeClipPath } from './preset-shape-clip-paths';
 export {
 	PRESET_SHAPE_DEFINITIONS,
 	PRESET_SHAPE_CATEGORY_LABELS,
-} from './preset-shape-definitions.js';
+} from './preset-shape-definitions';

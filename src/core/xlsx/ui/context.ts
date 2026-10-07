@@ -1,8 +1,8 @@
 // The editor context every UI module (grid, formula bar, sheet tabs, commands, dialogs) receives.
 // Shapes are fixed by the UI contract; the shell (component.ts) is the only implementation.
-import type { CellAddress, CellRange, EditSession, Workbook } from '../index.js';
-import type { CommandRegistry } from './commands.js';
-import type { DialogRegistry } from './dialogs.js';
+import type { CellAddress, CellRange, EditSession, Workbook } from '../index';
+import type { CommandRegistry } from './commands';
+import type { DialogRegistry } from './dialogs';
 
 export interface Selection {
 	sheet: number;

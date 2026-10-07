@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calc, E } from './test-helpers.js';
+import { calc, E } from './test-helpers';
 
 // Recorded independently with Excel 16.0 build 20430, 2026-10-07.
 describe('classic lookup array arguments', () => {

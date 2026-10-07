@@ -1,7 +1,7 @@
 // Strings of the tool dialogs (Insert Chart, Paste Special, Page Setup, Zoom, Move or Copy,
 // Protect Sheet, Insert / Delete cells, Remove Duplicates, Text to Columns, Symbol, Series,
 // Create Table): English key -> [fr, de, es, zh-CN].
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const TOOLS_STRINGS: Translations = {
 	// Insert Chart

@@ -11,15 +11,15 @@ export {
 	pixelsToColumnWidth,
 	pixelsToPoints,
 	pointsToPixels,
-} from './units.js';
-export { AxisMetrics } from './axis-metrics.js';
+} from './units';
+export { AxisMetrics } from './axis-metrics';
 export {
 	createGridMetrics,
 	zoomPercent,
 	type GridMetrics,
 	type GridMetricsOptions,
-} from './metrics.js';
-export { visibleCells, type Viewport, type VisibleCells } from './viewport.js';
+} from './metrics';
+export { visibleCells, type Viewport, type VisibleCells } from './viewport';
 export {
 	DEFAULT_ANCHOR_EXTENT_EMU,
 	MIN_TWO_CELL_PIXELS,
@@ -30,9 +30,9 @@ export {
 	pixelSizeToExtent,
 	type AnchorKind,
 	type PixelBox,
-} from './anchors.js';
-export { applyTint, hls240ToRgb, parseHex, rgbToHls240, toHexColor, type Hls } from './tint.js';
-export { INDEXED_COLORS, THEME_SLOTS, mixColors, resolveColor, themeColor } from './colors.js';
+} from './anchors';
+export { applyTint, hls240ToRgb, parseHex, rgbToHls240, toHexColor, type Hls } from './tint';
+export { INDEXED_COLORS, THEME_SLOTS, mixColors, resolveColor, themeColor } from './colors';
 export type {
 	BordersView,
 	CellView,
@@ -46,7 +46,7 @@ export type {
 	IconView,
 	MergeView,
 	VAlignView,
-} from './types.js';
+} from './types';
 export {
 	BORDER_STYLES,
 	bordersView,
@@ -54,22 +54,22 @@ export {
 	fillView,
 	fontView,
 	mergeFont,
-} from './style-view.js';
+} from './style-view';
 export {
 	cellView,
 	effectiveStyleId,
 	generalAlignment,
 	rotationDegrees,
 	type CellViewOptions,
-} from './cell-view.js';
+} from './cell-view';
 export {
 	createConditionalFormatEvaluator,
 	scaleColor,
 	type CellAt,
 	type ConditionalFormatOptions,
 	type FormulaEvaluator,
-} from './cf-evaluator.js';
-export { compareValues, percentile } from './cf-values.js';
+} from './cf-evaluator';
+export { compareValues, percentile } from './cf-values';
 export {
 	isOverflowTarget,
 	mergeView,
@@ -77,17 +77,17 @@ export {
 	selectionStats,
 	type OverflowExtent,
 	type SelectionStats,
-} from './sheet-queries.js';
-export { navigate, type NavigationKey } from './navigate.js';
-export { autoFitColumnWidth, type MeasureText } from './autofit.js';
-export { autoSeriesColor, modulateLuminance, chartColorScheme } from './chart-colors.js';
+} from './sheet-queries';
+export { navigate, type NavigationKey } from './navigate';
+export { autoFitColumnWidth, type MeasureText } from './autofit';
+export { autoSeriesColor, modulateLuminance, chartColorScheme } from './chart-colors';
 export {
 	formatAxisValue,
 	niceScale,
 	PERCENT_SCALE,
 	type AxisScale,
 	type NiceScaleOptions,
-} from './chart-scale.js';
+} from './chart-scale';
 export {
 	categoryTotals,
 	chartView,
@@ -95,12 +95,12 @@ export {
 	type ChartViewModel,
 	type EvaluateRef,
 	type ValueAxisView,
-} from './chart-view.js';
-export { renderChartSvg } from './chart-svg.js';
-export { createRefEvaluator, type RefEvaluatorOptions } from './ref-evaluator.js';
+} from './chart-view';
+export { renderChartSvg } from './chart-svg';
+export { createRefEvaluator, type RefEvaluatorOptions } from './ref-evaluator';
 export {
 	approximateMeasure,
 	autoFitRowHeight,
 	lineHeightPoints,
 	wrappedLineCount,
-} from './row-autofit.js';
+} from './row-autofit';

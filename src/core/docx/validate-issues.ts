@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Shared plumbing for pre-save model validation: issue records, the typed error and the
 // primitive schema-value predicates every rule is built from.
-import { isStThemeColor } from './generated/wml-simple-types.js';
-import { isValidLanguageTag } from './language.js';
-import { parseHexColor } from './simple-types.js';
+import { isStThemeColor } from './generated/wml-simple-types';
+import { isValidLanguageTag } from './language';
+import { parseHexColor } from './simple-types';
 
 /** One schema-invalid value found in a document model. */
 export interface ValidationIssue {

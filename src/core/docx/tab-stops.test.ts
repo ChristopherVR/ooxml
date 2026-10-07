@@ -1,7 +1,7 @@
-import { signedTwips, twips } from './units.js';
+import { signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx, type Paragraph } from './index.js';
+import { createDocument, loadDocx, saveDocx, type Paragraph } from './index';
 
 async function documentXml(bytes: Uint8Array) {
 	return (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');

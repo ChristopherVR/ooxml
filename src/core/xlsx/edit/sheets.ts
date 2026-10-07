@@ -1,14 +1,14 @@
-import type { Color, DefinedName, SheetState, Table, Workbook } from '../model.js';
+import type { Color, DefinedName, SheetState, Table, Workbook } from '../model';
 import {
 	createWorksheet,
 	nextSheetId,
 	nextSheetName,
 	sheetByName,
 	validateSheetName,
-} from '../workbook.js';
-import { type EditContext, sheetAt } from './context.js';
-import { deleteSheetInFormula, renameSheetInFormula, renameTableInFormula } from './deps.js';
-import { rewriteFormulas, rewriteSheetFormulas } from './shift-formulas.js';
+} from '../workbook';
+import { type EditContext, sheetAt } from './context';
+import { deleteSheetInFormula, renameSheetInFormula, renameTableInFormula } from './deps';
+import { rewriteFormulas, rewriteSheetFormulas } from './shift-formulas';
 
 function assertUnlocked(workbook: Workbook): void {
 	if (workbook.structureLocked) throw new Error('The workbook structure is protected.');

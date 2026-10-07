@@ -1,5 +1,5 @@
-import { defineTeamsContentPreview, type TeamsContentPreview } from './content-preview.js';
-import type { OpenFileDetail } from './teams-app.js';
+import { defineTeamsContentPreview, type TeamsContentPreview } from './content-preview';
+import type { OpenFileDetail } from './teams-app';
 
 beforeAll(() => defineTeamsContentPreview());
 afterEach(() => {

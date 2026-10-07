@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { digestSync, sha1, sha256, sha384, sha512 } from './index.js';
+import { digestSync, sha1, sha256, sha384, sha512 } from './index';
 
 const hex = (bytes: Uint8Array | undefined) => Buffer.from(bytes ?? []).toString('hex');
 const ascii = (text: string) => new TextEncoder().encode(text);

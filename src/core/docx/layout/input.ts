@@ -7,7 +7,7 @@
  * fallback, so the pipeline keeps compiling as other agents add model
  * fields, and nothing here ever reads `(x as any)`.
  */
-import type { SignedTwips, Twips } from '../index.js';
+import type { SignedTwips, Twips } from '../index';
 
 export interface LayoutRun {
 	text: string;
@@ -17,7 +17,7 @@ export interface LayoutRun {
 	/** Points, matching `TextRun.fontSize` in docx-core. */
 	fontSizePt?: number;
 	textScalePercent?: number;
-	ligatures?: import('../ligatures.js').Ligatures;
+	ligatures?: import('../ligatures').Ligatures;
 	characterSpacingPx?: number;
 	kerningThresholdPt?: number;
 	/** Positive raises the baseline, negative lowers it. */

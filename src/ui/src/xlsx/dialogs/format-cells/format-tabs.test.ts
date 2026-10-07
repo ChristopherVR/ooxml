@@ -8,8 +8,8 @@ import {
 	inputByLabel,
 	pressKey,
 	setValue,
-} from '../../commands/test-support.js';
-import { registerFormatCellsDialogs } from './index.js';
+} from '../../commands/test-support';
+import { registerFormatCellsDialogs } from './index';
 
 afterEach(() => (document.body.innerHTML = ''));
 

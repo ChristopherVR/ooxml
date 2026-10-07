@@ -1,12 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, SectionColumns, SectionProperties } from './model.js';
-import { children, first, getW, isElement, named, type XmlElement } from './xml.js';
-import { getRelationshipId } from './relationships.js';
-import { parsePageBorders } from './page-borders.js';
-import { isStNumberFormat, isStSectionMark, isStVerticalJc } from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
-import { twips } from './units.js';
-import { parseOnOff, parseSignedTwips, parseTwips, parseUnsignedInteger } from './simple-types.js';
+import type { Block, SectionColumns, SectionProperties } from './model';
+import { children, first, getW, isElement, named, type XmlElement } from './xml';
+import { getRelationshipId } from './relationships';
+import { parsePageBorders } from './page-borders';
+import { isStNumberFormat, isStSectionMark, isStVerticalJc } from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
+import { twips } from './units';
+import { parseOnOff, parseSignedTwips, parseTwips, parseUnsignedInteger } from './simple-types';
 
 const twipInt = parseTwips;
 const signedTwipInt = parseSignedTwips;

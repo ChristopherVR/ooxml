@@ -1,5 +1,5 @@
 // Home tab strings: tab and group captions, command labels and menu items.
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const RIBBON_HOME_STRINGS: Translations = {
 	Home: ['Accueil', 'Start', 'Inicio', '开始'],

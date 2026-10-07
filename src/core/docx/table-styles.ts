@@ -4,7 +4,7 @@ import type {
 	TableStyleCatalog,
 	TableStyleConditionalFormatting,
 	TableStyleDefinition,
-} from './table-model.js';
+} from './table-model';
 import {
 	children,
 	first,
@@ -13,10 +13,10 @@ import {
 	parseXml,
 	type XmlDocument,
 	type XmlElement,
-} from './xml.js';
-import { parseRunProperties } from './run-properties.js';
-import { parseOnOff } from './simple-types.js';
-import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders.js';
+} from './xml';
+import { parseRunProperties } from './run-properties';
+import { parseOnOff } from './simple-types';
+import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders';
 
 const REGIONS: TableConditionalRegion[] = [
 	'wholeTable',

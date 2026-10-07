@@ -7,7 +7,7 @@
  * @module sdk/units
  */
 
-import { EMU_PER_INCH, EMU_PER_PIXEL, EMU_PER_POINT } from '../../../../units/index.js';
+import { EMU_PER_INCH, EMU_PER_PIXEL, EMU_PER_POINT } from '../../../../units/index';
 
 /** Pixels per inch at 96 DPI (standard screen resolution). */
 const PPI = 96;

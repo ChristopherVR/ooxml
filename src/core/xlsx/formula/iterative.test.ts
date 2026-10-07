@@ -2,10 +2,10 @@
 // reported and left at 0.
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadXlsx } from '../read/load.js';
-import { saveXlsx } from '../write/save.js';
-import { CIRCULAR_REFERENCE_WARNING } from './engine.js';
-import { book, engine, get } from './test-helpers.js';
+import { loadXlsx } from '../read/load';
+import { saveXlsx } from '../write/save';
+import { CIRCULAR_REFERENCE_WARNING } from './engine';
+import { book, engine, get } from './test-helpers';
 
 const iterating = (cells: Parameters<typeof book>[0], count = 100, delta = 0.001) => {
 	const wb = book(cells);

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { isSpilledCell } from '../formula/spill.js';
-import type { Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
+import { getCell } from '../cells';
+import { isSpilledCell } from '../formula/spill';
+import type { Workbook } from '../model';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
 
 const val = (wb: Workbook, row: number, col: number, sheet = 0) =>
 	getCell(wb.sheets[sheet]!, row, col)?.value ?? null;

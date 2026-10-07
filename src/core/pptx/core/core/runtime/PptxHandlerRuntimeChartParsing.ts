@@ -14,7 +14,7 @@
  *   `PptxHandlerRuntimeChartColorStyle` → **this** → `PptxHandlerRuntimePresentationStructure`
  */
 
-import { EMU_PER_POINT } from '../../../../units/index.js';
+import { EMU_PER_POINT } from '../../../../units/index';
 import { XmlObject } from '../../types';
 import type { PptxChartData, PptxChartScatterStyle, PptxChartType } from '../../types';
 import {

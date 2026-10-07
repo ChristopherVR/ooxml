@@ -11,7 +11,7 @@ import type {
 	DiagramConnection,
 	DiagramLayoutType,
 	DiagramStyleIntensity,
-} from '../../../diagram/index.js';
+} from '../../../diagram/index';
 import type { PptxCustomPathProperties } from './geometry';
 import type { PptxSmartArtChrome } from './smart-art-chrome';
 import type { PptxSmartArtLayoutDefinition } from './smart-art-layout-definition';

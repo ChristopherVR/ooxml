@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { parseXml, WORD_NS, getW, type XmlElement } from './xml.js';
-import type { ThemeCatalog, ThemeColorSlot, ThemeFontSet } from './theme-model.js';
+import { parseXml, WORD_NS, getW, type XmlElement } from './xml';
+import type { ThemeCatalog, ThemeColorSlot, ThemeFontSet } from './theme-model';
 import {
 	isStWmlColorSchemeIndex,
 	type StWmlColorSchemeIndex,
-} from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
+} from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
 
 const DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const SCHEME_ORDER: ThemeColorSlot[] = [

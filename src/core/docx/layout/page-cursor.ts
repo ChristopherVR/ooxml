@@ -1,11 +1,11 @@
-import type { LayoutColumns, LayoutPageGeometry } from './input.js';
-import { expectDefined } from '../expect-defined.js';
+import type { LayoutColumns, LayoutPageGeometry } from './input';
+import { expectDefined } from '../expect-defined';
 import type {
 	LayoutBlockBox,
 	LayoutColumnBox,
 	LayoutFootnoteBox,
 	LayoutPageBox,
-} from './result.js';
+} from './result';
 
 /** Space for the short rule above a page's footnotes. */
 export const FOOTNOTE_SEPARATOR_PX = 12;

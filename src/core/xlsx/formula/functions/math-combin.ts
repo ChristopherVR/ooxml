@@ -1,7 +1,7 @@
 // Factorials, combinations, GCD and LCM.
-import { ERR, fail, type Value } from '../values.js';
-import { collectNumbers, numeric, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail, type Value } from '../values';
+import { collectNumbers, numeric, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Math & Trig';
 

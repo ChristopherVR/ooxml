@@ -1,4 +1,4 @@
-import type { Ligatures } from '../ligatures.js';
+import type { Ligatures } from '../ligatures';
 
 /** Explicitly sets every optional class so None cancels inherited font features. */
 export function ligatureCss(value: Ligatures): string {

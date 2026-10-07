@@ -1,9 +1,9 @@
-import { signedTwips, twips } from './units.js';
+import { signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, type DocumentModel, type Paragraph } from './index.js';
-import { ensureListDefinition } from './numbering-editing.js';
-import { at, lastOf } from './test-support/access.js';
+import { loadDocx, type DocumentModel, type Paragraph } from './index';
+import { ensureListDefinition } from './numbering-editing';
+import { at, lastOf } from './test-support/access';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

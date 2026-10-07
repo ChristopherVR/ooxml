@@ -1,6 +1,6 @@
-import { defineTeamsApp, type TeamsApp } from './teams-app.js';
-import type { TeamsChannelTab } from './channel-tab.js';
-import type { TeamsContentPreview } from './content-preview.js';
+import { defineTeamsApp, type TeamsApp } from './teams-app';
+import type { TeamsChannelTab } from './channel-tab';
+import type { TeamsContentPreview } from './content-preview';
 
 beforeAll(() => defineTeamsApp());
 afterEach(() => {

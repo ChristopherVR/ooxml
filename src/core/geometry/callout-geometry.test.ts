@@ -6,7 +6,7 @@ import {
 	getCalloutLeaderLineGeometry,
 	buildCalloutLeaderLineSvgPath,
 	getCalloutViewBoxBounds,
-} from './callout-geometry.js';
+} from './callout-geometry';
 
 describe('isCalloutShape', () => {
 	it('returns true for all 12 callout shape variants', () => {

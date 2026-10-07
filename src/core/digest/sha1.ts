@@ -1,6 +1,6 @@
 // Synchronous SHA-1 (FIPS 180-4). Broken for collision resistance; it is here only because
 // ECMA-376 password hashes and legacy files still name it.
-import { pad64, wordsOut } from './sha256.js';
+import { pad64, wordsOut } from './sha256';
 
 const W = new Uint32Array(80);
 const rotl = (x: number, n: number) => (x << n) | (x >>> (32 - n));

@@ -6,8 +6,8 @@ import {
 	validateDefinedName,
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { field, invalid, select, textArea, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { field, invalid, select, textArea, textInput } from './fields';
+import { showDialog } from './frame';
 
 export interface DefineNameProps {
 	name?: string;

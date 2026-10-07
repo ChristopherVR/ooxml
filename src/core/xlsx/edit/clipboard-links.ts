@@ -1,8 +1,8 @@
-import { rangesIntersect, type CellAddress, type CellRange } from '../address.js';
-import type { Hyperlink, Worksheet } from '../model.js';
-import type { ClipboardCells } from './types.js';
-import { subtractRange } from './range-math.js';
-import { hyperlinkPolicy } from '../../opc/safe-href.js';
+import { rangesIntersect, type CellAddress, type CellRange } from '../address';
+import type { Hyperlink, Worksheet } from '../model';
+import type { ClipboardCells } from './types';
+import { subtractRange } from './range-math';
+import { hyperlinkPolicy } from '../../opc/safe-href';
 
 export function htmlHref(link: Hyperlink | undefined): string | undefined {
 	const href = link?.target

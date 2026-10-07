@@ -1,6 +1,6 @@
 // Command registry: every ribbon button, menu item and shortcut runs a command by id. The
 // implementations live in `commands/` (UI-COMMANDS) and the grid; this file is only the registry.
-import type { EditorContext } from './context.js';
+import type { EditorContext } from './context';
 
 export interface Command {
 	/** Stable kebab id: 'home.bold', 'home.merge-center', 'view.freeze-panes'. */

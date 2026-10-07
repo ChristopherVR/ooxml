@@ -11,7 +11,7 @@ import type {
 	SignatureDetail,
 	SignatureDetailStatus,
 	SignatureValidationPolicy,
-} from './types.js';
+} from './types';
 
 /**
  * Compute the overall status for an individual signature detail

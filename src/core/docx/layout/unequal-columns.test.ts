@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { twips } from '../index.js';
-import { layoutSections } from './page-flow.js';
-import type { LayoutParagraph } from './input.js';
+import { twips } from '../index';
+import { layoutSections } from './page-flow';
+import type { LayoutParagraph } from './input';
 const measure = { widthOf: (text: string) => text.length * 10, lineHeightOf: () => 20 };
 const page = {
 	widthPx: 320,

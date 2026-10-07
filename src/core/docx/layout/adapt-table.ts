@@ -8,8 +8,8 @@ import {
 	type Table,
 	type TableBorderSide,
 	type TableCellMargins,
-} from '../index.js';
-import { expectDefined } from '../expect-defined.js';
+} from '../index';
+import { expectDefined } from '../expect-defined';
 import type {
 	LayoutBorder,
 	LayoutCellBorders,
@@ -18,7 +18,7 @@ import type {
 	LayoutTable,
 	LayoutTableCell,
 	LayoutTableRow,
-} from './input.js';
+} from './input';
 
 const twipsToPx = twipsToPixels;
 /** Word's default table cell margins (`w:tblCellMar`): 108 twips (0.075in) left and right. */

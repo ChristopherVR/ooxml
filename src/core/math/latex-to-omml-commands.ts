@@ -10,14 +10,14 @@ import {
 	GREEK_MAP,
 	NARY_MAP,
 	OPERATOR_MAP,
-} from './latex-omml-symbols.js';
-import type { LatexParserContext } from './latex-to-omml-constructs.js';
+} from './latex-omml-symbols';
+import type { LatexParserContext } from './latex-to-omml-constructs';
 import {
 	parseDelimiter,
 	parseFuncApplication,
 	parseNary,
 	parseTextArgument,
-} from './latex-to-omml-constructs.js';
+} from './latex-to-omml-constructs';
 import {
 	parseAccent,
 	parseBar,
@@ -28,8 +28,8 @@ import {
 	parsePhantom,
 	parsePrescript,
 	parseUnderOverset,
-} from './latex-to-omml-environments.js';
-import type { OmmlNode } from './omml-to-mathml.js';
+} from './latex-to-omml-environments';
+import type { OmmlNode } from './omml-to-mathml';
 
 /** `\frac{n}{d}` (+ `\dfrac`/`\tfrac`), `\sfrac` (linear) and `\binom` (no bar). */
 function parseFraction(ctx: LatexParserContext, cmd: string): OmmlNode {

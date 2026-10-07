@@ -4,10 +4,10 @@ import {
 	formatAddress,
 	normalizeRange,
 	rangesIntersect,
-} from '../address.js';
-import { deleteCell, forEachCellInRange, getCell } from '../cells.js';
-import type { Cell, CellValue, Worksheet } from '../model.js';
-import { applyStylePatch, styleAt } from '../styles.js';
+} from '../address';
+import { deleteCell, forEachCellInRange, getCell } from '../cells';
+import type { Cell, CellValue, Worksheet } from '../model';
+import { applyStylePatch, styleAt } from '../styles';
 import {
 	type EditContext,
 	baseStyleId,
@@ -15,11 +15,11 @@ import {
 	ensureCell,
 	pruneCell,
 	sheetAt,
-} from './context.js';
-import { parseCellInput } from './deps.js';
-import type { EditScope, SheetPart } from './history.js';
-import { cellRange, subtractRange } from './range-math.js';
-import type { ClearWhat } from './types.js';
+} from './context';
+import { parseCellInput } from './deps';
+import type { EditScope, SheetPart } from './history';
+import { cellRange, subtractRange } from './range-math';
+import type { ClearWhat } from './types';
 
 /** The table whose header row holds a position, if any. */
 function tableHeaderAt(sheet: Worksheet, row: number, col: number) {

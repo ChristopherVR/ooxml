@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { definedProps } from './defined-props.js';
-import { computeListLabels } from './numbering-format.js';
-import type { DocumentModel } from './model.js';
-import type { NumberingCatalog } from './numbering-model.js';
-import { loadDocx } from './parse.js';
+import { definedProps } from './defined-props';
+import { computeListLabels } from './numbering-format';
+import type { DocumentModel } from './model';
+import type { NumberingCatalog } from './numbering-model';
+import { loadDocx } from './parse';
 
 describe('definedProps', () => {
 	it('drops undefined values but keeps other falsy values', () => {

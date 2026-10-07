@@ -1,18 +1,18 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { elements, first, getW, type XmlElement, WORD_NS, WORD_DATE_UTC_NS } from './xml.js';
-import { isWordHighlightToken } from './highlight.js';
-import { isValidLanguageTag } from './language.js';
-import { isWordUnderlineStyle } from './underline.js';
-import { isThemeColorToken } from './theme-color.js';
-import { isLigatures, WORD_2010_NS } from './ligatures.js';
-import { isStVerticalAlignRun } from './generated/wml-simple-types.js';
+import { elements, first, getW, type XmlElement, WORD_NS, WORD_DATE_UTC_NS } from './xml';
+import { isWordHighlightToken } from './highlight';
+import { isValidLanguageTag } from './language';
+import { isWordUnderlineStyle } from './underline';
+import { isThemeColorToken } from './theme-color';
+import { isLigatures, WORD_2010_NS } from './ligatures';
+import { isStVerticalAlignRun } from './generated/wml-simple-types';
 import {
 	parseHalfPoints,
 	parseHexColor,
 	parseSignedTwips,
 	parseSignedHalfPoints,
 	parseTextScale,
-} from './simple-types.js';
+} from './simple-types';
 
 const modeledRunProperties = new Set([
 	'b',

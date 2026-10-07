@@ -8,11 +8,11 @@ import {
 	parseDiagramDataModel,
 	parseRelationshipIdAttributes,
 	type DiagramRelationshipIds,
-} from '../../diagram/index.js';
-import { parseRelationships, resolvePartPath } from '../../opc/index.js';
-import { NS, first } from '../../xml/index.js';
-import type { DrawingAnchor, SmartArtObject, Worksheet } from '../model.js';
-import type { SourceIndex } from './package.js';
+} from '../../diagram/index';
+import { parseRelationships, resolvePartPath } from '../../opc/index';
+import { NS, first } from '../../xml/index';
+import type { DrawingAnchor, SmartArtObject, Worksheet } from '../model';
+import type { SourceIndex } from './package';
 
 /** The `a:graphicData/@uri` of a SmartArt graphic. */
 export const SMART_ART_GRAPHIC_URI = NS.dgm;

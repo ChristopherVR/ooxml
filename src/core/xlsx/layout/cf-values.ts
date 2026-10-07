@@ -1,5 +1,5 @@
-import type { CellValue, ConditionalOperator } from '../model.js';
-import { isCellError } from '../model.js';
+import type { CellValue, ConditionalOperator } from '../model';
+import { isCellError } from '../model';
 
 /** Excel's comparison order: numbers < text < booleans. Blank compares as 0 or "". */
 function typeRank(value: CellValue): number {

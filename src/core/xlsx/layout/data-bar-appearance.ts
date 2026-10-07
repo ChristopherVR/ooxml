@@ -1,9 +1,9 @@
-import { NS, first, parseXml, elements } from '../../xml/index.js';
-import type { ConditionalRule, Workbook } from '../model.js';
-import { boolAttr } from '../read/xml-util.js';
-import { dataBarLengths } from '../conditional-extensions.js';
-import { parseColor } from '../read/style-parts.js';
-import { resolveColor } from './colors.js';
+import { NS, first, parseXml, elements } from '../../xml/index';
+import type { ConditionalRule, Workbook } from '../model';
+import { boolAttr } from '../read/xml-util';
+import { dataBarLengths } from '../conditional-extensions';
+import { parseColor } from '../read/style-parts';
+import { resolveColor } from './colors';
 
 interface BarAppearance {
 	positive: string;

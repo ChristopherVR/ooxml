@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { COM_AVLST_GROUND_TRUTH } from './com-avlst-ground-truth.js';
-import { PRESET_SHAPE_GEOMETRY_TABLE } from './preset-shape-definitions-table.js';
+import { COM_AVLST_GROUND_TRUTH } from './com-avlst-ground-truth';
+import { PRESET_SHAPE_GEOMETRY_TABLE } from './preset-shape-definitions-table';
 
 describe('preset avLst vs PowerPoint COM ground truth', () => {
 	for (const entry of COM_AVLST_GROUND_TRUTH) {

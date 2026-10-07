@@ -1,13 +1,13 @@
 // Undo history must record what an edit changes, not copy the sheet or the workbook per step.
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { putCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { setCellInput } from './cell-values.js';
-import { createEditSession } from './session.js';
-import { insertRows } from './structure.js';
-import { testContext } from './test-context.js';
+import { parseRange } from '../address';
+import { putCell } from '../cells';
+import type { Workbook } from '../model';
+import { createWorkbook } from '../workbook';
+import { setCellInput } from './cell-values';
+import { createEditSession } from './session';
+import { insertRows } from './structure';
+import { testContext } from './test-context';
 
 function bigWorkbook(rows: number): Workbook {
 	const wb = createWorkbook({ sheets: ['A', 'B'] });

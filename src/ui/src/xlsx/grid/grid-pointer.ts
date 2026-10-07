@@ -2,11 +2,11 @@
 // autoscroll, Ctrl multi-range, point mode while editing a formula, fill-handle drags, header
 // border resizing and double-click autofit, hyperlink Ctrl+click, and touch tap-to-select.
 import { normalizeRange, type CellAddress, type CellRange } from 'ooxml-core/xlsx';
-import type { CellEditor } from './cell-editor.js';
+import type { CellEditor } from './cell-editor';
 import type { Hit } from 'ooxml-core/xlsx/ui';
-import type { GridSelection } from './grid-selection.js';
-import type { GridView } from './grid-view.js';
-import { startHeaderResize, autoFit } from './header-resize.js';
+import type { GridSelection } from './grid-selection';
+import type { GridView } from './grid-view';
+import { startHeaderResize, autoFit } from './header-resize';
 import { addRange, extendSelection, selectCell, spanRange } from 'ooxml-core/xlsx/ui';
 
 export interface PointerHost {

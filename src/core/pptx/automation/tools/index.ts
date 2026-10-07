@@ -7,7 +7,7 @@ export {
 	updateSlideProperties,
 	setSlideTransition,
 	setCanvasSize,
-} from './slide-tools.js';
+} from './slide-tools';
 export type {
 	GetSlideResult,
 	AddSlideParams,
@@ -19,7 +19,7 @@ export type {
 	UpdateSlidePropertiesParams,
 	SetSlideTransitionParams,
 	SetCanvasSizeParams,
-} from './slide-tools.js';
+} from './slide-tools';
 
 export {
 	generateElementId,
@@ -27,7 +27,7 @@ export {
 	describeElement,
 	extractSlideText,
 	validateSlideIndex,
-} from './helpers.js';
+} from './helpers';
 
 export {
 	addElement,
@@ -40,7 +40,7 @@ export {
 	groupElements,
 	ungroupElements,
 	batchUpdateElements,
-} from './element-tools.js';
+} from './element-tools';
 export type {
 	AddElementParams,
 	AddElementResult,
@@ -56,32 +56,32 @@ export type {
 	UngroupElementsParams,
 	UngroupElementsResult,
 	BatchUpdateElementsParams,
-} from './element-tools.js';
+} from './element-tools';
 
-export { updateTableCells, manageTableStructure } from './table-tools.js';
-export type { UpdateTableCellsParams, ManageTableStructureParams } from './table-tools.js';
+export { updateTableCells, manageTableStructure } from './table-tools';
+export type { UpdateTableCellsParams, ManageTableStructureParams } from './table-tools';
 
 export {
 	setTableStyleSection,
 	createTableStyle,
 	deleteTableStyle,
 	assignTableStyle,
-} from './table-style-tools.js';
+} from './table-style-tools';
 export type {
 	SetTableStyleSectionParams,
 	CreateTableStyleParams,
 	DeleteTableStyleParams,
 	AssignTableStyleParams,
-} from './table-style-tools.js';
+} from './table-style-tools';
 
-export { updateElementStyle, runAccessibilityCheck } from './style-tools.js';
+export { updateElementStyle, runAccessibilityCheck } from './style-tools';
 export type {
 	UpdateElementStyleParams,
 	AccessibilityIssue,
 	AccessibilityCheckResult,
-} from './style-tools.js';
+} from './style-tools';
 
-export { findText, replaceText, manageComments } from './content-tools.js';
+export { findText, replaceText, manageComments } from './content-tools';
 export type {
 	FindTextParams,
 	TextMatch,
@@ -91,24 +91,24 @@ export type {
 	ManageCommentsParams,
 	CommentInfo,
 	ManageCommentsResult,
-} from './content-tools.js';
+} from './content-tools';
 
-export { convertToMarkdown } from './conversion-tools.js';
-export type { ConvertToMarkdownParams, ConvertToMarkdownResult } from './conversion-tools.js';
+export { convertToMarkdown } from './conversion-tools';
+export type { ConvertToMarkdownParams, ConvertToMarkdownResult } from './conversion-tools';
 
 export {
 	getThemeInfo,
 	applyThemePreset,
 	updateThemeColors,
 	updateThemeFonts,
-} from './theme-tools.js';
+} from './theme-tools';
 export type {
 	ThemeInfo,
 	ApplyThemePresetParams,
 	ApplyThemePresetResult,
 	UpdateThemeColorsParams,
 	UpdateThemeFontsParams,
-} from './theme-tools.js';
+} from './theme-tools';
 
 export {
 	updateChart,
@@ -116,7 +116,7 @@ export {
 	removeChartSeriesT,
 	updateChartSeriesData,
 	createChart,
-} from './chart-tools.js';
+} from './chart-tools';
 export type {
 	UpdateChartParams,
 	AddChartSeriesParams,
@@ -124,7 +124,7 @@ export type {
 	UpdateChartSeriesDataParams,
 	CreateChartParams,
 	CreateChartResult,
-} from './chart-tools.js';
+} from './chart-tools';
 
 export {
 	formatChartDataPoint,
@@ -132,98 +132,98 @@ export {
 	formatChartSeries,
 	setChartHelperLineT,
 	setChartColorMapOverrideT,
-} from './chart-formatting-tools.js';
+} from './chart-formatting-tools';
 export type {
 	FormatChartDataPointParams,
 	FormatChartDataLabelParams,
 	FormatChartSeriesParams,
 	SetChartHelperLineParams,
 	SetChartColorMapOverrideParams,
-} from './chart-formatting-tools.js';
+} from './chart-formatting-tools';
 
 export {
 	listChartUserShapesT,
 	addChartUserShapeT,
 	updateChartUserShapeT,
 	removeChartUserShapeT,
-} from './chart-user-shape-tools.js';
+} from './chart-user-shape-tools';
 export type {
 	ChartUserShapeInput,
 	ListChartUserShapesParams,
 	AddChartUserShapeParams,
 	UpdateChartUserShapeParams,
 	RemoveChartUserShapeParams,
-} from './chart-user-shape-tools.js';
+} from './chart-user-shape-tools';
 
-export { manageSmartArt } from './smartart-tools.js';
+export { manageSmartArt } from './smartart-tools';
 export type {
 	ManageSmartArtParams,
 	SmartArtNodeInfo,
 	ManageSmartArtResult,
-} from './smartart-tools.js';
+} from './smartart-tools';
 
-export { mergePresentationT, diffPresentationsT } from './merge-tools.js';
+export { mergePresentationT, diffPresentationsT } from './merge-tools';
 export type {
 	MergePresentationParams,
 	MergePresentationResult,
 	DiffPresentationsParams,
-} from './merge-tools.js';
+} from './merge-tools';
 
-export { findPlaceholdersT, applyTemplateT } from './template-tools.js';
+export { findPlaceholdersT, applyTemplateT } from './template-tools';
 export type {
 	FindPlaceholdersResult,
 	ApplyTemplateParams,
 	ApplyTemplateResult,
-} from './template-tools.js';
+} from './template-tools';
 
-export { getMetadata, updateMetadata } from './metadata-tools.js';
-export type { MetadataResult, UpdateMetadataParams } from './metadata-tools.js';
+export { getMetadata, updateMetadata } from './metadata-tools';
+export type { MetadataResult, UpdateMetadataParams } from './metadata-tools';
 
-export { manageSections } from './section-tools.js';
-export type { ManageSectionsParams, SectionInfo, ManageSectionsResult } from './section-tools.js';
+export { manageSections } from './section-tools';
+export type { ManageSectionsParams, SectionInfo, ManageSectionsResult } from './section-tools';
 
-export { exportToSvg, exportSlideSvg } from './export-tools.js';
+export { exportToSvg, exportSlideSvg } from './export-tools';
 export type {
 	ExportToSvgParams,
 	ExportToSvgResult,
 	ExportSlideSvgParams,
 	ExportSlideSvgResult,
-} from './export-tools.js';
+} from './export-tools';
 
-export { exportToJson, importFromJson } from './json-tools.js';
+export { exportToJson, importFromJson } from './json-tools';
 export type {
 	ExportToJsonParams,
 	ExportToJsonResult,
 	ImportFromJsonParams,
 	ImportFromJsonResult,
-} from './json-tools.js';
+} from './json-tools';
 
-export { manageHyperlinks } from './hyperlink-tools.js';
+export { manageHyperlinks } from './hyperlink-tools';
 export type {
 	ManageHyperlinksParams,
 	HyperlinkInfo,
 	ManageHyperlinksResult,
-} from './hyperlink-tools.js';
+} from './hyperlink-tools';
 
-export { replaceGeometry } from './geometry-tools.js';
-export type { ReplaceGeometryParams } from './geometry-tools.js';
+export { replaceGeometry } from './geometry-tools';
+export type { ReplaceGeometryParams } from './geometry-tools';
 
-export { setElementLockT } from './lock-tools.js';
-export type { SetElementLockParams } from './lock-tools.js';
+export { setElementLockT } from './lock-tools';
+export type { SetElementLockParams } from './lock-tools';
 
-export { validatePresentation, repairPresentation } from './validation-tools.js';
-export type { ValidatePresentationResult, RepairPresentationResult } from './validation-tools.js';
+export { validatePresentation, repairPresentation } from './validation-tools';
+export type { ValidatePresentationResult, RepairPresentationResult } from './validation-tools';
 
-export { getPresentationProperties, updatePresentationProperties } from './presentation-tools.js';
-export type { UpdatePresentationPropertiesParams } from './presentation-tools.js';
+export { getPresentationProperties, updatePresentationProperties } from './presentation-tools';
+export type { UpdatePresentationPropertiesParams } from './presentation-tools';
 
-export { getLayouts, applyLayout } from './layout-tools.js';
+export { getLayouts, applyLayout } from './layout-tools';
 export type {
 	GetLayoutsResult,
 	ApplyLayoutParams,
 	ApplyLayoutResult,
 	LayoutInfo,
-} from './layout-tools.js';
+} from './layout-tools';
 
 export {
 	getOleContent,
@@ -232,7 +232,7 @@ export {
 	setOleDeckSlideTitle,
 	replaceOleFileT,
 	setOleObjectNameT,
-} from './ole-tools.js';
+} from './ole-tools';
 export type {
 	GetOleContentParams,
 	GetOleContentResult,
@@ -242,4 +242,4 @@ export type {
 	SetOleDeckSlideTitleParams,
 	ReplaceOleFileParams,
 	SetOleObjectNameParams,
-} from './ole-tools.js';
+} from './ole-tools';

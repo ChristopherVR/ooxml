@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { cellError, isErrorCode, type CellValue } from '../model.js';
-import { styleAt } from '../styles.js';
-import { createWorkbook } from '../workbook.js';
-import { parseRange } from '../address.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { createEditSession } from './session.js';
-import type { PasteOptions } from './types.js';
+import { getCell } from '../cells';
+import { cellError, isErrorCode, type CellValue } from '../model';
+import { styleAt } from '../styles';
+import { createWorkbook } from '../workbook';
+import { parseRange } from '../address';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { createEditSession } from './session';
+import type { PasteOptions } from './types';
 
 interface NativeCase extends PasteOptions {
 	source: string;

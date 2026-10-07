@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inTimePeriod, timePeriodFormula } from './time-period.js';
+import { inTimePeriod, timePeriodFormula } from './time-period';
 
 // 2024-05-15 is a Wednesday, serial 45427.
 const TODAY = 45427;

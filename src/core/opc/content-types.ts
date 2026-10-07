@@ -1,4 +1,4 @@
-import { NS, elements, parseXml } from '../xml/index.js';
+import { NS, elements, parseXml } from '../xml/index';
 
 export interface ContentTypes {
 	/** Extension (lower case, no dot) to content type. */

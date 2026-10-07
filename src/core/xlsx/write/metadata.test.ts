@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import type { Cell } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { parseDynamicArrayMetadata } from '../read/metadata.js';
-import { createWorksheet } from '../workbook.js';
-import { MetadataPlan, writeMetadataPart } from './metadata.js';
-import { PackageWriter, RelationshipSet } from './package-writer.js';
-import { miniPackage, ws, X } from './mini-package-fixtures.js';
-import { SharedStringTable } from './shared-strings.js';
-import { sheetDataXml } from './sheet-data.js';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import type { Cell } from '../model';
+import { loadXlsx } from '../read/index';
+import { parseDynamicArrayMetadata } from '../read/metadata';
+import { createWorksheet } from '../workbook';
+import { MetadataPlan, writeMetadataPart } from './metadata';
+import { PackageWriter, RelationshipSet } from './package-writer';
+import { miniPackage, ws, X } from './mini-package-fixtures';
+import { SharedStringTable } from './shared-strings';
+import { sheetDataXml } from './sheet-data';
 
 const RICH = 'http://schemas.microsoft.com/office/spreadsheetml/2017/richdata';
 // The review's t12 metadata: one XLRICHVALUE value-metadata block, no cell metadata.

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { positionSelectMenu } from './select-menu.js';
+import { positionSelectMenu } from './select-menu';
 
 // Moved with the select from pptx-viewer (select-placement.test.ts). Margins and the height cap
 // come from tokens; unset in jsdom, they use their defaults (8px gutter, 4px gap, 240px cap).

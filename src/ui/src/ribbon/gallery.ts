@@ -2,11 +2,11 @@ import { html, render, type TemplateResult } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
-import { OfficeElement, controlStyles } from '../base.js';
-import { createIconSvg, paintIcon } from '../icons.js';
-import { definer, present } from '../registry.js';
-import { attachGalleryStyles } from './gallery-styles.js';
-import { parseSvgPreview } from './safe-svg.js';
+import { OfficeElement, controlStyles } from '../base';
+import { createIconSvg, paintIcon } from '../icons';
+import { definer, present } from '../registry';
+import { attachGalleryStyles } from './gallery-styles';
+import { parseSvgPreview } from './safe-svg';
 
 export type OfficeGalleryPickEvent = CustomEvent<{ gallery: string; itemId: string }>;
 
@@ -398,4 +398,4 @@ export class OfficeUiGallery extends OfficeElement {
 
 export const defineGallery = definer('office-ui-gallery', () => OfficeUiGallery);
 
-export { parseSvgPreview } from './safe-svg.js';
+export { parseSvgPreview } from './safe-svg';

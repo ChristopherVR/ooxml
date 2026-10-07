@@ -2,7 +2,7 @@ import type { DocumentModel } from 'ooxml-core/docx';
 import { resolveParagraphFormatting } from 'ooxml-core/docx';
 import { layoutDocumentModel, type LayoutResult } from 'ooxml-core/docx/layout';
 import { createCanvasMeasurer } from './canvas-measurer';
-import { renderPrintLayout, type PictureUrl, type PrintLayoutHandle } from './print-layout.js';
+import { renderPrintLayout, type PictureUrl, type PrintLayoutHandle } from './print-layout';
 import { decoratePages } from './print-header-footer';
 
 const RELAYOUT_DEBOUNCE_MS = 150;

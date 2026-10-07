@@ -9,9 +9,9 @@ import {
 	pressKey,
 	setValue,
 	tick,
-} from '../commands/test-support.js';
-import { quickRule } from './cf-quick.js';
-import { registerRuleDialogs } from './register-rules.js';
+} from '../commands/test-support';
+import { quickRule } from './cf-quick';
+import { registerRuleDialogs } from './register-rules';
 
 afterEach(() => (document.body.innerHTML = ''));
 

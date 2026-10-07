@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { createCalcEngine } from '../formula/index.js';
-import { getCell } from '../cells.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { createWorkbook } from '../workbook.js';
-import { createConditionalFormatEvaluator } from './cf-evaluator.js';
+import { createCalcEngine } from '../formula/index';
+import { getCell } from '../cells';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { createWorkbook } from '../workbook';
+import { createConditionalFormatEvaluator } from './cf-evaluator';
 
 interface NativeGeometry {
 	cases: {

@@ -1,1 +1,1 @@
-export * from './tab-state.js';
+export * from './tab-state';

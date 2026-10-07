@@ -1,7 +1,7 @@
 // Shared plumbing for SUMIF(S), COUNTIF(S), AVERAGEIF(S), MAXIFS and MINIFS.
-import type { CellRange } from '../../address.js';
-import type { CallContext } from '../context.js';
-import { pick } from '../operators.js';
+import type { CellRange } from '../../address';
+import type { CallContext } from '../context';
+import { pick } from '../operators';
 import {
 	type Area,
 	ERR,
@@ -12,9 +12,9 @@ import {
 	RefValue,
 	type Scalar,
 	type Value,
-} from '../values.js';
-import { equalityKey, positionsOf } from './criteria-index.js';
-import { makeCriteria, scalar } from './helpers.js';
+} from '../values';
+import { equalityKey, positionsOf } from './criteria-index';
+import { makeCriteria, scalar } from './helpers';
 
 const CLIP = 100_000;
 

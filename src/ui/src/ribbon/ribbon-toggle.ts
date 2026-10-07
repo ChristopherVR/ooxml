@@ -1,7 +1,7 @@
 import { html, unsafeStatic } from 'lit/static-html.js';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { defineCheckbox } from '../form/checkbox.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { defineCheckbox } from '../form/checkbox';
+import { definer, present } from '../registry';
 import css from './ribbon-toggle.css?raw';
 
 type Configured = { requestEvent: string; idAttribute: string; detailKey: string };

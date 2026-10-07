@@ -1,8 +1,8 @@
-export * from './types.js';
-export { CORE_PROPERTY_FIELDS, parseCoreProperties, writeCoreProperties } from './core.js';
-export { parseAppProperties, writeAppProperties } from './app.js';
+export * from './types';
+export { CORE_PROPERTY_FIELDS, parseCoreProperties, writeCoreProperties } from './core';
+export { parseAppProperties, writeAppProperties } from './app';
 export {
 	allocateCustomPropertyIds,
 	parseCustomProperties,
 	writeCustomProperties,
-} from './custom.js';
+} from './custom';

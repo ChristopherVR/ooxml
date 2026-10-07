@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 
 import { describe, it, expect } from 'vitest';
 
-import * as crypto from '../../../crypto/index.js';
+import * as crypto from '../../../crypto/index';
 import { EncryptedFileError, detectFileFormat } from './encryption-detection';
 import { parseOle2, buildOle2, Ole2ParseError } from './ole2-parser';
 import { decryptPptx, encryptPptx, verifyPassword, IncorrectPasswordError } from './ooxml-crypto';

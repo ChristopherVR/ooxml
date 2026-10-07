@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type JSZip from 'jszip';
-import type { Comment } from './model.js';
-import { buildXml, makeW, parseXml, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
-import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts.js';
+import type { Comment } from './model';
+import { buildXml, makeW, parseXml, type XmlDocument, type XmlElement, WORD_NS } from './xml';
+import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 const COMMENTS_PATH = 'word/comments.xml';
 const COMMENTS_EXTENDED_PATH = 'word/commentsExtended.xml';

@@ -1,4 +1,4 @@
-import type { Condition, ConditionOp, DatePart, Section, SectionKind, Token } from './types.js';
+import type { Condition, ConditionOp, DatePart, Section, SectionKind, Token } from './types';
 
 const NAMED_COLORS: Readonly<Record<string, string>> = {
 	black: '#000000',

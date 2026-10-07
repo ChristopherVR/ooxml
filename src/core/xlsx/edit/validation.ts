@@ -1,10 +1,10 @@
-import { rangeContains } from '../address.js';
-import type { Cell, CellValue, ConditionalOperator, DataValidation, Workbook } from '../model.js';
-import { isCellError } from '../model.js';
-import { rawText } from './context.js';
-import { type CalcEngine, createCalcEngine, translateFormula } from './deps.js';
-import { listItemMatches, listSource } from './validation-list.js';
-import type { ValidationResult } from './types.js';
+import { rangeContains } from '../address';
+import type { Cell, CellValue, ConditionalOperator, DataValidation, Workbook } from '../model';
+import { isCellError } from '../model';
+import { rawText } from './context';
+import { type CalcEngine, createCalcEngine, translateFormula } from './deps';
+import { listItemMatches, listSource } from './validation-list';
+import type { ValidationResult } from './types';
 
 export interface ValidationOptions {
 	/** Evaluates a validation formula at the cell (the session passes its calc engine). */

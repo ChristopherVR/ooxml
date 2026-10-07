@@ -1,8 +1,8 @@
-import { type CellRange, normalizeRange, rangesIntersect } from '../address.js';
-import { deleteCell, getCell, putCell } from '../cells.js';
-import type { Cell } from '../model.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
-import { translateFormula } from './deps.js';
+import { type CellRange, normalizeRange, rangesIntersect } from '../address';
+import { deleteCell, getCell, putCell } from '../cells';
+import type { Cell } from '../model';
+import { type EditContext, displayText, sheetAt } from './context';
+import { translateFormula } from './deps';
 
 export interface RemoveDuplicatesResult {
 	/** Data rows removed. */

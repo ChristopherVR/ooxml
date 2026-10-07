@@ -1,6 +1,6 @@
-import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index.js';
-import type { ChartObject, ChartSeries, ChartType, Color, DrawingAnchor } from '../model.js';
-import { att } from './xml-util.js';
+import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
+import type { ChartObject, ChartSeries, ChartType, Color, DrawingAnchor } from '../model';
+import { att } from './xml-util';
 import { parseDrawingColorIn } from '../../diagram/drawing-color';
 import { readChartFormatting } from '../../chart/read-formatting';
 

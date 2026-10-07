@@ -5,21 +5,21 @@ import type {
 	TableCellMargins,
 	TableLook,
 	TableRowProperties,
-} from './table-model.js';
-import type { Paragraph, Table } from './model.js';
-import { children, first, getW, type XmlElement, WORD_NS } from './xml.js';
-import { canEditTableStructure } from './write-table.js';
-import { isStJcTable, isStVerticalJc } from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
+} from './table-model';
+import type { Paragraph, Table } from './model';
+import { children, first, getW, type XmlElement, WORD_NS } from './xml';
+import { canEditTableStructure } from './write-table';
+import { isStJcTable, isStVerticalJc } from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
 import {
 	onOffAttribute,
 	onOffElement,
 	parseSignedTwips,
 	parseTwips,
 	parseUnsignedInteger,
-} from './simple-types.js';
-import type { Twips } from './units.js';
-import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders.js';
+} from './simple-types';
+import type { Twips } from './units';
+import { parseShadingFill, parseShadingThemeFill, parseTableBorders } from './table-borders';
 
 const dxa = parseTwips;
 

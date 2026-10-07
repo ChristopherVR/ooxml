@@ -3,8 +3,8 @@
 // time never overwrite each other. Everything a peer wrote is re-validated when read back, so a
 // hostile or buggy client cannot inject markup or malformed rows. DOM-free. New code.
 import * as Y from 'yjs';
-import { createIdGenerator } from '../collab/identity.js';
-import { isValidId } from '../collab/validation.js';
+import { createIdGenerator } from '../collab/identity';
+import { isValidId } from '../collab/validation';
 import {
 	type Attachment,
 	type Channel,
@@ -14,7 +14,7 @@ import {
 	sanitizeChannelName,
 	sanitizeEmoji,
 	sanitizeMessageText,
-} from './model.js';
+} from './model';
 
 const CHANNELS = 'teams:channels';
 const REACTIONS = 'teams:reactions';

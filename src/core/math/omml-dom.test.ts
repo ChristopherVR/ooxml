@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
+import { parseXml } from '../xml/index';
 import {
 	convertLatexToOmml,
 	convertOmmlToLatex,
 	convertOmmlToMathMl,
 	ommlFromElement,
 	parseOmml,
-} from './index.js';
+} from './index';
 
 const ns = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
 describe('format-neutral OMML DOM input', () => {

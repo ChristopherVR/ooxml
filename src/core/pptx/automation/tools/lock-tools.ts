@@ -1,7 +1,7 @@
-import { setElementLocked } from '../../index.js';
+import { setElementLocked } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── setElementLockT ──────────────────────────────────────────────────────────
 

@@ -1,11 +1,11 @@
 // Home > Cells: insert and delete (cells, rows, columns, sheets) and the Format menu (row height,
 // column width, autofit, hide and unhide, sheet organisation, protection, Format Cells).
-import { nextSheetName, type Color } from '../../index.js';
-import type { Command } from '../commands.js';
-import { sheetBaseName } from '../localization.js';
-import type { EditorContext } from '../context.js';
-import { style } from './font.js';
-import { icon } from './icons.js';
+import { nextSheetName, type Color } from '../../index';
+import type { Command } from '../commands';
+import { sheetBaseName } from '../localization';
+import type { EditorContext } from '../context';
+import { style } from './font';
+import { icon } from './icons';
 import {
 	activeStyle,
 	colsOf,
@@ -16,7 +16,7 @@ import {
 	target,
 	wholeColumns,
 	wholeRows,
-} from './util.js';
+} from './util';
 
 const rowsCount = (ctx: EditorContext) => {
 	const t = target(ctx);

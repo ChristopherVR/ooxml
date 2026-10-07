@@ -1,4 +1,4 @@
-import { filePopoutDetail, filePopoutUrl } from './file-popout.js';
+import { filePopoutDetail, filePopoutUrl } from './file-popout';
 
 describe('file viewer route', () => {
 	it('preserves a signed URL in the fragment without adding it to request parameters', () => {

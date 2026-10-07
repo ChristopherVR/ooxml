@@ -3,18 +3,18 @@
 // changes the active chart's type).
 import { type ChartObject, type ChartType, chartView, renderChartSvg } from 'ooxml-core/xlsx';
 import { activeChart, editChart } from 'ooxml-core/xlsx/ui';
-import { CHART_TYPES } from '../commands/insert.js';
+import { CHART_TYPES } from '../commands/insert';
 import { regionOf, target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el, field, select, text, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { el, field, select, text, textInput } from './fields';
+import { showDialog } from './frame';
 import { buildChart, evaluateRef } from 'ooxml-core/xlsx/ui';
 import {
 	defineGallery,
 	type OfficeUiGallery,
 	type OfficeGalleryPickEvent,
-} from '../../ribbon/gallery.js';
-import { parseSvgPreview } from '../../ribbon/safe-svg.js';
+} from '../../ribbon/gallery';
+import { parseSvgPreview } from '../../ribbon/safe-svg';
 
 export interface InsertChartProps {
 	type?: ChartType;

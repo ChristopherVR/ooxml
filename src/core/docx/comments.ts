@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Comment } from './model.js';
-import { getW, parseXml, textContent, type XmlElement, WORD_NS } from './xml.js';
+import type { Comment } from './model';
+import { getW, parseXml, textContent, type XmlElement, WORD_NS } from './xml';
 
 const W14_NS = 'http://schemas.microsoft.com/office/word/2010/wordml';
 const W15_NS = 'http://schemas.microsoft.com/office/word/2012/wordml';

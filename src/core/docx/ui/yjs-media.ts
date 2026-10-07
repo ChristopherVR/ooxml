@@ -1,6 +1,6 @@
-import type { CollabSession } from '../../collab/index.js';
-import { createIdGenerator, createAssetSync } from '../../collab/index.js';
-import type { PendingMediaPart } from '../model.js';
+import type { CollabSession } from '../../collab/index';
+import { createIdGenerator, createAssetSync } from '../../collab/index';
+import type { PendingMediaPart } from '../model';
 import * as Y from 'yjs';
 
 const extensions: Record<string, string> = {

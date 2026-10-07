@@ -17,7 +17,7 @@ import {
 	numberPrompt,
 	pickDialog,
 	textPrompt,
-} from './prompts.js';
+} from './prompts';
 
 const columnWidth = (ctx: EditorContext): number => {
 	const t = target(ctx);

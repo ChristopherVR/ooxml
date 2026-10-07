@@ -1,51 +1,51 @@
-import type { CellRange } from '../address.js';
-import type { Workbook } from '../model.js';
-import * as annotations from './annotations.js';
-import * as borders from './borders.js';
-import * as cellShift from './cell-shift.js';
-import * as values from './cell-values.js';
-import * as clipboard from './clipboard.js';
-import { pasteSelection } from './paste-selection.js';
-import type { EditContext, RunInfo } from './context.js';
-import { createCalcEngine } from './deps.js';
-import * as dimensions from './dimensions.js';
-import * as fill from './fill.js';
-import * as filter from './filter.js';
-import * as find from './find.js';
-import * as format from './format.js';
+import type { CellRange } from '../address';
+import type { Workbook } from '../model';
+import * as annotations from './annotations';
+import * as borders from './borders';
+import * as cellShift from './cell-shift';
+import * as values from './cell-values';
+import * as clipboard from './clipboard';
+import { pasteSelection } from './paste-selection';
+import type { EditContext, RunInfo } from './context';
+import { createCalcEngine } from './deps';
+import * as dimensions from './dimensions';
+import * as fill from './fill';
+import * as filter from './filter';
+import * as find from './find';
+import * as format from './format';
 import {
 	type EditScope,
 	History,
 	type HistoryStep,
 	captureScope,
 	restoreSnapshot,
-} from './history.js';
-import { SessionCalculator } from './session-calc.js';
-import * as calcMode from './calc-mode.js';
-import * as docProps from './doc-properties.js';
-import * as drawings from './drawings.js';
-import * as cellStyle from './cell-style.js';
-import * as cfEdits from './conditional-formats.js';
-import * as charts from './charts.js';
-import * as tableEdits from './table-edits.js';
-import * as duplicates from './duplicates.js';
-import * as outline from './outline.js';
-import * as page from './page.js';
-import * as protection from './protection.js';
-import * as merge from './merge.js';
-import * as rowFit from './row-autofit.js';
-import * as sheets from './sheets.js';
-import * as sort from './sort.js';
-import * as structure from './structure.js';
-import * as tables from './tables.js';
+} from './history';
+import { SessionCalculator } from './session-calc';
+import * as calcMode from './calc-mode';
+import * as docProps from './doc-properties';
+import * as drawings from './drawings';
+import * as cellStyle from './cell-style';
+import * as cfEdits from './conditional-formats';
+import * as charts from './charts';
+import * as tableEdits from './table-edits';
+import * as duplicates from './duplicates';
+import * as outline from './outline';
+import * as page from './page';
+import * as protection from './protection';
+import * as merge from './merge';
+import * as rowFit from './row-autofit';
+import * as sheets from './sheets';
+import * as sort from './sort';
+import * as structure from './structure';
+import * as tables from './tables';
 import type {
 	EditSession,
 	EditSessionOptions,
 	WorkbookChange,
 	WorkbookChangeKind,
-} from './types.js';
-import { validateCellInput } from './validation.js';
-import * as view from './view.js';
+} from './types';
+import { validateCellInput } from './validation';
+import * as view from './view';
 
 interface OpenStep {
 	step: HistoryStep;

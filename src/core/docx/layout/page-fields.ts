@@ -1,8 +1,8 @@
-import type { DocumentModel, HeaderFooterContent, HeaderFooterSlots, TextRun } from '../model.js';
-import { formatNoteNumber } from '../notes.js';
-import { fieldName } from '../field-runs.js';
-import { dateFieldResult } from '../field-date.js';
-import type { LayoutPageBox } from './result.js';
+import type { DocumentModel, HeaderFooterContent, HeaderFooterSlots, TextRun } from '../model';
+import { formatNoteNumber } from '../notes';
+import { fieldName } from '../field-runs';
+import { dateFieldResult } from '../field-date';
+import type { LayoutPageBox } from './result';
 
 export interface PageFieldContext {
 	page: string;

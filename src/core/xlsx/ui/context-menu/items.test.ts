@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellMenu, columnHeaderMenu, rowHeaderMenu, tabMenu, type MenuEntry } from './items.js';
+import { cellMenu, columnHeaderMenu, rowHeaderMenu, tabMenu, type MenuEntry } from './items';
 
 const ids = (entries: MenuEntry[]) => entries.map((e) => e.id);
 const disabled = (entries: MenuEntry[]) => entries.filter((e) => e.disabled).map((e) => e.id);

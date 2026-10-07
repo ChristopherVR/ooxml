@@ -1,9 +1,9 @@
 import * as Y from 'yjs';
-import { createIdGenerator } from '../collab/identity.js';
-import { isValidId } from '../collab/validation.js';
-import { contentUrl } from './content.js';
-import { sanitizeAttachment, sanitizeChannelName, type Attachment } from './model.js';
-import type { ChatUser } from './chat.js';
+import { createIdGenerator } from '../collab/identity';
+import { isValidId } from '../collab/validation';
+import { contentUrl } from './content';
+import { sanitizeAttachment, sanitizeChannelName, type Attachment } from './model';
+import type { ChatUser } from './chat';
 
 export type TabContent =
 	| { type: 'file'; attachment: Attachment }

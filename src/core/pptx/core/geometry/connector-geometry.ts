@@ -1,4 +1,4 @@
-import { clampUnitInterval } from '../../../color/color-primitives.js';
+import { clampUnitInterval } from '../../../color/color-primitives';
 /**
  * Framework-agnostic connector geometry calculations.
  *

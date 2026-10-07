@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ROW, parseRange } from '../address.js';
+import { MAX_ROW, parseRange } from '../address';
 import {
 	shiftIndex,
 	shiftIndexClamped,
@@ -7,7 +7,7 @@ import {
 	shiftRangeInBand,
 	shiftSpan,
 	subtractRange,
-} from './range-math.js';
+} from './range-math';
 
 const r = (ref: string) => {
 	const range = parseRange(ref);

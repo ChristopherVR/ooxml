@@ -1,9 +1,9 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { getCell, putCell } from '../cells.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from './index.js';
+import { getCell, putCell } from '../cells';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from './index';
 
 // A signed package built by hand the way Excel lays one out (Excel COM can only sign with a
 // certificate from the user's store): a root origin relationship, the origin part, its

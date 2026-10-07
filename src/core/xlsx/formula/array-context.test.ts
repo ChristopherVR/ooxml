@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { needsArrayEvaluation } from './array-context.js';
+import { needsArrayEvaluation } from './array-context';
 
 describe('needsArrayEvaluation', () => {
 	it('is false for scalar formulas and array-native aggregation', () => {

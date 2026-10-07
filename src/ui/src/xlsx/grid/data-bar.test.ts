@@ -4,8 +4,8 @@ import { resolve } from 'node:path';
 import JSZip from 'jszip';
 import { createWorkbook, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountGrid } from './index.js';
-import { createTestContext } from './test-context.js';
+import { mountGrid } from './index';
+import { createTestContext } from './test-context';
 
 const native = JSON.parse(
 	readFileSync(

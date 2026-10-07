@@ -1,19 +1,19 @@
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE, isSignaturePart } from '../../opc/signature/index.js';
-import type { Workbook } from '../model.js';
-import { parsePersons } from '../read/comments.js';
-import { CONTENT_TYPES, SourceIndex } from '../read/package.js';
-import { PersonRegistry } from './comments.js';
-import { relativeTarget } from './drawing.js';
-import { patchCarriedParts, workbookRefEdits } from './carried-refs.js';
-import { MetadataPlan, writeMetadataPart } from './metadata.js';
-import { PackageWriter, RelationshipSet } from './package-writer.js';
-import { SharedStringTable } from './shared-strings.js';
-import { StyleWriter } from './styles.js';
-import { themePart } from './theme.js';
-import { regeneratesRootRel, writeDocProps } from './doc-props.js';
-import { workbookXml, type SheetRef } from './workbook-part.js';
-import { writeWorksheet, type SaveContext } from './worksheet.js';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE, isSignaturePart } from '../../opc/signature/index';
+import type { Workbook } from '../model';
+import { parsePersons } from '../read/comments';
+import { CONTENT_TYPES, SourceIndex } from '../read/package';
+import { PersonRegistry } from './comments';
+import { relativeTarget } from './drawing';
+import { patchCarriedParts, workbookRefEdits } from './carried-refs';
+import { MetadataPlan, writeMetadataPart } from './metadata';
+import { PackageWriter, RelationshipSet } from './package-writer';
+import { SharedStringTable } from './shared-strings';
+import { StyleWriter } from './styles';
+import { themePart } from './theme';
+import { regeneratesRootRel, writeDocProps } from './doc-props';
+import { workbookXml, type SheetRef } from './workbook-part';
+import { writeWorksheet, type SaveContext } from './worksheet';
 
 /** Workbook relationships regenerated on save (everything else in the source is kept). */
 const REGENERATED = new Set<string>([

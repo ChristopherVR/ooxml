@@ -1,4 +1,4 @@
-import { initialsOf } from '../presence.js';
+import { initialsOf } from '../presence';
 
 /**
  * Office File > Account: the local display profile (name and avatar colour) shared by the suite.

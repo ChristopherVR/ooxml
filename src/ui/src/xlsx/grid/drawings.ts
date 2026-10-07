@@ -11,10 +11,10 @@ import {
 	renderChartSvg,
 	type DrawingObject,
 } from 'ooxml-core/xlsx';
-import { h, place, svgNode, viewOf } from './dom.js';
+import { h, place, svgNode, viewOf } from './dom';
 import { QUADRANTS, type Box } from 'ooxml-core/xlsx/ui';
-import type { GridView } from './grid-view.js';
-import { paintSmartArt } from './smartart.js';
+import type { GridView } from './grid-view';
+import { paintSmartArt } from './smartart';
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;

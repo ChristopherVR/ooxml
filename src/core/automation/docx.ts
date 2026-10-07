@@ -1,6 +1,6 @@
-import { createDocument, type Paragraph } from '../docx/model.js';
-import { loadDocx } from '../docx/parse.js';
-import { saveDocx } from '../docx/save.js';
+import { createDocument, type Paragraph } from '../docx/model';
+import { loadDocx } from '../docx/parse';
+import { saveDocx } from '../docx/save';
 
 /** Headless Word operations, shared by MCP and other automation adapters. */
 export async function inspectDocx(bytes: Uint8Array) {

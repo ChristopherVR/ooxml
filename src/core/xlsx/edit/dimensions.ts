@@ -1,7 +1,7 @@
-import type { CellStyle, Worksheet } from '../model.js';
-import { styleAt } from '../styles.js';
-import { editColumns } from './columns.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
+import type { CellStyle, Worksheet } from '../model';
+import { styleAt } from '../styles';
+import { editColumns } from './columns';
+import { type EditContext, displayText, sheetAt } from './context';
 
 /** Maximum digit width of the default font (Calibri 11) in pixels. */
 const MDW = 7;

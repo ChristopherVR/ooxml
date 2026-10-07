@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isEastAsianChar, tokenizeRun } from './text-breaks.js';
+import { isEastAsianChar, tokenizeRun } from './text-breaks';
 
 describe('isEastAsianChar', () => {
 	it('classifies CJK ideographs, kana, and hangul as East Asian', () => {

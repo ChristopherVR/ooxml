@@ -8,7 +8,7 @@ import {
 	type FileTransferProgress,
 } from 'ooxml-core/teams';
 import css from './files-panel.css?raw';
-import { defineTeamsFileActions } from './file-actions.js';
+import { defineTeamsFileActions } from './file-actions';
 
 /** File controls bind to channel-capturing core actions; uploaded bytes never enter UI state. */
 export class TeamsFilesPanel extends LitElement {

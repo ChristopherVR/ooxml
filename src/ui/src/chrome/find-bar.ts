@@ -1,8 +1,8 @@
 import { LitElement, html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { live } from 'lit/directives/live.js';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { definer, present } from '../registry';
 import css from './find-bar.css?raw';
 
 export type OfficeFindInputEvent = CustomEvent<{ query: string }>;

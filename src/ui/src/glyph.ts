@@ -4,7 +4,7 @@
 // never replaces the node (which would make the browser drop the click). The svg holds no
 // whitespace, so it never adds text to its parent's `textContent`.
 import { html, svg, type TemplateResult } from 'lit';
-import { getIcon } from './icons.js';
+import { getIcon } from './icons';
 
 export function glyph(
 	name: string | null | undefined,

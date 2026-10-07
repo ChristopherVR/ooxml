@@ -4,24 +4,24 @@
 // Angular can all adopt in a few lines. Anything a screen shows is in the state; anything a button
 // does is an action. DOM-free: storage, fetch and media devices are injectable. New code.
 import * as Y from 'yjs';
-import { fromBase64, toBase64 } from '../collab/codec.js';
-import { Emitter } from '../collab/emitter.js';
-import { createClientId } from '../collab/identity.js';
-import type { ConnectionStatus } from '../collab/provider.js';
-import type { CallParticipant, CallSession, MediaDevicesLike } from './call.js';
-import type { Attachment, Channel, Message } from './model.js';
-import { createFileActions } from './files.js';
-import { createMessageTransfers, type MessageTransfer } from './message-transfer.js';
-import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
-import type { ChannelTab, TabContent } from './tabs.js';
-import { channelThreads, type MessageThread } from './threads.js';
-import { createDraftStore, type ChatDraft, type DraftContext, type SavedDraft } from './drafts.js';
+import { fromBase64, toBase64 } from '../collab/codec';
+import { Emitter } from '../collab/emitter';
+import { createClientId } from '../collab/identity';
+import type { ConnectionStatus } from '../collab/provider';
+import type { CallParticipant, CallSession, MediaDevicesLike } from './call';
+import type { Attachment, Channel, Message } from './model';
+import { createFileActions } from './files';
+import { createMessageTransfers, type MessageTransfer } from './message-transfer';
+import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
+import type { ChannelTab, TabContent } from './tabs';
+import { channelThreads, type MessageThread } from './threads';
+import { createDraftStore, type ChatDraft, type DraftContext, type SavedDraft } from './drafts';
 import {
 	createThreadFollows,
 	type FollowedThread,
 	type ThreadFollowSettings,
-} from './followed-threads.js';
-import type { StreamLike } from './peer.js';
+} from './followed-threads';
+import type { StreamLike } from './peer';
 import {
 	type ChannelView,
 	type FileEntry,
@@ -35,13 +35,13 @@ import {
 	peopleViews,
 	searchMessages,
 	typingNames,
-} from './view.js';
+} from './view';
 import {
 	type Availability,
 	type TeamsWorkspace,
 	type WorkspaceOptions,
 	createTeamsWorkspace,
-} from './workspace.js';
+} from './workspace';
 
 export interface StorageLike {
 	getItem: (key: string) => string | null;

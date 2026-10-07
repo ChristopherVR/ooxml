@@ -1,7 +1,7 @@
 // Metric-compatible substitutes for Word's core fonts, so pagination measured on systems without
 // Microsoft fonts (Linux, ChromeOS) lines up with Word. Carlito, Caladea, Arimo, Tinos and Cousine
 // share advance widths with Calibri, Cambria, Arial, Times New Roman and Courier New.
-import { DEFAULT_FONT_FAMILY } from './units.js';
+import { DEFAULT_FONT_FAMILY } from './units';
 
 const SUBSTITUTES: Record<string, { fallbacks: string[]; generic: string }> = {
 	calibri: { fallbacks: ['Carlito'], generic: 'sans-serif' },

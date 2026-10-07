@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { resolveBlankDisplay, visibleRuns } from './blank-display.js';
+import { resolveBlankDisplay, visibleRuns } from './blank-display';
 
 describe('resolveBlankDisplay', () => {
 	it('preserves values and visibility when there are no blanks', () => {

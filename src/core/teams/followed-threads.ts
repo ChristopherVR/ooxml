@@ -1,7 +1,7 @@
-import { isValidId } from '../collab/validation.js';
-import type { Channel, Message } from './model.js';
-import type { StorageLike } from './store.js';
-import { channelThreads } from './threads.js';
+import { isValidId } from '../collab/validation';
+import type { Channel, Message } from './model';
+import type { StorageLike } from './store';
+import { channelThreads } from './threads';
 
 export interface FollowedThread {
 	channelId: string;

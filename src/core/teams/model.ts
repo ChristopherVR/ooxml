@@ -1,6 +1,6 @@
 // Shared types and small validators for the `teams` area: channels, messages, attachments and the
 // Office-file kinds a channel can link to. Pure data, no DOM, no Yjs. New code.
-import { stripHtmlTags } from '../collab/validation.js';
+import { stripHtmlTags } from '../collab/validation';
 
 export type ChannelKind = 'channel' | 'direct';
 

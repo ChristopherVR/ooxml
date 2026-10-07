@@ -1,8 +1,8 @@
-import { parseXml } from '../../xml/index.js';
-import { parseRange } from '../address.js';
-import type { Table, TableColumn } from '../model.js';
-import { stripFuturePrefixes } from './formula-text.js';
-import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util.js';
+import { parseXml } from '../../xml/index';
+import { parseRange } from '../address';
+import type { Table, TableColumn } from '../model';
+import { stripFuturePrefixes } from './formula-text';
+import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util';
 
 /** Reads a table part; `undefined` when it has no usable range. */
 export function parseTable(xml: string, partName: string): Table | undefined {

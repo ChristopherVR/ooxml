@@ -1,10 +1,10 @@
-import { cellKey, rangeContains } from '../address.js';
-import { forEachCellInRange, getValue } from '../cells.js';
-import { translateFormula } from '../formula/index.js';
-import { inTimePeriod } from '../time-period.js';
-import { iconIndex, literal, localTodaySerial, mergeDxf, scaleColor } from './cf-helpers.js';
+import { cellKey, rangeContains } from '../address';
+import { forEachCellInRange, getValue } from '../cells';
+import { translateFormula } from '../formula/index';
+import { inTimePeriod } from '../time-period';
+import { iconIndex, literal, localTodaySerial, mergeDxf, scaleColor } from './cf-helpers';
 
-export { iconIndex, scaleColor } from './cf-helpers.js';
+export { iconIndex, scaleColor } from './cf-helpers';
 import type {
 	CellValue,
 	CfvoThreshold,
@@ -12,11 +12,11 @@ import type {
 	ConditionalRule,
 	Workbook,
 	Worksheet,
-} from '../model.js';
-import { isCellError } from '../model.js';
-import { resolveColor } from './colors.js';
-import { dataBarAppearance } from './data-bar-appearance.js';
-import { dataBarGeometry } from './data-bar-geometry.js';
+} from '../model';
+import { isCellError } from '../model';
+import { resolveColor } from './colors';
+import { dataBarAppearance } from './data-bar-appearance';
+import { dataBarGeometry } from './data-bar-geometry';
 import {
 	computeStats,
 	isTruthy,
@@ -25,8 +25,8 @@ import {
 	valueKey,
 	valueText,
 	type RangeStats,
-} from './cf-values.js';
-import type { ConditionalFormatEvaluator, ConditionalFormatResult } from './types.js';
+} from './cf-values';
+import type { ConditionalFormatEvaluator, ConditionalFormatResult } from './types';
 
 export type CellAt = { sheet: number; row: number; col: number };
 export type FormulaEvaluator = (formula: string, at: CellAt) => CellValue;

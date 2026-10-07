@@ -15,19 +15,19 @@ import {
 } from 'ooxml-core/teams';
 // Registered from the leaf modules, not the package root: the root imports this folder through
 // `teams/index`, so importing it back would make `OFFICE_UI_TAGS` read `TEAMS_TAGS` too early.
-import { registerControls } from '../../controls.js';
-import { definePresence } from '../../presence.js';
-import { installOfficeUiTheme, THEME_CSS } from '../../theme.js';
-import { registerTeams } from '../index.js';
-import { TeamsController } from './controller.js';
+import { registerControls } from '../../controls';
+import { definePresence } from '../../presence';
+import { installOfficeUiTheme, THEME_CSS } from '../../theme';
+import { registerTeams } from '../index';
+import { TeamsController } from './controller';
 import {
 	defineTeamsContentPreview,
 	type FileEmbeds,
 	type SaveFileCopy,
-} from './content-preview.js';
-import { defineTeamsChannelTab } from './channel-tab.js';
-import { defineTeamsFilesPanel } from './files-panel.js';
-import { defineTeamsSettings, type TeamsTheme } from './teams-settings.js';
+} from './content-preview';
+import { defineTeamsChannelTab } from './channel-tab';
+import { defineTeamsFilesPanel } from './files-panel';
+import { defineTeamsSettings, type TeamsTheme } from './teams-settings';
 import {
 	loadConfig,
 	loadIdentity,
@@ -35,15 +35,15 @@ import {
 	saveConfig,
 	saveIdentity,
 	type Identity,
-} from './storage.js';
+} from './storage';
 import css from './teams-app.css?raw';
-import { threadPane } from './thread-pane.js';
-import { followedThreads } from './followed-threads.js';
-import { draftList } from './draft-list.js';
-import { filePopoutDetail, filePopoutUrl } from './file-popout.js';
-import { messageTransfers } from './message-transfers.js';
-import { defineTeamsProfileMenu } from './profile-menu.js';
-import { defineTeamsAddTabDialog } from './add-tab-dialog.js';
+import { threadPane } from './thread-pane';
+import { followedThreads } from './followed-threads';
+import { draftList } from './draft-list';
+import { filePopoutDetail, filePopoutUrl } from './file-popout';
+import { messageTransfers } from './message-transfers';
+import { defineTeamsProfileMenu } from './profile-menu';
+import { defineTeamsAddTabDialog } from './add-tab-dialog';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {

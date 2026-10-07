@@ -1,4 +1,4 @@
-import { blendColorOntoWhite } from '../../../../color/color-primitives.js';
+import { blendColorOntoWhite } from '../../../../color/color-primitives';
 import type { PptxImageProperties, PptxSlideBackgroundPattern, XmlObject } from '../../types';
 import { partRelsPath } from '../../utils/part-rels-path';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';

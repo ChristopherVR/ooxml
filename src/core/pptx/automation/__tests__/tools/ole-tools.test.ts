@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import JSZip from 'jszip';
-import { oleBytesToDataUrl, PptxHandler } from '../../../index.js';
-import type { OlePptxElement, PptxData } from '../../../index.js';
+import { oleBytesToDataUrl, PptxHandler } from '../../../index';
+import type { OlePptxElement, PptxData } from '../../../index';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -13,8 +13,8 @@ import {
 	setOleDocumentParagraph,
 	setOleObjectNameT,
 	setOleSheetCell,
-} from '../../tools/ole-tools.js';
-import type { ToolContext } from '../../types.js';
+} from '../../tools/ole-tools';
+import type { ToolContext } from '../../types';
 
 const WORKBOOK_XML = `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></sheets></workbook>`;
 const SHEET1_XML = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1"><v>10</v></c></row></sheetData></worksheet>`;

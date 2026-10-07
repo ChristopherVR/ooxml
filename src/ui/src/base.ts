@@ -10,9 +10,9 @@ import {
 	type PropertyDeclaration,
 	type PropertyDeclarations,
 } from 'lit';
-import { emit, present } from './registry.js';
-import { COMMON_CONTROL_CSS } from './styles.js';
-import { OFFICE_TOKENS } from './tokens.js';
+import { emit, present } from './registry';
+import { COMMON_CONTROL_CSS } from './styles';
+import { OFFICE_TOKENS } from './tokens';
 
 /**
  * Give every bare `var(--office-x)` in a stylesheet the token's default, so a control renders

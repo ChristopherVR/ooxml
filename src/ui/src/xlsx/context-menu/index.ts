@@ -14,4 +14,4 @@ export {
 	openContextMenu,
 	type ContextMenuHandle,
 	type OpenMenuOptions,
-} from './menu.js';
+} from './menu';

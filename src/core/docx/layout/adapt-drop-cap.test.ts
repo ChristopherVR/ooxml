@@ -1,6 +1,6 @@
-import type { DocumentModel } from '../index.js';
+import type { DocumentModel } from '../index';
 import { describe, expect, it } from 'vitest';
-import { adaptDocumentModel } from './adapter.js';
+import { adaptDocumentModel } from './adapter';
 
 describe('drop cap folding', () => {
 	it('lays the initial out at the start of the next paragraph', () => {

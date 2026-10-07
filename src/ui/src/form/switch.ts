@@ -1,7 +1,7 @@
 import { html } from 'lit';
-import { controlStyles } from '../base.js';
-import { definer } from '../registry.js';
-import { OfficeUiCheckable } from './checkable.js';
+import { controlStyles } from '../base';
+import { definer } from '../registry';
+import { OfficeUiCheckable } from './checkable';
 import css from './switch.css?raw';
 
 /**

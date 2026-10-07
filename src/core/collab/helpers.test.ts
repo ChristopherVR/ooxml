@@ -1,11 +1,11 @@
 import * as Y from 'yjs';
 import { describe, expect, it, vi } from 'vitest';
-import { createAssetSync } from './assets.js';
+import { createAssetSync } from './assets';
 import {
 	createPresencePublisher,
 	borrowAwareness,
 	removeAwarenessStatesLocally,
-} from './awareness.js';
+} from './awareness';
 import {
 	applyUpdateSafe,
 	encodeSnapshot,
@@ -14,29 +14,29 @@ import {
 	restoreSnapshot,
 	toBase64,
 	validateUpdate,
-} from './codec.js';
+} from './codec';
 import {
 	assignUserColor,
 	buildRoster,
 	createIdGenerator,
 	formatCursorLabel,
 	getUserInitials,
-} from './identity.js';
+} from './identity';
 import {
 	createDepartureChannel,
 	registerTeardown,
 	type DepartureChannelLike,
 	type TeardownListener,
-} from './lifecycle.js';
+} from './lifecycle';
 import {
 	BoundedMap,
 	classifyVersion,
 	freezeDeep,
 	IdempotencyCache,
 	SequenceTracker,
-} from './ordering.js';
-import { createSyncGate, shouldAutoFollowBroadcaster, shouldRoomReplaceLoad } from './policy.js';
-import { deriveCanvasPresence, presenceToCursors } from './presence.js';
+} from './ordering';
+import { createSyncGate, shouldAutoFollowBroadcaster, shouldRoomReplaceLoad } from './policy';
+import { deriveCanvasPresence, presenceToCursors } from './presence';
 import {
 	isMixedContentBlocked,
 	isValidRoomId,
@@ -45,13 +45,13 @@ import {
 	sanitizeUserName,
 	stripHtmlTags,
 	validateDisplayName,
-} from './validation.js';
+} from './validation';
 import {
 	adaptYjsProvider,
 	observeExternalSession,
 	type ExternalSession,
-} from './external-provider.js';
-import { createWebSocketTransport, roomUrl, type WebSocketLike } from './websocket-transport.js';
+} from './external-provider';
+import { createWebSocketTransport, roomUrl, type WebSocketLike } from './websocket-transport';
 
 describe('validation', () => {
 	it('validates room ids, colours, avatars and names', () => {

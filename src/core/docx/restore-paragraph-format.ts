@@ -1,6 +1,6 @@
-import type { Paragraph } from './model.js';
-import { parseDirectParagraphProperties } from './paragraph-properties.js';
-import { parsePropertiesSnapshot } from './revision-properties.js';
+import type { Paragraph } from './model';
+import { parseDirectParagraphProperties } from './paragraph-properties';
+import { parsePropertiesSnapshot } from './revision-properties';
 
 export const PARAGRAPH_FORMAT_KEYS = [
 	'align',

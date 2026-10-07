@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { DrawingAnchor } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { deleteDrawing, setDrawingAnchor } from './drawings.js';
-import { testContext } from './test-context.js';
+import type { DrawingAnchor } from '../model';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { deleteDrawing, setDrawingAnchor } from './drawings';
+import { testContext } from './test-context';
 
 const fixture = () =>
 	new Uint8Array(

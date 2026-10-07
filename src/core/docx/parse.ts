@@ -1,7 +1,7 @@
-import { parseCoreProperties } from './core-properties.js';
+import { parseCoreProperties } from './core-properties';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
-import type { Block, DocumentModel, LoadedDocument } from './model.js';
+import type { Block, DocumentModel, LoadedDocument } from './model';
 import {
 	children,
 	first,
@@ -9,27 +9,27 @@ import {
 	parseXml,
 	type XmlDocument,
 	WORD_NS,
-} from './xml.js';
-import { remember, saveDocx } from './save.js';
-import { parseParagraphStyleCatalog } from './paragraph-styles.js';
-import { parseBlocksFromContainer } from './block-parser.js';
-import { parseDocumentParts } from './document-parts.js';
-import { parseNumberingCatalog } from './numbering-parse.js';
-import { parseComments } from './comments.js';
-import { parseTrackChangesSetting } from './settings.js';
-import { parsePageBackground } from './page-background.js';
-import { parseRunStyleCatalog } from './character-styles.js';
-import { parseTableStyleCatalog } from './table-styles.js';
-import { parseTheme, parseColorSchemeMapping } from './theme.js';
+} from './xml';
+import { remember, saveDocx } from './save';
+import { parseParagraphStyleCatalog } from './paragraph-styles';
+import { parseBlocksFromContainer } from './block-parser';
+import { parseDocumentParts } from './document-parts';
+import { parseNumberingCatalog } from './numbering-parse';
+import { parseComments } from './comments';
+import { parseTrackChangesSetting } from './settings';
+import { parsePageBackground } from './page-background';
+import { parseRunStyleCatalog } from './character-styles';
+import { parseTableStyleCatalog } from './table-styles';
+import { parseTheme, parseColorSchemeMapping } from './theme';
 
 const px = (twips: string | undefined, fallback: number): number =>
 	twips === undefined ? fallback : (Number(twips) * 96) / 1440;
 
-import { type DrawingContext } from './drawing.js';
-import { parseContentTypes, parseRelationships } from './package-parts.js';
-import { withParseWarnings } from './parse-diagnostics.js';
-import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse-warnings.js';
-import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document.js';
+import { type DrawingContext } from './drawing';
+import { parseContentTypes, parseRelationships } from './package-parts';
+import { withParseWarnings } from './parse-diagnostics';
+import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse-warnings';
+import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
 
 export interface PackageContext {
 	original: Uint8Array;

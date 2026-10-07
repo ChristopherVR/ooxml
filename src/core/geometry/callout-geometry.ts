@@ -24,7 +24,7 @@
  *
  * @module geometry/callout-geometry
  */
-import { at } from './indexed.js';
+import { at } from './indexed';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

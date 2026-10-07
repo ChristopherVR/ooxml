@@ -10,7 +10,7 @@ import {
 	type EditSession,
 	type StylePatch,
 	type Workbook,
-} from '../../index.js';
+} from '../../index';
 
 export type TemplateId = 'budget' | 'todo' | 'invoice';
 type T = (key: string, vars?: Record<string, string | number>) => string;

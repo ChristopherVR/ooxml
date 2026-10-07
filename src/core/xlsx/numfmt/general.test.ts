@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatGeneral } from './general.js';
+import { formatGeneral } from './general';
 
 // Recorded from Excel 16: TEXT/Range.Text of a General cell wide enough for 11 characters.
 describe('formatGeneral', () => {

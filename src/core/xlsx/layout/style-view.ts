@@ -1,6 +1,6 @@
-import type { Border, BorderEdge, BorderStyle, Fill, Font, ThemePalette } from '../model.js';
-import { resolveColor } from './colors.js';
-import type { BordersView, EdgeView, FillView, FontView } from './types.js';
+import type { Border, BorderEdge, BorderStyle, Fill, Font, ThemePalette } from '../model';
+import { resolveColor } from './colors';
+import type { BordersView, EdgeView, FillView, FontView } from './types';
 
 const BLACK = '#000000';
 const WHITE = '#FFFFFF';

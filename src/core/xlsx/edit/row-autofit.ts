@@ -1,8 +1,8 @@
-import { type CellRange, normalizeRange } from '../address.js';
-import type { MeasureText } from '../layout/autofit.js';
-import type { Worksheet } from '../model.js';
-import { approximateMeasure, autoFitRowHeight } from '../layout/row-autofit.js';
-import { type EditContext, sheetAt } from './context.js';
+import { type CellRange, normalizeRange } from '../address';
+import type { MeasureText } from '../layout/autofit';
+import type { Worksheet } from '../model';
+import { approximateMeasure, autoFitRowHeight } from '../layout/row-autofit';
+import { type EditContext, sheetAt } from './context';
 
 /** Excel's largest row height in points. */
 const MAX_HEIGHT = 409;

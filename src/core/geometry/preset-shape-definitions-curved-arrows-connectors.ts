@@ -34,7 +34,7 @@
  * the human-driven merge of all batch agents.
  */
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 // ---------------------------------------------------------------------------
 // Helpers

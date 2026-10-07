@@ -3,7 +3,7 @@ import type {
 	PptxChartLegendPosition,
 	PptxChartAxisType,
 	ChartAxisEdit,
-} from '../../index.js';
+} from '../../index';
 import {
 	setChartType,
 	addChartSeries,
@@ -16,11 +16,11 @@ import {
 	setChartDataLabels,
 	setChartAxis,
 	ChartBuilder,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { applyParetoChartTypeAlias } from './chart-pareto.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { applyParetoChartTypeAlias } from './chart-pareto';
+import { validateSlideIndex } from './helpers';
 
 // ── updateChart ──────────────────────────────────────────────────────────────
 

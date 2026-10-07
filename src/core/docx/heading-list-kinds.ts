@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StNumberFormat } from './generated/wml-simple-types.js';
-import type { NumberingLevelDefinition } from './numbering-model.js';
-import { signedTwips, twips } from './units.js';
+import type { StNumberFormat } from './generated/wml-simple-types';
+import type { NumberingLevelDefinition } from './numbering-model';
+import { signedTwips, twips } from './units';
 
 /** Heading-linked outline lists from Word's Multilevel List gallery. */
 export type HeadingListKind = 'headings' | 'article' | 'roman';

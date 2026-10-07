@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import { internStyle } from '../styles.js';
-import { createWorkbook, defaultCellStyle } from '../workbook.js';
-import { autoGrowRows } from './row-autofit.js';
-import { testContext } from './test-context.js';
+import { putCell } from '../cells';
+import { internStyle } from '../styles';
+import { createWorkbook, defaultCellStyle } from '../workbook';
+import { autoGrowRows } from './row-autofit';
+import { testContext } from './test-context';
 
 function setup() {
 	const wb = createWorkbook();

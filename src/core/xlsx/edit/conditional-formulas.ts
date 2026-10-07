@@ -1,5 +1,5 @@
-import type { ConditionalRule } from '../model.js';
-import { rewriteConditionalExtension } from '../conditional-extensions.js';
+import type { ConditionalRule } from '../model';
+import { rewriteConditionalExtension } from '../conditional-extensions';
 
 /** Visits modeled rule formulas, including formula-valued visual thresholds. */
 export function rewriteConditionalRule(

@@ -1,6 +1,6 @@
 // Rewriting structured (table) references when a table is renamed.
-import { FormulaError } from './ast.js';
-import { joinTokens, type Token, tokenize } from './tokenizer.js';
+import { FormulaError } from './ast';
+import { joinTokens, type Token, tokenize } from './tokenizer';
 
 function safeTokens(formula: string): Token[] | undefined {
 	try {

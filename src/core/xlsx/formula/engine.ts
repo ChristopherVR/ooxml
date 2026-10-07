@@ -1,25 +1,25 @@
 // The calc engine: the public API (full and incremental recalculation, invalidation, ad hoc
 // evaluation) over the recalculation core in engine-core.ts.
-import { cellKey } from '../address.js';
-import { getCell } from '../cells.js';
-import type { Cell, CellValue, Workbook } from '../model.js';
-import { FormulaError } from './ast.js';
-import { withDateSystem } from './date-serial.js';
-import { EngineCore } from './engine-core.js';
-import type { CalcEngine, CalcEngineOptions, CellPosition } from './engine-types.js';
-import { rangeHas, sameRange } from './engine-util.js';
-import { evaluateNode } from './evaluator.js';
-import type { FormulaNode } from './graph.js';
-import { implicitIntersection, toMatrix } from './references.js';
-import { isSpilledCell } from './spill.js';
-import { type Area, ERR, ErrorSignal, LambdaValue, type Value } from './values.js';
+import { cellKey } from '../address';
+import { getCell } from '../cells';
+import type { Cell, CellValue, Workbook } from '../model';
+import { FormulaError } from './ast';
+import { withDateSystem } from './date-serial';
+import { EngineCore } from './engine-core';
+import type { CalcEngine, CalcEngineOptions, CellPosition } from './engine-types';
+import { rangeHas, sameRange } from './engine-util';
+import { evaluateNode } from './evaluator';
+import type { FormulaNode } from './graph';
+import { implicitIntersection, toMatrix } from './references';
+import { isSpilledCell } from './spill';
+import { type Area, ERR, ErrorSignal, LambdaValue, type Value } from './values';
 
 export {
 	type CalcEngine,
 	type CalcEngineOptions,
 	CIRCULAR_REFERENCE_WARNING,
 	type CellPosition,
-} from './engine-types.js';
+} from './engine-types';
 
 class Engine extends EngineCore implements CalcEngine {
 	// ---- recalculation ----

@@ -1,7 +1,7 @@
-import type { CellRange } from '../address.js';
-import type { CellError, ErrorCode } from '../model.js';
-import { isCellError } from '../model.js';
-import type { FormulaAst } from './ast.js';
+import type { CellRange } from '../address';
+import type { CellError, ErrorCode } from '../model';
+import { isCellError } from '../model';
+import type { FormulaAst } from './ast';
 
 /** A single value as formulas see it; `null` is an empty cell (or an omitted argument). */
 export type Scalar = number | string | boolean | CellError | null;

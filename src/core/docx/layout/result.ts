@@ -12,11 +12,11 @@ export interface LayoutFragment {
 	fontFamily?: string;
 	fontSizePt?: number;
 	textScalePercent?: number;
-	ligatures?: import('../ligatures.js').Ligatures;
+	ligatures?: import('../ligatures').Ligatures;
 	characterSpacingPx?: number;
 	kerningThresholdPt?: number;
 	/** An inline picture drawn in this fragment's box, bottom-aligned on the line. */
-	object?: import('./input.js').LayoutObject;
+	object?: import('./input').LayoutObject;
 	color?: string;
 	underline?: boolean;
 	strike?: boolean;
@@ -60,7 +60,7 @@ export interface LayoutParagraphBox {
 export interface LayoutParagraphFrame {
 	leftPx: number;
 	widthPx: number;
-	borders?: import('./input.js').LayoutParagraphBorders;
+	borders?: import('./input').LayoutParagraphBorders;
 	shading?: string;
 }
 
@@ -70,7 +70,7 @@ export interface LayoutCellGeometry {
 	widthPx: number;
 	paddingLeftPx: number;
 	paddingRightPx: number;
-	borders?: import('./input.js').LayoutCellBorders;
+	borders?: import('./input').LayoutCellBorders;
 	shading?: string;
 	verticalAlign?: 'top' | 'center' | 'bottom';
 	/** Height of the cell's content (with its top and bottom padding), for vertical alignment. */

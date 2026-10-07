@@ -1,10 +1,10 @@
 // UI-COMMANDS entry: registers every command, dialog and ribbon tab on an editor context.
-import { insertNowCommands } from './insert-now.js';
+import { insertNowCommands } from './insert-now';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { registerDialogs } from '../dialogs/index.js';
+import { registerDialogs } from '../dialogs/index';
 import { registerRibbonTabs } from 'ooxml-core/xlsx/ui';
-import { commandTabs } from '../ribbon/tabs/index.js';
+import { commandTabs } from '../ribbon/tabs/index';
 import { alignmentCommands } from 'ooxml-core/xlsx/ui';
 import { cellCommands } from 'ooxml-core/xlsx/ui';
 import { clipboardCommands, installFormatPainter } from 'ooxml-core/xlsx/ui';
@@ -13,13 +13,13 @@ import { dataCommands } from 'ooxml-core/xlsx/ui';
 import { editingCommands } from 'ooxml-core/xlsx/ui';
 import { fontCommands } from 'ooxml-core/xlsx/ui';
 import { formulaCommands } from 'ooxml-core/xlsx/ui';
-import { registerSheetIcons } from './register-icons.js';
-import { insertCommands } from './insert.js';
+import { registerSheetIcons } from './register-icons';
+import { insertCommands } from './insert';
 import { numberCommands } from 'ooxml-core/xlsx/ui';
 import { pageLayoutCommands } from 'ooxml-core/xlsx/ui';
-import { reviewCommands } from './review.js';
-import { styleCommands } from './styles.js';
-import { viewCommands } from './view.js';
+import { reviewCommands } from './review';
+import { styleCommands } from './styles';
+import { viewCommands } from './view';
 
 /** Every UI-COMMANDS command (fresh objects; safe to register on several editors). */
 export function allCommands(): Command[] {

@@ -1,9 +1,9 @@
 /** Pure OMML to MathML conversion, with no browser or document-format dependency. */
-import type { OmmlNode } from './omml-node.js';
-import { stripXmlOrderSuffix } from './omml-node.js';
-import { getOmmlMathColor, getOmmlMathFontSize } from './omml-color.js';
-import { ensureArray } from './omml-mathml-helpers.js';
-export type { OmmlNode } from './omml-node.js';
+import type { OmmlNode } from './omml-node';
+import { stripXmlOrderSuffix } from './omml-node';
+import { getOmmlMathColor, getOmmlMathFontSize } from './omml-color';
+import { ensureArray } from './omml-mathml-helpers';
+export type { OmmlNode } from './omml-node';
 import {
 	convertRun,
 	convertFraction,
@@ -23,7 +23,7 @@ import {
 	convertEqArr,
 	convertBox,
 	convertFunc,
-} from './omml-mathml-converters.js';
+} from './omml-mathml-converters';
 // ── Dispatch ────────────────────────────────────────────────────────────────
 
 /** Convert all child elements of an OMML container to MathML. */

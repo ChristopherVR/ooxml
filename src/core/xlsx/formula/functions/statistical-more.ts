@@ -1,9 +1,9 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, type Value } from '../values.js';
-import { collectNumbers, num, spec } from './helpers.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
-import { STATISTICAL_SHAPE } from './statistical-shape.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, type Value } from '../values';
+import { collectNumbers, num, spec } from './helpers';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
+import { STATISTICAL_SHAPE } from './statistical-shape';
 
 const C = 'Statistical';
 

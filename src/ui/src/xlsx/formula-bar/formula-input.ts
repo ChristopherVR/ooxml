@@ -3,10 +3,10 @@
 // to several lines.
 import { cellInputText } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { h } from '../grid/dom.js';
+import { h } from '../grid/dom';
 import { editBridge, type EditState } from 'ooxml-core/xlsx/ui';
-import { createFormulaField, type FormulaField } from '../grid/formula-field.js';
-import { createFunctionAssist, type FunctionAssist } from '../grid/function-assist.js';
+import { createFormulaField, type FormulaField } from '../grid/formula-field';
+import { createFunctionAssist, type FunctionAssist } from '../grid/function-assist';
 import { splice } from 'ooxml-core/xlsx';
 
 export interface FormulaInput {

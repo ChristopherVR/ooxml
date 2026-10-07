@@ -1,7 +1,7 @@
-import { normalizeDigestAlgorithmName, type SupportedDigestName } from './algorithm-names.js';
-import { sha1 } from './sha1.js';
-import { sha256 } from './sha256.js';
-import { sha384, sha512 } from './sha512.js';
+import { normalizeDigestAlgorithmName, type SupportedDigestName } from './algorithm-names';
+import { sha1 } from './sha1';
+import { sha256 } from './sha256';
+import { sha384, sha512 } from './sha512';
 
 /** A synchronous hash function over bytes. */
 export type DigestFunction = (data: Uint8Array) => Uint8Array;

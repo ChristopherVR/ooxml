@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { book, engine, get, set, E } from './test-helpers.js';
-import { createEditSession } from '../edit/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/index.js';
-import { loadXlsx } from '../read/index.js';
-import { getCell } from '../cells.js';
-import { createCalcEngine } from './engine.js';
+import { book, engine, get, set, E } from './test-helpers';
+import { createEditSession } from '../edit/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/index';
+import { loadXlsx } from '../read/index';
+import { getCell } from '../cells';
+import { createCalcEngine } from './engine';
 
 // Recorded independently with Excel 16.0 build 20430 at Z1, 2026-10-07.
 describe('INDIRECT R1C1 references', () => {

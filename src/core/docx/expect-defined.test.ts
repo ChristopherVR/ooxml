@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { expectDefined } from './expect-defined.js';
+import { expectDefined } from './expect-defined';
 
 describe('expectDefined', () => {
 	it('returns present values, including falsy ones', () => {

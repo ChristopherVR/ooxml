@@ -6,19 +6,19 @@
 // Moved from the pptx area (`src/core/pptx/core/utils/ooxml-crypto*.ts`, `encryption-detection.ts`;
 // see PROVENANCE.md). Not re-exported from the root entry: it pulls the CFB codec in.
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
-export { createOfficeGuid } from './uuid.js';
+export { createOfficeGuid } from './uuid';
 import {
 	decryptAgilePackage,
 	decryptStandardPackage,
 	verifyAgileDataIntegrity,
 	verifyAgilePassword,
 	verifyStandardPassword,
-} from './decrypt.js';
-import { openEncryptedPackage, toArrayBuffer, toBytes } from './detect.js';
-import { encryptAgile, encryptStandard } from './encrypt.js';
-import { parseEncryptionInfo } from './encryption-info.js';
-import { IncorrectPasswordError } from './errors.js';
-import type { EncryptionInfo, EncryptionOptions, StandardEncryptionInfo } from './types.js';
+} from './decrypt';
+import { openEncryptedPackage, toArrayBuffer, toBytes } from './detect';
+import { encryptAgile, encryptStandard } from './encrypt';
+import { parseEncryptionInfo } from './encryption-info';
+import { IncorrectPasswordError } from './errors';
+import type { EncryptionInfo, EncryptionOptions, StandardEncryptionInfo } from './types';
 
 export {
 	DataIntegrityError,
@@ -26,7 +26,7 @@ export {
 	PasswordRequiredError,
 	isOoxmlCryptoError,
 	type OoxmlCryptoErrorCode,
-} from './errors.js';
+} from './errors';
 export {
 	EncryptedFileError,
 	detectFileFormat,
@@ -35,15 +35,15 @@ export {
 	openEncryptedPackage,
 	type EncryptedPackageStreams,
 	type FileFormatDetection,
-} from './detect.js';
+} from './detect';
 export type {
 	EncryptionAlgorithm,
 	EncryptionInfo,
 	EncryptionOptions,
 	EncryptionScheme,
 	StandardEncryptionInfo,
-} from './types.js';
-export { RC4_ALG_ID, parseEncryptionInfo } from './encryption-info.js';
+} from './types';
+export { RC4_ALG_ID, parseEncryptionInfo } from './encryption-info';
 export {
 	BLOCK_KEYS,
 	computeStandardKeyBase,
@@ -51,20 +51,20 @@ export {
 	deriveStandardKey,
 	deriveStandardKeyFromBase,
 	generateIV,
-} from './key-derivation.js';
+} from './key-derivation';
 export {
 	decryptAgilePackage,
 	decryptStandardPackage,
 	verifyAgileDataIntegrity,
 	verifyAgilePassword,
 	verifyStandardPassword,
-} from './decrypt.js';
-export { encryptAgilePackage, encryptStandardPackage } from './encrypt.js';
+} from './decrypt';
+export { encryptAgilePackage, encryptStandardPackage } from './encrypt';
 export {
 	buildAgileEncryptionInfoXml,
 	buildEncryptionInfoStream,
 	buildStandardEncryptionInfoStream,
-} from './encryption-info-write.js';
+} from './encryption-info-write';
 
 const isStandard = (
 	info: EncryptionInfo | StandardEncryptionInfo,

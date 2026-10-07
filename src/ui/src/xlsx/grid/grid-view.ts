@@ -17,8 +17,8 @@ import {
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { buildItems } from 'ooxml-core/xlsx/ui';
 import { fitNumber } from 'ooxml-core/xlsx/ui';
-import { CellLayer } from './cell-layer.js';
-import { h, nextFrame, place } from './dom.js';
+import { CellLayer } from './cell-layer';
+import { h, nextFrame, place } from './dom';
 import {
 	columnHeaderHeight,
 	GridGeometry,
@@ -28,12 +28,12 @@ import {
 	type Hit,
 	type Quadrant,
 } from 'ooxml-core/xlsx/ui';
-import { GridlineLayer } from './gridlines.js';
-import { paintChrome, type HeaderPane } from './pane-chrome.js';
+import { GridlineLayer } from './gridlines';
+import { paintChrome, type HeaderPane } from './pane-chrome';
 import { CellViewCache } from 'ooxml-core/xlsx/ui';
-import { HeaderLayer } from './headers.js';
-import { createTextMeasurer, type TextMeasurer } from './measure.js';
-import { SelectionLayer, type OverlayState } from './selection-layer.js';
+import { HeaderLayer } from './headers';
+import { createTextMeasurer, type TextMeasurer } from './measure';
+import { SelectionLayer, type OverlayState } from './selection-layer';
 import { cellRange } from 'ooxml-core/xlsx/ui';
 
 interface QuadrantNodes {

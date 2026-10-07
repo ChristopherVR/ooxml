@@ -1,11 +1,11 @@
-import { MAX_COL, MAX_ROW, type CellRange, normalizeRange } from '../address.js';
-import { getCell, putCell, usedRange } from '../cells.js';
-import type { Cell, CellValue, Workbook, Worksheet } from '../model.js';
-import { isCellError } from '../model.js';
-import { styleAt } from '../styles.js';
-import { formatValue, type CalcEngine } from './deps.js';
-import type { EditScope } from './history.js';
-import type { WorkbookChangeKind } from './types.js';
+import { MAX_COL, MAX_ROW, type CellRange, normalizeRange } from '../address';
+import { getCell, putCell, usedRange } from '../cells';
+import type { Cell, CellValue, Workbook, Worksheet } from '../model';
+import { isCellError } from '../model';
+import { styleAt } from '../styles';
+import { formatValue, type CalcEngine } from './deps';
+import type { EditScope } from './history';
+import type { WorkbookChangeKind } from './types';
 
 export interface RunInfo {
 	sheet?: number;

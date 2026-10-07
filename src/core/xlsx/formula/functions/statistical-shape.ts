@@ -1,8 +1,8 @@
-import { ERR, fail, Matrix } from '../values.js';
-import { collectNumbers, num, numeric, spec } from './helpers.js';
-import * as S from './stats-core.js';
-import { gamma, gammaLn } from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail, Matrix } from '../values';
+import { collectNumbers, num, numeric, spec } from './helpers';
+import * as S from './stats-core';
+import { gamma, gammaLn } from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Statistical';
 

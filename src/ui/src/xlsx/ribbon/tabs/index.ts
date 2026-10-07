@@ -1,9 +1,9 @@
 // Every ribbon tab UI-COMMANDS supplies, in Excel's order. The File backstage belongs to the shell.
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
-import { chartDesignTab, tableDesignTab } from './contextual.js';
-import { dataTab, formulasTab } from './formulas-data.js';
-import { homeTab } from './home.js';
-import { insertTab, pageLayoutTab } from './insert-layout.js';
+import { chartDesignTab, tableDesignTab } from './contextual';
+import { dataTab, formulasTab } from './formulas-data';
+import { homeTab } from './home';
+import { insertTab, pageLayoutTab } from './insert-layout';
 import { helpTab, reviewTab, viewTab } from 'ooxml-core/xlsx/ui';
 
 export function commandTabs(): RibbonTab[] {

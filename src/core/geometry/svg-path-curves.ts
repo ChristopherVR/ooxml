@@ -1,4 +1,4 @@
-import type { Point2 } from './svg-path-types.js';
+import type { Point2 } from './svg-path-types';
 
 /** Sample a cubic Bezier at `segments` steps (excluding the start point). */
 export function sampleCubic(

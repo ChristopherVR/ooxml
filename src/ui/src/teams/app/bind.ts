@@ -3,8 +3,8 @@
 // behaviour lives in <teams-app>. Each binding also ships raw hooks over the core client, for apps
 // that want to render their own UI (see `store.ts`).
 import type { TeamsServerConfig } from 'ooxml-core/teams';
-import type { FileOpeners, FileUploader, OpenFileDetail, TeamsApp } from './teams-app.js';
-import type { FileEmbeds } from './content-preview.js';
+import type { FileOpeners, FileUploader, OpenFileDetail, TeamsApp } from './teams-app';
+import type { FileEmbeds } from './content-preview';
 
 export interface TeamsProps {
 	/** Shared-state room: 1-100 alphanumeric, `-` or `_`. Default `demo`. */

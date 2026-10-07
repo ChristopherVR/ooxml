@@ -1,4 +1,4 @@
-import { FormulaError, type StructuredRef, type StructuredSpecial } from './ast.js';
+import { FormulaError, type StructuredRef, type StructuredSpecial } from './ast';
 
 const SPECIALS: Record<string, StructuredSpecial> = {
 	'#all': '#All',

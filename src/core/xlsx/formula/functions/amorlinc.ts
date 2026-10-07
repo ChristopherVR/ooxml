@@ -1,7 +1,7 @@
-import { ERR, fail } from '../values.js';
-import { isLeapYear, serialToYmd } from '../date-serial.js';
-import { serialArg, yearFrac } from './date-calc.js';
-import { finite, num, optNum, spec } from './helpers.js';
+import { ERR, fail } from '../values';
+import { isLeapYear, serialToYmd } from '../date-serial';
+import { serialArg, yearFrac } from './date-calc';
+import { finite, num, optNum, spec } from './helpers';
 
 /**
  * Straight-line French depreciation, including a prorated initial period.

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { parseAddress, parseRange } from '../address.js';
-import { putCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { clearRange, setCellInput } from './cell-values.js';
-import { createEditSession } from './session.js';
-import { insertRows } from './structure.js';
-import { testContext } from './test-context.js';
-import type { EditSession } from './types.js';
+import { parseAddress, parseRange } from '../address';
+import { putCell } from '../cells';
+import type { Workbook } from '../model';
+import { createWorkbook } from '../workbook';
+import { clearRange, setCellInput } from './cell-values';
+import { createEditSession } from './session';
+import { insertRows } from './structure';
+import { testContext } from './test-context';
+import type { EditSession } from './types';
 
 const A = (ref: string) => parseAddress(ref) ?? { row: 0, col: 0 };
 const R = (ref: string) => {

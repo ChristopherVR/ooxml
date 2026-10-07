@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { OfficeGalleryState } from '../controls.js';
-import { registerOfficeUi } from '../index.js';
-import { parseSvgPreview } from './safe-svg.js';
+import type { OfficeGalleryState } from '../controls';
+import { registerOfficeUi } from '../index';
+import { parseSvgPreview } from './safe-svg';
 
 // Adapted from pptx-viewer's ribbon-gallery tests (`packages/shared/src/web-components/ribbon-gallery.test.ts`).
 beforeAll(() => registerOfficeUi());

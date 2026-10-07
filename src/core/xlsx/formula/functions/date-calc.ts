@@ -1,5 +1,5 @@
 // Calendar arithmetic behind the date functions.
-import type { CallContext } from '../context.js';
+import type { CallContext } from '../context';
 import {
 	daysInMonth,
 	isLeapYear,
@@ -7,9 +7,9 @@ import {
 	serialToYmd,
 	weekdayOf,
 	ymdToSerial,
-} from '../date-serial.js';
-import { ERR, fail, type Value } from '../values.js';
-import { num } from './helpers.js';
+} from '../date-serial';
+import { ERR, fail, type Value } from '../values';
+import { num } from './helpers';
 
 const MAX_SERIAL = 2_958_465;
 

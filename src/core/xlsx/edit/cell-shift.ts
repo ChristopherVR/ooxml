@@ -1,12 +1,12 @@
-import { type CellRange, MAX_COL, MAX_ROW, normalizeRange, rangesIntersect } from '../address.js';
-import type { Worksheet } from '../model.js';
-import { shiftFormulaInBand } from './band-formulas.js';
-import { type EditContext, isWholeColumns, isWholeRows, sheetAt } from './context.js';
-import type { AxisShift } from './range-math.js';
-import { cellRange } from './range-math.js';
-import { rewriteFormulas } from './shift-formulas.js';
-import { type Band, shiftSheetContent } from './shift-sheet.js';
-import { deleteColumns, deleteRows, insertColumns, insertRows } from './structure.js';
+import { type CellRange, MAX_COL, MAX_ROW, normalizeRange, rangesIntersect } from '../address';
+import type { Worksheet } from '../model';
+import { shiftFormulaInBand } from './band-formulas';
+import { type EditContext, isWholeColumns, isWholeRows, sheetAt } from './context';
+import type { AxisShift } from './range-math';
+import { cellRange } from './range-math';
+import { rewriteFormulas } from './shift-formulas';
+import { type Band, shiftSheetContent } from './shift-sheet';
+import { deleteColumns, deleteRows, insertColumns, insertRows } from './structure';
 
 /** Merges and tables cut by the band's edge would be torn apart; Excel refuses those shifts. */
 function assertBandIntact(sheet: Worksheet, shift: AxisShift, band: Band): void {

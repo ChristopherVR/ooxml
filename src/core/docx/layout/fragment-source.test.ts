@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { layoutParagraph } from './paragraph-layout.js';
-import type { LayoutParagraph } from './input.js';
+import { layoutParagraph } from './paragraph-layout';
+import type { LayoutParagraph } from './input';
 
 const measure = { widthOf: (text: string) => text.length * 10, lineHeightOf: () => 20 };
 const layout = (runs: LayoutParagraph['runs'], width = 300) =>

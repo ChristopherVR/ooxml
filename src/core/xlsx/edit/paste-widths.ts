@@ -1,8 +1,8 @@
-import { MAX_COL, MAX_ROW, type CellRange } from '../address.js';
-import { DEFAULT_COL_WIDTH } from '../workbook.js';
-import { editColumns } from './columns.js';
-import { sheetAt, type EditContext } from './context.js';
-import type { ClipboardCells } from './types.js';
+import { MAX_COL, MAX_ROW, type CellRange } from '../address';
+import { DEFAULT_COL_WIDTH } from '../workbook';
+import { editColumns } from './columns';
+import { sheetAt, type EditContext } from './context';
+import type { ClipboardCells } from './types';
 
 /** Excel repeats original column metrics, even when the copied cells are transposed. */
 export function pasteWidths(

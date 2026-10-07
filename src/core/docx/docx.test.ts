@@ -1,8 +1,8 @@
-import { signedTwips, twips } from './units.js';
+import { signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, saveDocx } from './index.js';
-import { at, expectParagraph, expectTable } from './test-support/access.js';
+import { loadDocx, saveDocx } from './index';
+import { at, expectParagraph, expectTable } from './test-support/access';
 
 const sourceXml = `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:keepNext/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>Hello</w:t></w:r><w:r><w:t> world</w:t></w:r></w:p><w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>`;
 

@@ -1,6 +1,6 @@
-import { ERR, fail } from '../values.js';
-import { num, spec, str } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail } from '../values';
+import { num, spec, str } from './helpers';
+import type { FunctionSpec } from './types';
 
 /**
  * CONVERT's unit table. It covers the common units of each dimension Excel documents but not

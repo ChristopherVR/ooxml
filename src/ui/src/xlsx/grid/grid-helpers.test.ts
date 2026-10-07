@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { createWorkbook, putCell, type ChartObject } from 'ooxml-core/xlsx';
 import { describe, expect, it } from 'vitest';
-import { drawingKeyDown } from './drawing-keys.js';
-import type { DrawingLayer } from './drawings.js';
-import { createTestContext } from './test-context.js';
+import { drawingKeyDown } from './drawing-keys';
+import type { DrawingLayer } from './drawings';
+import { createTestContext } from './test-context';
 import { closeParens } from 'ooxml-core/xlsx';
-import { currentRegionOrAll, fillPlan } from './grid-commands.js';
-import { fillTarget } from './grid-pointer.js';
+import { currentRegionOrAll, fillPlan } from './grid-commands';
+import { fillTarget } from './grid-pointer';
 
 const range = (r1: number, c1: number, r2: number, c2: number) => ({
 	start: { row: r1, col: c1 },

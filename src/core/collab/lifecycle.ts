@@ -4,7 +4,7 @@
 // `collaboration-departure.ts`; channel and message names are now configurable and default to
 // neutral `ooxml-core:` names (pptx-viewer's old names are exported as legacy constants).
 // See PROVENANCE.md.
-import { type AwarenessStatesLike, removeAwarenessStatesLocally } from './awareness.js';
+import { type AwarenessStatesLike, removeAwarenessStatesLocally } from './awareness';
 
 /** `postMessage` payload an embedding page can send into a frame to make it leave its room first. */
 export const COLLAB_LEAVE_MESSAGE = 'ooxml-core:collab-leave';

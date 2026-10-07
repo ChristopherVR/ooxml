@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import type { Workbook } from '../model.js';
-import { styleAt } from '../styles.js';
-import { LegacyXlsError, loadLegacyXls } from './legacy-xls.js';
+import { getCell } from '../cells';
+import type { Workbook } from '../model';
+import { styleAt } from '../styles';
+import { LegacyXlsError, loadLegacyXls } from './legacy-xls';
 
 // Real Excel 16 saves (FileFormat 56), copied from the ole2 repository where
 // test/fixtures/xls/generate-xls-fixtures.ps1 regenerates them.

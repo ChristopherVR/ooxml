@@ -1,9 +1,9 @@
-import type { PageCursor } from './page-cursor.js';
-import { adjustForWidowOrphan, widowControlEnabled } from './keep-rules.js';
-import type { ParagraphLayoutResult } from './paragraph-layout.js';
-import type { LayoutParagraph } from './input.js';
-import type { LayoutParagraphBox } from './result.js';
-import { expectDefined } from '../expect-defined.js';
+import type { PageCursor } from './page-cursor';
+import { adjustForWidowOrphan, widowControlEnabled } from './keep-rules';
+import type { ParagraphLayoutResult } from './paragraph-layout';
+import type { LayoutParagraph } from './input';
+import type { LayoutParagraphBox } from './result';
+import { expectDefined } from '../expect-defined';
 
 export interface ParagraphPlacement {
 	paragraph: LayoutParagraph;

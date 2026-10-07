@@ -2,23 +2,23 @@
 // in-cell editor, keyboard, pointer, clipboard, menus, drawings, indicators and accessibility,
 // registers the grid's `edit.*` commands and attaches the GridController to the context.
 import type { CellRange } from 'ooxml-core/xlsx';
-import { createGridClipboard } from '../clipboard.js';
+import { createGridClipboard } from '../clipboard';
 import type { EditorContext, GridController, Selection } from 'ooxml-core/xlsx/ui';
-import { CellEditor } from './cell-editor.js';
-import { ensureStyle } from './dom.js';
-import { drawingKeyDown } from './drawing-keys.js';
-import { DrawingLayer } from './drawings.js';
-import { GridA11y } from './grid-a11y.js';
-import { gridCommands } from './grid-commands.js';
-import { editorKeyDown, readyKeyDown, type KeyHost } from './grid-keys.js';
-import { openMenuAtActive, wireMenus } from './grid-menus.js';
-import { wirePointer } from './grid-pointer.js';
-import { GridSelection } from './grid-selection.js';
-import { GridView } from './grid-view.js';
-import { followLink, wireTooltips } from './indicators.js';
+import { CellEditor } from './cell-editor';
+import { ensureStyle } from './dom';
+import { drawingKeyDown } from './drawing-keys';
+import { DrawingLayer } from './drawings';
+import { GridA11y } from './grid-a11y';
+import { gridCommands } from './grid-commands';
+import { editorKeyDown, readyKeyDown, type KeyHost } from './grid-keys';
+import { openMenuAtActive, wireMenus } from './grid-menus';
+import { wirePointer } from './grid-pointer';
+import { GridSelection } from './grid-selection';
+import { GridView } from './grid-view';
+import { followLink, wireTooltips } from './indicators';
 import { selectCell } from 'ooxml-core/xlsx/ui';
-import { GRID_CSS } from './styles.js';
-import { ValidationList } from './validation-list.js';
+import { GRID_CSS } from './styles';
+import { ValidationList } from './validation-list';
 
 export { editBridge, type EditBridge, type EditMode, type EditState } from 'ooxml-core/xlsx/ui';
 

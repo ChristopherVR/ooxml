@@ -1,7 +1,7 @@
 // Maps one BIFF8 worksheet from the ole2 reader onto the workbook model: cells with cached values
 // and formula text, styles, merges, column/row sizes, view and frozen panes, hyperlinks and comments.
 import type { XlsCellValue, XlsRange, XlsSheet } from '@christophervr/ole2/legacy-excel-workbook';
-import type { CellRange } from '../address.js';
+import type { CellRange } from '../address';
 import {
 	cellError,
 	isErrorCode,
@@ -11,9 +11,9 @@ import {
 	type Hyperlink,
 	type RowInfo,
 	type Worksheet,
-} from '../model.js';
-import { createWorksheet } from '../workbook.js';
-import { mapColor } from './legacy-xls-styles.js';
+} from '../model';
+import { createWorksheet } from '../workbook';
+import { mapColor } from './legacy-xls-styles';
 
 /** Resolves a BIFF8 XF index to a model style id (0 for the default format). */
 export type StyleResolver = (xf: number) => number;

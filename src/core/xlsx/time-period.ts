@@ -1,7 +1,7 @@
 // "A Date Occurring" conditional-format periods: the formula Excel stores with the rule and a
 // direct test used by the layout evaluator.
-import type { TimePeriod } from './model.js';
-import { serialToDate } from './numfmt/date.js';
+import type { TimePeriod } from './model';
+import { serialToDate } from './numfmt/date';
 
 /** The formula Excel writes for a `timePeriod` rule whose range starts at `cell` (`A1`). */
 export function timePeriodFormula(period: TimePeriod, cell: string): string {

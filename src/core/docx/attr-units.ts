@@ -1,5 +1,5 @@
-import { roundSignedTwips, roundTwips, type SignedTwips, type Twips } from '../units/units.js';
-import type { Paragraph } from './model-paragraph.js';
+import { roundSignedTwips, roundTwips, type SignedTwips, type Twips } from '../units/units';
+import type { Paragraph } from './model-paragraph';
 
 // ProseMirror node attributes are untyped, so measurements cross into the branded model here:
 // values are rounded to whole twips, and anything that is not a finite number (or is negative

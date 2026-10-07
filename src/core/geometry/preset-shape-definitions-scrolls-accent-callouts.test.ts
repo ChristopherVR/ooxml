@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SCROLLS_ACCENT_CALLOUTS_PRESET_DEFINITIONS } from './preset-shape-definitions-scrolls-accent-callouts.js';
+import { SCROLLS_ACCENT_CALLOUTS_PRESET_DEFINITIONS } from './preset-shape-definitions-scrolls-accent-callouts';
 
 const REQUIRED_SHAPES = [
 	'verticalScroll',

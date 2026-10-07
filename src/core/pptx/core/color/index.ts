@@ -18,9 +18,9 @@ export {
 	rgbToHsl,
 	hslToRgb,
 	toHex,
-} from '../../../color/color-primitives.js';
+} from '../../../color/color-primitives';
 
-export type { HslColor } from '../../../color/color-primitives.js';
+export type { HslColor } from '../../../color/color-primitives';
 
 export { applyDrawingColorTransforms } from './color-transforms';
 

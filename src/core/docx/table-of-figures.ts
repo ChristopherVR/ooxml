@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Tables of figures are `TOC \c "Label"` fields whose entries are the captions numbered by a
 // matching `SEQ Label` field.
-import type { DocumentModel, Paragraph } from './model.js';
+import type { DocumentModel, Paragraph } from './model';
 
 /** The caption label a TOC instruction collects (`\c "Figure"`), or undefined for a heading TOC. */
 export function tocCaptionLabel(instruction: string): string | undefined {

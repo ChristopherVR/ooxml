@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CONNECTORS_BRACKETS_PRESET_DEFINITIONS } from './preset-shape-definitions-connectors-brackets.js';
+import { CONNECTORS_BRACKETS_PRESET_DEFINITIONS } from './preset-shape-definitions-connectors-brackets';
 
 const REQUIRED_SHAPES = [
 	'curvedConnector2',

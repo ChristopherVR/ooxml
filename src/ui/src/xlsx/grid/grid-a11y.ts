@@ -2,8 +2,8 @@
 // value) and a polite live region announcing selection changes.
 import { formatAddress, MAX_COL, MAX_ROW } from 'ooxml-core/xlsx';
 import type { Selection } from 'ooxml-core/xlsx/ui';
-import { h } from './dom.js';
-import type { GridView } from './grid-view.js';
+import { h } from './dom';
+import type { GridView } from './grid-view';
 import { selectionCellCount, selectionRef } from 'ooxml-core/xlsx/ui';
 
 export function describeSelection(view: GridView, selection: Selection): string {

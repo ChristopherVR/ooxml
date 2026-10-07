@@ -1,5 +1,5 @@
-import type { CellAddress, CellRange } from './address.js';
-import type { Cell, CellValue, Worksheet } from './model.js';
+import type { CellAddress, CellRange } from './address';
+import type { Cell, CellValue, Worksheet } from './model';
 
 /** The cell at a position, or `undefined` for an empty one. */
 export const getCell = (sheet: Worksheet, row: number, col: number): Cell | undefined =>

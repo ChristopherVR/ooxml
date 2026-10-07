@@ -1,6 +1,6 @@
 // Cell metadata (`xl/metadata.xml`): which `cm` indices mark dynamic-array formulas.
-import { elements, parseXml, type XmlElement } from '../../xml/index.js';
-import { att } from './xml-util.js';
+import { elements, parseXml, type XmlElement } from '../../xml/index';
+import { att } from './xml-util';
 
 /** The `metadataType` name Excel uses for dynamic-array properties. */
 export const DYNAMIC_ARRAY_TYPE = 'XLDAPR';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { miniPackage, roundTrip, ws } from './mini-package-fixtures.js';
+import { miniPackage, roundTrip, ws } from './mini-package-fixtures';
 
 const ROWS =
 	'<row r="1"><c r="A1"><v>1</v></c></row><row r="2"><c r="A2"><v>2</v></c></row><row r="3"><c r="A3"><v>3</v></c></row>';

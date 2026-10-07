@@ -8,11 +8,11 @@ import {
 	first,
 	parseXml,
 	type XmlElement,
-} from '../../xml/index.js';
-import type { ChartObject } from '../model.js';
-import { parseChart } from '../read/chart.js';
-import { chartXml, patchChartReferences } from './chart.js';
-import { escapeText } from './xml-out.js';
+} from '../../xml/index';
+import type { ChartObject } from '../model';
+import { parseChart } from '../read/chart';
+import { chartXml, patchChartReferences } from './chart';
+import { escapeText } from './xml-out';
 import { patchChartColors } from './chart-colors';
 
 type Doc = ReturnType<typeof parseXml>;

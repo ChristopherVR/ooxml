@@ -10,9 +10,9 @@ import {
 	normalizeRange,
 	rangesIntersect,
 	usedRange,
-} from '../../index.js';
-import type { EditorContext } from '../context.js';
-import { target } from './util.js';
+} from '../../index';
+import type { EditorContext } from '../context';
+import { target } from './util';
 
 export type SpecialKind =
 	| 'formulas'

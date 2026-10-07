@@ -1,7 +1,7 @@
-import { ERR, fail } from '../values.js';
-import { collectNumbers, num, numeric, spec } from './helpers.js';
-import { domain } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail } from '../values';
+import { collectNumbers, num, numeric, spec } from './helpers';
+import { domain } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Math & Trig';
 

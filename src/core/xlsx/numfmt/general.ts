@@ -1,4 +1,4 @@
-import { type Digits, plain, roundDecimals, roundSignificant, toDigits } from './decimal.js';
+import { type Digits, plain, roundDecimals, roundSignificant, toDigits } from './decimal';
 
 /** Width Excel's General format fits a number into (sign excluded). */
 const GENERAL_WIDTH = 11;

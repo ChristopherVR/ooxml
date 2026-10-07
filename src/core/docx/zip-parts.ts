@@ -1,10 +1,10 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Minimal string-level surgery for OPC package plumbing, used only to create parts (settings.xml,
 // comments.xml...) that a source package may lack. The generic helpers are in `ooxml-opc`.
-import { ensureRelationship } from '../opc/index.js';
+import { ensureRelationship } from '../opc/index';
 import type JSZip from 'jszip';
 
-export { ensureContentTypeOverride } from '../opc/index.js';
+export { ensureContentTypeOverride } from '../opc/index';
 
 const DOCUMENT_RELS_PATH = 'word/_rels/document.xml.rels';
 

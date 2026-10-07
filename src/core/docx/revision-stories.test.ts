@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { acceptAllRevisions, listRevisions, rejectAllRevisions } from './revision-commands.js';
-import { documentBlockLists } from './document-paragraphs.js';
-import type { DocumentModel, Paragraph } from './model.js';
+import { loadDocx } from './parse';
+import { acceptAllRevisions, listRevisions, rejectAllRevisions } from './revision-commands';
+import { documentBlockLists } from './document-paragraphs';
+import type { DocumentModel, Paragraph } from './model';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

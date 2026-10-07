@@ -1,17 +1,17 @@
 // The calc engine's view of the workbook: formula nodes, cell reads that compute pending
 // formulas on demand, and the dependency indexes.
-import { cellKey, type CellRange, normalizeRange } from '../address.js';
-import type { Cell, Workbook } from '../model.js';
-import { FormulaError, type FormulaAst } from './ast.js';
-import type { EvalHost } from './context.js';
-import type { CalcEngineOptions } from './engine-types.js';
-import type { FormulaOrder } from './engine-order.js';
-import { analyze, type FormulaNode } from './graph.js';
-import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index.js';
-import { parseFormula } from './parser.js';
-import { scanRange, sheetBounds } from './sheet-scan.js';
-import { clearFootprint, isSpilledCell } from './spill.js';
-import { type Area, err, Matrix, type Scalar } from './values.js';
+import { cellKey, type CellRange, normalizeRange } from '../address';
+import type { Cell, Workbook } from '../model';
+import { FormulaError, type FormulaAst } from './ast';
+import type { EvalHost } from './context';
+import type { CalcEngineOptions } from './engine-types';
+import type { FormulaOrder } from './engine-order';
+import { analyze, type FormulaNode } from './graph';
+import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index';
+import { parseFormula } from './parser';
+import { scanRange, sheetBounds } from './sheet-scan';
+import { clearFootprint, isSpilledCell } from './spill';
+import { type Area, err, Matrix, type Scalar } from './values';
 
 /**
  * Thrown to unwind evaluation when formulas computed on demand nest too deeply (a long chain of

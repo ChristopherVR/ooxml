@@ -1,10 +1,10 @@
-import { deleteCell, getCell, putCell } from '../cells.js';
-import type { Cell, Workbook } from '../model.js';
-import { internStyle, styleAt } from '../styles.js';
-import { clearContents } from './cell-values.js';
-import { ensureCell, pruneCell, type sheetAt } from './context.js';
-import type { ClipboardCell, PasteMode, PasteOperation } from './types.js';
-import { pasteArithmetic } from './paste-arithmetic.js';
+import { deleteCell, getCell, putCell } from '../cells';
+import type { Cell, Workbook } from '../model';
+import { internStyle, styleAt } from '../styles';
+import { clearContents } from './cell-values';
+import { ensureCell, pruneCell, type sheetAt } from './context';
+import type { ClipboardCell, PasteMode, PasteOperation } from './types';
+import { pasteArithmetic } from './paste-arithmetic';
 export function writeClip(
 	workbook: Workbook,
 	sheet: ReturnType<typeof sheetAt>,

@@ -1,6 +1,6 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values.js';
-import { bool, int, num, optNum, scalar, spec } from './helpers.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values';
+import { bool, int, num, optNum, scalar, spec } from './helpers';
 import {
 	findAscending,
 	findDescending,
@@ -9,9 +9,9 @@ import {
 	shape,
 	vectorOf,
 	xsearch,
-} from './lookup-core.js';
-import { REFERENCE_FUNCTIONS } from './reference.js';
-import type { FunctionSpec } from './types.js';
+} from './lookup-core';
+import { REFERENCE_FUNCTIONS } from './reference';
+import type { FunctionSpec } from './types';
 
 const C = 'Lookup & Reference';
 

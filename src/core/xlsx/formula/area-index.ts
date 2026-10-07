@@ -1,7 +1,7 @@
 // A spatial index of sheet areas: which items (dependent formulas, spill footprints) cover a cell
 // or range, without scanning every item per lookup.
-import { cellKey, type CellRange, keyToAddress, rangesIntersect } from '../address.js';
-import type { Area } from './values.js';
+import { cellKey, type CellRange, keyToAddress, rangesIntersect } from '../address';
+import type { Area } from './values';
 
 interface Entry<T> {
 	range: CellRange;

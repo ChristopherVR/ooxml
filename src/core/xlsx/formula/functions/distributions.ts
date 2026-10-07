@@ -1,4 +1,4 @@
-import { ERR, fail } from '../values.js';
+import { ERR, fail } from '../values';
 import {
 	binomDist,
 	erf,
@@ -12,12 +12,12 @@ import {
 	positive,
 	probability,
 	tCdf,
-} from './dist-core.js';
-import { numeric } from './helpers.js';
-import { gammaLn } from './stats-core.js';
-import type { FunctionSpec } from './types.js';
-import { DISTRIBUTION_F } from './distributions-f.js';
-import { DISTRIBUTION_MORE } from './distributions-more.js';
+} from './dist-core';
+import { numeric } from './helpers';
+import { gammaLn } from './stats-core';
+import type { FunctionSpec } from './types';
+import { DISTRIBUTION_F } from './distributions-f';
+import { DISTRIBUTION_MORE } from './distributions-more';
 
 const C = 'Statistical';
 

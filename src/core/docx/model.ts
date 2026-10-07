@@ -1,26 +1,26 @@
-import type { DocumentProperties } from './core-properties.js';
+import type { DocumentProperties } from './core-properties';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { defaultStyleCatalogs } from './default-styles.js';
-import type { StJcTable, StNumberFormat } from './generated/wml-simple-types.js';
-import type { ParagraphStyleCatalog } from './model-paragraph.js';
-import type { NumberingCatalog } from './numbering-model.js';
-import type { SignedTwips, Twips } from './units.js';
-export type { Revision, TextRun } from './model-run.js';
+import { defaultStyleCatalogs } from './default-styles';
+import type { StJcTable, StNumberFormat } from './generated/wml-simple-types';
+import type { ParagraphStyleCatalog } from './model-paragraph';
+import type { NumberingCatalog } from './numbering-model';
+import type { SignedTwips, Twips } from './units';
+export type { Revision, TextRun } from './model-run';
 export type {
 	Paragraph,
 	ParagraphFormatting,
 	ParagraphStyleCatalog,
 	ParagraphStyleDefinition,
 	TabStop,
-} from './model-paragraph.js';
-import type { Paragraph } from './model-paragraph.js';
+} from './model-paragraph';
+import type { Paragraph } from './model-paragraph';
 export type {
 	HyperlinkInfo,
 	InlineImage,
 	PicturePlacement,
 	WatermarkSpec,
-} from './inline-model.js';
-import type { Note, SectionProperties } from './section-model.js';
+} from './inline-model';
+import type { Note, SectionProperties } from './section-model';
 export type {
 	HeaderFooterContent,
 	HeaderFooterSlots,
@@ -32,7 +32,7 @@ export type {
 	SectionColumns,
 	SectionPageNumbering,
 	SectionProperties,
-} from './section-model.js';
+} from './section-model';
 /** A comment thread entry parsed from comments.xml / commentsExtended.xml. */
 export interface Comment {
 	id: string;
@@ -54,13 +54,13 @@ export type {
 	ThemeFontScript,
 	ThemeFontRole,
 	WordUnderlineStyle,
-} from './theme-model.js';
+} from './theme-model';
 export type {
 	RunFormatting,
 	CharacterStyleDefinition,
 	RunStyleCatalog,
-} from './run-style-model.js';
-import type { RunStyleCatalog } from './run-style-model.js';
+} from './run-style-model';
+import type { RunStyleCatalog } from './run-style-model';
 export type {
 	TableBorderSide,
 	TableBorders,
@@ -71,8 +71,8 @@ export type {
 	TableStyleConditionalFormatting,
 	TableStyleDefinition,
 	TableStyleCatalog,
-} from './table-model.js';
-import type { TableCell as TableCellShape, TableStyleCatalog } from './table-model.js';
+} from './table-model';
+import type { TableCell as TableCellShape, TableStyleCatalog } from './table-model';
 
 export type TableCell = TableCellShape;
 export interface Table {
@@ -88,14 +88,14 @@ export interface Table {
 	/** The exact `w:tblPr/w:jc` value (`ST_JcTable`, including `start`/`end`); `alignment` is derived from it. */
 	justification?: StJcTable;
 	indentTwips?: SignedTwips;
-	borders?: import('./table-model.js').TableBorders;
+	borders?: import('./table-model').TableBorders;
 	/** `w:tblStyle/@w:val`; conditional formatting resolves through `tableStyles` without flattening. */
 	style?: string;
-	look?: import('./table-model.js').TableLook;
+	look?: import('./table-model').TableLook;
 	/** Default cell margins (`w:tblCellMar`); cells' own `w:tcMar` override them. */
-	cellMargins?: import('./table-model.js').TableCellMargins;
+	cellMargins?: import('./table-model').TableCellMargins;
 	/** Per-row properties, parallel to `rows` (read from `w:trPr`; preserved on save). */
-	rowProperties?: import('./table-model.js').TableRowProperties[];
+	rowProperties?: import('./table-model').TableRowProperties[];
 }
 export type Block = Paragraph | Table;
 export interface DocumentModel {
@@ -142,7 +142,7 @@ export interface DocumentModel {
 	/** Source table style catalog; editing the catalog itself is not supported. */
 	tableStyles?: TableStyleCatalog;
 	/** Parsed word/theme/theme1.xml and settings.xml color scheme mapping. */
-	theme?: import('./theme-model.js').ThemeCatalog;
+	theme?: import('./theme-model').ThemeCatalog;
 }
 /** Bytes for a media part staged for save but not yet part of the loaded package (e.g. a newly inserted picture). */
 export interface PendingMediaPart {

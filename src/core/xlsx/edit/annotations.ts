@@ -1,12 +1,12 @@
-import { type CellAddress, type CellRange, normalizeRange, rangesIntersect } from '../address.js';
-import { getCell } from '../cells.js';
-import type { ConditionalFormat, DataValidation, Hyperlink } from '../model.js';
-import { writeValue } from './cell-values.js';
-import { type EditContext, sheetAt } from './context.js';
-import { patchRange } from './format.js';
-import { removeValidationArea } from './validation-ranges.js';
-import { removeConditionalArea } from './clipboard-conditional.js';
-import { renumber, rulesByPriority } from './conditional-formats.js';
+import { type CellAddress, type CellRange, normalizeRange, rangesIntersect } from '../address';
+import { getCell } from '../cells';
+import type { ConditionalFormat, DataValidation, Hyperlink } from '../model';
+import { writeValue } from './cell-values';
+import { type EditContext, sheetAt } from './context';
+import { patchRange } from './format';
+import { removeValidationArea } from './validation-ranges';
+import { removeConditionalArea } from './clipboard-conditional';
+import { renumber, rulesByPriority } from './conditional-formats';
 
 /** Adds, replaces or (with `text` undefined) removes the comment on a cell. */
 export function setComment(

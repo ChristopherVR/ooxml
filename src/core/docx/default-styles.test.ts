@@ -1,8 +1,8 @@
-import { twips } from './units.js';
+import { twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx } from './index.js';
-import { must } from './test-support/access.js';
+import { createDocument, loadDocx, saveDocx } from './index';
+import { must } from './test-support/access';
 
 describe('new document styles', () => {
 	it("gives new documents Word's modern defaults and saves them in styles.xml", async () => {

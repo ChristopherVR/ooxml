@@ -1,12 +1,12 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { createEditSession } from '../edit/session.js';
-import { createCalcEngine } from '../formula/engine.js';
-import { isSpilledCell } from '../formula/spill.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from './index.js';
+import { getCell } from '../cells';
+import { createEditSession } from '../edit/session';
+import { createCalcEngine } from '../formula/engine';
+import { isSpilledCell } from '../formula/spill';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from './index';
 
 const part = async (bytes: Uint8Array, name: string): Promise<string> =>
 	(await (await JSZip.loadAsync(bytes)).file(name)?.async('string')) ?? '';

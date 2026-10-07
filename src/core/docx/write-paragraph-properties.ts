@@ -1,6 +1,6 @@
-import type { Paragraph } from './model.js';
-import { writeParagraphDecoration } from './write-paragraph-decoration.js';
-import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
+import type { Paragraph } from './model';
+import { writeParagraphDecoration } from './write-paragraph-decoration';
+import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);

@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Text watermarks: the VML `PowerPlusWaterMarkObject` shape Word puts in a header paragraph.
-import type { InlineImage, WatermarkSpec } from './inline-model.js';
-import { makeNS, makeW, type XmlDocument, type XmlElement } from './xml.js';
+import type { InlineImage, WatermarkSpec } from './inline-model';
+import { makeNS, makeW, type XmlDocument, type XmlElement } from './xml';
 
 const VML_NS = 'urn:schemas-microsoft-com:vml';
 const OFFICE_NS = 'urn:schemas-microsoft-com:office:office';

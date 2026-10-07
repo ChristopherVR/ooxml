@@ -1,9 +1,9 @@
-import { ERR, fail } from '../values.js';
-import { betaI, chiCdf, invert, positive, probability, tCdf, tPdf } from './dist-core.js';
-import { numeric } from './helpers.js';
-import { combin } from './math.js';
-import { gammaLn } from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+import { ERR, fail } from '../values';
+import { betaI, chiCdf, invert, positive, probability, tCdf, tPdf } from './dist-core';
+import { numeric } from './helpers';
+import { combin } from './math';
+import { gammaLn } from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Statistical';
 

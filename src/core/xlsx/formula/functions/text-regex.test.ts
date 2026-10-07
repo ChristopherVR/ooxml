@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calc, E } from '../test-helpers.js';
+import { calc, E } from '../test-helpers';
 
 describe('ENCODEURL', () => {
 	it('encodes like Microsoft documents it', () => {

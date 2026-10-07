@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, parseParagraphStyleCatalog, resolveParagraphFormatting } from './index.js';
-import { at, expectParagraph, must } from './test-support/access.js';
+import { loadDocx, parseParagraphStyleCatalog, resolveParagraphFormatting } from './index';
+import { at, expectParagraph, must } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const stylesXml = `<w:styles xmlns:w="${ns}">

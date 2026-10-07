@@ -1,5 +1,5 @@
-import type { Block } from '../index.js';
-import type { LayoutBlock } from './input.js';
+import type { Block } from '../index';
+import type { LayoutBlock } from './input';
 
 /**
  * Print Layout has no text frames, so a drop cap paragraph (`w:framePr w:dropCap`) is folded into

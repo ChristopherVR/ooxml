@@ -3,7 +3,7 @@
 // here knows about ProseMirror: a message is `{ clientId, sequence | version, fingerprint }`.
 // Extracted from docx-viewer `collaboration.ts` / `collaboration-protocol.ts` / `presence.ts`;
 // see PROVENANCE.md.
-import { isNonNegativeSafeInteger } from './validation.js';
+import { isNonNegativeSafeInteger } from './validation';
 
 export type OrderingStatus = 'apply' | 'duplicate' | 'stale' | 'out-of-order' | 'invalid';
 

@@ -1,10 +1,10 @@
 // Formulas tab: Insert Function, the Function Library category menus (from the core
 // FUNCTION_CATALOG), Defined Names, Show Formulas and Calculation.
-import { FUNCTION_CATALOG, type FunctionInfo } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { editing, refresh, target, viewing } from './util.js';
+import { FUNCTION_CATALOG, type FunctionInfo } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { editing, refresh, target, viewing } from './util';
 
 /** Function Library menus: [menu label, catalog category]. */
 export const FUNCTION_MENUS: ReadonlyArray<

@@ -1,4 +1,4 @@
-import type { ChartPptxElement } from '../../index.js';
+import type { ChartPptxElement } from '../../index';
 
 /**
  * Compute the running cumulative-percentage-of-total for a list of values, in

@@ -1,8 +1,8 @@
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, type Scalar, type Value } from '../values.js';
-import { makeCriteria, scalar, spec } from './helpers.js';
-import * as S from './stats-core.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, type Scalar, type Value } from '../values';
+import { makeCriteria, scalar, spec } from './helpers';
+import * as S from './stats-core';
+import type { FunctionSpec } from './types';
 
 const C = 'Database';
 

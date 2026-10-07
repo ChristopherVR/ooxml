@@ -1,7 +1,7 @@
 // Fits with closed-form answers (derived by hand and checked in the comments), plus the
 // documented LINEST example {1,9,5,7} against {0,4,2,3}, which is y = 2x + 1.
 import { describe, expect, it } from 'vitest';
-import { calc, calcArray, E } from '../test-helpers.js';
+import { calc, calcArray, E } from '../test-helpers';
 
 const cells = (name: string, values: number[]) =>
 	Object.fromEntries(values.map((v, i) => [`${name}${i + 1}`, v]));

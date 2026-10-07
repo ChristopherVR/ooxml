@@ -2,11 +2,11 @@
 // Writes section edits: page size/orientation, margins, columns and break type for changed
 // sections, new section breaks (a paragraph-level w:sectPr copied from the following section,
 // as Word does) and removed breaks. Other section properties stay protected.
-import type { Block, HeaderFooterSlots, SectionProperties } from './model.js';
-import { patchPageBorders } from './page-borders.js';
-import { orderSectionProperties } from './element-order.js';
-import { orderParagraphProperties } from './tab-stops.js';
-import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { Block, HeaderFooterSlots, SectionProperties } from './model';
+import { patchPageBorders } from './page-borders';
+import { orderSectionProperties } from './element-order';
+import { orderParagraphProperties } from './tab-stops';
+import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 /** Section properties this writer can change; any other difference is rejected. */
 const WRITABLE = new Set([

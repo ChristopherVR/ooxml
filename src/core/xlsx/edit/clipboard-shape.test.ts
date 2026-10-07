@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { parseAddress, parseRange } from '../address.js';
-import { getCell } from '../cells.js';
-import { styleAt } from '../styles.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
-import { parseTsv } from './clipboard-text.js';
-import { parseHtmlTable } from './clipboard-html-parse.js';
+import { parseAddress, parseRange } from '../address';
+import { getCell } from '../cells';
+import { styleAt } from '../styles';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
+import { parseTsv } from './clipboard-text';
+import { parseHtmlTable } from './clipboard-html-parse';
 
 const range = (ref: string) => {
 	const result = parseRange(ref);

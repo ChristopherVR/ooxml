@@ -1,13 +1,13 @@
-import type { ChartPptxElement, PptxChartUserShape } from '../../index.js';
+import type { ChartPptxElement, PptxChartUserShape } from '../../index';
 import {
 	addChartUserShape,
 	listChartUserShapes,
 	removeChartUserShape,
 	updateChartUserShape,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 /**
  * Chart drawing-overlay (`c:userShapes`) tools (C2-G10 edit/serialize

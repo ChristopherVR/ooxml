@@ -6,8 +6,8 @@ import {
 	MAX_ROW,
 	pixelsToColumnWidth,
 } from 'ooxml-core/xlsx';
-import { h, place } from './dom.js';
-import type { GridView } from './grid-view.js';
+import { h, place } from './dom';
+import type { GridView } from './grid-view';
 
 /** The indices a resize applies to: every fully selected row/column when `index` is one of them. */
 export function resizeTargets(view: GridView, axis: 'row' | 'col', index: number): number[] {

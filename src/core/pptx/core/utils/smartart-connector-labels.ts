@@ -14,7 +14,7 @@
  * @module smartart-connector-labels
  */
 
-import { collectTransitionText } from '../../../diagram/index.js';
+import { collectTransitionText } from '../../../diagram/index';
 import type { PptxSmartArtConnection, XmlObject } from '../types';
 
 type LocalName = (key: string) => string;

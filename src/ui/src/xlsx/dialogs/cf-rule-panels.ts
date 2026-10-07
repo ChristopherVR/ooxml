@@ -6,8 +6,8 @@ import type {
 	DifferentialStyle,
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { OPERATORS, TIME_PERIOD_LABELS, operand, operandText } from './cf-common.js';
-import { checkbox, el, field, numberInput, row, select, textInput } from './fields.js';
+import { OPERATORS, TIME_PERIOD_LABELS, operand, operandText } from './cf-common';
+import { checkbox, el, field, numberInput, row, select, textInput } from './fields';
 
 export type PanelRead =
 	| ConditionalRule

@@ -1,4 +1,4 @@
-import { createDocument } from './model.js';
+import { createDocument } from './model';
 import { describe, expect, it } from 'vitest';
 import {
 	changeColumnGap,
@@ -8,8 +8,8 @@ import {
 	equalColumnDraft,
 	unequalColumnPreset,
 	validColumnDraft,
-} from './column-settings.js';
-import { sectionsOf } from './section-layout.js';
+} from './column-settings';
+import { sectionsOf } from './section-layout';
 
 describe('column settings', () => {
 	it('creates inverse Left/Right presets with exact twip totals', () => {

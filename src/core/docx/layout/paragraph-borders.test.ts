@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, type Paragraph } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import { layoutDocument } from './layout.js';
-import type { LayoutParagraph } from './input.js';
-import type { LayoutParagraphBox } from './result.js';
-import type { TextMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+import { loadDocx, type Paragraph } from '../index';
+import { adaptDocumentModel } from './adapter';
+import { layoutDocument } from './layout';
+import type { LayoutParagraph } from './input';
+import type { LayoutParagraphBox } from './result';
+import type { TextMeasurer } from './measure';
+import { at } from './test-helpers';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };

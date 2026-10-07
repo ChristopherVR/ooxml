@@ -1,6 +1,6 @@
 // Resolves a layout family from a layout definition's unique id and gallery categories.
 // Extracted from `pptx/core/core/runtime/smartart-layout-category.ts`.
-import type { DiagramLayoutType } from './types.js';
+import type { DiagramLayoutType } from './types';
 
 /** Canonical `dgm:cat/@type` values that map 1:1 onto layout families. */
 const CATEGORY_FAMILY: Record<string, DiagramLayoutType> = {

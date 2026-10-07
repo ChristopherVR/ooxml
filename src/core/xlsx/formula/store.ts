@@ -1,16 +1,16 @@
 // Writing a formula's result into the sheet: plain values, CSE array ranges, or spills.
-import { type CellAddress, MAX_COL, MAX_ROW } from '../address.js';
-import type { Cell, Worksheet } from '../model.js';
-import { sameRange } from './engine-util.js';
-import type { FormulaNode } from './graph.js';
+import { type CellAddress, MAX_COL, MAX_ROW } from '../address';
+import type { Cell, Worksheet } from '../model';
+import { sameRange } from './engine-util';
+import type { FormulaNode } from './graph';
 import {
 	clearFootprint,
 	fillArrayRange,
 	footprintFor,
 	footprintFree,
 	writeFootprint,
-} from './spill.js';
-import { ERR, Matrix, type Scalar } from './values.js';
+} from './spill';
+import { ERR, Matrix, type Scalar } from './values';
 
 /**
  * Stores `result` for `node`: a CSE formula fills its array range, an array result spills into

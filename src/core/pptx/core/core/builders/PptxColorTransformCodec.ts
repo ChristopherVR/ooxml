@@ -3,7 +3,7 @@ import {
 	parseDrawingFraction,
 	parseDrawingHueDegrees,
 	scrgbLinearToSrgb8,
-} from '../../../../color/color-primitives.js';
+} from '../../../../color/color-primitives';
 import { applyDrawingColorTransforms } from '../../color/color-transforms';
 import { PRESET_COLOR_MAP, SYSTEM_COLOR_MAP } from '../../constants';
 import type { XmlObject } from '../../types';

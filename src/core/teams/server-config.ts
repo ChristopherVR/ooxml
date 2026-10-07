@@ -3,7 +3,7 @@
 // runs "local" (tabs of one browser over BroadcastChannel). Input is untrusted (a settings form, a
 // URL fragment, a JSON file), so it is validated and every problem is reported, never thrown.
 // New code.
-import type { IceServer } from './peer.js';
+import type { IceServer } from './peer';
 
 export type ServerMode = 'local' | 'server';
 

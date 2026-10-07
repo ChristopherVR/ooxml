@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { loadDocx, saveDocx } from './index.js';
-import { expectParagraph } from './test-support/access.js';
-import { first, getW, parseXml, WORD_NS } from './xml.js';
+import { loadDocx, saveDocx } from './index';
+import { expectParagraph } from './test-support/access';
+import { first, getW, parseXml, WORD_NS } from './xml';
 
 async function fixture() {
 	const zip = new JSZip();

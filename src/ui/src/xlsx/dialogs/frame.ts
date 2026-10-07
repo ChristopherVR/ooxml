@@ -3,8 +3,8 @@
 // resolves with the dialog's result or undefined when it is cancelled.
 import { defineDialog } from '../../index';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { dialogHost } from './host.js';
-import { DIALOG_CSS } from './styles.js';
+import { dialogHost } from './host';
+import { DIALOG_CSS } from './styles';
 
 export interface DialogSpec<T> {
 	/** English heading (translated here). */

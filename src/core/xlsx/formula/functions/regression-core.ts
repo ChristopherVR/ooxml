@@ -1,5 +1,5 @@
-import { ERR, fail } from '../values.js';
-import { eliminate } from './matrix.js';
+import { ERR, fail } from '../values';
+import { eliminate } from './matrix';
 
 /** The least-squares fit of `y` on the columns of `x` (observations are rows). */
 export interface Fit {

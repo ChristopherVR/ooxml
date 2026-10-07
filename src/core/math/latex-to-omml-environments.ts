@@ -5,15 +5,15 @@
  * pre-scripts. Every construct the `omml-to-mathml` renderer understands has a
  * LaTeX spelling here so `omml-to-latex` can round-trip it losslessly.
  */
-import { EQARR_ENVS, MATRIX_ENVS } from './latex-omml-symbols.js';
-import type { LatexParserContext } from './latex-to-omml-constructs.js';
+import { EQARR_ENVS, MATRIX_ENVS } from './latex-omml-symbols';
+import type { LatexParserContext } from './latex-to-omml-constructs';
 import {
 	applyScripts,
 	parseFuncApplication,
 	parseScriptArgs,
 	parseTextArgument,
-} from './latex-to-omml-constructs.js';
-import type { OmmlNode } from './omml-to-mathml.js';
+} from './latex-to-omml-constructs';
+import type { OmmlNode } from './omml-to-mathml';
 
 function valNode(value: string): OmmlNode {
 	return { '@_val': value } as unknown as OmmlNode;

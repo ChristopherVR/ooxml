@@ -1,10 +1,10 @@
 // Shared fixtures for the formula tests (not part of the public API).
-import { parseAddress, parseRange } from '../address.js';
-import { getCell, putCell } from '../cells.js';
-import type { CellValue, Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { type CalcEngine, createCalcEngine } from './engine.js';
-import { err } from './values.js';
+import { parseAddress, parseRange } from '../address';
+import { getCell, putCell } from '../cells';
+import type { CellValue, Workbook } from '../model';
+import { createWorkbook } from '../workbook';
+import { type CalcEngine, createCalcEngine } from './engine';
+import { err } from './values';
 
 export type CellSpec = CellValue | `=${string}`;
 

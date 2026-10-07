@@ -1,7 +1,7 @@
-import { PptxMarkdownConverter } from '../../index.js';
-import type { PptxConverterOptions } from '../../index.js';
+import { PptxMarkdownConverter } from '../../index';
+import type { PptxConverterOptions } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 export interface ConvertToMarkdownParams {
 	outputDir?: string;

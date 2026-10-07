@@ -3,15 +3,15 @@
 import { nextSheetName } from 'ooxml-core/xlsx';
 import { sheetBaseName } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { openContextMenu, tabMenu } from '../context-menu/index.js';
-import { ensureStyle, h } from '../grid/dom.js';
-import { wireTabDrag } from './drag.js';
-import { startRename, type RenameHandle } from './rename.js';
-import { renderTabs, sheetOf, tabFor, visibleSheetIndices } from './render.js';
-import { TABS_CSS } from './styles.js';
+import { openContextMenu, tabMenu } from '../context-menu/index';
+import { ensureStyle, h } from '../grid/dom';
+import { wireTabDrag } from './drag';
+import { startRename, type RenameHandle } from './rename';
+import { renderTabs, sheetOf, tabFor, visibleSheetIndices } from './render';
+import { TABS_CSS } from './styles';
 
-export { dropTarget, slotAt } from './drag.js';
-export { visibleSheetIndices } from './render.js';
+export { dropTarget, slotAt } from './drag';
+export { visibleSheetIndices } from './render';
 
 export function mountSheetTabs(ctx: EditorContext, container: HTMLElement): () => void {
 	const doc = container.ownerDocument;

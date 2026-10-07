@@ -1,12 +1,12 @@
 // Home > Alignment: vertical and horizontal alignment, orientation, wrap text, indent and the
 // merge variants. Checked state reflects the active cell.
-import type { HorizontalAlignment, MergeMode, VerticalAlignment } from '../../index.js';
-import { mergeWouldDiscard, rangesIntersect } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { style } from './font.js';
-import { icon } from './icons.js';
-import { UNSET, activeStyle, editing, target } from './util.js';
+import type { HorizontalAlignment, MergeMode, VerticalAlignment } from '../../index';
+import { mergeWouldDiscard, rangesIntersect } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { style } from './font';
+import { icon } from './icons';
+import { UNSET, activeStyle, editing, target } from './util';
 
 const vertical = (ctx: EditorContext): VerticalAlignment =>
 	activeStyle(ctx)?.alignment?.vertical ?? 'bottom';

@@ -1,11 +1,11 @@
-import type { DocumentModel } from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import { layoutSections } from './page-flow.js';
-import { FLOAT_WRAP_NOTE, positionFloats } from './floats.js';
-import { sameExclusions, wrapExclusions } from './wrap.js';
-import type { LayoutDocumentInput } from './input.js';
-import type { LayoutResult } from './result.js';
-import type { TextMeasurer } from './measure.js';
+import type { DocumentModel } from '../index';
+import { adaptDocumentModel } from './adapter';
+import { layoutSections } from './page-flow';
+import { FLOAT_WRAP_NOTE, positionFloats } from './floats';
+import { sameExclusions, wrapExclusions } from './wrap';
+import type { LayoutDocumentInput } from './input';
+import type { LayoutResult } from './result';
+import type { TextMeasurer } from './measure';
 
 /** Paginates an engine-native `LayoutDocumentInput` (bypasses the DocumentModel adapter). */
 export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasurer): LayoutResult {

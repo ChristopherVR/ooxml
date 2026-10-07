@@ -2,19 +2,19 @@
 // Writes relationships added while applying edits to one package part (the document, a header,
 // a footer or a notes part), plus the bytes and content types of newly inserted media.
 import type JSZip from 'jszip';
-import type { PendingMediaPart } from './model.js';
+import type { PendingMediaPart } from './model';
 import {
 	buildRelationshipsXml,
 	ensureContentTypeDefault,
 	parseRelationships,
-} from './package-parts.js';
+} from './package-parts';
 import {
 	RelationshipAllocator,
 	scanUsedRelationshipIds,
 	type NewRelationship,
-} from './relationship-allocator.js';
-import type { DocPrIdAllocator } from './docpr-ids.js';
-import type { XmlDocument } from './xml.js';
+} from './relationship-allocator';
+import type { DocPrIdAllocator } from './docpr-ids';
+import type { XmlDocument } from './xml';
 
 const CONTENT_TYPES_PART = '[Content_Types].xml';
 const extensionOf = (partName: string): string => partName.split('.').pop()?.toLowerCase() ?? '';

@@ -1,15 +1,15 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { ParagraphBorders, TableBorderSide, TableBorders } from './table-model.js';
-import type { ThemeColorToken } from './theme-model.js';
-import { isStBorder, isStThemeColor } from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
+import type { ParagraphBorders, TableBorderSide, TableBorders } from './table-model';
+import type { ThemeColorToken } from './theme-model';
+import { isStBorder, isStThemeColor } from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
 import {
 	parseEighthPoints,
 	parseRgbColor,
 	parseTintShade,
 	parseUnsignedInteger,
-} from './simple-types.js';
-import { first, getW, type XmlElement } from './xml.js';
+} from './simple-types';
+import { first, getW, type XmlElement } from './xml';
 
 const SIDES = [
 	'top',

@@ -14,7 +14,7 @@ import {
 	select,
 	text,
 	textInput,
-} from './fields.js';
+} from './fields';
 
 export interface SetupTab {
 	panel: HTMLElement;

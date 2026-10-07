@@ -7,7 +7,7 @@
  *
  * @module geometry/shape-boolean-types
  */
-import { at } from './indexed.js';
+import { at } from './indexed';
 
 // ---------------------------------------------------------------------------
 // Point type & constants

@@ -1,7 +1,7 @@
-import { PptxHandler } from '../index.js';
-import type { PptxData } from '../index.js';
+import { PptxHandler } from '../index';
+import type { PptxData } from '../index';
 
-import type { ExecutionContext, TableStyleSaveOptions, ToolContext, ToolResult } from './types.js';
+import type { ExecutionContext, TableStyleSaveOptions, ToolContext, ToolResult } from './types';
 
 const PPTX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 

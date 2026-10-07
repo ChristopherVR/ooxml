@@ -2,7 +2,7 @@
 // Ranges that span paragraphs: each comment gets one w:commentRangeStart in the first paragraph it
 // touches and one w:commentRangeEnd (plus its reference) in the last; move ranges
 // (w:moveFromRangeStart/w:moveToRangeStart) work the same way.
-import type { Block, DocumentModel, Paragraph, TextRun } from './model.js';
+import type { Block, DocumentModel, Paragraph, TextRun } from './model';
 
 /** Range keys a run belongs to: `comment:<id>` and, for moved text, `moveFrom:<name>`/`moveTo:<name>`. */
 export function rangeKeys(run: TextRun): string[] {

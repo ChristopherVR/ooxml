@@ -9,8 +9,8 @@
  *
  * @module render/preset-connection-sites-rects
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { CARDINAL_SITES, cxn } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { CARDINAL_SITES, cxn } from './preset-connection-sites-types';
 
 export const RECT_VARIANT_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	round1Rect: { sites: CARDINAL_SITES },

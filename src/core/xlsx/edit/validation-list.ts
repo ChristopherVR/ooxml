@@ -1,10 +1,10 @@
-import { parseRange } from '../address.js';
-import { forEachCellInRange } from '../cells.js';
-import type { CellValue, Workbook } from '../model.js';
-import { isCellError } from '../model.js';
-import { sheetByName } from '../workbook.js';
-import { displayText, rawText } from './context.js';
-import { parseCellInput } from './deps.js';
+import { parseRange } from '../address';
+import { forEachCellInRange } from '../cells';
+import type { CellValue, Workbook } from '../model';
+import { isCellError } from '../model';
+import { sheetByName } from '../workbook';
+import { displayText, rawText } from './context';
+import { parseCellInput } from './deps';
 
 export type Evaluate = (
 	formula: string,

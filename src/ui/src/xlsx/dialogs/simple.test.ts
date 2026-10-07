@@ -9,8 +9,8 @@ import {
 	pressKey,
 	setValue,
 	tick,
-} from '../commands/test-support.js';
-import { registerSimpleDialogs } from './simple.js';
+} from '../commands/test-support';
+import { registerSimpleDialogs } from './simple';
 
 afterEach(() => (document.body.innerHTML = ''));
 

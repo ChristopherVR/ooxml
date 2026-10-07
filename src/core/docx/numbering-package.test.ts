@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { ensureListDefinition } from './numbering-editing.js';
-import type { Paragraph } from './model.js';
-import { at, must } from './test-support/access.js';
+import { loadDocx } from './parse';
+import { ensureListDefinition } from './numbering-editing';
+import type { Paragraph } from './model';
+import { at, must } from './test-support/access';
 
 const WORD_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const documentXml = `<?xml version="1.0"?><w:document xmlns:w="${WORD_NS}"><w:body><w:p><w:r><w:t>Plain</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`;
@@ -125,7 +125,7 @@ describe('numbering package surgery', () => {
 	});
 
 	it('rejects creating a numbering catalog from the standalone writer', async () => {
-		const { saveDocx } = await import('./save.js');
+		const { saveDocx } = await import('./save');
 		const { catalog } = ensureListDefinition(undefined, 'bullet');
 		await expect(
 			saveDocx({

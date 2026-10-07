@@ -8,7 +8,7 @@ import {
 	type NavigationKey,
 } from 'ooxml-core/xlsx';
 import { acceptsReference, isFormulaText, splice } from 'ooxml-core/xlsx';
-import type { GridView } from './grid-view.js';
+import type { GridView } from './grid-view';
 import { spanRange } from 'ooxml-core/xlsx/ui';
 
 export interface PointEditor {

@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { decodeBase64, encodeBase64 } from './base64.js';
-import { MAX_SPIN_COUNT, hashPassword, verifyPasswordHash, type PasswordHash } from './index.js';
+import { decodeBase64, encodeBase64 } from './base64';
+import { MAX_SPIN_COUNT, hashPassword, verifyPasswordHash, type PasswordHash } from './index';
 
 // Written by Excel 16 for `Worksheet.Protect('open sesame')`.
 const EXCEL_SHEET: PasswordHash = {

@@ -1,8 +1,8 @@
-import { parseXml, type XmlElement } from '../../xml/index.js';
-import type { CellStyle, DifferentialStyle, Workbook } from '../model.js';
-import { styleKey } from '../styles.js';
-import { defaultCellStyle } from '../workbook.js';
-import { builtinFormat } from './builtin-formats.js';
+import { parseXml, type XmlElement } from '../../xml/index';
+import type { CellStyle, DifferentialStyle, Workbook } from '../model';
+import { styleKey } from '../styles';
+import { defaultCellStyle } from '../workbook';
+import { builtinFormat } from './builtin-formats';
 import {
 	parseAlignment,
 	parseBorder,
@@ -10,8 +10,8 @@ import {
 	parseFont,
 	parseIndexedPalette,
 	parseProtection,
-} from './style-parts.js';
-import { att, boolAttr, numAttr, xChildren, xFirst } from './xml-util.js';
+} from './style-parts';
+import { att, boolAttr, numAttr, xChildren, xFirst } from './xml-util';
 
 export interface ParsedStyles {
 	styles: CellStyle[];

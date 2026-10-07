@@ -10,7 +10,7 @@ import {
 	type CellRange,
 	type DefinedName,
 	type Workbook,
-} from '../../index.js';
+} from '../../index';
 
 export interface NameTarget {
 	sheet: number;

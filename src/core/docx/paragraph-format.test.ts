@@ -1,8 +1,8 @@
-import { signedTwips, twips } from './units.js';
+import { signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx } from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+import { createDocument, loadDocx, saveDocx } from './index';
+import { at, expectParagraph } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const sourceXml = `<w:document xmlns:w="${ns}"><w:body>

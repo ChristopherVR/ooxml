@@ -17,7 +17,7 @@
  * "Lighter N%" is `lumMod = 1 - N`, `lumOff = N`; "Darker N%" is `lumMod = 1 - N`.
  *
  */
-import { hexToRgbChannels, rgbToHsl } from '../../color/index.js';
+import { hexToRgbChannels, rgbToHsl } from '../../color/index';
 import { resolveThemeColorRef } from '../core/color/theme-color-ref';
 import type { PptxThemeColorRef, PptxThemeColorSchemeName } from '../core/types/color-ref';
 import { THEME_COLOR_PALETTE_COLUMNS } from '../core/types/color-ref';

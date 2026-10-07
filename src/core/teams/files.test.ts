@@ -1,6 +1,6 @@
-import { createFileActions } from './files.js';
-import { loadXlsx } from '../xlsx/index.js';
-import type { Attachment } from './model.js';
+import { createFileActions } from './files';
+import { loadXlsx } from '../xlsx/index';
+import type { Attachment } from './model';
 
 function setup() {
 	const uploads: (Blob & { name: string })[] = [];

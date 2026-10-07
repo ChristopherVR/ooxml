@@ -2,8 +2,8 @@
 import { createWorkbook, getCell, putCell, type Workbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
 import { editBridge } from 'ooxml-core/xlsx/ui';
-import { mountGrid } from './index.js';
-import { createTestContext, type TestContext } from './test-context.js';
+import { mountGrid } from './index';
+import { createTestContext, type TestContext } from './test-context';
 
 let dispose: (() => void) | undefined;
 afterEach(() => {

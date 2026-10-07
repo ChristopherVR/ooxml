@@ -7,9 +7,9 @@
  * @module geometry/shape-boolean-clipping
  */
 
-import { at } from './indexed.js';
-import type { Vec2 } from './shape-boolean-types.js';
-import { EPSILON, cross2, ensureCCW, polygonArea, pointInTriangle } from './shape-boolean-types.js';
+import { at } from './indexed';
+import type { Vec2 } from './shape-boolean-types';
+import { EPSILON, cross2, ensureCCW, polygonArea, pointInTriangle } from './shape-boolean-types';
 
 // ---------------------------------------------------------------------------
 // Line intersection

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { LegacyDocError, loadLegacyDoc } from './legacy-doc.js';
+import { LegacyDocError, loadLegacyDoc } from './legacy-doc';
 import { buildOle2 } from '@christophervr/ole2/ole2-parser-write';
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
 import { ENTRY_TYPE_ROOT, ENTRY_TYPE_STREAM } from '@christophervr/ole2/ole2-parser-types';

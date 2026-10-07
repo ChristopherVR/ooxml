@@ -8,9 +8,9 @@
  * @module geometry/shape-boolean-union
  */
 
-import { at } from './indexed.js';
-import type { Vec2 } from './shape-boolean-types.js';
-import { EPSILON, vec2Eq, pointInPolygon } from './shape-boolean-types.js';
+import { at } from './indexed';
+import type { Vec2 } from './shape-boolean-types';
+import { EPSILON, vec2Eq, pointInPolygon } from './shape-boolean-types';
 
 // ---------------------------------------------------------------------------
 // Segment-segment intersection

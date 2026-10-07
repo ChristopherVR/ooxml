@@ -1,7 +1,7 @@
 // DrawingML fill and line readers over the DOM. Diagram-independent; destined for `drawingml`.
-import { parseDrawingColorIn } from './drawing-color.js';
-import { NS, children, elements, first, type XmlElement } from './dom.js';
-import type { DiagramFill, DiagramLine } from './types.js';
+import { parseDrawingColorIn } from './drawing-color';
+import { NS, children, elements, first, type XmlElement } from './dom';
+import type { DiagramFill, DiagramLine } from './types';
 
 const FILL_ELEMENTS = new Set([
 	'noFill',

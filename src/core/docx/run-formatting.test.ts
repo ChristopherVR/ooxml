@@ -5,8 +5,8 @@ import {
 	parseParagraphStyleCatalog,
 	parseRunStyleCatalog,
 	resolveRunFormatting,
-} from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+} from './index';
+import { at, expectParagraph } from './test-support/access';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const stylesXml = `<w:styles xmlns:w="${ns}">

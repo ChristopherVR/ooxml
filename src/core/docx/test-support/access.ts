@@ -1,6 +1,6 @@
 // Test-only: checked accessors that keep tests readable under noUncheckedIndexedAccess.
 // Each helper throws a descriptive error instead of letting `undefined` leak into assertions.
-import type { Block, Paragraph, Table } from '../model.js';
+import type { Block, Paragraph, Table } from '../model';
 
 /** Returns `items[index]`, failing the test with a clear message when it is missing. */
 export function at<T>(items: Readonly<Record<number, T>> | undefined, index: number): T {

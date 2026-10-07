@@ -1,9 +1,9 @@
 // The formula bar: Name Box, cancel / enter / fx buttons and the expandable formula input.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { ensureStyle, h } from '../grid/dom.js';
-import { createFormulaInput } from './formula-input.js';
-import { createNameBox } from './name-box.js';
-import { FORMULA_BAR_CSS } from './styles.js';
+import { ensureStyle, h } from '../grid/dom';
+import { createFormulaInput } from './formula-input';
+import { createNameBox } from './name-box';
+import { FORMULA_BAR_CSS } from './styles';
 
 export {
 	absoluteReference,

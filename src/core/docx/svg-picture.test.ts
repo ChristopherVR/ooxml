@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx, saveDocx, createDocument, type Paragraph } from './index.js';
-import { at } from './test-support/access.js';
+import { loadDocx, saveDocx, createDocument, type Paragraph } from './index';
+import { at } from './test-support/access';
 
 const SVG = new TextEncoder().encode(
 	'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>',

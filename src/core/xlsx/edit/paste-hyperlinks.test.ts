@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseRange, rangeContains } from '../address.js';
-import { getCell } from '../cells.js';
-import type { Hyperlink } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { createEditSession } from './session.js';
-import type { PasteOptions } from './types.js';
+import { parseRange, rangeContains } from '../address';
+import { getCell } from '../cells';
+import type { Hyperlink } from '../model';
+import { createWorkbook } from '../workbook';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { createEditSession } from './session';
+import type { PasteOptions } from './types';
 
 interface NativeLink {
 	target: string;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { addFuturePrefixes, stripFuturePrefixes } from './formula-text.js';
-import { fromStoredSyntax, toStoredSyntax } from './formula-storage.js';
+import { addFuturePrefixes, stripFuturePrefixes } from './formula-text';
+import { fromStoredSyntax, toStoredSyntax } from './formula-storage';
 
 describe('dynamic-array storage syntax', () => {
 	it('writes spill references and @ as ANCHORARRAY and SINGLE', () => {

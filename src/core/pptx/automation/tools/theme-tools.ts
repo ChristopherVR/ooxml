@@ -3,10 +3,10 @@ import type {
 	PptxThemeFontScheme,
 	PptxTheme,
 	ThemePresetName,
-} from '../../index.js';
-import { getThemePreset, ThemePresets } from '../../index.js';
+} from '../../index';
+import { getThemePreset, ThemePresets } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── getThemeInfo ─────────────────────────────────────────────────────────────
 

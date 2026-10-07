@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { diagramsIn, loadDocx, resolveDiagramColor, type DocxDiagram } from './index.js';
-import { at, expectParagraph } from './test-support/access.js';
+import { diagramsIn, loadDocx, resolveDiagramColor, type DocxDiagram } from './index';
+import { at, expectParagraph } from './test-support/access';
 
 // Provenance and the build script: scripts/docx/build-smartart-fixture.mjs (PROVENANCE.md).
 const fixture = () =>

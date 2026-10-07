@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StNumberFormat } from './generated/wml-simple-types.js';
-import type { SignedTwips, Twips } from './units.js';
+import type { StNumberFormat } from './generated/wml-simple-types';
+import type { SignedTwips, Twips } from './units';
 /** Character formatting of a level's marker (`w:lvl/w:rPr`); absent fields follow the paragraph's text. */
 export interface NumberingMarkerFormat {
 	fontFamily?: string;

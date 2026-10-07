@@ -5,10 +5,10 @@ import {
 	signedTwips,
 	twips,
 	type Paragraph,
-} from '../index.js';
-import { adaptDocumentModel } from './adapter.js';
-import { layoutParagraph } from './paragraph-layout.js';
-import type { TextMeasurer } from './measure.js';
+} from '../index';
+import { adaptDocumentModel } from './adapter';
+import { layoutParagraph } from './paragraph-layout';
+import type { TextMeasurer } from './measure';
 
 const measurer: TextMeasurer = { widthOf: (text) => text.length * 10, lineHeightOf: () => 20 };
 const noop = () => {};

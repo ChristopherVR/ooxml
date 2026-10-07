@@ -1,6 +1,6 @@
-import { MAX_COL, MAX_ROW, type CellAddress } from '../address.js';
-import { usedRange } from '../cells.js';
-import type { Worksheet } from '../model.js';
+import { MAX_COL, MAX_ROW, type CellAddress } from '../address';
+import { usedRange } from '../cells';
+import type { Worksheet } from '../model';
 
 export type NavigationKey =
 	| 'up'

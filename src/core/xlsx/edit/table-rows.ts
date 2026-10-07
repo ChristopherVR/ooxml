@@ -1,8 +1,8 @@
 // Row helpers for table edits: empty checks, clearing, and the totals row cells.
-import { getCell } from '../cells.js';
-import type { Table, Worksheet } from '../model.js';
-import { clearContents, writeValue } from './cell-values.js';
-import { ensureCell, pruneCell } from './context.js';
+import { getCell } from '../cells';
+import type { Table, Worksheet } from '../model';
+import { clearContents, writeValue } from './cell-values';
+import { ensureCell, pruneCell } from './context';
 
 /** Whether a row holds no values or formulas between two columns. */
 export function rowIsEmpty(sheet: Worksheet, row: number, lo: number, hi: number): boolean {

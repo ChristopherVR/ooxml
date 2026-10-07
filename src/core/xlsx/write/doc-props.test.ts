@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { createEditSession } from '../edit/index.js';
-import { loadXlsx } from '../read/index.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from './index.js';
+import { createEditSession } from '../edit/index';
+import { loadXlsx } from '../read/index';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from './index';
 
 const fixture = (name: string) =>
 	new Uint8Array(readFileSync(path.join(import.meta.dirname, '..', '__fixtures__', name)));

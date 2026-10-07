@@ -7,7 +7,7 @@ import {
 	collectRevisionRanges,
 	goToNextChange,
 	rejectRevisionRange,
-} from './review-commands.js';
+} from './review-commands';
 
 const schema = new Schema({
 	nodes: {

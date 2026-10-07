@@ -1,5 +1,5 @@
-import { twips } from '../units/units.js';
-import type { SectionColumns, SectionProperties } from './section-model.js';
+import { twips } from '../units/units';
+import type { SectionColumns, SectionProperties } from './section-model';
 
 export const columnTextWidth = (section: SectionProperties): number =>
 	section.pageWidthTwips -

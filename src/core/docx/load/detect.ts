@@ -1,8 +1,8 @@
-import { PasswordRequiredError } from '../../crypto/errors.js';
-import { decryptOoxmlPackage, isEncryptedOoxmlPackage } from '../../crypto/index.js';
-import type { LoadedDocument } from '../model.js';
-import { loadDocx } from '../parse.js';
-import { loadLegacyDoc } from './legacy-doc.js';
+import { PasswordRequiredError } from '../../crypto/errors';
+import { decryptOoxmlPackage, isEncryptedOoxmlPackage } from '../../crypto/index';
+import type { LoadedDocument } from '../model';
+import { loadDocx } from '../parse';
+import { loadLegacyDoc } from './legacy-doc';
 
 /**
  * A detected document format. `'encrypted'` is a .docx saved with a password to open (a compound

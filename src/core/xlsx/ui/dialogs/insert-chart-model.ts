@@ -13,7 +13,7 @@ import {
 	normalizeRange,
 	parseRange,
 	quoteSheetName,
-} from '../../index.js';
+} from '../../index';
 
 const absolute = (r: CellRange): string => {
 	const a = (row: number, col: number) =>

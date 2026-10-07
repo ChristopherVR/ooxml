@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BEST_FIT_OUTSIDE_GAP, BEST_FIT_RIM_INSET, placeBestFitLabel } from './pie-best-fit.js';
+import { BEST_FIT_OUTSIDE_GAP, BEST_FIT_RIM_INSET, placeBestFitLabel } from './pie-best-fit';
 
 /** PowerPoint's small test pie (R = 89.625pt) in px, centred on the origin. */
 const R = 89.625 * (4 / 3);

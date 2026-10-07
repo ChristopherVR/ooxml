@@ -1,9 +1,9 @@
 // Pure projections from core state to what a UI shows: channel rows with unread and live flags,
 // people, typing names, a channel's files and cross-channel message search. No side effects, so
 // every binding (and every test) gets the same answers. New code.
-import type { CallParticipant } from './call.js';
-import type { Availability } from './workspace.js';
-import type { Channel, Message, OfficeKind } from './model.js';
+import type { CallParticipant } from './call';
+import type { Availability } from './workspace';
+import type { Channel, Message, OfficeKind } from './model';
 
 export interface ChannelView {
 	id: string;

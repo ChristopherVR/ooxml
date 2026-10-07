@@ -1,8 +1,8 @@
-import { eighthPoints, signedTwips, twips } from './units.js';
+import { eighthPoints, signedTwips, twips } from './units';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx, type DocumentModel, type Table } from './index.js';
-import { at, must } from './test-support/access.js';
+import { createDocument, loadDocx, saveDocx, type DocumentModel, type Table } from './index';
+import { at, must } from './test-support/access';
 
 const para = (id: string) => ({ type: 'paragraph' as const, id, runs: [{ text: id }] });
 

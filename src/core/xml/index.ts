@@ -1,2 +1,2 @@
-export * from './namespaces.js';
-export * from './xml.js';
+export * from './namespaces';
+export * from './xml';

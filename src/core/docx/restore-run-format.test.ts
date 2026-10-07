@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
-import { rejectRevision } from './revision-commands.js';
-import { expectParagraph } from './test-support/access.js';
-import { restoreRunFormatting } from './restore-run-format.js';
-import type { TextRun } from './model.js';
+import { loadDocx } from './parse';
+import { rejectRevision } from './revision-commands';
+import { expectParagraph } from './test-support/access';
+import { restoreRunFormatting } from './restore-run-format';
+import type { TextRun } from './model';
 
 describe('restoring complete run properties', () => {
 	it('restores language, style and opaque properties without retaining newly applied formatting', async () => {

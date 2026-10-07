@@ -8,8 +8,8 @@
  *
  * @module render/preset-connection-sites-stars
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { CARDINAL_SITES, cxn, gd } from './preset-connection-sites-types';
 
 export const STAR_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	star7: {

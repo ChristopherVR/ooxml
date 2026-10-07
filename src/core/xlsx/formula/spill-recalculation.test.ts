@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { isSpilledCell } from './spill.js';
-import { book, E, engine, get, grid, locate, set } from './test-helpers.js';
+import { getCell } from '../cells';
+import { isSpilledCell } from './spill';
+import { book, E, engine, get, grid, locate, set } from './test-helpers';
 
 describe('reusing spill destinations', () => {
 	it('updates same-size spills and their readers while retaining children and formatting', () => {

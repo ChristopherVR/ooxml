@@ -1,13 +1,13 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Table of contents fields (`TOC \o "1-3"`): builds entries from heading paragraphs and finds or
 // refreshes an existing TOC field that spans body paragraphs.
-import { expectDefined } from './expect-defined.js';
-import { fieldName } from './field-runs.js';
-import { resolveParagraphFormatting } from './paragraph-styles.js';
-import { tocSwitches, type TocSwitches } from './toc-switches.js';
-import { captionParagraphs, tocCaptionLabel } from './table-of-figures.js';
-import { signedTwips, twips, type Twips } from './units.js';
-import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog, TextRun } from './model.js';
+import { expectDefined } from './expect-defined';
+import { fieldName } from './field-runs';
+import { resolveParagraphFormatting } from './paragraph-styles';
+import { tocSwitches, type TocSwitches } from './toc-switches';
+import { captionParagraphs, tocCaptionLabel } from './table-of-figures';
+import { signedTwips, twips, type Twips } from './units';
+import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog, TextRun } from './model';
 
 export const DEFAULT_TOC_INSTRUCTION = ' TOC \\o "1-3" \\h \\z \\u ';
 /** Word's result text when a TOC has no entries. */

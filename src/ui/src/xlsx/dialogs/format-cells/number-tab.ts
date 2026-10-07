@@ -11,7 +11,7 @@ import {
 	select,
 	text,
 	textInput,
-} from '../fields.js';
+} from '../fields';
 import {
 	CATEGORIES,
 	type CategoryId,

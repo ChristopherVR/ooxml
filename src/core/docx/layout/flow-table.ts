@@ -1,8 +1,8 @@
-import type { PageCursor } from './page-cursor.js';
-import { layoutRow, splitRowAtHeight, type RowLayout } from './table-layout.js';
-import type { TextMeasurer } from './measure.js';
-import type { LayoutTable, LayoutTableRow } from './input.js';
-import type { LayoutTableBox, LayoutTableRowBox } from './result.js';
+import type { PageCursor } from './page-cursor';
+import { layoutRow, splitRowAtHeight, type RowLayout } from './table-layout';
+import type { TextMeasurer } from './measure';
+import type { LayoutTable, LayoutTableRow } from './input';
+import type { LayoutTableBox, LayoutTableRowBox } from './result';
 
 /**
  * Places a table row by row, splitting a row across a page/column boundary

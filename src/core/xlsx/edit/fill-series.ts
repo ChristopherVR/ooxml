@@ -1,6 +1,6 @@
-import type { Cell, CellValue, Workbook } from '../model.js';
-import { styleAt } from '../styles.js';
-import { dateToSerial, isDateFormat, serialToDate } from './deps.js';
+import type { Cell, CellValue, Workbook } from '../model';
+import { styleAt } from '../styles';
+import { dateToSerial, isDateFormat, serialToDate } from './deps';
 
 /** What a fill puts at lane position `k`: a copy of the source cell or a generated value. */
 export type SeriesStep = { kind: 'copy' } | { kind: 'value'; value: CellValue };

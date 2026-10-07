@@ -1,4 +1,4 @@
-import type { OmmlNode as XmlObject } from './omml-node.js';
+import type { OmmlNode as XmlObject } from './omml-node';
 
 /**
  * Read the first explicit DrawingML run colour nested inside an OMML tree.

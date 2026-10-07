@@ -2,11 +2,11 @@
 // Copy and Format Painter. The system clipboard belongs to the grid's `edit.*` commands; these
 // commands delegate to them when the grid registered them and also keep the core payload so the
 // paste variants can use it.
-import { resolvePasteOptions, type ClipboardPayload, type PasteRequest } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { editing, target, viewing } from './util.js';
+import { resolvePasteOptions, type ClipboardPayload, type PasteRequest } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { editing, target, viewing } from './util';
 
 interface ClipState {
 	payload?: ClipboardPayload;

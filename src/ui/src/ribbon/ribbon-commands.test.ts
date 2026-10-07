@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { registerIcon } from '../icons.js';
-import { registerOfficeUi } from '../index.js';
+import { registerIcon } from '../icons';
+import { registerOfficeUi } from '../index';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => {

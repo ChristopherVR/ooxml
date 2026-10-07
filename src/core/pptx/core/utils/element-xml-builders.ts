@@ -3,7 +3,7 @@
  * in the PPTX editor.
  */
 
-import { normalizeHexColor } from '../../../color/color-primitives.js';
+import { normalizeHexColor } from '../../../color/color-primitives';
 import { EMU_PER_PX, DEFAULT_STROKE_COLOR } from '../constants';
 import type { PptxElementWithText, ConnectorPptxElement, XmlObject } from '../types';
 import { applyDrawingLineDash } from './drawing-line-dash';

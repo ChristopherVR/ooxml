@@ -1,6 +1,6 @@
-import type { Workbook, Worksheet } from '../model.js';
-import { rewritePreservedFormulas } from './shift-preserved.js';
-import { rewriteConditionalRule } from './conditional-formulas.js';
+import type { Workbook, Worksheet } from '../model';
+import { rewritePreservedFormulas } from './shift-preserved';
+import { rewriteConditionalRule } from './conditional-formulas';
 
 /** Rewrites one formula; `formulaSheet` is the sheet unqualified references point at. */
 export type FormulaRewrite = (formula: string, formulaSheet: string) => string;

@@ -1,12 +1,12 @@
 // Bond pricing and yield (PRICE, YIELD, DURATION, MDURATION) and accrued interest.
-import type { CallContext } from '../context.js';
-import { ERR, fail, type Value } from '../values.js';
-import { couponFacts, type CouponFacts } from './coupons.js';
-import { addMonths, days360, serialArg, yearFrac } from './date-calc.js';
-import { solve } from './financial-core.js';
-import { daysInMonth, serialToYmd } from '../date-serial.js';
-import { bool, int, num, optNum, spec } from './helpers.js';
-import type { FunctionSpec } from './types.js';
+import type { CallContext } from '../context';
+import { ERR, fail, type Value } from '../values';
+import { couponFacts, type CouponFacts } from './coupons';
+import { addMonths, days360, serialArg, yearFrac } from './date-calc';
+import { solve } from './financial-core';
+import { daysInMonth, serialToYmd } from '../date-serial';
+import { bool, int, num, optNum, spec } from './helpers';
+import type { FunctionSpec } from './types';
 
 const C = 'Financial';
 

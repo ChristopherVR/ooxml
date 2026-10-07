@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell, serialToDate } from 'ooxml-core/xlsx';
 import { describe, expect, it } from 'vitest';
-import { allCommands } from './index.js';
-import { nowSerial } from './insert-now.js';
-import { createTestContext } from './test-support.js';
+import { allCommands } from './index';
+import { nowSerial } from './insert-now';
+import { createTestContext } from './test-support';
 
 describe('insert date and time', () => {
 	it('computes local wall-clock serials', () => {

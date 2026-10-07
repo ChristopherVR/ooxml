@@ -3,7 +3,7 @@
 // reference boxes of the formula being edited and the fill-drag preview.
 import type { CellRange, GridMetrics } from 'ooxml-core/xlsx';
 import type { Selection } from 'ooxml-core/xlsx/ui';
-import { h, place } from './dom.js';
+import { h, place } from './dom';
 import { isSingleCell } from 'ooxml-core/xlsx/ui';
 
 export interface OverlayState {

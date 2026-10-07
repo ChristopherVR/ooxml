@@ -1,24 +1,24 @@
-import { RELATIONSHIP_TYPES } from '../../opc/index.js';
-import type { Workbook, Worksheet } from '../model.js';
+import { RELATIONSHIP_TYPES } from '../../opc/index';
+import type { Workbook, Worksheet } from '../model';
 import {
 	mergeComments,
 	parseLegacyComments,
 	parsePersons,
 	parseThreadedComments,
-} from '../read/comments.js';
-import { parseDrawing } from '../read/drawing.js';
-import { CONTENT_TYPES, type SourceIndex } from '../read/package.js';
-import { parseTable } from '../read/tables.js';
-import { commentParts, type PersonRegistry } from './comments.js';
-import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing.js';
-import type { MetadataPlan } from './metadata.js';
-import type { PackageWriter, RelationshipSet } from './package-writer.js';
-import type { SharedStringTable } from './shared-strings.js';
-import { sameModel } from './snapshot.js';
-import type { StyleWriter } from './styles.js';
-import { stripNoteShapes, vmlAllocatorFor, vmlIdmapBlocks } from './vml-ids.js';
-import { patchTableXml } from './table-patch.js';
-import { resolveTableColumns, resolveTableNames, tableXml, totalsRowFormulas } from './tables.js';
+} from '../read/comments';
+import { parseDrawing } from '../read/drawing';
+import { CONTENT_TYPES, type SourceIndex } from '../read/package';
+import { parseTable } from '../read/tables';
+import { commentParts, type PersonRegistry } from './comments';
+import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing';
+import type { MetadataPlan } from './metadata';
+import type { PackageWriter, RelationshipSet } from './package-writer';
+import type { SharedStringTable } from './shared-strings';
+import { sameModel } from './snapshot';
+import type { StyleWriter } from './styles';
+import { stripNoteShapes, vmlAllocatorFor, vmlIdmapBlocks } from './vml-ids';
+import { patchTableXml } from './table-patch';
+import { resolveTableColumns, resolveTableNames, tableXml, totalsRowFormulas } from './tables';
 
 /** Worksheet dependents: comments (+ VML, threads), tables and the drawing part. */
 export interface SaveContext {

@@ -1,10 +1,10 @@
-import { toText } from '../coerce.js';
-import type { CallContext } from '../context.js';
-import { ERR, fail, isError, type Value } from '../values.js';
-import { bool, num, optNum, spec, str, wildcardRegex } from './helpers.js';
-import type { FunctionSpec } from './types.js';
-import { TEXT_CONVERT } from './text-convert.js';
-import { left, lower, proper, right, upper } from './text-case.js';
+import { toText } from '../coerce';
+import type { CallContext } from '../context';
+import { ERR, fail, isError, type Value } from '../values';
+import { bool, num, optNum, spec, str, wildcardRegex } from './helpers';
+import type { FunctionSpec } from './types';
+import { TEXT_CONVERT } from './text-convert';
+import { left, lower, proper, right, upper } from './text-case';
 
 const C = 'Text';
 const MAX_TEXT = 32_767;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RECTS_SNIPS_PRESET_DEFINITIONS } from './preset-shape-definitions-rects-snips.js';
+import { RECTS_SNIPS_PRESET_DEFINITIONS } from './preset-shape-definitions-rects-snips';
 
 const REQUIRED_SHAPES = [
 	'round1Rect',

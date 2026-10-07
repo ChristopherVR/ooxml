@@ -2,8 +2,8 @@
 // and New / Edit / Delete.
 import { type CellValue, type DefinedName, isCellError } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el, field, select } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { el, field, select } from './fields';
+import { button, showDialog } from './frame';
 
 type NameFilter = 'all' | 'worksheet' | 'workbook' | 'errors' | 'noErrors';
 

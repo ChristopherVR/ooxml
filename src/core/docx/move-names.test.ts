@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createDocument } from './index.js';
-import type { Paragraph } from './model.js';
-import { numberMoveNames } from './move-names.js';
-import { sectionsOf } from './section-layout.js';
+import { createDocument } from './index';
+import type { Paragraph } from './model';
+import { numberMoveNames } from './move-names';
+import { sectionsOf } from './section-layout';
 
 const paragraph = (
 	id: string,

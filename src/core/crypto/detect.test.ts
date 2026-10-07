@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
 import { buildOle2 } from '@christophervr/ole2/ole2-parser-write';
-import { detectFileFormat, EncryptedFileError, isEncryptedOoxmlPackage } from './detect.js';
-import { encryptOoxmlPackage } from './index.js';
+import { detectFileFormat, EncryptedFileError, isEncryptedOoxmlPackage } from './detect';
+import { encryptOoxmlPackage } from './index';
 
 // ---------------------------------------------------------------------------
 // detectFileFormat

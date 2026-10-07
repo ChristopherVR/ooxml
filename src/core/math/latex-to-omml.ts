@@ -17,15 +17,15 @@
  * Construct builders: `latex-to-omml-constructs.ts` and
  * `latex-to-omml-environments.ts`.
  */
-import type { Token } from './latex-omml-siblings.js';
-import { mergeSiblings, tokenize } from './latex-omml-siblings.js';
-import { parseCommand } from './latex-to-omml-commands.js';
-import type { LatexParserContext } from './latex-to-omml-constructs.js';
-import { parseScriptArgs, tryParseScripts } from './latex-to-omml-constructs.js';
-import { buildPrescript } from './latex-to-omml-environments.js';
-import type { OmmlNode } from './omml-to-mathml.js';
+import type { Token } from './latex-omml-siblings';
+import { mergeSiblings, tokenize } from './latex-omml-siblings';
+import { parseCommand } from './latex-to-omml-commands';
+import type { LatexParserContext } from './latex-to-omml-constructs';
+import { parseScriptArgs, tryParseScripts } from './latex-to-omml-constructs';
+import { buildPrescript } from './latex-to-omml-environments';
+import type { OmmlNode } from './omml-to-mathml';
 
-export { convertOmmlToLatex } from './omml-to-latex.js';
+export { convertOmmlToLatex } from './omml-to-latex';
 
 // ── Parser ───────────────────────────────────────────────────────────────────
 

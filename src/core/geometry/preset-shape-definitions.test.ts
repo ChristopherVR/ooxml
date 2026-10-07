@@ -1,13 +1,13 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { isStShapeType, normalizeStShapeType } from './preset-geometry-names.js';
+import { isStShapeType, normalizeStShapeType } from './preset-geometry-names';
 import {
 	PRESET_SHAPE_DEFINITIONS,
 	PRESET_SHAPE_CATEGORY_LABELS,
 	PRIMARY_SHAPE_DEFINITIONS,
 	EXTENDED_SHAPE_DEFINITIONS,
-} from './preset-shape-definitions.js';
-import type { PresetShapeCategory } from './preset-shape-types.js';
+} from './preset-shape-definitions';
+import type { PresetShapeCategory } from './preset-shape-types';
 
 // ---------------------------------------------------------------------------
 // PRESET_SHAPE_DEFINITIONS

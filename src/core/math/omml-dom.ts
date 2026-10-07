@@ -1,6 +1,6 @@
-import { elements, parseXml, type XmlElement } from '../xml/index.js';
-import { mergeSiblings } from './latex-omml-siblings.js';
-import type { OmmlNode } from './omml-node.js';
+import { elements, parseXml, type XmlElement } from '../xml/index';
+import { mergeSiblings } from './latex-omml-siblings';
+import type { OmmlNode } from './omml-node';
 
 const PREFIXES: Readonly<Record<string, string>> = {
 	'http://schemas.openxmlformats.org/officeDocument/2006/math': 'm',

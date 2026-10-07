@@ -7,10 +7,10 @@ import {
 	type Paragraph,
 	type SectionProperties,
 	type Table,
-} from '../index.js';
-import { layoutDocumentModel } from './layout.js';
-import { createFakeMeasurer } from './measure.js';
-import { at } from './test-helpers.js';
+} from '../index';
+import { layoutDocumentModel } from './layout';
+import { createFakeMeasurer } from './measure';
+import { at } from './test-helpers';
 
 const measurer = createFakeMeasurer();
 const paragraph = (id: string, text: string, extra: Partial<Paragraph> = {}): Paragraph => ({

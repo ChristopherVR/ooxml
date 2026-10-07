@@ -1,7 +1,7 @@
-import { compileFraction, type FractionPlan, fractionSlash } from './fraction.js';
-import { compileNumber, type NumberPlan } from './number.js';
-import { splitSections, tokenizeSection } from './tokenizer.js';
-import type { Condition, Section } from './types.js';
+import { compileFraction, type FractionPlan, fractionSlash } from './fraction';
+import { compileNumber, type NumberPlan } from './number';
+import { splitSections, tokenizeSection } from './tokenizer';
+import type { Condition, Section } from './types';
 
 export interface CompiledSection extends Section {
 	number?: NumberPlan;

@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { CharacterStyleDefinition, RunStyleCatalog } from './run-style-model.js';
-import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml.js';
-import { parseRunProperties } from './run-properties.js';
-import { parseOnOff } from './simple-types.js';
+import type { CharacterStyleDefinition, RunStyleCatalog } from './run-style-model';
+import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
+import { parseRunProperties } from './run-properties';
+import { parseOnOff } from './simple-types';
 
 function styleElements(document: XmlDocument): XmlElement[] {
 	return Array.from(document.getElementsByTagName('*')).filter(

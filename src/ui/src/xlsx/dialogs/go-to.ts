@@ -2,8 +2,8 @@
 import { type CellRange, parseRange, sheetByName } from 'ooxml-core/xlsx';
 import { type SpecialKind, selectSpecial } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, field, invalid, listBox, radios, text, textInput } from './fields.js';
-import { button, showDialog } from './frame.js';
+import { checkbox, field, invalid, listBox, radios, text, textInput } from './fields';
+import { button, showDialog } from './frame';
 
 /** Selects a range on a sheet, switching sheets when needed. */
 export function selectOn(ctx: EditorContext, sheet: number, range: CellRange): void {

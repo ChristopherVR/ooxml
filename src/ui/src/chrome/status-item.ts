@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { definer } from '../registry';
 import css from './status-item.css?raw';
 
 /**

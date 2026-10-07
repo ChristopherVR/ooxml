@@ -9,7 +9,7 @@ import {
 	styleAt,
 	type Workbook,
 	type Worksheet,
-} from '../../index.js';
+} from '../../index';
 
 export function fitNumber(
 	workbook: Workbook | undefined,

@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, saveDocx, resolveRunFormatting } from './index.js';
-import { parseRunProperties } from './run-properties.js';
-import { parseXml, WORD_NS } from './xml.js';
-import { runHasUnknownProperties } from './write-run-validation.js';
-import { expectParagraph } from './test-support/access.js';
+import { loadDocx, saveDocx, resolveRunFormatting } from './index';
+import { parseRunProperties } from './run-properties';
+import { parseXml, WORD_NS } from './xml';
+import { runHasUnknownProperties } from './write-run-validation';
+import { expectParagraph } from './test-support/access';
 
 describe('explicit run baseline', () => {
 	it('parses baseline as an editable neutral override and protects invalid values', () => {

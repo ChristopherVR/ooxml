@@ -1,10 +1,10 @@
-import { NS, elements, parseXml, type XmlElement } from '../../xml/index.js';
-import { columnLabel, quoteSheetName } from '../address.js';
-import type { DefinedName, Workbook } from '../model.js';
-import { addFuturePrefixes } from '../read/formula-text.js';
-import { selfContainedXml } from '../read/xml-util.js';
-import { modernHashValues } from './password-hash.js';
-import { XML_HEADER, attrs, escapeAttr, escapeText, inlineFragment } from './xml-out.js';
+import { NS, elements, parseXml, type XmlElement } from '../../xml/index';
+import { columnLabel, quoteSheetName } from '../address';
+import type { DefinedName, Workbook } from '../model';
+import { addFuturePrefixes } from '../read/formula-text';
+import { selfContainedXml } from '../read/xml-util';
+import { modernHashValues } from './password-hash';
+import { XML_HEADER, attrs, escapeAttr, escapeText, inlineFragment } from './xml-out';
 
 /** CT_Workbook children kept verbatim from the source, by position in the schema sequence. */
 const KEPT_BEFORE_SHEETS = ['fileVersion', 'fileSharing'];
@@ -138,4 +138,4 @@ export function workbookXml(
 	return `${out}</workbook>`;
 }
 
-export { appXml, coreXml } from './doc-props.js';
+export { appXml, coreXml } from './doc-props';

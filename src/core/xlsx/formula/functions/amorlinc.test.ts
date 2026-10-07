@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { calc, book, engine, get, set, calcArray } from '../test-helpers.js';
-import { FUNCTION_CATALOG } from './registry.js';
-import { loadXlsx } from '../../read/index.js';
-import { saveXlsx } from '../../write/index.js';
-import { getCell } from '../../cells.js';
+import { calc, book, engine, get, set, calcArray } from '../test-helpers';
+import { FUNCTION_CATALOG } from './registry';
+import { loadXlsx } from '../../read/index';
+import { saveXlsx } from '../../write/index';
+import { getCell } from '../../cells';
 
 // Native Excel 16 results, recorded by scripts/record-xlsx-amorlinc.ps1.
 const fixture = JSON.parse(

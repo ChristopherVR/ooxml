@@ -1,5 +1,5 @@
-import { EDITOR_THEME_MODES, type EditorThemeMode, type XlsxTheme } from './types.js';
-import { themeToCssVars } from './css-vars.js';
+import { EDITOR_THEME_MODES, type EditorThemeMode, type XlsxTheme } from './types';
+import { themeToCssVars } from './css-vars';
 
 /** Unknown values fall back to `auto`, which follows the OS colour scheme. */
 export function normalizeThemeMode(value: unknown): EditorThemeMode {

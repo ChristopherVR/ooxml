@@ -1,4 +1,4 @@
-import type { CellStyle, ThemePalette, Workbook, Worksheet } from './model.js';
+import type { CellStyle, ThemePalette, Workbook, Worksheet } from './model';
 
 /** The Office 2013+ default theme ("Office") palette, used when a package has no theme part. */
 export const DEFAULT_THEME: ThemePalette = {

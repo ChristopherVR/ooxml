@@ -1,12 +1,12 @@
-import { rangeContains } from '../address.js';
-import { getCell } from '../cells.js';
-import type { Alignment, CellStyle, CellValue, Workbook, Worksheet } from '../model.js';
-import { isCellError } from '../model.js';
-import { formatValue } from '../numfmt/index.js';
-import { styleAt } from '../styles.js';
-import { bordersView, fillView, fontView, mergeBorder, mergeFont } from './style-view.js';
-import type { CellView, ConditionalFormatEvaluator, HAlignView } from './types.js';
-import { INDENT_PX_PER_LEVEL } from './units.js';
+import { rangeContains } from '../address';
+import { getCell } from '../cells';
+import type { Alignment, CellStyle, CellValue, Workbook, Worksheet } from '../model';
+import { isCellError } from '../model';
+import { formatValue } from '../numfmt/index';
+import { styleAt } from '../styles';
+import { bordersView, fillView, fontView, mergeBorder, mergeFont } from './style-view';
+import type { CellView, ConditionalFormatEvaluator, HAlignView } from './types';
+import { INDENT_PX_PER_LEVEL } from './units';
 
 /** The style id that applies to a cell: its own, else its row's, else its column's. */
 export function effectiveStyleId(sheet: Worksheet, row: number, col: number): number {

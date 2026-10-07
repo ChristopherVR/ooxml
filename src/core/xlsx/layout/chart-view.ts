@@ -1,10 +1,10 @@
-import type { CellValue, ChartObject, ChartSeries, ChartType, Workbook } from '../model.js';
-import { isCellError } from '../model.js';
-import { autoSeriesColor, chartColorScheme } from './chart-colors.js';
+import type { CellValue, ChartObject, ChartSeries, ChartType, Workbook } from '../model';
+import { isCellError } from '../model';
+import { autoSeriesColor, chartColorScheme } from './chart-colors';
 import { chartPaletteSeriesColor, findChartColorPalette } from '../../chart/color-palettes';
 import { resolveDrawingColor } from '../../diagram/drawing-color';
-import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale.js';
-import { resolveColor } from './colors.js';
+import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale';
+import { resolveColor } from './colors';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
 
 export interface ChartSeriesView {

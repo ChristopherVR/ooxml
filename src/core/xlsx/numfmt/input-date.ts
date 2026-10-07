@@ -1,4 +1,4 @@
-import { dateToSerial } from './date.js';
+import { dateToSerial } from './date';
 
 export interface DateInput {
 	value: number;

@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { calc, calcArray, book, engine, get } from '../test-helpers.js';
-import { loadXlsx } from '../../read/index.js';
-import { saveXlsx } from '../../write/index.js';
-import { getCell } from '../../cells.js';
+import { calc, calcArray, book, engine, get } from '../test-helpers';
+import { loadXlsx } from '../../read/index';
+import { saveXlsx } from '../../write/index';
+import { getCell } from '../../cells';
 
 // Excel 16.0 measurements, reproducible with scripts/record-xlsx-depreciation.ps1.
 const fixture = JSON.parse(

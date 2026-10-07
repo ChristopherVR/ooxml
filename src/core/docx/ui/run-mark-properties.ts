@@ -1,7 +1,7 @@
-import type { TextRun } from '../model.js';
+import type { TextRun } from '../model';
 import type { Node as ProseMirrorNode, Mark } from 'prosemirror-model';
-import { explicitOffFields } from './run-extra-mark.js';
-import { commentIdsFromMarks } from './comment-anchors.js';
+import { explicitOffFields } from './run-extra-mark';
+import { commentIdsFromMarks } from './comment-anchors';
 
 function propertyOfMark(child: ProseMirrorNode, name: string): Mark | undefined {
 	return child.marks.find((mark) => mark.type.name === name);

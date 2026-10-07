@@ -1,6 +1,6 @@
 // Framework-neutral pagination engine; conversions match the CSS-pixel-at-96dpi
 // convention already used by @christophervr/docx-core's DocumentModel.page.
-import { roundSignedTwips, twips, type SignedTwips } from '../index.js';
+import { roundSignedTwips, twips, type SignedTwips } from '../index';
 
 /** Twentieths of a point (Word's native unit for spacing/indents) to CSS pixels. */
 export function twipsToPx(value: SignedTwips): number {

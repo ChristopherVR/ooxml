@@ -28,7 +28,7 @@
  * @module adjustment-aware-shapes
  */
 
-import { at } from './indexed.js';
+import { at } from './indexed';
 
 // ---------------------------------------------------------------------------
 // Constants

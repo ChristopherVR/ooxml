@@ -1,5 +1,5 @@
-import type { PageSetup, PrintOptions } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
+import type { PageSetup, PrintOptions } from '../model';
+import { type EditContext, sheetAt } from './context';
 
 /** A page setup patch; an `undefined` entry clears that setting. */
 export type PageSetupPatch = { [K in keyof PageSetup]?: PageSetup[K] | undefined };

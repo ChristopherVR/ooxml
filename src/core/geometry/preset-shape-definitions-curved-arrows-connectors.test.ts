@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { CURVED_ARROWS_CONNECTORS_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-connectors.js';
+import { CURVED_ARROWS_CONNECTORS_PRESET_DEFINITIONS } from './preset-shape-definitions-curved-arrows-connectors';
 
 const REQUIRED_SHAPES = [
 	// Lines

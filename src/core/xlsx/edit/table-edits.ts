@@ -1,17 +1,17 @@
 // Editing existing tables: options, rename, header/totals toggles, resize, convert to range.
-import { type CellRange, normalizeRange, rangesIntersect } from '../address.js';
-import { forEachCell, getCell } from '../cells.js';
-import { structuredToA1 } from '../formula/structured-to-a1.js';
-import { renameTableInFormula } from '../formula/table-refs.js';
-import type { Table, TableColumn, Workbook, Worksheet } from '../model.js';
-import { shiftFormulaInBand } from './band-formulas.js';
-import { writeValue } from './cell-values.js';
-import { type EditContext, displayText, sheetAt } from './context.js';
-import type { EditScope } from './history.js';
-import { rewriteFormulas } from './shift-formulas.js';
-import { shiftSheetContent } from './shift-sheet.js';
-import { applyTotalsRow, clearRow, rowIsEmpty } from './table-rows.js';
-import { uniqueHeaders } from './tables.js';
+import { type CellRange, normalizeRange, rangesIntersect } from '../address';
+import { forEachCell, getCell } from '../cells';
+import { structuredToA1 } from '../formula/structured-to-a1';
+import { renameTableInFormula } from '../formula/table-refs';
+import type { Table, TableColumn, Workbook, Worksheet } from '../model';
+import { shiftFormulaInBand } from './band-formulas';
+import { writeValue } from './cell-values';
+import { type EditContext, displayText, sheetAt } from './context';
+import type { EditScope } from './history';
+import { rewriteFormulas } from './shift-formulas';
+import { shiftSheetContent } from './shift-sheet';
+import { applyTotalsRow, clearRow, rowIsEmpty } from './table-rows';
+import { uniqueHeaders } from './tables';
 
 /** A table by index in `sheet.tables` or by name (case-insensitive). */
 export type TableRef = number | string;

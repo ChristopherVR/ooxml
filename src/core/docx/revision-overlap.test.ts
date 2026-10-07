@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { loadDocx } from './parse.js';
+import { loadDocx } from './parse';
 import {
 	acceptRevision,
 	rejectRevision,
 	rejectAllRevisions,
 	listRevisions,
-} from './revision-commands.js';
-import { expectParagraph } from './test-support/access.js';
-import { WORD_NS, WORD_DATE_UTC_NS, parseXml } from './xml.js';
-import { runHasUnknownProperties } from './write-run-validation.js';
+} from './revision-commands';
+import { expectParagraph } from './test-support/access';
+import { WORD_NS, WORD_DATE_UTC_NS, parseXml } from './xml';
+import { runHasUnknownProperties } from './write-run-validation';
 
 async function fixture(kind: 'ins' | 'del') {
 	const zip = new JSZip();

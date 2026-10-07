@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createDocument, saveDocx } from '../index.js';
-import { detectDocumentFormat, loadDocument } from './detect.js';
+import { createDocument, saveDocx } from '../index';
+import { detectDocumentFormat, loadDocument } from './detect';
 describe('document routing', () => {
 	it('routes DOCX by content and respects typed-array slices', async () => {
 		const bytes = await saveDocx(createDocument());

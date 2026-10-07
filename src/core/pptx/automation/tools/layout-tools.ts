@@ -1,7 +1,7 @@
-import { findLayoutByName, findLayoutByType } from '../../index.js';
+import { findLayoutByName, findLayoutByType } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { generateElementId, validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { generateElementId, validateSlideIndex } from './helpers';
 
 // ── getLayouts ───────────────────────────────────────────────────────────────
 

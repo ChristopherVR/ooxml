@@ -1,19 +1,19 @@
 // The calc engine's recalculation core: ordering, cycles, spilling and per-formula evaluation.
-import { cellKey, type CellRange } from '../address.js';
-import type { Cell } from '../model.js';
-import type { FormulaAst } from './ast.js';
-import type { Frame } from './context.js';
-import { withDateSystem } from './date-serial.js';
-import { Deferred, EngineHost } from './engine-host.js';
-import { formulaOrder } from './engine-order.js';
-import { CIRCULAR_REFERENCE_WARNING } from './engine-types.js';
-import { boundingBox, clean, finalize, rangeHas, sameRange } from './engine-util.js';
-import { evaluateNode } from './evaluator.js';
-import type { FormulaNode } from './graph.js';
-import { implicitIntersection } from './references.js';
-import { isSpilledCell, releaseSpilledCell } from './spill.js';
-import { storeResult } from './store.js';
-import { ERR, ErrorSignal, type Matrix, type Scalar } from './values.js';
+import { cellKey, type CellRange } from '../address';
+import type { Cell } from '../model';
+import type { FormulaAst } from './ast';
+import type { Frame } from './context';
+import { withDateSystem } from './date-serial';
+import { Deferred, EngineHost } from './engine-host';
+import { formulaOrder } from './engine-order';
+import { CIRCULAR_REFERENCE_WARNING } from './engine-types';
+import { boundingBox, clean, finalize, rangeHas, sameRange } from './engine-util';
+import { evaluateNode } from './evaluator';
+import type { FormulaNode } from './graph';
+import { implicitIntersection } from './references';
+import { isSpilledCell, releaseSpilledCell } from './spill';
+import { storeResult } from './store';
+import { ERR, ErrorSignal, type Matrix, type Scalar } from './values';
 
 const MAX_ROUNDS = 8;
 

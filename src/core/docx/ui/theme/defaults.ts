@@ -1,4 +1,4 @@
-import type { EditorTheme } from './types.js';
+import type { EditorTheme } from './types';
 
 /**
  * Light preset: Word's neutral chrome with Word blue as primary. Neutrals follow the same

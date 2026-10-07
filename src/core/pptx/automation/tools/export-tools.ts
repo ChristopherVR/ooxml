@@ -1,8 +1,8 @@
-import { SvgExporter } from '../../index.js';
-import type { SvgExportOptions } from '../../index.js';
+import { SvgExporter } from '../../index';
+import type { SvgExportOptions } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex } from './helpers.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex } from './helpers';
 
 // ── exportToSvg ──────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ import type {
 	EditSession,
 	Workbook,
 	Worksheet,
-} from '../../index.js';
+} from '../../index';
 import {
 	MAX_COL,
 	MAX_ROW,
@@ -15,9 +15,9 @@ import {
 	getCell,
 	normalizeRange,
 	styleAt,
-} from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
+} from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
 
 /** Everything an editing command needs: the session, sheet and normalized selection. */
 export interface Target {

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import { internStyle } from '../styles.js';
-import { createWorkbook, defaultCellStyle } from '../workbook.js';
+import { putCell } from '../cells';
+import { internStyle } from '../styles';
+import { createWorkbook, defaultCellStyle } from '../workbook';
 import {
 	approximateMeasure,
 	autoFitRowHeight,
 	lineHeightPoints,
 	wrappedLineCount,
-} from './row-autofit.js';
+} from './row-autofit';
 
 const measure = (text: string): number => text.length * 7;
 

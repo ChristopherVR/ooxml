@@ -2,9 +2,9 @@
 // Replace All, all through the core session's find API.
 import { type FindMatch, type FindQuery, formatAddress, getCell } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, el, field, row, select, tabs, textInput } from './fields.js';
-import { button, showDialog } from './frame.js';
-import { selectOn } from './go-to.js';
+import { checkbox, el, field, row, select, tabs, textInput } from './fields';
+import { button, showDialog } from './frame';
+import { selectOn } from './go-to';
 
 export interface FindReplaceProps {
 	tab?: 'find' | 'replace';

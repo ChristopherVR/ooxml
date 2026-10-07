@@ -1,6 +1,6 @@
-import { MAX_COL, MAX_ROW } from '../address.js';
-import type { FreezePane } from '../model.js';
-import type { GridMetrics } from './metrics.js';
+import { MAX_COL, MAX_ROW } from '../address';
+import type { FreezePane } from '../model';
+import type { GridMetrics } from './metrics';
 
 /**
  * The scrollable pane's scroll offsets and the size of the whole cell area (frozen panes included),

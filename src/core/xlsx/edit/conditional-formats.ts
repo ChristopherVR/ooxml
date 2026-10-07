@@ -1,7 +1,7 @@
 // Editing existing conditional formats: replace, remove and reorder rules by priority.
-import { normalizeRange } from '../address.js';
-import type { ConditionalFormat, ConditionalRule, Worksheet } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
+import { normalizeRange } from '../address';
+import type { ConditionalFormat, ConditionalRule, Worksheet } from '../model';
+import { type EditContext, sheetAt } from './context';
 
 function formatAt(sheet: Worksheet, index: number): ConditionalFormat {
 	const format = sheet.conditionalFormats[index];

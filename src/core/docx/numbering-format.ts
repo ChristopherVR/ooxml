@@ -1,20 +1,20 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog } from './model.js';
+import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog } from './model';
 import type {
 	NumberingCatalog,
 	NumberingLevelDefinition,
 	ParagraphListLabel,
-} from './numbering-model.js';
-import { definedProps } from './defined-props.js';
-import { resolveNumberingLevel } from './numbering-parse.js';
-import { resolveStyleNumbering } from './paragraph-styles.js';
+} from './numbering-model';
+import { definedProps } from './defined-props';
+import { resolveNumberingLevel } from './numbering-parse';
+import { resolveStyleNumbering } from './paragraph-styles';
 import {
 	cardinalWords,
 	letterLabel,
 	ordinalNumeral,
 	ordinalWords,
 	romanNumeral,
-} from './numbering-text.js';
+} from './numbering-text';
 
 /** Formats one placeholder value using a level's numbering format. */
 export function formatListNumber(numFmt: string, value: number): string {

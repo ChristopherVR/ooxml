@@ -1,6 +1,6 @@
-import type { ColumnInfo, RowInfo } from '../model.js';
-import { editColumns } from './columns.js';
-import { type EditContext, sheetAt } from './context.js';
+import type { ColumnInfo, RowInfo } from '../model';
+import { editColumns } from './columns';
+import { type EditContext, sheetAt } from './context';
 
 /** Excel's deepest outline level. */
 export const MAX_OUTLINE_LEVEL = 7;

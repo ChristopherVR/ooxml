@@ -1,7 +1,7 @@
-import { NS } from '../../xml/index.js';
-import type { RichTextRun } from '../model.js';
-import { fontXml } from './style-xml.js';
-import { XML_HEADER, tElement } from './xml-out.js';
+import { NS } from '../../xml/index';
+import type { RichTextRun } from '../model';
+import { fontXml } from './style-xml';
+import { XML_HEADER, tElement } from './xml-out';
 
 /** The `<si>`/`<is>` body of a plain or rich string. */
 export function richStringXml(text: string, runs: readonly RichTextRun[] | undefined): string {

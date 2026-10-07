@@ -1,8 +1,8 @@
 // Paste Special gathers options; the requesting command applies them once.
 import type { PasteOptions } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, radios, row } from './fields.js';
-import { showDialog } from './frame.js';
+import { checkbox, radios, row } from './fields';
+import { showDialog } from './frame';
 
 const PASTE: ReadonlyArray<readonly [string, string]> = [
 	['all', 'All'],

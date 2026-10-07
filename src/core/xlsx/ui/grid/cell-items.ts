@@ -7,8 +7,8 @@ import {
 	type CellView,
 	type GridMetrics,
 	type Worksheet,
-} from '../../index.js';
-import { cssFont, hashes, hasBorders, repeatToFill } from './cell-paint.js';
+} from '../../index';
+import { cssFont, hashes, hasBorders, repeatToFill } from './cell-paint';
 
 export interface CellItem {
 	key: string;

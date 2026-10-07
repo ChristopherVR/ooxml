@@ -1,12 +1,12 @@
-import type { PptxSlideTransition, PptxTransitionType } from '../../index.js';
+import type { PptxSlideTransition, PptxTransitionType } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 import {
 	generateSlideId,
 	generateElementId,
 	describeElement,
 	validateSlideIndex,
-} from './helpers.js';
+} from './helpers';
 
 export interface GetSlideResult {
 	slideIndex: number;

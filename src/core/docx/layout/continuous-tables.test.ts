@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { loadDocx } from '../index.js';
-import { createFakeMeasurer } from './measure.js';
-import { layoutDocumentModel } from './layout.js';
-import { layoutSections } from './page-flow.js';
+import { loadDocx } from '../index';
+import { createFakeMeasurer } from './measure';
+import { layoutDocumentModel } from './layout';
+import { layoutSections } from './page-flow';
 
 const fixture = (name: string) => new URL(`./fixtures/continuous-tables/${name}`, import.meta.url);
 describe('native Word tables before continuous section breaks', () => {

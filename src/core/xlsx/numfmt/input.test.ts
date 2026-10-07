@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { cellError } from '../model.js';
-import { formatValue, parseCellInput } from './index.js';
+import { cellError } from '../model';
+import { formatValue, parseCellInput } from './index';
 
 // Values and formats recorded by typing each text into a General cell of Excel 16 (en-US).
 // Where Excel used the machine's short date (yyyy-mm-dd here), the en-US default m/d/yyyy is

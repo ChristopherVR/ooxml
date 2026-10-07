@@ -7,8 +7,8 @@
  *
  * @module render/preset-connection-sites-callouts-basic
  */
-import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types.js';
-import { cxn, gd } from './preset-connection-sites-types.js';
+import type { PresetConnectionSiteDefinition } from './preset-connection-sites-types';
+import { cxn, gd } from './preset-connection-sites-types';
 
 export const CALLOUT_CONNECTION_SITES: Record<string, PresetConnectionSiteDefinition> = {
 	accentBorderCallout1: {

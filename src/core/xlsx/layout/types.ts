@@ -1,5 +1,5 @@
-import type { CellRange } from '../address.js';
-import type { DifferentialStyle, PatternType } from '../model.js';
+import type { CellRange } from '../address';
+import type { DifferentialStyle, PatternType } from '../model';
 
 /** A font ready to paint. */
 export interface FontView {

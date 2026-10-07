@@ -1,7 +1,7 @@
 import { html, nothing, type PropertyValues } from 'lit';
-import { definer } from '../registry.js';
-import { TeamsElement, withStyles } from './base.js';
-import { icon } from './icons.js';
+import { definer } from '../registry';
+import { TeamsElement, withStyles } from './base';
+import { icon } from './icons';
 import css from './call-controls.css?raw';
 
 export type CallAction = 'chat' | 'people' | 'hand' | 'camera' | 'mic' | 'screen' | 'leave';

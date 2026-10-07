@@ -1,10 +1,10 @@
-import { type CellRange, normalizeRange, rangesIntersect } from '../address.js';
-import { deleteCell, forEachCellInRange, putCell, usedRange } from '../cells.js';
-import type { Cell, CellValue, Worksheet } from '../model.js';
-import { isCellError } from '../model.js';
-import { type EditContext, sheetAt } from './context.js';
-import { isSpilledCell, translateFormula } from './deps.js';
-import { cellRange } from './range-math.js';
+import { type CellRange, normalizeRange, rangesIntersect } from '../address';
+import { deleteCell, forEachCellInRange, putCell, usedRange } from '../cells';
+import type { Cell, CellValue, Worksheet } from '../model';
+import { isCellError } from '../model';
+import { type EditContext, sheetAt } from './context';
+import { isSpilledCell, translateFormula } from './deps';
+import { cellRange } from './range-math';
 
 export interface SortKey {
 	col: number;

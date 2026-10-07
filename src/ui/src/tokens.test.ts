@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { OFFICE_UI_TAGS, registerOfficeUi } from './index.js';
-import { THEME_CSS } from './theme.js';
-import { OFFICE_TOKENS, tok } from './tokens.js';
+import { OFFICE_UI_TAGS, registerOfficeUi } from './index';
+import { THEME_CSS } from './theme';
+import { OFFICE_TOKENS, tok } from './tokens';
 
 beforeAll(() => registerOfficeUi());
 

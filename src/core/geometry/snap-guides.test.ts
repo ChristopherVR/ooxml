@@ -6,8 +6,8 @@ import {
 	snapBox,
 	snapToGridStep,
 	snapValue,
-} from './snap-guides.js';
-import type { SnapBox, SnapGuide, SnapResult } from './snap-guides.js';
+} from './snap-guides';
+import type { SnapBox, SnapGuide, SnapResult } from './snap-guides';
 
 // ---------------------------------------------------------------------------
 // computeSnapToShape (React / Vue model) - siblings + guides → snap lines

@@ -1,8 +1,8 @@
-import type { PptxData } from '../../../index.js';
+import type { PptxData } from '../../../index';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { convertToMarkdown } from '../../tools/conversion-tools.js';
-import type { ToolContext } from '../../types.js';
+import { convertToMarkdown } from '../../tools/conversion-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(): PptxData {
 	return {

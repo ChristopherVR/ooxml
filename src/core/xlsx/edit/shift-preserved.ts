@@ -2,12 +2,12 @@
 // manual page breaks and the Excel 2010 extension list (sparklines, x14 conditional formats and
 // data validations), so inserting or deleting rows and columns keeps them on the cells they
 // belong to.
-import type { CellRange } from '../address.js';
-import { formatRange } from '../address.js';
-import type { Worksheet } from '../model.js';
-import { parseSqref } from '../read/sheet-props.js';
-import { buildXml, elements, parseXml, type XmlElement } from '../../xml/index.js';
-import { type AxisShift, shiftIndex } from './range-math.js';
+import type { CellRange } from '../address';
+import { formatRange } from '../address';
+import type { Worksheet } from '../model';
+import { parseSqref } from '../read/sheet-props';
+import { buildXml, elements, parseXml, type XmlElement } from '../../xml/index';
+import { type AxisShift, shiftIndex } from './range-math';
 
 const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
 

@@ -1,18 +1,18 @@
 // Format-neutral SmartArt (DiagramML): the part model, DOM parsers for the data, layout, colours,
 // quick-style and cached-drawing parts, relationship resolution and a loader. `pptx` and `docx`
 // adapt to it; nothing here knows about slides or documents.
-export * from './types.js';
-export * from './attributes.js';
-export * from './layout-category.js';
-export * from './relationships.js';
-export * from './data-model.js';
-export * from './definitions.js';
-export * from './drawing-color.js';
-export * from './drawing-fill.js';
-export * from './drawing-text.js';
-export * from './drawing-geometry.js';
-export * from './drawing.js';
-export * from './drawing-bounds.js';
-export * from './load.js';
-export { attributeReader } from './dom.js';
+export * from './types';
+export * from './attributes';
+export * from './layout-category';
+export * from './relationships';
+export * from './data-model';
+export * from './definitions';
+export * from './drawing-color';
+export * from './drawing-fill';
+export * from './drawing-text';
+export * from './drawing-geometry';
+export * from './drawing';
+export * from './drawing-bounds';
+export * from './load';
+export { attributeReader } from './dom';
 export * from './write-color';

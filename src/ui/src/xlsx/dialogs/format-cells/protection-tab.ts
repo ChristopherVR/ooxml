@@ -1,5 +1,5 @@
 // Format Cells > Protection: Locked and Hidden (effective once the sheet is protected).
-import { checkbox, el, text } from '../fields.js';
+import { checkbox, el, text } from '../fields';
 import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 export function protectionTab(init: TabInit): FormatTab {

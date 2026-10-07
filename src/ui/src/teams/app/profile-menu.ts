@@ -1,6 +1,6 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import type { TeamsState } from 'ooxml-core/teams';
-import { toggleAnchoredPopover } from './anchored-popover.js';
+import { toggleAnchoredPopover } from './anchored-popover';
 import css from './profile-menu.css?raw';
 
 const AVAILABILITY = ['available', 'busy', 'away'] as const;

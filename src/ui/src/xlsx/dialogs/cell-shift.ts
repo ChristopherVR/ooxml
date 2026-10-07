@@ -1,8 +1,8 @@
 // Insert and Delete (Ctrl++ / Ctrl+-): shift cells, or insert / delete entire rows or columns.
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { radios } from './fields.js';
-import { showDialog } from './frame.js';
+import { radios } from './fields';
+import { showDialog } from './frame';
 
 export type ShiftChoice = 'right' | 'down' | 'left' | 'up' | 'row' | 'column';
 

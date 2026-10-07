@@ -5,8 +5,8 @@
 // New code written for the collab area; the rules come from pptx-viewer's
 // `collaboration-external-readiness.ts` and `collaboration-load-origin.ts`. See PROVENANCE.md.
 import type * as Y from 'yjs';
-import { type LoadOrigin, shouldRoomReplaceLoad } from './policy.js';
-import type { CollabSession } from './session.js';
+import { type LoadOrigin, shouldRoomReplaceLoad } from './policy';
+import type { CollabSession } from './session';
 
 /** Transaction origin used for the adapter's own writes, so observers can skip echoes. */
 export const LOCAL_ORIGIN: unique symbol = Symbol('ooxml-core:collab:local');

@@ -3,7 +3,7 @@
 // stack: it needs no media server but scales to roughly a dozen people; an SFU would plug in behind
 // the same `CallSession` surface. Media capture, the peer connection constructor and the stream
 // constructor are injectable, so the session is testable without a browser. DOM-free. New code.
-import { Emitter } from '../collab/emitter.js';
+import { Emitter } from '../collab/emitter';
 import {
 	type IceServer,
 	type Peer,
@@ -12,8 +12,8 @@ import {
 	type StreamLike,
 	type TrackLike,
 	createPeer,
-} from './peer.js';
-import type { MediaState, Signal, SignalingChannel } from './signaling.js';
+} from './peer';
+import type { MediaState, Signal, SignalingChannel } from './signaling';
 
 export interface MediaDevicesLike {
 	getUserMedia: (constraints: { audio?: boolean; video?: boolean }) => Promise<StreamLike>;

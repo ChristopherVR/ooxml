@@ -1,6 +1,6 @@
-import { signedTwipsFromPixels, twips, twipsFromPixels } from '../units/units.js';
-import type { Block, DocumentModel } from './model.js';
-import type { SectionProperties } from './section-model.js';
+import { signedTwipsFromPixels, twips, twipsFromPixels } from '../units/units';
+import type { Block, DocumentModel } from './model';
+import type { SectionProperties } from './section-model';
 
 /** Section layout without header/footer content, as stored on the editor document for undo. */
 export function sectionLayoutJson(sections: SectionProperties[]): string {

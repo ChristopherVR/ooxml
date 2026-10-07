@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { REFINED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows-refined.js';
+import { REFINED_ARROW_PRESET_DEFINITIONS } from './preset-shape-definitions-arrows-refined';
 
 const REQUIRED_REFINEMENTS = [
 	'bentArrow',

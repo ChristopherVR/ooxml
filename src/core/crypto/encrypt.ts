@@ -15,21 +15,21 @@ import {
 	hmac,
 	uint32LE,
 } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
-import { aesEcbEncrypt } from './aes-ecb.js';
+import { aesEcbEncrypt } from './aes-ecb';
 import {
 	STANDARD_ALG_ID_HASH_SHA1,
 	buildAgileEncryptionInfoXml,
 	buildEncryptionInfoStream,
 	buildStandardEncryptionInfoStream,
-} from './encryption-info-write.js';
+} from './encryption-info-write';
 import {
 	BLOCK_KEYS,
 	computeAgileKeyBase,
 	deriveAgileKeyFromBase,
 	deriveStandardKey,
 	generateIV,
-} from './key-derivation.js';
-import type { EncryptionInfo, EncryptionOptions } from './types.js';
+} from './key-derivation';
+import type { EncryptionInfo, EncryptionOptions } from './types';
 
 const SEGMENT_SIZE = 4096;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { readOleDocumentParagraphs, writeOleDocumentParagraphEdit } from './embedded.js';
+import { readOleDocumentParagraphs, writeOleDocumentParagraphEdit } from './embedded';
 
 async function docxFixture(): Promise<Uint8Array> {
 	const zip = new JSZip();

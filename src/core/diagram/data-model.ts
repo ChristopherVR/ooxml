@@ -1,7 +1,7 @@
 // DOM parser for the diagram data model part (`dgm:dataModel`). Generalises
 // `pptx/core/builders/PptxSmartArtParser.ts` and `parseSmartArtConnections` of the pptx runtime.
-import { parseXml, type XmlDocument } from '../xml/index.js';
-import { parseConnectionAttributes, parseCustomLayoutAttributes } from './attributes.js';
+import { parseXml, type XmlDocument } from '../xml/index';
+import { parseConnectionAttributes, parseCustomLayoutAttributes } from './attributes';
 import {
 	NS,
 	attributeReader,
@@ -11,8 +11,8 @@ import {
 	integerAttribute,
 	stringAttribute,
 	type XmlElement,
-} from './dom.js';
-import type { DiagramConnection, DiagramDataModel, DiagramIssue, DiagramPoint } from './types.js';
+} from './dom';
+import type { DiagramConnection, DiagramDataModel, DiagramIssue, DiagramPoint } from './types';
 
 /** `parTrans` and `sibTrans` points carry the text drawn on an org-chart relationship line. */
 const TRANSITION_TYPES: ReadonlySet<string> = new Set(['parTrans', 'sibTrans']);

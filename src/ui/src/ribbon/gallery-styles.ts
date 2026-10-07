@@ -1,4 +1,4 @@
-import { withTokens } from '../base.js';
+import { withTokens } from '../base';
 import css from './gallery.css?raw';
 
 /**

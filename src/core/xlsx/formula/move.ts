@@ -1,8 +1,8 @@
 // Reference rewrites for moving cells (cut and paste) and deleting sheets.
-import { type CellRange, normalizeRange } from '../address.js';
-import type { RefSpec } from './ast.js';
-import { joinTokens } from './tokenizer.js';
-import { formatRefSpec, prefixText, safeTokens } from './transform.js';
+import { type CellRange, normalizeRange } from '../address';
+import type { RefSpec } from './ast';
+import { joinTokens } from './tokenizer';
+import { formatRefSpec, prefixText, safeTokens } from './transform';
 
 /** Cells moved by a cut and paste: `range` on `fromSheet` lands at (+dRow, +dCol) on `toSheet`. */
 export interface MoveSpec {

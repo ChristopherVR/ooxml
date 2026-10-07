@@ -1,8 +1,8 @@
-import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/index.js';
-import { formatRange, parseRange, type CellRange } from '../address.js';
-import type { Table, Worksheet } from '../model.js';
-import { addFuturePrefixes } from '../read/formula-text.js';
-import { num } from './xml-out.js';
+import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/index';
+import { formatRange, parseRange, type CellRange } from '../address';
+import type { Table, Worksheet } from '../model';
+import { addFuturePrefixes } from '../read/formula-text';
+import { num } from './xml-out';
 
 const xKids = (parent: XmlElement, local: string): XmlElement[] =>
 	elements(parent).filter((e) => e.localName === local);

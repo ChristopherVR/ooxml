@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { FormulaError, type FormulaAst } from './ast.js';
-import { parseFormula } from './parser.js';
+import { FormulaError, type FormulaAst } from './ast';
+import { parseFormula } from './parser';
 
 /** A compact s-expression of the tree, for readable precedence assertions. */
 function show(node: FormulaAst): string {

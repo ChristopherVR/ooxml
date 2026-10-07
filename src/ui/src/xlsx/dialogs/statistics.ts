@@ -1,8 +1,8 @@
 // Workbook Statistics (Review > Proofing): read-only counts for the current sheet and workbook.
 import { type Worksheet, formatAddress, usedRange } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el, fieldset } from './fields.js';
-import { showDialog } from './frame.js';
+import { el, fieldset } from './fields';
+import { showDialog } from './frame';
 
 export interface SheetStats {
 	cells: number;

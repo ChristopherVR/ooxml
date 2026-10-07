@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { createAssetSync } from './assets.js';
+import { createAssetSync } from './assets';
 
 it('routes raw binary payloads without aliasing callers or incrementing equal swaps', () => {
 	const sync = createAssetSync({ mapName: 'assets', fields: { bytes: '_bytes' } });

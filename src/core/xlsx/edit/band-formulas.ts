@@ -1,7 +1,7 @@
-import type { CellRange } from '../address.js';
-import { type RefSpec, type Token, formatRefSpec, tokenize } from './deps.js';
-import { type AxisShift, sameRange, shiftRangeInBand } from './range-math.js';
-import type { Band } from './shift-sheet.js';
+import type { CellRange } from '../address';
+import { type RefSpec, type Token, formatRefSpec, tokenize } from './deps';
+import { type AxisShift, sameRange, shiftRangeInBand } from './range-math';
+import type { Band } from './shift-sheet';
 
 /** Whether a reference token points at `sheet` (unqualified ones point at the formula's sheet). */
 function pointsAt(token: Token, formulaSheet: string, sheet: string): boolean {

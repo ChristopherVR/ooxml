@@ -10,23 +10,23 @@
  *
  * @module render/preset-text-rect-table
  */
-import { evaluateGuides } from './guide-formula-api.js';
-import { resolveOperand } from './guide-formula-eval.js';
-import { normalizeStShapeType } from './preset-geometry-names.js';
-import { ACTION_BUTTON_TEXT_RECTS } from './preset-text-rect-action-buttons.js';
-import { ARROW_TEXT_RECTS } from './preset-text-rect-arrows.js';
-import { BRACE_TEXT_RECTS } from './preset-text-rect-braces.js';
-import { CALLOUT_TEXT_RECTS } from './preset-text-rect-callouts.js';
-import { CIRCULAR_ARROW_TEXT_RECTS } from './preset-text-rect-circular-arrows.js';
-import { FLOWCHART_TEXT_RECTS } from './preset-text-rect-flowchart.js';
-import { MISC_TEXT_RECTS_A } from './preset-text-rect-misc-a.js';
-import { MISC_TEXT_RECTS_B } from './preset-text-rect-misc-b.js';
-import { POLYGON_TEXT_RECTS } from './preset-text-rect-polygons.js';
-import { QUAD_TEXT_RECTS } from './preset-text-rect-quads.js';
-import { RIBBON_TEXT_RECTS } from './preset-text-rect-ribbons.js';
-import { STAR_TEXT_RECTS } from './preset-text-rect-stars.js';
-import { TAB_TEXT_RECTS } from './preset-text-rect-tabs.js';
-import type { PresetTextRectDefinition } from './preset-text-rect-types.js';
+import { evaluateGuides } from './guide-formula-api';
+import { resolveOperand } from './guide-formula-eval';
+import { normalizeStShapeType } from './preset-geometry-names';
+import { ACTION_BUTTON_TEXT_RECTS } from './preset-text-rect-action-buttons';
+import { ARROW_TEXT_RECTS } from './preset-text-rect-arrows';
+import { BRACE_TEXT_RECTS } from './preset-text-rect-braces';
+import { CALLOUT_TEXT_RECTS } from './preset-text-rect-callouts';
+import { CIRCULAR_ARROW_TEXT_RECTS } from './preset-text-rect-circular-arrows';
+import { FLOWCHART_TEXT_RECTS } from './preset-text-rect-flowchart';
+import { MISC_TEXT_RECTS_A } from './preset-text-rect-misc-a';
+import { MISC_TEXT_RECTS_B } from './preset-text-rect-misc-b';
+import { POLYGON_TEXT_RECTS } from './preset-text-rect-polygons';
+import { QUAD_TEXT_RECTS } from './preset-text-rect-quads';
+import { RIBBON_TEXT_RECTS } from './preset-text-rect-ribbons';
+import { STAR_TEXT_RECTS } from './preset-text-rect-stars';
+import { TAB_TEXT_RECTS } from './preset-text-rect-tabs';
+import type { PresetTextRectDefinition } from './preset-text-rect-types';
 
 /**
  * Every preset this repo carries an ECMA `<a:rect>` transcription for via this

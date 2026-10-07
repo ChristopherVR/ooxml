@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { defineSelect } from './select.js';
+import { defineSelect } from './select';
 
 afterEach(() => document.body.replaceChildren());
 

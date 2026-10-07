@@ -1,5 +1,5 @@
 import type { EditorState, Transaction } from 'prosemirror-state';
-import { createIdGenerator } from '../../collab/index.js';
+import { createIdGenerator } from '../../collab/index';
 
 /** Generates collision-resistant document IDs within one unique client session. */
 export function createCollaborationIdGenerator(clientId: string): (kind: string) => string {

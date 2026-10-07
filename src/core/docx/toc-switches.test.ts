@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { createDocument, loadDocx, tocEntries, type DocumentModel } from './index.js';
-import { tocSwitches } from './toc-switches.js';
+import { createDocument, loadDocx, tocEntries, type DocumentModel } from './index';
+import { tocSwitches } from './toc-switches';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const REL = 'http://schemas.openxmlformats.org/package/2006/relationships';

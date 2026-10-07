@@ -9,8 +9,8 @@ import {
 	inputByLabel,
 	pressKey,
 	setValue,
-} from '../commands/test-support.js';
-import { registerToolDialogs } from './register-tools.js';
+} from '../commands/test-support';
+import { registerToolDialogs } from './register-tools';
 
 afterEach(() => (document.body.innerHTML = ''));
 

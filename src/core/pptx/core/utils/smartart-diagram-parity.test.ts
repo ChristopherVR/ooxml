@@ -5,7 +5,7 @@ import path from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseDiagramDataModel } from '../../../diagram/index.js';
+import { parseDiagramDataModel } from '../../../diagram/index';
 import type { XmlObject } from '../types';
 import { collectSmartArtTransitionText } from './smartart-connector-labels';
 import {

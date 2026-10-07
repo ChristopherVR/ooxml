@@ -4,9 +4,9 @@ import type { ConditionalRule, DifferentialStyle, TimePeriod } from 'ooxml-core/
 import { HIGHLIGHT_STYLES } from 'ooxml-core/xlsx/ui';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { TIME_PERIOD_LABELS, customFormat, operand } from './cf-common.js';
-import { field, invalid, numberInput, row, select, text, textInput } from './fields.js';
-import { showDialog } from './frame.js';
+import { TIME_PERIOD_LABELS, customFormat, operand } from './cf-common';
+import { field, invalid, numberInput, row, select, text, textInput } from './fields';
+import { showDialog } from './frame';
 
 interface QuickSpec {
 	heading: string;

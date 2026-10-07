@@ -1,8 +1,8 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { contentUrl, readContent, type FileEntry, type TeamsClient } from 'ooxml-core/teams';
-import { downloadBytes } from '../../xlsx/file-commands.js';
+import { downloadBytes } from '../../xlsx/file-commands';
 import css from './file-actions.css?raw';
-import { toggleAnchoredPopover } from './anchored-popover.js';
+import { toggleAnchoredPopover } from './anchored-popover';
 const fileKey = (file: FileEntry | null | undefined): string =>
 	JSON.stringify([file?.channelId, file?.messageId, file?.url, file?.name]);
 

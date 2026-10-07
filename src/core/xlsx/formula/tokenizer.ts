@@ -1,4 +1,4 @@
-import { FormulaError, type RefSpec, type SheetPrefix } from './ast.js';
+import { FormulaError, type RefSpec, type SheetPrefix } from './ast';
 import {
 	NAME_RE,
 	NAME_START,
@@ -9,9 +9,9 @@ import {
 	readPrefix,
 	readReference,
 	numberLiteral,
-} from './lexemes.js';
+} from './lexemes';
 
-export { numberLiteral, readReference } from './lexemes.js';
+export { numberLiteral, readReference } from './lexemes';
 
 export type TokenKind =
 	| 'number'

@@ -3,7 +3,7 @@
 import type { Comment } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { toggleWorkbookProtection, unprotectSheet } from '../dialogs/protect-sheet.js';
+import { toggleWorkbookProtection, unprotectSheet } from '../dialogs/protect-sheet';
 import { icon } from 'ooxml-core/xlsx/ui';
 import { editing, target, viewing } from 'ooxml-core/xlsx/ui';
 

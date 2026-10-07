@@ -1,7 +1,7 @@
 // Collaborator identity: roles, colours, labels, initials and collision-resistant id generation.
 // Extracted from pptx-viewer `collaboration-presence.ts` / `collaboration-active-session.ts` and
 // docx-viewer `collaboration-identity.ts` / `presence.ts` (palette); see PROVENANCE.md.
-import { DEFAULT_COLOR, isValidId } from './validation.js';
+import { DEFAULT_COLOR, isValidId } from './validation';
 
 /** Collaboration role within a session. */
 export type CollaborationRole = 'owner' | 'collaborator' | 'viewer';

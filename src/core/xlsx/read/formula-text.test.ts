@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addFuturePrefixes, stripFuturePrefixes, translateReferences } from './formula-text.js';
+import { addFuturePrefixes, stripFuturePrefixes, translateReferences } from './formula-text';
 
 describe('translateReferences', () => {
 	it('moves relative parts and keeps absolute ones', () => {

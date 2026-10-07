@@ -2,10 +2,10 @@
 // editor's keys (commit / cancel / newline / point mode / F2 / F4). Keys the grid does not own
 // propagate to the shell's global shortcuts.
 import type { NavigationKey } from 'ooxml-core/xlsx';
-import type { CellEditor } from './cell-editor.js';
-import { currentRegionOrAll } from './grid-commands.js';
-import type { GridSelection } from './grid-selection.js';
-import type { GridView } from './grid-view.js';
+import type { CellEditor } from './cell-editor';
+import { currentRegionOrAll } from './grid-commands';
+import type { GridSelection } from './grid-selection';
+import type { GridView } from './grid-view';
 import { toggleAbsolute } from 'ooxml-core/xlsx';
 
 export interface KeyHost {

@@ -4,8 +4,8 @@
 import { createDecipheriv, createHash } from 'node:crypto';
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
 import { describe, expect, it } from 'vitest';
-import { decryptOoxmlPackage, encryptOoxmlPackage, parseEncryptionInfo } from './index.js';
-import type { StandardEncryptionInfo } from './types.js';
+import { decryptOoxmlPackage, encryptOoxmlPackage, parseEncryptionInfo } from './index';
+import type { StandardEncryptionInfo } from './types';
 
 const sha1 = (...parts: Uint8Array[]): Buffer => {
 	const hash = createHash('sha1');

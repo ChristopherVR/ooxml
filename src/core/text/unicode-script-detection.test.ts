@@ -4,7 +4,7 @@ import {
 	segmentByScript,
 	resolveFontForScript,
 	hasDistinctScriptFonts,
-} from './index.js';
+} from './index';
 
 describe('script font primitives', () => {
 	it.each([

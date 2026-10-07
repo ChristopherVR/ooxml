@@ -1,9 +1,9 @@
-import { stripXmlOrderSuffix } from './omml-node.js';
+import { stripXmlOrderSuffix } from './omml-node';
 import { describe, expect, it } from 'vitest';
 
-import { convertLatexToOmml } from './latex-to-omml.js';
-import { convertOmmlToLatex } from './omml-to-latex.js';
-import { convertOmmlToMathMl } from './omml-to-mathml.js';
+import { convertLatexToOmml } from './latex-to-omml';
+import { convertOmmlToLatex } from './omml-to-latex';
+import { convertOmmlToMathMl } from './omml-to-mathml';
 
 type Rec = Record<string, unknown>;
 

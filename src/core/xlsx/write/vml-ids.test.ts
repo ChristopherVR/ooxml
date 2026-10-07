@@ -1,9 +1,9 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { createEditSession } from '../edit/index.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from './index.js';
-import { VmlIdAllocator, stripNoteShapes, vmlIdmapBlocks, vmlShapeIds } from './vml-ids.js';
+import { createEditSession } from '../edit/index';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from './index';
+import { VmlIdAllocator, stripNoteShapes, vmlIdmapBlocks, vmlShapeIds } from './vml-ids';
 
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

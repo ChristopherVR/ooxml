@@ -44,9 +44,9 @@
  * `preset-shape-definitions-table.ts`.
  */
 
-import { gear6 } from './preset-shape-definitions-gear6.js';
-import { gear9 } from './preset-shape-definitions-gear9.js';
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
+import { gear6 } from './preset-shape-definitions-gear6';
+import { gear9 } from './preset-shape-definitions-gear9';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
 
 // ---------------------------------------------------------------------------
 // Helpers

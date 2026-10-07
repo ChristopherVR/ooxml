@@ -1,11 +1,11 @@
-import type { Table, TableCell } from './model.js';
-import type { TableBorders, TableCellMargins, TableRowProperties } from './table-model.js';
-import { buildCellProperties, buildRowProperties } from './table-cell-write.js';
-import { buildBorders } from './table-defaults.js';
-import { patchMarginProperties } from './write-table-margins.js';
-import { orderChildren } from './element-order.js';
-import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
-import { isStVerticalJc } from './generated/wml-simple-types.js';
+import type { Table, TableCell } from './model';
+import type { TableBorders, TableCellMargins, TableRowProperties } from './table-model';
+import { buildCellProperties, buildRowProperties } from './table-cell-write';
+import { buildBorders } from './table-defaults';
+import { patchMarginProperties } from './write-table-margins';
+import { orderChildren } from './element-order';
+import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+import { isStVerticalJc } from './generated/wml-simple-types';
 
 const ROW_ORDER = [
 	'cnfStyle',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RibbonControl, RibbonMenuItem } from 'ooxml-core/xlsx/ui';
 import { COMMAND_TABLES, commandStrings } from 'ooxml-core/xlsx/ui';
-import { allCommands, commandTabs } from './index.js';
+import { allCommands, commandTabs } from './index';
 import { BUILTIN_CELL_STYLES } from 'ooxml-core/xlsx';
 
 const known = new Set(COMMAND_TABLES.flatMap((table) => Object.keys(table)));

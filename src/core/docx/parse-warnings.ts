@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Reports precisely which imported features are unsupported, so parse.ts stays focused on
 // building the document model. Never silently claims Word parity for anything listed here.
-import type { Block, Paragraph } from './model.js';
-import { hasSpecialBreak, isModeledBreak } from './breaks.js';
-import { textContent, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import type { Block, Paragraph } from './model';
+import { hasSpecialBreak, isModeledBreak } from './breaks';
+import { textContent, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 
 function hasAny(document: XmlDocument, names: string[]): boolean {
 	return names.some((name) => document.getElementsByTagNameNS(WORD_NS, name).length > 0);

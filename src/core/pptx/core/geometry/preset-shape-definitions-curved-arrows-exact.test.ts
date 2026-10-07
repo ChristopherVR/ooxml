@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { EXACT_CURVED_ARROW_PRESET_DEFINITIONS } from '../../../geometry/preset-shape-definitions-curved-arrows-exact.js';
+import { EXACT_CURVED_ARROW_PRESET_DEFINITIONS } from '../../../geometry/preset-shape-definitions-curved-arrows-exact';
 import { evaluatePresetShape } from './preset-shape-evaluator';
 
 const SHAPES = ['curvedRightArrow', 'curvedLeftArrow', 'curvedUpArrow', 'curvedDownArrow'] as const;

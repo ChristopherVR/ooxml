@@ -1,9 +1,9 @@
 import * as Y from 'yjs';
-import type { CollabSession } from '../../collab/index.js';
-import type { Comment } from '../model.js';
+import type { CollabSession } from '../../collab/index';
+import type { Comment } from '../model';
 import type { EditorView } from 'prosemirror-view';
 import { ySyncPluginKey } from 'y-prosemirror';
-import { addComment } from './comment-commands.js';
+import { addComment } from './comment-commands';
 
 /** Independent records avoid replacing a whole thread when two authors reply offline.
  * Deletion hides concurrent replies until the root is explicitly restored by undo. */

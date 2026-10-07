@@ -8,15 +8,15 @@ import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import * as Y from 'yjs';
-import { applyUpdateSafe, MAX_UPDATE_BYTES } from './codec.js';
-import { Emitter } from './emitter.js';
+import { applyUpdateSafe, MAX_UPDATE_BYTES } from './codec';
+import { Emitter } from './emitter';
 import type {
 	ConnectionStatus,
 	ProviderContext,
 	ProviderEvents,
 	SyncProvider,
 	Transport,
-} from './provider.js';
+} from './provider';
 
 export const MESSAGE_SYNC = 0;
 export const MESSAGE_AWARENESS = 1;

@@ -3,9 +3,9 @@
 // nothing does not ask.
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { registerSimpleDialogs } from '../dialogs/simple.js';
-import { allCommands } from './index.js';
-import { clickButton, createTestContext, dialogEl, tick } from './test-support.js';
+import { registerSimpleDialogs } from '../dialogs/simple';
+import { allCommands } from './index';
+import { clickButton, createTestContext, dialogEl, tick } from './test-support';
 
 afterEach(() => (document.body.innerHTML = ''));
 

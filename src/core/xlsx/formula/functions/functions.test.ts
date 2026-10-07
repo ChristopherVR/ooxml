@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calc, calcArray, E } from '../test-helpers.js';
-import { FUNCTION_CATALOG, getFunction } from './registry.js';
+import { calc, calcArray, E } from '../test-helpers';
+import { FUNCTION_CATALOG, getFunction } from './registry';
 
 describe('FUNCTION_CATALOG', () => {
 	it('lists well over 150 implemented functions with unique names', () => {

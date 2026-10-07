@@ -1,8 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Tags field result runs with their field code so renderers can recalculate display-only fields
 // such as PAGE and NUMPAGES. The markers and field code are modeled as their own runs.
-import type { TextRun } from './model.js';
-import { getW, isElement, named, textContent, type XmlElement } from './xml.js';
+import type { TextRun } from './model';
+import { getW, isElement, named, textContent, type XmlElement } from './xml';
 
 /** The field code's name (first word, upper case), e.g. `PAGE` for ` PAGE \* MERGEFORMAT `. */
 export function fieldName(instr: string): string {

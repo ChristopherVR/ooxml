@@ -1,7 +1,7 @@
 // Numerical core of the statistical distributions (incomplete gamma and beta, inverses).
-import { ERR, fail } from '../values.js';
-import { combin } from './math.js';
-import { gammaLn } from './stats-core.js';
+import { ERR, fail } from '../values';
+import { combin } from './math';
+import { gammaLn } from './stats-core';
 
 const EPS = 1e-15;
 

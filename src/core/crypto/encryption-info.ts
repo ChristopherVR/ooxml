@@ -5,7 +5,7 @@
  */
 
 import { base64Decode } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
-import type { EncryptionInfo, StandardEncryptionInfo } from './types.js';
+import type { EncryptionInfo, StandardEncryptionInfo } from './types';
 
 /**
  * Algorithm ID for RC4 in the [MS-OFFCRYPTO] EncryptionHeader `algId` field.

@@ -1,10 +1,10 @@
 // Home > Font: font name and size, grow / shrink, bold, italic, underline, strikethrough, font and
 // fill colours and the border presets. Toggle state reads the active cell's resolved format.
-import type { BorderEdge, BorderPreset, Color, StylePatch } from '../../index.js';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { UNSET, activeStyle, editing, target, withTarget } from './util.js';
+import type { BorderEdge, BorderPreset, Color, StylePatch } from '../../index';
+import type { Command } from '../commands';
+import type { EditorContext } from '../context';
+import { icon } from './icons';
+import { UNSET, activeStyle, editing, target, withTarget } from './util';
 
 export const FONT_NAMES = [
 	'Aptos',

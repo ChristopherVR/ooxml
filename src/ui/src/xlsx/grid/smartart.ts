@@ -5,7 +5,7 @@
 import { THEME_SLOTS, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
 import { defineSmartArt, type SchemeColors, type SchemeFonts } from '../../index';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { h } from './dom.js';
+import { h } from './dom';
 
 const ALIASES: Readonly<Record<string, string>> = {
 	bg1: 'lt1',

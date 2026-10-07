@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { loadXlsx } from '../read/load.js';
-import { createWorkbook } from '../workbook.js';
-import { saveXlsx } from '../write/save.js';
-import { legacyPasswordHash, verifySheetPassword, verifyWorkbookPassword } from './protection.js';
-import { createEditSession } from './session.js';
+import { loadXlsx } from '../read/load';
+import { createWorkbook } from '../workbook';
+import { saveXlsx } from '../write/save';
+import { legacyPasswordHash, verifySheetPassword, verifyWorkbookPassword } from './protection';
+import { createEditSession } from './session';
 
 const setup = () => {
 	const wb = createWorkbook({ sheets: ['Sheet1'] });

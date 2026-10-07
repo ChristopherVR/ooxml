@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table.js';
-import { TABS_DECORATIONS_PRESET_DEFINITIONS } from './preset-shape-definitions-tabs-decorations.js';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
+import { TABS_DECORATIONS_PRESET_DEFINITIONS } from './preset-shape-definitions-tabs-decorations';
 
 const REQUIRED_SHAPES = [
 	'cornerTabs',

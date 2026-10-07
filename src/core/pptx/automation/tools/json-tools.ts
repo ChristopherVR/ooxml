@@ -2,10 +2,10 @@ import {
 	applyImportedPptxData,
 	buildPptxJsonDocument,
 	deserializePptxFromJson,
-} from '../../index.js';
-import type { PptxJsonAssetStats } from '../../index.js';
+} from '../../index';
+import type { PptxJsonAssetStats } from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
+import type { ToolContext, ToolResult } from '../types';
 
 // ── exportToJson ─────────────────────────────────────────────────────────────
 

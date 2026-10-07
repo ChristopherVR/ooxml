@@ -6,7 +6,7 @@ export {
 	parseRelationships,
 	resolvePartPath,
 	type Relationship,
-} from '../opc/index.js';
-import { NS } from '../xml/index.js';
+} from '../opc/index';
+import { NS } from '../xml/index';
 
 export const RELATIONSHIP_NS = NS.r;

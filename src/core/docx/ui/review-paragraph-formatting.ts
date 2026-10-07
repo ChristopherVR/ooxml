@@ -1,7 +1,7 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { Transaction } from 'prosemirror-state';
-import type { Paragraph, Revision } from '../model.js';
-import { PARAGRAPH_FORMAT_KEYS, restoreParagraphFormatting } from '../restore-paragraph-format.js';
+import type { Paragraph, Revision } from '../model';
+import { PARAGRAPH_FORMAT_KEYS, restoreParagraphFormatting } from '../restore-paragraph-format';
 
 export function paragraphFormattingRevision(node: ProseMirrorNode): Revision | undefined {
 	const revision = node.attrs.formatRevision as Revision | undefined;

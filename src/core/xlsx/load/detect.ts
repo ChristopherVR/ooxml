@@ -2,20 +2,20 @@
 // (encrypted) packages, Excel 97-2003 .xls (OLE2 compound file) and CSV text. Detection sniffs
 // content; a file name only distinguishes macro-enabled and binary packages and never overrides
 // what the bytes are.
-import { PasswordRequiredError } from '../../crypto/errors.js';
+import { PasswordRequiredError } from '../../crypto/errors';
 import {
 	decryptOoxmlPackage,
 	encryptOoxmlPackage,
 	isEncryptedOoxmlPackage,
 	type EncryptionOptions,
-} from '../../crypto/index.js';
-import type { Workbook } from '../model.js';
-import { loadXlsx } from '../read/index.js';
-import { saveXlsx } from '../write/index.js';
-import { csvToWorkbook, sheetNameFromFileName, sheetToCsv } from './csv.js';
-import { xlsbUnsupported } from './errors.js';
-import { loadLegacyXls } from './legacy-xls.js';
-import { decodeSpreadsheetText } from './text-decode.js';
+} from '../../crypto/index';
+import type { Workbook } from '../model';
+import { loadXlsx } from '../read/index';
+import { saveXlsx } from '../write/index';
+import { csvToWorkbook, sheetNameFromFileName, sheetToCsv } from './csv';
+import { xlsbUnsupported } from './errors';
+import { loadLegacyXls } from './legacy-xls';
+import { decodeSpreadsheetText } from './text-decode';
 
 /**
  * A detected spreadsheet format. `'encrypted'` is an OOXML package saved with a password to open

@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseRange, formatRange, rangeContains } from '../address.js';
-import { getCell } from '../cells.js';
-import type { ConditionalRule, Fill } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { createCalcEngine } from '../formula/index.js';
-import { createConditionalFormatEvaluator } from '../layout/cf-evaluator.js';
-import { createEditSession } from './session.js';
-import type { PasteOptions } from './types.js';
-import { saveXlsx } from '../write/index.js';
-import { loadXlsx } from '../read/index.js';
+import { parseRange, formatRange, rangeContains } from '../address';
+import { getCell } from '../cells';
+import type { ConditionalRule, Fill } from '../model';
+import { createWorkbook } from '../workbook';
+import { createCalcEngine } from '../formula/index';
+import { createConditionalFormatEvaluator } from '../layout/cf-evaluator';
+import { createEditSession } from './session';
+import type { PasteOptions } from './types';
+import { saveXlsx } from '../write/index';
+import { loadXlsx } from '../read/index';
 
 interface NativeRule {
 	type: number;

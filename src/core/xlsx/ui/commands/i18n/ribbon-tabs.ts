@@ -1,5 +1,5 @@
 // Insert, Page Layout, Formulas, Data, Review, View, Help and contextual tab strings.
-import type { Translations } from './types.js';
+import type { Translations } from './types';
 
 export const RIBBON_TAB_STRINGS: Translations = {
 	'Chart Styles': [

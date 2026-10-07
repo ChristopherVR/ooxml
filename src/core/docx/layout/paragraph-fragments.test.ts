@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { alignFragments } from './paragraph-fragments.js';
-import type { LayoutFragment } from './result.js';
-import { at } from './test-helpers.js';
+import { alignFragments } from './paragraph-fragments';
+import type { LayoutFragment } from './result';
+import { at } from './test-helpers';
 
 const frag = (text: string, xPx: number, widthPx: number): LayoutFragment => ({
 	text,

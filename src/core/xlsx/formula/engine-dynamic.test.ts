@@ -1,8 +1,8 @@
 // Dynamic references (OFFSET, INDEX, INDIRECT, `:` between computed references), on-demand
 // computation depth and deeply nested formulas.
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import { book, engine, get, locate, set } from './test-helpers.js';
+import { putCell } from '../cells';
+import { book, engine, get, locate, set } from './test-helpers';
 
 const at = (wb: Parameters<typeof locate>[0], key: string) => locate(wb, key);
 

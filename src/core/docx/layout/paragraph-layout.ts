@@ -1,19 +1,19 @@
-import type { TextMeasurer } from './measure.js';
-import type { BreakToken } from './text-breaks.js';
-import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result.js';
-import type { LayoutParagraph } from './input.js';
-import { NO_TWIPS, twipsToPx } from './units.js';
-import { placeTab } from './tab-stops.js';
+import type { TextMeasurer } from './measure';
+import type { BreakToken } from './text-breaks';
+import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
+import type { LayoutParagraph } from './input';
+import { NO_TWIPS, twipsToPx } from './units';
+import { placeTab } from './tab-stops';
 import {
 	fontOf,
 	runTextWidth,
 	resolveIndents,
 	tokenizeParagraph,
 	type PlacedToken,
-} from './paragraph-tokens.js';
-import { lineMetrics, tokenExtent } from './line-metrics.js';
-import { alignFragments, buildFragments } from './paragraph-fragments.js';
-import { expectDefined } from '../expect-defined.js';
+} from './paragraph-tokens';
+import { lineMetrics, tokenExtent } from './line-metrics';
+import { alignFragments, buildFragments } from './paragraph-fragments';
+import { expectDefined } from '../expect-defined';
 
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */

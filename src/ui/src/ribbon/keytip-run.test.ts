@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { assignKeyTips, runKeyTips, type KeyTipTarget } from './keytip-run.js';
+import { assignKeyTips, runKeyTips, type KeyTipTarget } from './keytip-run';
 
 const target = (name: string, key = '', activate = () => {}): KeyTipTarget => {
 	const element = document.createElement('button');

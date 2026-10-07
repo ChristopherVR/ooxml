@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import type { Workbook } from '../model.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
+import { parseRange } from '../address';
+import type { Workbook } from '../model';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
 
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';

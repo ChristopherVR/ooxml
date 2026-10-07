@@ -5,7 +5,7 @@ import {
 	isOpenableHyperlinkHref,
 	isSafeHyperlinkHref,
 	isStorableHyperlinkHref,
-} from './safe-href.js';
+} from './safe-href';
 
 // Built without the literal token so script-url lint rules stay quiet.
 const JS = `${'java'}script`;

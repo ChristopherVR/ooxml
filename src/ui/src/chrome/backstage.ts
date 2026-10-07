@@ -1,7 +1,7 @@
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { OfficeElement, controlStyles, flag } from '../base.js';
-import { definer, present } from '../registry.js';
+import { OfficeElement, controlStyles, flag } from '../base';
+import { definer, present } from '../registry';
 import css from './backstage.css?raw';
 
 /**

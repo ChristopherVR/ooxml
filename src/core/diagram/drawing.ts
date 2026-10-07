@@ -2,13 +2,13 @@
 // application last laid out, as a renderer-neutral model in EMU. Generalises
 // `parseSmartArtDrawingShapes`/`parseDrawingShape` of the pptx runtime without its theme and
 // presentation dependencies (colours stay unresolved; see `resolveDrawingColor`).
-import { parseXml, type XmlDocument } from '../xml/index.js';
-import { parseStyleReferences } from './definitions.js';
-import { parseDrawingFill, parseDrawingLine } from './drawing-fill.js';
-import { parseDrawingGeometry, parseFrame, parseTransform } from './drawing-geometry.js';
-import { parseDrawingTextBody } from './drawing-text.js';
-import { NS, first, stringAttribute, type XmlElement } from './dom.js';
-import type { DiagramDrawing, DiagramDrawingShape, DiagramIssue } from './types.js';
+import { parseXml, type XmlDocument } from '../xml/index';
+import { parseStyleReferences } from './definitions';
+import { parseDrawingFill, parseDrawingLine } from './drawing-fill';
+import { parseDrawingGeometry, parseFrame, parseTransform } from './drawing-geometry';
+import { parseDrawingTextBody } from './drawing-text';
+import { NS, first, stringAttribute, type XmlElement } from './dom';
+import type { DiagramDrawing, DiagramDrawingShape, DiagramIssue } from './types';
 
 interface GroupTransform {
 	offsetX: number;

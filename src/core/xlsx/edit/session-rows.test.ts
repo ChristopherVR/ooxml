@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { putCell } from '../cells.js';
-import { createWorkbook } from '../workbook.js';
-import { createEditSession } from './session.js';
+import { putCell } from '../cells';
+import { createWorkbook } from '../workbook';
+import { createEditSession } from './session';
 
 const all = { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } };
 

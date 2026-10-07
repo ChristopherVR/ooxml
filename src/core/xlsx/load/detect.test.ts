@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells.js';
-import { decodeText, detectWorkbookFormat, loadWorkbook, saveWorkbook } from './detect.js';
-import { LegacyXlsError } from './legacy-xls.js';
+import { getCell } from '../cells';
+import { decodeText, detectWorkbookFormat, loadWorkbook, saveWorkbook } from './detect';
+import { LegacyXlsError } from './legacy-xls';
 
 const fixture = async (path: string): Promise<Uint8Array> =>
 	new Uint8Array(await readFile(new URL(`../__fixtures__/${path}`, import.meta.url)));

@@ -1,8 +1,8 @@
-import { ELEMENT_FIELD_KIND, PptxHandler, SLIDE_FIELD_KIND } from '../../index.js';
-import type { PptxSlide, PptxElement } from '../../index.js';
+import { ELEMENT_FIELD_KIND, PptxHandler, SLIDE_FIELD_KIND } from '../../index';
+import type { PptxSlide, PptxElement } from '../../index';
 import { Doc as YDoc, Array as YArray, Map as YMap, Text as YText } from 'yjs';
 
-import { encodeTextBodyToYText, decodeTextBodyFromYText } from './text-body-codec.js';
+import { encodeTextBodyToYText, decodeTextBodyFromYText } from './text-body-codec';
 
 export const ORIGIN_FILE_LOAD = 'file-load';
 

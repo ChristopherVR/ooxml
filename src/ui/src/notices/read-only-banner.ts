@@ -1,8 +1,8 @@
 import { html, type PropertyValues } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { OfficeElement, controlStyles } from '../base.js';
-import { glyph } from '../glyph.js';
-import { definer } from '../registry.js';
+import { OfficeElement, controlStyles } from '../base';
+import { glyph } from '../glyph';
+import { definer } from '../registry';
 import css from './read-only-banner.css?raw';
 
 export interface OfficeReadOnlyBannerState {

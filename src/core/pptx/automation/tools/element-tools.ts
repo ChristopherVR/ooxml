@@ -7,7 +7,7 @@ import {
 	reassignDescendantIds,
 	resolveThemeColorRef,
 	ungroupElements as ungroupElementInArray,
-} from '../../index.js';
+} from '../../index';
 import type {
 	TextPptxElement,
 	ShapePptxElement,
@@ -17,12 +17,12 @@ import type {
 	PptxElementAnimation,
 	PptxThemeColorRef,
 	TextSegment,
-} from '../../index.js';
+} from '../../index';
 
-import type { ToolContext, ToolResult } from '../types.js';
-import { validateSlideIndex, generateElementId } from './helpers.js';
-import { applyElementAltText, applyElementTitle } from './style-tools.js';
-import { setElementText } from './text-editing.js';
+import type { ToolContext, ToolResult } from '../types';
+import { validateSlideIndex, generateElementId } from './helpers';
+import { applyElementAltText, applyElementTitle } from './style-tools';
+import { setElementText } from './text-editing';
 
 // ── addElement ──────────────────────────────────────────────────────────────
 

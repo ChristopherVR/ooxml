@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StThemeColor } from './generated/wml-simple-types.js';
+import type { StThemeColor } from './generated/wml-simple-types';
 /** Word theme color scheme slots (`a:clrScheme` children), in schema order. */
 export type ThemeColorSlot =
 	| 'dk1'

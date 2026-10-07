@@ -1,4 +1,4 @@
-import type { DiagramDrawingShape } from './types.js';
+import type { DiagramDrawingShape } from './types';
 
 /** Axis-aligned drawing bounds, in the same units as the supplied frames. */
 export interface DiagramDrawingBounds {

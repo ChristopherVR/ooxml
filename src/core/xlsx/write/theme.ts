@@ -1,7 +1,7 @@
-import { NS, buildXml, elements, first, parseXml } from '../../xml/index.js';
-import type { ThemePalette } from '../model.js';
-import { PALETTE_SLOTS, SCHEME_ORDER, parseTheme } from '../read/theme.js';
-import { XML_HEADER, escapeAttr } from './xml-out.js';
+import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
+import type { ThemePalette } from '../model';
+import { PALETTE_SLOTS, SCHEME_ORDER, parseTheme } from '../read/theme';
+import { XML_HEADER, escapeAttr } from './xml-out';
 
 const colorOf = (theme: ThemePalette, slot: string): string =>
 	(theme.colors[PALETTE_SLOTS.indexOf(slot as (typeof PALETTE_SLOTS)[number])] ?? '000000')

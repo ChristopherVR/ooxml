@@ -10,12 +10,12 @@
  * @module geometry/shape-boolean-ops
  */
 
-import { at } from './indexed.js';
-import { clipPolygons } from './shape-boolean-clipping.js';
-import { svgPathToPolygons, polygonsToSvgPath } from './shape-boolean-svg.js';
-import type { Vec2 } from './shape-boolean-types.js';
-import { ensureCCW, ensureCW, polygonArea, EPSILON } from './shape-boolean-types.js';
-import { computeUnionWalk } from './shape-boolean-union.js';
+import { at } from './indexed';
+import { clipPolygons } from './shape-boolean-clipping';
+import { svgPathToPolygons, polygonsToSvgPath } from './shape-boolean-svg';
+import type { Vec2 } from './shape-boolean-types';
+import { ensureCCW, ensureCW, polygonArea, EPSILON } from './shape-boolean-types';
+import { computeUnionWalk } from './shape-boolean-union';
 
 // ---------------------------------------------------------------------------
 // Internal helpers

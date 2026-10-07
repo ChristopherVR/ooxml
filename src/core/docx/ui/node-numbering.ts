@@ -1,4 +1,4 @@
-import { resolveParagraphNumbering, type DocumentModel } from '../index.js';
+import { resolveParagraphNumbering, type DocumentModel } from '../index';
 import type { Node } from 'prosemirror-model';
 
 /** Resolve a live paragraph's direct or inherited list without adding model properties. */

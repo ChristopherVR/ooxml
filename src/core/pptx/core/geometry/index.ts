@@ -24,14 +24,14 @@ export {
 	type PresetShapeGeometryDefinition,
 	type PresetPath,
 	type PresetPathCommand,
-} from '../../../geometry/preset-shape-definitions-table.js';
+} from '../../../geometry/preset-shape-definitions-table';
 
 export {
 	ST_SHAPE_TYPE_VALUES,
 	PRESET_GEOMETRY_ALIASES,
 	isStShapeType,
 	normalizeStShapeType,
-} from '../../../geometry/preset-geometry-names.js';
+} from '../../../geometry/preset-geometry-names';
 
 export {
 	evaluatePresetShape,
@@ -46,17 +46,17 @@ export {
 	getPresetConnectionSites,
 	lookupPresetConnectionSites,
 	type EvaluatedPresetConnectionSite,
-} from '../../../geometry/preset-connection-sites-table.js';
+} from '../../../geometry/preset-connection-sites-table';
 export type {
 	PresetConnectionSiteDefinition,
 	PresetConnectionSiteToken,
-} from '../../../geometry/preset-connection-sites-types.js';
+} from '../../../geometry/preset-connection-sites-types';
 
 export {
 	getPresetTextRect,
 	lookupPresetTextRectOverride,
-} from '../../../geometry/preset-text-rect-table.js';
-export type { PresetTextRectDefinition } from '../../../geometry/preset-text-rect-types.js';
+} from '../../../geometry/preset-text-rect-table';
+export type { PresetTextRectDefinition } from '../../../geometry/preset-text-rect-types';
 
 export { customGeometryPathsToSvgSubpaths, type CustomGeometrySubpathSvg } from './custom-geometry';
 
@@ -72,14 +72,14 @@ export {
 	evaluateCustomGeometryPaths,
 } from './custom-geometry-live-eval';
 
-export { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes.js';
+export { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes';
 
 export {
 	getCloudClipPath,
 	getCloudCalloutClipPath,
 	CLOUD_LOBE_COUNT,
 	CLOUD_CALLOUT_TAIL_COUNT,
-} from '../../../geometry/cloud-bezier-paths.js';
+} from '../../../geometry/cloud-bezier-paths';
 
 export { getConnectorAdjustment, getConnectorPathGeometry } from './connector-geometry';
 export type { ConnectorPathGeometry } from './connector-geometry';
@@ -98,11 +98,11 @@ export {
 	PRESET_SHAPE_DEFINITIONS,
 	PRESET_SHAPE_CATEGORY_LABELS,
 	getPresetShapeClipPath,
-} from '../../../geometry/preset-shape-paths.js';
+} from '../../../geometry/preset-shape-paths';
 export type {
 	PresetShapeDefinition,
 	PresetShapeCategory,
-} from '../../../geometry/preset-shape-paths.js';
+} from '../../../geometry/preset-shape-paths';
 
 export {
 	createBuiltinVariables,
@@ -136,8 +136,8 @@ export {
 	unionSvgPaths,
 	intersectSvgPaths,
 	subtractSvgPaths,
-} from '../../../geometry/shape-boolean.js';
-export type { Vec2, MergeShapeOperation } from '../../../geometry/shape-boolean.js';
+} from '../../../geometry/shape-boolean';
+export type { Vec2, MergeShapeOperation } from '../../../geometry/shape-boolean';
 
 export { FreeformPathBuilder, douglasPeucker, catmullRomToBezier } from './freeform-builder';
 
@@ -147,8 +147,8 @@ export {
 	getCalloutLeaderLineGeometry,
 	buildCalloutLeaderLineSvgPath,
 	getCalloutViewBoxBounds,
-} from '../../../geometry/callout-geometry.js';
+} from '../../../geometry/callout-geometry';
 export type {
 	CalloutPoint,
 	CalloutLeaderLineGeometry,
-} from '../../../geometry/callout-geometry.js';
+} from '../../../geometry/callout-geometry';

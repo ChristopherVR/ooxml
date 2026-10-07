@@ -9,9 +9,9 @@ import {
 	pressKey,
 	setValue,
 	tick,
-} from '../commands/test-support.js';
-import { safeAddress } from './hyperlink.js';
-import { registerRuleDialogs } from './register-rules.js';
+} from '../commands/test-support';
+import { safeAddress } from './hyperlink';
+import { registerRuleDialogs } from './register-rules';
 
 afterEach(() => (document.body.innerHTML = ''));
 

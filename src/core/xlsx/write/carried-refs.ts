@@ -1,18 +1,18 @@
 // Reference rewriting for parts the writer copies from the source package without modelling them
 // (pivot cache definitions, chart parts behind chartsheets): sheet renames, deleted sheets and row
 // or column inserts and deletes made in the editor must reach them, as Excel does on save.
-import type { Band } from '../edit/shift-sheet.js';
-import type { Workbook, Worksheet } from '../model.js';
-import type { SourceIndex } from '../read/package.js';
-import { parseWorkbookPart } from '../read/workbook-part.js';
-import type { PackageWriter } from './package-writer.js';
-import { shiftFormulaInBand } from '../edit/band-formulas.js';
+import type { Band } from '../edit/shift-sheet';
+import type { Workbook, Worksheet } from '../model';
+import type { SourceIndex } from '../read/package';
+import { parseWorkbookPart } from '../read/workbook-part';
+import type { PackageWriter } from './package-writer';
+import { shiftFormulaInBand } from '../edit/band-formulas';
 import {
 	deleteSheetInFormula,
 	renameSheetInFormula,
 	shiftFormula,
 	type ShiftSpec,
-} from '../formula/index.js';
+} from '../formula/index';
 
 /** A row or column insert (`count` > 0) or delete (`count` < 0) on one sheet. */
 export interface CarriedShift {

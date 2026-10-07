@@ -8,7 +8,7 @@
  *
  * @module render/preset-text-rect-action-buttons
  */
-import type { PresetTextRectDefinition } from './preset-text-rect-types.js';
+import type { PresetTextRectDefinition } from './preset-text-rect-types';
 
 export const ACTION_BUTTON_TEXT_RECTS: Record<string, PresetTextRectDefinition> = {
 	actionButtonBackPrevious: {

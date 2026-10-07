@@ -1,9 +1,9 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Resolves w:hyperlink targets (relationship-based external links, or w:anchor internal links)
 // and simple, non-field-code HYPERLINK fields (w:fldSimple).
-import type { HyperlinkInfo } from './model.js';
-import type { Relationship } from './package-parts.js';
-import { getR, getW, type XmlElement } from './xml.js';
+import type { HyperlinkInfo } from './model';
+import type { Relationship } from './package-parts';
+import { getR, getW, type XmlElement } from './xml';
 
 /** Resolves a `w:hyperlink` element's target using the document's relationship map. */
 export function resolveHyperlink(

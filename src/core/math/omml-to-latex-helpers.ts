@@ -2,9 +2,9 @@
  * omml-to-latex-helpers: node-access and text helpers for the OMML -> LaTeX
  * reverse converter (`omml-to-latex.ts`).
  */
-import { stripXmlOrderSuffix } from './omml-node.js';
+import { stripXmlOrderSuffix } from './omml-node';
 
-import { REVERSE_ESCAPE, REVERSE_GREEK, REVERSE_OPERATOR } from './latex-omml-symbols.js';
+import { REVERSE_ESCAPE, REVERSE_GREEK, REVERSE_OPERATOR } from './latex-omml-symbols';
 
 export type XmlRecord = Record<string, unknown>;
 

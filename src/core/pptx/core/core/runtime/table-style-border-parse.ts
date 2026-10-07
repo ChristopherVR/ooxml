@@ -10,7 +10,7 @@
  * The scheme-colour parse is shared with the section-fill path via
  * {@link parseSolidFillStyle} so colour logic is not hand-rolled twice.
  */
-import { parseOoxmlPercent } from '../../../../color/color-primitives.js';
+import { parseOoxmlPercent } from '../../../../color/color-primitives';
 import type {
 	ParsedTableStyleBorder,
 	ParsedTableStyleBorders,

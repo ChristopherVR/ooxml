@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { serialToYmd, weekdayOf, ymdToSerial } from './date-serial.js';
-import { numberToText, parseNumberText } from './text-number.js';
+import { serialToYmd, weekdayOf, ymdToSerial } from './date-serial';
+import { numberToText, parseNumberText } from './text-number';
 
 // Expected values were read from Excel 16 (`=""&x` and `="text"+0`).
 describe('numberToText', () => {

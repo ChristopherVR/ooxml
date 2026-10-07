@@ -5,7 +5,7 @@ import {
 	CLOUD_LOBE_COUNT,
 	getCloudCalloutClipPath,
 	getCloudClipPath,
-} from '../../../geometry/cloud-bezier-paths.js';
+} from '../../../geometry/cloud-bezier-paths';
 import { getCloudPathForRendering, getShapeClipPath } from './shape-geometry';
 
 /** Count cubic-Bezier "C" commands in a path string. */

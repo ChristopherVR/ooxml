@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseRange } from '../address.js';
-import { deleteSheetInFormula, moveReferencesInFormula, type MoveSpec } from './move.js';
+import { parseRange } from '../address';
+import { deleteSheetInFormula, moveReferencesInFormula, type MoveSpec } from './move';
 
 const range = (ref: string) => {
 	const r = parseRange(ref);

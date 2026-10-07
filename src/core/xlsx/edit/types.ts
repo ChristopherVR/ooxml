@@ -1,5 +1,5 @@
-import type { DocumentPropertiesPatch } from './doc-properties.js';
-import type { CellAddress, CellRange } from '../address.js';
+import type { DocumentPropertiesPatch } from './doc-properties';
+import type { CellAddress, CellRange } from '../address';
 import type {
 	BorderEdge,
 	CellStyle,
@@ -20,12 +20,12 @@ import type {
 	SheetView,
 	Table,
 	Workbook,
-} from '../model.js';
-import type { FontView } from '../layout/types.js';
-import type { StylePatch } from '../styles.js';
-import type { CalcEngine } from './deps.js';
-import type { ChartPatch } from './charts.js';
-import type { TablePatch, TableRef } from './table-edits.js';
+} from '../model';
+import type { FontView } from '../layout/types';
+import type { StylePatch } from '../styles';
+import type { CalcEngine } from './deps';
+import type { ChartPatch } from './charts';
+import type { TablePatch, TableRef } from './table-edits';
 
 /** Border presets of the ribbon's border drop-down. */
 export type BorderPreset =
@@ -80,8 +80,8 @@ export type {
 	ClipboardPayload,
 	FindMatch,
 	FindQuery,
-} from './types-clipboard.js';
-import type { ClipboardPayload, FindMatch, FindQuery } from './types-clipboard.js';
+} from './types-clipboard';
+import type { ClipboardPayload, FindMatch, FindQuery } from './types-clipboard';
 
 export type WorkbookChangeKind =
 	| 'cells'

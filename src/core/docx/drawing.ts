@@ -2,20 +2,20 @@
 // Parses w:drawing (wp:inline / wp:anchor pictures) and legacy w:pict (VML) into InlineImage.
 // Adapted layout/EMU-conversion approach from pptx-viewer-new packages/core/src/core (DrawingML
 // picture parsing); reimplemented here against @xmldom/xmldom instead of that package's DOM layer.
-import type { InlineImage, PicturePlacement } from './model.js';
+import type { InlineImage, PicturePlacement } from './model';
 import {
 	contentTypeForPart,
 	resolveInternalTarget,
 	type ContentTypes,
 	type Relationship,
-} from './package-parts.js';
-import { definedProps } from './defined-props.js';
-import { parseWatermarkShape } from './watermark.js';
-import { isSimpleTextBox, textBoxHasBorder } from './write-text-box.js';
-import { getR, isElement, type XmlElement } from './xml.js';
-import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types.js';
-import { enumValue } from './parse-diagnostics.js';
-import { DIAGRAM_GRAPHIC_URI, parseDiagramGraphic } from './diagram.js';
+} from './package-parts';
+import { definedProps } from './defined-props';
+import { parseWatermarkShape } from './watermark';
+import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
+import { getR, isElement, type XmlElement } from './xml';
+import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
+import { enumValue } from './parse-diagnostics';
+import { DIAGRAM_GRAPHIC_URI, parseDiagramGraphic } from './diagram';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -24,8 +24,8 @@ const WPS_NS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShap
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const PICTURE_GRAPHIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
 /** 914400 EMU per inch, 96 CSS px per inch. */
-export { EMU_PER_PIXEL } from './units.js';
-import { EMU_PER_PIXEL } from './units.js';
+export { EMU_PER_PIXEL } from './units';
+import { EMU_PER_PIXEL } from './units';
 
 export interface DrawingContext {
 	rels: ReadonlyMap<string, Relationship>;

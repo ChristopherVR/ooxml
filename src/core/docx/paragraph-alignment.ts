@@ -1,11 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // The single `w:pPr/w:jc` parser shared by direct paragraphs, styles and docDefaults.
-import type { StJc } from './generated/wml-simple-types.js';
-import { isStJc } from './generated/wml-simple-types.js';
-import type { Paragraph } from './model.js';
-import { enumValue } from './parse-diagnostics.js';
-import { onOffElement } from './simple-types.js';
-import { first, getW, type XmlElement } from './xml.js';
+import type { StJc } from './generated/wml-simple-types';
+import { isStJc } from './generated/wml-simple-types';
+import type { Paragraph } from './model';
+import { enumValue } from './parse-diagnostics';
+import { onOffElement } from './simple-types';
+import { first, getW, type XmlElement } from './xml';
 
 export type ParagraphAlign = 'left' | 'center' | 'right' | 'justify';
 
