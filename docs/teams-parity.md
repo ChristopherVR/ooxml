@@ -227,6 +227,20 @@ isolation; browser acceptance checks follow, live counts, reload, navigation and
 unfollow across six bindings. This is a device-local list: cross-device preference
 sync, automatic following and thread notifications remain unsupported.
 
+## Tenth implemented slice: unread followed threads
+
+Followed threads carry separate personal read markers. Opening a thread marks
+its current messages read; rendering its pane in a visible browser document also
+marks newly arrived replies read. Viewing channel roots alone does not mark the
+collapsed threads read. The list exposes unread counts, mark-read/unread actions
+and an unread-only filter. New non-deleted messages from other authors contribute
+to counts; edits and reactions do not. Explicit unread marks persist locally.
+Tests cover foreign/self/deleted messages, no-op read updates, restoration, filtering
+and reopening. This is not a shared read receipt or notification delivery system;
+cross-device state, viewport-level reading detection, activity notifications and
+automatic following remain outstanding. These controls follow Microsoft's
+[followed-thread inbox workflow](https://support.microsoft.com/en-us/teams/teams-channels/follow-threads-in-microsoft-teams).
+
 ## Next releasable slices
 
 1. Shared tab permissions: authenticated membership and server enforcement,

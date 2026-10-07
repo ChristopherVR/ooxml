@@ -137,6 +137,8 @@ export interface TeamsClient {
 	openThread: (messageId: string) => void;
 	closeThread: () => void;
 	followThread: (channelId: string, messageId: string, followed: boolean) => boolean;
+	/** Personal read state for a followed thread, independent of channel read markers. */
+	markThreadRead: (channelId: string, messageId: string, read?: boolean) => boolean;
 	startEdit: (messageId: string) => void;
 	cancelCompose: () => void;
 	deleteMessage: (messageId: string) => void;
@@ -268,7 +270,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			thread,
 			threadFollowed:
 				!!thread && follows.has(selected, thread.root.id, (id) => threads.thread(id)?.root.id),
-			followedThreads: follows.view(channels, messagesOf),
+			followedThreads: follows.view(channels, messagesOf, ws.user.id),
 			files: filesOf(messages),
 			allFiles: allFilesOf(channels, messagesOf),
 			tabs: selected ? ws.tabs.tabs(selected) : [],
@@ -414,6 +416,23 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			refresh();
 		};
 	const find = (id: string): Message | undefined => messagesOf(selected).find((m) => m.id === id);
+	const markThreadRead = (channelId: string, messageId: string, read = true): boolean => {
+		const index = channelThreads(messagesOf(channelId));
+		const thread = index.thread(messageId);
+		if (!thread) return false;
+		let readAt = 0;
+		if (read)
+			for (const message of [thread.root, ...thread.replies]) readAt = Math.max(readAt, message.ts);
+		const changed = follows.mark(
+			channelId,
+			thread.root.id,
+			readAt,
+			!read,
+			(id) => index.thread(id)?.root.id,
+		);
+		if (changed) refresh();
+		return changed;
+	};
 
 	const leave = (): void => {
 		const active = call;
@@ -505,6 +524,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			if (thread) {
 				threadId = thread.root.id;
 				replyId = editId = '';
+				markThreadRead(selected, thread.root.id);
 			}
 		}),
 		closeThread: act(() => {
@@ -521,9 +541,11 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				followed,
 				(id) => index.thread(id)?.root.id,
 			);
+			if (changed && followed && thread) markThreadRead(channelId, thread.root.id);
 			refresh();
 			return changed;
 		},
+		markThreadRead,
 		startEdit: act((id) => {
 			const m = find(id);
 			if (m && m.authorId === ws.user.id) [editId, replyId] = [id, ''];
