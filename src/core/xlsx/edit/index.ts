@@ -57,6 +57,7 @@ export type {
 	WorkbookChangeKind,
 } from './types';
 export * from './chart-colors';
+export * from './chart-element-fill';
 export {
 	chartSeriesGradientPatch,
 	chartGradientStopTransparency,

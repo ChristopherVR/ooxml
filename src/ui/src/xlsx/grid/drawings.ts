@@ -19,6 +19,7 @@ import { paintSmartArt } from './smartart';
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
 	xgSeriesHit?: number | undefined;
+	xgChartPart?: 'chartArea' | 'plotArea' | undefined;
 }
 
 export class DrawingLayer {
@@ -77,10 +78,12 @@ export class DrawingLayer {
 						// Pointer capture retargets dblclick to the drawing container. Keep the
 						// actual hit from pointerdown so a background click stays distinct.
 						const series = (event.currentTarget as ObjectNode).xgSeriesHit;
-						if (series === undefined) return;
+						const part = (event.currentTarget as ObjectNode).xgChartPart;
+						if (series === undefined && part === undefined) return;
 						event.stopPropagation();
 						view.ctx.selection.set({ drawing: index });
-						void view.ctx.commands.run('chart.format-series', series);
+						if (series !== undefined) void view.ctx.commands.run('chart.format-series', series);
+						else void view.ctx.commands.run('chart.format-area', part);
 					});
 					this.#nodes.set(key, node);
 				}
@@ -181,6 +184,9 @@ export class DrawingLayer {
 		const series = (event.target as Element).closest<SVGElement>('[data-chart-series]')?.dataset
 			.chartSeries;
 		node.xgSeriesHit = series === undefined ? undefined : Number(series);
+		const part = (event.target as Element).closest<SVGElement>('[data-chart-part]')?.dataset
+			.chartPart;
+		node.xgChartPart = part === 'chartArea' || part === 'plotArea' ? part : undefined;
 		view.ctx.selection.set({ drawing: index });
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();

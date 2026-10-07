@@ -27,7 +27,7 @@ export function chartSeriesCommand(): Command {
 	});
 }
 
-export function createChartSeriesPane(ctx: EditorContext) {
+export function createChartSeriesPane(ctx: EditorContext, onOpen?: () => void) {
 	const element = el(ctx, 'aside', 'xve-chart-series-pane');
 	element.hidden = true;
 	element.setAttribute('role', 'complementary');
@@ -37,6 +37,7 @@ export function createChartSeriesPane(ctx: EditorContext) {
 	closeButton.type = 'button';
 	closeButton.textContent = '×';
 	const close = () => {
+		fills.refresh(undefined, undefined);
 		element.hidden = true;
 		ctx.grid()?.focus();
 	};
@@ -184,6 +185,7 @@ export function createChartSeriesPane(ctx: EditorContext) {
 	relocalize();
 	ctx.dialogs.register('format-chart-series', async (_ctx, props) => {
 		if (!ctx.commands.isEnabled('chart.format-series')) return;
+		onOpen?.();
 		element.hidden = false;
 		refresh();
 		if (
@@ -196,5 +198,5 @@ export function createChartSeriesPane(ctx: EditorContext) {
 		}
 		overlap.focus();
 	});
-	return { element, refresh, relocalize };
+	return { element, refresh, relocalize, close };
 }

@@ -4,12 +4,13 @@ import { buildChartGradientDef, type ChartGradientFill } from 'ooxml-core/chart'
 export function createChartGradientPreview(
 	root: ShadowRoot,
 	drawing: number,
-	series: number,
+	series: number | 'chartArea' | 'plotArea',
 	gradient: ChartGradientFill,
 ) {
+	const target = typeof series === 'number' ? `s${series}` : series;
 	const nodes = Array.from(
 		root.querySelectorAll<SVGElement>(
-			`.xg-obj[data-index="${drawing}"] :is(linearGradient,radialGradient,pattern)[id$="-s${series}"]`,
+			`.xg-obj[data-index="${drawing}"] :is(linearGradient,radialGradient,pattern)[id$="-${target}"]`,
 		),
 	);
 	const originals = nodes.map((node) => ({

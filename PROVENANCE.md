@@ -1374,3 +1374,35 @@ exclusion, permission checks, history flags and teardown remain shared.
 Four core regressions cover notification ordering and editing/read-only peers;
 two mounted cases verify immediate models and DOCX exports. No sync-engine code
 or UI logic was copied into the mapping.
+
+## Shared chart fill controls for chart and plot backgrounds
+
+Source: ChristopherVR/ooxml at `c3b3491a1`,
+`src/core/xlsx/edit/chart-series-gradient.ts` and the existing series fill,
+transparency, gradient and preview UI modules. Gradient mutation is now one
+core function used by series and element targets. `chart-element-fill.ts`
+provides narrow background patches and immutable preview models; the edit
+session applies these without exposing unsupported formatting edits or
+storing command-only fields in chart models. Existing point overrides and
+unrelated formatting remain intact.
+
+`src/ui/src/xlsx/chart-fill-binding.ts` binds those core edits to the existing
+controls. The new chart-area pane reuses themed color selection, presets,
+directions, gradient stops, paired ranges, preview cancellation and command
+admission. It can select chart or plot area. Painted backgrounds retain hit
+identity through pointer capture for double-click formatting, and opening a
+background/series pane closes the other. Transparent plot hit regions,
+additional format targets, outlines, effects and native pane-layout
+certification remain unfinished.
+
+The Playwright MCP visual review exposed stale resolved radial focus in
+shared direction thumbnails. `withChartGradientDirection` updates both focus
+representations; gallery regressions verify five distinct center/corner
+previews even with imported focal points. Browser checks cover both targets,
+all four geometries, five path directions, presets, color/transparency,
+stop insertion/removal, undo, read-only guards and noncommitting isolated
+previews. Excel 16.0 build 20430 reopened/resaved the UI-authored workbook via
+the editor save API: seven-stop circle chart area (bottom-right, first-stop
+37 percent transparency) and two-stop shape plot area (top-left) preserve
+paths, stops, RGB, alpha and rectangle geometry exactly. Native pane layout,
+chart layout and full M365 parity are not claimed.

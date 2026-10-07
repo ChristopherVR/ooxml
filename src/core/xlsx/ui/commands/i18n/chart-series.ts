@@ -1,6 +1,21 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	'Format Chart Area': [
+		'Format de la zone de graphique',
+		'Diagrammbereich formatieren',
+		'Formato del área del gráfico',
+		'设置图表区格式',
+	],
+	'Format Plot Area': [
+		'Format de la zone de traçage',
+		'Zeichnungsfläche formatieren',
+		'Formato del área de trazado',
+		'设置绘图区格式',
+	],
+	'Chart Area': ['Zone de graphique', 'Diagrammbereich', 'Área del gráfico', '图表区'],
+	'Plot Area': ['Zone de traçage', 'Zeichnungsfläche', 'Área de trazado', '绘图区'],
+	'Chart element': ['Élément de graphique', 'Diagrammelement', 'Elemento del gráfico', '图表元素'],
 	'Linear gradient': ['Linéaire', 'Linear', 'Lineal', '线性'],
 	Rectangular: ['Rectangulaire', 'Rechteckig', 'Rectangular', '矩形'],
 	Radial: ['Radial', 'Radial', 'Radial', '射线'],

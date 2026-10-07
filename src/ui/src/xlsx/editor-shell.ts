@@ -25,6 +25,7 @@ import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
 import { createChartSeriesPane } from './chart-series-pane';
+import { createChartAreaPane } from './chart-area-pane';
 
 /** Element properties the shell's options and customize pages change. */
 export interface ShellElement extends HTMLElement {
@@ -167,7 +168,8 @@ export function buildShell(core: EditorCore): Shell {
 	const toaster = createToaster(doc, () => ctx.t('Close'));
 
 	const workspace = el(doc, 'div', 'xve-workspace');
-	const chartSeriesPane = createChartSeriesPane(ctx);
+	const chartSeriesPane = createChartSeriesPane(ctx, () => chartAreaPane.close());
+	const chartAreaPane = createChartAreaPane(ctx, () => chartSeriesPane.close());
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
 	const gridHost = el(doc, 'div', 'xve-grid-host');
@@ -176,7 +178,7 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(workspace, chartSeriesPane.element);
+	canvasRow.append(workspace, chartSeriesPane.element, chartAreaPane.element);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
@@ -205,6 +207,7 @@ export function buildShell(core: EditorCore): Shell {
 			gridHost,
 			tabsRow,
 			chartSeriesPane.element,
+			chartAreaPane.element,
 			statusBar.element,
 		].filter((region) => region.getClientRects().length);
 	const focusRegion = (region: HTMLElement) => {
@@ -245,6 +248,7 @@ export function buildShell(core: EditorCore): Shell {
 			titleBar.refresh();
 			statusBar.refresh();
 			chartSeriesPane.refresh();
+			chartAreaPane.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
 				chrome.setSaveState('dirty');
@@ -260,6 +264,7 @@ export function buildShell(core: EditorCore): Shell {
 			statusBar.relocalize();
 			backstage.relocalize();
 			chartSeriesPane.relocalize();
+			chartAreaPane.relocalize();
 			core.requestRender();
 		},
 	};

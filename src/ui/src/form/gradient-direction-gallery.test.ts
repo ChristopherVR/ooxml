@@ -104,6 +104,7 @@ for (const path of ['circle', 'shape'])
 			gradient: {
 				type: 'radial',
 				path,
+				focalPoint: { x: 0.5, y: 0.5 },
 				stops: [
 					{ position: 0, color: '#ff0000' },
 					{ position: 100, color: '#ffffff' },
@@ -126,6 +127,18 @@ for (const path of ['circle', 'shape'])
 		for (const item of items) {
 			const doc = new DOMParser().parseFromString(item.preview!, 'image/svg+xml');
 			expect(doc.querySelector(path === 'circle' ? 'radialGradient' : 'pattern')).not.toBeNull();
+			if (path === 'circle') {
+				const expected: Record<string, [number, number]> = {
+					center: [0.5, 0.5],
+					'top-left': [0, 0],
+					'top-right': [1, 0],
+					'bottom-left': [0, 1],
+					'bottom-right': [1, 1],
+				};
+				const radial = doc.querySelector('radialGradient')!;
+				expect(Number(radial.getAttribute('cx'))).toBe(expected[item.id]![0]);
+				expect(Number(radial.getAttribute('cy'))).toBe(expected[item.id]![1]);
+			}
 		}
 		gallery.element.dispatchEvent(
 			new CustomEvent('office-gallery-pick', { detail: { itemId: 'bottom-right' } }),

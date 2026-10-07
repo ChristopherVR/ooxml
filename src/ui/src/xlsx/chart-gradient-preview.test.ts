@@ -28,3 +28,32 @@ it('paints crossed stops in all frozen panes and restores only the affected seri
 	expect(root.innerHTML).toBe(before);
 	host.remove();
 });
+
+it('previews a background in every frozen pane while preserving physical radial bounds and other paints', () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const root = host.attachShadow({ mode: 'open' });
+	const markup = `<div class="xg-obj" data-index="2"><svg><defs><radialGradient id="chart-chartArea" cx="1" cy="1" r="1.2" gradientTransform="matrix(1 0 0 2 0 -1)"><stop offset="0" stop-color="#FF0000"/><stop offset="1" stop-color="#FFFFFF"/></radialGradient><linearGradient id="chart-plotArea"><stop offset="0" stop-color="#0000FF"/></linearGradient></defs></svg></div>`;
+	root.innerHTML = markup + markup.replace(/chart-/g, 'second-');
+	const before = root.innerHTML;
+	const preview = createChartGradientPreview(root, 2, 'chartArea', {
+		type: 'radial',
+		path: 'circle',
+		focalPoint: { x: 1, y: 1 },
+		stops: [
+			{ position: 0, color: '#FF0000' },
+			{ position: 100, color: '#FFFFFF' },
+		],
+	});
+	preview.position(0, 40);
+	for (const radial of root.querySelectorAll('radialGradient')) {
+		expect(radial.getAttribute('gradientTransform')).toBe('matrix(1 0 0 2 0 -1)');
+		expect(radial.getAttribute('r')).toBe('1.2');
+		expect(radial.children[0]!.getAttribute('offset')).toBe('0.4');
+	}
+	for (const plot of root.querySelectorAll('linearGradient'))
+		expect(plot.children[0]!.getAttribute('stop-color')).toBe('#0000FF');
+	preview.restore();
+	expect(root.innerHTML).toBe(before);
+	host.remove();
+});

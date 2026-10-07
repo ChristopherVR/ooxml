@@ -1,14 +1,15 @@
-import {
-	chartSeriesTransparency,
-	chartSeriesTransparencyPatch,
-	type ChartObject,
-} from 'ooxml-core/xlsx';
+import { type ChartObject } from 'ooxml-core/xlsx';
+import { seriesFillBinding, type ChartFillBinding } from './chart-fill-binding';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { createNumberRange } from '../form/number-range';
 import { el, field, numberInput } from './dialogs/fields';
 
 /** The shared native range input pairs with the existing validated percentage field. */
-export function createSeriesTransparency(ctx: EditorContext, selected: () => number) {
+export function createSeriesTransparency(
+	ctx: EditorContext,
+	selected: () => number,
+	binding: ChartFillBinding = seriesFillBinding(selected),
+) {
 	const element = el(ctx, 'div');
 	const input = numberInput(ctx, 0, 0, 100);
 	const row = field(ctx, 'Transparency', input);
@@ -17,7 +18,7 @@ export function createSeriesTransparency(ctx: EditorContext, selected: () => num
 	row.append(unit);
 	const range = createNumberRange(input, {
 		label: () => ctx.t('Transparency'),
-		enabled: () => ctx.commands.isEnabled('chart.format-series'),
+		enabled: () => ctx.commands.isEnabled(binding.commandId),
 	});
 	range.element.className = 'xve-chart-series-range';
 	element.append(row, range.element);
@@ -25,15 +26,15 @@ export function createSeriesTransparency(ctx: EditorContext, selected: () => num
 	const refresh = (chart: ChartObject | undefined) => {
 		range.cancel();
 		current = chart;
-		const value = chart ? chartSeriesTransparency(chart, selected()) : undefined;
+		const value = chart ? binding.transparency(chart) : undefined;
 		input.value = String(value ?? 0);
-		input.disabled = value === undefined || !ctx.commands.isEnabled('chart.format-series');
+		input.disabled = value === undefined || !ctx.commands.isEnabled(binding.commandId);
 		row.querySelector('span')!.textContent = ctx.t('Transparency');
 		input.setAttribute('aria-label', ctx.t('Transparency'));
 		range.refresh();
 	};
 	input.addEventListener('change', () => {
-		if (!current || input.disabled || !ctx.commands.isEnabled('chart.format-series'))
+		if (!current || input.disabled || !ctx.commands.isEnabled(binding.commandId))
 			return refresh(current);
 		if (!input.checkValidity() || !Number.isInteger(input.valueAsNumber)) {
 			ctx.toast(
@@ -44,7 +45,7 @@ export function createSeriesTransparency(ctx: EditorContext, selected: () => num
 		}
 		const found = activeChart(ctx);
 		if (!found || found.chart !== current) return refresh(current);
-		const patch = chartSeriesTransparencyPatch(current, selected(), input.valueAsNumber);
+		const patch = binding.setTransparency(current, input.valueAsNumber);
 		if (patch) ctx.session()?.updateChart(ctx.activeSheet(), found.index, patch);
 		refresh(found.chart);
 	});

@@ -8,7 +8,7 @@ import {
 	type RectGradientDirection,
 	type DrawingGradientGeometryType,
 } from '../../diagram/gradient-geometry';
-import type { DiagramFill } from '../../diagram/types';
+import type { DiagramFill, DiagramColor } from '../../diagram/types';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
@@ -53,20 +53,39 @@ export function chartSeriesGradientPatch(
 	const current = chart.series[index];
 	if (!Number.isInteger(index) || !current)
 		throw new RangeError(`No chart series at index ${index}`);
-	const old = current.fill;
+	const result = chartGradientFillEdit(
+		current.fill,
+		edit,
+		chartSeriesSolidColor(chart, index) ??
+			chartPaletteSeriesColorChoice(
+				findChartColorPalette(chart.colorPalette ?? 10) ?? findChartColorPalette(10)!,
+				index,
+				chart.series.length,
+			),
+	);
+	if (!result) return undefined;
+	const series = structuredClone(chart.series);
+	const next = series[index]!;
+	next.fill = result.fill;
+	delete next.color;
+	delete next.drawingColor;
+	delete next.pointColors;
+	delete next.pointFills;
+	return { patch: { series }, stopIndex: result.stopIndex };
+}
+
+/** Shared chart-fill edit: geometry and stop logic are independent of the target element. */
+export function chartGradientFillEdit(
+	old: DiagramFill | undefined,
+	edit: ChartGradientEdit,
+	defaultColor: DiagramColor,
+): { fill: Gradient; stopIndex: number } | undefined {
 	let fill: Gradient;
 	if (edit.kind === 'preset') fill = officeGradientPresetFill(edit.id);
 	else if (old?.kind === 'gradient') fill = structuredClone(old);
 	else {
 		if (edit.kind !== 'create') return undefined;
-		const color = structuredClone(
-			chartSeriesSolidColor(chart, index) ??
-				chartPaletteSeriesColorChoice(
-					findChartColorPalette(chart.colorPalette ?? 10) ?? findChartColorPalette(10)!,
-					index,
-					chart.series.length,
-				),
-		);
+		const color = structuredClone(defaultColor);
 		fill = {
 			kind: 'gradient',
 			angle: 90,
@@ -139,12 +158,5 @@ export function chartSeriesGradientPatch(
 		}
 	}
 	if (JSON.stringify(fill) === JSON.stringify(old)) return undefined;
-	const series = structuredClone(chart.series);
-	const next = series[index]!;
-	next.fill = fill;
-	delete next.color;
-	delete next.drawingColor;
-	delete next.pointColors;
-	delete next.pointFills;
-	return { patch: { series }, stopIndex };
+	return { fill, stopIndex };
 }

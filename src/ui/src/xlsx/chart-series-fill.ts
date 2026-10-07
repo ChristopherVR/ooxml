@@ -1,18 +1,17 @@
-import {
-	chartSeriesFillPatch,
-	chartSeriesSolidFillPatch,
-	type ChartObject,
-	type ChartViewModel,
-	type Color,
-} from 'ooxml-core/xlsx';
+import { type ChartObject, type ChartViewModel, type Color } from 'ooxml-core/xlsx';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { seriesFillBinding, type ChartFillBinding } from './chart-fill-binding';
 import { el, field, select } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
 import { createSeriesTransparency } from './chart-series-transparency';
 import { createSeriesGradient } from './chart-series-gradient';
 
 /** Primary series fill controls reuse the ribbon's themed color picker and core paint edits. */
-export function createSeriesFill(ctx: EditorContext, selected: () => number) {
+export function createSeriesFill(
+	ctx: EditorContext,
+	selected: () => number,
+	binding: ChartFillBinding = seriesFillBinding(selected),
+) {
 	const element = el(ctx, 'div', 'xve-chart-series-fill');
 	const heading = el(ctx, 'h3');
 	const kind = select(ctx, []);
@@ -20,37 +19,37 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	const color = el(ctx, 'button', 'xve-input xve-chart-series-color');
 	color.type = 'button';
 	const colorField = field(ctx, 'Color', color);
-	const transparency = createSeriesTransparency(ctx, selected);
-	const gradient = createSeriesGradient(ctx, selected);
+	const transparency = createSeriesTransparency(ctx, selected, binding);
+	const gradient = createSeriesGradient(ctx, selected, binding);
 	element.append(heading, kindField, colorField, transparency.element, gradient.element);
 	let current: ChartObject | undefined;
 	const apply = (value: Color | null) => {
-		if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
+		if (!current || !ctx.commands.isEnabled(binding.commandId)) return;
 		const found = activeChart(ctx);
 		if (!found || found.chart !== current) return;
-		const patch = chartSeriesFillPatch(current, selected(), value);
+		const patch = binding.color(current, value);
 		if (patch) ctx.session()?.updateChart(ctx.activeSheet(), found.index, patch);
 	};
 	kind.addEventListener('change', () => {
 		if (kind.value === 'none') apply(null);
 		else if (kind.value === 'gradient') gradient.create();
 		else if (kind.value === 'solid') {
-			if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
+			if (!current || !ctx.commands.isEnabled(binding.commandId)) return;
 			const found = activeChart(ctx);
 			if (!found || found.chart !== current) return;
-			const patch = chartSeriesSolidFillPatch(current, selected());
+			const patch = binding.solid(current);
 			if (patch) ctx.session()?.updateChart(ctx.activeSheet(), found.index, patch);
 		}
 	});
 	color.addEventListener('click', () => {
-		if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
+		if (!current || !ctx.commands.isEnabled(binding.commandId)) return;
 		const chart = current;
-		const index = selected();
+		const index = binding.key();
 		const workbook = ctx.workbook();
 		openColorGrid(
 			color,
 			(choice) => {
-				if (current === chart && ctx.workbook() === workbook && selected() === index && choice)
+				if (current === chart && ctx.workbook() === workbook && binding.key() === index && choice)
 					apply(choice);
 			},
 			{ t: ctx.t, ...(workbook ? { theme: workbook.theme } : {}) },
@@ -60,8 +59,7 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 		current = chart;
 		transparency.refresh(chart);
 		gradient.refresh(chart, model);
-		const series = chart?.series[selected()];
-		const fill = series?.fill;
+		const fill = chart && binding.fill(chart);
 		const value =
 			fill?.kind === 'none'
 				? 'none'
@@ -88,9 +86,9 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 		kind.value = value;
 		colorField.hidden = value !== 'solid';
 		transparency.element.hidden = value !== 'solid';
-		kind.disabled = !series || !ctx.commands.isEnabled('chart.format-series');
+		kind.disabled = !chart || !ctx.commands.isEnabled(binding.commandId);
 		color.disabled = kind.disabled || value !== 'solid';
-		const paint = model?.series[selected()]?.color;
+		const paint = model && binding.paint(model);
 		color.style.setProperty('--series-fill', paint && paint !== 'none' ? paint : 'transparent');
 		heading.textContent = ctx.t('Fill');
 		for (const [row, control, label] of [

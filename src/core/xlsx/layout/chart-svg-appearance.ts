@@ -125,5 +125,5 @@ export function chartAreaRect(
 	const stroke = entry?.lineColor ?? 'none';
 	if (fill === 'none' && stroke === 'none') return '';
 	const width = entry?.lineWidth === undefined ? 1 : chartPointsToPixels(entry.lineWidth);
-	return `${defs}<rect x="${n(area.x)}" y="${n(area.y)}" width="${n(area.w)}" height="${n(area.h)}" fill="${esc(fill)}" stroke="${esc(stroke)}" stroke-width="${n(width)}"/>`;
+	return `${defs}<rect x="${n(area.x)}" y="${n(area.y)}" width="${n(area.w)}" height="${n(area.h)}" fill="${esc(fill)}" stroke="${esc(stroke)}" stroke-width="${n(width)}" data-chart-part="${part}"/>`;
 }

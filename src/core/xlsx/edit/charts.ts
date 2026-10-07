@@ -2,6 +2,7 @@
 import type { ChartObject, DrawingAnchor, ImageObject, Workbook } from '../model';
 import { type EditContext, sheetAt } from './context';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
+import { chartWithElementFills, type ChartElementFills } from './chart-element-fill';
 
 /** File extensions for the picture types Excel accepts. */
 export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {
@@ -19,7 +20,7 @@ export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {
 /** What `updateChart` may change (the chart keeps its kind and source part). */
 export type ChartPatch = Partial<
 	Omit<ChartObject, 'kind' | 'partName' | 'styleDefinition' | 'formatting'>
->;
+> & { elementFills?: ChartElementFills };
 
 /** Adds a chart drawn from the model (a new chart part is written on save); returns its index. */
 export function addChart(ctx: EditContext, s: number, chart: Omit<ChartObject, 'kind'>): number {
@@ -49,6 +50,9 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 	const sheet = sheetAt(ctx.workbook, s);
 	const chart = sheet.drawings[index];
 	if (!chart || chart.kind !== 'chart') throw new RangeError(`No chart at index ${index}`);
+	const formatting = patch.elementFills
+		? chartWithElementFills(chart, patch.elementFills).formatting
+		: undefined;
 	ctx.run(
 		'Edit chart',
 		'annotations',
@@ -56,6 +60,8 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 		() => {
 			const live = sheet.drawings[index] as ChartObject;
 			const changes = structuredClone(patch);
+			delete changes.elementFills;
+			if (formatting) live.formatting = formatting;
 			// A legacy color edit replaces the parsed DrawingML choice unless the caller edits both.
 			changes.series?.forEach((series, i) => {
 				const before = live.series[i];

@@ -21,6 +21,7 @@ import { reviewCommands } from './review';
 import { styleCommands } from './styles';
 import { viewCommands } from './view';
 import { chartSeriesCommand } from '../chart-series-pane';
+import { chartAreaCommand } from '../chart-area-pane';
 
 /** Every UI-COMMANDS command (fresh objects; safe to register on several editors). */
 export function allCommands(): Command[] {
@@ -41,6 +42,7 @@ export function allCommands(): Command[] {
 		...viewCommands(),
 		...contextualCommands(),
 		chartSeriesCommand(),
+		chartAreaCommand(),
 	];
 }
 

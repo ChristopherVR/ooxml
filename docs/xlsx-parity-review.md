@@ -1320,8 +1320,8 @@ area, plot area, title and legend fill metadata. Kept-part tests preserve
 outlines, effects and extensions, including newly inserted legends and
 replaced referenced titles. Existing series fill editing uses the same shared
 DOM replacement helper. Unsupported picture/pattern fill editing, generated
-font/outline/effect preservation, title/legend background painting and a
-background-formatting pane remain open.
+font/outline/effect preservation and title/legend background painting remain
+open. Background pane authoring is covered by the next iteration below.
 
 The diagram/chart/XLSX sweep passes 8,349 ordinary tests plus the 17 existing
 expected raster failures, with an additional focused title/legend insertion
@@ -1332,3 +1332,22 @@ and downloaded a circular chart/plot background; Excel COM retained circle
 paths, center focus, red/white colors and endpoint positions on all four
 fill-bearing elements after resave. These checks verify fill metadata and
 background rendering, not exact native layout or full formatting UI parity.
+
+Chart/plot background formatting now has a docked pane opened from Chart
+Design or a painted background double-click. Its target selector, no-fill,
+solid and gradient authoring reuse the series controls. All model mutations
+stay in core, and stop/range previews affect only the selected painted
+background until commit. Target changes and pane closure cancel previews.
+The pane follows undo/redo, disables editing in read-only mode and closes
+when the series pane opens. Transparent plot hit regions, other formatting
+targets, borders/effects and exact native pane layout remain open.
+
+A shared-gallery correction prevents imported radial focal points from
+making all direction thumbnails appear centered. Playwright MCP reviewed the
+corrected five previews without horizontal pane overflow. Excel 16.0 build
+20430 reopened/resaved a workbook authored through that UI and its save API:
+a bottom-right seven-stop circle on chart area retains 37 percent first-stop
+transparency, and a top-left two-stop shape on plot area retains its red/white
+colors. Paths, stops, color transforms and target/tile rectangles match the
+pre-resave export exactly. This proves those edits and their serialization,
+not native full-chart raster fidelity or complete formatting parity.

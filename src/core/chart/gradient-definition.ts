@@ -2,11 +2,20 @@
 import type { DiagramFill, DiagramColor } from '../diagram/types';
 import { sortGradientStops } from './gradient-stop-edit';
 import { sigmaGradientStops } from '../color/sigma-gradient-stops';
+import { rectGradientFocus, type RectGradientDirection } from '../diagram/gradient-geometry';
 import {
 	buildRectPathGradientSvg,
 	type RectPathGradientFillToRect,
 } from '../diagram/rect-path-gradient';
 
+/** Named direction previews must update both resolved focus and preserved rectangle geometry. */
+export function withChartGradientDirection(
+	fill: ChartGradientFill,
+	direction: RectGradientDirection,
+): ChartGradientFill {
+	const focus = rectGradientFocus(direction);
+	return { ...fill, type: 'radial', fillToRect: focus, focalPoint: { x: focus.l, y: focus.t } };
+}
 export interface ChartGradientFill {
 	type: 'linear' | 'radial';
 	stops: Array<{ color: string; position: number; opacity?: number }>;

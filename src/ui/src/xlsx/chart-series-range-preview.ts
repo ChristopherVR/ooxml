@@ -1,5 +1,4 @@
 import {
-	chartSeriesGradientPatch,
 	chartView,
 	createRefEvaluator,
 	type ChartObject,
@@ -9,6 +8,7 @@ import { drawingColorCss } from 'ooxml-core/diagram';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import type { createGradientStopTrack } from '../form/gradient-stop-track';
 import { createChartGradientPreview } from './chart-gradient-preview';
+import type { ChartFillBinding } from './chart-fill-binding';
 
 export type GradientParameter = 'position' | 'brightness' | 'transparency';
 
@@ -17,14 +17,15 @@ export function seriesRangePreview(
 	ctx: EditorContext,
 	chart: ChartObject,
 	view: ChartViewModel,
-	series: number,
+	series: ReturnType<ChartFillBinding['key']>,
 	stop: number,
 	drawing: number,
 	track: ReturnType<typeof createGradientStopTrack>,
 	color: HTMLButtonElement,
 	valid: () => boolean,
+	binding: ChartFillBinding,
 ) {
-	const gradient = view.series[series]?.gradient;
+	const gradient = binding.gradient(view);
 	const book = ctx.workbook();
 	const sheet = ctx.activeSheet();
 	let preview: ReturnType<typeof createChartGradientPreview> | undefined;
@@ -50,25 +51,27 @@ export function seriesRangePreview(
 			!gradient ||
 			ctx.workbook() !== book ||
 			ctx.activeSheet() !== sheet ||
-			!ctx.commands.isEnabled('chart.format-series')
+			!ctx.commands.isEnabled(binding.commandId)
 		)
 			return;
-		const result = chartSeriesGradientPatch(chart, series, {
+		const result = binding.edit(chart, {
 			kind: 'stop',
 			index: stop,
 			[property]: value,
 		});
-		const next = result
-			? chartView(
-					book,
-					sheet,
-					{ ...chart, ...result.patch },
-					createRefEvaluator(book, ctx.session()?.calc, { sheet }),
-				).series[series]?.gradient
+		const paint = result
+			? binding.gradient(
+					chartView(
+						book,
+						sheet,
+						binding.preview(chart, result.patch),
+						createRefEvaluator(book, ctx.session()?.calc, { sheet }),
+					),
+				)
 			: gradient;
-		if (!next) return;
+		if (!paint) return;
 		preview ??= createChartGradientPreview(ctx.root, drawing, series, gradient);
-		preview.paint(next);
-		strip(next);
+		preview.paint(paint);
+		strip(paint);
 	};
 }

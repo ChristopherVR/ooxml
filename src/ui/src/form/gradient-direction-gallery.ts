@@ -1,7 +1,6 @@
-import type { ChartGradientFill } from 'ooxml-core/chart';
+import { withChartGradientDirection, type ChartGradientFill } from 'ooxml-core/chart';
 import {
 	RECT_GRADIENT_DIRECTIONS,
-	rectGradientFocus,
 	rectGradientDirection,
 	type RectGradientDirection,
 } from 'ooxml-core/diagram';
@@ -62,11 +61,10 @@ export function createGradientDirectionGallery(doc: Document) {
 					id,
 					label: options.translate(label),
 					applied: rectGradientDirection(options.gradient.fillToRect) === id,
-					preview: gradientGalleryPreview(`${prefix}-${id}`, {
-						...options.gradient,
-						type: 'radial',
-						fillToRect: rectGradientFocus(id),
-					}),
+					preview: gradientGalleryPreview(
+						`${prefix}-${id}`,
+						withChartGradientDirection(options.gradient, id),
+					),
 				}))
 			: DIRECTIONS.map(([angle, label]) => ({
 					id: String(angle),

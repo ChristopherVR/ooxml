@@ -1,10 +1,10 @@
 import {
-	chartSeriesGradientPatch,
 	chartGradientStopTransparency,
 	type ChartGradientEdit,
 	type ChartObject,
 	type ChartViewModel,
 } from 'ooxml-core/xlsx';
+import { seriesFillBinding, type ChartFillBinding } from './chart-fill-binding';
 import { drawingColorCss, drawingColorBrightness } from 'ooxml-core/diagram';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { createGradientStopTrack } from '../form/gradient-stop-track';
@@ -17,7 +17,11 @@ import { createChartGradientPreview } from './chart-gradient-preview';
 import { createNumberRange } from '../form/number-range';
 import { seriesRangePreview } from './chart-series-range-preview';
 
-export function createSeriesGradient(ctx: EditorContext, selected: () => number) {
+export function createSeriesGradient(
+	ctx: EditorContext,
+	selected: () => number,
+	binding: ChartFillBinding = seriesFillBinding(selected),
+) {
 	const element = el(ctx, 'div', 'xve-chart-series-gradient');
 	const angle = numberInput(ctx, 90, 0, 360);
 	const position = numberInput(ctx, 0, 0, 100);
@@ -64,11 +68,11 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		const range = createNumberRange(input, {
 			label: () => input.getAttribute('aria-label') ?? '',
 			enabled: () => {
-				const fill = current?.series[selected()]?.fill;
+				const fill = current && binding.fill(current);
 				return (
-					ctx.commands.isEnabled('chart.format-series') &&
+					ctx.commands.isEnabled(binding.commandId) &&
 					fill?.kind === 'gradient' &&
-					fill.stops.length === model?.series[selected()]?.gradient?.stops.length
+					fill.stops.length === (model && binding.gradient(model)?.stops.length)
 				);
 			},
 			onPreview: (value) => {
@@ -94,16 +98,16 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	let current: ChartObject | undefined;
 	let model: ChartViewModel | undefined;
 	let stopIndex = 0;
-	let seriesIndex = -1;
+	let seriesIndex: ReturnType<ChartFillBinding['key']> = -1;
 	let drawingIndex = -1;
 	let shownBook = ctx.workbook();
 	let shownSheet = -1;
 	let shownPath: string | undefined;
 	const apply = (edit: ChartGradientEdit) => {
-		if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
+		if (!current || !ctx.commands.isEnabled(binding.commandId)) return;
 		const found = activeChart(ctx);
 		if (!found || found.chart !== current) return;
-		const result = chartSeriesGradientPatch(current, selected(), edit);
+		const result = binding.edit(current, edit);
 		if (!result) return;
 		if (edit.kind !== 'angle' && edit.kind !== 'geometry') stopIndex = result.stopIndex;
 		ctx.session()?.updateChart(ctx.activeSheet(), found.index, result.patch);
@@ -114,7 +118,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		previewRange = undefined;
 		const nextDrawing = activeChart(ctx)?.index ?? -1;
 		if (
-			seriesIndex !== selected() ||
+			seriesIndex !== binding.key() ||
 			drawingIndex !== nextDrawing ||
 			shownBook !== ctx.workbook() ||
 			shownSheet !== ctx.activeSheet()
@@ -125,11 +129,11 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		}
 		shownBook = ctx.workbook();
 		shownSheet = ctx.activeSheet();
-		seriesIndex = selected();
+		seriesIndex = binding.key();
 		drawingIndex = nextDrawing;
 		current = chart;
 		model = view;
-		const fill = chart?.series[selected()]?.fill;
+		const fill = chart && binding.fill(chart);
 		element.hidden = fill?.kind !== 'gradient';
 		if (fill?.kind !== 'gradient') {
 			direction.close();
@@ -137,7 +141,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			return;
 		}
 		stopIndex = Math.max(0, Math.min(stopIndex, fill.stops.length - 1));
-		const disabled = !ctx.commands.isEnabled('chart.format-series');
+		const disabled = !ctx.commands.isEnabled(binding.commandId);
 		presetRow.querySelector('span')!.textContent = ctx.t('Preset gradients');
 		preset.update({
 			fill,
@@ -146,7 +150,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			translate: ctx.t,
 			onPick: (id) => apply({ kind: 'preset', id }),
 		});
-		const rectangularMarks = chart?.chartType === 'column' || chart?.chartType === 'bar';
+		const rectangularMarks = !!chart && binding.rectangular(chart);
 		type.refresh(fill, disabled, rectangularMarks);
 		if (shownPath !== fill.path) direction.close();
 		shownPath = fill.path;
@@ -162,10 +166,10 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			color.disabled =
 			brightness.disabled =
 				disabled || !fill.stops.length;
-		const stops = view?.series[selected()]?.gradient?.stops ?? [];
+		const stops = (view && binding.gradient(view)?.stops) ?? [];
 		directionRow.querySelector('span')!.textContent = ctx.t('Direction');
 		direction.update({
-			gradient: view?.series[selected()]?.gradient ?? { type: 'linear', stops: [] },
+			gradient: (view && binding.gradient(view)) ?? { type: 'linear', stops: [] },
 			disabled:
 				disabled ||
 				(!!fill.path &&
@@ -181,7 +185,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			},
 		});
 		brightness.disabled ||= stopBrightness === undefined;
-		const previewSeries = selected();
+		const previewSeries = binding.key();
 		const previewStop = stopIndex;
 		if (chart && view)
 			previewRange = seriesRangePreview(
@@ -195,13 +199,14 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 				color,
 				() =>
 					current === chart &&
-					selected() === previewSeries &&
+					binding.key() === previewSeries &&
 					stopIndex === previewStop &&
-					chart.series[previewSeries]?.fill === fill,
+					binding.fill(chart) === fill,
+				binding,
 			);
 		color.style.setProperty('--series-fill', stops[stopIndex]?.color ?? 'transparent');
 		let preview: ReturnType<typeof createChartGradientPreview> | undefined;
-		const gradient = view?.series[selected()]?.gradient;
+		const gradient = view && binding.gradient(view);
 		track.update({
 			stops: stops.map((stop) => ({
 				position: stop.position,
@@ -221,10 +226,10 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 					preview?.restore();
 					preview = undefined;
 				}
-				if (current !== chart || chart?.series[selected()]?.fill !== fill) return;
+				if (current !== chart || (chart && binding.fill(chart) !== fill)) return;
 				position.value = String(value ?? fill.stops[index]?.position ?? 0);
 				if (value !== undefined && gradient) {
-					preview ??= createChartGradientPreview(ctx.root, drawingIndex, selected(), gradient);
+					preview ??= createChartGradientPreview(ctx.root, drawingIndex, binding.key(), gradient);
 					preview.position(index, value);
 				}
 			},
@@ -248,7 +253,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		[brightness, 'brightness'],
 	] as const) {
 		input.addEventListener('change', () => {
-			if (input.disabled || !ctx.commands.isEnabled('chart.format-series'))
+			if (input.disabled || !ctx.commands.isEnabled(binding.commandId))
 				return refresh(current, model);
 			const value = input.valueAsNumber;
 			if (!Number.isFinite(value) || !input.checkValidity()) {
@@ -272,9 +277,9 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		if (!remove.disabled) apply({ kind: 'remove', index: stopIndex });
 	});
 	color.addEventListener('click', () => {
-		if (color.disabled || !ctx.commands.isEnabled('chart.format-series')) return;
+		if (color.disabled || !ctx.commands.isEnabled(binding.commandId)) return;
 		const chart = current;
-		const series = selected();
+		const series = binding.key();
 		const index = stopIndex;
 		const book = ctx.workbook();
 		openColorGrid(
@@ -283,7 +288,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 				if (
 					choice &&
 					current === chart &&
-					selected() === series &&
+					binding.key() === series &&
 					stopIndex === index &&
 					ctx.workbook() === book
 				)
