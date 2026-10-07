@@ -69,6 +69,50 @@ it('flips twice, preserves the source pin and snapshots its axis', async () => {
 	command.axis = 'vertical';
 	expect(copied).toEqual([flip()]);
 });
+it('replaces proven flip formulas and recalculates dependents without changing their formulas', async () => {
+	const source = await fixture({
+		pages: [
+			{
+				id: '0',
+				contents: `<Shapes>${target(
+					cell('Angle', Math.PI / 6, 'Width/1in*15deg') +
+						cell('FlipX', 1, 'Width/Width') +
+						cell('User.Derived', Math.PI / 6 + 1, 'Angle/1rad+FlipX'),
+				)}</Shapes>`,
+			},
+		],
+	});
+	const saved = await editVsdx(source, [flip()]);
+	const pkg = await VisioPackage.open(saved.bytes);
+	const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+	const nodes = children(children(children(root, 'Shapes')[0], 'Shape')[0], 'Cell');
+	const get = (name: string) => nodes.find((node) => attribute(node, 'N') === name)!;
+	expect(Number(attribute(get('Angle'), 'V'))).toBeCloseTo(-Math.PI / 6, 12);
+	expect(attribute(get('Angle'), 'F')).toBeUndefined();
+	expect(attribute(get('FlipX'), 'V')).toBe('0');
+	expect(attribute(get('FlipX'), 'F')).toBeUndefined();
+	expect(Number(attribute(get('User.Derived'), 'V'))).toBeCloseTo(-Math.PI / 6, 12);
+	expect(attribute(get('User.Derived'), 'F')).toBe('Angle/1rad+FlipX');
+	const restored = await editVsdx(saved.bytes, [flip()]);
+	expect((await parseVsdx(restored.bytes)).pages[0]!.shapes[0]!.transform).toEqual(
+		(await parseVsdx(source)).pages[0]!.shapes[0]!.transform,
+	);
+});
+it.each([
+	cell('Angle', 0, 'Width/1in*15deg'),
+	cell('Angle', Math.PI / 6, 'Sheet.99!Width/1in*15deg'),
+	cell('Angle', Math.PI / 6, 'Angle'),
+	cell('FlipX', 1, 'Width/Height'),
+	cell('FlipX', 1, 'NOW()+Width/Width'),
+	cell('FlipX', 1, 'SETATREF(Width)'),
+])('refuses unproven source formulas %s', async (extra) => {
+	const source = await fixture({
+		pages: [{ id: '0', contents: `<Shapes>${target(extra)}</Shapes>` }],
+	});
+	const original = source.slice();
+	await expect(editVsdx(source, [flip()])).rejects.toThrow();
+	expect(source).toEqual(original);
+});
 for (const extra of [
 	'<Cell N="FlipX" V="0" F="GUARD(0)" E="#REF!"/>',
 	cell('FlipX', 0, 'Width/1in'),
@@ -95,6 +139,9 @@ for (const variable of [
 	'VISIO_NATIVE_FLIP_Y_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_BLOCKED_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_BLOCKED_LOCK_DIR',
+	'VISIO_NATIVE_FLIP_DEPENDENT_ANGLE_DIR',
+	'VISIO_NATIVE_FLIP_DEPENDENT_FLAG_DIR',
+	'VISIO_NATIVE_FLIP_DEPENDENT_ZERO_ANGLE_DIR',
 ])
 	it.skipIf(!process.env[variable]).each(['rectangle', 'ellipse'])(
 		`matches native ${variable} %s`,
@@ -112,6 +159,31 @@ for (const variable of [
 			if (variable.includes('_BLOCKED_')) {
 				expect(Buffer.from(result.bytes).equals(source)).toBe(true);
 				expect(result.changedParts).toEqual([]);
+			}
+			if (variable.includes('_DEPENDENT_')) {
+				const original = await VisioPackage.open(source),
+					saved = await VisioPackage.open(result.bytes);
+				const cellName = variable.includes('_ANGLE_')
+					? 'Angle'
+					: evidence.flip === 'Horizontal'
+						? 'FlipX'
+						: 'FlipY';
+				const formula = async (pkg: VisioPackage) => {
+					const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+					const node = children(children(root, 'Shapes')[0], 'Shape').find(
+						(node) => attribute(node, 'ID') === id,
+					)!;
+					return attribute(
+						children(node, 'Cell').find((node) => attribute(node, 'N') === cellName),
+						'F',
+					);
+				};
+				expect(await formula(original)).toContain('Width');
+				if (variable.includes('_ZERO_')) expect(await formula(saved)).toBe(await formula(original));
+				else expect(await formula(saved)).toBeUndefined();
+				for (const path of original.paths())
+					if (path !== 'visio/pages/page1.xml')
+						expect(await saved.readBytes(path)).toEqual(await original.readBytes(path));
 			}
 			const actual = (await parseVsdx(result.bytes)).pages[0]!.shapes.find(
 				(shape) => shape.id === id,

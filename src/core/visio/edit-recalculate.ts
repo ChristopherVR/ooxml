@@ -1,11 +1,7 @@
+import { createVisioCellEvaluator } from './edit-recalculate-values';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
-import {
-	analyzeVisioFormula,
-	evaluateVisioFormula,
-	visioFormulaCachedValue,
-	type VisioFormulaValue,
-} from './formula';
+import { analyzeVisioFormula, type VisioFormulaValue } from './formula';
 import {
 	indexCells,
 	key,
@@ -42,65 +38,9 @@ export function recalculateVisioCells(
 		if (affected.size > maxAffected)
 			fail('LIMIT_FORMULA_AFFECTED', 'Affected ShapeSheet cell limit exceeded.');
 	}
-	const active = new Set<string>(),
-		values = new Map<string, VisioFormulaValue>();
-	let steps = bound(options.maxSteps, 100_000);
-	const maxDepth = bound(options.maxDepth, 64);
-	const evaluate = (id: string): VisioFormulaValue => {
-		options.check?.();
-		if (--steps < 0)
-			fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');
-		const cached = values.get(id);
-		if (cached) return cached;
-		if (active.has(id)) fail('EDIT_FORMULA_CYCLE', 'Affected ShapeSheet dependency cycle.');
-		if (active.size >= maxDepth)
-			fail('LIMIT_FORMULA_DEPTH', 'ShapeSheet dependency depth limit exceeded.');
-		const item = cells.get(id);
-		if (!item || (item.unsafe && (!item.node || !options.masterMovePins?.has(item.node))))
-			fail(
-				'EDIT_UNSUPPORTED_DEPENDENCY',
-				'Affected formula references missing, inherited or grouped cells.',
-			);
-		if (item.node?.hasAttribute('E'))
-			fail('EDIT_FORMULA_ERROR', 'Affected ShapeSheet cell has an error cache.');
-		active.add(id);
-		let result: VisioFormulaValue;
-		if (item.formula) {
-			const analysis = analyzeVisioFormula(item.formula);
-			if (analysis.unsupportedFunctions.length)
-				fail('EDIT_UNSUPPORTED_FORMULA', 'Affected formula uses unsupported functions.');
-			result = evaluateVisioFormula(
-				item.formula,
-				(ref) =>
-					evaluate(
-						key({ pageId: item.pageId, shapeId: ref.shapeId ?? item.shapeId, cell: ref.cell }),
-					),
-				{
-					...options.pageContext?.get(item.pageId),
-					onStep: () => {
-						if (--steps < 0)
-							fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');
-					},
-				},
-			);
-		} else
-			result = visioFormulaCachedValue(
-				attribute(item.node, 'V') ?? '',
-				attribute(item.node, 'U') ??
-					(item.unit === 'length' ? 'DL' : item.unit === 'angle' ? 'DA' : undefined),
-			);
-		if (result.unit === 'scalar' && item.unit !== 'scalar') result = { ...result, unit: item.unit };
-		const declared = attribute(item.node, 'U');
-		const expected = declared ? visioFormulaCachedValue('0', declared).unit : item.unit;
-		if (result.unit !== expected)
-			fail('EDIT_FORMULA_UNIT', 'Affected formula cache has incompatible units.');
-		if (!Number.isFinite(result.value) || Math.abs(result.value) > 1e9)
-			fail('EDIT_FORMULA_VALUE', 'Affected formula cache exceeds supported magnitude.');
-		active.delete(id);
-		values.set(id, result);
-		return result;
-	};
-	for (const id of affected) evaluate(id);
+	const evaluate = createVisioCellEvaluator(cells, options);
+	const values = new Map<string, VisioFormulaValue>();
+	for (const id of affected) values.set(id, evaluate(id));
 	const pages = new Set<string>();
 	for (const id of affected) {
 		const item = cells.get(id)!;

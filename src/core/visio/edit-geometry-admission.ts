@@ -3,7 +3,13 @@ export { cells, numeric, setCell } from './edit-geometry-cells';
 import { assertEllipseResizeRow } from './edit-ellipse-geometry';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
-import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
+import {
+	analyzeVisioFormula,
+	evaluateVisioFormula,
+	visioFormulaCachedValue,
+	type VisioFormulaReference,
+	type VisioFormulaValue,
+} from './formula';
 import { visioCellDependsOn } from './edit-recalculate';
 import type { VisioGeometryEdit } from './edit-commands';
 import { executableCellFormula } from './cell-formula';
@@ -21,7 +27,10 @@ export function guardedCell(node: Element | undefined): boolean {
 	const source = executableCellFormula(attribute(node, 'F'));
 	return !!(source && analyzeVisioFormula(source).guarded);
 }
-export function editableCell(node: Element | undefined): void {
+export function editableCell(
+	node: Element | undefined,
+	resolve?: (reference: VisioFormulaReference) => VisioFormulaValue,
+): void {
 	if (!node) return;
 	if (node.hasAttribute('E')) fail('UNSUPPORTED_GEOMETRY_EDIT', 'Cannot overwrite an error cell.');
 	const source = attribute(node, 'F');
@@ -33,15 +42,16 @@ export function editableCell(node: Element | undefined): void {
 	if (
 		analysis.guarded ||
 		analysis.dynamic ||
-		analysis.references.length ||
+		(analysis.references.length && !resolve) ||
 		analysis.unsupportedFunctions.length
 	)
 		fail(
 			'EDIT_PROTECTED_CELL',
 			'Transform formulas, GUARD and SETATREF redirection cannot be overwritten.',
 		);
-	evaluateVisioFormula(formula, () =>
-		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Unexpected formula dependency.'),
+	evaluateVisioFormula(
+		formula,
+		resolve ?? (() => fail('UNSUPPORTED_GEOMETRY_EDIT', 'Unexpected formula dependency.')),
 	);
 }
 export const isLineSheet = (local: ReadonlyMap<string, Element>): boolean =>

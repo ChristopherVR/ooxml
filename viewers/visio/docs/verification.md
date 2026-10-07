@@ -2,6 +2,40 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native static flip formulas, 2026-10-08
+
+Three owned Visio 16 captures exercise rectangle and ellipse source formulas:
+
+- Width-dependent Angle, custom pivots: visio-line-movement-3fadfcaeafab4a9c986a7f4ff51df775.
+- Width-dependent FlipY, drawing-to-page ratio 2: visio-line-movement-e122b2d52e6a40399b44b4e5d9701cd9.
+- Width-dependent zero Angle: visio-line-movement-aa15358b12914a1585578a51369a365f.
+
+The recorder accepts FlipAngleFormula and FlipFlagFormula through the same
+owned capture and cleanup lifecycle. Selection.Flip replaces the nonzero Angle
+and toggled flag formulas with constant values. It retains the source formula
+when Angle already evaluates to zero. The original user instance was untouched;
+these recordings do not prove native menu/pointer gestures or Office reopening.
+
+The bounded evaluator extracted from edit-recalculate.ts is now reused by a
+read-only source proof. It checks dependency availability, cycles, units and
+cache agreement before allowing a static flip formula to be replaced. Existing
+post-edit dependency recalculation and protections remain in use. Other geometry
+commands retain their existing formula admission. Synthetic regressions cover
+outgoing dependent cache updates with preserved formulas, inconsistent caches,
+missing/cyclic references and formula redirection. Native comparisons also check
+formula replacement/retention and byte preservation of unrelated package parts.
+
+The full Visio core suite passed 2,264 checks, with 97 optional checks skipped.
+After adding the zero-angle capture and explicit XML assertions, the focused
+flip/recalculation run passed 45 checks, with 16 older optional capture checks
+skipped. The two initial captures passed 24 browser scenarios; the zero-angle
+capture passed another 12, across all six bindings. These actual menu workflows
+compare saved poses, undo/redo and public export/reload. Core/UI builds and core,
+UI and configured viewer typechecks passed.
+
+Inherited transforms, groups/masters/glue, unknown or inconsistent formulas,
+exact paint and Microsoft Visio reopen acceptance remain unverified.
+
 ## Fully blocked flip history and feedback, 2026-10-08
 
 Two fresh owned native Visio 16 captures verify fully blocked transforms:

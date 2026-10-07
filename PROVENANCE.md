@@ -1897,3 +1897,27 @@ This covers the two native fully blocked references and honest command feedback.
 It does not establish all protection combinations, literal native menu gestures,
 dependent transforms, groups/master/glue, exact paint or native Visio reopen
 acceptance. Full Visio parity remains incomplete.
+
+## Shared source proof for native Visio flip formulas
+
+Source: ChristopherVR/ooxml at `9feb75113`,
+`src/core/visio/edit-recalculate.ts` and geometry cell admission.
+The bounded recursive cell evaluator moves into `edit-recalculate-values.ts`,
+with its existing limits, units, cycle detection and missing/inherited/grouped
+reference checks. Cache recalculation reuses it unchanged. Flip admission uses
+the same evaluator read-only, additionally checking source formula/cache
+agreement before replacing an unguarded static transform formula. No second
+formula interpreter, dependency graph, worker or history engine was added.
+Other geometry commands keep their existing formula admission.
+
+The existing native recorder accepts Angle and selected-flag formulas. Three
+owned Visio 16 captures cover width-dependent angles, a width-dependent boolean
+flip flag, and a zero-dependent angle. Visio replaces nonzero Angle and toggled
+flag formulas with constants, while retaining a zero Angle formula. Rectangle
+and ellipse comparisons include custom pivots and a drawing-to-page ratio of 2.
+Core checks preserve unrelated package parts, retain dependent formulas while
+updating caches, and reject inconsistent caches, cycles, missing references and
+formula redirection. The existing six-binding menu/history/save/reload matrix
+uses the same native captures. Applications quit; the original user instance
+remains untouched. Exact paint, native menu gestures, inherited/group/master/glue
+transforms and Microsoft Visio reopen acceptance remain unverified.

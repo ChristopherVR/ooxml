@@ -1,3 +1,4 @@
+import { editableFlipCell } from './edit-flip-formula';
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
@@ -129,7 +130,8 @@ export function applyGeometryEdit(
 			const retainAngle = edit.type === 'flip-shape' && (rotationLocked || guardedCell(angle));
 			if (!retainAngle) {
 				unlocked('LockRotate');
-				editableCell(angle);
+				if (edit.type === 'flip-shape') editableFlipCell(roots, edit, angle, check);
+				else editableCell(angle);
 			}
 			const targetAngle =
 				edit.type === 'flip-shape' ? numeric(angle, 0) * (retainAngle ? 1 : -1) : edit.angle;
@@ -139,7 +141,7 @@ export function applyGeometryEdit(
 				if (flag?.hasAttribute('E'))
 					fail('UNSUPPORTED_GEOMETRY_EDIT', 'Cannot transform an erroneous flip cache.');
 				const retainFlag = guardedCell(flag);
-				if (!retainFlag) editableCell(flag);
+				if (!retainFlag) editableFlipCell(roots, edit, flag, check);
 				const value = numeric(flag, 0);
 				if (
 					(value !== 0 && value !== 1) ||

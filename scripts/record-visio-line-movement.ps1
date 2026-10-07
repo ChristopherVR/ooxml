@@ -13,6 +13,8 @@ param(
  [ValidateSet('None','Left','Right')][string]$QuarterTurn='None',
  [ValidateSet('None','Horizontal','Vertical')][string]$Flip='None',
  [ValidateSet('None','LockRotate','GuardAngle','GuardFlipX','GuardFlipY','GuardBoth','LockAndGuardFlip')][string]$FlipProtection='None',
+ [string]$FlipAngleFormula='',
+ [string]$FlipFlagFormula='',
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -175,6 +177,13 @@ try {
  }
  if($Flip -ne 'None'){
   foreach($shape in @($rectangle,$ellipse)){
+   if($shape){
+    if($FlipAngleFormula){$shape.CellsU('Angle').FormulaU=$FlipAngleFormula}
+    if($FlipFlagFormula){
+     $cell=if($Flip -eq 'Horizontal'){'FlipX'}else{'FlipY'}
+     $shape.CellsU($cell).FormulaU=$FlipFlagFormula
+    }
+   }
    if($shape -and $FlipProtection -ne 'None'){
     if($FlipProtection -eq 'GuardAngle'){$shape.CellsU('Angle').FormulaU='GUARD('+ $shape.CellsU('Angle').FormulaU +')'}
     elseif($FlipProtection -eq 'GuardFlipX'){$shape.CellsU('FlipX').FormulaU='GUARD(0)'}

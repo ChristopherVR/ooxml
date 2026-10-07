@@ -18,6 +18,9 @@ for (const variable of [
 	'VISIO_NATIVE_FLIP_Y_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_BLOCKED_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_BLOCKED_LOCK_DIR',
+	'VISIO_NATIVE_FLIP_DEPENDENT_ANGLE_DIR',
+	'VISIO_NATIVE_FLIP_DEPENDENT_FLAG_DIR',
+	'VISIO_NATIVE_FLIP_DEPENDENT_ZERO_ANGLE_DIR',
 ]) {
 	const flip = variable.includes('_FLIP_');
 	for (const kind of ['rectangle', 'ellipse']) {
