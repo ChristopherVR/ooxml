@@ -1,8 +1,7 @@
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
-import { visioFormulaCachedValue, analyzeVisioFormula } from './formula';
-import { executableCellFormula } from './cell-formula';
+import { visioFormulaCachedValue } from './formula';
 import {
 	assertVisioShapeUnreferenced,
 	recalculateVisioCells,
@@ -20,6 +19,7 @@ import {
 import {
 	numeric,
 	editableCell,
+	guardedCell,
 	setCell,
 	cells,
 	isLineSheet,
@@ -126,11 +126,7 @@ export function applyGeometryEdit(
 				visioFormulaCachedValue('0', attribute(angle, 'U')).unit !== 'angle'
 			)
 				fail('EDIT_FORMULA_UNIT', 'Angle must use angular units.');
-			const sourceAngleFormula = executableCellFormula(attribute(angle, 'F'));
-			const retainAngle =
-				edit.type === 'flip-shape' &&
-				(rotationLocked ||
-					!!(sourceAngleFormula && analyzeVisioFormula(sourceAngleFormula).guarded));
+			const retainAngle = edit.type === 'flip-shape' && (rotationLocked || guardedCell(angle));
 			if (!retainAngle) {
 				unlocked('LockRotate');
 				editableCell(angle);
@@ -140,7 +136,10 @@ export function applyGeometryEdit(
 			if (edit.type === 'flip-shape') {
 				const name = edit.axis === 'horizontal' ? 'FlipX' : 'FlipY';
 				const flag = local.get(name);
-				editableCell(flag);
+				if (flag?.hasAttribute('E'))
+					fail('UNSUPPORTED_GEOMETRY_EDIT', 'Cannot transform an erroneous flip cache.');
+				const retainFlag = guardedCell(flag);
+				if (!retainFlag) editableCell(flag);
 				const value = numeric(flag, 0);
 				if (
 					(value !== 0 && value !== 1) ||
@@ -148,9 +147,11 @@ export function applyGeometryEdit(
 						visioFormulaCachedValue('0', attribute(flag, 'U')).unit !== 'scalar')
 				)
 					fail('EDIT_FORMULA_UNIT', 'Flip flags must be scalar booleans.');
-				expectedFlip = { cell: name, value: 1 - value };
-				setCell(shape, name, expectedFlip.value);
-				add(name);
+				expectedFlip = { cell: name, value: retainFlag ? value : 1 - value };
+				if (!retainFlag) {
+					setCell(shape, name, expectedFlip.value);
+					add(name);
+				}
 			} else if (numeric(angle, 0) === targetAngle) return [];
 			expected = {
 				width: numeric(local.get('Width')),
@@ -159,7 +160,7 @@ export function applyGeometryEdit(
 				y: numeric(local.get('PinY'), numeric(local.get('Height')) / 2),
 			};
 			expectedAngle = targetAngle;
-			if (!retainAngle) {
+			if (!retainAngle && numeric(angle, 0) !== targetAngle) {
 				setCell(shape, 'Angle', targetAngle);
 				cells(shape).get('Angle')!.setAttribute('U', 'RAD');
 				add('Angle');

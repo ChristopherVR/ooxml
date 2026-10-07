@@ -20,6 +20,34 @@ const target = (extra = '') =>
 		'1',
 		cell('Width', 2) + cell('Height', 1) + cell('PinX', 2) + cell('PinY', 3) + rectangle + extra,
 	);
+
+it.each([0, Math.PI / 6])(
+	'preserves a fully blocked flip byte-for-byte at angle %s',
+	async (angle) => {
+		const bytes = await fixture({
+			pages: [
+				{
+					id: '0',
+					contents: `<Shapes>${target(cell('Angle', angle, `GUARD(${angle}rad)`) + cell('FlipX', 0, 'GUARD(0)'))}</Shapes>`,
+				},
+			],
+		});
+		const result = await editVsdx(bytes, [flip()]);
+		expect(result.bytes).toEqual(bytes);
+		expect(result.changedParts).toEqual([]);
+	},
+);
+it('does not dirty an unprotected zero angle when its flip flag is guarded', async () => {
+	const bytes = await fixture({
+		pages: [
+			{
+				id: '0',
+				contents: `<Shapes>${target(cell('Angle', 0) + cell('FlipX', 0, 'GUARD(0)'))}</Shapes>`,
+			},
+		],
+	});
+	expect((await editVsdx(bytes, [flip()])).bytes).toEqual(bytes);
+});
 it('flips twice, preserves the source pin and snapshots its axis', async () => {
 	const bytes = await fixture({
 		pages: [{ id: '0', contents: `<Shapes>${target(cell('Angle', Math.PI / 6))}</Shapes>` }],
@@ -42,7 +70,7 @@ it('flips twice, preserves the source pin and snapshots its axis', async () => {
 	expect(copied).toEqual([flip()]);
 });
 for (const extra of [
-	cell('FlipX', 0, 'GUARD(FALSE)'),
+	'<Cell N="FlipX" V="0" F="GUARD(0)" E="#REF!"/>',
 	cell('FlipX', 0, 'Width/1in'),
 	cell('FlipX', 2),
 	'<Cell N="FlipX" V="0" U="IN"/>',
@@ -63,6 +91,8 @@ for (const variable of [
 	'VISIO_NATIVE_FLIP_VERTICAL_DIR',
 	'VISIO_NATIVE_FLIP_LOCK_DIR',
 	'VISIO_NATIVE_FLIP_GUARD_DIR',
+	'VISIO_NATIVE_FLIP_X_GUARD_DIR',
+	'VISIO_NATIVE_FLIP_Y_GUARD_DIR',
 ])
 	it.skipIf(!process.env[variable]).each(['rectangle', 'ellipse'])(
 		`matches native ${variable} %s`,

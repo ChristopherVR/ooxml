@@ -108,7 +108,10 @@ rectangle/ellipse comparisons cover a custom pivot at 30 degrees and scaled
 pages at 210 degrees. Native locked and guarded-angle horizontal flips now
 retain the original Angle cell while toggling the flip flag; both shapes pass
 core comparisons and six-binding menu/history/save/reload checks. Scalar
-inherited rotation locks also have core regression coverage. Guarded/dependent flip flags,
+inherited rotation locks also have core regression coverage. Guarded FlipX/FlipY
+flags now retain their formula/cache while an unprotected Angle negates, matching
+four further native rectangle/ellipse poses. Fully blocked flips preserve source
+bytes without a dirty part. Dependent flip flags,
 inherited transforms, groups/masters/glue, broader native flip gestures and
 Microsoft Visio reopen acceptance remain open. Source protections are refused
 instead of being overwritten.

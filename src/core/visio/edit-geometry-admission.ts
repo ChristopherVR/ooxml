@@ -16,6 +16,11 @@ const locks = [
 	'LockAspect',
 	'LockDelete',
 ] as const;
+/** Shared GUARD recognition for cells a native transform leaves in place. */
+export function guardedCell(node: Element | undefined): boolean {
+	const source = executableCellFormula(attribute(node, 'F'));
+	return !!(source && analyzeVisioFormula(source).guarded);
+}
 export function editableCell(node: Element | undefined): void {
 	if (!node) return;
 	if (node.hasAttribute('E')) fail('UNSUPPORTED_GEOMETRY_EDIT', 'Cannot overwrite an error cell.');

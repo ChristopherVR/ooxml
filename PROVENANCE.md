@@ -1834,3 +1834,24 @@ confirmed the previously overlapping Revenue/space runs now advance
 contiguously; screenshot review and Excel COM title bounds identify remaining
 padding/vertical placement differences. Browser tests compare painted SVG
 advances and line centering in every binding before/after a type edit.
+
+## Visio guarded flip flags
+
+Source: ChristopherVR/ooxml at `48c91568f`, the existing protected-angle flip
+branch and formula analysis. `guardedCell` shares GUARD recognition for Angle
+and the selected flip flag. The native transaction retains a guarded flag's
+attributes while negating an unprotected Angle, through the same cell writer,
+dependency recalculator and expected-cache verification. A zero or guarded
+Angle with a guarded flag produces no dirty part and preserves original bytes.
+
+Two new owned Visio 16 Selection.Flip references cover guarded FlipX=0 with
+a 30-degree custom pivot and guarded FlipY=1 at 210 degrees, rectangle and
+ellipse. The existing recorder captures both without bypassing GUARD. Core
+tests compare native transforms, geometry/styles and angle/pin metadata;
+the existing all-six menu matrix covers navigation/cancellation, undo/redo
+and public save/reload. Synthetic fully blocked flips also check byte-exact
+no-op behavior. No native fully blocked-flip UI evidence is claimed.
+
+Dependent flip/angle formulas, broader protection inheritance, groups/master
+and glued transforms, native menu/pointer gestures, exact paint and Microsoft
+Visio reopen acceptance remain open. Existing imports remain extensionless.
