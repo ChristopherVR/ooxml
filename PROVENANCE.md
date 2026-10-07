@@ -1317,3 +1317,17 @@ six variants. Playwright MCP reviewed a circular chart/plot background and
 downloaded it. Excel COM resaved the download with circle paths, center focus,
 two endpoint stops and red/white RGB intact on all four elements. Native chart
 layout and complete Excel parity are not established by these checks.
+## Shared Word field comment selection
+
+Source: ChristopherVR/ooxml at `4397b4bf5`, shared comment commands, field guard
+and inline Yjs range mapping. Added `src/core/docx/ui/comment-selection.ts` to
+expand comments to balanced complex-field boundaries, reused by ordinary text
+commands and Yjs element capture. The existing writer remains unchanged.
+`scripts/record-word-field-comments.ps1` records synthetic native authoring on
+field markers, partial cached results and whole fields. Three committed native
+fixtures and scopes verify parsing and neighboring-edit preservation; fifteen
+rebuilt exports verify field scopes and isolated author restoration.
+Projection observers now use the existing Yjs binding mutex to avoid writing
+older text state back during remote map notifications. No binding implementation
+was copied. Nested/simple-field behavior and M365 subscription builds remain
+unverified.

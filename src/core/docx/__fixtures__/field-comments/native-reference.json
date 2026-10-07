@@ -1,0 +1,81 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "begin",
+			"text": "Before1After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "Ada native",
+					"scope": "1",
+					"start": 6,
+					"end": 16
+				},
+				{
+					"author": "Bob",
+					"text": "Bob native",
+					"scope": "1",
+					"start": 6,
+					"end": 16
+				}
+			]
+		},
+		{
+			"name": "result",
+			"text": "BeforeABCDEAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "Ada native",
+					"scope": "ABCDE",
+					"start": 6,
+					"end": 20
+				},
+				{
+					"author": "Bob",
+					"text": "Bob native",
+					"scope": "ABCDE",
+					"start": 6,
+					"end": 20
+				}
+			]
+		},
+		{
+			"name": "whole",
+			"text": "Before1After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "Ada native",
+					"scope": "1",
+					"start": 6,
+					"end": 16
+				},
+				{
+					"author": "Bob",
+					"text": "Bob native",
+					"scope": "1",
+					"start": 6,
+					"end": 16
+				}
+			]
+		}
+	]
+}

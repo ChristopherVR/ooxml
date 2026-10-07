@@ -7,6 +7,7 @@ import {
 	ySyncPluginKey,
 } from 'y-prosemirror';
 import { commentIdsFromNode } from './comment-anchors';
+import { commentSelectionRange } from './comment-selection';
 
 type Mapping = Parameters<typeof absolutePositionToRelativePosition>[2];
 interface AnchorRange {
@@ -61,12 +62,8 @@ export class WordYjsInlineCommentAnchors {
 	add(state: EditorState, id: string): boolean {
 		const binding = ySyncPluginKey.getState(state)?.binding;
 		if (!binding || binding.type !== this.fragment) return false;
-		const ranges = this.capture(
-			state.doc,
-			state.selection.from,
-			state.selection.to,
-			binding.mapping,
-		);
+		const selection = commentSelectionRange(state.doc, state.selection.from, state.selection.to);
+		const ranges = this.capture(state.doc, selection.from, selection.to, binding.mapping);
 		if (!ranges.length) return false;
 		this.ranges.set(id, ranges);
 		return true;
@@ -143,8 +140,14 @@ export class WordYjsInlineCommentAnchors {
 				return tr.setMeta('addToHistory', false).setMeta('dve-remote', true);
 			},
 			view: (view) => {
-				const refresh = () =>
-					view.dispatch(view.state.tr.setMeta('word-inline-comment-anchors', true));
+				const refresh = () => {
+					const binding = ySyncPluginKey.getState(view.state)?.binding;
+					// Projection is read-only. A map observer may run before the fragment observer;
+					// writing its older text snapshot back would erase incoming text comment marks.
+					binding?.mux(() =>
+						view.dispatch(view.state.tr.setMeta('word-inline-comment-anchors', true)),
+					);
+				};
 				this.ranges.observe(refresh);
 				this.deleted.observe(refresh);
 				return {

@@ -2,8 +2,53 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { fileInput, fileNameLabel, newDocument, saveButton } from './helpers';
+import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
+	test(`${framework}: commenting on part of a field result anchors the complete field`, async ({
+		page,
+	}) => {
+		await page.goto(`/?framework=${framework}`);
+		await (
+			await fileInput(page)
+		).setInputFiles({
+			name: 'field.docx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			buffer: await fieldDocx(),
+		});
+		const editor = page.locator('docx-editor');
+		const result = editor.locator('[data-field="AUTHOR"]');
+		await expect(result).toContainText('Ann');
+		await editor.locator('.ProseMirror').focus();
+		await result.evaluate((element) => {
+			const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()!;
+			const selection = window.getSelection();
+			selection!.setBaseAndExtent(text, 1, text, 2);
+		});
+		await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe('n');
+		await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
+		const pane = editor.locator('.dve-comments-panel');
+		await pane.getByRole('textbox', { name: 'New comment', exact: true }).fill('Whole field');
+		await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
+		const bytes = await editor.evaluate(async (element) =>
+			Array.from(await (element as DocxEditorElement).saveBytes()),
+		);
+		const zip = await JSZip.loadAsync(new Uint8Array(bytes));
+		const xml = await zip.file('word/document.xml')!.async('string');
+		expect(xml.indexOf('<w:commentRangeStart')).toBeLessThan(xml.indexOf('w:fldCharType="begin"'));
+		expect(xml.indexOf('<w:commentRangeEnd')).toBeGreaterThan(xml.indexOf('w:fldCharType="end"'));
+		expect(xml.match(/<w:commentRangeStart\b/g)).toHaveLength(1);
+		await editor.getByRole('button', { name: 'Undo', exact: true }).click();
+		const undone = await editor.evaluate(async (element) =>
+			Array.from(await (element as DocxEditorElement).saveBytes()),
+		);
+		const undoneZip = await JSZip.loadAsync(new Uint8Array(undone));
+		expect(await undoneZip.file('word/document.xml')!.async('string')).not.toContain(
+			'<w:commentRangeStart',
+		);
+	});
 
 async function fieldDocx(): Promise<Buffer> {
 	const zip = new JSZip();

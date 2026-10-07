@@ -28,7 +28,7 @@ afterEach(() => {
 	for (const session of sessions.splice(0)) session.destroy();
 });
 
-for (const name of ['picture', 'note', 'break', 'line-break'])
+for (const name of ['picture', 'note', 'break', 'line-break', 'field'])
 	it(`exports concurrent ${name} comments, deletes independently, and preserves anchors during font edits and detached saves`, async () => {
 		const bytes = new Uint8Array(
 			await readFile(
@@ -61,7 +61,13 @@ for (const name of ['picture', 'note', 'break', 'line-break'])
 		const bb = wordYjsPluginKey.getState(bv.state)!;
 		let pos = -1;
 		av.state.doc.descendants((node, position) => {
-			if (pos < 0 && node.isInline && !node.isText) pos = position;
+			if (
+				pos < 0 &&
+				(name === 'field'
+					? node.isText && node.marks.some((mark) => mark.type.name === 'field')
+					: node.isInline && !node.isText)
+			)
+				pos = position;
 		});
 		for (const view of [av, bv])
 			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, pos, pos + 1)));
@@ -73,14 +79,16 @@ for (const name of ['picture', 'note', 'break', 'line-break'])
 		expect(av.state.doc.eq(bv.state.doc)).toBe(true);
 		for (const editor of editors) {
 			expect(commentIdsAtSelection(viewOf(editor))).toEqual(['a', 'b']);
-			expect(runsOf(editor.documentModel!).flatMap((run) => run.commentIds ?? [])).toHaveLength(2);
+			expect(runsOf(editor.documentModel!).flatMap((run) => run.commentIds ?? [])).toHaveLength(
+				name === 'field' ? 10 : 2,
+			);
 			const model = (await loadDocx(await editor.saveBytes())).model;
 			expect(model.comments?.map((comment) => comment.text).sort()).toEqual([
 				'A comment',
 				'B comment',
 			]);
 			const runs = runsOf(model);
-			expect(runs.flatMap((run) => run.commentIds ?? [])).toHaveLength(2);
+			expect(runs.flatMap((run) => run.commentIds ?? [])).toHaveLength(name === 'field' ? 10 : 2);
 		}
 		bb.stopCapturing();
 		applyFontFormat(bv, { size: 18, smallCaps: true });
@@ -103,5 +111,7 @@ for (const name of ['picture', 'note', 'break', 'line-break'])
 		expect(bb.comments.reply('a', 'Bob', 'Remote reply', () => 'reply')).toBe(true);
 		const detached = (await loadDocx(await a!.saveBytes())).model;
 		expect(detached.comments).toHaveLength(2);
-		expect(runsOf(detached).flatMap((run) => run.commentIds ?? [])).toHaveLength(1);
+		expect(runsOf(detached).flatMap((run) => run.commentIds ?? [])).toHaveLength(
+			name === 'field' ? 5 : 1,
+		);
 	});

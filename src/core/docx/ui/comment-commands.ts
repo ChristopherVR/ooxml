@@ -5,6 +5,7 @@ import { TextSelection } from 'prosemirror-state';
 import { commentIdsFromNode } from './comment-anchors';
 import { hasInlineRunAttributes, setInlineRunFormatting } from './inline-formatting';
 import { inlineNodeRun } from './run-adapter';
+import { commentSelectionRange } from './comment-selection';
 
 let commentSerial = 0;
 function nextCommentId(idGenerator?: (kind: string) => string): string {
@@ -22,7 +23,11 @@ export function addComment(
 	inlineElements = true,
 ): Comment | null {
 	if (!view.editable || !view.state.schema.marks.comment) return null;
-	const { from, to } = view.state.selection;
+	const { from, to } = commentSelectionRange(
+		view.state.doc,
+		view.state.selection.from,
+		view.state.selection.to,
+	);
 	if (from === to) return null;
 	const id = nextCommentId(idGenerator);
 	let tr = view.state.tr;

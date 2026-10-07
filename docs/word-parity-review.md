@@ -478,3 +478,21 @@ authors match. The second overlapping field-marker comment has a zero-width
 native scope, so field-range parity remains unfinished. The installed perpetual
 Word build does not establish current Microsoft 365 parity. Existing v1/v2 rooms
 require export with their matching client and creation of a fresh v3 room.
+
+The field-comment scope gap above is now corrected for balanced complex fields.
+Native Word authoring expands a begin-marker selection, a one-character result
+selection and a whole-field selection to the complete field. Ordinary and Yjs
+comment authoring now share that range expansion. Three native packages retain
+both overlapping anchors through a neighboring text edit; rebuilt field exports
+reopen with matching full scopes, deletion and local restoration. Five mounted
+peer cases now include field results. Six browser bindings cover result selection,
+whole-field export and undo. Nested fields, simple fields and M365 subscription
+build comparisons still require separate evidence.
+
+Anchor projections use the existing binding mutex to remain read-only during map
+notifications. This prevents an older view snapshot from erasing incoming text
+marks when a comment spans text and inline elements in the same transaction.
+
+Ordinary comment undo currently removes range anchors but leaves thread metadata
+in the pane; Yjs undo restores both. The field browser cases verify anchor undo
+only. Ordinary thread metadata history is a separate remaining gap.

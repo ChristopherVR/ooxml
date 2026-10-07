@@ -131,7 +131,7 @@ its anchor together and reveals surviving replies; each author's undo retains
 other authors' operations. Export snapshots the latest shared threads even while
 the editor is detached.
 
-V3 rooms carry an `inline-relative-v1` comment capability in their Word identity map. Pictures, breaks, note references and field markers retain independent anchors through concurrent additions, deletions, neighboring text edits and local undo. Imported anchors seed these ranges when a new room is created. Matching legacy rooms retain their `independent-v1` text-only capability.
+V3 rooms carry an `inline-relative-v1` comment capability in their Word identity map. Pictures, breaks, note references and field markers retain independent anchors through concurrent additions, deletions, neighboring text edits and local undo. Imported anchors seed these ranges when a new room is created. Commenting on a result or marker of a balanced complex field covers the complete field, matching the recorded native Word behavior. Matching legacy rooms retain their `independent-v1` text-only capability.
 Compatible rooms without it keep their loaded comments and disable comment editing.
 Create a new room from a canonical saved snapshot to upgrade; do not change the
 capability on a live room. Authority-step mode does not synchronize comment

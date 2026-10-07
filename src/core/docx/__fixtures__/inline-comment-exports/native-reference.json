@@ -67,16 +67,16 @@
 				{
 					"author": "Bob",
 					"text": "B comment",
-					"scope": "",
+					"scope": "1",
 					"start": 6,
-					"end": 7
+					"end": 16
 				},
 				{
 					"author": "Ada",
 					"text": "A comment",
-					"scope": "",
-					"start": 7,
-					"end": 7
+					"scope": "1",
+					"start": 6,
+					"end": 16
 				}
 			]
 		},
@@ -102,9 +102,9 @@
 				{
 					"author": "Ada",
 					"text": "A comment",
-					"scope": "",
+					"scope": "1",
 					"start": 6,
-					"end": 7
+					"end": 16
 				}
 			]
 		},
