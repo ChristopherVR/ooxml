@@ -3,6 +3,10 @@
 	// Tighten gradually; new code elsewhere stays strict (see AGENTS.md).
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
+		// Core's own editor modules must resolve the model before dist exists.
+		"paths": {
+			"ooxml-core/pptx": ["./pptx/index.ts"]
+		},
 		"exactOptionalPropertyTypes": false,
 		"noUncheckedIndexedAccess": false,
 		"noImplicitOverride": false,
