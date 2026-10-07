@@ -61,7 +61,11 @@ describe('editable fields', () => {
 			),
 		);
 		const paragraph = loaded.model.blocks[0] as Paragraph;
-		expect(paragraph.runs[1]).toEqual({ text: 'Ann', field: { instr: 'AUTHOR', simple: true } });
+		expect(paragraph.runs[1]).toEqual({
+			text: 'Ann',
+			field: { instr: 'AUTHOR', simple: true },
+			fieldInstanceId: 'p0:simple-field-0',
+		});
 		const runs = [{ text: 'Written by ' }, { ...paragraph.runs[1], text: 'Bea' }];
 		const xml = await documentXml(
 			await loaded.save({ ...loaded.model, blocks: [{ ...paragraph, runs }] }),

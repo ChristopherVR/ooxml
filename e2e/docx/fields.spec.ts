@@ -7,7 +7,7 @@ import type { DocxEditorElement } from '../../viewers/docx/packages/web-componen
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
-	for (const kind of ['complex', 'simple'] as const)
+	for (const kind of ['complex', 'simple', 'adjacent'] as const)
 		test(`${framework}: commenting on part of a ${kind} field result anchors the complete field`, async ({
 			page,
 		}) => {
@@ -17,10 +17,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			).setInputFiles({
 				name: 'field.docx',
 				mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-				buffer: await fieldDocx(kind === 'simple'),
+				buffer: await fieldDocx(kind !== 'complex', kind === 'adjacent'),
 			});
 			const editor = page.locator('docx-editor');
-			const result = editor.locator('[data-field="AUTHOR"]');
+			const result = editor.locator('[data-field="AUTHOR"]').first();
 			await expect(result).toContainText('Ann');
 			await editor.locator('.ProseMirror').focus();
 			await result.evaluate((element) => {
@@ -39,12 +39,16 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			const zip = await JSZip.loadAsync(new Uint8Array(bytes));
 			const xml = await zip.file('word/document.xml')!.async('string');
 			expect(xml.indexOf('<w:commentRangeStart')).toBeLessThan(
-				xml.indexOf(kind === 'simple' ? '<w:fldSimple' : 'w:fldCharType="begin"'),
+				xml.indexOf(kind !== 'complex' ? '<w:fldSimple' : 'w:fldCharType="begin"'),
 			);
 			expect(xml.indexOf('<w:commentRangeEnd')).toBeGreaterThan(
-				xml.indexOf(kind === 'simple' ? '</w:fldSimple>' : 'w:fldCharType="end"'),
+				xml.indexOf(kind !== 'complex' ? '</w:fldSimple>' : 'w:fldCharType="end"'),
 			);
 			expect(xml.match(/<w:commentRangeStart\b/g)).toHaveLength(1);
+			if (kind === 'adjacent') {
+				expect(xml.match(/<w:fldSimple\b/g)).toHaveLength(2);
+				expect(xml.indexOf('<w:commentRangeEnd')).toBeLessThan(xml.lastIndexOf('<w:fldSimple'));
+			}
 			await editor.getByRole('button', { name: 'Undo', exact: true }).click();
 			await expect(pane).not.toContainText('Whole field');
 			const undone = await editor.evaluate(async (element) =>
@@ -59,7 +63,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await expect(pane).toContainText('Whole field');
 		});
 
-async function fieldDocx(simple = false): Promise<Buffer> {
+async function fieldDocx(simple = false, adjacent = false): Promise<Buffer> {
 	const zip = new JSZip();
 	zip.file(
 		'[Content_Types].xml',
@@ -79,7 +83,9 @@ async function fieldDocx(simple = false): Promise<Buffer> {
 			'word/document.xml',
 			xml.replace(
 				/<w:r><w:fldChar w:fldCharType="begin"\/><\/w:r>[\s\S]*?<w:r><w:fldChar w:fldCharType="end"\/><\/w:r>/,
-				'<w:fldSimple w:instr=" AUTHOR "><w:r><w:t>Ann</w:t></w:r></w:fldSimple>',
+				'<w:fldSimple w:instr=" AUTHOR "><w:r><w:t>Ann</w:t></w:r></w:fldSimple>'.repeat(
+					adjacent ? 2 : 1,
+				),
 			),
 		);
 	}

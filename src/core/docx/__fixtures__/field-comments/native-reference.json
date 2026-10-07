@@ -101,6 +101,31 @@
 					"end": 29
 				}
 			]
+		},
+		{
+			"name": "adjacent-result",
+			"text": "BeforeABCDEABCDEAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "Ada native",
+					"scope": "ABCDE",
+					"start": 6,
+					"end": 29
+				},
+				{
+					"author": "Bob",
+					"text": "Bob native",
+					"scope": "ABCDE",
+					"start": 6,
+					"end": 29
+				}
+			]
 		}
 	]
 }

@@ -1,7 +1,8 @@
 # Word parity review and implementation progress
 
-Reviewed 2026-10-07. This is a source review and a bounded first implementation,
-not a claim of Microsoft Word equivalence or a completed browser assessment.
+Initial source review: 2026-10-07. Updated 2026-10-08 with the bounded native,
+browser and regression evidence below. Current Microsoft 365 Word parity remains
+unverified; the installed perpetual Word build is not subscription certification.
 
 ## Source state and ownership
 
@@ -10,28 +11,18 @@ The consolidated workspace uses `src/core` (`ooxml-core`) and `src/ui`
 in `src/core/collab`, reusable controls in `src/ui`, and framework lifecycle/event
 adapters in the viewer. Core must never import the UI package.
 
-The reviewed viewer entry re-exports `ooxml-ui/docx`. The initial shared checkout
-was detached at an older commit and lacked the Word editor and its exports.
-On preparing this slice for publication, current `origin/main` was found to
-already contain the consolidated sources in `src/ui/src/docx` and
-`src/core/docx/ui`, with the viewer under `viewers/docx`. These existing sources
-are the integration target. The slice is landed from an isolated checkout of
-current main, without publishing the older workspace migration. No source has
-been extracted in this slice.
-
-The viewer's parity roadmap and browser contracts describe six bindings over one
-editor, continuous editing, read-only paginated Print Layout, formatting, lists,
-tables, sections/stories, fields, comments and tracked changes. Those contracts
-are useful feature evidence, but were inspected rather than executed in this
-review. They do not establish pixel-equivalent Word output.
+The viewer entry re-exports `ooxml-ui/docx`. Six framework bindings consume one
+shared editor. Editing is continuous and paginated Print Layout remains read-only.
+Executed browser and native comparisons are recorded by feature below; those
+cases do not establish pixel-equivalent output across arbitrary Word documents.
 
 ## Principal gaps
 
 | Area                  | Evidence and remaining work                                                                                                                                                                                                                                                                        | Reuse boundary                                                                                                        |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Editable pages        | Editing remains continuous; Print Layout is read-only. Caret, selection, IME and keyboard mappings need contracts before editable page surfaces.                                                                                                                                                   | Shared docx layout; one Word editor                                                                                   |
-| Layout                | Continuous section breaks are explicitly approximated as page breaks in `docx/layout/page-flow.ts`. Complex typography and Word font metrics need reference documents.                                                                                                                             | Injectable measurer and shared layout engine                                                                          |
-| Tables                | Complex/merged structural editing and collaborative table changes remain limited. Header pagination was incorrectly repeating noncontiguous marked rows.                                                                                                                                           | Word model, editing and layout in core                                                                                |
+| Layout                | Covered continuous-section bands, column balancing, headers and page fields have native/browser references below. Complex typography, floats, boundary transitions and Word font metrics remain incomplete.                                                                                        | Injectable measurer and shared layout engine                                                                          |
+| Tables                | Complex/merged structural editing and collaborative table changes remain limited. Contiguous header pagination is fixed; complex structural editing and native table-layout coverage remain incomplete.                                                                                            | Word model, editing and layout in core                                                                                |
 | Drawing objects       | The viewer roadmap identifies missing general shape, chart and SmartArt editing. Equations are display-only in the newer editor.                                                                                                                                                                   | Geometry, diagram and future shared DrawingML/chart/math areas, rather than imports of PowerPoint UI internals        |
 | Proofing and review   | Browser spelling is not a Word grammar engine. Compare, protection, richer references and automatic field calculation need explicit implementations.                                                                                                                                               | Product logic in docx; host service contracts where appropriate                                                       |
 | Collaboration         | Word uses authority-ordered ProseMirror steps and separate transient presence. Shared collab already has Yjs, awareness, WebSocket protocol and external WebRTC/WebSocket adapters. Opt-in Word Yjs binding is now wired through the shared session; multi-story collaboration remains incomplete. | Format-neutral lifecycle/providers in collab; Word schema mapping in docx; cursor DOM and Share/status controls in UI |
@@ -528,3 +519,13 @@ Simple-field imports also reuse the paragraph range/revision collector instead
 of flattening only direct runs. Internal partial comment scopes and overlapping
 outer comments survive parse/save; comment-reference runs no longer become
 empty field results. The writer retains those imported partial scopes.
+
+### Adjacent imported simple-field identities
+
+Distinct imported simple fields with identical instructions retain identities
+through the model, existing opaque editor marks, direct formatting, Yjs and
+export. Comment expansion and field updates respect those boundaries; the first
+field's scope matches native Word (6:29) and excludes the second field. This
+addresses the imported adjacency gap noted above. Identity is regenerated from
+source order on import, not written as an OOXML attribute. Clipboard copies and
+new adjacent fields lacking an identity are not established by these cases.

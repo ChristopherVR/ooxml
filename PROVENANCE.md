@@ -1456,3 +1456,15 @@ paper edge; the shared browser workflow now compares scaled box creation and
 ellipse resize/move through history and saved reload. Geometry controls retain
 their documented drawing-inch contract. Native off-paper visibility, native
 pointer snapping and Office reopen acceptance remain unverified.
+
+## Shared Word imported simple-field identity
+
+Source: ChristopherVR/ooxml at `30500efc7`, simple-field parser, writer and
+shared run adapter. Imported field result runs now carry a per-paragraph
+`fieldInstanceId` in the existing opaque run-properties metadata, retaining
+separate adjacent fields with identical instructions. The core result scanner
+and writer compare it; clearing direct formatting preserves it. Two-peer
+comment/export and field-update/history regressions exercise the same mapping.
+Synthetic adjacent-source and native adjacent-result fixtures record Word's
+first-field-only scope (6:29). Copies/pasted field identity and newly authored
+fields without identities still require separate handling.

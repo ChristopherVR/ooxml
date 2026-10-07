@@ -140,6 +140,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 
 function parseParagraph(node: XmlElement, id: string): Paragraph {
 	const props = first(node, 'pPr');
+	let simpleFieldIndex = 0;
 	const trackField = createFieldTracker();
 	const { runs } = collectParagraphRuns(
 		node,
@@ -163,10 +164,11 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 			);
 			if (link) return results.map((run) => ({ ...run, link }));
 			const field = { instr: instr.trim(), simple: true };
+			const fieldInstanceId = `${id}:simple-field-${simpleFieldIndex++}`;
 			// Show Word's cached result; fall back to a readable placeholder when none was saved.
 			if (!results.some((run) => run.text || run.equation))
-				return [{ text: fieldPlaceholderText(instr), field }];
-			return results.map((run) => ({ ...run, field }));
+				return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId }];
+			return results.map((run) => ({ ...run, field, fieldInstanceId }));
 		},
 		(hyperlink) => {
 			if (!activeContext) return undefined;

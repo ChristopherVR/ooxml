@@ -8,6 +8,7 @@ import { ligatureStyle } from './ligature-style';
  * so the writer never strips them from the source XML).
  */
 export const extraRunFields = [
+	'fieldInstanceId',
 	'restoredRunPropertiesXml',
 	'sourceRunPropertiesXml',
 	'formatRevision',

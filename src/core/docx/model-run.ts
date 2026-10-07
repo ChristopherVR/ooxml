@@ -82,10 +82,11 @@ export interface TextRun {
 	noteMark?: 'footnote' | 'endnote';
 	/**
 	 * Present on runs holding a field's displayed result (`w:fldSimple`, or text between a complex
-	 * field's `separate` and `end`). Display metadata only: fields are not recalculated on save and
-	 * paragraphs containing them stay protected from edits.
+	 * field's `separate` and `end`). Cached display metadata; saving does not recalculate instructions.
 	 */
 	field?: { instr: string; simple?: boolean };
+	/** Imported simple-field boundary identity, shared by its result runs; not an OOXML attribute. */
+	fieldInstanceId?: string;
 	/** A complex field's `w:fldChar` marker run (begin, separate or end); `text` is empty. */
 	fieldChar?: 'begin' | 'separate' | 'end';
 	/** A complex field's instruction text run (`w:instrText`), e.g. ` TOC \o "1-3" `; `text` is empty. */

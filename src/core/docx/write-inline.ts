@@ -276,17 +276,23 @@ export function buildInlineContent(
 
 type ContainerGroup =
 	| { kind: 'link'; link: HyperlinkInfo }
-	| { kind: 'simpleField'; instr: string };
+	| { kind: 'simpleField'; instr: string; instanceId: string | undefined };
 
 /** The wrapper a run is written inside: a hyperlink, or a simple field (`w:fldSimple`). */
 function containerGroup(run: TextRun): ContainerGroup | undefined {
 	if (run.link) return { kind: 'link', link: run.link };
-	if (run.field?.simple) return { kind: 'simpleField', instr: run.field.instr };
+	if (run.field?.simple)
+		return { kind: 'simpleField', instr: run.field.instr, instanceId: run.fieldInstanceId };
 	return undefined;
 }
 
 function sameGroup(a: ContainerGroup | undefined, b: ContainerGroup | undefined): boolean {
 	if (!a || !b) return a === b;
 	if (a.kind === 'link' && b.kind === 'link') return sameLink(a.link, b.link);
-	return a.kind === 'simpleField' && b.kind === 'simpleField' && a.instr === b.instr;
+	return (
+		a.kind === 'simpleField' &&
+		b.kind === 'simpleField' &&
+		a.instr === b.instr &&
+		a.instanceId === b.instanceId
+	);
 }

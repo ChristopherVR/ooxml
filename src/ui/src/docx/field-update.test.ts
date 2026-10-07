@@ -41,6 +41,32 @@ const texts = (view: EditorView) => {
 const pages = (id: string) => ({ p0: '1', p1: '4' })[id];
 
 describe('updateFields', () => {
+	it('updates adjacent identical references independently and retains their field identities', () => {
+		const instr = 'REF _Ref2';
+		const result = (id: string) =>
+			schema.text('Old', [
+				schema.marks.field!.create({ instr, simple: true }),
+				schema.marks.runProperties!.create({ props: { fieldInstanceId: id } }),
+			]);
+		const view = editor(
+			paragraph('p0', [schema.text('New title')], ['_Ref2']),
+			paragraph('p1', [result('first'), result('second')]),
+		);
+		expect(updateFields(view, pages)).toBe(true);
+		expect(texts(view)[1]).toBe('New titleNew title');
+		const ids: string[] = [];
+		view.state.doc
+			.child(1)
+			.forEach((node) =>
+				ids.push(
+					node.marks.find((mark) => mark.type.name === 'runProperties')!.attrs.props
+						.fieldInstanceId,
+				),
+			);
+		expect(ids).toEqual(['first', 'second']);
+		undo(view.state, view.dispatch);
+		expect(texts(view)[1]).toBe('OldOld');
+	});
 	it('renumbers captions, then refreshes REF and PAGEREF results', () => {
 		const view = editor(
 			paragraph('p0', [schema.text('Intro ')], []),

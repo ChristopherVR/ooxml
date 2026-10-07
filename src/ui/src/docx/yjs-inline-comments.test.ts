@@ -28,12 +28,20 @@ afterEach(() => {
 	for (const session of sessions.splice(0)) session.destroy();
 });
 
-for (const name of ['picture', 'note', 'break', 'line-break', 'field', 'simple-field'])
+for (const name of [
+	'picture',
+	'note',
+	'break',
+	'line-break',
+	'field',
+	'simple-field',
+	'adjacent-fields',
+])
 	it(`exports concurrent ${name} comments, deletes independently, and preserves anchors during font edits and detached saves`, async () => {
 		const bytes = new Uint8Array(
 			await readFile(
-				name === 'simple-field'
-					? '../core/docx/__fixtures__/field-comments/simple-source.docx'
+				name === 'simple-field' || name === 'adjacent-fields'
+					? `../core/docx/__fixtures__/field-comments/${name === 'simple-field' ? 'simple' : 'adjacent'}-source.docx`
 					: `../core/docx/__fixtures__/review-advanced-object-formatting/${name}-before.docx`,
 			),
 		);
@@ -65,7 +73,7 @@ for (const name of ['picture', 'note', 'break', 'line-break', 'field', 'simple-f
 		av.state.doc.descendants((node, position) => {
 			if (
 				pos < 0 &&
-				(name === 'field' || name === 'simple-field'
+				(name === 'field' || name === 'simple-field' || name === 'adjacent-fields'
 					? node.isText && node.marks.some((mark) => mark.type.name === 'field')
 					: node.isInline && !node.isText)
 			)
@@ -90,6 +98,12 @@ for (const name of ['picture', 'note', 'break', 'line-break', 'field', 'simple-f
 				'B comment',
 			]);
 			const runs = runsOf(model);
+			if (name === 'adjacent-fields') {
+				const fields = runs.filter((run) => run.field);
+				expect(fields).toHaveLength(2);
+				expect(fields[0]!.commentIds).toHaveLength(2);
+				expect(fields[1]!.commentIds).toBeUndefined();
+			}
 			expect(runs.flatMap((run) => run.commentIds ?? [])).toHaveLength(name === 'field' ? 10 : 2);
 		}
 		bb.stopCapturing();
