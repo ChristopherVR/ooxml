@@ -145,11 +145,11 @@ textarea:focus-visible {
 		padding: 0 var(--office-space-2) var(--office-space-2);
 	}
 	textarea {
-		font-size: 16px;
+		font-size: var(--office-font-size-touch);
 		min-height: 3em;
 	}
 	.bar button {
-		min-width: 36px;
-		height: 36px;
+		min-width: var(--office-touch-target);
+		height: var(--office-touch-target);
 	}
 }

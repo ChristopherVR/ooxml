@@ -45,6 +45,8 @@ export const OFFICE_TOKENS = {
 	'--office-font-size-md': '14px',
 	'--office-font-size-lg': '15px',
 	'--office-font-size-xl': '18px',
+	/** Smallest text size that keeps mobile browsers from zooming a focused field. */
+	'--office-font-size-touch': '16px',
 	'--office-font-weight-medium': '500',
 	'--office-font-weight-bold': '600',
 	'--office-line-height': '1.4',
@@ -77,6 +79,8 @@ export const OFFICE_TOKENS = {
 	// Sizes
 	'--office-target-size': '28px',
 	'--office-target-size-touch': '44px',
+	/** Minimum pointer target on touch layouts. */
+	'--office-touch-target': '36px',
 	'--office-control-height': '24px',
 	'--office-control-height-md': '28px',
 	'--office-control-height-lg': '32px',
