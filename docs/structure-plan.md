@@ -229,24 +229,65 @@ and no claim of parity without evidence.
   re-scanned the DOM on every transaction) that is now cached; Visio theming is
   documented; four redundant `.oxfmtrc.json` copies are gone.
 
-### Wave 4 (next)
+### Wave 4 (landed 2026-10-08)
 
-- pptx off `fast-xml-parser` area by area (plan step 6), starting with charts
-  through the parity harness and SmartArt through the ordered-XML tree. Charts
-  started: classic chart parts are read by the neutral parser and adapted to
-  `PptxChartData` (proven deeply equal to the old parser on every committed
-  chart); styles, ChartEx and the chart writers still use the object tree.
+Browser verification ran for the first time since Wave 1, one agent per
+product, with `--workers=2` on Chromium (Playwright 1.63):
 
-  SmartArt layout (agnostic-core plan step 2): the hierarchy arranger and
-  every other interpreter, up to `interpretSmartArtLayout`, moved to
-  `diagram/hierarchy` and `diagram/layout`; the node text projection (needs a
-  neutral paragraph model) and the editing reflow (needs a neutral drawing
-  shape) are still in pptx.
+- Excel: every `chart-*` spec (387 tests) plus `framework-matrix`,
+  `clipboard-parity`, `formatting`, `editing` pass in all six frameworks; new
+  specs cover sparklines, the Show Comments list, every binding's own handle
+  and two-window collaboration.
+- Word: 452 tests across the comment, review, field, locale, parity and
+  ribbon specs pass in all six frameworks; new specs cover the shared comments
+  pane, the ruler drag and the binding handles. It caught a real Wave 2
+  regression: Word never registered `office-ui-ruler` (the unit test had
+  masked it by registering everything), now fixed with a test that would have
+  failed. Two flaky specs were made deterministic.
+- Visio: 68 ungated tests pass (the `VISIO_NATIVE_*` captures stay skipped);
+  new specs cover the shared theme tokens and the `aria-label` on every host.
+  It caught a real flaky-share bug (the host never published a drawing when a
+  load-time zoom swallowed the load event), now fixed with a regression test.
+- Teams: the whole suite (30 tests) passes in all six frameworks; new specs
+  cover the host class, the `open-file` event and the PowerPoint reading view.
+- The demos for Excel and Word now drive each binding's real handle (before,
+  no browser test reached the bindings' handles at all).
 
-- One chart painter for xlsx and the pptx DOM renderer.
+Implementation:
+
+- pptx charts off `fast-xml-parser` (plan step 6): classic chart parts are read
+  by the neutral parser and adapted to `PptxChartData`, proven deeply equal to
+  the old parser on every committed chart before the old parser was deleted;
+  the neutral model gained walls, floors, data tables and display units. It
+  exposed two pptx writers that saved undeclared `c15`/`c16` prefixes (fixed),
+  and decks this library saved that way are repaired on load with a reported
+  issue. Styles, ChartEx and the chart writers still use the object tree.
+- SmartArt layout (plan step 2): the hierarchy arranger, every other
+  interpreter up to `interpretSmartArtLayout` and their closure (253 files)
+  moved to `diagram/hierarchy` and `diagram/layout`, strict, byte-identical on
+  the corpus; node text projection (needs a neutral paragraph model) and the
+  editing reflow (needs a neutral drawing shape) remain in pptx.
+- One chart painter: the Excel SVG painter moved to `chart/render` over a
+  neutral `ChartSummary`; `renderChartSpaceSvg` draws any `ChartSpace`. Word
+  now draws bar, column, line, area, pie, doughnut, scatter and radar charts
+  in the editor and in Print Layout (read-only; bubble, stock, surface and
+  chartex show a labelled frame). The pptx DOM renderer still has its own.
+- Excel collaboration is wired: `collaboration` on `<xlsx-editor>` and every
+  binding, File > Share, remote selections painted from a DOM-free layout,
+  presence in the title bar, undo routed through the Yjs undo manager while
+  bound. The browser spec found a join-time race (a guest could seed a blank
+  workbook over the host's); the fix makes the shared transport announce
+  presence before answering a sync request and makes a joiner wait for an
+  earlier writer's workbook.
+
+### Wave 5 (next)
+
 - pptx binding factory; per-binding contract parity tests for all products;
   the pptx comments panels on the shared pane.
-- xlsx collaboration UI wiring; docx `DocumentAdapter` into `src/core/docx`.
-- Shared backstage and find bar.
-- Product parity: Word editable Print Layout, charts and shapes drawn; Excel
-  pivot rendering and Page Layout; Visio connector routing and glue.
+- pptx chart styles, ChartEx and the chart writers onto the neutral model;
+  the pptx DOM chart renderer onto `chart/render`.
+- Neutral paragraph model in `drawingml`, then SmartArt text projection and
+  editing out of pptx; the engine's ordered XML onto the shared `xml` DOM.
+- Shared backstage and find bar; docx `DocumentAdapter` into `src/core/docx`.
+- Product parity: Word editable Print Layout and shapes drawn; Excel pivot
+  rendering and Page Layout; Visio connector routing and glue.
