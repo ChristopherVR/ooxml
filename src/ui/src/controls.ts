@@ -15,6 +15,7 @@ import { defineFindBar } from './chrome/find-bar';
 import { defineCommentsPane } from './comments/comments-pane';
 import { definePrintPreview } from './chrome/print-preview';
 import { defineRibbon } from './ribbon/ribbon-tabs';
+import { defineRibbonActions } from './ribbon/ribbon-actions';
 import { defineRibbonSection } from './ribbon/ribbon-section';
 import { defineGallery } from './ribbon/gallery';
 import { defineRuler } from './chrome/ruler';
@@ -55,6 +56,7 @@ export {
 	defineGallery,
 	definePrintPreview,
 	defineRibbon,
+	defineRibbonActions,
 	defineRuler,
 	defineButton,
 	defineCheckbox,
@@ -127,6 +129,7 @@ export type { KeyTipTarget } from './ribbon/keytip-run';
 export { createRibbonOverflow } from './ribbon/overflow';
 export type { RibbonOverflow, RibbonOverflowOptions } from './ribbon/overflow';
 export type { OfficeRibbonSelectEvent } from './ribbon/ribbon-tabs';
+export type { OfficeRibbonActionsMode, OfficeRibbonModeEvent } from './ribbon/ribbon-actions';
 export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon/ribbon-section';
 export {
 	parseSvgPreview,
@@ -207,6 +210,7 @@ export const CONTROL_DEFINERS = [
 	defineOptionsDialog,
 	defineAccount,
 	defineRibbon,
+	defineRibbonActions,
 	defineFindBar,
 	defineRuler,
 	defineBackstage,

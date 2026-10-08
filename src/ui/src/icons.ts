@@ -84,6 +84,7 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	info: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M10 9v4.5M10 6.3v.1',
 	restore: 'M3.5 10a6.5 6.5 0 1 0 2-4.6M3.5 3v3.5H7M10 6.5v3.8l2.5 1.6',
 	print: 'M5.5 7.5V3h9v4.5M5.5 14.5H3V8h14v6.5h-2.5M5.5 12h9v5h-9Z',
+	share: 'm12 4 5 5-5 5M17 9h-6a7 7 0 0 0-7 7',
 };
 for (const [name, d] of Object.entries(BUILT_IN)) registry.set(name, { d });
 

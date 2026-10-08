@@ -232,21 +232,21 @@ describe('<xlsx-editor> shell', () => {
 			child.classList.contains('xve-ribbon-actions'),
 		) as HTMLElement;
 		expect(actions.slot).toBe('actions');
-		for (const selector of ['.xve-mode-select', '.xve-comments-button', '.xve-share-button']) {
-			expect(actions.querySelector(selector), selector).not.toBeNull();
-			expect(
-				root.querySelector('office-ui-title-bar')!.querySelector(selector),
-				selector,
-			).toBeNull();
+		expect(actions.tagName.toLowerCase()).toBe('office-ui-ribbon-actions');
+		for (const part of ['mode-select', 'comments', 'share']) {
+			expect(actions.shadowRoot!.querySelector(`[part="${part}"]`), part).not.toBeNull();
 		}
+		expect(
+			root.querySelector('office-ui-title-bar')!.querySelector('office-ui-ribbon-actions'),
+		).toBeNull();
 	});
 
 	it('toggles read-only from the ribbon tab row and focuses the grid', async () => {
 		const { element, of } = editor();
 		element.newWorkbook();
-		const mode = element.shadowRoot!.querySelector<HTMLSelectElement>(
-			'office-ui-ribbon .xve-mode-select',
-		)!;
+		const mode = element
+			.shadowRoot!.querySelector('office-ui-ribbon office-ui-ribbon-actions')!
+			.shadowRoot!.querySelector<HTMLSelectElement>('[part="mode-select"]')!;
 		mode.value = 'viewing';
 		mode.dispatchEvent(new Event('change'));
 		expect(element.readOnly).toBe(true);

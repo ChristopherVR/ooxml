@@ -37,6 +37,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-options-dialog',
 	'office-ui-account',
 	'office-ui-ribbon',
+	'office-ui-ribbon-actions',
 	'office-ui-find-bar',
 	'office-ui-ruler',
 	'office-ui-backstage',

@@ -1,12 +1,11 @@
 /**
  * The controls at the right end of Excel's ribbon tab row: the Editing / Viewing selector, the
- * Comments toggle and Share, in that order, as Excel 365 places them. They sit in the shared
- * ribbon's `actions` slot; the title bar keeps the file name, search and the people in a shared
- * session.
+ * Comments toggle and Share, in that order, as Excel 365 places them. The shared
+ * `office-ui-ribbon-actions` element draws them (Word uses the same one) in the shared ribbon's
+ * `actions` slot; the title bar keeps the file name, search and the people in a shared session.
  */
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el } from './ribbon/controls';
-import { ribbonIcon } from './ribbon/icons';
+import { defineRibbonActions, type OfficeUiRibbonActions } from '../ribbon/ribbon-actions';
 import type { XlsxCollaborationState } from './collaboration-types';
 
 export interface RibbonActionsHandlers {
@@ -17,7 +16,7 @@ export interface RibbonActionsHandlers {
 }
 
 export interface RibbonActions {
-	readonly element: HTMLElement;
+	readonly element: OfficeUiRibbonActions;
 	/** Re-reads read-only, sharing and the comments pane state. */
 	refresh(): void;
 	relocalize(): void;
@@ -28,45 +27,36 @@ export function createRibbonActions(
 	handlers: RibbonActionsHandlers,
 ): RibbonActions {
 	const doc = ctx.host.ownerDocument;
-	const element = el(doc, 'div', 'xve-ribbon-actions');
+	defineRibbonActions(doc.defaultView?.customElements);
+	const element = doc.createElement('office-ui-ribbon-actions') as OfficeUiRibbonActions;
+	element.className = 'xve-ribbon-actions';
 	element.slot = 'actions';
-
-	const modeBox = el(doc, 'label', 'xve-mode');
-	const mode = el(doc, 'select', 'xve-mode-select');
-	mode.append(new Option('', 'editing'), new Option('', 'viewing'));
-	mode.addEventListener('change', () => handlers.setReadOnly(mode.value === 'viewing'));
-	modeBox.append(ribbonIcon(doc, 'pencil', 16), mode);
-
-	const labelled = (className: string, icon: string) => {
-		const button = el(doc, 'button', className);
-		button.type = 'button';
-		const text = el(doc, 'span', 'xve-action-label');
-		button.append(ribbonIcon(doc, icon, 16), text);
-		return { button, text };
-	};
-	const comments = labelled('xve-icon-button xve-comments-button', 'comments');
-	comments.button.addEventListener('click', () => void ctx.commands.run('review.show-comments'));
-	const share = labelled('xve-share-button', 'share');
-	share.button.addEventListener('click', () => void ctx.commands.run('file.share'));
-	element.append(modeBox, comments.button, share.button);
+	element.addEventListener('office-ribbon-mode', (event) =>
+		handlers.setReadOnly((event as CustomEvent<{ mode: string }>).detail.mode === 'viewing'),
+	);
+	element.addEventListener('office-ribbon-comments', () => {
+		void ctx.commands.run('review.show-comments');
+	});
+	element.addEventListener('office-ribbon-share', () => void ctx.commands.run('file.share'));
 
 	const relocalize = () => {
-		mode.setAttribute('aria-label', ctx.t('Editing mode'));
-		mode.title = ctx.t('Editing mode');
-		mode.options[0]!.textContent = ctx.t('Editing');
-		mode.options[1]!.textContent = ctx.t('Viewing');
-		comments.text.textContent = ctx.t('Comments');
-		comments.button.title = ctx.t('Show comments');
-		share.text.textContent = ctx.t('Share');
-		share.button.title = ctx.t('Share');
+		element.modeLabel = ctx.t('Editing mode');
+		element.modes = [
+			{ value: 'editing', label: ctx.t('Editing') },
+			{ value: 'viewing', label: ctx.t('Viewing') },
+		];
+		element.commentsLabel = ctx.t('Comments');
+		element.commentsTitle = ctx.t('Show comments');
+		element.shareLabel = ctx.t('Share');
+		element.shareTitle = ctx.t('Share');
 		refresh();
 	};
 	const refresh = () => {
-		mode.value = ctx.readOnly() ? 'viewing' : 'editing';
-		share.button.hidden = !ctx.commands.get('file.share') || handlers.isHidden('file.share');
-		share.button.setAttribute('aria-pressed', String(Boolean(handlers.collaboration?.().active)));
+		element.mode = ctx.readOnly() ? 'viewing' : 'editing';
+		element.noShare = !ctx.commands.get('file.share') || handlers.isHidden('file.share');
+		element.sharePressed = Boolean(handlers.collaboration?.().active);
 		const showComments = ctx.commands.get('review.show-comments');
-		comments.button.hidden = !showComments;
+		element.noComments = !showComments;
 		if (!showComments) return;
 		let pressed = false;
 		try {
@@ -74,7 +64,7 @@ export function createRibbonActions(
 		} catch {
 			pressed = false;
 		}
-		comments.button.setAttribute('aria-pressed', String(pressed));
+		element.commentsPressed = pressed;
 	};
 	relocalize();
 	return { element, refresh, relocalize };

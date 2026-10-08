@@ -2181,6 +2181,167 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "ribbon/ribbon-actions.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRibbonActions",
+					"tagName": "office-ui-ribbon-actions",
+					"customElement": true,
+					"description": "`<office-ui-ribbon-actions>`: the controls Office places at the right end of the ribbon tab row, in Office's order: the editing-mode selector (pencil icon and a native select), Comments (icon and label) and the accent Share button. Put it in `office-ui-ribbon`'s `actions` slot (or at a product tab row's right end). Controlled: the host owns every value and redraws after an event. Properties: `modes` (the selector's choices; empty hides it), `mode`, `mode-label` (its name), `comments-label`, `comments-title`, `comments-pressed`, `comments-count` (a badge when above 0), `no-comments`, `share-label`, `share-title`, `share-pressed` (a live session) and `no-share`. Events: `office-ribbon-mode` `{ mode }`, `office-ribbon-comments` and `office-ribbon-share`. Parts: `mode`, `mode-select`, `comments`, `share`. Below 900px the labels hide, as in Office's narrow layout; the buttons keep their accessible names through `aria-label`.",
+					"attributes": [
+						{
+							"name": "comments-count"
+						},
+						{
+							"name": "comments-label"
+						},
+						{
+							"name": "comments-pressed"
+						},
+						{
+							"name": "comments-title"
+						},
+						{
+							"name": "mode"
+						},
+						{
+							"name": "mode-label"
+						},
+						{
+							"name": "no-comments"
+						},
+						{
+							"name": "no-share"
+						},
+						{
+							"name": "share-label"
+						},
+						{
+							"name": "share-pressed"
+						},
+						{
+							"name": "share-title"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "commentsCount",
+							"type": {
+								"text": "number"
+							},
+							"attribute": "comments-count"
+						},
+						{
+							"kind": "field",
+							"name": "commentsLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "comments-label"
+						},
+						{
+							"kind": "field",
+							"name": "commentsPressed",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "comments-pressed"
+						},
+						{
+							"kind": "field",
+							"name": "commentsTitle",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "comments-title"
+						},
+						{
+							"kind": "field",
+							"name": "mode",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "modeLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "mode-label"
+						},
+						{
+							"kind": "field",
+							"name": "modes"
+						},
+						{
+							"kind": "field",
+							"name": "noComments",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "no-comments"
+						},
+						{
+							"kind": "field",
+							"name": "noShare",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "no-share"
+						},
+						{
+							"kind": "field",
+							"name": "shareLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "share-label"
+						},
+						{
+							"kind": "field",
+							"name": "sharePressed",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "share-pressed"
+						},
+						{
+							"kind": "field",
+							"name": "shareTitle",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "share-title"
+						}
+					],
+					"events": [
+						{
+							"name": "office-ribbon-comments"
+						},
+						{
+							"name": "office-ribbon-mode"
+						},
+						{
+							"name": "office-ribbon-share"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ribbon-actions",
+					"declaration": {
+						"name": "OfficeUiRibbonActions"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "ribbon/ribbon-group.ts",
 			"declarations": [
 				{

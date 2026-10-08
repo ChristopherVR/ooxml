@@ -152,15 +152,17 @@ describe('ribbon actions', () => {
 		});
 		const node = actions.element;
 		expect(node.slot).toBe('actions');
-		const select = node.querySelector<HTMLSelectElement>('.xve-mode-select')!;
-		const commentsButton = node.querySelector<HTMLButtonElement>('.xve-comments-button')!;
-		const shareButton = node.querySelector<HTMLButtonElement>('.xve-share-button')!;
+		expect(node.tagName.toLowerCase()).toBe('office-ui-ribbon-actions');
+		document.body.append(node);
+		const select = node.control('mode-select') as HTMLSelectElement;
+		const commentsButton = node.control('comments') as HTMLButtonElement;
+		const shareButton = node.control('share') as HTMLButtonElement;
 		// Excel's order: the editing mode just left of Comments, then Share.
-		expect([...node.children].map((child) => child.className)).toEqual([
-			'xve-mode',
-			'xve-icon-button xve-comments-button',
-			'xve-share-button',
-		]);
+		expect(
+			[...node.shadowRoot!.children]
+				.filter((child) => child.tagName !== 'STYLE')
+				.map((child) => child.getAttribute('part')),
+		).toEqual(['mode', 'comments', 'share']);
 		expect(select.getAttribute('aria-label')).toBe('Editing mode');
 		expect(select.value).toBe('editing');
 		expect(commentsButton.textContent).toBe('Comments');

@@ -32,11 +32,13 @@ for (const framework of FRAMEWORKS) {
 
 		const mode = ribbon(page).getByRole('combobox', { name: 'Editing mode' });
 		const comments = ribbon(page).getByRole('button', { name: 'Comments', exact: true });
-		const share = ribbon(page).locator('.xve-share-button');
+		const share = ribbon(page).locator('office-ui-ribbon-actions [part="share"]');
 		for (const control of [mode, comments, share]) await expect(control).toBeVisible();
 		await expect(share).toHaveText('Share');
 		await expect(part(page, 'title-bar').getByRole('combobox')).toHaveCount(0);
-		await expect(part(page, 'title-bar').locator('.xve-share-button')).toHaveCount(0);
+		await expect(
+			part(page, 'title-bar').locator('office-ui-ribbon-actions [part="share"]'),
+		).toHaveCount(0);
 
 		const tabs = ribbon(page).getByRole('tab');
 		const lastTab = (await tabs.last().boundingBox())!;
