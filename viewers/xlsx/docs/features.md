@@ -33,7 +33,7 @@ The workbook engine in `ooxml-core` and the `<xlsx-editor>` component are young.
 
 ## Formulas
 
-The calculation engine lives in `ooxml-core` and recalculates dependents after each edit. Its catalogue holds about 480 functions across math and trigonometry, statistics (including the inverse distributions and the `LINEST`, `LOGEST`, `TREND` and `GROWTH` family), logic, text (including `REGEXTEST`, `REGEXEXTRACT` and `REGEXREPLACE`), dates, lookup (including `XLOOKUP` and dynamic arrays such as `FILTER`, `SORT`, `UNIQUE` and `SEQUENCE`), information, financial (including the bond, coupon, discount-security and Treasury bill functions, `VDB` and `XIRR`), engineering (including `COMPLEX`, the `IM` functions and `CONVERT`) and database (`DSUM`, `DCOUNT`, `DGET` and the rest). Insert Function lists them by category.
+The calculation engine lives in `ooxml-core` and recalculates dependents after each edit. Its catalogue holds 481 functions (counted from `FUNCTION_CATALOG` on 2026-10-08) across math and trigonometry, statistics (including the inverse distributions and the `LINEST`, `LOGEST`, `TREND` and `GROWTH` family), logic, text (including `REGEXTEST`, `REGEXEXTRACT` and `REGEXREPLACE`), dates, lookup (including `XLOOKUP` and dynamic arrays such as `FILTER`, `SORT`, `UNIQUE` and `SEQUENCE`), information, financial (including the bond, coupon, discount-security and Treasury bill functions, `VDB` and `XIRR`), engineering (including `COMPLEX`, the `IM` functions and `CONVERT`) and database (`DSUM`, `DCOUNT`, `DGET` and the rest). Insert Function lists them by category.
 
 Not every Excel function exists: an unknown one shows `#NAME?`. These are not implemented: `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE`, `ODDLYIELD`, `AMORDEGRC`, `BESSELI`, `BESSELJ`, `BESSELK`, `BESSELY`, `FORECAST.ETS`, `ASC`, `DBCS`, `JIS`, `PHONETIC`, `BAHTTEXT`, `INFO`, `GETPIVOTDATA`, `ISOMITTED` and `WEBSERVICE`. External workbook references are kept but not resolved.
 
@@ -67,6 +67,13 @@ including the tested horizontal/vertical entry arrangements. Manual title
 dimensions, complete plot placement, automatic legend geometry, multi-row/column
 legend packing and
 position-authoring controls remain incomplete.
+Bubble, stock and surface charts are not drawn: they render as a labelled
+frame and are preserved on save (`src/core/xlsx/layout/chart-svg.ts`,
+`chart.test.ts`). Chart-style authoring is not supported: imported style
+definitions are kept and rendered, but cannot be created or edited
+(`src/core/xlsx/model.ts`, `styleDefinition`). The rendering and formatting
+above are covered by the core chart tests and by `docs/xlsx-parity-review.md`
+in the ooxml repository.
 Native Excel comparisons verify specific edit/export paths. Exact chart text
 measurement, wrapping, placement and raster fidelity remain incomplete, as do
 many axes/labels/effects controls, advanced chart families and full native UI.
