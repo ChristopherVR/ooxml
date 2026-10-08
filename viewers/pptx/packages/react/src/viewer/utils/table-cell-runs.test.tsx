@@ -47,4 +47,27 @@ describe('renderTableCellContent', () => {
 		expect(html).toContain('<br/>');
 		expect(html).toContain('display:block');
 	});
+
+	it("keeps an edited cell's first paragraph layout", () => {
+		const cell: PptxTableCell = { text: 'edited', paragraphs: [{ lineSpacingExactPt: 9 }] };
+		expect(markup(cell, 'edited')).toBe(
+			'<div><div style="display:block;line-height:12px">' +
+				'<span style="position:relative">edited</span></div></div>',
+		);
+	});
+
+	it('renders each paragraph with its own layout when the cell carries one', () => {
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ align: 'right', lineSpacingExactPt: 9 }, {}],
+			style: { align: 'right' },
+		};
+		// The first paragraph takes the cell's alignment.
+		expect(markup(cell, 'one\ntwo')).toBe(
+			'<div><div style="display:block;line-height:12px">' +
+				'<span style="position:relative">one</span></div>' +
+				'<div style="display:block;text-align:start"><span style="position:relative">two</span></div></div>',
+		);
+	});
 });

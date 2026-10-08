@@ -365,6 +365,29 @@ describe('tableRenderer', () => {
 		expect(style).toContain('vertical-align: sub');
 	});
 
+	it('draws each paragraph as its own block with its own layout', () => {
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ align: 'right', paragraphMarginLeft: 10, lineSpacingExactPt: 9 }, {}],
+			style: { align: 'right' },
+		};
+		const data: PptxTableData = { columnWidths: [1], rows: [{ cells: [cell] }] };
+		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
+		const blocks = wrapper.findAll('td > div');
+		expect(blocks).toHaveLength(2);
+		const first = blocks[0].element as HTMLElement;
+		// The first paragraph takes the cell's alignment.
+		expect((wrapper.find('td').element as HTMLElement).style.textAlign).toBe('right');
+		expect(first.style.textAlign).toBe('');
+		expect(first.style.getPropertyValue('margin-inline-start')).toBe('10px');
+		expect(first.style.lineHeight).toBe('12px');
+		expect(blocks[0].text()).toBe('one');
+		expect((blocks[1].element as HTMLElement).style.textAlign).toBe('start');
+		expect(blocks[1].text()).toBe('two');
+		expect(wrapper.find('.pptx-vue-table__para-break').exists()).toBeFalsy();
+	});
+
 	it('takes half of the border width out of the cell padding', () => {
 		const data: PptxTableData = {
 			columnWidths: [1],

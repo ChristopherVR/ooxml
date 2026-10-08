@@ -51,8 +51,9 @@ export interface TableCellPosition {
  * How PowerPoint lays out cell text the deck says nothing about: single line
  * spacing (as for shape text; the browser's `normal` depends on the font and
  * runs taller) and the default cell margins of `a:tcPr` (`marL`/`marR`
- * 91440 EMU, `marT`/`marB` 45720 EMU). A cell's own margins win. Line
- * spacing authored inside a cell (`a:lnSpc`) is not modelled for tables yet.
+ * 91440 EMU, `marT`/`marB` 45720 EMU). A cell's own margins win, and line
+ * spacing a paragraph sets itself is applied per paragraph
+ * (`cellParagraphBlocks`).
  */
 export const TABLE_CELL_TEXT_DEFAULTS: Readonly<TableCellCss> = {
 	lineHeight: DEFAULT_LINE_HEIGHT,

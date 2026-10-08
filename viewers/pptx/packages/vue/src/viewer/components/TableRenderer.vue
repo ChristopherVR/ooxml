@@ -7,6 +7,7 @@ import type {
 	PptxThemeColorScheme,
 } from 'pptx-viewer-core';
 import type {
+	CellParagraphBlock,
 	CellPatternFillCss,
 	CellTextRun,
 	TableCellCss,
@@ -14,6 +15,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	canDrillDown,
+	cellParagraphBlocks,
 	cellPatternFillCss,
 	cellRunStyle,
 	DEFAULT_FONT_FAMILY,
@@ -182,6 +184,11 @@ interface RenderableCell {
 	 * when null, the plain `text` string is rendered instead.
 	 */
 	textRuns: CellTextRun[] | null;
+	/**
+	 * One block per paragraph when the cell's paragraphs set their own layout;
+	 * the template then renders these instead of {@link textRuns}.
+	 */
+	paragraphs: CellParagraphBlock[] | null;
 	/** Plain-text fallback rendered when `textRuns` is null. */
 	text: string;
 	diagonals: ReturnType<typeof getCellDiagonalBorders>;
@@ -261,6 +268,7 @@ const rows = computed<RenderableRow[]>(() => {
 				style,
 				patternFill,
 				textRuns,
+				paragraphs: cellParagraphBlocks(cell) ?? null,
 				text: cell.text || ' ',
 				diagonals: getCellDiagonalBorders(
 					cell.style,
@@ -615,6 +623,28 @@ onBeforeUnmount(() => {
 								@blur="commitCellEdit"
 								@keydown="onCellInputKeydown"
 							/>
+							<!--
+							Paragraph blocks: a cell whose paragraphs set their own
+							alignment, indent or spacing renders one block per paragraph.
+						-->
+							<template v-else-if="cell.paragraphs">
+								<div
+									v-for="(paragraph, pi) in cell.paragraphs"
+									:key="`${cell.key}-para-${pi}`"
+									class="pptx-vue-table__para"
+									:style="{ display: 'block', ...paragraph.css }"
+								>
+									<template
+										v-for="(run, ri) in paragraph.runs"
+										:key="`${cell.key}-para-${pi}-run-${ri}`"
+									>
+										<br v-if="run.isLineBreak" />
+										<span v-else class="pptx-vue-table__run" :style="runStyle(run)">{{
+											run.text
+										}}</span>
+									</template>
+								</div>
+							</template>
 							<!--
 							Rich per-run text: when `textRuns` is present each run is
 							a styled <span>. Paragraph breaks become block-level <div>s;

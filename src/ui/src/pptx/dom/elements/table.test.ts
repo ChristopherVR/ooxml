@@ -271,6 +271,80 @@ describe('renderTableElement', () => {
 	});
 });
 
+describe('renderTableElement paragraph layout', () => {
+	it('draws each paragraph as its own block with its own layout', () => {
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ align: 'right', paragraphMarginLeft: 10, lineSpacingExactPt: 9 }, {}],
+			style: { align: 'right' },
+		};
+		const td = renderTable(
+			buildTableElement({ columnWidths: [1], rows: [{ cells: [cell] }] }),
+		).querySelector('td') as HTMLElement;
+		const blocks = td.querySelectorAll<HTMLElement>('div.pptxv-table-para');
+		expect(blocks).toHaveLength(2);
+		// The first paragraph takes the cell's alignment.
+		expect(td.style.textAlign).toBe('right');
+		expect(blocks[0].style.textAlign).toBe('');
+		expect(blocks[0].style.getPropertyValue('margin-inline-start')).toBe('10px');
+		expect(blocks[0].style.lineHeight).toBe('12px');
+		expect(blocks[0].textContent).toBe('one');
+		expect(blocks[1].style.textAlign).toBe('start');
+		expect(blocks[1].style.lineHeight).toBe('');
+		expect(blocks[1].textContent).toBe('two');
+		expect(td.querySelector('.pptxv-table-para-break')).toBeNull();
+	});
+
+	it("follows the cell's alignment once it is edited", () => {
+		// The alignment buttons change only `style.align`.
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ align: 'left', paragraphSpacingAfter: 6 }, { align: 'left' }],
+			style: { align: 'center' },
+		};
+		const td = renderTable(
+			buildTableElement({ columnWidths: [1], rows: [{ cells: [cell] }] }),
+		).querySelector('td') as HTMLElement;
+		const blocks = td.querySelectorAll<HTMLElement>('div.pptxv-table-para');
+		expect(blocks).toHaveLength(2);
+		expect(td.style.textAlign).toBe('center');
+		expect([...blocks].map((block) => block.style.textAlign)).toStrictEqual(['', '']);
+	});
+
+	it('keeps an anchorCtr cell centred when its paragraphs take blocks', () => {
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ paragraphSpacingAfter: 6 }, {}],
+			style: { anchorCtr: true },
+		};
+		const td = renderTable(
+			buildTableElement({ columnWidths: [1], rows: [{ cells: [cell] }] }),
+		).querySelector('td') as HTMLElement;
+		const blocks = td.querySelectorAll<HTMLElement>('div.pptxv-table-para');
+		expect(blocks).toHaveLength(2);
+		expect(td.style.textAlign).toBe('center');
+		expect([...blocks].map((block) => block.style.textAlign)).toStrictEqual(['', '']);
+	});
+
+	it("keeps an edited cell's first paragraph layout", () => {
+		const cell: PptxTableCell = { text: 'edited', paragraphs: [{ lineSpacingExactPt: 9 }] };
+		const td = renderTable(
+			buildTableElement({ columnWidths: [1], rows: [{ cells: [cell] }] }),
+		).querySelector('td') as HTMLElement;
+		const block = td.querySelector<HTMLElement>('div.pptxv-table-para');
+		expect(block?.style.lineHeight).toBe('12px');
+		expect(block?.textContent).toBe('edited');
+	});
+
+	it('keeps the run stream for a cell without paragraph layout', () => {
+		const td = renderTable().querySelectorAll('tbody tr')[2].querySelector('td') as HTMLElement;
+		expect(td.querySelector('.pptxv-table-para')).toBeNull();
+	});
+});
+
 describe('renderTableElement cell borders', () => {
 	it('draws no border on a side the deck gives none, and keeps a border it gives', () => {
 		const data: PptxTableData = {

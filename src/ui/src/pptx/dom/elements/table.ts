@@ -7,6 +7,7 @@ import type {
 	TableStyleContext,
 } from '../../index';
 import {
+	cellParagraphBlocks,
 	cellPatternFillCss,
 	cellRunStyle,
 	DEFAULT_FONT_FAMILY,
@@ -238,8 +239,18 @@ function renderDiagonalOverlay(doc: Document, diagonals: DiagonalBorderInfo): SV
  * Cell text: rich per-run spans when the cell carries `CellTextRun[]`
  * (duck-typed extension, matching the other bindings), with paragraph breaks
  * as block `<div>`s and line breaks as `<br>`; otherwise the plain string.
+ * A cell whose paragraphs set their own layout gets one block per paragraph.
  */
 function appendCellText(doc: Document, td: HTMLTableCellElement, cell: PptxTableCell): void {
+	const blocks = cellParagraphBlocks(cell);
+	if (blocks) {
+		for (const block of blocks) {
+			const div = createEl(doc, 'div', 'pptxv-table-para', { display: 'block', ...block.css });
+			appendRuns(doc, div, block.runs);
+			td.appendChild(div);
+		}
+		return;
+	}
 	const richCell = cell as PptxTableCell & { textRuns?: CellTextRun[] };
 	const textRuns = richCell.textRuns && richCell.textRuns.length > 0 ? richCell.textRuns : null;
 	if (!textRuns) {
@@ -255,8 +266,15 @@ function appendCellText(doc: Document, td: HTMLTableCellElement, cell: PptxTable
 			);
 			continue;
 		}
+		appendRuns(doc, td, [run]);
+	}
+}
+
+/** Runs as styled `<span>`s, and line breaks as `<br>`. */
+function appendRuns(doc: Document, parent: HTMLElement, runs: readonly CellTextRun[]): void {
+	for (const run of runs) {
 		if (run.isLineBreak) {
-			td.appendChild(doc.createElement('br'));
+			parent.appendChild(doc.createElement('br'));
 			continue;
 		}
 		const span = createEl(doc, 'span', 'pptxv-table-run', {
@@ -264,6 +282,6 @@ function appendCellText(doc: Document, td: HTMLTableCellElement, cell: PptxTable
 			...cellRunStyle(run),
 		});
 		span.textContent = run.text;
-		td.appendChild(span);
+		parent.appendChild(span);
 	}
 }

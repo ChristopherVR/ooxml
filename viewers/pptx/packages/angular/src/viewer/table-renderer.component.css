@@ -13,6 +13,9 @@
 	outline: 1px solid rgba(96, 165, 250, 0.5);
 	outline-offset: -1px;
 }
+.pptx-ng-cell-para {
+	margin: 0;
+}
 .pptx-ng-cell-diag {
 	position: absolute;
 	inset: 0;

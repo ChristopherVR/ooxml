@@ -48,8 +48,8 @@
 										(keydown)="onCellInputKeydown($event)"
 									/>
 								} @else if (vm.paragraphs.length > 0) {
-									@for (para of vm.paragraphs; track $index) {
-										<p class="pptx-ng-cell-para">
+									@for (para of vm.paragraphs; track $index; let i = $index) {
+										<p class="pptx-ng-cell-para" [ngStyle]="vm.paragraphStyles?.[i] ?? null">
 											@for (run of para; track $index) {
 												@if (run.isLineBreak) {
 													<br />
