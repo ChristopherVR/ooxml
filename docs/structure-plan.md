@@ -55,23 +55,32 @@ under 30k, most of it geometry tables.
 
 ### 1.3 Documentation and configuration drift
 
-- `AGENTS.md`: the "Where does my change go?" table sends PowerPoint drawing
-  to `viewers/pptx/packages/shared`, which is a facade; package names are
-  wrong (docx bindings are unscoped `docx-*-viewer`, teams are
-  `openteams-*-viewer`); the status line omits `chart`, `math`, `text`,
-  `visio` and `teams` and describes `drawingml` as planned.
-- `viewers/xlsx/docs/features.md` did not name the chart families that draw
-  as a labelled frame (bubble, stock, surface) or that chart-style authoring
-  is unsupported, and its function count was approximate (the registry holds
-  481; the survey's own grep undercounted it). Fixed in Wave 1 item 8.
-- `.github/workflows/ci.yml`: the `lint` job is gated on `typecheck.ui`.
-- `src/ui/tsconfig.pptx.json` does not extend the base; `src/ui`
-  `sideEffects` lists only the pptx entry; the `pptx/*` and `pptx/editor/*`
-  wildcard exports resolve to fixed bundler lists that differ between tsup and
-  tsdown.
-- Five `.oxfmtrc.json` copies; docx and xlsx duplicate `playwright-chromium.ts`
-  and `tsconfig.release.json`.
-- 309 of 4,310 non-test modules exceed 300 lines.
+Resolved in Waves 1 and 2 (2026-10-08):
+
+- `AGENTS.md`: the PowerPoint row of the "Where does my change go?" table, the
+  package names and the status line were corrected (Wave 1 item 8).
+- `viewers/xlsx/docs/features.md` now names the labelled-frame chart families,
+  states that chart-style authoring is unsupported and takes its function count
+  (481) from the registry (Wave 1 item 8).
+- `.github/workflows/ci.yml`: the `lint` job no longer waits on `typecheck.ui`
+  (Wave 1 item 8).
+- `src/ui/tsconfig.pptx.json` extends the base (Wave 2).
+- The Playwright Chromium helper is shared by docx and xlsx (Wave 2).
+  `tsconfig.release.json` is still duplicated between them.
+- Every viewer typecheck is green (Wave 2).
+- Four of the five `.oxfmtrc.json` copies were dropped on 2026-10-08 (docx,
+  teams, visio and xlsx only restated the root settings).
+
+Still open:
+
+- `.oxfmtrc.json`: the pptx viewer keeps its own copy (it spells out every
+  option and adds `ignorePatterns` for `dist/` and minified files); fold those
+  into the root config before removing it.
+- `src/ui` `sideEffects` lists only the pptx entry.
+- The `pptx/*` and `pptx/editor/*` wildcard exports resolve to fixed bundler
+  lists that differ between tsup and tsdown.
+- 306 of 4,378 non-test modules under `src/` exceed 300 lines (recounted on
+  2026-10-08; tests, fixtures and declaration files excluded).
 
 ## 2. Target structure
 
