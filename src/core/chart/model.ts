@@ -51,7 +51,7 @@ export interface ChartPlotGroup {
 	shape?: string;
 	/** Line: whether markers are shown (`c:marker`). */
 	marker?: boolean;
-	/** Line: `c:smooth` of the group (series carry their own). */
+	/** Line: the group-level smoothing default (`c:lineChart/c:smooth`); a series' own wins. */
 	smooth?: boolean;
 	dropLines?: boolean;
 	hiLowLines?: boolean;

@@ -39,10 +39,12 @@ describe('parseChartSpace', () => {
 			<c:smooth/></c:ser>`;
 		const { chartSpace, issues } = parseChartSpace(
 			space(
-				`<c:plotArea><c:lineChart><c:grouping val="standard"/>${ser}<c:axId val="5"/></c:lineChart></c:plotArea>`,
+				`<c:plotArea><c:lineChart><c:grouping val="standard"/>${ser}<c:marker val="1"/><c:smooth val="0"/><c:axId val="5"/></c:lineChart></c:plotArea>`,
 			),
 		);
 		expect(issues).toEqual([]);
+		// CT_LineChart's own `c:smooth` is the group default; the series keeps its override.
+		expect(chartSpace.plotArea.groups[0]).toMatchObject({ marker: true, smooth: false });
 		const series = chartSpace.plotArea.groups[0]?.series[0];
 		expect(series).toMatchObject({ index: 3, order: 1, invertIfNegative: true, smooth: true });
 		expect(series?.tx).toEqual({ value: 'Literal', text: 'Literal' });
