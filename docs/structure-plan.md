@@ -60,9 +60,10 @@ under 30k, most of it geometry tables.
   wrong (docx bindings are unscoped `docx-*-viewer`, teams are
   `openteams-*-viewer`); the status line omits `chart`, `math`, `text`,
   `visio` and `teams` and describes `drawingml` as planned.
-- `viewers/xlsx/docs/features.md` says chart formatting is unsupported and
-  claims "about 480" functions; the parity review documents shipped chart
-  styling, and the registry holds a different count.
+- `viewers/xlsx/docs/features.md` did not name the chart families that draw
+  as a labelled frame (bubble, stock, surface) or that chart-style authoring
+  is unsupported, and its function count was approximate (the registry holds
+  481; the survey's own grep undercounted it). Fixed in Wave 1 item 8.
 - `.github/workflows/ci.yml`: the `lint` job is gated on `typecheck.ui`.
 - `src/ui/tsconfig.pptx.json` does not extend the base; `src/ui`
   `sideEffects` lists only the pptx entry; the `pptx/*` and `pptx/editor/*`
