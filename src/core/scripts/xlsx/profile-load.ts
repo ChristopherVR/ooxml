@@ -5,7 +5,8 @@
 // (`prepareCalculation`, which the editor runs in idle time) and a later edit. Run with
 // `bun src/core/scripts/xlsx/profile-load.ts <file>` (`--repeat N` runs it N times and prints each
 // stage's fastest and median time; `--recalc` also times a full recalculation, after which there
-// is nothing left to prepare); add `--cpu-prof` to bun for a CPU profile of the same run.
+// is nothing left to prepare; `--structural` times row, column and sheet edits
+// and F9, see profile-structural.ts); add `--cpu-prof` to bun for a CPU profile of the same run.
 import { readFileSync } from 'node:fs';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { createEditSession } from '../../xlsx/edit/index';
@@ -21,10 +22,13 @@ import { parseSharedStrings } from '../../xlsx/read/shared-strings';
 import { parseWorkbookPart } from '../../xlsx/read/workbook-part';
 import { parseWorksheet, type SheetContext } from '../../xlsx/read/worksheet';
 import { CellViewCache } from '../../xlsx/ui/grid/view-cache';
+import { profileStructural } from './profile-structural';
 
 const path = process.argv[2] ?? '';
 if (!path) {
-	console.error('usage: bun src/core/scripts/xlsx/profile-load.ts <workbook> [--recalc]');
+	console.error(
+		'usage: bun src/core/scripts/xlsx/profile-load.ts <workbook> [--recalc] [--structural]',
+	);
 	process.exit(2);
 }
 const times = new Map<string, number[]>();
@@ -127,6 +131,8 @@ async function once(): Promise<void> {
 		const at = { sheet: workbook.activeSheet, row: 0, col: 200 };
 		session.setCellInput(at.sheet, at.row, at.col, '=1+1');
 	});
+
+	if (process.argv.includes('--structural')) await profileStructural(bytes, path, stage);
 
 	summary = `${workbook.sheets.length} sheets, ${formulas} formulas; fullCalcOnLoad: ${!!workbook.fullCalcOnLoad}, calcMode: ${workbook.calcMode ?? 'auto'}`;
 }
