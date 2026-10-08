@@ -44,6 +44,7 @@ import {
 import { cellImageFillCss } from './table-style-image';
 import { styleDeclaresFills } from './table-style-scheme';
 import { isKoreanLanguage } from './text-east-asian-breaks';
+import { authoredLetterSpacingPx } from './text-run-spacing';
 import { BASELINE_FONT_SCALE } from './text-run-style';
 
 export { resolveStyleDiagonalBorders } from './table-style-borders';
@@ -90,6 +91,8 @@ export interface CellTextRun {
 	language?: string;
 	/** Baseline shift from `a:rPr/@baseline`: positive for superscript, negative for subscript. */
 	baseline?: number;
+	/** Character spacing from `a:rPr/@spc`, in hundredths of a point. */
+	characterSpacing?: number;
 }
 
 /**
@@ -129,6 +132,12 @@ export function cellRunStyle(run: CellTextRun): TableCellCss {
 	}
 	if (deco.length > 0) {
 		css.textDecoration = deco.join(' ');
+	}
+	// Only the authored spacing. Shape text adds a measured tracking
+	// correction, which cells do not use.
+	const letterSpacingPx = authoredLetterSpacingPx(run);
+	if (letterSpacingPx !== 0) {
+		css.letterSpacing = `${letterSpacingPx}px`;
 	}
 	// Same rule as shape text (`segmentStyleToCss`): PowerPoint wraps Korean
 	// between words, a browser between any two Hangul syllables.
