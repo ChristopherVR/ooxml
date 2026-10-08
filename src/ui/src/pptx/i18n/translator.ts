@@ -1,3 +1,4 @@
+import { createTranslator as createMessageTranslator } from 'ooxml-core/i18n';
 import { keyToLabel, translationsEn } from './translations-en';
 
 /**
@@ -20,25 +21,14 @@ export type Translator = (key: string, params?: Record<string, string | number>)
 /** Locale to flat `key: message` dictionary map supplied by the host. */
 export type TranslationMessages = Record<string, Record<string, string>>;
 
-function interpolate(template: string, params?: Record<string, string | number>): string {
-	if (!params) {
-		return template;
-	}
-	return template.replace(/\{\{\s*(\w+)\s*\}\}/gu, (match, name: string) => {
-		const value = params[name];
-		return value === undefined ? match : String(value);
-	});
-}
-
 /**
  * Build a {@link Translator} for a locale. `messages[locale]` (when provided)
  * wins over the built-in English dictionary; English is always the fallback.
  */
 export function createTranslator(locale = 'en', messages?: TranslationMessages): Translator {
-	const localeDict = messages?.[locale];
-	const baseDict = locale !== 'en' ? messages?.en : undefined;
-	return (key, params) => {
-		const template = localeDict?.[key] ?? baseDict?.[key] ?? translationsEn[key] ?? keyToLabel(key);
-		return interpolate(template, params);
-	};
+	return createMessageTranslator(
+		messages?.[locale],
+		[locale !== 'en' ? messages?.en : undefined, translationsEn],
+		{ placeholder: 'double', missing: keyToLabel },
+	);
 }
