@@ -3,6 +3,7 @@ import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-comman
 import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
 import { snapshotPasteShapes } from '../edit-paste-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
+import { snapshotTextRanges } from '../edit-text-range-commands';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -25,6 +26,21 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			return { type: command.type, pageId: command.pageId, index: command.index };
 		}
 		if (command.type === 'delete-page') return { type: command.type, pageId: command.pageId };
+		if (command.type === 'set-page-size') {
+			if (
+				![command.width, command.height].every(
+					(value) =>
+						typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 1e6,
+				)
+			)
+				throw new Error('Invalid physical page dimensions.');
+			return {
+				type: command.type,
+				pageId: command.pageId,
+				width: command.width,
+				height: command.height,
+			};
+		}
 		const text = (value: unknown): string => {
 			if (typeof value !== 'string') throw new Error('Invalid edit text.');
 			characters += value.length;
@@ -84,6 +100,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 				};
 			case 'replace-plain-text':
 				return { type: command.type, ...target, text: text(command.text) };
+			case 'replace-text-ranges':
+				return snapshotTextRanges(command, text);
 			case 'delete-shape':
 				return { type: command.type, ...target };
 			case 'rotate-shape':

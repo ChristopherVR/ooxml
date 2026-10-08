@@ -1,4 +1,11 @@
-import type { VisioTextEdit } from '../edit-commands';
+import type { VisioTextEdit, VisioTextRange, VisioTextRangesEdit } from '../edit-commands';
+
+export type VisioTextReplaceEdit = VisioTextEdit | VisioTextRangesEdit;
+export type VisioTextReplacePlanEdit =
+	| Readonly<VisioTextEdit>
+	| (Readonly<Omit<VisioTextRangesEdit, 'ranges'>> & {
+			readonly ranges: readonly Readonly<VisioTextRange>[];
+	  });
 
 /** UTF-16 bounds; oversized inputs fail instead of producing partial replacements. */
 export const VISIO_TEXT_REPLACE_LIMITS = Object.freeze({
@@ -37,7 +44,7 @@ export interface VisioTextReplaceRequest extends VisioTextReplaceScope {
 export interface VisioTextReplacePlan {
 	readonly occurrences: readonly VisioTextOccurrence[];
 	readonly replacementCount: number;
-	readonly edits: readonly Readonly<VisioTextEdit>[];
+	readonly edits: readonly VisioTextReplacePlanEdit[];
 	readonly nextOccurrence: VisioTextOccurrence | undefined;
 }
 export const textReplaceError = (message: string): never => {

@@ -58,8 +58,8 @@ describe('source-backed atomic text replacement plans', () => {
 		expect(bytes).toEqual(before);
 		expect((await parseVsdx(bytes)).pages[0]!.shapes[0]!.text.plainText).toBe('😀aaa');
 	});
-	it.each(['<cp IX="0"/>a', '<fld IX="0">a</fld>'])(
-		'includes rich matched text and refuses without silent skipping %#',
+	it.each(['<fld IX="0">a</fld>'])(
+		'includes field matched text and refuses without silent skipping %#',
 		async (text) => {
 			const bytes = await fixture({
 					pages: [{ id: '0', contents: `<Shapes>${local('1', 'a')}${local('2', text)}</Shapes>` }],
@@ -67,17 +67,22 @@ describe('source-backed atomic text replacement plans', () => {
 				document = await parseVsdx(bytes);
 			const plan = visioTextReplacePlan(document, request);
 			expect(plan.replacementCount).toBe(2);
-			await expect(editVsdx(bytes, plan.edits)).rejects.toThrow(/Rich text/);
+			await expect(editVsdx(bytes, plan.edits)).rejects.toThrow(/field/);
 		},
 	);
-	it('retains no-op targets so rich text is still refused', async () => {
+	it('retains supported rich no-op targets and exact source bytes', async () => {
 		const bytes = await fixture({
 				pages: [{ id: '0', contents: `<Shapes>${local('1', '<cp IX="0"/>a')}</Shapes>` }],
 			}),
 			document = await parseVsdx(bytes);
-		await expect(
-			editVsdx(bytes, visioTextReplacePlan(document, { ...request, replacement: 'a' }).edits),
-		).rejects.toThrow(/Rich text/);
+		expect(
+			(
+				await editVsdx(
+					bytes,
+					visioTextReplacePlan(document, { ...request, replacement: 'a' }).edits,
+				)
+			).bytes,
+		).toEqual(bytes);
 	});
 	it('includes matched master text and refuses the complete source transaction', async () => {
 		const bytes = await fixture({

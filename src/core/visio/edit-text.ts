@@ -2,7 +2,7 @@ import { buildXml } from '../xml/index';
 import { fail, type VisioPackageLimits } from './package-common';
 import { attribute, children } from './sheet';
 import { inspectXml, inspectNamespaces } from './xml-validation';
-import { assertShapeLocks } from './edit-style-admission';
+import { localTextTarget } from './edit-text-target';
 import { encodeVisioPlainText, decodeVisioPlainText } from './plain-text';
 
 export async function replacePlainText(
@@ -13,45 +13,17 @@ export async function replacePlainText(
 	check: () => void,
 	assertDependencies: (shape: Element, text: Element) => Promise<void>,
 ): Promise<boolean> {
-	const shapeChildren = (parent: Element): Element[] => {
-		const containers = children(parent, 'Shapes');
-		if (containers.length > 1)
-			fail('INVALID_SHAPE_ID', 'Duplicate Shapes containers are ambiguous.');
-		return children(containers[0], 'Shape');
-	};
-	const shapes = new Map<string, { node: Element; inherited: boolean; deleted: boolean }>();
-	const pending = shapeChildren(root).map((node) => ({
-		node,
-		inherited: false,
-		deleted: false,
-	}));
-	while (pending.length) {
-		check();
-		const item = pending.pop()!;
-		const id = attribute(item.node, 'ID');
-		if (!id || shapes.has(id))
-			fail('INVALID_SHAPE_ID', 'Local shape IDs must be present and unique.');
-		const inherited =
-			item.inherited || item.node.hasAttribute('Master') || item.node.hasAttribute('MasterShape');
-		const deleted = item.deleted || ['1', 'true'].includes(attribute(item.node, 'Del') ?? '');
-		shapes.set(id, { node: item.node, inherited, deleted });
-		for (const node of shapeChildren(item.node)) pending.push({ node, inherited, deleted });
-	}
-	const target = shapes.get(shapeId);
-	if (!target) fail('EDIT_TARGET_NOT_FOUND', 'Local shape does not exist.');
-	if (target.inherited || target.deleted)
-		fail('UNSUPPORTED_TEXT_EDIT', 'Master-linked or deleted shapes cannot be edited.');
-	assertShapeLocks(target.node, document, ['LockTextEdit']);
-	const texts = children(target.node, 'Text');
+	const target = localTextTarget(root, document, shapeId, check);
+	const texts = children(target, 'Text');
 	if (texts.length !== 1)
 		fail('UNSUPPORTED_TEXT_EDIT', 'Editing requires one existing local Text element.');
 	const node = texts[0]!;
 	if (Array.from(node.childNodes).some((item) => item.nodeType !== 3 && item.nodeType !== 4))
 		fail('UNSUPPORTED_TEXT_EDIT', 'Rich text, fields and unknown text markup cannot be edited.');
-	if (children(target.node, 'Section').some((section) => attribute(section, 'N') === 'Field'))
+	if (children(target, 'Section').some((section) => attribute(section, 'N') === 'Field'))
 		fail('UNSUPPORTED_TEXT_EDIT', 'Shapes with text fields cannot be edited.');
 	if (decodeVisioPlainText(node.textContent ?? '') === text) return false;
-	await assertDependencies(target.node, node);
+	await assertDependencies(target, node);
 	check();
 	while (node.firstChild) node.removeChild(node.firstChild);
 	node.appendChild(node.ownerDocument!.createTextNode(encodeVisioPlainText(text)));

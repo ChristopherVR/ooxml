@@ -238,6 +238,9 @@ export interface VisioConnection {
 }
 export interface VisioPage {
 	id: string;
+	/** Explicit cached drawing page-size modes. Missing or invalid source caches are omitted. */
+	drawingSizeType?: number;
+	drawingResizeType?: number;
 	/** Cached PageScale/DrawingScale. Scene geometry is in physical page inches;
 	 * source-backed geometry edits continue to accept drawing inches. Omitted means 1.
 	 */

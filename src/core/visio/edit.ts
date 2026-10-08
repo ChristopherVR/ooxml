@@ -3,6 +3,7 @@ import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import { replaceScopedPlainText } from './edit-text-scope';
+import { replaceScopedTextRanges } from './edit-text-ranges';
 import {
 	snapshotVisioEdits,
 	isVisioPageEdit,
@@ -23,11 +24,14 @@ import { deleteVisioShapes, type VisioShapeDelete } from './edit-delete';
 export type {
 	VisioEdit,
 	VisioTextEdit,
+	VisioTextRange,
+	VisioTextRangesEdit,
 	VisioGeometryEdit,
 	VisioPageInsert,
 	VisioPageReorder,
 	VisioPageRename,
 	VisioPageDelete,
+	VisioPageSizeEdit,
 	VisioPageEdit,
 	VisioFormatEdit,
 	VisioTextFormatEdit,
@@ -100,6 +104,7 @@ export async function editVsdx(
 	const geometryCommands = commands.filter(
 		(command): command is VisioGeometryEdit =>
 			command.type !== 'replace-plain-text' &&
+			command.type !== 'replace-text-ranges' &&
 			command.type !== 'reorder-shape' &&
 			command.type !== 'duplicate-shapes' &&
 			command.type !== 'paste-shapes' &&
@@ -112,6 +117,7 @@ export async function editVsdx(
 		commands.some(
 			(command) =>
 				command.type === 'replace-plain-text' ||
+				command.type === 'replace-text-ranges' ||
 				isVisioFormatEdit(command) ||
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
@@ -166,9 +172,11 @@ export async function editVsdx(
 			root = (sourceRoot.ownerDocument!.cloneNode(true) as Document).documentElement;
 			roots.set(command.pageId, root);
 		}
-		if (command.type === 'replace-plain-text') {
+		if (command.type === 'replace-plain-text' || command.type === 'replace-text-ranges') {
 			if (
-				await replaceScopedPlainText(pkg, new Set(pages.values()), roots, document!, command, check)
+				await (command.type === 'replace-plain-text'
+					? replaceScopedPlainText(pkg, new Set(pages.values()), roots, document!, command, check)
+					: replaceScopedTextRanges(pkg, new Set(pages.values()), roots, document!, command, check))
 			) {
 				dirty.set(path, root);
 				textChanged = true;

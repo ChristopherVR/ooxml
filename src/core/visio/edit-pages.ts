@@ -9,6 +9,7 @@ import { updatePageAppProperties } from './edit-page-properties';
 import { recalculatePageFormulas } from './edit-page-formulas';
 import { renameVisioPage } from './edit-page-rename';
 import { deleteVisioPage } from './edit-page-delete';
+import { setVisioPageSize } from './edit-page-size';
 import { relationshipsPartFor } from '../opc/relationships';
 import type { VisioPageEdit } from './edit-commands';
 import type { EditVsdxResult } from './edit';
@@ -62,6 +63,10 @@ export async function editVsdxPages(
 	for (const command of commands) {
 		check();
 		const existing = children(pages, 'Page');
+		if (command.type === 'set-page-size') {
+			await setVisioPageSize(pkg, pagesPart, pages, pagePaths, dirty, command, check);
+			continue;
+		}
 		if (command.type === 'delete-page') {
 			await deleteVisioPage(
 				pkg,
@@ -167,8 +172,10 @@ export async function editVsdxPages(
 			fail('LIMIT_EDIT_OUTPUT', 'Saved package exceeds output limit.');
 		return { bytes: original, changedParts: [], diagnostics: [] };
 	}
-	await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);
-	await recalculatePageFormulas(pkg, pagesPart, pages, pagePaths, dirty, check);
+	if (commands.some((command) => command.type !== 'set-page-size')) {
+		await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);
+		await recalculatePageFormulas(pkg, pagesPart, pages, pagePaths, dirty, check);
+	}
 	if (new Set([...parts.keys(), ...dirty.keys()]).size > limits.maxEntries)
 		fail('LIMIT_ENTRIES', 'Page insertion exceeds package entry limit.');
 	let total = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0),
@@ -197,9 +204,12 @@ export async function editVsdxPages(
 		changedParts: [...new Set([...removed, ...dirty.keys()])],
 		diagnostics: [
 			{
-				code: 'edit-pages-experimental',
-				message:
-					'Page metadata and supported local numeric page-dependent caches were updated. Inherited, string and background-render-context formulas remain unsupported.',
+				code: commands.every((command) => command.type === 'set-page-size')
+					? 'edit-page-size-experimental'
+					: 'edit-pages-experimental',
+				message: commands.every((command) => command.type === 'set-page-size')
+					? 'Fixed custom drawing-page dimensions were updated. Shape positions and printer settings were retained; affected page-size formula caches remain unsupported.'
+					: 'Page metadata and supported local numeric page-dependent caches were updated. Inherited, string and background-render-context formulas remain unsupported.',
 			},
 		],
 	};

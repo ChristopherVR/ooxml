@@ -262,6 +262,8 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 				'isBackground',
 				'backgroundPageId',
 				'drawingToPageScale',
+				'drawingSizeType',
+				'drawingResizeType',
 			]),
 			shapes: shapes(page.shapes),
 			connectors: [],

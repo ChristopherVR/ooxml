@@ -1,5 +1,20 @@
 # Visio capability ledger
 
+## Rich-text replacement and fixed page-size core, 2026-10-09
+
+Source range replacements now preserve supported character formatting within
+paragraphs. The existing scoped planner emits these commands, while paragraph
+breaks retain the plain-text writer. Twenty-four rich native outputs and 18 plain
+outputs match and reopen in Visio 16. Fields, rich paragraph deletion, paragraph
+break changes and conflicting marker boundaries still refuse atomically.
+
+The page-size command selects fixed/custom drawing dimensions without moving
+shapes or changing printer paper. Native comparison and reopen evidence covers
+28 outputs across fixed dimensions, size modes and a core-created document.
+Affected or unknown page-size formula dependencies are refused. Shared page-size
+controls and installed-binding validation are in progress; Auto Size, Fit to
+Drawing and native interactive page-setup parity remain open.
+
 ## Scoped replacement and zero-weight SVG output, 2026-10-09
 
 The shared Find/Replace controls support literal case-sensitive occurrences,

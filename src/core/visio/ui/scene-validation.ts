@@ -82,6 +82,9 @@ export function assertViewableDocument(model: VisioDocument): void {
 		finite(page.height, 'page height', 0.001);
 		if (page.drawingToPageScale !== undefined)
 			finite(page.drawingToPageScale, 'drawing scale', Number.MIN_VALUE, Number.MAX_VALUE);
+		for (const mode of [page.drawingSizeType, page.drawingResizeType])
+			if (mode !== undefined && (!Number.isSafeInteger(mode) || mode < 0 || mode > 255))
+				throw new Error('The scene has an invalid drawing page-size mode.');
 		if (!Array.isArray(page.shapes) || stack.length + page.shapes.length > MAX_SHAPES)
 			throw new Error('The scene exceeds safe shape count limits or has an invalid shape list.');
 		const ids = new Set<string>();

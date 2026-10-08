@@ -1,5 +1,4 @@
 import type { VisioDocument } from '../model';
-import type { VisioTextEdit } from '../edit-commands';
 import { replaceEntries, snapshotReplaceScope, type ReplaceEntry } from './text-replace-snapshot';
 import {
 	VISIO_TEXT_REPLACE_LIMITS as limits,
@@ -10,12 +9,15 @@ import {
 	type VisioTextReplacePlan,
 	type VisioTextReplaceRequest,
 	type VisioTextReplaceScope,
+	type VisioTextReplaceEdit,
 } from './text-replace-types';
 export type {
 	VisioTextOccurrence,
 	VisioTextReplacePlan,
 	VisioTextReplaceRequest,
 	VisioTextReplaceScope,
+	VisioTextReplaceEdit,
+	VisioTextReplacePlanEdit,
 } from './text-replace-types';
 export { VISIO_TEXT_REPLACE_LIMITS } from './text-replace-types';
 export { visioTextOccurrenceSelection } from './text-replace-selection';
@@ -130,9 +132,10 @@ export function visioTextReplacePlan(
 		targets.set(key, list);
 	}
 	if (targets.size > limits.commands) textReplaceError('Replace command count exceeds limits.');
-	const edits: VisioTextEdit[] = [],
+	const edits: VisioTextReplaceEdit[] = [],
 		updated: ReplaceEntry[] = [];
-	let outputCharacters = 0;
+	let outputCharacters = 0,
+		commandCharacters = 0;
 	for (const entry of entries) {
 		const matches = targets.get(JSON.stringify([entry.pageId, entry.shapeId]));
 		let text = entry.text;
@@ -150,14 +153,27 @@ export function visioTextReplacePlan(
 			parts.push(text.slice(from));
 			text = parts.join('');
 			// Retain matched no-op targets so unsupported/protected text is never silently skipped.
-			edits.push(
-				Object.freeze({
-					type: 'replace-plain-text',
-					pageId: entry.pageId,
-					shapeId: entry.shapeId,
-					text,
-				}),
-			);
+			const target = { pageId: entry.pageId, shapeId: entry.shapeId };
+			if (replacement.includes('\n') || scope.query.includes('\n')) {
+				commandCharacters += text.length;
+				edits.push(Object.freeze({ type: 'replace-plain-text', ...target, text }));
+			} else {
+				commandCharacters += entry.text.length + matches.length * replacement.length;
+				edits.push(
+					Object.freeze({
+						type: 'replace-text-ranges',
+						...target,
+						expectedText: entry.text,
+						ranges: Object.freeze(
+							matches.map((match) =>
+								Object.freeze({ start: match.start, end: match.end, text: replacement }),
+							),
+						),
+					}),
+				);
+			}
+			if (commandCharacters > limits.output)
+				textReplaceError('Replace input exceeds aggregate command text limits.');
 		}
 		updated.push({ ...entry, text });
 	}
@@ -189,7 +205,7 @@ export function visioTextReplacePlan(
 export function visioTextReplaceCommands(
 	model: VisioDocument,
 	plan: VisioTextReplacePlan,
-): VisioTextEdit[] {
+): VisioTextReplaceEdit[] {
 	const record = records.get(plan);
 	if (!record) return textReplaceError('Replace plan was not produced by this planner.');
 	const current = replaceEntries(model, record.scope);
@@ -205,5 +221,9 @@ export function visioTextReplaceCommands(
 		})
 	)
 		textReplaceError('Replace plan is stale. Search the current drawing again.');
-	return plan.edits.map((edit) => ({ ...edit }));
+	return plan.edits.map((edit) =>
+		edit.type === 'replace-text-ranges'
+			? { ...edit, ranges: edit.ranges.map((range) => ({ ...range })) }
+			: { ...edit },
+	);
 }

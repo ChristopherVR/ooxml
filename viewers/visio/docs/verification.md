@@ -2,6 +2,39 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Rich-text ranges and fixed drawing-page dimensions, 2026-10-09
+
+The core replacement planner now retains character formatting for replacements
+within paragraphs. `record-visio-text-ranges.ps1` captures 24 native cases at
+scales 0.5, 1 and 2. Actual core output matches native saved text, per-character
+formatting, paragraph alignment and geometry. Owned Visio 16 reopened all 24 core
+outputs and confirmed those values. Reopening the saved native reference through
+COM remains unverified because that separate probe hung; parsed native references
+and core-output COM acceptance are distinct checks. Existing 18 plain replacement
+outputs also pass the changed planner and native reopen.
+
+Ranges require complete expected source text and nonoverlapping UTF-16 scalar
+boundaries. Character/paragraph rows and unmatched markup stay intact. Fields,
+paragraph-break edits, complete rich paragraph deletion and conflicting character
+markers remain refused atomically. Plain text keeps its paragraph-break writer.
+Plans are deeply frozen, and returned commands own their nested range objects.
+Run the optional oracle with `VISIO_NATIVE_TEXT_RANGES_DIR`.
+
+`record-visio-page-size.ps1` measures physical drawing dimensions separately from
+printer paper. The fixed/custom command sets drawing-size mode 3 and resize mode
+0, retaining shape placement and printer settings. Native comparisons and owned
+COM reopen pass for 12 fixed dimensions, 15 size/resize-mode transitions and one
+actual core factory document. Twelve dependent-page cases refuse without output.
+The four optional selectors are `VISIO_NATIVE_PAGE_SIZE_DIR`,
+`VISIO_NATIVE_PAGE_SIZE_MODES_DIR`, `VISIO_NATIVE_PAGE_SIZE_FACTORY_DIR` and
+`VISIO_NATIVE_PAGE_SIZE_DEPENDENT_DIR`. Auto Size, Fit to Drawing and interactive
+native ribbon equivalence are not established by these direct-cell probes.
+
+With these native oracles enabled, the core Visio suite passed 2,947 tests with
+171 optional cases skipped across 172 files. Strict core types and the production
+Visio build passed. Shared UI and installed-binding validation for these additions
+is in progress.
+
 ## Scoped replacement and zero-weight SVG output, 2026-10-09
 
 `record-visio-text-replace.ps1` captures 18 native Characters-range replacements

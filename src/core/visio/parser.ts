@@ -280,11 +280,28 @@ export async function parseVsdx(
 		};
 		visit(shapes);
 		const connectors = connections(root, localReport);
+		const pageModes: Pick<VisioPage, 'drawingSizeType' | 'drawingResizeType'> = {};
+		for (const [name, key] of [
+			['DrawingSizeType', 'drawingSizeType'],
+			['DrawingResizeType', 'drawingResizeType'],
+		] as const) {
+			const source = sheet.cells.get(name);
+			if (
+				!source ||
+				source.error !== undefined ||
+				source.formula === 'Inh' ||
+				(source.unit !== undefined && !['NUM', 'BOOL'].includes(source.unit))
+			)
+				continue;
+			const value = number(sheet.cells, name, Number.NaN, localReport);
+			if (Number.isSafeInteger(value) && value >= 0 && value <= 255) pageModes[key] = value;
+		}
 		for (const connection of connectors)
 			if (!seen.has(connection.fromShapeId) || !seen.has(connection.toShapeId))
 				localReport('dangling-connection', 'A connection references a missing shape.');
 		pages.push({
 			id,
+			...pageModes,
 			...(drawingToPageScale === 1 ? {} : { drawingToPageScale }),
 			name: metadata(
 				attribute(page, 'Name') ?? attribute(page, 'NameU') ?? `Page ${id}`,

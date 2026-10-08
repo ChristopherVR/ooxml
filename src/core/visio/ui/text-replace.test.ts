@@ -8,6 +8,8 @@ import {
 	visioTextReplaceOccurrences,
 	visioTextReplacePlan,
 	type VisioTextReplaceRequest,
+	type VisioTextReplaceEdit,
+	type VisioTextReplacePlanEdit,
 } from './text-replace';
 
 const request: VisioTextReplaceRequest = {
@@ -37,6 +39,10 @@ function model(...texts: string[]): VisioDocument {
 	return result;
 }
 
+const rangeEdit = (edit: Readonly<VisioTextReplaceEdit>) => {
+	if (edit.type !== 'replace-text-ranges') throw new Error('Expected a range command');
+	return edit;
+};
 describe('literal full-text replacement planning', () => {
 	it('navigates complete occurrences and wraps without using lowercase Find previews', () => {
 		const source = model('İ a a');
@@ -73,13 +79,18 @@ describe('literal full-text replacement planning', () => {
 			{ pageId: '0', shapeId: '1', start: 8, end: 10 },
 		]);
 		expect(plan.replacementCount).toBe(2);
-		expect(plan.edits[0]!.text).toBe('😀$&a A $&');
+		expect(rangeEdit(plan.edits[0]!).ranges).toEqual([
+			{ start: 2, end: 4, text: '$&' },
+			{ start: 8, end: 10, text: '$&' },
+		]);
 		expect(source.pages[0]!.shapes[0]!.text.plainText).toBe('😀aaa A aa');
 	});
 	it('searches beyond old Find preview and per-shape index truncation', () => {
 		const source = model('x'.repeat(40000) + 'a');
 		expect(visioTextReplaceOccurrences(source, request)[0]!.start).toBe(40000);
-		expect(visioTextReplacePlan(source, request).edits[0]!.text).toBe('x'.repeat(40000) + 'X');
+		expect(rangeEdit(visioTextReplacePlan(source, request).edits[0]!).ranges).toEqual([
+			{ start: 40000, end: 40001, text: 'X' },
+		]);
 	});
 	it('distinguishes page-local IDs and walks current/all pages in source order', () => {
 		const source = model('a');
@@ -127,7 +138,7 @@ describe('literal full-text replacement planning', () => {
 			replacement: 'aaaa',
 			current: matches[0]!,
 		});
-		expect(plan.edits[0]!.text).toBe('aaaa a');
+		expect(rangeEdit(plan.edits[0]!).ranges).toEqual([{ start: 0, end: 1, text: 'aaaa' }]);
 		expect(plan.nextOccurrence).toEqual({ pageId: '0', shapeId: '1', start: 5, end: 6 });
 		const last = visioTextReplacePlan(source, {
 			...request,
@@ -139,7 +150,7 @@ describe('literal full-text replacement planning', () => {
 	it('deletes current and handles zero matches without commands', () => {
 		const source = model('a a');
 		const plan = visioTextReplacePlan(source, { ...request, mode: 'current', replacement: '' });
-		expect(plan.edits[0]!.text).toBe(' a');
+		expect(rangeEdit(plan.edits[0]!).ranges).toEqual([{ start: 0, end: 1, text: '' }]);
 		expect(plan.nextOccurrence!.start).toBe(1);
 		expect(visioTextReplacePlan(model('none'), request).edits).toEqual([]);
 	});
@@ -149,14 +160,24 @@ describe('literal full-text replacement planning', () => {
 		);
 	});
 	it('freezes plans and does not retain caller request or output command objects', () => {
+		const compileTimeReadonly = (edit: VisioTextReplacePlanEdit) => {
+			if (edit.type === 'replace-text-ranges') {
+				// @ts-expect-error Plans own deeply readonly range elements; commands are mutable clones.
+				edit.ranges[0]!.text = 'wrong';
+			}
+		};
+		expect(compileTimeReadonly).toBeTypeOf('function');
 		const source = model('a'),
 			input = { ...request, scope: 'selection' as const, selection: [{ id: '1' }] };
 		const plan = visioTextReplacePlan(source, input);
 		input.selection[0]!.id = '9';
 		input.replacement = 'wrong';
 		const edits = visioTextReplaceCommands(source, plan);
-		edits[0]!.text = 'wrong';
-		expect(visioTextReplaceCommands(source, plan)[0]!.text).toBe('X');
+		if (edits[0]!.type !== 'replace-text-ranges') throw new Error('Expected range edit');
+		edits[0]!.ranges[0]!.text = 'wrong';
+		expect(rangeEdit(visioTextReplaceCommands(source, plan)[0]!).ranges[0]!.text).toBe('X');
+		expect(Object.isFrozen(rangeEdit(plan.edits[0]!).ranges)).toBe(true);
+		expect(Object.isFrozen(rangeEdit(plan.edits[0]!).ranges[0])).toBe(true);
 		expect(Object.isFrozen(plan)).toBe(true);
 		expect(Object.isFrozen(plan.occurrences[0])).toBe(true);
 		expect(Object.isFrozen(plan.edits[0])).toBe(true);
@@ -240,5 +261,15 @@ describe('replacement input and allocation bounds', () => {
 		expect(() =>
 			visioTextReplacePlan(model('a'.repeat(40)), { ...request, replacement: 'X'.repeat(32768) }),
 		).toThrow(/output/);
+	});
+	it('bounds expected source and replacement payload even when final output fits', () => {
+		const query = 'a'.repeat(256);
+		expect(() =>
+			visioTextReplacePlan(model(query.repeat(40) + 'x'.repeat(979760)), {
+				...request,
+				query,
+				replacement: 'b'.repeat(256),
+			}),
+		).toThrow(/input.*aggregate/);
 	});
 });

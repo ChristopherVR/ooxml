@@ -1,4 +1,6 @@
 import { fail } from './package-common';
+import { snapshotTextRanges, type VisioTextRangesEdit } from './edit-text-range-commands';
+export type { VisioTextRange, VisioTextRangesEdit } from './edit-text-range-commands';
 import { snapshotResizeAnchor, type VisioResizeAnchor } from './resize-anchor';
 export type { VisioResizeAnchor } from './resize-anchor';
 import { snapshotDuplicateShapes, type VisioDuplicateShapesEdit } from './edit-duplicate-commands';
@@ -70,9 +72,22 @@ export interface VisioPageDelete {
 	type: 'delete-page';
 	pageId: string;
 }
-export type VisioPageEdit = VisioPageInsert | VisioPageReorder | VisioPageRename | VisioPageDelete;
+/** Physical page inches. Select fixed custom mode; printer paper and shape positions are retained. */
+export interface VisioPageSizeEdit {
+	type: 'set-page-size';
+	pageId: string;
+	width: number;
+	height: number;
+}
+export type VisioPageEdit =
+	| VisioPageInsert
+	| VisioPageReorder
+	| VisioPageRename
+	| VisioPageDelete
+	| VisioPageSizeEdit;
 export type VisioEdit =
 	| VisioTextEdit
+	| VisioTextRangesEdit
 	| VisioGeometryEdit
 	| VisioPageEdit
 	| VisioFormatEdit
@@ -83,7 +98,8 @@ export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
 	edit.type === 'rename-page' ||
-	edit.type === 'delete-page';
+	edit.type === 'delete-page' ||
+	edit.type === 'set-page-size';
 
 /** Potential direct changes used by both package and master dependency admission. */
 export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
@@ -157,6 +173,13 @@ export function snapshotVisioEdits(
 		if (edit.type === 'duplicate-shapes') return snapshotDuplicateShapes(edit);
 		if (edit.type === 'paste-shapes') return snapshotPasteShapes(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
+		if (edit.type === 'set-page-size')
+			return {
+				type: edit.type,
+				pageId: edit.pageId,
+				width: numeric(edit.width, true),
+				height: numeric(edit.height, true),
+			};
 		if (edit.type === 'reorder-page') {
 			if (!Number.isSafeInteger(edit.index) || edit.index < 0 || edit.index > 1_000_000)
 				fail('INVALID_EDIT', 'Page order requires a bounded zero-based integer index.');
@@ -188,6 +211,7 @@ export function snapshotVisioEdits(
 		const target = { pageId: edit.pageId, shapeId: edit.shapeId };
 		if (edit.type === 'replace-plain-text')
 			return { ...target, type: edit.type, text: text(edit.text) };
+		if (edit.type === 'replace-text-ranges') return snapshotTextRanges(edit, text);
 		if (isVisioFormatEdit(edit)) return snapshotFormatting(edit);
 		if (edit.type === 'reorder-shape') {
 			if (!['front', 'back', 'forward', 'backward'].includes(edit.order))
