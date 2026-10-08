@@ -50,12 +50,15 @@ test('code-5 arrows paint both endpoint directions and preserve the inward base 
 				ctx.fillRect(0, 0, 800, 400);
 				ctx.drawImage(image, 0, 0, 800, 400);
 				const at = (x: number, y: number) => Array.from(ctx.getImageData(x, y, 1, 1).data);
-				// 200px/in; marker meet-scale .0296in/unit; tips (200,200)/(600,200).
-				// Interior samples lie off the shaft; base-gap samples distinguish a concave
-				// glyph from a filled triangle or no marker. Behind-tip samples check direction.
+				// 200px/in; tips (200,200)/(600,200). A straight round-capped line takes the
+				// native measured glyph (core visioFilledArrow): size 6 at 0.005in is 0.255in
+				// per unit, so the base corners sit 102px behind each tip and the inward base
+				// curve 89px at the shaft. Interior samples lie off the shaft; base-gap samples
+				// (95px) distinguish a concave glyph from a filled triangle or no marker.
+				// Behind-tip samples check direction.
 				samples.push({
 					filled: [at(230, 206), at(570, 194)],
-					gap: [at(249, 206), at(551, 194)],
+					gap: [at(295, 206), at(505, 194)],
 					outside: [at(185, 206), at(615, 194)],
 				});
 			} finally {
