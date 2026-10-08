@@ -5,7 +5,6 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { parseChartSpace } from '../../../chart/index';
-import { NS, elements, parseXml } from '../../../xml/index';
 import { PptxHandler } from '../../index';
 import type { PptxChartData, PptxElement } from '../../index';
 import { diffShapes } from './chart-neutral-parity';
@@ -92,12 +91,6 @@ async function pptxChartsByPart(bytes: Buffer): Promise<Map<string, PptxChartDat
 	return byPart;
 }
 
-/** Whether `c:style` is a direct child of `c:chartSpace` (not only inside `mc:AlternateContent`). */
-function hasDirectStyle(xml: string): boolean {
-	const root = parseXml(xml).documentElement;
-	return elements(root).some((child) => child.localName === 'style' && child.namespaceURI === NS.c);
-}
-
 const DECKS = await chartDecks();
 const totals = { parts: 0, classic: 0, chartEx: 0, series: 0, axes: 0 };
 
@@ -137,19 +130,6 @@ describe('chart parity: pptx object-tree parser vs neutral parseChartSpace', () 
 				if (neutral.categories.length === 0 && workbookCategories.length > 0) {
 					expect(legacy.categories).toEqual(workbookCategories);
 					neutral.categories = workbookCategories;
-				}
-
-				// Expectation (known pptx defect, NOT fixed here): Office writes `c:style` inside
-				// `mc:AlternateContent` (`c14:style` in mc:Choice, `c:style` in mc:Fallback). A consumer
-				// that does not model `c14:style` must take the fallback (ECMA-376 Part 3, 10.2.1), as
-				// `parseChartSpace` does; `extractChartStyle` only reads a direct `c:style`, so pptx
-				// reports no style. Reading the fallback in pptx would switch these charts from the
-				// default palette to `getChartStylePalette(2)`, which starts at accent 2 although
-				// Office's default style 2 starts at accent 1, so the fix waits for the UI style
-				// palette to be corrected (docs/agnostic-core-plan.md, step 5).
-				if (neutral.style !== undefined && !hasDirectStyle(xml)) {
-					expect(legacy.style).toBeUndefined();
-					delete neutral.style;
 				}
 
 				expect(diffShapes(neutral, legacy), `${deck.name} ${part}`).toEqual([]);

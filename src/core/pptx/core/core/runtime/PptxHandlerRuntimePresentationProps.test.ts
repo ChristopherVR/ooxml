@@ -222,3 +222,27 @@ describe('extractChartStyle chart-wide text style', () => {
 		});
 	});
 });
+
+describe('extractChartStyle style number', () => {
+	it('reads a direct c:style', () => {
+		expect(extractChartStyle({ 'c:style': { '@_val': '26' } }, undefined)?.styleId).toBe(26);
+	});
+
+	it('reads c:style from mc:Fallback when Office wraps it in mc:AlternateContent', () => {
+		const chartSpace = {
+			'mc:AlternateContent': {
+				'mc:Choice': { '@_Requires': 'c14', 'c14:style': { '@_val': '102' } },
+				'mc:Fallback': { 'c:style': { '@_val': '2' } },
+			},
+		};
+		expect(extractChartStyle(chartSpace, undefined)?.styleId).toBe(2);
+	});
+
+	it('prefers a direct c:style over the fallback', () => {
+		const chartSpace = {
+			'c:style': { '@_val': '5' },
+			'mc:AlternateContent': { 'mc:Fallback': { 'c:style': { '@_val': '2' } } },
+		};
+		expect(extractChartStyle(chartSpace, undefined)?.styleId).toBe(5);
+	});
+});

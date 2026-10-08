@@ -187,8 +187,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const style: PptxChartStyle = {};
 		let hasStyle = false;
 
-		// Style ID from c:style
-		const styleNode = this.xmlLookupService.getChildByLocalName(chartSpace, 'style');
+		// Style ID from c:style. Office writes it inside `mc:AlternateContent` (`c14:style` under
+		// `mc:Choice`, `c:style` under `mc:Fallback`); a consumer that does not model `c14:style`
+		// takes the fallback (ECMA-376 Part 3, markup compatibility), as `parseChartSpace` does.
+		const styleNode =
+			this.xmlLookupService.getChildByLocalName(chartSpace, 'style') ??
+			this.xmlLookupService
+				.getChildrenArrayByLocalName(chartSpace, 'AlternateContent')
+				.map((alternate) =>
+					this.xmlLookupService.getChildByLocalName(
+						this.xmlLookupService.getChildByLocalName(alternate, 'Fallback'),
+						'style',
+					),
+				)
+				.find((node) => node?.['@_val'] !== undefined);
 		if (styleNode?.['@_val']) {
 			style.styleId = parseInt(String(styleNode['@_val']));
 			hasStyle = true;
