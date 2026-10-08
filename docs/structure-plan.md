@@ -232,7 +232,10 @@ and no claim of parity without evidence.
 ### Wave 4 (next)
 
 - pptx off `fast-xml-parser` area by area (plan step 6), starting with charts
-  through the parity harness and SmartArt through the ordered-XML tree.
+  through the parity harness and SmartArt through the ordered-XML tree. Charts
+  started: classic chart parts are read by the neutral parser and adapted to
+  `PptxChartData` (proven deeply equal to the old parser on every committed
+  chart); styles, ChartEx and the chart writers still use the object tree.
 - One chart painter for xlsx and the pptx DOM renderer.
 - pptx binding factory; per-binding contract parity tests for all products;
   the pptx comments panels on the shared pane.
