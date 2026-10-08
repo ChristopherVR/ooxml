@@ -375,6 +375,7 @@ export const enRibbon = {
 	Reply: 'Reply',
 	Resolve: 'Resolve',
 	Reopen: 'Reopen',
+	Resolved: 'Resolved',
 	Delete: 'Delete',
 	'No comments': 'No comments yet.',
 	Tracking: 'Tracking',

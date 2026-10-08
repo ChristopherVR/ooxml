@@ -384,6 +384,7 @@ export const esRibbon: RibbonStrings = {
 	Reply: 'Responder',
 	Resolve: 'Resolver',
 	Reopen: 'Reabrir',
+	Resolved: 'Resuelto',
 	Delete: 'Eliminar',
 	'No comments': 'Aún no hay comentarios.',
 	Tracking: 'Seguimiento',

@@ -384,6 +384,7 @@ export const deRibbon: RibbonStrings = {
 	Reply: 'Antworten',
 	Resolve: 'Lösen',
 	Reopen: 'Erneut öffnen',
+	Resolved: 'Gelöst',
 	Delete: 'Löschen',
 	'No comments': 'Noch keine Kommentare.',
 	Tracking: 'Nachverfolgung',

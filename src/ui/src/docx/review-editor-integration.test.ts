@@ -78,14 +78,13 @@ describe('review editing end to end', () => {
 		const pm = view(editor);
 		pm.dispatch(pm.state.tr.setSelection(TextSelection.create(pm.state.doc, 1, 7)));
 		click(editor, 'Add comment');
-		const input = editor.shadowRoot!.querySelector<HTMLTextAreaElement>(
-			'[aria-label="New comment"]',
-		)!;
+		const pane = editor.shadowRoot!.querySelector('.dve-comments-panel')!.shadowRoot!;
+		const input = pane.querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!;
 		expect(input).toBeTruthy();
 		input.value = 'Please check';
 		input.dispatchEvent(new Event('input'));
-		const submit = [...editor.shadowRoot!.querySelectorAll<HTMLButtonElement>('button')].find(
-			(button) => button.textContent === 'Add comment' && button.closest('[aria-label="Comments"]'),
+		const submit = [...pane.querySelectorAll<HTMLButtonElement>('button')].find(
+			(button) => button.textContent === 'Add comment',
 		);
 		submit?.click();
 		const comments = editor.documentModel!.comments ?? [];

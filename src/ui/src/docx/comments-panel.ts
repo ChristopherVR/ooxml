@@ -1,19 +1,21 @@
+// Word's comments pane: the shared `office-ui-comments-pane` fed from the document's comments.
 import type { Comment, DocumentModel } from 'ooxml-core/docx';
-import {
-	localizeElement,
-	normalizeEditorLocale,
-	translate,
-	type EditorLocale,
-} from './localization';
+import { defineCommentsPane, type OfficeUiCommentsPane } from '../comments/comments-pane';
+import type { OfficeCommentThread, OfficeCommentsLabels } from '../comments/types';
+import { normalizeEditorLocale, translate, type EditorLocale } from './localization';
 
 export interface CommentsPanelOptions {
 	getModel: () => DocumentModel;
 	canAdd: () => boolean;
 	canEdit?: () => boolean;
+	/** The thread anchored at the caret, highlighted in the pane. */
+	activeId?: () => string | undefined;
 	onAdd: (text: string) => void;
 	onReply: (parentId: string, text: string) => void;
 	onResolve: (id: string, resolved: boolean) => void;
 	onDelete: (id: string) => void;
+	/** A thread was chosen in the pane: go to its anchor. */
+	onSelect?: (id: string) => void;
 	onClose?: () => void;
 }
 export interface CommentsPanelHandle {
@@ -25,114 +27,75 @@ export interface CommentsPanelHandle {
 	readonly isOpen: boolean;
 }
 
-const styleText = `
-	.dve-comments-panel{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-left:1px solid var(--line,#ddd);background:var(--surface,#fff);color:var(--ink,#222);font:12px/1.4 'Segoe UI',Arial,sans-serif;width:clamp(220px,26vw,320px);overflow-y:auto}
-	.dve-comments-panel[hidden]{display:none}
-	.dve-comments-panel h2{margin:0;font-size:13px}
-	.dve-comment-new textarea,.dve-comment-reply textarea{box-sizing:border-box;width:100%;min-height:44px;resize:vertical;border:1px solid var(--line,#ddd);border-radius:3px;padding:5px 7px;font:inherit;background:var(--surface,#fff);color:var(--ink,#222)}
-	.dve-comment-new button,.dve-comment-actions button,.dve-comment-reply button{border:1px solid var(--line,#ddd);border-radius:3px;background:var(--surface,#fff);color:var(--ink,#222);font:inherit;cursor:pointer;padding:3px 8px}
-	.dve-comment-new button:disabled,.dve-comment-actions button:disabled{opacity:.5;cursor:default}
-	.dve-comment-thread{border:1px solid var(--line,#ddd);border-radius:4px;padding:7px 8px;display:flex;flex-direction:column;gap:4px}
-	.dve-comment-thread[data-resolved="true"]{opacity:.65}
-	.dve-comment-meta{display:flex;justify-content:space-between;gap:6px;color:var(--muted,#666);font-size:11px}
-	.dve-comment-text{white-space:pre-wrap}
-	.dve-comment-actions{display:flex;gap:5px;flex-wrap:wrap}
-	.dve-comment-reply{margin-left:12px;display:flex;flex-direction:column;gap:4px}
-	.dve-comment-empty{color:var(--muted,#666)}
-`;
-
-function row(
-	comment: Comment,
-	indent: boolean,
-	locale: EditorLocale,
-	options: CommentsPanelOptions,
-): HTMLElement {
-	const thread = document.createElement('div');
-	thread.className = 'dve-comment-thread';
-	if (indent) thread.style.marginLeft = '14px';
-	thread.dataset.resolved = String(Boolean(comment.resolved));
-	const meta = document.createElement('div');
-	meta.className = 'dve-comment-meta';
-	meta.append(
-		Object.assign(document.createElement('span'), { textContent: comment.author }),
-		Object.assign(document.createElement('span'), { textContent: comment.date ?? '' }),
-	);
-	const text = document.createElement('p');
-	text.className = 'dve-comment-text';
-	text.textContent = comment.text;
-	const actions = document.createElement('div');
-	const canEdit = options.canEdit?.() ?? true;
-	actions.className = 'dve-comment-actions';
-	if (!comment.parentId) {
-		const resolve = document.createElement('button');
-		resolve.type = 'button';
-		resolve.disabled = !canEdit;
-		resolve.textContent = translate(locale, comment.resolved ? 'Reopen' : 'Resolve');
-		resolve.addEventListener('click', () => options.onResolve(comment.id, !comment.resolved));
-		actions.append(resolve);
-	}
-	const del = document.createElement('button');
-	del.type = 'button';
-	del.disabled = !canEdit;
-	del.textContent = translate(locale, 'Delete');
-	del.addEventListener('click', () => options.onDelete(comment.id));
-	actions.append(del);
-	thread.append(meta, text, actions);
-	if (!comment.parentId) {
-		const replyForm = document.createElement('div');
-		replyForm.className = 'dve-comment-reply';
-		const input = document.createElement('textarea');
-		input.disabled = !canEdit;
-		input.setAttribute('aria-label', translate(locale, 'Reply'));
-		input.placeholder = translate(locale, 'Reply');
-		const send = document.createElement('button');
-		send.type = 'button';
-		send.disabled = !canEdit;
-		send.textContent = translate(locale, 'Reply');
-		send.addEventListener('click', () => {
-			if (!input.value.trim()) return;
-			options.onReply(comment.id, input.value.trim());
-			input.value = '';
-		});
-		replyForm.append(input, send);
-		thread.append(replyForm);
-	}
-	return thread;
+/** Word comments as neutral threads: each top-level comment with its direct replies. */
+export function wordCommentThreads(comments: readonly Comment[]): OfficeCommentThread[] {
+	const entry = (comment: Comment) => ({
+		id: comment.id,
+		author: comment.author,
+		text: comment.text,
+		...(comment.initials ? { initials: comment.initials } : {}),
+		...(comment.date ? { created: comment.date } : {}),
+	});
+	return comments
+		.filter((comment) => !comment.parentId)
+		.map((comment) => ({
+			id: comment.id,
+			resolved: Boolean(comment.resolved),
+			comments: [
+				entry(comment),
+				...comments.filter((reply) => reply.parentId === comment.id).map(entry),
+			],
+		}));
 }
+
+function labels(locale: EditorLocale): Partial<OfficeCommentsLabels> {
+	const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
+	return {
+		heading: t('Comments'),
+		list: t('Comments'),
+		close: t('Close comments'),
+		newComment: t('New comment'),
+		add: t('Add comment'),
+		reply: t('Reply'),
+		resolve: t('Resolve'),
+		reopen: t('Reopen'),
+		resolved: t('Resolved'),
+		delete: t('Delete'),
+		empty: t('No comments'),
+	};
+}
+
+type Detail = { text: string; threadId: string; commentId: string };
+const detail = (event: Event) => (event as CustomEvent<Detail>).detail;
 
 export function createCommentsPanel(options: CommentsPanelOptions): CommentsPanelHandle {
 	let locale: EditorLocale = 'en';
-	const panel = document.createElement('aside');
+	defineCommentsPane();
+	const panel = document.createElement('office-ui-comments-pane') as OfficeUiCommentsPane;
 	panel.className = 'dve-comments-panel';
 	panel.setAttribute('role', 'complementary');
 	panel.setAttribute('aria-label', translate(locale, 'Comments'));
 	panel.hidden = true;
-	const style = document.createElement('style');
-	style.textContent = styleText;
-	const heading = document.createElement('h2');
-	heading.textContent = translate(locale, 'Comments');
-	const closeButton = document.createElement('button');
-	closeButton.type = 'button';
-	closeButton.textContent = translate(locale, 'Close comments');
-	closeButton.setAttribute('aria-label', translate(locale, 'Close comments'));
-	closeButton.addEventListener('click', () => close());
-	const newForm = document.createElement('div');
-	newForm.className = 'dve-comment-new';
-	const newInput = document.createElement('textarea');
-	newInput.setAttribute('aria-label', translate(locale, 'New comment'));
-	newInput.placeholder = translate(locale, 'New comment');
-	const addButton = document.createElement('button');
-	addButton.type = 'button';
-	addButton.textContent = translate(locale, 'Add comment');
-	addButton.addEventListener('click', () => {
-		if (!newInput.value.trim()) return;
-		options.onAdd(newInput.value.trim());
-		newInput.value = '';
+	panel.closable = true;
+	// The e2e specs find a comment and its own buttons by `.dve-comment-thread`.
+	panel.classNames = { thread: 'dve-comment-card', comment: 'dve-comment-thread' };
+	panel.labels = labels(locale);
+	panel.addEventListener('comment-add', (event) => {
+		options.onAdd(detail(event).text);
 		refresh();
 	});
-	newForm.append(newInput, addButton);
-	const list = document.createElement('div');
-	panel.append(style, heading, closeButton, newForm, list);
+	panel.addEventListener('comment-reply', (event) =>
+		options.onReply(detail(event).threadId, detail(event).text),
+	);
+	panel.addEventListener('thread-resolve', (event) =>
+		options.onResolve(detail(event).threadId, true),
+	);
+	panel.addEventListener('thread-reopen', (event) =>
+		options.onResolve(detail(event).threadId, false),
+	);
+	panel.addEventListener('comment-delete', (event) => options.onDelete(detail(event).commentId));
+	panel.addEventListener('thread-select', (event) => options.onSelect?.(detail(event).threadId));
+	panel.addEventListener('comments-close', () => close());
 
 	let isOpen = false;
 	function close() {
@@ -141,24 +104,11 @@ export function createCommentsPanel(options: CommentsPanelOptions): CommentsPane
 		options.onClose?.();
 	}
 	function refresh() {
-		addButton.disabled = !options.canAdd();
-		const comments = options.getModel().comments ?? [];
-		list.replaceChildren();
-		const top = comments.filter((comment) => !comment.parentId);
-		if (!top.length) {
-			const empty = document.createElement('p');
-			empty.className = 'dve-comment-empty';
-			empty.textContent = translate(locale, 'No comments');
-			list.append(empty);
-			return;
-		}
-		for (const comment of top) {
-			list.append(row(comment, false, locale, options));
-			for (const reply of comments.filter((item) => item.parentId === comment.id))
-				list.append(row(reply, true, locale, options));
-		}
+		panel.readOnly = !(options.canEdit?.() ?? true);
+		panel.addDisabled = !options.canAdd();
+		panel.activeThreadId = options.activeId?.() ?? null;
+		panel.threads = wordCommentThreads(options.getModel().comments ?? []);
 	}
-	localizeElement(panel, locale);
 	refresh();
 	return {
 		element: panel,
@@ -174,13 +124,9 @@ export function createCommentsPanel(options: CommentsPanelOptions): CommentsPane
 		refresh,
 		setLocale(value: string) {
 			locale = normalizeEditorLocale(value);
-			heading.textContent = translate(locale, 'Comments');
 			panel.setAttribute('aria-label', translate(locale, 'Comments'));
-			closeButton.textContent = translate(locale, 'Close comments');
-			closeButton.setAttribute('aria-label', translate(locale, 'Close comments'));
-			newInput.setAttribute('aria-label', translate(locale, 'New comment'));
-			newInput.placeholder = translate(locale, 'New comment');
-			addButton.textContent = translate(locale, 'Add comment');
+			panel.labels = labels(locale);
+			panel.locale = locale;
 			refresh();
 		},
 	};

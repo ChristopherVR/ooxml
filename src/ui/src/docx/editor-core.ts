@@ -270,6 +270,8 @@ export class EditorCore {
 			);
 		const { searchPanel, printLayout, review, chrome, toolbar } = this.shell;
 		searchPanel?.refresh();
+		// The open pane follows the caret's thread and whether a selection can take a comment.
+		if (review?.commentsOpen) review.commentsPanel.refresh();
 		if (this.pages.viewMode === 'print') printLayout?.refreshCurrentPage();
 		const status = refreshEditorControls(
 			toolbar,

@@ -20,18 +20,19 @@ it('undoes pane threads, replies, resolution and deletion with their exported an
 	const view = (editor as unknown as { view: EditorView }).view;
 	view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 6)));
 	const root = editor.shadowRoot!;
+	const pane = () => root.querySelector('.dve-comments-panel')!.shadowRoot!;
 	const button = (label: string) =>
 		[
-			...root.querySelectorAll<HTMLButtonElement>('.dve-comments-panel button'),
+			...pane().querySelectorAll<HTMLButtonElement>('button'),
 			...(root
 				.querySelector('office-ui-title-bar')
 				?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? []),
 			...root.querySelectorAll<HTMLButtonElement>('button'),
 		].find((item) => item.getAttribute('aria-label') === label || item.textContent === label)!;
 	button('Show comments').click();
-	root.querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!.value = 'Root review';
+	pane().querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!.value = 'Root review';
 	button('Add comment').click();
-	root.querySelector<HTMLTextAreaElement>('[aria-label="Reply"]')!.value = 'Reply review';
+	pane().querySelector<HTMLTextAreaElement>('[aria-label="Reply"]')!.value = 'Reply review';
 	button('Reply').click();
 	button('Resolve').click();
 	button('Delete').click();
@@ -39,7 +40,7 @@ it('undoes pane threads, replies, resolution and deletion with their exported an
 	button('Undo').click();
 	expect(editor.documentModel!.comments).toHaveLength(2);
 	expect(editor.documentModel!.comments![0]!.resolved).toBe(true);
-	expect(root.querySelector('.dve-comments-panel')!.textContent).toContain('Reply review');
+	expect(pane().textContent).toContain('Reply review');
 	const restored = (await loadDocx(await editor.saveBytes())).model;
 	expect(restored.comments).toHaveLength(2);
 	expect(restored.blocks[0]).toMatchObject({
@@ -49,10 +50,10 @@ it('undoes pane threads, replies, resolution and deletion with their exported an
 	expect(editor.documentModel!.comments![0]!.resolved).toBe(false);
 	button('Undo').click();
 	expect(editor.documentModel!.comments).toHaveLength(1);
-	expect(root.querySelector('.dve-comments-panel')!.textContent).not.toContain('Reply review');
+	expect(pane().textContent).not.toContain('Reply review');
 	button('Undo').click();
 	expect(editor.documentModel!.comments ?? []).toEqual([]);
-	expect(root.querySelector('.dve-comments-panel')!.textContent).not.toContain('Root review');
+	expect(pane().textContent).not.toContain('Root review');
 	const undone = (await loadDocx(await editor.saveBytes())).model;
 	expect(undone.comments ?? []).toEqual([]);
 	expect(undone.blocks[0]).toMatchObject({ runs: [{ text: 'Alpha' }] });

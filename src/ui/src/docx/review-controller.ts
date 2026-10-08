@@ -1,3 +1,4 @@
+import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { Comment, DocumentModel } from 'ooxml-core/docx';
 import type { WordYjsCollaboration } from 'ooxml-core/docx/ui';
@@ -9,6 +10,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import {
 	addComment,
+	commentAnchors,
 	commentIdsAtSelection,
 	deleteComment,
 	goToComment,
@@ -51,6 +53,11 @@ export class ReviewController {
 				const view = host.getView();
 				return Boolean(host.canEditComments() && view && !view.state.selection.empty);
 			},
+			activeId: () => {
+				const view = host.getView();
+				return view ? commentIdsAtSelection(view)[0] : undefined;
+			},
+			onSelect: (id) => this.goToAnchor(id),
 			onAdd: (text) => this.addComment(text),
 			onReply: (parentId, text) => {
 				if (!host.canEditComments()) return;
@@ -87,6 +94,18 @@ export class ReviewController {
 	}
 	setLocale(locale: string): void {
 		this.commentsPanel.setLocale(locale);
+	}
+
+	/** Moves the caret to the start of a thread's anchored text (the pane keeps focus). */
+	private goToAnchor(id: string) {
+		const view = this.host.getView();
+		const anchor = view && commentAnchors(view).find((item) => item.id === id);
+		if (!view || !anchor) return;
+		view.dispatch(
+			view.state.tr
+				.setSelection(TextSelection.create(view.state.doc, anchor.from))
+				.scrollIntoView(),
+		);
 	}
 
 	/** Removes a comment, its replies and its anchored range in one go. */

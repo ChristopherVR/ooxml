@@ -381,6 +381,7 @@ export const zhCNRibbon: RibbonStrings = {
 	Reply: '回复',
 	Resolve: '解决',
 	Reopen: '重新打开',
+	Resolved: '已解决',
 	Delete: '删除',
 	'No comments': '暂无批注。',
 	Tracking: '修订',

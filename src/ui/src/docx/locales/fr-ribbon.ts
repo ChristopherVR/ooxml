@@ -377,6 +377,7 @@ export const frRibbon: RibbonStrings = {
 	Reply: 'Répondre',
 	Resolve: 'Résoudre',
 	Reopen: 'Rouvrir',
+	Resolved: 'Résolu',
 	Delete: 'Supprimer',
 	'No comments': 'Aucun commentaire pour le moment.',
 	Tracking: 'Suivi',
