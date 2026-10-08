@@ -22,10 +22,11 @@ import type { PptxChartAxisFormatting, PptxChartData } from 'ooxml-core/pptx';
 
 /**
  * Find the chart's primary (non-secondary) value axis: the one positioned
- * "l" (left), or the first `valAx` entry when none declares a position.
- * Mirrors `getPrimaryValueAxisId` in `chart-axis.ts`.
+ * "l" (left), or else the first `valAx` entry (a horizontal bar chart's
+ * value axis sits at the bottom). Mirrors `getPrimaryValueAxisId` in
+ * `chart-axis.ts`.
  */
-function primaryValueAxis(
+export function primaryValueAxis(
 	axes: PptxChartAxisFormatting[] | undefined,
 ): PptxChartAxisFormatting | undefined {
 	if (!axes) {

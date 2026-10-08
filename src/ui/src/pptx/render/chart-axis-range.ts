@@ -2,6 +2,7 @@ import type { PptxChartAxisFormatting, PptxChartSeries } from 'ooxml-core/pptx';
 
 import type { ValueRange } from './chart-helpers';
 import { computeValueRange } from './chart-helpers';
+import { computeStackedValueRange } from './chart-view-model-scale';
 
 const LOG_EXPONENT_TOLERANCE = 1e-12;
 
@@ -52,6 +53,72 @@ export function computeValueRangeForAxis(
 	const automatic = logBase
 		? computeLogValueRange(series, logBase)
 		: computeValueRange(series, plotHeightPx);
+	return withAxisBounds(automatic, axis, logBase);
+}
+
+/**
+ * Compute a stacked chart's value range on its value axis: the category
+ * totals, scaled by an explicit `c:min` / `c:max` the same way an unstacked
+ * range is, or percentStacked's 0 to 100 (see {@link percentStackedRange}).
+ * Both follow `c:orientation`.
+ */
+export function computeStackedValueRangeForAxis(
+	series: ReadonlyArray<PptxChartSeries>,
+	catCount: number,
+	axis: PptxChartAxisFormatting | undefined,
+	isPercent: boolean,
+	plotSizePx?: number,
+): ValueRange {
+	if (isPercent) {
+		return {
+			...percentStackedRange(series, catCount, plotSizePx),
+			...(axis?.orientation === 'maxMin' ? { reverseOrder: true } : {}),
+		};
+	}
+	return withAxisBounds(computeStackedValueRange(series, catCount, plotSizePx), axis);
+}
+
+/**
+ * A percentStacked range runs from 0 to 100. A negative value takes its share
+ * of the category's absolute total below zero, so when any share is negative
+ * the bottom is the automatic scale of the lowest negative stack, never below
+ * -100, and every segment stays on the plot.
+ */
+function percentStackedRange(
+	series: ReadonlyArray<PptxChartSeries>,
+	catCount: number,
+	plotSizePx?: number,
+): ValueRange {
+	const shares = series.map((entry) => ({
+		...entry,
+		values: Array.from({ length: catCount }, (_, ci) => {
+			const total = series.reduce((sum, s) => sum + Math.abs(s.values[ci] ?? 0), 0);
+			return total > 0 ? ((entry.values[ci] ?? 0) / total) * 100 : 0;
+		}),
+	}));
+	const automatic = computeStackedValueRange(shares, catCount, plotSizePx);
+	if (automatic.min >= 0) {
+		return { min: 0, max: 100, span: 100 };
+	}
+	const min = Math.max(automatic.min, -100);
+	const unit = automatic.majorUnit;
+	return {
+		min,
+		max: 100,
+		span: 100 - min,
+		...(unit !== undefined && 100 % unit === 0 && min % unit === 0 ? { majorUnit: unit } : {}),
+	};
+}
+
+/**
+ * Apply a value axis's explicit `c:min` / `c:max` and `c:orientation` to an
+ * automatic range, stacked or not.
+ */
+function withAxisBounds(
+	automatic: ValueRange,
+	axis: PptxChartAxisFormatting | undefined,
+	logBase?: number,
+): ValueRange {
 	const validMin =
 		typeof axis?.min === 'number' && Number.isFinite(axis.min) && (!logBase || axis.min > 0)
 			? axis.min

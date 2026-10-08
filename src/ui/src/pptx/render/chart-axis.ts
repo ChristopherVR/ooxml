@@ -19,6 +19,7 @@ import type { PptxChartAxisFormatting, PptxChartDataTable, PptxChartSeries } fro
 
 export {
 	computeLogValueRange,
+	computeStackedValueRangeForAxis,
 	computeValueRangeForAxis,
 	computeValueRangeForChart,
 	findLogAxis,

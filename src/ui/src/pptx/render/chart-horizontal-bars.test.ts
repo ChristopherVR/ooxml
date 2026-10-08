@@ -145,6 +145,101 @@ describe('buildHorizontalBarViewModel', () => {
 		expect(legacyPercent.heights[0]).toBeCloseTo(legacyPercent.band * 0.6, 6);
 	});
 
+	it('cuts stacked bars at the plot edges for c:min above 0 and c:max below a total', () => {
+		const vm = buildHorizontalBarViewModel(
+			element(),
+			chartData({
+				grouping: 'stacked',
+				axes: [{ axisType: 'valAx', axPos: 'b', majorGridlines: true, min: 3, max: 4 }],
+				series: [
+					{ name: 'S1', values: [2, 2] },
+					{ name: 'S2', values: [3, 1] },
+				],
+			}),
+			['A', 'B'],
+		);
+		const left = Math.min(...vm.gridlines.map((line) => line.x1));
+		const right = Math.max(...vm.gridlines.map((line) => line.x1));
+		const bars = rects(vm);
+		// S1 (0..2) lies below 3 in both categories and is dropped. S2 runs 2..5
+		// in A, cut to the whole 3..4 axis, and 2..3 in B, which touches only the edge.
+		expect(bars).toHaveLength(1);
+		expect(bars[0].x).toBeCloseTo(left, 6);
+		expect(bars[0].x + bars[0].w).toBeCloseTo(right, 6);
+	});
+
+	it('honours explicit c:min and c:max on a stacked bar chart value axis', () => {
+		const vm = buildHorizontalBarViewModel(
+			element(),
+			chartData({
+				grouping: 'stacked',
+				axes: [{ axisType: 'valAx', axPos: 'b', majorGridlines: true, min: 0, max: 20 }],
+				series: [
+					{ name: 'S1', values: [2, 2] },
+					{ name: 'S2', values: [3, 1] },
+				],
+			}),
+			['A', 'B'],
+		);
+		const left = Math.min(...vm.gridlines.map((line) => line.x1));
+		const right = Math.max(...vm.gridlines.map((line) => line.x1));
+		const totalA = rects(vm)
+			.filter((bar) => bar.part?.pointIndex === 0)
+			.reduce((sum, bar) => sum + bar.w, 0);
+		// Category A sums to 5 of an axis that runs to 20.
+		expect(totalA / (right - left)).toBeCloseTo(0.25, 2);
+		expect(vm.axisLabels.some((label) => label.text === '20')).toBeTruthy();
+	});
+
+	it.each(['stacked', 'percentStacked'] as const)(
+		'reverses a %s bar chart value axis for c:orientation maxMin',
+		(grouping) => {
+			const vm = buildHorizontalBarViewModel(
+				element(),
+				chartData({
+					grouping,
+					axes: [{ axisType: 'valAx', axPos: 'b', majorGridlines: true, orientation: 'maxMin' }],
+					series: [
+						{ name: 'S1', values: [2, 2] },
+						{ name: 'S2', values: [3, 1] },
+					],
+				}),
+				['A', 'B'],
+			);
+			const [first, second] = rects(vm).filter((bar) => bar.part?.pointIndex === 0);
+			// Values grow leftwards: the second segment sits left of the first.
+			expect(second.x + second.w).toBeCloseTo(first.x, 1);
+		},
+	);
+
+	it.each([
+		['mixed-sign', [30, -10], [-70, 90]],
+		['all-negative', [-30, -10], [-70, -90]],
+	] as const)('keeps every %s percentStacked segment on the plot', (_name, a, b) => {
+		const vm = buildHorizontalBarViewModel(
+			element(),
+			chartData({
+				grouping: 'percentStacked',
+				style: { hasDataLabels: true },
+				series: [
+					{ name: 'S1', values: [...a] },
+					{ name: 'S2', values: [...b] },
+				],
+			}),
+			['A', 'B'],
+		);
+		const left = Math.min(...vm.gridlines.map((line) => line.x1));
+		const right = Math.max(...vm.gridlines.map((line) => line.x1));
+		const bars = rects(vm);
+		expect(bars).toHaveLength(4);
+		for (const bar of bars) {
+			expect(bar.x).toBeGreaterThanOrEqual(left - 1e-6);
+			expect(bar.x + bar.w).toBeLessThanOrEqual(right + 1e-6);
+		}
+		expect(vm.dataLabels).toHaveLength(4);
+		expect(vm.zeroLine).toBeDefined();
+	});
+
 	it('draws a vertical zero line when the range spans zero', () => {
 		const vm = buildHorizontalBarViewModel(
 			element(),

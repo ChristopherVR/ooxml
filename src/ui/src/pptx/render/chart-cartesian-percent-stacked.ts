@@ -14,9 +14,11 @@ import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
 import type { PlotLayout, SvgPrimitive, SvgRect, SvgText, ValueRange } from './chart-view-model';
 import {
 	buildMarkTooltip,
+	clipStackedSegment,
 	paletteColor,
 	seriesColor,
 	stackedBarWidth,
+	stackedSegmentExtent,
 	valueToY,
 } from './chart-view-model';
 
@@ -69,14 +71,22 @@ export function buildPercentStackedBars(
 			const sourceIndex = sourceIndices[ci] ?? ci,
 				rawVal = series[si].values[sourceIndex] ?? 0,
 				val = catTotal > 0 ? (rawVal / catTotal) * 100 : 0,
-				isNeg = val < 0,
-				base = isNeg ? negRunning : posRunning,
-				top = base + val,
-				x = layout.plotLeft + barGroupWidth * ci + barOffset,
-				baseY = valueToY(base, primaryRange, layout.plotTop, layout.plotBottom),
-				topY = valueToY(top, primaryRange, layout.plotTop, layout.plotBottom),
-				y = Math.min(baseY, topY),
-				h = Math.max(Math.abs(baseY - topY), 0.5),
+				base = val < 0 ? negRunning : posRunning;
+			if (val < 0) {
+				negRunning += val;
+			} else {
+				posRunning += val;
+			}
+			const segment = clipStackedSegment(base, val, primaryRange);
+			if (!segment) {
+				continue;
+			}
+			const x = layout.plotLeft + barGroupWidth * ci + barOffset,
+				toY = (value: number) => valueToY(value, primaryRange, layout.plotTop, layout.plotBottom),
+				{ start: y, size: h } =
+					val < 0
+						? stackedSegmentExtent(toY(segment.high), toY(segment.low), 0.5)
+						: stackedSegmentExtent(toY(segment.low), toY(segment.high), 0.5),
 				pctBaseFill =
 					resolveDataPointFill(series[si], sourceIndex, paletteColor(si, palette)) ??
 					seriesColor(series[si], si, palette);
@@ -108,12 +118,6 @@ export function buildPercentStackedBars(
 					fontWeight: 'bold',
 					...dataLabelFontOverride(resolveDataLabelTextStyle(chartData, series[si], sourceIndex)),
 				});
-			}
-
-			if (isNeg) {
-				negRunning += val;
-			} else {
-				posRunning += val;
 			}
 		}
 	}

@@ -59,6 +59,30 @@ describe('buildStackedDragGeometry', () => {
 });
 
 describe('resolveStackedDragValue', () => {
+	it('plain stacked: projects the pointer on a bounded value axis as the chart draws it', () => {
+		const bounded: PptxChartData = {
+			...stackedData,
+			axes: [{ axisType: 'valAx', axPos: 'l', min: 0, max: 100 }],
+		};
+		const geometry = buildStackedDragGeometry({ width: 400, height: 300 }, bounded, 1, 0)!;
+		expect(geometry.range).toMatchObject({ min: 0, max: 100 });
+		// Halfway up the plot is 50 on a 0..100 axis: B's own value becomes 50 - 10.
+		const pointerY = (geometry.plotTop + geometry.plotBottom) / 2;
+		expect(resolveStackedDragValue(geometry, pointerY)).toBeCloseTo(40, 0);
+	});
+
+	it('plain stacked: projects the pointer on a reversed (maxMin) value axis', () => {
+		const reversed: PptxChartData = {
+			...stackedData,
+			axes: [{ axisType: 'valAx', axPos: 'l', min: 0, max: 100, orientation: 'maxMin' }],
+		};
+		const geometry = buildStackedDragGeometry({ width: 400, height: 300 }, reversed, 1, 0)!;
+		expect(geometry.range.reverseOrder).toBe(true);
+		// A quarter of the way down the plot is 25 when values grow downwards.
+		const pointerY = geometry.plotTop + (geometry.plotBottom - geometry.plotTop) / 4;
+		expect(resolveStackedDragValue(geometry, pointerY)).toBeCloseTo(15, 0);
+	});
+
 	it('plain stacked: pointer value minus base gives the new own value', () => {
 		const geometry = buildStackedDragGeometry({ width: 400, height: 300 }, stackedData, 1, 0)!,
 			// Pointer at the value 55 (base 10 + 45 of new own contribution).

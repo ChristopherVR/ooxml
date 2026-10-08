@@ -2,6 +2,7 @@ import type { PptxChartSeries } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {
+	computeStackedValueRangeForAxis,
 	computeValueRangeForAxis,
 	computeValueRangeForChart,
 	generateAxisTicks,
@@ -10,6 +11,58 @@ import {
 } from './chart-axis';
 
 const SERIES: PptxChartSeries[] = [{ name: 'Values', values: [20, 40] }];
+
+describe('stacked value ranges on an axis', () => {
+	const STACKED: PptxChartSeries[] = [
+		{ name: 'A', values: [20, 10] },
+		{ name: 'B', values: [30, 40] },
+	];
+
+	it('scales the category totals by explicit bounds', () => {
+		expect(
+			computeStackedValueRangeForAxis(STACKED, 2, { axisType: 'valAx', min: 0, max: 100 }, false),
+		).toStrictEqual({ min: 0, max: 100, span: 100 });
+	});
+
+	it('keeps the automatic scale of the totals without bounds', () => {
+		const range = computeStackedValueRangeForAxis(STACKED, 2, { axisType: 'valAx' }, false);
+		expect(range.min).toBe(0);
+		expect(range.max).toBeGreaterThanOrEqual(50);
+		expect(range.majorUnit).toBeGreaterThan(0);
+	});
+
+	it('keeps percentStacked at 0 to 100 without negative values and follows c:orientation', () => {
+		const axis = { axisType: 'valAx', min: 0, max: 0.5, orientation: 'maxMin' } as const;
+		expect(computeStackedValueRangeForAxis(STACKED, 2, axis, true)).toStrictEqual({
+			min: 0,
+			max: 100,
+			span: 100,
+			reverseOrder: true,
+		});
+	});
+
+	it('extends percentStacked below zero to fit negative shares', () => {
+		// Category shares: 75% and -25%, then -100% for the all-negative one.
+		const mixed: PptxChartSeries[] = [
+			{ name: 'A', values: [3, -2] },
+			{ name: 'B', values: [-1, -2] },
+		];
+		expect(computeStackedValueRangeForAxis(mixed.slice(0, 1), 1, undefined, true)).toMatchObject({
+			min: 0,
+			max: 100,
+		});
+		const partly = computeStackedValueRangeForAxis(mixed, 1, undefined, true);
+		expect(partly.max).toBe(100);
+		expect(partly.min).toBeLessThanOrEqual(-25);
+		expect(partly.min).toBeGreaterThan(-100);
+		expect(partly.span).toBe(100 - partly.min);
+		expect(computeStackedValueRangeForAxis(mixed, 2, undefined, true)).toMatchObject({
+			min: -100,
+			max: 100,
+			span: 200,
+		});
+	});
+});
 
 describe('axis-constrained value ranges', () => {
 	it('uses explicit linear minimum and maximum bounds', () => {

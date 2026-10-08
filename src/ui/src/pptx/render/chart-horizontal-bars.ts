@@ -17,10 +17,11 @@ import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
 import { clusteredBarGeometry } from './chart-bar-cluster-geometry';
 
 import { resolveChartTitleText } from './chart-auto-title';
-import { computeValueRangeForChart } from './chart-axis-range';
+import { computeStackedValueRangeForAxis, computeValueRangeForChart } from './chart-axis-range';
 import { resolveBarLabelPlacement } from './chart-data-label-anchor';
 import { dataLabelFontOverride, resolveDataLabelTextStyle } from './chart-data-label-text';
 import { DEFAULT_CHART_DATA_LABEL_PX, DEFAULT_CHART_TEXT_PX } from './chart-font';
+import { primaryValueAxis } from './chart-gridlines-toggle';
 import {
 	barFill,
 	buildSideCategoryLabels,
@@ -42,9 +43,10 @@ import {
 	buildLegend,
 	buildMarkTooltip,
 	computePlotLayout,
-	computeStackedValueRange,
+	clipStackedSegment,
 	formatAxisValue,
 	stackedBarWidth,
+	stackedSegmentExtent,
 } from './chart-view-model';
 
 export { valueToX } from './chart-horizontal-bars-helpers';
@@ -69,11 +71,15 @@ export function buildHorizontalBarViewModel(
 		// The value axis runs along the WIDTH here (categories run down the left,
 		// values along the bottom: this builder transposes the column engine), so
 		// the gridline-count budget is keyed off plotWidth, not plotHeight.
-		range: ValueRange = isPercent
-			? { min: 0, max: 100, span: 100 }
-			: isStacked
-				? computeStackedValueRange(series, catCount, layout.plotWidth)
-				: computeValueRangeForChart(series, chartData.axes, layout.plotWidth),
+		range: ValueRange = isStacked
+			? computeStackedValueRangeForAxis(
+					series,
+					catCount,
+					primaryValueAxis(chartData.axes),
+					isPercent,
+					layout.plotWidth,
+				)
+			: computeValueRangeForChart(series, chartData.axes, layout.plotWidth),
 		{ gridlines, axisLabels } = buildTransposedValueAxis(range, layout),
 		zeroX = valueToX(0, range, layout.plotLeft, layout.plotRight),
 		zeroLine: SvgLine | undefined =
@@ -175,13 +181,22 @@ export function buildHorizontalBarViewModel(
 				}
 				// eslint-disable-next-line one-var -- pre-existing, unrelated to this change
 				const isNeg = val < 0,
-					base = isNeg ? negRunning : posRunning,
-					top = base + val,
-					y = layout.plotTop + band * ci + barOffset,
-					baseX = valueToX(base, range, layout.plotLeft, layout.plotRight),
-					topX = valueToX(top, range, layout.plotLeft, layout.plotRight),
-					x = Math.min(baseX, topX),
-					w = Math.max(Math.abs(topX - baseX), 0.5);
+					base = isNeg ? negRunning : posRunning;
+				if (isNeg) {
+					negRunning += val;
+				} else {
+					posRunning += val;
+				}
+				const segment = clipStackedSegment(base, val, range);
+				if (!segment) {
+					continue;
+				}
+				const y = layout.plotTop + band * ci + barOffset,
+					{ start: x, size: w } = stackedSegmentExtent(
+						valueToX(isNeg ? segment.high : segment.low, range, layout.plotLeft, layout.plotRight),
+						valueToX(isNeg ? segment.low : segment.high, range, layout.plotLeft, layout.plotRight),
+						0.5,
+					);
 				primitives.push({
 					kind: 'rect',
 					x,
@@ -236,11 +251,6 @@ export function buildHorizontalBarViewModel(
 							...dataLabelFontOverride(resolveDataLabelTextStyle(chartData, series[si], ci)),
 						});
 					}
-				}
-				if (isNeg) {
-					negRunning += val;
-				} else {
-					posRunning += val;
 				}
 			}
 		}
