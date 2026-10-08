@@ -22,6 +22,7 @@ import {
 	type ViewerState,
 	type VsdxSource,
 	type VisioEdit,
+	type CreateVsdxOptions,
 	type VisioShapeSelection,
 	type SvgExportOptions,
 	type CurrentPagePrintSnapshotOptions,
@@ -88,6 +89,9 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	load(source: VsdxSource) {
 		return this.handle.load(source);
 	}
+	createBlankDrawing(options?: CreateVsdxOptions) {
+		return this.handle.createBlankDrawing(options);
+	}
 	applyEdits(edits: readonly VisioEdit[]) {
 		return this.handle.applyEdits(edits);
 	}
@@ -150,6 +154,7 @@ export type {
 	ViewerOptions,
 	ViewerEvents,
 	VisioShapeSelection,
+	CreateVsdxOptions,
 	ViewerEditState,
 	VsdxExportResult,
 } from './common';

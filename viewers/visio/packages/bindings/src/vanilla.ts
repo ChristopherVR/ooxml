@@ -7,6 +7,7 @@ export type {
 	ViewerCallbacks,
 	ViewerEvents,
 	VisioShapeSelection,
+	CreateVsdxOptions,
 	VsdxSource,
 	ViewerEditState,
 	VsdxExportResult,

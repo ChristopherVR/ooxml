@@ -17,6 +17,7 @@ export type ViewerHandle = Pick<
 	| 'element'
 	| 'controller'
 	| 'load'
+	| 'createBlankDrawing'
 	| 'applyEdits'
 	| 'selectShapes'
 	| 'selectAll'
@@ -108,6 +109,9 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		},
 		async load(source) {
 			await requireViewer().load(source);
+		},
+		async createBlankDrawing(options) {
+			await requireViewer().createBlankDrawing(options);
 		},
 		async applyEdits(edits) {
 			await requireViewer().applyEdits(edits);
@@ -234,4 +238,4 @@ export type {
 
 export type { ViewerEditState, VsdxExportResult } from 'ooxml-ui/visio';
 
-export type { VisioEdit, VisioGeometryEdit } from 'ooxml-core/visio';
+export type { VisioEdit, VisioGeometryEdit, CreateVsdxOptions } from 'ooxml-core/visio';

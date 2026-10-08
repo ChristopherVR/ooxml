@@ -35,6 +35,9 @@ export function wireHandleEvents(
 		move(event: PointerEvent): void;
 		finish(event: PointerEvent): Promise<void>;
 		cancel(): void;
+		/** General shape drags leave ordinary below-threshold clicks unchanged. */
+		shouldSuppressClick?(): boolean;
+		consumeClick?(): boolean;
 	},
 ): () => void {
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController;
@@ -53,7 +56,8 @@ export function wireHandleEvents(
 	viewport.addEventListener(
 		'pointerup',
 		(event) => {
-			if (event.pointerId === callbacks.pointer()) suppressClick = true;
+			if (event.pointerId === callbacks.pointer())
+				suppressClick = callbacks.shouldSuppressClick?.() ?? true;
 			void callbacks.finish(event);
 		},
 		options,
@@ -78,7 +82,8 @@ export function wireHandleEvents(
 	viewport.addEventListener(
 		'click',
 		(event) => {
-			if (suppressClick) {
+			const cancelled = callbacks.consumeClick?.() ?? false;
+			if (suppressClick || cancelled) {
 				suppressClick = false;
 				event.stopImmediatePropagation();
 			}

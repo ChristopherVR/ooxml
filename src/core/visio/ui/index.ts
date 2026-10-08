@@ -30,3 +30,5 @@ export * from './shape-arrange';
 
 export * from './selection';
 export * from './shape-clipboard';
+export * from './shape-move';
+export * from './marquee';

@@ -1,4 +1,4 @@
-import type { VisioEdit } from 'ooxml-core/visio';
+import type { VisioEdit, CreateVsdxOptions } from 'ooxml-core/visio';
 import type {
 	ViewerOptions,
 	ViewerCallbacks,
@@ -17,6 +17,7 @@ export interface MountedViewer {
 	readonly controller: ViewerController;
 	update(options: ViewerOptions): void;
 	load(source: VsdxSource): Promise<void>;
+	createBlankDrawing(options?: CreateVsdxOptions): Promise<void>;
 	applyEdits(edits: readonly VisioEdit[]): Promise<void>;
 	selectShapes(shapes: readonly VisioShapeSelection[]): void;
 	selectAll(): void;
@@ -82,6 +83,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async load(source) {
 			assertAlive();
 			await element.load(source);
+		},
+		async createBlankDrawing(options) {
+			assertAlive();
+			await element.createBlankDrawing(options);
 		},
 		async applyEdits(edits) {
 			assertAlive();

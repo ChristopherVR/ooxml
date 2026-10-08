@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -125,9 +126,10 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			);
 			// Svelte compiles its component in the host project; its shared UI runtime is prebuilt.
 			const component = readFileSync(resolve(outDir, 'VisioViewer.svelte'), 'utf8').replace(
-				"'./common'",
-				"'./runtime.js'",
+				/(['"])\.\/common(?:\.js)?\1/g,
+				(_match, quote) => `${quote}./runtime.js${quote}`,
 			);
+			assert.ok(!/(['"])\.\/common(?:\.js)?\1/.test(component), 'Packaged Svelte imports resolve');
 			writeFileSync(resolve(outDir, 'VisioViewer.svelte'), component);
 			const runtimeEntry = resolve(temporary, 'svelte-runtime.ts');
 			writeFileSync(
@@ -162,7 +164,7 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 				`import type { Component } from 'svelte';
 import type { Readable } from 'svelte/store';
 import type { ViewerProps, ViewerHandle, ViewerState } from './types/packages/bindings/src/common.js';
-declare const VisioViewer: Component<ViewerProps & { class?: string; style?: string }, Pick<ViewerHandle, 'load' | 'replacePlainText' | 'applyEdits' | 'undo' | 'redo' | 'cancelEdit' | 'exportVsdx' | 'fit' | 'setLayerVisibility' | 'resetLayerVisibility' | 'exportSvg' | 'createPrintSnapshot'> & { getHandle(): ViewerHandle; getState(): Readable<ViewerState | null> }>;
+declare const VisioViewer: Component<ViewerProps & { class?: string; style?: string }, Omit<ViewerHandle, 'element' | 'controller'> & { getHandle(): ViewerHandle; getState(): Readable<ViewerState | null> }>;
 export default VisioViewer;
 `,
 			);

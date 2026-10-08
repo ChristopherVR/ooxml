@@ -2,6 +2,11 @@
 
 Six thin native integrations use one browser element and one `mountViewer` implementation. Each is published as its own self-contained package; none parses documents, draws diagrams or owns another renderer.
 
+Each native handle exposes `createBlankDrawing(options?: CreateVsdxOptions)`.
+The shared controller creates and accepts the new source through its existing
+load lifecycle; state hooks and document events update normally. Pointer movement
+and marquee selection run inside the same shared web component for all bindings.
+
 | Framework | Package                | Export                                       |
 | --------- | ---------------------- | -------------------------------------------- |
 | Vanilla   | `visio-vanilla-viewer` | `mountViewer`                                |

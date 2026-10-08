@@ -99,8 +99,8 @@ describe('shared Office-style viewer chrome', () => {
 		expect(item('save').disabled).toBe(true);
 		item('new').click();
 		const blank = root.querySelector<HTMLButtonElement>('[data-backstage-action="new-blank"]')!;
-		expect(blank.disabled).toBe(true);
-		expect(blank.title).toMatch(/not available yet\. Needs core blank drawing creation/);
+		expect(blank.disabled).toBe(false);
+		expect(blank.title).toBe('');
 		item('export').click();
 		expect(
 			root.querySelector<HTMLButtonElement>(

@@ -2,6 +2,49 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Blank drawings, pointer movement and batch deletion, 2026-10-09
+
+The core creates editable single-page VSDX packages using shared XML and OPC
+writers. Native Visio 16 opens blank and core-created rectangle documents for
+Letter, landscape Letter and A4, edits each blank and saves every result. The
+recorded defaults include Calibri 12-point text, black lines, white fills and
+matching physical page dimensions/pins. The Windows part is required for these
+packages to open in Visio. Reproducible scripts are
+`create-visio-new-drawing-fixtures.ts` and `record-visio-new-drawing.ps1`;
+`VISIO_NATIVE_NEW_DRAWING_DIR` enables the optional test. Native COM assignment
+adds a terminal paragraph break to newly assigned text, while resaving the
+existing core-created text preserves it; the test records that distinction.
+
+`record-visio-batch-delete.ps1` captures nine native Selection.Delete cases at
+three scales, including internal references, reverse order and movement locks.
+Core deletion preserves retained XML/caches and untouched package payloads;
+both deletion and capture/delete/paste output reopen in Visio with matching IDs,
+names, pins and User cells. `VISIO_NATIVE_BATCH_DELETE_DIR` enables these tests.
+Connect healing, inherited/group deletion and mixed-command batch expansion are
+not established.
+
+The core Visio suite passed 2,559 tests with 158 optional skips before the new
+native drawing oracle was added. The explicit drawing run passed nine tests,
+including native reopen evidence. Shared Visio UI passed 881 tests with seven
+optional skips. Native bindings passed 114 DOM and five SSR tests, strict
+TypeScript and Svelte checks. Production core/UI bundles, seven viewer packages,
+parser/edit/clipboard worker smoke tests and 48 docs checks passed.
+
+New, pointer movement/marquee and reference-closed Delete/Cut each passed in all
+six framework demos. Movement checks include rotated/custom-pin shapes at
+0.5/1/2 scales, inert preview before release, atomic multi-move, Escape,
+additive/full-enclosure selection, byte-exact undo/redo, download/reopen and
+protected-target refusal. Pattern/gradient preview resources match a fresh moved
+render and are disposed by their existing owner. The clean nine-tarball consumer
+also mounts all six frameworks, exercises New and validates declared handles and
+production workers. Its direct Svelte component checks caught and fixed incomplete
+runtime import rewriting and an outdated forwarded-method declaration.
+
+The full browser run passed 115 active checks and skipped 715 optional native
+captures. One landing-page helper raced automatic iframe loading while scrolling
+its fallback button into view. The helper now waits for viewport-triggered loading;
+all four landing workflows passed three repetitions after that correction.
+
 ## Source shape clipboard, 2026-10-09
 
 Copy, Cut and Paste now share the same web component, controller and core across

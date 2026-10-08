@@ -182,16 +182,7 @@ export function createBackstage(doc: Document): HTMLElement {
 	const templates = el(doc, 'div', 'backstage-templates');
 	const slot = doc.createElement('slot');
 	slot.name = 'templates';
-	templates.append(
-		action(
-			doc,
-			'new-blank',
-			'Blank drawing',
-			'Start an empty drawing.',
-			'Needs core blank drawing creation.',
-		),
-		slot,
-	);
+	templates.append(action(doc, 'new-blank', 'Blank drawing', 'Start an empty drawing.'), slot);
 	const input = el(doc, 'input', 'backstage-file-input');
 	input.type = 'file';
 	input.accept = '.vsdx,.vsd';

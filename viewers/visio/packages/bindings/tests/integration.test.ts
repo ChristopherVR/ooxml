@@ -177,6 +177,20 @@ const payloads: ViewerEvents = {
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: forwards blank creation options and rejects after disposal`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument });
+			const create = vi.spyOn(mounted.handle.element, 'createBlankDrawing').mockResolvedValue();
+			const options = { width: 6, height: 4 };
+			await act(async () => mounted.handle.createBlankDrawing(options));
+			expect(create).toHaveBeenCalledOnce();
+			expect(create).toHaveBeenLastCalledWith(options);
+			await mounted.destroy();
+			await expect(mounted.handle.createBlankDrawing()).rejects.toThrow(/not mounted|destroyed/);
+			expect(create).toHaveBeenCalledOnce();
+			host.remove();
+		});
 		it(`${framework}: forwards clipboard handles and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

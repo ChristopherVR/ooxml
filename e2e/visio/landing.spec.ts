@@ -3,8 +3,10 @@ import { test, expect } from '@playwright/test';
 const demoFrame = '.pv-livepane iframe';
 
 async function loadLiveDemo(page: import('@playwright/test').Page) {
-	const load = page.getByRole('button', { name: 'Load the live demo' });
-	if (await load.count()) await load.click();
+	// Entering the viewport starts the lazy demo and removes its fallback button.
+	// A count-then-click can race that observer while Playwright scrolls the button.
+	await page.locator('#live-demo').scrollIntoViewIfNeeded();
+	await expect(page.locator(demoFrame)).toHaveCount(1);
 }
 
 test('shared Office theme changes update the embedded viewer without replacing its diagram', async ({

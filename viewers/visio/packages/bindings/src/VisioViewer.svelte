@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { CreateVsdxOptions } from './common';
   import { readonly, writable } from 'svelte/store';
   import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type VisioShapeSelection, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common';
   type Props = ViewerProps & { class?: string; style?: string; 'aria-label'?: string };
@@ -23,6 +24,7 @@
   export function getState() { return readonly(state); }
   export function getHandle() { return handle; }
   export function load(source: VsdxSource) { return handle.load(source); }
+  export function createBlankDrawing(options?: CreateVsdxOptions) { return handle.createBlankDrawing(options); }
   export function applyEdits(edits: readonly VisioEdit[]) { return handle.applyEdits(edits); }
   export function selectShapes(shapes: readonly VisioShapeSelection[]) { handle.selectShapes(shapes); }
   export function selectAll() { handle.selectAll(); }

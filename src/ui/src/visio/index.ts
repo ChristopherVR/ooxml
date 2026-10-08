@@ -1,4 +1,5 @@
 export { ViewerController, type ViewerState } from './controller';
+export type { CreateVsdxOptions } from 'ooxml-core/visio';
 export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';
 export { mountViewer, type MountedViewer } from './binding';
 export { VisioViewerElement, registerVisioViewer } from './viewer-element';

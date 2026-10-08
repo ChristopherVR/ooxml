@@ -28,6 +28,15 @@ for (const [, meta] of Object.entries(VIEWER_PACKAGES)) {
 	const files = pack.files.map((file) => file.path);
 	for (const file of ['dist/index.js', 'dist/index.d.ts', 'LICENSE'])
 		assert.ok(files.includes(file), `${meta.npm}: ${file}`);
+	if (meta.npm === 'visio-svelte-viewer') {
+		const component = readFileSync(resolve(directory, 'dist/VisioViewer.svelte'), 'utf8');
+		assert.ok(
+			!/(['"])\.\/common(?:\.js)?\1/.test(component),
+			'Svelte has no source common imports',
+		);
+		assert.match(component, /from\s+(['"])\.\/runtime\.js\1/, 'Svelte uses its shipped runtime');
+		assert.ok(files.includes('dist/runtime.js'), 'Svelte runtime ships in the tarball');
+	}
 	assert.ok(
 		!files.some((file) => /\.test\.|integration\/|node_modules\//.test(file)),
 		'No development artifacts',
@@ -96,6 +105,7 @@ for (const name of ${JSON.stringify(names)}) {
   ${
 		workspaceRuntime
 			? `assert.equal(typeof controller.duplicateSelection, 'function', name);
+  assert.equal(typeof controller.createBlankDrawing, 'function', name);
   assert.equal(typeof controller.prepareClipboardSelection, 'function', name);
   assert.ok(Object.isFrozen(controller.state.clipboard));
   controller.setDocument(document);
@@ -146,9 +156,22 @@ declare const s${index}: p${index}.ViewerState;
 const selections${index}: readonly p${index}.VisioShapeSelection[] = s${index}.selectedShapes;
 h${index}.selectShapes(selections${index}); h${index}.selectAll(); h${index}.clearSelection();
 const duplication${index}: Promise<void> = h${index}.duplicateSelection(); void duplication${index};
+const newOptions${index}: p${index}.CreateVsdxOptions = { width: 6, height: 4 };
+const creation${index}: Promise<void> = h${index}.createBlankDrawing(newOptions${index}); void creation${index};
 const copying${index}: Promise<void> = h${index}.copySelection(); void copying${index};
 const cutting${index}: Promise<void> = h${index}.cutSelection(); void cutting${index};
 const pasting${index}: Promise<void> = h${index}.pasteSelection(); void pasting${index};
+${
+	name === 'visio-svelte-viewer'
+		? `declare const component: ReturnType<typeof p${index}.VisioViewer>;
+const componentCreation: Promise<void> = component.createBlankDrawing(newOptions${index}); void componentCreation;
+component.selectShapes(selections${index}); component.selectAll(); component.clearSelection();
+const componentDuplication: Promise<void> = component.duplicateSelection(); void componentDuplication;
+const componentCopy: Promise<void> = component.copySelection(); void componentCopy;
+const componentCut: Promise<void> = component.cutSelection(); void componentCut;
+const componentPaste: Promise<void> = component.pasteSelection(); void componentPaste;`
+		: ''
+}
 const ready${index}: boolean = s${index}.clipboard.ready; void ready${index};
 const events${index}: p${index}.ViewerCallbacks = { 'selection-change': selection => { const items: readonly p${index}.VisioShapeSelection[] = selection; void items; } };
 // @ts-expect-error The selection array is immutable.

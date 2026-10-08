@@ -1,6 +1,7 @@
 import type { ViewerState } from './controller';
 import type { VsdxSource } from 'ooxml-core/visio/ui';
 import { backstageItems, type BackstagePage } from './backstage';
+import { wireNewDrawing } from './viewer-new-drawing';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
 export interface BackstageHost {
@@ -8,6 +9,7 @@ export interface BackstageHost {
 	viewport: HTMLElement;
 	fileName(): string;
 	load(source: VsdxSource): Promise<void>;
+	createBlankDrawing(): Promise<void>;
 	exportVsdx(): { bytes: Uint8Array; dirty: boolean };
 	exportSvg(): { svg: string; pageIndex: number };
 	closeDocument(): void;
@@ -19,7 +21,7 @@ export interface BackstageHost {
 
 /**
  * Visio's File backstage: opened from the File tab, closed with Back or Escape (focus returns to
- * File). Open, Save, Save As, Export, Print and Close are real; the rest is shown disabled.
+ * File). New, Open, Save, Save As, Export, Print and Close delegate to shared source APIs.
  */
 type Backstage = HTMLElement & {
 	items: unknown;
@@ -36,6 +38,7 @@ export class ViewerBackstage {
 	#state: ViewerState | undefined;
 	#items = '';
 	#urls = new Set<string>();
+	#newDrawing: ReturnType<typeof wireNewDrawing> | undefined;
 	constructor(private readonly host: BackstageHost) {
 		this.#root = host.root.querySelector<Backstage>('office-ui-backstage')!;
 		this.#ribbon = host.root.querySelector<Ribbon>('office-ui-ribbon')!;
@@ -56,6 +59,12 @@ export class ViewerBackstage {
 		const Abort = this.host.root.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
 		const options = { signal: events.signal };
+		this.#newDrawing = wireNewDrawing(
+			this.host.root,
+			() => this.host.createBlankDrawing(),
+			() => !!(this.#state?.loading || this.#state?.edit.busy),
+			this.host.announce,
+		);
 		this.#ribbon.addEventListener(
 			'office-ribbon-file',
 			() => (this.open ? this.hide() : this.show()),
@@ -110,6 +119,7 @@ export class ViewerBackstage {
 			options,
 		);
 		return () => {
+			this.#newDrawing?.dispose();
 			events.abort();
 			for (const url of this.#urls) URL.revokeObjectURL(url);
 			this.#urls.clear();
@@ -117,6 +127,7 @@ export class ViewerBackstage {
 	}
 	#run(action: string): void {
 		if (action === 'open') this.#input.click();
+		else if (action === 'new-blank') this.#newDrawing?.run();
 		else if (action === 'download') this.#download();
 		else if (action === 'export-svg') this.#exportSvg();
 		else if (action === 'print') this.#print();
@@ -235,6 +246,11 @@ export class ViewerBackstage {
 			? `${notes} compatibility notes describe what this viewer approximates or omits.`
 			: 'No compatibility notes.';
 		const busy = state.loading || state.edit.busy;
+		const blank = this.#root.querySelector<HTMLButtonElement>(
+			'[data-backstage-action="new-blank"]',
+		)!;
+		blank.disabled = busy;
+		blank.title = busy ? 'Wait for the current document operation.' : '';
 		const saveReason =
 			state.document?.format === 'vsd'
 				? 'Legacy VSD drawings are read only here.'

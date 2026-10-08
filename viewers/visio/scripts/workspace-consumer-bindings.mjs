@@ -183,6 +183,47 @@ export async function verifyWorkspaceBindings(bytes) {
 				`${framework}: duplicate redo selection`,
 			);
 			await verifyWorkspaceClipboard(viewer, framework);
+			await viewer.createBlankDrawing({ width: 6, height: 4 });
+			const blank = viewer.controller.state;
+			check(
+				blank.document.pages.length === 1 &&
+					blank.document.pages[0].width === 6 &&
+					blank.document.pages[0].height === 4 &&
+					blank.document.pages[0].shapes.length === 0,
+				`${framework}: blank source dimensions`,
+			);
+			check(
+				blank.selectedShapes.length === 0 &&
+					blank.edit.sourceAvailable &&
+					!blank.edit.dirty &&
+					!blank.edit.canUndo &&
+					!blank.edit.canRedo,
+				`${framework}: clean editable new source`,
+			);
+			check(viewer.element.fileName === 'New drawing.vsdx', `${framework}: New filename`);
+			const blankPageId = blank.document.pages[0].id;
+			await viewer.applyEdits([
+				{
+					type: 'create-rectangle',
+					pageId: blankPageId,
+					shapeId: '1',
+					x: 2,
+					y: 2,
+					width: 1,
+					height: 1,
+				},
+			]);
+			check(
+				viewer.controller.state.edit.dirty &&
+					viewer.controller.state.document.pages[0].shapes.length === 1,
+				`${framework}: new source edit`,
+			);
+			await viewer.undo();
+			check(
+				!viewer.controller.state.edit.dirty &&
+					viewer.controller.state.document.pages[0].shapes.length === 0,
+				`${framework}: clean new source undo`,
+			);
 			results.push(framework);
 		} finally {
 			await binding?.release();

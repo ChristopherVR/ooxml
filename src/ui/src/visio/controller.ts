@@ -9,6 +9,8 @@ import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './wor
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import {
 	loadVisio,
+	createVsdx,
+	type CreateVsdxOptions,
 	deserializeVisioClipboard,
 	type VisioDocument,
 	type VisioEdit,
@@ -352,6 +354,10 @@ export class ViewerController {
 			bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
 		return this.loadSource(() => owned);
 	}
+	/** A fresh source-backed drawing shares load replacement and cancellation behavior. */
+	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
+		return this.loadSource(() => createVsdx(options));
+	}
 	/** Reading bytes shares the same request epoch and error state as parsing them. */
 	async loadSource(
 		read: () => Uint8Array | ArrayBuffer | Promise<Uint8Array | ArrayBuffer>,
@@ -449,6 +455,29 @@ export class ViewerController {
 	/** Atomic source-backed edits. Core owns protection, dependency and target validation. */
 	async applyEdits(edits: readonly VisioEdit[]): Promise<void> {
 		return this.#mutate('edit', snapshotEdits(edits));
+	}
+	/** Gesture batches may only edit the captured current-page selection. */
+	async applySelectionEdits(edits: readonly VisioEdit[]): Promise<void> {
+		this.#assertAlive();
+		const revision = this.#revision;
+		const state = this.#state;
+		const pageId = state.document?.pages[state.pageIndex]?.id;
+		const selected = new Set(state.selectedShapes.map((shape) => shape.id));
+		const commands = snapshotEdits(edits);
+		if (this.#destroyed || revision !== this.#revision)
+			throw new DOMException('The selection edit was superseded or cancelled.', 'AbortError');
+		if (
+			!pageId ||
+			!selected.size ||
+			!commands.length ||
+			!state.selectedShapes.every((shape) => visioSelectionIsOnPage(shape, pageId)) ||
+			commands.some(
+				(command) =>
+					!('shapeId' in command) || command.pageId !== pageId || !selected.has(command.shapeId),
+			)
+		)
+			throw new Error('Selection edits must target selected shapes on the current page.');
+		return this.#mutate('edit', commands, undefined, undefined, true);
 	}
 	/** Duplicate the current page selection as one source edit and selection history transition. */
 	async duplicateSelection(): Promise<void> {
@@ -611,7 +640,7 @@ export class ViewerController {
 		commands?: readonly VisioEdit[],
 		remote?: Uint8Array,
 		postSelection?: PostEditSelection,
-		strictClipboardCompletion = false,
+		strictSelectionIntent = false,
 	): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
@@ -719,10 +748,10 @@ export class ViewerController {
 			// No external callbacks occur between history acceptance and model acceptance.
 			assertCurrent();
 			if (
-				strictClipboardCompletion &&
+				strictSelectionIntent &&
 				(selectionIntent !== this.#selectionIntent || clipboardPageIndex !== this.#state.pageIndex)
 			)
-				throw new DOMException('The clipboard action was superseded or cancelled.', 'AbortError');
+				throw new DOMException('The selection edit was superseded or cancelled.', 'AbortError');
 			if (edited) history.append(edited.bytes, edited.diagnostics);
 			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
 			else history.move(target!);
@@ -761,11 +790,7 @@ export class ViewerController {
 		} catch (cause) {
 			if (!current())
 				throw new DOMException('The diagram edit was superseded or cancelled.', 'AbortError');
-			if (
-				strictClipboardCompletion &&
-				cause instanceof DOMException &&
-				cause.name === 'AbortError'
-			) {
+			if (strictSelectionIntent && cause instanceof DOMException && cause.name === 'AbortError') {
 				this.#change({ edit: history.state });
 				throw cause;
 			}
@@ -773,7 +798,7 @@ export class ViewerController {
 			this.#change({ edit: Object.freeze({ ...history.state, error }) });
 			throw error;
 		}
-		if (strictClipboardCompletion) {
+		if (strictSelectionIntent) {
 			const context = this.#clipboardContext();
 			if (
 				!current() ||
@@ -783,7 +808,7 @@ export class ViewerController {
 				context.selectionIntent !== selectionIntent ||
 				context.pageId !== completionPageId
 			)
-				throw new DOMException('The clipboard action was superseded or cancelled.', 'AbortError');
+				throw new DOMException('The selection edit was superseded or cancelled.', 'AbortError');
 		}
 	}
 	#assertAlive(): void {

@@ -152,12 +152,13 @@ it.each(['selection', 'source', 'cancel', 'cancelEdit', 'owner'] as const)(
 		else if (action === 'cancel') controller.cancelLoad();
 		else if (action === 'cancelEdit') controller.cancelEdit();
 		const target = action === 'owner' ? other.controller : controller;
+		const before = target.exportVsdx().bytes;
 		await expect(target.cutPreparedSelection(token)).rejects.toHaveProperty('name', 'AbortError');
 		await expect(target.pasteClipboardText(text, token)).rejects.toHaveProperty(
 			'name',
 			'AbortError',
 		);
-		expect(target.exportVsdx().bytes).toEqual(bytes);
+		expect(target.exportVsdx().bytes).toEqual(before);
 		expect(target.state.edit.canUndo).toBe(false);
 		controller.destroy();
 		other.controller.destroy();

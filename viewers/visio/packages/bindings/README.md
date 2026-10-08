@@ -13,6 +13,12 @@ This package is private source inside the repository. It is not a published, sta
 
 ## Shared contract
 
+Every handle exposes `createBlankDrawing(options?: CreateVsdxOptions)` through
+the shared element. Width and height are physical inches; omission creates a
+Letter page. Accepted creation replaces source, selection and history and updates
+each framework's existing state hook. The Svelte component forwards this method
+directly as well as through `getHandle()`.
+
 All adapters accept the same properties:
 
 - `document`: a `VisioDocument` or `null` to clear it

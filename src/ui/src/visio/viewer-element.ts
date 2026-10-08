@@ -17,7 +17,9 @@ import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewe
 import { fitZoom } from './viewer-fit';
 import { createShapesStrip, createShapesWindow } from './shapes-window';
 import { createBackstage, type BackstagePage } from './backstage';
+import type { CreateVsdxOptions } from 'ooxml-core/visio';
 import { ViewerBackstage } from './viewer-backstage';
+import { ViewerPointerGestures } from './viewer-pointer-gestures';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
@@ -61,6 +63,7 @@ export class VisioViewerElement extends BaseElement {
 	#profile: ViewerProfile;
 	#share: ViewerShare;
 	#backstage: ViewerBackstage;
+	#pointer: ViewerPointerGestures;
 	#fileName = '';
 	#loadToken = 0;
 	#findBar: FindBar;
@@ -127,6 +130,7 @@ export class VisioViewerElement extends BaseElement {
 			viewport: this.#viewport,
 			controller: this.controller,
 			toolChanged: () => {
+				this.#pointer.render(this.controller.state);
 				this.#lineEndpoints.render(this.controller.state);
 				this.#rotationHandle.render(this.controller.state);
 			},
@@ -145,6 +149,13 @@ export class VisioViewerElement extends BaseElement {
 			},
 		});
 		this.#profile = new ViewerProfile(this.#root);
+		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
+			active: () => this.#commands.tool === 'pointer',
+			announce: (message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
+		});
 		this.#lineEndpoints = new ViewerLineEndpoints(this.#viewport, this.controller, {
 			active: () => this.#commands.tool === 'pointer',
 			announce: (message) => {
@@ -165,6 +176,7 @@ export class VisioViewerElement extends BaseElement {
 			viewport: this.#viewport,
 			fileName: () => this.#fileName,
 			load: (source) => this.load(source),
+			createBlankDrawing: () => this.createBlankDrawing(),
 			exportVsdx: () => this.controller.exportVsdx(),
 			exportSvg: () => this.exportSvg(),
 			closeDocument: () => {
@@ -229,6 +241,24 @@ export class VisioViewerElement extends BaseElement {
 		// A destroyed or superseded viewer keeps no name from a late load.
 		if (this.#disposed || token !== this.#loadToken) return;
 		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
+		this.#render(this.controller.state);
+	}
+	/** Create a source-backed drawing and name only the accepted request. */
+	async createBlankDrawing(options?: CreateVsdxOptions): Promise<void> {
+		this.#assertAlive();
+		const token = ++this.#loadToken;
+		const generation = this.controller.documentGeneration;
+		await this.controller.createBlankDrawing(options);
+		if (
+			this.#disposed ||
+			token !== this.#loadToken ||
+			this.controller.documentGeneration !== generation + 1 ||
+			this.controller.state.loading ||
+			!this.controller.state.edit.sourceAvailable
+		)
+			return;
+		this.#fileName = 'New drawing.vsdx';
+		this.#backstage.hide();
 		this.#render(this.controller.state);
 	}
 	/** Leave Visio's File backstage and return to the drawing. */
@@ -377,6 +407,7 @@ export class VisioViewerElement extends BaseElement {
 	#wireInputs(): () => void {
 		const disposeChrome = this.#chrome.wire();
 		const disposeCommands = this.#commands.wire();
+		const disposePointer = this.#pointer.wire();
 		const disposeLineEndpoints = this.#lineEndpoints.wire();
 		const disposeRotation = this.#rotationHandle.wire();
 		const disposeBackstage = this.#backstage.wire();
@@ -412,6 +443,7 @@ export class VisioViewerElement extends BaseElement {
 		return () => {
 			disposeChrome();
 			disposeCommands();
+			disposePointer();
 			disposeLineEndpoints();
 			disposeRotation();
 			disposeBackstage();
@@ -475,6 +507,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#chrome.render(state, this.#notes.children.length);
 		this.#commands.render(state);
 		this.#backstage.render(state);
+		this.#pointer.render(state);
 		this.#panZoom.render();
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading

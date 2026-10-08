@@ -46,6 +46,36 @@ visible foreground shapes. Single-target text and geometry panels require
 exactly one selected shape. Home formatting and deletion operate atomically on
 multiple selected shapes; source protection of any target rejects the batch.
 
+## Create a blank drawing
+
+Every mounted/native handle and the shared element expose
+`createBlankDrawing(options?: CreateVsdxOptions): Promise<void>`. The controller
+offers the same method. Optional `width` and `height` use physical inches;
+defaults are 8.5 by 11 with one empty page and a 1:1 drawing scale. File > New >
+Blank Drawing and Ctrl+N call the same lifecycle. Editable controls keep their
+native shortcut behavior.
+
+An accepted New request replaces the document, selection and history, and the
+element names it `New drawing.vsdx`. Source bytes can be exported immediately;
+`dirty` records subsequent edits. Superseded loads, cancellation and disposal
+cannot accept a late result. State changes flow through each binding's existing
+reactive state API.
+
+## Pointer movement and marquee selection
+
+Dragging an eligible local 2D shape moves the current selection by a common
+translation. A four-client-pixel threshold preserves ordinary clicks. The preview
+changes only SVG presentation; releasing submits one atomic source edit. Escape,
+lost pointer capture, source/page/selection changes and tool changes cancel it.
+Movement uses physical page coordinates and converts to drawing units in core,
+preserving saved rotation and local pins. Source protections remain authoritative.
+
+Dragging blank page space selects fully enclosed visible foreground shapes using
+their transformed width/height extents. Shift, Ctrl or Meta adds to the current
+selection. Pointer movement currently excludes masters, groups, layers, foreign
+objects and glued connectors. Resize handles and connector routing are separate
+capabilities and remain outside this gesture scope.
+
 ## Find diagram text
 
 The shared search controls find literal text across visible shapes and pages.
