@@ -9,6 +9,7 @@ import { axisTargetIntervals, niceValueAxisBounds } from './chart-axis-nice';
 import { chartFontPx } from './chart-font';
 import { reserveLegendSpace } from './chart-legend-placement';
 import { formatChartNumber } from './chart-number-format';
+import { getChartStylePalette } from './chart-style-palette';
 import { chartTitleBand } from './chart-title-band';
 
 /**
@@ -29,127 +30,7 @@ import { chartTitleBand } from './chart-title-band';
 
 // ── Style palettes ───────────────────────────────────────────────
 
-const ACCENT1 = '#4472C4';
-const ACCENT2 = '#ED7D31';
-const ACCENT3 = '#A5A5A5';
-const ACCENT4 = '#FFC000';
-const ACCENT5 = '#5B9BD5';
-const ACCENT6 = '#70AD47';
-
-const ACCENTS = [ACCENT1, ACCENT2, ACCENT3, ACCENT4, ACCENT5, ACCENT6];
-
-/**
- * The default fallback palette used when no chart style is specified.
- *
- * The Office accent cycle (accent1-6 plus the two chart extras), i.e. what
- * PowerPoint paints for a chart with no style part. This MUST stay identical
- * to `chart-view-model.ts`'s `DEFAULT_PALETTE` (which aliases it): the two
- * used to differ (this one was a Tailwind-ish set), and since the bindings
- * reach the shared engine through both entry points, the same deck fell back
- * to two different palettes depending on the binding.
- */
-export const DEFAULT_CHART_PALETTE: ReadonlyArray<string> = [
-	'#4472C4',
-	'#ED7D31',
-	'#A5A5A5',
-	'#FFC000',
-	'#5B9BD5',
-	'#70AD47',
-	'#FF0000',
-	'#00B0F0',
-];
-
-/** Parse a hex colour string (#RRGGBB) into [r, g, b]. */
-function hexToRgb(hex: string): [number, number, number] {
-	const h = hex.replace('#', '');
-	return [
-		parseInt(h.substring(0, 2), 16),
-		parseInt(h.substring(2, 4), 16),
-		parseInt(h.substring(4, 6), 16),
-	];
-}
-
-/** Convert [r, g, b] back to #RRGGBB. */
-function rgbToHex(r: number, g: number, b: number): string {
-	const clamp = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
-	return `#${clamp(r).toString(16).padStart(2, '0')}${clamp(g)
-		.toString(16)
-		.padStart(2, '0')}${clamp(b).toString(16).padStart(2, '0')}`;
-}
-
-/** Apply a tint (lighten towards white). `amount` in [0, 1]. */
-function tint(hex: string, amount: number): string {
-	const [r, g, b] = hexToRgb(hex);
-	return rgbToHex(r + (255 - r) * amount, g + (255 - g) * amount, b + (255 - b) * amount);
-}
-
-/** Apply a shade (darken towards black). `amount` in [0, 1]. */
-function shade(hex: string, amount: number): string {
-	const [r, g, b] = hexToRgb(hex);
-	return rgbToHex(r * (1 - amount), g * (1 - amount), b * (1 - amount));
-}
-
-/** Monochrome ramp of one colour, darkest first: three shades, the colour, four tints. */
-function monochromaticRamp(base: string): string[] {
-	return [
-		shade(base, 0.5),
-		shade(base, 0.35),
-		shade(base, 0.15),
-		base,
-		tint(base, 0.2),
-		tint(base, 0.4),
-		tint(base, 0.6),
-		tint(base, 0.8),
-	];
-}
-
-/**
- * The colourful palette: the six accents in theme order, then the same accents darker for series
- * 7-12 (Office darkens them with `lumMod`; an RGB shade of 40% approximates it).
- */
-function colourfulAccents(): string[] {
-	return [...ACCENTS, ...ACCENTS.map((accent) => shade(accent, 0.4))];
-}
-
-/** The greyscale column's base (text 1 at 50%). */
-const GREY = '#7F7F7F';
-
-/**
- * Office's built-in chart styles (`c:style/@val`, 1-48). ECMA-376 Part 1, 21.2.2.196 only says the
- * value selects one of the application's predefined styles; the colours follow Office's chart style
- * gallery of six rows of eight: column `(id - 1) % 8` is 0 greyscale, 1 colourful (accent1 to
- * accent6 in theme order; style 2 is Office's default), and 2 to 7 monochrome shades and tints of
- * accent1 to accent6. The rows (1-8, 9-16, 17-24, 25-32, 33-40, 41-48) vary outlines, effects and
- * backgrounds, not the series colours.
- */
-const STYLE_COLUMN_PALETTES: ReadonlyArray<() => string[]> = [
-	() => monochromaticRamp(GREY),
-	colourfulAccents,
-	...ACCENTS.map((accent) => () => monochromaticRamp(accent)),
-];
-
-function buildPalette(styleId: number): string[] {
-	const column = (Math.max(1, Math.min(48, Math.trunc(styleId))) - 1) % 8;
-	return STYLE_COLUMN_PALETTES[column]!();
-}
-
-const paletteCache = new Map<number, string[]>();
-
-/**
- * Get the colour palette for a chart style index (1–48). Falls back to the
- * default palette when undefined or out of range.
- */
-export function getChartStylePalette(styleId?: number): ReadonlyArray<string> {
-	if (styleId === undefined || styleId < 1 || styleId > 48) {
-		return DEFAULT_CHART_PALETTE;
-	}
-	let palette = paletteCache.get(styleId);
-	if (!palette) {
-		palette = buildPalette(styleId);
-		paletteCache.set(styleId, palette);
-	}
-	return palette;
-}
+export { DEFAULT_CHART_PALETTE, getChartStylePalette } from './chart-style-palette';
 
 /**
  * Resolve a series colour: explicit colour → marker fill → parsed palette →

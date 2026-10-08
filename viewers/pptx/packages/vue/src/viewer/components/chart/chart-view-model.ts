@@ -19,20 +19,16 @@
  * @module chart-view-model
  */
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import { buildChartViewModel, getChartStylePalette } from 'ooxml-ui/pptx';
+import { buildChartViewModel, resolveChartPalette } from 'ooxml-ui/pptx';
 import type { ChartViewModel } from 'ooxml-ui/pptx';
 
 /**
- * Resolve the colour palette Vue uses for a chart, mirroring the precedence of
- * `seriesColor(series, i, styleId, colorPalette)` in `chart-helpers.ts`: an
- * explicit parsed `colorPalette` wins, otherwise the style-id palette (which
- * itself falls back to the default chart palette).
+ * The colour palette Vue paints a chart with: the shared `resolveChartPalette`
+ * (the parsed colour-style palette, else the chart style over the deck theme's
+ * accents), so Vue cannot drift from the other bindings.
  */
 export function resolveVuePalette(chartData: PptxChartData): string[] {
-	if (chartData.colorPalette && chartData.colorPalette.length > 0) {
-		return [...chartData.colorPalette];
-	}
-	return [...getChartStylePalette(chartData.style?.styleId)];
+	return resolveChartPalette(chartData);
 }
 
 /**

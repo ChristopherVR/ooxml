@@ -1438,6 +1438,14 @@ export interface PptxChartData {
 	colorPalette?: string[];
 
 	/**
+	 * The deck theme's `accent1` to `accent6` as resolved hex colours (`#RRGGBB`),
+	 * recorded at load for rendering only and never written on save. A chart with
+	 * no colour-style part paints its `c:style` palette over these accents, as
+	 * PowerPoint does; absent when the theme does not define all six.
+	 */
+	themeAccentColors?: string[];
+
+	/**
 	 * Color cycling method from the chart color style part's `meth` attribute.
 	 *
 	 * - `"cycle"`: repeat the palette colours in order (default)

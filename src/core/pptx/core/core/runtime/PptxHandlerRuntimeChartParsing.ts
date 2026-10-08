@@ -321,10 +321,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				: undefined;
 		const view3D = view3DFromNeutral(neutral);
 		const chartChrome = chartChromeFromNeutral(neutral);
+		// The deck theme's accent1..accent6, for rendering a c:style palette only
+		// (never written on save).
+		const themeAccentColors = this.resolveChartThemeAccents();
 
 		return {
 			chartType,
 			categories: filled.categories,
+			...(themeAccentColors ? { themeAccentColors } : {}),
 			...(categoryLevels ? { categoryLevels } : {}),
 			...(dateCategories ? { dateCategories } : {}),
 			series: filled.series,

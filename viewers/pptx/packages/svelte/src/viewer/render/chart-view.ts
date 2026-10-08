@@ -5,8 +5,8 @@ import {
 	chartPartToAttrs,
 	chartPlaceholderLabel,
 	computeChartLegendLayout,
-	getChartStylePalette,
 	resolveChartKind,
+	resolveChartPalette as resolveSharedChartPalette,
 } from 'ooxml-ui/pptx';
 
 /**
@@ -23,15 +23,12 @@ export type ChartView =
 	| { kind: 'placeholder'; label: string };
 
 /**
- * Resolve the colour palette for a chart, mirroring Vue's `resolveVuePalette`:
- * an explicit parsed `colorPalette` wins, otherwise the style-id palette
- * (which itself falls back to the default chart palette).
+ * The colour palette Svelte paints a chart with: the shared `resolveChartPalette`
+ * (the parsed colour-style palette, else the chart style over the deck theme's
+ * accents), so Svelte cannot drift from the other bindings.
  */
 export function resolveChartPalette(chartData: PptxChartData): string[] {
-	if (chartData.colorPalette && chartData.colorPalette.length > 0) {
-		return [...chartData.colorPalette];
-	}
-	return [...getChartStylePalette(chartData.style?.styleId)];
+	return resolveSharedChartPalette(chartData);
 }
 
 /**

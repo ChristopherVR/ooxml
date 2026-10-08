@@ -145,7 +145,7 @@ describe('chart parity: pptx object-tree parser vs neutral parseChartSpace', () 
 	// classic part that turns into an unreadable one, changes these totals. Update them deliberately
 	// when a chart fixture is added.
 	it('covered every chart part in the corpus', () => {
-		expect(DECKS).toHaveLength(22);
-		expect(totals).toEqual({ parts: 81, classic: 74, chartEx: 7, series: 141, axes: 108 });
+		expect(DECKS).toHaveLength(23);
+		expect(totals).toEqual({ parts: 82, classic: 75, chartEx: 7, series: 148, axes: 110 });
 	});
 });

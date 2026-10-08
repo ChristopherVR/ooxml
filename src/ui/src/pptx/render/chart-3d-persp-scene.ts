@@ -23,7 +23,7 @@ import { buildPerspMarkSet } from './chart-3d-persp-mark-set';
 import { surfaceBands } from './chart-3d-persp-surface';
 import { buildPerspCamera, perspToScreen } from './chart-3d-persp-view';
 import { roundDragValue } from './chart-interaction';
-import { DEFAULT_PALETTE } from './chart-view-model-scale';
+import { resolveChartPalette } from './chart-style-palette';
 import type { ChartViewModel, LegendEntry } from './chart-view-model-types';
 
 /** Selection marker colour (the 2D selected-mark accent). */
@@ -64,7 +64,7 @@ function surfaceLegend(
 export function mountPerspChartView(input: PerspSceneInput, ctx: ThreeViewContext): ThreeViewScene {
 	const three = ctx.three;
 	const { vm, layout, chartData } = input;
-	const palette = chartData.colorPalette?.length ? chartData.colorPalette : DEFAULT_PALETTE;
+	const palette = resolveChartPalette(chartData);
 	const camera = buildPerspCamera(three, layout.view, vm.svgWidth, vm.svgHeight);
 	const scene = new three.Scene();
 	const marks = buildPerspMarkSet(three, chartData, layout, palette);

@@ -2,8 +2,8 @@ import {
 	buildChartViewModel,
 	chartPartToAttrs,
 	computeChartLegendLayout,
+	resolveChartPalette,
 	resolveChartSvgDef,
-	getChartStylePalette,
 } from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
@@ -50,16 +50,12 @@ function partAttrs(part: ChartPartRef | undefined): Record<string, string> | und
 }
 
 /**
- * Resolve the colour palette React uses for a chart, mirroring the precedence
- * of `seriesColor(series, i, styleId, colorPalette)` in `chart-helpers.ts`:
- * an explicit parsed `colorPalette` wins, otherwise the style-id tailwind
- * palette (which itself falls back to `DEFAULT_CHART_PALETTE`).
+ * The colour palette React paints a chart with: the shared `resolveChartPalette`
+ * (the parsed colour-style palette, else the chart style over the deck theme's
+ * accents), so React cannot drift from the other bindings.
  */
 export function resolveReactPalette(chartData: PptxChartData): string[] {
-	if (chartData.colorPalette && chartData.colorPalette.length > 0) {
-		return chartData.colorPalette;
-	}
-	return [...getChartStylePalette(chartData.style?.styleId)];
+	return resolveChartPalette(chartData);
 }
 
 /**

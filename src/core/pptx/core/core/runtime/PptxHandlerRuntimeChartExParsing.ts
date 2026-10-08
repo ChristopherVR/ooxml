@@ -26,6 +26,7 @@ type ChartPartFacts = Pick<
 	| 'embeddedWorkbookData'
 	| 'pivotSource'
 	| 'colorPalette'
+	| 'themeAccentColors'
 	| 'colorMethod'
 	| 'colorStylePartPath'
 	| 'colorStyleOriginalPalette'
@@ -58,6 +59,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Office 2013+ colour style (colorsN.xml) and the separate chart style part (styleN.xml),
 		// which carries the built-in style's per-element font, line and fill defaults.
 		const chartColorStyle = await this.parseChartColorStyle(chartPartPath);
+		const themeAccentColors = this.resolveChartThemeAccents();
 		const chartStyleDefinition = await this.parseChartStyleDefinitionPart(chartPartPath);
 		const layouts = parseChartLayouts(chartRoot, localName);
 		const userShapesXml = this.parseUserShapesXml(chartSpace);
@@ -72,6 +74,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...(embeddedWorkbookData ? { embeddedWorkbookData } : {}),
 			...(pivotSource ? { pivotSource } : {}),
 			...(chartColorStyle?.palette ? { colorPalette: chartColorStyle.palette } : {}),
+			...(themeAccentColors ? { themeAccentColors } : {}),
 			...(chartColorStyle?.method ? { colorMethod: chartColorStyle.method } : {}),
 			...(chartColorStyle
 				? {

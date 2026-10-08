@@ -2,8 +2,8 @@ import type { PptxChartData } from 'ooxml-core/pptx';
 import {
 	buildChartViewModel,
 	chartPlaceholderLabel,
-	getChartStylePalette,
 	getContainerStyle,
+	resolveChartPalette as resolveSharedChartPalette,
 	resolveChartKind,
 	resolveChartThreeViewSpec,
 	resolveRevealedChartData,
@@ -150,15 +150,11 @@ export const renderChartSvgElement: ElementRenderer = (element, zIndex, context)
 };
 
 /**
- * Resolve the colour palette for a chart, mirroring Vue's `resolveVuePalette`:
- * an explicit parsed `colorPalette` wins, otherwise the style-id palette
- * (which itself falls back to the default chart palette).
+ * Resolve the colour palette for a chart: the shared `resolveChartPalette`
+ * (the parsed colour-style palette, else the chart style over the deck theme).
  */
 export function resolveChartPalette(chartData: PptxChartData): string[] {
-	if (chartData.colorPalette && chartData.colorPalette.length > 0) {
-		return [...chartData.colorPalette];
-	}
-	return [...getChartStylePalette(chartData.style?.styleId)];
+	return resolveSharedChartPalette(chartData);
 }
 
 /** Labelled placeholder for unsupported / empty charts (mirrors Vue's). */

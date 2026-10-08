@@ -33,6 +33,7 @@ import { withChartTitleBand } from './chart-title-band';
 import { resolveChartTitleRunSpans } from './chart-title-runs';
 import { fitTitleBand, resolveChartTitleTextStyle } from './chart-title-style';
 import { buildChartUserShapeOverlay } from './chart-user-shape-overlay';
+import { withResolvedPalette } from './chart-style-palette';
 import { resolveChartKind } from './chart-view-model-kinds';
 import type { SupportedChartKind } from './chart-view-model-kinds';
 import { withManualLayouts } from './chart-view-model-manual';
@@ -60,8 +61,9 @@ function buildChartViewModelInner(element: PptxElement): ChartViewModel {
 		return buildFallbackViewModel(element.width, element.height, 'Chart');
 	}
 	const chartEl = element as ChartPptxElement,
+		// Resolved once here (chart-style-palette.ts), so every binding paints one colour cycle.
 		chartData = chartEl.chartData
-			? withChartTextDefaults(withAutoTitle(chartEl.chartData))
+			? withResolvedPalette(withChartTextDefaults(withAutoTitle(chartEl.chartData)))
 			: chartEl.chartData;
 
 	if (!chartData || chartData.series.length === 0) {

@@ -130,6 +130,23 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
+	 * The theme's `accent1` to `accent6` as `#RRGGBB`, the colours a chart with no
+	 * colour-style part builds its `c:style` palette from. `undefined` unless the
+	 * theme resolves all six.
+	 */
+	protected resolveChartThemeAccents(): string[] | undefined {
+		const accents: string[] = [];
+		for (let n = 1; n <= 6; n++) {
+			const hex = this.resolveChartSchemeColor(`accent${n}`);
+			if (!hex || !/^#[0-9a-f]{6}$/iu.test(hex)) {
+				return undefined;
+			}
+			accents.push(hex.toUpperCase());
+		}
+		return accents;
+	}
+
+	/**
 	 * Traverse a `<cs:colorStyle>` element and extract ordered palette colors.
 	 *
 	 * Child elements can be:
