@@ -1,0 +1,47 @@
+title: '[Idea] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are for early thinking: rough proposals, "would this make sense?",
+        API shapes worth debating. Once an idea is concrete and agreed, it moves to a
+        [feature request](https://github.com/ChristopherVR/ooxml/issues/new?template=feature_request.yml).
+
+        If Office does something and we do not, that is usually a fidelity bug
+        rather than an idea, and a bug report is the better place for it.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the use case, not just the proposed API.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where would it live?
+      options:
+        - Parsing or saving (round-trip fidelity)
+        - Document model or editing commands
+        - Layout or rendering logic
+        - A shared area (xml, opc, units, color, geometry, chart, diagram)
+        - ooxml-ui or a viewer binding
+        - Collaboration or teams
+        - Tooling (MCP, automation, release, CI)
+        - Not sure
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Would you like to help build it?
+      options:
+        - label: I would be willing to open a PR

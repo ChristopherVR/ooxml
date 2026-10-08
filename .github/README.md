@@ -15,6 +15,7 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**What is here**](#what-is-in-this-repository) &nbsp;&middot;&nbsp;
 [**Development**](#development) &nbsp;&middot;&nbsp;
 [**Roadmap**](../docs/roadmap.md) &nbsp;&middot;&nbsp;
+[**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
 [**Contributing**](../CONTRIBUTING.md)
 
 |                               [PowerPoint](https://christophervr.github.io/ooxml/pptx/demo/)                                |                                      [Word](https://christophervr.github.io/ooxml/docx/demo/)                                       |                                [Excel](https://christophervr.github.io/ooxml/xlsx/demo/)                                 |
@@ -157,6 +158,14 @@ The working agreements are in [AGENTS.md](../AGENTS.md), and [PROVENANCE.md](../
 - [OOXML Office](https://christophervr.github.io/ooxml/): the suite's launcher page (`site/`). It opens the demos of every viewer, all built into the same site.
 - [ole2](https://github.com/ChristopherVR/ole2): the compound-file container and legacy binary Office codecs.
 - [emf-converter](https://github.com/ChristopherVR/emf-converter) and [mtx-decompressor](https://github.com/ChristopherVR/mtx-decompressor): EMF/WMF rendering and embedded-font (MicroType Express) decompression, used by the library.
+
+## Community and support
+
+- **Questions and usage help:** ask in [Discussions, Q&A](https://github.com/ChristopherVR/ooxml/discussions/categories/q-a) and mark the answer that solved it.
+- **Ideas:** talk them through in [Ideas](https://github.com/ChristopherVR/ooxml/discussions/categories/ideas); agreed ones become feature requests.
+- **Built something?** Share it in [Show and tell](https://github.com/ChristopherVR/ooxml/discussions/categories/show-and-tell).
+- **Bugs and fidelity gaps:** open an [issue](https://github.com/ChristopherVR/ooxml/issues/new/choose), ideally with a sample file.
+- **Security problems:** report them privately, see [SECURITY.md](../SECURITY.md).
 
 ## License
 

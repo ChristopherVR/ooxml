@@ -1,6 +1,6 @@
 # Contributing to ooxml-core
 
-Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first. Found a security problem? Do **not** open a public issue: see [SECURITY.md](SECURITY.md).
+Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first. Found a security problem? Do **not** open a public issue: see [SECURITY.md](SECURITY.md). Questions and early ideas belong in [Discussions](https://github.com/ChristopherVR/ooxml/discussions) (Q&A and Ideas); issues are for bugs and agreed feature requests.
 
 ## What belongs here
 

@@ -1,0 +1,53 @@
+title: '[Q] '
+labels: ['question']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask anything about using ooxml-core, ooxml-ui, ooxml-mcp or the viewers.
+        Mark the reply that solved it as the answer so the next person finds it.
+
+        Found something that is clearly broken? Please open a
+        [bug report](https://github.com/ChristopherVR/ooxml/issues/new?template=bug_report.yml)
+        instead. Security problems go to a
+        [private advisory](https://github.com/ChristopherVR/ooxml/security/advisories/new), never here.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - xml / opc / units / color / geometry (shared)
+        - docx
+        - pptx
+        - xlsx
+        - visio
+        - chart / diagram / math / drawingml
+        - collab / teams
+        - crypto / digest / signatures
+        - ooxml-ui or a viewer binding
+        - mcp / automation
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What are you trying to do, and what have you tried so far?
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code or sample (optional)
+      description: A short snippet helps. A sample file is welcome if it contains nothing private.
+      render: ts
+
+  - type: input
+    id: version
+    attributes:
+      label: Package and version (optional)
+      placeholder: ooxml-core 0.21.1, pptx-react-viewer 1.x, ...

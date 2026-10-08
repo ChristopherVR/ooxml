@@ -1,0 +1,25 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Built something with ooxml-core, a viewer or the MCP server? Show it off.
+        Screenshots, links and short write-ups are all welcome.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you make?
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: Link (optional)
+      description: A repository, demo, package or post.
+
+  - type: textarea
+    id: used
+    attributes:
+      label: Which parts of ooxml did you use? (optional)
+      placeholder: ooxml-core/docx, pptx-vue-viewer, ooxml-mcp, ...
