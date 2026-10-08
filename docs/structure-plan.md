@@ -234,6 +234,15 @@ and no claim of parity without evidence.
 Browser verification ran for the first time since Wave 1, one agent per
 product, with `--workers=2` on Chromium (Playwright 1.63):
 
+- PowerPoint: 148 tests across the autosave-recovery, web-control-contract,
+  title-bar, status-bar, ui-primitives, every chart and every SmartArt spec
+  pass on all five demos (the WebGL-gated 3D specs ran on SwiftShader); new
+  specs cover the root display options and the chart style palette. It caught
+  two real cross-binding bugs: Vue, Angular and Svelte never bound the chart
+  axis-label fonts the shared view model emits, and chart style palettes were
+  built from the fixed Office accents rather than the deck theme (Angular
+  ignored the style entirely). Both are fixed in the shared layer with a test
+  per binding; the chart now carries the theme accents for rendering only.
 - Excel: every `chart-*` spec (387 tests) plus `framework-matrix`,
   `clipboard-parity`, `formatting`, `editing` pass in all six frameworks; new
   specs cover sparklines, the Show Comments list, every binding's own handle
