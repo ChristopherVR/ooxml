@@ -12,6 +12,7 @@ import { product, mountProduct } from './product.js';
 import { mountFileActions } from './file-actions.js';
 import { mountDiskSearch } from './disk-search.js';
 import { mountPwa } from './pwa.js';
+import { mountStart } from './start.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 
@@ -112,13 +113,15 @@ async function showTeams() {
 	renderTabs();
 	history.replaceState(null, '', '#/teams');
 }
+const blankNames = {
+	docx: 'Document',
+	xlsx: 'Workbook',
+	pptx: 'Presentation',
+	vsdx: 'Drawing',
+};
 async function create(kind) {
 	void preloadEditor(kind)?.catch(() => {});
-	if (kind === 'vsdx') {
-		$('file-input').click();
-		return;
-	}
-	const name = `${kind === 'docx' ? 'Document' : kind === 'xlsx' ? 'Workbook' : 'Presentation'} ${files.filter((d) => d.kind === kind).length + 1}.${kind}`;
+	const name = `${blankNames[kind]} ${files.filter((d) => d.kind === kind).length + 1}.${kind}`;
 	const doc = await store.create(name, await blankDocument(kind));
 	await open(doc.id);
 }
@@ -202,7 +205,7 @@ $('rail').innerHTML =
 $('create-row').innerHTML = apps
 	.map(
 		(a) =>
-			`<button data-create="${a.id}">${badge(a.id)}<span>${a.id === 'vsdx' ? 'Open drawing' : `Blank ${a.id === 'docx' ? 'document' : a.id === 'xlsx' ? 'workbook' : 'presentation'}`}</span><small>${a.name}</small></button>`,
+			`<button data-create="${a.id}">${badge(a.id)}<span>Blank ${blankNames[a.id].toLowerCase()}</span><small>${a.name}</small></button>`,
 	)
 	.join('');
 document.addEventListener('click', (event) => {
@@ -403,6 +406,7 @@ for (const eventName of ['pointerover', 'focusin'])
 
 mountProduct();
 mountPwa();
+mountStart();
 
 disk = mountDiskSearch({ store, open, refresh });
 const fileActions = mountFileActions({

@@ -7,6 +7,8 @@ const { chromium, expect } = require('@playwright/test');
 const base = process.env.SUITE_URL || 'http://127.0.0.1:8133';
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
+// Skip the first-visit start chooser; these checks drive the whole suite.
+await context.addInitScript(() => localStorage.setItem('ooxml-start-app', 'office'));
 const page = await context.newPage();
 page.setDefaultTimeout(20000);
 const errors = [];
@@ -161,17 +163,34 @@ try {
 		await expect(page.locator('.workspace-sidebar')).toBeHidden();
 		if (kind === 'teams')
 			await expect(page.locator('office-ui-chat-composer textarea')).toBeVisible();
-		else if (kind !== 'vsdx') {
+		else {
 			await page.locator(`[data-create=${kind}]`).click();
-			await expect(page.locator(kind === 'pptx' ? '.pptxv' : `${kind}-editor`)).toBeVisible();
+			const editor = { pptx: '.pptxv', vsdx: 'visio-viewer' }[kind] ?? `${kind}-editor`;
+			await expect(page.locator(editor)).toBeVisible();
 		}
 	}
 	await page.goto(base + '/');
 	await page.locator('[data-create=docx]').click();
 	await expect(page.locator('docx-editor')).toBeVisible();
+	await context.setOffline(false);
+	// A first visit asks what to open, remembers it, and ?suite returns to the whole suite.
+	const fresh = await browser.newContext();
+	const visitor = await fresh.newPage();
+	await visitor.goto(base + '/');
+	await visitor.locator('#dialog [data-start=docx]').click();
+	await visitor.waitForURL(/\/apps\/word\/$/);
+	await visitor.goto(base + '/');
+	await visitor.waitForURL(/\/apps\/word\/$/);
+	await visitor.locator('#launcher-toggle').click();
+	await visitor.locator('#app-launcher a', { hasText: 'OOXML Office' }).click();
+	await expect(visitor.locator('[data-create=docx]')).toBeVisible();
+	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	await visitor.goto(base + '/');
+	await expect(visitor).toHaveURL(base + '/');
+	await fresh.close();
 	assert.deepEqual(errors, []);
 	console.log(
-		'PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint create offline.',
+		'Start chooser remembers the app. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
 	);
 } finally {
 	await browser.close();

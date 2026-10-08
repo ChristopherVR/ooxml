@@ -8,6 +8,8 @@ const { chromium, expect } = require('@playwright/test');
 const { createDocx } = await import('../src/core/dist/automation/index.mjs');
 const browser = await chromium.launch({ channel: 'chromium' });
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
+// Skip the first-visit start chooser; these checks drive the whole suite.
+await context.addInitScript(() => localStorage.setItem('ooxml-start-app', 'office'));
 const page = await context.newPage();
 page.setDefaultTimeout(15000);
 const errors = [];

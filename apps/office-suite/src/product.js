@@ -57,5 +57,5 @@ export function mountProduct() {
 	for (const button of $('create-row').querySelectorAll('[data-create]'))
 		button.hidden = button.dataset.create !== product;
 	$('app-launcher').innerHTML =
-		`<div class="launcher-heading"><h2>Your apps</h2></div><div class="launcher-grid"><a href="${suiteBase.href}">OOXML Office</a>${[...apps, { id: 'teams', name: 'Teams' }].map((a) => `<a href="${new URL(`apps/${productPaths[a.id]}/`, suiteBase)}">${badge(a.id)}<span>${a.name}</span></a>`).join('')}</div>`;
+		`<div class="launcher-heading"><h2>Your apps</h2></div><div class="launcher-grid"><a href="${new URL('?suite', suiteBase)}">OOXML Office</a>${[...apps, { id: 'teams', name: 'Teams' }].map((a) => `<a href="${new URL(`apps/${productPaths[a.id]}/`, suiteBase)}">${badge(a.id)}<span>${a.name}</span></a>`).join('')}</div>`;
 }

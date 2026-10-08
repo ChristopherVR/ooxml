@@ -117,5 +117,6 @@ export async function blankDocument(kind) {
 		const { handler, data } = await PresentationBuilder.create({ initialSlideCount: 1 });
 		return handler.save(data.slides);
 	}
-	throw new Error('Import a presentation or drawing to start editing.');
+	if (kind === 'vsdx') return (await import('ooxml-core/visio')).createVsdx();
+	throw new Error(`Cannot create a blank ${kind} file.`);
 }

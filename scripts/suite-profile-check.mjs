@@ -8,6 +8,8 @@ const { chromium, expect } = require('@playwright/test');
 const { createDocx } = await import('../src/core/dist/automation/index.mjs');
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+// Skip the first-visit start chooser; these checks drive the whole suite.
+await page.addInitScript(() => localStorage.setItem('ooxml-start-app', 'office'));
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const base = process.env.SUITE_URL ?? 'http://127.0.0.1:8130';

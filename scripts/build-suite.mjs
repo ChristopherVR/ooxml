@@ -19,6 +19,7 @@ for (const name of [
 	'workspace-responsive.css',
 	'favicon.svg',
 	'appearance-init.js',
+	'start-init.js',
 ])
 	await cp(join(root, 'site', name), join(out, name));
 await bundleSuite(join(out, 'suite.js'));
