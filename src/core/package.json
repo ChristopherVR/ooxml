@@ -74,6 +74,11 @@
 			"import": "./dist/text/index.mjs",
 			"require": "./dist/text/index.cjs"
 		},
+		"./i18n": {
+			"types": "./dist/i18n/index.d.ts",
+			"import": "./dist/i18n/index.mjs",
+			"require": "./dist/i18n/index.cjs"
+		},
 		"./diagram": {
 			"types": "./dist/diagram/index.d.ts",
 			"import": "./dist/diagram/index.mjs",

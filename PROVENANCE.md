@@ -2092,3 +2092,16 @@ overlay reservation and wide/tall dimensions. Playwright MCP exercises actual
 imports and a Line edit/export; Excel resave/reopen retains the tested tall
 legend's geometry, font and overlay flag. This work does not complete native
 legend packing, paint ordering, swatches, authoring controls or chart parity.
+
+## i18n area: shared locale, dictionary and translator helpers
+
+Source: ChristopherVR/ooxml at `d9ef4e075`. `src/core/i18n/locale.ts` generalises
+the two identical `normalizeEditorLocale` copies in
+`src/ui/src/docx/localization.ts` and `src/core/xlsx/ui/localization.ts`
+(region fallback, Traditional Chinese rejection); `dictionary.ts` is
+`mergeStringModules` from `src/core/xlsx/ui/locales/merge.ts`; `translator.ts`
+unifies the docx `translateTemplate`, the xlsx `fillTemplate`/`translate` and the
+pptx `src/ui/src/pptx/i18n/translator.ts` interpolation (`{name}` and `{{name}}`)
+and fallback chain. The three product modules keep their public exports as thin
+wrappers over `ooxml-core/i18n`; no dictionaries moved and none were added for
+visio or teams.
