@@ -25,6 +25,15 @@ Validation in an isolated checkout of current main:
 - Core and UI declarations/bundles, strict UI checking, and viewer/demo/browser
   TypeScript passed. The docs and all six demo builds passed.
 
+The pre-push aggregate check stopped on existing formatting issues in the
+untouched theming guide and Solid binding. Every subsequent check ran separately
+and passed, including converter integration, production workers, packed consumers
+and all seven installable packages. The packed browser consumer also passed.
+The full Chromium invocation passed 58 checks and skipped 715 optional native
+fixture cases. It exposed one stale Bold-tooltip assertion, now updated, and 15
+timing failures under eight workers while package checks were also running.
+All 16 failed cases passed on rerun with two workers against the same built site.
+
 Independent review caught disabled style properties leaking into text edits and
 noncanonical cell names producing duplicate cells; both have regression tests.
 Additional checks covered physical font/line sizes on scaled pages, multiline

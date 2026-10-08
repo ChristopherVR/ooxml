@@ -54,9 +54,9 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await ribbon('Undo').click();
 	await expect(created).toHaveCount(1);
 
-	// Visio's full Home layout is present; commands the core lacks are disabled with a reason.
+	// Formatting becomes available when an editable shape is selected.
 	await expect(ribbon('Bold')).toBeDisabled();
-	await expect(ribbon('Bold')).toHaveAttribute('title', /not available yet\. Needs core text/);
+	await expect(ribbon('Bold')).toHaveAttribute('title', /Select a shape to edit formatting/);
 	// Dropdowns open as top-layer menus that stay inside the window, even at the right edge.
 	await expect(viewer.getByRole('button', { name: 'Select', exact: true })).toHaveAttribute(
 		'title',
