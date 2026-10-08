@@ -1,4 +1,4 @@
-import { html } from 'lit';
+import { html, nothing } from 'lit';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import { OFFICE_TOKENS } from '../tokens';
@@ -9,12 +9,39 @@ export function rulerDivisions(unitPixels: number): number {
 	return unitPixels >= 192 ? 16 : unitPixels >= 96 ? 8 : unitPixels >= 48 ? 4 : 2;
 }
 
+/** A draggable marker on the ruler (an indent, a tab stop, a margin handle). */
+export interface RulerMarker {
+	/** Identifies the marker in events and in its `data-marker` attribute. */
+	name: string;
+	/** CSS pixels from the ruler's start edge, at 100% zoom. */
+	position: number;
+	/** Which side of the ruler the pointer sits on; defaults to `bottom`. */
+	edge?: 'top' | 'bottom';
+	/** Accessible name of the marker. */
+	label?: string;
+}
+
+/** Detail of `ruler-marker-move`, `ruler-marker-commit` and `ruler-marker-cancel`. */
+export interface RulerMarkerEventDetail {
+	name: string;
+	/** Pointer position in CSS pixels from the start edge at 100% zoom (zoom already removed). */
+	position: number;
+}
+
 /**
- * `<office-ui-ruler>`: a decorative Office ruler (inches by default). The product positions it
+ * `<office-ui-ruler>`: an Office ruler (inches by default). The product positions it
  * and says where zero is: `origin` is the CSS-pixel offset of zero from the ruler's start edge,
  * `scale` the CSS pixels per unit (96 at 100% for inches). `orientation="vertical"` draws a
  * side ruler; `direction="reverse"` makes values grow toward the start edge, as Visio's
- * vertical ruler grows upward from the page bottom. Hidden from assistive technology.
+ * vertical ruler grows upward from the page bottom.
+ *
+ * Page rulers add: `extent` (the ruler's own length in px, as long as the page), `marginStart` /
+ * `marginEnd` (shaded margin bands), `zoom` (the ruler is shown at that CSS zoom) and
+ * `labelsWithinMargins` (whole-unit labels only between the margins, counted up from `origin`).
+ * `markers` are draggable: the element fires `ruler-marker-move` while one is dragged (the host
+ * answers by updating `markers` to preview), then `ruler-marker-commit` on release or
+ * `ruler-marker-cancel`; all carry a `RulerMarkerEventDetail`. Without a `label` the ruler is
+ * hidden from assistive technology; with one it is an image with that name.
  */
 export class OfficeUiRuler extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -23,12 +50,27 @@ export class OfficeUiRuler extends OfficeElement {
 		origin: { type: Number },
 		scale: { type: Number },
 		direction: { type: String },
+		extent: { type: Number },
+		marginStart: { type: Number },
+		marginEnd: { type: Number },
+		zoom: { type: Number },
+		labelsWithinMargins: { type: Boolean },
+		label: { type: String },
+		markers: { attribute: false },
 	};
 	declare orientation: string;
 	declare origin: number;
 	declare scale: number;
 	declare direction: string;
+	declare extent: number;
+	declare marginStart: number;
+	declare marginEnd: number;
+	declare zoom: number;
+	declare labelsWithinMargins: boolean;
+	declare label: string;
+	declare markers: readonly RulerMarker[];
 	private frame = 0;
+	private zoomApplied = false;
 	private observer: ResizeObserver | undefined;
 
 	constructor() {
@@ -37,6 +79,13 @@ export class OfficeUiRuler extends OfficeElement {
 		this.origin = 0;
 		this.scale = 96;
 		this.direction = '';
+		this.extent = 0;
+		this.marginStart = 0;
+		this.marginEnd = 0;
+		this.zoom = 1;
+		this.labelsWithinMargins = false;
+		this.label = '';
+		this.markers = [];
 	}
 
 	override connectedCallback(): void {
@@ -62,11 +111,67 @@ export class OfficeUiRuler extends OfficeElement {
 	}
 
 	protected override willUpdate(): void {
-		this.setAttribute('aria-hidden', 'true');
+		if (this.label) {
+			this.removeAttribute('aria-hidden');
+			this.setAttribute('role', 'img');
+			this.setAttribute('aria-label', this.label);
+		} else {
+			this.setAttribute('aria-hidden', 'true');
+			if (this.getAttribute('role') === 'img') this.removeAttribute('role');
+			this.removeAttribute('aria-label');
+		}
 	}
 
 	protected override updated(): void {
+		if (this.extent > 0)
+			this.style.setProperty(
+				this.orientation === 'vertical' ? 'height' : 'width',
+				`${this.extent}px`,
+			);
+		if (this.zoom !== 1 && this.zoom > 0) {
+			this.style.setProperty('zoom', String(this.zoom));
+			this.zoomApplied = true;
+		} else if (this.zoomApplied) {
+			this.style.removeProperty('zoom');
+			this.zoomApplied = false;
+		}
 		this.schedule();
+	}
+
+	private get zoomFactor(): number {
+		return this.zoom > 0 ? this.zoom : 1;
+	}
+
+	private pointerPosition(event: PointerEvent): number {
+		const box = this.getBoundingClientRect();
+		const offset =
+			this.orientation === 'vertical' ? event.clientY - box.top : event.clientX - box.left;
+		return offset / this.zoomFactor;
+	}
+
+	private emit(type: string, detail: RulerMarkerEventDetail): void {
+		this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+	}
+
+	private dragMarker(event: PointerEvent, name: string): void {
+		if (event.button !== 0) return;
+		event.preventDefault();
+		const marker = event.currentTarget as HTMLElement;
+		marker.setPointerCapture?.(event.pointerId);
+		const move = (e: PointerEvent) =>
+			this.emit('ruler-marker-move', { name, position: this.pointerPosition(e) });
+		const finish = (e: PointerEvent) => {
+			marker.removeEventListener('pointermove', move);
+			marker.removeEventListener('pointerup', finish);
+			marker.removeEventListener('pointercancel', finish);
+			this.emit(e.type === 'pointerup' ? 'ruler-marker-commit' : 'ruler-marker-cancel', {
+				name,
+				position: this.pointerPosition(e),
+			});
+		};
+		marker.addEventListener('pointermove', move);
+		marker.addEventListener('pointerup', finish);
+		marker.addEventListener('pointercancel', finish);
 	}
 
 	private draw(): void {
@@ -77,10 +182,13 @@ export class OfficeUiRuler extends OfficeElement {
 		const vertical = this.orientation === 'vertical';
 		const reverse = this.direction === 'reverse';
 		const box = this.getBoundingClientRect();
-		const length = vertical ? box.height : box.width;
+		// Layout size ignores the host's own CSS zoom; fall back to the box where there is no layout.
+		const length =
+			(vertical ? this.offsetHeight : this.offsetWidth) || (vertical ? box.height : box.width);
 		const thickness =
-			(vertical ? box.width : box.height) || parseFloat(OFFICE_TOKENS['--office-ruler-size']);
-		const ratio = view?.devicePixelRatio ?? 1;
+			(vertical ? this.offsetWidth || box.width : this.offsetHeight || box.height) ||
+			parseFloat(OFFICE_TOKENS['--office-ruler-size']);
+		const ratio = (view?.devicePixelRatio ?? 1) * this.zoomFactor;
 		canvas.width = Math.max(1, Math.round((vertical ? thickness : length) * ratio));
 		canvas.height = Math.max(1, Math.round((vertical ? length : thickness) * ratio));
 		const context = canvas.getContext?.('2d');
@@ -120,6 +228,11 @@ export class OfficeUiRuler extends OfficeElement {
 				context.lineTo(at, thickness - tick);
 			}
 			if (index % divisions !== 0) continue;
+			if (
+				this.labelsWithinMargins &&
+				(index < 0 || at < this.marginStart || at > length - this.marginEnd)
+			)
+				continue;
 			const label = String(index / divisions);
 			if (!vertical) context.fillText(label, at + 2, 9);
 			else {
@@ -134,7 +247,25 @@ export class OfficeUiRuler extends OfficeElement {
 	}
 
 	protected override render() {
-		return html`<canvas></canvas>`;
+		const vertical = this.orientation === 'vertical';
+		const band = (side: 'start' | 'end', size: number) =>
+			size > 0
+				? html`<div
+						class="margin"
+						data-margin=${side}
+						style="${side === 'start' ? (vertical ? 'top' : 'left') : vertical ? 'bottom' : 'right'}:0;${vertical ? 'height' : 'width'}:${size}px"
+					></div>`
+				: nothing;
+		return html`${band('start', this.marginStart)}${band('end', this.marginEnd)}<canvas
+			></canvas>${this.markers.map(
+				(marker) => html`<div
+					class="marker ${marker.edge === 'top' ? 'top' : 'bottom'}"
+					data-marker=${marker.name}
+					style="${vertical ? 'top' : 'left'}:${marker.position}px"
+					aria-label=${marker.label ?? nothing}
+					@pointerdown=${(event: PointerEvent) => this.dragMarker(event, marker.name)}
+				></div>`,
+			)}`;
 	}
 }
 
