@@ -199,6 +199,17 @@ describe('parseParagraphSpacingPx', () => {
 		};
 		expect(parseParagraphSpacingPx(node)).toBeUndefined();
 	});
+
+	it('resolves a:spcPct against a single line of the given font size', () => {
+		// 50% of one 16px line, and a single line is 1.2x the font size.
+		const node: XmlObject = { 'a:spcPct': { '@_val': '50000' } };
+		expect(parseParagraphSpacingPx(node, 16)).toBeCloseTo(9.6, 5);
+	});
+
+	it('leaves a:spcPct unresolved without a font size', () => {
+		const node: XmlObject = { 'a:spcPct': { '@_val': '50000' } };
+		expect(parseParagraphSpacingPx(node)).toBeUndefined();
+	});
 });
 
 // ---------------------------------------------------------------------------

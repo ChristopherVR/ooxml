@@ -86,6 +86,18 @@ describe('withCellText', () => {
 		expect(cell.textRuns).toHaveLength(1);
 	});
 
+	it("keeps only the first paragraph's layout, as the rewritten markup does", () => {
+		const next = withCellText(
+			{
+				text: 'one\ntwo',
+				textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+				paragraphs: [{ align: 'right' }, { align: 'center' }],
+			},
+			'new',
+		);
+		expect(next).toStrictEqual({ text: 'new', paragraphs: [{ align: 'right' }] });
+	});
+
 	it('is a no-op on the run model for a cell that never had one', () => {
 		expect(withCellText({ text: 'a' }, 'b')).toStrictEqual({ text: 'b' });
 	});

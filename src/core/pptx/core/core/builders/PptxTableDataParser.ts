@@ -14,6 +14,7 @@ import {
 	applyCellBorderStyle,
 	applyCellMarginStyle,
 } from './table-cell-fill-border-helpers';
+import { extractTableCellParagraphs } from './table-cell-paragraphs';
 import { extractTableCellTextRuns } from './table-cell-runs';
 import { applyCellAlignmentStyle, applyCellTextFormat } from './table-cell-text-style-helpers';
 
@@ -84,6 +85,7 @@ export class PptxTableDataParser implements IPptxTableDataParser {
 			const tableProperties = (tableNode['a:tblPr'] || {}) as XmlObject;
 			const tableStyleId = this.extractTableStyleId(tableProperties);
 
+			const defaultCellFontSize = this.context.resolveDefaultCellFontSize?.(slidePath);
 			const xmlRows = this.context.ensureArray(tableNode['a:tr']) as XmlObject[];
 			const rows: PptxTableRow[] = xmlRows.map((rowNode) => {
 				const rowHeightEmu = parseInt(String(rowNode?.['@_h'] || '0'), 10) || 0;
@@ -97,9 +99,13 @@ export class PptxTableDataParser implements IPptxTableDataParser {
 							cellNode['a:tcPr'] as XmlObject | undefined,
 						);
 						const textRuns = extractTableCellTextRuns(cellNode, this.context);
+						const paragraphs = textRuns
+							? extractTableCellParagraphs(cellNode, this.context, defaultCellFontSize)
+							: undefined;
 						return {
 							text: this.extractTableCellText(cellNode),
 							...(textRuns ? { textRuns } : {}),
+							...(paragraphs ? { paragraphs } : {}),
 							style: this.extractTableCellStyleFromXml(cellNode, slidePath),
 							gridSpan: cellNode['@_gridSpan']
 								? parseInt(String(cellNode['@_gridSpan']), 10)
@@ -141,8 +147,6 @@ export class PptxTableDataParser implements IPptxTableDataParser {
 			const tableEffects =
 				parseTableEffectChain(tableProperties['a:effectLst'] as XmlObject | undefined) ??
 				(effectDag ? [{ kind: 'effectDag', xml: effectDag }] : undefined);
-
-			const defaultCellFontSize = this.context.resolveDefaultCellFontSize?.(slidePath);
 
 			return {
 				rows,

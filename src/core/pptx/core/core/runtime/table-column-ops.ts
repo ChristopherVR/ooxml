@@ -276,6 +276,7 @@ export function removeTableColumn(
 							...nextCell,
 							text: cell.text || nextCell.text,
 							textRuns: cell.text ? cell.textRuns : nextCell.textRuns,
+							paragraphs: cell.text ? cell.paragraphs : nextCell.paragraphs,
 							style: nextCell.style || cell.style,
 							gridSpan: gs - 1 > 1 ? gs - 1 : undefined,
 							hMerge: undefined, // No longer a continuation
