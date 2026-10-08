@@ -69,6 +69,27 @@ describe('ribbon overflow', () => {
 		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
 	});
 
+	it('ends the dropdown on a command but keeps it open for a button that opens a popup', async () => {
+		const { el, groups } = panel(150);
+		overflow.fitPanel(el);
+		const group = groups[1]!;
+		const run = group.querySelector<HTMLButtonElement>('[data-command]')!;
+		const gallery = document.createElement('button');
+		gallery.dataset.command = 'gallery';
+		gallery.setAttribute('aria-haspopup', 'dialog');
+		group.append(gallery);
+		const toggle = group.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!;
+		const tick = () => new Promise((done) => setTimeout(done, 0));
+		toggle.click();
+		gallery.click();
+		await tick();
+		expect(document.querySelector('.ribbon-overflow-panel')?.contains(gallery)).toBe(true);
+		run.click();
+		await tick();
+		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
+		expect(group.contains(gallery)).toBe(true);
+	});
+
 	it('leaves a panel that already fits alone', () => {
 		const { el, groups } = panel(500);
 		overflow.fitPanel(el);

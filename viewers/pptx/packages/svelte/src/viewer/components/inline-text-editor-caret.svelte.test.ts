@@ -4,7 +4,7 @@
  * via the shared `placeCaretAtEnd`. Focus alone leaves the caret at the start,
  * which is the parity bug this pins.
  */
-import type { PptxElement } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { InlineListController, YjsFactories } from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
@@ -16,7 +16,7 @@ import { flushSync, mount, unmount, untrack } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
-import { duplicateSlideAt, moveSlide } from '../editor/editor-slide-ops';
+import { moveSlide } from '../editor/editor-slide-ops';
 import { EditorState } from '../editor/editor-state.svelte';
 import InlineTextEditor from './InlineTextEditor.svelte';
 import ParagraphGroup from './ribbon/home/ParagraphGroup.svelte';
@@ -54,10 +54,14 @@ describe('inline text editor caret placement', () => {
 					}),
 			};
 			const element = textElement();
-			const duplicated = duplicateSlideAt(
-				[{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [element] }],
-				0,
-			)!;
+			// Shape IDs only need to be unique within a slide, so a second slide can hold an
+			// element with the same ID as the one being edited.
+			const duplicated: { slides: PptxSlide[] } = {
+				slides: [
+					{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [element] },
+					{ id: 's2', rId: 'rId2', slideNumber: 2, elements: [{ ...element }] },
+				] as PptxSlide[],
+			};
 			let slides = $state(duplicated.slides);
 			reconcileSlidesInYDoc(duplicated.slides, doc, factories);
 			const patcher = createCollaborationLivePatcher();
@@ -119,8 +123,8 @@ describe('inline text editor caret placement', () => {
 				} else if (closing === 'readonly') {
 					patcher.configure(null, null);
 				} else if (closing === 'slide replacement' || closing === 'mutable target') {
-					// Duplicating a slide preserves element IDs. A reorder can
-					// replace the active slide while its numeric index stays zero.
+					// A reorder can replace the active slide while its numeric
+					// index stays zero and the element ID still matches.
 					expect(duplicated.slides[1].elements[0].id).toBe(element.id);
 					untrack(() => {
 						slides = moveSlide(slides, 0, 1)!;

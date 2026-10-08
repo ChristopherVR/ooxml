@@ -95,9 +95,12 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			closeOpen?.();
 			button.focus();
 		};
-		// A command ends the dropdown; selects and combo boxes keep it open.
+		// A command ends the dropdown; selects, combo boxes and buttons that open their own popup
+		// (a gallery or a menu, which would vanish with the dropdown) keep it open.
 		pop.addEventListener('click', (event) => {
-			if ((event.target as Element).closest(options.command)) setTimeout(() => closeOpen?.(), 0);
+			const command = (event.target as Element).closest(options.command);
+			const popup = command?.getAttribute('aria-haspopup');
+			if (command && (!popup || popup === 'false')) setTimeout(() => closeOpen?.(), 0);
 		});
 		doc.addEventListener('pointerdown', outside, true);
 		doc.addEventListener('keydown', escape, true);

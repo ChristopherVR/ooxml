@@ -100,11 +100,25 @@ for (const framework of FRAMEWORKS)
 		await expect(
 			popup.getByRole('button', { name: 'Colorful Palette 2', exact: true }),
 		).toBeFocused();
+		// At phone width the ribbon may fold Chart Styles into a dropdown (it depends on the
+		// platform's font metrics), hiding the open gallery with it. Let the ribbon refit, then
+		// reopen the gallery, from the folded group when there is one, before measuring it.
+		await page.keyboard.press('Escape');
 		await page.setViewportSize({ width: 390, height: 844 });
+		await page.evaluate(
+			() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+		);
+		const folded = editor(page).getByRole('button', { name: 'Chart Styles', exact: true });
+		if (await folded.isVisible()) await folded.click();
+		await trigger.click();
+		await expect(popup).toBeVisible();
 		const bounds = await popup.boundingBox();
 		expect(bounds!.x).toBeGreaterThanOrEqual(0);
 		expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+		await page.keyboard.press('Escape');
 		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect(trigger).toBeVisible();
+		await trigger.click();
 		await popup.getByRole('button', { name: 'Monochromatic Palette 2', exact: true }).click();
 		type Book = { sheets: { drawings: { title?: string; colorPalette?: number }[] }[] };
 		const chart = async () =>
