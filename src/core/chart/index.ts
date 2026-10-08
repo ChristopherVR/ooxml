@@ -29,3 +29,4 @@ export * from './data-cache';
 export { parseChartSpace } from './parse-space';
 export { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
 export { CHART_GROUP_ELEMENTS } from './parse-plot';
+export * from './render/index';
