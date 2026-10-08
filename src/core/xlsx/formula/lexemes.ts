@@ -75,7 +75,7 @@ export const isNameStartCode = (code: number): boolean =>
 const isNameCharCode = (code: number): boolean =>
 	isNameStartCode(code) || isDigitCode(code) || code === 46 || code === 63;
 
-/** A character of an unquoted sheet name in a prefix (the class of `PREFIX_AT`). */
+/** A character of an unquoted sheet name in a prefix. */
 const isSheetCharCode = (code: number): boolean =>
 	isLetterCode(code) || isDigitCode(code) || code === 95 || code === 46 || code >= 0xa1;
 
@@ -220,8 +220,6 @@ export function splitSheets(text: string): { sheet: string; sheet2?: string; boo
 	return out;
 }
 
-const PREFIX_AT = /(\[\d+\])?([A-Za-z0-9_.\u00A1-\uFFFF]+)(?::([A-Za-z0-9_.\u00A1-\uFFFF]+))?!/y;
-
 /** Reads an optional sheet prefix at `at`; returns it and its length. */
 export function readPrefix(
 	source: string,
@@ -234,8 +232,8 @@ export function readPrefix(
 		const length = quoted.length + 1;
 		return { prefix: { text: source.slice(at, at + length), ...splitSheets(quoted.name) }, length };
 	}
-	// The pattern can only match when the run of sheet-name characters (after an optional `[n]`
-	// book index) ends at `!` or `:`; checking that first skips the regex for most tokens.
+	// `[n]Sheet!` or `[n]First:Last!`, scanned by hand: a regex with `+` runs before the
+	// required `!` backtracks quadratically on long runs of sheet-name characters.
 	let i = at;
 	if (ch === '[') {
 		i++;
@@ -243,13 +241,24 @@ export function readPrefix(
 		if (i === at + 1 || source[i] !== ']') return undefined;
 		i++;
 	}
+	const sheetFrom = i;
 	while (i < source.length && isSheetCharCode(source.charCodeAt(i))) i++;
-	if (source[i] !== '!' && source[i] !== ':') return undefined;
-	const m = matchAt(PREFIX_AT, source, at);
-	if (!m) return undefined;
-	if (!m[1] && /^\d/.test(m[2] ?? '') && !m[3]) return undefined;
-	const raw = m[0].slice(0, -1);
-	return { prefix: { text: m[0], ...splitSheets(raw) }, length: m[0].length };
+	if (i === sheetFrom) return undefined;
+	let lastFrom = -1;
+	if (source[i] === ':') {
+		lastFrom = i + 1;
+		i = lastFrom;
+		while (i < source.length && isSheetCharCode(source.charCodeAt(i))) i++;
+		if (i === lastFrom) return undefined;
+	}
+	if (source[i] !== '!') return undefined;
+	// A plain leading-digit name such as `1A!` is a row or number, not a sheet.
+	if (ch !== '[' && lastFrom < 0 && isDigitCode(source.charCodeAt(sheetFrom))) return undefined;
+	const length = i + 1 - at;
+	return {
+		prefix: { text: source.slice(at, at + length), ...splitSheets(source.slice(at, i)) },
+		length,
+	};
 }
 
 /** A number literal's value; Excel keeps only 15 significant digits of what was typed. */
