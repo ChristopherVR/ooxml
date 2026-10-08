@@ -158,7 +158,9 @@ and no claim of parity without evidence.
 - pptx document properties through `opc/properties`.
 - Shared chrome: title bar, status bar, backstage and find bar used by all
   four products; token bridges reduced to alias sheets.
-- Diagram layout engine out of pptx (plan step 2).
+- Diagram layout engine out of pptx (plan step 2): model types and engine moved to
+  `diagram`; constraint solver, hierarchy and interpreters remain (see the step 2
+  status in `agnostic-core-plan.md`).
 - Gradient raster gaps (bug 3) with native reference images.
 - `src/ui/tsconfig.pptx.json` extends the base; tighten one pptx directory at
   a time; shared `playwright-chromium` and `tsconfig.release` for docx and
