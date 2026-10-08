@@ -1,3 +1,4 @@
+import { SUPPORTED_OFFICE_LOCALES } from 'ooxml-core/i18n';
 import { de } from './locales/de';
 import { en } from './locales/en';
 import { es } from './locales/es';
@@ -10,4 +11,4 @@ export type { LocaleStrings, LocalizationKey } from './locales/en';
 export const strings = { en, fr, de, es, 'zh-CN': zhCN } as const;
 
 /** Canonical codes of the supported display locales, in menu order. */
-export const EDITOR_LOCALES = ['en', 'fr', 'de', 'es', 'zh-CN'] as const;
+export const EDITOR_LOCALES = SUPPORTED_OFFICE_LOCALES;

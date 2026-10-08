@@ -1,4 +1,5 @@
 /** Display-language strings for the shared editor UI. This locale never changes DOCX language marks. */
+import { interpolate, normalizeLocale } from 'ooxml-core/i18n';
 import { EDITOR_LOCALES, strings, type LocalizationKey } from './localization-strings';
 
 export type EditorLocale = (typeof EDITOR_LOCALES)[number];
@@ -13,17 +14,7 @@ export type { LocalizationKey };
  * Simplified Chinese, while Traditional tags (`zh-TW`, `zh-HK`, `zh-Hant`) are unsupported.
  */
 export function normalizeEditorLocale(value: string | null | undefined): EditorLocale {
-	const parts = (value ?? '').trim().toLowerCase().split(/[-_]/);
-	switch (parts[0]) {
-		case 'fr':
-		case 'de':
-		case 'es':
-			return parts[0];
-		case 'zh':
-			return parts.some((part) => ['hant', 'tw', 'hk', 'mo'].includes(part)) ? 'en' : 'zh-CN';
-		default:
-			return 'en';
-	}
+	return normalizeLocale(value, EDITOR_LOCALES, 'en');
 }
 export function translate(locale: EditorLocale, key: LocalizationKey): string {
 	return strings[locale][key] ?? strings.en[key] ?? key;
@@ -34,9 +25,7 @@ export function translateTemplate(
 	key: LocalizationKey,
 	values: Record<string, string | number>,
 ): string {
-	return translate(locale, key).replace(/\{(\w+)\}/g, (match, name: string) =>
-		name in values ? String(values[name]) : match,
-	);
+	return interpolate(translate(locale, key), values);
 }
 function translateDynamic(locale: EditorLocale, text: string): string {
 	if (locale === 'en') return text;
