@@ -72,6 +72,7 @@
 												y2="100%"
 												[attr.stroke]="diag.diagDownColor"
 												[attr.stroke-width]="diag.diagDownWidth"
+												[style.stroke-width]="screenStrokeWidth(diag.diagDownWidth)"
 											/>
 										}
 										@if (diag.diagUpColor && diag.diagUpWidth) {
@@ -82,6 +83,7 @@
 												y2="0"
 												[attr.stroke]="diag.diagUpColor"
 												[attr.stroke-width]="diag.diagUpWidth"
+												[style.stroke-width]="screenStrokeWidth(diag.diagUpWidth)"
 											/>
 										}
 									</svg>

@@ -20,17 +20,6 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type {
-	ChartPptxElement,
-	InkPptxElement,
-	PptxElement,
-	PptxGridSpacing,
-	PptxSlide,
-	PptxTableData,
-	TextStyle,
-} from 'pptx-viewer-core';
-import { hasTextProperties } from 'pptx-viewer-core';
-
-import type {
 	InlineListController,
 	InlineListSeed,
 	InlineTextEditSnapshot,
@@ -50,6 +39,7 @@ import {
 	canInteractWithElement,
 	collectConnectorSiteCandidates,
 	createInlineListSeed,
+	deviceStrokeStageStyle,
 	inlineListBodyText,
 	editorNudgeDelta,
 	findConnectorSiteNear,
@@ -67,6 +57,17 @@ import {
 } from 'ooxml-ui/pptx';
 import type { AiCanvasHighlight, AiChangeBatch } from 'ooxml-ui/pptx/ai';
 import { resolveContextMenuElementId } from 'ooxml-ui/pptx/render/context-menu-target';
+import type {
+	ChartPptxElement,
+	InkPptxElement,
+	PptxElement,
+	PptxGridSpacing,
+	PptxSlide,
+	PptxTableData,
+	TextStyle,
+} from 'pptx-viewer-core';
+import { hasTextProperties } from 'pptx-viewer-core';
+
 import { ActiveXControlsOverlayComponent } from './activex-controls-overlay.component';
 import { AiChangeOverlayComponent } from './ai/ai-change-overlay.component';
 import { AiFocusHighlightOverlayComponent } from './ai/ai-focus-highlight-overlay.component';
@@ -1747,6 +1748,8 @@ export class SlideCanvasComponent implements SlideContext {
 			height: `${size.height}px`,
 			transform: `scale(${scale})`,
 			'transform-origin': 'top left',
+			// One device pixel in slide px: thin strokes stay visible on screen.
+			...deviceStrokeStageStyle(scale),
 			position: 'relative',
 			overflow: 'hidden',
 			'box-shadow': '0 10px 40px rgba(0, 0, 0, 0.35)',

@@ -1,5 +1,5 @@
+import { buildPreviewElements, deviceStrokeStageStyle, editorThumbnailHeight } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { buildPreviewElements, editorThumbnailHeight } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -68,6 +68,7 @@ function SlideThumbnailImpl({
 					height: safeCanvasHeight,
 					transform: `scale(${scale})`,
 					transformOrigin: 'top left',
+					...deviceStrokeStageStyle(scale),
 				}}
 			>
 				<SlideBackgroundImageLayer slide={slide} />

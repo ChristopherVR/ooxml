@@ -1,3 +1,10 @@
+import {
+	buildSubpathPaints,
+	screenStrokeWidth,
+	svgGradientFillRef,
+	svgLineCap,
+} from 'ooxml-ui/pptx';
+import type { SvgGradientDef } from 'ooxml-ui/pptx';
 /**
  * Per-sub-path custom-geometry SVG rendering.
  *
@@ -19,8 +26,6 @@
  */
 import { customGeometryPathsToSvgSubpaths } from 'pptx-viewer-core';
 import type { CustomGeometryPath, ShapeStyle } from 'pptx-viewer-core';
-import { buildSubpathPaints, svgGradientFillRef, svgLineCap } from 'ooxml-ui/pptx';
-import type { SvgGradientDef } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { colorWithOpacity } from './color';
@@ -93,7 +98,11 @@ function strokeStrands(d: string, keyBase: string, ctx: StrokeStyleContext): Rea
 			strokeLinejoin={ctx.lineJoin}
 			strokeMiterlimit={ctx.miterLimit}
 			vectorEffect='non-scaling-stroke'
-			style={offset !== 0 ? { transform: `translate(0, ${offset}px)` } : undefined}
+			style={{
+				// Never under one device pixel on screen (shared `device-pixel-stroke`).
+				strokeWidth: screenStrokeWidth(Math.max(ctx.widths[idx] ?? ctx.strokeWidth, 1)),
+				transform: offset !== 0 ? `translate(0, ${offset}px)` : undefined,
+			}}
 		/>
 	));
 }

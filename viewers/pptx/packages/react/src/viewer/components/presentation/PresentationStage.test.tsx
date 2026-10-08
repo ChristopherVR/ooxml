@@ -1,3 +1,4 @@
+import { isPresentationAdvanceClick, PRESENTATION_STAGE_ATTRIBUTE } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * PowerPoint's "On Mouse Click" advance on the slide-show surface.
@@ -9,7 +10,6 @@
  * live slide content (a hyperlink, an action shape) is NOT also an advance.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { isPresentationAdvanceClick, PRESENTATION_STAGE_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -136,5 +136,15 @@ describe('presentationStage show contract', () => {
 		expect(
 			stage?.querySelector('[data-element-id="ppt/slides/slide2.xml-shape-0"]'),
 		).not.toBeNull();
+	});
+});
+
+describe('presentationStage thin strokes (issue #23)', () => {
+	it('publishes one device pixel in slide px for its scale', () => {
+		renderStage(vi.fn());
+		const stage = container.querySelector<HTMLElement>(`[${PRESENTATION_STAGE_ATTRIBUTE}]`);
+		expect(stage?.style.getPropertyValue('--pptx-device-px')).toMatch(
+			/^calc\(1px \/ \([\d.]+ \* var\(--pptx-dpr, 1\)\)\)$/u,
+		);
 	});
 });

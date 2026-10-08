@@ -1,3 +1,4 @@
+import { deviceStrokeStageStyle, READING_VIEW_STAGE_ATTR } from 'ooxml-ui/pptx';
 /**
  * The slide surface inside Reading View.
  *
@@ -9,7 +10,6 @@
  * same machinery the presenter previews use.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { READING_VIEW_STAGE_ATTR } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasSize } from '../../types';
@@ -64,7 +64,7 @@ export function ReadingViewStage({
 			)}
 			<div
 				className='absolute left-0 top-0 origin-top-left'
-				style={{ width, height, transform: `scale(${scale})` }}
+				style={{ width, height, transform: `scale(${scale})`, ...deviceStrokeStageStyle(scale) }}
 			>
 				{elements.map((element, index) => (
 					<StaticElementRenderer

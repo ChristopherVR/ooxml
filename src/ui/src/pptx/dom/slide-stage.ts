@@ -20,6 +20,7 @@ import {
 	actionAffordanceLabels,
 	applyElementActionAffordances,
 	applyRenderedElementAccessibility,
+	deviceStrokeStageStyle,
 	elementHitTargetStyle,
 	getSlideBackgroundStyle,
 	isElementRendered,
@@ -153,6 +154,8 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		'--pptx-slide-w': `${canvasSize.width}px`,
 		'--pptx-slide-h': `${canvasSize.height}px`,
 		'--pptxv-grid-size': `${options.gridSpacingPx ?? 10}px`,
+		// One device pixel in slide px: thin strokes stay visible on screen.
+		...deviceStrokeStageStyle(scale),
 		...getSlideBackgroundStyle(slide, { widthPx: canvasSize.width, heightPx: canvasSize.height }),
 	});
 	if (interactive || options.reading) {

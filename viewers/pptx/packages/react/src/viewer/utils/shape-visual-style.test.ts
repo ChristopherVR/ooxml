@@ -209,7 +209,7 @@ describe('getShapeVisualStyle shared-pipeline convergence', () => {
 		// line / gap / line. (The old inset-box-shadow strands never painted a
 		// gap at all, and left the border at a third of its authored weight.)
 		expect(style.borderStyle).toBe('double');
-		expect(style.borderWidth).toBe(9);
+		expect(style.borderWidth).toBe('max(9px, var(--pptx-device-px, 0px))');
 		expect(style.boxShadow).toBeUndefined();
 	});
 

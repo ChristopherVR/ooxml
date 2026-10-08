@@ -1,5 +1,3 @@
-import type { PptxElement } from 'pptx-viewer-core';
-import { isImageLikeElement } from 'pptx-viewer-core';
 import {
 	buildHollowHitOutline,
 	buildStrokeOutline,
@@ -11,6 +9,8 @@ import {
 	strokeOutlineViewBox,
 } from 'ooxml-ui/pptx';
 import type { StrokeOutlinePaint } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
+import { isImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
 import type { CSSProperties } from 'react';
 
@@ -255,9 +255,11 @@ export function ShapeEffectOverlay({
 							strokeDasharray={strokeOutline.dashArray}
 							strokeLinecap={strokeOutline.lineCap}
 							strokeLinejoin={strokeOutline.lineJoin}
-							style={
-								strand.offset !== 0 ? { transform: `translate(0, ${strand.offset}px)` } : undefined
-							}
+							style={{
+								// Never under one device pixel on screen (shared `device-pixel-stroke`).
+								strokeWidth: strand.cssStrokeWidth,
+								transform: strand.offset !== 0 ? `translate(0, ${strand.offset}px)` : undefined,
+							}}
 						/>
 					))}
 				</svg>

@@ -1,11 +1,11 @@
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 /**
  * ScaledSlidePreview: renders a slide at any size by scaling the native
  * canvas dimensions into a container-determined bounding box.
  *
  * Used by PresenterView for current-slide and next-slide previews.
  */
-import { visibleTemplateElements } from 'ooxml-ui/pptx';
+import { deviceStrokeStageStyle, visibleTemplateElements } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React, { useEffect, useRef, useState } from 'react';
 
 import type { CanvasSize } from '../types';
@@ -92,6 +92,7 @@ function ScaledSlidePreviewImpl({
 					height: safeCanvasHeight,
 					transform: `scale(${scale})`,
 					transformOrigin: 'top left',
+					...deviceStrokeStageStyle(scale),
 				}}
 			>
 				{previewElements.map((element, index) => (

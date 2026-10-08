@@ -37,6 +37,7 @@ import { getShapeType, hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
 import { getCompoundLineOffsets, getCompoundLineWidths, svgLineCap } from './connector-style';
+import { screenStrokeWidth } from './device-pixel-stroke';
 import { getSvgStrokeDasharray, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity } from './fill-style';
 import { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from './shape-geometry';
@@ -66,6 +67,12 @@ export type StrokeOutlinePaint = SvgGradientDef | SvgPatternDef;
  */
 export interface StrokeOutlineStrand {
 	strokeWidth: number;
+	/**
+	 * `strokeWidth` as the inline CSS `stroke-width` to paint on screen: never
+	 * under one device pixel inside a stage (see `device-pixel-stroke`). Write it
+	 * as a style property next to the numeric attribute.
+	 */
+	cssStrokeWidth: string;
 	offset: number;
 }
 
@@ -236,10 +243,13 @@ function outlineStrands(
 ): StrokeOutlineStrand[] {
 	const offsets = getCompoundLineOffsets(compoundLine, strokeWidth);
 	if (offsets.length <= 1) {
-		return [{ strokeWidth, offset: 0 }];
+		return [{ strokeWidth, cssStrokeWidth: screenStrokeWidth(strokeWidth), offset: 0 }];
 	}
 	const widths = getCompoundLineWidths(compoundLine, strokeWidth);
-	return offsets.map((offset, idx) => ({ strokeWidth: widths[idx] ?? strokeWidth, offset }));
+	return offsets.map((offset, idx) => {
+		const width = widths[idx] ?? strokeWidth;
+		return { strokeWidth: width, cssStrokeWidth: screenStrokeWidth(width), offset };
+	});
 }
 
 /**

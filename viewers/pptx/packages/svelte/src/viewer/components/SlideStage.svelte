@@ -12,6 +12,7 @@
 		applyElementActionAffordances,
 		applyRenderedElementAccessibility,
 		deriveSlideFieldContext,
+		deviceStrokeStageStyle,
 		getSlideBackgroundStyle,
 	} from 'ooxml-ui/pptx';
 
@@ -68,6 +69,8 @@
 			height: `${canvasSize.height}px`,
 			transform: `scale(${scale})`,
 			transformOrigin: 'top left',
+			// One device pixel in slide px: thin strokes stay visible on screen.
+			...deviceStrokeStageStyle(scale),
 			position: 'relative',
 			overflow: 'hidden',
 			// Motion-path keyframes translate by a fraction of the SLIDE, not of

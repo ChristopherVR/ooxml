@@ -1,4 +1,5 @@
 import { settleThreeViews, snapshotThreeViewsIntoClone } from '../three-view/export-snapshot';
+import { withAuthoredStrokeWidths } from './device-pixel-stroke';
 import { prepareExportClone } from './export-clone';
 import { collectExternalFontFaceCss, collectFontFaceCss } from './foreign-object-font-embed';
 import type { FontStyleDocumentLike, LinkStyleDocumentLike } from './foreign-object-font-embed';
@@ -87,7 +88,11 @@ export async function buildForeignObjectSvgBody(
 	// (while the trees are still aligned).
 	await settleThreeViews(element);
 	const clone = element.cloneNode(true) as HTMLElement;
-	inlineComputedStylesOnClone(element, clone, readComputedStyle);
+	// Read computed styles at AUTHORED stroke widths, not the on-screen
+	// one-device-pixel minimum the live stage applies.
+	withAuthoredStrokeWidths(element, () =>
+		inlineComputedStylesOnClone(element, clone, readComputedStyle),
+	);
 	snapshotThreeViewsIntoClone(element, clone);
 	// Keep the trees aligned while copying styles, then omit editor-only nodes
 	// before embedding resources. The live editor tree is never changed.

@@ -1,4 +1,5 @@
 import {
+	deviceStrokeStageStyle,
 	isGroupMember,
 	motionPathFor,
 	parentSelection,
@@ -348,6 +349,8 @@ function SlideCanvasContent({
 						width: canvasSize.width,
 						height: canvasSize.height,
 						transform: `scale(${zoom.editorScale})`,
+						// One device pixel in slide px: thin strokes stay visible on screen.
+						...deviceStrokeStageStyle(zoom.editorScale),
 						transformOrigin: 'top left',
 						['--pptx-handle-inverse-scale' as string]: 1 / zoom.editorScale,
 						// Motion-path keyframes translate by a fraction of the SLIDE, so

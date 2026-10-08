@@ -1,10 +1,10 @@
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 /**
  * A table cell draws no border of its own. The deck's borders come from the cell style, so a side
  * with none renders with none (as PowerPoint draws it) instead of a default 1px border that pushes
  * the cell content in.
  */
 import type { TablePptxElement } from 'pptx-viewer-core';
-import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -47,7 +47,7 @@ describe('table cell default border', () => {
 			expect(attributes).not.toMatch(/class="[^"]*\bborder\b/u);
 			expect(attributes).not.toContain('border-white');
 		}
-		expect(cells[1]).toContain('border-left:2px solid #ff0000');
+		expect(cells[1]).toContain('border-left:max(2px, var(--pptx-device-px, 0px)) solid #ff0000');
 		expect(cells[0]).not.toContain('border-left');
 	});
 });

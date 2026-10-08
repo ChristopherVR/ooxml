@@ -52,6 +52,9 @@ export * from './subpath-fill-overlay';
 // The whole `a:ln` -> CSS decision (border width/style/colour, compound lines,
 // line join / cap / miter limit) as one descriptor, so no binding re-derives it.
 export * from './stroke-style';
+// On-screen strokes and borders never thinner than one device pixel (issue #23):
+// the stage publishes the device pixel, widths are written as `max()` against it.
+export * from './device-pixel-stroke';
 // `a:blipFill/a:tile`: scale, offset, alignment and mirror-flip of a tiled
 // picture, which four of five bindings used to render as one stretched copy.
 export * from './image-tiling';

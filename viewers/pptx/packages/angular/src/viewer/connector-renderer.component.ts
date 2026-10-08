@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { getLineGlowFilterCss, getLineShadowParams, screenStrokeWidth } from 'ooxml-ui/pptx';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 
-import { getLineGlowFilterCss, getLineShadowParams } from 'ooxml-ui/pptx';
-import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { buildConnectorGeometry } from './connector-path';
 import type { MarkerShape } from './connector-path';
 import type { Rect } from './connector-routing';
@@ -129,6 +129,7 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 							fill="none"
 							[attr.stroke]="strokeColor()"
 							[attr.stroke-width]="strand.width"
+							[style.stroke-width]="strand.cssWidth"
 							[attr.stroke-opacity]="geo().strokeOpacity"
 							[attr.stroke-dasharray]="geo().dashArray ?? null"
 							[attr.stroke-linecap]="geo().strokeLinecap"
@@ -146,6 +147,7 @@ import { DynamicStyleComponent } from './dynamic-style.component';
 							[attr.y2]="geo().y2"
 							[attr.stroke]="strokeColor()"
 							[attr.stroke-width]="strand.width"
+							[style.stroke-width]="strand.cssWidth"
 							[attr.stroke-opacity]="geo().strokeOpacity"
 							[attr.stroke-dasharray]="geo().dashArray ?? null"
 							[attr.stroke-linecap]="geo().strokeLinecap"
@@ -251,6 +253,7 @@ export class ConnectorRendererComponent {
 		return offsets.map((offset, idx) => ({
 			key: idx,
 			width: Math.max(g.compoundWidths[idx] ?? g.strokeWidth, 1),
+			cssWidth: screenStrokeWidth(Math.max(g.compoundWidths[idx] ?? g.strokeWidth, 1)),
 			transform: offset !== 0 ? `translate(0 ${offset})` : null,
 			shadowFilter: idx === 0 && this.lineShadow() ? `url(#${this.shadowFilterId()})` : null,
 			markerStart: idx === 0 ? g.startMarkerRef : null,
@@ -272,6 +275,8 @@ export class ConnectorRendererComponent {
 interface ConnectorStrand {
 	key: number;
 	width: number;
+	/** `width` as the on-screen CSS width: never under one device pixel. */
+	cssWidth: string;
 	transform: string | null;
 	shadowFilter: string | null;
 	markerStart: string | null;

@@ -8,7 +8,7 @@
 	 * pattern fills, diagonal borders (SVG overlay), and rich per-run text.
 	 * All style resolution lives in `render/table-view.ts` + shared helpers.
 	 */
-	import { canDrillDown, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+	import { canDrillDown, screenStrokeWidth, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { buildTableRows, columnWidthStyles, tableRootStyle } from '../render';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
@@ -171,6 +171,7 @@
 												y2="100%"
 												stroke={cell.diagonals.diagDownColor}
 												stroke-width={cell.diagonals.diagDownWidth}
+												style:stroke-width={screenStrokeWidth(cell.diagonals.diagDownWidth)}
 											/>
 										{/if}
 										{#if cell.diagonals.diagUpColor && cell.diagonals.diagUpWidth}
@@ -181,6 +182,7 @@
 												y2="0"
 												stroke={cell.diagonals.diagUpColor}
 												stroke-width={cell.diagonals.diagUpWidth}
+												style:stroke-width={screenStrokeWidth(cell.diagonals.diagUpWidth)}
 											/>
 										{/if}
 									</svg>

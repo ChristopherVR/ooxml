@@ -20,6 +20,7 @@ import {
 	cellRunStyle,
 	DEFAULT_FONT_FAMILY,
 	getCellDiagonalBorders,
+	screenStrokeWidth,
 	tableCellCss,
 	tableCellPointerIntent,
 	tableContainerCss,
@@ -591,6 +592,7 @@ onBeforeUnmount(() => {
 									y2="100%"
 									:stroke="cell.diagonals.diagDownColor"
 									:stroke-width="cell.diagonals.diagDownWidth"
+									:style="{ strokeWidth: screenStrokeWidth(cell.diagonals.diagDownWidth) }"
 								/>
 								<line
 									v-if="cell.diagonals.diagUpColor && cell.diagonals.diagUpWidth"
@@ -600,6 +602,7 @@ onBeforeUnmount(() => {
 									y2="0"
 									:stroke="cell.diagonals.diagUpColor"
 									:stroke-width="cell.diagonals.diagUpWidth"
+									:style="{ strokeWidth: screenStrokeWidth(cell.diagonals.diagUpWidth) }"
 								/>
 							</svg>
 

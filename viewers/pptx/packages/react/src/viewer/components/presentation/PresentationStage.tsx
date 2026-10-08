@@ -1,6 +1,10 @@
-import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { PRESENTATION_HIT_TEST_CSS, PRESENTATION_STAGE_ATTRIBUTE } from 'ooxml-ui/pptx';
+import {
+	deviceStrokeStageStyle,
+	PRESENTATION_HIT_TEST_CSS,
+	PRESENTATION_STAGE_ATTRIBUTE,
+} from 'ooxml-ui/pptx';
 import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
+import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
 /**
  * PresentationStage: the slide show surface.
  *
@@ -179,6 +183,8 @@ export function PresentationStage({
 							height: safeHeight,
 							transform: `scale(${scale})`,
 							transformOrigin: 'top left',
+							// One device pixel in slide px: thin strokes stay visible on screen.
+							...deviceStrokeStageStyle(scale),
 							// Motion-path keyframes translate by a fraction of the SLIDE, so
 							// the stage publishes its own size for those calc() offsets.
 							'--pptx-slide-w': `${safeWidth}px`,

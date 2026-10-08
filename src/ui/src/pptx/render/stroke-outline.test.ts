@@ -268,7 +268,9 @@ describe('buildStrokeOutline stroke-only ("open") presets', () => {
 	});
 
 	it('paints one strand for a single line and several for a compound one', () => {
-		expect(buildStrokeOutline(line())!.strands).toStrictEqual([{ strokeWidth: 2, offset: 0 }]);
+		expect(buildStrokeOutline(line())!.strands).toStrictEqual([
+			{ strokeWidth: 2, cssStrokeWidth: 'max(2px, var(--pptx-device-px, 0px))', offset: 0 },
+		]);
 		const compound = buildStrokeOutline(line({}, { strokeWidth: 4, compoundLine: 'dbl' }))!;
 		expect(compound.strands).toHaveLength(2);
 		expect(compound.strands[0].offset).not.toBe(compound.strands[1].offset);

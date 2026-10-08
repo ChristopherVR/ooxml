@@ -273,6 +273,28 @@ describe('buildForeignObjectSvgBody', () => {
 
 		document.body.removeChild(el);
 	});
+
+	it('reads computed styles at authored stroke widths and restores the on-screen device pixel', async () => {
+		document.body.innerHTML = '';
+		const stage = document.createElement('div');
+		const live = 'calc(1px / (0.5 * var(--pptx-dpr, 1)))';
+		stage.style.setProperty('--pptx-device-px', live);
+		document.body.appendChild(stage);
+		const seen: string[] = [];
+
+		await buildForeignObjectSvgBody(stage, document, {
+			width: 20,
+			height: 20,
+			readComputedStyle: (el) => {
+				seen.push((el as HTMLElement).style.getPropertyValue('--pptx-device-px'));
+				return { length: 0, item: () => '', getPropertyValue: () => '' };
+			},
+		});
+
+		expect(seen).toEqual(['0px']);
+		expect(stage.style.getPropertyValue('--pptx-device-px')).toBe(live);
+		document.body.removeChild(stage);
+	});
 });
 
 describe('foreignObject markup with hostile deck content', () => {

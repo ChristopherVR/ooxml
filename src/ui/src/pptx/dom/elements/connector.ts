@@ -12,6 +12,7 @@ import {
 	getLineShadowParams,
 	markerPath,
 	normalizeArrow,
+	screenStrokeWidth,
 } from '../../index';
 
 import { createEl, createSvgEl } from '../dom';
@@ -158,10 +159,11 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 	svg.appendChild(hit);
 
 	offsets.forEach((offset, idx) => {
+		const strandWidth = Math.max(widths[idx] ?? strokeWidth, 1);
 		const stroke: Record<string, string | number | undefined> = {
 			// Inherit the wrapper's base stroke so a colour animation cascades.
 			stroke: 'inherit',
-			'stroke-width': Math.max(widths[idx] ?? strokeWidth, 1),
+			'stroke-width': strandWidth,
 			'stroke-opacity': strokeOpacity,
 			'stroke-dasharray': dashArray,
 			'stroke-linecap': 'round',
@@ -189,6 +191,8 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 				...stroke,
 			});
 		}
+		// On screen, never thinner than one device pixel (`device-pixel-stroke`).
+		node.style.setProperty('stroke-width', screenStrokeWidth(strandWidth));
 		svg.appendChild(node);
 	});
 

@@ -163,7 +163,7 @@ describe('cellStyleToStyleMap', () => {
 			borderTopColor: '#FF0000',
 			borderTopDash: 'dot',
 		});
-		expect(map['border-top']).toBe('2px dotted #FF0000');
+		expect(map['border-top']).toBe('max(2px, var(--pptx-device-px, 0px)) dotted #FF0000');
 	});
 
 	it('falls back to borderColor when per-edge color is absent', () => {
@@ -171,7 +171,7 @@ describe('cellStyleToStyleMap', () => {
 			borderColor: '#123456',
 			borderBottomWidth: 1,
 		});
-		expect(map['border-bottom']).toBe('1px solid #123456');
+		expect(map['border-bottom']).toBe('max(1px, var(--pptx-device-px, 0px)) solid #123456');
 	});
 
 	it('maps cell margins to padding', () => {

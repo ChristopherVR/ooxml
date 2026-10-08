@@ -1,4 +1,14 @@
 <script setup lang="ts">
+import {
+	buildStrokeOutline,
+	buildSubpathFillOverlay,
+	getBevelLightingSvgFilter,
+	getComputedEffectStyle,
+	getEffectStyleSource,
+	getSoftEdgeSvgFilter,
+	buildHollowHitOutline,
+	strokeOutlineViewBox,
+} from 'ooxml-ui/pptx';
 /**
  * ShapeEffectOverlay: paints the two shape-effect extras that need their own
  * DOM nodes (the shape's CSS `filter`/`box-shadow`/blend already ride on the
@@ -48,16 +58,6 @@
  * outline, hollow hit band, sub-path fill, or reflection.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import {
-	buildStrokeOutline,
-	buildSubpathFillOverlay,
-	getBevelLightingSvgFilter,
-	getComputedEffectStyle,
-	getEffectStyleSource,
-	getSoftEdgeSvgFilter,
-	buildHollowHitOutline,
-	strokeOutlineViewBox,
-} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 
@@ -285,7 +285,10 @@ const reflection = computed<CSSProperties | undefined>(() =>
 			:stroke-dasharray="strokeOutline.dashArray"
 			:stroke-linecap="strokeOutline.lineCap"
 			:stroke-linejoin="strokeOutline.lineJoin"
-			:style="strand.offset !== 0 ? { transform: `translate(0, ${strand.offset}px)` } : undefined"
+			:style="{
+				strokeWidth: strand.cssStrokeWidth,
+				transform: strand.offset !== 0 ? `translate(0, ${strand.offset}px)` : undefined,
+			}"
 		/>
 	</svg>
 	<svg

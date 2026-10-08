@@ -1,6 +1,3 @@
-import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-
 import {
 	DEFAULT_STROKE_COLOR,
 	DEFAULT_TEXT_COLOR,
@@ -13,8 +10,11 @@ import {
 	resolveShapeGeometry,
 	getContainerStyle as sharedGetContainerStyle,
 	getImageSrc as sharedGetImageSrc,
-	px,
+	screenBorder,
 } from 'ooxml-ui/pptx';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
+
 import { buildDuotoneFilter } from './duotone-filter';
 import type { DuotoneFilterDef } from './duotone-filter';
 import { getSoftEdgeFilterDef, resolveShapeFilterCss } from './element-effect-defs';
@@ -148,7 +148,7 @@ export function getShapeFillStrokeStyle(
 		if (stroke.borderWidth > 0) {
 			if (animatesStroke) {
 				// Keep the width / style; leave the colour to the animated keyframes.
-				style['border-width'] = px(stroke.borderWidth);
+				style['border-width'] = stroke.cssBorderWidth;
 				style['border-style'] = stroke.borderStyle ?? 'solid';
 			} else if (stroke.border) {
 				style['border'] = stroke.border;
@@ -252,10 +252,11 @@ export function getShapeFillStrokeStyle(
 			style['border'] = 'none';
 			// A `line` preset draws one edge, so the compound type decides its
 			// style here too (`border-style: double` paints the parallel strands).
-			style['border-top'] = `${px(geometry.strokeWidth)} ${getCssBorderDashStyle(
-				el.shapeStyle?.strokeDash,
-				el.shapeStyle?.compoundLine,
-			)} ${el.shapeStyle?.strokeColor ?? DEFAULT_STROKE_COLOR}`;
+			style['border-top'] = screenBorder(
+				geometry.strokeWidth,
+				getCssBorderDashStyle(el.shapeStyle?.strokeDash, el.shapeStyle?.compoundLine),
+				el.shapeStyle?.strokeColor ?? DEFAULT_STROKE_COLOR,
+			);
 			return style;
 		default:
 			return style;

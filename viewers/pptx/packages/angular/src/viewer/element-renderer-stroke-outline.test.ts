@@ -1,3 +1,4 @@
+import { strokeOutlineViewBox } from 'ooxml-ui/pptx';
 /**
  * Unit tests for the gradient / pattern OUTLINE wiring in
  * `ElementRendererComponent`.
@@ -16,7 +17,6 @@
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { strokeOutlineViewBox } from 'ooxml-ui/pptx';
 import { getStrokeOutline } from './element-effect-defs';
 import { getShapeFillStrokeStyle } from './element-style';
 
@@ -143,7 +143,9 @@ describe('elementRenderer stroke outline (stroke-only preset)', () => {
 		expect(outline!.paint).toBeUndefined();
 		expect(outline!.stroke).toBe('#000000');
 		expect(outline!.d).toBe('M 0 0 L 400 0');
-		expect(outline!.strands).toStrictEqual([{ strokeWidth: 2, offset: 0 }]);
+		expect(outline!.strands).toStrictEqual([
+			{ strokeWidth: 2, cssStrokeWidth: 'max(2px, var(--pptx-device-px, 0px))', offset: 0 },
+		]);
 	});
 
 	it('gives a flat rule no viewBox, since a zero-height one would hide the <svg>', () => {

@@ -1,5 +1,3 @@
-import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import {
 	buildTextBlockStyle,
 	elementHitTargetStyle as sharedElementHitTargetStyle,
@@ -11,8 +9,10 @@ import {
 	getImageSrc as sharedGetImageSrc,
 	isHollowShapeElement,
 	resolveShapeGeometry,
-	px,
+	screenBorder,
 } from 'ooxml-ui/pptx';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 
 import { DEFAULT_STROKE_COLOR, DEFAULT_TEXT_COLOR } from '../constants';
@@ -138,7 +138,7 @@ export function getShapeFillStrokeStyle(
 		if (stroke.borderWidth > 0) {
 			if (animatesStroke) {
 				// Keep the width / dash; leave the colour to the animated keyframes.
-				style.borderWidth = px(stroke.borderWidth);
+				style.borderWidth = stroke.cssBorderWidth;
 				style.borderStyle = stroke.borderStyle;
 			} else {
 				style.border = stroke.border;
@@ -238,7 +238,11 @@ export function getShapeFillStrokeStyle(
 			const strokeWidth = geometry.strokeWidth;
 			style.backgroundColor = 'transparent';
 			style.border = 'none';
-			style.borderTop = `${px(strokeWidth)} ${getCssBorderDashStyle(el.shapeStyle?.strokeDash)} ${el.shapeStyle?.strokeColor ?? DEFAULT_STROKE_COLOR}`;
+			style.borderTop = screenBorder(
+				strokeWidth,
+				getCssBorderDashStyle(el.shapeStyle?.strokeDash),
+				el.shapeStyle?.strokeColor ?? DEFAULT_STROKE_COLOR,
+			);
 			return style;
 		}
 		default:

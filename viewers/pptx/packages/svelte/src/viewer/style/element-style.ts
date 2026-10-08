@@ -1,5 +1,3 @@
-import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import { hasShapeProperties } from 'pptx-viewer-core';
 import type { CssStyleMap } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_STROKE_COLOR,
@@ -13,8 +11,10 @@ import {
 	getImageSrc as sharedGetImageSrc,
 	isHollowShapeElement,
 	resolveShapeGeometry,
-	px,
+	screenBorder,
 } from 'ooxml-ui/pptx';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
 
 import { merge3dStyle } from './merge-3d';
 
@@ -119,7 +119,7 @@ export function getShapeFillStrokeStyle(
 		if (stroke.borderWidth > 0) {
 			if (animatesStroke) {
 				// Keep the width / dash; leave the colour to the animated keyframes.
-				style.borderWidth = px(stroke.borderWidth);
+				style.borderWidth = stroke.cssBorderWidth;
 				style.borderStyle = stroke.borderStyle ?? 'solid';
 			} else {
 				style.border = stroke.border ?? '';
@@ -206,9 +206,11 @@ export function getShapeFillStrokeStyle(
 		case 'lineEdge':
 			style.backgroundColor = 'transparent';
 			style.border = 'none';
-			style.borderTop = `${px(geometry.strokeWidth)} ${getCssBorderDashStyle(
-				el.shapeStyle?.strokeDash,
-			)} ${el.shapeStyle?.strokeColor ?? DEFAULT_STROKE_COLOR}`;
+			style.borderTop = screenBorder(
+				geometry.strokeWidth,
+				getCssBorderDashStyle(el.shapeStyle?.strokeDash),
+				el.shapeStyle?.strokeColor ?? DEFAULT_STROKE_COLOR,
+			);
 			return style;
 		default:
 			return style;

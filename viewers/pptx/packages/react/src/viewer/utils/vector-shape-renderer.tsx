@@ -1,4 +1,13 @@
 import {
+	buildStrokeOutline,
+	buildSvgGradientDef,
+	getPresetShapeVectorGeometry,
+	isWedgeCalloutPresetShape,
+	screenStrokeWidth,
+	svgGradientFillRef,
+	svgLineCap,
+} from 'ooxml-ui/pptx';
+import {
 	PptxElement,
 	hasShapeProperties,
 	isCalloutShape,
@@ -6,14 +15,6 @@ import {
 	buildCalloutLeaderLineSvgPath,
 	getCalloutViewBoxBounds,
 } from 'pptx-viewer-core';
-import {
-	buildStrokeOutline,
-	buildSvgGradientDef,
-	getPresetShapeVectorGeometry,
-	isWedgeCalloutPresetShape,
-	svgGradientFillRef,
-	svgLineCap,
-} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { colorWithOpacity } from './color';
@@ -63,6 +64,8 @@ export function renderVectorShape(
 		const height = Math.max(element.height, 1);
 		const rim = Math.max(Math.min(height * 0.16, 28), 6);
 		const stroke = Math.max(strokeWidth, 1);
+		// Never under one device pixel on screen (shared `device-pixel-stroke`).
+		const screenStroke = { strokeWidth: screenStrokeWidth(stroke) };
 		return (
 			<svg
 				viewBox={`0 0 ${width} ${height}`}
@@ -79,6 +82,7 @@ export function renderVectorShape(
 					strokeWidth={stroke}
 					strokeDasharray={dashArray}
 					vectorEffect='non-scaling-stroke'
+					style={screenStroke}
 				/>
 				<rect
 					x={0}
@@ -90,6 +94,7 @@ export function renderVectorShape(
 					strokeWidth={stroke}
 					strokeDasharray={dashArray}
 					vectorEffect='non-scaling-stroke'
+					style={screenStroke}
 				/>
 				<ellipse
 					cx={width / 2}
@@ -101,6 +106,7 @@ export function renderVectorShape(
 					strokeWidth={stroke}
 					strokeDasharray={dashArray}
 					vectorEffect='non-scaling-stroke'
+					style={screenStroke}
 				/>
 			</svg>
 		);
@@ -167,6 +173,9 @@ export function renderVectorShape(
 						strokeWidth={strokeWidth * 2}
 						strokeDasharray={dashArray}
 						vectorEffect='non-scaling-stroke'
+						// Doubled because the clip hides the inner half; that visible
+						// half is what must stay at least one device pixel.
+						style={{ strokeWidth: `calc(2 * ${screenStrokeWidth(strokeWidth)})` }}
 					/>
 				</svg>
 			);
@@ -207,6 +216,7 @@ export function renderVectorShape(
 						strokeWidth={strokeWidth}
 						strokeDasharray={dashArray}
 						vectorEffect='non-scaling-stroke'
+						style={{ strokeWidth: screenStrokeWidth(strokeWidth) }}
 					/>
 				</svg>
 			);
@@ -254,6 +264,7 @@ export function renderVectorShape(
 							stroke={strokePaint}
 							strokeWidth={lineStroke}
 							vectorEffect='non-scaling-stroke'
+							style={{ strokeWidth: screenStrokeWidth(lineStroke) }}
 						/>
 					)}
 					{/* Leader line from shape edge to callout point */}
@@ -266,6 +277,7 @@ export function renderVectorShape(
 						strokeLinecap='round'
 						strokeLinejoin='round'
 						vectorEffect='non-scaling-stroke'
+						style={{ strokeWidth: screenStrokeWidth(lineStroke) }}
 					/>
 				</svg>
 			);
@@ -342,6 +354,7 @@ export function renderVectorShape(
 						vectorEffect='non-scaling-stroke'
 						style={{
 							pointerEvents: 'none',
+							strokeWidth: screenStrokeWidth(Math.max(widths[idx] ?? strokeWidth, 1)),
 							...(offset !== 0 ? { transform: `translate(0, ${offset}px)` } : {}),
 						}}
 					/>

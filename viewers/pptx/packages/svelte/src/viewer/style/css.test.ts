@@ -104,7 +104,7 @@ describe('element styles (shared render helpers)', () => {
 			shapeType: 'rect',
 			shapeStyle: { strokeColor: '#00ff00', strokeWidth: 2, lineAlignment: 'in' },
 		} as PptxElement);
-		expect(style.border).toBe('2px solid #00ff00');
+		expect(style.border).toBe('max(2px, var(--pptx-device-px, 0px)) solid #00ff00');
 	});
 
 	it('centres a stroke border at the default (omitted) alignment instead', () => {

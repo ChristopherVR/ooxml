@@ -372,7 +372,8 @@ describe('renderTableElement cell borders', () => {
 		const [plain, ruled] = Array.from(renderTable(buildTableElement(data)).querySelectorAll('td'));
 		// The cell no longer starts from a 1px white border that would push its content in.
 		expect(plain?.getAttribute('style') ?? '').not.toMatch(/border/u);
-		expect(ruled?.style.borderLeft).toBe('2px solid #ff0000');
-		expect(ruled?.style.borderRight).toBe('');
+		// happy-dom drops a `max(..., var())` border value, so the painted rule
+		// itself is asserted under jsdom in `dom/device-pixel-stroke.test.ts`.
+		expect(ruled?.getAttribute('style') ?? '').not.toMatch(/border-right/u);
 	});
 });

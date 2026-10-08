@@ -140,7 +140,9 @@ describe('renderSlideStage', () => {
 		const shape = stage.querySelector<HTMLElement>('[data-element-id="el-shape"]');
 		expect(shape).toBeTruthy();
 		expect(shape?.style.backgroundColor).toBeTruthy();
-		expect(shape?.style.border).toContain('2px');
+		// The border is `max(2px, <one device pixel>)`, which happy-dom drops; it is
+		// asserted under jsdom in `dom/device-pixel-stroke.test.ts`.
+		expect(shape?.style.borderRadius).toBeTruthy();
 	});
 
 	it('renders images as <img> with the resolved source', () => {

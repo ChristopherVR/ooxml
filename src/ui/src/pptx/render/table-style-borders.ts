@@ -23,6 +23,7 @@ import type {
 	PptxTableData,
 } from 'ooxml-core/pptx';
 
+import { screenBorder } from './device-pixel-stroke';
 import { ooxmlDashToCssBorderStyle } from './table-style';
 import type { DiagonalBorderInfo } from './table-style';
 
@@ -82,7 +83,7 @@ function borderToCss(
 	const width = border.width ?? 1;
 	const dash = ooxmlDashToCssBorderStyle(border.dash);
 	const color = border.color ?? resolve(border.fill) ?? '#000000';
-	return `${width}px ${dash} ${color}`;
+	return screenBorder(width, dash, color);
 }
 
 /** Coordinates + banding context needed to select the applicable sections. */

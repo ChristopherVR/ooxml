@@ -28,6 +28,7 @@ import {
 	buildPrintStyleSheet,
 	escapeXml,
 	svgToDataUrl,
+	withAuthoredStrokeWidths,
 } from 'ooxml-ui/pptx';
 import type { SvgPrintOptions, SvgPrintResult } from 'ooxml-ui/pptx';
 
@@ -227,7 +228,9 @@ export function serializeElementToSvg(
 
 	// Optionally inline computed styles on each element
 	if (inlineStyles) {
-		inlineComputedStyles(element, clone);
+		// Print keeps AUTHORED stroke widths, not the on-screen one-device-pixel
+		// minimum the live stage applies (shared `device-pixel-stroke`).
+		withAuthoredStrokeWidths(element, () => inlineComputedStyles(element, clone));
 	}
 
 	// Serialize the clone to HTML

@@ -1,8 +1,11 @@
-import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
 // `getCellDiagonalBorders` combines a cell's explicit diagonals with any
 // inherited from the applicable table-style sections; shared so the resolution
 // stays in sync with the other bindings.
-import { getCellDiagonalBorders as resolveCellDiagonalBorders } from 'ooxml-ui/pptx';
+import {
+	getCellDiagonalBorders as resolveCellDiagonalBorders,
+	screenStrokeWidth,
+} from 'ooxml-ui/pptx';
+import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
 import React from 'react';
 
 import type { TableStyleContext } from './table-band-style';
@@ -82,6 +85,7 @@ export function TableCellDiagonalBorders({
 					y2='100%'
 					stroke={diag.diagDownColor}
 					strokeWidth={diag.diagDownWidth}
+					style={{ strokeWidth: screenStrokeWidth(diag.diagDownWidth) }}
 				/>
 			)}
 			{hasUp && (
@@ -92,6 +96,7 @@ export function TableCellDiagonalBorders({
 					y2='0'
 					stroke={diag.diagUpColor}
 					strokeWidth={diag.diagUpWidth}
+					style={{ strokeWidth: screenStrokeWidth(diag.diagUpWidth) }}
 				/>
 			)}
 		</svg>

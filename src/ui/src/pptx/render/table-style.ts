@@ -29,6 +29,7 @@ import type {
 	PptxThemeFontScheme,
 } from 'ooxml-core/pptx';
 
+import { screenBorder } from './device-pixel-stroke';
 import { getPatternSvg, normalizeHexColor } from './fill-style';
 import { cellPaddingCss } from './table-cell-padding';
 import type { CellBorderPosition } from './table-style-borders';
@@ -443,7 +444,7 @@ export function cellStyleToCss(style?: PptxTableCellStyle): TableCellCss {
 			const w = edge.width ?? 1;
 			const c = edge.color ?? style.borderColor ?? '#000000';
 			const s = ooxmlDashToCssBorderStyle(edge.dash);
-			css[edge.prefix] = `${w}px ${s} ${c}`;
+			css[edge.prefix] = screenBorder(w, s, c);
 		}
 	}
 

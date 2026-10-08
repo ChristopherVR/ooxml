@@ -1,8 +1,5 @@
 import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { GroupPptxElement, PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import { isImageLikeElement } from 'pptx-viewer-core';
-
 import {
 	getComputedEffectStyle,
 	getGroupChildParentFill,
@@ -15,6 +12,9 @@ import type {
 	StrokeOutline,
 	SubpathFillOverlay,
 } from 'ooxml-ui/pptx';
+import type { GroupPptxElement, PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { isImageLikeElement } from 'pptx-viewer-core';
+
 import {
 	getEffectFillOverlay,
 	getSoftEdgeFilterDef,
@@ -187,6 +187,7 @@ import { SlideTextBlockComponent } from './slide-text-block.component';
 								fill="none"
 								[attr.stroke]="so.stroke"
 								[attr.stroke-width]="strand.strokeWidth"
+								[style.stroke-width]="strand.cssStrokeWidth"
 								[attr.stroke-dasharray]="so.dashArray"
 								[attr.stroke-linecap]="so.lineCap"
 								[attr.stroke-linejoin]="so.lineJoin"

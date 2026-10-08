@@ -88,7 +88,7 @@ describe('getShapeFillStrokeStyle', () => {
 			}),
 		);
 		expect(style.backgroundColor).toBe('#ff0000');
-		expect(style.border).toBe('2px solid #000');
+		expect(style.border).toBe('max(2px, var(--pptx-device-px, 0px)) solid #000');
 	});
 
 	it('maps stroke dash to a CSS border style', () => {
@@ -106,7 +106,7 @@ describe('getShapeFillStrokeStyle', () => {
 				},
 			}),
 		);
-		expect(dotted.border).toBe('1px dotted #000');
+		expect(dotted.border).toBe('max(1px, var(--pptx-device-px, 0px)) dotted #000');
 		const dashed = getShapeFillStrokeStyle(
 			shape({
 				shapeStyle: {
@@ -117,7 +117,7 @@ describe('getShapeFillStrokeStyle', () => {
 				},
 			}),
 		);
-		expect(dashed.border).toBe('1px dashed #000');
+		expect(dashed.border).toBe('max(1px, var(--pptx-device-px, 0px)) dashed #000');
 	});
 
 	it('rounds ellipse geometry with a per-axis 50% radius', () => {

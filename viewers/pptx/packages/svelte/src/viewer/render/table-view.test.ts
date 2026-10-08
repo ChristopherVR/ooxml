@@ -19,7 +19,9 @@ describe('table cell borders', () => {
 		const [plain, ruled] = buildTableRows(data)[0]?.cells ?? [];
 		// No default 1px white border: it would push the cell content in.
 		expect(plain?.style).not.toMatch(/border/u);
-		expect(ruled?.style).toMatch(/border-left:\s*2px solid #ff0000/u);
+		expect(ruled?.style).toMatch(
+			/border-left:\s*max\(2px, var\(--pptx-device-px, 0px\)\) solid #ff0000/u,
+		);
 		expect(ruled?.style).not.toMatch(/border-right/u);
 	});
 });

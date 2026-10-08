@@ -1,3 +1,4 @@
+import { screenBorder } from 'ooxml-ui/pptx';
 import type { XmlObject } from 'pptx-viewer-core';
 import { ooxmlGradientAngleToCssDegrees } from 'pptx-viewer-core';
 import React from 'react';
@@ -238,8 +239,11 @@ export function parseCellBorders(cellProperties: XmlObject | undefined): React.C
 		if (color) {
 			const opacity = parseDrawingColorOpacity(ln['a:solidFill'] as XmlObject | undefined);
 			const key = `${edge.prefix}` as keyof React.CSSProperties;
-			(borderStyle as Record<string, string>)[key] =
-				`${widthPx}px ${cssBorderStyle} ${colorWithOpacity(color, opacity)}`;
+			(borderStyle as Record<string, string>)[key] = screenBorder(
+				widthPx,
+				cssBorderStyle,
+				colorWithOpacity(color, opacity),
+			);
 		}
 	}
 

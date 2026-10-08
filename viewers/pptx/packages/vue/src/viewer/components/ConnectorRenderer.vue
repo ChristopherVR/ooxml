@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import {
+	getLineGlowFilterCss,
+	getLineShadowParams,
+	markerPath,
+	screenStrokeWidth,
+} from 'ooxml-ui/pptx';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import type { ConnectorArrowType, PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-import { getLineGlowFilterCss, getLineShadowParams, markerPath } from 'ooxml-ui/pptx';
-import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 
@@ -247,6 +252,16 @@ function offsetTransform(offset: number): string | undefined {
 	}
 	return `translate(0, ${offset}px)`;
 }
+
+/** Painted width of strand `idx`: floored at 1px, and at one device pixel on screen. */
+function strandWidth(idx: number): number {
+	return Math.max(compoundWidths.value[idx] ?? strokeWidth.value, 1);
+}
+
+/** Inline style of strand `idx` (shared `device-pixel-stroke`, plus its offset). */
+function strandStyle(idx: number, offset: number): CSSProperties {
+	return { strokeWidth: screenStrokeWidth(strandWidth(idx)), transform: offsetTransform(offset) };
+}
 </script>
 
 <template>
@@ -337,13 +352,13 @@ function offsetTransform(offset: number): string | undefined {
 					:d="pathGeometry.pathData"
 					fill="none"
 					:stroke="strokeColor"
-					:stroke-width="Math.max(compoundWidths[idx] ?? strokeWidth, 1)"
+					:stroke-width="strandWidth(idx)"
 					:stroke-opacity="strokeOpacity"
 					:stroke-dasharray="dashArray"
 					stroke-linecap="round"
 					stroke-linejoin="round"
 					:filter="idx === 0 && lineShadow ? `url(#${shadowFilterId})` : undefined"
-					:style="offsetTransform(offset) ? { transform: offsetTransform(offset) } : undefined"
+					:style="strandStyle(idx, offset)"
 					:marker-start="idx === 0 && startMarker ? `url(#${startMarkerId})` : undefined"
 					:marker-end="
 						idx === compoundOffsets.length - 1 && endMarker ? `url(#${endMarkerId})` : undefined
@@ -361,7 +376,8 @@ function offsetTransform(offset: number): string | undefined {
 					:x2="x2"
 					:y2="y2 + offset"
 					:stroke="strokeColor"
-					:stroke-width="Math.max(compoundWidths[idx] ?? strokeWidth, 1)"
+					:stroke-width="strandWidth(idx)"
+					:style="strandStyle(idx, 0)"
 					:stroke-opacity="strokeOpacity"
 					:stroke-dasharray="dashArray"
 					stroke-linecap="round"

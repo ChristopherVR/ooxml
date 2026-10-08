@@ -13,10 +13,15 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
+import type { TableStyleContext } from 'ooxml-ui/pptx';
+import {
+	canDrillDown,
+	DEFAULT_FONT_FAMILY,
+	screenStrokeWidth,
+	tableContainerCss,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
-import type { TableStyleContext } from 'ooxml-ui/pptx';
-import { canDrillDown, DEFAULT_FONT_FAMILY, tableContainerCss } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import { LoadContentService } from './load-content.service';
 import { buildColStyles, buildTableViewModel } from './table-renderer-helpers';
@@ -83,6 +88,8 @@ export class TableRendererComponent {
 	 * binding's demo. All five bindings declare this same shared default.
 	 */
 	readonly defaultTableFontFamily = DEFAULT_FONT_FAMILY;
+	/** Diagonal border width on screen: never under one device pixel. */
+	protected readonly screenStrokeWidth = screenStrokeWidth;
 	private readonly injector = inject(Injector);
 	/** Shared cell-selection state (present only inside the editor subtree). */
 	private readonly selectionSvc = inject(TableSelectionService, { optional: true });

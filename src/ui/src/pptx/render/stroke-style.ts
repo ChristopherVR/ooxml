@@ -27,6 +27,7 @@ import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
 
 import { DEFAULT_STROKE_COLOR } from '../constants';
+import { screenBorder, screenStrokeWidth } from './device-pixel-stroke';
 import type { CssBorderStyle } from './element-style-transform';
 import { getCssBorderDashStyle, normalizeStrokeDashType } from './element-style-transform';
 import { colorWithOpacity, normalizeHexColor } from './fill-style';
@@ -49,13 +50,19 @@ export interface ComputedStrokeStyle {
 	 * then divides between its strands and the gap.
 	 */
 	readonly borderWidth: number;
+	/**
+	 * `border-width` as the CSS value to paint: {@link borderWidth} held at one
+	 * device pixel or more on screen (see `device-pixel-stroke`), `'0px'` when
+	 * nothing is painted. Bindings write this, not `${borderWidth}px`.
+	 */
+	readonly cssBorderWidth: string;
 	/** `border-style`, or `undefined` when nothing is painted. */
 	readonly borderStyle: CssBorderStyle | undefined;
 	/** `border-color` (already carrying `strokeOpacity`), or `undefined`. */
 	readonly borderColor: string | undefined;
 	/**
-	 * The three above as a `border` shorthand, for bindings that write one
-	 * property. `undefined` when nothing is painted.
+	 * The three above as a `border` shorthand (width from {@link cssBorderWidth}),
+	 * for bindings that write one property. `undefined` when nothing is painted.
 	 */
 	readonly border: string | undefined;
 	/** `stroke-linejoin` (inherited into descendant SVG), from `a:ln`'s join. */
@@ -73,6 +80,7 @@ export interface ComputedStrokeStyle {
 /** Nothing painted: the shared "no outline" answer. */
 const NO_STROKE: ComputedStrokeStyle = {
 	borderWidth: 0,
+	cssBorderWidth: '0px',
 	borderStyle: undefined,
 	borderColor: undefined,
 	border: undefined,
@@ -169,9 +177,10 @@ export function getComputedStrokeStyle(element: PptxElement): ComputedStrokeStyl
 			: colorWithOpacity(normalizeHexColor(rawColor, DEFAULT_STROKE_COLOR), style.strokeOpacity);
 	return {
 		borderWidth,
+		cssBorderWidth: screenStrokeWidth(borderWidth),
 		borderStyle,
 		borderColor,
-		border: `${borderWidth}px ${borderStyle ?? 'solid'} ${borderColor}`,
+		border: screenBorder(borderWidth, borderStyle ?? 'solid', borderColor),
 		...joins,
 	};
 }

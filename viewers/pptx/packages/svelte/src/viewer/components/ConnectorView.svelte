@@ -7,7 +7,12 @@
 	 * agnostic `buildConnectorGeometry`; this component only emits SVG.
 	 */
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-	import { buildConnectorGeometry, getLineGlowFilterCss, getLineShadowParams } from 'ooxml-ui/pptx';
+	import {
+		buildConnectorGeometry,
+		getLineGlowFilterCss,
+		getLineShadowParams,
+		screenStrokeWidth,
+	} from 'ooxml-ui/pptx';
 
 	import { styleToString } from '../style';
 	import type { ElementRendererProps } from './props';
@@ -123,6 +128,9 @@
 					fill="none"
 					stroke={strokeColor}
 					stroke-width={Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1)}
+					style:stroke-width={screenStrokeWidth(
+						Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1),
+					)}
 					stroke-opacity={geometry.strokeOpacity}
 					stroke-dasharray={geometry.dashArray}
 					stroke-linecap={geometry.strokeLinecap}
@@ -142,6 +150,9 @@
 					y2={geometry.y2 + offset}
 					stroke={strokeColor}
 					stroke-width={Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1)}
+					style:stroke-width={screenStrokeWidth(
+						Math.max(geometry.compoundWidths[idx] ?? geometry.strokeWidth, 1),
+					)}
 					stroke-opacity={geometry.strokeOpacity}
 					stroke-dasharray={geometry.dashArray}
 					stroke-linecap={geometry.strokeLinecap}

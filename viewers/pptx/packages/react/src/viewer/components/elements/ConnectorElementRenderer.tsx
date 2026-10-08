@@ -1,9 +1,10 @@
-import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import {
 	connectorWrapperTransform,
 	getSelectionOutlineColor,
+	screenStrokeWidth,
 	svgLineCap,
 } from 'ooxml-ui/pptx';
+import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 import React from 'react';
 
 import { DEFAULT_STROKE_COLOR } from '../../constants';
@@ -248,6 +249,8 @@ export const ConnectorElementRenderer: React.FC<ConnectorRendererProps> = React.
 							filter={idx === 0 && lineShadow ? `url(#${markerSeed}-line-shadow)` : undefined}
 							style={{
 								pointerEvents: 'none',
+								// Never under one device pixel on screen (shared `device-pixel-stroke`).
+								strokeWidth: screenStrokeWidth(Math.max(compoundWidths[idx] ?? strokeWidth, 1)),
 								...(offset !== 0
 									? {
 											transform: `translate(0, ${offset}px)`,

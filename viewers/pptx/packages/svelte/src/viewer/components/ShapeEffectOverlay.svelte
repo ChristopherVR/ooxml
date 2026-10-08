@@ -242,6 +242,7 @@
 				fill="none"
 				stroke={strokeOutline.stroke}
 				stroke-width={strand.strokeWidth}
+				style:stroke-width={strand.cssStrokeWidth}
 				stroke-dasharray={strokeOutline.dashArray}
 				stroke-linecap={strokeOutline.lineCap}
 				stroke-linejoin={strokeOutline.lineJoin}

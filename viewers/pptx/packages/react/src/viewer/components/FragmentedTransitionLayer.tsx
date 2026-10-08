@@ -1,4 +1,3 @@
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 /**
  * Renders one `FragmentedLayer` (from `getFragmentedTransitionDescriptor` in
  * `pptx-viewer-shared`) as N clipped copies of `SlideLayer` - the React
@@ -12,7 +11,9 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  * parameterised by CSS custom properties, so the whole set stays
  * transform/opacity-only and GPU-composited with no per-frame JS.
  */
+import { deviceStrokeStageStyle } from 'ooxml-ui/pptx';
 import type { FragmentedLayer } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
 import type { CanvasSize } from '../types';
@@ -68,6 +69,7 @@ export function FragmentedTransitionLayer({
 							flexShrink: 0,
 							transform: `scale(${scale})`,
 							transformOrigin: 'center',
+							...deviceStrokeStageStyle(scale),
 						}}
 					>
 						<SlideLayer slide={slide} templateElements={templateElements} canvasSize={canvasSize} />

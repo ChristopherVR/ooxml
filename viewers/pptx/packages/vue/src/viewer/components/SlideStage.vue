@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import {
 	actionAffordanceLabels,
 	applyElementActionAffordances,
 	applyRenderedElementAccessibility,
+	deviceStrokeStageStyle,
 	getSlideBackgroundStyle,
 	visibleTemplateElements,
 } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, ref, watchPostEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -180,6 +181,8 @@ const stageStyle = computed<CSSProperties>(() => ({
 	height: `${props.canvasSize.height}px`,
 	transform: `scale(${props.scale})`,
 	transformOrigin: 'top left',
+	// One device pixel in slide px: thin strokes stay visible on screen.
+	...deviceStrokeStageStyle(props.scale),
 	position: 'relative',
 	overflow: 'hidden',
 	// Motion-path keyframes translate by a fraction of the SLIDE, so the stage

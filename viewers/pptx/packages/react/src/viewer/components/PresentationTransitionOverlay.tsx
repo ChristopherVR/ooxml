@@ -1,4 +1,3 @@
-import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 /**
  * Overlay rendered during slide transitions in presentation mode.
  *
@@ -7,7 +6,8 @@ import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-co
  * main SlideCanvas underneath (or on top, depending on `outgoingOnTop`).
  */
 import type { FragmentedTransitionDescriptor, MorphTransitionPlan } from 'ooxml-ui/pptx';
-import { getFragmentedTransitionDescriptor } from 'ooxml-ui/pptx';
+import { deviceStrokeStageStyle, getFragmentedTransitionDescriptor } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 
 import type { CanvasSize } from '../types';
@@ -229,6 +229,7 @@ export function PresentationTransitionOverlay({
 							flexShrink: 0,
 							transform: `scale(${scale})`,
 							transformOrigin: 'center',
+							...deviceStrokeStageStyle(scale),
 						}}
 					>
 						<SlideLayer
@@ -268,6 +269,7 @@ export function PresentationTransitionOverlay({
 							flexShrink: 0,
 							transform: `scale(${scale})`,
 							transformOrigin: 'center',
+							...deviceStrokeStageStyle(scale),
 						}}
 					>
 						<SlideLayer

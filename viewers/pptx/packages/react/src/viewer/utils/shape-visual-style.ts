@@ -1,5 +1,3 @@
-import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import { hasShapeProperties } from 'pptx-viewer-core';
 import {
 	getComputedEffectStyle,
 	getComputedFillStyle,
@@ -8,7 +6,10 @@ import {
 	isWedgeCalloutPresetShape,
 	isStrokeOnlyPresetElement,
 	resolveShapeGeometry,
+	screenStrokeWidth,
 } from 'ooxml-ui/pptx';
+import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
 /**
  * Shape visual style computation.
  *
@@ -157,7 +158,9 @@ export function getShapeVisualStyle(
 		// An unstroked element must occupy EXACTLY its authored box, so the
 		// selection/hover affordance is an `outline` (see `ElementRenderer`) and
 		// the border collapses to 0 rather than to a transparent 1px.
-		borderWidth: stroke.borderWidth,
+		// On screen the painted width never drops under one device pixel (shared
+		// `device-pixel-stroke`); an unstroked element keeps a plain `0`.
+		borderWidth: stroke.borderWidth > 0 ? stroke.cssBorderWidth : 0,
 		borderColor: animatesStroke ? undefined : stroke.borderColor,
 		borderStyle: stroke.borderStyle,
 		// Inherited SVG presentation properties: written on the container so the
@@ -255,7 +258,7 @@ export function getShapeVisualStyle(
 				...base,
 				backgroundColor: 'transparent',
 				borderWidth: 0,
-				borderTopWidth: geometry.strokeWidth,
+				borderTopWidth: screenStrokeWidth(geometry.strokeWidth),
 				borderTopColor: stroke.borderColor,
 				borderTopStyle: (stroke.borderStyle ?? 'solid') as React.CSSProperties['borderTopStyle'],
 			};

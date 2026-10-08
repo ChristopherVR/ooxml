@@ -1,4 +1,3 @@
-import type { PptxSlide } from 'pptx-viewer-core';
 /**
  * Morph transition overlay: paints only the departing shapes, unanimated as a
  * layer, each carrying its own fade-out. The persisting shapes are already
@@ -10,7 +9,12 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * unchanged in behaviour.
  */
 import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
-import { MORPH_CROSSFADE_GROUP_STYLE, MORPH_CROSSFADE_HALF_STYLE } from 'ooxml-ui/pptx';
+import {
+	deviceStrokeStageStyle,
+	MORPH_CROSSFADE_GROUP_STYLE,
+	MORPH_CROSSFADE_HALF_STYLE,
+} from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
 import type { CanvasSize } from '../types';
@@ -69,6 +73,7 @@ export function MorphTransitionOverlay({
 						flexShrink: 0,
 						transform: `scale(${scale})`,
 						transformOrigin: 'center',
+						...deviceStrokeStageStyle(scale),
 						position: 'relative',
 					}}
 				>

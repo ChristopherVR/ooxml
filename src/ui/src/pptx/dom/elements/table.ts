@@ -13,6 +13,7 @@ import {
 	DEFAULT_FONT_FAMILY,
 	getCellDiagonalBorders,
 	getContainerStyle,
+	screenStrokeWidth,
 	tableCellCss,
 	tableContainerCss,
 } from '../../index';
@@ -193,6 +194,21 @@ function renderCell(
 	return td;
 }
 
+/** One diagonal border line, held at one device pixel or more on screen. */
+function diagonalLine(
+	doc: Document,
+	x1: number | string,
+	y1: number | string,
+	x2: number | string,
+	y2: number | string,
+	stroke: string,
+	width: number,
+): SVGLineElement {
+	const line = createSvgEl(doc, 'line', { x1, y1, x2, y2, stroke, 'stroke-width': width });
+	line.style.setProperty('stroke-width', screenStrokeWidth(width));
+	return line;
+}
+
 /** Diagonal cell borders as an absolutely positioned SVG overlay. */
 function renderDiagonalOverlay(doc: Document, diagonals: DiagonalBorderInfo): SVGSVGElement {
 	const svg = createSvgEl(doc, 'svg', {
@@ -210,26 +226,12 @@ function renderDiagonalOverlay(doc: Document, diagonals: DiagonalBorderInfo): SV
 	});
 	if (diagonals.diagDownColor && diagonals.diagDownWidth) {
 		svg.appendChild(
-			createSvgEl(doc, 'line', {
-				x1: 0,
-				y1: 0,
-				x2: '100%',
-				y2: '100%',
-				stroke: diagonals.diagDownColor,
-				'stroke-width': diagonals.diagDownWidth,
-			}),
+			diagonalLine(doc, 0, 0, '100%', '100%', diagonals.diagDownColor, diagonals.diagDownWidth),
 		);
 	}
 	if (diagonals.diagUpColor && diagonals.diagUpWidth) {
 		svg.appendChild(
-			createSvgEl(doc, 'line', {
-				x1: 0,
-				y1: '100%',
-				x2: '100%',
-				y2: 0,
-				stroke: diagonals.diagUpColor,
-				'stroke-width': diagonals.diagUpWidth,
-			}),
+			diagonalLine(doc, 0, '100%', '100%', 0, diagonals.diagUpColor, diagonals.diagUpWidth),
 		);
 	}
 	return svg;

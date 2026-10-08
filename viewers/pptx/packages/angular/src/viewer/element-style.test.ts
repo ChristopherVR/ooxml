@@ -378,7 +378,7 @@ describe('getShapeFillStrokeStyle - outline', () => {
 				},
 			} as unknown as Partial<PptxElement>),
 		);
-		expect(style['border']).toBe('8px double #FF0000');
+		expect(style['border']).toBe('max(8px, var(--pptx-device-px, 0px)) double #FF0000');
 	});
 
 	it('lets the compound type outrank the dash pattern', () => {
@@ -409,7 +409,7 @@ describe('getShapeFillStrokeStyle - outline', () => {
 				},
 			} as unknown as Partial<PptxElement>),
 		);
-		expect(style['border']).toBe('2px solid rgba(255, 0, 0, 0.5)');
+		expect(style['border']).toBe('max(2px, var(--pptx-device-px, 0px)) solid rgba(255, 0, 0, 0.5)');
 	});
 
 	it('emits the inherited SVG stroke properties, including a:miter/@lim', () => {
@@ -440,7 +440,7 @@ describe('getShapeFillStrokeStyle - outline', () => {
 				},
 			} as unknown as Partial<PptxElement>),
 		);
-		expect(style['border']).toBe('4px dashed #FF0000');
+		expect(style['border']).toBe('max(4px, var(--pptx-device-px, 0px)) dashed #FF0000');
 	});
 
 	it('centres a plain solid line at the default (omitted) alignment instead', () => {
