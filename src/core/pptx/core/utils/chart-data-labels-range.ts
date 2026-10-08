@@ -258,7 +258,7 @@ export function applyDataLabelsRangeToDLbls(
 	}
 	if (range) {
 		ownExt['@_uri'] = CHART15_EXT_URI;
-		ownExt['xmlns:c15'] = 'http://schemas.microsoft.com/office/drawing/2012/chart';
+		ownExt['@_xmlns:c15'] = 'http://schemas.microsoft.com/office/drawing/2012/chart';
 		ownExt['c15:showDataLabelsRange'] = { '@_val': showDataLabelsRange === false ? '0' : '1' };
 		ownExt['c15:datalabelsRange'] = {
 			'c15:f': range.formula,

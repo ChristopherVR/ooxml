@@ -9,7 +9,7 @@
  *
  * A newly-hidden series has no real cell-range formula (it was a normal
  * plotted series a moment ago), so its `c15:ser/c:tx`/`c:cat`/`c:val` are
- * written as LITERAL values (`c15:v`, `c:strLit`, `c:numLit`), the same forms
+ * written as LITERAL values (`c:v`, `c:strLit`, `c:numLit`), the same forms
  * `chart-xml-generator.ts` already uses for a brand-new SDK-created series,
  * rather than `c:strRef`/`c:numRef` (which require a `c:f` formula this
  * codebase does not track for a filtered entry).
@@ -47,7 +47,7 @@ function buildFilteredSerNode(entry: PptxChartFilteredSeries, categories: string
 		'c:order': { '@_val': String(entry.order) },
 	};
 	if (entry.name !== undefined) {
-		node['c:tx'] = { 'c15:v': entry.name };
+		node['c:tx'] = { 'c:v': entry.name };
 	}
 	if (cats.length > 0) {
 		node['c:cat'] = {
@@ -67,7 +67,7 @@ function buildFilteredSerNode(entry: PptxChartFilteredSeries, categories: string
 		node['c:extLst'] = {
 			'c:ext': {
 				'@_uri': '{C3380CC4-5D6E-409C-BE32-E72D297353CC}',
-				'xmlns:c16': 'http://schemas.microsoft.com/office/drawing/2014/chart',
+				'@_xmlns:c16': 'http://schemas.microsoft.com/office/drawing/2014/chart',
 				'c16:uniqueId': { '@_val': entry.uniqueId },
 			},
 		};
@@ -141,7 +141,7 @@ export function applyFilteredSeriesToXml(
 	}
 	if (filteredSeries && filteredSeries.length > 0) {
 		ownExt['@_uri'] = CHART_FILTERED_SERIES_EXT_URI;
-		ownExt['xmlns:c15'] = 'http://schemas.microsoft.com/office/drawing/2012/chart';
+		ownExt['@_xmlns:c15'] = 'http://schemas.microsoft.com/office/drawing/2012/chart';
 		const serNodes = filteredSeries.map((entry) => buildFilteredSerNode(entry, categories));
 		ownExt[`c15:${wrapperLocalName(containerLocalName)}`] = {
 			'c15:ser': serNodes.length === 1 ? serNodes[0] : serNodes,
