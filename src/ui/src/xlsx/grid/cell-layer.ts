@@ -16,6 +16,7 @@ import {
 import type { CellItem } from 'ooxml-core/xlsx/ui';
 import { h, svgNode } from './dom';
 import { iconSvg } from 'ooxml-core/xlsx/ui';
+import { sparklineSvg } from './sparkline';
 
 interface CellNode extends HTMLDivElement {
 	xgSig?: string | undefined;
@@ -158,6 +159,8 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 	style.backgroundImage = fill?.image ?? '';
 	node.className = `xg-c${item.overflowing ? ' xg-c-over' : ''}${view.hasHyperlink ? ' xg-link' : ''}${item.merged ? ' xg-merged' : ''}`;
 	node.replaceChildren();
+	// A sparkline is drawn first, behind the cell's bars, icons, text and borders.
+	if (view.sparkline) node.append(sparklineSvg(doc, view.sparkline, item.w, item.h, zoom));
 	if (view.dataBar) {
 		const bar = h(doc, 'div', 'xg-db');
 		const width = Math.max(0, Math.min(1, view.dataBar.fraction)) * (item.w - 4);

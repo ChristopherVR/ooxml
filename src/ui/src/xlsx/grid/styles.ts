@@ -25,6 +25,7 @@ export const GRID_CSS = `
 .xg-link{cursor:pointer}
 .xg-b{position:absolute;left:-1px;top:-1px;box-sizing:border-box;pointer-events:none}
 .xg-diag{position:absolute;left:0;top:0;pointer-events:none}
+.xg-spark{position:absolute;left:0;top:0;pointer-events:none;overflow:hidden}
 .xg-db{position:absolute;left:2px;top:2px;bottom:2px;border:1px solid;box-sizing:border-box}
 .xg-ic{position:absolute;left:2px;top:50%;transform:translateY(-50%)}
 .xg-cm{position:absolute;right:0;top:0;width:0;height:0;border-left:6px solid transparent;border-top:6px solid #d13438;z-index:2}
