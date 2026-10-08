@@ -16,7 +16,7 @@
  */
 
 import type { PptxChartAxisFormatting, PptxChartDisplayUnitsLabel, XmlObject } from '../types';
-import { hasLocalName } from './chart-axis-parser';
+import { hasLocalName } from './chart-xml-presence';
 import type { ColorParserLike, XmlLookupLike } from './chart-cx-parser';
 import { parseShapeProps } from './chart-series-detail-parser';
 import { collectAllText } from './chart-title-xml-ops';
@@ -186,7 +186,7 @@ function parseSingleCxAxis(
 		result.numFmt = { formatCode, sourceLinked: numFmtNode?.['@_sourceLinked'] === '1' };
 	}
 
-	// See `chart-axis-parser.ts`'s `hasLocalName` doc comment: a childless,
+	// See `chart-xml-presence.ts`'s `hasLocalName` doc comment: a childless,
 	// attribute-less `<cx:majorGridlines/>` parses to an empty string, which
 	// `getChildByLocalName`'s object-shape guard mistakes for "absent".
 	if (hasLocalName(axisNode, 'majorGridlines')) {

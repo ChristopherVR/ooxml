@@ -11,6 +11,7 @@ import {
 	parseImplicitBlipPictureFill,
 } from './chart-datapoint-serializer';
 import { parseChartUniqueId } from './chart-series-identity';
+import { hasLocalName } from './chart-xml-presence';
 
 /** Resolve a possibly-prefixed XML key to its local name (`c:idx` -> `idx`). */
 function localNameOf(key: string): string {
@@ -91,7 +92,7 @@ export function parseShapeProps(
 	const ln = xmlLookup.getChildByLocalName(spPrNode, 'ln');
 	if (ln) {
 		// `<a:noFill/>` parses to an empty string, so presence decides, not truthiness.
-		if (Object.keys(ln).some((key) => localNameOf(key) === 'noFill')) {
+		if (hasLocalName(ln, 'noFill')) {
 			result.lineNoFill = true;
 			hasProps = true;
 		}

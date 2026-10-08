@@ -5,6 +5,7 @@ import { parseChartAxisScaling } from './chart-axis-scaling';
 import { parseChartDateAxisUnits } from './chart-date-axis';
 import { parseShapeProps } from './chart-series-detail-parser';
 import { collectAllText } from './chart-title-xml-ops';
+import { hasLocalName } from './chart-xml-presence';
 
 export { upsertChartAxisChild } from './chart-axis-scaling';
 
@@ -20,21 +21,6 @@ interface ColorParserLike {
 function safeInt(val: unknown): number | undefined {
 	const n = parseInt(String(val), 10);
 	return Number.isFinite(n) ? n : undefined;
-}
-
-/**
- * Whether `node` has a child named `name`, by KEY existence rather than
- * `getChildByLocalName`'s "resolves to a non-array object" check. A childless,
- * attribute-less element (`<c:majorGridlines/>`) is a legal, common way to
- * mark a boolean flag present, but fast-xml-parser renders it as an empty
- * STRING, which `getChildByLocalName` cannot distinguish from "absent".
- */
-export function hasLocalName(node: XmlObject, name: string): boolean {
-	if (Object.hasOwn(node, name)) {
-		return true;
-	}
-	const suffix = `:${name}`;
-	return Object.keys(node).some((key) => key.endsWith(suffix));
 }
 
 const AXIS_TYPE_MAP: Record<string, PptxChartAxisFormatting['axisType']> = {
