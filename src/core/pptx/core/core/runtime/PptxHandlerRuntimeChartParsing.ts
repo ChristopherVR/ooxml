@@ -14,7 +14,7 @@
  *   `PptxHandlerRuntimeChartExParsing` -> **this** -> `PptxHandlerRuntimePresentationStructure`
  */
 
-import { parseChartSpace, type ChartSpace } from '../../../../chart/index';
+import type { ChartSpace } from '../../../../chart/index';
 import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
 import { parseLineStyle } from '../../utils/chart-advanced-parser';
@@ -41,22 +41,12 @@ import {
 	view3DFromNeutral,
 	type ChartTreeReader,
 } from '../../utils/chart-from-neutral';
+import { readChartPartModel } from '../../utils/chart-part-repair';
 import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 import { parseChartUpDownBars } from '../../utils/chart-up-down-bars';
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { applyEmbeddedWorkbookFallback } from './chart-embedded-fallback';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
-
-/** The neutral model of a classic chart part, or undefined for ChartEx and unreadable parts. */
-function readNeutralChartSpace(text: string): ChartSpace | undefined {
-	try {
-		const { chartSpace, issues } = parseChartSpace(text);
-		if (issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED')) return undefined;
-		return chartSpace;
-	} catch {
-		return undefined;
-	}
-}
 
 /** The object-tree nodes of a chart part. */
 interface ChartTree {
@@ -113,7 +103,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			this.currentSlideClrMapOverride = clrMapOvr;
 		}
 		try {
-			const neutral = readNeutralChartSpace(chartPart.text);
+			const { chartSpace: neutral, repairIssue } = readChartPartModel(chartPart.text);
+			if (repairIssue) {
+				this.compatibilityService.reportWarning({
+					code: repairIssue.code,
+					message: repairIssue.message,
+					severity: 'info',
+					scope: 'element',
+					xmlPath: chartPart.partPath,
+				});
+			}
 			// ChartEx (Office 2016+) parts use plotAreaRegion instead of chart groups.
 			if (!neutral || neutral.plotArea.groups.length === 0) {
 				return await this.parseCxChart(
