@@ -26,8 +26,13 @@ export function defineOnce(
 	assertContract(registry, tag);
 	if (registry.get(tag)) return;
 	const ctor = make();
-	Object.defineProperty(ctor, CONTRACT_KEY, { value: CONTRACT_REVISION });
+	markContract(ctor);
 	registry.define(tag, ctor);
+}
+
+/** Stamp a constructor with this build's contract revision. */
+export function markContract(ctor: CustomElementConstructor): void {
+	Object.defineProperty(ctor, CONTRACT_KEY, { value: CONTRACT_REVISION });
 }
 
 export type Definer = ((registry?: CustomElementRegistry) => void) & { readonly tag: string };
