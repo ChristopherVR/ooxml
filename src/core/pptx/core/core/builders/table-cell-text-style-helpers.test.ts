@@ -217,6 +217,58 @@ describe('applyCellTextFormat - paragraph alignment', () => {
 // ---------------------------------------------------------------------------
 
 describe('applyCellTextFormat - run properties', () => {
+	it('sizes an empty cell from its end paragraph properties', () => {
+		const tableCell: XmlObject = {
+			'a:txBody': {
+				'a:p': { 'a:endParaRPr': { '@_lang': 'en-US', '@_sz': '600', '@_b': '1' } },
+			},
+		};
+		const style: PptxTableCellStyle = {};
+		expect(applyCellTextFormat(tableCell, style, makeContext())).toBeTruthy();
+		// Only the size: the end properties do not style the cell's text.
+		expect(style).toStrictEqual({ fontSize: 6 });
+	});
+
+	it.each([
+		['a field', { 'a:fld': { '@_type': 'slidenum', 'a:t': '1' } }],
+		['a line break', { 'a:br': {} }],
+	])('does not size a cell from its end properties when it holds %s', (_, content) => {
+		const tableCell: XmlObject = {
+			'a:txBody': { 'a:p': { ...content, 'a:endParaRPr': { '@_sz': '600' } } },
+		};
+		const style: PptxTableCellStyle = {};
+		applyCellTextFormat(tableCell, style, makeContext());
+		expect(style.fontSize).toBeUndefined();
+	});
+
+	it('does not size a cell from an empty first paragraph when a later one has text', () => {
+		const tableCell: XmlObject = {
+			'a:txBody': {
+				'a:p': [
+					{ 'a:endParaRPr': { '@_sz': '600' } },
+					{ 'a:r': { 'a:rPr': { '@_sz': '1200' }, 'a:t': 'text' } },
+				],
+			},
+		};
+		const style: PptxTableCellStyle = {};
+		applyCellTextFormat(tableCell, style, makeContext());
+		expect(style.fontSize).toBeUndefined();
+	});
+
+	it("keeps the first run's properties over the end paragraph properties", () => {
+		const tableCell: XmlObject = {
+			'a:txBody': {
+				'a:p': {
+					'a:r': { 'a:rPr': { '@_sz': '1200' }, 'a:t': 'text' },
+					'a:endParaRPr': { '@_sz': '600' },
+				},
+			},
+		};
+		const style: PptxTableCellStyle = {};
+		applyCellTextFormat(tableCell, style, makeContext());
+		expect(style.fontSize).toBe(12);
+	});
+
 	it('applies bold from run properties', () => {
 		const tableCell: XmlObject = {
 			'a:txBody': {
