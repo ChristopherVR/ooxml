@@ -48,6 +48,30 @@ for (const framework of FRAMEWORKS) {
 		await expect(stamp).toHaveAttribute('data-selection', 'C12');
 		expect(errors).toEqual([]);
 	});
+
+	test(`${framework}: the binding's own handle exposes element and dirty`, async ({ page }) => {
+		const errors = pageErrors(page);
+		await openSample(page, framework);
+		// The demo keeps the handle the binding itself returned (ref, exposed instance or exports).
+		const handle = () =>
+			page.evaluate(() => {
+				const h = (window as unknown as { xlsxDemoHandle?: { element?: Element; dirty?: unknown } })
+					.xlsxDemoHandle;
+				return {
+					same: !!h?.element && h.element === document.querySelector('xlsx-editor'),
+					dirty: h?.dirty,
+				};
+			});
+		expect(await handle()).toEqual({ same: true, dirty: false });
+		await typeInActiveCell(page, `${framework} dirty`);
+		await expect.poll(async () => (await handle()).dirty).toBe(true);
+		await page.evaluate(() =>
+			(window as unknown as { xlsxDemoHandle: { markClean(): void } }).xlsxDemoHandle.markClean(),
+		);
+		await expect.poll(async () => (await handle()).dirty).toBe(false);
+		expect((await handle()).same).toBe(true);
+		expect(errors).toEqual([]);
+	});
 }
 
 test('the chosen locale reaches the editor mounted through an adapter', async ({ page }) => {

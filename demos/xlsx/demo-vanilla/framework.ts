@@ -7,23 +7,23 @@ import type { XlsxEditorElement } from 'xlsx-web-component';
 
 export const DEMO_FRAMEWORKS = ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'] as const;
 
-/** The same handle the vanilla binding returns, built over an element a framework adapter mounted. */
-function handleFor(element: XlsxEditorElement): EditorHandle {
-	return {
-		element,
-		load: (input, fileName) => element.load(input, fileName),
-		newWorkbook: () => element.newWorkbook(),
-		save: () => element.save(),
-		saveBytes: (format) => element.saveBytes(format),
-		download: (fileName) => element.download(fileName),
-		markClean: () => element.markClean(),
-		select: (ref) => element.select(ref),
-		getSelection: () => element.getSelection(),
-		setActiveSheet: (index) => element.setActiveSheet(index),
-		get dirty() {
-			return element.dirty;
-		},
-	};
+/** The handle each binding hands its host (ref, exposed instance, exports), kept for the browser tests. */
+declare global {
+	interface Window {
+		xlsxDemoHandle?: EditorHandle;
+	}
+}
+
+/** Waits for the adapter to mount `<xlsx-editor>` and the binding to hand over its own handle. */
+async function bindingHandle(
+	host: HTMLElement,
+	framework: string,
+	handle: () => EditorHandle | undefined,
+): Promise<EditorHandle> {
+	await waitForEditor(host, framework);
+	const found = handle();
+	if (!found) throw new Error(`${framework} binding did not expose its handle`);
+	return found;
 }
 
 function waitForEditor(host: HTMLElement, framework: string): Promise<XlsxEditorElement> {
@@ -66,22 +66,44 @@ export async function mountFramework(
 			import('react'),
 			import('../../../viewers/xlsx/packages/bindings/src/react'),
 		]);
-		createRoot(host).render(createElement(SpreadsheetEditor, options));
+		let handle: EditorHandle | null = null;
+		createRoot(host).render(
+			createElement(SpreadsheetEditor, {
+				...options,
+				ref: (value: EditorHandle | null) => {
+					handle = value;
+				},
+			}),
+		);
+		return expose(await bindingHandle(host, framework, () => handle ?? undefined));
 	} else if (framework === 'solid') {
 		const [{ render }, { createComponent }, { SpreadsheetEditor }] = await Promise.all([
 			import('solid-js/web'),
 			import('solid-js'),
 			import('../../../viewers/xlsx/packages/bindings/src/solid'),
 		]);
-		render(() => createComponent(SpreadsheetEditor, options), host);
+		let handle: EditorHandle | undefined;
+		render(
+			() =>
+				createComponent(SpreadsheetEditor, {
+					...options,
+					editorRef: (value) => {
+						handle = value;
+					},
+				}),
+			host,
+		);
+		return expose(await bindingHandle(host, framework, () => handle));
 	} else if (framework === 'vue') {
 		const [{ createApp, h }, { SpreadsheetEditor }] = await Promise.all([
 			import('vue'),
 			import('../../../viewers/xlsx/packages/bindings/src/vue'),
 		]);
+		let handle: EditorHandle | undefined;
 		createApp({
 			render: () =>
 				h(SpreadsheetEditor, {
+					ref: (value) => (handle = (value ?? undefined) as EditorHandle | undefined),
 					...(options.workbook && { workbook: options.workbook }),
 					...(options.readOnly !== undefined && { readOnly: options.readOnly }),
 					...(options.locale !== undefined && { locale: options.locale }),
@@ -91,12 +113,13 @@ export async function mountFramework(
 					...(options.onDirtyChange && { 'onDirty-change': options.onDirtyChange }),
 				}),
 		}).mount(host);
+		return expose(await bindingHandle(host, framework, () => handle));
 	} else if (framework === 'svelte') {
 		const [{ mount }, { default: XlsxEditor }] = await Promise.all([
 			import('svelte'),
 			import('../../../viewers/xlsx/packages/bindings/src/XlsxEditor.svelte'),
 		]);
-		mount(XlsxEditor, {
+		const component = mount(XlsxEditor, {
 			target: host,
 			props: {
 				workbook: options.workbook,
@@ -108,6 +131,7 @@ export async function mountFramework(
 				ondirtychange: options.onDirtyChange,
 			},
 		});
+		return expose(await bindingHandle(host, framework, () => component as unknown as EditorHandle));
 	} else if (framework === 'angular') {
 		await import('@angular/compiler');
 		const [
@@ -134,8 +158,13 @@ export async function mountFramework(
 		if (options.onDirtyChange) component.instance.dirtyChange.subscribe(options.onDirtyChange);
 		app.attachView(component.hostView);
 		component.changeDetectorRef.detectChanges();
-	} else {
-		return mountEditor(host, options);
+		const instance = component.instance;
+		return expose(await bindingHandle(host, framework, () => instance as unknown as EditorHandle));
 	}
-	return handleFor(await waitForEditor(host, framework));
+	return expose(mountEditor(host, options));
+}
+
+function expose(handle: EditorHandle): EditorHandle {
+	window.xlsxDemoHandle = handle;
+	return handle;
 }
