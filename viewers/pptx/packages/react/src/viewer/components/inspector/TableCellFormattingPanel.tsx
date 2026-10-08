@@ -1,3 +1,4 @@
+import { withCellStyle } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -52,12 +53,7 @@ export function TableCellFormattingPanel({
 			}
 			return {
 				...row,
-				cells: row.cells.map((c, ci) => {
-					if (ci !== columnIndex) {
-						return c;
-					}
-					return { ...c, style: { ...cs, ...updates } };
-				}),
+				cells: row.cells.map((c, ci) => (ci === columnIndex ? withCellStyle(c, updates) : c)),
 			};
 		});
 		onUpdateTableData({ rows: newRows });

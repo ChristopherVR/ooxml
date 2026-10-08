@@ -45,6 +45,7 @@ import {
 	updateGradientStopPatch,
 	vAlignPatch,
 	switchSmartArtLayoutData,
+	withCellStyle,
 } from 'ooxml-ui/pptx';
 import type { GradientState, InlineTextSelection, TextAdvancedChanges } from 'ooxml-ui/pptx';
 
@@ -232,10 +233,7 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 						rows: cellStyle
 							? el.tableData.rows.map((row) => ({
 									...row,
-									cells: row.cells.map((cell) => ({
-										...cell,
-										style: { ...cell.style, ...cellStyle },
-									})),
+									cells: row.cells.map((cell) => withCellStyle(cell, cellStyle)),
 								}))
 							: el.tableData.rows,
 					},
@@ -261,9 +259,7 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 								? {
 										...row,
 										cells: row.cells.map((cell, cellIndex) =>
-											cellIndex === columnIndex
-												? { ...cell, style: { ...cell.style, ...patch } }
-												: cell,
+											cellIndex === columnIndex ? withCellStyle(cell, patch) : cell,
 										),
 									}
 								: row,

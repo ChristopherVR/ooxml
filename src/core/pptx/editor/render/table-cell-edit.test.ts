@@ -1,7 +1,7 @@
 import type { TablePptxElement } from '../../index';
 import { describe, expect, it } from 'vitest';
 
-import { setCellText, withCellText } from './table-cell-edit';
+import { setCellText, withCellStyle, withCellText } from './table-cell-edit';
 
 function makeTable(): TablePptxElement {
 	return {
@@ -100,5 +100,43 @@ describe('withCellText', () => {
 
 	it('is a no-op on the run model for a cell that never had one', () => {
 		expect(withCellText({ text: 'a' }, 'b')).toStrictEqual({ text: 'b' });
+	});
+});
+
+describe('withCellStyle', () => {
+	it('merges the patch into the cell style', () => {
+		const cell = { text: 'a', style: { bold: true } };
+		const next = withCellStyle(cell, { italic: true });
+		expect(next).toStrictEqual({ text: 'a', style: { bold: true, italic: true } });
+		expect(cell.style).toStrictEqual({ bold: true });
+	});
+
+	it('aligns every paragraph with the cell and keeps their other layout', () => {
+		const cell = {
+			text: 'one\ntwo\nthree',
+			style: { align: 'right' as const },
+			paragraphs: [{ align: 'right' as const }, { align: 'center' as const, rtl: true }, {}],
+		};
+		expect(withCellStyle(cell, { align: 'left' })).toStrictEqual({
+			text: 'one\ntwo\nthree',
+			style: { align: 'left' },
+			paragraphs: [{ align: 'left' }, { align: 'left', rtl: true }, { align: 'left' }],
+		});
+		expect(cell.paragraphs[1]).toStrictEqual({ align: 'center', rtl: true });
+	});
+
+	it('gives each line its alignment when the cell had no paragraph layout', () => {
+		expect(withCellStyle({ text: 'one\ntwo' }, { align: 'center' }).paragraphs).toStrictEqual([
+			{ align: 'center' },
+			{ align: 'center' },
+		]);
+	});
+
+	it('gives every line of an edited cell its alignment', () => {
+		const edited = withCellText({ text: 'a', paragraphs: [{ paragraphIndent: 4 }] }, 'one\ntwo');
+		expect(withCellStyle(edited, { align: 'right' }).paragraphs).toStrictEqual([
+			{ paragraphIndent: 4, align: 'right' },
+			{ align: 'right' },
+		]);
 	});
 });

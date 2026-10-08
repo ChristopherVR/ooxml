@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
-import { computeMergeCellDown, computeMergeCellRight, computeSplitCell } from 'ooxml-ui/pptx';
+import {
+	computeMergeCellDown,
+	computeMergeCellRight,
+	computeSplitCell,
+	withCellStyle,
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -73,9 +78,7 @@ function updateCellStyle(updates: Partial<PptxTableCellStyle>): void {
 		}
 		return {
 			...row,
-			cells: row.cells.map((c, ci) =>
-				ci !== props.columnIndex ? c : { ...c, style: { ...cs.value, ...updates } },
-			),
+			cells: row.cells.map((c, ci) => (ci !== props.columnIndex ? c : withCellStyle(c, updates))),
 		};
 	});
 	emit('update', { rows: newRows });

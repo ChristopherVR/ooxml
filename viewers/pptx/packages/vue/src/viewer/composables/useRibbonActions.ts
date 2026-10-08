@@ -16,6 +16,7 @@ import {
 	transformTextCase,
 	transformInlineListCase,
 	updateTextSegmentStyle,
+	withCellStyle,
 } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
@@ -113,9 +114,7 @@ export function useRibbonActions(input: UseRibbonActionsInput) {
 				: {
 						...row,
 						cells: row.cells.map((c, ci) =>
-							ci !== columnIndex
-								? c
-								: { ...c, style: { ...c.style, ...updates } as PptxTableCellStyle },
+							ci !== columnIndex ? c : withCellStyle(c, updates as Partial<PptxTableCellStyle>),
 						),
 					},
 		);

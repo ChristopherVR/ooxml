@@ -6,7 +6,7 @@
  *
  * @module render/table-cell-edit
  */
-import type { PptxTableCell, TablePptxElement } from 'ooxml-core/pptx';
+import type { PptxTableCell, PptxTableCellStyle, TablePptxElement } from 'ooxml-core/pptx';
 
 /**
  * Replace one cell's plain text, DROPPING the per-run model that described the
@@ -39,6 +39,32 @@ export function withCellText(cell: PptxTableCell, text: string): PptxTableCell {
 	delete next.textRuns;
 	if (cell.paragraphs) {
 		next.paragraphs = cell.paragraphs.slice(0, 1);
+	}
+	return next;
+}
+
+/**
+ * Merge a style patch into one cell.
+ *
+ * Aligning a cell aligns every paragraph in it: save writes each paragraph's
+ * own alignment, so a paragraph that kept its old one would keep it in the
+ * file. `paragraphs` gets one entry per line of `text`; save writes as many as
+ * the cell has `a:p`.
+ *
+ * @param cell - The cell to restyle (not mutated).
+ * @param patch - Style fields to set.
+ * @returns A new cell with the patch applied.
+ */
+export function withCellStyle(
+	cell: PptxTableCell,
+	patch: Partial<PptxTableCellStyle>,
+): PptxTableCell {
+	const next: PptxTableCell = { ...cell, style: { ...cell.style, ...patch } };
+	const { align } = patch;
+	if (align) {
+		next.paragraphs = cell.text
+			.split('\n')
+			.map((_, index) => ({ ...cell.paragraphs?.[index], align }));
 	}
 	return next;
 }

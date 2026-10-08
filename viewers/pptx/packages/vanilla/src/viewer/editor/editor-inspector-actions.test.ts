@@ -1,4 +1,4 @@
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide, TablePptxElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Store, ViewerState } from '../state';
@@ -435,6 +435,26 @@ describe('createInspectorActions table', () => {
 			align: 'center',
 			marginLeft: 6,
 		});
+	});
+
+	it('aligns every paragraph of a cell', () => {
+		const element = tableElement() as TablePptxElement;
+		Object.assign(element.tableData!.rows[0].cells[1], {
+			text: 'one\ntwo',
+			paragraphs: [{ align: 'right' }, { align: 'center' }],
+		});
+		const { store, actions } = buildActions(element);
+
+		actions.setTableCellStyle(0, 1, { align: 'left' });
+		const aligned = (selectedEl(store) as TablePptxElement).tableData?.rows[0].cells[1];
+		expect(aligned?.paragraphs).toStrictEqual([{ align: 'left' }, { align: 'left' }]);
+
+		actions.setTableOptions({}, { align: 'right' });
+		const cells = (selectedEl(store) as TablePptxElement).tableData?.rows[0].cells;
+		expect(cells?.map((cell) => cell.paragraphs)).toStrictEqual([
+			[{ align: 'right' }],
+			[{ align: 'right' }, { align: 'right' }],
+		]);
 	});
 });
 

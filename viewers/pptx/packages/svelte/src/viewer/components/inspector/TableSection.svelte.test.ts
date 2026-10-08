@@ -266,4 +266,28 @@ describe('tableSection', () => {
 		const data = (currentEl(editor) as TableShape).tableData;
 		expect(data?.rows[0]?.cells[0]?.style).toMatchObject({ color: '#123456' });
 	});
+
+	it('aligns every paragraph of the selected cell', () => {
+		const el = tableEl() as TablePptxElement;
+		Object.assign(el.tableData!.rows[0].cells[0], {
+			text: 'one\ntwo',
+			style: { align: 'right' },
+			paragraphs: [{ align: 'right' }, { align: 'center' }],
+		});
+		const editor = makeEditor(el);
+		const { target } = mountSection(editor, currentEl(editor));
+		const select = target.querySelector<HTMLSelectElement>(
+			'pptx-ui-select[aria-label="Horizontal"]',
+		);
+		if (!select) {
+			throw new Error('cell alignment select not found');
+		}
+		select.value = 'left';
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		flushSync();
+		expect((currentEl(editor) as TablePptxElement).tableData?.rows[0].cells[0]).toMatchObject({
+			style: { align: 'left' },
+			paragraphs: [{ align: 'left' }, { align: 'left' }],
+		});
+	});
 });
