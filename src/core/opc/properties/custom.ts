@@ -118,3 +118,67 @@ export function writeCustomProperties(properties: readonly CustomProperty[]): st
 		`<Properties xmlns="${NS.customProperties}" xmlns:vt="${NS.vt}">${body}</Properties>`
 	);
 }
+
+/**
+ * A custom property seen as text, for editors that show every variant type as a string: the
+ * variant element's local name (`lpwstr`, `i4`, `ui4`, `lpstr`...) and its text content.
+ */
+export interface CustomPropertyText {
+	name: string;
+	type: string;
+	text: string;
+	pid?: number;
+}
+
+/** Reads `docProps/custom.xml` as text; `type` is empty for a value outside the `vt` namespace. */
+export function parseCustomPropertyTexts(xml: string | undefined): CustomPropertyText[] {
+	if (!xml) return [];
+	const root = parseXml(xml, { label: 'custom properties' }).documentElement;
+	const out: CustomPropertyText[] = [];
+	for (const property of children(root, 'property', NS.customProperties)) {
+		const name = property.getAttribute('name') ?? '';
+		if (!name) continue;
+		const variant = elements(property)[0];
+		const pid = Number.parseInt(property.getAttribute('pid') ?? '', 10);
+		out.push({
+			name,
+			type: variant && isVt(variant) ? variant.localName : '',
+			text: variant?.textContent ?? '',
+			...(Number.isFinite(pid) ? { pid } : {}),
+		});
+	}
+	return out;
+}
+
+const INT32 = /^-?\d+$/;
+
+/**
+ * The property `name` holding `text` as a `vt:<type>` value. It is typed when the text survives
+ * the typed value unchanged (`i4` `42`, `r8` `2.5`, `bool` `true`), and raw otherwise (`i4`
+ * `042`, `ui4`, `lpstr`...), so the written text is always exactly `text`. An unusable type
+ * name falls back to `lpwstr`.
+ */
+export function customPropertyFromText(name: string, type: string, text: string): CustomProperty {
+	switch (type) {
+		case 'lpwstr':
+		case 'filetime':
+			return { name, type, value: text };
+		case 'i4': {
+			const value = Number.parseInt(text, 10);
+			if (INT32.test(text) && String(value) === text && value === (value | 0))
+				return { name, type, value };
+			break;
+		}
+		case 'r8': {
+			const value = Number(text);
+			if (text.trim() !== '' && String(value) === text) return { name, type, value };
+			break;
+		}
+		case 'bool':
+			if (text === 'true' || text === 'false') return { name, type, value: text === 'true' };
+			break;
+		default:
+			if (!/^[A-Za-z][A-Za-z0-9]*$/.test(type)) return { name, type: 'lpwstr', value: text };
+	}
+	return { name, type: 'raw', xml: `<vt:${type}>${escape(text)}</vt:${type}>` };
+}

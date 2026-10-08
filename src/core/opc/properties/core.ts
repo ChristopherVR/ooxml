@@ -1,4 +1,5 @@
-import { NS, buildXml, first, parseXml, type XmlElement } from '../../xml/index';
+import { NS, first, parseXml, type XmlElement } from '../../xml/index';
+import { PartPatch, escapeText } from './patch';
 import type { CoreProperties } from './types';
 
 const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
@@ -43,30 +44,37 @@ export function parseCoreProperties(xml: string | undefined): CoreProperties {
 	return out;
 }
 
+/** `date` as W3CDTF at second precision in UTC (`2026-10-08T09:30:00Z`), as Office writes it. */
+export const formatW3cdtf = (date: Date): string => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
 /**
  * Writes `docProps/core.xml`. With `sourceXml` the source part is patched: known fields are
- * set, replaced or removed to match `props`, and every element the model does not know is kept.
+ * set, replaced or removed to match `props`, and everything else is kept byte for byte (see
+ * `PartPatch`). A date that is written carries `xsi:type="dcterms:W3CDTF"` as ECMA-376 Part 2
+ * requires, and any `xsi` or `dcterms` declaration that needs is added to the root.
  */
 export function writeCoreProperties(props: CoreProperties, sourceXml?: string): string {
-	const doc = parseXml(sourceXml ?? EMPTY_CORE, { label: 'core properties' });
-	const root = doc.documentElement;
+	const xml = sourceXml ?? EMPTY_CORE;
+	const root = parseXml(xml, { label: 'core properties' }).documentElement;
+	const patch = new PartPatch(xml, root);
 	for (const [field, prefix, isDate] of FIELDS) {
 		const ns = NS[prefix];
 		const value = props[field];
-		let element: XmlElement | undefined = first(root, field, ns);
+		const element: XmlElement | undefined = first(root, field, ns);
 		if (value === undefined || value === '') {
-			if (element && (element.textContent ?? '') !== '') root.removeChild(element);
+			if (element && (element.textContent ?? '') !== '') patch.remove(element);
 			continue;
 		}
-		if (!element) {
-			element = doc.createElementNS(ns, `${prefix}:${field}`);
-			if (isDate) element.setAttributeNS(XSI, 'xsi:type', 'dcterms:W3CDTF');
-			root.appendChild(element);
+		if (element && element.textContent === value) continue;
+		const typed = () =>
+			` ${patch.prefix(XSI, 'xsi')}:type="${patch.prefix(NS.dcterms, 'dcterms')}:W3CDTF"`;
+		if (element) {
+			if (isDate && !element.getAttributeNS(XSI, 'type')) patch.addAttribute(element, typed());
+			patch.setContent(element, escapeText(value));
+			continue;
 		}
-		if (element.textContent !== value) element.textContent = value;
+		const name = patch.qualify(ns, field, prefix);
+		patch.insert(`<${name}${isDate ? typed() : ''}>${escapeText(value)}</${name}>`);
 	}
-	const out = buildXml(doc);
-	return out.startsWith('<?xml')
-		? out
-		: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n${out}`;
+	return patch.toString();
 }

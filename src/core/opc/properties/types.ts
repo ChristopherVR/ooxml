@@ -55,6 +55,21 @@ export interface AppProperties {
 	docSecurity?: number;
 	/** `TotalTime`: editing minutes. */
 	totalTime?: number;
+	/** `PresentationFormat` (`Widescreen`, `On-screen Show (4:3)`). */
+	presentationFormat?: string;
+	/** Document statistics as the producing application last counted them. */
+	pages?: number;
+	words?: number;
+	characters?: number;
+	charactersWithSpaces?: number;
+	lines?: number;
+	paragraphs?: number;
+	slides?: number;
+	/** `Notes`: slides with a notes page. */
+	notes?: number;
+	hiddenSlides?: number;
+	/** `MMClips`: multimedia clips. */
+	mmClips?: number;
 	scaleCrop?: boolean;
 	linksUpToDate?: boolean;
 	sharedDoc?: boolean;
