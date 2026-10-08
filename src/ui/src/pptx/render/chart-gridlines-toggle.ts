@@ -22,10 +22,11 @@ import type { PptxChartAxisFormatting, PptxChartData } from 'ooxml-core/pptx';
 
 /**
  * Find the chart's primary (non-secondary) value axis: the one positioned
- * "l" (left), or the first `valAx` entry when none declares a position.
- * Mirrors `getPrimaryValueAxisId` in `chart-axis.ts`.
+ * "l" (left), or else the first `valAx` entry (a horizontal bar chart's
+ * value axis sits at the bottom). Mirrors `getPrimaryValueAxisId` in
+ * `chart-axis.ts`.
  */
-function primaryValueAxis(
+export function primaryValueAxis(
 	axes: PptxChartAxisFormatting[] | undefined,
 ): PptxChartAxisFormatting | undefined {
 	if (!axes) {
@@ -61,6 +62,14 @@ export function chartGridlinesState(chartData: PptxChartData): boolean {
 
 /** Whether the cartesian renderer should draw primary major gridlines. */
 export const shouldRenderMajorGridlines = chartGridlinesState;
+
+/**
+ * Whether one value axis draws major gridlines: a parsed axis follows its own
+ * `c:majorGridlines`; with no parsed axis, gridlines are drawn.
+ */
+export function axisShowsMajorGridlines(axis: PptxChartAxisFormatting | undefined): boolean {
+	return axis ? axis.majorGridlines === true : true;
+}
 
 /**
  * Build a `Partial<PptxChartData>` patch that toggles major gridlines on the

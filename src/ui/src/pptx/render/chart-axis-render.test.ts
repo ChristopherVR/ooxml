@@ -336,3 +336,19 @@ describe('a PowerPoint-saved value axis with no line', () => {
 		expect(vm.axisLabels.length).toBeGreaterThan(0);
 	});
 });
+
+describe('buildSecondaryAxis major gridlines', () => {
+	const range: ValueRange = { min: 0, max: 50, span: 50 };
+
+	it('draws none when showMajorGridlines is false', () => {
+		const axis: PptxChartAxisFormatting = { axisType: 'valAx', axPos: 'r', majorTickMark: 'out' };
+		const shown = buildSecondaryAxis(range, layout, axis, layout.plotRight, true);
+		const hidden = buildSecondaryAxis(range, layout, axis, layout.plotRight, false);
+		const spansPlot = (line: { x1: number; x2: number }) =>
+			line.x1 === layout.plotLeft && line.x2 === layout.plotRight;
+		expect(shown.gridlines.some(spansPlot)).toBeTruthy();
+		expect(hidden.gridlines.some(spansPlot)).toBeFalsy();
+		expect(hidden.gridlines.length).toBeGreaterThan(0);
+		expect(hidden.axisLabels).toStrictEqual(shown.axisLabels);
+	});
+});

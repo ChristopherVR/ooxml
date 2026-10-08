@@ -189,13 +189,15 @@ export function buildSecondaryAxis(
 	layout: PlotLayout,
 	axis: PptxChartAxisFormatting | undefined,
 	axisX = layout.plotRight,
+	/** As on {@link buildPrimaryAxis}: `false` when `c:majorGridlines` is absent. */
+	showMajorGridlines = true,
 ): { gridlines: SvgLine[]; axisLabels: SvgText[] } {
 	const gridlines: SvgLine[] = [];
 	const axisLabels: SvgText[] = [];
 	const textStyle = chartAxisTextStyle(axis);
 	const captionStyle = chartAxisTextStyle(axis);
 	const axisLine = buildVerticalAxisLine(axis, axisX, layout);
-	const drawMajorGridlines = !isNoLine(axis?.majorGridlinesSpPr);
+	const drawMajorGridlines = showMajorGridlines && !isNoLine(axis?.majorGridlinesSpPr);
 	if (axisLine) {
 		gridlines.push(axisLine);
 	}

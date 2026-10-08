@@ -18,7 +18,7 @@ import {
 import { appendAreaSeries, appendLineSeries } from './chart-combo-series';
 import { computeDataTablePrimitives } from './chart-data-table-render';
 import { computeErrorBarPrimitives } from './chart-error-bars';
-import { shouldRenderMajorGridlines } from './chart-gridlines-toggle';
+import { axisShowsMajorGridlines, shouldRenderMajorGridlines } from './chart-gridlines-toggle';
 import { computeHelperLinePrimitives } from './chart-helper-lines';
 import { buildCartesianHorizontalAxis } from './chart-horizontal-axis';
 import type { LegendSwatchKind } from './chart-legend-swatch';
@@ -118,6 +118,7 @@ export function buildComboViewModel(
 					'right',
 					chartData.dateCategories?.values,
 				),
+				axisShowsMajorGridlines(secondaryAxisFormatting),
 			)
 		: undefined;
 	const zeroLine = primaryRange.logScale ? undefined : buildZeroLine(primaryRange, layout);

@@ -315,10 +315,22 @@ describe('cartesian secondary value axis', () => {
 	};
 
 	it('emits a second set of gridlines and labels on the right', () => {
-		const vm = buildChartViewModel(chartElement(secChart));
+		const withGridlines: PptxChartData = {
+			...secChart,
+			axes: secChart.axes!.map((axis) =>
+				axis.axPos === 'r' ? { ...axis, majorGridlines: true } : axis,
+			),
+		};
+		const vm = buildChartViewModel(chartElement(withGridlines));
 		expect(vm.secondaryGridlines).toBeDefined();
 		expect(vm.secondaryAxisLabels).toBeDefined();
 		expect(vm.secondaryGridlines!.length).toBeGreaterThan(0);
+	});
+
+	it('draws no secondary gridlines when that axis has no c:majorGridlines of its own', () => {
+		const vm = buildChartViewModel(chartElement(secChart));
+		expect(vm.secondaryGridlines).toStrictEqual([]);
+		expect(vm.secondaryAxisLabels!.length).toBeGreaterThan(0);
 	});
 
 	it('positions secondary labels to the right of plotRight', () => {

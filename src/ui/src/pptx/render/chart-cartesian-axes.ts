@@ -4,7 +4,7 @@ import { getSecondaryValueAxis } from './chart-axis';
 import { verticalAxisX } from './chart-axis-crossing';
 import { buildPrimaryAxis, buildSecondaryAxis } from './chart-axis-render';
 import { chartAxisTextStyle } from './chart-axis-style';
-import { shouldRenderMajorGridlines } from './chart-gridlines-toggle';
+import { axisShowsMajorGridlines, shouldRenderMajorGridlines } from './chart-gridlines-toggle';
 import type { PlotLayout, SvgLine, SvgText, ValueRange } from './chart-view-model';
 import { buildGridlinesAndLabels } from './chart-view-model';
 
@@ -96,6 +96,7 @@ export function buildCartesianAxes(
 		layout,
 		secondaryAxis,
 		axisX(secondaryAxis?.crossAxisId, 'right'),
+		axisShowsMajorGridlines(secondaryAxis),
 	);
 	return {
 		...primary,
