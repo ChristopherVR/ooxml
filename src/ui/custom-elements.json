@@ -2219,10 +2219,25 @@
 					"name": "OfficeUiRuler",
 					"tagName": "office-ui-ruler",
 					"customElement": true,
-					"description": "`<office-ui-ruler>`: a decorative Office ruler (inches by default). The product positions it and says where zero is: `origin` is the CSS-pixel offset of zero from the ruler's start edge, `scale` the CSS pixels per unit (96 at 100% for inches). `orientation=\"vertical\"` draws a side ruler; `direction=\"reverse\"` makes values grow toward the start edge, as Visio's vertical ruler grows upward from the page bottom. Hidden from assistive technology.",
+					"description": "`<office-ui-ruler>`: an Office ruler (inches by default). The product positions it and says where zero is: `origin` is the CSS-pixel offset of zero from the ruler's start edge, `scale` the CSS pixels per unit (96 at 100% for inches). `orientation=\"vertical\"` draws a side ruler; `direction=\"reverse\"` makes values grow toward the start edge, as Visio's vertical ruler grows upward from the page bottom. Page rulers add: `extent` (the ruler's own length in px, as long as the page), `marginStart` / `marginEnd` (shaded margin bands), `zoom` (the ruler is shown at that CSS zoom) and `labelsWithinMargins` (whole-unit labels only between the margins, counted up from `origin`). `markers` are draggable: the element fires `ruler-marker-move` while one is dragged (the host answers by updating `markers` to preview), then `ruler-marker-commit` on release or `ruler-marker-cancel`; all carry a `RulerMarkerEventDetail`. Without a `label` the ruler is hidden from assistive technology; with one it is an image with that name.",
 					"attributes": [
 						{
 							"name": "direction"
+						},
+						{
+							"name": "extent"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "labelswithinmargins"
+						},
+						{
+							"name": "marginend"
+						},
+						{
+							"name": "marginstart"
 						},
 						{
 							"name": "orientation"
@@ -2232,6 +2247,9 @@
 						},
 						{
 							"name": "scale"
+						},
+						{
+							"name": "zoom"
 						}
 					],
 					"members": [
@@ -2241,6 +2259,45 @@
 							"type": {
 								"text": "string"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "extent",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "labelsWithinMargins",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "marginEnd",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "marginStart",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "markers"
 						},
 						{
 							"kind": "field",
@@ -2262,9 +2319,20 @@
 							"type": {
 								"text": "number"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "zoom",
+							"type": {
+								"text": "number"
+							}
 						}
 					],
-					"events": []
+					"events": [
+						{
+							"name": "ruler-marker-move"
+						}
+					]
 				}
 			],
 			"exports": [
