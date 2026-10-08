@@ -274,3 +274,54 @@ describe('buildForeignObjectSvgBody', () => {
 		document.body.removeChild(el);
 	});
 });
+
+describe('foreignObject markup with hostile deck content', () => {
+	it('keeps script and event-handler payloads inert as text and attribute values', async () => {
+		document.body.innerHTML = '';
+		const fontStyle = document.createElement('style');
+		fontStyle.textContent =
+			"@font-face { font-family: 'Evil]]><script>alert(1)</script>'; src: url(data:font/woff2;base64,AAA); }";
+		document.head.appendChild(fontStyle);
+		const el = document.createElement('div');
+		const text = document.createElement('p');
+		text.textContent = '<script>alert(1)</script><img src=x onerror=alert(1)>';
+		const link = document.createElement('a');
+		link.setAttribute('href', '#"><img src=x onerror=alert(1)>');
+		link.setAttribute('title', '" onerror="alert(1)');
+		el.append(text, link);
+		document.body.appendChild(el);
+		try {
+			const body = await buildForeignObjectSvgBody(el, document, {
+				width: 20,
+				height: 10,
+				backgroundColor: '"/><script>alert(1)</script><rect onerror="alert(1)',
+			});
+			const xml = wrapForeignObjectSvg(body.bodyMarkup, {
+				viewBoxX: 0,
+				viewBoxY: 0,
+				viewBoxWidth: 20,
+				viewBoxHeight: 10,
+				outputWidth: 20,
+				outputHeight: 10,
+			});
+			const parsed = new DOMParser().parseFromString(xml, 'image/svg+xml');
+			expect(parsed.getElementsByTagName('parsererror')).toHaveLength(0);
+			expect(parsed.getElementsByTagName('script')).toHaveLength(0);
+			expect(parsed.getElementsByTagName('img')).toHaveLength(0);
+			for (const node of Array.from(parsed.getElementsByTagName('*'))) {
+				expect(node.hasAttribute('onerror')).toBe(false);
+			}
+			expect(parsed.getElementsByTagName('p')[0]?.textContent).toBe(text.textContent);
+			expect(parsed.getElementsByTagName('a')[0]?.getAttribute('title')).toBe(
+				'" onerror="alert(1)',
+			);
+			expect(parsed.getElementsByTagName('rect')[0]?.getAttribute('fill')).toBe(
+				'"/><script>alert(1)</script><rect onerror="alert(1)',
+			);
+			expect(parsed.getElementsByTagName('style')[0]?.textContent).toBe(fontStyle.textContent);
+		} finally {
+			fontStyle.remove();
+			el.remove();
+		}
+	});
+});

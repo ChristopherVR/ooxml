@@ -27,6 +27,7 @@ import type { FontStyleDocumentLike, LinkStyleDocumentLike } from './foreign-obj
 import { embedImagesOnClone, fetchAsDataUrl } from './foreign-object-image-embed';
 import { inlineComputedStylesOnClone } from './foreign-object-style-inline';
 import type { ComputedStyleReader } from './foreign-object-style-inline';
+import { escapeSvgAttr } from './visual-effects';
 
 /** Options for {@link buildForeignObjectSvgBody}. */
 export interface ForeignObjectSvgBodyOptions {
@@ -50,8 +51,14 @@ export interface ForeignObjectSvgBody {
 	naturalHeight: number;
 }
 
-function escapeAttr(value: string): string {
-	return value.replace(/&/gu, '&amp;').replace(/"/gu, '&quot;');
+/**
+ * Wrap CSS text in a CDATA section. A literal `]]>` inside the text (an
+ * external stylesheet or a deck font name can carry one) would end the
+ * section early and let the rest parse as markup, so it is split across two
+ * sections, which XML joins back into the original text.
+ */
+export function cssCdata(css: string): string {
+	return `<![CDATA[${css.replaceAll(']]>', ']]]]><![CDATA[>')}]]>`;
 }
 
 /**
@@ -94,10 +101,10 @@ export async function buildForeignObjectSvgBody(
 
 	const fontFaceCss = [collectFontFaceCss(doc), externalFonts.css].filter(Boolean).join('\n\n');
 	const defs = fontFaceCss
-		? `<defs><style type="text/css"><![CDATA[${fontFaceCss}]]></style></defs>`
+		? `<defs><style type="text/css">${cssCdata(fontFaceCss)}</style></defs>`
 		: '';
 	const bgRect = backgroundColor
-		? `<rect width="${width}" height="${height}" fill="${escapeAttr(backgroundColor)}" />`
+		? `<rect width="${width}" height="${height}" fill="${escapeSvgAttr(backgroundColor)}" />`
 		: '';
 
 	const bodyMarkup = [
@@ -144,6 +151,11 @@ export interface ForeignObjectTileWindow {
  * SVG in "image" context, which never executes embedded scripts. Never pass
  * this string to `innerHTML`/`outerHTML`, `document.write`, or an HTML-mode
  * parse.
+ *
+ * Every deck-derived value in `bodyMarkup` is already escaped by
+ * {@link buildForeignObjectSvgBody}: slide text and attributes go through
+ * `XMLSerializer`, the background colour through `escapeSvgAttr`, and font CSS
+ * through {@link cssCdata}. The tile numbers are coerced with `Number`.
  */
 export function wrapForeignObjectSvg(bodyMarkup: string, tile: ForeignObjectTileWindow): string {
 	const { viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight, outputWidth, outputHeight } = tile;
