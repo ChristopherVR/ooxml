@@ -83,12 +83,29 @@ colors. It remains display-only: insertion, text editing, reflow and complete
 layout/color/style galleries are not implemented. A missing cached drawing
 produces a text placeholder.
 
+## Sparklines
+
+Excel 2010 sparklines are drawn in their host cells, behind the cell's text:
+line (with markers and high, low, first, last and negative points), column and
+win/loss. The drawing follows the group's settings for empty cells (gap, zero or
+connected), the vertical axis (each sparkline, the whole group or custom limits),
+the horizontal axis at zero, the date axis, right-to-left plotting, hidden cells
+and theme or RGB colours. A sparkline repaints when a cell in its data range
+changes and resizes with its cell. The sparkline XML is saved exactly as loaded,
+and inserted or deleted rows and columns move it with its cells.
+
+Sparklines cannot be created or edited: there is no Sparkline ribbon tab, style
+gallery or group editing. Exact Excel pixel output (marker size, column gap and
+line anti-aliasing) is not matched, and non-numeric cells in a data range are
+treated as empty.
+
 ## Not supported (preserved where possible)
 
 | Feature                             | Behaviour                                                                                                                                                                         |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Pivot tables and pivot caches       | Kept on save; not shown as pivots and not refreshed.                                                                                                                              |
-| Slicers, timelines, sparklines      | Kept on save; not drawn.                                                                                                                                                          |
+| Slicers, timelines                  | Kept on save; not drawn.                                                                                                                                                          |
+| Sparkline authoring                 | Sparklines are drawn (see above) and kept on save; creating them, changing their settings and the style gallery are not implemented.                                            |
 | Advanced charts and chart options   | Common families and supported formatting are described above. Advanced families, complete axes/labels/effects authoring and exact native layout remain incomplete.                |
 | Shapes, SmartArt, form controls     | Pictures display. SmartArt uses the cached drawing through the shared renderer (display only); without a cached drawing, its text is listed. Other drawings show as placeholders. |
 | Macros (VBA), add-ins, Power Query  | Never executed; the VBA project is carried through.                                                                                                                               |

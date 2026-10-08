@@ -38,7 +38,7 @@ An early release: the areas below work and are covered by unit and browser tests
 | **Formatting**    | Fonts, fills, borders, alignment, number formats, merged cells, column widths, row heights, conditional formatting (rules, colour scales, data bars, icon sets), validation lists.                                                                     |
 | **Objects**       | Common chart types drawn as SVG from live values and pictures; both can be selected, moved, resized and deleted, and a chart's type, title and legend changed. Shapes, SmartArt and form controls show as placeholders.                                |
 | **File formats**  | `.xlsx`, `.xlsm` (macros never run, kept on save), `.xltx`, legacy Excel 97-2003 `.xls` (read; saved as `.xlsx`) via the shared `ole2` codecs inside `ooxml-core`, and `.csv`.                                                                         |
-| **Not supported** | Pivot tables, slicers, sparklines, external links and Power Query are kept but not shown or refreshed. Password-protected loading and saving use the shared core encryption API; UI support varies by operation. No real-time collaboration yet.       |
+| **Not supported** | Pivot tables, slicers, external links and Power Query are kept but not shown or refreshed. Sparklines are drawn but cannot be created or edited. Password-protected loading and saving use the shared core encryption API; UI support varies by operation. No real-time collaboration yet.       |
 | **Localization**  | Interface in English, French, German, Spanish and Simplified Chinese through a `locale` option. Workbook content is never translated.                                                                                                                  |
 
 ## Getting started

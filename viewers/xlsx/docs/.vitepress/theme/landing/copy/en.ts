@@ -67,7 +67,7 @@ export const en: LandingCopy = {
 	status: {
 		kicker: 'Status',
 		title: 'Honest about what is not done.',
-		copy: 'This is an early implementation and not Microsoft Excel parity. Pivot tables, slicers, sparklines, macros and external links are preserved but not shown or edited; the function library is large but not complete; password-protected files are unsupported. The features page lists the gaps.',
+		copy: 'This is an early implementation and not Microsoft Excel parity. Pivot tables, slicers, macros and external links are preserved but not shown or edited; sparklines are shown but not edited; the function library is large but not complete; password-protected files are unsupported. The features page lists the gaps.',
 		link: { text: 'Features and limitations', href: '/features' },
 		roadmapTitle: 'Where the logic lives',
 		roadmapCopy:
