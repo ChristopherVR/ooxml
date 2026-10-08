@@ -44,7 +44,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.keyboard.type('Alpha beta gamma');
 
 		await selectWord(surface, 'Alpha');
-		await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
+		await editor.locator('office-ui-ribbon-actions [part="comments"]').click();
 		const pane = editor.getByRole('complementary', { name: 'Comments' });
 		await expect(pane).toBeVisible();
 		const box = pane.getByRole('textbox', { name: 'New comment', exact: true });
@@ -109,7 +109,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(surface.locator('p').first()).toHaveText('Alpha beta gamma');
 
 		// Clicking a thread also goes to its anchor.
-		await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
+		await editor.locator('office-ui-ribbon-actions [part="comments"]').click();
 		await expect(pane).toBeVisible();
 		await first.locator('.author').first().click();
 		await expect(first).toHaveAttribute('aria-current', 'true');

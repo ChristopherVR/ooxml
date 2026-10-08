@@ -9,6 +9,7 @@ export const enApp = {
 	Editing: 'Editing',
 	Viewing: 'Viewing',
 	'Show comments': 'Show comments',
+	Share: 'Share',
 	'Unsaved changes': 'Unsaved changes',
 	Saved: 'Saved',
 	'Saving…': 'Saving…',

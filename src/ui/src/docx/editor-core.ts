@@ -295,6 +295,6 @@ export class EditorCore {
 				this.host.canEditOutsideBody(),
 			);
 		syncPageState(this);
-		chrome?.titleBar.setCommentsOpen(Boolean(review?.commentsOpen));
+		chrome?.ribbonActions.setCommentsOpen(Boolean(review?.commentsOpen));
 	}
 }

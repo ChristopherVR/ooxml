@@ -61,6 +61,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 			if (typeof document.execCommand === 'function') core.targetView()?.focus();
 		},
 		toggleComments: () => shell.review?.handleComments('toggle'),
+		collaborating: () => core.collab.active,
 		setViewMode: (mode) => core.pages.setViewMode(mode),
 		setZoom: (percent) => core.pages.setZoom(percent),
 		options: () => ({

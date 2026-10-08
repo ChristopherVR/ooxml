@@ -45,7 +45,41 @@ async function showEditor(): Promise<EditorHandle> {
 			toast(error.message);
 		},
 	});
+	editor.element.addEventListener('file-command', onShare);
 	return editor;
+}
+
+/** The session this window hosts or joined, if any. */
+let sessionRoom: string | undefined;
+/**
+ * Share (the ribbon tab row's button) has no editor default: the host brings the transport. This
+ * demo hosts a session of this browser with the open document and opens a second window that
+ * joins it (see session.ts), or, once sharing, just opens another window into the same session.
+ */
+function onShare(event: Event) {
+	if ((event as CustomEvent<{ command: string }>).detail.command !== 'share') return;
+	event.preventDefault();
+	const element = event.currentTarget as DocxEditorElement;
+	const hosting = !sessionRoom;
+	const room = (sessionRoom ??= `doc-${Math.random().toString(36).slice(2, 8)}`);
+	const guest = new URL(location.href);
+	guest.searchParams.delete('sample');
+	guest.searchParams.set('room', room);
+	guest.searchParams.set('name', 'Grace');
+	// Opened before any await so the browser still counts it as the click's popup.
+	window.open(guest, '_blank');
+	if (!hosting) return;
+	void import('./session').then(({ runSession }) =>
+		runSession(element, {
+			room,
+			host: true,
+			name: 'Ada',
+			onStatus: (text) => {
+				get('build-stamp').textContent = `docx-viewer demo · ${framework} · ${text}`;
+				toast(text);
+			},
+		}),
+	);
 }
 
 async function openFile(file: File) {
@@ -93,6 +127,7 @@ get('sample').addEventListener('click', (event) => {
 const query = new URLSearchParams(location.search);
 const room = query.get('room');
 if (room && /^[A-Za-z0-9_-]{1,64}$/.test(room)) {
+	sessionRoom = room;
 	const host = query.get('sample') === '1';
 	void (async () => {
 		if (host) await openModel(createSampleDocument(), 'Sample document.docx');

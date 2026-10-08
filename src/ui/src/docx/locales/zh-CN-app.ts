@@ -16,6 +16,7 @@ export const zhCNApp: AppStrings = {
 	Editing: '编辑',
 	Viewing: '查看',
 	'Show comments': '显示批注',
+	Share: '共享',
 	'Unsaved changes': '未保存的更改',
 	Saved: '已保存',
 	'Saving…': '正在保存…',

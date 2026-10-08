@@ -45,7 +45,7 @@ All events bubble and are composed, so they cross the shadow boundary.
 | `document-error`     | `Error`               | Loading, saving, printing or an edit failed.                                 |
 | `document-warning`   | `string`              | Non-fatal notice.                                                            |
 | `readonly-change`    | `boolean`             | The user toggled Editing/Viewing in the chrome.                              |
-| `file-command`       | `{ command }`         | Cancelable. `command` is `new`, `open`, `save`, `export` or `print`.         |
+| `file-command`       | `{ command }`         | Cancelable. `command` is `new`, `open`, `save`, `export`, `print` or `share`. |
 | `dirty-change`       | `boolean`             | Unsaved-changes state flipped.                                               |
 | `page-change`        | `{ page, pageCount }` | Print Layout page or page count changed (approximate pagination).            |
 | `ribbon-action`      | `RibbonAction`        | A ribbon control was activated.                                              |

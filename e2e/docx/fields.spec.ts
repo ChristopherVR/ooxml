@@ -93,7 +93,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					.poll(() => page.evaluate(() => window.getSelection()?.toString()), { timeout: 1000 })
 					.toBe('n');
 			}).toPass();
-			await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
+			await editor.locator('office-ui-ribbon-actions [part="comments"]').click();
 			const pane = editor.locator('.dve-comments-panel');
 			await pane.getByRole('textbox', { name: 'New comment', exact: true }).fill('Whole field');
 			await pane.getByRole('button', { name: 'Add comment', exact: true }).click();

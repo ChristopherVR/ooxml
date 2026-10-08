@@ -54,11 +54,11 @@ export async function saveCopyAsDocx(page: Page) {
 export const fileNameLabel = (page: Page) => editor(page).locator('.dve-titlebar .file .name');
 export const saveStateLabel = (page: Page) => editor(page).locator('.dve-titlebar .file .status');
 
-/** Switches the title bar's Editing/Viewing mode. */
+/** Switches the ribbon tab row's Editing/Viewing mode. */
 export async function setReadOnly(page: Page, readOnly: boolean) {
-	// Located by class: its accessible name follows the editor's display locale.
+	// Located by part: its accessible name follows the editor's display locale.
 	await editor(page)
-		.locator('.dve-mode-select')
+		.locator('office-ui-ribbon-actions [part="mode-select"]')
 		.selectOption(readOnly ? 'viewing' : 'editing');
 }
 

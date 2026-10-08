@@ -16,6 +16,7 @@ export const esApp: AppStrings = {
 	Editing: 'Edición',
 	Viewing: 'Visualización',
 	'Show comments': 'Mostrar comentarios',
+	Share: 'Compartir',
 	'Unsaved changes': 'Cambios sin guardar',
 	Saved: 'Guardado',
 	'Saving…': 'Guardando…',

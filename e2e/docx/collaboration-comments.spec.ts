@@ -45,7 +45,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(b.locator('img[data-docx-image]')).toHaveAttribute('src', /^blob:/);
 		for (const peer of [a, b]) {
 			await peer.locator('.dve-picture').click();
-			await peer.getByRole('button', { name: 'Show comments', exact: true }).click();
+			await peer.locator('office-ui-ribbon-actions [part="comments"]').click();
 		}
 		const paneA = a.locator('.dve-comments-panel');
 		const paneB = b.locator('.dve-comments-panel');
@@ -117,11 +117,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await a.locator('.ProseMirror').click();
 		await page.keyboard.press('Control+Home');
 		await page.keyboard.press('Control+Shift+ArrowRight');
-		await a.getByRole('button', { name: 'Show comments', exact: true }).click();
+		await a.locator('office-ui-ribbon-actions [part="comments"]').click();
 		const paneA = a.locator('.dve-comments-panel');
 		await paneA.getByRole('textbox', { name: 'New comment', exact: true }).fill('Shared review');
 		await paneA.getByRole('button', { name: 'Add comment', exact: true }).click();
-		await b.getByRole('button', { name: 'Show comments', exact: true }).click();
+		await b.locator('office-ui-ribbon-actions [part="comments"]').click();
 		const paneB = b.locator('.dve-comments-panel');
 		await expect(paneB).toContainText('Shared review');
 		await page.getByRole('button', { name: 'Pause delivery', exact: true }).click();
@@ -156,7 +156,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.getByLabel('Editor B read only', { exact: true }).check();
 		// Reopening refreshes the existing pane against the current write permission.
 		await paneB.getByRole('button', { name: 'Close comments', exact: true }).click();
-		await b.getByRole('button', { name: 'Show comments', exact: true }).click();
+		await b.locator('office-ui-ribbon-actions [part="comments"]').click();
 		await expect(paneB.getByRole('button', { name: 'Reopen', exact: true })).toBeDisabled();
 		await expect(paneB.getByRole('button', { name: 'Reply', exact: true })).toBeDisabled();
 		await paneA

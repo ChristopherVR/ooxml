@@ -115,15 +115,56 @@ describe('Word window chrome', () => {
 		expect(backstage.textContent).toContain('Report.docx');
 	});
 
-	it('zooms from the status bar and switches to viewing mode from the title bar', async () => {
+	it('zooms from the status bar and switches to viewing mode from the ribbon tab row', async () => {
 		const editor = mount();
 		const zoom = await inner(editor, 'office-ui-zoom-slider');
 		zoom.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!.click();
 		await root(editor).querySelector<Updating>('office-ui-zoom-slider')!.updateComplete;
 		expect(zoom.querySelector('output')?.textContent).toBe('110%');
-		const mode = root(editor).querySelector<HTMLSelectElement>('.dve-mode-select')!;
+		const mode = root(editor)
+			.querySelector('office-ui-ribbon office-ui-ribbon-actions')!
+			.shadowRoot!.querySelector<HTMLSelectElement>('[part="mode-select"]')!;
 		mode.value = 'viewing';
 		mode.dispatchEvent(new Event('change'));
 		expect(editor.readOnly).toBe(true);
+	});
+
+	it('places Editing mode, Comments and Share at the right end of the ribbon tab row', async () => {
+		const editor = mount();
+		const ribbon = root(editor).querySelector('office-ui-ribbon')!;
+		const actions = ribbon.querySelector<Updating>('office-ui-ribbon-actions')!;
+		expect(actions.slot).toBe('actions');
+		await actions.updateComplete;
+		const shadow = actions.shadowRoot!;
+		expect(
+			[...shadow.children]
+				.filter((child) => child.tagName !== 'STYLE')
+				.map((child) => child.getAttribute('part')),
+		).toEqual(['mode', 'comments', 'share']);
+		// Nothing of the three stays in the title bar.
+		const bar = root(editor).querySelector('office-ui-title-bar')!;
+		expect(bar.querySelector('select, button, office-ui-ribbon-actions')).toBeNull();
+		const comments = shadow.querySelector<HTMLButtonElement>('[part="comments"]')!;
+		const share = shadow.querySelector<HTMLButtonElement>('[part="share"]')!;
+		expect(comments.textContent).toBe('Comments');
+		expect(share.textContent).toBe('Share');
+		comments.click();
+		await actions.updateComplete;
+		expect(comments.getAttribute('aria-pressed')).toBe('true');
+		const commands: string[] = [];
+		editor.addEventListener('file-command', (event) => {
+			commands.push((event as CustomEvent<{ command: string }>).detail.command);
+			event.preventDefault();
+		});
+		share.click();
+		await Promise.resolve();
+		expect(commands).toEqual(['share']);
+		editor.locale = 'de';
+		await actions.updateComplete;
+		expect(share.textContent).toBe('Freigeben');
+		expect([...shadow.querySelectorAll('option')].map((option) => option.textContent)).toEqual([
+			'Bearbeiten',
+			'Anzeigen',
+		]);
 	});
 });

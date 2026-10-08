@@ -1,6 +1,5 @@
 import { defineSearchField, defineSwitch, defineTitleBar } from '../controls';
 import type { OfficeTitleBarCommand, OfficeTitleBarState } from '../controls';
-import { iconButton } from './chrome-icons';
 import { translateUiText } from './localization';
 import type { FileCommand } from './file-commands';
 
@@ -9,8 +8,6 @@ export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
 export interface TitleBarHandlers {
 	fileCommand(command: FileCommand): void;
 	history(key: 'undo' | 'redo'): void;
-	toggleComments(): void;
-	setReadOnly(readOnly: boolean): void;
 	/** The ribbon root, searched by the "Tell me" box for runnable commands. */
 	ribbon(): HTMLElement | undefined;
 }
@@ -20,7 +17,6 @@ export interface TitleBar {
 	setFileName(name: string): void;
 	setSaveState(state: SaveState): void;
 	setReadOnly(readOnly: boolean): void;
-	setCommentsOpen(open: boolean): void;
 	/** Redraws every label after the editor locale changed. */
 	relocalize(): void;
 }
@@ -63,8 +59,9 @@ const TELL_ME_LIMIT = 8;
 
 /**
  * Word-style title bar: quick access toolbar, document name/state and "Tell me". The shared
- * `office-ui-title-bar` draws it from translated state; the comments toggle and view mode stay
- * docx controls placed in its `account` slot.
+ * `office-ui-title-bar` draws it from translated state. The editing mode, Comments and Share sit
+ * at the right end of the ribbon tab row (ribbon-actions.ts), as in Word 365; the bar's `account`
+ * and `collaboration` slots stay free for a host's account and presence.
  */
 export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 	// The bar renders a search field and a switch; register them here so this works on every
@@ -74,29 +71,6 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 	defineTitleBar();
 	const element = document.createElement('office-ui-title-bar') as TitleBarElement;
 	element.className = 'dve-titlebar';
-
-	const actions = document.createElement('div');
-	actions.className = 'dve-title-actions';
-	actions.slot = 'account';
-	const comments = iconButton('comment', 'Show comments');
-	comments.setAttribute('aria-pressed', 'false');
-	comments.addEventListener('click', () => handlers.toggleComments());
-	const mode = document.createElement('select');
-	mode.className = 'dve-mode-select';
-	mode.setAttribute('aria-label', 'Editing mode');
-	const modeOptions: [string, string][] = [
-		['editing', 'Editing'],
-		['viewing', 'Viewing'],
-	];
-	for (const [value, text] of modeOptions) {
-		const option = document.createElement('option');
-		option.value = value;
-		option.textContent = text;
-		mode.append(option);
-	}
-	mode.addEventListener('change', () => handlers.setReadOnly(mode.value === 'viewing'));
-	actions.append(comments, mode);
-	element.append(actions);
 
 	const model = { fileName: '', saveState: 'saved' as SaveState, readOnly: false };
 	/** The "Tell me" matches of the last query, by the id the bar reports back. */
@@ -174,11 +148,7 @@ export function createTitleBar(handlers: TitleBarHandlers): TitleBar {
 		},
 		setReadOnly(readOnly) {
 			model.readOnly = readOnly;
-			mode.value = readOnly ? 'viewing' : 'editing';
 			render();
-		},
-		setCommentsOpen(open) {
-			comments.setAttribute('aria-pressed', String(open));
 		},
 		relocalize: render,
 	};

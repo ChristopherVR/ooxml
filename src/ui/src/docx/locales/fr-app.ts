@@ -10,6 +10,7 @@ export const frApp: AppStrings = {
 	Editing: 'Modification',
 	Viewing: 'Lecture',
 	'Show comments': 'Afficher les commentaires',
+	Share: 'Partager',
 	'Unsaved changes': 'Modifications non enregistrées',
 	Saved: 'Enregistré',
 	'Saving…': 'Enregistrement…',

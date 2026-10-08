@@ -29,7 +29,10 @@ it('undoes pane threads, replies, resolution and deletion with their exported an
 				?.shadowRoot?.querySelectorAll<HTMLButtonElement>('button') ?? []),
 			...root.querySelectorAll<HTMLButtonElement>('button'),
 		].find((item) => item.getAttribute('aria-label') === label || item.textContent === label)!;
-	button('Show comments').click();
+	root
+		.querySelector('office-ui-ribbon-actions')!
+		.shadowRoot!.querySelector<HTMLButtonElement>('[part="comments"]')!
+		.click();
 	pane().querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!.value = 'Root review';
 	button('Add comment').click();
 	pane().querySelector<HTMLTextAreaElement>('[aria-label="Reply"]')!.value = 'Reply review';

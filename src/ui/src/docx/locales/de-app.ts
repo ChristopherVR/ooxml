@@ -16,6 +16,7 @@ export const deApp: AppStrings = {
 	Editing: 'Bearbeiten',
 	Viewing: 'Anzeigen',
 	'Show comments': 'Kommentare anzeigen',
+	Share: 'Freigeben',
 	'Unsaved changes': 'Nicht gespeicherte Änderungen',
 	Saved: 'Gespeichert',
 	'Saving…': 'Speichern…',

@@ -79,16 +79,18 @@ Set the optional `locale` prop on any framework editor to localize the ribbon an
 ## Window chrome and file commands
 
 The editor draws Word-style chrome inside its shadow root: a title bar (quick-access Save,
-Undo and Redo, the file name and save state, a "Tell me what you want to do" command search,
-comments and an Editing/Viewing mode switch), a **File** tab with a backstage (Info with
+Undo and Redo, the file name and save state, a "Tell me what you want to do" command search),
+the Editing/Viewing mode switch, **Comments** and **Share** at the right end of the ribbon tab
+row (as in Word 365), a **File** tab with a backstage (Info with
 compatibility notes, New, Open, Save, Save a copy as DOCX, Print), and a status bar (page,
 words, compatibility notes, Web/Print Layout and zoom).
 
 Set `element.fileName` to name the open document. File commands are announced first as a
-cancelable `file-command` event whose `detail.command` is `new`, `open`, `save`, `export` or
-`print`. Call `preventDefault()` to handle it in your application (for example to save to your
-own storage); otherwise the editor uses its browser-only default: a file picker, a download, or
-the print dialog. Choosing **Viewing** raises `readonly-change`.
+cancelable `file-command` event whose `detail.command` is `new`, `open`, `save`, `export`,
+`print` or `share`. Call `preventDefault()` to handle it in your application (for example to save
+to your own storage); otherwise the editor uses its browser-only default: a file picker, a
+download, or the print dialog. `share` (the Share button) has no default: starting a session needs
+your transport and authority, so handle it and call `startCollaboration`. Choosing **Viewing** raises `readonly-change`.
 
 ```ts
 editor.fileName = 'Quarterly report.docx';

@@ -11,6 +11,7 @@ import {
 } from './file-commands';
 import { documentStats, plainText } from 'ooxml-core/docx';
 import { localizeElement, translate, type EditorLocale } from './localization';
+import { createRibbonActions, type RibbonActions } from './ribbon-actions';
 import { createStatusBar, type StatusBar } from './status-bar';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
@@ -29,6 +30,8 @@ export interface ChromeHost {
 	print(): void;
 	history(key: 'undo' | 'redo'): void;
 	toggleComments(): void;
+	/** Whether a collaboration session is live (Share then reads pressed). */
+	collaborating(): boolean;
 	setViewMode(mode: 'draft' | 'print'): void;
 	setZoom(percent: number): void;
 	reportError(error: Error): void;
@@ -43,9 +46,13 @@ export interface ChromeHost {
 
 export const DEFAULT_FILE_NAME = 'Document1.docx';
 
-/** Title bar, File tab/backstage, status bar and the default browser file workflow. */
+/**
+ * Title bar, ribbon tab-row actions (editing mode, Comments, Share), File tab/backstage, status
+ * bar and the default browser file workflow.
+ */
 export class EditorChrome {
 	readonly titleBar: TitleBar;
+	readonly ribbonActions: RibbonActions;
 	readonly backstage: Backstage;
 	readonly statusBar: StatusBar;
 	readonly fileInput: HTMLInputElement;
@@ -57,9 +64,12 @@ export class EditorChrome {
 		this.titleBar = createTitleBar({
 			fileCommand: (command) => void this.run(command),
 			history: (key) => host.history(key),
-			toggleComments: () => host.toggleComments(),
-			setReadOnly: (readOnly) => host.setReadOnly(readOnly),
 			ribbon: () => host.ribbon(),
+		});
+		this.ribbonActions = createRibbonActions({
+			setReadOnly: (readOnly) => host.setReadOnly(readOnly),
+			toggleComments: () => host.toggleComments(),
+			share: () => void this.run('share'),
 		});
 		this.backstage = createBackstage({
 			fileCommand: (command, fileName) => void this.run(command, fileName),
@@ -109,6 +119,8 @@ export class EditorChrome {
 		frame.prepend(this.titleBar.element);
 		frame.append(this.statusBar.element, this.backstage.element, this.fileInput);
 		this.ribbon = ribbon as RibbonElement;
+		// Editing mode, Comments and Share at the right end of the tab row, as in Word.
+		ribbon.append(this.ribbonActions.element);
 		// The File button belongs to the shared ribbon; it asks for the File view with this event.
 		ribbon.addEventListener('office-ribbon-file', () => this.backstage.open('home'));
 	}
@@ -138,6 +150,7 @@ export class EditorChrome {
 		this.statusBar.relocalize();
 		this.backstage.relocalize();
 		this.titleBar.relocalize();
+		this.ribbonActions.relocalize(locale);
 		const fileTab = this.host.ribbon()?.querySelector('.dve-file-tab');
 		if (fileTab) fileTab.textContent = translate(locale, 'File');
 		this.fileInput.setAttribute('aria-label', translate(locale, 'Open'));
@@ -150,6 +163,8 @@ export class EditorChrome {
 		this.statusBar.setNoteCount(model.warnings.length);
 		this.statusBar.setLanguage(this.host.element.lang || '');
 		this.titleBar.setReadOnly(this.host.readOnly());
+		this.ribbonActions.setReadOnly(this.host.readOnly());
+		this.ribbonActions.setSharing(this.host.collaborating());
 	}
 
 	closeBackstage(): void {
@@ -164,6 +179,8 @@ export class EditorChrome {
 			if (command === 'new') this.newDocument();
 			else if (command === 'open') this.fileInput.click();
 			else if (command === 'print') this.host.print();
+			// Sharing needs the host's transport and authority, so there is no browser default.
+			else if (command === 'share') return;
 			else if (command === 'exportText')
 				downloadText(plainText(this.host.model()), withExtension(this._fileName, 'txt'));
 			else if (command === 'saveAs') {
