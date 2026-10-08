@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.1.0) - 2026-10-08
+
+### Features
+
+- **ui:** Enable proven visio group rotation interactions ([be9ca55](https://github.com/ChristopherVR/ooxml/commit/be9ca5586434432f1673d42f5a0a6560ace25d83))
+- **docx:** Edit imported list instance starts ([fe839f1](https://github.com/ChristopherVR/ooxml/commit/fe839f108009479d89e105a74a25f4bd8bea6bff))
+- **docx:** Track plain paragraph splits and joins ([0b11ba1](https://github.com/ChristopherVR/ooxml/commit/0b11ba1e3599cd082d68862010c4c2576a5b8410))
+- **xlsx:** Render imported manual legend layouts ([5173750](https://github.com/ChristopherVR/ooxml/commit/5173750a97a560e50d408d3f2f39df6d162d78d5))
+
+### Bug Fixes
+
+- **docx:** Track complete simple field replacements ([e4a7ccd](https://github.com/ChristopherVR/ooxml/commit/e4a7ccdb6a0eea969ed9fc4b878d6114ed749425))
+- **docx:** Preserve field lock and dirty state ([818d8cd](https://github.com/ChristopherVR/ooxml/commit/818d8cd2e0ff0f2ab14b7da49b211f296d43cec6))
+- **docx:** Retain locked caches during field updates ([9cad7c9](https://github.com/ChristopherVR/ooxml/commit/9cad7c9b61fd76d900cef945f6766547e164e64e))
+- **docx:** Repair complex field lock metadata after edits ([93b8b4e](https://github.com/ChristopherVR/ooxml/commit/93b8b4e9662c5aaf0bb7a94f599492d0441ffa93))
+- **docx:** Exclude bookmarked tracked paragraph splits ([fcd6cb7](https://github.com/ChristopherVR/ooxml/commit/fcd6cb7caec0596511268f8f0799d518c9331cf1))
+
 ## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.0.0) - 2026-10-07
 
 ### Features

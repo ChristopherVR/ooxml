@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.2.4](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@0.2.4) - 2026-10-08
+
+### Bug Fixes
+
+- **ci:** Recover unpublished releases and validate manifests ([ae190df](https://github.com/ChristopherVR/ooxml/commit/ae190df2352283303858719fe1db5e58b86903fb))
+
 ## [0.2.3](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@0.2.3) - 2026-10-07
 
 ## [0.2.2](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@0.2.2) - 2026-10-07

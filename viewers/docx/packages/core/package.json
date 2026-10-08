@@ -1,6 +1,6 @@
 {
 	"name": "docx-core",
-	"version": "0.1.11",
+	"version": "0.1.12",
 	"description": "Framework-neutral DOCX document model, parser and serializer (thin entry point over ooxml-core/docx)",
 	"homepage": "https://christophervr.github.io/ooxml/docx/",
 	"bugs": {

@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-viewer-mcp",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "Headless XLSX MCP tools backed only by OOXML core",
 	"homepage": "https://christophervr.github.io/ooxml/xlsx/",
 	"bugs": {
@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.30.0",
-		"ooxml-core": "^1.0.0",
+		"ooxml-core": "^1.1.0",
 		"zod": "^4.4.3"
 	},
 	"engines": {

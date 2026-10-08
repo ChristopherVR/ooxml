@@ -7,6 +7,8 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.4.6](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-solid-viewer@0.4.6) - 2026-10-08
+
 ## [0.4.5](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-solid-viewer@0.4.5) - 2026-10-07
 
 ## [0.4.4](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-solid-viewer@0.4.4) - 2026-10-07

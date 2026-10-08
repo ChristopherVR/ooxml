@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.1.0) - 2026-10-08
+
+### Features
+
+- **ui:** Enable proven visio group rotation interactions ([be9ca55](https://github.com/ChristopherVR/ooxml/commit/be9ca5586434432f1673d42f5a0a6560ace25d83))
+- **docx:** Track plain paragraph splits and joins ([0b11ba1](https://github.com/ChristopherVR/ooxml/commit/0b11ba1e3599cd082d68862010c4c2576a5b8410))
+
+### Bug Fixes
+
+- **docx:** Retain locked caches during field updates ([9cad7c9](https://github.com/ChristopherVR/ooxml/commit/9cad7c9b61fd76d900cef945f6766547e164e64e))
+- **docx:** Repair complex field lock metadata after edits ([93b8b4e](https://github.com/ChristopherVR/ooxml/commit/93b8b4e9662c5aaf0bb7a94f599492d0441ffa93))
+
+### Testing
+
+- **docx:** Verify mounted tracked field replacements ([c305e45](https://github.com/ChristopherVR/ooxml/commit/c305e459da59d489e241b164cf049956e7c2c52f))
+
 ## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.0.0) - 2026-10-07
 
 ### Features

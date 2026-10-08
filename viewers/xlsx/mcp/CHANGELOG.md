@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.6](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.1.6) - 2026-10-08
+
+### Bug Fixes
+
+- **ci:** Recover unpublished releases and validate manifests ([ae190df](https://github.com/ChristopherVR/ooxml/commit/ae190df2352283303858719fe1db5e58b86903fb))
+
 ## [0.1.5](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@0.1.5) - 2026-10-07
 
 ### Refactor

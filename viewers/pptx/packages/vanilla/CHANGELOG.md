@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.29.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.29.0) - 2026-10-08
+
+### Features
+
+- **xlsx:** Render imported manual legend layouts ([5173750](https://github.com/ChristopherVR/ooxml/commit/5173750a97a560e50d408d3f2f39df6d162d78d5))
+
 ## [3.28.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.28.0) - 2026-10-07
 
 ### Features
