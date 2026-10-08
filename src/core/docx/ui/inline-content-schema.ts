@@ -1,5 +1,6 @@
 import type { DOMOutputSpec, NodeSpec, MarkSpec } from 'prosemirror-model';
 import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
+import { chartNodeSpec } from './chart-spec';
 
 const safeAttrValue = (value: unknown): string => String(value ?? '').replace(/[;{}"]/g, '');
 
@@ -75,7 +76,7 @@ export const imageNodeSpec: NodeSpec = {
 		textBoxBorder: { default: null },
 		/** A SmartArt graphic (`DocxDiagram`) as JSON; shown read-only by the SmartArt node view. */
 		diagram: { default: null },
-		/** A chart (`DocxChart`) as JSON; shown as a placeholder. */
+		/** A chart (`DocxChart`) as JSON; painted read-only from its cached values (`chart-spec.ts`). */
 		chart: { default: null },
 	},
 	parseDOM: [
@@ -96,43 +97,45 @@ export const imageNodeSpec: NodeSpec = {
 		},
 	],
 	toDOM: (node) =>
-		node.attrs.unsupported
-			? [
-					'span',
-					{
-						'data-docx-image-placeholder': '1',
-						...inlineRunPropertiesDomAttrs(node),
-						...(node.attrs.diagram ? { 'data-docx-smartart': '1' } : {}),
-						class: 'dve-image-placeholder',
-						style: `width:${node.attrs.widthPx}px;height:${node.attrs.heightPx}px`,
-					},
-					node.attrs.unsupported,
-					...textBoxLines(node.attrs.textBoxText),
-				]
-			: [
-					'img',
-					{
-						'data-docx-image': '1',
-						...inlineRunPropertiesDomAttrs(node),
-						'data-rel-id': node.attrs.relId,
-						'data-part-name': node.attrs.partName,
-						'data-content-type': node.attrs.contentType,
-						'data-width-px': String(node.attrs.widthPx),
-						'data-height-px': String(node.attrs.heightPx),
-						'data-anchored': node.attrs.anchored ? '1' : '0',
-						class: [
-							'dve-image',
-							node.attrs.anchored ? 'dve-image-anchored' : '',
-							placementClass(node.attrs.placement),
-						]
-							.filter(Boolean)
-							.join(' '),
-						alt: node.attrs.altText || '',
-						title: node.attrs.title || '',
-						width: String(node.attrs.widthPx),
-						height: String(node.attrs.heightPx),
-					},
-				],
+		node.attrs.chart
+			? chartNodeSpec(node)
+			: node.attrs.unsupported
+				? [
+						'span',
+						{
+							'data-docx-image-placeholder': '1',
+							...inlineRunPropertiesDomAttrs(node),
+							...(node.attrs.diagram ? { 'data-docx-smartart': '1' } : {}),
+							class: 'dve-image-placeholder',
+							style: `width:${node.attrs.widthPx}px;height:${node.attrs.heightPx}px`,
+						},
+						node.attrs.unsupported,
+						...textBoxLines(node.attrs.textBoxText),
+					]
+				: [
+						'img',
+						{
+							'data-docx-image': '1',
+							...inlineRunPropertiesDomAttrs(node),
+							'data-rel-id': node.attrs.relId,
+							'data-part-name': node.attrs.partName,
+							'data-content-type': node.attrs.contentType,
+							'data-width-px': String(node.attrs.widthPx),
+							'data-height-px': String(node.attrs.heightPx),
+							'data-anchored': node.attrs.anchored ? '1' : '0',
+							class: [
+								'dve-image',
+								node.attrs.anchored ? 'dve-image-anchored' : '',
+								placementClass(node.attrs.placement),
+							]
+								.filter(Boolean)
+								.join(' '),
+							alt: node.attrs.altText || '',
+							title: node.attrs.title || '',
+							width: String(node.attrs.widthPx),
+							height: String(node.attrs.heightPx),
+						},
+					],
 };
 
 /** Only these schemes are ever placed in a rendered `href`; other targets stay in the model only. */

@@ -12,6 +12,8 @@ import { renderTable } from './print-table';
 import { lineNumberLabels, type PrintLineNumbering } from './print-line-numbers';
 import { pageBorderBox } from './print-page-borders';
 import { resolveFragmentClick, type PrintFragmentHit } from './print-fragment-hit';
+import { pictureElement, type PictureUrl } from './print-picture';
+export type { PictureUrl } from './print-picture';
 export type { PrintLineNumbering } from './print-line-numbers';
 
 /** One clickable line, recorded for best-effort click-to-cursor mapping. */
@@ -35,26 +37,6 @@ export interface PrintLayoutHandle {
 	 * from the editor, not a second editing surface.
 	 */
 	resolveClick(target: Element, clientX: number): { blockId: string; offset: number } | null;
-}
-
-/** Resolves a package picture part to a displayable URL; undefined draws a placeholder box. */
-export type PictureUrl = (partName: string, contentType: string) => string | undefined;
-
-function pictureElement(
-	object: { partName: string; contentType: string; widthPx: number; heightPx: number },
-	pictureUrl: PictureUrl | undefined,
-): HTMLElement {
-	const url = object.partName ? pictureUrl?.(object.partName, object.contentType) : undefined;
-	const element = document.createElement(url ? 'img' : 'div');
-	if (url) {
-		(element as HTMLImageElement).src = url;
-		(element as HTMLImageElement).alt = '';
-	} else element.classList.add('dve-print-picture-missing');
-	element.classList.add('dve-print-picture');
-	element.style.position = 'absolute';
-	element.style.width = `${object.widthPx}px`;
-	element.style.height = `${object.heightPx}px`;
-	return element;
 }
 
 const LEADER_CHARACTERS: Record<string, string> = { dot: '.', hyphen: '-', middleDot: '·' };

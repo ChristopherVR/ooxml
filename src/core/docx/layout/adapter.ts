@@ -13,6 +13,7 @@ import {
 	twipsToPixels,
 } from '../index';
 import { floatsOf } from './adapt-floats';
+import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
 import { adaptTable } from './adapt-table';
 import { foldDropCaps } from './adapt-drop-cap';
@@ -135,6 +136,9 @@ export function adaptDocumentModel(
 						contentType: image.contentType,
 						widthPx: image.widthPx,
 						heightPx: image.heightPx,
+						...(image.chart
+							? { chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme) }
+							: {}),
 					}
 				: undefined;
 		return {

@@ -48,6 +48,8 @@ export interface LayoutObject {
 	contentType: string;
 	widthPx: number;
 	heightPx: number;
+	/** A chart drawn at this size: the painted SVG markup, or only its frame label. */
+	chart?: { svg?: string; label: string };
 }
 
 /** A floating picture anchored to a paragraph (`wp:anchor`), positioned on the page. */

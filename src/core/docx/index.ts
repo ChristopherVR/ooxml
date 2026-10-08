@@ -31,6 +31,7 @@ export {
 } from './diagram';
 export { diagramsIn } from './diagram-document';
 export { CHART_GRAPHIC_URI, CHART_NOTICE, chartsIn, type DocxChart } from './chart';
+export { docxChartPaint, themeCatalogColorScheme, type DocxChartPaint } from './chart-paint';
 export { diagramColorTheme, resolveDiagramColor } from './diagram-theme';
 export { saveDocx } from './save';
 export {

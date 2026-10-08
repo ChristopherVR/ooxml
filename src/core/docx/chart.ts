@@ -2,9 +2,17 @@
 // Charts in a Word document: the `w:drawing` whose `a:graphicData` holds `c:chart r:id`. This
 // module models the host side (placement, relationship, part name) and reads the chart part
 // through the format-neutral `chart` area. The chart part, its relationships and its embedded
-// workbook are never rewritten: they stay in the package untouched, and the drawing is shown as a
-// placeholder.
-import { parseChartSpace, type ChartParseIssue, type ChartSpace } from '../chart/index';
+// workbook are never rewritten: they stay in the package untouched. The drawing is painted from
+// the cached values by the shared chart painter (`chart-paint.ts`).
+import {
+	chartColorStyleId,
+	parseChartSpace,
+	readChartFormatting,
+	type ChartParseIssue,
+	type ChartSpace,
+	type ChartStyleDefinition,
+} from '../chart/index';
+import { parseXml } from '../xml/index';
 import { parseRelationships, relationshipsPartFor, resolvePartPath } from '../opc/index';
 import type { Block } from './model';
 import type { Relationship } from './package-parts';
@@ -31,6 +39,10 @@ export interface DocxChart {
 	partName?: string;
 	/** The parsed chart part (`c:chartSpace`); absent when the part could not be read. */
 	chartSpace?: ChartSpace;
+	/** Direct formatting read from the chart part (`readChartFormatting`), for painting. */
+	formatting?: ChartStyleDefinition;
+	/** The Office colour style id of the part's `chartColorStyle` relationship, when present. */
+	colorPalette?: number;
 	/** The chart title text, when the chart shows one. */
 	title?: string;
 	/** The embedded workbook part holding the chart data (`c:externalData`), when it is in the package. */
@@ -43,7 +55,7 @@ export interface DocxChart {
 
 /** The honest status shown with every chart. */
 export const CHART_NOTICE =
-	'The chart is shown as a placeholder: chart drawing is not implemented for Word documents yet. Its data and formatting are read for inspection, and the chart part and its workbook are preserved unchanged on save.';
+	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter and radar charts; other kinds show a labelled frame). It is not editable, and the chart part and its workbook are preserved unchanged on save.';
 
 /** Reads the host side of a chart graphic. Synchronous: resolves the relationship, reads no part. */
 export function parseChartGraphic(
@@ -105,18 +117,28 @@ export async function resolveChartPart(
 			});
 			return;
 		}
-		const { chartSpace, issues } = parseChartSpace(xml);
+		const root = parseXml(xml, { label: 'Chart part' }).documentElement;
+		const { chartSpace, issues } = parseChartSpace(root);
 		chart.chartSpace = chartSpace;
 		chart.issues.push(...issues);
 		const title = chartSpace.autoTitleDeleted ? undefined : chartSpace.title?.text;
 		if (title) chart.title = title;
-		const dataRelId = chartSpace.externalDataRelId;
-		if (dataRelId) {
-			const rels = parseRelationships(await readText(relationshipsPartFor(chart.partName)));
-			const rel = rels.get(dataRelId);
-			if (rel && rel.mode !== 'External' && rel.type === PACKAGE_RELATIONSHIP_TYPE)
-				chart.workbookPartName = resolvePartPath(chart.partName, rel.target);
+		if (chartSpace.plotArea.groups.length) {
+			const formatting = readChartFormatting(root);
+			if (formatting) chart.formatting = formatting;
 		}
+		const rels = parseRelationships(await readText(relationshipsPartFor(chart.partName)));
+		const dataRelId = chartSpace.externalDataRelId;
+		const dataRel = dataRelId ? rels.get(dataRelId) : undefined;
+		if (dataRel && dataRel.mode !== 'External' && dataRel.type === PACKAGE_RELATIONSHIP_TYPE)
+			chart.workbookPartName = resolvePartPath(chart.partName, dataRel.target);
+		const colorsRel = [...rels.values()].find(
+			(rel) => rel.mode !== 'External' && rel.type.endsWith('/chartColorStyle'),
+		);
+		const colorsXml =
+			colorsRel && (await readText(resolvePartPath(chart.partName, colorsRel.target)));
+		const palette = colorsXml ? chartColorStyleId(colorsXml) : undefined;
+		if (palette !== undefined) chart.colorPalette = palette;
 	} catch (error) {
 		chart.issues.push({
 			code: 'CHART_PART_UNREADABLE',

@@ -32,6 +32,19 @@
 	color: var(--muted);
 	font-size: 11px;
 }
+/* Charts: painted read-only from the cached values in the chart part. */
+.dve-paper .dve-chart {
+	display: inline-block;
+	vertical-align: bottom;
+	max-width: 100%;
+	overflow: hidden;
+	background: #fff;
+}
+.dve-paper .dve-chart > svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
 .dve-paper .dve-image-placeholder:has(.dve-textbox-line) {
 	place-items: start;
 	align-content: start;

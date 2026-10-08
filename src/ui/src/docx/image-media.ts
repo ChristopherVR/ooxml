@@ -1,7 +1,7 @@
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import { schema } from './schema';
-import { placementClass } from 'ooxml-core/docx/ui';
+import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import type { ThemeCatalog } from 'ooxml-core/docx';
 
@@ -47,7 +47,7 @@ export interface ImageNodeViewOptions {
 	editPicture?(pos: number): void;
 	/** The widest a picture may be resized to, in CSS pixels. */
 	maxWidth?(): number;
-	/** The document theme, for resolving SmartArt colours. */
+	/** The document theme, for resolving SmartArt and chart colours. */
 	theme?(): ThemeCatalog | undefined;
 }
 
@@ -80,6 +80,11 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
 		const diagram = parseDiagram(node.attrs.diagram);
 		if (diagram) return smartArtNodeView(node, diagram, options.theme?.());
+		if (node.attrs.chart) {
+			// The chart is painted read-only with the document theme; its part is preserved on save.
+			const spec = chartNodeSpec(node, options.theme?.());
+			return { dom: DOMSerializer.renderSpec(document, spec).dom, ignoreMutation: () => true };
+		}
 		const content = renderSpec(node);
 		// A placeholder (unsupported drawing or text box) shows static child text that ProseMirror must leave alone.
 		if (content.tagName !== 'IMG') return { dom: content, ignoreMutation: () => true };
