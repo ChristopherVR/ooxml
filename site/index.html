@@ -2,157 +2,231 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<meta name="ooxml-root" content="./" />
+		<meta name="theme-color" content="#0f6cbd" />
+		<link rel="manifest" href="manifest.webmanifest" />
+		<link rel="apple-touch-icon" href="icons/office-192.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>OOXML Office</title>
 		<meta
 			name="description"
-			content="Office files in your browser: PowerPoint, Word and the Visio alpha and Excel beta, built on one shared OOXML core."
+			content="An integrated workspace for documents, spreadsheets, presentations, diagrams and Teams."
 		/>
-		<meta name="color-scheme" content="dark light" />
+		<script src="appearance-init.js"></script>
 		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			rel="stylesheet"
-			href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap"
-		/>
-		<link rel="stylesheet" href="styles.css?v=launcher-20261007" />
-		<link rel="stylesheet" href="desk.css?v=launcher-20261007" />
-		<link rel="stylesheet" href="chungus.css" />
-		<script>
-			// Apply a saved theme before first paint so the page never flashes. The key
-			// is VitePress's, shared with the embedded demos and both docs sites.
-			try {
-				const theme = localStorage.getItem('vitepress-theme-appearance');
-				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
-			} catch {}
-		</script>
-		<script type="importmap">
-			{
-				"imports": {
-					"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-				}
-			}
-		</script>
-		<script type="module" src="app.js?v=launcher-20261007"></script>
+		<link rel="stylesheet" href="styles.css" />
+		<link rel="stylesheet" href="themes.css" />
+		<link rel="stylesheet" href="workspace.css" />
+		<script type="module" src="suite.js"></script>
 	</head>
 	<body>
-		<header class="topbar">
-			<a class="topbar__brand" href="#/" title="OOXML Office home">
-				<svg class="topbar__mark" viewBox="0 0 32 32" aria-hidden="true">
-					<rect x="2" y="2" width="13" height="13" rx="3.5" fill="#e2552d" />
-					<rect x="17" y="2" width="13" height="13" rx="3.5" fill="#3d6bf0" />
-					<rect x="2" y="17" width="13" height="13" rx="3.5" fill="#1f9d63" />
-					<rect x="17" y="17" width="13" height="13" rx="3.5" fill="#8a6cf0" />
-				</svg>
-				<span class="topbar__wordmark">OOXML Office</span>
-			</a>
-			<div class="tabs">
-				<div class="tabstrip" id="tabstrip" role="tablist" aria-label="Open apps"></div>
-				<div class="newtab">
-					<button
-						class="newtab__button"
-						id="new-tab"
-						type="button"
-						aria-haspopup="menu"
-						aria-expanded="false"
-						aria-label="New tab"
-						title="New tab"
-					>
-						<svg viewBox="0 0 14 14" aria-hidden="true">
-							<path
-								d="M7 2v10M2 7h10"
-								stroke="currentColor"
-								stroke-width="1.6"
-								stroke-linecap="round"
-							/>
-						</svg>
-					</button>
-					<div class="newtab__menu" id="new-menu" role="menu" hidden></div>
-				</div>
-			</div>
-			<nav class="topbar__links">
-				<a href="https://github.com/ChristopherVR/ooxml" target="_blank" rel="noreferrer">GitHub</a>
-				<button
-					class="topbar__theme"
-					id="theme-toggle"
-					type="button"
-					aria-label="Switch between light and dark"
-					title="Switch between light and dark"
-				>
-					<svg viewBox="0 0 20 20" aria-hidden="true">
-						<path fill="currentColor" d="M10 2a8 8 0 1 0 0 16V2z" />
-						<circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5" />
-					</svg>
-				</button>
-			</nav>
+		<header class="suite-header">
+			<button
+				id="launcher-toggle"
+				popovertarget="app-launcher"
+				aria-label="Open app launcher"
+				title="Apps"
+			></button>
+			<a href="#/" class="brand" aria-label="OOXML Office home"
+				><span class="brand-symbol"><i></i><i></i><i></i><i></i></span>OOXML
+				<strong>Office</strong></a
+			>
+			<label class="search"
+				><span id="search-symbol" aria-hidden="true"></span
+				><input
+					id="search"
+					type="search"
+					placeholder="Search your workspace"
+					aria-label="Search files"
+				/><kbd>⌕</kbd></label
+			>
+			<button
+				id="mobile-search-toggle"
+				aria-label="Search workspace"
+				aria-expanded="false"
+			></button>
+			<button id="assistant-toggle" aria-expanded="false" aria-controls="assistant"></button>
+			<button id="theme-picker" aria-label="Appearance" title="Settings"></button>
+			<button
+				id="profile-toggle"
+				class="profile-button"
+				popovertarget="account-menu"
+				aria-label="Account manager"
+				aria-expanded="false"
+				aria-controls="account-menu"
+			></button>
 		</header>
-
-		<main id="home" class="home">
-			<section class="hero">
-				<div class="hero__copy">
-					<h1>Office, opened&nbsp;up.</h1>
-					<p class="hero__lede">
-						Slides and documents that open, edit and present right here in your browser. Nothing to
-						install, and the files you open are read on your own machine.
-					</p>
-					<div class="hero__actions" id="launch-actions"></div>
-					<p class="hero__note">Local files. Open source. Yours to build on.</p>
-				</div>
-				<figure class="desk">
-					<img src="desk.svg" width="600" height="530" alt="" />
-					<figcaption>From the first idea to the finished file.</figcaption>
-				</figure>
-			</section>
-
-			<section class="dock" aria-labelledby="dock-title">
-				<p class="section-label">Explore the suite</p>
-				<h2 id="dock-title">Documents</h2>
-				<p class="section-lede">
-					Find demos, framework bindings and documentation for each file format.
-				</p>
-				<ul class="dock__grid" id="app-grid"></ul>
-				<div class="collaboration">
+		<section
+			id="app-launcher"
+			class="shell-popover app-launcher"
+			popover
+			aria-label="App launcher"
+		></section>
+		<section
+			id="account-menu"
+			class="shell-popover account-menu"
+			popover
+			aria-label="Account manager"
+		></section>
+		<section
+			id="workspace-menu"
+			class="shell-popover workspace-menu"
+			popover
+			aria-label="Switch workspace"
+		></section>
+		<section
+			id="storage-menu"
+			class="shell-popover storage-menu"
+			popover
+			aria-label="Storage and folders"
+		></section>
+		<div class="suite-layout">
+			<aside class="workspace-sidebar">
+				<button
+					class="workspace-switch"
+					popovertarget="workspace-menu"
+					aria-label="Switch workspace"
+				>
+					<span class="workspace-emblem">O</span
+					><span
+						><strong id="workspace-name">Personal workspace</strong
+						><small>On this device</small></span
+					><span class="workspace-caret">⌄</span>
+				</button>
+				<nav id="rail" class="app-rail" aria-label="Workspace navigation"></nav>
+				<div class="sidebar-footer">
+					<span class="storage-dot"></span>
 					<div>
-						<h3>Collaboration</h3>
-						<p class="section-lede">A place for the conversations around your work.</p>
+						<strong>Device storage</strong><small id="storage-summary">Your local library</small>
 					</div>
-					<ul class="dock__grid" id="collaboration-grid"></ul>
+					<button id="storage-toggle" popovertarget="storage-menu" aria-label="Storage and folders">
+						⋯
+					</button>
 				</div>
-			</section>
-			<section class="core" aria-labelledby="core-title">
-				<div class="core__intro">
-					<p class="section-label">For developers</p>
-					<h2 id="core-title">One core under every app</h2>
-					<p class="core__lede">
-						OOXML owns the format logic. The viewers provide framework bindings, with shared browser
-						controls and supporting codecs underneath. Explore the source by layer. Coverage varies
-						by format; each app documents its current limits.
-					</p>
+			</aside>
+			<div class="suite-body">
+				<div id="tabs" class="tabs" role="tablist" aria-label="Open documents"></div>
+				<div class="work-row">
+					<main class="work-main">
+						<section id="home" class="home">
+							<div class="workspace-breadcrumb">
+								Workspace <span>/</span> <span id="library-owner">Personal workspace</span>
+							</div>
+							<div class="page-heading">
+								<div>
+									<h1 id="home-title">Home</h1>
+									<p id="welcome">A place for everything you are working on.</p>
+								</div>
+								<button id="upload" class="primary">Upload file</button>
+							</div>
+							<section id="create-section" class="create-section">
+								<div class="section-heading">
+									<h2>Create something new</h2>
+									<span>One workspace. All your apps.</span>
+								</div>
+								<div id="create-row" class="create-row"></div>
+							</section>
+							<section class="library-section">
+								<div id="disk-search" aria-live="polite"></div>
+								<div class="file-heading">
+									<h2 id="library-title">Your documents</h2>
+									<span id="file-count"></span><button data-storage>Folders &amp; storage</button>
+								</div>
+								<div class="file-toolbar" aria-label="Filter by application">
+									<button data-file-filter="" aria-pressed="true">All files</button
+									><button data-file-filter="docx">Word</button
+									><button data-file-filter="xlsx">Excel</button
+									><button data-file-filter="pptx">PowerPoint</button
+									><button data-file-filter="vsdx">Visio</button
+									><span class="sort-label">Modified ↓</span>
+								</div>
+								<div class="file-table">
+									<table>
+										<thead>
+											<tr>
+												<th>Name</th>
+												<th>Application</th>
+												<th>Location</th>
+												<th>Modified</th>
+												<th><span class="sr-only">Actions</span></th>
+											</tr>
+										</thead>
+										<tbody id="files"></tbody>
+									</table>
+									<div id="empty" class="empty">
+										<div class="empty-documents" aria-hidden="true">
+											<span class="empty-page back"></span
+											><span class="empty-page front"><i></i><i></i><i></i></span>
+										</div>
+										<h3 id="empty-title">Start with your first document</h3>
+										<p id="empty-description">
+											Create something new above, or bring in a file from your device.
+										</p>
+										<button class="text-link" data-import>Browse files on this device →</button>
+									</div>
+								</div>
+							</section>
+							<div class="workspace-note">
+								<span class="storage-dot"></span>Your files stay on this device. Download a copy
+								whenever you need it.
+							</div>
+						</section>
+						<section id="teams-host" class="teams-host" hidden></section>
+						<section id="editor-area" class="editor-area" hidden>
+							<div class="document-commandbar">
+								<button id="back-teams" hidden>‹ Back to Teams</button
+								><button id="back-parent" hidden>‹ Parent document</button
+								><button id="save">Save</button><button id="rename">Rename</button
+								><button id="download">Download</button><button id="embedded">Embedded files</button
+								><span id="save-state"></span
+								><button id="share" class="primary">Share in Teams</button>
+							</div>
+							<div id="editors"></div>
+						</section>
+					</main>
+					<aside id="assistant" class="assistant" aria-label="Shared AI assistant" hidden>
+						<header>
+							<h2>✧ Assistant</h2>
+							<button id="ai-settings" aria-label="Assistant settings">⚙</button>
+						</header>
+						<div class="assistant-intro">
+							<h3>Work across your files</h3>
+							<p>
+								Ask about a document, compare files or propose changes. You choose the files the
+								assistant can read.
+							</p>
+							<button id="ai-context">Choose context</button>
+							<p id="ai-scope">No files selected</p>
+						</div>
+						<div id="ai-messages" class="ai-messages" aria-live="polite"></div>
+						<form id="ai-form">
+							<label class="sr-only" for="ai-input">Message</label
+							><textarea
+								id="ai-input"
+								placeholder="Ask about your work..."
+								rows="3"
+								required
+							></textarea>
+							<div>
+								<span id="ai-state">Connect a model in settings</span
+								><button id="ai-send" class="primary">Send ↑</button>
+							</div>
+						</form>
+					</aside>
 				</div>
-				<div id="source-groups" class="source-groups"></div>
-			</section>
-
-			<footer class="footer">
-				<p>
-					Open source under Apache-2.0. Not affiliated with or endorsed by Microsoft. PowerPoint,
-					Word, Excel and Visio are trademarks of Microsoft Corporation, used here only to name the
-					file formats each app opens.
-				</p>
-			</footer>
-		</main>
-
-		<div class="ctxmenu" id="tab-menu" role="menu" hidden></div>
-
-		<section id="workspace" class="workspace" hidden>
-			<div class="appbar" id="appbar" hidden></div>
-			<div class="workspace__frames" id="workspace-frames">
-				<div class="workspace__loading" id="workspace-loading">
-					<i class="spinner" aria-hidden="true"></i>
-					<span id="workspace-loading-label">Loading</span>
-				</div>
+				<footer class="statusbar">
+					<span id="status" role="status">Ready</span
+					><span id="workspace-status">Personal workspace · This device</span>
+				</footer>
 			</div>
-		</section>
+		</div>
+		<input id="file-input" type="file" accept=".docx,.xlsx,.pptx,.vsdx" multiple hidden />
+		<dialog id="dialog">
+			<header>
+				<h2 id="dialog-title"></h2>
+				<button id="dialog-close" aria-label="Close dialog">×</button>
+			</header>
+			<div id="dialog-content"></div>
+		</dialog>
 	</body>
 </html>

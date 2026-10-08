@@ -1,0 +1,24 @@
+{
+	"name": "ooxml-office",
+	"version": "0.1.0",
+	"private": true,
+	"description": "The OOXML Office application, standalone Office apps, PWA builds and desktop frontend",
+	"type": "module",
+	"scripts": {
+		"build": "bun run --cwd ../.. build:suite",
+		"preview": "node ../../scripts/preview-site.mjs",
+		"test": "node ../../scripts/suite-browser-check.mjs",
+		"test:profile": "node ../../scripts/suite-profile-check.mjs",
+		"test:regressions": "node ../../scripts/suite-regression-check.mjs",
+		"test:files": "node ../../scripts/suite-files-check.mjs"
+	},
+	"dependencies": {
+		"@tauri-apps/api": "^2.0.0",
+		"ooxml-core": "workspace:*",
+		"ooxml-ui": "workspace:*",
+		"pptx-vanilla-viewer": "workspace:*"
+	},
+	"devDependencies": {
+		"vite": "^8.3.2"
+	}
+}

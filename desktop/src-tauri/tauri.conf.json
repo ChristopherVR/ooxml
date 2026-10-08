@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schema.tauri.app/config/2",
+	"productName": "OOXML Office",
+	"version": "0.1.0",
+	"identifier": "io.github.christophervr.ooxml",
+	"build": {
+		"frontendDist": "../../suite-dist",
+		"beforeBuildCommand": "bun run --cwd .. build:suite"
+	},
+	"app": {
+		"windows": [
+			{
+				"label": "main",
+				"title": "OOXML Office",
+				"dragDropEnabled": false,
+				"width": 1440,
+				"height": 960,
+				"minWidth": 800,
+				"minHeight": 600
+			}
+		],
+		"security": {
+			"capabilities": [],
+			"csp": "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: blob: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob:; frame-src https:; connect-src 'self' ipc: http://ipc.localhost https: wss: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; object-src 'none'; base-uri 'self'"
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"shortDescription": "One workspace for your Office files",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		]
+	}
+}

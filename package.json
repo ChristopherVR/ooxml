@@ -21,6 +21,7 @@
 		"demos/xlsx",
 		"demos/visio",
 		"demos/teams",
+		"apps/office-suite",
 		"e2e/docx",
 		"e2e/xlsx",
 		"e2e/visio",
@@ -33,6 +34,10 @@
 	"type": "module",
 	"scripts": {
 		"build": "bun run --cwd src/core build",
+		"build:suite": "bun run build && bun run --cwd src/ui build && node scripts/build-suite.mjs",
+		"preview:suite": "node scripts/preview-site.mjs",
+		"test:suite": "node scripts/suite-browser-check.mjs",
+		"test:suite:profile": "node scripts/suite-profile-check.mjs",
 		"build:visio": "bun run --cwd src/core build:visio",
 		"typecheck": "bun run --cwd src/core typecheck",
 		"typecheck:strict": "bun run --cwd src/core typecheck:strict",
@@ -50,7 +55,9 @@
 		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",
 		"test:mcp": "node --test mcp/test/*.test.js",
 		"lint": "oxlint --ignore-pattern=viewers/",
-		"lint:fix": "oxlint --fix --ignore-pattern=viewers/"
+		"lint:fix": "oxlint --fix --ignore-pattern=viewers/",
+		"test:suite:regressions": "node scripts/suite-regression-check.mjs",
+		"test:suite:files": "node scripts/suite-files-check.mjs"
 	},
 	"devDependencies": {
 		"oxfmt": "0.71.0",

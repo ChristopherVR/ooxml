@@ -1,9 +1,6 @@
 name: Deploy the site to GitHub Pages
 
-# One site serves https://christophervr.github.io/ooxml/: the Office-suite launcher (site/) at the
-# root and each imported viewer's documentation and demos under /docx/, /xlsx/, /visio/ and /teams/
-# (scripts/build-pages.mjs assembles it). The pptx viewer is still its own repository and its own
-# site; the launcher links to it.
+# The integrated Office app and standalone PWAs share this build with viewer docs and demos.
 on:
   push:
     branches: [main]
@@ -11,9 +8,14 @@ on:
       - 'site/**'
       - 'viewers/**'
       - 'demos/**'
+      - 'apps/**'
+      - 'scripts/build-pwa.mjs'
+      - 'scripts/pwa/**'
       - 'e2e/**'
       - 'src/ui/**'
+      - 'src/core/**'
       - 'scripts/build-pages.mjs'
+      - 'scripts/bundle-suite.mjs'
       - 'bun.lock'
       - '.github/workflows/pages.yml'
   workflow_dispatch:

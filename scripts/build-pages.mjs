@@ -19,6 +19,7 @@ import { cpSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
+import { buildPwa } from './build-pwa.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -54,6 +55,7 @@ mkdirSync(out, { recursive: true });
 // The launcher goes first: it owns the site root, and no viewer directory name collides with it.
 cpSync(join(ROOT, 'site'), out, { recursive: true });
 await bundleSuite(join(out, 'suite.js'));
+await buildPwa(out);
 
 for (const name of selected) {
 	const dir = join(ROOT, 'viewers', name);

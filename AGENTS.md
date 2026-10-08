@@ -28,7 +28,7 @@ file and never fork the two (the viewer repositories drifted that way once).
   the Pages build includes their sites (`scripts/build-pages.mjs`).
 - `demos/<product>/` (`pptx`, `docx`, `xlsx`, `visio`, `teams`) holds the demo apps of the viewers, at the root. Each is a private workspace package declaring what its own files import (pptx has one package per framework demo, `demos/pptx/demo-*`, plus `demos/pptx` for the files they share); the demo is built and served by its viewer's scripts and vite config (`viewers/<product>`), so a viewer's `package.json` still owns `build`, `demo` and `test:browser`. A change under `demos/<product>/` checks that viewer in CI (`scripts/ci-plan.mjs`), and the Pages build reads it.
 - `e2e/<product>/` (`pptx`, `docx`, `xlsx`, `visio`, `teams`) holds the Playwright browser tests and their fixtures, at the root. Each is a private workspace package declaring what its specs import (all but pptx also have a `tsconfig.json` extending the viewer's). Playwright is still configured and run from the viewer (`cd viewers/<product> && bun run test:browser`, `bun run e2e` for pptx), whose config points `testDir` here. The pptx browser suite is large, so CI runs it in its own jobs split by framework and shard (`pptx-*` in `.github/workflows/ci.yml`).
-- `site/` is the static Office-suite launcher deployed to GitHub Pages by `.github/workflows/pages.yml` (no build step, not published to npm). It embeds the viewers' demos, which the Pages build puts under the same site, and must hold no Office logic; add an app there by editing `site/apps.js`.
+- `apps/office-suite/` is the private `ooxml-office` application package: document sessions, shared profile/theme, Teams integration and assistant wiring. It consumes existing core and UI packages, never duplicates Office parsing or editing logic. `site/` supplies its HTML/CSS shell. `scripts/build-suite.mjs` bundles `suite-dist/` with suite and standalone PWA entry points; desktop consumes the same output. GitHub Pages also includes the viewers' independent docs and demos.
 - Bun, TypeScript strict (including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`), Vitest with tests next to the code, ESM output (add CJS when a consumer needs it).
 - Keep source modules under 300 lines where practical. Add regression tests for parsing, preservation, round-trip and editing behaviour; move tests with the code they cover.
 - Unsupported features must be reported honestly. Never claim Office parity or lossless export without evidence.
@@ -120,33 +120,21 @@ lands in the viewer; see `docs/linked-changes.md` for the order and how to link 
 
 ### Where does my change go?
 
-| The change is about...                                                                   | Make it in                                                      |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Parsing, the document model, editing commands, saving or round-trip loss (any format)    | `src/core/<format>/` here, with a round-trip test               |
-| Units, colour, geometry, XML, OPC, SmartArt or collaboration shared by formats           | the shared area here (`units`, `color`, `geometry`, `xml`, ...) |
-| `.doc` / `.xls` / `.ppt` binary codecs, CFB containers, RC4                              | `ole2`                                                          |
-| How a correctly parsed element is drawn or laid out in the PowerPoint UI                 | `src/ui/src/pptx`                                               |
-| How a spreadsheet is laid out for painting (grid sizes, colours, cell views, CF, charts) | `src/core/xlsx/layout/` here (the Excel UI only paints it)      |
-| Ribbons, dialogs, framework wiring, styling, demos, browser tests                        | the viewer under `viewers/` (and `demos/`, `e2e/`)              |
-| The launcher page at christophervr.github.io/ooxml                                       | `site/` here (no logic; it embeds the viewers' deployed demos)  |
+| The change is about...                                                                   | Make it in                                                         |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Parsing, the document model, editing commands, saving or round-trip loss (any format)    | `src/core/<format>/` here, with a round-trip test                  |
+| Units, colour, geometry, XML, OPC, SmartArt or collaboration shared by formats           | the shared area here (`units`, `color`, `geometry`, `xml`, ...)    |
+| `.doc` / `.xls` / `.ppt` binary codecs, CFB containers, RC4                              | `ole2`                                                             |
+| How a correctly parsed element is drawn or laid out in the PowerPoint UI                 | `src/ui/src/pptx`                                                  |
+| How a spreadsheet is laid out for painting (grid sizes, colours, cell views, CF, charts) | `src/core/xlsx/layout/` here (the Excel UI only paints it)         |
+| Ribbons, dialogs, framework wiring, styling, demos, browser tests                        | the viewer under `viewers/` (and `demos/`, `e2e/`)                 |
+| The launcher page at christophervr.github.io/ooxml                                       | `apps/office-suite/` for application wiring; `site/` for the shell |
 
 ### GitHub Pages
 
-- `https://christophervr.github.io/ooxml/` is the Office-suite launcher
-  (`site/`, deployed by `.github/workflows/pages.yml` on pushes to `main` that
-  touch `site/`).
-- `https://christophervr.github.io/ooxml/pptx/`,
-  `https://christophervr.github.io/ooxml/docx/` and
-  `https://christophervr.github.io/ooxml/xlsx/` are the viewers' docs sites;
-  each serves its framework demos at `/demo/` (React), `/demo-vue/`,
-  `/demo-angular/`, `/demo-svelte/`, `/demo-vanilla/` and, for Word and Excel,
-  `/demo-solid/`. The launcher embeds those URLs (see `site/apps.js`), so a demo
-  route renamed in a viewer must be renamed there too.
-- All the viewers share the `christophervr.github.io` origin and therefore
-  `localStorage`. The launcher's theme uses VitePress's
-  `vitepress-theme-appearance` key, which the docx and xlsx demos follow live; the pptx
-  demos read `pptx-demo-theme` and `pptx-viewer-prefs` at start-up (see
-  `site/theme.js`).
+- `https://christophervr.github.io/ooxml/` serves the integrated Office app. Standalone installable apps live under `/ooxml/apps/{word,excel,powerpoint,visio,teams}/`.
+- Viewers retain their docs and framework demos under `/ooxml/{docx,xlsx,pptx,visio,teams}/`.
+- Suite appearance uses `ooxml-suite-theme`, with editor API adapters and root tokens for floating PowerPoint dialogs. The suite and standalone applications share profile-scoped IndexedDB and cross-tab theme preferences on the same origin. Demo theme keys remain independent.
 
 ## Commands
 
@@ -160,9 +148,7 @@ bun run test:scripts   # release planner, publish guards, commit checks
 bun run fmt            # oxfmt (tabs, single quotes, width 100)
 ```
 
-Preview the launcher with any static server from `site/` (for example
-`python -m http.server` in that folder). Locally the embedded demos are
-cross-origin, so theme sync into the frames only works on the deployed site.
+Build with `bun run build:suite`, then preview with `bun run preview:suite` (default port 8123). The app mounts the real editors directly. No demo iframes are used.
 
 ## Branching and git workflow
 
