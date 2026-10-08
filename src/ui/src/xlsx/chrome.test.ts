@@ -46,6 +46,8 @@ describe('status bar', () => {
 			return bar.element.shadowRoot!;
 		};
 		expect(bar.element.getAttribute('part')).toBe('status-bar');
+		// Excel's order: statistics, then the view buttons, then the zoom slider.
+		expect(bar.element.querySelector('.xve-status-stats')!.slot).toBe('summary');
 		expect((await drawn()).querySelector('[data-item="mode"]')!.textContent).toBe('Ready');
 		core.workbook!.warnings.push('Pivot tables are not shown');
 		core.setReadOnly(true);

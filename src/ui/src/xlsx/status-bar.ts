@@ -97,9 +97,9 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 	element.setAttribute('part', 'status-bar');
 	element.setAttribute('role', 'status');
 
-	// Statistics sit in the trailing slot, before the views, as in Excel; right-click picks them.
+	// Statistics open the trailing group, before the views, as in Excel; right-click picks them.
 	const stats = el(doc, 'span', 'xve-status-stats');
-	stats.slot = 'end';
+	stats.slot = 'summary';
 	const shown = new Set<StatKey>(['average', 'count', 'sum']);
 	stats.addEventListener('contextmenu', (event) => {
 		event.preventDefault();
