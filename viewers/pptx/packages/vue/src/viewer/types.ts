@@ -194,6 +194,23 @@ export interface PowerPointViewerProps {
 	 */
 	hiddenActions?: ToolbarActionId[];
 	/**
+	 * Zero-based slide shown after each load, clamped into the deck. Default
+	 * `0`. Changing it later does not move the current slide; it applies to
+	 * the next load.
+	 */
+	initialSlide?: number;
+	/**
+	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
+	 * and read-only banners, the mobile toolbar and the status bar. Default
+	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).
+	 */
+	showToolbar?: boolean;
+	/**
+	 * Show the slide thumbnail pane. Default `true`. The pane still follows
+	 * the user's own collapse toggle and the `slidesPane` customisation panel.
+	 */
+	showThumbnails?: boolean;
+	/**
 	 * Framework-neutral UI customisation. See docs/guide/customization.md.
 	 *
 	 * Hides ribbon tabs/buttons, Options pages/sections/settings, File tab

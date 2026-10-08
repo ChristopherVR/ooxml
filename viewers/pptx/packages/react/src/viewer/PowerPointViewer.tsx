@@ -47,6 +47,7 @@ import {
 	resolveImageResolutionScale,
 	resolveOptionRootClasses,
 	resolveSlideSizeSelection,
+	resolveViewerRootOptions,
 	shouldDiscardAutosaveOnSuccessfulSave,
 	shouldShowAutosaveRecoveryPrompt,
 	resolveAutosaveIntervalSeconds,
@@ -195,7 +196,10 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			hiddenActions: legacyHiddenActions,
 			ai,
 			customization,
+			initialSlide,
 		} = props;
+		// `showToolbar` / `showThumbnails` defaults are shared with every binding.
+		const rootOptions = resolveViewerRootOptions(props);
 
 		useEffect(() => {
 			const css = buildUserFontFaceStyles(fonts);
@@ -884,6 +888,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			// (SSRF/privacy-safe), so only an explicit `true` here lets remote
 			// http(s) image sources actually load.
 			allowExternalImages: viewerOptions.trust.allowExternalContent,
+			initialSlide,
 			setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 			setModifyVerifier: readOnlyRec.setModifyVerifier,
 			setCompatToasts: compatToastsState.setToasts,
@@ -1088,6 +1093,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			!isMobile &&
 			!dialogs.isNarrowViewport &&
 			state.isSlidesPaneOpen &&
+			rootOptions.showThumbnails &&
 			isPanelVisible(customizationResolved, 'slidesPane');
 		const showMasterPane = mode === 'master' && !isMobile && state.isSlidesPaneOpen;
 
@@ -1147,7 +1153,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 					) : (
 						<ThemeColorMapProvider value={themeColorMapValue}>
 							<RecentColorsProvider value={recentColorsValue}>
-								{mode !== 'present' && (
+								{mode !== 'present' && rootOptions.showToolbar && (
 									<ViewerToolbarSection
 										mode={mode}
 										canEdit={canEdit}
@@ -1203,7 +1209,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 									/>
 								)}
 
-								{mode !== 'present' && readOnlyRec.bannerVisible && (
+								{mode !== 'present' && rootOptions.showToolbar && readOnlyRec.bannerVisible && (
 									<ReadOnlyBanner
 										recommendation={readOnlyRec.recommendation}
 										onEditAnyway={readOnlyRec.editAnyway}
@@ -1298,14 +1304,14 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 										mode={mode}
 										onSetMode={handleSetMode}
 										onToggleSlideSorter={() => state.setShowSlideSorter((p) => !p)}
-										hideStatusBar={isMobile}
+										hideStatusBar={isMobile || !rootOptions.showToolbar}
 										hiddenActions={hiddenActions}
 										notesStyle={state.notesMaster?.notesStyle}
 										onNotesHeightChange={setNotesBarHeight}
 									/>
 								)}
 
-								{mode !== 'present' && isMobile && (
+								{mode !== 'present' && isMobile && rootOptions.showToolbar && (
 									<MobileChromeOverlay
 										state={state}
 										editorOps={editorOps}

@@ -54,7 +54,9 @@ import {
 	resolveAutosaveIntervalMs,
 	resolveAuthoredSlideRange,
 	resolveExpiredAutosaveSnapshots,
+	resolveInitialSlideIndex,
 	resolveThemeCatalogEntry,
+	resolveViewerRootOptions,
 	ribbonCustomizationCss,
 	shouldShowAutosaveRecoveryPrompt,
 	setMasterViewBackgroundColor,
@@ -327,7 +329,7 @@ import { ZoomTargetService } from './zoom-target.service';
 					<pre class="pptx-ng-error-detail">{{ loader.error() }}</pre>
 				</div>
 			} @else {
-				@if (protectedViewActive() && chromeVisible()) {
+				@if (protectedViewActive() && toolbarVisible()) {
 					<div
 						class="pptx-ng-protected-view-banner flex items-center gap-3 border-b border-amber-700/30 bg-amber-900/20 px-4 py-2"
 						role="status"
@@ -347,7 +349,7 @@ import { ZoomTargetService } from './zoom-target.service';
 						</button>
 					</div>
 				}
-				@if (loadNotices.bannerActive() && chromeVisible()) {
+				@if (loadNotices.bannerActive() && toolbarVisible()) {
 					<pptx-readonly-banner
 						[kind]="loadNotices.recommendation().kind"
 						[messageKey]="loadNotices.recommendation().messageKey"
@@ -360,7 +362,7 @@ import { ZoomTargetService } from './zoom-target.service';
 						(cancelPassword)="loadNotices.cancelPasswordPrompt()"
 					/>
 				}
-				@if (!mobile.isMobile() && chromeVisible()) {
+				@if (!mobile.isMobile() && toolbarVisible()) {
 					@if (customizationService.panelVisible('titleBar')) {
 						<pptx-title-bar
 							[canEdit]="canEdit()"
@@ -506,7 +508,7 @@ import { ZoomTargetService } from './zoom-target.service';
 					}
 				}
 
-				@if (mobile.isMobile() && chromeVisible()) {
+				@if (mobile.isMobile() && toolbarVisible()) {
 					<pptx-mobile-toolbar
 						[canEdit]="canEdit()"
 						[canUndo]="editor.canUndo()"
@@ -535,7 +537,7 @@ import { ZoomTargetService } from './zoom-target.service';
 						canEdit() &&
 						!mobile.isMobile() &&
 						!slidesPanelCollapsed() &&
-						chromeVisible() &&
+						thumbnailsVisible() &&
 						customizationService.panelVisible('slidesPane')
 					) {
 						<pptx-slides-panel
@@ -553,7 +555,7 @@ import { ZoomTargetService } from './zoom-target.service';
 							"
 						/>
 					} @else if (
-						!canEdit() && chromeVisible() && customizationService.panelVisible('slidesPane')
+						!canEdit() && thumbnailsVisible() && customizationService.panelVisible('slidesPane')
 					) {
 						<nav class="pptx-ng-thumbnails" [attr.aria-label]="'pptx.sections.slides' | translate">
 							@for (slide of displaySlides(); track slide.id; let i = $index) {
@@ -843,7 +845,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				}
 
 				@if (
-					!mobile.isMobile() && chromeVisible() && customizationService.panelVisible('statusBar')
+					!mobile.isMobile() && toolbarVisible() && customizationService.panelVisible('statusBar')
 				) {
 					<pptx-status-bar
 						[slideIndex]="activeSlideIndex()"
@@ -1260,7 +1262,7 @@ import { ZoomTargetService } from './zoom-target.service';
 			}
 
 			<!-- ── Mobile chrome (narrow / touch viewports only) ─────────────── -->
-			@if (mobile.isMobile() && !loader.loading() && !loader.error()) {
+			@if (mobile.isMobile() && !loader.loading() && !loader.error() && rootOptions().showToolbar) {
 				<pptx-mobile-slides-sheet
 					[open]="mobileSheetSvc.mobileSheet() === 'slides'"
 					[slides]="displaySlidesMut()"
@@ -1552,6 +1554,31 @@ export class PowerPointViewerComponent
 	 * (`hideRibbonTab`, `lockSetting`, ...).
 	 */
 	readonly customization = input<ViewerCustomization | undefined>(undefined);
+	/**
+	 * Zero-based slide shown after each load, clamped into the deck. Default
+	 * `0`. Changing it later does not move the current slide; it applies to
+	 * the next load.
+	 */
+	readonly initialSlide = input<number | undefined>(undefined);
+	/**
+	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
+	 * and read-only banners, the mobile toolbar and the status bar. Default
+	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).
+	 */
+	readonly showToolbar = input<boolean | undefined>(undefined);
+	/**
+	 * Show the slide thumbnail pane. Default `true`. The pane still follows
+	 * the user's own collapse toggle and the `slidesPane` customisation panel.
+	 */
+	readonly showThumbnails = input<boolean | undefined>(undefined);
+	/** The three root display inputs with the shared defaults applied. */
+	protected readonly rootOptions = computed(() =>
+		resolveViewerRootOptions({
+			initialSlide: this.initialSlide(),
+			showToolbar: this.showToolbar(),
+			showThumbnails: this.showThumbnails(),
+		}),
+	);
 	protected readonly customizationService = inject(ViewerCustomizationService);
 	private readonly customizationInputSync = this.customizationService.bindInput(this.customization);
 
@@ -1848,6 +1875,14 @@ export class PowerPointViewerComponent
 	 * pins the rule for all five.
 	 */
 	protected readonly chromeVisible = computed(() => !this.presentationMode.presenting());
+	/** The editor chrome (banners, title bar, ribbon, toolbars, status bar): host `showToolbar`. */
+	protected readonly toolbarVisible = computed(
+		() => this.chromeVisible() && this.rootOptions().showToolbar,
+	);
+	/** The slide thumbnail pane: host `showThumbnails`. */
+	protected readonly thumbnailsVisible = computed(
+		() => this.chromeVisible() && this.rootOptions().showThumbnails,
+	);
 	/**
 	 * The user PREFERENCE (title-bar AutoSave toggle; default on). What actually
 	 * runs is {@link autosaveActivation}, which folds in the host's `autosave`
@@ -2273,7 +2308,8 @@ export class PowerPointViewerComponent
 			const slides = this.loader.slides();
 			untracked(() => {
 				this.editor.setSlides(slides, this.loader.sections());
-				this.activeSlideIndex.set(0);
+				// Host `initialSlide`, clamped by the shared helper every binding uses.
+				this.activeSlideIndex.set(resolveInitialSlideIndex(this.initialSlide(), slides.length));
 				// A newly opened document is protected again even if the previous
 				// one was unlocked via "Enable Editing" this session.
 				this.protectedViewDismissed.set(false);

@@ -75,6 +75,8 @@ export interface UseViewerIntegrationInput {
 	autosaveIntervalMs?: number;
 	/** File > Options > Trust Center > "Allow external content"; forwarded to `useContentLifecycle`. */
 	allowExternalImages?: boolean;
+	/** Host `initialSlide` prop: the slide shown after each load; forwarded to `useContentLifecycle`. */
+	initialSlide?: number;
 	/** Forwarded to `useContentLifecycle` -> `useLoadContent`: see `useReadOnlyRecommendationState`. */
 	setReadOnlyRecommendation: Dispatch<SetStateAction<ReadOnlyRecommendation>>;
 	/** Forwarded to `useContentLifecycle` -> `useLoadContent`: see `useReadOnlyRecommendationState`. */
@@ -176,6 +178,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		autosaveAllowed = true,
 		autosaveIntervalMs,
 		allowExternalImages,
+		initialSlide,
 		setReadOnlyRecommendation,
 		setModifyVerifier,
 		setCompatToasts,
@@ -255,6 +258,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 			password: dialogs.presentationPassword ?? undefined,
 			onContentApplied: () => setLoadVersion((v) => v + 1),
 			allowExternalImages,
+			initialSlide,
 			setReadOnlyRecommendation,
 			setModifyVerifier,
 			setCompatToasts,

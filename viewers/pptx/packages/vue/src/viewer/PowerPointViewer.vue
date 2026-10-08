@@ -54,8 +54,10 @@ import {
 	resolveHistoryDepth,
 	resolveAuthoredSlideRange,
 	resolveImageResolutionScale,
+	resolveInitialSlideIndex,
 	resolveOptionRootClasses,
 	resolveSlideSizeSelection,
+	resolveViewerRootOptions,
 	resetSlideLayoutPath,
 	shouldClearAutosaveCacheOnClose,
 	shouldOpenInProtectedView,
@@ -195,7 +197,13 @@ const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	lineChart3D: false,
 	areaChart3D: false,
 	pieChart3D: false,
+	// Vue casts an absent boolean prop to `false`, so the shared `true`
+	// defaults (VIEWER_ROOT_OPTION_DEFAULTS) must be restated here.
+	showToolbar: true,
+	showThumbnails: true,
 });
+// `initialSlide` / `showToolbar` / `showThumbnails`, resolved by the shared helper.
+const rootOptions = computed(() => resolveViewerRootOptions(props));
 const emit = defineEmits<PowerPointViewerEmits>();
 
 const { t } = useI18n();
@@ -274,6 +282,9 @@ const deck = useLoadContent(() => activeContent.value, {
 	},
 	onContentApplied: () => {
 		loadVersion.value += 1;
+		// Host `initialSlide`, clamped into the freshly applied deck (every
+		// binding uses the shared `resolveInitialSlideIndex`).
+		activeSlideIndex.value = resolveInitialSlideIndex(props.initialSlide, slides.value.length);
 	},
 	getSaveIntent: () => ({
 		password: password.presentationPassword.value,
@@ -1798,7 +1809,7 @@ defineExpose<PowerPointViewerExpose>({
 			     overlay already covers it visually, but leaving it mounted keeps
 			     its controls tab-focusable and creates duplicate accessible names
 			     (e.g. a second "Present" / "Menu" button) underneath the overlay. -->
-			<template v-if="!presentation.presenting.value">
+			<template v-if="!presentation.presenting.value && rootOptions.showToolbar">
 				<!-- Trust Center > Protected View: shown only when the HOST allows
 				     editing but the option is still blocking it; a document the host
 				     opened read-only never shows this (there is nothing to enable). -->
@@ -1959,6 +1970,7 @@ defineExpose<PowerPointViewerExpose>({
 						!isMobile &&
 						!sidebarCollapsed &&
 						!presentation.presenting.value &&
+						rootOptions.showThumbnails &&
 						panelVisible('slidesPane')
 					"
 					:merged-slides="mergedSlides"
@@ -2106,7 +2118,11 @@ defineExpose<PowerPointViewerExpose>({
 			<!-- Bottom status bar (desktop): React-parity chrome -->
 			<StatusBar
 				v-if="
-					!isMobile && slideCount > 0 && !presentation.presenting.value && panelVisible('statusBar')
+					!isMobile &&
+					slideCount > 0 &&
+					!presentation.presenting.value &&
+					rootOptions.showToolbar &&
+					panelVisible('statusBar')
 				"
 				:slide-count="slideCount"
 				:active-slide-index="activeSlideIndex"
@@ -2250,7 +2266,7 @@ defineExpose<PowerPointViewerExpose>({
 			/>
 
 			<ViewerMobileSheets
-				v-if="isMobile && !presentation.presenting.value"
+				v-if="isMobile && !presentation.presenting.value && rootOptions.showToolbar"
 				:chrome="mobileChrome"
 				:deck="deck"
 				:slide-ops="slideOps"

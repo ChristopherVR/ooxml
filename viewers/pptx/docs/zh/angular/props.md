@@ -56,6 +56,20 @@ Angular 没有 `forwardRef` 句柄。`PowerPointViewerComponent` 的公开方法
 | --------- | --------- | ------- | ------------------------------------------------------------------------------------------ |
 | `canEdit` | `boolean` | `false` | 启用编辑操作，包括功能区编辑工具、检查器编辑、内联文本编辑和幻灯片管理。`false` 表示只读。 |
 
+## 显示 {#display}
+
+这三个属性与 Svelte 和原生绑定一致，默认值和范围限制由共享代码统一处理。
+
+| 输入                 | 类型        | 默认值    | 说明                                                                       |
+| ------------------ | --------- | ------ | ------------------------------------------------------------------------ |
+| `[initialSlide]`   | `number`  | `0`    | 每次加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。之后修改只对下一次加载生效。                           |
+| `[showToolbar]`    | `boolean` | `true` | 显示编辑器外框：标题栏、功能区和工具栏、受保护视图与只读横幅、移动端工具栏和状态栏。为 `false` 时只保留画布（以及显示中的缩略图窗格）。 |
+| `[showThumbnails]` | `boolean` | `true` | 显示幻灯片缩略图窗格。仍受用户自己的折叠开关和 `slidesPane` 自定义面板控制。                            |
+
+```html
+<pptx-viewer [content]="bytes" [initialSlide]="2" [showToolbar]="false" [showThumbnails]="false" />
+```
+
 ## 事件（`@Output()`） {#events-output-s}
 
 | 输出                 | 载荷                          | 说明                                                                                        |
@@ -119,6 +133,9 @@ class PowerPointViewerComponent {
 	// Inputs
 	readonly content = input<Uint8Array | ArrayBuffer | null>(null);
 	readonly canEdit = input<boolean>(false);
+	readonly initialSlide = input<number | undefined>(undefined);
+	readonly showToolbar = input<boolean | undefined>(undefined);
+	readonly showThumbnails = input<boolean | undefined>(undefined);
 	readonly class = input<string>('');
 	readonly theme = input<ViewerTheme | undefined>(undefined);
 	readonly filePath = input<string | undefined>(undefined);

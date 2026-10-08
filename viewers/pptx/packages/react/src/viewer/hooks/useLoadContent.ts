@@ -33,6 +33,7 @@ import {
 	createPresentationLoadResources,
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
+	resolveInitialSlideIndex,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
@@ -135,6 +136,12 @@ export interface UseLoadContentInput {
 	 * says unless it is passed through explicitly.
 	 */
 	allowExternalImages?: boolean;
+	/**
+	 * Host `initialSlide` prop: the zero-based slide shown after each load,
+	 * clamped by the shared `resolveInitialSlideIndex`. Read through a ref, so
+	 * changing it never reloads the deck; it applies on the next load.
+	 */
+	initialSlide?: number;
 }
 
 export interface UseLoadContentResult {
@@ -191,8 +198,11 @@ export function useLoadContent({
 	setIsEncrypted,
 	onContentApplied,
 	allowExternalImages,
+	initialSlide,
 }: UseLoadContentInput): UseLoadContentResult {
 	const handlerRef = useRef<PptxHandler | null>(null);
+	const initialSlideRef = useRef(initialSlide);
+	initialSlideRef.current = initialSlide;
 	const originalBufferRef = useRef<ArrayBuffer | null>(null);
 	const renderTokenRef = useRef(0);
 
@@ -424,7 +434,9 @@ export function useLoadContent({
 					]),
 				);
 
-				setActiveSlideIndex(0);
+				setActiveSlideIndex(
+					resolveInitialSlideIndex(initialSlideRef.current, parsed.slides.length),
+				);
 				clearSelection();
 				setIsDirty(false);
 				history.resetHistory();

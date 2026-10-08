@@ -38,6 +38,20 @@ part of `PowerPointViewerProps`.
 | --------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `canEdit` | `boolean` | `false` | Enables editing actions (toolbar editing controls, inspector edits, inline text editing, slide management). When `false`, the viewer is read-only. |
 
+## Display {#display}
+
+These three match the Svelte and vanilla bindings; the defaults and clamping are shared.
+
+| Prop             | Type      | Default | Description                                                                                                                                                                                       |
+| ---------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`   | `number`  | `0`     | Zero-based slide shown after each load, clamped into the deck. Changing it later applies to the next load, not the current slide.                                                                 |
+| `showToolbar`    | `boolean` | `true`  | Show the editor chrome: title bar, ribbon and toolbar, protected-view and read-only banners, the mobile toolbar and the status bar. `false` leaves the canvas (and the thumbnail pane, if shown). |
+| `showThumbnails` | `boolean` | `true`  | Show the slide thumbnail pane. It still follows the user's own collapse toggle and the `slidesPane` customisation panel.                                                                          |
+
+```vue
+<PowerPointViewer :content="bytes" :initial-slide="2" :show-toolbar="false" :show-thumbnails="false" />
+```
+
 ## Events
 
 | Event                  | Payload                       | Description                                                                           |
@@ -126,6 +140,9 @@ interface PowerPointViewerProps {
 	filePath?: string;
 	fileName?: string;
 	canEdit?: boolean;
+	initialSlide?: number;
+	showToolbar?: boolean;
+	showThumbnails?: boolean;
 	autosave?: boolean;
 	autosaveIntervalMs?: number;
 	class?: string;

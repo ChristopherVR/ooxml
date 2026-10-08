@@ -53,6 +53,8 @@ export interface UseContentLifecycleInput {
 	onContentApplied?: () => void;
 	/** Forwarded to {@link useLoadContent}: File > Options > Trust Center > "Allow external content". */
 	allowExternalImages?: boolean;
+	/** Forwarded to {@link useLoadContent}: the host `initialSlide` prop. */
+	initialSlide?: number;
 	/** Forwarded to {@link useLoadContent}: see `useReadOnlyRecommendationState`. */
 	setReadOnlyRecommendation: React.Dispatch<React.SetStateAction<ReadOnlyRecommendation>>;
 	/** Forwarded to {@link useLoadContent}: see `useReadOnlyRecommendationState`. */
@@ -101,6 +103,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		password,
 		onContentApplied,
 		allowExternalImages,
+		initialSlide,
 		setReadOnlyRecommendation,
 		setModifyVerifier,
 		setCompatToasts,
@@ -152,6 +155,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		setIsEncrypted: setIsEncryptedDialogOpen,
 		onContentApplied,
 		allowExternalImages,
+		initialSlide,
 	});
 
 	// Sync the shared handler ref for action sounds. `state.loading` is not read

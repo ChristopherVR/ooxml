@@ -520,6 +520,26 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	pieChart3D?: boolean;
 
 	/**
+	 * Zero-based slide shown after each load, clamped into the deck. Default
+	 * `0`. Changing it later does not move the current slide; it applies to
+	 * the next load.
+	 */
+	initialSlide?: number;
+
+	/**
+	 * Show the editor chrome: title bar, ribbon and toolbar, protected-view
+	 * and read-only banners, the mobile toolbar and the status bar. Default
+	 * `true`; `false` leaves the canvas (and the thumbnail pane, if shown).
+	 */
+	showToolbar?: boolean;
+
+	/**
+	 * Show the slide thumbnail pane. Default `true`. The pane still follows
+	 * the user's own collapse toggle and the `slidesPane` customisation panel.
+	 */
+	showThumbnails?: boolean;
+
+	/**
 	 * Hide individual toolbar buttons and/or ribbon tabs instead of the whole
 	 * toolbar. Accepts any mix of button ids (`share`, `broadcast`, `export`,
 	 * `undo`, `redo`, `record`, `notes`, `fullscreen`, `zoom`, `navigation`)
