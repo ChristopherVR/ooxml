@@ -26,6 +26,7 @@ import { useI18n } from 'vue-i18n';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { useDemoAiConfig } from './ai-config';
 import {
@@ -141,6 +142,9 @@ const { smartArt3D, surfaceChart3D, barChart3D, lineChart3D, areaChart3D, pieCha
 	currentDemo3DFlags();
 // `?customization=<json>` (demos/shared/demo-customization.ts), for e2e.
 const customization = currentDemoCustomization() as ViewerCustomization | undefined;
+// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`
+// (demos/shared/demo-root-options.ts), for e2e.
+const rootOptions = currentDemoRootOptions();
 // `?sample=1` auto-loads the bundled sample deck (used by the docs landing
 // page to embed a live, pre-populated viewer).
 const urlSample = params.get('sample') === '1';
@@ -547,6 +551,9 @@ function onZoneClick(e: MouseEvent): void {
 			:areaChart3D="areaChart3D"
 			:pieChart3D="pieChart3D"
 			:customization="customization"
+			:show-toolbar="rootOptions.showToolbar"
+			:show-thumbnails="rootOptions.showThumbnails"
+			:initial-slide="rootOptions.initialSlide"
 			:ai="aiConfig"
 			:author-name="collaborationConfig?.userName ?? autoName"
 			:collaboration="collaborationConfig ?? undefined"

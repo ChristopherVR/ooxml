@@ -40,6 +40,7 @@ import {
 import type { CollaborationConfig } from '../../../viewers/pptx/packages/react/src/viewer';
 import { installDevViewerHandle } from '../dev-viewer-handle';
 import { currentDemoCustomization } from '../shared/demo-customization';
+import { currentDemoRootOptions } from '../shared/demo-root-options';
 import { externalSessionRequested } from '../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../shared/rendering-3d-flags';
 import { useDemoAiConfig } from './ai-config';
@@ -407,6 +408,10 @@ function App() {
 	const [customization] = useState(
 		() => currentDemoCustomization() as ViewerCustomization | undefined,
 	);
+	// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`
+	// (demos/shared/demo-root-options.ts), for e2e.
+	// eslint-disable-next-line react/hook-use-state
+	const [rootOptions] = useState(currentDemoRootOptions);
 	// `?sample=1` auto-loads the bundled sample deck (used by the docs landing
 	// page to embed a live, pre-populated viewer).
 	// eslint-disable-next-line react/hook-use-state
@@ -950,6 +955,7 @@ function App() {
 					canEdit
 					autosaveIntervalMs={2000}
 					customization={customization}
+					{...rootOptions}
 					smartArt3D={smartArt3D}
 					surfaceChart3D={surfaceChart3D}
 					barChart3D={barChart3D}

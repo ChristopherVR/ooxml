@@ -17,6 +17,7 @@ import { PptxHandler } from 'pptx-viewer-core';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { buildViewerAiConfig } from './ai-config';
@@ -171,6 +172,9 @@ function openViewer(
 		shareDefaults: { userName },
 		// `?customization=<json>` (demos/shared/demo-customization.ts), for e2e.
 		customization: currentDemoCustomization() as ViewerCustomization | undefined,
+		// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`
+		// (demos/shared/demo-root-options.ts), for e2e.
+		...currentDemoRootOptions(),
 		onError: (message, error) => {
 			console.error('pptx-vanilla-viewer failed to load', message, error);
 			// A deck the viewer cannot load must not be reopened on every refresh.

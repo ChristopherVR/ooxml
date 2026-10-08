@@ -33,6 +33,7 @@
 	import { language, t } from './demo-i18n.svelte';
 	import { installDevViewerHandle } from '../../dev-viewer-handle';
 	import { currentDemoCustomization } from '../../shared/demo-customization';
+	import { currentDemoRootOptions } from '../../shared/demo-root-options';
 	import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 	import { readStoredTheme, themes } from './themes';
 
@@ -55,6 +56,9 @@
 		currentDemo3DFlags();
 	// `?customization=<json>` (demos/shared/demo-customization.ts), for e2e.
 	const customization = currentDemoCustomization() as ViewerCustomization | undefined;
+	// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`
+	// (demos/shared/demo-root-options.ts), for e2e.
+	const rootOptions = currentDemoRootOptions();
 	const audienceSession = parsePresentationSessionId(window.location.hash);
 	if (audienceSession) {
 		void loadPresentationDeck(audienceSession).then((content) => {
@@ -316,6 +320,7 @@
 			{areaChart3D}
 			{pieChart3D}
 			{customization}
+			{...rootOptions}
 			editable
 			autosave
 			autosaveIntervalMs={2000}

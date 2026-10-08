@@ -36,6 +36,7 @@ import 'pptx-angular-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { currentDemoCustomization } from '../../shared/demo-customization';
+import { currentDemoRootOptions } from '../../shared/demo-root-options';
 import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { buildDemoAiConfig, readStoredAiFields } from './ai-config';
 import {
@@ -99,6 +100,9 @@ type DemoContent = Uint8Array | ArrayBuffer;
 					[filePath]="fileName() || undefined"
 					[autosaveIntervalMs]="2000"
 					[customization]="customization"
+					[showToolbar]="rootOptions.showToolbar"
+					[showThumbnails]="rootOptions.showThumbnails"
+					[initialSlide]="rootOptions.initialSlide"
 					[smartArt3D]="smartArt3D"
 					[surfaceChart3D]="surfaceChart3D"
 					[barChart3D]="barChart3D"
@@ -143,6 +147,8 @@ export class AppComponent {
 	private readonly rendering3D = currentDemo3DFlags();
 	/** `?customization=<json>` (demos/shared/demo-customization.ts), for e2e. */
 	readonly customization = currentDemoCustomization() as ViewerCustomization | undefined;
+	/** `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>` (demos/shared/demo-root-options.ts), for e2e. */
+	readonly rootOptions = currentDemoRootOptions();
 	readonly smartArt3D = this.rendering3D.smartArt3D;
 	readonly surfaceChart3D = this.rendering3D.surfaceChart3D;
 	readonly barChart3D = this.rendering3D.barChart3D;
