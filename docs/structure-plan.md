@@ -331,10 +331,22 @@ Implementation:
   raised by the tokenizer change); the three lint errors another commit left
   in the office app shell are fixed.
 
+### Chrome consistency (landed 2026-10-08)
+
+- One shared `office-ui-ribbon-actions` element (mode selector, Comments,
+  accent Share, in Office's order) sits in the ribbon tab row's `actions`
+  slot for Excel and Word; PowerPoint's five bindings place a
+  `pptx-ui-ribbon-actions` subclass at the right end of their own tab row
+  (Record, Comments, Share). Word gained a Share entry point (a cancelable
+  `file-command`, the host supplies the transport). The pptx tab row itself
+  is still a per-binding look-alike of the shared ribbon tabs; replacing it
+  with `office-ui-ribbon` is the remaining unification step.
+
 ### Wave 5 (next)
 
 - pptx binding factory; per-binding contract parity tests for all products;
-  the pptx comments panels on the shared pane.
+  the pptx comments panels on the shared pane; the pptx tab row on
+  `office-ui-ribbon`.
 - pptx chart styles, ChartEx and the chart writers onto the neutral model;
   the pptx DOM chart renderer onto `chart/render`.
 - Neutral paragraph model in `drawingml`, then SmartArt text projection and
