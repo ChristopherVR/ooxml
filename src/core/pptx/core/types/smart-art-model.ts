@@ -51,6 +51,20 @@ import type { XmlObject } from './common';
 import type { TextStyle } from './text';
 import type { Pptx3DScene, Pptx3DShape, Text3DStyle } from './three-d';
 
+// The aliases below resolve to the neutral names, so the declaration bundle
+// emits those names and consumers whose inferred types reach them (for example
+// `PptxSmartArtNodeStyle` resolving to `DiagramNodeStyle`) must be able to
+// import them from `ooxml-core/pptx` too. Re-export every neutral model type
+// and the part-model names the pptx SmartArt types reference.
+export type * from '../../../diagram/model/index';
+export type {
+	DiagramColorScheme,
+	DiagramConnection,
+	DiagramLayoutType,
+	DiagramNodeCustomLayout,
+	DiagramStyleIntensity,
+} from '../../../diagram/types';
+
 // Constraints and rules (CT_Constraint, CT_NumericRule).
 export type PptxSmartArtConstraintRelationship = DiagramConstraintRelationship;
 export type PptxSmartArtConstraintOperator = DiagramConstraintOperator;
