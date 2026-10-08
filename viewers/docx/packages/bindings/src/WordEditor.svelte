@@ -1,6 +1,5 @@
 <script lang="ts">
-  import type { DocxEditorElement } from 'docx-web-component';
-  import { eventOptions, mountEditor, pickEditorProps, type EditorBinding, type EditorEventHandlers, type EditorProps } from './index';
+  import { eventOptions, mountEditor, pickEditorProps, type EditorBinding, type EditorEventHandlers, type EditorHandle, type EditorProps } from './index';
   type Props = EditorProps & {
     ondocumentchange?: EditorEventHandlers['document-change'];
     ondocumenterror?: EditorEventHandlers['document-error'];
@@ -10,7 +9,7 @@
   let { documentModel, readOnly = false, locale = 'en', theme = 'auto', showThumbnails = false, showToolbar = true, hiddenActions = [], ondocumentchange, ondocumenterror, onpagechange, ondirtychange }: Props = $props();
   let binding: EditorBinding | undefined;
   // Live `element` and `dirty`, the same handle vocabulary as the other frameworks (`EDITOR_HANDLE_KEYS`).
-  let mountedElement = $state.raw<DocxEditorElement | undefined>();
+  let mountedElement = $state.raw<EditorHandle['element'] | undefined>();
   let dirtyState = $state(false);
   const element = $derived(mountedElement);
   const dirty = $derived(dirtyState);
