@@ -34,6 +34,7 @@ export { MAX_OUTLINE_LEVEL } from './outline';
 export type { RemoveDuplicatesResult } from './duplicates';
 export { calcModeOf, type CalcMode } from './calc-mode';
 export type { DocumentPropertiesPatch } from './doc-properties';
+export type { ExternalChange } from './external';
 export { shiftRange, shiftSpan, subtractRange, type Axis, type AxisShift } from './range-math';
 export type {
 	BorderPreset,

@@ -159,6 +159,11 @@
 			"import": "./dist/xlsx/load/index.mjs",
 			"require": "./dist/xlsx/load/index.cjs"
 		},
+		"./xlsx/collab": {
+			"types": "./dist/xlsx/collab/index.d.ts",
+			"import": "./dist/xlsx/collab/index.mjs",
+			"require": "./dist/xlsx/collab/index.cjs"
+		},
 		"./pptx": {
 			"types": "./dist/pptx/index.d.ts",
 			"import": "./dist/pptx/index.mjs",

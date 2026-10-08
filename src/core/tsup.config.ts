@@ -30,6 +30,7 @@ export default defineConfig({
 		'visio/ui/index': 'visio/ui/index.ts',
 		'xlsx/index': 'xlsx/index.ts',
 		'xlsx/load/index': 'xlsx/load/index.ts',
+		'xlsx/collab/index': 'xlsx/collab/index.ts',
 		'xlsx/ui/index': 'xlsx/ui/index.ts',
 		'automation/index': 'automation/index.ts',
 		'automation/node': 'automation/node.ts',

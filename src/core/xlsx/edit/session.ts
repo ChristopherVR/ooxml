@@ -8,6 +8,7 @@ import * as clipboard from './clipboard';
 import { pasteSelection } from './paste-selection';
 import type { EditContext, RunInfo } from './context';
 import { createCalcEngine } from './deps';
+import { applyExternal } from './external';
 import * as dimensions from './dimensions';
 import * as fill from './fill';
 import * as filter from './filter';
@@ -38,12 +39,7 @@ import * as sheets from './sheets';
 import * as sort from './sort';
 import * as structure from './structure';
 import * as tables from './tables';
-import type {
-	EditSession,
-	EditSessionOptions,
-	WorkbookChange,
-	WorkbookChangeKind,
-} from './types';
+import type { EditSession, EditSessionOptions, WorkbookChange, WorkbookChangeKind } from './types';
 import { validateCellInput } from './validation';
 import * as view from './view';
 
@@ -296,5 +292,6 @@ export function createEditSession(
 			listeners.add(listener);
 			return () => listeners.delete(listener);
 		},
+		applyExternal: (apply) => applyExternal({ calculator, emit, busy: () => !!open }, apply),
 	};
 }

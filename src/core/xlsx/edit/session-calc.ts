@@ -26,10 +26,27 @@ export class SessionCalculator {
 			if (isStructural(step)) this.staleGraph = true;
 			return;
 		}
+		this.recalc(isStructural(step), () => touchedCells(step));
+	}
+
+	/** Recalculates after a change applied outside the history (a collaborator's edit). */
+	afterExternal(structural: boolean, cells: { sheet: number; row: number; col: number }[]): void {
+		if (!this.enabled) return;
+		if (calcModeOf(this.workbook) === 'manual') {
+			if (structural) this.staleGraph = true;
+			return;
+		}
+		this.recalc(structural, () => cells);
+	}
+
+	private recalc(
+		structural: boolean,
+		cells: () => { sheet: number; row: number; col: number }[],
+	): void {
 		try {
-			if (this.staleGraph || isStructural(step)) this.full();
+			if (this.staleGraph || structural) this.full();
 			else {
-				const changed = touchedCells(step);
+				const changed = cells();
 				if (changed.length) this.calc.recalculateFrom(changed);
 			}
 		} catch (error) {

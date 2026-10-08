@@ -1,4 +1,5 @@
 import type { DocumentPropertiesPatch } from './doc-properties';
+import type { ExternalChange } from './external';
 import type { CellAddress, CellRange } from '../address';
 import type {
 	BorderEdge,
@@ -93,7 +94,9 @@ export type WorkbookChangeKind =
 	| 'names'
 	| 'batch'
 	| 'undo'
-	| 'redo';
+	| 'redo'
+	/** A collaborator's change applied through `applyExternal`. */
+	| 'remote';
 
 export interface WorkbookChange {
 	kind: WorkbookChangeKind;
@@ -104,6 +107,8 @@ export interface WorkbookChange {
 	ranges?: CellRange[];
 	/** Rows, columns or sheets moved: views must rebuild metrics, not only repaint cells. */
 	structural: boolean;
+	/** Applied through `applyExternal` (a collaborator or a shared undo), not recorded in history. */
+	external?: true;
 }
 
 export interface ValidationFailure {
@@ -305,4 +310,12 @@ export interface EditSession {
 	undoLabel(): string | undefined;
 	redoLabel(): string | undefined;
 	onChange(listener: (change: WorkbookChange) => void): () => void;
+	/**
+	 * Applies a change that did not start here (a collaborator's edit, a shared undo): `apply`
+	 * mutates the workbook and describes what it touched (or returns undefined when nothing
+	 * changed). It is recalculated and announced to listeners with `external: true`, but not
+	 * recorded in the undo history, so a session bound to a shared document undoes through its
+	 * binding. Throws inside a batch.
+	 */
+	applyExternal(apply: () => ExternalChange | undefined): boolean;
 }
