@@ -216,6 +216,8 @@ export const OFFICE_TOKENS = {
 	'--office-print-preview-width': '420px',
 	'--office-find-max-width': '640px',
 	'--office-find-bar-height': '40px',
+	'--office-find-replace-field-min-width': '120px',
+	'--office-find-replace-select-min-width': '150px',
 	'--office-ruler-size': '18px',
 	'--office-avatar-size': '48px',
 	'--office-avatar-color': 'var(--office-muted-foreground, #6b7280)',

@@ -2,7 +2,6 @@ import { textGroups } from './ribbon-home-format';
 import { paintOptions } from './ribbon-style-options';
 import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 
-const TEXT = 'Needs core text formatting edits.';
 const STYLE = 'Needs core fill, line and effect edits.';
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
 const CONNECT = 'Needs core connector and glue edits.';

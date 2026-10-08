@@ -166,14 +166,24 @@ it('applies AllPages atomically with page-qualified IDs and preserves source on 
 	await ui.controller.undo();
 	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
 	ui.dispose();
-	for (const [locked, rich] of [
+	// Replacing inside a character run keeps the source runs, so rich text accepts it.
+	const rich = await setup(false, true);
+	rich.scope('all-pages');
+	rich.query('cat');
+	rich.text('dog');
+	rich.press('replace-all');
+	await rich.done();
+	expect(rich.texts()).toEqual([['dog dog CAT', 'dog dog'], ['dog tail']]);
+	rich.dispose();
+	// A locked shape refuses any edit; rich text still refuses inserted paragraphs.
+	for (const [locked, richText] of [
 		[true, false],
 		[false, true],
 	]) {
-		const refused = await setup(locked, rich);
+		const refused = await setup(locked, richText);
 		refused.scope('all-pages');
 		refused.query('cat');
-		refused.text('dog');
+		refused.text(richText ? 'dog\n' : 'dog');
 		expect(refused.bar.status).toBe('5 occurrences');
 		refused.press('replace-all');
 		await refused.done();

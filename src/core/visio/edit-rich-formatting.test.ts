@@ -3,7 +3,6 @@ import JSZip from 'jszip';
 import { editVsdx } from './edit';
 import { parseVsdx } from './parser';
 import { cell, fixture, shape, rectangle, section } from './test-fixtures';
-import { visioFormattingShape, visioTextFormattingState } from './ui/formatting';
 
 const command = { type: 'format-text' as const, pageId: '0', shapeId: '1' };
 const row = (index: number, cells: string) => `<Row IX="${index}">${cells}</Row>`;

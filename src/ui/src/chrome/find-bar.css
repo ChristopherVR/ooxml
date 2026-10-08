@@ -30,7 +30,7 @@
 	flex: 1;
 }
 .replace-fields textarea {
-	min-width: 120px;
+	min-width: var(--office-find-replace-field-min-width);
 	width: 100%;
 	box-sizing: border-box;
 	min-height: var(--office-input-height);
@@ -42,10 +42,10 @@
 	background: var(--office-background);
 }
 .replace-fields office-ui-select {
-	min-width: 150px;
+	min-width: var(--office-find-replace-select-min-width);
 }
 .find-error {
-	color: var(--office-error, #b00020);
+	color: var(--office-danger);
 	margin-bottom: 0;
 }
 [role='search'] {
