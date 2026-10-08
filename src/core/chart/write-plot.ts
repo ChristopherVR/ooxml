@@ -8,6 +8,7 @@ import type { ChartPlotArea, ChartPlotGroup } from './model';
 import type { ChartLines, ChartShapeProperties } from './model-series';
 import { CHART_GROUP_ELEMENTS } from './parse-plot';
 import { axisXml } from './write-axes';
+import { dataTableXml } from './write-chrome';
 import { seriesXml } from './write-series';
 import { layoutXml, shapePropertiesXml } from './write-shape';
 import { dataLabelsXml } from './write-text';
@@ -84,6 +85,7 @@ export function plotAreaXml(context: ChartWriteContext, plotArea: ChartPlotArea)
 		layoutXml(context, plotArea.layout) +
 			plotArea.groups.map((group) => groupXml(context, group)).join('') +
 			plotArea.axes.map((axis) => axisXml(context, axis)).join('') +
+			dataTableXml(context, plotArea.dataTable) +
 			shapePropertiesXml(context, plotArea.spPr) +
 			raw(context, plotArea.extLst),
 	);

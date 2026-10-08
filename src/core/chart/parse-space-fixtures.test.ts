@@ -231,11 +231,11 @@ describe('parseChartSpace on PowerPoint-authored charts', () => {
 		]);
 		expect(surface.chartSpace.view3D).toEqual({ rotX: 15, rotY: 20, rightAngleAxes: false });
 		expect(issueCodes(surface.issues)).toEqual([
-			'CHART_ELEMENT_NOT_MODELLED c:chart/c:floor',
-			'CHART_ELEMENT_NOT_MODELLED c:chart/c:sideWall',
-			'CHART_ELEMENT_NOT_MODELLED c:chart/c:backWall',
 			'CHART_ELEMENT_NOT_MODELLED c:surface3DChart/c:bandFmts',
 		]);
+		expect(surface.chartSpace.floor).toMatchObject({ thickness: 0 });
+		expect(surface.chartSpace.sideWall).toBeDefined();
+		expect(surface.chartSpace.backWall).toBeDefined();
 		const pie = (await chartPart(pptx('pie3d.pptx'), 'ppt/charts/chart1.xml')).chartSpace;
 		expect(pie.plotArea.groups[0]).toMatchObject({
 			kind: 'pie',

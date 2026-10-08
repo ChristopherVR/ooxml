@@ -8,6 +8,7 @@ import type {
 	ChartPlotArea,
 	ChartPlotGroup,
 } from './model';
+import { parseDataTable, parseDisplayUnits } from './parse-chrome';
 import { parseSeries } from './parse-series';
 import { parseDataLabels, parseTitle } from './parse-text';
 import {
@@ -171,6 +172,7 @@ const AXIS = new Set([
 	'tickMarkSkip',
 	'noMultiLvlLbl',
 	'baseTimeUnit',
+	'dispUnits',
 	'extLst',
 ]);
 
@@ -224,6 +226,7 @@ function parseAxis(
 			tickMarkSkip: number('tickMarkSkip'),
 			noMultiLevelLabels: cBool(context, element, 'noMultiLvlLbl'),
 			baseTimeUnit: cVal(element, 'baseTimeUnit'),
+			displayUnits: parseDisplayUnits(context, cChild(element, 'dispUnits')),
 			spPr: shapeProperties(element),
 			txPr: textProperties(element),
 			extLst: extensionList(element),
@@ -231,7 +234,7 @@ function parseAxis(
 	);
 }
 
-const PLOT_AREA = new Set(['layout', 'spPr', 'extLst']);
+const PLOT_AREA = new Set(['layout', 'dTable', 'spPr', 'extLst']);
 
 /** The plot area (`c:plotArea`): chart groups and axes in document order. */
 export function parsePlotArea(
@@ -261,6 +264,7 @@ export function parsePlotArea(
 	reportUnmodelled(context, element, handled);
 	return assignDefined(plotArea, {
 		layout: manualLayout(element),
+		dataTable: parseDataTable(context, cChild(element, 'dTable')),
 		spPr: shapeProperties(element),
 		extLst: extensionList(element),
 	});

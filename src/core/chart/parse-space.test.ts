@@ -126,7 +126,7 @@ describe('parseChartSpace', () => {
 	it('reports unknown children and malformed values instead of throwing', () => {
 		const { chartSpace, issues } = parseChartSpace(
 			space(
-				'<c:plotArea><c:barChart><c:gapWidth val="wide"/><c:mystery/><c:ser><c:errBars/></c:ser></c:barChart><c:dTable/></c:plotArea>',
+				'<c:plotArea><c:barChart><c:gapWidth val="wide"/><c:mystery/><c:ser><c:errBars/></c:ser></c:barChart><c:dTable><c:mystery/></c:dTable></c:plotArea>',
 				'<c:protection/>',
 			),
 		);
@@ -136,7 +136,7 @@ describe('parseChartSpace', () => {
 			'c:barChart/c:mystery is not modelled; it is kept only in the source part.',
 			'c:ser/c:errBars is not modelled; it is kept only in the source part.',
 			'c:barChart/c:gapWidth has an unreadable value "wide".',
-			'c:plotArea/c:dTable is not modelled; it is kept only in the source part.',
+			'c:dTable/c:mystery is not modelled; it is kept only in the source part.',
 		]);
 	});
 

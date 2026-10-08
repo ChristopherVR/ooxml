@@ -15,23 +15,15 @@ const root = import.meta.dirname;
 const pptx = (name: string) => path.join(root, '../pptx/__tests__/fixtures/e2e', name);
 const xlsx = (name: string) => path.join(root, '../xlsx/__fixtures__', name);
 
-const WALLS = ['c:chart/c:floor', 'c:chart/c:sideWall', 'c:chart/c:backWall'];
-
 /**
  * The elements each part loses, by part: what the parser reports as not modelled. Parts not listed
- * round-trip byte-identical. Causes: trendlines, walls and floors and surface band formats are not
- * in the model yet (docs/agnostic-core-plan.md, step 5).
+ * round-trip byte-identical. Causes: trendlines and surface band formats are not in the model yet
+ * (docs/agnostic-core-plan.md, step 5).
  */
 const UNMODELLED: Record<string, string[]> = {
 	'chart-gallery.pptx ppt/charts/chart2.xml': ['c:ser/c:trendline'],
-	...Object.fromEntries(
-		[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((n) => [
-			`three-d-charts.pptx ppt/charts/chart${n}.xml`,
-			WALLS,
-		]),
-	),
-	'three-d-charts.pptx ppt/charts/chart16.xml': [...WALLS, 'c:surface3DChart/c:bandFmts'],
-	'three-d-charts.pptx ppt/charts/chart17.xml': [...WALLS, 'c:surface3DChart/c:bandFmts'],
+	'three-d-charts.pptx ppt/charts/chart16.xml': ['c:surface3DChart/c:bandFmts'],
+	'three-d-charts.pptx ppt/charts/chart17.xml': ['c:surface3DChart/c:bandFmts'],
 };
 
 /** Written without prefixes (default chart namespace, `a` declared per element): see below. */

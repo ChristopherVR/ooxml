@@ -3,9 +3,10 @@
 // out of schema order); booleans are written `1`/`0`, numbers in the canonical form of
 // `chartNumber`, cached point text exactly as held. Raw extension lists, print settings and kept
 // sources are written verbatim minus the declarations the root already makes. What the parser
-// reports as not modelled (trendlines, error bars, walls, floors, data tables...) is not written.
+// reports as not modelled (trendlines, error bars, pivot formats...) is not written.
 import { NS } from '../xml/index';
 import type { ChartLegend, ChartSpace, ChartView3D } from './model';
+import { surfaceXml } from './write-chrome';
 import { plotAreaXml } from './write-plot';
 import { layoutXml, shapePropertiesXml, textBodyXml } from './write-shape';
 import { titleXml } from './write-text';
@@ -92,6 +93,9 @@ export function writeChartSpace(space: ChartSpace, options: WriteChartSpaceOptio
 		titleXml(context, space.title) +
 			valXml('autoTitleDeleted', space.autoTitleDeleted) +
 			view3DXml(space.view3D) +
+			surfaceXml(context, 'floor', space.floor) +
+			surfaceXml(context, 'sideWall', space.sideWall) +
+			surfaceXml(context, 'backWall', space.backWall) +
 			plotAreaXml(context, space.plotArea) +
 			legendXml(context, space.legend) +
 			valXml('plotVisOnly', space.plotVisibleOnly) +

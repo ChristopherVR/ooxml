@@ -1,6 +1,7 @@
 // Format-neutral model of a DrawingML chart part (`c:chartSpace`, ECMA-376 Part 1, 21.2): the chart
 // groups, axes, legend and the part itself. Series, data sources, text and shape properties are in
 // `model-series.ts`.
+import type { ChartDataTable, ChartDisplayUnits, ChartSurface } from './model-chrome';
 import type {
 	ChartDataLabels,
 	ChartLayout,
@@ -14,6 +15,7 @@ import type {
 } from './model-series';
 
 export type * from './model-series';
+export type * from './model-chrome';
 
 /** The chart family of a plot group. */
 export type ChartGroupKind =
@@ -134,6 +136,8 @@ export interface ChartAxis {
 	tickMarkSkip?: number;
 	noMultiLevelLabels?: boolean;
 	baseTimeUnit?: string;
+	/** Value axis: `c:dispUnits`. */
+	displayUnits?: ChartDisplayUnits;
 	spPr?: ChartShapeProperties;
 	txPr?: ChartTextBody;
 	extLst?: string;
@@ -146,6 +150,8 @@ export interface ChartPlotArea {
 	/** Chart groups in document order; a combination chart has more than one. */
 	groups: ChartPlotGroup[];
 	axes: ChartAxis[];
+	/** `c:dTable`, present when the data table is shown. */
+	dataTable?: ChartDataTable;
 	spPr?: ChartShapeProperties;
 	extLst?: string;
 }
@@ -185,6 +191,10 @@ export interface ChartSpace {
 	title?: ChartTitle;
 	autoTitleDeleted?: boolean;
 	view3D?: ChartView3D;
+	/** 3-D chart floor and walls (`c:floor`, `c:sideWall`, `c:backWall`). */
+	floor?: ChartSurface;
+	sideWall?: ChartSurface;
+	backWall?: ChartSurface;
 	plotArea: ChartPlotArea;
 	legend?: ChartLegend;
 	plotVisibleOnly?: boolean;

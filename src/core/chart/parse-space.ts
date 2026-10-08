@@ -2,6 +2,7 @@
 // throws on content it does not know; such children are reported as issues and stay in the part.
 import { NS, buildXml, children, first, parseXml, relAttr, type XmlElement } from '../xml/index';
 import type { ChartLegend, ChartSpace, ChartSpaceParseResult, ChartView3D } from './model';
+import { parseSurface } from './parse-chrome';
 import { parsePlotArea } from './parse-plot';
 import { parseTitle } from './parse-text';
 import { CHART_ROOT_BINDINGS } from './xml-fragment';
@@ -99,6 +100,9 @@ const CHART = new Set([
 	'title',
 	'autoTitleDeleted',
 	'view3D',
+	'floor',
+	'sideWall',
+	'backWall',
 	'plotArea',
 	'legend',
 	'plotVisOnly',
@@ -156,6 +160,9 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 			title: title ? parseTitle(context, title) : undefined,
 			autoTitleDeleted: cBool(context, chart, 'autoTitleDeleted'),
 			view3D: view3D ? parseView3D(context, view3D) : undefined,
+			floor: parseSurface(context, cChild(chart, 'floor')),
+			sideWall: parseSurface(context, cChild(chart, 'sideWall')),
+			backWall: parseSurface(context, cChild(chart, 'backWall')),
 			legend: legend ? parseLegend(context, legend) : undefined,
 			plotVisibleOnly: cBool(context, chart, 'plotVisOnly'),
 			displayBlanksAs: cVal(chart, 'dispBlanksAs'),
