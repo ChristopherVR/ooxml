@@ -10,8 +10,8 @@
  * built-in style palettes, but nothing curated a small user-facing subset of
  * them or applied one to a chart. This module is deliberately modest (six
  * presets) rather than PowerPoint's full 48+ gallery, per this feature's
- * scope: it reuses `getChartStylePalette` for every colour, not a new colour
- * model.
+ * scope: two presets are Office style palettes from `getChartStylePalette`
+ * and four are recolours of the colourful one, not a new colour model.
  *
  * The 2D SVG chart engine (`chart-view-model-scale.ts`'s `seriesColor`/
  * `paletteColor`) reads `PptxChartData.colorPalette` directly and does NOT
@@ -45,6 +45,7 @@
 import type { PptxChartData, PptxChartDataPoint, PptxChartSeries } from 'ooxml-core/pptx';
 
 import { getChartStylePalette } from './chart-helpers';
+import { shade, tint } from './chart-palette';
 
 /** One built-in "Chart Styles" gallery entry. */
 export interface ChartStylePresetDescriptor {
@@ -56,15 +57,65 @@ export interface ChartStylePresetDescriptor {
 	applied: boolean;
 }
 
-/** The curated preset list: (id, label key, source `c:style/@val`). */
-const CHART_STYLE_PRESETS: ReadonlyArray<{ id: string; labelKey: string; styleId: number }> = [
-	{ id: 'colorful', labelKey: 'pptx.chart.styleColorful', styleId: 2 },
-	{ id: 'monochrome', labelKey: 'pptx.chart.styleMonochrome', styleId: 10 },
-	{ id: 'colorfulLight', labelKey: 'pptx.chart.styleColorfulLight', styleId: 18 },
-	{ id: 'colorfulDark', labelKey: 'pptx.chart.styleColorfulDark', styleId: 26 },
-	{ id: 'mutedDark', labelKey: 'pptx.chart.styleMutedDark', styleId: 34 },
-	{ id: 'pastel', labelKey: 'pptx.chart.stylePastel', styleId: 42 },
+/**
+ * The curated preset list: (id, label key, the `c:style/@val` mirrored onto the chart, palette).
+ * `colorful` and `monochrome` are Office's own style 2 and style 3 palettes; the four variants are
+ * recolours of the colourful palette and mirror a colourful-column style of another gallery row
+ * (Office's rows differ in effects, not colours, so no style number has these exact colours).
+ */
+const CHART_STYLE_PRESETS: ReadonlyArray<{
+	id: string;
+	labelKey: string;
+	styleId: number;
+	palette: () => readonly string[];
+}> = [
+	{
+		id: 'colorful',
+		labelKey: 'pptx.chart.styleColorful',
+		styleId: 2,
+		palette: () => getChartStylePalette(2),
+	},
+	{
+		id: 'monochrome',
+		labelKey: 'pptx.chart.styleMonochrome',
+		styleId: 3,
+		palette: () => getChartStylePalette(3),
+	},
+	{
+		id: 'colorfulLight',
+		labelKey: 'pptx.chart.styleColorfulLight',
+		styleId: 18,
+		palette: () => recolour((c) => tint(c, 0.3)),
+	},
+	{
+		id: 'colorfulDark',
+		labelKey: 'pptx.chart.styleColorfulDark',
+		styleId: 26,
+		palette: () => recolour((c) => shade(c, 0.3)),
+	},
+	{
+		id: 'mutedDark',
+		labelKey: 'pptx.chart.styleMutedDark',
+		styleId: 34,
+		palette: () => recolour((c) => shade(tint(c, 0.3), 0.4)),
+	},
+	{
+		id: 'pastel',
+		labelKey: 'pptx.chart.stylePastel',
+		styleId: 42,
+		palette: () => recolour((c) => tint(c, 0.55)),
+	},
 ];
+
+/** The colourful palette (style 2) with every colour transformed. */
+function recolour(transform: (color: string) => string): string[] {
+	return getChartStylePalette(2).map(transform);
+}
+
+/** The resolved colours of a "Chart Styles" preset, or `undefined` for an unknown id. */
+export function chartStylePresetPalette(id: string): readonly string[] | undefined {
+	return findPreset(id)?.palette();
+}
 
 function paletteEquals(a: readonly string[], b: readonly string[] | undefined): boolean {
 	if (!b || a.length !== b.length) {
@@ -86,8 +137,8 @@ function findPreset(id: string) {
 export function buildChartStylePresets(
 	chartData: Pick<PptxChartData, 'colorPalette'> & Partial<Pick<PptxChartData, 'series'>>,
 ): ChartStylePresetDescriptor[] {
-	return CHART_STYLE_PRESETS.map(({ id, labelKey, styleId }) => {
-		const colors = getChartStylePalette(styleId);
+	return CHART_STYLE_PRESETS.map(({ id, labelKey, palette }) => {
+		const colors = palette();
 		return {
 			id,
 			labelKey,
@@ -128,7 +179,7 @@ export function clearSeriesColor(series: PptxChartSeries): PptxChartSeries {
 
 /**
  * Apply a "Chart Styles" preset by id: resolves its palette via
- * `getChartStylePalette`, writes it onto `colorPalette` (also mirroring
+ * its preset entry, writes it onto `colorPalette` (also mirroring
  * `style.styleId`), and clears every series'/data-point's own explicit fill
  * so the new palette is not immediately shadowed by pre-existing colours
  * (see this module's header). Returns `null` for an unknown preset id so a
@@ -142,7 +193,7 @@ export function applyChartStylePreset(
 	if (!preset) {
 		return null;
 	}
-	const colors = [...getChartStylePalette(preset.styleId)];
+	const colors = [...preset.palette()];
 	return {
 		...chartData,
 		colorPalette: colors,

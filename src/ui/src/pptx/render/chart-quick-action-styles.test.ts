@@ -19,6 +19,8 @@ describe('buildChartStylePresets', () => {
 		expect(presets).toHaveLength(6);
 		expect(presets.every((p) => !p.applied)).toBeTruthy();
 		expect(presets.every((p) => p.colors.length > 0)).toBeTruthy();
+		// Every preset is a different recolour.
+		expect(new Set(presets.map((p) => p.colors.join()))).toHaveProperty('size', 6);
 	});
 
 	it('marks the matching preset applied when colorPalette matches its resolved colours', () => {
@@ -35,8 +37,9 @@ describe('applyChartStylePreset', () => {
 	it('applies a known preset id, writing colorPalette and style.styleId', () => {
 		const next = applyChartStylePreset(chart(), 'monochrome');
 		expect(next).not.toBeNull();
-		expect(next!.colorPalette).toStrictEqual([...getChartStylePalette(10)]);
-		expect(next!.style?.styleId).toBe(10);
+		// Office style 3: the monochrome accent 1 palette.
+		expect(next!.colorPalette).toStrictEqual([...getChartStylePalette(3)]);
+		expect(next!.style?.styleId).toBe(3);
 	});
 
 	it('returns null for an unknown preset id', () => {

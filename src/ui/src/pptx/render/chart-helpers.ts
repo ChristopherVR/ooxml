@@ -89,14 +89,7 @@ function shade(hex: string, amount: number): string {
 	return rgbToHex(r * (1 - amount), g * (1 - amount), b * (1 - amount));
 }
 
-function colorfulSequential(offset: number): string[] {
-	const out: string[] = [];
-	for (let i = 0; i < 8; i++) {
-		out.push(ACCENTS[(i + offset) % ACCENTS.length]);
-	}
-	return out;
-}
-
+/** Monochrome ramp of one colour, darkest first: three shades, the colour, four tints. */
 function monochromaticRamp(base: string): string[] {
 	return [
 		shade(base, 0.5),
@@ -110,48 +103,34 @@ function monochromaticRamp(base: string): string[] {
 	];
 }
 
-function colorfulVariant(offset: number, tintAmount: number): string[] {
-	return ACCENTS.map((_, i) => {
-		const idx = (i + offset) % ACCENTS.length;
-		return tintAmount > 0 ? tint(ACCENTS[idx], tintAmount) : shade(ACCENTS[idx], -tintAmount);
-	}).concat([
-		tint(ACCENTS[offset % ACCENTS.length], 0.4),
-		shade(ACCENTS[(offset + 1) % ACCENTS.length], 0.2),
-	]);
+/**
+ * The colourful palette: the six accents in theme order, then the same accents darker for series
+ * 7-12 (Office darkens them with `lumMod`; an RGB shade of 40% approximates it).
+ */
+function colourfulAccents(): string[] {
+	return [...ACCENTS, ...ACCENTS.map((accent) => shade(accent, 0.4))];
 }
 
-function darkPalette(offset: number, shadeAmount: number): string[] {
-	return colorfulSequential(offset).map((c) => shade(c, shadeAmount));
-}
+/** The greyscale column's base (text 1 at 50%). */
+const GREY = '#7F7F7F';
 
-function tonedPalette(offset: number, tintAmount: number): string[] {
-	return colorfulSequential(offset).map((c) => tint(c, tintAmount));
-}
+/**
+ * Office's built-in chart styles (`c:style/@val`, 1-48). ECMA-376 Part 1, 21.2.2.196 only says the
+ * value selects one of the application's predefined styles; the colours follow Office's chart style
+ * gallery of six rows of eight: column `(id - 1) % 8` is 0 greyscale, 1 colourful (accent1 to
+ * accent6 in theme order; style 2 is Office's default), and 2 to 7 monochrome shades and tints of
+ * accent1 to accent6. The rows (1-8, 9-16, 17-24, 25-32, 33-40, 41-48) vary outlines, effects and
+ * backgrounds, not the series colours.
+ */
+const STYLE_COLUMN_PALETTES: ReadonlyArray<() => string[]> = [
+	() => monochromaticRamp(GREY),
+	colourfulAccents,
+	...ACCENTS.map((accent) => () => monochromaticRamp(accent)),
+];
 
 function buildPalette(styleId: number): string[] {
-	const id = Math.max(1, Math.min(48, styleId));
-	if (id <= 8) {
-		return colorfulSequential(id - 1);
-	}
-	if (id <= 16) {
-		const accentIdx = (id - 9) % ACCENTS.length;
-		return monochromaticRamp(ACCENTS[accentIdx]);
-	}
-	if (id <= 24) {
-		const sub = id - 17;
-		const tintAmt = sub < 4 ? sub * 0.1 : -(sub - 4) * 0.1;
-		return colorfulVariant(sub, tintAmt);
-	}
-	if (id <= 32) {
-		const sub = id - 25;
-		return darkPalette(sub, 0.25 + (sub % 4) * 0.1);
-	}
-	if (id <= 40) {
-		const sub = id - 33;
-		return tonedPalette(sub, 0.15 + (sub % 4) * 0.08);
-	}
-	const sub = id - 41;
-	return tonedPalette(sub, 0.4 + (sub % 4) * 0.1);
+	const column = (Math.max(1, Math.min(48, Math.trunc(styleId))) - 1) % 8;
+	return STYLE_COLUMN_PALETTES[column]!();
 }
 
 const paletteCache = new Map<number, string[]>();

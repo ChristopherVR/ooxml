@@ -1,7 +1,7 @@
 import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { getChartStylePalette } from '../chart-helpers';
+import { chartStylePresetPalette } from '../chart-quick-action-styles';
 import { applyRibbonGalleryItem, buildRibbonGallery } from './gallery-registry';
 
 function chart(chartType: PptxChartData['chartType'] = 'bar'): PptxElement {
@@ -57,7 +57,7 @@ describe('chart Styles gallery', () => {
 			'pastel',
 		]);
 		const data = patched(applyRibbonGalleryItem('chartStyles', 'pastel', { element: chart() }));
-		const palette = getChartStylePalette(42);
+		const palette = chartStylePresetPalette('pastel')!;
 		expect(data.colorPalette).toStrictEqual(palette);
 		expect(data.series.map((s) => s.color)).toStrictEqual([palette[0], palette[1]]);
 		const again = buildRibbonGallery('chartStyles', {

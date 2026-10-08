@@ -471,7 +471,7 @@ describe('seriesColor', () => {
 		const series = { name: 'A', values: [] } as PptxChartSeries;
 		const color1 = seriesColor(series, 0, 1);
 		const color10 = seriesColor(series, 0, 10);
-		// Style 1 (colorful) and style 10 (monochromatic) should differ
+		// Style 1 (greyscale) and style 10 (colourful) should differ
 		expect(color1).not.toBe(color10);
 	});
 
