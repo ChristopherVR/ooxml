@@ -38,16 +38,32 @@ describe('workbook statistics', () => {
 });
 
 describe('comments list', () => {
+	const pane = (ctx: ReturnType<typeof setup>) =>
+		dialogEl(ctx, 'comments-list').querySelector<HTMLElement>('office-ui-comments-pane')!;
+	const threads = (ctx: ReturnType<typeof setup>) => [
+		...pane(ctx).shadowRoot!.querySelectorAll<HTMLElement>('[role="listitem"]'),
+	];
+	const composedKey = (el: HTMLElement, key: string) =>
+		el.dispatchEvent(
+			new KeyboardEvent('keydown', { key, bubbles: true, composed: true, cancelable: true }),
+		);
+
 	it('lists comments in order and selects the activated one', async () => {
 		const ctx = setup();
 		const done = ctx.dialogs.open('comments-list');
-		const options = [
-			...dialogEl(ctx, 'comments-list').querySelectorAll<HTMLElement>('[role="option"]'),
-		];
-		expect(options.map((o) => o.textContent)).toEqual(['A1  Bob: First', 'C4  Ann: Second']);
-		const list = dialogEl(ctx, 'comments-list').querySelector<HTMLElement>('[role="listbox"]')!;
-		pressKey(list, 'ArrowDown');
-		pressKey(list, 'Enter');
+		expect(
+			threads(ctx).map((t) => [
+				t.querySelector('.anchor-label')!.textContent,
+				t.querySelector('.author')!.textContent,
+				t.querySelector('.text')!.textContent,
+			]),
+		).toEqual([
+			['A1', 'Bob', 'First'],
+			['C4', 'Ann', 'Second'],
+		]);
+		expect(pane(ctx).shadowRoot!.querySelectorAll('button, textarea')).toHaveLength(0);
+		composedKey(threads(ctx)[0]!, 'ArrowDown');
+		composedKey(threads(ctx)[1]!, 'Enter');
 		expect(await done).toBe('C4');
 		expect(ctx.selection.get().active).toEqual({ row: 3, col: 2 });
 	});
@@ -55,10 +71,7 @@ describe('comments list', () => {
 	it('Escape closes without moving', async () => {
 		const ctx = setup();
 		const done = ctx.dialogs.open('comments-list');
-		pressKey(
-			dialogEl(ctx, 'comments-list').querySelector<HTMLElement>('[role="listbox"]')!,
-			'Escape',
-		);
+		pressKey(pane(ctx), 'Escape');
 		expect(await done).toBeUndefined();
 		expect(ctx.selection.get().active).toEqual({ row: 0, col: 0 });
 	});
