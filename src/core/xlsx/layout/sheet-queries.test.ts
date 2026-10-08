@@ -6,7 +6,13 @@ import { internStyle } from '../styles';
 import { createWorkbook, defaultCellStyle } from '../workbook';
 import { autoFitColumnWidth } from './autofit';
 import { createGridMetrics } from './metrics';
-import { isOverflowTarget, mergeView, overflowExtent, selectionStats } from './sheet-queries';
+import {
+	formatSelectionStat,
+	isOverflowTarget,
+	mergeView,
+	overflowExtent,
+	selectionStats,
+} from './sheet-queries';
 import { columnWidthToPixels } from './units';
 
 const range = (r1: number, c1: number, r2: number, c2: number) => ({
@@ -53,7 +59,28 @@ describe('selectionStats', () => {
 			average: 3,
 			min: 1,
 			max: 6,
+			numFmt: 'General',
 		});
+	});
+
+	it('formats the statistics with the first numeric cell format, like Excel', () => {
+		const book = createWorkbook();
+		const ws = book.sheets[0]!;
+		const money = internStyle(book, { ...defaultCellStyle(), numFmt: '#,##0.00' });
+		const percent = internStyle(book, { ...defaultCellStyle(), numFmt: '0%' });
+		putCell(ws, 0, 0, { value: 'Label' });
+		putCell(ws, 1, 0, { value: 67867.2337454545, styleId: money });
+		putCell(ws, 2, 0, { value: 0.25, styleId: percent });
+		const stats = selectionStats(book, 0, [range(0, 0, 2, 0)]);
+		expect(stats.numFmt).toBe('#,##0.00');
+		expect(formatSelectionStat(book, stats, stats.sum)).toBe('67,867.48');
+		const general = selectionStats(wb, 0, [range(0, 0, 5, 0)]);
+		expect(formatSelectionStat(wb, general, 67867.2337454545)).toBe('67867.23375');
+		expect(formatSelectionStat(wb, { count: 0, numericCount: 0, sum: 0 }, 1 / 3)).toBe(
+			'0.333333333',
+		);
+		// The first numeric cell decides, wherever it sits in the selection.
+		expect(selectionStats(book, 0, [range(2, 0, 2, 0), range(1, 0, 1, 0)]).numFmt).toBe('0%');
 	});
 
 	it('handles whole columns and overlapping ranges', () => {

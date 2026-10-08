@@ -87,6 +87,7 @@ export {
 } from './cf-evaluator';
 export { compareValues, percentile } from './cf-values';
 export {
+	formatSelectionStat,
 	isOverflowTarget,
 	mergeView,
 	overflowExtent,

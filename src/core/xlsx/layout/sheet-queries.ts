@@ -1,6 +1,9 @@
 import { MAX_COL, type CellRange } from '../address';
 import { forEachCellInRange, getCell, mergeAt } from '../cells';
 import type { Workbook, Worksheet } from '../model';
+import { formatValue } from '../numfmt/index';
+import { styleAt } from '../styles';
+import { effectiveStyleId } from './cell-view';
 import type { GridMetrics } from './metrics';
 import type { HAlignView, MergeView } from './types';
 
@@ -21,6 +24,11 @@ export interface SelectionStats {
 	average?: number;
 	min?: number;
 	max?: number;
+	/**
+	 * The number format of the first numeric cell, which Excel shows the average, minimum,
+	 * maximum and sum in (see {@link formatSelectionStat}). Present with numbers.
+	 */
+	numFmt?: string;
 }
 
 /**
@@ -38,6 +46,7 @@ export function selectionStats(
 	const seen = new Set<string>();
 	let min = Infinity;
 	let max = -Infinity;
+	let numFmt: string | undefined;
 	for (const range of ranges)
 		forEachCellInRange(ws, range, (cell, row, col) => {
 			if (ranges.length > 1) {
@@ -50,6 +59,7 @@ export function selectionStats(
 			out.count++;
 			if (typeof value === 'number' && Number.isFinite(value)) {
 				out.numericCount++;
+				numFmt ??= styleAt(workbook, effectiveStyleId(ws, row, col)).numFmt || 'General';
 				out.sum += value;
 				min = Math.min(min, value);
 				max = Math.max(max, value);
@@ -59,8 +69,18 @@ export function selectionStats(
 		out.average = out.sum / out.numericCount;
 		out.min = min;
 		out.max = max;
+		out.numFmt = numFmt ?? 'General';
 	}
 	return out;
+}
+
+/** A statistic as the status bar shows it: in the selection's number format (General without). */
+export function formatSelectionStat(
+	workbook: Workbook,
+	stats: SelectionStats,
+	value: number,
+): string {
+	return formatValue(value, stats.numFmt ?? 'General', { date1904: workbook.date1904 }).text;
 }
 
 /** A cell that text may overflow into: nothing stored there, or an empty value without a formula. */

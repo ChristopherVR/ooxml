@@ -32,6 +32,24 @@ describe('status bar', () => {
 		expect(statisticsText(core.ctx, new Set(['sum']))).toBe('');
 	});
 
+	it('formats Average and Sum with the first numeric cell format, General without one', () => {
+		const workbook = createWorkbook();
+		const session = createEditSession(workbook);
+		session.setCellValue(0, 0, 0, 67867.2337454545);
+		session.setCellValue(0, 1, 0, 1000);
+		const { core } = shellFixture(workbook);
+		const range = { start: { row: 0, col: 0 }, end: { row: 1, col: 0 } };
+		core.selection.set({ ranges: [range] });
+		const shown = new Set<'average' | 'count' | 'sum'>(['average', 'count', 'sum']);
+		expect(statisticsText(core.ctx, shown)).toBe(
+			'Average: 34433.61687    Count: 2    Sum: 68867.23375',
+		);
+		session.applyStyle(0, [range], { numFmt: '#,##0.00' });
+		expect(statisticsText(core.ctx, shown)).toBe(
+			'Average: 34,433.62    Count: 2    Sum: 68,867.23',
+		);
+	});
+
 	it('shows the mode, read-only badge, notes button and zoom', async () => {
 		const { core } = shellFixture(numbers());
 		const notes: string[] = [];

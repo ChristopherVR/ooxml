@@ -5,7 +5,7 @@
  * `office-ui-status-bar` and `office-ui-zoom-slider` draw it from translated state; this module
  * holds the model and routes activations to the editor.
  */
-import { selectionStats } from 'ooxml-core/xlsx';
+import { formatSelectionStat, selectionStats } from 'ooxml-core/xlsx';
 import { defineStatusBar, defineZoomSlider } from '../controls';
 import type { OfficeStatusBarState } from '../controls';
 import { registerIcon } from '../icons';
@@ -80,7 +80,12 @@ export function statisticsText(ctx: EditorContext, shown: ReadonlySet<StatKey>):
 							: undefined
 						: stats[key];
 		if (value === undefined) continue;
-		parts.push(`${ctx.t(STAT_LABELS[key])}: ${formatNumber(locale, value)}`);
+		// Counts are plain numbers; the others use the number format of the first numeric cell.
+		const text =
+			key === 'count' || key === 'numericCount'
+				? formatNumber(locale, value)
+				: formatSelectionStat(workbook, stats, value);
+		parts.push(`${ctx.t(STAT_LABELS[key])}: ${text}`);
 	}
 	return parts.join('    ');
 }
