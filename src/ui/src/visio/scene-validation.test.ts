@@ -129,7 +129,7 @@ describe('defensive scene limits', () => {
 		expect(() => assertViewableDocument(model)).toThrow('layer count');
 	});
 	it.each(
-		[[], [1], [0, 0], [1, NaN], [1, 28], [1, -1], [1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1]].map(
+		[[], [1], [0, 0], [1, NaN], [1, 41], [1, -1], [1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1]].map(
 			(lineDash) => ({ lineDash }),
 		),
 	)('rejects invalid normalized line-dash arrays %j', ({ lineDash }) => {
@@ -137,6 +137,14 @@ describe('defensive scene limits', () => {
 		model.pages[0]!.shapes[0]!.style.lineDash = lineDash;
 		expect(() => assertViewableDocument(model)).toThrow(/line dash/);
 	});
+	it.each([-1, NaN, Infinity, 1_000_001])(
+		'rejects invalid fixed dash dot length %s',
+		(lineDashDotLength) => {
+			const model = structuredClone(demoDocument);
+			model.pages[0]!.shapes[0]!.style.lineDashDotLength = lineDashDotLength;
+			expect(() => assertViewableDocument(model)).toThrow(/line dash dot length/);
+		},
+	);
 	it('rejects nonfinite and excessive dimensions before rendering', () => {
 		const model = structuredClone(demoDocument);
 		model.pages[0]!.width = Infinity;

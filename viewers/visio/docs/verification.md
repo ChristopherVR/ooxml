@@ -2,6 +2,50 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Paint formatting and native line patterns, 2026-10-09
+
+`record-visio-paint-formatting.ps1` records 54 native paint-edit cases across
+drawing scales 0.5, 1 and 2. Actual core edits match parsed styles, text, geometry
+and transforms, retaining every untouched package payload. Native COM reopen
+matches the measured paint values and transforms. Run the optional comparison
+with `VISIO_NATIVE_PAINT_FORMATTING_DIR`. Native transparency quantization rounds
+to half-percent steps with midpoint ties upward. Root `LineGradientEnabled`
+inheritance was measured separately and uses the existing shared theme resolver.
+Active saved gradient stop alpha remains unchanged by standalone ShapeSheet
+transparency cells, so the visible-paint API refuses those changes unless paint
+replacement is explicit.
+
+`record-visio-line-patterns.ps1` captures 432 native SVG cases: built-in patterns
+0-23, caps 0/1/2, 1/3-point weights and scales 0.5/1/2. The optional
+`line-pattern-native.test.ts`, selected by `VISIO_NATIVE_LINE_PATTERNS_DIR`, passes
+for all captured dash arrays, cap mappings and widths. Square-cap dots are fixed
+at 0.01 points, independent of stroke weight. This proves measured SVG attributes;
+it does not claim complete raster equality. Source and interactive/static SVG
+regressions cover finite dot lengths, native cap-aware ratios and bounded scene
+validation.
+
+Phase 8 core checks passed 2,817 tests with 170 optional cases skipped. Shared UI
+passed 958 tests with seven skipped. Strict core, UI and viewer TypeScript checks
+passed; native binding checks passed 114 DOM and five SSR tests, with zero Svelte
+errors or warnings. Production core/UI, PowerPoint and all seven viewer package
+builds passed, together with all six demo builds, worker checks and 48
+documentation checks.
+
+The clean nine-tarball consumer (`vos4mb`) passed types, workers and browser
+workflows through all six native mounts. Its added generic paint edits cover all
+25 fill patterns, background color, raw foreground/background opacity and line
+opacity, No Line followed by pattern 23, document events, preserved selection,
+reparsed source styles and exact byte undo. The six focused paint-property
+browser workflows passed. The full production browser run passed 140 active
+checks with 715 optional native-capture cases skipped and no failures: 855 total
+cases in 7.4 minutes.
+
+A separate zero-width audit found native SVG uses a 0.75-point fallback while
+PNG exports retain device hairlines and smaller arrows at 96/144/300 DPI. Owned
+hidden-window zoom changes from 25% to 400% did not change these exports. Raster
+settings were restored and reread after the probe. Raw zero width stays in the
+model; matching these distinct native rendering policies remains open.
+
 ## Fixed-size text creation and terminal paragraph markers, 2026-10-09
 
 Owned Visio 16 measurements recorded ten logical text cases: empty text,

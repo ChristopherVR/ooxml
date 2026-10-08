@@ -226,7 +226,8 @@ The Home ribbon and `applyEdits()` share `format-text`, `format-shape` and
 `reorder-shape` commands. Text formatting includes saved font families, point
 size, bold/italic/underline/strikethrough, color, bullets, indentation and
 horizontal/vertical alignment. Shape formatting includes solid fill and line
-color/weight. Formatting requires ordinary local leaf shapes. Whole-shape text
+color/weight, line patterns 0-23, fill patterns 0-24, background color and
+transparency. Formatting requires ordinary local leaf shapes. Whole-shape text
 formatting updates each effective character or paragraph row while preserving
 run markers, text, unrelated style bits and supported cached fields. Character
 and paragraph formatting have separate source admission; vertical alignment
@@ -239,6 +240,24 @@ an explicit formatting choice creates a local override even if its value is
 unchanged. Top-level inherited protection and transform cells remain guarded.
 Fonts must already exist in the source drawing. Stacking commands support
 front/back/forward/backward on one ordinary top-level shape in display band zero.
+
+`format-shape` accepts `linePattern`, `fillPattern`, `fillBackgroundColor`
+(`'#RRGGBB'`), `lineTransparency` and `fillTransparency` (percent from 0 to 100).
+Transparency is rounded to half-percent steps, with ties upward. Fill transparency
+sets foreground and background together. Pattern 0 means no paint; pattern 1 is
+solid. Explicit `linePattern: 1` enables an outline independently of line color.
+An explicit fill pattern overrides the solid pattern implied by `fillColor`;
+`fillColor: 'none'` with a nonzero fill pattern is rejected. Active gradient
+transparency requires explicit paint replacement, while ordinary inherited solid
+theme paints are supported.
+
+The shared Line menu exposes No Line and built-in patterns. Both paint menus and
+the shape context menu open Fill & Line. The dialog applies only changed fields
+in one atomic selection transaction. Mixed or unavailable source values remain
+unset until changed. All six native bindings use the existing `applyEdits()` and
+reactive document/selection events; no framework-specific paint engine is added.
+`visioShapeFormattingState(shapes)` provides aggregate source paint values for
+custom controls. These values are separate from gradient/tile opacity multipliers.
 
 Six Align commands align to the first selected shape. Position provides equal
 horizontal and vertical edge spacing for three or more shapes. The core
@@ -318,8 +337,8 @@ worker, history and cancellation path.
 
 Home > Text Tool and Insert > Text Box use the same shared fixed-size text-box
 draft. Drag blank page space, enter plain text, then use Add text box or
-Ctrl/Meta+Enter; Escape cancels it. Empty or whitespace-only drafts do not create
-source shapes. Clicking an existing shape with Text Tool selects it and reveals
+Ctrl/Meta+Enter; Escape cancels it. Empty drafts do not create source shapes;
+intentional spaces and newlines are preserved. Clicking an existing shape with Text Tool selects it and reveals
 the existing text-edit controls. Rectangle, ellipse and line drawing use the
 same guarded creation lifecycle. Their internal controller transaction captures
 source, page, ordered selection, zoom and visibility intent before drawing,

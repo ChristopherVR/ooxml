@@ -38,7 +38,13 @@ export function paintOptions(target: 'fill' | 'line'): CommandSpec[] {
 			action: { type: 'shape-format', patch: { fillColor: 'none' } },
 			checked: false,
 		});
-	else
+	else {
+		items.push({
+			id: 'line-pattern-0',
+			label: 'No Line',
+			action: { type: 'shape-format', patch: { linePattern: 0 } },
+			checked: false,
+		});
 		items.push({
 			id: 'line-weight',
 			label: 'Weight',
@@ -49,5 +55,21 @@ export function paintOptions(target: 'fill' | 'line'): CommandSpec[] {
 				checked: false,
 			})),
 		});
+		items.push({
+			id: 'line-pattern',
+			label: 'Pattern',
+			items: Array.from({ length: 23 }, (_, index) => ({
+				id: `line-pattern-${index + 1}`,
+				label: index === 0 ? 'Solid' : `Pattern ${index + 1}`,
+				action: { type: 'shape-format' as const, patch: { linePattern: index + 1 } },
+				checked: false,
+			})),
+		});
+	}
+	items.push({
+		id: `${target}-options`,
+		label: 'More Options...',
+		action: { type: 'paint-properties' },
+	});
 	return items;
 }

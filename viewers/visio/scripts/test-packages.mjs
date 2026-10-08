@@ -163,6 +163,14 @@ const anchoredResize${index}: p${index}.VisioEdit = { type: 'resize-shape', page
 const resizing${index}: Promise<void> = h${index}.applyEdits([anchoredResize${index}]); void resizing${index};
 const textBox${index}: p${index}.VisioEdit = { type: 'create-text-box', pageId: '0', shapeId: '2', x: 2, y: 2, width: 2, height: 1, text: 'Text\\n' };
 const drawingText${index}: Promise<void> = h${index}.applyEdits([textBox${index}]); void drawingText${index};
+const paint${index}: p${index}.VisioEdit = { type: 'format-shape', pageId: '0', shapeId: '2', linePattern: 23, lineTransparency: 33.26, fillPattern: 24, fillBackgroundColor: '#abcdef', fillTransparency: 12.26 };
+const painting${index}: Promise<void> = h${index}.applyEdits([paint${index}]); void painting${index};
+const noPaint${index}: p${index}.VisioEdit = { type: 'format-shape', pageId: '0', shapeId: '2', linePattern: 0, fillPattern: 0 };
+void h${index}.applyEdits([noPaint${index}]);
+const paintStyle${index} = s${index}.document?.pages[0]?.shapes[0]?.style;
+const paintAlphas${index}: readonly (number | undefined)[] = [paintStyle${index}?.fillForegroundOpacity, paintStyle${index}?.fillBackgroundOpacity, paintStyle${index}?.lineColorOpacity]; void paintAlphas${index};
+const fillIndex${index}: number | undefined = paintStyle${index}?.fillPatternIndex; void fillIndex${index};
+const fillBackground${index}: string | undefined = paintStyle${index}?.fillBackgroundColor; void fillBackground${index};
 // @ts-expect-error Creating a text box requires logical text.
 const missingText${index}: p${index}.VisioEdit = { type: 'create-text-box', pageId: '0', shapeId: '3', x: 2, y: 2, width: 2, height: 1 };
 void missingText${index};
@@ -239,6 +247,11 @@ if (workspaceRuntime)
 	writeFileSync(
 		resolve(consumer, 'workspace-consumer-clipboard.mjs'),
 		readFileSync(resolve(root, 'scripts/workspace-consumer-clipboard.mjs')),
+	);
+if (workspaceRuntime)
+	writeFileSync(
+		resolve(consumer, 'workspace-consumer-editing.mjs'),
+		readFileSync(resolve(root, 'scripts/workspace-consumer-editing.mjs')),
 	);
 if (workspaceRuntime)
 	writeFileSync(

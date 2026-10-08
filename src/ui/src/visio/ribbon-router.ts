@@ -15,6 +15,7 @@ export interface RibbonTargets {
 	setTool(tool: CanvasTool): void;
 	cancelDrawing(): void;
 	insertPage(): void;
+	showPaintProperties(): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
 	togglePanZoom(): void;
@@ -64,6 +65,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.cancelDrawing();
 		case 'page-insert':
 			return targets.insertPage();
+		case 'paint-properties':
+			return targets.showPaintProperties();
 		case 'grid':
 			return targets.toggleGrid();
 		case 'ruler':

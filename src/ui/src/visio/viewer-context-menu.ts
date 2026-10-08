@@ -87,7 +87,7 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				id: 'ctx-format',
 				label: 'Format Shape',
 				icon: 'fill',
-				unsupported: 'Needs core fill, line and effect edits.',
+				action: { type: 'paint-properties' },
 			},
 			'-',
 			{

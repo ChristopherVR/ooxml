@@ -11,7 +11,8 @@ import {
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioFormattingAction } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
-import { paintOptions, fontColorOptions } from './ribbon-style-options';
+import { fontColorOptions } from './ribbon-style-options';
+import { renderPaintMenus } from './viewer-paint-menu';
 
 type Combo = RibbonCommand & {
 	value: string;
@@ -34,6 +35,7 @@ export class ViewerFormatting {
 	run(action: VisioFormattingAction): void {
 		const state = this.controller.state;
 		if (!state.edit.sourceAvailable || state.loading || state.edit.busy) return;
+		const sourceGeneration = this.controller.sourceGeneration;
 		const page = state.document?.pages[state.pageIndex];
 		const selections = state.selectedShapes;
 		if (
@@ -93,8 +95,19 @@ export class ViewerFormatting {
 			return { type: 'format-text', ...target, ...patch };
 		});
 		if (commands.some((command) => !command)) return;
+		const current = this.controller.state;
+		if (
+			current.document !== state.document ||
+			current.pageIndex !== state.pageIndex ||
+			current.selectedShapes !== selections ||
+			this.controller.sourceGeneration !== sourceGeneration
+		)
+			return;
 		this.edit(
-			() => this.controller.applyEdits(commands),
+			() =>
+				action.type === 'shape-format'
+					? this.controller.applySelectionEdits(commands)
+					: this.controller.applyEdits(commands),
 			action.type === 'shape-order' ? 'Updated shape order.' : 'Updated shape formatting.',
 		);
 	}
@@ -209,48 +222,7 @@ export class ViewerFormatting {
 				});
 			size.value = current === undefined ? '' : String(current);
 		}
-		for (const target of ['fill', 'line'] as const) {
-			set(this.root.querySelector<RibbonCommand>(`[data-menu="${target}"]`), styleReason);
-			for (const item of paintOptions(target)) {
-				if (item.items) {
-					set(this.root.querySelector<RibbonCommand>(`[data-menu="${item.id}"]`), styleReason);
-					for (const weight of item.items) {
-						const el = button(weight.id);
-						set(el, styleReason);
-						if (el && weight.action?.type === 'shape-format') {
-							const points = weight.action.patch.lineWeight ?? 0;
-							el.setAttribute(
-								'checked',
-								String(
-									!!styleShape &&
-										styleShapes.every(
-											(itemShape) => Math.abs(itemShape.style.lineWidth * 72 - points) < 0.001,
-										),
-								),
-							);
-						}
-					}
-				} else {
-					const el = button(item.id);
-					set(el, styleReason);
-					if (el && item.action?.type === 'shape-format') {
-						const color =
-							target === 'fill' ? item.action.patch.fillColor : item.action.patch.lineColor;
-						el.setAttribute(
-							'checked',
-							String(
-								!!styleShape &&
-									styleShapes.every(
-										(itemShape) =>
-											(target === 'fill' ? itemShape.style.fill : itemShape.style.lineColor) ===
-											color,
-									),
-							),
-						);
-					}
-				}
-			}
-		}
+		renderPaintMenus(this.root, styleShape ? styleShapes : [], styleReason, set);
 		const ordering =
 			page && selection && currentPage ? visioOrderingShape(page, selection.id) : undefined;
 		const orderReason =

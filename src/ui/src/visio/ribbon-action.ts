@@ -23,6 +23,7 @@ export type VisioRibbonAction =
 	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'cancel-drawing' }
 	| { type: 'page-insert' }
+	| { type: 'paint-properties' }
 	| { type: 'delete' }
 	| { type: 'duplicate' }
 	| { type: 'clipboard'; operation: 'copy' | 'cut' | 'paste'; event?: ClipboardEvent }

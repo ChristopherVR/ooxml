@@ -17,6 +17,7 @@ import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
+import { ViewerPaintProperties } from './viewer-paint-properties';
 import { ViewerArrangement } from './viewer-arrangement';
 import { ViewerDuplication } from './viewer-duplication';
 import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
@@ -59,6 +60,7 @@ export class ViewerCommands {
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
 	#formatting: ViewerFormatting;
+	#paint: ViewerPaintProperties;
 	#arrangement: ViewerArrangement;
 	#duplication: ViewerDuplication;
 	#clipboard: ViewerClipboard;
@@ -76,6 +78,7 @@ export class ViewerCommands {
 		this.#formatting = new ViewerFormatting(host.root, host.controller, (run, success) => {
 			void this.#edit(run, success);
 		});
+		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#pageOrder = new ViewerPageOrder(host.root, host.controller);
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
@@ -108,6 +111,7 @@ export class ViewerCommands {
 				this.#text.cancel();
 			},
 			insertPage: () => this.#insertPage(),
+			showPaintProperties: () => this.#paint.show(),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
 				this.render(host.controller.state);
@@ -203,6 +207,7 @@ export class ViewerCommands {
 		const disposeDraw = this.#draw.wire();
 		const disposeText = this.#text.wire();
 		const disposeClipboard = this.#clipboard.wire();
+		const disposePaint = this.#paint.wire();
 		return () => {
 			this.#pageOrder.close();
 			this.#pageRename.close();
@@ -212,6 +217,7 @@ export class ViewerCommands {
 			disposeDraw();
 			disposeText();
 			disposeClipboard();
+			disposePaint();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -401,6 +407,7 @@ export class ViewerCommands {
 		this.#duplication.render(state);
 		this.#clipboard.render(state);
 		this.#formatting.render(state);
+		this.#paint.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

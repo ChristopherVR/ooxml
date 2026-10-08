@@ -40,16 +40,41 @@ describe('line ends', () => {
 		const model = structuredClone(demoDocument),
 			line = model.pages[0]!.shapes[1]!;
 		line.style.linePattern = 2;
-		line.style.lineDash = [6, 3];
+		line.style.lineDash = [7, 5];
 		line.style.lineWidth = 0.005;
 		const result = renderPage(model, model.pages[0]!);
 		expect(
 			result.svg.querySelector('[data-shape-id="c1"] path')?.getAttribute('stroke-dasharray'),
-		).toBe('0.03 0.015');
-		expect(line.style.lineDash).toEqual([6, 3]);
-		expect(result.warnings).toContain('Some dashed strokes use inferred Visio pattern spacing.');
+		).toBe('0.035 0.025');
+		expect(line.style.lineDash).toEqual([7, 5]);
+		expect(result.warnings).not.toContain(
+			'Some dashed strokes use inferred Visio pattern spacing.',
+		);
 		result.dispose();
 	});
+	it.each([1, 3])(
+		'keeps native square-cap dots at a fixed length for %s-point strokes',
+		(points) => {
+			const model = structuredClone(demoDocument),
+				line = model.pages[0]!.shapes[1]!;
+			Object.assign(line.style, {
+				linePattern: 3,
+				lineCap: 'square',
+				lineDash: [0, 5],
+				lineDashDotLength: 0.01 / 72,
+				lineWidth: points / 72,
+			});
+			for (const options of [{}, { static: true }]) {
+				const result = renderPage(model, model.pages[0]!, options);
+				const path = result.svg.querySelector('[stroke-dasharray]')!;
+				const lengths = path.getAttribute('stroke-dasharray')!.split(' ').map(Number);
+				expect(lengths[0]).toBeCloseTo(0.01 / 72, 12);
+				expect(lengths[1]).toBeCloseTo((5 * points) / 72, 12);
+				expect(path.getAttribute('stroke-linecap')).toBe('square');
+				result.dispose();
+			}
+		},
+	);
 	it('reports unresolved positive patterns instead of guessing a dash sequence', () => {
 		const model = structuredClone(demoDocument),
 			line = model.pages[0]!.shapes[1]!;

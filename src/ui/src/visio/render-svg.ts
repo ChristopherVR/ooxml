@@ -22,6 +22,7 @@ import {
 	assertViewableDocument,
 	composeVisioTransform,
 	VISIO_IDENTITY_TRANSFORM,
+	visioLineDashLengths,
 } from 'ooxml-core/visio/ui';
 import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
@@ -230,11 +231,9 @@ function drawOwn(
 		path.setAttribute('stroke-linejoin', 'round');
 		path.setAttribute('stroke-linecap', shape.style.lineCap ?? 'round');
 		if (stroked && shape.style.linePattern > 1) {
-			const dash = shape.style.lineDash;
+			const dash = visioLineDashLengths(shape.style);
 			if (dash) {
-				path.setAttribute('stroke-dasharray', dash.map((n) => n * shape.style.lineWidth).join(' '));
-				if (shape.style.linePattern <= 23)
-					warnings.add('Some dashed strokes use inferred Visio pattern spacing.');
+				path.setAttribute('stroke-dasharray', dash.join(' '));
 			} else warnings.add('An unresolved line pattern is shown as a solid stroke.');
 		}
 		if (stroked) applyArrowheads(path, shape.style, defs, warnings);

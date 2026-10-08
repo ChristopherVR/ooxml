@@ -1,5 +1,28 @@
 # Visio capability ledger
 
+## Paint patterns, transparency and native dashes, 2026-10-09
+
+The shared Line menu now exposes No Line and built-in patterns. Fill & Line
+provides fill patterns 0-24, background color, line patterns 0-23 and foreground/
+background fill transparency plus line transparency. It commits changed fields
+as one selection edit, preserving untouched mixed values and exact undo bytes.
+All six native handles use the existing generic edit API and reactive hooks.
+
+Core preserves protected cells, unrelated styles, text and geometry; transparency
+uses native half-percent rounding. Ordinary inherited solid themes are supported.
+Active gradient transparency/background edits require explicit paint replacement.
+Native edit/reopen evidence covers 54 cases across three drawing scales. Separately,
+432 native SVG cases establish built-in dash lengths and cap mapping across all
+patterns, three caps, two stroke weights and three scales. Square dots retain
+their fixed 0.01-point length. Complete raster equality, custom line patterns and
+all gradient editing behavior remain outside this evidence. Core/UI regressions,
+strict checks, native bindings, production builds and nine-tarball installed
+consumer checks passed. All six installed native mounts verified every supported
+fill pattern, raw opacity, No Line followed by pattern 23, document events,
+preserved selection and exact byte undo. Six focused paint-property browser
+workflows passed; the full production run passed 140 active checks with 715
+optional native-capture cases skipped and no failures, in 7.4 minutes.
+
 ## Fixed-size Text Tool and logical text, 2026-10-09
 
 Home Text Tool and Insert Text Box now share a plain-text draft on a dragged

@@ -4,6 +4,7 @@ import ribbon from './ribbon.css?raw';
 import shapes from './shapes.css?raw';
 import sizePosition from './size-position.css?raw';
 import textTool from './text-tool.css?raw';
+import paintProperties from './paint-properties.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -17,6 +18,7 @@ export const canvasAndRibbonStyles = [
 	canvas,
 	sizePosition,
 	textTool,
+	paintProperties,
 	visioThemeBridge,
 ].join('\n');
 
