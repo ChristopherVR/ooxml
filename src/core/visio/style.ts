@@ -9,6 +9,7 @@ import { linePattern } from './line-pattern';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { textParagraphs, type ParagraphMarker } from './paragraphs';
+import { decodeVisioPlainText } from './plain-text';
 import type { VisioStyle, VisioText, VisioTextRun, VisioGeometry } from './model';
 import { transform } from './geometry';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
@@ -210,8 +211,10 @@ export function shapeText(
 	let currentCells = defaultCells;
 	const runs: VisioTextRun[] = [];
 	const paragraphMarkers: ParagraphMarker[] = [];
-	let textOffset = 0;
-	const append = (text: string) => {
+	let textOffset = 0,
+		terminalDirectText = false;
+	const append = (text: string, direct = false) => {
+		terminalDirectText = direct;
 		if (text) {
 			consume(text.length);
 			runs.push({ text, ...runStyle(currentCells, resources, report, cells) });
@@ -220,8 +223,9 @@ export function shapeText(
 	};
 	if (node && !number(cells, 'HideText', 0, report)) {
 		for (const part of Array.from(node.childNodes)) {
-			if (part.nodeType === 3 || part.nodeType === 4) append(part.nodeValue ?? '');
-			else if (part.nodeType === 1) {
+			if (part.nodeType === 3 || part.nodeType === 4) {
+				if (part.nodeValue) append(part.nodeValue, true);
+			} else if (part.nodeType === 1) {
 				const element = part as Element;
 				if (element.localName === 'cp')
 					currentCells = characters.get(element.getAttribute('IX') ?? '0') ?? defaultCells;
@@ -243,10 +247,10 @@ export function shapeText(
 	const textWidth = Math.max(0, number(cells, 'TxtWidth', width, report)),
 		textHeight = Math.max(0, number(cells, 'TxtHeight', height, report));
 	const vertical = number(cells, 'VerticalAlign', 1, report);
-	const plainText = runs.map((r) => r.text).join('');
+	const storedText = runs.map((r) => r.text).join('');
 	const defaultRun = runStyle(defaultCells, resources, report, cells);
 	const paragraphs = textParagraphs(
-		plainText,
+		storedText,
 		paragraphMarkers,
 		sheet,
 		defaultRun.fontFamily,
@@ -256,6 +260,11 @@ export function shapeText(
 		runs,
 		consumeParagraph,
 	);
+	// Paragraph offsets use the stored final marker; logical runs exclude it.
+	// A field's cached text is content, never a structural paragraph terminator.
+	const lastRun = runs.at(-1);
+	if (terminalDirectText && lastRun) lastRun.text = decodeVisioPlainText(lastRun.text);
+	const plainText = runs.map((run) => run.text).join('');
 	return {
 		plainText,
 		...textBackground(cells, resources, report),

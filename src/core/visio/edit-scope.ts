@@ -230,6 +230,7 @@ export async function assertGeometryPackageScope(
 			if (
 				(command.type === 'create-rectangle' ||
 					command.type === 'create-ellipse' ||
+					command.type === 'create-text-box' ||
 					command.type === 'create-line') &&
 				command.pageId === pageId &&
 				!shapes.some((shape) => attribute(shape, 'ID') === command.shapeId)
@@ -238,6 +239,13 @@ export async function assertGeometryPackageScope(
 				const shape = root.ownerDocument!.createElementNS(root.namespaceURI, 'Shape');
 				shape.setAttribute('ID', command.shapeId);
 				applyShapeCreationStyles(shape, documentRoot);
+				if (command.type === 'create-text-box')
+					for (const name of ['LinePattern', 'FillPattern']) {
+						const node = root.ownerDocument!.createElementNS(root.namespaceURI, 'Cell');
+						node.setAttribute('N', name);
+						node.setAttribute('V', '0');
+						shape.appendChild(node);
+					}
 				for (const name of ['PinX', 'PinY', 'Width', 'Height', 'LocPinX', 'LocPinY', 'Angle']) {
 					const node = root.ownerDocument!.createElementNS(root.namespaceURI, 'Cell');
 					node.setAttribute('N', name);

@@ -44,10 +44,8 @@ describe.skipIf(!directory)('native new drawing acceptance', () => {
 			expect(native.height).toBeCloseTo(core.height, 10);
 			expect(native.shapes).toHaveLength(1);
 			expect(native.shapes[0]!.transform).toEqual(core.shapes[0]!.transform);
-			// COM Text assignment appends a paragraph terminator; reopening existing core text does not.
-			expect(native.shapes[0]!.text.plainText).toBe(
-				core.shapes[0]!.text.plainText + (item.initialShapes === 0 ? '\n' : ''),
-			);
+			// Native XML paragraph terminators are excluded from the logical text model.
+			expect(native.shapes[0]!.text.plainText).toBe(core.shapes[0]!.text.plainText);
 			expect(item.shape.font).toBe('Calibri');
 			expect(item.shape['Char.Size']).toBeCloseTo(12 / 72, 10);
 			expect(item.initialShapes).toBe(item.name.endsWith('-blank') ? 0 : 1);

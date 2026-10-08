@@ -1,7 +1,8 @@
 import { DEFAULTS, fail, type VisioPackageLimits } from './package-common';
 import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
-import { replacePlainText, serializeEditedXml } from './edit-text';
+import { serializeEditedXml } from './edit-text';
+import { replaceScopedPlainText } from './edit-text-scope';
 import {
 	snapshotVisioEdits,
 	isVisioPageEdit,
@@ -9,6 +10,7 @@ import {
 	type VisioGeometryEdit,
 } from './edit-commands';
 import { applyGeometryEdit } from './edit-geometry';
+import { assertDuplicateScope } from './edit-duplicate-scope';
 import { assertGeometryPackageScope } from './edit-scope';
 import { emptyMasterMoveProof } from './edit-master-move';
 import { editVsdxPages } from './edit-pages';
@@ -109,6 +111,7 @@ export async function editVsdx(
 		geometryCommands.length ||
 		commands.some(
 			(command) =>
+				command.type === 'replace-plain-text' ||
 				isVisioFormatEdit(command) ||
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
@@ -119,6 +122,14 @@ export async function editVsdx(
 		for (const [pageId, path] of pages) {
 			const sourceRoot = await visioXml(pkg, path, 'PageContents');
 			roots.set(pageId, (sourceRoot.ownerDocument!.cloneNode(true) as Document).documentElement);
+		}
+		for (const [pageId, root] of roots) {
+			const ids = new Set(
+				geometryCommands
+					.filter((command) => command.type === 'create-text-box' && command.pageId === pageId)
+					.map((command) => command.shapeId),
+			);
+			if (ids.size) await assertDuplicateScope(pkg, new Set(pages.values()), root, ids, check);
 		}
 		if (geometryCommands.length)
 			masterMovePins = await assertGeometryPackageScope(
@@ -156,7 +167,9 @@ export async function editVsdx(
 			roots.set(command.pageId, root);
 		}
 		if (command.type === 'replace-plain-text') {
-			if (replacePlainText(root, command.shapeId, command.text, check)) {
+			if (
+				await replaceScopedPlainText(pkg, new Set(pages.values()), roots, document!, command, check)
+			) {
 				dirty.set(path, root);
 				textChanged = true;
 			}
@@ -254,7 +267,7 @@ export async function editVsdx(
 						{
 							code: 'edit-caches-not-recalculated',
 							message:
-								'Text was replaced without recalculating formulas or dependent caches. Native Visio reopen and rendering compatibility are unverified.',
+								'Plain text changed; affected or unknown formula dependencies were refused. Untouched caches were preserved. Native fidelity is limited to tested cases.',
 						},
 					]
 				: []),

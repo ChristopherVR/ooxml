@@ -57,6 +57,17 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		const target = { pageId: command.pageId, shapeId: command.shapeId };
 		if (isVisioFormatEdit(command)) return snapshotFormatting(command);
 		switch (command.type) {
+			case 'create-text-box':
+				numbers(command.x, command.y, command.width, command.height);
+				return {
+					type: command.type,
+					...target,
+					x: command.x,
+					y: command.y,
+					width: command.width,
+					height: command.height,
+					text: text(command.text),
+				};
 			case 'reorder-shape':
 				if (!['front', 'back', 'forward', 'backward'].includes(command.order))
 					throw new Error('Invalid shape order.');

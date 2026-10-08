@@ -65,11 +65,19 @@ export function applyGeometryEdit(
 			y: (edit.beginY + edit.endY) / 2,
 		};
 		for (const name of geometryChangedCells(edit)) add(name);
-	} else if (edit.type === 'create-rectangle' || edit.type === 'create-ellipse') {
+	} else if (
+		edit.type === 'create-rectangle' ||
+		edit.type === 'create-ellipse' ||
+		edit.type === 'create-text-box'
+	) {
 		if (edit.type === 'create-ellipse') createEllipse(root, document, edit);
 		else createRectangle(root, document, edit);
 		expected = { width: edit.width, height: edit.height, x: edit.x, y: edit.y };
 		for (const name of ['Width', 'Height', 'PinX', 'PinY']) add(name);
+		if (edit.type === 'create-text-box') {
+			add('LinePattern');
+			add('FillPattern');
+		}
 	} else {
 		const shape = admitted(
 			root,

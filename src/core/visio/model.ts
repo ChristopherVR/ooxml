@@ -114,6 +114,7 @@ export interface VisioParagraph {
 	bullet?: { text: string; fontFamily: string; fontSize: number; offset: number };
 }
 export interface VisioText {
+	/** Logical displayed text. VSDX excludes its stored terminal paragraph marker. */
 	plainText: string;
 	/** Default character styles, including for an empty text block. */
 	bold?: boolean;

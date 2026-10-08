@@ -336,10 +336,18 @@ Calls own input bytes and command values before their first asynchronous step.
 Each call has a fresh bounded operation lifetime; do not keep a `VisioPackage`
 reader alive as an interactive editing session. No public mutable DOM is exposed.
 
-Plain-text edits still do not recalculate text-dependent formulas and report
-`edit-caches-not-recalculated`. Rich-text editing and master overrides remain unsupported.
-Automated evidence covers reopening in this library and preservation/security
-invariants. Microsoft Visio reopen and native rendering fidelity remain unverified.
+Plain-text replacement respects effective `LockTextEdit` protection and refuses
+affected or unknown text dependencies before mutation. It does not recalculate
+text-dependent formulas. Rich-text content editing and master overrides remain
+unsupported. VSDX logical text excludes exactly one stored terminal paragraph
+marker; intentional trailing LF characters and blank paragraphs are preserved.
+Legacy VSD text semantics are unchanged.
+
+Owned native Visio 16 evidence verifies ten logical-text input cases and forty
+core outputs across rectangle, ellipse, text-box creation and plain-text
+replacement. Native `Shape.Text`, `Characters.Text` and reparsing native-resaved
+outputs retain these logical strings. This does not establish exact text layout,
+automatic text sizing or general native rendering fidelity.
 
 ## Experimental geometry transaction
 
@@ -347,6 +355,7 @@ The same atomic `editVsdx` transaction accepts the typed `VisioEdit` union:
 
 ```ts
 { type: 'create-rectangle', pageId, shapeId, x, y, width, height, text? }
+{ type: 'create-text-box', pageId, shapeId, x, y, width, height, text }
 { type: 'move-shape', pageId, shapeId, x, y }
 { type: 'resize-shape', pageId, shapeId, width, height, anchor? }
 { type: 'delete-shape', pageId, shapeId }
@@ -358,6 +367,26 @@ unsigned integers. Coordinates and dimensions are bounded to one million inches;
 dimensions must be positive. Existing admitted top-level local 2D shapes can be
 edited, including shapes imported from another producer. There is no provenance
 requirement that the viewer created the shape.
+
+`create-text-box` requires plain text and positive fixed box dimensions. It uses
+the document's saved default text style, with explicit `FillPattern=0` and
+`LinePattern=0`. Assigning line color alone does not enable an outline. The same
+source scope, protection and dependency checks guard creation. This command does
+not model native Text Tool automatic sizing, rich-text content editing or all
+template/theme defaults. The DOM-free drawing planner under `visio/ui` owns
+coordinate conversion, snapped creation bounds, minimum dimensions and fresh ID
+planning; UI adapters hold temporary previews and user intent.
+
+Two owned native captures verify twelve default-style and twelve custom
+`DefaultTextStyle=1` cases at drawing scales 1, 2 and 0.5, including fixed text,
+multiline text, intentional trailing blank paragraphs and empty text. The custom
+Text Only style uses Arial 18 pt, left/top alignment and zero margins. Actual
+`editVsdx` outputs match native scene text/styles/geometry, preserve every
+untouched package payload byte-for-byte, and reopen in Visio with the measured
+text, style IDs, pins, dimensions, transforms and paint patterns. These 24 cases
+prove saved fixed-box API behavior, not interactive Text Tool defaults or
+automatic sizing. See `edit-text-box-native.test.ts` and
+`scripts/record-visio-text-box.ps1` (`-CustomTextStyle`, then `-CoreOutputPath`).
 
 Optional `anchor: { x, y }` on `resize-shape` fixes a normalized local bounds
 point; each coordinate must be `0`, `0.5` or `1`, with local Y increasing upward.

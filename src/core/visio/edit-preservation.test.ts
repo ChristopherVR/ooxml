@@ -75,7 +75,7 @@ describe('VSDX edit preservation', () => {
 			});
 			const result = await editVsdx(input, [edit]);
 			const pkg = await VisioPackage.open(result.bytes);
-			expect((await pkg.readXml('visio/pages/page1.xml')).textContent).toBe('Changed');
+			expect((await pkg.readXml('visio/pages/page1.xml')).textContent).toBe('Changed\n');
 			expect(new TextDecoder().decode(await pkg.readBytes('visio/pages/page1.xml'))).toContain(
 				'encoding="UTF-8"',
 			);

@@ -40,6 +40,7 @@ export function visioPageEditToDrawing(page: VisioPage, edit: VisioEdit): VisioE
 			return edit;
 		case 'create-rectangle':
 		case 'create-ellipse':
+		case 'create-text-box':
 			return {
 				...edit,
 				x: coordinate(edit.x),

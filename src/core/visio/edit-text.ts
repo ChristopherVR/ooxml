@@ -2,13 +2,17 @@ import { buildXml } from '../xml/index';
 import { fail, type VisioPackageLimits } from './package-common';
 import { attribute, children } from './sheet';
 import { inspectXml, inspectNamespaces } from './xml-validation';
+import { assertShapeLocks } from './edit-style-admission';
+import { encodeVisioPlainText, decodeVisioPlainText } from './plain-text';
 
-export function replacePlainText(
+export async function replacePlainText(
 	root: Element,
+	document: Element,
 	shapeId: string,
 	text: string,
 	check: () => void,
-): boolean {
+	assertDependencies: (shape: Element, text: Element) => Promise<void>,
+): Promise<boolean> {
 	const shapeChildren = (parent: Element): Element[] => {
 		const containers = children(parent, 'Shapes');
 		if (containers.length > 1)
@@ -37,6 +41,7 @@ export function replacePlainText(
 	if (!target) fail('EDIT_TARGET_NOT_FOUND', 'Local shape does not exist.');
 	if (target.inherited || target.deleted)
 		fail('UNSUPPORTED_TEXT_EDIT', 'Master-linked or deleted shapes cannot be edited.');
+	assertShapeLocks(target.node, document, ['LockTextEdit']);
 	const texts = children(target.node, 'Text');
 	if (texts.length !== 1)
 		fail('UNSUPPORTED_TEXT_EDIT', 'Editing requires one existing local Text element.');
@@ -45,9 +50,11 @@ export function replacePlainText(
 		fail('UNSUPPORTED_TEXT_EDIT', 'Rich text, fields and unknown text markup cannot be edited.');
 	if (children(target.node, 'Section').some((section) => attribute(section, 'N') === 'Field'))
 		fail('UNSUPPORTED_TEXT_EDIT', 'Shapes with text fields cannot be edited.');
-	if (node.textContent === text) return false;
+	if (decodeVisioPlainText(node.textContent ?? '') === text) return false;
+	await assertDependencies(target.node, node);
+	check();
 	while (node.firstChild) node.removeChild(node.firstChild);
-	node.appendChild(node.ownerDocument!.createTextNode(text));
+	node.appendChild(node.ownerDocument!.createTextNode(encodeVisioPlainText(text)));
 	return true;
 }
 

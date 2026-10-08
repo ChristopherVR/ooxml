@@ -34,3 +34,4 @@ export * from './shape-move';
 export * from './size-position';
 export * from './marquee';
 export * from './shape-resize';
+export * from './draw-plan';

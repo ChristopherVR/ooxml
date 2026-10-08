@@ -31,7 +31,7 @@ it('independent shared buffer is copied before await', async () => {
 	const pending = editVsdx(buf, [command]);
 	buf.fill(0);
 	const pkg = await VisioPackage.open((await pending).bytes);
-	expect((await pkg.readXml('visio/pages/page1.xml')).textContent).toBe('new');
+	expect((await pkg.readXml('visio/pages/page1.xml')).textContent).toBe('new\n');
 });
 it('independent resizable buffer is copied before await', async () => {
 	const a = await base();
@@ -49,7 +49,7 @@ it('independent resizable buffer is copied before await', async () => {
 	const pending = editVsdx(buf, [command]);
 	buf.resize(0);
 	const pkg = await VisioPackage.open((await pending).bytes);
-	expect((await pkg.readXml('visio/pages/page1.xml')).textContent).toBe('new');
+	expect((await pkg.readXml('visio/pages/page1.xml')).textContent).toBe('new\n');
 });
 it('independent invalid text is rejected atomically', async () => {
 	const a = await base(),

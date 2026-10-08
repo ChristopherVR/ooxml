@@ -39,6 +39,7 @@ export type VisioGeometryEdit =
 	| (Target & { type: 'create-line'; beginX: number; beginY: number; endX: number; endY: number })
 	| (BoxCreation & { type: 'create-rectangle' })
 	| (BoxCreation & { type: 'create-ellipse' })
+	| (BoxCreation & { type: 'create-text-box'; text: string })
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number; anchor?: VisioResizeAnchor })
 	| (Target & { type: 'rotate-shape'; angle: number })
@@ -101,6 +102,8 @@ export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
 			'LocPinY',
 		];
 	if (edit.type === 'delete-shape') return [];
+	if (edit.type === 'create-text-box')
+		return ['PinX', 'PinY', 'Width', 'Height', 'LinePattern', 'FillPattern'];
 	if (edit.type === 'move-line-endpoint') {
 		const prefix = edit.endpoint === 'begin' ? 'Begin' : 'End';
 		return [`${prefix}X`, `${prefix}Y`];
@@ -194,6 +197,16 @@ export function snapshotVisioEdits(
 		if (!/^[1-9]\d{0,9}$/.test(edit.shapeId) || Number(edit.shapeId) > 4294967295)
 			fail('INVALID_EDIT', 'Geometry shape IDs must be canonical positive unsigned integers.');
 		switch (edit.type) {
+			case 'create-text-box':
+				return {
+					...target,
+					type: edit.type,
+					x: numeric(edit.x),
+					y: numeric(edit.y),
+					width: numeric(edit.width, true),
+					height: numeric(edit.height, true),
+					text: text(edit.text),
+				};
 			case 'create-line': {
 				const beginX = numeric(edit.beginX),
 					beginY = numeric(edit.beginY);

@@ -13,6 +13,15 @@ export async function assertDuplicateScope(
 	newIds: ReadonlySet<string>,
 	check: () => void,
 ): Promise<void> {
+	const existing = new Set<string>();
+	for (const node of Array.from(targetPage.getElementsByTagName('*'))) {
+		check();
+		if (node.localName !== 'Shape' || node.namespaceURI !== targetPage.namespaceURI) continue;
+		const id = attribute(node, 'ID');
+		if (!id || existing.has(id)) fail('INVALID_SHAPE_ID', 'Source shape IDs must be unique.');
+		if (newIds.has(id)) fail('INVALID_SHAPE_ID', 'New shape ID already exists.');
+		existing.add(id);
+	}
 	await assertShapeOrderPackageScope(pkg, check);
 	const inspect = (root: Element) => {
 		for (const node of [root, ...Array.from(root.getElementsByTagName('*'))]) {
