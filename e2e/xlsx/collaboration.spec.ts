@@ -11,8 +11,6 @@ import {
 	typeInActiveCell,
 } from './helpers';
 
-// NOTE: written alongside the editor wiring but not executed yet (no Playwright run in that change).
-
 /**
  * Two windows of one browser share a workbook through File > Share. Without a server the editor
  * joins the room over a BroadcastChannel, which connects pages of one browser context, so each
@@ -31,6 +29,12 @@ async function startSharing(page: Page, name: string, room: string) {
 	await part(page, 'backstage').locator('[data-backstage="back"]').click();
 	await expect(share).toBeHidden();
 }
+
+/**
+ * What the grid shows. The grid recycles hidden cell nodes (and hidden quadrants) that keep their
+ * last text, so `toContainText` (textContent) would still see a cell that was cleared.
+ */
+const shown = (page: Page) => grid(page).innerText();
 
 const sharing = (page: Page) =>
 	editor(page).evaluate(
@@ -57,10 +61,10 @@ for (const [index, host] of FRAMEWORKS.entries()) {
 
 		await goToCell(ada, 'H2');
 		await typeInActiveCell(ada, 'Ada was here');
-		await expect(grid(bob)).toContainText('Ada was here');
+		await expect.poll(() => shown(bob)).toContain('Ada was here');
 		await goToCell(bob, 'H3');
 		await typeInActiveCell(bob, 'Bob was here');
-		await expect(grid(ada)).toContainText('Bob was here');
+		await expect.poll(() => shown(ada)).toContain('Bob was here');
 
 		// Ada's selection is outlined in Bob's grid with her name.
 		await goToCell(ada, 'C4');
@@ -70,10 +74,10 @@ for (const [index, host] of FRAMEWORKS.entries()) {
 		// Undo in one window reverts only that window's edit, everywhere.
 		await grid(ada).focus();
 		await ada.keyboard.press('Control+Z');
-		await expect(grid(bob)).not.toContainText('Ada was here');
-		await expect(grid(ada)).not.toContainText('Ada was here');
-		await expect(grid(ada)).toContainText('Bob was here');
-		await expect(grid(bob)).toContainText('Bob was here');
+		await expect.poll(() => shown(bob)).not.toContain('Ada was here');
+		await expect.poll(() => shown(ada)).not.toContain('Ada was here');
+		await expect.poll(() => shown(ada)).toContain('Bob was here');
+		await expect.poll(() => shown(bob)).toContain('Bob was here');
 
 		// Stopping leaves the room: later edits stay local.
 		await editor(bob).evaluate((node) =>
@@ -82,8 +86,8 @@ for (const [index, host] of FRAMEWORKS.entries()) {
 		await expect.poll(() => sharing(ada)).toBe(1);
 		await goToCell(ada, 'H4');
 		await typeInActiveCell(ada, 'after Bob left');
-		await expect(grid(ada)).toContainText('after Bob left');
-		await expect(grid(bob)).not.toContainText('after Bob left');
+		await expect.poll(() => shown(ada)).toContain('after Bob left');
+		await expect.poll(() => shown(bob)).not.toContain('after Bob left');
 		expect(errors.flat()).toEqual([]);
 	});
 }
