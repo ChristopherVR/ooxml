@@ -1,9 +1,7 @@
 import { mount } from 'svelte';
 import Teams from 'openteams-svelte-viewer';
-import { config, showStaticNotice, userId, userName, workspaceId } from '../../shared';
+import { showStaticNotice } from '../../shared';
+import { props } from './props.svelte';
 
 showStaticNotice();
-mount(Teams, {
-	target: document.getElementById('app')!,
-	props: { workspaceId, userName, userId, config },
-});
+mount(Teams, { target: document.getElementById('app')!, props });

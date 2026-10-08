@@ -4,7 +4,7 @@ One demo per binding is published with this site. All of them run the same works
 
 | Demo                                                                                         | What it shows                                                                             | Source          |
 | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------- |
-| [Vanilla](/demo/){target="_self"} (also at [/demo-vanilla/](/demo-vanilla/){target="_self"}) | The whole app: one `<teams-app>` element.                                                 | `demos/vanilla` |
+| [Vanilla](/demo/){target="_self"} (also at [/demo-vanilla/](/demo-vanilla/){target="_self"}) | The whole app: one `<teams-app>` mounted by `mountTeams`.                                 | `demos/vanilla` |
 | [React](/demo-react/){target="_self"}                                                        | `<Teams />` on the left and a hand-written panel over the `useTeams()` hook on the right. | `demos/react`   |
 | [Vue](/demo-vue/){target="_self"}                                                            | The `<Teams>` component of `openteams-vue-viewer`.                                        | `demos/vue`     |
 | [Angular](/demo-angular/){target="_self"}                                                    | `<teams-workspace>` of `openteams-angular-viewer`.                                        | `demos/angular` |

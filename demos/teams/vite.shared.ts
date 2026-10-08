@@ -47,6 +47,7 @@ export function sharedConfig(port: number): UserConfig {
 					? []
 					: [
 							{ find: /^teams-viewer$/, replacement: local('web-component/src/index.ts') },
+							{ find: /^openteams-vanilla-viewer$/, replacement: local('vanilla/src/index.ts') },
 							{ find: /^openteams-react-viewer$/, replacement: local('react/src/index.ts') },
 							{ find: /^openteams-vue-viewer$/, replacement: local('vue/src/index.ts') },
 							{ find: /^openteams-solid-viewer$/, replacement: local('solid/src/index.ts') },

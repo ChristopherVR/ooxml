@@ -1,20 +1,22 @@
 import '../../theme-sync';
-import { defineTeamsApp, type TeamsApp } from 'teams-viewer';
-
-defineTeamsApp();
-const app = document.querySelector<TeamsApp>('teams-app')!;
+import { mountTeams, type TeamsElementProps } from 'openteams-vanilla-viewer';
+import { currentHostClass, onHostClass, recordOpenFile } from '../../test-hooks';
 
 // ?name=Ada&id=ada opens the demo as that person, so two tabs can talk to each other.
 const params = new URLSearchParams(location.search);
 const name = params.get('name');
+const props: TeamsElementProps = {
+	className: currentHostClass(),
+	onOpenFile: (detail, event) => {
+		recordOpenFile(detail, event);
+		console.info('open file', detail.attachment.kind, detail.url);
+	},
+};
 if (name) {
-	app.setAttribute('user-name', name);
-	app.setAttribute(
-		'user-id',
-		params.get('id') ?? `demo-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-	);
+	props.userName = name;
+	props.userId = params.get('id') ?? `demo-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 }
-if (params.get('room')) app.setAttribute('workspace-id', params.get('room')!);
+if (params.get('room')) props.workspaceId = params.get('room')!;
 
 // The GitHub Pages build (VITE_TEAMS_STATIC=1) has no server behind it, so it starts in local mode:
 // tabs of this browser share chat, presence and calls over BroadcastChannel and nothing leaves the
@@ -30,21 +32,20 @@ try {
 } catch {
 	// storage blocked: fall through to the default
 }
-if (params.get('local') || (staticSite && !hasSaved)) app.config = { mode: 'local', iceServers };
+if (params.get('local') || (staticSite && !hasSaved)) props.config = { mode: 'local', iceServers };
 else if (!hasSaved)
-	app.config = {
+	props.config = {
 		mode: 'server',
 		syncUrl: 'ws://127.0.0.1:8787/sync',
 		signalingUrl: 'ws://127.0.0.1:8787/signal',
 		iceServers,
 	};
 
-if (staticSite && params.get('openteams-file') !== '1') showStaticNotice();
+// The whole app is one <teams-app>, mounted and kept in sync by the vanilla binding.
+const teams = mountTeams(document.body, props);
+onHostClass((className) => teams.update({ ...props, className }));
 
-app.addEventListener('teams-open-file', (event) => {
-	const { attachment, url } = (event as CustomEvent).detail;
-	console.info('open file', attachment.kind, url);
-});
+if (staticSite && params.get('openteams-file') !== '1') showStaticNotice();
 
 /** Say that this page runs without a server, and offer a second person in a new tab. */
 function showStaticNotice(): void {

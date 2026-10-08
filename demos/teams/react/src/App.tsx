@@ -3,7 +3,8 @@
 //   right  useTeams()     your own markup over the raw client: state in, actions out
 import { Teams, useTeams, type TeamsClientOptions } from 'openteams-react-viewer';
 import type { TeamsServerConfig } from 'ooxml-core/teams';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { currentHostClass, onHostClass, recordOpenFile } from '../../test-hooks';
 
 const params = new URLSearchParams(location.search);
 const name = params.get('name') ?? 'Ada';
@@ -25,9 +26,21 @@ const config: TeamsServerConfig =
 			};
 
 export function App() {
+	// The host class goes through the binding; the browser tests swap it (../../test-hooks).
+	const [hostClass, setHostClass] = useState(currentHostClass);
+	useEffect(() => onHostClass(setHostClass), []);
+	const teams = (
+		<Teams
+			className={hostClass}
+			workspaceId={workspaceId}
+			userName={name}
+			userId={userId}
+			config={config}
+			onOpenFile={recordOpenFile}
+		/>
+	);
 	// A file preview does not mount the raw-hook client or the demo notice.
-	if (params.get('openteams-file') === '1')
-		return <Teams workspaceId={workspaceId} userName={name} userId={userId} config={config} />;
+	if (params.get('openteams-file') === '1') return teams;
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 			{staticSite ? <StaticNotice /> : null}
@@ -39,7 +52,7 @@ export function App() {
 					minHeight: 0,
 				}}
 			>
-				<Teams workspaceId={workspaceId} userName={name} userId={userId} config={config} />
+				{teams}
 				{panelDemo ? <CustomPanel /> : null}
 			</div>
 		</div>

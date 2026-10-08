@@ -259,7 +259,7 @@
       "name": "teams-demo-vanilla",
       "version": "0.0.0",
       "dependencies": {
-        "teams-viewer": "workspace:*",
+        "openteams-vanilla-viewer": "workspace:*",
       },
     },
     "demos/teams/vue": {

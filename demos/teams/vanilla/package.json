@@ -8,6 +8,6 @@
 		"build": "vite build"
 	},
 	"dependencies": {
-		"teams-viewer": "workspace:*"
+		"openteams-vanilla-viewer": "workspace:*"
 	}
 }
