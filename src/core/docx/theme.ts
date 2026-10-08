@@ -1,80 +1,34 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+import { parseTheme as parseDrawingTheme } from '../drawingml/theme';
+import { THEME_COLOR_SLOTS, type ThemeFontCollection } from '../drawingml/theme-model';
+import { themeSlotHex } from '../drawingml/theme-color';
 import { parseXml, WORD_NS, getW, type XmlElement } from './xml';
 import type { ThemeCatalog, ThemeColorSlot, ThemeFontSet } from './theme-model';
-import {
-	isStWmlColorSchemeIndex,
-	type StWmlColorSchemeIndex,
-} from './generated/wml-simple-types';
+import { isStWmlColorSchemeIndex, type StWmlColorSchemeIndex } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 
-const DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
-const SCHEME_ORDER: ThemeColorSlot[] = [
-	'dk1',
-	'lt1',
-	'dk2',
-	'lt2',
-	'accent1',
-	'accent2',
-	'accent3',
-	'accent4',
-	'accent5',
-	'accent6',
-	'hlink',
-	'folHlink',
-];
-
-function drawingChild(parent: Element | undefined, local: string): Element | undefined {
-	if (!parent) return undefined;
-	for (const node of Array.from(parent.childNodes)) {
-		const element = node as Element;
-		if (
-			element.nodeType === 1 &&
-			element.localName === local &&
-			element.namespaceURI === DRAWING_NS
-		)
-			return element;
-	}
-	return undefined;
-}
-
-function colorOf(slot: Element | undefined): string | undefined {
-	const srgb = drawingChild(slot, 'srgbClr');
-	if (srgb) return srgb.getAttribute('val')?.toUpperCase() || undefined;
-	const sys = drawingChild(slot, 'sysClr');
-	if (sys) return sys.getAttribute('lastClr')?.toUpperCase() || undefined;
-	return undefined;
-}
-
-function fontSetOf(element: Element | undefined): ThemeFontSet {
-	if (!element) return {};
-	const latin = drawingChild(element, 'latin')?.getAttribute('typeface') || undefined;
-	const ea = drawingChild(element, 'ea')?.getAttribute('typeface') || undefined;
-	const cs = drawingChild(element, 'cs')?.getAttribute('typeface') || undefined;
+function fontSetOf(collection: ThemeFontCollection): ThemeFontSet {
+	const { latin, eastAsia, complexScript } = collection;
 	return {
 		...(latin ? { latin } : {}),
-		...(ea ? { eastAsia: ea } : {}),
-		...(cs ? { complexScript: cs } : {}),
+		...(eastAsia ? { eastAsia } : {}),
+		...(complexScript ? { complexScript } : {}),
 	};
 }
 
-/** Parses `word/theme/theme1.xml`'s color scheme and major/minor font scheme. */
+/**
+ * Parses `word/theme/theme1.xml`'s color scheme and major/minor font scheme through the neutral
+ * DrawingML theme parser. Scheme colours keep the `RRGGBB` of an `srgbClr` or a `sysClr`'s
+ * `lastClr`; other colour kinds leave the slot empty.
+ */
 export function parseTheme(xml: string): ThemeCatalog {
-	const document = parseXml(xml);
-	const root = document.documentElement;
-	const clrScheme = Array.from(root.getElementsByTagNameNS(DRAWING_NS, 'clrScheme'))[0] as
-		| Element
-		| undefined;
+	const theme = parseDrawingTheme(parseXml(xml));
 	const colors: Partial<Record<ThemeColorSlot, string>> = {};
-	for (const slotName of SCHEME_ORDER) {
-		const slot = drawingChild(clrScheme, slotName);
-		const value = colorOf(slot);
-		if (value) colors[slotName] = value;
+	for (const slot of THEME_COLOR_SLOTS) {
+		const value = themeSlotHex(theme.colorScheme.colors[slot]);
+		if (value) colors[slot] = value;
 	}
-	const fontScheme = Array.from(root.getElementsByTagNameNS(DRAWING_NS, 'fontScheme'))[0] as
-		| Element
-		| undefined;
-	const major = drawingChild(fontScheme, 'majorFont');
-	const minor = drawingChild(fontScheme, 'minorFont');
+	const { major, minor } = theme.fontScheme;
 	return { colors, colorMapping: {}, fonts: { major: fontSetOf(major), minor: fontSetOf(minor) } };
 }
 

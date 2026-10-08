@@ -1,19 +1,8 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+import type { ThemeColorSlot } from '../drawingml/theme-model';
 import type { StThemeColor } from './generated/wml-simple-types';
-/** Word theme color scheme slots (`a:clrScheme` children), in schema order. */
-export type ThemeColorSlot =
-	| 'dk1'
-	| 'lt1'
-	| 'dk2'
-	| 'lt2'
-	| 'accent1'
-	| 'accent2'
-	| 'accent3'
-	| 'accent4'
-	| 'accent5'
-	| 'accent6'
-	| 'hlink'
-	| 'folHlink';
+/** Theme color scheme slots (`a:clrScheme` children): the neutral DrawingML slots. */
+export type { ThemeColorSlot };
 /** WordprocessingML `ST_ThemeColor` tokens (generated from the schema) referenced from `w:themeColor`/`w:themeFill`. */
 export type ThemeColorToken = StThemeColor;
 export interface ThemeFontSet {

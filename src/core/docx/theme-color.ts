@@ -1,4 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+import { linearToSrgb255, srgb255ToLinear, toHex } from '../color/index';
+import { DEFAULT_THEME_COLOR_MAP } from '../drawingml/theme-model';
 import type {
 	ThemeCatalog,
 	ThemeColorReference,
@@ -26,13 +28,6 @@ const TOKEN_TO_SLOT: Partial<Record<ThemeColorToken, ThemeColorSlot>> = {
 	hyperlink: 'hlink',
 	followedHyperlink: 'folHlink',
 };
-/** Word's conventional bg/tx defaults when settings.xml has no explicit clrSchemeMapping. */
-const DEFAULT_MAPPING: Record<'bg1' | 'tx1' | 'bg2' | 'tx2', ThemeColorSlot> = {
-	bg1: 'lt1',
-	tx1: 'dk1',
-	bg2: 'lt2',
-	tx2: 'dk2',
-};
 
 /** Resolves a `w:themeColor` token to the theme's `#RRGGBB` scheme color, before tint/shade. */
 export function resolveThemeColorToken(
@@ -47,7 +42,8 @@ export function resolveThemeColorToken(
 	};
 	const logicalKey = logical[token];
 	if (logicalKey) {
-		const slot = theme.colorMapping[logicalKey] ?? DEFAULT_MAPPING[logicalKey];
+		// Word's conventional bg/tx defaults apply when settings.xml has no clrSchemeMapping.
+		const slot = theme.colorMapping[logicalKey] ?? DEFAULT_THEME_COLOR_MAP[logicalKey];
 		return theme.colors[slot];
 	}
 	const slot = TOKEN_TO_SLOT[token];
@@ -63,40 +59,24 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 		b: Number.parseInt(normalized.slice(4, 6), 16),
 	};
 }
-function toHex(value: number): string {
-	return Math.min(255, Math.max(0, Math.round(value)))
-		.toString(16)
-		.padStart(2, '0')
-		.toUpperCase();
-}
 /*
- * Linear-light shade/tint mixing, adapted from
- * pptx-viewer-new packages/core/src/core/color/color-linear.ts and
- * color-transforms.ts (ECMA-376 Part 1, 20.1.2.3.30/20.1.2.3.32): PowerPoint
- * and Word mix a scheme color toward black/white in linear light rather than
- * gamma-encoded sRGB, so the same IEC 61966-2-1 transfer function is ported here.
+ * Linear-light shade/tint mixing (ECMA-376 Part 1, 20.1.2.3.30/20.1.2.3.32): PowerPoint and Word
+ * mix a scheme color toward black/white in linear light rather than gamma-encoded sRGB, with the
+ * IEC 61966-2-1 transfer function of the shared `color` area.
  */
-function srgbToLinear(channel: number): number {
-	const c = Math.min(1, Math.max(0, channel / 255));
-	return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-}
-function linearToSrgb(linear: number): number {
-	const c = Math.min(1, Math.max(0, linear));
-	return 255 * (c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055);
-}
 
 /** Mixes toward black; `fraction` 0 = black, 1 = unchanged, per Word's `themeShade`. */
 export function applyThemeShade(hex: string, fraction: number): string {
 	const rgb = hexToRgb(hex);
 	if (!rgb) return hex;
-	const mix = (channel: number) => linearToSrgb(srgbToLinear(channel) * fraction);
+	const mix = (channel: number) => linearToSrgb255(srgb255ToLinear(channel) * fraction);
 	return `#${toHex(mix(rgb.r))}${toHex(mix(rgb.g))}${toHex(mix(rgb.b))}`;
 }
 /** Mixes toward white; `fraction` 0 = white, 1 = unchanged, per Word's `themeTint`. */
 export function applyThemeTint(hex: string, fraction: number): string {
 	const rgb = hexToRgb(hex);
 	if (!rgb) return hex;
-	const mix = (channel: number) => linearToSrgb(1 - (1 - srgbToLinear(channel)) * fraction);
+	const mix = (channel: number) => linearToSrgb255(1 - (1 - srgb255ToLinear(channel)) * fraction);
 	return `#${toHex(mix(rgb.r))}${toHex(mix(rgb.g))}${toHex(mix(rgb.b))}`;
 }
 
