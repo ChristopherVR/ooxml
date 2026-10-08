@@ -1,5 +1,5 @@
 import { chromium, defineConfig } from '@playwright/test';
-import { resolveChromiumExecutable } from './scripts/playwright-chromium';
+import { resolveChromiumExecutable } from '../../scripts/playwright-chromium.mjs';
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 4180);
 const origin = `http://127.0.0.1:${port}`;
