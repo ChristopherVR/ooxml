@@ -1,26 +1,26 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		applyTeamsProps,
+		bindTeams,
 		defineTeamsApp,
-		listenTeamsEvents,
+		pickTeamsProps,
 		type TeamsApp,
-		type TeamsProps,
+		type TeamsBinding,
+		type TeamsElementProps,
 	} from 'teams-viewer';
 
-	let props: TeamsProps = $props();
+	// `class` is the host class (`className` works too).
+	let props: TeamsElementProps & { class?: string } = $props();
 	let el: TeamsApp | undefined = $state();
-	let applied: TeamsProps = {};
+	let binding: TeamsBinding | undefined;
 
 	onMount(() => {
 		defineTeamsApp();
-		return listenTeamsEvents(el!, () => props);
+		binding = bindTeams(el!, () => props);
+		return () => binding?.destroy();
 	});
 	$effect(() => {
-		if (!el) return;
-		const next: TeamsProps = { ...props };
-		applyTeamsProps(el, next, applied);
-		applied = next;
+		binding?.update(pickTeamsProps({ ...props, className: props.class ?? props.className }));
 	});
 </script>
 

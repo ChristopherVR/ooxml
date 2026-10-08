@@ -1,13 +1,13 @@
 import { createEffect, createSignal, onCleanup, onMount, type Accessor } from 'solid-js';
 import {
-	applyTeamsProps,
+	bindTeams,
 	createTeams,
 	defineTeamsApp,
-	listenTeamsEvents,
+	pickTeamsProps,
 	type TeamsApp,
 	type TeamsClient,
 	type TeamsClientOptions,
-	type TeamsProps,
+	type TeamsElementProps,
 	type TeamsState,
 } from 'teams-viewer';
 
@@ -18,27 +18,16 @@ export type { TeamsClient, TeamsClientOptions, TeamsProps, TeamsState } from 'te
  * JSX transform needed) keeps the package a lifecycle adapter: props are re-applied reactively
  * and handlers are read at event time.
  */
-export function Teams(props: TeamsProps): HTMLElement {
+export function Teams(props: TeamsElementProps & { class?: string | undefined }): HTMLElement {
 	defineTeamsApp();
 	const el = document.createElement('teams-app') as TeamsApp;
 	el.style.display = 'block';
 	el.style.height = '100%';
-	let applied: TeamsProps = {};
-	const snapshot = (): TeamsProps => ({
-		...(props.workspaceId !== undefined ? { workspaceId: props.workspaceId } : {}),
-		...(props.userName !== undefined ? { userName: props.userName } : {}),
-		...(props.userId !== undefined ? { userId: props.userId } : {}),
-		...(props.config !== undefined ? { config: props.config } : {}),
-		...(props.uploadFile ? { uploadFile: props.uploadFile } : {}),
-		...(props.openers ? { openers: props.openers } : {}),
-		...(props.embeds ? { embeds: props.embeds } : {}),
-	});
+	const binding = bindTeams(el, () => props);
 	createEffect(() => {
-		const next = snapshot();
-		applyTeamsProps(el, next, applied);
-		applied = next;
+		binding.update(pickTeamsProps({ ...props, className: props.class ?? props.className }));
 	});
-	onMount(() => onCleanup(listenTeamsEvents(el, () => props)));
+	onCleanup(binding.destroy);
 	return el;
 }
 

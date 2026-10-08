@@ -35,7 +35,7 @@ Never add or fork logic here that belongs in the core. If the core lacks somethi
 - **Colours, spacing and radii come from the ooxml-ui tokens** (`var(--office-...)`). No raw colours
   or pixel lengths in component CSS; relative units (`em`) are fine.
 - **Bindings are lifecycle adapters.** The component binding creates `<teams-app>`, forwards props
-  with `applyTeamsProps` and re-emits events with `listenTeamsEvents` (both in `bind.ts`). Each
+  with `bindTeams`/`pickTeamsProps` (`packages/web-component/src/bind.ts`, over `applyTeamsProps` and `listenTeamsEvents` in `bind.ts` of ooxml-ui) and re-emits events with it. Each
   binding also exposes the **raw hook** over `createTeams` (React `useTeams`, Vue `useTeams`, Solid
   `createTeamsClient`, Svelte `teamsStore`, Angular `TeamsService`). A behaviour bug is fixed once,
   in `web-component` or the core; a hook or wiring bug is fixed in every binding in the same change.

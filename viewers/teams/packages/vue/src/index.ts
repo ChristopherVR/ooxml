@@ -14,17 +14,18 @@ import {
 } from 'vue';
 import type { TeamsServerConfig } from 'ooxml-core/teams';
 import {
-	applyTeamsProps,
+	bindTeams,
 	createTeams,
 	defineTeamsApp,
-	listenTeamsEvents,
+	pickTeamsProps,
 	type FileOpeners,
 	type FileEmbeds,
 	type FileUploader,
 	type TeamsApp,
 	type TeamsClient,
+	type TeamsBinding,
 	type TeamsClientOptions,
-	type TeamsProps,
+	type TeamsElementProps,
 	type TeamsState,
 } from 'teams-viewer';
 
@@ -45,36 +46,25 @@ export const Teams = defineComponent({
 	emits: ['ready', 'open-file', 'config-change'],
 	setup(props, { emit, expose }) {
 		const el = ref<TeamsApp | null>(null);
-		let applied: TeamsProps = {};
-		let stop = (): void => {};
-		const current = (): TeamsProps => ({
-			...(props.workspaceId !== undefined ? { workspaceId: props.workspaceId } : {}),
-			...(props.userName !== undefined ? { userName: props.userName } : {}),
-			...(props.userId !== undefined ? { userId: props.userId } : {}),
-			...(props.config !== undefined ? { config: props.config } : {}),
-			...(props.uploadFile ? { uploadFile: props.uploadFile } : {}),
-			...(props.openers ? { openers: props.openers } : {}),
-			...(props.embeds ? { embeds: props.embeds } : {}),
+		let binding: TeamsBinding | undefined;
+		// `class` and `style` fall through to the <teams-app> root, so no class prop is declared.
+		const current = (): TeamsElementProps => ({
+			...pickTeamsProps(props),
 			onReady: (d) => emit('ready', d),
 			onOpenFile: (d, e) => emit('open-file', d, e),
 			onConfigChange: (d) => emit('config-change', d),
 		});
-		const sync = (): void => {
-			if (!el.value) return;
-			const next = current();
-			applyTeamsProps(el.value, next, applied);
-			applied = next;
-		};
+		const sync = (): void => binding?.update(current());
 		onMounted(() => {
 			defineTeamsApp();
-			if (el.value) stop = listenTeamsEvents(el.value, current);
+			if (el.value) binding = bindTeams(el.value, current);
 			sync();
 		});
 		watch(
 			() => [props.workspaceId, props.userName, props.userId, props.config, props.uploadFile, props.openers, props.embeds],
 			sync,
 		);
-		onBeforeUnmount(() => stop());
+		onBeforeUnmount(() => binding?.destroy());
 		expose({ element: el });
 		return () => h('teams-app', { ref: el, style: 'display:block;height:100%' });
 	},

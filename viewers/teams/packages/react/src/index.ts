@@ -9,11 +9,12 @@ import {
 	useSyncExternalStore,
 } from 'react';
 import {
-	applyTeamsProps,
+	bindTeams,
 	createTeams,
 	defineTeamsApp,
-	listenTeamsEvents,
+	pickTeamsProps,
 	type TeamsApp,
+	type TeamsBinding,
 	type TeamsClient,
 	type TeamsClientOptions,
 	type TeamsProps,
@@ -29,19 +30,26 @@ export const Teams = forwardRef<TeamsApp | null, TeamsProps & { className?: stri
 ) {
 	const el = useRef<TeamsApp | null>(null);
 	const latest = useRef<TeamsProps>(props);
-	const applied = useRef<TeamsProps>({});
+	const binding = useRef<TeamsBinding | null>(null);
 	latest.current = props;
 	useImperativeHandle(ref, () => el.current as TeamsApp, []);
 	useLayoutEffect(() => {
 		defineTeamsApp();
 	}, []);
-	// Props are applied after every render; unchanged values are skipped inside applyTeamsProps.
 	useEffect(() => {
 		if (!el.current) return;
-		applyTeamsProps(el.current, props, applied.current);
-		applied.current = props;
+		const bound = bindTeams(el.current, () => latest.current);
+		binding.current = bound;
+		return () => {
+			bound.destroy();
+			binding.current = null;
+		};
+	}, []);
+	// Props are applied after every render; unchanged values are skipped inside the binding. The
+	// class goes through React itself (below), so it also reaches server-rendered markup.
+	useEffect(() => {
+		binding.current?.update(pickTeamsProps(props));
 	});
-	useEffect(() => (el.current ? listenTeamsEvents(el.current, () => latest.current) : undefined), []);
 	return createElement('teams-app', {
 		ref: el,
 		class: className,

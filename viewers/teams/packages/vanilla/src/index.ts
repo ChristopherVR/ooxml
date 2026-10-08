@@ -1,9 +1,9 @@
 import {
-	applyTeamsProps,
+	bindTeams,
 	defineTeamsApp,
-	listenTeamsEvents,
+	pickTeamsProps,
 	type TeamsApp,
-	type TeamsProps,
+	type TeamsElementProps,
 } from 'teams-viewer';
 
 // The raw store and the element itself, for your own UI or plain `<teams-app>` markup: the private
@@ -14,6 +14,7 @@ export {
 	defineTeamsApp,
 	type TeamsClient,
 	type TeamsClientOptions,
+	type TeamsElementProps,
 	type TeamsProps,
 	type TeamsState,
 } from 'teams-viewer';
@@ -21,28 +22,28 @@ export {
 export interface MountedTeams {
 	readonly element: TeamsApp;
 	/** Update props; only changed values are applied. */
-	update: (next: TeamsProps) => void;
+	update: (next: TeamsElementProps) => void;
 	destroy: () => void;
 }
 
 /** Create a `<teams-app>` inside `container` and keep it in sync with `props`. */
-export function mountTeams(container: HTMLElement, props: TeamsProps = {}): MountedTeams {
+export function mountTeams(container: HTMLElement, props: TeamsElementProps = {}): MountedTeams {
 	defineTeamsApp();
 	const element = container.ownerDocument.createElement('teams-app') as TeamsApp;
 	element.style.display = 'block';
 	element.style.height = '100%';
 	let current = props;
-	const stop = listenTeamsEvents(element, () => current);
-	applyTeamsProps(element, current);
+	const binding = bindTeams(element, () => current);
+	binding.update(pickTeamsProps(current));
 	container.append(element);
 	return {
 		element,
 		update(next) {
-			applyTeamsProps(element, next, current);
 			current = next;
+			binding.update(pickTeamsProps(next));
 		},
 		destroy() {
-			stop();
+			binding.destroy();
 			element.remove();
 		},
 	};
