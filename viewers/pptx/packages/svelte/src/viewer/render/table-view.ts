@@ -7,6 +7,7 @@ import type {
 	TableStyleContext,
 } from 'ooxml-ui/pptx';
 import {
+	cellParagraphBlocks,
 	cellPatternFillCss,
 	cellRunStyle,
 	DEFAULT_FONT_FAMILY,
@@ -49,6 +50,14 @@ export interface TableRunView {
 	style: string;
 }
 
+/** One paragraph block of a cell whose paragraphs set their own layout. */
+export interface TableParagraphView {
+	key: string;
+	/** Inline `style` string for the paragraph `<div>`. */
+	style: string;
+	runs: TableRunView[];
+}
+
 /** One rendered `<td>`. */
 export interface TableCellView {
 	key: string;
@@ -62,6 +71,8 @@ export interface TableCellView {
 	diagonals: DiagonalBorderInfo | null;
 	/** Rich per-run content, or `null` to fall back to {@link text}. */
 	runs: TableRunView[] | null;
+	/** One block per paragraph when the paragraphs set their own layout, else `null`. */
+	paragraphBlocks: TableParagraphView[] | null;
 	/** Plain cell text fallback (space-padded so empty cells keep height). */
 	text: string;
 }
@@ -158,6 +169,7 @@ function buildCellView(
 			context,
 		),
 		runs: buildRunViews(cell),
+		paragraphBlocks: buildParagraphViews(cell),
 		text: cell.text || ' ',
 	};
 }
@@ -172,11 +184,28 @@ function buildRunViews(cell: PptxTableCell): TableRunView[] | null {
 	if (!textRuns || textRuns.length === 0) {
 		return null;
 	}
-	return textRuns.map((run, i) => ({
+	return textRuns.map(runView);
+}
+
+function runView(run: CellTextRun, i: number): TableRunView {
+	return {
 		key: `run${i}`,
 		isParagraphBreak: run.isParagraphBreak === true,
 		isLineBreak: run.isLineBreak === true,
 		text: run.text,
 		style: styleToString({ position: 'relative', ...cellRunStyle(run) }),
+	};
+}
+
+/** Paragraph blocks for a cell whose paragraphs set their own layout; `null` otherwise. */
+function buildParagraphViews(cell: PptxTableCell): TableParagraphView[] | null {
+	const blocks = cellParagraphBlocks(cell);
+	if (!blocks) {
+		return null;
+	}
+	return blocks.map((block, i) => ({
+		key: `para${i}`,
+		style: styleToString({ display: 'block', ...block.css }),
+		runs: block.runs.map(runView),
 	}));
 }

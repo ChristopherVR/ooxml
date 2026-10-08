@@ -516,6 +516,9 @@ export * from './table-style-builtins';
 // bindings; React had lost the band layer on programmatic tables and Angular the
 // colour floor, so both are decided here now.
 export * from './table-cell-css';
+// A cell's paragraphs as blocks, each with its own alignment, indent and line
+// spacing, for cells whose paragraphs set them.
+export * from './table-cell-paragraphs';
 // Whether a canvas press extends the table CELL range or falls through to the
 // element selection. Vue let a Shift-click fall through, which toggled the table
 // out of the selection and wiped the range anchor, so block merge was

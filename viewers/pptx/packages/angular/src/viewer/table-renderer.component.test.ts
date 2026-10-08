@@ -767,6 +767,34 @@ describe('buildTableViewModel -- paragraphs field', () => {
 	});
 });
 
+describe('buildTableViewModel -- paragraph layout', () => {
+	it("gives each paragraph its own style when the cell's paragraphs set one", () => {
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ align: 'right', paragraphMarginLeft: 10, lineSpacingExactPt: 9 }, {}],
+			style: { align: 'right' },
+		};
+		const el = tableElement([{ cells: [{ text: '' }] }]) as TablePptxElement;
+		el.tableData!.rows[0].cells[0] = cell;
+		const vm = buildTableViewModel(el)[0].cells[0];
+		expect(vm.paragraphs.map((para) => para.map((run) => run.text))).toStrictEqual([
+			['one'],
+			['two'],
+		]);
+		expect(vm.paragraphStyles).toStrictEqual([
+			// The first paragraph takes the cell's alignment.
+			{ 'margin-inline-start': '10px', 'line-height': '12px' },
+			{ 'text-align': 'start' },
+		]);
+	});
+
+	it('leaves paragraph styles out for a cell without paragraph layout', () => {
+		const vm = buildTableViewModel(tableElement([{ cells: [{ text: 'Hello' }] }]))[0].cells[0];
+		expect(vm.paragraphStyles).toBeNull();
+	});
+});
+
 // ==========================================================================
 // buildTableViewModel: diagonal borders (getCellDiagonalBorders integration)
 // ==========================================================================

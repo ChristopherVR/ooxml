@@ -17,11 +17,12 @@
 import type { PptxElement, PptxTableCell, TablePptxElement } from 'pptx-viewer-core';
 
 import type { DiagonalBorderInfo, TableStyleContext } from 'ooxml-ui/pptx';
-import { getCellDiagonalBorders, tableCellCss } from 'ooxml-ui/pptx';
+import { cellParagraphBlocks, getCellDiagonalBorders, tableCellCss } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import type { CellParagraph } from './table-cell-style';
 import {
 	buildCellParagraphs,
+	buildCellParagraphStyles,
 	columnWidthStyle,
 	cssObjectToStyleMap,
 	rowStyle,
@@ -32,6 +33,7 @@ import {
 // on it) so this module can keep importing from that one and not the reverse.
 export {
 	buildCellParagraphs,
+	buildCellParagraphStyles,
 	cellRunStyle,
 	cellStyleToStyleMap,
 	cellTdStyle,
@@ -57,6 +59,8 @@ export interface TableCellViewModel {
 	tdStyle: StyleMap;
 	displayText: string;
 	paragraphs: CellParagraph[];
+	/** Each paragraph's own style when the cell's paragraphs set one, else `null`. */
+	paragraphStyles: StyleMap[] | null;
 	/** Diagonal border overlay info, or null when the cell has none. */
 	diagonal: DiagonalBorderInfo | null;
 }
@@ -127,6 +131,7 @@ export function buildTableViewModel(
 					),
 				};
 
+				const blocks = cellParagraphBlocks(cell);
 				return {
 					cell,
 					rowIndex,
@@ -137,7 +142,8 @@ export function buildTableViewModel(
 					// Non-breaking space (U+00A0) keeps an empty cell from collapsing;
 					// mirrors React's `cell.text || '\u00a0'` in table-render-data.tsx.
 					displayText: cell.text || '\u00a0',
-					paragraphs: buildCellParagraphs(cell),
+					paragraphs: buildCellParagraphs(cell, blocks),
+					paragraphStyles: buildCellParagraphStyles(blocks),
 					// Combine per-cell explicit diagonals with any inherited from the
 					// applicable table-style sections (per-cell still takes precedence).
 					diagonal: getCellDiagonalBorders(

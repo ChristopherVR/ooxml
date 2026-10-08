@@ -17,7 +17,9 @@ import type { PptxTableCell, PptxTableCellStyle, PptxTableRow } from 'pptx-viewe
 // The OOXML-dash → CSS-border-style map is framework-agnostic and lives in
 // `pptx-viewer-shared`; re-exported here so this module's public surface
 // (and colocated tests) keep importing `ooxmlDashToCssBorderStyle` unchanged.
+import type { CellParagraphBlock, CellTextRun as SharedCellTextRun } from 'ooxml-ui/pptx';
 import {
+	cellParagraphBlocks,
 	cellRunStyle as cellRunCss,
 	cellStyleToCss,
 	ooxmlDashToCssBorderStyle,
@@ -168,8 +170,14 @@ export function cellRunStyle(style: PptxTableCellStyle | undefined): StyleMap {
  * signalling the template to fall back to the non-breaking-space placeholder
  * (which keeps the row height).
  */
-export function buildCellParagraphs(cell: PptxTableCell): CellParagraph[] {
+export function buildCellParagraphs(
+	cell: PptxTableCell,
+	blocks: CellParagraphBlock[] | undefined = cellParagraphBlocks(cell),
+): CellParagraph[] {
 	const cellStyle = cellRunStyle(cell.style);
+	if (blocks) {
+		return blocks.map((block) => block.runs.map((run) => paragraphRun(run, cellStyle)));
+	}
 	const runs = cell.textRuns;
 	if (runs && runs.length > 0) {
 		const paragraphs: CellParagraph[] = [[]];
@@ -178,17 +186,7 @@ export function buildCellParagraphs(cell: PptxTableCell): CellParagraph[] {
 				paragraphs.push([]);
 				continue;
 			}
-			const current = paragraphs[paragraphs.length - 1];
-			if (run.isLineBreak) {
-				current.push({ text: '', style: {}, isLineBreak: true });
-				continue;
-			}
-			// The cell-level style is the base (alignment-independent font
-			// defaults); the run's own properties win over it.
-			current.push({
-				text: run.text,
-				style: { ...cellStyle, ...cssObjectToStyleMap(cellRunCss(run)) },
-			});
+			paragraphs[paragraphs.length - 1].push(paragraphRun(run, cellStyle));
 		}
 		return paragraphs;
 	}
@@ -198,4 +196,24 @@ export function buildCellParagraphs(cell: PptxTableCell): CellParagraph[] {
 	}
 	const lines = text.split('\n');
 	return lines.map((line): CellParagraph => [{ text: line, style: cellStyle }]);
+}
+
+/** One parsed run as a template run: a `<br>` marker or a styled span. */
+function paragraphRun(run: SharedCellTextRun, cellStyle: StyleMap): CellTextRun {
+	if (run.isLineBreak) {
+		return { text: '', style: {}, isLineBreak: true };
+	}
+	// The cell-level style is the base (alignment-independent font defaults);
+	// the run's own properties win over it.
+	return { text: run.text, style: { ...cellStyle, ...cssObjectToStyleMap(cellRunCss(run)) } };
+}
+
+/**
+ * Per-paragraph styles, index-aligned with {@link buildCellParagraphs}, for a
+ * cell whose paragraphs set their own layout; `null` otherwise.
+ */
+export function buildCellParagraphStyles(
+	blocks: CellParagraphBlock[] | undefined,
+): StyleMap[] | null {
+	return blocks ? blocks.map((block) => cssObjectToStyleMap(block.css)) : null;
 }

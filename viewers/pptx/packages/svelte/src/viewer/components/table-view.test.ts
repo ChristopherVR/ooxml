@@ -252,6 +252,29 @@ describe('tableView', () => {
 		expect(spans[1].style.verticalAlign).toBe('sub');
 	});
 
+	it('draws each paragraph as its own block with its own layout', () => {
+		const cell: PptxTableCell = {
+			text: 'one\ntwo',
+			textRuns: [{ text: 'one' }, { text: '', isParagraphBreak: true }, { text: 'two' }],
+			paragraphs: [{ align: 'right', paragraphMarginLeft: 10, lineSpacingExactPt: 9 }, {}],
+			style: { align: 'right' },
+		};
+		const td = mountEl(
+			buildTableElement({ columnWidths: [1], rows: [{ cells: [cell] }] }),
+		).querySelector<HTMLElement>('td');
+		const blocks = td?.querySelectorAll<HTMLElement>(':scope > div') ?? [];
+		expect(blocks).toHaveLength(2);
+		// The first paragraph takes the cell's alignment.
+		expect(td?.style.textAlign).toBe('right');
+		expect(blocks[0].style.textAlign).toBe('');
+		expect(blocks[0].style.getPropertyValue('margin-inline-start')).toBe('10px');
+		expect(blocks[0].style.lineHeight).toBe('12px');
+		expect(blocks[0].textContent).toBe('one');
+		expect(blocks[1].style.textAlign).toBe('start');
+		expect(blocks[1].textContent).toBe('two');
+		expect(td?.textContent).toBe('onetwo');
+	});
+
 	// G8 (OpenXML parity audit, D3): a:graphicFrameLocks/@noDrilldown was
 	// parsed but never enforced - a cell was still double-click editable on a
 	// locked table.

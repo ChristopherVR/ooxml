@@ -186,7 +186,12 @@
 									</svg>
 								{/if}{#if editingKey === cell.key}
 									<input use:focusInput data-inline-editor type="text" bind:value={draft} onpointerdown={(event) => event.stopPropagation()} onclick={(event) => event.stopPropagation()} onblur={() => commit(cell)} onkeydown={(event) => { if (event.key === 'Enter') commit(cell); else if (event.key === 'Escape') editingKey = null; }} />
-								{:else if cell.runs}{#each cell.runs as run (run.key)}{#if run.isParagraphBreak}<div
+								{:else if cell.paragraphBlocks}{#each cell.paragraphBlocks as paragraph (paragraph.key)}<div
+											class="pptx-svelte-table-para"
+											style={paragraph.style}
+										>{#each paragraph.runs as run (run.key)}{#if run.isLineBreak}<br />{:else}<span
+													class="pptx-svelte-table-run"
+													style={run.style}>{run.text}</span>{/if}{/each}</div>{/each}{:else if cell.runs}{#each cell.runs as run (run.key)}{#if run.isParagraphBreak}<div
 											class="pptx-svelte-table-para-break"
 											style="display: block; height: 0"
 										></div>{:else if run.isLineBreak}<br />{:else}<span
