@@ -388,6 +388,41 @@ describe('matchIdenticalTwins', () => {
 		expect(matchIdenticalTwins(from.elements, to.elements, new Set(), new Set())).toHaveLength(0);
 	});
 
+	it('claims the nearest twin, not the first in document order', () => {
+		const from = makeSlide([overlay('a', 400, 'Rectangle 6')]);
+		const to = makeSlide([overlay('far', 2400), overlay('near', 420)], 'slide-2');
+		const pairs = matchIdenticalTwins(from.elements, to.elements, new Set(), new Set());
+		expect(pairs.map((p) => p.toElement.id)).toEqual(['near']);
+	});
+
+	it('leaves a wedge to its recoloured in-place counterpart (issue #34)', () => {
+		// The selection moves from the left wedge to its mirror on the right:
+		// each position keeps its own wedge, only the fills swap. The mirror
+		// is an identical twin of the left wedge (same box, same unselected
+		// fill), but pairing them would send both wedges across the wheel.
+		const wedge = (id: string, x: number, fill: string): PptxElement =>
+			makeElement({
+				id,
+				type: 'shape',
+				x,
+				y: 236,
+				width: 198,
+				height: 249,
+				shapeType: 'custom',
+				shapeStyle: { fillMode: 'solid', fillColor: fill },
+			});
+		const from = makeSlide([wedge('a-left', 303, '#C00000'), wedge('a-right', 779, '#404040')]);
+		const to = makeSlide(
+			[wedge('b-left', 303, '#404040'), wedge('b-right', 779, '#C00000')],
+			'slide-2',
+		);
+		expect(matchIdenticalTwins(from.elements, to.elements, new Set(), new Set())).toHaveLength(0);
+		const { pairs } = matchMorphElementsFull(from, to);
+		const byFrom = new Map(pairs.map((p) => [p.fromElement.id, p.toElement.id]));
+		expect(byFrom.get('a-left')).toBe('b-left');
+		expect(byFrom.get('a-right')).toBe('b-right');
+	});
+
 	it('refuses wordful twins that say different things', () => {
 		const from = makeSlide([overlay('a', 1279)]);
 		const to = makeSlide([overlay('b', 1)], 'slide-2');

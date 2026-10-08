@@ -20,9 +20,8 @@ import {
 	matchSameMedia,
 } from './morph-heuristics';
 import { getElementMorphName } from './morph-name';
-import { conflictingMorphNames, differentText } from './morph-predicates';
+import { centreDistance, conflictingMorphNames, proximityAccepts } from './morph-predicates';
 import type { MorphMatchResult, MorphPair } from './morph-types';
-import { PROXIMITY_SIZE_RATIO_LIMIT, PROXIMITY_THRESHOLD } from './morph-types';
 
 // ---------------------------------------------------------------------------
 // Element name extraction
@@ -341,9 +340,6 @@ export function matchMorphElementsFull(fromSlide: PptxSlide, toSlide: PptxSlide)
 			if (usedTo.has(toEl.id)) {
 				continue;
 			}
-			if (fromEl.type !== toEl.type) {
-				continue;
-			}
 			// Proximity is the weakest signal there is: it says two elements sit
 			// in the same place, not that they are the same object. For TEXT that
 			// is not enough. The issue #131 deck rebuilds its centre panel on
@@ -356,27 +352,14 @@ export function matchMorphElementsFull(fromSlide: PptxSlide, toSlide: PptxSlide)
 			//
 			// Anything the author really did carry across keeps its `a16:creationId`
 			// (pass 2a) or its `!!` name (pass 1) and never reaches this pass, so
-			// gating here costs a real morph nothing.
-			if (differentText(fromEl, toEl)) {
-				continue;
-			}
-			// An explicit `!!` name that disagrees is the author saying these are
-			// two different objects; proximity must not overrule it.
-			if (conflictingMorphNames(fromEl, toEl)) {
-				continue;
-			}
-			const widthRatio =
-				Math.max(fromEl.width, toEl.width, 1) / Math.max(Math.min(fromEl.width, toEl.width), 1);
-			const heightRatio =
-				Math.max(fromEl.height, toEl.height, 1) / Math.max(Math.min(fromEl.height, toEl.height), 1);
-			if (widthRatio > PROXIMITY_SIZE_RATIO_LIMIT || heightRatio > PROXIMITY_SIZE_RATIO_LIMIT) {
-				continue;
-			}
-			const dx = fromEl.x - toEl.x;
-			const dy = fromEl.y - toEl.y;
-			const dist = Math.sqrt(dx * dx + dy * dy);
-			if (dist < PROXIMITY_THRESHOLD) {
-				candidates.push({ fromEl, toEl, dist });
+			// gating here costs a real morph nothing. An explicit `!!` name that
+			// disagrees is the author saying these are two different objects, so
+			// proximity must not overrule it either.
+			//
+			// Both vetoes, the size gate and the distance gate live in
+			// `proximityAccepts`, which the twin passes' rival check shares.
+			if (proximityAccepts(fromEl, toEl)) {
+				candidates.push({ fromEl, toEl, dist: centreDistance(fromEl, toEl) });
 			}
 		}
 	}

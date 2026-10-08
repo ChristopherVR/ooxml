@@ -16,6 +16,7 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 
 import { getElementMorphName } from './morph-name';
+import { PROXIMITY_SIZE_RATIO_LIMIT, PROXIMITY_THRESHOLD } from './morph-types';
 
 /** Depth cap for the recursive text read; real decks never nest this far. */
 const TEXT_MAX_DEPTH = 8;
@@ -149,4 +150,54 @@ export function appearanceSignature(el: PptxElement): string {
 	}
 	parts.push(mediaIdentity(el) ?? '');
 	return parts.join('|');
+}
+
+/**
+ * Whether the proximity pass would accept `a` and `b` as a pair: the same
+ * type, within `PROXIMITY_THRESHOLD`, boxes no more than
+ * `PROXIMITY_SIZE_RATIO_LIMIT` apart on either axis, and neither veto firing.
+ * Shared by that pass and by the distance-agnostic passes' rival check, so the
+ * two can never disagree about what "a counterpart in place" is.
+ */
+export function proximityAccepts(a: PptxElement, b: PptxElement): boolean {
+	if (a.type !== b.type || differentText(a, b) || conflictingMorphNames(a, b)) {
+		return false;
+	}
+	const ratio = (p: number, q: number): number => Math.max(p, q, 1) / Math.max(Math.min(p, q), 1);
+	if (
+		ratio(a.width, b.width) > PROXIMITY_SIZE_RATIO_LIMIT ||
+		ratio(a.height, b.height) > PROXIMITY_SIZE_RATIO_LIMIT
+	) {
+		return false;
+	}
+	return centreDistance(a, b) < PROXIMITY_THRESHOLD;
+}
+
+/**
+ * Whether a distance-agnostic pairing of `fromEl` with `toEl` would steal an
+ * element from a CLOSER counterpart the proximity pass accepts, on either side.
+ *
+ * The twin passes exist to carry an object across a distance proximity cannot
+ * reach (a panel parked off-stage), not to overrule a counterpart sitting in
+ * place. Without this, the issue #34 wheel deck broke: its unselected wedges
+ * share one fill and every wedge of an orientation shares one box, so the
+ * identical-twin pass paired a wedge with its mirror across the wheel while
+ * its own in-place counterpart (recoloured, because the selection moved there)
+ * stood unclaimed, and every wedge swapped places from the third topic on.
+ */
+export function hasCloserProximityRival(
+	fromEl: PptxElement,
+	toEl: PptxElement,
+	fromElements: readonly PptxElement[],
+	toElements: readonly PptxElement[],
+	usedFrom: ReadonlySet<string>,
+	usedTo: ReadonlySet<string>,
+): boolean {
+	const dist = centreDistance(fromEl, toEl);
+	const closer = (a: PptxElement, b: PptxElement): boolean =>
+		centreDistance(a, b) < dist && proximityAccepts(a, b);
+	return (
+		toElements.some((other) => other !== toEl && !usedTo.has(other.id) && closer(fromEl, other)) ||
+		fromElements.some((other) => other !== fromEl && !usedFrom.has(other.id) && closer(other, toEl))
+	);
 }

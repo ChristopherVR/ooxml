@@ -29,6 +29,7 @@ import {
 	centreDistance,
 	conflictingMorphNames,
 	differentText,
+	hasCloserProximityRival,
 	hasDeclaredPaint,
 	sameMediaPicture,
 } from './morph-predicates';
@@ -189,6 +190,9 @@ export function matchNamedTextTwins(
 			if (differentText(fromEl, toEl)) {
 				continue;
 			}
+			if (hasCloserProximityRival(fromEl, toEl, fromElements, toElements, usedFrom, usedTo)) {
+				continue;
+			}
 			const dist = centreDistance(fromEl, toEl);
 			if (!best || dist < best.dist) {
 				best = { toEl, dist };
@@ -235,6 +239,9 @@ export function matchGroupTwins(
 			if (!sameSizedTwinCasts(fromEl, toEl)) {
 				continue;
 			}
+			if (hasCloserProximityRival(fromEl, toEl, fromElements, toElements, usedFrom, usedTo)) {
+				continue;
+			}
 			pairs.push({ fromElement: fromEl, toElement: toEl });
 			usedFrom.add(fromEl.id);
 			usedTo.add(toEl.id);
@@ -258,39 +265,45 @@ export function matchIdenticalTwins(
 	usedFrom: Set<string>,
 	usedTo: Set<string>,
 ): MorphPair[] {
-	const pairs: MorphPair[] = [];
+	// Collect every legal twin first and claim nearest-first: taking each
+	// `fromEl`'s first twin in document order sent a wheel wedge to its mirror
+	// across the slide whenever the mirror came first in the spTree.
+	const candidates: { fromEl: PptxElement; toEl: PptxElement; dist: number }[] = [];
 	for (const fromEl of fromElements) {
-		if (usedFrom.has(fromEl.id)) {
-			continue;
-		}
-		if (!hasDeclaredPaint(fromEl)) {
+		if (usedFrom.has(fromEl.id) || !hasDeclaredPaint(fromEl)) {
 			continue;
 		}
 		const fromSignature = appearanceSignature(fromEl);
 		for (const toEl of toElements) {
-			if (usedTo.has(toEl.id)) {
-				continue;
-			}
-			if (appearanceSignature(toEl) !== fromSignature) {
+			if (usedTo.has(toEl.id) || appearanceSignature(toEl) !== fromSignature) {
 				continue;
 			}
 			if (fromEl.width !== toEl.width || fromEl.height !== toEl.height) {
 				continue;
 			}
-			// Same-place-different-words is a rebuilt panel, not a moved object.
-			if (differentText(fromEl, toEl)) {
-				continue;
-			}
-			// An explicit `!!` name that disagrees is the author saying these
+			// Same-place-different-words is a rebuilt panel, not a moved object,
+			// and an explicit `!!` name that disagrees is the author saying these
 			// are two different objects.
-			if (conflictingMorphNames(fromEl, toEl)) {
+			if (differentText(fromEl, toEl) || conflictingMorphNames(fromEl, toEl)) {
 				continue;
 			}
-			pairs.push({ fromElement: fromEl, toElement: toEl });
-			usedFrom.add(fromEl.id);
-			usedTo.add(toEl.id);
-			break;
+			// A counterpart the proximity pass accepts, sitting closer, outranks
+			// a twin across the slide (issue #34).
+			if (hasCloserProximityRival(fromEl, toEl, fromElements, toElements, usedFrom, usedTo)) {
+				continue;
+			}
+			candidates.push({ fromEl, toEl, dist: centreDistance(fromEl, toEl) });
 		}
+	}
+	candidates.sort((a, b) => a.dist - b.dist);
+	const pairs: MorphPair[] = [];
+	for (const { fromEl, toEl } of candidates) {
+		if (usedFrom.has(fromEl.id) || usedTo.has(toEl.id)) {
+			continue;
+		}
+		pairs.push({ fromElement: fromEl, toElement: toEl });
+		usedFrom.add(fromEl.id);
+		usedTo.add(toEl.id);
 	}
 	return pairs;
 }
