@@ -27,7 +27,11 @@ function* units(raw: number): Generator<number> {
 }
 
 /**
- * Excel-like automatic axis bounds: the axis includes zero unless the data sits in the top sixth
+ * Excel-like automatic axis bounds. Deliberately separate from `chart/axis-nice.ts`
+ * (PowerPoint's scale): units here are 1/2/5 x 10^n with `maxIntervals` as a ceiling,
+ * there 2.5 is also a step and the count is a target; see chart-scale-vs-axis-nice.test.ts.
+ *
+ * Rules: the axis includes zero unless the data sits in the top sixth
  * of its range, 5% headroom is added on the open ends, and the major unit is the smallest of
  * 1/2/5 x 10^n that keeps the interval count within `maxIntervals`.
  */
