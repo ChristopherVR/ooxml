@@ -4,9 +4,18 @@ import {
 	type EditorHandle,
 } from '../../../viewers/docx/packages/bindings/src/index';
 import type { DocxEditorElement } from 'docx-web-component';
-/** Demo-only harness: actual framework mounts exercise each public adapter. */
+
+/** The host element of a mounted demo editor, carrying the framework binding's own handle. */
+export type FrameworkHost = HTMLElement & { docxEditorHandle?: EditorHandle };
+
+/**
+ * Demo-only harness: actual framework mounts exercise each public adapter, and the editor is
+ * driven through the handle that adapter exposes (React ref, Vue template ref, Angular component
+ * instance, Svelte component exports, Solid `editorRef`). The handle is also left on the host as
+ * `docxEditorHandle` so the browser specs can check the shared handle vocabulary.
+ */
 export async function mountFramework(
-	host: HTMLElement,
+	host: FrameworkHost,
 	options: EditorOptions,
 	frameworkOverride?: string,
 ): Promise<EditorHandle> {
@@ -15,20 +24,31 @@ export async function mountFramework(
 		new URLSearchParams(location.search).get('framework') ||
 		import.meta.env.VITE_DEMO_FRAMEWORK ||
 		'vanilla';
+	let handle: EditorHandle | undefined;
 	if (framework === 'react') {
 		const [{ createRoot }, { createElement }, { WordEditor }] = await Promise.all([
 			import('react-dom/client'),
 			import('react'),
 			import('../../../viewers/docx/packages/bindings/src/react'),
 		]);
-		createRoot(host).render(createElement(WordEditor, options));
+		createRoot(host).render(
+			createElement(WordEditor, {
+				...options,
+				ref: (value: EditorHandle | null) => {
+					if (value) handle = value;
+				},
+			}),
+		);
 	} else if (framework === 'solid') {
 		const [{ render }, { createComponent }, { WordEditor }] = await Promise.all([
 			import('solid-js/web'),
 			import('solid-js'),
 			import('../../../viewers/docx/packages/bindings/src/solid'),
 		]);
-		render(() => createComponent(WordEditor, options), host);
+		render(
+			() => createComponent(WordEditor, { ...options, editorRef: (value) => (handle = value) }),
+			host,
+		);
 	} else if (framework === 'vue') {
 		const [{ createApp, h }, { WordEditor }] = await Promise.all([
 			import('vue'),
@@ -37,6 +57,9 @@ export async function mountFramework(
 		createApp({
 			render: () =>
 				h(WordEditor, {
+					ref: (value: unknown) => {
+						if (value) handle = value as EditorHandle;
+					},
 					...(options.documentModel && { documentModel: options.documentModel }),
 					...(options.readOnly !== undefined && { readOnly: options.readOnly }),
 					...(options.locale !== undefined && { locale: options.locale }),
@@ -49,7 +72,7 @@ export async function mountFramework(
 			import('svelte'),
 			import('../../../viewers/docx/packages/bindings/src/WordEditor.svelte'),
 		]);
-		mount(WordEditor, {
+		handle = mount(WordEditor, {
 			target: host,
 			props: {
 				documentModel: options.documentModel,
@@ -58,7 +81,7 @@ export async function mountFramework(
 				ondocumentchange: options.onDocumentChange,
 				ondocumenterror: options.onDocumentError,
 			},
-		});
+		}) as unknown as EditorHandle;
 	} else if (framework === 'angular') {
 		await import('@angular/compiler');
 		const [
@@ -82,10 +105,12 @@ export async function mountFramework(
 		component.instance.documentError.subscribe(options.onDocumentError);
 		app.attachView(component.hostView);
 		component.changeDetectorRef.detectChanges();
+		// `element` is undefined only before the view initialises, which is awaited below.
+		handle = component.instance as EditorHandle;
 	} else {
-		return mountEditor(host, options);
+		handle = mountEditor(host, options);
 	}
-	const element = await new Promise<DocxEditorElement>((resolve, reject) => {
+	await new Promise<DocxEditorElement>((resolve, reject) => {
 		const existing = host.querySelector<DocxEditorElement>('docx-editor');
 		if (existing) {
 			resolve(existing);
@@ -105,14 +130,9 @@ export async function mountFramework(
 		}, 10000);
 		observer.observe(host, { childList: true, subtree: true });
 	});
-	return {
-		element,
-		load: (input) => element.load(input),
-		save: () => element.save(),
-		download: (fileName) => element.download(fileName),
-		markClean: () => element.markClean(),
-		get dirty() {
-			return element.dirty;
-		},
-	};
+	// React attaches its ref in the same commit that mounts the element; give it that tick.
+	if (!handle) await new Promise((resolve) => setTimeout(resolve, 0));
+	if (!handle) throw new Error(`${framework} binding exposed no editor handle`);
+	host.docxEditorHandle = handle;
+	return handle;
 }
