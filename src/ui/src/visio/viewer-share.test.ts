@@ -89,4 +89,26 @@ describe('File > Share', () => {
 		b.share.stop();
 		expect(b.people()).toEqual([]);
 	});
+
+	it('shares a drawing loaded after joining even when an earlier listener changes state on load', async () => {
+		const room = `test-${Math.random().toString(36).slice(2, 8)}`;
+		const a = window('Ada');
+		// A host that fits the page on load changes the zoom inside the load event, which makes the
+		// controller drop that event for listeners registered later, such as the share session.
+		a.controller.onEvent((name) => {
+			if (name === 'document-load') a.controller.setZoom(2);
+		});
+		await a.share.start(room);
+		const b = window('Grace');
+		await b.share.start(room);
+		await until(() => b.people().includes('Ada') && a.people().includes('Grace'));
+
+		await a.controller.load(new Uint8Array([4, 2]));
+		expect(a.controller.state.zoom).toBe(2);
+		await until(() => b.parsed.some((bytes) => bytes.join() === '4,2'));
+		// A later local edit still reaches the peer, and neither window echoes it back to A.
+		await a.controller.applyEdits([]);
+		await until(() => b.parsed.some((bytes) => bytes.join() === '4,2,7'));
+		expect(a.parsed.map((bytes) => bytes.join())).toEqual(['4,2']);
+	});
 });

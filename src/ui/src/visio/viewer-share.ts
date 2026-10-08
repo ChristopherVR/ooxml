@@ -1,5 +1,6 @@
 import type { OfficeProfile } from '../controls';
 import type { PresenceParticipant } from '../presence';
+import type { VisioDocument } from 'ooxml-core/visio';
 import type { ViewerController, ViewerState } from './controller';
 
 type Collab = typeof import('ooxml-core/collab');
@@ -26,8 +27,12 @@ export class ViewerShare {
 	#revision = 0;
 	/** The package this window last published or adopted, to skip repeats of it. */
 	#last: Uint8Array | null = null;
+	/** The drawing this window last published or adopted, so a local load or edit is sent once. */
+	#shared: VisioDocument | null = null;
 	#adopting = false;
 	#pending: Uint8Array | null = null;
+	/** Publishes a local drawing the room has not seen; set once the session has settled. */
+	#catchUp: (() => void) | null = null;
 	#starting = false;
 	constructor(
 		root: ShadowRoot,
@@ -87,6 +92,8 @@ export class ViewerShare {
 		this.#session?.destroy();
 		this.#session = null;
 		this.#pending = null;
+		this.#shared = null;
+		this.#catchUp = null;
 		this.#revision = 0;
 		this.#last = null;
 		this.#people.participants = [];
@@ -106,11 +113,15 @@ export class ViewerShare {
 		});
 		this.#session = session;
 		const publish = () => {
+			const { document } = this.controller.state;
+			if (this.#adopting || this.#pending || document === this.#shared || !session.canWrite())
+				return;
 			const bytes = this.#localBytes();
-			if (!bytes || !session.canWrite()) return;
+			if (!bytes) return;
 			adapter.write(session.doc, { bytes, revision: this.#revision }, collab.LOCAL_ORIGIN);
 			this.#revision = adapter.read(session.doc).revision;
 			this.#last = bytes;
+			this.#shared = document;
 		};
 		const adopt = () => {
 			if (adapter.isEmpty(session.doc)) return;
@@ -127,8 +138,15 @@ export class ViewerShare {
 			if (transaction.origin !== collab.LOCAL_ORIGIN) adopt();
 		};
 		map.observe(observer);
-		// The room wins when it already has a drawing; otherwise this window seeds it.
-		const settle = () => (adapter.isEmpty(session.doc) ? publish() : adopt());
+		// The room wins when it already has a drawing; otherwise this window seeds it. From then on a
+		// settled local drawing the room has not seen is published from state, not only from the
+		// load and change events: the controller drops an event for later listeners when an earlier
+		// one changes state (a host fitting the page on load), and sharing must not depend on order.
+		const settle = () => {
+			this.#catchUp = publish;
+			if (adapter.isEmpty(session.doc)) publish();
+			else adopt();
+		};
 		const stopReady = session.on('ready', settle);
 		const stopPeers = session.on('peers', (peers) => this.#showPeers(peers));
 		const stopEvents = this.controller.onEvent((name, detail) => {
@@ -142,6 +160,7 @@ export class ViewerShare {
 			stopPeers();
 			stopEvents();
 			stopState();
+			this.#catchUp = null;
 		};
 		if (session.canWrite()) settle();
 		this.#showPeers(session.peers());
@@ -166,6 +185,7 @@ export class ViewerShare {
 		const done = (error?: unknown) => {
 			this.#adopting = false;
 			if (error) this.#say(error instanceof Error ? error.message : String(error));
+			else this.#shared = this.controller.state.document;
 		};
 		this.#adopting = true;
 		const run =
@@ -176,6 +196,7 @@ export class ViewerShare {
 	}
 	#flush(state: ViewerState): void {
 		if (this.#pending && !state.edit.busy && !state.loading) this.#apply(this.#pending);
+		else this.#catchUp?.();
 	}
 	#showPeers(peers: readonly { clientId: number; userName: string; userColor: string }[]): void {
 		const me = this.profile();
