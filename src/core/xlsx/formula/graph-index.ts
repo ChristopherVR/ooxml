@@ -52,12 +52,15 @@ export class ColumnIndex {
 
 /** Which formulas read a cell: static and dynamic precedents of every node. */
 export class ReverseIndex extends AreaIndex<FormulaNode> {
-	constructor(nodes: Iterable<FormulaNode>) {
+	constructor(nodes: Iterable<FormulaNode> = []) {
 		super();
-		for (const node of nodes) {
-			for (const dep of node.deps) this.add(dep, node);
-			for (const dep of node.dynamicDeps) this.add(dep, node);
-		}
+		for (const node of nodes) this.addNode(node);
+	}
+
+	/** Indexes one more formula's precedents. */
+	addNode(node: FormulaNode): void {
+		for (const dep of node.deps) this.add(dep, node);
+		for (const dep of node.dynamicDeps) this.add(dep, node);
 	}
 }
 

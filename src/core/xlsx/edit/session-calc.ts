@@ -21,9 +21,10 @@ export class SessionCalculator {
 
 	/** Recalculates after an applied, undone or redone step (failures become warnings). */
 	afterStep(step: HistoryStep): void {
-		if (!this.enabled) return;
-		if (calcModeOf(this.workbook) === 'manual') {
-			if (isStructural(step)) this.staleGraph = true;
+		if (!this.enabled || calcModeOf(this.workbook) === 'manual') {
+			// The engine is not told about this change, so a graph built ahead of time is stale.
+			this.calc.discardPreparation();
+			if (this.enabled && isStructural(step)) this.staleGraph = true;
 			return;
 		}
 		this.recalc(isStructural(step), () => touchedCells(step));
@@ -31,9 +32,9 @@ export class SessionCalculator {
 
 	/** Recalculates after a change applied outside the history (a collaborator's edit). */
 	afterExternal(structural: boolean, cells: { sheet: number; row: number; col: number }[]): void {
-		if (!this.enabled) return;
-		if (calcModeOf(this.workbook) === 'manual') {
-			if (structural) this.staleGraph = true;
+		if (!this.enabled || calcModeOf(this.workbook) === 'manual') {
+			this.calc.discardPreparation();
+			if (this.enabled && structural) this.staleGraph = true;
 			return;
 		}
 		this.recalc(structural, () => cells);
@@ -52,6 +53,18 @@ export class SessionCalculator {
 		} catch (error) {
 			const message = `Recalculation failed: ${error instanceof Error ? error.message : String(error)}`;
 			if (!this.workbook.warnings.includes(message)) this.workbook.warnings.push(message);
+		}
+	}
+
+	/** Builds the dependency graph ahead of the first edit (see `EditSession.prepareCalculation`). */
+	prepare(timeRemaining?: () => number): boolean {
+		if (!this.enabled || calcModeOf(this.workbook) === 'manual' || this.staleGraph) return true;
+		try {
+			return this.calc.prepare(timeRemaining);
+		} catch {
+			// The first edit builds the graph again and reports what failed as a warning.
+			this.calc.discardPreparation();
+			return true;
 		}
 	}
 

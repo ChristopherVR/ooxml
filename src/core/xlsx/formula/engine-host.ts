@@ -8,7 +8,7 @@ import type { CalcEngineOptions } from './engine-types';
 import type { FormulaOrder } from './engine-order';
 import { analyze, type FormulaNode } from './graph';
 import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index';
-import { parseFormula } from './parser';
+import { ParseCache } from './parse-cache';
 import { scanRange, sheetBounds } from './sheet-scan';
 import { clearFootprint, isSpilledCell } from './spill';
 import { type Area, err, Matrix, type Scalar } from './values';
@@ -28,7 +28,7 @@ const MAX_NESTED_COMPUTE = 40;
 export abstract class EngineHost implements EvalHost {
 	protected readonly nodes = new Map<number, Map<number, FormulaNode>>();
 	protected readonly footprints = new Set<FormulaNode>();
-	protected readonly astCache = new Map<string, FormulaAst | FormulaError>();
+	protected readonly parsed = new ParseCache();
 	protected readonly boundsCache = new Map<number, { rows: number; cols: number }>();
 	protected readonly inProgress = new Set<FormulaNode>();
 	protected cycles = new Set<FormulaNode>();
@@ -52,6 +52,8 @@ export abstract class EngineHost implements EvalHost {
 	protected evaluations = 0;
 	protected built = false;
 	protected needsFull = false;
+	/** No recalculation has run since the workbook was opened: stored values may stand. */
+	protected fresh = true;
 
 	constructor(
 		readonly workbook: Workbook,
@@ -160,20 +162,7 @@ export abstract class EngineHost implements EvalHost {
 	}
 
 	parse(formula: string): FormulaAst | FormulaError {
-		let ast = this.astCache.get(formula);
-		if (!ast) {
-			try {
-				ast = parseFormula(formula);
-			} catch (e) {
-				// A stack overflow while parsing is reported like a too-deeply nested formula.
-				if (e instanceof RangeError) ast = new FormulaError(e.message, -1, '#VALUE!');
-				else if (!(e instanceof FormulaError)) throw e;
-				else ast = e;
-			}
-			if (this.astCache.size > 100_000) this.astCache.clear();
-			this.astCache.set(formula, ast);
-		}
-		return ast;
+		return this.parsed.parse(formula);
 	}
 
 	now(): Date {
@@ -185,21 +174,6 @@ export abstract class EngineHost implements EvalHost {
 	}
 
 	// ---- graph ----
-
-	protected build(): void {
-		this.nodes.clear();
-		this.footprints.clear();
-		this.footprintIndex = undefined;
-		this.workbook.sheets.forEach((sheet, s) => {
-			for (const [row, cells] of sheet.rows) {
-				for (const [col, cell] of cells) {
-					if (cell.formula) this.createNode(s, row, col, cell, true);
-				}
-			}
-		});
-		this.built = true;
-		this.graphChanged();
-	}
 
 	protected createNode(
 		sheet: number,

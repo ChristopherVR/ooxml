@@ -49,7 +49,11 @@ const OPERAND_START = new Set(['ref', 'name', 'func', 'open', 'structured']);
 
 /** Parses a formula (without, or with, its leading `=`) into a syntax tree. Throws FormulaError. */
 export function parseFormula(formula: string): FormulaAst {
-	const all = tokenize(formula);
+	return parseTokens(tokenize(formula));
+}
+
+/** Parses the tokens of a formula (as {@link tokenize} returns them). Throws FormulaError. */
+export function parseTokens(all: readonly Token[]): FormulaAst {
 	const tokens: Token[] = [];
 	const wsBefore: boolean[] = [];
 	let sawWs = false;

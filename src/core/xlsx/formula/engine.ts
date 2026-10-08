@@ -6,6 +6,7 @@ import type { Cell, CellValue, Workbook } from '../model';
 import { FormulaError } from './ast';
 import { withDateSystem } from './date-serial';
 import { EngineCore } from './engine-core';
+import { GraphPreparation, type PreparedFormulas } from './engine-prepare';
 import type { CalcEngine, CalcEngineOptions, CellPosition } from './engine-types';
 import { rangeHas, sameRange } from './engine-util';
 import { evaluateNode } from './evaluator';
@@ -22,9 +23,62 @@ export {
 } from './engine-types';
 
 class Engine extends EngineCore implements CalcEngine {
+	private preparation: GraphPreparation | undefined;
+	/** The prepared formulas the first recalculation checks (see `trustsStoredValues`). */
+	private prepared: PreparedFormulas | undefined;
+
+	// ---- recalculation ----
+
+	// ---- the graph ----
+
+	prepare(timeRemaining?: () => number): boolean {
+		if (this.built || this.needsFull) return true;
+		this.preparation ??= this.startPreparation();
+		if (!this.preparation.run(timeRemaining)) return false;
+		this.finishPreparation(this.preparation);
+		return true;
+	}
+
+	discardPreparation(): void {
+		if (!this.fresh || this.needsFull) return;
+		this.preparation = undefined;
+		this.prepared = undefined;
+		this.nodes.clear();
+		this.footprints.clear();
+		this.graphChanged();
+		this.built = false;
+	}
+
+	/** Completes the graph, continuing a preparation that is under way. */
+	protected build(): void {
+		const preparation = this.preparation ?? this.startPreparation();
+		preparation.run();
+		this.finishPreparation(preparation);
+	}
+
+	private startPreparation(): GraphPreparation {
+		this.nodes.clear();
+		this.footprints.clear();
+		this.footprintIndex = undefined;
+		this.prepared = undefined;
+		return new GraphPreparation(this.workbook, (s, row, col, cell) =>
+			this.createNode(s, row, col, cell, true),
+		);
+	}
+
+	private finishPreparation(preparation: GraphPreparation): void {
+		this.preparation = undefined;
+		this.built = true;
+		this.graphChanged();
+		this.reverseIndex = preparation.reverse;
+		this.prepared = preparation.formulas;
+	}
+
 	// ---- recalculation ----
 
 	recalculateAll(): void {
+		this.fresh = false;
+		this.prepared = undefined;
 		if (this.needsFull) this.releaseAllSpills();
 		if (!this.built || this.needsFull) this.build();
 		this.needsFull = false;
@@ -34,12 +88,13 @@ class Engine extends EngineCore implements CalcEngine {
 
 	recalculateFrom(changes: CellPosition[]): void {
 		const seeds = new Set<FormulaNode>();
-		if (!this.built && !this.needsFull) {
+		if (this.fresh && !this.needsFull) {
 			// The first recalculation after opening: like Excel, trust the values the file stored and
 			// compute only what the change reaches plus formulas saved without a value. A workbook
 			// whose formulas may spill is calculated in full, since spill ranges are only known once
 			// their anchors have been evaluated. The changed cells themselves are evaluated below.
-			this.build();
+			this.fresh = false;
+			if (!this.built) this.build();
 			if (!this.trustsStoredValues(changes, seeds)) {
 				this.recalculateAll();
 				return;
@@ -99,13 +154,19 @@ class Engine extends EngineCore implements CalcEngine {
 	 * without a value into `missing`.
 	 */
 	protected trustsStoredValues(changes: CellPosition[], missing: Set<FormulaNode>): boolean {
+		const prepared = this.prepared;
+		this.prepared = undefined;
+		if (!prepared) return false;
 		const changed = new Set(changes.map((c) => `${c.sheet}:${cellKey(c.row, c.col)}`));
-		for (const node of this.allNodes()) {
-			const legacyOrArray = node.legacy || node.arrayRange;
-			if (!legacyOrArray && !changed.has(`${node.sheet}:${cellKey(node.row, node.col)}`))
+		const current = (node: FormulaNode): boolean =>
+			this.nodes.get(node.sheet)?.get(cellKey(node.row, node.col)) === node;
+		for (const node of prepared.dynamic) {
+			if (current(node) && !changed.has(`${node.sheet}:${cellKey(node.row, node.col)}`))
 				return false;
+		}
+		for (const node of prepared.unvalued) {
 			const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
-			if (cell && cell.value === null && !node.keepCached) missing.add(node);
+			if (current(node) && cell && cell.value === null) missing.add(node);
 		}
 		return true;
 	}
@@ -127,6 +188,8 @@ class Engine extends EngineCore implements CalcEngine {
 
 	invalidate(): void {
 		this.releaseAllSpills();
+		this.preparation = undefined;
+		this.prepared = undefined;
 		this.nodes.clear();
 		this.footprints.clear();
 		this.graphChanged();

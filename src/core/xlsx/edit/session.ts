@@ -256,6 +256,7 @@ export function createEditSession(
 			calculator.full();
 			emit({ kind: 'cells', label: 'Calculate now', structural: false });
 		},
+		prepareCalculation: (opts) => calculator.prepare(opts?.timeRemaining),
 		calculateSheet(s) {
 			calculator.sheet(s);
 			emit({ kind: 'cells', label: 'Calculate sheet', sheet: s, structural: false });

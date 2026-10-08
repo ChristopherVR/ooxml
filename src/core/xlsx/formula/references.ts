@@ -17,8 +17,11 @@ import {
 
 /** Sheet index for a name (case-insensitive), or -1. */
 export function sheetIndex(host: EvalHost, name: string): number {
+	const sheets = host.workbook.sheets;
+	// Sheet names are unique ignoring case, so an exact match is the match (and needs no lower-casing).
+	for (let i = 0; i < sheets.length; i++) if (sheets[i]?.name === name) return i;
 	const lower = name.toLowerCase();
-	return host.workbook.sheets.findIndex((sheet) => sheet.name.toLowerCase() === lower);
+	return sheets.findIndex((sheet) => sheet.name.toLowerCase() === lower);
 }
 
 /** The sheets a prefix names (several for a 3D reference); `undefined` when one is missing. */

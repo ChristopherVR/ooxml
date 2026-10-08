@@ -1,12 +1,15 @@
 // Times each stage of opening a workbook the way `<xlsx-editor>` does: format detection and the
 // package read (`loadWorkbook`), each worksheet's parse, the edit session, a full recalculation
-// (what `fullCalcOnLoad` or the first edit costs), the grid metrics and the cell views of the
-// first viewport of every sheet. Run with `bun src/core/scripts/xlsx/profile-load.ts <file>`
-// (`--repeat N` runs it N times and prints each stage's fastest and median time; `--recalc` also
-// times a full recalculation); add `--cpu-prof` to bun for a CPU profile of the same run.
+// (what `fullCalcOnLoad` costs), the grid metrics and the cell views of the first viewport of
+// every sheet; then the first edit with and without the formula graph prepared ahead
+// (`prepareCalculation`, which the editor runs in idle time) and a later edit. Run with
+// `bun src/core/scripts/xlsx/profile-load.ts <file>` (`--repeat N` runs it N times and prints each
+// stage's fastest and median time; `--recalc` also times a full recalculation, after which there
+// is nothing left to prepare); add `--cpu-prof` to bun for a CPU profile of the same run.
 import { readFileSync } from 'node:fs';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { createEditSession } from '../../xlsx/edit/index';
+import { type CalcEngine, createCalcEngine } from '../../xlsx/formula/index';
 import { createGridMetrics } from '../../xlsx/layout/metrics';
 import { approximateMeasure } from '../../xlsx/layout/row-autofit';
 import { visibleCells } from '../../xlsx/layout/viewport';
@@ -109,12 +112,20 @@ async function once(): Promise<void> {
 		await stage('recalculateAll (fullCalcOnLoad / first edit)', () =>
 			session.calc.recalculateAll(),
 		);
-	await stage('first edit (recalculateFrom one cell)', () => {
-		const sheet = workbook.sheets[workbook.activeSheet];
-		const first = sheet?.rows.values().next().value?.keys().next().value;
-		const row = sheet?.rows.keys().next().value;
-		if (row !== undefined && first !== undefined)
-			session.calc.recalculateFrom([{ sheet: workbook.activeSheet, row, col: first }]);
+	const sheet = workbook.sheets[workbook.activeSheet];
+	const row = sheet?.rows.keys().next().value;
+	const col = sheet?.rows.values().next().value?.keys().next().value;
+	const edit = (engine: CalcEngine) => {
+		if (row !== undefined && col !== undefined)
+			engine.recalculateFrom([{ sheet: workbook.activeSheet, row, col }]);
+	};
+	await stage('first edit, graph not prepared', () => edit(createCalcEngine(workbook)));
+	await stage('prepare graph (idle work, total)', () => session.prepareCalculation());
+	await stage('first edit after preparation', () => edit(session.calc));
+	await stage('later edit', () => edit(session.calc));
+	await stage('later edit typing a formula', () => {
+		const at = { sheet: workbook.activeSheet, row: 0, col: 200 };
+		session.setCellInput(at.sheet, at.row, at.col, '=1+1');
 	});
 
 	summary = `${workbook.sheets.length} sheets, ${formulas} formulas; fullCalcOnLoad: ${!!workbook.fullCalcOnLoad}, calcMode: ${workbook.calcMode ?? 'auto'}`;

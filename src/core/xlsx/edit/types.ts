@@ -296,6 +296,15 @@ export interface EditSession {
 	/** Recalculates every formula (F9); not an undo step. */
 	calculateNow(): void;
 	/**
+	 * Builds the formula dependency graph ahead of the first edit, so that edit does not wait
+	 * for every formula to be parsed. Call it repeatedly from idle time: each call works until
+	 * `timeRemaining()` (milliseconds left, as `requestIdleCallback`'s deadline reports them)
+	 * reaches zero and returns true once the graph is ready. Without `timeRemaining` it finishes
+	 * in one call. Edits made before it is done stay correct: they finish the remaining work
+	 * first. A no-op (true) when edits do not recalculate.
+	 */
+	prepareCalculation(options?: { timeRemaining?: () => number }): boolean;
+	/**
 	 * Recalculates the formulas of one sheet and their dependents (Shift+F9). After structural
 	 * edits made in manual mode the whole workbook is recalculated instead.
 	 */
