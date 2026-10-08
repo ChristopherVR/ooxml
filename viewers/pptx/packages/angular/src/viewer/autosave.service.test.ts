@@ -9,6 +9,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutosaveService } from './autosave.service';
+import { EditorStateService } from './editor-state.service';
 
 vi.mock(import('ooxml-ui/pptx'), async () => {
 	const actual = await vi.importActual<typeof import('ooxml-ui/pptx')>('ooxml-ui/pptx');
@@ -190,5 +191,57 @@ describe('autosave timer redundancy', () => {
 		expect(saveAutosaveSnapshot).toHaveBeenCalledTimes(2);
 		await bound.tick();
 		expect(bound.serialize).toHaveBeenCalledTimes(2);
+	});
+});
+
+/**
+ * The edit the browser recovery specs drive (Home > New Slide) must reach the
+ * snapshot writer through the REAL editor state, not a stubbed dirty flag.
+ *
+ * Every test above binds `isDirty: () => true`, so none of them could notice an
+ * editor that never raises the flag, which is exactly how React once shipped
+ * with no crash recovery at all. `autosave-recovery-prompt.spec.ts` and
+ * `autosave-recovery-encryption.spec.ts` used to skip any binding that wrote no
+ * snapshot after New Slide; this pins the Angular half of that guarantee.
+ */
+describe('a ribbon New Slide on a freshly loaded deck', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		vi.mocked(saveAutosaveSnapshot).mockClear();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it.each([
+		{ layoutPath: undefined, label: 'the plain button' },
+		{ layoutPath: 'ppt/slideLayouts/slideLayout2.xml', label: 'a layout from its menu' },
+	])('writes a recovery snapshot after $label', async ({ layoutPath }) => {
+		const editor = new EditorStateService();
+		editor.setSlides([{ id: 's1', rId: 's1', slideNumber: 1, elements: [] }]);
+		const serialize = vi.fn(async () => new Uint8Array([1, 2, 3]));
+		const { autosave, flushEffects } = harness();
+		autosave.bind({
+			enabled: () => true,
+			filePath: () => 'deck.pptx',
+			isDirty: () => editor.dirty(),
+			serialize,
+			intervalMs: () => 2000,
+			changeSources: () => [editor.slides(), editor.templateElementsBySlideId()],
+		});
+		flushEffects();
+
+		// Opening a deck is not an edit: nothing to recover yet.
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(saveAutosaveSnapshot).not.toHaveBeenCalled();
+
+		// The handler `ribbon-home-section` runs for `home.slides.newSlide`.
+		editor.addSlide(0, layoutPath);
+		expect(editor.dirty()).toBeTruthy();
+
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(serialize).toHaveBeenCalledOnce();
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', new Uint8Array([1, 2, 3]));
 	});
 });

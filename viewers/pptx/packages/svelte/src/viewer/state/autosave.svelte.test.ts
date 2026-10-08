@@ -239,6 +239,38 @@ describe('autosaveController', () => {
 		h.dispose();
 	});
 
+	/**
+	 * The edit the browser recovery specs drive, through the handlers
+	 * `SlidesGroup.svelte` runs for `home.slides.newSlide` (the plain button, and
+	 * a layout picked from its menu) rather than a hand-written reassignment. The
+	 * specs used to skip any binding that wrote no snapshot after New Slide.
+	 */
+	it.each([
+		{
+			label: 'the plain button',
+			insert: (e: EditorState) => e.slidesOps.insertSlideAfterCurrent(),
+		},
+		{
+			label: 'a layout from its menu',
+			insert: (e: EditorState) =>
+				e.slidesOps.insertSlideFromLayout('ppt/slideLayouts/slideLayout2.xml', 'Title and Content'),
+		},
+	])('writes a recovery snapshot after Home > New Slide ($label)', async ({ insert }) => {
+		const h = setup();
+		h.editor.editable = true;
+		flushSync();
+		expect(h.ctl.isDirty).toBeFalsy();
+
+		expect(insert(h.editor)).toBe(1);
+		flushSync();
+		expect(h.editor.dirty).toBeTruthy();
+		expect(h.ctl.isDirty).toBeTruthy();
+		await vi.advanceTimersByTimeAsync(1000);
+
+		expect(saveSnapshot).toHaveBeenCalledExactlyOnceWith('deck.pptx', expect.any(Uint8Array));
+		h.dispose();
+	});
+
 	it('is inert without a filePath', async () => {
 		const h = setup({ filePath: '' });
 		h.editor.slides = [slide('s1'), slide('s2')];

@@ -13,6 +13,7 @@ import { effectScope, nextTick, ref, shallowRef } from 'vue';
 
 import { useAutosaveWiring } from './useAutosaveWiring';
 import type { UseAutosaveWiringResult } from './useAutosaveWiring';
+import { useLayoutSlideOperations } from './useLayoutSlideOperations';
 
 // There is no IndexedDB in this environment, and the store is not what is under
 // test: intercept the write so a snapshot that DOES happen is observable rather
@@ -168,6 +169,32 @@ describe('a read-only session writes no recovery snapshot', () => {
 
 		// A genuine edit: the editor reassigns the array immutably.
 		harness.slides.value = [...harness.slides.value, slide('d')];
+		expect(harness.api.autosave.isDirty.value).toBeTruthy();
+		vi.advanceTimersByTime(2000);
+		await vi.runOnlyPendingTimersAsync();
+
+		expect(harness.snapshots()).toBe(1);
+		harness.stop();
+	});
+
+	/**
+	 * The edit the browser recovery specs drive. Home > New Slide in this binding
+	 * runs `insertSlideFromLayout` (`SlidesGroup.vue`, `newSlideNeedsLayout`), so
+	 * this drives that real handler rather than a hand-written reassignment: the
+	 * specs used to skip any binding that wrote no snapshot after New Slide.
+	 */
+	it('writes a recovery snapshot after Home > New Slide', async () => {
+		const harness = wire();
+		await load(harness);
+		const layoutOps = useLayoutSlideOperations({
+			slides: harness.slides,
+			activeSlideIndex: ref(0),
+			handler: shallowRef(null),
+			pushHistory: vi.fn(),
+		});
+
+		await layoutOps.insertSlideFromLayout('ppt/slideLayouts/slideLayout2.xml', 'Title and Content');
+		expect(harness.slides.value).toHaveLength(4);
 		expect(harness.api.autosave.isDirty.value).toBeTruthy();
 		vi.advanceTimersByTime(2000);
 		await vi.runOnlyPendingTimersAsync();

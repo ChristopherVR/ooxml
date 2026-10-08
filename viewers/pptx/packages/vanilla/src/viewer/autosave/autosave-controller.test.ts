@@ -1,5 +1,5 @@
-import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import type { AutosaveActivation, AutosaveRecoveryOffer } from 'ooxml-ui/pptx';
+import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';
@@ -20,6 +20,8 @@ vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 
 // Imported after the mock is registered.
 const { createAutosaveController } = await import('./autosave-controller');
+const { createEditorOps } = await import('../editor/editor-operations');
+const { createSlideActions } = await import('../editor/editor-slide-actions');
 
 function makeSlide(id: string): PptxSlide {
 	return { id, elements: [] } as unknown as PptxSlide;
@@ -173,6 +175,45 @@ describe('createAutosaveController', () => {
 		expect(controller.isEnabled()).toBeTruthy();
 		await vi.advanceTimersByTimeAsync(1000);
 		expect(save).toHaveBeenCalledOnce();
+		controller.destroy();
+	});
+
+	/**
+	 * The edit the browser recovery specs drive, through the real slide actions
+	 * `slides-group.ts` runs for `home.slides.newSlide` (the plain button, and a
+	 * layout from its menu) rather than a hand-set dirty flag: every test above
+	 * sets `dirty: true` itself, so none could see an editor that never raises
+	 * it. The specs used to skip any binding that wrote no snapshot here.
+	 */
+	it.each([
+		{ label: 'the plain button', layoutPath: undefined },
+		{ label: 'a layout from its menu', layoutPath: 'ppt/slideLayouts/slideLayout2.xml' },
+	])('persists a snapshot after Home > New Slide ($label)', async ({ layoutPath }) => {
+		const { handler, save } = makeHandler();
+		const controller = createAutosaveController({
+			store,
+			getHandler: () => handler,
+			filePath: 'deck.pptx',
+			getIntervalMs: () => 2000,
+		});
+		// A load: slides arrive without the dirty flag, so nothing is written.
+		store.set({ slides: [makeSlide('a')], editable: true, loading: false });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(saveAutosaveSnapshot).not.toHaveBeenCalled();
+
+		const ops = createEditorOps({ store, getHandler: () => null, onHistoryChange: vi.fn() });
+		const actions = createSlideActions({ store, ops, getHandler: () => null });
+		if (layoutPath) {
+			actions.insertSlideFromLayout(layoutPath, 'Title and Content');
+		} else {
+			actions.addSlide();
+		}
+		expect(store.get().slides).toHaveLength(2);
+		expect(store.get().dirty).toBeTruthy();
+		await vi.advanceTimersByTimeAsync(2000);
+
+		expect(save).toHaveBeenCalledOnce();
+		expect(saveAutosaveSnapshot).toHaveBeenCalledWith('deck.pptx', new Uint8Array([1, 2, 3]));
 		controller.destroy();
 	});
 });
