@@ -40,10 +40,14 @@ async function copyDeclarations(directory) {
 		const destination = join(outputDir, relative(sourceDir, sourcePath));
 		await mkdir(join(destination, '..'), { recursive: true });
 		await cp(sourcePath, destination);
-		if (!entry.name.endsWith('.map')) declarationFiles.push(destination);
+		if (!entry.name.endsWith('.map')) {
+			declarationFiles.push(destination);
+		}
 	}
 }
 
 await copyDeclarations(sourceDir);
-for (const file of declarationFiles) await checkExportLists(file);
+for (const file of declarationFiles) {
+	await checkExportLists(file);
+}
 await rm(sourceDir, { recursive: true, force: true });

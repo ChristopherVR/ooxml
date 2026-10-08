@@ -1,4 +1,8 @@
-import type { PptxData, PptxSlide, SvgExportOptions as CoreSvgExportOptions } from 'pptx-viewer-core';
+import type {
+	PptxData,
+	PptxSlide,
+	SvgExportOptions as CoreSvgExportOptions,
+} from 'pptx-viewer-core';
 import { SvgExporter } from 'pptx-viewer-core';
 
 /**
@@ -23,4 +27,3 @@ export function exportSlideToSvg(
 export function exportAllSlidesToSvg(data: PptxData, options: SvgExportOptions = {}): string[] {
 	return SvgExporter.exportAll(data, options);
 }
-
