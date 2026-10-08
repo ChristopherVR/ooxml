@@ -23,7 +23,6 @@
 	"exclude": [
 		"**/dist/**",
 		"**/node_modules/**",
-		"pptx/ui/**",
 		"pptx/**/*.test.ts",
 		"pptx/**/*.test.tsx",
 		"pptx/__tests__/fixtures/e2e/**"
