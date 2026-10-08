@@ -81,12 +81,18 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			const result = editor.locator('[data-field="AUTHOR"]').first();
 			await expect(result).toContainText('Ann');
 			await editor.locator('.ProseMirror').focus();
-			await result.evaluate((element) => {
-				const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()!;
-				const selection = window.getSelection();
-				selection!.setBaseAndExtent(text, 1, text, 2);
-			});
-			await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe('n');
+			// Focusing can make ProseMirror redraw its own (collapsed) selection a moment later,
+			// over the one set here; set it again until it holds.
+			await expect(async () => {
+				await result.evaluate((element) => {
+					const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()!;
+					const selection = window.getSelection();
+					selection!.setBaseAndExtent(text, 1, text, 2);
+				});
+				await expect
+					.poll(() => page.evaluate(() => window.getSelection()?.toString()), { timeout: 1000 })
+					.toBe('n');
+			}).toPass();
 			await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
 			const pane = editor.locator('.dve-comments-panel');
 			await pane.getByRole('textbox', { name: 'New comment', exact: true }).fill('Whole field');
