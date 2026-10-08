@@ -9,6 +9,7 @@ import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
 import type { SourceIndex } from './package';
 import { readSheetData, type CellContext } from './sheet-data';
+import { splitSheetData } from './sheet-data-source';
 import {
 	readAutoFilter,
 	readColumns,
@@ -141,7 +142,8 @@ export function parseWorksheet(
 		ctx.warn(`Sheet "${name}" has no part ${partName}; it was loaded empty.`);
 		return sheet;
 	}
-	const root = parseXml(xml, { label: 'XLSX worksheet' }).documentElement;
+	const split = splitSheetData(xml);
+	const root = parseXml(split?.xml ?? xml, { label: 'XLSX worksheet' }).documentElement;
 	const byName = new Map<string, XmlElement>();
 	const cfBlocks: XmlElement[] = [];
 	for (const node of elements(root)) {
@@ -164,7 +166,7 @@ export function parseWorksheet(
 	if (format.format) sheet.format = format.format;
 	sheet.columns = readColumns(byName.get('cols'), ctx.xfMap);
 	const data = byName.get('sheetData');
-	if (data) readSheetData(ctx, data, sheet);
+	if (data) readSheetData(ctx, split?.sheetData ?? data, sheet);
 	const protection = readProtection(byName.get('sheetProtection'));
 	if (protection) sheet.protection = protection;
 	const autoFilter = readAutoFilter(byName.get('autoFilter'));
