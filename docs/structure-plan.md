@@ -289,6 +289,28 @@ Implementation:
   presence before answering a sync request and makes a joiner wait for an
   earlier writer's workbook.
 
+### Wave 4 follow-ups (landed 2026-10-08)
+
+- Excel opened a real 66,000-formula workbook (one 6.5 MB sheet) in about
+  1.6 s of core time because every worksheet was parsed into a full DOM, and
+  the first edit recalculated every formula. Worksheet cell data now goes
+  through a lightweight reader in `xml/lite.ts` (falling back to the DOM for
+  anything it does not handle), the first edit trusts stored values and
+  computes only what it reaches, and the formula tokenizer no longer slices
+  the source per match: core load 1.6 s to 0.33 s, time to first painted
+  grid in the browser roughly halved. `src/core/scripts/xlsx/profile-load.ts`
+  measures each stage. Still slow: the first edit (about 0.5 s, building the
+  dependency graph) and structural edits (full recalculation).
+- Excel chrome now matches Excel 365: the editing-mode selector, Comments and
+  Share sit at the right end of the ribbon tab row (a new `actions` slot on
+  the shared ribbon tabs), the search box is centred in the title bar, the
+  title bar's collaboration slot holds presence only, and the status bar
+  reads Ready, selection statistics (a new `summary` slot on the shared
+  status bar), view buttons, zoom. A reported double "Ready" bar could not be
+  reproduced in any framework, width or theme, or on the deployed demo; a
+  unit test and a browser spec now assert one status bar. Word and
+  PowerPoint still place Comments and Share elsewhere (follow-up).
+
 ### Wave 5 (next)
 
 - pptx binding factory; per-binding contract parity tests for all products;
