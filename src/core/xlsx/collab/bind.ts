@@ -77,6 +77,20 @@ export function bindWorkbookSession(
 	let unsent = false;
 	let replaying: 'undo' | 'redo' | undefined;
 	let dirty = emptyDirty();
+	/** The room was empty but an earlier writer is present: wait for its workbook, then adopt. */
+	let waiting = false;
+	const joined = Date.now();
+	host.updatePresence({ joined });
+	/** A writer that joined before this binding (ties broken by client id) and will seed the room. */
+	const earlierWriter = (): boolean =>
+		host
+			.peers()
+			.some(
+				(peer) =>
+					peer.joined !== undefined &&
+					peer.role !== 'viewer' &&
+					(peer.joined < joined || (peer.joined === joined && peer.clientId < doc.clientID)),
+			);
 
 	const write = (scope: WriteScope, origin: symbol): void => {
 		doc.transact(() => writeWorkbook(shared, keys, workbook, scope), origin);
@@ -100,10 +114,15 @@ export function bindWorkbookSession(
 		if (disposed) return;
 		if (shared.sheets.size === 0) {
 			if (!host.canWrite()) return;
+			// Synced to an empty room while an earlier writer has not seeded yet (its gate is still
+			// closed): seeding now would make that writer adopt this workbook instead of its own.
+			waiting = !settled && earlierWriter();
+			if (waiting) return;
 			write({ kind: 'all' }, XLSX_SYNC_ORIGIN);
 		} else if (settled && unsent && host.canWrite()) write({ kind: 'all' }, XLSX_SYNC_ORIGIN);
 		else if (!settled) apply(true);
 		settled = true;
+		waiting = false;
 		unsent = false;
 	};
 
@@ -124,6 +143,7 @@ export function bindWorkbookSession(
 		if (disposed || !isDirty(dirty)) return;
 		if (!settled) {
 			dirty = emptyDirty(); // Adoption reads the whole room.
+			if (waiting && shared.sheets.size > 0) settle();
 			return;
 		}
 		const kind = transaction.origin === undoManager ? (replaying ?? 'undo') : 'remote';
@@ -142,6 +162,10 @@ export function bindWorkbookSession(
 	const stopReady = host.on('ready', settle);
 	const stopSynced = host.on('synced', (synced) => {
 		if (synced && !host.canWrite()) settle();
+	});
+	// The earlier writer left before seeding: this binding seeds after all.
+	const stopPeers = host.on('peers', () => {
+		if (waiting && !settled) settle();
 	});
 	if (host.synced || host.canWrite()) settle();
 
@@ -187,6 +211,7 @@ export function bindWorkbookSession(
 			stopEdits();
 			stopReady();
 			stopSynced();
+			stopPeers();
 			undoManager.destroy();
 		},
 	};

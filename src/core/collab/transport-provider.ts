@@ -111,6 +111,9 @@ export function createTransportProvider(
 		const kind = decoding.readVarUint(decoder);
 		const payload = decoding.readVarUint8Array(decoder);
 		if (kind === SYNC_STEP1) {
+			// Announce ourselves before the reply completes the newcomer's sync, so it knows who is
+			// in the room when it decides whether to seed an empty document.
+			if (awareness.getLocalState() !== null) sendAwareness([doc.clientID]);
 			const encoder = encoding.createEncoder();
 			encoding.writeVarUint(encoder, MESSAGE_SYNC);
 			encoding.writeVarUint(encoder, SYNC_STEP2);

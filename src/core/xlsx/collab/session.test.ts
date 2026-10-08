@@ -1,5 +1,6 @@
 // The binding on real collab sessions over the in-memory transport: gate, seeding, presence.
 import { afterEach, describe, expect, it } from 'vitest';
+import { createBroadcastTransport } from '../../collab/broadcast-transport';
 import { createMemoryHub } from '../../collab/memory-transport';
 import { type CollabSession, createCollabSession } from '../../collab/session';
 import { transportProvider } from '../../collab/transport-provider';
@@ -14,15 +15,21 @@ afterEach(() => {
 	for (const session of open.splice(0)) session.destroy();
 });
 
-function join(hub: ReturnType<typeof createMemoryHub>, name: string, sheets: string[]) {
+type Hub = ReturnType<typeof createMemoryHub> | { broadcast: string };
+
+function join(hub: Hub, name: string, sheets: string[], syncGraceMs = 0) {
+	const transport =
+		'broadcast' in hub
+			? createBroadcastTransport({ roomId: hub.broadcast })
+			: hub.createTransport('book');
 	const session = createCollabSession<XlsxPresence>({
 		roomId: 'book',
-		provider: transportProvider({ transport: hub.createTransport('book') }),
+		provider: transportProvider({ transport }),
 		user: { name },
 		initialPresence: {},
 		sanitizePayload: sanitizeXlsxPresence,
 		heartbeatMs: 0,
-		syncGraceMs: 0,
+		syncGraceMs,
 	});
 	open.push(session);
 	const edit = createEditSession(createWorkbook({ sheets }));
@@ -44,5 +51,31 @@ describe('bindWorkbookSession on collab sessions', () => {
 		b.binding.setSelection(0, { start: { row: 1, col: 0 }, end: { row: 1, col: 0 } });
 		await new Promise((resolve) => setTimeout(resolve, 80));
 		expect(a.binding.remoteSelections()).toMatchObject([{ userName: 'Bob', sheet: 0 }]);
+	});
+
+	it('a guest joining before the first peer seeded adopts that peer workbook', async () => {
+		// Ada is alone and still inside her grace period (nothing written yet) when Bob arrives: the
+		// handshake syncs Bob to an empty room and Ada's awareness arrives before any workbook. The
+		// BroadcastChannel delivers Bob's opening sync before his hello, as in the browser.
+		const hub = { broadcast: `race-${Math.random().toString(36).slice(2)}` };
+		const a = join(hub, 'Ada', ['Sales', 'Budget'], 150);
+		a.edit.setCellInput(0, 0, 0, 'from Ada');
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		const b = join(hub, 'Bob', ['Sheet1'], 150);
+		await new Promise((resolve) => setTimeout(resolve, 400));
+		for (const side of [a, b]) {
+			expect(side.edit.workbook.sheets.map((s) => s.name)).toEqual(['Sales', 'Budget']);
+			expect(getCell(side.edit.workbook.sheets[0]!, 0, 0)?.value).toBe('from Ada');
+		}
+	});
+
+	it('peers that seed at the same moment converge to one workbook', async () => {
+		const hub = { broadcast: `same-${Math.random().toString(36).slice(2)}` };
+		const a = join(hub, 'Ada', ['Sales'], 60);
+		const b = join(hub, 'Bob', ['Notes'], 60);
+		await new Promise((resolve) => setTimeout(resolve, 300));
+		const names = (side: typeof a) => side.edit.workbook.sheets.map((s) => s.name);
+		expect(names(a)).toEqual(names(b));
+		expect(names(a).length).toBeGreaterThan(0);
 	});
 });

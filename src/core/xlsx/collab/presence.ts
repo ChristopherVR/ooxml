@@ -9,6 +9,11 @@ export interface XlsxPresence {
 	sheet?: string;
 	/** The selection as an A1 range (`B2` or `B2:D9`). */
 	range?: string;
+	/**
+	 * When this peer's binding joined (ms since the epoch). A peer finding the room empty leaves the
+	 * seeding to a writer that joined before it, so a guest never replaces that writer's workbook.
+	 */
+	joined?: number;
 }
 
 /** A collaborator's selection resolved against the local workbook. */
@@ -29,7 +34,8 @@ const SHEET_KEY = /^[a-z0-9]{1,16}-[a-z0-9]{1,16}$/;
  */
 export function sanitizeXlsxPresence(raw: Record<string, unknown>): XlsxPresence {
 	const out: XlsxPresence = {};
-	const { sheet, range } = raw;
+	const { sheet, range, joined } = raw;
+	if (typeof joined === 'number' && Number.isFinite(joined) && joined > 0) out.joined = joined;
 	if (typeof sheet !== 'string' || !SHEET_KEY.test(sheet)) return out;
 	if (typeof range !== 'string' || range.length > 32) return out;
 	const parsed = parseRange(range);
