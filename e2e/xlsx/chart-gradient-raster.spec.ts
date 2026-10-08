@@ -39,21 +39,12 @@ const runs = [
 	{
 		name: 'native scaled chart gradient raster',
 		gap: false,
-		cases: samples.filter(
-			(sample) =>
-				!sample.name.startsWith('three-transparent') &&
-				sample.name !== 'coincident-angle-135-480x300',
-		),
+		cases: samples.filter((sample) => !sample.name.startsWith('three-transparent')),
 	},
 	{
 		name: 'known native translucent three-stop mismatch',
 		gap: true,
 		cases: samples.filter((sample) => sample.name === 'three-transparent-angle-135-300x300'),
-	},
-	{
-		name: 'known native coincident edge mismatch',
-		gap: true,
-		cases: samples.filter((sample) => sample.name === 'coincident-angle-135-480x300'),
 	},
 ];
 for (const run of runs)

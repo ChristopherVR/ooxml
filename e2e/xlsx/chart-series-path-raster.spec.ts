@@ -12,6 +12,15 @@ import { parseDrawingFill } from 'ooxml-core/diagram';
 import native from '../../src/core/chart/__fixtures__/native-gradient-series-path-profiles.json' with { type: 'json' };
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
 
+// Open browser-only gaps (core models pass both at pixel centres and corners):
+// - circle-transparent at 391,479: browser 3.04 premultiplied levels (limit 3); the core
+//   radial model is 2.18 off (native green premul 133.2, model 135.4), and the native red
+//   channel reads 254 from export truncation, so browser gradient quantization adds ~0.9.
+// - centre shape at 302,376: browser 3 levels (limit 2); the core band image gives 23-24
+//   against native 23, but the green ramp there is ~3 levels per pixel, so a sub-pixel
+//   registration difference of the per-mark pattern explains it.
+// Needed evidence: the browser's per-pixel values for both marks with the rendered mark
+// bounds, or native captures at a larger chart size where the ramp is shallower.
 const known = [
 	'series-column-path-corner-circle-transparent-angle-2-300x300',
 	'series-column-path-center-shape-angle-1-300x300',

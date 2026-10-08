@@ -1665,3 +1665,43 @@ native core cases and all 48 legend browser cases again. Automatic legend
 geometry, arbitrary multi-row/column packing, entry text
 overrides, line/marker swatches, position-authoring UI and complete chart parity
 remain open.
+
+### Gradient raster gap follow-up (8 October 2026)
+
+The core linear comparison now evaluates each native sample at its pixel
+centre, as the browser repro already did through `getImageData`. With that
+geometry the wide 135-degree coincident-stop capture explains itself: Excel
+paints two stops saved at one position as a one-step ramp that starts at the
+shared position. Pixels projecting to exactly 0.5 keep the earlier red stop
+(both square diagonals), and pixels 0.000469 past it carry 30-31/255 of the
+later white stop, which bounds the ramp to 1/261..1/251 of the gradient
+vector. `chart/gradient-coincident-stops.ts` opens coincident linear stops by
+1/256 (never past the next stop or the end), so every Office chart painter
+(XLSX, PowerPoint charts, galleries) shares it. All 20 coincident captures stay
+within 0.6 levels; the previous hard SVG step missed the wide boundary by
+about 225 levels. Only linear fills were measured; radial and path stops keep
+their offsets.
+
+Sixteen translucent three-stop captures remain expected failures. Against the
+straight-alpha SVG stops they miss by 3.22 to 3.67 premultiplied levels (limit
+3), with alpha within 0.76; angles 180 and 270 peak at 2.40 to 2.74 and pass.
+In the 0-56% red-to-green segment native red sits about 2.3 levels below the
+model and green about 0.9 above: colour leans about 0.01 of the segment toward
+the more opaque stop (premultiplied interpolation would lean about 0.08), plus
+roughly one level of PARGB-to-ARGB export truncation (opaque green reads 254).
+The passing two-stop translucent profile shows the same lean at under two
+levels. An alpha weight of `a^0.05` would pass every case but is an
+unexplained fit, so it is not applied. Separating the colour weighting from
+export truncation needs native captures of a two-stop red-to-green fill with
+unequal alphas and of the same fill with its alphas swapped.
+
+The two series repros remain browser-only gaps; the core models pass them at
+pixel centres and corners. The translucent top-right circle at 391,479 is
+2.18 levels off in core (native green premultiplied 133.2, model 135.4) and
+3.04 in the browser, so browser gradient quantization adds about 0.9. The
+centred shape at 302,376 is 23-24 in core against native 23, but the ramp
+there is about three levels per pixel, so a sub-pixel registration difference
+of the per-mark pattern accounts for the 3-level browser error. Browser
+per-pixel values with the rendered mark bounds, or native captures at a larger
+chart size, are needed to close them. The browser specs were updated for the
+coincident fix but were not executed in this change.
