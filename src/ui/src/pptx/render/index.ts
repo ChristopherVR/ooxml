@@ -1756,3 +1756,5 @@ export * from './notes-toolbar-state';
 export * from './title-bar-state';
 
 export * from './slide-sorter-state';
+
+export * from './viewer-root-options';
