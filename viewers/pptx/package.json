@@ -30,7 +30,7 @@
 		"locales:generate": "bun --tsconfig-override scripts/tsconfig.runtime.json scripts/generate-complete-locales.ts",
 		"fonts:catalogue": "node scripts/update-google-fonts-catalogue.mjs",
 		"build:packages": "bun run --filter 'pptx-viewer-core' build && bun run --filter 'pptx-viewer-shared' build && bun run --filter 'pptx-viewer-locales' build && bun run --filter 'pptx-viewer-mcp' build && bun run --filter '@christophervr/pptx-viewer' build && bun run --filter 'pptx-react-viewer' build && bun run --filter 'pptx-vue-viewer' build && bun run --filter 'pptx-angular-viewer' build && bun run --filter 'pptx-vanilla-viewer' build && bun run --filter 'pptx-svelte-viewer' build",
-		"typecheck": "bun run --filter '*' typecheck",
+		"typecheck": "bun run build:packages && bun run --filter '*' typecheck",
 		"test": "bash scripts/test-all.sh",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
