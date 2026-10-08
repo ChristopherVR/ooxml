@@ -35,7 +35,16 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				doc,
 				small({ id: 'connector', label: 'Connector', icon: 'connector', unsupported: CONNECT }),
 			),
-			command(doc, small({ id: 'text-tool', label: 'Text', icon: 'textBox', unsupported: SHAPES })),
+			command(
+				doc,
+				small({
+					id: 'text-tool',
+					label: 'Text',
+					icon: 'textBox',
+					action: { type: 'tool', tool: 'text' },
+					keys: ['Control+2', 'Ctrl+2'],
+				}),
+			),
 		]),
 		stack(doc, [
 			menu(doc, {
@@ -85,7 +94,12 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			),
 			command(
 				doc,
-				icon({ id: 'text-block', label: 'Text Block', icon: 'visioTextBlock', unsupported: TEXT }),
+				icon({
+					id: 'text-block',
+					label: 'Text Block',
+					icon: 'visioTextBlock',
+					unsupported: 'Needs core text-block movement and resizing.',
+				}),
 			),
 		]),
 	]);

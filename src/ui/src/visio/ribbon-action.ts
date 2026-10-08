@@ -1,7 +1,7 @@
 import type { VisioShapeFormatEdit } from 'ooxml-core/visio';
 import type { VisioArrangement } from 'ooxml-core/visio/ui';
 
-export type CanvasTool = 'pointer' | 'rectangle' | 'ellipse' | 'line';
+export type CanvasTool = 'pointer' | 'rectangle' | 'ellipse' | 'line' | 'text';
 export type VisioFormattingAction =
 	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' | 'strikethrough' }
 	| { type: 'font-color'; value?: string }
@@ -21,6 +21,8 @@ export type VisioRibbonAction =
 	| { type: 'selection'; mode: 'all' | 'clear' }
 	| { type: 'history'; key: 'undo' | 'redo' }
 	| { type: 'tool'; tool: CanvasTool }
+	| { type: 'cancel-drawing' }
+	| { type: 'page-insert' }
 	| { type: 'delete' }
 	| { type: 'duplicate' }
 	| { type: 'clipboard'; operation: 'copy' | 'cut' | 'paste'; event?: ClipboardEvent }

@@ -3,6 +3,7 @@ import canvas from './canvas.css?raw';
 import ribbon from './ribbon.css?raw';
 import shapes from './shapes.css?raw';
 import sizePosition from './size-position.css?raw';
+import textTool from './text-tool.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -15,6 +16,7 @@ export const canvasAndRibbonStyles = [
 	backstage,
 	canvas,
 	sizePosition,
+	textTool,
 	visioThemeBridge,
 ].join('\n');
 

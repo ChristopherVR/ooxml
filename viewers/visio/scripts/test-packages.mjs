@@ -161,6 +161,11 @@ const creation${index}: Promise<void> = h${index}.createBlankDrawing(newOptions$
 const anchor${index}: p${index}.VisioResizeAnchor = { x: 0, y: 0 };
 const anchoredResize${index}: p${index}.VisioEdit = { type: 'resize-shape', pageId: '0', shapeId: '1', width: 2, height: 1, anchor: anchor${index} };
 const resizing${index}: Promise<void> = h${index}.applyEdits([anchoredResize${index}]); void resizing${index};
+const textBox${index}: p${index}.VisioEdit = { type: 'create-text-box', pageId: '0', shapeId: '2', x: 2, y: 2, width: 2, height: 1, text: 'Text\\n' };
+const drawingText${index}: Promise<void> = h${index}.applyEdits([textBox${index}]); void drawingText${index};
+// @ts-expect-error Creating a text box requires logical text.
+const missingText${index}: p${index}.VisioEdit = { type: 'create-text-box', pageId: '0', shapeId: '3', x: 2, y: 2, width: 2, height: 1 };
+void missingText${index};
 const copying${index}: Promise<void> = h${index}.copySelection(); void copying${index};
 const cutting${index}: Promise<void> = h${index}.cutSelection(); void cutting${index};
 const pasting${index}: Promise<void> = h${index}.pasteSelection(); void pasting${index};

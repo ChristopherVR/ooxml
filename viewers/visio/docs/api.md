@@ -205,7 +205,11 @@ formats remain unsupported. Assigning a model with `document` does not supply
 editable package bytes. Core validation rejects master-linked shapes, rich text,
 fields, signed packages and macro-enabled content. XML/package edits run in an
 isolated worker; framework wrappers do not implement format logic. Plain-text
-edits do not recalculate text-dependent formula caches.
+edits refuse affected or unknown text-dependent formula caches instead of leaving
+them stale, and respect effective `LockTextEdit` protection. VSDX logical text
+excludes its stored terminal paragraph marker while retaining intentional
+trailing LF characters and blank paragraphs. Legacy VSD text semantics are
+unchanged. Rich-text content editing remains unsupported.
 
 `exportVsdx()` returns `{ bytes, dirty, diagnostics }` for an explicit downloaded
 copy. It does not overwrite the source file, upload it or claim native round-trip
@@ -311,6 +315,49 @@ The shared geometry controls expose create rectangle, move, resize and safe
 delete. Every native/mounted framework handle also forwards
 `applyEdits(edits: readonly VisioEdit[])` for an atomic batch through the same
 worker, history and cancellation path.
+
+Home > Text Tool and Insert > Text Box use the same shared fixed-size text-box
+draft. Drag blank page space, enter plain text, then use Add text box or
+Ctrl/Meta+Enter; Escape cancels it. Empty or whitespace-only drafts do not create
+source shapes. Clicking an existing shape with Text Tool selects it and reveals
+the existing text-edit controls. Rectangle, ellipse and line drawing use the
+same guarded creation lifecycle. Their internal controller transaction captures
+source, page, ordered selection, zoom and visibility intent before drawing,
+checks that intent before source acceptance, and selects created shapes in the
+same undo step. Newer intent or disposal supersedes a pending creation. Internal
+creation tokens are not an additional native binding API.
+
+All six public handles accept the new ordinary command through `applyEdits()`:
+
+```ts
+await handle.applyEdits([
+	{
+		type: 'create-text-box',
+		pageId: '0',
+		shapeId: '10',
+		x: 4,
+		y: 5,
+		width: 3,
+		height: 2,
+		text: 'Text with an intentional trailing blank paragraph\n',
+	},
+]);
+```
+
+Text is required. The saved default text style supplies the initial character
+formatting. Explicit `FillPattern=0` and `LinePattern=0` make the new box
+paint-free; changing line color alone does not enable an outline. Fixed-size
+draft creation does not establish native GUI Text Tool defaults, automatic text
+sizing or rich-text content editing. Generic `applyEdits()` keeps its existing
+selection behavior; the shared drawing tool owns the created-shape selection.
+Native evidence covers 24 saved fixed-box API cases at three drawing scales,
+using default and custom Text Only/Arial 18 pt styles, with core outputs reopened
+in Visio. These saved-style cases do not measure interactive GUI defaults; see
+the [verification record](verification.md).
+
+Insert > Blank Page routes through the existing source-backed page insertion
+command, then selects the new page. It shares the page bar's insertion behavior,
+undo/redo and source admission; this does not add template-backed page creation.
 
 ```ts
 await handle.applyEdits([

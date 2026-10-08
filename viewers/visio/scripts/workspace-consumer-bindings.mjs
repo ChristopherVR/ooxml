@@ -101,12 +101,14 @@ export async function verifyWorkspaceBindings(bytes) {
 		host.style.height = '600px';
 		document.body.append(host);
 		const selections = [],
-			primary = [];
+			primary = [],
+			changes = [];
 		let binding;
 		try {
 			binding = await mounted(framework, host, {
 				'selection-change': (value) => selections.push(value),
 				'shape-select': (value) => primary.push(value),
+				'document-change': (value) => changes.push(value),
 			});
 			const viewer = binding.handle;
 			const nativeSelections = [];
@@ -260,6 +262,50 @@ export async function verifyWorkspaceBindings(bytes) {
 				!viewer.controller.state.edit.dirty &&
 					viewer.controller.state.document.pages[0].shapes.length === 0,
 				`${framework}: clean new source undo`,
+			);
+			const beforeText = viewer.exportVsdx().bytes,
+				text = `Installed ${framework}\nBlank paragraph\n`;
+			await viewer.applyEdits([
+				{
+					type: 'create-text-box',
+					pageId: blankPageId,
+					shapeId: '2',
+					x: 2,
+					y: 2,
+					width: 2,
+					height: 1,
+					text,
+				},
+			]);
+			const textState = viewer.controller.state,
+				textShape = textState.document.pages[0].shapes[0];
+			check(
+				textShape.text.plainText === text &&
+					textShape.style.fill === 'none' &&
+					textShape.style.linePattern === 0,
+				`${framework}: logical text and paint-free text box`,
+			);
+			check(
+				changes.at(-1).document === textState.document &&
+					changes.at(-1).kind === 'edit' &&
+					textState.edit.dirty,
+				`${framework}: created model through binding callback`,
+			);
+			viewer.selectAll();
+			check(
+				selections.at(-1) === viewer.controller.state.selectedShapes &&
+					nativeSelections.at(-1) === selections.at(-1) &&
+					primary.at(-1)?.id === textShape.id,
+				`${framework}: created text selection events`,
+			);
+			await viewer.undo();
+			const beforeTextRestored = viewer.exportVsdx().bytes;
+			check(
+				beforeTextRestored.length === beforeText.length &&
+					beforeTextRestored.every((byte, index) => byte === beforeText[index]) &&
+					viewer.controller.state.document.pages[0].shapes.length === 0 &&
+					viewer.controller.state.selectedShapes.length === 0,
+				`${framework}: byte-exact text creation undo`,
 			);
 			results.push(framework);
 		} finally {

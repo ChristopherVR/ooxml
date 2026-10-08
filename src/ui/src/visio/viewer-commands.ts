@@ -11,6 +11,7 @@ import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './
 import type { RibbonCommand } from './ribbon-parts';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
 import { ShapeDrawTool } from './viewer-draw-tool';
+import { ViewerTextTool } from './viewer-text-tool';
 import type { Rulers } from './viewer-ruler';
 import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
@@ -53,6 +54,7 @@ export class ViewerCommands {
 	#ruler = false;
 	#pending = 0;
 	#draw: ShapeDrawTool;
+	#text: ViewerTextTool;
 	#pageOrder: ViewerPageOrder;
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
@@ -78,8 +80,13 @@ export class ViewerCommands {
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
 		this.#draw = new ShapeDrawTool(host.viewport, host.controller, {
-			tool: () => (this.#tool === 'pointer' ? undefined : this.#tool),
+			tool: () => (this.#tool === 'pointer' || this.#tool === 'text' ? undefined : this.#tool),
 			announce: host.announce,
+		});
+		this.#text = new ViewerTextTool(host.viewport, host.controller, {
+			active: () => this.#tool === 'text',
+			announce: host.announce,
+			revealEdit: () => host.reveal('edit', true),
 		});
 		this.#targets = {
 			controller: host.controller,
@@ -96,6 +103,11 @@ export class ViewerCommands {
 			formatSelection: (action) => this.#formatting.run(action),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
 			setTool: (tool) => this.setTool(tool),
+			cancelDrawing: () => {
+				this.#draw.cancel();
+				this.#text.cancel();
+			},
+			insertPage: () => this.#insertPage(),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
 				this.render(host.controller.state);
@@ -189,6 +201,7 @@ export class ViewerCommands {
 			options,
 		);
 		const disposeDraw = this.#draw.wire();
+		const disposeText = this.#text.wire();
 		const disposeClipboard = this.#clipboard.wire();
 		return () => {
 			this.#pageOrder.close();
@@ -197,11 +210,16 @@ export class ViewerCommands {
 			++this.#pending;
 			events.abort();
 			disposeDraw();
+			disposeText();
 			disposeClipboard();
 		};
 	}
 	setTool(tool: CanvasTool): void {
 		if (tool !== 'pointer' && !this.#canEdit(this.host.controller.state)) return;
+		if (tool !== this.#tool) {
+			this.#draw.cancel();
+			this.#text.cancel();
+		}
 		this.#tool = tool;
 		this.render(this.host.controller.state);
 		this.host.toolChanged?.();
@@ -240,9 +258,26 @@ export class ViewerCommands {
 		const state = this.host.controller.state;
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || !state.document || !this.#canEdit(state)) return;
+		const sourceGeneration = this.host.controller.sourceGeneration;
+		const documentGeneration = this.host.controller.documentGeneration;
 		void this.#edit(async () => {
 			const command = visioPageInsertCommand(state.document!, page.id);
+			const current = this.host.controller.state;
+			if (
+				current.document !== state.document ||
+				current.pageIndex !== state.pageIndex ||
+				current.selectedShapes !== state.selectedShapes
+			)
+				return;
 			await this.host.controller.applyEdits([command]);
+			const after = this.host.controller.state;
+			if (
+				this.host.controller.sourceGeneration !== sourceGeneration ||
+				this.host.controller.documentGeneration !== documentGeneration + 1 ||
+				after.pageIndex !== state.pageIndex ||
+				after.selectedShapes !== state.selectedShapes
+			)
+				return;
 			const index = this.host.controller.state.document!.pages.findIndex(
 				(page) => page.id === command.pageId,
 			);
@@ -322,6 +357,8 @@ export class ViewerCommands {
 		if (control && (key === 'PageDown' || key === 'PageUp'))
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'fullscreen' };
+		if (key === 'Escape' && (this.#draw.drawing || this.#text.drafting))
+			return { type: 'cancel-drawing' };
 		if (event.composedPath().some(editable)) return undefined;
 		if (control && !event.shiftKey && ['c', 'x', 'v'].includes(key)) {
 			const operation = key === 'c' ? 'copy' : key === 'x' ? 'cut' : 'paste';
@@ -338,6 +375,7 @@ export class ViewerCommands {
 		if (control && (key === 'y' || (event.shiftKey && key === 'z')))
 			return { type: 'history', key: 'redo' };
 		if (control && key === '1') return { type: 'tool', tool: 'pointer' };
+		if (control && key === '2') return { type: 'tool', tool: 'text' };
 		if (control && key === '8') return { type: 'tool', tool: 'rectangle' };
 		if (control && key === '9') return { type: 'tool', tool: 'ellipse' };
 		if (control && key === '6') return { type: 'tool', tool: 'line' };
@@ -358,6 +396,8 @@ export class ViewerCommands {
 		this.run(action);
 	}
 	render(state: ViewerState): void {
+		this.#draw.render(state);
+		this.#text.render(state);
 		this.#duplication.render(state);
 		this.#clipboard.render(state);
 		this.#formatting.render(state);
@@ -404,6 +444,13 @@ export class ViewerCommands {
 		button('ellipse').setAttribute('checked', String(this.#tool === 'ellipse'));
 		button('ellipse').disabled = !editing || !page;
 		button('line-tool').disabled = !editing || !page;
+		button('text-tool').setAttribute('pressed', String(this.#tool === 'text'));
+		for (const name of ['text-tool', 'text-box', 'blank-page'])
+			button(name).disabled = !editing || !page;
+		for (const name of ['text-tool', 'text-box'])
+			button(name).title = editing
+				? 'Drag a fixed-size text box, or click a shape to edit plain text.'
+				: 'Open a .vsdx file to add text boxes.';
 		rectangle.title = state.edit.sourceAvailable
 			? 'Rectangle (Ctrl+8)'
 			: 'Rectangle (Ctrl+8): open a .vsdx file to draw. Model-only documents are read only.';

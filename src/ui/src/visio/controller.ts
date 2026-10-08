@@ -24,6 +24,13 @@ import {
 } from './clipboard-capture';
 import { createWorkerClipboardCapture, type CancellableClipboardCapture } from './worker-clipboard';
 import {
+	ViewerCreationTokens,
+	creationCancelled,
+	sameCreationContext,
+	type CreationContext,
+	type ViewerCreationToken,
+} from './creation-token';
+import {
 	EMPTY_SELECTION,
 	sameSelection,
 	selectionKey,
@@ -103,6 +110,8 @@ export class ViewerController {
 	#history: DocumentHistory | null = null;
 	#selectionHistory = new WeakMap<SourceSnapshot, SelectionHistory>();
 	#selectionIntent = 0;
+	#viewIntent = 0;
+	#creation = new ViewerCreationTokens(() => this.#creationContext());
 	#sourceFormat: VisioDocument['format'] | null = null;
 	#editId = 0;
 	#visible = documentVisibility(null);
@@ -479,6 +488,49 @@ export class ViewerController {
 			throw new Error('Selection edits must target selected shapes on the current page.');
 		return this.#mutate('edit', commands, undefined, undefined, true);
 	}
+	/** Capture an internal drawing intent before pointer movement or draft input. */
+	captureCreationToken(pageId: string): ViewerCreationToken {
+		this.#assertAlive();
+		return this.#creation.capture(pageId);
+	}
+	isCreationTokenCurrent(token: ViewerCreationToken): boolean {
+		return this.#creation.current(token);
+	}
+	/** Internal drawing adapter entry point: creation and its selection form one history edge. */
+	async applyCreationEdits(edits: readonly VisioEdit[], token: ViewerCreationToken): Promise<void> {
+		this.#assertAlive();
+		const context = this.#creation.require(token);
+		const revision = this.#revision;
+		const commands = snapshotEdits(edits);
+		if (this.#destroyed || revision !== this.#revision) throw creationCancelled();
+		this.#creation.require(token);
+		if (
+			!commands.length ||
+			commands.some(
+				(command) =>
+					!['create-rectangle', 'create-ellipse', 'create-line', 'create-text-box'].includes(
+						command.type,
+					) ||
+					command.pageId !== context.pageId ||
+					!('shapeId' in command),
+			)
+		)
+			throw new Error('Creation edits must create shapes on the captured current page.');
+		const shapeIds = Object.freeze(
+			commands.map((command) => {
+				if (!('shapeId' in command)) throw new Error('Creation requires shape IDs.');
+				return command.shapeId;
+			}),
+		);
+		return this.#mutate(
+			'edit',
+			commands,
+			undefined,
+			{ pageId: context.pageId, shapeIds },
+			true,
+			context,
+		);
+	}
 	/** Duplicate the current page selection as one source edit and selection history transition. */
 	async duplicateSelection(): Promise<void> {
 		this.#assertAlive();
@@ -635,12 +687,54 @@ export class ViewerController {
 			? (this.#history?.state ?? EMPTY_EDIT_STATE)
 			: EMPTY_EDIT_STATE;
 	}
+	#creationContext(allowBusy = false): CreationContext | undefined {
+		if (
+			this.#destroyed ||
+			!this.#history ||
+			this.#sourceFormat !== 'vsdx' ||
+			this.#state.document?.format !== 'vsdx' ||
+			this.#state.loading ||
+			(!allowBusy && this.#state.edit.busy)
+		)
+			return undefined;
+		const revision = this.#revision;
+		try {
+			const pageId = this.#state.document.pages[this.#state.pageIndex]?.id;
+			if (!pageId || this.#destroyed || revision !== this.#revision) return undefined;
+			return Object.freeze({
+				sourceGeneration: this.#sourceGeneration,
+				documentGeneration: this.#documentGeneration,
+				operationGeneration: this.#editId,
+				selectionIntent: this.#selectionIntent,
+				viewIntent: this.#viewIntent,
+				pageId,
+				pageIndex: this.#state.pageIndex,
+			});
+		} catch {
+			return undefined;
+		}
+	}
+	#creationCurrent(
+		context: CreationContext,
+		operation: number,
+		document = context.documentGeneration,
+	): boolean {
+		const current = this.#creationContext(true);
+		return (
+			!!current &&
+			sameCreationContext(
+				{ ...context, operationGeneration: operation, documentGeneration: document },
+				current,
+			)
+		);
+	}
 	async #mutate(
 		kind: 'edit' | 'undo' | 'redo' | 'remote',
 		commands?: readonly VisioEdit[],
 		remote?: Uint8Array,
 		postSelection?: PostEditSelection,
 		strictSelectionIntent = false,
+		creation?: CreationContext,
 	): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
@@ -695,6 +789,7 @@ export class ViewerController {
 				throw new Error('A VSDX edit or history operation cannot change the source format.');
 			if (edited && !edited.changedParts.length) {
 				this.#change({ edit: history.state });
+				if (creation && !this.#creationCurrent(creation, id)) throw creationCancelled();
 				return;
 			}
 			const visible = documentVisibility(document, this.#state.layerVisibilityOverrides);
@@ -747,6 +842,7 @@ export class ViewerController {
 				throw new Error('The selection exceeds the bounded duplicate undo metadata limit.');
 			// No external callbacks occur between history acceptance and model acceptance.
 			assertCurrent();
+			if (creation && !this.#creationCurrent(creation, id)) throw creationCancelled();
 			if (
 				strictSelectionIntent &&
 				(selectionIntent !== this.#selectionIntent || clipboardPageIndex !== this.#state.pageIndex)
@@ -810,12 +906,21 @@ export class ViewerController {
 			)
 				throw new DOMException('The selection edit was superseded or cancelled.', 'AbortError');
 		}
+		if (creation && !this.#creationCurrent(creation, id, completionGeneration))
+			throw creationCancelled();
 	}
 	#assertAlive(): void {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');
 	}
 	#change(change: Partial<ViewerState>): boolean {
 		const revision = ++this.#revision;
+		if (
+			(change.zoom !== undefined && change.zoom !== this.#state.zoom) ||
+			(change.pageIndex !== undefined && change.pageIndex !== this.#state.pageIndex) ||
+			(change.layerVisibilityOverrides !== undefined &&
+				change.layerVisibilityOverrides !== this.#state.layerVisibilityOverrides)
+		)
+			++this.#viewIntent;
 		const invalidatesClipboard = [
 			'document',
 			'edit',

@@ -1,0 +1,45 @@
+.viewport[data-tool='text'] {
+	cursor: text;
+	touch-action: none;
+}
+.text-box-draft {
+	box-sizing: border-box;
+	overflow: auto;
+	position: absolute;
+	z-index: 3;
+	width: 300px;
+	max-width: calc(100% - 16px);
+	padding: 12px;
+	background: var(--_vv-surface);
+	color: var(--_vv-ink);
+	border: 1px solid var(--_vv-accent);
+	border-radius: 4px;
+	box-shadow: 0 2px 12px #0003;
+}
+.text-box-draft label {
+	display: grid;
+	gap: 6px;
+	font-weight: 600;
+}
+.text-box-draft textarea {
+	box-sizing: border-box;
+	width: 100%;
+	resize: vertical;
+	font: inherit;
+}
+.text-box-draft p {
+	margin: 8px 0;
+	font-size: 12px;
+}
+.text-box-draft > div {
+	display: flex;
+	gap: 8px;
+}
+.text-box-draft-frame {
+	pointer-events: none;
+}
+.paper [data-shape-id][data-selected='true'] > [data-text-hit],
+.paper [data-shape-id]:focus-visible > [data-text-hit] {
+	stroke: var(--_vv-accent);
+	stroke-width: 1px;
+}

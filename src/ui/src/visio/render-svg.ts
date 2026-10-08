@@ -180,6 +180,26 @@ function drawOwn(
 	world: VisioMatrix,
 ): void {
 	const { warnings, defs, resources } = context;
+	// A paint-free text box needs its text bounds as a pointer target, including gaps between glyphs.
+	if (
+		context.interactive &&
+		shape.text.plainText &&
+		!shape.geometry.some(
+			(geometry) =>
+				(geometry.fill && shape.style.fill !== 'none') ||
+				(geometry.stroke && shape.style.linePattern !== 0),
+		)
+	) {
+		const hit = svgElement('rect');
+		hit.dataset.textHit = '';
+		hit.setAttribute('transform', matrix(shape.text.transform));
+		hit.setAttribute('width', String(shape.text.width));
+		hit.setAttribute('height', String(shape.text.height));
+		hit.setAttribute('fill', 'transparent');
+		hit.setAttribute('pointer-events', 'all');
+		hit.setAttribute('vector-effect', 'non-scaling-stroke');
+		group.append(hit);
+	}
 	const fill = shape.geometry.some((geometry) => geometry.fill)
 		? fillPaint(shape.style, defs, resources, world, context.pageHeight)
 		: 'none';

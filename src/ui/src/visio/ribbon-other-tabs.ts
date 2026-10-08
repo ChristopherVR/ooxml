@@ -27,11 +27,11 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
 		commandRow(doc, 'Insert commands', [
 			group(doc, 'Pages', [
-				dropdown(doc, {
+				command(doc, {
 					id: 'blank-page',
 					label: 'Blank Page',
 					icon: 'visioPagesPane',
-					reason: PAGES,
+					action: { type: 'page-insert' },
 				}),
 			]),
 			group(doc, 'Illustrations', [
@@ -62,7 +62,12 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 				command(doc, unsupported('link', 'Link', 'visioLink', 'Needs core hyperlink edits.')),
 			]),
 			group(doc, 'Text', [
-				dropdown(doc, { id: 'text-box', label: 'Text Box', icon: 'textBox', reason: PARTS }),
+				command(doc, {
+					id: 'text-box',
+					label: 'Text Box',
+					icon: 'textBox',
+					action: { type: 'tool', tool: 'text' },
+				}),
 				stack(doc, [
 					command(doc, unsupported('screen-tip', 'ScreenTip', 'message', REVIEW, 'small')),
 					command(

@@ -108,6 +108,33 @@ async function setup(source = true, noOp = false, model = demoDocument) {
 }
 
 describe('Visio ribbon commands', () => {
+	it('routes Home Text, Insert Text Box and Ctrl+2 through one tool and enables the existing page command', async () => {
+		const ui = await setup();
+		ui.press('text-tool');
+		expect(ui.commands.tool).toBe('text');
+		expect(ui.command('text-tool').getAttribute('pressed')).toBe('true');
+		ui.key({ key: '1', ctrlKey: true });
+		ui.press('text-box');
+		expect(ui.commands.tool).toBe('text');
+		ui.key({ key: '1', ctrlKey: true });
+		ui.key({ key: '2', ctrlKey: true });
+		expect(ui.commands.tool).toBe('text');
+		ui.key({ key: '1', ctrlKey: true });
+		ui.key({ key: '2', ctrlKey: true }, ui.viewport.querySelector('textarea')!);
+		expect(ui.commands.tool).toBe('pointer');
+		ui.press('blank-page');
+		await ui.settle();
+		expect(ui.edits[0]?.[0]?.type).toBe('insert-page');
+		ui.dispose();
+		ui.controller.destroy();
+		const readOnly = await setup(false);
+		for (const name of ['text-tool', 'text-box', 'blank-page'])
+			expect(readOnly.command(name).disabled).toBe(true);
+		readOnly.key({ key: '2', ctrlKey: true });
+		expect(readOnly.commands.tool).toBe('pointer');
+		readOnly.dispose();
+		readOnly.controller.destroy();
+	});
 	it('announces unchanged commands without claiming a successful mutation', async () => {
 		const { controller, key, settle, calls } = await setup(true, true);
 		controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });

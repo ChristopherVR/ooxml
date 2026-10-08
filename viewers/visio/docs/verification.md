@@ -2,6 +2,70 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Fixed-size text creation and terminal paragraph markers, 2026-10-09
+
+Owned Visio 16 measurements recorded ten logical text cases: empty text,
+intentional trailing newlines and blank paragraphs, multiline text, UTF-16
+surrogate pairs, spaces/tabs and literal XML punctuation. Saved native VSDX
+parsing preserves all ten logical strings. Forty core writer outputs cover
+rectangle, ellipse, fixed-size text-box creation and plain-text replacement.
+Native COM reopen matched `Shape.Text` and `Characters.Text`; reparsing the
+native-resaved packages retained every logical string. Reproduce this bounded
+oracle with `scripts/record-visio-text-paragraphs.ps1` and
+`plain-text-native.test.ts` using `VISIO_NATIVE_TEXT_PARAGRAPHS_DIR`.
+
+A separate fixed-box API oracle records twelve cases with default text styles
+and twelve with custom `DefaultTextStyle=1` (Text Only): Arial 18 pt, left/top
+alignment and zero margins. Each capture uses drawing scales 1, 2 and 0.5 and
+four strings: `Fixed text box`, `First line\nSecond line`, `Trailing\n\n` and
+empty text. Actual `editVsdx` creation matches native scene text, style and
+geometry; every untouched package payload remains byte-exact. Owned COM reopen
+of all 24 core outputs matched `Shape.Text`, font/style IDs, transforms, pins,
+size, angle, local/text dimensions, margins, alignment and line/fill patterns.
+Reproduce with `scripts/record-visio-text-box.ps1`, using `-CustomTextStyle` for
+the second capture and `-CoreOutputPath` for reopen. The optional
+`edit-text-box-native.test.ts` uses `VISIO_NATIVE_TEXT_BOX_DIR` and
+`VISIO_NATIVE_TEXT_BOX_CUSTOM_DIR`. The reference applies native rectangle and
+cell APIs; it does not automate the interactive Text Tool or prove automatic
+text sizing.
+
+The parser removes exactly one final direct-text LF marker after constructing
+paragraph offsets. Intentional blank paragraphs, UTF-16 offsets and their styles
+remain intact; field/unknown-element display caches are not trimmed. Legacy VSD
+text semantics remain unchanged. Source text replacement now checks effective
+`LockTextEdit` and refuses affected or unknown text dependencies rather than
+preserving stale recalculation caches.
+
+The shared Home Text Tool and Insert Text Box prepare fixed-size plain-text
+drafts. Core plans creation; the controller captures source/page/selection/view
+intent and accepts source plus ordered created selection in one undo transition.
+The internal token is weakly owned and stores scalar generations, not source
+bytes or models. Focused controller regressions cover stale intent, reentrant
+host callbacks, cancellation, disposal and exact byte undo/redo. Insert Blank
+Page uses the existing source-backed page insertion path.
+
+Phase 7 core checks passed 2,691 tests with 168 optional cases skipped. Shared UI
+passed 940 tests with seven skipped. Strict core, UI and viewer TypeScript checks
+passed; native binding checks passed 114 DOM and five SSR tests, with zero Svelte
+errors or warnings. Production core/UI, PowerPoint and all seven viewer package
+builds passed, together with all six demo builds and worker checks.
+
+The clean consumer installed all nine actual local tarballs and passed types,
+workers and browser workflows through all six native mounts. The added generic
+`create-text-box` checks preserve literal trailing LF text, paint-free style,
+document/selection events and exact byte undo. Documentation passed 48 checks
+after a concurrent VitePress temporary-build race was resolved by a sequential
+rerun. The final production browser suite passed 134 active checks with 715
+optional native-capture cases skipped and no failures, in seven minutes. All six
+Text Tool and all six resize workflows passed alongside the existing toolbar,
+geometry, editing and worker regressions. The first focused Text Tool run had
+two fixture-only initial-zoom assumptions; the corrected assertions use the
+captured initial zoom, and the full run passed against unchanged production code.
+
+Broader template/theme defaults remain unmeasured. GUI Text Tool defaults,
+automatic sizing, rich-text content editing and native visual layout are not
+established by the completed logical text oracle.
+
 ## Anchored resize and numeric Size & Position, 2026-10-09
 
 Owned native Visio 16 measurements cover direct PinX, PinY, Width, Height and

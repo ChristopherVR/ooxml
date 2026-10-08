@@ -13,6 +13,8 @@ export interface RibbonTargets {
 	formatSelection(action: VisioFormattingAction): void;
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
 	setTool(tool: CanvasTool): void;
+	cancelDrawing(): void;
+	insertPage(): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
 	togglePanZoom(): void;
@@ -58,6 +60,10 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.flipSelection(action.axis);
 		case 'tool':
 			return targets.setTool(action.tool);
+		case 'cancel-drawing':
+			return targets.cancelDrawing();
+		case 'page-insert':
+			return targets.insertPage();
 		case 'grid':
 			return targets.toggleGrid();
 		case 'ruler':
