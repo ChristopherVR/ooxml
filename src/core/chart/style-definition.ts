@@ -1,4 +1,4 @@
-import type { DiagramColor, DiagramFill, DiagramLine, DiagramTextBody } from '../diagram/types';
+import type { DrawingColor, DrawingFill, DrawingLine, DrawingTextBody } from '../drawingml/types';
 import type { ChartManualLayout } from './manual-layout';
 
 /** Chart elements consumed by the current Office chart painters. */
@@ -20,7 +20,7 @@ export type ChartStylePart = (typeof CHART_STYLE_PARTS)[number];
 
 export interface ChartStyleReference {
 	index: string;
-	color?: DiagramColor;
+	color?: DrawingColor;
 }
 
 /** Theme-relative formatting; opaque XML retains properties not yet interpreted. */
@@ -28,7 +28,7 @@ export interface ChartStyleEntry {
 	/** Imported placement; sourceXml preserves it until layout authoring is implemented. */
 	layout?: ChartManualLayout;
 	overlay?: boolean;
-	textBody?: DiagramTextBody;
+	textBody?: DrawingTextBody;
 	/** Element text defaults before paragraph/run overrides. */
 	textBodyStyle?: ChartTextProperties;
 	/** Direct axis formatting, when imported from a chart part. */
@@ -39,13 +39,13 @@ export interface ChartStyleEntry {
 	italic?: boolean;
 	underline?: boolean;
 	typeface?: string;
-	textColor?: DiagramColor;
+	textColor?: DrawingColor;
 	fontRef?: ChartStyleReference;
 	lineRef?: ChartStyleReference;
 	fillRef?: ChartStyleReference;
 	effectRef?: ChartStyleReference;
-	fill?: DiagramFill;
-	line?: DiagramLine;
+	fill?: DrawingFill;
+	line?: DrawingLine;
 	/** Direct text-effect XML; an empty effect list suppresses inherited effects. */
 	textEffectsXml?: string;
 	sourceXml: string;
@@ -90,10 +90,10 @@ export type ResolvedChartStyleDefinition = Partial<Record<ChartStylePart, Resolv
 /** One shared precedence rule for explicit formatting and style references. */
 export function resolveChartStyleDefinition(
 	style: ChartStyleDefinition,
-	resolve: (color: DiagramColor) => string | undefined,
+	resolve: (color: DrawingColor) => string | undefined,
 ): ResolvedChartStyleDefinition | undefined {
 	const out: ResolvedChartStyleDefinition = {};
-	const fillColor = (fill: DiagramFill | undefined) =>
+	const fillColor = (fill: DrawingFill | undefined) =>
 		fill?.kind === 'none' ? 'none' : fill?.kind === 'solid' ? resolve(fill.color) : undefined;
 	for (const name of CHART_STYLE_PARTS) {
 		const source = style.entries[name];

@@ -1,5 +1,5 @@
 /** Resolved chart gradients, shared by Office chart painters. */
-import type { DiagramFill, DiagramColor } from '../diagram/types';
+import type { DrawingColor, DrawingFill } from '../drawingml/types';
 import { sortGradientStops } from './gradient-stop-edit';
 import { sigmaGradientStops } from '../color/sigma-gradient-stops';
 import { spreadCoincidentStops } from './gradient-coincident-stops';
@@ -61,8 +61,8 @@ export type ChartSvgGradientDef =
 
 /** Resolve imported DrawingML gradient stops once for every Office chart painter. */
 export function resolveChartGradient(
-	fill: Extract<DiagramFill, { kind: 'gradient' }>,
-	resolve: (color: DiagramColor) => { hex: string; alpha: number } | undefined,
+	fill: Extract<DrawingFill, { kind: 'gradient' }>,
+	resolve: (color: DrawingColor) => { hex: string; alpha: number } | undefined,
 ): ChartGradientFill {
 	const focus = fill.fillToRect;
 	const stops = fill.stops.flatMap((stop) => {

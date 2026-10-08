@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { buildChartGradientDef, resolveChartGradient } from './gradient-definition';
-import type { DiagramFill } from '../diagram/types';
+import type { DrawingFill } from '../drawingml/types';
 it('retains the native vertical vector and resolves off-box circle focus', () => {
 	expect(buildChartGradientDef('g', { type: 'linear', angle: 90, stops: [] })).toMatchObject({
 		x1: 0.5,
@@ -14,7 +14,7 @@ it('retains the native vertical vector and resolves off-box circle focus', () =>
 });
 
 it('restricts native interpolation to resolved opaque scaled linear endpoint pairs', () => {
-	const fill: Extract<DiagramFill, { kind: 'gradient' }> = {
+	const fill: Extract<DrawingFill, { kind: 'gradient' }> = {
 		kind: 'gradient',
 		angle: 45,
 		scaled: true,

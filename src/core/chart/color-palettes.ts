@@ -27,7 +27,7 @@
  * @module chart/color-palettes
  */
 import { resolveDrawingColor } from '../drawingml/drawing-color';
-import type { DiagramColor } from '../diagram/types';
+import type { DrawingColor } from '../drawingml/types';
 
 export type ChartThemeColor =
 	| 'dk1'
@@ -139,7 +139,7 @@ export function chartPaletteSeriesColorChoice(
 	palette: ChartColorPalette,
 	i: number,
 	n: number,
-): DiagramColor {
+): DrawingColor {
 	let base: ChartThemeColor | undefined;
 	let transform: Transform;
 	if (palette.meth === 'cycle') {
