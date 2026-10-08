@@ -345,6 +345,17 @@ describe('renderTableElement paragraph layout', () => {
 	});
 });
 
+describe('renderTableElement character spacing', () => {
+	it("applies a run's own character spacing", () => {
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [richCell('tight', [{ text: 'tight', characterSpacing: -75 }])] }],
+		};
+		const span = renderTable(buildTableElement(tableData)).querySelector<HTMLElement>('td span');
+		expect(span?.style.letterSpacing).toBe('-1px');
+	});
+});
+
 describe('renderTableElement cell borders', () => {
 	it('draws no border on a side the deck gives none, and keeps a border it gives', () => {
 		const data: PptxTableData = {

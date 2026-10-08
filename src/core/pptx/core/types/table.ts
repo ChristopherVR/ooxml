@@ -275,6 +275,8 @@ export interface PptxTableCellTextRun {
 	 * (`-25000` is a 25% subscript). Positive raises the run, negative lowers it.
 	 */
 	baseline?: number;
+	/** Character spacing from `a:rPr/@spc`, in hundredths of a point. */
+	characterSpacing?: number;
 }
 
 /**

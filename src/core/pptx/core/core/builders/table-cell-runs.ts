@@ -90,6 +90,10 @@ function applyRunProperties(
 	if (Number.isFinite(baseline) && baseline !== 0) {
 		run.baseline = baseline;
 	}
+	const spacing = parseInt(String(runProperties['@_spc'] ?? ''), 10);
+	if (Number.isFinite(spacing) && spacing !== 0) {
+		run.characterSpacing = spacing;
+	}
 }
 
 /**

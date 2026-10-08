@@ -199,6 +199,12 @@ describe('cellRunStyle', () => {
 		expect(cellRunStyle({ text: '温室効果ガス', language: 'ja-JP' }).wordBreak).toBeUndefined();
 		expect(cellRunStyle({ text: 'Schedule' }).wordBreak).toBeUndefined();
 	});
+
+	it("applies the run's own character spacing", () => {
+		// -75 hundredths of a point is -1px at 96 dpi.
+		expect(cellRunStyle({ text: 'tight', characterSpacing: -75 }).letterSpacing).toBe('-1px');
+		expect(cellRunStyle({ text: 'plain' })).not.toHaveProperty('letterSpacing');
+	});
 });
 
 describe('getDiagonalBorders', () => {

@@ -141,6 +141,21 @@ describe('extractTableCellTextRuns', () => {
 		expect(runs?.[1].baseline).toBe(-25000);
 	});
 
+	it('reads run character spacing in hundredths of a point', () => {
+		const cell = parseCell(
+			'<a:tc><a:txBody><a:bodyPr/><a:p>' +
+				'<a:r><a:rPr lang="en-US" spc="-50"/><a:t>tight</a:t></a:r>' +
+				'<a:r><a:rPr lang="en-US" spc="0"/><a:t>plain</a:t></a:r>' +
+				'<a:fld id="{AAAA0000-0000-4000-A000-000000000001}" type="slidenum">' +
+				'<a:rPr lang="en-US" spc="120"/><a:t>1</a:t></a:fld>' +
+				'</a:p></a:txBody></a:tc>',
+		);
+		const runs = extractTableCellTextRuns(cell, context);
+		expect(runs?.[0].characterSpacing).toBe(-50);
+		expect(runs?.[1]).not.toHaveProperty('characterSpacing');
+		expect(runs?.[2]).toMatchObject({ isField: true, characterSpacing: 120 });
+	});
+
 	it('marks paragraph boundaries between paragraphs', () => {
 		const cell = parseCell(
 			'<a:tc><a:txBody><a:bodyPr/>' +
