@@ -27,12 +27,15 @@ samples retain the two-level tolerance; translucent premultiplied samples allow
 three levels, with alpha within two levels.
 
 The additional capture deliberately retains unresolved differences. Sixteen
-translucent three-stop core cases and one wide 135-degree coincident-edge case
-are explicit expected failures, not passing parity evidence. Browser coverage
-has a strict passing sweep plus separate expected-failure repros for each of
-these two problems in every binding. Those markers must be removed once the
-renderer matches the native pixels; the tolerances must not be raised to hide
-the remaining discrepancies.
+translucent three-stop core cases are explicit expected failures, not passing
+parity evidence (3.22 to 3.67 premultiplied levels against a limit of 3; see
+the note in `gradient-raster.test.ts`). Browser coverage has a strict passing
+sweep plus a separate expected-failure repro in every binding. That marker must
+be removed once the renderer matches the native pixels; the tolerances must not
+be raised to hide the remaining discrepancies. Samples are evaluated at pixel
+centres. The wide 135-degree coincident-edge case passes since coincident
+linear stops open into the measured 1/256 native ramp
+(`gradient-coincident-stops.ts`).
 
 ## Rectangular path profiles
 

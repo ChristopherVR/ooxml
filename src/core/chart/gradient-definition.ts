@@ -2,6 +2,7 @@
 import type { DiagramFill, DiagramColor } from '../diagram/types';
 import { sortGradientStops } from './gradient-stop-edit';
 import { sigmaGradientStops } from '../color/sigma-gradient-stops';
+import { spreadCoincidentStops } from './gradient-coincident-stops';
 import { rectGradientFocus, type RectGradientDirection } from '../drawingml/gradient-geometry';
 import {
 	buildRectPathGradientSvg,
@@ -166,6 +167,6 @@ export function buildChartGradientDef(
 		y1: round(0.5 - dy),
 		x2: round(0.5 + dx),
 		y2: round(0.5 + dy),
-		stops,
+		stops: spreadCoincidentStops(stops),
 	};
 }
