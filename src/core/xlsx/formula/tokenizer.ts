@@ -1,9 +1,10 @@
 import { FormulaError, type RefSpec, type SheetPrefix } from './ast';
 import {
-	NAME_RE,
-	NAME_START,
-	NUMBER_RE,
+	NAME_AT,
+	isNameStartCode,
+	NUMBER_AT,
 	OPERATORS,
+	matchAt,
 	matchError,
 	readBrackets,
 	readPrefix,
@@ -45,6 +46,18 @@ export interface Token {
 	spill?: boolean;
 }
 
+const SINGLE: Partial<Record<string, TokenKind>> = {
+	'(': 'open',
+	')': 'close',
+	',': 'comma',
+	';': 'semicolon',
+	'{': 'lbrace',
+	'}': 'rbrace',
+};
+const BOOK_INDEX = /\[\d+\]/y;
+const isSpace = (code: number): boolean => code === 32 || code === 9 || code === 13 || code === 10;
+const isDigit = (code: number): boolean => code >= 48 && code <= 57;
+
 /** Splits a formula (with or without its leading `=`) into tokens, whitespace included. */
 export function tokenize(formula: string): Token[] {
 	const source = formula;
@@ -57,27 +70,28 @@ export function tokenize(formula: string): Token[] {
 	};
 	while (i < source.length) {
 		const ch = source[i] ?? '';
+		const code = source.charCodeAt(i);
 		const start = i;
-		if (/[ \t\r\n]/.test(ch)) {
-			const m = /^[ \t\r\n]+/.exec(source.slice(i));
-			push({ kind: 'ws', text: m?.[0] ?? ch, start });
+		if (isSpace(code)) {
+			let j = i + 1;
+			while (j < source.length && isSpace(source.charCodeAt(j))) j++;
+			push({ kind: 'ws', text: source.slice(i, j), start });
 			continue;
 		}
 		if (ch === '"') {
 			let j = i + 1;
 			let value = '';
 			for (;;) {
-				if (j >= source.length) throw new FormulaError('Unterminated string', start);
-				if (source[j] === '"') {
-					if (source[j + 1] === '"') {
-						value += '"';
-						j += 2;
-						continue;
-					}
-					break;
+				const quote = source.indexOf('"', j);
+				if (quote < 0) throw new FormulaError('Unterminated string', start);
+				value += source.slice(j, quote);
+				if (source[quote + 1] === '"') {
+					value += '"';
+					j = quote + 2;
+					continue;
 				}
-				value += source[j];
-				j++;
+				j = quote;
+				break;
 			}
 			push({ kind: 'string', text: source.slice(start, j + 1), start, value });
 			continue;
@@ -93,25 +107,18 @@ export function tokenize(formula: string): Token[] {
 			});
 			continue;
 		}
-		const single: Partial<Record<string, TokenKind>> = {
-			'(': 'open',
-			')': 'close',
-			',': 'comma',
-			';': 'semicolon',
-			'{': 'lbrace',
-			'}': 'rbrace',
-		};
-		const kind = single[ch];
+		const kind = SINGLE[ch];
 		if (kind) {
 			push({ kind, text: ch, start });
 			continue;
 		}
-		if (ch === '[' && !/^\[\d+\]/.test(source.slice(i))) {
+		if (ch === '[' && !matchAt(BOOK_INDEX, source, i)) {
 			const length = readBrackets(source, i);
 			push({ kind: 'structured', text: source.slice(i, i + length), start, value: '' });
 			continue;
 		}
-		const prefixed = ch === "'" || ch === '[' || NAME_START.test(ch) || /\d/.test(ch);
+		const nameStart = isNameStartCode(code);
+		const prefixed = ch === "'" || ch === '[' || nameStart || isDigit(code);
 		if (prefixed) {
 			const prefix = readPrefix(source, i);
 			if (prefix) {
@@ -120,14 +127,15 @@ export function tokenize(formula: string): Token[] {
 			}
 			if (ch === "'" || ch === '[') throw new FormulaError('Malformed sheet reference', start);
 		}
-		if (/[\d.]/.test(ch) || ch === '$' || NAME_START.test(ch)) {
+		const numeric = isDigit(code) || ch === '.';
+		if (numeric || ch === '$' || nameStart) {
 			const ref = readReference(source, i);
 			if (ref) {
 				push(refToken(source, start, i + ref.length, ref.ref, undefined));
 				continue;
 			}
-			if (/[\d.]/.test(ch)) {
-				const m = NUMBER_RE.exec(source.slice(i));
+			if (numeric) {
+				const m = matchAt(NUMBER_AT, source, i);
 				if (!m) throw new FormulaError(`Unexpected '${ch}'`, start);
 				push({ kind: 'number', text: m[0], start, value: numberLiteral(m[0]) });
 				continue;
@@ -172,7 +180,8 @@ function readAfterPrefix(source: string, at: number, start: number, prefix: Shee
 	}
 	const ref = readReference(source, at);
 	if (ref) return refToken(source, start, at + ref.length, ref.ref, prefix);
-	if (NAME_START.test(source[at] ?? '')) return readName(source, at, start, prefix);
+	if (at < source.length && isNameStartCode(source.charCodeAt(at)))
+		return readName(source, at, start, prefix);
 	throw new FormulaError('Invalid reference after sheet name', at);
 }
 
@@ -182,7 +191,7 @@ function readName(
 	start: number,
 	prefix: SheetPrefix | undefined,
 ): Token {
-	const m = NAME_RE.exec(source.slice(at));
+	const m = matchAt(NAME_AT, source, at);
 	if (!m) throw new FormulaError('Invalid name', at);
 	const name = m[0];
 	let end = at + name.length;

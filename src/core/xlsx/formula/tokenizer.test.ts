@@ -64,6 +64,46 @@ describe('tokenize', () => {
 		expect(broken?.ref).toBeUndefined();
 	});
 
+	it('tells prefixes, ranges, names and numbers apart at every boundary', () => {
+		expect(kinds('Data.2024!A1+ABCD:E+AB12:CD3+12345678:2+1.5E3+.5')).toEqual([
+			'ref:Data.2024!A1',
+			'op:+',
+			'name:ABCD',
+			'op::',
+			'name:E',
+			'op:+',
+			'ref:AB12:CD3',
+			'op:+',
+			'number:12345678',
+			'op::',
+			'number:2',
+			'op:+',
+			'number:1.5E3',
+			'op:+',
+			'number:.5',
+		]);
+		expect(kinds('abc.def(1)+x1y+B12.5')).toEqual([
+			'func:abc.def',
+			'open:(',
+			'number:1',
+			'close:)',
+			'op:+',
+			'name:x1y',
+			'op:+',
+			'name:B12.5',
+		]);
+		expect(kinds('1:1048577')).toEqual(['number:1', 'op::', 'number:1048577']);
+		expect(kinds('"a""b"&"" &"c"')).toEqual([
+			'string:"a""b"',
+			'op:&',
+			'string:""',
+			'op:&',
+			'string:"c"',
+		]);
+		expect(tokenize('"a""b"')[0]?.value).toBe('a"b');
+		expect(() => tokenize('"open""')).toThrow(FormulaError);
+	});
+
 	it('reads sheet-qualified names and function prefixes', () => {
 		expect(kinds('Sheet1!Rate*_xlfn.XLOOKUP(1,A:A,B:B)')[0]).toBe('name:Sheet1!Rate');
 		expect(kinds('_xlfn.XLOOKUP(1)')[0]).toBe('func:_xlfn.XLOOKUP');
