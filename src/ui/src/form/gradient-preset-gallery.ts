@@ -3,8 +3,8 @@ import {
 	officeGradientPresetFill,
 	officeGradientPresetId,
 	resolveDrawingColor,
-	type DiagramFill,
 } from 'ooxml-core/diagram';
+import type { DrawingFill } from 'ooxml-core/drawingml';
 import { resolveChartGradient } from 'ooxml-core/chart';
 import {
 	defineGallery,
@@ -14,7 +14,7 @@ import {
 import { gradientGalleryPreview } from './gradient-gallery-preview';
 
 interface PresetOptions {
-	fill: DiagramFill;
+	fill: DrawingFill;
 	disabled: boolean;
 	label: string;
 	translate(label: string): string;

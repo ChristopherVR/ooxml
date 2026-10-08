@@ -1,4 +1,5 @@
-import type { DiagramFill, DrawingGradientGeometryType } from 'ooxml-core/diagram';
+import type { DrawingGradientGeometryType } from 'ooxml-core/diagram';
+import type { DrawingFill } from 'ooxml-core/drawingml';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './dialogs/fields';
 
@@ -31,7 +32,7 @@ export function createGradientTypeField(
 	return {
 		element,
 		refresh(
-			fill: Extract<DiagramFill, { kind: 'gradient' }>,
+			fill: Extract<DrawingFill, { kind: 'gradient' }>,
 			disabled: boolean,
 			rectangularMarks = false,
 		) {

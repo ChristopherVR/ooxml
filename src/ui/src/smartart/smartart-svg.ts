@@ -1,12 +1,7 @@
 import { hexToRgbChannels } from 'ooxml-core/color';
 import { resolveDrawingColor } from 'ooxml-core/diagram';
-import type {
-	DiagramColor,
-	DiagramDrawing,
-	DiagramDrawingShape,
-	DiagramFill,
-	DiagramPath,
-} from 'ooxml-core/diagram';
+import type { DiagramDrawing, DiagramDrawingShape } from 'ooxml-core/diagram';
+import type { DrawingColor, DrawingFill, DrawingPath } from 'ooxml-core/drawingml';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const EMU_PER_PX = 9525;
@@ -31,7 +26,7 @@ export interface SchemeFonts {
 }
 
 export function colorToCss(
-	color: DiagramColor | undefined,
+	color: DrawingColor | undefined,
 	scheme: SchemeColors,
 	report?: SmartArtRenderReport,
 ): string | undefined {
@@ -54,7 +49,7 @@ export function colorToCss(
 }
 
 function fillToCss(
-	fill: DiagramFill | undefined,
+	fill: DrawingFill | undefined,
 	scheme: SchemeColors,
 	report: SmartArtRenderReport,
 ): string {
@@ -67,7 +62,7 @@ function fillToCss(
 }
 
 /** Path coordinates are in the path's own units; scale them to the frame (px). */
-function pathData(path: DiagramPath, widthPx: number, heightPx: number): string {
+function pathData(path: DrawingPath, widthPx: number, heightPx: number): string {
 	const sx = path.width ? widthPx / path.width : 1;
 	const sy = path.height ? heightPx / path.height : 1;
 	const x = (v: number) => +(v * sx).toFixed(2);

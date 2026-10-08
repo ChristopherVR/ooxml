@@ -18,14 +18,14 @@ import {
 	type ChartGradientEdit,
 	type ChartFillPart,
 } from 'ooxml-core/xlsx';
-import type { DiagramFill } from 'ooxml-core/diagram';
+import type { DrawingFill } from 'ooxml-core/drawingml';
 import type { ChartGradientFill } from 'ooxml-core/chart';
 
 /** UI target binding; every model edit and temporary model remains in core. */
 export interface ChartFillBinding {
 	commandId: string;
 	key(): number | ChartFillPart;
-	fill(chart: ChartObject): DiagramFill | undefined;
+	fill(chart: ChartObject): DrawingFill | undefined;
 	gradient(view: ChartViewModel): ChartGradientFill | undefined;
 	paint(view: ChartViewModel): string | undefined;
 	rectangular(chart: ChartObject): boolean;
