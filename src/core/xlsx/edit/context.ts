@@ -2,8 +2,8 @@ import { MAX_COL, MAX_ROW, type CellRange, normalizeRange } from '../address';
 import { getCell, putCell, usedRange } from '../cells';
 import type { Cell, CellValue, Workbook, Worksheet } from '../model';
 import { isCellError } from '../model';
-import { styleAt } from '../styles';
-import { formatValue, type CalcEngine } from './deps';
+import type { CalcEngine, CellPosition } from './deps';
+export { displayText } from '../display-text';
 import type { CalcHint, EditScope } from './history';
 import type { WorkbookChangeKind } from './types';
 
@@ -21,12 +21,15 @@ export interface EditContext {
 	readonly calc: CalcEngine;
 	/** Base of new sheet names (see `EditSessionOptions.defaultSheetBase`). */
 	defaultSheetBase?: string;
-	/** Runs `fn` as one undoable step whose effect is confined to `scopes`. */
+	/**
+	 * Runs `fn` as one undoable step confined to `scopes`. A refs scope supplies formula positions
+	 * captured before the edit; callers must also include any newly written formulas when rewriting.
+	 */
 	run<T>(
 		label: string,
 		kind: WorkbookChangeKind,
 		scopes: EditScope[],
-		fn: () => T,
+		fn: (formulaCells?: readonly CellPosition[]) => T,
 		info?: RunInfo,
 	): T;
 }
@@ -93,18 +96,6 @@ export function forEachPosition(
 	if (!r) return;
 	for (let row = r.start.row; row <= r.end.row; row++)
 		for (let col = r.start.col; col <= r.end.col; col++) visit(row, col);
-}
-
-/** The text the grid shows for a cell. */
-export function displayText(workbook: Workbook, cell: Cell | undefined): string {
-	if (!cell) return '';
-	const value = cell.value;
-	if (value === null) return '';
-	if (isCellError(value)) return value.error;
-	if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-	if (cell.richText && typeof value === 'string') return value;
-	const format = styleAt(workbook, cell.styleId).numFmt;
-	return formatValue(value, format, { date1904: workbook.date1904 }).text;
 }
 
 /** What the user typed for a cell, as the formula bar shows it. */

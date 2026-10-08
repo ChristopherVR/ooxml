@@ -112,7 +112,7 @@ describe('undo history of row and column shifts', () => {
 });
 
 describe('undo history of cell edits', () => {
-	it('a table header edit records the header cell and the table list only', () => {
+	it('a table header edit records workbook references and the header cell without a sheet copy', () => {
 		const wb = createWorkbook();
 		for (let r = 0; r < 50; r++) putCell(wb.sheets[0]!, r, 0, { value: r });
 		const s = createEditSession(wb, { recalc: false });
@@ -120,7 +120,7 @@ describe('undo history of cell edits', () => {
 		const ctx = testContext(wb);
 		setCellInput(ctx, 0, 0, 0, 'Head');
 		const kinds = ctx.steps[0]?.entries.map((e) => e.before.kind);
-		expect(kinds).toEqual(['cells', 'parts']);
+		expect(kinds).toEqual(['refs', 'cells']);
 		expect(wb.sheets[0]?.tables[0]?.columns[0]?.name).toBe('Head');
 		ctx.undo();
 		expect(wb.sheets[0]?.tables[0]?.columns[0]?.name).toBe('0');

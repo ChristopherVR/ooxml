@@ -114,7 +114,8 @@ export async function saveBytes(
 ): Promise<Uint8Array> {
 	if (!core.workbook) throw new Error('No workbook is open');
 	const grid = core.ctx.grid();
-	if (grid?.isEditing()) grid.commitEdit();
+	if (grid?.isEditing() && !grid.commitEdit())
+		throw new Error(core.ctx.t('Finish or cancel the current cell edit before saving.'));
 	const { saveWorkbook } = await import('ooxml-core/xlsx/load');
 	return saveWorkbook(core.workbook, format, {
 		sheetIndex: core.activeSheet,

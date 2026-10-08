@@ -162,6 +162,15 @@ export function setHidden(
 			}
 			for (const row of indices) {
 				const info = { ...sheet.rowInfo.get(row) };
+				if (info.filteredOut) {
+					if (hidden) info.manuallyHidden = true;
+					else delete info.manuallyHidden;
+					sheet.rowInfo.set(row, info);
+					continue;
+				}
+				const filter = sheet.autoFilter;
+				if (filter?.columns?.length && row > filter.range.start.row && row <= filter.range.end.row)
+					info.filteredOut = false;
 				if (hidden) info.hidden = true;
 				else {
 					delete info.hidden;

@@ -22,6 +22,7 @@ import { rangeWithin } from './range-math';
 import type { ClipboardCell, ClipboardCells, ClipboardPayload, PasteRequest } from './types';
 import { resolvePasteOptions } from './paste-options';
 import { writeClip } from './paste-cell';
+import { syncTableHeader, writeScopes } from './cell-values';
 import { copyColumnWidths } from './columns';
 import { pasteWidths } from './paste-widths';
 import { copyAnnotations, clearAnnotations, pasteAnnotations } from './clipboard-annotations';
@@ -161,14 +162,13 @@ export function pasteAt(
 	const destCells: EditScope = { kind: 'cells', sheet: s, ranges: [dest] };
 	const scopes: EditScope[] = cut
 		? [{ kind: 'refs' }, { kind: 'cells', sheet: cut.sheet, ranges: [cut.range] }, destCells]
-		: [
-				destCells,
-				{
-					kind: 'parts',
-					sheet: s,
-					parts: ['merges', 'comments', 'dataValidations', 'hyperlinks', 'conditionalFormats'],
-				},
-			];
+		: writeScopes(sheet, s, dest, [
+				'merges',
+				'comments',
+				'dataValidations',
+				'hyperlinks',
+				'conditionalFormats',
+			]);
 	const move = cut && {
 		fromSheet: sheetAt(workbook, cut.sheet).name,
 		range: cut.range,
@@ -254,6 +254,8 @@ export function pasteAt(
 									? clip.formula
 									: moveFormula(clip.formula, at.row - origin.row, at.col - origin.col);
 					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf, operation);
+					if (mode !== 'formats' && mode !== 'comments' && mode !== 'validation')
+						syncTableHeader(ctx, sheet, row, col);
 				}
 			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'formats') {
 				sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, dest));

@@ -1,7 +1,8 @@
 import { type CellAddress, type CellRange, normalizeRange, rangeContains } from '../address';
 import { getCell } from '../cells';
 import type { AutoFilter, Worksheet } from '../model';
-import { type EditContext, displayText, sheetAt } from './context';
+import { type EditContext, sheetAt } from './context';
+import { rowMatchesFilter } from '../filter-rows';
 import { sortRows } from './sort';
 
 /**
@@ -50,14 +51,21 @@ export function currentRegion(sheet: Worksheet, at: CellAddress): CellRange {
 export function applyFilter(ctx: EditContext, sheet: Worksheet, filter: AutoFilter): void {
 	const { range } = filter;
 	for (let row = range.start.row + 1; row <= range.end.row; row++) {
-		const visible = (filter.columns ?? []).every((fc) => {
-			if (!fc.values && !fc.blank) return true;
-			const text = displayText(ctx.workbook, getCell(sheet, row, range.start.col + fc.offset));
-			return text === '' ? !!fc.blank : (fc.values ?? []).includes(text);
-		});
+		const visible = rowMatchesFilter(ctx.workbook, sheet, row, filter);
 		const info = { ...sheet.rowInfo.get(row) };
-		if (visible) delete info.hidden;
-		else info.hidden = true;
+		const manual = info.manuallyHidden || (info.hidden && !info.filteredOut);
+		if (visible) {
+			delete info.filteredOut;
+			delete info.manuallyHidden;
+			if (manual) {
+				info.hidden = true;
+				if (filter.columns?.length) info.filteredOut = false;
+			} else delete info.hidden;
+		} else {
+			info.hidden = true;
+			info.filteredOut = true;
+			if (manual) info.manuallyHidden = true;
+		}
 		if (Object.keys(info).length) sheet.rowInfo.set(row, info);
 		else sheet.rowInfo.delete(row);
 	}

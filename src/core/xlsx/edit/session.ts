@@ -7,7 +7,7 @@ import * as values from './cell-values';
 import * as clipboard from './clipboard';
 import { pasteSelection } from './paste-selection';
 import type { EditContext, RunInfo } from './context';
-import { createCalcEngine } from './deps';
+import { createCalcEngine, type CellPosition } from './deps';
 import { applyExternal } from './external';
 import * as dimensions from './dimensions';
 import * as fill from './fill';
@@ -101,7 +101,7 @@ export function createEditSession(
 		label: string,
 		kind: WorkbookChangeKind,
 		scopes: EditScope[],
-		fn: () => T,
+		fn: (formulaCells?: readonly CellPosition[]) => T,
 		info: RunInfo = {},
 	): T => {
 		const outer = !open;
@@ -120,7 +120,7 @@ export function createEditSession(
 		const befores = scopes.map((scope) => captureScope(workbook, scope));
 		let result: T;
 		try {
-			result = fn();
+			result = fn(befores.find((snapshot) => snapshot.kind === 'refs')?.data.formulas);
 		} catch (error) {
 			for (let i = befores.length - 1; i >= 0; i--) {
 				const snapshot = befores[i];

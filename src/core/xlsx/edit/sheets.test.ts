@@ -71,7 +71,24 @@ describe('add and delete sheets', () => {
 		wb.structureLocked = true;
 		expect(() => s.addSheet()).toThrow(/protected/);
 		expect(() => s.renameSheet(0, 'X')).toThrow(/protected/);
+		wb.sheets[0]!.state = 'hidden';
+		expect(() => s.setSheetState(0, 'visible')).toThrow(/protected/);
+		expect(wb.sheets[0]!.state).toBe('hidden');
+		wb.structureLocked = false;
+		s.setSheetState(0, 'visible');
+		expect(wb.sheets[0]!.state).toBe('visible');
 	});
+	it.each(['hidden', 'veryHidden'] as const)(
+		'blocks unhiding a protected %s sheet without adding history',
+		(state) => {
+			const { wb, s } = setup();
+			wb.sheets[0]!.state = state;
+			wb.structureLocked = true;
+			expect(() => s.setSheetState(0, 'visible')).toThrow(/protected/);
+			expect(wb.sheets[0]!.state).toBe(state);
+			expect(s.canUndo()).toBe(false);
+		},
+	);
 });
 
 describe('rename', () => {

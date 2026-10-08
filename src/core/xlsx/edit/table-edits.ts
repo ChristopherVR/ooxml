@@ -11,7 +11,7 @@ import type { EditScope } from './history';
 import { rewriteFormulas } from './shift-formulas';
 import { shiftSheetContent } from './shift-sheet';
 import { applyTotalsRow, clearRow, rowIsEmpty } from './table-rows';
-import { uniqueHeaders } from './tables';
+import { uniqueHeaders } from './table-header-names';
 
 /** A table by index in `sheet.tables` or by name (case-insensitive). */
 export type TableRef = number | string;

@@ -1,6 +1,7 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { detectDigitalSignatures } from '../../opc/signature/index';
 import { parseRange } from '../address';
+import { readFilteredRows } from '../filter-rows';
 import type { Workbook, WorkbookProperties, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
 import { parsePersons } from './comments';
@@ -126,6 +127,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	if (!sheets.length) throw new Error('XLSX workbook has no sheets');
 	await resolveSmartArt(sheets, source, warn);
 	liftPrintAreas(workbook);
+	readFilteredRows(workbook);
 	return workbook;
 }
 
