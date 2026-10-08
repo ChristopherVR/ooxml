@@ -7,6 +7,30 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.3.0) - 2026-10-08
+
+### Features
+
+- **ui:** Add pptx-ui-ribbon-actions for the powerpoint tab row ([ce94a31](https://github.com/ChristopherVR/ooxml/commit/ce94a3170ec8f09ecd83e8bf4fe424dff3225153))
+
+### Bug Fixes
+
+- **ui:** Keep thin pptx strokes at least one device pixel on screen ([bb1df44](https://github.com/ChristopherVR/ooxml/commit/bb1df4463b9321ce6b57214037ac938bb1d33296))
+- **pptx:** Default an absent c:gapWidth to 150 ([e16f565](https://github.com/ChristopherVR/ooxml/commit/e16f5651541cfbba9b7a1280e58463c041e507d9))
+- **pptx:** Clip stacked lines and areas to the plot area ([5556f31](https://github.com/ChristopherVR/ooxml/commit/5556f315cff31eb8d2be7063eb2db46ecff34d05))
+- **pptx:** Label only the visible part of clipped stacked bars ([2285eef](https://github.com/ChristopherVR/ooxml/commit/2285eef11fb513364ee0994a495c41e43f33d678))
+- **xlsx:** Format selection statistics with the cell number format ([649f556](https://github.com/ChristopherVR/ooxml/commit/649f5568b348083aa548b2e819da02435d68d64a))
+- **docx:** Place editing mode, comments and share like office ([9fed33b](https://github.com/ChristopherVR/ooxml/commit/9fed33bda8aae213ce439510a328293d0451ce48))
+- **ui:** Size the chat composer's touch layout from tokens ([42bb661](https://github.com/ChristopherVR/ooxml/commit/42bb66145246c14a93e2ade14092b78c6e2a9d09))
+
+### Performance
+
+- **ui:** Build the excel formula graph in idle time ([f4e3b4e](https://github.com/ChristopherVR/ooxml/commit/f4e3b4e4ce3d6d7b8221320a8165622fd4d89719))
+
+### Refactor
+
+- **ui:** Share the ribbon actions between excel and word ([b34bbaf](https://github.com/ChristopherVR/ooxml/commit/b34bbaf3aba00c208df249bc263a451396357d77))
+
 ## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.2.0) - 2026-10-08
 
 ### Features

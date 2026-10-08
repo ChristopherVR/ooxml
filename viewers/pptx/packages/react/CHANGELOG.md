@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.30.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.30.1) - 2026-10-08
+
+### Bug Fixes
+
+- **ui:** Keep thin pptx strokes at least one device pixel on screen ([bb1df44](https://github.com/ChristopherVR/ooxml/commit/bb1df4463b9321ce6b57214037ac938bb1d33296))
+- **pptx:** Keep unedited empty table cells free of a:tcPr ([01d4f3d](https://github.com/ChristopherVR/ooxml/commit/01d4f3d36d5acd4fb795b4f33018efa0e3482b06))
+- **pptx:** Default an absent c:gapWidth to 150 ([e16f565](https://github.com/ChristopherVR/ooxml/commit/e16f5651541cfbba9b7a1280e58463c041e507d9))
+
+### Refactor
+
+- **pptx:** Share the chart XML presence check for a:noFill ([ad7bae0](https://github.com/ChristopherVR/ooxml/commit/ad7bae0ea91758a2e7dcb581c2f472da394e5eb4))
+
 ## [4.30.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.30.0) - 2026-10-08
 
 ### Features

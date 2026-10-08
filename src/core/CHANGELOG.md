@@ -7,6 +7,34 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.2.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.2.1) - 2026-10-08
+
+### Bug Fixes
+
+- **pptx:** Keep unedited empty table cells free of a:tcPr ([01d4f3d](https://github.com/ChristopherVR/ooxml/commit/01d4f3d36d5acd4fb795b4f33018efa0e3482b06))
+- **pptx:** Default an absent c:gapWidth to 150 ([e16f565](https://github.com/ChristopherVR/ooxml/commit/e16f5651541cfbba9b7a1280e58463c041e507d9))
+- **xlsx:** Format selection statistics with the cell number format ([649f556](https://github.com/ChristopherVR/ooxml/commit/649f5568b348083aa548b2e819da02435d68d64a))
+- **xlsx:** Make the formula number lexeme linear ([9b32d49](https://github.com/ChristopherVR/ooxml/commit/9b32d493d49dde1ba9002da056c4a24a8885af11))
+
+### Performance
+
+- **xlsx:** Prepare the formula graph incrementally ([15dc223](https://github.com/ChristopherVR/ooxml/commit/15dc22334dc6a5561817b24399a4cb0675dae3b4))
+- **xlsx:** Shift the formula graph on row and column edits ([e3ef7d8](https://github.com/ChristopherVR/ooxml/commit/e3ef7d8bd7cb29d0c8cdcc6bf8dee29c07cace38))
+- **xlsx:** Rename sheet references without rebuilding the graph ([57094bf](https://github.com/ChristopherVR/ooxml/commit/57094bfadb0831e52d08553f7927176c66062a68))
+- **xlsx:** Cache formula templates for structural rewrites ([6d477d0](https://github.com/ChristopherVR/ooxml/commit/6d477d0023ceede31a50326f6fd3761bb8d97284))
+
+### Refactor
+
+- **pptx:** Share the chart XML presence check for a:noFill ([ad7bae0](https://github.com/ChristopherVR/ooxml/commit/ad7bae0ea91758a2e7dcb581c2f472da394e5eb4))
+
+### Testing
+
+- **xlsx:** Structural edits while the formula graph is prepared ([67e0de5](https://github.com/ChristopherVR/ooxml/commit/67e0de5f621a1fdb3149a7a261f0d33b9e4073f4))
+
+### Chores
+
+- **xlsx:** Profile structural edits ([b3330b4](https://github.com/ChristopherVR/ooxml/commit/b3330b419664f5fa7494bc1deada2ba8e25cc232))
+
 ## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.2.0) - 2026-10-08
 
 ### Features
