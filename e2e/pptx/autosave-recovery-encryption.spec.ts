@@ -194,16 +194,13 @@ test.describe('autosave recovery vs password protection', () => {
 
 		const snapshot = await waitForSnapshot(page);
 
-		// Behaviour-gated, not name-gated (the neutrality checker forbids
-		// branching on the project, and rightly so): a binding whose editor never
-		// raises the dirty flag never reaches `saveAutosaveSnapshot` at all, so
-		// there is nothing here to say about encryption. That is a SEPARATE bug
-		// from the one this spec pins; when it is fixed the skip disappears on
-		// its own and that binding starts being asserted like the others.
-		test.skip(
-			snapshot === null,
-			'this binding never wrote a recovery snapshot after an edit (its editor does not raise the dirty flag)',
-		);
+		// Every binding raises its dirty flag on New Slide, so a missing snapshot
+		// is a failure, not a skip (it used to be skipped while React's editor
+		// never raised the flag; each binding now pins that in its unit suite).
+		expect(
+			snapshot,
+			'an edit on a protected deck must still write a recovery snapshot',
+		).not.toBeNull();
 		if (!snapshot) {
 			return;
 		}

@@ -216,14 +216,11 @@ test.describe('crash-recovery prompt', () => {
 		await expect(recoveryDialog(page)).toHaveCount(0);
 
 		await makeAnEdit(page);
-		const wrote = await waitForSnapshot(page);
-
-		// Behaviour-gated, not name-gated (the neutrality checker forbids branching
-		// on the project, and rightly so): a binding whose editor never raises the
-		// dirty flag never reaches `saveAutosaveSnapshot`, so there is no snapshot
-		// for this spec to say anything about. That is a SEPARATE defect from the
-		// one asserted here, and when it is fixed the skip disappears on its own.
-		test.skip(!wrote, 'this binding never wrote a recovery snapshot after an edit');
+		// Every binding must raise its dirty flag on New Slide and write a
+		// snapshot. This used to be a behaviour-gated skip from the days React's
+		// editor never raised the flag; each binding now pins that half in its
+		// own unit suite (the "New Slide" recovery-snapshot tests).
+		expect(await waitForSnapshot(page), 'an edit must write a recovery snapshot').toBe(true);
 
 		// What a crashed tab looks like from the viewer's side: the same deck
 		// opened with no session behind it, and the snapshot still on disk.
@@ -267,8 +264,7 @@ test.describe('crash-recovery prompt', () => {
 	test('Discard drops the snapshot instead of loading it', async ({ page }) => {
 		await loadNamedDeck(page, LONG_FILE_NAME);
 		await makeAnEdit(page);
-		const wrote = await waitForSnapshot(page);
-		test.skip(!wrote, 'this binding never wrote a recovery snapshot after an edit');
+		expect(await waitForSnapshot(page), 'an edit must write a recovery snapshot').toBe(true);
 
 		await page.setViewportSize({ width: 360, height: 480 });
 		await reopenDeckKeepingSnapshot(page, LONG_FILE_NAME);
