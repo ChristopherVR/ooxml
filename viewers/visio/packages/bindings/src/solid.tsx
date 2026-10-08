@@ -12,6 +12,7 @@ import {
 export interface VisioViewerProps extends ViewerProps {
 	class?: string | undefined;
 	style?: JSX.CSSProperties | undefined;
+	'aria-label'?: string | undefined;
 	viewerRef?: ((handle: ViewerHandle | undefined) => void) | undefined;
 }
 /** Native Solid host and ownership; all document work remains in the shared binding. */
@@ -48,7 +49,7 @@ export function VisioViewer(props: VisioViewerProps) {
 			mounted?.destroy();
 		}
 	});
-	return <div ref={host} class={props.class} style={props.style} />;
+	return <div ref={host} class={props.class} style={props.style} aria-label={props['aria-label']} />;
 }
 /**
  * Reactive viewer state as a Solid accessor for a handle accessor (for example a signal set by

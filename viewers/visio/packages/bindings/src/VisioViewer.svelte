@@ -1,8 +1,8 @@
 <script lang="ts">
   import { readonly, writable } from 'svelte/store';
   import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common';
-  type Props = ViewerProps & { class?: string; style?: string };
-  let { document, pageIndex, zoom, showToolbar, events, class: className, style }: Props = $props();
+  type Props = ViewerProps & { class?: string; style?: string; 'aria-label'?: string };
+  let { document, pageIndex, zoom, showToolbar, events, class: className, style, 'aria-label': ariaLabel }: Props = $props();
   const options = $derived({ document, pageIndex, zoom, showToolbar, events } satisfies Required<ViewerProps>);
   let binding: MountedViewer | undefined;
   const handle = viewerHandle(() => binding);
@@ -35,4 +35,4 @@
   export function exportSvg(options?: SvgExportOptions) { return handle.exportSvg(options); }
   export function createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions) { return handle.createPrintSnapshot(options); }
 </script>
-<div class={className} {style} use:attach={options}></div>
+<div class={className} {style} aria-label={ariaLabel} use:attach={options}></div>
