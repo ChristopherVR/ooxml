@@ -37,6 +37,7 @@ import {
 } from './chart-3d-oblique-labels';
 import type { ObliqueChartLayout } from './chart-3d-oblique-types';
 import { axisTargetIntervals, niceValueAxisBounds } from './chart-axis-nice';
+import { DEFAULT_BAR_GAP_WIDTH } from './chart-bar-cluster-geometry';
 import { axisTickValues } from './chart-view-model-chrome';
 import type { ChartViewModel } from './chart-view-model-types';
 import { estimateTextWidth } from './text-wrap-estimate';
@@ -62,7 +63,6 @@ const TOP_NO_TITLE = 14 * PT;
 const BOTTOM_WITH_LEGEND = 57.5 * PT;
 const BOTTOM_NO_LEGEND = 31 * PT;
 
-const DEFAULT_GAP_WIDTH = 150;
 const DEFAULT_GAP_DEPTH = 150;
 
 export type {
@@ -159,7 +159,7 @@ export function computeObliqueBarLayout(
 	const rotX = ((chartData.view3D?.rotX ?? 15) * Math.PI) / 180;
 	const rotY = ((chartData.view3D?.rotY ?? 20) * Math.PI) / 180;
 	const shear = { x: Math.sin(rotY), y: -Math.sin(rotX) };
-	const gapWidth = (chartData.barGapWidth ?? DEFAULT_GAP_WIDTH) / 100;
+	const gapWidth = (chartData.barGapWidth ?? DEFAULT_BAR_GAP_WIDTH) / 100;
 	const gapDepth = (chartData.gapDepth ?? DEFAULT_GAP_DEPTH) / 100;
 	const slots = grouping === 'clustered' ? nSer : 1;
 	const rows = grouping === 'standard' ? nSer : 1;

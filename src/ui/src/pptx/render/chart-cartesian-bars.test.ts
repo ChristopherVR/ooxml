@@ -89,14 +89,16 @@ describe('buildBars clustered gapWidth/overlap sizing', () => {
 		expect(eightSeries[0].w).toBeCloseTo(twoSeries[0].w, 6);
 	});
 
-	it('keeps the legacy 0.7-of-group heuristic when c:gapWidth is not parsed', () => {
+	it('takes the ECMA-376 default gap of 150% when c:gapWidth is absent', () => {
 		const chartData: PptxChartData = {
 			chartType: 'bar',
 			categories: ['Category 1'],
 			series: series([1, 2]),
 		} as PptxChartData;
 		const rects = barRects(chartData, 1000);
-		expect(rects[0].w).toBeCloseTo((1000 * 0.7) / 2, 6);
+		// Two side-by-side bars plus a gap of 1.5 bar widths fill the slot.
+		expect(rects[0].w).toBeCloseTo(1000 / (2 + 1.5), 6);
+		expect(barRects(baseChartData([1, 2], 150, 0), 1000)[0].w).toBeCloseTo(rects[0].w, 6);
 	});
 
 	it('reduces to the single-series case identically to before (no overlap ambiguity)', () => {

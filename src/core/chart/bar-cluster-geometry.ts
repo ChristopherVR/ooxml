@@ -6,6 +6,13 @@
  *
  * @module chart-bar-cluster-geometry
  */
+/**
+ * ECMA-376 default of `c:gapWidth` when a bar chart omits it: the gap between
+ * categories is 150% of one bar's width. Every bar renderer (2D clustered,
+ * stacked and percentStacked, and the 3D layouts) falls back to this one value.
+ */
+export const DEFAULT_BAR_GAP_WIDTH = 150;
+
 export interface BarClusterOptions {
 	barGapWidth?: number;
 	barOverlap?: number;
@@ -44,8 +51,8 @@ export function clusteredBarGeometry(
 	// seriesCount side-by-side bars) fills the gap-reduced group width; see the
 	// comment below.
 	const overlap = chartData.barOverlap ?? 0;
-	// Honour c:gapWidth (gap between clusters, % of a bar width) when parsed;
-	// otherwise keep the legacy 0.7-of-group heuristic byte-for-byte.
+	// Honour c:gapWidth (gap between clusters, % of a bar width); an absent
+	// c:gapWidth takes the spec default, DEFAULT_BAR_GAP_WIDTH (150%).
 	//
 	// COM-verified ground truth (PowerPoint Object 16, single category, six
 	// series, gapWidth=5, overlap=23): dividing by seriesCount alone (the
@@ -73,10 +80,8 @@ export function clusteredBarGeometry(
 	// width whenever gapWidth and overlap are both non-trivial (this fixture:
 	// 8.9% computed vs. 17.6% measured). Single-series charts are unaffected:
 	// `overlapSpan` is 1 regardless of `overlap`, so both formulas agree.
-	const singleBarWidth =
-		chartData.barGapWidth !== undefined
-			? barGroupWidth / (overlapSpan + Math.max(chartData.barGapWidth, 0) / 100)
-			: (barGroupWidth * 0.7) / seriesCount;
+	const gapWidth = chartData.barGapWidth ?? DEFAULT_BAR_GAP_WIDTH;
+	const singleBarWidth = barGroupWidth / (overlapSpan + Math.max(gapWidth, 0) / 100);
 	const step = singleBarWidth * (1 - overlap / 100);
 	return { singleBarWidth, step, clusterWidth: singleBarWidth + step * (seriesCount - 1) };
 }

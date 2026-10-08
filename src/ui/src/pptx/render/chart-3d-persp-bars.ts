@@ -13,8 +13,7 @@ import type { PptxChartData } from 'ooxml-core/pptx';
 import { obliqueBarTaper } from './chart-3d-oblique-bars';
 import type { PerspChartLayout } from './chart-3d-persp-layout';
 import type { PerspPrism } from './chart-3d-persp-marks';
-
-const DEFAULT_GAP_WIDTH = 150;
+import { DEFAULT_BAR_GAP_WIDTH } from './chart-bar-cluster-geometry';
 
 type LayoutCore = Pick<
 	PerspChartLayout,
@@ -37,7 +36,7 @@ export function buildPerspBarPrisms(
 	// Slots divide the category axis: box x for columns, box y for horizontal bars.
 	const catExtent = layout.horizontal ? layout.view.box.h : layout.view.box.w;
 	const slot = nCat > 0 ? catExtent / nCat : catExtent;
-	const gapWidth = (chartData.barGapWidth ?? DEFAULT_GAP_WIDTH) / 100;
+	const gapWidth = (chartData.barGapWidth ?? DEFAULT_BAR_GAP_WIDTH) / 100;
 	const slots = layout.grouping === 'clustered' ? nSer : 1;
 	const barW = slot / (slots + gapWidth);
 	const depth = Math.min(barW, layout.rowDepth);

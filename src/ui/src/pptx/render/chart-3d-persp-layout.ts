@@ -30,6 +30,7 @@ import { perspObliqueCameraFor } from './chart-3d-persp-oblique';
 import { fitPerspView, perspCameraFor } from './chart-3d-persp-view';
 import type { PerspView } from './chart-3d-persp-view';
 import { axisTargetIntervals, niceValueAxisBounds } from './chart-axis-nice';
+import { DEFAULT_BAR_GAP_WIDTH } from './chart-bar-cluster-geometry';
 import type { ChartViewModel } from './chart-view-model-types';
 
 export type { PerspLabel } from './chart-3d-persp-labels';
@@ -52,7 +53,7 @@ const RECT_TOP_WITH_TITLE = 48 * PT;
 const RECT_TOP_NO_TITLE = 14 * PT;
 const RECT_BOTTOM_WITH_LEGEND = 62 * PT;
 const RECT_BOTTOM_NO_LEGEND = 31 * PT;
-const DEFAULT_GAP = 150;
+const DEFAULT_GAP_DEPTH = 150;
 /**
  * Category extent per unit of value extent for a horizontal bar box (no
  * ground truth for a perspective one; the right-angle-axes export,
@@ -182,8 +183,8 @@ export function computePerspChartLayout(
 		'midCat';
 	const view3D = chartData.view3D;
 
-	const gapWidth = (chartData.barGapWidth ?? DEFAULT_GAP) / 100;
-	const gapDepth = (chartData.gapDepth ?? DEFAULT_GAP) / 100;
+	const gapWidth = (chartData.barGapWidth ?? DEFAULT_BAR_GAP_WIDTH) / 100;
+	const gapDepth = (chartData.gapDepth ?? DEFAULT_GAP_DEPTH) / 100;
 	const slot = 1 / nCat;
 	const rows = kind === 'surface' ? nSer : grouping === 'standard' ? nSer : 1;
 	const markDepth = slot / (1 + gapWidth);

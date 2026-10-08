@@ -167,7 +167,7 @@ export function buildHorizontalBarViewModel(
 		}
 	} else {
 		const totals = isPercent ? categoryTotals(series, catCount) : [],
-			barH = stackedBarWidth(band, chartData.barGapWidth, isPercent ? 0.6 : 0.7),
+			barH = stackedBarWidth(band, chartData.barGapWidth),
 			barOffset = (band - barH) / 2;
 		for (let ci = 0; ci < catCount; ci++) {
 			let posRunning = 0,

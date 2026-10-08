@@ -127,7 +127,8 @@ describe('buildComboViewModel series formatting', () => {
 		expect(line?.strokeWidth).toBe(2.4);
 		expect(line?.dashArray).toBeUndefined();
 		const bars = dataPointRects(vm.primitives);
-		expect(bars[0].w / (bars[1].x - bars[0].x)).toBeCloseTo(0.7);
+		// No c:gapWidth: the ECMA-376 default of 150% makes the bar 1 / 2.5 of its slot.
+		expect(bars[0].w / (bars[1].x - bars[0].x)).toBeCloseTo(0.4);
 		expect(vm.dataLabels[0]).toMatchObject({ fill: '#334155' });
 	});
 });

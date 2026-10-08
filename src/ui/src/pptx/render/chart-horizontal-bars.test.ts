@@ -174,11 +174,13 @@ describe('buildHorizontalBarViewModel', () => {
 				expect(h).toBeCloseTo(sized.band / 1.5, 6);
 			}
 		}
-		// Without c:gapWidth the old fractions of the band stay.
-		const legacy = stacked('stacked');
-		expect(legacy.heights[0]).toBeCloseTo(legacy.band * 0.7, 6);
-		const legacyPercent = stacked('percentStacked');
-		expect(legacyPercent.heights[0]).toBeCloseTo(legacyPercent.band * 0.6, 6);
+		// Without c:gapWidth both take the ECMA-376 default of 150%: 40% of the band.
+		for (const grouping of ['stacked', 'percentStacked'] as const) {
+			const fallback = stacked(grouping);
+			for (const h of fallback.heights) {
+				expect(h).toBeCloseTo(fallback.band / 2.5, 6);
+			}
+		}
 	});
 
 	it('cuts stacked bars at the plot edges for c:min above 0 and c:max below a total', () => {

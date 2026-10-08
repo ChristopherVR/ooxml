@@ -201,7 +201,7 @@ export function buildBars(
 	}
 
 	// Non-percent stacked: the original `computeStackedBarRects` geometry (one
-	// bar per category, sized by c:gapWidth or else 0.7 of the slot, running
+	// bar per category, sized by c:gapWidth (default 150%), running
 	// from the zero line), with the original abs-value data labels. Only
 	// percentStacked uses the normalised running-sum path below (matching
 	// React's `renderStackedBarChart`).

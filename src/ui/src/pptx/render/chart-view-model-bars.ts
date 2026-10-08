@@ -43,8 +43,8 @@ export function computeBarRects(
 	const rects: BarRect[] = [],
 		seriesCount = Math.max(series.length, 1),
 		barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-		singleBarWidth = (barGroupWidth * 0.7) / seriesCount,
-		groupOffset = (barGroupWidth - singleBarWidth * seriesCount) / 2;
+		{ singleBarWidth, clusterWidth } = clusteredBarGeometry(barGroupWidth, seriesCount, {}),
+		groupOffset = (barGroupWidth - clusterWidth) / 2;
 
 	for (let ci = 0; ci < catCount; ci++) {
 		for (let si = 0; si < series.length; si++) {
@@ -69,16 +69,12 @@ export function computeBarRects(
 /**
  * Width of a stacked bar in one category slot. All the series of a stacked
  * chart share one bar, so `c:gapWidth` sizes it the way it sizes a cluster of
- * one; without it the bar keeps its old `fallbackFraction` of the slot.
+ * one. An absent `c:gapWidth` takes the ECMA-376 default of 150%
+ * (`DEFAULT_BAR_GAP_WIDTH`), so the bar is 40% of the slot.
  */
-export function stackedBarWidth(
-	slotWidth: number,
-	gapWidth: number | undefined,
-	fallbackFraction: number,
-): number {
-	return gapWidth === undefined
-		? slotWidth * fallbackFraction
-		: clusteredBarGeometry(slotWidth, 1, { barGapWidth: gapWidth }).singleBarWidth;
+export function stackedBarWidth(slotWidth: number, gapWidth: number | undefined): number {
+	return clusteredBarGeometry(slotWidth, 1, gapWidth === undefined ? {} : { barGapWidth: gapWidth })
+		.singleBarWidth;
 }
 
 /**
@@ -126,7 +122,7 @@ export function computeStackedBarRects(
 ): BarRect[] {
 	const rects: BarRect[] = [],
 		slot = layout.plotWidth / Math.max(catCount, 1),
-		barW = stackedBarWidth(slot, gapWidth, 0.7),
+		barW = stackedBarWidth(slot, gapWidth),
 		barOffset = (slot - barW) / 2;
 
 	for (let ci = 0; ci < catCount; ci++) {

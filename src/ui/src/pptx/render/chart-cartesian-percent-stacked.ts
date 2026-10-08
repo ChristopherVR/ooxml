@@ -54,7 +54,7 @@ export function buildPercentStackedBars(
 		palette = chartData.colorPalette,
 		showLabels = chartData.style?.hasDataLabels,
 		barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-		barW = stackedBarWidth(barGroupWidth, chartData.barGapWidth, 0.6),
+		barW = stackedBarWidth(barGroupWidth, chartData.barGapWidth),
 		barOffset = (barGroupWidth - barW) / 2,
 		displaySeries = series.map((entry) => ({
 			...entry,

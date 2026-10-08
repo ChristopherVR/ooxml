@@ -76,7 +76,7 @@ describe('cartesian linear default path', () => {
 		expect(rects).toHaveLength(6);
 	});
 
-	it('keeps abs-stacked geometry: 0.7 bar-group width, one rect per non-zero value', () => {
+	it('keeps abs-stacked geometry: one rect per non-zero value', () => {
 		const stacked: PptxChartData = {
 			...baselineBar,
 			grouping: 'stacked',
@@ -453,9 +453,14 @@ describe('cartesian stacked bars', () => {
 		return { vm, rects, slot: plotWidth / 2 };
 	};
 
-	it('keeps 0.7 of the category slot when c:gapWidth is absent', () => {
-		const { rects, slot } = rectsOf(stackedChart());
-		expect(rects[0]?.kind === 'rect' && rects[0].w).toBeCloseTo(slot * 0.7, 6);
+	it('takes the ECMA-376 default gap of 150% when c:gapWidth is absent', () => {
+		for (const grouping of ['stacked', 'percentStacked'] as const) {
+			const { rects, slot } = rectsOf(stackedChart({ grouping }));
+			expect(rects.length).toBeGreaterThan(0);
+			for (const rect of rects) {
+				expect(rect.kind === 'rect' && rect.w).toBeCloseTo(slot / 2.5, 6);
+			}
+		}
 	});
 
 	it('sizes stacked and percentStacked bars from c:gapWidth like a one-bar cluster', () => {

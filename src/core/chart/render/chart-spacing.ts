@@ -1,3 +1,4 @@
+import { DEFAULT_BAR_GAP_WIDTH } from '../bar-cluster-geometry';
 import type { ChartSummary } from './summary';
 
 type ChartSpacing = Pick<ChartSummary, 'barGapWidth' | 'barOverlap' | 'grouping'>;
@@ -8,7 +9,7 @@ export function chartBarSpacing(
 ): Required<Pick<ChartSummary, 'barGapWidth' | 'barOverlap'>> {
 	const stacked = chart.grouping === 'stacked' || chart.grouping === 'percentStacked';
 	return {
-		barGapWidth: chart.barGapWidth ?? 150,
+		barGapWidth: chart.barGapWidth ?? DEFAULT_BAR_GAP_WIDTH,
 		barOverlap: chart.barOverlap ?? (stacked ? 100 : 0),
 	};
 }
