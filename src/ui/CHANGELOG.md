@@ -7,6 +7,62 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.2.0) - 2026-10-08
+
+### Features
+
+- **ui:** Give the visio viewer the shared theme tokens ([1121dfe](https://github.com/ChristopherVR/ooxml/commit/1121dfeea611fcf86c15b1365c7ad0beb84d51b0))
+- **ui:** Extend the shared ruler for word documents ([81451bd](https://github.com/ChristopherVR/ooxml/commit/81451bd3b77b52e71d3d274f62f1887b968d2052))
+- **ui:** Draw sparklines in the excel grid ([e015d99](https://github.com/ChristopherVR/ooxml/commit/e015d9963dd4429b46979873394e97022ba7d38d))
+- **ui:** Extend the shared title bar and status bar tokens ([9ff07df](https://github.com/ChristopherVR/ooxml/commit/9ff07df93a6e6507cd132dafe7361a68589aec9f))
+- **ui:** Add the shared comments pane ([ec3d140](https://github.com/ChristopherVR/ooxml/commit/ec3d1409316c3f3bd76c3b6fa4f4bbc4b1d22a04))
+- **ui:** Share excel workbooks over the collab session ([0d274d2](https://github.com/ChristopherVR/ooxml/commit/0d274d2455cef4ef7c3f0c44578bd96a7719fbda))
+- **docx:** Draw charts in the editor and print layout ([da2ed18](https://github.com/ChristopherVR/ooxml/commit/da2ed1850715cf85d01ecc4f3967aa48d9414348))
+- **ui:** Add showCompatibilityToasts root option ([992adda](https://github.com/ChristopherVR/ooxml/commit/992adda597325f8d2c9ca5fcbf612ac4da1b65c0))
+- **ui:** Integrate suite storage and teams host controls ([f0c9f6c](https://github.com/ChristopherVR/ooxml/commit/f0c9f6cabc3f7cbde6f8e080946375b2733856a6))
+- **ui:** Add a right-aligned actions slot to the ribbon tabs ([b8943a6](https://github.com/ChristopherVR/ooxml/commit/b8943a6b49a0fa3f9f8e90debc6b8b0eb132ea8e))
+- **ui:** Add a summary slot to the status bar ([c11c2b8](https://github.com/ChristopherVR/ooxml/commit/c11c2b814230a9442d970d3364a30519f6fc8ed1))
+
+### Bug Fixes
+
+- **ui:** Use spacing tokens in the ruler marker styles ([6acef4b](https://github.com/ChristopherVR/ooxml/commit/6acef4b098fcf47c10d8a380648caa95de1465ad))
+- **xlsx:** Report sparklines as shown in the feature notes ([1db5daa](https://github.com/ChristopherVR/ooxml/commit/1db5daacd00458cdd74e6913ea5b6c627bbe6543))
+- **ui:** Map chart style numbers to the palettes office uses ([c16145d](https://github.com/ChristopherVR/ooxml/commit/c16145de0c649e401259f25a0cacc06a3f5c409d))
+- **ui:** Register office-ui-ruler when word creates its ruler ([e4eb8df](https://github.com/ChristopherVR/ooxml/commit/e4eb8dffbc27a863ad17da03a22572c6ffe8cd9b))
+- **ui:** Publish shared visio drawings from settled state ([cb7c587](https://github.com/ChristopherVR/ooxml/commit/cb7c587e11a9d52bb86e405501f6623d2fa9eb57))
+- **pptx:** Build chart style palettes over the deck theme ([7ab9527](https://github.com/ChristopherVR/ooxml/commit/7ab9527743dbb1dc1438d2d3e6e73553b13e54b7))
+- **pptx:** Lay out table cell paragraphs with their own spacing ([c3db7c5](https://github.com/ChristopherVR/ooxml/commit/c3db7c57596d8f31e24b2d556ed1eea8dddad90a))
+- **pptx:** Align every paragraph when a table cell is aligned ([1bb7e7d](https://github.com/ChristopherVR/ooxml/commit/1bb7e7de568a0d8a6808862fd6dc4367782e9686))
+- **pptx:** Skip chart axis lines and gridlines set to no line ([c6a9fcb](https://github.com/ChristopherVR/ooxml/commit/c6a9fcb0fb07498acf6db64d9ee9417339a6f2ac))
+- **pptx:** Draw value gridlines only for axes with c:majorGridlines ([3229b2e](https://github.com/ChristopherVR/ooxml/commit/3229b2e67395d24faeb803e6447fe34b07e44770))
+- **pptx:** Apply a table cell run's character spacing ([6d1ee14](https://github.com/ChristopherVR/ooxml/commit/6d1ee148cbd0ea058ae032a7a3b8fe9cdace1ce1))
+- **pptx:** Size stacked bars from c:gapWidth ([c951292](https://github.com/ChristopherVR/ooxml/commit/c951292dd2f4ef06b216d075554a0c5f5d6b043f))
+- **pptx:** Honour c:min and c:max on stacked charts ([0895267](https://github.com/ChristopherVR/ooxml/commit/08952672d90597d8cb99102652657c6c419f5fb7))
+- **xlsx:** Place editing mode, comments and share like excel ([2d161c7](https://github.com/ChristopherVR/ooxml/commit/2d161c71022b08c44d7dd7f5274acbf44f80bc1c))
+- **xlsx:** Show the selection statistics before the view buttons ([c64c804](https://github.com/ChristopherVR/ooxml/commit/c64c80415c93f95db8ef48a4b4bd57f0bb0bd934))
+- **ui:** List the ribbon actions and status summary slots ([65fb8af](https://github.com/ChristopherVR/ooxml/commit/65fb8afd31cd7db0bb22a4d73e90aa31b8b9c833))
+- **ui:** Escape deck text in the foreignObject export document ([60ad105](https://github.com/ChristopherVR/ooxml/commit/60ad105c4753f4a9e31c24873d0da83291b037f8))
+
+### Refactor
+
+- **ui:** Use the Drawing type names ([02a8884](https://github.com/ChristopherVR/ooxml/commit/02a8884b2c07e8b935425fd772b9edea6c31f840))
+- **ui:** Feed the xlsx office tokens from the shared bridge ([a851f3e](https://github.com/ChristopherVR/ooxml/commit/a851f3e02c6e3fc53c886aa03fdef5e62b0aca0d))
+- **ui:** Drive the word ruler through office-ui-ruler ([767c09d](https://github.com/ChristopherVR/ooxml/commit/767c09dce172f384313f215bfec9ad46a4ca33f2))
+- **ui:** Theme the pptx title and status bars through host tokens ([e2effd1](https://github.com/ChristopherVR/ooxml/commit/e2effd14164fa04a1476cf9f16439b5f12518528))
+- **ui:** Show word comments in the shared pane ([951b4ed](https://github.com/ChristopherVR/ooxml/commit/951b4ed01e1d3f17725d15e45d960a579e7e89d1))
+- **ui:** Show excel comments in the shared pane ([4a7ee1b](https://github.com/ChristopherVR/ooxml/commit/4a7ee1b40f88fd25cacb04b2ef0a6dbbc0b58138))
+
+### Testing
+
+- **ui:** Speed up the yjs inline comments suite ([7c8e88d](https://github.com/ChristopherVR/ooxml/commit/7c8e88d936e6539ae1e4cf12f402584bd076fcdb))
+- **xlsx:** Assert one status bar and excel's tab-row actions ([91b6054](https://github.com/ChristopherVR/ooxml/commit/91b6054b0c03c637af972e9a174e5e7308f21cfb))
+
+### Chores
+
+- **ui:** Extend the base tsconfig in the pptx project ([581528e](https://github.com/ChristopherVR/ooxml/commit/581528e1eec8d7b8c45d79139809ba7a723939a0))
+- **ui:** Regenerate the custom elements manifest for the ruler ([3a744b9](https://github.com/ChristopherVR/ooxml/commit/3a744b9fca030c32282dc1d0c9a5be39dd24dffd))
+- **scripts:** Expand every wildcard in package smoke subpaths ([f240a06](https://github.com/ChristopherVR/ooxml/commit/f240a06302ce04102f52a4df11dae529009dbc3b))
+
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.1.0) - 2026-10-08
 
 ### Features

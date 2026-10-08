@@ -7,6 +7,65 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.30.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.30.0) - 2026-10-08
+
+### Features
+
+- **chart:** Add the neutral chartSpace model ([2544c31](https://github.com/ChristopherVR/ooxml/commit/2544c31319b5cc723b26a2c37b519719693f62b8))
+- **chart:** Parse chart parts from the shared DOM ([49c1b76](https://github.com/ChristopherVR/ooxml/commit/49c1b76e41b5fac972c52a5d8169e9ad14478cfd))
+- **opc:** Patch property parts in place and model app statistics ([66c4cf1](https://github.com/ChristopherVR/ooxml/commit/66c4cf1043d73a6df05131d813cbae7f5af6e35e))
+- **chart:** Write chartSpace parts from the neutral model ([bf6920f](https://github.com/ChristopherVR/ooxml/commit/bf6920fb553ff32c32c3edf9bff652cad3bd71ac))
+- **chart:** Accept text bodies given as XML and drop invalid characters ([816830f](https://github.com/ChristopherVR/ooxml/commit/816830fa29a42491d72b835a9b6eb7b5a617f234))
+- **chart:** Render chartSpace parts to svg ([eb2c12f](https://github.com/ChristopherVR/ooxml/commit/eb2c12f877c0f4c7521a9d71e323120fb9084ca6))
+- **chart:** Model display units, data tables and walls ([b95531a](https://github.com/ChristopherVR/ooxml/commit/b95531a3ff55f09c83676291c4b4857d1943189c))
+- **ui:** Add showCompatibilityToasts root option ([992adda](https://github.com/ChristopherVR/ooxml/commit/992adda597325f8d2c9ca5fcbf612ac4da1b65c0))
+- **opc:** Support shared suite files and embedded editing ([41614b1](https://github.com/ChristopherVR/ooxml/commit/41614b10ef62522fe2dceae695b478b53cca293a))
+
+### Bug Fixes
+
+- **chart:** Paint coincident linear stops as the native one-step ramp ([eabbc5e](https://github.com/ChristopherVR/ooxml/commit/eabbc5e3dc968f0d40246293238ef88ae7b004f4))
+- **pptx:** List line breaks in slide titles as spaces in app.xml ([45f496a](https://github.com/ChristopherVR/ooxml/commit/45f496ab747f90f7b8764a295c8d0df8414141c0))
+- **pptx:** Export the neutral SmartArt type names from the public entry ([0f081d2](https://github.com/ChristopherVR/ooxml/commit/0f081d260fbaf034129114fcba6137c900dbf846))
+- **chart:** Read the line chart group's own c:smooth ([a5cfd0d](https://github.com/ChristopherVR/ooxml/commit/a5cfd0d45af11e2b2214a9abdc86ce33ba5312be))
+- **pptx:** Read chart style numbers from the mc:Fallback ([045faf7](https://github.com/ChristopherVR/ooxml/commit/045faf71cadf05f1c9bc4b3155003abe9520b764))
+- **pptx:** Treat a bare data-label switch as on ([637f938](https://github.com/ChristopherVR/ooxml/commit/637f938814baced0d2f72aeca7142e2281db0ca3))
+- **pptx:** Declare c15 and c16 prefixes in chart extension writers ([7b93a01](https://github.com/ChristopherVR/ooxml/commit/7b93a010a77c1ef8433f75fc8d2f3ad810659c75))
+- **pptx:** Repair chart parts this library once saved with undeclared prefixes ([a5f77af](https://github.com/ChristopherVR/ooxml/commit/a5f77af3bf0a2661af35091da920ca707e4fcb96))
+- **pptx:** Paint chart label fonts in every binding ([13493fc](https://github.com/ChristopherVR/ooxml/commit/13493fc180d39cb2622d5f22fd331a9e0abbb781))
+- **pptx:** Build chart style palettes over the deck theme ([7ab9527](https://github.com/ChristopherVR/ooxml/commit/7ab9527743dbb1dc1438d2d3e6e73553b13e54b7))
+- **pptx:** Read each table cell paragraph's own layout ([bcc61f3](https://github.com/ChristopherVR/ooxml/commit/bcc61f3b3e98564e50d018a4a37576f3b237fb57))
+- **pptx:** Lay out table cell paragraphs with their own spacing ([c3db7c5](https://github.com/ChristopherVR/ooxml/commit/c3db7c57596d8f31e24b2d556ed1eea8dddad90a))
+- **pptx:** Save each table cell paragraph's own alignment ([0d43f35](https://github.com/ChristopherVR/ooxml/commit/0d43f3530d5cefd52b98193be98329b4ec66547b))
+- **pptx:** Align every paragraph when a table cell is aligned ([1bb7e7d](https://github.com/ChristopherVR/ooxml/commit/1bb7e7de568a0d8a6808862fd6dc4367782e9686))
+- **pptx:** Skip chart axis lines and gridlines set to no line ([c6a9fcb](https://github.com/ChristopherVR/ooxml/commit/c6a9fcb0fb07498acf6db64d9ee9417339a6f2ac))
+- **pptx:** Apply a table cell run's character spacing ([6d1ee14](https://github.com/ChristopherVR/ooxml/commit/6d1ee148cbd0ea058ae032a7a3b8fe9cdace1ce1))
+- **pptx:** Size an empty table cell from its end paragraph properties ([30da656](https://github.com/ChristopherVR/ooxml/commit/30da656aa60039fff3c912c20cd286dc49055adf))
+
+### Performance
+
+- **xml:** Add a lightweight reader for large plain fragments ([5e0318f](https://github.com/ChristopherVR/ooxml/commit/5e0318facba5e0766dd6d1f26172eb94177fe471))
+
+### Refactor
+
+- **pptx:** Compile the ui helpers under the strict project ([edbff0a](https://github.com/ChristopherVR/ooxml/commit/edbff0a3fd1863efa394da6c9fe826514fda5f7c))
+- **chart:** Use the Drawing type names ([76bf49c](https://github.com/ChristopherVR/ooxml/commit/76bf49c0a96519816c79375eed1aa9ead84f8b10))
+- **diagram:** Add the neutral SmartArt model types ([b8f4e74](https://github.com/ChristopherVR/ooxml/commit/b8f4e7406362570e085c701dd1e342d534fcc048))
+- **geometry:** Move the preset shape evaluator out of pptx ([c670910](https://github.com/ChristopherVR/ooxml/commit/c670910349b7f6d6d02c335a551518265efde6a9))
+- **diagram:** Move the layout engine out of pptx ([91767c0](https://github.com/ChristopherVR/ooxml/commit/91767c03d4ec9fb2225c47eddd0adc850f187022))
+- **pptx:** Update document properties through opc/properties ([a295f6a](https://github.com/ChristopherVR/ooxml/commit/a295f6a2182eb344e6c9e9a6fe70ba5366268b9c))
+- **diagram:** Port the dgm:choose walkers to ordered XML ([2dfc037](https://github.com/ChristopherVR/ooxml/commit/2dfc0371bb0d4b72e5a3ef4b4cb71bd1a5cb7f81))
+- **diagram:** Move the SmartArt constraint solver into diagram ([bd91ad8](https://github.com/ChristopherVR/ooxml/commit/bd91ad884cf00947957b9620309c885df21d6985))
+- **diagram:** Move the SmartArt interpreter model into diagram ([b24d320](https://github.com/ChristopherVR/ooxml/commit/b24d3200af42eda7c1d7fcc7dcf592202e2fc0f8))
+- **chart:** Move the svg painter into the chart area ([0f9169d](https://github.com/ChristopherVR/ooxml/commit/0f9169d11c5bf92342bc291fdb3f8ef8d84927c5))
+- **pptx:** Build chart models from the neutral parser ([1e38985](https://github.com/ChristopherVR/ooxml/commit/1e389856ae308843d0d86c83b41f6a62284ef1d2))
+- **pptx:** Delete the legacy object-tree chart parser ([b4f0f4f](https://github.com/ChristopherVR/ooxml/commit/b4f0f4f8af4b2eefe49749f5b3c1b1ee7492dba9))
+- **diagram:** Move the SmartArt hierarchy arranger into diagram ([989744c](https://github.com/ChristopherVR/ooxml/commit/989744c5a2ed121eda9b2b11a37815e295c14740))
+- **diagram:** Move the SmartArt layout interpreters into diagram ([3725b73](https://github.com/ChristopherVR/ooxml/commit/3725b7359b5d845012fa7b84b3cddc421446cfbd))
+
+### Testing
+
+- **pptx:** Compare chart parts with the neutral parser on every deck ([58b16be](https://github.com/ChristopherVR/ooxml/commit/58b16be72bdcf27e291ff5b9bebc139db9cd3607))
+
 ## [4.29.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.29.0) - 2026-10-08
 
 ### Features

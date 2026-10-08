@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-svelte-viewer@0.5.0) - 2026-10-08
+
+### Features
+
+- **xlsx:** Expose collaboration in every binding ([2983ccc](https://github.com/ChristopherVR/ooxml/commit/2983ccc1e5d72749a31d2540e8f57b637f282b3e))
+
 ## [0.4.6](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-svelte-viewer@0.4.6) - 2026-10-08
 
 ## [0.4.5](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-svelte-viewer@0.4.5) - 2026-10-07

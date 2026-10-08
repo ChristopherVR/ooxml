@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.6](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-vanilla-viewer@0.1.6) - 2026-10-08
+
+### Bug Fixes
+
+- **teams:** Accept a host class in every binding ([629bb11](https://github.com/ChristopherVR/ooxml/commit/629bb118e6adc0ad21c78a34a60c884586b09869))
+
 ## [0.1.5](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-vanilla-viewer@0.1.5) - 2026-10-07
 
 ## [0.1.4](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-vanilla-viewer@0.1.4) - 2026-10-07

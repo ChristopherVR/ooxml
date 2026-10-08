@@ -7,6 +7,91 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.2.0) - 2026-10-08
+
+### Features
+
+- **chart:** Add the neutral chartSpace model ([2544c31](https://github.com/ChristopherVR/ooxml/commit/2544c31319b5cc723b26a2c37b519719693f62b8))
+- **chart:** Parse chart parts from the shared DOM ([49c1b76](https://github.com/ChristopherVR/ooxml/commit/49c1b76e41b5fac972c52a5d8169e9ad14478cfd))
+- **docx:** Load chart parts into the document model ([01ce179](https://github.com/ChristopherVR/ooxml/commit/01ce17985b5d5bd0399497af6fe370ae99413a53))
+- **opc:** Patch property parts in place and model app statistics ([66c4cf1](https://github.com/ChristopherVR/ooxml/commit/66c4cf1043d73a6df05131d813cbae7f5af6e35e))
+- **xlsx:** Model and read sparkline groups ([681f241](https://github.com/ChristopherVR/ooxml/commit/681f2418a0300ffb19287b57928544f4e90b0a95))
+- **xlsx:** Lay out sparklines for painting ([d95575a](https://github.com/ChristopherVR/ooxml/commit/d95575ab9d67bc0c96c33181262b3de232214493))
+- **xlsx:** Add the Yjs workbook adapter ([6289494](https://github.com/ChristopherVR/ooxml/commit/628949485ba4f14ffda1f131cf6c8b44fc5596bf))
+- **xlsx:** Bind edit sessions to shared workbooks ([cd28ab3](https://github.com/ChristopherVR/ooxml/commit/cd28ab35755790f149632bd2dae0ad2a37d5935d))
+- **chart:** Write chartSpace parts from the neutral model ([bf6920f](https://github.com/ChristopherVR/ooxml/commit/bf6920fb553ff32c32c3edf9bff652cad3bd71ac))
+- **chart:** Accept text bodies given as XML and drop invalid characters ([816830f](https://github.com/ChristopherVR/ooxml/commit/816830fa29a42491d72b835a9b6eb7b5a617f234))
+- **xlsx:** Lay out remote selections ([3770bb8](https://github.com/ChristopherVR/ooxml/commit/3770bb85d8d7106fcf67c822533c189e5087e1c1))
+- **xlsx:** Let the editor context own the undo history ([46641d7](https://github.com/ChristopherVR/ooxml/commit/46641d76777a94c25897c391c8066d3b057f8212))
+- **chart:** Render chartSpace parts to svg ([eb2c12f](https://github.com/ChristopherVR/ooxml/commit/eb2c12f877c0f4c7521a9d71e323120fb9084ca6))
+- **docx:** Draw charts in the editor and print layout ([da2ed18](https://github.com/ChristopherVR/ooxml/commit/da2ed1850715cf85d01ecc4f3967aa48d9414348))
+- **chart:** Model display units, data tables and walls ([b95531a](https://github.com/ChristopherVR/ooxml/commit/b95531a3ff55f09c83676291c4b4857d1943189c))
+- **opc:** Support shared suite files and embedded editing ([41614b1](https://github.com/ChristopherVR/ooxml/commit/41614b10ef62522fe2dceae695b478b53cca293a))
+
+### Bug Fixes
+
+- **pptx:** Keep pptx/ui in the relaxed project the bundlers read ([fb2a0d3](https://github.com/ChristopherVR/ooxml/commit/fb2a0d3224cc8d524baae359de5098003332ef0e))
+- **chart:** Paint coincident linear stops as the native one-step ramp ([eabbc5e](https://github.com/ChristopherVR/ooxml/commit/eabbc5e3dc968f0d40246293238ef88ae7b004f4))
+- **pptx:** List line breaks in slide titles as spaces in app.xml ([45f496a](https://github.com/ChristopherVR/ooxml/commit/45f496ab747f90f7b8764a295c8d0df8414141c0))
+- **pptx:** Export the neutral SmartArt type names from the public entry ([0f081d2](https://github.com/ChristopherVR/ooxml/commit/0f081d260fbaf034129114fcba6137c900dbf846))
+- **xlsx:** Report sparklines as shown in the feature notes ([1db5daa](https://github.com/ChristopherVR/ooxml/commit/1db5daacd00458cdd74e6913ea5b6c627bbe6543))
+- **chart:** Read the line chart group's own c:smooth ([a5cfd0d](https://github.com/ChristopherVR/ooxml/commit/a5cfd0d45af11e2b2214a9abdc86ce33ba5312be))
+- **pptx:** Read chart style numbers from the mc:Fallback ([045faf7](https://github.com/ChristopherVR/ooxml/commit/045faf71cadf05f1c9bc4b3155003abe9520b764))
+- **pptx:** Treat a bare data-label switch as on ([637f938](https://github.com/ChristopherVR/ooxml/commit/637f938814baced0d2f72aeca7142e2281db0ca3))
+- **pptx:** Declare c15 and c16 prefixes in chart extension writers ([7b93a01](https://github.com/ChristopherVR/ooxml/commit/7b93a010a77c1ef8433f75fc8d2f3ad810659c75))
+- **pptx:** Repair chart parts this library once saved with undeclared prefixes ([a5f77af](https://github.com/ChristopherVR/ooxml/commit/a5f77af3bf0a2661af35091da920ca707e4fcb96))
+- **xlsx:** Adopt the shared workbook before seeding a room ([3b3aa8e](https://github.com/ChristopherVR/ooxml/commit/3b3aa8e3e4b5d54c062b2d955b0f1008ee9cebc0))
+- **pptx:** Build chart style palettes over the deck theme ([7ab9527](https://github.com/ChristopherVR/ooxml/commit/7ab9527743dbb1dc1438d2d3e6e73553b13e54b7))
+- **pptx:** Read each table cell paragraph's own layout ([bcc61f3](https://github.com/ChristopherVR/ooxml/commit/bcc61f3b3e98564e50d018a4a37576f3b237fb57))
+- **pptx:** Save each table cell paragraph's own alignment ([0d43f35](https://github.com/ChristopherVR/ooxml/commit/0d43f3530d5cefd52b98193be98329b4ec66547b))
+- **pptx:** Align every paragraph when a table cell is aligned ([1bb7e7d](https://github.com/ChristopherVR/ooxml/commit/1bb7e7de568a0d8a6808862fd6dc4367782e9686))
+- **pptx:** Skip chart axis lines and gridlines set to no line ([c6a9fcb](https://github.com/ChristopherVR/ooxml/commit/c6a9fcb0fb07498acf6db64d9ee9417339a6f2ac))
+- **pptx:** Apply a table cell run's character spacing ([6d1ee14](https://github.com/ChristopherVR/ooxml/commit/6d1ee148cbd0ea058ae032a7a3b8fe9cdace1ce1))
+- **pptx:** Size an empty table cell from its end paragraph properties ([30da656](https://github.com/ChristopherVR/ooxml/commit/30da656aa60039fff3c912c20cd286dc49055adf))
+- **teams:** Bound the content pattern ([78dde2d](https://github.com/ChristopherVR/ooxml/commit/78dde2dbd5f7161febe60f1dcd84586fe7668b4d))
+- **xlsx:** Guard chart series edits against prototype keys ([c49e00f](https://github.com/ChristopherVR/ooxml/commit/c49e00f90bc48b2443841bdfa5d21965175496a8))
+
+### Performance
+
+- **xml:** Add a lightweight reader for large plain fragments ([5e0318f](https://github.com/ChristopherVR/ooxml/commit/5e0318facba5e0766dd6d1f26172eb94177fe471))
+- **xlsx:** Read worksheet cell data without building a DOM ([d5addd2](https://github.com/ChristopherVR/ooxml/commit/d5addd2352df2b2aead2920136ae38775663bec2))
+- **xlsx:** Trust stored values on the first recalculation ([a584a55](https://github.com/ChristopherVR/ooxml/commit/a584a550628a9725f2a637a671883e28d8ca1dc3))
+- **xlsx:** Tokenize formulas without slicing the source ([a7ec241](https://github.com/ChristopherVR/ooxml/commit/a7ec241ea393436f4c27d4e7024eef1878460c82))
+
+### Refactor
+
+- **pptx:** Compile the ui helpers under the strict project ([edbff0a](https://github.com/ChristopherVR/ooxml/commit/edbff0a3fd1863efa394da6c9fe826514fda5f7c))
+- **visio:** Read the theme through drawingml ([5281182](https://github.com/ChristopherVR/ooxml/commit/528118204a9405f3e8f6dd216fb9d7bdd0c62f93))
+- **chart:** Use the Drawing type names ([76bf49c](https://github.com/ChristopherVR/ooxml/commit/76bf49c0a96519816c79375eed1aa9ead84f8b10))
+- **xlsx:** Use the Drawing type names ([ab6fc07](https://github.com/ChristopherVR/ooxml/commit/ab6fc07bbf978d27b4f3335676331016a2bf736d))
+- **xlsx:** Build chart objects from the shared chart model ([d0a660e](https://github.com/ChristopherVR/ooxml/commit/d0a660e6e54d20ed788594476360cbe8b3db4b9e))
+- **diagram:** Add the neutral SmartArt model types ([b8f4e74](https://github.com/ChristopherVR/ooxml/commit/b8f4e7406362570e085c701dd1e342d534fcc048))
+- **geometry:** Move the preset shape evaluator out of pptx ([c670910](https://github.com/ChristopherVR/ooxml/commit/c670910349b7f6d6d02c335a551518265efde6a9))
+- **diagram:** Move the layout engine out of pptx ([91767c0](https://github.com/ChristopherVR/ooxml/commit/91767c03d4ec9fb2225c47eddd0adc850f187022))
+- **pptx:** Update document properties through opc/properties ([a295f6a](https://github.com/ChristopherVR/ooxml/commit/a295f6a2182eb344e6c9e9a6fe70ba5366268b9c))
+- **diagram:** Port the dgm:choose walkers to ordered XML ([2dfc037](https://github.com/ChristopherVR/ooxml/commit/2dfc0371bb0d4b72e5a3ef4b4cb71bd1a5cb7f81))
+- **diagram:** Move the SmartArt constraint solver into diagram ([bd91ad8](https://github.com/ChristopherVR/ooxml/commit/bd91ad884cf00947957b9620309c885df21d6985))
+- **diagram:** Move the SmartArt interpreter model into diagram ([b24d320](https://github.com/ChristopherVR/ooxml/commit/b24d3200af42eda7c1d7fcc7dcf592202e2fc0f8))
+- **xlsx:** Write new charts through the shared writer ([2f898a7](https://github.com/ChristopherVR/ooxml/commit/2f898a7c560b3141df55b3544691fe5deefc118f))
+- **chart:** Move the svg painter into the chart area ([0f9169d](https://github.com/ChristopherVR/ooxml/commit/0f9169d11c5bf92342bc291fdb3f8ef8d84927c5))
+- **pptx:** Build chart models from the neutral parser ([1e38985](https://github.com/ChristopherVR/ooxml/commit/1e389856ae308843d0d86c83b41f6a62284ef1d2))
+- **pptx:** Delete the legacy object-tree chart parser ([b4f0f4f](https://github.com/ChristopherVR/ooxml/commit/b4f0f4f8af4b2eefe49749f5b3c1b1ee7492dba9))
+- **diagram:** Move the SmartArt hierarchy arranger into diagram ([989744c](https://github.com/ChristopherVR/ooxml/commit/989744c5a2ed121eda9b2b11a37815e295c14740))
+- **diagram:** Move the SmartArt layout interpreters into diagram ([3725b73](https://github.com/ChristopherVR/ooxml/commit/3725b7359b5d845012fa7b84b3cddc421446cfbd))
+
+### Documentation
+
+- Describe the xlsx collaboration adapter ([d17cef3](https://github.com/ChristopherVR/ooxml/commit/d17cef34d8cd04f46419dcaf9989a99688b7fecf))
+
+### Testing
+
+- **pptx:** Compare chart parts with the neutral parser on every deck ([58b16be](https://github.com/ChristopherVR/ooxml/commit/58b16be72bdcf27e291ff5b9bebc139db9cd3607))
+
+### Chores
+
+- **xlsx:** Add a load profiler script ([60650a6](https://github.com/ChristopherVR/ooxml/commit/60650a6add08555a3c475b39139d88f36b773aa9))
+- **scripts:** Expand every wildcard in package smoke subpaths ([f240a06](https://github.com/ChristopherVR/ooxml/commit/f240a06302ce04102f52a4df11dae529009dbc3b))
+
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.1.0) - 2026-10-08
 
 ### Features
