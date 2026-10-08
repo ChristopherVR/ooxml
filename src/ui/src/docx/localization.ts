@@ -138,9 +138,31 @@ export function localizeElement(root: HTMLElement, locale: EditorLocale): void {
 	}
 }
 
+const controlCache = new WeakMap<ParentNode, Map<string, HTMLElement>>();
+
+/**
+ * Finds a toolbar control by its English label (`aria-label`, or the original
+ * label kept in `data-localearialabel` once translated). The editor looks up a
+ * few dozen controls on every transaction, and an attribute selector scans the
+ * whole toolbar each time, so the hit is remembered per root and reused while
+ * it is still connected and still carries the label.
+ */
 export function findLocalizedControl<T extends HTMLElement>(
 	root: ParentNode,
 	label: string,
 ): T | null {
-	return root.querySelector<T>(`[aria-label="${label}"], [data-localearialabel="${label}"]`);
+	let cache = controlCache.get(root);
+	const cached = cache?.get(label);
+	if (
+		cached?.isConnected &&
+		root.contains(cached) &&
+		(cached.getAttribute('aria-label') === label || cached.dataset.localearialabel === label)
+	)
+		return cached as T;
+	const found = root.querySelector<T>(`[aria-label="${label}"], [data-localearialabel="${label}"]`);
+	if (found) {
+		if (!cache) controlCache.set(root, (cache = new Map()));
+		cache.set(label, found);
+	}
+	return found;
 }

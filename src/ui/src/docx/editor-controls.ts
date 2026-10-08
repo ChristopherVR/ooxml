@@ -2,7 +2,7 @@ import type { EditorView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
 import type { DocumentModel } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
-import { formatPageStatus, formatWordCount } from './localization';
+import { findLocalizedControl, formatPageStatus, formatWordCount } from './localization';
 import { syncParagraphControls, syncFormatControls } from './ribbon-controls';
 import { syncFontControls } from './font-sync';
 import { syncMultilingualControls } from './multilingual-ribbon';
@@ -84,9 +84,9 @@ export function refreshEditorControls(
 		syncParagraphToggles(toolbar, view, model);
 		syncContextualTabs(toolbar, state);
 		syncRuler(toolbar, view, model);
-		const trackButton = toolbar.querySelector<HTMLButtonElement>('[aria-label="Track changes"]');
+		const trackButton = findLocalizedControl<HTMLButtonElement>(toolbar, 'Track changes');
 		trackButton?.setAttribute('aria-pressed', String(Boolean(model.trackChanges)));
-		const commentsButton = toolbar.querySelector<HTMLButtonElement>('[aria-label="Comments"]');
+		const commentsButton = findLocalizedControl<HTMLButtonElement>(toolbar, 'Comments');
 		commentsButton?.setAttribute('aria-pressed', String(commentsOpen));
 		const changeAtCursor = hasChangeAtCursor(view);
 		const anyChange = hasAnyChange(view);
@@ -106,9 +106,7 @@ export function refreshEditorControls(
 				state.selection instanceof NodeSelection && state.selection.node.type.name === 'image',
 			],
 		] as const) {
-			const control = toolbar.querySelector<HTMLButtonElement>(
-				`[data-localearialabel="${label}"], [aria-label="${label}"]`,
-			);
+			const control = findLocalizedControl<HTMLButtonElement>(toolbar, label);
 			if (control) control.disabled = readOnly || !enabled;
 		}
 	}
