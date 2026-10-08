@@ -32,6 +32,7 @@ import {
 	SheetSelections,
 } from 'ooxml-core/xlsx/ui';
 import type { CalculationMode } from './backstage';
+import { CalcPreparation } from './calc-preparation';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
 
@@ -66,6 +67,8 @@ export class EditorCore {
 	readonly ctx: EditorContext;
 	/** Co-editing over `ooxml-core/collab`; undo and redo go through it while shared. */
 	readonly collab: XlsxCollaboration;
+	/** Builds the formula graph in idle time after a workbook opens. */
+	readonly calcPreparation: CalcPreparation;
 	private gridController: GridController | undefined;
 	private readonly modelListeners = new Set<(change: unknown) => void>();
 	private stopSession: (() => void) | undefined;
@@ -115,6 +118,7 @@ export class EditorCore {
 		});
 		this.ctx = this.createContext();
 		this.collab = collaborationFor(this);
+		this.calcPreparation = new CalcPreparation(host, () => !!this.gridController?.isEditing());
 	}
 
 	private createContext(): EditorContext {
@@ -208,6 +212,7 @@ export class EditorCore {
 			}
 		}
 		this.stopSession = this.session?.onChange((change) => this.onSessionChange(change));
+		this.calcPreparation.start(this.session);
 		const sheets = workbook?.sheets.length ?? 0;
 		const preferred = workbook?.activeSheet ?? 0;
 		this.activeSheet = Math.min(Math.max(0, preferred), Math.max(0, sheets - 1));
