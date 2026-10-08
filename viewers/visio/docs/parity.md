@@ -1,5 +1,30 @@
 # Visio capability ledger
 
+## Anchored resize and numeric Size & Position, 2026-10-09
+
+The shared pointer tool now exposes eight single-selection resize handles.
+Core computes the fixed opposite anchor along saved rotated/reflected local
+axes and proves the resulting source dimensions, proportional local pins and
+dependent caches before mutation. Preview changes the selection frame only;
+release is one history transaction. Existing `resize-shape` commands without an
+anchor retain their fixed-rotation-pin behavior.
+
+View > Task Panes > Size & Position edits X/Y and dimensions in drawing inches
+and angle in counterclockwise degrees. Enter or blur commits one valid field;
+exact current-value input preserves bytes/formulas/history. Drafts survive
+unrelated rerenders on the same source/selection. Newer source/page/selection
+intent and cancellation supersede pending edits. The same shared component
+supplies these controls to all six bindings.
+
+Admission is bounded to source-backed ordinary local, unlayered, unglued 2D
+leaves. Protected cells, unsafe formulas, nonproportional guarded local pins,
+dimension-dependent rotation/flip changes and affected text fields can refuse
+atomically. Groups, masters, foreign objects, multi-shape resize, full-content
+resize preview, snapping, aspect-modifier gestures, numeric formula/unit-string
+entry and pin-position editing remain open. Native source and reopen evidence
+is recorded in [verification](verification.md); it does not establish full
+Visio behavior or visual parity.
+
 ## Blank drawings and pointer gestures, 2026-10-09
 
 File > New > Blank Drawing, Ctrl+N and all six native handles create an editable
@@ -13,7 +38,8 @@ in one history step. Blank-page dragging supports full-enclosure marquee with
 additive modifiers. Source/page/selection changes cancel gestures and pending
 source acceptance. Protected targets reject the complete move. Masters, groups,
 layers, foreign objects and glued connectors remain outside pointer movement;
-resize handles and routing still need their own source proofs.
+resize handles now have the separate bounded proof described above; routing
+remains unsupported.
 
 Pure deletion batches now permit references entirely inside the removed set.
 Retained references, metadata and Connect records still refuse, with all target

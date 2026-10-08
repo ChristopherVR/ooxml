@@ -30,6 +30,7 @@ export type VisioRibbonAction =
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }
 	| { type: 'panZoom' }
+	| { type: 'sizePosition' }
 	| { type: 'ruler' }
 	| { type: 'fullscreen' }
 	| { type: 'zoom'; mode: 'fit' | 'width' | 'actual' }

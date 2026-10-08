@@ -2,6 +2,52 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Anchored resize and numeric Size & Position, 2026-10-09
+
+Owned native Visio 16 measurements cover direct PinX, PinY, Width, Height and
+Angle cell edits: 15 cases at drawing scales 0.5, 1 and 2. Core numeric helpers
+produce the corresponding drawing-inch/radian source edits. Parsed dimensions,
+transforms and text match the native references, and all 15 core outputs open
+again through native COM with matching measured values. This is a cell-edit
+oracle, not automation of Visio's Size & Position window. Generate references
+with `create-visio-size-position-fixtures.ts`, record with
+`record-visio-size-position.ps1`, and select them with
+`VISIO_NATIVE_SIZE_POSITION_DIR`. The recorder's `-ReopenCore` switch checks
+the generated core outputs.
+
+`record-visio-anchored-resize.ps1` measures native handle resizing in owned
+invisible documents. `VISIO_NATIVE_ANCHORED_RESIZE_DIR` enables the optional
+actual `editVsdx` comparisons and source preservation. The rectangle corpus
+recorded 456 native cases; actual core edits matched 288 supported cases.
+all 288 rectangle outputs and 192 accepted ellipse outputs passed native COM
+reopen. These cases
+cover eight directions, three scales, rotated/reflected and custom local pins,
+supported proportional guards and retained formulas. Synthetic regression tests
+separately check atomic protection/dependency refusals; the native edit oracle
+does not exercise every refusal observation. Regenerated numeric output also
+passed the repeated native COM check.
+
+The complete Visio core run passed 2,613 tests, strict core TypeScript passed,
+and shared Visio UI passed 903 tests. Focused shared UI tests cover drawing-unit display, fixed-pin numeric dimension
+edits, negative angles, Enter/blur deduplication, exact no-ops, draft retention,
+invalid input, source protection refusal and stale selection cancellation.
+All six framework demos passed the Size & Position browser workflow. The clean
+nine-tarball consumer also passed anchored resize through all six actual native
+mounts, including dimensions/pins, preserved selection and byte-exact undo.
+The full browser run passed 122 active checks and skipped 715 optional native
+captures; six resize workflows initially failed test-helper checks. The helpers
+now wait for idle before byte export and read SVG width/height attributes as
+double precision instead of float32 `baseVal`. All six resize workflows passed
+the focused rerun against unchanged production bundles, retaining geometry,
+transform, fixed-anchor and byte-exact history assertions. These are a full run
+and a separate six-case rerun, not one 128-pass full run.
+
+The resize preview is a bounds frame. Full-content preview, snapping,
+aspect-modifier gestures, multi-shape resize, groups/masters/glue, arbitrary
+guarded local pins and dimension-dependent rotation/flip changes remain outside
+the supported subset. Native file acceptance for these recorded cases does not
+establish full-page visual equivalence or general Visio parity.
+
 ## Blank drawings, pointer movement and batch deletion, 2026-10-09
 
 The core creates editable single-page VSDX packages using shared XML and OPC

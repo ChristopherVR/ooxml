@@ -158,6 +158,9 @@ h${index}.selectShapes(selections${index}); h${index}.selectAll(); h${index}.cle
 const duplication${index}: Promise<void> = h${index}.duplicateSelection(); void duplication${index};
 const newOptions${index}: p${index}.CreateVsdxOptions = { width: 6, height: 4 };
 const creation${index}: Promise<void> = h${index}.createBlankDrawing(newOptions${index}); void creation${index};
+const anchor${index}: p${index}.VisioResizeAnchor = { x: 0, y: 0 };
+const anchoredResize${index}: p${index}.VisioEdit = { type: 'resize-shape', pageId: '0', shapeId: '1', width: 2, height: 1, anchor: anchor${index} };
+const resizing${index}: Promise<void> = h${index}.applyEdits([anchoredResize${index}]); void resizing${index};
 const copying${index}: Promise<void> = h${index}.copySelection(); void copying${index};
 const cutting${index}: Promise<void> = h${index}.cutSelection(); void cutting${index};
 const pasting${index}: Promise<void> = h${index}.pasteSelection(); void pasting${index};

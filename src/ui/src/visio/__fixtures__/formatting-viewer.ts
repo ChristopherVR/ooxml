@@ -67,6 +67,7 @@ export async function setupFormattingViewer(source = true, mixedText = false) {
 		reveal: () => {},
 		focusSearch: () => {},
 		togglePanZoom: () => {},
+		toggleSizePosition: () => {},
 		announce: (message) => feedback.push(message),
 	});
 	const dispose = commands.wire();

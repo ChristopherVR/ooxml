@@ -74,7 +74,44 @@ Dragging blank page space selects fully enclosed visible foreground shapes using
 their transformed width/height extents. Shift, Ctrl or Meta adds to the current
 selection. Pointer movement currently excludes masters, groups, layers, foreign
 objects and glued connectors. Resize handles and connector routing are separate
-capabilities and remain outside this gesture scope.
+capabilities; resize handles are described below, while routing remains outside
+this gesture scope.
+
+## Resize handles and Size & Position
+
+The shared pointer tool shows eight resize handles for one eligible local 2D
+shape. Edge handles change one dimension; corner handles change both. The
+opposite edge or corner stays fixed in the shape's saved rotated/reflected local
+axes. Saved off-centre local pins scale proportionally where source proof allows
+it. During dragging, only the selection frame previews the new bounds; releasing
+submits one source edit and one undo step. Crossing the opposite handle clamps
+the dimension at the smaller of its original size and 1/16 physical inch without
+changing flip flags. Snapping, aspect-modifier gestures, full-content preview and
+multi-shape resize are not implemented.
+
+View > Task Panes > Size & Position opens the shared numeric pane. X/Y are the
+rotation pin in drawing inches from the bottom-left origin, with Y increasing
+upward. Width and height also use drawing inches, independent of physical page
+scale. Angle uses degrees, positive counterclockwise. Enter or leaving a field
+commits that field once; Escape restores its saved value. Width/height changes
+in this pane hold the rotation pin fixed, unlike the anchored pointer handles.
+Exact current-value input leaves source bytes, formulas and history unchanged.
+Drafts survive zoom and other edits on the same source/selection; replacement or
+a different selection clears them.
+
+Both controls require source-backed VSDX and one ordinary local, unlayered,
+unglued 2D shape with saved pins. Groups, masters, foreign objects and multiple
+selection are unavailable. Scene eligibility is preliminary: core checks source
+geometry, protections, formulas and dependencies on submission. A rejection
+shows an error without changing source bytes or history. Cancellation, disposal
+and newer source/page/selection intent prevent a pending edit from accepting.
+
+The core `visioSizePositionState(page, shapeId)` helper supplies frozen numeric
+state. `visioSizePositionCommand(page, shapeId, field, value)` returns ordinary
+edits, an empty array for exact no-op input, or `undefined` for an invalid or
+unsupported candidate. Custom controls can use these helpers with the existing
+atomic editing API. Unit strings, formula entry and changing the pin position
+are not supported by the numeric pane.
 
 ## Find diagram text
 
@@ -157,7 +194,8 @@ event, whose detail is `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`.
 Inspect `controller.state.edit` for source availability, busy/dirty status,
 undo/redo availability, history truncation, errors and diagnostics.
 
-Only imported source-backed VSDX documents can be edited or exported as VSDX.
+Source-backed VSDX documents loaded or created by the viewer can be edited or
+exported as VSDX.
 Binary VSD v11 imports use the released ole2 codec through ooxml-core: supported
 explicit page/shape transforms, move/line geometry and plain text are previewed
 with diagnosed fallback styles. Original legacy bytes remain privately retained;
@@ -291,7 +329,12 @@ await handle.applyEdits([
 ```
 
 Coordinates are rotation-pin positions in drawing inches, bottom-left origin,
-up-positive. Resizing holds the pin fixed. IDs are explicit. Existing admitted
+up-positive. Resizing holds the pin fixed unless the command includes
+`anchor: { x, y }`. Each anchor coordinate is `0`, `0.5` or `1`, identifying the
+fixed point in the shape's normalized, upward local width/height bounds. For
+example, `{ x: 0, y: 0 }` holds its local bottom-left corner fixed. Anchored
+resizing has a separate source proof for local pins, affected caches and fixed
+rotation/flip values. IDs are explicit. Existing admitted
 local top-level 2D shapes can be edited, including shapes imported from other
 producers. Core evaluates supported affected numeric ShapeSheet dependencies and
 preserves untouched ZIP payloads. The viewer never mutates XML itself.

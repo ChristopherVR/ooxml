@@ -31,6 +31,7 @@ interface CommandHost {
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
 	focusSearch(): void;
 	togglePanZoom(): void;
+	toggleSizePosition(): void;
 	/** Transient command feedback for the status bar; document text is never interpreted as markup. */
 	announce(message: string): void;
 	toolChanged?(): void;
@@ -108,6 +109,7 @@ export class ViewerCommands {
 			reveal: host.reveal,
 			fit: host.fit,
 			togglePanZoom: host.togglePanZoom,
+			toggleSizePosition: host.toggleSizePosition,
 			focusSearch: host.focusSearch,
 		};
 	}

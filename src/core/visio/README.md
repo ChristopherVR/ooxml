@@ -381,7 +381,7 @@ coarse scene eligibility; source admission remains authoritative.
 
 Native Visio 16 direct numeric cell-edit and core-output reopen evidence covers
 15 cases at scales 0.5, 1 and 2. Anchored actual-edit comparisons cover 288
-accepted rectangles within a 456-case corpus; all 288 rectangle outputs and 192
+supported rectangle cases within 456 recorded native observations; all 288 rectangle outputs and 192
 accepted ellipse outputs passed native COM reopen. The record does not establish native window behavior,
 general anchored admission or visual parity. Optional tests use
 `VISIO_NATIVE_SIZE_POSITION_DIR` and `VISIO_NATIVE_ANCHORED_RESIZE_DIR`; their

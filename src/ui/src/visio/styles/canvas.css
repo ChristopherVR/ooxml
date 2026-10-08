@@ -14,6 +14,7 @@
 }
 
 .paper [data-line-endpoint],
+.paper [data-resize-handle],
 .rotation-overlay [data-rotation-handle] {
 	fill: var(--_vv-accent);
 	stroke: white;
@@ -21,6 +22,15 @@
 	cursor: crosshair;
 	touch-action: none;
 	pointer-events: all;
+}
+.paper [data-resize-frame] {
+	fill: none;
+	stroke: var(--_vv-accent);
+	stroke-width: 1px;
+	pointer-events: none;
+}
+.paper [data-resize-frame-preview] {
+	stroke-dasharray: 5 3;
 }
 .paper .endpoint-preview,
 .paper .rotation-preview,

@@ -76,7 +76,8 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 							{
 								id: 'size-position',
 								label: 'Size & Position',
-								unsupported: 'Needs core-exposed shape pins.',
+								action: { type: 'sizePosition' },
+								checked: false,
 							},
 							{
 								id: 'drawing-explorer',

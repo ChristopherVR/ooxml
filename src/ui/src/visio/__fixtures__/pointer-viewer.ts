@@ -7,7 +7,7 @@ import { wireViewerInputs } from '../viewer-input';
 import { renderPage } from '../render-svg';
 import { createVsdxFixture } from './fixture.mjs';
 
-export async function pointerViewer(protectedSecond = false, source = true) {
+export async function pointerViewer(protectedSecond = false, source = true, resizable = false) {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Movable'));
 	const xml = await zip.file('visio/pages/page1.xml')!.async('string');
 	const first = xml.match(/<Shape .*?<\/Shape>/s)![0];
@@ -17,6 +17,15 @@ export async function pointerViewer(protectedSecond = false, source = true) {
 		.replace('N="PinX" V="4"', 'N="PinX" V="7"')
 		.replace('<Text>', `${protectedSecond ? '<Cell N="LockMoveX" V="1"/>' : ''}<Text>`);
 	zip.file('visio/pages/page1.xml', xml.replace('</Shapes>', second + '</Shapes>'));
+	if (resizable) {
+		const page = await zip.file('visio/pages/page1.xml')!.async('string');
+		zip.file(
+			'visio/pages/page1.xml',
+			page
+				.replaceAll('N="X" V="3"/>', 'N="X" V="3" F="Width"/>')
+				.replaceAll('N="Y" V="1"/>', 'N="Y" V="1" F="Height"/>'),
+		);
+	}
 	const bytes = await zip.generateAsync({ type: 'uint8array' });
 	const edits: VisioEdit[][] = [];
 	const controller = new ViewerController(
@@ -38,7 +47,10 @@ export async function pointerViewer(protectedSecond = false, source = true) {
 	viewport.append(rendered.svg);
 	const svg = rendered.svg;
 	// Ten client pixels represent one physical page inch; production uses the browser's CTM.
-	Object.defineProperty(svg, 'getScreenCTM', { value: () => ({ inverse: () => ({}) }) });
+	Object.defineProperty(svg, 'getScreenCTM', {
+		value: () => ({ a: 10, b: 0, inverse: () => ({}) }),
+		configurable: true,
+	});
 	vi.stubGlobal(
 		'DOMPoint',
 		class {

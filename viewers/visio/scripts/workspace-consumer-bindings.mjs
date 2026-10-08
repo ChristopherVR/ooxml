@@ -218,6 +218,43 @@ export async function verifyWorkspaceBindings(bytes) {
 					viewer.controller.state.document.pages[0].shapes.length === 1,
 				`${framework}: new source edit`,
 			);
+			const originalShape = viewer.controller.state.document.pages[0].shapes[0];
+			viewer.selectShapes([
+				{ id: originalShape.id, name: originalShape.name, pageId: blankPageId },
+			]);
+			const beforeResize = viewer.exportVsdx().bytes;
+			const beforeSelection = JSON.stringify(viewer.controller.state.selectedShapes);
+			await viewer.applyEdits([
+				{
+					type: 'resize-shape',
+					pageId: blankPageId,
+					shapeId: originalShape.id,
+					width: 2,
+					height: 1,
+					anchor: { x: 0, y: 0 },
+				},
+			]);
+			const resized = viewer.controller.state.document.pages[0].shapes[0];
+			check(
+				resized.width === 2 &&
+					resized.height === 1 &&
+					resized.rotation.pinX === 2.5 &&
+					resized.rotation.pinY === 2,
+				`${framework}: fixed opposite anchor resize`,
+			);
+			check(
+				JSON.stringify(viewer.controller.state.selectedShapes) === beforeSelection &&
+					viewer.controller.state.selectedShape === viewer.controller.state.selectedShapes[0],
+				`${framework}: anchored resize selection`,
+			);
+			await viewer.undo();
+			const restored = viewer.exportVsdx().bytes;
+			check(
+				restored.length === beforeResize.length &&
+					restored.every((byte, index) => byte === beforeResize[index]) &&
+					JSON.stringify(viewer.controller.state.selectedShapes) === beforeSelection,
+				`${framework}: byte-exact anchored resize undo`,
+			);
 			await viewer.undo();
 			check(
 				!viewer.controller.state.edit.dirty &&

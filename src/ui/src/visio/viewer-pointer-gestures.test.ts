@@ -150,6 +150,28 @@ it('clears pending outside releases and owns disposal without swallowing future 
 	expect(ui.edits).toHaveLength(0);
 });
 
+it('hides stale resize and rotation overlays during movement, restoring them on cancellation', async () => {
+	const ui = await pointerViewer();
+	ui.select();
+	const resize = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+	resize.dataset.resizeOverlay = '';
+	ui.svg.append(resize);
+	const rotation = document.createElement('div');
+	rotation.className = 'rotation-overlay';
+	rotation.style.visibility = 'visible';
+	ui.viewport.append(rotation);
+	ui.pointer('pointerdown', ui.group());
+	ui.pointer('pointermove', ui.svg, 50, 40);
+	expect(resize.style.visibility).toBe('hidden');
+	expect(rotation.style.visibility).toBe('hidden');
+	ui.viewport.dispatchEvent(
+		new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+	);
+	expect(resize.style.visibility).toBe('');
+	expect(rotation.style.visibility).toBe('visible');
+	ui.dispose();
+});
+
 it('refuses a background shape with the same foreground ID and cancels page changes', async () => {
 	const ui = await pointerViewer();
 	ui.group().dataset.pageId = 'background';

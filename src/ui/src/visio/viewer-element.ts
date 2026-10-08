@@ -20,6 +20,7 @@ import { createBackstage, type BackstagePage } from './backstage';
 import type { CreateVsdxOptions } from 'ooxml-core/visio';
 import { ViewerBackstage } from './viewer-backstage';
 import { ViewerPointerGestures } from './viewer-pointer-gestures';
+import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
@@ -33,6 +34,7 @@ import { ViewerCanvas } from './viewer-canvas';
 import { ViewerCommands } from './viewer-commands';
 import { ViewerLineEndpoints } from './viewer-line-endpoints';
 import { ViewerRotationHandle } from './viewer-rotation-handle';
+import { ViewerResizeHandles } from './viewer-resize-handles';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
@@ -56,6 +58,7 @@ export class VisioViewerElement extends BaseElement {
 	#commands: ViewerCommands;
 	#lineEndpoints: ViewerLineEndpoints;
 	#rotationHandle: ViewerRotationHandle;
+	#resizeHandles: ViewerResizeHandles;
 	#handleState: ViewerState | undefined;
 	#rulers: Rulers;
 	#canvas: ViewerCanvas;
@@ -64,6 +67,7 @@ export class VisioViewerElement extends BaseElement {
 	#share: ViewerShare;
 	#backstage: ViewerBackstage;
 	#pointer: ViewerPointerGestures;
+	#sizePosition: ViewerSizePosition;
 	#fileName = '';
 	#loadToken = 0;
 	#findBar: FindBar;
@@ -98,7 +102,7 @@ export class VisioViewerElement extends BaseElement {
 		applyKeyTips(ribbon);
 		workspace.before(ribbon, this.#findBar);
 		workspace.prepend(createShapesStrip(document), createShapesWindow(document));
-		workspace.append(createPanZoom(document));
+		workspace.append(createPanZoom(document), createSizePosition(document));
 		this.#root.append(
 			createBackstage(document),
 			createOptionsDialog(document),
@@ -125,6 +129,9 @@ export class VisioViewerElement extends BaseElement {
 		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
 			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
 		);
+		this.#sizePosition = new ViewerSizePosition(this.#root, this.controller, (open) =>
+			this.#root.querySelector('[command="size-position"]')?.setAttribute('checked', String(open)),
+		);
 		this.#commands = new ViewerCommands({
 			root: this.#root,
 			viewport: this.#viewport,
@@ -133,12 +140,14 @@ export class VisioViewerElement extends BaseElement {
 				this.#pointer.render(this.controller.state);
 				this.#lineEndpoints.render(this.controller.state);
 				this.#rotationHandle.render(this.controller.state);
+				this.#resizeHandles.render(this.controller.state);
 			},
 			fit: (mode) => this.#fit(mode),
 			togglePane: (pane) => this.#chrome.togglePane(pane),
 			reveal: (panel, focusText) => this.#chrome.reveal(panel, focusText),
 			rulers: this.#rulers,
 			togglePanZoom: () => this.#panZoom.toggle(),
+			toggleSizePosition: () => this.#sizePosition.toggle(),
 			focusSearch: () => {
 				this.#chrome.closeCompactTools();
 				this.#findBar.show();
@@ -164,6 +173,13 @@ export class VisioViewerElement extends BaseElement {
 			},
 		});
 		this.#rotationHandle = new ViewerRotationHandle(this.#viewport, this.controller, {
+			active: () => this.#commands.tool === 'pointer',
+			announce: (message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
+		});
+		this.#resizeHandles = new ViewerResizeHandles(this.#viewport, this.controller, {
 			active: () => this.#commands.tool === 'pointer',
 			announce: (message) => {
 				this.#announcement = message;
@@ -410,11 +426,13 @@ export class VisioViewerElement extends BaseElement {
 		const disposePointer = this.#pointer.wire();
 		const disposeLineEndpoints = this.#lineEndpoints.wire();
 		const disposeRotation = this.#rotationHandle.wire();
+		const disposeResize = this.#resizeHandles.wire();
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
 		const disposeTellMe = wireTellMe(this.#root);
 		const keyTips = attachKeyTips(this.#root);
 		const disposePanZoom = this.#panZoom.wire();
+		const disposeSizePosition = this.#sizePosition.wire();
 		const disposeProfile = this.#profile.wire();
 		const disposeShare = this.#share.wire();
 		const disposeRulers = this.#rulers.wire();
@@ -446,11 +464,13 @@ export class VisioViewerElement extends BaseElement {
 			disposePointer();
 			disposeLineEndpoints();
 			disposeRotation();
+			disposeResize();
 			disposeBackstage();
 			disposeMenus();
 			disposeTellMe();
 			keyTips.dispose();
 			disposePanZoom();
+			disposeSizePosition();
 			disposeProfile();
 			disposeShare();
 			disposeRulers();
@@ -482,6 +502,7 @@ export class VisioViewerElement extends BaseElement {
 		) {
 			this.#lineEndpoints.render(state);
 			this.#rotationHandle.render(state);
+			this.#resizeHandles.render(state);
 		}
 		if (changed) this.#announcement = undefined;
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
@@ -509,6 +530,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#backstage.render(state);
 		this.#pointer.render(state);
 		this.#panZoom.render();
+		this.#sizePosition.render(state);
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'

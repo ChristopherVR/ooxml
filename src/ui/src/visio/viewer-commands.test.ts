@@ -74,6 +74,7 @@ async function setup(source = true, noOp = false, model = demoDocument) {
 		reveal: (panel, focusText) => calls.push(`reveal:${panel}:${focusText}`),
 		focusSearch: () => calls.push('search'),
 		togglePanZoom: () => calls.push('pan-zoom'),
+		toggleSizePosition: () => calls.push('size-position'),
 		announce: (message) => calls.push(message),
 	});
 	const dispose = commands.wire();

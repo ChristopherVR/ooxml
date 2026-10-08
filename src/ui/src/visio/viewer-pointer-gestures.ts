@@ -15,6 +15,7 @@ import { pagePoint } from './viewer-draw-tool';
 import { wireHandleEvents } from './viewer-handle-events';
 import { documentVisibility } from './viewer-layers';
 import { createMovementPreview } from './viewer-movement-preview';
+import { hideGestureOverlays } from './viewer-gesture-overlays';
 
 interface Gesture {
 	pointer: number;
@@ -23,6 +24,7 @@ interface Gesture {
 	page: VisioPage;
 	selection: ViewerState['selectedShapes'];
 	layers: ViewerState['layerVisibilityOverrides'];
+	zoom: number;
 	start: VisioPagePoint;
 	clientX: number;
 	clientY: number;
@@ -31,6 +33,7 @@ interface Gesture {
 	target?: { id: string; name: string; pageId: string };
 	preview?: ReturnType<typeof createMovementPreview>;
 	marquee?: SVGRectElement;
+	showOverlays?: () => void;
 }
 const pointOptions = { snap: false, bounded: false } as const;
 /** Direct pointer movement and full-enclosure marquee; release is the only source edit. */
@@ -77,6 +80,7 @@ export class ViewerPointerGestures {
 			state.document?.pages[state.pageIndex] === drag.page &&
 			state.selectedShapes === drag.selection &&
 			state.layerVisibilityOverrides === drag.layers &&
+			state.zoom === drag.zoom &&
 			drag.svg.isConnected &&
 			!state.loading &&
 			!state.edit.busy &&
@@ -87,7 +91,12 @@ export class ViewerPointerGestures {
 		this.#cancelClick = false;
 		if (this.#drag || event.button !== 0 || !this.options.active()) return;
 		const node = event.target as Element;
-		if (node.closest?.('[data-line-endpoint], [data-rotation-handle], .rotation-overlay')) return;
+		if (
+			node.closest?.(
+				'[data-line-endpoint], [data-rotation-handle], [data-resize-handle], .rotation-overlay',
+			)
+		)
+			return;
 		const state = this.controller.state,
 			page = state.document?.pages[state.pageIndex];
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
@@ -110,6 +119,7 @@ export class ViewerPointerGestures {
 			document: state.document,
 			selection: state.selectedShapes,
 			layers: state.layerVisibilityOverrides,
+			zoom: state.zoom,
 			start,
 			clientX: event.clientX,
 			clientY: event.clientY,
@@ -172,6 +182,10 @@ export class ViewerPointerGestures {
 				drag.page,
 				drag.selection.map((shape) => shape.id),
 			);
+			drag.showOverlays = hideGestureOverlays(
+				this.viewport,
+				'[data-resize-overlay], .rotation-overlay',
+			);
 		} else {
 			const rect = this.viewport.ownerDocument.createElementNS(
 				'http://www.w3.org/2000/svg',
@@ -233,6 +247,7 @@ export class ViewerPointerGestures {
 		this.#drag = undefined;
 		if (drag?.started) this.#cancelClick = true;
 		drag?.preview?.dispose();
+		drag?.showOverlays?.();
 		drag?.marquee?.remove();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);

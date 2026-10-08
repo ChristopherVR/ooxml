@@ -13,6 +13,7 @@ import {
 	type HandleGestureSnapshot,
 } from './viewer-handle-events';
 import { createRotationPreview } from './viewer-rotation-preview';
+import { hideGestureOverlays } from './viewer-gesture-overlays';
 const SVG = 'http://www.w3.org/2000/svg';
 const pointOptions = { snap: false, bounded: false } as const;
 /** A source-backed rotation gesture; previews never mutate the model or history. */
@@ -25,6 +26,7 @@ export class ViewerRotationHandle {
 				startY: number;
 				center: { x: number; y: number };
 				rotate: (point: { x: number; y: number }) => number;
+				showOverlays: () => void;
 		  })
 		| undefined;
 	#request = 0;
@@ -182,6 +184,7 @@ export class ViewerRotationHandle {
 			shapeId: shape.id,
 			preview,
 			shapePreview: createRotationPreview(state.document, page, shape, source),
+			showOverlays: hideGestureOverlays(this.viewport, '[data-resize-overlay]'),
 			startX: event.clientX,
 			startY: event.clientY,
 			center,
@@ -227,6 +230,7 @@ export class ViewerRotationHandle {
 		this.#drag = undefined;
 		drag?.preview.remove();
 		drag?.shapePreview.dispose();
+		drag?.showOverlays();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
 	}
