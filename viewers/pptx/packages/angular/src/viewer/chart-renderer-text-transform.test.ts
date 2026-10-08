@@ -29,6 +29,22 @@ describe('chartRendererComponent text wiring', () => {
 		expect(textBlock(loopVar, list)).toContain(`[attr.transform]="${loopVar}.transform`);
 	});
 
+	// The view model resolves the chart text font (`chartTextFontFamily`) onto axis,
+	// category and data labels; Angular, Vue and Svelte dropped it, so their labels
+	// fell back to the page font while React and vanilla drew Calibri (caught by
+	// `e2e/pptx/chart-svg-parity.spec.ts`).
+	it.each([
+		['dl', 'dataLabels'],
+		['lbl', 'axisLabels'],
+		['lbl', 'secondaryAxisLabels'],
+		['lbl', 'categoryLabels'],
+	])('binds the font weight, style and family on %s of %s', (loopVar, list) => {
+		const block = textBlock(loopVar, list);
+		expect(block).toContain(`[attr.font-weight]="${loopVar}.fontWeight ?? 'normal'"`);
+		expect(block).toContain(`[attr.font-style]="${loopVar}.fontStyle ?? 'normal'"`);
+		expect(block).toContain(`[attr.font-family]="${loopVar}.fontFamily ?? null"`);
+	});
+
 	it('binds opacity on data labels', () => {
 		expect(textBlock('dl', 'dataLabels')).toContain('[attr.opacity]="dl.opacity ?? 1"');
 	});

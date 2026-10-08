@@ -74,10 +74,10 @@
 	{/each}
 
 	{#each vm.axisLabels as lbl, i (`al${i}`)}
-		<text x={lbl.x} y={lbl.y} text-anchor={lbl.textAnchor} font-size={lbl.fontSize} fill={lbl.fill} font-weight={lbl.fontWeight ?? 'normal'} dominant-baseline={lbl.dominantBaseline} opacity={lbl.opacity ?? 1} transform={lbl.transform}>{lbl.text}</text>
+		<text x={lbl.x} y={lbl.y} text-anchor={lbl.textAnchor} font-size={lbl.fontSize} fill={lbl.fill} font-weight={lbl.fontWeight ?? 'normal'} font-style={lbl.fontStyle ?? 'normal'} font-family={lbl.fontFamily} dominant-baseline={lbl.dominantBaseline} opacity={lbl.opacity ?? 1} transform={lbl.transform}>{lbl.text}</text>
 	{/each}
 	{#each vm.secondaryAxisLabels ?? [] as lbl, i (`sal${i}`)}
-		<text x={lbl.x} y={lbl.y} text-anchor={lbl.textAnchor} font-size={lbl.fontSize} fill={lbl.fill} font-weight={lbl.fontWeight ?? 'normal'} dominant-baseline={lbl.dominantBaseline} opacity={lbl.opacity ?? 1} transform={lbl.transform}>{lbl.text}</text>
+		<text x={lbl.x} y={lbl.y} text-anchor={lbl.textAnchor} font-size={lbl.fontSize} fill={lbl.fill} font-weight={lbl.fontWeight ?? 'normal'} font-style={lbl.fontStyle ?? 'normal'} font-family={lbl.fontFamily} dominant-baseline={lbl.dominantBaseline} opacity={lbl.opacity ?? 1} transform={lbl.transform}>{lbl.text}</text>
 	{/each}
 
 	{#if vm.zeroLine}
@@ -85,7 +85,7 @@
 	{/if}
 
 	{#each vm.categoryLabels as lbl, i (`cl${i}`)}
-		<text x={lbl.x} y={lbl.y} text-anchor={lbl.textAnchor} font-size={lbl.fontSize} fill={lbl.fill} font-weight={lbl.fontWeight ?? 'normal'} dominant-baseline={lbl.dominantBaseline} opacity={lbl.opacity ?? 1} transform={lbl.transform}>{lbl.text}</text>
+		<text x={lbl.x} y={lbl.y} text-anchor={lbl.textAnchor} font-size={lbl.fontSize} fill={lbl.fill} font-weight={lbl.fontWeight ?? 'normal'} font-style={lbl.fontStyle ?? 'normal'} font-family={lbl.fontFamily} dominant-baseline={lbl.dominantBaseline} opacity={lbl.opacity ?? 1} transform={lbl.transform}>{lbl.text}</text>
 	{/each}
 
 	{#each vm.primitives as prim, i (`p${i}`)}
@@ -112,7 +112,7 @@
 	{/each}
 
 	{#each vm.dataLabels as dl, i (`dl${i}`)}
-		<text x={dl.x} y={dl.y} text-anchor={dl.textAnchor} font-size={dl.fontSize} fill={dl.fill} font-weight={dl.fontWeight ?? 'normal'} dominant-baseline={dl.dominantBaseline} opacity={dl.opacity ?? 1} transform={dl.transform}>{dl.text}</text>
+		<text x={dl.x} y={dl.y} text-anchor={dl.textAnchor} font-size={dl.fontSize} fill={dl.fill} font-weight={dl.fontWeight ?? 'normal'} font-style={dl.fontStyle ?? 'normal'} font-family={dl.fontFamily} dominant-baseline={dl.dominantBaseline} opacity={dl.opacity ?? 1} transform={dl.transform}>{dl.text}</text>
 	{/each}
 
 	{#each legendItems as entry (entry.key)}

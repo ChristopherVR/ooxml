@@ -193,27 +193,10 @@ function renderPrimitive(prim: SvgPrimitive, key: string): React.ReactNode {
 				</polygon>
 			);
 		}
-		case 'text': {
-			const t = prim as SvgText;
-			return (
-				<text
-					key={key}
-					x={t.x}
-					y={t.y}
-					textAnchor={t.textAnchor}
-					fontSize={t.fontSize}
-					fill={t.fill}
-					fontWeight={t.fontWeight ?? 'normal'}
-					dominantBaseline={
-						t.dominantBaseline as React.SVGProps<SVGTextElement>['dominantBaseline']
-					}
-					opacity={t.opacity ?? 1}
-					transform={t.transform}
-				>
-					{t.text}
-				</text>
-			);
-		}
+		case 'text':
+			// One text renderer for every chart text, so a primitive label (treemap,
+			// sunburst) keeps the font family and style the view model resolved.
+			return renderText(prim as SvgText, key);
 		default:
 			return null;
 	}
