@@ -83,7 +83,7 @@ export async function buildPwa(out) {
 				.replace('<title>OOXML Office</title>', `<title>${name}</title>`)
 				.replace('name="ooxml-root" content="./"', 'name="ooxml-root" content="../../"')
 				.replace(
-					/(src|href)="(appearance-init\.js|start-init\.js|favicon\.svg|styles\.css|themes\.css|workspace\.css|suite\.js)"/g,
+					/(src|href)="(appearance-init\.js|favicon\.svg|styles\.css|themes\.css|workspace\.css|suite\.js)"/g,
 					`$1="../../$2"`,
 				)
 				.replace('href="icons/office-192.png"', `href="../../icons/${slug}-192.png"`);

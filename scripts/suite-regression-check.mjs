@@ -173,24 +173,22 @@ try {
 	await page.locator('[data-create=docx]').click();
 	await expect(page.locator('docx-editor')).toBeVisible();
 	await context.setOffline(false);
-	// A first visit asks what to open, remembers it, and ?suite returns to the whole suite.
+	// The root asks until the suite is chosen; a product goes to its own site, and ?suite stays.
 	const fresh = await browser.newContext();
 	const visitor = await fresh.newPage();
 	await visitor.goto(base + '/');
-	await visitor.locator('#dialog [data-start=docx]').click();
-	await visitor.waitForURL(/\/apps\/word\/$/);
+	await visitor.locator('#dialog [data-start=vsdx]').click();
+	await visitor.waitForURL(base + '/visio/');
 	await visitor.goto(base + '/');
-	await visitor.waitForURL(/\/apps\/word\/$/);
-	await visitor.locator('#launcher-toggle').click();
-	await visitor.locator('#app-launcher a', { hasText: 'OOXML Office' }).click();
+	await visitor.locator('#dialog [data-start=office]').click();
+	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	await visitor.reload();
 	await expect(visitor.locator('[data-create=docx]')).toBeVisible();
 	await expect(visitor.locator('#dialog')).not.toBeVisible();
-	await visitor.goto(base + '/');
-	await expect(visitor).toHaveURL(base + '/');
 	await fresh.close();
 	assert.deepEqual(errors, []);
 	console.log(
-		'Start chooser remembers the app. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
+		'Start chooser opens product sites and remembers the suite. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
 	);
 } finally {
 	await browser.close();
