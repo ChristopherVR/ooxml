@@ -206,6 +206,41 @@ describe('<xlsx-editor> shell', () => {
 		expect(element.workbook).toBe(newWorkbook);
 	});
 
+	it('renders one status bar with one Ready, and the mode, Comments and Share on the tab row', async () => {
+		const { element } = editor();
+		element.newWorkbook();
+		const root = element.shadowRoot!;
+		const bars = root.querySelectorAll<HTMLElement & { updateComplete: Promise<unknown> }>(
+			'office-ui-status-bar',
+		);
+		expect(bars).toHaveLength(1);
+		expect(root.querySelectorAll('[part~="status-bar"]')).toHaveLength(1);
+		await bars[0]!.updateComplete;
+		// Every "Ready" in the editor, light and shadow trees alike.
+		const texts: string[] = [];
+		const walk = (node: ParentNode) => {
+			for (const child of node.querySelectorAll('*')) {
+				if (!child.childElementCount && child.textContent?.trim())
+					texts.push(child.textContent.trim());
+				if (child.shadowRoot) walk(child.shadowRoot);
+			}
+		};
+		walk(root);
+		expect(texts.filter((text) => text === 'Ready')).toHaveLength(1);
+		const ribbon = root.querySelector('office-ui-ribbon')!;
+		const actions = [...ribbon.children].find((child) =>
+			child.classList.contains('xve-ribbon-actions'),
+		) as HTMLElement;
+		expect(actions.slot).toBe('actions');
+		for (const selector of ['.xve-mode-select', '.xve-comments-button', '.xve-share-button']) {
+			expect(actions.querySelector(selector), selector).not.toBeNull();
+			expect(
+				root.querySelector('office-ui-title-bar')!.querySelector(selector),
+				selector,
+			).toBeNull();
+		}
+	});
+
 	it('toggles read-only from the ribbon tab row and focuses the grid', async () => {
 		const { element, of } = editor();
 		element.newWorkbook();
