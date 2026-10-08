@@ -11,9 +11,8 @@
  * the flags (`PptxChartDataPoint.picture` / `PptxChartSeries.picture`) but
  * cannot resolve `r:embed`/`r:link` itself (that needs the chart part's
  * relationships and zip access), so this re-walks the SAME raw `c:ser` nodes,
- * in the SAME order `parseAllChartContainers` traversed them
- * (container-by-container, in `containerKeys` order), to line each
- * `series[i]` up with its source `c:ser` node and mutate
+ * given in the SAME order the series were built (`rawSeriesNodes[i]` is the
+ * node of `series[i]`), to line each series up with its source node and mutate
  * `dataPoints[j].picture.imageUrl` / `series[i].picture.imageUrl` in place.
  *
  * @module runtime/chart-datapoint-picture-resolver
@@ -46,14 +45,10 @@ export async function resolveDataPointPictureImages(
 	readChartRels: ReadChartRels,
 	resolveImagePath: ResolveImagePath,
 	getImageData: GetImageData,
-	plotArea: XmlObject,
-	containerKeys: string[],
+	rawSeriesNodes: XmlObject[],
 	series: PptxChartData['series'],
 	chartPartPath: string,
 ): Promise<void> {
-	const rawSeriesNodes = containerKeys.flatMap((key) =>
-		xmlLookup.getChildrenArrayByLocalName(plotArea[key] as XmlObject | undefined, 'ser'),
-	);
 	let rels: Array<{ id: string; type: string; target: string }> | undefined;
 	for (let si = 0; si < series.length; si++) {
 		const seriesNode = rawSeriesNodes[si];
