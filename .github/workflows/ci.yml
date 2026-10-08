@@ -273,6 +273,12 @@ jobs:
           bun run typecheck
           bun run e2e:contract
           bun run test:binding-packages
+      # The browser suite regenerates its fixture decks through the core's save pipeline, so a
+      # core change that alters a save must commit the refreshed decks, or every later run
+      # rewrites them and leaves the working tree dirty.
+      - name: Check the generated e2e fixtures are committed
+        working-directory: viewers/pptx
+        run: bun run fixtures:check
       # Every package's dist, and the sources the Angular build generates, for the jobs below. Only
       # the generated files: re-extracting a tracked source would make it newer than the build, and
       # the e2e freshness guard (e2e/pptx/dist-freshness.ts) would then refuse to run.
