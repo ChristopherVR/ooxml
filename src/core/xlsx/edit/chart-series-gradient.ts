@@ -13,6 +13,7 @@ import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
 import { chartSeriesSolidColor } from './chart-series-transparency';
+import { chartSeriesAt, cloneChartSeriesForEdit } from './chart-series-target';
 
 export type ChartGradientEdit =
 	| { kind: 'create' }
@@ -50,9 +51,7 @@ export function chartSeriesGradientPatch(
 	index: number,
 	edit: ChartGradientEdit,
 ): { patch: ChartPatch; stopIndex: number } | undefined {
-	const current = chart.series[index];
-	if (!Number.isInteger(index) || !current)
-		throw new RangeError(`No chart series at index ${index}`);
+	const current = chartSeriesAt(chart, index);
 	const result = chartGradientFillEdit(
 		current.fill,
 		edit,
@@ -64,8 +63,7 @@ export function chartSeriesGradientPatch(
 			),
 	);
 	if (!result) return undefined;
-	const series = structuredClone(chart.series);
-	const next = series[index]!;
+	const { series, target: next } = cloneChartSeriesForEdit(chart, index);
 	next.fill = result.fill;
 	delete next.color;
 	delete next.drawingColor;

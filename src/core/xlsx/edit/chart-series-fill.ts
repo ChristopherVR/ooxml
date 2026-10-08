@@ -4,6 +4,7 @@ import type { ChartObject, Color } from '../model';
 import { THEME_SLOTS } from '../layout/colors';
 import type { ChartPatch } from './charts';
 import { sameChartColor } from './chart-colors';
+import { chartSeriesAt, cloneChartSeriesForEdit } from './chart-series-target';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 
 /** Spreadsheet theme tints use HSL luminance, represented by DrawingML lumMod/lumOff. */
@@ -26,9 +27,7 @@ export function chartSeriesFillPatch(
 	index: number,
 	color: Color | null,
 ): ChartPatch | undefined {
-	const current = chart.series[index];
-	if (!Number.isInteger(index) || !current)
-		throw new RangeError(`No chart series at index ${index}`);
+	const current = chartSeriesAt(chart, index);
 	const choice = color === null ? undefined : chartDrawingColor(color);
 	if (color !== null && !choice) throw new RangeError('Invalid chart fill color');
 	const previous = current.fill?.kind === 'solid' ? current.fill.color : current.drawingColor;
@@ -48,9 +47,7 @@ export function chartSeriesSolidFillPatch(
 	chart: ChartObject,
 	index: number,
 ): ChartPatch | undefined {
-	const current = chart.series[index];
-	if (!Number.isInteger(index) || !current)
-		throw new RangeError(`No chart series at index ${index}`);
+	const current = chartSeriesAt(chart, index);
 	if (!current.fill || current.fill.kind === 'solid') return undefined;
 	const choice = current.fill.kind === 'gradient' ? current.fill.stops[0]?.color : undefined;
 	return replaceSeriesPaint(
@@ -72,7 +69,7 @@ function replaceSeriesPaint(
 	index: number,
 	choice: DrawingColor | undefined,
 ): ChartPatch | undefined {
-	const current = chart.series[index]!;
+	const current = chartSeriesAt(chart, index);
 	if (
 		!Object.keys(current.pointColors ?? {}).length &&
 		!Object.keys(current.pointFills ?? {}).length &&
@@ -81,8 +78,7 @@ function replaceSeriesPaint(
 			: !current.fill && sameChartColor(current.drawingColor, choice))
 	)
 		return undefined;
-	const series = structuredClone(chart.series);
-	const next = series[index]!;
+	const { series, target: next } = cloneChartSeriesForEdit(chart, index);
 	delete next.fill;
 	delete next.color;
 	delete next.drawingColor;

@@ -5,6 +5,7 @@ import type { ChartObject } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
 import { sameChartColor } from './chart-colors';
+import { chartSeriesAt, cloneChartSeriesForEdit } from './chart-series-target';
 
 export function chartSeriesSolidColor(chart: ChartObject, index: number): DrawingColor | undefined {
 	const series = chart.series[index];
@@ -40,9 +41,7 @@ export function chartSeriesTransparencyPatch(
 ): ChartPatch | undefined {
 	if (!Number.isFinite(percent) || percent < 0 || percent > 100)
 		throw new RangeError('Chart transparency must be from 0 to 100');
-	const current = chart.series[index];
-	if (!Number.isInteger(index) || !current)
-		throw new RangeError(`No chart series at index ${index}`);
+	const current = chartSeriesAt(chart, index);
 	const color = chartSeriesSolidColor(chart, index);
 	if (!color) return undefined;
 	const choice = structuredClone(color);
@@ -57,8 +56,7 @@ export function chartSeriesTransparencyPatch(
 		!Object.keys(current.pointFills ?? {}).length
 	)
 		return undefined;
-	const series = structuredClone(chart.series);
-	const next = series[index]!;
+	const { series, target: next } = cloneChartSeriesForEdit(chart, index);
 	delete next.fill;
 	delete next.color;
 	delete next.pointColors;
