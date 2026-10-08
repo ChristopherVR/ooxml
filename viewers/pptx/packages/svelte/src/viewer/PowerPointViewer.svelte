@@ -50,10 +50,12 @@
 	// Only the defaulted props get an alias; the rest are read as `props.x`, which
 	// is what keeps them reactive (a destructured top-level read would snapshot).
 	const className = $derived(props.class ?? '');
-	// `showToolbar` / `showThumbnails` defaults are shared with every binding.
+	// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
+	// shared with every binding.
 	const rootOptions = $derived(resolveViewerRootOptions(props));
 	const showThumbnails = $derived(rootOptions.showThumbnails);
 	const showToolbar = $derived(rootOptions.showToolbar);
+	const showCompatibilityToasts = $derived(rootOptions.showCompatibilityToasts);
 	const showNotes = $derived(props.showNotes ?? true);
 
 	$effect(() => {
@@ -256,8 +258,9 @@
 		oncancel={() => exportUi.cancel()}
 	/>
 	<!-- Compatibility-warning toasts: load diagnostics, hidden during a running
-	     show like the rest of the editor chrome. -->
-	{#if !viewer.isFullscreen}
+	     show like the rest of the editor chrome, and when the host sets
+	     showCompatibilityToasts to false (warnings are still collected). -->
+	{#if !viewer.isFullscreen && showCompatibilityToasts}
 		<CompatibilityToasts
 			toasts={compatToasts.visibleToasts}
 			overflowCount={compatToasts.overflowCount}

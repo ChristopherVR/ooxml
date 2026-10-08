@@ -180,6 +180,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		...resolveChromePanelFlags(customization()),
 		showToolbar: rootOptions.showToolbar,
 		showThumbnails: rootOptions.showThumbnails,
+		showCompatibilityToasts: rootOptions.showCompatibilityToasts,
 		showFormatToolbar: options.showFormatToolbar ?? true,
 		showInspector: options.showInspector ?? true,
 		editable: options.editable ?? false,

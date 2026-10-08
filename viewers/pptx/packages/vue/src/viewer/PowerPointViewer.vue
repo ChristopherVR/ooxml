@@ -201,8 +201,10 @@ const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 	// defaults (VIEWER_ROOT_OPTION_DEFAULTS) must be restated here.
 	showToolbar: true,
 	showThumbnails: true,
+	showCompatibilityToasts: true,
 });
-// `initialSlide` / `showToolbar` / `showThumbnails`, resolved by the shared helper.
+// `initialSlide` / `showToolbar` / `showThumbnails` / `showCompatibilityToasts`,
+// resolved by the shared helper.
 const rootOptions = computed(() => resolveViewerRootOptions(props));
 const emit = defineEmits<PowerPointViewerEmits>();
 
@@ -2314,9 +2316,10 @@ defineExpose<PowerPointViewerExpose>({
 		</template>
 
 		<!-- Compatibility-warning toasts: load diagnostics, hidden during a
-		     running show like the rest of the editor chrome. -->
+		     running show like the rest of the editor chrome, and when the host
+		     sets showCompatibilityToasts to false (warnings are still collected). -->
 		<CompatibilityToasts
-			v-if="!presentation.presenting.value"
+			v-if="!presentation.presenting.value && rootOptions.showCompatibilityToasts"
 			:toasts="compatToasts.visibleToasts.value"
 			:overflow-count="compatToasts.overflowCount.value"
 			:right-inset="compatToastRightInset"

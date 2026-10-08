@@ -40,16 +40,17 @@ type PptxViewerSource = ArrayBuffer | Uint8Array | Blob | string;
 
 ## Chrome & initial state
 
-| Option              | Type                | Default | Description                                                                                                                                                                                   |
-| ------------------- | ------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`      | `number`            | `0`     | Zero-based slide to show after load (clamped).                                                                                                                                                |
-| `showToolbar`       | `boolean`           | `true`  | Show the navigation/zoom/fullscreen toolbar.                                                                                                                                                  |
-| `showThumbnails`    | `boolean`           | `true`  | Show the thumbnail sidebar.                                                                                                                                                                   |
-| `showFormatToolbar` | `boolean`           | `true`  | Build the editing format toolbar row (bold/fill/insert/z-order). The row is only _visible_ while editing is enabled.                                                                          |
-| `showInspector`     | `boolean`           | `true`  | Build the property inspector panel (position/size/fill/line). Only _visible_ while editing is enabled.                                                                                        |
-| `hiddenActions`     | `ToolbarActionId[]` | -       | Individually hide toolbar buttons and/or ribbon tabs; see below.                                                                                                                              |
-| `editable`          | `boolean`           | `false` | Enable editing: click to select, drag/resize/rotate, inline text editing, keyboard shortcuts, undo/redo, and the toolbar Save button. Toggle later via [`setEditable`](/vanilla/api#editing). |
-| `readOnly`          | `boolean`           | -       | Legacy flag superseded by `editable`; kept so existing option objects stay type-valid. It has no effect.                                                                                      |
+| Option                    | Type                | Default | Description                                                                                                                                                                                   |
+| ------------------------- | ------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`            | `number`            | `0`     | Zero-based slide to show after load (clamped).                                                                                                                                                |
+| `showToolbar`             | `boolean`           | `true`  | Show the navigation/zoom/fullscreen toolbar.                                                                                                                                                  |
+| `showThumbnails`          | `boolean`           | `true`  | Show the thumbnail sidebar.                                                                                                                                                                   |
+| `showCompatibilityToasts` | `boolean`           | `true`  | Show the compatibility warning toast stack after a load. `false` hides the stack only; the warnings are still collected. Independent of `showToolbar`.                                        |
+| `showFormatToolbar`       | `boolean`           | `true`  | Build the editing format toolbar row (bold/fill/insert/z-order). The row is only _visible_ while editing is enabled.                                                                          |
+| `showInspector`           | `boolean`           | `true`  | Build the property inspector panel (position/size/fill/line). Only _visible_ while editing is enabled.                                                                                        |
+| `hiddenActions`           | `ToolbarActionId[]` | -       | Individually hide toolbar buttons and/or ribbon tabs; see below.                                                                                                                              |
+| `editable`                | `boolean`           | `false` | Enable editing: click to select, drag/resize/rotate, inline text editing, keyboard shortcuts, undo/redo, and the toolbar Save button. Toggle later via [`setEditable`](/vanilla/api#editing). |
+| `readOnly`                | `boolean`           | -       | Legacy flag superseded by `editable`; kept so existing option objects stay type-valid. It has no effect.                                                                                      |
 
 ### `hiddenActions`
 
@@ -232,6 +233,7 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	readOnly?: boolean;
 	showToolbar?: boolean;
 	showThumbnails?: boolean;
+	showCompatibilityToasts?: boolean;
 	showFormatToolbar?: boolean;
 	showInspector?: boolean;
 	hiddenActions?: ToolbarActionId[];

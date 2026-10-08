@@ -1,10 +1,12 @@
 // @vitest-environment happy-dom
 /**
- * The root display props `showToolbar`, `showThumbnails` and `initialSlide`,
+ * The root display props `showToolbar`, `showThumbnails`,
+ * `showCompatibilityToasts` and `initialSlide`,
  * end to end through the real `PowerPointViewer`. The defaults and clamping
  * come from the shared `resolveViewerRootOptions` / `resolveInitialSlideIndex`
  * (ooxml-ui/pptx), so these props behave as they do in every other binding.
  */
+import JSZip from 'jszip';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -38,6 +40,20 @@ async function sampleDeck(slideCount: number): Promise<Uint8Array> {
 	}
 }
 
+/** A deck whose presentation part carries unmodelled markup, so it loads with a compatibility warning. */
+async function warnedDeck(): Promise<Uint8Array> {
+	const zip = await JSZip.loadAsync(await sampleDeck(1));
+	const xml = await zip.file('ppt/presentation.xml')?.async('string');
+	if (!xml) {
+		throw new Error('the sample deck has no presentation part');
+	}
+	zip.file(
+		'ppt/presentation.xml',
+		xml.replace('</p:presentation>', '<p:unmodelledMarker/></p:presentation>'),
+	);
+	return zip.generateAsync({ type: 'uint8array' });
+}
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -61,8 +77,9 @@ afterEach(() => {
 async function mount(
 	props: Partial<Omit<ViewerProps, 'content'>>,
 	slideCount = 1,
+	deck?: Uint8Array,
 ): Promise<ViewerHandle> {
-	const content = await sampleDeck(slideCount);
+	const content = deck ?? (await sampleDeck(slideCount));
 	const ref = createRef<ViewerHandle>();
 	await act(async () => {
 		root.render(<PowerPointViewer ref={ref} content={content} canEdit {...props} />);
@@ -89,6 +106,7 @@ async function mount(
 const ribbon = (): Element | null => container.querySelector('[data-pptx-chrome="ribbon"]');
 const slidesPane = (): Element | null => container.querySelector('[data-pptx-chrome="slides"]');
 const statusBar = (): Element | null => container.querySelector('pptx-ui-status-bar');
+const compatToasts = (): Element | null => container.querySelector('pptx-ui-compat-toasts');
 
 describe('powerPointViewer root display props', () => {
 	it('shows the toolbar, status bar and thumbnails and opens slide 0 by default', async () => {
@@ -120,5 +138,16 @@ describe('powerPointViewer root display props', () => {
 	it('clamps an out-of-range initialSlide into the deck', async () => {
 		const handle = await mount({ initialSlide: 99 }, 3);
 		expect(handle.getActiveSlideIndex()).toBe(2);
+	});
+
+	it('shows the compatibility toast stack by default when the deck has warnings', async () => {
+		await mount({}, 1, await warnedDeck());
+		expect(compatToasts()).not.toBeNull();
+	});
+
+	it('hides the compatibility toast stack when showCompatibilityToasts is false', async () => {
+		await mount({ showCompatibilityToasts: false }, 1, await warnedDeck());
+		expect(compatToasts()).toBeNull();
+		expect(ribbon()).not.toBeNull();
 	});
 });

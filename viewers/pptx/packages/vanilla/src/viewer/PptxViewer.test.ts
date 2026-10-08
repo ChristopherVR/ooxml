@@ -1,3 +1,4 @@
+import JSZip from 'jszip';
 import type { PptxElement } from 'pptx-viewer-core';
 import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -7,6 +8,24 @@ import { createPptxViewer, PptxViewer } from './PptxViewer';
 import type { PptxViewerInstance } from './types';
 
 let active: PptxViewerInstance[] = [];
+
+/** A deck whose presentation part carries unmodelled markup, so it loads with a compatibility warning. */
+async function warnedDeck(): Promise<Uint8Array> {
+	const { PptxHandler } = await import('pptx-viewer-core');
+	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
+	const bytes = await handler.save(data.slides);
+	handler.dispose();
+	const zip = await JSZip.loadAsync(bytes);
+	const xml = await zip.file('ppt/presentation.xml')?.async('string');
+	if (!xml) {
+		throw new Error('the sample deck has no presentation part');
+	}
+	zip.file(
+		'ppt/presentation.xml',
+		xml.replace('</p:presentation>', '<p:unmodelledMarker/></p:presentation>'),
+	);
+	return zip.generateAsync({ type: 'uint8array' });
+}
 
 function mount(options?: ConstructorParameters<typeof PptxViewer>[1]): {
 	container: HTMLElement;
@@ -239,6 +258,22 @@ describe('createPptxViewer', () => {
 		expect(container.querySelector('.pptxv-ribbon')).toBeNull();
 		expect(container.querySelector('.pptxv-thumbs')).toBeNull();
 		expect(container.querySelector('.pptxv-viewport')).toBeTruthy();
+	});
+
+	it('hides the compatibility toast stack when showCompatibilityToasts is false', async () => {
+		const bytes = await warnedDeck();
+		const shown = mount({ showToolbar: false });
+		await shown.viewer.loadFile(bytes);
+		expect(shown.container.querySelector('pptx-ui-compat-toasts')).toBeTruthy();
+		expect((shown.viewer as PptxViewer).store.get().compatToasts.length).toBeGreaterThan(0);
+		shown.viewer.dismissAllCompatToasts();
+		expect((shown.viewer as PptxViewer).store.get().compatToasts).toHaveLength(0);
+
+		const hidden = mount({ showToolbar: false, showCompatibilityToasts: false });
+		await hidden.viewer.loadFile(bytes);
+		expect(hidden.container.querySelector('pptx-ui-compat-toasts')).toBeNull();
+		// The warnings are still collected for the host.
+		expect((hidden.viewer as PptxViewer).store.get().compatToasts.length).toBeGreaterThan(0);
 	});
 
 	it('opens a loaded deck on initialSlide, clamped into the deck', async () => {

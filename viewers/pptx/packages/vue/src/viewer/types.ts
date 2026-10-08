@@ -211,6 +211,11 @@ export interface PowerPointViewerProps {
 	 */
 	showThumbnails?: boolean;
 	/**
+	 * Show the compatibility warning toast stack after a load. Default `true`.
+	 * `false` hides the stack only; the warnings are still collected.
+	 */
+	showCompatibilityToasts?: boolean;
+	/**
 	 * Framework-neutral UI customisation. See docs/guide/customization.md.
 	 *
 	 * Hides ribbon tabs/buttons, Options pages/sections/settings, File tab

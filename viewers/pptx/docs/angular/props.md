@@ -70,13 +70,14 @@ viewer raises a **"Recover unsaved changes?"** dialog offering Restore or Discar
 
 ## Display {#display}
 
-These three match the Svelte and vanilla bindings; the defaults and clamping are shared.
+These four match the Svelte and vanilla bindings; the defaults and clamping are shared.
 
-| Prop               | Type      | Default | Description                                                                                                                                                                                       |
-| ------------------ | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `[initialSlide]`   | `number`  | `0`     | Zero-based slide shown after each load, clamped into the deck. Changing it later applies to the next load, not the current slide.                                                                 |
-| `[showToolbar]`    | `boolean` | `true`  | Show the editor chrome: title bar, ribbon and toolbar, protected-view and read-only banners, the mobile toolbar and the status bar. `false` leaves the canvas (and the thumbnail pane, if shown). |
-| `[showThumbnails]` | `boolean` | `true`  | Show the slide thumbnail pane. It still follows the user's own collapse toggle and the `slidesPane` customisation panel.                                                                          |
+| Prop                        | Type      | Default | Description                                                                                                                                                                                       |
+| --------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[initialSlide]`            | `number`  | `0`     | Zero-based slide shown after each load, clamped into the deck. Changing it later applies to the next load, not the current slide.                                                                 |
+| `[showToolbar]`             | `boolean` | `true`  | Show the editor chrome: title bar, ribbon and toolbar, protected-view and read-only banners, the mobile toolbar and the status bar. `false` leaves the canvas (and the thumbnail pane, if shown). |
+| `[showThumbnails]`          | `boolean` | `true`  | Show the slide thumbnail pane. It still follows the user's own collapse toggle and the `slidesPane` customisation panel.                                                                          |
+| `[showCompatibilityToasts]` | `boolean` | `true`  | Show the compatibility warning toast stack after a load. `false` hides the stack only; the warnings are still collected. Independent of `showToolbar`.                                            |
 
 ```html
 <pptx-viewer [content]="bytes" [initialSlide]="2" [showToolbar]="false" [showThumbnails]="false" />
@@ -166,6 +167,7 @@ class PowerPointViewerComponent {
 	readonly initialSlide = input<number | undefined>(undefined);
 	readonly showToolbar = input<boolean | undefined>(undefined);
 	readonly showThumbnails = input<boolean | undefined>(undefined);
+	readonly showCompatibilityToasts = input<boolean | undefined>(undefined);
 	readonly class = input<string>('');
 	readonly theme = input<ViewerTheme | undefined>(undefined);
 	readonly filePath = input<string | undefined>(undefined);

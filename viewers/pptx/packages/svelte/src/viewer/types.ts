@@ -122,6 +122,11 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	/** Show the navigation/zoom toolbar. Default true. */
 	showToolbar?: boolean;
 	/**
+	 * Show the compatibility warning toast stack after a load. Default true.
+	 * `false` hides the stack only; the warnings are still collected.
+	 */
+	showCompatibilityToasts?: boolean;
+	/**
 	 * Toolbar buttons and/or ribbon tabs to hide, e.g. `['share', 'broadcast']`
 	 * to remove the collaboration entry points from a read-only embed, or
 	 * `['record']` to drop both the quick-access Record button and the Record

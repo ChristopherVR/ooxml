@@ -540,6 +540,12 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	showThumbnails?: boolean;
 
 	/**
+	 * Show the compatibility warning toast stack after a load. Default `true`.
+	 * `false` hides the stack only; the warnings are still collected.
+	 */
+	showCompatibilityToasts?: boolean;
+
+	/**
 	 * Hide individual toolbar buttons and/or ribbon tabs instead of the whole
 	 * toolbar. Accepts any mix of button ids (`share`, `broadcast`, `export`,
 	 * `undo`, `redo`, `record`, `notes`, `fullscreen`, `zoom`, `navigation`)

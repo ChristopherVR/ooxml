@@ -49,6 +49,12 @@ import { createTitleBar } from './title-bar';
 export interface ChromeOptions {
 	showToolbar: boolean;
 	showThumbnails: boolean;
+	/**
+	 * Mount the compatibility warning toast stack (default true). When false the
+	 * stack is never built and `setCompatToasts` is a no-op; the store still
+	 * collects the warnings.
+	 */
+	showCompatibilityToasts?: boolean;
 	/** Show the ribbon's editing surface (tab bar + Home/Insert/View content); default true. */
 	showFormatToolbar: boolean;
 	/** Build the property inspector panel (default true; shown only when editable). */
@@ -391,17 +397,23 @@ export function buildViewerChrome(
 	// Load-diagnostics toast stack, bottom-right of the chrome; not part of the
 	// slide-show surface, so it mounts on `root` alongside the touch/desktop
 	// show controls rather than inside `body`.
-	const compatToasts = createCompatToastStack(
-		doc,
-		t,
-		(id) => options.onDismissCompatToast(id),
-		() => options.onDismissAllCompatToasts(),
-	);
-	root.appendChild(compatToasts.el);
-	// The notes strip is docked between the canvas and the status bar, so the
-	// stack has to clear its live height (it grows when the pane expands and
-	// reads 0 while hidden, e.g. presenting or on mobile).
-	observeElementHeight(notes.el, (height) => compatToasts.setBottomInset(height));
+	// The host's `showCompatibilityToasts: false` skips the stack entirely.
+	const compatToasts =
+		options.showCompatibilityToasts === false
+			? null
+			: createCompatToastStack(
+					doc,
+					t,
+					(id) => options.onDismissCompatToast(id),
+					() => options.onDismissAllCompatToasts(),
+				);
+	if (compatToasts) {
+		root.appendChild(compatToasts.el);
+		// The notes strip is docked between the canvas and the status bar, so the
+		// stack has to clear its live height (it grows when the pane expands and
+		// reads 0 while hidden, e.g. presenting or on mobile).
+		observeElementHeight(notes.el, (height) => compatToasts.setBottomInset(height));
+	}
 
 	// "Run program" notices for a running show; same anchor as the compat
 	// toasts (the two never compete for the same screen: compat toasts are
@@ -485,7 +497,7 @@ export function buildViewerChrome(
 			readOnlyBanner?.update(recommendation, dismissed, passwordState);
 		},
 		setCompatToasts(toasts, rightInset) {
-			compatToasts.update(toasts, rightInset);
+			compatToasts?.update(toasts, rightInset);
 		},
 		setRunProgramNotices(notices) {
 			runProgramNotices.update(notices);

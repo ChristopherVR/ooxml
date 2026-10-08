@@ -1,5 +1,6 @@
 /**
- * The root display inputs `showToolbar`, `showThumbnails` and `initialSlide`.
+ * The root display inputs `showToolbar`, `showThumbnails`,
+ * `showCompatibilityToasts` and `initialSlide`.
  *
  * React, Vue, Svelte and vanilla expose the three; Angular did not, so a host
  * could not hide the chrome, hide the thumbnail pane or open on a given slide
@@ -25,18 +26,30 @@ function gateBefore(marker: string): string {
 }
 
 describe('powerPointViewerComponent root display inputs', () => {
-	it('declares the three inputs undefaulted so the shared defaults apply', () => {
+	it('declares the root inputs undefaulted so the shared defaults apply', () => {
 		expect(source).toContain('readonly initialSlide = input<number | undefined>(undefined);');
 		expect(source).toContain('readonly showToolbar = input<boolean | undefined>(undefined);');
 		expect(source).toContain('readonly showThumbnails = input<boolean | undefined>(undefined);');
+		expect(source).toContain(
+			'readonly showCompatibilityToasts = input<boolean | undefined>(undefined);',
+		);
 		expect(source).toMatch(
-			/rootOptions = computed\(\(\) =>\s*resolveViewerRootOptions\(\{\s*initialSlide: this\.initialSlide\(\),\s*showToolbar: this\.showToolbar\(\),\s*showThumbnails: this\.showThumbnails\(\),/u,
+			/rootOptions = computed\(\(\) =>\s*resolveViewerRootOptions\(\{\s*initialSlide: this\.initialSlide\(\),\s*showToolbar: this\.showToolbar\(\),\s*showThumbnails: this\.showThumbnails\(\),\s*showCompatibilityToasts: this\.showCompatibilityToasts\(\),/u,
 		);
 		expect(resolveViewerRootOptions({})).toStrictEqual({
 			initialSlide: 0,
 			showToolbar: true,
 			showThumbnails: true,
+			showCompatibilityToasts: true,
 		});
+	});
+
+	it('gates the compatibility toast stack on showCompatibilityToasts alone', () => {
+		const gate = gateBefore('<pptx-compat-toasts');
+		expect(gate).toBe('@if (rootOptions().showCompatibilityToasts)');
+		expect(
+			resolveViewerRootOptions({ showCompatibilityToasts: false }).showCompatibilityToasts,
+		).toBeFalsy();
 	});
 
 	it('gates the banners, title bar, ribbon, mobile toolbar and status bar on showToolbar', () => {
@@ -45,7 +58,9 @@ describe('powerPointViewerComponent root display inputs', () => {
 		);
 		expect(gateBefore('pptx-ng-protected-view-banner')).toContain('toolbarVisible()');
 		expect(gateBefore('<pptx-readonly-banner')).toContain('toolbarVisible()');
-		expect(gateBefore("@if (customizationService.panelVisible('titleBar'))")).toContain('!mobile.isMobile() && toolbarVisible()');
+		expect(gateBefore("@if (customizationService.panelVisible('titleBar'))")).toContain(
+			'!mobile.isMobile() && toolbarVisible()',
+		);
 		expect(gateBefore('<pptx-mobile-toolbar')).toContain('toolbarVisible()');
 		expect(gateBefore('<pptx-status-bar')).toContain('toolbarVisible()');
 		expect(gateBefore('<pptx-mobile-slides-sheet')).toContain('rootOptions().showToolbar');

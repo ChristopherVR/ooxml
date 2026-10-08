@@ -12,14 +12,25 @@ describe('resolveViewerRootOptions', () => {
 			initialSlide: 0,
 			showToolbar: true,
 			showThumbnails: true,
+			showCompatibilityToasts: true,
 		});
 		expect(resolveViewerRootOptions({})).toEqual(VIEWER_ROOT_OPTION_DEFAULTS);
 	});
 
 	it('keeps explicit values, including false', () => {
 		expect(
-			resolveViewerRootOptions({ initialSlide: 3, showToolbar: false, showThumbnails: false }),
-		).toEqual({ initialSlide: 3, showToolbar: false, showThumbnails: false });
+			resolveViewerRootOptions({
+				initialSlide: 3,
+				showToolbar: false,
+				showThumbnails: false,
+				showCompatibilityToasts: false,
+			}),
+		).toEqual({
+			initialSlide: 3,
+			showToolbar: false,
+			showThumbnails: false,
+			showCompatibilityToasts: false,
+		});
 	});
 
 	it('treats an explicit undefined as unset', () => {
@@ -28,8 +39,17 @@ describe('resolveViewerRootOptions', () => {
 				initialSlide: undefined,
 				showToolbar: undefined,
 				showThumbnails: undefined,
+				showCompatibilityToasts: undefined,
 			}),
 		).toEqual(VIEWER_ROOT_OPTION_DEFAULTS);
+	});
+
+	it('resolves the compatibility toasts independently of the toolbar', () => {
+		expect(resolveViewerRootOptions({ showToolbar: false }).showCompatibilityToasts).toBe(true);
+		expect(resolveViewerRootOptions({ showCompatibilityToasts: false })).toEqual({
+			...VIEWER_ROOT_OPTION_DEFAULTS,
+			showCompatibilityToasts: false,
+		});
 	});
 
 	it('falls back to slide 0 for a non-finite initial slide', () => {

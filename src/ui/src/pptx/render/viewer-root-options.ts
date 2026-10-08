@@ -1,8 +1,8 @@
 /**
  * The root display options every PowerPoint binding accepts: `initialSlide`,
- * `showToolbar` and `showThumbnails`. The defaults and the clamping live here
- * so React, Vue, Angular, Svelte and vanilla agree on them; each binding only
- * maps the resolved values onto its own template.
+ * `showToolbar`, `showThumbnails` and `showCompatibilityToasts`. The defaults
+ * and the clamping live here so React, Vue, Angular, Svelte and vanilla agree
+ * on them; each binding only maps the resolved values onto its own template.
  *
  * - `showToolbar` (default `true`) gates the whole editor chrome around the
  *   canvas: the title bar, ribbon and toolbar, the quick-access toolbar, the
@@ -11,6 +11,11 @@
  * - `showThumbnails` (default `true`) gates the slide thumbnail pane. It is a
  *   ceiling: the pane still follows the user's own collapse toggle and the
  *   `slidesPane` customisation panel switch.
+ * - `showCompatibilityToasts` (default `true`) gates the compatibility
+ *   warning toast stack shown after a load. `false` hides the stack only:
+ *   the warnings are still collected, so a host can surface them its own way
+ *   (useful for headless capture, read-only previews, or apps with their own
+ *   notice). It is independent of `showToolbar`.
  * - `initialSlide` (default `0`, zero-based) is the slide shown after each
  *   load, clamped into the deck with {@link resolveInitialSlideIndex}.
  */
@@ -23,6 +28,8 @@ export interface ViewerRootOptions {
 	showToolbar?: boolean | undefined;
 	/** Show the slide thumbnail pane. Default `true`. */
 	showThumbnails?: boolean | undefined;
+	/** Show the compatibility warning toast stack. Default `true`; warnings are still collected when `false`. */
+	showCompatibilityToasts?: boolean | undefined;
 }
 
 /** {@link ViewerRootOptions} with every default applied. */
@@ -30,6 +37,7 @@ export interface ResolvedViewerRootOptions {
 	initialSlide: number;
 	showToolbar: boolean;
 	showThumbnails: boolean;
+	showCompatibilityToasts: boolean;
 }
 
 /** The defaults the bindings document for the root display options. */
@@ -37,6 +45,7 @@ export const VIEWER_ROOT_OPTION_DEFAULTS: Readonly<ResolvedViewerRootOptions> = 
 	initialSlide: 0,
 	showToolbar: true,
 	showThumbnails: true,
+	showCompatibilityToasts: true,
 });
 
 /**
@@ -55,6 +64,8 @@ export function resolveViewerRootOptions(
 				: VIEWER_ROOT_OPTION_DEFAULTS.initialSlide,
 		showToolbar: options?.showToolbar ?? VIEWER_ROOT_OPTION_DEFAULTS.showToolbar,
 		showThumbnails: options?.showThumbnails ?? VIEWER_ROOT_OPTION_DEFAULTS.showThumbnails,
+		showCompatibilityToasts:
+			options?.showCompatibilityToasts ?? VIEWER_ROOT_OPTION_DEFAULTS.showCompatibilityToasts,
 	};
 }
 

@@ -25,6 +25,7 @@ description: PowerPointViewer Svelte 5 组件完整的属性和事件回调约�
 | -------------------------------------------------------------------------- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `initialSlide`                                                             | `number`            | `0`     | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                     |
 | `showThumbnails`                                                           | `boolean`           | `true`  | 显示缩略图侧边栏。                                                                                            |
+| `showCompatibilityToasts`                                                  | `boolean`           | `true`  | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                   |
 | `showToolbar`                                                              | `boolean`           | `true`  | 显示导航和缩放工具栏，并在 `editable` 启用时显示功能区。                                                      |
 | `showNotes`                                                                | `boolean`           | `true`  | 显示演讲者备注面板及工具栏开关。传入 `onnotesupdate` 可编辑备注，省略时备注只读。                             |
 | `hiddenActions`                                                            | `ToolbarActionId[]` | -       | 要隐藏的工具栏按钮或功能区选项卡，参见[下方取值](#hiddenactions-values)。                                     |

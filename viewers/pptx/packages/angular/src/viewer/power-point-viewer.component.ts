@@ -1354,13 +1354,15 @@ import { ZoomTargetService } from './zoom-target.service';
 				/>
 			}
 
-			<pptx-compat-toasts
-				[toasts]="loadNotices.visibleToasts()"
-				[rightInset]="compatToastRightInset()"
-				[bottomInset]="notesBarHeight()"
-				(dismissOne)="loadNotices.dismissToast($event)"
-				(dismissAll)="loadNotices.dismissAllToasts()"
-			/>
+			@if (rootOptions().showCompatibilityToasts) {
+				<pptx-compat-toasts
+					[toasts]="loadNotices.visibleToasts()"
+					[rightInset]="compatToastRightInset()"
+					[bottomInset]="notesBarHeight()"
+					(dismissOne)="loadNotices.dismissToast($event)"
+					(dismissAll)="loadNotices.dismissAllToasts()"
+				/>
+			}
 		</div>
 	`,
 })
@@ -1571,12 +1573,18 @@ export class PowerPointViewerComponent
 	 * the user's own collapse toggle and the `slidesPane` customisation panel.
 	 */
 	readonly showThumbnails = input<boolean | undefined>(undefined);
-	/** The three root display inputs with the shared defaults applied. */
+	/**
+	 * Show the compatibility warning toast stack after a load. Default `true`.
+	 * `false` hides the stack only; the warnings are still collected.
+	 */
+	readonly showCompatibilityToasts = input<boolean | undefined>(undefined);
+	/** The root display inputs with the shared defaults applied. */
 	protected readonly rootOptions = computed(() =>
 		resolveViewerRootOptions({
 			initialSlide: this.initialSlide(),
 			showToolbar: this.showToolbar(),
 			showThumbnails: this.showThumbnails(),
+			showCompatibilityToasts: this.showCompatibilityToasts(),
 		}),
 	);
 	protected readonly customizationService = inject(ViewerCustomizationService);

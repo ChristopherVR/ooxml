@@ -150,6 +150,12 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	/** Show the thumbnail sidebar (default `true`). */
 	showThumbnails?: boolean;
 	/**
+	 * Show the compatibility warning toast stack after a load (default `true`).
+	 * `false` hides the stack only: the warnings are still collected. Useful for
+	 * headless capture, read-only previews, or hosts with their own notice.
+	 */
+	showCompatibilityToasts?: boolean;
+	/**
 	 * Build the editing format toolbar row (bold/fill/insert/z-order); default
 	 * `true`. The row is only *visible* while editing is enabled.
 	 */
@@ -346,6 +352,12 @@ export interface PptxViewerInstance extends PowerPointViewerAPI, ViewerCustomiza
 	getSlideCount(): number;
 	/** Zero-based index of the visible slide. */
 	getCurrentSlide(): number;
+	/**
+	 * Dismiss every compatibility warning toast of the current load, as the
+	 * stack's "Dismiss all" button does. The next load shows its own warnings
+	 * again; pass `showCompatibilityToasts: false` to never show the stack.
+	 */
+	dismissAllCompatToasts(): void;
 	/** Effective zoom scale (1 = 100%), after fit resolution. */
 	getZoom(): number;
 	/** Set an explicit zoom scale, or `'fit'` for fit-to-viewport. */

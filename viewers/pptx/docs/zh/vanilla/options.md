@@ -32,16 +32,17 @@ type PptxViewerSource = ArrayBuffer | Uint8Array | Blob | string;
 
 ## 界面与初始状态 {#chrome-initial-state}
 
-| 选项                | 类型                | 默认值  | 说明                                                                                                                                                           |
-| ------------------- | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `initialSlide`      | `number`            | `0`     | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                                                                      |
-| `showToolbar`       | `boolean`           | `true`  | 显示导航、缩放和全屏工具栏。                                                                                                                                   |
-| `showThumbnails`    | `boolean`           | `true`  | 显示缩略图侧边栏。                                                                                                                                             |
-| `showFormatToolbar` | `boolean`           | `true`  | 构建编辑格式工具栏行，包括粗体、填充、插入和层叠顺序。该行仅在启用编辑时*可见*。                                                                               |
-| `showInspector`     | `boolean`           | `true`  | 构建属性检查器面板，包括位置、尺寸、填充和线条。仅在启用编辑时*可见*。                                                                                         |
-| `hiddenActions`     | `ToolbarActionId[]` | -       | 单独隐藏工具栏按钮或功能区选项卡，见下文。                                                                                                                     |
-| `editable`          | `boolean`           | `false` | 启用编辑，包括点击选择、拖动、缩放、旋转、内联文本编辑、键盘快捷键、撤销和重做，以及工具栏保存按钮。稍后可通过 [`setEditable`](/zh/vanilla/api#editing) 切换。 |
-| `readOnly`          | `boolean`           | -       | 已由 `editable` 替代的旧标记，保留它是为了让已有选项对象继续通过类型检查，不再产生效果。                                                                       |
+| 选项                      | 类型                | 默认值  | 说明                                                                                                                                                           |
+| ------------------------- | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initialSlide`            | `number`            | `0`     | 加载后显示的幻灯片，索引从 0 开始，自动限制在有效范围内。                                                                                                      |
+| `showToolbar`             | `boolean`           | `true`  | 显示导航、缩放和全屏工具栏。                                                                                                                                   |
+| `showThumbnails`          | `boolean`           | `true`  | 显示缩略图侧边栏。                                                                                                                                             |
+| `showCompatibilityToasts` | `boolean`           | `true`  | 加载后显示兼容性警告提示堆栈。`false` 只隐藏堆栈，警告仍会被收集。不受 `showToolbar` 影响。                                                                    |
+| `showFormatToolbar`       | `boolean`           | `true`  | 构建编辑格式工具栏行，包括粗体、填充、插入和层叠顺序。该行仅在启用编辑时*可见*。                                                                               |
+| `showInspector`           | `boolean`           | `true`  | 构建属性检查器面板，包括位置、尺寸、填充和线条。仅在启用编辑时*可见*。                                                                                         |
+| `hiddenActions`           | `ToolbarActionId[]` | -       | 单独隐藏工具栏按钮或功能区选项卡，见下文。                                                                                                                     |
+| `editable`                | `boolean`           | `false` | 启用编辑，包括点击选择、拖动、缩放、旋转、内联文本编辑、键盘快捷键、撤销和重做，以及工具栏保存按钮。稍后可通过 [`setEditable`](/zh/vanilla/api#editing) 切换。 |
+| `readOnly`                | `boolean`           | -       | 已由 `editable` 替代的旧标记，保留它是为了让已有选项对象继续通过类型检查，不再产生效果。                                                                       |
 
 ### `hiddenActions` {#hiddenactions}
 
@@ -180,6 +181,7 @@ interface PptxViewerOptions extends PptxViewerCallbacks {
 	readOnly?: boolean;
 	showToolbar?: boolean;
 	showThumbnails?: boolean;
+	showCompatibilityToasts?: boolean;
 	showFormatToolbar?: boolean;
 	showInspector?: boolean;
 	hiddenActions?: ToolbarActionId[];

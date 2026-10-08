@@ -76,12 +76,15 @@ See the [session guide](/guide/host-owned-collaboration) for persistence boundar
 
 ## Loading {#loading}
 
-| Method     | Signature                                                    | Description                                                               |
-| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `loadFile` | `(file: Blob \| ArrayBuffer \| Uint8Array) => Promise<void>` | Load a presentation from bytes or a Blob/File (replaces the current one). |
-| `loadUrl`  | `(url: string) => Promise<void>`                             | Fetch and load a presentation from a URL.                                 |
+| Method                   | Signature                                                    | Description                                                                                              |
+| ------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `loadFile`               | `(file: Blob \| ArrayBuffer \| Uint8Array) => Promise<void>` | Load a presentation from bytes or a Blob/File (replaces the current one).                                |
+| `loadUrl`                | `(url: string) => Promise<void>`                             | Fetch and load a presentation from a URL.                                                                |
+| `dismissAllCompatToasts` | `() => void`                                                 | Dismiss every compatibility warning toast of the current load, as the stack's "Dismiss all" button does. |
 
 Both resolve once the presentation is rendered; failures surface through the `onError` callback.
+A deck with compatibility warnings opens a toast stack after each load; pass
+`showCompatibilityToasts: false` (see [Options & Callbacks](/vanilla/options)) to never show it.
 
 ## Navigation
 

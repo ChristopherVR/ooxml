@@ -15,12 +15,14 @@ const viewer: PptxViewerInstance = createPptxViewer(host, { source });
 
 ## 加载 {#loading}
 
-| 方法       | 签名                                                         | 说明                                            |
-| ---------- | ------------------------------------------------------------ | ----------------------------------------------- |
-| `loadFile` | `(file: Blob \| ArrayBuffer \| Uint8Array) => Promise<void>` | 从字节或 Blob/File 加载演示文稿，替换当前内容。 |
-| `loadUrl`  | `(url: string) => Promise<void>`                             | 从 URL 获取并加载演示文稿。                     |
+| 方法                     | 签名                                                         | 说明                                                               |
+| ------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `loadFile`               | `(file: Blob \| ArrayBuffer \| Uint8Array) => Promise<void>` | 从字节或 Blob/File 加载演示文稿，替换当前内容。                    |
+| `loadUrl`                | `(url: string) => Promise<void>`                             | 从 URL 获取并加载演示文稿。                                        |
+| `dismissAllCompatToasts` | `() => void`                                                 | 关闭当前加载的所有兼容性警告提示，与提示堆栈的“全部关闭”按钮相同。 |
 
 两者均在演示文稿渲染完成后解析 Promise，失败通过 `onError` 回调报告。
+包含兼容性警告的演示文稿在每次加载后会显示提示堆栈；传入 `showCompatibilityToasts: false`（参见[选项与回调](/zh/vanilla/options)）可始终不显示。
 
 ## 导航 {#navigation}
 

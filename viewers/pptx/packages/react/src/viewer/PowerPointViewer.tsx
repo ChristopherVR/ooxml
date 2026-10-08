@@ -198,7 +198,8 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			customization,
 			initialSlide,
 		} = props;
-		// `showToolbar` / `showThumbnails` defaults are shared with every binding.
+		// `showToolbar` / `showThumbnails` / `showCompatibilityToasts` defaults are
+		// shared with every binding.
 		const rootOptions = resolveViewerRootOptions(props);
 
 		useEffect(() => {
@@ -1338,7 +1339,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 				    the stack's `right: 12px` renders UNDER that panel's own content
 				    (it visually overlapped the Properties panel's "Presentation"
 				    section) instead of floating clear of it over the canvas. */}
-				{mode !== 'present' && (
+				{mode !== 'present' && rootOptions.showCompatibilityToasts && (
 					<CompatibilityToasts
 						toasts={compatToastsState.toasts}
 						onDismiss={compatToastsState.dismiss}

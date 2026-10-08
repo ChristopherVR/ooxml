@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import JSZip from 'jszip';
 import type { ExternalCollaborationSession } from 'ooxml-ui/pptx';
 import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
@@ -26,6 +27,20 @@ afterEach(() => {
 	cleanup?.();
 	cleanup = undefined;
 });
+
+/** The sample deck with unmodelled presentation markup, so it loads with a compatibility warning. */
+async function warnedDeck(): Promise<Uint8Array> {
+	const zip = await JSZip.loadAsync(readFileSync(FIXTURE));
+	const xml = await zip.file('ppt/presentation.xml')?.async('string');
+	if (!xml) {
+		throw new Error('the sample deck has no presentation part');
+	}
+	zip.file(
+		'ppt/presentation.xml',
+		xml.replace('</p:presentation>', '<p:unmodelledMarker/></p:presentation>'),
+	);
+	return zip.generateAsync({ type: 'uint8array' });
+}
 
 /** Text of the shared status bar, which renders inside an open shadow root. */
 function statusBarText(target: HTMLElement): string {
@@ -264,6 +279,24 @@ describe('powerPointViewer', () => {
 		const { target } = await mountViewer({ showToolbar: false, showThumbnails: false });
 		expect(target.querySelector('.pptx-svelte-toolbar')).toBeNull();
 		expect(target.querySelector('.pptx-svelte-thumbs')).toBeNull();
+		expect(target.querySelector('.pptx-svelte-stage')).not.toBeNull();
+	});
+
+	it('shows the compatibility toast stack by default when the deck has warnings', async () => {
+		const { target } = await mountViewer({ source: await warnedDeck() });
+		await vi.waitFor(() => {
+			flushSync();
+			expect(target.querySelector('pptx-ui-compat-toasts')).not.toBeNull();
+		});
+	});
+
+	it('hides the compatibility toast stack when showCompatibilityToasts is false', async () => {
+		const { target } = await mountViewer({
+			source: await warnedDeck(),
+			showCompatibilityToasts: false,
+		});
+		flushSync();
+		expect(target.querySelector('pptx-ui-compat-toasts')).toBeNull();
 		expect(target.querySelector('.pptx-svelte-stage')).not.toBeNull();
 	});
 
