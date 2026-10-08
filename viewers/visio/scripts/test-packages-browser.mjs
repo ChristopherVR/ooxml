@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import { chromium } from '@playwright/test';
 import { preview } from 'vite';
-import { parseVsdx } from 'ooxml-core/visio';
 
 const root = resolve(import.meta.dirname, '..');
-const consumer = readFileSync(resolve(root, '.package-build/consumer.txt'), 'utf8');
+const workspaceRuntime = process.argv.includes('--workspace-runtime');
+const consumer = readFileSync(
+	resolve(root, `.package-build/consumer${workspaceRuntime ? '.workspace' : ''}.txt`),
+	'utf8',
+);
+const consumerRequire = createRequire(resolve(consumer, 'package.json'));
+const { parseVsdx } = await import(pathToFileURL(consumerRequire.resolve('ooxml-core/visio')).href);
 const server = await preview({
 	configFile: false,
 	root: consumer,
@@ -68,6 +75,13 @@ try {
 	const bytes = await page.evaluate(() => [...window.viewer.exportVsdx().bytes]);
 	const saved = await parseVsdx(Uint8Array.from(bytes));
 	assert.equal(saved.pages[0].shapes[0].text.plainText, 'Published browser edit');
+	if (workspaceRuntime) {
+		const frameworks = await page.evaluate(
+			(bytes) => window.verifyWorkspaceBindings(bytes),
+			[...readFileSync(resolve(consumer, 'fixture.vsdx'))],
+		);
+		assert.deepEqual(frameworks, ['react', 'vue', 'solid', 'angular', 'svelte', 'vanilla']);
+	}
 	await page.locator('#file').setInputFiles(resolve(consumer, 'fixture.vsd'));
 	await page.waitForFunction(() => window.viewer.controller.state.document?.format === 'vsd');
 	const legacyState = await page.evaluate(() => {
@@ -88,7 +102,9 @@ try {
 	assert.deepEqual(errors, []);
 	await page.evaluate(() => window.viewer.destroy());
 	console.log(
-		'Packed browser consumer imports all six adapters, parses with the shipped worker and exports a reopenable edit.',
+		workspaceRuntime
+			? 'Packed workspace consumer mounts all six frameworks and verifies selection handles, frozen events and worker edits.'
+			: 'Packed browser consumer imports all six adapters, parses with the shipped worker and exports a reopenable edit.',
 	);
 } finally {
 	await browser.close();

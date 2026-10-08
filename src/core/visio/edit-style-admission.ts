@@ -2,7 +2,13 @@ import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { editableCell } from './edit-geometry-admission';
 import { executableCellFormula } from './cell-formula';
-import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
+import {
+	analyzeVisioFormula,
+	evaluateVisioFormula,
+	visioFormulaCachedValue,
+	parseVisioFormula,
+	type VisioFormulaAst,
+} from './formula';
 
 export type FormattingCategory = 'LineStyle' | 'FillStyle' | 'TextStyle';
 export function uniqueFormattingCells(sheet: Element): Map<string, Element> {
@@ -155,12 +161,50 @@ export function assertShapeLocks(
 		}
 }
 
+/** Native ordinary shapes explicitly cache an empty LayerMember string. */
+export function assertUnlayeredShape(shape: Element, document: Element): void {
+	for (const category of ['LineStyle', 'FillStyle', 'TextStyle'] as const) {
+		const cell = effectiveShapeCell(shape, document, 'LayerMember', category);
+		if (!cell) continue;
+		if (
+			attribute(cell, 'V') !== '' ||
+			cell.hasAttribute('E') ||
+			executableCellFormula(attribute(cell, 'F'))
+		)
+			fail(
+				'UNSUPPORTED_FORMAT_EDIT',
+				'Layered or unresolved layer membership is not yet supported.',
+			);
+	}
+}
+
 /** Literal native font/color lookups are safe to replace after GUARD and reference analysis. */
 export function assertEditableFormattingCell(cell: Element | undefined): void {
 	const source = executableCellFormula(attribute(cell, 'F'));
+	const ast = source ? parseVisioFormula(source) : undefined;
+	const themeLiteral = (node: VisioFormulaAst): boolean =>
+		node.kind === 'string' ||
+		node.kind === 'number' ||
+		(node.kind === 'call' &&
+			['THEMEVAL', 'THEME', 'THEMEGUARD'].includes(node.name) &&
+			node.args.every(themeLiteral));
+	// THEMEGUARD is explicitly overridable by manual formatting; GUARD and
+	// SETATREF remain prohibited. Only literal theme lookups are admitted here.
+	// https://learn.microsoft.com/en-us/office/client-developer/visio/themeguard-function
 	if (
-		source &&
-		/^\s*=?\s*(?:FONT\(\s*"[^"\r\n]*"\s*\)|RGB\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\))\s*$/i.test(source)
+		ast?.kind === 'call' &&
+		((ast.name === 'FONT' && ast.args.length === 1 && ast.args[0]?.kind === 'string') ||
+			(ast.name === 'RGB' &&
+				ast.args.length === 3 &&
+				ast.args.every(
+					(arg) =>
+						arg.kind === 'number' &&
+						arg.unit === 'scalar' &&
+						Number.isInteger(arg.value) &&
+						arg.value >= 0 &&
+						arg.value <= 255,
+				)) ||
+			(['THEMEVAL', 'THEME', 'THEMEGUARD'].includes(ast.name) && themeLiteral(ast)))
 	) {
 		if (cell?.hasAttribute('E'))
 			fail('EDIT_PROTECTED_CELL', 'Cannot overwrite an error formatting cell.');

@@ -66,6 +66,7 @@ export type {
 	ViewerCallbacks,
 	ViewerOptions,
 	ViewerEvents,
+	VisioShapeSelection,
 	ViewerEditState,
 	VsdxExportResult,
 } from './common';

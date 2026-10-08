@@ -22,6 +22,7 @@ import {
 	type ViewerState,
 	type VsdxSource,
 	type VisioEdit,
+	type VisioShapeSelection,
 	type SvgExportOptions,
 	type CurrentPagePrintSnapshotOptions,
 } from './common';
@@ -39,6 +40,7 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	@Output() pageChange = new EventEmitter<ViewerEvents['page-change']>();
 	@Output() zoomChange = new EventEmitter<ViewerEvents['zoom-change']>();
 	@Output() shapeSelect = new EventEmitter<ViewerEvents['shape-select']>();
+	@Output() selectionChange = new EventEmitter<ViewerEvents['selection-change']>();
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding: MountedViewer | undefined;
 	private readonly handle = viewerHandle(() => this.binding);
@@ -53,6 +55,7 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 		'page-change': this.pageChange,
 		'zoom-change': this.zoomChange,
 		'shape-select': this.shapeSelect,
+		'selection-change': this.selectionChange,
 	} satisfies { [K in keyof ViewerEvents]: EventEmitter<ViewerEvents[K]> };
 	private options() {
 		return withEventEmitter(this, (name, value) => {
@@ -87,6 +90,15 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 	applyEdits(edits: readonly VisioEdit[]) {
 		return this.handle.applyEdits(edits);
+	}
+	selectShapes(shapes: readonly VisioShapeSelection[]) {
+		this.handle.selectShapes(shapes);
+	}
+	selectAll() {
+		this.handle.selectAll();
+	}
+	clearSelection() {
+		this.handle.clearSelection();
 	}
 	replacePlainText(pageId: string, shapeId: string, text: string) {
 		return this.handle.replacePlainText(pageId, shapeId, text);
@@ -125,6 +137,7 @@ export type {
 	ViewerCallbacks,
 	ViewerOptions,
 	ViewerEvents,
+	VisioShapeSelection,
 	ViewerEditState,
 	VsdxExportResult,
 } from './common';

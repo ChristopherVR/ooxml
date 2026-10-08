@@ -190,6 +190,7 @@ function runStyle(
 		bold: !!(bits & 1),
 		italic: !!(bits & 2),
 		underline: !!(bits & 4),
+		strikethrough: number(cells, 'Strikethru', 0, report) !== 0,
 	};
 }
 export function shapeText(
@@ -261,7 +262,8 @@ export function shapeText(
 		paragraphs,
 		runs,
 		...runStyle(defaultCells, resources, report, cells),
-		horizontalAlign: alignment === 1 ? 'center' : alignment === 2 ? 'right' : 'left',
+		horizontalAlign:
+			alignment === 1 ? 'center' : alignment === 2 ? 'right' : alignment === 3 ? 'justify' : 'left',
 		verticalAlign: vertical === 0 ? 'top' : vertical === 2 ? 'bottom' : 'middle',
 		width: textWidth,
 		height: textHeight,

@@ -1,4 +1,15 @@
 import type { CommandSpec } from './ribbon-parts';
+import { OFFICE_COLOR_SWATCHES } from '../form/color-swatches';
+
+/** The common Office solid font colors, with an explicit typed action per entry. */
+export function fontColorOptions(): CommandSpec[] {
+	return OFFICE_COLOR_SWATCHES.map(({ hex, label }) => ({
+		id: `font-color-${label.toLowerCase()}`,
+		label,
+		action: { type: 'font-color', value: hex },
+		checked: false,
+	}));
+}
 
 const colors = [
 	['Black', '#000000'],

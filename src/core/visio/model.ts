@@ -95,6 +95,8 @@ export interface VisioTextRun {
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;
+	/** Single native Strikethru decoration; double strikethrough is separate. */
+	strikethrough?: boolean;
 }
 export interface VisioParagraph {
 	/** UTF-16 offsets into plainText. End excludes the paragraph's newline. */
@@ -113,6 +115,11 @@ export interface VisioParagraph {
 }
 export interface VisioText {
 	plainText: string;
+	/** Default character styles, including for an empty text block. */
+	bold?: boolean;
+	italic?: boolean;
+	underline?: boolean;
+	strikethrough?: boolean;
 	/** Optional backdrop behind laid-out text, not the complete shape rectangle. */
 	backgroundColor?: string;
 	backgroundOpacity?: number;
@@ -122,7 +129,7 @@ export interface VisioText {
 	fontSize: number;
 	color: string;
 	opacity?: number;
-	horizontalAlign: 'left' | 'center' | 'right';
+	horizontalAlign: 'left' | 'center' | 'right' | 'justify';
 	verticalAlign: 'top' | 'middle' | 'bottom';
 	/** Local text box transform (y-up), dimensions and margins in inches. */
 	transform: VisioMatrix;

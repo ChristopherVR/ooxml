@@ -21,7 +21,7 @@ All adapters accept the same properties:
 - `showToolbar`: toolbar visibility
 - `events`: typed callback map using literal event names
 
-The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, and `shape-select`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
+The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, `shape-select`, and `selection-change`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
 
 Property updates are partial. Native framework snapshots are diffed so unrelated rerenders do not undo an imperative load or a user-changed viewport. Omitted or `undefined` properties preserve current viewer state. `null` explicitly clears the document. Removing the `events` prop clears callback-map handlers. Supply a new document object for an external replacement; in-place mutation is not a supported reactivity mechanism. Page and zoom interactions may update internal viewer state; the props request changes when their framework updates them.
 
@@ -50,7 +50,7 @@ Angular exposes native inputs and outputs. Add the standalone component to the a
 <visio-viewer-host [document]="diagram" (documentError)="reportError($event)" />
 ```
 
-Angular outputs are `documentLoad`, `documentError`, `pageChange`, `zoomChange` and `shapeSelect`. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
+Angular outputs are `documentLoad`, `documentChange`, `documentError`, `pageChange`, `zoomChange`, `shapeSelect` and `selectionChange`. The complete `events` callback map is also accepted as an input. Vue and Angular invoke the callback-map handler and then emit their native output; use either API unless both notifications are intended.
 
 For large immutable document models, use Vue `shallowRef`/`markRaw` and Svelte `$state.raw` rather than deeply proxying a newly constructed options object on every update. Rewrapping a document in a new reactive proxy changes its identity and requests an external replacement. In-place mutation is not supported.
 
@@ -97,6 +97,10 @@ Viewer state includes page, zoom, selection, search, editing and undo availabili
 
 Native hooks follow viewer replacement and conditional remounts, detach old controller subscriptions and expose `null` while no viewer is mounted. Vanilla consumers own their subscription cleanup: call the returned unsubscribe function before destroying or replacing the mounted viewer. Old controller updates cannot change a replacement viewer's state. These lifecycle checks cover all six adapters, including React StrictMode effect replay.
 
+`state.selectedShapes` is an ordered, immutable array. Its first item is the primary `selectedShape`, and the existing `shape-select` callback retains that primary-selection payload. `selection-change` reports the complete array. Vue exposes a native `selection-change` event, Angular exposes `selectionChange`, and every adapter accepts the shared `events['selection-change']` callback.
+
+All six handles provide `selectShapes(targets)`, `selectAll()` and `clearSelection()`. Shift, Ctrl or Meta clicking toggles a shape; clicking the background clears the selection. Hidden or deleted targets are removed, selected groups exclude their descendants, and switching pages or documents clears selection. Single-target text and geometry panels require exactly one selected shape.
+
 ## Checks
 
 Install this private package's development dependencies separately from the root:
@@ -126,4 +130,4 @@ The focused lifecycle tests mock only the shared mount to isolate framework wiri
 
 ## Editing scope
 
-Editing is experimental and limited to source-backed local plain-text replacement. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. Core rejects master-linked text, rich text, fields, signed packages and macro content. History is bounded, formula caches are not recalculated, and native Visio reopening remains unverified. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo` or `redo`. Unrelated framework rerenders must not replace an edited model with stale props.
+Editing is experimental and source-backed. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. `applyEdits()` forwards atomic geometry, text, formatting and ordering commands to the shared core. Plain-text replacement rejects master-linked text, rich text and fields; other commands have their own admission rules. Signed packages and macro content remain unsupported. The shared Home ribbon supports multi-selection formatting, alignment/distribution and deletion. History is bounded. Native Visio save/reopen evidence covers specific formatting and arrangement captures, not general fidelity; see `docs/verification.md` and `docs/parity.md` for current limits. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo` or `redo`. Unrelated framework rerenders must not replace an edited model with stale props.

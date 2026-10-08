@@ -25,3 +25,6 @@ export * from './rotation-preview';
 export * from './shape-rotation';
 export * from './shape-order';
 export * from './formatting';
+export * from './shape-arrange';
+
+export * from './selection';

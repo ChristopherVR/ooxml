@@ -2,11 +2,18 @@ import {
 	DocumentHistory,
 	EMPTY_EDIT_STATE,
 	type ViewerEditState,
+	type SourceSnapshot,
 	type VsdxExportResult,
 } from 'ooxml-core/visio/ui';
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor';
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { loadVisio, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
+import {
+	EMPTY_SELECTION,
+	sameSelection,
+	selectionKey,
+	snapshotSelection,
+} from 'ooxml-core/visio/ui';
 import {
 	EMPTY_LAYER_OVERRIDES,
 	documentVisibility,
@@ -15,7 +22,7 @@ import {
 } from './viewer-layers';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import type { CancellableParser } from './worker-parser';
-import type { ViewerEvents } from 'ooxml-core/visio/ui';
+import type { ViewerEvents, VisioShapeSelection } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_TEXT_SEARCH,
 	indexDocumentText,
@@ -35,7 +42,15 @@ export interface ViewerState {
 	readonly search: TextSearchState;
 	/** Viewer-only display overrides, independent of saved model and print policy. */
 	readonly layerVisibilityOverrides: readonly LayerVisibilityOverride[];
-	readonly selectedShape: { id: string; name: string; pageId?: string } | null;
+	/** Backward-compatible primary selection, the first entry of selectedShapes. */
+	readonly selectedShape: VisioShapeSelection | null;
+	readonly selectedShapes: readonly VisioShapeSelection[];
+}
+interface SelectionHistory {
+	readonly pageId: string;
+	readonly before: readonly VisioShapeSelection[];
+	readonly after: readonly VisioShapeSelection[];
+	readonly intent: number;
 }
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
@@ -48,6 +63,7 @@ export class ViewerController {
 		loading: false,
 		error: null,
 		selectedShape: null,
+		selectedShapes: EMPTY_SELECTION,
 		search: EMPTY_TEXT_SEARCH,
 		layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 	});
@@ -60,6 +76,8 @@ export class ViewerController {
 	#sourceGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
 	#history: DocumentHistory | null = null;
+	#selectionHistory = new WeakMap<SourceSnapshot, SelectionHistory>();
+	#selectionIntent = 0;
 	#sourceFormat: VisioDocument['format'] | null = null;
 	#editId = 0;
 	#visible = documentVisibility(null);
@@ -103,6 +121,7 @@ export class ViewerController {
 		++this.#sourceGeneration;
 		this.#invalidateEdit();
 		this.#history = null;
+		this.#selectionHistory = new WeakMap();
 		this.#sourceFormat = null;
 		this.#loadId++;
 		this.parser.cancel?.();
@@ -124,6 +143,7 @@ export class ViewerController {
 		const count = this.#state.document?.pages.length ?? 0;
 		const next = Math.max(0, Math.min(count - 1, Number.isFinite(index) ? Math.trunc(index) : 0));
 		if (next === this.#state.pageIndex) return;
+		++this.#selectionIntent;
 		if (this.#change({ pageIndex: next, selectedShape: null, search: this.#inactiveSearch() }))
 			this.#emit('page-change', next);
 	}
@@ -135,13 +155,54 @@ export class ViewerController {
 	}
 	selectShape(shape: ViewerState['selectedShape']): void {
 		this.#assertAlive();
+		const revision = this.#revision;
 		if (
 			shape &&
 			!visibleSelection(this.#state.document, this.#state.pageIndex, shape, this.#visible)
 		)
 			return;
-		if (this.#change({ selectedShape: shape, search: this.#inactiveSearch() }))
-			this.#emit('shape-select', shape);
+		if (this.#destroyed || revision !== this.#revision) return;
+		this.selectShapes(shape ? [shape] : EMPTY_SELECTION);
+	}
+	/** Replace the ordered selection; hidden/missing targets and group descendants are omitted. */
+	selectShapes(shapes: readonly VisioShapeSelection[]): void {
+		this.#assertAlive();
+		const revision = this.#revision;
+		const selectedShapes = snapshotSelection(
+			this.#state.document,
+			this.#state.pageIndex,
+			shapes,
+			this.#visible,
+		);
+		// Host getters may replace the document or issue newer selection while being snapshotted.
+		if (this.#destroyed || revision !== this.#revision) return;
+		++this.#selectionIntent;
+		if (this.#change({ selectedShapes, search: this.#inactiveSearch() }))
+			this.#emit('shape-select', this.#state.selectedShape);
+	}
+	toggleShapeSelection(shape: VisioShapeSelection): void {
+		this.#assertAlive();
+		const revision = this.#revision;
+		const pageId = this.#state.document?.pages[this.#state.pageIndex]?.id ?? '';
+		const key = selectionKey(shape, pageId);
+		if (this.#destroyed || revision !== this.#revision) return;
+		const current = this.#state.selectedShapes;
+		const found = current.some((item) => selectionKey(item, pageId) === key);
+		this.selectShapes(
+			found ? current.filter((item) => selectionKey(item, pageId) !== key) : [...current, shape],
+		);
+	}
+	/** Select the current page's visible top-level shapes, excluding background-page content. */
+	selectAll(): void {
+		this.#assertAlive();
+		const page = this.#state.document?.pages[this.#state.pageIndex];
+		this.selectShapes(
+			page?.shapes.map((shape) => ({ id: shape.id, name: shape.name, pageId: page.id })) ??
+				EMPTY_SELECTION,
+		);
+	}
+	clearSelection(): void {
+		this.selectShapes(EMPTY_SELECTION);
 	}
 	/** Override one source-page layer for viewing. null restores its saved display flag. */
 	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void {
@@ -179,25 +240,25 @@ export class ViewerController {
 		const search = searchIndex
 			? searchDocumentText(searchIndex, this.#state.search.query)
 			: EMPTY_TEXT_SEARCH;
-		const cleared =
-			!!this.#state.selectedShape &&
-			!visibleSelection(
-				this.#state.document,
-				this.#state.pageIndex,
-				this.#state.selectedShape,
-				visible,
-			);
+		const selectedShapes = snapshotSelection(
+			this.#state.document,
+			this.#state.pageIndex,
+			this.#state.selectedShapes,
+			visible,
+		);
+		const changedSelection = !sameSelection(selectedShapes, this.#state.selectedShapes);
+		if (changedSelection) ++this.#selectionIntent;
 		this.#visible = visible;
 		this.#searchIndex = searchIndex;
 		if (
 			this.#change({
 				layerVisibilityOverrides,
 				search,
-				...(cleared ? { selectedShape: null } : {}),
+				selectedShapes,
 			}) &&
-			cleared
+			changedSelection
 		)
-			this.#emit('shape-select', null);
+			this.#emit('shape-select', this.#state.selectedShape);
 	}
 	/** Search does not change the page or selection until explicit result navigation. */
 	setSearchQuery(query: string): void {
@@ -229,6 +290,7 @@ export class ViewerController {
 		// Page callbacks/subscribers may replace the document or issue newer navigation.
 		if (this.#destroyed || revision !== this.#revision) return;
 		const shape = { id: result.shapeId, name: result.shapeName, pageId: result.pageId };
+		++this.#selectionIntent;
 		if (this.#change({ selectedShape: shape })) this.#emit('shape-select', shape);
 	}
 	nextSearchResult(): void {
@@ -289,6 +351,7 @@ export class ViewerController {
 			throw error;
 		}
 		this.#history = history;
+		this.#selectionHistory = new WeakMap();
 		this.#sourceFormat = document.format;
 		this.#searchIndex = null;
 		this.#visible = visible;
@@ -301,6 +364,7 @@ export class ViewerController {
 			loading: false,
 			error: null,
 			selectedShape: null,
+			selectedShapes: EMPTY_SELECTION,
 			search: EMPTY_TEXT_SEARCH,
 			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		});
@@ -318,6 +382,7 @@ export class ViewerController {
 		this.#destroyed = true;
 		this.#invalidateEdit();
 		this.#history = null;
+		this.#selectionHistory = new WeakMap();
 		this.#sourceFormat = null;
 		++this.#documentGeneration;
 		++this.#sourceGeneration;
@@ -335,6 +400,7 @@ export class ViewerController {
 			loading: false,
 			error: null,
 			selectedShape: null,
+			selectedShapes: EMPTY_SELECTION,
 			search: EMPTY_TEXT_SEARCH,
 			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		});
@@ -398,6 +464,14 @@ export class ViewerController {
 		const target =
 			kind === 'undo' ? history.undoTarget : kind === 'redo' ? history.redoTarget : undefined;
 		if ((kind === 'undo' || kind === 'redo') && !target) return;
+		const beforeSource = history.current;
+		const selectionIntent = this.#selectionIntent;
+		const restored =
+			kind === 'undo'
+				? this.#selectionHistory.get(beforeSource)
+				: kind === 'redo' && target
+					? this.#selectionHistory.get(target)
+					: undefined;
 		const id = ++this.#editId;
 		const loadId = this.#loadId;
 		const current = () =>
@@ -440,7 +514,7 @@ export class ViewerController {
 			const search = searchIndex
 				? searchDocumentText(searchIndex, this.#state.search.query)
 				: EMPTY_TEXT_SEARCH;
-			const selection = this.#state.selectedShape;
+			const beforeSelection = this.#state.selectedShapes;
 			const oldPageIndex = this.#state.pageIndex;
 			const currentPageId = this.#state.document?.pages[oldPageIndex]?.id;
 			const foundPageIndex = document.pages.findIndex((page) => page.id === currentPageId);
@@ -448,12 +522,39 @@ export class ViewerController {
 				foundPageIndex >= 0
 					? foundPageIndex
 					: Math.min(oldPageIndex, Math.max(0, document.pages.length - 1));
-			const selectedShape =
-				selection && visibleSelection(document, pageIndex, selection, visible) ? selection : null;
+			const selection =
+				restored &&
+				restored.intent === selectionIntent &&
+				selectionIntent === this.#selectionIntent &&
+				restored.pageId === currentPageId
+					? kind === 'undo'
+						? restored.before
+						: restored.after
+					: beforeSelection;
+			const selectedShapes = snapshotSelection(document, pageIndex, selection, visible);
 			// No external callbacks occur between history acceptance and model acceptance.
 			if (edited) history.append(edited.bytes, edited.diagnostics);
 			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
 			else history.move(target!);
+			if (
+				(edited || kind === 'remote') &&
+				foundPageIndex >= 0 &&
+				!sameSelection(beforeSelection, selectedShapes)
+			) {
+				// Only pruned-selection edges are restored. Ordinary history preserves user selection.
+				const characters = [...beforeSelection, ...selectedShapes].reduce(
+					(sum, shape) => sum + shape.id.length + shape.name.length + (shape.pageId?.length ?? 0),
+					0,
+				);
+				// Weak keys follow the bounded source history; each edge retains at most 1M characters.
+				if (characters <= 1_000_000)
+					this.#selectionHistory.set(history.current, {
+						pageId: currentPageId!,
+						before: beforeSelection,
+						after: selectedShapes,
+						intent: this.#selectionIntent,
+					});
+			}
 			this.#visible = visible;
 			this.#searchIndex = searchIndex;
 			++this.#documentGeneration;
@@ -462,7 +563,7 @@ export class ViewerController {
 					document,
 					edit: history.state,
 					search,
-					selectedShape,
+					selectedShapes,
 					error: null,
 					pageIndex,
 				}) &&
@@ -485,11 +586,31 @@ export class ViewerController {
 	}
 	#change(change: Partial<ViewerState>): boolean {
 		const revision = ++this.#revision;
-		this.#state = Object.freeze({ ...this.#state, ...change });
+		const previous = this.#state.selectedShapes;
+		const requested =
+			change.selectedShapes ??
+			('selectedShape' in change
+				? change.selectedShape
+					? Object.freeze([Object.freeze({ ...change.selectedShape })])
+					: EMPTY_SELECTION
+				: undefined);
+		const selectedShapes = requested && sameSelection(previous, requested) ? previous : requested;
+		this.#state = Object.freeze({
+			...this.#state,
+			...change,
+			...(selectedShapes
+				? {
+						selectedShapes,
+						selectedShape: selectedShapes[0] ?? null,
+					}
+				: {}),
+		});
 		for (const listener of [...this.#subscribers]) {
 			if (this.#destroyed || revision !== this.#revision) break;
 			if (this.#subscribers.has(listener)) this.#notify(() => listener(this.#state));
 		}
+		if (!this.#destroyed && revision === this.#revision && previous !== this.#state.selectedShapes)
+			this.#emit('selection-change', this.#state.selectedShapes);
 		return !this.#destroyed && revision === this.#revision;
 	}
 	#notify(callback: () => void): boolean {

@@ -1,18 +1,24 @@
 import type { VisioShapeFormatEdit } from 'ooxml-core/visio';
+import type { VisioArrangement } from 'ooxml-core/visio/ui';
 
 export type CanvasTool = 'pointer' | 'rectangle' | 'ellipse' | 'line';
 export type VisioFormattingAction =
-	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' }
+	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' | 'strikethrough' }
+	| { type: 'font-color'; value?: string }
+	| { type: 'text-bullets' }
+	| { type: 'text-indent'; direction: 'increase' | 'decrease' }
 	| { type: 'font-family'; value: string }
 	| { type: 'font-size'; value: number }
 	| { type: 'font-step'; direction: 1 | -1 }
-	| { type: 'text-align'; axis: 'horizontal'; value: 'left' | 'center' | 'right' }
+	| { type: 'text-align'; axis: 'horizontal'; value: 'left' | 'center' | 'right' | 'justify' }
 	| { type: 'text-align'; axis: 'vertical'; value: 'top' | 'middle' | 'bottom' }
 	| { type: 'shape-format'; patch: Omit<VisioShapeFormatEdit, 'type' | 'pageId' | 'shapeId'> }
 	| { type: 'shape-order'; order: 'front' | 'back' | 'forward' | 'backward' };
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
+	| { type: 'arrange'; operation: VisioArrangement }
+	| { type: 'selection'; mode: 'all' | 'clear' }
 	| { type: 'history'; key: 'undo' | 'redo' }
 	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'delete' }

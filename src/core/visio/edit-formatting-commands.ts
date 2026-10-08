@@ -9,10 +9,17 @@ export interface VisioTextFormatEdit extends Target {
 	type: 'format-text';
 	fontSize?: number;
 	fontFamily?: string;
+	/** Opaque custom text color. */
+	fontColor?: string;
 	bold?: boolean;
 	italic?: boolean;
 	underline?: boolean;
-	horizontalAlign?: 'left' | 'center' | 'right';
+	strikethrough?: boolean;
+	/** Enable paragraph bullets, retaining an existing glyph selection. */
+	bullets?: boolean;
+	/** Physical points, independent of the drawing scale. */
+	indentLeft?: number;
+	horizontalAlign?: 'left' | 'center' | 'right' | 'justify';
 	verticalAlign?: 'top' | 'middle' | 'bottom';
 }
 export interface VisioShapeFormatEdit extends Target {
@@ -42,6 +49,8 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 	};
 	if (edit.type === 'format-text' && result.type === 'format-text') {
 		if (edit.fontSize !== undefined) result.fontSize = points(edit.fontSize, 1, 1000);
+		if (edit.fontColor !== undefined) result.fontColor = color(edit.fontColor);
+		if (edit.indentLeft !== undefined) result.indentLeft = points(edit.indentLeft, 0, 7200);
 		if (edit.fontFamily !== undefined) {
 			if (
 				typeof edit.fontFamily !== 'string' ||
@@ -52,13 +61,13 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 				fail('INVALID_EDIT', 'Invalid font family.');
 			result.fontFamily = edit.fontFamily;
 		}
-		for (const name of ['bold', 'italic', 'underline'] as const) {
+		for (const name of ['bold', 'italic', 'underline', 'strikethrough', 'bullets'] as const) {
 			if (edit[name] === undefined) continue;
 			if (typeof edit[name] !== 'boolean') fail('INVALID_EDIT', 'Text styles require booleans.');
 			result[name] = edit[name];
 		}
 		if (edit.horizontalAlign !== undefined) {
-			if (!['left', 'center', 'right'].includes(edit.horizontalAlign))
+			if (!['left', 'center', 'right', 'justify'].includes(edit.horizontalAlign))
 				fail('INVALID_EDIT', 'Invalid horizontal alignment.');
 			result.horizontalAlign = edit.horizontalAlign;
 		}

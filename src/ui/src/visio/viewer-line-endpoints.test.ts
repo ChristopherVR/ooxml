@@ -31,6 +31,17 @@ it('owns selected local handles, zoom sizing, tool changes and disposal', async 
 	controller.setZoom(controller.state.zoom * 2);
 	tool.render(controller.state);
 	expect(Number(viewport.querySelector('circle')!.getAttribute('r'))).toBe(firstRadius / 2);
+	const other = model.pages[0]!.shapes[1]!;
+	controller.selectShapes([
+		{ id: shape.id, name: shape.name, pageId: model.pages[0]!.id },
+		{ id: other.id, name: other.name, pageId: model.pages[0]!.id },
+	]);
+	tool.render(controller.state);
+	expect(controller.state.selectedShape?.id).toBe(shape.id);
+	expect(viewport.querySelectorAll('[data-line-endpoint]')).toHaveLength(0);
+	controller.selectShape({ id: shape.id, name: shape.name, pageId: model.pages[0]!.id });
+	tool.render(controller.state);
+	expect(viewport.querySelectorAll('[data-line-endpoint]')).toHaveLength(2);
 	active = false;
 	tool.render(controller.state);
 	expect(viewport.querySelectorAll('[data-line-endpoint]')).toHaveLength(0);

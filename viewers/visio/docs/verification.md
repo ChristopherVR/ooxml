@@ -2,6 +2,87 @@
 
 Status: local Windows development evidence, 2026-10-08. Full Microsoft Visio parity is not established.
 
+## Multi-selection, extended text controls and native arrangement, 2026-10-08
+
+The shared controller and all six native bindings now expose ordered immutable
+selection, a first-selected primary shape, `selection-change`, `selectShapes`,
+`selectAll` and `clearSelection`. Home formatting and deletion execute one
+atomic history transaction across the selection. Added controls include font
+color, strikethrough, bullets, 18-point indentation steps, justification, six
+alignment actions and horizontal/vertical equal spacing. Selection survives
+formatting and history; page/document replacement and hidden/deleted targets
+clear or prune it. Single-target controls stay unavailable for multiple selection.
+
+Validation includes 2,360 Visio core tests and 770 shared Visio UI tests passing,
+with 150 and seven optional checks skipped respectively. Binding tests passed
+96 DOM checks, strict TypeScript and Svelte checking. Twelve browser workflows
+passed across vanilla, React, Vue, Angular, Svelte and Solid: source-backed
+formatting plus additive selection, frozen public events, atomic formatting,
+history, extended text controls and downloaded VSDX reload. Core/UI bundles and
+declarations and viewer/browser TypeScript passed.
+
+The final two-worker browser suite passed 85 active checks and skipped 715
+optional fixture checks. Its sole failure was an older toolbar assertion that
+expected no selection after deletion undo. Undo now restores the deleted
+selection unless superseded by newer user intent; the corrected test checks that
+behavior and actual Escape deselection, and passed on rerun. All six new
+arrangement workflows passed, including both spacing axes, undo/redo, source
+download/reload and atomic deletion. Another 46 focused controller checks cover
+the selection-history change, cancellation, source replacement and newer user
+selection. The complete non-browser `check` passed, including formatting,
+bindings, production workers, declarations and packed consumers. The previous
+theming-table whitespace failure was formatted as part of this checkpoint.
+
+`bun run test:packages:workspace` additionally packs the local core, UI and seven
+viewer packages into a clean consumer. All nine tarballs install and their new
+selection APIs pass strict declaration checks, including readonly assertions.
+The browser mounts the actual installed React, Vue, Angular, Svelte, Solid and
+vanilla integrations, uses shipped workers, and checks selection events,
+primary order, formatting retention and VSDX reload. The default registry-backed
+package check remains separate; its success alone does not verify unreleased
+workspace behavior.
+
+Final review added regression guards for reentrant host selection getters and
+for background shapes sharing IDs with foreground shapes. Newer document,
+selection, page or disposal actions cannot be overwritten by a stale selection
+snapshot. Rotation/flip and endpoint gestures validate their source page before
+touching a foreground shape. The focused review run passed 39 UI and five core
+selection checks, plus strict UI TypeScript.
+After rebuilding both libraries and all demos with those guards, all 19 focused
+formatting, multi-selection, arrangement and toolbar browser workflows passed.
+
+Owned native Visio 16 captures provide additional, separate evidence:
+
+- `scripts/record-visio-formatting.ps1` records actual native font tables,
+  inherited empty layer membership, themed default styles, text/paint cells and
+  stacking order. Four captures cover front/back/forward/backward with extended
+  text controls at drawing-to-page ratios 1, 0.5 and 2. The optional
+  `edit-formatting-native-oracle.test.ts` compares parsed output and untouched ZIP
+  payloads. Native reopen of each core output confirms the recorded cells, IDs,
+  text, fonts and order on all twelve pages.
+- `scripts/record-visio-arrangement.ps1` records six native alignment and two
+  native distribution operations at the same three scales with rotated rectangles
+  of different sizes. `ui/shape-arrange-native.test.ts` and native reopen confirm
+  all 24 cases. Native alignment uses float32 local width/height extents; the
+  comparison bound is derived from each source extent's float32 rounding and
+  transform, plus 1e-11 inches. Production retains full numerical precision.
+- `scripts/record-visio-distribution.ps1` records 34 additional overlapping,
+  enclosing and tied-position cases. Native spacing orders shapes by centers,
+  with selection-order ties, including upward-positive vertical coordinates.
+  `ui/shape-distribute-native.test.ts` and native reopen confirm these cases
+  within 1e-8 inches. Shared generic geometry behavior is unchanged.
+
+The scripts create their own hidden COM application and temporary documents,
+never attach to an existing user session, and close only the instance they own.
+Set `VISIO_NATIVE_FORMATTING_DIR`, `VISIO_NATIVE_ARRANGEMENT_DIR` or
+`VISIO_NATIVE_DISTRIBUTION_DIR` to a generated capture directory to run its
+optional test. Pass the generated `core.vsdx` to the corresponding recorder's
+`-CoreOutputPath` with the same `-OutputDirectory` to verify native reopen.
+
+These are cell, geometry, preservation and native acceptance checks for the
+captured subset. They do not establish pixel equivalence, mixed-row rich-text
+editing, clipboard, groups/masters/glued arrangement or full Office parity.
+
 ## Source-backed Home commands and binding lifecycle, 2026-10-08
 
 Home font/size, bold/italic/underline, horizontal/vertical alignment, solid fill,

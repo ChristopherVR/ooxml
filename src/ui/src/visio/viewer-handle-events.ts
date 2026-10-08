@@ -1,5 +1,6 @@
 import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
 import type { ViewerState } from './controller';
+import { visioSelectionIsOnPage } from 'ooxml-core/visio/ui';
 export interface HandleGestureSnapshot {
 	pointer: number;
 	svg: SVGSVGElement;
@@ -17,6 +18,8 @@ export function handleGestureIsCurrent(
 		state.document === drag.document &&
 		state.document?.pages[state.pageIndex] === drag.page &&
 		state.selectedShape?.id === drag.shapeId &&
+		visioSelectionIsOnPage(state.selectedShape, drag.page.id) &&
+		state.selectedShapes.length === 1 &&
 		drag.svg.isConnected &&
 		!state.loading &&
 		!state.edit.busy &&

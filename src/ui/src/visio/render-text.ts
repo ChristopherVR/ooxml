@@ -92,7 +92,11 @@ export function renderText(
 			span.setAttribute('fill-opacity', String(run.opacity ?? text.opacity ?? 1));
 			if (run.bold) span.setAttribute('font-weight', 'bold');
 			if (run.italic) span.setAttribute('font-style', 'italic');
-			if (run.underline) span.setAttribute('text-decoration', 'underline');
+			const decorations = [
+				run.underline ? 'underline' : '',
+				run.strikethrough ? 'line-through' : '',
+			].filter(Boolean);
+			if (decorations.length) span.setAttribute('text-decoration', decorations.join(' '));
 			row.append(span);
 		}
 		node.append(row);

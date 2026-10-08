@@ -1,5 +1,10 @@
 import type { VisioEdit } from 'ooxml-core/visio';
-import type { ViewerOptions, ViewerCallbacks, VsdxSource } from 'ooxml-core/visio/ui';
+import type {
+	ViewerOptions,
+	ViewerCallbacks,
+	VsdxSource,
+	VisioShapeSelection,
+} from 'ooxml-core/visio/ui';
 import { eventKeys, propertyKeys } from 'ooxml-core/visio/ui';
 import { registerVisioViewer, type VisioViewerElement } from './viewer-element';
 import type { ViewerController } from './controller';
@@ -13,6 +18,9 @@ export interface MountedViewer {
 	update(options: ViewerOptions): void;
 	load(source: VsdxSource): Promise<void>;
 	applyEdits(edits: readonly VisioEdit[]): Promise<void>;
+	selectShapes(shapes: readonly VisioShapeSelection[]): void;
+	selectAll(): void;
+	clearSelection(): void;
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void>;
 	undo(): Promise<void>;
 	redo(): Promise<void>;
@@ -74,6 +82,18 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async applyEdits(edits) {
 			assertAlive();
 			await element.applyEdits(edits);
+		},
+		selectShapes(shapes) {
+			assertAlive();
+			element.selectShapes(shapes);
+		},
+		selectAll() {
+			assertAlive();
+			element.selectAll();
+		},
+		clearSelection() {
+			assertAlive();
+			element.clearSelection();
 		},
 		async replacePlainText(pageId, shapeId, text) {
 			assertAlive();

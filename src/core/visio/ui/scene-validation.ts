@@ -104,7 +104,9 @@ export function assertViewableDocument(model: VisioDocument): void {
 		member(shape.kind, ['shape', 'group', 'connector', 'foreign'], 'shape kind');
 		if (shape.groupDisplayMode !== undefined)
 			member(shape.groupDisplayMode, [0, 1, 2], 'group display mode');
-		member(shape.text.horizontalAlign, ['left', 'center', 'right'], 'text alignment');
+		member(shape.text.horizontalAlign, ['left', 'center', 'right', 'justify'], 'text alignment');
+		for (const key of ['bold', 'italic', 'underline', 'strikethrough'] as const)
+			if (shape.text[key] !== undefined) member(shape.text[key], [true, false], 'text style');
 		member(shape.text.verticalAlign, ['top', 'middle', 'bottom'], 'text alignment');
 		label(shape.name);
 		label(shape.text.fontFamily, 1024);
@@ -189,6 +191,8 @@ export function assertViewableDocument(model: VisioDocument): void {
 		if (!Array.isArray(shape.text.runs) || runCount + shape.text.runs.length > 100_000)
 			throw new Error('The scene exceeds safe text run limits or has an invalid run list.');
 		for (const run of shape.text.runs) {
+			if (run.strikethrough !== undefined)
+				member(run.strikethrough, [true, false], 'strikethrough style');
 			label(run.fontFamily, 1024);
 			label(run.color, 256);
 			if (run.opacity !== undefined) finite(run.opacity, 'text run opacity', 0, 1);

@@ -34,6 +34,8 @@ it('Angular mounts with real native lifecycle and zoneless input/output updates'
 	component.instance.zoomChange.subscribe(native);
 	const changed = vi.fn();
 	component.instance.documentChange.subscribe(changed);
+	const selectionChanged = vi.fn();
+	component.instance.selectionChange.subscribe(selectionChanged);
 	app.attachView(component.hostView);
 	component.changeDetectorRef.detectChanges();
 	const change = {
@@ -43,6 +45,9 @@ it('Angular mounts with real native lifecycle and zoneless input/output updates'
 	};
 	emit('document-change', change);
 	expect(changed).toHaveBeenCalledWith(change);
+	const selection = Object.freeze([{ id: 'shape', name: 'Shape', pageId: 'page' }]);
+	emit('selection-change', selection);
+	expect(selectionChanged).toHaveBeenCalledWith(selection);
 	const live = current();
 	const retained = component.instance;
 	await retained.replacePlainText('page', 'shape', 'Changed');

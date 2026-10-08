@@ -4,6 +4,7 @@ import {
 	isEditCancellation,
 	visioPageEditToDrawing,
 	visioStraightLineHandles,
+	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
@@ -45,6 +46,8 @@ export class ViewerLineEndpoints {
 		if (
 			!page ||
 			!state.selectedShape ||
+			!visioSelectionIsOnPage(state.selectedShape, page.id) ||
+			state.selectedShapes.length !== 1 ||
 			!state.edit.sourceAvailable ||
 			state.edit.busy ||
 			state.loading ||
@@ -61,7 +64,10 @@ export class ViewerLineEndpoints {
 		)
 			return;
 		const group = Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
-			(group) => group.dataset.shapeId === shape.id && group.dataset.selected === 'true',
+			(group) =>
+				group.dataset.shapeId === shape.id &&
+				(group.dataset.pageId ?? page.id) === page.id &&
+				group.dataset.selected === 'true',
 		);
 		if (!group) return;
 		const svg = group.ownerSVGElement;
@@ -121,6 +127,9 @@ export class ViewerLineEndpoints {
 			!page ||
 			!state.document ||
 			!state.selectedShape ||
+			!visioSelectionIsOnPage(state.selectedShape, page.id) ||
+			handle.dataset.lineShapeId !== state.selectedShape.id ||
+			state.selectedShapes.length !== 1 ||
 			this.#drag ||
 			event.button !== 0 ||
 			state.edit.busy ||
@@ -168,6 +177,10 @@ export class ViewerLineEndpoints {
 	#move(event: PointerEvent): void {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
+		if (!handleGestureIsCurrent(drag, this.controller.state, this.options.active())) {
+			this.#cancel();
+			return;
+		}
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		if (point) {
 			drag.preview.setAttribute('x2', String(point.x));
@@ -186,6 +199,10 @@ export class ViewerLineEndpoints {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
+		if (!handleGestureIsCurrent(drag, this.controller.state, this.options.active())) {
+			this.#cancel();
+			return;
+		}
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);

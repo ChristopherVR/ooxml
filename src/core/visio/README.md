@@ -9,27 +9,45 @@ preserves untouched package payloads under the limitations documented below.
 
 `editVsdx` accepts `format-text`, `format-shape` and `reorder-shape` commands.
 Text properties are `fontFamily`, `fontSize` (points), `bold`, `italic`,
-`underline`, `horizontalAlign` (`left`, `center`, `right`) and `verticalAlign`
-(`top`, `middle`, `bottom`). Shape properties are `fillColor` (six-digit hex or
+`underline`, `strikethrough`, `fontColor` (six-digit hex), `bullets`,
+`indentLeft` (points), `horizontalAlign` (`left`, `center`, `right`, `justify`)
+and `verticalAlign` (`top`, `middle`, `bottom`). Shape properties are `fillColor` (six-digit hex or
 `none`), `lineColor` (six-digit hex) and `lineWeight` (points). Reordering accepts
 `order: 'front' | 'back' | 'forward' | 'backward'`. Every command includes
 `pageId` and `shapeId`; the complete command batch is atomic.
 
 Formatting admits unlayered local leaf shapes and local lines. Text edits apply
 uniformly to one character and paragraph row, with plain text or supported
-zero-index markers. Font family edits require an existing document FaceName.
+zero-index markers. Font family edits require an existing document FaceName;
+both native name-valued `FONT` caches and older explicit font IDs are supported.
 Protected/error/delegated cells, unsupported inheritance and formulas depending
 on changed formatting are refused. Paint edits preserve existing rich-text runs.
 Stacking edits move intact top-level ordinary shape nodes within display band
 zero; masters, groups, foreign shapes, layered targets, and dynamic/container
-dependencies are currently refused. Physical point sizes do not scale with the
+dependencies are currently refused. Empty inherited layer membership is admitted.
+Pure theme formulas can be overridden; guards and reference-bearing formulas
+remain protected. Physical point sizes do not scale with the
 page drawing scale. The optional `VisioDocument.fontFamilies` lists saved font
 families for host pickers.
 
 Successful saves carry experimental diagnostics. Untouched part payloads remain
-byte-identical, while edited XML and ZIP representation may change. These changes
-do not establish native Microsoft Visio reopen or visual equivalence. Regression
-coverage lives in `edit-formatting.test.ts` and `edit-shape-order.test.ts`.
+byte-identical, while edited XML and ZIP representation may change. Owned native
+Visio 16 captures verify all four stacking operations and these formatting cells
+after save and reopen at three drawing scales. This proves the captured subset,
+not general native visual equivalence. Regression coverage includes
+`edit-formatting.test.ts`, `edit-shape-order.test.ts` and the optional
+`edit-formatting-native-oracle.test.ts`; regenerate its references with
+`scripts/record-visio-formatting.ps1`.
+
+The DOM-free `ooxml-core/visio/ui` helpers include immutable selection snapshots,
+aggregate formatting state and `visioArrangeCommands`. Alignment uses the first
+selected shape as its reference. Horizontal and vertical spacing use equal gaps
+between rotated width/height boxes, ordered by centers with selection-order ties,
+as measured in native Visio. These helpers return ordinary atomic move commands;
+source locks, glue and formula admission remain authoritative. The current
+arrangement scope is unlayered local leaf shapes with saved pins, excluding
+masters, groups and glued connectors. Native captures cover six alignment and
+two distribution actions at three drawing scales plus 34 overlapping/tied cases.
 
 ## Read a drawing
 

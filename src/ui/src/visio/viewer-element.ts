@@ -1,5 +1,5 @@
 import type { VisioDocument, VisioEdit } from 'ooxml-core/visio';
-import type { VsdxSource } from 'ooxml-core/visio/ui';
+import type { VsdxSource, VisioShapeSelection } from 'ooxml-core/visio/ui';
 import { createWorkerParser } from './worker-parser';
 import { ViewerController, type ViewerState } from './controller';
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
@@ -249,6 +249,18 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		return this.controller.applyEdits(edits);
 	}
+	selectShapes(shapes: readonly VisioShapeSelection[]): void {
+		this.#assertAlive();
+		this.controller.selectShapes(shapes);
+	}
+	selectAll(): void {
+		this.#assertAlive();
+		this.controller.selectAll();
+	}
+	clearSelection(): void {
+		this.#assertAlive();
+		this.controller.clearSelection();
+	}
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
 		this.#assertAlive();
 		return this.controller.replacePlainText(pageId, shapeId, text);
@@ -415,6 +427,7 @@ export class VisioViewerElement extends BaseElement {
 			!previous ||
 			previous.zoom !== state.zoom ||
 			previous.selectedShape !== state.selectedShape ||
+			previous.selectedShapes !== state.selectedShapes ||
 			previous.loading !== state.loading ||
 			previous.edit.busy !== state.edit.busy ||
 			previous.edit.sourceAvailable !== state.edit.sourceAvailable
@@ -429,7 +442,11 @@ export class VisioViewerElement extends BaseElement {
 		const inches = (value: number) => `${+value.toFixed(3)} in`;
 		this.#shapeStatus.setAttribute(
 			'value',
-			inspected ? `Width: ${inches(inspected.width)}  Height: ${inches(inspected.height)}` : '',
+			state.selectedShapes.length > 1
+				? `${state.selectedShapes.length} shapes selected`
+				: inspected
+					? `Width: ${inches(inspected.width)}  Height: ${inches(inspected.height)}`
+					: '',
 		);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;

@@ -38,6 +38,7 @@
 		"link:core": "node scripts/link-core.mjs",
 		"build:packages": "node scripts/build-packages.mjs",
 		"test:packages": "node scripts/test-packages.mjs",
+		"test:packages:workspace": "node scripts/test-packages.mjs --workspace-runtime && node scripts/test-packages-browser.mjs --workspace-runtime",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix"
 	},

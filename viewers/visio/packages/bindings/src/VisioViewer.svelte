@@ -1,6 +1,6 @@
 <script lang="ts">
   import { readonly, writable } from 'svelte/store';
-  import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common';
+  import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type VisioShapeSelection, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common';
   type Props = ViewerProps & { class?: string; style?: string; 'aria-label'?: string };
   let { document, pageIndex, zoom, showToolbar, events, class: className, style, 'aria-label': ariaLabel }: Props = $props();
   const options = $derived({ document, pageIndex, zoom, showToolbar, events } satisfies Required<ViewerProps>);
@@ -24,6 +24,9 @@
   export function getHandle() { return handle; }
   export function load(source: VsdxSource) { return handle.load(source); }
   export function applyEdits(edits: readonly VisioEdit[]) { return handle.applyEdits(edits); }
+  export function selectShapes(shapes: readonly VisioShapeSelection[]) { handle.selectShapes(shapes); }
+  export function selectAll() { handle.selectAll(); }
+  export function clearSelection() { handle.clearSelection(); }
   export function replacePlainText(pageId: string, shapeId: string, text: string) { return handle.replacePlainText(pageId, shapeId, text); }
   export function undo() { return handle.undo(); }
   export function redo() { return handle.redo(); }

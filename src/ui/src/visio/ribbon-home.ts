@@ -132,18 +132,10 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			id: 'align',
 			label: 'Align',
 			icon: 'alignObjects',
-			unsupported: ARRANGE,
-			items: [
-				'Align Left',
-				'Align Center',
-				'Align Right',
-				'Align Top',
-				'Align Middle',
-				'Align Bottom',
-			].map((label) => ({
-				id: label.toLowerCase().replace(' ', '-shapes-'),
-				label,
-				unsupported: ARRANGE,
+			items: (['left', 'center', 'right', 'top', 'middle', 'bottom'] as const).map((edge) => ({
+				id: `align-shapes-${edge}`,
+				label: `Align ${edge[0]!.toUpperCase()}${edge.slice(1)}`,
+				action: { type: 'arrange', operation: { type: 'align', edge } },
 			})),
 		}),
 		menu(doc, {
@@ -153,6 +145,16 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			unsupported: ARRANGE,
 			items: [
 				{ id: 'auto-align', label: 'Auto Align & Space', unsupported: ARRANGE },
+				{
+					id: 'distribute-horizontal',
+					label: 'Distribute Horizontally',
+					action: { type: 'arrange', operation: { type: 'distribute', axis: 'horizontal' } },
+				},
+				{
+					id: 'distribute-vertical',
+					label: 'Distribute Vertically',
+					action: { type: 'arrange', operation: { type: 'distribute', axis: 'vertical' } },
+				},
 				{
 					id: 'rotate',
 					label: 'Rotate Shapes',
@@ -277,7 +279,17 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				icon: 'pointer',
 				size: 'small',
 				items: [
-					{ id: 'select-all', label: 'Select All', unsupported: SELECT },
+					{
+						id: 'select-all',
+						label: 'Select All',
+						action: { type: 'selection', mode: 'all' },
+						keys: ['Control+A', 'Ctrl+A'],
+					},
+					{
+						id: 'clear-selection',
+						label: 'Deselect All',
+						action: { type: 'selection', mode: 'clear' },
+					},
 					{ id: 'select-by-type', label: 'Select by Type...', unsupported: SELECT },
 				],
 			}),

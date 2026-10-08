@@ -1,3 +1,4 @@
+import { selectionKey } from 'ooxml-core/visio/ui';
 import type { ViewerController } from './controller';
 import { contextMenu } from './ribbon-parts';
 
@@ -97,14 +98,19 @@ export function wireContextMenus(
 		const state = controller.state;
 		if (!state.document?.pages[state.pageIndex]) return;
 		if (shape) {
-			controller.selectShape({
+			const selected = {
 				id: shape.dataset.shapeId!,
 				name: shape.dataset.shapeName ?? '',
 				...(shape.dataset.pageId ? { pageId: shape.dataset.pageId } : {}),
-			});
+			};
+			const pageId = state.document.pages[state.pageIndex]!.id;
+			const containsTarget = () =>
+				controller.state.selectedShapes.some(
+					(item) => selectionKey(item, pageId) === selectionKey(selected, pageId),
+				);
+			if (!containsTarget()) controller.selectShape(selected);
 			// Selection may be refused (for example a hidden layer); fall back to the page menu.
-			if (controller.state.selectedShape?.id === shape.dataset.shapeId)
-				return menu('shape').openAt(x, y);
+			if (containsTarget()) return menu('shape').openAt(x, y);
 		}
 		menu('page').openAt(x, y);
 	};

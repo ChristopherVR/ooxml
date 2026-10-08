@@ -98,6 +98,7 @@ export class ViewerEditControls {
 	}
 	async #run(action: 'apply' | 'undo' | 'redo'): Promise<void> {
 		if (this.#buttons[action].disabled) return;
+		if (action === 'apply' && this.#controller.state.selectedShapes.length !== 1) return;
 		const request = ++this.#request;
 		this.#pending = true;
 		this.#localError = undefined;
@@ -127,6 +128,7 @@ export class ViewerEditControls {
 			state.pageIndex,
 			pageId,
 			selection?.id,
+			state.selectedShapes.length,
 		]);
 		if (identity !== this.#identity) {
 			this.#identity = identity;
@@ -144,11 +146,18 @@ export class ViewerEditControls {
 			if (!dirty) this.input.value = this.#initial;
 		}
 		const busy = state.loading || state.edit.busy || this.#pending;
-		const available = state.edit.sourceAvailable && !!shape && pageId !== undefined;
+		const available =
+			state.edit.sourceAvailable &&
+			!!shape &&
+			pageId !== undefined &&
+			state.selectedShapes.length === 1;
 		this.panel.setAttribute('aria-busy', String(busy));
-		this.#target.textContent = shape
-			? `Page ID: ${pageId} · Shape ID: ${shape.id} · ${shape.name || 'Unnamed shape'}`
-			: 'Select a shape to replace its plain text.';
+		this.#target.textContent =
+			state.selectedShapes.length > 1
+				? 'Select one shape to edit its plain text.'
+				: shape
+					? `Page ID: ${pageId} · Shape ID: ${shape.id} · ${shape.name || 'Unnamed shape'}`
+					: 'Select a shape to replace its plain text.';
 		this.input.disabled = !available || busy;
 		this.#buttons.apply.disabled = !available || busy || this.input.value === this.#initial;
 		this.#buttons.cancel.disabled =

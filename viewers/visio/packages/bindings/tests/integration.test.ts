@@ -173,9 +173,45 @@ const payloads: ViewerEvents = {
 	'page-change': 2,
 	'zoom-change': 3,
 	'shape-select': { id: 'shape-7', name: 'Example' },
+	'selection-change': Object.freeze([{ id: 'shape-7', name: 'Example' }]),
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: exposes immutable multi-selection, complete callbacks and guarded handles`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const changed = vi.fn();
+			const mounted = await mountNative(host, {
+				document: demoDocument,
+				events: { 'selection-change': changed },
+			});
+			const shapes = demoDocument.pages[0]!.shapes.slice(0, 3).map((shape) => ({
+				id: shape.id,
+				name: shape.name,
+				pageId: '1',
+			}));
+			await act(async () => mounted.handle.selectShapes(shapes));
+			expect(mounted.handle.controller.state.selectedShapes).toEqual(shapes);
+			expect(mounted.handle.controller.state.selectedShape).toBe(
+				mounted.handle.controller.state.selectedShapes[0],
+			);
+			expect(changed).toHaveBeenLastCalledWith(shapes);
+			expect(Object.isFrozen(changed.mock.calls.at(-1)![0])).toBe(true);
+			await act(async () => mounted.handle.selectAll());
+			expect(mounted.handle.controller.state.selectedShapes).toHaveLength(
+				demoDocument.pages[0]!.shapes.length,
+			);
+			await act(async () => mounted.handle.clearSelection());
+			expect(mounted.handle.controller.state.selectedShape).toBeNull();
+			expect(changed).toHaveBeenLastCalledWith([]);
+			const before = changed.mock.calls.length;
+			await mounted.destroy();
+			expect(() => mounted.handle.selectShapes(shapes)).toThrow(/not mounted|destroyed/);
+			expect(() => mounted.handle.selectAll()).toThrow(/not mounted|destroyed/);
+			expect(() => mounted.handle.clearSelection()).toThrow(/not mounted|destroyed/);
+			expect(changed).toHaveBeenCalledTimes(before);
+			host.remove();
+		});
 		it(`${framework}: properties, complete event map, real load rejection, disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

@@ -4,6 +4,7 @@ import { compatibilityNotes, compatibilityText } from 'ooxml-core/visio/ui';
 import type { TextSearchResult } from 'ooxml-core/visio/ui';
 import { renderPage } from './render-svg';
 import { selectedShape, shapeDetails } from './shape-inspector';
+import { selectionKey } from 'ooxml-core/visio/ui';
 
 /**
  * The drawing window: renders the current page, owns its resources, lists compatibility notes
@@ -15,6 +16,7 @@ export class ViewerCanvas {
 	#page = -1;
 	#layers: ViewerState['layerVisibilityOverrides'] | undefined;
 	#selection: ViewerState['selectedShape'] = null;
+	#selections: ViewerState['selectedShapes'] | undefined;
 	#revealed: TextSearchResult | undefined;
 	#inspected: VisioShape | undefined;
 	#warnings: string[] = [];
@@ -39,6 +41,7 @@ export class ViewerCanvas {
 		this.#dispose = () => {};
 		this.#revealed = undefined;
 		this.#selection = null;
+		this.#selections = undefined;
 	}
 	/** Returns true when the page itself was re-rendered. */
 	render(state: ViewerState): boolean {
@@ -98,16 +101,24 @@ export class ViewerCanvas {
 		const selection = state.selectedShape;
 		if (
 			changed ||
+			this.#selections !== state.selectedShapes ||
 			this.#selection?.id !== selection?.id ||
 			this.#selection?.pageId !== selection?.pageId ||
 			this.#selection?.name !== selection?.name ||
 			(searchResult && searchResult !== this.#revealed)
 		) {
+			const pageId = state.document?.pages[state.pageIndex]?.id ?? '';
+			const selectedKeys = new Set(state.selectedShapes.map((item) => selectionKey(item, pageId)));
 			for (const shape of this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')) {
-				const selected =
-					!!selection &&
-					shape.dataset.shapeId === selection.id &&
-					(!selection.pageId || shape.dataset.pageId === selection.pageId);
+				const selected = selectedKeys.has(
+					selectionKey(
+						{
+							id: shape.dataset.shapeId!,
+							...(shape.dataset.pageId ? { pageId: shape.dataset.pageId } : {}),
+						},
+						pageId,
+					),
+				);
 				shape.dataset.selected = String(selected);
 				if (
 					selected &&
@@ -133,6 +144,7 @@ export class ViewerCanvas {
 					.replaceChildren(...(inspected ? [shapeDetails(inspected)] : []));
 			}
 			this.#selection = selection ? { ...selection } : null;
+			this.#selections = state.selectedShapes;
 		}
 		if (!searchResult) this.#revealed = undefined;
 	}

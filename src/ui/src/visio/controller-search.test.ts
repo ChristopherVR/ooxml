@@ -29,7 +29,11 @@ describe('shared controller search and navigation', () => {
 		controller.previousSearchResult();
 		expect(controller.state.pageIndex).toBe(1);
 		expect(controller.state.selectedShape?.pageId).toBe('2');
-		expect(events.mock.calls.map(([name]) => name)).toEqual(['page-change', 'shape-select']);
+		expect(events.mock.calls.map(([name]) => name)).toEqual([
+			'page-change',
+			'selection-change',
+			'shape-select',
+		]);
 		controller.nextSearchResult();
 		expect(controller.state.pageIndex).toBe(0);
 		expect(controller.state.selectedShape?.pageId).toBe('1');

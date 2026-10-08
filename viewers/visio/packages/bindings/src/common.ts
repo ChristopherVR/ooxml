@@ -18,6 +18,9 @@ export type ViewerHandle = Pick<
 	| 'controller'
 	| 'load'
 	| 'applyEdits'
+	| 'selectShapes'
+	| 'selectAll'
+	| 'clearSelection'
 	| 'replacePlainText'
 	| 'undo'
 	| 'redo'
@@ -104,6 +107,15 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		},
 		async applyEdits(edits) {
 			await requireViewer().applyEdits(edits);
+		},
+		selectShapes(shapes) {
+			requireViewer().selectShapes(shapes);
+		},
+		selectAll() {
+			requireViewer().selectAll();
+		},
+		clearSelection() {
+			requireViewer().clearSelection();
 		},
 		async replacePlainText(pageId, shapeId, text) {
 			await requireViewer().replacePlainText(pageId, shapeId, text);
@@ -192,6 +204,7 @@ export { mountViewer };
 export type { MountedViewer, ViewerCallbacks, ViewerOptions, ViewerProperties };
 export { eventKeys, propertyKeys };
 export type { ViewerEvents, VsdxSource } from 'ooxml-ui/visio';
+export type { VisioShapeSelection } from 'ooxml-ui/visio';
 export { ViewerController, type ViewerState } from 'ooxml-ui/visio';
 export type { SvgExportOptions, SvgExportResult } from 'ooxml-ui/visio';
 export type {

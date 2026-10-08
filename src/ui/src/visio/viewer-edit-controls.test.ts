@@ -334,3 +334,22 @@ it.each(['text', 'geometry'] as const)(
 		}
 	},
 );
+
+it('refuses a single-target text draft when the primary gains another selected shape', () => {
+	const { controller, controls, state, button, input, dispose } = setup();
+	const apply = vi.spyOn(controller, 'replacePlainText').mockResolvedValue();
+	input('pending primary draft');
+	const selectedShapes = Object.freeze([
+		...state.selectedShapes,
+		Object.freeze({ id: 's2', name: 'Process', pageId: '1' }),
+	]);
+	Object.assign(state, { selectedShapes });
+	controls.render(state);
+	expect(controls.input.disabled).toBe(true);
+	expect(button('apply').disabled).toBe(true);
+	button('apply').disabled = false;
+	button('apply').click();
+	expect(apply).not.toHaveBeenCalled();
+	expect(controls.input.value).not.toBe('pending primary draft');
+	dispose();
+});

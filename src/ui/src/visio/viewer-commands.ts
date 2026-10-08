@@ -5,6 +5,7 @@ import {
 	visioPageInsertCommand,
 	visioQuarterTurnCommand,
 	visioLocalRotationShape,
+	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
@@ -15,6 +16,7 @@ import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
+import { ViewerArrangement } from './viewer-arrangement';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -52,8 +54,12 @@ export class ViewerCommands {
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
 	#formatting: ViewerFormatting;
+	#arrangement: ViewerArrangement;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
+		this.#arrangement = new ViewerArrangement(host.root, host.controller, (run, message) => {
+			void this.#edit(run, message);
+		});
 		this.#formatting = new ViewerFormatting(host.root, host.controller, (run, success) => {
 			void this.#edit(run, success);
 		});
@@ -71,6 +77,7 @@ export class ViewerCommands {
 			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			formatSelection: (action) => this.#formatting.run(action),
+			arrangeSelection: (action) => this.#arrangement.run(action.operation),
 			setTool: (tool) => this.setTool(tool),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
@@ -186,12 +193,23 @@ export class ViewerCommands {
 	}
 	#delete(): void {
 		const state = this.host.controller.state;
-		const shape = state.selectedShape;
-		const pageId = shape?.pageId ?? state.document?.pages[state.pageIndex]?.id;
-		if (!shape || pageId === undefined || !this.#canEdit(state)) return;
+		const shapes = state.selectedShapes;
+		const pageId = state.document?.pages[state.pageIndex]?.id;
+		if (
+			!shapes.length ||
+			pageId === undefined ||
+			!this.#canEdit(state) ||
+			shapes.some((shape) => shape.pageId && shape.pageId !== pageId)
+		)
+			return;
 		void this.#edit(
-			() => this.host.controller.applyEdits([{ type: 'delete-shape', pageId, shapeId: shape.id }]),
-			`Deleted ${shape.name || `shape ${shape.id}`}.`,
+			() =>
+				this.host.controller.applyEdits(
+					shapes.map((shape) => ({ type: 'delete-shape', pageId, shapeId: shape.id })),
+				),
+			shapes.length === 1
+				? `Deleted ${shapes[0]!.name || `shape ${shapes[0]!.id}`}.`
+				: `Deleted ${shapes.length} shapes.`,
 		);
 	}
 	#insertPage(): void {
@@ -210,7 +228,14 @@ export class ViewerCommands {
 	#transform(action: Extract<VisioRibbonAction, { type: 'rotate' | 'flip' }>): void {
 		const state = this.host.controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		if (!page || !state.selectedShape || !this.#canEdit(state)) return;
+		if (
+			!page ||
+			!state.selectedShape ||
+			!visioSelectionIsOnPage(state.selectedShape, page.id) ||
+			state.selectedShapes.length !== 1 ||
+			!this.#canEdit(state)
+		)
+			return;
 		const command =
 			action.type === 'rotate'
 				? visioQuarterTurnCommand(page, state.selectedShape.id, action.direction)
@@ -274,6 +299,7 @@ export class ViewerCommands {
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'fullscreen' };
 		if (editable(event.target)) return undefined;
+		if (control && !event.shiftKey && key === 'a') return { type: 'selection', mode: 'all' };
 		if (control && !event.shiftKey && key === 'b') return { type: 'text-toggle', property: 'bold' };
 		if (control && !event.shiftKey && key === 'i')
 			return { type: 'text-toggle', property: 'italic' };
@@ -291,6 +317,8 @@ export class ViewerCommands {
 			return { type: 'reveal', panel: 'edit', focusText: true };
 		if (key === 'Escape' && this.#tool !== 'pointer' && !this.#draw.drawing)
 			return { type: 'tool', tool: 'pointer' };
+		if (key === 'Escape' && state.selectedShapes.length && !this.#draw.drawing)
+			return { type: 'selection', mode: 'clear' };
 		return undefined;
 	}
 	#shortcut(event: KeyboardEvent): void {
@@ -316,6 +344,8 @@ export class ViewerCommands {
 			editing &&
 			!!page &&
 			!!state.selectedShape &&
+			visioSelectionIsOnPage(state.selectedShape, page.id) &&
+			state.selectedShapes.length === 1 &&
 			!!visioLocalRotationShape(page, state.selectedShape.id);
 		for (const name of ['rotate-left', 'rotate-right']) button(name).disabled = !rotating;
 		const flipping =
@@ -325,7 +355,11 @@ export class ViewerCommands {
 			!!visioLocalRotationShape(page, state.selectedShape.id, false);
 		for (const name of ['flip-horizontal', 'flip-vertical']) button(name).disabled = !flipping;
 		root.querySelector<RibbonCommand>('[data-menu="rotate"]')!.disabled = !rotating;
-		root.querySelector<RibbonCommand>('[data-menu="position"]')!.disabled = !rotating;
+		const distributing = this.#arrangement.render(state);
+		root.querySelector<RibbonCommand>('[data-menu="position"]')!.disabled =
+			!rotating && !distributing;
+		button('select-all').disabled = !page || state.loading;
+		button('clear-selection').disabled = !state.selectedShapes.length;
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
 		button('redo').disabled = !state.edit.canRedo || state.edit.busy || state.loading;
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));

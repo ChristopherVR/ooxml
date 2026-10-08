@@ -4,9 +4,11 @@ import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import { assertFormattingDependencies } from './edit-formatting-scope';
+import { formattingFont } from './edit-formatting-font';
 import {
 	assertEditableFormattingCell,
 	assertShapeLocks,
+	assertUnlayeredShape,
 	effectiveShapeCell,
 	formattingRow,
 	formattingCell,
@@ -85,9 +87,7 @@ export async function applyFormattingEdit(
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	const shape = targetShape(root, edit.shapeId);
-	for (const category of ['LineStyle', 'FillStyle', 'TextStyle'] as const)
-		if (effectiveShapeCell(shape, document, 'LayerMember', category))
-			fail('UNSUPPORTED_FORMAT_EDIT', 'Layered shape formatting is not yet supported.');
+	assertUnlayeredShape(shape, document);
 	assertShapeLocks(
 		shape,
 		document,
@@ -111,26 +111,35 @@ export async function applyFormattingEdit(
 	if (edit.type === 'format-text') {
 		plainUniformText(shape);
 		if (edit.fontSize !== undefined) add('Character.0.Size', edit.fontSize / 72, 'TextStyle', 'PT');
+		if (edit.fontColor !== undefined) {
+			// https://learn.microsoft.com/en-us/office/client-developer/visio/color-cell-character-section
+			add('Character.0.Color', edit.fontColor, 'TextStyle', undefined, rgb(edit.fontColor));
+			add('Character.0.ColorTrans', 0, 'TextStyle');
+		}
+		if (edit.strikethrough !== undefined)
+			add('Character.0.Strikethru', edit.strikethrough ? 1 : 0, 'TextStyle');
+		if (edit.indentLeft !== undefined)
+			add('Paragraph.0.IndLeft', edit.indentLeft / 72, 'TextStyle', 'PT');
+		if (edit.bullets !== undefined) {
+			const cell = effectiveShapeCell(shape, document, 'Paragraph.0.Bullet', 'TextStyle');
+			const current = cell
+				? visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'))
+				: { value: 0, unit: 'scalar' };
+			if (
+				current.unit !== 'scalar' ||
+				!Number.isInteger(current.value) ||
+				current.value < 0 ||
+				current.value > 7
+			)
+				fail(
+					'UNSUPPORTED_FORMAT_EDIT',
+					'Paragraph bullets require a supported scalar bullet style.',
+				);
+			add('Paragraph.0.Bullet', edit.bullets ? current.value || 1 : 0, 'TextStyle');
+		}
 		if (edit.fontFamily !== undefined) {
-			const names = children(document, 'FaceNames');
-			if (names.length !== 1)
-				fail('UNSUPPORTED_FORMAT_EDIT', 'Font family requires existing document FaceNames.');
-			const fonts = children(names[0], 'FaceName');
-			const ids = new Set<string>();
-			for (const font of fonts) {
-				const id = attribute(font, 'ID');
-				if (!id || !/^\d+$/.test(id) || ids.has(id))
-					fail('UNSUPPORTED_FORMAT_EDIT', 'Document font IDs must be explicit and unique.');
-				ids.add(id);
-			}
-			const matches = fonts.filter(
-				(font) =>
-					(attribute(font, 'Name') ?? attribute(font, 'NameU'))?.toLowerCase() ===
-					edit.fontFamily!.toLowerCase(),
-			);
-			if (matches.length !== 1)
-				fail('UNSUPPORTED_FORMAT_EDIT', 'Font family must match one existing document FaceName.');
-			add('Character.0.Font', attribute(matches[0], 'ID')!, 'TextStyle');
+			const font = formattingFont(document, edit.fontFamily);
+			add('Character.0.Font', font.value, 'TextStyle', undefined, font.formula);
 		}
 		if ([edit.bold, edit.italic, edit.underline].some((value) => value !== undefined)) {
 			const cell = effectiveShapeCell(shape, document, 'Character.0.Style', 'TextStyle');
@@ -156,7 +165,7 @@ export async function applyFormattingEdit(
 		if (edit.horizontalAlign !== undefined)
 			add(
 				'Paragraph.0.HorzAlign',
-				['left', 'center', 'right'].indexOf(edit.horizontalAlign),
+				['left', 'center', 'right', 'justify'].indexOf(edit.horizontalAlign),
 				'TextStyle',
 			);
 		if (edit.verticalAlign !== undefined)
@@ -186,7 +195,10 @@ export async function applyFormattingEdit(
 			effective?.hasAttribute('U') &&
 			visioFormulaCachedValue('0', attribute(effective, 'U')).unit !== 'length'
 		)
-			fail('EDIT_FORMULA_UNIT', 'Font size and line weight require length units.');
+			fail(
+				'EDIT_FORMULA_UNIT',
+				'Font size, paragraph indent and line weight require length units.',
+			);
 		const [section, , name] = write.name.split('.');
 		const parent = name ? formattingRow(shape, section!) : shape;
 		const local = parent ? formattingCell(parent, name ?? write.name) : undefined;

@@ -9,6 +9,7 @@ export interface RibbonTargets {
 	rotateSelection(direction: 'left' | 'right'): void;
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
 	formatSelection(action: VisioFormattingAction): void;
+	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
 	setTool(tool: CanvasTool): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
@@ -25,7 +26,14 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 	const { controller } = targets;
 	const page = controller.state.document?.pages[controller.state.pageIndex];
 	switch (action.type) {
+		case 'arrange':
+			return targets.arrangeSelection(action);
+		case 'selection':
+			return action.mode === 'all' ? controller.selectAll() : controller.clearSelection();
 		case 'text-toggle':
+		case 'font-color':
+		case 'text-bullets':
+		case 'text-indent':
 		case 'font-family':
 		case 'font-size':
 		case 'font-step':

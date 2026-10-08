@@ -14,6 +14,21 @@ const order = (value: 'front' | 'back' | 'forward' | 'backward', shapeId = '2'):
 	shapeId,
 	order: value,
 });
+
+it('admits an inherited empty native LayerMember without treating it as a layer assignment', async () => {
+	const bytes = await source(
+		'',
+		'<StyleSheets><StyleSheet ID="0"><Cell N="LayerMember" V=""/></StyleSheet></StyleSheets>',
+		'FillStyle="0"',
+	);
+	const result = await editVsdx(bytes, [order('front')]);
+	expect((await parseVsdx(result.bytes)).pages[0]!.shapes.map((shape) => shape.id)).toEqual([
+		'1',
+		'3',
+		'4',
+		'2',
+	]);
+});
 const box = (id: string, extra = '', attrs = '') =>
 	shape(
 		id,

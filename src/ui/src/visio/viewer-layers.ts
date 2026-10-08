@@ -1,3 +1,5 @@
+import { hasVisibleShapeContent } from 'ooxml-core/visio/ui';
+export { hasVisibleShapeContent } from 'ooxml-core/visio/ui';
 import {
 	getVisioPageLayers,
 	resolveVisioPageVisibility,
@@ -85,26 +87,4 @@ export function visibleSelection(
 		stack.push(...shape.children);
 	}
 	return false;
-}
-
-/** Rendering eligibility shared by selection and SVG containers; no format interpretation. */
-export function hasVisibleShapeContent(
-	shape: VisioShape,
-	visible: WeakMap<VisioShape, boolean> | undefined,
-	cache = new WeakMap<VisioShape, boolean>(),
-): boolean {
-	const cached = cache.get(shape);
-	if (cached !== undefined) return cached;
-	const own =
-		!(shape.kind === 'group' && shape.groupDisplayMode === 0) &&
-		(shape.geometry.length > 0 ||
-			!!shape.image ||
-			!!shape.foreignVector ||
-			!!shape.text.plainText ||
-			shape.kind === 'foreign');
-	const renderable =
-		(visible?.get(shape) ?? !shape.hidden) &&
-		(own || shape.children.some((child) => hasVisibleShapeContent(child, visible, cache)));
-	cache.set(shape, renderable);
-	return renderable;
 }

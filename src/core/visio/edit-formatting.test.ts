@@ -204,7 +204,7 @@ describe('formatting admission', () => {
 		{ ...formatText, fontFamily: '' },
 		{ ...formatText, fontFamily: 'Bad\nfont' },
 		{ ...formatText, bold: 1 },
-		{ ...formatText, horizontalAlign: 'justify' },
+		{ ...formatText, horizontalAlign: 'distributed' },
 		{ ...formatText, verticalAlign: 'left' },
 		{ ...formatShape, fillColor: '#fff' },
 		{ ...formatShape, lineColor: 'none' },

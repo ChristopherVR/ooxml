@@ -10,6 +10,7 @@ it('Vue watches native props, forwards all native events and clears callbacks on
 	const first = vi.fn();
 	const latest = vi.fn();
 	const output = vi.fn();
+	const selectionOutput = vi.fn();
 	const props = reactive<ViewerProps>({
 		document: null,
 		pageIndex: 0,
@@ -26,6 +27,7 @@ it('Vue watches native props, forwards all native events and clears callbacks on
 					if (value) exposed = value as ViewerHandle;
 				},
 				'onZoom-change': output,
+				'onSelection-change': selectionOutput,
 			}),
 	});
 	app.mount(host);
@@ -42,6 +44,9 @@ it('Vue watches native props, forwards all native events and clears callbacks on
 	expect(first).not.toHaveBeenCalled();
 	expect(latest).toHaveBeenCalledWith(3);
 	expect(output).toHaveBeenCalledWith(3);
+	const selected = Object.freeze([{ id: '1', name: 'Shape', pageId: '1' }]);
+	emit('selection-change', selected);
+	expect(selectionOutput).toHaveBeenCalledWith(selected);
 	delete props.events;
 	await nextTick();
 	emit('zoom-change', 4);

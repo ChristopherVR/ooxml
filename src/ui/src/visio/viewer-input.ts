@@ -24,10 +24,15 @@ export function wireViewerInputs(
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController,
 		events = new Abort();
 	const options = { signal: events.signal };
+	const activate = (target: SVGGElement | null | undefined, additive: boolean) => {
+		const shape = selection(target);
+		if (shape && additive) controller.toggleShapeSelection(shape);
+		else controller.selectShape(shape);
+	};
 	zoomSlider.addEventListener('input', () => controller.setZoom(zoomSlider.value / 100), options);
 	viewport.addEventListener(
 		'click',
-		(event) => controller.selectShape(selection(targetShape(event))),
+		(event) => activate(targetShape(event), event.shiftKey || event.ctrlKey || event.metaKey),
 		options,
 	);
 	viewport.addEventListener(
@@ -57,7 +62,7 @@ export function wireViewerInputs(
 			}
 			if (target && (event.key === 'Enter' || event.key === ' ')) {
 				event.preventDefault();
-				controller.selectShape(selection(target));
+				activate(target, event.shiftKey || event.ctrlKey || event.metaKey);
 				return;
 			}
 			if (event.key === 'Escape') controller.selectShape(null);

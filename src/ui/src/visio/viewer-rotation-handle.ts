@@ -1,5 +1,10 @@
 import { createRotationDrag, resolveRotateHandlePlacement } from 'ooxml-core/geometry';
-import { editErrorMessage, isEditCancellation, visioLocalRotationShape } from 'ooxml-core/visio/ui';
+import {
+	editErrorMessage,
+	isEditCancellation,
+	visioLocalRotationShape,
+	visioSelectionIsOnPage,
+} from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
 import {
@@ -41,6 +46,8 @@ export class ViewerRotationHandle {
 		if (
 			!page ||
 			!selection ||
+			!visioSelectionIsOnPage(selection, page.id) ||
+			state.selectedShapes.length !== 1 ||
 			!state.edit.sourceAvailable ||
 			state.loading ||
 			state.edit.busy ||
@@ -50,7 +57,10 @@ export class ViewerRotationHandle {
 		const shape = visioLocalRotationShape(page, selection.id);
 		if (!shape?.rotation) return;
 		const group = Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
-			(group) => group.dataset.shapeId === shape.id && group.dataset.selected === 'true',
+			(group) =>
+				group.dataset.shapeId === shape.id &&
+				(group.dataset.pageId ?? page.id) === page.id &&
+				group.dataset.selected === 'true',
 		);
 		const svg = group?.ownerSVGElement,
 			matrix = svg?.getScreenCTM?.();
@@ -133,6 +143,8 @@ export class ViewerRotationHandle {
 			!state.document ||
 			!shape?.rotation ||
 			state.selectedShape?.id !== shape.id ||
+			!visioSelectionIsOnPage(state.selectedShape, page.id) ||
+			state.selectedShapes.length !== 1 ||
 			this.#drag ||
 			event.button !== 0 ||
 			state.edit.busy ||
@@ -142,7 +154,8 @@ export class ViewerRotationHandle {
 		)
 			return;
 		const source = Array.from(svg.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
-			(group) => group.dataset.shapeId === shape.id,
+			(group) =>
+				group.dataset.shapeId === shape.id && (group.dataset.pageId ?? page.id) === page.id,
 		);
 		if (!source) return;
 		const start = pagePoint(svg, page, event, pointOptions);
@@ -190,6 +203,10 @@ export class ViewerRotationHandle {
 	#move(event: PointerEvent): void {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
+		if (!handleGestureIsCurrent(drag, this.controller.state, this.options.active())) {
+			this.#cancel();
+			return;
+		}
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		if (point) {
 			const angle = (-drag.rotate(point) * Math.PI) / 180;
@@ -216,6 +233,10 @@ export class ViewerRotationHandle {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
+		if (!handleGestureIsCurrent(drag, this.controller.state, this.options.active())) {
+			this.#cancel();
+			return;
+		}
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);

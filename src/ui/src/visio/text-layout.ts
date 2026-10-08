@@ -187,7 +187,8 @@ export function wrapText(
 			last.color === run.color &&
 			last.bold === run.bold &&
 			last.italic === run.italic &&
-			last.underline === run.underline
+			last.underline === run.underline &&
+			!!last.strikethrough === !!run.strikethrough
 		)
 			last.text += text;
 		else {

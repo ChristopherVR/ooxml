@@ -35,7 +35,7 @@ vi.mock('ooxml-ui/visio', async (importOriginal) => ({
 			options: initial,
 			destroyed: false,
 			listeners: new Set(),
-			state: { pageIndex: 0, zoom: 1 },
+			state: { pageIndex: 0, zoom: 1, selectedShape: null, selectedShapes: Object.freeze([]) },
 			update,
 			destroy,
 			binding: {
@@ -59,6 +59,9 @@ vi.mock('ooxml-ui/visio', async (importOriginal) => ({
 				applyEdits: vi.fn(async () => {
 					assertAlive();
 				}),
+				selectShapes: vi.fn(assertAlive),
+				selectAll: vi.fn(assertAlive),
+				clearSelection: vi.fn(assertAlive),
 				replacePlainText: vi.fn(async () => {
 					assertAlive();
 				}),

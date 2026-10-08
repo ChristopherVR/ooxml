@@ -79,6 +79,7 @@ export class ViewerGeometryControls {
 		const pageId = state.selectedShape?.pageId ?? state.document?.pages[state.pageIndex]?.id;
 		if (pageId === undefined) return;
 		const type = button.dataset.geometryAction as VisioGeometryEdit['type'];
+		if (type !== 'create-rectangle' && state.selectedShapes.length !== 1) return;
 		const shapeId = type === 'create-rectangle' ? this.#fields.id.value : state.selectedShape?.id;
 		if (!shapeId) return;
 		const x = this.#fields.x.valueAsNumber,
@@ -135,6 +136,7 @@ export class ViewerGeometryControls {
 			state.pageIndex,
 			pageId,
 			state.selectedShape?.id,
+			state.selectedShapes.length,
 		]);
 		if (identity !== this.#identity) {
 			this.#identity = identity;
@@ -165,6 +167,7 @@ export class ViewerGeometryControls {
 				(action === 'create-rectangle'
 					? !this.#fields.id.value || !position || !size
 					: !state.selectedShape ||
+						state.selectedShapes.length !== 1 ||
 						(action === 'move-shape' && !position) ||
 						(action === 'resize-shape' && !size && !lineSize) ||
 						(action === 'rotate-shape' &&

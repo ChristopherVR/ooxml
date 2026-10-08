@@ -12,6 +12,7 @@ import { runNpm } from './npm-command.mjs';
 import { createVsdxFixture } from '../../../e2e/visio/fixture.mjs';
 
 const root = resolve(import.meta.dirname, '..');
+const workspaceRuntime = process.argv.includes('--workspace-runtime');
 const consumer = mkdtempSync(resolve(tmpdir(), 'visio-published-consumer-'));
 const dependencies = {};
 for (const [, meta] of Object.entries(VIEWER_PACKAGES)) {
@@ -39,6 +40,26 @@ for (const [, meta] of Object.entries(VIEWER_PACKAGES)) {
 		);
 	dependencies[manifest.name] = `file:${resolve(consumer, pack.filename)}`;
 	Object.assign(dependencies, manifest.peerDependencies);
+}
+if (workspaceRuntime) {
+	// Application renderers are host dependencies, not shipped adapter dependencies.
+	dependencies['react-dom'] = dependencies.react;
+	dependencies['@angular/platform-browser'] = dependencies['@angular/core'];
+	for (const area of ['core', 'ui']) {
+		const directory = resolve(root, '../../src', area);
+		const manifest = JSON.parse(readFileSync(resolve(directory, 'package.json')));
+		const [pack] = JSON.parse(
+			runNpm(['pack', '--json', '--ignore-scripts', '--pack-destination', consumer], {
+				cwd: directory,
+				encoding: 'utf8',
+			}),
+		);
+		assert.ok(
+			pack.files.some((file) => file.path.startsWith('dist/visio/')),
+			`${manifest.name}: built Visio runtime`,
+		);
+		dependencies[manifest.name] = `file:${resolve(consumer, pack.filename)}`;
+	}
 }
 // Every sibling must resolve to its tarball even when dependent manifests use registry ranges.
 writeFileSync(
@@ -72,6 +93,22 @@ for (const name of ${JSON.stringify(names)}) {
   const controller = new api.ViewerController();
   controller.setZoom(1.25);
   assert.equal(controller.state.zoom, 1.25);
+  ${
+		workspaceRuntime
+			? `controller.setDocument(document);
+  const events = [];
+  controller.onEvent((name, value) => { if (name === 'selection-change') events.push(value); });
+  const shape = document.pages[0].shapes[0];
+  controller.selectShapes([{ id: shape.id, name: shape.name, pageId: document.pages[0].id }]);
+  assert.equal(controller.state.selectedShapes.length, 1, name);
+  assert.equal(controller.state.selectedShape, controller.state.selectedShapes[0]);
+  assert.ok(Object.isFrozen(events.at(-1)) && Object.isFrozen(events.at(-1)[0]));
+  controller.clearSelection();
+  assert.equal(events.at(-1).length, 0);
+  controller.selectAll();
+  assert.equal(events.at(-1).length, 1);`
+			: ''
+	}
   await controller.load(legacy);
   assert.equal(controller.state.document.format, 'vsd');
   assert.equal(controller.state.edit.sourceAvailable, false);
@@ -96,7 +133,23 @@ writeFileSync(
 	names
 		.map(
 			(name, index) =>
-				`import * as p${index} from '${name}';\nvoid p${index}.parseVsdx; void p${index}.loadVisio;${index ? `void new p${index}.ViewerController();` : ''}`,
+				`import * as p${index} from '${name}';\nvoid p${index}.parseVsdx; void p${index}.loadVisio;${
+					index
+						? `void new p${index}.ViewerController();${
+								workspaceRuntime
+									? `
+declare const h${index}: p${index}.${name === 'visio-svelte-viewer' ? 'MountedViewer' : 'ViewerHandle'};
+declare const s${index}: p${index}.ViewerState;
+const selections${index}: readonly p${index}.VisioShapeSelection[] = s${index}.selectedShapes;
+h${index}.selectShapes(selections${index}); h${index}.selectAll(); h${index}.clearSelection();
+const events${index}: p${index}.ViewerCallbacks = { 'selection-change': selection => { const items: readonly p${index}.VisioShapeSelection[] = selection; void items; } };
+// @ts-expect-error The selection array is immutable.
+s${index}.selectedShapes.push({ id: '1', name: '1' });
+void events${index};`
+									: ''
+							}`
+						: ''
+				}`,
 		)
 		.join('\n'),
 );
@@ -106,12 +159,15 @@ execFileSync(
 		resolve(root, 'node_modules/typescript/bin/tsc'),
 		'--noEmit',
 		'--module',
-		'nodenext',
+		'esnext',
+		'--moduleResolution',
+		'bundler',
 		'--target',
 		'es2022',
 		'--lib',
 		'es2022,dom',
 		'--skipLibCheck',
+		'--strict',
 		'types.ts',
 	],
 	{ cwd: consumer, stdio: 'inherit' },
@@ -135,17 +191,31 @@ document.getElementById('file').addEventListener('change', async event => {
  try { await window.viewer.load(event.target.files[0]); } catch (error) { window.loadError = String(error); }
 });`,
 );
+if (workspaceRuntime)
+	writeFileSync(
+		resolve(consumer, 'workspace-bindings.js'),
+		readFileSync(resolve(root, 'scripts/workspace-consumer-bindings.mjs')),
+	);
+if (workspaceRuntime)
+	writeFileSync(
+		resolve(consumer, 'main.js'),
+		readFileSync(resolve(consumer, 'main.js'), 'utf8') +
+			'\nimport { verifyWorkspaceBindings } from "./workspace-bindings.js"; window.verifyWorkspaceBindings = verifyWorkspaceBindings;',
+	);
 const bindingsRequire = createRequire(resolve(root, 'packages/bindings/package.json'));
 const { svelte } = await import(
 	pathToFileURL(bindingsRequire.resolve('@sveltejs/vite-plugin-svelte')).href
 );
 await build({ configFile: false, root: consumer, plugins: [svelte()], build: { outDir: 'dist' } });
-writeFileSync(resolve(root, '.package-build/consumer.txt'), consumer);
+writeFileSync(
+	resolve(root, `.package-build/consumer${workspaceRuntime ? '.workspace' : ''}.txt`),
+	consumer,
+);
 execFileSync(
 	process.execPath,
 	[resolve(root, 'scripts/test-worker-bundle.mjs'), resolve(consumer, 'dist/assets')],
 	{ cwd: root, stdio: 'inherit' },
 );
 console.log(
-	'Seven tarballs pass registry-only install, ESM imports, VSD/VSDX parsing, legacy edit/export refusal, declarations and consumer worker checks.',
+	`${workspaceRuntime ? 'Nine workspace' : 'Seven registry-compatible viewer'} tarballs pass install, ESM imports, VSD/VSDX parsing, legacy edit/export refusal, declarations and consumer worker checks.`,
 );

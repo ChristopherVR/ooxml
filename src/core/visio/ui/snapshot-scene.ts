@@ -183,6 +183,10 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 	const text = (source: VisioText): VisioText => ({
 		...fields(source, [
 			'plainText',
+			'bold',
+			'italic',
+			'underline',
+			'strikethrough',
 			'backgroundColor',
 			'backgroundOpacity',
 			'opacity',
@@ -201,6 +205,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			bold: !!run.bold,
 			italic: !!run.italic,
 			underline: !!run.underline,
+			...(run.strikethrough === undefined ? {} : { strikethrough: !!run.strikethrough }),
 		})),
 		...(source.paragraphs === undefined
 			? {}

@@ -1,4 +1,5 @@
 import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-parts';
+import { fontColorOptions } from './ribbon-style-options';
 
 const TEXT = 'Needs core text formatting edits.';
 const CLIPBOARD = 'Needs core shape copy and paste.';
@@ -117,7 +118,8 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'strikethrough',
 								label: 'Strikethrough',
 								icon: 'strikethrough',
-								unsupported: TEXT,
+								pressed: false,
+								action: { type: 'text-toggle', property: 'strikethrough' },
 							}),
 						),
 						menu(doc, {
@@ -134,8 +136,8 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 							icon: 'fontColor',
 							size: 'icon',
 							split: true,
-							unsupported: TEXT,
-							items: [{ id: 'more-colors', label: 'More Colors...', unsupported: TEXT }],
+							action: { type: 'font-color' },
+							items: fontColorOptions(),
 						}),
 					],
 					true,
@@ -184,7 +186,13 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 						),
 						command(
 							doc,
-							icon({ id: 'bullets', label: 'Bullets', icon: 'bullets', unsupported: TEXT }),
+							icon({
+								id: 'bullets',
+								label: 'Bullets',
+								icon: 'bullets',
+								pressed: false,
+								action: { type: 'text-bullets' },
+							}),
 						),
 					],
 					true,
@@ -224,7 +232,13 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 						),
 						command(
 							doc,
-							icon({ id: 'justify', label: 'Justify', icon: 'justify', unsupported: TEXT }),
+							icon({
+								id: 'justify',
+								label: 'Justify',
+								icon: 'justify',
+								pressed: false,
+								action: { type: 'text-align', axis: 'horizontal', value: 'justify' },
+							}),
 						),
 						command(
 							doc,
@@ -232,7 +246,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'indent-decrease',
 								label: 'Decrease Indent',
 								icon: 'indentDecrease',
-								unsupported: TEXT,
+								action: { type: 'text-indent', direction: 'decrease' },
 							}),
 						),
 						command(
@@ -241,7 +255,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'indent-increase',
 								label: 'Increase Indent',
 								icon: 'indentIncrease',
-								unsupported: TEXT,
+								action: { type: 'text-indent', direction: 'increase' },
 							}),
 						),
 					],

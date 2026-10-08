@@ -200,3 +200,23 @@ it('keeps unsupported connector rotation disabled', async () => {
 	expect(button('rotate-shape').disabled).toBe(true);
 	dispose();
 });
+
+it('refuses all single-target geometry operations during multi-selection', async () => {
+	const { controller, input, button, dispose } = await setup();
+	const apply = vi.spyOn(controller, 'applyEdits').mockResolvedValue();
+	input('x', '1');
+	input('y', '2');
+	input('width', '3');
+	input('height', '4');
+	controller.selectShapes([
+		{ id: 's1', name: 'Start', pageId: '1' },
+		{ id: 's2', name: 'Process', pageId: '1' },
+	]);
+	for (const action of ['move-shape', 'resize-shape', 'delete-shape']) {
+		expect(button(action).disabled).toBe(true);
+		button(action).disabled = false;
+		button(action).click();
+	}
+	expect(apply).not.toHaveBeenCalled();
+	dispose();
+});

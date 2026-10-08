@@ -26,6 +26,7 @@ export {
 	type ViewerCallbacks,
 	type ViewerOptions,
 	type VsdxSource,
+	type VisioShapeSelection,
 } from 'ooxml-core/visio/ui';
 export type { VisioDocument, VisioPage, VisioShape, VisioDiagnostic } from 'ooxml-core/visio';
 

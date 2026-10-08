@@ -1,5 +1,5 @@
 import type { VisioShapeOrderEdit } from './edit-commands';
-import { assertShapeLocks, effectiveShapeCell } from './edit-style-admission';
+import { assertShapeLocks, assertUnlayeredShape, effectiveShapeCell } from './edit-style-admission';
 import { executableCellFormula } from './cell-formula';
 import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
 import { fail } from './package-common';
@@ -97,9 +97,7 @@ export function reorderVisioShape(
 	if (index < 0) fail('EDIT_TARGET_NOT_FOUND', 'A top-level local shape is required.');
 	const target = siblings[index]!;
 	assertShapeLocks(target, document, ['LockSelect', 'LockFormat']);
-	for (const category of ['LineStyle', 'FillStyle', 'TextStyle'] as const)
-		if (effectiveShapeCell(target, document, 'LayerMember', category))
-			fail('UNSUPPORTED_SHAPE_ORDER', 'Layered shape ordering is not yet supported.');
+	assertUnlayeredShape(target, document);
 	const destination =
 		edit.order === 'front'
 			? siblings.length - 1

@@ -2264,3 +2264,11 @@ anchor and legacy `Color`. Theme slots and the Office default colours moved to
 `render/theme-palette.ts`, and the hex helpers to `src/core/color/hex-rgb.ts` (`tint.ts`
 re-exports them as `parseHex`/`toHexColor`). The Excel chart tests are unchanged apart from
 import paths and still pass byte for byte.
+
+## Visio selection rendering eligibility
+
+Source: ChristopherVR/ooxml at `fadc60d589474d0699404b1e1fb251257fb13219`,
+`src/ui/src/visio/viewer-layers.ts`. The DOM-free `hasVisibleShapeContent` helper
+moved into `src/core/visio/ui/selection.ts`, alongside new immutable selection
+normalization helpers. Its rendering eligibility behavior is unchanged; the UI
+re-exports it so SVG rendering and selection use the same implementation.

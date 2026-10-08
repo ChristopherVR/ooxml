@@ -11,25 +11,49 @@ import type { CancellableEditor } from './worker-editor';
 
 afterEach(() => document.body.replaceChildren());
 
-async function setup(source = true, noOp = false) {
+it('refuses rotation and flip of a background selection sharing a foreground ID', async () => {
+	const model = structuredClone(demoDocument);
+	const front = model.pages[0]!,
+		background = model.pages[1]!;
+	front.backgroundPageId = background.id;
+	background.isBackground = true;
+	background.shapes = [structuredClone(front.shapes[0]!)];
+	const ui = await setup(true, false, model);
+	ui.controller.selectShape({
+		id: background.shapes[0]!.id,
+		name: 'Background',
+		pageId: background.id,
+	});
+	for (const name of ['rotate-left', 'rotate-right', 'flip-horizontal', 'flip-vertical'])
+		expect(ui.command(name).disabled).toBe(true);
+	ui.commands.run({ type: 'rotate', direction: 'left' });
+	ui.commands.run({ type: 'flip', axis: 'horizontal' });
+	await ui.settle();
+	expect(ui.edits).toHaveLength(0);
+	expect(ui.controller.state.document!.pages[0]!.shapes[0]).toEqual(front.shapes[0]);
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+async function setup(source = true, noOp = false, model = demoDocument) {
 	registerViewerControls();
 	const edits: VisioEdit[][] = [];
 	const editor: CancellableEditor = async (_bytes, commands) => {
 		edits.push([...commands]);
 		return {
 			bytes: new Uint8Array([edits.length + 1]),
-			document: structuredClone(demoDocument),
+			document: structuredClone(model),
 			changedParts: noOp ? [] : ['visio/pages/page1.xml'],
 			diagnostics: [],
 		};
 	};
 	const controller = new ViewerController(
-		async () => structuredClone(demoDocument),
+		async () => structuredClone(model),
 		() => {},
 		editor,
 	);
 	if (source) await controller.load(new Uint8Array([1]));
-	else controller.setDocument(structuredClone(demoDocument));
+	else controller.setDocument(structuredClone(model));
 	const host = document.createElement('div');
 	document.body.append(host);
 	const root = host.attachShadow({ mode: 'open' });

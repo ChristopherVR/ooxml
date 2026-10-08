@@ -6,6 +6,12 @@ export interface ViewerProperties {
 	zoom: number;
 	showToolbar: boolean;
 }
+/** A page-scoped shape identity. Omitted pageId means the currently displayed page. */
+export interface VisioShapeSelection {
+	readonly id: string;
+	readonly name: string;
+	readonly pageId?: string;
+}
 export interface ViewerEvents {
 	'document-load': VisioDocument;
 	'document-change': {
@@ -16,7 +22,9 @@ export interface ViewerEvents {
 	'document-error': Error;
 	'page-change': number;
 	'zoom-change': number;
-	'shape-select': { id: string; name: string; pageId?: string } | null;
+	'shape-select': VisioShapeSelection | null;
+	/** Ordered immutable selection; the first entry is the primary selectedShape. */
+	'selection-change': readonly VisioShapeSelection[];
 }
 export type ViewerCallbacks = {
 	[K in keyof ViewerEvents]?: (detail: ViewerEvents[K]) => void;
@@ -34,6 +42,7 @@ export const eventKeys = [
 	'page-change',
 	'zoom-change',
 	'shape-select',
+	'selection-change',
 ] as const satisfies readonly (keyof ViewerEvents)[];
 // Adding a contract member must also update the inventories used by every adapter.
 const allProperties: Record<

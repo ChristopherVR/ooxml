@@ -28,6 +28,24 @@ browser-only. `ViewerController` is DOM-free, so another renderer can subscribe
 to the same state/events. `renderPage` is the SVG renderer port. See
 [architecture](architecture.md) for the module ownership.
 
+## Select shapes
+
+Every mounted/native handle exposes `selectShapes(targets)`, `selectAll()` and
+`clearSelection()`. A target has `{ id, name, pageId? }`; omitted `pageId` means
+the current page. `controller.state.selectedShapes` is an ordered, immutable
+array, and its first item is the primary `selectedShape`. The existing
+`shape-select` event reports that primary item; `selection-change` reports the
+complete array. These states are available through each framework's native hook,
+composable, signal or store. Vue emits `selection-change`; Angular exposes
+`selectionChange`; all six adapters accept `events['selection-change']`.
+
+Shift, Ctrl or Meta clicking toggles a shape. Background clicks and Escape clear
+selection. Hidden/deleted targets are removed, selecting a group excludes its
+descendants, and changing pages/documents clears selection. Select All includes
+visible foreground shapes. Single-target text and geometry panels require
+exactly one selected shape. Home formatting and deletion operate atomically on
+multiple selected shapes; source protection of any target rejects the batch.
+
 ## Find diagram text
 
 The shared search controls find literal text across visible shapes and pages.
@@ -125,8 +143,29 @@ edits do not recalculate text-dependent formula caches.
 copy. It does not overwrite the source file, upload it or claim native round-trip
 fidelity. The shared UI downloads only after the user's explicit action. History
 is bounded and may discard older undo states, reported by `historyTruncated`.
-General drawing, style editing, rich-text editing and native Visio reopen
-verification remain unsupported.
+Plain-text replacement remains limited to the admitted subset above. The
+formatting and geometry operations below have separate admission rules. Native
+reopen evidence covers specific recorded cases, described in the
+[verification record](verification.md); it does not establish general fidelity.
+
+## Experimental formatting and arrangement
+
+The Home ribbon and `applyEdits()` share `format-text`, `format-shape` and
+`reorder-shape` commands. Text formatting includes saved font families, point
+size, bold/italic/underline/strikethrough, color, bullets, indentation and
+horizontal/vertical alignment. Shape formatting includes solid fill and line
+color/weight. Formatting currently requires ordinary local leaf shapes and
+uniform character/paragraph rows; mixed-row rich text remains outside scope.
+Fonts must already exist in the source drawing. Stacking commands support
+front/back/forward/backward on one ordinary top-level shape in display band zero.
+
+Six Align commands align to the first selected shape. Position provides equal
+horizontal and vertical edge spacing for three or more shapes. The core
+`visioArrangeCommands(page, selectedIds, action)` helper produces atomic edits
+for hosts with custom controls. It measures rotated width/height boxes, orders
+distribution by centers and preserves selection order for ties. Groups, masters,
+layers and glued connectors remain outside its admission scope. These actions
+share history, selection retention and VSDX download/reopen with other edits.
 
 ## Experimental geometry editing
 
@@ -162,7 +201,7 @@ connectors/glue, unsafe protection/redirection, unsupported affected formulas,
 ambiguous package dependencies and referenced deletion fail with a visible
 error. Relative line geometry scales; absolute line geometry needs a supported
 dimension dependency. See the core
-[`src/core/visio/README.md`](https://github.com/ChristopherVR/ooxml/blob/main/src/visio/README.md)
+[`src/core/visio/README.md`](https://github.com/ChristopherVR/ooxml/blob/main/src/core/visio/README.md)
 for the command contract, numeric limits, exclusion reasons and next expansions.
 The [capability ledger](parity.md) records the current admitted set, which now
 also includes bounded primitive master-instance moves with explicit local pins.
@@ -172,5 +211,6 @@ accepted public corpus diagrams currently admit zero geometry edits because
 non-page dependency scope cannot yet be proved independent. Thirteen also lack an
 eligible local shape. Practical editing coverage for that corpus remains blocked;
 next work is a scoped package/master/theme dependency graph and master-instance
-editing, followed by glued endpoint routing. Native Visio reopen/fidelity is
-unverified.
+editing, followed by glued endpoint routing. Native reopen has since been
+verified for the specific formatting and arrangement captures in the
+[verification record](verification.md); general fidelity remains unverified.
