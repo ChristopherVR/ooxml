@@ -21,6 +21,12 @@ export {
 } from './metrics';
 export { visibleCells, type Viewport, type VisibleCells } from './viewport';
 export {
+	layoutRemoteSelections,
+	type RemoteRange,
+	type RemoteSelectionBox,
+	type RemoteSelectionLayoutOptions,
+} from './remote-selections';
+export {
 	DEFAULT_ANCHOR_EXTENT_EMU,
 	MIN_TWO_CELL_PIXELS,
 	anchorKind,
