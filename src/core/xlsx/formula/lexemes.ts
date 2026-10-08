@@ -10,7 +10,7 @@ export const NAME_RE = /^[A-Za-z_\\\u00A1-\uFFFF][A-Za-z0-9_.?\\\u00A1-\uFFFF]*/
 export const CELL_RE = /^(\$?)([A-Za-z]{1,3})(\$?)(\d{1,7})/;
 export const COLS_RE = /^(\$?)([A-Za-z]{1,3}):(\$?)([A-Za-z]{1,3})/;
 export const ROWS_RE = /^(\$?)(\d{1,7}):(\$?)(\d{1,7})/;
-export const NUMBER_RE = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/;
+export const NUMBER_RE = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/;
 
 /** Sticky forms of the anchored patterns, matched at a position without slicing the source. */
 const sticky = (re: RegExp): RegExp => new RegExp(re.source.replace(/^\^/, ''), 'y');
