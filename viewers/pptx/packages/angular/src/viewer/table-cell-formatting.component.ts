@@ -16,6 +16,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxTableCellStyle, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
+import { withCellStyle } from 'ooxml-ui/pptx';
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import { RecentColorsService } from './recent-colors.service';
 import { TableCellAdvancedFillComponent } from './table-cell-advanced-fill.component';
@@ -408,9 +409,7 @@ export class TableCellFormattingComponent {
 				? row
 				: {
 						...row,
-						cells: row.cells.map((c, ci) =>
-							ci !== s.columnIndex ? c : { ...c, style: { ...c.style, ...patch } },
-						),
+						cells: row.cells.map((c, ci) => (ci !== s.columnIndex ? c : withCellStyle(c, patch))),
 					},
 		);
 		this.commit({ ...td, rows });

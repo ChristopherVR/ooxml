@@ -12,7 +12,9 @@ import {
 	insertTableElementColumn,
 	removeTableElementColumn,
 	setCellText,
+	withCellStyle,
 } from 'ooxml-ui/pptx';
+import type { PptxTableCellStyle } from 'pptx-viewer-core';
 
 import type { TableCellEditorState } from '../types';
 import { updateCellTextInRawXml, updateCellTextStyleInRawXml } from '../utils/table-parse';
@@ -116,15 +118,11 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 				}
 				return {
 					...row,
-					cells: row.cells.map((cell, ci) => {
-						if (ci !== colIndex) {
-							return cell;
-						}
-						return {
-							...cell,
-							style: { ...cell.style, ...styleUpdates },
-						};
-					}),
+					cells: row.cells.map((cell, ci) =>
+						ci === colIndex
+							? withCellStyle(cell, styleUpdates as Partial<PptxTableCellStyle>)
+							: cell,
+					),
 				};
 			});
 			updates.tableData = { ...selectedElement.tableData, rows: newRows };

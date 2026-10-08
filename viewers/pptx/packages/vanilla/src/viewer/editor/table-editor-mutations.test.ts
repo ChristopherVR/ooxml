@@ -101,6 +101,26 @@ describe('table editor mutations', () => {
 		});
 	});
 
+	it('aligns every paragraph of each cell in a range', () => {
+		const data = table();
+		Object.assign(data.rows[0].cells[1], {
+			text: 'one\ntwo',
+			paragraphs: [{ align: 'right' }, { align: 'center' }],
+		});
+		const next = patchTableCells(
+			data,
+			[
+				{ row: 0, column: 1 },
+				{ row: 1, column: 1 },
+			],
+			{ align: 'center' },
+		);
+		expect(next.rows.map((row) => row.cells[1].paragraphs)).toStrictEqual([
+			[{ align: 'center' }, { align: 'center' }],
+			[{ align: 'center' }],
+		]);
+	});
+
 	it('resizes a row and normalizes column widths', () => {
 		const resized = setTableColumnWidth(table(), 0, 70);
 		expect(resized.columnWidths[0]).toBeCloseTo(0.7);

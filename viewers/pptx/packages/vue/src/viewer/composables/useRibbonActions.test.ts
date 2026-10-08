@@ -278,6 +278,43 @@ describe('ribbonUpdateTextStyle list commands', () => {
 	});
 });
 
+describe('ribbonUpdateTextStyle on a table cell', () => {
+	it('aligns every paragraph of the selected cell', () => {
+		const table: PptxElement = {
+			id: 'table',
+			type: 'table',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 40,
+			tableData: {
+				rows: [
+					{
+						cells: [
+							{
+								text: 'one\ntwo',
+								style: { align: 'right' },
+								paragraphs: [{ align: 'right' }, { align: 'center' }],
+							},
+						],
+					},
+				],
+				columnWidths: [1],
+			},
+		};
+		const { actions, element } = useHarness(table);
+		actions.ribbonUpdateTextStyle({ align: 'left' });
+		const result = element();
+		if (result.type !== 'table') {
+			throw new Error('expected table');
+		}
+		expect(result.tableData?.rows[0].cells[0]).toMatchObject({
+			style: { align: 'left' },
+			paragraphs: [{ align: 'left' }, { align: 'left' }],
+		});
+	});
+});
+
 describe('ribbonUpdateTextCase', () => {
 	it('ends the native list session before changing its body and leaves marker text intact', () => {
 		const source = textElement();

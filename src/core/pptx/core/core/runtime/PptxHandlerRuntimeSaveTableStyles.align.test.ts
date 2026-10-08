@@ -1,8 +1,10 @@
 import { XMLParser } from 'fast-xml-parser';
 import { describe, expect, it } from 'vitest';
 
+import { withCellStyle } from '../../../editor/render/table-cell-edit';
 import type { PptxTableCellParagraph, PptxTableCellStyle, XmlObject } from '../../types';
 import { PptxHandlerRuntime } from './PptxHandlerRuntimeImplementation';
+import { flattenCellTxBodyText, rebuildCellTextBody } from './table-cell-text-xml';
 
 class TableStyleRuntime extends PptxHandlerRuntime {
 	public writeStyle(
@@ -24,7 +26,8 @@ function parseCell(paragraphs: string): XmlObject {
 }
 
 function alignments(cell: XmlObject): unknown[] {
-	const paragraphs = (cell['a:txBody'] as XmlObject)['a:p'] as XmlObject[];
+	const value = (cell['a:txBody'] as XmlObject)['a:p'];
+	const paragraphs = (Array.isArray(value) ? value : [value]) as XmlObject[];
 	return paragraphs.map((paragraph) => (paragraph['a:pPr'] as XmlObject | undefined)?.['@_algn']);
 }
 
@@ -74,5 +77,30 @@ describe('table cell paragraph alignment on save', () => {
 		const original = structuredClone(cell['a:txBody']);
 		runtime.writeStyle(cell, {}, [{}, { align: 'middle' as PptxTableCellParagraph['align'] }]);
 		expect(cell['a:txBody']).toStrictEqual(original);
+	});
+
+	it('aligns the one paragraph of a cell whose lines are soft breaks', () => {
+		const cell = parseCell('<a:p><a:r><a:t>One</a:t></a:r><a:br/><a:r><a:t>Two</a:t></a:r></a:p>');
+		const text = flattenCellTxBodyText(
+			cell['a:txBody'] as XmlObject,
+			(value) => (Array.isArray(value) ? value : value === undefined ? [] : [value]) as XmlObject[],
+		);
+		const { style, paragraphs } = withCellStyle({ text }, { align: 'center' });
+		expect(paragraphs).toStrictEqual([{ align: 'center' }]);
+		runtime.writeStyle(cell, style!, paragraphs);
+		expect(alignments(cell)).toStrictEqual(['ctr']);
+	});
+
+	it('aligns a cell whose edited lines share one paragraph', () => {
+		const cell: XmlObject = {
+			'a:txBody': rebuildCellTextBody(
+				parseCell('<a:p><a:pPr algn="r"/><a:r><a:t>Old</a:t></a:r></a:p>')['a:txBody'] as XmlObject,
+				'one\ntwo\nthree',
+			),
+		};
+		const { style, paragraphs } = withCellStyle({ text: 'one\ntwo\nthree' }, { align: 'center' });
+		expect(paragraphs).toHaveLength(3);
+		runtime.writeStyle(cell, style!, paragraphs);
+		expect(alignments(cell)).toStrictEqual(['ctr']);
 	});
 });

@@ -11,6 +11,7 @@ import {
 	insertTableElementRow,
 	mergeCells,
 	redistributeColumnWidth,
+	withCellStyle,
 } from 'ooxml-ui/pptx';
 
 export interface TableCellPosition {
@@ -37,9 +38,7 @@ export function patchTableCells(
 		rows: data.rows.map((row, rowIndex) => ({
 			...row,
 			cells: row.cells.map((cell, columnIndex) =>
-				keys.has(`${rowIndex}:${columnIndex}`)
-					? { ...cell, style: { ...cell.style, ...patch } }
-					: cell,
+				keys.has(`${rowIndex}:${columnIndex}`) ? withCellStyle(cell, patch) : cell,
 			),
 		})),
 	};

@@ -346,7 +346,8 @@ export interface PptxTableCell {
 	 * is `{}` for a paragraph that sets none of it. Present only when some
 	 * paragraph sets something. Editing the cell's text keeps only the first
 	 * entry, as the rewritten `a:txBody` keeps only the first paragraph's
-	 * `a:pPr`.
+	 * `a:pPr`. Aligning the cell gives one entry per line of {@link text}
+	 * instead; save writes as many as the cell has `a:p`.
 	 */
 	paragraphs?: PptxTableCellParagraph[];
 	/** Column span (defaults to 1). */

@@ -187,6 +187,22 @@ describe('createTableStructHandlers', () => {
 
 	// ── handleResizeTableColumns ──────────────────────────────────────────
 
+	describe('handleUpdateCellTextStyle', () => {
+		it('aligns every paragraph of the cell', () => {
+			const input = createMockInput();
+			Object.assign((input.selectedElement as TablePptxElement).tableData!.rows[1].cells[1], {
+				text: 'one\ntwo',
+				paragraphs: [{ align: 'right' }, { align: 'center' }],
+			});
+			createTableStructHandlers(input).handleUpdateCellTextStyle({ align: 'left' });
+			const updates = vi.mocked(input.ops.updateElementById).mock.calls[0][1] as TablePptxElement;
+			expect(updates.tableData?.rows[1].cells[1]).toMatchObject({
+				style: { align: 'left' },
+				paragraphs: [{ align: 'left' }, { align: 'left' }],
+			});
+		});
+	});
+
 	describe('handleResizeTableColumns', () => {
 		it('should update column widths', () => {
 			const input = createMockInput();

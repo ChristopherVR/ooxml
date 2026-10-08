@@ -9,6 +9,7 @@
  * `ribbon-color-popover.component.test.ts` established for this package.
  */
 import { Injector, runInInjectionContext } from '@angular/core';
+import type { TablePptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
 import { componentSource } from './component-source.test-support';
@@ -66,5 +67,44 @@ describe('tableCellFormattingComponent colour theme wiring', () => {
 			},
 		);
 		expect(patch[1]).toStrictEqual({ backgroundColor: '#ffffff', backgroundColorRef: undefined });
+	});
+});
+
+describe('tableCellFormattingComponent alignment', () => {
+	it('aligns every paragraph of the selected cell', () => {
+		const component = createComponent();
+		const element: TablePptxElement = {
+			id: 'table',
+			type: 'table',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 40,
+			tableData: {
+				columnWidths: [1],
+				rows: [
+					{
+						cells: [
+							{
+								text: 'one\ntwo',
+								style: { align: 'right' },
+								paragraphs: [{ align: 'right' }, { align: 'center' }],
+							},
+						],
+					},
+				],
+			},
+		};
+		Object.assign(component, {
+			element: () => element,
+			sel: () => ({ elementId: 'table', rowIndex: 0, columnIndex: 0 }),
+		});
+		const emitted: TablePptxElement[] = [];
+		component.elementChange.subscribe((next) => emitted.push(next));
+		(component as unknown as FormattingHandlers).updateStyle({ align: 'left' });
+		expect(emitted[0]?.tableData?.rows[0].cells[0]).toMatchObject({
+			style: { align: 'left' },
+			paragraphs: [{ align: 'left' }, { align: 'left' }],
+		});
 	});
 });

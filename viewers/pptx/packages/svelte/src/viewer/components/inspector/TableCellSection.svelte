@@ -8,6 +8,7 @@
 		schemaLabel,
 		tableCellFillColorCommitPatch,
 		tableCellTextColorCommitPatch,
+		withCellStyle,
 	} from 'ooxml-ui/pptx';
 	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
@@ -55,7 +56,7 @@
 	const style = $derived(cell?.style ?? {});
 
 	function patchStyle(next: Partial<PptxTableCellStyle>): void {
-		onpatch({ rows: table.rows.map((row, ri) => ri === rowIndex ? { ...row, cells: row.cells.map((item, ci) => ci === columnIndex ? { ...item, style: { ...style, ...next } } : item) } : row) });
+		onpatch({ rows: table.rows.map((row, ri) => ri === rowIndex ? { ...row, cells: row.cells.map((item, ci) => ci === columnIndex ? withCellStyle(item, next) : item) } : row) });
 	}
 	function patchColor(next: Partial<PptxTableCellStyle>, color: string): void {
 		patchStyle(next);
