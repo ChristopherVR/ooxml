@@ -33,11 +33,21 @@ class Engine extends EngineCore implements CalcEngine {
 	}
 
 	recalculateFrom(changes: CellPosition[]): void {
-		if (!this.built || this.needsFull) {
+		const seeds = new Set<FormulaNode>();
+		if (!this.built && !this.needsFull) {
+			// The first recalculation after opening: like Excel, trust the values the file stored and
+			// compute only what the change reaches plus formulas saved without a value. A workbook
+			// whose formulas may spill is calculated in full, since spill ranges are only known once
+			// their anchors have been evaluated. The changed cells themselves are evaluated below.
+			this.build();
+			if (!this.trustsStoredValues(changes, seeds)) {
+				this.recalculateAll();
+				return;
+			}
+		} else if (!this.built || this.needsFull) {
 			this.recalculateAll();
 			return;
 		}
-		const seeds = new Set<FormulaNode>();
 		const changed: Area[] = [];
 		let structural = false;
 		for (const change of changes) {
@@ -81,6 +91,23 @@ class Engine extends EngineCore implements CalcEngine {
 		for (const area of changed) reverse.dependents(area.sheet, area.range, seeds);
 		for (const node of this.allNodes()) if (node.volatile) seeds.add(node);
 		this.run(seeds, false);
+	}
+
+	/**
+	 * Whether the stored results can stand for a fresh graph: apart from the changed cells, every
+	 * formula has legacy or CSE array semantics (none can spill). Collects the formulas stored
+	 * without a value into `missing`.
+	 */
+	protected trustsStoredValues(changes: CellPosition[], missing: Set<FormulaNode>): boolean {
+		const changed = new Set(changes.map((c) => `${c.sheet}:${cellKey(c.row, c.col)}`));
+		for (const node of this.allNodes()) {
+			const legacyOrArray = node.legacy || node.arrayRange;
+			if (!legacyOrArray && !changed.has(`${node.sheet}:${cellKey(node.row, node.col)}`))
+				return false;
+			const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
+			if (cell && cell.value === null && !node.keepCached) missing.add(node);
+		}
+		return true;
 	}
 
 	/**
