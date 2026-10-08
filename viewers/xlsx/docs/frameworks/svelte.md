@@ -15,6 +15,6 @@ Use the Svelte 5 adapter as a component and handle workbook changes with the cal
 <XlsxEditor bind:this={editor} {workbook} onworkbookchange={(next) => (workbook = next)} />
 ```
 
-The package root is the component (default export). The plain-JavaScript helpers (`mountEditor`, `loadWorkbook`, `createWorkbook` and the shared types) are under `xlsx-svelte-viewer/runtime`. Component exports: `load`, `newWorkbook`, `save`, `saveBytes`, `download`, `markClean`, `select`, `getSelection`, `setActiveSheet`, `isDirty` and `getElement`.
+The package root is the component (default export). The plain-JavaScript helpers (`mountEditor`, `loadWorkbook`, `createWorkbook` and the shared types) are under `xlsx-svelte-viewer/runtime`. Component exports: `load`, `newWorkbook`, `save`, `saveBytes`, `download`, `markClean`, `select`, `getSelection`, `setActiveSheet`, the live `element` and `dirty` properties (`isDirty()` and `getElement()` remain as deprecated aliases).
 
 See the [complete binding contract](/bindings) or [try the Svelte demo](/demo-svelte/).

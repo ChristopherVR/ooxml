@@ -129,7 +129,7 @@ async function writeSvelteComponent(distDir) {
 			"import type { Component } from 'svelte';",
 			"import type { EditorEventHandlers, EditorProps, XlsxEditorElement } from './runtime';",
 			"type Props = EditorProps & { onworkbookchange?: EditorEventHandlers['workbook-change']; onworkbookerror?: EditorEventHandlers['workbook-error']; onselectionchange?: EditorEventHandlers['selection-change']; ondirtychange?: EditorEventHandlers['dirty-change']; onready?: EditorEventHandlers['ready'] };",
-			"type Exports = { load(input: Uint8Array | ArrayBuffer, fileName?: string): Promise<void>; newWorkbook(): void; save(): Promise<Blob>; saveBytes(format?: 'xlsx' | 'csv'): Promise<Uint8Array>; download(fileName?: string): Promise<void>; markClean(): void; select(ref: string): void; getSelection(): string; setActiveSheet(index: number): void; isDirty(): boolean; getElement(): XlsxEditorElement | undefined };",
+			"type Exports = { load(input: Uint8Array | ArrayBuffer, fileName?: string): Promise<void>; newWorkbook(): void; save(): Promise<Blob>; saveBytes(format?: 'xlsx' | 'csv'): Promise<Uint8Array>; download(fileName?: string): Promise<void>; markClean(): void; select(ref: string): void; getSelection(): string; setActiveSheet(index: number): void; /** @deprecated Use dirty. */ isDirty(): boolean; /** @deprecated Use element. */ getElement(): XlsxEditorElement | undefined; readonly element: XlsxEditorElement | undefined; readonly dirty: boolean };",
 			'declare const XlsxEditor: Component<Props, Exports>;',
 			'export default XlsxEditor;',
 			'',

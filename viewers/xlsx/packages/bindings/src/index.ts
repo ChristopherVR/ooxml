@@ -271,3 +271,27 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 	options.onReady?.(element);
 	return binding;
 }
+
+/**
+ * The imperative handle every framework exposes (React ref, Vue template ref, Angular component
+ * instance, Solid `editorRef`, Svelte component instance). `handle-keys.test.ts` checks each one.
+ */
+export const EDITOR_HANDLE_KEYS = [
+	'element',
+	'load',
+	'newWorkbook',
+	'save',
+	'saveBytes',
+	'download',
+	'markClean',
+	'select',
+	'getSelection',
+	'setActiveSheet',
+	'dirty',
+] as const satisfies readonly (keyof EditorHandle)[];
+export type EditorHandleKey = (typeof EDITOR_HANDLE_KEYS)[number];
+// Compile-time guard: adding a member to EditorHandle without listing it above is an error.
+const handleKeysAreComplete: Exclude<keyof EditorHandle, EditorHandleKey> extends never
+	? true
+	: never = true;
+void handleKeysAreComplete;
