@@ -2,14 +2,14 @@ import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes } from './chart-svg-appearance';
 import { text, n } from './chart-svg-util';
 import { chartTextWidth, chartFontMetrics, type ChartSvgOptions } from './chart-svg-text-metrics';
-import type { DiagramTextSpacing } from '../../diagram/types';
+import type { DrawingTextSpacing } from '../../drawingml/types';
 import { chartPointsToPixels } from './chart-appearance';
 import type { ChartTitleText } from './chart-title-text';
 import { wrapStyledRuns } from '../../text/wrap-styled-runs';
 import { hasManualLayoutFields, resolveManualLayoutRect } from '../../chart/manual-layout';
 
 function spacing(
-	value: DiagramTextSpacing | undefined,
+	value: DrawingTextSpacing | undefined,
 	naturalHeight: number,
 	fallback: number,
 ): number {

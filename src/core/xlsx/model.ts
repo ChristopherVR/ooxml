@@ -1,5 +1,6 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
-import type { DiagramColor, DiagramDrawing, DiagramIssue, DiagramFill } from '../diagram/types';
+import type { DiagramDrawing, DiagramIssue } from '../diagram/types';
+import type { DrawingColor, DrawingFill } from '../drawingml/types';
 import type { CellAddress, CellRange } from './address';
 import type { ChartStyleDefinition } from '../chart/style-definition';
 
@@ -536,13 +537,13 @@ export interface ChartSeries {
 	values: (number | null)[];
 	color?: Color;
 	/** DrawingML fill/line color, including theme transforms. */
-	drawingColor?: DiagramColor;
+	drawingColor?: DrawingColor;
 	/** Explicit colors of individual points (indexed by c:dPt/c:idx). */
-	pointColors?: Record<number, DiagramColor>;
+	pointColors?: Record<number, DrawingColor>;
 	/** Non-solid primary DrawingML fill/line paint. Solid fills use drawingColor. */
-	fill?: DiagramFill;
+	fill?: DrawingFill;
 	/** Non-solid individual point fills; solid point overrides use pointColors. */
-	pointFills?: Record<number, DiagramFill>;
+	pointFills?: Record<number, DrawingFill>;
 	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
 	effectsXml?: string;
 }

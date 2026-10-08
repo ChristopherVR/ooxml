@@ -1,16 +1,16 @@
-import type { DiagramTextRun, DiagramTextParagraph } from '../../diagram/types';
+import type { DrawingTextParagraph, DrawingTextRun } from '../../drawingml/types';
 import type { ChartStyleEntry } from '../../chart/style-definition';
 import type { ChartObject, ThemePalette } from '../model';
 import { chartAppearance, type ChartAppearanceEntry } from './chart-appearance';
 
 export interface ChartTitleText {
 	paragraphs: (Pick<
-		DiagramTextParagraph,
+		DrawingTextParagraph,
 		'align' | 'lineSpacing' | 'spaceBefore' | 'spaceAfter'
 	> & { runs: { text: string; appearance: ChartAppearanceEntry }[] })[];
 }
 
-function properties(run: Partial<DiagramTextRun>): Partial<ChartStyleEntry> {
+function properties(run: Partial<DrawingTextRun>): Partial<ChartStyleEntry> {
 	return {
 		...(run.sizePt === undefined ? {} : { fontSize: run.sizePt }),
 		...(run.bold === undefined ? {} : { bold: run.bold }),

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createWorkbook, createEditSession, saveXlsx, loadXlsx } from 'ooxml-core/xlsx';
-import type { DiagramFill } from 'ooxml-core/diagram';
+import type { DrawingFill } from 'ooxml-core/drawingml';
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
 
 for (const framework of FRAMEWORKS)
@@ -8,7 +8,7 @@ for (const framework of FRAMEWORKS)
 		const errors = pageErrors(page);
 		await openLanding(page, framework);
 		for (const kind of ['none', 'solid', 'linear', 'rect', 'circle', 'shape'] as const) {
-			const fill: DiagramFill =
+			const fill: DrawingFill =
 				kind === 'none'
 					? { kind: 'none' }
 					: kind === 'solid'

@@ -1,4 +1,4 @@
-import type { DiagramColor } from '../../diagram/types';
+import type { DrawingColor } from '../../drawingml/types';
 import { withDrawingColorBrightness } from '../../drawingml/drawing-color-brightness';
 import type { ChartObject, Color } from '../model';
 import { THEME_SLOTS } from '../layout/colors';
@@ -7,9 +7,9 @@ import { sameChartColor } from './chart-colors';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 
 /** Spreadsheet theme tints use HSL luminance, represented by DrawingML lumMod/lumOff. */
-export function chartDrawingColor(color: Color | undefined): DiagramColor | undefined {
+export function chartDrawingColor(color: Color | undefined): DrawingColor | undefined {
 	if (!color) return undefined;
-	let choice: DiagramColor;
+	let choice: DrawingColor;
 	if (color.rgb && /^(?:[0-9a-f]{2})?[0-9a-f]{6}$/i.test(color.rgb))
 		choice = { kind: 'srgb', value: color.rgb.slice(-6).toUpperCase(), transforms: [] };
 	else if (color.theme !== undefined && Number.isInteger(color.theme) && THEME_SLOTS[color.theme])
@@ -70,7 +70,7 @@ export function chartSeriesSolidFillPatch(
 function replaceSeriesPaint(
 	chart: ChartObject,
 	index: number,
-	choice: DiagramColor | undefined,
+	choice: DrawingColor | undefined,
 ): ChartPatch | undefined {
 	const current = chart.series[index]!;
 	if (

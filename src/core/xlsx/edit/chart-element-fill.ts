@@ -1,4 +1,4 @@
-import type { DiagramFill, DiagramColor } from '../../diagram/types';
+import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { resolveDrawingColor } from '../../drawingml/drawing-color';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
@@ -7,11 +7,11 @@ import { chartGradientFillEdit, type ChartGradientEdit } from './chart-series-gr
 
 export const CHART_FILL_PARTS = ['chartArea', 'plotArea', 'title', 'legend'] as const;
 export type ChartFillPart = (typeof CHART_FILL_PARTS)[number];
-export type ChartElementFills = Partial<Record<ChartFillPart, DiagramFill>>;
-const white = (): DiagramColor => ({ kind: 'scheme', value: 'lt1', transforms: [] });
+export type ChartElementFills = Partial<Record<ChartFillPart, DrawingFill>>;
+const white = (): DrawingColor => ({ kind: 'scheme', value: 'lt1', transforms: [] });
 
 /** Effective background fill, including imported chart-style defaults. */
-export function chartElementFill(chart: ChartObject, part: ChartFillPart): DiagramFill {
+export function chartElementFill(chart: ChartObject, part: ChartFillPart): DrawingFill {
 	return (
 		chart.formatting?.entries[part]?.fill ??
 		chart.styleDefinition?.entries[part]?.fill ??
@@ -36,7 +36,7 @@ export function chartWithElementFills(chart: ChartObject, fills: ChartElementFil
 	return { ...chart, formatting };
 }
 
-function patch(chart: ChartObject, part: ChartFillPart, fill: DiagramFill): ChartPatch | undefined {
+function patch(chart: ChartObject, part: ChartFillPart, fill: DrawingFill): ChartPatch | undefined {
 	if (JSON.stringify(chartElementFill(chart, part)) === JSON.stringify(fill)) return undefined;
 	return { elementFills: { [part]: fill } };
 }

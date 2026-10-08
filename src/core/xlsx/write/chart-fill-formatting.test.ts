@@ -9,9 +9,9 @@ import { parseChart } from '../read/chart';
 import { parseDrawingFill } from '../../drawingml/drawing-fill';
 import { parseXml, NS } from '../../xml';
 import type { ChartObject } from '../model';
-import type { DiagramFill } from '../../diagram/types';
+import type { DrawingFill } from '../../drawingml/types';
 
-const fills: DiagramFill[] = [
+const fills: DrawingFill[] = [
 	{ kind: 'none' },
 	{
 		kind: 'solid',
@@ -25,7 +25,7 @@ const fills: DiagramFill[] = [
 		)!,
 	),
 ];
-const chart = (fill: DiagramFill): ChartObject => ({
+const chart = (fill: DrawingFill): ChartObject => ({
 	kind: 'chart',
 	chartType: 'column',
 	showLegend: true,
@@ -39,7 +39,7 @@ const chart = (fill: DiagramFill): ChartObject => ({
 		),
 	},
 });
-const modeled = (fill: DiagramFill | undefined) => {
+const modeled = (fill: DrawingFill | undefined) => {
 	if (fill?.kind !== 'gradient') return fill;
 	const { sourceXml: _sourceXml, ...rest } = fill;
 	return rest;

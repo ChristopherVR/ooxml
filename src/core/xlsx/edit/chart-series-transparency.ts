@@ -1,12 +1,12 @@
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 import { resolveDrawingColor } from '../../drawingml/drawing-color';
-import type { DiagramColor } from '../../diagram/types';
+import type { DrawingColor } from '../../drawingml/types';
 import type { ChartObject } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
 import { sameChartColor } from './chart-colors';
 
-export function chartSeriesSolidColor(chart: ChartObject, index: number): DiagramColor | undefined {
+export function chartSeriesSolidColor(chart: ChartObject, index: number): DrawingColor | undefined {
 	const series = chart.series[index];
 	if (!series || (series.fill && series.fill.kind !== 'solid')) return undefined;
 	return series.fill?.kind === 'solid'

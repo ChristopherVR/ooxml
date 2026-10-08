@@ -8,7 +8,7 @@ import {
 	type RectGradientDirection,
 	type DrawingGradientGeometryType,
 } from '../../drawingml/gradient-geometry';
-import type { DiagramFill, DiagramColor } from '../../diagram/types';
+import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
@@ -30,7 +30,7 @@ export type ChartGradientEdit =
 	| { kind: 'add'; index: number }
 	| { kind: 'remove'; index: number };
 
-type Gradient = Extract<DiagramFill, { kind: 'gradient' }>;
+type Gradient = Extract<DrawingFill, { kind: 'gradient' }>;
 export function chartGradientStopTransparency(fill: Gradient, index: number): number {
 	const color = fill.stops[index]?.color;
 	const value =
@@ -76,9 +76,9 @@ export function chartSeriesGradientPatch(
 
 /** Shared chart-fill edit: geometry and stop logic are independent of the target element. */
 export function chartGradientFillEdit(
-	old: DiagramFill | undefined,
+	old: DrawingFill | undefined,
 	edit: ChartGradientEdit,
-	defaultColor: DiagramColor,
+	defaultColor: DrawingColor,
 ): { fill: Gradient; stopIndex: number } | undefined {
 	let fill: Gradient;
 	if (edit.kind === 'preset') fill = officeGradientPresetFill(edit.id);

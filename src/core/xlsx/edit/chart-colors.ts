@@ -1,10 +1,10 @@
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
-import type { DiagramColor, DiagramFill } from '../../diagram/types';
+import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import type { ChartObject } from '../model';
 import type { ChartPatch } from './charts';
 
 /** Equality of DrawingML colors, including the ordered transform sequence. */
-export function sameChartColor(a: DiagramColor | undefined, b: DiagramColor | undefined): boolean {
+export function sameChartColor(a: DrawingColor | undefined, b: DrawingColor | undefined): boolean {
 	if (!a || !b) return a === b;
 	return (
 		a.kind === b.kind &&
@@ -19,10 +19,10 @@ export function sameChartColor(a: DiagramColor | undefined, b: DiagramColor | un
 
 /** Palette transforms precede gradient shading transforms in Excel's saved XML. */
 function recolorGradient(
-	fill: DiagramFill | undefined,
-	previous: DiagramColor,
-	next: DiagramColor,
-): DiagramFill | undefined {
+	fill: DrawingFill | undefined,
+	previous: DrawingColor,
+	next: DrawingColor,
+): DrawingFill | undefined {
 	if (fill?.kind !== 'gradient') return fill;
 	const matches = fill.stops.every((stop) =>
 		sameChartColor(

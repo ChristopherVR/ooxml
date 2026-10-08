@@ -9,7 +9,7 @@ import { parseDrawingColorIn } from '../../drawingml/drawing-color';
 import { fillElementOf } from '../../drawingml/drawing-fill';
 import { drawingColorXml } from '../../drawingml/write-color';
 import { drawingFillXml, setDrawingFillXml } from '../../drawingml/write-fill';
-import type { DiagramColor } from '../../diagram/types';
+import type { DrawingColor } from '../../drawingml/types';
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import { sameChartColor } from '../edit/chart-colors';
 import type { ChartObject, ChartSeries } from '../model';
@@ -36,8 +36,8 @@ export function chartSeriesFill(chart: ChartObject, series: ChartSeries, index: 
 
 function recolorMarker(
 	marker: XmlElement | undefined,
-	previous: DiagramColor,
-	next: DiagramColor,
+	previous: DrawingColor,
+	next: DrawingColor,
 ): void {
 	for (const paint of [marker, first(marker, 'ln', NS.a)]) {
 		if (paint && sameChartColor(parseDrawingColorIn(first(paint, 'solidFill', NS.a)), previous))
