@@ -15,6 +15,7 @@ import { emit, type FileCommand } from './events';
 import { installKeyboard, type ShellAction } from './keyboard';
 import { installCommands, mountFormulaBar, mountGrid, mountSheetTabs } from './modules';
 import { createRibbon, type Ribbon } from './ribbon/ribbon';
+import { createRibbonActions } from './ribbon-actions';
 import { el } from './ribbon/controls';
 import { hideKeyTips } from './ribbon/keytips';
 import { shellCommands } from './shell-commands';
@@ -147,10 +148,16 @@ export function buildShell(core: EditorCore): Shell {
 	);
 	safeMount('commands', () => installCommands(ctx));
 	const ribbon = createRibbon(ctx, { openBackstage: () => backstage.open('info'), isHidden });
+	// Editing mode, Comments and Share at the right end of the tab row, as in Excel.
+	const ribbonActions = createRibbonActions(ctx, {
+		isHidden,
+		setReadOnly: (readOnly) => (element.readOnly = readOnly),
+		collaboration: () => core.collab.state(),
+	});
+	ribbon.element.append(ribbonActions.element);
 	const titleBar = createTitleBar(ctx, {
 		isHidden,
 		save: () => void fileCommand('save'),
-		setReadOnly: (readOnly) => (element.readOnly = readOnly),
 		collaboration: () => core.collab.state(),
 		revealControl(id) {
 			const control = ribbon.element.querySelector<HTMLElement>(
@@ -253,6 +260,7 @@ export function buildShell(core: EditorCore): Shell {
 		render() {
 			ribbon.refresh();
 			titleBar.refresh();
+			ribbonActions.refresh();
 			statusBar.refresh();
 			chartSeriesPane.refresh();
 			chartAreaPane.refresh();
@@ -268,6 +276,7 @@ export function buildShell(core: EditorCore): Shell {
 			emptyText.textContent = ctx.t('Open a workbook or create a new one from the File tab.');
 			ribbon.rebuild();
 			titleBar.relocalize();
+			ribbonActions.relocalize();
 			statusBar.relocalize();
 			backstage.relocalize();
 			chartSeriesPane.relocalize();

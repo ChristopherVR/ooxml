@@ -20,7 +20,7 @@ async function startSharing(page: Page, name: string, room: string) {
 	await editor(page).evaluate((node, author) => {
 		(node as unknown as { authorName: string }).authorName = author;
 	}, name);
-	await part(page, 'title-bar').locator('.xve-share-button').click();
+	await part(page, 'ribbon').locator('.xve-share-button').click();
 	const share = editor(page).locator('[data-backstage-page="share"]');
 	await expect(share).toBeVisible();
 	await share.locator('.xve-share-room').fill(room);

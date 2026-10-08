@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createEditSession, createWorkbook } from 'ooxml-core/xlsx';
 import { createStatusBar, statisticsText } from './status-bar';
 import { createTitleBar } from './title-bar';
+import { createRibbonActions } from './ribbon-actions';
 import { buildPrintHtml, printRange } from './print';
 import { createTemplateWorkbook } from './backstage';
 import { flush, shellFixture, spyCommand } from './test-support/shell';
@@ -67,14 +68,12 @@ describe('status bar', () => {
 });
 
 describe('title bar', () => {
-	it('shows the file name and save state, toggles Editing/Viewing and runs undo', async () => {
+	it('shows the file name and save state and runs undo', async () => {
 		const { core } = shellFixture();
 		const undo = spyCommand('edit.undo');
 		core.commands.register(undo);
-		const modes: boolean[] = [];
 		const bar = createTitleBar(core.ctx, {
 			save: () => undefined,
-			setReadOnly: (on) => modes.push(on),
 			isHidden: () => false,
 			revealControl: () => false,
 		});
@@ -88,10 +87,8 @@ describe('title bar', () => {
 		let root = await drawn();
 		expect(root.querySelector('.name')!.textContent).toBe('Budget.xlsx');
 		expect(root.querySelector('.status')!.textContent).toBe('Unsaved changes');
-		const select = bar.element.querySelector<HTMLSelectElement>('.xve-mode-select')!;
-		select.value = 'viewing';
-		select.dispatchEvent(new Event('change'));
-		expect(modes).toEqual([true]);
+		// Editing mode, Comments and Share moved to the ribbon tab row (ribbon actions).
+		expect(bar.element.querySelector('select, button')).toBeNull();
 		root.querySelector<HTMLButtonElement>('[aria-label="Undo"]')!.click();
 		await flush();
 		expect(undo.runs).toHaveLength(1);
@@ -107,7 +104,6 @@ describe('title bar', () => {
 		core.commands.register(undo);
 		const bar = createTitleBar(core.ctx, {
 			save: () => undefined,
-			setReadOnly: () => undefined,
 			isHidden: () => false,
 			revealControl: () => false,
 		});
@@ -117,6 +113,54 @@ describe('title bar', () => {
 		);
 		await flush();
 		expect(undo.runs).toHaveLength(1);
+	});
+});
+
+describe('ribbon actions', () => {
+	it('toggles Editing/Viewing, shows Comments and runs Share, labelled and translated', async () => {
+		const { core } = shellFixture();
+		const share = spyCommand('file.share');
+		const comments = spyCommand('review.show-comments');
+		core.commands.register(share);
+		core.commands.register(comments);
+		const modes: boolean[] = [];
+		let hidden = false;
+		const actions = createRibbonActions(core.ctx, {
+			setReadOnly: (on) => modes.push(on),
+			isHidden: (id) => hidden && id === 'file.share',
+			collaboration: () => ({ active: true, status: 'connected', people: [] }) as never,
+		});
+		const node = actions.element;
+		expect(node.slot).toBe('actions');
+		const select = node.querySelector<HTMLSelectElement>('.xve-mode-select')!;
+		const commentsButton = node.querySelector<HTMLButtonElement>('.xve-comments-button')!;
+		const shareButton = node.querySelector<HTMLButtonElement>('.xve-share-button')!;
+		// Excel's order: the editing mode just left of Comments, then Share.
+		expect([...node.children].map((child) => child.className)).toEqual([
+			'xve-mode',
+			'xve-icon-button xve-comments-button',
+			'xve-share-button',
+		]);
+		expect(select.getAttribute('aria-label')).toBe('Editing mode');
+		expect(select.value).toBe('editing');
+		expect(commentsButton.textContent).toBe('Comments');
+		expect(shareButton.textContent).toBe('Share');
+		expect(shareButton.getAttribute('aria-pressed')).toBe('true');
+		select.value = 'viewing';
+		select.dispatchEvent(new Event('change'));
+		expect(modes).toEqual([true]);
+		commentsButton.click();
+		shareButton.click();
+		await flush();
+		expect(comments.runs).toHaveLength(1);
+		expect(share.runs).toHaveLength(1);
+		hidden = true;
+		actions.refresh();
+		expect(shareButton.hidden).toBe(true);
+		core.setLocale('fr');
+		actions.relocalize();
+		expect(select.options[0]!.textContent).not.toBe('Editing');
+		expect(commentsButton.textContent).not.toBe('Comments');
 	});
 });
 

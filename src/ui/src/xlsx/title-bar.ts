@@ -1,15 +1,13 @@
 /**
  * Excel-style title bar: the X badge and quick access toolbar (Save, Undo, Redo), the file name
- * and save state, "Tell me", the comments toggle, Share and the Editing / Viewing select. The
- * shared `office-ui-title-bar` draws the mark, Quick Access Toolbar, name and command search from
- * translated state; the product controls sit in its `actions` slot and, while the workbook is
- * shared, the people in the session (the shared presence stack) in its `collaboration` slot.
+ * and save state and "Tell me". The shared `office-ui-title-bar` draws them from translated
+ * state; while the workbook is shared, the people in the session (the shared presence stack) sit
+ * in its `collaboration` slot. The editing mode, Comments and Share live at the right end of the
+ * ribbon tab row, as in Excel (ribbon-actions.ts).
  */
 import { defineTitleBar } from '../controls';
 import type { OfficeTitleBarState } from '../controls';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el } from './ribbon/controls';
-import { ribbonIcon } from './ribbon/icons';
 import { historyOf, searchCommands, type TellMeHandlers } from 'ooxml-core/xlsx/ui';
 import { definePresence, type PresenceParticipant } from '../presence';
 import { participants } from './backstage/pages-share';
@@ -19,7 +17,6 @@ export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
 
 export interface TitleBarHandlers extends TellMeHandlers {
 	save(): void;
-	setReadOnly(readOnly: boolean): void;
 	/** Sharing state for the presence stack; absent hides it. */
 	collaboration?(): XlsxCollaborationState;
 }
@@ -28,7 +25,7 @@ export interface TitleBar {
 	readonly element: HTMLElement;
 	setFileName(name: string): void;
 	setSaveState(state: SaveState): void;
-	/** Re-reads read-only, undo/redo and comments state. */
+	/** Re-reads undo/redo and the people in a shared session. */
 	refresh(): void;
 	relocalize(): void;
 	focusTellMe(): void;
@@ -53,20 +50,6 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	element.className = 'xve-titlebar';
 	element.setAttribute('part', 'title-bar');
 
-	const actions = el(doc, 'div', 'xve-title-actions');
-	actions.slot = 'actions';
-	const comments = el(doc, 'button', 'xve-icon-button');
-	comments.type = 'button';
-	comments.append(ribbonIcon(doc, 'comments', 16));
-	comments.addEventListener('click', () => void ctx.commands.run('review.show-comments'));
-	const share = el(doc, 'button', 'xve-icon-button xve-share-button');
-	share.type = 'button';
-	share.append(ribbonIcon(doc, 'share', 16));
-	share.addEventListener('click', () => void ctx.commands.run('file.share'));
-	const mode = el(doc, 'select', 'xve-mode-select');
-	mode.append(new Option('', 'editing'), new Option('', 'viewing'));
-	mode.addEventListener('change', () => handlers.setReadOnly(mode.value === 'viewing'));
-	actions.append(comments, share, mode);
 	definePresence();
 	const people = doc.createElement('office-ui-presence') as HTMLElement & {
 		participants: PresenceParticipant[];
@@ -75,7 +58,7 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	people.slot = 'collaboration';
 	people.setAttribute('max', '3');
 	people.hidden = true;
-	element.append(actions, people);
+	element.append(people);
 
 	let fileName = '';
 	let saveState: SaveState = 'saved';
@@ -136,39 +119,15 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 		void ctx.commands.run(command.id);
 	});
 
-	const label = (control: HTMLElement, text: string) => {
-		const translated = ctx.t(text);
-		control.setAttribute('aria-label', translated);
-		control.title = translated;
-	};
 	const relocalize = () => {
-		label(comments, 'Show comments');
-		label(share, 'Share');
 		people.setAttribute('label', ctx.t('People in this session'));
-		mode.setAttribute('aria-label', ctx.t('Editing mode'));
-		mode.options[0]!.textContent = ctx.t('Editing');
-		mode.options[1]!.textContent = ctx.t('Viewing');
 		render();
 	};
 	const refresh = () => {
-		mode.value = ctx.readOnly() ? 'viewing' : 'editing';
-		share.hidden = !ctx.commands.get('file.share') || handlers.isHidden('file.share');
 		const sharing = handlers.collaboration?.();
 		people.hidden = !sharing?.active;
-		share.setAttribute('aria-pressed', String(Boolean(sharing?.active)));
 		const next = sharing?.active ? participants(sharing) : [];
 		if (JSON.stringify(next) !== JSON.stringify(people.participants)) people.participants = next;
-		const showComments = ctx.commands.get('review.show-comments');
-		comments.hidden = !showComments;
-		if (showComments) {
-			let pressed = false;
-			try {
-				pressed = showComments.checked?.(ctx) ?? false;
-			} catch {
-				pressed = false;
-			}
-			comments.setAttribute('aria-pressed', String(pressed));
-		}
 		render();
 	};
 	relocalize();

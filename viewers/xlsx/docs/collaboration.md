@@ -4,7 +4,7 @@ Several people can edit one workbook at the same time. The editor maps the workb
 
 ## Start sharing
 
-From the editor: **File > Share** (or the Share button in the title bar), type a session name and choose **Start sharing**. Another window or tab of the same browser that has a workbook open and starts sharing with the same session name joins it. Without a server set by the page, nothing leaves the browser: the session runs over a `BroadcastChannel`.
+From the editor: **File > Share** (or the Share button at the right end of the ribbon tab row), type a session name and choose **Start sharing**. Another window or tab of the same browser that has a workbook open and starts sharing with the same session name joins it. Without a server set by the page, nothing leaves the browser: the session runs over a `BroadcastChannel`.
 
 From code, set the `collaboration` property (or prop, in every binding):
 

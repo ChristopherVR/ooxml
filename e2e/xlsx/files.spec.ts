@@ -44,7 +44,7 @@ test('a downloaded .xlsx reopens with its edits (save round trip)', async ({ pag
 
 test('the Editing / Viewing switch makes the editor read-only', async ({ page }) => {
 	await newWorkbook(page);
-	await part(page, 'title-bar')
+	await part(page, 'ribbon')
 		.getByRole('combobox', { name: 'Editing mode' })
 		.selectOption('viewing');
 	expect(await editorProperty<boolean>(page, 'readOnly')).toBe(true);

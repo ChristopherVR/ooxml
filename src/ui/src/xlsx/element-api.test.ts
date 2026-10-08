@@ -206,10 +206,12 @@ describe('<xlsx-editor> shell', () => {
 		expect(element.workbook).toBe(newWorkbook);
 	});
 
-	it('toggles read-only from the title bar and focuses the grid', async () => {
+	it('toggles read-only from the ribbon tab row and focuses the grid', async () => {
 		const { element, of } = editor();
 		element.newWorkbook();
-		const mode = element.shadowRoot!.querySelector<HTMLSelectElement>('.xve-mode-select')!;
+		const mode = element.shadowRoot!.querySelector<HTMLSelectElement>(
+			'office-ui-ribbon .xve-mode-select',
+		)!;
 		mode.value = 'viewing';
 		mode.dispatchEvent(new Event('change'));
 		expect(element.readOnly).toBe(true);
