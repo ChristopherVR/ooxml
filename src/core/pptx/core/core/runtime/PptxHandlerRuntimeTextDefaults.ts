@@ -1,16 +1,9 @@
 import { parseOoxmlPercent } from '../../color';
+import { parseParagraphSpacingPx } from '../../utils/paragraph-properties-parser';
 import { XmlObject, TextStyle, PlaceholderDefaults, PlaceholderTextLevelStyle } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeShapeImageFill';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
-	/**
-	 * A single line's height, as a multiple of its font's point size. This is
-	 * the basis `a:spcPct` percentage paragraph spacing (`a:spcBef`/`a:spcAft`)
-	 * resolves against; see `parseParagraphSpacingPx` for the COM measurement
-	 * that pinned it at 1.2, not 1.0.
-	 */
-	private static readonly SINGLE_LINE_HEIGHT_FACTOR = 1.2;
-
 	/**
 	 * Apply {@link PlaceholderDefaults} body-level properties to a
 	 * {@link TextStyle} as fallback values (only sets fields that are
@@ -54,37 +47,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		spacingNode: XmlObject | undefined,
 		basisFontSizePx?: number,
 	): number | undefined {
-		if (!spacingNode) {
-			return undefined;
-		}
-		const spacingPointsRaw = Number.parseInt(
-			String((spacingNode['a:spcPts'] as XmlObject | undefined)?.['@_val'] || ''),
-			10,
-		);
-		if (Number.isFinite(spacingPointsRaw)) {
-			return this.pointsToPixels(spacingPointsRaw / 100);
-		}
-		// Percentage spacing (`a:spcPct`) is relative to a SINGLE LINE'S height,
-		// not the bare font size. PowerPoint's single-line height (also what
-		// `a:lnSpc/a:spcPct` at 100% resolves to) runs about 1.2x the font's
-		// point size, not 1.0x: measured through COM on a slide with 18pt runs
-		// and `spcBef` 100% / `spcAft` 50% (audit-text/gen.py slide 16), the
-		// pixel pitch between consecutive paragraph baselines was exactly
-		// `(1.0 + 1.2 + 0.5 * 1.2) * 18pt`, i.e. the paragraph's own single-line
-		// pitch plus `spcAft` and `spcBef` each scaled by `1.2 * fontSize`.
-		// Using the bare font size here under-counted every percentage-based
-		// paragraph gap by that same 20%.
-		const spacingFraction = parseOoxmlPercent(
-			(spacingNode['a:spcPct'] as XmlObject | undefined)?.['@_val'],
-		);
-		if (
-			spacingFraction !== undefined &&
-			typeof basisFontSizePx === 'number' &&
-			basisFontSizePx > 0
-		) {
-			return spacingFraction * basisFontSizePx * PptxHandlerRuntime.SINGLE_LINE_HEIGHT_FACTOR;
-		}
-		return undefined;
+		return parseParagraphSpacingPx(spacingNode, basisFontSizePx);
 	}
 
 	protected parseLineSpacingMultiplier(lineSpacingNode: XmlObject | undefined): number | undefined {

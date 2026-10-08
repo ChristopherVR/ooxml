@@ -724,8 +724,10 @@ describe('combined operations', () => {
 				{ text: 'A', bold: true },
 				{ text: '1', italic: true },
 			];
+			source.paragraphs = [{ align: 'right' }];
 			target.text = '';
 			target.textRuns = [{ text: '', underline: true }];
+			target.paragraphs = [{ align: 'center' }];
 			if (axis === 'row') {
 				source.rowSpan = 2;
 				target.vMerge = true;
@@ -736,6 +738,7 @@ describe('combined operations', () => {
 			const result = axis === 'row' ? removeTableRow(td, 0) : removeTableColumn(td, 0);
 			expect(result.tableData.rows[0].cells[0].text).toBe(source.text);
 			expect(result.tableData.rows[0].cells[0].textRuns).toStrictEqual(source.textRuns);
+			expect(result.tableData.rows[0].cells[0].paragraphs).toStrictEqual(source.paragraphs);
 		},
 	);
 
@@ -760,6 +763,7 @@ describe('combined operations', () => {
 			text: 'B1',
 			hMerge: true,
 			textRuns: [{ text: 'B', italic: true }, { text: '1' }],
+			paragraphs: [{ align: 'center' }],
 		};
 		const cells = getXmlCells(getTbl(raw), 0);
 		cells[0] = makeTc('', { '@_gridSpan': '2' });
@@ -769,6 +773,9 @@ describe('combined operations', () => {
 		const result = removeTableColumn(td, 0, raw);
 		expect(result.tableData.rows[0].cells[0].text).toBe('B1');
 		expect(result.tableData.rows[0].cells[0].textRuns).toStrictEqual(td.rows[0].cells[1].textRuns);
+		expect(result.tableData.rows[0].cells[0].paragraphs).toStrictEqual(
+			td.rows[0].cells[1].paragraphs,
+		);
 		expect(getXmlCells(getTbl(result.rawXml!), 0)[0]['a:txBody']).toStrictEqual(expectedBody);
 	});
 

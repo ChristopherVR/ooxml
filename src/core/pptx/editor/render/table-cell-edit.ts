@@ -27,6 +27,8 @@ import type { PptxTableCell, TablePptxElement } from 'ooxml-core/pptx';
  * `rebuildCellTextBody` collapses the cell to a SINGLE run carrying the first
  * run's `a:rPr`, and `PptxTableCell.style` is that same first-run style, so the
  * flat-text fallback and the rewritten `a:txBody` paint the same thing.
+ * For the same reason only the first paragraph's layout is kept: the
+ * rewritten `a:txBody` keeps only the first paragraph's `a:pPr`.
  *
  * @param cell - The cell to re-text (not mutated).
  * @param text - New plain-text content.
@@ -35,6 +37,9 @@ import type { PptxTableCell, TablePptxElement } from 'ooxml-core/pptx';
 export function withCellText(cell: PptxTableCell, text: string): PptxTableCell {
 	const next: PptxTableCell = { ...cell, text };
 	delete next.textRuns;
+	if (cell.paragraphs) {
+		next.paragraphs = cell.paragraphs.slice(0, 1);
+	}
 	return next;
 }
 

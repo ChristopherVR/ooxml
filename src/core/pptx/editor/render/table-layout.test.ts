@@ -66,11 +66,14 @@ describe('deleteTableRow', () => {
 			source.gridSpan = 2;
 			target.hMerge = true;
 		}
+		source.paragraphs = [{ align: 'right' }];
 		target.textRuns = [{ text: '', underline: true }];
+		target.paragraphs = [{ align: 'center' }];
 		target.style = { fontSize: 24 };
 		const result = axis === 'row' ? deleteTableRow(table, 0) : deleteTableColumn(table, 0);
 		expect(result.rows[0].cells[0].text).toBe(source.text);
 		expect(result.rows[0].cells[0].textRuns).toStrictEqual(source.textRuns);
+		expect(result.rows[0].cells[0].paragraphs).toStrictEqual(source.paragraphs);
 		expect(result.rows[0].cells[0].style).toStrictEqual(target.style);
 		expect(target.textRuns).toStrictEqual([{ text: '', underline: true }]);
 	});
@@ -84,6 +87,7 @@ describe('deleteTableRow', () => {
 			source.textRuns = [{ text: '', bold: true }];
 			target.text = 'Fallback';
 			target.textRuns = [{ text: 'Fallback', italic: true }];
+			target.paragraphs = [{ lineSpacingExactPt: 9 }];
 			if (axis === 'row') {
 				source.rowSpan = 2;
 				target.vMerge = true;
@@ -94,6 +98,7 @@ describe('deleteTableRow', () => {
 			const result = axis === 'row' ? deleteTableRow(table, 0) : deleteTableColumn(table, 0);
 			expect(result.rows[0].cells[0].text).toBe(target.text);
 			expect(result.rows[0].cells[0].textRuns).toStrictEqual(target.textRuns);
+			expect(result.rows[0].cells[0].paragraphs).toStrictEqual(target.paragraphs);
 		},
 	);
 

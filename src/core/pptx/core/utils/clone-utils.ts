@@ -31,7 +31,7 @@
  *   `fillGradientStops`), `shapeAdjustments`, `adjustmentHandles`, custom path
  *   data;
  * - `table`: `tableData.rows[].cells[]` (+ each cell's `style`, `textRuns`,
- *   `extraAttributes`) and `tableData.columnWidths`;
+ *   `paragraphs`, `extraAttributes`) and `tableData.columnWidths`;
  * - `chart`: `chartData` (categories, series, per-series values);
  * - `smartArt`: `smartArtData.nodes[]`;
  * - `media`: `bookmarks`, `captionTracks`, `metadata`, `audioCdStart` / `-End`;

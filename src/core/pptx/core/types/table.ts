@@ -11,6 +11,7 @@
 
 import type { PptxThemeColorRef } from './color-ref';
 import type { ParsedTableStyleEffect } from './table-style-edit';
+import type { TextStyle } from './text';
 
 /**
  * Per-cell visual style for a table cell.
@@ -277,6 +278,44 @@ export interface PptxTableCellTextRun {
 }
 
 /**
+ * One paragraph's own `a:pPr` layout inside a table cell: alignment,
+ * direction, left margin and first-line indent, line spacing, and space
+ * before and after. For an empty paragraph, also the size of its line from
+ * `a:endParaRPr`.
+ *
+ * The layout fields and units are the ones {@link TextStyle} uses for shape
+ * text (px for margins, indent and paragraph spacing; points for exact line
+ * spacing), so a renderer resolves both through the same paragraph helpers.
+ *
+ * @example
+ * ```ts
+ * const paragraph: PptxTableCellParagraph = {
+ *   align: "right",
+ *   paragraphMarginLeft: 12,
+ *   lineSpacingExactPt: 9.6,
+ * };
+ * // => satisfies PptxTableCellParagraph
+ * ```
+ */
+export type PptxTableCellParagraph = Pick<
+	TextStyle,
+	| 'align'
+	| 'rtl'
+	| 'paragraphMarginLeft'
+	| 'paragraphIndent'
+	| 'lineSpacing'
+	| 'lineSpacingExactPt'
+	| 'paragraphSpacingBefore'
+	| 'paragraphSpacingAfter'
+> & {
+	/**
+	 * For a paragraph with no run, field or break: the size of its line in
+	 * points, from `a:endParaRPr@sz` (cell runs give their sizes in points too).
+	 */
+	endParaFontSize?: number;
+};
+
+/**
  * A single table cell with text content, optional style, and merge info.
  *
  * @example
@@ -301,6 +340,15 @@ export interface PptxTableCell {
 	 * string), so an edit path must clear them alongside setting `text`.
 	 */
 	textRuns?: PptxTableCellTextRun[];
+	/**
+	 * Each paragraph's own layout, one entry per `a:p` in source order (the
+	 * paragraphs {@link textRuns} separates with `isParagraphBreak`). An entry
+	 * is `{}` for a paragraph that sets none of it. Present only when some
+	 * paragraph sets something. Editing the cell's text keeps only the first
+	 * entry, as the rewritten `a:txBody` keeps only the first paragraph's
+	 * `a:pPr`.
+	 */
+	paragraphs?: PptxTableCellParagraph[];
 	/** Column span (defaults to 1). */
 	gridSpan?: number;
 	/** Row span (defaults to 1). */

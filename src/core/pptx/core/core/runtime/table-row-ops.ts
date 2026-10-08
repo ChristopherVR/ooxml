@@ -222,6 +222,7 @@ export function removeTableRow(
 								...cc,
 								text: cell.text, // Move text from anchor to new anchor
 								textRuns: cell.textRuns,
+								paragraphs: cell.paragraphs,
 								style: cc.style || cell.style,
 								rowSpan: newRs > 1 ? newRs : undefined,
 								vMerge: undefined, // No longer a continuation

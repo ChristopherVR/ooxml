@@ -87,12 +87,29 @@ export function resolveParagraphAlignment(
 // ---------------------------------------------------------------------------
 
 /**
+ * A single line's height, as a multiple of its font's point size: the basis
+ * `a:spcPct` paragraph spacing (`a:spcBef`/`a:spcAft`) resolves against.
+ */
+const SINGLE_LINE_HEIGHT_FACTOR = 1.2;
+
+/**
  * Parse paragraph spacing from an `a:spcBef` or `a:spcAft` node.
  *
- * Looks for `a:spcPts/@_val` (hundredths of a point) and converts
- * to pixels (at 96 dpi).  Returns `undefined` when absent/invalid.
+ * `a:spcPts/@_val` (hundredths of a point) converts to pixels at 96 dpi.
+ * `a:spcPct` is a fraction of one single-spaced line, so it resolves only when
+ * the paragraph's font size in px is given. Returns `undefined` when
+ * absent/invalid.
+ *
+ * A single line is 1.2x the font size, not 1.0x: measured through COM on a
+ * slide with 18pt runs and `spcBef` 100% / `spcAft` 50% (audit-text/gen.py
+ * slide 16), the pitch between consecutive paragraph baselines was exactly
+ * `(1.0 + 1.2 + 0.5 * 1.2) * 18pt`, i.e. the paragraph's own single-line pitch
+ * plus `spcAft` and `spcBef` each scaled by `1.2 * fontSize`.
  */
-export function parseParagraphSpacingPx(spacingNode: XmlObject | undefined): number | undefined {
+export function parseParagraphSpacingPx(
+	spacingNode: XmlObject | undefined,
+	basisFontSizePx?: number,
+): number | undefined {
 	if (!spacingNode) {
 		return undefined;
 	}
@@ -100,6 +117,10 @@ export function parseParagraphSpacingPx(spacingNode: XmlObject | undefined): num
 	const raw = Number.parseInt(String(spcPts?.['@_val'] || ''), 10);
 	if (Number.isFinite(raw)) {
 		return pointsToPixels(raw / 100);
+	}
+	const fraction = parseOoxmlPercent((spacingNode['a:spcPct'] as XmlObject | undefined)?.['@_val']);
+	if (fraction !== undefined && basisFontSizePx !== undefined && basisFontSizePx > 0) {
+		return fraction * basisFontSizePx * SINGLE_LINE_HEIGHT_FACTOR;
 	}
 	return undefined;
 }
