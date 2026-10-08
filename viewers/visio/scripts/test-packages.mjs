@@ -96,6 +96,8 @@ for (const name of ${JSON.stringify(names)}) {
   ${
 		workspaceRuntime
 			? `assert.equal(typeof controller.duplicateSelection, 'function', name);
+  assert.equal(typeof controller.prepareClipboardSelection, 'function', name);
+  assert.ok(Object.isFrozen(controller.state.clipboard));
   controller.setDocument(document);
   const events = [];
   controller.onEvent((name, value) => { if (name === 'selection-change') events.push(value); });
@@ -144,6 +146,10 @@ declare const s${index}: p${index}.ViewerState;
 const selections${index}: readonly p${index}.VisioShapeSelection[] = s${index}.selectedShapes;
 h${index}.selectShapes(selections${index}); h${index}.selectAll(); h${index}.clearSelection();
 const duplication${index}: Promise<void> = h${index}.duplicateSelection(); void duplication${index};
+const copying${index}: Promise<void> = h${index}.copySelection(); void copying${index};
+const cutting${index}: Promise<void> = h${index}.cutSelection(); void cutting${index};
+const pasting${index}: Promise<void> = h${index}.pasteSelection(); void pasting${index};
+const ready${index}: boolean = s${index}.clipboard.ready; void ready${index};
 const events${index}: p${index}.ViewerCallbacks = { 'selection-change': selection => { const items: readonly p${index}.VisioShapeSelection[] = selection; void items; } };
 // @ts-expect-error The selection array is immutable.
 s${index}.selectedShapes.push({ id: '1', name: '1' });
@@ -200,6 +206,11 @@ if (workspaceRuntime)
 	);
 if (workspaceRuntime)
 	writeFileSync(
+		resolve(consumer, 'workspace-consumer-clipboard.mjs'),
+		readFileSync(resolve(root, 'scripts/workspace-consumer-clipboard.mjs')),
+	);
+if (workspaceRuntime)
+	writeFileSync(
 		resolve(consumer, 'main.js'),
 		readFileSync(resolve(consumer, 'main.js'), 'utf8') +
 			'\nimport { verifyWorkspaceBindings } from "./workspace-bindings.js"; window.verifyWorkspaceBindings = verifyWorkspaceBindings;',
@@ -215,7 +226,11 @@ writeFileSync(
 );
 execFileSync(
 	process.execPath,
-	[resolve(root, 'scripts/test-worker-bundle.mjs'), resolve(consumer, 'dist/assets')],
+	[
+		resolve(root, 'scripts/test-worker-bundle.mjs'),
+		resolve(consumer, 'dist/assets'),
+		...(workspaceRuntime ? [] : ['--registry-runtime']),
+	],
 	{ cwd: root, stdio: 'inherit' },
 );
 console.log(

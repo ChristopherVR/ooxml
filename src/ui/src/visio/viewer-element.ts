@@ -265,6 +265,18 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		return this.controller.duplicateSelection();
 	}
+	copySelection(): Promise<void> {
+		this.#assertAlive();
+		return this.#commands.clipboard('copy');
+	}
+	cutSelection(): Promise<void> {
+		this.#assertAlive();
+		return this.#commands.clipboard('cut');
+	}
+	pasteSelection(): Promise<void> {
+		this.#assertAlive();
+		return this.#commands.clipboard('paste');
+	}
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
 		this.#assertAlive();
 		return this.controller.replacePlainText(pageId, shapeId, text);

@@ -1,4 +1,5 @@
 export { ViewerController, type ViewerState } from './controller';
+export type { ViewerClipboardState, ViewerClipboardToken } from './clipboard-capture';
 export { mountViewer, type MountedViewer } from './binding';
 export { VisioViewerElement, registerVisioViewer } from './viewer-element';
 export { renderPage, type RenderResult, type RenderOptions } from './render-svg';

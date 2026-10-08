@@ -16,11 +16,12 @@ and `verticalAlign` (`top`, `middle`, `bottom`). Shape properties are `fillColor
 `order: 'front' | 'back' | 'forward' | 'backward'`. Every command includes
 `pageId` and `shapeId`; the complete command batch is atomic.
 
-Formatting admits unlayered local leaf shapes and local lines. Text edits apply
-uniformly to one character and paragraph row, with plain text or supported
-zero-index markers. Font family edits require an existing document FaceName;
+Formatting admits unlayered local leaf shapes and local lines. Whole-shape text
+edits update effective character/paragraph rows, preserving mixed-run markers,
+unrelated style bits and supported cached fields. Proven local `F="Inh"` text
+cells become explicit overrides. Font family edits require an existing document FaceName;
 both native name-valued `FONT` caches and older explicit font IDs are supported.
-Protected/error/delegated cells, unsupported inheritance and formulas depending
+Protected/error-bearing cells, unsupported inheritance and formulas depending
 on changed formatting are refused. Paint edits preserve existing rich-text runs.
 Stacking edits move intact top-level ordinary shape nodes within display band
 zero; masters, groups, foreign shapes, layered targets, and dynamic/container
@@ -48,6 +49,34 @@ source locks, glue and formula admission remain authoritative. The current
 arrangement scope is unlayered local leaf shapes with saved pins, excluding
 masters, groups and glued connectors. Native captures cover six alignment and
 two distribution actions at three drawing scales plus 34 overlapping/tied cases.
+
+## Source duplication and shape clipboard
+
+`duplicate-shapes` clones admitted local unglued 2D leaves with fresh IDs and
+names, preserving source stacking order, mixed text and inert unknown XML. It
+remaps references between copied shapes and proves affected formula caches.
+The `visioDuplicateCommand` helper defaults to 0.33 drawing inches right/down.
+Native Visio 16 capture and reopen cover nine single, multiple and movement-locked
+cases at three scales. Groups, masters, layers, foreign shapes and unsupported
+dependencies remain refused.
+
+`captureVisioClipboard(bytes, pageId, shapeIds)` returns an owned
+`VisioClipboardSnapshot`; `serializeVisioClipboard` and
+`deserializeVisioClipboard` encode/validate bounded versioned text. These APIs
+never access a system clipboard. The `paste-shapes` command imports captured XML
+through the same clone transaction after checking actual font/style/theme
+definitions and page settings, ordinal, background context and drawing ratio.
+Its copies do not depend on originals remaining in the target package. Source
+references must stay inside the copied selection. `visioPasteCommand` allocates
+fresh page-local IDs and accepts an optional drawing-inch offset.
+
+Limits include 1,000 shapes, 64 resource records, 8,388,608 UTF-16 code units
+and 100,000 aggregate XML nodes before incoming DOM construction. Malformed XML,
+surrogates, ambiguous resource mappings, relationship-bearing fragments and
+unsupported formulas are refused before mutation. Untouched package payloads
+remain byte-identical. Native reopen covers clipboard-generated output from the
+nine duplicate fixtures, not native clipboard interoperability or placement.
+Resource import, cross-scale paste and native paste cascade remain unsupported.
 
 ## Read a drawing
 

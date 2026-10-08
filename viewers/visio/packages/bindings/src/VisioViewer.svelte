@@ -28,6 +28,9 @@
   export function selectAll() { handle.selectAll(); }
   export function clearSelection() { handle.clearSelection(); }
   export function duplicateSelection() { return handle.duplicateSelection(); }
+  export function copySelection() { return handle.copySelection(); }
+  export function cutSelection() { return handle.cutSelection(); }
+  export function pasteSelection() { return handle.pasteSelection(); }
   export function replacePlainText(pageId: string, shapeId: string, text: string) { return handle.replacePlainText(pageId, shapeId, text); }
   export function undo() { return handle.undo(); }
   export function redo() { return handle.redo(); }

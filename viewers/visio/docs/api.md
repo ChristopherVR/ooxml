@@ -182,7 +182,7 @@ share history, selection retention and VSDX download/reopen with other edits.
 handle duplicates admitted selected shapes on the current page. Home's Paste
 menu, the shape context menu, Tell me and Ctrl+D call the same method. Text
 inputs retain their native keyboard behavior. Duplicate does not use the system
-clipboard; Copy, Cut and Paste remain unavailable.
+clipboard.
 
 The core `visioDuplicateCommand(page, selectedIds)` helper produces a
 `duplicate-shapes` source command with fresh page-local IDs. Copies retain source
@@ -197,6 +197,45 @@ restores the original selection and redo the copies unless a newer selection or
 page action supersedes it. Failed, cancelled or superseded operations cannot
 partially change source bytes or selection. The ordinary `selection-change` and
 `document-change` events expose the accepted result to native framework state.
+
+## Experimental shape clipboard
+
+Every mounted/native handle exposes `copySelection()`, `cutSelection()` and
+`pasteSelection()`, each returning `Promise<void>`. Invoke them from a user
+gesture so the browser can grant clipboard access. Home, context menus, Tell me
+and Ctrl/Meta+C, X and V use the same shared adapter. Text inputs retain native
+clipboard behavior. Clipboard failures appear in the viewer without changing
+source bytes, history or selection. Cut writes the clipboard before deleting;
+if protection prevents deletion, the copied shapes remain on the clipboard and
+the viewer reports that they could not be cut.
+
+The payload is bounded `text/plain` with the `OOXML-VISIO-SHAPES/1` marker. It
+contains captured shape XML and required source context, so editing or cutting
+the originals does not invalidate the copied content. Paste always reads the
+current system clipboard; it does not silently reuse an internal previous copy.
+Native Microsoft Visio clipboard formats, arbitrary text, images and Paste
+Special are not supported. Pasted shapes receive fresh IDs/names and an offset
+of 0.33 drawing inches right and down. Repeated paste uses this same offset;
+native paste cascade and cross-page placement are not established.
+
+The first supported scope is ordinary local unglued 2D leaves with matching
+document font/style/theme definitions and page settings, ordinal, background
+context and drawing ratio. References must remain inside the copied selection.
+Groups, masters, layers, foreign content, relationship-bearing fragments,
+unsupported formulas and resource import remain refused. Core validates the
+entire payload before an atomic source edit. Paste selects its copies and shares
+Duplicate's bounded history and selection-intent rules.
+
+`controller.state.clipboard` exposes immutable `ready`, `preparing` and `error`
+state through each framework's existing reactive subscription. Source capture
+runs in a cancellable worker and is invalidated by selection, page, visibility
+or document changes. Hosts providing their own clipboard transport can use
+`captureClipboardToken()`, `prepareClipboardSelection(token)`,
+`getPreparedClipboard(token)`, `cutPreparedSelection(token)` and
+`pasteClipboardText(text, token)` on the controller. Tokens reject stale actions.
+The DOM-free core exports `captureVisioClipboard`, `serializeVisioClipboard`,
+`deserializeVisioClipboard`, the `paste-shapes` edit and the
+`visioPasteCommand(page, clipboard, offset?)` command builder.
 
 ## Experimental geometry editing
 

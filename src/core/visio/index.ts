@@ -64,9 +64,18 @@ export {
 	type VisioShapeFormatEdit,
 	type VisioShapeOrderEdit,
 	type VisioDuplicateShapesEdit,
+	type VisioPasteShapesEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';
+export {
+	captureVisioClipboard,
+	serializeVisioClipboard,
+	deserializeVisioClipboard,
+	VISIO_CLIPBOARD_MAGIC,
+	VISIO_CLIPBOARD_MAX_CHARS,
+	type VisioClipboardSnapshot,
+} from './clipboard';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,

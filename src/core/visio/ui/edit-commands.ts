@@ -1,6 +1,7 @@
 import type { VisioEdit } from '../index';
 import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-commands';
 import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
+import { snapshotPasteShapes } from '../edit-paste-commands';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -16,6 +17,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		)
 			throw new Error('Invalid edit command.');
 		if (command.type === 'duplicate-shapes') return snapshotDuplicateShapes(command);
+		if (command.type === 'paste-shapes') return snapshotPasteShapes(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');

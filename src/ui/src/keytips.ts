@@ -31,7 +31,9 @@ const TIP_CSS =
 
 type Root = ShadowRoot | HTMLElement;
 const isDisabled = (el: Element) =>
-	el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true';
+	el.hasAttribute('disabled') ||
+	el.getAttribute('aria-disabled') === 'true' ||
+	(el.matches('office-ui-menu-button[command][main-disabled]') && !!el.getAttribute('command'));
 const visible = (el: Element) => {
 	const box = el.getBoundingClientRect();
 	return box.width > 0 && box.height > 0;

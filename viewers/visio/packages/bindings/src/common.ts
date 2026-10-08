@@ -22,6 +22,9 @@ export type ViewerHandle = Pick<
 	| 'selectAll'
 	| 'clearSelection'
 	| 'duplicateSelection'
+	| 'copySelection'
+	| 'cutSelection'
+	| 'pasteSelection'
 	| 'replacePlainText'
 	| 'undo'
 	| 'redo'
@@ -123,6 +126,15 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		},
 		async duplicateSelection() {
 			await requireViewer().duplicateSelection();
+		},
+		async copySelection() {
+			await requireViewer().copySelection();
+		},
+		async cutSelection() {
+			await requireViewer().cutSelection();
+		},
+		async pasteSelection() {
+			await requireViewer().pasteSelection();
 		},
 		async undo() {
 			await requireViewer().undo();

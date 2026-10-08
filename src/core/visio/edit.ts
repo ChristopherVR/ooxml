@@ -16,6 +16,7 @@ import { applyFormattingEdit } from './edit-formatting';
 import { isVisioFormatEdit } from './edit-formatting-commands';
 import { reorderVisioShape, assertShapeOrderPackageScope } from './edit-shape-order';
 import { duplicateVisioShapes } from './edit-duplicate';
+import { pasteVisioShapes } from './edit-paste';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -30,6 +31,7 @@ export type {
 	VisioShapeFormatEdit,
 	VisioShapeOrderEdit,
 	VisioDuplicateShapesEdit,
+	VisioPasteShapesEdit,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -96,6 +98,7 @@ export async function editVsdx(
 			command.type !== 'replace-plain-text' &&
 			command.type !== 'reorder-shape' &&
 			command.type !== 'duplicate-shapes' &&
+			command.type !== 'paste-shapes' &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
@@ -106,7 +109,8 @@ export async function editVsdx(
 			(command) =>
 				isVisioFormatEdit(command) ||
 				command.type === 'reorder-shape' ||
-				command.type === 'duplicate-shapes',
+				command.type === 'duplicate-shapes' ||
+				command.type === 'paste-shapes',
 		)
 	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
@@ -131,6 +135,7 @@ export async function editVsdx(
 	let formatChanged = false;
 	let orderChanged = false;
 	let duplicateChanged = false;
+	let pasteChanged = false;
 	for (const command of commands) {
 		check();
 		const path = pages.get(command.pageId);
@@ -158,6 +163,17 @@ export async function editVsdx(
 				dirty.set(path, root);
 				orderChanged = true;
 			}
+		} else if (command.type === 'paste-shapes') {
+			for (const pageId of await pasteVisioShapes(
+				pkg,
+				new Set(pages.values()),
+				roots,
+				document!,
+				command,
+				check,
+			))
+				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			pasteChanged = true;
 		} else if (command.type === 'duplicate-shapes') {
 			for (const pageId of await duplicateVisioShapes(
 				pkg,
@@ -206,6 +222,15 @@ export async function editVsdx(
 		bytes,
 		changedParts: [...dirty.keys()],
 		diagnostics: [
+			...(pasteChanged
+				? [
+						{
+							code: 'edit-paste-experimental',
+							message:
+								'Captured shape XML was pasted with compatible resources and page context. Clipboard placement and cross-document fidelity are limited to supported cases.',
+						},
+					]
+				: []),
 			...(duplicateChanged
 				? [
 						{

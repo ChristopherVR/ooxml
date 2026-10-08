@@ -1,6 +1,12 @@
 import { expect, vi } from 'vitest';
 import JSZip from 'jszip';
-import { editVsdx, parseVsdx, type VisioEdit } from 'ooxml-core/visio';
+import {
+	captureVisioClipboard,
+	serializeVisioClipboard,
+	editVsdx,
+	parseVsdx,
+	type VisioEdit,
+} from 'ooxml-core/visio';
 import { ViewerController } from '../controller';
 import { ViewerCommands } from '../viewer-commands';
 import { createRibbon } from '../ribbon';
@@ -39,6 +45,8 @@ export async function setupFormattingViewer(source = true, mixedText = false) {
 			const result = await editVsdx(bytes, commands);
 			return { ...result, document: await parseVsdx(result.bytes) };
 		},
+		async (bytes, pageId, shapeIds) =>
+			serializeVisioClipboard(await captureVisioClipboard(bytes, pageId, shapeIds)),
 	);
 	if (source) await controller.load(bytes);
 	else controller.setDocument(await parseVsdx(bytes));

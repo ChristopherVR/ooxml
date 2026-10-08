@@ -29,3 +29,4 @@ export * from './formatting';
 export * from './shape-arrange';
 
 export * from './selection';
+export * from './shape-clipboard';

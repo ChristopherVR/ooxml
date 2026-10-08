@@ -47,7 +47,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 		await viewer.locator('svg.paper [data-shape-id="1"]').click();
 		await selected(viewer, ['1']);
-		await expect(viewer.locator('[command="paste"] .main')).toBeDisabled();
+		await expect(viewer.locator('[command="paste"] .main')).toBeEnabled();
 		await expect(viewer.locator('[command="paste"] .caret')).toBeEnabled();
 		await viewer.locator('[command="paste"] .caret').click();
 		await viewer.locator('[command="duplicate"]').click();

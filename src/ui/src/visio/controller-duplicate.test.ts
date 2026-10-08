@@ -53,12 +53,15 @@ function deferred() {
 it('accepts cloned source and ordered primary selection atomically in one undo transition', async () => {
 	const { controller, editor, originals, bytes } = await setup();
 	const accepted = vi.fn();
+	let observedDocument = controller.state.document;
 	const selectedPrimary = vi.fn();
 	controller.onEvent((name, value) => {
 		if (name === 'shape-select') selectedPrimary(value);
 	});
 	controller.subscribe((state) => {
-		if (!state.edit.busy && state.document!.pages[0]!.shapes.length === 4) {
+		const changedDocument = state.document !== observedDocument;
+		observedDocument = state.document;
+		if (changedDocument && !state.edit.busy && state.document!.pages[0]!.shapes.length === 4) {
 			expect(state.selectedShapes).toHaveLength(2);
 			expect(
 				state.selectedShapes.every(

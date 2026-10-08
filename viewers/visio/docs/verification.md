@@ -2,6 +2,55 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Source shape clipboard, 2026-10-09
+
+Copy, Cut and Paste now share the same web component, controller and core across
+all six bindings. The core captures detached XML and source context; paste checks
+actual font/style/theme definitions and page context before cloning fresh sheet
+identities. Captured content survives edits and deletion of originals. The
+versioned text payload is bounded before XML construction; malformed Unicode,
+ambiguous resources, unsafe or oversized paths and unsupported references refuse
+atomically. Cut writes before deleting and reports when protection leaves copied
+shapes in place. Paste reads actual clipboard contents without an internal
+fallback. Editable text controls retain browser behavior.
+
+Selection/page/source changes, cancellation and disposal invalidate pending
+clipboard operations. Prepared state is immutable and reaches each framework's
+existing hook, composable, signal or subscription. Shared split-button KeyTips
+respect a disabled main command while leaving the menu available.
+
+The complete Visio core run passed 2,512 tests with 156 optional skips. Additional
+final path and empty-page regressions passed in an 87-test clipboard/duplicate run.
+The shared Visio/menu/KeyTips run passed 852 tests with seven optional
+skips; the final transport feedback changes passed 43 focused UI checks. Native bindings passed
+108 DOM tests, five SSR tests and strict/Svelte checks. Strict core/UI/viewer
+checks, production bundles/declarations, converter integration and 48 docs checks
+also passed.
+
+Twelve Chromium workflows passed for Clipboard and Duplicate across every
+framework. The complete final browser run passed 98 active checks and skipped
+715 optional native-capture scenarios. A clean consumer installed all nine local core/UI/viewer tarballs and
+tested actual native mounts, declared handles and production workers. It covered
+captured content after source text changes, ordered paste selection, history,
+write-first Cut, denied writes, empty-selection Paste and invalid clipboard
+refusal. Browser and installed-package tests replace the clipboard with a
+synthetic in-page transport; they never access the user's system clipboard.
+
+`clipboard-native-source.test.ts` captures the nine native-authored duplicate
+fixtures, serializes/deserializes their clipboard payload and pastes through the
+core. `VISIO_NATIVE_DUPLICATE_DIR` selects those references. The resulting
+`clipboard-core.vsdx` matches the previously validated duplicate scene and
+reopens in native Visio 16 with matching names, IDs, rich text, transforms,
+dependent User-cell values and movement locks. These checks use explicit offsets
+and establish file acceptance for those fixtures. They do not establish native
+clipboard formats, native paste placement/cascade or general interoperability.
+
+The admitted subset is local unglued 2D leaves with matching document resources
+and page settings, ordinal, background context and drawing ratio. Resource
+import, cross-scale placement, Paste Special, native Microsoft Visio clipboard
+formats, groups, masters, layers, foreign objects and unsupported dependencies
+remain open.
+
 ## Proven local text-style inheritance, 2026-10-09
 
 Formatting now admits local Character/Paragraph `F="Inh"` cells with a proven

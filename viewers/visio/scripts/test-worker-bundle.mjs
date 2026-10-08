@@ -164,6 +164,74 @@ try {
 			.items.length > 0,
 	);
 	assert.ok(vectorEdit.document.diagnostics.some((note) => note.code === 'emf-limited-rendering'));
+	const clipboardName = assets.find((file) => /^clipboard-worker-.*\.js$/.test(file));
+	// The separate registry compatibility gate can consume a runtime predating clipboard support.
+	if (!process.argv.includes('--registry-runtime') || clipboardName) {
+		assert.ok(clipboardName, 'Production clipboard capture worker must exist');
+		const clipboardUrl = pathToFileURL(resolve(assetDirectory, clipboardName)).href;
+		const clipboardWorker = new Worker(
+			`
+ const { parentPort } = require('node:worker_threads');
+ globalThis.self = globalThis;
+ globalThis.postMessage = data => parentPort.postMessage(data);
+ import(${JSON.stringify(clipboardUrl)}).then(() => {
+   parentPort.on('message', data => self.onmessage({ data }));
+   parentPort.postMessage({ ready: true });
+ }).catch(error => { throw error; });
+`,
+			{ eval: true },
+		);
+		const clipboardReply = () =>
+			new Promise((resolve, reject) => {
+				clipboardWorker.once('message', resolve);
+				clipboardWorker.once('error', reject);
+			});
+		const clipboardTimeout = setTimeout(() => {
+			clipboardWorker.terminate();
+			throw new Error('Clipboard worker smoke timed out');
+		}, 20_000);
+		try {
+			await clipboardReply();
+			let capture = clipboardReply();
+			clipboardWorker.postMessage({ bytes: fixture.buffer, pageId: '1', shapeIds: ['1'] });
+			const captured = await capture;
+			assert.equal(captured.ok, true, captured.message);
+			assert.ok(captured.text.startsWith('OOXML-VISIO-SHAPES/1\n'));
+			const snapshot = JSON.parse(captured.text.slice(captured.text.indexOf('\n') + 1));
+			assert.deepEqual(snapshot.selectionIds, ['1']);
+			assert.equal(snapshot.shapes.length, 1);
+			assert.ok(snapshot.shapes[0].xml.includes('Source text'));
+			response = editReply();
+			editWorker.postMessage({
+				bytes: fixture.buffer,
+				edits: [
+					{
+						type: 'paste-shapes',
+						pageId: '1',
+						clipboard: snapshot,
+						copies: [{ shapeId: '1', newShapeId: '2' }],
+						offsetX: 0.33,
+						offsetY: -0.33,
+					},
+				],
+			});
+			const pasted = await response;
+			assert.equal(pasted.ok, true, pasted.message);
+			assert.equal(pasted.document.pages[0].shapes.length, 2);
+			assert.equal(pasted.document.pages[0].shapes[1].text.plainText, 'Source text');
+			capture = clipboardReply();
+			clipboardWorker.postMessage({ bytes: fixture.buffer, pageId: '1', shapeIds: ['missing'] });
+			const refused = await capture;
+			assert.equal(refused.ok, false);
+			assert.equal(typeof refused.message, 'string');
+			console.log(
+				'Production clipboard worker captures portable source text, rejects missing targets and pastes through the edit worker.',
+			);
+		} finally {
+			clearTimeout(clipboardTimeout);
+			await clipboardWorker.terminate();
+		}
+	}
 	console.log(
 		'Production edit worker passes edit/reparse, byte-preserving no-op and structured core rejection checks.',
 	);

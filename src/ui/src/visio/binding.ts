@@ -22,6 +22,9 @@ export interface MountedViewer {
 	selectAll(): void;
 	clearSelection(): void;
 	duplicateSelection(): Promise<void>;
+	copySelection(): Promise<void>;
+	cutSelection(): Promise<void>;
+	pasteSelection(): Promise<void>;
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void>;
 	undo(): Promise<void>;
 	redo(): Promise<void>;
@@ -103,6 +106,18 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async duplicateSelection() {
 			assertAlive();
 			await element.duplicateSelection();
+		},
+		async copySelection() {
+			assertAlive();
+			await element.copySelection();
+		},
+		async cutSelection() {
+			assertAlive();
+			await element.cutSelection();
+		},
+		async pasteSelection() {
+			assertAlive();
+			await element.pasteSelection();
 		},
 		async undo() {
 			assertAlive();

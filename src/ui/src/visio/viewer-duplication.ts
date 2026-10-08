@@ -38,7 +38,5 @@ export class ViewerDuplication {
 			command.disabled = !!reason;
 			command.title = reason ? `Duplicate (Ctrl+D): ${reason}` : 'Duplicate (Ctrl+D)';
 		}
-		const paste = this.root.querySelector<RibbonCommand>('[data-menu="paste"]');
-		if (paste) paste.disabled = !!reason;
 	}
 }

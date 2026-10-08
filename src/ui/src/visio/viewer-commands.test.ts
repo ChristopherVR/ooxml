@@ -271,7 +271,7 @@ describe('Visio context menus', () => {
 		expect(viewer.controller.state.selectedShape?.id).toBe('s1');
 		const cut = menu.querySelector<HTMLElement & { disabled: boolean }>('[command="ctx-cut"]')!;
 		expect(cut.disabled).toBe(true);
-		expect(cut.getAttribute('title')).toMatch(/not available yet\. Needs core shape copy/);
+		expect(cut.getAttribute('title')).toMatch(/Model-only documents are read only/);
 		menu.querySelector('[command="ctx-edit-text"]')!.shadowRoot!.querySelector('button')!.click();
 		expect(menu.open).toBe(false);
 		expect(root.querySelector<HTMLDetailsElement>('.edit-controls')!.open).toBe(true);

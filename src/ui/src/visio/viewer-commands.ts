@@ -18,6 +18,7 @@ import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
 import { ViewerArrangement } from './viewer-arrangement';
 import { ViewerDuplication } from './viewer-duplication';
+import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -57,8 +58,12 @@ export class ViewerCommands {
 	#formatting: ViewerFormatting;
 	#arrangement: ViewerArrangement;
 	#duplication: ViewerDuplication;
+	#clipboard: ViewerClipboard;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
+		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
+			this.render(host.controller.state),
+		);
 		this.#duplication = new ViewerDuplication(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
 		});
@@ -80,6 +85,11 @@ export class ViewerCommands {
 			history: (key) => this.#history(key),
 			deleteSelection: () => this.#delete(),
 			duplicateSelection: () => this.#duplication.run(),
+			clipboard: (action) => {
+				void this.#clipboard.run(action.operation, action.event).catch((error: unknown) => {
+					if (!isEditCancellation(error)) host.announce(editErrorMessage(error));
+				});
+			},
 			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			formatSelection: (action) => this.#formatting.run(action),
@@ -103,6 +113,10 @@ export class ViewerCommands {
 	}
 	get tool(): CanvasTool {
 		return this.#tool;
+	}
+	/** Browser clipboard transport used by the element's public clipboard methods. */
+	clipboard(operation: ClipboardOperation): Promise<void> {
+		return this.#clipboard.run(operation);
 	}
 	/** Run one typed action, exactly as a ribbon control or shortcut would. */
 	run(action: VisioRibbonAction): void {
@@ -173,6 +187,7 @@ export class ViewerCommands {
 			options,
 		);
 		const disposeDraw = this.#draw.wire();
+		const disposeClipboard = this.#clipboard.wire();
 		return () => {
 			this.#pageOrder.close();
 			this.#pageRename.close();
@@ -180,6 +195,7 @@ export class ViewerCommands {
 			++this.#pending;
 			events.abort();
 			disposeDraw();
+			disposeClipboard();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -304,7 +320,11 @@ export class ViewerCommands {
 		if (control && (key === 'PageDown' || key === 'PageUp'))
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'fullscreen' };
-		if (editable(event.target)) return undefined;
+		if (event.composedPath().some(editable)) return undefined;
+		if (control && !event.shiftKey && ['c', 'x', 'v'].includes(key)) {
+			const operation = key === 'c' ? 'copy' : key === 'x' ? 'cut' : 'paste';
+			if (this.#clipboard.canUseAsync(operation)) return { type: 'clipboard', operation };
+		}
 		if (control && !event.shiftKey && key === 'a') return { type: 'selection', mode: 'all' };
 		if (control && !event.shiftKey && key === 'd') return { type: 'duplicate' };
 		if (control && !event.shiftKey && key === 'b') return { type: 'text-toggle', property: 'bold' };
@@ -337,6 +357,7 @@ export class ViewerCommands {
 	}
 	render(state: ViewerState): void {
 		this.#duplication.render(state);
+		this.#clipboard.render(state);
 		this.#formatting.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);

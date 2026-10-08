@@ -177,6 +177,22 @@ const payloads: ViewerEvents = {
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: forwards clipboard handles and rejects after disposal`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument });
+			const methods = ['copySelection', 'cutSelection', 'pasteSelection'] as const;
+			const calls = methods.map((method) =>
+				vi.spyOn(mounted.handle.element, method).mockResolvedValue(),
+			);
+			for (const method of methods) await act(async () => mounted.handle[method]());
+			for (const call of calls) expect(call).toHaveBeenCalledOnce();
+			await mounted.destroy();
+			for (const method of methods)
+				await expect(mounted.handle[method]()).rejects.toThrow(/not mounted|destroyed/);
+			for (const call of calls) expect(call).toHaveBeenCalledOnce();
+			host.remove();
+		});
 		it(`${framework}: forwards duplication through the shared controller and rejects after disposal`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

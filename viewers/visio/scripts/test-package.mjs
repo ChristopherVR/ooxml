@@ -96,5 +96,6 @@ assert.ok(
 run(process.execPath, [
 	resolve(root, 'scripts/test-worker-bundle.mjs'),
 	resolve(temporary, 'build/assets'),
+	'--registry-runtime',
 ]);
 console.log(`Packed ESM/type declarations/consumer build/worker checks passed: ${temporary}`);

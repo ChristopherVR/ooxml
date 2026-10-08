@@ -2,16 +2,33 @@ import { selectionKey } from 'ooxml-core/visio/ui';
 import type { ViewerController } from './controller';
 import { contextMenu } from './ribbon-parts';
 
-const CLIPBOARD = 'Needs core shape copy and paste.';
 const ARRANGE = 'Needs core grouping, container and z-order edits.';
 
 /** Visio's shape and page context menus; commands the core lacks are shown disabled. */
 export function createContextMenus(doc: Document): HTMLElement[] {
 	return [
 		contextMenu(doc, 'shape', 'Shape', [
-			{ id: 'ctx-cut', label: 'Cut', icon: 'cut', unsupported: CLIPBOARD },
-			{ id: 'ctx-copy', label: 'Copy', icon: 'copy', unsupported: CLIPBOARD },
-			{ id: 'ctx-paste', label: 'Paste', icon: 'paste', unsupported: CLIPBOARD },
+			{
+				id: 'ctx-cut',
+				label: 'Cut',
+				icon: 'cut',
+				action: { type: 'clipboard', operation: 'cut' },
+				keys: ['Control+X', 'Ctrl+X'],
+			},
+			{
+				id: 'ctx-copy',
+				label: 'Copy',
+				icon: 'copy',
+				action: { type: 'clipboard', operation: 'copy' },
+				keys: ['Control+C', 'Ctrl+C'],
+			},
+			{
+				id: 'ctx-paste',
+				label: 'Paste',
+				icon: 'paste',
+				action: { type: 'clipboard', operation: 'paste' },
+				keys: ['Control+V', 'Ctrl+V'],
+			},
 			{
 				id: 'ctx-duplicate',
 				label: 'Duplicate',
@@ -81,7 +98,13 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 			},
 		]),
 		contextMenu(doc, 'page', 'Page', [
-			{ id: 'ctx-page-paste', label: 'Paste', icon: 'paste', unsupported: CLIPBOARD },
+			{
+				id: 'ctx-page-paste',
+				label: 'Paste',
+				icon: 'paste',
+				action: { type: 'clipboard', operation: 'paste' },
+				keys: ['Control+V', 'Ctrl+V'],
+			},
 			'-',
 			{
 				id: 'ctx-fit',

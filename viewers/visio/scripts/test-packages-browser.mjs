@@ -103,7 +103,7 @@ try {
 	await page.evaluate(() => window.viewer.destroy());
 	console.log(
 		workspaceRuntime
-			? 'Packed workspace consumer mounts all six frameworks and verifies selection handles, frozen events and worker edits.'
+			? 'Packed workspace consumer mounts all six frameworks and verifies selection, duplication, clipboard transactions and worker edits.'
 			: 'Packed browser consumer imports all six adapters, parses with the shipped worker and exports a reopenable edit.',
 	);
 } finally {

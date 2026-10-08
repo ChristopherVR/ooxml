@@ -2,7 +2,7 @@ import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-p
 import { fontColorOptions } from './ribbon-style-options';
 
 const TEXT = 'Needs core text formatting edits.';
-const CLIPBOARD = 'Needs core shape copy and paste.';
+const CLIPBOARD = 'Paste Special and native Visio clipboard formats are unsupported.';
 const STYLE = 'Needs core fill, line and effect edits.';
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
@@ -15,10 +15,10 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 			label: 'Paste',
 			icon: 'paste',
 			split: true,
-			unsupported: CLIPBOARD,
+			action: { type: 'clipboard', operation: 'paste' },
 			keys: ['Control+V', 'Ctrl+V'],
 			items: [
-				{ id: 'paste-item', label: 'Paste', unsupported: CLIPBOARD },
+				{ id: 'paste-item', label: 'Paste', action: { type: 'clipboard', operation: 'paste' } },
 				{ id: 'paste-special', label: 'Paste Special...', unsupported: CLIPBOARD },
 				{
 					id: 'duplicate',
@@ -30,8 +30,26 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 			],
 		}),
 		stack(doc, [
-			command(doc, small({ id: 'cut', label: 'Cut', icon: 'cut', unsupported: CLIPBOARD })),
-			command(doc, small({ id: 'copy', label: 'Copy', icon: 'copy', unsupported: CLIPBOARD })),
+			command(
+				doc,
+				small({
+					id: 'cut',
+					label: 'Cut',
+					icon: 'cut',
+					action: { type: 'clipboard', operation: 'cut' },
+					keys: ['Control+X', 'Ctrl+X'],
+				}),
+			),
+			command(
+				doc,
+				small({
+					id: 'copy',
+					label: 'Copy',
+					icon: 'copy',
+					action: { type: 'clipboard', operation: 'copy' },
+					keys: ['Control+C', 'Ctrl+C'],
+				}),
+			),
 			command(
 				doc,
 				small({

@@ -14,6 +14,7 @@ import { VisioViewer as SolidViewer } from 'visio-solid-viewer';
 import { VisioViewerComponent } from 'visio-angular-viewer';
 import { VisioViewer as SvelteViewer } from 'visio-svelte-viewer';
 import { mountViewer } from 'visio-vanilla-viewer';
+import { verifyWorkspaceClipboard } from './workspace-consumer-clipboard.mjs';
 
 const check = (condition, message) => {
 	if (!condition) throw new Error(message);
@@ -181,6 +182,7 @@ export async function verifyWorkspaceBindings(bytes) {
 					JSON.stringify(clones),
 				`${framework}: duplicate redo selection`,
 			);
+			await verifyWorkspaceClipboard(viewer, framework);
 			results.push(framework);
 		} finally {
 			await binding?.release();

@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { attachKeyTips, registerOfficeUi } from './index';
+import type { OfficeUiMenuButton } from './menu/menu-button';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => {
@@ -111,6 +112,38 @@ describe('attachKeyTips', () => {
 		press('Alt', 'keyup');
 		expect(keytips.active).toBe(false);
 		expect(badges()).toEqual([]);
+		keytips.dispose();
+	});
+	it('dims the disabled split main command while keeping its caret available and ordinary menus enabled', async () => {
+		const { root, press, keytips } = setup();
+		const panel = root.querySelector('#home')!;
+		const split = document.createElement('office-ui-menu-button');
+		split.setAttribute('command', 'paste');
+		split.setAttribute('main-disabled', '');
+		split.setAttribute('label', 'Paste');
+		split.dataset.keytip = 'S';
+		const menu = document.createElement('office-ui-menu-button');
+		menu.setAttribute('main-disabled', '');
+		menu.setAttribute('label', 'Options');
+		menu.dataset.keytip = 'O';
+		panel.append(split, menu);
+		const commands = vi.fn();
+		split.addEventListener('office-command', commands);
+		press('Alt');
+		press('Alt', 'keyup');
+		press('h');
+		await new Promise((resolve) => requestAnimationFrame(resolve));
+		const badge = [...root.querySelectorAll<HTMLElement>('[aria-hidden="true"] span')].find(
+			(el) => el.textContent === 'S',
+		)!;
+		expect(badge.style.opacity).toBe('0.45');
+		press('s');
+		expect(commands).not.toHaveBeenCalled();
+		expect(keytips.active).toBe(true);
+		expect(split.shadowRoot!.querySelector<HTMLButtonElement>('.caret')!.disabled).toBe(false);
+		press('o');
+		expect((menu as OfficeUiMenuButton).open).toBe(true);
+		expect(keytips.active).toBe(false);
 		keytips.dispose();
 	});
 });

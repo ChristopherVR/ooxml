@@ -1,7 +1,7 @@
 import { buildXml } from '../xml/index';
 import type { VisioPackage } from './package';
 import type { VisioDuplicateShapesEdit } from './edit-duplicate-commands';
-import { attribute, children } from './sheet';
+import { attribute, children, VISIO_NS, VISIO_LEGACY_NS } from './sheet';
 import { fail } from './package-common';
 import { admitted, numeric, setCell } from './edit-geometry-admission';
 import {
@@ -47,6 +47,7 @@ export async function duplicateVisioShapes(
 	document: Element,
 	edit: VisioDuplicateShapesEdit,
 	check: () => void,
+	detached?: { root: Element; pageId: string },
 ): Promise<readonly string[]> {
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
@@ -61,9 +62,14 @@ export async function duplicateVisioShapes(
 	if ([...newIds].some((id) => ids.has(id)))
 		fail('INVALID_SHAPE_ID', 'Duplicate shape ID already exists.');
 	await assertDuplicateScope(pkg, pagePaths, root, newIds, check);
-	const indexed = indexCells(roots, { check });
+	const sourceRoot = detached?.root ?? root;
+	const sourcePageId = detached?.pageId ?? edit.pageId;
+	const indexed = indexCells(detached ? new Map([[sourcePageId, sourceRoot]]) : roots, { check });
 	const evaluate = createVisioCellEvaluator(indexed, { check }, true);
-	const container = children(root, 'Shapes')[0]!;
+	const containers = children(root, 'Shapes');
+	if (containers.length > 1) fail('INVALID_SHAPE_ID', 'Duplicate Shapes containers.');
+	const container =
+		containers[0] ?? root.ownerDocument!.createElementNS(root.namespaceURI, 'Shapes');
 	const mapping = new Map(edit.copies.map((copy) => [copy.shapeId, copy.newShapeId]));
 	const names = new Map(['Name', 'NameU'].map((name) => [name, new Set<string>()]));
 	for (const node of Array.from(root.getElementsByTagName('*')))
@@ -77,10 +83,11 @@ export async function duplicateVisioShapes(
 		cloneCharacters = buildXml(root).length;
 	for (const copy of edit.copies) {
 		check();
-		const source = admitted(root, copy.shapeId);
+		const source = admitted(sourceRoot, copy.shapeId);
+		assertCloneLeaf(source);
 		assertUnlayeredShape(source, document);
 		assertShapeLocks(source, document, ['LockSelect']);
-		for (const connects of children(root, 'Connects'))
+		for (const connects of children(sourceRoot, 'Connects'))
 			for (const connection of children(connects, 'Connect'))
 				if (['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === copy.shapeId))
 					fail('UNSUPPORTED_DUPLICATE', 'Glued shapes cannot be duplicated safely.');
@@ -91,7 +98,7 @@ export async function duplicateVisioShapes(
 			['PinY', edit.offsetY],
 		] as const) {
 			if (offset !== 0) assertEditableFormattingCell(formattingCell(source, name));
-			evaluate(key({ pageId: edit.pageId, shapeId: copy.shapeId, cell: name }));
+			evaluate(key({ pageId: sourcePageId, shapeId: copy.shapeId, cell: name }));
 		}
 		if (Math.abs(x + edit.offsetX) > 1e6 || Math.abs(y + edit.offsetY) > 1e6)
 			fail('UNSUPPORTED_DUPLICATE', 'Duplicated pins exceed coordinate limits.');
@@ -101,12 +108,15 @@ export async function duplicateVisioShapes(
 			fail('LIMIT_DUPLICATE', 'Duplicated XML exceeds bounded expansion limits.');
 		plans.push({ source, id: copy.newShapeId, x: x + edit.offsetX, y: y + edit.offsetY });
 	}
-	const order = new Map(children(container, 'Shape').map((source, index) => [source, index]));
+	const order = new Map(
+		children(children(sourceRoot, 'Shapes')[0], 'Shape').map((source, index) => [source, index]),
+	);
 	plans.sort((a, b) => order.get(a.source)! - order.get(b.source)!);
+	if (!container.parentNode) root.insertBefore(container, children(root, 'Connects')[0] ?? null);
 	const changed: VisioCellKey[] = [];
 	for (const plan of plans) {
 		check();
-		const shape = plan.source.cloneNode(true) as Element;
+		const shape = root.ownerDocument!.importNode(plan.source, true) as Element;
 		copyIdentity(shape, plan.id, names);
 		for (const node of [shape, ...Array.from(shape.getElementsByTagName('*'))]) {
 			const source = executableCellFormula(attribute(node, 'F'));
@@ -167,4 +177,16 @@ export async function duplicateVisioShapes(
 	const dirty = new Set([edit.pageId]);
 	for (const id of recalculateVisioCells(roots, changed, { check })) dirty.add(id);
 	return [...dirty];
+}
+
+/** Unknown wrappers must not conceal additional sheet identities in a purported leaf copy. */
+export function assertCloneLeaf(source: Element): void {
+	if (
+		Array.from(source.getElementsByTagName('*')).some(
+			(node) =>
+				node.localName === 'Shape' &&
+				(node.namespaceURI === VISIO_NS || node.namespaceURI === VISIO_LEGACY_NS),
+		)
+	)
+		fail('UNSUPPORTED_DUPLICATE', 'Nested Visio shape identities cannot be copied as leaf XML.');
 }

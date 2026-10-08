@@ -7,7 +7,20 @@ import {
 } from 'ooxml-core/visio/ui';
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor';
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
-import { loadVisio, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
+import {
+	loadVisio,
+	deserializeVisioClipboard,
+	type VisioDocument,
+	type VisioEdit,
+} from 'ooxml-core/visio';
+import {
+	ViewerClipboardCapture,
+	EMPTY_CLIPBOARD_STATE,
+	type ViewerClipboardState,
+	type ViewerClipboardToken,
+	type ClipboardContext,
+} from './clipboard-capture';
+import { createWorkerClipboardCapture, type CancellableClipboardCapture } from './worker-clipboard';
 import {
 	EMPTY_SELECTION,
 	sameSelection,
@@ -15,6 +28,7 @@ import {
 	snapshotSelection,
 	visioDuplicateCommand,
 	visioSelectionIsOnPage,
+	visioPasteCommand,
 } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_LAYER_OVERRIDES,
@@ -47,6 +61,8 @@ export interface ViewerState {
 	/** Backward-compatible primary selection, the first entry of selectedShapes. */
 	readonly selectedShape: VisioShapeSelection | null;
 	readonly selectedShapes: readonly VisioShapeSelection[];
+	/** Prepared source selection availability for native clipboard gestures. Payload stays private. */
+	readonly clipboard: ViewerClipboardState;
 }
 interface SelectionHistory {
 	readonly pageId: string;
@@ -72,6 +88,7 @@ export class ViewerController {
 		selectedShapes: EMPTY_SELECTION,
 		search: EMPTY_TEXT_SEARCH,
 		layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
+		clipboard: EMPTY_CLIPBOARD_STATE,
 	});
 	#subscribers = new Set<(state: ViewerState) => void>();
 	#events = new Set<EventListener>();
@@ -87,6 +104,8 @@ export class ViewerController {
 	#sourceFormat: VisioDocument['format'] | null = null;
 	#editId = 0;
 	#visible = documentVisibility(null);
+	#clipboard: ViewerClipboardCapture;
+	#clipboardQueued = false;
 	constructor(
 		private readonly parser: Parser = loadVisio,
 		private readonly listenerError: (error: unknown) => void = (error) => {
@@ -94,7 +113,17 @@ export class ViewerController {
 			else console.error('Visio viewer listener failed:', error);
 		},
 		private readonly editor: CancellableEditor = createWorkerEditor(),
-	) {}
+		clipboardCapture: CancellableClipboardCapture = createWorkerClipboardCapture(),
+	) {
+		this.#clipboard = new ViewerClipboardCapture(
+			() => this.#clipboardContext(),
+			() => this.#history!.current.bytes,
+			(clipboard) => {
+				if (!this.#destroyed) this.#change({ clipboard });
+			},
+			clipboardCapture,
+		);
+	}
 	get state(): ViewerState {
 		return this.#state;
 	}
@@ -386,6 +415,7 @@ export class ViewerController {
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
+		this.#clipboard.destroy();
 		this.#invalidateEdit();
 		this.#history = null;
 		this.#selectionHistory = new WeakMap();
@@ -409,6 +439,7 @@ export class ViewerController {
 			selectedShapes: EMPTY_SELECTION,
 			search: EMPTY_TEXT_SEARCH,
 			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
+			clipboard: EMPTY_CLIPBOARD_STATE,
 		});
 	}
 	/** Replace one source-backed local plain-text target. Core decides target support. */
@@ -443,6 +474,95 @@ export class ViewerController {
 			shapeIds: Object.freeze(command.copies.map((copy) => copy.newShapeId)),
 		});
 	}
+	captureClipboardToken(): ViewerClipboardToken {
+		this.#assertAlive();
+		return this.#clipboard.token();
+	}
+	getPreparedClipboard(token: ViewerClipboardToken): string | null {
+		this.#assertAlive();
+		return this.#clipboard.prepared(token);
+	}
+	async prepareClipboardSelection(token: ViewerClipboardToken): Promise<string> {
+		this.#assertAlive();
+		return this.#clipboard.prepare(token);
+	}
+	/** Called only after the DOM transport has successfully written the captured payload. */
+	async cutPreparedSelection(token: ViewerClipboardToken): Promise<void> {
+		this.#assertAlive();
+		const context = this.#clipboard.require(token);
+		if (!this.#clipboard.prepared(token))
+			throw new Error('Prepare the selected shapes before cutting.');
+		return this.#mutate(
+			'edit',
+			snapshotEdits(
+				context.shapeIds.map((shapeId) => ({
+					type: 'delete-shape',
+					pageId: context.pageId,
+					shapeId,
+				})),
+			),
+			undefined,
+			undefined,
+			true,
+		);
+	}
+	/** The supplied text must come from the current clipboard read, never an internal fallback. */
+	async pasteClipboardText(text: string, token: ViewerClipboardToken): Promise<void> {
+		this.#assertAlive();
+		const context = this.#clipboard.require(token);
+		const clipboard = deserializeVisioClipboard(text);
+		const page = this.#state.document!.pages[this.#state.pageIndex]!;
+		const command = visioPasteCommand(page, clipboard);
+		this.#clipboard.require(token);
+		if (!command) throw new Error('The clipboard shapes cannot be pasted on this page safely.');
+		return this.#mutate(
+			'edit',
+			snapshotEdits([command]),
+			undefined,
+			{
+				pageId: context.pageId,
+				shapeIds: Object.freeze(command.copies.map((copy) => copy.newShapeId)),
+			},
+			true,
+		);
+	}
+	#clipboardContext(): ClipboardContext | undefined {
+		if (
+			this.#destroyed ||
+			!this.#history ||
+			this.#sourceFormat !== 'vsdx' ||
+			this.#state.document?.format !== 'vsdx' ||
+			this.#state.loading ||
+			this.#state.edit.busy
+		)
+			return undefined;
+		const revision = this.#revision;
+		try {
+			const pageId = this.#state.document.pages[this.#state.pageIndex]?.id;
+			const selected = this.#state.selectedShapes;
+			if (
+				!pageId ||
+				!selected.every((shape) => visioSelectionIsOnPage(shape, pageId)) ||
+				this.#destroyed ||
+				revision !== this.#revision
+			)
+				return undefined;
+			return Object.freeze({
+				sourceGeneration: this.#sourceGeneration,
+				documentGeneration: this.#documentGeneration,
+				operationGeneration: this.#editId,
+				selectionIntent: this.#selectionIntent,
+				pageId,
+				selectionCount: selected.length,
+				shapeIds:
+					selected.length <= 1000
+						? Object.freeze(selected.map((shape) => shape.id))
+						: Object.freeze([]),
+			});
+		} catch {
+			return undefined;
+		}
+	}
 	async undo(): Promise<void> {
 		return this.#mutate('undo');
 	}
@@ -458,7 +578,13 @@ export class ViewerController {
 	}
 	cancelEdit(): void {
 		this.#assertAlive();
-		if (!this.#state.edit.busy) return;
+		if (!this.#state.edit.busy) {
+			// Browser clipboard reads/writes are pending while the editor itself is idle.
+			++this.#editId;
+			this.#clipboard.reset();
+			this.#change({ clipboard: EMPTY_CLIPBOARD_STATE });
+			return;
+		}
 		this.#invalidateEdit();
 		this.parser.cancel?.();
 		this.#change({ edit: this.#sourceEditState() });
@@ -485,6 +611,7 @@ export class ViewerController {
 		commands?: readonly VisioEdit[],
 		remote?: Uint8Array,
 		postSelection?: PostEditSelection,
+		strictClipboardCompletion = false,
 	): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
@@ -497,6 +624,7 @@ export class ViewerController {
 		if ((kind === 'undo' || kind === 'redo') && !target) return;
 		const beforeSource = history.current;
 		const selectionIntent = this.#selectionIntent;
+		const clipboardPageIndex = this.#state.pageIndex;
 		const restored =
 			kind === 'undo'
 				? this.#selectionHistory.get(beforeSource)
@@ -516,6 +644,8 @@ export class ViewerController {
 		};
 		this.#change({ edit: Object.freeze({ ...history.state, busy: true }) });
 		assertCurrent();
+		let completionGeneration = -1;
+		let completionPageId: string | undefined;
 		try {
 			let document: VisioDocument;
 			let edited: Awaited<ReturnType<CancellableEditor>> | undefined;
@@ -588,6 +718,11 @@ export class ViewerController {
 				throw new Error('The selection exceeds the bounded duplicate undo metadata limit.');
 			// No external callbacks occur between history acceptance and model acceptance.
 			assertCurrent();
+			if (
+				strictClipboardCompletion &&
+				(selectionIntent !== this.#selectionIntent || clipboardPageIndex !== this.#state.pageIndex)
+			)
+				throw new DOMException('The clipboard action was superseded or cancelled.', 'AbortError');
 			if (edited) history.append(edited.bytes, edited.diagnostics);
 			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
 			else history.move(target!);
@@ -605,6 +740,8 @@ export class ViewerController {
 			this.#visible = visible;
 			this.#searchIndex = searchIndex;
 			++this.#documentGeneration;
+			completionGeneration = this.#documentGeneration;
+			completionPageId = currentPageId;
 			if (
 				this.#change({
 					document,
@@ -624,9 +761,29 @@ export class ViewerController {
 		} catch (cause) {
 			if (!current())
 				throw new DOMException('The diagram edit was superseded or cancelled.', 'AbortError');
+			if (
+				strictClipboardCompletion &&
+				cause instanceof DOMException &&
+				cause.name === 'AbortError'
+			) {
+				this.#change({ edit: history.state });
+				throw cause;
+			}
 			const error = cause instanceof Error ? cause : new Error(String(cause));
 			this.#change({ edit: Object.freeze({ ...history.state, error }) });
 			throw error;
+		}
+		if (strictClipboardCompletion) {
+			const context = this.#clipboardContext();
+			if (
+				!current() ||
+				!context ||
+				context.documentGeneration !== completionGeneration ||
+				context.operationGeneration !== id ||
+				context.selectionIntent !== selectionIntent ||
+				context.pageId !== completionPageId
+			)
+				throw new DOMException('The clipboard action was superseded or cancelled.', 'AbortError');
 		}
 	}
 	#assertAlive(): void {
@@ -634,6 +791,15 @@ export class ViewerController {
 	}
 	#change(change: Partial<ViewerState>): boolean {
 		const revision = ++this.#revision;
+		const invalidatesClipboard = [
+			'document',
+			'edit',
+			'loading',
+			'pageIndex',
+			'selectedShape',
+			'selectedShapes',
+			'layerVisibilityOverrides',
+		].some((key) => key in change);
 		const previous = this.#state.selectedShapes;
 		const requested =
 			change.selectedShapes ??
@@ -646,6 +812,7 @@ export class ViewerController {
 		this.#state = Object.freeze({
 			...this.#state,
 			...change,
+			...(invalidatesClipboard ? { clipboard: EMPTY_CLIPBOARD_STATE } : {}),
 			...(selectedShapes
 				? {
 						selectedShapes,
@@ -653,12 +820,20 @@ export class ViewerController {
 					}
 				: {}),
 		});
+		if (invalidatesClipboard) this.#clipboard.reset();
 		for (const listener of [...this.#subscribers]) {
 			if (this.#destroyed || revision !== this.#revision) break;
 			if (this.#subscribers.has(listener)) this.#notify(() => listener(this.#state));
 		}
 		if (!this.#destroyed && revision === this.#revision && previous !== this.#state.selectedShapes)
 			this.#emit('selection-change', this.#state.selectedShapes);
+		if (!this.#destroyed && !this.#clipboardQueued) {
+			this.#clipboardQueued = true;
+			queueMicrotask(() => {
+				this.#clipboardQueued = false;
+				if (!this.#destroyed) this.#clipboard.refresh();
+			});
+		}
 		return !this.#destroyed && revision === this.#revision;
 	}
 	#notify(callback: () => void): boolean {

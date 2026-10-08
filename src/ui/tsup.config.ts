@@ -39,6 +39,7 @@ export default defineConfig({
 		visio: 'src/visio/index.ts',
 		'edit-worker': 'src/visio/edit-worker.ts',
 		'parse-worker': 'src/visio/parse-worker.ts',
+		'clipboard-worker': 'src/visio/clipboard-worker.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
