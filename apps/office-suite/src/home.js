@@ -13,7 +13,11 @@ function favourites() {
 }
 export function toggleFavourite(id) {
 	const items = favourites();
-	items.has(id) ? items.delete(id) : items.add(id);
+	if (items.has(id)) {
+		items.delete(id);
+	} else {
+		items.add(id);
+	}
 	localStorage.setItem(key(), JSON.stringify([...items]));
 }
 export function renderLibrary(files, filter) {

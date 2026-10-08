@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { writeFile, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const require = createRequire(join(root, 'e2e/docx/package.json'));

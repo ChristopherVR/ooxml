@@ -1,4 +1,4 @@
-import { $, escape, choose, notify, task } from './ui.js';
+import { $, escape, choose, task } from './ui.js';
 import { inspect, operationHelp, prepareChanges, validateChanges } from './ai-operations.js';
 
 export function mountAssistant({ store, sessions, refresh, getActive, getTeams }) {
