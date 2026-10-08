@@ -1,4 +1,21 @@
 import { fail } from './package-common';
+import {
+	isVisioFormatEdit,
+	snapshotFormatting,
+	type VisioFormatEdit,
+} from './edit-formatting-commands';
+export type {
+	VisioFormatEdit,
+	VisioTextFormatEdit,
+	VisioShapeFormatEdit,
+} from './edit-formatting-commands';
+
+export interface VisioShapeOrderEdit {
+	type: 'reorder-shape';
+	pageId: string;
+	shapeId: string;
+	order: 'front' | 'back' | 'forward' | 'backward';
+}
 
 export interface VisioTextEdit {
 	type: 'replace-plain-text';
@@ -47,7 +64,12 @@ export interface VisioPageDelete {
 	pageId: string;
 }
 export type VisioPageEdit = VisioPageInsert | VisioPageReorder | VisioPageRename | VisioPageDelete;
-export type VisioEdit = VisioTextEdit | VisioGeometryEdit | VisioPageEdit;
+export type VisioEdit =
+	| VisioTextEdit
+	| VisioGeometryEdit
+	| VisioPageEdit
+	| VisioFormatEdit
+	| VisioShapeOrderEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -150,6 +172,12 @@ export function snapshotVisioEdits(
 		const target = { pageId: edit.pageId, shapeId: edit.shapeId };
 		if (edit.type === 'replace-plain-text')
 			return { ...target, type: edit.type, text: text(edit.text) };
+		if (isVisioFormatEdit(edit)) return snapshotFormatting(edit);
+		if (edit.type === 'reorder-shape') {
+			if (!['front', 'back', 'forward', 'backward'].includes(edit.order))
+				fail('INVALID_EDIT', 'Invalid shape order.');
+			return { ...target, type: edit.type, order: edit.order };
+		}
 		if (!/^[1-9]\d{0,9}$/.test(edit.shapeId) || Number(edit.shapeId) > 4294967295)
 			fail('INVALID_EDIT', 'Geometry shape IDs must be canonical positive unsigned integers.');
 		switch (edit.type) {

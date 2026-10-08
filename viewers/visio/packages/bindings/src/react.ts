@@ -3,7 +3,6 @@ import {
 	forwardRef,
 	useEffect,
 	useImperativeHandle,
-	useMemo,
 	useRef,
 	useSyncExternalStore,
 	type CSSProperties,
@@ -56,7 +55,9 @@ export const VisioViewer = forwardRef<ViewerHandle, VisioViewerProps>(
 export function useVisioViewerState(
 	ref: RefObject<ViewerHandle | null | undefined>,
 ): ViewerState | null {
-	const source = useMemo(() => viewerStateSource(() => ref.current), [ref]);
+	// Ref contents change during commit, after this hook renders. Refresh the subscription on
+	// every commit so replacement/removal detaches the old controller and reads the mounted one.
+	const source = viewerStateSource(() => ref.current);
 	return useSyncExternalStore(source.subscribe, source.getSnapshot, () => null);
 }
 export type {

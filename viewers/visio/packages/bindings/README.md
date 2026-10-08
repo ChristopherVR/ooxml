@@ -82,6 +82,21 @@ viewer.destroy();
 
 Style hooks are native to each framework: React `className`/`style`, Vue inherited attributes, Angular host attributes, Svelte `class`/`style`, and Solid `class`/`style`. The application must give the host a usable height. Shared viewer styling and accessibility live in the custom element.
 
+## Native state
+
+Viewer state includes page, zoom, selection, search, editing and undo availability. Each framework subscribes to the shared controller rather than polling the element:
+
+| Framework | State API                                                               |
+| --------- | ----------------------------------------------------------------------- |
+| React     | `useVisioViewerState(viewerRef)` returns `ViewerState` or `null`        |
+| Vue       | `useVisioViewerState(templateRef)` returns a read-only shallow ref      |
+| Angular   | `viewer.state()` reads the component's read-only signal                 |
+| Svelte    | `viewer.getState()` returns a read-only store                           |
+| Solid     | `createVisioViewerState(handleAccessor)` returns an accessor            |
+| Vanilla   | `viewer.controller.subscribe(listener)` returns an unsubscribe function |
+
+Native hooks follow viewer replacement and conditional remounts, detach old controller subscriptions and expose `null` while no viewer is mounted. Vanilla consumers own their subscription cleanup: call the returned unsubscribe function before destroying or replacing the mounted viewer. Old controller updates cannot change a replacement viewer's state. These lifecycle checks cover all six adapters, including React StrictMode effect replay.
+
 ## Checks
 
 Install this private package's development dependencies separately from the root:
@@ -96,6 +111,7 @@ The root viewer and the sibling `ooxml-core/visio` must first be resolvable acco
 Checks include TypeScript, `svelte-check`, native runtime lifecycle tests and real-element integration:
 
 - React StrictMode mount, cleanup and remount
+- Native state subscription replacement, conditional remount and stale-controller isolation
 - Native prop diffing preserves imperative documents/user zoom across unrelated updates
 - Late Blob success and failure after unmount/remount cannot affect the new viewer
 - Throwing ref-release callbacks cannot prevent Solid resource cleanup

@@ -1,4 +1,5 @@
 import { textGroups } from './ribbon-home-format';
+import { paintOptions } from './ribbon-style-options';
 import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 
 const TEXT = 'Needs core text formatting edits.';
@@ -105,16 +106,14 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 					label: 'Fill',
 					icon: 'fill',
 					size: 'small',
-					unsupported: STYLE,
-					items: [{ id: 'fill-options', label: 'Fill Options...', unsupported: STYLE }],
+					items: paintOptions('fill'),
 				}),
 				menu(doc, {
 					id: 'line',
 					label: 'Line',
 					icon: 'line',
 					size: 'small',
-					unsupported: STYLE,
-					items: [{ id: 'line-options', label: 'Line Options...', unsupported: STYLE }],
+					items: paintOptions('line'),
 				}),
 				menu(doc, {
 					id: 'effects',
@@ -189,8 +188,14 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				icon: 'bringToFront',
 				size: 'small',
 				split: true,
-				unsupported: ARRANGE,
-				items: [{ id: 'bring-forward', label: 'Bring Forward', unsupported: ARRANGE }],
+				action: { type: 'shape-order', order: 'front' },
+				items: [
+					{
+						id: 'bring-forward',
+						label: 'Bring Forward',
+						action: { type: 'shape-order', order: 'forward' },
+					},
+				],
 			}),
 			menu(doc, {
 				id: 'send-to-back',
@@ -198,8 +203,14 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				icon: 'sendToBack',
 				size: 'small',
 				split: true,
-				unsupported: ARRANGE,
-				items: [{ id: 'send-backward', label: 'Send Backward', unsupported: ARRANGE }],
+				action: { type: 'shape-order', order: 'back' },
+				items: [
+					{
+						id: 'send-backward',
+						label: 'Send Backward',
+						action: { type: 'shape-order', order: 'backward' },
+					},
+				],
 			}),
 			menu(doc, {
 				id: 'group',

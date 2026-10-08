@@ -48,14 +48,14 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 							label: 'Font',
 							placeholder: 'Calibri',
 							width: 128,
-							unsupported: TEXT,
+							action: (value) => ({ type: 'font-family', value }),
 						}),
 						combo(doc, {
 							id: 'font-size',
 							label: 'Font Size',
 							placeholder: '12pt.',
 							width: 64,
-							unsupported: TEXT,
+							action: (value) => ({ type: 'font-size', value: Number(value) }),
 						}),
 						command(
 							doc,
@@ -63,7 +63,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'grow-font',
 								label: 'Increase Font Size',
 								icon: 'growFont',
-								unsupported: TEXT,
+								action: { type: 'font-step', direction: 1 },
 							}),
 						),
 						command(
@@ -72,7 +72,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'shrink-font',
 								label: 'Decrease Font Size',
 								icon: 'shrinkFont',
-								unsupported: TEXT,
+								action: { type: 'font-step', direction: -1 },
 							}),
 						),
 					],
@@ -81,14 +81,35 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 				stack(
 					doc,
 					[
-						command(doc, icon({ id: 'bold', label: 'Bold', icon: 'bold', unsupported: TEXT })),
 						command(
 							doc,
-							icon({ id: 'italic', label: 'Italic', icon: 'italic', unsupported: TEXT }),
+							icon({
+								id: 'bold',
+								label: 'Bold',
+								icon: 'bold',
+								pressed: false,
+								action: { type: 'text-toggle', property: 'bold' },
+							}),
 						),
 						command(
 							doc,
-							icon({ id: 'underline', label: 'Underline', icon: 'underline', unsupported: TEXT }),
+							icon({
+								id: 'italic',
+								label: 'Italic',
+								icon: 'italic',
+								pressed: false,
+								action: { type: 'text-toggle', property: 'italic' },
+							}),
+						),
+						command(
+							doc,
+							icon({
+								id: 'underline',
+								label: 'Underline',
+								icon: 'underline',
+								pressed: false,
+								action: { type: 'text-toggle', property: 'underline' },
+							}),
 						),
 						command(
 							doc,
@@ -133,7 +154,13 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 					[
 						command(
 							doc,
-							icon({ id: 'align-top', label: 'Align Top', icon: 'alignTop', unsupported: TEXT }),
+							icon({
+								id: 'align-top',
+								label: 'Align Top',
+								icon: 'alignTop',
+								pressed: false,
+								action: { type: 'text-align', axis: 'vertical', value: 'top' },
+							}),
 						),
 						command(
 							doc,
@@ -141,7 +168,8 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'align-middle',
 								label: 'Align Middle',
 								icon: 'alignMiddle',
-								unsupported: TEXT,
+								pressed: false,
+								action: { type: 'text-align', axis: 'vertical', value: 'middle' },
 							}),
 						),
 						command(
@@ -150,7 +178,8 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'align-bottom',
 								label: 'Align Bottom',
 								icon: 'alignBottom',
-								unsupported: TEXT,
+								pressed: false,
+								action: { type: 'text-align', axis: 'vertical', value: 'bottom' },
 							}),
 						),
 						command(
@@ -165,11 +194,23 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 					[
 						command(
 							doc,
-							icon({ id: 'align-left', label: 'Align Left', icon: 'alignLeft', unsupported: TEXT }),
+							icon({
+								id: 'align-left',
+								label: 'Align Left',
+								icon: 'alignLeft',
+								pressed: false,
+								action: { type: 'text-align', axis: 'horizontal', value: 'left' },
+							}),
 						),
 						command(
 							doc,
-							icon({ id: 'align-center', label: 'Center', icon: 'alignCenter', unsupported: TEXT }),
+							icon({
+								id: 'align-center',
+								label: 'Center',
+								icon: 'alignCenter',
+								pressed: false,
+								action: { type: 'text-align', axis: 'horizontal', value: 'center' },
+							}),
 						),
 						command(
 							doc,
@@ -177,7 +218,8 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								id: 'align-right',
 								label: 'Align Right',
 								icon: 'alignRight',
-								unsupported: TEXT,
+								pressed: false,
+								action: { type: 'text-align', axis: 'horizontal', value: 'right' },
 							}),
 						),
 						command(

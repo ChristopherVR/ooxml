@@ -1,9 +1,37 @@
-# Visio scenes and experimental text saving
+# Visio scenes and experimental source-backed editing
 
 `ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
 UI components live in the separate viewer. This is a supported subset, not Visio
-parity or a ShapeSheet calculation engine. A separate experimental plain-text
-save API preserves untouched package payloads under the limitations documented below.
+parity or a complete ShapeSheet calculation engine. The experimental edit API
+preserves untouched package payloads under the limitations documented below.
+
+## Whole-shape formatting and stacking order
+
+`editVsdx` accepts `format-text`, `format-shape` and `reorder-shape` commands.
+Text properties are `fontFamily`, `fontSize` (points), `bold`, `italic`,
+`underline`, `horizontalAlign` (`left`, `center`, `right`) and `verticalAlign`
+(`top`, `middle`, `bottom`). Shape properties are `fillColor` (six-digit hex or
+`none`), `lineColor` (six-digit hex) and `lineWeight` (points). Reordering accepts
+`order: 'front' | 'back' | 'forward' | 'backward'`. Every command includes
+`pageId` and `shapeId`; the complete command batch is atomic.
+
+Formatting admits unlayered local leaf shapes and local lines. Text edits apply
+uniformly to one character and paragraph row, with plain text or supported
+zero-index markers. Font family edits require an existing document FaceName.
+Protected/error/delegated cells, unsupported inheritance and formulas depending
+on changed formatting are refused. Paint edits preserve existing rich-text runs.
+Stacking edits move intact top-level ordinary shape nodes within display band
+zero; masters, groups, foreign shapes, layered targets, and dynamic/container
+dependencies are currently refused. Physical point sizes do not scale with the
+page drawing scale. The optional `VisioDocument.fontFamilies` lists saved font
+families for host pickers.
+
+Successful saves carry experimental diagnostics. Untouched part payloads remain
+byte-identical, while edited XML and ZIP representation may change. These changes
+do not establish native Microsoft Visio reopen or visual equivalence. Regression
+coverage lives in `edit-formatting.test.ts` and `edit-shape-order.test.ts`.
+
+## Read a drawing
 
 ```ts
 import { parseVsdx, getVisioPageLayers } from 'ooxml-core/visio';

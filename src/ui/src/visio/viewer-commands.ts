@@ -14,6 +14,7 @@ import type { Rulers } from './viewer-ruler';
 import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
+import { ViewerFormatting } from './viewer-formatting';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -32,7 +33,9 @@ interface CommandHost {
 }
 const editable = (target: EventTarget | null) =>
 	target instanceof Element &&
-	!!target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])');
+	!!target.closest(
+		'input, textarea, select, office-ui-select, [contenteditable]:not([contenteditable="false"])',
+	);
 
 /**
  * Visio command state (tool, grid, pending edits) and keyboard shortcuts. Ribbon controls emit
@@ -48,8 +51,12 @@ export class ViewerCommands {
 	#pageOrder: ViewerPageOrder;
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
+	#formatting: ViewerFormatting;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
+		this.#formatting = new ViewerFormatting(host.root, host.controller, (run, success) => {
+			void this.#edit(run, success);
+		});
 		this.#pageOrder = new ViewerPageOrder(host.root, host.controller);
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
@@ -63,6 +70,7 @@ export class ViewerCommands {
 			deleteSelection: () => this.#delete(),
 			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
+			formatSelection: (action) => this.#formatting.run(action),
 			setTool: (tool) => this.setTool(tool),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
@@ -266,6 +274,11 @@ export class ViewerCommands {
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'fullscreen' };
 		if (editable(event.target)) return undefined;
+		if (control && !event.shiftKey && key === 'b') return { type: 'text-toggle', property: 'bold' };
+		if (control && !event.shiftKey && key === 'i')
+			return { type: 'text-toggle', property: 'italic' };
+		if (control && !event.shiftKey && key === 'u')
+			return { type: 'text-toggle', property: 'underline' };
 		if (control && !event.shiftKey && key === 'z') return { type: 'history', key: 'undo' };
 		if (control && (key === 'y' || (event.shiftKey && key === 'z')))
 			return { type: 'history', key: 'redo' };
@@ -288,6 +301,7 @@ export class ViewerCommands {
 		this.run(action);
 	}
 	render(state: ViewerState): void {
+		this.#formatting.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

@@ -2,11 +2,19 @@ import { DEFAULTS, fail, type VisioPackageLimits } from './package-common';
 import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { replacePlainText, serializeEditedXml } from './edit-text';
-import { snapshotVisioEdits, isVisioPageEdit, type VisioEdit } from './edit-commands';
+import {
+	snapshotVisioEdits,
+	isVisioPageEdit,
+	type VisioEdit,
+	type VisioGeometryEdit,
+} from './edit-commands';
 import { applyGeometryEdit } from './edit-geometry';
 import { assertGeometryPackageScope } from './edit-scope';
 import { emptyMasterMoveProof } from './edit-master-move';
 import { editVsdxPages } from './edit-pages';
+import { applyFormattingEdit } from './edit-formatting';
+import { isVisioFormatEdit } from './edit-formatting-commands';
+import { reorderVisioShape, assertShapeOrderPackageScope } from './edit-shape-order';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -16,6 +24,10 @@ export type {
 	VisioPageRename,
 	VisioPageDelete,
 	VisioPageEdit,
+	VisioFormatEdit,
+	VisioTextFormatEdit,
+	VisioShapeFormatEdit,
+	VisioShapeOrderEdit,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -77,26 +89,39 @@ export async function editVsdx(
 	}
 	const dirty = new Map<string, Element>();
 	const roots = new Map<string, Element>();
-	const geometry = commands.some((command) => command.type !== 'replace-plain-text');
+	const geometryCommands = commands.filter(
+		(command): command is VisioGeometryEdit =>
+			command.type !== 'replace-plain-text' &&
+			command.type !== 'reorder-shape' &&
+			!isVisioFormatEdit(command),
+	);
 	let document: Element | undefined;
 	let masterMovePins = emptyMasterMoveProof();
-	if (geometry) {
+	if (
+		geometryCommands.length ||
+		commands.some((command) => isVisioFormatEdit(command) || command.type === 'reorder-shape')
+	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
 		for (const [pageId, path] of pages) {
 			const sourceRoot = await visioXml(pkg, path, 'PageContents');
 			roots.set(pageId, (sourceRoot.ownerDocument!.cloneNode(true) as Document).documentElement);
 		}
-		masterMovePins = await assertGeometryPackageScope(
-			pkg,
-			new Set(pages.values()),
-			commands.filter((command) => command.type !== 'replace-plain-text'),
-			check,
-			roots,
-		);
+		if (geometryCommands.length)
+			masterMovePins = await assertGeometryPackageScope(
+				pkg,
+				new Set(pages.values()),
+				geometryCommands,
+				check,
+				roots,
+			);
 		const path = await related(pkg, '', 'document');
 		document = await visioXml(pkg, path!, 'VisioDocument');
 	}
 	let textChanged = false;
+	if (commands.some((command) => command.type === 'reorder-shape'))
+		await assertShapeOrderPackageScope(pkg, check);
+	let formatChanged = false;
+	let orderChanged = false;
 	for (const command of commands) {
 		check();
 		const path = pages.get(command.pageId);
@@ -111,6 +136,18 @@ export async function editVsdx(
 			if (replacePlainText(root, command.shapeId, command.text, check)) {
 				dirty.set(path, root);
 				textChanged = true;
+			}
+		} else if (isVisioFormatEdit(command)) {
+			if (
+				await applyFormattingEdit(pkg, new Set(pages.values()), roots, document!, command, check)
+			) {
+				dirty.set(path, root);
+				formatChanged = true;
+			}
+		} else if (command.type === 'reorder-shape') {
+			if (reorderVisioShape(root, document!, command, check)) {
+				dirty.set(path, root);
+				orderChanged = true;
 			}
 		} else {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
@@ -148,8 +185,8 @@ export async function editVsdx(
 	return {
 		bytes,
 		changedParts: [...dirty.keys()],
-		diagnostics:
-			dirty.size && textChanged
+		diagnostics: [
+			...(dirty.size && textChanged
 				? [
 						{
 							code: 'edit-caches-not-recalculated',
@@ -157,14 +194,34 @@ export async function editVsdx(
 								'Text was replaced without recalculating formulas or dependent caches. Native Visio reopen and rendering compatibility are unverified.',
 						},
 					]
-				: dirty.size
-					? [
-							{
-								code: 'edit-geometry-experimental',
-								message:
-									'Supported affected geometry caches were recalculated. Native Visio reopen and rendering fidelity remain unverified.',
-							},
-						]
-					: [],
+				: []),
+			...(dirty.size && geometryCommands.length
+				? [
+						{
+							code: 'edit-geometry-experimental',
+							message:
+								'Supported affected geometry caches were recalculated. Native Visio reopen and rendering fidelity remain unverified.',
+						},
+					]
+				: []),
+			...(formatChanged
+				? [
+						{
+							code: 'edit-formatting-experimental',
+							message:
+								'Uniform text and solid shape formatting was changed without recalculating text layout. Native Visio reopen and rendering fidelity remain unverified.',
+						},
+					]
+				: []),
+			...(orderChanged
+				? [
+						{
+							code: 'edit-shape-order-experimental',
+							message:
+								'Local sibling shape order was changed. Native Visio reopen and rendering fidelity remain unverified.',
+						},
+					]
+				: []),
+		],
 	};
 }

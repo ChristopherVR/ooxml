@@ -1,4 +1,5 @@
 import type { VisioEdit } from '../index';
+import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-commands';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -49,7 +50,12 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (typeof command.shapeId !== 'string' || !command.shapeId || command.shapeId.length > 256)
 			throw new Error('Invalid edit shape target.');
 		const target = { pageId: command.pageId, shapeId: command.shapeId };
+		if (isVisioFormatEdit(command)) return snapshotFormatting(command);
 		switch (command.type) {
+			case 'reorder-shape':
+				if (!['front', 'back', 'forward', 'backward'].includes(command.order))
+					throw new Error('Invalid shape order.');
+				return { ...target, type: command.type, order: command.order };
 			case 'create-line':
 				numbers(command.beginX, command.beginY, command.endX, command.endY);
 				return {

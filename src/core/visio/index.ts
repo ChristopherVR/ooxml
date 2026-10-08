@@ -59,6 +59,10 @@ export {
 	type VisioPageRename,
 	type VisioPageDelete,
 	type VisioPageEdit,
+	type VisioFormatEdit,
+	type VisioTextFormatEdit,
+	type VisioShapeFormatEdit,
+	type VisioShapeOrderEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';

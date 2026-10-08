@@ -231,6 +231,14 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 	};
 	return {
 		format: 'vsdx',
+		...(model.fontFamilies === undefined
+			? {}
+			: {
+					fontFamilies: list(model.fontFamilies, 'font families', 10000, (font) => {
+						if (typeof font !== 'string' || font.length > 1024) throw invalid();
+						return font;
+					}),
+				}),
 		diagnostics: list(model.diagnostics, 'diagnostics', 2000, (note) =>
 			fields(note, ['code', 'message', 'severity']),
 		),

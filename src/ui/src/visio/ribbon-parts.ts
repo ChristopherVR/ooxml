@@ -59,7 +59,7 @@ export function command(doc: Document, spec: CommandSpec): RibbonCommand {
 	el.dataset.size = spec.size ?? 'large';
 	el.addEventListener('office-command', (event) => {
 		event.stopPropagation();
-		if (spec.action) emitRibbonAction(el, spec.action);
+		if (spec.action && !el.disabled) emitRibbonAction(el, spec.action);
 	});
 	return el;
 }
@@ -105,7 +105,11 @@ export function menu(doc: Document, spec: MenuSpec, submenu = false): RibbonComm
 		el.addEventListener('office-command', (event) => {
 			event.stopPropagation();
 			const action = actions.get((event as CustomEvent<{ command: string }>).detail.command);
-			if (action) emitRibbonAction(el, action);
+			const id = (event as CustomEvent<{ command: string }>).detail.command;
+			const target = [...el.querySelectorAll<RibbonCommand>('[command]')].find(
+				(item) => item.getAttribute('command') === id,
+			);
+			if (action && !el.disabled && !target?.disabled) emitRibbonAction(el, action);
 		});
 	return el;
 }
@@ -164,10 +168,17 @@ export function check(doc: Document, spec: CommandSpec): HTMLElement {
 	return label;
 }
 
-/** A shared select shown as Visio's font or size combo; disabled until core supports it. */
+/** A shared select shown as Visio's font or size combo. */
 export function combo(
 	doc: Document,
-	spec: { id: string; label: string; placeholder: string; width: number; unsupported: string },
+	spec: {
+		id: string;
+		label: string;
+		placeholder: string;
+		width: number;
+		unsupported?: string;
+		action?: (value: string) => VisioRibbonAction;
+	},
 ): HTMLElement {
 	const el = doc.createElement('office-ui-select') as HTMLElement & {
 		options: { value: string; label: string }[];
@@ -176,10 +187,13 @@ export function combo(
 	el.dataset.combo = spec.id;
 	el.setAttribute('aria-label', spec.label);
 	el.setAttribute('disabled', '');
-	el.title = `${spec.label}: not available yet. ${spec.unsupported}`;
+	el.title = spec.action ? spec.label : `${spec.label}: not available yet. ${spec.unsupported}`;
 	el.style.width = `${spec.width}px`;
 	el.options = [{ value: '', label: spec.placeholder }];
 	el.value = '';
+	el.addEventListener('change', () => {
+		if (spec.action && !el.hasAttribute('disabled')) emitRibbonAction(el, spec.action(el.value));
+	});
 	return el;
 }
 

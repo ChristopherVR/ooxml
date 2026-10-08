@@ -1,5 +1,5 @@
 import type { ViewerController } from './controller';
-import type { VisioRibbonAction, CanvasTool } from './ribbon-action';
+import type { VisioRibbonAction, CanvasTool, VisioFormattingAction } from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
 export interface RibbonTargets {
@@ -8,6 +8,7 @@ export interface RibbonTargets {
 	deleteSelection(): void;
 	rotateSelection(direction: 'left' | 'right'): void;
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
+	formatSelection(action: VisioFormattingAction): void;
 	setTool(tool: CanvasTool): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
@@ -24,6 +25,14 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 	const { controller } = targets;
 	const page = controller.state.document?.pages[controller.state.pageIndex];
 	switch (action.type) {
+		case 'text-toggle':
+		case 'font-family':
+		case 'font-size':
+		case 'font-step':
+		case 'text-align':
+		case 'shape-format':
+		case 'shape-order':
+			return targets.formatSelection(action);
 		case 'history':
 			return targets.history(action.key);
 		case 'delete':

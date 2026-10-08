@@ -235,6 +235,8 @@ export interface VisioPage {
 }
 export interface VisioDocument {
 	format: 'vsdx' | 'vsd';
+	/** Existing source FaceNames available for conservative source-backed font edits. */
+	fontFamilies?: readonly string[];
 	pages: VisioPage[];
 	diagnostics: VisioDiagnostic[];
 }

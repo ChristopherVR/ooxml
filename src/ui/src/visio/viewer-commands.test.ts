@@ -279,7 +279,7 @@ describe('Visio Tell me', () => {
 		const options = () => [...search.shadowRoot!.querySelectorAll('li')];
 		type('bold');
 		expect(options()[0]!.getAttribute('aria-disabled')).toBe('true');
-		expect(options()[0]!.textContent).toMatch(/Bold.*not available yet\. Needs core text/);
+		expect(options()[0]!.textContent).toMatch(/Bold.*Open a .vsdx file/);
 		type('grid');
 		const first = options()[0]!;
 		expect(first.querySelector('span')!.textContent).toBe('Grid');

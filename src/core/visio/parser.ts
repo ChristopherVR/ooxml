@@ -109,12 +109,26 @@ export async function parseVsdx(
 	};
 	for (const color of children(child(documentRoot, 'Colors'), 'ColorEntry'))
 		resources.colors.set(attribute(color, 'IX') ?? '', attribute(color, 'RGB') ?? '');
-	children(child(documentRoot, 'FaceNames'), 'FaceName').forEach((font, index) =>
+	const faceNames = children(child(documentRoot, 'FaceNames'), 'FaceName');
+	if (faceNames.length > 10000)
+		throw new VisioPackageError(
+			'METADATA_LIMIT',
+			'Document font count exceeds its metadata limit.',
+		);
+	let fontCharacters = 0;
+	faceNames.forEach((font, index) => {
+		checkTime();
+		fontCharacters += (attribute(font, 'Name') ?? attribute(font, 'NameU') ?? 'Arial').length;
+		if (fontCharacters > 1_000_000)
+			throw new VisioPackageError(
+				'METADATA_LIMIT',
+				'Document fonts exceed aggregate metadata limits.',
+			);
 		resources.fonts.set(
 			metadata(attribute(font, 'ID') ?? String(index), 256, 'Font ID'),
 			metadata(attribute(font, 'Name') ?? attribute(font, 'NameU') ?? 'Arial', 1024, 'Font name'),
-		),
-	);
+		);
+	});
 	const styles = new Map<string, StyleRecord>();
 	for (const style of children(child(documentRoot, 'StyleSheets'), 'StyleSheet'))
 		styles.set(metadata(attribute(style, 'ID') ?? '', 256, 'Style ID'), {
@@ -293,7 +307,12 @@ export async function parseVsdx(
 		'ShapeSheet formulas, automatic connector routing, and external data are not evaluated; saved cached values and supported theme records are used.',
 		{ severity: 'info' },
 	);
-	return { format: 'vsdx', pages, diagnostics: diagnosticState.finish() };
+	return {
+		format: 'vsdx',
+		pages,
+		diagnostics: diagnosticState.finish(),
+		fontFamilies: [...new Set(resources.fonts.values())],
+	};
 }
 
 /** Backgrounds first, selected page last. Missing pages and cycles are safe. */

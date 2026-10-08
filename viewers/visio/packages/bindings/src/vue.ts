@@ -3,10 +3,10 @@ import {
 	h,
 	onBeforeUnmount,
 	onMounted,
-	onScopeDispose,
 	ref,
 	shallowRef,
 	watch,
+	watchEffect,
 	type PropType,
 	type Ref,
 	type ShallowRef,
@@ -37,21 +37,21 @@ export const VisioViewer = defineComponent({
 	emits: [...eventKeys],
 	setup(props, { emit, expose }) {
 		const host = ref<HTMLElement>();
-		let binding: MountedViewer | undefined;
+		const binding = shallowRef<MountedViewer>();
 		const options = () => withEventEmitter(props, (name, value) => emit(name, value));
 		onMounted(() => {
-			binding = mountFrameworkViewer(host.value!, options());
+			binding.value = mountFrameworkViewer(host.value!, options());
 		});
 		watch(
 			() => [...propertyKeys.map((key) => props[key]), props.events],
-			() => binding?.update(options()),
+			() => binding.value?.update(options()),
 		);
 		onBeforeUnmount(() => {
-			const mounted = binding;
-			binding = undefined;
+			const mounted = binding.value;
+			binding.value = undefined;
 			mounted?.destroy();
 		});
-		expose(viewerHandle(() => binding));
+		expose(viewerHandle(() => binding.value));
 		return () => h('div', { ref: host });
 	},
 });
@@ -63,20 +63,20 @@ export function useVisioViewerState(
 	viewer: Ref<ViewerHandle | null | undefined>,
 ): Readonly<ShallowRef<ViewerState | null>> {
 	const state = shallowRef<ViewerState | null>(null);
-	let stop = () => {};
-	watch(
-		viewer,
-		(handle) => {
-			stop();
-			const source = viewerStateSource(() => handle);
+	watchEffect(
+		(onCleanup) => {
+			// A template ref can be exposed before onMounted creates its controller. Reading the
+			// reactive binding through the handle follows that transition as well as ref changes.
+			const source = viewerStateSource(() => viewer.value);
 			state.value = source.getSnapshot();
-			stop = source.subscribe(() => {
-				state.value = source.getSnapshot();
-			});
+			onCleanup(
+				source.subscribe(() => {
+					state.value = source.getSnapshot();
+				}),
+			);
 		},
-		{ immediate: true, flush: 'post' },
+		{ flush: 'post' },
 	);
-	onScopeDispose(() => stop());
 	return state;
 }
 export type {

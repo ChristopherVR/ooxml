@@ -181,9 +181,9 @@ describe('shared Office-style viewer chrome', () => {
 		// The sample is a model-only document: no source bytes means no drawing or deletion.
 		expect(command('rectangle').disabled).toBe(true);
 		expect(command('undo').disabled).toBe(true);
-		// Unsupported Visio commands are visible, disabled and say what is missing.
+		// Formatting requires source bytes and explains how to enable it.
 		expect(command('bold').disabled).toBe(true);
-		expect(command('bold').getAttribute('title')).toMatch(/not available yet\. Needs core text/);
+		expect(command('bold').getAttribute('title')).toMatch(/Open a .vsdx file/);
 		root
 			.querySelector<HTMLElement>('.viewport')!
 			.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2', bubbles: true, composed: true }));

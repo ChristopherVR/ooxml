@@ -2,6 +2,38 @@
 
 Status: local Windows development evidence, 2026-10-08. Full Microsoft Visio parity is not established.
 
+## Source-backed Home commands and binding lifecycle, 2026-10-08
+
+Home font/size, bold/italic/underline, horizontal/vertical alignment, solid fill,
+line color/weight and four stacking-order actions now reach the shared editing
+worker and history. The six framework demos share those actions. React and Vue
+state subscriptions now follow viewer replacement and detach old controllers.
+
+Validation in an isolated checkout of current main:
+
+- Visio core suite: 2,263 passed, 149 optional native/corpus checks skipped.
+- After independent-review fixes: 115 focused editing, preservation, security,
+  formatting, ordering and page UI checks passed.
+- Visio UI suite: 742 passed, seven optional checks skipped; the final focused
+  formatting/controller/chrome run passed 28 checks, including eight new
+  formatting tests.
+- Native binding check: strict TypeScript and Svelte check passed; 90 DOM tests
+  and five SSR tests passed against built workspace packages.
+- Chromium: 18 workflows passed, including formatting, undo/redo, source download
+  and reopen in vanilla, React, Vue, Angular, Svelte and Solid, plus existing
+  edit, geometry, protected-refusal and mobile save workflows.
+- Core and UI declarations/bundles, strict UI checking, and viewer/demo/browser
+  TypeScript passed. The docs and all six demo builds passed.
+
+Independent review caught disabled style properties leaking into text edits and
+noncanonical cell names producing duplicate cells; both have regression tests.
+Additional checks covered physical font/line sizes on scaled pages, multiline
+alignment, unchanged ZIP payloads and repeated-command no-ops.
+
+No Microsoft Visio reopen, pixel equivalence, other browser engine or full Office
+parity claim follows from these checks. Editing admission and the remaining
+capability gaps are described in parity.md.
+
 ## Native local group rotation interactions, 2026-10-08
 
 Two further owned Visio 16 references use Selection.Rotate on the parent group:

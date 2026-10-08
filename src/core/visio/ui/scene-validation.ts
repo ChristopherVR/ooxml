@@ -50,6 +50,11 @@ export function assertViewableDocument(model: VisioDocument): void {
 		metadataBytes += value.length;
 		if (metadataBytes > 1_000_000) throw new Error('The scene exceeds aggregate metadata limits.');
 	};
+	if (model.fontFamilies !== undefined) {
+		if (!Array.isArray(model.fontFamilies) || model.fontFamilies.length > 10000)
+			throw new Error('The scene has an invalid font family list.');
+		for (const family of model.fontFamilies) label(family, 1024);
+	}
 	for (const diagnostic of model.diagnostics) {
 		label(diagnostic.code, 256);
 		label(diagnostic.message);
