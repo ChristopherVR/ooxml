@@ -310,7 +310,8 @@ core -> shared -> react / vue / angular / vanilla / svelte
 ```bash
 bun run build         # Build all packages in dependency order
 bun run test          # Run vitest across all packages
-bun run typecheck     # Type-check all packages
+bun run typecheck     # Type-check all packages (needs built packages)
+bun run typecheck:fresh  # Build the packages, then type-check (clean checkouts)
 bun run fmt           # Format with oxfmt
 bun run lint          # Lint with oxlint
 bun run demo          # Start the React demo dev server (port 4173)

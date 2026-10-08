@@ -35,7 +35,7 @@ cd pptx-viewer
 bun install
 bun run build      # foundations, bindings, installer, and React demo
 bun run test
-bun run typecheck
+bun run typecheck        # needs built packages; on a clean checkout use typecheck:fresh
 bun run lint
 bun run fmt:check
 ```
@@ -407,6 +407,7 @@ Before you push:
 
 ```bash
 bun run lint && bun run fmt:check && bun run typecheck && bun run test
+bun run typecheck:fresh  # instead of typecheck when packages are not built yet
 bun run e2e          # if you touched anything user-visible
 ```
 
