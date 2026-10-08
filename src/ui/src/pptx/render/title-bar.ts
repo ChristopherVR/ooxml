@@ -59,6 +59,11 @@ export const TITLE_BAR_DEFAULT_FILE_KEY = 'pptx.titleBar.defaultFileName';
 // Class tokens (Tailwind), shared verbatim by all three bindings
 // ---------------------------------------------------------------------------
 
+/**
+ * @deprecated No binding paints the title bar from these any more: every binding renders
+ * `pptx-ui-title-bar`, the shared `office-ui-title-bar` themed from `TITLE_BAR_METRICS`.
+ * Kept for compatibility and as the metrics' cross-check (`chrome-metrics.test.ts`).
+ */
 export const TITLE_BAR_CLASSES = {
 	/** Outer row container. Hidden on mobile (the compact toolbar covers it). */
 	container:

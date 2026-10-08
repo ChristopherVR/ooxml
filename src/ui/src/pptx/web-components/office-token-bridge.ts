@@ -1,6 +1,5 @@
+import { STATUS_BAR_METRICS, TITLE_BAR_METRICS as M } from '../render';
 import { tok } from './control-tokens';
-import { STATUS_BAR_BRIDGE } from './status-bar-styles';
-import { TITLE_BAR_BRIDGE } from './title-bar-styles';
 
 /**
  * The `pptx-ui-*` tags implemented by `ooxml-ui` (see `office-aliases.ts`). Their shadow CSS reads
@@ -86,10 +85,65 @@ const BASE = `
 	--office-switch-thumb-on: ${tok('--pptx-switch-thumb')};
 `;
 
-/** Per-tag extras: pptx sizes and colours where its controls differ from the Office defaults. */
+/**
+ * The pptx look of the shared title bar, from the shared chrome metrics: `--office-title-bar-*`
+ * tokens, the compact AutoSave switch (its `--pptx-switch-*` inputs inherit into the nested
+ * `pptx-ui-switch`) and hiding both placements on phones, where the compact toolbar covers them.
+ */
+const TITLE_BAR = `:host {
+	--office-title-bar-height: ${M.height}px;
+	--office-title-bar-background: color-mix(in srgb, var(--pptx-secondary, #1e1e2e) 80%, transparent);
+	--office-title-bar-foreground: var(--pptx-card-foreground, #e2e8f0);
+	--office-title-bar-name-foreground: var(--pptx-foreground, #f1f5f9);
+	--office-title-bar-border: color-mix(in srgb, var(--pptx-border, #33334d) 60%, transparent);
+	--office-title-bar-mark-size: ${M.logoSize}px;
+	--office-title-bar-mark-background: ${M.logoBackground};
+	--office-title-bar-mark-foreground: #fff;
+	--office-title-bar-result-selected: var(--pptx-accent, #33334d);
+	--office-font-size-xs: ${M.fontSize}px;
+	--office-font-size-sm: ${M.fileNameFontSize}px;
+	--office-font-size-2xs: ${M.logoFontSize}px;
+	--office-font-weight-medium: ${M.fileNameFontWeight};
+	--office-icon-size: 14px;
+	--office-icon-stroke: 1.4;
+	--office-control-height-md: 24px;
+	--office-selected: color-mix(in srgb, var(--pptx-accent, #33334d) 60%, transparent);
+	--office-warning: #eab308;
+	--office-danger: #f87171;
+	--office-popover: var(--pptx-popover, var(--pptx-card, #1e1e2e));
+	--office-shadow-lg: 0 14px 28px rgb(0 0 0 / 40%);
+	--pptx-switch-width: ${M.switchTrackWidth}px;
+	--pptx-switch-height: ${M.switchTrackHeight}px;
+	--pptx-switch-knob-size: ${M.switchKnobSize}px;
+	--pptx-switch-knob-offset: ${M.switchKnobOffsetOff}px;
+	--pptx-switch-knob-travel: ${M.switchKnobOffsetOn - M.switchKnobOffsetOff}px;
+	--pptx-switch-track: color-mix(in srgb, var(--pptx-muted-foreground, #a5a5b5) 40%, transparent);
+	--pptx-switch-thumb: #fff;
+}
+@media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) { :host { display: none !important; } }`;
+
+/** The pptx look of the shared status bar: tokens only, sized by the shared chrome metrics. */
+const STATUS_BAR = `:host {
+	--office-status-bar-height: ${STATUS_BAR_METRICS.height}px;
+	--office-status-bar-separator-opacity: 0.6;
+	--office-surface: color-mix(in srgb, var(--pptx-secondary, #1e1e2e) 50%, transparent);
+	--office-border: var(--pptx-border, #33334d);
+	--office-foreground: var(--pptx-card-foreground, #e2e8f0);
+	--office-font-size-xs: 10px;
+	--office-control-height-xs: 24px;
+	--office-icon-stroke: 1.45;
+	--office-warning: #facc15;
+	--office-danger: #f87171;
+	line-height: 1.2;
+}`;
+
+/**
+ * Per-tag extras: pptx sizes and colours where its controls differ from the Office defaults.
+ * Only `:host` rules, so no product style depends on a shared element's internal class names.
+ */
 const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
-	'pptx-ui-title-bar': TITLE_BAR_BRIDGE,
-	'pptx-ui-status-bar': STATUS_BAR_BRIDGE,
+	'pptx-ui-title-bar': TITLE_BAR,
+	'pptx-ui-status-bar': STATUS_BAR,
 	'pptx-ui-ribbon-gallery': `:host { --office-foreground: var(--pptx-foreground, #f9fafb); --office-background: var(--pptx-background, #111827);
 	--office-gallery-strip-background: color-mix(in srgb, var(--pptx-muted, #2a2a3d) 30%, transparent);
 	--office-command-icon-color: var(--pptx-primary, #6366f1); --office-z-popover: 1200;

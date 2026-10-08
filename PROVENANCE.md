@@ -2195,3 +2195,17 @@ break and indentation are kept, inserted elements follow PowerPoint's order,
 rewritten text escapes only `&`, `<`, `>` and CR, and `custom.xml` carries a
 declaration. Two behaviours changed: custom properties are written even when
 `app.xml` is missing, and an `app.xml` whose root has a prefix is refreshed.
+
+## pptx title and status bar bridges (2026-10-08)
+
+Source: ChristopherVR/ooxml at `0f081d260`,
+`src/ui/src/pptx/web-components/title-bar-styles.ts` (`TITLE_BAR_BRIDGE`) and
+`status-bar-styles.ts` (`STATUS_BAR_BRIDGE`). Both modules were deleted; their
+token blocks moved into the per-tag extras of `office-token-bridge.ts`. The
+rules that reached into the shared elements' internals became shared tokens:
+`.name` colour is `--office-title-bar-name-foreground`, the highlighted search
+result `--office-title-bar-result-selected`, the status-bar separators'
+opacity `--office-status-bar-separator-opacity`, the AutoSave switch metrics
+moved from `.switch` to `:host` (they inherit into the nested `pptx-ui-switch`)
+and the status bar's `.bar` line height to `:host`. The status bar's
+`.zoom-fit` rule was dropped: `.bar button` outranked it, so it never applied.
