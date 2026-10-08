@@ -75,7 +75,7 @@ describe('theme-color-swatches', () => {
 			'accent5',
 			'accent6',
 		]);
-		const accent1 = grid[4];
+		const accent1 = grid[4]!;
 		expect(accent1.base.hex).toBe('#4472c4');
 		expect(accent1.base.label).toBe('Accent 1');
 		// PowerPoint's own Blue, Accent 1 variants.
@@ -86,12 +86,15 @@ describe('theme-color-swatches', () => {
 			'#2f5597',
 			'#203864',
 		]);
-		expect(accent1.variants[0].label).toBe('Accent 1, Lighter 80%');
+		expect(accent1.variants[0]?.label).toBe('Accent 1, Lighter 80%');
 		// White background gets the darker rows; black text gets the lighter rows.
-		expect(grid[0].variants[0]).toMatchObject({ hex: '#f2f2f2', label: 'Background 1, Darker 5%' });
-		expect(grid[1].variants[0]).toMatchObject({ hex: '#808080', label: 'Text 1, Lighter 50%' });
+		expect(grid[0]?.variants[0]).toMatchObject({
+			hex: '#f2f2f2',
+			label: 'Background 1, Darker 5%',
+		});
+		expect(grid[1]?.variants[0]).toMatchObject({ hex: '#808080', label: 'Text 1, Lighter 50%' });
 		// Light grey Background 2 (L ~0.9) gets the 10/25/50/75/90 darker rows.
-		expect(grid[2].variants.map((s) => s.variant?.percent)).toStrictEqual([10, 25, 50, 75, 90]);
+		expect(grid[2]?.variants.map((s) => s.variant?.percent)).toStrictEqual([10, 25, 50, 75, 90]);
 	});
 
 	it('skips columns the theme map cannot resolve and tolerates a missing map', () => {
