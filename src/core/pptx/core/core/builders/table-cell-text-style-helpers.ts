@@ -88,12 +88,42 @@ export function applyCellTextFormat(
 	const firstRun = (context.ensureArray(firstParagraph['a:r']) as XmlObject[])[0];
 	const runProperties = firstRun?.['a:rPr'] as XmlObject | undefined;
 	if (!runProperties) {
+		if (!hasContent(tableCell, context)) {
+			hasStyle = applyEndParagraphSize(firstParagraph, style) || hasStyle;
+		}
 		return hasStyle;
 	}
 
 	hasStyle = applyRunProperties(runProperties, style, context) || hasStyle;
 
 	return hasStyle;
+}
+
+/** Whether any paragraph of the cell holds a run, a field or a line break. */
+function hasContent(tableCell: XmlObject, context: TableCellTextStyleContext): boolean {
+	const paragraphs = context.ensureArray(
+		(tableCell['a:txBody'] as XmlObject | undefined)?.['a:p'],
+	) as XmlObject[];
+	return paragraphs.some((paragraph) =>
+		['a:r', 'a:fld', 'a:br'].some((tag) => context.ensureArray(paragraph?.[tag]).length > 0),
+	);
+}
+
+/**
+ * An empty cell's line is as tall as its `a:endParaRPr` size, as for an empty
+ * paragraph in shape text. Only the size is read: like shape text, the end
+ * properties do not style the cell's text.
+ */
+function applyEndParagraphSize(paragraph: XmlObject, style: PptxTableCellStyle): boolean {
+	const size = parseInt(
+		String((paragraph['a:endParaRPr'] as XmlObject | undefined)?.['@_sz'] ?? ''),
+		10,
+	);
+	if (!Number.isFinite(size) || size <= 0) {
+		return false;
+	}
+	style.fontSize = size / 100;
+	return true;
 }
 
 function applyRunProperties(
