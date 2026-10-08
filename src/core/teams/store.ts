@@ -13,6 +13,7 @@ import type { Attachment, Channel, Message } from './model';
 import { createFileActions } from './files';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
+import { uploadTeamsServerFile } from './server-file-storage';
 import type { ChannelTab, TabContent } from './tabs';
 import { channelThreads, type MessageThread } from './threads';
 import { tabConversationId } from './tab-conversation';
@@ -50,6 +51,8 @@ export interface StorageLike {
 }
 export interface UploadableFile {
 	name: string;
+	/** Original display name when name is a unique remote storage key. */
+	originalName?: string;
 	size: number;
 	type?: string;
 }
@@ -446,22 +449,12 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				).url;
 				return attachment;
 			}
-			const target = server();
-			if (!target) {
-				throw new Error('Configure file storage before sharing attachments');
-			}
-			const doFetch = options.fetch ?? globalThis.fetch;
-			const res = await doFetch(
-				`${target.base}/files/${workspaceId}/${encodeURIComponent(file.name)}`,
-				{
-					method: 'POST',
-					body: file,
+			attachment.url = (
+				await uploadTeamsServerFile(ws.config, workspaceId, file, {
 					...(signal ? { signal } : {}),
-					...(target.token ? { headers: { Authorization: `Bearer ${target.token}` } } : {}),
-				},
-			);
-			if (!res.ok) throw new Error(`Upload failed (${res.status})`);
-			attachment.url = `${target.base}${((await res.json()) as { url: string }).url}`;
+					...(options.fetch ? { fetch: options.fetch } : {}),
+				})
+			).url;
 		} catch (error) {
 			checkFileAbort(signal);
 			throw error;

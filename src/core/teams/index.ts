@@ -8,6 +8,7 @@ export * from './chat';
 export * from './model';
 export * from './peer';
 export * from './server-config';
+export * from './server-file-storage';
 export * from './signaling';
 export * from './store';
 export * from './tabs';

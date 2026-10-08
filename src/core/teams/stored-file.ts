@@ -23,6 +23,7 @@ export async function storeAttachment(
 	const ext = name.includes('.') ? `.${name.split('.').pop()}` : '';
 	const unique = Object.assign(new Blob([file], { type: file.type ?? '' }), {
 		name: `${prefix}-${createClientId()}${ext}`,
+		originalName: name,
 	});
 	let uploaded: Attachment;
 	try {

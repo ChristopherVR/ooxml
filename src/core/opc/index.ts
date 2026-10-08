@@ -4,5 +4,6 @@ export * from './content-types';
 export * from './package';
 export * from './clone-part-graph';
 export * from './safe-href';
+export * from './embedded-packages';
 export * from './properties/index';
 export * as signature from './signature/index';
