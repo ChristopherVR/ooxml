@@ -12,6 +12,7 @@ import { defineRibbonToggle } from './ribbon/ribbon-toggle';
 import { defineSearchField } from './form/search-field';
 import { defineBackstage } from './chrome/backstage';
 import { defineFindBar } from './chrome/find-bar';
+import { defineCommentsPane } from './comments/comments-pane';
 import { definePrintPreview } from './chrome/print-preview';
 import { defineRibbon } from './ribbon/ribbon-tabs';
 import { defineRibbonSection } from './ribbon/ribbon-section';
@@ -49,6 +50,7 @@ export {
 	defineSearchField,
 	defineToasts,
 	defineBackstage,
+	defineCommentsPane,
 	defineFindBar,
 	defineGallery,
 	definePrintPreview,
@@ -106,6 +108,20 @@ export type {
 } from './chrome/backstage';
 export type { OfficeFindInputEvent, OfficeFindStepEvent } from './chrome/find-bar';
 export type { OfficePrintPreviewPageEvent } from './chrome/print-preview';
+export {
+	commentInitials,
+	DEFAULT_COMMENTS_LABELS,
+	formatCommentTime,
+	type OfficeComment,
+	type OfficeCommentAddDetail,
+	type OfficeCommentDeleteDetail,
+	type OfficeCommentEditDetail,
+	type OfficeCommentReplyDetail,
+	type OfficeCommentsClassNames,
+	type OfficeCommentsLabels,
+	type OfficeCommentThread,
+	type OfficeThreadDetail,
+} from './comments/types';
 export { assignKeyTips, runKeyTips } from './ribbon/keytip-run';
 export type { KeyTipTarget } from './ribbon/keytip-run';
 export { createRibbonOverflow } from './ribbon/overflow';
@@ -205,6 +221,7 @@ export const CONTROL_DEFINERS = [
 	defineTitleBar,
 	defineRibbonSection,
 	defineGallery,
+	defineCommentsPane,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

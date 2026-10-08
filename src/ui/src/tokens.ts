@@ -216,6 +216,8 @@ export const OFFICE_TOKENS = {
 	'--office-avatar-size': '48px',
 	'--office-avatar-color': 'var(--office-muted-foreground, #6b7280)',
 	'--office-toast-width': '360px',
+	'--office-comments-pane-width': '300px',
+	'--office-comment-avatar-size': '24px',
 	'--office-account-field-width': '320px',
 	// Component: galleries
 	'--office-gallery-trigger-height': '24px',

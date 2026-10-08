@@ -849,6 +849,145 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "comments/comments-pane.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCommentsPane",
+					"tagName": "office-ui-comments-pane",
+					"customElement": true,
+					"description": "`<office-ui-comments-pane>`: Office's comments pane, one UX for Word, Excel and PowerPoint. Threads show each comment's avatar initials, author, time and text, with Reply, Resolve/Reopen, Edit (own comments, by `currentAuthor`) and Delete, under a new-comment box. The pane never changes its threads: every action is an event and the product sets `threads` again. Arrow keys, Home and End move between threads; Enter or Space (or a click) selects one (`thread-select`) so the product can go to its anchor. Escape is left to the host. Properties: `threads`, `activeThreadId`, `readOnly` (controls shown but disabled), `listOnly` (no composer, replies or actions: a navigation list), `closable`, `addDisabled`, `currentAuthor`, `labels` (partial, English defaults), `classNames` (product hook classes), `locale` (time formatting). Events (bubbling, composed): `comment-add` `{ text }`, `comment-reply` `{ threadId, text }`, `comment-edit` `{ threadId, commentId, text }`, `comment-delete` `{ threadId, commentId }`, `thread-resolve`, `thread-reopen` and `thread-select` `{ threadId }`, `comments-close`.",
+					"attributes": [
+						{
+							"name": "active-thread-id"
+						},
+						{
+							"name": "add-disabled"
+						},
+						{
+							"name": "closable"
+						},
+						{
+							"name": "current-author"
+						},
+						{
+							"name": "list-only"
+						},
+						{
+							"name": "locale"
+						},
+						{
+							"name": "read-only"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "activeThreadId",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "active-thread-id"
+						},
+						{
+							"kind": "field",
+							"name": "addDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "add-disabled"
+						},
+						{
+							"kind": "field",
+							"name": "classNames"
+						},
+						{
+							"kind": "field",
+							"name": "closable",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "currentAuthor",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "current-author"
+						},
+						{
+							"kind": "field",
+							"name": "labels"
+						},
+						{
+							"kind": "field",
+							"name": "listOnly",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "list-only"
+						},
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "readOnly",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "read-only"
+						},
+						{
+							"kind": "field",
+							"name": "threads"
+						}
+					],
+					"events": [
+						{
+							"name": "comment-add"
+						},
+						{
+							"name": "comment-delete"
+						},
+						{
+							"name": "comment-edit"
+						},
+						{
+							"name": "comment-reply"
+						},
+						{
+							"name": "comments-close"
+						},
+						{
+							"name": "thread-reopen"
+						},
+						{
+							"name": "thread-resolve"
+						},
+						{
+							"name": "thread-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-comments-pane",
+					"declaration": {
+						"name": "OfficeUiCommentsPane"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "menu/context-menu.ts",
 			"declarations": [
 				{
