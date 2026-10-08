@@ -4,32 +4,34 @@ All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `p
 
 ## Props
 
-| Prop             | Type                          | Default      | Notes                                                                                                  |
-| ---------------- | ----------------------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
-| `workbook`       | `Workbook`                    | none         | Shown when a **new object** is passed. The workbook the editor emits is never assigned back (no loop). |
-| `bytes`          | `Uint8Array \| ArrayBuffer`   | none         | File bytes; loaded again whenever a new array is passed.                                               |
-| `src`            | `string`                      | none         | URL fetched and loaded when the string changes; the file name defaults to the URL's last segment.      |
-| `fileName`       | `string`                      | `Book1.xlsx` | Forwarded only when the parent changes it, so File > Open in the editor can rename the workbook.       |
-| `readOnly`       | `boolean`                     | `false`      |                                                                                                        |
-| `locale`         | `string`                      | `en`         | `en`, `fr`, `de`, `es`, `zh-CN` or a tag that maps to one (`de-DE`).                                   |
-| `theme`          | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` follows the operating system.                                                                   |
-| `authorName`     | `string`                      | `Author`     | Recorded on new comments.                                                                              |
-| `showToolbar`    | `boolean`                     | `true`       | The ribbon.                                                                                            |
-| `showFormulaBar` | `boolean`                     | `true`       | The name box and formula bar.                                                                          |
-| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls to hide, by stable id.                                                                 |
-| `themeColors`    | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                              |
+| Prop             | Type                          | Default      | Notes                                                                                                                   |
+| ---------------- | ----------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `workbook`       | `Workbook`                    | none         | Shown when a **new object** is passed. The workbook the editor emits is never assigned back (no loop).                  |
+| `bytes`          | `Uint8Array \| ArrayBuffer`   | none         | File bytes; loaded again whenever a new array is passed.                                                                |
+| `src`            | `string`                      | none         | URL fetched and loaded when the string changes; the file name defaults to the URL's last segment.                       |
+| `fileName`       | `string`                      | `Book1.xlsx` | Forwarded only when the parent changes it, so File > Open in the editor can rename the workbook.                        |
+| `readOnly`       | `boolean`                     | `false`      |                                                                                                                         |
+| `locale`         | `string`                      | `en`         | `en`, `fr`, `de`, `es`, `zh-CN` or a tag that maps to one (`de-DE`).                                                    |
+| `theme`          | `'light' \| 'dark' \| 'auto'` | `auto`       | `auto` follows the operating system.                                                                                    |
+| `authorName`     | `string`                      | `Author`     | Recorded on new comments.                                                                                               |
+| `showToolbar`    | `boolean`                     | `true`       | The ribbon.                                                                                                             |
+| `showFormulaBar` | `boolean`                     | `true`       | The name box and formula bar.                                                                                           |
+| `hiddenActions`  | `string[]`                    | `[]`         | Ribbon controls to hide, by stable id.                                                                                  |
+| `themeColors`    | `Partial<Record<...>>`        | `{}`         | Token overrides, see [theming](/theming).                                                                               |
+| `collaboration`  | `XlsxCollaborationOptions`    | none         | Shares the open workbook in a room while set; a new object rejoins, `null` leaves. See [collaboration](/collaboration). |
 
 ## Callbacks and events
 
-| Callback (React, Solid, vanilla) | Vue event          | Angular output    | Svelte prop         | Payload                     |
-| -------------------------------- | ------------------ | ----------------- | ------------------- | --------------------------- |
-| `onWorkbookChange`               | `workbook-change`  | `workbookChange`  | `onworkbookchange`  | `Workbook`                  |
-| `onWorkbookError`                | `workbook-error`   | `workbookError`   | `onworkbookerror`   | `Error`                     |
-| `onSelectionChange`              | `selection-change` | `selectionChange` | `onselectionchange` | `{ sheet, ref, active }`    |
-| `onDirtyChange`                  | `dirty-change`     | `dirtyChange`     | `ondirtychange`     | `boolean`                   |
-| `onReadOnlyChange`               | `readonly-change`  | `readOnlyChange`  | `onreadonlychange`  | `boolean`                   |
-| `onRibbonCustomize`              | `ribbon-customize` | `ribbonCustomize` | `onribboncustomize` | `string[]` (hidden actions) |
-| `onReady`                        | `ready`            | `ready`           | `onready`           | the `<xlsx-editor>` element |
+| Callback (React, Solid, vanilla) | Vue event              | Angular output        | Svelte prop             | Payload                     |
+| -------------------------------- | ---------------------- | --------------------- | ----------------------- | --------------------------- |
+| `onWorkbookChange`               | `workbook-change`      | `workbookChange`      | `onworkbookchange`      | `Workbook`                  |
+| `onWorkbookError`                | `workbook-error`       | `workbookError`       | `onworkbookerror`       | `Error`                     |
+| `onSelectionChange`              | `selection-change`     | `selectionChange`     | `onselectionchange`     | `{ sheet, ref, active }`    |
+| `onDirtyChange`                  | `dirty-change`         | `dirtyChange`         | `ondirtychange`         | `boolean`                   |
+| `onReadOnlyChange`               | `readonly-change`      | `readOnlyChange`      | `onreadonlychange`      | `boolean`                   |
+| `onRibbonCustomize`              | `ribbon-customize`     | `ribbonCustomize`     | `onribboncustomize`     | `string[]` (hidden actions) |
+| `onCollaborationChange`          | `collaboration-change` | `collaborationChange` | `oncollaborationchange` | `XlsxCollaborationState`    |
+| `onReady`                        | `ready`                | `ready`               | `onready`               | the `<xlsx-editor>` element |
 
 Load failures (corrupt, encrypted or unsupported files) reach `onWorkbookError`; a failed `src` fetch does too. A `src` fetch still in flight is dropped when new `bytes` or a new `workbook` arrive, or `src` is cleared or changed. The element's other events (`workbook-warning`, `file-command`, `sheet-change`, `ribbon-action`) are listened to on the element itself, see the [element API](/api).
 
@@ -50,6 +52,7 @@ Every adapter exposes the same handle: React through `ref`, Vue through the temp
 | `markClean()`                   | Clears `dirty` after you persisted a saved Blob yourself.           |
 | `select(ref)`, `getSelection()` | Selection as an A1 reference (`'B2:D8'`).                           |
 | `setActiveSheet(index)`         | Switches sheet.                                                     |
+| `share()`                       | Opens File > Share. Unmounting the editor leaves any shared room.   |
 | `dirty`                         | Unsaved edits (Svelte: `isDirty()`).                                |
 
 Calling a handle method before the editor is mounted throws `Editor is not mounted`.
