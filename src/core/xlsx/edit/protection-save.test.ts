@@ -166,7 +166,7 @@ describe('hashes that cannot be checked', () => {
 	});
 
 	it('never unlocks an unsupported digest without a legacy hash', () => {
-		for (const name of ['WHIRLPOOL', 'MD5', 'SHA-3-256']) {
+		for (const name of ['SHA3-256', 'BLAKE2B', 'SHA-3-256']) {
 			expect(verifySheetPassword({ sheet: true, modernHash: modern(name) }, ''), name).toBe(false);
 			const book = { ...createWorkbook(), structureLocked: true, workbookModernHash: modern(name) };
 			expect(verifyWorkbookPassword(book, 'open sesame'), name).toBe(false);
@@ -174,7 +174,7 @@ describe('hashes that cannot be checked', () => {
 	});
 
 	it('falls back to the legacy hash for an unsupported digest', () => {
-		const protection = { sheet: true, modernHash: modern('WHIRLPOOL'), passwordHash: 'CBEB' };
+		const protection = { sheet: true, modernHash: modern('SHA3-256'), passwordHash: 'CBEB' };
 		expect(verifySheetPassword(protection, 'test')).toBe(true);
 		expect(verifySheetPassword(protection, 'other')).toBe(false);
 	});

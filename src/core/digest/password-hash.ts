@@ -1,5 +1,5 @@
 import { decodeBase64, encodeBase64 } from './base64';
-import { digestFunction } from './digest';
+import { digestFunction, type DigestFunction } from './digest';
 
 /**
  * An ECMA-376 agile password hash as Office stores it on protection elements (`sheetProtection`,
@@ -23,12 +23,16 @@ const validSpinCount = (spinCount: number | undefined): spinCount is number | un
 	spinCount === undefined ||
 	(Number.isInteger(spinCount) && spinCount >= 0 && spinCount <= MAX_SPIN_COUNT);
 
-/** H(salt + password as UTF-16LE), then `spinCount` rounds of H(previous + round as uint32 LE). */
-function spin(
+/**
+ * The ECMA-376 / [MS-OFFCRYPTO] 2.3.7.1 password spin: H(salt + password as UTF-16LE), then
+ * `spinCount` rounds of H(previous + round as uint32 LE). `salt` may be empty (a salt-less
+ * verifier simply prepends nothing). Synchronous, so 100,000 rounds take milliseconds.
+ */
+export function spinPasswordHash(
 	password: string,
 	salt: Uint8Array,
 	spinCount: number,
-	digest: (data: Uint8Array) => Uint8Array,
+	digest: DigestFunction,
 ): Uint8Array {
 	const input = new Uint8Array(salt.length + password.length * 2);
 	input.set(salt);
@@ -56,7 +60,7 @@ function hashBytes(
 	const digest = digestFunction(algorithmName);
 	const salt = decodeBase64(saltValue);
 	if (!digest || !salt || !validSpinCount(spinCount)) return undefined;
-	return spin(password, salt, spinCount ?? 0, digest);
+	return spinPasswordHash(password, salt, spinCount ?? 0, digest);
 }
 
 /**

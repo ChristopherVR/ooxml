@@ -46,6 +46,7 @@ describe('hashPassword', () => {
 		['SHA256', 'sha256'],
 		['sha_384', 'sha384'],
 		['SHA-512', 'sha512'],
+		['md5', 'md5'],
 	])('matches node:crypto for %s', (algorithmName, node) => {
 		const salt = randomBytes(16);
 		const options = { algorithmName, saltValue: salt.toString('base64'), spinCount: 1000 };
@@ -61,8 +62,8 @@ describe('hashPassword', () => {
 
 	it('returns undefined for unsupported digests and unusable parameters', () => {
 		const base = { saltValue: 'eA==', spinCount: 1 };
-		expect(hashPassword('x', { ...base, algorithmName: 'WHIRLPOOL' })).toBeUndefined();
-		expect(hashPassword('x', { ...base, algorithmName: 'MD5' })).toBeUndefined();
+		expect(hashPassword('x', { ...base, algorithmName: 'SHA3-256' })).toBeUndefined();
+		expect(hashPassword('x', { ...base, algorithmName: 'BLAKE2B' })).toBeUndefined();
 		expect(hashPassword('x', { ...base, algorithmName: 'SHA-1', saltValue: '!!' })).toBeUndefined();
 		for (const spinCount of [-1, 1.5, Number.NaN, Infinity, MAX_SPIN_COUNT + 1, 2 ** 32])
 			expect(
@@ -106,8 +107,8 @@ describe('verifyPasswordHash', () => {
 	});
 
 	it('returns undefined for digests it does not compute', () => {
-		expect(verifyPasswordHash('x', { ...EXCEL_SHEET, algorithmName: 'WHIRLPOOL' })).toBeUndefined();
-		expect(verifyPasswordHash('x', { ...EXCEL_SHEET, algorithmName: 'MD5' })).toBeUndefined();
+		expect(verifyPasswordHash('x', { ...EXCEL_SHEET, algorithmName: 'SHA3-256' })).toBeUndefined();
+		expect(verifyPasswordHash('x', { ...EXCEL_SHEET, algorithmName: 'BLAKE2B' })).toBeUndefined();
 	});
 });
 

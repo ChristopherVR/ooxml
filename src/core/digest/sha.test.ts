@@ -68,7 +68,7 @@ describe('digestSync', () => {
 	});
 
 	it('returns undefined for digests it does not compute', () => {
-		for (const name of ['MD5', 'WHIRLPOOL', 'RIPEMD-160', 'SHA-3-256', '', 'constructor'])
+		for (const name of ['BLAKE2B', 'SHA3-256', 'GOST', 'SHA-3-256', '', 'constructor'])
 			expect(digestSync(name, new Uint8Array()), name).toBeUndefined();
 	});
 

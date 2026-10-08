@@ -22,8 +22,8 @@ export type DigestAlgorithmName =
 	| 'RIPEMD-160'
 	| 'WHIRLPOOL';
 
-/** The algorithms {@link digestSync} computes (the others are recognised but not implemented). */
-export type SupportedDigestName = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+/** The algorithms {@link digestSync} computes: every name this module recognises. */
+export type SupportedDigestName = DigestAlgorithmName;
 
 /** Lookup key: the name upper-cased with hyphens, underscores and white space removed. */
 const CANONICAL_BY_LOOKUP_KEY: Readonly<Record<string, DigestAlgorithmName>> = {

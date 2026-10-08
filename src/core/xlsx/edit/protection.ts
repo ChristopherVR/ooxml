@@ -65,7 +65,7 @@ export async function verifySheetPasswordAsync(
 /**
  * The base64 ECMA-376 agile hash of `password` for the salt and iteration count in `hash`, as a
  * promise for callers written against the async API; `hashPassword` in `ooxml-core/digest` is the
- * synchronous form. Rejects for a digest other than SHA-1/256/384/512 or unusable parameters.
+ * synchronous form. Rejects for a digest `ooxml-core/digest` lacks, or unusable parameters.
  */
 export async function modernPasswordHash(
 	password: string,
