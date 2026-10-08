@@ -67,7 +67,7 @@
 		"pack": "bun run build && bun pm pack"
 	},
 	"dependencies": {
-		"ooxml-ui": "^0.30.1"
+		"ooxml-ui": "^1.0.0"
 	},
 	"devDependencies": {
 		"tsdown": "^0.23.0",
