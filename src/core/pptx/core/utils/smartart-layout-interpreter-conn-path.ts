@@ -20,7 +20,7 @@
  * Pure geometry; no framework code, no DOM.
  */
 
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** Half-width of the drawn arrowhead wings, in px. */
 const ARROW_WING = 4;

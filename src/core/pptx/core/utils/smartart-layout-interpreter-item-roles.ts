@@ -85,7 +85,10 @@ import {
 	resolvePartialForEachRoles,
 	unwrapTextRoles,
 } from './smartart-layout-interpreter-item-roles-unwrap';
-import type { RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 export {
 	contentIds,

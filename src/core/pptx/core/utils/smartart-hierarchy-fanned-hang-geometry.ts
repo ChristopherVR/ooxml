@@ -23,7 +23,7 @@ import type { ConstraintIndex } from './smartart-constraint-solver';
 import { resolveConstraint } from './smartart-constraint-solver';
 import { resolveHierarchyDispatchChAlign } from './smartart-hierarchy-dispatch-lindir';
 import { resolveHierarchyGenerationTemplates } from './smartart-hierarchy-generation-templates';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /** Fan gap ratio (fraction of the root box's own width) when the layout declares no `sibSp`. */
 const DEFAULT_SIB_SP_RATIO = 0.05;

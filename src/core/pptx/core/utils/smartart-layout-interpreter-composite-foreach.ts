@@ -21,7 +21,11 @@ import type { SlotStyleContext } from './smartart-layout-interpreter-composite';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
 import { rectNode } from './smartart-layout-interpreter-render';
-import type { BoundingBox, RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	RenderedRectNode,
+} from '../../../diagram/layout/smartart-layout-types';
 import { smartArtDescendantsWithText } from './smartart-node-tree-axis';
 
 /**

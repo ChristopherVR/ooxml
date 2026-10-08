@@ -13,7 +13,7 @@
 
 import type { Slot, SlotDims } from './smartart-layout-interpreter-composite-slots';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * One `readSlots`-resolved `dims`, resolved to a rect and - for a candidate

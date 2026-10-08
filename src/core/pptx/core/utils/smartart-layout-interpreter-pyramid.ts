@@ -98,7 +98,11 @@ import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { algorithmParam } from './smartart-layout-interpreter-model';
 import { polygonNode, styleContext } from './smartart-layout-interpreter-render';
 import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
-import type { BoundingBox, RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 // COM-verified against "Basic Pyramid" (`basic-pyramid--flat3.pptx`, no
 // `sibSp` declared on the `pyra` layout node): the stack of bands fills the

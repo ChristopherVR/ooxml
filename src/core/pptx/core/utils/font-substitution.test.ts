@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { TABLE as APTOS_TABLE } from './font-advance-widths-aptos.generated';
-import { TABLE as ARIAL_TABLE } from './font-advance-widths-arial.generated';
-import { TABLE as CALIBRI_LIGHT_TABLE } from './font-advance-widths-calibri-light.generated';
-import { TABLE as CALIBRI_TABLE } from './font-advance-widths-calibri.generated';
-import { TABLE as SEGOE_UI_TABLE } from './font-advance-widths-segoe-ui.generated';
-import { TABLE as TIMES_NEW_ROMAN_TABLE } from './font-advance-widths-times-new-roman.generated';
-import type { FontAdvanceTable } from './font-advance-widths.generated';
+import { TABLE as APTOS_TABLE } from '../../../text/font-metrics/font-advance-widths-aptos.generated';
+import { TABLE as ARIAL_TABLE } from '../../../text/font-metrics/font-advance-widths-arial.generated';
+import { TABLE as CALIBRI_LIGHT_TABLE } from '../../../text/font-metrics/font-advance-widths-calibri-light.generated';
+import { TABLE as CALIBRI_TABLE } from '../../../text/font-metrics/font-advance-widths-calibri.generated';
+import { TABLE as SEGOE_UI_TABLE } from '../../../text/font-metrics/font-advance-widths-segoe-ui.generated';
+import { TABLE as TIMES_NEW_ROMAN_TABLE } from '../../../text/font-metrics/font-advance-widths-times-new-roman.generated';
+import type { FontAdvanceTable } from '../../../text/font-metrics/font-advance-widths.generated';
 import {
 	FONT_SUBSTITUTION_MAP,
 	PANOSE_FAMILY_MAP,

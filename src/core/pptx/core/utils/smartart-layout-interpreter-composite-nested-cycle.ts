@@ -36,7 +36,7 @@ import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
 import { arrangeCycle } from './smartart-layout-interpreter-cycle';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import type { BoundingBox, RenderedNode } from './smartart-layout-types';
+import type { BoundingBox, RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * `wrapper`'s own nested-cycle anchor: when it is a bare-`presOf`

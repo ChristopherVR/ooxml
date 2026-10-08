@@ -72,7 +72,7 @@ import type {
 	RenderedConnector,
 	RenderedNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Execute the hierarchy algorithm over the data-model node tree. */
 export function arrangeHierarchy(

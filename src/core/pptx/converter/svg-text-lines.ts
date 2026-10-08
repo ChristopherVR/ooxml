@@ -2,8 +2,8 @@ import type { TextSegment } from '../core/types/text';
 import {
 	DEFAULT_FONT_ADVANCE_TABLE,
 	FONT_ADVANCE_TABLES,
-} from '../core/utils/font-advance-widths.generated';
-import { measureTextWidth } from '../core/utils/smartart-text-wrap-fit';
+} from '../../text/font-metrics/font-advance-widths.generated';
+import { measureTextWidth } from '../../diagram/layout/smartart-text-wrap-fit';
 import { wrapStyledRuns } from '../../text/wrap-styled-runs';
 
 export interface SvgTextRun {

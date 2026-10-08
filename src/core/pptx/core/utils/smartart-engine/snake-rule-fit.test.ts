@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { SmartArtPptxElement } from '../../types/elements';
 import { decomposeSmartArt } from '../smartart-decompose';
-import { runEngineLayout } from './engine-to-result';
+import { runEngineLayout } from '../../../../diagram/engine/engine-to-result';
 
 const GALLERY_DIR = path.resolve(__dirname, '../../../__tests__/fixtures/smartart-gallery');
 const PX_PER_PT = 96 / 72;

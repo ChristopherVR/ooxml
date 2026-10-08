@@ -45,7 +45,7 @@ import type {
 	RenderedConnector,
 	RenderedRectNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 const INSET = 6;
 

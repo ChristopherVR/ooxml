@@ -28,7 +28,7 @@ import type {
 	RenderedPolygonNode,
 	RenderedRectNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Parse an SVG polygon `points` string ("x,y x,y ...") into numeric pairs. */
 function parsePoints(points: string): Array<[number, number]> {

@@ -172,7 +172,7 @@ export {
 	gearPoints,
 	strokeFor,
 	flattenNodes,
-} from './smartart-layout-style-helpers';
+} from '../../../diagram/layout/smartart-layout-style-helpers';
 
 export type {
 	LayoutRect,
@@ -186,7 +186,7 @@ export type {
 	LayoutFamily,
 	SmartArtLayoutResult,
 	BoundingBox,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 export {
 	rectNode,

@@ -20,7 +20,7 @@ import {
 import { stackAsRect } from './smartart-layout-interpreter-item-role-stack-rect';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
 import { resolvePresetRenderKind } from './smartart-layout-shape-preset';
-import type { RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * Stack already-resolved role `content` within `original`'s box. Returns

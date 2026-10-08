@@ -12,8 +12,8 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData, SmartArtPptxElement } from '../../types';
-import type { RenderedRectNode } from '../smartart-layout-types';
-import { runEngineLayout } from './engine-to-result';
+import type { RenderedRectNode } from '../../../../diagram/layout/smartart-layout-types';
+import { runEngineLayout } from '../../../../diagram/engine/engine-to-result';
 
 const fixture = fileURLToPath(
 	new URL('../../../__tests__/fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),

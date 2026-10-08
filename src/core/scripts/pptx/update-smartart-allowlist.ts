@@ -9,10 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const TARGET = path.resolve(
-	HERE,
-	'../../pptx/core/utils/smartart-engine/engine-first-allowlist.ts',
-);
+const TARGET = path.resolve(HERE, '../../diagram/engine/engine-first-allowlist.ts');
 
 const measured = readFileSync(process.argv[2], 'utf-8');
 const rows: string[] = [];

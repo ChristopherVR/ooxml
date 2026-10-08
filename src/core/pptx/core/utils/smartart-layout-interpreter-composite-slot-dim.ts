@@ -16,7 +16,7 @@ import {
 import type { ConstraintIndex } from './smartart-constraint-solver';
 import { resolveConstraint } from './smartart-constraint-solver';
 import { findConstraint } from './smartart-layout-interpreter-model';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /** A single resolved dimension, either box-relative pixels or an absolute raw. */
 export interface Dim {

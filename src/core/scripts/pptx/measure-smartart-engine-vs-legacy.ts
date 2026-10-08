@@ -38,10 +38,10 @@ import { fileURLToPath } from 'node:url';
 import { PptxHandler } from '../../pptx/core/PptxHandler';
 import type { PptxElement, SmartArtPptxElement } from '../../pptx/core/types/elements';
 import { decomposeSmartArt } from '../../pptx/core/utils';
-import { runEngineLayout } from '../../pptx/core/utils/smartart-engine/engine-to-result';
+import { runEngineLayout } from '../../diagram/engine/engine-to-result';
 import { interpretedLayoutToElements } from '../../pptx/core/utils/smartart-interpreter-drawing-bridge';
 import { interpretSmartArtLayout } from '../../pptx/core/utils/smartart-layout-interpreter';
-import { flattenNodes } from '../../pptx/core/utils/smartart-layout-style-helpers';
+import { flattenNodes } from '../../diagram/layout/smartart-layout-style-helpers';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const GALLERY_DIR = path.resolve(HERE, '../../pptx/__tests__/fixtures/smartart-gallery');

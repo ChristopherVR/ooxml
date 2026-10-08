@@ -17,7 +17,7 @@ import type { ConstraintIndex } from './smartart-constraint-solver';
 import { resolveIterationRect } from './smartart-layout-interpreter-composite-iteration';
 import { readSlots } from './smartart-layout-interpreter-composite-slots';
 import type { Slot } from './smartart-layout-interpreter-composite-slots';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /** One resolved choose-aware slot: its final rect, the node(s) it renders
  * (the first is primary, the rest fold in as extra paragraphs), the

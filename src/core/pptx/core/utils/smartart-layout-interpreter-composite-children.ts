@@ -23,7 +23,11 @@ import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import { findConstraint } from './smartart-layout-interpreter-constraints';
 import { resolveHubToNodeRatioViaUserSize } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 import { rectNode } from './smartart-layout-interpreter-render';
-import type { BoundingBox, RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	RenderedRectNode,
+} from '../../../diagram/layout/smartart-layout-types';
 import { smartArtDescendantsWithText } from './smartart-node-tree-axis';
 
 /** A uniform absolute pixel size every item from one repeater template takes. */

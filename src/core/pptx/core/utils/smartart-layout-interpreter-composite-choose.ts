@@ -53,7 +53,11 @@ import type { ChooseAwareSlot } from './smartart-layout-interpreter-composite-gr
 import { resolveGroupedSlots } from './smartart-layout-interpreter-composite-group-slots';
 import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
 import { findCompositeItemShape } from './smartart-layout-shape-preset';
-import type { BoundingBox, RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	RenderedRectNode,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * Collect every choose-live content slot in `node`'s subtree (see

@@ -71,7 +71,11 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNumericRule,
 } from '../types';
-import type { BoundingBox, RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Depth-first collection of every `dgm:rule` anywhere in the layout tree. */
 export function collectNamedRules(

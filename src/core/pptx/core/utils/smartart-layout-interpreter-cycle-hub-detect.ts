@@ -14,7 +14,7 @@ import { resolveViaUserSizeNodeWidthPx } from './smartart-layout-interpreter-cyc
 import type { HubRingGeometry } from './smartart-layout-interpreter-cycle-ring';
 import { algorithmParam } from './smartart-layout-interpreter-model';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /** Everything `arrangeCycle` needs about whether/how this ring has a `ctrShpMap="fNode"` hub. */
 export interface HubExpansion {

@@ -8,7 +8,7 @@ import {
 	hasMaxDepthGuard,
 } from './smartart-layout-interpreter-cycle-extension';
 import { styleContext } from './smartart-layout-interpreter-render';
-import type { RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** Every node in these tests resolves `kind: 'rect'` (forced via `boxInputs.shape`). */
 function asRect(entry: RenderedNode): RenderedRectNode {

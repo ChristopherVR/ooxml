@@ -8,7 +8,7 @@
  */
 
 import type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
-import type { RenderedConnector } from './smartart-layout-types';
+import type { RenderedConnector } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * One arc per adjacent ring-point pair (`n` pairs on a full circle, `n - 1`

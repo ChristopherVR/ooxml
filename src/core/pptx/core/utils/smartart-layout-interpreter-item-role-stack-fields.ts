@@ -10,7 +10,7 @@
 
 import { rolePreset } from './smartart-layout-interpreter-item-role-shared';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
-import type { RenderedNode } from './smartart-layout-types';
+import type { RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * A role's own RENDERED preset: its declared shape, UNLESS it is a

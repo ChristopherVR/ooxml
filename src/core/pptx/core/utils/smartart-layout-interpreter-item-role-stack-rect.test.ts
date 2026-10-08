@@ -4,7 +4,7 @@ import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../ty
 import { buildConstraintIndex } from './smartart-constraint-solver';
 import { stackRoleContent } from './smartart-layout-interpreter-item-role-stack';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** "Vertical Bullet List"'s own real shape: `parentText`/`childText`, `h` primFontSz-relative to `parentText`, `parentText`'s own `primFontSz` a literal ceiling. */
 function verticalBulletListRoles(): {

@@ -82,7 +82,7 @@ import type {
 	RenderedConnector,
 	RenderedNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 export type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
 export { computeCycleRingLayout } from './smartart-layout-interpreter-cycle-ring';

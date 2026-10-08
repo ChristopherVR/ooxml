@@ -40,7 +40,10 @@ import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 import type { CycleBoxInputs } from './smartart-layout-interpreter-cycle-boxes';
 import type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
 import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import type { RenderedConnector, RenderedNode } from './smartart-layout-types';
+import type {
+	RenderedConnector,
+	RenderedNode,
+} from '../../../diagram/layout/smartart-layout-types';
 
 const DEG_TO_RAD = Math.PI / 180;
 

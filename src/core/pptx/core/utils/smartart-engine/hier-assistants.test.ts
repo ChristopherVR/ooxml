@@ -13,9 +13,9 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxElement, SmartArtPptxElement } from '../../types/elements';
 import { decomposeSmartArt } from '../smartart-decompose';
-import { runEngineLayout } from './engine-to-result';
-import { placeTwoColumns } from './hier-assistants';
-import type { HierShape } from './hier-shape';
+import { runEngineLayout } from '../../../../diagram/engine/engine-to-result';
+import { placeTwoColumns } from '../../../../diagram/engine/hier-assistants';
+import type { HierShape } from '../../../../diagram/engine/hier-shape';
 
 const CORPUS_DIR = path.resolve(__dirname, '../../../__tests__/fixtures/corpus');
 

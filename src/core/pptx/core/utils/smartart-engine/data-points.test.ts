@@ -14,7 +14,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtConnection, PptxSmartArtNode } from '../../types';
-import { buildDataModel } from './data-points';
+import { buildDataModel } from '../../../../diagram/engine/data-points';
 
 function node(id: string, text: string, parentId?: string): PptxSmartArtNode {
 	return { id, text, parentId, nodeType: 'node' };

@@ -60,7 +60,7 @@ import {
 	pushRoleContent,
 	resolveRoleContent,
 } from './smartart-layout-interpreter-item-role-transition';
-import type { RenderedNode } from './smartart-layout-types';
+import type { RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * True when `node` was itself produced by an ENCLOSING `dgm:forEach` that

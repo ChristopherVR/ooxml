@@ -17,7 +17,7 @@ import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import type { Slot, SlottedDims } from './smartart-layout-interpreter-composite-slots';
 import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
 import { findCompositeItemShape } from './smartart-layout-shape-preset';
-import type { BoundingBox, RenderedNode } from './smartart-layout-types';
+import type { BoundingBox, RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 function slotRect(slot: SlottedDims, box: BoundingBox, absX: number, absY: number): Slot {
 	return resolveSlot(slot.dims, box, absX, absY);

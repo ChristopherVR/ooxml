@@ -73,7 +73,10 @@ import { resolveFannedHangGeometry } from './smartart-hierarchy-fanned-hang-geom
 import { baseContext, elbowConnector, pushNode } from './smartart-hierarchy-shared';
 import type { HierContext } from './smartart-hierarchy-shared';
 import { resolveHierarchyItemFontSizePx } from './smartart-layout-interpreter-hierarchy-fontfit';
-import type { BoundingBox, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Root-to-first-descendant gap, as a multiple of the descendant row's own height - see the module doc comment. */
 const ROOT_CHILD_GAP_RATIO = 0.98;

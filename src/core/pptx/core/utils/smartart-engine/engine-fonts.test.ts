@@ -12,16 +12,20 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../PptxHandler';
 import type { SmartArtPptxElement } from '../../types/elements';
-import { FONT_ADVANCE_TABLES } from '../font-advance-widths.generated';
-import { applyConstraint } from './constraint-eval';
-import type { DataPoint } from './data-points';
-import type { EngineNode } from './engine-node';
-import { runEngineLayout } from './engine-to-result';
-import { resolveEngineFonts } from './font-groups';
-import type { LdConstraint } from './layout-def-types';
-import { presetAdjustments } from './shape-adjust';
-import { nodeFontBounds, nodeMarginsPt } from './text-fit';
-import { paragraphSizesPt, paragraphsFit, textMetricsFor } from './text-measure';
+import { FONT_ADVANCE_TABLES } from '../../../../text/font-metrics/font-advance-widths.generated';
+import { applyConstraint } from '../../../../diagram/engine/constraint-eval';
+import type { DataPoint } from '../../../../diagram/engine/data-points';
+import type { EngineNode } from '../../../../diagram/engine/engine-node';
+import { runEngineLayout } from '../../../../diagram/engine/engine-to-result';
+import { resolveEngineFonts } from '../../../../diagram/engine/font-groups';
+import type { LdConstraint } from '../../../../diagram/engine/layout-def-types';
+import { presetAdjustments } from '../../../../diagram/engine/shape-adjust';
+import { nodeFontBounds, nodeMarginsPt } from '../../../../diagram/engine/text-fit';
+import {
+	paragraphSizesPt,
+	paragraphsFit,
+	textMetricsFor,
+} from '../../../../diagram/engine/text-measure';
 
 const GALLERY_DIR = path.resolve(__dirname, '../../../__tests__/fixtures/smartart-gallery');
 const PX_PER_PT = 96 / 72;

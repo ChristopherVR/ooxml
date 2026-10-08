@@ -19,7 +19,11 @@ import type { ConstraintIndex } from './smartart-constraint-solver';
 import { EMPTY_CONSTRAINT_INDEX, roleOf } from './smartart-constraint-solver';
 import { algorithmParam } from './smartart-layout-interpreter-model';
 import { DEFAULT_GAP_RATIO, DEFAULT_INSET } from './smartart-layout-interpreter-pyramid';
-import type { BoundingBox, RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * `dgm:constr type="pyraAcctRatio"` - always `dgm:choose`-wrapped (gated on

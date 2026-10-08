@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 import { arrangeConn } from './smartart-layout-interpreter-aux';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 const PALETTE = ['#3b82f6', '#22c55e', '#f97316'];
 const BOX = { width: 400, height: 300 };

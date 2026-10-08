@@ -54,7 +54,7 @@ import type {
 	RenderedConnector,
 	RenderedNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** COM-verified leading-margin ratio for the generation (stacking) axis, as a fraction of the item's OWN size on that axis - see the module doc comment. */
 export const GENERATION_MARGIN_RATIO = 0.1675;

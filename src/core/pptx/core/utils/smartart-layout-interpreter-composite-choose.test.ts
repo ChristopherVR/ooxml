@@ -13,7 +13,7 @@ import {
 import type { FontFitContext } from './smartart-layout-interpreter-composite-fontfit';
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite-render';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 const box = { width: 800, height: 400 };
 

@@ -24,7 +24,10 @@ import { fitHangingBox } from './smartart-hierarchy-hanging-box';
 import { countHangingRows } from './smartart-hierarchy-hanging-fold';
 import { baseContext } from './smartart-hierarchy-shared';
 import { resolveHierarchyItemFontSizePx } from './smartart-layout-interpreter-hierarchy-fontfit';
-import type { BoundingBox, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 const HANGING_MODE_INSET = 6;
 

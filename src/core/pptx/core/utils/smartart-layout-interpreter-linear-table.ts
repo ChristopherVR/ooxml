@@ -59,7 +59,11 @@ import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
 import { styleContext } from './smartart-layout-interpreter-render';
 import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
 import { findCompositeItemShape } from './smartart-layout-shape-preset';
-import type { BoundingBox, RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Matches `resolveMainAxisLayout`'s own "no explicit signal" fallback - see this module's doc comment. */
 const DEFAULT_GAP_RATIO = 0.25;

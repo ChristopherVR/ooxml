@@ -4,7 +4,7 @@ import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
 import { arrangeComposite } from './smartart-layout-interpreter-composite';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 function slot(
 	name: string,

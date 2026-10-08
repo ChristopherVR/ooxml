@@ -45,8 +45,12 @@ import {
 } from './smartart-layout-item-font-size';
 import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
 import { findCompositeItemShape, roundRectCornerInsetPx } from './smartart-layout-shape-preset';
-import type { BoundingBox, RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
-import { SMARTART_LINE_SPACING_FACTOR } from './smartart-text-wrap-fit';
+import type {
+	BoundingBox,
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
+import { SMARTART_LINE_SPACING_FACTOR } from '../../../diagram/layout/smartart-text-wrap-fit';
 
 export { arrangeSnake } from './smartart-layout-interpreter-snake';
 

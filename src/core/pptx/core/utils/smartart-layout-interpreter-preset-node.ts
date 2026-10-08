@@ -20,7 +20,7 @@ import {
 	resolvePresetRenderKind,
 } from './smartart-layout-shape-preset';
 import type { PresetRenderKind } from './smartart-layout-shape-preset';
-import type { RenderedNode } from './smartart-layout-types';
+import type { RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 export interface PresetBoxNodeParams {
 	key: string;

@@ -7,7 +7,7 @@ import {
 	resolveItemRoleContent,
 	resolveItemTextRoles,
 } from './smartart-layout-interpreter-item-roles';
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** A `dgm:presOf`-bearing text role: `alg type="tx"` + a non-empty axis. */
 function textRole(name: string, axis: string): PptxSmartArtLayoutNode {

@@ -18,7 +18,7 @@
 import { computeRingBulgeBounds } from './smartart-layout-interpreter-cycle-ring-bulge';
 import { nestedHubSatelliteRingLayout } from './smartart-layout-interpreter-cycle-ring-nested-hub';
 import { resolveRingAxisOffset } from './smartart-layout-interpreter-cycle-ring-offset';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 const DEG_TO_RAD = Math.PI / 180;
 

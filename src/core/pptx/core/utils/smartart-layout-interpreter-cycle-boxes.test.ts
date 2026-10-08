@@ -5,7 +5,7 @@ import type { CycleBoxInputs } from './smartart-layout-interpreter-cycle-boxes';
 import { buildCycleHubBox, buildCycleRingBoxes } from './smartart-layout-interpreter-cycle-boxes';
 import type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
 import { styleContext } from './smartart-layout-interpreter-render';
-import type { RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 const boxInputs: CycleBoxInputs = {
 	palette: ['#fff', '#000'],

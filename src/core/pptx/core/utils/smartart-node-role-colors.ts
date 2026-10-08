@@ -17,7 +17,10 @@
  */
 
 import type { PptxSmartArtNode } from '../types';
-import type { RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Per-styleLbl-role resolved colour lists (from a diagram colour transform). */
 export type SmartArtColorRoleMap = Record<string, { fill: string[]; line: string[] }>;

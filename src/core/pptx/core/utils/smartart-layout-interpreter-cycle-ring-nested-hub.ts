@@ -7,7 +7,7 @@
  */
 
 import type { CycleRingLayout, HubRingGeometry } from './smartart-layout-interpreter-cycle-ring';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 const DEG_TO_RAD = Math.PI / 180;
 

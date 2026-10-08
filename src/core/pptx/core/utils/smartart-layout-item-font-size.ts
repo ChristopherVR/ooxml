@@ -49,16 +49,20 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { DEFAULT_FONT_ADVANCE_TABLE, FONT_ADVANCE_TABLES } from './font-advance-widths.generated';
-import type { FontAdvanceTable } from './font-advance-widths.generated';
+import { resolveFontTable } from '../../../diagram/layout/smartart-font-table';
+import type { FontAdvanceTable } from '../../../text/font-metrics/font-advance-widths.generated';
 import { entryKey, resolveConstraint } from './smartart-constraint-solver';
 import type { ConstraintIndex } from './smartart-constraint-solver';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import type { FontBounds } from './smartart-layout-item-font-role';
 import { itemFontBoundsPx, nodeFontBounds } from './smartart-layout-item-font-role';
-import { fitWrappedFontSize, SMARTART_LINE_SPACING_FACTOR } from './smartart-text-wrap-fit';
+import {
+	fitWrappedFontSize,
+	SMARTART_LINE_SPACING_FACTOR,
+} from '../../../diagram/layout/smartart-text-wrap-fit';
 
 export { primFontSzCeilingPx, resolveItemSelfAspect } from './smartart-layout-item-font-role';
+export { resolveFontTable };
 
 /** Points per CSS pixel at PowerPoint's 96 DPI convention (see module doc comment). */
 const POINTS_TO_PIXELS = 96 / 72;
@@ -68,16 +72,6 @@ export interface FontFitItem {
 	text: string;
 	width: number;
 	height: number;
-}
-
-/**
- * Resolve the {@link FontAdvanceTable} for `fontName`, defaulting to Calibri
- * (the Office theme's default minor font, and what SmartArt renders in
- * absent an explicit per-node font override) and falling back to the
- * cross-font average for a font this table has not measured.
- */
-export function resolveFontTable(fontName: string | undefined): FontAdvanceTable {
-	return FONT_ADVANCE_TABLES[fontName ?? 'Calibri'] ?? DEFAULT_FONT_ADVANCE_TABLE;
 }
 
 /**

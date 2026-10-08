@@ -13,11 +13,11 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { SmartArtPptxElement } from '../../types/elements';
 import { decomposeSmartArt } from '../smartart-decompose';
-import type { DataPoint } from './data-points';
-import type { EngineNode } from './engine-node';
-import { runEngineLayout } from './engine-to-result';
-import { layoutFontOf } from './layout-font';
-import { canGrow } from './text-grow';
+import type { DataPoint } from '../../../../diagram/engine/data-points';
+import type { EngineNode } from '../../../../diagram/engine/engine-node';
+import { runEngineLayout } from '../../../../diagram/engine/engine-to-result';
+import { layoutFontOf } from '../../../../diagram/engine/layout-font';
+import { canGrow } from '../../../../diagram/engine/text-grow';
 
 const GALLERY_DIR = path.resolve(__dirname, '../../../__tests__/fixtures/smartart-gallery');
 const PX_PER_PT = 96 / 72;

@@ -19,13 +19,13 @@
  * unverified code.
  */
 
-import type { FontAdvanceTable } from './font-advance-widths.generated';
+import type { FontAdvanceTable } from '../../../text/font-metrics/font-advance-widths.generated';
 import { firstConstraintDeclaredBy } from './smartart-constraint-declared-by';
 import type { ConstraintIndex } from './smartart-constraint-solver';
 import { hasReference } from './smartart-constraint-solver';
 import { itemMarginsPx, proportionalMarginFraction } from './smartart-layout-item-font-size';
-import { smartArtLineEm } from './smartart-line-pitch';
-import { wrappedLineCount } from './smartart-text-wrap-fit';
+import { smartArtLineEm } from '../../../diagram/layout/smartart-line-pitch';
+import { wrappedLineCount } from '../../../diagram/layout/smartart-text-wrap-fit';
 
 /**
  * True when the arranger declares `itemRole`'s own `mainAxisType` extent as

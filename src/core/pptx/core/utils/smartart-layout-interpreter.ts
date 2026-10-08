@@ -58,7 +58,10 @@ import {
 	resolveNamedRuleOverride,
 } from './smartart-layout-interpreter-named-rules';
 import { repositionPyramidBands } from './smartart-layout-interpreter-pyramid-bands';
-import type { BoundingBox, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 import { applySmartArtRoleColors } from './smartart-node-role-colors';
 import type { SmartArtColorRoleMap } from './smartart-node-role-colors';
 

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtNode } from '../types';
-import type { SmartArtLayoutResult, RenderedRectNode } from './smartart-layout-types';
+import type {
+	SmartArtLayoutResult,
+	RenderedRectNode,
+} from '../../../diagram/layout/smartart-layout-types';
 import { applySmartArtRoleColors } from './smartart-node-role-colors';
 
 function rect(nodeId: string, fill: string): RenderedRectNode {

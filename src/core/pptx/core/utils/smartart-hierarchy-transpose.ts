@@ -17,7 +17,7 @@ import type {
 	RenderedConnector,
 	RenderedNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Swap `x`<->`y` (`width`<->`height`, `textX`<->`textY`) for one rendered node. */
 function transposeNode(node: RenderedNode): RenderedNode {

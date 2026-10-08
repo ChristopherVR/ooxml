@@ -24,7 +24,7 @@ import {
 	GENERATION_MARGIN_RATIO,
 } from './smartart-hierarchy-pitch';
 import { HANG_HEIGHT_RATIO, HIER_TAIL_OFFSET_RATIO } from './smartart-hierarchy-shared';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 export interface HierarchyAxisPitches {
 	xPitch: AxisPitch;

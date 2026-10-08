@@ -31,7 +31,7 @@ import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
 import { styleContext } from './smartart-layout-interpreter-render';
 import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
 import { roundRectCornerInsetPx } from './smartart-layout-shape-preset';
-import type { BoundingBox, RenderedNode } from './smartart-layout-types';
+import type { BoundingBox, RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** The hub point plus the satellites its nested `axis="ch"` forEach actually arranges. */
 export interface HubExpansion {

@@ -27,7 +27,7 @@ import { hierarchyDeclaresCenteredFanAxisSwap } from './smartart-hierarchy-cente
 import { resolveHierarchyOrientation } from './smartart-hierarchy-orientation';
 import type { HierarchyOrientation } from './smartart-hierarchy-orientation-types';
 import { findHierarchyItemName } from './smartart-hierarchy-shared';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 export interface HierarchyEffectiveOrientation {
 	orientation: HierarchyOrientation;

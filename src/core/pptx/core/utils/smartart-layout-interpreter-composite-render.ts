@@ -12,7 +12,7 @@ import type { Slot } from './smartart-layout-interpreter-composite-slots';
 import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
 import type { StyleContext } from './smartart-layout-interpreter-render';
 import { findCompositeItemShape } from './smartart-layout-shape-preset';
-import type { RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** Shared per-arranger style/palette context, threaded through every slot
  * renderer in this module's callers and in `smartart-layout-interpreter-

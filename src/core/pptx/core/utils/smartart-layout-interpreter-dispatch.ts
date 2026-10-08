@@ -17,7 +17,10 @@ import { arrangeLinear, arrangeSnake } from './smartart-layout-interpreter-linea
 import { resolveFlowDirection } from './smartart-layout-interpreter-model';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { arrangePyramid } from './smartart-layout-interpreter-pyramid';
-import type { BoundingBox, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Dispatch a discovered plan to its arranger, or `undefined` when declined. */
 export function dispatchArrangement(

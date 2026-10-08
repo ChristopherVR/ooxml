@@ -20,7 +20,7 @@ import {
 } from './smartart-layout-interpreter-item-role-stack-fields';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
 import { resolveRoleFontSize } from './smartart-layout-item-font-size';
-import type { RenderedNode, RenderedRectNode } from './smartart-layout-types';
+import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * `declaringRole`'s own `w`-weighted children, in the SAME left-to-right

@@ -26,7 +26,7 @@ import type {
 	RenderedCircleNode,
 	RenderedNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * Reposition every `childName`-tagged ring entry beside its own `selfName`

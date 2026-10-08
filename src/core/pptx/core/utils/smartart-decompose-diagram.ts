@@ -29,12 +29,12 @@
 
 import type { PptxElement, PptxSmartArtData, PptxSmartArtNode } from '../types';
 import type { DrawingBounds } from './smartart-decompose-dispatch';
-import { ENGINE_FIRST_LAYOUT_IDS } from './smartart-engine/engine-first-allowlist';
-import { runEngineLayout } from './smartart-engine/engine-to-result';
+import { ENGINE_FIRST_LAYOUT_IDS } from '../../../diagram/engine/engine-first-allowlist';
+import { runEngineLayout } from '../../../diagram/engine/engine-to-result';
 import { interpretedLayoutToElements } from './smartart-interpreter-drawing-bridge';
 import { interpretSmartArtLayout } from './smartart-layout-interpreter';
-import { flattenNodes } from './smartart-layout-style-helpers';
-import type { SmartArtLayoutResult } from './smartart-layout-types';
+import { flattenNodes } from '../../../diagram/layout/smartart-layout-style-helpers';
+import type { SmartArtLayoutResult } from '../../../diagram/layout/smartart-layout-types';
 
 function tryLegacy(
 	smartArtData: PptxSmartArtData & {

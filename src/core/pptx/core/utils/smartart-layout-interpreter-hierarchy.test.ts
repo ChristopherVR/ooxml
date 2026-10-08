@@ -8,7 +8,11 @@ import type {
 import { buildConstraintIndex } from './smartart-constraint-solver';
 import type { ConstraintIndex } from './smartart-constraint-solver';
 import { arrangeHierarchy } from './smartart-layout-interpreter-hierarchy';
-import type { BoundingBox, RenderedRectNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedRectNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 const box: BoundingBox = { width: 600, height: 400 };
 const palette = ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000'];

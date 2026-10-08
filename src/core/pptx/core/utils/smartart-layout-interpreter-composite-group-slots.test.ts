@@ -4,7 +4,7 @@ import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
 import type { RawSlotCandidate } from './smartart-layout-interpreter-composite-group-slots';
 import { resolveGroupedSlots } from './smartart-layout-interpreter-composite-group-slots';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 const BOX: BoundingBox = { width: 400, height: 300 };
 

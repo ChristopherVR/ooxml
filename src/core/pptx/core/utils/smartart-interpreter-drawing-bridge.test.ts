@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtNode } from '../types';
 import { interpretedLayoutToElements } from './smartart-interpreter-drawing-bridge';
-import type { RenderedRectNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	RenderedRectNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 function rect(nodeId: string, x: number): RenderedRectNode {
 	return {

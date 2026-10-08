@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 import type { PptxSmartArtNode } from '../types';
 import type { CompositeContentLayout } from './smartart-layout-interpreter-cycle-item-aspect';
 import { repositionCycleRingContent } from './smartart-layout-interpreter-cycle-ring-item';
-import type { RenderedCircleNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	RenderedCircleNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 function circle(overrides: Partial<RenderedCircleNode>): RenderedCircleNode {
 	return {

@@ -91,8 +91,11 @@ import {
 	resolveFontTable,
 	snapToWholePoint,
 } from './smartart-layout-item-font-size';
-import { itemFits } from './smartart-layout-item-font-tier-fit';
-import { SMARTART_LINE_SPACING_FACTOR } from './smartart-text-wrap-fit';
+import { itemFits } from '../../../diagram/layout/smartart-layout-item-font-tier-fit';
+import type { TieredFontFitItem } from '../../../diagram/layout/smartart-layout-item-font-tier-fit';
+
+export type { TieredFontFitItem };
+import { SMARTART_LINE_SPACING_FACTOR } from '../../../diagram/layout/smartart-text-wrap-fit';
 
 /**
  * See the module doc comment: the data-derived, FIXED top-level/descendant
@@ -115,25 +118,6 @@ export const SMARTART_DESCENDANT_FONT_SCALE = 0.78;
  * for the full derivation and COM numbers. `smartart-layout-item-tx-
  * anchor.ts` itself is unaffected, just no longer used for this.
  */
-
-/** A folded item's own top-level text plus its descendant paragraphs, kept SEPARATE (see module doc comment). */
-export interface TieredFontFitItem {
-	rootText: string;
-	descendantTexts: readonly string[];
-	width: number;
-	height: number;
-	/**
-	 * Round 23: true when `descendantTexts` render as their OWN SEPARATE box
-	 * (a role-split item template - "Vertical Bullet List"'s `childText` -
-	 * not a paragraph stacked below the root's own in the SAME box, as
-	 * `basic-process`'s folded bullet text is). The root then never gets a
-	 * trailing `spcAft` for a descendant it is not adjacent to: measured,
-	 * removing this spurious term alone closes `vertical-bullet-list--
-	 * hier5.pptx`'s "Node One" from 39pt to cached 46pt exactly. Omitted:
-	 * unchanged behaviour (every fold-into-the-same-box fixture unaffected).
-	 */
-	separateDescendantBox?: boolean;
-}
 
 const PX_PER_PT = 96 / 72;
 

@@ -7,7 +7,7 @@ import type {
 	RenderedPolygonNode,
 	RenderedNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 function polygon(nodeId: string): RenderedPolygonNode {
 	return {

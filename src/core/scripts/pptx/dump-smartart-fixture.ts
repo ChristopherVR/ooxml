@@ -12,9 +12,9 @@ import { fileURLToPath } from 'node:url';
 import { PptxHandler } from '../../pptx/core/PptxHandler';
 import type { PptxElement, SmartArtPptxElement } from '../../pptx/core/types/elements';
 import { decomposeSmartArt } from '../../pptx/core/utils';
-import { runSmartArtEngine } from '../../pptx/core/utils/smartart-engine/engine';
-import type { EngineNode } from '../../pptx/core/utils/smartart-engine/engine-node';
-import { runEngineLayout } from '../../pptx/core/utils/smartart-engine/engine-to-result';
+import { runSmartArtEngine } from '../../diagram/engine/engine';
+import type { EngineNode } from '../../diagram/engine/engine-node';
+import { runEngineLayout } from '../../diagram/engine/engine-to-result';
 import { interpretedLayoutToElements } from '../../pptx/core/utils/smartart-interpreter-drawing-bridge';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));

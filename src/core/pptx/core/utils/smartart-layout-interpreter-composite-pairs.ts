@@ -14,7 +14,7 @@ import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 import { findRingDesSibling, ringFoldRect } from './smartart-layout-interpreter-composite-ring';
 import type { Slot, SlottedDims } from './smartart-layout-interpreter-composite-slots';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 import { smartArtDescendantsWithText } from './smartart-node-tree-axis';
 
 /** One `self`-anchored point, its resolved rect, and its paired `des` fold (when any). */

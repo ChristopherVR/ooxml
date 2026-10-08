@@ -14,7 +14,7 @@ import { resolveByAncestorChain } from './smartart-constraint-declared-by';
 import type { ConstraintIndex } from './smartart-constraint-solver';
 import { resolveConstraint } from './smartart-constraint-solver';
 import { isUserSizeHubRole } from './smartart-layout-interpreter-composite-aspect';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 function finiteFactor(value: unknown): value is number {
 	return typeof value === 'number' && Number.isFinite(value) && value > 0;

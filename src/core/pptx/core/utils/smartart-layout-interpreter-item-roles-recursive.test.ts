@@ -11,7 +11,7 @@ import {
 	hasRecursiveItemTemplate,
 	resolveRecursiveItemRoleContent,
 } from './smartart-layout-interpreter-item-roles-recursive';
-import type { RenderedRectNode } from './smartart-layout-types';
+import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 const CH_NODE_FOREACH: PptxSmartArtIteratorAttributes = { axis: ['ch'], pointTypes: ['node'] };
 

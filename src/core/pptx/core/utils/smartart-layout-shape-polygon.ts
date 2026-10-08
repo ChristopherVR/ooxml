@@ -8,7 +8,7 @@
  * @module smartart-layout-shape-polygon
  */
 
-import { chevronPoints } from './smartart-layout-style-helpers';
+import { chevronPoints } from '../../../diagram/layout/smartart-layout-style-helpers';
 
 /**
  * Build SVG polygon `points` for a preset geometry inscribed in the box

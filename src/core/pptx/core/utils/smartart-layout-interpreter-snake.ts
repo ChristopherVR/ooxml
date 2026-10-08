@@ -24,7 +24,11 @@ import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
 import { findCompositeItemShape, roundRectCornerInsetPx } from './smartart-layout-shape-preset';
 import type { SnakeFlowDir, SnakeGridDims, SnakeGrowDir } from './smartart-layout-snake-grid';
 import { snakeCell, snakeGridDims } from './smartart-layout-snake-grid';
-import type { BoundingBox, RenderedNode, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	RenderedNode,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Execute the `snake` algorithm: a grid honouring `grDir`/`flowDir`/`contDir`/`bkpt`. */
 export function arrangeSnake(

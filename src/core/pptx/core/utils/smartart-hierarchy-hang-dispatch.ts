@@ -30,7 +30,10 @@ import type { TreeNode } from './smartart-helpers';
 import type { CornerHangPlan } from './smartart-hierarchy-corner-plan';
 import { arrangeFannedHangingForest } from './smartart-hierarchy-fanned-hang';
 import { arrangeFullyHangingTree } from './smartart-hierarchy-hanging-arrange';
-import type { BoundingBox, SmartArtLayoutResult } from './smartart-layout-types';
+import type {
+	BoundingBox,
+	SmartArtLayoutResult,
+} from '../../../diagram/layout/smartart-layout-types';
 
 export function dispatchHangingMode(
 	nodes: PptxSmartArtNode[],

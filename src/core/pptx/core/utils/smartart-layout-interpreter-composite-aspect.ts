@@ -56,7 +56,7 @@
 
 import type { PptxSmartArtLayoutNode } from '../types';
 import type { ConstraintIndex } from './smartart-constraint-solver';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * The `ar` (aspect ratio, width/height) an algorithm's own `dgm:param`

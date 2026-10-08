@@ -36,7 +36,7 @@
 
 .PARAMETER OutFile
   Destination .ts file. Defaults to
-  src/core/pptx/core/utils/font-advance-widths.generated.ts.
+  src/core/text/font-metrics/font-advance-widths.generated.ts.
 
 .PARAMETER Fonts
   Fonts to measure. Defaults to the Office theme's default minor font
@@ -50,7 +50,7 @@
   Requires a local PowerPoint install (COM automation, Windows only).
 #>
 param(
-  [string]$OutFile = "$PSScriptRoot\..\..\src\pptx\core\utils\font-advance-widths.generated.ts",
+  [string]$OutFile = "$PSScriptRoot\..\..\text\font-metrics\font-advance-widths.generated.ts",
   [string[]]$Fonts = @('Calibri', 'Calibri Light', 'Arial', 'Times New Roman', 'Segoe UI'),
   [switch]$SkipBarrel
 )

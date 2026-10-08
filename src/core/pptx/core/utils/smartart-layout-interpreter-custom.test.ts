@@ -7,7 +7,7 @@ import type {
 	RenderedPolygonNode,
 	RenderedRectNode,
 	SmartArtLayoutResult,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 const BOX = { width: 400, height: 200 };
 

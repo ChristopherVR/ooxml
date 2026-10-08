@@ -4,7 +4,10 @@ import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../ty
 import { buildConstraintIndex, EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
 import { stackRoleContent } from './smartart-layout-interpreter-item-role-stack';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
-import type { RenderedCircleNode, RenderedRectNode } from './smartart-layout-types';
+import type {
+	RenderedCircleNode,
+	RenderedRectNode,
+} from '../../../diagram/layout/smartart-layout-types';
 
 const ORIGINAL: RenderedRectNode = {
 	kind: 'rect',

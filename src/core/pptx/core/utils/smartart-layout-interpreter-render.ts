@@ -23,12 +23,12 @@ import {
 	styleShadow,
 	styleStroke,
 	truncate,
-} from './smartart-layout-style-helpers';
+} from '../../../diagram/layout/smartart-layout-style-helpers';
 import type {
 	RenderedCircleNode,
 	RenderedPolygonNode,
 	RenderedRectNode,
-} from './smartart-layout-types';
+} from '../../../diagram/layout/smartart-layout-types';
 
 /** Resolved stroke width / colour / shadow for a SmartArt style. */
 export interface StyleContext {

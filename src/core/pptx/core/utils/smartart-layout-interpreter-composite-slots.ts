@@ -18,7 +18,7 @@ import { roleOf } from './smartart-constraint-solver';
 import { isUserSizeHubRole } from './smartart-layout-interpreter-composite-aspect';
 import type { Dim } from './smartart-layout-interpreter-composite-slot-dim';
 import { dimOf } from './smartart-layout-interpreter-composite-slot-dim';
-import type { BoundingBox } from './smartart-layout-types';
+import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 export type { Dim } from './smartart-layout-interpreter-composite-slot-dim';
 

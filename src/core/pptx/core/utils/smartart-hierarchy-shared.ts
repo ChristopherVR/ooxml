@@ -19,7 +19,10 @@ import { resolveHierarchyItemNode } from './smartart-hierarchy-item-template';
 import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
 import { styleContext } from './smartart-layout-interpreter-render';
 import type { StyleContext } from './smartart-layout-interpreter-render';
-import type { RenderedConnector, RenderedNode } from './smartart-layout-types';
+import type {
+	RenderedConnector,
+	RenderedNode,
+} from '../../../diagram/layout/smartart-layout-types';
 
 /**
  * Find the actual per-node preset geometry a hierarchy item box should carry.

@@ -3,6 +3,8 @@
 // adapt to it; nothing here knows about slides or documents.
 export * from './types';
 export type * from './model';
+export * from './engine';
+export * from './layout';
 export * from './attributes';
 export * from './layout-category';
 export * from './relationships';
