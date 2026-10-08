@@ -1,4 +1,4 @@
-import type { OfficeUiRuler, RulerMarkerEventDetail } from '../chrome/ruler';
+import { defineRuler, type OfficeUiRuler, type RulerMarkerEventDetail } from '../chrome/ruler';
 import type { ParagraphFormat } from './paragraph-format';
 
 /** Everything the ruler draws, in CSS pixels at 100% zoom (96 per inch). */
@@ -107,6 +107,9 @@ function paintMarkers(ruler: RulerElement, geometry: RulerGeometry): void {
  * undoable step on release (`onChange`). Margin edges and tab stops are not draggable.
  */
 export function createRuler(onChange?: (change: RulerChange) => void): HTMLElement {
+	// Register the element here, like every other shared element the editor creates: without it the
+	// ruler is an unknown inline element with no markers.
+	defineRuler();
 	const ruler = document.createElement('office-ui-ruler') as RulerElement;
 	ruler.className = 'dve-ruler';
 	ruler.label = 'Ruler';
