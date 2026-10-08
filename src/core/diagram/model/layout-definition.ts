@@ -1,55 +1,33 @@
 /** Typed, editable metadata from a DiagramML layout-definition part. */
 
-import type { XmlObject } from './common';
-import type { PptxSmartArtConstraint, PptxSmartArtNumericRule } from './smart-art-constraint-rules';
-// PptxSmartArtLocalizedText, PptxSmartArtLayoutCategory,
-// PptxSmartArtAlgorithmParameter, PptxSmartArtLayoutAlgorithm,
-// PptxSmartArtIteratorAttributes, PptxSmartArtForEach, PptxSmartArtWhen,
-// PptxSmartArtChoose, PptxSmartArtShapeAdjustment and
-// PptxSmartArtLayoutNodeShape live in `smart-art-layout-primitives.ts` to
-// keep this file within the per-file line budget. Imported (for local use
-// below) and re-exported here so existing imports from
-// `smart-art-layout-definition` (and the `smart-art`/types barrel) keep
-// working unchanged.
-import type {
-	PptxSmartArtAlgorithmParameter,
-	PptxSmartArtChoose,
-	PptxSmartArtForEach,
-	PptxSmartArtIteratorAttributes,
-	PptxSmartArtLayoutAlgorithm,
-	PptxSmartArtLayoutCategory,
-	PptxSmartArtLayoutNodeShape,
-	PptxSmartArtLocalizedText,
-	PptxSmartArtShapeAdjustment,
-	PptxSmartArtWhen,
-} from './smart-art-layout-primitives';
+// `R` is the raw XML node a reader keeps for round-trip (pptx: its `XmlObject` tree). Moved from
+// `pptx/core/types/smart-art-layout-definition.ts`.
 
-export type {
-	PptxSmartArtAlgorithmParameter,
-	PptxSmartArtChoose,
-	PptxSmartArtForEach,
-	PptxSmartArtIteratorAttributes,
-	PptxSmartArtLayoutAlgorithm,
-	PptxSmartArtLayoutCategory,
-	PptxSmartArtLayoutNodeShape,
-	PptxSmartArtLocalizedText,
-	PptxSmartArtShapeAdjustment,
-	PptxSmartArtWhen,
-};
+import type { DiagramConstraint, DiagramNumericRule } from './constraint-rules';
+import type {
+	DiagramChoose,
+	DiagramForEach,
+	DiagramIteratorAttributes,
+	DiagramLayoutAlgorithm,
+	DiagramLayoutCategory,
+	DiagramLayoutNodeShape,
+	DiagramLocalizedText,
+	DiagramWhen,
+} from './layout-primitives';
 
 /** Identity and ordering metadata from DiagramML CT_LayoutNode. */
-export interface PptxSmartArtLayoutNode {
+export interface DiagramLayoutNode<R = unknown> {
 	name?: string;
 	styleLabel?: string;
 	childOrder?: 'b' | 't';
 	moveWith?: string;
-	algorithm?: PptxSmartArtLayoutAlgorithm;
-	forEach?: PptxSmartArtForEach[];
-	choose?: PptxSmartArtChoose[];
-	constraints?: PptxSmartArtConstraint[];
-	rules?: PptxSmartArtNumericRule[];
+	algorithm?: DiagramLayoutAlgorithm;
+	forEach?: DiagramForEach<R>[];
+	choose?: DiagramChoose<R>[];
+	constraints?: DiagramConstraint<R>[];
+	rules?: DiagramNumericRule<R>[];
 	/** `dgm:shape`: this node's own preset geometry override, when present. */
-	shape?: PptxSmartArtLayoutNodeShape;
+	shape?: DiagramLayoutNodeShape;
 	/**
 	 * `dgm:presOf` (CT_PresentationOf, same iterator shape as `dgm:forEach`):
 	 * which data-model point(s) this node's OWN text/geometry binds to -
@@ -63,7 +41,7 @@ export interface PptxSmartArtLayoutNode {
 	 * layout's `roleText`/`bodyText`) apart from a same-generation sibling
 	 * that positions or decorates instead.
 	 */
-	presentationOf?: PptxSmartArtIteratorAttributes;
+	presentationOf?: DiagramIteratorAttributes;
 	/**
 	 * EVERY `dgm:constr` reachable from this node, including ones declared
 	 * inside a `dgm:choose`/`dgm:if`/`dgm:else` that wraps THIS layoutNode's
@@ -85,8 +63,8 @@ export interface PptxSmartArtLayoutNode {
 	 * `smartart-constraint-solver.ts`'s `buildConstraintIndex`, the only
 	 * consumer.
 	 */
-	allConstraints?: PptxSmartArtConstraint[];
-	children?: PptxSmartArtLayoutNode[];
+	allConstraints?: DiagramConstraint<R>[];
+	children?: DiagramLayoutNode<R>[];
 	/**
 	 * The iterator attributes of the ENCLOSING `dgm:forEach` this node was
 	 * found through, when `nestedLayoutNodes` (`smartart-layout-definition
@@ -113,7 +91,7 @@ export interface PptxSmartArtLayoutNode {
 	 * consumer. Read-only / interpretation-only, like `allConstraints`:
 	 * never round-tripped by `applySmartArtLayoutDefinition`.
 	 */
-	forEachOrigin?: PptxSmartArtIteratorAttributes;
+	forEachOrigin?: DiagramIteratorAttributes;
 	/**
 	 * The conditions of EVERY enclosing `dgm:if` this node was found through,
 	 * outermost first, when `nestedLayoutNodes` (`smartart-layout-
@@ -151,7 +129,7 @@ export interface PptxSmartArtLayoutNode {
 	 * guard already accumulated before it. Evaluate with `smartart-layout-
 	 * interpreter-when.ts`'s `evaluateWhen`, once per entry, ANDed.
 	 */
-	chooseGuard?: PptxSmartArtWhen[];
+	chooseGuard?: DiagramWhen<R>[];
 	/**
 	 * ROUND 42: the forEach iterator active WHEN EACH ENTRY of {@link
 	 * chooseGuard} was declared (index-parallel with it, `undefined` per
@@ -175,7 +153,7 @@ export interface PptxSmartArtLayoutNode {
 	 * `undefined` whenever {@link chooseGuard} itself is (no enclosing
 	 * choose at all).
 	 */
-	chooseGuardOrigins?: (PptxSmartArtIteratorAttributes | undefined)[];
+	chooseGuardOrigins?: (DiagramIteratorAttributes | undefined)[];
 	/**
 	 * The chain of every enclosing `dgm:choose`'s own GROUP identity + this
 	 * node's ordinal position within it + THAT branch's own condition,
@@ -223,8 +201,8 @@ export interface PptxSmartArtLayoutNode {
 	chooseGroups?: {
 		id: string;
 		ordinal: number;
-		guard?: PptxSmartArtWhen;
-		origin?: PptxSmartArtIteratorAttributes;
+		guard?: DiagramWhen<R>;
+		origin?: DiagramIteratorAttributes;
 	}[];
 	/**
 	 * Every `dgm:presOf` candidate reachable through a `dgm:choose`/`dgm:if`/
@@ -247,8 +225,8 @@ export interface PptxSmartArtLayoutNode {
 	 * own runtime would, first-match-wins.
 	 */
 	presentationOfCandidates?: {
-		guard: PptxSmartArtWhen[];
-		presentationOf: PptxSmartArtIteratorAttributes;
+		guard: DiagramWhen<R>[];
+		presentationOf: DiagramIteratorAttributes;
 	}[];
 	/**
 	 * SESSION 17: every `dgm:rule` reachable through a `dgm:choose`/`dgm:if`/
@@ -263,8 +241,8 @@ export interface PptxSmartArtLayoutNode {
 	 * how the guard is evaluated against the real satellite count.
 	 */
 	ruleCandidates?: {
-		guard: PptxSmartArtWhen[];
-		rule: PptxSmartArtNumericRule;
+		guard: DiagramWhen<R>[];
+		rule: DiagramNumericRule<R>;
 	}[];
 	/**
 	 * ROUND 39: every `dgm:constr` reachable through a `dgm:choose`/`dgm:if`/
@@ -281,22 +259,22 @@ export interface PptxSmartArtLayoutNode {
 	 * pre-existing blind union of every branch is not enough on its own.
 	 */
 	constraintCandidates?: {
-		guard: PptxSmartArtWhen[];
-		constraint: PptxSmartArtConstraint;
+		guard: DiagramWhen<R>[];
+		constraint: DiagramConstraint<R>;
 	}[];
 }
 
 /** Metadata and root node from DiagramML CT_DiagramDefinition. */
-export interface PptxSmartArtLayoutDefinition {
+export interface DiagramLayoutDefinition<R = unknown> {
 	uniqueId?: string;
 	minimumVersion?: string;
 	defaultStyle?: string;
-	titles?: PptxSmartArtLocalizedText[];
-	descriptions?: PptxSmartArtLocalizedText[];
-	categories?: PptxSmartArtLayoutCategory[];
-	rootNode: PptxSmartArtLayoutNode;
+	titles?: DiagramLocalizedText[];
+	descriptions?: DiagramLocalizedText[];
+	categories?: DiagramLayoutCategory[];
+	rootNode: DiagramLayoutNode<R>;
 	/** Original definition retained for constraint evaluation and foreign rules. */
-	rawXml?: XmlObject;
+	rawXml?: R;
 	/**
 	 * The un-parsed layout-definition part text (starting at `<dgm:layoutDef>`,
 	 * XML declaration included). `rawXml` above loses the document order of

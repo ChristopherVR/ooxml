@@ -4,7 +4,7 @@ import type {
 	PptxSmartArtColorStyleLabel,
 	PptxSmartArtDefinitionMetadata,
 	PptxSmartArtQuickStyleLabel,
-} from '../../types/smart-art-style-definition';
+} from '../../types/smart-art-model';
 
 type LocalName = (key: string) => string;
 

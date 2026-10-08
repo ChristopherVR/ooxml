@@ -1,35 +1,37 @@
 /** Editable metadata shared by DiagramML quick-style and color definitions. */
 
-import type { Pptx3DScene, Pptx3DShape, Text3DStyle } from './three-d';
+// The 3D parameters (`Scene`, `Shape`, `Text`) are the reader's own camera/light, bevel and text
+// extrusion models (pptx: `Pptx3DScene`, `Pptx3DShape`, `Text3DStyle`) until `drawingml` has a 3D
+// model. Moved from `pptx/core/types/smart-art-style-definition.ts`.
 
-export interface PptxSmartArtDefinitionText {
+export interface DiagramDefinitionText {
 	value: string;
 	language?: string;
 }
 
-export interface PptxSmartArtDefinitionCategory {
+export interface DiagramDefinitionCategory {
 	type: string;
 	priority: number;
 }
 
-export type PptxSmartArtColorApplicationMethod = 'span' | 'cycle' | 'repeat';
-export type PptxSmartArtHueDirection = 'cw' | 'ccw';
+export type DiagramColorApplicationMethod = 'span' | 'cycle' | 'repeat';
+export type DiagramHueDirection = 'cw' | 'ccw';
 
 /** CT_Colors application metadata. Color-choice children remain preserved XML. */
-export interface PptxSmartArtColorListMetadata {
-	method?: PptxSmartArtColorApplicationMethod;
-	hueDirection?: PptxSmartArtHueDirection;
+export interface DiagramColorListMetadata {
+	method?: DiagramColorApplicationMethod;
+	hueDirection?: DiagramHueDirection;
 }
 
 /**
  * A quick-style label's `a:lnRef`/`a:fillRef`/`a:effectRef`/`a:fontRef`
  * (`CT_ShapeStyle`, the same complex type an ordinary shape's `p:style`
  * uses), resolved against the theme's `fmtScheme` at parse time instead of
- * the coarse subtle/moderate/intense enum ({@link PptxSmartArtQuickStyle.effectIntensity}).
+ * the coarse subtle/moderate/intense enum ({@link DiagramQuickStyle.effectIntensity}).
  * Only populated when a theme format scheme was available when the quick
  * style was parsed. See G13 in the 2026-09 diagram audit.
  */
-export interface PptxSmartArtResolvedStyleRef {
+export interface DiagramResolvedStyleRef {
 	fillColor?: string;
 	fillMode?: 'solid' | 'gradient' | 'pattern' | 'none' | 'theme';
 	strokeColor?: string;
@@ -41,43 +43,43 @@ export interface PptxSmartArtResolvedStyleRef {
 }
 
 /** CT_StyleLabel metadata from a quick-style definition. */
-export interface PptxSmartArtQuickStyleLabel {
+export interface DiagramQuickStyleLabel<Scene = unknown, Shape = unknown, Text = unknown> {
 	name: string;
 	/** Theme-resolved `dgm:style` refs for this label's role, when available. */
-	resolvedStyle?: PptxSmartArtResolvedStyleRef;
+	resolvedStyle?: DiagramResolvedStyleRef;
 	/**
 	 * The label's own `dgm:scene3d` (per-shape camera + light rig). PowerPoint
 	 * copies it onto a shape's cached `a:scene3d` unless it is the default
 	 * front camera with a `threePt` light (see `applySmartArtQuickStyle3d`).
 	 */
-	scene3d?: Pptx3DScene;
+	scene3d?: Scene;
 	/** The label's own `dgm:sp3d` (bevel / extrusion / contour / material); absent when empty. */
-	shape3d?: Pptx3DShape;
+	shape3d?: Shape;
 	/** The label's `dgm:txPr/a:sp3d` label-text extrusion (Bird's Eye Scene). */
-	text3d?: Text3DStyle;
+	text3d?: Text;
 }
 
 /** CT_CTStyleLabel metadata from a color-transform definition. */
-export interface PptxSmartArtColorStyleLabel {
+export interface DiagramColorTransformLabel {
 	name: string;
-	fill?: PptxSmartArtColorListMetadata;
-	line?: PptxSmartArtColorListMetadata;
-	effect?: PptxSmartArtColorListMetadata;
-	textLine?: PptxSmartArtColorListMetadata;
-	textFill?: PptxSmartArtColorListMetadata;
-	textEffect?: PptxSmartArtColorListMetadata;
+	fill?: DiagramColorListMetadata;
+	line?: DiagramColorListMetadata;
+	effect?: DiagramColorListMetadata;
+	textLine?: DiagramColorListMetadata;
+	textFill?: DiagramColorListMetadata;
+	textEffect?: DiagramColorListMetadata;
 }
 
-export interface PptxSmartArtDefinitionMetadata {
+export interface DiagramDefinitionMetadata {
 	uniqueId?: string;
 	minimumVersion?: string;
-	titles?: PptxSmartArtDefinitionText[];
-	descriptions?: PptxSmartArtDefinitionText[];
-	categories?: PptxSmartArtDefinitionCategory[];
+	titles?: DiagramDefinitionText[];
+	descriptions?: DiagramDefinitionText[];
+	categories?: DiagramDefinitionCategory[];
 }
 
 /** Typed CT_ColorTransform metadata and the resolved legacy color palette. */
-export interface PptxSmartArtColorTransform extends PptxSmartArtDefinitionMetadata {
+export interface DiagramColorTransform extends DiagramDefinitionMetadata {
 	/** Legacy resolved display name. */
 	name?: string;
 	/** Ordered resolved fill colors for rendering. */
@@ -93,24 +95,24 @@ export interface PptxSmartArtColorTransform extends PptxSmartArtDefinitionMetada
 	/** Ordered resolved text-effect colors (primary styleLbl `txEffectClrLst`). */
 	textEffectColors?: string[];
 	/** Fill-list span/cycle + hue-direction interpolation of the primary styleLbl. */
-	fillInterpolation?: PptxSmartArtColorListMetadata;
+	fillInterpolation?: DiagramColorListMetadata;
 	/** Line-list span/cycle + hue-direction interpolation of the primary styleLbl. */
-	lineInterpolation?: PptxSmartArtColorListMetadata;
+	lineInterpolation?: DiagramColorListMetadata;
 	/** Ordered CT_CTStyleLabel metadata. */
-	labels?: PptxSmartArtColorStyleLabel[];
+	labels?: DiagramColorTransformLabel[];
 	/**
 	 * Every `styleLbl`'s own resolved fill/line colour list, keyed by name
 	 * (e.g. `node1`, `asst0`, `bgShp`, `revTx`). Unlike {@link fillColors} /
 	 * {@link lineColors} (which collapse to ONE "primary" node-role list),
 	 * this keeps every role so a node can be coloured from its OWN role's
-	 * palette (see `PptxSmartArtNode.styleRole` and `applySmartArtRoleColors`)
+	 * palette (see `DiagramNode.styleRole` and `applySmartArtRoleColors`)
 	 * instead of a generic cycled colour.
 	 */
-	roleColors?: Record<string, SmartArtRoleColorList>;
+	roleColors?: Record<string, DiagramRoleColorList>;
 }
 
 /** One colour-transform `styleLbl`'s resolved colour lists. */
-export interface SmartArtRoleColorList {
+export interface DiagramRoleColorList {
 	fill: string[];
 	line: string[];
 	/**
@@ -121,23 +123,27 @@ export interface SmartArtRoleColorList {
 }
 
 /** Typed CT_StyleDefinition metadata and legacy rendering hint. */
-export interface PptxSmartArtQuickStyle extends PptxSmartArtDefinitionMetadata {
+export interface DiagramQuickStyle<
+	Scene = unknown,
+	Shape = unknown,
+	Text = unknown,
+> extends DiagramDefinitionMetadata {
 	/** Legacy resolved display name. */
 	name?: string;
 	/** Legacy effect-intensity rendering hint. */
 	effectIntensity?: string;
 	/** Ordered CT_StyleLabel metadata. Complex style payload remains preserved XML. */
-	labels?: PptxSmartArtQuickStyleLabel[];
+	labels?: DiagramQuickStyleLabel<Scene, Shape, Text>[];
 	/**
 	 * Whole-diagram 3D scene (camera preset/rotation/zoom/fov, light rig,
 	 * backdrop) from the quick style's own `dgm:styleDef/dgm:scene3d`, present
 	 * for the "Scene" quick styles (Brick, Flat, Metallic, Sunset, Bird's Eye
 	 * Scene). One camera renders the whole diagram; per-shape `a:scene3d` is
-	 * absent for those styles (see `PptxSmartArtDrawingShape.scene3d`). Each
+	 * absent for those styles (see the cached drawing shape's own `scene3d`). Each
 	 * `dgm:styleLbl` also carries its own per-label `dgm:scene3d`/`dgm:sp3d`
-	 * ({@link PptxSmartArtQuickStyleLabel.scene3d} / `shape3d` / `text3d`),
+	 * ({@link DiagramQuickStyleLabel.scene3d} / `shape3d` / `text3d`),
 	 * which PowerPoint bakes onto each cached shape; they are re-applied when a
 	 * structural edit regenerates the shapes.
 	 */
-	scene3d?: Pptx3DScene;
+	scene3d?: Scene;
 }

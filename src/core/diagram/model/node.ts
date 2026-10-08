@@ -1,15 +1,11 @@
 /**
- * SmartArt node types: per-run text, per-node visual override, and the
- * data-model node itself. Split out of `smart-art.ts` to keep each type file
- * within the project's per-file line budget. Re-exported from `smart-art.ts`
- * (and thus the `types` barrel) for backward compatibility, so existing
- * imports of these symbols continue to work unchanged.
- *
- * @module pptx-types/smart-art-node
+ * SmartArt data-model node types: per-run text, per-node visual override, and
+ * the node itself. `S` is the reader's resolved run style (pptx: its
+ * `TextStyle`); the layout engine never reads it. Moved from
+ * `pptx/core/types/smart-art-node.ts`.
  */
 
-import type { DiagramNodeCustomLayout } from '../../../diagram/index';
-import type { TextStyle } from './text';
+import type { DiagramNodeCustomLayout } from '../types';
 
 /**
  * A single run of text inside a SmartArt node, capturing the run text and the
@@ -19,14 +15,14 @@ import type { TextStyle } from './text';
  *
  * @example
  * ```ts
- * const run: PptxSmartArtTextRun = {
+ * const run: DiagramNodeTextRun = {
  *   text: "Bold",
  *   rPr: { "@_b": "1", "@_lang": "en-US" },
  * };
- * // => satisfies PptxSmartArtTextRun
+ * // => satisfies DiagramNodeTextRun
  * ```
  */
-export interface PptxSmartArtTextRun {
+export interface DiagramNodeTextRun<S = unknown> {
 	/** Run text content. */
 	text: string;
 	/**
@@ -35,7 +31,7 @@ export interface PptxSmartArtTextRun {
 	 */
 	rPr?: Record<string, unknown>;
 	/** Resolved standard shape-text style derived from {@link rPr}. */
-	style?: TextStyle;
+	style?: S;
 	/** Raw run XML used to retain unmodelled extension children on save. */
 	rawXml?: Record<string, unknown>;
 	/** Original direct-child order, including unmodelled extension children. */
@@ -43,12 +39,12 @@ export interface PptxSmartArtTextRun {
 }
 
 /** An ordered item within a SmartArt text paragraph. */
-export type PptxSmartArtTextParagraphItem =
-	| { kind: 'run'; run: PptxSmartArtTextRun }
+export type DiagramNodeTextParagraphItem<S = unknown> =
+	| { kind: 'run'; run: DiagramNodeTextRun<S> }
 	| {
 			kind: 'break';
 			rPr?: Record<string, unknown>;
-			style?: TextStyle;
+			style?: S;
 			rawXml?: Record<string, unknown>;
 			childOrder?: string[];
 	  }
@@ -58,7 +54,7 @@ export type PptxSmartArtTextParagraphItem =
 			fieldType?: string;
 			text: string;
 			rPr?: Record<string, unknown>;
-			style?: TextStyle;
+			style?: S;
 			pPr?: Record<string, unknown>;
 			rawXml?: Record<string, unknown>;
 			childOrder?: string[];
@@ -67,15 +63,15 @@ export type PptxSmartArtTextParagraphItem =
 	| { kind: 'raw'; name: string; value: unknown };
 
 /** A complete `a:p` paragraph in a SmartArt data-model text body. */
-export interface PptxSmartArtTextParagraph {
+export interface DiagramNodeTextParagraph<S = unknown> {
 	/** Paragraph properties (`a:pPr`) preserved verbatim. */
 	pPr?: Record<string, unknown>;
 	/** Text children in source order. */
-	items: PptxSmartArtTextParagraphItem[];
+	items: DiagramNodeTextParagraphItem<S>[];
 	/** End-paragraph run properties (`a:endParaRPr`) preserved verbatim. */
 	endParaRPr?: Record<string, unknown>;
 	/** Resolved style for the paragraph terminator. */
-	endParaStyle?: TextStyle;
+	endParaStyle?: S;
 	/** Raw paragraph XML used to retain unmodelled extension children on save. */
 	rawXml?: Record<string, unknown>;
 }
@@ -95,15 +91,15 @@ export interface PptxSmartArtTextParagraph {
  *
  * @example
  * ```ts
- * const style: PptxSmartArtNodeStyle = {
+ * const style: DiagramNodeStyle = {
  *   fillColor: "#FF0000",
  *   fontColor: "#FFFFFF",
  *   bold: true,
  * };
- * // => satisfies PptxSmartArtNodeStyle
+ * // => satisfies DiagramNodeStyle
  * ```
  */
-export interface PptxSmartArtNodeStyle {
+export interface DiagramNodeStyle {
 	/** Solid fill colour override (hex, e.g. "#4F81BD"). */
 	fillColor?: string;
 	/** Outline / line colour override (hex). */
@@ -117,32 +113,11 @@ export interface PptxSmartArtNodeStyle {
 }
 
 /**
- * Manual layout override for a `type="pres"` presentation point, read from its
- * `dgm:prSet` attributes. PowerPoint writes these when the user drags, resizes,
- * rotates, or flips a SmartArt node by hand in its own diagram editor; without
- * them the node silently reverts to its algorithmic position whenever there is
- * no cached `dsp:` drawing part to fall back on.
- *
- * Every field is optional: only the attributes actually present on `prSet` are
- * populated. Angle and scale/factor units are already normalised to degrees and
- * plain ratios (a `custScaleX="150000"` becomes `scaleX: 1.5`), so a consumer
- * never has to know the raw `60000ths-of-a-degree` / `100000ths-of-a-percent`
- * XML encodings.
- *
- * @example
- * ```ts
- * const custom: SmartArtNodeCustomLayout = { angle: 15, scaleX: 1.2 };
- * // => a node manually rotated 15 degrees and widened 20% in PowerPoint
- * ```
- */
-export type SmartArtNodeCustomLayout = DiagramNodeCustomLayout;
-
-/**
  * A single node in the SmartArt data model.
  *
  * @example
  * ```ts
- * const node: PptxSmartArtNode = {
+ * const node: DiagramNode = {
  *   id: "1",
  *   text: "CEO",
  *   children: [
@@ -150,16 +125,16 @@ export type SmartArtNodeCustomLayout = DiagramNodeCustomLayout;
  *     { id: "3", text: "VP Engineering", parentId: "1" },
  *   ],
  * };
- * // => satisfies PptxSmartArtNode
+ * // => satisfies DiagramNode
  * ```
  */
-export interface PptxSmartArtNode {
+export interface DiagramNode<S = unknown> {
 	id: string;
 	text: string;
 	/** CT_Pt connection identifier, when the point references a connection. */
 	connectionId?: string | null;
 	parentId?: string;
-	children?: PptxSmartArtNode[];
+	children?: DiagramNode<S>[];
 	/** Node type from `@_type` attribute (e.g. "doc", "node", "asst", "pres"). */
 	nodeType?: string;
 	/**
@@ -194,19 +169,19 @@ export interface PptxSmartArtNode {
 	 * the save path rebuilds the paragraph from these runs so per-run rich text
 	 * is not flattened. When {@link text} diverges, the runs are ignored.
 	 */
-	runs?: PptxSmartArtTextRun[];
+	runs?: DiagramNodeTextRun<S>[];
 	/**
 	 * Complete typed paragraph model. Unlike {@link runs}, this retains every
 	 * paragraph and the ordered run, field, break, and tab children within it.
 	 */
-	paragraphs?: PptxSmartArtTextParagraph[];
+	paragraphs?: DiagramNodeTextParagraph<S>[];
 	/**
 	 * Optional per-node visual override (fill / line / font colour, bold /
 	 * italic). Read at parse time from the point's `spPr` / first-run `rPr`, set
 	 * by the editing op, honoured by the render path, and written back on save so
 	 * it round-trips.
 	 */
-	style?: PptxSmartArtNodeStyle;
+	style?: DiagramNodeStyle;
 	/**
 	 * Manual layout override read from the node's `dgm:prSet` `cust*`
 	 * attributes (drag/resize/rotate/flip performed in PowerPoint's own diagram
@@ -214,5 +189,5 @@ export interface PptxSmartArtNode {
 	 * {@link module:smartart-layout-interpreter-custom} so it survives even
 	 * when there is no cached `dsp:` drawing to fall back on.
 	 */
-	customLayout?: SmartArtNodeCustomLayout;
+	customLayout?: DiagramNodeCustomLayout;
 }

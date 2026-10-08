@@ -9,49 +9,26 @@
 import type {
 	DiagramColorScheme,
 	DiagramConnection,
+	DiagramData,
 	DiagramLayoutType,
 	DiagramStyleIntensity,
 } from '../../../diagram/index';
 import type { PptxCustomPathProperties } from './geometry';
 import type { PptxSmartArtChrome } from './smart-art-chrome';
-import type { PptxSmartArtLayoutDefinition } from './smart-art-layout-definition';
-import type { PptxSmartArtNode } from './smart-art-node';
 import type {
-	PptxSmartArtColorTransform,
+	PptxSmartArtLayoutDefinition,
+	PptxSmartArtNode,
 	PptxSmartArtQuickStyle,
-} from './smart-art-style-definition';
+} from './smart-art-model';
 import type { TextSegment } from './text';
 import type { Pptx3DScene, Pptx3DShape, Text3DStyle } from './three-d';
 
-// Node-related types (PptxSmartArtTextRun, PptxSmartArtNodeStyle,
-// PptxSmartArtNode) live in `smart-art-node.ts` to keep this file within the
-// per-file line budget. They are re-exported here so existing imports from
-// `smart-art` (and the `types` barrel) keep working unchanged.
-export type {
-	PptxSmartArtTextRun,
-	PptxSmartArtTextParagraphItem,
-	PptxSmartArtTextParagraph,
-	PptxSmartArtNodeStyle,
-	PptxSmartArtNode,
-	SmartArtNodeCustomLayout,
-} from './smart-art-node';
-export type {
-	PptxSmartArtAlgorithmParameter,
-	PptxSmartArtChoose,
-	PptxSmartArtForEach,
-	PptxSmartArtIteratorAttributes,
-	PptxSmartArtLayoutCategory,
-	PptxSmartArtLayoutAlgorithm,
-	PptxSmartArtLayoutDefinition,
-	PptxSmartArtLayoutNode,
-	PptxSmartArtLayoutNodeShape,
-	PptxSmartArtShapeAdjustment,
-	PptxSmartArtLocalizedText,
-	PptxSmartArtWhen,
-} from './smart-art-layout-definition';
-export type * from './smart-art-style-definition';
+// The neutral SmartArt model (nodes, layout definition, constraints, colour
+// transform, quick style, layout variables) lives in `diagram/model`;
+// `smart-art-model.ts` binds it to the pptx raw-XML, text-style and 3D types
+// under the historical `PptxSmartArt*` names.
+export type * from './smart-art-model';
 export type * from './smart-art-definition-header';
-export type * from './smart-art-constraint-rules';
 
 // ==========================================================================
 // SmartArt types
@@ -67,52 +44,6 @@ export type * from './smart-art-constraint-rules';
  * ```
  */
 export type SmartArtLayoutType = DiagramLayoutType;
-
-/**
- * Named SmartArt layout presets for creation (subset of PowerPoint layouts).
- *
- * @example
- * ```ts
- * const layout: SmartArtLayout = "hierarchy";
- * // => "hierarchy" — one of: "basicBlockList" | "alternatingHexagons" | "hierarchy" | …
- * ```
- */
-export type SmartArtLayout =
-	| 'basicBlockList'
-	| 'alternatingHexagons'
-	| 'basicChevronProcess'
-	| 'basicCycle'
-	| 'basicPie'
-	| 'basicRadial'
-	| 'basicVenn'
-	| 'continuousBlockProcess'
-	| 'convergingRadial'
-	| 'hierarchy'
-	| 'horizontalBulletList'
-	| 'linearVenn'
-	| 'segmentedProcess'
-	| 'stackedList'
-	| 'tableList'
-	| 'trapezoidList'
-	| 'upwardArrow'
-	| 'basicFunnel'
-	| 'basicTarget'
-	| 'interlockingGears'
-	| 'basicTimeline'
-	| 'basicMatrix'
-	| 'basicPyramid'
-	| 'invertedPyramid'
-	| 'bendingProcess'
-	| 'stepDownProcess'
-	| 'alternatingFlow'
-	| 'descendingProcess'
-	| 'pictureAccentList'
-	| 'verticalBlockList'
-	| 'groupedList'
-	| 'pyramidList'
-	| 'horizontalPictureList'
-	| 'accentProcess'
-	| 'verticalChevronList';
 
 /**
  * SmartArt colour scheme presets.
@@ -305,42 +236,9 @@ export interface PptxSmartArtDrawingShape extends PptxCustomPathProperties {
 export type { PptxSmartArtChrome, PptxSmartArtRawBackgroundFill } from './smart-art-chrome';
 
 /**
- * Presentation layout variables from `dgm:prSet/dgm:presLayoutVars` (data model)
- * or `dgm:varLst` (layout definition defaults).
- *
- * These drive how the DiagramML layout interpreter arranges points: flow
- * direction, hierarchy branch style, org-chart mode, and child count limits.
- * The fallback layout engine can consult them for direction/org-chart hints.
- *
- * @example
- * ```ts
- * const vars: PptxSmartArtPresLayoutVars = { direction: "rev", orgChart: true };
- * // => satisfies PptxSmartArtPresLayoutVars
- * ```
- */
-export interface PptxSmartArtPresLayoutVars {
-	/** Flow direction (`dgm:dir`): "norm" (default) or "rev" (reversed/RTL). */
-	direction?: 'norm' | 'rev';
-	/** Hierarchy branch style (`dgm:hierBranch`): std/init/l/r/hang. */
-	hierarchyBranch?: 'std' | 'init' | 'l' | 'r' | 'hang';
-	/** Org-chart mode enabled (`dgm:orgChart`). */
-	orgChart?: boolean;
-	/** Maximum children per node (`dgm:chMax`, -1 = unbounded). */
-	childMax?: number;
-	/** Preferred children per node (`dgm:chPref`, -1 = unbounded). */
-	childPreferred?: number;
-	/** Whether bullets are enabled (`dgm:bulletEnabled`). */
-	bulletEnabled?: boolean;
-	/** Animation-by-level setting (`dgm:animLvl`). */
-	animationLevel?: string;
-	/** Animate-one setting (`dgm:animOne`). */
-	animateOne?: string;
-	/** Allowed resize handles (`dgm:resizeHandles`). */
-	resizeHandles?: string;
-}
-
-/**
- * Complete parsed SmartArt data for a {@link SmartArtPptxElement}.
+ * Complete parsed SmartArt data for a {@link SmartArtPptxElement}: the neutral
+ * {@link DiagramData} (bound to the pptx node, quick-style and layout-definition
+ * types) plus the package parts, cached drawing and save hints.
  *
  * @example
  * ```ts
@@ -358,42 +256,16 @@ export interface PptxSmartArtPresLayoutVars {
  * // => satisfies PptxSmartArtData
  * ```
  */
-export interface PptxSmartArtData {
-	layoutType?: string;
-	resolvedLayoutType?: SmartArtLayoutType;
-	/** Named layout preset (used when creating new SmartArt). */
-	layout?: SmartArtLayout;
-	/** Colour scheme for the SmartArt graphic. */
-	colorScheme?: SmartArtColorScheme;
-	/** Visual style intensity. */
-	style?: SmartArtStyle;
+export interface PptxSmartArtData extends DiagramData {
 	nodes: PptxSmartArtNode[];
-	/** Connections between data-model nodes. */
-	connections?: PptxSmartArtConnection[];
 	/** Pre-computed shapes from `ppt/diagrams/drawing*.xml`. */
 	drawingShapes?: PptxSmartArtDrawingShape[];
 	/** Background and outline chrome from `dgm:bg` / `dgm:whole`. */
 	chrome?: PptxSmartArtChrome;
-	/** Colour transform from `ppt/diagrams/colors*.xml`. */
-	colorTransform?: PptxSmartArtColorTransform;
 	/** Quick style from `ppt/diagrams/quickStyles*.xml`. */
 	quickStyle?: PptxSmartArtQuickStyle;
 	/** Editable metadata from the related DiagramML layout definition. */
 	layoutDefinition?: PptxSmartArtLayoutDefinition;
-	/**
-	 * Presentation layout variables (direction, hierarchy branch, org-chart,
-	 * child limits, bullets) from `dgm:presLayoutVars` / layout `dgm:varLst`.
-	 * Consulted by the fallback layout engine for direction/org-chart hints.
-	 */
-	presLayoutVars?: PptxSmartArtPresLayoutVars;
-	/**
-	 * The deck's own theme minor-Latin font (`a:fontScheme/a:minorFont/a:latin/
-	 * @typeface`): what SmartArt text actually renders in when no per-run
-	 * `a:latin` override is present (the common case - see
-	 * `smartart-layout-item-font-size.ts`'s font-fit, the one consumer).
-	 * Undefined when the theme carries no font scheme at all.
-	 */
-	themeMinorFont?: string;
 	/** Relationship ID for the diagram data part (for round-trip save). */
 	dataRelId?: string;
 	/** Relationship ID for the diagram layout part. */

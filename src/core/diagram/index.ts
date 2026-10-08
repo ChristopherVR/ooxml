@@ -2,6 +2,7 @@
 // quick-style and cached-drawing parts, relationship resolution and a loader. `pptx` and `docx`
 // adapt to it; nothing here knows about slides or documents.
 export * from './types';
+export type * from './model';
 export * from './attributes';
 export * from './layout-category';
 export * from './relationships';

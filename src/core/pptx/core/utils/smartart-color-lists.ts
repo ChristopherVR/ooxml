@@ -20,7 +20,7 @@ import type { XmlObject } from '../types';
 import type {
 	PptxSmartArtColorListMetadata,
 	SmartArtRoleColorList,
-} from '../types/smart-art-style-definition';
+} from '../types/smart-art-model';
 
 /** Injected XML/colour accessors so this module needs no runtime instance. */
 export interface SmartArtColorListDeps {
