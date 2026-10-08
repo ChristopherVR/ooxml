@@ -29,7 +29,17 @@ Text properties are `fontFamily`, `fontSize` (points), `bold`, `italic`,
 `underline`, `strikethrough`, `fontColor` (six-digit hex), `bullets`,
 `indentLeft` (points), `horizontalAlign` (`left`, `center`, `right`, `justify`)
 and `verticalAlign` (`top`, `middle`, `bottom`). Shape properties are `fillColor` (six-digit hex or
-`none`), `lineColor` (six-digit hex) and `lineWeight` (points). Reordering accepts
+`none`), `lineColor` (six-digit hex), `lineWeight` (points), `linePattern` (0-23),
+`fillPattern` (0-24), `fillBackgroundColor` (six-digit hex), `lineTransparency`
+and `fillTransparency` (0-100 percent). Transparency rounds to native half-percent
+steps, with midpoint ties upward. Fill transparency changes both foreground and
+background. Pattern 0 hides the paint; pattern 1 is solid. Explicit line pattern
+selection can enable a text-box outline without changing its color or weight.
+An explicit fill pattern overrides a color's implicit solid pattern; `fillColor:
+'none'` with a nonzero pattern is contradictory and rejected. Active gradient
+transparency/background changes require explicit paint replacement. Ordinary
+inherited solid theme paints reuse the shared theme resolver.
+Reordering accepts
 `order: 'front' | 'back' | 'forward' | 'backward'`. Every command includes
 `pageId` and `shapeId`; the complete command batch is atomic.
 
@@ -134,10 +144,9 @@ Background page layers are returned in painting order.
   positive-weight NURBS. Cached contiguous `SplineStart`/`SplineKnot` sequences use
   the same sampler with implicit unit weights. Both produce explicit approximation diagnostics
 - Cached solid colors/fills, line widths/pattern codes, arrow codes/sizes, and opacity
-- Cached/themed normalized line caps; legacy square/extended mappings are marked
-  as inferred compatibility until verified against native geometry
-- Cached line patterns 2-23 normalized to bounded dash/gap sequences, with inferred
-  spacing diagnostics. Custom master patterns and themed dashes remain unresolved
+- Cached/themed normalized line caps, with native Visio 16 SVG evidence for cached caps
+- Cached line patterns 2-23 normalized to native cap-aware dash/gap sequences.
+  Custom master patterns and non-solid themed dashes remain unresolved
 - Saved Quick Style color selectors and internal DrawingML theme color/variant records;
   solid fills, linear gradient endpoints/stops, tint/shade/alpha color transforms,
   and themed line widths, with diagnostics for approximations
@@ -187,15 +196,25 @@ gradients remain unsupported; native visual equivalence is unverified.
 Normalized `style.lineCap` maps directly to SVG `stroke-linecap`. An absent effective
 cell leaves it undefined; consumers retain their documented fallback. Themed caps
 resolve independently of line width and use Office's flat default when the selected
-theme line omits its cap. Cached caps 1/2 map to butt/square based on observed upstream
-compatibility, with `inferred-line-cap` diagnostics; they are not an exact-fidelity claim.
+theme line omits its cap. Native Visio 16 SVG exports confirm cached caps 1/2 map
+to butt/square. These measurements establish endpoint and dash attributes, not
+complete pixel equality for every geometry and paint combination.
 Normalized `style.lineDash` contains alternating dash/gap lengths in stroke-width
 multiples, unlike the scene's inch coordinates. Consumers multiply by the actual
-`lineWidth` without a minimum-width floor. The cached built-in sequences have 2-6
-entries, each at most 27, and retain `inferred-line-pattern` diagnostics because
-MS-VSDX pictures the patterns without specifying exact numerical spacing. Cached
+`lineWidth` without a minimum-width floor. Zero-length square-cap dots substitute
+`lineDashDotLength`, which stores the native fixed 0.01-point length in inches.
+`visioLineDashLengths` from the UI helper export applies both rules. The cached
+built-in sequences have 2-6 entries, each at most 40. The recorder
+`scripts/record-visio-line-patterns.ps1` and optional `line-pattern-native.test.ts`
+compare 432 native cases: patterns 0-23, all three caps, 1/3-point strokes and
+drawing scales 0.5, 1 and 2. Set `VISIO_NATIVE_LINE_PATTERNS_DIR` to the recorder
+output to run the oracle. Cached
 values override unused themed dashes. A requested themed pattern stays unresolved
 with a solid fallback; custom pattern 254 and invalid enumerations are diagnosed.
+Native zero-width hairlines remain a rendering gap: SVG export uses 0.75-point
+strokes, while native raster output uses device hairlines and different arrow sizes.
+The model preserves the raw zero width; the nonzero native dash oracle does not
+establish zero-width rendering parity.
 Line properties, including arrowheads, must be suppressed when geometry has
 `stroke: false` or the effective `linePattern` is 0.
 Rectangle rounding preserves local coordinates and winding, and honors inherited

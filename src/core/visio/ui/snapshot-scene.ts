@@ -92,10 +92,16 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 	const style = (source: VisioStyle): VisioStyle => {
 		const result = fields(source, [
 			'fill',
+			'fillPatternIndex',
+			'fillForegroundOpacity',
+			'fillBackgroundColor',
+			'fillBackgroundOpacity',
 			'lineColor',
 			'lineWidth',
 			'lineCap',
 			'linePattern',
+			'lineDashDotLength',
+			'lineColorOpacity',
 			'fillOpacity',
 			'lineOpacity',
 			'startArrow',

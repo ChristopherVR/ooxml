@@ -18,6 +18,7 @@ const LINE_PROPERTIES = [
 	'LineCap',
 	'LinePattern',
 	'LineColorTrans',
+	'LineGradientEnabled',
 	'BeginArrow',
 	'EndArrow',
 	'BeginArrowSize',

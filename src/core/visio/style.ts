@@ -6,6 +6,7 @@ import { themeLinearGradient } from './theme-gradient';
 import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line';
 import { lineCap } from './line-style';
 import { linePattern } from './line-pattern';
+import { sourcePaint } from './source-paint';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { textParagraphs, type ParagraphMarker } from './paragraphs';
@@ -147,13 +148,14 @@ export function shapeStyle(
 				: color(cells, 'FillForegnd', '#ffffff', resources, report, cells, !!fillGradient),
 		...(fillGradient ? { fillGradient } : {}),
 		...(fillPattern ? { fillPattern } : {}),
+		...sourcePaint(cells, (name, fallback) => color(cells, name, fallback, resources, () => {})),
 		lineColor: color(cells, 'LineColor', '#000000', resources, report),
 		...(lineGradient ? { lineGradient } : {}),
 		lineWidth:
 			themeLineWeight(cells, resources, report) ??
 			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
 		...(cap === undefined ? {} : { lineCap: cap }),
-		...(themeSolidLinePattern(cells, resources) ?? linePattern(cells, report)),
+		...(themeSolidLinePattern(cells, resources) ?? linePattern(cells, report, cap)),
 		// Saved and legacy stop transparencies already supply the fill opacity.
 		fillOpacity:
 			savedGradient || legacyGradient || fillPattern

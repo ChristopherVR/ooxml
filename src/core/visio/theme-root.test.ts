@@ -63,7 +63,7 @@ describe('explicit root theme selection', () => {
 			lineWidth: 0.035,
 			lineCap: 'square',
 			linePattern: 23,
-			lineDash: [2, 2],
+			lineDash: [1, 2],
 			lineOpacity: 0.75,
 		});
 		expect(result.shape.text.color).toBe('#654321');

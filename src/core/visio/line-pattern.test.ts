@@ -7,36 +7,36 @@ import { generatedTheme, themeFixture } from './theme-fixtures';
 
 const cells = (value: string): Cells => new Map([['LinePattern', { value }]]);
 const expected: [number, number[]][] = [
-	[2, [6, 3]],
-	[3, [1, 3]],
-	[4, [6, 3, 1, 3]],
-	[5, [6, 3, 1, 3, 1, 3]],
-	[6, [6, 3, 6, 3, 1, 3]],
-	[7, [14, 2, 6, 2]],
-	[8, [14, 2, 6, 2, 6, 2]],
-	[9, [3, 2]],
-	[10, [1, 2]],
-	[11, [3, 2, 1, 2]],
-	[12, [3, 2, 1, 2, 1, 2]],
-	[13, [3, 2, 3, 2, 1, 2]],
-	[14, [7, 2, 3, 2]],
-	[15, [7, 2, 3, 2, 3, 2]],
-	[16, [11, 5]],
-	[17, [1, 5]],
-	[18, [11, 5, 1, 5]],
-	[19, [11, 5, 1, 5, 1, 5]],
-	[20, [11, 5, 11, 5, 1, 5]],
-	[21, [27, 5, 11, 5]],
-	[22, [27, 5, 11, 5, 11, 5]],
-	[23, [2, 2]],
+	[2, [7, 5]],
+	[3, [0, 5]],
+	[4, [7, 5, 0, 5]],
+	[5, [7, 5, 0, 5, 0, 5]],
+	[6, [7, 5, 7, 5, 0, 5]],
+	[7, [19, 5, 7, 5]],
+	[8, [19, 5, 7, 5, 7, 5]],
+	[9, [3, 3]],
+	[10, [0, 3]],
+	[11, [3, 3, 0, 3]],
+	[12, [3, 3, 0, 3, 0, 3]],
+	[13, [3, 3, 3, 3, 0, 3]],
+	[14, [9, 3, 3, 3]],
+	[15, [9, 3, 3, 3, 3, 3]],
+	[16, [15, 9]],
+	[17, [0, 9]],
+	[18, [15, 9, 0, 9]],
+	[19, [15, 9, 0, 9, 0, 9]],
+	[20, [15, 9, 15, 9, 0, 9]],
+	[21, [39, 9, 15, 9]],
+	[22, [39, 9, 15, 9, 15, 9]],
+	[23, [1, 2]],
 ];
 
 describe('Visio cached line-pattern normalization', () => {
 	// Expected sequences are stated independently of the implementation's three-band formula.
-	it.each(expected)('normalizes built-in %i with explicit inference diagnostics', (id, dash) => {
+	it.each(expected)('matches native built-in %i with round caps', (id, dash) => {
 		const report = vi.fn();
 		expect(linePattern(cells(String(id)), report)).toEqual({ linePattern: id, lineDash: dash });
-		expect(report.mock.calls.map(([code]) => code)).toEqual(['inferred-line-pattern']);
+		expect(report).not.toHaveBeenCalled();
 	});
 	it.each(['0', '1'])('keeps %s undashed without an inference warning', (value) => {
 		const report = vi.fn();
@@ -81,7 +81,7 @@ describe('Visio cached line-pattern normalization', () => {
 	});
 	it('uses numeric saved results without evaluating a formula', () => {
 		const pattern: Cells = new Map([['LinePattern', { value: ' 2.3e1 ', formula: 'THEMEVAL()' }]]);
-		expect(linePattern(pattern, vi.fn())).toEqual({ linePattern: 23, lineDash: [2, 2] });
+		expect(linePattern(pattern, vi.fn())).toEqual({ linePattern: 23, lineDash: [1, 2] });
 		const report = vi.fn();
 		expect(linePattern(new Map([['LinePattern', { formula: '2+2' }]]), report)).toEqual({
 			linePattern: 1,
@@ -91,7 +91,7 @@ describe('Visio cached line-pattern normalization', () => {
 	it('does not share mutable sequence arrays between shapes', () => {
 		const first = linePattern(cells('23'), vi.fn());
 		(first.lineDash as number[])[0] = 100;
-		expect(linePattern(cells('23'), vi.fn()).lineDash).toEqual([2, 2]);
+		expect(linePattern(cells('23'), vi.fn()).lineDash).toEqual([1, 2]);
 	});
 	it.each([0, 0.001, 0.02])(
 		'keeps stroke-width multipliers independent of line width %s',
@@ -109,7 +109,7 @@ describe('Visio cached line-pattern normalization', () => {
 			expect(doc.pages[0]!.shapes[0]!.style).toMatchObject({
 				lineWidth: width,
 				linePattern: 23,
-				lineDash: [2, 2],
+				lineDash: [1, 2],
 			});
 		},
 	);
@@ -127,10 +127,10 @@ describe('Visio cached line-pattern normalization', () => {
 			}),
 		);
 		expect(doc.pages[0]!.shapes.map(({ style }) => [style.linePattern, style.lineDash])).toEqual([
-			[23, [2, 2]],
-			[6, [6, 3, 6, 3, 1, 3]],
+			[23, [1, 2]],
+			[6, [7, 5, 7, 5, 0, 5]],
 			[0, undefined],
-			[6, [6, 3, 6, 3, 1, 3]],
+			[6, [7, 5, 7, 5, 0, 5]],
 			[1, undefined],
 		]);
 	});

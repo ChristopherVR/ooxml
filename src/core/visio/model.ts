@@ -64,6 +64,11 @@ export interface VisioStyle {
 	/** Supported normalized gradient; fill remains the solid fallback color. */
 	fillGradient?: VisioFillGradient;
 	fillPattern?: VisioFillPattern;
+	/** Cached source paint properties, independent of gradient/tile render multipliers. */
+	fillPatternIndex?: number;
+	fillForegroundOpacity?: number;
+	fillBackgroundColor?: string;
+	fillBackgroundOpacity?: number;
 	lineColor: string;
 	/** Saved gradient paint; lineColor remains the fallback and arrow-marker color. */
 	lineGradient?: VisioFillGradient;
@@ -73,10 +78,15 @@ export interface VisioStyle {
 	/** Effective ShapeSheet line pattern; 0 is no line, 1 is solid (also invalid-cache fallback). */
 	linePattern: number;
 	/** Alternating dash/gap lengths in stroke-width multiples, not inches.
-	 * Cached built-ins 2-23 use inferred compatibility spacing (2-6 entries, each 0-27).
-	 * Absent for solid, invisible or unresolved patterns. Consumers scale by lineWidth.
+	 * Native built-ins 2-23 use cap-aware spacing (2-6 entries, each 0-40).
+	 * Absent for solid, invisible or unresolved patterns. Consumers scale by lineWidth,
+	 * substituting lineDashDotLength for zero-length square-cap dots when present.
 	 */
 	lineDash?: readonly number[];
+	/** Physical inches used for zero-length square-cap dots in native built-in dashes. */
+	lineDashDotLength?: number;
+	/** Cached LineColorTrans opacity, independent of gradient rendering. */
+	lineColorOpacity?: number;
 	fillOpacity: number;
 	lineOpacity: number;
 	/** Visio arrowhead codes. Consumers must report unsupported arrow variants. */

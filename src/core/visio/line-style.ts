@@ -35,16 +35,8 @@ export function lineCap(
 	}
 	const value = number(cells, 'LineCap', NaN, report);
 	if (value === 0) return 'round';
-	if (value === 1 || value === 2) {
-		// Compatibility inference corroborated by libvisio 49fb9d3a9d21d4374cad782925e48c577a41f5be,
-		// src/lib/VSDContentCollector.cpp:2992-3007. No implementation code is copied.
-		// Microsoft's legacy names alone do not define these caps' exact endpoint geometry.
-		report(
-			'inferred-line-cap',
-			'Legacy square/extended cap geometry uses an inferred compatibility mapping.',
-		);
-		return value === 1 ? 'butt' : 'square';
-	}
+	// Native Visio 16 SVG exports confirm the legacy names' endpoint mapping.
+	if (value === 1 || value === 2) return value === 1 ? 'butt' : 'square';
 	if (Number.isFinite(value))
 		report('invalid-line-cap', 'The cached line cap is outside the supported enumeration.');
 	return undefined;

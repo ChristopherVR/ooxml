@@ -29,6 +29,15 @@ export interface VisioShapeFormatEdit extends Target {
 	fillColor?: string;
 	lineColor?: string;
 	lineWeight?: number;
+	/** Built-in line pattern: 0 hides the line, 1 is solid, 2-23 are dashes. */
+	linePattern?: number;
+	/** Percent transparency, normalized to native half-percent steps. */
+	lineTransparency?: number;
+	/** Classic non-gradient fill pattern: 0 hides fill, 1 is solid, 2-24 are hatches. */
+	fillPattern?: number;
+	fillBackgroundColor?: string;
+	/** Percent transparency applied to both foreground and background fill. */
+	fillTransparency?: number;
 }
 export type VisioFormatEdit = VisioTextFormatEdit | VisioShapeFormatEdit;
 export const isVisioFormatEdit = (edit: { type: string }): edit is VisioFormatEdit =>
@@ -82,6 +91,21 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 		if (edit.fillColor !== undefined) result.fillColor = color(edit.fillColor, true);
 		if (edit.lineColor !== undefined) result.lineColor = color(edit.lineColor);
 		if (edit.lineWeight !== undefined) result.lineWeight = points(edit.lineWeight, 0, 100);
+		for (const [name, maximum] of [
+			['linePattern', 23],
+			['fillPattern', 24],
+		] as const) {
+			if (edit[name] === undefined) continue;
+			const value = points(edit[name], 0, maximum);
+			if (!Number.isInteger(value)) fail('INVALID_EDIT', 'Paint patterns require integers.');
+			result[name] = value;
+		}
+		for (const name of ['lineTransparency', 'fillTransparency'] as const)
+			if (edit[name] !== undefined) result[name] = Math.round(points(edit[name], 0, 100) * 2) / 2;
+		if (edit.fillBackgroundColor !== undefined)
+			result.fillBackgroundColor = color(edit.fillBackgroundColor);
+		if (result.fillColor === 'none' && result.fillPattern !== undefined && result.fillPattern !== 0)
+			fail('INVALID_EDIT', 'No fill conflicts with a visible fill pattern.');
 	}
 	if (Object.keys(result).length === 3)
 		fail('INVALID_EDIT', 'Formatting requires at least one property.');

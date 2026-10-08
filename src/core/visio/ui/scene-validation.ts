@@ -145,7 +145,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 			const dash = shape.style.lineDash;
 			if (!Array.isArray(dash) || dash.length < 2 || dash.length > 6 || dash.length % 2 !== 0)
 				throw new Error('The scene has an invalid normalized line dash.');
-			for (const value of dash) finite(value, 'line dash length', 0, 27);
+			for (const value of dash) finite(value, 'line dash length', 0, 40);
 			if (!dash.some((value) => value > 0))
 				throw new Error('The scene has an empty line dash pattern.');
 		}
@@ -163,6 +163,25 @@ export function assertViewableDocument(model: VisioDocument): void {
 			throw new Error('The scene has an invalid normalized line cap.');
 		finite(shape.style.fillOpacity, 'fill opacity', 0, 1);
 		finite(shape.style.lineOpacity, 'line opacity', 0, 1);
+		if (shape.style.lineDashDotLength !== undefined)
+			finite(shape.style.lineDashDotLength, 'line dash dot length', 0, 1_000_000);
+		for (const name of [
+			'fillForegroundOpacity',
+			'fillBackgroundOpacity',
+			'lineColorOpacity',
+		] as const)
+			if (shape.style[name] !== undefined) finite(shape.style[name], 'source paint opacity', 0, 1);
+		if (shape.style.fillPatternIndex !== undefined) {
+			finite(shape.style.fillPatternIndex, 'source fill pattern', 0, 65535);
+			if (!Number.isInteger(shape.style.fillPatternIndex))
+				throw new Error('The scene has an invalid source fill pattern.');
+		}
+		if (
+			shape.style.fillBackgroundColor !== undefined &&
+			(typeof shape.style.fillBackgroundColor !== 'string' ||
+				!/^#[0-9a-f]{6}$/i.test(shape.style.fillBackgroundColor))
+		)
+			throw new Error('The scene has an invalid source fill background color.');
 		if (shape.style.fillPattern) {
 			const tile = shape.style.fillPattern;
 			finite(tile.width, 'fill pattern width', 1 / 12, 1 / 12);

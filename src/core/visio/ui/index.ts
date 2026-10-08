@@ -35,3 +35,5 @@ export * from './size-position';
 export * from './marquee';
 export * from './shape-resize';
 export * from './draw-plan';
+export * from './line-dash';
+export * from './shape-formatting';

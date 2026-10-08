@@ -22,16 +22,11 @@ describe('Visio normalized line caps', () => {
 		['0', 'round'],
 		['1', 'butt'],
 		['2', 'square'],
-	] as const)(
-		'normalizes cached %s to %s without hiding compatibility inferences',
-		(value, expected) => {
-			const report = vi.fn();
-			expect(lineCap(caps(value), resources, report)).toBe(expected);
-			expect(report.mock.calls.map(([code]) => code)).toEqual(
-				value === '0' ? [] : ['inferred-line-cap'],
-			);
-		},
-	);
+	] as const)('matches native cached %s to %s', (value, expected) => {
+		const report = vi.fn();
+		expect(lineCap(caps(value), resources, report)).toBe(expected);
+		expect(report).not.toHaveBeenCalled();
+	});
 	it('leaves absent caps undefined instead of manufacturing a ShapeSheet default', () => {
 		const report = vi.fn();
 		expect(lineCap(new Map(), resources, report)).toBeUndefined();

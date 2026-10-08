@@ -4,6 +4,7 @@ import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import { textFormattingWrites } from './edit-formatting-text';
+import { shapeFormattingWrites, assertShapeFormattingPaintScope } from './edit-formatting-paint';
 import { assertFormattingDependencies } from './edit-formatting-scope';
 import {
 	assertEditableFormattingCell,
@@ -67,39 +68,12 @@ export async function applyFormattingEdit(
 	);
 	let writes: FormattingWrite[] = [];
 	let rows: Map<string, FormattingRowContext> | undefined;
-	const add = (
-		name: string,
-		value: string | number,
-		category: FormattingCategory,
-		unit?: string,
-		formula?: string,
-	) =>
-		writes.push({
-			name,
-			value: String(value),
-			category,
-			...(unit ? { unit } : {}),
-			...(formula ? { formula } : {}),
-		});
 	if (edit.type === 'format-text') {
 		const plan = textFormattingWrites(shape, document, edit, check);
 		writes = plan.writes;
 		rows = plan.rows;
 	} else {
-		if (edit.fillColor !== undefined) {
-			add('FillPattern', edit.fillColor === 'none' ? 0 : 1, 'FillStyle');
-			add('FillGradientEnabled', 0, 'FillStyle');
-			if (edit.fillColor !== 'none') {
-				add('FillForegnd', edit.fillColor, 'FillStyle', undefined, rgb(edit.fillColor));
-				add('FillForegndTrans', 0, 'FillStyle');
-			}
-		}
-		if (edit.lineColor !== undefined) {
-			add('LineColor', edit.lineColor, 'LineStyle', undefined, rgb(edit.lineColor));
-			add('LineColorTrans', 0, 'LineStyle');
-			add('LineGradientEnabled', 0, 'LineStyle');
-		}
-		if (edit.lineWeight !== undefined) add('LineWeight', edit.lineWeight / 72, 'LineStyle', 'PT');
+		writes = shapeFormattingWrites(edit);
 	}
 	const changed = new Map<string, Element | undefined>();
 	for (const write of writes) {
@@ -108,6 +82,14 @@ export async function applyFormattingEdit(
 		const rowContext = rows?.get(section!);
 		const effective = effectiveShapeCell(shape, document, write.name, write.category, rowContext);
 		assertEditableFormattingCell(effective);
+		if (
+			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd)$/.test(
+				write.name,
+			) &&
+			effective?.hasAttribute('U') &&
+			visioFormulaCachedValue('0', attribute(effective, 'U')).unit !== 'scalar'
+		)
+			fail('EDIT_FORMULA_UNIT', 'Paint patterns and transparency require scalar units.');
 		if (
 			write.unit &&
 			effective?.hasAttribute('U') &&
@@ -129,6 +111,8 @@ export async function applyFormattingEdit(
 		changed.set(write.name, local);
 	}
 	if (!changed.size) return false;
+	if (edit.type === 'format-shape')
+		await assertShapeFormattingPaintScope(pkg, document, shape, edit, changed, check);
 	await assertFormattingDependencies(pkg, pagePaths, roots, edit.pageId, shape, changed, check);
 	for (const write of writes) {
 		check();
@@ -171,7 +155,4 @@ export async function applyFormattingEdit(
 		else if (attribute(cell, 'F') !== 'No Formula') cell.removeAttribute('F');
 	}
 	return true;
-}
-function rgb(color: string): string {
-	return `RGB(${[1, 3, 5].map((index) => parseInt(color.slice(index, index + 2), 16)).join(',')})`;
 }
