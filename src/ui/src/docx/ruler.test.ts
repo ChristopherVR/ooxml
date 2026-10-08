@@ -2,11 +2,10 @@
 import { createDocument } from 'ooxml-core/docx';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { createRibbon } from './ribbon';
 import {
 	createRuler,
-	inchLabels,
 	markerChange,
 	markerPositions,
 	updateRuler,
@@ -14,6 +13,9 @@ import {
 } from './ruler';
 import { rulerGeometry, syncRuler } from './ruler-sync';
 import { schema } from './schema';
+import { registerOfficeUi } from '../index';
+
+beforeAll(() => registerOfficeUi());
 
 const geometry = (over: Partial<RulerGeometry> = {}): RulerGeometry => ({
 	pageWidth: 816,
@@ -35,31 +37,25 @@ describe('ruler geometry', () => {
 		});
 		expect(markerPositions(geometry({ indentLeft: 48, firstLine: -48 })).firstLine).toBe(96);
 	});
-
-	it('labels whole inches from the left margin up to the right margin', () => {
-		expect(inchLabels(geometry())).toEqual([
-			{ at: 192, text: '1' },
-			{ at: 288, text: '2' },
-			{ at: 384, text: '3' },
-			{ at: 480, text: '4' },
-			{ at: 576, text: '5' },
-			{ at: 672, text: '6' },
-		]);
-		expect(inchLabels(geometry({ marginLeft: 0, marginRight: 0, pageWidth: 90 }))).toEqual([]);
-	});
 });
 
+const marker = (ruler: HTMLElement, name: string) =>
+	ruler.shadowRoot!.querySelector<HTMLElement>(`[data-marker="${name}"]`)!;
+
 describe('ruler element', () => {
-	it('sizes itself, shades the margins, moves markers and follows the zoom', () => {
+	it('is the shared ruler, sized to the page, with shaded margins and a zoom', () => {
 		const ruler = createRuler();
+		document.body.append(ruler);
 		updateRuler(ruler, geometry({ indentLeft: 48 }), 1.5);
+		expect(ruler.localName).toBe('office-ui-ruler');
+		expect(ruler.classList.contains('dve-ruler')).toBe(true);
+		expect(ruler.getAttribute('aria-label')).toBe('Ruler');
 		expect(ruler.style.width).toBe('816px');
-		expect(ruler.style.getPropertyValue('--dve-zoom')).toBe('1.5');
-		expect(ruler.querySelector<HTMLElement>('.dve-ruler-margin-left')!.style.width).toBe('96px');
-		expect(ruler.querySelector<HTMLElement>('.dve-ruler-marker-left')!.style.left).toBe('144px');
-		expect(ruler.querySelectorAll('.dve-ruler-labels span')).toHaveLength(6);
-		updateRuler(ruler, geometry({ indentLeft: 48 }), 1.5);
-		expect(ruler.querySelectorAll('.dve-ruler-labels span')).toHaveLength(6);
+		expect(ruler.style.getPropertyValue('zoom')).toBe('1.5');
+		const bands = ruler.shadowRoot!.querySelectorAll<HTMLElement>('.margin');
+		expect([...bands].map((band) => band.style.width)).toEqual(['96px', '96px']);
+		expect(marker(ruler, 'left').style.left).toBe('144px');
+		ruler.remove();
 	});
 });
 
@@ -94,7 +90,7 @@ describe('ruler sync', () => {
 		const ruler = createRuler();
 		frame.append(ruler);
 		syncRuler(ribbon, view, createDocument());
-		expect(ruler.querySelector<HTMLElement>('.dve-ruler-marker-left')!.style.left).toBe('144px');
+		expect(marker(ruler, 'left').style.left).toBe('144px');
 	});
 
 	it('has a View button that emits the toggle', () => {
@@ -131,12 +127,12 @@ describe('ruler dragging', () => {
 		const ruler = createRuler((change) => changes.push(change));
 		document.body.append(ruler);
 		updateRuler(ruler, geometry(), 1);
-		const marker = ruler.querySelector<HTMLElement>('.dve-ruler-marker-left')!;
+		const handle = marker(ruler, 'left');
 		const fire = (type: string, clientX: number) =>
-			marker.dispatchEvent(new MouseEvent(type, { clientX, bubbles: true, button: 0 }));
+			handle.dispatchEvent(new MouseEvent(type, { clientX, bubbles: true, button: 0 }));
 		fire('pointerdown', 96);
 		fire('pointermove', 144);
-		expect(marker.style.left).toBe('144px');
+		expect(marker(ruler, 'left').style.left).toBe('144px');
 		expect(changes).toEqual([]);
 		fire('pointerup', 144);
 		expect(changes).toEqual([{ leftInches: 0.5 }]);

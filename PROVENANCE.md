@@ -2143,3 +2143,17 @@ and styles, effect and connector schemes, font styles) are still parsed in visio
 elements; the module exports are otherwise unchanged. Parse output of 15 local
 native VSDX files (including the two hash-pinned Apache POI corpus files) is
 byte-identical before and after.
+
+## Word ruler on the shared ruler (wave 2, item 7)
+
+The DOM ruler in `src/ui/src/docx/ruler.ts` (inch labels, shaded margins, three
+draggable indent markers, its `.dve-ruler*` CSS in `docx/styles/chrome-document.css`)
+now renders through `office-ui-ruler` (`src/ui/src/chrome/ruler.ts`). The shared
+element gained `extent`, `marginStart`, `marginEnd`, `zoom`, `labelsWithinMargins`,
+`label` and draggable `markers` with `ruler-marker-move`/`-commit`/`-cancel` events.
+`docx/ruler.ts` keeps only the indent arithmetic (`markerPositions`, `markerChange`)
+and a thin `createRuler`/`updateRuler` adapter. Marker hooks changed from
+`.dve-ruler-marker-<name>` classes to `[data-marker="<name>"]` inside the ruler's
+shadow root (the docx e2e spec was updated). The xlsx `office-bridge.css` was
+replaced by `shadcnBridge(':host', '--xve-')`, and the Visio viewer now derives its
+colours from the shared `--office-*` tokens (`visio/styles/theme.ts`).

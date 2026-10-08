@@ -360,7 +360,7 @@ test.describe('Word-style ribbon', () => {
 		await editor.getByRole('button', { name: 'Ruler', exact: true }).click();
 		const ruler = editor.locator('.dve-ruler');
 		await expect(ruler).toBeVisible();
-		const left = ruler.locator('.dve-ruler-marker-left');
+		const left = ruler.locator('[data-marker="left"]');
 		const before = await left.evaluate((el) => parseFloat((el as HTMLElement).style.left));
 		await editor.locator('[role="tab"][data-tab="layout"]').click();
 		const spinner = editor.getByLabel('Indent left', { exact: true });
