@@ -255,6 +255,34 @@ describe('buildComboViewModel', () => {
 		expect(vm.secondaryAxisLabels?.some((label) => label.text === '2')).toBeTruthy();
 	});
 
+	it('draws secondary gridlines only when the secondary axis has c:majorGridlines', () => {
+		const chartData = (secondaryGridlines: boolean): PptxChartData => ({
+			chartType: 'combo',
+			categories: ['Q1', 'Q2'],
+			series: [
+				{ name: 'Revenue', values: [1000, 2000], axisId: 20, seriesChartType: 'bar' },
+				{ name: 'Margin', values: [1, 2], axisId: 40, seriesChartType: 'line' },
+			],
+			axes: [
+				{ axisType: 'catAx', axisId: 10, crossAxisId: 20, axPos: 'b' },
+				{ axisType: 'valAx', axisId: 20, crossAxisId: 10, axPos: 'l', majorGridlines: true },
+				{ axisType: 'catAx', axisId: 30, crossAxisId: 40, axPos: 't' },
+				{
+					axisType: 'valAx',
+					axisId: 40,
+					crossAxisId: 30,
+					axPos: 'r',
+					...(secondaryGridlines ? { majorGridlines: true } : {}),
+				},
+			],
+		});
+		const without = buildComboViewModel(makeElement(), chartData(false), ['Q1', 'Q2']);
+		const withGrid = buildComboViewModel(makeElement(), chartData(true), ['Q1', 'Q2']);
+		expect(without.secondaryGridlines).toStrictEqual([]);
+		expect(withGrid.secondaryGridlines?.length).toBeGreaterThan(0);
+		expect(without.gridlines.length).toBeGreaterThan(0);
+	});
+
 	it('honours explicit secondary-axis bounds for combo line placement', () => {
 		const chartData: PptxChartData = {
 			chartType: 'combo',

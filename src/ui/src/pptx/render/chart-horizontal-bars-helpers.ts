@@ -5,8 +5,10 @@
  *
  * @module chart-horizontal-bars-helpers
  */
-import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
+import type { PptxChartAxisFormatting, PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 
+import { buildVerticalStyledGridline } from './chart-axis-primitives';
+import { isNoLine } from './chart-axis-style';
 import { resolveDataPointFill, resolveVaryColorFill } from './chart-datapoint-style';
 import { DEFAULT_CHART_TEXT_PX } from './chart-font';
 import type { PlotLayout, SvgLine, SvgText, ValueRange } from './chart-view-model';
@@ -36,24 +38,35 @@ export function valueToX(val: number, range: ValueRange, leftX: number, rightX: 
 	return range.reverseOrder ? rightX - ratio * usable : leftX + ratio * usable;
 }
 
-/** Vertical value gridlines + bottom tick labels (the transposed value axis). */
+/**
+ * Vertical value gridlines + bottom tick labels (the transposed value axis).
+ * `showMajorGridlines` comes from `shouldRenderMajorGridlines`, as on the
+ * column engine; gridlines take their line from `c:majorGridlines/c:spPr`.
+ */
 export function buildTransposedValueAxis(
 	range: ValueRange,
 	layout: PlotLayout,
+	axis?: PptxChartAxisFormatting,
+	showMajorGridlines = true,
 ): { gridlines: SvgLine[]; axisLabels: SvgText[] } {
 	const gridlines: SvgLine[] = [],
-		axisLabels: SvgText[] = [];
+		axisLabels: SvgText[] = [],
+		drawGridlines = showMajorGridlines && !isNoLine(axis?.majorGridlinesSpPr);
 	for (const val of axisTickValues(range)) {
 		const x = valueToX(val, range, layout.plotLeft, layout.plotRight);
-		gridlines.push({
-			kind: 'line',
-			x1: x,
-			y1: layout.plotTop,
-			x2: x,
-			y2: layout.plotBottom,
-			stroke: GRIDLINE_COLOR,
-			strokeWidth: 1,
-		});
+		if (drawGridlines) {
+			gridlines.push(
+				buildVerticalStyledGridline(
+					x,
+					layout,
+					axis?.majorGridlinesSpPr,
+					GRIDLINE_COLOR,
+					1,
+					undefined,
+					undefined,
+				),
+			);
+		}
 		axisLabels.push({
 			kind: 'text',
 			x,

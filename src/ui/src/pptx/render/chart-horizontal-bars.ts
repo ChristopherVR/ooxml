@@ -21,6 +21,7 @@ import { computeValueRangeForChart } from './chart-axis-range';
 import { resolveBarLabelPlacement } from './chart-data-label-anchor';
 import { dataLabelFontOverride, resolveDataLabelTextStyle } from './chart-data-label-text';
 import { DEFAULT_CHART_DATA_LABEL_PX, DEFAULT_CHART_TEXT_PX } from './chart-font';
+import { primaryValueAxis, shouldRenderMajorGridlines } from './chart-gridlines-toggle';
 import {
 	barFill,
 	buildSideCategoryLabels,
@@ -73,7 +74,12 @@ export function buildHorizontalBarViewModel(
 			: isStacked
 				? computeStackedValueRange(series, catCount, layout.plotWidth)
 				: computeValueRangeForChart(series, chartData.axes, layout.plotWidth),
-		{ gridlines, axisLabels } = buildTransposedValueAxis(range, layout),
+		{ gridlines, axisLabels } = buildTransposedValueAxis(
+			range,
+			layout,
+			primaryValueAxis(chartData.axes),
+			shouldRenderMajorGridlines(chartData),
+		),
 		zeroX = valueToX(0, range, layout.plotLeft, layout.plotRight),
 		zeroLine: SvgLine | undefined =
 			range.min < 0 && range.max > 0

@@ -1,4 +1,4 @@
-import type { ChartPptxElement, PptxChartData } from 'ooxml-core/pptx';
+import type { ChartPptxElement, PptxChartData, PptxChartShapeProps } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { buildCartesianViewModel } from './chart-cartesian';
@@ -28,6 +28,8 @@ function chartData(overrides?: Partial<PptxChartData>): PptxChartData {
 		...overrides,
 	};
 }
+
+const CATEGORIES = ['A', 'B', 'C'];
 
 function rects(vm: { primitives: ReadonlyArray<{ kind: string }> }): SvgRect[] {
 	return vm.primitives.filter((p): p is SvgRect => p.kind === 'rect');
@@ -74,6 +76,40 @@ describe('buildHorizontalBarViewModel', () => {
 		const maxCatX = Math.max(...vm.categoryLabels.map((l) => l.x));
 		const minGridX = Math.min(...vm.gridlines.map((l) => l.x1));
 		expect(maxCatX).toBeLessThan(minGridX + 1);
+	});
+
+	it('draws value gridlines only when the parsed value axis has c:majorGridlines', () => {
+		const withAxes = (majorGridlines: boolean) =>
+			buildHorizontalBarViewModel(
+				element(),
+				chartData({
+					axes: [
+						{ axisType: 'catAx', axPos: 'l', axisId: 1, crossAxisId: 2 },
+						{ axisType: 'valAx', axPos: 'b', axisId: 2, crossAxisId: 1, majorGridlines },
+					],
+				}),
+				CATEGORIES,
+			);
+		const hidden = withAxes(false);
+		const shown = withAxes(true);
+		expect(hidden.gridlines).toStrictEqual([]);
+		expect(shown.gridlines.length).toBeGreaterThan(0);
+		expect(hidden.axisLabels).toStrictEqual(shown.axisLabels);
+	});
+
+	it('takes the value gridline style from c:majorGridlines/c:spPr', () => {
+		const withGridlineLine = (majorGridlinesSpPr: PptxChartShapeProps) =>
+			buildHorizontalBarViewModel(
+				element(),
+				chartData({
+					axes: [{ axisType: 'valAx', axPos: 'b', majorGridlines: true, majorGridlinesSpPr }],
+				}),
+				CATEGORIES,
+			);
+		const styled = withGridlineLine({ strokeColor: '#D9D9D9', strokeWidth: 0.75 });
+		expect(styled.gridlines.length).toBeGreaterThan(0);
+		expect(styled.gridlines.every((line) => line.stroke === '#D9D9D9')).toBeTruthy();
+		expect(withGridlineLine({ lineNoFill: true }).gridlines).toStrictEqual([]);
 	});
 
 	it('stacks series along x when grouping is stacked', () => {

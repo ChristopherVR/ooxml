@@ -2,6 +2,7 @@ import type { PptxChartData } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {
+	axisShowsMajorGridlines,
 	chartGridlinesPatch,
 	chartGridlinesState,
 	shouldRenderMajorGridlines,
@@ -72,6 +73,14 @@ describe('chartGridlinesState', () => {
 			axes: [{ axisType: 'valAx', axPos: 'l', majorGridlines: false }],
 		});
 		expect(chartGridlinesState(stackedLineHidden)).toBeFalsy();
+	});
+});
+
+describe('axisShowsMajorGridlines', () => {
+	it('follows a parsed axis and keeps gridlines for an axis that was never parsed', () => {
+		expect(axisShowsMajorGridlines({ axisType: 'valAx', majorGridlines: true })).toBe(true);
+		expect(axisShowsMajorGridlines({ axisType: 'valAx' })).toBe(false);
+		expect(axisShowsMajorGridlines(undefined)).toBe(true);
 	});
 });
 
