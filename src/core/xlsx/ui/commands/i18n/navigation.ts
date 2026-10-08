@@ -356,11 +356,17 @@ export const NAVIGATION_STRINGS: Translations = {
 	Hyperlinks: ['Liens hypertexte', 'Hyperlinks', 'Hipervínculos', '超链接'],
 	'Sort and filter': ['Tri et filtre', 'Sortieren und Filtern', 'Ordenar y filtrar', '排序和筛选'],
 	'Freeze panes': ['Figer les volets', 'Fenster fixieren', 'Inmovilizar paneles', '冻结窗格'],
-	'Pivot tables and sparklines (kept in the file but not shown)': [
-		'Tableaux croisés dynamiques et graphiques sparkline (conservés dans le fichier mais non affichés)',
-		'PivotTables und Sparklines (in der Datei erhalten, aber nicht angezeigt)',
-		'Tablas dinámicas y minigráficos (se conservan en el archivo, pero no se muestran)',
-		'数据透视表和迷你图(保留在文件中但不显示)',
+	'Pivot tables (kept in the file but not shown)': [
+		'Tableaux croisés dynamiques (conservés dans le fichier mais non affichés)',
+		'PivotTables (in der Datei erhalten, aber nicht angezeigt)',
+		'Tablas dinámicas (se conservan en el archivo, pero no se muestran)',
+		'数据透视表(保留在文件中但不显示)',
+	],
+	'Creating or editing sparklines (existing ones are shown)': [
+		'Création ou modification de graphiques sparkline (ceux existants sont affichés)',
+		'Sparklines erstellen oder bearbeiten (vorhandene werden angezeigt)',
+		'Crear o editar minigráficos (los existentes se muestran)',
+		'创建或编辑迷你图(现有迷你图会显示)',
 	],
 	'Show Formulas': ['Afficher les formules', 'Formeln anzeigen', 'Mostrar fórmulas', '显示公式'],
 	'Manual calculation': ['Calcul manuel', 'Manuelle Berechnung', 'Cálculo manual', '手动计算'],

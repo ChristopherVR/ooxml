@@ -132,8 +132,8 @@ export const shell: Record<string, string> = {
 	'Compatibility notes': 'Kompatibilitätshinweise',
 	'No compatibility notes for this workbook.':
 		'Keine Kompatibilitätshinweise für diese Arbeitsmappe.',
-	'Charts are shown but not edited; pivot tables, sparklines, macros and other unsupported parts are kept in the file but not shown.':
-		'Diagramme werden angezeigt, aber nicht bearbeitet; PivotTables, Sparklines, Makros und andere nicht unterstützte Teile bleiben in der Datei erhalten, werden aber nicht angezeigt.',
+	'Charts and sparklines are shown but not edited; pivot tables, macros and other unsupported parts are kept in the file but not shown.':
+		'Diagramme und Sparklines werden angezeigt, aber nicht bearbeitet; PivotTables, Makros und andere nicht unterstützte Teile bleiben in der Datei erhalten, werden aber nicht angezeigt.',
 	'This workbook was opened from an Excel 97-2003 file (.xls). Save writes an Excel Workbook (.xlsx); the original .xls file is not changed.':
 		'Diese Arbeitsmappe wurde aus einer Excel 97-2003-Datei (.xls) geöffnet. Beim Speichern entsteht eine Excel-Arbeitsmappe (.xlsx); die ursprüngliche .xls-Datei bleibt unverändert.',
 	'This workbook was opened from a CSV file, which keeps values only. Save writes an Excel Workbook (.xlsx); use Export to write CSV.':

@@ -91,7 +91,7 @@ export function renderInfo(page: PageContext): void {
 		paragraph(
 			page,
 			t(
-				'Charts are shown but not edited; pivot tables, sparklines, macros and other unsupported parts are kept in the file but not shown.',
+				'Charts and sparklines are shown but not edited; pivot tables, macros and other unsupported parts are kept in the file but not shown.',
 			),
 			'xve-backstage-muted',
 		),

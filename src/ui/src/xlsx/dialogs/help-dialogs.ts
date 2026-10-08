@@ -48,7 +48,8 @@ export const SUPPORTED_FEATURES = [
 ] as const;
 
 export const UNSUPPORTED_FEATURES = [
-	'Pivot tables and sparklines (kept in the file but not shown)',
+	'Pivot tables (kept in the file but not shown)',
+	'Creating or editing sparklines (existing ones are shown)',
 	'Show Formulas',
 	'Manual calculation',
 	'Outline (grouping) for columns',

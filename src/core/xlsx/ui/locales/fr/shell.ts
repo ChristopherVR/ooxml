@@ -131,8 +131,8 @@ export const shell: Record<string, string> = {
 	'Inspect Workbook': 'Inspecter le classeur',
 	'Compatibility notes': 'Notes de compatibilité',
 	'No compatibility notes for this workbook.': 'Aucune note de compatibilité pour ce classeur.',
-	'Charts are shown but not edited; pivot tables, sparklines, macros and other unsupported parts are kept in the file but not shown.':
-		'Les graphiques sont affichés mais non modifiables ; les tableaux croisés dynamiques, graphiques sparkline, macros et autres éléments non pris en charge sont conservés dans le fichier mais pas affichés.',
+	'Charts and sparklines are shown but not edited; pivot tables, macros and other unsupported parts are kept in the file but not shown.':
+		'Les graphiques et graphiques sparkline sont affichés mais non modifiables ; les tableaux croisés dynamiques, macros et autres éléments non pris en charge sont conservés dans le fichier mais pas affichés.',
 	'This workbook was opened from an Excel 97-2003 file (.xls). Save writes an Excel Workbook (.xlsx); the original .xls file is not changed.':
 		"Ce classeur a été ouvert à partir d'un fichier Excel 97-2003 (.xls). L'enregistrement crée un classeur Excel (.xlsx) ; le fichier .xls d'origine n'est pas modifié.",
 	'This workbook was opened from a CSV file, which keeps values only. Save writes an Excel Workbook (.xlsx); use Export to write CSV.':

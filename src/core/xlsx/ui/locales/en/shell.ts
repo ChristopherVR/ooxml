@@ -131,8 +131,8 @@ export const shell: Record<string, string> = {
 	'Inspect Workbook': 'Inspect Workbook',
 	'Compatibility notes': 'Compatibility notes',
 	'No compatibility notes for this workbook.': 'No compatibility notes for this workbook.',
-	'Charts are shown but not edited; pivot tables, sparklines, macros and other unsupported parts are kept in the file but not shown.':
-		'Charts are shown but not edited; pivot tables, sparklines, macros and other unsupported parts are kept in the file but not shown.',
+	'Charts and sparklines are shown but not edited; pivot tables, macros and other unsupported parts are kept in the file but not shown.':
+		'Charts and sparklines are shown but not edited; pivot tables, macros and other unsupported parts are kept in the file but not shown.',
 	'This workbook was opened from an Excel 97-2003 file (.xls). Save writes an Excel Workbook (.xlsx); the original .xls file is not changed.':
 		'This workbook was opened from an Excel 97-2003 file (.xls). Save writes an Excel Workbook (.xlsx); the original .xls file is not changed.',
 	'This workbook was opened from a CSV file, which keeps values only. Save writes an Excel Workbook (.xlsx); use Export to write CSV.':

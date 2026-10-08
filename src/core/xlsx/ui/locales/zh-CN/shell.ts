@@ -130,8 +130,8 @@ export const shell: Record<string, string> = {
 	'Inspect Workbook': '检查工作簿',
 	'Compatibility notes': '兼容性说明',
 	'No compatibility notes for this workbook.': '此工作簿没有兼容性说明。',
-	'Charts are shown but not edited; pivot tables, sparklines, macros and other unsupported parts are kept in the file but not shown.':
-		'图表仅显示，不可编辑；数据透视表、迷你图、宏和其他不支持的部分会保留在文件中，但不显示。',
+	'Charts and sparklines are shown but not edited; pivot tables, macros and other unsupported parts are kept in the file but not shown.':
+		'图表和迷你图仅显示，不可编辑；数据透视表、宏和其他不支持的部分会保留在文件中，但不显示。',
 	'This workbook was opened from an Excel 97-2003 file (.xls). Save writes an Excel Workbook (.xlsx); the original .xls file is not changed.':
 		'此工作簿是从 Excel 97-2003 文件 (.xls) 打开的。保存时会写入 Excel 工作簿 (.xlsx)；原始 .xls 文件不会更改。',
 	'This workbook was opened from a CSV file, which keeps values only. Save writes an Excel Workbook (.xlsx); use Export to write CSV.':
