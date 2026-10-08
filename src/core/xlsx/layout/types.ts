@@ -1,5 +1,6 @@
 import type { CellRange } from '../address';
 import type { DifferentialStyle, PatternType } from '../model';
+import type { SparklineView } from './sparkline-view';
 
 /** A font ready to paint. */
 export interface FontView {
@@ -90,6 +91,8 @@ export interface CellView {
 	overflow: boolean;
 	dataBar?: DataBarView;
 	icon?: IconView;
+	/** A sparkline hosted in the cell, drawn behind its content. */
+	sparkline?: SparklineView;
 	hasComment: boolean;
 	hasHyperlink: boolean;
 	/** A list data validation with an in-cell drop-down covers the cell. */

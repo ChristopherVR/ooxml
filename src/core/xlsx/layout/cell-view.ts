@@ -6,6 +6,7 @@ import { formatValue } from '../numfmt/index';
 import { styleAt } from '../styles';
 import { bordersView, fillView, fontView, mergeBorder, mergeFont } from './style-view';
 import type { CellView, ConditionalFormatEvaluator, HAlignView } from './types';
+import { sparklineViewAt } from './sparkline-data';
 import { INDENT_PX_PER_LEVEL } from './units';
 
 /** The style id that applies to a cell: its own, else its row's, else its column's. */
@@ -152,6 +153,8 @@ export function cellView(
 	if (fill) view.fill = fill;
 	if (conditional?.dataBar) view.dataBar = conditional.dataBar;
 	if (conditional?.icon) view.icon = conditional.icon;
+	const sparkline = sparklineViewAt(workbook, sheetIndex, row, col);
+	if (sparkline) view.sparkline = sparkline;
 
 	const link = sheet.hyperlinks.find((h) => rangeContains(h.range, { row, col }));
 	if (link) {

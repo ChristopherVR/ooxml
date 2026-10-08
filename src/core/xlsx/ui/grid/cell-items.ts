@@ -59,6 +59,7 @@ export function isBlankView(view: CellView): boolean {
 		!hasBorders(view.borders) &&
 		!view.dataBar &&
 		!view.icon &&
+		!view.sparkline &&
 		!view.hasComment
 	);
 }

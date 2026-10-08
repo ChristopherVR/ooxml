@@ -7,6 +7,7 @@ import {
 	createConditionalFormatEvaluator,
 	effectiveStyleId,
 	getCell,
+	hasSparklineAt,
 	type CellView,
 	type ConditionalFormatEvaluator,
 	type EditSession,
@@ -56,7 +57,10 @@ export class CellViewCache {
 		if (workbook && sheet) {
 			const stored = getCell(sheet, row, col);
 			const plain =
-				!stored && effectiveStyleId(sheet, row, col) === 0 && !cfCovers(sheet, row, col);
+				!stored &&
+				effectiveStyleId(sheet, row, col) === 0 &&
+				!cfCovers(sheet, row, col) &&
+				!hasSparklineAt(sheet, row, col);
 			if (!plain) {
 				const view = cellView(workbook, this.#source.sheetIndex(), row, col, this.#evaluator());
 				result = isBlankView(view) ? null : view;

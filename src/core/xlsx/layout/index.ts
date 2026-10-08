@@ -49,6 +49,23 @@ export type {
 } from './types';
 export { BORDER_STYLES, bordersView, edgeView, fillView, fontView, mergeFont } from './style-view';
 export {
+	sparklineScale,
+	sparklineValues,
+	sparklineView,
+	type SparklineColumnView,
+	type SparklineData,
+	type SparklineMarkerView,
+	type SparklinePointView,
+	type SparklineScale,
+	type SparklineView,
+} from './sparkline-view';
+export {
+	hasSparklineAt,
+	readSparklineValues,
+	resolveSparklineRange,
+	sparklineViewAt,
+} from './sparkline-data';
+export {
 	cellView,
 	effectiveStyleId,
 	generalAlignment,
