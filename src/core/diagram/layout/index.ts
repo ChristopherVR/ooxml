@@ -65,3 +65,14 @@ export {
 	findConstraint,
 	ratioConstraint,
 } from './smartart-layout-interpreter-constraints';
+
+// Arrangement discovery: which `dgm:alg` drives a layout definition (hierarchy, a decidable
+// choose, a slot-mapping composite, the first structural algorithm), and the iteration helpers.
+export {
+	discoverArrangement,
+	resolveFlowDirection,
+	type ArrangementKind,
+	type ArrangementPlan,
+	type FlowDirection,
+} from './smartart-layout-interpreter-model';
+export { selectArrangedNodes } from './smartart-layout-interpreter-flow';

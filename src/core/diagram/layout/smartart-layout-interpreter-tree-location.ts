@@ -12,7 +12,7 @@
  * @module smartart-layout-interpreter-tree-location
  */
 
-import type { PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutNode } from '../model';
 
 /** A node's location within the flattened layout-node tree, for `dgm:if` position/depth functions. */
 export interface TreeLocation {
@@ -25,9 +25,9 @@ export interface TreeLocation {
 }
 
 /** Depth-first walk of the flattened layout-node tree, tracking each node's {@link TreeLocation}. */
-export function walkWithTreeLocation(
-	node: PptxSmartArtLayoutNode,
-	visit: (node: PptxSmartArtLayoutNode, location: TreeLocation) => void,
+export function walkWithTreeLocation<R>(
+	node: DiagramLayoutNode<R>,
+	visit: (node: DiagramLayoutNode<R>, location: TreeLocation) => void,
 	location: TreeLocation = { position: 1, total: 1, depth: 0 },
 ): void {
 	visit(node, location);
@@ -42,7 +42,7 @@ export function walkWithTreeLocation(
 }
 
 /** Deepest `depth` reached by {@link walkWithTreeLocation} over the whole tree, for `dgm:if func="maxDepth"`. */
-export function treeMaxDepth(node: PptxSmartArtLayoutNode, depth = 0): number {
+export function treeMaxDepth(node: DiagramLayoutNode, depth = 0): number {
 	const children = node.children ?? [];
 	if (children.length === 0) {
 		return depth;

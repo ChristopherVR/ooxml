@@ -29,15 +29,15 @@ import { evaluateVar } from './smartart-layout-interpreter-when-var';
  */
 export interface WhenContext {
 	/** 1-based ordinal position of the point being evaluated, for `pos`/`revPos`/`posEven`/`posOdd`. */
-	position?: number;
+	position?: number | undefined;
 	/** Sibling count the position is measured against, for `revPos`. */
-	total?: number;
+	total?: number | undefined;
 	/** Depth of the point/node being evaluated, for `func="depth"`. */
-	depth?: number;
+	depth?: number | undefined;
 	/** Maximum depth of the tree, for `func="maxDepth"`. */
-	maxDepth?: number;
+	maxDepth?: number | undefined;
 	/** Diagram presentation layout variables, for `func="var"` (`@arg` names the variable). */
-	presLayoutVars?: DiagramPresLayoutVars;
+	presLayoutVars?: DiagramPresLayoutVars | undefined;
 	/**
 	 * The diagram's own flat data-model node array (`parentId`-linked), for a
 	 * `func="cnt"` `dgm:if` whose `@axis` is declared at all - a single bare
@@ -48,7 +48,7 @@ export interface WhenContext {
 	 * coarser `nodeCount`-only behaviour for `cnt` exactly as before (no
 	 * regression for a caller that never had this).
 	 */
-	nodes?: DiagramNode[];
+	nodes?: DiagramNode[] | undefined;
 	/**
 	 * The point(s) a `dgm:if`'s own enclosing `dgm:forEach` bound (its
 	 * `DiagramLayoutNode.forEachOrigin`, already resolved to real data
@@ -60,7 +60,7 @@ export interface WhenContext {
 	 * `maxDepth` exactly as before (no regression for a caller that never had
 	 * this - no existing caller populates this field yet).
 	 */
-	anchor?: DiagramNode[];
+	anchor?: DiagramNode[] | undefined;
 }
 
 /** Evaluate `func="posEven"`/`"posOdd"` as a 1/0 numeric compare against `when.value` (default 1). */

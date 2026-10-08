@@ -9,20 +9,20 @@
  * TypeScript - no framework code, no DOM.
  */
 
-import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
+import type { DiagramLayoutNode, DiagramPresLayoutVars } from '../model';
 
 /** The first nested item `layoutNode` under an arranger (the per-point shape). */
-export function itemNode(arranger: PptxSmartArtLayoutNode): PptxSmartArtLayoutNode | undefined {
+export function itemNode<R>(arranger: DiagramLayoutNode<R>): DiagramLayoutNode<R> | undefined {
 	return arranger.children?.[0];
 }
 
 /** Read an algorithm parameter value by its `dgm:param` type. */
-export function algorithmParam(node: PptxSmartArtLayoutNode, type: string): string | undefined {
+export function algorithmParam(node: DiagramLayoutNode, type: string): string | undefined {
 	return node.algorithm?.parameters?.find((param) => param.type === type)?.value;
 }
 
 /** Read a numeric algorithm parameter, returning `fallback` when absent/invalid. */
-export function numericParam(node: PptxSmartArtLayoutNode, type: string, fallback: number): number {
+export function numericParam(node: DiagramLayoutNode, type: string, fallback: number): number {
 	const raw = algorithmParam(node, type);
 	if (raw === undefined) {
 		return fallback;
@@ -43,8 +43,8 @@ export interface FlowDirection {
  * reversed direction both flip the placement order.
  */
 export function resolveFlowDirection(
-	arranger: PptxSmartArtLayoutNode,
-	presLayoutVars: PptxSmartArtPresLayoutVars | undefined,
+	arranger: DiagramLayoutNode,
+	presLayoutVars: DiagramPresLayoutVars | undefined,
 ): FlowDirection {
 	const linDir = algorithmParam(arranger, 'linDir');
 	const vertical = linDir === 'fromT' || linDir === 'fromB';

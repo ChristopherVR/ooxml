@@ -27,7 +27,7 @@
  * `x=469,y=341`, not the 27x24 accent-sized box the old zip produced.
  */
 
-import { PRIMARY_ALG } from './smartart-layout-interpreter-arrangement-kind';
+import { PRIMARY_ALG } from '../../../diagram/layout/smartart-layout-interpreter-arrangement-kind';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
 
 /** `true` for a slot whose own `dgm:alg type="tx"` marks it as the REAL,

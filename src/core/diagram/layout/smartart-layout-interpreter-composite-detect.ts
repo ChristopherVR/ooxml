@@ -241,7 +241,10 @@ export function mapsSlots(node: DiagramLayoutNode): boolean {
  * handles it there. A genuine top-level composite is never itself such an
  * item template (nothing repeats it per point), so it is unaffected.
  */
-export function itemTemplateNodes(node: DiagramLayoutNode, out: Set<DiagramLayoutNode>): void {
+export function itemTemplateNodes<R>(
+	node: DiagramLayoutNode<R>,
+	out: Set<DiagramLayoutNode<R>>,
+): void {
 	const drivesPoints = node.forEach?.some(
 		(each) =>
 			each.axis?.length === 1 &&

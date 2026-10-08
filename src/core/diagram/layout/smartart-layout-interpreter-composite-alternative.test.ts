@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutNode } from '../model';
 import { isMappedSlotAlternative } from './smartart-layout-interpreter-composite-alternative';
 
 describe('isMappedSlotAlternative', () => {
 	it('false when compositeSlot is not yet resolved', () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'singleCycle',
 			forEachOrigin: { name: 'singleCycle' },
 		};
@@ -13,22 +13,22 @@ describe('isMappedSlotAlternative', () => {
 	});
 
 	it('false when node carries no forEachOrigin at all (a direct child)', () => {
-		const compositeSlot: PptxSmartArtLayoutNode = {
+		const compositeSlot: DiagramLayoutNode = {
 			name: 'Name0',
 			forEach: [{ name: 'singleCycle' }],
 		};
-		const node: PptxSmartArtLayoutNode = { name: 'child' };
+		const node: DiagramLayoutNode = { name: 'child' };
 		expect(isMappedSlotAlternative(compositeSlot, node)).toBeFalsy();
 	});
 
 	it("true when node's forEachOrigin name matches one of compositeSlot's own forEach children", () => {
 		// `radial-cluster--hier5.pptx`'s exact shape: Name0's own
 		// `<dgm:forEach name="singleCycle" .../>` is one of its own named slots.
-		const compositeSlot: PptxSmartArtLayoutNode = {
+		const compositeSlot: DiagramLayoutNode = {
 			name: 'Name0',
 			forEach: [{ name: 'textCenter' }, { name: 'singleCycle' }],
 		};
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'cycle_3',
 			forEachOrigin: { name: 'singleCycle', axis: ['ch'] },
 		};
@@ -36,11 +36,11 @@ describe('isMappedSlotAlternative', () => {
 	});
 
 	it("false when node's forEachOrigin name matches none of compositeSlot's own forEach children", () => {
-		const compositeSlot: PptxSmartArtLayoutNode = {
+		const compositeSlot: DiagramLayoutNode = {
 			name: 'Name0',
 			forEach: [{ name: 'singleCycle' }],
 		};
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'unrelated',
 			forEachOrigin: { name: 'someOtherForEach', axis: ['ch'] },
 		};
@@ -48,8 +48,8 @@ describe('isMappedSlotAlternative', () => {
 	});
 
 	it('false when compositeSlot declares no forEach children of its own', () => {
-		const compositeSlot: PptxSmartArtLayoutNode = { name: 'Name0' };
-		const node: PptxSmartArtLayoutNode = {
+		const compositeSlot: DiagramLayoutNode = { name: 'Name0' };
+		const node: DiagramLayoutNode = {
 			name: 'cycle_3',
 			forEachOrigin: { name: 'singleCycle', axis: ['ch'] },
 		};

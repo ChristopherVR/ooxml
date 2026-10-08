@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtLayoutNode, PptxSmartArtWhen } from '../types';
+import type { DiagramLayoutNode, DiagramWhen } from '../model';
 import {
 	detectPositionFamily,
 	hasPositionGuard,
 } from './smartart-layout-interpreter-position-family';
 
-function posGuard(value: string): PptxSmartArtWhen {
+function posGuard(value: string): DiagramWhen {
 	return { function: 'pos', operator: 'equ', value };
 }
 
-function cntGuard(value: string): PptxSmartArtWhen {
+function cntGuard(value: string): DiagramWhen {
 	return { function: 'cnt', operator: 'gte', value };
 }
 
@@ -36,7 +36,7 @@ describe('detectPositionFamily', () => {
 	});
 
 	it('undefined when only ONE child is pos-guarded (needs 2+ to be a family)', () => {
-		const parent: PptxSmartArtLayoutNode = {
+		const parent: DiagramLayoutNode = {
 			name: 'parent',
 			children: [
 				{ name: 'chLin1', algorithm: { type: 'lin' }, chooseGuard: [posGuard('1'), cntGuard('1')] },
@@ -50,12 +50,12 @@ describe('detectPositionFamily', () => {
 		"sub-step-process--hier5.pptx's real shape: chLin1..chLin7, sorted ascending by pos " +
 			'(fed out of document order to prove the sort, not just pass-through)',
 		() => {
-			const make = (n: number): PptxSmartArtLayoutNode => ({
+			const make = (n: number): DiagramLayoutNode => ({
 				name: `chLin${n}`,
 				algorithm: { type: 'lin' },
 				chooseGuard: [posGuard(String(n)), cntGuard('1')],
 			});
-			const parent: PptxSmartArtLayoutNode = {
+			const parent: DiagramLayoutNode = {
 				name: 'Name0',
 				children: [make(3), make(1), make(2)],
 			};
@@ -65,7 +65,7 @@ describe('detectPositionFamily', () => {
 	);
 
 	it('undefined when the algorithm.type does not match', () => {
-		const parent: PptxSmartArtLayoutNode = {
+		const parent: DiagramLayoutNode = {
 			name: 'parent',
 			children: [
 				{ name: 'a', algorithm: { type: 'cycle' }, chooseGuard: [posGuard('1'), cntGuard('1')] },
@@ -76,7 +76,7 @@ describe('detectPositionFamily', () => {
 	});
 
 	it('undefined when the non-pos guard shape differs between candidates (not a genuine family)', () => {
-		const parent: PptxSmartArtLayoutNode = {
+		const parent: DiagramLayoutNode = {
 			name: 'parent',
 			children: [
 				{ name: 'a', algorithm: { type: 'lin' }, chooseGuard: [posGuard('1'), cntGuard('1')] },
@@ -87,7 +87,7 @@ describe('detectPositionFamily', () => {
 	});
 
 	it('undefined when two candidates share the same pos value (ambiguous, not a real family)', () => {
-		const parent: PptxSmartArtLayoutNode = {
+		const parent: DiagramLayoutNode = {
 			name: 'parent',
 			children: [
 				{ name: 'a', algorithm: { type: 'lin' }, chooseGuard: [posGuard('1'), cntGuard('1')] },

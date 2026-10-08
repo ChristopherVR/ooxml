@@ -39,9 +39,10 @@
  * corpus classification this was measured against before landing.
  */
 
-import type { PptxSmartArtLayoutNode } from '../types';
-import { chooseAlgType } from './smartart-layout-interpreter-flow';
-import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import type { DiagramLayoutNode } from '../model';
+import type { RawXmlView } from './smartart-choose-xml';
+import { chooseAlgType } from './smartart-layout-interpreter-choose-algorithm';
+import type { WhenContext } from './smartart-layout-interpreter-when';
 
 const HIERARCHY_ALG_TYPES = new Set(['hierRoot', 'hierChild']);
 
@@ -60,16 +61,17 @@ const HIERARCHY_ALG_TYPES = new Set(['hierRoot', 'hierChild']);
  * direction pick is universal), so a direct-only check would never fire for
  * the exact construct this guard exists to protect.
  */
-export function hasHierarchyDescendant(
-	node: PptxSmartArtLayoutNode,
+export function hasHierarchyDescendant<R>(
+	view: RawXmlView<R>,
+	node: DiagramLayoutNode<R>,
 	nodeCount: number,
 	context: WhenContext,
 ): boolean {
 	return (node.children ?? []).some((child) => {
-		const type = child.algorithm?.type ?? chooseAlgType(child, nodeCount, context);
+		const type = child.algorithm?.type ?? chooseAlgType(view, child, nodeCount, context);
 		if (type && HIERARCHY_ALG_TYPES.has(type)) {
 			return true;
 		}
-		return hasHierarchyDescendant(child, nodeCount, context);
+		return hasHierarchyDescendant(view, child, nodeCount, context);
 	});
 }

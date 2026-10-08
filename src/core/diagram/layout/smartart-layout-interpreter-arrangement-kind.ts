@@ -7,7 +7,7 @@
  * site is unaffected. Pure types/constants; no framework code.
  */
 
-import type { PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutNode } from '../model';
 
 /** Arrangement families the interpreter can execute. */
 export type ArrangementKind =
@@ -22,10 +22,10 @@ export type ArrangementKind =
 	| 'text';
 
 /** The arranger `layoutNode` plus the resolved arrangement family. */
-export interface ArrangementPlan {
+export interface ArrangementPlan<R = unknown> {
 	kind: ArrangementKind;
 	/** The `layoutNode` carrying the arrangement algorithm + its constraints. */
-	node: PptxSmartArtLayoutNode;
+	node: DiagramLayoutNode<R>;
 }
 
 /** Map a non-hierarchy `dgm:alg` type to an arrangement family. */
@@ -62,6 +62,6 @@ export const STRUCTURAL_ARRANGEMENT_KINDS = new Set<ArrangementKind>([
  * primary (constraints or children). A bare leaf is meaningless on its own, so
  * the interpreter declines and the caller keeps its legacy approximation.
  */
-export function isMeaningfulAux(node: PptxSmartArtLayoutNode): boolean {
+export function isMeaningfulAux(node: DiagramLayoutNode): boolean {
 	return (node.constraints?.length ?? 0) > 0 || (node.children?.length ?? 0) > 0;
 }

@@ -13,11 +13,8 @@
  * Pure TypeScript - no framework code, no DOM.
  */
 
-import type {
-	PptxSmartArtLayoutAlgorithm,
-	PptxSmartArtLayoutNode,
-	PptxSmartArtNode,
-} from '../types';
+import type { DiagramLayoutAlgorithm, DiagramLayoutNode, DiagramNode } from '../model';
+import type { RawXmlView } from './smartart-choose-xml';
 import type { ArrangementPlan } from './smartart-layout-interpreter-arrangement-kind';
 import {
 	PRIMARY_ALG,
@@ -29,13 +26,13 @@ import {
 	isContinuationForEach,
 	isTransitionOnlyChild,
 	mapsSlots,
-} from '../../../diagram/layout/smartart-layout-interpreter-composite-detect';
+} from './smartart-layout-interpreter-composite-detect';
 import { hasHierarchyDescendant } from './smartart-layout-interpreter-hierarchy-descendant';
 import { hasPositionGuard } from './smartart-layout-interpreter-position-family';
-import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import type { WhenContext } from './smartart-layout-interpreter-when';
 
-export interface ChooseResolution {
-	chosen: ArrangementPlan | undefined;
+export interface ChooseResolution<R = unknown> {
+	chosen: ArrangementPlan<R> | undefined;
 	/** `true` when `node` should be added to `blockedSubtreeRoots` (a tunnelled result). */
 	blockSubtree: boolean;
 }
@@ -45,14 +42,15 @@ export interface ChooseResolution {
  * own doc comment for the precedence this implements (mirrors
  * `discoverArrangement`'s own precedence list, items 2-3).
  */
-export function resolveNonHierarchyChoose(
-	node: PptxSmartArtLayoutNode,
-	resolvedAlg: PptxSmartArtLayoutAlgorithm | undefined,
+export function resolveNonHierarchyChoose<R>(
+	view: RawXmlView<R>,
+	node: DiagramLayoutNode<R>,
+	resolvedAlg: DiagramLayoutAlgorithm | undefined,
 	nodeCount: number,
-	whenContext: WhenContext & { nodes?: PptxSmartArtNode[] },
-	itemTemplates: ReadonlySet<PptxSmartArtLayoutNode>,
-	compositeSlot: PptxSmartArtLayoutNode | undefined,
-): ChooseResolution {
+	whenContext: WhenContext & { nodes?: DiagramNode[] | undefined },
+	itemTemplates: ReadonlySet<DiagramLayoutNode<R>>,
+	compositeSlot: DiagramLayoutNode<R> | undefined,
+): ChooseResolution<R> {
 	const type = resolvedAlg?.type;
 	const withResolvedAlg = resolvedAlg ? { ...node, algorithm: resolvedAlg } : node;
 	const kind = type ? PRIMARY_ALG[type] : undefined;
@@ -75,6 +73,7 @@ export function resolveNonHierarchyChoose(
 	// - corpus-measured, monotonic threshold; see `smartart-layout-interpreter-
 	// choose-depth.ts`'s own doc comment.
 	const tunnelledPastOwnSlot = tunnelsPastOwnCompositeSlot(
+		view,
 		node,
 		nodeCount,
 		whenContext,
@@ -88,7 +87,7 @@ export function resolveNonHierarchyChoose(
 	const wrapsHierarchy =
 		kind !== undefined &&
 		STRUCTURAL_ARRANGEMENT_KINDS.has(kind) &&
-		hasHierarchyDescendant(node, nodeCount, whenContext);
+		hasHierarchyDescendant(view, node, nodeCount, whenContext);
 	// ROUND 42: `node` reached through one of `compositeSlot`'s OWN named
 	// slots describes that slot's own internal arrangement, not a competing
 	// algorithm - see `isMappedSlotAlternative`'s own doc comment.

@@ -45,20 +45,20 @@
  * Pure TypeScript - no framework code, no DOM.
  */
 
-import type { PptxSmartArtLayoutNode, PptxSmartArtWhen } from '../types';
+import type { DiagramLayoutNode, DiagramWhen } from '../model';
 
 /** `true` when `node`'s own `chooseGuard` chain carries a `func="pos"` condition. */
-export function hasPositionGuard(node: PptxSmartArtLayoutNode): boolean {
+export function hasPositionGuard(node: DiagramLayoutNode): boolean {
 	return node.chooseGuard?.some((guard) => guard.function === 'pos') ?? false;
 }
 
 /** The `pos` guard's own value from `node`'s `chooseGuard` chain, or `undefined`. */
-function positionValue(node: PptxSmartArtLayoutNode): string | undefined {
+function positionValue(node: DiagramLayoutNode): string | undefined {
 	return node.chooseGuard?.find((guard) => guard.function === 'pos')?.value;
 }
 
 /** `node`'s `chooseGuard` chain, minus any `pos` entries, as a comparison key. */
-function nonPositionGuardShape(guard: PptxSmartArtWhen[]): string {
+function nonPositionGuardShape(guard: DiagramWhen[]): string {
 	return JSON.stringify(
 		guard
 			.filter((w) => w.function !== 'pos')
@@ -74,16 +74,16 @@ function nonPositionGuardShape(guard: PptxSmartArtWhen[]): string {
  * and agree on {@link nonPositionGuardShape}.
  */
 export function detectPositionFamily(
-	parent: PptxSmartArtLayoutNode,
+	parent: DiagramLayoutNode,
 	type: string,
-): PptxSmartArtLayoutNode[] | undefined {
+): DiagramLayoutNode[] | undefined {
 	const candidates = (parent.children ?? []).filter(
 		(child) => child.algorithm?.type === type && hasPositionGuard(child),
 	);
 	if (candidates.length < 2) {
 		return undefined;
 	}
-	const baseline = nonPositionGuardShape(candidates[0].chooseGuard ?? []);
+	const baseline = nonPositionGuardShape(candidates[0]!.chooseGuard ?? []);
 	const seenPositions = new Set<string>();
 	for (const candidate of candidates) {
 		if (nonPositionGuardShape(candidate.chooseGuard ?? []) !== baseline) {

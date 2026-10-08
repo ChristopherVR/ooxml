@@ -9,7 +9,7 @@
  * ...>`. Pure TypeScript - no framework code, no DOM.
  */
 
-import type { PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutNode } from '../model';
 
 /**
  * `true` when `node` was reached through one of `compositeSlot`'s OWN
@@ -32,8 +32,8 @@ import type { PptxSmartArtLayoutNode } from '../types';
  * forEach).
  */
 export function isMappedSlotAlternative(
-	compositeSlot: PptxSmartArtLayoutNode | undefined,
-	node: PptxSmartArtLayoutNode,
+	compositeSlot: DiagramLayoutNode | undefined,
+	node: DiagramLayoutNode,
 ): boolean {
 	const originName = node.forEachOrigin?.name;
 	if (!compositeSlot || !originName) {
