@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import { arrangeComposite } from './smartart-layout-interpreter-composite';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';

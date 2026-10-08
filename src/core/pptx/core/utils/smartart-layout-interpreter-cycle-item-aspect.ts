@@ -10,8 +10,8 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { resolveConstraint, roleOf } from './smartart-constraint-solver';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import { resolveConstraint, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 
 /** A composite ring item's own self (uniform, ring-placed) + content-dependent child sub-shapes. */
 export interface CompositeContentLayout {

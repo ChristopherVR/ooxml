@@ -62,8 +62,8 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { resolveConstraint } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveHierarchyGenerationTemplates } from './smartart-hierarchy-generation-templates';
 
 /** Legacy ad-hoc fallback ratios (SESSION 28), used only when no declared item-template size resolves. */

@@ -10,13 +10,13 @@
  */
 
 import type { PptxSmartArtNode, PptxSmartArtPresLayoutVars, SmartArtStyle } from '../types';
-import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
+import { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
 import {
 	isDesRootedFontRole,
 	isPrimFontSzRoleSplitItem,
-} from './smartart-constraint-sibling-roles';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX, roleOf } from './smartart-constraint-solver';
+} from '../../../diagram/layout/smartart-constraint-sibling-roles';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import {
 	isMainAxisContentSized,

@@ -90,9 +90,9 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode, SmartArtStyle } from '../types';
-import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX, roleOf } from './smartart-constraint-solver';
+import { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { algorithmParam } from './smartart-layout-interpreter-model';

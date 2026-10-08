@@ -36,7 +36,7 @@
  */
 
 import type { PptxSmartArtNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';

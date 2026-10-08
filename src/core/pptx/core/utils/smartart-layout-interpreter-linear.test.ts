@@ -5,7 +5,7 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNode,
 } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { arrangeLinear, arrangeSnake } from './smartart-layout-interpreter-linear';
 import type { ArrangementPlan, FlowDirection } from './smartart-layout-interpreter-model';
 import { resolveSharedItemFontSize } from './smartart-layout-item-font-size';

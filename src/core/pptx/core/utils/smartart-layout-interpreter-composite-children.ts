@@ -13,14 +13,14 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { resolveConstraint } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
 import { positionRange } from '../../../diagram/layout/smartart-layout-interpreter-axis-range';
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite';
 import { isUserSizeHubRole } from './smartart-layout-interpreter-composite-aspect';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
-import { findConstraint } from './smartart-layout-interpreter-constraints';
+import { findConstraint } from '../../../diagram/layout/smartart-layout-interpreter-constraints';
 import { resolveHubToNodeRatioViaUserSize } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 import { rectNode } from './smartart-layout-interpreter-render';
 import type {

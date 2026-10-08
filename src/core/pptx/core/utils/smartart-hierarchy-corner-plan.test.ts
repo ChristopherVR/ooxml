@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveCornerHangPlan } from './smartart-hierarchy-corner-plan';
 
 /**

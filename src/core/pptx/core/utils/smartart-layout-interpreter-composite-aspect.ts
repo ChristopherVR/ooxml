@@ -55,7 +55,7 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 
 /**

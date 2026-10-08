@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtConstraint, PptxSmartArtLayoutDefinition } from '../types';
-import { buildConstraintIndex, EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import {
+	buildConstraintIndex,
+	EMPTY_CONSTRAINT_INDEX,
+} from '../../../diagram/layout/smartart-constraint-solver';
 import { fitHangingBox } from './smartart-hierarchy-hanging-box';
 
 function constr(overrides: Partial<PptxSmartArtConstraint>): PptxSmartArtConstraint {

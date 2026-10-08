@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../types';
-import { buildConstraintIndex, roleOf } from './smartart-constraint-solver';
+import { buildConstraintIndex, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import {
 	proportionalMarginFraction,

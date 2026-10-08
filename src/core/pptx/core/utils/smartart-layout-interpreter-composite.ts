@@ -32,8 +32,8 @@ import type {
 	PptxSmartArtPresLayoutVars,
 	SmartArtStyle,
 } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX, roleOf } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	fitAspectRatioBox,
 	readAlgorithmAspectRatio,

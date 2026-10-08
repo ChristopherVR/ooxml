@@ -13,8 +13,8 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { roleOf } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { isUserSizeHubRole } from './smartart-layout-interpreter-composite-aspect';
 import type { Dim } from './smartart-layout-interpreter-composite-slot-dim';
 import { dimOf } from './smartart-layout-interpreter-composite-slot-dim';

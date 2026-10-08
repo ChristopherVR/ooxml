@@ -52,7 +52,7 @@ import type {
 	PptxSmartArtPresLayoutVars,
 	SmartArtStyle,
 } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { chooseAlgorithm, chooseAlgType } from './smartart-layout-interpreter-choose-algorithm';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { presetBoxNode } from './smartart-layout-interpreter-preset-node';

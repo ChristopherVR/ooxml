@@ -58,8 +58,8 @@
  */
 
 import type { PptxSmartArtNode, SmartArtStyle } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import { buildCycleHubBox, buildCycleRingBoxes } from './smartart-layout-interpreter-cycle-boxes';
 import { buildCycleRingConnectors } from './smartart-layout-interpreter-cycle-connectors';
 import {

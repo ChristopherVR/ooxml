@@ -21,7 +21,7 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { adjustOrientationForAxisSwap } from './smartart-hierarchy-axis-swap-orientation';
 import { hierarchyDeclaresCenteredFanAxisSwap } from './smartart-hierarchy-centered-fan-axis';
 import { resolveHierarchyOrientation } from './smartart-hierarchy-orientation';

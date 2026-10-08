@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtLayoutDefinition } from '../types';
+import type { DiagramLayoutDefinition } from '../model';
 import { resolveByAncestorChain } from './smartart-constraint-declared-by';
 import { buildConstraintIndex } from './smartart-constraint-solver';
 
 describe('resolveByAncestorChain', () => {
 	it("finds a type-typed constraint declared by the nearest ancestor in the chain (radial-cluster's own Name0 userS, cycle_3 is the arranger)", () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'Name0',
 				constraints: [
@@ -38,7 +38,7 @@ describe('resolveByAncestorChain', () => {
 	});
 
 	it('disambiguates by declaring role: an UNRELATED branch declaring the same type is skipped when it is not in the chain', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'Name0',
 				constraints: [
@@ -81,7 +81,7 @@ describe('resolveByAncestorChain', () => {
 	});
 
 	it('returns undefined when no candidate is declared by any role in the chain', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'Name0',
 				children: [
@@ -99,7 +99,7 @@ describe('resolveByAncestorChain', () => {
 	});
 
 	it('honours an optionalMatch filter, skipping a same-type candidate that fails it', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'Name0',
 				constraints: [
@@ -116,7 +116,7 @@ describe('resolveByAncestorChain', () => {
 	});
 
 	it('prefers the nearest ancestor over a farther one that also declares the type', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'Name0',
 				constraints: [{ type: 'userS', referenceForName: 'farHub', factor: 0.9 }],

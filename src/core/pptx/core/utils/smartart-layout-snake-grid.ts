@@ -8,7 +8,7 @@
  * geometry; no framework code.
  */
 
-import { findConstraint } from './smartart-layout-interpreter-constraints';
+import { findConstraint } from '../../../diagram/layout/smartart-layout-interpreter-constraints';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { algorithmParam } from './smartart-layout-interpreter-model';
 

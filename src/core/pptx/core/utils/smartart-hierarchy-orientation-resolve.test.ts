@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveHierarchyEffectiveOrientation } from './smartart-hierarchy-orientation-resolve';
 
 const BOX = { width: 867, height: 533 };

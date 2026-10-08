@@ -49,7 +49,7 @@ export {
 	clampByRules,
 	findConstraint,
 	ratioConstraint,
-} from './smartart-layout-interpreter-constraints';
+} from '../../../diagram/layout/smartart-layout-interpreter-constraints';
 export {
 	detectPositionFamily,
 	hasPositionGuard,

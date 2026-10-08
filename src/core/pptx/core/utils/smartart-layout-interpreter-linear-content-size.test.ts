@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutDefinition } from '../types';
 import { DEFAULT_FONT_ADVANCE_TABLE } from '../../../text/font-metrics/font-advance-widths.generated';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	isMainAxisContentSized,
 	resolveContentSizedExtents,

@@ -12,9 +12,9 @@ import type { PptxSmartArtConstraint } from '../types';
 import {
 	firstConstraintDeclaredBy,
 	resolveConstraintDeclaredBy,
-} from './smartart-constraint-declared-by';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { resolveConstraint } from './smartart-constraint-solver';
+} from '../../../diagram/layout/smartart-constraint-declared-by';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
 import { findConstraint } from './smartart-layout-interpreter-model';
 import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';
 

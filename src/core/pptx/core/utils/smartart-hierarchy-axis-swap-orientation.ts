@@ -54,7 +54,7 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveGenerationGapRatio } from './smartart-hierarchy-generation-gap';
 import type { HierarchyOrientation } from './smartart-hierarchy-orientation-types';
 

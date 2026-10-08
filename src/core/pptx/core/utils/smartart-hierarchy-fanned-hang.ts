@@ -67,7 +67,7 @@ import type {
 	PptxSmartArtPresLayoutVars,
 	SmartArtStyle,
 } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { TreeNode } from './smartart-helpers';
 import { resolveFannedHangGeometry } from './smartart-hierarchy-fanned-hang-geometry';
 import { baseContext, elbowConnector, pushNode } from './smartart-hierarchy-shared';

@@ -8,8 +8,8 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { resolveConstraint } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
 import { findCompositeDescendant } from './smartart-hierarchy-composite-child';
 
 /** COM-verified "Hierarchy" fallback (`h:w`, absent any declared aspect - see `resolveAspectRatio`). */

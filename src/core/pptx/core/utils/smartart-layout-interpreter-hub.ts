@@ -18,8 +18,8 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode, SmartArtStyle } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import {
 	computeCycleRingLayout,

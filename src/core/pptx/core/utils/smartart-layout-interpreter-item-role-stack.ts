@@ -10,7 +10,7 @@
  * identically.
  */
 
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { ItemRoleLayoutScope } from './smartart-layout-interpreter-item-role-orientation';
 import { stackAsColumns } from './smartart-layout-interpreter-item-role-stack-columns';
 import {

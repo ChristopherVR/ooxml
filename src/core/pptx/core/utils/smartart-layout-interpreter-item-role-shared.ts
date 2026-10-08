@@ -16,9 +16,9 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { resolveConstraintDeclaredBy } from './smartart-constraint-declared-by';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { roleOf } from './smartart-constraint-solver';
+import { resolveConstraintDeclaredBy } from '../../../diagram/layout/smartart-constraint-declared-by';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { compoundChildIds } from './smartart-layout-interpreter-item-role-compound';
 import { smartArtDescendantsWithText } from './smartart-node-tree-axis';
 

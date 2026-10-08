@@ -5,7 +5,7 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNode,
 } from '../types';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	expandRecursiveItemRoles,
 	hasRecursiveItemTemplate,

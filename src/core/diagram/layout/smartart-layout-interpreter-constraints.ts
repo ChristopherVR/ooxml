@@ -8,21 +8,21 @@
  * framework code, no DOM.
  */
 
-import type { PptxSmartArtConstraint, PptxSmartArtNumericRule } from '../types';
+import type { DiagramConstraint, DiagramNumericRule } from '../model';
 
 /** Find the first constraint of `type`, optionally restricted to a relationship. */
-export function findConstraint(
-	constraints: PptxSmartArtConstraint[] | undefined,
+export function findConstraint<C extends DiagramConstraint>(
+	constraints: C[] | undefined,
 	type: string,
-	forRel?: PptxSmartArtConstraint['for'],
-): PptxSmartArtConstraint | undefined {
+	forRel?: DiagramConstraint['for'],
+): C | undefined {
 	return constraints?.find(
 		(constraint) => constraint.type === type && (forRel === undefined || constraint.for === forRel),
 	);
 }
 
 /** Read a constraint's ratio (`fact`, or a sub-1 `val`), or `undefined`. */
-function constraintRatio(constraint: PptxSmartArtConstraint): number | undefined {
+function constraintRatio(constraint: DiagramConstraint): number | undefined {
 	if (typeof constraint.factor === 'number' && Number.isFinite(constraint.factor)) {
 		return Math.max(0, constraint.factor);
 	}
@@ -40,7 +40,7 @@ function constraintRatio(constraint: PptxSmartArtConstraint): number | undefined
 /** Clamp a ratio to a matching `dgm:ruleLst` numeric rule's `max`, when present. */
 export function clampByRules(
 	value: number,
-	rules: PptxSmartArtNumericRule[] | undefined,
+	rules: DiagramNumericRule[] | undefined,
 	type: string,
 ): number {
 	const rule = rules?.find((entry) => entry.type === type);
@@ -63,10 +63,10 @@ export function clampByRules(
  * by any matching `dgm:ruleLst` numeric rule `max` when `rules` is supplied.
  */
 export function ratioConstraint(
-	constraints: PptxSmartArtConstraint[] | undefined,
+	constraints: DiagramConstraint[] | undefined,
 	types: readonly string[],
 	fallback: number,
-	rules?: PptxSmartArtNumericRule[],
+	rules?: DiagramNumericRule[],
 ): number {
 	for (const type of types) {
 		const matches = (constraints ?? []).filter((constraint) => constraint.type === type);

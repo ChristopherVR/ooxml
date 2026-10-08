@@ -10,9 +10,9 @@
  */
 
 import type { PptxSmartArtNode, SmartArtStyle } from '../types';
-import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX, roleOf } from './smartart-constraint-solver';
+import { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import { INSET } from './smartart-layout-interpreter-linear-shared';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';

@@ -28,7 +28,7 @@
 import type { OrderedXmlElement } from '../../../diagram/layout/smartart-choose-xml';
 import { activeBranch } from '../../../diagram/layout/smartart-layout-interpreter-choose-branch';
 import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
-import { roleOf } from './smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { chooseAlgorithm } from './smartart-layout-interpreter-choose-algorithm';
 import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 import { unwrapTextRoles } from './smartart-layout-interpreter-item-roles-unwrap';

@@ -11,9 +11,9 @@ import type { PptxSmartArtNode, PptxSmartArtPresLayoutVars } from '../types';
 import {
 	firstConstraintDeclaredBy,
 	resolveConstraintDeclaredBy,
-} from './smartart-constraint-declared-by';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { roleOf } from './smartart-constraint-solver';
+} from '../../../diagram/layout/smartart-constraint-declared-by';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { isColumnWrapper } from './smartart-layout-interpreter-item-role-orientation';
 import type { ArrangementPlan, FlowDirection } from './smartart-layout-interpreter-model';
 import { itemNode } from './smartart-layout-interpreter-model';

@@ -32,7 +32,7 @@ import type {
 	PptxSmartArtPresLayoutVars,
 	SmartArtStyle,
 } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { selectArrangedPoints } from './smartart-layout-interpreter-arranged-selection';
 import {
 	buildChildOrder,

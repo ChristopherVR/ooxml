@@ -8,7 +8,7 @@
  */
 
 import type { PptxSmartArtNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { HubToNodeRatio } from './smartart-layout-interpreter-cycle-hub-ratio';
 import { resolveViaUserSizeNodeWidthPx } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 import type { HubRingGeometry } from './smartart-layout-interpreter-cycle-ring';

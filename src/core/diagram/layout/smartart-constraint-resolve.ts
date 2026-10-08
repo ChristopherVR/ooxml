@@ -12,7 +12,7 @@
  * Pure graph/geometry code; no framework code, no DOM.
  */
 
-import type { PptxSmartArtConstraint } from '../types';
+import type { DiagramConstraint } from '../model';
 import type { ConstraintIndex, IndexedConstraint } from './smartart-constraint-solver';
 import { entryKey, hasReference, targetRole } from './smartart-constraint-solver';
 
@@ -21,7 +21,7 @@ function finite(value: number | undefined): value is number {
 }
 
 /** A constraint's own literal `val`/`fact` (no reference involved). */
-function literalValue(constraint: PptxSmartArtConstraint): number | undefined {
+function literalValue(constraint: DiagramConstraint): number | undefined {
 	if (finite(constraint.factor)) {
 		return constraint.factor;
 	}
@@ -32,7 +32,7 @@ function literalValue(constraint: PptxSmartArtConstraint): number | undefined {
 }
 
 /** Apply a resolved reference's factor, then any `gte`/`lte` bound against `val`. */
-function combine(constraint: PptxSmartArtConstraint, referenced: number): number {
+function combine(constraint: DiagramConstraint, referenced: number): number {
 	const factor = finite(constraint.factor) ? constraint.factor : 1;
 	let result = referenced * factor;
 	if (finite(constraint.value)) {

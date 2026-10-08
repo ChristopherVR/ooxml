@@ -7,10 +7,10 @@
  * on top of the general `ConstraintIndex` machinery there.
  */
 
-import type { PptxSmartArtConstraint, PptxSmartArtNumericRule } from '../types';
+import type { DiagramConstraint, DiagramNumericRule } from '../model';
 import { entryKey, hasReference, resolveConstraint } from './smartart-constraint-solver';
 import type { ConstraintIndex } from './smartart-constraint-solver';
-import { clampByRules, ratioConstraint } from './smartart-layout-interpreter-model';
+import { clampByRules, ratioConstraint } from './smartart-layout-interpreter-constraints';
 
 /**
  * Resolve a relative-only fallback for the ratio-style constraint types a
@@ -25,7 +25,7 @@ function resolveReferencedRatio(
 	index: ConstraintIndex,
 	role: string,
 	types: readonly string[],
-	rules: PptxSmartArtNumericRule[] | undefined,
+	rules: DiagramNumericRule[] | undefined,
 ): number | undefined {
 	for (const type of types) {
 		const candidates = index.entries.get(entryKey(role, type));
@@ -47,12 +47,12 @@ function resolveReferencedRatio(
  * before giving up to `fallback`.
  */
 export function resolveRatioConstraint(
-	constraints: PptxSmartArtConstraint[] | undefined,
+	constraints: DiagramConstraint[] | undefined,
 	index: ConstraintIndex,
 	role: string,
 	types: readonly string[],
 	fallback: number,
-	rules?: PptxSmartArtNumericRule[],
+	rules?: DiagramNumericRule[],
 ): number {
 	const literal = ratioConstraint(constraints, types, Number.NaN, rules);
 	if (!Number.isNaN(literal)) {

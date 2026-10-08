@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../types';
-import { buildConstraintIndex, EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import {
+	buildConstraintIndex,
+	EMPTY_CONSTRAINT_INDEX,
+} from '../../../diagram/layout/smartart-constraint-solver';
 import { readSlots } from './smartart-layout-interpreter-composite-slots';
 
 const box = { width: 800, height: 400 };

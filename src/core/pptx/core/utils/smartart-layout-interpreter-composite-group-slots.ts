@@ -13,7 +13,7 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveIterationRect } from './smartart-layout-interpreter-composite-iteration';
 import { readSlots } from './smartart-layout-interpreter-composite-slots';
 import type { Slot } from './smartart-layout-interpreter-composite-slots';

@@ -12,7 +12,7 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNode,
 } from '../types';
-import { roleOf } from './smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveAxisNodes } from '../../../diagram/layout/smartart-layout-interpreter-axis-count';
 import {
 	resolveAnchoredContentPerAnchor,

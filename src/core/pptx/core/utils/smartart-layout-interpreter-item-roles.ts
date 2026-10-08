@@ -61,8 +61,8 @@ import type {
 	PptxSmartArtNode,
 	PptxSmartArtPresLayoutVars,
 } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { roleOf } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import type { ItemRoleLayoutScope } from './smartart-layout-interpreter-item-role-orientation';
 import { resolveItemRoleLayoutScope } from './smartart-layout-interpreter-item-role-orientation';
 import {

@@ -6,7 +6,7 @@
  * layered on top of the general `ConstraintIndex` machinery there.
  */
 
-import type { PptxSmartArtConstraint } from '../types';
+import type { DiagramConstraint } from '../model';
 import type { ConstraintIndex, IndexedConstraint } from './smartart-constraint-solver';
 import { entryKey, resolveEntry } from './smartart-constraint-solver';
 
@@ -68,7 +68,7 @@ export function firstConstraintDeclaredBy(
 	role: string,
 	type: string,
 	declaringRole: string,
-): PptxSmartArtConstraint | undefined {
+): DiagramConstraint | undefined {
 	const candidates = index.entries.get(entryKey(role, type));
 	return candidates?.find((candidate) => candidate.declaringRole === declaringRole)?.constraint;
 }
@@ -98,7 +98,7 @@ export function resolveByAncestorChain(
 	index: ConstraintIndex,
 	type: string,
 	declaringRoleChain: readonly string[],
-	optionalMatch?: (constraint: PptxSmartArtConstraint) => boolean,
+	optionalMatch?: (constraint: DiagramConstraint) => boolean,
 ): IndexedConstraint | undefined {
 	for (const declaringRole of declaringRoleChain) {
 		for (const entries of index.entries.values()) {

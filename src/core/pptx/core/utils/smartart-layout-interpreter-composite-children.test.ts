@@ -5,7 +5,7 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNode,
 } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite';
 import {
 	renderChildRepeaterSlot,

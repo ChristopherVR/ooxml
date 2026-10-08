@@ -46,8 +46,8 @@ import type {
 	PptxSmartArtPresLayoutVars,
 	SmartArtStyle,
 } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import { buildTree, treeDepth } from './smartart-helpers';
 import type { TreeNode } from './smartart-helpers';
 import { computeHierarchyAxisPitches } from './smartart-hierarchy-axis-pitch';

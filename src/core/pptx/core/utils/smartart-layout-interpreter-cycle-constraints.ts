@@ -11,10 +11,13 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { roleOf } from './smartart-constraint-solver';
-import { findConstraint, ratioConstraint } from './smartart-layout-interpreter-constraints';
+import { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
+import {
+	findConstraint,
+	ratioConstraint,
+} from '../../../diagram/layout/smartart-layout-interpreter-constraints';
 import type { HubToNodeRatio } from './smartart-layout-interpreter-cycle-hub-ratio';
 import {
 	resolveHubGapRatio,

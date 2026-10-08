@@ -38,3 +38,30 @@ export {
 export { evaluateWhen, type WhenContext } from './smartart-layout-interpreter-when';
 export { resolvePresentationOf } from './smartart-layout-interpreter-presof-choose';
 export { resolveAxisCount, resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
+export {
+	constraintAttributes,
+	formatXsdDouble,
+	parseConstraintAttributes,
+	parseRuleAttributes,
+	parseXsdDouble,
+	ruleAttributes,
+	validateSmartArtConstraintRules,
+	type DiagramAttributeValue,
+} from './smartart-constraint-rules';
+
+// The constraint solver: resolves `dgm:constr` references (`refType`/`refFor`) across the whole
+// layout definition, choose-aware, for the layout interpreter.
+export {
+	buildConstraintIndex,
+	EMPTY_CONSTRAINT_INDEX,
+	resolveConstraint,
+	type ConstraintIndex,
+	type IndexedConstraint,
+} from './smartart-constraint-solver';
+export { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
+export { selectConstraints } from './smartart-constraint-branch-index';
+export {
+	clampByRules,
+	findConstraint,
+	ratioConstraint,
+} from './smartart-layout-interpreter-constraints';

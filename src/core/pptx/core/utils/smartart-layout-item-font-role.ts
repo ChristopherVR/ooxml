@@ -10,8 +10,8 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { resolveConstraint, roleOf } from './smartart-constraint-solver';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import { resolveConstraint, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { itemNode } from './smartart-layout-interpreter-model';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 

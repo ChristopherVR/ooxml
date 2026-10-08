@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtLayoutNode, PptxSmartArtWhen } from '../types';
+import type { DiagramLayoutNode, DiagramWhen } from '../model';
 import { selectConstraints } from './smartart-constraint-branch-index';
 
-function when(overrides: Partial<PptxSmartArtWhen>): PptxSmartArtWhen {
+function when(overrides: Partial<DiagramWhen>): DiagramWhen {
 	return { function: 'cnt', operator: 'equ', value: '0', ...overrides };
 }
 
-function node(overrides: Partial<PptxSmartArtLayoutNode>): PptxSmartArtLayoutNode {
+function node(overrides: Partial<DiagramLayoutNode>): DiagramLayoutNode {
 	return { name: 'composite', ...overrides };
 }
 
@@ -15,8 +15,8 @@ describe('smartArt choose-aware constraint selection (selectConstraints)', () =>
 	it('picks the constraints of the branch whose guard chain decides true, ignoring the others', () => {
 		// `basic-venn--flat3.pptx`'s exact shape: `circ1`'s `ctrX` differs per
 		// data-point-count branch under the SAME composite's `dgm:choose`.
-		const cnt2 = { type: 'ctrX', for: 'ch', forName: 'circ1', factor: 0.3 };
-		const cnt3 = { type: 'ctrX', for: 'ch', forName: 'circ1', factor: 0.5 };
+		const cnt2 = { type: 'ctrX', for: 'ch' as const, forName: 'circ1', factor: 0.3 };
+		const cnt3 = { type: 'ctrX', for: 'ch' as const, forName: 'circ1', factor: 0.5 };
 		const composite = node({
 			constraintCandidates: [
 				{ guard: [when({ value: '2' })], constraint: cnt2 },
@@ -28,8 +28,8 @@ describe('smartArt choose-aware constraint selection (selectConstraints)', () =>
 	});
 
 	it('groups multiple dgm:constr entries under the SAME branch into one result', () => {
-		const ctrX = { type: 'ctrX', for: 'ch', forName: 'circ1', factor: 0.5 };
-		const ctrY = { type: 'ctrY', for: 'ch', forName: 'circ1', factor: 0.25 };
+		const ctrX = { type: 'ctrX', for: 'ch' as const, forName: 'circ1', factor: 0.5 };
+		const ctrY = { type: 'ctrY', for: 'ch' as const, forName: 'circ1', factor: 0.25 };
 		const guard = [when({ value: '3' })];
 		const composite = node({
 			constraintCandidates: [
@@ -46,7 +46,7 @@ describe('smartArt choose-aware constraint selection (selectConstraints)', () =>
 		// condition of its own - nothing proves its siblings false, so it must
 		// stay a fallback, never a positive match, even when it is the only
 		// candidate whose guard chain is (vacuously) satisfied.
-		const fallback = { type: 'ctrX', for: 'ch', forName: 'circ1', factor: 0.1 };
+		const fallback = { type: 'ctrX', for: 'ch' as const, forName: 'circ1', factor: 0.1 };
 		const composite = node({
 			constraintCandidates: [{ guard: [], constraint: fallback }],
 		});
@@ -54,7 +54,7 @@ describe('smartArt choose-aware constraint selection (selectConstraints)', () =>
 	});
 
 	it('returns undefined when no branch decides (falls back to the blind union)', () => {
-		const cnt2 = { type: 'ctrX', for: 'ch', forName: 'circ1', factor: 0.3 };
+		const cnt2 = { type: 'ctrX', for: 'ch' as const, forName: 'circ1', factor: 0.3 };
 		const composite = node({
 			constraintCandidates: [{ guard: [when({ value: '2' })], constraint: cnt2 }],
 		});
@@ -68,7 +68,7 @@ describe('smartArt choose-aware constraint selection (selectConstraints)', () =>
 	});
 
 	it('returns undefined when nodeCount is omitted (no diagram to evaluate the guard against)', () => {
-		const cnt3 = { type: 'ctrX', for: 'ch', forName: 'circ1', factor: 0.5 };
+		const cnt3 = { type: 'ctrX', for: 'ch' as const, forName: 'circ1', factor: 0.5 };
 		const composite = node({
 			constraintCandidates: [{ guard: [when({ value: '3' })], constraint: cnt3 }],
 		});

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { stackAsColumns } from './smartart-layout-interpreter-item-role-stack-columns';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
 

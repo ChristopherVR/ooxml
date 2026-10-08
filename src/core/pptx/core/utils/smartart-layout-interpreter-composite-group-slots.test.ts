@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX } from '../../../diagram/layout/smartart-constraint-solver';
 import type { RawSlotCandidate } from './smartart-layout-interpreter-composite-group-slots';
 import { resolveGroupedSlots } from './smartart-layout-interpreter-composite-group-slots';
 import type { BoundingBox } from '../../../diagram/layout/smartart-layout-types';

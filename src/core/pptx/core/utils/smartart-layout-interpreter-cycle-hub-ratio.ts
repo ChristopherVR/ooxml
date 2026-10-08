@@ -9,8 +9,8 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtWhen } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { resolveConstraint } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
 import type { HubToNodeRatio } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 import { resolveHubToNodeRatioViaUserSize } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 import { evaluateWhen } from '../../../diagram/layout/smartart-layout-interpreter-when';

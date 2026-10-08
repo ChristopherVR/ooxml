@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutDefinition, DiagramLayoutNode } from '../model';
 import {
 	isDesRootedFontRole,
 	isPrimFontSzRoleSplitItem,
@@ -10,7 +10,7 @@ import { buildConstraintIndex } from './smartart-constraint-solver';
 
 describe('siblingRolesDeclaringType', () => {
 	it("finds every role name an arranger declares an 'h' constraint for, including a non-text sibling (spacer)", () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'linear',
 				algorithm: { type: 'lin' },
@@ -52,7 +52,7 @@ describe('siblingRolesDeclaringType', () => {
 	});
 
 	it('returns an empty list when the declaring role declares no constraint of that type', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: { name: 'diagram', algorithm: { type: 'lin' } },
 		};
 		const index = buildConstraintIndex(definition);
@@ -60,15 +60,15 @@ describe('siblingRolesDeclaringType', () => {
 	});
 
 	it("does not pick up a DIFFERENT role's own declaration of the same type", () => {
-		const outer: PptxSmartArtLayoutNode = {
+		const outer: DiagramLayoutNode = {
 			name: 'outer',
 			constraints: [{ type: 'h', for: 'ch', forName: 'a', factor: 0.5 }],
 		};
-		const inner: PptxSmartArtLayoutNode = {
+		const inner: DiagramLayoutNode = {
 			name: 'a',
 			children: [{ name: 'b', constraints: [{ type: 'h', for: 'ch', forName: 'c', factor: 0.9 }] }],
 		};
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: { name: 'root', algorithm: { type: 'lin' }, children: [outer, inner] },
 		};
 		const index = buildConstraintIndex(definition);
@@ -77,7 +77,7 @@ describe('siblingRolesDeclaringType', () => {
 });
 
 /** "Vertical Bullet List"'s own real shape: `parentText`/`childText`/`spacer`, every `h` primFontSz-relative to `parentText`, `parentText`'s own `primFontSz` a LITERAL ceiling. */
-const verticalBulletListLike = (): PptxSmartArtLayoutDefinition => ({
+const verticalBulletListLike = (): DiagramLayoutDefinition => ({
 	rootNode: {
 		name: 'linear',
 		algorithm: { type: 'lin' },
@@ -125,7 +125,7 @@ const verticalBulletListLike = (): PptxSmartArtLayoutDefinition => ({
  * Both the content-sized wrapper and the negative factor previously broke
  * the "every declared role is primFontSz-anchored" check.
  */
-const verticalBoxListLike = (): PptxSmartArtLayoutDefinition => ({
+const verticalBoxListLike = (): DiagramLayoutDefinition => ({
 	rootNode: {
 		name: 'linear',
 		algorithm: { type: 'lin' },
@@ -190,7 +190,7 @@ describe('isPrimFontSzRoleSplitItem', () => {
 	});
 
 	it("is false when the driving role's own primFontSz is ITSELF only a reference, not a literal ceiling (round 23: vertical-circle-list--hier5.pptx's nested `lin` regression, txLvl2's primFontSz is 0.78 * txLvl1, never declared literally)", () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'lin',
 				algorithm: { type: 'lin' },
@@ -239,7 +239,7 @@ describe('isPrimFontSzRoleSplitItem', () => {
 	});
 
 	it("is false when a declared role's h is a plain fraction-of-h split, not primFontSz-relative", () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'linear',
 				algorithm: { type: 'lin' },
@@ -261,7 +261,7 @@ describe('isPrimFontSzRoleSplitItem', () => {
 
 	it('is false for "Vertical Box List" when the content-sized wrapper is replaced by an UNRELATED, non-primFontSz, non-INF declaration (the wrapper exemption must not over-match)', () => {
 		const definition = verticalBoxListLike();
-		definition.rootNode.constraints = definition.rootNode.constraints?.map((constraint) =>
+		definition.rootNode.constraints = (definition.rootNode.constraints ?? []).map((constraint) =>
 			constraint.forName === 'parentLin'
 				? { type: 'h', for: 'ch', forName: 'parentLin', referenceType: 'w', factor: 0.5 }
 				: constraint,

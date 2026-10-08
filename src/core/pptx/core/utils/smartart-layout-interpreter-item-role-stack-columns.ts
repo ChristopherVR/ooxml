@@ -11,8 +11,8 @@
  * wide right descendant column, never a vertical stack.
  */
 
-import { siblingRolesDeclaringType } from './smartart-constraint-sibling-roles';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import { siblingRolesDeclaringType } from '../../../diagram/layout/smartart-constraint-sibling-roles';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { widthWeight } from './smartart-layout-interpreter-item-role-shared';
 import {
 	splitEntryFields,

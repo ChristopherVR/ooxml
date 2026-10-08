@@ -82,7 +82,7 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { itemFontBoundsPx, nodeFontBounds } from './smartart-layout-item-font-role';
 import {

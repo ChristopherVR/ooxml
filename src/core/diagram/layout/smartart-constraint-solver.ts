@@ -1,7 +1,7 @@
 /**
  * SmartArt DiagramML interpreter - relative constraint resolver.
  *
- * `dgm:constr` (`PptxSmartArtConstraint`) can express a value relative to
+ * `dgm:constr` (`DiagramConstraint`) can express a value relative to
  * ANOTHER layoutNode role's resolved value via `@refType`/`@refFor`/
  * `@refForName`/`@refPtType`, instead of (or alongside) an absolute
  * `@val`/`@fact`. Every existing consumer of `constrLst` in this interpreter
@@ -61,13 +61,9 @@
  *   default, exactly as they did before any relative constraint existed.
  */
 
-import type {
-	PptxSmartArtConstraint,
-	PptxSmartArtLayoutDefinition,
-	PptxSmartArtLayoutNode,
-} from '../types';
+import type { DiagramConstraint, DiagramLayoutDefinition, DiagramLayoutNode } from '../model';
 import { selectConstraints } from './smartart-constraint-branch-index';
-import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import type { WhenContext } from './smartart-layout-interpreter-when';
 
 /** Sentinel role for an unnamed layoutNode (most commonly the root arranger). */
 const ROOT_ROLE = '\u0000root';
@@ -76,7 +72,7 @@ const ROOT_ROLE = '\u0000root';
  * `smartart-constraint-declared-by.ts`, which needs to filter candidates by
  * `declaringRole` before running the same reference-walking logic. */
 export interface IndexedConstraint {
-	constraint: PptxSmartArtConstraint;
+	constraint: DiagramConstraint;
 	/** Name of the layoutNode whose `constrLst` declared this entry ("self"). */
 	declaringRole: string;
 }
@@ -112,7 +108,11 @@ export interface ConstraintIndex {
 /** Exposed for `smartart-constraint-resolve.ts` (reference-role targeting
  * uses the SAME logic as forward targeting). */
 export function targetRole(
-	target: { for?: string; forName?: string; pointType?: string },
+	target: {
+		for?: string | undefined;
+		forName?: string | undefined;
+		pointType?: string | undefined;
+	},
 	declaringRole: string,
 ): string {
 	if ((target.for === 'ch' || target.for === 'des') && target.forName) {
@@ -130,7 +130,7 @@ export function entryKey(role: string, type: string): string {
 }
 
 /** True when a constraint carries any `ref*` attribute (a relative constraint). */
-export function hasReference(constraint: PptxSmartArtConstraint): boolean {
+export function hasReference(constraint: DiagramConstraint): boolean {
 	return (
 		constraint.referenceType !== undefined ||
 		constraint.referenceFor !== undefined ||
@@ -140,7 +140,7 @@ export function hasReference(constraint: PptxSmartArtConstraint): boolean {
 }
 
 /** The role name a layoutNode's own constraints/references resolve under. */
-export function roleOf(node: PptxSmartArtLayoutNode | undefined): string {
+export function roleOf(node: DiagramLayoutNode | undefined): string {
 	return node?.name ?? ROOT_ROLE;
 }
 
@@ -164,13 +164,13 @@ export const EMPTY_CONSTRAINT_INDEX: ConstraintIndex = { entries: new Map(), roo
  * caller with no diagram to evaluate against cannot decide a branch anyway.
  */
 export function buildConstraintIndex(
-	definition: PptxSmartArtLayoutDefinition,
+	definition: DiagramLayoutDefinition,
 	nodeCount?: number,
 	context?: WhenContext,
 ): ConstraintIndex {
 	const entries = new Map<string, IndexedConstraint[]>();
 
-	const walk = (node: PptxSmartArtLayoutNode): void => {
+	const walk = (node: DiagramLayoutNode): void => {
 		const declaringRole = roleOf(node);
 		// `allConstraints` (when present) is a superset of `constraints` that
 		// also includes ones declared inside a `dgm:choose`/`dgm:if`/`dgm:else`

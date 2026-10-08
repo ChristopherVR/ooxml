@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveGenerationGapRatio } from './smartart-hierarchy-generation-gap';
 
 describe('resolveGenerationGapRatio', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutDefinition, PptxSmartArtLayoutNode } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { stackRoleContent } from './smartart-layout-interpreter-item-role-stack';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
 import type { RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';

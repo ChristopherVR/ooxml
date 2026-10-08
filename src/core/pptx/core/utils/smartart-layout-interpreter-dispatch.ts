@@ -9,7 +9,7 @@
  */
 
 import type { PptxSmartArtNode, PptxSmartArtPresLayoutVars, SmartArtStyle } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { arrangeConn, arrangeSpacer, arrangeText } from './smartart-layout-interpreter-aux';
 import { arrangeComposite } from './smartart-layout-interpreter-composite';
 import { arrangeCycle } from './smartart-layout-interpreter-cycle';

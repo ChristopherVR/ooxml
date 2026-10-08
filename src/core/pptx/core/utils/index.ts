@@ -217,9 +217,9 @@ export {
 	hasReference,
 	EMPTY_CONSTRAINT_INDEX,
 	type ConstraintIndex,
-} from './smartart-constraint-solver';
-export { resolveConstraintDeclaredBy } from './smartart-constraint-declared-by';
-export { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
+} from '../../../diagram/layout/smartart-constraint-solver';
+export { resolveConstraintDeclaredBy } from '../../../diagram/layout/smartart-constraint-declared-by';
+export { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
 export { selectArrangedNodes, chooseAlgType } from './smartart-layout-interpreter-flow';
 export { arrangeLinear, arrangeSnake } from './smartart-layout-interpreter-linear';
 export { arrangeCycle } from './smartart-layout-interpreter-cycle';

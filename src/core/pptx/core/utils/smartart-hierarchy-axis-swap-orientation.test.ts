@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutDefinition } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { adjustOrientationForAxisSwap } from './smartart-hierarchy-axis-swap-orientation';
 import type { HierarchyOrientation } from './smartart-hierarchy-orientation-types';
 

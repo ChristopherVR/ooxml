@@ -5,7 +5,7 @@ import type {
 	PptxSmartArtNode,
 	PptxSmartArtLayoutNode,
 } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	descendantTextById,
 	hasAmbiguousTopLevelRoles,

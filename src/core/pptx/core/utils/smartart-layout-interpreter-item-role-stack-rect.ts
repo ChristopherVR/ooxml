@@ -12,9 +12,9 @@ import {
 	isDesRootedFontRole,
 	isPrimFontSzRoleSplitItem,
 	siblingRolesDeclaringType,
-} from './smartart-constraint-sibling-roles';
-import { roleOf } from './smartart-constraint-solver';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+} from '../../../diagram/layout/smartart-constraint-sibling-roles';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { heightWeight } from './smartart-layout-interpreter-item-role-shared';
 import {
 	splitEntryFields,

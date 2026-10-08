@@ -80,8 +80,8 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { resolveConstraint } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
 import { resolveHierarchyItemNode } from './smartart-hierarchy-item-template';
 import { chooseAlgorithmOfType } from './smartart-layout-interpreter-choose-algorithm';
 

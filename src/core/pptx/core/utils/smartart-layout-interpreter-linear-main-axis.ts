@@ -9,9 +9,9 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { firstConstraintDeclaredBy } from './smartart-constraint-declared-by';
-import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import { firstConstraintDeclaredBy } from '../../../diagram/layout/smartart-constraint-declared-by';
+import { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 
 /** A decorative between-item gap, resolved as either a fraction of the item's own main-axis extent, or a fixed pixel amount. */
 type MainAxisGap = { relative: number } | { absolutePx: number };

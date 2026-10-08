@@ -51,8 +51,8 @@
 import type { PptxSmartArtLayoutNode } from '../types';
 import { resolveFontTable } from '../../../diagram/layout/smartart-font-table';
 import type { FontAdvanceTable } from '../../../text/font-metrics/font-advance-widths.generated';
-import { entryKey, resolveConstraint } from './smartart-constraint-solver';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import { entryKey, resolveConstraint } from '../../../diagram/layout/smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import type { FontBounds } from './smartart-layout-item-font-role';
 import { itemFontBoundsPx, nodeFontBounds } from './smartart-layout-item-font-role';

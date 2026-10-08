@@ -43,8 +43,8 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { roleOf } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite';
 import { collectRawCandidates } from './smartart-layout-interpreter-composite-candidates';
 import type { FontFitContext } from './smartart-layout-interpreter-composite-fontfit';

@@ -37,7 +37,7 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	resolveHierarchyDispatchChAlign,
 	resolveHierarchyDispatchLinDir,

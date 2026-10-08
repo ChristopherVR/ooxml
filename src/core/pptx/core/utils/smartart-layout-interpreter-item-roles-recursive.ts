@@ -47,7 +47,7 @@
  */
 
 import type { PptxSmartArtConnection, PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	descendantTextById,
 	hasAmbiguousTopLevelRoles,

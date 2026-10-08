@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtConstraint, PptxSmartArtLayoutDefinition } from '../types';
+import type { DiagramConstraint, DiagramLayoutDefinition } from '../model';
 import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
 import { buildConstraintIndex, resolveConstraint } from './smartart-constraint-solver';
 
-function constr(overrides: Partial<PptxSmartArtConstraint>): PptxSmartArtConstraint {
+function constr(overrides: Partial<DiagramConstraint>): DiagramConstraint {
 	return { type: 'w', ...overrides };
 }
 
@@ -14,7 +14,7 @@ describe('smartArt relative constraint solver', () => {
 		// width, and their h as 0.6x that width - exactly the shape genuine
 		// PowerPoint content uses (see `ppt/diagrams/layout1.xml` inside
 		// `e2e/fixtures/animation-builds-color.pptx`).
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -42,7 +42,7 @@ describe('smartArt relative constraint solver', () => {
 		// no literal value of its own - it equals the "sibTrans" spacer's width,
 		// which is itself 0.1x the item ("node") width, which is itself the whole
 		// box. Three hops, no literal at any of them.
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -71,7 +71,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('degrades to undefined when the referenced role does not exist', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -92,7 +92,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('degrades to undefined (not an infinite loop) on a reference cycle', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -124,7 +124,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('degrades an unresolvable reference to the entry’s own literal val, not undefined', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -146,7 +146,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('applies a gte bound against a value the reference DID resolve', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -172,7 +172,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('applies an lte bound against a value the reference DID resolve', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -198,7 +198,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('an explicit equ op behaves like the default (no bound applied)', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -223,7 +223,7 @@ describe('smartArt relative constraint solver', () => {
 
 	it('gte/lte bounds compose across a multi-hop reference chain', () => {
 		// base -> scaled (0.2x base) -> clamped (lte 0.1 against scaled)
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -263,7 +263,7 @@ describe('smartArt relative constraint solver', () => {
 		// declaringRole" reading silently resolved to `undefined` and dropped
 		// every one of `balance`'s real slots. This must resolve the literal
 		// 0.365 directly, ignoring `childrenComposite`'s own (undeclared) w.
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'outerComposite',
 				children: [
@@ -293,7 +293,7 @@ describe('smartArt relative constraint solver', () => {
 		// genuinely means "inherit `Name0`'s own resolved w" (fill the parent).
 		// Nothing to degrade to, so this must still walk the self-reference,
 		// unlike the `fact`-bearing axis-hint case above.
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'Name0',
 				constraints: [constr({ type: 'w', for: 'ch', forName: 'outerBox', referenceType: 'w' })],
@@ -305,11 +305,11 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('resolveRatioConstraint prefers an existing literal match over the graph', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: { name: 'diagram', children: [{ name: 'node' }] },
 		};
 		const index = buildConstraintIndex(definition);
-		const literalConstraints: PptxSmartArtConstraint[] = [constr({ type: 'sibSp', factor: 0.3 })];
+		const literalConstraints: DiagramConstraint[] = [constr({ type: 'sibSp', factor: 0.3 })];
 
 		expect(
 			resolveRatioConstraint(literalConstraints, index, 'diagram', ['sibSp', 'sp'], 0.25),
@@ -317,7 +317,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('resolveRatioConstraint falls back to the graph, then to the default', () => {
-		const resolvable: PptxSmartArtLayoutDefinition = {
+		const resolvable: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [
@@ -338,7 +338,7 @@ describe('smartArt relative constraint solver', () => {
 			0.5,
 		);
 
-		const empty: PptxSmartArtLayoutDefinition = { rootNode: { name: 'diagram' } };
+		const empty: DiagramLayoutDefinition = { rootNode: { name: 'diagram' } };
 		const emptyIndex = buildConstraintIndex(empty);
 		expect(resolveRatioConstraint(undefined, emptyIndex, 'diagram', ['sp'], 0.25)).toBe(0.25);
 	});
@@ -357,7 +357,7 @@ describe('smartArt relative constraint solver', () => {
 	 * has three DISTINCT, stacked boxes, `y = 120/237/353`).
 	 */
 	it('anchors a content-free t/l constraint at 0 and derives b/r as t+h / l+w when never declared directly', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'composite',
 				constraints: [
@@ -391,7 +391,7 @@ describe('smartArt relative constraint solver', () => {
 	});
 
 	it('does NOT default a content-free w/h to 0 (only t/l are anchor edges)', () => {
-		const definition: PptxSmartArtLayoutDefinition = {
+		const definition: DiagramLayoutDefinition = {
 			rootNode: {
 				name: 'diagram',
 				constraints: [constr({ type: 'w', for: 'ch', forName: 'line1' })],

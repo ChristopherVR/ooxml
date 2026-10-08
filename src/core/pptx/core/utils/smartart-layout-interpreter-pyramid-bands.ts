@@ -14,9 +14,9 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { resolveRatioConstraint } from './smartart-constraint-ratio-fallback';
-import type { ConstraintIndex } from './smartart-constraint-solver';
-import { EMPTY_CONSTRAINT_INDEX, roleOf } from './smartart-constraint-solver';
+import { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import { EMPTY_CONSTRAINT_INDEX, roleOf } from '../../../diagram/layout/smartart-constraint-solver';
 import { algorithmParam } from './smartart-layout-interpreter-model';
 import { DEFAULT_GAP_RATIO, DEFAULT_INSET } from './smartart-layout-interpreter-pyramid';
 import type {

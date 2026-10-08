@@ -2,7 +2,7 @@
  * SmartArt DiagramML interpreter - choose-aware constraint selection.
  *
  * `smartart-constraint-solver.ts`'s `buildConstraintIndex` has always indexed
- * `PptxSmartArtLayoutNode.allConstraints`: every `dgm:constr` reachable
+ * `DiagramLayoutNode.allConstraints`: every `dgm:constr` reachable
  * through a `dgm:choose`/`dgm:if`/`dgm:else` wrapping a node's own
  * `constrLst`, BLINDLY UNIONED with no guard evaluation at all (that field's
  * own doc comment documents this as deliberate: "this interpreter does not
@@ -16,7 +16,7 @@
  * actually live for the current diagram.
  *
  * {@link selectConstraints} is the choose-aware alternative: it groups
- * `PptxSmartArtLayoutNode.constraintCandidates` (round 39,
+ * `DiagramLayoutNode.constraintCandidates` (round 39,
  * `smartart-layout-definition-constraint-candidates.ts`) by guard chain (one
  * group per `dgm:if`/`dgm:else` branch) and returns the constraints of the
  * FIRST branch, in document order, whose ENTIRE guard chain evaluates
@@ -39,14 +39,14 @@
  * Pure geometry; no framework code.
  */
 
-import type { PptxSmartArtConstraint, PptxSmartArtLayoutNode, PptxSmartArtWhen } from '../types';
-import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
-import { evaluateWhen } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import type { DiagramConstraint, DiagramLayoutNode, DiagramWhen } from '../model';
+import type { WhenContext } from './smartart-layout-interpreter-when';
+import { evaluateWhen } from './smartart-layout-interpreter-when';
 
 /** Stable string key for a guard chain, so every `dgm:constr` declared under
  * the SAME `dgm:if`/`dgm:else` branch regroups into one entry even when the
  * parser does not guarantee handing back the exact same array instance. */
-function chainKey(guard: readonly PptxSmartArtWhen[]): string {
+function chainKey(guard: readonly DiagramWhen[]): string {
 	return guard
 		.map(
 			(when) =>
@@ -56,13 +56,13 @@ function chainKey(guard: readonly PptxSmartArtWhen[]): string {
 }
 
 interface Branch {
-	guard: readonly PptxSmartArtWhen[];
-	constraints: PptxSmartArtConstraint[];
+	guard: readonly DiagramWhen[];
+	constraints: DiagramConstraint[];
 }
 
 /** Group `candidates` by guard chain, preserving first-seen (document) order. */
 function groupByBranch(
-	candidates: readonly { guard: PptxSmartArtWhen[]; constraint: PptxSmartArtConstraint }[],
+	candidates: readonly { guard: DiagramWhen[]; constraint: DiagramConstraint }[],
 ): Branch[] {
 	const order: string[] = [];
 	const byKey = new Map<string, Branch>();
@@ -85,10 +85,10 @@ function groupByBranch(
  * module's own doc comment for the full contract).
  */
 export function selectConstraints(
-	node: PptxSmartArtLayoutNode,
+	node: DiagramLayoutNode,
 	nodeCount: number | undefined,
 	context: WhenContext | undefined,
-): PptxSmartArtConstraint[] | undefined {
+): DiagramConstraint[] | undefined {
 	const candidates = node.constraintCandidates;
 	if (!candidates || candidates.length === 0 || nodeCount === undefined) {
 		return undefined;

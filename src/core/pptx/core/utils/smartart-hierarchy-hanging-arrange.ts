@@ -15,7 +15,7 @@ import type {
 	PptxSmartArtPresLayoutVars,
 	SmartArtStyle,
 } from '../types';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import type { TreeNode } from './smartart-helpers';
 import { linDirHangDirection } from './smartart-hierarchy-branch-mode';
 import { hierarchyLeafFoldsDescendants } from './smartart-hierarchy-fold-depth';

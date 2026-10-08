@@ -5,7 +5,10 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNode,
 } from '../types';
-import { buildConstraintIndex, EMPTY_CONSTRAINT_INDEX } from './smartart-constraint-solver';
+import {
+	buildConstraintIndex,
+	EMPTY_CONSTRAINT_INDEX,
+} from '../../../diagram/layout/smartart-constraint-solver';
 import {
 	arrangeByChooseAwareSlots,
 	collectChooseAwareSlots,

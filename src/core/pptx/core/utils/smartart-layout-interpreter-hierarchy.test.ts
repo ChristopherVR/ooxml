@@ -5,8 +5,8 @@ import type {
 	PptxSmartArtNode,
 	PptxSmartArtPresLayoutVars,
 } from '../types';
-import { buildConstraintIndex } from './smartart-constraint-solver';
-import type { ConstraintIndex } from './smartart-constraint-solver';
+import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
+import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { arrangeHierarchy } from './smartart-layout-interpreter-hierarchy';
 import type {
 	BoundingBox,
