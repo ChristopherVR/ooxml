@@ -357,7 +357,10 @@ Still not at parity:
   honoured by the marker's tab suffix in the editor and Print Layout.) Text Highlight keeps the 17-colour list (Word's is a short
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
 - **Insert:** Cover Page galleries (one plain design exists), Shapes, Icons, 3D Models, inserting or editing SmartArt (existing SmartArt is shown read-only from its saved drawing, not recomputed),
-  Charts, Screenshot, floating or formatted Text Boxes, WordArt, Equation, Signature Line, Object.
+  inserting or editing Charts (existing charts are drawn read-only from the values cached in the part for bar, column, line,
+  area, pie, doughnut, scatter and radar charts; bubble, stock, surface and chartex charts show a labelled frame naming the
+  family, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, Equation,
+  Signature Line, Object.
 - **Layout and References:** Manual Hyphenation and its options, Position
   and Wrap Text, Citations, Bibliography, Index and Table of Authorities, and
   automatic updating of `REF`, `PAGEREF` and `SEQ` results (Update Fields refreshes them on request; inserting a caption
