@@ -24,3 +24,4 @@ export * from './gradient-stop-edit';
 export * from './bar-cluster-geometry';
 export * from './manual-layout';
 export * from './write-layout-formatting';
+export * from './model';
