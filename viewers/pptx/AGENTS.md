@@ -184,7 +184,8 @@ folder:
 bun run build:packages       # Build core, shared, locales, tools, cli and the five bindings (what CI and releases run)
 bun run build                # The same plus the React demo
 bun run test                 # Run vitest across all packages (scripts/test-all.sh)
-bun run typecheck            # Type-check all packages
+bun run typecheck            # Type-check all packages (needs built packages: CI runs build:packages first)
+bun run typecheck:fresh      # Build the packages, then type-check (clean checkouts)
 bun run fmt                  # Format with oxfmt (format only the files you changed)
 bun run lint                 # Lint with oxlint
 bun run e2e                  # Neutrality contract + Playwright (all five demos; pass --project=react etc. to narrow)
