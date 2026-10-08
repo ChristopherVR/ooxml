@@ -1,5 +1,6 @@
 import { XmlObject } from '../../types';
-import type { PptxTableCellStyle } from '../../types';
+import type { PptxTableCellParagraph, PptxTableCellStyle } from '../../types';
+import { parseAlignmentAttr } from '../../utils/paragraph-properties-parser';
 import { ensureXmlChildOrCreate, ensureXmlChildren } from '../../utils/xml-access';
 import { TC_PR_BORDERS_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeLayoutSwitching';
@@ -112,8 +113,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/**
 	 * Write cell styling back into XML (fill, alignment, font props).
+	 * `paragraphs` gives each paragraph's own alignment; without it only the
+	 * first paragraph takes the cell's.
 	 */
-	protected writeTableCellStyle(xmlCell: XmlObject, style: PptxTableCellStyle): void {
+	protected writeTableCellStyle(
+		xmlCell: XmlObject,
+		style: PptxTableCellStyle,
+		paragraphs?: PptxTableCellParagraph[],
+	): void {
 		if (!xmlCell['a:tcPr']) {
 			xmlCell['a:tcPr'] = {};
 		}
@@ -140,21 +147,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			tcPr['@_vert'] = style.textDirection;
 		}
 
-		// Text alignment — set in first paragraph's pPr
-		if (style.align) {
-			const txBody = xmlCell['a:txBody'] as XmlObject | undefined;
-			const firstP = txBody ? ensureXmlChildren(txBody, 'a:p')[0] : undefined;
-			if (firstP) {
+		// Text alignment: each paragraph's own, with the cell's on the first.
+		// A paragraph that already aligns that way is left as it is, so an
+		// unedited cell keeps its markup.
+		const aligns = paragraphs?.map((paragraph) => paragraph.align) ?? [];
+		aligns[0] = style.align ?? aligns[0];
+		const txBody = xmlCell['a:txBody'] as XmlObject | undefined;
+		if (txBody && aligns.some(Boolean)) {
+			for (const [index, paragraph] of ensureXmlChildren(txBody, 'a:p').entries()) {
+				const align = aligns[index];
+				const token = this.textAlignToDrawingValue(align);
+				const current = (paragraph['a:pPr'] as XmlObject | undefined)?.['@_algn'];
+				if (!token || parseAlignmentAttr(current as string | undefined) === align) {
+					continue;
+				}
 				// CT_TextParagraph requires pPr before runs and endParaRPr.
 				// Heal bare properties and merge existing properties in place.
-				const pPr = ensureXmlChildOrCreate(firstP, 'a:pPr', 'first');
-				const alignMap: Record<string, string> = {
-					left: 'l',
-					center: 'ctr',
-					right: 'r',
-					justify: 'just',
-				};
-				pPr['@_algn'] = alignMap[style.align] || 'l';
+				const pPr = ensureXmlChildOrCreate(paragraph, 'a:pPr', 'first');
+				pPr['@_algn'] = token;
 			}
 		}
 

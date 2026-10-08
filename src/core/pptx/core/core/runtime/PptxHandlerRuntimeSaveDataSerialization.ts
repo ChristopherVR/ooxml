@@ -183,7 +183,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							this.writeTableCellText(xmlCell, cell.text);
 						}
 						if (cell.style) {
-							this.writeTableCellStyle(xmlCell, cell.style);
+							this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs);
 						}
 						serializeCellExtraAttributes(xmlCell, cell.extraAttributes);
 					}
@@ -217,7 +217,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 					// Update cell style
 					if (cell.style) {
-						this.writeTableCellStyle(xmlCell, cell.style);
+						this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs);
 					}
 
 					// Round-trip opaque tcPr attributes (horzOverflow,
