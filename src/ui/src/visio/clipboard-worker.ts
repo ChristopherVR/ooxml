@@ -3,6 +3,7 @@ import type { ClipboardCaptureRequest } from './worker-clipboard';
 
 /** The worker owns package/XML capture; only the bounded portable payload leaves it. */
 self.onmessage = async (event: MessageEvent<ClipboardCaptureRequest>) => {
+	if (event.origin && event.origin !== self.location.origin) return;
 	try {
 		const request = event.data;
 		const snapshot = await captureVisioClipboard(

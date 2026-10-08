@@ -7,6 +7,21 @@ const attribute = new RegExp(
 	'uy',
 );
 const xmlWhitespace = (value: string) => /^[ \t\r\n]*$/.test(value);
+const reservedNamespaces = new Map([
+	['xml', 'http://www.w3.org/XML/1998/namespace'],
+	['xmlns', 'http://www.w3.org/2000/xmlns/'],
+]);
+/** Prefix bindings an element declares, chained to its parent's (a Map, so no key reaches a prototype). */
+type NamespaceScope = { bindings: Map<string, string>; parent: NamespaceScope | undefined };
+function lookupNamespace(scope: NamespaceScope | undefined, prefix: string): string | undefined {
+	const reserved = reservedNamespaces.get(prefix);
+	if (reserved !== undefined) return reserved;
+	for (; scope; scope = scope.parent) {
+		const uri = scope.bindings.get(prefix);
+		if (uri !== undefined) return uri;
+	}
+	return undefined;
+}
 /** Bound DOM construction first and reject the malformed input that tolerant XML parsers repair. */
 export function inspectXml(
 	xml: string,
@@ -20,7 +35,7 @@ export function inspectXml(
 		/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/.test(xml)
 	)
 		fail('INVALID_XML', 'DTD, entities, or invalid XML characters');
-	const stack: { name: string; namespaces: Record<string, string> }[] = [];
+	const stack: { name: string; namespaces: NamespaceScope }[] = [];
 	let nodes = 0,
 		roots = 0,
 		at = 0;
@@ -104,9 +119,7 @@ export function inspectXml(
 				fail('INVALID_XML', 'Mismatched XML closing tag');
 		} else {
 			const attrs = new Set<string>();
-			const namespaces = Object.create(stack.at(-1)?.namespaces ?? null) as Record<string, string>;
-			namespaces['xml'] = 'http://www.w3.org/XML/1998/namespace';
-			namespaces['xmlns'] = 'http://www.w3.org/2000/xmlns/';
+			const namespaces: NamespaceScope = { bindings: new Map(), parent: stack.at(-1)?.namespaces };
 			while (!xmlWhitespace(body.slice(cursor))) {
 				attribute.lastIndex = cursor;
 				const match = attribute.exec(body);
@@ -116,14 +129,14 @@ export function inspectXml(
 				const value = match[2] ?? match[3] ?? '';
 				text(value);
 				if (match[1]?.startsWith('xmlns:'))
-					namespaces[match[1].slice(6)] = decodeXmlAttribute(value);
+					namespaces.bindings.set(match[1].slice(6), decodeXmlAttribute(value));
 				node();
 				cursor = attribute.lastIndex;
 			}
 			const expanded = new Set<string>();
 			for (const attr of attrs) {
 				const colon = attr.indexOf(':');
-				const uri = colon < 0 ? '' : namespaces[attr.slice(0, colon)];
+				const uri = colon < 0 ? '' : lookupNamespace(namespaces, attr.slice(0, colon));
 				if (uri === undefined) fail('INVALID_XML', 'Unbound XML attribute prefix');
 				const key = `${uri}\u0000${attr.slice(colon + 1)}`;
 				if (expanded.has(key)) fail('INVALID_XML', 'Duplicate expanded XML attribute name');
