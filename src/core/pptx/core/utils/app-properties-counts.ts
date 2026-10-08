@@ -11,7 +11,7 @@
  *   records 3, not 0.
  * - A slide with no title text (no title placeholder, or an empty one) is
  *   listed in `TitlesOfParts` as "PowerPoint Presentation", not as an empty
- *   `vt:lpstr`.
+ *   `vt:lpstr`; a break inside a title is listed as a space.
  *
  * @module app-properties-counts
  */
@@ -28,9 +28,16 @@ const SLIDE_REL_TYPE_SUFFIX = '/relationships/slide';
 const NOTES_SLIDE_REL_TYPE_SUFFIX = '/relationships/notesSlide';
 const DIAGRAM_DATA_REL_TYPE_SUFFIX = '/relationships/diagramData';
 
-/** Map derived slide titles onto the entries PowerPoint records for them. */
+/**
+ * Map derived slide titles onto the entries PowerPoint records for them. A line or paragraph
+ * break in a title is recorded as a space: a PowerPoint-saved deck lists a two-line title
+ * `INS` / `TRUCTIONS` as `INS TRUCTIONS` (fixtures/e2e/absolute-path-rels.pptx).
+ */
 export function toAppTitleEntries(titles: string[]): string[] {
-	return titles.map((title) => (title.length > 0 ? title : UNTITLED_SLIDE_TITLE));
+	return titles.map((title) => {
+		const entry = title.replace(/\r\n|[\r\n\v]/g, ' ');
+		return entry.length > 0 ? entry : UNTITLED_SLIDE_TITLE;
+	});
 }
 
 function relationshipsOf(parsed: XmlObject): XmlObject[] {
