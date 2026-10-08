@@ -96,15 +96,16 @@ export function renameSheet(ctx: EditContext, index: number, name: string): void
 	if (old === name) return;
 	const problem = validateSheetName(workbook, name, index);
 	if (problem) throw new Error(problem);
+	// A `refs` snapshot covers it: sheet metadata (the name), defined names and changed formulas.
 	ctx.run(
 		'Rename sheet',
 		'sheets',
-		[{ kind: 'workbook' }],
+		[{ kind: 'refs' }],
 		() => {
 			rewriteFormulas(workbook, (formula) => renameSheetInFormula(formula, old, name));
 			sheet.name = name;
 		},
-		{ sheet: index, structural: true },
+		{ sheet: index, structural: true, calc: { kind: 'rename', from: old, to: name } },
 	);
 }
 

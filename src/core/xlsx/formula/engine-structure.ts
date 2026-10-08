@@ -1,6 +1,6 @@
 // Structural edits without a rebuild: a row or column insert or delete moves the formula graph in
-// place. Formulas whose value can change are queued for the next recalculation; everything else
-// keeps its value.
+// place, and a sheet rename only refreshes the formulas whose text changed. Formulas whose value
+// can change are queued for the next recalculation; everything else keeps its value.
 import { cellKey, normalizeRange } from '../address';
 import { FormulaError } from './ast';
 import { EngineCore } from './engine-core';
@@ -18,6 +18,13 @@ import {
 } from './shift-graph';
 import { isSpilledCell } from './spill';
 import { type Area, err } from './values';
+
+const sameAreas = (a: readonly Area[], b: readonly Area[]): boolean =>
+	a.length === b.length &&
+	a.every((x, i) => {
+		const y = b[i] as Area;
+		return x.sheet === y.sheet && sameRange(x.range, y.range);
+	});
 
 export abstract class EngineStructure extends EngineCore {
 	/** Formulas a structural edit left to recalculate (with their dependents) on the next pass. */
@@ -201,6 +208,42 @@ export abstract class EngineStructure extends EngineCore {
 			out[i] = { sheet: area.sheet, range: movedRange(area.range, shift.axis, delta) };
 		}
 		return out ?? list;
+	}
+
+	/**
+	 * Follows a sheet rename (`from` to `to`, formulas already rewritten): precedents are kept by
+	 * sheet index, so only rewritten formulas need their text parsed again, and only formulas that
+	 * name the new sheet without having been rewritten (previously unresolved), describe sheets
+	 * (CELL, SHEET, FORMULATEXT) or read defined names whose areas changed are recalculated.
+	 */
+	renameSheet(from: string, to: string): void {
+		if (!this.graphReady()) {
+			this.invalidate();
+			return;
+		}
+		const target = to.toLowerCase();
+		let depsChanged = false;
+		for (const map of this.nodes.values())
+			for (const node of map.values()) {
+				const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
+				if (cell?.formula === undefined) {
+					this.invalidate();
+					return;
+				}
+				const changed = cell.formula !== node.formula;
+				const traits = node.ast && astTraits(node.ast);
+				node.formula = cell.formula;
+				if (traits?.complex || (!changed && traits?.sheets.has(target))) {
+					const deps = node.deps;
+					const dynamicDeps = node.dynamicDeps;
+					this.reanalyze(node);
+					const same = sameAreas(deps, node.deps) && sameAreas(dynamicDeps, node.dynamicDeps);
+					if (!same) depsChanged = true;
+					if (!same || !traits?.complex) this.structuralSeeds.add(node);
+				} else if (changed) node.stale = true;
+				if (traits?.descriptive || traits?.opaque) this.structuralSeeds.add(node);
+			}
+		if (depsChanged) this.graphChanged();
 	}
 
 	/** Takes the formulas queued by structural edits. */

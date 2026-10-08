@@ -1,6 +1,6 @@
 // When an edit session recalculates: incrementally after cell edits and after the structural edits
-// the calc engine can follow in place (row and column inserts and deletes), fully after
-// other structural ones, and not at all in manual calculation mode until calculateNow /
+// the calc engine can follow in place (row and column inserts and deletes, sheet renames), fully
+// after other structural ones, and not at all in manual calculation mode until calculateNow /
 // calculateSheet.
 import type { Workbook } from '../model';
 import { calcModeOf } from './calc-mode';
@@ -16,6 +16,8 @@ const isStructural = (step: HistoryStep): boolean =>
 function hintFor(step: HistoryStep, mode: 'apply' | 'undo' | 'redo'): CalcHint | undefined {
 	const hint = step.calc;
 	if (!hint) return undefined;
+	if (hint.kind === 'rename')
+		return mode === 'undo' ? { kind: 'rename', from: hint.to, to: hint.from } : hint;
 	// Undoing a delete brings back references the graph no longer has: that rebuilds.
 	return mode === 'undo' ? undefined : hint;
 }
@@ -83,7 +85,8 @@ export class SessionCalculator {
 	}
 
 	private follow(hint: CalcHint): void {
-		this.calc.shiftCells(hint.sheet, hint.shift);
+		if (hint.kind === 'shift') this.calc.shiftCells(hint.sheet, hint.shift);
+		else this.calc.renameSheet(hint.from, hint.to);
 	}
 
 	private guard(run: () => void): void {

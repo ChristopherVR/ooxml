@@ -36,6 +36,8 @@ export interface CalcEngine {
 	 * formula cut by the edit, no graph yet) it is invalidated, as by `invalidate`.
 	 */
 	shiftCells(sheet: number, shift: { axis: 'row' | 'col'; at: number; count: number }): void;
+	/** Follows a sheet renamed from `from` to `to` (formulas already rewritten), like `shiftCells`. */
+	renameSheet(from: string, to: string): void;
 	/** Like `evaluate` but keeps array results (list validation sources, chart series). */
 	evaluateArray(formula: string, at: CellPosition): CellValue[][];
 	/** The current spill range anchored at a cell. */

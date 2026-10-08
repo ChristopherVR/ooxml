@@ -61,6 +61,9 @@ const EDITS: Edit[] = [
 	['insert a column', (s, i) => s.insertColumns(i, 1, 1)],
 	['delete a column', (s, i) => s.deleteColumns(i, 0, 1)],
 	['insert columns far right', (s, i) => s.insertColumns(i, 30, 2)],
+	['rename the sheet', (s, i) => s.renameSheet(i, `${s.workbook.sheets[i]?.name ?? ''} x`)],
+	undo,
+	redo,
 ];
 
 /**
@@ -166,7 +169,7 @@ function synthetic(legacy: boolean): Workbook {
 describe('structural edits recalculate in place', () => {
 	for (const name of ['excel-features.xlsx', 'openpyxl-features.xlsx', 'excel-1904.xlsx'])
 		it(`match a full recalculation on ${name}`, async () => {
-			// Only undoing a row or column edit rebuilds.
+			// Only undoing a row or column edit rebuilds; a rename is undone in place.
 			const rebuilds = checkEdits(await fixture(name));
 			expect(rebuilds.filter((edit) => !edit.startsWith('undo '))).toEqual([]);
 		});
@@ -229,5 +232,19 @@ describe('structural edits recalculate in place', () => {
 		expect(getCell(data, 16, 2)?.value).toBe(-1); // F9 recalculates only what changed
 		session.calculateNow({ full: true });
 		expect(getCell(data, 16, 2)?.value).not.toBe(-1);
+	});
+
+	it('renames a sheet without evaluating the formulas that name it', () => {
+		const wb = synthetic(true);
+		const session = createEditSession(wb, { autoRowHeight: false });
+		session.calculateNow({ full: true });
+		const report = wb.sheets[1];
+		const cell = report && getCell(report, 0, 0);
+		if (!cell) throw new Error('cell');
+		cell.value = -1;
+		session.renameSheet(0, 'Inputs');
+		expect(cell.formula).toBe('Inputs!A1+Inputs!C1');
+		expect(cell.value).toBe(-1);
+		expect(getCell(wb.sheets[0] as never, 21, 5)?.value).toBe(2); // SHEET("Report")
 	});
 });

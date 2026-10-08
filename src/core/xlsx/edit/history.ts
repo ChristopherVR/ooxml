@@ -89,13 +89,11 @@ export interface HistoryEntry {
 
 /**
  * How the calc engine can follow a structural step without rebuilding its graph: rows or columns
- * inserted or deleted on a sheet. Only set on a step made by one command.
+ * inserted or deleted on a sheet, or a sheet renamed. Only set on a step made by one command.
  */
-export type CalcHint = {
-	kind: 'shift';
-	sheet: number;
-	shift: { axis: 'row' | 'col'; at: number; count: number };
-};
+export type CalcHint =
+	| { kind: 'shift'; sheet: number; shift: { axis: 'row' | 'col'; at: number; count: number } }
+	| { kind: 'rename'; from: string; to: string };
 
 export interface HistoryStep {
 	label: string;
