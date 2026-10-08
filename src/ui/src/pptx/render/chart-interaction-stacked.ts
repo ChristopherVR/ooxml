@@ -18,10 +18,11 @@
  */
 import type { PptxChartData } from 'ooxml-core/pptx';
 
-import { computeLayoutOptions } from './chart-axis';
+import { computeLayoutOptions, computeStackedValueRangeForAxis } from './chart-axis';
+import { primaryValueAxis } from './chart-gridlines-toggle';
 import { roundDragValue, shareToValue, valueFromY } from './chart-interaction';
 import { computeStackedSeriesPlots } from './chart-stacked-series';
-import { computePlotLayout, computeStackedValueRange } from './chart-view-model';
+import { computePlotLayout } from './chart-view-model';
 import type { ValueRange } from './chart-view-model';
 
 /** Geometry a stacked/percentStacked segment drag needs, resolved once at drag start. */
@@ -70,11 +71,16 @@ export function buildStackedDragGeometry(
 		),
 		layoutOpts = computeLayoutOptions(chartData.axes, chartData.dataTable, chartData.series.length),
 		layout = computePlotLayout(element.width, element.height, chartData, true, layoutOpts),
-		// Computed from the SAME `layout.autoPlotHeight` `chart-cartesian.ts`'s
-		// `stackedRange` uses, so a drag never disagrees with what is on screen.
-		range: ValueRange = percent
-			? { min: 0, max: 100, span: 100 }
-			: computeStackedValueRange(chartData.series, catCount, layout.autoPlotHeight);
+		// The same range `chart-cartesian.ts` draws with (same axis, bounds,
+		// orientation and `layout.autoPlotHeight`), so a drag never disagrees
+		// with what is on screen.
+		range = computeStackedValueRangeForAxis(
+			chartData.series,
+			catCount,
+			primaryValueAxis(chartData.axes),
+			percent,
+			layout.autoPlotHeight,
+		);
 	return {
 		range,
 		plotTop: layout.plotTop,

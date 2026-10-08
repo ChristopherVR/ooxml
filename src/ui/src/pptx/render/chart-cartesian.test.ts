@@ -399,6 +399,37 @@ describe('cartesian percentStacked', () => {
 		// Two segments per category, two categories -> four rects.
 		expect(rects).toHaveLength(4);
 	});
+
+	const plotEdges = (vm: ReturnType<typeof buildChartViewModel>) => ({
+		top: Math.min(...vm.gridlines.map((line) => line.y1)),
+		bottom: Math.max(...vm.gridlines.map((line) => line.y1)),
+	});
+
+	it.each([
+		['mixed-sign', [30, -10], [-70, 90], ['30%', '-70%', '-10%', '90%']],
+		['all-negative', [-30, -10], [-70, -90], ['-30%', '-70%', '-10%', '-90%']],
+	] as const)('keeps every %s segment and its label on the plot', (_name, a, b, labels) => {
+		const vm = buildChartViewModel(
+			chartElement({
+				...percentChart,
+				series: [
+					{ name: 'A', values: [...a] },
+					{ name: 'B', values: [...b] },
+				],
+			}),
+		);
+		const { top, bottom } = plotEdges(vm);
+		const rects = vm.primitives.filter((p) => p.kind === 'rect');
+		expect(rects).toHaveLength(4);
+		for (const rect of rects) {
+			expect(rect.kind === 'rect' && rect.y).toBeGreaterThanOrEqual(top - 1e-6);
+			expect(rect.kind === 'rect' && rect.y + rect.h).toBeLessThanOrEqual(bottom + 1e-6);
+		}
+		expect(vm.dataLabels.map((label) => label.text).toSorted()).toStrictEqual(
+			[...labels].toSorted(),
+		);
+		expect(vm.axisLabels.some((label) => Number(label.text) < 0)).toBeTruthy();
+	});
 });
 
 // ── Stacked bars: c:gapWidth and explicit value-axis bounds ─────
@@ -433,6 +464,100 @@ describe('cartesian stacked bars', () => {
 			for (const rect of rects) {
 				expect(rect.kind === 'rect' && rect.w).toBeCloseTo(slot / 1.5, 6);
 			}
+		}
+	});
+
+	it('honours explicit c:min and c:max', () => {
+		const axes: PptxChartData['axes'] = [
+			{ axisType: 'valAx', axPos: 'l', majorGridlines: true, min: 0, max: 100 },
+		];
+		const { vm, rects } = rectsOf(stackedChart({ axes }));
+		// The axis runs 0..100, so its gridlines span the whole plot height.
+		const plotTop = Math.min(...vm.gridlines.map((line) => line.y1));
+		const zeroY = Math.max(...vm.gridlines.map((line) => line.y1));
+		const tallest = Math.min(...rects.map((rect) => (rect.kind === 'rect' ? rect.y : zeroY)));
+		// Q2 sums to 50 of an axis that runs to 100: half the plot height.
+		expect((zeroY - tallest) / (zeroY - plotTop)).toBeCloseTo(0.5, 2);
+		expect(vm.axisLabels.some((label) => label.text === '100')).toBeTruthy();
+	});
+
+	it('uses c:min + 1 as the top when c:max is not above c:min', () => {
+		const axes: PptxChartData['axes'] = [
+			{ axisType: 'valAx', axPos: 'l', majorGridlines: true, min: 80, max: 20 },
+		];
+		const { vm } = rectsOf(stackedChart({ axes }));
+		const values = vm.axisLabels.map((label) => Number(label.text)).filter(Number.isFinite);
+		expect(Math.min(...values)).toBe(80);
+		expect(Math.max(...values)).toBe(81);
+	});
+
+	// The plot's top and bottom edges, read off a 0..100 primary axis's gridlines.
+	const plotEdges = (vm: ReturnType<typeof buildChartViewModel>) => ({
+		top: Math.min(...vm.gridlines.map((line) => line.y1)),
+		bottom: Math.max(...vm.gridlines.map((line) => line.y1)),
+	});
+	const boxes = (rects: ReturnType<typeof rectsOf>['rects']) =>
+		rects.flatMap((rect) => (rect.kind === 'rect' ? [{ y: rect.y, h: rect.h }] : []));
+
+	it('cuts the stack at the plot top when c:max is below a category total', () => {
+		const axes: PptxChartData['axes'] = [
+			{ axisType: 'valAx', axPos: 'l', majorGridlines: true, min: 0, max: 40 },
+		];
+		const { vm, rects } = rectsOf(stackedChart({ axes }));
+		const { top, bottom } = plotEdges(vm);
+		// Q1 sums to 50 and Q2 to 50: both stacks reach exactly to the top.
+		for (const box of boxes(rects)) {
+			expect(box.y).toBeGreaterThanOrEqual(top - 1e-6);
+			expect(box.y + box.h).toBeLessThanOrEqual(bottom + 1e-6);
+		}
+		expect(Math.min(...boxes(rects).map((box) => box.y))).toBeCloseTo(top, 6);
+	});
+
+	it('starts the bars at the axis crossing when c:min is above 0', () => {
+		const axes: PptxChartData['axes'] = [
+			{ axisType: 'valAx', axPos: 'l', majorGridlines: true, min: 15, max: 60 },
+		];
+		const { vm, rects } = rectsOf(stackedChart({ axes }));
+		const { top, bottom } = plotEdges(vm);
+		// Q2's A segment (0..10) lies wholly below 15 and is dropped; the others
+		// are cut at 15, the bottom of the plot.
+		expect(rects).toHaveLength(3);
+		for (const box of boxes(rects)) {
+			expect(box.y).toBeGreaterThanOrEqual(top - 1e-6);
+			expect(box.y + box.h).toBeLessThanOrEqual(bottom + 1e-6);
+		}
+		expect(Math.max(...boxes(rects).map((box) => box.y + box.h))).toBeCloseTo(bottom, 6);
+	});
+
+	it('keeps reversed stacked columns inside the plot for c:orientation maxMin', () => {
+		const axes: PptxChartData['axes'] = [
+			{
+				axisType: 'valAx',
+				axPos: 'l',
+				majorGridlines: true,
+				min: 0,
+				max: 100,
+				orientation: 'maxMin',
+			},
+		];
+		const { vm, rects } = rectsOf(stackedChart({ axes }));
+		const { top, bottom } = plotEdges(vm);
+		for (const box of boxes(rects)) {
+			expect(box.y).toBeGreaterThanOrEqual(top - 1e-6);
+			expect(box.y + box.h).toBeLessThanOrEqual(bottom + 1e-6);
+		}
+		// Values grow downwards from the top edge.
+		expect(Math.min(...boxes(rects).map((box) => box.y))).toBeCloseTo(top, 6);
+	});
+
+	it('honours an explicit c:max on stacked lines and areas too', () => {
+		for (const chartType of ['line', 'area'] as const) {
+			const axes: PptxChartData['axes'] = [
+				{ axisType: 'valAx', axPos: 'l', majorGridlines: true, min: 0, max: 100 },
+			];
+			const vm = buildChartViewModel(chartElement(stackedChart({ chartType, axes })));
+			const values = vm.axisLabels.map((label) => Number(label.text)).filter(Number.isFinite);
+			expect(Math.max(...values)).toBe(100);
 		}
 	});
 });

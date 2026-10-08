@@ -81,6 +81,41 @@ export function stackedBarWidth(
 		: clusteredBarGeometry(slotWidth, 1, { barGapWidth: gapWidth }).singleBarWidth;
 }
 
+/**
+ * Clip one stacked segment, running from `base` to `base + value` on the value
+ * axis, to the axis range. An explicit `c:min` / `c:max` cuts the segment at
+ * the plot edge, as PowerPoint draws it, and a segment wholly outside the
+ * range is dropped (`undefined`). Every stacked bar path goes through here.
+ */
+export function clipStackedSegment(
+	base: number,
+	value: number,
+	range: ValueRange,
+): { low: number; high: number } | undefined {
+	const low = Math.max(Math.min(base, base + value), range.min),
+		high = Math.min(Math.max(base, base + value), range.max);
+	return high > low ? { low, high } : undefined;
+}
+
+/**
+ * Pixel extent of a clipped stacked segment between `baseCoord` (where it
+ * sits on the stack) and `tipCoord`. A segment thinner than `minSize` grows
+ * away from its base, so it never covers the segment it sits on.
+ */
+export function stackedSegmentExtent(
+	baseCoord: number,
+	tipCoord: number,
+	minSize: number,
+): { start: number; size: number } {
+	const size = Math.max(Math.abs(tipCoord - baseCoord), minSize);
+	return { start: tipCoord < baseCoord ? baseCoord - size : baseCoord, size };
+}
+
+/**
+ * One rect per non-zero segment of a stacked column chart: each series sits on
+ * the running total of the same-sign series below it, and the segment is
+ * clipped to the value axis by {@link clipStackedSegment}.
+ */
 export function computeStackedBarRects(
 	series: ReadonlyArray<PptxChartSeries>,
 	catCount: number,
@@ -90,52 +125,51 @@ export function computeStackedBarRects(
 	gapWidth?: number,
 ): BarRect[] {
 	const rects: BarRect[] = [],
-		barW = stackedBarWidth(layout.plotWidth / Math.max(catCount, 1), gapWidth, 0.7),
-		barOffset = (layout.plotWidth / Math.max(catCount, 1) - barW) / 2,
-		zeroY = valueToY(0, range, layout.plotTop, layout.plotBottom);
+		slot = layout.plotWidth / Math.max(catCount, 1),
+		barW = stackedBarWidth(slot, gapWidth, 0.7),
+		barOffset = (slot - barW) / 2;
 
 	for (let ci = 0; ci < catCount; ci++) {
-		let posTop = zeroY,
-			negBottom = zeroY;
+		let posTotal = 0,
+			negTotal = 0;
 
 		for (let si = 0; si < series.length; si++) {
 			const val = series[si].values[ci] ?? 0;
 			if (val === 0) {
 				continue;
 			}
-			const x = layout.plotLeft + (layout.plotWidth / Math.max(catCount, 1)) * ci + barOffset,
-				h = Math.max(
-					Math.abs(
-						valueToY(val, range, layout.plotTop, layout.plotBottom) -
-							valueToY(0, range, layout.plotTop, layout.plotBottom),
-					),
-					1,
-				);
+			const base = val > 0 ? posTotal : negTotal;
 			if (val > 0) {
-				const y = posTop - h;
-				rects.push({
-					x,
-					y,
-					w: barW,
-					h,
-					fill: seriesColor(series[si], si, colorPalette),
-					seriesIndex: si,
-					pointIndex: ci,
-				});
-				posTop = y;
+				posTotal += val;
 			} else {
-				const y = negBottom;
-				rects.push({
-					x,
-					y,
-					w: barW,
-					h,
-					fill: seriesColor(series[si], si, colorPalette),
-					seriesIndex: si,
-					pointIndex: ci,
-				});
-				negBottom = y + h;
+				negTotal += val;
 			}
+			const segment = clipStackedSegment(base, val, range);
+			if (!segment) {
+				continue;
+			}
+			const baseY = valueToY(
+					val > 0 ? segment.low : segment.high,
+					range,
+					layout.plotTop,
+					layout.plotBottom,
+				),
+				tipY = valueToY(
+					val > 0 ? segment.high : segment.low,
+					range,
+					layout.plotTop,
+					layout.plotBottom,
+				),
+				{ start, size } = stackedSegmentExtent(baseY, tipY, 1);
+			rects.push({
+				x: layout.plotLeft + slot * ci + barOffset,
+				y: start,
+				w: barW,
+				h: size,
+				fill: seriesColor(series[si], si, colorPalette),
+				seriesIndex: si,
+				pointIndex: ci,
+			});
 		}
 	}
 	return rects;
