@@ -4,13 +4,14 @@
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/79aed9f8-5d10-4038-9106-7d1927fa0575
  * Only color-bearing quick-style properties are represented here.
  */
+import { parseTheme, type DrawingColor } from '../drawingml/index';
 import type { VisioPackage } from './package';
 import type { Report } from './sheet';
 import {
-	colorChoice,
 	DRAWING_NS,
 	extension,
 	integer,
+	parsedColorChoice,
 	themeChild,
 	themeChildren,
 	THEME_NS,
@@ -20,8 +21,10 @@ export interface VisioTheme {
 	colorId: number | undefined;
 	effectId: number | undefined;
 	connectorId: number | undefined;
-	colors: Map<string, Element>;
-	variants: Map<string, Element>[];
+	/** Scheme slots (`dk1`, `lt1`, `accent1`-`accent6`) and the Visio `bkgnd` extension colour. */
+	colors: Map<string, DrawingColor>;
+	/** Visio variation colours `varColor1`-`varColor7`, keyed `1`-`7`. */
+	variants: Map<string, DrawingColor>[];
 	variationStyles: Element[][];
 	fills: Element[];
 	lines: Element[];
@@ -32,6 +35,16 @@ export interface VisioTheme {
 	connectorFonts: Element[];
 	connectorEffects: Element[];
 }
+const VISIO_SCHEME_SLOTS = [
+	'dk1',
+	'lt1',
+	'accent1',
+	'accent2',
+	'accent3',
+	'accent4',
+	'accent5',
+	'accent6',
+] as const;
 const componentId = (node: Element | undefined) =>
 	integer(themeChild(node, 'schemeID', THEME_NS)?.getAttribute('schemeEnum'));
 /** Read only bounded, internal DrawingML theme parts using the existing package limits. */
@@ -56,21 +69,14 @@ export async function loadVisioThemes(
 		}
 		const base = themeChild(root, 'themeElements');
 		const palette = themeChild(base, 'clrScheme');
-		const colors = new Map<string, Element>();
-		for (const name of [
-			'dk1',
-			'lt1',
-			'accent1',
-			'accent2',
-			'accent3',
-			'accent4',
-			'accent5',
-			'accent6',
-		]) {
-			const choice = colorChoice(themeChild(palette, name));
-			if (choice) colors.set(name, choice);
+		// The shared reader parses the scheme; Visio keeps only slots holding exactly one `a:` colour.
+		const scheme = parseTheme(root).colorScheme.colors;
+		const colors = new Map<string, DrawingColor>();
+		for (const name of VISIO_SCHEME_SLOTS) {
+			const color = scheme[name];
+			if (color && parsedColorChoice(themeChild(palette, name))) colors.set(name, color);
 		}
-		const background = colorChoice(extension(palette, 'bkgnd'));
+		const background = parsedColorChoice(extension(palette, 'bkgnd'));
 		if (background) colors.set('bkgnd', background);
 		const variants = themeChildren(
 			extension(palette, 'variationClrSchemeLst'),
@@ -79,9 +85,9 @@ export async function loadVisioThemes(
 		)
 			.slice(0, 4)
 			.map((variant) => {
-				const entries = new Map<string, Element>();
+				const entries = new Map<string, DrawingColor>();
 				for (let index = 1; index <= 7; index++) {
-					const choice = colorChoice(themeChild(variant, `varColor${index}`, THEME_NS));
+					const choice = parsedColorChoice(themeChild(variant, `varColor${index}`, THEME_NS));
 					if (choice) entries.set(String(index), choice);
 				}
 				return entries;

@@ -8,7 +8,14 @@
  */
 import type { Cells, Report, Sheet } from './sheet';
 import type { VisioTheme } from './theme';
-import { colorChoice, drawingColor, integer, themeChild, THEME_NS } from './theme-color';
+import {
+	colorChoice,
+	drawingColor,
+	integer,
+	themeChild,
+	THEME_NS,
+	type ThemeColorSource,
+} from './theme-color';
 
 export interface ThemeResources {
 	themes?: VisioTheme[];
@@ -133,7 +140,7 @@ export function themePaintContext(
 ):
 	| {
 			selected: Element;
-			colors: ReadonlyMap<string, Element>;
+			colors: ReadonlyMap<string, ThemeColorSource>;
 			base: string | undefined;
 	  }
 	| undefined {

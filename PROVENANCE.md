@@ -2125,3 +2125,21 @@ tests moved alongside). The UI module now delegates to `ooxml-core/geometry` and
 keeps only the pptx-typed adjustment helpers and `{ x, y }` adapters. The two
 `elbowWaypoints` implementations produced identical points for every tested
 segment count, flip and degenerate input, so no behaviour changed.
+
+## Visio theme on `drawingml` (wave 2)
+
+`src/core/visio/theme-color.ts` no longer carries its own DrawingML colour
+resolver: `drawingPaint`/`drawingColor` read the colour with `parseDrawingColor`
+and apply tint, shade and alpha with `resolveDrawingColor` (document order, linear
+light) from `src/core/drawingml/`. What stays in visio is a thin guard that keeps
+its stricter limits (only `srgbClr`, saved `sysClr` and `schemeClr`; `a:`
+namespace on the colour and its transforms; at most 32 transforms; `shade`, `tint`
+and `alpha` as integers up to 100000, `hueMod` ignored per MS-VSDX 2.3.4.2.22;
+scheme references at most 8 deep; lower-case `#rrggbb`). `src/core/visio/theme.ts`
+reads the `a:clrScheme` slots through `parseTheme`, keeping only slots that hold
+exactly one `a:` colour as before; the `vt:` extensions (`bkgnd`, variation colours
+and styles, effect and connector schemes, font styles) are still parsed in visio.
+`VisioTheme.colors` and `variants` now hold `DrawingColor` values instead of
+elements; the module exports are otherwise unchanged. Parse output of 15 local
+native VSDX files (including the two hash-pinned Apache POI corpus files) is
+byte-identical before and after.

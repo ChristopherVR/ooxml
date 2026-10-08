@@ -1,4 +1,4 @@
-import { linearToSrgb255, srgb255ToLinear } from '../color/index';
+import { parseDrawingColor, resolveDrawingColor, type DrawingColor } from '../drawingml/index';
 import { elements } from '../xml/index';
 
 export const DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -22,55 +22,82 @@ export function colorChoice(node: Element | undefined): Element | undefined {
 	const choices = (node ? elements(node) : []).filter((item) => item.namespaceURI === DRAWING_NS);
 	return choices.length === 1 ? choices[0] : undefined;
 }
-/** Bounded DrawingML color choices; unsupported transforms never silently disappear. */
+
+/** A saved DrawingML colour element, or one the shared `drawingml` reader already parsed. */
+export type ThemeColorSource = Element | DrawingColor;
+
+const isParsed = (source: ThemeColorSource): source is DrawingColor =>
+	typeof (source as Partial<DrawingColor>).kind === 'string';
+
+/** Visio's namespace guard over the shared colour reader: the colour and its transforms are `a:`. */
+function visioColor(source: ThemeColorSource | undefined): DrawingColor | undefined {
+	if (!source) return undefined;
+	if (isParsed(source)) return source;
+	if (source.namespaceURI !== DRAWING_NS) return undefined;
+	if (elements(source).some((transform) => transform.namespaceURI !== DRAWING_NS)) return undefined;
+	return parseDrawingColor(source);
+}
+/** The single `a:` colour of `node` (with only `a:` transforms), read by the shared reader. */
+export function parsedColorChoice(node: Element | undefined): DrawingColor | undefined {
+	return visioColor(colorChoice(node));
+}
+
+// MS-VSDX 2.3.4.2.22 declares hueMod unused in dynamic themes; the rest stay unresolved.
+const SUPPORTED_TRANSFORMS = new Set(['shade', 'tint', 'alpha']);
+
+/**
+ * Bounded DrawingML color choices; unsupported transforms never silently disappear. The colour is
+ * read and its tint, shade and alpha applied (linear light, document order) by `drawingml`; this
+ * guard keeps Visio's limits: srgb, saved system and scheme colours only, at most 32 transforms,
+ * shade/tint/alpha as integers up to 100000, and scheme references at most 8 deep.
+ */
 export function drawingPaint(
-	node: Element | undefined,
-	colors: ReadonlyMap<string, Element>,
+	node: ThemeColorSource | undefined,
+	colors: ReadonlyMap<string, ThemeColorSource>,
 	placeholder?: string,
 	depth = 0,
 ): { color: string; opacity: number } | undefined {
-	if (!node || depth > 8 || node.namespaceURI !== DRAWING_NS) return undefined;
+	if (depth > 8) return undefined;
+	const color = visioColor(node);
+	if (!color || color.transforms.length > 32) return undefined;
+	const transforms = color.transforms.filter((transform) => transform.name !== 'hueMod');
+	if (
+		transforms.some(
+			(transform) =>
+				!SUPPORTED_TRANSFORMS.has(transform.name) ||
+				(integer(transform.value) ?? 100_001) > 100_000,
+		)
+	)
+		return undefined;
 	let rgb: string | undefined;
-	let opacity = 1;
-	if (node.localName === 'srgbClr') rgb = node.getAttribute('val') ?? undefined;
-	else if (node.localName === 'sysClr') rgb = node.getAttribute('lastClr') ?? undefined;
-	else if (node.localName === 'schemeClr') {
-		const name = node.getAttribute('val') ?? '';
-		const inherited =
-			name === 'phClr' ? undefined : drawingPaint(colors.get(name), colors, placeholder, depth + 1);
-		rgb = name === 'phClr' ? placeholder : inherited?.color;
-		opacity = inherited?.opacity ?? 1;
+	let inherited: { color: string; opacity: number } | undefined;
+	if (color.kind === 'srgb') rgb = color.value;
+	else if (color.kind === 'system') rgb = color.fallback;
+	else if (color.kind === 'scheme') {
+		if (color.value === 'phClr') rgb = placeholder;
+		else {
+			inherited = drawingPaint(colors.get(color.value), colors, placeholder, depth + 1);
+			rgb = inherited?.color;
+		}
 	}
 	if (!rgb || !/^#?[\da-f]{6}$/i.test(rgb)) return undefined;
-	rgb = rgb.replace(/^#/, '');
-	let channels = [0, 2, 4].map((offset) =>
-		srgb255ToLinear(parseInt(rgb.slice(offset, offset + 2), 16)),
+	const resolved = resolveDrawingColor(
+		{ kind: 'srgb', value: rgb.replace(/^#/, ''), transforms },
+		undefined,
+		{ transformOrder: 'document' },
 	);
-	const transforms = elements(node);
-	if (transforms.length > 32) return undefined;
-	for (const transform of transforms) {
-		// MS-VSDX 2.3.4.2.22 declares hueMod unused in dynamic themes.
-		if (transform.namespaceURI === DRAWING_NS && transform.localName === 'hueMod') continue;
-		const value = integer(transform.getAttribute('val'));
-		if (transform.namespaceURI !== DRAWING_NS || value === undefined || value > 100_000)
-			return undefined;
-		const ratio = value / 100_000;
-		// ISO 29500 tint/shade mix with white/black in linear light.
-		if (transform.localName === 'shade') channels = channels.map((channel) => channel * ratio);
-		else if (transform.localName === 'tint')
-			channels = channels.map((channel) => channel * ratio + 1 - ratio);
-		else if (transform.localName === 'alpha') opacity = ratio;
-		else return undefined;
-	}
+	if (!resolved) return undefined;
 	return {
-		opacity,
-		color: `#${channels.map((channel) => Math.round(linearToSrgb255(channel)).toString(16).padStart(2, '0')).join('')}`,
+		opacity: transforms.some((transform) => transform.name === 'alpha')
+			? resolved.alpha
+			: (inherited?.opacity ?? 1),
+		color: resolved.hex.toLowerCase(),
 	};
 }
 /** Flat colors cannot represent partial alpha, so leave those unresolved. */
 export function drawingColor(
-	node: Element | undefined,
-	colors: ReadonlyMap<string, Element>,
+	node: ThemeColorSource | undefined,
+	colors: ReadonlyMap<string, ThemeColorSource>,
 	placeholder?: string,
 ): string | undefined {
 	const paint = drawingPaint(node, colors, placeholder);

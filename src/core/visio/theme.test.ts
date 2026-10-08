@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { parseVsdx } from './parser';
 import { parseXml } from '../xml/index';
-import { drawingColor } from './theme-color';
+import { drawingColor, drawingPaint } from './theme-color';
 import {
 	drawingNamespace,
 	generatedTheme,
@@ -184,5 +184,21 @@ describe('bounded DrawingML color choices', () => {
 			`<a:sysClr xmlns:a="${drawingNamespace}" val="windowText" lastClr="123456"/>`,
 		).documentElement;
 		expect(drawingColor(system, new Map())).toBe('#123456');
+	});
+	it('resolves scheme colours parsed by the shared drawingml reader', () => {
+		const scheme = parseXml(
+			`<a:schemeClr xmlns:a="${drawingNamespace}" val="accent1"><a:shade val="50000"/><a:hueMod val="90000"/></a:schemeClr>`,
+		).documentElement;
+		const accent = { kind: 'srgb' as const, value: '4472C4', transforms: [] };
+		expect(drawingColor(scheme, new Map([['accent1', accent]]))).toBe('#2f528f');
+		const translucent = {
+			kind: 'srgb' as const,
+			value: '4472C4',
+			transforms: [{ name: 'alpha', value: '40000' }],
+		};
+		expect(drawingPaint(scheme, new Map([['accent1', translucent]]))?.opacity).toBe(0.4);
+		expect(
+			drawingColor(scheme, new Map([['accent1', { ...accent, kind: 'preset' as const }]])),
+		).toBeUndefined();
 	});
 });
