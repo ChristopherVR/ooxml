@@ -16,6 +16,7 @@ import { VisioViewer as SvelteViewer } from 'visio-svelte-viewer';
 import { mountViewer } from 'visio-vanilla-viewer';
 import { verifyWorkspaceClipboard } from './workspace-consumer-clipboard.mjs';
 import { verifyWorkspaceEditing } from './workspace-consumer-editing.mjs';
+import { verifyWorkspaceReplacement } from './workspace-consumer-replacement.mjs';
 
 const check = (condition, message) => {
 	if (!condition) throw new Error(message);
@@ -192,6 +193,7 @@ export async function verifyWorkspaceBindings(bytes) {
 				changes,
 				nativeSelections,
 			});
+			await verifyWorkspaceReplacement(viewer, framework, changes);
 			results.push(framework);
 		} finally {
 			await binding?.release();

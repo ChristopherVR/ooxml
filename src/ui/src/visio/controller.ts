@@ -56,6 +56,20 @@ import {
 	type DocumentTextIndex,
 	type TextSearchState,
 } from 'ooxml-core/visio/ui';
+import {
+	ViewerTextReplacement,
+	replacementCancelled,
+	sameReplacementContext,
+	type ReplacementContext,
+	type ViewerTextReplaceToken,
+	type ViewerTextReplaceScope,
+	type ViewerTextReplacementInput,
+} from './replacement-token';
+import {
+	visioTextOccurrenceSelection,
+	type VisioTextOccurrence,
+	type VisioTextReplacePlan,
+} from 'ooxml-core/visio/ui';
 
 export interface ViewerState {
 	readonly document: VisioDocument | null;
@@ -75,6 +89,8 @@ export interface ViewerState {
 }
 interface SelectionHistory {
 	readonly pageId: string;
+	readonly beforePageId?: string;
+	readonly afterPageId?: string;
 	readonly before: readonly VisioShapeSelection[];
 	readonly after: readonly VisioShapeSelection[];
 	readonly intent: number;
@@ -82,6 +98,13 @@ interface SelectionHistory {
 interface PostEditSelection {
 	readonly pageId: string;
 	readonly shapeIds: readonly string[];
+	readonly navigate?: boolean;
+}
+interface ReplacementMutation {
+	readonly context: ReplacementContext;
+	readonly owner: object;
+	readonly next?: VisioTextOccurrence;
+	readonly complete: (context: ReplacementContext) => void;
 }
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
@@ -112,6 +135,18 @@ export class ViewerController {
 	#selectionIntent = 0;
 	#viewIntent = 0;
 	#creation = new ViewerCreationTokens(() => this.#creationContext());
+	#replacementNavigation = 0;
+	#replacementOperation:
+		| { owner: object; id: number; source: number; document: number }
+		| undefined;
+	#replacement = new ViewerTextReplacement({
+		context: () => this.#replacementContext(),
+		document: () => this.#state.document,
+		selection: () => this.#state.selectedShapes,
+		navigate: (occurrence, context) => this.#navigateReplacement(occurrence, context),
+		mutate: (edits, next, context, owner) => this.#applyReplacement(edits, next, context, owner),
+		cancel: (owner) => this.#cancelReplacement(owner),
+	});
 	#sourceFormat: VisioDocument['format'] | null = null;
 	#editId = 0;
 	#visible = documentVisibility(null);
@@ -465,6 +500,36 @@ export class ViewerController {
 	async applyEdits(edits: readonly VisioEdit[]): Promise<void> {
 		return this.#mutate('edit', snapshotEdits(edits));
 	}
+	captureTextReplaceToken(scope: ViewerTextReplaceScope): ViewerTextReplaceToken {
+		this.#assertAlive();
+		return this.#replacement.capture(scope);
+	}
+	isTextReplaceTokenCurrent(token: ViewerTextReplaceToken): boolean {
+		return this.#replacement.current(token);
+	}
+	/** Cancel only the pending application owned by this replacement token. */
+	cancelTextReplace(token: ViewerTextReplaceToken): void {
+		this.#replacement.cancel(token);
+	}
+	getTextReplaceOccurrences(token: ViewerTextReplaceToken, query: string) {
+		return this.#replacement.occurrences(token, query);
+	}
+	planTextReplacement(token: ViewerTextReplaceToken, input: ViewerTextReplacementInput) {
+		return this.#replacement.plan(token, input);
+	}
+	selectTextReplaceOccurrence(
+		token: ViewerTextReplaceToken,
+		occurrence: VisioTextOccurrence,
+		query: string,
+	): ViewerTextReplaceToken {
+		return this.#replacement.navigate(token, occurrence, query);
+	}
+	applyTextReplacePlan(
+		plan: VisioTextReplacePlan,
+		token: ViewerTextReplaceToken,
+	): Promise<ViewerTextReplaceToken> {
+		return this.#replacement.apply(plan, token);
+	}
 	/** Gesture batches may only edit the captured current-page selection. */
 	async applySelectionEdits(edits: readonly VisioEdit[]): Promise<void> {
 		this.#assertAlive();
@@ -714,6 +779,96 @@ export class ViewerController {
 			return undefined;
 		}
 	}
+	#replacementContext(allowBusy = false): ReplacementContext | undefined {
+		const context = this.#creationContext(allowBusy);
+		if (!context) return undefined;
+		return Object.freeze({
+			sourceGeneration: context.sourceGeneration,
+			documentGeneration: context.documentGeneration,
+			operationGeneration: context.operationGeneration,
+			selectionIntent: context.selectionIntent,
+			navigationIntent: this.#replacementNavigation,
+			pageId: context.pageId,
+			pageIndex: context.pageIndex,
+		});
+	}
+	#requireReplacement(context: ReplacementContext, allowBusy = false): ReplacementContext {
+		const current = this.#replacementContext(allowBusy);
+		if (!current || !sameReplacementContext(context, current)) throw replacementCancelled();
+		return current;
+	}
+	#navigateReplacement(
+		occurrence: VisioTextOccurrence,
+		context: ReplacementContext,
+	): ReplacementContext {
+		this.#requireReplacement(context);
+		const target = visioTextOccurrenceSelection(this.#state.document!, occurrence);
+		if (!target) throw new Error('The replacement occurrence target is no longer available.');
+		const selectedShapes = snapshotSelection(
+			this.#state.document,
+			target.pageIndex,
+			[target.selection],
+			this.#visible,
+		);
+		this.#requireReplacement(context);
+		const expected = Object.freeze({
+			...context,
+			pageId: target.selection.pageId!,
+			pageIndex: target.pageIndex,
+			navigationIntent: ++this.#replacementNavigation,
+		});
+		if (!this.#change({ pageIndex: target.pageIndex, selectedShapes }))
+			throw replacementCancelled();
+		this.#requireReplacement(expected);
+		this.#emit('shape-select', selectedShapes[0] ?? null);
+		this.#requireReplacement(expected);
+		if (target.pageIndex !== context.pageIndex) this.#emit('page-change', target.pageIndex);
+		return this.#requireReplacement(expected);
+	}
+	async #applyReplacement(
+		edits: readonly VisioEdit[],
+		next: VisioTextOccurrence | undefined,
+		context: ReplacementContext,
+		owner: object,
+	): Promise<ReplacementContext> {
+		this.#requireReplacement(context);
+		const commands = snapshotEdits(edits);
+		this.#requireReplacement(context);
+		let completed: ReplacementContext | undefined;
+		await this.#mutate(
+			'edit',
+			commands,
+			undefined,
+			next
+				? { pageId: next.pageId, shapeIds: Object.freeze([next.shapeId]), navigate: true }
+				: undefined,
+			true,
+			undefined,
+			{
+				context,
+				owner,
+				...(next ? { next } : {}),
+				complete: (accepted) => {
+					completed = accepted;
+				},
+			},
+		);
+		if (!completed) throw replacementCancelled();
+		return this.#requireReplacement(completed);
+	}
+	#cancelReplacement(owner: object): void {
+		const operation = this.#replacementOperation;
+		if (
+			!this.#destroyed &&
+			!this.#state.loading &&
+			this.#state.edit.busy &&
+			operation?.owner === owner &&
+			operation.id === this.#editId &&
+			operation.source === this.#sourceGeneration &&
+			operation.document === this.#documentGeneration
+		)
+			this.cancelEdit();
+	}
 	#creationCurrent(
 		context: CreationContext,
 		operation: number,
@@ -735,6 +890,7 @@ export class ViewerController {
 		postSelection?: PostEditSelection,
 		strictSelectionIntent = false,
 		creation?: CreationContext,
+		replacement?: ReplacementMutation,
 	): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
@@ -755,6 +911,15 @@ export class ViewerController {
 					? this.#selectionHistory.get(target)
 					: undefined;
 		const id = ++this.#editId;
+		// Set ownership before publishing busy: host subscribers may cancel and start another edit.
+		this.#replacementOperation = replacement
+			? {
+					owner: replacement.owner,
+					id,
+					source: this.#sourceGeneration,
+					document: this.#documentGeneration,
+				}
+			: undefined;
 		const loadId = this.#loadId;
 		const current = () =>
 			!this.#destroyed &&
@@ -788,8 +953,20 @@ export class ViewerController {
 			if (document.format !== 'vsdx')
 				throw new Error('A VSDX edit or history operation cannot change the source format.');
 			if (edited && !edited.changedParts.length) {
+				if (replacement)
+					this.#requireReplacement({ ...replacement.context, operationGeneration: id }, true);
 				this.#change({ edit: history.state });
 				if (creation && !this.#creationCurrent(creation, id)) throw creationCancelled();
+				if (replacement) {
+					const context = this.#requireReplacement({
+						...replacement.context,
+						operationGeneration: id,
+					});
+					// Revalidated owned navigation is allowed even when the source writer returns exact bytes.
+					replacement.complete(
+						replacement.next ? this.#navigateReplacement(replacement.next, context) : context,
+					);
+				}
 				return;
 			}
 			const visible = documentVisibility(document, this.#state.layerVisibilityOverrides);
@@ -805,16 +982,27 @@ export class ViewerController {
 			if (oldPageIndex !== this.#state.pageIndex)
 				throw new DOMException('The diagram page was superseded.', 'AbortError');
 			const beforeSelection = this.#state.selectedShapes;
-			const foundPageIndex = document.pages.findIndex((page) => page.id === currentPageId);
+			const restoreSelection =
+				restored &&
+				restored.intent === selectionIntent &&
+				selectionIntent === this.#selectionIntent &&
+				(kind === 'undo'
+					? (restored.afterPageId ?? restored.pageId)
+					: (restored.beforePageId ?? restored.pageId)) === currentPageId;
+			const requestedPageId = postSelection?.navigate
+				? postSelection.pageId
+				: restoreSelection
+					? kind === 'undo'
+						? (restored.beforePageId ?? restored.pageId)
+						: (restored.afterPageId ?? restored.pageId)
+					: currentPageId;
+			const foundPageIndex = document.pages.findIndex((page) => page.id === requestedPageId);
 			const pageIndex =
 				foundPageIndex >= 0
 					? foundPageIndex
 					: Math.min(oldPageIndex, Math.max(0, document.pages.length - 1));
 			const requestedSelection =
-				restored &&
-				restored.intent === selectionIntent &&
-				selectionIntent === this.#selectionIntent &&
-				restored.pageId === currentPageId
+				restored && restoreSelection
 					? kind === 'undo'
 						? restored.before
 						: restored.after
@@ -822,10 +1010,15 @@ export class ViewerController {
 			const usePostSelection =
 				postSelection &&
 				selectionIntent === this.#selectionIntent &&
-				postSelection.pageId === currentPageId &&
+				(postSelection.navigate || postSelection.pageId === currentPageId) &&
 				foundPageIndex >= 0;
 			const selection = usePostSelection
 				? postSelection.shapeIds.flatMap((id) => {
+						if (replacement?.next) {
+							const target = visioTextOccurrenceSelection(document, replacement.next);
+							if (!target) throw new Error('The next replacement target is no longer available.');
+							return target.selection;
+						}
 						const shape = document.pages[pageIndex]?.shapes.find((shape) => shape.id === id);
 						return shape ? [{ id: shape.id, name: shape.name, pageId: postSelection.pageId }] : [];
 					})
@@ -843,6 +1036,8 @@ export class ViewerController {
 			// No external callbacks occur between history acceptance and model acceptance.
 			assertCurrent();
 			if (creation && !this.#creationCurrent(creation, id)) throw creationCancelled();
+			if (replacement)
+				this.#requireReplacement({ ...replacement.context, operationGeneration: id }, true);
 			if (
 				strictSelectionIntent &&
 				(selectionIntent !== this.#selectionIntent || clipboardPageIndex !== this.#state.pageIndex)
@@ -851,12 +1046,17 @@ export class ViewerController {
 			if (edited) history.append(edited.bytes, edited.diagnostics);
 			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
 			else history.move(target!);
-			if ((edited || kind === 'remote') && foundPageIndex >= 0 && selectionChanged) {
+			if (
+				(edited || kind === 'remote') &&
+				foundPageIndex >= 0 &&
+				(selectionChanged || (replacement && pageIndex !== oldPageIndex))
+			) {
 				// Pruning and explicit post-edit selection form history edges; other edits keep selection.
 				// Weak keys follow the bounded source history; each edge retains at most 1M characters.
 				if (characters <= 1_000_000)
 					this.#selectionHistory.set(history.current, {
 						pageId: currentPageId!,
+						...(replacement ? { beforePageId: currentPageId!, afterPageId: requestedPageId! } : {}),
 						before: beforeSelection,
 						after: selectedShapes,
 						intent: this.#selectionIntent,
@@ -866,7 +1066,7 @@ export class ViewerController {
 			this.#searchIndex = searchIndex;
 			++this.#documentGeneration;
 			completionGeneration = this.#documentGeneration;
-			completionPageId = currentPageId;
+			completionPageId = requestedPageId;
 			if (
 				this.#change({
 					document,
@@ -879,7 +1079,13 @@ export class ViewerController {
 				current()
 			) {
 				if (usePostSelection) this.#emit('shape-select', selectedShapes[0] ?? null);
-				if (current() && pageIndex !== oldPageIndex) this.#emit('page-change', pageIndex);
+				if (
+					current() &&
+					pageIndex !== oldPageIndex &&
+					(!replacement ||
+						(this.#state.pageIndex === pageIndex && this.#selectionIntent === selectionIntent))
+				)
+					this.#emit('page-change', pageIndex);
 				if (current())
 					this.#emit('document-change', { document, dirty: history.state.dirty, kind });
 			}
@@ -908,6 +1114,24 @@ export class ViewerController {
 		}
 		if (creation && !this.#creationCurrent(creation, id, completionGeneration))
 			throw creationCancelled();
+		if (replacement) {
+			const context = this.#replacementContext();
+			if (
+				!context ||
+				!sameReplacementContext(
+					{
+						...replacement.context,
+						operationGeneration: id,
+						documentGeneration: completionGeneration,
+						pageId: completionPageId!,
+						pageIndex: context.pageIndex,
+					},
+					context,
+				)
+			)
+				throw replacementCancelled();
+			replacement.complete(context);
+		}
 	}
 	#assertAlive(): void {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');

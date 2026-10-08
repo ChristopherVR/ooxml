@@ -32,6 +32,7 @@ interface CommandHost {
 	togglePane(pane: 'shapes' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
 	focusSearch(): void;
+	focusReplace?(): void;
 	togglePanZoom(): void;
 	toggleSizePosition(): void;
 	/** Transient command feedback for the status bar; document text is never interpreted as markup. */
@@ -127,6 +128,7 @@ export class ViewerCommands {
 			togglePanZoom: host.togglePanZoom,
 			toggleSizePosition: host.toggleSizePosition,
 			focusSearch: host.focusSearch,
+			focusReplace: () => host.focusReplace?.(),
 		};
 	}
 	get tool(): CanvasTool {
@@ -359,6 +361,7 @@ export class ViewerCommands {
 		const control = event.ctrlKey || event.metaKey;
 		const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
 		if (control && key === 'f') return { type: 'search' };
+		if (control && !event.shiftKey && key === 'h') return { type: 'replace' };
 		if (control && event.shiftKey && key === 'w') return { type: 'zoom', mode: 'fit' };
 		if (control && (key === 'PageDown' || key === 'PageUp'))
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
@@ -454,6 +457,10 @@ export class ViewerCommands {
 		button('text-tool').setAttribute('pressed', String(this.#tool === 'text'));
 		for (const name of ['text-tool', 'text-box', 'blank-page'])
 			button(name).disabled = !editing || !page;
+		button('replace').disabled = !editing || !page;
+		button('replace').title = editing
+			? 'Replace literal, case-sensitive text occurrences (Ctrl+H).'
+			: 'Open a .vsdx file to replace text.';
 		for (const name of ['text-tool', 'text-box'])
 			button(name).title = editing
 				? 'Drag a fixed-size text box, or click a shape to edit plain text.'

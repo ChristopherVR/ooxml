@@ -6,6 +6,17 @@ export type FindBar = HTMLElement & {
 	value: string;
 	status: string;
 	statusTitle: string;
+	replaceMode: boolean;
+	replacement: string;
+	replacementMaxlength: number;
+	scope: string;
+	scopeOptions: { value: string; label: string; disabled?: boolean }[];
+	matchCase: boolean;
+	matchCaseDisabled: boolean;
+	replaceDisabled: boolean;
+	replaceAllDisabled: boolean;
+	error: string;
+	updateComplete: Promise<boolean>;
 	show(): void;
 	close(): void;
 };
@@ -38,12 +49,16 @@ export function wireFindBar(
 	const options = { signal: events.signal };
 	bar.addEventListener(
 		'office-find-input',
-		(event) => controller.setSearchQuery((event as CustomEvent<{ query: string }>).detail.query),
+		(event) => {
+			if (!bar.replaceMode)
+				controller.setSearchQuery((event as CustomEvent<{ query: string }>).detail.query);
+		},
 		options,
 	);
 	bar.addEventListener(
 		'office-find-step',
 		(event) => {
+			if (bar.replaceMode) return;
 			const { direction } = (event as CustomEvent<{ direction: 'next' | 'previous' }>).detail;
 			if (direction === 'next') controller.nextSearchResult();
 			else controller.previousSearchResult();
@@ -55,6 +70,7 @@ export function wireFindBar(
 }
 
 export function renderFindBar(bar: FindBar, state: ViewerState): void {
+	if (bar.replaceMode) return;
 	bar.value = state.search.query;
 	bar.toggleAttribute('disabled', !state.document?.pages.length);
 	bar.toggleAttribute('navigation-disabled', !state.search.results.length);

@@ -23,6 +23,7 @@ import {
 	composeVisioTransform,
 	VISIO_IDENTITY_TRANSFORM,
 	visioLineDashLengths,
+	visioSvgStrokeStyle,
 } from 'ooxml-core/visio/ui';
 import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
@@ -61,6 +62,7 @@ interface RenderContext {
 	renderable: WeakMap<VisioShape, boolean>;
 	visible: WeakMap<VisioShape, boolean> | undefined;
 	interactive: boolean;
+	static: boolean;
 }
 export function renderPage(
 	model: VisioDocument,
@@ -115,6 +117,7 @@ export function renderPage(
 		renderable: new WeakMap(),
 		visible,
 		interactive: !options.static && options.interactive !== false,
+		static: options.static === true,
 	};
 	try {
 		for (const layer of pages)
@@ -181,6 +184,7 @@ function drawOwn(
 	world: VisioMatrix,
 ): void {
 	const { warnings, defs, resources } = context;
+	const lineStyle = context.static ? visioSvgStrokeStyle(shape.style) : shape.style;
 	// A paint-free text box needs its text bounds as a pointer target, including gaps between glyphs.
 	if (
 		context.interactive &&
@@ -206,7 +210,7 @@ function drawOwn(
 		: 'none';
 	const stroke =
 		shape.geometry.some((geometry) => geometry.stroke) && shape.style.linePattern !== 0
-			? linePaint(shape.style, defs, resources, world, context.pageHeight, [
+			? linePaint(lineStyle, defs, resources, world, context.pageHeight, [
 					shape.width,
 					shape.height,
 				])
@@ -226,17 +230,17 @@ function drawOwn(
 		path.setAttribute('fill-opacity', String(shape.style.fillOpacity));
 		const stroked = geometry.stroke && shape.style.linePattern !== 0;
 		path.setAttribute('stroke', stroked ? stroke : 'none');
-		path.setAttribute('stroke-width', String(shape.style.lineWidth));
+		path.setAttribute('stroke-width', String(lineStyle.lineWidth));
 		path.setAttribute('stroke-opacity', String(shape.style.lineOpacity));
 		path.setAttribute('stroke-linejoin', 'round');
 		path.setAttribute('stroke-linecap', shape.style.lineCap ?? 'round');
 		if (stroked && shape.style.linePattern > 1) {
-			const dash = visioLineDashLengths(shape.style);
+			const dash = visioLineDashLengths(lineStyle);
 			if (dash) {
 				path.setAttribute('stroke-dasharray', dash.join(' '));
 			} else warnings.add('An unresolved line pattern is shown as a solid stroke.');
 		}
-		if (stroked) applyArrowheads(path, shape.style, defs, warnings);
+		if (stroked) applyArrowheads(path, lineStyle, defs, warnings);
 		group.append(path);
 	}
 	const raster = renderImage(shape, resources);

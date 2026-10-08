@@ -44,7 +44,7 @@ try {
 	])
 		assert(files.has(required), `the package is missing ${required}`);
 	assert(
-		![...files].some((file) => /\.test\.|__tests__|src\//.test(file)),
+		![...files].some((file) => /\.test\.|__tests__|__fixtures__|src\//.test(file)),
 		'tests or sources were packed',
 	);
 	assert(manifest.dependencies['ooxml-core'], 'the core dependency is missing');

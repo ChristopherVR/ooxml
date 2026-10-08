@@ -63,6 +63,11 @@ if (workspaceRuntime) {
 				encoding: 'utf8',
 			}),
 		);
+		if (area === 'ui')
+			assert.ok(
+				!pack.files.some((file) => /__fixtures__/.test(file.path)),
+				'UI fixtures are excluded from the tarball',
+			);
 		assert.ok(
 			pack.files.some((file) => file.path.startsWith('dist/visio/')),
 			`${manifest.name}: built Visio runtime`,
@@ -171,6 +176,9 @@ const paintStyle${index} = s${index}.document?.pages[0]?.shapes[0]?.style;
 const paintAlphas${index}: readonly (number | undefined)[] = [paintStyle${index}?.fillForegroundOpacity, paintStyle${index}?.fillBackgroundOpacity, paintStyle${index}?.lineColorOpacity]; void paintAlphas${index};
 const fillIndex${index}: number | undefined = paintStyle${index}?.fillPatternIndex; void fillIndex${index};
 const fillBackground${index}: string | undefined = paintStyle${index}?.fillBackgroundColor; void fillBackground${index};
+const replaceToken${index} = h${index}.controller.captureTextReplaceToken('all-pages');
+const replacePlan${index} = h${index}.controller.planTextReplacement(replaceToken${index}, { query: 'a', replacement: '$&', mode: 'all' });
+const replacing${index} = h${index}.controller.applyTextReplacePlan(replacePlan${index}, replaceToken${index}); void replacing${index};
 // @ts-expect-error Creating a text box requires logical text.
 const missingText${index}: p${index}.VisioEdit = { type: 'create-text-box', pageId: '0', shapeId: '3', x: 2, y: 2, width: 2, height: 1 };
 void missingText${index};
@@ -252,6 +260,11 @@ if (workspaceRuntime)
 	writeFileSync(
 		resolve(consumer, 'workspace-consumer-editing.mjs'),
 		readFileSync(resolve(root, 'scripts/workspace-consumer-editing.mjs')),
+	);
+if (workspaceRuntime)
+	writeFileSync(
+		resolve(consumer, 'workspace-consumer-replacement.mjs'),
+		readFileSync(resolve(root, 'scripts/workspace-consumer-replacement.mjs')),
 	);
 if (workspaceRuntime)
 	writeFileSync(

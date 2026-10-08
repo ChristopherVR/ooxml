@@ -14,6 +14,7 @@ import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar } from './status-bar';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
+import { ViewerReplace } from './viewer-replace';
 import { fitZoom } from './viewer-fit';
 import { createShapesStrip, createShapesWindow } from './shapes-window';
 import { createBackstage, type BackstagePage } from './backstage';
@@ -71,6 +72,7 @@ export class VisioViewerElement extends BaseElement {
 	#fileName = '';
 	#loadToken = 0;
 	#findBar: FindBar;
+	#replace: ViewerReplace;
 	#status: HTMLSpanElement;
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
@@ -132,6 +134,10 @@ export class VisioViewerElement extends BaseElement {
 		this.#sizePosition = new ViewerSizePosition(this.#root, this.controller, (open) =>
 			this.#root.querySelector('[command="size-position"]')?.setAttribute('checked', String(open)),
 		);
+		this.#replace = new ViewerReplace(this.#findBar, this.controller, (message) => {
+			this.#announcement = message;
+			this.#status.textContent = message;
+		});
 		this.#commands = new ViewerCommands({
 			root: this.#root,
 			viewport: this.#viewport,
@@ -150,7 +156,11 @@ export class VisioViewerElement extends BaseElement {
 			toggleSizePosition: () => this.#sizePosition.toggle(),
 			focusSearch: () => {
 				this.#chrome.closeCompactTools();
-				this.#findBar.show();
+				this.#replace.showFind();
+			},
+			focusReplace: () => {
+				this.#chrome.closeCompactTools();
+				this.#replace.showReplace();
 			},
 			announce: (message) => {
 				this.#announcement = message;
@@ -448,6 +458,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeFind = wireFindBar(this.#findBar, this.controller, () =>
 			this.#viewport.focus({ preventScroll: true }),
 		);
+		const disposeReplace = this.#replace.wire();
 		const disposeEdit = this.#edit.wire();
 		const disposeLayers = wireLayerControls(this.#layers, this.controller);
 		const disposeInputs = wireViewerInputs(
@@ -476,6 +487,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeRulers();
 			disposeStencil();
 			disposeFind();
+			disposeReplace();
 			disposeInputs();
 			disposeLayers();
 			disposeEdit();
@@ -520,6 +532,7 @@ export class VisioViewerElement extends BaseElement {
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderFindBar(this.#findBar, state);
+		this.#replace.render(state);
 		this.#edit.render(state);
 		if (changed) renderLayerControls(this.#layers, state);
 		else

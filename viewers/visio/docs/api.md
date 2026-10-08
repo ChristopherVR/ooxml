@@ -184,6 +184,38 @@ repeated whole-model validation. Callers may lower limits. Separate SVGs must
 remain isolated because their internal resource IDs can repeat. This is
 preparation for a future print workflow, not native Visio printing support.
 
+## Scoped Find and Replace
+
+Home > Find > Replace and Ctrl+H open the shared replacement controls. Find Next,
+Previous, Replace and Replace All use full, literal, case-sensitive occurrences.
+Scopes are Selection, Current page and All pages. Selection includes selected
+group subtrees in ordered-selection/source order, with overlapping targets
+deduplicated. Page scopes use saved source order, including hidden source text.
+Navigation wraps and selects a visible target when possible. Match case is
+checked and currently fixed; whole-word, case folding and special search codes
+are not implemented. These scope/traversal rules are bounded application policy,
+not a claim of native Find dialog equivalence.
+
+Every native binding exposes the same `controller`: hosts can use
+`captureTextReplaceToken(scope)`, `getTextReplaceOccurrences(token, query)`,
+`selectTextReplaceOccurrence(token, occurrence, query)`,
+`planTextReplacement(token, { query, replacement, mode, current? })` and
+`applyTextReplacePlan(plan, token)`. Navigation and application return a fresh
+opaque token. Retain that token to keep the original selected scope while moving
+between matches. Manual selection/page changes, source replacement or another
+operation invalidate prior tokens. `cancelTextReplace(token)` cancels only that
+token's active application, leaving newer unrelated edits running. Plans and tokens belong to their controller
+and cannot be forged or reused across instances.
+
+Replacement uses one atomic source edit and one undo edge, including cross-page
+result navigation. Native `document-change`, `selection-change` and `shape-select`
+events remain available through the framework callbacks. Replace All preserves
+selection; current replacement advances to the next occurrence. A same-text
+replacement keeps exact source bytes and adds no history while still navigating.
+Unsupported matched rich, field-bearing, master-linked, protected or dependent
+text refuses the entire batch. The draft displays the error and remains editable.
+Closing the controls or changing intent cancels its pending operation.
+
 ## Experimental local plain-text editing
 
 After `load(bytesOrBlob)`, select a local shape and use the shared text controls,

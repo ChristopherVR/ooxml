@@ -25,6 +25,7 @@ export interface RibbonTargets {
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
 	fit(mode: 'page' | 'width'): void;
 	focusSearch(): void;
+	focusReplace(): void;
 }
 
 /** Routes a ribbon, status-bar or shortcut action to the controller that owns it. */
@@ -83,6 +84,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.reveal(action.panel, action.focusText ?? false);
 		case 'search':
 			return targets.focusSearch();
+		case 'replace':
+			return targets.focusReplace();
 		case 'page':
 			return controller.setPage(controller.state.pageIndex + action.step);
 		case 'zoomTo':

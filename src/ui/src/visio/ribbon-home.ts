@@ -266,7 +266,12 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 						action: { type: 'search' },
 						keys: ['Control+F', 'Ctrl+F'],
 					},
-					{ id: 'replace', label: 'Replace...', unsupported: TEXT },
+					{
+						id: 'replace',
+						label: 'Replace...',
+						action: { type: 'replace' },
+						keys: ['Control+H', 'Ctrl+H'],
+					},
 				],
 			}),
 			menu(doc, {

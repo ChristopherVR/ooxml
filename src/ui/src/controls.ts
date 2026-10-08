@@ -108,7 +108,12 @@ export type {
 	OfficeBackstageItem,
 	OfficeBackstageSelectEvent,
 } from './chrome/backstage';
-export type { OfficeFindInputEvent, OfficeFindStepEvent } from './chrome/find-bar';
+export type {
+	OfficeFindInputEvent,
+	OfficeFindStepEvent,
+	OfficeFindOptionsEvent,
+	OfficeFindReplaceEvent,
+} from './chrome/find-bar';
 export type { OfficePrintPreviewPageEvent } from './chrome/print-preview';
 export {
 	commentInitials,

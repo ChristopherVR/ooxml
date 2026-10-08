@@ -2,6 +2,52 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Scoped replacement and zero-weight SVG output, 2026-10-09
+
+`record-visio-text-replace.ps1` captures 18 native Characters-range replacements
+at scales 0.5, 1 and 2. The optional `VISIO_NATIVE_TEXT_REPLACE_DIR` oracle checks
+actual core output against native text, geometry, transforms and styles, and
+retains byte-identical untouched package parts. All 18 core outputs reopened in
+Visio 16 with the expected text. Cases include UTF-16 offsets, literal dollar
+replacement, empty replacement, current occurrence and multiple occurrences.
+Native Find dialog traversal, selected-group recursion and case folding remain
+unmeasured. The UI therefore makes its source-order scope and case-sensitive
+policy explicit. Matched unsupported source text is refused atomically.
+
+`record-visio-svg-zero-stroke.ps1` captures 12 native vector cases: round, butt and
+square dots plus filled arrow 4, each at 0, 0.001 and 0.75 points. Core and shared
+static SVG tests pass against these actual drawings, checking stroke widths,
+dash lengths and marker setbacks. Exactly zero saved weight uses 0.75 points in
+SVG output; smaller nonzero weights stay literal, and saved source values remain
+unchanged. Select `VISIO_NATIVE_SVG_ZERO_STROKE_DIR` for both optional tests. Native
+raster/device hairlines and live/print equivalence remain open.
+
+The phase 9 core suite passed 2,858 tests with 170 optional cases skipped, including
+both native oracles above. Strict core and production Visio builds passed. The
+targeted SVG, arrow and export UI checks passed 88 tests with one optional case
+skipped; the separate native shared renderer check also passed. The full shared
+Visio UI suite passed 990 tests with eight optional cases skipped. Shared Find
+controls and replacement routing passed 53 focused checks. Strict UI/viewer
+types, 114 native-binding DOM tests, five SSR tests, production workers, all six
+demo builds and 48 documentation checks passed. The full production browser run
+passed 146 active tests with 715 optional native-capture cases skipped: 861 cases
+in 7.9 minutes, including the six replacement workflows.
+
+The clean nine-tarball consumer verifies replacement plans through all six
+native handles, native and framework document events, literal dollars and UTF-16
+text, cross-page Replace All, exact undo/redo and stale-intent refusal. Packaging
+also excludes test-fixture declarations and guards against their return.
+Final review reproduced a host callback cancelling a replacement, starting a
+different edit on unchanged source, then closing Replace. Private per-application
+ownership now prevents the close from cancelling the newer edit. The new
+regression and 41 focused controller/adapter checks passed, with strict UI types.
+The shipped custom-element manifest includes the replacement properties/events;
+both manifest checks passed. After the ownership fix, production UI, all seven
+viewer packages and six demo builds passed. All six replacement browser workflows
+passed again (31.5 seconds). The final clean nine-tarball consumer (`9emHtf`)
+passed installation, types, workers and browser checks through all six native
+framework mounts, including the replacement workflows above.
+
 ## Paint formatting and native line patterns, 2026-10-09
 
 `record-visio-paint-formatting.ps1` records 54 native paint-edit cases across
@@ -44,7 +90,8 @@ A separate zero-width audit found native SVG uses a 0.75-point fallback while
 PNG exports retain device hairlines and smaller arrows at 96/144/300 DPI. Owned
 hidden-window zoom changes from 25% to 400% did not change these exports. Raster
 settings were restored and reread after the probe. Raw zero width stays in the
-model; matching these distinct native rendering policies remains open.
+model. The SVG-only policy is implemented and measured in the later section
+above; native raster and live device hairline parity remain open.
 
 ## Fixed-size text creation and terminal paragraph markers, 2026-10-09
 

@@ -1,5 +1,28 @@
 # Visio capability ledger
 
+## Scoped replacement and zero-weight SVG output, 2026-10-09
+
+The shared Find/Replace controls support literal case-sensitive occurrences,
+selection/current-page/all-page scopes, current replacement and atomic Replace
+All. Scope tokens survive owned result navigation while rejecting stale source
+or manual intent. All six native bindings expose the same controller operations
+and reactive document/selection callbacks. Unsupported matched text refuses the
+entire source batch. Core replacement output matches 18 native Characters-range
+cases and reopens in Visio 16; native dialog traversal, rich-text replacement,
+case folding and whole-word matching remain open. Shared UI checks and the full
+861-case browser run passed (146 active, 715 optional native captures skipped).
+Installed native handles exercise the same replacement plans and reactive hooks.
+An additional reproduced cancellation-ownership race is fixed and covered by
+41 focused controller/adapter checks. Production builds, all six replacement
+browser workflows and the final nine-tarball installed consumer passed again
+after this fix.
+
+Static SVG now applies the measured zero-weight policy without changing raw
+source width: native zero weight exports at 0.75 points, while nonzero thin lines
+stay literal. Twelve native cases pass through core and the shared DOM exporter,
+including dotted cap variants and filled-arrow setbacks. This does not establish
+native live, raster or print hairline parity.
+
 ## Paint patterns, transparency and native dashes, 2026-10-09
 
 The shared Line menu now exposes No Line and built-in patterns. Fill & Line

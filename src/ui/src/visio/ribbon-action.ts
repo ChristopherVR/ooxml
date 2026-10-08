@@ -39,6 +39,7 @@ export type VisioRibbonAction =
 	| { type: 'zoom'; mode: 'fit' | 'width' | 'actual' }
 	| { type: 'zoomTo'; percent: number }
 	| { type: 'search' }
+	| { type: 'replace' }
 	| { type: 'page'; step: 1 | -1 };
 
 /** Event name shared by every ribbon control; detail is the typed action. */

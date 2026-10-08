@@ -1160,7 +1160,7 @@
 					"name": "OfficeUiFindBar",
 					"tagName": "office-ui-find-bar",
 					"customElement": true,
-					"description": "`<office-ui-find-bar>`: Office's on-demand Find bar under the ribbon. Shown while `open`; `show()` opens it and selects the query. Enter steps to the next result, Shift+Enter to the previous; Escape clears a query, or closes the bar when it is already empty. Attributes: `open`, `label`, `input-label`, `placeholder`, `maxlength`, `disabled`, `navigation-disabled`, `previous-label`, `next-label`, `close-label`. Properties: `value`, `status`, `statusTitle`. Events: `office-find-input` `{ query }`, `office-find-step` `{ direction }`, `office-find-close`.",
+					"description": "`<office-ui-find-bar>`: Office's on-demand Find bar under the ribbon. Shown while `open`; `show()` opens it and selects the query. Enter steps to the next result, Shift+Enter to the previous; Escape clears a query, or closes the bar when it is already empty. Attributes: `open`, `label`, `input-label`, `placeholder`, `maxlength`, `disabled`, `navigation-disabled`, `previous-label`, `next-label`, `close-label`. Properties: `value`, `status`, `statusTitle`. Events: `office-find-input` `{ query }`, `office-find-step` `{ direction }`, `office-find-close`. Opt-in `replace-mode` adds a multiline `replacement`, `scope`/`scopeOptions`, `matchCase`, `match-case-disabled`, `replace-disabled`, `replace-all-disabled`, `replacement-maxlength` and inert `error` text. `office-find-options` reports replacement/scope/matchCase; `office-find-replace` requests current/all. The host owns matching and edit transactions.",
 					"attributes": [
 						{
 							"name": "close-label"
@@ -1173,6 +1173,12 @@
 						},
 						{
 							"name": "label"
+						},
+						{
+							"name": "match-case"
+						},
+						{
+							"name": "match-case-disabled"
 						},
 						{
 							"name": "maxlength"
@@ -1191,6 +1197,18 @@
 						},
 						{
 							"name": "previous-label"
+						},
+						{
+							"name": "replace-all-disabled"
+						},
+						{
+							"name": "replace-disabled"
+						},
+						{
+							"name": "replace-mode"
+						},
+						{
+							"name": "replacement-maxlength"
 						}
 					],
 					"members": [
@@ -1211,6 +1229,10 @@
 						},
 						{
 							"kind": "field",
+							"name": "error"
+						},
+						{
+							"kind": "field",
 							"name": "inputLabel",
 							"type": {
 								"text": "string"
@@ -1223,6 +1245,22 @@
 							"type": {
 								"text": "string"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "matchCase",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "match-case"
+						},
+						{
+							"kind": "field",
+							"name": "matchCaseDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "match-case-disabled"
 						},
 						{
 							"kind": "field",
@@ -1271,6 +1309,50 @@
 						},
 						{
 							"kind": "field",
+							"name": "replaceAllDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "replace-all-disabled"
+						},
+						{
+							"kind": "field",
+							"name": "replaceDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "replace-disabled"
+						},
+						{
+							"kind": "field",
+							"name": "replacement"
+						},
+						{
+							"kind": "field",
+							"name": "replacementMaxlength",
+							"type": {
+								"text": "number"
+							},
+							"attribute": "replacement-maxlength"
+						},
+						{
+							"kind": "field",
+							"name": "replaceMode",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "replace-mode"
+						},
+						{
+							"kind": "field",
+							"name": "scope"
+						},
+						{
+							"kind": "field",
+							"name": "scopeOptions"
+						},
+						{
+							"kind": "field",
 							"name": "status"
 						},
 						{
@@ -1288,6 +1370,12 @@
 						},
 						{
 							"name": "office-find-input"
+						},
+						{
+							"name": "office-find-options"
+						},
+						{
+							"name": "office-find-replace"
 						},
 						{
 							"name": "office-find-step"

@@ -12,6 +12,42 @@
 :host(:not([open])) {
 	display: none;
 }
+.find-content {
+	flex: 1;
+	min-width: 0;
+}
+.replace-fields {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--office-space-2);
+	margin-top: var(--office-space-2);
+}
+.replace-fields label {
+	flex: 0 1 auto;
+}
+.replace-fields label:first-child {
+	flex: 1;
+}
+.replace-fields textarea {
+	min-width: 120px;
+	width: 100%;
+	box-sizing: border-box;
+	min-height: var(--office-input-height);
+	padding: var(--office-space-1);
+	font: inherit;
+	color: inherit;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-background);
+}
+.replace-fields office-ui-select {
+	min-width: 150px;
+}
+.find-error {
+	color: var(--office-error, #b00020);
+	margin-bottom: 0;
+}
 [role='search'] {
 	display: flex;
 	flex: 1;
