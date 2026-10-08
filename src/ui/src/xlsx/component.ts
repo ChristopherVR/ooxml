@@ -14,6 +14,7 @@ import {
 import { buildShell, type Shell } from './editor-shell';
 import { XlsxEditorApi } from './element-api';
 import type { XlsxEditorEventMap } from './events';
+import type { XlsxCollaborationOptions } from './collaboration-types';
 import type { EditorLocale, EditorLocaleInput } from 'ooxml-core/xlsx/ui';
 import {
 	applyThemeColors,
@@ -74,6 +75,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		if (this.shell) return;
 		this.shell = buildShell(this.core);
 		this.chrome = this.shell.chrome;
+		this.openShare = () => this.shell?.backstage.open('share');
 		this.core.requestRender();
 	}
 
@@ -179,6 +181,18 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	/** Unsaved changes since the last load, save or `markClean()`. */
 	get dirty(): boolean {
 		return this.core.dirty.dirty;
+	}
+
+	/**
+	 * Shares the open workbook in a room while set: a workbook opened later joins the same room
+	 * (the room's content wins when it already has a workbook); `null` leaves it. A window joining
+	 * an existing room still needs a workbook open (`newWorkbook()` is enough).
+	 */
+	get collaboration(): XlsxCollaborationOptions | null {
+		return this.core.collab.wanted ?? null;
+	}
+	set collaboration(value: XlsxCollaborationOptions | null | undefined) {
+		this.core.collab.want(value ?? undefined);
 	}
 
 	get activeSheet(): number {

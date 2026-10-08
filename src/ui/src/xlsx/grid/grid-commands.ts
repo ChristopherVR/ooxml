@@ -10,6 +10,7 @@ import {
 import type { GridClipboard } from '../clipboard';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext, Selection } from 'ooxml-core/xlsx/ui';
+import { historyOf } from 'ooxml-core/xlsx/ui';
 
 export interface CommandHost {
 	clipboard: GridClipboard;
@@ -131,10 +132,10 @@ export function gridCommands(host: CommandHost): Command[] {
 			icon: 'undo',
 			shortcut: 'Ctrl+Z',
 			editing: true,
-			enabled: (ctx) => Boolean(ctx.session()?.canUndo()) || host.isEditing(),
+			enabled: (ctx) => Boolean(historyOf(ctx)?.canUndo()) || host.isEditing(),
 			run: (ctx) => {
 				if (host.isEditing()) return host.cancelEdit();
-				ctx.session()?.undo();
+				historyOf(ctx)?.undo();
 			},
 		},
 		{
@@ -143,8 +144,8 @@ export function gridCommands(host: CommandHost): Command[] {
 			icon: 'redo',
 			shortcut: 'Ctrl+Y',
 			editing: true,
-			enabled: (ctx) => Boolean(ctx.session()?.canRedo()),
-			run: (ctx) => void ctx.session()?.redo(),
+			enabled: (ctx) => Boolean(historyOf(ctx)?.canRedo()),
+			run: (ctx) => void historyOf(ctx)?.redo(),
 		},
 		{
 			id: 'edit.select-all',

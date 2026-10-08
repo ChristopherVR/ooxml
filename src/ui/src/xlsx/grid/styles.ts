@@ -43,6 +43,12 @@ export const GRID_CSS = `
 @media (prefers-reduced-motion:reduce){.xg-ants{animation:none}}
 .xg-fill-preview{position:absolute;box-sizing:border-box;border:1px dashed #666}
 .xg-refbox{position:absolute;box-sizing:border-box;border:2px solid}
+.xg-remote-layer{position:absolute;left:0;top:0;pointer-events:none;z-index:3}
+.xg-remote{position:absolute;box-sizing:border-box;border:2px solid}
+.xg-remote[hidden]{display:none}
+.xg-remote-tag{position:absolute;left:-2px;bottom:100%;max-width:160px;padding:0 4px;height:16px;line-height:16px;
+	font:600 11px/16px var(--xve-font,system-ui,sans-serif);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:2px 2px 2px 0}
+.xg-remote[data-tag="inside"] .xg-remote-tag{bottom:auto;top:0;left:0;border-radius:0 0 2px 0}
 .xg-hbox{background:var(--xve-header-bg,#f3f3f3);z-index:4}
 .xg-hdr-plane{position:absolute;left:0;top:0;will-change:transform}
 .xg-hd{position:absolute;box-sizing:border-box;display:flex;align-items:center;justify-content:center;

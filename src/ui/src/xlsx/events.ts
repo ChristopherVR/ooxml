@@ -1,4 +1,5 @@
 import type { Workbook } from 'ooxml-core/xlsx';
+import type { XlsxCollaborationState } from './collaboration-types';
 
 export type FileCommand = 'new' | 'open' | 'save' | 'saveAs' | 'export' | 'exportCsv' | 'print';
 
@@ -36,6 +37,8 @@ export interface XlsxEditorEventMap {
 	'sheet-change': { index: number; name: string };
 	/** Unsaved-changes state flipped: true after an edit, false after save, load or `markClean()`. */
 	'dirty-change': { dirty: boolean };
+	/** Sharing started or stopped, the connection changed, or someone joined, left or synced. */
+	'collaboration-change': XlsxCollaborationState;
 }
 export type XlsxEditorEventName = keyof XlsxEditorEventMap;
 export type XlsxEditorEventDetail<K extends XlsxEditorEventName> = XlsxEditorEventMap[K];
@@ -52,6 +55,7 @@ export const XLSX_EDITOR_EVENTS = [
 	'selection-change',
 	'sheet-change',
 	'dirty-change',
+	'collaboration-change',
 ] as const satisfies readonly XlsxEditorEventName[];
 
 /** Events a host can cancel with `preventDefault()`. */

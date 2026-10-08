@@ -9,8 +9,10 @@ import type { BackstageHost, PageContext } from './parts';
 import { renderInfo } from './pages-info';
 import { renderExport, renderNew, renderOpen, renderPrint, renderSaveAs } from './pages-file';
 import { renderCustomize, renderOptions } from './pages-options';
+import { renderShare } from './pages-share';
 
 export type { BackstageHost, EditorOptions, CalculationMode, IterationSettings } from './parts';
+export { participants, type ShareHost } from './pages-share';
 export { compatibilityNotes, formatNotes } from './pages-info';
 export { createTemplateWorkbook, TEMPLATES, type TemplateId } from 'ooxml-core/xlsx/ui';
 
@@ -20,6 +22,7 @@ export type BackstagePage =
 	| 'open'
 	| 'saveAs'
 	| 'print'
+	| 'share'
 	| 'export'
 	| 'options'
 	| 'customize';
@@ -31,6 +34,8 @@ export interface Backstage {
 	readonly isOpen: boolean;
 	/** Re-renders the open page (after a locale change). */
 	relocalize(): void;
+	/** Re-renders `page` when it is the one open (its state changed). */
+	refresh(page: BackstagePage): void;
 }
 
 type BackstageElement = HTMLElement & {
@@ -47,6 +52,7 @@ const PAGES: Array<[BackstagePage, string]> = [
 	['open', 'Open'],
 	['saveAs', 'Save As'],
 	['print', 'Print'],
+	['share', 'Share'],
 	['export', 'Export'],
 	['options', 'Options'],
 	['customize', 'Customize Ribbon'],
@@ -57,6 +63,7 @@ const RENDERERS: Record<BackstagePage, (page: PageContext) => void> = {
 	open: renderOpen,
 	saveAs: renderSaveAs,
 	print: renderPrint,
+	share: renderShare,
 	export: renderExport,
 	options: renderOptions,
 	customize: renderCustomize,
@@ -122,6 +129,7 @@ export function createBackstage(host: BackstageHost): Backstage {
 			item('save', 'Save'),
 			page('saveAs'),
 			page('print'),
+			page('share'),
 			page('export'),
 			page('options', 'footer'),
 			page('customize', 'footer'),
@@ -142,5 +150,8 @@ export function createBackstage(host: BackstageHost): Backstage {
 			return element.open;
 		},
 		relocalize,
+		refresh(page) {
+			if (element.open && current === page) show(page);
+		},
 	};
 }

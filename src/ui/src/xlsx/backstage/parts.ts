@@ -5,6 +5,7 @@ import type { FileCommand } from '../events';
 import { ribbonIcon } from '../ribbon/icons';
 import type { SaveState } from '../title-bar';
 import type { TemplateId } from 'ooxml-core/xlsx/ui';
+import type { ShareHost } from './pages-share';
 
 export type CalculationMode = 'automatic' | 'manual';
 /** Iterative calculation: maximum iterations and maximum change; undefined when off. */
@@ -34,6 +35,8 @@ export interface BackstageHost {
 	removePassword?(): void;
 	hiddenActions(): readonly string[];
 	setHiddenActions(ids: string[]): void;
+	/** File > Share; without it the page only shows its title. */
+	share?: ShareHost;
 }
 
 export interface PageContext {

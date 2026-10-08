@@ -176,6 +176,7 @@ describe('File backstage', () => {
 			'save',
 			'saveAs',
 			'print',
+			'share',
 			'export',
 			'options',
 			'customize',

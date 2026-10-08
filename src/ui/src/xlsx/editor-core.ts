@@ -32,6 +32,7 @@ import {
 	SheetSelections,
 } from 'ooxml-core/xlsx/ui';
 import type { CalculationMode } from './backstage';
+import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
 
 /** What the shell exposes back to the core (filled in when the element connects). */
@@ -63,6 +64,8 @@ export class EditorCore {
 	readonly dialogs: DialogRegistry;
 	readonly dirty: DirtyState;
 	readonly ctx: EditorContext;
+	/** Co-editing over `ooxml-core/collab`; undo and redo go through it while shared. */
+	readonly collab: XlsxCollaboration;
 	private gridController: GridController | undefined;
 	private readonly modelListeners = new Set<(change: unknown) => void>();
 	private stopSession: (() => void) | undefined;
@@ -111,6 +114,7 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
+		this.collab = collaborationFor(this);
 	}
 
 	private createContext(): EditorContext {
@@ -153,6 +157,9 @@ export class EditorCore {
 			},
 			authorName: () => core.authorName,
 			locale: () => core.locale,
+			history: () => core.collab.history() ?? core.session,
+			remoteSelections: () => core.collab.remoteSelections(),
+			onRemoteSelectionsChange: (listener) => core.collab.onRemoteChange(listener),
 		};
 	}
 
@@ -184,6 +191,10 @@ export class EditorCore {
 
 	/** Replaces the workbook (load, new, template, property), with a fresh edit session. */
 	setWorkbook(workbook: Workbook | undefined): void {
+		// The room is bound to the old edit session: leave it, and rejoin below only when the host
+		// asked for sharing declaratively (the `collaboration` property).
+		if (this.collab.suspend() && !this.collab.wanted)
+			this.shell?.toast(this.ctx.t('Sharing stopped because another workbook was opened.'));
 		this.savePassword = undefined;
 		this.stopSession?.();
 		this.stopSession = undefined;
@@ -209,6 +220,7 @@ export class EditorCore {
 		this.selection.set(initialSelection(this.activeSheet, workbook));
 		this.dirty.set(false);
 		this.notifyModel({ kind: 'load' });
+		this.collab.resume();
 	}
 
 	private createSession(workbook: Workbook): EditSession | undefined {

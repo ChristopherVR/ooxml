@@ -6,11 +6,12 @@
 import { MAX_COL, MAX_ROW } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { historyOf } from 'ooxml-core/xlsx/ui';
 import type { FileCommand } from './events';
 
 export interface ShellCommandHandlers {
 	fileCommand(command: FileCommand): void;
-	openBackstage(page: 'info' | 'saveAs' | 'options' | 'new'): void;
+	openBackstage(page: 'info' | 'saveAs' | 'options' | 'new' | 'share'): void;
 	showShortcuts(): void;
 	formulaBarShown(): boolean;
 	setFormulaBarShown(shown: boolean): void;
@@ -57,6 +58,12 @@ export function shellCommands(handlers: ShellCommandHandlers): Command[] {
 		},
 		{ id: 'file.info', label: 'Info', icon: 'info', run: () => handlers.openBackstage('info') },
 		{
+			id: 'file.share',
+			label: 'Share',
+			icon: 'share',
+			run: () => handlers.openBackstage('share'),
+		},
+		{
 			id: 'file.options',
 			label: 'Options',
 			icon: 'settings',
@@ -68,8 +75,8 @@ export function shellCommands(handlers: ShellCommandHandlers): Command[] {
 			icon: 'undo',
 			shortcut: 'Ctrl+Z',
 			editing: true,
-			enabled: (ctx) => ctx.session()?.canUndo() ?? false,
-			run: (ctx) => void ctx.session()?.undo(),
+			enabled: (ctx) => historyOf(ctx)?.canUndo() ?? false,
+			run: (ctx) => void historyOf(ctx)?.undo(),
 		},
 		{
 			id: 'edit.redo',
@@ -77,8 +84,8 @@ export function shellCommands(handlers: ShellCommandHandlers): Command[] {
 			icon: 'redo',
 			shortcut: 'Ctrl+Y',
 			editing: true,
-			enabled: (ctx) => ctx.session()?.canRedo() ?? false,
-			run: (ctx) => void ctx.session()?.redo(),
+			enabled: (ctx) => historyOf(ctx)?.canRedo() ?? false,
+			run: (ctx) => void historyOf(ctx)?.redo(),
 		},
 		{
 			id: 'sheet.next',

@@ -19,6 +19,7 @@ import { followLink, wireTooltips } from './indicators';
 import { selectCell } from 'ooxml-core/xlsx/ui';
 import { GRID_CSS } from './styles';
 import { ValidationList } from './validation-list';
+import { installRemoteSelections } from './remote-layer';
 
 export { editBridge, type EditBridge, type EditMode, type EditState } from 'ooxml-core/xlsx/ui';
 
@@ -41,6 +42,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	const drawings = new DrawingLayer(view);
 	const list = new ValidationList(view, () => editor.focus());
 	const a11y = new GridA11y(view, sink);
+	const removeRemote = installRemoteSelections(view);
 	let marqueeSheet = -1;
 	const clipboard = createGridClipboard({
 		ctx,
@@ -200,6 +202,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		drawings.destroy();
 		editor.destroy();
 		a11y.destroy();
+		removeRemote();
 		view.destroy();
 	};
 }

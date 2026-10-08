@@ -123,6 +123,11 @@ export function buildShell(core: EditorCore): Shell {
 			core.dirty.set(true);
 			backstage.relocalize();
 		},
+		share: {
+			state: () => core.collab.state(),
+			start: (roomId) => core.collab.start({ roomId }),
+			stop: () => core.collab.stop(),
+		},
 		hiddenActions: () => core.hiddenActions,
 		setHiddenActions(ids) {
 			element.hiddenActions = ids;
@@ -146,6 +151,7 @@ export function buildShell(core: EditorCore): Shell {
 		isHidden,
 		save: () => void fileCommand('save'),
 		setReadOnly: (readOnly) => (element.readOnly = readOnly),
+		collaboration: () => core.collab.state(),
 		revealControl(id) {
 			const control = ribbon.element.querySelector<HTMLElement>(
 				`.ribbon-panel [data-command="${id.replace(/["\\]/g, '')}"]`,
@@ -241,6 +247,7 @@ export function buildShell(core: EditorCore): Shell {
 		focusRegion(next);
 	};
 	installKeyboard(ctx, actions);
+	element.addEventListener('collaboration-change', () => backstage.refresh('share'));
 
 	core.shell = {
 		render() {

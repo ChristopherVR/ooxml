@@ -1,21 +1,27 @@
 /**
  * Excel-style title bar: the X badge and quick access toolbar (Save, Undo, Redo), the file name
- * and save state, "Tell me", the comments toggle and the Editing / Viewing select. The shared
- * `office-ui-title-bar` draws the mark, Quick Access Toolbar, name and command search from
- * translated state; the comments toggle and mode select are product controls in its `actions` slot.
+ * and save state, "Tell me", the comments toggle, Share and the Editing / Viewing select. The
+ * shared `office-ui-title-bar` draws the mark, Quick Access Toolbar, name and command search from
+ * translated state; the product controls sit in its `actions` slot and, while the workbook is
+ * shared, the people in the session (the shared presence stack) in its `collaboration` slot.
  */
 import { defineTitleBar } from '../controls';
 import type { OfficeTitleBarState } from '../controls';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el } from './ribbon/controls';
 import { ribbonIcon } from './ribbon/icons';
-import { searchCommands, type TellMeHandlers } from 'ooxml-core/xlsx/ui';
+import { historyOf, searchCommands, type TellMeHandlers } from 'ooxml-core/xlsx/ui';
+import { definePresence, type PresenceParticipant } from '../presence';
+import { participants } from './backstage/pages-share';
+import type { XlsxCollaborationState } from './collaboration-types';
 
 export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
 
 export interface TitleBarHandlers extends TellMeHandlers {
 	save(): void;
 	setReadOnly(readOnly: boolean): void;
+	/** Sharing state for the presence stack; absent hides it. */
+	collaboration?(): XlsxCollaborationState;
 }
 
 export interface TitleBar {
@@ -53,18 +59,29 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	comments.type = 'button';
 	comments.append(ribbonIcon(doc, 'comments', 16));
 	comments.addEventListener('click', () => void ctx.commands.run('review.show-comments'));
+	const share = el(doc, 'button', 'xve-icon-button xve-share-button');
+	share.type = 'button';
+	share.append(ribbonIcon(doc, 'share', 16));
+	share.addEventListener('click', () => void ctx.commands.run('file.share'));
 	const mode = el(doc, 'select', 'xve-mode-select');
 	mode.append(new Option('', 'editing'), new Option('', 'viewing'));
 	mode.addEventListener('change', () => handlers.setReadOnly(mode.value === 'viewing'));
-	actions.append(comments, mode);
-	element.append(actions);
+	actions.append(comments, share, mode);
+	definePresence();
+	const people = doc.createElement('office-ui-presence') as HTMLElement & {
+		participants: PresenceParticipant[];
+	};
+	people.className = 'xve-title-people';
+	people.slot = 'collaboration';
+	people.setAttribute('max', '3');
+	people.hidden = true;
+	element.append(actions, people);
 
 	let fileName = '';
 	let saveState: SaveState = 'saved';
 
 	const render = () => {
-		const session = ctx.session();
-		const undoLabel = session?.undoLabel();
+		const undoLabel = historyOf(ctx)?.undoLabel();
 		const entries = [
 			{ id: 'save', icon: 'save', label: ctx.t('Save'), title: `${ctx.t('Save')} (Ctrl+S)` },
 			{
@@ -126,6 +143,8 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	};
 	const relocalize = () => {
 		label(comments, 'Show comments');
+		label(share, 'Share');
+		people.setAttribute('label', ctx.t('People in this session'));
 		mode.setAttribute('aria-label', ctx.t('Editing mode'));
 		mode.options[0]!.textContent = ctx.t('Editing');
 		mode.options[1]!.textContent = ctx.t('Viewing');
@@ -133,6 +152,12 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	};
 	const refresh = () => {
 		mode.value = ctx.readOnly() ? 'viewing' : 'editing';
+		share.hidden = !ctx.commands.get('file.share') || handlers.isHidden('file.share');
+		const sharing = handlers.collaboration?.();
+		people.hidden = !sharing?.active;
+		share.setAttribute('aria-pressed', String(Boolean(sharing?.active)));
+		const next = sharing?.active ? participants(sharing) : [];
+		if (JSON.stringify(next) !== JSON.stringify(people.participants)) people.participants = next;
 		const showComments = ctx.commands.get('review.show-comments');
 		comments.hidden = !showComments;
 		if (showComments) {

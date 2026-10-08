@@ -1,12 +1,13 @@
 /**
  * The public methods of `<xlsx-editor>` (load, newWorkbook, save, saveBytes, download, markClean,
- * select, getSelection, setActiveSheet, undo, redo, focusGrid). The properties and lifecycle are
+ * select, getSelection, setActiveSheet, collaboration, share, undo, redo, focusGrid). The properties and lifecycle are
  * in component.ts; the state is the EditorCore.
  */
 import { EditorCore } from './editor-core';
 import { loadInto, newInto, saveBlob, saveBytes, type FileChrome } from './editor-files';
 import { downloadBytes, saveExtension, withExtension } from './file-commands';
 import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
+import type { XlsxCollaborationOptions, XlsxCollaborationState } from './collaboration-types';
 
 /** Server rendering has no HTMLElement; the class still has to be definable there. */
 export const HTMLElementBase = (
@@ -17,6 +18,8 @@ export class XlsxEditorApi extends HTMLElementBase {
 	protected readonly core: EditorCore = new EditorCore(this);
 	/** Set by the shell once connected. */
 	protected chrome: FileChrome | undefined;
+	/** Set by the shell once connected: opens File > Share. */
+	protected openShare: (() => void) | undefined;
 
 	/** Opens .xlsx, .xlsm, .xltx, .xls or .csv bytes; `fileName` helps detection and names the file. */
 	async load(bytes: Uint8Array | ArrayBuffer, fileName?: string): Promise<void> {
@@ -81,6 +84,36 @@ export class XlsxEditorApi extends HTMLElementBase {
 		this.core.setActiveSheet(index);
 	}
 
+	/**
+	 * Shares the open workbook in a room (see `XlsxCollaborationOptions`). Resolves once joined;
+	 * the room's workbook replaces this one when the room already has one. Rejects when sharing is
+	 * already active or no workbook is open.
+	 */
+	startCollaboration(options: XlsxCollaborationOptions): Promise<void> {
+		return this.core.collab.start(options);
+	}
+
+	/** Leaves the room (and clears `collaboration`). The workbook stays as it is. */
+	stopCollaboration(): void {
+		this.core.collab.stop();
+	}
+
+	/** Restarts the connection, keeping the shared workbook and changes made offline. */
+	reconnectCollaboration(): void {
+		this.core.collab.reconnect();
+	}
+
+	/** Who is in the room and how the connection is. */
+	get collaborationState(): XlsxCollaborationState {
+		return this.core.collab.state();
+	}
+
+	/** Opens File > Share, where the user starts or stops sharing and sees who is in the room. */
+	share(): void {
+		this.openShare?.();
+	}
+
+	/** Undo the last edit; while shared, only this window's edits are undone. */
 	undo(): void {
 		void this.core.commands.run('edit.undo');
 	}

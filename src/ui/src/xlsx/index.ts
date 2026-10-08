@@ -11,6 +11,11 @@ export {
 	type XlsxEditorEventMap,
 	type XlsxEditorEventName,
 } from './events';
+export type {
+	XlsxCollaborationOptions,
+	XlsxCollaborationState,
+	XlsxCollaborator,
+} from './collaboration-types';
 export {
 	XLSX_EDITOR_ATTRIBUTES,
 	DEFAULT_AUTHOR_NAME,
