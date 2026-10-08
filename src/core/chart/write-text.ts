@@ -20,8 +20,9 @@ import {
 	type ChartWriteContext,
 } from './write-util';
 
+/** Text content, written as an open and close pair even when empty (as the xlsx writer did). */
 const textElement = (local: string, value: string) =>
-	value ? `<c:${local}>${escapeText(value)}</c:${local}>` : `<c:${local}/>`;
+	`<c:${local}>${escapeText(value)}</c:${local}>`;
 
 /** The points of a cache; a point without an index takes its position (the index is required). */
 function cachePoints(cache: ChartDataCache): string {

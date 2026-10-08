@@ -7,10 +7,20 @@ export interface ChartWriteContext {
 	bindings: NamespaceBindings;
 }
 
-export const escapeText = (value: string): string =>
-	value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Characters XML 1.0 cannot carry; they are dropped, as the xlsx writer drops them.
+const INVALID_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g;
 
-export const escapeAttribute = (value: string): string => escapeText(value).replace(/"/g, '&quot;');
+/** Escapes element text. */
+export const escapeText = (value: string): string =>
+	value.replace(INVALID_XML, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Escapes an attribute value; line breaks and tabs become references so they survive parsing. */
+export const escapeAttribute = (value: string): string =>
+	escapeText(value)
+		.replace(/"/g, '&quot;')
+		.replace(/\r/g, '&#13;')
+		.replace(/\n/g, '&#10;')
+		.replace(/\t/g, '&#9;');
 
 /**
  * The canonical lexical form of a number the model holds as a value (`@val`, layout fractions):

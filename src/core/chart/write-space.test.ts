@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NS } from '../xml/index';
 import type { ChartSpace } from './model';
 import { parseChartSpace } from './parse-space';
+import { chartTextBodyFromXml } from './write-shape';
 import { chartNumber } from './write-util';
 import { writeChartSpace } from './write-space';
 import { stripDeclarations } from './xml-fragment';
@@ -172,6 +173,43 @@ describe('writeChartSpace', () => {
 			},
 		});
 		expect(xml).toContain('<c:pie3DChart/>');
+	});
+});
+
+describe('writeChartSpace text', () => {
+	it('drops characters XML cannot carry and keeps a given text body verbatim', () => {
+		const rich = chartTextBodyFromXml(
+			'<a:bodyPr/><a:p><a:r><a:rPr lang="en-US"/><a:t>Kept</a:t></a:r></a:p>',
+		);
+		const xml = writeChartSpace({
+			title: { tx: { rich } },
+			plotArea: {
+				groups: [
+					{
+						kind: 'pie',
+						element: 'pieChart',
+						is3D: false,
+						axisIds: [],
+						series: [
+							{
+								tx: { value: 'ab' },
+								dataPoints: [],
+								values: {
+									kind: 'numLit',
+									cache: { type: 'number', points: [{ index: 0, value: '' }] },
+								},
+							},
+						],
+					},
+				],
+				axes: [],
+			},
+		});
+		expect(xml).toContain(
+			'<c:title><c:tx><c:rich><a:bodyPr/><a:p><a:r><a:rPr lang="en-US"/><a:t>Kept</a:t></a:r></a:p></c:rich></c:tx></c:title>',
+		);
+		expect(xml).toContain('<c:tx><c:v>ab</c:v></c:tx>');
+		expect(xml).toContain('<c:pt idx="0"><c:v></c:v></c:pt>');
 	});
 });
 

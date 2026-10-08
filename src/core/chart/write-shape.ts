@@ -160,3 +160,16 @@ export function numberFormatXml(format: ChartNumberFormat | undefined): string {
 		format.sourceLinked === undefined ? '' : ` sourceLinked="${format.sourceLinked ? 1 : 0}"`;
 	return `<c:numFmt formatCode="${escapeAttribute(format.formatCode)}"${linked}/>`;
 }
+
+/**
+ * A text body given as the XML of its children (`<a:bodyPr/>...`): the modelled fields read from
+ * it, the XML kept as its source, so the writer emits exactly that XML until the fields change.
+ */
+export function chartTextBodyFromXml(xml: string): ChartTextBody {
+	const body: ChartTextBody = parseDrawingTextBody(wrap('rich', xml)) ?? {
+		paragraphs: [],
+		text: '',
+	};
+	body.sourceXml = xml;
+	return body;
+}
