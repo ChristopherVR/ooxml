@@ -25,10 +25,12 @@
  * stack as ROWS (the pre-existing, unchanged default) or COLUMNS.
  */
 
-import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars, XmlObject } from '../types';
+import type { OrderedXmlElement } from '../../../diagram/layout/smartart-choose-xml';
+import { activeBranch } from '../../../diagram/layout/smartart-layout-interpreter-choose-branch';
+import type { PptxSmartArtLayoutNode, PptxSmartArtPresLayoutVars } from '../types';
 import { roleOf } from './smartart-constraint-solver';
 import { chooseAlgorithm } from './smartart-layout-interpreter-choose-algorithm';
-import { activeBranch, localName } from './smartart-layout-interpreter-choose-branch';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 import { unwrapTextRoles } from './smartart-layout-interpreter-item-roles-unwrap';
 
 /** How a role-split item's content roles are laid out within the item's box. */
@@ -121,25 +123,20 @@ export function isExplicitHorizontalLin(
  * when `branch` declares no shape of its own at all.
  */
 function rawShapeAttributes(
-	branch: XmlObject | undefined,
+	branch: OrderedXmlElement | undefined,
 ): { type?: string; rot?: string } | undefined {
-	if (!branch) {
+	// An empty `<dgm:shape/>` (no attributes, no children) declares nothing.
+	const shapeXml = branch?.children.find(
+		(child) =>
+			child.name === 'shape' && (Object.keys(child.attrs).length > 0 || child.children.length > 0),
+	);
+	if (!shapeXml) {
 		return undefined;
 	}
-	for (const [key, value] of Object.entries(branch)) {
-		if (key.startsWith('@_') || localName(key) !== 'shape') {
-			continue;
-		}
-		const shapeXml = (Array.isArray(value) ? value[0] : value) as XmlObject | undefined;
-		if (!shapeXml || typeof shapeXml !== 'object') {
-			continue;
-		}
-		return {
-			type: shapeXml['@_type'] as string | undefined,
-			rot: shapeXml['@_rot'] as string | undefined,
-		};
-	}
-	return undefined;
+	return {
+		type: shapeXml.attrs['type'],
+		rot: shapeXml.attrs['rot'],
+	} as { type?: string; rot?: string };
 }
 
 /**
@@ -179,7 +176,9 @@ function resolvedShapeIsPlainRect(
 		return true;
 	}
 	for (const choose of role.choose) {
-		const attrs = rawShapeAttributes(activeBranch(choose, nodeCount, { presLayoutVars }));
+		const attrs = rawShapeAttributes(
+			pptxOrderedXml(activeBranch(choose, nodeCount, { presLayoutVars })),
+		);
 		if (attrs) {
 			const rotated = attrs.rot !== undefined && attrs.rot !== '0';
 			return !rotated && (attrs.type === undefined || attrs.type === 'rect');

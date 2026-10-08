@@ -40,8 +40,8 @@
  */
 
 import type { PptxSmartArtConstraint, PptxSmartArtLayoutNode, PptxSmartArtWhen } from '../types';
-import type { WhenContext } from './smartart-layout-interpreter-when';
-import { evaluateWhen } from './smartart-layout-interpreter-when';
+import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import { evaluateWhen } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 /** Stable string key for a guard chain, so every `dgm:constr` declared under
  * the SAME `dgm:if`/`dgm:else` branch regroups into one entry even when the

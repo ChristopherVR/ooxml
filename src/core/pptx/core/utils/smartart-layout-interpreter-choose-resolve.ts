@@ -29,10 +29,10 @@ import {
 	isContinuationForEach,
 	isTransitionOnlyChild,
 	mapsSlots,
-} from './smartart-layout-interpreter-composite-detect';
+} from '../../../diagram/layout/smartart-layout-interpreter-composite-detect';
 import { hasHierarchyDescendant } from './smartart-layout-interpreter-hierarchy-descendant';
 import { hasPositionGuard } from './smartart-layout-interpreter-position-family';
-import type { WhenContext } from './smartart-layout-interpreter-when';
+import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 export interface ChooseResolution {
 	chosen: ArrangementPlan | undefined;

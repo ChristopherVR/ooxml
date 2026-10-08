@@ -8,7 +8,7 @@
  * Pure TypeScript - no framework code, no DOM.
  */
 
-import type { PptxSmartArtNode, PptxSmartArtPresLayoutVars, PptxSmartArtWhen } from '../types';
+import type { DiagramNode, DiagramPresLayoutVars, DiagramWhen } from '../model';
 import { resolveAxisCount } from './smartart-layout-interpreter-axis-count';
 import { resolveAxisMaxDepth } from './smartart-layout-interpreter-axis-depth';
 import { compareNumeric, toNumber } from './smartart-layout-interpreter-when-numeric';
@@ -37,7 +37,7 @@ export interface WhenContext {
 	/** Maximum depth of the tree, for `func="maxDepth"`. */
 	maxDepth?: number;
 	/** Diagram presentation layout variables, for `func="var"` (`@arg` names the variable). */
-	presLayoutVars?: PptxSmartArtPresLayoutVars;
+	presLayoutVars?: DiagramPresLayoutVars;
 	/**
 	 * The diagram's own flat data-model node array (`parentId`-linked), for a
 	 * `func="cnt"` `dgm:if` whose `@axis` is declared at all - a single bare
@@ -48,10 +48,10 @@ export interface WhenContext {
 	 * coarser `nodeCount`-only behaviour for `cnt` exactly as before (no
 	 * regression for a caller that never had this).
 	 */
-	nodes?: PptxSmartArtNode[];
+	nodes?: DiagramNode[];
 	/**
 	 * The point(s) a `dgm:if`'s own enclosing `dgm:forEach` bound (its
-	 * `PptxSmartArtLayoutNode.forEachOrigin`, already resolved to real data
+	 * `DiagramLayoutNode.forEachOrigin`, already resolved to real data
 	 * nodes), for a `func="maxDepth"` `dgm:if` whose `@axis` needs anchor-
 	 * relative navigation rather than the diagram root - see {@link
 	 * resolveAxisMaxDepth}'s own doc comment (`smartart-layout-interpreter-
@@ -60,12 +60,12 @@ export interface WhenContext {
 	 * `maxDepth` exactly as before (no regression for a caller that never had
 	 * this - no existing caller populates this field yet).
 	 */
-	anchor?: PptxSmartArtNode[];
+	anchor?: DiagramNode[];
 }
 
 /** Evaluate `func="posEven"`/`"posOdd"` as a 1/0 numeric compare against `when.value` (default 1). */
 function evaluateParity(
-	when: PptxSmartArtWhen,
+	when: DiagramWhen,
 	position: number,
 	wantEven: boolean,
 ): boolean | undefined {
@@ -84,7 +84,7 @@ function evaluateParity(
  * so the caller keeps its blind first-alg behaviour.
  */
 export function evaluateWhen(
-	when: PptxSmartArtWhen,
+	when: DiagramWhen,
 	nodeCount: number,
 	context: WhenContext,
 ): boolean | undefined {

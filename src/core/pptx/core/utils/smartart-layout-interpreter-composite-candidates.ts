@@ -13,15 +13,15 @@ import type {
 	PptxSmartArtNode,
 } from '../types';
 import { roleOf } from './smartart-constraint-solver';
-import { resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
+import { resolveAxisNodes } from '../../../diagram/layout/smartart-layout-interpreter-axis-count';
 import {
 	resolveAnchoredContentPerAnchor,
 	resolveAnchoredContentPerAnchorFrom,
 } from './smartart-layout-interpreter-composite-anchor';
 import { selectFirstMatchChildren } from './smartart-layout-interpreter-composite-choose-groups';
-import { STRUCTURAL_ALG_TYPES } from './smartart-layout-interpreter-composite-detect';
+import { STRUCTURAL_ALG_TYPES } from '../../../diagram/layout/smartart-layout-interpreter-composite-detect';
 import type { RawSlotCandidate } from './smartart-layout-interpreter-composite-group-slots';
-import { evaluateWhen } from './smartart-layout-interpreter-when';
+import { evaluateWhen } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 /**
  * Resolve a forEach iterator's own anchor point set, root-relatively -

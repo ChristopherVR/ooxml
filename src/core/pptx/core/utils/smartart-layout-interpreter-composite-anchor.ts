@@ -39,8 +39,8 @@ import type {
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNode,
 } from '../types';
-import { resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
-import { resolvePresentationOf } from './smartart-layout-interpreter-when';
+import { resolveAxisNodes } from '../../../diagram/layout/smartart-layout-interpreter-axis-count';
+import { resolvePresentationOf } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 /** `node`'s own `forEachOrigin`, resolved root-relatively (a `dgm:forEach` always describes "which points, starting from the diagram") - `[]` when there is none, or it matches nothing. */
 function resolveOrigin(node: PptxSmartArtLayoutNode, flat: PptxSmartArtNode[]): PptxSmartArtNode[] {

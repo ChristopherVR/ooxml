@@ -1,19 +1,20 @@
+import {
+	constraintAttributes,
+	parseConstraintAttributes,
+	parseRuleAttributes,
+	ruleAttributes,
+	validateSmartArtConstraintRules,
+} from '../../../diagram/layout/smartart-constraint-rules';
+import type { DiagramAttributeValue } from '../../../diagram/layout/smartart-constraint-rules';
 import type {
 	PptxSmartArtConstraint,
-	PptxSmartArtConstraintOperator,
-	PptxSmartArtConstraintPointType,
-	PptxSmartArtConstraintRelationship,
 	PptxSmartArtLayoutNode,
 	PptxSmartArtNumericRule,
 	XmlObject,
 } from '../types';
 import { cloneXmlObject } from './clone-utils';
-import {
-	SMART_ART_CONSTRAINT_OPERATORS,
-	SMART_ART_CONSTRAINT_TYPES,
-	SMART_ART_POINT_TYPES,
-	SMART_ART_RELATIONSHIPS,
-} from './smartart-constraint-values';
+
+export { validateSmartArtConstraintRules } from '../../../diagram/layout/smartart-constraint-rules';
 
 type LocalName = (key: string) => string;
 
@@ -45,75 +46,19 @@ function attr(node: XmlObject, name: string, localName: LocalName): string | und
 	return key && node[key] !== undefined ? String(node[key]) : undefined;
 }
 
-function xsdDouble(value: string | undefined): number | undefined {
-	if (value === undefined || value.trim() === '') {
-		return undefined;
-	}
-	if (value === 'NaN') {
-		return Number.NaN;
-	}
-	if (value === 'INF') {
-		return Number.POSITIVE_INFINITY;
-	}
-	if (value === '-INF') {
-		return Number.NEGATIVE_INFINITY;
-	}
-	const parsed = Number(value);
-	return Number.isNaN(parsed) ? undefined : parsed;
+/** Reads attributes by local name for the neutral `diagram` parsers. */
+function reader(node: XmlObject, localName: LocalName): (name: string) => string | undefined {
+	return (name) => attr(node, name, localName);
 }
 
-function parseTarget(node: XmlObject, localName: LocalName) {
-	return {
-		for: attr(node, 'for', localName) as PptxSmartArtConstraintRelationship | undefined,
-		forName: attr(node, 'forName', localName),
-		pointType: attr(node, 'ptType', localName) as PptxSmartArtConstraintPointType | undefined,
-	};
-}
-
-/**
- * Parse one `dgm:constr` element. Exposed for `smartart-layout-definition
- * .ts`, which reuses it to parse constraint entries reachable through a
- * `dgm:choose`/`dgm:if`/`dgm:else` wrapping this SAME layoutNode (a
- * genuinely conditional, e.g. count-branched, `constrLst`), not just the
- * node's own direct one this module's `parseSmartArtConstraintRules` reads.
- */
 export function parseConstraint(node: XmlObject, localName: LocalName): PptxSmartArtConstraint {
-	return {
-		type: attr(node, 'type', localName) ?? '',
-		...parseTarget(node, localName),
-		referenceType: attr(node, 'refType', localName),
-		referenceFor: attr(node, 'refFor', localName) as PptxSmartArtConstraintRelationship | undefined,
-		referenceForName: attr(node, 'refForName', localName),
-		referencePointType: attr(node, 'refPtType', localName) as
-			| PptxSmartArtConstraintPointType
-			| undefined,
-		operator: attr(node, 'op', localName) as PptxSmartArtConstraintOperator | undefined,
-		value: xsdDouble(attr(node, 'val', localName)),
-		factor: xsdDouble(attr(node, 'fact', localName)),
-		rawXml: cloneXmlObject(node),
-	};
+	return parseConstraintAttributes(reader(node, localName), cloneXmlObject(node));
 }
 
-/**
- * Parse one `dgm:rule` element. Exposed for `smartart-layout-definition.ts`,
- * which reuses it to parse rule entries reachable through a `dgm:choose`/
- * `dgm:if`/`dgm:else` wrapping this SAME layoutNode's `ruleLst` (a genuinely
- * conditional, count-branched rule set - see `smartart-layout-definition-
- * constraints.ts`'s `ruleCandidates`), not just the node's own direct one
- * this module's `parseSmartArtConstraintRules` reads.
- */
 export function parseRule(node: XmlObject, localName: LocalName): PptxSmartArtNumericRule {
-	return {
-		type: attr(node, 'type', localName) ?? '',
-		...parseTarget(node, localName),
-		value: xsdDouble(attr(node, 'val', localName)),
-		factor: xsdDouble(attr(node, 'fact', localName)),
-		max: xsdDouble(attr(node, 'max', localName)),
-		rawXml: cloneXmlObject(node),
-	};
+	return parseRuleAttributes(reader(node, localName), cloneXmlObject(node));
 }
 
-/** Parse the constraint and numeric-rule children of CT_LayoutNode. */
 export function parseSmartArtConstraintRules(
 	node: XmlObject,
 	localName: LocalName,
@@ -132,90 +77,23 @@ export function parseSmartArtConstraintRules(
 	};
 }
 
-function validateTarget(
-	value: PptxSmartArtConstraint | PptxSmartArtNumericRule,
-	path: string,
-): string[] {
-	const errors: string[] = [];
-	if (!SMART_ART_CONSTRAINT_TYPES.has(value.type)) {
-		errors.push(`${path}.type is invalid`);
-	}
-	if (value.for !== undefined && !SMART_ART_RELATIONSHIPS.has(value.for)) {
-		errors.push(`${path}.for is invalid`);
-	}
-	if (value.pointType !== undefined && !SMART_ART_POINT_TYPES.has(value.pointType)) {
-		errors.push(`${path}.pointType is invalid`);
-	}
-	return errors;
-}
-
-export function validateSmartArtConstraintRules(value: PptxSmartArtLayoutNode): string[] {
-	const errors: string[] = [];
-	value.constraints?.forEach((item, index) => {
-		const path = `constraints[${index}]`;
-		errors.push(...validateTarget(item, path));
-		if (item.referenceType !== undefined && !SMART_ART_CONSTRAINT_TYPES.has(item.referenceType)) {
-			errors.push(`${path}.referenceType is invalid`);
-		}
-		if (item.referenceFor !== undefined && !SMART_ART_RELATIONSHIPS.has(item.referenceFor)) {
-			errors.push(`${path}.referenceFor is invalid`);
-		}
-		if (
-			item.referencePointType !== undefined &&
-			!SMART_ART_POINT_TYPES.has(item.referencePointType)
-		) {
-			errors.push(`${path}.referencePointType is invalid`);
-		}
-		if (item.operator !== undefined && !SMART_ART_CONSTRAINT_OPERATORS.has(item.operator)) {
-			errors.push(`${path}.operator is invalid`);
-		}
-	});
-	value.rules?.forEach((item, index) => errors.push(...validateTarget(item, `rules[${index}]`)));
-	return errors;
-}
-
-function formatDouble(value: number): string {
-	if (Number.isNaN(value)) {
-		return 'NaN';
-	}
-	if (value === Number.POSITIVE_INFINITY) {
-		return 'INF';
-	}
-	if (value === Number.NEGATIVE_INFINITY) {
-		return '-INF';
-	}
-	return String(value);
-}
-
-function setAttr(
+function setAttributes(
 	node: XmlObject,
-	name: string,
-	value: string | number | undefined,
+	values: readonly DiagramAttributeValue[],
 	localName: LocalName,
 ): void {
-	const key =
-		Object.keys(node).find(
-			(candidate) =>
-				candidate.startsWith('@_') && localName(candidate.replace(/^@_/u, '')) === name,
-		) ?? `@_${name}`;
-	if (value === undefined) {
-		delete node[key];
-	} else {
-		node[key] = typeof value === 'number' ? formatDouble(value) : value;
+	for (const [name, value] of values) {
+		const key =
+			Object.keys(node).find(
+				(candidate) =>
+					candidate.startsWith('@_') && localName(candidate.replace(/^@_/u, '')) === name,
+			) ?? `@_${name}`;
+		if (value === undefined) {
+			delete node[key];
+		} else {
+			node[key] = value;
+		}
 	}
-}
-
-function applyTarget(
-	node: XmlObject,
-	value: PptxSmartArtConstraint | PptxSmartArtNumericRule,
-	localName: LocalName,
-): void {
-	setAttr(node, 'type', value.type, localName);
-	setAttr(node, 'for', value.for, localName);
-	setAttr(node, 'forName', value.forName, localName);
-	setAttr(node, 'ptType', value.pointType, localName);
-	setAttr(node, 'val', value.value, localName);
-	setAttr(node, 'fact', value.factor, localName);
 }
 
 function itemPrefix(listKey: string | undefined): string {
@@ -249,17 +127,13 @@ export function applySmartArtConstraintRules(
 		}
 		list[itemKey] = values.map((item, index) => {
 			const target = cloneXmlObject(oldItems[index]) ?? cloneXmlObject(item.rawXml) ?? {};
-			applyTarget(target, item, localName);
-			if (itemName === 'constr') {
-				const constraint = item as PptxSmartArtConstraint;
-				setAttr(target, 'refType', constraint.referenceType, localName);
-				setAttr(target, 'refFor', constraint.referenceFor, localName);
-				setAttr(target, 'refForName', constraint.referenceForName, localName);
-				setAttr(target, 'refPtType', constraint.referencePointType, localName);
-				setAttr(target, 'op', constraint.operator, localName);
-			} else {
-				setAttr(target, 'max', (item as PptxSmartArtNumericRule).max, localName);
-			}
+			setAttributes(
+				target,
+				itemName === 'constr'
+					? constraintAttributes(item as PptxSmartArtConstraint)
+					: ruleAttributes(item as PptxSmartArtNumericRule),
+				localName,
+			);
 			return target;
 		});
 		node[listKey] = list;

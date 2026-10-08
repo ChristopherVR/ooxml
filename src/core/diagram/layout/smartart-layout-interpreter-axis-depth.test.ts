@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtNode } from '../types';
+import type { DiagramNode } from '../model';
 import { resolveAxisMaxDepth } from './smartart-layout-interpreter-axis-depth';
 
 describe('resolveAxisMaxDepth', () => {
 	it('is undecidable (undefined) with an empty anchor', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
 		expect(
 			resolveAxisMaxDepth([one], ['des'], undefined, undefined, undefined, []),
 		).toBeUndefined();
 	});
 
 	it('is undecidable (undefined) for an axis resolveAxisNodes itself declines', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
 		expect(resolveAxisMaxDepth([one], [], undefined, undefined, undefined, [one])).toBeUndefined();
 	});
 
@@ -24,33 +24,33 @@ describe('resolveAxisMaxDepth', () => {
 	 * exact number the round 13 successor doc records deriving by hand.
 	 */
 	it('measures the deepest descendant level from the anchor (radial-cluster--hier5.pptx shape)', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'Node One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three', parentId: 'one' };
-		const four: PptxSmartArtNode = { id: 'four', text: 'Four', parentId: 'one' };
-		const five: PptxSmartArtNode = { id: 'five', text: 'Five', parentId: 'four' };
+		const one: DiagramNode = { id: 'one', text: 'Node One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Three', parentId: 'one' };
+		const four: DiagramNode = { id: 'four', text: 'Four', parentId: 'one' };
+		const five: DiagramNode = { id: 'five', text: 'Five', parentId: 'four' };
 		const nodes = [one, two, three, four, five];
 		expect(resolveAxisMaxDepth(nodes, ['des'], undefined, undefined, undefined, [one])).toBe(2);
 	});
 
 	it('is 0 (real, decidable) for a childless anchor', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
 		expect(resolveAxisMaxDepth([one], ['des'], undefined, undefined, undefined, [one])).toBe(0);
 	});
 
 	it('is 1 for a flat anchor whose children have no children of their own', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three', parentId: 'one' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Three', parentId: 'one' };
 		const nodes = [one, two, three];
 		expect(resolveAxisMaxDepth(nodes, ['des'], undefined, undefined, undefined, [one])).toBe(1);
 	});
 
 	it('takes the MAXIMUM across a multi-point anchor', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
-		const deep: PptxSmartArtNode = { id: 'deep', text: 'Deep', parentId: 'two' };
-		const deeper: PptxSmartArtNode = { id: 'deeper', text: 'Deeper', parentId: 'deep' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
+		const deep: DiagramNode = { id: 'deep', text: 'Deep', parentId: 'two' };
+		const deeper: DiagramNode = { id: 'deeper', text: 'Deeper', parentId: 'deep' };
 		const nodes = [one, two, deep, deeper];
 		// `one` has no children of its own (depth 0); `two`'s own descendant
 		// chain goes 2 levels deep. The anchor set's own maxDepth is the max
@@ -61,9 +61,9 @@ describe('resolveAxisMaxDepth', () => {
 	});
 
 	it('respects ptType/st/cnt filtering on the resolved axis set', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const trans: PptxSmartArtNode = {
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const trans: DiagramNode = {
 			id: 'trans',
 			text: '',
 			parentId: 'one',

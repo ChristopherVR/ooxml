@@ -72,13 +72,15 @@
  * NOT-yet-solved problem (see the round 17 successor doc section).
  */
 
-import type { PptxSmartArtChoose, PptxSmartArtLayoutNode, XmlObject } from '../types';
+import type { OrderedXmlElement } from '../../../diagram/layout/smartart-choose-xml';
+import { algorithmParameters, groupedChildren } from '../../../diagram/layout/smartart-choose-xml';
 import {
 	activeBranch,
-	localName,
 	nestedChooseBranch,
-} from './smartart-layout-interpreter-choose-branch';
-import type { WhenContext } from './smartart-layout-interpreter-when';
+} from '../../../diagram/layout/smartart-layout-interpreter-choose-branch';
+import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import type { PptxSmartArtLayoutNode } from '../types';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 /** ECMA-376 `ST_VerticalAlignment`. */
 export type TxAnchorVert = 't' | 'mid' | 'b';
@@ -101,42 +103,15 @@ function isVert(value: string | undefined): value is TxAnchorVert {
 }
 
 /** First `dgm:alg type="tx"` found in `raw`, WITHOUT descending into a nested `dgm:choose` (that is handled separately by the caller). */
-function directTxAlg(raw: XmlObject | undefined): XmlObject | undefined {
-	if (!raw) {
-		return undefined;
-	}
-	for (const [key, entry] of Object.entries(raw)) {
-		if (key.startsWith('@_') || localName(key) !== 'alg') {
-			continue;
-		}
-		for (const candidate of Array.isArray(entry) ? entry : [entry]) {
-			if (
-				candidate &&
-				typeof candidate === 'object' &&
-				(candidate as XmlObject)['@_type'] === 'tx'
-			) {
-				return candidate as XmlObject;
-			}
-		}
-	}
-	return undefined;
+function directTxAlg(raw: OrderedXmlElement | undefined): OrderedXmlElement | undefined {
+	return raw?.children.find((child) => child.name === 'alg' && child.attrs['type'] === 'tx');
 }
 
 /** `dgm:param` children of a `dgm:alg` element, keyed by `@type`. */
-function txParams(algXml: XmlObject): Map<string, string> {
+function txParams(algXml: OrderedXmlElement): Map<string, string> {
 	const map = new Map<string, string>();
-	const paramKey = Object.keys(algXml).find((key) => localName(key) === 'param');
-	const raw = paramKey ? algXml[paramKey] : undefined;
-	const list: unknown[] = Array.isArray(raw) ? raw : raw !== undefined ? [raw] : [];
-	for (const entry of list) {
-		if (!entry || typeof entry !== 'object') {
-			continue;
-		}
-		const type = String((entry as XmlObject)['@_type'] ?? '');
-		const value = (entry as XmlObject)['@_val'];
-		if (type) {
-			map.set(type, String(value ?? ''));
-		}
+	for (const param of algorithmParameters(algXml)) {
+		map.set(param.type, param.value ?? '');
 	}
 	return map;
 }
@@ -157,7 +132,7 @@ function resolveTxParams(
 		return map;
 	}
 	for (const choose of item.choose ?? []) {
-		const branch = activeBranch(choose as PptxSmartArtChoose, nodeCount, context);
+		const branch = pptxOrderedXml(activeBranch(choose, nodeCount, context));
 		if (!branch) {
 			continue;
 		}
@@ -165,16 +140,13 @@ function resolveTxParams(
 		if (direct) {
 			return txParams(direct);
 		}
-		for (const [key, entry] of Object.entries(branch)) {
-			if (localName(key) !== 'choose') {
+		for (const candidate of groupedChildren(branch)) {
+			if (candidate.name !== 'choose') {
 				continue;
 			}
-			for (const candidate of Array.isArray(entry) ? entry : [entry]) {
-				const nested = nestedChooseBranch(candidate as XmlObject, nodeCount, context);
-				const nestedAlg = nested ? directTxAlg(nested) : undefined;
-				if (nestedAlg) {
-					return txParams(nestedAlg);
-				}
+			const nestedAlg = directTxAlg(nestedChooseBranch(candidate, nodeCount, context));
+			if (nestedAlg) {
+				return txParams(nestedAlg);
 			}
 		}
 	}

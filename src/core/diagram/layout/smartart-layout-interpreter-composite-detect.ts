@@ -9,7 +9,7 @@
  * framework code, no DOM.
  */
 
-import type { PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutNode } from '../model';
 
 /** Constraint types that position a composite child into an explicit slot. */
 const SLOT_CONSTRAINTS = new Set(['l', 't', 'w', 'h', 'ctrX', 'ctrY']);
@@ -55,7 +55,7 @@ export const STRUCTURAL_ALG_TYPES = new Set([
  * here (from `smartart-layout-interpreter-model.ts`, its only caller) purely
  * for the repo's per-file line budget.
  */
-export function isTransitionOnlyChild(node: PptxSmartArtLayoutNode): boolean {
+export function isTransitionOnlyChild(node: DiagramLayoutNode): boolean {
 	const origin = node.forEachOrigin;
 	if (!origin) {
 		return false;
@@ -105,7 +105,7 @@ export function isTransitionOnlyChild(node: PptxSmartArtLayoutNode): boolean {
  * at all) is guarded separately so `.every`'s vacuous-true default never
  * fires.
  */
-export function isContinuationForEach(node: PptxSmartArtLayoutNode): boolean {
+export function isContinuationForEach(node: DiagramLayoutNode): boolean {
 	const forEach = node.forEach ?? [];
 	if (forEach.length === 0) {
 		return false;
@@ -142,7 +142,7 @@ export function isContinuationForEach(node: PptxSmartArtLayoutNode): boolean {
  * plain content leaves (`tx`/`sp`/`conn`), never onto a nested `lin`/`cycle`/
  * `pyra`/`snake`/hierarchy alg, so this never excludes one of those.
  */
-export function hasStructuralDescendant(node: PptxSmartArtLayoutNode): boolean {
+export function hasStructuralDescendant(node: DiagramLayoutNode): boolean {
 	return (node.children ?? []).some(
 		(child) =>
 			(STRUCTURAL_ALG_TYPES.has(child.algorithm?.type ?? '') && !isContinuationForEach(child)) ||
@@ -173,7 +173,7 @@ export function hasStructuralDescendant(node: PptxSmartArtLayoutNode): boolean {
  * `STRUCTURAL_ALG_TYPES` on purpose - only `lin`/`cycle`/`pyra`/`snake`
  * item templates are handled today).
  */
-export function hasRepeatedTemplateStructuralDescendant(node: PptxSmartArtLayoutNode): boolean {
+export function hasRepeatedTemplateStructuralDescendant(node: DiagramLayoutNode): boolean {
 	return (node.children ?? []).some((child) => {
 		if (
 			STRUCTURAL_ALG_TYPES.has(child.algorithm?.type ?? '') &&
@@ -201,7 +201,7 @@ export function hasRepeatedTemplateStructuralDescendant(node: PptxSmartArtLayout
  * arranger still needs `compositeSlot` to win so the slot resolver (not a
  * blind "first structural descendant wins" walk) decides what renders.
  */
-export function distinctMappedSlotCount(node: PptxSmartArtLayoutNode): number {
+export function distinctMappedSlotCount(node: DiagramLayoutNode): number {
 	const names = new Set<string>();
 	for (const constraint of node.allConstraints ?? node.constraints ?? []) {
 		if (constraint.for === 'ch' && constraint.forName) {
@@ -211,7 +211,7 @@ export function distinctMappedSlotCount(node: PptxSmartArtLayoutNode): number {
 	return names.size;
 }
 
-export function mapsSlots(node: PptxSmartArtLayoutNode): boolean {
+export function mapsSlots(node: DiagramLayoutNode): boolean {
 	const declaredByArranger = (node.allConstraints ?? node.constraints ?? []).some(
 		(constraint) => constraint.for === 'ch' && SLOT_CONSTRAINTS.has(constraint.type),
 	);
@@ -241,10 +241,7 @@ export function mapsSlots(node: PptxSmartArtLayoutNode): boolean {
  * handles it there. A genuine top-level composite is never itself such an
  * item template (nothing repeats it per point), so it is unaffected.
  */
-export function itemTemplateNodes(
-	node: PptxSmartArtLayoutNode,
-	out: Set<PptxSmartArtLayoutNode>,
-): void {
+export function itemTemplateNodes(node: DiagramLayoutNode, out: Set<DiagramLayoutNode>): void {
 	const drivesPoints = node.forEach?.some(
 		(each) =>
 			each.axis?.length === 1 &&
@@ -273,8 +270,8 @@ export function itemTemplateNodes(
  * full derivation.
  */
 export function isLayoutNodeOrDescendantOf(
-	ancestor: PptxSmartArtLayoutNode,
-	node: PptxSmartArtLayoutNode,
+	ancestor: DiagramLayoutNode,
+	node: DiagramLayoutNode,
 ): boolean {
 	if (ancestor === node) {
 		return true;

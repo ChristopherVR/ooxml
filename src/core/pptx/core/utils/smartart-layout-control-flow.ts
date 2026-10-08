@@ -6,9 +6,12 @@ import type {
 	PptxSmartArtWhen,
 	XmlObject,
 } from '../types';
+import {
+	parseIteratorAttributes,
+	parseWhenAttributes,
+} from '../../../diagram/layout/smartart-layout-control-flow';
 
 type LocalName = (key: string) => string;
-const UINT_MAX = 4_294_967_295;
 
 function children(node: XmlObject, name: string, localName: LocalName): XmlObject[] {
 	const key = Object.keys(node).find((candidate) => localName(candidate) === name);
@@ -16,41 +19,17 @@ function children(node: XmlObject, name: string, localName: LocalName): XmlObjec
 	return Array.isArray(value) ? value : value && typeof value === 'object' ? [value] : [];
 }
 
+/** Reads a `fast-xml-parser` node's attributes for the neutral `diagram` parsers. */
+function attributes(node: XmlObject): (name: string) => string | undefined {
+	return (name) => {
+		const value = node[`@_${name}`];
+		return value === undefined || value === null ? undefined : String(value);
+	};
+}
+
 function optionalString(value: unknown): string | undefined {
 	const result = String(value ?? '').trim();
 	return result.length > 0 ? result : undefined;
-}
-
-function strings(value: unknown): string[] | undefined {
-	const values = optionalString(value)?.split(/\s+/u);
-	return values?.length ? values : undefined;
-}
-
-function booleans(value: unknown): boolean[] | undefined {
-	const values = strings(value);
-	if (!values || values.some((entry) => !['0', '1', 'true', 'false'].includes(entry))) {
-		return undefined;
-	}
-	return values.map((entry) => entry === '1' || entry === 'true');
-}
-
-function integers(value: unknown, unsigned = false): number[] | undefined {
-	const values = strings(value);
-	if (!values) {
-		return undefined;
-	}
-	const parsed = values.map(Number);
-	if (
-		parsed.some(
-			(entry) =>
-				!Number.isInteger(entry) ||
-				entry < (unsigned ? 0 : -2_147_483_648) ||
-				entry > (unsigned ? UINT_MAX : 2_147_483_647),
-		)
-	) {
-		return undefined;
-	}
-	return parsed;
 }
 
 /**
@@ -59,39 +38,12 @@ function integers(value: unknown, unsigned = false): number[] | undefined {
  * it verbatim for `dgm:presOf` (CT_PresentationOf extends CT_Iterate).
  */
 export function parseIterator(node: XmlObject): PptxSmartArtIteratorAttributes {
-	return {
-		name: optionalString(node['@_name']),
-		reference: optionalString(node['@_ref']),
-		axis: strings(node['@_axis']),
-		pointTypes: strings(node['@_ptType']),
-		hideLastTransition: booleans(node['@_hideLastTrans']),
-		start: integers(node['@_st']),
-		count: integers(node['@_cnt'], true),
-		step: integers(node['@_step']),
-	};
+	return parseIteratorAttributes(attributes(node));
 }
 
-/**
- * Exported so `smartart-layout-interpreter-choose-algorithm.ts` can parse a
- * NESTED `dgm:if` living inside an already-active branch's raw XML (a
- * `dgm:choose` wrapped entirely inside another `dgm:if`, never reaching
- * `parseSmartArtControlFlow` below - only a layoutNode's DIRECT `dgm:choose`
- * children do) the exact same way this module parses a top-level one.
- */
+/** A `dgm:if` of the object tree (see `parseWhenAttributes` in `diagram`). */
 export function parseWhen(node: XmlObject): PptxSmartArtWhen | undefined {
-	const func = optionalString(node['@_func']);
-	const operator = optionalString(node['@_op']);
-	const value = optionalString(node['@_val']);
-	return func && operator && value
-		? {
-				...parseIterator(node),
-				function: func,
-				argument: optionalString(node['@_arg']),
-				operator,
-				value,
-				rawXml: node,
-			}
-		: undefined;
+	return parseWhenAttributes(attributes(node), node);
 }
 
 export function parseSmartArtControlFlow(
@@ -210,36 +162,4 @@ export function applySmartArtControlFlow(
 	);
 }
 
-export function validateSmartArtControlFlow(node: PptxSmartArtLayoutNode): string[] {
-	const errors: string[] = [];
-	const validateIterator = (value: PptxSmartArtIteratorAttributes, path: string): void => {
-		for (const field of ['start', 'step'] as const) {
-			if (
-				value[field]?.some(
-					(entry) => !Number.isInteger(entry) || entry < -2_147_483_648 || entry > 2_147_483_647,
-				)
-			) {
-				errors.push(`${path}.${field} values must be signed 32-bit integers`);
-			}
-		}
-		if (value.count?.some((entry) => !Number.isInteger(entry) || entry < 0 || entry > UINT_MAX)) {
-			errors.push(`${path}.count values must be unsigned 32-bit integers`);
-		}
-	};
-	node.forEach?.forEach((value, index) => validateIterator(value, `forEach[${index}]`));
-	node.choose?.forEach((choose, chooseIndex) => {
-		if (choose.when.length === 0) {
-			errors.push(`choose[${chooseIndex}].when requires at least one branch`);
-		}
-		choose.when.forEach((branch, branchIndex) => {
-			const path = `choose[${chooseIndex}].when[${branchIndex}]`;
-			validateIterator(branch, path);
-			for (const field of ['function', 'operator', 'value'] as const) {
-				if (!branch[field].trim()) {
-					errors.push(`${path}.${field} is required`);
-				}
-			}
-		});
-	});
-	return errors;
-}
+export { validateSmartArtControlFlow } from '../../../diagram/layout/smartart-layout-control-flow';

@@ -39,8 +39,8 @@ import type {
 	PptxSmartArtNode,
 	PptxSmartArtWhen,
 } from '../types';
-import { resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
-import { evaluateWhen } from './smartart-layout-interpreter-when';
+import { resolveAxisNodes } from '../../../diagram/layout/smartart-layout-interpreter-axis-count';
+import { evaluateWhen } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 /** One `chooseGroups` ordinal's own guard, plus the forEach iterator active WHEN THAT BRANCH was declared (`chooseGroups[].origin`, ROUND 42 - NOT a representative member's own, possibly deeper, `forEachOrigin`: see that field's doc comment) - the anchor a `func="maxDepth"`/`"cnt"`-family `@axis` condition in that guard needs (see {@link winningOrdinalFor}). */
 interface OrdinalEntry {

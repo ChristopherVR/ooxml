@@ -2,16 +2,12 @@
  * SmartArt DiagramML interpreter - choose-aware `dgm:presOf` resolution.
  *
  * Split out of `smartart-layout-interpreter-when.ts` (the file-size budget):
- * {@link resolvePresentationOf} is the ONE consumer of `PptxSmartArtLayoutNode.
+ * {@link resolvePresentationOf} is the ONE consumer of `DiagramLayoutNode.
  * presentationOfCandidates`, layered on top of `evaluateWhen` from that
  * module. Pure TypeScript - no framework code, no DOM.
  */
 
-import type {
-	PptxSmartArtIteratorAttributes,
-	PptxSmartArtLayoutNode,
-	PptxSmartArtNode,
-} from '../types';
+import type { DiagramIteratorAttributes, DiagramLayoutNode, DiagramNode } from '../model';
 import { evaluateWhen } from './smartart-layout-interpreter-when';
 
 /**
@@ -33,9 +29,9 @@ import { evaluateWhen } from './smartart-layout-interpreter-when';
  * at all.
  */
 export function resolvePresentationOf(
-	node: PptxSmartArtLayoutNode,
-	flat: PptxSmartArtNode[],
-): PptxSmartArtIteratorAttributes | undefined {
+	node: DiagramLayoutNode,
+	flat: DiagramNode[],
+): DiagramIteratorAttributes | undefined {
 	const candidates = node.presentationOfCandidates;
 	if (!candidates || candidates.length === 0) {
 		return node.presentationOf;

@@ -10,7 +10,10 @@
  * substitution this feeds.
  */
 
+import type { OrderedXmlElement } from '../../../diagram/layout/smartart-choose-xml';
+import { firstChildNamed, groupedChildren } from '../../../diagram/layout/smartart-choose-xml';
 import type { PptxSmartArtForEach, PptxSmartArtLayoutNode } from '../types';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 /**
  * True when a raw `dgm:forEach` targets `axis="ch"` node points (not
@@ -28,17 +31,12 @@ import type { PptxSmartArtForEach, PptxSmartArtLayoutNode } from '../types';
  * `dgm:forEach`s each start at `st="1"`/`"2"`/... for a DIFFERENT total
  * count, so the FIRST one found in document order is always `st="1"`).
  */
-function isChildNodeForEach(entry: unknown): boolean {
-	const raw = Array.isArray(entry) ? entry[0] : entry;
-	if (!raw || typeof raw !== 'object') {
-		return false;
-	}
-	const attrs = raw as Record<string, unknown>;
-	const ptType = attrs['@_ptType'];
-	const start = Number(attrs['@_st'] ?? '1');
+function isChildNodeForEach(forEach: OrderedXmlElement): boolean {
+	const ptType = forEach.attrs['ptType'];
+	const start = Number(forEach.attrs['st'] ?? '1');
 	return (
-		attrs['@_axis'] === 'ch' &&
-		(ptType === undefined || String(ptType).includes('node')) &&
+		forEach.attrs['axis'] === 'ch' &&
+		(ptType === undefined || ptType.includes('node')) &&
 		(!Number.isFinite(start) || start <= 1)
 	);
 }
@@ -48,25 +46,14 @@ function isChildNodeForEach(entry: unknown): boolean {
  * it (through `dgm:layoutNode`/`dgm:choose`/`dgm:if`/`dgm:else` wrapping), a
  * NESTED `dgm:forEach axis="ch"` targeting node points.
  */
-function hasNestedChildForEach(value: unknown): boolean {
-	if (!value || typeof value !== 'object') {
-		return false;
-	}
-	if (Array.isArray(value)) {
-		return value.some(hasNestedChildForEach);
-	}
-	for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-		if (key.startsWith('@_')) {
-			continue;
-		}
-		if (key.split(':').pop() === 'forEach' && isChildNodeForEach(entry)) {
-			return true;
-		}
-		if (hasNestedChildForEach(entry)) {
-			return true;
-		}
-	}
-	return false;
+function hasNestedChildForEach(element: OrderedXmlElement): boolean {
+	// Only the FIRST `dgm:forEach` child is tested as the iterator itself;
+	// every child (that one included) is then searched recursively.
+	const firstForEach = firstChildNamed(element, 'forEach');
+	return (
+		(firstForEach !== undefined && isChildNodeForEach(firstForEach)) ||
+		groupedChildren(element).some(hasNestedChildForEach)
+	);
 }
 
 /**
@@ -82,25 +69,13 @@ function hasNestedChildForEach(value: unknown): boolean {
  * checking only direct children (not descending further) is what keeps this
  * from also firing for those.
  */
-function hasDirectSelfNodeForEach(raw: unknown): boolean {
-	if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-		return false;
-	}
-	const key = Object.keys(raw as Record<string, unknown>).find(
-		(candidate) => candidate.split(':').pop() === 'forEach',
+function hasDirectSelfNodeForEach(raw: OrderedXmlElement | undefined): boolean {
+	return (raw?.children ?? []).some(
+		(entry) =>
+			entry.name === 'forEach' &&
+			entry.attrs['axis'] === 'self' &&
+			(entry.attrs['ptType'] ?? '').includes('node'),
 	);
-	if (!key) {
-		return false;
-	}
-	const value = (raw as Record<string, unknown>)[key];
-	const entries = Array.isArray(value) ? value : [value];
-	return entries.some((entry) => {
-		if (!entry || typeof entry !== 'object') {
-			return false;
-		}
-		const attrs = entry as Record<string, unknown>;
-		return attrs['@_axis'] === 'self' && String(attrs['@_ptType'] ?? '').includes('node');
-	});
 }
 
 /**
@@ -127,7 +102,7 @@ function isOwnChildForEach(entry: PptxSmartArtForEach | undefined): boolean {
 		entry.axis?.[0] === 'ch' &&
 		(entry.pointTypes === undefined || entry.pointTypes.includes('node')) &&
 		start <= 1 &&
-		hasDirectSelfNodeForEach(entry.rawXml)
+		hasDirectSelfNodeForEach(pptxOrderedXml(entry.rawXml))
 	);
 }
 
@@ -147,6 +122,6 @@ export function arrangerRepeatsChildTemplate(arranger: PptxSmartArtLayoutNode): 
 	if (isOwnChildForEach(entry)) {
 		return true;
 	}
-	const raw = entry?.rawXml;
+	const raw = pptxOrderedXml(entry?.rawXml);
 	return raw !== undefined && hasNestedChildForEach(raw);
 }

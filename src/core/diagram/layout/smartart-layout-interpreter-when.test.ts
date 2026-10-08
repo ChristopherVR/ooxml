@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtNode, PptxSmartArtWhen } from '../types';
+import type { DiagramNode, DiagramWhen } from '../model';
 import { evaluateWhen } from './smartart-layout-interpreter-when';
 import type { WhenContext } from './smartart-layout-interpreter-when';
 
-function when(fn: string, operator: string, value: string, argument?: string): PptxSmartArtWhen {
+function when(fn: string, operator: string, value: string, argument?: string): DiagramWhen {
 	return { function: fn, operator, value, ...(argument ? { argument } : {}) };
 }
 
@@ -73,13 +73,13 @@ describe('evaluateWhen', () => {
 	 * wrong or undecidable regardless of the real tree.
 	 */
 	it('maxDepth: axis-aware and anchor-relative when both are supplied', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three', parentId: 'one' };
-		const four: PptxSmartArtNode = { id: 'four', text: 'Four', parentId: 'one' };
-		const five: PptxSmartArtNode = { id: 'five', text: 'Five', parentId: 'four' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Three', parentId: 'one' };
+		const four: DiagramNode = { id: 'four', text: 'Four', parentId: 'one' };
+		const five: DiagramNode = { id: 'five', text: 'Five', parentId: 'four' };
 		const nodes = [one, two, three, four, five];
-		const guard: PptxSmartArtWhen = {
+		const guard: DiagramWhen = {
 			axis: ['des'],
 			function: 'maxDepth',
 			operator: 'lte',
@@ -95,8 +95,8 @@ describe('evaluateWhen', () => {
 	});
 
 	it('maxDepth: a childless anchor resolves to a real, decidable 0', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const guard: PptxSmartArtWhen = {
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const guard: DiagramWhen = {
 			axis: ['des'],
 			function: 'maxDepth',
 			operator: 'equ',
@@ -106,8 +106,8 @@ describe('evaluateWhen', () => {
 	});
 
 	it('maxDepth: falls back to context.maxDepth when axis or anchor is missing (no regression)', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const guard: PptxSmartArtWhen = {
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const guard: DiagramWhen = {
 			axis: ['des'],
 			function: 'maxDepth',
 			operator: 'equ',
@@ -194,7 +194,7 @@ describe('evaluateWhen', () => {
 	// wrongly-resolved `90`.
 	describe('cnt: compound @axis navigation (ECMA-376 21.4.7.5)', () => {
 		/** "Node One" (root/hub) -> Two/Three/Four; Four -> Five (a deeper solo grandchild). */
-		function radialHubNodes(): PptxSmartArtNode[] {
+		function radialHubNodes(): DiagramNode[] {
 			return [
 				{ id: 'one', text: 'Node One' },
 				{ id: 'two', text: 'Node Two', parentId: 'one' },
@@ -204,7 +204,7 @@ describe('evaluateWhen', () => {
 			];
 		}
 
-		function compoundCnt(op: string, val: string): PptxSmartArtWhen {
+		function compoundCnt(op: string, val: string): DiagramWhen {
 			return {
 				function: 'cnt',
 				operator: op,
@@ -227,7 +227,7 @@ describe('evaluateWhen', () => {
 		});
 
 		it('the SAME condition is TRUE for a hub with only 1 real satellite', () => {
-			const oneSatellite: PptxSmartArtNode[] = [
+			const oneSatellite: DiagramNode[] = [
 				{ id: 'one', text: 'Node One' },
 				{ id: 'two', text: 'Node Two', parentId: 'one' },
 			];
@@ -242,7 +242,7 @@ describe('evaluateWhen', () => {
 			// `axis="ch"` (no anchor) can never distinguish how many children a
 			// DEEPER node (a nested composite slot's own anchor) has.
 			const nodes = radialHubNodes();
-			const bareCh: PptxSmartArtWhen = {
+			const bareCh: DiagramWhen = {
 				function: 'cnt',
 				operator: 'equ',
 				value: '3',
@@ -268,7 +268,7 @@ describe('evaluateWhen', () => {
 		});
 
 		it('a bare single-hop axis with no st/cnt ALSO navigates the real tree, not the caller\'s flat nodeCount ("radial-list--hier5.pptx"\'s own satellite-count choose: 3 top-level satellites, not the flat total of 5)', () => {
-			const bareAxisCnt: PptxSmartArtWhen = {
+			const bareAxisCnt: DiagramWhen = {
 				function: 'cnt',
 				operator: 'gt',
 				value: '2',
@@ -290,7 +290,7 @@ describe('evaluateWhen', () => {
 		});
 
 		it('a bare single-hop axis counting the ACTUAL top-level set ("Node One" has 3 real children) resolves TRUE for a matching threshold', () => {
-			const bareAxisCnt: PptxSmartArtWhen = {
+			const bareAxisCnt: DiagramWhen = {
 				function: 'cnt',
 				operator: 'equ',
 				value: '1',
@@ -303,7 +303,7 @@ describe('evaluateWhen', () => {
 		});
 
 		it('falls back to nodeCount for a bare single-hop axis when no `nodes` context is supplied (no regression for an existing caller)', () => {
-			const bareAxisCnt: PptxSmartArtWhen = {
+			const bareAxisCnt: DiagramWhen = {
 				function: 'cnt',
 				operator: 'gt',
 				value: '2',

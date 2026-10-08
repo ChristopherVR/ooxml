@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtLayoutNode } from '../types';
+import type { DiagramLayoutNode } from '../model';
 import {
 	distinctMappedSlotCount,
 	hasRepeatedTemplateStructuralDescendant,
@@ -11,7 +11,7 @@ import {
 
 describe('isContinuationForEach', () => {
 	it('is true for a `dgm:forEach axis="ch" st="2"` (a CONTINUATION iterator)', () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'vertFlow',
 			forEach: [{ axis: ['ch'], pointTypes: ['node'], start: [2] }],
 		};
@@ -19,7 +19,7 @@ describe('isContinuationForEach', () => {
 	});
 
 	it("is false when `st` is absent (the diagram's own top-level iterator)", () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'itemsFlow',
 			forEach: [{ axis: ['ch'], pointTypes: ['node'] }],
 		};
@@ -27,7 +27,7 @@ describe('isContinuationForEach', () => {
 	});
 
 	it('is false when `st` is exactly 1 (starts from the first point)', () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'itemsFlow',
 			forEach: [{ axis: ['ch'], pointTypes: ['node'], start: [1] }],
 		};
@@ -35,7 +35,7 @@ describe('isContinuationForEach', () => {
 	});
 
 	it('is false for a non-`ch` axis (a self/transition iterator, not a point continuation)', () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'sibTransHolder',
 			forEach: [{ axis: ['self'], pointTypes: ['parTrans'], start: [2] }],
 		};
@@ -57,7 +57,7 @@ describe('isContinuationForEach', () => {
 	 * node as a whole is not a pure continuation.
 	 */
 	it("is false for MULTIPLE forEach entries where one covers point 1 (`Basic Venn`'s `compositeShape`)", () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'compositeShape',
 			forEach: [
 				{ axis: ['ch'], pointTypes: ['node'], count: [1] },
@@ -69,7 +69,7 @@ describe('isContinuationForEach', () => {
 	});
 
 	it('is true when EVERY forEach entry skips point 1 (a genuine multi-entry continuation)', () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'multiContinuation',
 			forEach: [
 				{ axis: ['ch'], pointTypes: ['node'], start: [2] },
@@ -94,12 +94,12 @@ describe('isContinuationForEach', () => {
  */
 describe('hasStructuralDescendant excludes a continuation-only descendant', () => {
 	it('returns false when the only structural descendant is a continuation forEach', () => {
-		const pillars: PptxSmartArtLayoutNode = {
+		const pillars: DiagramLayoutNode = {
 			name: 'pillars',
 			algorithm: { type: 'lin' },
 			forEach: [{ axis: ['ch'], pointTypes: ['node'], start: [2] }],
 		};
-		const composite: PptxSmartArtLayoutNode = {
+		const composite: DiagramLayoutNode = {
 			name: 'composite',
 			algorithm: { type: 'composite' },
 			children: [pillars],
@@ -108,12 +108,12 @@ describe('hasStructuralDescendant excludes a continuation-only descendant', () =
 	});
 
 	it('still returns true for a genuine per-item nested arranger (no `st` restriction)', () => {
-		const itemsFlow: PptxSmartArtLayoutNode = {
+		const itemsFlow: DiagramLayoutNode = {
 			name: 'itemsFlow',
 			algorithm: { type: 'lin' },
 			forEach: [{ axis: ['ch'], pointTypes: ['node'] }],
 		};
-		const root: PptxSmartArtLayoutNode = {
+		const root: DiagramLayoutNode = {
 			name: 'root',
 			algorithm: { type: 'composite' },
 			children: [itemsFlow],
@@ -131,10 +131,10 @@ describe('hasStructuralDescendant excludes a continuation-only descendant', () =
  * OWN choose wrongly tunnelling into one such slot.
  */
 describe('isLayoutNodeOrDescendantOf', () => {
-	const outerBoxChildren: PptxSmartArtLayoutNode = { name: 'outerBoxChildren' };
-	const outerBox: PptxSmartArtLayoutNode = { name: 'outerBox', children: [outerBoxChildren] };
-	const middleBox: PptxSmartArtLayoutNode = { name: 'middleBox' };
-	const name0: PptxSmartArtLayoutNode = { name: 'Name0', children: [outerBox, middleBox] };
+	const outerBoxChildren: DiagramLayoutNode = { name: 'outerBoxChildren' };
+	const outerBox: DiagramLayoutNode = { name: 'outerBox', children: [outerBoxChildren] };
+	const middleBox: DiagramLayoutNode = { name: 'middleBox' };
+	const name0: DiagramLayoutNode = { name: 'Name0', children: [outerBox, middleBox] };
 
 	it('is true for the ancestor itself', () => {
 		expect(isLayoutNodeOrDescendantOf(name0, name0)).toBeTruthy();
@@ -159,7 +159,7 @@ describe('isLayoutNodeOrDescendantOf', () => {
 
 describe('distinctMappedSlotCount', () => {
 	it('counts DISTINCT for="ch" forName slots (continuous-arrow-process\'s Name0: dummy + linH)', () => {
-		const name0: PptxSmartArtLayoutNode = {
+		const name0: DiagramLayoutNode = {
 			name: 'Name0',
 			allConstraints: [
 				{ type: 'w', for: 'ch', forName: 'dummy' },
@@ -172,7 +172,7 @@ describe('distinctMappedSlotCount', () => {
 	});
 
 	it('is 1 for a shell composite with exactly one named slot (NumberedDotsVertical root/itemsFlow)', () => {
-		const root: PptxSmartArtLayoutNode = {
+		const root: DiagramLayoutNode = {
 			name: 'root',
 			allConstraints: [
 				{ type: 'l', for: 'ch', forName: 'itemsFlow' },
@@ -187,7 +187,7 @@ describe('distinctMappedSlotCount', () => {
 	});
 
 	it('falls back to `constraints` when `allConstraints` is absent', () => {
-		const node: PptxSmartArtLayoutNode = {
+		const node: DiagramLayoutNode = {
 			name: 'n',
 			constraints: [
 				{ type: 'w', for: 'ch', forName: 'a' },
@@ -210,33 +210,33 @@ describe('distinctMappedSlotCount', () => {
  */
 describe('hasRepeatedTemplateStructuralDescendant', () => {
 	it('is true for a structural child reached through an axis="ch" ptType="node" forEachOrigin (continuous-arrow-process\'s linV)', () => {
-		const linV: PptxSmartArtLayoutNode = {
+		const linV: DiagramLayoutNode = {
 			name: 'linV',
 			algorithm: { type: 'lin' },
 			forEachOrigin: { axis: ['ch'], pointTypes: ['node'] },
 		};
-		const linH: PptxSmartArtLayoutNode = { name: 'linH', children: [linV] };
-		const name0: PptxSmartArtLayoutNode = { name: 'Name0', children: [linH] };
+		const linH: DiagramLayoutNode = { name: 'linH', children: [linV] };
+		const name0: DiagramLayoutNode = { name: 'Name0', children: [linH] };
 		expect(hasRepeatedTemplateStructuralDescendant(name0)).toBeTruthy();
 	});
 
 	it("is false for a structural child that owns its OWN forEach directly (NumberedDotsVertical's itemsFlow)", () => {
-		const itemsFlow: PptxSmartArtLayoutNode = {
+		const itemsFlow: DiagramLayoutNode = {
 			name: 'itemsFlow',
 			algorithm: { type: 'lin' },
 			forEach: [{ axis: ['ch'], pointTypes: ['node'] }],
 		};
-		const root: PptxSmartArtLayoutNode = { name: 'root', children: [itemsFlow] };
+		const root: DiagramLayoutNode = { name: 'root', children: [itemsFlow] };
 		expect(hasRepeatedTemplateStructuralDescendant(root)).toBeFalsy();
 	});
 
 	it('is false when the forEachOrigin axis is not "ch" (e.g. a self-anchored decoration)', () => {
-		const decoration: PptxSmartArtLayoutNode = {
+		const decoration: DiagramLayoutNode = {
 			name: 'decoration',
 			algorithm: { type: 'lin' },
 			forEachOrigin: { axis: ['self'], pointTypes: ['node'] },
 		};
-		const root: PptxSmartArtLayoutNode = { name: 'root', children: [decoration] };
+		const root: DiagramLayoutNode = { name: 'root', children: [decoration] };
 		expect(hasRepeatedTemplateStructuralDescendant(root)).toBeFalsy();
 	});
 

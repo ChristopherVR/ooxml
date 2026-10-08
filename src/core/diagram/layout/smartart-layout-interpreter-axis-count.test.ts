@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PptxSmartArtNode } from '../types';
+import type { DiagramNode } from '../model';
 import { resolveAxisCount, resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
 
 describe('resolveAxisNodes', () => {
@@ -9,7 +9,7 @@ describe('resolveAxisNodes', () => {
 	});
 
 	it('is undecidable (undefined) with no context when hop 0 is none of ch/self/root', () => {
-		const nodes: PptxSmartArtNode[] = [{ id: 'a', text: 'A' }];
+		const nodes: DiagramNode[] = [{ id: 'a', text: 'A' }];
 		expect(resolveAxisNodes(nodes, ['des'], undefined, undefined, undefined)).toBeUndefined();
 	});
 
@@ -24,9 +24,9 @@ describe('resolveAxisNodes', () => {
 	 * deliberately NOT given the same treatment.
 	 */
 	it('bare "root" resolves to the diagram\'s own top-level points, same as ch/self', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Three' };
 		const nodes = [one, two, three];
 		const result = resolveAxisNodes(nodes, ['root'], ['node'], undefined, undefined);
 		expect(result?.map((n) => n.id)).toStrictEqual(['one', 'three']);
@@ -41,11 +41,11 @@ describe('resolveAxisNodes', () => {
 	 * here is absorbed into the `root` read, not a second real tree-hop).
 	 */
 	it('"root ch" resolves to the top-level points themselves, not their children', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const child: PptxSmartArtNode = { id: 'child', text: 'Child', parentId: 'one' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three' };
-		const grandchild: PptxSmartArtNode = { id: 'gc', text: 'GC', parentId: 'three' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const child: DiagramNode = { id: 'child', text: 'Child', parentId: 'one' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
+		const three: DiagramNode = { id: 'three', text: 'Three' };
+		const grandchild: DiagramNode = { id: 'gc', text: 'GC', parentId: 'three' };
 		const nodes = [one, child, two, three, grandchild];
 		const result = resolveAxisNodes(nodes, ['root', 'ch'], ['all', 'node'], undefined, undefined);
 		expect(result?.map((n) => n.id)).toStrictEqual(['one', 'two', 'three']);
@@ -61,11 +61,11 @@ describe('resolveAxisNodes', () => {
 	 * descendants) all three incorrectly passed at once.
 	 */
 	it('"root ch" with st/cnt reads the top-level count, discriminating nested-target\'s three ring guards', () => {
-		const nodeOne: PptxSmartArtNode = { id: 'one', text: 'Node One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three', parentId: 'one' };
-		const four: PptxSmartArtNode = { id: 'four', text: 'Four', parentId: 'one' };
-		const five: PptxSmartArtNode = { id: 'five', text: 'Five', parentId: 'four' };
+		const nodeOne: DiagramNode = { id: 'one', text: 'Node One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Three', parentId: 'one' };
+		const four: DiagramNode = { id: 'four', text: 'Four', parentId: 'one' };
+		const five: DiagramNode = { id: 'five', text: 'Five', parentId: 'four' };
 		const nodes = [nodeOne, two, three, four, five];
 		const result = resolveAxisNodes(nodes, ['root', 'ch'], ['all', 'node'], [1, 1], [0, 0]);
 		expect(result?.map((n) => n.id)).toStrictEqual(['one']);
@@ -80,7 +80,7 @@ describe('resolveAxisNodes', () => {
 	 * `des` case above and `resolveAxisNodes`'s own doc comment).
 	 */
 	it('"root des" (root compounded with a non-ch hop) stays undecidable', () => {
-		const nodes: PptxSmartArtNode[] = [{ id: 'a', text: 'A' }];
+		const nodes: DiagramNode[] = [{ id: 'a', text: 'A' }];
 		expect(
 			resolveAxisNodes(nodes, ['root', 'des'], undefined, undefined, undefined),
 		).toBeUndefined();
@@ -99,9 +99,9 @@ describe('resolveAxisNodes', () => {
 	 * axis-scan.ts`, 3 hits, all `item1..3`).
 	 */
 	it('an explicit "root" hop 0 ignores a supplied context (opts out of anchor-relative navigation)', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
-		const anchor: PptxSmartArtNode = { id: 'anchor', text: 'Anchor' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
+		const anchor: DiagramNode = { id: 'anchor', text: 'Anchor' };
 		const nodes = [one, two];
 		// `context` (the forEachOrigin's own resolved anchor) is a DIFFERENT
 		// node entirely from `nodes` - if it were consulted at all for a
@@ -111,10 +111,10 @@ describe('resolveAxisNodes', () => {
 	});
 
 	it('"root ch" with context still absorbs the ch hop into the root read, ignoring context', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const child: PptxSmartArtNode = { id: 'child', text: 'Child', parentId: 'one' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
-		const anchor: PptxSmartArtNode = { id: 'anchor', text: 'Anchor' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const child: DiagramNode = { id: 'child', text: 'Child', parentId: 'one' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
+		const anchor: DiagramNode = { id: 'anchor', text: 'Anchor' };
 		const nodes = [one, child, two];
 		const result = resolveAxisNodes(nodes, ['root', 'ch'], ['all', 'node'], undefined, undefined, [
 			anchor,
@@ -123,17 +123,17 @@ describe('resolveAxisNodes', () => {
 	});
 
 	it('"root des" with context stays undecidable, same as without one', () => {
-		const nodes: PptxSmartArtNode[] = [{ id: 'a', text: 'A' }];
-		const anchor: PptxSmartArtNode = { id: 'anchor', text: 'Anchor' };
+		const nodes: DiagramNode[] = [{ id: 'a', text: 'A' }];
+		const anchor: DiagramNode = { id: 'anchor', text: 'Anchor' };
 		expect(
 			resolveAxisNodes(nodes, ['root', 'des'], undefined, undefined, undefined, [anchor]),
 		).toBeUndefined();
 	});
 
 	it('bare "ch" resolves to the diagram\'s own top-level points', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Three' };
 		const nodes = [one, two, three];
 		const result = resolveAxisNodes(nodes, ['ch'], ['node'], undefined, undefined);
 		expect(result?.map((n) => n.id)).toStrictEqual(['one', 'three']);
@@ -149,26 +149,26 @@ describe('resolveAxisNodes', () => {
 	 * first, folding three unrelated points' text into one shape.
 	 */
 	it('count without an explicit start defaults start to 1 (does not return every node)', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
+		const three: DiagramNode = { id: 'three', text: 'Three' };
 		const nodes = [one, two, three];
 		const result = resolveAxisNodes(nodes, ['ch'], ['node'], undefined, [1]);
 		expect(result?.map((n) => n.id)).toStrictEqual(['one']);
 	});
 
 	it('neither start nor count is still a true no-op (every matched node)', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
 		const nodes = [one, two];
 		const result = resolveAxisNodes(nodes, ['ch'], ['node'], undefined, undefined);
 		expect(result?.map((n) => n.id)).toStrictEqual(['one', 'two']);
 	});
 
 	it('an explicit start still behaves exactly as before (unaffected by the count-defaulting fix)', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Three' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
+		const three: DiagramNode = { id: 'three', text: 'Three' };
 		const nodes = [one, two, three];
 		const result = resolveAxisNodes(nodes, ['ch'], ['node'], [2], [1]);
 		expect(result?.map((n) => n.id)).toStrictEqual(['two']);
@@ -181,9 +181,9 @@ describe('resolveAxisNodes', () => {
 	 * of the diagram root.
 	 */
 	it('an explicit context anchors hop 0 instead of the diagram root', () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'Node One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Node Two', parentId: 'one' };
-		const three: PptxSmartArtNode = { id: 'three', text: 'Node Three' };
+		const one: DiagramNode = { id: 'one', text: 'Node One' };
+		const two: DiagramNode = { id: 'two', text: 'Node Two', parentId: 'one' };
+		const three: DiagramNode = { id: 'three', text: 'Node Three' };
 		const nodes = [one, two, three];
 		// Anchored at "Node One": desOrSelf should be [one, two], never "three".
 		const result = resolveAxisNodes(nodes, ['desOrSelf'], ['node'], undefined, undefined, [one]);
@@ -191,8 +191,8 @@ describe('resolveAxisNodes', () => {
 	});
 
 	it('a context lets hop 0 accept every single-hop axis token, not just ch/self', () => {
-		const a: PptxSmartArtNode = { id: 'a', text: 'A' };
-		const b: PptxSmartArtNode = { id: 'b', text: 'B', parentId: 'a' };
+		const a: DiagramNode = { id: 'a', text: 'A' };
+		const b: DiagramNode = { id: 'b', text: 'B', parentId: 'a' };
 		const nodes = [a, b];
 		expect(
 			resolveAxisNodes(nodes, ['ancst'], undefined, undefined, undefined, [b])?.map((n) => n.id),
@@ -202,16 +202,16 @@ describe('resolveAxisNodes', () => {
 
 describe('resolveAxisCount', () => {
 	it("matches resolveAxisNodes's own length", () => {
-		const one: PptxSmartArtNode = { id: 'one', text: 'One' };
-		const two: PptxSmartArtNode = { id: 'two', text: 'Two' };
+		const one: DiagramNode = { id: 'one', text: 'One' };
+		const two: DiagramNode = { id: 'two', text: 'Two' };
 		const nodes = [one, two];
 		expect(resolveAxisCount(nodes, ['ch'], ['node'], undefined, undefined)).toBe(2);
 	});
 
 	it("forwards an optional anchor context to resolveAxisNodes (round 13's maxDepth mechanism, extended to cnt)", () => {
-		const a: PptxSmartArtNode = { id: 'a', text: 'A' };
-		const b: PptxSmartArtNode = { id: 'b', text: 'B', parentId: 'a' };
-		const c: PptxSmartArtNode = { id: 'c', text: 'C', parentId: 'a' };
+		const a: DiagramNode = { id: 'a', text: 'A' };
+		const b: DiagramNode = { id: 'b', text: 'B', parentId: 'a' };
+		const c: DiagramNode = { id: 'c', text: 'C', parentId: 'a' };
 		const nodes = [a, b, c];
 		// Root-relative (no anchor): `ch` at hop 0 is the `roots` shortcut - `a` alone.
 		expect(resolveAxisCount(nodes, ['ch'], undefined, undefined, undefined)).toBe(1);

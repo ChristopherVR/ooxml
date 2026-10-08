@@ -10,14 +10,15 @@
  * blind, unbounded `composite` search caused, and why this one avoids them).
  */
 
-import type { XmlObject } from '../types';
-import { localName, nestedChooseBranch } from './smartart-layout-interpreter-choose-branch';
+import type { OrderedXmlElement } from './smartart-choose-xml';
+import { groupedChildren } from './smartart-choose-xml';
+import { nestedChooseBranch } from './smartart-layout-interpreter-choose-branch';
 import type { WhenContext } from './smartart-layout-interpreter-when';
 
 /** A recognised `dgm:alg` found inside a branch's XML, its type plus the raw element (for its `dgm:param`s). */
 export interface FoundBranchAlg {
 	type: string;
-	raw: XmlObject;
+	raw: OrderedXmlElement;
 }
 
 /**
@@ -43,7 +44,7 @@ export interface FoundBranchAlg {
  * all.
  */
 export function boundedCompositeAlg(
-	raw: XmlObject | undefined,
+	raw: OrderedXmlElement | undefined,
 	nodeCount: number,
 	context: WhenContext,
 ): FoundBranchAlg | undefined {
@@ -51,50 +52,28 @@ export function boundedCompositeAlg(
 		return undefined;
 	}
 	let found: FoundBranchAlg | undefined;
-	const visit = (value: unknown): void => {
-		if (found !== undefined || !value || typeof value !== 'object') {
-			return;
-		}
-		if (Array.isArray(value)) {
-			value.forEach(visit);
-			return;
-		}
-		for (const [key, entry] of Object.entries(value as XmlObject)) {
+	const visit = (element: OrderedXmlElement): void => {
+		for (const child of groupedChildren(element)) {
 			if (found !== undefined) {
 				return;
 			}
-			if (key.startsWith('@_')) {
-				continue;
-			}
-			const name = localName(key);
-			if (name === 'layoutNode') {
+			if (child.name === 'layoutNode') {
 				// Never cross into a nested layoutNode - see this function's doc
 				// comment for why (the previously-measured regression class).
 				continue;
 			}
-			if (name === 'alg') {
-				for (const candidate of Array.isArray(entry) ? entry : [entry]) {
-					const type =
-						candidate && typeof candidate === 'object'
-							? String((candidate as XmlObject)['@_type'] ?? '')
-							: '';
-					if (type === 'composite') {
-						found = { type, raw: candidate as XmlObject };
-						return;
-					}
+			if (child.name === 'alg') {
+				if (child.attrs['type'] === 'composite') {
+					found = { type: 'composite', raw: child };
+					return;
 				}
-			} else if (name === 'choose') {
-				for (const candidate of Array.isArray(entry) ? entry : [entry]) {
-					if (!candidate || typeof candidate !== 'object') {
-						continue;
-					}
-					const winningBranch = nestedChooseBranch(candidate as XmlObject, nodeCount, context);
-					if (winningBranch) {
-						visit(winningBranch);
-					}
+			} else if (child.name === 'choose') {
+				const winningBranch = nestedChooseBranch(child, nodeCount, context);
+				if (winningBranch) {
+					visit(winningBranch);
 				}
 			} else {
-				visit(entry);
+				visit(child);
 			}
 		}
 	};

@@ -67,7 +67,7 @@ import type {
 	PptxSmartArtLayoutNode,
 } from '../types';
 import { selectConstraints } from './smartart-constraint-branch-index';
-import type { WhenContext } from './smartart-layout-interpreter-when';
+import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 /** Sentinel role for an unnamed layoutNode (most commonly the root arranger). */
 const ROOT_ROLE = '\u0000root';

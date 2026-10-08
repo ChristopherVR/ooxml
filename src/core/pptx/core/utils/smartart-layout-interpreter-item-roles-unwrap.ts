@@ -10,7 +10,7 @@
  */
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { isTransitionOnlyChild } from './smartart-layout-interpreter-composite-detect';
+import { isTransitionOnlyChild } from '../../../diagram/layout/smartart-layout-interpreter-composite-detect';
 import { isTextRole, TRANSITION_ROLE_NAMES } from './smartart-layout-interpreter-item-role-shared';
 
 /**

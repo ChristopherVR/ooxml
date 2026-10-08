@@ -17,31 +17,31 @@ export type DiagramConstraintPointType =
 	| 'sibTrans';
 
 export interface DiagramConstraintTarget {
-	for?: DiagramConstraintRelationship;
-	forName?: string;
-	pointType?: DiagramConstraintPointType;
+	for?: DiagramConstraintRelationship | undefined;
+	forName?: string | undefined;
+	pointType?: DiagramConstraintPointType | undefined;
 }
 
 /** Editable DiagramML CT_Constraint. */
 export interface DiagramConstraint<R = unknown> extends DiagramConstraintTarget {
 	type: string;
-	referenceType?: string;
-	referenceFor?: DiagramConstraintRelationship;
-	referenceForName?: string;
-	referencePointType?: DiagramConstraintPointType;
-	operator?: DiagramConstraintOperator;
-	value?: number;
-	factor?: number;
+	referenceType?: string | undefined;
+	referenceFor?: DiagramConstraintRelationship | undefined;
+	referenceForName?: string | undefined;
+	referencePointType?: DiagramConstraintPointType | undefined;
+	operator?: DiagramConstraintOperator | undefined;
+	value?: number | undefined;
+	factor?: number | undefined;
 	/** Original constraint retained for foreign attributes and extension content. */
-	rawXml?: R;
+	rawXml?: R | undefined;
 }
 
 /** Editable DiagramML CT_NumericRule. */
 export interface DiagramNumericRule<R = unknown> extends DiagramConstraintTarget {
 	type: string;
-	value?: number;
-	factor?: number;
-	max?: number;
+	value?: number | undefined;
+	factor?: number | undefined;
+	max?: number | undefined;
 	/** Original rule retained for foreign attributes and extension content. */
-	rawXml?: R;
+	rawXml?: R | undefined;
 }

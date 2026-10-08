@@ -13,7 +13,7 @@
  * Pure tree navigation; no framework code.
  */
 
-import type { PptxSmartArtNode } from '../types';
+import type { DiagramNode } from '../model';
 import { navigateAxisHop } from './smartart-layout-interpreter-axis-hop';
 
 /**
@@ -23,7 +23,7 @@ import { navigateAxisHop } from './smartart-layout-interpreter-axis-hop';
  * `"node"`; `"all"` matches anything; any other declared type
  * (`"asst"`/`"doc"`/`"parTrans"`/`"sibTrans"`/...) must match exactly.
  */
-function pointTypeMatches(node: PptxSmartArtNode, pointType: string): boolean {
+function pointTypeMatches(node: DiagramNode, pointType: string): boolean {
 	if (pointType === 'all') {
 		return true;
 	}
@@ -54,11 +54,11 @@ function pointTypeMatches(node: PptxSmartArtNode, pointType: string): boolean {
  * whenever `count` is meaningfully constraining fixes this generally, for
  * every caller, not just the one that exposed it.
  */
-function selectRange(
-	nodes: PptxSmartArtNode[],
+function selectRange<N extends DiagramNode>(
+	nodes: N[],
 	start: number | undefined,
 	count: number | undefined,
-): PptxSmartArtNode[] {
+): N[] {
 	if (start === undefined && count === undefined) {
 		return nodes;
 	}
@@ -68,12 +68,12 @@ function selectRange(
 }
 
 /** One hop's `@ptType` filter followed by its own `@st`/`@cnt` range, the pair every hop in {@link resolveAxisNodes}'s loop applies. */
-function applyPointTypeAndRange(
-	nodes: PptxSmartArtNode[],
+function applyPointTypeAndRange<N extends DiagramNode>(
+	nodes: N[],
 	pointType: string | undefined,
 	start: number | undefined,
 	count: number | undefined,
-): PptxSmartArtNode[] {
+): N[] {
 	const filtered = pointType ? nodes.filter((n) => pointTypeMatches(n, pointType)) : nodes;
 	return selectRange(filtered, start, count);
 }
@@ -95,7 +95,7 @@ function applyPointTypeAndRange(
  *   spec defines (`self`/`ch`/`des`/`desOrSelf`/`par`/`ancst`/`ancstOrSelf`/
  *   `followSib`/`precedSib`/`follow`/`preced`/`none`) - needed for a
  *   `presOf`/`dgm:if` reached through a `dgm:forEach` (a node's own
- *   {@link PptxSmartArtLayoutNode.forEachOrigin}), where content is scoped
+ *   {@link DiagramLayoutNode.forEachOrigin}), where content is scoped
  *   to ONE specific point, not the whole diagram (`Phased Process`'s
  *   `circ1Tx`, `presOf axis="desOrSelf"`, is anchored one hop up by its
  *   `forEachOrigin`'s `axis="ch ch" st="2 1" cnt="1 1"` - "point 2's first
@@ -170,14 +170,14 @@ function applyPointTypeAndRange(
  * foreach.ts`'s content resolution, which need the actual resolved NODES,
  * not just how many.
  */
-export function resolveAxisNodes(
-	nodes: PptxSmartArtNode[],
+export function resolveAxisNodes<N extends DiagramNode>(
+	nodes: N[],
 	axis: string[],
 	pointTypes: string[] | undefined,
 	start: number[] | undefined,
 	count: number[] | undefined,
-	context?: PptxSmartArtNode[],
-): PptxSmartArtNode[] | undefined {
+	context?: N[],
+): N[] | undefined {
 	if (axis.length === 0) {
 		return undefined;
 	}
@@ -197,8 +197,8 @@ export function resolveAxisNodes(
 		return undefined;
 	}
 	const byId = new Map(nodes.map((n) => [n.id, n] as const));
-	const childrenOf = new Map<string, PptxSmartArtNode[]>();
-	const parentOf = new Map<string, PptxSmartArtNode>();
+	const childrenOf = new Map<string, N[]>();
+	const parentOf = new Map<string, N>();
 	for (const node of nodes) {
 		const parent = node.parentId ? byId.get(node.parentId) : undefined;
 		if (parent) {
@@ -222,7 +222,7 @@ export function resolveAxisNodes(
 	// of anchor-relative navigation regardless). Otherwise a `context`-
 	// anchored hop 0 uses `navigateAxisHop` like every later hop does, and a
 	// bare (non-`root`) `ch`/`self` is the pre-existing `roots` shortcut.
-	let current: PptxSmartArtNode[];
+	let current: N[];
 	let nextHop: number;
 	if (axis[0] === 'root' && axis.length > 1) {
 		current = applyPointTypeAndRange(roots, pointTypes?.[1], start?.[1], count?.[1]);
@@ -232,7 +232,7 @@ export function resolveAxisNodes(
 		nextHop = 1;
 	} else if (context !== undefined) {
 		current = applyPointTypeAndRange(
-			navigateAxisHop(context, axis[0], nodes, childrenOf, parentOf, roots),
+			navigateAxisHop(context, axis[0]!, nodes, childrenOf, parentOf, roots),
 			pointTypes?.[0],
 			start?.[0],
 			count?.[0],
@@ -244,7 +244,7 @@ export function resolveAxisNodes(
 	}
 	for (let hop = nextHop; hop < axis.length; hop += 1) {
 		current = applyPointTypeAndRange(
-			navigateAxisHop(current, axis[hop], nodes, childrenOf, parentOf, roots),
+			navigateAxisHop(current, axis[hop]!, nodes, childrenOf, parentOf, roots),
 			pointTypes?.[hop],
 			start?.[hop],
 			count?.[hop],
@@ -272,12 +272,12 @@ export function resolveAxisNodes(
  * offer.
  */
 export function resolveAxisCount(
-	nodes: PptxSmartArtNode[],
+	nodes: DiagramNode[],
 	axis: string[],
 	pointTypes: string[] | undefined,
 	start: number[] | undefined,
 	count: number[] | undefined,
-	context?: PptxSmartArtNode[],
+	context?: DiagramNode[],
 ): number | undefined {
 	return resolveAxisNodes(nodes, axis, pointTypes, start, count, context)?.length;
 }

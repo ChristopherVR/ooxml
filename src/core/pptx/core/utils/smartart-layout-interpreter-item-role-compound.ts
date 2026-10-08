@@ -16,7 +16,7 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { positionRange } from './smartart-layout-interpreter-axis-range';
+import { positionRange } from '../../../diagram/layout/smartart-layout-interpreter-axis-range';
 import { smartArtDescendantsWithText } from './smartart-node-tree-axis';
 
 /**

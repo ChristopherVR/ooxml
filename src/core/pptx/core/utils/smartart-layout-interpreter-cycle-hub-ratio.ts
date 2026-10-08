@@ -13,7 +13,7 @@ import type { ConstraintIndex } from './smartart-constraint-solver';
 import { resolveConstraint } from './smartart-constraint-solver';
 import type { HubToNodeRatio } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 import { resolveHubToNodeRatioViaUserSize } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
-import { evaluateWhen } from './smartart-layout-interpreter-when';
+import { evaluateWhen } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 export type { HubToNodeRatio } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
 

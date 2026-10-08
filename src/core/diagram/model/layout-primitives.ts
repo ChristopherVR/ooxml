@@ -18,7 +18,7 @@ export interface DiagramLayoutCategory {
 
 export interface DiagramAlgorithmParameter {
 	type: string;
-	value?: string;
+	value?: string | undefined;
 }
 
 /** Typed DiagramML CT_Algorithm data attached to a layout node. */
@@ -29,14 +29,14 @@ export interface DiagramLayoutAlgorithm {
 }
 
 export interface DiagramIteratorAttributes {
-	name?: string;
-	reference?: string;
-	axis?: string[];
-	pointTypes?: string[];
-	hideLastTransition?: boolean[];
-	start?: number[];
-	count?: number[];
-	step?: number[];
+	name?: string | undefined;
+	reference?: string | undefined;
+	axis?: string[] | undefined;
+	pointTypes?: string[] | undefined;
+	hideLastTransition?: boolean[] | undefined;
+	start?: number[] | undefined;
+	count?: number[] | undefined;
+	step?: number[] | undefined;
 }
 
 export interface DiagramForEach<R = unknown> extends DiagramIteratorAttributes {
@@ -45,7 +45,7 @@ export interface DiagramForEach<R = unknown> extends DiagramIteratorAttributes {
 
 export interface DiagramWhen<R = unknown> extends DiagramIteratorAttributes {
 	function: string;
-	argument?: string;
+	argument?: string | undefined;
 	operator: string;
 	value: string;
 	rawXml?: R;

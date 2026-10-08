@@ -41,7 +41,7 @@
 
 import type { PptxSmartArtLayoutNode } from '../types';
 import { chooseAlgType } from './smartart-layout-interpreter-flow';
-import type { WhenContext } from './smartart-layout-interpreter-when';
+import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
 
 const HIERARCHY_ALG_TYPES = new Set(['hierRoot', 'hierChild']);
 

@@ -50,7 +50,7 @@
  * Pure tree navigation; no framework code.
  */
 
-import type { PptxSmartArtNode } from '../types';
+import type { DiagramNode } from '../model';
 import { resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
 
 /**
@@ -61,12 +61,12 @@ import { resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
  * defensive only, real SmartArt data models are always a proper tree).
  */
 function depthFromAnchor(
-	node: PptxSmartArtNode,
+	node: DiagramNode,
 	anchorId: string,
-	byId: Map<string, PptxSmartArtNode>,
+	byId: Map<string, DiagramNode>,
 ): number | undefined {
 	let depth = 0;
-	let current: PptxSmartArtNode | undefined = node;
+	let current: DiagramNode | undefined = node;
 	const seen = new Set<string>();
 	while (current) {
 		if (current.id === anchorId) {
@@ -85,7 +85,7 @@ function depthFromAnchor(
 /**
  * ECMA-376 `dgm:if/@func="maxDepth"`: the deepest level reached by the
  * `@axis`-resolved point set, counted from `anchor` (the enclosing
- * `dgm:forEach`'s own bound point(s) - see `PptxSmartArtLayoutNode.
+ * `dgm:forEach`'s own bound point(s) - see `DiagramLayoutNode.
  * forEachOrigin`, the SAME anchor {@link resolveAxisNodes}'s own `context`
  * parameter already threads through for `des`/`desOrSelf`/etc navigation
  * reached through a forEach). `anchor` is a set (mirroring `resolveAxisNodes`
@@ -102,12 +102,12 @@ function depthFromAnchor(
  * point) is a real, decidable `0` - not undecidable.
  */
 export function resolveAxisMaxDepth(
-	nodes: PptxSmartArtNode[],
+	nodes: DiagramNode[],
 	axis: string[],
 	pointTypes: string[] | undefined,
 	start: number[] | undefined,
 	count: number[] | undefined,
-	anchor: PptxSmartArtNode[],
+	anchor: DiagramNode[],
 ): number | undefined {
 	if (anchor.length === 0) {
 		return undefined;

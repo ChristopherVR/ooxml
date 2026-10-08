@@ -16,7 +16,7 @@
  */
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { resolveAxisNodes } from './smartart-layout-interpreter-axis-count';
+import { resolveAxisNodes } from '../../../diagram/layout/smartart-layout-interpreter-axis-count';
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';

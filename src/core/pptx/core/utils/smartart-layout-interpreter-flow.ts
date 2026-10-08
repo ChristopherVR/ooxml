@@ -19,7 +19,7 @@
 
 import type { PptxSmartArtForEach, PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 
-export type { WhenContext } from './smartart-layout-interpreter-when';
+export type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
 // Re-exported so existing callers (`smartart-layout-interpreter-model.ts`,
 // `index.ts`'s barrel) keep importing choose/alg resolution from this module;
 // the implementation itself lives in

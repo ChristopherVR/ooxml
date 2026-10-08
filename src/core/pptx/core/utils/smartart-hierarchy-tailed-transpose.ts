@@ -35,43 +35,27 @@
  * Pure XML/geometry reading; no framework code, no DOM.
  */
 
-import type { PptxSmartArtLayoutNode, XmlObject } from '../types';
-import { localName } from './smartart-layout-interpreter-choose-branch';
+import type { OrderedXmlElement } from '../../../diagram/layout/smartart-choose-xml';
+import { groupedChildren } from '../../../diagram/layout/smartart-choose-xml';
+import type { PptxSmartArtLayoutNode } from '../types';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 /** First `dgm:param[@type=paramType]/@val` found under a `dgm:alg`, searched blindly (see the module doc comment for why a blind, non-decidable search is safe here). */
-function findAlgParamValue(raw: unknown, paramType: string): string | undefined {
-	if (!raw || typeof raw !== 'object') {
+function findAlgParamValue(
+	element: OrderedXmlElement | undefined,
+	paramType: string,
+): string | undefined {
+	if (!element) {
 		return undefined;
 	}
-	if (Array.isArray(raw)) {
-		for (const entry of raw) {
-			const found = findAlgParamValue(entry, paramType);
-			if (found !== undefined) {
-				return found;
-			}
-		}
-		return undefined;
-	}
-	for (const [key, value] of Object.entries(raw as XmlObject)) {
-		if (key.startsWith('@_')) {
-			continue;
-		}
-		const name = localName(key);
-		if (name === 'param') {
-			const candidates = Array.isArray(value) ? value : [value];
-			for (const candidate of candidates) {
-				if (
-					candidate &&
-					typeof candidate === 'object' &&
-					(candidate as XmlObject)['@_type'] === paramType
-				) {
-					const val = (candidate as XmlObject)['@_val'];
-					return typeof val === 'string' ? val : undefined;
-				}
+	for (const child of groupedChildren(element)) {
+		if (child.name === 'param') {
+			if (child.attrs['type'] === paramType) {
+				return child.attrs['val'];
 			}
 			continue;
 		}
-		const found = findAlgParamValue(value, paramType);
+		const found = findAlgParamValue(child, paramType);
 		if (found !== undefined) {
 			return found;
 		}
@@ -103,7 +87,7 @@ export function tailedHierarchyDeclaresChAlign(
 	}
 	for (const choose of algorithmNode.choose ?? []) {
 		const branchRaw = choose.when[0]?.rawXml ?? choose.otherwise?.rawXml;
-		if (findAlgParamValue(branchRaw, 'chAlign') !== undefined) {
+		if (findAlgParamValue(pptxOrderedXml(branchRaw), 'chAlign') !== undefined) {
 			return true;
 		}
 	}

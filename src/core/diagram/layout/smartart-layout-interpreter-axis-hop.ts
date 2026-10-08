@@ -12,14 +12,11 @@
  * framework code.
  */
 
-import type { PptxSmartArtNode } from '../types';
+import type { DiagramNode } from '../model';
 
 /** Every descendant of `node` (children, grandchildren, ...), document order. */
-function descendantsOf(
-	node: PptxSmartArtNode,
-	childrenOf: Map<string, PptxSmartArtNode[]>,
-): PptxSmartArtNode[] {
-	const out: PptxSmartArtNode[] = [];
+function descendantsOf<N extends DiagramNode>(node: N, childrenOf: Map<string, N[]>): N[] {
+	const out: N[] = [];
 	const stack = [...(childrenOf.get(node.id) ?? [])];
 	while (stack.length > 0) {
 		const next = stack.shift();
@@ -33,11 +30,8 @@ function descendantsOf(
 }
 
 /** Every ancestor of `node` (parent, grandparent, ...), nearest first. */
-function ancestorsOf(
-	node: PptxSmartArtNode,
-	parentOf: Map<string, PptxSmartArtNode>,
-): PptxSmartArtNode[] {
-	const out: PptxSmartArtNode[] = [];
+function ancestorsOf<N extends DiagramNode>(node: N, parentOf: Map<string, N>): N[] {
+	const out: N[] = [];
 	let current = parentOf.get(node.id);
 	while (current) {
 		out.push(current);
@@ -47,12 +41,12 @@ function ancestorsOf(
 }
 
 /** `node`'s siblings (same parent, or the top-level `roots` when it has none), in document order, INCLUDING `node` itself. */
-function siblingGroupOf(
-	node: PptxSmartArtNode,
-	parentOf: Map<string, PptxSmartArtNode>,
-	childrenOf: Map<string, PptxSmartArtNode[]>,
-	roots: PptxSmartArtNode[],
-): PptxSmartArtNode[] {
+function siblingGroupOf<N extends DiagramNode>(
+	node: N,
+	parentOf: Map<string, N>,
+	childrenOf: Map<string, N[]>,
+	roots: N[],
+): N[] {
 	const parent = parentOf.get(node.id);
 	return parent ? (childrenOf.get(parent.id) ?? []) : roots;
 }
@@ -89,23 +83,23 @@ function siblingGroupOf(
  * than hop 0, from a real anchored point). `none` is always empty (ECMA's
  * own explicit "no navigation" token).
  */
-export function navigateAxisHop(
-	current: PptxSmartArtNode[],
+export function navigateAxisHop<N extends DiagramNode>(
+	current: N[],
 	axis: string,
-	nodes: PptxSmartArtNode[],
-	childrenOf: Map<string, PptxSmartArtNode[]>,
-	parentOf: Map<string, PptxSmartArtNode>,
-	roots: PptxSmartArtNode[],
-): PptxSmartArtNode[] {
-	const out: PptxSmartArtNode[] = [];
+	nodes: N[],
+	childrenOf: Map<string, N[]>,
+	parentOf: Map<string, N>,
+	roots: N[],
+): N[] {
+	const out: N[] = [];
 	const seen = new Set<string>();
-	const add = (node: PptxSmartArtNode): void => {
+	const add = (node: N): void => {
 		if (!seen.has(node.id)) {
 			seen.add(node.id);
 			out.push(node);
 		}
 	};
-	const addAll = (list: PptxSmartArtNode[]): void => {
+	const addAll = (list: N[]): void => {
 		for (const node of list) {
 			add(node);
 		}
@@ -163,7 +157,7 @@ export function navigateAxisHop(
 			}
 			case 'root': {
 				const ancestors = ancestorsOf(node, parentOf);
-				add(ancestors.length > 0 ? ancestors[ancestors.length - 1] : node);
+				add(ancestors.length > 0 ? ancestors[ancestors.length - 1]! : node);
 				break;
 			}
 			case 'none':

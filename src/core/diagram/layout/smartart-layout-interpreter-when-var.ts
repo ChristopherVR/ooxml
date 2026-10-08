@@ -7,12 +7,12 @@
  * no DOM.
  */
 
-import type { PptxSmartArtPresLayoutVars, PptxSmartArtWhen } from '../types';
+import type { DiagramPresLayoutVars, DiagramWhen } from '../model';
 import { compareNumeric, toNumber } from './smartart-layout-interpreter-when-numeric';
 
 /** `dgm:if/@arg` variable name -> the `presLayoutVars` field it names (`dgm:varLst` tag names). */
 const VAR_LOOKUP: Readonly<
-	Record<string, (vars: PptxSmartArtPresLayoutVars) => string | number | boolean | undefined>
+	Record<string, (vars: DiagramPresLayoutVars) => string | number | boolean | undefined>
 > = {
 	dir: (v) => v.direction,
 	hierBranch: (v) => v.hierarchyBranch,
@@ -46,8 +46,8 @@ const VAR_DEFAULT: Readonly<Partial<Record<string, string>>> = { dir: 'norm' };
 
 /** Evaluate `func="var"`: compare `presLayoutVars[@arg]` against `when.value`. */
 export function evaluateVar(
-	when: PptxSmartArtWhen,
-	presLayoutVars: PptxSmartArtPresLayoutVars,
+	when: DiagramWhen,
+	presLayoutVars: DiagramPresLayoutVars,
 ): boolean | undefined {
 	if (!when.argument) {
 		return undefined;

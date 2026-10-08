@@ -41,7 +41,7 @@ import {
 	isLayoutNodeOrDescendantOf,
 	itemTemplateNodes,
 	mapsSlots,
-} from './smartart-layout-interpreter-composite-detect';
+} from '../../../diagram/layout/smartart-layout-interpreter-composite-detect';
 import { chooseAlgorithm } from './smartart-layout-interpreter-flow';
 import { treeMaxDepth, walkWithTreeLocation } from './smartart-layout-interpreter-tree-location';
 
