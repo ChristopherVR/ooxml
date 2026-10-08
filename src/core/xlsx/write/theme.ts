@@ -1,6 +1,7 @@
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import type { ThemePalette } from '../model';
-import { PALETTE_SLOTS, SCHEME_ORDER, parseTheme } from '../read/theme';
+import { THEME_COLOR_SLOTS } from '../../drawingml/theme-model';
+import { PALETTE_SLOTS, parseTheme } from '../read/theme';
 import { XML_HEADER, escapeAttr } from './xml-out';
 
 const colorOf = (theme: ThemePalette, slot: string): string =>
@@ -10,7 +11,7 @@ const colorOf = (theme: ThemePalette, slot: string): string =>
 
 /** A complete Office theme part built from the model palette and fonts. */
 export function defaultThemeXml(theme: ThemePalette): string {
-	const scheme = SCHEME_ORDER.map(
+	const scheme = THEME_COLOR_SLOTS.map(
 		(slot) => `<a:${slot}><a:srgbClr val="${colorOf(theme, slot)}"/></a:${slot}>`,
 	).join('');
 	const font = (kind: string, face: string) =>
