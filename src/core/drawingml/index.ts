@@ -23,3 +23,6 @@ export * from './write-fill';
 export * from './gradient-presets';
 export * from './gradient-geometry';
 export * from './rect-path-gradient';
+export * from './theme-model';
+export * from './theme';
+export * from './theme-color';
