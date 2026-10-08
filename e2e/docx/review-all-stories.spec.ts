@@ -23,7 +23,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const pending = () =>
 			editor.evaluate((el) => {
 				const model = (el as DocxEditorElement).documentModel!;
-				const blocks = [
+				const blocks: NonNullable<DocxEditorElement['documentModel']>['blocks'] = [
 					...model.blocks,
 					...(model.sections ?? []).flatMap((section) =>
 						[
