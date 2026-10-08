@@ -149,22 +149,35 @@ and no claim of parity without evidence.
 | 7   | Autosave recovery snapshot (bug 2): root cause and fix across bindings.                                                                                                                 | ui, viewers |
 | 8   | Docs and CI hygiene: `AGENTS.md` table, names and status; `features.md` chart section and function count from the registry; `ci.yml` lint gate; `.github/README.md` names.              | docs, ci    |
 
-### Wave 2
+### Wave 2 (landed 2026-10-08, see the commit log for details)
 
-- `chart` model and parsers (plan step 5), xlsx reader first, docx `c:chart`.
-  Started: the model, `parseChartSpace`, the xlsx reader and docx chart
-  loading are in; the pptx alias, chartex and a neutral writer remain
-  (`agnostic-core-plan.md`, step 5).
-- pptx document properties through `opc/properties`.
-- Shared chrome: title bar, status bar, backstage and find bar used by all
-  four products; token bridges reduced to alias sheets.
-- Diagram layout engine out of pptx (plan step 2): model types and engine moved to
-  `diagram`; constraint solver, hierarchy and interpreters remain (see the step 2
-  status in `agnostic-core-plan.md`).
-- Gradient raster gaps (bug 3) with native reference images.
-- `src/ui/tsconfig.pptx.json` extends the base; tighten one pptx directory at
-  a time; shared `playwright-chromium` and `tsconfig.release` for docx and
-  xlsx.
+- `chart` model and parsers (plan step 5): the neutral `ChartSpace` model,
+  `parseChartSpace` over the shared DOM, xlsx as first client (identical output
+  on 364 real chart parts) and Word chart loading are in. Remaining: a neutral
+  writer, the pptx alias, chartex (`agnostic-core-plan.md`, step 5).
+- pptx document properties through `opc/properties`: done. The shared writers
+  now patch parts in place (unchanged bytes survive for every format); the
+  pptx updater is a thin adapter. Output differs from the old pptx writer only
+  in formatting and is closer to the source file.
+- Shared chrome: the Word ruler drives `office-ui-ruler` (markers, margins,
+  zoom and extent were added to the shared element); Visio follows the shared
+  `--office-*` theme through one alias block; the xlsx bridge is the shared
+  `shadcnBridge`. Title bar, status bar, backstage and find bar for all four
+  products remain.
+- Diagram layout engine out of pptx (plan step 2): model types and the engine
+  moved to `diagram`, strict; the constraint solver, hierarchy and
+  interpreters remain (they read the pptx object tree; step 2 status in
+  `agnostic-core-plan.md`).
+- Visio reads its theme and DrawingML colours through `drawingml`; the
+  `Diagram*` aliases are gone outside `diagram`.
+- Gradient raster gaps (bug 3): the coincident-stop case is fixed from native
+  measurements (Excel paints a one-step ramp, not a hard edge); the sixteen
+  translucent three-stop cases stay pinned with measured differences in the
+  test and in `xlsx-parity-review.md`.
+- `src/ui/tsconfig.pptx.json` extends the base; `src/core/pptx/ui` compiles
+  strict; the Playwright Chromium helper is shared by docx and xlsx.
+- Every viewer typecheck is green (the `e2e/docx`, `e2e/xlsx`, teams Svelte
+  demo and pptx CLI breaks were fixed).
 
 ### Wave 3
 
