@@ -11,7 +11,8 @@ const workspace = createWorkspace();
 	selector: 'visio-demo-app',
 	standalone: true,
 	imports: [VisioViewerComponent],
-	template: '<visio-viewer-host [document]="document" [events]="events"></visio-viewer-host>',
+	template:
+		'<visio-viewer-host [document]="document" [events]="events" aria-label="Visio diagram"></visio-viewer-host>',
 })
 class AppComponent implements AfterViewInit {
 	@ViewChild(VisioViewerComponent) viewer?: VisioViewerComponent;

@@ -13,6 +13,7 @@ function App() {
 		<VisioViewer
 			document={document()}
 			events={workspace.events}
+			aria-label="Visio diagram"
 			viewerRef={(handle) => {
 				if (handle && !attached) {
 					attached = true;

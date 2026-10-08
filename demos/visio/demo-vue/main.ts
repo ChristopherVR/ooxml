@@ -14,7 +14,12 @@ const App = defineComponent({
 			if (viewer.value) workspace.attach(viewer.value, (next) => (document.value = next));
 		});
 		return () =>
-			h(VisioViewer, { ref: viewer, document: document.value, events: workspace.events });
+			h(VisioViewer, {
+				ref: viewer,
+				document: document.value,
+				events: workspace.events,
+				'aria-label': 'Visio diagram',
+			});
 	},
 });
 
