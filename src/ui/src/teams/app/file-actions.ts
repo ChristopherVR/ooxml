@@ -68,6 +68,18 @@ export class TeamsFileActions extends LitElement {
 	private async transfer(action: 'copy' | 'download'): Promise<void> {
 		if (this.busy || !this.file || !this.client) return;
 		const { file, client } = this;
+		// Suite hosts may own local files which are not ordinary HTTP downloads.
+		if (
+			!this.dispatchEvent(
+				new CustomEvent('teams-file-transfer', {
+					detail: { attachment: file, action },
+					bubbles: true,
+					composed: true,
+					cancelable: true,
+				}),
+			)
+		)
+			return;
 		const abort = new AbortController();
 		this.abort = abort;
 		this.busy = true;

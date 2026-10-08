@@ -1,5 +1,7 @@
 :host {
 	display: block;
+	min-width: 0;
+	flex: none;
 	padding: 0 var(--office-space-5) var(--office-space-4);
 }
 .typing {
@@ -38,7 +40,8 @@ textarea {
 	background: transparent;
 	color: inherit;
 	font: inherit;
-	field-sizing: content;
+	overflow-y: auto;
+	line-height: 1.5;
 }
 .bar {
 	display: flex;
@@ -109,4 +112,44 @@ textarea {
 }
 .picker button {
 	font-size: 1.3em;
+}
+
+textarea:focus-visible {
+	outline: none;
+}
+.box:focus-within {
+	border-color: var(--office-teams-brand);
+}
+.pending {
+	max-height: 7em;
+	overflow-y: auto;
+	padding-block-end: var(--office-space-2);
+}
+.pending li {
+	min-width: 0;
+	max-width: 100%;
+}
+.pending button {
+	max-width: 100%;
+	height: auto;
+	min-height: 2.4em;
+}
+.file-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+@media (max-width: 600px) {
+	:host {
+		padding: 0 var(--office-space-2) var(--office-space-2);
+	}
+	textarea {
+		font-size: 16px;
+		min-height: 3em;
+	}
+	.bar button {
+		min-width: 36px;
+		height: 36px;
+	}
 }

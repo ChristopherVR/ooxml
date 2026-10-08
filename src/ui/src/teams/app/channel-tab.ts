@@ -14,6 +14,7 @@ export class TeamsChannelTab extends LitElement {
 		canSave: { type: Boolean },
 		detail: { state: true },
 		error: { state: true },
+		hostOpened: { state: true },
 	};
 	declare tab: ChannelTab | null;
 	declare client: TeamsClient | null;
@@ -21,6 +22,7 @@ export class TeamsChannelTab extends LitElement {
 	declare canSave: boolean;
 	declare detail: OpenFileDetail | null;
 	declare error: string;
+	declare hostOpened: boolean;
 	private key = '';
 	private owner: TeamsClient | null = null;
 	private generation = 0;
@@ -33,6 +35,7 @@ export class TeamsChannelTab extends LitElement {
 		this.canSave = false;
 		this.detail = null;
 		this.error = '';
+		this.hostOpened = false;
 	}
 	protected override updated(changed: PropertyValues<this>): void {
 		if (changed.has('tab') || changed.has('client')) void this.resolve();
@@ -56,6 +59,7 @@ export class TeamsChannelTab extends LitElement {
 		const generation = ++this.generation;
 		this.detail = null;
 		this.error = '';
+		this.hostOpened = false;
 		if (!tab || !client) return;
 		const attachment =
 			tab.content.type === 'file'
@@ -66,6 +70,7 @@ export class TeamsChannelTab extends LitElement {
 			if (generation !== this.generation || !this.isConnected) return;
 			if (!url) throw new Error('Could not resolve the tab content');
 			this.detail = { attachment, url, channelId: tab.channelId };
+			if (tab.content.type === 'file') this.openInHost();
 		} catch (error) {
 			if (generation === this.generation)
 				this.error = error instanceof Error ? error.message : 'Could not open the tab';
@@ -78,7 +83,20 @@ export class TeamsChannelTab extends LitElement {
 			await client.saveFileCopy(tab.channelId, file, options);
 		};
 	}
+	private openInHost(): void {
+		this.hostOpened = !this.dispatchEvent(
+			new CustomEvent('teams-open-file', {
+				detail: this.detail,
+				bubbles: true,
+				composed: true,
+				cancelable: true,
+			}),
+		);
+	}
 	protected override render() {
+		if (this.hostOpened)
+			return html`<p>${this.detail?.attachment.name}</p>
+				<button type="button" @click=${() => this.openInHost()}>Open document</button>`;
 		return html`${
 			this.error
 				? html`<p role="alert">${this.error}</p>

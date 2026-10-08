@@ -235,8 +235,9 @@ export class TeamsApp extends LitElement {
 		const workspaceId = /^[\w-]{1,100}$/u.test(this.workspaceId) ? this.workspaceId : 'demo';
 		this.themeStorageKey = `teams:theme:${encodeURIComponent(workspaceId)}:${encodeURIComponent(named.id)}`;
 		const rememberedTheme = safeStorage.getItem(this.themeStorageKey);
-		this.theme =
-			rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
+		if (!this.hasAttribute('host-theme'))
+			this.theme =
+				rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
 		this.applyTheme();
 		this.showAppNames =
 			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:app-names:')) !==

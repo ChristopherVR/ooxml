@@ -587,3 +587,8 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 		grid-template-columns: auto minmax(0, 1fr) auto;
 	}
 }
+
+/* An application host can own the single suite-level account control. */
+:host([host-profile]) teams-profile-menu {
+	display: none;
+}

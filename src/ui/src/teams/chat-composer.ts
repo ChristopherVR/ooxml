@@ -76,7 +76,19 @@ export class OfficeUiChatComposer extends TeamsElement {
 		this.emojiOpen = false;
 	}
 
+	private focusMessage(): void {
+		void this.updateComplete.then(() =>
+			this.renderRoot.querySelector('textarea')?.focus({ preventScroll: true }),
+		);
+	}
+	private resizeMessage(): void {
+		const area = this.renderRoot.querySelector('textarea');
+		if (!area) return;
+		area.style.height = 'auto';
+		area.style.height = `${Math.min(area.scrollHeight, 160)}px`;
+	}
 	protected override updated(changed: PropertyValues<this>): void {
+		if (changed.has('value')) this.resizeMessage();
 		if (changed.has('replyingTo') || changed.has('editing')) {
 			if (this.replyingTo !== null || this.editing)
 				this.renderRoot.querySelector('textarea')?.focus();
@@ -98,6 +110,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 		this.files = [];
 		this.emojiOpen = false;
 		this.fire('office-chat-send', { text, files });
+		this.focusMessage();
 	}
 
 	private onInput(event: Event): void {
@@ -111,6 +124,11 @@ export class OfficeUiChatComposer extends TeamsElement {
 	}
 
 	private onKeydown(event: KeyboardEvent): void {
+		if (event.key === 'Escape' && this.emojiOpen) {
+			this.emojiOpen = false;
+			this.focusMessage();
+			return;
+		}
 		if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
 			event.preventDefault();
 			this.submit();
@@ -121,12 +139,17 @@ export class OfficeUiChatComposer extends TeamsElement {
 
 	private pick(event: Event): void {
 		const input = event.target as HTMLInputElement;
-		this.files = [...this.files, ...Array.from(input.files ?? [])].slice(0, MAX_FILES);
+		this.addFiles(Array.from(input.files ?? []));
 		input.value = '';
+	}
+	private addFiles(files: File[]): void {
+		if (this.disabled) return;
+		this.files = [...this.files, ...files].slice(0, MAX_FILES);
 		this.missingFiles = this.missingFiles.filter(
 			(name) => !this.files.some((file) => file.name === name),
 		);
 		this.saveDraft();
+		this.focusMessage();
 	}
 	private saveDraft(): void {
 		this.fire('office-chat-draft', {
@@ -150,7 +173,22 @@ export class OfficeUiChatComposer extends TeamsElement {
 				: '';
 		return html`
 			<div class="typing" aria-live="polite">${this.typingLine()}</div>
-			<div class="box">
+			<div
+				class="box"
+				@dragover=${(event: DragEvent) => {
+					if (event.dataTransfer?.types.includes('Files')) {
+						event.preventDefault();
+						event.stopPropagation();
+					}
+				}}
+				@drop=${(event: DragEvent) => {
+					if (event.dataTransfer?.files.length) {
+						event.preventDefault();
+						event.stopPropagation();
+						this.addFiles([...event.dataTransfer.files]);
+					}
+				}}
+			>
 				${
 					this.missingFiles.length
 						? html`<div role="status">
@@ -196,6 +234,12 @@ export class OfficeUiChatComposer extends TeamsElement {
 					placeholder=${this.placeholder}
 					?disabled=${this.disabled}
 					@input=${this.onInput}
+					@paste=${(event: ClipboardEvent) => {
+						if (event.clipboardData?.files.length) {
+							event.preventDefault();
+							this.addFiles([...event.clipboardData.files]);
+						}
+					}}
 					@keydown=${this.onKeydown}
 				></textarea>
 				${
@@ -208,10 +252,11 @@ export class OfficeUiChatComposer extends TeamsElement {
 											aria-label=${`Remove ${f.name}`}
 											@click=${() => {
 												this.files = this.files.filter((_, j) => j !== i);
+												this.focusMessage();
 												this.saveDraft();
 											}}
 										>
-											${f.name} ${icon('close')}
+											<span class="file-label" title=${f.name}>${f.name}</span>${icon('close')}
 										</button>
 									</li>`,
 								)}
@@ -247,7 +292,14 @@ export class OfficeUiChatComposer extends TeamsElement {
 												type="button"
 												role="menuitem"
 												@click=${() => {
-													this.value += e;
+													const area = this.renderRoot.querySelector('textarea');
+													const start = area?.selectionStart ?? this.value.length,
+														end = area?.selectionEnd ?? start;
+													this.value = this.value.slice(0, start) + e + this.value.slice(end);
+													void this.updateComplete.then(() => {
+														area?.focus({ preventScroll: true });
+														area?.setSelectionRange(start + e.length, start + e.length);
+													});
 													this.saveDraft();
 													this.emojiOpen = false;
 													this.renderRoot.querySelector('textarea')?.focus();
