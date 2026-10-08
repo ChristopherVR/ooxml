@@ -851,3 +851,4 @@ export type {
 	CustomPropertyType,
 	HeadingPair,
 } from '../opc/properties/types';
+export type * from './model-sparklines';
