@@ -134,6 +134,21 @@ describe('Markdown blocks', () => {
 		]);
 		expect(tokens.at(-1)).toEqual({ kind: 'text', text: '[bad](javascript:x)' });
 	});
+	it('matches inline syntax in linear time on adversarial bracket runs', () => {
+		const base = 'https://host/notes.md';
+		for (const input of ['[' + '[\\'.repeat(50_000), '[\\](' + '[!](!'.repeat(50_000)]) {
+			const started = performance.now();
+			const tokens = markdownInline(input, base);
+			expect(performance.now() - started).toBeLessThan(500);
+			expect(tokens).toEqual([{ kind: 'text', text: input }]);
+		}
+		expect(markdownInline('see [a](https://host/x) and [b [c](https://host/y)', base)).toEqual([
+			{ kind: 'text', text: 'see ' },
+			{ kind: 'link', text: 'a', url: 'https://host/x' },
+			{ kind: 'text', text: ' and [b ' },
+			{ kind: 'link', text: 'c', url: 'https://host/y' },
+		]);
+	});
 	it('supports headings, bullets, quotes, fences and leaves HTML as text', () => {
 		expect(
 			markdownBlocks('# Title\r\n- item\n> quote\n```js\n<img onerror=x>\n```\n<script>x</script>'),

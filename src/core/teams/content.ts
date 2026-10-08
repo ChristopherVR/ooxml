@@ -102,7 +102,10 @@ export interface MarkdownInline {
 /** Flat inline subset; no embedded HTML, images or automatic resource requests. */
 export function markdownInline(text: string, base: string): MarkdownInline[] {
 	const tokens: MarkdownInline[] = [];
-	const syntax = /`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\(([^\s)]+)\)/gu;
+	// Each repeated class excludes the bracket that could start another match
+	// (link text stops at `[`, a URL at `(`), so a failed attempt never rescans
+	// the text the next attempt starts in and matching stays linear.
+	const syntax = /`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^[\]]+)\]\(([^\s()]+)\)/gu;
 	let offset = 0;
 	for (const match of text.matchAll(syntax)) {
 		if (match.index > offset) tokens.push({ kind: 'text', text: text.slice(offset, match.index) });
