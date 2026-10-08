@@ -238,6 +238,8 @@ export function buildHorizontalBarViewModel(
 							rawVal,
 							'horizontal',
 							{ width: layout.svgWidth, height: layout.svgHeight },
+							// A stacked segment's label is centred unless c:dLblPos says otherwise.
+							'ctr',
 						);
 						dataLabels.push({
 							kind: 'text',

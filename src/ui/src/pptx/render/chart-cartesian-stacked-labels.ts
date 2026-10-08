@@ -14,68 +14,58 @@ import {
 	resolveDataLabelTextStyle,
 } from './chart-data-label-text';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
-import type { PlotLayout, SvgText, ValueRange } from './chart-view-model';
-import { valueToY } from './chart-view-model';
+import type { BarRect, PlotLayout, SvgText } from './chart-view-model';
 
 /**
- * Push the abs-value stacked data labels matching the original cartesian
- * builder: one label per (category x series) at the bar mid, only when data
- * labels are on. `c:dLblPos` (ctr/inBase/inEnd/outEnd) repositions the label
- * on the bar rect, and a per-point `c:dLbl/c:layout` drag shifts it further,
- * via the same `resolveBarLabelPlacement` pipeline the clustered path uses.
+ * Push the stacked column data labels, one per drawn segment. Each label is
+ * placed on its own segment's rect, which `computeStackedBarRects` has
+ * already clipped to the value axis: a segment that an authored `c:min` /
+ * `c:max` cuts away entirely has no rect and so no label, and a partly cut
+ * segment is labelled on its visible part (its centre for `ctr`, the
+ * default when no `c:dLblPos` is authored). `c:dLblPos` (ctr/inBase/inEnd/outEnd) and a per-point
+ * `c:dLbl/c:layout` drag go through the same `resolveBarLabelPlacement`
+ * pipeline the clustered path uses. A zero value draws no segment and no
+ * label, as on the horizontal stacked bar.
  */
-export function pushClusteredStackedLabels(
+export function pushStackedBarLabels(
 	chartData: PptxChartData,
 	series: ReadonlyArray<PptxChartSeries>,
 	sourceIndices: ReadonlyArray<number>,
-	catCount: number,
+	rects: ReadonlyArray<BarRect>,
 	layout: PlotLayout,
-	range: ValueRange,
 	dataLabels: SvgText[],
 ): void {
-	const barGroupWidth = layout.plotWidth / catCount,
-		seriesCount = Math.max(series.length, 1),
-		singleBarWidth = (barGroupWidth * 0.7) / seriesCount,
-		groupOffset = (barGroupWidth - singleBarWidth * seriesCount) / 2;
-
-	for (let ci = 0; ci < catCount; ci++) {
-		const sourceIndex = sourceIndices[ci] ?? ci;
-		for (let si = 0; si < series.length; si++) {
-			const val = series[si].values[sourceIndex] ?? 0,
-				barX = layout.plotLeft + barGroupWidth * ci + groupOffset + singleBarWidth * si,
-				zeroY = valueToY(0, range, layout.plotTop, layout.plotBottom),
-				valY = valueToY(val, range, layout.plotTop, layout.plotBottom),
-				barY = Math.min(zeroY, valY),
-				barH = Math.max(Math.abs(zeroY - valY), 1),
-				label = buildDataLabelText({
-					chartData,
-					series: series[si],
-					pointIndex: sourceIndex,
-					value: val,
-				});
-			if (label === undefined) {
-				continue;
-			}
-			const anchor = resolveBarLabelPlacement(
-				chartData,
-				series[si],
-				sourceIndex,
-				{ x: barX, y: barY, width: singleBarWidth, height: barH },
-				val,
-				'vertical',
-				{ width: layout.svgWidth, height: layout.svgHeight },
-			);
-			dataLabels.push({
-				kind: 'text',
-				x: anchor.x,
-				y: anchor.y,
-				text: label.text,
-				fontSize: DEFAULT_CHART_DATA_LABEL_PX,
-				fill: label.color ?? '#334155',
-				textAnchor: anchor.textAnchor,
-				...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
-				...dataLabelFontOverride(resolveDataLabelTextStyle(chartData, series[si], sourceIndex)),
-			});
+	for (const rect of rects) {
+		const entry = rect.seriesIndex === undefined ? undefined : series[rect.seriesIndex];
+		if (!entry || rect.pointIndex === undefined) {
+			continue;
 		}
+		const sourceIndex = sourceIndices[rect.pointIndex] ?? rect.pointIndex,
+			val = entry.values[sourceIndex] ?? 0,
+			label = buildDataLabelText({ chartData, series: entry, pointIndex: sourceIndex, value: val });
+		if (label === undefined) {
+			continue;
+		}
+		const anchor = resolveBarLabelPlacement(
+			chartData,
+			entry,
+			sourceIndex,
+			{ x: rect.x, y: rect.y, width: rect.w, height: rect.h },
+			val,
+			'vertical',
+			{ width: layout.svgWidth, height: layout.svgHeight },
+			'ctr',
+		);
+		dataLabels.push({
+			kind: 'text',
+			x: anchor.x,
+			y: anchor.y,
+			text: label.text,
+			fontSize: DEFAULT_CHART_DATA_LABEL_PX,
+			fill: label.color ?? '#334155',
+			textAnchor: anchor.textAnchor,
+			...(anchor.dominantBaseline ? { dominantBaseline: anchor.dominantBaseline } : {}),
+			...dataLabelFontOverride(resolveDataLabelTextStyle(chartData, entry, sourceIndex)),
+		});
 	}
 }

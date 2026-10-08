@@ -15,7 +15,7 @@ import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 import { clusteredBarGeometry } from './chart-bar-cluster-geometry';
 import { buildPercentStackedBars } from './chart-cartesian-percent-stacked';
 import type { SeriesPlotResult } from './chart-cartesian-plots';
-import { pushClusteredStackedLabels } from './chart-cartesian-stacked-labels';
+import { pushStackedBarLabels } from './chart-cartesian-stacked-labels';
 import { findPointLabel, resolveBarLabelPlacement } from './chart-data-label-anchor';
 import { buildDataLabelDecorations, calloutLabelLift } from './chart-data-label-callout';
 import {
@@ -239,15 +239,7 @@ export function buildBars(
 			primitives.push({ kind: 'rect', x: r.x, y: r.y, w: r.w, h: r.h, fill, rx: 1, part, title });
 		}
 		if (showLabels) {
-			pushClusteredStackedLabels(
-				chartData,
-				series,
-				sourceIndices,
-				catCount,
-				layout,
-				primaryRange,
-				dataLabels,
-			);
+			pushStackedBarLabels(chartData, series, sourceIndices, rects, layout, dataLabels);
 		}
 		return { primitives, dataLabels };
 	}

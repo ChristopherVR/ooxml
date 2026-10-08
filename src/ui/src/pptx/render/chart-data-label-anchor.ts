@@ -190,6 +190,9 @@ export function resolveMarkerLabelAnchor(
  * `c:dLbl/c:layout` manual drag. `frame` is the chart element's own pixel box
  * (`layout.svgWidth` / `svgHeight` in every cartesian builder), which is what
  * a manual layout's fractional coordinates are measured against.
+ * `defaultPosition` applies when no level authors a `c:dLblPos`: a stacked
+ * segment passes `ctr`, PowerPoint's default (and `outEnd` is not offered
+ * for stacked bars), while a clustered bar keeps the outside-end fallback.
  */
 export function resolveBarLabelPlacement(
 	chartData: PptxChartData,
@@ -199,10 +202,14 @@ export function resolveBarLabelPlacement(
 	value: number,
 	orientation: 'vertical' | 'horizontal',
 	frame: ChartFrameSize,
+	defaultPosition?: PptxChartDataLabelPosition,
 ): LabelAnchor {
 	const point = findPointLabel(series, pointIndex),
 		position =
-			point?.position ?? series.dataLabelOptions?.position ?? chartData.style?.dataLabels?.position,
+			point?.position ??
+			series.dataLabelOptions?.position ??
+			chartData.style?.dataLabels?.position ??
+			defaultPosition,
 		anchor = resolveBarLabelAnchor(position, rect, value, orientation),
 		shifted = applyLabelManualLayout(point?.layout, frame, anchor);
 	return { ...anchor, x: shifted.x, y: shifted.y };
