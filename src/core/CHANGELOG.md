@@ -7,6 +7,29 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.3.0) - 2026-10-08
+
+### Features
+
+- **visio:** Enable source-backed formatting and shape ordering ([c39f7be](https://github.com/ChristopherVR/ooxml/commit/c39f7bee397d27afa31155a96c01997122402773))
+- **visio:** Enable multi-selection formatting and arrangement ([fb70098](https://github.com/ChristopherVR/ooxml/commit/fb70098a2b100d6ec37cd091acd618c91477cfb2))
+- **visio:** Enable rich formatting and source duplication ([d50e388](https://github.com/ChristopherVR/ooxml/commit/d50e388f9190809d6a860894663cdbf774ca4dca))
+- **visio:** Format proven inherited text cells ([cbb4b20](https://github.com/ChristopherVR/ooxml/commit/cbb4b20c66effb2f2f019a6f9c5ec7f83fa07608))
+- **visio:** Enable source-backed shape clipboard ([2c13c1f](https://github.com/ChristopherVR/ooxml/commit/2c13c1f39998cf37e83d3949a6685f84f4b16e4d))
+- **visio:** Delete reference-closed shape selections ([d02ed0e](https://github.com/ChristopherVR/ooxml/commit/d02ed0ebb1f97622436ef0944838eaefed9f7127))
+- **visio:** Create editable blank drawing packages ([4bcb713](https://github.com/ChristopherVR/ooxml/commit/4bcb71385e260240bbd03e1349fc4ff020327bd7))
+- **visio:** Enable new drawings and pointer selection gestures ([75ac409](https://github.com/ChristopherVR/ooxml/commit/75ac409e5e67c23203c765d3aa472b6817853090))
+- **visio:** Add source-proven anchored shape resizing ([cff07b8](https://github.com/ChristopherVR/ooxml/commit/cff07b8d9d7521819f2f4c3c514d77ca77d1638c))
+- **visio:** Enable resize handles and size and position pane ([7601406](https://github.com/ChristopherVR/ooxml/commit/76014064de44defbf80208cd0fab1f33ef17c00b))
+- **visio:** Add text boxes and preserve logical text paragraphs ([cbc47ff](https://github.com/ChristopherVR/ooxml/commit/cbc47ffc77cd8145c5e6b633a3dd87a105ed4072))
+- **visio:** Add native paint patterns and transparency edits ([3a9ba13](https://github.com/ChristopherVR/ooxml/commit/3a9ba136f30d71b030af7cb86eecceed1ce49e3d))
+- **visio:** Add scoped replacement plans and SVG hairlines ([79fb8e8](https://github.com/ChristopherVR/ooxml/commit/79fb8e8f6b572a3b7d53d8ba660626f7d49a7e9d))
+
+### Bug Fixes
+
+- **pptx:** Write cell properties into an empty a:tcPr ([22e8a3b](https://github.com/ChristopherVR/ooxml/commit/22e8a3b9661b4dada517df5d24d47e8eb3fa94e9))
+- **xlsx:** Read formula sheet prefixes without a backtracking regex ([4a19c87](https://github.com/ChristopherVR/ooxml/commit/4a19c87ce84643af7af28e22abb7917c7efc9771))
+
 ## [1.2.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.2.1) - 2026-10-08
 
 ### Bug Fixes

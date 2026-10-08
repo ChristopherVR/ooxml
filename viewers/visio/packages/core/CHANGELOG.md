@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.4.0) - 2026-10-08
+
+### Features
+
+- **visio:** Enable new drawings and pointer selection gestures ([75ac409](https://github.com/ChristopherVR/ooxml/commit/75ac409e5e67c23203c765d3aa472b6817853090))
+
 ## [0.3.7](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.3.7) - 2026-10-08
 
 ## [0.3.6](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.3.6) - 2026-10-07

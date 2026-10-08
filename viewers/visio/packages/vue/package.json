@@ -1,6 +1,6 @@
 {
 	"name": "visio-vue-viewer",
-	"version": "0.5.9",
+	"version": "0.6.0",
 	"description": "Local-first Visio viewer for vue",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {
@@ -33,7 +33,7 @@
 		"emf-converter": "4.8.21",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
-		"visio-core": "^0.3.7"
+		"visio-core": "^0.4.0"
 	},
 	"peerDependencies": {
 		"vue": "^3.5.0"

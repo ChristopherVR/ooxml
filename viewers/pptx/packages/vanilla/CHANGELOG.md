@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.30.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.30.2) - 2026-10-08
+
+### Bug Fixes
+
+- **pptx:** Write cell properties into an empty a:tcPr ([22e8a3b](https://github.com/ChristopherVR/ooxml/commit/22e8a3b9661b4dada517df5d24d47e8eb3fa94e9))
+- **pptx:** Place share in the ribbon tab row ([8efe00e](https://github.com/ChristopherVR/ooxml/commit/8efe00e3b889e2565c7256bbac6c28ceb2787e2b))
+- **pptx:** Emit valid declarations for pptx-vanilla-viewer exports ([1a4aef2](https://github.com/ChristopherVR/ooxml/commit/1a4aef2240c68b6da32e0739e5b0d3ccc16287ed))
+
+### Styling
+
+- **pptx:** Format the declaration export-list guard ([85a73e4](https://github.com/ChristopherVR/ooxml/commit/85a73e48ab351d518e3adc9187ba222cc21ffb13))
+
+### Chores
+
+- **pptx:** Require ooxml-ui 1.3.0 for the ribbon actions ([4c6ace1](https://github.com/ChristopherVR/ooxml/commit/4c6ace1cef8e237c77e1ff2b825b2d86b3fee083))
+
 ## [3.30.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.30.1) - 2026-10-08
 
 ### Bug Fixes

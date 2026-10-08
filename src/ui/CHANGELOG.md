@@ -7,6 +7,19 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.4.0) - 2026-10-08
+
+### Features
+
+- **visio:** Enable source-backed formatting and shape ordering ([c39f7be](https://github.com/ChristopherVR/ooxml/commit/c39f7bee397d27afa31155a96c01997122402773))
+- **visio:** Enable multi-selection formatting and arrangement ([fb70098](https://github.com/ChristopherVR/ooxml/commit/fb70098a2b100d6ec37cd091acd618c91477cfb2))
+- **visio:** Enable rich formatting and source duplication ([d50e388](https://github.com/ChristopherVR/ooxml/commit/d50e388f9190809d6a860894663cdbf774ca4dca))
+- **visio:** Enable source-backed shape clipboard ([2c13c1f](https://github.com/ChristopherVR/ooxml/commit/2c13c1f39998cf37e83d3949a6685f84f4b16e4d))
+- **visio:** Enable new drawings and pointer selection gestures ([75ac409](https://github.com/ChristopherVR/ooxml/commit/75ac409e5e67c23203c765d3aa472b6817853090))
+- **visio:** Enable resize handles and size and position pane ([7601406](https://github.com/ChristopherVR/ooxml/commit/76014064de44defbf80208cd0fab1f33ef17c00b))
+- **visio:** Enable text tools and atomic drawing creation ([b8376f2](https://github.com/ChristopherVR/ooxml/commit/b8376f2575f2e594a713456d820bfb64e5048483))
+- **visio:** Enable shared fill and line properties ([9ae72a0](https://github.com/ChristopherVR/ooxml/commit/9ae72a00656d2c17b8b09a51a1ac9c262654898a))
+
 ## [1.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.3.0) - 2026-10-08
 
 ### Features
