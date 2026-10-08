@@ -180,9 +180,11 @@ and no claim of parity without evidence.
   `--office-title-bar-result-selected` and
   `--office-status-bar-separator-opacity` for it), and the pptx style modules
   are gone. Backstage and find bar remain.
-- Diagram layout engine out of pptx (plan step 2): model types and the engine
-  moved to `diagram`, strict; the constraint solver, hierarchy and
-  interpreters remain (they read the pptx object tree; step 2 status in
+- Diagram layout engine out of pptx (plan step 2): model types, the engine,
+  the `dgm:choose` walkers (ported to the engine's ordered-XML tree, pptx
+  converts its raw slots at one adapter), the constraint solver and the
+  interpreter model moved to `diagram`, strict; the hierarchy family and the
+  remaining interpreters stay in pptx (step 2 status in
   `agnostic-core-plan.md`).
 - Visio reads its theme and DrawingML colours through `drawingml`; the
   `Diagram*` aliases are gone outside `diagram`.
