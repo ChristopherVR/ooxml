@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.7](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@0.1.7) - 2026-10-08
+
+### Documentation
+
+- Refresh the readmes with webp images and the office suite ([6a800d0](https://github.com/ChristopherVR/ooxml/commit/6a800d062bc911d6c4ea682bdbffa7fc437d1556))
+
 ## [0.1.6](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@0.1.6) - 2026-10-08
 
 ### Bug Fixes

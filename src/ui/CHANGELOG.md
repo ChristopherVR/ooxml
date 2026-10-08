@@ -7,6 +7,26 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.4.1) - 2026-10-08
+
+### Bug Fixes
+
+- **ui:** Restore CI after the Visio find and replace changes ([f0ca01d](https://github.com/ChristopherVR/ooxml/commit/f0ca01d6618346cee74b723cfb9cb16f61eb1cb3))
+- **ui:** Keep a folded ribbon group open for popup buttons ([88a9d78](https://github.com/ChristopherVR/ooxml/commit/88a9d78d5f3188c5b725d9c5baa0cd6568c954e2))
+- **ui:** Restore only the device-pixel var after an export style read ([01c157b](https://github.com/ChristopherVR/ooxml/commit/01c157b4c5ec2f4248216368ef2e20b8bc282dd5))
+- **xlsx:** Correct table, subtotal, save and sheet protection behavior ([#32](https://github.com/ChristopherVR/ooxml/issues/32)) ([af31ec6](https://github.com/ChristopherVR/ooxml/commit/af31ec670c229eabb8515e04bacf9f2c277ef053))
+- **ui:** Keep table resize handles off merged cells ([e8b99ee](https://github.com/ChristopherVR/ooxml/commit/e8b99ee588ecd856fd4f201a96262c4a62637aef))
+- **ui:** Keep morph twins from stealing in-place wheel wedges ([cd1df51](https://github.com/ChristopherVR/ooxml/commit/cd1df5149446afb5b790bc744cbf51d50e5b01b0))
+- **visio:** Resolve open code-scanning alerts ([a6bb188](https://github.com/ChristopherVR/ooxml/commit/a6bb188c4da9285a09589f6716b112aee82edb8b))
+
+### Documentation
+
+- Refresh the readmes with webp images and the office suite ([6a800d0](https://github.com/ChristopherVR/ooxml/commit/6a800d062bc911d6c4ea682bdbffa7fc437d1556))
+
+### Testing
+
+- **ui:** Silence expected lit and jsdom canvas warnings ([47deb26](https://github.com/ChristopherVR/ooxml/commit/47deb26c4830af0804c59a2336020e6c14170690))
+
 ## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.4.0) - 2026-10-08
 
 ### Features

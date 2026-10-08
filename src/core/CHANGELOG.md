@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.4.0) - 2026-10-08
+
+### Features
+
+- **visio:** Preserve rich replacements and set fixed page dimensions ([8882860](https://github.com/ChristopherVR/ooxml/commit/8882860df98992b16e6c0ac83666f7d69dab7bc8))
+
+### Bug Fixes
+
+- **ui:** Restore CI after the Visio find and replace changes ([f0ca01d](https://github.com/ChristopherVR/ooxml/commit/f0ca01d6618346cee74b723cfb9cb16f61eb1cb3))
+- **xlsx:** Correct table, subtotal, save and sheet protection behavior ([#32](https://github.com/ChristopherVR/ooxml/issues/32)) ([af31ec6](https://github.com/ChristopherVR/ooxml/commit/af31ec670c229eabb8515e04bacf9f2c277ef053))
+- **visio:** Resolve open code-scanning alerts ([a6bb188](https://github.com/ChristopherVR/ooxml/commit/a6bb188c4da9285a09589f6716b112aee82edb8b))
+
+### Documentation
+
+- Refresh the readmes with webp images and the office suite ([6a800d0](https://github.com/ChristopherVR/ooxml/commit/6a800d062bc911d6c4ea682bdbffa7fc437d1556))
+
 ## [1.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.3.0) - 2026-10-08
 
 ### Features

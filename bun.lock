@@ -381,7 +381,7 @@
     },
     "mcp": {
       "name": "ooxml-mcp",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "bin": {
         "ooxml-tools": "src/cli.js",
       },
@@ -393,10 +393,10 @@
         "zod": "^4.6.5",
       },
       "peerDependencies": {
-        "docx-viewer-mcp": "^0.1.4",
+        "docx-viewer-mcp": "^0.1.7",
         "pptx-viewer-mcp": ">=2.6.0 <3",
-        "visio-viewer-mcp": "^0.2.1",
-        "xlsx-viewer-mcp": "^0.1.4",
+        "visio-viewer-mcp": "^0.3.1",
+        "xlsx-viewer-mcp": "^0.1.7",
       },
       "optionalPeers": [
         "docx-viewer-mcp",
@@ -407,7 +407,7 @@
     },
     "src/core": {
       "name": "ooxml-core",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "bin": {
         "pptx": "./dist/pptx/cli/index.mjs",
       },
@@ -462,7 +462,7 @@
     },
     "src/ui": {
       "name": "ooxml-ui",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "dependencies": {
         "dompurify": "^3.4.16",
         "emf-converter": "4.8.21",
@@ -548,7 +548,7 @@
     },
     "viewers/docx/mcp": {
       "name": "docx-viewer-mcp",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "bin": {
         "docx-tools": "src/cli.js",
       },
@@ -560,7 +560,7 @@
     },
     "viewers/docx/packages/angular": {
       "name": "docx-angular-viewer",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -595,14 +595,14 @@
     },
     "viewers/docx/packages/core": {
       "name": "docx-core",
-      "version": "0.1.12",
+      "version": "0.1.13",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/docx/packages/react": {
       "name": "docx-react-viewer",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -614,7 +614,7 @@
     },
     "viewers/docx/packages/solid": {
       "name": "docx-solid-viewer",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -626,7 +626,7 @@
     },
     "viewers/docx/packages/svelte": {
       "name": "docx-svelte-viewer",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -638,7 +638,7 @@
     },
     "viewers/docx/packages/vanilla": {
       "name": "docx-vanilla-viewer",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -647,7 +647,7 @@
     },
     "viewers/docx/packages/vue": {
       "name": "docx-vue-viewer",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -728,7 +728,7 @@
     },
     "viewers/pptx/packages/angular": {
       "name": "pptx-angular-viewer",
-      "version": "4.30.2",
+      "version": "4.30.3",
       "dependencies": {
         "@lucide/angular": "^1.52.0",
         "dompurify": "^3.4.16",
@@ -789,7 +789,7 @@
     },
     "viewers/pptx/packages/cli": {
       "name": "@christophervr/pptx-viewer",
-      "version": "2.41.4",
+      "version": "2.41.5",
       "bin": {
         "pptx-viewer": "./dist/cli.mjs",
       },
@@ -836,12 +836,12 @@
     },
     "viewers/pptx/packages/core": {
       "name": "pptx-viewer-core",
-      "version": "4.13.3",
+      "version": "4.13.4",
       "bin": {
         "pptx": "./dist/cli/index.mjs",
       },
       "dependencies": {
-        "ooxml-core": "^1.1.0",
+        "ooxml-core": "^1.4.0",
       },
       "devDependencies": {
         "@napi-rs/canvas": "^1.0.10",
@@ -881,13 +881,13 @@
     },
     "viewers/pptx/packages/react": {
       "name": "pptx-react-viewer",
-      "version": "4.30.2",
+      "version": "4.30.3",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.16",
         "html2canvas-pro": "^2.5.1",
-        "ooxml-core": "^1.3.0",
-        "ooxml-ui": "^1.4.0",
+        "ooxml-core": "^1.4.0",
+        "ooxml-ui": "^1.4.1",
         "opentype.js": "^2.0.0",
         "tailwind-merge": "^3.7.0",
       },
@@ -967,7 +967,7 @@
     },
     "viewers/pptx/packages/svelte": {
       "name": "pptx-svelte-viewer",
-      "version": "4.30.2",
+      "version": "4.30.3",
       "dependencies": {
         "@lucide/svelte": "^1.52.0",
         "fast-xml-parser": "^5.11.2",
@@ -1017,7 +1017,7 @@
     },
     "viewers/pptx/packages/tools": {
       "name": "pptx-viewer-mcp",
-      "version": "2.8.2",
+      "version": "2.8.3",
       "bin": {
         "pptx-tools": "dist/mcp/cli.mjs",
       },
@@ -1045,7 +1045,7 @@
     },
     "viewers/pptx/packages/vanilla": {
       "name": "pptx-vanilla-viewer",
-      "version": "3.30.2",
+      "version": "3.30.3",
       "dependencies": {
         "dompurify": "^3.4.16",
         "fast-xml-parser": "^5.11.2",
@@ -1085,7 +1085,7 @@
     },
     "viewers/pptx/packages/vue": {
       "name": "pptx-vue-viewer",
-      "version": "4.30.2",
+      "version": "4.30.3",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.16",
@@ -1179,7 +1179,7 @@
     },
     "viewers/teams/packages/angular": {
       "name": "openteams-angular-viewer",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1194,7 +1194,7 @@
     },
     "viewers/teams/packages/react": {
       "name": "openteams-react-viewer",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1210,7 +1210,7 @@
     },
     "viewers/teams/packages/solid": {
       "name": "openteams-solid-viewer",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1225,7 +1225,7 @@
     },
     "viewers/teams/packages/svelte": {
       "name": "openteams-svelte-viewer",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1240,7 +1240,7 @@
     },
     "viewers/teams/packages/vanilla": {
       "name": "openteams-vanilla-viewer",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1249,7 +1249,7 @@
     },
     "viewers/teams/packages/vue": {
       "name": "openteams-vue-viewer",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1273,7 +1273,7 @@
     },
     "viewers/teams/server": {
       "name": "openteams-server",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "bin": {
         "openteams-server": "bin.mjs",
       },
@@ -1316,7 +1316,7 @@
     },
     "viewers/visio/mcp": {
       "name": "visio-viewer-mcp",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "bin": {
         "visio-tools": "src/cli.js",
       },
@@ -1328,12 +1328,12 @@
     },
     "viewers/visio/packages/angular": {
       "name": "visio-angular-viewer",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^0.3.2",
+        "visio-core": "^0.4.1",
       },
       "peerDependencies": {
         "@angular/core": "^21.0.0",
@@ -1366,19 +1366,19 @@
     },
     "viewers/visio/packages/core": {
       "name": "visio-core",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/visio/packages/react": {
       "name": "visio-react-viewer",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^0.3.2",
+        "visio-core": "^0.4.1",
       },
       "peerDependencies": {
         "react": ">=18",
@@ -1386,12 +1386,12 @@
     },
     "viewers/visio/packages/solid": {
       "name": "visio-solid-viewer",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^0.3.2",
+        "visio-core": "^0.4.1",
       },
       "peerDependencies": {
         "solid-js": "^1.9.0",
@@ -1399,12 +1399,12 @@
     },
     "viewers/visio/packages/svelte": {
       "name": "visio-svelte-viewer",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^0.3.2",
+        "visio-core": "^0.4.1",
       },
       "peerDependencies": {
         "svelte": "^5.0.0",
@@ -1412,22 +1412,22 @@
     },
     "viewers/visio/packages/vanilla": {
       "name": "visio-vanilla-viewer",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^0.3.2",
+        "visio-core": "^0.4.1",
       },
     },
     "viewers/visio/packages/vue": {
       "name": "visio-vue-viewer",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
         "ooxml-ui": "*",
-        "visio-core": "^0.3.2",
+        "visio-core": "^0.4.1",
       },
       "peerDependencies": {
         "vue": "^3.5.0",
@@ -1477,7 +1477,7 @@
     },
     "viewers/xlsx/mcp": {
       "name": "xlsx-viewer-mcp",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "bin": {
         "xlsx-tools": "src/cli.js",
       },
@@ -1489,7 +1489,7 @@
     },
     "viewers/xlsx/packages/angular": {
       "name": "xlsx-angular-viewer",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1524,14 +1524,14 @@
     },
     "viewers/xlsx/packages/core": {
       "name": "@christophervr/xlsx-core",
-      "version": "0.2.9",
+      "version": "0.2.10",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/xlsx/packages/react": {
       "name": "@christophervr/xlsx-react-viewer",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1543,7 +1543,7 @@
     },
     "viewers/xlsx/packages/solid": {
       "name": "xlsx-solid-viewer",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1555,7 +1555,7 @@
     },
     "viewers/xlsx/packages/svelte": {
       "name": "xlsx-svelte-viewer",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1567,7 +1567,7 @@
     },
     "viewers/xlsx/packages/vanilla": {
       "name": "xlsx-vanilla-viewer",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1576,7 +1576,7 @@
     },
     "viewers/xlsx/packages/vue": {
       "name": "xlsx-vue-viewer",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
