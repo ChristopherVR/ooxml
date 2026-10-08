@@ -39,9 +39,9 @@ canvas {
 	z-index: 1;
 	width: 0;
 	height: 0;
-	margin-left: -4px;
-	border-right: 4px solid transparent;
-	border-left: 4px solid transparent;
+	margin-left: calc(var(--office-space-1) * -1);
+	border-right: var(--office-space-1) solid transparent;
+	border-left: var(--office-space-1) solid transparent;
 	cursor: ew-resize;
 	touch-action: none;
 	pointer-events: auto;
@@ -49,32 +49,32 @@ canvas {
 .marker::after {
 	content: '';
 	position: absolute;
-	inset: -6px;
-	margin-left: -4px;
+	inset: calc(var(--office-space-1-5) * -1);
+	margin-left: calc(var(--office-space-1) * -1);
 }
 .marker.top {
-	top: 1px;
-	border-top: 6px solid var(--office-accent);
+	top: var(--office-space-px);
+	border-top: var(--office-space-1-5) solid var(--office-accent);
 }
 .marker.bottom {
-	bottom: 1px;
-	border-bottom: 6px solid var(--office-accent);
+	bottom: var(--office-space-px);
+	border-bottom: var(--office-space-1-5) solid var(--office-accent);
 }
 :host([orientation='vertical']) .marker {
-	margin-top: -4px;
+	margin-top: calc(var(--office-space-1) * -1);
 	margin-left: 0;
 	border: 0;
-	border-top: 4px solid transparent;
-	border-bottom: 4px solid transparent;
+	border-top: var(--office-space-1) solid transparent;
+	border-bottom: var(--office-space-1) solid transparent;
 	cursor: ns-resize;
 }
 :host([orientation='vertical']) .marker.top {
 	top: auto;
-	left: 1px;
-	border-left: 6px solid var(--office-accent);
+	left: var(--office-space-px);
+	border-left: var(--office-space-1-5) solid var(--office-accent);
 }
 :host([orientation='vertical']) .marker.bottom {
-	right: 1px;
+	right: var(--office-space-px);
 	bottom: auto;
-	border-right: 6px solid var(--office-accent);
+	border-right: var(--office-space-1-5) solid var(--office-accent);
 }
