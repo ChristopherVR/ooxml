@@ -84,6 +84,11 @@
 			"import": "./dist/diagram/index.mjs",
 			"require": "./dist/diagram/index.cjs"
 		},
+		"./drawingml": {
+			"types": "./dist/drawingml/index.d.ts",
+			"import": "./dist/drawingml/index.mjs",
+			"require": "./dist/drawingml/index.cjs"
+		},
 		"./digest": {
 			"types": "./dist/digest/index.d.ts",
 			"import": "./dist/digest/index.mjs",

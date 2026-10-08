@@ -1,6 +1,6 @@
-import type { DiagramFill } from './types';
+import type { DrawingFill } from './types';
 
-type Gradient = Extract<DiagramFill, { kind: 'gradient' }>;
+type Gradient = Extract<DrawingFill, { kind: 'gradient' }>;
 export type DrawingGradientGeometryType = 'linear' | 'rect' | 'circle' | 'shape';
 export type RectGradientDirection =
 	| 'center'

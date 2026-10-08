@@ -1,6 +1,34 @@
 // Format-neutral SmartArt (DiagramML) model. No PowerPoint, Word, slide or document types appear
 // here: both `pptx` and `docx` adapt to it. Extracted from `pptx/core/types/smart-art*.ts`.
 
+import type {
+	DrawingColor,
+	DrawingFill,
+	DrawingFrame,
+	DrawingLine,
+	DrawingPath,
+	DrawingPathCommand,
+	DrawingTextBody,
+	DrawingTextParagraph,
+	DrawingTextRun,
+	DrawingTextSpacing,
+} from '../drawingml/types';
+
+export type { AttributeReader } from '../drawingml/types';
+
+// The DrawingML primitives a diagram uses are the neutral `drawingml` types under their
+// historical diagram names, kept so the public `ooxml-core/diagram` API does not change.
+export type DiagramColor = DrawingColor;
+export type DiagramFill = DrawingFill;
+export type DiagramLine = DrawingLine;
+export type DiagramTextRun = DrawingTextRun;
+export type DiagramTextSpacing = DrawingTextSpacing;
+export type DiagramTextParagraph = DrawingTextParagraph;
+export type DiagramTextBody = DrawingTextBody;
+export type DiagramFrame = DrawingFrame;
+export type DiagramPathCommand = DrawingPathCommand;
+export type DiagramPath = DrawingPath;
+
 /** Resolved SmartArt layout family. */
 export type DiagramLayoutType =
 	| 'list'
@@ -77,9 +105,6 @@ export interface DiagramRelationshipIds {
 	colorsRelId?: string;
 }
 
-/** Reads one attribute by local name; `undefined` when absent. Lets one parser serve a DOM element and an object tree. */
-export type AttributeReader = (name: string) => string | undefined;
-
 /** A recoverable problem found while reading a diagram part. */
 export interface DiagramIssue {
 	code: string;
@@ -130,17 +155,6 @@ export interface DiagramDefinitionHeader {
 	title?: string;
 	description?: string;
 	categories: { type: string; priority?: number }[];
-}
-
-/** A theme-independent DrawingML colour as written in a part. */
-export interface DiagramColor {
-	kind: 'srgb' | 'scheme' | 'system' | 'preset' | 'scrgb' | 'hsl';
-	/** Hex for `srgb`, the scheme/preset/system name, or the serialized channels for `scrgb`/`hsl`. */
-	value: string;
-	/** Colour transforms in document order (`alpha`, `lumMod`, `shade`...), raw attribute values. */
-	transforms: { name: string; value: string }[];
-	/** `lastClr` of a system colour: the value the producer saw. */
-	fallback?: string;
 }
 
 /** A colour choice list (`dgm:fillClrLst` and friends). */
@@ -201,104 +215,11 @@ export interface DiagramLayoutSummary extends DiagramDefinitionHeader {
 	layoutNodeCount: number;
 }
 
-/** A fill of a cached drawing shape. */
-export type DiagramFill =
-	| { kind: 'none' }
-	| { kind: 'solid'; color: DiagramColor }
-	| {
-			kind: 'gradient';
-			/** Original gradient XML, retaining flags and unsupported properties for editing. */
-			sourceXml?: string;
-			stops: { position: number; color: DiagramColor }[];
-			/** Linear angle in degrees, when `a:lin` is present. */
-			angle?: number;
-			/** Whether the linear vector scales with the shape's bounding box. */
-			scaled?: boolean;
-			path?: string;
-			/** DrawingML path-gradient focus rectangle, as fractions of the shape box. */
-			fillToRect?: { l: number; t: number; r: number; b: number };
-			/** Gradient tile insets; corner directions can extend beyond the shape box. */
-			tileRect?: { l: number; t: number; r: number; b: number };
-	  }
-	| { kind: 'pattern'; preset: string; foreground?: DiagramColor; background?: DiagramColor }
-	| { kind: 'picture'; relId?: string }
-	| { kind: 'unsupported'; element: string };
-
-export interface DiagramLine {
-	/** Width in EMU. */
-	widthEmu?: number;
-	fill?: DiagramFill;
-	dash?: string;
-	cap?: string;
-}
-
 export interface DiagramStyleReference {
 	line?: DiagramStyleRef;
 	fill?: DiagramStyleRef;
 	effect?: DiagramStyleRef;
 	font?: DiagramStyleRef;
-}
-
-/** One run of a drawing shape's text. */
-export interface DiagramTextRun {
-	text: string;
-	/** Font size in points. */
-	sizePt?: number;
-	bold?: boolean;
-	italic?: boolean;
-	underline?: boolean;
-	color?: DiagramColor;
-	typeface?: string;
-}
-
-/** DrawingML spacing, retaining absolute points or a fractional percentage. */
-export interface DiagramTextSpacing {
-	unit: 'points' | 'percent';
-	value: number;
-}
-
-export interface DiagramTextParagraph {
-	/** Paragraph default run properties, inherited by individual runs. */
-	defaultProperties?: Omit<DiagramTextRun, 'text'>;
-	/** `l`, `ctr`, `r`, `just`... */
-	align?: string;
-	lineSpacing?: DiagramTextSpacing;
-	spaceBefore?: DiagramTextSpacing;
-	spaceAfter?: DiagramTextSpacing;
-	runs: DiagramTextRun[];
-}
-
-export interface DiagramTextBody {
-	/** `t`, `ctr`, `b`... */
-	anchor?: string;
-	/** Insets in EMU: left, top, right, bottom. */
-	insetsEmu?: { left?: number; top?: number; right?: number; bottom?: number };
-	paragraphs: DiagramTextParagraph[];
-	/** Paragraph texts joined by a newline. */
-	text: string;
-}
-
-/** Position and size in EMU, relative to the diagram frame. */
-export interface DiagramFrame {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
-
-export type DiagramPathCommand =
-	| { op: 'M' | 'L'; x: number; y: number }
-	| { op: 'C'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
-	| { op: 'Q'; x1: number; y1: number; x: number; y: number }
-	| { op: 'A'; wR: number; hR: number; startAngle: number; swingAngle: number }
-	| { op: 'Z' };
-
-export interface DiagramPath {
-	width?: number;
-	height?: number;
-	fill?: string;
-	stroke?: boolean;
-	commands: DiagramPathCommand[];
 }
 
 /** A shape of the cached `dsp:drawing`, renderer-neutral. Geometry in EMU, angles in degrees. */

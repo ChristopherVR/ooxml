@@ -2,11 +2,11 @@
 import type { DiagramFill, DiagramColor } from '../diagram/types';
 import { sortGradientStops } from './gradient-stop-edit';
 import { sigmaGradientStops } from '../color/sigma-gradient-stops';
-import { rectGradientFocus, type RectGradientDirection } from '../diagram/gradient-geometry';
+import { rectGradientFocus, type RectGradientDirection } from '../drawingml/gradient-geometry';
 import {
 	buildRectPathGradientSvg,
 	type RectPathGradientFillToRect,
-} from '../diagram/rect-path-gradient';
+} from '../drawingml/rect-path-gradient';
 
 /** Named direction previews must update both resolved focus and preserved rectangle geometry. */
 export function withChartGradientDirection(

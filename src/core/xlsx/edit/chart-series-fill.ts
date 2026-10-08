@@ -1,5 +1,5 @@
 import type { DiagramColor } from '../../diagram/types';
-import { withDrawingColorBrightness } from '../../diagram/drawing-color-brightness';
+import { withDrawingColorBrightness } from '../../drawingml/drawing-color-brightness';
 import type { ChartObject, Color } from '../model';
 import { THEME_SLOTS } from '../layout/colors';
 import type { ChartPatch } from './charts';

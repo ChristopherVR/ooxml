@@ -1,5 +1,5 @@
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
-import { resolveDrawingColor } from '../../diagram/drawing-color';
+import { resolveDrawingColor } from '../../drawingml/drawing-color';
 import type { DiagramColor } from '../../diagram/types';
 import type { ChartObject } from '../model';
 import type { ChartPatch } from './charts';

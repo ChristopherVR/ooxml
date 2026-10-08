@@ -26,7 +26,7 @@
  *
  * @module chart/color-palettes
  */
-import { resolveDrawingColor } from '../diagram/drawing-color';
+import { resolveDrawingColor } from '../drawingml/drawing-color';
 import type { DiagramColor } from '../diagram/types';
 
 export type ChartThemeColor =

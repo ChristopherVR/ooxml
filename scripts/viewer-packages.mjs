@@ -48,9 +48,18 @@ function viewer(name, { bundled, inlinedCore = [], globals, packages }) {
  * areas it imports, and the subpaths the viewer imports directly.
  */
 const PPTX_INLINED_CORE = [
-	...['pptx', 'automation', 'chart', 'color', 'crypto', 'diagram', 'geometry', 'math', 'opc'].map(
-		(area) => `src/core/${area}`,
-	),
+	...[
+		'pptx',
+		'automation',
+		'chart',
+		'color',
+		'crypto',
+		'diagram',
+		'drawingml',
+		'geometry',
+		'math',
+		'opc',
+	].map((area) => `src/core/${area}`),
 	...['text', 'units', 'xml'].map((area) => `src/core/${area}`),
 	'src/core/tsup.pptx.config.ts',
 	'src/core/tsup.pptx-editor.config.ts',

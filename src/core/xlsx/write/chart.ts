@@ -2,8 +2,8 @@ import { NS, buildXml, children, elements, first, parseXml } from '../../xml/ind
 import type { ChartObject, ChartSeries } from '../model';
 import { XML_HEADER, escapeAttr, escapeText } from './xml-out';
 import { chartSeriesFill } from './chart-colors';
-import { drawingColorXml } from '../../diagram/write-color';
-import { drawingFillXml } from '../../diagram/write-fill';
+import { drawingColorXml } from '../../drawingml/write-color';
+import { drawingFillXml } from '../../drawingml/write-fill';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
 import { writeChartFillFormatting } from '../../chart/write-fill-formatting';

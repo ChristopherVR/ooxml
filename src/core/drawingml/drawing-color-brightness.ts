@@ -1,7 +1,7 @@
-import type { DiagramColor } from './types';
+import type { DrawingColor } from './types';
 
 /** Native Office brightness, in percent. Noncanonical luminance expressions remain unknown. */
-export function drawingColorBrightness(color: DiagramColor): number | undefined {
+export function drawingColorBrightness(color: DrawingColor): number | undefined {
 	const transforms = color.transforms.filter((item) =>
 		['lum', 'lumMod', 'lumOff'].includes(item.name),
 	);
@@ -27,7 +27,7 @@ export function drawingColorBrightness(color: DiagramColor): number | undefined 
 }
 
 /** Replace native brightness while preserving the color choice and unrelated transforms. */
-export function withDrawingColorBrightness(color: DiagramColor, percent: number): DiagramColor {
+export function withDrawingColorBrightness(color: DrawingColor, percent: number): DrawingColor {
 	if (!Number.isFinite(percent) || percent < -100 || percent > 100)
 		throw new RangeError('Brightness must be from -100 to 100');
 	const result = structuredClone(color);

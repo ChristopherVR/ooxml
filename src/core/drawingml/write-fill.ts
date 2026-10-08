@@ -1,7 +1,7 @@
 import { NS, buildXml, children, elements, first, parseXml, type XmlElement } from '../xml/index';
 import { drawingColorXml } from './write-color';
 import { parseDrawingColorIn } from './drawing-color';
-import type { DiagramFill } from './types';
+import type { DrawingFill } from './types';
 
 /** Replace only the DrawingML fill, retaining geometry, outlines, effects and extensions. */
 export function setDrawingFillXml(properties: XmlElement, xml: string): void {
@@ -34,7 +34,7 @@ export function setDrawingFillXml(properties: XmlElement, xml: string): void {
 }
 
 /** Serializes modelled DrawingML fills, retaining imported gradient flags and extensions. */
-export function drawingFillXml(fill: DiagramFill): string | undefined {
+export function drawingFillXml(fill: DrawingFill): string | undefined {
 	if (fill.kind === 'none') return '<a:noFill/>';
 	if (fill.kind === 'solid') return `<a:solidFill>${drawingColorXml(fill.color)}</a:solidFill>`;
 	if (fill.kind !== 'gradient') return undefined;

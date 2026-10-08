@@ -14,6 +14,7 @@ export default defineConfig({
 		'geometry/index': 'geometry/index.ts',
 		'xml/index': 'xml/index.ts',
 		'opc/index': 'opc/index.ts',
+		'drawingml/index': 'drawingml/index.ts',
 		'diagram/index': 'diagram/index.ts',
 		'digest/index': 'digest/index.ts',
 		'crypto/index': 'crypto/index.ts',

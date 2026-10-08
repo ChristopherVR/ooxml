@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest';
 import { drawingColorBrightness, withDrawingColorBrightness } from './drawing-color-brightness';
-import type { DiagramColor } from './types';
+import type { DrawingColor } from './types';
 
 it('retains theme identity and unrelated ordered transforms when replacing brightness', () => {
-	const color: DiagramColor = {
+	const color: DrawingColor = {
 		kind: 'scheme',
 		value: 'accent1',
 		transforms: [

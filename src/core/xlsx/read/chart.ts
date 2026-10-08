@@ -1,11 +1,11 @@
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import type { ChartObject, ChartSeries, ChartType, Color, DrawingAnchor } from '../model';
 import { att } from './xml-util';
-import { parseDrawingColorIn } from '../../diagram/drawing-color';
+import { parseDrawingColorIn } from '../../drawingml/drawing-color';
 import { readChartFormatting } from '../../chart/read-formatting';
-import { parseDrawingFill } from '../../diagram/drawing-fill';
+import { parseDrawingFill } from '../../drawingml/drawing-fill';
 import { buildXml } from '../../xml/index';
-import { parseDrawingTextBody } from '../../diagram/drawing-text';
+import { parseDrawingTextBody } from '../../drawingml/drawing-text';
 
 const c = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.c);
 const val = (parent: ParentNode | null | undefined, local: string) => att(c(parent, local), 'val');

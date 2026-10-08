@@ -1,5 +1,5 @@
 import type { DiagramFill, DiagramColor } from '../../diagram/types';
-import { resolveDrawingColor } from '../../diagram/drawing-color';
+import { resolveDrawingColor } from '../../drawingml/drawing-color';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';

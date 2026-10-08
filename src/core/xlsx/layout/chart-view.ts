@@ -2,13 +2,13 @@ import type { CellValue, ChartObject, ChartSeries, ChartType, Workbook } from '.
 import { isCellError } from '../model';
 import { autoSeriesColor, chartColorScheme } from './chart-colors';
 import { chartPaletteSeriesColor, findChartColorPalette } from '../../chart/color-palettes';
-import { resolveDrawingColor } from '../../diagram/drawing-color';
-import { drawingColorCss } from '../../diagram/drawing-color-css';
+import { resolveDrawingColor } from '../../drawingml/drawing-color';
+import { drawingColorCss } from '../../drawingml/drawing-color-css';
 import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale';
 import { resolveColor } from './colors';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
-import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
+import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { chartTitleText, type ChartTitleText } from './chart-title-text';
 import type { ChartManualLayout } from '../../chart/manual-layout';
 

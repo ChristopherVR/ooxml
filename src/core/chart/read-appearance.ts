@@ -1,5 +1,5 @@
-import { parseDrawingColorIn } from '../diagram/drawing-color';
-import { parseDrawingFill, parseDrawingLine } from '../diagram/drawing-fill';
+import { parseDrawingColorIn } from '../drawingml/drawing-color';
+import { parseDrawingFill, parseDrawingLine } from '../drawingml/drawing-fill';
 import { NS, buildXml, first, type XmlElement } from '../xml/index';
 import type { ChartStyleEntry } from './style-definition';
 

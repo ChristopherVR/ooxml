@@ -3,7 +3,7 @@ import { XMLBuilder } from 'fast-xml-parser';
 import { CHART_COLOR_STYLE_NS } from '../../../chart/color-style';
 import { readChartStyle } from '../../../chart/read-style';
 import { CHART_STYLE_PARTS, resolveChartStyleDefinition } from '../../../chart/style-definition';
-import { drawingColorXml } from '../../../diagram/write-color';
+import { drawingColorXml } from '../../../drawingml/write-color';
 import { NS, elements, parseXml } from '../../../xml/index';
 import type { PptxChartStyleDefinition, XmlObject } from '../types';
 

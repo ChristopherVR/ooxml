@@ -1,13 +1,13 @@
 import { removeGradientStop } from '../../chart/gradient-stop-edit';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
-import { resolveDrawingColor } from '../../diagram/drawing-color';
-import { withDrawingColorBrightness } from '../../diagram/drawing-color-brightness';
-import { officeGradientPresetFill } from '../../diagram/gradient-presets';
+import { resolveDrawingColor } from '../../drawingml/drawing-color';
+import { withDrawingColorBrightness } from '../../drawingml/drawing-color-brightness';
+import { officeGradientPresetFill } from '../../drawingml/gradient-presets';
 import {
 	withDrawingGradientGeometry,
 	type RectGradientDirection,
 	type DrawingGradientGeometryType,
-} from '../../diagram/gradient-geometry';
+} from '../../drawingml/gradient-geometry';
 import type { DiagramFill, DiagramColor } from '../../diagram/types';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';

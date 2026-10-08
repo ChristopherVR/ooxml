@@ -1,7 +1,7 @@
-// DrawingML fill and line readers over the DOM. Diagram-independent; destined for `drawingml`.
+// DrawingML fill and line readers over the DOM.
 import { parseDrawingColorIn } from './drawing-color';
 import { NS, children, elements, first, type XmlElement } from './dom';
-import type { DiagramFill, DiagramLine } from './types';
+import type { DrawingFill, DrawingLine } from './types';
 import { buildXml } from '../xml/index';
 
 const FILL_ELEMENTS = new Set([
@@ -25,7 +25,7 @@ export function fillElementOf(properties: XmlElement | undefined): XmlElement | 
 }
 
 /** Reads the fill of `a:spPr`/`a:ln`; `undefined` when the element declares none (inherit). */
-export function parseDrawingFill(properties: XmlElement | undefined): DiagramFill | undefined {
+export function parseDrawingFill(properties: XmlElement | undefined): DrawingFill | undefined {
 	const fill = fillElementOf(properties);
 	if (!fill) return undefined;
 	switch (fill.localName) {
@@ -96,9 +96,9 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 }
 
 /** Reads `a:ln`: width in EMU, fill, dash and cap. */
-export function parseDrawingLine(ln: XmlElement | undefined): DiagramLine | undefined {
+export function parseDrawingLine(ln: XmlElement | undefined): DrawingLine | undefined {
 	if (!ln) return undefined;
-	const line: DiagramLine = {};
+	const line: DrawingLine = {};
 	const width = Number.parseInt(ln.getAttribute('w') ?? '', 10);
 	if (Number.isFinite(width)) line.widthEmu = width;
 	const fill = parseDrawingFill(ln);

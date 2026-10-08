@@ -8,7 +8,7 @@ import { saveXlsx } from '../write/index';
 import type { ChartObject } from '../model';
 import { chartView } from '../layout/chart-view';
 import { buildChartGradientDef } from '../../chart/gradient-definition';
-import { drawingColorBrightness } from '../../diagram/drawing-color-brightness';
+import { drawingColorBrightness } from '../../drawingml/drawing-color-brightness';
 import {
 	chartSeriesGradientPatch,
 	chartGradientStopTransparency,

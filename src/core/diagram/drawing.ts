@@ -4,9 +4,9 @@
 // presentation dependencies (colours stay unresolved; see `resolveDrawingColor`).
 import { parseXml, type XmlDocument } from '../xml/index';
 import { parseStyleReferences } from './definitions';
-import { parseDrawingFill, parseDrawingLine } from './drawing-fill';
-import { parseDrawingGeometry, parseFrame, parseTransform } from './drawing-geometry';
-import { parseDrawingTextBody } from './drawing-text';
+import { parseDrawingFill, parseDrawingLine } from '../drawingml/drawing-fill';
+import { parseDrawingGeometry, parseFrame, parseTransform } from '../drawingml/drawing-geometry';
+import { parseDrawingTextBody } from '../drawingml/drawing-text';
 import { NS, first, stringAttribute, type XmlElement } from './dom';
 import type { DiagramDrawing, DiagramDrawingShape, DiagramIssue } from './types';
 

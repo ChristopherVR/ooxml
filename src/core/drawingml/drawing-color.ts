@@ -1,5 +1,5 @@
-// DrawingML colour: a DOM reader and a theme-aware resolver. Written without any diagram
-// knowledge so it moves unchanged into the future `drawingml` area (see docs/agnostic-core-plan.md).
+// DrawingML colour: a DOM reader and a theme-aware resolver (moved from the provisional copy in
+// `diagram`, see docs/agnostic-core-plan.md).
 import {
 	clampUnitInterval,
 	hexToRgbChannels,
@@ -13,10 +13,10 @@ import {
 } from '../color/index';
 import { linearToSrgb255, srgb255ToLinear } from '../color/color-linear';
 import { NS, elements, type XmlElement } from './dom';
-import type { DiagramColor } from './types';
+import type { DrawingColor } from './types';
 import { orderedColorTransforms } from './ordered-color-transforms';
 
-const COLOR_ELEMENTS: Record<string, DiagramColor['kind']> = {
+const COLOR_ELEMENTS: Record<string, DrawingColor['kind']> = {
 	srgbClr: 'srgb',
 	schemeClr: 'scheme',
 	sysClr: 'system',
@@ -25,7 +25,7 @@ const COLOR_ELEMENTS: Record<string, DiagramColor['kind']> = {
 	hslClr: 'hsl',
 };
 
-function colorValue(kind: DiagramColor['kind'], element: XmlElement): string {
+function colorValue(kind: DrawingColor['kind'], element: XmlElement): string {
 	const attribute = (name: string) => element.getAttribute(name) ?? '';
 	if (kind === 'scrgb') return `${attribute('r')},${attribute('g')},${attribute('b')}`;
 	if (kind === 'hsl') return `${attribute('hue')},${attribute('sat')},${attribute('lum')}`;
@@ -33,7 +33,7 @@ function colorValue(kind: DiagramColor['kind'], element: XmlElement): string {
 }
 
 /** Reads the colour element held directly by `container` (`a:solidFill`, `dgm:fillClrLst` item...). */
-export function parseDrawingColorIn(container: XmlElement | undefined): DiagramColor | undefined {
+export function parseDrawingColorIn(container: XmlElement | undefined): DrawingColor | undefined {
 	if (!container) return undefined;
 	for (const element of elements(container)) {
 		const kind = COLOR_ELEMENTS[element.localName];
@@ -44,10 +44,10 @@ export function parseDrawingColorIn(container: XmlElement | undefined): DiagramC
 }
 
 /** Reads one colour element (`a:srgbClr`, `a:schemeClr`, ...) and its transform children. */
-export function parseDrawingColor(element: XmlElement): DiagramColor | undefined {
+export function parseDrawingColor(element: XmlElement): DrawingColor | undefined {
 	const kind = COLOR_ELEMENTS[element.localName];
 	if (!kind) return undefined;
-	const color: DiagramColor = {
+	const color: DrawingColor = {
 		kind,
 		value: colorValue(kind, element),
 		transforms: elements(element).map((child) => ({
@@ -61,7 +61,7 @@ export function parseDrawingColor(element: XmlElement): DiagramColor | undefined
 }
 
 /** Every colour element directly under `container`, in order (a `dgm:fillClrLst`). */
-export function parseDrawingColorList(container: XmlElement | undefined): DiagramColor[] {
+export function parseDrawingColorList(container: XmlElement | undefined): DrawingColor[] {
 	if (!container) return [];
 	return elements(container).flatMap((element) => {
 		const color = parseDrawingColor(element);
@@ -94,7 +94,7 @@ const PRESET_COLORS: Record<string, string> = {
 	grey: '#808080',
 };
 
-function baseHex(color: DiagramColor, theme: DrawingColorTheme | undefined): string | undefined {
+function baseHex(color: DrawingColor, theme: DrawingColorTheme | undefined): string | undefined {
 	switch (color.kind) {
 		case 'srgb':
 			return /^[0-9a-f]{6}$/i.test(color.value) ? `#${color.value.toUpperCase()}` : undefined;
@@ -152,7 +152,7 @@ const APPLIED = new Set([
  * intermediate channels, matching measured native Excel gradient stops.
  */
 export function resolveDrawingColor(
-	color: DiagramColor,
+	color: DrawingColor,
 	theme?: DrawingColorTheme,
 	options?: { hslRounding?: 'nearest' | 'halfDown'; transformOrder?: 'legacy' | 'document' },
 ): ResolvedDrawingColor | undefined {

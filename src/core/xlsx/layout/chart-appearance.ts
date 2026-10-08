@@ -5,13 +5,13 @@ import {
 	type ChartStylePart,
 	type ResolvedChartStyleEntry,
 } from '../../chart/style-definition';
-import { resolveDrawingColor } from '../../diagram/drawing-color';
-import { drawingColorCss } from '../../diagram/drawing-color-css';
+import { resolveDrawingColor } from '../../drawingml/drawing-color';
+import { drawingColorCss } from '../../drawingml/drawing-color-css';
 import { EMU_PER_PIXEL, EMU_PER_POINT } from '../../units/constants';
 import type { ChartObject, ThemePalette } from '../model';
 import { chartColorScheme } from './chart-colors';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
-import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
+import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { builtInChartTextStyle, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
 import { inheritChartText } from '../../chart/text-inheritance';
 

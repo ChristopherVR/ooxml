@@ -1,13 +1,13 @@
-// DrawingML transform and geometry readers over the DOM. Diagram-independent; destined for
-// `drawingml` (preset evaluation itself lives in the `geometry` area).
+// DrawingML transform and geometry readers over the DOM (preset evaluation itself lives in the
+// `geometry` area).
 import { NS, booleanAttribute, children, first, type XmlElement } from './dom';
-import type { DiagramFrame, DiagramPath, DiagramPathCommand } from './types';
+import type { DrawingFrame, DrawingPath, DrawingPathCommand } from './types';
 
 const int = (element: XmlElement | null | undefined, name: string): number =>
 	Number.parseInt(element?.getAttribute(name) ?? '', 10);
 
 /** A frame from an element holding `a:off` and `a:ext` (`a:xfrm`, `dsp:txXfrm`). */
-export function parseFrame(container: XmlElement | undefined): DiagramFrame | undefined {
+export function parseFrame(container: XmlElement | undefined): DrawingFrame | undefined {
 	const off = first(container, 'off', NS.a);
 	const ext = first(container, 'ext', NS.a);
 	if (!off || !ext) return undefined;
@@ -20,7 +20,7 @@ export function parseFrame(container: XmlElement | undefined): DiagramFrame | un
 }
 
 export interface ParsedTransform {
-	frame: DiagramFrame;
+	frame: DrawingFrame;
 	/** Degrees. */
 	rotation?: number;
 	flipHorizontal?: boolean;
@@ -40,8 +40,8 @@ export function parseTransform(xfrm: XmlElement | undefined): ParsedTransform | 
 	};
 }
 
-function parsePathCommands(path: XmlElement): DiagramPathCommand[] | undefined {
-	const commands: DiagramPathCommand[] = [];
+function parsePathCommands(path: XmlElement): DrawingPathCommand[] | undefined {
+	const commands: DrawingPathCommand[] = [];
 	const point = (element: XmlElement) => {
 		const x = int(element, 'x');
 		const y = int(element, 'y');
@@ -93,7 +93,7 @@ function parsePathCommands(path: XmlElement): DiagramPathCommand[] | undefined {
 export interface ParsedGeometry {
 	geometry: string;
 	adjustments?: Record<string, number>;
-	paths?: DiagramPath[];
+	paths?: DrawingPath[];
 	/** Set when a geometry is present but not fully modelled. */
 	issue?: string;
 }
@@ -103,7 +103,7 @@ export function parseDrawingGeometry(spPr: XmlElement | undefined): ParsedGeomet
 	const preset = first(spPr, 'prstGeom', NS.a);
 	const custom = first(spPr, 'custGeom', NS.a);
 	if (custom) {
-		const paths: DiagramPath[] = [];
+		const paths: DrawingPath[] = [];
 		for (const path of children(first(custom, 'pathLst', NS.a) ?? custom, 'path', NS.a)) {
 			const commands = parsePathCommands(path);
 			// Guide-named coordinates need the guide evaluator; report rather than guess.

@@ -1,4 +1,4 @@
-import { parseDrawingColorIn } from '../diagram/drawing-color';
+import { parseDrawingColorIn } from '../drawingml/drawing-color';
 import { buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
 import { readChartAppearance } from './read-appearance';
 import { CHART_COLOR_STYLE_NS } from './color-style';

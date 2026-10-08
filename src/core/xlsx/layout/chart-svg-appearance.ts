@@ -5,7 +5,7 @@ import { AXIS_COLOR, GRID_COLOR, FONT_SIZE, n, esc, type Rect, type text } from 
 import { buildChartGradientDef, type ChartGradientFill } from '../../chart/gradient-definition';
 import { chartGradientMarkup } from '../../chart/gradient-markup';
 import { cssFontFamily } from './font-family';
-import { svgDropShadowElement, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
+import { svgDropShadowElement, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 
 /** Each standalone SVG needs distinct gradient targets when inserted beside other charts. */
 let nextPaintId = 0;

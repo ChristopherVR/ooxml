@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { NS, buildXml, parseXml } from '../xml';
 import { readChartFormatting } from './read-formatting';
 import { writeChartFillFormatting } from './write-fill-formatting';
-import { setDrawingFillXml } from '../diagram/write-fill';
+import { setDrawingFillXml } from '../drawingml/write-fill';
 
 it('patches fills without replacing outlines, effects, transforms or unknown extensions', () => {
 	const doc = parseXml(

@@ -1,5 +1,5 @@
 import { NS, buildXml, parseXml } from '../xml/index';
-import type { DiagramColor } from './types';
+import type { DrawingColor } from './types';
 
 const ELEMENTS = {
 	srgb: 'srgbClr',
@@ -11,7 +11,7 @@ const ELEMENTS = {
 } as const;
 
 /** One DrawingML color choice, with its ordered transforms and system-color fallback. */
-export function drawingColorXml(color: DiagramColor): string {
+export function drawingColorXml(color: DrawingColor): string {
 	const local = ELEMENTS[color.kind];
 	const doc = parseXml(`<a:${local} xmlns:a="${NS.a}"/>`);
 	const root = doc.documentElement;

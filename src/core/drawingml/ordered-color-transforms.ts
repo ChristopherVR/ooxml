@@ -6,12 +6,12 @@ import {
 	rgbToHsl,
 } from '../color/index';
 import { linearToSrgb255, srgb255ToLinear } from '../color/color-linear';
-import type { DiagramColor } from './types';
+import type { DrawingColor } from './types';
 
 /** Apply transforms in document order, keeping fractional channels until the final quantization. */
 export function orderedColorTransforms(
 	channels: { r: number; g: number; b: number },
-	transforms: DiagramColor['transforms'],
+	transforms: DrawingColor['transforms'],
 ): { r: number; g: number; b: number; alpha: number } {
 	let { r, g, b } = channels;
 	let alpha = 1;

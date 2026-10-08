@@ -1,8 +1,8 @@
 import { OFFICE_GRADIENT_PRESET_DATA } from './gradient-preset-data';
 import { NS } from '../xml';
-import type { DiagramFill } from './types';
+import type { DrawingFill } from './types';
 
-type Gradient = Extract<DiagramFill, { kind: 'gradient' }>;
+type Gradient = Extract<DrawingFill, { kind: 'gradient' }>;
 
 /** The 24 standard Office named presets, with native horizontal style/variant 1. */
 export const OFFICE_GRADIENT_PRESETS: ReadonlyArray<{
@@ -30,7 +30,7 @@ export function officeGradientPresetFill(id: number): Gradient {
 }
 
 /** Recognize exact preset values; customized or unsupported paint has no preset identity. */
-export function officeGradientPresetId(fill: DiagramFill): number | undefined {
+export function officeGradientPresetId(fill: DrawingFill): number | undefined {
 	if (fill.kind !== 'gradient' || fill.path || fill.angle !== 90 || fill.scaled !== true)
 		return undefined;
 	const index = OFFICE_GRADIENT_PRESET_DATA.findIndex(

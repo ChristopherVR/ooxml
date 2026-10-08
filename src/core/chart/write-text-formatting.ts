@@ -1,7 +1,7 @@
 import { NS, elements, first, parseXml, type XmlElement } from '../xml';
 import { chartFormattingNodes } from './formatting-nodes';
 import type { ChartStyleDefinition } from './style-definition';
-import { parseDrawingTextBody } from '../diagram/drawing-text';
+import { parseDrawingTextBody } from '../drawingml/drawing-text';
 
 const rich = (node: XmlElement) => first(first(node, 'tx', NS.c), 'rich', NS.c);
 

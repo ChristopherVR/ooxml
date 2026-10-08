@@ -11,7 +11,7 @@ import {
 	officeGradientPresetFill,
 	officeGradientPresetId,
 	OFFICE_GRADIENT_PRESETS,
-} from '../../diagram/gradient-presets';
+} from '../../drawingml/gradient-presets';
 
 async function nativeBook(xml: string) {
 	const book = createWorkbook();

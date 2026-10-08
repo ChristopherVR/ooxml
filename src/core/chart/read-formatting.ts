@@ -3,7 +3,7 @@ import { readChartAppearance } from './read-appearance';
 import type { ChartStyleDefinition, ChartStyleEntry } from './style-definition';
 import { chartFormattingNodes } from './formatting-nodes';
 import { readBuiltInChartStyle } from './built-in-text-style';
-import { parseDrawingTextBody } from '../diagram/drawing-text';
+import { parseDrawingTextBody } from '../drawingml/drawing-text';
 import { readChartManualLayoutValues } from './manual-layout';
 
 const c = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.c);

@@ -6,7 +6,7 @@ import { saveXlsx } from './index';
 import { chartXml } from './chart';
 import { patchChartPart } from './chart-patch';
 import { parseChart } from '../read/chart';
-import { parseDrawingFill } from '../../diagram/drawing-fill';
+import { parseDrawingFill } from '../../drawingml/drawing-fill';
 import { parseXml, NS } from '../../xml';
 import type { ChartObject } from '../model';
 import type { DiagramFill } from '../../diagram/types';

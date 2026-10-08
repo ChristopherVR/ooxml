@@ -5,10 +5,10 @@ import {
 	CHART_COLOR_STYLE_CONTENT_TYPE,
 	CHART_COLOR_STYLE_REL,
 } from '../../chart/color-style';
-import { parseDrawingColorIn } from '../../diagram/drawing-color';
-import { fillElementOf } from '../../diagram/drawing-fill';
-import { drawingColorXml } from '../../diagram/write-color';
-import { drawingFillXml, setDrawingFillXml } from '../../diagram/write-fill';
+import { parseDrawingColorIn } from '../../drawingml/drawing-color';
+import { fillElementOf } from '../../drawingml/drawing-fill';
+import { drawingColorXml } from '../../drawingml/write-color';
+import { drawingFillXml, setDrawingFillXml } from '../../drawingml/write-fill';
 import type { DiagramColor } from '../../diagram/types';
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import { sameChartColor } from '../edit/chart-colors';

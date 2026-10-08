@@ -3,9 +3,9 @@ import reference from './__fixtures__/native-gradient-path-profiles.json';
 import paths from './__fixtures__/native-gradient-circle-shape-profiles.json';
 import series from './__fixtures__/native-gradient-series-path-profiles.json';
 import { parseXml, NS } from '../xml';
-import { parseDrawingFill } from '../diagram/drawing-fill';
-import { drawingFillXml } from '../diagram/write-fill';
-import { resolveDrawingColor } from '../diagram/drawing-color';
+import { parseDrawingFill } from '../drawingml/drawing-fill';
+import { drawingFillXml } from '../drawingml/write-fill';
+import { resolveDrawingColor } from '../drawingml/drawing-color';
 import { hexToRgbChannels } from '../color/color-primitives';
 import { buildChartGradientDef, resolveChartGradient } from './gradient-definition';
 

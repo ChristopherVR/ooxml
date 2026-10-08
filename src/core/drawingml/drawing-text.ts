@@ -1,15 +1,14 @@
-// DrawingML text body reader (`dsp:txBody`, `a:txBody`) over the DOM. Diagram-independent;
-// destined for `drawingml`.
+// DrawingML text body reader (`a:txBody`, `dsp:txBody`, `c:txPr`) over the DOM.
 import { parseDrawingColorIn } from './drawing-color';
 import { NS, booleanAttribute, children, elements, first, type XmlElement } from './dom';
 import type {
-	DiagramTextBody,
-	DiagramTextParagraph,
-	DiagramTextRun,
-	DiagramTextSpacing,
+	DrawingTextBody,
+	DrawingTextParagraph,
+	DrawingTextRun,
+	DrawingTextSpacing,
 } from './types';
 
-function parseSpacing(parent: XmlElement | undefined): DiagramTextSpacing | undefined {
+function parseSpacing(parent: XmlElement | undefined): DrawingTextSpacing | undefined {
 	for (const [name, unit, divisor] of [
 		['spcPts', 'points', 100],
 		['spcPct', 'percent', 100000],
@@ -22,8 +21,8 @@ function parseSpacing(parent: XmlElement | undefined): DiagramTextSpacing | unde
 	return undefined;
 }
 
-function parseProperties(properties: XmlElement | undefined): Omit<DiagramTextRun, 'text'> {
-	const parsed: Omit<DiagramTextRun, 'text'> = {};
+function parseProperties(properties: XmlElement | undefined): Omit<DrawingTextRun, 'text'> {
+	const parsed: Omit<DrawingTextRun, 'text'> = {};
 	const size = Number.parseInt(properties?.getAttribute('sz') ?? '', 10);
 	if (Number.isFinite(size)) parsed.sizePt = size / 100;
 	const bold = booleanAttribute(properties, 'b');
@@ -39,15 +38,15 @@ function parseProperties(properties: XmlElement | undefined): Omit<DiagramTextRu
 	return parsed;
 }
 
-function parseRun(run: XmlElement): DiagramTextRun {
+function parseRun(run: XmlElement): DrawingTextRun {
 	return {
 		text: run.localName === 'br' ? '\n' : (first(run, 't', NS.a)?.textContent ?? ''),
 		...parseProperties(first(run, 'rPr', NS.a)),
 	};
 }
 
-function parseParagraph(paragraph: XmlElement): DiagramTextParagraph {
-	const runs: DiagramTextRun[] = [];
+function parseParagraph(paragraph: XmlElement): DrawingTextParagraph {
+	const runs: DrawingTextRun[] = [];
 	// Fields show cached text in their original position, and breaks retain their line boundary.
 	for (const child of elements(paragraph))
 		if (child.namespaceURI === NS.a && ['r', 'fld', 'br'].includes(child.localName))
@@ -69,17 +68,17 @@ function parseParagraph(paragraph: XmlElement): DiagramTextParagraph {
 }
 
 /** Reads a text body: anchor, insets and the runs of every paragraph. */
-export function parseDrawingTextBody(body: XmlElement | undefined): DiagramTextBody | undefined {
+export function parseDrawingTextBody(body: XmlElement | undefined): DrawingTextBody | undefined {
 	if (!body) return undefined;
 	const properties = first(body, 'bodyPr', NS.a);
 	const paragraphs = children(body, 'p', NS.a).map(parseParagraph);
-	const result: DiagramTextBody = {
+	const result: DrawingTextBody = {
 		paragraphs,
 		text: paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join('')).join('\n'),
 	};
 	const anchor = properties?.getAttribute('anchor');
 	if (anchor) result.anchor = anchor;
-	const insets: NonNullable<DiagramTextBody['insetsEmu']> = {};
+	const insets: NonNullable<DrawingTextBody['insetsEmu']> = {};
 	for (const [key, attribute] of [
 		['left', 'lIns'],
 		['top', 'tIns'],

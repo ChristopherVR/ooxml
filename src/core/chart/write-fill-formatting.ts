@@ -1,6 +1,6 @@
 import { NS, elements, first, type XmlElement } from '../xml';
-import { parseDrawingFill } from '../diagram/drawing-fill';
-import { drawingFillXml, setDrawingFillXml } from '../diagram/write-fill';
+import { parseDrawingFill } from '../drawingml/drawing-fill';
+import { drawingFillXml, setDrawingFillXml } from '../drawingml/write-fill';
 import { chartFormattingNodes } from './formatting-nodes';
 import type { ChartStyleDefinition } from './style-definition';
 

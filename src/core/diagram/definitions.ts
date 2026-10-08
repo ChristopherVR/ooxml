@@ -1,7 +1,7 @@
 // DOM parsers for the three definition parts of a diagram: colours (`dgm:colorsDef`), quick style
 // (`dgm:styleDef`) and layout (`dgm:layoutDef`, header and root algorithm only).
 import { parseXml, type XmlDocument } from '../xml/index';
-import { parseDrawingColorIn, parseDrawingColorList } from './drawing-color';
+import { parseDrawingColorIn, parseDrawingColorList } from '../drawingml/drawing-color';
 import {
 	NS,
 	children,
