@@ -20,6 +20,7 @@ import {
 	isFeatureEnabled,
 	isPanelVisible,
 	resolveEffectiveHiddenActions,
+	resolveViewerRootOptions,
 } from 'ooxml-ui/pptx';
 import type {
 	ResolvedCustomization,
@@ -100,7 +101,8 @@ export function createViewerCustomizationLifecycle(
 			cachedOptions = {
 				...options,
 				hiddenActions: resolveEffectiveHiddenActions(resolved, options.hiddenActions),
-				showThumbnails: (options.showThumbnails ?? true) && isPanelVisible(resolved, 'slidesPane'),
+				showThumbnails:
+					resolveViewerRootOptions(options).showThumbnails && isPanelVisible(resolved, 'slidesPane'),
 				showInspector: (options.showInspector ?? true) && isPanelVisible(resolved, 'inspector'),
 			};
 		}

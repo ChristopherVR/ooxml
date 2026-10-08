@@ -1,4 +1,8 @@
-import { EMPTY_RESOLVED_CUSTOMIZATION, isFeatureEnabled } from 'ooxml-ui/pptx';
+import {
+	EMPTY_RESOLVED_CUSTOMIZATION,
+	isFeatureEnabled,
+	resolveViewerRootOptions,
+} from 'ooxml-ui/pptx';
 import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
@@ -46,7 +50,7 @@ export function toViewerStateOptions(
 		// as an explicit `false`. See `resolveAutosaveActivation` in shared.
 		getAutosave: () => getProps().autosave,
 		getFilePath: () => getProps().filePath,
-		getInitialSlide: () => getProps().initialSlide ?? 0,
+		getInitialSlide: () => resolveViewerRootOptions(getProps()).initialSlide,
 		getSmartArt3D: () => getProps().smartArt3D ?? false,
 		getSurfaceChart3D: () => getProps().surfaceChart3D ?? false,
 		getBarChart3D: () => getProps().barChart3D ?? false,

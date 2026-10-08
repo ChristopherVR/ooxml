@@ -15,6 +15,7 @@
 	import {
 		buildUserFontFaceStyles,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
+		resolveViewerRootOptions,
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
 	import type { ViewerMode } from 'ooxml-ui/pptx';
@@ -49,8 +50,10 @@
 	// Only the defaulted props get an alias; the rest are read as `props.x`, which
 	// is what keeps them reactive (a destructured top-level read would snapshot).
 	const className = $derived(props.class ?? '');
-	const showThumbnails = $derived(props.showThumbnails ?? true);
-	const showToolbar = $derived(props.showToolbar ?? true);
+	// `showToolbar` / `showThumbnails` defaults are shared with every binding.
+	const rootOptions = $derived(resolveViewerRootOptions(props));
+	const showThumbnails = $derived(rootOptions.showThumbnails);
+	const showToolbar = $derived(rootOptions.showToolbar);
 	const showNotes = $derived(props.showNotes ?? true);
 
 	$effect(() => {

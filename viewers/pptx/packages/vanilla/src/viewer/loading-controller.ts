@@ -7,6 +7,7 @@ import {
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
 } from 'ooxml-ui/pptx';
+import { resolveInitialSlideIndex } from 'ooxml-ui/pptx';
 import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
 
 import type { EditorController } from './editor';
@@ -14,7 +15,6 @@ import { seedDeckViewPreferences } from './editor';
 import type { Translator } from './i18n';
 import type { PptxViewerSource } from './load';
 import { loadPresentation, resolveSourceToBuffer, revokeBlobUrls } from './load';
-import { clampSlideIndex } from './state';
 import type { Store, ViewerState } from './state';
 import type { PptxViewerOptions } from './types';
 
@@ -216,7 +216,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				tableStyleMap: loaded.tableStyleMap,
 				tableStylesDefaultId: loaded.tableStylesDefaultId,
 				tableStylesToDelete: [],
-				currentSlide: clampSlideIndex(options.initialSlide ?? 0, partition.slides.length),
+				currentSlide: resolveInitialSlideIndex(options.initialSlide, partition.slides.length),
 				loading: false,
 			});
 			// Goes through the central editable gate (store flag + the editor

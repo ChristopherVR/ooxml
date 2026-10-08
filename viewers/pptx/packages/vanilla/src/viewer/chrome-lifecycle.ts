@@ -4,6 +4,7 @@ import {
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	isFeatureEnabled,
 	readRibbonTransitionDraft,
+	resolveViewerRootOptions,
 	safeOpenUrl,
 	toggleBlackboard,
 } from 'ooxml-ui/pptx';
@@ -174,10 +175,11 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	const { doc, container, t, options, store, renderer } = deps;
 	const customization = (): ResolvedCustomization =>
 		deps.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION;
+	const rootOptions = resolveViewerRootOptions(options);
 	const chrome = buildViewerChrome(doc, t, {
 		...resolveChromePanelFlags(customization()),
-		showToolbar: options.showToolbar ?? true,
-		showThumbnails: options.showThumbnails ?? true,
+		showToolbar: rootOptions.showToolbar,
+		showThumbnails: rootOptions.showThumbnails,
 		showFormatToolbar: options.showFormatToolbar ?? true,
 		showInspector: options.showInspector ?? true,
 		editable: options.editable ?? false,

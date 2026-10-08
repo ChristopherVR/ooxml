@@ -241,6 +241,19 @@ describe('createPptxViewer', () => {
 		expect(container.querySelector('.pptxv-viewport')).toBeTruthy();
 	});
 
+	it('opens a loaded deck on initialSlide, clamped into the deck', async () => {
+		const { PptxHandler } = await import('pptx-viewer-core');
+		const { handler, data } = await PptxHandler.create({ initialSlideCount: 3 });
+		const bytes = await handler.save(data.slides);
+		handler.dispose();
+		const inRange = mount({ initialSlide: 1, showToolbar: false });
+		await inRange.viewer.loadFile(bytes);
+		expect(inRange.viewer.getCurrentSlide()).toBe(1);
+		const outOfRange = mount({ initialSlide: 99, showToolbar: false });
+		await outOfRange.viewer.loadFile(bytes);
+		expect(outOfRange.viewer.getCurrentSlide()).toBe(2);
+	});
+
 	it('starts empty with the no-slides message and safe navigation', () => {
 		const { container, viewer } = mount();
 		expect(viewer.getSlideCount()).toBe(0);
