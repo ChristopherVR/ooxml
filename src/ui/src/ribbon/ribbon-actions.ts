@@ -22,11 +22,15 @@ export type OfficeRibbonModeEvent = CustomEvent<{ mode: string }>;
  * Properties: `modes` (the selector's choices; empty hides it), `mode`, `mode-label` (its name),
  * `comments-label`, `comments-title`, `comments-pressed`, `comments-count` (a badge when above 0),
  * `no-comments`, `share-label`, `share-title`, `share-pressed` (a live session) and `no-share`.
- * Events: `office-ribbon-mode` `{ mode }`, `office-ribbon-comments` and `office-ribbon-share`.
+ * Events: `office-ribbon-mode` `{ mode }`, `office-ribbon-comments` and `office-ribbon-share` (static
+ * `modeEvent`, `commentsEvent` and `shareEvent` let a product subclass keep its own names).
  * Parts: `mode`, `mode-select`, `comments`, `share`. Below 900px the labels hide, as in Office's
  * narrow layout; the buttons keep their accessible names through `aria-label`.
  */
 export class OfficeUiRibbonActions extends OfficeElement {
+	static modeEvent = 'office-ribbon-mode';
+	static commentsEvent = 'office-ribbon-comments';
+	static shareEvent = 'office-ribbon-share';
 	static override styles = controlStyles(css);
 	static override properties = {
 		modes: { attribute: false },
@@ -82,7 +86,11 @@ export class OfficeUiRibbonActions extends OfficeElement {
 		const mode = select.value;
 		// Controlled: keep showing the host's mode until it redraws with the new one.
 		select.value = this.mode;
-		if (mode !== this.mode) this.fire('office-ribbon-mode', { mode });
+		if (mode !== this.mode) this.fire(this.events().modeEvent, { mode });
+	}
+
+	private events(): { modeEvent: string; commentsEvent: string; shareEvent: string } {
+		return this.constructor as typeof OfficeUiRibbonActions;
 	}
 
 	protected override updated(): void {
@@ -97,7 +105,7 @@ export class OfficeUiRibbonActions extends OfficeElement {
 		const shareTitle = this.shareTitle ?? this.shareLabel;
 		// No whitespace between nodes: consumers compare the buttons' textContent.
 		// prettier-ignore
-		return html`<label class="mode" part="mode" ?hidden=${modes.length === 0}>${glyph('pencil', 'glyph')}<select class="mode-select" part="mode-select" aria-label=${this.modeLabel} title=${this.modeLabel} @change=${this.onMode}>${modes.map((option) => html`<option value=${option.value} ?selected=${option.value === this.mode}>${option.label}</option>`)}</select></label><button class="comments" part="comments" type="button" aria-label=${this.commentsLabel} title=${count > 0 ? `${commentsTitle} (${count})` : commentsTitle} aria-pressed=${String(present(this.commentsPressed))} ?hidden=${present(this.noComments)} @click=${() => this.fire('office-ribbon-comments', {})}>${glyph('message', 'glyph')}<span class="label">${this.commentsLabel}</span>${count > 0 ? html`<span class="badge" aria-hidden="true">${count}</span>` : ''}</button><button class="share" part="share" type="button" aria-label=${this.shareLabel} title=${shareTitle} aria-pressed=${String(present(this.sharePressed))} ?hidden=${present(this.noShare)} @click=${() => this.fire('office-ribbon-share', {})}>${glyph('share', 'glyph')}<span class="label">${this.shareLabel}</span></button>`;
+		return html`<label class="mode" part="mode" ?hidden=${modes.length === 0}>${glyph('pencil', 'glyph')}<select class="mode-select" part="mode-select" aria-label=${this.modeLabel} title=${this.modeLabel} @change=${this.onMode}>${modes.map((option) => html`<option value=${option.value} ?selected=${option.value === this.mode}>${option.label}</option>`)}</select></label><button class="comments" part="comments" type="button" aria-label=${this.commentsLabel} title=${count > 0 ? `${commentsTitle} (${count})` : commentsTitle} aria-pressed=${String(present(this.commentsPressed))} ?hidden=${present(this.noComments)} @click=${() => this.fire(this.events().commentsEvent, {})}>${glyph('message', 'glyph')}<span class="label">${this.commentsLabel}</span>${count > 0 ? html`<span class="badge" aria-hidden="true">${count}</span>` : ''}</button><button class="share" part="share" type="button" aria-label=${this.shareLabel} title=${shareTitle} aria-pressed=${String(present(this.sharePressed))} ?hidden=${present(this.noShare)} @click=${() => this.fire(this.events().shareEvent, {})}>${glyph('share', 'glyph')}<span class="label">${this.shareLabel}</span></button>`;
 	}
 }
 

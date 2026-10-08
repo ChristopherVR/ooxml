@@ -45,6 +45,7 @@ import { definePptxRibbonTransitions } from './ribbon-transitions';
 import { definePptxRibbonView } from './ribbon-view';
 import { definePptxSlideShowOptions } from './slide-show-options';
 import { definePptxStatusBar } from './status-bar';
+import { definePptxRibbonActions } from './ribbon-actions';
 import { definePptxSubtitleSettings } from './subtitle-settings';
 import { definePptxThemeEditor } from './theme-editor';
 import { definePptxTitleBar } from './title-bar';
@@ -160,6 +161,7 @@ const controls = [
 	['pptx-ui-ribbon-gallery', definePptxRibbonGallery],
 	['pptx-ui-ribbon-toggle', definePptxRibbonToggle],
 	['pptx-ui-status-bar', definePptxStatusBar],
+	['pptx-ui-ribbon-actions', definePptxRibbonActions],
 	['pptx-ui-notes-toolbar', definePptxNotesToolbar],
 	['pptx-ui-context-menu', definePptxContextMenu],
 	['pptx-ui-subtitle-settings', definePptxSubtitleSettings],

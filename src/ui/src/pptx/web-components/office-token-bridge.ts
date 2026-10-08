@@ -25,6 +25,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-title-bar',
 	'pptx-ui-status-bar',
 	'pptx-ui-ribbon-gallery',
+	'pptx-ui-ribbon-actions',
 ] as const;
 
 /** Every alias maps the shared tokens onto the pptx theme and control tokens. */
@@ -161,6 +162,9 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	--office-launcher-inset-end: -2px; --office-launcher-inset-bottom: 1px; --office-launcher-width: 14px;
 	--office-launcher-height: 14px; --office-ribbon-collapse-x: var(--pptx-collapse-x, 8px);
 	--office-ribbon-collapse-y: var(--pptx-collapse-y, 120px); }`,
+	// The tab row's Comments and Share at the pptx tab-row scale (11px labels, 24px controls).
+	'pptx-ui-ribbon-actions': `:host { --office-font-size: 11px; --office-control-height-md: 24px;
+	--office-icon-size-md: 14px; --office-font-size-2xs: 8px; padding-inline-start: 0; }`,
 	'pptx-ui-context-menu': `:host { --office-menu-min-width: 180px; --office-danger: var(--pptx-destructive, #f87171);
 	--office-selected: var(--pptx-accent, #33334d); --office-radius-md: var(--pptx-radius, 6px); }`,
 };

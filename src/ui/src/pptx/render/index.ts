@@ -1760,6 +1760,7 @@ export * from './ribbon-transitions-state';
 export * from './status-bar-state';
 export * from './notes-toolbar-state';
 export * from './title-bar-state';
+export * from './tab-row-actions';
 
 export * from './slide-sorter-state';
 
