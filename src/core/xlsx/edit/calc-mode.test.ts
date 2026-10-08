@@ -46,7 +46,15 @@ describe('manual calculation', () => {
 		s.calculateSheet(0);
 		expect(value(wb, 0, 1, 1)).toBe(30);
 		expect(getCell(wb.sheets[1]!, 0, 0)?.formula).toBe('Sheet1!A2+1');
+		// The graph followed the inserted row, so Shift+F9 stays on its sheet; F9 does the rest.
+		expect(value(wb, 1, 0, 0)).toBe(8);
+		s.calculateNow();
 		expect(value(wb, 1, 0, 0)).toBe(4);
+		// A structural edit the graph cannot follow (a new sheet) recalculates everything.
+		s.setCellValue(0, 1, 0, 1);
+		s.addSheet('Extra');
+		s.calculateSheet(2);
+		expect([value(wb, 0, 1, 1), value(wb, 1, 0, 0)]).toEqual([10, 2]);
 	});
 	it('recalculates when switching back to automatic and undoes the switch', () => {
 		const { wb, s } = setup();

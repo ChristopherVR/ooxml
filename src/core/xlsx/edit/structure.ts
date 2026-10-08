@@ -64,7 +64,7 @@ function shiftAxis(
 			applyAxisShift(ctx, sheet, shift);
 			if (insert) inheritFormats(sheet, axis, at, count);
 		},
-		{ sheet: s, structural: true },
+		{ sheet: s, structural: true, calc: { kind: 'shift', sheet: s, shift } },
 	);
 }
 

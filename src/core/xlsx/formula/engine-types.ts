@@ -28,6 +28,14 @@ export interface CalcEngine {
 	 * engine being told (edits in manual calculation mode); the next recalculation rebuilds it.
 	 */
 	discardPreparation(): void;
+	/**
+	 * Follows rows or columns inserted (`count` > 0) or deleted at `at` on a sheet, called after
+	 * the workbook's cells moved and its formulas were rewritten: the dependency graph moves in
+	 * place and the formulas whose value can change wait for the next `recalculateFrom` (which
+	 * may be given no cells). When the graph cannot follow (spills on the sheet, an array
+	 * formula cut by the edit, no graph yet) it is invalidated, as by `invalidate`.
+	 */
+	shiftCells(sheet: number, shift: { axis: 'row' | 'col'; at: number; count: number }): void;
 	/** Like `evaluate` but keeps array results (list validation sources, chart series). */
 	evaluateArray(formula: string, at: CellPosition): CellValue[][];
 	/** The current spill range anchored at a cell. */

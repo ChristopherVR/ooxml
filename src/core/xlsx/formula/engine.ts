@@ -5,8 +5,8 @@ import { getCell } from '../cells';
 import type { Cell, CellValue, Workbook } from '../model';
 import { FormulaError } from './ast';
 import { withDateSystem } from './date-serial';
-import { EngineCore } from './engine-core';
 import { GraphPreparation, type PreparedFormulas } from './engine-prepare';
+import { EngineStructure } from './engine-structure';
 import type { CalcEngine, CalcEngineOptions, CellPosition } from './engine-types';
 import { rangeHas, sameRange } from './engine-util';
 import { evaluateNode } from './evaluator';
@@ -22,12 +22,10 @@ export {
 	type CellPosition,
 } from './engine-types';
 
-class Engine extends EngineCore implements CalcEngine {
+class Engine extends EngineStructure implements CalcEngine {
 	private preparation: GraphPreparation | undefined;
 	/** The prepared formulas the first recalculation checks (see `trustsStoredValues`). */
 	private prepared: PreparedFormulas | undefined;
-
-	// ---- recalculation ----
 
 	// ---- the graph ----
 
@@ -43,6 +41,7 @@ class Engine extends EngineCore implements CalcEngine {
 		if (!this.fresh || this.needsFull) return;
 		this.preparation = undefined;
 		this.prepared = undefined;
+		this.structuralSeeds.clear();
 		this.nodes.clear();
 		this.footprints.clear();
 		this.graphChanged();
@@ -82,6 +81,7 @@ class Engine extends EngineCore implements CalcEngine {
 		if (this.needsFull) this.releaseAllSpills();
 		if (!this.built || this.needsFull) this.build();
 		this.needsFull = false;
+		this.structuralSeeds.clear();
 		this.cycles = new Set();
 		this.run(new Set(this.allNodes()), true);
 	}
@@ -142,6 +142,7 @@ class Engine extends EngineCore implements CalcEngine {
 			}
 		}
 		if (structural) this.graphChanged();
+		this.takeStructuralSeeds(seeds);
 		const reverse = this.reverse();
 		for (const area of changed) reverse.dependents(area.sheet, area.range, seeds);
 		for (const node of this.allNodes()) if (node.volatile) seeds.add(node);
@@ -187,6 +188,7 @@ class Engine extends EngineCore implements CalcEngine {
 	}
 
 	invalidate(): void {
+		this.structuralSeeds.clear();
 		this.releaseAllSpills();
 		this.preparation = undefined;
 		this.prepared = undefined;

@@ -39,6 +39,11 @@ export interface FormulaNode {
 	blockedSpill?: CellRange;
 	/** The error shown for a formula that cannot be parsed for a reason other than syntax. */
 	parseError?: CellError;
+	/**
+	 * `formula` was rewritten by a structural edit that moved its references along with their
+	 * cells: `deps` already follow, and `ast` is parsed again from the new text when evaluated.
+	 */
+	stale?: boolean;
 }
 
 interface DepContext {

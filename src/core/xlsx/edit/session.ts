@@ -66,14 +66,14 @@ export function createEditSession(
 	};
 
 	const calculator = new SessionCalculator(workbook, calc, autoRecalc);
-	const recalc = (step: HistoryStep): void => calculator.afterStep(step);
+	const recalc = (step: HistoryStep, mode: 'apply' | 'undo' | 'redo' = 'apply'): void =>
+		calculator.afterStep(step, mode);
 
-	const begin = (label: string, kind: WorkbookChangeKind, info: RunInfo): OpenStep => ({
-		step: { label, entries: [], structural: info.structural ?? false },
-		kind,
-		sheet: info.sheet,
-		ranges: [...(info.ranges ?? [])],
-	});
+	const begin = (label: string, kind: WorkbookChangeKind, info: RunInfo): OpenStep => {
+		const step: HistoryStep = { label, entries: [], structural: info.structural ?? false };
+		if (info.calc) step.calc = info.calc;
+		return { step, kind, sheet: info.sheet, ranges: [...(info.ranges ?? [])] };
+	};
 
 	const finish = (current: OpenStep): void => {
 		if (!current.step.entries.length) return;
@@ -107,10 +107,14 @@ export function createEditSession(
 		const outer = !open;
 		const current = open ?? begin(label, kind, info);
 		if (!outer) {
+			// A hint describes one command; a step made of several cannot be followed in place.
+			delete current.step.calc;
 			if (info.structural) current.step.structural = true;
 			if (current.sheet === undefined && info.sheet !== undefined) current.sheet = info.sheet;
 			current.ranges.push(...(info.ranges ?? []));
 		}
+		// A structural edit the engine can follow needs the graph of the workbook before it.
+		if (outer && info.calc) calculator.beforeStructural();
 		open = current;
 		const mark = current.step.entries.length;
 		const befores = scopes.map((scope) => captureScope(workbook, scope));
@@ -163,7 +167,7 @@ export function createEditSession(
 		if (open) throw new Error(`Cannot ${kind} inside a batch`);
 		const step = kind === 'undo' ? history.undo(workbook) : history.redo(workbook);
 		if (!step) return false;
-		recalc(step);
+		recalc(step, kind);
 		emit({ kind, label: step.label, structural: step.structural });
 		return true;
 	};
@@ -252,8 +256,8 @@ export function createEditSession(
 		setDocumentProperties: (patch) => docProps.setDocumentProperties(ctx, patch),
 		setAutoRecalc: (enabled) => calcMode.setCalcMode(ctx, enabled ? 'auto' : 'manual'),
 		autoRecalc: () => autoRecalc && calcMode.calcModeOf(workbook) === 'auto',
-		calculateNow() {
-			calculator.full();
+		calculateNow(options) {
+			calculator.now(options?.full ?? false);
 			emit({ kind: 'cells', label: 'Calculate now', structural: false });
 		},
 		prepareCalculation: (opts) => calculator.prepare(opts?.timeRemaining),

@@ -285,6 +285,7 @@ export abstract class EngineCore extends EngineHost {
 	}
 
 	protected evaluateFormula(node: FormulaNode): Scalar | Matrix {
+		if (node.stale) this.refreshAst(node);
 		if (!node.ast) return node.parseError ?? ERR.NAME;
 		const ast = node.ast;
 		const frame = this.frameFor(node.sheet, node.row, node.col, ast, node.legacy);

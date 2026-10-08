@@ -87,10 +87,21 @@ export interface HistoryEntry {
 	after: Snapshot;
 }
 
+/**
+ * How the calc engine can follow a structural step without rebuilding its graph: rows or columns
+ * inserted or deleted on a sheet. Only set on a step made by one command.
+ */
+export type CalcHint = {
+	kind: 'shift';
+	sheet: number;
+	shift: { axis: 'row' | 'col'; at: number; count: number };
+};
+
 export interface HistoryStep {
 	label: string;
 	entries: HistoryEntry[];
 	structural: boolean;
+	calc?: CalcHint;
 }
 
 /** Positions a small range covers are probed directly; larger ones scan the stored rows. */

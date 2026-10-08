@@ -4,13 +4,15 @@ import type { Cell, CellValue, Workbook, Worksheet } from '../model';
 import { isCellError } from '../model';
 import { styleAt } from '../styles';
 import { formatValue, type CalcEngine } from './deps';
-import type { EditScope } from './history';
+import type { CalcHint, EditScope } from './history';
 import type { WorkbookChangeKind } from './types';
 
 export interface RunInfo {
 	sheet?: number;
 	ranges?: CellRange[];
 	structural?: boolean;
+	/** Lets the calc engine follow this structural edit in place (see `CalcHint`). */
+	calc?: CalcHint;
 }
 
 /** What every command module receives from the session. */

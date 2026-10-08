@@ -210,6 +210,15 @@ export abstract class EngineHost implements EvalHost {
 		return node;
 	}
 
+	/** Parses a node's text again after a structural edit rewrote it (see `FormulaNode.stale`). */
+	protected refreshAst(node: FormulaNode): void {
+		const parsed = this.parse(node.formula);
+		delete node.stale;
+		delete node.parseError;
+		node.ast = parsed instanceof FormulaError ? undefined : parsed;
+		if (parsed instanceof FormulaError && parsed.code) node.parseError = err(parsed.code);
+	}
+
 	protected removeNode(node: FormulaNode, changed: Area[]): void {
 		const sheet = this.workbook.sheets[node.sheet];
 		if (node.spill && sheet) {

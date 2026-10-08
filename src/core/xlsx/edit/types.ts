@@ -293,8 +293,14 @@ export interface EditSession {
 	 * always wins) or the workbook is in manual calculation mode.
 	 */
 	autoRecalc(): boolean;
-	/** Recalculates every formula (F9); not an undo step. */
-	calculateNow(): void;
+	/**
+	 * Calculate Now (F9), not an undo step: recalculates the formulas changed since the last
+	 * calculation (edits made in manual mode, structural edits) with their dependents and the
+	 * volatile functions. The first calculation of a session, a change of the iteration settings
+	 * and structural edits the graph could not follow recalculate everything. `full` always does
+	 * (Ctrl+Alt+F9: every formula, with the dependency graph rebuilt).
+	 */
+	calculateNow(options?: { full?: boolean }): void;
 	/**
 	 * Builds the formula dependency graph ahead of the first edit, so that edit does not wait
 	 * for every formula to be parsed. Call it repeatedly from idle time: each call works until
@@ -306,7 +312,8 @@ export interface EditSession {
 	prepareCalculation(options?: { timeRemaining?: () => number }): boolean;
 	/**
 	 * Recalculates the formulas of one sheet and their dependents (Shift+F9). After structural
-	 * edits made in manual mode the whole workbook is recalculated instead.
+	 * edits made in manual mode that the dependency graph could not follow (sheets added, deleted
+	 * or moved, cells inserted or deleted, ...) the whole workbook is recalculated instead.
 	 */
 	calculateSheet(sheet: number): void;
 	/** Validates `value` against the cell's data validation, using this session's calc engine. */
