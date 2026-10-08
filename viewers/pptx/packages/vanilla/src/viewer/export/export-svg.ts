@@ -1,5 +1,13 @@
-import type { PptxData, PptxSlide, SvgExportOptions } from 'pptx-viewer-core';
+import type { PptxData, PptxSlide, SvgExportOptions as CoreSvgExportOptions } from 'pptx-viewer-core';
 import { SvgExporter } from 'pptx-viewer-core';
+
+/**
+ * Options for the SVG exporters. A local alias rather than a re-export of
+ * `pptx-viewer-core`: the declaration bundler wrote a re-export reached
+ * through `export *` as a dotted name in an export list, which is a syntax
+ * error for consumers (issue #33).
+ */
+export type SvgExportOptions = CoreSvgExportOptions;
 
 /** Export one parsed slide as resolution-independent SVG markup. */
 export function exportSlideToSvg(
@@ -16,4 +24,3 @@ export function exportAllSlidesToSvg(data: PptxData, options: SvgExportOptions =
 	return SvgExporter.exportAll(data, options);
 }
 
-export type { SvgExportOptions } from 'pptx-viewer-core';
