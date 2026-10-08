@@ -127,9 +127,9 @@ async function writeSvelteComponent(distDir) {
 		path.join(distDir, 'index.d.ts'),
 		[
 			"import type { Component } from 'svelte';",
-			"import type { EditorEventHandlers, EditorProps } from './runtime';",
+			"import type { EditorEventHandlers, EditorHandle, EditorProps } from './runtime';",
 			"type Props = EditorProps & { ondocumentchange?: EditorEventHandlers['document-change']; ondocumenterror?: EditorEventHandlers['document-error']; onpagechange?: EditorEventHandlers['page-change']; ondirtychange?: EditorEventHandlers['dirty-change'] };",
-			'type Exports = { load(input: Uint8Array | ArrayBuffer): Promise<void>; save(): Promise<Blob>; download(fileName?: string): Promise<void>; markClean(): void; isDirty(): boolean };',
+			"type Exports = { load(input: Uint8Array | ArrayBuffer): Promise<void>; save(): Promise<Blob>; download(fileName?: string): Promise<void>; markClean(): void; /** @deprecated Use dirty. */ isDirty(): boolean; readonly element: EditorHandle['element'] | undefined; readonly dirty: boolean };",
 			'declare const WordEditor: Component<Props, Exports>;',
 			'export default WordEditor;',
 			'',
