@@ -9,7 +9,7 @@ import { parseDrawingColorIn } from '../../drawingml/drawing-color';
 import { fillElementOf } from '../../drawingml/drawing-fill';
 import { drawingColorXml } from '../../drawingml/write-color';
 import { drawingFillXml, setDrawingFillXml } from '../../drawingml/write-fill';
-import type { DrawingColor } from '../../drawingml/types';
+import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import { sameChartColor } from '../edit/chart-colors';
 import type { ChartObject, ChartSeries } from '../model';
@@ -22,16 +22,27 @@ type Doc = ReturnType<typeof parseXml>;
 export function chartSeriesFill(chart: ChartObject, series: ChartSeries, index: number): string {
 	const imported = series.fill && drawingFillXml(series.fill);
 	if (imported) return imported;
+	return `<a:solidFill>${drawingColorXml(chartSeriesColor(chart, series, index))}</a:solidFill>`;
+}
+
+/** {@link chartSeriesFill} as a model fill: the imported fill when it can be written, else solid. */
+export function chartSeriesDrawingFill(
+	chart: ChartObject,
+	series: ChartSeries,
+	index: number,
+): DrawingFill {
+	if (series.fill && drawingFillXml(series.fill)) return series.fill;
+	return { kind: 'solid', color: chartSeriesColor(chart, series, index) };
+}
+
+/** The series colour: manual, legacy, else the palette's choice for the series. */
+function chartSeriesColor(chart: ChartObject, series: ChartSeries, index: number): DrawingColor {
 	const palette = findChartColorPalette(chart.colorPalette ?? 10)!;
-	const choice =
+	return (
 		series.drawingColor ??
 		chartDrawingColor(series.color) ??
-		chartPaletteSeriesColorChoice(
-			palette ?? findChartColorPalette(10)!,
-			index,
-			chart.series.length,
-		);
-	return `<a:solidFill>${drawingColorXml(choice)}</a:solidFill>`;
+		chartPaletteSeriesColorChoice(palette ?? findChartColorPalette(10)!, index, chart.series.length)
+	);
 }
 
 function recolorMarker(
