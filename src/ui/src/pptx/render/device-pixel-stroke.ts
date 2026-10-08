@@ -158,23 +158,38 @@ export function neutralizeDeviceStrokes(root: StyledElement): void {
 
 /**
  * Run `read` with the LIVE subtree temporarily at authored widths, then put
- * every touched `style` attribute back exactly as it was. For export paths
- * that copy computed styles from the live tree; the swap is synchronous, so no
- * frame is painted in between.
+ * {@link DEVICE_PX_VAR} back exactly as it was on every touched element. For
+ * export paths that copy computed styles from the live tree; the swap is
+ * synchronous, so no frame is painted in between.
+ *
+ * Only the variable is saved and restored, never the whole `style`
+ * attribute: the attribute is the browser's serialisation of the inline
+ * declarations, which rounds numbers (Chromium writes a framework-set
+ * `scale(0.9958333)` back as `scale(0.995833)`). Re-parsing it would shift
+ * the live stage's transform by a fraction of a pixel for good, changing the
+ * measured size, and so the pixel size, of every later export.
  */
 export function withAuthoredStrokeWidths<T>(root: StyledElement, read: () => T): T {
-	const saved = carriers(root).map((el) => ({ el, style: el.getAttribute('style') }));
+	const saved = carriers(root).map((el) => ({
+		el,
+		hadStyle: el.hasAttribute('style'),
+		value: el.style?.getPropertyValue(DEVICE_PX_VAR) ?? '',
+		priority: el.style?.getPropertyPriority(DEVICE_PX_VAR) ?? '',
+	}));
 	for (const { el } of saved) {
 		el.style?.setProperty(DEVICE_PX_VAR, '0px');
 	}
 	try {
 		return read();
 	} finally {
-		for (const { el, style } of saved) {
-			if (style === null) {
-				el.removeAttribute('style');
+		for (const { el, hadStyle, value, priority } of saved) {
+			if (value) {
+				el.style?.setProperty(DEVICE_PX_VAR, value, priority);
 			} else {
-				el.setAttribute('style', style);
+				el.style?.removeProperty(DEVICE_PX_VAR);
+			}
+			if (!hadStyle && !el.getAttribute('style')) {
+				el.removeAttribute('style');
 			}
 		}
 	}

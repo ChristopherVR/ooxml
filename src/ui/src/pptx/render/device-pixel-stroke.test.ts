@@ -139,4 +139,34 @@ describe('export keeps authored widths', () => {
 		expect(host.getAttribute('style')).toBeNull();
 		expect(path.style.getPropertyValue(DEVICE_PX_VAR)).toBe('');
 	});
+
+	it('restores only the variable, never re-parsing the style attribute', () => {
+		// A browser serialises inline styles with rounded numbers, so writing the
+		// attribute back would shift a framework-set transform on the live stage.
+		const { host, stage } = stageWithStroke();
+		stage.style.setProperty('transform', 'scale(0.9958333333)');
+		const writes: string[] = [];
+		const setAttribute = stage.setAttribute.bind(stage);
+		stage.setAttribute = (name: string, value: string) => {
+			writes.push(name);
+			setAttribute(name, value);
+		};
+		withAuthoredStrokeWidths(host, () => undefined);
+		expect(writes).toEqual([]);
+		expect(stage.style.getPropertyValue('transform')).toBe('scale(0.9958333333)');
+		expect(stage.style.getPropertyValue(DEVICE_PX_VAR)).toBe(
+			'calc(1px / (0.5 * var(--pptx-dpr, 1)))',
+		);
+	});
+
+	it('leaves no style attribute on a captured element that had none', () => {
+		const { stage } = stageWithStroke();
+		const shape = document.createElement('div');
+		stage.appendChild(shape);
+		withAuthoredStrokeWidths(shape, () => undefined);
+		expect(shape.getAttribute('style')).toBeNull();
+		expect(stage.style.getPropertyValue(DEVICE_PX_VAR)).toBe(
+			'calc(1px / (0.5 * var(--pptx-dpr, 1)))',
+		);
+	});
 });
