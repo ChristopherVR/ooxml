@@ -4,7 +4,7 @@ import { parseChart } from '../read/chart';
 import { createWorkbook } from '../workbook';
 import { THEME_SLOTS } from './colors';
 import { chartView } from './chart-view';
-import { renderChartSvg } from './chart-svg';
+import { renderChartSvg } from '../../chart/render/chart-svg';
 import { NS, parseXml } from '../../xml/index';
 
 for (const sample of native.cases)

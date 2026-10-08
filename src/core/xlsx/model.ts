@@ -1,8 +1,12 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
 import type { DiagramDrawing, DiagramIssue } from '../diagram/types';
-import type { DrawingColor, DrawingFill } from '../drawingml/types';
 import type { CellAddress, CellRange } from './address';
-import type { ChartStyleDefinition } from '../chart/style-definition';
+import type {
+	ChartSummary,
+	ChartSummarySeries,
+	ChartSummaryType,
+	ChartThemePalette,
+} from '../chart/render/summary';
 
 /** Excel error values. */
 export const ERROR_CODES = [
@@ -513,61 +517,17 @@ export interface ImageObject {
 	description?: string;
 }
 
-export type ChartType =
-	| 'bar'
-	| 'column'
-	| 'line'
-	| 'pie'
-	| 'doughnut'
-	| 'area'
-	| 'scatter'
-	| 'radar'
-	| 'bubble'
-	| 'stock'
-	| 'surface';
+export type ChartType = ChartSummaryType;
 
-export interface ChartSeries {
-	name?: string;
-	/** Formula reference for the series name (`Sheet1!$B$1`). */
-	nameRef?: string;
-	categoriesRef?: string;
-	valuesRef?: string;
-	/** Cached categories and values from the chart part, used when references cannot resolve. */
-	categories: (string | number)[];
-	values: (number | null)[];
+/** A spreadsheet chart series: the neutral summary series plus its SpreadsheetML colour. */
+export interface ChartSeries extends ChartSummarySeries {
 	color?: Color;
-	/** DrawingML fill/line color, including theme transforms. */
-	drawingColor?: DrawingColor;
-	/** Explicit colors of individual points (indexed by c:dPt/c:idx). */
-	pointColors?: Record<number, DrawingColor>;
-	/** Non-solid primary DrawingML fill/line paint. Solid fills use drawingColor. */
-	fill?: DrawingFill;
-	/** Non-solid individual point fills; solid point overrides use pointColors. */
-	pointFills?: Record<number, DrawingFill>;
-	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
-	effectsXml?: string;
 }
 
-export interface ChartObject {
+/** A chart anchored on a sheet: the neutral chart summary plus its anchor and package part. */
+export interface ChartObject extends ChartSummary<ChartSeries> {
 	kind: 'chart';
 	anchor: DrawingAnchor;
-	chartType: ChartType;
-	/** Bar/column grouping. */
-	grouping?: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
-	/** Gap between category clusters, as a percentage of one bar's width (0..500). */
-	barGapWidth?: number;
-	/** Overlap of adjacent series, in percent (-100..100). */
-	barOverlap?: number;
-	title?: string;
-	series: ChartSeries[];
-	showLegend: boolean;
-	legendPosition?: 'r' | 'l' | 't' | 'b' | 'tr';
-	/** Office color-style id (ChartColor). Manual series/point colors retain precedence. */
-	colorPalette?: number;
-	/** Imported Office chart-style metadata. Style authoring is not yet supported. */
-	styleDefinition?: ChartStyleDefinition;
-	/** Direct formatting. Axis flags and fills serialize; other metadata edits remain unsupported. */
-	formatting?: ChartStyleDefinition;
 	/** Package part of the chart (`xl/charts/chart1.xml`), kept so unmodelled detail survives. */
 	partName?: string;
 	name?: string;
@@ -763,12 +723,7 @@ export interface DefinedName {
 }
 
 /** The workbook theme's colour palette and fonts, resolved for rendering. */
-export interface ThemePalette {
-	/** 12 colours in theme order (lt1, dk1, lt2, dk2, accent1-6, hlink, folHlink) as `RRGGBB`. */
-	colors: string[];
-	majorFont: string;
-	minorFont: string;
-}
+export type ThemePalette = ChartThemePalette;
 
 /**
  * Document properties: every core (`docProps/core.xml`) and extended (`docProps/app.xml`) field

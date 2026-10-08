@@ -3,7 +3,7 @@ import { readChartStyle } from '../../chart/read-style';
 import { parseChart } from '../read/chart';
 import { createWorkbook } from '../workbook';
 import { chartView } from './chart-view';
-import { renderChartSvg } from './chart-svg';
+import { renderChartSvg } from '../../chart/render/chart-svg';
 import { NS, parseXml } from '../../xml/index';
 
 it('prefers direct run formatting and no-fill/zero-width overrides while following theme changes', () => {

@@ -4,10 +4,10 @@ import geometry from '../../chart/excel-chart-title-geometry.json';
 import { parseChart } from '../read/chart';
 import { createWorkbook } from '../workbook';
 import { chartView } from './chart-view';
-import { renderChartSvg } from './chart-svg';
-import { chartTextWidth, fitChartText } from './chart-svg-text-metrics';
+import { renderChartSvg } from '../../chart/render/chart-svg';
+import { chartTextWidth, fitChartText } from '../../chart/render/chart-svg-text-metrics';
 import { parseXml } from '../../xml';
-import { chartRichTitleSvg } from './chart-svg-title-text';
+import { chartRichTitleSvg } from '../../chart/render/chart-svg-title-text';
 
 it('places native mixed runs contiguously and centers their measured line', () => {
 	const source = native.cases.find((item) => item.referenceName === 'mixed-lines')!;

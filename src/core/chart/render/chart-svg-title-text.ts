@@ -6,7 +6,7 @@ import type { DrawingTextSpacing } from '../../drawingml/types';
 import { chartPointsToPixels } from './chart-appearance';
 import type { ChartTitleText } from './chart-title-text';
 import { wrapStyledRuns } from '../../text/wrap-styled-runs';
-import { hasManualLayoutFields, resolveManualLayoutRect } from '../../chart/manual-layout';
+import { hasManualLayoutFields, resolveManualLayoutRect } from '../manual-layout';
 
 function spacing(
 	value: DrawingTextSpacing | undefined,

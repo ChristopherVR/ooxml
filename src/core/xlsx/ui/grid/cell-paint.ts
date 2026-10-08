@@ -2,7 +2,7 @@
 // borders, alignment). The DOM painter only copies these onto recycled nodes.
 import type { BordersView, EdgeView, FillView, FontView, PatternType } from '../../index';
 
-import { cssFontFamily } from '../../layout/font-family';
+import { cssFontFamily } from '../../../text/css-font-family';
 export { cssFontFamily };
 
 /** CSS `font` shorthand for a font at a zoom (percent). */

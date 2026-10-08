@@ -6,7 +6,7 @@ import { chartView } from '../xlsx/layout/chart-view';
 import { chartXml } from '../xlsx/write/chart';
 import { readChartStyle } from './read-style';
 import { NS, parseXml, first, buildXml } from '../xml';
-import { renderChartSvg } from '../xlsx/layout/chart-svg';
+import { renderChartSvg } from './render/chart-svg';
 
 for (const sample of native.cases)
 	it(`matches native chart-space text inheritance for ${sample.referenceName}`, () => {

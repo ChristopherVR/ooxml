@@ -6,7 +6,7 @@ import { builtInChartStyleXml, readBuiltInChartStyle } from './built-in-text-sty
 import { parseChart } from '../xlsx/read/chart';
 import { createWorkbook } from '../xlsx/workbook';
 import { chartView } from '../xlsx/layout/chart-view';
-import { renderChartSvg } from '../xlsx/layout/chart-svg';
+import { renderChartSvg } from './render/chart-svg';
 import { chartXml } from '../xlsx/write/chart';
 import { readChartStyle } from './read-style';
 import external from './excel-chart-styles.json';

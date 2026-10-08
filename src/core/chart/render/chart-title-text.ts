@@ -1,6 +1,6 @@
 import type { DrawingTextParagraph, DrawingTextRun } from '../../drawingml/types';
-import type { ChartStyleEntry } from '../../chart/style-definition';
-import type { ChartObject, ThemePalette } from '../model';
+import type { ChartStyleEntry } from '../style-definition';
+import type { ChartSummary, ChartThemePalette } from './summary';
 import { chartAppearance, type ChartAppearanceEntry } from './chart-appearance';
 
 export interface ChartTitleText {
@@ -23,8 +23,8 @@ function properties(run: Partial<DrawingTextRun>): Partial<ChartStyleEntry> {
 
 /** Resolve imported mixed text through the same chart/theme precedence as ordinary labels. */
 export function chartTitleText(
-	chart: ChartObject,
-	theme: ThemePalette,
+	chart: ChartSummary,
+	theme: ChartThemePalette,
 ): ChartTitleText | undefined {
 	const formatting = chart.formatting;
 	const entry = formatting?.entries.title;

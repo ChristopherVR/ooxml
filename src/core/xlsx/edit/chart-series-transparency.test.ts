@@ -6,7 +6,7 @@ import { createEditSession } from './session';
 import { saveXlsx } from '../write/index';
 import { loadXlsx } from '../read/index';
 import { chartView } from '../layout/chart-view';
-import { renderChartSvg } from '../layout/chart-svg';
+import { renderChartSvg } from '../../chart/render/chart-svg';
 import type { ChartObject } from '../model';
 import { chartSeriesTransparency, chartSeriesTransparencyPatch } from './chart-series-transparency';
 import { chartSeriesFillPatch, chartSeriesSolidFillPatch } from './chart-series-fill';

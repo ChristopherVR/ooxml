@@ -7,7 +7,7 @@ import {
 	fitChartText,
 	type ChartSvgOptions,
 } from './chart-svg-text-metrics';
-import { resolveManualLayoutRect } from '../../chart/manual-layout';
+import { resolveManualLayoutRect } from '../manual-layout';
 
 /** Keep the automatic reservation when a legend is moved; overlay releases it. */
 export function chartLegendSvg(

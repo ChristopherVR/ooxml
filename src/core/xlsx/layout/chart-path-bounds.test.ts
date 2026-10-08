@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { parseXml } from '../../xml';
 import type { ChartViewModel } from './chart-view';
-import { renderChartSvg } from './chart-svg';
+import { renderChartSvg } from '../../chart/render/chart-svg';
 
 function view(path: string): ChartViewModel {
 	const gradient = {

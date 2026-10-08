@@ -1,10 +1,10 @@
 import type { ChartViewModel } from './chart-view';
 import type { Frame } from './chart-svg-cartesian';
 import { rect, n } from './chart-svg-util';
-import { clusteredBarGeometry } from '../../chart/bar-cluster-geometry';
+import { clusteredBarGeometry } from '../bar-cluster-geometry';
 import { chartBarSpacing } from './chart-spacing';
-import { buildChartGradientDef } from '../../chart/gradient-definition';
-import { chartGradientMarkup } from '../../chart/gradient-markup';
+import { buildChartGradientDef } from '../gradient-definition';
+import { chartGradientMarkup } from '../gradient-markup';
 
 export function bars(
 	model: ChartViewModel,

@@ -2240,3 +2240,22 @@ adapter from its own comment records to `OfficeCommentThread`.
 - PowerPoint: not ported. `pptx/render/comments-list.ts` holds only the pure comment-array
   transforms; each framework binding draws its own comments panel, so adopting the pane
   is a per-binding change in `viewers/pptx`.
+
+## Chart SVG painter in the chart area (wave 4, Word charts)
+
+Source: ChristopherVR/ooxml at `8fb1f582d`, `src/core/xlsx/layout/chart-*.ts` and
+`font-family.ts`, and the `ChartSpace -> ChartObject` mapping in `src/core/xlsx/read/chart.ts`.
+Moved with `git mv`, file names kept, into `src/core/chart/render/` (`chart-view`,
+`chart-appearance`, `chart-title-text`, `chart-colors`, `chart-scale`, `chart-spacing` and every
+`chart-svg*` module); `font-family.ts` became `src/core/text/css-font-family.ts` because the
+cell painter shares it. What changed: the painter reads the new neutral `ChartSummary` /
+`ChartSummarySeries` / `ChartThemePalette` types (`render/summary.ts`), which the spreadsheet
+`ChartObject`, `ChartSeries` and `ThemePalette` now extend; `chartView` became
+`chartSummaryView(chart, theme, { evaluateRef, seriesColor })` with the value-axis helpers split
+into `chart-value-axis.ts`, and `xlsx/layout/chart-view.ts` is a thin wrapper that supplies live
+cell references and SpreadsheetML series colours. The series mapping moved to
+`render/summary-from-space.ts` (`chartSummaryFromSpace`); the spreadsheet reader only adds the
+anchor and legacy `Color`. Theme slots and the Office default colours moved to
+`render/theme-palette.ts`, and the hex helpers to `src/core/color/hex-rgb.ts` (`tint.ts`
+re-exports them as `parseHex`/`toHexColor`). The Excel chart tests are unchanged apart from
+import paths and still pass byte for byte.

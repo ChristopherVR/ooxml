@@ -1,10 +1,10 @@
-import type { ChartStylePart } from '../../chart/style-definition';
+import type { ChartStylePart } from '../style-definition';
 import { chartPointsToPixels } from './chart-appearance';
 import type { ChartViewModel } from './chart-view';
 import { AXIS_COLOR, GRID_COLOR, FONT_SIZE, n, esc, type Rect, type text } from './chart-svg-util';
-import { buildChartGradientDef, type ChartGradientFill } from '../../chart/gradient-definition';
-import { chartGradientMarkup } from '../../chart/gradient-markup';
-import { cssFontFamily } from './font-family';
+import { buildChartGradientDef, type ChartGradientFill } from '../gradient-definition';
+import { chartGradientMarkup } from '../gradient-markup';
+import { cssFontFamily } from '../../text/css-font-family';
 import { svgDropShadowElement, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 
 /** Each standalone SVG needs distinct gradient targets when inserted beside other charts. */

@@ -3,8 +3,8 @@ import native from './excel-chart-legend-layout.json';
 import { parseChart } from '../xlsx/read/chart';
 import { createWorkbook } from '../xlsx/workbook';
 import { chartView } from '../xlsx/layout/chart-view';
-import { chartLegendSvg } from '../xlsx/layout/chart-svg-legend';
-import { renderChartSvg } from '../xlsx/layout/chart-svg';
+import { chartLegendSvg } from './render/chart-svg-legend';
+import { renderChartSvg } from './render/chart-svg';
 import { chartXml } from '../xlsx/write/chart';
 import { NS, first, parseXml, buildXml } from '../xml';
 

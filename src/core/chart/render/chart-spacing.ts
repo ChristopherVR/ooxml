@@ -1,11 +1,11 @@
-import type { ChartObject } from '../model';
+import type { ChartSummary } from './summary';
 
-type ChartSpacing = Pick<ChartObject, 'barGapWidth' | 'barOverlap' | 'grouping'>;
+type ChartSpacing = Pick<ChartSummary, 'barGapWidth' | 'barOverlap' | 'grouping'>;
 
 /** Effective authored spacing. Imported charts already carry OOXML's explicit defaults. */
 export function chartBarSpacing(
 	chart: ChartSpacing,
-): Required<Pick<ChartObject, 'barGapWidth' | 'barOverlap'>> {
+): Required<Pick<ChartSummary, 'barGapWidth' | 'barOverlap'>> {
 	const stacked = chart.grouping === 'stacked' || chart.grouping === 'percentStacked';
 	return {
 		barGapWidth: chart.barGapWidth ?? 150,

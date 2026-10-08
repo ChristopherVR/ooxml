@@ -9,7 +9,7 @@ import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import type { ChartObject } from '../model';
 import { chartView } from './chart-view';
-import { renderChartSvg } from './chart-svg';
+import { renderChartSvg } from '../../chart/render/chart-svg';
 import { THEME_SLOTS } from './colors';
 
 const sampleChart = (sample: (typeof native.cases)[number]) =>

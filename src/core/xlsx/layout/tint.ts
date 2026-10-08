@@ -1,3 +1,5 @@
+import { parseArgbHex, rgbToUpperHex } from '../../color/hex-rgb';
+
 /**
  * Excel's colour tint (`<color theme="4" tint="0.39997"/>`). Excel converts the base colour to
  * HLS on the Windows integer scale (`HLSMAX` 240, as `ColorRGBToHLS` does), scales the luminance
@@ -75,19 +77,10 @@ export function hls240ToRgb({ h, l, s }: Hls): [number, number, number] {
 }
 
 /** Parses `RRGGBB` or `AARRGGBB` (alpha ignored), with or without `#`. */
-export function parseHex(hex: string): [number, number, number] | undefined {
-	const clean = hex.replace(/^#/, '');
-	const rgb = clean.length === 8 ? clean.slice(2) : clean;
-	if (!/^[0-9a-fA-F]{6}$/.test(rgb)) return undefined;
-	return [0, 2, 4].map((i) => parseInt(rgb.slice(i, i + 2), 16)) as [number, number, number];
-}
+export const parseHex = parseArgbHex;
 
 /** `#RRGGBB` (upper case). */
-export const toHexColor = (rgb: readonly number[]): string =>
-	`#${rgb
-		.map((v) => clamp255(Math.round(v)).toString(16).padStart(2, '0'))
-		.join('')
-		.toUpperCase()}`;
+export const toHexColor = rgbToUpperHex;
 
 /** Applies an Excel tint (-1..1) to an `RRGGBB` colour; returns `#RRGGBB`. */
 export function applyTint(hex: string, tint: number | undefined): string {

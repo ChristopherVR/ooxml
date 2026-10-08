@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { niceValueAxisBounds } from '../../chart/axis-nice';
-import { niceScale } from './chart-scale';
+import { niceScale } from '../../chart/render/chart-scale';
 
 const inputs: [number, number][] = [];
 for (const lo of [0, 1, 3, 10, 40, 85, -5, -90, -20]) {

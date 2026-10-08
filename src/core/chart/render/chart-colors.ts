@@ -1,16 +1,15 @@
 import { hslToRgb, rgbToHsl } from '../../color/index';
-import type { ThemePalette } from '../model';
-import { themeColor } from './colors';
-import { parseHex, toHexColor } from './tint';
+import { parseArgbHex as parseHex, rgbToUpperHex as toHexColor } from '../../color/hex-rgb';
+import type { ChartThemePalette } from './summary';
+import { THEME_SLOTS, themeColor } from './theme-palette';
 import {
 	chartPaletteSeriesColor,
 	findChartColorPalette,
 	type ChartColorScheme,
-} from '../../chart/color-palettes';
-import { THEME_SLOTS } from './colors';
+} from '../color-palettes';
 
-/** Workbook theme in DrawingML slot order, including missing-slot fallbacks. */
-export function chartColorScheme(theme: ThemePalette): ChartColorScheme {
+/** Document theme in DrawingML slot order, including missing-slot fallbacks. */
+export function chartColorScheme(theme: ChartThemePalette): ChartColorScheme {
 	const slots = Object.fromEntries(
 		THEME_SLOTS.map((slot, index) => [slot, `#${themeColor(theme, index) ?? '000000'}`]),
 	);
@@ -35,7 +34,7 @@ export function modulateLuminance(hex: string, lumMod: number, lumOff = 0): stri
 }
 
 /** The automatic colour of series (or pie point) `index`, `#RRGGBB`. */
-export function autoSeriesColor(theme: ThemePalette, index: number): string {
+export function autoSeriesColor(theme: ChartThemePalette, index: number): string {
 	const i = Math.max(0, Math.floor(index));
 	return chartPaletteSeriesColor(findChartColorPalette(10)!, i, i + 1, chartColorScheme(theme));
 }

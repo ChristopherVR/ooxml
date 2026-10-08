@@ -1,104 +1,21 @@
-import type { CellValue, ChartObject, ChartSeries, ChartType, Workbook } from '../model';
-import { isCellError } from '../model';
-import { autoSeriesColor, chartColorScheme } from './chart-colors';
-import { chartPaletteSeriesColor, findChartColorPalette } from '../../chart/color-palettes';
-import { resolveDrawingColor } from '../../drawingml/drawing-color';
-import { drawingColorCss } from '../../drawingml/drawing-color-css';
-import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale';
+// The spreadsheet entry to the shared chart view: live cell references and SpreadsheetML series
+// colours on top of the neutral `chart/render` view model.
+import {
+	chartSummaryView,
+	type ChartViewModel,
+	type EvaluateRef,
+} from '../../chart/render/chart-view';
+import type { ChartObject, Workbook } from '../model';
 import { resolveColor } from './colors';
-import { chartAppearance, type ChartAppearance } from './chart-appearance';
-import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
-import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
-import { chartTitleText, type ChartTitleText } from './chart-title-text';
-import type { ChartManualLayout } from '../../chart/manual-layout';
 
-export interface ChartSeriesView {
-	shadow?: DrawingSvgShadow;
-	shadowFilter?: string;
-	gradient?: ChartGradientFill;
-	pointGradients?: Record<number, ChartGradientFill>;
-	name: string;
-	values: (number | null)[];
-	/** Scatter X values (numeric categories, or 1..n when the categories are text). */
-	xValues?: (number | null)[];
-	color: string;
-	/** Per-point colours (pie and doughnut vary colours by point). */
-	pointColors?: string[];
-}
-
-export interface ValueAxisView extends AxisScale {
-	/** Ticks are fractions shown as percentages (percent-stacked charts). */
-	percent: boolean;
-}
-
-/** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
-export interface ChartViewModel {
-	legendLayout?: ChartManualLayout;
-	legendOverlay?: boolean;
-	titleLayout?: ChartManualLayout;
-	titleOverlay?: boolean;
-	titleText?: ChartTitleText;
-	barGapWidth?: number;
-	barOverlap?: number;
-	/** Native defaults and direct element formatting, resolved against the workbook theme. */
-	appearance?: ChartAppearance;
-	type: ChartType;
-	grouping: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
-	title?: string;
-	showLegend: boolean;
-	legendPosition: 'r' | 'l' | 't' | 'b' | 'tr';
-	categories: string[];
-	series: ChartSeriesView[];
-	/** Value (Y) axis; for bar charts it runs horizontally. */
-	valueAxis?: ValueAxisView;
-	/** Scatter X axis. */
-	xAxis?: AxisScale;
-	/** Bars run horizontally (`bar`), not vertically (`column`). */
-	horizontal: boolean;
-	/** False for chart types this painter does not draw (bubble, stock, surface). */
-	supported: boolean;
-}
-
-export type EvaluateRef = (ref: string) => CellValue[];
-
-const SUPPORTED: ReadonlySet<ChartType> = new Set([
-	'bar',
-	'column',
-	'line',
-	'area',
-	'pie',
-	'doughnut',
-	'scatter',
-	'radar',
-]);
-
-function toText(value: CellValue | string | number): string {
-	if (value === null) return '';
-	if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-	if (isCellError(value)) return value.error;
-	return String(value);
-}
-
-const toNumber = (value: CellValue | number | null): number | null =>
-	typeof value === 'number' && Number.isFinite(value) ? value : null;
-
-function resolveRef(ref: string | undefined, evaluateRef: EvaluateRef): CellValue[] | undefined {
-	if (!ref) return undefined;
-	try {
-		const values = evaluateRef(ref);
-		return values.length ? values : undefined;
-	} catch {
-		return undefined;
-	}
-}
-
-function seriesName(series: ChartSeries, index: number, evaluateRef: EvaluateRef): string {
-	const fromRef = resolveRef(series.nameRef, evaluateRef)
-		?.map(toText)
-		.filter((t) => t !== '')
-		.join(' ');
-	return fromRef || series.name || `Series${index + 1}`;
-}
+export {
+	categoryTotals,
+	type ChartRefValue,
+	type ChartSeriesView,
+	type ChartViewModel,
+	type EvaluateRef,
+	type ValueAxisView,
+} from '../../chart/render/chart-view';
 
 /**
  * Resolves a chart's series from live cells (`evaluateRef` returns the values of a reference such
@@ -111,187 +28,9 @@ export function chartView(
 	evaluateRef: EvaluateRef,
 ): ChartViewModel {
 	void sheetIndex;
-	const type = chart.chartType;
 	const theme = workbook.theme;
-	const radial = type === 'pie' || type === 'doughnut';
-	const palette =
-		chart.colorPalette === undefined ? undefined : findChartColorPalette(chart.colorPalette);
-	const scheme = chartColorScheme(theme);
-	const drawingColor = (color: ChartSeries['drawingColor']) =>
-		color &&
-		drawingColorCss(
-			resolveDrawingColor(
-				color,
-				{
-					scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-				},
-				{ transformOrder: 'document' },
-			),
-		);
-	const gradient = (fill: ChartSeries['fill']) =>
-		fill?.kind === 'gradient'
-			? resolveChartGradient(fill, (color) =>
-					resolveDrawingColor(
-						color,
-						{
-							scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-						},
-						{ transformOrder: 'document' },
-					),
-				)
-			: undefined;
-	const grouping =
-		chart.grouping ?? (type === 'bar' || type === 'column' ? 'clustered' : 'standard');
-	let categories: string[] = [];
-	const rawCategories: (CellValue | string | number)[][] = [];
-	const series: ChartSeriesView[] = chart.series.map((s, i) => {
-		const values = (resolveRef(s.valuesRef, evaluateRef)?.map(toNumber) ??
-			s.values.map(toNumber)) as (number | null)[];
-		const cats = resolveRef(s.categoriesRef, evaluateRef) ?? s.categories;
-		rawCategories.push(cats);
-		const paletteColor =
-			palette && chartPaletteSeriesColor(palette, i, chart.series.length, scheme);
-		const color =
-			s.fill?.kind === 'none'
-				? 'none'
-				: (drawingColor(s.fill?.kind === 'solid' ? s.fill.color : s.drawingColor) ??
-					resolveColor(s.color, theme) ??
-					paletteColor ??
-					autoSeriesColor(theme, i));
-		const view: ChartSeriesView = { name: seriesName(s, i, evaluateRef), values, color };
-		const shadow = resolveDrawingShadowXml(s.effectsXml, {
-			scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-		});
-		if (shadow) view.shadow = shadow;
-		const resolvedGradient = gradient(s.fill);
-		if (resolvedGradient) view.gradient = resolvedGradient;
-		const points = Object.fromEntries(
-			Object.entries(s.pointFills ?? {}).flatMap(([key, fill]) => {
-				const value = gradient(fill);
-				return value ? [[key, value]] : [];
-			}),
-		);
-		if (Object.keys(points).length) view.pointGradients = points;
-		return view;
+	return chartSummaryView(chart, theme, {
+		evaluateRef,
+		seriesColor: (series) => resolveColor(series.color, theme),
 	});
-	const longest = Math.max(0, ...series.map((s) => s.values.length));
-	const firstCats = rawCategories.find((c) => c.length > 0) ?? [];
-	categories = Array.from({ length: Math.max(longest, firstCats.length) }, (_, i) =>
-		firstCats[i] !== undefined ? toText(firstCats[i] ?? null) : String(i + 1),
-	);
-
-	if (radial) {
-		series.forEach((s, seriesIndex) => {
-			s.pointColors = s.values.map((_, i) => {
-				const explicit = drawingColor(chart.series[seriesIndex]?.pointColors?.[i]);
-				return (
-					explicit ??
-					(palette
-						? chartPaletteSeriesColor(palette, i, s.values.length, scheme)
-						: autoSeriesColor(theme, i))
-				);
-			});
-		});
-	} else
-		series.forEach((s, seriesIndex) => {
-			const points = chart.series[seriesIndex]?.pointColors;
-			if (points) s.pointColors = s.values.map((_, i) => drawingColor(points[i]) ?? s.color);
-		});
-	series.forEach((s, index) => {
-		const source = chart.series[index]!;
-		if (s.gradient && !radial && s.pointColors) {
-			// Holes inherit the series paint, which becomes a gradient URL at the painter boundary.
-			for (let i = 0; i < s.pointColors.length; i++)
-				if (!source.pointColors?.[i]) delete s.pointColors[i];
-		}
-		for (const [key, fill] of Object.entries(source.pointFills ?? {})) {
-			if (fill.kind === 'none') (s.pointColors ??= [])[Number(key)] = 'none';
-			else if (fill.kind === 'solid') {
-				const paint = drawingColor(fill.color);
-				if (paint) (s.pointColors ??= [])[Number(key)] = paint;
-			}
-		}
-	});
-
-	const model: ChartViewModel = {
-		...(chart.barGapWidth === undefined ? {} : { barGapWidth: chart.barGapWidth }),
-		...(chart.barOverlap === undefined ? {} : { barOverlap: chart.barOverlap }),
-		type,
-		grouping,
-		showLegend: chart.showLegend,
-		legendPosition: chart.legendPosition ?? 'r',
-		categories,
-		series,
-		horizontal: type === 'bar',
-		supported: SUPPORTED.has(type),
-	};
-	if (chart.title) model.title = chart.title;
-	const titleFormatting = chart.formatting?.entries.title;
-	if (titleFormatting?.layout) model.titleLayout = titleFormatting.layout;
-	if (titleFormatting?.overlay !== undefined) model.titleOverlay = titleFormatting.overlay;
-	const legendFormatting = chart.formatting?.entries.legend;
-	if (legendFormatting?.layout) model.legendLayout = legendFormatting.layout;
-	if (legendFormatting?.overlay !== undefined) model.legendOverlay = legendFormatting.overlay;
-	const titleText = chartTitleText(chart, theme);
-	if (titleText) model.titleText = titleText;
-	const appearance = chartAppearance(chart, theme);
-	if (appearance) model.appearance = appearance;
-
-	if (type === 'scatter') {
-		series.forEach((s, i) => {
-			const cats = rawCategories[i] ?? [];
-			const numeric = cats.length > 0 && cats.every((c) => typeof c === 'number');
-			s.xValues = s.values.map((_, k) =>
-				numeric ? toNumber((cats[k] ?? null) as CellValue) : k + 1,
-			);
-		});
-		const xs = series.flatMap((s) => s.xValues ?? []).filter((x): x is number => x !== null);
-		model.xAxis = xs.length ? niceScale(Math.min(...xs), Math.max(...xs)) : niceScale(0, 1);
-	}
-	if (!radial) model.valueAxis = valueAxis(model);
-	return model;
-}
-
-function valueAxis(model: ChartViewModel): ValueAxisView {
-	const stackable =
-		model.type === 'bar' ||
-		model.type === 'column' ||
-		model.type === 'line' ||
-		model.type === 'area';
-	if (stackable && model.grouping === 'percentStacked')
-		return { ...PERCENT_SCALE, ticks: [...PERCENT_SCALE.ticks], percent: true };
-	let min = Infinity;
-	let max = -Infinity;
-	if (stackable && model.grouping === 'stacked') {
-		for (let i = 0; i < model.categories.length; i++) {
-			let pos = 0;
-			let neg = 0;
-			for (const s of model.series) {
-				const v = s.values[i] ?? 0;
-				if (v >= 0) pos += v;
-				else neg += v;
-			}
-			min = Math.min(min, neg);
-			max = Math.max(max, pos);
-		}
-	} else {
-		for (const s of model.series)
-			for (const v of s.values)
-				if (v !== null) {
-					min = Math.min(min, v);
-					max = Math.max(max, v);
-				}
-	}
-	if (min === Infinity) {
-		min = 0;
-		max = 1;
-	}
-	return { ...niceScale(min, max), percent: false };
-}
-
-/** Per-category stacked totals of absolute values (for percent-stacked charts). */
-export function categoryTotals(model: ChartViewModel): number[] {
-	return model.categories.map((_, i) =>
-		model.series.reduce((sum, s) => sum + Math.abs(s.values[i] ?? 0), 0),
-	);
 }

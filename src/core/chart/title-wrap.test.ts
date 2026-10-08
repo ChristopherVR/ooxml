@@ -4,7 +4,7 @@ import browser from './excel-chart-title-wrap-browser-metrics.json';
 import { parseChart } from '../xlsx/read/chart';
 import { createWorkbook } from '../xlsx/workbook';
 import { chartView } from '../xlsx/layout/chart-view';
-import { chartRichTitleSvg } from '../xlsx/layout/chart-svg-title-text';
+import { chartRichTitleSvg } from './render/chart-svg-title-text';
 import { chartXml } from '../xlsx/write/chart';
 import { NS, first, parseXml, buildXml } from '../xml';
 

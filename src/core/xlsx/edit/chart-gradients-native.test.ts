@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import native from '../__fixtures__/excel-chart-gradients.json';
 import { NS, parseXml } from '../../xml/index';
 import { chartView } from '../layout/chart-view';
-import { renderChartSvg } from '../layout/chart-svg';
+import { renderChartSvg } from '../../chart/render/chart-svg';
 import { THEME_SLOTS } from '../layout/colors';
 import type { ChartObject } from '../model';
 import { loadXlsx } from '../read/index';

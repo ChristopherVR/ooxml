@@ -6,8 +6,8 @@ import { parseChart } from '../read/chart';
 import { createWorkbook } from '../workbook';
 import { THEME_SLOTS } from './colors';
 import { chartView } from './chart-view';
-import { renderChartSvg } from './chart-svg';
-import { chartPointsToPixels } from './chart-appearance';
+import { renderChartSvg } from '../../chart/render/chart-svg';
+import { chartPointsToPixels } from '../../chart/render/chart-appearance';
 
 for (const sample of native.cases)
 	it(`renders native style ${sample.style} text measured by Excel COM`, () => {

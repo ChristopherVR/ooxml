@@ -3,8 +3,8 @@ import { parseXml } from '../../xml';
 import { createWorkbook } from '../workbook';
 import type { ChartObject } from '../model';
 import { chartView } from './chart-view';
-import { renderChartSvg } from './chart-svg';
-import { chartAreaRect } from './chart-svg-appearance';
+import { renderChartSvg } from '../../chart/render/chart-svg';
+import { chartAreaRect } from '../../chart/render/chart-svg-appearance';
 
 function chart(): ChartObject {
 	return {

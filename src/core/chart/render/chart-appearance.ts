@@ -4,16 +4,16 @@ import {
 	type ChartStyleEntry,
 	type ChartStylePart,
 	type ResolvedChartStyleEntry,
-} from '../../chart/style-definition';
+} from '../style-definition';
 import { resolveDrawingColor } from '../../drawingml/drawing-color';
 import { drawingColorCss } from '../../drawingml/drawing-color-css';
 import { EMU_PER_PIXEL, EMU_PER_POINT } from '../../units/constants';
-import type { ChartObject, ThemePalette } from '../model';
+import type { ChartSummary, ChartThemePalette } from './summary';
 import { chartColorScheme } from './chart-colors';
-import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
+import { resolveChartGradient, type ChartGradientFill } from '../gradient-definition';
 import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
-import { builtInChartTextStyle, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
-import { inheritChartText } from '../../chart/text-inheritance';
+import { builtInChartTextStyle, effectiveBuiltInChartStyle } from '../built-in-text-style';
+import { inheritChartText } from '../text-inheritance';
 
 export interface ChartAppearanceEntry extends ResolvedChartStyleEntry {
 	textShadow?: DrawingSvgShadow;
@@ -27,7 +27,7 @@ export type ChartAppearance = Partial<Record<ChartStylePart, ChartAppearanceEntr
 export const chartPointsToPixels = (points: number): number =>
 	(points * EMU_PER_POINT) / EMU_PER_PIXEL;
 
-function typeface(entry: ChartStyleEntry, theme: ThemePalette): string | undefined {
+function typeface(entry: ChartStyleEntry, theme: ChartThemePalette): string | undefined {
 	const name = entry.typeface;
 	if (name?.startsWith('+mj-')) return theme.majorFont;
 	if (name?.startsWith('+mn-')) return theme.minorFont;
@@ -43,8 +43,8 @@ function typeface(entry: ChartStyleEntry, theme: ThemePalette): string | undefin
 
 /** Direct properties override native style defaults; theme fonts and colors remain live. */
 export function chartAppearance(
-	chart: ChartObject,
-	theme: ThemePalette,
+	chart: ChartSummary,
+	theme: ChartThemePalette,
 ): ChartAppearance | undefined {
 	const defaults = builtInChartTextStyle(effectiveBuiltInChartStyle(chart.formatting));
 	const entries: Record<string, ChartStyleEntry> = {};

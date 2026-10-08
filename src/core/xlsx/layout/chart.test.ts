@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { CellValue, ChartObject, ChartType } from '../model';
 import { createWorkbook, DEFAULT_THEME } from '../workbook';
-import { autoSeriesColor, modulateLuminance } from './chart-colors';
-import { formatAxisValue, niceScale } from './chart-scale';
-import { renderChartSvg } from './chart-svg';
-import { esc } from './chart-svg-util';
+import { autoSeriesColor, modulateLuminance } from '../../chart/render/chart-colors';
+import { formatAxisValue, niceScale } from '../../chart/render/chart-scale';
+import { renderChartSvg } from '../../chart/render/chart-svg';
+import { esc } from '../../chart/render/chart-svg-util';
 import { chartView, type ChartViewModel } from './chart-view';
 
 const anchor = { from: { row: 0, col: 0, colOffset: 0, rowOffset: 0 } };

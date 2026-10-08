@@ -1,5 +1,6 @@
 import type { Color, ThemePalette } from '../model';
 import { applyTint, parseHex, toHexColor } from './tint';
+import { themeColor } from '../../chart/render/theme-palette';
 
 /**
  * The legacy 64-colour palette (`indexed` 0-63) as `RRGGBB`, followed by the system foreground
@@ -75,43 +76,7 @@ export const INDEXED_COLORS: readonly string[] = [
 	'FFFFFF',
 ];
 
-/** Theme slot names in SpreadsheetML index order. */
-export const THEME_SLOTS = [
-	'lt1',
-	'dk1',
-	'lt2',
-	'dk2',
-	'accent1',
-	'accent2',
-	'accent3',
-	'accent4',
-	'accent5',
-	'accent6',
-	'hlink',
-	'folHlink',
-] as const;
-
-/** Office 2013-2022 theme colours, used for slots a palette lacks. */
-const FALLBACK_THEME = [
-	'FFFFFF',
-	'000000',
-	'E7E6E6',
-	'44546A',
-	'4472C4',
-	'ED7D31',
-	'A5A5A5',
-	'FFC000',
-	'5B9BD5',
-	'70AD47',
-	'0563C1',
-	'954F72',
-];
-
-/** The `RRGGBB` of theme slot `index` (0 lt1, 1 dk1, 2 lt2, 3 dk2, 4-9 accents, 10 hlink, 11 folHlink). */
-export function themeColor(theme: ThemePalette, index: number): string | undefined {
-	const hex = theme.colors[index] ?? FALLBACK_THEME[index];
-	return hex && parseHex(hex) ? hex.replace(/^#/, '') : undefined;
-}
+export { THEME_SLOTS, themeColor } from '../../chart/render/theme-palette';
 
 /**
  * Resolves a SpreadsheetML colour to `#RRGGBB`. Explicit RGB wins, then theme (with Excel's tint),

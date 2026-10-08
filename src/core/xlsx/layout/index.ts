@@ -96,14 +96,18 @@ export {
 } from './sheet-queries';
 export { navigate, type NavigationKey } from './navigate';
 export { autoFitColumnWidth, type MeasureText } from './autofit';
-export { autoSeriesColor, modulateLuminance, chartColorScheme } from './chart-colors';
+export {
+	autoSeriesColor,
+	modulateLuminance,
+	chartColorScheme,
+} from '../../chart/render/chart-colors';
 export {
 	formatAxisValue,
 	niceScale,
 	PERCENT_SCALE,
 	type AxisScale,
 	type NiceScaleOptions,
-} from './chart-scale';
+} from '../../chart/render/chart-scale';
 export {
 	categoryTotals,
 	chartView,
@@ -112,8 +116,8 @@ export {
 	type EvaluateRef,
 	type ValueAxisView,
 } from './chart-view';
-export { renderChartSvg, type ChartSvgOptions } from './chart-svg';
-export { chartBarSpacing } from './chart-spacing';
+export { renderChartSvg, type ChartSvgOptions } from '../../chart/render/chart-svg';
+export { chartBarSpacing } from '../../chart/render/chart-spacing';
 export { createRefEvaluator, type RefEvaluatorOptions } from './ref-evaluator';
 export {
 	approximateMeasure,
