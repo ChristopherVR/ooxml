@@ -25,3 +25,6 @@ export * from './bar-cluster-geometry';
 export * from './manual-layout';
 export * from './write-layout-formatting';
 export * from './model';
+export * from './data-cache';
+export { parseChartSpace } from './parse-space';
+export { CHART_GROUP_ELEMENTS } from './parse-plot';
