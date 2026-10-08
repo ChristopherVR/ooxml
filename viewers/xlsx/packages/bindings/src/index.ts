@@ -3,6 +3,8 @@ import {
 	type EditorLocaleInput,
 	type EditorThemeMode,
 	type SelectionChangeDetail,
+	type XlsxCollaborationOptions,
+	type XlsxCollaborationState,
 	type XlsxEditorElement,
 	type XlsxEditorEventDetail,
 	type XlsxEditorEventName,
@@ -37,6 +39,11 @@ export interface EditorProps {
 	hiddenActions?: readonly string[] | undefined;
 	/** Theme token overrides, applied as `--xve-*` custom properties. */
 	themeColors?: XlsxThemeColors | undefined;
+	/**
+	 * Shares the open workbook in a room while set (room id, server URL or provider, user name and
+	 * colour); forwarded when a new object is passed, and `undefined` or `null` leaves the room.
+	 */
+	collaboration?: XlsxCollaborationOptions | null | undefined;
 }
 /** Editor callbacks; each is the framework-neutral form of one entry in `EDITOR_EVENT_NAMES`. */
 export interface EditorEventOptions {
@@ -48,6 +55,8 @@ export interface EditorEventOptions {
 	onReadOnlyChange?: ((readOnly: boolean) => void) | undefined;
 	/** The user changed the shown ribbon commands (File > Options > Customize Ribbon). */
 	onRibbonCustomize?: ((hiddenActions: string[]) => void) | undefined;
+	/** Sharing started or stopped, the connection changed, or someone joined or left. */
+	onCollaborationChange?: ((state: XlsxCollaborationState) => void) | undefined;
 	/** Called once, after the element is created and attached. */
 	onReady?: ((element: XlsxEditorElement) => void) | undefined;
 }
@@ -67,6 +76,7 @@ export const EDITOR_PROP_KEYS = [
 	'showFormulaBar',
 	'hiddenActions',
 	'themeColors',
+	'collaboration',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
 // Compile-time guard: adding a key to EditorProps without listing it above is an error.
@@ -82,6 +92,7 @@ export const EDITOR_EVENT_NAMES = [
 	'dirty-change',
 	'readonly-change',
 	'ribbon-customize',
+	'collaboration-change',
 ] as const satisfies readonly XlsxEditorEventName[];
 export type EditorEventName = (typeof EDITOR_EVENT_NAMES)[number];
 /** One handler per bound event (unwrapped payload); a missing key is a compile error in every adapter. */
@@ -92,6 +103,7 @@ export interface EditorEventHandlers {
 	'dirty-change': EditorEventOptions['onDirtyChange'];
 	'readonly-change': EditorEventOptions['onReadOnlyChange'];
 	'ribbon-customize': EditorEventOptions['onRibbonCustomize'];
+	'collaboration-change': EditorEventOptions['onCollaborationChange'];
 	ready?: EditorEventOptions['onReady'];
 }
 
@@ -113,6 +125,7 @@ export function eventOptions(handlers: EditorEventHandlers): EditorEventOptions 
 		onDirtyChange: handlers['dirty-change'],
 		onReadOnlyChange: handlers['readonly-change'],
 		onRibbonCustomize: handlers['ribbon-customize'],
+		onCollaborationChange: handlers['collaboration-change'],
 		onReady: handlers.ready,
 	};
 }
@@ -130,6 +143,8 @@ export interface EditorHandle {
 	select(ref: string): void;
 	getSelection(): string;
 	setActiveSheet(index: number): void;
+	/** Opens File > Share, where the user starts or stops sharing the workbook. */
+	share(): void;
 	readonly dirty: boolean;
 }
 export interface EditorBinding extends EditorHandle {
@@ -160,6 +175,7 @@ export function deferredHandle(current: () => EditorBinding | null | undefined):
 		select: (ref) => get().select(ref),
 		getSelection: () => get().getSelection(),
 		setActiveSheet: (index) => get().setActiveSheet(index),
+		share: () => get().share(),
 		get dirty() {
 			return current()?.dirty ?? false;
 		},
@@ -198,6 +214,7 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 		'dirty-change': (event) => options.onDirtyChange?.(event.detail.dirty),
 		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly),
 		'ribbon-customize': (event) => options.onRibbonCustomize?.([...event.detail.hiddenActions]),
+		'collaboration-change': (event) => options.onCollaborationChange?.(event.detail),
 	};
 	const listen = (add: boolean) => {
 		for (const name of EDITOR_EVENT_NAMES) {
@@ -229,6 +246,9 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 			// The element renames itself on File > Open; only forward a name the parent changed.
 			if (changed('fileName', next.fileName) && next.fileName !== undefined)
 				element.fileName = next.fileName;
+			// After `fileName`, before the workbook: a workbook opened below joins the room.
+			if (changed('collaboration', next.collaboration ?? null))
+				element.collaboration = next.collaboration ?? null;
 			if (next.workbook && next.workbook !== lastInput && next.workbook !== lastEmitted) {
 				src.cancel();
 				element.workbook = next.workbook;
@@ -255,6 +275,7 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 		select: (ref) => element.select(ref),
 		getSelection: () => element.getSelection(),
 		setActiveSheet: (index) => element.setActiveSheet(index),
+		share: () => element.share(),
 		get dirty() {
 			return element.dirty;
 		},
@@ -262,6 +283,9 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 			if (destroyed) return;
 			destroyed = true;
 			src.cancel();
+			// Leave the room: an unmounted editor must not keep editing the shared workbook. (Checked,
+			// so the binding still works on an ooxml-ui release without collaboration.)
+			if (typeof element.stopCollaboration === 'function') element.stopCollaboration();
 			listen(false);
 			element.remove();
 		},
@@ -287,6 +311,7 @@ export const EDITOR_HANDLE_KEYS = [
 	'select',
 	'getSelection',
 	'setActiveSheet',
+	'share',
 	'dirty',
 ] as const satisfies readonly (keyof EditorHandle)[];
 export type EditorHandleKey = (typeof EDITOR_HANDLE_KEYS)[number];

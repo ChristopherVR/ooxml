@@ -20,6 +20,7 @@ export function SpreadsheetEditor(props: SpreadsheetEditorProps) {
 			'dirty-change': props.onDirtyChange,
 			'readonly-change': props.onReadOnlyChange,
 			'ribbon-customize': props.onRibbonCustomize,
+			'collaboration-change': props.onCollaborationChange,
 			ready: props.onReady,
 		}),
 	});

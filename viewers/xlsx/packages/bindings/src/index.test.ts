@@ -95,7 +95,14 @@ describe('shared option keys', () => {
 		for (const name of EDITOR_EVENT_NAMES) expect(XLSX_EDITOR_EVENTS).toContain(name);
 		const binding = mountEditor(newHost());
 		const props = ['readOnly', 'locale', 'theme', 'fileName', 'authorName', 'workbook'];
-		for (const key of [...props, 'showToolbar', 'showFormulaBar', 'hiddenActions', 'themeColors'])
+		for (const key of [
+			...props,
+			'showToolbar',
+			'showFormulaBar',
+			'hiddenActions',
+			'themeColors',
+			'collaboration',
+		])
 			expect(key in binding.element, key).toBe(true);
 		expect(EDITOR_PROP_KEYS).toEqual(expect.arrayContaining([...props, 'bytes', 'src']));
 		binding.destroy();
@@ -113,6 +120,7 @@ describe('shared option keys', () => {
 			'dirty-change': undefined,
 			'readonly-change': undefined,
 			'ribbon-customize': undefined,
+			'collaboration-change': undefined,
 		});
 		options.onWorkbookChange?.(workbook);
 		expect(change).toHaveBeenCalledWith(workbook);

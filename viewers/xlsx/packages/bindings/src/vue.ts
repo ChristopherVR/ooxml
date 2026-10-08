@@ -1,6 +1,12 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue';
 import type { Workbook } from '@christophervr/xlsx-core';
-import type { EditorThemeMode, XlsxEditorElement, XlsxThemeColors } from 'xlsx-web-component';
+import type {
+	EditorThemeMode,
+	XlsxCollaborationOptions,
+	XlsxCollaborationState,
+	XlsxEditorElement,
+	XlsxThemeColors,
+} from 'xlsx-web-component';
 import {
 	EDITOR_EVENT_NAMES,
 	EDITOR_PROP_KEYS,
@@ -26,6 +32,7 @@ export const SpreadsheetEditor = defineComponent({
 		showFormulaBar: { type: Boolean, default: true },
 		hiddenActions: Array as PropType<readonly string[]>,
 		themeColors: Object as PropType<XlsxThemeColors>,
+		collaboration: Object as PropType<XlsxCollaborationOptions | null>,
 	} satisfies Record<EditorPropKey, unknown>,
 	emits: [...EDITOR_EVENT_NAMES, 'ready'],
 	setup(props, { emit, expose }) {
@@ -40,6 +47,8 @@ export const SpreadsheetEditor = defineComponent({
 				'dirty-change': (dirty: boolean) => emit('dirty-change', dirty),
 				'readonly-change': (readOnly: boolean) => emit('readonly-change', readOnly),
 				'ribbon-customize': (hiddenActions: string[]) => emit('ribbon-customize', hiddenActions),
+				'collaboration-change': (state: XlsxCollaborationState) =>
+					emit('collaboration-change', state),
 				ready: (element: XlsxEditorElement) => emit('ready', element),
 			}),
 		});
@@ -65,6 +74,7 @@ export const SpreadsheetEditor = defineComponent({
 			select: handle.select,
 			getSelection: handle.getSelection,
 			setActiveSheet: handle.setActiveSheet,
+			share: handle.share,
 			get dirty() {
 				return handle.dirty;
 			},

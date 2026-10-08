@@ -13,6 +13,8 @@ import type { Workbook } from '@christophervr/xlsx-core';
 import type {
 	EditorThemeMode,
 	SelectionChangeDetail,
+	XlsxCollaborationOptions,
+	XlsxCollaborationState,
 	XlsxEditorElement,
 	XlsxThemeColors,
 } from 'xlsx-web-component';
@@ -38,6 +40,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Input() showFormulaBar = true;
 	@Input() hiddenActions: readonly string[] = [];
 	@Input() themeColors?: XlsxThemeColors;
+	@Input() collaboration?: XlsxCollaborationOptions | null;
 	@Output() workbookChange = new EventEmitter<Workbook>();
 	@Output() workbookError = new EventEmitter<Error>();
 	@Output() selectionChange = new EventEmitter<SelectionChangeDetail>();
@@ -45,6 +48,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	/** Pairs with `readOnly` for `[(readOnly)]` two-way binding. */
 	@Output() readOnlyChange = new EventEmitter<boolean>();
 	@Output() ribbonCustomize = new EventEmitter<string[]>();
+	@Output() collaborationChange = new EventEmitter<XlsxCollaborationState>();
 	@Output() ready = new EventEmitter<XlsxEditorElement>();
 	private host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding?: EditorBinding;
@@ -59,6 +63,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
 				'readonly-change': (readOnly) => this.readOnlyChange.emit(readOnly),
 				'ribbon-customize': (hiddenActions) => this.ribbonCustomize.emit(hiddenActions),
+				'collaboration-change': (state) => this.collaborationChange.emit(state),
 				ready: (element) => this.ready.emit(element),
 			}),
 		};
@@ -101,6 +106,9 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	}
 	setActiveSheet(index: number) {
 		this.handle.setActiveSheet(index);
+	}
+	share() {
+		this.handle.share();
 	}
 	get dirty() {
 		return this.handle.dirty;

@@ -32,6 +32,7 @@ describe('every framework exposes the shared handle vocabulary', () => {
 				'saveBytes',
 				'select',
 				'setActiveSheet',
+				'share',
 			].sort(),
 		);
 	});
