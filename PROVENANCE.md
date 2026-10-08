@@ -2173,3 +2173,25 @@ and a thin `createRuler`/`updateRuler` adapter. Marker hooks changed from
 shadow root (the docx e2e spec was updated). The xlsx `office-bridge.css` was
 replaced by `shadcnBridge(':host', '--xve-')`, and the Visio viewer now derives its
 colours from the shared `--office-*` tokens (`visio/styles/theme.ts`).
+
+## pptx document properties through `opc/properties` (wave 2)
+
+Source: ChristopherVR/ooxml at `03b6a34ac`,
+`src/core/pptx/core/services/PptxDocumentPropertiesUpdater.ts`,
+`src/core/pptx/core/utils/app-properties-titles.ts` and the three `docProps`
+readers in `src/core/pptx/core/core/runtime/PptxHandlerRuntimeDocProperties.ts`.
+Nothing was copied: the shared `src/core/opc/properties` model gained what pptx
+needed (the PowerPoint and Word statistics fields of `app.xml`, Strict
+extended-property namespaces, `formatW3cdtf`, title-group helpers generalised
+from `applySlideTitlesToAppProps`, a text view of custom properties) and its
+writers now splice changes into the source part (`patch.ts`) instead of
+reserialising the DOM. The pptx updater and readers are adapters over it
+(`utils/document-properties-model.ts`); the custom-properties package entries
+moved verbatim to `services/custom-properties-package.ts`; the titles module was
+deleted. The word, paragraph and notes counters stay in pptx (PowerPoint
+algorithms). Output differs from the former fast-xml-parser rebuild only in
+form, checked on the 328 committed decks that carry docProps: the source declaration line
+break and indentation are kept, inserted elements follow PowerPoint's order,
+rewritten text escapes only `&`, `<`, `>` and CR, and `custom.xml` carries a
+declaration. Two behaviours changed: custom properties are written even when
+`app.xml` is missing, and an `app.xml` whose root has a prefix is refreshed.

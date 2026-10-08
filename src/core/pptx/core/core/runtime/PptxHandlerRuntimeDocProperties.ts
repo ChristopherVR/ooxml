@@ -7,9 +7,19 @@ import type {
 	PptxCustomerData,
 	PptxTagCollection,
 } from '../../types';
+import {
+	parseAppProperties as parseSharedAppProperties,
+	parseCoreProperties as parseSharedCoreProperties,
+	parseCustomPropertyTexts,
+} from '../../../../opc/properties/index';
 import { parseActiveXControlsFromSlide } from '../../utils/activex-parser';
 import { resolveContentType } from '../../utils/customer-data-package';
 import { safeResolveZipPath } from '../../utils/safe-path';
+import {
+	toPptxAppProperties,
+	toPptxCoreProperties,
+	toPptxCustomProperties,
+} from '../../utils/document-properties-model';
 import { discoverTagCollections } from '../../utils/tag-package';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeMediaData';
 
@@ -72,80 +82,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		);
 	}
 
+	/** The text of a package part, or `undefined` when the package has no such part. */
+	private async readPartText(path: string): Promise<string | undefined> {
+		return this.zip.file(path)?.async('string');
+	}
+
 	/**
 	 * Parse extended (application) properties from `docProps/app.xml`.
 	 */
 	protected async parseAppProperties(): Promise<PptxAppProperties | undefined> {
 		try {
-			const appFile = this.zip.file('docProps/app.xml');
-			if (!appFile) {
-				return undefined;
-			}
-
-			const xml = await appFile.async('string');
-			const data = this.parser.parse(xml) as XmlObject;
-			const props = data?.['Properties'] as XmlObject | undefined;
-			if (!props) {
-				return undefined;
-			}
-
-			const str = (key: string): string | undefined => {
-				const v = props[key];
-				if (v === undefined || v === null) {
-					return undefined;
-				}
-				const raw = String(v).trim();
-				return raw || undefined;
-			};
-
-			const num = (key: string): number | undefined => {
-				const v = props[key];
-				if (v === undefined || v === null) {
-					return undefined;
-				}
-				const n = Number(v);
-				return Number.isFinite(n) ? n : undefined;
-			};
-
-			const bool = (key: string): boolean | undefined => {
-				const v = props[key];
-				if (v === undefined || v === null) {
-					return undefined;
-				}
-				const raw = String(v).trim().toLowerCase();
-				if (raw === 'true' || raw === '1') {
-					return true;
-				}
-				if (raw === 'false' || raw === '0') {
-					return false;
-				}
-				return undefined;
-			};
-
-			const result: PptxAppProperties = {
-				application: str('Application'),
-				appVersion: str('AppVersion'),
-				presentationFormat: str('PresentationFormat'),
-				slides: num('Slides'),
-				hiddenSlides: num('HiddenSlides'),
-				notes: num('Notes'),
-				totalTime: num('TotalTime'),
-				words: num('Words'),
-				paragraphs: num('Paragraphs'),
-				company: str('Company'),
-				manager: str('Manager'),
-				template: str('Template'),
-				hyperlinkBase: str('HyperlinkBase'),
-				docSecurity: num('DocSecurity'),
-				mmClips: num('MMClips'),
-				scaleCrop: bool('ScaleCrop'),
-				linksUpToDate: bool('LinksUpToDate'),
-				sharedDoc: bool('SharedDoc'),
-				hyperlinksChanged: bool('HyperlinksChanged'),
-			};
-
-			const hasAny = Object.values(result).some((v) => v !== undefined);
-			return hasAny ? result : undefined;
+			const xml = await this.readPartText('docProps/app.xml');
+			return xml === undefined ? undefined : toPptxAppProperties(parseSharedAppProperties(xml));
 		} catch (e) {
 			console.warn('Failed to parse app properties:', e);
 			return undefined;
@@ -157,45 +105,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 */
 	protected async parseCoreProperties(): Promise<PptxCoreProperties | undefined> {
 		try {
-			const coreFile = this.zip.file('docProps/core.xml');
-			if (!coreFile) {
-				return undefined;
-			}
-
-			const xml = await coreFile.async('string');
-			const data = this.parser.parse(xml) as XmlObject;
-			const coreProps = data?.['cp:coreProperties'] as XmlObject | undefined;
-			if (!coreProps) {
-				return undefined;
-			}
-
-			const str = (key: string): string | undefined => {
-				const v = coreProps[key];
-				if (v === undefined || v === null) {
-					return undefined;
-				}
-				// Some elements carry attributes, so text content may be under #text
-				const raw =
-					typeof v === 'object' && v !== null ? String((v as XmlObject)['#text'] ?? '') : String(v);
-				return raw.trim() || undefined;
-			};
-
-			const result: PptxCoreProperties = {
-				title: str('dc:title'),
-				subject: str('dc:subject'),
-				creator: str('dc:creator'),
-				keywords: str('cp:keywords'),
-				description: str('dc:description'),
-				lastModifiedBy: str('cp:lastModifiedBy'),
-				revision: str('cp:revision'),
-				created: str('dcterms:created'),
-				modified: str('dcterms:modified'),
-				category: str('cp:category'),
-				contentStatus: str('cp:contentStatus'),
-			};
-
-			const hasAny = Object.values(result).some((v) => v !== undefined);
-			return hasAny ? result : undefined;
+			const xml = await this.readPartText('docProps/core.xml');
+			return xml === undefined ? undefined : toPptxCoreProperties(parseSharedCoreProperties(xml));
 		} catch (e) {
 			console.warn('Failed to parse core properties:', e);
 			return undefined;
@@ -206,54 +117,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Parse custom document properties from `docProps/custom.xml`.
 	 */
 	protected async parseCustomProperties(): Promise<PptxCustomProperty[]> {
-		const results: PptxCustomProperty[] = [];
 		try {
-			const customFile = this.zip.file('docProps/custom.xml');
-			if (!customFile) {
-				return results;
-			}
-
-			const xml = await customFile.async('string');
-			const data = this.parser.parse(xml) as XmlObject;
-			const properties = data?.['Properties'] as XmlObject | undefined;
-			if (!properties) {
-				return results;
-			}
-
-			const propEntries = this.ensureArray(properties['property']) as XmlObject[];
-			for (const prop of propEntries) {
-				const name = String(prop['@_name'] || '').trim();
-				if (!name) {
-					continue;
-				}
-
-				// VT types: vt:lpwstr, vt:i4, vt:bool, vt:filetime, vt:r8, etc.
-				let value = '';
-				let type = 'unknown';
-				const vtTypes = [
-					'vt:lpwstr',
-					'vt:i4',
-					'vt:bool',
-					'vt:filetime',
-					'vt:r8',
-					'vt:i2',
-					'vt:ui4',
-					'vt:lpstr',
-				];
-				for (const vt of vtTypes) {
-					if (prop[vt] !== undefined) {
-						value = String(prop[vt]);
-						type = vt.replace('vt:', '');
-						break;
-					}
-				}
-
-				results.push({ name, value, type });
-			}
+			const xml = await this.readPartText('docProps/custom.xml');
+			return toPptxCustomProperties(parseCustomPropertyTexts(xml));
 		} catch (e) {
 			console.warn('Failed to parse custom properties:', e);
+			return [];
 		}
-		return results;
 	}
 
 	/**
