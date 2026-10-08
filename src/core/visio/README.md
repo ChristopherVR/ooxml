@@ -78,6 +78,17 @@ remain byte-identical. Native reopen covers clipboard-generated output from the
 nine duplicate fixtures, not native clipboard interoperability or placement.
 Resource import, cross-scale paste and native paste cascade remain unsupported.
 
+An array containing only `delete-shape` commands removes an admitted set together.
+References between removed local leaves may remain inside that set; references
+from retained formulas, metadata or Connect records still refuse. All targets
+and deletion locks are checked before any node is removed. Mixed command arrays
+retain the sequential single-shape policy. This enables Cut of a closed selection
+without weakening retained-reference protection. Native Visio 16 deletion and
+core capture/delete/paste reopen cover nine cases at three drawing scales,
+including reverse selection order and independent movement locks. Use
+`scripts/record-visio-batch-delete.ps1` and `VISIO_NATIVE_BATCH_DELETE_DIR` for
+the optional oracle. Connector healing and inherited/group deletion remain open.
+
 ## Read a drawing
 
 ```ts
@@ -492,7 +503,7 @@ This first bundle has deliberate exclusions:
 | GUARD, SETATREF and referenced transform formulas                             | Direct overwrites would bypass protection/redirection or discard semantics          | Verified redirection commands; never bypass protection                          |
 | Protected cells and inherited/ambiguous protection                            | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                         | Proven effective protection resolution                                          |
 | Absolute geometry lacking dimension-dependent formulas; nonlinear geometry    | Scaling cached coordinates can distort shape semantics                              | Additional row evaluators and explicit scaling proofs                           |
-| Referenced deletion                                                           | Formulas, Connects or metadata could dangle                                         | Explicit validated dependency-removal transactions                              |
+| Deletion referenced outside a removed set                                     | Retained formulas, Connects or metadata could dangle                                | Explicit validated dependency-removal and connector-healing transactions        |
 
 Relative MoveTo/LineTo geometry scales with Width/Height. Absolute MoveTo/LineTo
 coordinates require a supported transitive dependency on dimensions, except zero

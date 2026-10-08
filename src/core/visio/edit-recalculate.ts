@@ -55,31 +55,41 @@ export function recalculateVisioCells(
 	return [...pages];
 }
 
-/** Deletion is only admitted when no static formula or Connect record refers to the shape. */
+/** Retained cells must not refer to a removed sheet. Selected owners disappear together. */
+export function assertVisioShapesUnreferenced(
+	roots: ReadonlyMap<string, Element>,
+	removed: ReadonlyMap<string, ReadonlySet<string>>,
+	options: VisioRecalculationOptions = {},
+): void {
+	const cells = indexCells(roots, options);
+	for (const cell of cells.values()) {
+		options.check?.();
+		if (removed.get(cell.pageId)?.has(cell.shapeId)) continue;
+		if (
+			cell.dependencies.some((id) => {
+				const parts = JSON.parse(id) as string[];
+				return removed.get(parts[0]!)?.has(parts[1]!) ?? false;
+			})
+		)
+			fail('EDIT_REFERENCED_DELETE', 'Shape is referenced by a ShapeSheet formula.');
+	}
+	for (const [pageId, ids] of removed)
+		for (const connections of children(roots.get(pageId), 'Connects'))
+			for (const connection of children(connections, 'Connect')) {
+				options.check?.();
+				if (['FromSheet', 'ToSheet'].some((name) => ids.has(attribute(connection, name) ?? '')))
+					fail('EDIT_REFERENCED_DELETE', 'Shape participates in a Connect record.');
+			}
+}
+
+/** Scalar deletion retains its existing reference policy. */
 export function assertVisioShapeUnreferenced(
 	roots: ReadonlyMap<string, Element>,
 	pageId: string,
 	shapeId: string,
 	options: VisioRecalculationOptions = {},
 ): void {
-	const cells = indexCells(roots, options);
-	for (const cell of cells.values()) {
-		if (cell.pageId !== pageId || cell.shapeId === shapeId) continue;
-		if (
-			cell.dependencies.some((id) => {
-				const parts = JSON.parse(id) as string[];
-				return parts[0] === pageId && parts[1] === shapeId;
-			})
-		)
-			fail('EDIT_REFERENCED_DELETE', 'Shape is referenced by a ShapeSheet formula.');
-	}
-	const root = roots.get(pageId);
-	if (root)
-		for (const connections of children(root, 'Connects'))
-			for (const connection of children(connections, 'Connect')) {
-				if (['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === shapeId))
-					fail('EDIT_REFERENCED_DELETE', 'Shape participates in a Connect record.');
-			}
+	assertVisioShapesUnreferenced(roots, new Map([[pageId, new Set([shapeId])]]), options);
 }
 
 /** Static transitive proof for admission of dimension-dependent absolute geometry. */

@@ -17,6 +17,7 @@ import { isVisioFormatEdit } from './edit-formatting-commands';
 import { reorderVisioShape, assertShapeOrderPackageScope } from './edit-shape-order';
 import { duplicateVisioShapes } from './edit-duplicate';
 import { pasteVisioShapes } from './edit-paste';
+import { deleteVisioShapes, type VisioShapeDelete } from './edit-delete';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -136,7 +137,14 @@ export async function editVsdx(
 	let orderChanged = false;
 	let duplicateChanged = false;
 	let pasteChanged = false;
-	for (const command of commands) {
+	const deletions = commands.filter(
+		(command): command is VisioShapeDelete => command.type === 'delete-shape',
+	);
+	const deleteOnly = deletions.length > 0 && deletions.length === commands.length;
+	if (deleteOnly)
+		for (const pageId of deleteVisioShapes(roots, document!, deletions, check))
+			dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+	for (const command of deleteOnly ? [] : commands) {
 		check();
 		const path = pages.get(command.pageId);
 		if (!path) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
@@ -249,7 +257,16 @@ export async function editVsdx(
 						},
 					]
 				: []),
-			...(dirty.size && geometryCommands.length
+			...(dirty.size && deleteOnly
+				? [
+						{
+							code: 'edit-delete-experimental',
+							message:
+								'Reference-closed local shapes were deleted. Retained formulas and caches were preserved; glue healing and inherited shape deletion remain unsupported.',
+						},
+					]
+				: []),
+			...(dirty.size && geometryCommands.length && !deleteOnly
 				? [
 						{
 							code: 'edit-geometry-experimental',
