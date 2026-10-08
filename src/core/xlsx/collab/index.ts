@@ -1,5 +1,5 @@
 // Real-time collaboration for workbooks (`ooxml-core/xlsx/collab`): the Yjs mapping of the
-// spreadsheet model, a whole-model `DocumentAdapter` and the presence payload.
+// spreadsheet model, a whole-model `DocumentAdapter`, the per-edit session binding and presence.
 export {
 	isSharedWorkbookEmpty,
 	readSharedWorkbook,
@@ -7,6 +7,15 @@ export {
 	xlsxDocumentAdapter,
 	type XlsxAdapterOptions,
 } from './adapter';
+export {
+	XLSX_EDIT_ORIGIN,
+	XLSX_SYNC_ORIGIN,
+	bindWorkbookSession,
+	scopeOf,
+	type WorkbookBinding,
+	type WorkbookBindingOptions,
+	type WorkbookCollabHost,
+} from './bind';
 export type { CellEntry, LineEntry } from './codec';
 export type { NameEntry } from './names';
 export {
