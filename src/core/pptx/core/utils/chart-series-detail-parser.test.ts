@@ -71,6 +71,19 @@ describe('parseShapeProps', () => {
 		});
 	});
 
+	it('reads an explicit a:ln/a:noFill as no line', () => {
+		// fast-xml-parser turns the self-closing `<a:noFill/>` into an empty string.
+		const spPr: XmlObject = { 'a:ln': { '@_w': '9525', 'a:noFill': '' } };
+		expect(parseShapeProps(spPr, xmlLookup, colorParser)).toStrictEqual({
+			lineNoFill: true,
+			strokeWidth: 0.75,
+		});
+	});
+
+	it('does not treat a shape fill of a:noFill as no line', () => {
+		expect(parseShapeProps({ 'a:noFill': '' }, xmlLookup, colorParser)).toBeUndefined();
+	});
+
 	it('should return undefined for empty spPr', () => {
 		expect(parseShapeProps({}, xmlLookup, colorParser)).toBeUndefined();
 	});

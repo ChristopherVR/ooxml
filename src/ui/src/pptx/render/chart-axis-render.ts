@@ -24,7 +24,7 @@ import {
 	buildVerticalAxisLine,
 	buildVerticalTickMark,
 } from './chart-axis-primitives';
-import { chartAxisTextStyle, unitsLabelTextStyle } from './chart-axis-style';
+import { chartAxisTextStyle, isNoLine, unitsLabelTextStyle } from './chart-axis-style';
 import type { PlotLayout, SvgLine, SvgText, ValueRange } from './chart-view-model';
 import { formatAxisValue, valueToY } from './chart-view-model';
 
@@ -90,10 +90,11 @@ export function buildPrimaryAxis(
 	const tickVals = generateAxisTicks(range, axis, TICK_COUNT);
 	const minorTickVals = generateMinorAxisTicks(range, axis);
 	const axisLine = buildVerticalAxisLine(axis, axisX, layout);
+	const drawMajorGridlines = showMajorGridlines && !isNoLine(axis?.majorGridlinesSpPr);
 	if (axisLine) {
 		gridlines.push(axisLine);
 	}
-	if (axis?.minorGridlines) {
+	if (axis?.minorGridlines && !isNoLine(axis.minorGridlinesSpPr)) {
 		for (const val of minorTickVals) {
 			const y = valueToY(val, range, layout.plotTop, layout.plotBottom);
 			gridlines.push(
@@ -118,7 +119,7 @@ export function buildPrimaryAxis(
 
 	for (const val of tickVals) {
 		const y = valueToY(val, range, layout.plotTop, layout.plotBottom);
-		if (showMajorGridlines) {
+		if (drawMajorGridlines) {
 			gridlines.push(
 				buildStyledGridline(
 					y,
@@ -194,13 +195,14 @@ export function buildSecondaryAxis(
 	const textStyle = chartAxisTextStyle(axis);
 	const captionStyle = chartAxisTextStyle(axis);
 	const axisLine = buildVerticalAxisLine(axis, axisX, layout);
+	const drawMajorGridlines = !isNoLine(axis?.majorGridlinesSpPr);
 	if (axisLine) {
 		gridlines.push(axisLine);
 	}
 
 	const tickValues = generateAxisTicks(range, axis, TICK_COUNT - 1);
 	const minorTickValues = generateMinorAxisTicks(range, axis);
-	if (axis?.minorGridlines) {
+	if (axis?.minorGridlines && !isNoLine(axis.minorGridlinesSpPr)) {
 		for (const val of minorTickValues) {
 			const y = valueToY(val, range, layout.plotTop, layout.plotBottom);
 			gridlines.push(
@@ -232,17 +234,19 @@ export function buildSecondaryAxis(
 	}
 	for (const val of tickValues) {
 		const y = valueToY(val, range, layout.plotTop, layout.plotBottom);
-		gridlines.push(
-			buildStyledGridline(
-				y,
-				layout,
-				axis?.majorGridlinesSpPr,
-				SECONDARY_GRID_COLOR,
-				0.5,
-				'2 3',
-				0.5,
-			),
-		);
+		if (drawMajorGridlines) {
+			gridlines.push(
+				buildStyledGridline(
+					y,
+					layout,
+					axis?.majorGridlinesSpPr,
+					SECONDARY_GRID_COLOR,
+					0.5,
+					'2 3',
+					0.5,
+				),
+			);
+		}
 		const tick = buildVerticalTickMark(
 			axisX,
 			y,

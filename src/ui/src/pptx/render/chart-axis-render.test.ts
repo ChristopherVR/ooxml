@@ -4,12 +4,15 @@
  * assertion that the linear no-units `buildPrimaryAxis` output matches the
  * original `buildGridlinesAndLabels` byte-for-byte.
  */
+import { readFileSync } from 'node:fs';
+
+import { PptxHandler } from 'ooxml-core/pptx';
 import type { PptxChartAxisFormatting } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { buildPrimaryAxis, buildSecondaryAxis } from './chart-axis-render';
 import type { PlotLayout, ValueRange } from './chart-view-model';
-import { buildGridlinesAndLabels } from './chart-view-model';
+import { buildChartViewModel, buildGridlinesAndLabels } from './chart-view-model';
 
 const layout: PlotLayout = {
 	svgWidth: 400,
@@ -251,5 +254,85 @@ describe('buildSecondaryAxis', () => {
 		expect(ticks).toHaveLength(5);
 		expect(axisLabels.every((label) => label.x === layout.plotLeft - 4)).toBeTruthy();
 		expect(axisLabels.every((label) => label.textAnchor === 'end')).toBeTruthy();
+	});
+});
+
+describe('value axis lines drawn with no line (a:ln/a:noFill)', () => {
+	const range: ValueRange = { min: 0, max: 100, span: 100 };
+	const noLine = { lineNoFill: true };
+	const spansPlot = (line: { x1: number; x2: number }) =>
+		line.x1 === layout.plotLeft && line.x2 === layout.plotRight;
+
+	it('drops the axis line and its tick marks but keeps labels and gridlines', () => {
+		const axis: PptxChartAxisFormatting = {
+			axisType: 'valAx',
+			majorTickMark: 'out',
+			minorTickMark: 'in',
+			minorUnit: 10,
+			spPr: noLine,
+		};
+		const { gridlines, axisLabels } = buildPrimaryAxis(range, layout, axis);
+		expect(gridlines.every(spansPlot)).toBeTruthy();
+		expect(gridlines.length).toBeGreaterThan(0);
+		expect(axisLabels.length).toBeGreaterThan(0);
+	});
+
+	it('drops gridlines whose own line is set to no line', () => {
+		const axis: PptxChartAxisFormatting = {
+			axisType: 'valAx',
+			majorGridlines: true,
+			majorGridlinesSpPr: noLine,
+			minorGridlines: true,
+			minorGridlinesSpPr: noLine,
+			minorUnit: 10,
+		};
+		expect(buildPrimaryAxis(range, layout, axis).gridlines).toHaveLength(0);
+		expect(buildSecondaryAxis(range, layout, { ...axis, axPos: 'r' }).gridlines).toHaveLength(0);
+	});
+
+	it('lets an explicit line colour win over a parsed no line', () => {
+		// Picking a colour in the editor writes a:solidFill and removes a:noFill on save.
+		const axis: PptxChartAxisFormatting = {
+			axisType: 'valAx',
+			majorTickMark: 'out',
+			spPr: { lineNoFill: true, strokeColor: '#FF0000' },
+		};
+		const { gridlines } = buildPrimaryAxis(range, layout, axis);
+		expect(gridlines.filter((line) => line.stroke === '#FF0000').length).toBeGreaterThan(0);
+	});
+
+	it('drops the secondary axis line and tick marks too', () => {
+		const { gridlines } = buildSecondaryAxis(range, layout, {
+			axisType: 'valAx',
+			axPos: 'r',
+			majorTickMark: 'cross',
+			spPr: noLine,
+		});
+		expect(gridlines.every(spansPlot)).toBeTruthy();
+	});
+});
+
+describe('a PowerPoint-saved value axis with no line', () => {
+	it('parses and renders without the default slate tick marks', async () => {
+		// Slide 5's column chart: `<c:valAx>` with `majorTickMark="out"` and
+		// `<c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr>`.
+		const buf = readFileSync(
+			new URL('../../../../../e2e/pptx/fixtures/issue-132-gradient-fill.pptx', import.meta.url),
+		);
+		const data = await new PptxHandler().load(
+			buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+		);
+		const chart = data.slides[4].elements.find((el) => el.type === 'chart');
+		if (!chart || chart.type !== 'chart') {
+			throw new Error('no chart on slide 5');
+		}
+		const valueAxis = chart.chartData?.axes?.find((axis) => axis.axisType === 'valAx');
+		expect(valueAxis?.spPr?.lineNoFill).toBe(true);
+		expect(valueAxis?.majorTickMark).toBe('out');
+
+		const vm = buildChartViewModel(chart);
+		expect(vm.gridlines.filter((line) => line.stroke === '#64748b')).toStrictEqual([]);
+		expect(vm.gridlines.length).toBeGreaterThan(0);
+		expect(vm.axisLabels.length).toBeGreaterThan(0);
 	});
 });

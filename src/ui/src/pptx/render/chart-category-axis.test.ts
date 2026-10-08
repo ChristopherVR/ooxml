@@ -47,4 +47,12 @@ describe('category axis plan', () => {
 		expect(plan.tickMarks.filter((tick) => tick.y2 > tick.y1)).toHaveLength(2);
 		expect(plan.tickMarks.filter((tick) => tick.y2 < tick.y1)).toHaveLength(1);
 	});
+
+	it('draws neither the axis line nor tick marks when the axis line is set to no line', () => {
+		const plan = buildCategoryAxisPlan(['A', 'B', 'C'], layout, 'bar', [
+			axis({ majorTickMark: 'out', minorTickMark: 'in', spPr: { lineNoFill: true } }),
+		]);
+		expect(plan.tickMarks).toStrictEqual([]);
+		expect(plan.labels).toHaveLength(3);
+	});
 });

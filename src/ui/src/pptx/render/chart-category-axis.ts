@@ -1,6 +1,6 @@
 import type { PptxChartAxisFormatting, PptxChartData } from 'ooxml-core/pptx';
 
-import { chartLineStyle } from './chart-axis-style';
+import { chartLineStyle, isNoLine } from './chart-axis-style';
 import { buildMultiLevelCategoryLabels } from './chart-category-labels';
 import { categoryX } from './chart-category-position';
 import type { PlotLayout, SvgLine, SvgText } from './chart-view-model';
@@ -37,7 +37,7 @@ export function tickLine(
 	length: number,
 	axis: PptxChartAxisFormatting,
 ): SvgLine | undefined {
-	if (!placement || placement === 'none') {
+	if (!placement || placement === 'none' || isNoLine(axis.spPr)) {
 		return undefined;
 	}
 	const inward = topAxis ? length : -length;
@@ -67,7 +67,7 @@ function buildTickMarks(
 	const result: SvgLine[] = [];
 	const topAxis = axis.axPos === 't';
 	const y = axisY ?? (topAxis ? layout.plotTop : layout.plotBottom);
-	if (axis.spPr) {
+	if (axis.spPr && !isNoLine(axis.spPr)) {
 		result.push({
 			kind: 'line',
 			x1: layout.plotLeft,
