@@ -62,7 +62,8 @@ jobs:
 
   lint:
     needs: plan
-    if: fromJSON(needs.plan.outputs.plan).typecheck.ui
+    # oxlint covers all of src/core and src/ui: run it whenever a typecheck would.
+    if: fromJSON(needs.plan.outputs.plan).typecheck.strict || fromJSON(needs.plan.outputs.plan).typecheck.pptx || fromJSON(needs.plan.outputs.plan).typecheck.ui
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
