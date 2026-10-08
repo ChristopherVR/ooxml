@@ -99,6 +99,21 @@ describe('office-ui-status-bar (controlled)', () => {
 		expect(outer).not.toHaveBeenCalled();
 	});
 
+	it('puts the summary slot after the spacer and before the toggles and views', () => {
+		const bar = make();
+		const stats = document.createElement('span');
+		stats.slot = 'summary';
+		stats.textContent = 'Sum: 6';
+		bar.append(stats);
+		const parts = [...bar.shadowRoot!.querySelector('.bar')!.children];
+		const at = (match: (node: Element) => boolean) => parts.findIndex(match);
+		const summary = at((node) => node.getAttribute('name') === 'summary');
+		expect((parts[summary] as HTMLSlotElement).assignedElements()).toEqual([stats]);
+		expect(summary).toBeGreaterThan(at((node) => node.classList.contains('spacer')));
+		expect(summary).toBeLessThan(at((node) => node.classList.contains('toggles')));
+		expect(summary).toBeLessThan(at((node) => node.classList.contains('views')));
+	});
+
 	it('stays a plain slotted container without state', () => {
 		const bar = make(null);
 		expect(bar.hasAttribute('data-controlled')).toBe(false);

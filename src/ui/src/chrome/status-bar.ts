@@ -61,7 +61,9 @@ export interface OfficeStatusBarState {
  * Controlled: set `state` (`OfficeStatusBarState`: start texts, toggles, view switches and a zoom
  * cluster, all translated); every button emits `office-status-activate` `{ id }` (static
  * `activateEvent` lets a product subclass keep its published name). Slots stay available in
- * controlled mode: the default after the texts, `collaboration` and `end` before the zoom. Keyed
+ * controlled mode: the default after the texts, `summary` at the start of the trailing group
+ * before the toggles and views (Excel's selection statistics), `collaboration` and `end` before
+ * the zoom. Keyed
  * children are patched in place, so a focused button survives updates.
  */
 export class OfficeUiStatusBar extends OfficeElement {
@@ -164,6 +166,7 @@ export class OfficeUiStatusBar extends OfficeElement {
 				</span>
 				<slot></slot>
 				<span class="spacer" ?hidden=${!state}></span>
+				<slot name="summary"></slot>
 				<span class="toggles" ?hidden=${togglesHidden}>
 					${repeat(
 						toggles,
