@@ -35,16 +35,19 @@ import {
 } from './smartart-layout-interpreter-linear-table';
 import type { ArrangementPlan, FlowDirection } from './smartart-layout-interpreter-model';
 import { itemNode } from './smartart-layout-interpreter-model';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import { styleContext } from './smartart-layout-interpreter-render';
-import { itemFontBoundsPx } from './smartart-layout-item-font-role';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
+import { itemFontBoundsPx } from '../../../diagram/layout/smartart-layout-item-font-role';
 import {
 	primFontSzCeilingPx,
 	resolveFontTable,
 	resolveItemSelfAspect,
-} from './smartart-layout-item-font-size';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
-import { findCompositeItemShape, roundRectCornerInsetPx } from './smartart-layout-shape-preset';
+} from '../../../diagram/layout/smartart-layout-item-font-size';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
+import {
+	findCompositeItemShape,
+	roundRectCornerInsetPx,
+} from '../../../diagram/layout/smartart-layout-shape-preset';
 import type {
 	BoundingBox,
 	RenderedNode,

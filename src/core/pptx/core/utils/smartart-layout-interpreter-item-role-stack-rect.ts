@@ -21,7 +21,7 @@ import {
 	textFromNodeIds,
 } from './smartart-layout-interpreter-item-role-stack-fields';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
-import { resolveRoleFontSize } from './smartart-layout-item-font-size';
+import { resolveRoleFontSize } from '../../../diagram/layout/smartart-layout-item-font-size';
 import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**

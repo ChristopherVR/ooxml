@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { tailedHierarchyDeclaresChAlign } from './smartart-hierarchy-tailed-transpose';
+import { tailedHierarchyDeclaresChAlign } from '../../../diagram/hierarchy/smartart-hierarchy-tailed-transpose';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 /** A `dgm:choose` branch whose raw XML nests `dgm:alg[@type=hierChild]/dgm:param`s, as `activeBranch`/`branchAlg` (choose-algorithm.ts) would see them. */
 function algBranch(params: Record<string, string>): { rawXml: Record<string, unknown> } {
@@ -20,7 +21,7 @@ function algBranch(params: Record<string, string>): { rawXml: Record<string, unk
 
 describe('tailedHierarchyDeclaresChAlign', () => {
 	it('is false for undefined algorithmNode', () => {
-		expect(tailedHierarchyDeclaresChAlign(undefined)).toBeFalsy();
+		expect(tailedHierarchyDeclaresChAlign(pptxOrderedXml, undefined)).toBeFalsy();
 	});
 
 	it('is false when the top-level choose only mirrors linDir fromL/fromR (plain "Organization Chart"/"Half Circle Organization Chart"/"Name and Title Organization Chart" own shape - no chAlign at this level in either dir=norm/rtl branch)', () => {
@@ -40,7 +41,7 @@ describe('tailedHierarchyDeclaresChAlign', () => {
 				},
 			],
 		};
-		expect(tailedHierarchyDeclaresChAlign(node)).toBeFalsy();
+		expect(tailedHierarchyDeclaresChAlign(pptxOrderedXml, node)).toBeFalsy();
 	});
 
 	it('is true when the top-level choose declares chAlign alongside linDir fromT ("Horizontal Organization Chart" own shape, both dir=norm/rtl branches)', () => {
@@ -60,7 +61,7 @@ describe('tailedHierarchyDeclaresChAlign', () => {
 				},
 			],
 		};
-		expect(tailedHierarchyDeclaresChAlign(node)).toBeTruthy();
+		expect(tailedHierarchyDeclaresChAlign(pptxOrderedXml, node)).toBeTruthy();
 	});
 
 	it('is true from a direct (non-choose-wrapped) algorithm.parameters chAlign, when already resolved', () => {
@@ -73,11 +74,11 @@ describe('tailedHierarchyDeclaresChAlign', () => {
 				],
 			},
 		};
-		expect(tailedHierarchyDeclaresChAlign(node)).toBeTruthy();
+		expect(tailedHierarchyDeclaresChAlign(pptxOrderedXml, node)).toBeTruthy();
 	});
 
 	it('is false when choose is present but empty, and algorithm carries no chAlign', () => {
 		const node: PptxSmartArtLayoutNode = { choose: [], algorithm: { type: 'hierChild' } };
-		expect(tailedHierarchyDeclaresChAlign(node)).toBeFalsy();
+		expect(tailedHierarchyDeclaresChAlign(pptxOrderedXml, node)).toBeFalsy();
 	});
 });

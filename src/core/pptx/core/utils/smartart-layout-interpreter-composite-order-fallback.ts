@@ -15,8 +15,8 @@ import { representativeSlotsPerPoint } from './smartart-layout-interpreter-compo
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite-render';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import type { Slot, SlottedDims } from './smartart-layout-interpreter-composite-slots';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import { findCompositeItemShape } from './smartart-layout-shape-preset';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import { findCompositeItemShape } from '../../../diagram/layout/smartart-layout-shape-preset';
 import type { BoundingBox, RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 function slotRect(slot: SlottedDims, box: BoundingBox, absX: number, absY: number): Slot {

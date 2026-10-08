@@ -38,8 +38,8 @@ import { connectorEndpoints, connectorPath } from './smartart-layout-interpreter
 import { arrangeLinear } from './smartart-layout-interpreter-linear';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { algorithmParam, resolveFlowDirection } from './smartart-layout-interpreter-model';
-import { rectNode, styleContext } from './smartart-layout-interpreter-render';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
+import { rectNode, styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
 import type {
 	BoundingBox,
 	RenderedConnector,

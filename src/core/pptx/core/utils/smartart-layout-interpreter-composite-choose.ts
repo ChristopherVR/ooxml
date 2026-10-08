@@ -51,8 +51,8 @@ import type { FontFitContext } from './smartart-layout-interpreter-composite-fon
 import { resolveFitByDeclaringRole } from './smartart-layout-interpreter-composite-fontfit';
 import type { ChooseAwareSlot } from './smartart-layout-interpreter-composite-group-slots';
 import { resolveGroupedSlots } from './smartart-layout-interpreter-composite-group-slots';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import { findCompositeItemShape } from './smartart-layout-shape-preset';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import { findCompositeItemShape } from '../../../diagram/layout/smartart-layout-shape-preset';
 import type {
 	BoundingBox,
 	RenderedNode,

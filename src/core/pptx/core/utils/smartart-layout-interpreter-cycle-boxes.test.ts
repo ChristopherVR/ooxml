@@ -4,7 +4,7 @@ import type { PptxSmartArtNode } from '../types';
 import type { CycleBoxInputs } from './smartart-layout-interpreter-cycle-boxes';
 import { buildCycleHubBox, buildCycleRingBoxes } from './smartart-layout-interpreter-cycle-boxes';
 import type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
-import { styleContext } from './smartart-layout-interpreter-render';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 const boxInputs: CycleBoxInputs = {

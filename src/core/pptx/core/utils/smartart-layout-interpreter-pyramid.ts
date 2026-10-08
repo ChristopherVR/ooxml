@@ -96,8 +96,11 @@ import { EMPTY_CONSTRAINT_INDEX, roleOf } from '../../../diagram/layout/smartart
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { algorithmParam } from './smartart-layout-interpreter-model';
-import { polygonNode, styleContext } from './smartart-layout-interpreter-render';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
+import {
+	polygonNode,
+	styleContext,
+} from '../../../diagram/layout/smartart-layout-interpreter-render';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
 import type {
 	BoundingBox,
 	RenderedNode,

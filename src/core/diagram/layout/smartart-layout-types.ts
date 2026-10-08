@@ -35,11 +35,11 @@ export interface LayoutRect {
  */
 export interface RenderedNodeTextStyle {
 	/** Label colour. Default `white`. */
-	fontColor?: string;
+	fontColor?: string | undefined;
 	/** SVG `font-weight` (`700` when the node is bold). Default unset. */
-	fontWeight?: number;
+	fontWeight?: number | undefined;
 	/** SVG `font-style`. Default unset. */
-	fontStyle?: 'italic';
+	fontStyle?: 'italic' | undefined;
 }
 
 /**
@@ -66,7 +66,7 @@ export interface RenderedNodeIdentity {
 	 * distinct from the arranger's hardcoded family shape. `undefined` keeps
 	 * the bridge's pre-existing behaviour.
 	 */
-	presetOverride?: string;
+	presetOverride?: string | undefined;
 	/**
 	 * Additional `DiagramNode.id`s whose text folds into THIS shape as
 	 * extra paragraphs (see `projectFoldedNodeText` in the drawing bridge),
@@ -101,7 +101,7 @@ export interface RenderedNodeIdentity {
 	 * since `stackRoleContent` itself has no generic way to split a
 	 * polygon's own `points`. `undefined` on an unsplit node.
 	 */
-	itemRoleName?: string;
+	itemRoleName?: string | undefined;
 	/**
 	 * The font size (px) a FOLDED descendant paragraph (`collectFoldedDescendants`
 	 * in the drawing bridge) should render at, when it differs from this
@@ -120,7 +120,7 @@ export interface RenderedNodeIdentity {
 	 */
 	styleLabel?: string | undefined;
 	/** Preset adjustments (`a:avLst`) to cache, e.g. a connector arrow's `adj1`/`adj2`. */
-	shapeAdjustments?: Record<string, number>;
+	shapeAdjustments?: Record<string, number> | undefined;
 }
 
 /** A node rendered as an SVG rect (rounded or flat). */
@@ -162,8 +162,8 @@ export interface RenderedCircleNode extends RenderedNodeTextStyle, RenderedNodeI
 	 * `smartart-interpreter-drawing-bridge.ts`'s geometry conversion currently
 	 * reads them.
 	 */
-	rx?: number;
-	ry?: number;
+	rx?: number | undefined;
+	ry?: number | undefined;
 	fill: string;
 	stroke: string;
 	strokeWidth: number;
@@ -174,17 +174,17 @@ export interface RenderedCircleNode extends RenderedNodeTextStyle, RenderedNodeI
 	 * Label anchor x. Defaults to `cx`; set when the label sits away from the
 	 * circle (target leader labels, timeline captions).
 	 */
-	textX?: number;
+	textX?: number | undefined;
 	/** Label anchor y. Defaults to `cy`. */
-	textY?: number;
+	textY?: number | undefined;
 	/** SVG `text-anchor` for the label. Defaults to `middle`. */
-	textAnchor?: 'start' | 'middle' | 'end';
+	textAnchor?: 'start' | 'middle' | 'end' | undefined;
 	/**
 	 * How the label block sits relative to `textY`: `middle` centres it (the
 	 * default), `bottom` puts the last baseline on `textY` (label above the
 	 * node), `top` puts the first line's top on `textY` (label below).
 	 */
-	textBaseline?: 'top' | 'middle' | 'bottom';
+	textBaseline?: 'top' | 'middle' | 'bottom' | undefined;
 }
 
 /** A node rendered as an SVG polygon (chevron, trapezoid, etc.). */
@@ -219,13 +219,13 @@ export interface RenderedConnector {
 	/** SVG path data string. */
 	d: string;
 	/** Stroke colour. Default `#94a3b8`. */
-	stroke?: string;
+	stroke?: string | undefined;
 	/** Stroke width. Default `1.5`. */
-	strokeWidth?: number;
+	strokeWidth?: number | undefined;
 	/** Stroke opacity. Default `0.5`. */
-	opacity?: number;
+	opacity?: number | undefined;
 	/** SVG `stroke-dasharray`. Default solid. */
-	dash?: string;
+	dash?: string | undefined;
 	/**
 	 * Connector label text, from a `dgm:pt/@type="parTrans"` transition
 	 * point's `dgm:t` (`DiagramConnection.label`). PowerPoint's own
@@ -233,7 +233,7 @@ export interface RenderedConnector {
 	 * relationship connector. `undefined` when the connector carries no text
 	 * (the overwhelming majority).
 	 */
-	text?: string;
+	text?: string | undefined;
 }
 
 /** The layout family applied to a SmartArt element. */

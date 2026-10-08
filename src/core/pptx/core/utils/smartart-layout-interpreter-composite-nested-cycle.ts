@@ -24,7 +24,7 @@ import type {
 	SmartArtStyle,
 } from '../types';
 import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
-import { translateResult } from './smartart-hierarchy-pitch';
+import { translateResult } from '../../../diagram/hierarchy/smartart-hierarchy-pitch';
 import { chooseAlgorithm, chooseAlgType } from './smartart-layout-interpreter-choose-algorithm';
 import {
 	collectChildRepeaterItems,

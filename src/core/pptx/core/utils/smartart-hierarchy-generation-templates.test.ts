@@ -9,7 +9,8 @@ import {
 	buildConstraintIndex,
 	EMPTY_CONSTRAINT_INDEX,
 } from '../../../diagram/layout/smartart-constraint-solver';
-import { resolveHierarchyGenerationTemplates } from './smartart-hierarchy-generation-templates';
+import { resolveHierarchyGenerationTemplates } from '../../../diagram/hierarchy/smartart-hierarchy-generation-templates';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 function constr(overrides: Partial<PptxSmartArtConstraint>): PptxSmartArtConstraint {
 	return { type: 'w', ...overrides };
@@ -274,7 +275,13 @@ describe('resolveHierarchyGenerationTemplates', () => {
 	it('splits root (rootText) from descendant (childText) with the declared size factors - hierarchy-list--hier5.pptx', () => {
 		const definition = hierarchyListLikeDefinition();
 		const index = buildConstraintIndex(definition);
-		const templates = resolveHierarchyGenerationTemplates(definition.rootNode, index, 5, undefined);
+		const templates = resolveHierarchyGenerationTemplates(
+			pptxOrderedXml,
+			definition.rootNode,
+			index,
+			5,
+			undefined,
+		);
 		expect(templates?.descendant.name).toBe('childText');
 		expect(templates?.root?.name).toBe('rootText');
 		// Cached ground truth: childText 179x112, rootText/rootComposite 224x112 -
@@ -285,6 +292,7 @@ describe('resolveHierarchyGenerationTemplates', () => {
 
 	it('returns no root entry for a single-template layout (ordinary "Hierarchy" family)', () => {
 		const templates = resolveHierarchyGenerationTemplates(
+			pptxOrderedXml,
 			singleTemplateNode(),
 			EMPTY_CONSTRAINT_INDEX,
 			5,
@@ -296,6 +304,7 @@ describe('resolveHierarchyGenerationTemplates', () => {
 
 	it('returns no root entry when a second candidate shares the root composite (name-and-title-organization-chart, no hierChild crossing)', () => {
 		const templates = resolveHierarchyGenerationTemplates(
+			pptxOrderedXml,
 			compoundTextRoleNode(),
 			EMPTY_CONSTRAINT_INDEX,
 			5,
@@ -308,6 +317,7 @@ describe('resolveHierarchyGenerationTemplates', () => {
 	it('returns undefined for a layoutDef with no tx+shape descendant at all', () => {
 		expect(
 			resolveHierarchyGenerationTemplates(
+				pptxOrderedXml,
 				{ name: 'hierChild1', algorithm: { type: 'hierChild' } },
 				EMPTY_CONSTRAINT_INDEX,
 				5,
@@ -319,9 +329,15 @@ describe('resolveHierarchyGenerationTemplates', () => {
 	it('sees a choose-wrapped tx candidate and splits root (Parent) from descendant (Child) - square-accent-list--hier5.pptx', () => {
 		const definition = squareAccentListLikeDefinition();
 		const index = buildConstraintIndex(definition);
-		const templates = resolveHierarchyGenerationTemplates(definition.rootNode, index, 5, {
-			direction: 'norm',
-		});
+		const templates = resolveHierarchyGenerationTemplates(
+			pptxOrderedXml,
+			definition.rootNode,
+			index,
+			5,
+			{
+				direction: 'norm',
+			},
+		);
 		expect(templates?.descendant.name).toBe('Child');
 		expect(templates?.root?.name).toBe('Parent');
 		// Genuine COM-measured unit-space values (see this test's own fixture doc comment).

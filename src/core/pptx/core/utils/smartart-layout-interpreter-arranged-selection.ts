@@ -11,7 +11,7 @@
  */
 
 import type { PptxSmartArtConnection, PptxSmartArtNode } from '../types';
-import { applyChildOrder } from './smartart-hierarchy-child-order';
+import { applyChildOrder } from '../../../diagram/hierarchy/smartart-hierarchy-child-order';
 import { buildChildOrder } from './smartart-layout-interpreter-connector-order';
 import { selectArrangedNodes } from './smartart-layout-interpreter-flow';
 import { detectHubExpansion } from './smartart-layout-interpreter-hub';

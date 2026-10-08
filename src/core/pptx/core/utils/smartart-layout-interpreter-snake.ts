@@ -17,11 +17,14 @@ import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import { INSET } from './smartart-layout-interpreter-linear-shared';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { algorithmParam, itemNode } from './smartart-layout-interpreter-model';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import { styleContext } from './smartart-layout-interpreter-render';
-import { resolveItemSelfAspect } from './smartart-layout-item-font-size';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
-import { findCompositeItemShape, roundRectCornerInsetPx } from './smartart-layout-shape-preset';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
+import { resolveItemSelfAspect } from '../../../diagram/layout/smartart-layout-item-font-size';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
+import {
+	findCompositeItemShape,
+	roundRectCornerInsetPx,
+} from '../../../diagram/layout/smartart-layout-shape-preset';
 import type { SnakeFlowDir, SnakeGridDims, SnakeGrowDir } from './smartart-layout-snake-grid';
 import { snakeCell, snakeGridDims } from './smartart-layout-snake-grid';
 import type {

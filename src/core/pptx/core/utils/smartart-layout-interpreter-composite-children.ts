@@ -22,7 +22,7 @@ import type { SlottedDims } from './smartart-layout-interpreter-composite-slots'
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import { findConstraint } from '../../../diagram/layout/smartart-layout-interpreter-constraints';
 import { resolveHubToNodeRatioViaUserSize } from './smartart-layout-interpreter-cycle-hub-ratio-usersize';
-import { rectNode } from './smartart-layout-interpreter-render';
+import { rectNode } from '../../../diagram/layout/smartart-layout-interpreter-render';
 import type {
 	BoundingBox,
 	RenderedNode,

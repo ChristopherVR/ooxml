@@ -39,7 +39,7 @@
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
 import type { CycleBoxInputs } from './smartart-layout-interpreter-cycle-boxes';
 import type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
 import type {
 	RenderedConnector,
 	RenderedNode,

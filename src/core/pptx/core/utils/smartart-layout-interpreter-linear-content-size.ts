@@ -23,7 +23,10 @@ import type { FontAdvanceTable } from '../../../text/font-metrics/font-advance-w
 import { firstConstraintDeclaredBy } from '../../../diagram/layout/smartart-constraint-declared-by';
 import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { hasReference } from '../../../diagram/layout/smartart-constraint-solver';
-import { itemMarginsPx, proportionalMarginFraction } from './smartart-layout-item-font-size';
+import {
+	itemMarginsPx,
+	proportionalMarginFraction,
+} from '../../../diagram/layout/smartart-layout-item-font-size';
 import { smartArtLineEm } from '../../../diagram/layout/smartart-line-pitch';
 import { wrappedLineCount } from '../../../diagram/layout/smartart-text-wrap-fit';
 

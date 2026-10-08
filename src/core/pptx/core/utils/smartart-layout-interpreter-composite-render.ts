@@ -9,9 +9,9 @@
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode, SmartArtStyle } from '../types';
 import type { SharedFontFit } from './smartart-layout-interpreter-composite-fontfit';
 import type { Slot } from './smartart-layout-interpreter-composite-slots';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import type { StyleContext } from './smartart-layout-interpreter-render';
-import { findCompositeItemShape } from './smartart-layout-shape-preset';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import type { StyleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
+import { findCompositeItemShape } from '../../../diagram/layout/smartart-layout-shape-preset';
 import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** Shared per-arranger style/palette context, threaded through every slot

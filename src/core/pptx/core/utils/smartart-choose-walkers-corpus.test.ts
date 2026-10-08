@@ -19,7 +19,7 @@ import {
 	loadBuiltinSmartArtLayoutXml,
 	parseBuiltinLayoutDefinition,
 } from './smartart-builtin-layouts';
-import { tailedHierarchyDeclaresChAlign } from './smartart-hierarchy-tailed-transpose';
+import { tailedHierarchyDeclaresChAlign } from '../../../diagram/hierarchy/smartart-hierarchy-tailed-transpose';
 import { resolveItemTxAnchor } from './smartart-layout-item-tx-anchor';
 import {
 	chooseAlgorithm,
@@ -34,6 +34,7 @@ import { arrangerRepeatsChildTemplate } from './smartart-layout-interpreter-hub-
 import { isColumnWrapper } from './smartart-layout-interpreter-item-role-orientation';
 import { discoverArrangement } from './smartart-layout-interpreter-model';
 import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 const FIXTURES = join(__dirname, '../../__tests__/fixtures');
 const COUNTS = [0, 1, 2, 3, 4, 5, 7, 9];
@@ -119,7 +120,7 @@ function results(definition: PptxSmartArtLayoutDefinition): unknown[] {
 		});
 	}
 	nodes.forEach((node, index) => {
-		out.push(['chAlign', index, tailedHierarchyDeclaresChAlign(node)]);
+		out.push(['chAlign', index, tailedHierarchyDeclaresChAlign(pptxOrderedXml, node)]);
 		out.push(['hub', index, arrangerRepeatsChildTemplate(node)]);
 	});
 	return out;

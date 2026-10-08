@@ -11,7 +11,7 @@ import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import {
 	resolveTieredItemFontSize,
 	SMARTART_DESCENDANT_FONT_SCALE,
-} from './smartart-layout-item-font-tier';
+} from '../../../diagram/layout/smartart-layout-item-font-tier';
 
 /** Points per CSS pixel at PowerPoint's 96 DPI convention (matches the source module). */
 const PT_TO_PX = 96 / 72;

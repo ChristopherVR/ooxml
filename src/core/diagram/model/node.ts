@@ -133,7 +133,7 @@ export interface DiagramNode<S = unknown> {
 	text: string;
 	/** CT_Pt connection identifier, when the point references a connection. */
 	connectionId?: string | null;
-	parentId?: string;
+	parentId?: string | undefined;
 	children?: DiagramNode<S>[];
 	/** Node type from `@_type` attribute (e.g. "doc", "node", "asst", "pres"). */
 	nodeType?: string;

@@ -7,7 +7,7 @@ import {
 	buildCycleRingExtensions,
 	hasMaxDepthGuard,
 } from './smartart-layout-interpreter-cycle-extension';
-import { styleContext } from './smartart-layout-interpreter-render';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** Every node in these tests resolves `kind: 'rect'` (forced via `boxInputs.shape`). */

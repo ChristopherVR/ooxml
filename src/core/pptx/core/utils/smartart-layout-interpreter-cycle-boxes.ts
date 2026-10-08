@@ -10,8 +10,8 @@
 import type { PptxSmartArtLayoutNodeShape, PptxSmartArtNode, SmartArtStyle } from '../types';
 import type { CycleFontFit } from './smartart-layout-interpreter-cycle-fontfit';
 import type { CycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import type { StyleContext } from './smartart-layout-interpreter-render';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import type { StyleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 import type { RenderedNode } from '../../../diagram/layout/smartart-layout-types';
 
 /** Shared per-box inputs every ring/hub box shares. */

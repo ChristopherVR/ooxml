@@ -75,8 +75,11 @@ import { resolveHubExpansion } from './smartart-layout-interpreter-cycle-hub-det
 import { computeCycleRingLayout } from './smartart-layout-interpreter-cycle-ring';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
 import { numericParam } from './smartart-layout-interpreter-model';
-import { styleContext } from './smartart-layout-interpreter-render';
-import { findCompositeItemShape, roundRectCornerInsetPx } from './smartart-layout-shape-preset';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
+import {
+	findCompositeItemShape,
+	roundRectCornerInsetPx,
+} from '../../../diagram/layout/smartart-layout-shape-preset';
 import type {
 	BoundingBox,
 	RenderedConnector,

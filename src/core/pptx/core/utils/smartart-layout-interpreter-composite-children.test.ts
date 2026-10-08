@@ -12,7 +12,7 @@ import {
 	resolveUserSizeItemBoxPx,
 } from './smartart-layout-interpreter-composite-children';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
-import { styleContext } from './smartart-layout-interpreter-render';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 
 /**
  * `radial-cluster--hier5.pptx`'s exact `cycle_1`/`childCenter1` shape:

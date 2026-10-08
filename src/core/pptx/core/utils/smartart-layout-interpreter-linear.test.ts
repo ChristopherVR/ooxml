@@ -8,8 +8,8 @@ import type {
 import { buildConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { arrangeLinear, arrangeSnake } from './smartart-layout-interpreter-linear';
 import type { ArrangementPlan, FlowDirection } from './smartart-layout-interpreter-model';
-import { resolveSharedItemFontSize } from './smartart-layout-item-font-size';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
+import { resolveSharedItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-size';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
 
 function planFor(node: PptxSmartArtLayoutNode): ArrangementPlan {
 	return { kind: 'snake', node };

@@ -20,7 +20,7 @@ import { resolveAxisNodes } from '../../../diagram/layout/smartart-layout-interp
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite';
 import { resolveSlot } from './smartart-layout-interpreter-composite-slots';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
-import { rectNode } from './smartart-layout-interpreter-render';
+import { rectNode } from '../../../diagram/layout/smartart-layout-interpreter-render';
 import type {
 	BoundingBox,
 	RenderedNode,

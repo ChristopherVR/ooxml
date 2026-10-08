@@ -19,7 +19,7 @@ import {
 } from './smartart-layout-interpreter-item-role-stack-fields';
 import { stackAsRect } from './smartart-layout-interpreter-item-role-stack-rect';
 import type { ItemRoleContent } from './smartart-layout-interpreter-item-role-transition';
-import { resolvePresetRenderKind } from './smartart-layout-shape-preset';
+import { resolvePresetRenderKind } from '../../../diagram/layout/smartart-layout-shape-preset';
 import type { RenderedNode, RenderedRectNode } from '../../../diagram/layout/smartart-layout-types';
 
 /**

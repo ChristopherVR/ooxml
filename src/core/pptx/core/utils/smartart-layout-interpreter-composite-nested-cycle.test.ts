@@ -8,7 +8,7 @@ import {
 } from './smartart-layout-interpreter-composite-nested-cycle';
 import type { SlotStyleContext } from './smartart-layout-interpreter-composite-render';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
-import { styleContext } from './smartart-layout-interpreter-render';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 
 /**
  * `radial-cluster--hier5.pptx`'s exact shape: "One" -> [Two, Three, Four],

@@ -55,10 +55,10 @@ import type {
 import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { chooseAlgorithm, chooseAlgType } from './smartart-layout-interpreter-choose-algorithm';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import { presetBoxNode } from './smartart-layout-interpreter-preset-node';
-import { styleContext } from './smartart-layout-interpreter-render';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
-import { findCompositeItemShape } from './smartart-layout-shape-preset';
+import { presetBoxNode } from '../../../diagram/layout/smartart-layout-interpreter-preset-node';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
+import { findCompositeItemShape } from '../../../diagram/layout/smartart-layout-shape-preset';
 import type {
 	BoundingBox,
 	RenderedNode,

@@ -24,7 +24,7 @@ import type { ConstraintIndex } from '../../../diagram/layout/smartart-constrain
 import type { ChooseAwareSlot } from './smartart-layout-interpreter-composite-group-slots';
 import type { SelfDesPair } from './smartart-layout-interpreter-composite-pairs';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
 
 /** What a shared font-fit computation needs from the caller; see `resolveSharedFontFit`. */
 export interface FontFitContext {

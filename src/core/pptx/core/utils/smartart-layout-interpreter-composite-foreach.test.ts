@@ -6,7 +6,7 @@ import {
 	renderForEachBoundSlots,
 } from './smartart-layout-interpreter-composite-foreach';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
-import { styleContext } from './smartart-layout-interpreter-render';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 
 const box = { width: 800, height: 400 };
 const ctx = {

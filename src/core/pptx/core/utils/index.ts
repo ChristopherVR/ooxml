@@ -194,7 +194,7 @@ export {
 	polygonNode,
 	styleContext,
 	type StyleContext,
-} from './smartart-layout-interpreter-render';
+} from '../../../diagram/layout/smartart-layout-interpreter-render';
 
 export {
 	discoverArrangement,

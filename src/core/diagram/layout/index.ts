@@ -76,3 +76,25 @@ export {
 	type FlowDirection,
 } from './smartart-layout-interpreter-model';
 export { selectArrangedNodes } from './smartart-layout-interpreter-flow';
+
+// The node forest, item font sizing and the styled node builders every arranger shares.
+export { buildForest, buildTree, treeDepth, treeWidth, type TreeNode } from './smartart-tree';
+export { resolveHierarchyItemFontSizePx } from './smartart-layout-interpreter-hierarchy-fontfit';
+export {
+	resolveRoleFontSize,
+	resolveSharedItemFontSize,
+	type FontFitItem,
+} from './smartart-layout-item-font-size';
+export {
+	resolveTieredItemFontSize,
+	SMARTART_DESCENDANT_FONT_SCALE,
+} from './smartart-layout-item-font-tier';
+export { presetBoxNode, type PresetBoxNodeParams } from './smartart-layout-interpreter-preset-node';
+export {
+	circleNode,
+	polygonNode,
+	rectNode,
+	styleContext,
+	type StyleContext,
+} from './smartart-layout-interpreter-render';
+export { presetPolygonPoints } from './smartart-layout-shape-polygon';

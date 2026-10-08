@@ -39,7 +39,7 @@ import type { PptxSmartArtNode } from '../types';
 import type { ConstraintIndex } from '../../../diagram/layout/smartart-constraint-solver';
 import { foldedDescendantTexts } from './smartart-interpreter-drawing-bridge';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import { resolveTieredItemFontSize } from './smartart-layout-item-font-tier';
+import { resolveTieredItemFontSize } from '../../../diagram/layout/smartart-layout-item-font-tier';
 
 /** Resolved root/descendant font size (px) for the ring items, plus the hub's own (when one is present). */
 export interface CycleFontFit {

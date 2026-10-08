@@ -53,7 +53,7 @@ import type { SlotStyleContext } from './smartart-layout-interpreter-composite-r
 import { axisAbsMax, readSlots } from './smartart-layout-interpreter-composite-slots';
 import type { SlottedDims } from './smartart-layout-interpreter-composite-slots';
 import type { ArrangementPlan } from './smartart-layout-interpreter-model';
-import { styleContext } from './smartart-layout-interpreter-render';
+import { styleContext } from '../../../diagram/layout/smartart-layout-interpreter-render';
 import type {
 	BoundingBox,
 	RenderedNode,
