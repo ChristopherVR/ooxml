@@ -38,6 +38,7 @@ export const ICON_PATHS: Record<string, string> = {
 	link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
 	comment: 'M4 5h16v11H10l-4 4v-4H4z M8 9h8 M8 12h5',
 	comments: 'M3 4h13v9H9l-3 3v-3H3z M9 17h6l3 3v-3h3V8h-3',
+	share: 'M14 4l6 6-6 6M20 10h-8a8 8 0 0 0-8 8',
 	deleteComment: 'M4 5h16v11H10l-4 4v-4H4z M9 8.5l5 5 M14 8.5l-5 5',
 	previous: 'M6 14l6-6 6 6',
 	next: 'M6 10l6 6 6-6',

@@ -1,6 +1,6 @@
 // The editor context every UI module (grid, formula bar, sheet tabs, commands, dialogs) receives.
 // Shapes are fixed by the UI contract; the shell (component.ts) is the only implementation.
-import type { CellAddress, CellRange, EditSession, Workbook } from '../index';
+import type { CellAddress, CellRange, EditSession, RemoteRange, Workbook } from '../index';
 import type { CommandRegistry } from './commands';
 import type { DialogRegistry } from './dialogs';
 
@@ -65,4 +65,25 @@ export interface EditorContext {
 	emit(type: string, detail: unknown): boolean;
 	authorName(): string;
 	locale(): string;
+	/**
+	 * The undo history Ctrl+Z, the ribbon and the Quick Access Toolbar drive: the edit session's
+	 * own, or a collaboration binding's while the workbook is shared (so undo never publishes a
+	 * snapshot restore as a local edit). Absent means the session's; read it through `historyOf`.
+	 */
+	history?(): EditHistory | undefined;
+	/** Collaborators' selections on every sheet; the grid outlines those on the shown sheet. */
+	remoteSelections?(): readonly RemoteRange[];
+	/** Fires when collaborators' selections (or who is in the room) change. */
+	onRemoteSelectionsChange?(listener: () => void): () => void;
+}
+
+/** The part of an edit session the undo and redo commands use. */
+export type EditHistory = Pick<
+	EditSession,
+	'undo' | 'redo' | 'canUndo' | 'canRedo' | 'undoLabel' | 'redoLabel'
+>;
+
+/** The history undo and redo go through: the context's override, else the edit session. */
+export function historyOf(ctx: EditorContext): EditHistory | undefined {
+	return ctx.history ? ctx.history() : ctx.session();
 }
