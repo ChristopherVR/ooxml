@@ -161,6 +161,10 @@ and paragraph formatting have separate source admission; vertical alignment
 does not rewrite either section. Protected or ambiguous rows and affected
 formula dependencies reject the complete transaction. Font-size increase and
 decrease require a uniform size; the size picker can set a mixed-size selection.
+Local Character/Paragraph `F="Inh"` cells are editable when their ancestor and
+cached value/units can be proven. Cacheless delegation requires a real ancestor;
+an explicit formatting choice creates a local override even if its value is
+unchanged. Top-level inherited protection and transform cells remain guarded.
 Fonts must already exist in the source drawing. Stacking commands support
 front/back/forward/backward on one ordinary top-level shape in display band zero.
 

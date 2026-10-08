@@ -140,7 +140,11 @@ export function effectiveShapeCell(
 			? formattingCell(localRow, cellName!)
 			: undefined
 		: namedCell(shape, name);
-	if (local && attribute(local, 'F') === 'Inh')
+	const delegatedLocal = local && attribute(local, 'F') === 'Inh';
+	if (
+		delegatedLocal &&
+		!(category === 'TextStyle' && cellName && ['Character', 'Paragraph'].includes(section!))
+	)
 		fail('EDIT_PROTECTED_CELL', 'Inherited formatting cells cannot be overwritten.');
 	if (local && !cellName) return local;
 	if (cellName) {
@@ -152,7 +156,24 @@ export function effectiveShapeCell(
 			[...cells.keys()].some((key) => key.toLowerCase() === cellName.toLowerCase())
 		)
 			fail('EDIT_AMBIGUOUS_CELL', 'Noncanonical formatting cell names cannot be overridden.');
-		return delegatedFormattingCell(cells?.get(cellName));
+		const effective = delegatedFormattingCell(cells?.get(cellName));
+		if (delegatedLocal) {
+			if (!effective)
+				fail(
+					'EDIT_PROTECTED_CELL',
+					'Inherited formatting cannot be overwritten without a proven ancestor.',
+				);
+			// Cacheless Inh cells contribute no parser value, but their retained unit would
+			// become active after writing a local value. Prove that unit before retaining it.
+			if (
+				!local.hasAttribute('V') &&
+				local.hasAttribute('U') &&
+				visioFormulaCachedValue('0', attribute(local, 'U')).unit !==
+					visioFormulaCachedValue('0', attribute(effective, 'U')).unit
+			)
+				fail('EDIT_PROTECTED_CELL', 'Inherited formatting has incompatible local units.');
+		}
+		return effective;
 	}
 	for (const style of formattingStyles(
 		shape,

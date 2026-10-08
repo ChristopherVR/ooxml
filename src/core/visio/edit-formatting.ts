@@ -121,6 +121,7 @@ export async function applyFormattingEdit(
 		const local = parent ? formattingCell(parent, name ?? write.name) : undefined;
 		if (
 			local &&
+			attribute(local, 'F') !== 'Inh' &&
 			attribute(local, 'V') === write.value &&
 			(!write.formula || attribute(local, 'F') === write.formula)
 		)

@@ -2,6 +2,29 @@
 
 Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
 
+## Proven local text-style inheritance, 2026-10-09
+
+Formatting now admits local Character/Paragraph `F="Inh"` cells with a proven
+ancestor and matching cached value/units. Cacheless cells require an ancestor;
+their retained units are checked before writing a value. An explicit choice
+breaks local delegation even if the requested value matches the cache. Missing,
+stale, guarded and error-bearing ancestry still refuses atomically. Top-level
+inherited locks and transform cells retain their previous protection.
+
+Validation passed 126 focused formatting tests and strict core TypeScript. The
+earlier extended and mixed-row native formatting oracles also passed.
+`scripts/record-visio-inherited-formatting.ps1` starts from a native Visio 16
+drawing with an italic/right-aligned text style and mixed font sizes, then creates
+three deliberate XML variants with cached and cacheless local `Inh` cells.
+These variants are native-derived fixtures, not untouched native save output.
+Visio loads them, performs bold/left-alignment changes and saves a reference.
+`edit-formatting-inherited-native.test.ts` compares the parsed scenes exactly;
+Visio reopen of the core output confirms all text rows and alignment values.
+Use `VISIO_NATIVE_INHERITED_FORMATTING_DIR` for the optional test, then the
+recorder's `-CoreOutputPath` with the same `-OutputDirectory` for native reopen.
+This establishes the recorded inheritance variants, not general inheritance or
+visual parity.
+
 ## Mixed-run formatting and source duplication, 2026-10-09
 
 Whole-shape formatting now updates effective Character/Paragraph rows without

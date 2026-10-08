@@ -42,7 +42,7 @@ describe('rich formatting admission', () => {
 			);
 			const before = bytes.slice();
 			await expect(editVsdx(bytes, [{ ...command, fontSize: 18 }])).rejects.toThrow(
-				/formula|protected|overwritten|transform/i,
+				/formula|protected|overwritten|transform|inherited/i,
 			);
 			expect(bytes).toEqual(before);
 		},
