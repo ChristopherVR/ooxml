@@ -1,12 +1,18 @@
+import { sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Development resolves the core package from the repository root source, so UI tests never need
 // a build of the core. Published consumers get the real dependency.
-const coreSource = fileURLToPath(new URL('../core', import.meta.url)).replaceAll('\\', '/');
+const coreSource = fileURLToPath(new URL('../core', import.meta.url)).replaceAll(sep, '/');
+const uiSource = fileURLToPath(new URL('./src', import.meta.url)).replaceAll(sep, '/');
 
 export default {
 	resolve: {
-		alias: [{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` }],
+		alias: [
+			{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
+			// The package imports its own subpaths by name; resolve them to source, not to dist.
+			{ find: /^ooxml-ui\/pptx\/dom$/, replacement: `${uiSource}/pptx/dom/index.ts` },
+		],
 	},
 	test: {
 		globals: true,

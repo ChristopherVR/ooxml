@@ -251,6 +251,8 @@ importing its source into the strict UI project would bypass that boundary.
 The UI build first stages PowerPoint declarations in the ignored `.types-pptx`
 directory, so the strict Teams build can consume the DOM adapter's declarations
 without importing legacy source or overwriting its declaration inputs.
+`bun run typecheck` stages the same declarations first, so it needs no prior
+build; the vitest config resolves `ooxml-ui/pptx/dom` to source for the same reason.
 
 ## Documentation
 
