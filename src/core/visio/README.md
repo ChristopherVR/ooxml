@@ -116,6 +116,34 @@ including reverse selection order and independent movement locks. Use
 `scripts/record-visio-batch-delete.ps1` and `VISIO_NATIVE_BATCH_DELETE_DIR` for
 the optional oracle. Connector healing and inherited/group deletion remain open.
 
+## Plan literal text replacement
+
+The DOM-free `ooxml-core/visio/ui` helpers `visioTextReplaceOccurrences`,
+`visioTextReplaceFindNext` and `visioTextReplacePlan` operate on full logical text
+with nonoverlapping UTF-16 ranges. Requests require `matchCase: true`, a nonempty
+literal query, `pageId` and an explicit `selection`, `current-page` or `all-pages`
+scope. Selection scope includes each selected group's subtree, deduplicated in
+ordered-selection/source order. Page scopes follow source order and Find Next
+wraps. These traversal policies have not been compared with native Find dialog
+navigation. Unicode case folding, whole-word matching and special search codes
+remain unsupported.
+
+Plans accept `mode: 'current' | 'all'`, literal replacement text, and an optional
+current occurrence. `visioTextReplaceCommands(model, plan)` rejects forged or
+stale text/identity/order snapshots and returns an owned atomic edit batch. A host
+must additionally bind its source revision and operation intent. Matched rich,
+field-bearing, master-linked, protected or unsupported text is retained in the
+batch so the source editor refuses the entire operation instead of silently
+skipping it. Empty replacement deletes matches; an unchanged replacement retains
+source admission checks. Output, match and input limits reject oversized work
+without truncation.
+
+`record-visio-text-replace.ps1` records 18 native Characters-range cases across
+three drawing scales. Actual core output matches their literal text and preserved
+geometry/style, retains untouched package payloads, and reopens in Visio 16. Use
+`VISIO_NATIVE_TEXT_REPLACE_DIR` for the optional oracle. This proves the measured
+range replacements, not native Find/Replace dialog or rich-text parity.
+
 ## Read a drawing
 
 ```ts
@@ -211,10 +239,14 @@ drawing scales 0.5, 1 and 2. Set `VISIO_NATIVE_LINE_PATTERNS_DIR` to the recorde
 output to run the oracle. Cached
 values override unused themed dashes. A requested themed pattern stays unresolved
 with a solid fallback; custom pattern 254 and invalid enumerations are diagnosed.
-Native zero-width hairlines remain a rendering gap: SVG export uses 0.75-point
-strokes, while native raster output uses device hairlines and different arrow sizes.
-The model preserves the raw zero width; the nonzero native dash oracle does not
-establish zero-width rendering parity.
+`visioSvgStrokeStyle` applies the native SVG export policy: an exactly zero saved
+weight renders at 0.75 points, including dash lengths and arrow setbacks. Smaller
+nonzero weights remain literal and the model retains the raw zero width. Static
+SVG clients can use this output policy. Twelve native vector cases cover round, butt
+and square dots plus filled arrow 4 at zero, 0.001 and 0.75 points. Regenerate with
+`record-visio-svg-zero-stroke.ps1` and select `VISIO_NATIVE_SVG_ZERO_STROKE_DIR`.
+Native raster output instead uses device hairlines and different arrow sizes;
+live, raster and print hairline parity remain unmeasured.
 Line properties, including arrowheads, must be suppressed when geometry has
 `stroke: false` or the effective `linePattern` is 0.
 Rectangle rounding preserves local coordinates and winding, and honors inherited
