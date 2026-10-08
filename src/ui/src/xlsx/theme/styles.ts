@@ -1,7 +1,7 @@
 import { darkTheme, lightTheme } from 'ooxml-core/xlsx/ui';
 import { themeToCssVars } from 'ooxml-core/xlsx/ui';
 import type { XlsxTheme } from 'ooxml-core/xlsx/ui';
-import officeBridge from './office-bridge.css?raw';
+import { shadcnBridge } from '../../theme-bridge';
 import shell from './shell.css?raw';
 import ribbon from './ribbon.css?raw';
 import popups from './popups.css?raw';
@@ -27,7 +27,10 @@ export const themeTokenText = `:host{${declarations(lightTheme, 'light')}}
 /** The shell stylesheet (tokens, chrome, ribbon, popups, backstage) for the shadow root. */
 export const editorStyleText = [
 	themeTokenText,
-	officeBridge,
+	// The shared elements read --office-*; feed them from the editor's --xve-* theme.
+	shadcnBridge(':host', '--xve-', {
+		extra: { '--office-font': "'Segoe UI', system-ui, -apple-system, sans-serif" },
+	}),
 	shell,
 	ribbon,
 	popups,

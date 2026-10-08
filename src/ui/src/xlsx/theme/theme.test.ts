@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { darkTheme, lightTheme } from 'ooxml-core/xlsx/ui';
 import { THEME_KEYS, themeToCssVars } from 'ooxml-core/xlsx/ui';
-import { themeTokenText } from './styles';
+import { editorStyleText, themeTokenText } from './styles';
 import { normalizeThemeMode } from 'ooxml-core/xlsx/ui';
 
 describe('theme tokens', () => {
@@ -39,5 +39,14 @@ describe('theme tokens', () => {
 	it('falls back to auto for unknown modes', () => {
 		expect(normalizeThemeMode('dark')).toBe('dark');
 		expect(normalizeThemeMode('sepia')).toBe('auto');
+	});
+});
+
+describe('office bridge', () => {
+	it('feeds the shared --office-* tokens from the --xve-* theme', () => {
+		expect(editorStyleText).toContain('--office-foreground: var(--xve-foreground);');
+		expect(editorStyleText).toContain('--office-accent: var(--xve-primary);');
+		expect(editorStyleText).toContain('--office-danger: var(--xve-destructive);');
+		expect(editorStyleText).toContain("--office-font: 'Segoe UI'");
 	});
 });
