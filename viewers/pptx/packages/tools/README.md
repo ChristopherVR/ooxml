@@ -1,12 +1,5 @@
 # pptx-viewer-mcp
 
-Document operations, load/save execution and the Y.Doc codec are owned by
-`ooxml-core/pptx/automation`. This repository owns MCP schemas, registration and
-the stdio CLI. Compatibility exports retain the existing library API.
-The `/mcp` import exports `createServer({ rootDir })` and `registerTools(server,
-{ rootDir })` without starting a transport; the CLI starts stdio separately.
-Release the core automation entry (0.11.0+) before publishing this change.
-
 [![npm](https://img.shields.io/npm/v/pptx-viewer-mcp.svg)](https://www.npmjs.com/package/pptx-viewer-mcp)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE)
 
@@ -16,6 +9,8 @@ Edit PowerPoint files from an AI agent. It ships a ready-to-run [MCP](https://mo
 
 - **Live demo:** https://christophervr.github.io/ooxml/pptx/demo/
 - **Docs:** https://christophervr.github.io/ooxml/pptx/
+
+Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; **[PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme)** &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
 
 ## Quick start
 
@@ -170,6 +165,14 @@ bun run build      # tsup -> dist/
 bun run typecheck  # tsc --noEmit
 bun run test       # vitest run
 ```
+
+## How it is built
+
+Document operations, load/save execution and the Y.Doc codec are owned by
+`ooxml-core/pptx/automation`. This repository owns MCP schemas, registration and
+the stdio CLI. Compatibility exports retain the existing library API.
+The `/mcp` import exports `createServer({ rootDir })` and `registerTools(server,
+{ rootDir })` without starting a transport; the CLI starts stdio separately.
 
 ## License
 

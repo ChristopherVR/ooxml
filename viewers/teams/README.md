@@ -18,7 +18,9 @@ An early implementation: not Microsoft Teams, not affiliated with Microsoft, and
 [**Getting started**](#getting-started) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 
-![The OpenTeams workspace: a channel list, a conversation with reactions and a quoted reply, and the composer](docs/public/hero-workspace.png)
+Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; **[OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme)** &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
+
+![The OpenTeams workspace: a channel list, a conversation with reactions and a quoted reply, and the composer](docs/public/hero-workspace.webp)
 
 </div>
 
@@ -45,16 +47,16 @@ An early implementation: not Microsoft Teams, not affiliated with Microsoft, and
 
 1. **Start a workspace.** Open the [in-browser demo](https://christophervr.github.io/ooxml/teams/demo/) (no server: it says so at the top), or run `npx openteams-server` and point the app at `ws://127.0.0.1:8787/sync` and `/signal`.
 
-   ![The vanilla demo on GitHub Pages with its notice: this demo runs entirely in your browser](docs/public/in-browser-demo.png)
+   ![The vanilla demo on GitHub Pages with its notice: this demo runs entirely in your browser](docs/public/in-browser-demo.webp)
 
 2. **Open a second tab as someone else.** The notice's link (or `?name=Bob`) opens the same workspace as another person; in server mode, any browser that reaches your server can join.
 3. **Talk.** Post in a channel, reply, react, and attach files. Each message is a Yjs update that reaches the other tabs (local mode) or every client of the room (server mode).
 
-   ![A conversation with Word, Excel and PowerPoint attachments shown as cards](docs/public/files-in-conversation.png)
+   ![A conversation with Word, Excel and PowerPoint attachments shown as cards](docs/public/files-in-conversation.webp)
 
 4. **Meet.** **Meet now** opens the pre-join screen (camera and microphone toggles); **Join now** connects everyone in the channel's call peer to peer, with signaling relayed by the server (or `BroadcastChannel` locally).
 
-   ![The pre-join screen with camera and microphone toggles](docs/public/call-prejoin.png)
+   ![The pre-join screen with camera and microphone toggles](docs/public/call-prejoin.webp)
 
 ## Getting started
 

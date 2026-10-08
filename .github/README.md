@@ -10,7 +10,8 @@ One XML model, one library, ready-made editors for every major framework, and no
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](../CODE_OF_CONDUCT.md)
 
-[**Try the apps**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
+[**Open OOXML Office**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
+[**The suite**](#ooxml-office-the-whole-suite-in-one-app) &nbsp;&middot;&nbsp;
 [**Quick start**](#quick-start) &nbsp;&middot;&nbsp;
 [**What is here**](#what-is-in-this-repository) &nbsp;&middot;&nbsp;
 [**Development**](#development) &nbsp;&middot;&nbsp;
@@ -18,11 +19,44 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
 [**Contributing**](../CONTRIBUTING.md)
 
-|                               [PowerPoint](https://christophervr.github.io/ooxml/pptx/demo/)                                |                                      [Word](https://christophervr.github.io/ooxml/docx/demo/)                                       |                                [Excel](https://christophervr.github.io/ooxml/xlsx/demo/)                                 |
-| :-------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
-| ![The PowerPoint editor](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/editor.png) |       ![The Word editor](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/docx/docs/public/hero-editor.png)       | ![The Excel editor](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/xlsx/docs/public/hero-editor.png) |
-|                                  [**Visio**](https://christophervr.github.io/ooxml/visio/)                                  |                                    [**OpenTeams**](https://christophervr.github.io/ooxml/teams/)                                    |                                                                                                                          |
-|  ![The Visio viewer](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/visio/docs/public/hero-viewer.png)  | ![The OpenTeams workspace](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/teams/docs/public/hero-workspace.png) |                                                                                                                          |
+<table>
+<tr>
+<td align="center" width="33%">
+<a href="../viewers/pptx#readme"><strong>PowerPoint</strong></a><br>
+<a href="../viewers/pptx#readme"><img src="../viewers/pptx/.github/assets/editor.webp" alt="The PowerPoint editor"></a><br>
+<sub><a href="https://christophervr.github.io/ooxml/pptx/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/pptx/">Docs</a> &middot; <a href="../viewers/pptx#readme">README</a></sub>
+</td>
+<td align="center" width="33%">
+<a href="../viewers/docx#readme"><strong>Word</strong></a><br>
+<a href="../viewers/docx#readme"><img src="../viewers/docx/docs/public/hero-editor.webp" alt="The Word editor"></a><br>
+<sub><a href="https://christophervr.github.io/ooxml/docx/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/docx/">Docs</a> &middot; <a href="../viewers/docx#readme">README</a></sub>
+</td>
+<td align="center" width="33%">
+<a href="../viewers/xlsx#readme"><strong>Excel</strong></a><br>
+<a href="../viewers/xlsx#readme"><img src="../viewers/xlsx/docs/public/hero-editor.webp" alt="The Excel editor"></a><br>
+<sub><a href="https://christophervr.github.io/ooxml/xlsx/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/xlsx/">Docs</a> &middot; <a href="../viewers/xlsx#readme">README</a></sub>
+</td>
+</tr>
+<tr>
+<td align="center" width="33%">
+<a href="../viewers/visio#readme"><strong>Visio</strong></a><br>
+<a href="../viewers/visio#readme"><img src="../viewers/visio/docs/public/hero-viewer.webp" alt="The Visio viewer"></a><br>
+<sub><a href="https://christophervr.github.io/ooxml/visio/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/visio/">Docs</a> &middot; <a href="../viewers/visio#readme">README</a></sub>
+</td>
+<td align="center" width="33%">
+<a href="../viewers/teams#readme"><strong>OpenTeams</strong></a><br>
+<a href="../viewers/teams#readme"><img src="../viewers/teams/docs/public/hero-workspace.webp" alt="The OpenTeams workspace"></a><br>
+<sub><a href="https://christophervr.github.io/ooxml/teams/demo/">Demo</a> &middot; <a href="https://christophervr.github.io/ooxml/teams/">Docs</a> &middot; <a href="../viewers/teams#readme">README</a></sub>
+</td>
+<td align="center" width="33%">
+<a href="../apps/office-suite#readme"><strong>OOXML Office</strong></a><br>
+<a href="../apps/office-suite#readme"><img src="assets/suite-workspace.webp" alt="OOXML Office: one workspace for every app"></a><br>
+<sub><a href="https://christophervr.github.io/ooxml/">Open the app</a> &middot; <a href="#ooxml-office-the-whole-suite-in-one-app">About</a> &middot; <a href="../apps/office-suite#readme">README</a></sub>
+</td>
+</tr>
+</table>
+
+<sub>Select a product to open its README.</sub>
 
 </div>
 
@@ -36,17 +70,45 @@ One XML model, one library, ready-made editors for every major framework, and no
 - **AI ready.** MCP servers let Claude, Cursor and other agents read and edit documents through the same code the editors use.
 - **Honest about its limits.** Unsupported features are reported, never hidden, and nothing here claims Office parity or lossless export without evidence.
 
-## The suite
+## OOXML Office: the whole suite in one app
 
-| Product        | Live demo                                                      | Install                                  | What you get                                                                                 |
-| -------------- | -------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **PowerPoint** | [Demo](https://christophervr.github.io/ooxml/pptx/demo/)       | `npm i pptx-react-viewer`                | React, Vue, Angular, Svelte and vanilla bindings, with editing, presenting and collaboration |
-| **Word**       | [Demo](https://christophervr.github.io/ooxml/docx/demo/)       | `npm i docx-react-viewer`                | `<docx-editor>`; React, Vue, Angular, Svelte, Solid and vanilla bindings                     |
-| **Excel**      | [Demo](https://christophervr.github.io/ooxml/xlsx/demo/)       | `npm i @christophervr/xlsx-react-viewer` | `<xlsx-editor>`; the same six bindings                                                       |
-| **Visio**      | [Docs and demos](https://christophervr.github.io/ooxml/visio/) | `npm i visio-react-viewer`               | A local-first viewer; the same six bindings                                                  |
-| **OpenTeams**  | [Docs and demos](https://christophervr.github.io/ooxml/teams/) | `npm i openteams-react-viewer`           | A bring-your-own-server workspace: chat, calls and shared Office files                       |
-| **Headless**   |                                                                | `npm i ooxml-core`                       | Parse, edit, validate and write every format, with no UI                                     |
-| **AI agents**  |                                                                | `npm i ooxml-mcp`                        | One MCP server for every format                                                              |
+[**OOXML Office**](https://christophervr.github.io/ooxml/) is the integrated application built from everything in this repository. It mounts the real Word, Excel, PowerPoint, Visio and OpenTeams editors (the same components the npm packages ship, not demo iframes) in one workspace with tabs, so you can move between a document, a workbook, a deck and a team conversation without losing your place.
+
+<p align="center">
+<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.webp" alt="The start chooser: open the whole suite, or Word, Excel, PowerPoint, Visio or Teams on its own" width="720"></a>
+</p>
+
+The first time you open it, it asks how you want to work:
+
+- **[OOXML Office](https://christophervr.github.io/ooxml/)**: every app in one workspace, with a shared file library, one tab per open document, an app launcher, search and one assistant pane.
+- **One product on its own**: [Word](../viewers/docx#readme), [Excel](../viewers/xlsx#readme), [PowerPoint](../viewers/pptx#readme), [Visio](../viewers/visio#readme) or [Teams](../viewers/teams#readme), each on its own site with its documentation and framework demos.
+
+What the suite gives you:
+
+- **One local library.** Import `.docx`, `.xlsx`, `.pptx` and `.vsdx` files, or create blank documents, workbooks, presentations and drawings. Files stay in your browser's IndexedDB (or the desktop app's WebView); nothing is uploaded, and Download always gives you the saved bytes.
+- **Live tabs.** A document opens in one editor tab, and edits survive switching apps. Tabs close, close others and close to the right like a desktop app, saving first.
+- **Office files in Teams.** Share a document in an OpenTeams channel, reopen it in its editor from the conversation and return to the channel. With a configured Teams server, files go through its storage.
+- **Embedded documents.** Open the Office packages embedded in a parent document, edit them, and save child and parent together.
+- **An assistant across files.** Pick files (and optionally the current conversation) and get bounded edit proposals you review, apply and undo. It talks to your own OpenAI-compatible endpoint, and nothing is applied without you.
+- **Profiles and appearance.** Local profiles with separate libraries, plus Light, Dark and System appearance and accent themes shared by every editor.
+- **Install it.** The root installs as a PWA, and each product also installs on its own (`/apps/word/`, `/apps/excel/`, `/apps/powerpoint/`, `/apps/visio/`, `/apps/teams/`), sharing one profile and library on the same origin. A [desktop build](../desktop/README.md) (Tauri) wraps the same bundle and adds a native folder picker.
+
+Its boundaries are written down: profiles are local conveniences, not sign-in; there is no cloud drive or Microsoft 365 integration; and document co-authoring is not wired to suite files yet. The full list is in [suite integration](../docs/suite-integration.md). The source is the private [`apps/office-suite`](../apps/office-suite#readme) package; run it locally with `bun run build:suite && bun run preview:suite`.
+
+## The products
+
+Each product name opens its README, with install steps and a snippet for every framework.
+
+| Product                                         | Live demo                                                 | Install                                  | What you get                                                                                 |
+| ----------------------------------------------- | --------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **[PowerPoint](../viewers/pptx#readme)**        | [Demo](https://christophervr.github.io/ooxml/pptx/demo/)  | `npm i pptx-react-viewer`                | React, Vue, Angular, Svelte and vanilla bindings, with editing, presenting and collaboration |
+| **[Word](../viewers/docx#readme)**              | [Demo](https://christophervr.github.io/ooxml/docx/demo/)  | `npm i docx-react-viewer`                | `<docx-editor>`; React, Vue, Angular, Svelte, Solid and vanilla bindings                     |
+| **[Excel](../viewers/xlsx#readme)**             | [Demo](https://christophervr.github.io/ooxml/xlsx/demo/)  | `npm i @christophervr/xlsx-react-viewer` | `<xlsx-editor>`; the same six bindings                                                       |
+| **[Visio](../viewers/visio#readme)**            | [Demo](https://christophervr.github.io/ooxml/visio/demo/) | `npm i visio-react-viewer`               | A local-first viewer; the same six bindings                                                  |
+| **[OpenTeams](../viewers/teams#readme)**        | [Demo](https://christophervr.github.io/ooxml/teams/demo/) | `npm i openteams-react-viewer`           | A bring-your-own-server workspace: chat, calls and shared Office files                       |
+| **[OOXML Office](../apps/office-suite#readme)** | [Open](https://christophervr.github.io/ooxml/)            | not published                            | The integrated suite above, as a web app, installable PWAs and a desktop build               |
+| **[Headless](../src/core#readme)**              |                                                           | `npm i ooxml-core`                       | Parse, edit, validate and write every format, with no UI                                     |
+| **[AI agents](../mcp#readme)**                  |                                                           | `npm i ooxml-mcp`                        | One MCP server for every format                                                              |
 
 ## Quick start
 
@@ -72,7 +134,7 @@ export function Editor() {
 }
 ```
 
-Each product's README has the snippet for every framework: [Word](../viewers/docx#readme), [Excel](../viewers/xlsx#readme), [Visio](../viewers/visio#readme) and [OpenTeams](../viewers/teams#readme). The library's areas and API are in the [`ooxml-core` README](../src/core#readme), and the [MCP server](../mcp#readme) has its own setup.
+Each product's README has the snippet for every framework: [PowerPoint](../viewers/pptx#readme), [Word](../viewers/docx#readme), [Excel](../viewers/xlsx#readme), [Visio](../viewers/visio#readme) and [OpenTeams](../viewers/teams#readme). The library's areas and API are in the [`ooxml-core` README](../src/core#readme), and the [MCP server](../mcp#readme) has its own setup.
 
 ## How it fits together
 
@@ -95,17 +157,18 @@ ooxml-mcp ───────────────────────�
 
 The logic of every Office product lives in this repository, and so do the interfaces for PowerPoint, Word, Excel, Visio and OpenTeams. They are all members of one Bun workspace with one lockfile. Each folder below links to its own README.
 
-| Folder                                     | Published as                                             | What it is                                                                                                                                                                                                                    |
-| ------------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`src/core`](../src/core#readme)           | [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) | The library: every format's model, parser, writer, editing commands, layout and the shared areas under them. No UI. Its README is the package's npm page.                                                                     |
-| [`src/ui`](../src/ui#readme)               | [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui)     | The shared browser elements (Lit web components): ribbons, dialogs, menus, the title and status bars, and the Word, Excel, Visio and OpenTeams editors as `ooxml-ui/<product>` subpaths. DOM only; the core never imports it. |
-| [`mcp/`](../mcp#readme)                    | [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)   | The combined MCP server that lets an AI assistant work with Office documents.                                                                                                                                                 |
-| [`viewers/pptx`](../viewers/pptx#readme)   | PowerPoint packages (below)                              | The PowerPoint editor and its bindings for React, Vue, Angular, Svelte and vanilla JavaScript, its CLI and MCP tools. [Docs and demos](https://christophervr.github.io/ooxml/pptx/).                                          |
-| [`viewers/docx`](../viewers/docx#readme)   | Word packages (below)                                    | The Word editor (`<docx-editor>`) and its bindings for React, Vue, Angular, Svelte, Solid and vanilla JavaScript. [Docs and demos](https://christophervr.github.io/ooxml/docx/).                                              |
-| [`viewers/xlsx`](../viewers/xlsx#readme)   | Excel packages (below)                                   | The Excel editor (`<xlsx-editor>`) and its bindings. [Docs and demos](https://christophervr.github.io/ooxml/xlsx/).                                                                                                           |
-| [`viewers/visio`](../viewers/visio#readme) | Visio packages (below)                                   | The local-first Visio viewer and its bindings. [Docs and demos](https://christophervr.github.io/ooxml/visio/).                                                                                                                |
-| [`viewers/teams`](../viewers/teams#readme) | OpenTeams packages (below)                               | A bring-your-own-server team workspace (channels, chat, calls, shared Office files), its bindings and a reference server. [Docs and demos](https://christophervr.github.io/ooxml/teams/).                                     |
-| [`site/`](../site)                         | not published                                            | The launcher at https://christophervr.github.io/ooxml/. Each viewer's documentation and demos are built into the same site, under `/pptx/`, `/docx/`, `/xlsx/`, `/visio/` and `/teams/`.                                      |
+| Folder                                             | Published as                                             | What it is                                                                                                                                                                                                                    |
+| -------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`src/core`](../src/core#readme)                   | [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) | The library: every format's model, parser, writer, editing commands, layout and the shared areas under them. No UI. Its README is the package's npm page.                                                                     |
+| [`src/ui`](../src/ui#readme)                       | [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui)     | The shared browser elements (Lit web components): ribbons, dialogs, menus, the title and status bars, and the Word, Excel, Visio and OpenTeams editors as `ooxml-ui/<product>` subpaths. DOM only; the core never imports it. |
+| [`mcp/`](../mcp#readme)                            | [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)   | The combined MCP server that lets an AI assistant work with Office documents.                                                                                                                                                 |
+| [`viewers/pptx`](../viewers/pptx#readme)           | PowerPoint packages (below)                              | The PowerPoint editor and its bindings for React, Vue, Angular, Svelte and vanilla JavaScript, its CLI and MCP tools. [Docs and demos](https://christophervr.github.io/ooxml/pptx/).                                          |
+| [`viewers/docx`](../viewers/docx#readme)           | Word packages (below)                                    | The Word editor (`<docx-editor>`) and its bindings for React, Vue, Angular, Svelte, Solid and vanilla JavaScript. [Docs and demos](https://christophervr.github.io/ooxml/docx/).                                              |
+| [`viewers/xlsx`](../viewers/xlsx#readme)           | Excel packages (below)                                   | The Excel editor (`<xlsx-editor>`) and its bindings. [Docs and demos](https://christophervr.github.io/ooxml/xlsx/).                                                                                                           |
+| [`viewers/visio`](../viewers/visio#readme)         | Visio packages (below)                                   | The local-first Visio viewer and its bindings. [Docs and demos](https://christophervr.github.io/ooxml/visio/).                                                                                                                |
+| [`viewers/teams`](../viewers/teams#readme)         | OpenTeams packages (below)                               | A bring-your-own-server team workspace (channels, chat, calls, shared Office files), its bindings and a reference server. [Docs and demos](https://christophervr.github.io/ooxml/teams/).                                     |
+| [`apps/office-suite`](../apps/office-suite#readme) | not published                                            | The [OOXML Office](#ooxml-office-the-whole-suite-in-one-app) application: the integrated suite, the standalone PWAs and the desktop frontend.                                                                                 |
+| [`site/`](../site)                                 | not published                                            | The HTML and CSS shell of the app at https://christophervr.github.io/ooxml/. Each viewer's documentation and demos are built into the same site, under `/pptx/`, `/docx/`, `/xlsx/`, `/visio/` and `/teams/`.                 |
 
 <details>
 <summary><strong>Every published package</strong></summary>
@@ -155,7 +218,7 @@ The working agreements are in [AGENTS.md](../AGENTS.md), and [PROVENANCE.md](../
 ## Documentation and related projects
 
 - The viewers, in this repository under `viewers/` ([pptx](https://christophervr.github.io/ooxml/pptx/), [docx](https://christophervr.github.io/ooxml/docx/), [xlsx](https://christophervr.github.io/ooxml/xlsx/), [visio](https://christophervr.github.io/ooxml/visio/), [teams](https://christophervr.github.io/ooxml/teams/)): the editors and viewers built on this package.
-- [OOXML Office](https://christophervr.github.io/ooxml/): the suite's launcher page (`site/`). It opens the demos of every viewer, all built into the same site.
+- [OOXML Office](https://christophervr.github.io/ooxml/): the integrated suite (`apps/office-suite`, with its shell in `site/`). Each viewer's docs and demos are built into the same site.
 - [ole2](https://github.com/ChristopherVR/ole2): the compound-file container and legacy binary Office codecs.
 - [emf-converter](https://github.com/ChristopherVR/emf-converter) and [mtx-decompressor](https://github.com/ChristopherVR/mtx-decompressor): EMF/WMF rendering and embedded-font (MicroType Express) decompression, used by the library.
 
