@@ -20,6 +20,7 @@
 import { TABLE0 } from './whirlpool-sbox';
 
 const WORD_MASK = (1n << 64n) - 1n;
+const LOW_MASK = 0xffffffffn;
 
 /** Rotate a 64-bit value right by `bytes` byte positions. */
 function rotateBytesRight(value: bigint, bytes: number): bigint {
@@ -28,16 +29,24 @@ function rotateBytesRight(value: bigint, bytes: number): bigint {
 }
 
 /**
- * All eight T-tables: `TABLES[i][x] = TABLE0[x]` rotated right by `i` bytes.
- * Built once at module load from {@link TABLE0} instead of storing all
- * 2048 constants directly (see module doc).
+ * All eight T-tables split into 32-bit halves: entry `t * 256 + x` of {@link TABLES_HI} and
+ * {@link TABLES_LO} is `TABLE0[x]` rotated right by `t` bytes. Built once at module load from
+ * {@link TABLE0} instead of storing all 2048 constants (see module doc); the hash itself runs
+ * on 32-bit numbers, since a BigInt per lookup made a 100,000-round password spin take tens of
+ * seconds.
  */
-export const TABLES: readonly (readonly bigint[])[] = Array.from({ length: 8 }, (_, i) =>
-	i === 0 ? TABLE0 : TABLE0.map((value) => rotateBytesRight(value, i)),
-);
+export const TABLES_HI = new Uint32Array(8 * 256);
+export const TABLES_LO = new Uint32Array(8 * 256);
+for (let t = 0; t < 8; t++) {
+	for (let x = 0; x < 256; x++) {
+		const value = t === 0 ? TABLE0[x]! : rotateBytesRight(TABLE0[x]!, t);
+		TABLES_HI[t * 256 + x] = Number(value >> 32n);
+		TABLES_LO[t * 256 + x] = Number(value & LOW_MASK);
+	}
+}
 
-/** Per-round key-schedule constants (10 rounds), RHash `whirlpool.c` `rc[]`. */
-export const ROUND_CONSTANTS: readonly bigint[] = [
+/** Per-round key-schedule constants (10 rounds), RHash `whirlpool.c` `rc[]`, as 32-bit halves. */
+const ROUND_CONSTANTS: readonly bigint[] = [
 	0x1823c6e887b8014fn,
 	0x36a6d2f5796f9152n,
 	0x60bc9b8ea30c7b35n,
@@ -49,5 +58,5 @@ export const ROUND_CONSTANTS: readonly bigint[] = [
 	0xfbee7c66dd17479en,
 	0xca2dbf07ad5a8333n,
 ];
-
-export { WORD_MASK };
+export const ROUND_CONSTANTS_HI = Uint32Array.from(ROUND_CONSTANTS, (c) => Number(c >> 32n));
+export const ROUND_CONSTANTS_LO = Uint32Array.from(ROUND_CONSTANTS, (c) => Number(c & LOW_MASK));

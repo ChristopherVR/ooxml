@@ -24,51 +24,100 @@
  *
  * @module digest/whirlpool
  */
-import { ROUND_CONSTANTS, TABLES, WORD_MASK } from './whirlpool-table';
+import * as table from './whirlpool-table';
+
+// Local bindings: a module runner that turns imports into namespace getters (Vitest's) would
+// otherwise pay a getter call on every one of the hash's table lookups, ten times slower.
+const TABLES_HI = table.TABLES_HI;
+const TABLES_LO = table.TABLES_LO;
+const ROUND_CONSTANTS_HI = table.ROUND_CONSTANTS_HI;
+const ROUND_CONSTANTS_LO = table.ROUND_CONSTANTS_LO;
 
 const BLOCK_BYTES = 64;
-const WORDS_PER_BLOCK = 8;
+const WORDS = 8;
 const ROUNDS = 10;
 
 /**
- * The Whirlpool T-table lookup fused with the round's byte permutation:
- * combines one byte from each of the eight words of `src`, each looked up
- * in a different rotated T-table, into the new word at column `shift`.
+ * A row of eight 64-bit words held as 32-bit halves: `hi[i]` and `lo[i]` are the high and low
+ * halves of word `i`.
  */
-function op(src: readonly bigint[], shift: number): bigint {
-	let result = 0n;
-	for (let t = 0; t < WORDS_PER_BLOCK; t++) {
-		const wordIndex = (shift + (WORDS_PER_BLOCK - t)) & 7;
-		const byteShift = BigInt(56 - t * 8);
-		const byte = Number((src[wordIndex]! >> byteShift) & 0xffn);
-		result ^= TABLES[t]![byte]!;
-	}
-	return result & WORD_MASK;
+interface Words {
+	hi: Uint32Array;
+	lo: Uint32Array;
 }
 
-/** Process one 64-byte block, mutating `hash` (the 8-word chaining value) in place. */
-function processBlock(hash: bigint[], block: readonly bigint[]): void {
-	const stateInitial = block.map((word, i) => (word ^ hash[i]!) & WORD_MASK);
-	let key = [...hash];
-	let state = stateInitial;
+const words = (): Words => ({ hi: new Uint32Array(WORDS), lo: new Uint32Array(WORDS) });
+
+/**
+ * The Whirlpool T-table lookup fused with the round's byte permutation: combines byte `t` (from
+ * the most significant) of word `(column - t) mod 8` of `src`, looked up in T-table `t`, into
+ * word `column` of `out`. Unrolled: this is the whole cost of the hash.
+ */
+function op(src: Words, column: number, out: Words): void {
+	const { hi: h, lo: l } = src;
+	const b0 = h[column]! >>> 24;
+	const b1 = (h[(column + 7) & 7]! >>> 16) & 0xff;
+	const b2 = (h[(column + 6) & 7]! >>> 8) & 0xff;
+	const b3 = h[(column + 5) & 7]! & 0xff;
+	const b4 = l[(column + 4) & 7]! >>> 24;
+	const b5 = (l[(column + 3) & 7]! >>> 16) & 0xff;
+	const b6 = (l[(column + 2) & 7]! >>> 8) & 0xff;
+	const b7 = l[(column + 1) & 7]! & 0xff;
+	out.hi[column] =
+		TABLES_HI[b0]! ^
+		TABLES_HI[256 + b1]! ^
+		TABLES_HI[512 + b2]! ^
+		TABLES_HI[768 + b3]! ^
+		TABLES_HI[1024 + b4]! ^
+		TABLES_HI[1280 + b5]! ^
+		TABLES_HI[1536 + b6]! ^
+		TABLES_HI[1792 + b7]!;
+	out.lo[column] =
+		TABLES_LO[b0]! ^
+		TABLES_LO[256 + b1]! ^
+		TABLES_LO[512 + b2]! ^
+		TABLES_LO[768 + b3]! ^
+		TABLES_LO[1024 + b4]! ^
+		TABLES_LO[1280 + b5]! ^
+		TABLES_LO[1536 + b6]! ^
+		TABLES_LO[1792 + b7]!;
+}
+
+/** Scratch rows reused across blocks so hashing allocates nothing per round. */
+const scratch = { key: words(), state: words(), initial: words(), nextKey: words(), next: words() };
+
+/** Process one 64-byte block, updating `hash` (the chaining value) in place. */
+function processBlock(hash: Words, block: Words): void {
+	const { key, state, initial, nextKey, next } = scratch;
+	for (let i = 0; i < WORDS; i++) {
+		initial.hi[i] = block.hi[i]! ^ hash.hi[i]!;
+		initial.lo[i] = block.lo[i]! ^ hash.lo[i]!;
+	}
+	key.hi.set(hash.hi);
+	key.lo.set(hash.lo);
+	state.hi.set(initial.hi);
+	state.lo.set(initial.lo);
 
 	for (let round = 0; round < ROUNDS; round++) {
-		const nextKey = new Array<bigint>(WORDS_PER_BLOCK);
-		for (let j = 0; j < WORDS_PER_BLOCK; j++) {
-			nextKey[j] = op(key, j) ^ (j === 0 ? ROUND_CONSTANTS[round]! : 0n);
+		for (let j = 0; j < WORDS; j++) op(key, j, nextKey);
+		nextKey.hi[0] = nextKey.hi[0]! ^ ROUND_CONSTANTS_HI[round]!;
+		nextKey.lo[0] = nextKey.lo[0]! ^ ROUND_CONSTANTS_LO[round]!;
+		for (let j = 0; j < WORDS; j++) {
+			op(state, j, next);
+			next.hi[j] = next.hi[j]! ^ nextKey.hi[j]!;
+			next.lo[j] = next.lo[j]! ^ nextKey.lo[j]!;
 		}
-		const nextState = new Array<bigint>(WORDS_PER_BLOCK);
-		for (let j = 0; j < WORDS_PER_BLOCK; j++) {
-			nextState[j] = (op(state, j) ^ nextKey[j]!) & WORD_MASK;
-		}
-		key = nextKey;
-		state = nextState;
+		key.hi.set(nextKey.hi);
+		key.lo.set(nextKey.lo);
+		state.hi.set(next.hi);
+		state.lo.set(next.lo);
 	}
 
 	// Miyaguchi-Preneel feedforward: the original chaining value appears
-	// exactly once, already folded into `stateInitial`.
-	for (let i = 0; i < WORDS_PER_BLOCK; i++) {
-		hash[i] = (stateInitial[i]! ^ state[i]!) & WORD_MASK;
+	// exactly once, already folded into `initial`.
+	for (let i = 0; i < WORDS; i++) {
+		hash.hi[i] = initial.hi[i]! ^ state.hi[i]!;
+		hash.lo[i] = initial.lo[i]! ^ state.lo[i]!;
 	}
 }
 
@@ -97,20 +146,22 @@ function pad(message: Uint8Array): Uint8Array {
 export function whirlpool(message: Uint8Array): Uint8Array {
 	const padded = pad(message);
 	const view = new DataView(padded.buffer);
-	const hash = new Array<bigint>(WORDS_PER_BLOCK).fill(0n);
-	const block = new Array<bigint>(WORDS_PER_BLOCK);
+	const hash = words();
+	const block = words();
 
 	for (let offset = 0; offset < padded.length; offset += BLOCK_BYTES) {
-		for (let i = 0; i < WORDS_PER_BLOCK; i++) {
-			block[i] = view.getBigUint64(offset + i * 8, false);
+		for (let i = 0; i < WORDS; i++) {
+			block.hi[i] = view.getUint32(offset + i * 8, false);
+			block.lo[i] = view.getUint32(offset + i * 8 + 4, false);
 		}
 		processBlock(hash, block);
 	}
 
 	const out = new Uint8Array(BLOCK_BYTES);
 	const outView = new DataView(out.buffer);
-	for (let i = 0; i < WORDS_PER_BLOCK; i++) {
-		outView.setBigUint64(i * 8, hash[i]!, false);
+	for (let i = 0; i < WORDS; i++) {
+		outView.setUint32(i * 8, hash.hi[i]!, false);
+		outView.setUint32(i * 8 + 4, hash.lo[i]!, false);
 	}
 	return out;
 }

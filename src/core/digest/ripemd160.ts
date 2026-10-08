@@ -14,7 +14,7 @@
  *
  * @module digest/ripemd160
  */
-import { add32, mdStyleDigest, rotl32 } from './bit-ops';
+import { add32, mdStyleDigest } from './bit-ops';
 import { f1, f2, f3, f4, f5 } from './ripemd-functions';
 
 const INITIAL_STATE = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
@@ -236,11 +236,11 @@ function applyLane(
 		const i2 = (target + 2) % 5;
 		const i3 = (target + 3) % 5;
 		const i4 = (target + 4) % 5;
-		const newTarget = add32(
-			rotl32(add32(r[target]!, f(r[i1]!, r[i2]!, r[i3]!), x[k]!, addConst), s),
-			r[i4]!,
-		);
-		r[i2] = rotl32(r[i2]!, 10);
+		// Plain 32-bit arithmetic (sums of four uint32 values stay exact in a double).
+		const sum = (r[target]! + f(r[i1]!, r[i2]!, r[i3]!) + x[k]! + addConst) >>> 0;
+		const newTarget = (((sum << s) | (sum >>> (32 - s))) + r[i4]!) >>> 0;
+		const c = r[i2]!;
+		r[i2] = ((c << 10) | (c >>> 22)) >>> 0;
 		r[target] = newTarget;
 		target = (target + 4) % 5;
 	}
