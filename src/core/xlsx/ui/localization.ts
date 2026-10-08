@@ -3,6 +3,7 @@
  * templates); each locale folder merges the shell, grid and command string files of that locale.
  * This locale never changes the workbook's own language or number formats.
  */
+import { createTranslator, interpolate, normalizeLocale } from '../../i18n/index';
 import { de } from './locales/de/index';
 import { en } from './locales/en/index';
 import { es } from './locales/es/index';
@@ -29,25 +30,12 @@ export const STRINGS: Readonly<Record<EditorLocale, Readonly<Record<string, stri
  * Simplified Chinese, while Traditional tags (`zh-TW`, `zh-HK`, `zh-Hant`) fall back to English.
  */
 export function normalizeEditorLocale(value: string | null | undefined): EditorLocale {
-	const parts = (value ?? '').trim().toLowerCase().split(/[-_]/);
-	switch (parts[0]) {
-		case 'fr':
-		case 'de':
-		case 'es':
-			return parts[0];
-		case 'zh':
-			return parts.some((part) => ['hant', 'tw', 'hk', 'mo'].includes(part)) ? 'en' : 'zh-CN';
-		default:
-			return 'en';
-	}
+	return normalizeLocale(value, EDITOR_LOCALES, 'en');
 }
 
 /** Fills `{name}` placeholders; unknown names are left as written. */
 export function fillTemplate(text: string, vars?: Record<string, string | number>): string {
-	if (!vars) return text;
-	return text.replace(/\{(\w+)\}/g, (match, name: string) =>
-		name in vars ? String(vars[name]) : match,
-	);
+	return interpolate(text, vars);
 }
 
 /** Translates an English key (falling back to English, then to the key itself) and fills it. */
@@ -56,8 +44,7 @@ export function translate(
 	key: string,
 	vars?: Record<string, string | number>,
 ): string {
-	const text = STRINGS[locale][key] ?? STRINGS.en[key] ?? key;
-	return fillTemplate(text, vars);
+	return createTranslator(STRINGS[locale], [STRINGS.en])(key, vars);
 }
 
 /** A bound translator for one locale, the shape of `EditorContext.t`. */
