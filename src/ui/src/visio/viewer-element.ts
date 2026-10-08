@@ -7,7 +7,8 @@ import { selectedShape } from './shape-inspector';
 import { wireViewerInputs } from './viewer-input';
 import { renderLayerControls, wireLayerControls } from './viewer-layer-controls';
 import { viewerStyles } from './styles';
-import { canvasAndRibbonStyles } from './styles/index';
+import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
+import { installOfficeUiTheme } from '../theme';
 import { createRibbon } from './ribbon';
 import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
@@ -85,8 +86,9 @@ export class VisioViewerElement extends BaseElement {
 		this.#root = this.attachShadow({ mode: 'open' });
 		// Shared Office controls must be defined before the static template upgrades them.
 		registerViewerControls();
+		installOfficeUiTheme();
 		// This template is static, never document content.
-		this.#root.innerHTML = `<style>${viewerStyles}${canvasAndRibbonStyles}</style>${viewerChromeTemplate}`;
+		this.#root.innerHTML = `<style>${visioThemeAliases}${viewerStyles}${canvasAndRibbonStyles}</style>${viewerChromeTemplate}`;
 		const workspace = this.#root.querySelector('.workspace')!;
 		this.#findBar = createFindBar(document);
 		const ribbon = createRibbon(document);

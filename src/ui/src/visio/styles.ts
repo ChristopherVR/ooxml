@@ -1,10 +1,6 @@
-/** Inherited public tokens use local fallback aliases so host themes are never shadowed. */
+/** Colours come from the alias block in `styles/theme.ts`, which follows the shared theme. */
 export const viewerStyles = `
 :host {
-  --_vv-bg:var(--vv-background,#eceae8); --_vv-surface:var(--vv-surface,#fff);
-  --_vv-secondary:var(--vv-secondary,#f3f2f1); --_vv-ink:var(--vv-ink,#1f1f1f);
-  --_vv-muted:var(--vv-muted,#605e5c); --_vv-border:var(--vv-border,#e1dfdd);
-  --_vv-accent:var(--vv-accent,#3955a3); --_vv-accent-soft:var(--vv-accent-soft,rgba(57,85,163,.10));
   display:flex; flex-direction:column; min-width:0; min-height:320px; height:100%; overflow:hidden;
   color:var(--_vv-ink); background:var(--_vv-bg); font:12px/1.5 "Segoe UI",Arial,sans-serif; contain:layout;
 }
@@ -14,7 +10,7 @@ button,select,input,textarea { font:inherit; color:inherit; border:1px solid var
 button { cursor:pointer; }
 button:hover:enabled { background:var(--_vv-accent-soft); border-color:var(--_vv-accent); }
 button:disabled { opacity:.4; cursor:default; }
-button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible { outline:2px solid var(--vv-focus,var(--_vv-accent)); outline-offset:2px; }
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible { outline:2px solid var(--_vv-focus); outline-offset:2px; }
 button[aria-pressed="true"] { color:var(--_vv-accent); background:var(--_vv-accent-soft); }
 .toolbar { flex:none; min-width:0; border-bottom:1px solid var(--_vv-border); background:var(--_vv-surface); }
 .spacer { flex:1; }
@@ -28,7 +24,7 @@ button[aria-pressed="true"] { color:var(--_vv-accent); background:var(--_vv-acce
 .pane-heading { height:37px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-bottom:1px solid var(--_vv-border); font-size:11px; font-weight:600; }
 .inspector-kind { color:var(--_vv-muted); font-size:10px; font-weight:400; }
 .viewport { position:relative; display:flex; flex-direction:column; flex:1; overflow:auto; min-width:0; min-height:0; padding:16px 4px; background:var(--_vv-bg); }
-.paper { display:block; flex:none; background:white; box-shadow:var(--vv-shadow,0 2px 8px rgb(0 0 0 / 14%)); margin:auto; }
+.paper { display:block; flex:none; background:white; box-shadow:var(--_vv-shadow); margin:auto; }
 .paper [data-shape-id] { cursor:pointer; }
 .paper [data-selected="true"] > [data-geometry] { stroke:var(--_vv-accent) !important; stroke-width:.025 !important; }
 .inspector-pane { flex:0 0 288px; width:288px; min-width:0; overflow:auto; border-left:1px solid var(--_vv-border); background:var(--_vv-secondary); }
@@ -54,11 +50,11 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
 .edit-controls label { display:block; margin-top:8px; }
 .edit-actions { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
 .edit-actions button { font-size:11px; padding:3px 7px; }
-.edit-actions [data-edit="apply"]:enabled { background:var(--_vv-accent); border-color:var(--_vv-accent); color:var(--vv-accent-ink,#fff); }
+.edit-actions [data-edit="apply"]:enabled { background:var(--_vv-accent); border-color:var(--_vv-accent); color:var(--_vv-accent-ink); }
 .edit-controls [data-geometry] { min-width:0; margin:8px 0 0; padding:6px; border:1px solid var(--_vv-border); }
 .edit-controls [data-geometry-field] { display:block; width:100%; min-width:0; margin-top:4px; }
-.edit-controls [data-geometry-error] { color:var(--vv-danger,#b42318); }
-.edit-controls [data-edit-error] { color:var(--vv-danger,#b42318); }
+.edit-controls [data-geometry-error] { color:var(--_vv-danger); }
+.edit-controls [data-edit-error] { color:var(--_vv-danger); }
 .edit-controls [data-edit-diagnostics] { max-height:100px; overflow:auto; padding-left:16px; }
 .layer-controls [data-layer-list] { max-height:240px; overflow:auto; }
 .layer-controls fieldset { border:1px solid var(--_vv-border); margin:6px 0; padding:6px; min-width:0; }

@@ -3,10 +3,6 @@
 	position: relative;
 }
 /* The shared office-ui-backstage draws the File column; these style Visio's page content. */
-.backstage {
-	--office-accent: var(--_vv-accent);
-	--office-accent-foreground: var(--vv-accent-ink, #fff);
-}
 .backstage-page h1 {
 	margin: 0 0 24px;
 	font-size: 34px;

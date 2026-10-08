@@ -1,18 +1,7 @@
 /*
- * Microsoft Visio ribbon layout on the shared ooxml-ui controls. Viewer theme tokens feed the
- * shared --office-* tokens, so host themes still apply. Loaded after the legacy styles.ts.
+ * Microsoft Visio ribbon layout on the shared ooxml-ui controls. The shared --office-* tokens come
+ * from the bridge in styles/theme.ts. Loaded after the legacy styles.ts.
  */
-:host {
-	--office-foreground: var(--_vv-ink);
-	--office-muted-foreground: var(--_vv-muted);
-	--office-background: var(--_vv-surface);
-	--office-surface: var(--_vv-accent-soft);
-	--office-border: var(--_vv-border);
-	--office-accent: var(--_vv-accent);
-	--office-accent-foreground: var(--vv-accent-ink, #fff);
-	--office-ring: var(--vv-focus, var(--_vv-accent));
-	--office-font: 'Segoe UI', Arial, sans-serif;
-}
 
 /* Tab row: Quick Access Toolbar, then Visio's tabs. */
 .ribbon-head {
