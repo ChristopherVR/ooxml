@@ -151,6 +151,36 @@ describe('buildHorizontalBarViewModel', () => {
 		expect(catWidth(0)).toBeCloseTo(catWidth(1), 0);
 	});
 
+	it('sizes stacked and percentStacked bars from c:gapWidth like a one-bar cluster', () => {
+		const stacked = (grouping: 'stacked' | 'percentStacked', barGapWidth?: number) => {
+			const vm = buildHorizontalBarViewModel(
+				element(),
+				chartData({
+					grouping,
+					...(barGapWidth !== undefined ? { barGapWidth } : {}),
+					series: [
+						{ name: 'S1', values: [2, 2] },
+						{ name: 'S2', values: [3, 1] },
+					],
+				}),
+				['A', 'B'],
+			);
+			const band = (vm.gridlines[0].y2 - vm.gridlines[0].y1) / 2;
+			return { heights: rects(vm).map((bar) => bar.h), band };
+		};
+		for (const grouping of ['stacked', 'percentStacked'] as const) {
+			const sized = stacked(grouping, 50);
+			for (const h of sized.heights) {
+				expect(h).toBeCloseTo(sized.band / 1.5, 6);
+			}
+		}
+		// Without c:gapWidth the old fractions of the band stay.
+		const legacy = stacked('stacked');
+		expect(legacy.heights[0]).toBeCloseTo(legacy.band * 0.7, 6);
+		const legacyPercent = stacked('percentStacked');
+		expect(legacyPercent.heights[0]).toBeCloseTo(legacyPercent.band * 0.6, 6);
+	});
+
 	it('draws a vertical zero line when the range spans zero', () => {
 		const vm = buildHorizontalBarViewModel(
 			element(),

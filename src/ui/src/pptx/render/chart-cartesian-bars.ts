@@ -4,9 +4,9 @@
  *
  * Split out of `chart-cartesian-plots.ts` to keep each module within the repo's
  * ~300-LOC limit. Pure helpers consumed by `buildCartesianViewModel`. Clustered
- * bars honour a secondary value range; non-percent stacked reuses the original
- * `computeStackedBarRects` geometry byte-for-byte; percentStacked normalises each
- * category to 100% with in-bar percent labels (matching React).
+ * bars honour a secondary value range; non-percent stacked uses
+ * `computeStackedBarRects`; percentStacked normalises each category to 100%
+ * with in-bar percent labels (matching React).
  *
  * @module chart-cartesian-bars
  */
@@ -200,16 +200,24 @@ export function buildBars(
 		return { primitives: [...primitives, ...labelBoxes], dataLabels };
 	}
 
-	// Non-percent stacked: preserve the original `computeStackedBarRects` geometry
-	// byte-for-byte (bar width 0.7, running from the zero line), with the original
-	// abs-value data labels. Only percentStacked uses the normalised running-sum
-	// path below (matching React's `renderStackedBarChart`).
+	// Non-percent stacked: the original `computeStackedBarRects` geometry (one
+	// bar per category, sized by c:gapWidth or else 0.7 of the slot, running
+	// from the zero line), with the original abs-value data labels. Only
+	// percentStacked uses the normalised running-sum path below (matching
+	// React's `renderStackedBarChart`).
 	if (grouping === 'stacked') {
 		const displaySeries = series.map((entry) => ({
 				...entry,
 				values: sourceIndices.map((sourceIndex) => entry.values[sourceIndex] ?? 0),
 			})),
-			rects = computeStackedBarRects(displaySeries, catCount, layout, primaryRange, palette);
+			rects = computeStackedBarRects(
+				displaySeries,
+				catCount,
+				layout,
+				primaryRange,
+				palette,
+				chartData.barGapWidth,
+			);
 		for (const r of rects) {
 			let fill = r.fill,
 				part: SvgRect['part'],
