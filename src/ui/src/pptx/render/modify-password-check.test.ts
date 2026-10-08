@@ -114,7 +114,7 @@ describe('checkModifyPassword', () => {
 	// MD4, MD5, RIPEMD-128, RIPEMD-160 and WHIRLPOOL are legal
 	// `p:modifyVerifier` algorithms (ECMA-376 19.2.1.22) that Web Crypto never
 	// implemented; core now falls back to pure-TypeScript implementations for
-	// all of them (`ooxml-core/pptx/digests`), so every one of them must
+	// all of them (`ooxml-core/digest`), so every one of them must
 	// resolve `ok: true` here, not `unsupported-algorithm`.
 	it.each(['MD2', 'MD4', 'MD5', 'RIPEMD-128', 'RIPEMD-160', 'WHIRLPOOL'] as const)(
 		'checks a %s verifier correctly (algorithm Web Crypto never implemented)',

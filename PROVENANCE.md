@@ -270,14 +270,25 @@ slow when each of Office's 100,000 spin rounds is awaited).
   The tests check each digest against `node:crypto` across the padding boundaries and against the
   FIPS 180-4 vectors.
 - `algorithm-names.ts` ports `normalizeDigestAlgorithmName` and its tests from the pptx area's
-  `src/core/pptx/core/utils/digests/algorithm-names.ts` (same repository); the pptx module is
-  unchanged.
+  `src/core/pptx/core/utils/digests/algorithm-names.ts` (same repository); the pptx module has
+  since been removed in favour of this one (see below).
 - `password-hash.ts` (`hashPassword`, `verifyPasswordHash`) replaces the spin loops in
   `src/core/xlsx/edit/protection.ts`. Expected values are hashes Excel 16 wrote through COM for a
   sheet and a workbook structure password.
-- The pptx area keeps its own `src/core/pptx/core/utils/digests` (MD2, MD4, MD5, RIPEMD, WHIRLPOOL and
-  a Web Crypto `digest`) for `p:modifyVerifier`; it can adopt this area for the SHA family and the
-  spin loop, and move its other digests here, when it is tightened to the strict flags.
+- `md2.ts`, `md5.ts`, `ripemd-functions.ts`, `ripemd128.ts`, `ripemd160.ts`, `whirlpool.ts`,
+  `whirlpool-table.ts`, `whirlpool-sbox.ts` and their tests moved from the pptx area's
+  `src/core/pptx/core/utils/digests/` (this repository, commit `d9ef4e075`). Changes: strict flags
+  (`noUncheckedIndexedAccess`), `@module` paths, WHIRLPOOL rewritten on 32-bit halves with split
+  T-tables (it used one BigInt per lookup, tens of seconds for a 100,000-round spin), and
+  RIPEMD-160's lane step on plain 32-bit arithmetic. Test vectors unchanged.
+- `bit-ops.ts` and `md4.ts` are pure-TypeScript ports of `@christophervr/ole2`'s
+  `utils/digests/bit-ops` and `utils/digests/md4` (which the pptx area forwarded to), so this area
+  never imports ole2; MD4's round schedules are generated from RFC 1320 section 3.4 and MD5's
+  feedback round is a flag on `applyRotatingRound`. `md4.test.ts` (RFC 1320 vectors) moved with it.
+- The pptx `digests` folder is gone: its Web Crypto `digest` dispatcher and `algorithm-names.ts`
+  are replaced by this area's `digestFunction` and `normalizeDigestAlgorithmName`, and
+  `p:modifyVerifier` (`src/core/pptx/core/utils/modify-verifier-codec.ts`) now runs the shared
+  synchronous `spinPasswordHash` instead of awaiting a digest per round (over 30 s per check).
 
 ## Math equation conversion (2026-10-03)
 

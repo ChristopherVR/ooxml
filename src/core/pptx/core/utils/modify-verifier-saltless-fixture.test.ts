@@ -44,19 +44,12 @@ describe('salt-less modifyVerifier fixtures (packages/core/src/__tests__/fixture
 		['modify-verifier-saltless-md5.pptx', 'MD5'],
 		['modify-verifier-saltless-ripemd160.pptx', 'RIPEMD-160'],
 		['modify-verifier-saltless-whirlpool.pptx', 'WHIRLPOOL'],
-	])(
-		'%s: parses with no saltData and verifies the password',
-		async (file, algorithmName) => {
-			const handler = new PptxHandler();
-			const data = await handler.load(fixtureBytes(file).buffer);
-			expect(data.modifyVerifier?.saltData).toBeUndefined();
-			expect(data.modifyVerifier?.algorithmName).toBe(algorithmName);
-			await expect(verifyModifyPassword(data.modifyVerifier!, PASSWORD)).resolves.toBeTruthy();
-			await expect(verifyModifyPassword(data.modifyVerifier!, 'wrong')).resolves.toBeFalsy();
-		},
-		// WHIRLPOOL is a pure-TypeScript digest (no Web Crypto implementation);
-		// each case runs 2 x 100000 spin-count iterations, which exceeded 60s on
-		// a loaded CI runner.
-		180_000,
-	);
+	])('%s: parses with no saltData and verifies the password', async (file, algorithmName) => {
+		const handler = new PptxHandler();
+		const data = await handler.load(fixtureBytes(file).buffer);
+		expect(data.modifyVerifier?.saltData).toBeUndefined();
+		expect(data.modifyVerifier?.algorithmName).toBe(algorithmName);
+		await expect(verifyModifyPassword(data.modifyVerifier!, PASSWORD)).resolves.toBeTruthy();
+		await expect(verifyModifyPassword(data.modifyVerifier!, 'wrong')).resolves.toBeFalsy();
+	});
 });

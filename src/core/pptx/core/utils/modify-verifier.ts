@@ -17,11 +17,12 @@
  * actual PowerPoint-authored password.
  *
  * Every hash algorithm ECMA-376 19.2.1.22 / [MS-OFFCRYPTO] permits a
- * verifier to name is checkable: SHA-1/256/384/512 via Web Crypto, and
- * MD2, MD4, MD5, RIPEMD-128, RIPEMD-160 and WHIRLPOOL via the pure
- * TypeScript implementations in `./digests` (Web Crypto never implemented
- * any of those). See `./digests/algorithm-names.ts` for name normalisation
- * and `./digests/digest.ts` for the dispatcher.
+ * verifier to name is checkable: SHA-1/256/384/512, MD2, MD4, MD5,
+ * RIPEMD-128, RIPEMD-160 and WHIRLPOOL, all through the synchronous
+ * pure-TypeScript digests of the shared `digest` area (`ooxml-core/digest`;
+ * see its `algorithm-names.ts` for name normalisation and `digest.ts` for
+ * the dispatcher). No Web Crypto, so the 100,000-round spin finishes in
+ * milliseconds rather than awaiting each round.
  *
  * ## Salt-less verifiers
  *
@@ -79,8 +80,8 @@
  */
 
 import type { PptxModifyVerifier } from '../types';
-import type { DigestAlgorithmName } from './digests';
-import { normalizeDigestAlgorithmName } from './digests';
+import type { DigestAlgorithmName } from '../../../digest/algorithm-names';
+import { normalizeDigestAlgorithmName } from '../../../digest/algorithm-names';
 import {
 	base64Decode,
 	base64Encode,
@@ -124,7 +125,7 @@ const CRYPT_ALGORITHM_SID_NAMES: Readonly<Record<number, DigestAlgorithmName>> =
  * Resolve a `p:modifyVerifier`'s effective hash algorithm name, preferring an
  * explicit `algorithmName` (or legacy `algIdExt`) and falling back to the
  * `cryptAlgorithmSid` CAPI identifier PowerPoint itself writes. The result is
- * always normalised (see `./digests/algorithm-names.ts`), so a caller never
+ * always normalised (see `ooxml-core/digest`'s `algorithm-names.ts`), so a caller never
  * has to separately handle `"SHA1"` vs `"SHA-1"` vs `"sha-1"`.
  *
  * Returns undefined when none of these resolve to a known algorithm (e.g. an

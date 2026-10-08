@@ -1,6 +1,6 @@
 /**
- * Byte-level helpers for `p:modifyVerifier` password hashing: UTF-16LE
- * encoding, base64 codec, and the ECMA-376 19.2.1.22 / [MS-OFFCRYPTO] 2.3.7.1
+ * Byte-level helpers for `p:modifyVerifier` password hashing: the base64
+ * codec, salt generation, and the ECMA-376 19.2.1.22 / [MS-OFFCRYPTO] 2.3.7.1
  * iterated-hash derivation itself. Split out of `modify-verifier.ts` (which
  * owns the public API and the CAPI algorithm-name resolution) purely to keep
  * both files under the repo's per-file line budget; nothing here is useful on
@@ -9,42 +9,9 @@
  * @module modify-verifier-codec
  */
 
-import type { DigestAlgorithmName } from './digests';
-import { digest } from './digests';
-
-/** Convert a string to UTF-16LE bytes. */
-export function encodeUtf16LE(str: string): Uint8Array {
-	const buf = new Uint8Array(str.length * 2);
-	for (let i = 0; i < str.length; i++) {
-		const code = str.charCodeAt(i);
-		buf[i * 2] = code & 0xff;
-		buf[i * 2 + 1] = (code >> 8) & 0xff;
-	}
-	return buf;
-}
-
-/** Concatenate Uint8Arrays. */
-export function concat(...arrays: Uint8Array[]): Uint8Array {
-	let totalLength = 0;
-	for (const arr of arrays) {
-		totalLength += arr.length;
-	}
-	const result = new Uint8Array(totalLength);
-	let offset = 0;
-	for (const arr of arrays) {
-		result.set(arr, offset);
-		offset += arr.length;
-	}
-	return result;
-}
-
-/** Write a 32-bit little-endian integer to a Uint8Array. */
-export function uint32LE(value: number): Uint8Array {
-	const buf = new Uint8Array(4);
-	const view = new DataView(buf.buffer);
-	view.setUint32(0, value, true);
-	return buf;
-}
+import type { DigestAlgorithmName } from '../../../digest/algorithm-names';
+import { digestFunction } from '../../../digest/digest';
+import { spinPasswordHash } from '../../../digest/password-hash';
 
 /**
  * Decode base64 string to Uint8Array.
@@ -110,7 +77,8 @@ export function randomSalt(): Uint8Array {
  * `p:modifyVerifier/@cryptAlgorithmSid="14"`, i.e. SHA-512): the reverse
  * order, used by an earlier version of this module, only ever passed its own
  * round-trip tests and could never verify an actual PowerPoint-authored
- * password.
+ * password. The derivation itself is the shared synchronous
+ * `spinPasswordHash` (`ooxml-core/digest`), the same one xlsx protection uses.
  */
 export async function iteratedHash(
 	algorithm: DigestAlgorithmName,
@@ -118,12 +86,13 @@ export async function iteratedHash(
 	password: string,
 	spinCount: number,
 ): Promise<Uint8Array> {
-	const passwordBytes = encodeUtf16LE(password);
-	let h = await digest(algorithm, concat(salt, passwordBytes));
-	for (let i = 0; i < spinCount; i++) {
-		h = await digest(algorithm, concat(h, uint32LE(i)));
+	// Every algorithm a verifier can name is computed synchronously by the shared `digest` area,
+	// so the 100,000-round spin runs in one tight loop instead of awaiting each round.
+	const digest = digestFunction(algorithm);
+	if (!digest) {
+		throw new Error(`Unsupported digest algorithm: ${algorithm as string}`);
 	}
-	return h;
+	return spinPasswordHash(password, salt, spinCount, digest);
 }
 
 /** Constant-shape byte comparison (length mismatch and content mismatch both fail). */
