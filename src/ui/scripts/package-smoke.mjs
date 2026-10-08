@@ -86,7 +86,7 @@ try {
 			const [prefix, suffix] = manifest.exports[entry].import.slice(2).split('*');
 			return [...files]
 				.filter((file) => file.startsWith(prefix) && file.endsWith(suffix))
-				.map((file) => entry.replace('*', file.slice(prefix.length, -suffix.length)));
+				.map((file) => entry.replaceAll('*', file.slice(prefix.length, -suffix.length)));
 		});
 	const specifiers = entries.map((entry) =>
 		path.posix.join(manifest.name, entry === '.' ? '' : entry),
