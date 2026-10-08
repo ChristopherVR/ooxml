@@ -151,3 +151,25 @@ describe('table save paragraph child order', () => {
 		expect([...xml.matchAll(/<a:endParaRPr sz="1800"/g)]).toHaveLength(3);
 	});
 });
+
+describe('table cell properties creation', () => {
+	const bareCell = (body: string): XmlObject =>
+		parser.parse(`<a:tc><a:txBody><a:bodyPr/>${body}</a:txBody></a:tc>`)['a:tc'] as XmlObject;
+
+	it('does not add a:tcPr for text-level fields only', () => {
+		const cell = bareCell('<a:p><a:r><a:t>Hi</a:t></a:r><a:endParaRPr sz="900"/></a:p>');
+		runtime.writeStyle(cell, { fontSize: 9, bold: true, align: 'center' });
+		expect(cell['a:tcPr']).toBeUndefined();
+		const xml = builder.build({ 'a:tc': cell }) as string;
+		expect(xml).toContain('<a:rPr b="1" sz="900"');
+		expect(xml).toContain('<a:pPr algn="ctr"');
+	});
+
+	it('adds a:tcPr when a cell property is written', () => {
+		const cell = bareCell('<a:p><a:endParaRPr sz="900"/></a:p>');
+		runtime.writeStyle(cell, { fontSize: 9, backgroundColor: '#00FF00', borderTopWidth: 1 });
+		const tcPr = cell['a:tcPr'] as XmlObject;
+		expect(Object.keys(tcPr)).toStrictEqual(['a:lnT', 'a:solidFill']);
+		expect(Object.keys(cell)).toStrictEqual(['a:txBody', 'a:tcPr']);
+	});
+});

@@ -121,10 +121,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		style: PptxTableCellStyle,
 		paragraphs?: PptxTableCellParagraph[],
 	): void {
-		if (!xmlCell['a:tcPr']) {
-			xmlCell['a:tcPr'] = {};
-		}
-		const tcPr = xmlCell['a:tcPr'] as XmlObject;
+		// Work on the existing `a:tcPr`, or on a detached one that is attached
+		// below only if a cell property was written into it. A style that only
+		// carries text-level fields (font size from `a:endParaRPr`, bold,
+		// alignment) must not add an empty `<a:tcPr/>` to an unedited cell.
+		const existingTcPr = xmlCell['a:tcPr'] as XmlObject | undefined;
+		const tcPr: XmlObject = existingTcPr ?? {};
 
 		// Background fill — pass a resolver so preserved colour-choice XML
 		// can be re-emitted verbatim when the resolved hex still matches.
@@ -261,6 +263,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		for (const key of Object.keys(reordered)) {
 			tcPr[key] = reordered[key];
+		}
+		if (!existingTcPr && Object.keys(tcPr).length > 0) {
+			xmlCell['a:tcPr'] = tcPr;
 		}
 	}
 }
