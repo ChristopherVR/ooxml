@@ -5,6 +5,7 @@ import { generateBar3DPictureFillFixture } from './fixtures/generate-bar3d-pictu
 import { generateFixture as generateBoxCubeTransitionFixture } from './fixtures/generate-box-cube-transition-fixture';
 import { generateChartFixture } from './fixtures/generate-chart-fixture';
 import { generateChartPieBestFitFixture } from './fixtures/generate-chart-pie-best-fit-fixture';
+import { generateChartStylePaletteFixture } from './fixtures/generate-chart-style-palette-fixture';
 import { generateChartTopAxisFixture } from './fixtures/generate-chart-top-axis-fixture';
 import { generateChartUserShapeGroupFixture } from './fixtures/generate-chart-user-shape-group-fixture';
 import { generateFixture as generateCinematicFragmentsFixture } from './fixtures/generate-cinematic-fragments-fixture';
@@ -48,6 +49,7 @@ export default async function globalSetup() {
 	await generateRibbonGalleriesFixture();
 	await generateChartFixture();
 	await generateChartPieBestFitFixture();
+	await generateChartStylePaletteFixture();
 	await generateChartTopAxisFixture();
 	await generateChartUserShapeGroupFixture();
 	await generateBar3DHorizontalFixture();
