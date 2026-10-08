@@ -23,7 +23,7 @@ import { tagSmartArtElementStyleLabel } from './smartart-element-style-label';
 import { nextId, makeShapeElement } from './smartart-helpers';
 import { collectFoldedDescendants, projectFoldedNodeText } from './smartart-interpreter-fold-text';
 import type { SmartArtLayoutResult } from '../../../diagram/layout/smartart-layout-types';
-import { smartArtChildrenOf } from './smartart-node-tree-axis';
+import { smartArtChildrenOf } from '../../../diagram/layout/smartart-node-tree-axis';
 
 export {
 	collectFoldedDescendants,

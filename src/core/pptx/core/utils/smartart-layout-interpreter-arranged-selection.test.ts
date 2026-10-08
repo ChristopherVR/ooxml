@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { selectArrangedPoints } from './smartart-layout-interpreter-arranged-selection';
+import { selectArrangedPoints } from '../../../diagram/layout/smartart-layout-interpreter-arranged-selection';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 /** A raw `dgm:forEach` xml body nesting another `axis="ch"` forEach - the
  * exact "hub + satellites" shape `detectHubExpansion` recognises (see
@@ -38,6 +39,7 @@ describe('selectArrangedPoints (round 42: hub detection skipped for composite pl
 	it('detects the hub pattern for a NON-composite plan (the pre-existing behaviour)', () => {
 		const nodes = hubNodes();
 		const selection = selectArrangedPoints(
+			pptxOrderedXml,
 			{ kind: 'cycle', node: hubArranger() },
 			nodes,
 			nodes,
@@ -50,6 +52,7 @@ describe('selectArrangedPoints (round 42: hub detection skipped for composite pl
 	it("does NOT run hub detection for a 'composite' plan, even with the SAME arranger shape that would otherwise match", () => {
 		const nodes = hubNodes();
 		const selection = selectArrangedPoints(
+			pptxOrderedXml,
 			{ kind: 'composite', node: hubArranger() },
 			nodes,
 			nodes,

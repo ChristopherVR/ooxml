@@ -55,6 +55,10 @@ function convert(value: XmlObject, name: string): OrderedXmlElement {
 	return element;
 }
 
-/** The ordered-XML view of a pptx raw slot (`undefined` for a missing or non-object slot). */
-export const pptxOrderedXml: RawXmlView<XmlObject> = (raw) =>
-	raw && typeof raw === 'object' ? convert(raw, '') : undefined;
+/**
+ * The ordered-XML view of a pptx raw slot (`undefined` for a missing or
+ * non-object slot). Typed over `unknown` so the interpreters, whose layout
+ * nodes keep an untyped raw slot, can take it as well.
+ */
+export const pptxOrderedXml: RawXmlView<unknown> = (raw) =>
+	raw && typeof raw === 'object' ? convert(raw as XmlObject, '') : undefined;

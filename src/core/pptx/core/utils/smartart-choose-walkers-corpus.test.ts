@@ -20,7 +20,7 @@ import {
 	parseBuiltinLayoutDefinition,
 } from './smartart-builtin-layouts';
 import { tailedHierarchyDeclaresChAlign } from '../../../diagram/hierarchy/smartart-hierarchy-tailed-transpose';
-import { resolveItemTxAnchor } from './smartart-layout-item-tx-anchor';
+import { resolveItemTxAnchor } from '../../../diagram/layout/smartart-layout-item-tx-anchor';
 import {
 	chooseAlgorithm,
 	chooseAlgorithmOfType,
@@ -30,8 +30,8 @@ import {
 	structuralChooseAlgDepth,
 	tunnelsPastOwnCompositeSlot,
 } from './smartart-layout-interpreter-choose-depth';
-import { arrangerRepeatsChildTemplate } from './smartart-layout-interpreter-hub-detect';
-import { isColumnWrapper } from './smartart-layout-interpreter-item-role-orientation';
+import { arrangerRepeatsChildTemplate } from '../../../diagram/layout/smartart-layout-interpreter-hub-detect';
+import { isColumnWrapper } from '../../../diagram/layout/smartart-layout-interpreter-item-role-orientation';
 import { discoverArrangement } from './smartart-layout-interpreter-model';
 import type { WhenContext } from '../../../diagram/layout/smartart-layout-interpreter-when';
 import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
@@ -99,9 +99,19 @@ function results(definition: PptxSmartArtLayoutDefinition): unknown[] {
 		out.push(['arr', count, discoverArrangement(definition, count)?.kind]);
 		out.push(['arrVars', count, discoverArrangement(definition, count, {} as never)?.node.name]);
 		nodes.forEach((node, index) => {
-			out.push(['tx', index, count, resolveItemTxAnchor(node, count, count % 2 === 0)]);
-			out.push(['col', index, count, isColumnWrapper(node, count, undefined)]);
-			out.push(['colVars', index, count, isColumnWrapper(node, count, {} as never)]);
+			out.push([
+				'tx',
+				index,
+				count,
+				resolveItemTxAnchor(pptxOrderedXml, node, count, count % 2 === 0),
+			]);
+			out.push(['col', index, count, isColumnWrapper(pptxOrderedXml, node, count, undefined)]);
+			out.push([
+				'colVars',
+				index,
+				count,
+				isColumnWrapper(pptxOrderedXml, node, count, {} as never),
+			]);
 			if (!node.choose?.length) {
 				return;
 			}
@@ -121,7 +131,7 @@ function results(definition: PptxSmartArtLayoutDefinition): unknown[] {
 	}
 	nodes.forEach((node, index) => {
 		out.push(['chAlign', index, tailedHierarchyDeclaresChAlign(pptxOrderedXml, node)]);
-		out.push(['hub', index, arrangerRepeatsChildTemplate(node)]);
+		out.push(['hub', index, arrangerRepeatsChildTemplate(pptxOrderedXml, node)]);
 	});
 	return out;
 }

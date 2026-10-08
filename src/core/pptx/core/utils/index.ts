@@ -222,16 +222,19 @@ export { resolveConstraintDeclaredBy } from '../../../diagram/layout/smartart-co
 export { resolveRatioConstraint } from '../../../diagram/layout/smartart-constraint-ratio-fallback';
 export { selectArrangedNodes, chooseAlgType } from './smartart-layout-interpreter-flow';
 export { arrangeLinear, arrangeSnake } from './smartart-layout-interpreter-linear';
-export { arrangeCycle } from './smartart-layout-interpreter-cycle';
+export { arrangeCycle } from '../../../diagram/layout/smartart-layout-interpreter-cycle';
 export { arrangeHierarchy } from './smartart-layout-interpreter-hierarchy';
-export { arrangePyramid } from './smartart-layout-interpreter-pyramid';
+export { arrangePyramid } from '../../../diagram/layout/smartart-layout-interpreter-pyramid';
 export { arrangeComposite } from './smartart-layout-interpreter-composite';
 export { arrangeConn, arrangeSpacer, arrangeText } from './smartart-layout-interpreter-aux';
-export { applyCustomLayoutOverrides } from './smartart-layout-interpreter-custom';
+export { applyCustomLayoutOverrides } from '../../../diagram/layout/smartart-layout-interpreter-custom';
 export { interpretSmartArtLayout, type InterpretLayoutInput } from './smartart-layout-interpreter';
 export { parseSmartArtPointCustomLayout } from './smartart-data-model-attributes';
 export { interpretedLayoutToElements } from './smartart-interpreter-drawing-bridge';
-export { applySmartArtRoleColors, type SmartArtColorRoleMap } from './smartart-node-role-colors';
+export {
+	applySmartArtRoleColors,
+	type SmartArtColorRoleMap,
+} from '../../../diagram/layout/smartart-node-role-colors';
 export {
 	resolveSmartArtNodeCoherent3DOff,
 	resolveSmartArtNodeStyleRoles,

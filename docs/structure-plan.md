@@ -236,9 +236,13 @@ and no claim of parity without evidence.
   started: classic chart parts are read by the neutral parser and adapted to
   `PptxChartData` (proven deeply equal to the old parser on every committed
   chart); styles, ChartEx and the chart writers still use the object tree.
-  SmartArt layout (agnostic-core plan step 2): the hierarchy arranger and its
-  closure moved to `diagram/hierarchy` and `diagram/layout`; the other
-  interpreters, editing reflow and node text projection are still in pptx.
+
+  SmartArt layout (agnostic-core plan step 2): the hierarchy arranger and
+  every other interpreter, up to `interpretSmartArtLayout`, moved to
+  `diagram/hierarchy` and `diagram/layout`; the node text projection (needs a
+  neutral paragraph model) and the editing reflow (needs a neutral drawing
+  shape) are still in pptx.
+
 - One chart painter for xlsx and the pptx DOM renderer.
 - pptx binding factory; per-binding contract parity tests for all products;
   the pptx comments panels on the shared pane.

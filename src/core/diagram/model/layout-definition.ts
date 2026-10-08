@@ -17,17 +17,17 @@ import type {
 
 /** Identity and ordering metadata from DiagramML CT_LayoutNode. */
 export interface DiagramLayoutNode<R = unknown> {
-	name?: string;
-	styleLabel?: string;
-	childOrder?: 'b' | 't';
-	moveWith?: string;
-	algorithm?: DiagramLayoutAlgorithm;
-	forEach?: DiagramForEach<R>[];
-	choose?: DiagramChoose<R>[];
-	constraints?: DiagramConstraint<R>[];
-	rules?: DiagramNumericRule<R>[];
+	name?: string | undefined;
+	styleLabel?: string | undefined;
+	childOrder?: 'b' | 't' | undefined;
+	moveWith?: string | undefined;
+	algorithm?: DiagramLayoutAlgorithm | undefined;
+	forEach?: DiagramForEach<R>[] | undefined;
+	choose?: DiagramChoose<R>[] | undefined;
+	constraints?: DiagramConstraint<R>[] | undefined;
+	rules?: DiagramNumericRule<R>[] | undefined;
 	/** `dgm:shape`: this node's own preset geometry override, when present. */
-	shape?: DiagramLayoutNodeShape;
+	shape?: DiagramLayoutNodeShape | undefined;
 	/**
 	 * `dgm:presOf` (CT_PresentationOf, same iterator shape as `dgm:forEach`):
 	 * which data-model point(s) this node's OWN text/geometry binds to -
@@ -41,7 +41,7 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * layout's `roleText`/`bodyText`) apart from a same-generation sibling
 	 * that positions or decorates instead.
 	 */
-	presentationOf?: DiagramIteratorAttributes;
+	presentationOf?: DiagramIteratorAttributes | undefined;
 	/**
 	 * EVERY `dgm:constr` reachable from this node, including ones declared
 	 * inside a `dgm:choose`/`dgm:if`/`dgm:else` that wraps THIS layoutNode's
@@ -63,8 +63,8 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * `smartart-constraint-solver.ts`'s `buildConstraintIndex`, the only
 	 * consumer.
 	 */
-	allConstraints?: DiagramConstraint<R>[];
-	children?: DiagramLayoutNode<R>[];
+	allConstraints?: DiagramConstraint<R>[] | undefined;
+	children?: DiagramLayoutNode<R>[] | undefined;
 	/**
 	 * The iterator attributes of the ENCLOSING `dgm:forEach` this node was
 	 * found through, when `nestedLayoutNodes` (`smartart-layout-definition
@@ -91,7 +91,7 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * consumer. Read-only / interpretation-only, like `allConstraints`:
 	 * never round-tripped by `applySmartArtLayoutDefinition`.
 	 */
-	forEachOrigin?: DiagramIteratorAttributes;
+	forEachOrigin?: DiagramIteratorAttributes | undefined;
 	/**
 	 * The conditions of EVERY enclosing `dgm:if` this node was found through,
 	 * outermost first, when `nestedLayoutNodes` (`smartart-layout-
@@ -129,7 +129,7 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * guard already accumulated before it. Evaluate with `smartart-layout-
 	 * interpreter-when.ts`'s `evaluateWhen`, once per entry, ANDed.
 	 */
-	chooseGuard?: DiagramWhen<R>[];
+	chooseGuard?: DiagramWhen<R>[] | undefined;
 	/**
 	 * ROUND 42: the forEach iterator active WHEN EACH ENTRY of {@link
 	 * chooseGuard} was declared (index-parallel with it, `undefined` per
@@ -153,7 +153,7 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * `undefined` whenever {@link chooseGuard} itself is (no enclosing
 	 * choose at all).
 	 */
-	chooseGuardOrigins?: (DiagramIteratorAttributes | undefined)[];
+	chooseGuardOrigins?: (DiagramIteratorAttributes | undefined)[] | undefined;
 	/**
 	 * The chain of every enclosing `dgm:choose`'s own GROUP identity + this
 	 * node's ordinal position within it + THAT branch's own condition,
@@ -198,12 +198,14 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * (possibly deeper) `forEachOrigin`. See `smartart-layout-interpreter-
 	 * composite-choose-groups.ts`'s `winningOrdinalFor`, the one consumer.
 	 */
-	chooseGroups?: {
-		id: string;
-		ordinal: number;
-		guard?: DiagramWhen<R>;
-		origin?: DiagramIteratorAttributes;
-	}[];
+	chooseGroups?:
+		| {
+				id: string;
+				ordinal: number;
+				guard?: DiagramWhen<R> | undefined;
+				origin?: DiagramIteratorAttributes | undefined;
+		  }[]
+		| undefined;
 	/**
 	 * Every `dgm:presOf` candidate reachable through a `dgm:choose`/`dgm:if`/
 	 * `dgm:else` wrapping THIS node's OWN presOf (as opposed to
@@ -224,10 +226,12 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * `resolvePresentationOf`, the one consumer) pick the branch PowerPoint's
 	 * own runtime would, first-match-wins.
 	 */
-	presentationOfCandidates?: {
-		guard: DiagramWhen<R>[];
-		presentationOf: DiagramIteratorAttributes;
-	}[];
+	presentationOfCandidates?:
+		| {
+				guard: DiagramWhen<R>[];
+				presentationOf: DiagramIteratorAttributes;
+		  }[]
+		| undefined;
 	/**
 	 * SESSION 17: every `dgm:rule` reachable through a `dgm:choose`/`dgm:if`/
 	 * `dgm:else` wrapping THIS node's `ruleLst` (a genuinely count-gated rule
@@ -240,10 +244,12 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * `resolveHubToNodeRatio` (COM-verified live mechanism, not a guess) for
 	 * how the guard is evaluated against the real satellite count.
 	 */
-	ruleCandidates?: {
-		guard: DiagramWhen<R>[];
-		rule: DiagramNumericRule<R>;
-	}[];
+	ruleCandidates?:
+		| {
+				guard: DiagramWhen<R>[];
+				rule: DiagramNumericRule<R>;
+		  }[]
+		| undefined;
 	/**
 	 * ROUND 39: every `dgm:constr` reachable through a `dgm:choose`/`dgm:if`/
 	 * `dgm:else` wrapping THIS node's `constrLst` (a genuinely count/position
@@ -258,23 +264,25 @@ export interface DiagramLayoutNode<R = unknown> {
 	 * diagram, and that module's own doc comment for why `allConstraints`'s
 	 * pre-existing blind union of every branch is not enough on its own.
 	 */
-	constraintCandidates?: {
-		guard: DiagramWhen<R>[];
-		constraint: DiagramConstraint<R>;
-	}[];
+	constraintCandidates?:
+		| {
+				guard: DiagramWhen<R>[];
+				constraint: DiagramConstraint<R>;
+		  }[]
+		| undefined;
 }
 
 /** Metadata and root node from DiagramML CT_DiagramDefinition. */
 export interface DiagramLayoutDefinition<R = unknown> {
-	uniqueId?: string;
-	minimumVersion?: string;
-	defaultStyle?: string;
-	titles?: DiagramLocalizedText[];
-	descriptions?: DiagramLocalizedText[];
-	categories?: DiagramLayoutCategory[];
+	uniqueId?: string | undefined;
+	minimumVersion?: string | undefined;
+	defaultStyle?: string | undefined;
+	titles?: DiagramLocalizedText[] | undefined;
+	descriptions?: DiagramLocalizedText[] | undefined;
+	categories?: DiagramLayoutCategory[] | undefined;
 	rootNode: DiagramLayoutNode<R>;
 	/** Original definition retained for constraint evaluation and foreign rules. */
-	rawXml?: R;
+	rawXml?: R | undefined;
 	/**
 	 * The un-parsed layout-definition part text (starting at `<dgm:layoutDef>`,
 	 * XML declaration included). `rawXml` above loses the document order of
@@ -286,5 +294,5 @@ export interface DiagramLayoutDefinition<R = unknown> {
 	 * `undefined` when the part could not be read (matches `rawXml`'s own
 	 * optionality); the engine falls back to the legacy interpreter then.
 	 */
-	rawXmlText?: string;
+	rawXmlText?: string | undefined;
 }

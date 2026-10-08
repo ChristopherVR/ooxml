@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode, PptxSmartArtNode } from '../types';
-import { buildHubRenderedNode, detectHubExpansion } from './smartart-layout-interpreter-hub';
+import {
+	buildHubRenderedNode,
+	detectHubExpansion,
+} from '../../../diagram/layout/smartart-layout-interpreter-hub';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 /** A raw `dgm:forEach` xml body, optionally nesting another `axis="ch"` forEach. */
 function forEachRawXml(nestedAxis?: string): Record<string, unknown> {
@@ -37,14 +41,14 @@ const childrenOf = new Map<string, PptxSmartArtNode[]>([
 
 describe('detectHubExpansion', () => {
 	it('detects the hub pattern: one selected point, its forEach nests a child-axis forEach', () => {
-		const expansion = detectHubExpansion(arranger('ch'), [hub], childrenOf);
+		const expansion = detectHubExpansion(pptxOrderedXml, arranger('ch'), [hub], childrenOf);
 		expect(expansion?.hubNode.id).toBe('hub');
 		expect(expansion?.satellites.map((n) => n.id)).toStrictEqual(['s1', 's2']);
 	});
 
 	it('declines when more than one point was already selected (ordinary diagram)', () => {
 		expect(
-			detectHubExpansion(arranger('ch'), [hub, { id: 'x', text: 'X' }], childrenOf),
+			detectHubExpansion(pptxOrderedXml, arranger('ch'), [hub, { id: 'x', text: 'X' }], childrenOf),
 		).toBeUndefined();
 	});
 
@@ -64,11 +68,11 @@ describe('detectHubExpansion', () => {
 				},
 			],
 		};
-		expect(detectHubExpansion(notAHub, [hub], childrenOf)).toBeUndefined();
+		expect(detectHubExpansion(pptxOrderedXml, notAHub, [hub], childrenOf)).toBeUndefined();
 	});
 
 	it('declines when the selected point genuinely has no children', () => {
-		expect(detectHubExpansion(arranger('ch'), [hub], new Map())).toBeUndefined();
+		expect(detectHubExpansion(pptxOrderedXml, arranger('ch'), [hub], new Map())).toBeUndefined();
 	});
 
 	it('declines a CONTINUATION nested forEach (st > 1): a list header is not a hub (Table List)', () => {
@@ -93,7 +97,7 @@ describe('detectHubExpansion', () => {
 			children: [{ name: 'roof', algorithm: { type: 'tx' } }],
 			forEach: [{ axis: ['ch'], pointTypes: ['node'], rawXml: continuationForEach }],
 		};
-		expect(detectHubExpansion(notAHub, [hub], childrenOf)).toBeUndefined();
+		expect(detectHubExpansion(pptxOrderedXml, notAHub, [hub], childrenOf)).toBeUndefined();
 	});
 
 	it('still detects a hub whose satellite forEach starts at "1" alongside OTHER st="2".."N" branches (Converging Text)', () => {
@@ -116,7 +120,7 @@ describe('detectHubExpansion', () => {
 			children: [{ name: 'composite', algorithm: { type: 'composite' } }],
 			forEach: [{ axis: ['ch'], pointTypes: ['node'], rawXml: mixedForEach }],
 		};
-		const expansion = detectHubExpansion(genuineHub, [hub], childrenOf);
+		const expansion = detectHubExpansion(pptxOrderedXml, genuineHub, [hub], childrenOf);
 		expect(expansion?.hubNode.id).toBe('hub');
 	});
 
@@ -144,7 +148,7 @@ describe('detectHubExpansion', () => {
 			children: [{ name: 'singleCenter', algorithm: { type: 'tx' } }],
 			forEach: [{ axis: ['ch'], pointTypes: ['node'], rawXml: ownChildForEach }],
 		};
-		const expansion = detectHubExpansion(radialClusterArranger, [hub], childrenOf);
+		const expansion = detectHubExpansion(pptxOrderedXml, radialClusterArranger, [hub], childrenOf);
 		expect(expansion?.hubNode.id).toBe('hub');
 		expect(expansion?.satellites.map((n) => n.id)).toStrictEqual(['s1', 's2']);
 	});

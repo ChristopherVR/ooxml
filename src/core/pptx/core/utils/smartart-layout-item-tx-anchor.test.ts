@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtChoose, PptxSmartArtLayoutNode } from '../types';
-import { resolveItemTxAnchor } from './smartart-layout-item-tx-anchor';
+import { resolveItemTxAnchor } from '../../../diagram/layout/smartart-layout-item-tx-anchor';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 describe('resolveItemTxAnchor', () => {
 	it('returns spec defaults (mid/t) for a bare `dgm:alg type="tx"` with no params - basic-process--hier5.pptx\'s real layout1.xml', () => {
 		const item: PptxSmartArtLayoutNode = { algorithm: { type: 'tx' } };
-		const result = resolveItemTxAnchor(item, 3, true);
+		const result = resolveItemTxAnchor(pptxOrderedXml, item, 3, true);
 		expect(result?.anchorVert).toBe('mid');
 		expect(result?.anchorVertCh).toBe('t');
 	});
@@ -22,7 +23,7 @@ describe('resolveItemTxAnchor', () => {
 				],
 			},
 		};
-		const result = resolveItemTxAnchor(item, 3, true);
+		const result = resolveItemTxAnchor(pptxOrderedXml, item, 3, true);
 		expect(result?.anchorVert).toBe('b');
 		expect(result?.anchorVertCh).toBe('b');
 	});
@@ -49,22 +50,22 @@ describe('resolveItemTxAnchor', () => {
 		const item: PptxSmartArtLayoutNode = { choose: [choose] };
 
 		// Folded somewhere in the diagram: the if-branch wins, txAnchorVertCh overridden to mid.
-		const folded = resolveItemTxAnchor(item, 3, true);
+		const folded = resolveItemTxAnchor(pptxOrderedXml, item, 3, true);
 		expect(folded?.anchorVertCh).toBe('mid');
 		expect(folded?.anchorVert).toBe('mid'); // still the spec default (unset by the if-branch)
 
 		// No fold anywhere: the else-branch wins (bare tx alg, spec defaults).
-		const unfolded = resolveItemTxAnchor(item, 3, false);
+		const unfolded = resolveItemTxAnchor(pptxOrderedXml, item, 3, false);
 		expect(unfolded?.anchorVertCh).toBe('t');
 		expect(unfolded?.anchorVert).toBe('mid');
 	});
 
 	it('is undefined for an item template with neither a direct tx algorithm nor a choose (a composite wrapper - see the module doc comment)', () => {
 		const item: PptxSmartArtLayoutNode = { algorithm: { type: 'composite' } };
-		expect(resolveItemTxAnchor(item, 3, true)).toBeUndefined();
+		expect(resolveItemTxAnchor(pptxOrderedXml, item, 3, true)).toBeUndefined();
 	});
 
 	it('is undefined when no item template is supplied at all', () => {
-		expect(resolveItemTxAnchor(undefined, 3, true)).toBeUndefined();
+		expect(resolveItemTxAnchor(pptxOrderedXml, undefined, 3, true)).toBeUndefined();
 	});
 });

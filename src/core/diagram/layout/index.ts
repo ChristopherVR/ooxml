@@ -98,3 +98,24 @@ export {
 	type StyleContext,
 } from './smartart-layout-interpreter-render';
 export { presetPolygonPoints } from './smartart-layout-shape-polygon';
+
+// The layout interpreter: discovers the arrangement a layout definition declares and runs its
+// arranger (linear, snake, cycle, pyramid, composite, hierarchy, auxiliary), then applies named
+// rules, item roles, custom layout overrides and role colours. Every entry point that reads raw
+// `dgm:choose`/`dgm:forEach` XML takes the `RawXmlView` first.
+export { interpretSmartArtLayout, type InterpretLayoutInput } from './smartart-layout-interpreter';
+export { dispatchArrangement } from './smartart-layout-interpreter-dispatch';
+export { arrangeConn, arrangeSpacer, arrangeText } from './smartart-layout-interpreter-aux';
+export { arrangeComposite } from './smartart-layout-interpreter-composite';
+export { arrangeCycle } from './smartart-layout-interpreter-cycle';
+export { arrangeLinear } from './smartart-layout-interpreter-linear';
+export { arrangePyramid } from './smartart-layout-interpreter-pyramid';
+export { arrangeSnake } from './smartart-layout-interpreter-snake';
+export { applyCustomLayoutOverrides } from './smartart-layout-interpreter-custom';
+export { applySmartArtRoleColors, type SmartArtColorRoleMap } from './smartart-node-role-colors';
+export { smartArtChildrenOf, topLevelSmartArtNodes } from './smartart-node-tree-axis';
+export {
+	collectFoldedDescendants,
+	foldedDescendantTexts,
+	foldedItemText,
+} from './smartart-interpreter-fold-text';

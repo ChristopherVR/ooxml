@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PptxSmartArtLayoutNode } from '../types';
-import { arrangerRepeatsChildTemplate } from './smartart-layout-interpreter-hub-detect';
+import { arrangerRepeatsChildTemplate } from '../../../diagram/layout/smartart-layout-interpreter-hub-detect';
+import { pptxOrderedXml } from './smartart-ordered-xml-adapter';
 
 function arranger(forEachRawXml: Record<string, unknown> | undefined): PptxSmartArtLayoutNode {
 	return {
@@ -14,12 +15,13 @@ function arranger(forEachRawXml: Record<string, unknown> | undefined): PptxSmart
 
 describe('arrangerRepeatsChildTemplate', () => {
 	it('false when the arranger declares no forEach at all', () => {
-		expect(arrangerRepeatsChildTemplate(arranger(undefined))).toBeFalsy();
+		expect(arrangerRepeatsChildTemplate(pptxOrderedXml, arranger(undefined))).toBeFalsy();
 	});
 
 	it('true: a nested axis="ch" forEach (radial-cycle/basic-radial/balance shape)', () => {
 		expect(
 			arrangerRepeatsChildTemplate(
+				pptxOrderedXml,
 				arranger({
 					'@_axis': 'ch',
 					'dgm:layoutNode': { '@_name': 'centerShape' },
@@ -32,6 +34,7 @@ describe('arrangerRepeatsChildTemplate', () => {
 	it('true: the arranger\'s own forEach directly nests axis="self" ptType="node" (radial-cluster shape)', () => {
 		expect(
 			arrangerRepeatsChildTemplate(
+				pptxOrderedXml,
 				arranger({
 					'@_axis': 'ch',
 					'@_cnt': '21',
@@ -47,6 +50,7 @@ describe('arrangerRepeatsChildTemplate', () => {
 	it('false: nested forEach targets sibTrans, not node points', () => {
 		expect(
 			arrangerRepeatsChildTemplate(
+				pptxOrderedXml,
 				arranger({
 					'@_axis': 'ch',
 					'dgm:layoutNode': { '@_name': 'item' },
@@ -59,6 +63,7 @@ describe('arrangerRepeatsChildTemplate', () => {
 	it('false: a CONTINUATION nested forEach (st > 1, Table List)', () => {
 		expect(
 			arrangerRepeatsChildTemplate(
+				pptxOrderedXml,
 				arranger({
 					'@_axis': 'ch',
 					'dgm:layoutNode': { '@_name': 'roof' },
@@ -71,6 +76,7 @@ describe('arrangerRepeatsChildTemplate', () => {
 	it('false: the arranger\'s own forEach is axis="ch" but nests neither a "ch" nor a direct "self"/"node" forEach', () => {
 		expect(
 			arrangerRepeatsChildTemplate(
+				pptxOrderedXml,
 				arranger({
 					'@_axis': 'ch',
 					'dgm:layoutNode': { '@_name': 'item' },
