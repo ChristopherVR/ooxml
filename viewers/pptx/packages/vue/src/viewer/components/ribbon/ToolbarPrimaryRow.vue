@@ -3,17 +3,17 @@
  * ToolbarPrimaryRow: Vue port of React's `toolbar/ToolbarPrimaryRow.tsx`.
  *
  * The ribbon's quick-access strip: slides-pane toggle, then a right cluster of
- * comments, mode switcher, custom-show controls, inspector toggle, settings,
- * read-only badge, and the overflow menu.
+ * mode switcher, custom-show controls, inspector toggle, settings, read-only
+ * badge, and the overflow menu.
  *
- * Undo/Redo and the Find button now live in the title bar; the Share button
+ * Undo/Redo and the Find button now live in the title bar; Comments and Share
  * moved to the tab row (`TabRowActions`), mirroring React's PowerPoint chrome.
  *
  * The React row also renders inline collaboration avatars from a
  * `useCollaboration()` context; in Vue collaboration is host-instantiated (not a
  * ribbon-level context), so that purely-decorative avatar cluster is omitted.
  */
-import { MessageSquare, PanelLeft, PanelRight, Settings, Sparkles } from 'lucide-vue-next';
+import { PanelLeft, PanelRight, Settings, Sparkles } from 'lucide-vue-next';
 import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -61,30 +61,7 @@ const qab =
 		<!-- Center spacer -->
 		<div class="flex-1 min-w-2 max-md:min-w-1" />
 
-		<!-- Right: Comments + Present + Inspector + Settings + Overflow -->
-		<button
-			v-if="props.mode === 'edit' || props.mode === 'master'"
-			type="button"
-			:class="
-				cn(
-					qab,
-					'relative max-md:hidden',
-					props.isCommentsPanelOpen ? 'text-foreground' : 'text-muted-foreground',
-				)
-			"
-			:title="t('pptx.toolbar.comments')"
-			:aria-label="t('pptx.toolbar.comments')"
-			@click="props.onToggleComments?.()"
-		>
-			<MessageSquare :class="ics" />
-			<span
-				v-if="(props.slideCommentCount ?? 0) > 0"
-				class="absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary text-[8px] text-white leading-none"
-			>
-				{{ props.slideCommentCount }}
-			</span>
-		</button>
-
+		<!-- Right: Present + Inspector + Settings + Overflow (Comments and Share sit on the tab row) -->
 		<ModeSwitcher
 			:mode="props.mode"
 			:on-set-mode="props.onSetMode"

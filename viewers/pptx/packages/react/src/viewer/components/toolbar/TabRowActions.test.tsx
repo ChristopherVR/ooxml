@@ -16,6 +16,7 @@ vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
 			const translations: Record<string, string> = {
 				'pptx.titleBar.record': 'Record',
 				'pptx.toolbar.share': 'Share',
+				'pptx.toolbar.comments': 'Comments',
 			};
 			const v = translations[key];
 			if (typeof v === 'string') {
@@ -47,19 +48,40 @@ function createProps(overrides: Partial<TabRowActionsProps> = {}): TabRowActions
 }
 
 describe('tabRowActions - default (backward compatible)', () => {
-	it('renders both Record and Share when hiddenActions is omitted', () => {
+	it('renders Record and the shared Comments / Share element when hiddenActions is omitted', () => {
 		const html = render(React.createElement(TabRowActions, createProps()));
 		expect(html).toContain('aria-label="Record"');
-		expect(html).toContain('aria-label="Share"');
+		expect(html).toContain('<pptx-ui-ribbon-actions');
+		expect(html).toContain('share-label="Share"');
+		expect(html).not.toContain('no-share');
+		// No comments handler: Comments is left out.
+		expect(html).toContain('no-comments=""');
+	});
+
+	it('shows Comments with its pressed state and slide count when a handler is given', () => {
+		const html = render(
+			React.createElement(
+				TabRowActions,
+				createProps({
+					onToggleComments: vi.fn<() => void>(),
+					isCommentsPanelOpen: true,
+					slideCommentCount: 3,
+				}),
+			),
+		);
+		expect(html).toContain('comments-label="Comments"');
+		expect(html).toContain('comments-pressed=""');
+		expect(html).toContain('comments-count="3"');
+		expect(html).not.toContain('no-comments');
 	});
 });
 
 describe('tabRowActions - hiddenActions', () => {
-	it('omits the Share button when "share" is hidden', () => {
+	it('hides Share when "share" is hidden', () => {
 		const html = render(
 			React.createElement(TabRowActions, createProps({ hiddenActions: ['share'] })),
 		);
-		expect(html).not.toContain('aria-label="Share"');
+		expect(html).toContain('no-share=""');
 		expect(html).toContain('aria-label="Record"');
 	});
 
@@ -68,14 +90,14 @@ describe('tabRowActions - hiddenActions', () => {
 			React.createElement(TabRowActions, createProps({ hiddenActions: ['record'] })),
 		);
 		expect(html).not.toContain('aria-label="Record"');
-		expect(html).toContain('aria-label="Share"');
+		expect(html).not.toContain('no-share');
 	});
 
-	it('omits both when both ids are hidden', () => {
+	it('hides both when both ids are hidden', () => {
 		const html = render(
 			React.createElement(TabRowActions, createProps({ hiddenActions: ['record', 'share'] })),
 		);
 		expect(html).not.toContain('aria-label="Record"');
-		expect(html).not.toContain('aria-label="Share"');
+		expect(html).toContain('no-share=""');
 	});
 });

@@ -70,6 +70,7 @@ export function createRibbon(
 
 	const tabBar = createRibbonTabBar(doc, t, (tab) => setActiveTab(tab), hiddenActions, {
 		startRecording: () => handlers.slideShow.startRehearsal(),
+		openComments: () => handlers.nav.openComments(),
 	});
 	tabBar.el.hidden = true;
 	el.appendChild(tabBar.el);

@@ -32,7 +32,6 @@ import {
 import {
 	LucideChevronDown,
 	LucideEllipsis,
-	LucideMessageSquare,
 	LucidePanelLeft,
 	LucidePanelRight,
 	LucidePlay,
@@ -96,8 +95,7 @@ export function visibleOverflowItems(
 		TranslatePipe,
 		LucidePanelLeft,
 		LucidePanelRight,
-		LucideMessageSquare,
-		LucidePlay,
+			LucidePlay,
 		LucideChevronDown,
 		LucidePlus,
 		LucideEllipsis,
@@ -121,23 +119,7 @@ export function visibleOverflowItems(
 			<!-- Center spacer -->
 			<div class="min-w-2 flex-1"></div>
 
-			<!-- Right: comments + present + show + inspector + overflow -->
-			<button
-				type="button"
-				class="pptx-rb-icon relative"
-				[ngClass]="commentsOpen() ? 'text-foreground' : 'text-muted-foreground'"
-				[title]="'pptx.toolbar.comments' | translate"
-				[attr.aria-label]="'pptx.toolbar.comments' | translate"
-				(click)="toggleComments.emit()"
-			>
-				<svg lucideMessageSquare class="h-3.5 w-3.5"></svg>
-				@if (commentCount() > 0) {
-					<span
-						class="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] leading-none text-white"
-						>{{ commentCount() }}</span
-					>
-				}
-			</button>
+			<!-- Right: present + show + inspector + overflow (Comments and Share sit on the tab row) -->
 
 			<!-- Present split-button + dropdown -->
 			<div class="relative inline-flex items-center" #presentRoot>
@@ -284,8 +266,6 @@ export class RibbonPrimaryRowComponent {
 	readonly slideCount = input<number>(0);
 	readonly sidebarCollapsed = input<boolean>(false);
 	readonly inspectorOpen = input<boolean>(false);
-	readonly commentsOpen = input<boolean>(false);
-	readonly commentCount = input<number>(0);
 	/** Toolbar buttons the host wants hidden (gates Broadcast + the export overflow items). */
 	readonly hiddenActions = input<ToolbarActionId[]>([]);
 	/** Whether the host enabled the AI assistant (shows the Sparkles toggle). */
@@ -296,7 +276,6 @@ export class RibbonPrimaryRowComponent {
 	readonly toggleSidebar = output<void>();
 	/** Emitted when the user clicks the AI assistant Sparkles toggle. */
 	readonly toggleAiPanel = output<void>();
-	readonly toggleComments = output<void>();
 	readonly present = output<void>();
 	readonly presenter = output<void>();
 	readonly broadcast = output<void>();

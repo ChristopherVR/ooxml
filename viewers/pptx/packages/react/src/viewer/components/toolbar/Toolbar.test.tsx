@@ -1269,16 +1269,26 @@ describe('toolbar - hiddenActions', () => {
 		expect(html).toContain('>Home</button>');
 	});
 
-	it('omits the Share button when "share" is hidden', () => {
+	it('hides the tab-row Share button when "share" is hidden', () => {
 		const html = render(
 			React.createElement(Toolbar, createMockToolbarProps({ hiddenActions: ['share'] })),
 		);
-		expect(html).not.toContain('aria-label="Share"');
+		expect(html).toContain('no-share=""');
 	});
 
-	it('renders the Share button when hiddenActions is omitted', () => {
+	it('renders Comments and Share on the tab row when hiddenActions is omitted', () => {
 		const html = render(React.createElement(Toolbar, createMockToolbarProps()));
-		expect(html).toContain('aria-label="Share"');
+		const tabRow = html.slice(html.indexOf('data-pptx-chrome="ribbon-tabs"'));
+		expect(tabRow).toContain('<pptx-ui-ribbon-actions');
+		expect(tabRow).toContain('share-label="Share"');
+		expect(tabRow).toContain('comments-label="Comments"');
+		expect(html).not.toContain('no-share');
+		// Comments left the primary row for the tab row.
+		const primary = html.slice(
+			html.indexOf('data-pptx-chrome="ribbon-primary"'),
+			html.indexOf('data-pptx-chrome="ribbon-tabs"'),
+		);
+		expect(primary).not.toContain('aria-label="Comments"');
 	});
 
 	it('omits the Broadcast command when "broadcast" is hidden', () => {

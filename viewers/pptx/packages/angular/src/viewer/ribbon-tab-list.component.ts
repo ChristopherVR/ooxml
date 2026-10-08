@@ -3,16 +3,28 @@
  * {@link RibbonComponent} (which was well over this repo's 300-LOC file cap).
  *
  * Renders: the scrollable tab strip (File/Home/Insert/.../Help, filtered by
- * `hiddenActions`), the pinned Record + Share actions (tab-row right side),
- * and the ribbon expand/collapse toggle. Behaviour and markup are unchanged
+ * `hiddenActions`), the pinned tab-row actions (Record, then Comments and Share
+ * drawn by the shared `pptx-ui-ribbon-actions`, the element Word and Excel put
+ * at the same place), and the ribbon expand/collapse toggle. Behaviour and markup are unchanged
  * from the original inline tab-bar `<div>` in `ribbon.component.ts`.
  */
 import { NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { LucideChevronDown, LucideChevronUp, LucideShare2 } from '@lucide/angular';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
+	input,
+	output,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { LucideChevronDown, LucideChevronUp } from '@lucide/angular';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { map, merge, startWith } from 'rxjs';
 
 import {
+	buildTabRowActionsState,
 	contextualTabLabelKey,
 	filterVisibleTabs,
 	TAB_ROW_ACTION_CLASSES,
@@ -27,7 +39,8 @@ import { ViewerOptionsService } from './viewer-options.service';
 	selector: 'pptx-ribbon-tab-list',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [NgClass, TranslatePipe, LucideShare2, LucideChevronUp, LucideChevronDown],
+	imports: [NgClass, TranslatePipe, LucideChevronUp, LucideChevronDown],
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	template: `
 		<div
 			role="tablist"
@@ -83,7 +96,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 				}
 			</div>
 
-			<!-- Tab-row right actions (Record + Share), mirroring React's TabRowActions -->
+			<!-- Tab-row right actions (Record, Comments, Share), mirroring React's TabRowActions -->
 			<div class="flex shrink-0 items-center gap-1 pr-1">
 				@if (canEdit() && !toolbar.isHidden('record')) {
 					<button
@@ -97,41 +110,25 @@ import { ViewerOptionsService } from './viewer-options.service';
 						<span>{{ 'pptx.titleBar.record' | translate }}</span>
 					</button>
 				}
-				@if (!toolbar.isHidden('share')) {
-					<div
-						role="status"
-						[attr.aria-label]="
-							collabConnected()
-								? ('pptx.collaboration.statusAriaLabel'
-									| translate: { status: 'pptx.collaboration.status.connected' | translate })
-								: null
-						"
-					>
-						<button
-							type="button"
-							class="relative inline-flex items-center gap-1 whitespace-nowrap rounded-sm px-2.5 py-1 text-[11px] font-medium text-white transition-colors"
-							[ngClass]="
-								collabConnected()
-									? 'bg-green-600 hover:bg-green-500'
-									: 'bg-primary hover:bg-primary/90'
-							"
-							[title]="
-								collabConnected()
-									? ('pptx.toolbar.sharingUsers' | translate: { count: connectedCount() })
-									: ('pptx.toolbar.share' | translate)
-							"
-							[attr.aria-label]="'pptx.toolbar.share' | translate"
-							(click)="share.emit()"
-						>
-							<svg lucideShare2 class="h-3.5 w-3.5"></svg>
-							<span>{{
-								collabConnected()
-									? ('pptx.toolbar.sharingCount' | translate: { count: connectedCount() })
-									: ('pptx.toolbar.share' | translate)
-							}}</span>
-						</button>
-					</div>
-				}
+				<!-- The live region announces a connected session (Angular has no separate
+				     status pill on this row). -->
+				<div
+					role="status"
+					class="flex items-center"
+					[attr.aria-label]="
+						collabConnected()
+							? ('pptx.collaboration.statusAriaLabel'
+								| translate: { status: 'pptx.collaboration.status.connected' | translate })
+							: null
+					"
+				>
+					<pptx-ui-ribbon-actions
+						data-pptx-chrome="tab-row-actions"
+						[state]="actionsState()"
+						(comments-toggle)="toggleComments.emit()"
+						(share-request)="share.emit()"
+					></pptx-ui-ribbon-actions>
+				</div>
 			</div>
 
 			<button
@@ -157,6 +154,9 @@ export class RibbonTabListComponent {
 	readonly canEdit = input<boolean>(false);
 	readonly collabConnected = input<boolean>(false);
 	readonly connectedCount = input<number>(0);
+	/** Comments pane state and the current slide's comment count (Comments' badge). */
+	readonly commentsOpen = input<boolean>(false);
+	readonly commentCount = input<number>(0);
 	readonly ribbonExpanded = input<boolean>(true);
 	/** Toolbar tabs/buttons the host wants hidden (filters the tab strip; gates Record/Share). */
 	readonly hiddenActions = input<ToolbarActionId[]>([]);
@@ -166,6 +166,7 @@ export class RibbonTabListComponent {
 	readonly selectTab = output<RibbonTab>();
 	readonly record = output<void>();
 	readonly share = output<void>();
+	readonly toggleComments = output<void>();
 	readonly toggleRibbonExpanded = output<void>();
 
 	protected readonly toolbar = toolbarVisibility(this.hiddenActions);
@@ -176,6 +177,27 @@ export class RibbonTabListComponent {
 	);
 
 	private readonly translate = inject(TranslateService);
+	/** Changes on language/dictionary updates so the element's labels re-translate. */
+	private readonly translations = toSignal(
+		merge(this.translate.onLangChange, this.translate.onTranslationChange).pipe(
+			map(() => Date.now()),
+			startWith(0),
+		),
+		{ initialValue: 0 },
+	);
+	/** Comments and Share for the shared element, from the shared descriptor. */
+	protected readonly actionsState = computed(() => {
+		this.translations();
+		return buildTabRowActionsState({
+			translate: (key, params) => this.translate.instant(key, params) as string,
+			showComments: true,
+			commentsOpen: this.commentsOpen(),
+			commentCount: this.commentCount(),
+			showShare: !this.toolbar.isHidden('share'),
+			isCollaborating: this.collabConnected(),
+			collaboratorCount: this.connectedCount(),
+		});
+	});
 	/** Optional so the tab strip renders outside a full viewer host too. */
 	private readonly viewerOpts = inject(ViewerOptionsService, { optional: true });
 

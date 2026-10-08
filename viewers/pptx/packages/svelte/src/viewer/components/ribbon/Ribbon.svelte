@@ -100,7 +100,6 @@
 	<RibbonPrimaryRow
 		chromeUi={props.chromeUi}
 		readOnly={props.readOnly}
-		commentCount={slideCommentCount}
 		onpresent={props.onfromcurrent}
 		onpresenter={props.onpresenter}
 		onrehearse={props.onrehearse}
@@ -133,6 +132,8 @@
 		onshare={props.onshare}
 		collabActive={props.collabActive}
 		hiddenActions={props.hiddenActions}
+		chromeUi={props.chromeUi}
+		commentCount={slideCommentCount}
 	/>
 	<FindReplacePanel findReplace={props.findReplace} editable={props.editor.editable} />
 	<!-- The File backstage is a full-screen `position: fixed` overlay, not a row

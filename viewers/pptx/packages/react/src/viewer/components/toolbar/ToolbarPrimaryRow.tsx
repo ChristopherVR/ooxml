@@ -1,7 +1,7 @@
-import { isDialogAvailable, isFeatureEnabled, isPanelVisible } from 'ooxml-ui/pptx';
+import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LuMessageSquare, LuPanelLeft, LuPanelRight, LuSettings, LuSparkles } from 'react-icons/lu';
+import { LuPanelLeft, LuPanelRight, LuSettings, LuSparkles } from 'react-icons/lu';
 
 import { cn } from '../../utils';
 import { useCollaboration, UserAvatarBar } from '../collaboration';
@@ -25,11 +25,10 @@ export function ToolbarPrimaryRow(p: ToolbarProps): React.ReactElement {
 
 	const collab = useCollaboration();
 	// Host customisation: hidden panes lose their toggles, a removed Options
-	// dialog loses its gear, disabled comments / sharing lose their chrome.
+	// dialog loses its gear, disabled sharing loses its avatars.
 	const customization = useViewerCustomizationContext();
 	const showSlidesToggle = isPanelVisible(customization, 'slidesPane');
 	const showInspectorToggle = isPanelVisible(customization, 'inspector');
-	const showComments = isFeatureEnabled(customization, 'comments');
 	const showShare = isDialogAvailable(customization, 'share');
 	const showSettings = isDialogAvailable(customization, 'options');
 
@@ -56,28 +55,7 @@ export function ToolbarPrimaryRow(p: ToolbarProps): React.ReactElement {
 			{/* Center spacer */}
 			<div className='flex-1 min-w-2 max-md:min-w-1' />
 
-			{/* Right: Comments + Present + Share + Inspector + Settings + Overflow */}
-			{(mode === 'edit' || mode === 'master') && showComments && (
-				<button
-					type='button'
-					onClick={p.onToggleComments}
-					className={cn(
-						qab,
-						'relative max-md:hidden',
-						p.isCommentsPanelOpen ? 'text-foreground' : 'text-muted-foreground',
-					)}
-					title={t('pptx.toolbar.comments')}
-					aria-label={t('pptx.toolbar.comments')}
-				>
-					<LuMessageSquare className={ics} />
-					{(p.slideCommentCount ?? 0) > 0 && (
-						<span className='absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary text-[8px] text-white leading-none'>
-							{p.slideCommentCount}
-						</span>
-					)}
-				</button>
-			)}
-
+			{/* Right: Present + Inspector + Settings + Overflow (Comments and Share sit on the tab row) */}
 			{/* Collaboration user avatars (inline, PowerPoint-style) */}
 			{collab &&
 				showShare &&

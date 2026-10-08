@@ -3,26 +3,34 @@ import { describe, expect, it } from 'vitest';
 
 import TabRowActions from './TabRowActions.vue';
 
+type ActionsHost = HTMLElement & {
+	state: { noShare: boolean; noComments: boolean; commentsPressed: boolean; commentsCount: number };
+};
+
+const actions = (wrapper: ReturnType<typeof mount>) =>
+	wrapper.find('pptx-ui-ribbon-actions').element as ActionsHost;
+
 /**
- * TabRowActions: the ribbon tab row's Record + Share buttons. Covers the
- * `hiddenActions` gating added for issue #64 (host-controlled toolbar
- * visibility): each button maps to its own `ToolbarActionId` ('record',
- * 'share') and can be hidden independently.
+ * TabRowActions: the ribbon tab row's Record button and the shared Comments /
+ * Share element. Covers the `hiddenActions` gating added for issue #64
+ * (host-controlled toolbar visibility): Record and Share map to their own
+ * `ToolbarActionId` ('record', 'share') and can be hidden independently.
  */
 describe('tabRowActions', () => {
-	it('renders Record and Share by default (hiddenActions omitted)', () => {
+	it('renders Record and the shared Comments / Share element by default', () => {
 		const wrapper = mount(TabRowActions, {
-			props: { onEnterRehearsalMode: () => {} },
+			props: { onEnterRehearsalMode: () => {}, onToggleComments: () => {} },
 		});
 		expect(wrapper.find('[aria-label="Record"]').exists()).toBeTruthy();
-		expect(wrapper.find('[aria-label="Share"]').exists()).toBeTruthy();
+		expect(actions(wrapper).state.noShare).toBe(false);
+		expect(actions(wrapper).state.noComments).toBe(false);
 	});
 
-	it('hides the Share button when "share" is in hiddenActions', () => {
+	it('hides Share when "share" is in hiddenActions', () => {
 		const wrapper = mount(TabRowActions, {
 			props: { onEnterRehearsalMode: () => {}, hiddenActions: ['share'] },
 		});
-		expect(wrapper.find('[aria-label="Share"]').exists()).toBeFalsy();
+		expect(actions(wrapper).state.noShare).toBe(true);
 		expect(wrapper.find('[aria-label="Record"]').exists()).toBeTruthy();
 	});
 
@@ -31,6 +39,23 @@ describe('tabRowActions', () => {
 			props: { onEnterRehearsalMode: () => {}, hiddenActions: ['record'] },
 		});
 		expect(wrapper.find('[aria-label="Record"]').exists()).toBeFalsy();
-		expect(wrapper.find('[aria-label="Share"]').exists()).toBeTruthy();
+		expect(actions(wrapper).state.noShare).toBe(false);
+	});
+
+	it('reflects the comments pane and routes the element events', async () => {
+		const calls: string[] = [];
+		const wrapper = mount(TabRowActions, {
+			props: {
+				onToggleComments: () => calls.push('comments'),
+				onOpenShareDialog: () => calls.push('share'),
+				isCommentsPanelOpen: true,
+				slideCommentCount: 2,
+			},
+		});
+		expect(actions(wrapper).state.commentsPressed).toBe(true);
+		expect(actions(wrapper).state.commentsCount).toBe(2);
+		await wrapper.find('pptx-ui-ribbon-actions').trigger('comments-toggle');
+		await wrapper.find('pptx-ui-ribbon-actions').trigger('share-request');
+		expect(calls).toEqual(['comments', 'share']);
 	});
 });

@@ -1,6 +1,7 @@
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ChromeUiState } from '../../state/chrome-ui.svelte';
 import { RIBBON_TABS } from './ribbon-tabs';
 import RibbonTabBar from './RibbonTabBar.svelte';
 
@@ -36,28 +37,40 @@ describe('ribbonTabBar hiddenActions', () => {
 		expect(tabLabels(target)).not.toContain('Record');
 	});
 
-	it('renders Record and Share on the tab row right side when wired', () => {
+	it('renders Record, then the shared Comments / Share element, on the tab row right side', () => {
 		const onrecord = vi.fn();
 		const onshare = vi.fn();
+		const chromeUi = new ChromeUiState();
 		const target = document.createElement('div');
+		document.body.append(target);
 		const instance = mount(RibbonTabBar, {
 			target,
-			props: { active: 'home', onselect: vi.fn(), onrecord, onshare },
+			props: { active: 'home', onselect: vi.fn(), onrecord, onshare, chromeUi, commentCount: 2 },
 		});
-		cleanup = () => unmount(instance);
+		cleanup = () => {
+			unmount(instance);
+			target.remove();
+		};
 
 		const record = target.querySelector<HTMLButtonElement>('.pptx-svelte-ribbon-record');
-		const share = target.querySelector<HTMLButtonElement>('.pptx-svelte-ribbon-share');
+		const actions = target.querySelector('pptx-ui-ribbon-actions')!;
+		const part = (name: string) =>
+			actions.shadowRoot!.querySelector<HTMLButtonElement>(`[part="${name}"]`)!;
 		expect(record).not.toBeNull();
-		expect(share).not.toBeNull();
+		expect(part('share').hidden).toBe(false);
+		expect(part('comments').hidden).toBe(false);
+		expect(part('comments').querySelector('.badge')?.textContent).toBe('2');
 		record?.click();
-		share?.click();
+		part('share').click();
+		part('comments').click();
 		expect(onrecord).toHaveBeenCalledOnce();
 		expect(onshare).toHaveBeenCalledOnce();
+		expect(chromeUi.inspectorTab).toBe('comments');
 	});
 
 	it('hides the tab-row Record / Share quick actions via hiddenActions', () => {
 		const target = document.createElement('div');
+		document.body.append(target);
 		const instance = mount(RibbonTabBar, {
 			target,
 			props: {
@@ -68,9 +81,13 @@ describe('ribbonTabBar hiddenActions', () => {
 				hiddenActions: ['record', 'share'],
 			},
 		});
-		cleanup = () => unmount(instance);
+		cleanup = () => {
+			unmount(instance);
+			target.remove();
+		};
 
 		expect(target.querySelector('.pptx-svelte-ribbon-record')).toBeNull();
-		expect(target.querySelector('.pptx-svelte-ribbon-share')).toBeNull();
+		const actions = target.querySelector('pptx-ui-ribbon-actions')!;
+		expect(actions.shadowRoot!.querySelector<HTMLElement>('[part="share"]')!.hidden).toBe(true);
 	});
 });

@@ -100,26 +100,4 @@ export const RIBBON_QUICK_CSS = `
 }
 .pptxv-tabrow-record:hover { background: var(--pptx-accent); color: var(--pptx-foreground); }
 .pptxv-tabrow-record-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
-.pptxv-tabrow-share, .pptxv-tabrow-share.pptxv-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	width: auto;
-	height: auto;
-	padding: 3px 10px;
-	border: none;
-	border-radius: 3px;
-	background: var(--pptx-primary);
-	color: var(--pptx-primary-foreground, #fff);
-	font: inherit;
-	font-size: 11px;
-	font-weight: 500;
-	white-space: nowrap;
-	cursor: pointer;
-}
-.pptxv-tabrow-share:hover, .pptxv-tabrow-share.pptxv-btn:hover:not(:disabled) {
-	background: color-mix(in srgb, var(--pptx-primary) 90%, #000);
-	color: var(--pptx-primary-foreground, #fff);
-}
-.pptxv-tabrow-share svg { width: 12px; height: 12px; }
 `;

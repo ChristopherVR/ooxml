@@ -122,6 +122,9 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 					<TabRowActions
 						onEnterRehearsalMode={p.canEdit ? p.onEnterRehearsalMode : undefined}
 						onOpenShareDialog={p.onOpenShareDialog}
+						onToggleComments={p.onToggleComments}
+						isCommentsPanelOpen={p.isCommentsPanelOpen}
+						slideCommentCount={p.slideCommentCount}
 						hiddenActions={p.hiddenActions}
 					/>
 					{isNarrowViewport && (

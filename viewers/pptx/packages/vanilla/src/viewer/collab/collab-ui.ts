@@ -1,6 +1,6 @@
 /* oxlint-disable eslint/one-var -- pre-existing throughout this file; independent concerns, not one statement */
 import type { CollaborationConfig, ConnectionStatus, ToolbarActionId } from 'ooxml-ui/pptx';
-import { buildBroadcastViewerUrl, isActionHidden } from 'ooxml-ui/pptx';
+import { buildBroadcastViewerUrl, buildTabRowActionsState, isActionHidden } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
@@ -17,6 +17,13 @@ import { createFollowModeBar } from './ui/follow-mode-bar';
 import { createRemoteSelectionOverlay } from './ui/remote-selection-overlay';
 import type { ShareDialogSession } from './ui/share-dialog';
 import { createShareDialog } from './ui/share-dialog';
+
+/** The shared tab-row element's Share properties this module drives. */
+type TabRowActionsHost = HTMLElement & {
+	noShare: boolean;
+	sharePressed: boolean;
+	shareTitle: string;
+};
 
 /**
  * collab-ui.ts: owns the Share/Broadcast dialogs, the toolbar status pill +
@@ -142,32 +149,31 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			viewerUrl(),
 		);
 	};
-	// Share lives on the ribbon tab row's right side (React's `TabRowActions`
-	// orange Share button); the status pill stays on the quick-access primary
-	// row. When no tab row exists (toolbar-less chrome, tests) Share falls back
-	// to the primary row. Broadcast has no standalone quick-access icon (React
-	// exposes it only via the Present menu "Present Online" item and the Slide
-	// Show tab, both of which route through `openBroadcast`). Share is hidden per
-	// the host's `hiddenActions` option ('share') and only constructed (not
-	// merely hidden) when visible.
+	// Share lives on the ribbon tab row's right side, on the shared
+	// `pptx-ui-ribbon-actions` the tab bar mounts there (Comments and Share, the
+	// element Word and Excel use); the status pill stays on the quick-access
+	// primary row. When no tab row exists (toolbar-less chrome, tests) Share
+	// falls back to a primary-row button. Broadcast has no standalone
+	// quick-access icon (React exposes it only via the Present menu "Present
+	// Online" item and the Slide Show tab, both of which route through
+	// `openBroadcast`). Share is hidden per the host's `hiddenActions` option
+	// ('share') and only shown (or, as a fallback, constructed) when visible.
 	const showShare = !isActionHidden('share', deps.hiddenActions);
 	const toolbarEl = chrome.ribbon?.el.querySelector<HTMLElement>('.pptxv-ribbon-primary') ?? null;
-	const tabRowActionsEl =
-		chrome.ribbon?.el.querySelector<HTMLElement>('.pptxv-tabrow-actions') ?? null;
+	const tabActions =
+		chrome.ribbon?.el.querySelector<TabRowActionsHost>('pptx-ui-ribbon-actions') ?? null;
 	if (toolbarEl) {
-		if (showShare) {
-			shareBtn = createEl(doc, 'button', tabRowActionsEl ? 'pptxv-tabrow-share' : 'pptxv-btn');
+		if (showShare && tabActions) {
+			tabActions.noShare = false;
+			tabActions.addEventListener('share-request', openShare);
+		} else if (showShare) {
+			shareBtn = createEl(doc, 'button', 'pptxv-btn');
 			shareBtn.type = 'button';
 			shareBtn.title = t('pptx.toolbar.share');
 			shareBtn.setAttribute('aria-label', t('pptx.toolbar.share'));
 			shareBtn.appendChild(createIcon(doc, 'share'));
-			if (tabRowActionsEl) {
-				const label = createEl(doc, 'span');
-				label.textContent = t('pptx.toolbar.share');
-				shareBtn.appendChild(label);
-			}
 			shareBtn.addEventListener('click', openShare);
-			(tabRowActionsEl ?? toolbarEl).appendChild(shareBtn);
+			toolbarEl.appendChild(shareBtn);
 		}
 		if (deps.showCollaborationStatus !== false) {
 			toolbarEl.appendChild(statusPill.el);
@@ -233,6 +239,18 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 		followBar.update(state.remotePresences, state.followedClientId);
 		statusPill.update(deps.getStatus(), connectedCount(state));
 		shareDialog.updateSession(shareSession(state));
+		if (tabActions && showShare) {
+			const live = buildTabRowActionsState({
+				translate: t,
+				showComments: true,
+				commentsOpen: false,
+				showShare,
+				isCollaborating: deps.getStatus() === 'connected',
+				collaboratorCount: connectedCount(state),
+			});
+			tabActions.sharePressed = live.sharePressed;
+			tabActions.shareTitle = live.shareTitle;
+		}
 	}
 	render(deps.store.get());
 
@@ -265,6 +283,10 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			unsubscribe();
 			shareBtn?.remove();
 			mobileShareBtn?.remove();
+			if (tabActions) {
+				tabActions.removeEventListener('share-request', openShare);
+				tabActions.noShare = true;
+			}
 			statusPill.destroy();
 			cursors.destroy();
 			remoteSelections.destroy();

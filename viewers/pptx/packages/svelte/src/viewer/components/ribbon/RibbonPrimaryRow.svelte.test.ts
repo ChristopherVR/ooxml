@@ -60,19 +60,18 @@ describe('ribbonPrimaryRow', () => {
 		expect(onbroadcast).toHaveBeenCalledOnce();
 	});
 
-	it('wires the sidebar / comments / inspector toggles to ChromeUiState', () => {
+	it('wires the sidebar / inspector toggles to ChromeUiState; Comments is on the tab row', () => {
 		const chromeUi = new ChromeUiState();
 		const target = mountRow({ chromeUi });
 
 		target.querySelector<HTMLButtonElement>('[aria-label="Toggle slides panel"]')?.click();
 		expect(chromeUi.sidebarCollapsed).toBeTruthy();
 
-		target.querySelector<HTMLButtonElement>('[aria-label="Comments"]')?.click();
-		expect(chromeUi.inspectorOpen).toBeTruthy();
-		expect(chromeUi.inspectorTab).toBe('comments');
+		expect(target.querySelector('[aria-label="Comments"]')).toBeNull();
 
+		const inspectorWasOpen = chromeUi.inspectorOpen;
 		target.querySelector<HTMLButtonElement>('[aria-label="Toggle inspector panel"]')?.click();
-		expect(chromeUi.inspectorOpen).toBeFalsy();
+		expect(chromeUi.inspectorOpen).toBe(!inspectorWasOpen);
 	});
 
 	it('renders the "+ Show" custom-shows button and the settings gear when wired', () => {

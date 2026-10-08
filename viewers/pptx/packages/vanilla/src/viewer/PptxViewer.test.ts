@@ -219,21 +219,25 @@ describe('createPptxViewer', () => {
 		).toBeNull();
 		const primary = container.querySelector('.pptxv-ribbon-primary');
 		expect(primary?.getAttribute('role')).toBeNull();
-		// React-aligned quick-access cluster: comments, Present split, "+ Show",
-		// inspector toggle, settings, overflow; collab appends the status pill.
-		// Broadcast has no standalone icon here (React reaches it via the Present
-		// menu's "Present Online" item), so it must NOT be in the primary row.
-		expect(primary?.querySelector('button[aria-label="Comments"]')).toBeTruthy();
+		// React-aligned quick-access cluster: Present split, "+ Show", inspector
+		// toggle, settings, overflow; collab appends the status pill. Comments
+		// moved to the tab row. Broadcast has no standalone icon here (React
+		// reaches it via the Present menu's "Present Online" item), so it must
+		// NOT be in the primary row.
+		expect(primary?.querySelector('button[aria-label="Comments"]')).toBeNull();
 		expect(primary?.querySelector('.pptxv-present-split')).toBeTruthy();
 		expect(primary?.querySelector('button[aria-label="Toggle inspector panel"]')).toBeTruthy();
 		expect(primary?.querySelector('button[aria-label="Settings & Shortcuts"]')).toBeTruthy();
 		expect(primary?.querySelector('button[aria-label="More actions"]')).toBeTruthy();
 		expect(primary?.querySelector('button[aria-label="Broadcast to a live audience"]')).toBeNull();
 		expect(primary?.querySelector('.pptxv-collab-status')).toBeTruthy();
-		// Share and Record live on the tab row's right side, matching React.
+		// Record, then Comments and Share (the shared tab-row element), live on
+		// the tab row's right side, matching React.
 		const tabRowActions = container.querySelector('.pptxv-tabrow-actions');
-		expect(tabRowActions?.querySelector('button[aria-label="Share"]')).toBeTruthy();
 		expect(tabRowActions?.querySelector('button[aria-label="Record"]')).toBeTruthy();
+		const shared = tabRowActions?.querySelector('pptx-ui-ribbon-actions')?.shadowRoot;
+		expect(shared?.querySelector<HTMLElement>('[part="share"]')?.hidden).toBe(false);
+		expect(shared?.querySelector<HTMLElement>('[part="comments"]')?.hidden).toBe(false);
 		expect(container.querySelector('[data-pptx-inspector]')?.getAttribute('aria-label')).toBe(
 			'Properties',
 		);

@@ -22,12 +22,13 @@ export interface RibbonPrimaryRow {
 
 /**
  * Desktop quick-access row above the ribbon tabs, mirroring React's
- * `ToolbarPrimaryRow` right cluster: comments, the "Present" split button
- * with its options dropdown, "+ Show", the inspector toggle, the settings
- * gear, and the "..." overflow menu. Save/undo/redo and autosave state live
- * in the title bar, matching React; collaboration appends its status pill
- * (and, without a tab row, its Share trigger) into this `.pptxv-ribbon-primary`
- * row (see `collab/collab-ui.ts`).
+ * `ToolbarPrimaryRow` right cluster: the "Present" split button with its
+ * options dropdown, "+ Show", the inspector toggle, the settings gear, and the
+ * "..." overflow menu. Save/undo/redo and autosave state live in the title
+ * bar, matching React; Comments and Share sit on the tab row
+ * (`ribbon-tab-bar.ts`). Collaboration appends its status pill (and, without
+ * a tab row, its Share trigger) into this `.pptxv-ribbon-primary` row (see
+ * `collab/collab-ui.ts`).
  */
 export function createRibbonPrimaryRow(
 	doc: Document,
@@ -37,14 +38,6 @@ export function createRibbonPrimaryRow(
 ): RibbonPrimaryRow {
 	const el = createEl(doc, 'div', 'pptxv-ribbon-primary');
 	el.dataset.pptxChrome = 'ribbon-primary';
-
-	// -- Comments ------------------------------------------------------------
-	const comments = makeButton(doc, {
-		label: t('pptx.toolbar.comments'),
-		icon: 'comment',
-		onClick: () => handlers.nav.openComments(),
-	});
-	el.appendChild(comments.btn);
 
 	// -- Present split button + options dropdown -----------------------------
 	const presentSplit = createEl(doc, 'div', 'pptxv-present-split');

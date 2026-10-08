@@ -1,5 +1,6 @@
 import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
+	buildTabRowActionsState,
 	contextualTabLabelKey,
 	filterVisibleTabs,
 	isActionHidden,
@@ -29,14 +30,18 @@ export interface RibbonTabBar {
 export interface RibbonTabBarActions {
 	/** The red-dot Record button (starts rehearsal/recording). */
 	startRecording(): void;
+	/** Comments on the shared tab-row element; absent leaves Comments out. */
+	openComments?(): void;
 }
 
 /**
  * The ribbon's tab strip (File/Home/Insert/.../View), à la React's ribbon tab
  * row. Tabs in `hiddenActions` are never constructed, matching how the ribbon
  * itself skips building content for a hidden tab. The right side carries the
- * Record button plus a `.pptxv-tabrow-actions` host the collaboration UI
- * mounts its Share trigger into (see `collab/collab-ui.ts`).
+ * Record button, then the shared `pptx-ui-ribbon-actions` (Comments and Share,
+ * the element Word and Excel put at the same place). This module owns its
+ * Comments; the collaboration UI turns on and drives its Share (see
+ * `collab/collab-ui.ts`), which stays hidden until then.
  */
 export function createRibbonTabBar(
 	doc: Document,
@@ -120,6 +125,21 @@ export function createRibbonTabBar(
 			record.addEventListener('click', () => actions.startRecording());
 			actionsHost.appendChild(record);
 		}
+		const tabActions = doc.createElement('pptx-ui-ribbon-actions');
+		tabActions.dataset.pptxChrome = 'tab-row-actions';
+		const initial = buildTabRowActionsState({
+			translate: t,
+			showComments: Boolean(actions.openComments),
+			commentsOpen: false,
+			showShare: false,
+			isCollaborating: false,
+		});
+		Object.assign(tabActions, initial);
+		const openComments = actions.openComments;
+		if (openComments) {
+			tabActions.addEventListener('comments-toggle', () => openComments());
+		}
+		actionsHost.appendChild(tabActions);
 		el.appendChild(actionsHost);
 	}
 

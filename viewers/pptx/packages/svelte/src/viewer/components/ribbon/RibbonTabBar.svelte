@@ -2,11 +2,18 @@
 	/**
 	 * RibbonTabBar: the File/Home/Insert/View tab strip, driven by the registry,
 	 * plus the right-side quick actions React keeps on the tab row
-	 * (`TabRowActions`): Record and the highlighted Share button.
+	 * (`TabRowActions`): Record, then Comments and Share drawn by the shared
+	 * `pptx-ui-ribbon-actions` (the element Word and Excel put there too).
 	 */
-	import { contextualTabLabelKey, filterVisibleTabs, isActionHidden } from 'ooxml-ui/pptx';
+	import {
+		buildTabRowActionsState,
+		contextualTabLabelKey,
+		filterVisibleTabs,
+		isActionHidden,
+	} from 'ooxml-ui/pptx';
 	import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
+	import type { ChromeUiState } from '../../state/chrome-ui.svelte';
 	import { useViewerOptions } from '../../state/viewer-options-context';
 	import { RIBBON_TABS } from './ribbon-tabs';
 	import type { RibbonTabId } from './ribbon-tabs';
@@ -19,6 +26,8 @@
 		collabActive = false,
 		hiddenActions,
 		contextualTabs = [],
+		chromeUi,
+		commentCount = 0,
 	}: {
 		active: RibbonTabId | RibbonContextualTabId;
 		onselect: (id: RibbonTabId | RibbonContextualTabId) => void;
@@ -28,11 +37,25 @@
 		onshare?: () => void;
 		collabActive?: boolean;
 		hiddenActions?: ToolbarActionId[];
+		/** Comments pane state and toggle; absent leaves Comments out. */
+		chromeUi?: ChromeUiState;
+		/** Comments on the current slide, shown as a badge. */
+		commentCount?: number;
 	} = $props();
 
 	const t = useTranslator();
 	const optionsState = useViewerOptions();
 	const visibleTabs = $derived(filterVisibleTabs(RIBBON_TABS, hiddenActions));
+	const actionsState = $derived(
+		buildTabRowActionsState({
+			translate: t,
+			showComments: Boolean(chromeUi),
+			commentsOpen: Boolean(chromeUi?.commentsOpen),
+			commentCount,
+			showShare: Boolean(onshare) && !isActionHidden('share', hiddenActions),
+			isCollaborating: collabActive,
+		}),
+	);
 </script>
 
 <div class="pptx-svelte-ribbon-tabrow" data-pptx-chrome="ribbon-tabs">
@@ -78,19 +101,12 @@
 				<span>{t('pptx.titleBar.record')}</span>
 			</button>
 		{/if}
-		{#if onshare && !isActionHidden('share', hiddenActions)}
-			<button
-				type="button"
-				class="pptx-svelte-ribbon-share"
-				class:pptx-svelte-ribbon-share-active={collabActive}
-				title={t('pptx.toolbar.share')}
-				aria-label={t('pptx.toolbar.share')}
-				onclick={onshare}
-			>
-				<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="8" r="1.6" fill="none" stroke="currentColor" stroke-width="1.3" /><circle cx="12" cy="3.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.3" /><circle cx="12" cy="12.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.3" /><path d="M5.4 7.2 10.6 4.3M5.4 8.8 10.6 11.7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" /></svg>
-				<span>{t('pptx.toolbar.share')}</span>
-			</button>
-		{/if}
+		<pptx-ui-ribbon-actions
+			data-pptx-chrome="tab-row-actions"
+			state={actionsState}
+			oncomments-toggle={() => chromeUi?.toggleComments()}
+			onshare-request={() => onshare?.()}
+		></pptx-ui-ribbon-actions>
 	</div>
 </div>
 
@@ -126,8 +142,7 @@
 		padding-right: 6px;
 	}
 
-	.pptx-svelte-ribbon-record,
-	.pptx-svelte-ribbon-share {
+	.pptx-svelte-ribbon-record {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
@@ -155,24 +170,6 @@
 		height: 7px;
 		border-radius: 50%;
 		background: #ef4444;
-	}
-
-	.pptx-svelte-ribbon-share {
-		background: var(--pptx-primary, #6366f1);
-		color: var(--pptx-primary-foreground, #fff);
-	}
-
-	.pptx-svelte-ribbon-share:hover {
-		filter: brightness(1.1);
-	}
-
-	.pptx-svelte-ribbon-share-active {
-		background: #16a34a;
-	}
-
-	.pptx-svelte-ribbon-share svg {
-		width: 12px;
-		height: 12px;
 	}
 
 	.pptx-svelte-ribbon-tab {

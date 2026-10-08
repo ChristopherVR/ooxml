@@ -33,6 +33,9 @@ interface Props {
 	onOpenShareDialog?: () => void;
 	isCollaborating?: boolean;
 	collaboratorCount?: number;
+	onToggleComments?: () => void;
+	isCommentsPanelOpen?: boolean;
+	slideCommentCount?: number;
 	hiddenActions?: ToolbarActionId[];
 	isCompactToolbarOpen: boolean;
 	onToggleCompactToolbar: () => void;
@@ -101,6 +104,9 @@ const screenTip = inject(ScreenTipKey, (label: string) => label);
 			:on-open-share-dialog="props.onOpenShareDialog"
 			:is-collaborating="props.isCollaborating"
 			:collaborator-count="props.collaboratorCount"
+			:on-toggle-comments="props.onToggleComments"
+			:is-comments-panel-open="props.isCommentsPanelOpen"
+			:slide-comment-count="props.slideCommentCount"
 			:hidden-actions="props.hiddenActions"
 		/>
 		<button

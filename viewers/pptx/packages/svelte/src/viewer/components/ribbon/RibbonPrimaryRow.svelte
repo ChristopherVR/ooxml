@@ -1,9 +1,10 @@
 <script lang="ts">
 	/**
 	 * React-aligned command row above the ribbon tabs (`ToolbarPrimaryRow`
-	 * port): slides-pane toggle on the left; comments, Present split button,
-	 * "+ Show" (custom shows), inspector toggle, settings gear, and the export
-	 * overflow menu on the right. Save/undo/redo stay in the title bar.
+	 * port): slides-pane toggle on the left; Present split button, "+ Show"
+	 * (custom shows), inspector toggle, settings gear, and the export overflow
+	 * menu on the right. Save/undo/redo stay in the title bar; Comments and
+	 * Share sit on the tab row (`RibbonTabBar`).
 	 */
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -18,7 +19,6 @@
 	const {
 		chromeUi,
 		readOnly = false,
-		commentCount = 0,
 		onpresent,
 		onpresenter,
 		onrehearse,
@@ -45,7 +45,6 @@
 	}: {
 		chromeUi?: ChromeUiState;
 		readOnly?: boolean;
-		commentCount?: number;
 		onpresent: () => void;
 		onpresenter?: () => void;
 		onrehearse?: () => void;
@@ -90,20 +89,6 @@
 		</button>
 	{/if}
 	<span class="pptx-svelte-ribbon-primary-spacer"></span>
-	{#if chromeUi}
-		<button
-			type="button"
-			class="pptx-svelte-ribbon-primary-comments"
-			class:pptx-svelte-ribbon-primary-on={chromeUi.commentsOpen}
-			aria-label={t('pptx.toolbar.comments')}
-			title={t('pptx.toolbar.comments')}
-			aria-pressed={chromeUi.commentsOpen}
-			onclick={() => chromeUi.toggleComments()}
-		>
-			<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11v7h-6l-3 3v-3h-2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" /></svg>
-			{#if commentCount > 0}<span class="pptx-svelte-ribbon-primary-badge">{commentCount}</span>{/if}
-		</button>
-	{/if}
 	<PresentSplitButton
 		{onpresent}
 		{onpresenter}
@@ -235,25 +220,6 @@
 
 	.pptx-svelte-ribbon-primary-ai.pptx-svelte-ribbon-primary-on {
 		color: var(--pptx-primary, #a5b4fc);
-	}
-
-	.pptx-svelte-ribbon-primary-comments {
-		position: relative;
-	}
-
-	.pptx-svelte-ribbon-primary-badge {
-		position: absolute;
-		top: -2px;
-		right: -2px;
-		display: grid;
-		place-items: center;
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: var(--pptx-primary, #6366f1);
-		color: #fff;
-		font-size: 8px;
-		line-height: 1;
 	}
 
 	.pptx-svelte-ribbon-primary-shows {

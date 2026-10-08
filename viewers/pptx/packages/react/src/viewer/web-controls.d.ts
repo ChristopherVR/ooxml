@@ -66,6 +66,7 @@ declare module 'react' {
 			'pptx-ui-subtitle-settings': WebControlProps;
 			'pptx-ui-theme-editor': WebControlProps;
 			'pptx-ui-title-bar': WebControlProps;
+			'pptx-ui-ribbon-actions': WebControlProps;
 		}
 	}
 }
