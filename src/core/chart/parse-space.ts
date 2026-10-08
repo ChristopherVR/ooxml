@@ -1,10 +1,12 @@
 // `c:chartSpace` parser over the shared `xml` DOM: one reader for every Office format. It never
 // throws on content it does not know; such children are reported as issues and stay in the part.
-import { NS, children, first, parseXml, relAttr, type XmlElement } from '../xml/index';
+import { NS, buildXml, children, first, parseXml, relAttr, type XmlElement } from '../xml/index';
 import type { ChartLegend, ChartSpace, ChartSpaceParseResult, ChartView3D } from './model';
 import { parsePlotArea } from './parse-plot';
 import { parseTitle } from './parse-text';
+import { CHART_ROOT_BINDINGS } from './xml-fragment';
 import {
+	attribute,
 	assignDefined,
 	cBool,
 	cChild,
@@ -73,6 +75,26 @@ function chartStyle(context: ChartParseContext, space: XmlElement): number | und
 	return undefined;
 }
 
+/** `c14:style` of the `mc:Choice` Office writes beside the `c:style` fallback. */
+function c14Style(space: XmlElement): number | undefined {
+	for (const alternate of children(space, 'AlternateContent', NS.mc)) {
+		const raw = attribute(first(first(alternate, 'Choice', NS.mc), 'style', NS.c14, false), 'val');
+		const value = raw?.trim() ? Number(raw) : Number.NaN;
+		if (Number.isFinite(value)) return value;
+	}
+	return undefined;
+}
+
+/** Root namespace declarations other than the `c`, `a` and `r` every chart part declares. */
+function namespaceDeclarations(root: XmlElement): { prefix: string; uri: string }[] | undefined {
+	const out: { prefix: string; uri: string }[] = [];
+	for (const item of Array.from(root.attributes)) {
+		if (item.prefix !== 'xmlns' || CHART_ROOT_BINDINGS.get(item.localName) === item.value) continue;
+		out.push({ prefix: item.localName, uri: item.value });
+	}
+	return out.length ? out : undefined;
+}
+
 const CHART = new Set([
 	'title',
 	'autoTitleDeleted',
@@ -94,6 +116,7 @@ const SPACE = new Set([
 	'spPr',
 	'txPr',
 	'externalData',
+	'printSettings',
 	'userShapes',
 	'extLst',
 ]);
@@ -121,6 +144,7 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 	const title = cChild(chart, 'title');
 	const legend = cChild(chart, 'legend');
 	const view3D = cChild(chart, 'view3D');
+	const printSettings = cChild(root, 'printSettings');
 	const chartSpace = assignDefined<ChartSpace>(
 		{ plotArea: parsePlotArea(context, cChild(chart, 'plotArea')) },
 		{
@@ -128,6 +152,7 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 			language: cVal(root, 'lang'),
 			roundedCorners: cBool(context, root, 'roundedCorners'),
 			style: chartStyle(context, root),
+			c14Style: c14Style(root),
 			title: title ? parseTitle(context, title) : undefined,
 			autoTitleDeleted: cBool(context, chart, 'autoTitleDeleted'),
 			view3D: view3D ? parseView3D(context, view3D) : undefined,
@@ -138,9 +163,12 @@ export function parseChartSpace(source: string | XmlElement): ChartSpaceParseRes
 			spPr: shapeProperties(root),
 			txPr: textProperties(root),
 			externalDataRelId: relAttr(cChild(root, 'externalData'), 'id') || undefined,
+			externalDataAutoUpdate: cBool(context, cChild(root, 'externalData'), 'autoUpdate'),
+			printSettings: printSettings ? buildXml(printSettings) : undefined,
 			userShapesRelId: relAttr(cChild(root, 'userShapes'), 'id') || undefined,
 			chartExtLst: extensionList(chart),
 			extLst: extensionList(root),
+			namespaceDeclarations: namespaceDeclarations(root),
 		},
 	);
 	return { chartSpace, issues: context.issues };

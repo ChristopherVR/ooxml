@@ -21,6 +21,35 @@ export interface ChartShapeProperties {
 	line?: DrawingLine;
 	/** `a:effectLst` as written, kept for round-trip. */
 	effectsXml?: string;
+	/**
+	 * The children of `c:spPr` as written, with the part's `c`, `a` and `r` declarations left to the
+	 * root. The writer re-emits them while `fill`, `line` and `effectsXml` still read back from them
+	 * and patches only the changed pieces otherwise, so unmodelled geometry and 3-D settings survive.
+	 */
+	sourceXml?: string;
+}
+
+/**
+ * A DrawingML text body of a chart (`c:rich`, `c:txPr`). `sourceXml` holds its children as written
+ * (same declaration rule as {@link ChartShapeProperties.sourceXml}); the writer re-emits them while
+ * the modelled fields still read back from them, and writes the modelled fields otherwise.
+ */
+export interface ChartTextBody extends DrawingTextBody {
+	sourceXml?: string;
+}
+
+/**
+ * A manual layout (`c:layout`): `{}` for an empty (automatic) layout element. `sourceXml` keeps
+ * the children as written, so values Excel wrote with 17 digits or an exponent come back as written
+ * while they still read back the same.
+ */
+export interface ChartLayout extends ChartManualLayout {
+	sourceXml?: string;
+}
+
+/** Chart lines (`c:majorGridlines`, `c:leaderLines`, `c:hiLowLines`...): only their shape. */
+export interface ChartLines {
+	spPr?: ChartShapeProperties;
 }
 
 /** A number format (`c:numFmt`). */
@@ -67,6 +96,8 @@ export interface ChartDataSource {
 	cache?: ChartDataCache;
 	/** The levels of a multi-level category cache (`c:multiLvlStrCache/c:lvl`), innermost first. */
 	levels?: ChartDataCache[];
+	/** `c:ptCount` of the multi-level cache. */
+	levelPointCount?: number;
 }
 
 /**
@@ -74,7 +105,7 @@ export interface ChartDataSource {
  * names only). `text` is the flattened string a client shows when it draws no runs.
  */
 export interface ChartText {
-	rich?: DrawingTextBody;
+	rich?: ChartTextBody;
 	reference?: ChartDataSource;
 	/** `c:v` of a series name. */
 	value?: string;
@@ -88,10 +119,10 @@ export interface ChartTitle {
 	/** Flattened text of `tx`; absent when the title has no text (an automatic title). */
 	text?: string;
 	overlay?: boolean;
-	layout?: ChartManualLayout;
+	layout?: ChartLayout;
 	spPr?: ChartShapeProperties;
 	/** Text properties (`c:txPr`). */
-	txPr?: DrawingTextBody;
+	txPr?: ChartTextBody;
 	extLst?: string;
 }
 
@@ -109,7 +140,7 @@ export interface ChartDataLabelOptions {
 	position?: string;
 	numberFormat?: ChartNumberFormat;
 	spPr?: ChartShapeProperties;
-	txPr?: DrawingTextBody;
+	txPr?: ChartTextBody;
 	extLst?: string;
 }
 
@@ -118,13 +149,15 @@ export interface ChartDataLabel extends ChartDataLabelOptions {
 	index?: number;
 	/** Custom label text. */
 	tx?: ChartText;
-	layout?: ChartManualLayout;
+	layout?: ChartLayout;
 }
 
 /** Data labels of a group or series (`c:dLbls`). */
 export interface ChartDataLabels extends ChartDataLabelOptions {
 	labels: ChartDataLabel[];
 	showLeaderLines?: boolean;
+	/** `c:leaderLines`, present when written. */
+	leaderLines?: ChartLines;
 }
 
 /** A marker (`c:marker`). */

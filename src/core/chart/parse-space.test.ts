@@ -59,6 +59,7 @@ describe('parseChartSpace', () => {
 				explosion: 12,
 				spPr: {
 					fill: { kind: 'solid', color: { kind: 'scheme', value: 'accent2', transforms: [] } },
+					sourceXml: '<a:solidFill><a:schemeClr val="accent2"/></a:solidFill>',
 				},
 			},
 		]);

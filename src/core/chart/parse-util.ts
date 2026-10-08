@@ -3,9 +3,16 @@
 import { NS, buildXml, elements, first, type XmlElement } from '../xml/index';
 import { parseDrawingFill, parseDrawingLine } from '../drawingml/drawing-fill';
 import { parseDrawingTextBody } from '../drawingml/drawing-text';
-import type { DrawingTextBody } from '../drawingml/types';
 import { readChartManualLayoutValues, type ChartManualLayout } from './manual-layout';
-import type { ChartNumberFormat, ChartParseIssue, ChartShapeProperties } from './model-series';
+import type {
+	ChartLayout,
+	ChartLines,
+	ChartNumberFormat,
+	ChartParseIssue,
+	ChartShapeProperties,
+	ChartTextBody,
+} from './model-series';
+import { innerXml } from './xml-fragment';
 
 /** Collects issues while a chart part is parsed. */
 export interface ChartParseContext {
@@ -87,10 +94,8 @@ export function extensionList(parent: XmlElement | undefined): string | undefine
 	return extLst ? buildXml(extLst) : undefined;
 }
 
-/** `c:spPr` through the `drawingml` fill, line and effect readers; present for an empty element. */
-export function shapeProperties(parent: XmlElement | undefined): ChartShapeProperties | undefined {
-	const spPr = cChild(parent, 'spPr');
-	if (!spPr) return undefined;
+/** The modelled fields of a `c:spPr` element (fill, line, effects), without its source. */
+export function readShapeFields(spPr: XmlElement): ChartShapeProperties {
 	const out: ChartShapeProperties = {};
 	const fill = parseDrawingFill(spPr);
 	if (fill) out.fill = fill;
@@ -101,9 +106,36 @@ export function shapeProperties(parent: XmlElement | undefined): ChartShapePrope
 	return out;
 }
 
+/** `c:spPr` through the `drawingml` fill, line and effect readers; present for an empty element. */
+export function shapeProperties(parent: XmlElement | undefined): ChartShapeProperties | undefined {
+	const spPr = cChild(parent, 'spPr');
+	if (!spPr) return undefined;
+	const out = readShapeFields(spPr);
+	const source = innerXml(spPr);
+	if (source) out.sourceXml = source;
+	return out;
+}
+
+/** A chart text body (`c:rich`, `c:txPr`) with its children kept as written. */
+export function chartTextBody(element: XmlElement | undefined): ChartTextBody | undefined {
+	const body: ChartTextBody | undefined = parseDrawingTextBody(element);
+	if (!body || !element) return body;
+	const source = innerXml(element);
+	if (source) body.sourceXml = source;
+	return body;
+}
+
 /** `c:txPr` as a DrawingML text body. */
-export const textProperties = (parent: XmlElement | undefined): DrawingTextBody | undefined =>
-	parseDrawingTextBody(cChild(parent, 'txPr'));
+export const textProperties = (parent: XmlElement | undefined): ChartTextBody | undefined =>
+	chartTextBody(cChild(parent, 'txPr'));
+
+/** Chart lines (`c:majorGridlines`, `c:leaderLines`...): present when written, with their shape. */
+export function chartLines(parent: XmlElement | undefined, local: string): ChartLines | undefined {
+	const element = cChild(parent, local);
+	if (!element) return undefined;
+	const spPr = shapeProperties(element);
+	return spPr ? { spPr } : {};
+}
 
 /** `c:numFmt`. */
 export function numberFormat(parent: XmlElement | undefined): ChartNumberFormat | undefined {
@@ -118,10 +150,20 @@ export function numberFormat(parent: XmlElement | undefined): ChartNumberFormat 
 	};
 }
 
-/** `c:layout/c:manualLayout`. */
-export function manualLayout(parent: XmlElement | undefined): ChartManualLayout | undefined {
-	const manual = cChild(cChild(parent, 'layout'), 'manualLayout');
-	return manual ? readChartManualLayoutValues((name) => cVal(manual, name)) : undefined;
+/** The values of a `c:layout` element; `{}` when it has none (automatic layout). */
+export function readLayoutFields(layout: XmlElement): ChartManualLayout {
+	const manual = cChild(layout, 'manualLayout');
+	return (manual && readChartManualLayoutValues((name) => cVal(manual, name))) ?? {};
+}
+
+/** `c:layout/c:manualLayout`, with the children kept as written. */
+export function manualLayout(parent: XmlElement | undefined): ChartLayout | undefined {
+	const layout = cChild(parent, 'layout');
+	if (!layout) return undefined;
+	const out: ChartLayout = readLayoutFields(layout);
+	const source = innerXml(layout);
+	if (source) out.sourceXml = source;
+	return out;
 }
 
 /** Assigns every defined entry of `values` to `target` (keeps optional properties absent). */

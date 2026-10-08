@@ -1,14 +1,15 @@
 // Format-neutral model of a DrawingML chart part (`c:chartSpace`, ECMA-376 Part 1, 21.2): the chart
 // groups, axes, legend and the part itself. Series, data sources, text and shape properties are in
 // `model-series.ts`.
-import type { DrawingTextBody } from '../drawingml/types';
-import type { ChartManualLayout } from './manual-layout';
 import type {
 	ChartDataLabels,
+	ChartLayout,
+	ChartLines,
 	ChartNumberFormat,
 	ChartParseIssue,
 	ChartShapeProperties,
 	ChartSpaceSeries,
+	ChartTextBody,
 	ChartTitle,
 } from './model-series';
 
@@ -50,11 +51,22 @@ export interface ChartPlotGroup {
 	shape?: string;
 	/** Line: whether markers are shown (`c:marker`). */
 	marker?: boolean;
+	/** Line: `c:smooth` of the group (series carry their own). */
+	smooth?: boolean;
 	dropLines?: boolean;
 	hiLowLines?: boolean;
 	/** Line and stock: whether up/down bars are drawn (`c:upDownBars`). */
 	upDownBars?: boolean;
 	seriesLines?: boolean;
+	/** The shapes of `c:dropLines`, `c:hiLowLines` and `c:serLines` when they are written. */
+	dropLinesSpPr?: ChartShapeProperties;
+	hiLowLinesSpPr?: ChartShapeProperties;
+	seriesLinesSpPr?: ChartShapeProperties;
+	/** `c:upDownBars/c:gapWidth`. */
+	upDownBarsGapWidth?: number;
+	/** `c:upBars` and `c:downBars`, present when written. */
+	upBars?: ChartLines;
+	downBars?: ChartLines;
 	/** Pie and doughnut, degrees. */
 	firstSliceAngle?: number;
 	/** Doughnut, percent. */
@@ -98,6 +110,9 @@ export interface ChartAxis {
 	scaling: ChartAxisScaling;
 	majorGridlines: boolean;
 	minorGridlines: boolean;
+	/** The shapes of the gridlines (`c:majorGridlines/c:spPr`). */
+	majorGridlinesSpPr?: ChartShapeProperties;
+	minorGridlinesSpPr?: ChartShapeProperties;
 	title?: ChartTitle;
 	numberFormat?: ChartNumberFormat;
 	/** `cross`, `in`, `out`, `none`. */
@@ -120,13 +135,14 @@ export interface ChartAxis {
 	noMultiLevelLabels?: boolean;
 	baseTimeUnit?: string;
 	spPr?: ChartShapeProperties;
-	txPr?: DrawingTextBody;
+	txPr?: ChartTextBody;
 	extLst?: string;
 }
 
 /** The plot area (`c:plotArea`). */
 export interface ChartPlotArea {
-	layout?: ChartManualLayout;
+	/** `c:layout`: `{}` for an empty (automatic) layout element, absent when not written. */
+	layout?: ChartLayout;
 	/** Chart groups in document order; a combination chart has more than one. */
 	groups: ChartPlotGroup[];
 	axes: ChartAxis[];
@@ -140,10 +156,10 @@ export interface ChartLegend {
 	position?: string;
 	overlay?: boolean;
 	/** `c:legendEntry` overrides. */
-	entries: { index?: number; deleted?: boolean; txPr?: DrawingTextBody }[];
-	layout?: ChartManualLayout;
+	entries: { index?: number; deleted?: boolean; txPr?: ChartTextBody }[];
+	layout?: ChartLayout;
 	spPr?: ChartShapeProperties;
-	txPr?: DrawingTextBody;
+	txPr?: ChartTextBody;
 	extLst?: string;
 }
 
@@ -164,6 +180,8 @@ export interface ChartSpace {
 	roundedCorners?: boolean;
 	/** `c:style` (1..48), read through `mc:AlternateContent` when Office wraps it. */
 	style?: number;
+	/** `c14:style` (101..148), the `mc:Choice` Office writes beside the `c:style` fallback. */
+	c14Style?: number;
 	title?: ChartTitle;
 	autoTitleDeleted?: boolean;
 	view3D?: ChartView3D;
@@ -174,15 +192,24 @@ export interface ChartSpace {
 	displayBlanksAs?: string;
 	showDataLabelsOverMax?: boolean;
 	spPr?: ChartShapeProperties;
-	txPr?: DrawingTextBody;
+	txPr?: ChartTextBody;
 	/** Relationship id of the embedded or linked workbook (`c:externalData/@r:id`). */
 	externalDataRelId?: string;
+	/** `c:externalData/c:autoUpdate`. */
+	externalDataAutoUpdate?: boolean;
+	/** `c:printSettings` as written (header, footer, margins, page setup), kept for round-trip. */
+	printSettings?: string;
 	/** Relationship id of the user shapes drawing (`c:userShapes/@r:id`). */
 	userShapesRelId?: string;
 	/** `c:chart/c:extLst` as written. */
 	chartExtLst?: string;
 	/** `c:chartSpace/c:extLst` as written. */
 	extLst?: string;
+	/**
+	 * Namespace declarations of the part root besides `c`, `a` and `r` (Office declares `c16r2`),
+	 * in document order, so extension lists keep the prefixes they were written with.
+	 */
+	namespaceDeclarations?: { prefix: string; uri: string }[];
 }
 
 /** What {@link parseChartSpace} returns: the model and what it did not model. */

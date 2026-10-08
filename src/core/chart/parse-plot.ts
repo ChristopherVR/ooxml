@@ -14,6 +14,7 @@ import {
 	assignDefined,
 	attribute,
 	cBool,
+	chartLines,
 	cChild,
 	cNumber,
 	cVal,
@@ -67,6 +68,7 @@ const GROUP = new Set([
 	'gapDepth',
 	'shape',
 	'marker',
+	'smooth',
 	'dropLines',
 	'hiLowLines',
 	'upDownBars',
@@ -91,6 +93,8 @@ function parseGroup(context: ChartParseContext, element: XmlElement): ChartPlotG
 	const flag = (local: string) => cBool(context, element, local);
 	const barDir = cVal(element, 'barDir');
 	const present = (local: string) => (cChild(element, local) ? true : undefined);
+	const linesShape = (local: string) => chartLines(element, local)?.spPr;
+	const bars = cChild(element, 'upDownBars');
 	return assignDefined<ChartPlotGroup>(
 		{
 			kind,
@@ -113,10 +117,17 @@ function parseGroup(context: ChartParseContext, element: XmlElement): ChartPlotG
 			gapDepth: number('gapDepth'),
 			shape: cVal(element, 'shape'),
 			marker: flag('marker'),
+			smooth: flag('smooth'),
 			dropLines: present('dropLines'),
 			hiLowLines: present('hiLowLines'),
 			upDownBars: present('upDownBars'),
 			seriesLines: present('serLines'),
+			dropLinesSpPr: linesShape('dropLines'),
+			hiLowLinesSpPr: linesShape('hiLowLines'),
+			seriesLinesSpPr: linesShape('serLines'),
+			upDownBarsGapWidth: cNumber(context, bars, 'gapWidth'),
+			upBars: chartLines(bars, 'upBars'),
+			downBars: chartLines(bars, 'downBars'),
 			firstSliceAngle: number('firstSliceAng'),
 			holeSize: number('holeSize'),
 			ofPieType: cVal(element, 'ofPieType'),
@@ -190,6 +201,8 @@ function parseAxis(
 			minorGridlines: cChild(element, 'minorGridlines') !== undefined,
 		},
 		{
+			majorGridlinesSpPr: chartLines(element, 'majorGridlines')?.spPr,
+			minorGridlinesSpPr: chartLines(element, 'minorGridlines')?.spPr,
 			id: number('axId'),
 			crossAxisId: number('crossAx'),
 			position: cVal(element, 'axPos'),

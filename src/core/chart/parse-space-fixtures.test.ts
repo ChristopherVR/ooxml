@@ -264,7 +264,10 @@ describe('parseChartSpace on spreadsheet charts', () => {
 			[1192221024, false],
 			[1995301167, true],
 		]);
-		expect(issueCodes(issues)).toEqual(['CHART_ELEMENT_NOT_MODELLED c:chartSpace/c:printSettings']);
+		// Print settings are kept raw, so the Excel part has nothing unmodelled.
+		expect(issues).toEqual([]);
+		expect(chartSpace.printSettings).toContain('<c:pageMargins');
+		expect(chartSpace.c14Style).toBe(102);
 	});
 
 	it('reads openpyxl charts, which carry references without caches', async () => {

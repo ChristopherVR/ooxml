@@ -1,6 +1,5 @@
 // `c:chartSpace` parser: data sources and their caches, chart text, titles and data labels.
 import { NS, children, type XmlElement } from '../xml/index';
-import { parseDrawingTextBody } from '../drawingml/drawing-text';
 import { chartCacheValues } from './data-cache';
 import type {
 	ChartCachePoint,
@@ -17,6 +16,8 @@ import {
 	assignDefined,
 	attribute,
 	cBool,
+	chartLines,
+	chartTextBody,
 	cChild,
 	cNumber,
 	cVal,
@@ -61,7 +62,11 @@ export function parseDataSource(element: XmlElement | undefined): ChartDataSourc
 		const cache = cChild(ref, 'numCache') ?? cChild(ref, 'strCache');
 		if (cache) source.cache = parseCache(cache);
 		const levels = cChild(ref, 'multiLvlStrCache');
-		if (levels) source.levels = children(levels, 'lvl', NS.c).map(parseCache);
+		if (levels) {
+			source.levels = children(levels, 'lvl', NS.c).map(parseCache);
+			const count = Number(cVal(levels, 'ptCount') ?? Number.NaN);
+			if (Number.isInteger(count) && count >= 0) source.levelPointCount = count;
+		}
 		return source;
 	}
 	const literal = cChild(element, 'numLit') ?? cChild(element, 'strLit');
@@ -80,7 +85,7 @@ export function parseChartText(
 ): ChartText | undefined {
 	if (!tx) return undefined;
 	const text: ChartText = {};
-	const rich = parseDrawingTextBody(cChild(tx, 'rich'));
+	const rich = chartTextBody(cChild(tx, 'rich'));
 	if (rich) text.rich = rich;
 	if (cChild(tx, 'strRef')) {
 		const reference = parseDataSource(tx);
@@ -173,6 +178,9 @@ export function parseDataLabels(
 	reportUnmodelled(context, element, LABELS);
 	return assignDefined<ChartDataLabels>(
 		{ ...labelOptions(context, element), labels },
-		{ showLeaderLines: cBool(context, element, 'showLeaderLines') },
+		{
+			showLeaderLines: cBool(context, element, 'showLeaderLines'),
+			leaderLines: chartLines(element, 'leaderLines'),
+		},
 	);
 }

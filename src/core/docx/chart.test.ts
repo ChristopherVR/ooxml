@@ -80,7 +80,8 @@ describe('charts in a Word document', () => {
 		const group = chart.chartSpace?.plotArea.groups[0];
 		expect(group).toMatchObject({ kind: 'bar', barDirection: 'col', grouping: 'clustered' });
 		expect(group?.series.map((series) => series.tx?.text)).toEqual(['Sales', 'Cost']);
-		expect(chart.issues.map((issue) => issue.code)).toEqual(['CHART_ELEMENT_NOT_MODELLED']);
+		// The Excel part's print settings are kept raw by the model, so nothing is reported.
+		expect(chart.issues).toEqual([]);
 		expect(chartsIn(loaded.model.blocks)).toEqual([chart]);
 	});
 
