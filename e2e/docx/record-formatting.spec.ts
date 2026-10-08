@@ -19,18 +19,22 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const body = editor.locator('.ProseMirror');
 		await expect(body).toContainText('Format me');
 		await editor.getByRole('tab', { name: 'Review', exact: true }).click();
-		await editor.getByRole('button', { name: 'Track changes', exact: true }).click();
-		await body.click();
-		await page.keyboard.press('Control+Home');
-		for (let index = 0; index < 6; index++) await page.keyboard.press('Shift+ArrowRight');
-		await expect
-			.poll(() =>
-				editor.evaluate((element) => {
-					const view = (element as unknown as { view: EditorView }).view;
-					return { from: view.state.selection.from, to: view.state.selection.to };
-				}),
-			)
-			.toEqual({ from: 1, to: 7 });
+		const track = editor.getByRole('button', { name: 'Track changes', exact: true });
+		await track.click();
+		await expect(track).toHaveAttribute('aria-pressed', 'true');
+		const selection = () =>
+			editor.evaluate((element) => {
+				const view = (element as unknown as { view: EditorView }).view;
+				return { from: view.state.selection.from, to: view.state.selection.to };
+			});
+		// On a slow runner a binding can still be re-rendering after the toggle and drop some of
+		// the key presses, so select again until the first six characters are selected.
+		await expect(async () => {
+			await body.click();
+			await page.keyboard.press('Control+Home');
+			for (let index = 0; index < 6; index++) await page.keyboard.press('Shift+ArrowRight');
+			expect(await selection()).toEqual({ from: 1, to: 7 });
+		}).toPass({ timeout: 15_000 });
 		await page.keyboard.press('Control+b');
 		const marker = body.locator('.dve-revision-format');
 		await expect(marker).toHaveCount(1);
