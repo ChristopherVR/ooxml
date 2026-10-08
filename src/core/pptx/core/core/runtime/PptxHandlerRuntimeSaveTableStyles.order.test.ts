@@ -173,3 +173,14 @@ describe('table cell properties creation', () => {
 		expect(Object.keys(cell)).toStrictEqual(['a:txBody', 'a:tcPr']);
 	});
 });
+
+describe('empty a:tcPr', () => {
+	it('writes a fill into a cell whose a:tcPr is empty', () => {
+		const cell = parser.parse(
+			'<a:tc><a:txBody><a:bodyPr/><a:p><a:endParaRPr sz="900"/></a:p></a:txBody><a:tcPr/></a:tc>',
+		)['a:tc'] as XmlObject;
+		runtime.writeStyle(cell, { fontSize: 9, backgroundColor: '#AABBCC' });
+		const xml = builder.build({ 'a:tc': cell }) as string;
+		expect(xml).toContain('<a:srgbClr val="AABBCC"');
+	});
+});

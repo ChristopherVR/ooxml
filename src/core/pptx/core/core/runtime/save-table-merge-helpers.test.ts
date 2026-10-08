@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../../types';
 import {
+	serializeCellExtraAttributes,
 	serializeCellMergeAttributes,
 	serializeTablePropertyFlags,
 	replaceFirstTextValueInTree,
@@ -331,5 +332,19 @@ describe('buildChartPoints', () => {
 
 	it('should return empty array for empty input', () => {
 		expect(buildChartPoints([])).toStrictEqual([]);
+	});
+});
+
+describe('serializeCellExtraAttributes', () => {
+	it('leaves a cell without a:tcPr alone when no attribute is written', () => {
+		const cell: XmlObject = {};
+		serializeCellExtraAttributes(cell, undefined);
+		expect(cell['a:tcPr']).toBeUndefined();
+	});
+
+	it('writes into a cell whose a:tcPr parsed as an empty string', () => {
+		const cell: XmlObject = { 'a:tcPr': '' };
+		serializeCellExtraAttributes(cell, { anchorCtr: '1' });
+		expect(cell['a:tcPr']).toEqual({ '@_anchorCtr': '1' });
 	});
 });

@@ -124,8 +124,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Work on the existing `a:tcPr`, or on a detached one that is attached
 		// below only if a cell property was written into it. A style that only
 		// carries text-level fields (font size from `a:endParaRPr`, bold,
-		// alignment) must not add an empty `<a:tcPr/>` to an unedited cell.
-		const existingTcPr = xmlCell['a:tcPr'] as XmlObject | undefined;
+		// alignment) must not add an empty `<a:tcPr/>` to an unedited cell. An
+		// empty `<a:tcPr/>` parses as '', which cannot take properties.
+		const rawTcPr = xmlCell['a:tcPr'];
+		const existingTcPr =
+			rawTcPr && typeof rawTcPr === 'object' ? (rawTcPr as XmlObject) : undefined;
 		const tcPr: XmlObject = existingTcPr ?? {};
 
 		// Background fill — pass a resolver so preserved colour-choice XML

@@ -32,8 +32,10 @@ export function serializeCellExtraAttributes(
 	extra: Record<string, string> | undefined,
 ): void {
 	// Only create `a:tcPr` when an attribute is written: an unedited cell
-	// without cell properties must not gain an empty `<a:tcPr/>`.
-	const existing = xmlCell['a:tcPr'] as XmlObject | undefined;
+	// without cell properties must not gain an empty `<a:tcPr/>`. An empty
+	// `<a:tcPr/>` parses as '', which cannot take attributes.
+	const raw = xmlCell['a:tcPr'];
+	const existing = raw && typeof raw === 'object' ? (raw as XmlObject) : undefined;
 	const tcPr: XmlObject = existing ?? {};
 	for (const attr of OPAQUE_TC_PR_ATTRS) {
 		const key = `@_${attr}`;
