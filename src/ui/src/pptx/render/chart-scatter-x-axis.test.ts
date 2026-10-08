@@ -82,6 +82,35 @@ describe('buildScatterXAxisPlan', () => {
 		expect(plan.gridlines.filter((g) => g.x1 === g.x2)).toHaveLength(0);
 	});
 
+	it('suppresses gridlines whose c:spPr sets the line to no line', () => {
+		const axis: PptxChartAxisFormatting = {
+			axisType: 'valAx',
+			axPos: 'b',
+			majorGridlines: true,
+			majorGridlinesSpPr: { lineNoFill: true },
+		};
+		const plan = buildScatterXAxisPlan(scatterChart({ axes: [axis] }), LAYOUT);
+		expect(plan.gridlines.filter((g) => g.x1 === g.x2)).toHaveLength(0);
+		expect(plan.labels.length).toBeGreaterThan(0);
+	});
+
+	it('drops the X axis tick marks when the axis line is set to no line', () => {
+		const axis: PptxChartAxisFormatting = {
+			axisType: 'valAx',
+			axPos: 'b',
+			majorTickMark: 'out',
+			spPr: { lineNoFill: true },
+		};
+		const withTicks = buildScatterXAxisPlan(
+			scatterChart({ axes: [{ ...axis, spPr: undefined }] }),
+			LAYOUT,
+		);
+		const plan = buildScatterXAxisPlan(scatterChart({ axes: [axis] }), LAYOUT);
+		const ticks = (lines: typeof plan.gridlines) => lines.filter((g) => g.y1 !== LAYOUT.plotTop);
+		expect(ticks(withTicks.gridlines).length).toBeGreaterThan(0);
+		expect(ticks(plan.gridlines)).toStrictEqual([]);
+	});
+
 	it('returns range: undefined when no series has any finite X value', () => {
 		const data = scatterChart({
 			categories: ['A', 'B', 'C'],

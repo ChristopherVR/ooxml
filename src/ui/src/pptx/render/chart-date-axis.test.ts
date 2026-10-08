@@ -2,8 +2,20 @@ import type { ChartPptxElement, PptxChartData } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { buildComboViewModel, buildStockViewModel } from './chart-combo-stock';
-import { excelSerialToDate } from './chart-date-axis';
+import { buildDateAxisPlan, excelSerialToDate } from './chart-date-axis';
+import type { PlotLayout } from './chart-view-model';
 import { buildChartViewModel } from './chart-view-model';
+
+const layout: PlotLayout = {
+	svgWidth: 400,
+	svgHeight: 300,
+	plotLeft: 40,
+	plotRight: 360,
+	plotTop: 30,
+	plotBottom: 260,
+	plotWidth: 320,
+	plotHeight: 230,
+};
 
 function data(chartType: PptxChartData['chartType'] = 'line'): PptxChartData {
 	return {
@@ -52,6 +64,27 @@ describe('continuous date axes', () => {
 		}
 		expect(circles[1].cx - circles[0].cx).toBeCloseTo((circles[2].cx - circles[0].cx) / 10);
 		expect(vm.categoryLabels.some((label) => label.text.includes('2023'))).toBeTruthy();
+	});
+
+	it('draws no date axis line or tick marks when the axis line is set to no line', () => {
+		const chartData = data();
+		const plan = buildDateAxisPlan(
+			{
+				...chartData,
+				axes: [
+					{
+						...chartData.axes![0],
+						majorTickMark: 'out',
+						minorTickMark: 'in',
+						minorUnit: 1,
+						spPr: { lineNoFill: true },
+					},
+				],
+			},
+			layout,
+		);
+		expect(plan?.tickMarks).toStrictEqual([]);
+		expect(plan?.labels.length).toBeGreaterThan(0);
 	});
 
 	it('honors bounds and reverse orientation while retaining source point indexes', () => {

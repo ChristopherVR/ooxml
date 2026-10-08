@@ -285,6 +285,11 @@ export interface PptxChartShapeProps {
 	strokeWidth?: number;
 	/** Line dash style (a:prstDash/@val), e.g. 'solid', 'dash', 'dot', 'lgDash'. */
 	strokeDashStyle?: string;
+	/**
+	 * `a:ln/a:noFill`: the line is explicitly not drawn. Not the same as having
+	 * no line formatting, which leaves the renderer's default line in place.
+	 */
+	lineNoFill?: boolean;
 }
 
 /** Up/down bar formatting on line and stock charts (`c:upDownBars`). */

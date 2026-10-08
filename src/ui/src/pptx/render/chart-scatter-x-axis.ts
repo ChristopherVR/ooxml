@@ -24,7 +24,7 @@ import type { PptxChartAxisFormatting, PptxChartData, PptxChartSeries } from 'oo
 
 import { computeValueRangeForAxis, generateAxisTicks } from './chart-axis';
 import { buildVerticalStyledGridline } from './chart-axis-primitives';
-import { chartAxisTextStyle } from './chart-axis-style';
+import { chartAxisTextStyle, isNoLine } from './chart-axis-style';
 import { tickLine } from './chart-category-axis';
 import { DEFAULT_CHART_TEXT_PX } from './chart-font';
 import type { PlotLayout, SvgLine, SvgText, ValueRange } from './chart-view-model';
@@ -81,7 +81,8 @@ export function buildScatterXAxisPlan(
 	const toPixelX = (value: number): number =>
 		valueToY(value, range, layout.plotRight, layout.plotLeft);
 
-	const showGridlines = xAxis ? xAxis.majorGridlines === true : true;
+	const showGridlines =
+		(xAxis ? xAxis.majorGridlines === true : true) && !isNoLine(xAxis?.majorGridlinesSpPr);
 	const gridlines: SvgLine[] = [];
 	const labels: SvgText[] = [];
 	const textStyle = chartAxisTextStyle(xAxis, DEFAULT_CHART_TEXT_PX);

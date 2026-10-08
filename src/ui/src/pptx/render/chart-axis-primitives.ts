@@ -1,6 +1,6 @@
 import type { PptxChartAxisFormatting, PptxChartShapeProps } from 'ooxml-core/pptx';
 
-import { chartLineStyle } from './chart-axis-style';
+import { chartLineStyle, isNoLine } from './chart-axis-style';
 import type { PlotLayout, SvgLine } from './chart-view-model';
 
 export function buildVerticalTickMark(
@@ -11,7 +11,7 @@ export function buildVerticalTickMark(
 	length: number,
 	shape: PptxChartShapeProps | undefined,
 ): SvgLine | undefined {
-	if (!placement || placement === 'none') {
+	if (!placement || placement === 'none' || isNoLine(shape)) {
 		return undefined;
 	}
 	const inward = side === 'left' ? 1 : -1;
@@ -32,7 +32,7 @@ export function buildVerticalAxisLine(
 	axisX: number,
 	layout: PlotLayout,
 ): SvgLine | undefined {
-	return axis?.spPr
+	return axis?.spPr && !isNoLine(axis.spPr)
 		? {
 				kind: 'line',
 				x1: axisX,

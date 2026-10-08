@@ -66,6 +66,14 @@ export function unitsLabelTextStyle(
 	};
 }
 
+/**
+ * Whether a chart line is set to no line (`a:ln/a:noFill`). An explicit colour
+ * wins: picking one in the editor replaces the `a:noFill` when it is saved.
+ */
+export function isNoLine(shape: PptxChartShapeProps | null | undefined): boolean {
+	return shape?.lineNoFill === true && shape.strokeColor === undefined;
+}
+
 export function chartLineStyle(
 	shape: PptxChartShapeProps | null | undefined,
 	fallbackColor = DEFAULT_COLOR,

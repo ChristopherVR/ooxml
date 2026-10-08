@@ -90,6 +90,11 @@ export function parseShapeProps(
 
 	const ln = xmlLookup.getChildByLocalName(spPrNode, 'ln');
 	if (ln) {
+		// `<a:noFill/>` parses to an empty string, so presence decides, not truthiness.
+		if (Object.keys(ln).some((key) => localNameOf(key) === 'noFill')) {
+			result.lineNoFill = true;
+			hasProps = true;
+		}
 		const lnFill = xmlLookup.getChildByLocalName(ln, 'solidFill');
 		const strokeColor = colorParser.parseColor(lnFill);
 		if (strokeColor) {

@@ -1,6 +1,6 @@
 import type { PptxChartAxisFormatting, PptxChartData } from 'ooxml-core/pptx';
 
-import { chartAxisTextStyle, chartLineStyle } from './chart-axis-style';
+import { chartAxisTextStyle, chartLineStyle, isNoLine } from './chart-axis-style';
 import { formatDate } from './chart-date-format';
 import type { PlotLayout, SvgLine, SvgText } from './chart-view-model';
 
@@ -49,7 +49,7 @@ function tickLine(
 	minor: boolean,
 ): SvgLine | undefined {
 	const placement = minor ? axis.minorTickMark : axis.majorTickMark;
-	if (!placement || placement === 'none') {
+	if (!placement || placement === 'none' || isNoLine(axis.spPr)) {
 		return undefined;
 	}
 	const length = minor ? 2.5 : 4;
@@ -172,7 +172,7 @@ export function buildDateAxisPlan(
 				const line = tickLine(x, y, axis, false);
 				return line ? [line] : [];
 			});
-	if (!axis.deleted && axis.spPr) {
+	if (!axis.deleted && axis.spPr && !isNoLine(axis.spPr)) {
 		tickMarks.unshift({
 			kind: 'line',
 			x1: layout.plotLeft,
