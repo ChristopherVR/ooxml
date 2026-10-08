@@ -76,6 +76,7 @@ export {
 	VISIO_CLIPBOARD_MAX_CHARS,
 	type VisioClipboardSnapshot,
 } from './clipboard';
+export { createVsdx, type CreateVsdxOptions } from './create-document';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,

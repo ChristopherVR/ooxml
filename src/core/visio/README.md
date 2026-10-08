@@ -5,6 +5,23 @@ UI components live in the separate viewer. This is a supported subset, not Visio
 parity or a complete ShapeSheet calculation engine. The experimental edit API
 preserves untouched package payloads under the limitations documented below.
 
+## Create a blank drawing
+
+`createVsdx({ width?, height? })` returns a source-backed, editable single-page
+VSDX. Dimensions are physical inches, defaulting to Letter (8.5 by 11) at 1:1
+drawing scale. Explicit Calibri 12-point text and basic black-line/white-fill
+defaults are independent of installed templates. The package includes the
+Windows part required by native Visio. Invalid or out-of-range dimensions fail
+before package creation.
+
+Native Visio 16 opens blank and core-created rectangle fixtures for Letter,
+landscape Letter and A4, can draw into each blank document and save them again.
+The oracle checks dimensions, pins, font and basic style defaults. Generate owned
+fixtures with `bun scripts/create-visio-new-drawing-fixtures.ts <directory>`,
+run `scripts/record-visio-new-drawing.ps1 -OutputDirectory <directory>`, then
+select that directory with `VISIO_NATIVE_NEW_DRAWING_DIR` for the optional test.
+This establishes those basic drawings, not template or theme equivalence.
+
 ## Whole-shape formatting and stacking order
 
 `editVsdx` accepts `format-text`, `format-shape` and `reorder-shape` commands.
