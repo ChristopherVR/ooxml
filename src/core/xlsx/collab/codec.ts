@@ -35,6 +35,8 @@ export interface LineEntry {
 	ol?: number;
 	c?: 1;
 	bf?: 1;
+	filtered?: 0 | 1;
+	manual?: 1;
 }
 
 type KeyOf = (styleId: number | undefined) => string | undefined;
@@ -131,6 +133,9 @@ export function encodeLine(info: RowInfo | ColumnInfo, keyOf: KeyOf, column = fa
 	if (size !== undefined) entry.size = size;
 	if (custom) entry.custom = 1;
 	if (info.hidden) entry.hidden = 1;
+	if (!column && (info as RowInfo).filteredOut !== undefined)
+		entry.filtered = (info as RowInfo).filteredOut ? 1 : 0;
+	if (!column && (info as RowInfo).manuallyHidden) entry.manual = 1;
 	const s = info.styleId ? keyOf(info.styleId) : undefined;
 	if (s) entry.s = s;
 	if (info.outlineLevel) entry.ol = info.outlineLevel;
@@ -154,6 +159,8 @@ export function decodeRow(raw: unknown, idOf: IdOf): RowInfo | undefined {
 	if (entry.size !== undefined) info.height = entry.size;
 	if (entry.custom === 1) info.customHeight = true;
 	if (entry.hidden === 1) info.hidden = true;
+	if (entry.filtered === 0 || entry.filtered === 1) info.filteredOut = entry.filtered === 1;
+	if (entry.manual === 1) info.manuallyHidden = true;
 	const styleId = entry.s ? idOf(entry.s) : undefined;
 	if (styleId) info.styleId = styleId;
 	if (entry.ol) info.outlineLevel = entry.ol;

@@ -19,4 +19,4 @@ export {
 	tokenize,
 	translateFormula,
 } from '../formula/index';
-export type { CalcEngine, RefSpec, ShiftSpec, Token } from '../formula/index';
+export type { CalcEngine, CellPosition, RefSpec, ShiftSpec, Token } from '../formula/index';

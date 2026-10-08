@@ -6,6 +6,7 @@ import { resolvePasteOptions } from './paste-options';
 import { pasteWidths } from './paste-widths';
 import { pasteConditionalFormats } from './clipboard-conditional';
 import { sheetAt } from './context';
+import { writeScopes } from './cell-values';
 
 /** Repeat a copied block over a compatible selection, using one undoable paste. */
 export function pasteSelection(
@@ -47,14 +48,13 @@ export function pasteSelection(
 	return ctx.run(
 		'Paste',
 		'cells',
-		[
-			{ kind: 'cells', sheet, ranges: [dest] },
-			{
-				kind: 'parts',
-				sheet,
-				parts: ['merges', 'comments', 'dataValidations', 'hyperlinks', 'conditionalFormats'],
-			},
-		],
+		writeScopes(sheetAt(ctx.workbook, sheet), sheet, dest, [
+			'merges',
+			'comments',
+			'dataValidations',
+			'hyperlinks',
+			'conditionalFormats',
+		]),
 		() => {
 			for (let row = dest.start.row; row <= dest.end.row; row += height)
 				for (let col = dest.start.col; col <= dest.end.col; col += width)

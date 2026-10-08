@@ -14,6 +14,7 @@ import { criteriaPairs, liftCriteria, matchingValues } from './criteria';
 import { collectNumbers, int, spec } from './helpers';
 import * as S from './stats-core';
 import type { FunctionSpec } from './types';
+import { isFilteredRow } from '../../filter-rows';
 
 const C = 'Math & Trig';
 
@@ -64,6 +65,7 @@ function subtotalValues(
 	skipHidden: boolean,
 	skipErrors: boolean,
 	skipNested = true,
+	skipFiltered = false,
 ): Scalar[] {
 	const out: Scalar[] = [];
 	const host = ctx.frame.host;
@@ -77,6 +79,7 @@ function subtotalValues(
 		for (const area of arg.areas) {
 			const sheet = ctx.workbook.sheets[area.sheet];
 			host.forEachStored(area.sheet, area.range, (value, row, col) => {
+				if (skipFiltered && sheet && isFilteredRow(ctx.workbook, sheet, row)) return;
 				if (skipHidden && sheet?.rowInfo.get(row)?.hidden) return;
 				if (skipNested && SUBTOTAL_RE.test(host.cellFormula(area.sheet, row, col) ?? '')) return;
 				if (skipErrors && isError(value)) return;
@@ -246,7 +249,7 @@ export const SUM_FUNCTIONS: FunctionSpec[] = [
 			const code = int(args[0]);
 			const base = code > 100 ? code - 100 : code;
 			if (base < 1 || base > 11) fail(ERR.VALUE);
-			return aggregate(base, subtotalValues(ctx, args.slice(1), code > 100, false));
+			return aggregate(base, subtotalValues(ctx, args.slice(1), code > 100, false, true, true));
 		},
 		['value', 'any'],
 	),

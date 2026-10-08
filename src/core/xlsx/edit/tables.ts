@@ -2,6 +2,8 @@ import { type CellRange, normalizeRange, rangesIntersect } from '../address';
 import { getCell } from '../cells';
 import type { Table, TableColumn, Workbook } from '../model';
 import { writeValue } from './cell-values';
+import { uniqueHeaders } from './table-header-names';
+export { uniqueHeaders } from './table-header-names';
 import { type EditContext, displayText, sheetAt } from './context';
 import { currentRegion } from './filter';
 import { shiftFormulaInBand } from './band-formulas';
@@ -12,26 +14,6 @@ function nextTableName(workbook: Workbook): string {
 	const taken = new Set(workbook.sheets.flatMap((s) => s.tables.map((t) => t.name.toLowerCase())));
 	const names = new Set(workbook.definedNames.map((n) => n.name.toLowerCase()));
 	for (let n = 1; ; n++) if (!taken.has(`table${n}`) && !names.has(`table${n}`)) return `Table${n}`;
-}
-
-/** Unique header names: blanks become `ColumnN`, repeats get a number suffix (`Name2`). */
-export function uniqueHeaders(texts: string[]): string[] {
-	const used = new Set<string>();
-	return texts.map((text, i) => {
-		let base = text.trim() || `Column${i + 1}`;
-		if (!used.has(base.toLowerCase())) {
-			used.add(base.toLowerCase());
-			return base;
-		}
-		for (let n = 2; ; n++) {
-			const candidate = `${base}${n}`;
-			if (!used.has(candidate.toLowerCase())) {
-				used.add(candidate.toLowerCase());
-				base = candidate;
-				return base;
-			}
-		}
-	});
 }
 
 /**

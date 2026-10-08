@@ -1,6 +1,8 @@
 // Shell strings (title bar, ribbon chrome, backstage, status bar, keyboard help, file commands).
 // English key -> zh-CN text. Grid and command strings live in grid.ts and commands.ts.
 export const shell: Record<string, string> = {
+	'Finish or cancel the current cell edit before saving.':
+		'请先完成或取消当前单元格的编辑，再保存。',
 	File: '文件',
 	Ribbon: '功能区',
 	'Ribbon tabs': '功能区选项卡',

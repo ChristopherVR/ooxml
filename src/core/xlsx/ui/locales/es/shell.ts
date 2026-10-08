@@ -1,6 +1,8 @@
 // Shell strings (title bar, ribbon chrome, backstage, status bar, keyboard help, file commands).
 // English key -> es text. Grid and command strings live in grid.ts and commands.ts.
 export const shell: Record<string, string> = {
+	'Finish or cancel the current cell edit before saving.':
+		'Finalice o cancele la edición de la celda actual antes de guardar.',
 	File: 'Archivo',
 	Ribbon: 'Cinta de opciones',
 	'Ribbon tabs': 'Pestañas de la cinta',

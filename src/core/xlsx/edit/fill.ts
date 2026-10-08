@@ -5,6 +5,7 @@ import { type EditContext, sheetAt } from './context';
 import { translateFormula } from './deps';
 import { detectSeries, mod } from './fill-series';
 import type { FillMode } from './types';
+import { syncTableHeader, writeScopes } from './cell-values';
 
 /** A formula moved by (`dRow`, `dCol`); unparseable formulas are kept as they are. */
 export function moveFormula(formula: string, dRow: number, dCol: number): string {
@@ -55,7 +56,7 @@ export function fillRange(
 	ctx.run(
 		'Fill',
 		'cells',
-		[{ kind: 'cells', sheet: s, ranges: [all] }],
+		writeScopes(sheet, s, all),
 		() => {
 			const laneCount = vertical
 				? src.end.col - src.start.col + 1
@@ -86,6 +87,7 @@ export function fillRange(
 							? copyCell(origin, row - srcRow, col - srcCol)
 							: { value: step.value, ...(origin.styleId ? { styleId: origin.styleId } : {}) };
 					putCell(sheet, row, col, cell);
+					syncTableHeader(ctx, sheet, row, col);
 				}
 			}
 		},

@@ -1,7 +1,7 @@
 import { rangeContains } from '../address';
 import { forEachCell, getCell } from '../cells';
 import type { Workbook } from '../model';
-import { syncTableHeader, writeInput } from './cell-values';
+import { syncTableHeader, writeInput, writeScopes } from './cell-values';
 import { type EditContext, displayText, sheetAt } from './context';
 import { isSpilledCell } from './deps';
 import type { EditScope } from './history';
@@ -90,16 +90,21 @@ const replaceQuery = (query: FindQuery): FindQuery =>
 	query.lookIn === 'comments' ? query : { ...query, lookIn: 'formulas' };
 
 /** What replacing changes on a sheet: the matched cells (and table headers) or the comments. */
-function replaceScopes(query: FindQuery, sheet: number, matches: FindMatch[]): EditScope[] {
+function replaceScopes(
+	ctx: EditContext,
+	query: FindQuery,
+	sheet: number,
+	matches: FindMatch[],
+): EditScope[] {
 	if (query.lookIn === 'comments') return [{ kind: 'parts', sheet, parts: ['comments'] }];
 	const ranges = matches.map((m) => ({
 		start: { row: m.row, col: m.col },
 		end: { row: m.row, col: m.col },
 	}));
-	return [
-		{ kind: 'cells', sheet, ranges },
-		{ kind: 'parts', sheet, parts: ['tables'] },
-	];
+	const header = ranges.some((range) =>
+		writeScopes(sheetAt(ctx.workbook, sheet), sheet, range).some((scope) => scope.kind === 'refs'),
+	);
+	return [...(header ? [{ kind: 'refs' as const }] : []), { kind: 'cells', sheet, ranges }];
 }
 
 function applyReplace(
@@ -141,14 +146,25 @@ export function replaceAll(ctx: EditContext, query: FindQuery, replacement: stri
 	const sheets = [...new Set(matches.map((m) => m.sheet))];
 	const scopes = sheets.flatMap((sheet) =>
 		replaceScopes(
+			ctx,
 			q,
 			sheet,
 			matches.filter((m) => m.sheet === sheet),
 		),
 	);
-	return ctx.run('Replace', 'cells', scopes, () => applyReplace(ctx, q, replacement, matches), {
-		...(sheets.length === 1 && sheets[0] !== undefined ? { sheet: sheets[0] } : {}),
-	});
+	const uniqueScopes = scopes.filter(
+		(scope, index) =>
+			scope.kind !== 'refs' || scopes.findIndex((entry) => entry.kind === 'refs') === index,
+	);
+	return ctx.run(
+		'Replace',
+		'cells',
+		uniqueScopes,
+		() => applyReplace(ctx, q, replacement, matches),
+		{
+			...(sheets.length === 1 && sheets[0] !== undefined ? { sheet: sheets[0] } : {}),
+		},
+	);
 }
 
 /** Replaces the query in one cell; false when that cell no longer matches. */
@@ -168,7 +184,7 @@ export function replaceOne(
 	ctx.run(
 		'Replace',
 		'cells',
-		replaceScopes(q, at.sheet, [match]),
+		replaceScopes(ctx, q, at.sheet, [match]),
 		() => applyReplace(ctx, q, replacement, [match]),
 		{ sheet: at.sheet },
 	);

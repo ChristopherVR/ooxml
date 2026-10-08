@@ -3,6 +3,7 @@ import {
 	type CellRange,
 	formatAddress,
 	normalizeRange,
+	rangeContains,
 	rangesIntersect,
 } from '../address';
 import { deleteCell, forEachCellInRange, getCell } from '../cells';
@@ -16,10 +17,13 @@ import {
 	pruneCell,
 	sheetAt,
 } from './context';
-import { parseCellInput } from './deps';
+import { parseCellInput, type CellPosition } from './deps';
 import type { EditScope, SheetPart } from './history';
 import { cellRange, subtractRange } from './range-math';
 import type { ClearWhat } from './types';
+import { renameTableColumnInFormula } from '../formula/table-refs';
+import { rewriteFormulas } from './shift-formulas';
+import { uniqueHeaders } from './table-header-names';
 
 /** The table whose header row holds a position, if any. */
 function tableHeaderAt(sheet: Worksheet, row: number, col: number) {
@@ -38,18 +42,43 @@ export function syncTableHeader(
 	sheet: Worksheet,
 	row: number,
 	col: number,
+	formulaCells?: readonly CellPosition[],
 ): void {
 	const table = tableHeaderAt(sheet, row, col);
 	if (!table) return;
 	const column = table.columns[col - table.range.start.col];
 	if (!column) return;
 	const text = displayText(ctx.workbook, getCell(sheet, row, col)).trim();
-	if (text) column.name = text;
+	if (!text || column.name === text) return;
+	const oldName = column.name;
+	const others = table.columns.filter((entry) => entry !== column).map((entry) => entry.name);
+	const newName = uniqueHeaders([...others, text]).at(-1)!;
+	column.name = newName;
+	if (newName !== text) writeValue(sheet, row, col, newName);
+	// A single-cell edit can reuse history's fresh formula snapshot, including its edited cell.
+	const index = ctx.workbook.sheets.indexOf(sheet);
+	const cells =
+		formulaCells &&
+		(formulaCells.some((cell) => cell.sheet === index && cell.row === row && cell.col === col)
+			? formulaCells
+			: [...formulaCells, { sheet: index, row, col }]);
+	rewriteFormulas(
+		ctx.workbook,
+		(formula, formulaSheet, at) =>
+			renameTableColumnInFormula(
+				formula,
+				table.name,
+				oldName,
+				newName,
+				formulaSheet === sheet.name && !!at && rangeContains(table.range, at),
+			),
+		cells,
+	);
 }
 
 /**
- * Undo scopes for writing to cells: the cells, plus the table list when a table header changes
- * (the column names follow the header text). `parts` adds other sheet properties the edit changes.
+ * Undo scopes for writing to cells, including workbook references when a table header changes.
+ * `parts` adds other sheet properties the edit changes.
  */
 export function writeScopes(
 	sheet: Worksheet,
@@ -66,15 +95,17 @@ export function writeScopes(
 				cellRange(t.range.start.row, t.range.start.col, t.range.start.row, t.range.end.col),
 			),
 	);
-	const all = touchesHeader && !parts.includes('tables') ? [...parts, 'tables' as const] : parts;
+	// Header changes can rewrite formulas and metadata on every sheet.
+	if (touchesHeader) return [{ kind: 'refs' }, { kind: 'cells', sheet: index, ranges: [r] }];
 	const scopes: EditScope[] = [{ kind: 'cells', sheet: index, ranges: [r] }];
-	if (all.length) scopes.push({ kind: 'parts', sheet: index, parts: all });
+	if (parts.length) scopes.push({ kind: 'parts', sheet: index, parts });
 	return scopes;
 }
 
 /** The single undo scope of {@link writeScopes}, kept for callers that want one. */
 export function writeScope(sheet: Worksheet, index: number, range: CellRange): EditScope {
 	const scopes = writeScopes(sheet, index, range);
+	if (scopes.some((scope) => scope.kind === 'refs')) return { kind: 'workbook' };
 	return scopes.length === 1 && scopes[0] ? scopes[0] : { kind: 'sheet', sheet: index };
 }
 
@@ -144,9 +175,9 @@ export function setCellInput(
 		`Typing in ${formatAddress({ row, col })}`,
 		'cells',
 		writeScopes(sheet, s, range),
-		() => {
+		(formulaCells) => {
 			writeInput(ctx, sheet, row, col, text);
-			syncTableHeader(ctx, sheet, row, col);
+			syncTableHeader(ctx, sheet, row, col, formulaCells);
 		},
 		{ sheet: s, ranges: [range] },
 	);
@@ -165,9 +196,9 @@ export function setCellValue(
 		`Edit ${formatAddress({ row, col })}`,
 		'cells',
 		writeScopes(sheet, s, range),
-		() => {
+		(formulaCells) => {
 			writeValue(sheet, row, col, value);
-			syncTableHeader(ctx, sheet, row, col);
+			syncTableHeader(ctx, sheet, row, col, formulaCells);
 		},
 		{ sheet: s, ranges: [range] },
 	);

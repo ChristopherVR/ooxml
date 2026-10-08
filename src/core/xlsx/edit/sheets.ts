@@ -223,8 +223,8 @@ export function setSheetState(ctx: EditContext, index: number, state: SheetState
 	const { workbook } = ctx;
 	const sheet = sheetAt(workbook, index);
 	if (sheet.state === state) return;
+	assertUnlocked(workbook);
 	if (state !== 'visible') {
-		assertUnlocked(workbook);
 		if (sheet.state === 'visible' && visibleCount(workbook) <= 1)
 			throw new Error('A workbook must contain at least one visible sheet.');
 	}

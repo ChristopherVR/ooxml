@@ -19,7 +19,7 @@ export function testContext(workbook: Workbook): TestContext {
 		steps,
 		run(label, kind, scopes, fn) {
 			const befores = scopes.map((scope) => captureScope(workbook, scope));
-			const result = fn();
+			const result = fn(befores.find((snapshot) => snapshot.kind === 'refs')?.data.formulas);
 			steps.push({
 				label,
 				kind,

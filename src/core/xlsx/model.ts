@@ -232,6 +232,10 @@ export interface RowInfo {
 	height?: number;
 	customHeight?: boolean;
 	hidden?: boolean;
+	/** Hidden by the active auto-filter, even if a later value edit would match its criteria. */
+	filteredOut?: boolean;
+	/** Manual hiding to restore when a row hidden for both reasons passes the filter again. */
+	manuallyHidden?: boolean;
 	styleId?: number;
 	outlineLevel?: number;
 	collapsed?: boolean;
