@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import {
+	columnHandleSegments,
 	computeColumnBoundaries,
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
+	computeTableMergeCrossings,
 	DEFAULT_ROW_HEIGHT,
 	getTableResizeScale,
+	isColumnBoundaryMergedAt,
+	isRowBoundaryMergedAt,
+	rowHandleSegments,
 } from 'ooxml-ui/pptx';
+import type { PptxTableRow } from 'pptx-viewer-core';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 /**
@@ -17,10 +23,14 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
  * `<tr>` heights. The pure drag math (redistribute two adjacent column
  * proportions, clamp a dragged row height) lives in `pptx-viewer-shared`
  * (`render/table-resize.ts`), so this component only owns the DOM interaction.
+ * A boundary stretch inside a merged cell is neither drawn nor hit-tested
+ * (`render/table-resize-merge.ts`), so a press there reaches the cell.
  */
 const props = defineProps<{
 	/** Column widths as proportions summing to ~1. */
 	columnWidths: number[];
+	/** The table's rows, for the merges that interrupt a boundary. */
+	rows?: readonly PptxTableRow[];
 	/** When false the overlay renders only the slotted table (no handles). */
 	editable: boolean;
 }>();
@@ -35,6 +45,8 @@ const emit = defineEmits<{
 const containerRef = ref<HTMLDivElement | null>(null);
 /** Cumulative bottom-edge pixel positions of the internal row boundaries. */
 const rowBounds = ref<number[]>([]);
+/** Measured table height, for the column-boundary segments. */
+const tableHeight = ref(0);
 
 interface DragState {
 	type: 'col' | 'row';
@@ -49,6 +61,11 @@ let drag: DragState | null = null;
 /** Cumulative left-edge percentages of the internal column boundaries. */
 const colBoundaries = computed<number[]>(() => computeColumnBoundaries(props.columnWidths));
 
+/** Where merged cells interrupt the internal boundaries. */
+const crossings = computed(() =>
+	computeTableMergeCrossings(props.rows ?? [], props.columnWidths.length),
+);
+
 /** Measure row boundaries from the mounted table rows (skip the last edge). */
 function measureRows(): void {
 	const container = containerRef.value;
@@ -56,6 +73,7 @@ function measureRows(): void {
 	if (!table) {
 		return;
 	}
+	tableHeight.value = table.offsetHeight;
 	const trs = table.querySelectorAll('tbody > tr');
 	const bounds: number[] = [];
 	let cumulative = 0;
@@ -74,7 +92,7 @@ function measureRows(): void {
 
 // Re-measure whenever the widths change (a proxy for content/layout changes).
 watch(
-	() => [props.columnWidths, props.editable] as const,
+	() => [props.columnWidths, props.rows, props.editable] as const,
 	() => {
 		void nextTick(measureRows);
 	},
@@ -134,7 +152,10 @@ function onContainerMouseDown(event: MouseEvent): void {
 	// Check column boundaries
 	for (let i = 0; i < colBoundaries.value.length; i++) {
 		const boundaryX = (colBoundaries.value[i] / 100) * rect.width;
-		if (Math.abs(localX - boundaryX) <= HANDLE_ZONE) {
+		if (
+			Math.abs(localX - boundaryX) <= HANDLE_ZONE &&
+			!isColumnBoundaryMergedAt(crossings.value, i, rowBounds.value, localY / scaleY)
+		) {
 			event.preventDefault();
 			event.stopPropagation();
 			document.body.style.cursor = 'col-resize';
@@ -154,7 +175,10 @@ function onContainerMouseDown(event: MouseEvent): void {
 
 	// Check row boundaries
 	for (let i = 0; i < rowBounds.value.length; i++) {
-		if (Math.abs(localY - rowBounds.value[i] * scaleY) <= HANDLE_ZONE) {
+		if (
+			Math.abs(localY - rowBounds.value[i] * scaleY) <= HANDLE_ZONE &&
+			!isRowBoundaryMergedAt(crossings.value, i, props.columnWidths, localX / (rect.width || 1))
+		) {
 			event.preventDefault();
 			event.stopPropagation();
 			const table = container.querySelector('table');
@@ -192,22 +216,43 @@ onBeforeUnmount(() => {
 			<div
 				v-for="(leftPct, i) in colBoundaries"
 				:key="`col-h-${i}`"
-				class="pptx-vue-table-resize__col group absolute bottom-0 top-0 z-10 w-[6px] cursor-col-resize"
+				class="pptx-vue-table-resize__col absolute bottom-0 top-0 z-10 w-[6px]"
 				:style="{ left: `calc(${leftPct}% - 3px)` }"
 			>
 				<div
-					class="mx-auto h-full w-px bg-transparent transition-colors group-hover:bg-blue-400/60"
-				/>
+					v-for="segment in columnHandleSegments(
+						crossings.columns[i] ?? [],
+						rowBounds,
+						tableHeight,
+					)"
+					:key="segment.top"
+					class="pptx-vue-table-resize__segment group absolute left-0 right-0 cursor-col-resize"
+					:style="{
+						top: `${segment.top}px`,
+						height: tableHeight ? `${segment.height}px` : '100%',
+					}"
+				>
+					<div
+						class="mx-auto h-full w-px bg-transparent transition-colors group-hover:bg-blue-400/60"
+					/>
+				</div>
 			</div>
 			<div
 				v-for="(topPx, i) in rowBounds"
 				:key="`row-h-${i}`"
-				class="pptx-vue-table-resize__row group absolute left-0 right-0 z-10 h-[6px] cursor-row-resize"
+				class="pptx-vue-table-resize__row absolute left-0 right-0 z-10 h-[6px]"
 				:style="{ top: `${topPx - 3}px` }"
 			>
 				<div
-					class="my-auto h-px w-full bg-transparent transition-colors group-hover:bg-blue-400/60"
-				/>
+					v-for="segment in rowHandleSegments(crossings.rows[i] ?? [], columnWidths)"
+					:key="segment.leftPct"
+					class="pptx-vue-table-resize__segment group absolute bottom-0 top-0 cursor-row-resize"
+					:style="{ left: `${segment.leftPct}%`, width: `${segment.widthPct}%` }"
+				>
+					<div
+						class="my-auto h-px w-full bg-transparent transition-colors group-hover:bg-blue-400/60"
+					/>
+				</div>
 			</div>
 		</template>
 	</div>
@@ -223,7 +268,8 @@ onBeforeUnmount(() => {
  * keeping the desktop mouse drag-to-resize functional.
  */
 .pptx-vue-table-resize__col,
-.pptx-vue-table-resize__row {
+.pptx-vue-table-resize__row,
+.pptx-vue-table-resize__segment {
 	pointer-events: none;
 }
 </style>

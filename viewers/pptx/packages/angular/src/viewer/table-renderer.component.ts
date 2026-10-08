@@ -20,7 +20,7 @@ import {
 	screenStrokeWidth,
 	tableContainerCss,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
+import type { PptxElement, PptxTableData, PptxTableRow, TablePptxElement } from 'pptx-viewer-core';
 
 import type { StyleMap } from './element-style';
 import { LoadContentService } from './load-content.service';
@@ -157,6 +157,9 @@ export class TableRendererComponent {
 
 	/** Column widths (0-1 fractions) for the resize overlay. */
 	readonly columnWidths = computed<number[]>(() => this.tableData()?.columnWidths ?? []);
+
+	/** The table's rows, so the resize overlay skips boundaries inside merged cells. */
+	readonly tableRows = computed<PptxTableRow[]>(() => this.tableData()?.rows ?? []);
 
 	constructor() {
 		// Focus + select-all the cell input as soon as it mounts (mirrors React's

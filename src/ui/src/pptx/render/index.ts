@@ -552,6 +552,7 @@ export * from './table-advanced-fill';
 // redistribution (clamped + renormalised), and row-height clamping. Each binding
 // keeps its own drag overlay component.
 export * from './table-resize';
+export * from './table-resize-merge';
 // Inline (on-canvas) SmartArt node text editing: node-text lookup, no-op commit
 // detection, and overlay-editor rect projection. Pure; the text mutation itself
 // stays in `ooxml-core/pptx` (`updateSmartArtNodeText`).

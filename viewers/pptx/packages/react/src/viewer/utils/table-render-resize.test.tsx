@@ -50,3 +50,44 @@ describe('table resize release', () => {
 		}
 	});
 });
+
+describe('table resize handles around merged cells', () => {
+	it('leaves no row handle over a vertically merged cell', () => {
+		const host = document.createElement('div');
+		document.body.appendChild(host);
+		const root = createRoot(host);
+		act(() =>
+			root.render(
+				<TableResizeOverlay
+					columnWidths={[0.25, 0.75]}
+					rows={[
+						{ cells: [{ text: 'A', rowSpan: 2 }, { text: 'B' }] },
+						{ cells: [{ text: '', vMerge: true }, { text: 'C' }] },
+					]}
+					editable
+				>
+					<table>
+						<tbody>
+							<tr>
+								<td rowSpan={2}>A</td>
+								<td>B</td>
+							</tr>
+							<tr>
+								<td>C</td>
+							</tr>
+						</tbody>
+					</table>
+				</TableResizeOverlay>,
+			),
+		);
+		try {
+			const segments = [...host.querySelectorAll<HTMLElement>('[class*="cursor-row-resize"]')];
+			expect(segments.map((segment) => [segment.style.left, segment.style.width])).toStrictEqual([
+				['25%', '75%'],
+			]);
+		} finally {
+			act(() => root.unmount());
+			host.remove();
+		}
+	});
+});

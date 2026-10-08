@@ -1,9 +1,3 @@
-import type {
-	PptxElement,
-	XmlObject,
-	TablePptxElement,
-	PptxTableCellStyle,
-} from 'pptx-viewer-core';
 /**
  * table-render.tsx: Barrel + renderTableElement
  *
@@ -21,6 +15,12 @@ import {
 	tableContainerCss,
 } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
+import type {
+	PptxElement,
+	XmlObject,
+	TablePptxElement,
+	PptxTableCellStyle,
+} from 'pptx-viewer-core';
 import React from 'react';
 
 import { cn } from '../../utils';
@@ -102,6 +102,7 @@ export function renderTableElement(
 	return (
 		<TableResizeOverlay
 			columnWidths={parsedTable.columnPercentages.map((p) => p / 100)}
+			rows={tableEl.tableData?.rows}
 			editable={isEditable}
 			onResizeColumns={options?.onResizeColumns}
 			onResizeRow={options?.onResizeRow}

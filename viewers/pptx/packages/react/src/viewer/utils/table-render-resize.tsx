@@ -1,17 +1,24 @@
 import {
+	columnHandleSegments,
 	computeColumnBoundaries,
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
+	computeTableMergeCrossings,
 	DEFAULT_ROW_HEIGHT,
+	rowHandleSegments,
 } from 'ooxml-ui/pptx';
+import type { PptxTableRow } from 'pptx-viewer-core';
 import React, { useRef, useEffect, useMemo, useLayoutEffect, useState, useCallback } from 'react';
 
 /**
  * Overlay that renders draggable column and row resize handles on top of a table.
+ * A boundary is drawn only along real cell edges: the stretch inside a merged
+ * cell gets no handle, so it never covers (and steals clicks from) that cell.
  */
 export function TableResizeOverlay({
 	children,
 	columnWidths,
+	rows,
 	editable,
 	onResizeColumns,
 	onResizeRow,
@@ -19,12 +26,15 @@ export function TableResizeOverlay({
 	children: React.ReactNode;
 	/** Column widths as proportions summing to ~1 */
 	columnWidths: number[];
+	/** The table's rows, for the merges that interrupt a boundary. */
+	rows?: readonly PptxTableRow[];
 	editable: boolean;
 	onResizeColumns?: (newWidths: number[]) => void;
 	onResizeRow?: (rowIndex: number, newHeight: number) => void;
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [rowBounds, setRowBounds] = useState<number[]>([]);
+	const [tableHeight, setTableHeight] = useState(0);
 
 	// Drag state stored in a ref to avoid re-renders mid-drag
 	const dragRef = useRef<{
@@ -38,6 +48,10 @@ export function TableResizeOverlay({
 
 	// Column boundary positions (cumulative percentages)
 	const colBoundaries = useMemo(() => computeColumnBoundaries(columnWidths), [columnWidths]);
+	const crossings = useMemo(
+		() => computeTableMergeCrossings(rows ?? [], columnWidths.length),
+		[rows, columnWidths.length],
+	);
 
 	// Measure row boundaries after layout
 	const measureRows = useCallback(() => {
@@ -58,6 +72,7 @@ export function TableResizeOverlay({
 				bounds.push(cumHeight);
 			}
 		});
+		setTableHeight(table.offsetHeight);
 		// Only update state when bounds actually change to avoid infinite re-render loop
 		setRowBounds((prev) => {
 			if (prev.length === bounds.length && prev.every((v, i) => v === bounds[i])) {
@@ -137,7 +152,7 @@ export function TableResizeOverlay({
 			type: 'col',
 			index,
 			startPos: e.clientX,
-			handleEl: e.currentTarget,
+			handleEl: (e.currentTarget.parentElement as HTMLDivElement | null) ?? e.currentTarget,
 			initialWidths: [...columnWidths],
 		};
 	};
@@ -154,7 +169,7 @@ export function TableResizeOverlay({
 			type: 'row',
 			index,
 			startPos: e.clientY,
-			handleEl: e.currentTarget,
+			handleEl: (e.currentTarget.parentElement as HTMLDivElement | null) ?? e.currentTarget,
 			initialRowHeight: actualHeight,
 		};
 	};
@@ -163,27 +178,45 @@ export function TableResizeOverlay({
 		<div ref={containerRef} className='relative w-full h-full'>
 			{children}
 
-			{/* Column resize handles */}
+			{/* Column resize handles: one line per boundary, a segment per real edge */}
 			{colBoundaries.map((leftPct, i) => (
 				<div
 					key={`col-h-${i}`}
-					className='absolute top-0 bottom-0 w-[6px] cursor-col-resize z-10 pointer-events-auto group'
+					className='absolute top-0 bottom-0 w-[6px] z-10 pointer-events-none'
 					style={{ left: `calc(${leftPct}% - 3px)` }}
-					onMouseDown={(e) => startColDrag(e, i)}
 				>
-					<div className='w-px h-full mx-auto bg-transparent group-hover:bg-blue-400/60 transition-colors' />
+					{columnHandleSegments(crossings.columns[i] ?? [], rowBounds, tableHeight).map(
+						({ top, height }) => (
+							<div
+								key={top}
+								className='absolute left-0 right-0 cursor-col-resize pointer-events-auto group'
+								style={{ top: `${top}px`, height: tableHeight ? `${height}px` : '100%' }}
+								onMouseDown={(e) => startColDrag(e, i)}
+							>
+								<div className='w-px h-full mx-auto bg-transparent group-hover:bg-blue-400/60 transition-colors' />
+							</div>
+						),
+					)}
 				</div>
 			))}
 
-			{/* Row resize handles */}
+			{/* Row resize handles: one line per boundary, a segment per real edge */}
 			{rowBounds.map((topPx, i) => (
 				<div
 					key={`row-h-${i}`}
-					className='absolute left-0 right-0 h-[6px] cursor-row-resize z-10 pointer-events-auto group'
+					className='absolute left-0 right-0 h-[6px] z-10 pointer-events-none'
 					style={{ top: `${topPx - 3}px` }}
-					onMouseDown={(e) => startRowDrag(e, i)}
 				>
-					<div className='h-px w-full my-auto bg-transparent group-hover:bg-blue-400/60 transition-colors' />
+					{rowHandleSegments(crossings.rows[i] ?? [], columnWidths).map(({ leftPct, widthPct }) => (
+						<div
+							key={leftPct}
+							className='absolute top-0 bottom-0 cursor-row-resize pointer-events-auto group'
+							style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+							onMouseDown={(e) => startRowDrag(e, i)}
+						>
+							<div className='h-px w-full my-auto bg-transparent group-hover:bg-blue-400/60 transition-colors' />
+						</div>
+					))}
 				</div>
 			))}
 		</div>

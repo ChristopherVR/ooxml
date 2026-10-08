@@ -1,11 +1,17 @@
-import type { PptxTableData } from 'pptx-viewer-core';
 import {
+	columnHandleSegments,
 	computeColumnBoundaries,
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
+	computeTableMergeCrossings,
 	DEFAULT_ROW_HEIGHT,
 	getTableResizeScale,
+	isColumnBoundaryMergedAt,
+	isRowBoundaryMergedAt,
+	rowHandleSegments,
 } from 'ooxml-ui/pptx';
+import type { TableMergeCrossings, TableRowHandleSegment } from 'ooxml-ui/pptx';
+import type { PptxTableData } from 'pptx-viewer-core';
 
 /**
  * table-resize (Svelte): column/row drag-resize handles for the canvas table,
@@ -20,6 +26,9 @@ import {
  * against the live boundary positions to start a drag instead, exactly
  * mirroring Vue's container-delegation approach (not Angular's real-handle
  * one, which would block that touch passthrough).
+ *
+ * A boundary stretch inside a merged cell is neither drawn nor hit-tested
+ * (`render/table-resize-merge.ts`), so a press there reaches the cell.
  */
 
 const HANDLE_ZONE = 3;
@@ -50,6 +59,10 @@ export class TableResizeController {
 	colBoundaries = $state<number[]>([]);
 	/** Cumulative top-edge pixel offsets of the internal row boundaries. */
 	rowBounds = $state<number[]>([]);
+	/** Measured table height, for the column-boundary segments. */
+	tableHeight = $state(0);
+	/** Where merged cells interrupt the internal boundaries. */
+	crossings = $state<TableMergeCrossings>({ rows: [], columns: [] });
 	/** Live drag translation (px) for the boundary line currently dragged, or null when idle. */
 	dragOffset = $state<number | null>(null);
 	dragType = $state<'col' | 'row' | null>(null);
@@ -77,8 +90,27 @@ export class TableResizeController {
 	measure(): void {
 		const data = this.#tableData();
 		this.colBoundaries = data ? computeColumnBoundaries(data.columnWidths) : [];
-		const table = this.#root()?.querySelector('table');
+		this.crossings = computeTableMergeCrossings(data?.rows ?? [], data?.columnWidths.length ?? 0);
+		const table = this.#root()?.querySelector<HTMLElement>('table');
 		this.rowBounds = table ? measureRowBoundaries(table) : [];
+		this.tableHeight = table?.offsetHeight ?? 0;
+	}
+
+	/** The real-edge segments of column boundary `index`, in px from the table top. */
+	colSegments(index: number): { top: number; height: number }[] {
+		return columnHandleSegments(
+			this.crossings.columns[index] ?? [],
+			this.rowBounds,
+			this.tableHeight,
+		);
+	}
+
+	/** The real-edge segments of row boundary `index`, as percentages of the width. */
+	rowSegments(index: number): TableRowHandleSegment[] {
+		return rowHandleSegments(
+			this.crossings.rows[index] ?? [],
+			this.#tableData()?.columnWidths ?? [],
+		);
 	}
 
 	/** Proximity-based drag initiation: hit-test a press against the measured boundaries. */
@@ -95,7 +127,10 @@ export class TableResizeController {
 
 		for (let i = 0; i < this.colBoundaries.length; i++) {
 			const boundaryX = (this.colBoundaries[i] / 100) * rect.width;
-			if (Math.abs(localX - boundaryX) <= HANDLE_ZONE) {
+			if (
+				Math.abs(localX - boundaryX) <= HANDLE_ZONE &&
+				!isColumnBoundaryMergedAt(this.crossings, i, this.rowBounds, localY / scaleY)
+			) {
 				this.#begin(event, {
 					type: 'col',
 					index: i,
@@ -107,7 +142,10 @@ export class TableResizeController {
 		}
 
 		for (let i = 0; i < this.rowBounds.length; i++) {
-			if (Math.abs(localY - this.rowBounds[i] * scaleY) <= HANDLE_ZONE) {
+			if (
+				Math.abs(localY - this.rowBounds[i] * scaleY) <= HANDLE_ZONE &&
+				!isRowBoundaryMergedAt(this.crossings, i, data.columnWidths, localX / (rect.width || 1))
+			) {
 				const tr = root.querySelectorAll<HTMLElement>('table tbody > tr')[i];
 				this.#begin(event, {
 					type: 'row',

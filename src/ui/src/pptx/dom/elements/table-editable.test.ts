@@ -20,7 +20,7 @@ function buildTableData(): PptxTableData {
 	};
 }
 
-function buildTableElement(): PptxElement {
+function buildTableElement(tableData = buildTableData()): PptxElement {
 	return {
 		type: 'table',
 		id: 'el-table',
@@ -28,12 +28,12 @@ function buildTableElement(): PptxElement {
 		y: 0,
 		width: 400,
 		height: 200,
-		tableData: buildTableData(),
+		tableData,
 	};
 }
 
 /** Mount a table with resize handlers wired, container geometry stubbed to 400x200 at (0,0). */
-function mountResizableTable() {
+function mountResizableTable(tableData = buildTableData()) {
 	const registry = createElementRendererRegistry();
 	registerTableChartRenderers(registry);
 	const onTableResizeColumns = vi.fn();
@@ -60,7 +60,7 @@ function mountResizableTable() {
 			return registry.resolve(element.type)(element, zIndex, context);
 		},
 	};
-	const element = buildTableElement();
+	const element = buildTableElement(tableData);
 	const container = renderTableElement(element, 0, context) as HTMLElement;
 	document.body.appendChild(container);
 	vi.spyOn(container, 'getBoundingClientRect').mockReturnValue({
@@ -194,5 +194,26 @@ describe('enableTableResize', () => {
 		expect(element.id).toBe('el-table');
 		expect(rowIndex).toBe(0);
 		expect(height).toBe(computeResizedRowHeight(40, 20));
+	});
+
+	it('offers no row handle across a vertically merged cell', () => {
+		const merged = buildTableData();
+		merged.rows[0]!.cells[0] = { text: 'A', rowSpan: 2 };
+		merged.rows[1]!.cells[0] = { text: '', vMerge: true };
+		const { container, onTableResizeRow } = mountResizableTable(merged);
+		// The boundary at 40px runs through the merged cell in the first column...
+		const inside = new MouseEvent('mousedown', {
+			clientX: 10,
+			clientY: 40,
+			bubbles: true,
+			cancelable: true,
+		});
+		container.dispatchEvent(inside);
+		expect(inside.defaultPrevented).toBeFalsy();
+		window.dispatchEvent(new MouseEvent('mouseup', { clientX: 10, clientY: 60 }));
+		expect(onTableResizeRow).not.toHaveBeenCalled();
+		// ...but is still a real edge in the other columns.
+		drag(container, [300, 40], [300, 60]);
+		expect(onTableResizeRow).toHaveBeenCalledOnce();
 	});
 });

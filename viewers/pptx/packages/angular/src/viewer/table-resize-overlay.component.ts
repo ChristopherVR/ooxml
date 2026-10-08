@@ -10,6 +10,9 @@
  * to `pptx-viewer-shared` (`computeColumnBoundaries` / `computeResizedColumnWidths`
  * / `computeResizedRowHeight`); this component only wires pointer events.
  *
+ * A boundary stretch inside a merged cell gets no handle
+ * (`render/table-resize-merge.ts`), so a press there reaches the cell.
+ *
  * On drop it emits the new column-width array (`resizeColumns`) or the resized
  * row's index + height (`resizeRow`); the parent commits them through the editor
  * history path.
@@ -27,13 +30,17 @@ import {
 	output,
 	signal,
 } from '@angular/core';
-
 import {
+	columnHandleSegments,
 	computeColumnBoundaries,
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
+	computeTableMergeCrossings,
 	DEFAULT_ROW_HEIGHT,
+	rowHandleSegments,
 } from 'ooxml-ui/pptx';
+import type { TableRowHandleSegment } from 'ooxml-ui/pptx';
+import type { PptxTableRow } from 'pptx-viewer-core';
 
 interface DragState {
 	type: 'col' | 'row';
@@ -53,75 +60,45 @@ interface DragState {
 			<ng-content />
 			@if (editable()) {
 				@for (leftPct of colBoundaries(); track $index; let i = $index) {
-					<div
-						class="pptx-ng-tbl-resize__col"
-						[style.left.%]="leftPct"
-						(pointerdown)="onColDown($event, i)"
-					>
-						<div class="pptx-ng-tbl-resize__col-line"></div>
+					<div class="pptx-ng-tbl-resize__col" [style.left.%]="leftPct">
+						@for (segment of colSegments(i); track segment.top) {
+							<div
+								class="pptx-ng-tbl-resize__segment pptx-ng-tbl-resize__col-segment"
+								[style.top.px]="segment.top"
+								[style.height]="tableHeight() ? segment.height + 'px' : '100%'"
+								(pointerdown)="onColDown($event, i)"
+							>
+								<div class="pptx-ng-tbl-resize__col-line"></div>
+							</div>
+						}
 					</div>
 				}
 				@for (topPx of rowBounds(); track $index; let i = $index) {
-					<div
-						class="pptx-ng-tbl-resize__row"
-						[style.top.px]="topPx"
-						(pointerdown)="onRowDown($event, i)"
-					>
-						<div class="pptx-ng-tbl-resize__row-line"></div>
+					<div class="pptx-ng-tbl-resize__row" [style.top.px]="topPx">
+						@for (segment of rowSegments(i); track segment.leftPct) {
+							<div
+								class="pptx-ng-tbl-resize__segment pptx-ng-tbl-resize__row-segment"
+								[style.left.%]="segment.leftPct"
+								[style.width.%]="segment.widthPct"
+								(pointerdown)="onRowDown($event, i)"
+							>
+								<div class="pptx-ng-tbl-resize__row-line"></div>
+							</div>
+						}
 					</div>
 				}
 			}
 		</div>
 	`,
-	styles: `
-		.pptx-ng-tbl-resize {
-			position: relative;
-			width: 100%;
-			height: 100%;
-		}
-		.pptx-ng-tbl-resize__col {
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			width: 6px;
-			margin-left: -3px;
-			cursor: col-resize;
-			z-index: 10;
-		}
-		.pptx-ng-tbl-resize__row {
-			position: absolute;
-			left: 0;
-			right: 0;
-			height: 6px;
-			margin-top: -3px;
-			cursor: row-resize;
-			z-index: 10;
-		}
-		.pptx-ng-tbl-resize__col-line {
-			width: 1px;
-			height: 100%;
-			margin: 0 auto;
-			background: transparent;
-			transition: background-color 0.12s;
-		}
-		.pptx-ng-tbl-resize__row-line {
-			height: 1px;
-			width: 100%;
-			margin: auto 0;
-			background: transparent;
-			transition: background-color 0.12s;
-		}
-		.pptx-ng-tbl-resize__col:hover .pptx-ng-tbl-resize__col-line,
-		.pptx-ng-tbl-resize__row:hover .pptx-ng-tbl-resize__row-line {
-			background: rgba(96, 165, 250, 0.6);
-		}
-	`,
+	styleUrl: './table-resize-overlay.component.css',
 })
 export class TableResizeOverlayComponent {
 	/** Column widths as proportions summing to ~1. */
 	readonly columnWidths = input.required<number[]>();
 	/** Whether the resize handles are active. */
 	readonly editable = input<boolean>(false);
+	/** The table's rows, for the merges that interrupt a boundary. */
+	readonly rows = input<readonly PptxTableRow[]>([]);
 
 	/** Emitted on column-boundary drop with the renormalised width array. */
 	readonly resizeColumns = output<number[]>();
@@ -136,6 +113,27 @@ export class TableResizeOverlayComponent {
 
 	/** Measured internal row-boundary offsets (px from the table top). */
 	readonly rowBounds = signal<number[]>([]);
+	/** Measured table height, for the column-boundary segments. */
+	readonly tableHeight = signal(0);
+
+	/** Where merged cells interrupt the internal boundaries. */
+	readonly crossings = computed(() =>
+		computeTableMergeCrossings(this.rows(), this.columnWidths().length),
+	);
+
+	/** The real-edge segments of column boundary `index`, in px from the table top. */
+	colSegments(index: number): { top: number; height: number }[] {
+		return columnHandleSegments(
+			this.crossings().columns[index] ?? [],
+			this.rowBounds(),
+			this.tableHeight(),
+		);
+	}
+
+	/** The real-edge segments of row boundary `index`, as percentages of the width. */
+	rowSegments(index: number): TableRowHandleSegment[] {
+		return rowHandleSegments(this.crossings().rows[index] ?? [], this.columnWidths());
+	}
 
 	private drag: DragState | null = null;
 	private readonly onMove = (e: PointerEvent): void => this.handleMove(e);
@@ -155,6 +153,7 @@ export class TableResizeOverlayComponent {
 		effect(() => {
 			// Depend on the column widths so structural changes trigger a re-measure.
 			this.columnWidths();
+			this.rows();
 			afterNextRender(() => this.measureRows(), { injector: this.injector });
 		});
 	}
@@ -178,6 +177,7 @@ export class TableResizeOverlayComponent {
 		if (!table) {
 			return;
 		}
+		this.tableHeight.set(table.offsetHeight);
 		const trs = table.querySelectorAll('tbody > tr');
 		const bounds: number[] = [];
 		let cumulative = 0;
@@ -200,7 +200,7 @@ export class TableResizeOverlayComponent {
 			type: 'col',
 			index,
 			startPos: event.clientX,
-			handle: event.currentTarget as HTMLElement,
+			handle: this.boundaryOf(event),
 			initialWidths: [...this.columnWidths()],
 		});
 	}
@@ -214,9 +214,15 @@ export class TableResizeOverlayComponent {
 			type: 'row',
 			index,
 			startPos: event.clientY,
-			handle: event.currentTarget as HTMLElement,
+			handle: this.boundaryOf(event),
 			initialRowHeight: tr?.offsetHeight ?? DEFAULT_ROW_HEIGHT,
 		});
+	}
+
+	/** The whole boundary line a pressed segment belongs to, so the drag moves all of it. */
+	private boundaryOf(event: PointerEvent): HTMLElement {
+		const segment = event.currentTarget as HTMLElement;
+		return segment.parentElement ?? segment;
 	}
 
 	private beginDrag(state: DragState): void {

@@ -49,6 +49,57 @@ describe('table resize release', () => {
 		}
 	});
 
+	it('leaves a row edge inside a vertically merged cell to the cell', async () => {
+		const wrapper = mount(TableResizeOverlay, {
+			props: {
+				columnWidths: [0.5, 0.5],
+				rows: [
+					{ cells: [{ text: 'A', rowSpan: 2 }, { text: 'B' }] },
+					{ cells: [{ text: '', vMerge: true }, { text: 'C' }] },
+				],
+				editable: true,
+			},
+			slots: {
+				default:
+					'<table><tbody><tr><td rowspan="2">A</td><td>B</td></tr><tr><td>C</td></tr></tbody></table>',
+			},
+			attachTo: document.body,
+		});
+		Object.defineProperty(wrapper.element, 'offsetHeight', { value: 80 });
+		vi.spyOn(wrapper.element, 'getBoundingClientRect').mockReturnValue({
+			left: 0,
+			top: 0,
+			width: 400,
+			height: 80,
+		} as DOMRect);
+		for (const row of wrapper.element.querySelectorAll('tr')) {
+			Object.defineProperty(row, 'offsetHeight', { value: 40 });
+		}
+		await wrapper.setProps({ columnWidths: [0.5, 0.5] });
+		await nextTick();
+		try {
+			const press = (clientX: number): MouseEvent => {
+				const event = new MouseEvent('mousedown', {
+					clientX,
+					clientY: 40,
+					bubbles: true,
+					cancelable: true,
+				});
+				wrapper.element.dispatchEvent(event);
+				window.dispatchEvent(new MouseEvent('mouseup', { clientX, clientY: 40 }));
+				return event;
+			};
+			expect(press(100).defaultPrevented).toBeFalsy();
+			expect(press(300).defaultPrevented).toBeTruthy();
+			const segments = wrapper.element.querySelectorAll<HTMLElement>(
+				'.pptx-vue-table-resize__row .pptx-vue-table-resize__segment',
+			);
+			expect([...segments].map((segment) => segment.style.left)).toStrictEqual(['50%']);
+		} finally {
+			wrapper.unmount();
+		}
+	});
+
 	it.each([
 		[200, 10],
 		[10, 0],

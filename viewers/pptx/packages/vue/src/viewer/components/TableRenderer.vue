@@ -1,12 +1,5 @@
 <script setup lang="ts">
 import type {
-	ParsedTableStyleMap,
-	PptxElement,
-	PptxTableCellStyle,
-	PptxTableData,
-	PptxThemeColorScheme,
-} from 'pptx-viewer-core';
-import type {
 	CellParagraphBlock,
 	CellPatternFillCss,
 	CellTextRun,
@@ -25,6 +18,13 @@ import {
 	tableCellPointerIntent,
 	tableContainerCss,
 } from 'ooxml-ui/pptx';
+import type {
+	ParsedTableStyleMap,
+	PptxElement,
+	PptxTableCellStyle,
+	PptxTableData,
+	PptxThemeColorScheme,
+} from 'pptx-viewer-core';
 import type { ComponentPublicInstance, CSSProperties } from 'vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
@@ -535,6 +535,7 @@ onBeforeUnmount(() => {
 		<component :is="'style'" v-if="textStyleOverrideCss">{{ textStyleOverrideCss }}</component>
 		<TableResizeOverlay
 			:column-widths="tableData.columnWidths"
+			:rows="tableData.rows"
 			:editable="editingEnabled"
 			@resize-columns="onResizeColumns"
 			@resize-row="onResizeRow"

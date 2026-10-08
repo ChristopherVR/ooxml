@@ -1,0 +1,55 @@
+.pptx-ng-tbl-resize {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+.pptx-ng-tbl-resize__col {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 6px;
+	margin-left: -3px;
+	z-index: 10;
+	pointer-events: none;
+}
+.pptx-ng-tbl-resize__row {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 6px;
+	margin-top: -3px;
+	z-index: 10;
+	pointer-events: none;
+}
+.pptx-ng-tbl-resize__segment {
+	position: absolute;
+	pointer-events: auto;
+}
+.pptx-ng-tbl-resize__col-segment {
+	left: 0;
+	right: 0;
+	cursor: col-resize;
+}
+.pptx-ng-tbl-resize__row-segment {
+	top: 0;
+	bottom: 0;
+	cursor: row-resize;
+}
+.pptx-ng-tbl-resize__col-line {
+	width: 1px;
+	height: 100%;
+	margin: 0 auto;
+	background: transparent;
+	transition: background-color 0.12s;
+}
+.pptx-ng-tbl-resize__row-line {
+	height: 1px;
+	width: 100%;
+	margin: auto 0;
+	background: transparent;
+	transition: background-color 0.12s;
+}
+.pptx-ng-tbl-resize__col-segment:hover .pptx-ng-tbl-resize__col-line,
+.pptx-ng-tbl-resize__row-segment:hover .pptx-ng-tbl-resize__row-line {
+	background: rgba(96, 165, 250, 0.6);
+}

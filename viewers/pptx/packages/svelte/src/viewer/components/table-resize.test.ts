@@ -1,7 +1,7 @@
+import { computeResizedColumnWidths, computeResizedRowHeight } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- many independent `it()` blocks, each with
    its own locals; not intended as one statement */
 import type { PptxTableData } from 'pptx-viewer-core';
-import { computeResizedColumnWidths, computeResizedRowHeight } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TableResizeController } from './table-resize.svelte';
@@ -163,6 +163,20 @@ describe('svelte table drag-resize', () => {
 		expect(controller.dragType).toBe('row');
 		expect(controller.dragIndex).toBe(0);
 		release(10, 25);
+		controller.destroy();
+	});
+
+	it('leaves a row edge inside a vertically merged cell to the cell', () => {
+		const data = tableData();
+		data.rows[0]!.cells[0] = { text: 'A', rowSpan: 2 };
+		data.rows[1]!.cells[0] = { text: '', vMerge: true };
+		const { controller, commitRow } = makeController({ data });
+		press(controller, 10, 40);
+		expect(controller.dragType).toBeNull();
+		expect(controller.rowSegments(0)).toStrictEqual([{ leftPct: 50, widthPct: 50 }]);
+		press(controller, 300, 40);
+		release(300, 60);
+		expect(commitRow).toHaveBeenCalledExactlyOnceWith(0, computeResizedRowHeight(40, 20));
 		controller.destroy();
 	});
 

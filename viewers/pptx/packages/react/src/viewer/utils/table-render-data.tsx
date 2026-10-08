@@ -1,11 +1,6 @@
-import type { TablePptxElement, PptxTableCell } from 'pptx-viewer-core';
 import type { TableCellCss } from 'ooxml-ui/pptx';
-import {
-	canDrillDown,
-	DEFAULT_FONT_FAMILY,
-	tableCellCss,
-	tableContainerCss,
-} from 'ooxml-ui/pptx';
+import { canDrillDown, DEFAULT_FONT_FAMILY, tableCellCss, tableContainerCss } from 'ooxml-ui/pptx';
+import type { TablePptxElement, PptxTableCell } from 'pptx-viewer-core';
 import React from 'react';
 
 import { cn } from '../../utils';
@@ -75,6 +70,7 @@ export function renderTableFromTableData(
 	return (
 		<TableResizeOverlay
 			columnWidths={tableData.columnWidths}
+			rows={tableData.rows}
 			editable={isEditable}
 			onResizeColumns={options?.onResizeColumns}
 			onResizeRow={options?.onResizeRow}

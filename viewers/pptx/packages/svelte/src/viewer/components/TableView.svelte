@@ -211,13 +211,21 @@
 				<div
 					class="pptx-svelte-table-resize-col"
 					style="left: calc({leftPct}% - 3px); transform: {resize.dragType === 'col' && resize.dragIndex === i ? `translateX(${resize.dragOffset}px)` : ''}"
-				></div>
+				>
+					{#each resize.colSegments(i) as segment (segment.top)}
+						<div class="pptx-svelte-table-resize-segment pptx-svelte-table-resize-col-segment" style="top: {segment.top}px; height: {resize.tableHeight ? `${segment.height}px` : '100%'}"></div>
+					{/each}
+				</div>
 			{/each}
 			{#each resize.rowBounds as topPx, i (i)}
 				<div
 					class="pptx-svelte-table-resize-row"
 					style="top: {topPx - 3}px; transform: {resize.dragType === 'row' && resize.dragIndex === i ? `translateY(${resize.dragOffset}px)` : ''}"
-				></div>
+				>
+					{#each resize.rowSegments(i) as segment (segment.leftPct)}
+						<div class="pptx-svelte-table-resize-segment pptx-svelte-table-resize-row-segment" style="left: {segment.leftPct}%; width: {segment.widthPct}%"></div>
+					{/each}
+				</div>
 			{/each}
 		{/if}
 	</div>
@@ -244,12 +252,25 @@
 		top: 0;
 		bottom: 0;
 		width: 6px;
-		cursor: col-resize;
 	}
 	.pptx-svelte-table-resize-row {
 		left: 0;
 		right: 0;
 		height: 6px;
+	}
+	/* One segment per real edge: a boundary inside a merged cell has none. */
+	.pptx-svelte-table-resize-segment {
+		position: absolute;
+		pointer-events: none;
+	}
+	.pptx-svelte-table-resize-col-segment {
+		left: 0;
+		right: 0;
+		cursor: col-resize;
+	}
+	.pptx-svelte-table-resize-row-segment {
+		top: 0;
+		bottom: 0;
 		cursor: row-resize;
 	}
 	/* The selected block, ringed the way the other bindings ring theirs. An

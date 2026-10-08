@@ -3,8 +3,13 @@ import {
 	computeColumnBoundaries,
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
+	computeTableMergeCrossings,
+	columnHandleSegments,
 	DEFAULT_ROW_HEIGHT,
 	getTableResizeScale,
+	isColumnBoundaryMergedAt,
+	isRowBoundaryMergedAt,
+	rowHandleSegments,
 } from '../../index';
 
 import { createEl } from '../dom';
@@ -70,7 +75,11 @@ export function enableTableResize(
 		for (const handle of [...colHandles, ...rowHandles]) {
 			handle.remove();
 		}
-		colHandles = computeColumnBoundaries(tableData!.columnWidths).map((leftPct) => {
+		const crossings = computeTableMergeCrossings(tableData!.rows, tableData!.columnWidths.length);
+		const rowBounds = measureRowBoundaries(table);
+		// One boundary element per line, holding a segment per real edge, so a
+		// line inside a merged cell is neither drawn nor offered as a handle.
+		colHandles = computeColumnBoundaries(tableData!.columnWidths).map((leftPct, i) => {
 			const handle = createEl(doc, 'div', 'pptxv-table-resize-col', {
 				position: 'absolute',
 				top: '0',
@@ -78,13 +87,29 @@ export function enableTableResize(
 				left: `calc(${leftPct}% - 3px)`,
 				width: '6px',
 				zIndex: '10',
-				cursor: 'col-resize',
 				pointerEvents: 'none',
 			});
+			const segments = columnHandleSegments(
+				crossings.columns[i] ?? [],
+				rowBounds,
+				table.offsetHeight,
+			);
+			for (const { top, height } of segments) {
+				handle.appendChild(
+					createEl(doc, 'div', 'pptxv-table-resize-segment', {
+						position: 'absolute',
+						left: '0',
+						right: '0',
+						top: `${top}px`,
+						height: `${height}px`,
+						cursor: 'col-resize',
+					}),
+				);
+			}
 			container.appendChild(handle);
 			return handle;
 		});
-		rowHandles = measureRowBoundaries(table).map((topPx) => {
+		rowHandles = rowBounds.map((topPx, i) => {
 			const handle = createEl(doc, 'div', 'pptxv-table-resize-row', {
 				position: 'absolute',
 				left: '0',
@@ -92,9 +117,21 @@ export function enableTableResize(
 				top: `${topPx - 3}px`,
 				height: '6px',
 				zIndex: '10',
-				cursor: 'row-resize',
 				pointerEvents: 'none',
 			});
+			const segments = rowHandleSegments(crossings.rows[i] ?? [], tableData!.columnWidths);
+			for (const { leftPct, widthPct } of segments) {
+				handle.appendChild(
+					createEl(doc, 'div', 'pptxv-table-resize-segment', {
+						position: 'absolute',
+						top: '0',
+						bottom: '0',
+						left: `${leftPct}%`,
+						width: `${widthPct}%`,
+						cursor: 'row-resize',
+					}),
+				);
+			}
 			container.appendChild(handle);
 			return handle;
 		});
@@ -153,10 +190,15 @@ export function enableTableResize(
 		const localY = event.clientY - rect.top;
 		const scaleY = getTableResizeScale(rect.height, container.offsetHeight);
 
+		const crossings = computeTableMergeCrossings(tableData!.rows, tableData!.columnWidths.length);
+		const rowBounds = measureRowBoundaries(table);
 		const colBoundaries = computeColumnBoundaries(tableData!.columnWidths);
 		for (let i = 0; i < colBoundaries.length; i++) {
 			const boundaryX = (colBoundaries[i] / 100) * rect.width;
-			if (Math.abs(localX - boundaryX) <= HANDLE_ZONE) {
+			if (
+				Math.abs(localX - boundaryX) <= HANDLE_ZONE &&
+				!isColumnBoundaryMergedAt(crossings, i, rowBounds, localY / scaleY)
+			) {
 				event.preventDefault();
 				event.stopPropagation();
 				doc.body.style.cursor = 'col-resize';
@@ -174,9 +216,11 @@ export function enableTableResize(
 			}
 		}
 
-		const rowBounds = measureRowBoundaries(table);
 		for (let i = 0; i < rowBounds.length; i++) {
-			if (Math.abs(localY - rowBounds[i] * scaleY) <= HANDLE_ZONE) {
+			if (
+				Math.abs(localY - rowBounds[i] * scaleY) <= HANDLE_ZONE &&
+				!isRowBoundaryMergedAt(crossings, i, tableData!.columnWidths, localX / (rect.width || 1))
+			) {
 				event.preventDefault();
 				event.stopPropagation();
 				const tr = table.querySelectorAll<HTMLElement>('tbody > tr')[i];
