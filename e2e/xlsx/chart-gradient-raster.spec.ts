@@ -54,6 +54,7 @@ for (const run of runs)
 			const book = createWorkbook();
 			createEditSession(book).addChart(0, {
 				chartType: 'column',
+				showLegend: false,
 				series: [{ name: 'Value', categories: ['A'], values: [1] }],
 				anchor: {
 					from: { row: 1, col: 1, rowOffset: 0, colOffset: 0 },

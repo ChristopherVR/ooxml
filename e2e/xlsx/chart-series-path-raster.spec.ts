@@ -115,7 +115,7 @@ for (const run of runs)
 				expect(size[0]! / size[1]!, `${sample.name} physical mark aspect`).toBeCloseTo(aspect, 4);
 				const pixels = await mark.evaluate(async (rect, sample) => {
 					const id = rect.getAttribute('fill')!.slice(5, -1);
-					const def = rect.ownerSVGElement!.querySelector(`[id="${id}"]`)!;
+					const def = (rect as SVGElement).ownerSVGElement!.querySelector(`[id="${id}"]`)!;
 					if (!def.id.includes('-mark0-s0')) throw new Error('Expected per-mark gradient');
 					const bounds = sample.paintBounds;
 					const image = new Image();
