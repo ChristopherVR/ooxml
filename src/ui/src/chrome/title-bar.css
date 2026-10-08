@@ -122,7 +122,7 @@ svg {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	color: var(--office-title-bar-foreground);
+	color: var(--office-title-bar-name-foreground);
 	font-size: var(--office-font-size-sm);
 	font-weight: var(--office-font-weight-medium);
 }
@@ -187,7 +187,7 @@ svg {
 }
 .results button:hover,
 .results button[aria-selected='true'] {
-	background: var(--office-selected);
+	background: var(--office-title-bar-result-selected);
 }
 .results .cat {
 	margin-inline-start: auto;

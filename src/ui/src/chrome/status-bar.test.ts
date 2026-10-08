@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { OfficeStatusBarState, OfficeStatusButton } from '../controls';
 import { registerOfficeUi } from '../index';
+import css from './status-bar.css?raw';
 
 // Adapted from pptx-viewer's status-bar tests (`packages/shared/src/web-components/status-bar.test.ts`).
 beforeAll(() => registerOfficeUi());
@@ -134,5 +135,10 @@ describe('office-ui-status-bar (controlled)', () => {
 		bar.addEventListener('status-request', (e) => seen((e as CustomEvent).detail));
 		button(bar, 'Normal').click();
 		expect(seen).toHaveBeenCalledWith({ id: 'normal' });
+	});
+
+	it('fades both separators through one token', () => {
+		const rules = css.match(/opacity: var\(--office-status-bar-separator-opacity\);/g) ?? [];
+		expect(rules).toHaveLength(2);
 	});
 });

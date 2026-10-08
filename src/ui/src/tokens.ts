@@ -165,6 +165,7 @@ export const OFFICE_TOKENS = {
 	'--office-launcher-height': '14px',
 	'--office-tab-indicator-width': '2.5px',
 	'--office-status-bar-height': '24px',
+	'--office-status-bar-separator-opacity': '1',
 	'--office-tab-height': '28px',
 	'--office-tab-max-width': '220px',
 	'--office-zoom-slider-width': '120px',
@@ -234,6 +235,9 @@ export const OFFICE_TOKENS = {
 	'--office-title-bar-mark-size': '20px',
 	'--office-title-bar-mark-background': 'var(--office-accent, #2563eb)',
 	'--office-title-bar-mark-foreground': 'var(--office-accent-foreground, #ffffff)',
+	'--office-title-bar-name-foreground':
+		'var(--office-title-bar-foreground, var(--office-foreground, #1f2937))',
+	'--office-title-bar-result-selected': 'var(--office-selected, #e5e7eb)',
 	'--office-title-bar-name-max-width': '240px',
 	'--office-title-bar-name-max-width-narrow': '140px',
 	'--office-title-bar-search-max-width': '448px',

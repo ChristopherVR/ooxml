@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { OfficeTitleBarState } from '../controls';
 import { registerOfficeUi } from '../index';
+import css from './title-bar.css?raw';
 
 // Adapted from pptx-viewer's title-bar tests (`packages/shared/src/web-components/title-bar.test.ts`).
 beforeAll(() => registerOfficeUi());
@@ -186,5 +187,13 @@ describe('office-ui-title-bar actions slot', () => {
 		document.body.append(bar);
 		const slots = [...bar.shadowRoot!.querySelectorAll('slot')].map((slot) => slot.name);
 		expect(slots).toEqual(['actions', 'collaboration', 'account']);
+	});
+
+	it('themes the file name and the highlighted result through their own tokens', () => {
+		// A product can colour them apart from the bar and the Quick Access hover.
+		expect(css).toMatch(/\.name \{[^}]*color: var\(--office-title-bar-name-foreground\);/);
+		expect(css).toMatch(
+			/\.results button\[aria-selected='true'\] \{\s*background: var\(--office-title-bar-result-selected\);/,
+		);
 	});
 });
