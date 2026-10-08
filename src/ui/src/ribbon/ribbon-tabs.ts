@@ -21,7 +21,8 @@ interface RibbonTab {
  * tab panels. Panels are light-DOM children carrying `data-ribbon-tab` (id), `data-label` and
  * optionally `data-tab-keytip`; the element builds the tabs from them, keeps exactly one panel
  * visible and moves between tabs with the arrow keys, Home and End. Slots: `quick-access`,
- * `search`, `end`. Attributes: `selected`, `label` (tab list name), `file-label` (default "File"),
+ * `search`, `end` (after the tabs) and `actions` (pushed to the right end of the tab row, before
+ * the collapse button: Office's editing mode, Comments and Share). Attributes: `selected`, `label` (tab list name), `file-label` (default "File"),
  * `no-file`, `file-expanded`, `file-keytip`. A panel with `data-tab-hidden` keeps its content but has
  * no tab (a contextual tab, or one a customisation removed); if it was selected, the first
  * remaining tab takes over. `data-contextual` on a panel tints its tab (`--office-ribbon-contextual`),
@@ -298,6 +299,7 @@ export class OfficeUiRibbon extends OfficeElement {
 				</div>
 				<slot name="search"></slot>
 				<slot name="end"></slot>
+				<slot name="actions" part="actions"></slot>
 				<button
 					class="collapse"
 					part="collapse"

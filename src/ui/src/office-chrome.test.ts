@@ -53,6 +53,29 @@ describe('office-ui-ribbon', () => {
 		expect(tabs()[1]!.dataset.keytipPanel).toBe('view-panel');
 	});
 
+	it('places slot="actions" children at the right end of the tab row, before collapse', () => {
+		const { el, tabs } = ribbon();
+		const share = document.createElement('button');
+		share.slot = 'actions';
+		share.textContent = 'Share';
+		el.append(share);
+		const head = el.shadowRoot!.querySelector('.head')!;
+		const slot = head.querySelector<HTMLSlotElement>('slot[name="actions"]')!;
+		expect(slot.assignedElements()).toEqual([share]);
+		expect(slot.getAttribute('part')).toBe('actions');
+		const order = [...head.children].map(
+			(node) => node.getAttribute('role') ?? node.getAttribute('name') ?? node.className,
+		);
+		expect(order.indexOf('actions')).toBeGreaterThan(order.indexOf('tablist'));
+		expect(order.indexOf('actions')).toBe(order.indexOf('collapse') - 1);
+		// An action is not a panel, so it never becomes a tab.
+		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home', 'View']);
+		const css = (el.constructor as unknown as { styles: { cssText: string }[] }).styles
+			.map((sheet) => sheet.cssText)
+			.join('\n');
+		expect(css).toMatch(/slot\[name='actions'\]\s*\{[^}]*margin-inline:\s*auto/u);
+	});
+
 	it('selects tabs by click and arrow keys unless the event is cancelled', () => {
 		const { el, tabs } = ribbon();
 		const seen: string[] = [];
