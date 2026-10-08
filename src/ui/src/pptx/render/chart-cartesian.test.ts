@@ -389,6 +389,42 @@ describe('cartesian percentStacked', () => {
 	});
 });
 
+// ── Stacked bars: c:gapWidth and explicit value-axis bounds ─────
+
+describe('cartesian stacked bars', () => {
+	const stackedChart = (overrides: Partial<PptxChartData> = {}): PptxChartData => ({
+		chartType: 'bar',
+		categories: ['Q1', 'Q2'],
+		series: [
+			{ name: 'A', values: [20, 10] },
+			{ name: 'B', values: [30, 40] },
+		],
+		grouping: 'stacked',
+		...overrides,
+	});
+	const rectsOf = (data: PptxChartData) => {
+		const vm = buildChartViewModel(chartElement(data));
+		const plotLeft = vm.gridlines[0].x1;
+		const plotWidth = vm.gridlines[0].x2 - plotLeft;
+		const rects = vm.primitives.filter((p) => p.kind === 'rect');
+		return { vm, rects, slot: plotWidth / 2 };
+	};
+
+	it('keeps 0.7 of the category slot when c:gapWidth is absent', () => {
+		const { rects, slot } = rectsOf(stackedChart());
+		expect(rects[0]?.kind === 'rect' && rects[0].w).toBeCloseTo(slot * 0.7, 6);
+	});
+
+	it('sizes stacked and percentStacked bars from c:gapWidth like a one-bar cluster', () => {
+		for (const grouping of ['stacked', 'percentStacked'] as const) {
+			const { rects, slot } = rectsOf(stackedChart({ grouping, barGapWidth: 50 }));
+			for (const rect of rects) {
+				expect(rect.kind === 'rect' && rect.w).toBeCloseTo(slot / 1.5, 6);
+			}
+		}
+	});
+});
+
 // ── invertIfNegative (c:invertIfNegative) ────────────────────────
 
 describe('cartesian invertIfNegative', () => {

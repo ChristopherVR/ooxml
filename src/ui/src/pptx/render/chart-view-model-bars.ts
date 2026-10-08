@@ -12,6 +12,7 @@
 
 import type { PptxChartSeries } from 'ooxml-core/pptx';
 
+import { clusteredBarGeometry } from './chart-bar-cluster-geometry';
 import { seriesColor, valueToY } from './chart-view-model-scale';
 import type { ValueRange } from './chart-view-model-scale';
 import type { PlotLayout } from './chart-view-model-types';
@@ -65,15 +66,31 @@ export function computeBarRects(
 	return rects;
 }
 
+/**
+ * Width of a stacked bar in one category slot. All the series of a stacked
+ * chart share one bar, so `c:gapWidth` sizes it the way it sizes a cluster of
+ * one; without it the bar keeps its old `fallbackFraction` of the slot.
+ */
+export function stackedBarWidth(
+	slotWidth: number,
+	gapWidth: number | undefined,
+	fallbackFraction: number,
+): number {
+	return gapWidth === undefined
+		? slotWidth * fallbackFraction
+		: clusteredBarGeometry(slotWidth, 1, { barGapWidth: gapWidth }).singleBarWidth;
+}
+
 export function computeStackedBarRects(
 	series: ReadonlyArray<PptxChartSeries>,
 	catCount: number,
 	layout: PlotLayout,
 	range: ValueRange,
 	colorPalette: readonly string[] | undefined,
+	gapWidth?: number,
 ): BarRect[] {
 	const rects: BarRect[] = [],
-		barW = (layout.plotWidth / Math.max(catCount, 1)) * 0.7,
+		barW = stackedBarWidth(layout.plotWidth / Math.max(catCount, 1), gapWidth, 0.7),
 		barOffset = (layout.plotWidth / Math.max(catCount, 1) - barW) / 2,
 		zeroY = valueToY(0, range, layout.plotTop, layout.plotBottom);
 

@@ -12,7 +12,13 @@ import { dataLabelFontOverride, resolveDataLabelTextStyle } from './chart-data-l
 import { resolveDataPointFill } from './chart-datapoint-style';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
 import type { PlotLayout, SvgPrimitive, SvgRect, SvgText, ValueRange } from './chart-view-model';
-import { buildMarkTooltip, paletteColor, seriesColor, valueToY } from './chart-view-model';
+import {
+	buildMarkTooltip,
+	paletteColor,
+	seriesColor,
+	stackedBarWidth,
+	valueToY,
+} from './chart-view-model';
 
 /** Per-category absolute totals (for percentStacked normalisation). */
 function categoryTotals(series: ReadonlyArray<PptxChartSeries>, catCount: number): number[] {
@@ -46,7 +52,7 @@ export function buildPercentStackedBars(
 		palette = chartData.colorPalette,
 		showLabels = chartData.style?.hasDataLabels,
 		barGroupWidth = layout.plotWidth / Math.max(catCount, 1),
-		barW = barGroupWidth * 0.6,
+		barW = stackedBarWidth(barGroupWidth, chartData.barGapWidth, 0.6),
 		barOffset = (barGroupWidth - barW) / 2,
 		displaySeries = series.map((entry) => ({
 			...entry,

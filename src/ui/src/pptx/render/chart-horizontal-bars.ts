@@ -44,6 +44,7 @@ import {
 	computePlotLayout,
 	computeStackedValueRange,
 	formatAxisValue,
+	stackedBarWidth,
 } from './chart-view-model';
 
 export { valueToX } from './chart-horizontal-bars-helpers';
@@ -160,7 +161,7 @@ export function buildHorizontalBarViewModel(
 		}
 	} else {
 		const totals = isPercent ? categoryTotals(series, catCount) : [],
-			barH = band * (isPercent ? 0.6 : 0.7),
+			barH = stackedBarWidth(band, chartData.barGapWidth, isPercent ? 0.6 : 0.7),
 			barOffset = (band - barH) / 2;
 		for (let ci = 0; ci < catCount; ci++) {
 			let posRunning = 0,
