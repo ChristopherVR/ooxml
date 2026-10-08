@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Inline pictures and hyperlink targets carried by text runs.
+import type { DocxChart } from './chart';
 import type { DocxDiagram } from './diagram';
 import type { StRelFromH, StRelFromV } from './generated/wml-simple-types';
 
@@ -34,6 +35,8 @@ export interface InlineImage {
 	textBoxBorder?: boolean;
 	/** For SmartArt (`unsupported: "SmartArt"`): its parts, extent and cached drawing; the markup and parts are preserved on save. */
 	diagram?: DocxDiagram;
+	/** For a chart (`unsupported: "Chart"`): its part and the parsed `c:chartSpace`; the markup and parts are preserved on save. */
+	chart?: DocxChart;
 }
 /** A Word text watermark (`PowerPlusWaterMarkObject`), carried by an inline object run in a header. */
 export interface WatermarkSpec {

@@ -92,6 +92,7 @@ export function runToInlineNodes(
 					textBoxEditable: run.image.textBoxEditable ?? null,
 					textBoxBorder: run.image.textBoxBorder ?? null,
 					diagram: run.image.diagram ? JSON.stringify(run.image.diagram) : null,
+					chart: run.image.chart ? JSON.stringify(run.image.chart) : null,
 				},
 				undefined,
 				marks,
@@ -191,6 +192,7 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 				...(typeof child.attrs.diagram === 'string'
 					? { diagram: JSON.parse(child.attrs.diagram) }
 					: {}),
+				...(typeof child.attrs.chart === 'string' ? { chart: JSON.parse(child.attrs.chart) } : {}),
 				...(typeof child.attrs.placement === 'string'
 					? { placement: JSON.parse(child.attrs.placement) }
 					: {}),

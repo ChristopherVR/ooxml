@@ -16,6 +16,7 @@ import { getR, isElement, type XmlElement } from './xml';
 import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 import { DIAGRAM_GRAPHIC_URI, parseDiagramGraphic } from './diagram';
+import { CHART_GRAPHIC_URI, parseChartGraphic } from './chart';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -161,6 +162,10 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		uri === DIAGRAM_GRAPHIC_URI && graphicData
 			? parseDiagramGraphic(graphicData, extent, docPr, context.rels, Boolean(anchored))
 			: undefined;
+	const chart =
+		uri === CHART_GRAPHIC_URI && graphicData
+			? parseChartGraphic(graphicData, docPr, context.rels, Boolean(anchored))
+			: undefined;
 	const textBox = uri.includes('wordprocessingShape') ? textBoxParagraphs(graphicData) : undefined;
 	return {
 		relId: relId ?? '',
@@ -171,6 +176,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		...definedProps({ altText, title, anchored }),
 		unsupported: textBox ? 'Text box' : unsupportedKindLabel(uri),
 		...(diagram ? { diagram } : {}),
+		...(chart ? { chart } : {}),
 		...(diagram && placement ? { placement } : {}),
 		...(textBox ? { textBoxText: textBox } : {}),
 		...(textBox && isSimpleTextBox(graphicData, Boolean(anchored))

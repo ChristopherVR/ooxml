@@ -23,6 +23,7 @@ import { parseContentTypes, parseRelationships } from './package-parts';
 import { withParseWarnings } from './parse-diagnostics';
 import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse-warnings';
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
+import { resolveDocumentCharts } from './chart';
 
 export interface PackageContext {
 	original: Uint8Array;
@@ -195,6 +196,9 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].flatMap((note) => note.blocks),
 	];
 	await resolveDocumentDiagrams(pictureBlocks, async (partName) =>
+		zip.file(partName)?.async('string'),
+	);
+	await resolveDocumentCharts(pictureBlocks, async (partName) =>
 		zip.file(partName)?.async('string'),
 	);
 	model.warnings.push(...imageAndBookmarkWarnings(blocks), ...diagramWarnings(pictureBlocks));

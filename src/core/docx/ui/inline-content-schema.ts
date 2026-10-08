@@ -75,6 +75,8 @@ export const imageNodeSpec: NodeSpec = {
 		textBoxBorder: { default: null },
 		/** A SmartArt graphic (`DocxDiagram`) as JSON; shown read-only by the SmartArt node view. */
 		diagram: { default: null },
+		/** A chart (`DocxChart`) as JSON; shown as a placeholder. */
+		chart: { default: null },
 	},
 	parseDOM: [
 		{

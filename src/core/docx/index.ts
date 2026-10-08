@@ -30,6 +30,7 @@ export {
 	type DocxDiagramRendering,
 } from './diagram';
 export { diagramsIn } from './diagram-document';
+export { CHART_GRAPHIC_URI, CHART_NOTICE, chartsIn, type DocxChart } from './chart';
 export { diagramColorTheme, resolveDiagramColor } from './diagram-theme';
 export { saveDocx } from './save';
 export {
