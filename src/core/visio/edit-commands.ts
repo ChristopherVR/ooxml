@@ -1,4 +1,6 @@
 import { fail } from './package-common';
+import { snapshotResizeAnchor, type VisioResizeAnchor } from './resize-anchor';
+export type { VisioResizeAnchor } from './resize-anchor';
 import { snapshotDuplicateShapes, type VisioDuplicateShapesEdit } from './edit-duplicate-commands';
 export type { VisioDuplicateShapesEdit } from './edit-duplicate-commands';
 import { snapshotPasteShapes, type VisioPasteShapesEdit } from './edit-paste-commands';
@@ -38,7 +40,7 @@ export type VisioGeometryEdit =
 	| (BoxCreation & { type: 'create-rectangle' })
 	| (BoxCreation & { type: 'create-ellipse' })
 	| (Target & { type: 'move-shape'; x: number; y: number })
-	| (Target & { type: 'resize-shape'; width: number; height: number })
+	| (Target & { type: 'resize-shape'; width: number; height: number; anchor?: VisioResizeAnchor })
 	| (Target & { type: 'rotate-shape'; angle: number })
 	| (Target & { type: 'flip-shape'; axis: 'horizontal' | 'vertical' })
 	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
@@ -104,7 +106,10 @@ export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
 		return [`${prefix}X`, `${prefix}Y`];
 	}
 	if (edit.type === 'move-shape') return ['PinX', 'PinY'];
-	if (edit.type === 'resize-shape') return ['Width', 'Height'];
+	if (edit.type === 'resize-shape')
+		return edit.anchor
+			? ['Width', 'Height', 'PinX', 'PinY', 'LocPinX', 'LocPinY']
+			: ['Width', 'Height'];
 	if (edit.type === 'rotate-shape') return ['Angle'];
 	if (edit.type === 'flip-shape') return ['Angle', edit.axis === 'horizontal' ? 'FlipX' : 'FlipY'];
 	return ['PinX', 'PinY', 'Width', 'Height'];
@@ -226,13 +231,16 @@ export function snapshotVisioEdits(
 					x: numeric(edit.x),
 					y: numeric(edit.y),
 				};
-			case 'resize-shape':
+			case 'resize-shape': {
+				const anchor = snapshotResizeAnchor(edit.anchor);
 				return {
 					...target,
 					type: edit.type,
 					width: numeric(edit.width, true),
 					height: numeric(edit.height, true, true),
+					...(anchor === undefined ? {} : { anchor }),
 				};
+			}
 			case 'delete-shape':
 				return { ...target, type: edit.type };
 			default:

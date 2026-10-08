@@ -10,7 +10,7 @@ import {
 	type VisioFormulaReference,
 	type VisioFormulaValue,
 } from './formula';
-import { visioCellDependsOn } from './edit-recalculate';
+import { createVisioDependencyQuery } from './edit-recalculate';
 import type { VisioGeometryEdit } from './edit-commands';
 import { executableCellFormula } from './cell-formula';
 
@@ -257,6 +257,7 @@ export function resizeGeometry(
 	lineEditShapes: ReadonlySet<Element> = new Set(),
 ): void {
 	const sections = children(shape, 'Section').filter((node) => attribute(node, 'N') === 'Geometry');
+	let depends: ReturnType<typeof createVisioDependencyQuery> | undefined;
 	if (!sections.length)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Resizing requires explicit supported local geometry.');
 	for (const section of sections) {
@@ -291,16 +292,15 @@ export function resizeGeometry(
 				const analysis = analyzeVisioFormula(formula);
 				if (!analysis.references.length && numeric(node) === 0) continue;
 				const cell = `Geometry${Number(attribute(section, 'IX') ?? '0') + 1}.${attribute(node, 'N')}${attribute(row, 'IX')}`;
+				depends ??= createVisioDependencyQuery(roots, { check, lineEditShapes });
 				if (
-					!visioCellDependsOn(
-						roots,
+					!depends(
 						{ pageId: edit.pageId, shapeId: edit.shapeId, cell },
 						['Width', 'Height'].map((cell) => ({
 							pageId: edit.pageId,
 							shapeId: edit.shapeId,
 							cell,
 						})),
-						{ check, lineEditShapes },
 					)
 				)
 					fail(

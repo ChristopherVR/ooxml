@@ -65,6 +65,7 @@ export {
 	type VisioShapeOrderEdit,
 	type VisioDuplicateShapesEdit,
 	type VisioPasteShapesEdit,
+	type VisioResizeAnchor,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';

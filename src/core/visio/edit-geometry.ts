@@ -1,4 +1,5 @@
 import { proveLocalGroupRotation } from './edit-group-rotation';
+import { resizeVisioShapeAtAnchor } from './edit-resize-anchor';
 import { executableCellFormula } from './cell-formula';
 import { editableTransformCell } from './edit-transform-formula';
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
@@ -41,6 +42,8 @@ export function applyGeometryEdit(
 	const masterMovePins = masterMoveProof.pins,
 		masterDimensions = masterMoveProof.dimensions;
 	check();
+	if (edit.type === 'resize-shape' && edit.anchor)
+		return resizeVisioShapeAtAnchor(roots, document, edit, check);
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	const groupRotation = proveLocalGroupRotation(root, edit, check);

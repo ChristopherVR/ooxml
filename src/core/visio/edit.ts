@@ -33,6 +33,7 @@ export type {
 	VisioShapeOrderEdit,
 	VisioDuplicateShapesEdit,
 	VisioPasteShapesEdit,
+	VisioResizeAnchor,
 } from './edit-commands';
 
 export interface EditVsdxOptions {

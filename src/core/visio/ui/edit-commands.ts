@@ -2,6 +2,7 @@ import type { VisioEdit } from '../index';
 import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-commands';
 import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
 import { snapshotPasteShapes } from '../edit-paste-commands';
+import { snapshotResizeAnchor } from '../resize-anchor';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -95,9 +96,17 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					x: command.x,
 					y: command.y,
 				};
-			case 'resize-shape':
+			case 'resize-shape': {
 				numbers(command.width, command.height);
-				return { type: command.type, ...target, width: command.width, height: command.height };
+				const anchor = snapshotResizeAnchor(command.anchor);
+				return {
+					type: command.type,
+					...target,
+					width: command.width,
+					height: command.height,
+					...(anchor === undefined ? {} : { anchor }),
+				};
+			}
 			case 'create-rectangle':
 			case 'create-ellipse':
 				numbers(command.x, command.y, command.width, command.height);

@@ -348,16 +348,45 @@ The same atomic `editVsdx` transaction accepts the typed `VisioEdit` union:
 ```ts
 { type: 'create-rectangle', pageId, shapeId, x, y, width, height, text? }
 { type: 'move-shape', pageId, shapeId, x, y }
-{ type: 'resize-shape', pageId, shapeId, width, height }
+{ type: 'resize-shape', pageId, shapeId, width, height, anchor? }
 { type: 'delete-shape', pageId, shapeId }
 ```
 
 Coordinates are drawing inches, bottom-left origin, up-positive, at the rotation
-pin. Resizing holds that pin fixed. Shape IDs are explicit canonical positive
+pin. Resizing without an anchor holds that pin fixed. Shape IDs are explicit canonical positive
 unsigned integers. Coordinates and dimensions are bounded to one million inches;
 dimensions must be positive. Existing admitted top-level local 2D shapes can be
 edited, including shapes imported from another producer. There is no provenance
 requirement that the viewer created the shape.
+
+Optional `anchor: { x, y }` on `resize-shape` fixes a normalized local bounds
+point; each coordinate must be `0`, `0.5` or `1`, with local Y increasing upward.
+For example, `{ x: 0, y: 0 }` fixes the local bottom-left corner. Anchored resize
+admits ordinary local unlayered 2D leaves with supported line-based geometry or
+canonical ellipses. It preserves rotation/flip values, scales unguarded local
+pins proportionally, and retains guarded local-pin formulas only when their
+projected values prove the same pose. Source locks, inherited protections,
+affected dependency caches and coordinate limits are checked before any write.
+Groups, masters, foreign shapes, glued targets, nonproportional guarded pins,
+affected text fields and dimension-dependent Angle/Flip formulas are refused.
+No-op dimensions preserve source payloads after admission.
+
+The DOM-free `visioResizeDrag` helper converts physical page movement to one
+anchored drawing-inch command and a preview frame. `visioSizePositionState`
+returns frozen drawing-inch pin/dimension values and counterclockwise degrees;
+`visioSizePositionCommand` produces fixed-pin size/move/rotation commands.
+Exact current-value input returns an empty command array before unit conversion,
+preserving formulas and avoiding floating round-trip changes. Both helpers use
+coarse scene eligibility; source admission remains authoritative.
+
+Native Visio 16 direct numeric cell-edit and core-output reopen evidence covers
+15 cases at scales 0.5, 1 and 2. Anchored actual-edit comparisons cover 288
+accepted rectangles within a 456-case corpus; all 288 rectangle outputs and 192
+accepted ellipse outputs passed native COM reopen. The record does not establish native window behavior,
+general anchored admission or visual parity. Optional tests use
+`VISIO_NATIVE_SIZE_POSITION_DIR` and `VISIO_NATIVE_ANCHORED_RESIZE_DIR`; their
+recorders are `scripts/record-visio-size-position.ps1` and
+`scripts/record-visio-anchored-resize.ps1`.
 
 Local unglued straight lines also admit `move-shape`: both endpoints translate
 while native midpoint and length formulas remain intact. This reuses the same
