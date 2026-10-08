@@ -19,7 +19,7 @@ import {
 	normalizeStShapeType,
 } from '../../../geometry/preset-geometry-names';
 import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table';
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 describe('sT_ShapeType enumeration', () => {
 	it('has exactly 187 unique values', () => {

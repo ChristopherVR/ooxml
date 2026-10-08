@@ -14,7 +14,7 @@ import type {
 	XmlObject,
 } from '../types';
 import { orderedXmlKey } from './custom-geometry-command-order';
-import { ooxmlArcToSvg } from './guide-formula-paths';
+import { ooxmlArcToSvg } from '../../../geometry/ooxml-arc';
 
 // ---------------------------------------------------------------------------
 // Structured paths -> SVG path data string

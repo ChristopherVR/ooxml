@@ -9,16 +9,12 @@
  * output is byte-compatible with the existing custom-geometry pipeline.
  */
 
-import { evaluateGuides } from '../../../geometry/guide-formula-api';
-import {
-	evaluateFormula,
-	parseFormula,
-	resolveOperand,
-} from '../../../geometry/guide-formula-eval';
-import { ooxmlArcToSvg } from './guide-formula-paths';
-import type { PresetShapeGeometryDefinition } from '../../../geometry/preset-shape-definitions-table';
-import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table';
-import { getPresetTextRect } from '../../../geometry/preset-text-rect-table';
+import { evaluateGuides } from './guide-formula-api';
+import { evaluateFormula, parseFormula, resolveOperand } from './guide-formula-eval';
+import { ooxmlArcToSvg } from './ooxml-arc';
+import type { PresetShapeGeometryDefinition } from './preset-shape-definitions-table';
+import { PRESET_SHAPE_GEOMETRY_TABLE } from './preset-shape-definitions-table';
+import { getPresetTextRect } from './preset-text-rect-table';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,9 +29,9 @@ export interface PresetSubpathResult {
 	/** SVG path data for this single sub-path. */
 	d: string;
 	/** `<a:path>/@fill` (`'none' | 'norm' | ...`); `undefined` means default. */
-	fill?: string;
+	fill?: string | undefined;
 	/** `<a:path>/@stroke`; `undefined`/`true` means stroked, `false` unstroked. */
-	stroke?: boolean;
+	stroke?: boolean | undefined;
 }
 
 /**
@@ -44,7 +40,7 @@ export interface PresetSubpathResult {
  */
 export interface PresetShapeEvaluationResult {
 	svgPath: string;
-	textRect?: { l: number; t: number; r: number; b: number };
+	textRect?: { l: number; t: number; r: number; b: number } | undefined;
 	/**
 	 * Per-sub-path geometry with fill/stroke flags. `svgPath` is these `d`
 	 * strings concatenated; this array additionally preserves the paint intent.

@@ -18,7 +18,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 const W = 200;
 const H = 100;

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import type { PptxElementWithShapeStyle } from '../types';
 import { getConnectorAdjustment, getConnectorPathGeometry } from './connector-geometry';
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 // Helper to create a minimal connector element.
 function makeConnector(

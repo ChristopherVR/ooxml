@@ -38,7 +38,7 @@ export {
 	lookupPresetShape,
 	type PresetShapeEvaluationResult,
 	type PresetSubpathResult,
-} from './preset-shape-evaluator';
+} from '../../../geometry/preset-shape-evaluator';
 
 export { filterValidShapeAdjustmentEntries } from './preset-adjustment-validation';
 
@@ -148,7 +148,4 @@ export {
 	buildCalloutLeaderLineSvgPath,
 	getCalloutViewBoxBounds,
 } from '../../../geometry/callout-geometry';
-export type {
-	CalloutPoint,
-	CalloutLeaderLineGeometry,
-} from '../../../geometry/callout-geometry';
+export type { CalloutPoint, CalloutLeaderLineGeometry } from '../../../geometry/callout-geometry';

@@ -17,7 +17,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { PRESET_SHAPE_GEOMETRY_TABLE } from '../../../geometry/preset-shape-definitions-table';
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 /** Extremes of the on-curve points of an evaluated path. */
 function bounds(svgPath: string): { minX: number; maxX: number; minY: number; maxY: number } {

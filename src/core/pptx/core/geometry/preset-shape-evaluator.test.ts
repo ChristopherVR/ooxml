@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluatePresetShape, lookupPresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape, lookupPresetShape } from '../../../geometry/preset-shape-evaluator';
 import { getShapeClipPathFromPreset } from './shape-geometry';
 
 describe('evaluatePresetShape', () => {

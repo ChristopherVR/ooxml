@@ -1,4 +1,4 @@
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 const CONNECTOR_PRESET = /^(?:bent|curved)connector[2-5]$/iu;
 const PATH_TOKEN = /[MLQCZ]|[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/giu;

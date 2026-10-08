@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 /** Every x/y coordinate pair in an evaluated `path(...)` string. */
 function points(pathData: string): Array<[number, number]> {

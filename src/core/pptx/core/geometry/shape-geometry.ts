@@ -8,7 +8,7 @@ import type { SupportedShapeType } from '../constants';
 import type { PptxElementWithShapeStyle } from '../types';
 import { getAdjustmentAwareClipPath } from '../../../geometry/adjustment-aware-shapes';
 import { getCloudCalloutClipPath, getCloudClipPath } from '../../../geometry/cloud-bezier-paths';
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 import {
 	PRESET_SHAPE_CLIP_PATHS,
 	getPresetShapeClipPath,

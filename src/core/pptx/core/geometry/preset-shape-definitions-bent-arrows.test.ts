@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { evaluatePresetShape } from './preset-shape-evaluator';
+import { evaluatePresetShape } from '../../../geometry/preset-shape-evaluator';
 
 /** Pull every numeric coordinate out of an evaluated SVG path string. */
 function coords(path: string): number[] {

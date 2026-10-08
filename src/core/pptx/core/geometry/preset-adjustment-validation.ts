@@ -27,7 +27,7 @@
  * @module preset-adjustment-validation
  */
 import type { XmlObject } from '../types';
-import { lookupPresetShape } from './preset-shape-evaluator';
+import { lookupPresetShape } from '../../../geometry/preset-shape-evaluator';
 
 /**
  * Filter a `shapeAdjustments` record down to `[name, value]` entries that are

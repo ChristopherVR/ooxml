@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
 import { ANGLE_SCALE } from '../../../geometry/guide-formula-eval';
-import { evaluateGeometryPaths, ooxmlArcToSvg } from './guide-formula-paths';
+import { ooxmlArcToSvg } from '../../../geometry/ooxml-arc';
+import { evaluateGeometryPaths } from './guide-formula-paths';
 
 // ---------------------------------------------------------------------------
 // Helpers

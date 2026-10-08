@@ -24,4 +24,5 @@ export {
 	parseAdjustmentValues,
 	resolveCoordinate,
 } from '../../../geometry/guide-formula-api';
-export { evaluateGeometryPaths, ooxmlArcToSvg } from './guide-formula-paths';
+export { evaluateGeometryPaths } from './guide-formula-paths';
+export { ooxmlArcToSvg } from '../../../geometry/ooxml-arc';
