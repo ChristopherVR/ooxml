@@ -28,19 +28,24 @@ const SHOW_FLAGS = [
 ] as const;
 
 /** A CT_Boolean is true when `@val` is `1`/`true`, or when the attribute is absent. */
-function isOn(node: XmlObject | undefined): boolean {
-	if (!node) {
+/**
+ * Whether the `CT_Boolean` switch `name` of `parent` is on. A present element without `@val` is
+ * on (the schema default); fast-xml-parser turns a bare `<c:showVal/>` into an empty string,
+ * which `getChildByLocalName` does not return, so presence is checked on the keys.
+ */
+function isOn(parent: XmlObject, name: string, xmlLookup: XmlLookupLike): boolean {
+	if (!Object.keys(parent).some((key) => key.slice(key.lastIndexOf(':') + 1) === name)) {
 		return false;
 	}
-	const value = node['@_val'];
+	const value = xmlLookup.getChildByLocalName(parent, name)?.['@_val'];
 	return value === undefined || value === '1' || value === 'true';
 }
 
 function groupShowsContent(group: XmlObject, xmlLookup: XmlLookupLike): boolean {
-	if (isOn(xmlLookup.getChildByLocalName(group, 'delete'))) {
+	if (isOn(group, 'delete', xmlLookup)) {
 		return false;
 	}
-	return SHOW_FLAGS.some((flag) => isOn(xmlLookup.getChildByLocalName(group, flag)));
+	return SHOW_FLAGS.some((flag) => isOn(group, flag, xmlLookup));
 }
 
 /**
@@ -54,7 +59,7 @@ export function dataLabelsGroupShowsContent(
 	if (!dLbls) {
 		return false;
 	}
-	if (isOn(xmlLookup.getChildByLocalName(dLbls, 'delete'))) {
+	if (isOn(dLbls, 'delete', xmlLookup)) {
 		return false;
 	}
 	if (groupShowsContent(dLbls, xmlLookup)) {
@@ -70,5 +75,5 @@ export function dataLabelsGroupDeleted(
 	dLbls: XmlObject | undefined,
 	xmlLookup: XmlLookupLike,
 ): boolean {
-	return dLbls !== undefined && isOn(xmlLookup.getChildByLocalName(dLbls, 'delete'));
+	return dLbls !== undefined && isOn(dLbls, 'delete', xmlLookup);
 }

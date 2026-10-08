@@ -78,9 +78,19 @@ function uint32(value: unknown): number | undefined {
 	return Number.isInteger(parsed) && parsed >= 0 && parsed <= 0xffffffff ? parsed : undefined;
 }
 
-function bool(node: XmlObject | undefined): boolean | undefined {
-	const value = node?.['@_val'];
-	if (value === '1' || value === 'true') {
+/**
+ * A `CT_Boolean` switch of `parent`: absent is unset, and a present element without `@val` is on
+ * (the schema default), as the neutral `parseChartSpace` reads it. fast-xml-parser turns a bare
+ * `<c:showVal/>` into an empty string, which `getChildByLocalName` does not return, so presence is
+ * checked on the keys.
+ */
+function flag(parent: XmlObject, name: string, xmlLookup: XmlLookupLike): boolean | undefined {
+	const key = Object.keys(parent).find((candidate) => localNameOf(candidate) === name);
+	if (key === undefined) {
+		return undefined;
+	}
+	const value = xmlLookup.getChildByLocalName(parent, name)?.['@_val'];
+	if (value === undefined || value === '1' || value === 'true') {
 		return true;
 	}
 	if (value === '0' || value === 'false') {
@@ -138,7 +148,7 @@ export function parseSeriesDataLabels(
 			return [];
 		}
 		const result: PptxChartDataLabel = { idx };
-		const deleted = bool(xmlLookup.getChildByLocalName(node, 'delete'));
+		const deleted = flag(node, 'delete', xmlLookup);
 		if (deleted !== undefined) {
 			result.deleted = deleted;
 		}
@@ -152,7 +162,7 @@ export function parseSeriesDataLabels(
 			['showLeaderLines', 'showLeaderLines'],
 		] as const;
 		for (const [xmlName, property] of fields) {
-			const value = bool(xmlLookup.getChildByLocalName(node, xmlName));
+			const value = flag(node, xmlName, xmlLookup);
 			if (value !== undefined) {
 				result[property] = value;
 			}
@@ -243,7 +253,7 @@ export function parseChartDataLabelOptions(
 		['showLeaderLines', 'showLeaderLines'],
 	] as const;
 	for (const [xmlName, property] of fields) {
-		const value = bool(xmlLookup.getChildByLocalName(group, xmlName));
+		const value = flag(group, xmlName, xmlLookup);
 		if (value !== undefined) {
 			result[property] = value;
 		}

@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { PptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { XmlObject } from '../types';
 import { parseChartDataLabelOptions, parseSeriesDataLabels } from './chart-data-label-parser';
+import {
+	dataLabelsGroupDeleted,
+	dataLabelsGroupShowsContent,
+} from './chart-data-labels-visibility';
 
 const lookup = new PptxXmlLookupService();
 
@@ -58,6 +62,28 @@ describe('chartML data label parsing', () => {
 			separator: '\n',
 			showLeaderLines: false,
 		});
+	});
+
+	it('reads a bare switch with no @val as on (the CT_Boolean default)', () => {
+		// fast-xml-parser reads `<c:showPercent/>` as an empty string and an element with other
+		// attributes as an object without `@_val`; both are on.
+		const group: XmlObject = {
+			'c:showVal': {},
+			'c:showPercent': '',
+			'c:showCatName': { '@_val': '0' },
+			'c:dLbl': { 'c:idx': { '@_val': '2' }, 'c:delete': {}, 'c:showSerName': {} },
+		};
+		expect(parseChartDataLabelOptions(group, lookup)).toStrictEqual({
+			showValue: true,
+			showPercent: true,
+			showCategory: false,
+		});
+		expect(parseSeriesDataLabels({ 'c:dLbls': group }, lookup)).toStrictEqual([
+			{ idx: 2, deleted: true, showSerName: true },
+		]);
+		expect(dataLabelsGroupShowsContent({ 'c:showPercent': '' }, lookup)).toBe(true);
+		expect(dataLabelsGroupDeleted({ 'c:delete': '' }, lookup)).toBe(true);
+		expect(dataLabelsGroupShowsContent({ 'c:showVal': { '@_val': '0' } }, lookup)).toBe(false);
 	});
 
 	// C2-G16: c:dLbls/c:numFmt and c:dLbl/c:numFmt (label-specific number format,
