@@ -25,25 +25,18 @@ import {
 } from './chart-data-label-text';
 import { resolveDataPointFill } from './chart-datapoint-style';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
-import { smoothLinePath } from './chart-line-path';
+import { clippedSeriesLine, insideBand, plotBand } from './chart-plot-clip';
 import { seriesLineStroke } from './chart-series-line-style';
 import { computeStackedSeriesPlots } from './chart-stacked-series';
 import type { LineAreaStacking } from './chart-stacked-series';
 import type {
 	ChartPartRef,
 	PlotLayout,
-	SvgPath,
-	SvgPolyline,
 	SvgPrimitive,
 	SvgText,
 	ValueRange,
 } from './chart-view-model';
-import {
-	buildMarkTooltip,
-	computeLinePoints,
-	linePointsToSvgString,
-	seriesColor,
-} from './chart-view-model';
+import { buildMarkTooltip, computeLinePoints, seriesColor } from './chart-view-model';
 
 /**
  * Build line-chart primitives, honouring a secondary value range per series
@@ -75,6 +68,7 @@ export function buildLines(
 		showLabels = chartData.style?.hasDataLabels,
 		isStackedMode = stacking !== 'clustered',
 		isPercent = stacking === 'percentStacked',
+		band = plotBand(layout),
 		// Resolve every series' own (blank-handled) values first: stacking needs
 		// all of them at once to compute the running sums.
 		resolved = chartData.series.map((series) => {
@@ -120,47 +114,27 @@ export function buildLines(
 				x: xPositions?.[index] ?? point.x,
 			})),
 			c = seriesColor(series, si, chartData.colorPalette),
-			// c:smooth draws a bezier path through the points; otherwise a polyline.
 			seriesPart: ChartPartRef = { role: 'series', seriesIndex: si },
 			allVisible = visible.every(Boolean);
-		if (allVisible) {
-			primitives.push(
-				series.smooth
-					? ({
-							kind: 'path',
-							d: smoothLinePath(pts),
-							stroke: c,
-							...lineStroke,
-							fill: 'none',
-							part: seriesPart,
-						} satisfies SvgPath)
-					: ({
-							kind: 'polyline',
-							points: linePointsToSvgString(pts),
-							stroke: c,
-							...lineStroke,
-							fill: 'none',
-							part: seriesPart,
-						} satisfies SvgPolyline),
-			);
-		} else {
-			// gap mode: draw one polyline per contiguous run of visible points.
-			for (const run of visibleRuns(visible)) {
-				if (run.length < 2) {
-					continue;
-				}
-				primitives.push({
-					kind: 'polyline',
-					points: linePointsToSvgString(run.map((i) => pts[i])),
-					stroke: c,
-					...lineStroke,
-					fill: 'none',
-					part: seriesPart,
-				} satisfies SvgPolyline);
+		// c:smooth draws a bezier path through the points; otherwise a polyline.
+		// gap mode draws one stroke per contiguous run of visible points. Either
+		// is clipped to the plot, which an authored c:min / c:max can cut.
+		for (const run of allVisible ? [pts] : visibleRuns(visible).map((r) => r.map((i) => pts[i]))) {
+			if (!allVisible && run.length < 2) {
+				continue;
 			}
+			primitives.push(
+				...clippedSeriesLine(
+					run,
+					allVisible && Boolean(series.smooth),
+					{ stroke: c, ...lineStroke, fill: 'none', part: seriesPart },
+					band,
+				),
+			);
 		}
 		pts.forEach((pt, displayIndex) => {
-			if (!visible[displayIndex]) {
+			// A point beyond the plot edge draws no marker (its line is cut there).
+			if (!visible[displayIndex] || !insideBand(pt, band)) {
 				return;
 			}
 			const idx = sourceIndices[displayIndex] ?? displayIndex,
@@ -190,7 +164,7 @@ export function buildLines(
 			const labelValues = stackedPlots ? stackedPlots[si].own : displayValues;
 			labelValues.forEach((val, displayIndex) => {
 				const pt = pts[displayIndex];
-				if (!pt || !visible[displayIndex]) {
+				if (!pt || !visible[displayIndex] || !insideBand(pt, band)) {
 					return;
 				}
 				if (isPercent) {

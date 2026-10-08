@@ -18,6 +18,13 @@ import {
 } from './chart-data-label-text';
 import { resolveDataPointFill } from './chart-datapoint-style';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
+import {
+	clipPolygonToBand,
+	clippedSeriesLine,
+	insideBand,
+	plotBand,
+	visibleSpanCentre,
+} from './chart-plot-clip';
 import { computeStackedSeriesPlots } from './chart-stacked-series';
 import type { LineAreaStacking } from './chart-stacked-series';
 import type {
@@ -62,6 +69,7 @@ export function buildAreas(
 		isStackedMode = stacking !== 'clustered',
 		isPercent = stacking === 'percentStacked',
 		baselineY = valueToY(0, range, layout.plotTop, layout.plotBottom),
+		band = plotBand(layout),
 		allDisplayValues = chartData.series.map((series) =>
 			series.values.length === 0
 				? undefined
@@ -89,49 +97,47 @@ export function buildAreas(
 				x: xPositions?.[index] ?? point.x,
 			})),
 			c = seriesColor(series, si, chartData.colorPalette),
-			lineStr = linePointsToSvgString(pts),
 			firstPt = pts[0],
-			lastPt = pts[pts.length - 1];
-		if (plot) {
+			lastPt = pts[pts.length - 1],
 			// Stacked band: fill between this series' cumulative top and its own
 			// base (the previous series' top), like a stream-graph layer, at full
 			// opacity so adjacent bands read as distinct rather than washed.
-			const baseStr = linePointsToSvgString(
-				[
-					...computeLinePoints(plot.base, catCount, layout, range).map((point, index) => ({
-						...point,
-						x: xPositions?.[index] ?? point.x,
-					})),
-				].reverse(),
-			);
+			// Unstacked: fill down to the zero line. Either fill is clipped to the
+			// plot, which an authored c:min / c:max can cut.
+			fillPolygon = plot
+				? [
+						...pts,
+						...computeLinePoints(plot.base, catCount, layout, range)
+							.map((point, index) => ({ ...point, x: xPositions?.[index] ?? point.x }))
+							.reverse(),
+					]
+				: firstPt && lastPt
+					? [{ x: firstPt.x, y: baselineY }, ...pts, { x: lastPt.x, y: baselineY }]
+					: [],
+			clippedFill = clipPolygonToBand(fillPolygon, band);
+		if (clippedFill.length > 0) {
 			primitives.push({
 				kind: 'polyline',
-				points: `${lineStr} ${baseStr}`,
+				points: linePointsToSvgString(clippedFill),
 				stroke: 'none',
 				strokeWidth: 0,
 				fill: c,
-				part: { role: 'series', seriesIndex: si },
-			} satisfies SvgPolyline);
-		} else if (firstPt && lastPt) {
-			primitives.push({
-				kind: 'polyline',
-				points: `${firstPt.x.toFixed(2)},${baselineY.toFixed(2)} ${lineStr} ${lastPt.x.toFixed(2)},${baselineY.toFixed(2)}`,
-				stroke: 'none',
-				strokeWidth: 0,
-				fill: c,
-				opacity: 0.25,
+				...(plot ? {} : { opacity: 0.25 }),
 				part: { role: 'series', seriesIndex: si },
 			} satisfies SvgPolyline);
 		}
-		primitives.push({
-			kind: 'polyline',
-			points: lineStr,
-			stroke: c,
-			strokeWidth: 2,
-			fill: 'none',
-			part: { role: 'series', seriesIndex: si },
-		} satisfies SvgPolyline);
+		primitives.push(
+			...clippedSeriesLine(
+				pts,
+				false,
+				{ stroke: c, strokeWidth: 2, fill: 'none', part: { role: 'series', seriesIndex: si } },
+				band,
+			),
+		);
 		pts.forEach((pt, displayIndex) => {
+			if (!insideBand(pt, band)) {
+				return;
+			}
 			const idx = sourceIndices[displayIndex] ?? displayIndex,
 				part: ChartPartRef = { role: 'dataPoint', seriesIndex: si, pointIndex: idx };
 			pushMarker(
@@ -171,12 +177,18 @@ export function buildAreas(
 					// float noticeably off the band it names.
 					const baseVal = plot?.base[displayIndex] ?? 0,
 						topVal = plot?.cumulative[displayIndex] ?? val,
-						baseY = valueToY(baseVal, range, layout.plotTop, layout.plotBottom),
-						topY = valueToY(topVal, range, layout.plotTop, layout.plotBottom);
+						centreY = visibleSpanCentre(
+							valueToY(baseVal, range, layout.plotTop, layout.plotBottom),
+							valueToY(topVal, range, layout.plotTop, layout.plotBottom),
+							band,
+						);
+					if (centreY === undefined) {
+						return;
+					}
 					dataLabels.push({
 						kind: 'text',
 						x: pt.x,
-						y: (baseY + topY) / 2,
+						y: centreY,
 						text: `${Math.round(val)}%`,
 						fontSize: DEFAULT_CHART_DATA_LABEL_PX,
 						fill: '#ffffff',
@@ -205,7 +217,14 @@ export function buildAreas(
 				const bandBase = plot
 						? valueToY(plot.base[displayIndex] ?? 0, range, layout.plotTop, layout.plotBottom)
 						: baselineY,
-					mid = { x: pt.x, y: (pt.y + bandBase) / 2 },
+					// The middle of the part of the band the plot shows: an authored
+					// c:min / c:max can cut it, and a band wholly cut away has no label.
+					midY = visibleSpanCentre(pt.y, bandBase, band);
+				if (midY === undefined) {
+					return;
+				}
+				// eslint-disable-next-line one-var -- an early return sits between this const and the previous one
+				const mid = { x: pt.x, y: midY },
 					anchor = resolveMarkerLabelPlacement(
 						chartData,
 						series,
