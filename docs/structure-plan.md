@@ -311,6 +311,26 @@ Implementation:
   unit test and a browser spec now assert one status bar. Word and
   PowerPoint still place Comments and Share elsewhere (follow-up).
 
+### Excel engine follow-ups (landed 2026-10-08)
+
+- The formula dependency graph is now prepared in idle time after the first
+  paint (`EditSession.prepareCalculation`, `src/ui/src/xlsx/calc-preparation.ts`,
+  slices under 8 ms, paused while the user types or scrolls), and parsing is
+  cached by formula shape (digits blanked; 129 shapes cover this workbook's
+  66,434 formulas): the first edit after preparation costs about 12 ms instead
+  of about 400 ms, first paint unchanged.
+- Row and column inserts and deletes, and sheet renames, shift the graph in
+  place and recalculate only what the edit can change, each checked against a
+  full recalculation from scratch: about 3 s to about 0.5 s on that workbook,
+  rename to 0.13 s. F9 now recalculates only dirty and volatile cells as Excel
+  does (`calculateNow({ full: true })` is Ctrl+Alt+F9). Still rebuilding:
+  undo of a row or column edit, edits on sheets with spills, cut array
+  formulas, cell shifts, sort, move, sheet add/delete/move.
+- Selection statistics use the first numeric cell's number format.
+- The formula number lexeme is unambiguous (a CodeQL polynomial-regex alert
+  raised by the tokenizer change); the three lint errors another commit left
+  in the office app shell are fixed.
+
 ### Wave 5 (next)
 
 - pptx binding factory; per-binding contract parity tests for all products;
