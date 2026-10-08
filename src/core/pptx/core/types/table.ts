@@ -87,7 +87,7 @@ export interface PptxTableCellStyle {
 	borderLeftColor?: string;
 	/** Right border color as hex. */
 	borderRightColor?: string;
-	align?: 'left' | 'center' | 'right' | 'justify';
+	align?: TextStyle['align'];
 	vAlign?: 'top' | 'middle' | 'bottom';
 	/** Text direction from `a:tcPr/@vert` (spec values from CT_TextVerticalType). */
 	textDirection?:
