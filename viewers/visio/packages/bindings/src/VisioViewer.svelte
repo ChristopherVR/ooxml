@@ -27,6 +27,7 @@
   export function selectShapes(shapes: readonly VisioShapeSelection[]) { handle.selectShapes(shapes); }
   export function selectAll() { handle.selectAll(); }
   export function clearSelection() { handle.clearSelection(); }
+  export function duplicateSelection() { return handle.duplicateSelection(); }
   export function replacePlainText(pageId: string, shapeId: string, text: string) { return handle.replacePlainText(pageId, shapeId, text); }
   export function undo() { return handle.undo(); }
   export function redo() { return handle.redo(); }

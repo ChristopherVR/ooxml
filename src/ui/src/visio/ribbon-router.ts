@@ -6,6 +6,7 @@ export interface RibbonTargets {
 	controller: ViewerController;
 	history(key: 'undo' | 'redo'): void;
 	deleteSelection(): void;
+	duplicateSelection(): void;
 	rotateSelection(direction: 'left' | 'right'): void;
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
 	formatSelection(action: VisioFormattingAction): void;
@@ -45,6 +46,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.history(action.key);
 		case 'delete':
 			return targets.deleteSelection();
+		case 'duplicate':
+			return targets.duplicateSelection();
 		case 'rotate':
 			return targets.rotateSelection(action.direction);
 		case 'flip':

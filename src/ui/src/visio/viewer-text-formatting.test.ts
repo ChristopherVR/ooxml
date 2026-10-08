@@ -7,6 +7,94 @@ import { setupFormattingViewer as setup } from './__fixtures__/formatting-viewer
 
 afterEach(() => document.body.replaceChildren());
 
+it('formats every rich row through real controls while preserving text markers and unrelated styles', async () => {
+	const ui = await setup(true, true);
+	const zip = await JSZip.loadAsync(ui.bytes);
+	const path = 'visio/pages/page1.xml';
+	const originalXml = (await zip.file(path)!.async('string')).replace(
+		'<Cell N="Style" V="1"/>',
+		'<Cell N="Style" V="3"/><Cell N="Letterspace" V="0.04"/>',
+	);
+	zip.file(path, originalXml);
+	const bytes = await zip.generateAsync({ type: 'uint8array' });
+	await ui.controller.load(bytes);
+	ui.selection();
+	expect(ui.button('bold').disabled).toBe(false);
+	expect(ui.button('bold').getAttribute('pressed')).toBe('false');
+	expect(ui.button('italic').getAttribute('pressed')).toBe('false');
+	ui.press('bold');
+	await ui.done();
+	expect(ui.shape().text.runs.map((run) => [run.bold, run.italic])).toEqual([
+		[true, false],
+		[true, true],
+	]);
+	expect(ui.button('bold').getAttribute('pressed')).toBe('true');
+	ui.press('font-color-red');
+	await ui.done();
+	expect(ui.shape().text.runs.every((run) => run.color === '#ff0000')).toBe(true);
+	const savedXml = await (
+		await JSZip.loadAsync(ui.controller.exportVsdx().bytes)
+	)
+		.file(path)!
+		.async('string');
+	expect(savedXml.match(/<Text>[\s\S]*?<\/Text>/u)![0]).toBe(
+		originalXml.match(/<Text>[\s\S]*?<\/Text>/u)![0],
+	);
+	expect(savedXml).toContain('<Cell N="Letterspace" V="0.04"/>');
+	ui.press('bold');
+	await ui.done();
+	expect(ui.shape().text.runs.map((run) => [run.bold, run.italic])).toEqual([
+		[false, false],
+		[false, true],
+	]);
+	await ui.controller.undo();
+	expect(ui.shape().text.runs.every((run) => run.bold)).toBe(true);
+	await ui.controller.undo();
+	await ui.controller.undo();
+	expect(ui.controller.exportVsdx().bytes).toEqual(bytes);
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+it('guards size steps on mixed-size runs while the absolute size picker remains available', async () => {
+	const ui = await setup(true, true);
+	const zip = await JSZip.loadAsync(ui.bytes);
+	const path = 'visio/pages/page1.xml';
+	zip.file(
+		path,
+		(await zip.file(path)!.async('string'))
+			.replace(
+				'<Cell N="Style" V="0"/>',
+				'<Cell N="Style" V="0"/><Cell N="Size" V="0.16666666666666666"/>',
+			)
+			.replace(
+				'<Cell N="Style" V="1"/>',
+				'<Cell N="Style" V="1"/><Cell N="Size" V="0.3333333333333333"/>',
+			),
+	);
+	const bytes = await zip.generateAsync({ type: 'uint8array' });
+	await ui.controller.load(bytes);
+	ui.selection();
+	expect(ui.shape().text.runs.map((run) => run.fontSize * 72)).toEqual([12, 24]);
+	expect(ui.combo('font-size').disabled).toBe(false);
+	expect(ui.combo('font-size').value).toBe('');
+	expect(ui.button('grow-font').disabled).toBe(true);
+	expect(ui.button('shrink-font').disabled).toBe(true);
+	ui.commands.run({ type: 'font-step', direction: 1 });
+	ui.commands.run({ type: 'font-step', direction: -1 });
+	expect(ui.edits).toEqual([]);
+	expect(ui.controller.exportVsdx().bytes).toEqual(bytes);
+	ui.select('font-size', '24');
+	await ui.done();
+	expect(ui.shape().text.runs.every((run) => run.fontSize * 72 === 24)).toBe(true);
+	expect(ui.button('grow-font').disabled).toBe(false);
+	ui.press('grow-font');
+	await ui.done();
+	expect(ui.shape().text.runs.every((run) => Math.abs(run.fontSize * 72 - 28) < 0.001)).toBe(true);
+	ui.dispose();
+	ui.controller.destroy();
+});
+
 it('applies font color, strike, bullets, indent and justify through the ribbon and source bytes', async () => {
 	const ui = await setup();
 	ui.selection();

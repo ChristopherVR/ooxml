@@ -265,11 +265,11 @@ describe('formatting admission', () => {
 			editVsdx(await source(), [{ ...formatText, fontFamily: 'Invented' }]),
 		).rejects.toThrow(/FaceName/i);
 	});
-	it('rejects multiple style rows, deleted style rows and fields', async () => {
+	it('rejects duplicate and deleted formatting rows', async () => {
 		for (const extra of [
-			section('Character', '<Row IX="0"/><Row IX="1"/>'),
-			section('Paragraph', '<Row IX="0" Del="1"/>'),
-			section('Field', '<Row IX="0"/>'),
+			section('Character', '<Row IX="0"/><Row IX="0"/>'),
+			section('Character', '<Row IX="0" Del="1"/>'),
+			section('Character', '<Row IX="1" Del="1"/>'),
 		])
 			await expect(editVsdx(await source(extra), [{ ...formatText, bold: true }])).rejects.toThrow(
 				/format|fields/i,
@@ -327,7 +327,7 @@ describe('formatting admission', () => {
 		const page = model.pages[0]!,
 			shape = page.shapes[0]!;
 		shape.text.runs.push({ ...shape.text.runs[0]!, bold: true });
-		expect(visioFormattingShape(page, '1')).toBeUndefined();
+		expect(visioFormattingShape(page, '1')).toBe(shape);
 		expect(visioStyleFormattingShape(page, '1')).toBe(shape);
 	});
 	it('rejects local and inherited layer membership conservatively', async () => {

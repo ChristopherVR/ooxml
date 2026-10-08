@@ -20,6 +20,13 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 			items: [
 				{ id: 'paste-item', label: 'Paste', unsupported: CLIPBOARD },
 				{ id: 'paste-special', label: 'Paste Special...', unsupported: CLIPBOARD },
+				{
+					id: 'duplicate',
+					label: 'Duplicate',
+					icon: 'copy',
+					action: { type: 'duplicate' },
+					keys: ['Control+D', 'Ctrl+D'],
+				},
 			],
 		}),
 		stack(doc, [

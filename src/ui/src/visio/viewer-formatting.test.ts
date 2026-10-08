@@ -181,12 +181,12 @@ it('keeps size step direction outside the standard font-size menu', async () => 
 	ui.controller.destroy();
 });
 
-it('allows fill and line changes on mixed text without enabling text formatting', async () => {
+it('allows fill and line changes while retaining mixed text and enabling text formatting', async () => {
 	const ui = await setup(true, true);
 	ui.selection();
 	expect(ui.shape().text.runs.map((run) => run.bold)).toEqual([false, true]);
-	expect(ui.button('bold').disabled).toBe(true);
-	expect(ui.button('bold').title).toMatch(/uniform text styles/);
+	expect(ui.button('bold').disabled).toBe(false);
+	expect(ui.button('bold').getAttribute('pressed')).toBe('false');
 	expect(ui.button('fill-blue').disabled).toBe(false);
 	expect(ui.button('fill-blue').title).toMatch(/source formulas and protection/);
 	ui.press('fill-blue');

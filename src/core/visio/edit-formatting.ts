@@ -3,16 +3,16 @@ import type { VisioFormatEdit } from './edit-formatting-commands';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
+import { textFormattingWrites } from './edit-formatting-text';
 import { assertFormattingDependencies } from './edit-formatting-scope';
-import { formattingFont } from './edit-formatting-font';
 import {
 	assertEditableFormattingCell,
 	assertShapeLocks,
 	assertUnlayeredShape,
 	effectiveShapeCell,
-	formattingRow,
 	formattingCell,
 	type FormattingCategory,
+	type FormattingRowContext,
 } from './edit-style-admission';
 
 function targetShape(root: Element, shapeId: string): Element {
@@ -40,35 +40,7 @@ function targetShape(root: Element, shapeId: string): Element {
 		);
 	return shape;
 }
-function plainUniformText(shape: Element): void {
-	const texts = children(shape, 'Text');
-	if (
-		texts.length !== 1 ||
-		children(shape, 'Section').some((node) => attribute(node, 'N') === 'Field')
-	)
-		fail(
-			'UNSUPPORTED_FORMAT_EDIT',
-			'Text formatting requires one existing local Text without fields.',
-		);
-	for (const part of Array.from(texts[0]!.childNodes)) {
-		if (part.nodeType === 3 || part.nodeType === 4) continue;
-		const marker = part as Element;
-		if (
-			part.nodeType !== 1 ||
-			marker.namespaceURI !== shape.namespaceURI ||
-			!['cp', 'pp', 'tp'].includes(marker.localName) ||
-			(attribute(marker, 'IX') ?? '0') !== '0' ||
-			marker.childNodes.length
-		)
-			fail(
-				'UNSUPPORTED_FORMAT_EDIT',
-				'Rich text, nonzero markers and unknown text markup cannot be formatted.',
-			);
-	}
-	formattingRow(shape, 'Character');
-	formattingRow(shape, 'Paragraph');
-}
-interface Write {
+export interface FormattingWrite {
 	name: string;
 	value: string;
 	unit?: string;
@@ -93,7 +65,8 @@ export async function applyFormattingEdit(
 		document,
 		edit.type === 'format-text' ? ['LockFormat', 'LockTextEdit'] : ['LockFormat'],
 	);
-	const writes: Write[] = [];
+	let writes: FormattingWrite[] = [];
+	let rows: Map<string, FormattingRowContext> | undefined;
 	const add = (
 		name: string,
 		value: string | number,
@@ -109,67 +82,9 @@ export async function applyFormattingEdit(
 			...(formula ? { formula } : {}),
 		});
 	if (edit.type === 'format-text') {
-		plainUniformText(shape);
-		if (edit.fontSize !== undefined) add('Character.0.Size', edit.fontSize / 72, 'TextStyle', 'PT');
-		if (edit.fontColor !== undefined) {
-			// https://learn.microsoft.com/en-us/office/client-developer/visio/color-cell-character-section
-			add('Character.0.Color', edit.fontColor, 'TextStyle', undefined, rgb(edit.fontColor));
-			add('Character.0.ColorTrans', 0, 'TextStyle');
-		}
-		if (edit.strikethrough !== undefined)
-			add('Character.0.Strikethru', edit.strikethrough ? 1 : 0, 'TextStyle');
-		if (edit.indentLeft !== undefined)
-			add('Paragraph.0.IndLeft', edit.indentLeft / 72, 'TextStyle', 'PT');
-		if (edit.bullets !== undefined) {
-			const cell = effectiveShapeCell(shape, document, 'Paragraph.0.Bullet', 'TextStyle');
-			const current = cell
-				? visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'))
-				: { value: 0, unit: 'scalar' };
-			if (
-				current.unit !== 'scalar' ||
-				!Number.isInteger(current.value) ||
-				current.value < 0 ||
-				current.value > 7
-			)
-				fail(
-					'UNSUPPORTED_FORMAT_EDIT',
-					'Paragraph bullets require a supported scalar bullet style.',
-				);
-			add('Paragraph.0.Bullet', edit.bullets ? current.value || 1 : 0, 'TextStyle');
-		}
-		if (edit.fontFamily !== undefined) {
-			const font = formattingFont(document, edit.fontFamily);
-			add('Character.0.Font', font.value, 'TextStyle', undefined, font.formula);
-		}
-		if ([edit.bold, edit.italic, edit.underline].some((value) => value !== undefined)) {
-			const cell = effectiveShapeCell(shape, document, 'Character.0.Style', 'TextStyle');
-			const cached = cell
-				? visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'))
-				: { value: 0, unit: 'scalar' };
-			if (
-				cached.unit !== 'scalar' ||
-				!Number.isSafeInteger(cached.value) ||
-				cached.value < 0 ||
-				cached.value > 255
-			)
-				fail('UNSUPPORTED_FORMAT_EDIT', 'Character style requires a valid scalar bit mask.');
-			let bits = cached.value;
-			for (const [value, bit] of [
-				[edit.bold, 1],
-				[edit.italic, 2],
-				[edit.underline, 4],
-			] as const)
-				if (value !== undefined) bits = value ? bits | bit : bits & ~bit;
-			add('Character.0.Style', bits, 'TextStyle');
-		}
-		if (edit.horizontalAlign !== undefined)
-			add(
-				'Paragraph.0.HorzAlign',
-				['left', 'center', 'right', 'justify'].indexOf(edit.horizontalAlign),
-				'TextStyle',
-			);
-		if (edit.verticalAlign !== undefined)
-			add('VerticalAlign', ['top', 'middle', 'bottom'].indexOf(edit.verticalAlign), 'TextStyle');
+		const plan = textFormattingWrites(shape, document, edit, check);
+		writes = plan.writes;
+		rows = plan.rows;
 	} else {
 		if (edit.fillColor !== undefined) {
 			add('FillPattern', edit.fillColor === 'none' ? 0 : 1, 'FillStyle');
@@ -188,7 +103,10 @@ export async function applyFormattingEdit(
 	}
 	const changed = new Map<string, Element | undefined>();
 	for (const write of writes) {
-		const effective = effectiveShapeCell(shape, document, write.name, write.category);
+		check();
+		const [section, index, name] = write.name.split('.');
+		const rowContext = rows?.get(section!);
+		const effective = effectiveShapeCell(shape, document, write.name, write.category, rowContext);
 		assertEditableFormattingCell(effective);
 		if (
 			write.unit &&
@@ -199,8 +117,7 @@ export async function applyFormattingEdit(
 				'EDIT_FORMULA_UNIT',
 				'Font size, paragraph indent and line weight require length units.',
 			);
-		const [section, , name] = write.name.split('.');
-		const parent = name ? formattingRow(shape, section!) : shape;
+		const parent = name ? rowContext!.local.get(index!) : shape;
 		const local = parent ? formattingCell(parent, name ?? write.name) : undefined;
 		if (
 			local &&
@@ -213,11 +130,13 @@ export async function applyFormattingEdit(
 	if (!changed.size) return false;
 	await assertFormattingDependencies(pkg, pagePaths, roots, edit.pageId, shape, changed, check);
 	for (const write of writes) {
+		check();
 		if (!changed.has(write.name)) continue;
-		const [sectionName, , cellName] = write.name.split('.');
+		const [sectionName, index, cellName] = write.name.split('.');
 		let parent = shape;
 		if (cellName) {
-			let row = formattingRow(shape, sectionName!);
+			const localRows = rows!.get(sectionName!)!.local;
+			let row = localRows.get(index!);
 			if (!row) {
 				let section = children(shape, 'Section').find(
 					(node) => attribute(node, 'N') === sectionName,
@@ -228,8 +147,9 @@ export async function applyFormattingEdit(
 					shape.insertBefore(section, children(shape, 'Text')[0] ?? null);
 				}
 				row = shape.ownerDocument!.createElementNS(shape.namespaceURI, 'Row');
-				row.setAttribute('IX', '0');
+				row.setAttribute('IX', index!);
 				section.appendChild(row);
+				localRows.set(index!, row);
 			}
 			parent = row;
 		}

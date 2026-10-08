@@ -21,6 +21,7 @@ export interface MountedViewer {
 	selectShapes(shapes: readonly VisioShapeSelection[]): void;
 	selectAll(): void;
 	clearSelection(): void;
+	duplicateSelection(): Promise<void>;
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void>;
 	undo(): Promise<void>;
 	redo(): Promise<void>;
@@ -98,6 +99,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async replacePlainText(pageId, shapeId, text) {
 			assertAlive();
 			await element.replacePlainText(pageId, shapeId, text);
+		},
+		async duplicateSelection() {
+			assertAlive();
+			await element.duplicateSelection();
 		},
 		async undo() {
 			assertAlive();

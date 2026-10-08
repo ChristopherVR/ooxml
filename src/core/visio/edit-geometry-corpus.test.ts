@@ -5,6 +5,7 @@ import JSZip from 'jszip';
 import { DOMParser } from '@xmldom/xmldom';
 import { describe, expect, it } from 'vitest';
 import { editVsdx, type VisioEdit, type EditVsdxResult } from './edit';
+import type { VisioGeometryEdit } from './edit-commands';
 import { VisioPackageError } from './package-common';
 import { parseVsdx } from './parser';
 
@@ -131,10 +132,7 @@ describe.skipIf(!directory)('public VSDX geometry edit corpus', () => {
 			};
 			const attempt = async (
 				name: 'create' | 'move' | 'resize' | 'delete',
-				edits: Exclude<
-					VisioEdit,
-					{ type: 'insert-page' | 'reorder-page' | 'rename-page' | 'delete-page' }
-				>[],
+				edits: VisioGeometryEdit[],
 			) => {
 				let result: EditVsdxResult;
 				try {

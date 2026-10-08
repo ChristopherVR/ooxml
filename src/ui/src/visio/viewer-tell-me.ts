@@ -25,7 +25,7 @@ function ribbonCommands(root: ShadowRoot): OfficeSearchCommand[] {
 		const label = node.getAttribute('label');
 		if (!label || seen.has(id)) continue;
 		seen.add(id);
-		const disabled = node.hasAttribute('disabled');
+		const disabled = node.hasAttribute('disabled') || node.hasAttribute('main-disabled');
 		commands.push({
 			id,
 			label,

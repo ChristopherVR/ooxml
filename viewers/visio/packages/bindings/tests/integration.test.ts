@@ -177,6 +177,32 @@ const payloads: ViewerEvents = {
 };
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: forwards duplication through the shared controller and rejects after disposal`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const changed = vi.fn();
+			const mounted = await mountNative(host, {
+				document: demoDocument,
+				events: { 'selection-change': changed },
+			});
+			const controller = mounted.handle.controller;
+			const selections = demoDocument.pages[0]!.shapes.slice(0, 2).map((shape) => ({
+				id: shape.id,
+				name: shape.name,
+				pageId: '1',
+			}));
+			const duplicate = vi.spyOn(controller, 'duplicateSelection').mockImplementation(async () => {
+				controller.selectShapes(selections);
+			});
+			await act(async () => mounted.handle.duplicateSelection());
+			expect(duplicate).toHaveBeenCalledOnce();
+			expect(changed).toHaveBeenLastCalledWith(controller.state.selectedShapes);
+			expect(controller.state.selectedShapes).toEqual(selections);
+			await mounted.destroy();
+			await expect(mounted.handle.duplicateSelection()).rejects.toThrow(/not mounted|destroyed/);
+			expect(duplicate).toHaveBeenCalledOnce();
+			host.remove();
+		});
 		it(`${framework}: exposes immutable multi-selection, complete callbacks and guarded handles`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

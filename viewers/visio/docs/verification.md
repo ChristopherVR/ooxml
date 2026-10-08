@@ -1,6 +1,71 @@
 # Verification record
 
-Status: local Windows development evidence, 2026-10-08. Full Microsoft Visio parity is not established.
+Status: local Windows development evidence, 2026-10-09. Full Microsoft Visio parity is not established.
+
+## Mixed-run formatting and source duplication, 2026-10-09
+
+Whole-shape formatting now updates effective Character/Paragraph rows without
+flattening mixed runs, unrelated style bits, text markers or supported cached
+fields. Source checks cover inherited row provenance, protected cells, ambiguous
+markers and bounded row expansion. Vertical alignment does not require rewriting
+text sections. Font-size stepping refuses mixed sizes; an explicit size choice
+can apply to mixed text.
+
+Duplicate now reaches a core source-cloning command from the Home Paste menu,
+shape context menu, Tell me, Ctrl+D and every native binding's
+`duplicateSelection()` method. Fresh IDs follow source stacking order while
+selection order retains the original primary. Copies receive native-style names,
+drop copied unique IDs and remap supported references to other copied shapes.
+The shared controller accepts source, model and clone selection in one history
+step. Undo/redo restores original/copy selection unless newer user intent wins.
+Reentrant callbacks, cancellation, replacement and disposal have regression
+coverage. The Paste main button remains unavailable while its Duplicate menu
+entry works, using the shared menu component's `main-disabled` capability.
+
+Validation passed 2,450 core tests (152 optional skips), including both new native
+oracles, and 819 shared Visio/menu UI tests (seven optional skips). Final review
+fixes passed 32 duplication tests and 52 focused controller tests, including
+case-insensitive native name collisions and reentrant page-ID getters. Strict
+core/UI/viewer/binding checks, 102 binding DOM tests, five SSR tests and Svelte
+checking passed. Core/UI bundles, declarations, all demos, production workers,
+converter integration, packed ESM and 48 documentation checks passed.
+
+Twenty-five Chromium workflows passed across all six bindings for Duplicate,
+formatting, selection, arrangement, history and source reload. After the final
+admission and reentrancy fixes, all six Duplicate workflows passed again against
+rebuilt demos. The clean nine-tarball workspace consumer also passed: installed
+declarations and runtime methods plus actual React/Vue/Angular/Svelte/Solid/vanilla
+mounts exercise worker-backed duplication, primary events and undo/redo selection.
+These installed-package checks use the workspace core/UI, not only released
+registry packages.
+
+Two owned native Visio 16 captures provide separate source/reopen evidence:
+
+- `scripts/record-visio-rich-formatting.ps1` creates multiple character and
+  paragraph rows, including a saved terminal paragraph style. It records native
+  whole-shape font, size, color, bold, strikethrough, indent, justification and
+  bullets at drawing-to-page scales 1, 0.5 and 2. The optional
+  `edit-rich-formatting-native.test.ts` compares parsed text/style/geometry and
+  untouched package payloads. Native reopen checks every visible character's
+  style, font and paragraph properties. The earlier extended formatting oracle
+  also passes with the new row admission.
+- `scripts/record-visio-duplicate.ps1` records native Selection.Duplicate for
+  single, reversed and movement-locked selections at all three scales. The nine
+  cases contain rotated rectangles, ellipses, mixed text, custom numeric name
+  suffixes, original unique IDs and self/cross-shape User-cell references.
+  `edit-duplicate-native.test.ts` compares shape IDs, names, rich text, geometry,
+  dependent caches and untouched package payloads. Native reopen confirms those
+  IDs/names, text, pins, dimensions, angles, User-cell values and movement locks.
+
+Set `VISIO_NATIVE_RICH_FORMATTING_DIR` or `VISIO_NATIVE_DUPLICATE_DIR` to a
+generated directory for its optional core test. Pass that test's `core.vsdx` to
+the recorder with `-CoreOutputPath` and the same `-OutputDirectory` for native
+reopen. Both recorders own their hidden COM instance and never use an existing
+user document or system clipboard.
+
+These checks establish the recorded subset. Clipboard interoperability,
+character-range editing, arbitrary master/group/glue duplication, general native
+file compatibility and full-page visual equivalence remain open.
 
 ## Multi-selection, extended text controls and native arrangement, 2026-10-08
 

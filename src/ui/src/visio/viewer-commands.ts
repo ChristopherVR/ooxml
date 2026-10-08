@@ -17,6 +17,7 @@ import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
 import { ViewerArrangement } from './viewer-arrangement';
+import { ViewerDuplication } from './viewer-duplication';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -55,8 +56,12 @@ export class ViewerCommands {
 	#pageDelete: ViewerPageDelete;
 	#formatting: ViewerFormatting;
 	#arrangement: ViewerArrangement;
+	#duplication: ViewerDuplication;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
+		this.#duplication = new ViewerDuplication(host.root, host.controller, (run, message) => {
+			void this.#edit(run, message);
+		});
 		this.#arrangement = new ViewerArrangement(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
 		});
@@ -74,6 +79,7 @@ export class ViewerCommands {
 			controller: host.controller,
 			history: (key) => this.#history(key),
 			deleteSelection: () => this.#delete(),
+			duplicateSelection: () => this.#duplication.run(),
 			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			formatSelection: (action) => this.#formatting.run(action),
@@ -300,6 +306,7 @@ export class ViewerCommands {
 		if (key === 'F5' && !control) return { type: 'fullscreen' };
 		if (editable(event.target)) return undefined;
 		if (control && !event.shiftKey && key === 'a') return { type: 'selection', mode: 'all' };
+		if (control && !event.shiftKey && key === 'd') return { type: 'duplicate' };
 		if (control && !event.shiftKey && key === 'b') return { type: 'text-toggle', property: 'bold' };
 		if (control && !event.shiftKey && key === 'i')
 			return { type: 'text-toggle', property: 'italic' };
@@ -329,6 +336,7 @@ export class ViewerCommands {
 		this.run(action);
 	}
 	render(state: ViewerState): void {
+		this.#duplication.render(state);
 		this.#formatting.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);

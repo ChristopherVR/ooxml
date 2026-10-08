@@ -12,6 +12,13 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 			{ id: 'ctx-cut', label: 'Cut', icon: 'cut', unsupported: CLIPBOARD },
 			{ id: 'ctx-copy', label: 'Copy', icon: 'copy', unsupported: CLIPBOARD },
 			{ id: 'ctx-paste', label: 'Paste', icon: 'paste', unsupported: CLIPBOARD },
+			{
+				id: 'ctx-duplicate',
+				label: 'Duplicate',
+				icon: 'copy',
+				action: { type: 'duplicate' },
+				keys: ['Control+D', 'Ctrl+D'],
+			},
 			'-',
 			{
 				id: 'ctx-edit-text',
@@ -22,7 +29,30 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 			'-',
 			{ id: 'ctx-group', label: 'Group', icon: 'group', unsupported: ARRANGE },
 			{ id: 'ctx-container', label: 'Container', icon: 'rectangle', unsupported: ARRANGE },
-			{ id: 'ctx-order', label: 'Order', icon: 'bringToFront', unsupported: ARRANGE },
+			{
+				id: 'ctx-bring-to-front',
+				label: 'Bring to Front',
+				icon: 'bringToFront',
+				action: { type: 'shape-order', order: 'front' },
+			},
+			{
+				id: 'ctx-bring-forward',
+				label: 'Bring Forward',
+				icon: 'bringToFront',
+				action: { type: 'shape-order', order: 'forward' },
+			},
+			{
+				id: 'ctx-send-to-back',
+				label: 'Send to Back',
+				icon: 'sendToBack',
+				action: { type: 'shape-order', order: 'back' },
+			},
+			{
+				id: 'ctx-send-backward',
+				label: 'Send Backward',
+				icon: 'sendToBack',
+				action: { type: 'shape-order', order: 'backward' },
+			},
 			'-',
 			{
 				id: 'ctx-hyperlink',

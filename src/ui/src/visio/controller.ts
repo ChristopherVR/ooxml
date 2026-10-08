@@ -13,6 +13,8 @@ import {
 	sameSelection,
 	selectionKey,
 	snapshotSelection,
+	visioDuplicateCommand,
+	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_LAYER_OVERRIDES,
@@ -51,6 +53,10 @@ interface SelectionHistory {
 	readonly before: readonly VisioShapeSelection[];
 	readonly after: readonly VisioShapeSelection[];
 	readonly intent: number;
+}
+interface PostEditSelection {
+	readonly pageId: string;
+	readonly shapeIds: readonly string[];
 }
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
@@ -413,6 +419,30 @@ export class ViewerController {
 	async applyEdits(edits: readonly VisioEdit[]): Promise<void> {
 		return this.#mutate('edit', snapshotEdits(edits));
 	}
+	/** Duplicate the current page selection as one source edit and selection history transition. */
+	async duplicateSelection(): Promise<void> {
+		this.#assertAlive();
+		const revision = this.#revision;
+		const page = this.#state.document?.pages[this.#state.pageIndex];
+		const selected = this.#state.selectedShapes;
+		if (
+			!page ||
+			!selected.length ||
+			!selected.every((shape) => visioSelectionIsOnPage(shape, page.id))
+		)
+			throw new Error('Select shapes on the current page before duplicating.');
+		const command = visioDuplicateCommand(
+			page,
+			selected.map((shape) => shape.id),
+		);
+		if (this.#destroyed || revision !== this.#revision)
+			throw new DOMException('The diagram selection was superseded.', 'AbortError');
+		if (!command) throw new Error('The selected shapes cannot be duplicated safely.');
+		return this.#mutate('edit', snapshotEdits([command]), undefined, {
+			pageId: command.pageId,
+			shapeIds: Object.freeze(command.copies.map((copy) => copy.newShapeId)),
+		});
+	}
 	async undo(): Promise<void> {
 		return this.#mutate('undo');
 	}
@@ -454,6 +484,7 @@ export class ViewerController {
 		kind: 'edit' | 'undo' | 'redo' | 'remote',
 		commands?: readonly VisioEdit[],
 		remote?: Uint8Array,
+		postSelection?: PostEditSelection,
 	): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
@@ -514,15 +545,18 @@ export class ViewerController {
 			const search = searchIndex
 				? searchDocumentText(searchIndex, this.#state.search.query)
 				: EMPTY_TEXT_SEARCH;
-			const beforeSelection = this.#state.selectedShapes;
 			const oldPageIndex = this.#state.pageIndex;
 			const currentPageId = this.#state.document?.pages[oldPageIndex]?.id;
+			assertCurrent();
+			if (oldPageIndex !== this.#state.pageIndex)
+				throw new DOMException('The diagram page was superseded.', 'AbortError');
+			const beforeSelection = this.#state.selectedShapes;
 			const foundPageIndex = document.pages.findIndex((page) => page.id === currentPageId);
 			const pageIndex =
 				foundPageIndex >= 0
 					? foundPageIndex
 					: Math.min(oldPageIndex, Math.max(0, document.pages.length - 1));
-			const selection =
+			const requestedSelection =
 				restored &&
 				restored.intent === selectionIntent &&
 				selectionIntent === this.#selectionIntent &&
@@ -531,21 +565,34 @@ export class ViewerController {
 						? restored.before
 						: restored.after
 					: beforeSelection;
+			const usePostSelection =
+				postSelection &&
+				selectionIntent === this.#selectionIntent &&
+				postSelection.pageId === currentPageId &&
+				foundPageIndex >= 0;
+			const selection = usePostSelection
+				? postSelection.shapeIds.flatMap((id) => {
+						const shape = document.pages[pageIndex]?.shapes.find((shape) => shape.id === id);
+						return shape ? [{ id: shape.id, name: shape.name, pageId: postSelection.pageId }] : [];
+					})
+				: requestedSelection;
 			const selectedShapes = snapshotSelection(document, pageIndex, selection, visible);
+			const selectionChanged = !sameSelection(beforeSelection, selectedShapes);
+			const characters = selectionChanged
+				? [...beforeSelection, ...selectedShapes].reduce(
+						(sum, shape) => sum + shape.id.length + shape.name.length + (shape.pageId?.length ?? 0),
+						0,
+					)
+				: 0;
+			if (usePostSelection && characters > 1_000_000)
+				throw new Error('The selection exceeds the bounded duplicate undo metadata limit.');
 			// No external callbacks occur between history acceptance and model acceptance.
+			assertCurrent();
 			if (edited) history.append(edited.bytes, edited.diagnostics);
 			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
 			else history.move(target!);
-			if (
-				(edited || kind === 'remote') &&
-				foundPageIndex >= 0 &&
-				!sameSelection(beforeSelection, selectedShapes)
-			) {
-				// Only pruned-selection edges are restored. Ordinary history preserves user selection.
-				const characters = [...beforeSelection, ...selectedShapes].reduce(
-					(sum, shape) => sum + shape.id.length + shape.name.length + (shape.pageId?.length ?? 0),
-					0,
-				);
+			if ((edited || kind === 'remote') && foundPageIndex >= 0 && selectionChanged) {
+				// Pruning and explicit post-edit selection form history edges; other edits keep selection.
 				// Weak keys follow the bounded source history; each edge retains at most 1M characters.
 				if (characters <= 1_000_000)
 					this.#selectionHistory.set(history.current, {
@@ -569,7 +616,8 @@ export class ViewerController {
 				}) &&
 				current()
 			) {
-				if (pageIndex !== oldPageIndex) this.#emit('page-change', pageIndex);
+				if (usePostSelection) this.#emit('shape-select', selectedShapes[0] ?? null);
+				if (current() && pageIndex !== oldPageIndex) this.#emit('page-change', pageIndex);
 				if (current())
 					this.#emit('document-change', { document, dirty: history.state.dirty, kind });
 			}

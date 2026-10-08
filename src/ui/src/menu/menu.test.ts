@@ -128,6 +128,36 @@ describe('office-ui-menu-button', () => {
 		expect(main.getAttribute('aria-label')).toBe('Layers');
 		expect(main.querySelector('span')!.hidden).toBe(true);
 	});
+	it('disables the split command while its menu stays keyboard accessible', () => {
+		const el = make<MenuButton>(markup(' command="layers-pane" main-disabled'));
+		const seen = commands();
+		const main = el.shadowRoot!.querySelector<HTMLButtonElement>('.main')!;
+		const caret = el.shadowRoot!.querySelector<HTMLButtonElement>('.caret')!;
+		expect(main.disabled).toBe(true);
+		expect(caret.disabled).toBe(false);
+		main.click();
+		expect(seen).toEqual([]);
+		el.focus();
+		expect(el.shadowRoot!.activeElement).toBe(caret);
+		key(caret, 'ArrowDown');
+		expect(el.open).toBe(true);
+		el.querySelector('office-ui-menu-item')!
+			.shadowRoot!.querySelector<HTMLButtonElement>('button')!
+			.click();
+		expect(seen).toEqual(['layer-properties']);
+		expect(el.open).toBe(false);
+		el.setAttribute('disabled', '');
+		expect(caret.disabled).toBe(true);
+		caret.click();
+		expect(el.open).toBe(false);
+	});
+	it('ignores main-disabled on an ordinary dropdown', () => {
+		const el = make<MenuButton>(markup(' main-disabled'));
+		const main = el.shadowRoot!.querySelector<HTMLButtonElement>('.main')!;
+		expect(main.disabled).toBe(false);
+		main.click();
+		expect(el.open).toBe(true);
+	});
 
 	it('stays closed and silent when disabled', () => {
 		const el = make<MenuButton>(markup(' disabled'));

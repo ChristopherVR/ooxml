@@ -1,4 +1,6 @@
 import { fail } from './package-common';
+import { snapshotDuplicateShapes, type VisioDuplicateShapesEdit } from './edit-duplicate-commands';
+export type { VisioDuplicateShapesEdit } from './edit-duplicate-commands';
 import {
 	isVisioFormatEdit,
 	snapshotFormatting,
@@ -69,6 +71,7 @@ export type VisioEdit =
 	| VisioGeometryEdit
 	| VisioPageEdit
 	| VisioFormatEdit
+	| VisioDuplicateShapesEdit
 	| VisioShapeOrderEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
@@ -140,6 +143,7 @@ export function snapshotVisioEdits(
 	return Array.from(edits, (edit) => {
 		if (!edit || typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit target.');
+		if (edit.type === 'duplicate-shapes') return snapshotDuplicateShapes(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'reorder-page') {
 			if (!Number.isSafeInteger(edit.index) || edit.index < 0 || edit.index > 1_000_000)

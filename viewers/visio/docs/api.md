@@ -154,8 +154,13 @@ The Home ribbon and `applyEdits()` share `format-text`, `format-shape` and
 `reorder-shape` commands. Text formatting includes saved font families, point
 size, bold/italic/underline/strikethrough, color, bullets, indentation and
 horizontal/vertical alignment. Shape formatting includes solid fill and line
-color/weight. Formatting currently requires ordinary local leaf shapes and
-uniform character/paragraph rows; mixed-row rich text remains outside scope.
+color/weight. Formatting requires ordinary local leaf shapes. Whole-shape text
+formatting updates each effective character or paragraph row while preserving
+run markers, text, unrelated style bits and supported cached fields. Character
+and paragraph formatting have separate source admission; vertical alignment
+does not rewrite either section. Protected or ambiguous rows and affected
+formula dependencies reject the complete transaction. Font-size increase and
+decrease require a uniform size; the size picker can set a mixed-size selection.
 Fonts must already exist in the source drawing. Stacking commands support
 front/back/forward/backward on one ordinary top-level shape in display band zero.
 
@@ -166,6 +171,28 @@ for hosts with custom controls. It measures rotated width/height boxes, orders
 distribution by centers and preserves selection order for ties. Groups, masters,
 layers and glued connectors remain outside its admission scope. These actions
 share history, selection retention and VSDX download/reopen with other edits.
+
+## Experimental duplication
+
+`duplicateSelection(): Promise<void>` on the controller and every mounted/native
+handle duplicates admitted selected shapes on the current page. Home's Paste
+menu, the shape context menu, Tell me and Ctrl+D call the same method. Text
+inputs retain their native keyboard behavior. Duplicate does not use the system
+clipboard; Copy, Cut and Paste remain unavailable.
+
+The core `visioDuplicateCommand(page, selectedIds)` helper produces a
+`duplicate-shapes` source command with fresh page-local IDs. Copies retain source
+XML, mixed text and stacking order, receive fresh names without copied unique
+IDs, and move 0.33 drawing inches right and down. Source validation currently
+admits local unglued 2D leaf shapes, excluding masters, groups, foreign content,
+layers, ambiguous identities and unsupported dependencies. Pin protection and
+affected formula caches are checked before accepting any source change.
+
+The resulting copies become the selection in one atomic history step. Undo
+restores the original selection and redo the copies unless a newer selection or
+page action supersedes it. Failed, cancelled or superseded operations cannot
+partially change source bytes or selection. The ordinary `selection-change` and
+`document-change` events expose the accepted result to native framework state.
 
 ## Experimental geometry editing
 

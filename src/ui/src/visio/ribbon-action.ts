@@ -22,6 +22,7 @@ export type VisioRibbonAction =
 	| { type: 'history'; key: 'undo' | 'redo' }
 	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'delete' }
+	| { type: 'duplicate' }
 	| { type: 'rotate'; direction: 'left' | 'right' }
 	| { type: 'flip'; axis: 'horizontal' | 'vertical' }
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }

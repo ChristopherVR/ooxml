@@ -4,7 +4,9 @@ interface Target {
 	pageId: string;
 	shapeId: string;
 }
-/** Whole-shape formatting. Font size and line weight use points. */
+/** Whole-shape formatting updates every effective stored row, including unused rows.
+ * Protected affected rows cause atomic refusal. Font size and indent use physical points.
+ */
 export interface VisioTextFormatEdit extends Target {
 	type: 'format-text';
 	fontSize?: number;

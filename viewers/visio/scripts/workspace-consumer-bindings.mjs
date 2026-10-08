@@ -155,6 +155,32 @@ export async function verifyWorkspaceBindings(bytes) {
 			);
 			viewer.selectAll();
 			check(selections.at(-1).length === 2, `${framework}: selectAll`);
+			const originals = viewer.controller.state.selectedShapes.map((shape) => shape.id);
+			await viewer.duplicateSelection();
+			const clones = viewer.controller.state.selectedShapes.map((shape) => shape.id);
+			check(
+				viewer.controller.state.document.pages[0].shapes.length === 4 &&
+					clones.length === 2 &&
+					clones.every((id) => !originals.includes(id)),
+				`${framework}: source-backed duplicate`,
+			);
+			check(
+				primary.at(-1) === viewer.controller.state.selectedShapes[0],
+				`${framework}: duplicate primary event`,
+			);
+			await viewer.undo();
+			check(
+				viewer.controller.state.document.pages[0].shapes.length === 2 &&
+					JSON.stringify(viewer.controller.state.selectedShapes.map((shape) => shape.id)) ===
+						JSON.stringify(originals),
+				`${framework}: duplicate undo selection`,
+			);
+			await viewer.redo();
+			check(
+				JSON.stringify(viewer.controller.state.selectedShapes.map((shape) => shape.id)) ===
+					JSON.stringify(clones),
+				`${framework}: duplicate redo selection`,
+			);
 			results.push(framework);
 		} finally {
 			await binding?.release();

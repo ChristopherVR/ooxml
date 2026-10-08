@@ -72,12 +72,13 @@ export function menu(doc: Document, spec: MenuSpec, submenu = false): RibbonComm
 	// A dropdown whose items are all unsupported explains itself with their shared reason.
 	const reason = spec.unsupported ?? spec.items.find((item) => item.unsupported)?.unsupported;
 	decorate(el, spec.split ? spec : { ...dropdown, ...(reason ? { unsupported: reason } : {}) });
-	// A dropdown is usable when any item works; a split button follows its own action.
+	// The split command and its menu can have independent availability.
 	const usable = (item: CommandSpec): boolean => !!item.action || !!item.items?.some(usable);
-	if (spec.split ? spec.action : spec.items.some(usable)) {
+	if (spec.split && !spec.action) el.setAttribute('main-disabled', '');
+	if ((spec.split && spec.action) || spec.items.some(usable)) {
 		el.removeAttribute('disabled');
 		delete el.dataset.unsupported;
-		el.setAttribute('title', spec.label);
+		if (!spec.split || spec.action) el.setAttribute('title', spec.label);
 	}
 	if (!spec.split) el.removeAttribute('command');
 	if (spec.size !== 'small' && spec.size !== 'icon') el.setAttribute('variant', 'stacked');

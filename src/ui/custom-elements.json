@@ -1413,7 +1413,7 @@
 					"name": "OfficeUiMenuButton",
 					"tagName": "office-ui-menu-button",
 					"customElement": true,
-					"description": "Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers, Align). With a `command` attribute it is a split button: the main part emits that command and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant=\"stacked\"`, `icon-only`, `disabled`, `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move; Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its `office-command` bubbles to the host.",
+					"description": "Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers, Align). With a `command` attribute it is a split button: the main part emits that command and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant=\"stacked\"`, `icon-only`, `disabled`, `main-disabled` (split command only), `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move; Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its `office-command` bubbles to the host.",
 					"attributes": [
 						{
 							"name": "command"
@@ -1432,6 +1432,9 @@
 						},
 						{
 							"name": "label"
+						},
+						{
+							"name": "main-disabled"
 						},
 						{
 							"name": "submenu"
@@ -1483,6 +1486,14 @@
 							"type": {
 								"text": "string"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "mainDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "main-disabled"
 						},
 						{
 							"kind": "field",

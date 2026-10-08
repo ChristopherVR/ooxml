@@ -100,6 +100,9 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	clearSelection() {
 		this.handle.clearSelection();
 	}
+	duplicateSelection() {
+		return this.handle.duplicateSelection();
+	}
 	replacePlainText(pageId: string, shapeId: string, text: string) {
 		return this.handle.replacePlainText(pageId, shapeId, text);
 	}

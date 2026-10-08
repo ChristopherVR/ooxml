@@ -21,25 +21,9 @@ export function visioStyleFormattingShape(
 		return undefined;
 	return shape;
 }
-/** Text controls require uniform scene runs in addition to an eligible local leaf. */
+/** Mixed runs can be formatted together; source row admission remains authoritative. */
 export function visioFormattingShape(page: VisioPage, shapeId: string): VisioShape | undefined {
-	const shape = visioStyleFormattingShape(page, shapeId);
-	if (!shape) return undefined;
-	const first = shape.text.runs[0];
-	if (
-		first &&
-		shape.text.runs.some(
-			(run) =>
-				run.fontFamily !== first.fontFamily ||
-				run.fontSize !== first.fontSize ||
-				run.bold !== first.bold ||
-				run.italic !== first.italic ||
-				run.underline !== first.underline ||
-				!!run.strikethrough !== !!first.strikethrough,
-		)
-	)
-		return undefined;
-	return shape;
+	return visioStyleFormattingShape(page, shapeId);
 }
 /** Offer existing document fonts, avoiding invented font IDs or caches. */
 export function visioFontFamilies(document: VisioDocument): readonly string[] {
@@ -116,4 +100,29 @@ export function visioTextIndentCommand(
 	const points = left * 72;
 	const indentLeft = Math.min(7200, Math.max(0, points + (direction === 'increase' ? 18 : -18)));
 	return { type: 'format-text', pageId: page.id, shapeId, indentLeft };
+}
+
+/** A size step requires a common rendered run size; absolute size changes admit mixed runs. */
+export function visioTextFontStepCommand(
+	page: VisioPage,
+	shapeId: string,
+	direction: 'increase' | 'decrease',
+): VisioTextFormatEdit | undefined {
+	const shape = visioFormattingShape(page, shapeId);
+	if (!shape || !['increase', 'decrease'].includes(direction)) return undefined;
+	const sizes = shape.text.runs.length
+		? shape.text.runs.map((run) => run.fontSize)
+		: [shape.text.fontSize];
+	const size = sizes[0]!;
+	if (!Number.isFinite(size) || sizes.some((value) => Math.abs(value - size) > 1e-10))
+		return undefined;
+	const current = size * 72;
+	if (current < 1 || current > 1000) return undefined;
+	const steps = [6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72];
+	const fontSize =
+		direction === 'increase'
+			? (steps.find((value) => value > current + 0.001) ?? Math.min(1000, Math.ceil(current * 1.2)))
+			: (steps.reverse().find((value) => value < current - 0.001) ??
+				Math.max(1, Math.floor(current / 1.2)));
+	return { type: 'format-text', pageId: page.id, shapeId, fontSize };
 }

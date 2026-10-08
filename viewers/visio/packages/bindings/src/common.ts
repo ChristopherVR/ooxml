@@ -21,6 +21,7 @@ export type ViewerHandle = Pick<
 	| 'selectShapes'
 	| 'selectAll'
 	| 'clearSelection'
+	| 'duplicateSelection'
 	| 'replacePlainText'
 	| 'undo'
 	| 'redo'
@@ -119,6 +120,9 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		},
 		async replacePlainText(pageId, shapeId, text) {
 			await requireViewer().replacePlainText(pageId, shapeId, text);
+		},
+		async duplicateSelection() {
+			await requireViewer().duplicateSelection();
 		},
 		async undo() {
 			await requireViewer().undo();

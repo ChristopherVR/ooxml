@@ -18,7 +18,7 @@ function menuOwner(element: Element): OfficeUiMenuButton | undefined {
  * Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers,
  * Align). With a `command` attribute it is a split button: the main part emits that command
  * and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant="stacked"`, `icon-only`,
- * `disabled`, `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon
+ * `disabled`, `main-disabled` (split command only), `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon
  * overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move;
  * Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its
  * `office-command` bubbles to the host.
@@ -31,6 +31,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 		command: { type: String, reflect: true },
 		keyshortcuts: { type: String },
 		disabled: flag,
+		mainDisabled: { attribute: 'main-disabled', ...flag },
 		submenu: flag,
 		iconOnly: { attribute: 'icon-only', ...flag },
 		open: { state: true },
@@ -40,6 +41,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 	declare command: string | null;
 	declare keyshortcuts: string | null;
 	declare disabled: boolean;
+	declare mainDisabled: boolean;
 	declare submenu: boolean;
 	declare iconOnly: boolean;
 	declare open: boolean;
@@ -57,6 +59,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 		this.command = null;
 		this.keyshortcuts = null;
 		this.disabled = false;
+		this.mainDisabled = false;
 		this.submenu = false;
 		this.iconOnly = false;
 		this.open = false;
@@ -98,7 +101,9 @@ export class OfficeUiMenuButton extends OfficeElement {
 	}
 
 	override focus(options?: FocusOptions): void {
-		this.renderRoot.querySelector<HTMLElement>('.main')?.focus(options);
+		this.renderRoot
+			.querySelector<HTMLElement>(this.split && present(this.mainDisabled) ? '.caret' : '.main')
+			?.focus(options);
 	}
 
 	private toggle(): void {
@@ -181,7 +186,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 	}
 
 	private onMain(): void {
-		if (present(this.disabled)) return;
+		if (present(this.disabled) || (this.split && present(this.mainDisabled))) return;
 		if (this.command) this.fire('office-command', { command: this.command });
 		else this.toggle();
 	}
@@ -241,7 +246,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 					role=${ifDefined(present(this.submenu) ? 'menuitem' : undefined)}
 					tabindex=${present(this.submenu) ? -1 : 0}
 					aria-expanded=${ifDefined(split ? undefined : String(open))}
-					?disabled=${disabled}
+					?disabled=${disabled || (split && present(this.mainDisabled))}
 					@click=${this.onMain}
 					@keydown=${this.onTriggerKey}
 					@pointerenter=${() => present(this.submenu) && this.show(-1)}

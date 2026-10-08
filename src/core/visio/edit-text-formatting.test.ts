@@ -123,9 +123,9 @@ describe('extended whole-shape text formatting', () => {
 		});
 	});
 
-	it('keeps rich text and unknown markup untouched when refusing an unsupported target', async () => {
+	it('keeps malformed rows and unknown markup untouched when refusing an unsupported target', async () => {
 		const bytes = await source(
-			section('Character', `<Row IX="0"/><Row IX="1">${cell('Style', 1)}</Row>`),
+			section('Character', `<Row IX="0"/><Row IX="01">${cell('Style', 1)}</Row>`),
 		);
 		const before = bytes.slice();
 		await expect(editVsdx(bytes, [{ ...command, fontColor: '#112233' }])).rejects.toThrow(/row/i);

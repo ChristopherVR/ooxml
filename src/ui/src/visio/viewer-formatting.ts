@@ -6,6 +6,7 @@ import {
 	visioOrderingShape,
 	visioTextFormattingState,
 	visioTextIndentCommand,
+	visioTextFontStepCommand,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioFormattingAction } from './ribbon-action';
@@ -61,6 +62,12 @@ export class ViewerFormatting {
 				return { type: 'format-shape', ...target, ...action.patch };
 			if (action.type === 'text-indent')
 				return visioTextIndentCommand(page, shape.id, action.direction)!;
+			if (action.type === 'font-step')
+				return visioTextFontStepCommand(
+					page,
+					shape.id,
+					action.direction === 1 ? 'increase' : 'decrease',
+				)!;
 			const patch: Omit<VisioTextFormatEdit, 'type' | 'pageId' | 'shapeId'> = {};
 			switch (action.type) {
 				case 'text-toggle':
@@ -78,16 +85,6 @@ export class ViewerFormatting {
 				case 'font-size':
 					patch.fontSize = action.value;
 					break;
-				case 'font-step': {
-					const current = shape.text.fontSize * 72;
-					patch.fontSize =
-						action.direction === 1
-							? (sizes.find((size) => size > current + 0.001) ??
-								Math.min(1000, Math.ceil(current * 1.2)))
-							: ([...sizes].reverse().find((size) => size < current - 0.001) ??
-								Math.max(1, Math.floor(current / 1.2)));
-					break;
-				}
 				case 'text-align':
 					if (action.axis === 'horizontal') patch.horizontalAlign = action.value;
 					else patch.verticalAlign = action.value;
@@ -128,7 +125,7 @@ export class ViewerFormatting {
 		const reason =
 			baseReason ||
 			(!shape
-				? 'Text formatting requires a local shape with uniform text styles, without a master, group, or layer membership.'
+				? 'Text formatting requires a local shape without a master, group, or layer membership.'
 				: '');
 		const styleReason =
 			baseReason ||
@@ -169,20 +166,17 @@ export class ViewerFormatting {
 		}
 		for (const value of vertical)
 			set(button(`align-${value}`), reason, !!shape && aggregate.verticalAlign === value);
-		set(
-			button('grow-font'),
-			reason ||
-				(shape && shapes.every((item) => item.text.fontSize * 72 >= 1000)
-					? 'Maximum supported size is 1000 pt.'
-					: ''),
-		);
-		set(
-			button('shrink-font'),
-			reason ||
-				(shape && shapes.every((item) => item.text.fontSize * 72 <= 1)
-					? 'Minimum supported size is 1 pt.'
-					: ''),
-		);
+		for (const [id, direction] of [
+			['grow-font', 'increase'],
+			['shrink-font', 'decrease'],
+		] as const)
+			set(
+				button(id),
+				reason ||
+					(!page || !shapes.every((item) => visioTextFontStepCommand(page, item.id, direction))
+						? 'Font-size steps require uniform run sizes within the supported range of 1 to 1000 pt.'
+						: ''),
+			);
 		const font = this.root.querySelector<Combo>('[data-combo="font"]');
 		const size = this.root.querySelector<Combo>('[data-combo="font-size"]');
 		const families = state.document ? visioFontFamilies(state.document) : [];
@@ -268,13 +262,13 @@ export class ViewerFormatting {
 						? 'Ordering requires a local shape without a master, group, or layer.'
 						: '';
 		const index = ordering && page ? page.shapes.indexOf(ordering) : -1;
-		for (const id of ['bring-to-front', 'bring-forward'])
+		for (const id of ['bring-to-front', 'bring-forward', 'ctx-bring-to-front', 'ctx-bring-forward'])
 			set(
 				button(id),
 				orderReason ||
 					(index === (page?.shapes.length ?? 0) - 1 ? 'The shape is already at the front.' : ''),
 			);
-		for (const id of ['send-to-back', 'send-backward'])
+		for (const id of ['send-to-back', 'send-backward', 'ctx-send-to-back', 'ctx-send-backward'])
 			set(button(id), orderReason || (index === 0 ? 'The shape is already at the back.' : ''));
 	}
 }

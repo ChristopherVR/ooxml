@@ -1,14 +1,15 @@
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
-import { editableCell } from './edit-geometry-admission';
 import { executableCellFormula } from './cell-formula';
 import {
-	analyzeVisioFormula,
-	evaluateVisioFormula,
-	visioFormulaCachedValue,
-	parseVisioFormula,
-	type VisioFormulaAst,
-} from './formula';
+	formattingRow,
+	delegatedFormattingCell,
+	formattingRows,
+	mergeFormattingRows,
+	type FormattingRowSources,
+} from './edit-formatting-rows';
+export { formattingRow } from './edit-formatting-rows';
+import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
 
 export type FormattingCategory = 'LineStyle' | 'FillStyle' | 'TextStyle';
 export function uniqueFormattingCells(sheet: Element): Map<string, Element> {
@@ -29,30 +30,10 @@ export function formattingCell(sheet: Element, name: string): Element | undefine
 		fail('EDIT_AMBIGUOUS_CELL', 'Noncanonical formatting cell names cannot be overridden.');
 	return cells.get(name);
 }
-export function formattingRow(sheet: Element, sectionName: string): Element | undefined {
-	const sections = children(sheet, 'Section').filter(
-		(section) => attribute(section, 'N') === sectionName,
-	);
-	if (sections.length > 1) fail('UNSUPPORTED_FORMAT_EDIT', 'Formatting section is ambiguous.');
-	const section = sections[0];
-	if (!section) return undefined;
-	const rows = children(section, 'Row');
-	if (
-		section.hasAttribute('Del') ||
-		rows.length > 1 ||
-		rows.some(
-			(row) =>
-				row.hasAttribute('Del') || (attribute(row, 'IX') ?? '0') !== '0' || row.hasAttribute('N'),
-		)
-	)
-		fail('UNSUPPORTED_FORMAT_EDIT', 'Formatting requires one live row with index zero.');
-	return rows[0];
-}
-
 function namedCell(sheet: Element, name: string): Element | undefined {
-	const [section, , cell] = name.split('.');
+	const [section, index, cell] = name.split('.');
 	if (!cell) return formattingCell(sheet, name);
-	const row = formattingRow(sheet, section!);
+	const row = formattingRow(sheet, section!, index);
 	return row ? formattingCell(row, cell) : undefined;
 }
 function categoryEnabled(style: Element, category: FormattingCategory): boolean {
@@ -83,15 +64,12 @@ function categoryEnabled(style: Element, category: FormattingCategory): boolean 
 	return cache.value !== 0;
 }
 /** Resolve source cells without trusting delegated caches or guessing style ancestry. */
-export function effectiveShapeCell(
+function formattingStyles(
 	shape: Element,
 	document: Element,
-	name: string,
 	category: FormattingCategory,
-): Element | undefined {
-	const local = namedCell(shape, name);
-	if (local && attribute(local, 'F') !== 'Inh') return local;
-	if (local) fail('EDIT_PROTECTED_CELL', 'Inherited formatting cells cannot be overwritten.');
+	gate: boolean,
+): Element[] {
 	const styles = new Map<string, Element>();
 	for (const container of children(document, 'StyleSheets'))
 		for (const style of children(container, 'StyleSheet')) {
@@ -106,22 +84,89 @@ export function effectiveShapeCell(
 		attribute(sheets[0], category) ??
 		(styles.has('0') ? '0' : undefined);
 	const seen = new Set<string>();
+	const result: Element[] = [];
 	while (id !== undefined) {
 		if (seen.has(id) || seen.size >= 64)
 			fail('EDIT_PROTECTED_CELL', 'Formatting style ancestry is cyclic or too deep.');
 		seen.add(id);
 		const style = styles.get(id);
 		if (!style) fail('EDIT_PROTECTED_CELL', 'Formatting style ancestry cannot be resolved.');
-		// Parser category gates suppress the entire selected ancestry. Protection still
-		// uses all categories, matching the conservative geometry admission contract.
-		if (!/^(Lock|LayerMember$|DisplayLevel$)/.test(name) && !categoryEnabled(style, category))
-			return undefined;
-		const cell = namedCell(style, name),
-			parent = attribute(style, category);
-		if (cell && attribute(cell, 'F') !== 'Inh') return cell;
-		if (cell && (parent === undefined || parent === id))
-			fail('EDIT_PROTECTED_CELL', 'Delegated formatting has no explicit ancestor.');
+		// A disabled ancestor contributes no cells; enabled child overrides survive.
+		// Protection still uses all categories, matching geometry admission.
+		if (gate && !categoryEnabled(style, category)) break;
+		result.push(style);
+		const parent = attribute(style, category);
 		id = parent !== id ? parent : undefined;
+	}
+	return result;
+}
+
+export function effectiveFormattingRows(
+	shape: Element,
+	document: Element,
+	section: string,
+): FormattingRowSources {
+	let result: FormattingRowSources = new Map();
+	for (const style of formattingStyles(shape, document, 'TextStyle', true).reverse())
+		result = mergeFormattingRows(result, style, section, uniqueFormattingCells);
+	return mergeFormattingRows(result, shape, section, uniqueFormattingCells);
+}
+export interface FormattingRowContext {
+	source: FormattingRowSources;
+	local: Map<string, Element>;
+}
+export function formattingRowContext(
+	shape: Element,
+	document: Element,
+	section: string,
+): FormattingRowContext {
+	return {
+		source: effectiveFormattingRows(shape, document, section),
+		local: formattingRows(shape, section),
+	};
+}
+
+export function effectiveShapeCell(
+	shape: Element,
+	document: Element,
+	name: string,
+	category: FormattingCategory,
+	rows?: FormattingRowContext,
+): Element | undefined {
+	const [section, index, cellName] = name.split('.');
+	const localRow = rows?.local.get(index!);
+	const local = rows
+		? localRow
+			? formattingCell(localRow, cellName!)
+			: undefined
+		: namedCell(shape, name);
+	if (local && attribute(local, 'F') === 'Inh')
+		fail('EDIT_PROTECTED_CELL', 'Inherited formatting cells cannot be overwritten.');
+	if (local && !cellName) return local;
+	if (cellName) {
+		const sources = rows?.source ?? effectiveFormattingRows(shape, document, section!);
+		const cells = sources.get(index!) ?? sources.get('0');
+		if (
+			cells &&
+			!cells.has(cellName) &&
+			[...cells.keys()].some((key) => key.toLowerCase() === cellName.toLowerCase())
+		)
+			fail('EDIT_AMBIGUOUS_CELL', 'Noncanonical formatting cell names cannot be overridden.');
+		return delegatedFormattingCell(cells?.get(cellName));
+	}
+	for (const style of formattingStyles(
+		shape,
+		document,
+		category,
+		!/^(Lock|LayerMember$|DisplayLevel$)/.test(name),
+	)) {
+		const cell = namedCell(style, name);
+		if (cell && attribute(cell, 'F') !== 'Inh') return cell;
+		if (
+			cell &&
+			(!attribute(style, category) || attribute(style, category) === attribute(style, 'ID'))
+		)
+			fail('EDIT_PROTECTED_CELL', 'Delegated formatting has no explicit ancestor.');
 	}
 	return undefined;
 }
@@ -178,49 +223,4 @@ export function assertUnlayeredShape(shape: Element, document: Element): void {
 	}
 }
 
-/** Literal native font/color lookups are safe to replace after GUARD and reference analysis. */
-export function assertEditableFormattingCell(cell: Element | undefined): void {
-	const source = executableCellFormula(attribute(cell, 'F'));
-	const ast = source ? parseVisioFormula(source) : undefined;
-	const themeLiteral = (node: VisioFormulaAst): boolean =>
-		node.kind === 'string' ||
-		node.kind === 'number' ||
-		(node.kind === 'call' &&
-			['THEMEVAL', 'THEME', 'THEMEGUARD'].includes(node.name) &&
-			node.args.every(themeLiteral));
-	// THEMEGUARD is explicitly overridable by manual formatting; GUARD and
-	// SETATREF remain prohibited. Only literal theme lookups are admitted here.
-	// https://learn.microsoft.com/en-us/office/client-developer/visio/themeguard-function
-	if (
-		ast?.kind === 'call' &&
-		((ast.name === 'FONT' && ast.args.length === 1 && ast.args[0]?.kind === 'string') ||
-			(ast.name === 'RGB' &&
-				ast.args.length === 3 &&
-				ast.args.every(
-					(arg) =>
-						arg.kind === 'number' &&
-						arg.unit === 'scalar' &&
-						Number.isInteger(arg.value) &&
-						arg.value >= 0 &&
-						arg.value <= 255,
-				)) ||
-			(['THEMEVAL', 'THEME', 'THEMEGUARD'].includes(ast.name) && themeLiteral(ast)))
-	) {
-		if (cell?.hasAttribute('E'))
-			fail('EDIT_PROTECTED_CELL', 'Cannot overwrite an error formatting cell.');
-		return;
-	}
-	editableCell(cell);
-	if (source && cell) {
-		const actual = evaluateVisioFormula(source, () =>
-			fail('EDIT_PROTECTED_CELL', 'Formatting dependencies cannot be overwritten.'),
-		);
-		const cache = visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'));
-		if (
-			actual.value !== cache.value ||
-			(actual.unit !== cache.unit &&
-				!(cache.unit === 'scalar' && actual.unit === 'length' && !cell.hasAttribute('U')))
-		)
-			fail('EDIT_PROTECTED_CELL', 'Formatting formula cache is stale or has incompatible units.');
-	}
-}
+export { assertEditableFormattingCell } from './edit-formatting-cell-admission';

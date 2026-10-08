@@ -261,6 +261,10 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		this.controller.clearSelection();
 	}
+	duplicateSelection(): Promise<void> {
+		this.#assertAlive();
+		return this.controller.duplicateSelection();
+	}
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
 		this.#assertAlive();
 		return this.controller.replacePlainText(pageId, shapeId, text);

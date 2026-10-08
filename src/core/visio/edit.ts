@@ -15,6 +15,7 @@ import { editVsdxPages } from './edit-pages';
 import { applyFormattingEdit } from './edit-formatting';
 import { isVisioFormatEdit } from './edit-formatting-commands';
 import { reorderVisioShape, assertShapeOrderPackageScope } from './edit-shape-order';
+import { duplicateVisioShapes } from './edit-duplicate';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -28,6 +29,7 @@ export type {
 	VisioTextFormatEdit,
 	VisioShapeFormatEdit,
 	VisioShapeOrderEdit,
+	VisioDuplicateShapesEdit,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -93,13 +95,19 @@ export async function editVsdx(
 		(command): command is VisioGeometryEdit =>
 			command.type !== 'replace-plain-text' &&
 			command.type !== 'reorder-shape' &&
+			command.type !== 'duplicate-shapes' &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
 	let masterMovePins = emptyMasterMoveProof();
 	if (
 		geometryCommands.length ||
-		commands.some((command) => isVisioFormatEdit(command) || command.type === 'reorder-shape')
+		commands.some(
+			(command) =>
+				isVisioFormatEdit(command) ||
+				command.type === 'reorder-shape' ||
+				command.type === 'duplicate-shapes',
+		)
 	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
 		for (const [pageId, path] of pages) {
@@ -122,6 +130,7 @@ export async function editVsdx(
 		await assertShapeOrderPackageScope(pkg, check);
 	let formatChanged = false;
 	let orderChanged = false;
+	let duplicateChanged = false;
 	for (const command of commands) {
 		check();
 		const path = pages.get(command.pageId);
@@ -149,6 +158,17 @@ export async function editVsdx(
 				dirty.set(path, root);
 				orderChanged = true;
 			}
+		} else if (command.type === 'duplicate-shapes') {
+			for (const pageId of await duplicateVisioShapes(
+				pkg,
+				new Set(pages.values()),
+				roots,
+				document!,
+				command,
+				check,
+			))
+				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			duplicateChanged = true;
 		} else {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
@@ -186,6 +206,15 @@ export async function editVsdx(
 		bytes,
 		changedParts: [...dirty.keys()],
 		diagnostics: [
+			...(duplicateChanged
+				? [
+						{
+							code: 'edit-duplicate-experimental',
+							message:
+								'Local shape XML was copied and supported pin-dependent caches were recalculated. Native fidelity is limited to tested cases.',
+						},
+					]
+				: []),
 			...(dirty.size && textChanged
 				? [
 						{
@@ -209,7 +238,7 @@ export async function editVsdx(
 						{
 							code: 'edit-formatting-experimental',
 							message:
-								'Uniform text and solid shape formatting was changed without recalculating text layout. Native Visio reopen and rendering fidelity remain unverified.',
+								'Text and solid shape formatting was changed without recalculating text layout. Native Visio reopen and rendering fidelity remain unverified.',
 						},
 					]
 				: []),

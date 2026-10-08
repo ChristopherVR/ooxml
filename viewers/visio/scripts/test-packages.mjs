@@ -95,7 +95,8 @@ for (const name of ${JSON.stringify(names)}) {
   assert.equal(controller.state.zoom, 1.25);
   ${
 		workspaceRuntime
-			? `controller.setDocument(document);
+			? `assert.equal(typeof controller.duplicateSelection, 'function', name);
+  controller.setDocument(document);
   const events = [];
   controller.onEvent((name, value) => { if (name === 'selection-change') events.push(value); });
   const shape = document.pages[0].shapes[0];
@@ -142,6 +143,7 @@ declare const h${index}: p${index}.${name === 'visio-svelte-viewer' ? 'MountedVi
 declare const s${index}: p${index}.ViewerState;
 const selections${index}: readonly p${index}.VisioShapeSelection[] = s${index}.selectedShapes;
 h${index}.selectShapes(selections${index}); h${index}.selectAll(); h${index}.clearSelection();
+const duplication${index}: Promise<void> = h${index}.duplicateSelection(); void duplication${index};
 const events${index}: p${index}.ViewerCallbacks = { 'selection-change': selection => { const items: readonly p${index}.VisioShapeSelection[] = selection; void items; } };
 // @ts-expect-error The selection array is immutable.
 s${index}.selectedShapes.push({ id: '1', name: '1' });
