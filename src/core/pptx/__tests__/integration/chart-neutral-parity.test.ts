@@ -18,6 +18,10 @@ import { projectPptxChart } from './chart-neutral-parity-pptx';
  * through `parseChartSpace` (the shared DOM, `ChartSpace`) - and both are projected onto one
  * comparison shape (`chart-neutral-parity.ts`) that must be equal.
  *
+ * pptx now builds its classic chart model from `parseChartSpace` (`utils/chart-from-neutral*.ts`),
+ * so this harness pins the adapter's normalisations against an independent projection of the
+ * neutral model.
+ *
  * Where the two models legitimately differ, the difference is an explicit expectation below, not a
  * loose tolerance: each one asserts the difference is still there, so a fix on either side turns the
  * suite red and tells you to delete the expectation.

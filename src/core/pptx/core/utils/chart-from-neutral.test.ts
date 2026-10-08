@@ -1,10 +1,11 @@
 /**
  * The pptx chart adapter over real chart XML: the part is read by the neutral parser
  * (`parseChartSpace`) and by fast-xml-parser (the styles), and the series and axes are built as
- * `getChartDataForGraphicFrame` builds them. The corpus-wide equality with the previous
- * object-tree parser is pinned by `__tests__/integration/chart-legacy-parity.test.ts`; the cases
- * below are where the adapter deliberately reads differently (ECMA-376 `CT_Boolean` defaults,
- * repeated chart groups), plus the colour pipeline that used to regress for plain line charts.
+ * `getChartDataForGraphicFrame` builds them. The adapter was proven deeply equal to the previous
+ * object-tree parser on every committed chart (81 frames) before that parser was deleted; the
+ * corpus stays covered by `__tests__/integration/chart-neutral-parity.test.ts`. The cases below
+ * are where the adapter deliberately reads differently (ECMA-376 `CT_Boolean` defaults, repeated
+ * chart groups), plus the colour pipeline that used to regress for plain line charts.
  */
 import { describe, expect, it } from 'vitest';
 

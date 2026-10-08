@@ -45,7 +45,6 @@ import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 import { parseChartUpDownBars } from '../../utils/chart-up-down-bars';
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { applyEmbeddedWorkbookFallback } from './chart-embedded-fallback';
-import { isLegacyChartParsing } from './legacy-chart-parsing';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
 
 /** The neutral model of a classic chart part, or undefined for ChartEx and unreadable parts. */
@@ -82,9 +81,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		slidePath: string,
 		graphicFrame: XmlObject | undefined,
 	): Promise<PptxChartData | undefined> {
-		if (isLegacyChartParsing()) {
-			return this.legacyGetChartDataForGraphicFrame(slidePath, graphicFrame);
-		}
 		const graphicData = this.xmlLookupService.getChildByLocalName(
 			this.xmlLookupService.getChildByLocalName(graphicFrame, 'graphic'),
 			'graphicData',

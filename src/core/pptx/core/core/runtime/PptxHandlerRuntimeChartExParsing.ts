@@ -6,7 +6,7 @@
  * `fast-xml-parser` object tree (`parseCxChartSeries`).
  *
  * Mixin chain position:
- *   `legacy-chart-parsing` -> **this** -> `PptxHandlerRuntimeChartParsing`
+ *   `PptxHandlerRuntimeChartColorStyle` -> **this** -> `PptxHandlerRuntimeChartParsing`
  */
 
 import { XmlObject } from '../../types';
@@ -17,7 +17,7 @@ import { parseChartPivotFormats } from '../../utils/chart-pivot-formats';
 import { parseChartPrintSettings } from '../../utils/chart-print-settings';
 import { parseChartProtection } from '../../utils/chart-protection';
 import { parseChartSpaceFlags } from '../../utils/chart-space-flags';
-import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './legacy-chart-parsing';
+import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartColorStyle';
 
 /** The chart-part facts {@link PptxHandlerRuntime.readChartPartFacts} returns. */
 type ChartPartFacts = Pick<
