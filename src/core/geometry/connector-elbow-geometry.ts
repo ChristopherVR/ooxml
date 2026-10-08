@@ -158,3 +158,73 @@ export function elbowCurveSegments(
 		{ control: toXY(mid2, secondaryEnd), end: toXY(primaryEnd, secondaryEnd) },
 	];
 }
+
+/**
+ * Segment count implied by a lower-cased `bentConnector*` / `curvedConnector*`
+ * shape type. Unknown or missing suffixes fall back to `3` (the Z-shape).
+ */
+export function elbowSegmentCount(lowerShapeType: string): ElbowSegments {
+	if (lowerShapeType.includes('connector4')) {
+		return 4;
+	}
+	if (lowerShapeType.includes('connector5')) {
+		return 5;
+	}
+	return 3;
+}
+
+function fmtPoint(p: ElbowPoint): string {
+	return `${p[0]},${p[1]}`;
+}
+
+function cubicTo(control: ElbowPoint, end: ElbowPoint): string {
+	return `C${fmtPoint(control)} ${fmtPoint(control)} ${fmtPoint(end)}`;
+}
+
+/**
+ * Render a `segments`-segment elbow as a smooth SVG path: cubic Beziers whose
+ * control points sit on the elbow's own corners, so curved connectors get the
+ * same horizontal-first routing as {@link elbowWaypoints} without a sharp
+ * corner. `3` emits one cubic through the two corner points; `4` and `5`
+ * insert one breakpoint per interior corner (halfway along the secondary
+ * axis) so the curve bends near the corner instead of overshooting it.
+ */
+export function curvedElbowPathD(
+	startX: number,
+	startY: number,
+	endX: number,
+	endY: number,
+	segments: ElbowSegments,
+	adj1: number,
+	adj2: number,
+	adj3: number,
+): string {
+	const start: ElbowPoint = [startX, startY];
+	const mu1 = startX + (endX - startX) * adj1;
+
+	if (segments === 3) {
+		return `M${fmtPoint(start)} C${fmtPoint([mu1, startY])} ${fmtPoint([mu1, endY])} ${fmtPoint([endX, endY])}`;
+	}
+
+	const mv = startY + (endY - startY) * adj2;
+	const vq1 = startY + (mv - startY) * 0.5;
+
+	if (segments === 4) {
+		return [
+			`M${fmtPoint(start)}`,
+			cubicTo([mu1, startY], [mu1, vq1]),
+			cubicTo([mu1, mv], [(mu1 + endX) / 2, mv]),
+			cubicTo([endX, mv], [endX, endY]),
+		].join(' ');
+	}
+
+	const mu2 = startX + (endX - startX) * adj3;
+	const vq2 = mv + (endY - mv) * 0.5;
+	return [
+		`M${fmtPoint(start)}`,
+		cubicTo([mu1, startY], [mu1, vq1]),
+		cubicTo([mu1, mv], [(mu1 + mu2) / 2, mv]),
+		cubicTo([mu2, mv], [mu2, vq2]),
+		cubicTo([mu2, endY], [endX, endY]),
+	].join(' ');
+}

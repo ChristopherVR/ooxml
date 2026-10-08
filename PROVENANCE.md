@@ -2105,3 +2105,13 @@ pptx `src/ui/src/pptx/i18n/translator.ts` interpolation (`{name}` and `{{name}}`
 and fallback chain. The three product modules keep their public exports as thin
 wrappers over `ooxml-core/i18n`; no dictionaries moved and none were added for
 visio or teams.
+
+## Elbow connector geometry dedup (wave 1, item 4)
+
+`curvedElbowPathD` and `elbowSegmentCount` moved from
+`src/ui/src/pptx/render/connector-elbow-geometry.ts` into
+`src/core/geometry/connector-elbow-geometry.ts` (rewritten over `[x, y]` tuples,
+tests moved alongside). The UI module now delegates to `ooxml-core/geometry` and
+keeps only the pptx-typed adjustment helpers and `{ x, y }` adapters. The two
+`elbowWaypoints` implementations produced identical points for every tested
+segment count, flip and degenerate input, so no behaviour changed.

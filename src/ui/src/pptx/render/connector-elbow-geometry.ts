@@ -10,15 +10,19 @@
  * their local box. `a:xfrm/@flipH` and `@flipV` orient that stored path; the
  * bounding-box aspect ratio does not transpose its axes.
  *
- * No framework imports.
+ * The geometry lives in `ooxml-core/geometry`; this module keeps the
+ * pptx-typed adjustment helpers and `{ x, y }` adapters. No framework imports.
  */
 
+import {
+	curvedElbowPathD,
+	elbowSegmentCount,
+	elbowWaypoints as coreElbowWaypoints,
+	type ElbowSegments,
+} from 'ooxml-core/geometry';
 import type { PptxElement } from 'ooxml-core/pptx';
 
 import type { RouterPoint } from './connector-router-types';
-
-/** Segment counts implied by the `bentConnector*` / `curvedConnector*` preset names. */
-export type ElbowSegments = 3 | 4 | 5;
 
 /**
  * Normalise one of a connector's OOXML adjustment values (`adj1`/`adj2`/`adj3`,
@@ -53,49 +57,15 @@ export function connectorBendFraction(element: PptxElement): number {
 	return connectorAdjustmentFraction(element, 'adj1', 0.5);
 }
 
-/**
- * Segment count implied by a lower-cased `bentConnector*` / `curvedConnector*`
- * shape type (`bentConnector2`/`curvedConnector2` are handled by their own
- * fixed-shape branch in `connector-path.ts` before this is consulted).
- * Unknown/missing suffixes fall back to `3` (the Z-shape), matching the
- * historical behaviour for a bare `"bentConnector"` / `"curvedConnector"`.
- */
-export function elbowSegmentCount(lowerShapeType: string): ElbowSegments {
-	if (lowerShapeType.includes('connector4')) {
-		return 4;
-	}
-	if (lowerShapeType.includes('connector5')) {
-		return 5;
-	}
-	return 3;
-}
+export { curvedElbowPathD, elbowSegmentCount };
+export type { ElbowSegments };
 
-/**
- * OOXML connector preset paths always use x as their primary bend axis.
- */
+/** OOXML connector preset paths always use x as their primary bend axis. */
 export function isHorizontalPrimary(_x1: number, _y1: number, _x2: number, _y2: number): boolean {
 	return true;
 }
 
-/** `(u, v)` -> `(x, y)`, transposed when the secondary axis is horizontal. */
-function axisMapper(horizontalPrimary: boolean): (u: number, v: number) => RouterPoint {
-	return (u, v) => (horizontalPrimary ? { x: u, y: v } : { x: v, y: u });
-}
-
-/**
- * Compute the bend waypoints (including the two endpoints) for a
- * `segments`-segment orthogonal elbow between `(x1,y1)` and `(x2,y2)`,
- * honouring `adj1`/`adj2`/`adj3` fractions (already normalised to 0..1 by
- * `connectorAdjustmentFraction`; explicit authored values win, 0.5 is the
- * spec default when absent).
- *
- * Segment counts mirror the OOXML presets:
- * - `3` (`bentConnector3`, Z-shape): one bend line, positioned by `adj1`.
- * - `4` (`bentConnector4`): a staircase through `adj1` (primary axis) and
- *   `adj2` (secondary axis).
- * - `5` (`bentConnector5`): a staircase with two primary-axis bend lines
- *   (`adj1`, `adj3`) joined by one secondary-axis crossing (`adj2`).
- */
+/** Bend waypoints (endpoints included) as `{ x, y }` points; see `ooxml-core/geometry`. */
 export function elbowWaypoints(
 	x1: number,
 	y1: number,
@@ -106,99 +76,16 @@ export function elbowWaypoints(
 	adj2: number,
 	adj3: number,
 ): RouterPoint[] {
-	const horizontalPrimary = isHorizontalPrimary(x1, y1, x2, y2);
-	const u1 = horizontalPrimary ? x1 : y1;
-	const v1 = horizontalPrimary ? y1 : x1;
-	const u2 = horizontalPrimary ? x2 : y2;
-	const v2 = horizontalPrimary ? y2 : x2;
-	const toXY = axisMapper(horizontalPrimary);
-
-	if (segments === 3) {
-		const mu = u1 + (u2 - u1) * adj1;
-		return [toXY(u1, v1), toXY(mu, v1), toXY(mu, v2), toXY(u2, v2)];
-	}
-	if (segments === 4) {
-		const mu = u1 + (u2 - u1) * adj1;
-		const mv = v1 + (v2 - v1) * adj2;
-		return [toXY(u1, v1), toXY(mu, v1), toXY(mu, mv), toXY(u2, mv), toXY(u2, v2)];
-	}
-	const mu1 = u1 + (u2 - u1) * adj1;
-	const mv = v1 + (v2 - v1) * adj2;
-	const mu2 = u1 + (u2 - u1) * adj3;
-	return [toXY(u1, v1), toXY(mu1, v1), toXY(mu1, mv), toXY(mu2, mv), toXY(mu2, v2), toXY(u2, v2)];
-}
-
-/** Format one `RouterPoint` as `"x,y"` for inline use in an SVG path `d`. */
-function fmt(p: RouterPoint): string {
-	return `${p.x},${p.y}`;
-}
-
-/** One cubic-Bezier path segment whose control points collapse onto `ctrl`. */
-function curveTo(ctrl: RouterPoint, end: RouterPoint): string {
-	return `C${fmt(ctrl)} ${fmt(ctrl)} ${fmt(end)}`;
-}
-
-/**
- * Render the same `segments`-segment elbow as a smooth path: cubic Beziers
- * whose control points sit on the elbow's own corners, so curved connectors
- * get the same horizontal-first, segment-count-aware routing as
- * {@link elbowWaypoints} while never producing a sharp corner.
- *
- * `segments === 3` emits a single cubic Bezier through the two corner points
- * (already smooth on its own, no interior breakpoint needed). `4` and `5`
- * each insert one extra breakpoint per interior corner (halfway along the
- * secondary axis) so the curve visibly bends near the corner instead of
- * overshooting it, mirroring the multi-segment cubic construction
- * `ooxml-core/src/pptx/core/geometry/connector-geometry.ts` uses for
- * `curvedConnector4`/`curvedConnector5`.
- */
-export function curvedElbowPathD(
-	x1: number,
-	y1: number,
-	x2: number,
-	y2: number,
-	segments: ElbowSegments,
-	adj1: number,
-	adj2: number,
-	adj3: number,
-): string {
-	const horizontalPrimary = isHorizontalPrimary(x1, y1, x2, y2);
-	const u1 = horizontalPrimary ? x1 : y1;
-	const v1 = horizontalPrimary ? y1 : x1;
-	const u2 = horizontalPrimary ? x2 : y2;
-	const v2 = horizontalPrimary ? y2 : x2;
-	const toXY = axisMapper(horizontalPrimary);
-	const start = toXY(u1, v1);
-
-	if (segments === 3) {
-		const mu = u1 + (u2 - u1) * adj1;
-		return `M${fmt(start)} C${fmt(toXY(mu, v1))} ${fmt(toXY(mu, v2))} ${fmt(toXY(u2, v2))}`;
-	}
-
-	if (segments === 4) {
-		const mu = u1 + (u2 - u1) * adj1;
-		const mv = v1 + (v2 - v1) * adj2;
-		const vq = v1 + (mv - v1) * 0.5;
-		const midU = (mu + u2) / 2;
-		return [
-			`M${fmt(start)}`,
-			curveTo(toXY(mu, v1), toXY(mu, vq)),
-			curveTo(toXY(mu, mv), toXY(midU, mv)),
-			curveTo(toXY(u2, mv), toXY(u2, v2)),
-		].join(' ');
-	}
-
-	const mu1 = u1 + (u2 - u1) * adj1;
-	const mv = v1 + (v2 - v1) * adj2;
-	const mu2 = u1 + (u2 - u1) * adj3;
-	const vq1 = v1 + (mv - v1) * 0.5;
-	const vq2 = mv + (v2 - mv) * 0.5;
-	const midU = (mu1 + mu2) / 2;
-	return [
-		`M${fmt(start)}`,
-		curveTo(toXY(mu1, v1), toXY(mu1, vq1)),
-		curveTo(toXY(mu1, mv), toXY(midU, mv)),
-		curveTo(toXY(mu2, mv), toXY(mu2, vq2)),
-		curveTo(toXY(mu2, v2), toXY(u2, v2)),
-	].join(' ');
+	return coreElbowWaypoints(
+		x1,
+		y1,
+		x2,
+		y2,
+		Math.abs(x2 - x1),
+		Math.abs(y2 - y1),
+		segments,
+		adj1,
+		adj2,
+		adj3,
+	).map(([x, y]) => ({ x, y }));
 }

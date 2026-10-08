@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	curvedElbowPathD,
 	elbowCurveSegments,
+	elbowSegmentCount,
 	elbowWaypoints,
 	isHorizontalPrimaryAxis,
 } from './connector-elbow-geometry';
@@ -118,5 +120,36 @@ describe('elbowCurveSegments: same orientation/segment logic, smooth instead of 
 			{ control: [70, 80], end: [70, 140] },
 			{ control: [70, 200], end: [100, 200] },
 		]);
+	});
+});
+
+describe('elbowSegmentCount', () => {
+	it('maps connector4 and connector5 names to 4 and 5 segments', () => {
+		expect(elbowSegmentCount('bentconnector4')).toBe(4);
+		expect(elbowSegmentCount('curvedconnector5')).toBe(5);
+	});
+
+	it('falls back to 3 (the Z-shape) for connector3 and unknown suffixes', () => {
+		expect(elbowSegmentCount('bentconnector3')).toBe(3);
+		expect(elbowSegmentCount('bentconnector')).toBe(3);
+	});
+});
+
+describe('curvedElbowPathD: smooth path over the same horizontal-first routing', () => {
+	it('renders a single cubic for curvedConnector3', () => {
+		expect(curvedElbowPathD(0, 0, 200, 50, 3, 0.5, 0.5, 0.5)).toBe('M0,0 C100,0 100,50 200,50');
+		expect(curvedElbowPathD(0, 0, 50, 200, 3, 0.5, 0.5, 0.5)).toBe('M0,0 C25,0 25,200 50,200');
+	});
+
+	it('renders three cubics for curvedConnector4', () => {
+		expect(curvedElbowPathD(0, 0, 200, 100, 4, 0.5, 0.5, 0.5)).toBe(
+			'M0,0 C100,0 100,0 100,25 C100,50 100,50 150,50 C200,50 200,50 200,100',
+		);
+	});
+
+	it('renders four cubics for curvedConnector5', () => {
+		expect(curvedElbowPathD(0, 0, 200, 100, 5, 0.25, 0.5, 0.75)).toBe(
+			'M0,0 C50,0 50,0 50,25 C50,50 50,50 100,50 C150,50 150,50 150,75 C150,100 150,100 200,100',
+		);
 	});
 });
