@@ -56,6 +56,7 @@ export type {
 	VisioShapeHyperlinkEdit,
 	VisioShapeScreenTipEdit,
 	VisioHyperlinkFields,
+	VisioConnectorGlue,
 } from './edit-commands';
 
 export interface EditVsdxOptions {

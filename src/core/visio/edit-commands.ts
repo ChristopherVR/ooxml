@@ -56,6 +56,11 @@ export interface VisioTextEdit {
 	shapeId: string;
 	text: string;
 }
+/** Shape-to-shape glue targets of a connector. A missing end stays unglued. */
+export interface VisioConnectorGlue {
+	begin?: string;
+	end?: string;
+}
 interface Target {
 	pageId: string;
 	shapeId: string;
@@ -63,7 +68,15 @@ interface Target {
 type BoxCreation = Target & { x: number; y: number; width: number; height: number; text?: string };
 /** Drawing inches; bottom-left origin, up-positive rotation pin. Rotation angles use radians. */
 export type VisioGeometryEdit =
-	| (Target & { type: 'create-line'; beginX: number; beginY: number; endX: number; endY: number })
+	| (Target & {
+			type: 'create-line';
+			beginX: number;
+			beginY: number;
+			endX: number;
+			endY: number;
+			/** Present for a connector: shape IDs whose PinX each end is glued to (dynamic glue). */
+			connect?: VisioConnectorGlue;
+	  })
 	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioBasicShape })
 	| (BoxCreation & { type: 'create-ellipse' })
 	| (BoxCreation & { type: 'create-text-box'; text: string })
@@ -273,7 +286,16 @@ export function snapshotVisioEdits(
 				const endX = numeric(edit.endX),
 					endY = numeric(edit.endY);
 				numeric(Math.hypot(endX - beginX, endY - beginY), true);
-				return { ...target, type: edit.type, beginX, beginY, endX, endY };
+				const connect = snapshotConnectorGlue(edit.connect, edit.shapeId);
+				return {
+					...target,
+					type: edit.type,
+					beginX,
+					beginY,
+					endX,
+					endY,
+					...(connect ? { connect } : {}),
+				};
 			}
 			case 'create-rectangle':
 			case 'create-ellipse': {
@@ -325,4 +347,30 @@ export function snapshotVisioEdits(
 				return fail('INVALID_EDIT', 'Unsupported edit command.');
 		}
 	});
+}
+
+/** Copy connector glue targets; each is a distinct canonical shape ID other than the connector. */
+export function snapshotConnectorGlue(
+	value: unknown,
+	connectorId: string,
+): VisioConnectorGlue | undefined {
+	if (value === undefined) return undefined;
+	if (!value || typeof value !== 'object') fail('INVALID_EDIT', 'Invalid connector glue.');
+	const source = value as Record<string, unknown>;
+	const result: VisioConnectorGlue = {};
+	for (const end of ['begin', 'end'] as const) {
+		const id = source[end];
+		if (id === undefined) continue;
+		if (
+			typeof id !== 'string' ||
+			!/^[1-9]\d{0,9}$/.test(id) ||
+			Number(id) > 4294967295 ||
+			id === connectorId
+		)
+			fail('INVALID_EDIT', 'Connector glue targets must be other canonical shape IDs.');
+		result[end] = id;
+	}
+	if (result.begin !== undefined && result.begin === result.end)
+		fail('INVALID_EDIT', 'A connector cannot glue both ends to the same shape.');
+	return result;
 }

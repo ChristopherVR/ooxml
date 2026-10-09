@@ -1,4 +1,4 @@
-import type { VisioGeometryEdit } from '../edit-commands';
+import type { VisioConnectorGlue, VisioGeometryEdit } from '../edit-commands';
 import type { VisioPage } from '../model';
 import type { VisioBasicShape } from '../basic-shapes';
 import { visioNextShapeId } from './shape-id';
@@ -118,6 +118,28 @@ export function visioLineCreationCommand(
 		endX: end.x,
 		endY: page.height - end.y,
 	});
+}
+
+/**
+ * A straight connector from the Connector tool. Ends dropped on shapes glue to them with native
+ * dynamic glue; the core moves glued ends to the facing side midpoints. An end dropped on the
+ * same shape as the begin end, or on empty canvas, stays unglued.
+ */
+export function visioConnectorCreationCommand(
+	page: VisioPage,
+	begin: VisioDrawingPoint,
+	end: VisioDrawingPoint,
+	glue: VisioConnectorGlue,
+): Extract<VisioGeometryEdit, { type: 'create-line' }> {
+	const line = visioLineCreationCommand(page, begin, end) as Extract<
+		VisioGeometryEdit,
+		{ type: 'create-line' }
+	>;
+	const connect: VisioConnectorGlue = {
+		...(glue.begin === undefined ? {} : { begin: glue.begin }),
+		...(glue.end === undefined || glue.end === glue.begin ? {} : { end: glue.end }),
+	};
+	return { ...line, connect };
 }
 
 /** Fixed-bounds creation. Native click-only sizing and automatic text growth are not inferred. */

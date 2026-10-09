@@ -31,7 +31,9 @@ export function visioLocalRotationShape(
 	}
 	if (
 		page.connectors.some(
-			(connection) => ids.has(connection.fromShapeId) || ids.has(connection.toShapeId),
+			(connection) =>
+				ids.has(connection.fromShapeId) ||
+				(ids.has(connection.toShapeId) && connection.toShapeId !== shapeId),
 		)
 	)
 		return undefined;

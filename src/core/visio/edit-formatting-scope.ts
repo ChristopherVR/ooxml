@@ -5,6 +5,7 @@ import { analyzeVisioFormula } from './formula';
 import { indexCells } from './edit-recalculate-index';
 import { fail } from './package-common';
 import { isThemeLookupFormula } from './edit-formatting-cell-admission';
+import { isConnectedGlueCell } from './edit-connector-glue';
 
 /** Nonnumeric font/color caches cannot be recalculated by the numeric engine.
  * Refuse every dependent formula, including metadata/styles/masters, before writes.
@@ -39,6 +40,8 @@ export async function assertFormattingDependencies(
 			// A 'Themed' cache is resolved from the current selectors on every read, so a
 			// literal theme lookup never goes stale when Quick Style selectors change.
 			if (attribute(node, 'V') === 'Themed' && isThemeLookupFormula(source)) continue;
+			// Dynamic glue follows geometry only; text and formatting never feed it.
+			if (isConnectedGlueCell(node, source)) continue;
 			let localShapeId: string | undefined;
 			let parent: Node | null = node;
 			while (parent?.nodeType === 1) {

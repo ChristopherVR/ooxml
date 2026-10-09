@@ -10,6 +10,7 @@ import {
 } from '../edit-metadata-commands';
 import { isVisioGroupEdit, snapshotGroupEdit } from '../edit-group-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
+import { snapshotConnectorGlue } from '../edit-commands';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
 
@@ -104,8 +105,9 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 				if (!['front', 'back', 'forward', 'backward'].includes(command.order))
 					throw new Error('Invalid shape order.');
 				return { ...target, type: command.type, order: command.order };
-			case 'create-line':
+			case 'create-line': {
 				numbers(command.beginX, command.beginY, command.endX, command.endY);
+				const connect = snapshotConnectorGlue(command.connect, command.shapeId);
 				return {
 					type: command.type,
 					...target,
@@ -113,7 +115,9 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					beginY: command.beginY,
 					endX: command.endX,
 					endY: command.endY,
+					...(connect ? { connect } : {}),
 				};
+			}
 			case 'replace-plain-text':
 				return { type: command.type, ...target, text: text(command.text) };
 			case 'replace-text-ranges':

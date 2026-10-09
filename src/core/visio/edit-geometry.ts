@@ -4,7 +4,16 @@ import { executableCellFormula } from './cell-formula';
 import { editableTransformCell } from './edit-transform-formula';
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
 import { createPath } from './edit-path-create';
-import { attribute, children } from './sheet';
+import {
+	glueNewConnector,
+	glueParticipants,
+	planConnector,
+	releaseDeletedGlue,
+	rerouteConnector,
+	topShape,
+	unglueConnector,
+} from './edit-connector';
+import { attribute } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import {
@@ -43,10 +52,28 @@ export function applyGeometryEdit(
 	const masterMovePins = masterMoveProof.pins,
 		masterDimensions = masterMoveProof.dimensions;
 	check();
-	if (edit.type === 'resize-shape' && edit.anchor)
-		return resizeVisioShapeAtAnchor(roots, document, edit, check);
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
+	// Connectors glued to an edited 2D shape follow it; an edited connector is unglued first.
+	const glue = edit.type.startsWith('create-')
+		? { connectors: [] }
+		: glueParticipants(root, edit.shapeId);
+	const glueShapes = new Set<Element>(
+		glue.connector
+			? [glue.connector.shape]
+			: glue.connectors.length
+				? [glueTarget(root, edit.shapeId)]
+				: [],
+	);
+	const reroute = (pages: readonly string[]): readonly string[] => {
+		if (!pages.length) return pages;
+		const result = new Set(pages);
+		for (const connector of glue.connectors)
+			for (const page of rerouteConnector(roots, edit.pageId, connector, check)) result.add(page);
+		return [...result];
+	};
+	if (edit.type === 'resize-shape' && edit.anchor)
+		return reroute(resizeVisioShapeAtAnchor(roots, document, edit, check, glueShapes));
 	const groupRotation = proveLocalGroupRotation(root, edit, check);
 	const changed: VisioCellKey[] = [];
 	let expected: { width: number; height: number; x: number; y: number } | undefined;
@@ -56,14 +83,17 @@ export function applyGeometryEdit(
 	let expectedFlip: { cell: string; value: number } | undefined;
 	const add = (cell: string) => changed.push({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
 	if (edit.type === 'create-line') {
-		const shape = createLine(root, document, edit);
+		const line = planConnector(root, edit);
+		const shape = createLine(root, document, line);
+		glueNewConnector(root, shape, line);
+		if (line.connect) glueShapes.add(shape);
 		lineEditShapes.add(shape);
 		fixedLine = proveLocalLine(shape);
 		expected = {
-			width: Math.hypot(edit.endX - edit.beginX, edit.endY - edit.beginY),
+			width: Math.hypot(line.endX - line.beginX, line.endY - line.beginY),
 			height: 0,
-			x: (edit.beginX + edit.endX) / 2,
-			y: (edit.beginY + edit.endY) / 2,
+			x: (line.beginX + line.endX) / 2,
+			y: (line.beginY + line.endY) / 2,
 		};
 		for (const name of geometryChangedCells(edit)) add(name);
 	} else if (edit.type === 'create-path') {
@@ -108,14 +138,12 @@ export function applyGeometryEdit(
 							: [],
 			edit.type === 'flip-shape',
 		);
-		if (edit.type !== 'delete-shape')
-			for (const connections of children(root, 'Connects'))
-				for (const connection of children(connections, 'Connect'))
-					if (['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === edit.shapeId))
-						fail(
-							'UNSUPPORTED_GEOMETRY_EDIT',
-							'Glued connections need routing and endpoint recalculation outside this subset.',
-						);
+		if (glue.connector && edit.type !== 'delete-shape')
+			unglueConnector(
+				root,
+				glue.connector,
+				edit.type === 'move-line-endpoint' ? [edit.endpoint] : ['begin', 'end'],
+			);
 		const unlocked = (
 			name:
 				| 'LockMoveX'
@@ -131,6 +159,7 @@ export function applyGeometryEdit(
 		};
 		if (edit.type === 'delete-shape') {
 			unlocked('LockDelete');
+			releaseDeletedGlue(roots, new Map([[edit.pageId, new Set([edit.shapeId])]]));
 			assertVisioShapeUnreferenced(roots, edit.pageId, edit.shapeId, { check });
 			shape.parentNode!.removeChild(shape);
 			return [edit.pageId];
@@ -226,7 +255,7 @@ export function applyGeometryEdit(
 			fixedLine = endpoint.fixed;
 			lineEditShapes.add(shape);
 			if (endpoint.expected.width !== numeric(local.get('Width')))
-				resizeGeometry(shape, roots, edit, check, lineEditShapes);
+				resizeGeometry(shape, roots, edit, check, lineEditShapes, glueShapes);
 		} else {
 			const width = numeric(local.get('Width')),
 				height = numeric(local.get('Height'));
@@ -247,7 +276,7 @@ export function applyGeometryEdit(
 				y: numeric(local.get('PinY'), height / 2),
 			};
 			if (width === edit.width && height === edit.height) return [];
-			resizeGeometry(shape, roots, edit, check, lineEditShapes);
+			resizeGeometry(shape, roots, edit, check, lineEditShapes, glueShapes);
 			if (
 				numeric(local.get('LockAspect'), 0) !== 0 &&
 				Math.abs(edit.width / width - edit.height / height) > 1e-9
@@ -281,6 +310,7 @@ export function applyGeometryEdit(
 		check,
 		masterMovePins,
 		lineEditShapes,
+		glueShapes,
 		groupRotationCells: groupRotation.angleCells,
 	});
 	const resultShape = admitted(
@@ -311,5 +341,9 @@ export function applyGeometryEdit(
 			'EDIT_UNSUPPORTED_DEPENDENCY',
 			'Dependent formulas would violate the requested geometry or fixed rotation pin.',
 		);
-	return [...new Set([edit.pageId, ...affectedPages])];
+	return reroute([...new Set([edit.pageId, ...affectedPages])]);
 }
+
+const glueTarget = (root: Element, shapeId: string): Element =>
+	topShape(root, shapeId) ??
+	fail('EDIT_TARGET_NOT_FOUND', 'A unique top-level local shape is required.');

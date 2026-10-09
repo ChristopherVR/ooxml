@@ -2,6 +2,7 @@ import type { VisioGeometryEdit } from './edit-commands';
 import { admitted, cells, numeric, protectedShape } from './edit-geometry-admission';
 import { fail } from './package-common';
 import { assertVisioShapesUnreferenced } from './edit-recalculate';
+import { releaseDeletedGlue } from './edit-connector';
 import { VISIO_NS, VISIO_LEGACY_NS } from './sheet';
 
 export type VisioShapeDelete = Extract<VisioGeometryEdit, { type: 'delete-shape' }>;
@@ -42,6 +43,7 @@ export function deleteVisioShapes(
 			fail('EDIT_PROTECTED_CELL', 'LockDelete prevents this operation.');
 		shapes.push(shape);
 	}
+	releaseDeletedGlue(roots, removed);
 	assertVisioShapesUnreferenced(roots, removed, { check });
 	// No mutation occurs until every target and every retained dependency has been proved.
 	check();

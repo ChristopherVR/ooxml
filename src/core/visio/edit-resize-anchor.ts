@@ -62,6 +62,7 @@ export function resizeVisioShapeAtAnchor(
 	document: Element,
 	edit: Resize,
 	check: () => void,
+	glueShapes: ReadonlySet<Element> = new Set(),
 ): readonly string[] {
 	check();
 	const root = roots.get(edit.pageId);
@@ -108,11 +109,14 @@ export function resizeVisioShapeAtAnchor(
 	assertUnlayeredShape(shape, document);
 	for (const container of children(root, 'Connects'))
 		for (const connection of children(container, 'Connect'))
-			if (['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === edit.shapeId))
+			if (
+				!glueShapes.has(shape) &&
+				['FromSheet', 'ToSheet'].some((name) => attribute(connection, name) === edit.shapeId)
+			)
 				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Glued shapes require routing outside this subset.');
-	const graph = indexCells(roots, { check });
+	const graph = indexCells(roots, { check, glueShapes });
 	const id = (cell: string) => key({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
-	const source = createVisioCellEvaluator(graph, { check }, true);
+	const source = createVisioCellEvaluator(graph, { check, glueShapes }, true);
 	const read = (name: string, fallback?: number): number =>
 		graph.has(id(name)) ? source(id(name)).value : numeric(local.get(name), fallback);
 	const width = read('Width'),

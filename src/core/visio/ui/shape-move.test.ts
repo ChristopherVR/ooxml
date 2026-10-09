@@ -54,6 +54,8 @@ it('declines the entire selection when any member is unsupported, glued or ambig
 		expect(visioMoveCommands(scene, ids, { x: 1, y: 1 })).toBeUndefined();
 	scene.connectors.push({ fromShapeId: 'a', toShapeId: 'b' } as (typeof scene.connectors)[number]);
 	expect(visioMoveCommands(scene, ['a'], { x: 1, y: 1 })).toBeUndefined();
+	// A glue target moves; core reroutes the connectors glued to it.
+	expect(visioMoveCommands(scene, ['b'], { x: 1, y: 1 })).toHaveLength(1);
 });
 it('admits an unchanged eligible selection but rejects nonfinite or overflowing translations', () => {
 	const scene = page();

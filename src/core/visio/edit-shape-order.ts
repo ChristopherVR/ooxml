@@ -5,6 +5,7 @@ import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } fr
 import { fail } from './package-common';
 import { attribute, children } from './sheet';
 import type { VisioPackage } from './package';
+import { isConnectedGlueCell } from './edit-connector-glue';
 
 /** Container lookup and dynamic references can depend on stacking order without naming a cell. */
 export async function assertShapeOrderPackageScope(
@@ -18,7 +19,8 @@ export async function assertShapeOrderPackageScope(
 			check();
 			const node = pending.pop()!;
 			const source = executableCellFormula(attribute(node, 'F'));
-			if (source) {
+			// Dynamic glue follows geometry and Connect rows, never stacking order.
+			if (source && !isConnectedGlueCell(node, source)) {
 				try {
 					if (analyzeVisioFormula(source, { onStep: check }).dynamic)
 						fail(

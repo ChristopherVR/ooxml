@@ -79,6 +79,7 @@ export {
 	type VisioResizeAnchor,
 	type VisioChangeShapeEdit,
 	type VisioChangeShapeTarget,
+	type VisioConnectorGlue,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';

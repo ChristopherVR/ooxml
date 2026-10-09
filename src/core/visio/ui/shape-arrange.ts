@@ -94,13 +94,7 @@ export function visioArrangeCommands(
 	for (const id of shapeIds) {
 		const shape = visioStyleFormattingShape(page, id);
 		const box = shape && alignmentBox(shape);
-		if (
-			!shape ||
-			!box ||
-			page.connectors.some(
-				(connection) => connection.fromShapeId === id || connection.toShapeId === id,
-			)
-		)
+		if (!shape || !box || page.connectors.some((connection) => connection.fromShapeId === id))
 			return undefined;
 		shapes.push(shape);
 		boxes.push(box);

@@ -3,6 +3,7 @@ import { children, attribute } from './sheet';
 import { fail } from './package-common';
 import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
+import { isNativeGlueCell } from './edit-connector-glue';
 
 export interface VisioCellKey {
 	pageId: string;
@@ -20,6 +21,8 @@ export interface VisioRecalculationOptions {
 	masterMovePins?: ReadonlySet<Element>;
 	/** Internal authorization after proving an unglued local straight-line edit. */
 	lineEditShapes?: ReadonlySet<Element>;
+	/** Internal authorization of proven owned dynamic-glue connectors and their 2D targets. */
+	glueShapes?: ReadonlySet<Element>;
 	/** Internal authorization of the proven local parent-group Angle leaf only. */
 	groupRotationCells?: ReadonlySet<Element>;
 }
@@ -65,13 +68,16 @@ export function indexCells(
 		if (root.hasAttribute('F'))
 			fail('EDIT_UNKNOWN_DEPENDENCY', 'Page root formula has unknown dependency scope.');
 		const indexedNodes = new Set<Element>();
-		const connected = new Set<string>();
+		const connected = new Set<string>(),
+			connectors = new Set<string>();
 		for (const container of children(root, 'Connects'))
 			for (const connection of children(container, 'Connect')) {
 				for (const attr of ['FromSheet', 'ToSheet']) {
 					const id = attribute(connection, attr);
 					if (id) connected.add(id);
 				}
+				const from = attribute(connection, 'FromSheet');
+				if (from) connectors.add(from);
 			}
 		const sheets: { node: Element; shapeId: string; unsafe: boolean }[] = [];
 		const ids = new Set<string>();
@@ -92,7 +98,7 @@ export function indexCells(
 							((attribute(node, 'Type') !== undefined && attribute(node, 'Type') !== 'Shape') ||
 								children(node, 'ForeignData').length > 0 ||
 								children(node, 'Rel').length > 0)) ||
-						connected.has(shapeId) ||
+						(connected.has(shapeId) && !options.glueShapes?.has(node)) ||
 						(!options.lineEditShapes?.has(node) &&
 							children(node, 'Cell').some(
 								(cell) =>
@@ -112,7 +118,13 @@ export function indexCells(
 		for (const node of children(root, 'PageSheet'))
 			sheets.push({ node, shapeId: '', unsafe: false });
 		for (const sheet of sheets) {
-			const addNode = (node: Element, cell: string, relative = false, deleted = false) => {
+			const addNode = (
+				node: Element,
+				cell: string,
+				relative = false,
+				deleted = false,
+				glue = false,
+			) => {
 				indexedNodes.add(node);
 				const item: IndexedCell = {
 					pageId,
@@ -124,7 +136,12 @@ export function indexCells(
 					unit: cellUnit(cell, relative),
 				};
 				const source = attribute(node, 'F');
-				if (executableCellFormula(source) && !inertDoubleClickFormula(cell, source!)) {
+				// Native dynamic glue is re-evaluated by Visio; the editor reads and writes its caches.
+				if (
+					executableCellFormula(source) &&
+					!inertDoubleClickFormula(cell, source!) &&
+					!(glue && isNativeGlueCell(cell, source!))
+				) {
 					try {
 						item.formula = parseVisioFormula(source!);
 						const analysis = analyzeVisioFormula(item.formula);
@@ -146,7 +163,9 @@ export function indexCells(
 				if (source === 'Inh') item.unsafe = true;
 				add(item);
 			};
-			for (const node of children(sheet.node, 'Cell')) addNode(node, attribute(node, 'N') ?? '');
+			const glue = connectors.has(sheet.shapeId);
+			for (const node of children(sheet.node, 'Cell'))
+				addNode(node, attribute(node, 'N') ?? '', false, false, glue);
 			for (const section of children(sheet.node, 'Section')) {
 				const name = attribute(section, 'N') ?? '';
 				const prefix =

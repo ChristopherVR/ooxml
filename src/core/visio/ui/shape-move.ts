@@ -23,9 +23,8 @@ export function visioMovementShape(page: VisioPage, id: string): VisioShape | un
 			shape.rotation.pinY,
 			...shape.transform,
 		].every(Number.isFinite) ||
-		page.connectors.some(
-			(connection) => connection.fromShapeId === id || connection.toShapeId === id,
-		)
+		// Glued connectors move with their shapes (core reroutes them); connectors themselves stay put.
+		page.connectors.some((connection) => connection.fromShapeId === id)
 	)
 		return undefined;
 	return shape;
