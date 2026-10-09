@@ -11,6 +11,12 @@ import { snapshotPathCreation, type VisioPathCreateEdit } from './edit-path-comm
 export type { VisioPathCreateEdit, VisioPathSegment } from './edit-path-commands';
 import { snapshotChangeShape, type VisioChangeShapeEdit } from './edit-change-shape-commands';
 export type { VisioChangeShapeEdit, VisioChangeShapeTarget } from './edit-change-shape-commands';
+import { isVisioGroupEdit, snapshotGroupEdit, type VisioGroupEdit } from './edit-group-commands';
+export type {
+	VisioGroupEdit,
+	VisioGroupShapesEdit,
+	VisioUngroupShapeEdit,
+} from './edit-group-commands';
 export type { VisioPasteShapesEdit } from './edit-paste-commands';
 import {
 	isVisioFormatEdit,
@@ -116,7 +122,8 @@ export type VisioEdit =
 	| VisioShapeOrderEdit
 	| VisioChangeShapeEdit
 	| VisioMetadataEdit
-	| VisioPictureInsertEdit;
+	| VisioPictureInsertEdit
+	| VisioGroupEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -198,6 +205,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'change-shape') return snapshotChangeShape(edit);
 		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
+		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {

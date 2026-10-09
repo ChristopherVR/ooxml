@@ -117,12 +117,11 @@ it.each([
 		expect(source).toEqual(original);
 	},
 );
-it('keeps group movement, resizing and flips outside this rotation proof', async () => {
+it('keeps group resizing and flips outside this rotation proof', async () => {
 	const source = await fixture({
 		pages: [{ id: '0', contents: `<Shapes>${group(leaf())}</Shapes>` }],
 	});
 	for (const command of [
-		{ type: 'move-shape', x: 3, y: 4 },
 		{ type: 'resize-shape', width: 3, height: 2 },
 		{ type: 'flip-shape', axis: 'horizontal' },
 	] as const)

@@ -8,6 +8,7 @@ import {
 	snapshotMetadataEdit,
 	snapshotPictureInsert,
 } from '../edit-metadata-commands';
+import { isVisioGroupEdit, snapshotGroupEdit } from '../edit-group-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
@@ -30,6 +31,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'change-shape') return snapshotChangeShape(command);
 		if (command.type === 'insert-picture') return snapshotPictureInsert(command);
 		if (isVisioMetadataEdit(command)) return snapshotMetadataEdit(command);
+		if (isVisioGroupEdit(command)) return snapshotGroupEdit(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');

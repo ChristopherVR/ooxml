@@ -25,6 +25,8 @@ import { changeVisioShape } from './edit-change-shape';
 import { isVisioMetadataEdit } from './edit-metadata-commands';
 import { applyMetadataEdit } from './edit-metadata';
 import { editVsdxPicture } from './edit-picture';
+import { isVisioGroupEdit } from './edit-group-commands';
+import { groupVisioShapes, ungroupVisioShape } from './edit-group';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -43,6 +45,9 @@ export type {
 	VisioShapeOrderEdit,
 	VisioDuplicateShapesEdit,
 	VisioPasteShapesEdit,
+	VisioGroupEdit,
+	VisioGroupShapesEdit,
+	VisioUngroupShapeEdit,
 	VisioResizeAnchor,
 	VisioChangeShapeEdit,
 	VisioChangeShapeTarget,
@@ -128,6 +133,7 @@ export async function editVsdx(
 			command.type !== 'change-shape' &&
 			command.type !== 'insert-picture' &&
 			!isVisioMetadataEdit(command) &&
+			!isVisioGroupEdit(command) &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
@@ -143,7 +149,8 @@ export async function editVsdx(
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
 				command.type === 'paste-shapes' ||
-				command.type === 'change-shape',
+				command.type === 'change-shape' ||
+				isVisioGroupEdit(command),
 		)
 	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
@@ -171,7 +178,7 @@ export async function editVsdx(
 		document = await visioXml(pkg, path!, 'VisioDocument');
 	}
 	let textChanged = false;
-	if (commands.some((command) => command.type === 'reorder-shape'))
+	if (commands.some((command) => command.type === 'reorder-shape' || isVisioGroupEdit(command)))
 		await assertShapeOrderPackageScope(pkg, check);
 	let formatChanged = false;
 	let orderChanged = false;
@@ -179,6 +186,7 @@ export async function editVsdx(
 	let pasteChanged = false;
 	let outlineChanged = false;
 	let metadataChanged = false;
+	let groupChanged = false;
 	const deletions = commands.filter(
 		(command): command is VisioShapeDelete => command.type === 'delete-shape',
 	);
@@ -227,6 +235,11 @@ export async function editVsdx(
 				dirty.set(path, root);
 				outlineChanged = true;
 			}
+		} else if (isVisioGroupEdit(command)) {
+			if (command.type === 'group-shapes') groupVisioShapes(root, document!, command, check);
+			else ungroupVisioShape(root, document!, command, check);
+			dirty.set(path, root);
+			groupChanged = true;
 		} else if (command.type === 'paste-shapes') {
 			for (const pageId of await pasteVisioShapes(
 				pkg,
@@ -355,6 +368,15 @@ export async function editVsdx(
 							code: 'edit-shape-metadata',
 							message:
 								'Local hyperlink rows or the ScreenTip (Comment) cell were changed. Following a link stays an explicit user action.',
+						},
+					]
+				: []),
+			...(groupChanged
+				? [
+						{
+							code: 'edit-group-experimental',
+							message:
+								'Local shapes were grouped or ungrouped with plain group-local pins; members carry no group-scaling formulas. Native Visio reopen and rendering fidelity remain unverified.',
 						},
 					]
 				: []),

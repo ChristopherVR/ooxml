@@ -13,6 +13,7 @@ export * from './page-edit';
 export * from './line-edit';
 export * from './shape-id';
 export * from './shape-duplicate';
+export * from './shape-group';
 export * from './fill-pattern-transform';
 export { visioGradientInstances } from './gradient-details';
 export {

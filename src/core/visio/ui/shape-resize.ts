@@ -25,7 +25,9 @@ export interface VisioResizeFrame {
 /** Only orthonormal ordinary local shapes have a scene-proven rectangular resize frame. */
 export function visioResizeShape(page: VisioPage, id: string): VisioShape | undefined {
 	const shape = visioMovementShape(page, id);
+	// Groups move but do not resize: members carry no group-scaling formulas yet.
 	return shape &&
+		!shape.children.length &&
 		visioResizeFrame(shape, { width: shape.width, height: shape.height }, { x: 0, y: 0 })
 		? shape
 		: undefined;

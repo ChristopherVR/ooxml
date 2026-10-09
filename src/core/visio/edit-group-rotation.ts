@@ -4,18 +4,9 @@ import { cells, numeric, isLineSheet, assertLengthTransformCells } from './edit-
 import { fail } from './package-common';
 import type { VisioGeometryEdit } from './edit-commands';
 
-/** Authorize only a local group Angle leaf; descendants remain read-only/unsafe to recalculate. */
-export function proveLocalGroupRotation(root: Element, edit: VisioGeometryEdit, check: () => void) {
-	const groups = new Set<Element>(),
-		angleCells = new Set<Element>();
-	if (edit.type !== 'rotate-shape') return { groups, angleCells };
-	const candidates = children(children(root, 'Shapes')[0], 'Shape').filter(
-		(node) => attribute(node, 'ID') === edit.shapeId,
-	);
-	if (candidates.length !== 1 || attribute(candidates[0], 'Type') !== 'Group')
-		return { groups, angleCells };
-	const group = candidates[0]!;
-	const pending = [group],
+/** Prove a local 2D sheet tree without masters, lines or foreign objects; returns its IDs. */
+export function proveLocalShapeTree(top: Element, check: () => void): Set<string> {
+	const pending = [top],
 		ids = new Set<string>();
 	while (pending.length) {
 		check();
@@ -41,7 +32,7 @@ export function proveLocalGroupRotation(root: Element, edit: VisioGeometryEdit, 
 		)
 			fail(
 				'UNSUPPORTED_GEOMETRY_EDIT',
-				'Group rotation requires a local unglued 2D tree without masters or foreign objects.',
+				'Group transforms require a local unglued 2D tree without masters or foreign objects.',
 			);
 		ids.add(id);
 		for (const name of [
@@ -78,14 +69,44 @@ export function proveLocalGroupRotation(root: Element, edit: VisioGeometryEdit, 
 		for (const name of ['PinX', 'PinY', 'LocPinX', 'LocPinY', 'Angle']) numeric(local.get(name));
 		pending.push(...descendants);
 	}
+	return ids;
+}
+
+/** Refuse a tree when a page Connect record names any of its sheets. */
+export function assertUngluedTree(root: Element, ids: ReadonlySet<string>, message: string): void {
 	for (const container of children(root, 'Connects'))
 		for (const connection of children(container, 'Connect'))
 			if (['FromSheet', 'ToSheet'].some((name) => ids.has(attribute(connection, name) ?? '')))
-				fail(
-					'UNSUPPORTED_GEOMETRY_EDIT',
-					'Group rotation cannot update glued descendant connections.',
-				);
+				fail('UNSUPPORTED_GEOMETRY_EDIT', message);
+}
+
+/** Authorize only a local group Angle leaf (rotation) or its explicit pins (move).
+ * Descendants remain read-only and unsafe to recalculate.
+ */
+export function proveLocalGroupRotation(root: Element, edit: VisioGeometryEdit, check: () => void) {
+	const groups = new Set<Element>(),
+		angleCells = new Set<Element>();
+	if (edit.type !== 'rotate-shape' && edit.type !== 'move-shape') return { groups, angleCells };
+	const candidates = children(children(root, 'Shapes')[0], 'Shape').filter(
+		(node) => attribute(node, 'ID') === edit.shapeId,
+	);
+	if (candidates.length !== 1 || attribute(candidates[0], 'Type') !== 'Group')
+		return { groups, angleCells };
+	const group = candidates[0]!;
+	assertUngluedTree(
+		root,
+		proveLocalShapeTree(group, check),
+		edit.type === 'move-shape'
+			? 'Group moves cannot update glued descendant connections.'
+			: 'Group rotation cannot update glued descendant connections.',
+	);
 	groups.add(group);
-	angleCells.add(cells(group).get('Angle')!);
+	if (edit.type === 'rotate-shape') angleCells.add(cells(group).get('Angle')!);
+	else
+		for (const name of ['PinX', 'PinY']) {
+			const cell = cells(group).get(name);
+			if (!cell) fail('UNSUPPORTED_GEOMETRY_EDIT', 'Group moves require explicit local pins.');
+			angleCells.add(cell);
+		}
 	return { groups, angleCells };
 }

@@ -2,6 +2,7 @@ import type { VisioEdit } from '../edit-commands';
 import type { VisioMatrix, VisioPage, VisioShape } from '../model';
 import { visioStyleFormattingShape } from './formatting';
 import { visioPageEditToDrawing } from './page-edit';
+import { visioMovableGroup } from './shape-group';
 
 export interface VisioPagePoint {
 	x: number;
@@ -9,10 +10,10 @@ export interface VisioPagePoint {
 }
 /** Source admission remains authoritative for locks, formulas, geometry and dependencies. */
 export function visioMovementShape(page: VisioPage, id: string): VisioShape | undefined {
-	const shape = visioStyleFormattingShape(page, id);
+	const shape = visioStyleFormattingShape(page, id) ?? visioMovableGroup(page, id);
 	if (
 		!shape ||
-		shape.kind !== 'shape' ||
+		(shape.kind !== 'shape' && !(shape.kind === 'group' && shape.children.length)) ||
 		!shape.rotation ||
 		!(shape.width > 0 && shape.height > 0) ||
 		![
