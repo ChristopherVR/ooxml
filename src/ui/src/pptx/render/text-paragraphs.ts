@@ -48,6 +48,19 @@ import { resolveAutoFitFontScale } from './text-style-helpers';
 // so moving the definitions needs no importer to change.
 
 /**
+ * Give every run the paragraph's run `line-height` (exact line spacing only,
+ * see `FIXED_SPACING_RUN_LINE_HEIGHT`). The bindings spread `run.style` onto
+ * the run's span, so this reaches all of them. An inline equation keeps its
+ * own line box.
+ */
+function withRunLineHeight(runs: ParagraphRun[], lineHeight: number | undefined): ParagraphRun[] {
+	if (lineHeight === undefined) {
+		return runs;
+	}
+	return runs.map((run) => (run.equation ? run : { ...run, style: { ...run.style, lineHeight } }));
+}
+
+/**
  * Group `element`'s text segments into rendered paragraphs. Paragraph
  * separators are `isParagraphBreak` segments (post-edit remap) or bare `"\n"`
  * text segments (the slide-load path); soft line breaks insert a newline within
@@ -241,7 +254,10 @@ export function buildParagraphs(
 			}
 
 			const para: RenderParagraph = {
-				runs: trimParagraphTrailingSpaces(runs, cssAlign, rtl === true),
+				runs: withRunLineHeight(
+					trimParagraphTrailingSpaces(runs, cssAlign, rtl === true),
+					spacing.runLineHeight,
+				),
 				bulletMarker: bullet?.picture?.src ? undefined : bullet?.marker,
 				bulletPicture: bullet?.picture,
 				bulletStyle,

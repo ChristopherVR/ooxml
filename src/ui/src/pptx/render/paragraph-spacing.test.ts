@@ -27,6 +27,21 @@ describe('resolveParagraphSpacing', () => {
 		expect(out.lineHeight).toBe('24px');
 	});
 
+	// Issue #35: PowerPoint keeps an exact pitch whatever run sizes a line
+	// holds, so the runs must not grow the line box around their own metrics.
+	it('gives the runs of an exactly spaced paragraph a zero line-height', () => {
+		const exact = resolveParagraphSpacing({
+			...base,
+			paraProps: { lineSpacingExactPt: 11 } as TextStyle,
+		});
+		expect(exact.runLineHeight).toBe(0);
+		const proportional = resolveParagraphSpacing({
+			...base,
+			paraProps: { lineSpacing: 1 } as TextStyle,
+		});
+		expect(proportional.runLineHeight).toBeUndefined();
+	});
+
 	// A paragraph's own spcBef NEVER becomes its own margin-top (spaceBeforePx
 	// is always undefined): both its own spcBef and spcAft fold into
 	// spaceAfterPx, the paragraph's trailing margin only. See

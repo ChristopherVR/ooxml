@@ -194,6 +194,11 @@ describe('cellStyleToCss', () => {
 });
 
 describe('cellRunStyle', () => {
+	it("carries the run's line-height, which exact paragraph spacing sets to zero", () => {
+		expect(cellRunStyle({ text: '•', fontSize: 9, lineHeight: 0 }).lineHeight).toBe(0);
+		expect(cellRunStyle({ text: '•', fontSize: 9 })).not.toHaveProperty('lineHeight');
+	});
+
 	it('keeps Korean words together (word-break: keep-all) only for a Korean run', () => {
 		expect(cellRunStyle({ text: '회의 일정', language: 'ko-KR' }).wordBreak).toBe('keep-all');
 		expect(cellRunStyle({ text: '温室効果ガス', language: 'ja-JP' }).wordBreak).toBeUndefined();

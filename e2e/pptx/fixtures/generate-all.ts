@@ -24,6 +24,7 @@ import { generateDegenerateShapeFixture } from './generate-degenerate-shape-fixt
 import { generateFixture as generateEffectSoundGalleryFixture } from './generate-effect-sound-gallery-fixture';
 import { generateFixture as generateFidelityShowcaseFixture } from './generate-fidelity-showcase-fixture';
 import { generateFieldSubstitutionFixture } from './generate-field-substitution-fixture';
+import { generateFixedLineSpacingFixture } from './generate-fixed-line-spacing-fixture';
 import { generateFixture } from './generate-format-painter-fixture';
 import { generateLineFillFidelityFixture } from './generate-line-fill-fidelity-fixture';
 import { generateLinkedTextBoxFixture } from './generate-linked-textbox-fixture';
@@ -85,6 +86,7 @@ const GENERATORS: ReadonlyArray<readonly [string, () => Promise<unknown>]> = [
 	['generateLineFillFidelityFixture', generateLineFillFidelityFixture],
 	['generateParityWave4Fixture', generateParityWave4Fixture],
 	['generateCjkLineBreakingFixture', generateCjkLineBreakingFixture],
+	['generateFixedLineSpacingFixture', generateFixedLineSpacingFixture],
 	['generateUnderlineWordsFixture', generateUnderlineWordsFixture],
 	['generateUnderlineWordsRubyTabFixture', generateUnderlineWordsRubyTabFixture],
 	['generatePresetTextInsetsFixture', generatePresetTextInsetsFixture],

@@ -30,7 +30,29 @@ export interface ParagraphSpacing {
 	 * own `a:spcBef` combined - see {@link resolveParagraphSpacing}.
 	 */
 	spaceAfterPx?: number;
+	/**
+	 * `line-height` for every run of the paragraph, set only with exact line
+	 * spacing (`a:spcPts`): `0`, so a run larger than the paragraph's strut
+	 * cannot grow the line box. See {@link FIXED_SPACING_RUN_LINE_HEIGHT}.
+	 */
+	runLineHeight?: number;
 }
+
+/**
+ * The `line-height` a run gets inside a paragraph with exact line spacing.
+ *
+ * PowerPoint keeps an exact pitch whatever sizes the runs on a line have; a
+ * larger run may overflow its line but never moves the next one. CSS does not:
+ * a run inherits the paragraph's absolute `line-height` and places it around
+ * its OWN font metrics, so a 9pt run among 7pt text sits higher and the line
+ * box grows to hold both (issue #35: 11pt spacing measured 11.75pt in
+ * Chromium). With a `line-height` of `0` a run's inline box shrinks to a point
+ * inside the paragraph's strut, which alone sizes the line. A run whose glyph
+ * midline rises above the strut's top (roughly one more than the line pitch
+ * plus the strut size, in points) can still push the line down, but by far
+ * less than before.
+ */
+export const FIXED_SPACING_RUN_LINE_HEIGHT = 0;
 
 /** Input for {@link resolveParagraphSpacing}. */
 export interface ParagraphSpacingInput {
@@ -169,6 +191,7 @@ export function resolveParagraphSpacing(input: ParagraphSpacingInput): Paragraph
 	const multiplier = lineSource?.lineSpacing;
 	if (typeof exactPt === 'number' && exactPt > 0) {
 		out.lineHeight = `${exactPt * PT_TO_PX}px`;
+		out.runLineHeight = FIXED_SPACING_RUN_LINE_HEIGHT;
 	} else if (typeof multiplier === 'number' && multiplier > 0) {
 		// `a:spcPct` stacks on PowerPoint's 1.2 single-spacing pitch; see
 		// `proportionalLineHeight` for the COM measurement behind it.

@@ -21,6 +21,12 @@ export interface CellParagraphBlock {
 	runs: CellTextRun[];
 }
 
+/** A paragraph's layout CSS, and the `line-height` its runs take, if any. */
+interface ParagraphLayout {
+	css: TableCellCss;
+	runLineHeight?: number;
+}
+
 /** An empty paragraph still takes a line, as it does in PowerPoint. */
 const BLANK_LINE: CellTextRun = { text: '', isLineBreak: true };
 
@@ -67,7 +73,7 @@ function paragraphLayoutCss(
 	followsCell: boolean,
 	isFirst: boolean,
 	isLast: boolean,
-): TableCellCss {
+): ParagraphLayout {
 	const css: TableCellCss = {};
 	const rtl = paragraph?.rtl === true;
 	if (!followsCell) {
@@ -108,7 +114,9 @@ function paragraphLayoutCss(
 	if (spacing.spaceAfterPx !== undefined) {
 		css.marginBlockEnd = `${spacing.spaceAfterPx}px`;
 	}
-	return css;
+	return spacing.runLineHeight === undefined
+		? { css }
+		: { css, runLineHeight: spacing.runLineHeight };
 }
 
 /** A paragraph's alignment, with PowerPoint's default. */
@@ -144,17 +152,17 @@ function followsCellAlign(
 function needsBlocks(
 	paragraphs: readonly (PptxTableCellParagraph | undefined)[],
 	follows: readonly boolean[],
-	layouts: readonly TableCellCss[],
+	layouts: readonly ParagraphLayout[],
 ): boolean {
 	return follows.some(
 		(followsCell, index) =>
 			!followsCell ||
 			paragraphs[index]?.rtl === true ||
-			layouts[index].marginInlineStart !== undefined ||
-			layouts[index].textIndent !== undefined ||
-			layouts[index].marginBlockEnd !== undefined ||
-			(layouts[index].lineHeight !== undefined &&
-				layouts[index].lineHeight !== DEFAULT_LINE_HEIGHT),
+			layouts[index].css.marginInlineStart !== undefined ||
+			layouts[index].css.textIndent !== undefined ||
+			layouts[index].css.marginBlockEnd !== undefined ||
+			(layouts[index].css.lineHeight !== undefined &&
+				layouts[index].css.lineHeight !== DEFAULT_LINE_HEIGHT),
 	);
 }
 
@@ -187,7 +195,7 @@ export function cellParagraphBlocks(cell: PptxTableCell): CellParagraphBlock[] |
 		return undefined;
 	}
 	return groups.map((group, index) => {
-		const css = layouts[index];
+		const { css, runLineHeight } = layouts[index];
 		const hasContent = group.some((run) => run.text !== '' || run.isLineBreak);
 		if (!hasContent) {
 			const endPt = paragraphs[index]?.endParaFontSize;
@@ -200,6 +208,11 @@ export function cellParagraphBlocks(cell: PptxTableCell): CellParagraphBlock[] |
 		if (strutPt !== undefined) {
 			css.fontSize = `${strutPt}pt`;
 		}
-		return { css, runs: group };
+		// Exact line spacing: the runs must not grow the line, as in shape text.
+		const runs =
+			runLineHeight === undefined
+				? group
+				: group.map((run) => ({ ...run, lineHeight: runLineHeight }));
+		return { css, runs };
 	});
 }

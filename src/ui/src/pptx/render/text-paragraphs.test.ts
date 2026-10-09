@@ -244,6 +244,22 @@ describe('buildParagraphs', () => {
 		// Exact points win over a proportional multiplier, in px (18pt at 96dpi).
 		expect(paras[1].lineHeight).toBe('24px');
 		expect(paras[1].spaceBeforePx).toBeUndefined();
+		// Proportional spacing leaves the runs on the paragraph's line-height.
+		expect(paras[0].runs[0].style).not.toHaveProperty('lineHeight');
+	});
+
+	// Issue #35: a 9pt run among 7pt text grew a line with fixed 11pt spacing
+	// in the browser; PowerPoint keeps the pitch. Every run of an exactly
+	// spaced paragraph gets a zero line-height so only the strut sizes a line.
+	it('keeps the runs of an exactly spaced paragraph from growing its lines', () => {
+		const paras = buildParagraphs(
+			textEl([
+				{ text: '•', style: { fontSize: 9 }, paragraphProperties: { lineSpacingExactPt: 11 } },
+				{ text: 'Text', style: { fontSize: 7 } },
+			]),
+		);
+		expect(paras[0].lineHeight).toBe(`${(11 * 96) / 72}px`);
+		expect(paras[0].runs.map((run) => run.style.lineHeight)).toStrictEqual([0, 0]);
 	});
 
 	it('folds the first paragraph own before-spacing into spaceAfterPx when spcFirstLastPara is explicitly true', () => {

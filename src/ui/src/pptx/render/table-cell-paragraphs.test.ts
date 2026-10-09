@@ -79,7 +79,8 @@ describe('cellParagraphBlocks', () => {
 					lineHeight: '12px',
 					fontSize: '8pt',
 				},
-				runs: [{ text: 'one', fontSize: 8 }],
+				// Exact spacing: the runs must not grow the line (issue #35).
+				runs: [{ text: 'one', fontSize: 8, lineHeight: 0 }],
 			},
 			{
 				// Single spacing is 1.2 lines, and 90% of that is 1.08.
@@ -234,7 +235,7 @@ describe('cellParagraphBlocks', () => {
 	it("keeps an edited cell's first paragraph layout over its plain text", () => {
 		const cell: PptxTableCell = { text: 'edited', paragraphs: [{ lineSpacingExactPt: 9 }] };
 		expect(cellParagraphBlocks(cell)).toStrictEqual([
-			{ css: { lineHeight: '12px' }, runs: [{ text: 'edited' }] },
+			{ css: { lineHeight: '12px' }, runs: [{ text: 'edited', lineHeight: 0 }] },
 		]);
 	});
 });

@@ -94,6 +94,12 @@ export interface CellTextRun {
 	baseline?: number;
 	/** Character spacing from `a:rPr/@spc`, in hundredths of a point. */
 	characterSpacing?: number;
+	/**
+	 * CSS `line-height` for the run's span. Set by `cellParagraphBlocks` on the
+	 * runs of a paragraph with exact line spacing, as shape text does (see
+	 * `FIXED_SPACING_RUN_LINE_HEIGHT`).
+	 */
+	lineHeight?: number;
 }
 
 /**
@@ -104,6 +110,9 @@ export function cellRunStyle(run: CellTextRun): TableCellCss {
 	const css: TableCellCss = {};
 	if (run.fontFamily) {
 		css.fontFamily = run.fontFamily;
+	}
+	if (run.lineHeight !== undefined) {
+		css.lineHeight = run.lineHeight;
 	}
 	// Super/subscript as shape text draws it (`text-run-style.ts`).
 	const shift = run.baseline ? (run.baseline > 0 ? 'super' : 'sub') : undefined;
