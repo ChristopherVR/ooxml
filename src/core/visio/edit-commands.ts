@@ -1,4 +1,5 @@
 import { fail } from './package-common';
+import { isVisioBasicShape, type VisioBasicShape } from './basic-shapes';
 import { snapshotTextRanges, type VisioTextRangesEdit } from './edit-text-range-commands';
 export type { VisioTextRange, VisioTextRangesEdit } from './edit-text-range-commands';
 import { snapshotResizeAnchor, type VisioResizeAnchor } from './resize-anchor';
@@ -39,7 +40,7 @@ type BoxCreation = Target & { x: number; y: number; width: number; height: numbe
 /** Drawing inches; bottom-left origin, up-positive rotation pin. Rotation angles use radians. */
 export type VisioGeometryEdit =
 	| (Target & { type: 'create-line'; beginX: number; beginY: number; endX: number; endY: number })
-	| (BoxCreation & { type: 'create-rectangle' })
+	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioBasicShape })
 	| (BoxCreation & { type: 'create-ellipse' })
 	| (BoxCreation & { type: 'create-text-box'; text: string })
 	| (Target & { type: 'move-shape'; x: number; y: number })
@@ -240,7 +241,10 @@ export function snapshotVisioEdits(
 				return { ...target, type: edit.type, beginX, beginY, endX, endY };
 			}
 			case 'create-rectangle':
-			case 'create-ellipse':
+			case 'create-ellipse': {
+				const shape = edit.type === 'create-rectangle' ? edit.shape : undefined;
+				if (shape !== undefined && !isVisioBasicShape(shape))
+					fail('INVALID_EDIT', 'Unknown basic shape.');
 				return {
 					...target,
 					type: edit.type,
@@ -249,7 +253,9 @@ export function snapshotVisioEdits(
 					width: numeric(edit.width, true),
 					height: numeric(edit.height, true),
 					...(edit.text === undefined ? {} : { text: text(edit.text) }),
+					...(shape === undefined ? {} : { shape }),
 				};
+			}
 			case 'rotate-shape':
 				return { ...target, type: edit.type, angle: numeric(edit.angle) };
 			case 'flip-shape':

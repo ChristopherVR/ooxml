@@ -82,6 +82,14 @@ export {
 } from './clipboard';
 export { createVsdx, type CreateVsdxOptions } from './create-document';
 export {
+	VISIO_BASIC_SHAPES,
+	isVisioBasicShape,
+	visioBasicShapeOutline,
+	type VisioBasicShape,
+	type VisioBasicOutline,
+	type VisioOutlinePoint,
+} from './basic-shapes';
+export {
 	parseVisioFormula,
 	analyzeVisioFormula,
 	evaluateVisioFormula,

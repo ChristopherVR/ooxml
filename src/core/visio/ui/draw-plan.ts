@@ -1,5 +1,6 @@
 import type { VisioGeometryEdit } from '../edit-commands';
 import type { VisioPage } from '../model';
+import type { VisioBasicShape } from '../basic-shapes';
 import { visioNextShapeId } from './shape-id';
 import { visioPageEditToDrawing } from './page-edit';
 
@@ -64,6 +65,8 @@ export function visioBoxCreationCommand(
 	centre: VisioDrawingPoint,
 	size: { width: number; height: number },
 	text?: string,
+	/** A Basic Shapes outline for a rectangle-kind box (see `VISIO_BASIC_SHAPES`). */
+	shape?: VisioBasicShape,
 ): VisioGeometryEdit {
 	if (
 		!['rectangle', 'ellipse', 'text'].includes(kind) ||
@@ -87,6 +90,7 @@ export function visioBoxCreationCommand(
 					...box,
 					type: kind === 'ellipse' ? 'create-ellipse' : 'create-rectangle',
 					...(text === undefined ? {} : { text }),
+					...(kind === 'rectangle' && shape !== undefined ? { shape } : {}),
 				};
 	return drawingCommand(page, command);
 }

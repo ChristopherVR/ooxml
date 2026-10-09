@@ -147,6 +147,9 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					width: command.width,
 					height: command.height,
 					...(command.text === undefined ? {} : { text: text(command.text) }),
+					...(command.type !== 'create-rectangle' || command.shape === undefined
+						? {}
+						: { shape: command.shape }),
 				};
 			default:
 				throw new Error('Invalid edit command type.');

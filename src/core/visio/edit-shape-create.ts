@@ -5,6 +5,7 @@ import type { VisioGeometryEdit } from './edit-commands';
 import { appendEllipseGeometry } from './edit-ellipse-geometry';
 import { assertShapeLocks } from './edit-style-admission';
 import { encodeVisioPlainText } from './plain-text';
+import { visioBasicShapeOutline } from './basic-shapes';
 
 function createShape(root: Element, shapeId: string): Element {
 	const doc = root.ownerDocument!;
@@ -77,24 +78,25 @@ export function createRectangle(
 	}
 	const doc = root.ownerDocument!;
 	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
-	const section = node('Section');
-	section.setAttribute('N', 'Geometry');
-	section.setAttribute('IX', '0');
-	for (const [index, [x, y]] of [
-		[0, 0],
-		[1, 0],
-		[1, 1],
-		[0, 1],
-		[0, 0],
-	].entries()) {
-		const row = node('Row');
-		row.setAttribute('IX', String(index + 1));
-		row.setAttribute('T', index ? 'RelLineTo' : 'RelMoveTo');
-		setCell(row, 'X', x!);
-		setCell(row, 'Y', y!);
-		section.appendChild(row);
+	const outline = visioBasicShapeOutline(
+		edit.type === 'create-rectangle' ? (edit.shape ?? 'rectangle') : 'rectangle',
+	);
+	if (outline.rounding)
+		setCell(shape, 'Rounding', outline.rounding * Math.min(edit.width, edit.height));
+	for (const [sectionIndex, points] of outline.paths.entries()) {
+		const section = node('Section');
+		section.setAttribute('N', 'Geometry');
+		section.setAttribute('IX', String(sectionIndex));
+		for (const [index, [x, y]] of [...points, points[0]!].entries()) {
+			const row = node('Row');
+			row.setAttribute('IX', String(index + 1));
+			row.setAttribute('T', index ? 'RelLineTo' : 'RelMoveTo');
+			setCell(row, 'X', x);
+			setCell(row, 'Y', y);
+			section.appendChild(row);
+		}
+		shape.appendChild(section);
 	}
-	shape.appendChild(section);
 	const text = node('Text');
 	text.appendChild(doc.createTextNode(encodeVisioPlainText(edit.text ?? '')));
 	shape.appendChild(text);
