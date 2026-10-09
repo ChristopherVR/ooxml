@@ -6,6 +6,7 @@ import type {
 	VisioInsertItem,
 	VisioDataCommand,
 	VisioLayoutAction,
+	VisioTextFeature,
 } from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
@@ -28,6 +29,7 @@ export interface RibbonTargets {
 	insertPage(): void;
 	insert(item: VisioInsertItem): void;
 	data(command: VisioDataCommand): void;
+	textFeature(feature: VisioTextFeature): void;
 	showPaintProperties(): void;
 	showFormatShape(): void;
 	pageTheme(action: Extract<VisioRibbonAction, { type: 'page-theme' }>): void;
@@ -113,6 +115,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.insert(action.item);
 		case 'data':
 			return targets.data(action.command);
+		case 'text-feature':
+			return targets.textFeature(action.feature);
 		case 'paint-properties':
 			return targets.showPaintProperties();
 		case 'format-shape-pane':

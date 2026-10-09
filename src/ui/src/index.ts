@@ -53,6 +53,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-ribbon-section',
 	'office-ui-gallery',
 	'office-ui-comments-pane',
+	'office-ui-symbol-picker',
 	'office-ui-presence',
 	'office-ui-smartart',
 	...TEAMS_TAGS,

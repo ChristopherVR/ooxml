@@ -3122,6 +3122,65 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "form/symbol-picker.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSymbolPicker",
+					"tagName": "office-ui-symbol-picker",
+					"customElement": true,
+					"description": "`<office-ui-symbol-picker>`: a grid of common symbols plus a character-code field, as in Office's Insert > Symbol. `symbols` replaces the grid (default `OFFICE_SYMBOLS`), `label` names the group, `disabled` disables everything. Choosing a symbol or inserting a valid code emits `office-symbol-pick` with `{ symbol, code }` (`code` is `U+XXXX`). Document text is never touched.",
+					"attributes": [
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "code"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "symbols"
+						}
+					],
+					"events": [
+						{
+							"name": "office-symbol-pick"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-symbol-picker",
+					"declaration": {
+						"name": "OfficeUiSymbolPicker"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "chrome/tab-strip.ts",
 			"declarations": [
 				{

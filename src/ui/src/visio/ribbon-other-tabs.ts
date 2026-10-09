@@ -128,23 +128,20 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 						size: 'small',
 						action: { type: 'insert', item: 'screen-tip' },
 					}),
-					command(
-						doc,
-						unsupported(
-							'field',
-							'Field',
-							'textBox',
-							'Text fields need a Field section and <fld> text runs with evaluated formulas, which the text editor does not support.',
-							'small',
-						),
-					),
+					command(doc, {
+						id: 'field',
+						label: 'Field',
+						icon: 'textBox',
+						size: 'small',
+						action: { type: 'text-feature', feature: 'field' },
+					}),
 					command(doc, unsupported('object', 'Object', 'visioPicture', OBJECTS, 'small')),
 				]),
-				dropdown(doc, {
+				command(doc, {
 					id: 'symbol',
 					label: 'Symbol',
 					icon: 'visioSymbol',
-					reason: 'Needs core text edits.',
+					action: { type: 'text-feature', feature: 'symbol' },
 				}),
 			]),
 		]),

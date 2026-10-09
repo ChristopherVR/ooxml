@@ -2,7 +2,6 @@ import { VISIO_DIAGRAM_RULE_SETS } from 'ooxml-core/visio/ui';
 import type { VisioReviewCommand } from './ribbon-action';
 import { check, command, commandRow, group, menu, stack } from './ribbon-parts';
 
-const PROOFING = 'Spelling, thesaurus and proofing languages are not bundled in this viewer.';
 const review = (command: VisioReviewCommand) => ({ type: 'review' as const, command });
 
 /** Visio's Process tab: Subprocess and Diagram Validation (this viewer's generic rules). */
@@ -84,22 +83,22 @@ export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
 					id: 'spelling',
 					label: 'Spelling',
 					icon: 'check',
-					unsupported: PROOFING,
+					action: { type: 'text-feature', feature: 'spelling' },
+					keys: ['F7', 'F7'],
 				}),
 				command(doc, {
 					id: 'thesaurus',
 					label: 'Thesaurus',
 					icon: 'search',
-					unsupported: PROOFING,
+					unsupported: 'No thesaurus dictionary is bundled with this editor.',
 				}),
 			]),
 			group(doc, 'Language', [
-				menu(doc, {
+				command(doc, {
 					id: 'language',
 					label: 'Language',
 					icon: 'message',
-					unsupported: PROOFING,
-					items: [{ id: 'language-more', label: 'Language options', unsupported: PROOFING }],
+					action: { type: 'text-feature', feature: 'language' },
 				}),
 			]),
 			group(doc, 'Comments', [

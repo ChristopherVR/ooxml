@@ -36,6 +36,7 @@ import { ViewerReview } from './viewer-review';
 import { ViewerDiagramParts } from './viewer-diagram-parts';
 import { ViewerData } from './viewer-data';
 import { ViewerLayoutCommands } from './viewer-layout-commands';
+import { ViewerTextFeatures } from './viewer-text-features';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -98,6 +99,7 @@ export class ViewerCommands {
 	#parts: ViewerDiagramParts;
 	#data: ViewerData;
 	readonly layoutCommands: ViewerLayoutCommands;
+	#textFeatures: ViewerTextFeatures;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -156,6 +158,14 @@ export class ViewerCommands {
 			},
 			pasteShapes: () => this.#clipboard.run('paste'),
 		});
+		this.#textFeatures = new ViewerTextFeatures(
+			host.root,
+			host.viewport,
+			host.controller,
+			host.announce,
+			(run, message) => void this.#edit(run, message),
+			(panel, focus) => host.reveal(panel, focus),
+		);
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
@@ -225,6 +235,7 @@ export class ViewerCommands {
 			insertPage: () => this.#insertPage(),
 			insert: (item) => this.#insert.open(item),
 			data: (command) => this.#data.handle(command),
+			textFeature: (feature) => this.#textFeatures.run(feature),
 			showPaintProperties: () => this.#paint.show(),
 			showFormatShape: () => this.#formatShape.show(),
 			pageTheme: (action) => this.#themes.run(action),
@@ -295,9 +306,17 @@ export class ViewerCommands {
 					this.run({ type: 'layout-options' });
 				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'zoom-fit')
 					this.run({ type: 'zoom', mode: 'fit' });
+				const launcher = (event as CustomEvent<{ command?: unknown }>).detail?.command;
+				if (launcher === 'font-dialog' || launcher === 'paragraph-dialog')
+					this.run({
+						type: 'text-feature',
+						feature: launcher === 'font-dialog' ? 'text-dialog' : 'paragraph-dialog',
+					});
 			},
 			options,
 		);
+		// First, so its handles take the pointer before shape and marquee gestures.
+		const disposeTextFeatures = this.#textFeatures.wire();
 		root.addEventListener('keydown', (event) => this.#shortcut(event as KeyboardEvent), options);
 		viewport.addEventListener(
 			'wheel',
@@ -364,6 +383,7 @@ export class ViewerCommands {
 			disposeData();
 			disposeLayout();
 			this.layoutCommands.close();
+			disposeTextFeatures();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -542,6 +562,9 @@ export class ViewerCommands {
 			return { type: 'history', key: 'redo' };
 		if (control && event.shiftKey && (event.code === 'Digit1' || key === '1' || key === '!'))
 			return { type: 'tool', tool: 'connection-point' };
+		if (control && event.shiftKey && event.code === 'Digit4')
+			return { type: 'text-feature', feature: 'text-block' };
+		if (!control && key === 'F7') return { type: 'text-feature', feature: 'spelling' };
 		if (control && key === '1') return { type: 'tool', tool: 'pointer' };
 		if (control && key === '2') return { type: 'tool', tool: 'text' };
 		if (control && key === '3') return { type: 'tool', tool: 'connector' };
@@ -587,6 +610,7 @@ export class ViewerCommands {
 		this.#formatShape.render(state);
 		this.#review.render(state);
 		this.#data.render(state);
+		this.#textFeatures.render(state, this.#tool === 'pointer');
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

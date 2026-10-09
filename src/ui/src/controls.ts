@@ -40,6 +40,7 @@ import { defineStatusItem } from './chrome/status-item';
 import { defineTabStrip } from './chrome/tab-strip';
 import { defineTitleBar } from './chrome/title-bar';
 import { defineZoomSlider } from './form/zoom-slider';
+import { defineSymbolPicker } from './form/symbol-picker';
 
 export {
 	defineAccount,
@@ -79,7 +80,9 @@ export {
 	defineTitleBar,
 	defineToolbar,
 	defineZoomSlider,
+	defineSymbolPicker,
 };
+export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type { OfficeCommandEvent } from './ribbon/button';
 export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog/dialog';
 export type { OfficeSelectOption } from './form/select';
@@ -231,6 +234,7 @@ export const CONTROL_DEFINERS = [
 	defineRibbonSection,
 	defineGallery,
 	defineCommentsPane,
+	defineSymbolPicker,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

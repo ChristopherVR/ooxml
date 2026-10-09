@@ -1,7 +1,6 @@
 import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { fontColorOptions } from './ribbon-style-options';
 
-const TEXT = 'Needs core text formatting edits.';
 const caseItems: CommandSpec[] = (
 	[
 		['sentence', 'Sentence case.'],
@@ -176,7 +175,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 				),
 			]),
 		],
-		{ launcher: TEXT },
+		{ dialog: 'Font options (Text dialog)' },
 	);
 	const paragraph = group(
 		doc,
@@ -295,7 +294,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 				),
 			]),
 		],
-		{ launcher: TEXT },
+		{ dialog: 'Paragraph options (Text dialog)' },
 	);
 	return [clipboard, font, paragraph];
 }

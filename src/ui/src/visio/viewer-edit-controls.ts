@@ -1,10 +1,15 @@
-import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
+import {
+	editErrorMessage,
+	isEditCancellation,
+	visioTextDraftEdit,
+	visioTextShape,
+} from 'ooxml-core/visio/ui';
 import { geometryControlsTemplate, ViewerGeometryControls } from './viewer-geometry-controls';
 import type { ViewerController, ViewerState } from './controller';
 import { selectedShape } from './shape-inspector';
 
 /** Static markup only. Document text is assigned exclusively through value/textContent. */
-export const editControlsTemplate = `<details class="edit-controls"><summary>Edit diagram (experimental)</summary><p id="edit-warning">Experimental source-backed editing. Unsupported targets are rejected. Native Visio compatibility is not verified. Keep your original file.</p><p data-edit-target></p><label for="edit-text">Selected shape text</label><textarea id="edit-text" rows="3" aria-describedby="edit-warning edit-target edit-status"></textarea><div class="edit-actions"><button type="button" data-edit="apply">Apply text</button><button type="button" data-edit="cancel">Cancel</button><button type="button" data-edit="undo">Undo</button><button type="button" data-edit="redo">Redo</button></div><p id="edit-status" role="status" aria-live="polite"></p><p data-edit-error role="alert" hidden></p><ul data-edit-diagnostics></ul>${geometryControlsTemplate}</details>`;
+export const editControlsTemplate = `<details class="edit-controls"><summary>Edit diagram (experimental)</summary><p id="edit-warning">Experimental source-backed editing. Unsupported targets are rejected. Native Visio compatibility is not verified. Keep your original file.</p><p data-edit-target></p><label for="edit-text">Selected shape text</label><textarea id="edit-text" rows="3" spellcheck="true" aria-describedby="edit-warning edit-target edit-status"></textarea><div class="edit-actions"><button type="button" data-edit="apply">Apply text</button><button type="button" data-edit="cancel">Cancel</button><button type="button" data-edit="undo">Undo</button><button type="button" data-edit="redo">Redo</button></div><p id="edit-status" role="status" aria-live="polite"></p><p data-edit-error role="alert" hidden></p><ul data-edit-diagnostics></ul>${geometryControlsTemplate}</details>`;
 
 export class ViewerEditControls {
 	readonly panel: HTMLDetailsElement;
@@ -106,7 +111,15 @@ export class ViewerEditControls {
 		try {
 			if (action === 'apply') {
 				if (this.#pageId === undefined || this.#shapeId === undefined) return;
-				await this.#controller.replacePlainText(this.#pageId, this.#shapeId, this.input.value);
+				const page = this.#controller.state.document?.pages.find(
+					(item) => item.id === this.#pageId,
+				);
+				// Fields stay atomic: text with fields is saved as a range edit around them.
+				if (page && visioTextShape(page, this.#shapeId)?.text.fields?.length) {
+					const edit = visioTextDraftEdit(page, this.#shapeId, this.input.value);
+					if (edit) await this.#controller.applyEdits([edit]);
+				} else
+					await this.#controller.replacePlainText(this.#pageId, this.#shapeId, this.input.value);
 			} else await this.#controller[action]();
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))
@@ -156,7 +169,7 @@ export class ViewerEditControls {
 			state.selectedShapes.length > 1
 				? 'Select one shape to edit its plain text.'
 				: shape
-					? `Page ID: ${pageId} · Shape ID: ${shape.id} · ${shape.name || 'Unnamed shape'}`
+					? `Page ID: ${pageId} · Shape ID: ${shape.id} · ${shape.name || 'Unnamed shape'}${shape.text?.fields?.length ? ` · ${shape.text.fields.length} text field${shape.text.fields.length > 1 ? 's' : ''} (kept as whole values; edit the text around them)` : ''}`
 					: 'Select a shape to replace its plain text.';
 		this.input.disabled = !available || busy;
 		this.#buttons.apply.disabled = !available || busy || this.input.value === this.#initial;

@@ -229,10 +229,55 @@ shape's Comment cell, shown as the SVG tooltip and in the shape inspector.
 Both refuse master instances (inherited sections), formula-driven cells and
 drawings whose formulas read `Comment` or `Hyperlink` cells. ScreenTips and
 link fields are single-line (at most 4096 characters) because the XML writer
-cannot preserve line breaks in attributes. Field, Object, Chart, CAD Drawing
-and Online Pictures stay disabled with their reasons: text fields need `<fld>`
-runs and formula evaluation, OLE objects, Excel charts and DWG/DXF import are
-not supported, and documents stay local.
+cannot preserve line breaks in attributes. Object, Chart, CAD Drawing and
+Online Pictures stay disabled with their reasons: OLE objects, Excel charts and
+DWG/DXF import are not supported, and documents stay local.
+
+## Text dialog, Text Block, Symbol, Field and proofing, 2026-10-09
+
+Home > Font and Paragraph dialog launchers open a Text dialog (shared
+`office-ui-dialog`) with Font (font, style, size, colour, transparency, case,
+super/subscript, underline, strikethrough, language), Character (letter
+spacing), Paragraph (alignment, indents, spacing before/after, line spacing as
+a multiple or exact points), Text Block (vertical alignment, margins, text
+background colour and transparency) and Bullets (Visio's seven built-in styles
+or a custom character) tabs. Only changed fields are written, as one undoable
+`format-text` edit over every selected shape's whole text. The Tabs tab is
+informational: tab stops are not written because the Tabs section layout is not
+verified against Visio and the renderer does not lay out tab stops. Character
+scale and position offsets, double underline/strikethrough, per-run dialog
+editing and the bullet font are not offered. The renderer now draws letter
+spacing, all/initial/small caps and super/subscript (Visio's default 2/3 size
+and 1/3 offset); text backgrounds were already drawn.
+
+Home > Tools > Text Block (Ctrl+Shift+4) frames the selected shape's text block
+with a movable body, eight resize handles and a rotation handle (whole degrees).
+Release writes TxtPinX/TxtPinY/TxtWidth/TxtHeight as `Width*k`/`Height*k`
+formulas, TxtLocPin as half the block and TxtAngle, so the block follows later
+resizes. It applies to top-level local 2D shapes only (not lines, groups,
+masters or layered shapes). Escape turns the tool off.
+
+Insert > Symbol opens the shared `office-ui-symbol-picker` (common symbols plus
+a character-code field). With the shape text editor holding the caret it inserts
+at the caret as an unapplied draft; otherwise it appends to the selected
+shape's text with a range edit (empty text is replaced). Insert > Field inserts
+a `<fld>` and Field row for Date/Time (current, creation, last saved, last edit,
+print), Document Info (title, author, subject, manager, company, category,
+keywords, description), Page Info (name, number, count), Geometry (Width,
+Height, Angle) or a custom numeric formula over the shape's own cells, with a
+supported format-picture subset. Page, document and date fields are evaluated
+when the drawing is opened; geometry fields follow resize recalculation. Fields
+are atomic in the text editor: edits around them are saved as range edits and
+edits that touch a field are refused with a reason. Native Visio reopening of
+these Field rows (Type, Format pictures, missing UI category cells) is not
+verified.
+
+Review > Spelling (F7) selects the selected or first text shape on the page and
+opens the shape text editor with the browser's native spell checking
+(`spellcheck`); no dictionary is bundled and other shapes are not walked
+automatically. Review > Language marks the selected shapes' text with a
+proofing language (Char.LangID). Thesaurus stays disabled: no thesaurus is
+bundled.
 
 ## Rich-text replacement and fixed page-size core, 2026-10-09
 

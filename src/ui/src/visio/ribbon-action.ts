@@ -35,6 +35,15 @@ export type VisioFormattingAction =
 	| { type: 'glow-preset'; size: number; accent: number }
 	| { type: 'shape-order'; order: 'front' | 'back' | 'forward' | 'backward' }
 	| { type: 'change-case'; mode: TextCaseMode };
+/** Text dialogs and tools: Home launchers and Text Block, Insert Symbol/Field, Review proofing. */
+export type VisioTextFeature =
+	| 'text-dialog'
+	| 'paragraph-dialog'
+	| 'text-block'
+	| 'symbol'
+	| 'field'
+	| 'spelling'
+	| 'language';
 /** Insert-tab items that act on the page or the selected shape. */
 export type VisioInsertItem = 'picture' | 'link' | 'screen-tip';
 /** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */
@@ -91,6 +100,7 @@ export type VisioRibbonAction =
 	| { type: 'page-insert' }
 	| { type: 'insert'; item: VisioInsertItem }
 	| { type: 'data'; command: VisioDataCommand }
+	| { type: 'text-feature'; feature: VisioTextFeature }
 	| { type: 'paint-properties' }
 	| { type: 'format-shape-pane' }
 	| { type: 'page-theme'; theme?: VisioBuiltInThemeId | 'none'; variant?: number }
