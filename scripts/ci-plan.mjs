@@ -3,6 +3,7 @@
 // one-file change does not start six runners.
 //
 //   node scripts/ci-plan.mjs --base <sha> --event <push|pull_request|schedule|workflow_dispatch>
+//     [--scope full|changed]   (manual runs only: plan from --base instead of everything)
 //
 // Prints the plan as JSON and, with GITHUB_OUTPUT set, writes it as the `plan` output. The planner is
 // deliberately conservative: anything it cannot place (a root manifest, a tsconfig, this file, the
@@ -523,13 +524,24 @@ function countTestFiles(base) {
 	return out.split('\n').filter((line) => /\.(test|spec)\.[cm]?[tj]sx?$/.test(line.trim())).length;
 }
 
+/**
+ * The files a run plans for, or undefined for a full run. The nightly run is always full; a manual
+ * run is full unless it asks for `--scope changed` with a base commit (a contributor checking a
+ * fork branch against the upstream commit it started from). A base git cannot diff falls back to a
+ * full run, never to an empty one.
+ */
+export function plannedFiles(event, base, scope, diff = changedSince) {
+	if (event === 'schedule') return undefined;
+	if (event === 'workflow_dispatch' && (scope !== 'changed' || !base)) return undefined;
+	return diff(base);
+}
+
 function main() {
 	const args = process.argv.slice(2);
-	const value = (flag) => args[args.indexOf(flag) + 1];
+	const value = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
 	const event = value('--event') ?? 'push';
 	const base = value('--base');
-	const changed =
-		event === 'schedule' || event === 'workflow_dispatch' ? undefined : changedSince(base);
+	const changed = plannedFiles(event, base, value('--scope'));
 	const full = changed === undefined;
 	let result = plan(changed ?? [], { full });
 	if (!result.full && result.test.run) {

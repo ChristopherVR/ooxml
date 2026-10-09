@@ -63,6 +63,11 @@ The release workflow writes `chore(release): bump versions and update changelogs
 
 - Keep pull requests focused; describe what changed and how you checked it. CI runs typecheck, tests, the release-script tests, build and the package smoke test, and must be green (`ci-success`).
 - Releases are cut automatically from `main` (hourly, plus manual dispatch); do not bump versions in pull requests.
+- Before pushing, `bun run verify` runs locally what CI would run for your commits (the CI planner's
+  lint, format, typecheck, affected-test and viewer checks), without the browser suites unless you
+  add `--browser`. Use the Bun version CI uses (`bun-version` in `.github/actions/setup/action.yml`).
+- On a fork, a manual run of the CI workflow can be scoped to your change: choose scope `changed`
+  and give the upstream commit your branch started from as the base. The default is a full run.
 
 ## Labels, alerts and dependencies
 

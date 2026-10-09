@@ -10,6 +10,7 @@ import {
 	VIEWERS,
 	consumersOfArea,
 	plan,
+	plannedFiles,
 	shardsFor,
 	viewersOfArea,
 } from './ci-plan.mjs';
@@ -326,4 +327,18 @@ test('PowerPoint product UI reaches its own bindings without unrelated viewers',
 	assert.deepEqual(viewers(result), []);
 	assert.ok(result.pptx.tests.includes('angular'));
 	assert.ok(result.pptx.tests.includes('vanilla'));
+});
+
+test('manual runs are full unless they ask for the changes since a base', () => {
+	const diff = (base) => (base === 'abc' ? ['src/core/xlsx/model.ts'] : undefined);
+	assert.equal(plannedFiles('schedule', 'abc', 'changed', diff), undefined);
+	assert.equal(plannedFiles('workflow_dispatch', 'abc', 'full', diff), undefined);
+	assert.equal(plannedFiles('workflow_dispatch', '', 'changed', diff), undefined);
+	assert.equal(plannedFiles('workflow_dispatch', undefined, undefined, diff), undefined);
+	assert.deepEqual(plannedFiles('workflow_dispatch', 'abc', 'changed', diff), [
+		'src/core/xlsx/model.ts',
+	]);
+	// A base git cannot diff (not in a fork's history) falls back to a full run.
+	assert.equal(plannedFiles('workflow_dispatch', 'missing', 'changed', diff), undefined);
+	assert.deepEqual(plannedFiles('push', 'abc', undefined, diff), ['src/core/xlsx/model.ts']);
 });

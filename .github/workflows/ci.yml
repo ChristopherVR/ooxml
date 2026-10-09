@@ -19,6 +19,16 @@ on:
       - 'NOTICE'
   pull_request:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'full: check everything. changed: only what the commits since the base reach.'
+        type: choice
+        options: [full, changed]
+        default: full
+      base:
+        description: 'Base commit for scope "changed", for example the upstream commit a fork branch started from.'
+        required: false
+        default: ''
   schedule:
     - cron: '17 3 * * *' # nightly full run: the safety net for `vitest --changed`
 
@@ -56,9 +66,12 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
       - id: plan
-        run: |
-          base="${{ github.event.pull_request.base.sha || github.event.before }}"
-          node scripts/ci-plan.mjs --event "${{ github.event_name }}" --base "$base"
+        # Inputs reach the script through the environment, never pasted into it.
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.base }}
+          SCOPE: ${{ inputs.scope || 'full' }}
+        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE"
 
   lint:
     needs: plan
