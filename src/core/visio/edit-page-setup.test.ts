@@ -5,7 +5,12 @@ import { parseVsdx } from './parser';
 import { createVsdx } from './create-document';
 import { fixture, cell, shape } from './test-fixtures';
 import { snapshotEdits } from './ui/edit-commands';
-import { visioOrientationEdits, visioPageBreaks } from './ui/page-setup';
+import {
+	visioMatchingPaperSize,
+	visioOrientationEdits,
+	visioPageBreaks,
+	visioPageSizePresetEdits,
+} from './ui/page-setup';
 import type { VisioEdit } from './edit-commands';
 
 const pagesXml = async (bytes: Uint8Array) =>
@@ -129,6 +134,22 @@ describe('page setup cells', () => {
 		expect([after.width, after.height]).toEqual([11, 8.5]);
 		expect(after.pageSetup?.printPageOrientation).toBe(2);
 		expect(visioOrientationEdits(after, 'landscape')).toEqual([]);
+	});
+});
+
+describe('size presets', () => {
+	it('keep the orientation and an Auto Size page stays automatic', async () => {
+		const auto = await editVsdx(await createVsdx(), [
+			{ type: 'set-page-setup', pageId: '0', autoSize: true },
+		]);
+		const page = (await parseVsdx(auto.bytes)).pages[0]!;
+		expect(visioMatchingPaperSize(page)?.id).toBe('letter');
+		const edits = visioPageSizePresetEdits(page, 'a3')!;
+		expect(edits.map((edit) => edit.type)).toEqual(['set-page-size', 'set-page-setup']);
+		const after = (await parseVsdx((await editVsdx(auto.bytes, edits)).bytes)).pages[0]!;
+		expect(after.drawingResizeType).toBe(1);
+		expect(visioMatchingPaperSize(after)?.id).toBe('a3');
+		expect(after.height).toBeGreaterThan(after.width);
 	});
 });
 

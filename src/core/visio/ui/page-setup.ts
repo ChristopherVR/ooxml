@@ -1,6 +1,11 @@
 import type { VisioEdit } from '../edit-commands';
 import type { VisioDocument, VisioPage } from '../model';
-import { VISIO_PAPER_SIZES, visioPaperSize, visioPrintTile } from '../paper-sizes';
+import {
+	VISIO_PAPER_SIZES,
+	visioPaperSize,
+	visioPrintTile,
+	type VisioPaperSize,
+} from '../paper-sizes';
 import {
 	VISIO_MANAGED_BACKGROUND,
 	visioDecorationName,
@@ -11,12 +16,20 @@ import { visioShapePageBox } from './marquee';
 import { visioMoveCommands, visioMovementShape } from './shape-move';
 import {
 	visioPageOrientationCommand,
+	visioPageSizePresetCommand,
 	visioPageSizeState,
 	type VisioPageOrientation,
 } from './page-size';
 
 export { VISIO_PAPER_SIZES, visioPaperSize, visioPrintTile } from '../paper-sizes';
 export type { VisioPaperSize } from '../paper-sizes';
+
+/** `set-page-size` selects a fixed page; a page whose Auto Size was on keeps it on. */
+export function visioKeepAutoSize(page: VisioPage, edits: readonly VisioEdit[]): VisioEdit[] {
+	return page.drawingResizeType === 1 && edits.some((edit) => edit.type === 'set-page-size')
+		? [...edits, { type: 'set-page-setup', pageId: page.id, autoSize: true }]
+		: [...edits];
+}
 
 /** Orientation swaps the page and sets the printer paper orientation, as Visio does. */
 export function visioOrientationEdits(
@@ -26,9 +39,28 @@ export function visioOrientationEdits(
 	const size = visioPageOrientationCommand(page, orientation);
 	if (!size) return undefined;
 	const wanted = orientation === 'portrait' ? 1 : 2;
-	return page.pageSetup?.printPageOrientation === wanted
-		? size
-		: [...size, { type: 'set-page-setup', pageId: page.id, printOrientation: orientation }];
+	return visioKeepAutoSize(
+		page,
+		page.pageSetup?.printPageOrientation === wanted
+			? size
+			: [...size, { type: 'set-page-setup', pageId: page.id, printOrientation: orientation }],
+	);
+}
+
+/** Design > Size: a standard size in the page's current orientation. */
+export function visioPageSizePresetEdits(page: VisioPage, id: string): VisioEdit[] | undefined {
+	const size = visioPageSizePresetCommand(page, id);
+	return size && visioKeepAutoSize(page, size);
+}
+
+/** The standard size the page matches in either orientation, if any. */
+export function visioMatchingPaperSize(page: VisioPage): VisioPaperSize | undefined {
+	const near = (a: number, b: number) => Math.abs(a - b) < 0.005;
+	return VISIO_PAPER_SIZES.find(
+		(size) =>
+			(near(size.width, page.width) && near(size.height, page.height)) ||
+			(near(size.height, page.width) && near(size.width, page.height)),
+	);
 }
 
 /**
