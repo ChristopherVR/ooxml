@@ -46,3 +46,32 @@
 	z-index: 1;
 	pointer-events: none;
 }
+/* View > Visual Aids > Connection Points: blue x markers (presentation only, never exported). */
+.paper [data-connection-points] path {
+	fill: none;
+	stroke: #1f6fd1;
+	stroke-width: 1.25px;
+	pointer-events: none;
+}
+.paper [data-connection-points] path[data-inherited='true'] {
+	stroke-opacity: 0.55;
+}
+.paper [data-connection-points] path[data-selected='true'] {
+	stroke: var(--_vv-accent);
+	stroke-width: 2.5px;
+}
+/* A connector end over a connection point glues to that point. */
+.paper .connect-point-target {
+	fill: none;
+	stroke: #2e9d43;
+	stroke-width: 2px;
+	pointer-events: none;
+}
+/* Connectors glued to dragged shapes, re-routed live until the move is committed. */
+.paper .connector-preview {
+	fill: none;
+	stroke: var(--_vv-accent);
+	stroke-width: 1.5px;
+	stroke-dasharray: 4 3;
+	pointer-events: none;
+}

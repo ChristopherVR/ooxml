@@ -3,6 +3,7 @@ import type {
 	VisioCalloutStyle,
 	VisioChangeShapeTarget,
 	VisioContainerStyle,
+	VisioConnectorRoute,
 	VisioShapeFormatEdit,
 } from 'ooxml-core/visio';
 import type { TextCaseMode, VisioArrangement, VisioRuleSetId } from 'ooxml-core/visio/ui';
@@ -11,6 +12,7 @@ import type { VisioPageSetupCommand } from './page-setup-action';
 export type CanvasTool =
 	| 'pointer'
 	| 'connector'
+	| 'connection-point'
 	| 'rectangle'
 	| 'ellipse'
 	| 'line'
@@ -91,6 +93,9 @@ export type VisioRibbonAction =
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }
+	| { type: 'connection-points' }
+	/** Design > Connectors restyles the selection; Insert > Connector arms the tool. */
+	| { type: 'connector-route'; route: VisioConnectorRoute; scope: 'selection' | 'tool' }
 	| { type: 'panZoom' }
 	| { type: 'sizePosition' }
 	| { type: 'ruler' }

@@ -209,6 +209,47 @@ describe('Visio ribbon commands', () => {
 		expect(readOnly.commands.tool).toBe('pointer');
 		expect(readOnly.command('connector').disabled).toBe(true);
 	});
+	it('arms the Connection Point tool, toggles point markers and restyles connectors', async () => {
+		const model = structuredClone(demoDocument);
+		const page = model.pages[0]!;
+		Object.assign(page.shapes[0]!, { id: '9', kind: 'connector', connectorRoute: 'straight' });
+		const ui = await setup(true, false, model);
+		expect(ui.command('connection-point').disabled).toBe(false);
+		expect(ui.command('connection-point').hasAttribute('data-unsupported')).toBe(false);
+		ui.press('connection-point');
+		expect(ui.commands.tool).toBe('connection-point');
+		expect(ui.viewport.dataset.tool).toBe('connection-point');
+		ui.key({ key: '1', ctrlKey: true });
+		ui.key({ key: '!', code: 'Digit1', ctrlKey: true, shiftKey: true });
+		expect(ui.commands.tool).toBe('connection-point');
+		expect(ui.check('connection-points').checked).toBe(true);
+		expect(ui.check('connection-points').hasAttribute('disabled')).toBe(false);
+		ui.commands.run({ type: 'connection-points' });
+		expect(ui.check('connection-points').checked).toBe(false);
+		// Design > Connectors restyles the selected connector; the menu shows its route.
+		ui.controller.selectShape({ id: page.shapes[0]!.id, name: 'c', pageId: page.id });
+		expect(ui.command('connectors-straight').getAttribute('checked')).toBe('true');
+		ui.commands.run({ type: 'connector-route', route: 'curved', scope: 'selection' });
+		await ui.settle();
+		expect(ui.edits.at(-1)).toEqual([
+			{
+				type: 'set-connector-route',
+				pageId: page.id,
+				shapeId: page.shapes[0]!.id,
+				route: 'curved',
+			},
+		]);
+		// Insert > Connector sets the route of new connectors and arms the Connector tool.
+		ui.commands.run({ type: 'connector-route', route: 'straight', scope: 'tool' });
+		expect(ui.commands.tool).toBe('connector');
+		expect(ui.command('insert-connector-straight').getAttribute('checked')).toBe('true');
+		expect(ui.command('insert-connector-right-angle').getAttribute('checked')).toBe('false');
+		const readOnly = await setup(false);
+		expect(readOnly.command('connection-point').disabled).toBe(true);
+		expect(readOnly.command('connectors-curved').disabled).toBe(true);
+		ui.dispose();
+		readOnly.dispose();
+	});
 	it('turns shared button activation into typed ribbon actions', async () => {
 		const { root, press } = await setup();
 		const actions: unknown[] = [];

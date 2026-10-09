@@ -6,7 +6,6 @@ import { diagramPartGallery } from './ribbon-diagram-parts';
 import type { VisioDataCommand } from './ribbon-action';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
-const PARTS = 'Needs core container, callout and connector edits.';
 const DESIGN = 'Needs core page setup and theme edits.';
 
 const unsupported = (
@@ -21,6 +20,40 @@ const dropdown = (doc: Document, spec: CommandSpec & { reason: string }) =>
 		...spec,
 		unsupported: spec.reason,
 		items: [{ id: `${spec.id}-more`, label: `${spec.label} options`, unsupported: spec.reason }],
+	});
+
+/**
+ * Connector styles. Design > Connectors restyles the selected connectors (and sets the style of
+ * new ones); Insert > Connector picks the style and arms the Connector tool.
+ */
+const connectorMenu = (doc: Document, id: string, label: string, scope: 'selection' | 'tool') =>
+	menu(doc, {
+		id,
+		label,
+		icon: 'connector',
+		items: [
+			...(
+				[
+					['right-angle', 'Right-Angle'],
+					['straight', 'Straight'],
+					['curved', 'Curved'],
+				] as const
+			).map(([route, name]) => ({
+				id: `${id}-${route}`,
+				label: scope === 'tool' ? `${name} Connector` : name,
+				action: { type: 'connector-route' as const, route, scope },
+				checked: route === 'right-angle',
+			})),
+			...(scope === 'selection'
+				? [
+						{
+							id: 'line-jumps',
+							label: 'Show Line Jumps',
+							unsupported: 'Line jumps are not drawn where connectors cross.',
+						},
+					]
+				: []),
+		],
 	});
 
 /** Visio's Insert tab: Pages, Illustrations, Diagram Parts, Links and Text. */
@@ -68,12 +101,7 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 			group(doc, 'Diagram Parts', [
 				diagramPartGallery(doc, 'container'),
 				diagramPartGallery(doc, 'callout'),
-				dropdown(doc, {
-					id: 'insert-connector',
-					label: 'Connector',
-					icon: 'connector',
-					reason: PARTS,
-				}),
+				connectorMenu(doc, 'insert-connector', 'Connector', 'tool'),
 			]),
 			group(doc, 'Links', [
 				command(doc, {
@@ -140,12 +168,7 @@ export function buildDesignPanel(doc: Document, panel: HTMLElement): void {
 						icon: 'position',
 						reason: 'Needs core automatic layout.',
 					}),
-					dropdown(doc, {
-						id: 'connectors',
-						label: 'Connectors',
-						icon: 'connector',
-						reason: PARTS,
-					}),
+					connectorMenu(doc, 'connectors', 'Connectors', 'selection'),
 				],
 				{ launcher: 'Needs core automatic layout.' },
 			),

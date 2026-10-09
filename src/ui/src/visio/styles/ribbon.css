@@ -204,7 +204,9 @@ office-ui-status-item[data-page-status] {
 .viewport[data-tool='pencil'],
 .viewport[data-tool='pencil'] .paper [data-shape-id],
 .viewport[data-tool='connector'],
-.viewport[data-tool='connector'] .paper [data-shape-id] {
+.viewport[data-tool='connector'] .paper [data-shape-id],
+.viewport[data-tool='connection-point'],
+.viewport[data-tool='connection-point'] .paper [data-shape-id] {
 	cursor: crosshair;
 }
 .viewport[data-tool='ellipse'],
@@ -217,7 +219,7 @@ office-ui-status-item[data-page-status] {
 	touch-action: none;
 }
 /* Connector tool: the shape under the pointer is the glue target (Visio's green glue box). */
-.viewport[data-tool='connector'] .paper [data-connect-target='true'] > path[data-geometry] {
+.viewport .paper [data-connect-target='true'] > path[data-geometry] {
 	/* Drawing units (inches), like the canvas focus stroke; wins over a focused shape's dashes. */
 	stroke: var(--_vv-accent) !important;
 	stroke-width: 0.05 !important;

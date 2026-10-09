@@ -31,6 +31,8 @@ export interface RibbonTargets {
 	showFormatShape(): void;
 	pageTheme(action: Extract<VisioRibbonAction, { type: 'page-theme' }>): void;
 	toggleGrid(): void;
+	toggleConnectionPoints?(): void;
+	connectorRoute?(action: Extract<VisioRibbonAction, { type: 'connector-route' }>): void;
 	toggleRuler(): void;
 	togglePanZoom(): void;
 	toggleSizePosition(): void;
@@ -105,6 +107,10 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.pageTheme(action);
 		case 'grid':
 			return targets.toggleGrid();
+		case 'connection-points':
+			return targets.toggleConnectionPoints?.();
+		case 'connector-route':
+			return targets.connectorRoute?.(action);
 		case 'ruler':
 			return targets.toggleRuler();
 		case 'panZoom':

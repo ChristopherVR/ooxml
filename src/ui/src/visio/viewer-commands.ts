@@ -14,6 +14,8 @@ import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
 import { ShapeDrawTool } from './viewer-draw-tool';
 import { ViewerTextTool } from './viewer-text-tool';
 import { ViewerConnectorTool } from './viewer-connector-tool';
+import { ViewerConnectionPoints } from './viewer-connection-points';
+import { ViewerConnectorRoutes } from './viewer-connector-routes';
 import type { Rulers } from './viewer-ruler';
 import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
@@ -74,6 +76,8 @@ export class ViewerCommands {
 	#draw: ShapeDrawTool;
 	#text: ViewerTextTool;
 	#connector: ViewerConnectorTool;
+	#points: ViewerConnectionPoints;
+	#routes: ViewerConnectorRoutes;
 	#pageOrder: ViewerPageOrder;
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
@@ -152,13 +156,27 @@ export class ViewerCommands {
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
 		this.#draw = new ShapeDrawTool(host.viewport, host.controller, {
 			tool: () =>
-				this.#tool === 'pointer' || this.#tool === 'text' || this.#tool === 'connector'
+				this.#tool === 'pointer' ||
+				this.#tool === 'text' ||
+				this.#tool === 'connector' ||
+				this.#tool === 'connection-point'
 					? undefined
 					: this.#tool,
 			announce: host.announce,
 		});
+		this.#routes = new ViewerConnectorRoutes(host.root, host.controller, {
+			setTool: (tool) => this.setTool(tool),
+			edit: (run, message) => void this.#edit(run, message),
+			announce: host.announce,
+		});
 		this.#connector = new ViewerConnectorTool(host.viewport, host.controller, {
 			active: () => this.#tool === 'connector',
+			announce: host.announce,
+			route: () => this.#routes.route,
+		});
+		this.#points = new ViewerConnectionPoints(host.viewport, host.controller, {
+			active: () => this.#tool === 'connection-point',
+			showing: () => this.#tool === 'connector',
 			announce: host.announce,
 		});
 		this.#text = new ViewerTextTool(host.viewport, host.controller, {
@@ -200,6 +218,11 @@ export class ViewerCommands {
 				this.#grid = !this.#grid;
 				this.render(host.controller.state);
 			},
+			toggleConnectionPoints: () => {
+				this.#points.toggle();
+				this.render(host.controller.state);
+			},
+			connectorRoute: (action) => this.#routes.run(action),
 			toggleRuler: () => {
 				this.#ruler = !this.#ruler;
 				this.render(host.controller.state);
@@ -293,6 +316,7 @@ export class ViewerCommands {
 			options,
 		);
 		const disposeConnector = this.#connector.wire();
+		const disposePoints = this.#points.wire();
 		const disposeDraw = this.#draw.wire();
 		const disposeText = this.#text.wire();
 		const disposeClipboard = this.#clipboard.wire();
@@ -312,6 +336,7 @@ export class ViewerCommands {
 			events.abort();
 			disposeDraw();
 			disposeConnector();
+			disposePoints();
 			disposeText();
 			disposeClipboard();
 			disposePaint();
@@ -344,6 +369,7 @@ export class ViewerCommands {
 	}
 	#delete(): void {
 		const state = this.host.controller.state;
+		if (this.#tool === 'connection-point' && this.#points.deleteSelected()) return;
 		const shapes = state.selectedShapes;
 		const page = state.document?.pages[state.pageIndex];
 		const pageId = page?.id;
@@ -494,6 +520,8 @@ export class ViewerCommands {
 		if (control && !event.shiftKey && key === 'z') return { type: 'history', key: 'undo' };
 		if (control && (key === 'y' || (event.shiftKey && key === 'z')))
 			return { type: 'history', key: 'redo' };
+		if (control && event.shiftKey && (event.code === 'Digit1' || key === '1' || key === '!'))
+			return { type: 'tool', tool: 'connection-point' };
 		if (control && key === '1') return { type: 'tool', tool: 'pointer' };
 		if (control && key === '2') return { type: 'tool', tool: 'text' };
 		if (control && key === '3') return { type: 'tool', tool: 'connector' };
@@ -503,7 +531,8 @@ export class ViewerCommands {
 		if (control && key === '5') return { type: 'tool', tool: 'freeform' };
 		if (control && key === '7') return { type: 'tool', tool: 'arc' };
 		if (control && key === '4') return { type: 'tool', tool: 'pencil' };
-		if (!control && key === 'Delete' && state.selectedShape) return { type: 'delete' };
+		if (!control && key === 'Delete' && (state.selectedShape || this.#points.selected))
+			return { type: 'delete' };
 		if (!control && key === 'F2' && state.document)
 			return { type: 'reveal', panel: 'edit', focusText: true };
 		if (key === 'Escape' && this.#tool !== 'pointer' && !drawing)
@@ -522,6 +551,8 @@ export class ViewerCommands {
 	render(state: ViewerState): void {
 		this.#draw.render(state);
 		this.#connector.render(state);
+		this.#points.render(state);
+		this.#routes.render(state);
 		this.#text.render(state);
 		this.#duplication.render(state);
 		this.#grouping.render(state);
@@ -572,6 +603,10 @@ export class ViewerCommands {
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));
 		button('connector').setAttribute('pressed', String(this.#tool === 'connector'));
 		button('connector').disabled = !editing || !page;
+		button('connection-point').setAttribute('pressed', String(this.#tool === 'connection-point'));
+		button('connection-point').disabled = !editing || !page;
+		box('connection-points').checked = this.#points.visible;
+		box('connection-points').disabled = !page;
 		// The drawing-tools split button shows the active tool; its active drawing item is checked.
 		const rectangle = button('rectangle');
 		rectangle.toggleAttribute('data-active', this.#tool === 'rectangle');

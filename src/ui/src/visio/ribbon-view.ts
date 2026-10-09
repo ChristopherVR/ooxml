@@ -118,12 +118,18 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 				'Visual Aids',
 				[
 					stack(doc, [
-						check(doc, { id: 'auto-connect', label: 'AutoConnect', unsupported: EDITING_AIDS }),
+						check(doc, {
+							id: 'auto-connect',
+							label: 'AutoConnect',
+							unsupported:
+								'Hover arrows that add a connected copy need shape duplication with glue in one step, which the core does not offer yet.',
+						}),
 						check(doc, { id: 'dynamic-grid', label: 'Dynamic Grid', unsupported: EDITING_AIDS }),
 						check(doc, {
 							id: 'connection-points',
 							label: 'Connection Points',
-							unsupported: EDITING_AIDS,
+							action: { type: 'connection-points' },
+							checked: true,
 						}),
 					]),
 				],
