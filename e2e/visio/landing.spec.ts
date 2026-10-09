@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 const demoFrame = '.pv-livepane iframe';
+// The iframe loads the whole viewer bundle cold; on a busy two-worker runner that can outlast
+// the default five-second expect timeout.
+const viewerLoad = { timeout: 30_000 };
 
 async function loadLiveDemo(page: import('@playwright/test').Page) {
 	// Entering the viewport starts the lazy demo and removes its fallback button.
@@ -62,7 +65,7 @@ for (const viewport of [
 		await expect(page.getByRole('heading', { level: 1 })).toContainText('.vsdx viewing,');
 		await page.screenshot({ path: `test-results/landing-${viewport.width}.png`, fullPage: true });
 		await loadLiveDemo(page);
-		await expect(page.frameLocator(demoFrame).locator('visio-viewer')).toBeVisible();
+		await expect(page.frameLocator(demoFrame).locator('visio-viewer')).toBeVisible(viewerLoad);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
 			true,
 		);
@@ -75,5 +78,7 @@ test('sharing mode shows two windows of the same viewer', async ({ page }) => {
 	await page.getByRole('button', { name: 'Sharing' }).click();
 	await expect(page.locator(demoFrame)).toHaveCount(2);
 	for (const index of [0, 1])
-		await expect(page.frameLocator(demoFrame).nth(index).locator('visio-viewer')).toBeVisible();
+		await expect(page.frameLocator(demoFrame).nth(index).locator('visio-viewer')).toBeVisible(
+			viewerLoad,
+		);
 });
