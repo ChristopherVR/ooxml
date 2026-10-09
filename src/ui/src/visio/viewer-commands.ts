@@ -394,6 +394,9 @@ export class ViewerCommands {
 		if (control && key === '8') return { type: 'tool', tool: 'rectangle' };
 		if (control && key === '9') return { type: 'tool', tool: 'ellipse' };
 		if (control && key === '6') return { type: 'tool', tool: 'line' };
+		if (control && key === '5') return { type: 'tool', tool: 'freeform' };
+		if (control && key === '7') return { type: 'tool', tool: 'arc' };
+		if (control && key === '4') return { type: 'tool', tool: 'pencil' };
 		if (!control && key === 'Delete' && state.selectedShape) return { type: 'delete' };
 		if (!control && key === 'F2' && state.document)
 			return { type: 'reveal', panel: 'edit', focusText: true };
@@ -460,6 +463,10 @@ export class ViewerCommands {
 		button('ellipse').setAttribute('checked', String(this.#tool === 'ellipse'));
 		button('ellipse').disabled = !editing || !page;
 		button('line-tool').disabled = !editing || !page;
+		for (const name of ['freeform', 'arc', 'pencil'] as const) {
+			button(name).setAttribute('checked', String(this.#tool === name));
+			button(name).disabled = !editing || !page;
+		}
 		button('text-tool').setAttribute('pressed', String(this.#tool === 'text'));
 		for (const name of ['text-tool', 'text-box', 'blank-page'])
 			button(name).disabled = !editing || !page;

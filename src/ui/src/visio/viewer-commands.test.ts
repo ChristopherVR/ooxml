@@ -169,6 +169,29 @@ describe('Visio ribbon commands', () => {
 		expect(readOnly.commands.tool).toBe('pointer');
 		expect(readOnly.command('line-tool').disabled).toBe(true);
 	});
+	it('shares Freeform, Arc and Pencil ribbon and Ctrl+5/7/4 tool state', async () => {
+		const { press, key, commands, command } = await setup();
+		for (const [name, digit] of [
+			['freeform', '5'],
+			['arc', '7'],
+			['pencil', '4'],
+		] as const) {
+			expect(command(name).disabled).toBe(false);
+			expect(command(name).hasAttribute('data-unsupported')).toBe(false);
+			press(name);
+			expect(commands.tool).toBe(name);
+			expect(command(name).getAttribute('checked')).toBe('true');
+			key({ key: '1', ctrlKey: true });
+			expect(commands.tool).toBe('pointer');
+			key({ key: digit, ctrlKey: true });
+			expect(commands.tool).toBe(name);
+		}
+		const readOnly = await setup(false);
+		readOnly.key({ key: '5', ctrlKey: true });
+		expect(readOnly.commands.tool).toBe('pointer');
+		for (const name of ['freeform', 'arc', 'pencil'])
+			expect(readOnly.command(name).disabled).toBe(true);
+	});
 	it('turns shared button activation into typed ribbon actions', async () => {
 		const { root, press } = await setup();
 		const actions: unknown[] = [];

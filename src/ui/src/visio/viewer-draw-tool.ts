@@ -3,6 +3,9 @@ import {
 	editErrorMessage,
 	isEditCancellation,
 	visioDrawPlan,
+	visioPathDrawPlan,
+	isVisioPathTool,
+	type VisioPathTool,
 	visioBoxCreationCommand,
 	visioLineCreationCommand,
 	type VisioDrawingPoint,
@@ -77,7 +80,7 @@ export class ShapeDrawTool {
 		viewport: HTMLElement,
 		private readonly controller: ViewerController,
 		options: {
-			tool(): 'rectangle' | 'ellipse' | 'line' | undefined;
+			tool(): 'rectangle' | 'ellipse' | 'line' | VisioPathTool | undefined;
 			announce(message: string): void;
 		},
 	) {
@@ -87,7 +90,11 @@ export class ShapeDrawTool {
 				const request = ++this.#request;
 				this.#pendingDocument = drag.document;
 				try {
-					const command = visioDrawPlan(drag.page, drag.kind, drag.start, end);
+					const command = isVisioPathTool(drag.kind)
+						? visioPathDrawPlan(drag.page, drag.kind, drag.points)
+						: visioDrawPlan(drag.page, drag.kind, drag.start, end);
+					if (!command && isVisioPathTool(drag.kind))
+						options.announce(`Drag on the page to draw a ${drag.kind}.`);
 					if (!command || !this.#gesture.current(drag)) return;
 					await controller.applyCreationEdits([command], drag.token);
 					if (request === this.#request) options.announce(`Shape ${command.shapeId} added.`);

@@ -573,9 +573,13 @@ export class ViewerController {
 			!commands.length ||
 			commands.some(
 				(command) =>
-					!['create-rectangle', 'create-ellipse', 'create-line', 'create-text-box'].includes(
-						command.type,
-					) ||
+					![
+						'create-rectangle',
+						'create-ellipse',
+						'create-line',
+						'create-text-box',
+						'create-path',
+					].includes(command.type) ||
 					command.pageId !== context.pageId ||
 					!('shapeId' in command),
 			)

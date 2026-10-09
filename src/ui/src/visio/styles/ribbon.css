@@ -196,13 +196,25 @@ office-ui-status-item[data-page-status] {
 .viewport[data-tool='rectangle'],
 .viewport[data-tool='rectangle'] .paper [data-shape-id],
 .viewport[data-tool='line'],
-.viewport[data-tool='line'] .paper [data-shape-id] {
+.viewport[data-tool='line'] .paper [data-shape-id],
+.viewport[data-tool='freeform'],
+.viewport[data-tool='freeform'] .paper [data-shape-id],
+.viewport[data-tool='arc'],
+.viewport[data-tool='arc'] .paper [data-shape-id],
+.viewport[data-tool='pencil'],
+.viewport[data-tool='pencil'] .paper [data-shape-id] {
 	cursor: crosshair;
 }
 .viewport[data-tool='ellipse'],
 .viewport[data-tool='rectangle'],
-.viewport[data-tool='line'] {
+.viewport[data-tool='line'],
+.viewport[data-tool='freeform'],
+.viewport[data-tool='arc'],
+.viewport[data-tool='pencil'] {
 	touch-action: none;
+}
+path.draw-preview {
+	fill: none;
 }
 .draw-preview {
 	fill: var(--_vv-accent-soft);

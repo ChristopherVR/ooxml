@@ -1,7 +1,15 @@
 import type { VisioShapeFormatEdit } from 'ooxml-core/visio';
 import type { VisioArrangement } from 'ooxml-core/visio/ui';
 
-export type CanvasTool = 'pointer' | 'rectangle' | 'ellipse' | 'line' | 'text';
+export type CanvasTool =
+	| 'pointer'
+	| 'rectangle'
+	| 'ellipse'
+	| 'line'
+	| 'text'
+	| 'freeform'
+	| 'arc'
+	| 'pencil';
 export type VisioFormattingAction =
 	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' | 'strikethrough' }
 	| { type: 'font-color'; value?: string }
