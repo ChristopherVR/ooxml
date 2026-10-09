@@ -25,7 +25,8 @@ type Box = HTMLElement & { checked: boolean; disabled: boolean };
  */
 export class ViewerGuides {
 	#shown = false;
-	#dynamic = false;
+	/** On by default, as in Visio: moving shapes snap to other shapes' edges and centres. */
+	#dynamic = true;
 	#selected: string | undefined;
 	#drag:
 		| { pointer: number; line: SVGGElement; id?: string; vertical: boolean; x: number; y: number }
@@ -61,16 +62,20 @@ export class ViewerGuides {
 	#editable(state: ViewerState): boolean {
 		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;
 	}
-	/** Snap a shape drag; draws alignment hints. Unchanged when no snapping is active. */
-	snap(page: VisioPage, ids: readonly string[], delta: VisioPagePoint): VisioPagePoint {
+	/**
+	 * Snap a shape drag; draws alignment hints. `grid` is the Snap to Grid step in page inches (0
+	 * while the grid is hidden). Unchanged when no snapping is active.
+	 */
+	snap(page: VisioPage, ids: readonly string[], delta: VisioPagePoint, grid = 0): VisioPagePoint {
 		const svg = this.#svg();
 		this.clearHints();
-		if (!this.#shown && !this.#dynamic) return delta;
+		if (!this.#shown && !this.#dynamic && !grid) return delta;
 		const zoom = this.controller.state.zoom || 1;
 		const result = visioSnapMoveDelta(page, ids, delta, {
 			shapes: this.#dynamic,
 			guides: this.#shown,
 			threshold: SNAP_PIXELS / (96 * zoom),
+			grid,
 		});
 		if (!svg || !result.lines.length) return result.delta;
 		const hints = svg.ownerDocument.createElementNS(SVG, 'g');

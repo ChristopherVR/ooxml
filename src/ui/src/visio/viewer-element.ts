@@ -180,7 +180,8 @@ export class VisioViewerElement extends BaseElement {
 				this.#announcement = message;
 				this.#status.textContent = message;
 			},
-			snap: (page, ids, delta) => this.#commands.layoutCommands.guides.snap(page, ids, delta),
+			snap: (page, ids, delta) =>
+				this.#commands.layoutCommands.guides.snap(page, ids, delta, this.#commands.gridStep),
 			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
 		});
 		this.#lineEndpoints = new ViewerLineEndpoints(this.#viewport, this.controller, {
@@ -504,6 +505,10 @@ export class VisioViewerElement extends BaseElement {
 			},
 			this.controller,
 			(mode) => this.#fit(mode),
+			(message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
 		);
 		return () => {
 			disposeChrome();

@@ -1,4 +1,4 @@
-import { createRotationDrag, resolveRotateHandlePlacement } from 'ooxml-core/geometry';
+import { createRotationDrag, resolveRotateHandlePlacement, snapAngle } from 'ooxml-core/geometry';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -16,6 +16,9 @@ import { createRotationPreview } from './viewer-rotation-preview';
 import { hideGestureOverlays } from './viewer-gesture-overlays';
 const SVG = 'http://www.w3.org/2000/svg';
 const pointOptions = { snap: false, bounded: false } as const;
+/** Visio's counter-clockwise radians from the drag's clockwise degrees; Shift snaps to 15°. */
+const radians = (degrees: number, snap: boolean) =>
+	(-(snap ? snapAngle(degrees) : degrees) * Math.PI) / 180;
 /** A source-backed rotation gesture; previews never mutate the model or history. */
 export class ViewerRotationHandle {
 	#drag:
@@ -212,7 +215,7 @@ export class ViewerRotationHandle {
 		}
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		if (point) {
-			const angle = (-drag.rotate(point) * Math.PI) / 180;
+			const angle = radians(drag.rotate(point), event.shiftKey);
 			try {
 				drag.shapePreview.update(angle);
 			} catch (error) {
@@ -244,7 +247,7 @@ export class ViewerRotationHandle {
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
-		const angle = point ? (-drag.rotate(point) * Math.PI) / 180 : undefined;
+		const angle = point ? radians(drag.rotate(point), event.shiftKey) : undefined;
 		this.#cancel();
 		if (
 			angle === undefined ||

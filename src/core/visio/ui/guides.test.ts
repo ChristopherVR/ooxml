@@ -79,4 +79,27 @@ describe('guide helpers', () => {
 			).delta,
 		).toEqual({ x: 1, y: 1 });
 	});
+	it('snaps the nearer edge to the grid on an axis no shape or guide claims', async () => {
+		const scene = await page();
+		// Shape 1 spans x 0.5..1.5 and y 0.5..1.5; a 0.25 grid.
+		const options = { shapes: false, guides: false, threshold: 0.1, grid: 0.25 };
+		const moved = visioSnapMoveDelta(scene, ['1'], { x: 0.3, y: -0.12 }, options);
+		// x: the left edge lands at 0.8, 0.05 past the 0.75 line, so the delta becomes 0.25.
+		// y: both edges (0.38 and 1.38) sit 0.12 below a grid line, so the shape returns to its row.
+		expect(moved.delta.x).toBeCloseTo(0.25, 9);
+		expect(moved.delta.y).toBeCloseTo(0, 9);
+		expect(moved.lines).toEqual([]);
+		// A guide still wins its own axis; the grid only fills the other one.
+		const guided = visioSnapMoveDelta(
+			scene,
+			['1'],
+			{ x: 4.45, y: 0.11 },
+			{ shapes: false, guides: true, threshold: 0.1, grid: 0.25 },
+		);
+		expect(guided.delta.x).toBeCloseTo(4.5, 9);
+		expect(guided.delta.y).toBeCloseTo(0, 9);
+		expect(
+			visioSnapMoveDelta(scene, ['1'], { x: 0.3, y: 0 }, { ...options, grid: 0 }).delta,
+		).toEqual({ x: 0.3, y: 0 });
+	});
 });

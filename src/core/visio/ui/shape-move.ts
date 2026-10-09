@@ -1,3 +1,4 @@
+import { arrowKeyDelta } from '../../geometry/nudge';
 import type { VisioEdit } from '../edit-commands';
 import type { VisioMatrix, VisioPage, VisioShape } from '../model';
 import { visioStyleFormattingShape } from './formatting';
@@ -97,4 +98,21 @@ export function visioMoveCommands(
 	} catch {
 		return undefined;
 	}
+}
+/**
+ * Arrow-key nudge: move the selection `step` page inches in the arrow's screen direction (Visio
+ * nudges by a small step, and Shift+arrow by one screen pixel). `null` for any other key,
+ * `undefined` when the selection cannot move.
+ */
+export function visioNudgeCommands(
+	page: VisioPage,
+	selection: readonly string[],
+	key: string,
+	step: number,
+): VisioEdit[] | undefined | null {
+	const delta = arrowKeyDelta(key, step);
+	if (!delta) return null;
+	if (!(step > 0) || !Number.isFinite(step)) return undefined;
+	// Commands use upward page y; an Up arrow raises the shape.
+	return visioMoveCommands(page, selection, { x: delta.dx, y: -delta.dy });
 }

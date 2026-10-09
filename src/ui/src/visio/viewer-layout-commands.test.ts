@@ -184,14 +184,20 @@ it('pastes clipboard text as a text box from Paste Special', async () => {
 it('toggles guides and Dynamic Grid, and snaps a move to another shape', async () => {
 	const view = await setup();
 	const guides = view.commands.layoutCommands.guides;
-	expect(guides.snap(page(view), ['3'], { x: 0.95, y: 0 })).toEqual({ x: 0.95, y: 0 });
-	view.commands.run({ type: 'dynamic-grid' });
 	const box = view.root.querySelector<HTMLElement & { checked: boolean }>(
 		'[data-check="dynamic-grid"]',
 	)!;
+	// Dynamic Grid starts on, as in Visio. Shape 3's centre x is 2 and shape 2's is 6: a 3.98 move
+	// snaps to 4.
 	expect(box.checked).toBe(true);
-	// Shape 3's centre x is 2 and shape 2's is 6: a 3.98 move snaps to 4.
 	expect(guides.snap(page(view), ['3'], { x: 3.98, y: 0 }).x).toBeCloseTo(4, 9);
+	view.commands.run({ type: 'dynamic-grid' });
+	expect(box.checked).toBe(false);
+	expect(guides.snap(page(view), ['3'], { x: 3.98, y: 0 })).toEqual({ x: 3.98, y: 0 });
+	// With the grid shown, a move lands the nearer edge on a quarter-inch line.
+	expect(guides.snap(page(view), ['3'], { x: 0.95, y: 0 }, 0.25).x).toBeCloseTo(1, 9);
+	view.commands.run({ type: 'dynamic-grid' });
+	expect(box.checked).toBe(true);
 	await view.controller.applyEdits([
 		{ type: 'create-guide', pageId: '1', shapeId: '9', orientation: 'vertical', position: 1 },
 	]);

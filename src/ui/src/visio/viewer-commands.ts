@@ -65,6 +65,8 @@ const editable = (target: EventTarget | null) =>
 		'input, textarea, select, office-ui-select, [contenteditable]:not([contenteditable="false"])',
 	);
 
+/** The minor grid the canvas draws (`styles/ribbon.css`): a quarter page inch. */
+const GRID_STEP = 1 / 4;
 /**
  * Visio command state (tool, grid, pending edits) and keyboard shortcuts. Ribbon controls emit
  * typed `ribbon-action` events and shortcuts build the same actions; both go through
@@ -264,6 +266,10 @@ export class ViewerCommands {
 			pageSetup: (command) => this.#pageSetup.run(command),
 			review: (action) => this.#review.run(action),
 		};
+	}
+	/** Page inches between minor grid lines while View > Grid is on (Snap to Grid), else 0. */
+	get gridStep(): number {
+		return this.#grid ? GRID_STEP : 0;
 	}
 	get tool(): CanvasTool {
 		return this.#tool;
