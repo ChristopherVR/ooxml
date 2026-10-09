@@ -221,6 +221,40 @@ jobs:
           path: src/ui/dist
           retention-days: 1
 
+  # The size of every published entry point. On a PR, bundle-size-comment.yml compares it with the
+  # newest measurement from main and comments; on main it is that baseline. Informational: it is
+  # not part of ci-success.
+  bundle-size:
+    needs: [plan, build, ui]
+    if: |
+      !cancelled() && needs.build.result == 'success' &&
+      (github.event_name == 'pull_request' || github.event_name == 'push')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      # The ui job is skipped when nothing reaches ooxml-ui; the comparison then leaves it out.
+      - uses: actions/download-artifact@v8
+        if: needs.ui.result == 'success'
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - run: node scripts/bundle-size.mjs measure src/core src/ui > bundle-size.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bundle-size
+          path: bundle-size.json
+          retention-days: ${{ github.event_name == 'push' && 90 || 7 }}
+
   # Release machinery: planner, publish guards, commit and changelog checks, the launcher and CI planner.
   scripts:
     needs: plan
