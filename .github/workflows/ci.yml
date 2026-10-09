@@ -90,7 +90,8 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - run: bun run lint
+      # `github` output turns each finding into an annotation on the changed line.
+      - run: bun run lint --format=github
 
   typecheck-strict:
     needs: plan
