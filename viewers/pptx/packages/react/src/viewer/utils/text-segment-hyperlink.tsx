@@ -43,6 +43,9 @@ export function renderHyperlink(
 	return (
 		<span
 			key={`${key}-link`}
+			data-pptx-hyperlink={url}
+			data-pptx-require-ctrl-click={requireCtrlClick ? '' : undefined}
+			data-pptx-hyperlink-target={targetFrame}
 			role='link'
 			tabIndex={0}
 			className={requireCtrlClick ? 'group/link relative' : undefined}

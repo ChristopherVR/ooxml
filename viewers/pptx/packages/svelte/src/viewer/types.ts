@@ -1,4 +1,3 @@
-import type { PptxSaveFormat } from 'pptx-viewer-core';
 import type {
 	AccountAuthConfig,
 	CanvasSize,
@@ -16,6 +15,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
+import type { PptxSaveFormat } from 'pptx-viewer-core';
 
 import type {
 	ExportGifOptions,
@@ -248,6 +248,8 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	ondirtychange?: (dirty: boolean) => void;
 	oncontentchange?: (content: Uint8Array) => void;
 	onmodechange?: (mode: string) => void;
+	/** Fired before following a link; return false to cancel its default action. */
+	onhyperlinkclick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	onzoomchange?: (zoom: number) => void;
 	onselectionchange?: (elementIds: string[]) => void;
 	onslidecountchange?: (count: number) => void;

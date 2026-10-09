@@ -29,7 +29,7 @@
 
 import type { PptxAction, PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
-import { isUrlSafe, safeOpenUrl } from './hyperlink-security';
+import { isUrlSafe, parsePpactionUrl, safeOpenUrl } from './hyperlink-security';
 import { isPresentationAdvanceClick } from './presentation-setup';
 
 /**
@@ -286,6 +286,17 @@ export function findPresentationActionTarget(
 ): PresentationActionTarget | undefined {
 	if (typeof Element === 'undefined' || !(target instanceof Element) || !slide) {
 		return undefined;
+	}
+	const run = target.closest('[data-pptx-hyperlink]');
+	if (run) {
+		const internal = parsePpactionUrl(run.getAttribute('data-pptx-hyperlink') ?? '');
+		// A run's link takes precedence over the surrounding shape's action.
+		return internal
+			? {
+					elementId: run.closest('[data-element-id]')?.getAttribute('data-element-id') ?? '',
+					action: { action: internal.action, targetSlideIndex: internal.targetSlideIndex },
+				}
+			: undefined;
 	}
 	const byId = new Map<string, PptxElement>();
 	for (const element of flattenSlideElements(slide.elements)) {

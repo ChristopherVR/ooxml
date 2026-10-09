@@ -14,6 +14,7 @@
 	import { onDestroy } from 'svelte';
 	import {
 		buildUserFontFaceStyles,
+		attachViewerHyperlinks,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
 		resolveViewerRootOptions,
 		themeToCssVars,
@@ -110,6 +111,25 @@
 		}),
 	);
 	onDestroy(() => vm.destroy());
+	$effect(() => {
+		const editable = vm.editingActive;
+		if (!rootEl) {
+			return;
+		}
+		return attachViewerHyperlinks(rootEl, {
+			getState: () => ({
+				slide: vm.activeSlide,
+				slideCount: vm.editor.slides.length,
+				currentSlideIndex: vm.viewer.current,
+				editable,
+				presenting: vm.viewerMode === 'present',
+			}),
+			goToSlide: (index) => vm.viewer.goTo(index),
+			onHyperlinkClick: (link) => props.onhyperlinkclick?.(link),
+			confirmExternalHyperlink: (url) =>
+				vm.optionsState.confirmHyperlink(url, t('pptx.options.trust.confirmHyperlinks')),
+		});
+	});
 	useCustomizationConstraints(customization, vm.optionsState);
 	const aiEnabled = $derived(Boolean(props.ai) && customization.isFeatureEnabled('ai'));
 	const hiddenActions = $derived(effectiveHiddenActions(customization.resolved, props.hiddenActions, vm.optionsState.hiddenRibbonTabIds));

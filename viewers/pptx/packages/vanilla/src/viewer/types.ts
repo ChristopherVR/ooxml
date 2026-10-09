@@ -1,4 +1,3 @@
-import type { PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
 import type {
 	AccountAuthConfig,
 	AutosaveRecord,
@@ -19,6 +18,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
+import type { PptxHandler, PptxSaveFormat } from 'pptx-viewer-core';
 
 import type { AutosaveStatus } from './autosave';
 import type { ShareDefaults } from './collab/share-helpers';
@@ -53,6 +53,8 @@ export type {
 
 /** Callbacks mirroring the Vue component's emits. */
 export interface PptxViewerCallbacks {
+	/** Fired before following a link; return false to cancel its default action. */
+	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/** Fired after a presentation loads successfully. */
 	onLoad?: (info: { slideCount: number; canvasSize: CanvasSize }) => void;
 	/** Fired when a load fails (message is already localised/best-effort). */

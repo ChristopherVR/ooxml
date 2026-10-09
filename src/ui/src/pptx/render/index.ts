@@ -1766,3 +1766,4 @@ export * from './tab-row-actions';
 export * from './slide-sorter-state';
 
 export * from './viewer-root-options';
+export * from './viewer-hyperlinks';

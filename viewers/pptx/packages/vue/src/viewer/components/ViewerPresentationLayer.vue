@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AuthoredSlideRange, HyperlinkClickHandler } from 'ooxml-ui/pptx';
 /**
  * ViewerPresentationLayer: the full-viewport surfaces that temporarily replace
  * the editing canvas (Slide Sorter, Outline View, Reading View, the slide show
@@ -10,7 +11,6 @@
  * than unpacked, so this file stays markup.
  */
 import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 
 import type { UseDeckViewsResult } from '../composables/useDeckViews';
 import type { UsePresentationControlsResult } from '../composables/usePresentationControls';
@@ -34,6 +34,7 @@ defineProps<{
 	content: Uint8Array | ArrayBuffer;
 	activeSlideIndex: number;
 	canEdit: boolean;
+	onHyperlinkClick?: HyperlinkClickHandler;
 	presentationProperties: PptxPresentationProperties;
 	/** Every named custom show, for an on-slide `ppaction://customshow` action's target. */
 	customShows?: readonly PptxCustomShow[];
@@ -102,6 +103,7 @@ defineProps<{
 	<!-- Presentation / slideshow overlay -->
 	<PresentationMode
 		v-if="presentation.presenting.value"
+		:on-hyperlink-click="onHyperlinkClick"
 		:slides="mergedSlides"
 		:canvas-size="canvasSize"
 		:media-data-urls="mediaDataUrls"

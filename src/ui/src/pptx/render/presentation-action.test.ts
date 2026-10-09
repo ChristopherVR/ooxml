@@ -308,6 +308,25 @@ describe('runPresentationAction: wave-4 verbs', () => {
 });
 
 describe('findPresentationActionTarget', () => {
+	it('lets an internal text link override its enclosing shape action', () => {
+		const slide = slideOf([shape('s1', { targetSlideIndex: 1 })]);
+		const node = render(
+			'<div data-element-id="s1"><a data-pptx-hyperlink="ppaction://hlinksldjump?slideIndex=2"><span>Jump</span></a></div>',
+		);
+		expect(findPresentationActionTarget(node.querySelector('span'), slide)).toStrictEqual({
+			elementId: 's1',
+			action: { action: 'ppaction://hlinksldjump', targetSlideIndex: 2 },
+		});
+	});
+
+	it('leaves an external text link to its own handler instead of the shape action', () => {
+		const slide = slideOf([shape('s1', { targetSlideIndex: 1 })]);
+		const node = render(
+			'<div data-element-id="s1"><a data-pptx-hyperlink="https://example.com"><span>Open</span></a></div>',
+		);
+		expect(findPresentationActionTarget(node.querySelector('span'), slide)).toBeUndefined();
+	});
+
 	it('finds the action of the element under the pointer', () => {
 		const slide = slideOf([
 			shape('s1', { action: 'ppaction://hlinksldjump', targetSlideIndex: 8 }),

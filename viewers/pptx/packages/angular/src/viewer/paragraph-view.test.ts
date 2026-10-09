@@ -1,3 +1,4 @@
+import { buildParagraphs } from 'ooxml-ui/pptx';
 /**
  * The Angular paragraph view model, now built from shared `buildParagraphs`.
  *
@@ -16,7 +17,6 @@
 import type { PptxElement, PptxElementWithText, TextSegment } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { buildParagraphs } from 'ooxml-ui/pptx';
 import { buildAngularParagraphs } from './paragraph-view';
 
 function textElement(segments: TextSegment[], extra: Record<string, unknown> = {}): PptxElement {
@@ -37,6 +37,23 @@ function textElement(segments: TextSegment[], extra: Record<string, unknown> = {
 const BREAK: TextSegment = { text: '\n', style: {} };
 
 describe('buildAngularParagraphs', () => {
+	it('keeps the resolved internal action for the live run renderer without a browser href', () => {
+		const element = textElement([
+			{
+				text: 'Jump',
+				style: {
+					hyperlink: 'slide3.xml',
+					hyperlinkAction: 'ppaction://hlinksldjump',
+					hyperlinkTargetSlideIndex: 2,
+				},
+			},
+		]);
+		const run = buildAngularParagraphs(element)[0].runs[0];
+		expect(run.hyperlink?.url).toBe('ppaction://hlinksldjump?slideIndex=2');
+		expect(run.hyperlink?.targetSlideIndex).toBe(2);
+		expect(run.href).toBeUndefined();
+	});
+
 	it('is a pure projection of the shared builder for plain text', () => {
 		const element = textElement([
 			{ text: 'First', style: { fontSize: 16 } },

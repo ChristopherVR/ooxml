@@ -1,5 +1,3 @@
-import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
-import { buildThemeColorMap } from 'pptx-viewer-core';
 /**
  * PowerPoint Viewer Plugin: Top-level Orchestrator Component.
  *
@@ -29,6 +27,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
+	attachViewerHyperlinks,
 	applyPreferenceToOptions,
 	buildUserFontFaceStyles,
 	deleteAutosaveSnapshot,
@@ -50,12 +49,15 @@ import {
 	resolveViewerRootOptions,
 	shouldDiscardAutosaveOnSuccessfulSave,
 	shouldShowAutosaveRecoveryPrompt,
+	shouldConfirmExternalHyperlink,
 	resolveAutosaveIntervalSeconds,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
 } from 'ooxml-ui/pptx';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
+import { buildThemeColorMap } from 'pptx-viewer-core';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -253,7 +255,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		// ── Locale catalog (File > Options > Language) ─────────────────
 		// This package never bundles an i18n instance: the host initialises
 		// `react-i18next` and this component only calls `changeLanguage` on it.
-		const { i18n } = useTranslation();
+		const { t, i18n } = useTranslation();
 		const [localeCode, setLocaleCode] = useState<string>(
 			() => defaultLocale ?? readStoredViewerPrefs().localeCode ?? 'en',
 		);
@@ -431,6 +433,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			loading,
 			error,
 			activeSlideIndex,
+			setActiveSlideIndex,
 			selectedElementId,
 			selectedElementIds,
 			templateElementsBySlideId,
@@ -715,6 +718,41 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			});
 
 		// ── Touch gestures: pinch-to-zoom on canvas viewport ──────
+		useEffect(() => {
+			const root = containerRef.current;
+			if (!root) {
+				return;
+			}
+			return attachViewerHyperlinks(root, {
+				getState: () => ({
+					slide: slides[activeSlideIndex],
+					slideCount: slides.length,
+					currentSlideIndex: activeSlideIndex,
+					editable: canEdit && mode !== 'preview',
+					presenting: mode === 'present',
+				}),
+				goToSlide: (index) =>
+					mode === 'present' ? presentation.navigateToSlide(index) : setActiveSlideIndex(index),
+				onHyperlinkClick: props.onHyperlinkClick,
+				confirmExternalHyperlink: (url) =>
+					!shouldConfirmExternalHyperlink(viewerOptions, url) ||
+					window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`),
+			});
+		}, [
+			containerRef,
+			slides,
+			activeSlideIndex,
+			canEdit,
+			mode,
+			presentation,
+			setActiveSlideIndex,
+			props.onHyperlinkClick,
+			viewerOptions,
+			t,
+			loading,
+			error,
+		]);
+
 		useTouchGestures({
 			targetRef: zoom.canvasViewportRef,
 			currentScale: zoom.scale,

@@ -1,5 +1,6 @@
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { isRunHyperlinkClickable } from 'ooxml-ui/pptx';
 
 import { EquationRendererComponent } from './equation-renderer.component';
 import { shouldPreventHyperlinkNavigation } from './hyperlink-confirm';
@@ -59,10 +60,13 @@ import { ViewerOptionsService } from './viewer-options.service';
 		<ng-template #runBase let-r="r">
 			@if (r.equationXml) {
 				<pptx-equation-renderer [equationXml]="r.equationXml" [equationNumber]="r.equationNumber" />
-			} @else if (r.href) {
+			} @else if (r.hyperlink && isRunHyperlinkClickable(r.hyperlink)) {
 				<a
 					class="pptx-ng-link"
-					[href]="r.href"
+					[attr.data-pptx-hyperlink]="r.hyperlink.url"
+					role="link"
+					tabindex="0"
+					[attr.href]="r.href"
 					[attr.target]="r.target ?? '_blank'"
 					[attr.rel]="r.rel ?? 'noopener noreferrer'"
 					[attr.title]="r.tooltip ?? null"
@@ -137,6 +141,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 	`,
 })
 export class SlideTextRunComponent {
+	protected readonly isRunHyperlinkClickable = isRunHyperlinkClickable;
 	readonly run = input.required<TextRun>();
 	/**
 	 * `false` (the default) renders the hyperlink anchor with no click
@@ -147,9 +152,9 @@ export class SlideTextRunComponent {
 
 	private readonly viewerOpts = inject(ViewerOptionsService, { optional: true });
 
-	protected onHyperlinkClick(event: MouseEvent, href: string): void {
+	protected onHyperlinkClick(event: MouseEvent, href: string | undefined): void {
 		const confirm = this.viewerOpts?.confirmExternalHyperlink.bind(this.viewerOpts);
-		if (shouldPreventHyperlinkNavigation(confirm, href)) {
+		if (href && shouldPreventHyperlinkNavigation(confirm, href)) {
 			event.preventDefault();
 		}
 	}

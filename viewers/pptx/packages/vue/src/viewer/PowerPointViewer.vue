@@ -24,16 +24,9 @@
  *  - `theme` context      -> `provideViewerTheme` + `useThemeStyle`.
  */
 import { ShieldAlert } from 'lucide-vue-next';
-import { hasShapeProperties, PptxHandler } from 'pptx-viewer-core';
-import type {
-	PptxElement,
-	PptxLayoutOption,
-	PptxLayoutPreview,
-	PptxTheme,
-	ShapeStyle,
-} from 'pptx-viewer-core';
 import {
 	applyAutoCorrect,
+	attachViewerHyperlinks,
 	buildDeckSaveOptions,
 	buildFieldSubstitutionContext,
 	buildUserFontFaceStyles,
@@ -61,9 +54,18 @@ import {
 	resetSlideLayoutPath,
 	shouldClearAutosaveCacheOnClose,
 	shouldOpenInProtectedView,
+	shouldConfirmExternalHyperlink,
 	shouldShowAutosaveRecoveryPrompt,
 } from 'ooxml-ui/pptx';
 import type { ViewerAddinStatus } from 'ooxml-ui/pptx';
+import { hasShapeProperties, PptxHandler } from 'pptx-viewer-core';
+import type {
+	PptxElement,
+	PptxLayoutOption,
+	PptxLayoutPreview,
+	PptxTheme,
+	ShapeStyle,
+} from 'pptx-viewer-core';
 import { computed, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -1247,6 +1249,34 @@ async function compareWithPresentation(): Promise<void> {
 // in pptx-viewer-shared). `viewerRootRef` stays bound to the template for
 // other consumers; it just is not fed into breakpoint derivation any more.
 const viewerRootRef = ref<HTMLElement | null>(null);
+
+watchEffect(
+	(onCleanup) => {
+		const root = viewerRootRef.value;
+		// Track permission changes so authoring badges follow the live edit mode.
+		const editable = canEditEffective.value;
+		if (!root) {
+			return;
+		}
+		onCleanup(
+			attachViewerHyperlinks(root, {
+				getState: () => ({
+					slide: mergedSlides.value[activeSlideIndex.value],
+					slideCount: mergedSlides.value.length,
+					currentSlideIndex: activeSlideIndex.value,
+					editable,
+					presenting: presentation.presenting.value,
+				}),
+				goToSlide: goTo,
+				onHyperlinkClick: (link) => props.onHyperlinkClick?.(link),
+				confirmExternalHyperlink: (url) =>
+					!shouldConfirmExternalHyperlink(viewerOptions.value, url) ||
+					window.confirm(`${t('pptx.options.trust.confirmHyperlinks')}\n\n${url}`),
+			}),
+		);
+	},
+	{ flush: 'post' },
+);
 const { isMobile, isTouchDevice } = useIsMobile(768);
 // Keep the focused field visible when the on-screen keyboard opens, and lift
 // the fixed bottom bar above the keyboard.
@@ -2339,6 +2369,7 @@ defineExpose<PowerPointViewerExpose>({
 
 		<ViewerPresentationLayer
 			:deck-views="deckViews"
+			:on-hyperlink-click="props.onHyperlinkClick"
 			:presentation="presentation"
 			:merged-slides="mergedSlides"
 			:slides="slides"

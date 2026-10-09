@@ -71,6 +71,10 @@ export const ACTION_INDICATOR_ICON_PATH = 'M13 2L3 14h9l-1 8 10-12h-9l1-8z';
  * the affordance's typography a property of the affordance.
  */
 export const ACTION_AFFORDANCE_CSS = `
+[data-pptx-read-only] .${ACTION_INDICATOR_CLASS},
+[data-pptx-read-only] .${LINK_TOOLTIP_CLASS} {
+	display: none;
+}
 .${ACTION_INDICATOR_CLASS} {
 	position: absolute;
 	top: -4px;

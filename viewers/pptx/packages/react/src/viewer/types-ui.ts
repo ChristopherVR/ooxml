@@ -1,12 +1,4 @@
 import type {
-	ConnectorArrowType,
-	PptxAnimationPreset,
-	PptxElementAnimation,
-	PptxSlideTransition,
-	StrokeDashType,
-	XmlObject,
-} from 'pptx-viewer-core';
-import type {
 	AccountAuthConfig,
 	PowerPointViewerAPI,
 	ThemeCatalogEntry,
@@ -18,6 +10,14 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
+import type {
+	ConnectorArrowType,
+	PptxAnimationPreset,
+	PptxElementAnimation,
+	PptxSlideTransition,
+	StrokeDashType,
+	XmlObject,
+} from 'pptx-viewer-core';
 /**
  * UI-related and interaction types for the PowerPoint viewer/editor plugin.
  *
@@ -276,6 +276,8 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	onContentChange?: (content: Uint8Array) => void;
 	/** Callback when active slide changes */
 	onActiveSlideChange?: (slideIndex: number) => void;
+	/** Fired before following a link; return false to cancel its default action. */
+	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/** Callback when the viewer mode changes (e.g. edit to present). */
 	onModeChange?: (mode: import('ooxml-ui/pptx').ViewerMode) => void;
 	/** Callback when the zoom level changes. */

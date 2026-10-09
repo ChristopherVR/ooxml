@@ -13,6 +13,7 @@
 import type { ParagraphRun } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_VIEWER_OPTIONS,
+	isRunHyperlinkClickable,
 	runEquationMathMl,
 	shouldConfirmExternalHyperlink,
 } from 'ooxml-ui/pptx';
@@ -63,11 +64,13 @@ function onLinkClick(event: MouseEvent): void {
 			>({{ run.equation.number }})</span
 		>
 	</span>
-	<!-- A safe external target renders as a real link; an internal `ppaction://`
-	     jump resolves to no href and falls through to the plain span. -->
+	<!-- Internal links have no browser href; the viewer follows their action. -->
 	<a
-		v-else-if="run.hyperlink?.href"
+		v-else-if="run.hyperlink && isRunHyperlinkClickable(run.hyperlink)"
 		class="pptx-vue-link"
+		:data-pptx-hyperlink="run.hyperlink.url"
+		role="link"
+		tabindex="0"
 		:href="run.hyperlink.href"
 		:target="run.hyperlink.target ?? '_blank'"
 		:rel="run.hyperlink.rel ?? 'noopener noreferrer'"
@@ -105,5 +108,6 @@ function onLinkClick(event: MouseEvent): void {
 
 .pptx-vue-link {
 	color: inherit;
+	cursor: pointer;
 }
 </style>
