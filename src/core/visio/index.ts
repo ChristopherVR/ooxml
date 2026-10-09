@@ -89,6 +89,8 @@ export {
 	type VisioPasteShapesEdit,
 	type VisioMetadataEdit,
 	type VisioPictureInsertEdit,
+	type VisioAssignLayersEdit,
+	type VisioGuideEdit,
 	type VisioShapeHyperlinkEdit,
 	type VisioShapeScreenTipEdit,
 	type VisioHyperlinkFields,
@@ -267,3 +269,4 @@ export type {
 	VisioSubprocessEdit,
 	VisioSubprocessSelection,
 } from './edit';
+export { isVisioLayerName, VISIO_LAYER_NAME_LIMIT } from './edit-layer-commands';

@@ -26,8 +26,10 @@ export interface VisioResizeFrame {
 export function visioResizeShape(page: VisioPage, id: string): VisioShape | undefined {
 	const shape = visioMovementShape(page, id);
 	// Groups move but do not resize: members carry no group-scaling formulas yet.
+	// Layered shapes move, but core resize admission still refuses layer membership.
 	return shape &&
 		!shape.children.length &&
+		!shape.layerIds?.length &&
 		visioResizeFrame(shape, { width: shape.width, height: shape.height }, { x: 0, y: 0 })
 		? shape
 		: undefined;

@@ -89,6 +89,10 @@ export type {
 	VisioInsertContainerEdit,
 	VisioInsertCalloutEdit,
 } from './edit-diagram-parts-commands';
+import { snapshotAssignLayers, type VisioAssignLayersEdit } from './edit-layer-commands';
+export type { VisioAssignLayersEdit } from './edit-layer-commands';
+import { isVisioGuideEdit, snapshotGuideEdit, type VisioGuideEdit } from './edit-guide-commands';
+export type { VisioGuideEdit } from './edit-guide-commands';
 import {
 	isVisioFormatEdit,
 	snapshotFormatting,
@@ -212,7 +216,9 @@ export type VisioEdit =
 	| VisioSubprocessEdit
 	| VisioDiagramPartEdit
 	| VisioShapeDataEdit
-	| VisioDataEdit;
+	| VisioDataEdit
+	| VisioAssignLayersEdit
+	| VisioGuideEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -300,6 +306,8 @@ export function snapshotVisioEdits(
 		if (edit.type === 'change-shape') return snapshotChangeShape(edit);
 		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
 		if (edit.type === 'set-page-theme') return snapshotPageTheme(edit);
+		if (edit.type === 'assign-layers') return snapshotAssignLayers(edit);
+		if (isVisioGuideEdit(edit)) return snapshotGuideEdit(edit);
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);
 		if (isVisioPageSetupEdit(edit)) return snapshotPageSetupEdit(edit);

@@ -9,9 +9,22 @@ export interface VisioPagePoint {
 	x: number;
 	y: number;
 }
+/** A local top-level shape on layers that are all unlocked; layers never block a move in core. */
+function layeredShape(page: VisioPage, id: string): VisioShape | undefined {
+	const matches = page.shapes.filter((shape) => shape.id === id);
+	const shape = matches.length === 1 ? matches[0]! : undefined;
+	if (!shape?.layerIds?.length) return undefined;
+	const unlayered = { ...page, shapes: [{ ...shape, layerIds: [] }] };
+	const plain = visioStyleFormattingShape(unlayered, id) ?? visioMovableGroup(unlayered, id);
+	const locked = shape.layerIds.some(
+		(layer) => page.layers?.find((entry) => entry.id === layer)?.locked !== false,
+	);
+	return plain && !locked ? shape : undefined;
+}
 /** Source admission remains authoritative for locks, formulas, geometry and dependencies. */
 export function visioMovementShape(page: VisioPage, id: string): VisioShape | undefined {
-	const shape = visioStyleFormattingShape(page, id) ?? visioMovableGroup(page, id);
+	const shape =
+		visioStyleFormattingShape(page, id) ?? visioMovableGroup(page, id) ?? layeredShape(page, id);
 	if (
 		!shape ||
 		(shape.kind !== 'shape' && !(shape.kind === 'group' && shape.children.length)) ||

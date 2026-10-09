@@ -56,3 +56,7 @@ export * from './subprocess';
 export * from './diagram-parts';
 export * from './data-table';
 export * from './data-graphics';
+export * from './auto-layout';
+export * from './select-by-type';
+export * from './layer-assign';
+export * from './guides';

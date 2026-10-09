@@ -23,7 +23,7 @@ export function visioSizePositionState(
 ): VisioSizePositionState | undefined {
 	const shape = visioMovementShape(page, id),
 		ratio = page.drawingToPageScale ?? 1;
-	if (!shape || !Number.isFinite(ratio) || ratio <= 0) return undefined;
+	if (!shape || shape.layerIds?.length || !Number.isFinite(ratio) || ratio <= 0) return undefined;
 	const rotation = shape.rotation!;
 	const state = {
 		pageId: page.id,

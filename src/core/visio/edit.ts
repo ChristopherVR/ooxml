@@ -37,6 +37,9 @@ import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
 import { applyShapeDataEdit } from './edit-shape-data';
 import { isVisioDataEdit } from './edit-data-commands';
 import { editVsdxData } from './edit-data';
+import { editVsdxLayers } from './edit-layers';
+import { isVisioGuideEdit } from './edit-guide-commands';
+import { applyGuideEdit } from './edit-guides';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -91,6 +94,8 @@ export type {
 	VisioDataDeleteEdit,
 	VisioDataLinkEdit,
 	VisioDataUnlinkEdit,
+	VisioAssignLayersEdit,
+	VisioGuideEdit,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -190,6 +195,12 @@ async function editVsdxTransaction(
 			check,
 		);
 	}
+	const layers = allCommands.find((command) => command.type === 'assign-layers');
+	if (layers) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_LAYER_TRANSACTION', 'Layer assignment requires its own transaction.');
+		return editVsdxLayers(pkg, parts, pages, layers, limits, maxOutput, deadline, check);
+	}
 	if (commands.length !== allCommands.length) {
 		const pageCommands = allCommands.filter(isVisioPageEdit);
 		// Fit to Drawing: a page resize and the moves that bring the drawing onto it, as one step.
@@ -249,6 +260,7 @@ async function editVsdxTransaction(
 			command.type !== 'set-shape-data' &&
 			!isVisioGroupEdit(command) &&
 			!isVisioDiagramPartEdit(command) &&
+			!isVisioGuideEdit(command) &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
@@ -267,7 +279,8 @@ async function editVsdxTransaction(
 				command.type === 'paste-shapes' ||
 				command.type === 'change-shape' ||
 				isVisioGroupEdit(command) ||
-				isVisioDiagramPartEdit(command),
+				isVisioDiagramPartEdit(command) ||
+				isVisioGuideEdit(command),
 		)
 	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
@@ -306,6 +319,7 @@ async function editVsdxTransaction(
 	let groupChanged = false;
 	let partChanged = false;
 	let shapeDataChanged = false;
+	let guideChanged = false;
 	const deletions = commands.filter(
 		(command): command is VisioShapeDelete => command.type === 'delete-shape',
 	);
@@ -372,6 +386,10 @@ async function editVsdxTransaction(
 				for (const pageId of insertVisioCallout(roots, document!, command, check))
 					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			partChanged = true;
+		} else if (isVisioGuideEdit(command)) {
+			applyGuideEdit(roots, command, check);
+			dirty.set(path, root);
+			guideChanged = true;
 		} else if (command.type === 'paste-shapes') {
 			for (const pageId of await pasteVisioShapes(
 				pkg,
@@ -399,7 +417,8 @@ async function editVsdxTransaction(
 			command.type !== 'set-page-theme' &&
 			command.type !== 'create-subprocess' &&
 			!isVisioCommentEdit(command) &&
-			!isVisioDataEdit(command)
+			!isVisioDataEdit(command) &&
+			command.type !== 'assign-layers'
 		) {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
@@ -533,6 +552,15 @@ async function editVsdxTransaction(
 							code: 'edit-diagram-part-approximate',
 							message:
 								'Containers and callouts record membership and targets in User rows, not in Visio Relationships formulas; Visio reopens them as plain shapes and a glued leader connector.',
+						},
+					]
+				: []),
+			...(guideChanged
+				? [
+						{
+							code: 'edit-guides',
+							message:
+								'Ruler guides were added, moved or removed as Type="Guide" shapes. Guides are not printed or exported by this viewer.',
 						},
 					]
 				: []),
