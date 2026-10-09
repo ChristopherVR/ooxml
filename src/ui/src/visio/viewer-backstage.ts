@@ -17,6 +17,8 @@ export interface BackstageHost {
 	showOptions(): void;
 	announce(message: string): void;
 	noteCount(): number;
+	/** File > Print > Page Setup. */
+	pageSetup?(): void;
 }
 
 /**
@@ -131,7 +133,10 @@ export class ViewerBackstage {
 		else if (action === 'download') this.#download();
 		else if (action === 'export-svg') this.#exportSvg();
 		else if (action === 'print') this.#print();
-		else if (action === 'notes') {
+		else if (action === 'page-setup') {
+			this.hide();
+			this.host.pageSetup?.();
+		} else if (action === 'notes') {
 			this.hide();
 			this.host.revealNotes();
 		}
@@ -261,6 +266,13 @@ export class ViewerBackstage {
 		)!;
 		download.disabled = saveDisabled;
 		download.title = saveDisabled ? saveReason : '';
+		const setup = this.#root.querySelector<HTMLButtonElement>(
+			'[data-backstage-action="page-setup"]',
+		);
+		if (setup) {
+			setup.disabled = !state.edit.sourceAvailable || busy || !page;
+			setup.title = setup.disabled ? 'Open a .vsdx file to change the page setup.' : '';
+		}
 		// Rebuild the navigation only when Save or Close change, so focus stays put.
 		const items = backstageItems({
 			save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },

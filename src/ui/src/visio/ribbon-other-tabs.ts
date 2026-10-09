@@ -1,4 +1,5 @@
 import { check, command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
+import { backgroundsGroup, pageSetupGroup } from './ribbon-page-setup';
 
 const PAGES = 'Needs core page insertion.';
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
@@ -125,36 +126,14 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 export function buildDesignPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
 		commandRow(doc, 'Design commands', [
-			group(
-				doc,
-				'Page Setup',
-				[
-					dropdown(doc, {
-						id: 'orientation',
-						label: 'Orientation',
-						icon: 'visioPagesPane',
-						reason: DESIGN,
-					}),
-					dropdown(doc, { id: 'size', label: 'Size', icon: 'pageWidth', reason: DESIGN }),
-					command(doc, unsupported('auto-size', 'Auto Size', 'fitPage', DESIGN)),
-				],
-				{ launcher: DESIGN },
-			),
+			pageSetupGroup(doc),
 			group(doc, 'Themes', [
 				dropdown(doc, { id: 'themes', label: 'Themes', icon: 'quickStyles', reason: DESIGN }),
 			]),
 			group(doc, 'Variants', [
 				dropdown(doc, { id: 'variants', label: 'Variants', icon: 'effects', reason: DESIGN }),
 			]),
-			group(doc, 'Backgrounds', [
-				dropdown(doc, { id: 'backgrounds', label: 'Backgrounds', icon: 'fill', reason: DESIGN }),
-				dropdown(doc, {
-					id: 'borders-titles',
-					label: 'Borders & Titles',
-					icon: 'rectangle',
-					reason: DESIGN,
-				}),
-			]),
+			backgroundsGroup(doc),
 			group(
 				doc,
 				'Layout',

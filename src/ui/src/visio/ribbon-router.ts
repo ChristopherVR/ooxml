@@ -36,6 +36,7 @@ export interface RibbonTargets {
 	fit(mode: 'page' | 'width'): void;
 	focusSearch(): void;
 	focusReplace(): void;
+	pageSetup(command: Extract<VisioRibbonAction, { type: 'page-setup' }>['command']): void;
 }
 
 /** Routes a ribbon, status-bar or shortcut action to the controller that owns it. */
@@ -107,6 +108,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.focusSearch();
 		case 'replace':
 			return targets.focusReplace();
+		case 'page-setup':
+			return targets.pageSetup(action.command);
 		case 'page':
 			return controller.setPage(controller.state.pageIndex + action.step);
 		case 'zoomTo':

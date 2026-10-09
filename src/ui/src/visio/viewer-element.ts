@@ -221,6 +221,8 @@ export class VisioViewerElement extends BaseElement {
 				this.#status.textContent = message;
 			},
 			noteCount: () => this.#notes.children.length,
+			pageSetup: () =>
+				this.#commands.run({ type: 'page-setup', command: { op: 'dialog', tab: 'print' } }),
 		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));

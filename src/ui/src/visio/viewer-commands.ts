@@ -26,6 +26,7 @@ import { ViewerDuplication } from './viewer-duplication';
 import { ViewerGrouping } from './viewer-grouping';
 import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
 import { ViewerInsert } from './viewer-insert';
+import { ViewerPageSetup } from './viewer-page-setup';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -79,6 +80,7 @@ export class ViewerCommands {
 	#grouping: ViewerGrouping;
 	#clipboard: ViewerClipboard;
 	#insert: ViewerInsert;
+	#pageSetup: ViewerPageSetup;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -102,6 +104,14 @@ export class ViewerCommands {
 		this.#insert = new ViewerInsert(host.root, host.controller, host.announce, (run, message) => {
 			void this.#edit(run, message);
 		});
+		this.#pageSetup = new ViewerPageSetup(
+			host.root,
+			host.controller,
+			(run, message) => {
+				void this.#edit(run, message);
+			},
+			host.announce,
+		);
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#painter = new ViewerFormatPainter(host.root, host.controller, host.announce, (run, m) => {
 			void this.#edit(run, m);
@@ -168,6 +178,7 @@ export class ViewerCommands {
 			toggleSizePosition: host.toggleSizePosition,
 			focusSearch: host.focusSearch,
 			focusReplace: () => host.focusReplace?.(),
+			pageSetup: (command) => this.#pageSetup.run(command),
 		};
 	}
 	get tool(): CanvasTool {
@@ -252,7 +263,9 @@ export class ViewerCommands {
 		const disposePaint = this.#paint.wire();
 		const disposePainter = this.#painter.wire();
 		const disposeInsert = this.#insert.wire(viewport);
+		const disposePageSetup = this.#pageSetup.wire();
 		return () => {
+			disposePageSetup();
 			this.#pageOrder.close();
 			this.#pageRename.close();
 			this.#pageDelete.close();
@@ -474,6 +487,7 @@ export class ViewerCommands {
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);
+		this.#pageSetup.render(state);
 		const { root, viewport } = this.host;
 		const button = (name: string) => root.querySelector<RibbonCommand>(`[command="${name}"]`)!;
 		const box = (name: string) =>

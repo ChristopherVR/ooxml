@@ -225,7 +225,19 @@ export function createBackstage(doc: Document): HTMLElement {
 				'An approximate picture with compatibility notes.',
 			),
 		),
-		page(doc, 'print', 'Print', action(doc, 'print', 'Print', 'Print the current page.'), preview),
+		page(
+			doc,
+			'print',
+			'Print',
+			action(doc, 'print', 'Print', 'Print the current page.'),
+			action(
+				doc,
+				'page-setup',
+				'Page Setup',
+				'Printer paper, page size, drawing scale and page properties.',
+			),
+			preview,
+		),
 		page(
 			doc,
 			'share',

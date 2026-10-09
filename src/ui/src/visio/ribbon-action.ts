@@ -1,5 +1,6 @@
 import type { VisioChangeShapeTarget, VisioShapeFormatEdit } from 'ooxml-core/visio';
 import type { TextCaseMode, VisioArrangement } from 'ooxml-core/visio/ui';
+import type { VisioPageSetupCommand } from './page-setup-action';
 
 export type CanvasTool =
 	| 'pointer'
@@ -57,7 +58,8 @@ export type VisioRibbonAction =
 	| { type: 'zoomTo'; percent: number }
 	| { type: 'search' }
 	| { type: 'replace' }
-	| { type: 'page'; step: 1 | -1 };
+	| { type: 'page'; step: 1 | -1 }
+	| { type: 'page-setup'; command: VisioPageSetupCommand };
 
 /** Event name shared by every ribbon control; detail is the typed action. */
 export const RIBBON_ACTION_EVENT = 'ribbon-action';

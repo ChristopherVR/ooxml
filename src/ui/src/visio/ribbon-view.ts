@@ -33,7 +33,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 					check(doc, {
 						id: 'page-breaks',
 						label: 'Page Breaks',
-						unsupported: 'Needs print tiling from the page setup.',
+						action: { type: 'page-setup', command: { op: 'page-breaks' } },
 					}),
 					check(doc, { id: 'grid', label: 'Grid', action: { type: 'grid' } }),
 				]),
