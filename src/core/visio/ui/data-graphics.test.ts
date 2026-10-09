@@ -150,14 +150,13 @@ describe('data graphics', () => {
 			'Db',
 			'Web',
 		]);
-		const relegend = await apply(
-			legend.bytes,
-			[
-				...visioRemoveDataGraphicEdits(legend.document.pages[0]!, ['legend']),
-				...visioLegendEdits(legend.document.pages[0]!, 'Name', rules.rules),
-			],
-		);
-		expect(relegend.document.pages[0]!.shapes.filter((shape) => shape.kind === 'group')).toHaveLength(1);
+		const relegend = await apply(legend.bytes, [
+			...visioRemoveDataGraphicEdits(legend.document.pages[0]!, ['legend']),
+			...visioLegendEdits(legend.document.pages[0]!, 'Name', rules.rules),
+		]);
+		expect(
+			relegend.document.pages[0]!.shapes.filter((shape) => shape.kind === 'group'),
+		).toHaveLength(1);
 		const restored = await apply(
 			relegend.bytes,
 			visioRemoveDataGraphicEdits(relegend.document.pages[0]!, ['1', '2', 'legend']),
@@ -176,5 +175,8 @@ describe('data graphics', () => {
 		const rules = visioColorRules(document.pages[0]!, ['1', '2'], 'Load');
 		expect(rules.rules.map((rule) => rule.label)).toEqual(['20 - 40', '40 - 60', '60 - 80']);
 		expect(rules.color(document.pages[0]!.shapes[1]!)).toBe('#2e75b6');
+		expect(visioColorRules(document.pages[0]!, ['2'], 'Load').rules).toEqual([
+			{ color: '#2e75b6', label: '80' },
+		]);
 	});
 });

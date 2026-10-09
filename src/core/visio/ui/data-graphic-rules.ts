@@ -86,7 +86,13 @@ export function visioColorRules(
 	if (numbers.every((value) => value !== undefined) && numbers.length) {
 		const min = Math.min(...(numbers as number[])),
 			max = Math.max(...(numbers as number[]));
-		const step = (max - min) / 3 || 1;
+		// One value (or all equal) is one rule, not three made-up ranges.
+		if (max === min)
+			return {
+				rules: [{ color: RANGES[2]!, label: String(+min.toPrecision(4)) }],
+				color: (shape) => (visioShapeDataNumber(shape, name) === undefined ? undefined : RANGES[2]),
+			};
+		const step = (max - min) / 3;
 		const round = (value: number) => +value.toPrecision(4);
 		const rules = RANGES.map((color, index) => ({
 			color,

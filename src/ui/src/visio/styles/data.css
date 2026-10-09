@@ -59,7 +59,6 @@
 .external-data table {
 	border-collapse: collapse;
 	font-size: 12px;
-	min-width: 100%;
 }
 .external-data th,
 .external-data td {
