@@ -8,10 +8,11 @@ import type { CancellableEditor } from './worker-editor';
 
 afterEach(() => document.body.replaceChildren());
 
-async function setup(source = true) {
+async function setup(source = true, delay = 0) {
 	const edits: VisioEdit[][] = [];
 	const editor: CancellableEditor = async (_bytes, commands) => {
 		edits.push([...commands]);
+		if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
 		return {
 			bytes: new Uint8Array([2]),
 			document: structuredClone(demoDocument),
@@ -68,13 +69,36 @@ describe("Visio's Shapes window", () => {
 		await settle();
 		master('star').click();
 		await settle();
-		expect(edits).toEqual([
-			[{ ...box, type: 'create-rectangle', width: 1, height: 0.75, shape: 'rectangle' }],
-			[{ ...box, type: 'create-ellipse', width: 1, height: 1 }],
-			[{ ...box, type: 'create-rectangle', width: 1, height: 1, shape: 'star' }],
+		// Each master is created with Visio's default theme look in the same history step.
+		const style = (shapeId: string) => ({
+			type: 'format-shape',
+			pageId: page.id,
+			shapeId,
+			quickStyle: { color: 2, matrix: 4 },
+		});
+		expect(edits.map(([created]) => created)).toEqual([
+			{ ...box, type: 'create-rectangle', width: 1, height: 0.75, shape: 'rectangle' },
+			{ ...box, type: 'create-ellipse', width: 1, height: 1 },
+			{ ...box, type: 'create-rectangle', width: 1, height: 1, shape: 'star' },
 		]);
+		for (const [created, styled, ...rest] of edits) {
+			expect(styled).toEqual(style((created as { shapeId: string }).shapeId));
+			expect(rest).toEqual([]);
+		}
 		expect(messages.at(-1)).toMatch(/^5-point star .+ added from Basic Shapes\.$/);
 		expect(controller.state.edit.canUndo).toBe(true);
+	});
+
+	it('adds a master dropped while the previous one is still saving', async () => {
+		const { master, edits, messages } = await setup(true, 30);
+		master('square').click();
+		master('triangle').click();
+		await new Promise((resolve) => setTimeout(resolve, 200));
+		expect(edits.map(([created]) => (created as { shape?: string }).shape)).toEqual([
+			'square',
+			'triangle',
+		]);
+		expect(messages.at(-1)).toMatch(/^Triangle .+ added from Basic Shapes\.$/);
 	});
 
 	it('explains read-only documents instead of editing them', async () => {

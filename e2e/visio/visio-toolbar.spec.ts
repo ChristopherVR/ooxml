@@ -85,6 +85,21 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await circle.dragTo(viewer.locator('svg.paper'), { targetPosition: { x: 260, y: 120 } });
 	await expect(viewer.locator('svg.paper > g > [data-shape-id]')).toHaveCount(shapesBefore + 2);
 	await expect(viewer.locator('[data-status]')).toHaveText(/Circle .+ added from Basic Shapes/);
+	// Dropped masters carry Visio's default theme look, and on screen no outline is thinner than
+	// one pixel, so a new shape is visible even when the page is zoomed out.
+	const drawn = await viewer
+		.locator('svg.paper > g > [data-shape-id]')
+		.last()
+		.locator('[data-geometry]')
+		.first()
+		.evaluate((path) => {
+			const svg = path.ownerSVGElement!;
+			const style = getComputedStyle(path);
+			const inch = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+			return { fill: style.fill, strokePixels: parseFloat(style.strokeWidth) * inch };
+		});
+	expect(drawn.fill).toBe('rgb(91, 155, 213)');
+	expect(drawn.strokePixels).toBeGreaterThanOrEqual(0.99);
 
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.locator('[data-check="ruler"]').click();

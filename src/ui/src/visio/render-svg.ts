@@ -234,6 +234,10 @@ function drawOwn(
 		const stroked = geometry.stroke && shape.style.linePattern !== 0;
 		path.setAttribute('stroke', stroked ? stroke : 'none');
 		path.setAttribute('stroke-width', String(lineStyle.lineWidth));
+		// On screen a stroke is at least one pixel (the canvas sets --vv-hairline); exports and
+		// prints keep the saved width.
+		if (context.interactive)
+			path.style.strokeWidth = `max(${lineStyle.lineWidth}, var(--vv-hairline, 0))`;
 		path.setAttribute('stroke-opacity', String(shape.style.lineOpacity));
 		path.setAttribute('stroke-linejoin', 'round');
 		path.setAttribute('stroke-linecap', shape.style.lineCap ?? 'round');

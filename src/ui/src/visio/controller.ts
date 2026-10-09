@@ -571,29 +571,32 @@ export class ViewerController {
 		const commands = snapshotEdits(edits);
 		if (this.#destroyed || revision !== this.#revision) throw creationCancelled();
 		this.#creation.require(token);
+		const creates = commands.filter((command) =>
+			[
+				'create-rectangle',
+				'create-ellipse',
+				'create-line',
+				'create-text-box',
+				'create-path',
+				'insert-picture',
+			].includes(command.type),
+		);
+		const created = new Set(
+			creates.map((command) => ('shapeId' in command ? command.shapeId : '')),
+		);
 		if (
-			!commands.length ||
+			!creates.length ||
 			commands.some(
 				(command) =>
-					![
-						'create-rectangle',
-						'create-ellipse',
-						'create-line',
-						'create-text-box',
-						'create-path',
-						'insert-picture',
-					].includes(command.type) ||
 					command.pageId !== context.pageId ||
-					!('shapeId' in command),
+					!('shapeId' in command) ||
+					// Besides creations, only the new shapes' own formatting (a stencil's style) rides along.
+					(!creates.includes(command) &&
+						(command.type !== 'format-shape' || !created.has(command.shapeId))),
 			)
 		)
 			throw new Error('Creation edits must create shapes on the captured current page.');
-		const shapeIds = Object.freeze(
-			commands.map((command) => {
-				if (!('shapeId' in command)) throw new Error('Creation requires shape IDs.');
-				return command.shapeId;
-			}),
-		);
+		const shapeIds = Object.freeze([...created]);
 		return this.#mutate(
 			'edit',
 			commands,

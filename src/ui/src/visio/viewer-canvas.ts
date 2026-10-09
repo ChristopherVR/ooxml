@@ -92,6 +92,9 @@ export class ViewerCanvas {
 			svg.style.height = `${page.height * 96 * state.zoom}px`;
 			// Viewer-only grid spacing: quarter-inch minor and one-inch major lines.
 			svg.style.setProperty('--vv-inch', `${96 * state.zoom}px`);
+			// One screen pixel in drawing inches: Visio never draws a line thinner than that, so
+			// hairlines and 0.75 pt lines stay visible when zoomed out.
+			svg.style.setProperty('--vv-hairline', String(1 / (96 * state.zoom)));
 		}
 		this.#mark(state, changed);
 		return changed;

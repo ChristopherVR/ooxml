@@ -16,20 +16,35 @@ export function wireStencil(
 	const Abort = pane.ownerDocument.defaultView?.AbortController ?? AbortController;
 	const events = new Abort();
 	const options = { signal: events.signal };
+	// A drop is accepted while an earlier edit is still saving; the shape is added once it is done.
 	const editable = () => {
 		const { edit, loading } = controller.state;
-		return edit.sourceAvailable && !edit.busy && !loading;
+		return edit.sourceAvailable && !loading;
 	};
-	const add = async (id: string, centre?: { clientX: number; clientY: number }) => {
+	const idle = () =>
+		new Promise<void>((resolve) => {
+			let stop: (() => void) | undefined;
+			let done = false;
+			stop = controller.subscribe((state) => {
+				if (done || state.edit.busy) return;
+				done = true;
+				resolve();
+				stop?.();
+			});
+			if (done) stop();
+		});
+	// Drops are added one at a time, in the order they were made, each where it was released.
+	let queue = Promise.resolve();
+	const add = (id: string, centre?: { clientX: number; clientY: number }) => {
 		const master = masterCreation(id);
 		const state = controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		if (!master || !page) return;
-		const { size } = master;
+		if (!master || !page) return queue;
 		if (!editable()) {
 			announce('Open a .vsdx file to add shapes. Model-only documents are read only.');
-			return;
+			return queue;
 		}
+		const { size } = master;
 		const svg = viewport.querySelector<SVGSVGElement>('svg.paper');
 		const point = centre && svg ? pagePoint(svg, page, centre) : undefined;
 		// Keep the whole shape on the page, as the drop point is its centre.
@@ -41,14 +56,21 @@ export function wireStencil(
 			page.height - size.height / 2,
 			Math.max(size.height / 2, point?.y ?? page.height / 2),
 		);
-		try {
-			const shapeId = await insertMaster(controller, page, master.create, { x, y }, size);
-			const name = pane.querySelector(`[data-master="${id}"] span`)?.textContent ?? 'Shape';
-			announce(`${name} ${shapeId} added from Basic Shapes.`);
-		} catch (error) {
-			if (!isEditCancellation(error) && !controller.state.edit.error)
-				announce(editErrorMessage(error));
-		}
+		queue = queue.then(async () => {
+			try {
+				if (controller.state.edit.busy) await idle();
+				const current = controller.state;
+				const target = current.document?.pages[current.pageIndex];
+				if (!target || target.id !== page.id || !editable()) return;
+				const shapeId = await insertMaster(controller, target, master.create, { x, y }, size);
+				const name = pane.querySelector(`[data-master="${id}"] span`)?.textContent ?? 'Shape';
+				announce(`${name} ${shapeId} added from Basic Shapes.`);
+			} catch (error) {
+				if (!isEditCancellation(error) && !controller.state.edit.error)
+					announce(editErrorMessage(error));
+			}
+		});
+		return queue;
 	};
 	pane.addEventListener(
 		'dragstart',
