@@ -60,3 +60,4 @@ export * from './auto-layout';
 export * from './select-by-type';
 export * from './layer-assign';
 export * from './guides';
+export * from './paste-text';

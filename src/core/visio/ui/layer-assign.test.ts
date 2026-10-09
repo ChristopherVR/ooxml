@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { editVsdx, type VisioEdit } from '../edit';
 import { parseVsdx } from '../parser';
 import { cell, fixture } from '../test-fixtures';
-import { visioLayerAssignCommand, visioLayerAssignState, visioNewLayerNames } from './layer-assign';
+import {
+	visioLayerAssignCommand,
+	visioLayerAssignCommands,
+	visioLayerAssignState,
+	visioNewLayerNames,
+} from './layer-assign';
 import { visioPageMasters, visioSelectByType, visioShapeSelectType } from './select-by-type';
 import { visioMoveCommands } from './shape-move';
 import { visioResizeShape } from './shape-resize';
@@ -58,6 +63,20 @@ describe('Assign to Layer scene helpers', () => {
 		});
 		expect(visioLayerAssignCommand(scene, ['1'], ['1'])).toBeUndefined();
 		expect(visioLayerAssignCommand(scene, [], ['0'])).toBeUndefined();
+	});
+	it('keeps mixed memberships per shape and adds new layers once', async () => {
+		const scene = await page();
+		expect(visioLayerAssignCommands(scene, ['1', '2'], [], ['0'], ['Added'])).toEqual([
+			{
+				type: 'assign-layers',
+				pageId: '0',
+				shapeIds: ['1'],
+				layerIds: ['0'],
+				newLayers: ['Added'],
+			},
+			{ type: 'assign-layers', pageId: '0', shapeIds: ['2'], layerIds: ['2'] },
+		]);
+		expect(visioLayerAssignCommands(scene, ['1', '2'], ['1'])).toBeUndefined();
 	});
 	it('validates new layer names against the page', async () => {
 		const scene = await page();

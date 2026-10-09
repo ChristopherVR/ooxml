@@ -77,3 +77,45 @@ export function visioLayerAssignCommand(
 		...(newLayers.length ? { newLayers: [...newLayers] } : {}),
 	};
 }
+
+/**
+ * The dialog's whole result as one transaction: `checked` layers for every shape, `mixed` layers
+ * (left indeterminate) kept per shape, and `newLayers` added once and assigned to every shape.
+ * Shapes with the same resulting membership share one command; later commands name the new
+ * layers by the IDs core allocates (one past the largest existing ID, in order).
+ */
+export function visioLayerAssignCommands(
+	page: VisioPage,
+	shapeIds: readonly string[],
+	checked: readonly string[],
+	mixed: readonly string[] = [],
+	newLayers: readonly string[] = [],
+): VisioAssignLayersEdit[] | undefined {
+	const state = visioLayerAssignState(page, shapeIds);
+	if (!state.ok) return undefined;
+	let next = (page.layers ?? []).reduce(
+		(largest, layer) => Math.max(largest, /^\d+$/.test(layer.id) ? Number(layer.id) + 1 : largest),
+		0,
+	);
+	const added = newLayers.map(() => String(next++));
+	const groups = new Map<string, { layers: string[]; ids: string[] }>();
+	for (const id of shapeIds) {
+		const shape = page.shapes.find((candidate) => candidate.id === id)!;
+		const layers = [
+			...new Set([...checked, ...mixed.filter((layer) => shape.layerIds?.includes(layer))]),
+		];
+		const key = layers.join(';');
+		const group = groups.get(key) ?? { layers, ids: [] };
+		group.ids.push(id);
+		groups.set(key, group);
+	}
+	const commands: VisioAssignLayersEdit[] = [];
+	for (const { layers, ids } of groups.values()) {
+		const command = visioLayerAssignCommand(page, ids, layers, commands.length ? [] : newLayers);
+		if (!command) return undefined;
+		commands.push(
+			commands.length ? { ...command, layerIds: [...command.layerIds, ...added] } : command,
+		);
+	}
+	return commands;
+}

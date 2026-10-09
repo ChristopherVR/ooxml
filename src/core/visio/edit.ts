@@ -195,9 +195,9 @@ async function editVsdxTransaction(
 			check,
 		);
 	}
-	const layers = allCommands.find((command) => command.type === 'assign-layers');
-	if (layers) {
-		if (allCommands.length !== 1)
+	const layers = allCommands.filter((command) => command.type === 'assign-layers');
+	if (layers.length) {
+		if (layers.length !== allCommands.length)
 			fail('EDIT_MIXED_LAYER_TRANSACTION', 'Layer assignment requires its own transaction.');
 		return editVsdxLayers(pkg, parts, pages, layers, limits, maxOutput, deadline, check);
 	}
