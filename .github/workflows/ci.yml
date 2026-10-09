@@ -93,6 +93,25 @@ jobs:
       # `github` output turns each finding into an annotation on the changed line.
       - run: bun run lint --format=github
 
+  # Repository style rules no formatter enforces (AGENTS.md, Style), on the lines the change adds.
+  style:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).base != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: No em-dashes in added lines
+        env:
+          BASE: ${{ fromJSON(needs.plan.outputs.plan).base }}
+        run: node scripts/check-em-dashes.mjs "$BASE"
+
   typecheck-strict:
     needs: plan
     if: fromJSON(needs.plan.outputs.plan).typecheck.strict
@@ -607,6 +626,7 @@ jobs:
       [
         plan,
         lint,
+        style,
         typecheck-strict,
         typecheck-pptx,
         typecheck-ui,
