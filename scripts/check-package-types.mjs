@@ -12,7 +12,9 @@
  * Everything else, such as a declaration import that NodeNext cannot resolve, fails.
  */
 import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { closeSync, mkdtempSync, openSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const ATTW = '@arethetypeswrong/cli@0.18.5';
@@ -50,18 +52,27 @@ function main(argv) {
 		console.error('Usage: node scripts/check-package-types.mjs <package dir> [--esm-only]');
 		return 2;
 	}
+	// attw's report goes to a file: through a pipe, a report of a few megabytes was cut short when
+	// attw exited before the pipe drained.
+	const scratch = mkdtempSync(join(tmpdir(), 'ooxml-attw-'));
+	const report = join(scratch, 'attw.json');
 	let output;
 	try {
-		output = execFileSync('bunx', [ATTW, '--pack', resolve(directory), '--format', 'json'], {
-			encoding: 'utf8',
-			maxBuffer: 256 * 1024 * 1024,
-			stdio: ['ignore', 'pipe', 'inherit'],
-			shell: process.platform === 'win32',
-		});
-	} catch (error) {
-		// attw exits non-zero when it finds any problem; the JSON is still on stdout.
-		output = error.stdout;
-		if (!output) throw error;
+		const fd = openSync(report, 'w');
+		try {
+			execFileSync('bunx', [ATTW, '--pack', resolve(directory), '--format', 'json'], {
+				stdio: ['ignore', fd, 'inherit'],
+				shell: process.platform === 'win32',
+			});
+		} catch (error) {
+			// attw exits non-zero when it finds any problem; the report is written all the same.
+			if (error.status === null) throw error;
+		} finally {
+			closeSync(fd);
+		}
+		output = readFileSync(report, 'utf8');
+	} finally {
+		rmSync(scratch, { recursive: true, force: true });
 	}
 	const { analysis } = JSON.parse(output);
 	const { errors, warnings } = classify(analysis.problems, {
