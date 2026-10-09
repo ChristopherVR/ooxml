@@ -1,5 +1,24 @@
 import { fail } from './package-common';
 import { isVisioOutlineShape, type VisioOutlineShape } from './stencil-shapes';
+import {
+	isVisioConnectorEdit,
+	snapshotConnectorEdit,
+	snapshotConnectorGlue,
+	snapshotConnectorRoute,
+	type VisioConnectorEdit,
+	type VisioConnectorGlue,
+	type VisioConnectorRoute,
+} from './edit-connector-commands';
+export { snapshotConnectorGlue } from './edit-connector-commands';
+export type {
+	VisioConnectorGlue,
+	VisioConnectorRoute,
+	VisioConnectorEdit,
+	VisioAddConnectionPointEdit,
+	VisioDeleteConnectionPointEdit,
+	VisioGlueConnectorEdit,
+	VisioConnectorRouteEdit,
+} from './edit-connector-commands';
 import { snapshotTextRanges, type VisioTextRangesEdit } from './edit-text-range-commands';
 export type { VisioTextRange, VisioTextRangesEdit } from './edit-text-range-commands';
 import { snapshotResizeAnchor, type VisioResizeAnchor } from './resize-anchor';
@@ -108,11 +127,6 @@ export interface VisioTextEdit {
 	shapeId: string;
 	text: string;
 }
-/** Shape-to-shape glue targets of a connector. A missing end stays unglued. */
-export interface VisioConnectorGlue {
-	begin?: string;
-	end?: string;
-}
 interface Target {
 	pageId: string;
 	shapeId: string;
@@ -126,8 +140,10 @@ export type VisioGeometryEdit =
 			beginY: number;
 			endX: number;
 			endY: number;
-			/** Present for a connector: shape IDs whose PinX each end is glued to (dynamic glue). */
+			/** Present for a connector: the shapes (or connection points) each end is glued to. */
 			connect?: VisioConnectorGlue;
+			/** A connector's route; omitted means straight. */
+			route?: VisioConnectorRoute;
 	  })
 	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioOutlineShape })
 	| (BoxCreation & { type: 'create-ellipse' })
@@ -138,7 +154,8 @@ export type VisioGeometryEdit =
 	| (Target & { type: 'rotate-shape'; angle: number })
 	| (Target & { type: 'flip-shape'; axis: 'horizontal' | 'vertical' })
 	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
-	| (Target & { type: 'delete-shape' });
+	| (Target & { type: 'delete-shape' })
+	| VisioConnectorEdit;
 /** Insert a blank foreground page after an existing page, copying its PageSheet settings. */
 export interface VisioPageInsert {
 	type: 'insert-page';
@@ -206,7 +223,12 @@ export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 
 /** Potential direct changes used by both package and master dependency admission. */
 export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
-	if (edit.type === 'create-line')
+	if (edit.type === 'add-connection-point' || edit.type === 'delete-connection-point') return [];
+	if (
+		edit.type === 'create-line' ||
+		edit.type === 'glue-connector' ||
+		edit.type === 'set-connector-route'
+	)
 		return [
 			'BeginX',
 			'BeginY',
@@ -286,6 +308,7 @@ export function snapshotVisioEdits(
 		if (isVisioDiagramPartEdit(edit)) return snapshotDiagramPartEdit(edit);
 		if (edit.type === 'set-shape-data') return snapshotShapeDataEdit(edit);
 		if (isVisioDataEdit(edit)) return snapshotDataEdit(edit);
+		if (isVisioConnectorEdit(edit)) return snapshotConnectorEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {
@@ -354,6 +377,7 @@ export function snapshotVisioEdits(
 					endY = numeric(edit.endY);
 				numeric(Math.hypot(endX - beginX, endY - beginY), true);
 				const connect = snapshotConnectorGlue(edit.connect, edit.shapeId);
+				const route = edit.route === undefined ? undefined : snapshotConnectorRoute(edit.route);
 				return {
 					...target,
 					type: edit.type,
@@ -362,6 +386,7 @@ export function snapshotVisioEdits(
 					endX,
 					endY,
 					...(connect ? { connect } : {}),
+					...(route ? { route } : {}),
 				};
 			}
 			case 'create-rectangle':
@@ -414,30 +439,4 @@ export function snapshotVisioEdits(
 				return fail('INVALID_EDIT', 'Unsupported edit command.');
 		}
 	});
-}
-
-/** Copy connector glue targets; each is a distinct canonical shape ID other than the connector. */
-export function snapshotConnectorGlue(
-	value: unknown,
-	connectorId: string,
-): VisioConnectorGlue | undefined {
-	if (value === undefined) return undefined;
-	if (!value || typeof value !== 'object') fail('INVALID_EDIT', 'Invalid connector glue.');
-	const source = value as Record<string, unknown>;
-	const result: VisioConnectorGlue = {};
-	for (const end of ['begin', 'end'] as const) {
-		const id = source[end];
-		if (id === undefined) continue;
-		if (
-			typeof id !== 'string' ||
-			!/^[1-9]\d{0,9}$/.test(id) ||
-			Number(id) > 4294967295 ||
-			id === connectorId
-		)
-			fail('INVALID_EDIT', 'Connector glue targets must be other canonical shape IDs.');
-		result[end] = id;
-	}
-	if (result.begin !== undefined && result.begin === result.end)
-		fail('INVALID_EDIT', 'A connector cannot glue both ends to the same shape.');
-	return result;
 }

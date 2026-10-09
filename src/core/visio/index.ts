@@ -126,6 +126,22 @@ export {
 export { createVsdx, type CreateVsdxOptions } from './create-document';
 export { VISIO_PATH_SEGMENT_LIMIT, type VisioPathCreateEdit } from './edit-path-commands';
 export {
+	VISIO_CONNECTOR_ROUTES,
+	type VisioConnectorRoute,
+	type VisioConnectorEdit,
+	type VisioAddConnectionPointEdit,
+	type VisioDeleteConnectionPointEdit,
+	type VisioGlueConnectorEdit,
+	type VisioConnectorRouteEdit,
+} from './edit-connector-commands';
+export {
+	visioOrthogonalRoute,
+	visioCurvedRoute,
+	type VisioRouteBox,
+	type VisioRouteEnd,
+	type VisioRoutePoint,
+} from './connector-route';
+export {
 	visioSimplifyPath,
 	visioFitFreeform,
 	visioFitPencil,

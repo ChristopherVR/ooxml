@@ -48,6 +48,9 @@ const staticUnsupported = new Set([
 	// still require the geometry evaluator and are rejected by numeric recalculation.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/polyline-function
 	'POLYLINE',
+	// NURBS likewise carries explicit control points (curved connectors write literal ones).
+	// https://learn.microsoft.com/en-us/office/client-developer/visio/nurbs-function
+	'NURBS',
 	'ROUND',
 	'INT',
 	'MOD',

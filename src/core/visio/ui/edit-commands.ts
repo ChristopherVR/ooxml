@@ -14,7 +14,12 @@ import { isVisioDiagramPartEdit, snapshotDiagramPartEdit } from '../edit-diagram
 import { snapshotShapeDataEdit } from '../edit-shape-data-commands';
 import { isVisioDataEdit, snapshotDataEdit } from '../edit-data-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
-import { snapshotConnectorGlue } from '../edit-commands';
+import {
+	isVisioConnectorEdit,
+	snapshotConnectorEdit,
+	snapshotConnectorGlue,
+	snapshotConnectorRoute,
+} from '../edit-connector-commands';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
 import { snapshotPageTheme } from '../edit-page-theme-commands';
@@ -47,6 +52,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (isVisioDiagramPartEdit(command)) return snapshotDiagramPartEdit(command);
 		if (command.type === 'set-shape-data') return snapshotShapeDataEdit(command);
 		if (isVisioDataEdit(command)) return snapshotDataEdit(command);
+		if (isVisioConnectorEdit(command)) return snapshotConnectorEdit(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');
@@ -122,6 +128,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			case 'create-line': {
 				numbers(command.beginX, command.beginY, command.endX, command.endY);
 				const connect = snapshotConnectorGlue(command.connect, command.shapeId);
+				const route =
+					command.route === undefined ? undefined : snapshotConnectorRoute(command.route);
 				return {
 					type: command.type,
 					...target,
@@ -130,6 +138,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					endX: command.endX,
 					endY: command.endY,
 					...(connect ? { connect } : {}),
+					...(route ? { route } : {}),
 				};
 			}
 			case 'replace-plain-text':

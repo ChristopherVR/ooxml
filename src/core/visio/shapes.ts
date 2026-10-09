@@ -7,6 +7,7 @@ import { shapeLayers, type LayerBudget } from './layers';
 import { layerPaintSheet } from './layer-paint';
 import type { VisioLayer, VisioShape } from './model';
 import { shapeTransformDetails, geometryPaths } from './geometry';
+import { shapeConnections } from './shape-connections';
 import { VisioPackageError } from './package';
 import { shapeStyle, shapeText, type Resources } from './style';
 import {
@@ -184,6 +185,7 @@ export function normalizeShapes(
 					'unsupported-foreign-object',
 					'This foreign object is not a supported embedded image or bounded vector and is not rendered.',
 				);
+			const transformDetails = shapeTransformDetails(sheet.cells, width, height, report);
 			if (type === 'Guide') report('hidden-guide', 'Guide shapes are retained but hidden.');
 			if ((shape.image || shape.foreignVector) && sheet.cells.get('ClippingPath')?.value)
 				report(
@@ -251,7 +253,15 @@ export function normalizeShapes(
 				width,
 				height,
 				...(groupDisplayMode === undefined ? {} : { groupDisplayMode }),
-				...shapeTransformDetails(sheet.cells, width, height, report),
+				...transformDetails,
+				...shapeConnections(
+					sheet,
+					original,
+					masterId !== undefined,
+					transformDetails.transform,
+					oneD,
+					report,
+				),
 				geometry,
 				style: shapeStyle(paintSheet, context.resources, report, width, height, geometry),
 				text: shapeText(

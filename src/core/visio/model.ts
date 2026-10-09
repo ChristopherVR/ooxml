@@ -262,6 +262,21 @@ export interface VisioShape {
 	screenTip?: string;
 	/** A container or callout (User.msvStructureType) with its members or target, when known. */
 	structure?: VisioShapeStructure;
+	/** Connection rows in local y-up coordinates; `index` is the zero-based row IX. */
+	connectionPoints?: VisioConnectionPoint[];
+	/** A 1D shape's begin and end points in local y-up coordinates. */
+	lineEnds?: { begin: VisioLocalPoint; end: VisioLocalPoint };
+	/** A dynamic connector's route from its ShapeRouteStyle and ConLineRouteExt caches. */
+	connectorRoute?: 'right-angle' | 'straight' | 'curved';
+}
+export interface VisioLocalPoint {
+	x: number;
+	y: number;
+}
+export interface VisioConnectionPoint extends VisioLocalPoint {
+	index: number;
+	/** True when the row comes from the shape's master rather than the shape itself. */
+	inherited: boolean;
 }
 export type VisioShapeStructure =
 	| { type: 'container'; memberIds: string[] }
