@@ -121,6 +121,15 @@ const shell = process.platform === 'win32' ? 'bash.exe' : 'bash';
 console.log(
 	`verify: ${steps.length} steps for ${full ? 'the whole repository' : `${files.length} files changed since ${base}`}`,
 );
+// Git hands a hook the repository it runs for (GIT_DIR, GIT_INDEX_FILE and so on). The steps must
+// not inherit it: the release planner's tests build throwaway repositories with `git init`,
+// `commit`, `tag` and `config`, which would otherwise land in this repository and its shared
+// config when verify runs as the pre-push hook. Each step finds the repository from its directory.
+const REPOSITORY_ENV =
+	/^GIT_(?:DIR|WORK_TREE|INDEX_FILE|COMMON_DIR|OBJECT_DIRECTORY|ALTERNATE_OBJECT_DIRECTORIES|PREFIX)$/;
+const env = Object.fromEntries(
+	Object.entries({ ...process.env, CI: '1' }).filter(([name]) => !REPOSITORY_ENV.test(name)),
+);
 const started = Date.now();
 for (const [index, step] of steps.entries()) {
 	const label = `[${index + 1}/${steps.length}] ${step.cwd === '.' ? '' : `${step.cwd}: `}${step.cmd}`;
@@ -129,7 +138,7 @@ for (const [index, step] of steps.entries()) {
 	const result = spawnSync(shell, ['-e', '-o', 'pipefail', '-c', step.cmd], {
 		cwd: join(ROOT, step.cwd),
 		stdio: 'inherit',
-		env: { ...process.env, CI: '1' },
+		env,
 	});
 	if (result.status !== 0) fail(`failed: ${label}\nFix it, or push anyway with --no-verify.`);
 	console.log(`ok in ${Math.round((Date.now() - at) / 1000)}s`);
