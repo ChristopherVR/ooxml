@@ -38,4 +38,17 @@ jobs:
       - run: bun run --cwd src/ui build
       # --compact gives short URLs (pkg.pr.new/ooxml-core@<sha>); it works because both packages
       # are on npm with this repository in their `repository` field.
-      - run: bunx pkg-pr-new@0.0.88 publish --compact --comment=update ./src/core ./src/ui
+      # Until the app is installed the upload is refused with "is not installed on or does not have
+      # access to"; that is a missing setup step, not a broken change, so it warns instead of failing
+      # the pull request. Any other error still fails.
+      - name: Publish to pkg.pr.new
+        run: |
+          set +e
+          bunx pkg-pr-new@0.0.88 publish --compact --comment=update ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ] && grep -q 'is not installed on or does not have access to' "$RUNNER_TEMP/pkg-pr-new.log"; then
+            echo "::warning title=Preview packages skipped::Install the pkg.pr.new GitHub App (https://github.com/apps/pkg-pr-new) on this repository to publish previews."
+            exit 0
+          fi
+          exit "$status"
