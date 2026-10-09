@@ -7,6 +7,40 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.6.0) - 2026-10-09
+
+### Features
+
+- **ui:** Add visio presentation mode ([7ef7441](https://github.com/ChristopherVR/ooxml/commit/7ef7441dcaa50bd97632ecf42d7a1bbaa221c0ba))
+- **ui:** Enable visio freeform, pencil and arc drawing tools ([1e38ad9](https://github.com/ChristopherVR/ooxml/commit/1e38ad97a81a1f1ec023922835d501e1f7543ba2))
+- **ui:** Enable the visio change shape gallery ([65b3219](https://github.com/ChristopherVR/ooxml/commit/65b32194f83ba875649898ec066b847dfc353a4a))
+- **ui:** Enable format painter and change case in the visio ribbon ([55395f7](https://github.com/ChristopherVR/ooxml/commit/55395f7b12d272039a9ae5269ce65d3d13a8c75a))
+- **ui:** Enable visio quick styles gallery and shadow effects ([d485ce2](https://github.com/ChristopherVR/ooxml/commit/d485ce2714783c770d81f47f55e9eb83b8f90ba7))
+- **ui:** Enable visio insert pictures, link and screentip ([d4a01ad](https://github.com/ChristopherVR/ooxml/commit/d4a01ad4e80333607c04a5a97fa6b6a7926f2fa3))
+- **ui:** Enable visio group and ungroup commands ([82f79c7](https://github.com/ChristopherVR/ooxml/commit/82f79c77e7e5cd2636c53dc1a4f442e80c02f154))
+- **ui:** Enable the visio connector tool with glue target feedback ([2614be1](https://github.com/ChristopherVR/ooxml/commit/2614be14dfb949eebc9e11e8a04e0f4075c7186d))
+- **ui:** Add visio page setup, backgrounds and page breaks ([d64077d](https://github.com/ChristopherVR/ooxml/commit/d64077d54f52b78d8b8249bc3e1011bcb0620dd7))
+- **ui:** Add visio themes, variants, effects and the format shape pane ([397cf6f](https://github.com/ChristopherVR/ooxml/commit/397cf6f7b295d2703f5df3d6b976e613b46a372d))
+- **ui:** Enable visio comments, reports, diagram checks and subprocess ([6d03f65](https://github.com/ChristopherVR/ooxml/commit/6d03f65939a9788b7bdf5f22c8f4b663e01c9a57))
+- **ui:** Add visio more shapes, quick shapes, containers and callouts ([d115659](https://github.com/ChristopherVR/ooxml/commit/d1156595cf5685d8154718af3452d19e7e51e568))
+- **ui:** Enable the visio data tab with import, linking and data graphics ([fc88751](https://github.com/ChristopherVR/ooxml/commit/fc887514fc44310a895f4183fb903be415e951a6))
+- **ui:** Add visio connection points, point glue and connector styles ([53fdb86](https://github.com/ChristopherVR/ooxml/commit/53fdb86c3b6d99b73bc28346a148b1e7f40a5873))
+- **ui:** Enable visio layout, layers, select by type, guides and pdf ([b278a33](https://github.com/ChristopherVR/ooxml/commit/b278a339ca7904195ad8382f8ad2c8e5f62a4833))
+- **ui:** Add visio text dialog, text block tool, symbol and field ([a510104](https://github.com/ChristopherVR/ooxml/commit/a5101049323feba94182e5802b2de399ba2f019a))
+
+### Bug Fixes
+
+- **ui:** Make dropped visio shapes visible and never lose a drop ([fa2f36e](https://github.com/ChristopherVR/ooxml/commit/fa2f36e9c7be0c54f5649d30c0d08183b81c5ccf))
+- **visio:** Show one colour rule when every value is equal ([00bc35c](https://github.com/ChristopherVR/ooxml/commit/00bc35c94781e428bca99820aca216d7030cf73e))
+- **ui:** State the visio AutoConnect limit precisely ([89ac6fd](https://github.com/ChristopherVR/ooxml/commit/89ac6fd4803928ca5b4fa9e3df763d36e51970d6))
+- **ui:** Keep visio text dialogs hidden and the text block overlay clear ([13eb01d](https://github.com/ChristopherVR/ooxml/commit/13eb01d47ce0147a000506cf21eeb121ac8606bd))
+- **ui:** Size the symbol picker in em and drop unused visio ribbon helpers ([d4b4c11](https://github.com/ChristopherVR/ooxml/commit/d4b4c113611809a2164024f1df23964f3ea838af))
+- **pptx:** Follow slide links outside slide shows ([#38](https://github.com/ChristopherVR/ooxml/issues/38)) ([f3e99cb](https://github.com/ChristopherVR/ooxml/commit/f3e99cb2d4faaefbfbb8e8c3a130744665f9be3c))
+
+### Testing
+
+- **ui:** Expect browser spelling and a disabled thesaurus in review ([bdc9575](https://github.com/ChristopherVR/ooxml/commit/bdc9575ec73d2b3b46f95ca2efaaee31d46abb16))
+
 ## [1.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.5.0) - 2026-10-09
 
 ### Features

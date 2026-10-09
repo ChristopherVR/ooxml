@@ -7,6 +7,39 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.6.0) - 2026-10-09
+
+### Features
+
+- **visio:** Create freeform, pencil and arc paths ([eeb6956](https://github.com/ChristopherVR/ooxml/commit/eeb69560e18ce57e7e7dac4cfaf5ab8594525b55))
+- **visio:** Change a local shape's outline to a basic shape ([8c808e9](https://github.com/ChristopherVR/ooxml/commit/8c808e962df0171d9d5057f18ec58af63b527ffa))
+- **visio:** Add change case and format painter commands ([85440e1](https://github.com/ChristopherVR/ooxml/commit/85440e1b6a88608c297de91157648a057dda0102))
+- **visio:** Add quick style and outer shadow format edits ([385f163](https://github.com/ChristopherVR/ooxml/commit/385f1635aa27b5f5fbfb591565b9ed599009efb2))
+- **visio:** Insert pictures and edit shape links and screentips ([d17698c](https://github.com/ChristopherVR/ooxml/commit/d17698c6345dd5b873c0141e661c04ec07235cf9))
+- **visio:** Add group-shapes and ungroup-shape edits ([1e905d7](https://github.com/ChristopherVR/ooxml/commit/1e905d7149631242ceb2909ca45b4701739d56a7))
+- **visio:** Glue straight connectors to shapes with native dynamic glue ([e4970fa](https://github.com/ChristopherVR/ooxml/commit/e4970fa5cef4f8c6f3a131642e101a0141f4684d))
+- **visio:** Add page setup, page properties and page decoration edits ([f473bd4](https://github.com/ChristopherVR/ooxml/commit/f473bd4804ade69b89e3b0aad9a5903c5735b680))
+- **visio:** Keep auto size on standard sizes and match paper sizes ([5760f7b](https://github.com/ChristopherVR/ooxml/commit/5760f7ba03789026ccbb13dcd47e462c18053a55))
+- **visio:** Add page themes and glow, soft edge and reflection effects ([709bd22](https://github.com/ChristopherVR/ooxml/commit/709bd2287e86a689eff8cb3b674f95f6da755d00))
+- **visio:** Add comments, subprocess, diagram checks and shape reports ([6fc89d0](https://github.com/ChristopherVR/ooxml/commit/6fc89d019990be3baa2a71acac8fbe25a386f566))
+- **visio:** Plan create new and create from selection subprocesses ([f52bbf1](https://github.com/ChristopherVR/ooxml/commit/f52bbf17e13df75a38c864d035d2d6ff594f92df))
+- **visio:** Add stencil outlines, containers and callouts ([7a28511](https://github.com/ChristopherVR/ooxml/commit/7a28511f983a8c316968d8e01f5308894bc41118))
+- **visio:** Edit shape data and save linked external data recordsets ([ca13e1d](https://github.com/ChristopherVR/ooxml/commit/ca13e1d184087b32cb03e8e5a727ec5fc0d362cf))
+- **visio:** Add data import tables and data graphic edit planning ([350c37a](https://github.com/ChristopherVR/ooxml/commit/350c37a38e0a5809456aa02973d8ebfbb07c5030))
+- **ui:** Enable the visio data tab with import, linking and data graphics ([fc88751](https://github.com/ChristopherVR/ooxml/commit/fc887514fc44310a895f4183fb903be415e951a6))
+- **visio:** Add connection points, point glue and connector routes ([25c47f8](https://github.com/ChristopherVR/ooxml/commit/25c47f883bd89cdbe9f74799baea0ec0c9dee438))
+- **visio:** Re-route glued connectors for move previews ([40e4dc5](https://github.com/ChristopherVR/ooxml/commit/40e4dc5d8276ae50531a872b86322bb0b9a47dc8))
+- **visio:** Add re-layout, auto align, layer assignment and guide edits ([c4c9cb2](https://github.com/ChristopherVR/ooxml/commit/c4c9cb2dec0579c595fc0d6be0787fd1da4e8cd6))
+- **visio:** Assign mixed layers in one transaction and paste text boxes ([3fedc6d](https://github.com/ChristopherVR/ooxml/commit/3fedc6dffe13ccaa1e6a100e33b90619b273ec23))
+- **visio:** Add text dialog formatting, text block placement and text fields ([30f680b](https://github.com/ChristopherVR/ooxml/commit/30f680bacbb4783fdaddc62f25c6cfebc10b0f5d))
+- **visio:** Add text dialog, text block and text draft helpers ([438a552](https://github.com/ChristopherVR/ooxml/commit/438a5529b051a601b7849b69fc3255e3d98ebd3d))
+
+### Bug Fixes
+
+- **visio:** Show one colour rule when every value is equal ([00bc35c](https://github.com/ChristopherVR/ooxml/commit/00bc35c94781e428bca99820aca216d7030cf73e))
+- **pptx:** Save the size of empty table cell paragraphs ([5f73df1](https://github.com/ChristopherVR/ooxml/commit/5f73df19e7c77690d55cc1c33f1792d76d18851a))
+- **visio:** Resolve code scanning alerts in connectors and links ([b370053](https://github.com/ChristopherVR/ooxml/commit/b370053ed6d6f96bb3ae9caeb84f3973a99ba9f8))
+
 ## [1.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.5.0) - 2026-10-09
 
 ### Features
