@@ -1,0 +1,41 @@
+name: Preview packages
+
+# Publishes every pull request's ooxml-core and ooxml-ui to pkg.pr.new (https://pkg.pr.new), a free
+# preview registry for open source, and comments the install commands on the PR. A viewer, the
+# suite or an outside consumer can then try an unreleased change with `npm i <url>` instead of
+# linking a checkout (scripts/link-local.mjs) or waiting for a release.
+#
+# Needs the pkg.pr.new GitHub App installed on the repository (https://github.com/apps/pkg-pr-new);
+# it authenticates the upload from this workflow run, so no token or secret is involved. Previews
+# are not npm releases: nothing here touches npm, tags or the release flow.
+on:
+  pull_request:
+    paths:
+      - 'src/core/**'
+      - 'src/ui/**'
+      - 'scripts/esm-declarations.mjs'
+      - 'bun.lock'
+      - '.github/workflows/preview-packages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-packages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Publish previews
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: bun run build
+      - run: bun run --cwd src/ui build
+      # --compact gives short URLs (pkg.pr.new/ooxml-core@<sha>); it works because both packages
+      # are on npm with this repository in their `repository` field.
+      - run: bunx pkg-pr-new@0.0.88 publish --compact --comment=update ./src/core ./src/ui
