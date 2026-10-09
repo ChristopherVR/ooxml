@@ -419,13 +419,22 @@ jobs:
         with:
           name: release-plan-${{ github.run_id }}
 
-      # Node 24 plus npm >= 11.5.1 is required for trusted publishing and --provenance.
+      # Node 24 plus npm >= 11.5.1 is required for trusted publishing and --provenance. Node 24
+      # bundles npm 11.5.1 or newer since 24.6, so the bundled npm is used as is (an unpinned
+      # global install would be an npm command Scorecard cannot pin) and checked below.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - run: npm install --global npm@^11.5.1
+      - name: Check npm supports trusted publishing
+        run: |
+          version="$(npm --version)"
+          if [ "$(printf '%s\n' 11.5.1 "$version" | sort -V | head -n 1)" != "11.5.1" ]; then
+            echo "::error::npm $version is older than 11.5.1, which trusted publishing needs."
+            exit 1
+          fi
+          echo "npm $version"
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
@@ -463,6 +472,7 @@ jobs:
           INPUT_TAG: ${{ inputs.tag }}
           GROUP: ${{ matrix.group }}
         run: |
+          # publish-released.mjs runs `npm publish --provenance` once per package in the group.
           if [ -n "$INPUT_TAG" ]; then
             node scripts/publish-released.mjs --tag "$INPUT_TAG" --group "$GROUP"
           else
