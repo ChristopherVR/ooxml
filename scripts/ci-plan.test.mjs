@@ -36,7 +36,10 @@ test('UI typechecks reuse core declarations from the build job', () => {
 	const job = workflow.match(/^  typecheck-ui:\r?\n([\s\S]*?)(?=^  \S)/m)?.[1];
 	assert.ok(job, 'the workflow has a UI typecheck job');
 	assert.match(job, /needs:\s*\[[^\]]*\bbuild\b[^\]]*\]/u);
-	assert.match(job, /download-artifact@\S+\s+with:\s+name:\s*core-dist\s+path:\s*src\/core\/dist/u);
+	assert.match(
+		job,
+		/download-artifact@\S+(?: +#[^\r\n]*)?\s+with:\s+name:\s*core-dist\s+path:\s*src\/core\/dist/u,
+	);
 	assert.ok(job.indexOf('download-artifact') < job.indexOf('src/ui typecheck'));
 });
 

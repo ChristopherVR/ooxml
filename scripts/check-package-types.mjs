@@ -12,7 +12,7 @@
  * Everything else, such as a declaration import that NodeNext cannot resolve, fails.
  */
 import { execFileSync } from 'node:child_process';
-import { closeSync, mkdtempSync, openSync, readFileSync, rmSync } from 'node:fs';
+import { closeSync, fstatSync, mkdtempSync, openSync, readSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -58,7 +58,7 @@ function main(argv) {
 	const report = join(scratch, 'attw.json');
 	let output;
 	try {
-		const fd = openSync(report, 'w');
+		const fd = openSync(report, 'w+');
 		try {
 			execFileSync('bunx', [ATTW, '--pack', resolve(directory), '--format', 'json'], {
 				stdio: ['ignore', fd, 'inherit'],
@@ -68,9 +68,13 @@ function main(argv) {
 			// attw exits non-zero when it finds any problem; the report is written all the same.
 			if (error.status === null) throw error;
 		} finally {
+			// Read the report back through the descriptor it was written to, not by name again.
+			const size = fstatSync(fd).size;
+			const buffer = Buffer.alloc(size);
+			readSync(fd, buffer, 0, size, 0);
+			output = buffer.toString('utf8');
 			closeSync(fd);
 		}
-		output = readFileSync(report, 'utf8');
 	} finally {
 		rmSync(scratch, { recursive: true, force: true });
 	}
