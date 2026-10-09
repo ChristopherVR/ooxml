@@ -4,6 +4,7 @@
 //
 //   node scripts/ci-plan.mjs --base <sha> --event <push|pull_request|schedule|workflow_dispatch>
 //     [--scope full|changed]   (manual runs only: plan from --base instead of everything)
+//     [--on-base true]         (with scope changed: run that plan on the base commit itself)
 //
 // Prints the plan as JSON and, with GITHUB_OUTPUT set, writes it as the `plan` output. The planner is
 // deliberately conservative: anything it cannot place (a root manifest, a tsconfig, this file, the
@@ -536,22 +537,59 @@ export function plannedFiles(event, base, scope, diff = changedSince) {
 	return diff(base);
 }
 
+/**
+ * A baseline run (manual, scope `changed`, `--on-base true`) plans from the branch's changes but
+ * runs on the base commit, so a failure can be checked against upstream in the same CI
+ * environment. Files the branch adds are left out (they do not exist on the base), and the core
+ * tests run as `vitest related` on the changed sources, since `--changed` finds nothing there.
+ */
+export function onBasePlan(result, changed) {
+	const sources = changed.filter((file) => file.startsWith('src/core/'));
+	if (!result.test.run) return result;
+	if (!sources.length) return { ...result, test: { ...result.test, run: false, shards: [] } };
+	const related = sources.map((file) => file.slice('src/core/'.length));
+	return { ...result, test: { ...result.test, mode: 'related', related } };
+}
+
+function existsAt(ref, file) {
+	try {
+		execFileSync('git', ['cat-file', '-e', `${ref}:${file}`], { stdio: 'ignore' });
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 function main() {
 	const args = process.argv.slice(2);
 	const value = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
 	const event = value('--event') ?? 'push';
 	const base = value('--base');
-	const changed = plannedFiles(event, base, value('--scope'));
+	const scope = value('--scope');
+	const onBase = value('--on-base') === 'true';
+	if (onBase && (event !== 'workflow_dispatch' || scope !== 'changed' || !base))
+		throw new Error('A run on the base needs a manual run with scope "changed" and a base commit.');
+	let changed = plannedFiles(event, base, scope);
+	if (onBase && changed === undefined) throw new Error(`Cannot diff against the base ${base}.`);
+	if (onBase) changed = changed.filter((file) => file && existsAt(base, file));
 	const full = changed === undefined;
 	let result = plan(changed ?? [], { full });
 	if (!result.full && result.test.run) {
 		const count = countTestFiles(base);
 		result = { ...result, test: { ...result.test, shards: shardsFor(count, false), files: count } };
 	}
+	if (onBase && !result.full) result = onBasePlan(result, changed);
 	result.base = full ? '' : base;
+	// The commit every job checks out: the base for a baseline run, otherwise the event's own.
+	result.ref = onBase ? git('rev-parse', `${base}^{commit}`) : '';
 	console.log(JSON.stringify(result, null, 2));
 	if (process.env.GITHUB_OUTPUT)
-		appendFileSync(process.env.GITHUB_OUTPUT, `plan=${JSON.stringify(result)}\n`);
+		appendFileSync(
+			process.env.GITHUB_OUTPUT,
+			`plan=${JSON.stringify(result)}
+ref=${result.ref}
+`,
+		);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main();

@@ -68,6 +68,10 @@ The release workflow writes `chore(release): bump versions and update changelogs
   add `--browser`. Use the Bun version CI uses (`bun-version` in `.github/actions/setup/action.yml`).
 - On a fork, a manual run of the CI workflow can be scoped to your change: choose scope `changed`
   and give the upstream commit your branch started from as the base. The default is a full run.
+- To tell whether a failure is yours or already upstream, run the same scoped checks with
+  `on_base` ticked: they then run on the base commit, in the same CI environment. A local pass
+  alone does not show a failure is unrelated. Report a baseline failure separately rather than
+  fixing it inside a focused pull request.
 
 ## Labels, alerts and dependencies
 

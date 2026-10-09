@@ -9,6 +9,7 @@ import {
 	PPTX_E2E_SHARDS,
 	VIEWERS,
 	consumersOfArea,
+	onBasePlan,
 	plan,
 	plannedFiles,
 	shardsFor,
@@ -341,4 +342,15 @@ test('manual runs are full unless they ask for the changes since a base', () => 
 	// A base git cannot diff (not in a fork's history) falls back to a full run.
 	assert.equal(plannedFiles('workflow_dispatch', 'missing', 'changed', diff), undefined);
 	assert.deepEqual(plannedFiles('push', 'abc', undefined, diff), ['src/core/xlsx/model.ts']);
+});
+
+test('a run on the base tests the core sources the branch changed, with vitest related', () => {
+	const changed = ['src/core/xlsx/model.ts', 'viewers/docx/docs/index.md'];
+	const result = onBasePlan(plan(changed), changed);
+	assert.equal(result.test.mode, 'related');
+	assert.deepEqual(result.test.related, ['xlsx/model.ts']);
+	const viewerOnly = ['viewers/docx/packages/react/src/index.ts'];
+	const none = onBasePlan(plan(viewerOnly), viewerOnly);
+	assert.equal(none.test.run, false);
+	assert.deepEqual(none.test.shards, []);
 });

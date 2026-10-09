@@ -29,6 +29,10 @@ on:
         description: 'Base commit for scope "changed", for example the upstream commit a fork branch started from.'
         required: false
         default: ''
+      on_base:
+        description: 'With scope "changed": run the same checks on the base commit instead, to see whether a failure is already there.'
+        type: boolean
+        default: false
   schedule:
     - cron: '17 3 * * *' # nightly full run: the safety net for `vitest --changed`
 
@@ -49,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
+      # The commit the other jobs check out: empty (the event's own) unless a run on the base.
+      ref: ${{ steps.plan.outputs.ref }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -71,7 +77,8 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.base }}
           SCOPE: ${{ inputs.scope || 'full' }}
-        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE"
+          ON_BASE: ${{ inputs.on_base || false }}
+        run: node scripts/ci-plan.mjs --event "$EVENT" --base "$BASE" --scope "$SCOPE" --on-base "$ON_BASE"
 
   lint:
     needs: plan
@@ -80,6 +87,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run lint
 
@@ -89,6 +98,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run typecheck:strict
 
@@ -98,6 +109,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run typecheck:pptx
 
@@ -107,6 +120,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -130,6 +145,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.plan.outputs.ref }}
           fetch-depth: 0
       - uses: ./.github/actions/setup
       - name: Run the affected tests
@@ -139,7 +155,11 @@ jobs:
           mode=$(node -p "JSON.parse(process.env.PLAN).test.mode")
           base=$(node -p "JSON.parse(process.env.PLAN).base")
           shard="--shard=${{ matrix.shard }}/${{ strategy.job-total }}"
-          if [ "$mode" = "changed" ] && [ -n "$base" ]; then
+          if [ "$mode" = "related" ]; then
+            # A run on the base: the tests related to the branch's changed core sources.
+            related=$(node -p "JSON.parse(process.env.PLAN).test.related.join(' ')")
+            cd src/core && bunx vitest related --run $related $shard --passWithNoTests
+          elif [ "$mode" = "changed" ] && [ -n "$base" ]; then
             bun run test --changed="$base" $shard --passWithNoTests
           else
             bun run test $shard
@@ -152,6 +172,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run build
       # The package and boundary checks only matter when the core or the UI changed; a viewer-only
@@ -173,6 +195,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -196,6 +220,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run test:scripts
       - run: bun run check:changelog
@@ -206,6 +232,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - run: bun run test:mcp
 
@@ -227,6 +255,8 @@ jobs:
         include: ${{ fromJSON(needs.plan.outputs.plan).viewers }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -270,6 +300,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -319,6 +351,8 @@ jobs:
         leg: ${{ fromJSON(needs.plan.outputs.plan).pptx.tests }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -363,6 +397,8 @@ jobs:
         shard: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.shards }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -428,6 +464,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v8
         with:
@@ -480,9 +518,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.plan.outputs.ref }}
           path: ooxml
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.plan.outputs.ref }}
           repository: ${{ matrix.repo }}
           path: viewer
       - uses: actions/setup-node@v7
