@@ -65,3 +65,4 @@ export * from './text-draft';
 export * from './text-dialog';
 export * from './text-block';
 export * from './text-field-catalog';
+export * from './sample-drawing';
