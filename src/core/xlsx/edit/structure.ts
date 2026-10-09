@@ -1,9 +1,9 @@
 import { MAX_COL, MAX_ROW } from '../address';
 import { getCell, putCell } from '../cells';
 import type { Worksheet } from '../model';
-import { type EditContext, sheetAt } from './context';
+import { type EditContext, type RunInfo, sheetAt } from './context';
 import { shiftFormula } from './deps';
-import type { Axis, AxisShift } from './range-math';
+import { type Axis, type AxisShift, shiftRange } from './range-math';
 import { rewriteFormulas } from './shift-formulas';
 import { shiftSheetContent } from './shift-sheet';
 
@@ -56,6 +56,10 @@ function shiftAxis(
 	const sheet = sheetAt(ctx.workbook, s);
 	const noun = axis === 'row' ? (count === 1 ? 'row' : 'rows') : count === 1 ? 'column' : 'columns';
 	const shift: AxisShift = { axis, at, count: insert ? count : -count };
+	const info: RunInfo = { sheet: s, structural: true };
+	// Removing a filter changes row visibility, so SUBTOTAL also needs a fresh calculation.
+	if (!sheet.autoFilter || shiftRange(sheet.autoFilter.range, shift))
+		info.calc = { kind: 'shift', sheet: s, shift };
 	ctx.run(
 		`${insert ? 'Insert' : 'Delete'} ${noun}`,
 		'structure',
@@ -64,7 +68,7 @@ function shiftAxis(
 			applyAxisShift(ctx, sheet, shift);
 			if (insert) inheritFormats(sheet, axis, at, count);
 		},
-		{ sheet: s, structural: true, calc: { kind: 'shift', sheet: s, shift } },
+		info,
 	);
 }
 
