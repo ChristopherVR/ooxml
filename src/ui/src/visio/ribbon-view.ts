@@ -38,11 +38,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 					check(doc, { id: 'grid', label: 'Grid', action: { type: 'grid' } }),
 				]),
 				stack(doc, [
-					check(doc, {
-						id: 'guides',
-						label: 'Guides',
-						unsupported: 'Needs guide shapes from the core.',
-					}),
+					check(doc, { id: 'guides', label: 'Guides', action: { type: 'guides' } }),
 					menu(doc, {
 						id: 'task-panes',
 						label: 'Task Panes',
@@ -82,7 +78,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 							{
 								id: 'drawing-explorer',
 								label: 'Drawing Explorer',
-								unsupported: 'Needs a document tree view.',
+								action: { type: 'drawing-explorer' },
 							},
 						],
 					}),
@@ -124,7 +120,11 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 							unsupported:
 								'Hover arrows that add a glued copy of a shape are not built yet; draw connectors with the Connector tool.',
 						}),
-						check(doc, { id: 'dynamic-grid', label: 'Dynamic Grid', unsupported: EDITING_AIDS }),
+						check(doc, {
+							id: 'dynamic-grid',
+							label: 'Dynamic Grid',
+							action: { type: 'dynamic-grid' },
+						}),
 						check(doc, {
 							id: 'connection-points',
 							label: 'Connection Points',

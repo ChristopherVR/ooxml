@@ -35,6 +35,7 @@ import { ViewerFormatShape } from './viewer-format-shape';
 import { ViewerReview } from './viewer-review';
 import { ViewerDiagramParts } from './viewer-diagram-parts';
 import { ViewerData } from './viewer-data';
+import { ViewerLayoutCommands } from './viewer-layout-commands';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -96,6 +97,7 @@ export class ViewerCommands {
 	#review: ViewerReview;
 	#parts: ViewerDiagramParts;
 	#data: ViewerData;
+	readonly layoutCommands: ViewerLayoutCommands;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -142,6 +144,17 @@ export class ViewerCommands {
 		);
 		this.#data = new ViewerData(host.root, host.controller, host.announce, (run, message) => {
 			void this.#edit(run, message);
+		});
+		this.layoutCommands = new ViewerLayoutCommands({
+			root: host.root,
+			viewport: host.viewport,
+			rulers: host.rulers.element,
+			controller: host.controller,
+			announce: host.announce,
+			edit: (run, message) => {
+				void this.#edit(run, message);
+			},
+			pasteShapes: () => this.#clipboard.run('paste'),
 		});
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
@@ -202,6 +215,7 @@ export class ViewerCommands {
 			formatSelection: (action) => this.#formatting.run(action),
 			formatPainter: (mode) => this.#painter.run(mode),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
+			layout: (action) => this.layoutCommands.run(action),
 			setTool: (tool) => this.setTool(tool),
 			cancelDrawing: () => {
 				this.#draw.cancel();
@@ -277,6 +291,8 @@ export class ViewerCommands {
 					(event.target as Element)?.matches?.('.page-tabs')
 				)
 					this.#insertPage();
+				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'layout-dialog')
+					this.run({ type: 'layout-options' });
 				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'zoom-fit')
 					this.run({ type: 'zoom', mode: 'fit' });
 			},
@@ -327,6 +343,7 @@ export class ViewerCommands {
 		const disposeFormatShape = this.#formatShape.wire();
 		const disposeReview = this.#review.wire();
 		const disposeData = this.#data.wire(viewport);
+		const disposeLayout = this.layoutCommands.wire();
 		return () => {
 			disposePageSetup();
 			this.#pageOrder.close();
@@ -345,6 +362,8 @@ export class ViewerCommands {
 			disposeFormatShape();
 			disposeReview();
 			disposeData();
+			disposeLayout();
+			this.layoutCommands.close();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -499,6 +518,7 @@ export class ViewerCommands {
 		if (control && (key === 'PageDown' || key === 'PageUp'))
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'presentation' };
+		if (key === 'F1' && !control) return { type: 'help', topic: 'help' };
 		const drawing = this.#draw.drawing || this.#connector.drawing;
 		if (key === 'Escape' && (drawing || this.#text.drafting)) return { type: 'cancel-drawing' };
 		if (event.composedPath().some(editable)) return undefined;
@@ -594,8 +614,9 @@ export class ViewerCommands {
 		for (const name of ['flip-horizontal', 'flip-vertical']) button(name).disabled = !flipping;
 		root.querySelector<RibbonCommand>('[data-menu="rotate"]')!.disabled = !rotating;
 		const distributing = this.#arrangement.render(state);
+		this.layoutCommands.render(state);
 		root.querySelector<RibbonCommand>('[data-menu="position"]')!.disabled =
-			!rotating && !distributing;
+			!rotating && !distributing && !this.layoutCommands.layout.available(state);
 		button('select-all').disabled = !page || state.loading;
 		button('clear-selection').disabled = !state.selectedShapes.length;
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;

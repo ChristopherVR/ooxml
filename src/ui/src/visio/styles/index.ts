@@ -10,6 +10,7 @@ import insert from './insert.css?raw';
 import pageSetup from './page-setup.css?raw';
 import review from './review.css?raw';
 import data from './data.css?raw';
+import layout from './layout.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -29,6 +30,7 @@ export const canvasAndRibbonStyles = [
 	pageSetup,
 	review,
 	data,
+	layout,
 	visioThemeBridge,
 ].join('\n');
 

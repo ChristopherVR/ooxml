@@ -5,6 +5,7 @@ import type {
 	VisioFormattingAction,
 	VisioInsertItem,
 	VisioDataCommand,
+	VisioLayoutAction,
 } from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
@@ -45,6 +46,8 @@ export interface RibbonTargets {
 	focusReplace(): void;
 	pageSetup(command: Extract<VisioRibbonAction, { type: 'page-setup' }>['command']): void;
 	review(action: Extract<VisioRibbonAction, { type: 'review' }>): void;
+	/** Layout, layers, selection, guides, explorer, export and help (ViewerLayoutCommands). */
+	layout(action: VisioLayoutAction): void;
 }
 
 /** Routes a ribbon, status-bar or shortcut action to the controller that owns it. */
@@ -54,6 +57,17 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 	switch (action.type) {
 		case 'arrange':
 			return targets.arrangeSelection(action);
+		case 'auto-align':
+		case 're-layout':
+		case 'layout-options':
+		case 'assign-layers':
+		case 'select-by-type':
+		case 'paste-special':
+		case 'guides':
+		case 'dynamic-grid':
+		case 'drawing-explorer':
+		case 'help':
+			return targets.layout(action);
 		case 'selection':
 			return action.mode === 'all' ? controller.selectAll() : controller.clearSelection();
 		case 'text-toggle':

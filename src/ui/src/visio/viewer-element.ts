@@ -40,6 +40,7 @@ import { ViewerResizeHandles } from './viewer-resize-handles';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
+import { exportDocumentPdf, exportPagePng } from './viewer-export';
 import {
 	createPrintSnapshot,
 	type CurrentPagePrintSnapshotOptions,
@@ -179,6 +180,8 @@ export class VisioViewerElement extends BaseElement {
 				this.#announcement = message;
 				this.#status.textContent = message;
 			},
+			snap: (page, ids, delta) => this.#commands.layoutCommands.guides.snap(page, ids, delta),
+			clearSnap: () => this.#commands.layoutCommands.guides.clearHints(),
 		});
 		this.#lineEndpoints = new ViewerLineEndpoints(this.#viewport, this.controller, {
 			active: () => this.#commands.tool === 'pointer',
@@ -210,6 +213,18 @@ export class VisioViewerElement extends BaseElement {
 			createBlankDrawing: () => this.createBlankDrawing(),
 			exportVsdx: () => this.controller.exportVsdx(),
 			exportSvg: () => this.exportSvg(),
+			exportPicture: async (format) => {
+				const { document: model, pageIndex } = this.controller.state;
+				if (!model) throw new Error('Open a drawing before exporting.');
+				const doc = this.ownerDocument;
+				return {
+					blob:
+						format === 'pdf'
+							? await exportDocumentPdf(doc, model)
+							: await exportPagePng(doc, model, pageIndex),
+					pageIndex,
+				};
+			},
 			closeDocument: () => {
 				this.#fileName = '';
 				this.controller.setDocument(null);

@@ -2,7 +2,6 @@ import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-p
 import { fontColorOptions } from './ribbon-style-options';
 
 const TEXT = 'Needs core text formatting edits.';
-const CLIPBOARD = 'Paste Special and native Visio clipboard formats are unsupported.';
 const caseItems: CommandSpec[] = (
 	[
 		['sentence', 'Sentence case.'],
@@ -27,7 +26,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 			keys: ['Control+V', 'Ctrl+V'],
 			items: [
 				{ id: 'paste-item', label: 'Paste', action: { type: 'clipboard', operation: 'paste' } },
-				{ id: 'paste-special', label: 'Paste Special...', unsupported: CLIPBOARD },
+				{ id: 'paste-special', label: 'Paste Special...', action: { type: 'paste-special' } },
 				{
 					id: 'duplicate',
 					label: 'Duplicate',

@@ -5,7 +5,6 @@ import { command, commandRow, group, menu, stack, type CommandSpec } from './rib
 import { changeShapeGallery } from './ribbon-change-shape';
 
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
-const SELECT = 'Needs multi-shape selection.';
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
 
@@ -175,7 +174,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			icon: 'position',
 			unsupported: ARRANGE,
 			items: [
-				{ id: 'auto-align', label: 'Auto Align & Space', unsupported: ARRANGE },
+				{ id: 'auto-align', label: 'Auto Align & Space', action: { type: 'auto-align' } },
 				{
 					id: 'distribute-horizontal',
 					label: 'Distribute Horizontally',
@@ -306,7 +305,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 					{
 						id: 'assign-layer',
 						label: 'Assign to Layer...',
-						unsupported: 'Needs core layer assignment edits.',
+						action: { type: 'assign-layers' },
 					},
 				],
 			}),
@@ -327,7 +326,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 						label: 'Deselect All',
 						action: { type: 'selection', mode: 'clear' },
 					},
-					{ id: 'select-by-type', label: 'Select by Type...', unsupported: SELECT },
+					{ id: 'select-by-type', label: 'Select by Type...', action: { type: 'select-by-type' } },
 				],
 			}),
 		]),

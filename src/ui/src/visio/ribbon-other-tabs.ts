@@ -4,6 +4,7 @@ import { backgroundsGroup, pageSetupGroup } from './ribbon-page-setup';
 import { themesGallery, variantOptions, variantsGallery } from './ribbon-themes';
 import { diagramPartGallery } from './ribbon-diagram-parts';
 import type { VisioDataCommand } from './ribbon-action';
+import { layoutGroup, reLayoutGallery } from './ribbon-layout';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 const DESIGN = 'Needs core page setup and theme edits.';
@@ -158,20 +159,10 @@ export function buildDesignPanel(doc: Document, panel: HTMLElement): void {
 			group(doc, 'Themes', [themesGallery(doc)]),
 			group(doc, 'Variants', [variantsGallery(doc), variantOptions(doc)]),
 			backgroundsGroup(doc),
-			group(
-				doc,
-				'Layout',
-				[
-					dropdown(doc, {
-						id: 're-layout',
-						label: 'Re-Layout Page',
-						icon: 'position',
-						reason: 'Needs core automatic layout.',
-					}),
-					connectorMenu(doc, 'connectors', 'Connectors', 'selection'),
-				],
-				{ launcher: 'Needs core automatic layout.' },
-			),
+			layoutGroup(doc, [
+				reLayoutGallery(doc),
+				connectorMenu(doc, 'connectors', 'Connectors', 'selection'),
+			]),
 		]),
 	);
 }
@@ -250,13 +241,18 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 	);
 }
 
-/** Visio's Help tab. Help content, support and training are not bundled in this viewer. */
+/** Visio's Help tab. Help and Show Training open the viewer guide; support is not connected. */
 export function buildHelpPanel(doc: Document, panel: HTMLElement): void {
-	const OFFLINE = 'Help content is not bundled; see the viewer guide.';
 	panel.append(
 		commandRow(doc, 'Help commands', [
 			group(doc, 'Help', [
-				command(doc, unsupported('help', 'Help', 'help', OFFLINE)),
+				command(doc, {
+					id: 'help',
+					label: 'Help',
+					icon: 'help',
+					action: { type: 'help', topic: 'help' },
+					keys: ['F1', 'F1'],
+				}),
 				command(
 					doc,
 					unsupported(
@@ -275,7 +271,12 @@ export function buildHelpPanel(doc: Document, panel: HTMLElement): void {
 						'Feedback is not collected by this viewer.',
 					),
 				),
-				command(doc, unsupported('show-training', 'Show Training', 'visioPresentation', OFFLINE)),
+				command(doc, {
+					id: 'show-training',
+					label: 'Show Training',
+					icon: 'visioPresentation',
+					action: { type: 'help', topic: 'training' },
+				}),
 			]),
 		]),
 	);

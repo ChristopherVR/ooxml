@@ -12,6 +12,8 @@ export interface BackstageHost {
 	createBlankDrawing(): Promise<void>;
 	exportVsdx(): { bytes: Uint8Array; dirty: boolean };
 	exportSvg(): { svg: string; pageIndex: number };
+	/** Raster PDF of the foreground pages, or a PNG of the current page (viewer-export). */
+	exportPicture(format: 'pdf' | 'png'): Promise<{ blob: Blob; pageIndex: number }>;
 	closeDocument(): void;
 	revealNotes(): void;
 	showOptions(): void;
@@ -132,6 +134,8 @@ export class ViewerBackstage {
 		else if (action === 'new-blank') this.#newDrawing?.run();
 		else if (action === 'download') this.#download();
 		else if (action === 'export-svg') this.#exportSvg();
+		else if (action === 'export-pdf' || action === 'export-png')
+			void this.#exportPicture(action === 'export-pdf' ? 'pdf' : 'png');
 		else if (action === 'print') this.#print();
 		else if (action === 'page-setup') {
 			this.hide();
@@ -185,6 +189,20 @@ export class ViewerBackstage {
 			);
 			this.hide();
 			this.host.announce('SVG export requested. This is an approximate snapshot.');
+		} catch (error) {
+			this.host.announce(error instanceof Error ? error.message : String(error));
+		}
+	}
+	async #exportPicture(format: 'pdf' | 'png'): Promise<void> {
+		this.hide();
+		this.host.announce(`Preparing the ${format.toUpperCase()}...`);
+		try {
+			const { blob, pageIndex } = await this.host.exportPicture(format);
+			const name = format === 'pdf' ? this.#base() : `${this.#base()}-page-${pageIndex + 1}`;
+			this.#save(blob, `${name}.${format}`);
+			this.host.announce(
+				`${format.toUpperCase()} export requested. Pages are pictures of the approximate rendering.`,
+			);
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}
@@ -261,11 +279,12 @@ export class ViewerBackstage {
 				? 'Legacy VSD drawings are read only here.'
 				: 'Open a .vsdx file to save a copy.';
 		const saveDisabled = !state.edit.sourceAvailable || busy;
-		const download = this.#root.querySelector<HTMLButtonElement>(
+		for (const download of this.#root.querySelectorAll<HTMLButtonElement>(
 			'[data-backstage-action="download"]',
-		)!;
-		download.disabled = saveDisabled;
-		download.title = saveDisabled ? saveReason : '';
+		)) {
+			download.disabled = saveDisabled;
+			download.title = saveDisabled ? saveReason : '';
+		}
 		const setup = this.#root.querySelector<HTMLButtonElement>(
 			'[data-backstage-action="page-setup"]',
 		);
@@ -284,7 +303,7 @@ export class ViewerBackstage {
 			this.#root.items = items;
 		}
 		for (const node of this.#root.querySelectorAll<HTMLButtonElement>(
-			'[data-backstage-action="export-svg"], [data-backstage-action="print"]',
+			'[data-backstage-action^="export-"], [data-backstage-action="print"]',
 		))
 			node.disabled = !page || busy;
 		this.#root.querySelector<HTMLButtonElement>('[data-backstage-action="notes"]')!.disabled =

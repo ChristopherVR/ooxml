@@ -46,7 +46,13 @@ export class ViewerPointerGestures {
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
-		private readonly options: { active(): boolean; announce(message: string): void },
+		private readonly options: {
+			active(): boolean;
+			announce(message: string): void;
+			/** Guides and Dynamic Grid: adjust a drag delta and show alignment hints. */
+			snap?(page: VisioPage, ids: readonly string[], delta: VisioPagePoint): VisioPagePoint;
+			clearSnap?(): void;
+		},
 	) {}
 	render(state: ViewerState): void {
 		if (this.#drag && !this.#current(this.#drag, state)) this.#cancel();
@@ -95,7 +101,7 @@ export class ViewerPointerGestures {
 		const node = event.target as Element;
 		if (
 			node.closest?.(
-				'[data-line-endpoint], [data-rotation-handle], [data-resize-handle], .rotation-overlay',
+				'[data-line-endpoint], [data-rotation-handle], [data-resize-handle], .rotation-overlay, [data-guide-id]',
 			)
 		)
 			return;
@@ -240,7 +246,7 @@ export class ViewerPointerGestures {
 		}
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		if (point && this.#current(drag)) {
-			if (drag.preview) drag.preview.update(visioPageDragDelta(drag.start, point));
+			if (drag.preview) drag.preview.update(this.#delta(drag, point));
 			const box = drag.marquee && visioMarqueeBox(drag.start, point);
 			if (box)
 				for (const [name, value] of Object.entries(box))
@@ -249,6 +255,11 @@ export class ViewerPointerGestures {
 		event.preventDefault();
 		event.stopImmediatePropagation();
 	}
+	#delta(drag: Gesture, point: VisioPagePoint): VisioPagePoint {
+		const delta = visioPageDragDelta(drag.start, point);
+		const ids = drag.selection.map((shape) => shape.id);
+		return this.options.snap?.(drag.page, ids, delta) ?? delta;
+	}
 	#cancel(): void {
 		const drag = this.#drag;
 		this.#drag = undefined;
@@ -256,6 +267,7 @@ export class ViewerPointerGestures {
 		drag?.preview?.dispose();
 		drag?.showOverlays?.();
 		drag?.marquee?.remove();
+		if (drag?.preview) this.options.clearSnap?.();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
 	}
@@ -287,8 +299,9 @@ export class ViewerPointerGestures {
 		const edits = visioMoveCommands(
 			drag.page,
 			drag.selection.map((shape) => shape.id),
-			visioPageDragDelta(drag.start, point),
+			this.#delta(drag, point),
 		);
+		this.options.clearSnap?.();
 		if (!edits?.length || !this.#current(drag)) return;
 		const request = ++this.#request;
 		try {

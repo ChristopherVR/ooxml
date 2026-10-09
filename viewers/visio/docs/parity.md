@@ -48,6 +48,58 @@ unlayered, local leaves without outside references) and refuses shapes with text
 fields or formulas reading the page number, count or name. Visio's subprocess
 shape master and its automatic page-name synchronisation are not reproduced.
 
+## Layout, layers, selection, guides and output, 2026-10-09
+
+- **Design > Re-Layout Page** (gallery: Flowchart top to bottom, Flowchart left to
+  right, Hierarchy, Compact Tree, Circular) and the **Layout** group launcher
+  (style, spacing, current page or selection). The connector graph comes from the
+  page's Connect rows (connector begin to end); the layout is a small layered
+  (Sugiyama-style: cycle breaking, longest-path or breadth-first layers, barycenter
+  ordering) placement, an indented tree or one circle per connected component, with
+  unconnected shapes in a grid after them (shared `geometry/graph-layout.ts`). It is
+  applied as one batch of `move-shape` edits (one undo step); connectors with the
+  viewer's own dynamic glue follow through core glue recalculation. Not Visio's
+  layout engine: no connector routing styles, no page resizing, no container or
+  swimlane awareness; Visio-saved glue, masters, locked and protected shapes are
+  left in place (counted in the status message) or refused by core admission.
+- **Home > Arrange > Position > Auto Align & Space** clusters shape centres into
+  rows and columns, snaps each cluster to a shared centre line and spaces rows and
+  columns evenly (at least 0.25 in). It does not follow connector flow as Visio's
+  command does.
+- **Home > Editing > Layers > Assign to Layer...** writes `LayerMember` on
+  top-level shapes and can add new layers to the page's Layer section in the same
+  transaction (`assign-layers`). Mixed memberships stay per shape. Groups, locked
+  layers, formula-driven membership and formulas reading `LayerMember` are refused.
+  Layered shapes on unlocked layers can now be moved; formatting, resizing,
+  duplication, grouping and ordering of layered shapes are still refused.
+- **Home > Editing > Select > Select by Type...** selects by shape type (shapes,
+  groups, connectors and lines, text-only shapes, pictures and objects), by layer
+  or by master ID (master names are not modelled; an instance name labels each).
+- **Home > Paste Special...**: Visio shapes (the viewer's own shape clipboard),
+  Unformatted text (a new text box) and Picture (PNG, JPEG or GIF through the
+  picture insertion edit). Needs the browser's clipboard read permission;
+  Picture needs `navigator.clipboard.read`. No other formats.
+- **View > Guides**: page guides (`Type="Guide"` shapes) are drawn when shown;
+  drag from the top or left ruler to add one, drag one to move it, click and
+  Delete to remove it (`create-guide`, `move-guide`, `delete-guide`). Moving
+  shapes snaps to shown guides. Guides that shapes are glued to are refused;
+  shapes are not glued to guides; guides are not printed or exported.
+- **View > Dynamic Grid** snaps moving shapes to other shapes' edges and centres
+  with alignment hints. Not Visio's spacing hints or grid-relative snapping.
+- **View > Task Panes > Drawing Explorer**: a dialog tree of pages, layers, shapes
+  (with group members) and masters used; activating an item navigates or selects.
+  It is not a dockable pane and does not list styles, fonts or foreign data.
+- **File > Export > Create PDF/XPS Document**: one picture page per foreground
+  page at the drawing's page size (150 dpi JPEG, capped at 4096 px), written by
+  the shared `ooxml-ui` PDF page writer. Text is not selectable and nothing is
+  vector; XPS is not offered. **Change File Type** offers VSDX, SVG, PDF and PNG
+  only.
+- **Help** (F1) and **Show Training** open the viewer guide
+  (christophervr.github.io/ooxml/visio/) in a new tab with `noopener`; there is no
+  bundled help or training content.
+- New Window, Arrange All, Cascade and Switch Windows stay disabled: the viewer
+  shows one drawing window.
+
 ## Presentation Mode, 2026-10-09
 
 Presentation Mode (F5, the View tab command and the status-bar button) shows the

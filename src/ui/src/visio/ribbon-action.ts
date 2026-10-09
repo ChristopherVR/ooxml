@@ -6,7 +6,7 @@ import type {
 	VisioConnectorRoute,
 	VisioShapeFormatEdit,
 } from 'ooxml-core/visio';
-import type { TextCaseMode, VisioArrangement, VisioRuleSetId } from 'ooxml-core/visio/ui';
+import type { TextCaseMode, VisioArrangement, VisioRuleSetId, VisioLayoutStyle } from 'ooxml-core/visio/ui';
 import type { VisioPageSetupCommand } from './page-setup-action';
 
 export type CanvasTool =
@@ -67,9 +67,22 @@ export type VisioDataCommand =
 	| 'legend'
 	| 'external-data-window'
 	| 'define-shape-data';
+/** Arrangement, layout, layer, selection, view and output commands (viewer-layout and friends). */
+export type VisioLayoutAction =
+	| { type: 'auto-align' }
+	| { type: 're-layout'; style: VisioLayoutStyle }
+	| { type: 'layout-options' }
+	| { type: 'assign-layers' }
+	| { type: 'select-by-type' }
+	| { type: 'paste-special' }
+	| { type: 'guides' }
+	| { type: 'dynamic-grid' }
+	| { type: 'drawing-explorer' }
+	| { type: 'help'; topic: 'help' | 'training' };
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
+	| VisioLayoutAction
 	| { type: 'arrange'; operation: VisioArrangement }
 	| { type: 'selection'; mode: 'all' | 'clear' }
 	| { type: 'history'; key: 'undo' | 'redo' }
