@@ -64,6 +64,8 @@ export interface PowerPointViewerProps {
 	fileName?: string;
 	/** Whether editing actions are enabled. */
 	canEdit?: boolean;
+	/** Fired before following a link; return false to cancel its default action. */
+	onHyperlinkClick?: import('ooxml-ui/pptx').HyperlinkClickHandler;
 	/**
 	 * Recovery autosave: after an edit the deck is re-serialised (always as a
 	 * plain, unencrypted package, because recovery has no password), stashed in

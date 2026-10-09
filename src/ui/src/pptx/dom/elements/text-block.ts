@@ -1,4 +1,9 @@
-import { buildTextBuildSpec, runEquationMathMl, textBuildSpanStyle } from '../../index';
+import {
+	buildTextBuildSpec,
+	isRunHyperlinkClickable,
+	runEquationMathMl,
+	textBuildSpanStyle,
+} from '../../index';
 import type {
 	CssStyleMap,
 	ElementAnimationState,
@@ -40,11 +45,13 @@ function createRunBaseNode(doc: Document, run: ParagraphRun): HTMLElement {
 		}
 		return host;
 	}
-	// An internal `ppaction://` jump resolves to no href (shared refuses to make
-	// an action look like a URL), so it renders as plain text as it always has.
-	if (run.hyperlink?.href) {
+	if (run.hyperlink && isRunHyperlinkClickable(run.hyperlink)) {
 		const link = createEl(doc, 'a', 'pptxv-link', run.style);
-		link.setAttribute('href', run.hyperlink.href);
+		link.setAttribute('data-pptx-hyperlink', run.hyperlink.url);
+		link.setAttribute('role', 'link');
+		link.tabIndex = 0;
+		link.style.cursor = 'pointer';
+		if (run.hyperlink.href) link.setAttribute('href', run.hyperlink.href);
 		link.setAttribute('target', run.hyperlink.target ?? '_blank');
 		link.setAttribute('rel', run.hyperlink.rel ?? 'noopener noreferrer');
 		if (run.hyperlink.tooltip) {

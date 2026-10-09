@@ -59,6 +59,11 @@ export interface RunHyperlink {
 	onHover?: boolean;
 }
 
+/** A real URL or an internal action can be activated; unsafe URLs stay plain text. */
+export function isRunHyperlinkClickable(link: RunHyperlink | undefined): boolean {
+	return Boolean(link && (link.href || isPpactionUrl(link.url)));
+}
+
 /** An inline equation run (`m:oMath`), rendered as MathML rather than text. */
 export interface RunEquation {
 	/** The raw OMML node, for `convertOmmlToMathMl`. */
@@ -76,7 +81,12 @@ export interface RunEquation {
  */
 export function resolveRunHyperlink(style: TextStyle | undefined): RunHyperlink | undefined {
 	const clicked = style?.hyperlink;
-	const raw = clicked || style?.hyperlinkMouseOver;
+	// Keep the package relationship on the model for saving, but navigate by
+	// the slide action. A relationship such as slide3.xml is not a web URL.
+	const clickAction = style?.hyperlinkAction;
+	const internalJump =
+		clickAction && /^ppaction:\/\/(?:hlinksldjump|hlinkshowjump)(?:\?|$)/iu.test(clickAction);
+	const raw = (internalJump ? clickAction : clicked) || style?.hyperlinkMouseOver;
 	if (!raw) {
 		return undefined;
 	}

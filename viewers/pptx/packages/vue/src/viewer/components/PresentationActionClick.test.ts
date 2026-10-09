@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
+import type { HyperlinkClickHandler } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanvasSize } from '../types';
 import PresentationMode from './PresentationMode.vue';
@@ -33,13 +34,14 @@ function slideWith(id: string, elements: PptxElement[], transition?: PptxSlide['
 	return { id, rId: `r-${id}`, elements, backgroundColor: '#ffffff', transition } as PptxSlide;
 }
 
-function mountShow(first: PptxSlide) {
+function mountShow(first: PptxSlide, onHyperlinkClick?: HyperlinkClickHandler) {
 	return mount(PresentationMode, {
 		props: {
 			slides: [first, slideWith('s2', []), slideWith('s3', []), slideWith('s4', [])],
 			canvasSize,
 			mediaDataUrls: new Map<string, string>(),
 			startIndex: 0,
+			onHyperlinkClick,
 		},
 		attachTo: document.body,
 	});
@@ -56,6 +58,27 @@ function clickElement(elementId: string): void {
 describe('presentationMode action clicks', () => {
 	afterEach(() => {
 		document.body.replaceChildren();
+	});
+
+	it('lets the host cancel a link in the teleported show without advancing', async () => {
+		const onHyperlinkClick = vi.fn().mockReturnValueOnce(false);
+		const wrapper = mountShow(
+			slideWith('s1', [actionShape('slice', { targetSlideIndex: 3 })]),
+			onHyperlinkClick,
+		);
+		try {
+			await wrapper.vm.$nextTick();
+			clickElement('slice');
+			await wrapper.vm.$nextTick();
+			expect(onHyperlinkClick).toHaveBeenCalledOnce();
+			expect(wrapper.emitted('slide-change')).toBeUndefined();
+			clickElement('slice');
+			await wrapper.vm.$nextTick();
+			expect(onHyperlinkClick).toHaveBeenCalledTimes(2);
+			expect(wrapper.emitted('slide-change')?.[0]).toStrictEqual([3]);
+		} finally {
+			wrapper.unmount();
+		}
 	});
 
 	it('follows a slice’s slide jump instead of advancing the show', async () => {

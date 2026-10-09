@@ -32,6 +32,28 @@ function textEl(segments: TextSegment[], extra: Record<string, unknown> = {}): P
 }
 
 describe('resolveRunHyperlink', () => {
+	it('routes a slide relationship through its internal action instead of a browser href', () => {
+		const style = {
+			hyperlink: 'slide3.xml',
+			hyperlinkAction: 'ppaction://hlinksldjump',
+			hyperlinkTargetSlideIndex: 2,
+		};
+		const link = resolveRunHyperlink(style);
+		expect(link?.url).toBe('ppaction://hlinksldjump?slideIndex=2');
+		expect(link?.targetSlideIndex).toBe(2);
+		expect(link?.href).toBeUndefined();
+		expect(style.hyperlink).toBe('slide3.xml');
+	});
+
+	it('keeps an unresolved internal slide relationship out of the browser', () => {
+		const link = resolveRunHyperlink({
+			hyperlink: '../slides/slide99.xml',
+			hyperlinkAction: 'ppaction://hlinksldjump',
+		});
+		expect(link?.url).toBe('ppaction://hlinksldjump');
+		expect(link?.href).toBeUndefined();
+	});
+
 	it('returns undefined for a run with no link', () => {
 		expect(resolveRunHyperlink(undefined)).toBeUndefined();
 		expect(resolveRunHyperlink({ bold: true })).toBeUndefined();

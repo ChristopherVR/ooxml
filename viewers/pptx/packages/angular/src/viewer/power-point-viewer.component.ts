@@ -16,22 +16,9 @@ import {
 	viewChild,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import type {
-	MasterViewTab,
-	PptxComment,
-	PptxCoreProperties,
-	PptxElement,
-	PptxHandoutMaster,
-	PptxLayoutOption,
-	PptxLayoutPreview,
-	PptxNotesMaster,
-	PptxSlide,
-	PptxSlideMaster,
-	PptxTheme,
-} from 'pptx-viewer-core';
-
 import {
 	commitElementUpdateBatch,
+	attachViewerHyperlinks,
 	applyMasterViewCrudAction,
 	applyPreferenceToOptions,
 	buildRasterPictureElement,
@@ -92,6 +79,20 @@ import type {
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
+import type {
+	MasterViewTab,
+	PptxComment,
+	PptxCoreProperties,
+	PptxElement,
+	PptxHandoutMaster,
+	PptxLayoutOption,
+	PptxLayoutPreview,
+	PptxNotesMaster,
+	PptxSlide,
+	PptxSlideMaster,
+	PptxTheme,
+} from 'pptx-viewer-core';
+
 import { themeStyle } from '../theme/viewer-theme';
 import { AccessibilityPanelComponent } from './accessibility-panel.component';
 import { AccessibilityService } from './accessibility.service';
@@ -1378,6 +1379,8 @@ export class PowerPointViewerComponent
 	});
 	/** Whether editing actions are enabled (host input; see {@link canEdit}). */
 	readonly canEditInput = input<boolean>(false, { alias: 'canEdit' });
+	/** Fired before following a link; return false to cancel its default action. */
+	readonly onHyperlinkClick = input<import('ooxml-ui/pptx').HyperlinkClickHandler>();
 	/** Optional class applied to the root element. */
 	readonly class = input<string>('');
 	/** Theme configuration for customising the viewer's appearance. Always wins over a File > Options > Appearance selection; see {@link defaultThemeKey}. */
@@ -1683,6 +1686,26 @@ export class PowerPointViewerComponent
 	/** The `<main>` host; used to locate the live `.pptx-ng-canvas-stage`. */
 	private readonly mainEl = viewChild<ElementRef<HTMLElement>>('mainEl');
 	private readonly viewerRoot = viewChild<ElementRef<HTMLElement>>('viewerRoot');
+	private readonly hyperlinkNavigation = effect((onCleanup) => {
+		const root = this.viewerRoot()?.nativeElement;
+		if (!root) {
+			return;
+		}
+		onCleanup(
+			attachViewerHyperlinks(root, {
+				getState: () => ({
+					slide: this.editor.slides()[this.activeSlideIndex()],
+					slideCount: this.editor.slides().length,
+					currentSlideIndex: this.activeSlideIndex(),
+					editable: this.canEdit(),
+					presenting: this.presentationMode.presenting(),
+				}),
+				goToSlide: (index) => this.goTo(index),
+				onHyperlinkClick: (link) => this.onHyperlinkClick()?.(link),
+				confirmExternalHyperlink: (url) => this.viewerOpts.confirmExternalHyperlink(url),
+			}),
+		);
+	});
 	/**
 	 * The docked "Speaker notes" strip's `<aside>` (only rendered on desktop
 	 * while editing with chrome visible) and its live height, so the
@@ -2896,9 +2919,7 @@ export class PowerPointViewerComponent
 		this.themeGallery.showThemeGallery.set(false);
 		this.themeEditorRequested.update((open) => !open);
 	}
-	protected async applyThemeEditor(
-		edit: import('ooxml-ui/pptx').ThemeEditorEdit,
-	): Promise<void> {
+	protected async applyThemeEditor(edit: import('ooxml-ui/pptx').ThemeEditorEdit): Promise<void> {
 		if (!this.canEdit()) {
 			return;
 		}

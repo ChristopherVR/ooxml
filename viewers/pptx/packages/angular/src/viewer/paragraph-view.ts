@@ -1,5 +1,3 @@
-import type { PptxElement, TextSegment } from 'pptx-viewer-core';
-
 import { buildParagraphs } from 'ooxml-ui/pptx';
 import type {
 	FieldSubstitutionContext,
@@ -8,6 +6,8 @@ import type {
 	ScriptFontPiece,
 	TabbedLineRun,
 } from 'ooxml-ui/pptx';
+import type { PptxElement, TextSegment } from 'pptx-viewer-core';
+
 import type { StyleMap } from './element-style';
 
 /**
@@ -32,6 +32,8 @@ import type { StyleMap } from './element-style';
 
 /** A single rendered run inside an Angular paragraph. */
 export interface TextRun {
+	/** Shared click target, including internal slide actions. */
+	hyperlink?: import('ooxml-ui/pptx').RunHyperlink;
 	text: string;
 	style: StyleMap;
 	/** Safe `href` when this run carries a renderable hyperlink. */
@@ -132,9 +134,7 @@ export function buildAngularParagraphs(
 	return buildParagraphs(element, fieldContext, segmentOverrides).map((para) => ({
 		runs: para.runs.map((run) => {
 			const out: TextRun = { text: run.text, style: run.style };
-			// A `ppaction://` slide jump resolves to no `href` (shared refuses to
-			// make an internal action look like a URL) and this binding has no
-			// click handler for one, so it renders as plain text - unchanged.
+			out.hyperlink = run.hyperlink;
 			if (run.hyperlink?.href) {
 				out.href = run.hyperlink.href;
 				out.tooltip = run.hyperlink.tooltip;

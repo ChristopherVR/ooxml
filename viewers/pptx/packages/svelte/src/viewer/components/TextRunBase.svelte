@@ -11,7 +11,7 @@
 	 * as ordinary text, an inline `m:oMath` as nothing, and furigana vanished.
 	 */
 	import type { ParagraphRun } from 'ooxml-ui/pptx';
-	import { runEquationMathMl } from 'ooxml-ui/pptx';
+	import { isRunHyperlinkClickable, runEquationMathMl } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerOptions } from '../state/viewer-options-context';
@@ -46,8 +46,11 @@
 			>{/if}{#if run.equation.number}<span class="pptx-svelte-equation-number"
 				>({run.equation.number})</span
 			>{/if}</span
-	>{:else if run.hyperlink?.href}<a
+	>{:else if run.hyperlink && isRunHyperlinkClickable(run.hyperlink)}<a
 		class="pptx-svelte-link"
+		data-pptx-hyperlink={run.hyperlink.url}
+		role="link"
+		tabindex="0"
 		href={run.hyperlink.href}
 		target={run.hyperlink.target ?? '_blank'}
 		rel={run.hyperlink.rel ?? 'noopener noreferrer'}
@@ -79,5 +82,6 @@
 
 	.pptx-svelte-link {
 		color: inherit;
+		cursor: pointer;
 	}
 </style>

@@ -1,6 +1,6 @@
-import type { ParsedTableStyleMap, PptxSaveFormat, TextSegment } from 'pptx-viewer-core';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
+	attachViewerHyperlinks,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	isFeatureEnabled,
 	readRibbonTransitionDraft,
@@ -19,6 +19,7 @@ import type {
 	ViewerOptionsStore,
 	ViewerTheme,
 } from 'ooxml-ui/pptx';
+import type { ParsedTableStyleMap, PptxSaveFormat, TextSegment } from 'pptx-viewer-core';
 
 import { buildChromeCallbacks } from './chrome-callbacks';
 import type { ChromeCallbackDeps } from './chrome-callbacks';
@@ -450,15 +451,8 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	};
 	chrome.root.addEventListener('click', onPresentationClick);
 
-	/**
-	 * A run-level text hyperlink (`<a class="pptxv-link" href>`, see
-	 * `render/elements/text-block.ts`) is a real anchor with `target="_blank"`:
-	 * left un-intercepted, the browser navigates on its own before any Trust
-	 * Center gate gets a look-in, in both editing/view and presentation mode.
-	 * `resolveHyperlinkHref` already keeps internal `ppaction://` jumps from
-	 * ever becoming one of these, so every match here is a genuine external
-	 * navigation candidate.
-	 */
+	// Fallback for external anchors without the shared run marker. Live linked
+	// runs are intercepted by attachViewerHyperlinks before this listener.
 	const onHyperlinkClick = (event: MouseEvent): void => {
 		if (!(event.target instanceof Element)) {
 			return;
@@ -474,6 +468,24 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		}
 	};
 	chrome.root.addEventListener('click', onHyperlinkClick);
+	const detachHyperlinks = attachViewerHyperlinks(chrome.root, {
+		getState: () => {
+			const state = store.get();
+			return {
+				slide: state.slides[state.currentSlide],
+				slideCount: state.slides.length,
+				currentSlideIndex: state.currentSlide,
+				editable: state.editable,
+				presenting: state.presenting,
+			};
+		},
+		goToSlide: deps.goToSlide,
+		onHyperlinkClick: deps.options.onHyperlinkClick,
+		confirmExternalHyperlink: deps.confirmExternalHyperlink,
+	});
+	const detachLinkMode = store.subscribe((state) => {
+		chrome.root.toggleAttribute('data-pptx-read-only', !state.editable);
+	});
 
 	// PowerPoint's "Advance slide: After <n>". Without it a deck whose slide also
 	// sets "on mouse click" OFF has no way forward at all: the gate above
@@ -518,6 +530,8 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	});
 
 	const detachPresentationClick = (): void => {
+		detachHyperlinks();
+		detachLinkMode();
 		chrome.root.removeEventListener('click', onPresentationClick);
 		chrome.root.removeEventListener('click', onHyperlinkClick);
 		autoAdvance.detach();

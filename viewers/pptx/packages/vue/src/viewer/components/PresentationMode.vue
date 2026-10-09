@@ -1,4 +1,26 @@
 <script setup lang="ts">
+import type {
+	AuthoredSlideRange,
+	HyperlinkClickHandler,
+	PresentationContextMenuActionId,
+} from 'ooxml-ui/pptx';
+import {
+	ANIMATION_KEYFRAMES_CSS,
+	applyHighlightClickStyle,
+	attachViewerHyperlinks,
+	DEFAULT_VIEWER_OPTIONS,
+	endAudienceDisplay,
+	findHighlightClickTarget,
+	getPresentationContextMenuSections,
+	handlePresentationStageClick,
+	HIGHLIGHT_CLEAR_STYLE,
+	mayLeaveSlideShow,
+	PRESENT_TOOLBAR_METRICS,
+	PRESENTATION_HIT_TEST_CSS,
+	shouldConfirmExternalHyperlink,
+	shouldLoopContinuously,
+	toggleBlackboard,
+} from 'ooxml-ui/pptx';
 /**
  * PresentationMode - a full-viewport slideshow overlay.
  *
@@ -19,24 +41,7 @@
  * and last slide, Esc exits, and a click on the stage advances.
  */
 import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange, PresentationContextMenuActionId } from 'ooxml-ui/pptx';
-import {
-	ANIMATION_KEYFRAMES_CSS,
-	applyHighlightClickStyle,
-	DEFAULT_VIEWER_OPTIONS,
-	endAudienceDisplay,
-	findHighlightClickTarget,
-	getPresentationContextMenuSections,
-	handlePresentationStageClick,
-	HIGHLIGHT_CLEAR_STYLE,
-	mayLeaveSlideShow,
-	PRESENT_TOOLBAR_METRICS,
-	PRESENTATION_HIT_TEST_CSS,
-	shouldConfirmExternalHyperlink,
-	shouldLoopContinuously,
-	toggleBlackboard,
-} from 'ooxml-ui/pptx';
-import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { stopAnimationSound } from '../composables/animation-sound';
@@ -85,6 +90,7 @@ const props = withDefaults(
 		content?: ArrayBuffer | Uint8Array | null;
 		startIndex?: number;
 		startInPresenterView?: boolean;
+		onHyperlinkClick?: HyperlinkClickHandler;
 		presentationProperties?: PptxPresentationProperties;
 		/** Membership of the running custom show, when one is selected. */
 		activeCustomShow?: { slideRIds: string[] } | null;
@@ -542,6 +548,32 @@ const actionRunner = {
 	oleVerb: (verb: number, elementId: string | undefined) => actionExtras?.oleVerb(verb, elementId),
 	runProgram: (target: string) => runProgramNotices.notify(target),
 };
+
+// The show is teleported outside the viewer root, so it owns the same link
+// capture separately. Its existing action runner still performs show jumps.
+watchEffect(
+	(onCleanup) => {
+		const root = overlayRef.value;
+		if (!root) {
+			return;
+		}
+		onCleanup(
+			attachViewerHyperlinks(root, {
+				getState: () => ({
+					slide: nav.activeSlide.value,
+					slideCount: props.slides.length,
+					currentSlideIndex: nav.currentIndex.value,
+					editable: false,
+					presenting: true,
+				}),
+				goToSlide: nav.goTo,
+				onHyperlinkClick: (link) => props.onHyperlinkClick?.(link),
+				confirmExternalHyperlink: actionRunner.confirmUrl,
+			}),
+		);
+	},
+	{ flush: 'post' },
+);
 
 /**
  * Tap-to-advance, but only when no drawing tool is armed and the presenter
