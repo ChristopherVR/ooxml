@@ -24,6 +24,21 @@ export type {
 	VisioPageSetupEdits,
 	VisioScaleUnit,
 } from './edit-page-setup-commands';
+import { snapshotShapeDataEdit, type VisioShapeDataEdit } from './edit-shape-data-commands';
+export type {
+	VisioShapeDataEdit,
+	VisioShapeDataFields,
+	VisioShapeDataType,
+} from './edit-shape-data-commands';
+import { isVisioDataEdit, snapshotDataEdit, type VisioDataEdit } from './edit-data-commands';
+export type {
+	VisioDataEdit,
+	VisioDataImportEdit,
+	VisioDataRefreshEdit,
+	VisioDataDeleteEdit,
+	VisioDataLinkEdit,
+	VisioDataUnlinkEdit,
+} from './edit-data-commands';
 export type {
 	VisioGroupEdit,
 	VisioGroupShapesEdit,
@@ -178,7 +193,9 @@ export type VisioEdit =
 	| VisioPageThemeEdit
 	| VisioCommentEdit
 	| VisioSubprocessEdit
-	| VisioDiagramPartEdit;
+	| VisioDiagramPartEdit
+	| VisioShapeDataEdit
+	| VisioDataEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -267,6 +284,8 @@ export function snapshotVisioEdits(
 		if (isVisioCommentEdit(edit)) return snapshotCommentEdit(edit);
 		if (edit.type === 'create-subprocess') return snapshotSubprocessEdit(edit);
 		if (isVisioDiagramPartEdit(edit)) return snapshotDiagramPartEdit(edit);
+		if (edit.type === 'set-shape-data') return snapshotShapeDataEdit(edit);
+		if (isVisioDataEdit(edit)) return snapshotDataEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {

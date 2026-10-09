@@ -12,6 +12,7 @@ import { diagnosticCollector } from './diagnostics';
 import { readVisioAnnotations, readVisioComments, type VisioComment } from './comments';
 import { metadata, metadataAttributes } from './metadata';
 import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata';
+import { readDataRecordsets, type VisioDataRecordset } from './data-recordsets';
 import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
 import { normalizeShapes, type ShapeContext } from './shapes';
 import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
@@ -334,6 +335,16 @@ export async function parseVsdx(
 		if (!(error instanceof VisioPackageError) || error.code === 'LIMIT_RUNTIME') throw error;
 		report('invalid-comments', 'The comments part could not be read; comments are not shown.');
 	}
+	let dataRecordsets: VisioDataRecordset[] = [];
+	try {
+		dataRecordsets = await readDataRecordsets(pkg, documentPart, checkTime);
+	} catch (error) {
+		if (error instanceof VisioPackageError && error.code === 'LIMIT_RUNTIME') throw error;
+		report(
+			'unsupported-data-recordsets',
+			`Saved external data could not be read and is preserved unchanged: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
 	report(
 		'cached-values-only',
 		'ShapeSheet formulas, automatic connector routing, and external data are not evaluated; saved cached values and supported theme records are used.',
@@ -343,6 +354,7 @@ export async function parseVsdx(
 		format: 'vsdx',
 		pages,
 		diagnostics: diagnosticState.finish(),
+		...(dataRecordsets.length ? { dataRecordsets } : {}),
 		fontFamilies: [...new Set(resources.fonts.values())],
 		...(comments.length ? { comments } : {}),
 	};

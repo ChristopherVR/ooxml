@@ -58,7 +58,7 @@ export function assertShapeDetails(shape: VisioShape, budget: DetailBudget): voi
 			'prompt',
 			'sortKey',
 		]);
-		booleans(record, ['invisible']);
+		booleans(record, ['invisible', 'dataLinked']);
 		count(row);
 	}
 	for (const row of links) {

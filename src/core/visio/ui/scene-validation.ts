@@ -9,6 +9,7 @@ import {
 	type VisioImage,
 } from '../index';
 import { assertShapeDetails } from './scene-details';
+import { assertSceneDataRecordsets } from './scene-data';
 import { ForeignVectorBudget } from './foreign-vector-budget';
 
 export const MAX_INPUT_BYTES = 32 * 1024 * 1024;
@@ -81,6 +82,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 			throw new Error('The scene has an invalid font family list.');
 		for (const family of model.fontFamilies) label(family, 1024);
 	}
+	assertSceneDataRecordsets(model);
 	for (const diagnostic of model.diagnostics) {
 		label(diagnostic.code, 256);
 		label(diagnostic.message);

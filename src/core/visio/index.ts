@@ -1,6 +1,20 @@
 /** VSDX parsing/editing and conservative legacy VSD preview scenes. */
 export type * from './model';
 export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata';
+export {
+	VISIO_DATA_LIMITS,
+	type VisioDataRecordset,
+	type VisioDataColumn,
+	type VisioDataColumnType,
+	type VisioDataRow,
+	type VisioDataLink,
+} from './data-recordsets';
+export {
+	VISIO_SHAPE_DATA_TYPES,
+	visioShapeDataRowName,
+	canonicalShapeDataValue,
+} from './edit-shape-data-commands';
+export { visioLinkedRowNames } from './edit-data';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
 export { loadVisio } from './load';
 export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy';
@@ -89,6 +103,15 @@ export {
 	type VisioChangeShapeTarget,
 	type VisioConnectorGlue,
 	type VisioPageThemeEdit,
+	type VisioShapeDataEdit,
+	type VisioShapeDataFields,
+	type VisioShapeDataType,
+	type VisioDataEdit,
+	type VisioDataImportEdit,
+	type VisioDataRefreshEdit,
+	type VisioDataDeleteEdit,
+	type VisioDataLinkEdit,
+	type VisioDataUnlinkEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';

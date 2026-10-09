@@ -34,6 +34,9 @@ import { editVsdxComments } from './edit-comments';
 import { editVsdxSubprocess } from './edit-subprocess';
 import { isVisioDiagramPartEdit } from './edit-diagram-parts-commands';
 import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
+import { applyShapeDataEdit } from './edit-shape-data';
+import { isVisioDataEdit } from './edit-data-commands';
+import { editVsdxData } from './edit-data';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -79,6 +82,15 @@ export type {
 	VisioCommentDeleteEdit,
 	VisioSubprocessEdit,
 	VisioSubprocessSelection,
+	VisioShapeDataEdit,
+	VisioShapeDataFields,
+	VisioShapeDataType,
+	VisioDataEdit,
+	VisioDataImportEdit,
+	VisioDataRefreshEdit,
+	VisioDataDeleteEdit,
+	VisioDataLinkEdit,
+	VisioDataUnlinkEdit,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -164,6 +176,20 @@ async function editVsdxTransaction(
 			fail('EDIT_MIXED_THEME_TRANSACTION', 'A page theme edit requires its own transaction.');
 		return editVsdxPageTheme(pkg, parts, pages, theme, limits, maxOutput, deadline, check);
 	}
+	if (allCommands.some(isVisioDataEdit)) {
+		if (!allCommands.every(isVisioDataEdit))
+			fail('EDIT_MIXED_DATA_TRANSACTION', 'External data edits require their own transaction.');
+		return editVsdxData(
+			pkg,
+			parts,
+			pages,
+			allCommands.filter(isVisioDataEdit),
+			limits,
+			maxOutput,
+			deadline,
+			check,
+		);
+	}
 	if (commands.length !== allCommands.length) {
 		const pageCommands = allCommands.filter(isVisioPageEdit);
 		// Fit to Drawing: a page resize and the moves that bring the drawing onto it, as one step.
@@ -220,6 +246,7 @@ async function editVsdxTransaction(
 			command.type !== 'insert-picture' &&
 			command.type !== 'set-page-theme' &&
 			!isVisioMetadataEdit(command) &&
+			command.type !== 'set-shape-data' &&
 			!isVisioGroupEdit(command) &&
 			!isVisioDiagramPartEdit(command) &&
 			!isVisioFormatEdit(command),
@@ -234,6 +261,7 @@ async function editVsdxTransaction(
 				command.type === 'replace-text-ranges' ||
 				isVisioFormatEdit(command) ||
 				isVisioMetadataEdit(command) ||
+				command.type === 'set-shape-data' ||
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
 				command.type === 'paste-shapes' ||
@@ -277,6 +305,7 @@ async function editVsdxTransaction(
 	let metadataChanged = false;
 	let groupChanged = false;
 	let partChanged = false;
+	let shapeDataChanged = false;
 	const deletions = commands.filter(
 		(command): command is VisioShapeDelete => command.type === 'delete-shape',
 	);
@@ -314,6 +343,11 @@ async function editVsdxTransaction(
 			if (applyMetadataEdit(roots, command, check)) {
 				dirty.set(path, root);
 				metadataChanged = true;
+			}
+		} else if (command.type === 'set-shape-data') {
+			if (applyShapeDataEdit(roots, command, check)) {
+				dirty.set(path, root);
+				shapeDataChanged = true;
 			}
 		} else if (command.type === 'reorder-shape') {
 			if (reorderVisioShape(root, document!, command, check)) {
@@ -364,7 +398,8 @@ async function editVsdxTransaction(
 			command.type !== 'insert-picture' &&
 			command.type !== 'set-page-theme' &&
 			command.type !== 'create-subprocess' &&
-			!isVisioCommentEdit(command)
+			!isVisioCommentEdit(command) &&
+			!isVisioDataEdit(command)
 		) {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
@@ -471,6 +506,15 @@ async function editVsdxTransaction(
 							code: 'edit-shape-metadata',
 							message:
 								'Local hyperlink rows or the ScreenTip (Comment) cell were changed. Following a link stays an explicit user action.',
+						},
+					]
+				: []),
+			...(shapeDataChanged
+				? [
+						{
+							code: 'edit-shape-data',
+							message:
+								'Local Shape Data (Property) rows were added, changed or removed. Rows read by formulas are refused.',
 						},
 					]
 				: []),

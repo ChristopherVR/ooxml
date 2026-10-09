@@ -2,6 +2,7 @@ import type { VisioForeignVector } from './foreign-vector';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 import type { VisioComment } from './comments';
 export type { VisioComment } from './comments';
+import type { VisioDataRecordset } from './data-recordsets';
 
 /** Visio's internal distance unit is the inch; angles are radians. */
 export type VisioMatrix = readonly [number, number, number, number, number, number];
@@ -331,6 +332,8 @@ export interface VisioDocument {
 	format: 'vsdx' | 'vsd';
 	/** Existing source FaceNames available for conservative source-backed font edits. */
 	fontFamilies?: readonly string[];
+	/** Saved external data (DataRecordSets): cached rows and shape links. Never refreshed here. */
+	dataRecordsets?: VisioDataRecordset[];
 	pages: VisioPage[];
 	diagnostics: VisioDiagnostic[];
 	/** Review comments (visio/comments.xml) and read-only Visio 2010 annotations. */
