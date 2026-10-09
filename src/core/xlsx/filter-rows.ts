@@ -16,14 +16,46 @@ export function rowMatchesFilter(
 	});
 }
 
+/** Records a filter result while preserving manual hiding and other row metadata. */
+export function setRowFiltered(
+	sheet: Worksheet,
+	row: number,
+	filteredOut: boolean,
+	hasCriteria = false,
+): void {
+	const info = { ...sheet.rowInfo.get(row) };
+	const manual = info.manuallyHidden || (info.hidden && !info.filteredOut);
+	if (filteredOut) {
+		info.hidden = true;
+		info.filteredOut = true;
+		if (manual) info.manuallyHidden = true;
+	} else {
+		delete info.filteredOut;
+		delete info.manuallyHidden;
+		if (manual) {
+			info.hidden = true;
+			if (hasCriteria) info.filteredOut = false;
+		} else delete info.hidden;
+	}
+	if (Object.keys(info).length) sheet.rowInfo.set(row, info);
+	else sheet.rowInfo.delete(row);
+}
+
+/** Removing the filter restores rows hidden only by it, retaining manual hiding. */
+export function clearFilteredRows(sheet: Worksheet): void {
+	for (const [row, info] of sheet.rowInfo)
+		if (info.filteredOut !== undefined || info.manuallyHidden !== undefined)
+			setRowFiltered(sheet, row, false);
+}
+
 /** Loaded rows have a combined hidden bit; infer the filter cause from supported criteria. */
 export function isFilteredRow(workbook: Workbook, sheet: Worksheet, row: number): boolean {
+	const filter = sheet.autoFilter;
+	if (!filter) return false;
 	const info = sheet.rowInfo.get(row);
 	if (info?.filteredOut !== undefined) return info.filteredOut;
-	const filter = sheet.autoFilter;
 	return (
 		!!info?.hidden &&
-		!!filter &&
 		row > filter.range.start.row &&
 		row <= filter.range.end.row &&
 		!rowMatchesFilter(workbook, sheet, row, filter)

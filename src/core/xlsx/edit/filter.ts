@@ -2,7 +2,7 @@ import { type CellAddress, type CellRange, normalizeRange, rangeContains } from 
 import { getCell } from '../cells';
 import type { AutoFilter, Worksheet } from '../model';
 import { type EditContext, sheetAt } from './context';
-import { rowMatchesFilter } from '../filter-rows';
+import { rowMatchesFilter, setRowFiltered } from '../filter-rows';
 import { sortRows } from './sort';
 
 /**
@@ -52,22 +52,7 @@ export function applyFilter(ctx: EditContext, sheet: Worksheet, filter: AutoFilt
 	const { range } = filter;
 	for (let row = range.start.row + 1; row <= range.end.row; row++) {
 		const visible = rowMatchesFilter(ctx.workbook, sheet, row, filter);
-		const info = { ...sheet.rowInfo.get(row) };
-		const manual = info.manuallyHidden || (info.hidden && !info.filteredOut);
-		if (visible) {
-			delete info.filteredOut;
-			delete info.manuallyHidden;
-			if (manual) {
-				info.hidden = true;
-				if (filter.columns?.length) info.filteredOut = false;
-			} else delete info.hidden;
-		} else {
-			info.hidden = true;
-			info.filteredOut = true;
-			if (manual) info.manuallyHidden = true;
-		}
-		if (Object.keys(info).length) sheet.rowInfo.set(row, info);
-		else sheet.rowInfo.delete(row);
+		setRowFiltered(sheet, row, !visible, !!filter.columns?.length);
 	}
 }
 

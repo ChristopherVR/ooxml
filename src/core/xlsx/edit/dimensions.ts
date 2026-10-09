@@ -169,11 +169,17 @@ export function setHidden(
 					continue;
 				}
 				const filter = sheet.autoFilter;
-				if (filter?.columns?.length && row > filter.range.start.row && row <= filter.range.end.row)
+				if (
+					hidden &&
+					filter?.columns?.length &&
+					row > filter.range.start.row &&
+					row <= filter.range.end.row
+				)
 					info.filteredOut = false;
 				if (hidden) info.hidden = true;
 				else {
 					delete info.hidden;
+					delete info.filteredOut;
 					if (info.height === 0) delete info.height;
 				}
 				if (Object.keys(info).length) sheet.rowInfo.set(row, info);

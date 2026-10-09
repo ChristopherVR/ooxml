@@ -1,5 +1,6 @@
 import type { CellRange } from '../address';
 import { putCell } from '../cells';
+import { clearFilteredRows } from '../filter-rows';
 import type { Cell, DrawingAnchor, Table, TableColumn, Worksheet } from '../model';
 import { normalizeColumns } from './columns';
 import { shiftPreservedXml } from './shift-preserved';
@@ -51,8 +52,10 @@ export function shiftSheetContent(sheet: Worksheet, shift: AxisShift, band?: Ban
 	if (sheet.autoFilter) {
 		const old = sheet.autoFilter.range;
 		const range = moveRange(old);
-		if (!range) delete sheet.autoFilter;
-		else {
+		if (!range) {
+			delete sheet.autoFilter;
+			clearFilteredRows(sheet);
+		} else {
 			const filter = { ...sheet.autoFilter, range };
 			if (shift.axis === 'col' && filter.columns)
 				filter.columns = filter.columns.flatMap((fc) => {
