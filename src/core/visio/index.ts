@@ -70,6 +70,7 @@ export {
 	type VisioTextEdit,
 	type VisioTextRange,
 	type VisioTextRangesEdit,
+	type VisioTextFieldInsertEdit,
 	type VisioPageInsert,
 	type VisioPageReorder,
 	type VisioPageRename,
@@ -235,6 +236,24 @@ export {
 	type VisioPartBox,
 } from './edit-diagram-parts-commands';
 export { visioShapeStructure, type VisioShapeStructure } from './shape-structure';
+export {
+	VISIO_TEXT_CASES,
+	VISIO_TEXT_POSITIONS,
+	type VisioTextBlockTransform,
+	type VisioTextCase,
+	type VisioTextFormatExtras,
+	type VisioTextMargins,
+	type VisioTextPosition,
+} from './edit-formatting-text-commands';
+export {
+	VISIO_FIELD_FORMATS,
+	VISIO_FIELD_FUNCTIONS,
+	evaluateVisioTextField,
+	formatVisioFieldValue,
+	type VisioFieldContext,
+	type VisioFieldProperties,
+	type VisioFieldValue,
+} from './text-fields';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,

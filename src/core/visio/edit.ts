@@ -4,6 +4,7 @@ import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import { replaceScopedPlainText } from './edit-text-scope';
 import { replaceScopedTextRanges } from './edit-text-ranges';
+import { insertVisioTextField } from './edit-text-field';
 import {
 	snapshotVisioEdits,
 	isVisioPageEdit,
@@ -45,6 +46,7 @@ export type {
 	VisioTextEdit,
 	VisioTextRange,
 	VisioTextRangesEdit,
+	VisioTextFieldInsertEdit,
 	VisioGeometryEdit,
 	VisioPageInsert,
 	VisioPageReorder,
@@ -250,6 +252,7 @@ async function editVsdxTransaction(
 		(command): command is VisioGeometryEdit =>
 			command.type !== 'replace-plain-text' &&
 			command.type !== 'replace-text-ranges' &&
+			command.type !== 'insert-text-field' &&
 			command.type !== 'reorder-shape' &&
 			command.type !== 'duplicate-shapes' &&
 			command.type !== 'paste-shapes' &&
@@ -271,6 +274,7 @@ async function editVsdxTransaction(
 			(command) =>
 				command.type === 'replace-plain-text' ||
 				command.type === 'replace-text-ranges' ||
+				command.type === 'insert-text-field' ||
 				isVisioFormatEdit(command) ||
 				isVisioMetadataEdit(command) ||
 				command.type === 'set-shape-data' ||
@@ -342,6 +346,13 @@ async function editVsdxTransaction(
 				await (command.type === 'replace-plain-text'
 					? replaceScopedPlainText(pkg, new Set(pages.values()), roots, document!, command, check)
 					: replaceScopedTextRanges(pkg, new Set(pages.values()), roots, document!, command, check))
+			) {
+				dirty.set(path, root);
+				textChanged = true;
+			}
+		} else if (command.type === 'insert-text-field') {
+			if (
+				await insertVisioTextField(pkg, new Set(pages.values()), roots, document!, command, check)
 			) {
 				dirty.set(path, root);
 				textChanged = true;

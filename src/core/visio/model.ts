@@ -138,6 +138,23 @@ export interface VisioTextRun {
 	underline: boolean;
 	/** Single native Strikethru decoration; double strikethrough is separate. */
 	strikethrough?: boolean;
+	/** Char.Letterspace in inches; omitted when zero. */
+	letterSpacing?: number;
+	/** Char.Pos; omitted for normal baseline text. */
+	position?: 'superscript' | 'subscript';
+	/** Char.Case display transform; the stored text keeps its own case. */
+	textCase?: 'all-caps' | 'initial-caps' | 'small-caps';
+	/** Char.LangID, a Windows language identifier; omitted when unset or zero. */
+	language?: number;
+}
+/** A text field's span in plainText. Display text is evaluated where supported. */
+export interface VisioTextField {
+	start: number;
+	end: number;
+	/** The cached text stored in the source <fld> element (source-backed edits compare it). */
+	cached: string;
+	/** The Field row's Value formula, when it has one. */
+	formula?: string;
 }
 export interface VisioParagraph {
 	/** UTF-16 offsets into plainText. End excludes the paragraph's newline. */
@@ -162,11 +179,18 @@ export interface VisioText {
 	italic?: boolean;
 	underline?: boolean;
 	strikethrough?: boolean;
+	/** Default character extras (Char row 0), as on VisioTextRun. */
+	letterSpacing?: number;
+	position?: 'superscript' | 'subscript';
+	textCase?: 'all-caps' | 'initial-caps' | 'small-caps';
+	language?: number;
 	/** Optional backdrop behind laid-out text, not the complete shape rectangle. */
 	backgroundColor?: string;
 	backgroundOpacity?: number;
 	runs: VisioTextRun[];
 	paragraphs?: VisioParagraph[];
+	/** Text fields (<fld>), in text order. Omitted when the text has none. */
+	fields?: VisioTextField[];
 	fontFamily: string;
 	fontSize: number;
 	color: string;

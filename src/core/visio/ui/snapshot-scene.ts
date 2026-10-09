@@ -8,6 +8,7 @@ import type {
 	VisioText,
 } from '../index';
 import { ForeignVectorBudget } from './foreign-vector-budget';
+const RUN_EXTRAS = ['letterSpacing', 'position', 'textCase', 'language'] as const;
 
 /** Copy only named scalar fields, never arbitrary host properties or their getters. */
 function fields<T, K extends keyof T>(source: T, keys: readonly K[]): Pick<T, K> {
@@ -211,11 +212,19 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			'verticalAlign',
 			'width',
 			'height',
+			...RUN_EXTRAS,
 		]),
 		transform: matrix(source.transform),
 		margins: fields(source.margins, ['left', 'right', 'top', 'bottom']),
+		...(source.fields === undefined
+			? {}
+			: {
+					fields: list(source.fields, 'text fields', 10_000, (field) =>
+						fields(field, ['start', 'end', 'cached', 'formula']),
+					),
+				}),
 		runs: list(source.runs, 'text runs', 100_000, (run) => ({
-			...fields(run, ['text', 'fontFamily', 'fontSize', 'color', 'opacity']),
+			...fields(run, ['text', 'fontFamily', 'fontSize', 'color', 'opacity', ...RUN_EXTRAS]),
 			bold: !!run.bold,
 			italic: !!run.italic,
 			underline: !!run.underline,

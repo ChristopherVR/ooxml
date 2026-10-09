@@ -12,6 +12,10 @@ import {
 	type VisioGlowEffect,
 	type VisioReflectionEffect,
 } from './edit-formatting-glow';
+import {
+	snapshotTextFormatExtras,
+	type VisioTextFormatExtras,
+} from './edit-formatting-text-commands';
 
 interface Target {
 	pageId: string;
@@ -20,7 +24,7 @@ interface Target {
 /** Whole-shape formatting updates every effective stored row, including unused rows.
  * Protected affected rows cause atomic refusal. Font size and indent use physical points.
  */
-export interface VisioTextFormatEdit extends Target {
+export interface VisioTextFormatEdit extends Target, VisioTextFormatExtras {
 	type: 'format-text';
 	fontSize?: number;
 	fontFamily?: string;
@@ -110,6 +114,7 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 				fail('INVALID_EDIT', 'Invalid vertical alignment.');
 			result.verticalAlign = edit.verticalAlign;
 		}
+		Object.assign(result, snapshotTextFormatExtras(edit));
 	} else if (edit.type === 'format-shape' && result.type === 'format-shape') {
 		if (edit.fillColor !== undefined) result.fillColor = color(edit.fillColor, true);
 		if (edit.lineColor !== undefined) result.lineColor = color(edit.lineColor);

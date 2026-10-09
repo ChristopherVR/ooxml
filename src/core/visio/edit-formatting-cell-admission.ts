@@ -40,7 +40,21 @@ export function isThemeLookupFormula(source: string | undefined): boolean {
 /** Literal native font/color lookups are safe to replace after GUARD and reference analysis. */
 export function assertEditableFormattingCell(cell: Element | undefined): void {
 	const source = executableCellFormula(attribute(cell, 'F'));
-	const ast = source ? parseVisioFormula(source) : undefined;
+	const parsed = source ? parseVisioFormula(source) : undefined;
+	if (parsed && proportionalTextBlockFormula(attribute(cell, 'N'), parsed)) {
+		if (cell?.hasAttribute('E'))
+			fail('EDIT_PROTECTED_CELL', 'Cannot overwrite an error formatting cell.');
+		return;
+	}
+	// A saved RGB text background carries Visio's +1 palette offset.
+	const ast =
+		parsed?.kind === 'binary' &&
+		parsed.operator === '+' &&
+		parsed.right.kind === 'number' &&
+		parsed.right.value === 1 &&
+		attribute(cell, 'N') === 'TextBkgnd'
+			? parsed.left
+			: parsed;
 	// THEMEGUARD is explicitly overridable by manual formatting; GUARD and
 	// SETATREF remain prohibited. Only literal theme lookups are admitted here.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/themeguard-function
@@ -76,4 +90,29 @@ export function assertEditableFormattingCell(cell: Element | undefined): void {
 		)
 			fail('EDIT_PROTECTED_CELL', 'Formatting formula cache is stale or has incompatible units.');
 	}
+}
+
+/** Text Block tool formulas (`Width*k`, `TxtHeight*0.5`): own-shape proportions it rewrites. */
+function proportionalTextBlockFormula(name: string | undefined, ast: VisioFormulaAst): boolean {
+	const bases: Record<string, string[]> = {
+		TxtPinX: ['Width'],
+		TxtWidth: ['Width'],
+		TxtPinY: ['Height'],
+		TxtHeight: ['Height'],
+		TxtLocPinX: ['TxtWidth'],
+		TxtLocPinY: ['TxtHeight'],
+	};
+	const allowed = name ? bases[name] : undefined;
+	if (!allowed || ast.kind !== 'binary' || ast.operator !== '*') return false;
+	const [reference, factor] =
+		ast.left.kind === 'reference' ? [ast.left, ast.right] : [ast.right, ast.left];
+	return (
+		reference.kind === 'reference' &&
+		reference.reference.shapeId === undefined &&
+		allowed.includes(reference.reference.cell) &&
+		((factor.kind === 'number' && factor.unit === 'scalar') ||
+			(factor.kind === 'unary' &&
+				factor.operand.kind === 'number' &&
+				factor.operand.unit === 'scalar'))
+	);
 }

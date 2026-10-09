@@ -46,6 +46,8 @@ export interface FormattingWrite {
 	value: string;
 	unit?: string;
 	formula?: string;
+	/** Remove a stored unit: the value is a plain scalar (negative SpLine multiples). */
+	dropUnit?: boolean;
 	category: FormattingCategory;
 }
 
@@ -97,12 +99,14 @@ export async function applyFormattingEdit(
 			);
 		if (
 			write.unit &&
+			!/\.SpLine$/.test(write.name) &&
 			effective?.hasAttribute('U') &&
-			visioFormulaCachedValue('0', attribute(effective, 'U')).unit !== 'length'
+			visioFormulaCachedValue('0', attribute(effective, 'U')).unit !==
+				visioFormulaCachedValue('0', write.unit).unit
 		)
 			fail(
 				'EDIT_FORMULA_UNIT',
-				'Font size, paragraph indent and line weight require length units.',
+				'Font size, paragraph indent, line weight and text block cells require matching units.',
 			);
 		const parent = name ? rowContext!.local.get(index!) : shape;
 		const local = parent ? formattingCell(parent, name ?? write.name) : undefined;
@@ -110,7 +114,8 @@ export async function applyFormattingEdit(
 			local &&
 			attribute(local, 'F') !== 'Inh' &&
 			attribute(local, 'V') === write.value &&
-			(!write.formula || attribute(local, 'F') === write.formula)
+			(!write.formula || attribute(local, 'F') === write.formula) &&
+			(!write.dropUnit || !local.hasAttribute('U'))
 		)
 			continue;
 		changed.set(write.name, local);
@@ -156,6 +161,7 @@ export async function applyFormattingEdit(
 		}
 		cell.setAttribute('V', write.value);
 		if (write.unit) cell.setAttribute('U', write.unit);
+		else if (write.dropUnit) cell.removeAttribute('U');
 		if (write.formula) cell.setAttribute('F', write.formula);
 		else if (attribute(cell, 'F') !== 'No Formula') cell.removeAttribute('F');
 	}

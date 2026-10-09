@@ -23,6 +23,7 @@ import {
 	snapshotConnectorRoute,
 } from '../edit-connector-commands';
 import { snapshotTextRanges } from '../edit-text-range-commands';
+import { snapshotTextFieldInsert } from '../edit-text-field-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
 import { snapshotPageTheme } from '../edit-page-theme-commands';
 import { isVisioCommentEdit, snapshotCommentEdit } from '../edit-comment-commands';
@@ -149,6 +150,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 				return { type: command.type, ...target, text: text(command.text) };
 			case 'replace-text-ranges':
 				return snapshotTextRanges(command, text);
+			case 'insert-text-field':
+				return snapshotTextFieldInsert(command);
 			case 'delete-shape':
 				return { type: command.type, ...target };
 			case 'rotate-shape':

@@ -30,6 +30,8 @@ import {
 	type RawShape,
 	type Report,
 } from './sheet';
+import { readVisioFieldProperties } from './text-field-context';
+import { visioWallClock } from './text-fields';
 
 export interface ParseVsdxOptions {
 	/** Trusted converter package injection. Only supply inside a disposable, externally timed worker. */
@@ -225,7 +227,11 @@ export async function parseVsdx(
 	const pages: VisioPage[] = [],
 		pageIds = new Set<string>();
 	const comments: VisioComment[] = [];
-	for (const page of children(await visioXml(pkg, pagesPart, 'Pages'), 'Page')) {
+	const pageNodes = children(await visioXml(pkg, pagesPart, 'Pages'), 'Page');
+	const foreground = pageNodes.filter((page) => !yes(attribute(page, 'Background')));
+	const fieldProperties = await readVisioFieldProperties(pkg);
+	const now = visioWallClock(new Date());
+	for (const page of pageNodes) {
 		const id = metadata(attribute(page, 'ID') ?? '', 256, 'Page ID');
 		if (!id || pageIds.has(id))
 			throw new VisioPackageError('INVALID_PAGE_ID', 'Page IDs must be present and unique.');
@@ -253,6 +259,14 @@ export async function parseVsdx(
 		resources.pageCells = new Map([...pageCells, ...sheet.cells]);
 		const theme = visioPageTheme(resources.themes, resources.pageCells);
 		comments.push(...readVisioAnnotations(sheet, id));
+		const pageNumber = foreground.indexOf(page) + 1;
+		resources.fieldContext = {
+			pageName: attribute(page, 'Name') ?? attribute(page, 'NameU') ?? `Page ${id}`,
+			...(pageNumber ? { pageNumber } : {}),
+			pageCount: foreground.length,
+			properties: fieldProperties,
+			now,
+		};
 		const layers = pageLayers(sheet, resources, localReport);
 		context.layers = indexLayers(layers);
 		const drawingToPageScale = visioPageGeometryScale(sheet.cells, localReport);

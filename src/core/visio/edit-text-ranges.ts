@@ -17,8 +17,6 @@ export async function replaceScopedTextRanges(
 	check: () => void,
 ): Promise<boolean> {
 	const shape = localTextTarget(roots.get(edit.pageId)!, document, edit.shapeId, check);
-	if (children(shape, 'Section').some((section) => attribute(section, 'N') === 'Field'))
-		fail('UNSUPPORTED_TEXT_RANGE', 'Text range editing of shapes with fields is unsupported.');
 	const texts = children(shape, 'Text');
 	if (texts.length !== 1)
 		fail('UNSUPPORTED_TEXT_RANGE', 'Range editing requires one existing local Text element.');
@@ -30,12 +28,6 @@ export async function replaceScopedTextRanges(
 			paragraphs = effectiveFormattingRows(shape, document, 'Paragraph');
 		assertFormattingText(shape, characters, paragraphs);
 	}
-	if (
-		Array.from(text.childNodes).some(
-			(node) => node.nodeType === 1 && (node as Element).localName === 'fld',
-		)
-	)
-		fail('UNSUPPORTED_TEXT_RANGE', 'Text range editing of fields is unsupported.');
 	let preceding = '';
 	for (const node of Array.from(text.childNodes)) {
 		if (node.nodeType === 3 || node.nodeType === 4) preceding += node.nodeValue ?? '';

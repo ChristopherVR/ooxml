@@ -21,7 +21,10 @@ export async function replacePlainText(
 	if (Array.from(node.childNodes).some((item) => item.nodeType !== 3 && item.nodeType !== 4))
 		fail('UNSUPPORTED_TEXT_EDIT', 'Rich text, fields and unknown text markup cannot be edited.');
 	if (children(target, 'Section').some((section) => attribute(section, 'N') === 'Field'))
-		fail('UNSUPPORTED_TEXT_EDIT', 'Shapes with text fields cannot be edited.');
+		fail(
+			'UNSUPPORTED_TEXT_EDIT',
+			'Replacing all text would remove its text fields; edit the text around the fields instead.',
+		);
 	if (decodeVisioPlainText(node.textContent ?? '') === text) return false;
 	await assertDependencies(target, node);
 	check();

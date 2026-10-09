@@ -43,6 +43,29 @@ Reordering accepts
 `order: 'front' | 'back' | 'forward' | 'backward'`. Every command includes
 `pageId` and `shapeId`; the complete command batch is atomic.
 
+The Text dialog properties extend `format-text`: `fontTransparency` (percent),
+`textCase` (`normal`, `all-caps`, `initial-caps`, `small-caps`), `textPosition`
+(`normal`, `superscript`, `subscript`), `language` (a Windows LCID), `letterSpacing`,
+`indentRight`, `indentFirst`, `spaceBefore`, `spaceAfter` (points), `lineSpacing`
+(`multiple` writes a negative SpLine, `exact` points), `bulletStyle` (0-7), `bulletText`
+(one character), `margins`, `textBackground` (hex or `none`, saved with Visio's `RGB()+1`
+formula), `textBackgroundTransparency` and `textBlock` (the Text Block tool: centre, size
+as fractions of Width/Height and an angle, written as `Width*k`/`Height*k` formulas so
+the block follows later resizes). Tab stops are not written.
+
+## Text fields
+
+`insert-text-field` adds a `<fld>` and a Field row (Value formula and cache, Format
+picture, Type 0 string, 2 number, 5 date) at an offset in the source text or at the end.
+It evaluates `NOW()`, the document date functions, `TITLE()`, `CREATOR()` and the other
+document-property functions, `PAGENAME()`, `PAGENUMBER()`, `PAGECOUNT()` and numeric
+formulas over the shape's own cells; anything else is refused. Format pictures are the
+`VISIO_FIELD_FORMATS` subset (`{{date picture}}`, `0`, `0.00`, `#,##0`, ` u` units, `@`).
+The parser shows evaluated page and document context and cached Values; other fields keep
+their stored text. Range edits treat a field as one atomic token and refuse ranges that
+touch it; whole-text replacement of a shape with fields is refused. Visio reopening
+these rows is not verified.
+
 Formatting admits unlayered local leaf shapes and local lines. Whole-shape text
 edits update effective character/paragraph rows, preserving mixed-run markers,
 unrelated style bits and supported cached fields. Proven local `F="Inh"` text

@@ -93,6 +93,8 @@ import { snapshotAssignLayers, type VisioAssignLayersEdit } from './edit-layer-c
 export type { VisioAssignLayersEdit } from './edit-layer-commands';
 import { isVisioGuideEdit, snapshotGuideEdit, type VisioGuideEdit } from './edit-guide-commands';
 export type { VisioGuideEdit } from './edit-guide-commands';
+import { snapshotTextFieldInsert, type VisioTextFieldInsertEdit } from './edit-text-field-commands';
+export type { VisioTextFieldInsertEdit } from './edit-text-field-commands';
 import {
 	isVisioFormatEdit,
 	snapshotFormatting,
@@ -201,6 +203,7 @@ export type VisioPageEdit =
 export type VisioEdit =
 	| VisioTextEdit
 	| VisioTextRangesEdit
+	| VisioTextFieldInsertEdit
 	| VisioGeometryEdit
 	| VisioPageEdit
 	| VisioFormatEdit
@@ -357,6 +360,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'replace-plain-text')
 			return { ...target, type: edit.type, text: text(edit.text) };
 		if (edit.type === 'replace-text-ranges') return snapshotTextRanges(edit, text);
+		if (edit.type === 'insert-text-field') return snapshotTextFieldInsert(edit);
 		if (isVisioFormatEdit(edit)) return snapshotFormatting(edit);
 		if (edit.type === 'reorder-shape') {
 			if (!['front', 'back', 'forward', 'backward'].includes(edit.order))

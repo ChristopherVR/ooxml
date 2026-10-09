@@ -11,15 +11,20 @@ import { shapeShadow } from './shadow';
 import { shapeEffects } from './effects';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
+import { characterExtras } from './text-character';
+import { textFieldDisplay } from './text-field-display';
+import type { VisioFieldContext } from './text-fields';
 import { textParagraphs, type ParagraphMarker } from './paragraphs';
 import { decodeVisioPlainText } from './plain-text';
-import type { VisioStyle, VisioText, VisioTextRun, VisioGeometry } from './model';
+import type { VisioStyle, VisioText, VisioTextField, VisioTextRun, VisioGeometry } from './model';
 import { transform } from './geometry';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
 
 export interface Resources extends ThemeResources {
 	colors: Map<string, string>;
 	fonts: Map<string, string>;
+	/** Page and document context for text fields, set per page by the parser. */
+	fieldContext?: VisioFieldContext;
 }
 const PALETTE = [
 	'#000000',
@@ -206,6 +211,7 @@ function runStyle(
 		italic: !!(bits & 2),
 		underline: !!(bits & 4),
 		strikethrough: number(cells, 'Strikethru', 0, report) !== 0,
+		...characterExtras(cells, report),
 	};
 }
 export function shapeText(
@@ -225,6 +231,7 @@ export function shapeText(
 	let currentCells = defaultCells;
 	const runs: VisioTextRun[] = [];
 	const paragraphMarkers: ParagraphMarker[] = [];
+	const fields: VisioTextField[] = [];
 	let textOffset = 0,
 		terminalDirectText = false;
 	const append = (text: string, direct = false) => {
@@ -245,8 +252,16 @@ export function shapeText(
 					currentCells = characters.get(element.getAttribute('IX') ?? '0') ?? defaultCells;
 				else if (element.localName === 'pp')
 					paragraphMarkers.push({ offset: textOffset, index: element.getAttribute('IX') ?? '0' });
-				else if (element.localName === 'fld') append(element.textContent ?? '');
-				else if (element.localName !== 'pp' && element.localName !== 'tp') {
+				else if (element.localName === 'fld') {
+					const field = textFieldDisplay(element, sheet, resources.fieldContext);
+					fields.push({
+						start: textOffset,
+						end: textOffset + field.text.length,
+						cached: field.cached,
+						...(field.formula ? { formula: field.formula } : {}),
+					});
+					append(field.text);
+				} else if (element.localName !== 'pp' && element.localName !== 'tp') {
 					report(
 						'unsupported-text-element',
 						`Text element ${element.localName} is represented as plain text.`,
@@ -284,6 +299,7 @@ export function shapeText(
 		...textBackground(cells, resources, report),
 		paragraphs,
 		runs,
+		...(fields.length ? { fields } : {}),
 		...runStyle(defaultCells, resources, report, cells),
 		horizontalAlign:
 			alignment === 1 ? 'center' : alignment === 2 ? 'right' : alignment === 3 ? 'justify' : 'left',

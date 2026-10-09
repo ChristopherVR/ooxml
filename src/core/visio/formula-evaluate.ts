@@ -44,6 +44,21 @@ const staticUnsupported = new Set([
 	'FONT',
 	// Page-name lookup has explicit arguments but returns a string, outside numeric evaluation.
 	'PAGENAME',
+	// Text-field functions read document properties or the clock, never ShapeSheet cells.
+	// https://learn.microsoft.com/en-us/office/client-developer/visio/now-function
+	'NOW',
+	'DOCCREATION',
+	'DOCLASTSAVE',
+	'DOCLASTEDIT',
+	'DOCLASTPRINT',
+	'TITLE',
+	'SUBJECT',
+	'CREATOR',
+	'KEYWORDS',
+	'DESCRIPTION',
+	'CATEGORY',
+	'COMPANY',
+	'MANAGER',
 	// POLYLINE encodes explicitly supplied geometry data; affected expressions
 	// still require the geometry evaluator and are rejected by numeric recalculation.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/polyline-function

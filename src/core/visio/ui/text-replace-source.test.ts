@@ -46,9 +46,8 @@ describe('source-backed atomic text replacement plans', () => {
 	});
 	it.each([
 		cell('LockTextEdit', 1),
-		'<Section N="Field"><Row IX="0"><Cell N="Value" V="a"/></Row></Section>',
 		'<Section N="User"><Row N="Dependent"><Cell N="Value" V="1" F="TEXTWIDTH(TheText)"/></Row></Section>',
-	])('refuses a late matched protected/field shape atomically %#', async (extra) => {
+	])('refuses a late matched protected/dependent shape atomically %#', async (extra) => {
 		const bytes = await source(extra),
 			before = bytes.slice(),
 			document = await parseVsdx(bytes);
