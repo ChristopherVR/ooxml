@@ -1,42 +1,37 @@
 /**
  * The chooser on the suite root: open the integrated suite, or go to one product's own site
  * (its docs and framework demos under /ooxml/<product>/, built by scripts/build-pages.mjs).
- * It asks on every visit; only the current tab remembers the suite, so a reload stays in it.
+ * It asks on every visit and every reload; the choice is never stored.
  * boot.js shows it before the suite loads, and the app launcher can show it again later.
  */
 import { $, apps, badge, choose, escape } from './ui.js';
 import { product, suiteBase } from './product.js';
 
-const KEY = 'ooxml-start';
 const sites = { docx: 'docx', xlsx: 'xlsx', pptx: 'pptx', vsdx: 'visio', teams: 'teams' };
 const choices = [
 	{ id: 'office', name: 'OOXML Office', detail: 'Every app in one workspace, with tabs' },
 	...apps.map((a) => ({ id: a.id, name: a.name, detail: `.${a.id} viewer, docs and demos` })),
 	{ id: 'teams', name: 'Teams', detail: 'Team workspace, docs and demos' },
 ];
-function inSuite() {
-	try {
-		return sessionStorage.getItem(KEY) === 'office';
-	} catch {
-		return false;
-	}
+/** A reload always asks again, even when the address points into the suite. */
+function reloaded() {
+	return performance.getEntriesByType('navigation')[0]?.type === 'reload';
 }
-function enterSuite() {
-	try {
-		sessionStorage.setItem(KEY, 'office');
-	} catch {}
-}
-/** Whether this visit must choose before the suite loads: the root page, not a link into a file. */
+/**
+ * Whether this visit must choose before the suite loads: the root page or any reload, not a
+ * fresh link into a file or ?suite (the app launcher's link). Nothing is stored, so the next
+ * visit asks again. Browser checks set `ooxmlSkipStart` from an init script to drive the suite.
+ */
 export function needsChooser() {
-	if (product || !/^https?:$/.test(location.protocol)) return false;
+	if (product || !/^https?:$/.test(location.protocol) || globalThis.ooxmlSkipStart) return false;
 	if (matchMedia('(display-mode: standalone)').matches) return false;
 	const url = new URL(location.href);
 	if (url.searchParams.has('suite')) {
-		enterSuite();
 		url.searchParams.delete('suite');
 		history.replaceState(null, '', url);
+		return false;
 	}
-	return !inSuite() && (!location.hash || location.hash === '#/');
+	return reloaded() || !location.hash || location.hash === '#/';
 }
 const officeBadge = '<span class="app-badge" style="--app:#0f6cbd">O</span>';
 /**
@@ -65,7 +60,6 @@ export function showChooser({ required = false, onSuite } = {}) {
 			location.assign(new URL(`${sites[id]}/`, suiteBase));
 			return;
 		}
-		enterSuite();
 		dialog.removeEventListener('cancel', block);
 		$('dialog-close').hidden = false;
 		dialog.close();

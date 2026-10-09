@@ -265,6 +265,14 @@ body [hidden] {
 	margin: 0 18px 16px;
 	color: var(--blue);
 }
+.update-app {
+	margin-right: auto;
+	border: 0;
+	background: none;
+	color: var(--blue);
+	font: inherit;
+	cursor: pointer;
+}
 .start-change {
 	margin: 0 16px 12px;
 	color: var(--blue);

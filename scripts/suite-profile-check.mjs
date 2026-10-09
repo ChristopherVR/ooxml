@@ -9,7 +9,7 @@ const { createDocx } = await import('../src/core/dist/automation/index.mjs');
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
 // Skip the start chooser; these checks drive the whole suite.
-await page.addInitScript(() => sessionStorage.setItem('ooxml-start', 'office'));
+await page.addInitScript(() => (globalThis.ooxmlSkipStart = true));
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const base = process.env.SUITE_URL ?? 'http://127.0.0.1:8130';

@@ -3,7 +3,7 @@
  * The static site contains no Office engine; the host imports the existing core and UI packages.
  */
 import { createRequire } from 'node:module';
-import { rm } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -18,7 +18,7 @@ export async function bundleSuite(outfile) {
 	await rm(chunks, { recursive: true, force: true });
 	const application = createRequire(join(ROOT, 'apps/office-suite/package.json'));
 	const { build } = await import(pathToFileURL(application.resolve('vite')).href);
-	await build({
+	const result = await build({
 		configFile: false,
 		root: join(ROOT, 'apps/office-suite/src'),
 		base: './',
@@ -54,11 +54,20 @@ export async function bundleSuite(outfile) {
 			rolldownOptions: {
 				input: join(ROOT, 'apps/office-suite/src/boot.js'),
 				output: {
-					entryFileNames: 'suite.js',
+					// The entry also holds code the lazy chunks import, so it is content-hashed like
+					// them; suite.js below only imports it. A versioned suite.js?v= URL in a page then
+					// cannot load the shared code a second time under another URL.
+					entryFileNames: 'suite-assets/boot-[hash].js',
 					chunkFileNames: 'suite-assets/[name]-[hash].js',
 					assetFileNames: 'suite-assets/[name]-[hash][extname]',
 				},
 			},
 		},
 	});
+	const entry = [result]
+		.flat()
+		.flatMap((r) => r.output)
+		.find((chunk) => chunk.type === 'chunk' && chunk.isEntry);
+	if (!entry) throw new Error('The suite build produced no entry chunk');
+	await writeFile(outfile, `import './${entry.fileName}';\n`);
 }

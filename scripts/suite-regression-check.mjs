@@ -8,7 +8,7 @@ const base = process.env.SUITE_URL || 'http://127.0.0.1:8133';
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
 // Skip the start chooser; these checks drive the whole suite.
-await context.addInitScript(() => sessionStorage.setItem('ooxml-start', 'office'));
+await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
 const page = await context.newPage();
 page.setDefaultTimeout(20000);
 const errors = [];
@@ -133,6 +133,32 @@ try {
 	console.log(
 		'PowerPoint: light/dark/accent, repeat cog close, properties control bounds and phone settings passed.',
 	);
+	// The suite's host rule once forced `display: block` on <visio-viewer>, overriding its flex
+	// :host, so the canvas pushed the ribbon out of view and the drawing opened at 100%.
+	await page.setViewportSize({ width: 1440, height: 960 });
+	await page.locator('#rail [data-home]').click();
+	await page.locator('[data-create=vsdx]').click();
+	const visio = page.locator('visio-viewer');
+	await expect(visio.locator('office-ui-ribbon.toolbar')).toBeVisible();
+	await expect.poll(() => visio.evaluate((el) => el.zoom)).not.toBe(1);
+	const visioLayout = await visio.evaluate((el) => {
+		const host = el.getBoundingClientRect();
+		const ribbon = el.shadowRoot.querySelector('office-ui-ribbon.toolbar').getBoundingClientRect();
+		const status = el.shadowRoot.querySelector('.status').getBoundingClientRect();
+		return {
+			display: getComputedStyle(el).display,
+			scrollTop: el.scrollTop,
+			ribbonInside: ribbon.top >= host.top - 1 && ribbon.height > 0,
+			statusInside: status.bottom <= host.bottom + 1,
+		};
+	});
+	assert.deepEqual(visioLayout, {
+		display: 'flex',
+		scrollTop: 0,
+		ribbonInside: true,
+		statusInside: true,
+	});
+	console.log('Visio: flex host, ribbon and status bar in view, page fitted on open passed.');
 	await page.evaluate(() => navigator.serviceWorker.ready);
 	await page.waitForFunction(() => !!navigator.serviceWorker.controller, {}, { timeout: 60000 });
 	const ids = new Set();
@@ -173,7 +199,8 @@ try {
 	await page.locator('[data-create=docx]').click();
 	await expect(page.locator('docx-editor')).toBeVisible();
 	await context.setOffline(false);
-	// The root asks until the suite is chosen; a product goes to its own site, and ?suite stays.
+	// The root asks until the suite is chosen; a product goes to its own site. Nothing is
+	// remembered: a reload asks again even inside the suite, and only ?suite skips it.
 	const fresh = await browser.newContext();
 	const visitor = await fresh.newPage();
 	await visitor.goto(base + '/');
@@ -182,7 +209,12 @@ try {
 	await visitor.goto(base + '/');
 	await visitor.locator('#dialog [data-start=office]').click();
 	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	await visitor.locator('[data-create=docx]').click();
+	await expect(visitor.locator('docx-editor')).toBeVisible();
 	await visitor.reload();
+	await expect(visitor.locator('#dialog [data-start=office]')).toBeVisible();
+	assert.equal(await visitor.evaluate(() => sessionStorage.length), 0);
+	await visitor.goto(base + '/?suite');
 	await expect(visitor.locator('[data-create=docx]')).toBeVisible();
 	await expect(visitor.locator('#dialog')).not.toBeVisible();
 	// Every new visit asks again, and nothing of the suite shows or loads until it is picked.
@@ -206,7 +238,7 @@ try {
 	await fresh.close();
 	assert.deepEqual(errors, []);
 	console.log(
-		'Start chooser asks on every visit, opens product sites and keeps the suite for the tab; apps have create buttons. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
+		'Start chooser asks on every visit, opens product sites and asks again on reload; apps have create buttons. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
 	);
 } finally {
 	await browser.close();

@@ -108,11 +108,36 @@ export async function buildPwa(out) {
 		}
 	}
 	await walk(out);
+	files.sort();
+	// The shell's scripts and styles keep fixed names, so every reference to one from a page or
+	// from workspace.css gets ?v=<hash of every asset>: a deploy changes the URL, which bypasses
+	// the HTTP cache and any older service worker. Chunks in suite-assets are content-hashed.
+	const assets = createHash('sha256');
+	for (const file of files.filter((f) => !f.endsWith('.html')))
+		assets.update(file).update(await readFile(join(out, file)));
+	const stamp = assets.digest('hex').slice(0, 12);
+	const stamped = new Set();
+	const versioned = (text, pattern) =>
+		text.replace(pattern, (match, before, path, name, after) => {
+			if (!files.includes(name)) return match;
+			stamped.add(name);
+			return `${before}${path}${name}?v=${stamp}${after}`;
+		});
+	for (const file of files.filter((f) => f.endsWith('.html') || f === 'workspace.css')) {
+		const text = await readFile(join(out, file), 'utf8');
+		await writeFile(
+			join(out, file),
+			file.endsWith('.html')
+				? versioned(text, /((?:src|href)=")((?:\.\.\/\.\.\/)?)([\w-]+\.(?:js|css))(")/g)
+				: versioned(text, /(@import url\(')(\.\/)([\w-]+\.css)('\))/g),
+		);
+	}
+	const cached = files.map((f) => (stamped.has(f) ? `${f}?v=${stamp}` : f));
 	const hash = createHash('sha256');
-	for (const file of files.sort()) hash.update(file).update(await readFile(join(out, file)));
+	for (const file of files) hash.update(file).update(await readFile(join(out, file)));
 	const worker = await readFile(new URL('./pwa/service-worker.js', import.meta.url), 'utf8');
 	await writeFile(
 		join(out, 'sw.js'),
-		`const VERSION=${JSON.stringify(hash.digest('hex').slice(0, 16))};\nconst FILES=${JSON.stringify(files)};\n${worker}`,
+		`const VERSION=${JSON.stringify(hash.digest('hex').slice(0, 16))};\nconst FILES=${JSON.stringify(cached)};\n${worker}`,
 	);
 }

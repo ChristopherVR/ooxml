@@ -9,7 +9,7 @@ const { createDocx } = await import('../src/core/dist/automation/index.mjs');
 const browser = await chromium.launch({ channel: 'chromium' });
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
 // Skip the start chooser; these checks drive the whole suite.
-await context.addInitScript(() => sessionStorage.setItem('ooxml-start', 'office'));
+await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
 const page = await context.newPage();
 page.setDefaultTimeout(15000);
 const errors = [];
