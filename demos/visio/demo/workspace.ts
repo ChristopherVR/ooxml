@@ -18,14 +18,11 @@ export interface Workspace {
 	/** What the binding mounts with; `attach` replaces it with the editable sample package. */
 	readonly initialDocument: VisioDocument;
 	/**
-	 * Connect the mounted viewer. `setDocument` gives the binding a new `document` property, the way
-	 * that framework updates props (state, signals, inputs); `destroy` tears the binding down.
+	 * Connect the mounted viewer; `destroy` tears the binding down. Every drawing, the sample
+	 * included, then opens through the viewer's `load`, so the binding's `document` prop stays the
+	 * initial placeholder.
 	 */
-	attach(
-		viewer: WorkspaceViewer,
-		setDocument: (document: VisioDocument) => void,
-		destroy?: () => void,
-	): void;
+	attach(viewer: WorkspaceViewer, destroy?: () => void): void;
 }
 
 /**
@@ -40,7 +37,6 @@ export function createWorkspace(doc: Document = document): Workspace {
 		errorBox = get('error');
 	const disposeTheme = wireWorkspaceTheme(doc);
 	let viewer: WorkspaceViewer | undefined;
-	let setDocument: (document: VisioDocument) => void = () => {};
 	let destroyViewer: () => void = () => {};
 	let requestId = 0;
 	const revealWorkspace = wireWorkspaceShell(doc, {
@@ -156,13 +152,8 @@ export function createWorkspace(doc: Document = document): Workspace {
 		},
 	};
 
-	function attach(
-		mounted: WorkspaceViewer,
-		set: (document: VisioDocument) => void,
-		destroy: () => void = () => {},
-	): void {
+	function attach(mounted: WorkspaceViewer, destroy: () => void = () => {}): void {
 		viewer = mounted;
-		setDocument = set;
 		destroyViewer = destroy;
 		const report = doc.querySelector<HTMLElement>('.workspace-footer')!;
 		report.slot = 'workspace-footer';
