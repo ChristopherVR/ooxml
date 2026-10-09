@@ -192,6 +192,23 @@ describe('Visio ribbon commands', () => {
 		for (const name of ['freeform', 'arc', 'pencil'])
 			expect(readOnly.command(name).disabled).toBe(true);
 	});
+	it('shares Connector ribbon and Ctrl+3 tool state, while read-only sources refuse it', async () => {
+		const { press, key, commands, command, viewport } = await setup();
+		expect(command('connector').disabled).toBe(false);
+		expect(command('connector').hasAttribute('data-unsupported')).toBe(false);
+		press('connector');
+		expect(commands.tool).toBe('connector');
+		expect(command('connector').getAttribute('pressed')).toBe('true');
+		expect(viewport.dataset.tool).toBe('connector');
+		key({ key: 'Escape' });
+		expect(commands.tool).toBe('pointer');
+		key({ key: '3', ctrlKey: true });
+		expect(commands.tool).toBe('connector');
+		const readOnly = await setup(false);
+		readOnly.key({ key: '3', ctrlKey: true });
+		expect(readOnly.commands.tool).toBe('pointer');
+		expect(readOnly.command('connector').disabled).toBe(true);
+	});
 	it('turns shared button activation into typed ribbon actions', async () => {
 		const { root, press } = await setup();
 		const actions: unknown[] = [];

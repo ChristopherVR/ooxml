@@ -58,9 +58,8 @@ export class ViewerLineEndpoints {
 		if (
 			!shape ||
 			!visioStraightLineHandles(shape) ||
-			page.connectors.some(
-				(connection) => connection.fromShapeId === shape.id || connection.toShapeId === shape.id,
-			)
+			// Dragging a glued connector's endpoint unglues that end, as in Visio.
+			page.connectors.some((connection) => connection.toShapeId === shape.id)
 		)
 			return;
 		const group = Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')).find(

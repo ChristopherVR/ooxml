@@ -3,6 +3,7 @@ import type { TextCaseMode, VisioArrangement } from 'ooxml-core/visio/ui';
 
 export type CanvasTool =
 	| 'pointer'
+	| 'connector'
 	| 'rectangle'
 	| 'ellipse'
 	| 'line'

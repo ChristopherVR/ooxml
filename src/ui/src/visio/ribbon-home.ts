@@ -5,7 +5,7 @@ import { command, commandRow, group, menu, stack, type CommandSpec } from './rib
 import { changeShapeGallery } from './ribbon-change-shape';
 
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
-const CONNECT = 'Needs core connector and glue edits.';
+const CONNECTION_POINT = 'Needs core connection-point rows and point-to-point glue.';
 const SELECT = 'Needs multi-shape selection.';
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
@@ -32,7 +32,13 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			),
 			command(
 				doc,
-				small({ id: 'connector', label: 'Connector', icon: 'connector', unsupported: CONNECT }),
+				small({
+					id: 'connector',
+					label: 'Connector',
+					icon: 'connector',
+					action: { type: 'tool', tool: 'connector' },
+					keys: ['Control+3', 'Ctrl+3'],
+				}),
 			),
 			command(
 				doc,
@@ -107,7 +113,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 					id: 'connection-point',
 					label: 'Connection Point',
 					icon: 'visioConnectionPoint',
-					unsupported: CONNECT,
+					unsupported: CONNECTION_POINT,
 				}),
 			),
 			command(

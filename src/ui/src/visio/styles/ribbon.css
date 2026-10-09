@@ -202,7 +202,9 @@ office-ui-status-item[data-page-status] {
 .viewport[data-tool='arc'],
 .viewport[data-tool='arc'] .paper [data-shape-id],
 .viewport[data-tool='pencil'],
-.viewport[data-tool='pencil'] .paper [data-shape-id] {
+.viewport[data-tool='pencil'] .paper [data-shape-id],
+.viewport[data-tool='connector'],
+.viewport[data-tool='connector'] .paper [data-shape-id] {
 	cursor: crosshair;
 }
 .viewport[data-tool='ellipse'],
@@ -210,8 +212,17 @@ office-ui-status-item[data-page-status] {
 .viewport[data-tool='line'],
 .viewport[data-tool='freeform'],
 .viewport[data-tool='arc'],
-.viewport[data-tool='pencil'] {
+.viewport[data-tool='pencil'],
+.viewport[data-tool='connector'] {
 	touch-action: none;
+}
+/* Connector tool: the shape under the pointer is the glue target (Visio's green glue box). */
+.viewport[data-tool='connector'] .paper [data-connect-target='true'] > path[data-geometry] {
+	/* Drawing units (inches), like the canvas focus stroke; wins over a focused shape's dashes. */
+	stroke: var(--_vv-accent) !important;
+	stroke-width: 0.05 !important;
+	stroke-opacity: 1 !important;
+	stroke-dasharray: none !important;
 }
 path.draw-preview {
 	fill: none;

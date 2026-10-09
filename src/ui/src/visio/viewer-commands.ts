@@ -12,6 +12,7 @@ import type { RibbonCommand } from './ribbon-parts';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
 import { ShapeDrawTool } from './viewer-draw-tool';
 import { ViewerTextTool } from './viewer-text-tool';
+import { ViewerConnectorTool } from './viewer-connector-tool';
 import type { Rulers } from './viewer-ruler';
 import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
@@ -65,6 +66,7 @@ export class ViewerCommands {
 	#pending = 0;
 	#draw: ShapeDrawTool;
 	#text: ViewerTextTool;
+	#connector: ViewerConnectorTool;
 	#pageOrder: ViewerPageOrder;
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
@@ -108,7 +110,14 @@ export class ViewerCommands {
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
 		this.#draw = new ShapeDrawTool(host.viewport, host.controller, {
-			tool: () => (this.#tool === 'pointer' || this.#tool === 'text' ? undefined : this.#tool),
+			tool: () =>
+				this.#tool === 'pointer' || this.#tool === 'text' || this.#tool === 'connector'
+					? undefined
+					: this.#tool,
+			announce: host.announce,
+		});
+		this.#connector = new ViewerConnectorTool(host.viewport, host.controller, {
+			active: () => this.#tool === 'connector',
 			announce: host.announce,
 		});
 		this.#text = new ViewerTextTool(host.viewport, host.controller, {
@@ -136,6 +145,7 @@ export class ViewerCommands {
 			setTool: (tool) => this.setTool(tool),
 			cancelDrawing: () => {
 				this.#draw.cancel();
+				this.#connector.cancel();
 				this.#text.cancel();
 			},
 			insertPage: () => this.#insertPage(),
@@ -235,6 +245,7 @@ export class ViewerCommands {
 			() => this.render(this.host.controller.state),
 			options,
 		);
+		const disposeConnector = this.#connector.wire();
 		const disposeDraw = this.#draw.wire();
 		const disposeText = this.#text.wire();
 		const disposeClipboard = this.#clipboard.wire();
@@ -248,6 +259,7 @@ export class ViewerCommands {
 			++this.#pending;
 			events.abort();
 			disposeDraw();
+			disposeConnector();
 			disposeText();
 			disposeClipboard();
 			disposePaint();
@@ -259,6 +271,7 @@ export class ViewerCommands {
 		if (tool !== 'pointer' && !this.#canEdit(this.host.controller.state)) return;
 		if (tool !== this.#tool) {
 			this.#draw.cancel();
+			this.#connector.cancel();
 			this.#text.cancel();
 		}
 		this.#tool = tool;
@@ -400,8 +413,8 @@ export class ViewerCommands {
 		if (control && (key === 'PageDown' || key === 'PageUp'))
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'presentation' };
-		if (key === 'Escape' && (this.#draw.drawing || this.#text.drafting))
-			return { type: 'cancel-drawing' };
+		const drawing = this.#draw.drawing || this.#connector.drawing;
+		if (key === 'Escape' && (drawing || this.#text.drafting)) return { type: 'cancel-drawing' };
 		if (event.composedPath().some(editable)) return undefined;
 		if (key === 'Escape' && this.#painter.armed) return { type: 'format-painter', mode: 'cancel' };
 		if (control && !event.shiftKey && ['c', 'x', 'v'].includes(key)) {
@@ -423,6 +436,7 @@ export class ViewerCommands {
 			return { type: 'history', key: 'redo' };
 		if (control && key === '1') return { type: 'tool', tool: 'pointer' };
 		if (control && key === '2') return { type: 'tool', tool: 'text' };
+		if (control && key === '3') return { type: 'tool', tool: 'connector' };
 		if (control && key === '8') return { type: 'tool', tool: 'rectangle' };
 		if (control && key === '9') return { type: 'tool', tool: 'ellipse' };
 		if (control && key === '6') return { type: 'tool', tool: 'line' };
@@ -432,9 +446,9 @@ export class ViewerCommands {
 		if (!control && key === 'Delete' && state.selectedShape) return { type: 'delete' };
 		if (!control && key === 'F2' && state.document)
 			return { type: 'reveal', panel: 'edit', focusText: true };
-		if (key === 'Escape' && this.#tool !== 'pointer' && !this.#draw.drawing)
+		if (key === 'Escape' && this.#tool !== 'pointer' && !drawing)
 			return { type: 'tool', tool: 'pointer' };
-		if (key === 'Escape' && state.selectedShapes.length && !this.#draw.drawing)
+		if (key === 'Escape' && state.selectedShapes.length && !drawing)
 			return { type: 'selection', mode: 'clear' };
 		return undefined;
 	}
@@ -447,6 +461,7 @@ export class ViewerCommands {
 	}
 	render(state: ViewerState): void {
 		this.#draw.render(state);
+		this.#connector.render(state);
 		this.#text.render(state);
 		this.#duplication.render(state);
 		this.#grouping.render(state);
@@ -489,6 +504,8 @@ export class ViewerCommands {
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
 		button('redo').disabled = !state.edit.canRedo || state.edit.busy || state.loading;
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));
+		button('connector').setAttribute('pressed', String(this.#tool === 'connector'));
+		button('connector').disabled = !editing || !page;
 		// The drawing-tools split button shows the active tool; its active drawing item is checked.
 		const rectangle = button('rectangle');
 		rectangle.toggleAttribute('data-active', this.#tool === 'rectangle');
