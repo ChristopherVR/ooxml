@@ -150,6 +150,30 @@ bun run fmt            # oxfmt (tabs, single quotes, width 100)
 
 Build with `bun run build:suite`, then preview with `bun run preview:suite` (default port 8123). The app mounts the real editors directly. No demo iframes are used.
 
+## Before pushing
+
+Unit tests in the folder you changed are not what CI runs. Every one of these slipped through once:
+
+- **Run `bun run verify`** before every push. It asks the CI planner (`scripts/ci-plan.mjs`) what
+  the commits not yet on `origin/main` reach and runs that locally: lint, the formatter on changed
+  files, the typechecks, the affected core and `ooxml-ui` tests and each touched viewer's own checks
+  (its typecheck and `fmt:check` included). Browser suites and packaging are skipped; add
+  `--browser` for the browser suites of what you touched, `--full` for everything. Steps run with
+  `CI=1`, so Vitest fails on a missing snapshot instead of writing one.
+- **Verify and push from your own worktree**, never the shared checkout: `verify` refuses
+  uncommitted changes, and another session's commits or half-edited files must not be tested or
+  pushed with yours. Push with `git push origin HEAD:main`.
+- **Parallel agents each take their own worktree and port** (`PLAYWRIGHT_PORT` for the viewers'
+  browser suites), or their servers and timeouts collide and real failures hide among flaky ones.
+- **Integrate, verify once, push once.** Each push to `main` cancels the CI run before it, so a
+  string of quick pushes leaves every run but the last unfinished.
+- **Use CI's Bun** (`bun-version` in `.github/actions/setup/action.yml`); another version writes a
+  different `bun.lock`. `verify` warns when they differ.
+
+A maintainer can run it automatically with a local, uncommitted hook in
+`$(git rev-parse --git-common-dir)/hooks/pre-push` that calls `node scripts/verify.mjs`;
+`git push --no-verify` skips it once.
+
 ## Branching and git workflow
 
 This repository uses **trunk-based development**: commit directly to `main`.

@@ -48,6 +48,7 @@
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
 		"test:scripts": "node --test 'scripts/*.test.mjs'",
+		"verify": "node scripts/verify.mjs",
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
 		"fleet": "node scripts/fleet.mjs",
 		"release:plan": "node scripts/release-plan.mjs",
