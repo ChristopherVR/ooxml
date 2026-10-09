@@ -10,6 +10,7 @@ import {
 	visioSceneToLocal,
 } from './connection-points';
 import { visioConnectorCreationCommand } from './draw-plan';
+import { visioConnectorMovePreviews, visioConnectorPreviewPath } from './connector-preview';
 
 async function scene() {
 	const blank = await fixture({ pages: [{ id: '0', contents: '' }] });
@@ -59,6 +60,21 @@ it('finds connection points, adds new ones and exposes routed connector ends', a
 	const ends = visioConnectorEndHandles(connector!)!;
 	expect(ends.begin).toEqual({ x: 0, y: 0 });
 	expect(ends.end).toEqual({ x: 1.5, y: 2 });
+});
+
+it('previews glued connectors re-routed around a dragged shape', async () => {
+	const page = await scene();
+	expect(visioConnectorMovePreviews(page, new Set(['3']), { x: 1, y: 0 })).toEqual([]);
+	const [preview] = visioConnectorMovePreviews(page, new Set(['2']), { x: 0, y: 2 });
+	expect(preview!.connectorId).toBe('3');
+	// The end follows connection point 0 of shape 2 (now at 4, 6), drawn with y down.
+	expect(preview!.points.at(-1)).toEqual({ x: 4, y: page.height - 6 });
+	expect(
+		preview!.points
+			.slice(1)
+			.every((p, i) => p.x === preview!.points[i]!.x || p.y === preview!.points[i]!.y),
+	).toBe(true);
+	expect(visioConnectorPreviewPath(preview!)).toMatch(/^M [\d.]+ [\d.]+ L /);
 });
 
 it('passes connection points and the route through connector creation', async () => {

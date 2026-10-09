@@ -1,0 +1,85 @@
+import type { VisioPage, VisioShape } from '../model';
+import type { VisioConnectorRoute } from '../edit-connector-commands';
+import {
+	chooseSites,
+	dynamicSites,
+	pointSite,
+	routeVertices,
+	type ConnectorSite,
+} from '../edit-connector-layout';
+import type { VisioGlueBox } from '../edit-connector-glue';
+
+/** A connector redrawn for a move preview, in page coordinates with y down (SVG page inches). */
+export interface VisioConnectorPreview {
+	connectorId: string;
+	route: VisioConnectorRoute;
+	/** Route vertices; a curved route has the four controls of one cubic. */
+	points: { x: number; y: number }[];
+}
+
+/**
+ * While shapes are dragged, the connectors glued to them re-routed for the translated shapes,
+ * with the same site choice and router the core uses when the move is committed. Connectors that
+ * move themselves, are not local, or cannot be resolved are left out.
+ */
+export function visioConnectorMovePreviews(
+	page: VisioPage,
+	moved: ReadonlySet<string>,
+	delta: { x: number; y: number },
+): VisioConnectorPreview[] {
+	const byId = new Map(page.shapes.map((shape) => [shape.id, shape]));
+	const box = (shape: VisioShape): VisioGlueBox => {
+		const [a, b, c, d, e, f] = shape.transform;
+		const offset = moved.has(shape.id) ? delta : { x: 0, y: 0 };
+		return {
+			width: shape.width,
+			height: shape.height,
+			transform: [a, b, c, d, e + offset.x, f + offset.y],
+		};
+	};
+	const result: VisioConnectorPreview[] = [];
+	for (const connector of page.shapes) {
+		if (connector.kind !== 'connector' || moved.has(connector.id) || connector.masterId) continue;
+		const rows = page.connectors.filter((row) => row.fromShapeId === connector.id);
+		if (!rows.some((row) => moved.has(row.toShapeId)) || !connector.lineEnds) continue;
+		const sites = (cell: 'BeginX' | 'EndX'): ConnectorSite[] | undefined => {
+			const row = rows.find((candidate) => candidate.fromCell === cell);
+			const target = row ? byId.get(row.toShapeId) : undefined;
+			if (row && !target) return undefined;
+			if (!row || !target) {
+				const [a, b, c, d, e, f] = connector.transform;
+				const local = cell === 'BeginX' ? connector.lineEnds!.begin : connector.lineEnds!.end;
+				return [{ point: { x: a * local.x + c * local.y + e, y: b * local.x + d * local.y + f } }];
+			}
+			const index = /^Connections\.X([1-9]\d*)$/.exec(row.toCell)?.[1];
+			if (index === undefined) return dynamicSites(box(target));
+			const point = target.connectionPoints?.find((p) => p.index === Number(index) - 1);
+			return point ? [pointSite(box(target), point.x, point.y)] : undefined;
+		};
+		const begin = sites('BeginX'),
+			end = sites('EndX');
+		if (!begin || !end) continue;
+		const route = connector.connectorRoute ?? 'straight';
+		try {
+			const points = routeVertices(route, chooseSites(begin, end));
+			result.push({
+				connectorId: connector.id,
+				route,
+				points: points.map((point) => ({ x: point.x, y: page.height - point.y })),
+			});
+		} catch {
+			// Coinciding ends are refused by the core on release as well.
+		}
+	}
+	return result;
+}
+
+/** SVG path data for a connector preview. */
+export function visioConnectorPreviewPath(preview: VisioConnectorPreview): string {
+	const [first, ...rest] = preview.points;
+	if (!first) return '';
+	const point = (p: { x: number; y: number }) => `${p.x} ${p.y}`;
+	return preview.route === 'curved' && rest.length === 3
+		? `M ${point(first)} C ${rest.map(point).join(' ')}`
+		: `M ${point(first)} ${rest.map((p) => `L ${point(p)}`).join(' ')}`;
+}

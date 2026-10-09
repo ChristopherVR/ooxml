@@ -12,6 +12,7 @@ export * from './snapshot-scene';
 export * from './page-edit';
 export * from './line-edit';
 export * from './connection-points';
+export * from './connector-preview';
 export * from './shape-id';
 export * from './shape-duplicate';
 export * from './shape-group';
