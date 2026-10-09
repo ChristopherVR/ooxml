@@ -133,7 +133,7 @@
 		"svelte": "^5.57.2",
 		"svelte-check": "^4.7.6",
 		"typescript": "6.0.3",
-		"vite": "^8.3.2",
+		"vite": "^8.3.3",
 		"vite-plugin-dts": "^5.1.2",
 		"vitest": "^5.0.3",
 		"y-webrtc": "^10.3.0",
