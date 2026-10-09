@@ -120,7 +120,7 @@ export function applyKeyTips(toolbar: HTMLElement): void {
 		const singles = new Set(Object.values(fixed).filter((code) => code.length === 1));
 		const used = new Set(Object.values(fixed));
 		const controls = panel.querySelectorAll<HTMLElement>(
-			'office-ui-button, office-ui-menu-button, office-ui-select[data-combo], office-ui-checkbox',
+			'office-ui-button, office-ui-menu-button, office-ui-gallery, office-ui-select[data-combo], office-ui-checkbox',
 		);
 		// A gallery's KeyTip belongs on its dropdown trigger, which renders once connected; the
 		// viewer copies it there (`syncChangeShape`).

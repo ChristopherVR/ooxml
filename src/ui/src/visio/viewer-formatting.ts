@@ -15,6 +15,7 @@ import type { VisioFormattingAction } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { fontColorOptions } from './ribbon-style-options';
 import { renderPaintMenus } from './viewer-paint-menu';
+import { renderShapeStyleControls } from './viewer-shape-styles';
 
 type Combo = RibbonCommand & {
 	value: string;
@@ -245,6 +246,7 @@ export class ViewerFormatting {
 			size.value = current === undefined ? '' : String(current);
 		}
 		renderPaintMenus(this.root, styleShape ? styleShapes : [], styleReason, set);
+		renderShapeStyleControls(this.root, styleShape ? styleShapes : [], styleReason, set);
 		const ordering =
 			page && selection && currentPage ? visioOrderingShape(page, selection.id) : undefined;
 		const orderReason =

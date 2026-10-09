@@ -36,7 +36,7 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 						kind: 'toggle',
 						key: 'livePreview',
 						label: 'Enable Live Preview',
-						...disabled('Needs Quick Styles and themes.'),
+						...disabled('Styles are applied on click; hover previews are not drawn yet.'),
 					},
 					{
 						kind: 'select',

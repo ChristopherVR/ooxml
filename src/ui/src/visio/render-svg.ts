@@ -27,6 +27,7 @@ import {
 } from 'ooxml-core/visio/ui';
 import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
+import { renderShadow } from './render-shadow';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function svgElement<K extends keyof SVGElementTagNameMap>(name: K): SVGElementTagNameMap[K] {
@@ -215,6 +216,7 @@ function drawOwn(
 					shape.height,
 				])
 			: 'none';
+	const paths: SVGPathElement[] = [];
 	for (const geometry of shape.geometry) {
 		if (++context.nodes > 50_000) {
 			warnings.add(
@@ -242,7 +244,10 @@ function drawOwn(
 		}
 		if (stroked) applyArrowheads(path, lineStyle, defs, warnings);
 		group.append(path);
+		paths.push(path);
 	}
+	const shadow = renderShadow(shape, paths, defs, world);
+	if (shadow) group.insertBefore(shadow, paths[0]!);
 	const raster = renderImage(shape, resources);
 	if (raster) group.append(raster);
 	const vector = renderForeignVectorShape(shape, context.vectorBudget);

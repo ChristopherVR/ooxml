@@ -1,9 +1,9 @@
 import { textGroups } from './ribbon-home-format';
 import { paintOptions } from './ribbon-style-options';
+import { effectsOptions, quickStyleGallery } from './ribbon-shape-styles';
 import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { changeShapeGallery } from './ribbon-change-shape';
 
-const STYLE = 'Needs core fill, line and effect edits.';
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
 const CONNECT = 'Needs core connector and glue edits.';
 const SELECT = 'Needs multi-shape selection.';
@@ -125,13 +125,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 		doc,
 		'Shape Styles',
 		[
-			menu(doc, {
-				id: 'quick-styles',
-				label: 'Quick Styles',
-				icon: 'quickStyles',
-				unsupported: STYLE,
-				items: [{ id: 'quick-style', label: 'Theme styles', unsupported: STYLE }],
-			}),
+			quickStyleGallery(doc),
 			stack(doc, [
 				menu(doc, {
 					id: 'fill',
@@ -152,12 +146,11 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 					label: 'Effects',
 					icon: 'effects',
 					size: 'small',
-					unsupported: STYLE,
-					items: [{ id: 'shadow', label: 'Shadow', unsupported: STYLE }],
+					items: effectsOptions(),
 				}),
 			]),
 		],
-		{ launcher: STYLE },
+		{ launcher: 'Needs the Format Shape pane.' },
 	);
 	const arrange = group(doc, 'Arrange', [
 		menu(doc, {
