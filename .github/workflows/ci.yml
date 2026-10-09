@@ -183,6 +183,9 @@ jobs:
       # change just needs the build output.
       - if: fromJSON(needs.plan.outputs.plan).checks.core
         run: bun run test:package
+      # The packed tarball's types resolve under NodeNext and bundlers (Are the Types Wrong).
+      - if: fromJSON(needs.plan.outputs.plan).checks.core
+        run: node scripts/check-package-types.mjs src/core
       - if: fromJSON(needs.plan.outputs.plan).checks.core
         run: node scripts/check-core-ui-boundary.mjs
       - uses: actions/upload-artifact@v7
@@ -210,6 +213,8 @@ jobs:
       - run: bun run --cwd src/ui build
       - if: fromJSON(needs.plan.outputs.plan).checks.ui
         run: bun run --cwd src/ui test:package
+      - if: fromJSON(needs.plan.outputs.plan).checks.ui
+        run: node scripts/check-package-types.mjs src/ui --esm-only
       - uses: actions/upload-artifact@v7
         with:
           name: ui-dist
