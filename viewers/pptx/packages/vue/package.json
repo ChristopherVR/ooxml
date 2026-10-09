@@ -141,7 +141,7 @@
 		"terser": "^5.51.2",
 		"three": "^0.186.1",
 		"typescript": "6.0.3",
-		"vite": "^8.3.2",
+		"vite": "^8.3.3",
 		"vite-plugin-dts": "^5.1.2",
 		"vitest": "^5.0.3",
 		"vue-tsc": "^3.3.12",
