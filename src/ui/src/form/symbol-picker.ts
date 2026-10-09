@@ -152,7 +152,7 @@ export class OfficeUiSymbolPicker extends OfficeElement {
 							event.preventDefault();
 							this.insertCode();
 						}} /></label
-				><output class="preview" aria-live="polite">${typed ?? ''}</output
+				><span class="preview" aria-live="polite">${typed ?? ''}</span
 				><button
 					type="button"
 					class="insert"

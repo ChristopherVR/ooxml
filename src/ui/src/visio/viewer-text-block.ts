@@ -152,13 +152,27 @@ export class ViewerTextBlockTool {
 		return group;
 	}
 	wire(): () => void {
-		const keys = (event: KeyboardEvent) => {
-			if (event.key === 'Escape' && this.#active && !this.#drag) {
+		// Escape ends the tool wherever focus is, except in text fields and dialogs.
+		const scope = this.viewport.getRootNode() as ShadowRoot | Document;
+		const keys = (event: Event) => {
+			if (
+				event instanceof KeyboardEvent &&
+				event.key === 'Escape' &&
+				this.#active &&
+				!this.#drag &&
+				!event.defaultPrevented &&
+				!event
+					.composedPath()
+					.some(
+						(node) =>
+							node instanceof Element && node.matches('input, textarea, select, office-ui-dialog'),
+					)
+			) {
 				event.preventDefault();
 				this.exit();
 			}
 		};
-		this.viewport.addEventListener('keydown', keys);
+		scope.addEventListener('keydown', keys, true);
 		const dispose = wireHandleEvents(this.viewport, {
 			pointer: () => this.#drag?.pointer,
 			start: (event) => this.#start(event),
@@ -170,7 +184,7 @@ export class ViewerTextBlockTool {
 			},
 		});
 		return () => {
-			this.viewport.removeEventListener('keydown', keys);
+			scope.removeEventListener('keydown', keys, true);
 			dispose();
 			this.#overlay?.remove();
 			this.#overlay = undefined;
@@ -201,6 +215,8 @@ export class ViewerTextBlockTool {
 			next: frame,
 		};
 		this.#overlay.dataset.textBlockPreview = '';
+		// Like the other handles, a drag gives the drawing window focus for Escape and shortcuts.
+		this.viewport.focus({ preventScroll: true });
 		this.viewport.setPointerCapture?.(event.pointerId);
 	}
 	#move(event: PointerEvent): void {

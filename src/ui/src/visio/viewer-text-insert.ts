@@ -52,6 +52,7 @@ export class ViewerTextInsert {
 	#formula: HTMLInputElement;
 	#target: TextInsertTarget | undefined;
 	#generation = -1;
+	#pending = false;
 	constructor(
 		root: ShadowRoot,
 		private readonly controller: ViewerController,
@@ -159,12 +160,13 @@ export class ViewerTextInsert {
 	}
 	/** Close when the drawing the dialog was opened for is replaced. */
 	render(): void {
-		if (this.controller.documentGeneration === this.#generation) return;
+		if (this.#pending || this.controller.documentGeneration === this.#generation) return;
 		if (this.#target?.editor) return;
 		this.close();
 	}
 	async #apply(edit: VisioEdit | undefined, error: HTMLElement, done: string): Promise<boolean> {
 		if (!edit) return false;
+		this.#pending = true;
 		try {
 			await this.controller.applyEdits([edit]);
 			this.#generation = this.controller.documentGeneration;
@@ -177,6 +179,8 @@ export class ViewerTextInsert {
 		} catch (failure) {
 			if (!isEditCancellation(failure)) error.textContent = editErrorMessage(failure);
 			return false;
+		} finally {
+			this.#pending = false;
 		}
 	}
 	async #insertSymbol(symbol: string): Promise<void> {

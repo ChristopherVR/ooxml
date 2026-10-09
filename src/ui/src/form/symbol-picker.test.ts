@@ -30,7 +30,7 @@ describe('office-ui-symbol-picker', () => {
 		expect(insert.disabled).toBe(true);
 		input.value = '2603';
 		input.dispatchEvent(new Event('input'));
-		expect(picker.shadowRoot!.querySelector('output')!.textContent).toBe('☃');
+		expect(picker.shadowRoot!.querySelector('.preview')!.textContent).toBe('☃');
 		insert.click();
 		expect(picks.at(-1)).toEqual({ symbol: '☃', code: 'U+2603' });
 		picker.disabled = true;

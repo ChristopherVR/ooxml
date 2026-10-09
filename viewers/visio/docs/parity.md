@@ -260,7 +260,9 @@ masters or layered shapes). Escape turns the tool off.
 Insert > Symbol opens the shared `office-ui-symbol-picker` (common symbols plus
 a character-code field). With the shape text editor holding the caret it inserts
 at the caret as an unapplied draft; otherwise it appends to the selected
-shape's text with a range edit (empty text is replaced). Insert > Field inserts
+shape's text with a range edit (empty text is replaced); appending directly
+after a trailing field is refused, because a range edit must replace at least
+one character outside a field. Insert > Field inserts
 a `<fld>` and Field row for Date/Time (current, creation, last saved, last edit,
 print), Document Info (title, author, subject, manager, company, category,
 keywords, description), Page Info (name, number, count), Geometry (Width,
