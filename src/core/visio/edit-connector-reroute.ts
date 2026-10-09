@@ -148,9 +148,10 @@ export function editRoutedConnector(
 		return rerouteConnector(roots, edit.pageId, glue, check, { free });
 	}
 	if (edit.type === 'move-line-endpoint') {
-		unglueConnector(root, glue, [edit.endpoint]);
+		const end = edit.endpoint === 'begin' ? 'begin' : 'end';
+		unglueConnector(root, glue, [end]);
 		return rerouteConnector(roots, edit.pageId, glue, check, {
-			free: { [edit.endpoint]: { x: edit.x, y: edit.y } },
+			free: { [end]: { x: edit.x, y: edit.y } },
 		});
 	}
 	return fail(
@@ -168,7 +169,8 @@ export function glueExistingConnector(
 	const root = roots.get(edit.pageId)!;
 	const shape = connectorShape(root, edit.shapeId);
 	const glue = proveConnector(root, edit.shapeId);
-	const other = glue.ends[edit.endpoint === 'begin' ? 'end' : 'begin'];
+	const end = edit.endpoint === 'begin' ? 'begin' : 'end';
+	const other = glue.ends[end === 'begin' ? 'end' : 'begin'];
 	if (other?.target === edit.target)
 		fail('INVALID_EDIT', 'A connector cannot glue both ends to the same shape.');
 	const target = {
@@ -177,9 +179,9 @@ export function glueExistingConnector(
 	};
 	glueSites(root, target);
 	proveConnectorShape(shape);
-	unglueConnector(root, glue, [edit.endpoint]);
-	glueEnd(root, shape, edit.endpoint, target);
-	glue.ends[edit.endpoint] = target;
+	unglueConnector(root, glue, [end]);
+	glueEnd(root, shape, end, target);
+	glue.ends[end] = target;
 	const pages = rerouteConnector(roots, edit.pageId, glue, check);
 	return pages.length ? pages : [edit.pageId];
 }

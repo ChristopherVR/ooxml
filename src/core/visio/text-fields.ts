@@ -173,7 +173,11 @@ function formatDate(date: Date, picture: string): string {
 	};
 	return picture.replace(
 		/yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|ss|tt|"[^"]*"/g,
-		(token) => (token.startsWith('"') ? token.slice(1, -1) : tokens[token]!()),
+		(token) => {
+			if (token.startsWith('"')) return token.slice(1, -1);
+			const format = tokens[token];
+			return typeof format === 'function' ? format() : token;
+		},
 	);
 }
 

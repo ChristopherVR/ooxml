@@ -124,19 +124,20 @@ export function snapshotConnectorEdit(edit: VisioConnectorEdit): VisioConnectorE
 		case 'glue-connector': {
 			if (edit.endpoint !== 'begin' && edit.endpoint !== 'end')
 				fail('INVALID_EDIT', 'A connector end must be begin or end.');
+			const end = edit.endpoint === 'begin' ? 'begin' : 'end';
 			const glue = snapshotConnectorGlue(
 				{
-					[edit.endpoint]: edit.target,
-					...(edit.point === undefined ? {} : { [`${edit.endpoint}Point`]: edit.point }),
+					[end]: edit.target,
+					...(edit.point === undefined ? {} : { [`${end}Point`]: edit.point }),
 				},
 				target.shapeId,
 			)!;
-			const point = glue[`${edit.endpoint}Point`];
+			const point = glue[`${end}Point`];
 			return {
 				...target,
 				type: edit.type,
-				endpoint: edit.endpoint,
-				target: glue[edit.endpoint]!,
+				endpoint: end,
+				target: glue[end]!,
 				...(point === undefined ? {} : { point }),
 			};
 		}

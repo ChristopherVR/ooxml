@@ -98,7 +98,6 @@ describe('Shape Data editing', () => {
 		const pkg = await VisioPackage.open(added.bytes);
 		const xml = new TextDecoder()
 			.decode(await pkg.readBytes('visio/pages/page1.xml'))
-			.replace('<Cell N="Comment"', '<Cell N="Comment"')
 			.replace(
 				'<Section N="Property">',
 				'<Cell N="Comment" V="" F="Prop.Cost"/><Section N="Property">',
