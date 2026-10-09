@@ -1,4 +1,8 @@
-import type { VisioChangeShapeTarget, VisioShapeFormatEdit } from 'ooxml-core/visio';
+import type {
+	VisioBuiltInThemeId,
+	VisioChangeShapeTarget,
+	VisioShapeFormatEdit,
+} from 'ooxml-core/visio';
 import type { TextCaseMode, VisioArrangement } from 'ooxml-core/visio/ui';
 import type { VisioPageSetupCommand } from './page-setup-action';
 
@@ -23,6 +27,8 @@ export type VisioFormattingAction =
 	| { type: 'text-align'; axis: 'horizontal'; value: 'left' | 'center' | 'right' | 'justify' }
 	| { type: 'text-align'; axis: 'vertical'; value: 'top' | 'middle' | 'bottom' }
 	| { type: 'shape-format'; patch: Omit<VisioShapeFormatEdit, 'type' | 'pageId' | 'shapeId'> }
+	/** A Glow Variations preset: its colour is the page theme's accent (1-6) when it is applied. */
+	| { type: 'glow-preset'; size: number; accent: number }
 	| { type: 'shape-order'; order: 'front' | 'back' | 'forward' | 'backward' }
 	| { type: 'change-case'; mode: TextCaseMode };
 /** Insert-tab items that act on the page or the selected shape. */
@@ -38,6 +44,8 @@ export type VisioRibbonAction =
 	| { type: 'page-insert' }
 	| { type: 'insert'; item: VisioInsertItem }
 	| { type: 'paint-properties' }
+	| { type: 'format-shape-pane' }
+	| { type: 'page-theme'; theme?: VisioBuiltInThemeId | 'none'; variant?: number }
 	| { type: 'delete' }
 	| { type: 'duplicate' }
 	| { type: 'format-painter'; mode: 'once' | 'sticky' | 'cancel' }

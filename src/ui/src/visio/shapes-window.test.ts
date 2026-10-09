@@ -74,7 +74,7 @@ describe("Visio's Shapes window", () => {
 			type: 'format-shape',
 			pageId: page.id,
 			shapeId,
-			quickStyle: { color: 2, matrix: 4 },
+			quickStyle: { color: 100, matrix: 4 },
 		});
 		expect(edits.map(([created]) => created)).toEqual([
 			{ ...box, type: 'create-rectangle', width: 1, height: 0.75, shape: 'rectangle' },

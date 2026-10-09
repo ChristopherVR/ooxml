@@ -25,6 +25,8 @@ export interface RibbonTargets {
 	insertPage(): void;
 	insert(item: VisioInsertItem): void;
 	showPaintProperties(): void;
+	showFormatShape(): void;
+	pageTheme(action: Extract<VisioRibbonAction, { type: 'page-theme' }>): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
 	togglePanZoom(): void;
@@ -57,6 +59,7 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 		case 'font-step':
 		case 'text-align':
 		case 'shape-format':
+		case 'glow-preset':
 		case 'shape-order':
 		case 'change-case':
 			return targets.formatSelection(action);
@@ -88,6 +91,10 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.insert(action.item);
 		case 'paint-properties':
 			return targets.showPaintProperties();
+		case 'format-shape-pane':
+			return targets.showFormatShape();
+		case 'page-theme':
+			return targets.pageTheme(action);
 		case 'grid':
 			return targets.toggleGrid();
 		case 'ruler':

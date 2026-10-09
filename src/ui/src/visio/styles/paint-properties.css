@@ -27,6 +27,15 @@
 .paint-properties-dialog [role='alert'] {
 	color: var(--office-error, #b00020);
 }
+/* Format Shape has three sections; keep it within short windows. */
+.format-shape-dialog fieldset {
+	gap: 6px;
+	margin-bottom: 10px;
+	padding: 8px 12px;
+}
+.format-shape-dialog input {
+	padding: 4px 6px;
+}
 @media (max-width: 480px) {
 	.paint-properties-dialog label {
 		grid-template-columns: 1fr;

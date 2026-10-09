@@ -15,7 +15,8 @@ import type { VisioFormattingAction } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { fontColorOptions } from './ribbon-style-options';
 import { renderPaintMenus } from './viewer-paint-menu';
-import { renderShapeStyleControls } from './viewer-shape-styles';
+import { pageAccentColor, renderShapeStyleControls } from './viewer-shape-styles';
+import { VISIO_GLOW_TRANSPARENCY } from 'ooxml-core/visio';
 
 type Combo = RibbonCommand & {
 	value: string;
@@ -37,6 +38,14 @@ export class ViewerFormatting {
 
 	run(action: VisioFormattingAction): void {
 		const state = this.controller.state;
+		if (action.type === 'glow-preset') {
+			const page = state.document?.pages[state.pageIndex];
+			const color = pageAccentColor(page, action.accent);
+			return this.run({
+				type: 'shape-format',
+				patch: { glow: { size: action.size, color, transparency: VISIO_GLOW_TRANSPARENCY } },
+			});
+		}
 		if (!state.edit.sourceAvailable || state.loading || state.edit.busy) return;
 		const sourceGeneration = this.controller.sourceGeneration;
 		const page = state.document?.pages[state.pageIndex];
@@ -246,7 +255,7 @@ export class ViewerFormatting {
 			size.value = current === undefined ? '' : String(current);
 		}
 		renderPaintMenus(this.root, styleShape ? styleShapes : [], styleReason, set);
-		renderShapeStyleControls(this.root, styleShape ? styleShapes : [], styleReason, set);
+		renderShapeStyleControls(this.root, styleShape ? styleShapes : [], styleReason, set, page);
 		const ordering =
 			page && selection && currentPage ? visioOrderingShape(page, selection.id) : undefined;
 		const orderReason =

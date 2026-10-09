@@ -40,7 +40,7 @@ export async function insertMaster(
 			master.kind === 'ellipse'
 				? visioBoxCreationCommand(page, 'ellipse', centre, size)
 				: visioBoxCreationCommand(page, 'rectangle', centre, size, undefined, master.shape),
-		// Basic Shapes masters carry the theme's default look, as in Visio: Accent 1 fill, a darker
+		// Basic Shapes masters carry the theme's default look, as in Visio: variant colour fill, a darker
 		// line and light text (the drawing's theme colours, or Office's when it has none).
 		(shapeId) => [
 			{
@@ -52,8 +52,11 @@ export async function insertMaster(
 		],
 	);
 }
-/** Quick Style a dropped master gets: Accent 1, theme style 4. */
-export const MASTER_QUICK_STYLE = { color: 2, matrix: 4 } as const;
+/**
+ * Quick Style a dropped master gets: variant colour 1 (Accent 1 in every built-in theme's first
+ * variant, and in the theme-less Office colours), theme style 4, so drops follow Design > Variants.
+ */
+export const MASTER_QUICK_STYLE = { color: 100, matrix: 4 } as const;
 export async function insertLine(
 	controller: ViewerController,
 	page: VisioPage,

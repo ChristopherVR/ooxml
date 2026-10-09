@@ -27,6 +27,8 @@ import { ViewerGrouping } from './viewer-grouping';
 import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
 import { ViewerInsert } from './viewer-insert';
 import { ViewerPageSetup } from './viewer-page-setup';
+import { ViewerThemes } from './viewer-themes';
+import { ViewerFormatShape } from './viewer-format-shape';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -81,6 +83,8 @@ export class ViewerCommands {
 	#clipboard: ViewerClipboard;
 	#insert: ViewerInsert;
 	#pageSetup: ViewerPageSetup;
+	#themes: ViewerThemes;
+	#formatShape: ViewerFormatShape;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -113,6 +117,10 @@ export class ViewerCommands {
 			host.announce,
 		);
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
+		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
+			void this.#edit(run, message);
+		});
+		this.#formatShape = new ViewerFormatShape(host.root, host.controller, host.announce);
 		this.#painter = new ViewerFormatPainter(host.root, host.controller, host.announce, (run, m) => {
 			void this.#edit(run, m);
 		});
@@ -161,6 +169,8 @@ export class ViewerCommands {
 			insertPage: () => this.#insertPage(),
 			insert: (item) => this.#insert.open(item),
 			showPaintProperties: () => this.#paint.show(),
+			showFormatShape: () => this.#formatShape.show(),
+			pageTheme: (action) => this.#themes.run(action),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
 				this.render(host.controller.state);
@@ -264,6 +274,7 @@ export class ViewerCommands {
 		const disposePainter = this.#painter.wire();
 		const disposeInsert = this.#insert.wire(viewport);
 		const disposePageSetup = this.#pageSetup.wire();
+		const disposeFormatShape = this.#formatShape.wire();
 		return () => {
 			disposePageSetup();
 			this.#pageOrder.close();
@@ -278,6 +289,7 @@ export class ViewerCommands {
 			disposePaint();
 			disposePainter();
 			disposeInsert();
+			disposeFormatShape();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -484,6 +496,8 @@ export class ViewerCommands {
 		this.#paint.render(state);
 		this.#painter.render(state);
 		this.#insert.render(state);
+		this.#themes.render(state);
+		this.#formatShape.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

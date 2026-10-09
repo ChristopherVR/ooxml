@@ -156,7 +156,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				}),
 			]),
 		],
-		{ launcher: 'Needs the Format Shape pane.' },
+		{ launcher: 'Select a local shape to format.' },
 	);
 	const arrange = group(doc, 'Arrange', [
 		menu(doc, {

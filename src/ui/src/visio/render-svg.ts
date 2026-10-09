@@ -28,6 +28,7 @@ import {
 import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
 import { renderShadow } from './render-shadow';
+import { renderShapeEffects } from './render-effects';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function svgElement<K extends keyof SVGElementTagNameMap>(name: K): SVGElementTagNameMap[K] {
@@ -251,8 +252,12 @@ function drawOwn(
 		group.append(path);
 		paths.push(path);
 	}
+	const effects = renderShapeEffects(shape, paths, defs, world);
+	for (const layer of effects.below) group.insertBefore(layer, paths[0]!);
+	if (effects.geometryFilter)
+		for (const path of paths) path.setAttribute('filter', effects.geometryFilter);
 	const shadow = renderShadow(shape, paths, defs, world);
-	if (shadow) group.insertBefore(shadow, paths[0]!);
+	if (shadow) group.insertBefore(shadow, effects.below[0] ?? paths[0]!);
 	const raster = renderImage(shape, resources);
 	if (raster) group.append(raster);
 	const vector = renderForeignVectorShape(shape, context.vectorBudget);

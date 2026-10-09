@@ -1,5 +1,6 @@
 import { check, command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { backgroundsGroup, pageSetupGroup } from './ribbon-page-setup';
+import { themesGallery, variantOptions, variantsGallery } from './ribbon-themes';
 
 const PAGES = 'Needs core page insertion.';
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
@@ -127,12 +128,8 @@ export function buildDesignPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
 		commandRow(doc, 'Design commands', [
 			pageSetupGroup(doc),
-			group(doc, 'Themes', [
-				dropdown(doc, { id: 'themes', label: 'Themes', icon: 'quickStyles', reason: DESIGN }),
-			]),
-			group(doc, 'Variants', [
-				dropdown(doc, { id: 'variants', label: 'Variants', icon: 'effects', reason: DESIGN }),
-			]),
+			group(doc, 'Themes', [themesGallery(doc)]),
+			group(doc, 'Variants', [variantsGallery(doc), variantOptions(doc)]),
 			backgroundsGroup(doc),
 			group(
 				doc,

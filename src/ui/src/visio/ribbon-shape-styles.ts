@@ -1,6 +1,9 @@
 import {
+	VISIO_GLOW_SIZES,
 	VISIO_QUICK_STYLE_COLORS,
+	VISIO_REFLECTION_PRESETS,
 	VISIO_SHADOW_PRESETS,
+	VISIO_SOFT_EDGE_SIZES,
 	visioFallbackQuickStyle,
 	type VisioQuickStyleColor,
 	type VisioShadowPreset,
@@ -9,7 +12,7 @@ import type { OfficeGalleryItem, OfficeGalleryState, OfficeUiGallery } from '../
 import { emitRibbonAction } from './ribbon-action';
 import type { CommandSpec } from './ribbon-parts';
 
-const COLOR_NAMES: Readonly<Record<VisioQuickStyleColor, string>> = {
+const COLOR_NAMES: Readonly<Partial<Record<VisioQuickStyleColor, string>>> = {
 	0: 'Dark',
 	2: 'Accent 1',
 	3: 'Accent 2',
@@ -48,7 +51,7 @@ export function quickStyleItems(): OfficeGalleryItem[] {
 	return MATRIX_NAMES.flatMap((name, row) =>
 		VISIO_QUICK_STYLE_COLORS.map((color) => ({
 			id: quickStyleItemId(color, row + 1),
-			label: `${COLOR_NAMES[color]}, ${name}`,
+			label: `${COLOR_NAMES[color] ?? 'Variant'}, ${name}`,
 			preview: preview(color, row + 1),
 		})),
 	);
@@ -100,26 +103,113 @@ export function quickStyleGallery(doc: Document): HTMLElement {
 }
 
 const EFFECT_REASONS: readonly [id: string, label: string, reason: string][] = [
-	['reflection', 'Reflection', 'Reflection cells are not written or rendered yet.'],
-	['glow', 'Glow', 'Glow cells are not written or rendered yet.'],
-	['soft-edges', 'Soft Edges', 'Soft edge cells are not written or rendered yet.'],
 	['bevel', 'Bevel', 'Bevel needs 3-D lighting the SVG renderer does not draw.'],
 	['rotation-3d', '3-D Rotation', '3-D rotation needs a 3-D renderer.'],
 ];
 
-/** Home > Shape Styles > Effects: outer shadow presets; the other effects stay disabled. */
+/** Stable menu ids of the effect presets, shared with the selection state sync. */
+export const glowItemId = (size: number, accent: number) => `glow-${size}-${accent}`;
+export const softEdgesItemId = (size: number) => `soft-edges-${String(size).replace('.', '-')}`;
+export const reflectionItemId = (id: string) => `reflection-${id}`;
+const options = (id: string, label: string): CommandSpec => ({
+	id,
+	label,
+	action: { type: 'format-shape-pane' },
+});
+
+function glowOptions(): CommandSpec {
+	return {
+		id: 'glow',
+		label: 'Glow',
+		items: [
+			{
+				id: 'glow-none',
+				label: 'No Glow',
+				action: {
+					type: 'shape-format',
+					patch: { glow: { size: 0, color: '#000000', transparency: 0 } },
+				},
+				checked: false,
+			},
+			...VISIO_GLOW_SIZES.map((size) => ({
+				id: `glow-size-${size}`,
+				label: `${size} pt glow`,
+				items: [1, 2, 3, 4, 5, 6].map((accent) => ({
+					id: glowItemId(size, accent),
+					label: `Glow: ${size} pt; Accent color ${accent}`,
+					action: { type: 'glow-preset' as const, size, accent },
+					checked: false,
+				})),
+			})),
+			options('glow-options', 'Glow Options...'),
+		],
+	};
+}
+function softEdgeOptions(): CommandSpec {
+	return {
+		id: 'soft-edges',
+		label: 'Soft Edges',
+		items: [
+			{
+				id: softEdgesItemId(0),
+				label: 'No Soft Edges',
+				action: { type: 'shape-format', patch: { softEdges: 0 } },
+				checked: false,
+			},
+			...VISIO_SOFT_EDGE_SIZES.map((size) => ({
+				id: softEdgesItemId(size),
+				label: `${size} Point`,
+				action: { type: 'shape-format' as const, patch: { softEdges: size } },
+				checked: false,
+			})),
+			options('soft-edges-options', 'Soft Edges Options...'),
+		],
+	};
+}
+function reflectionOptions(): CommandSpec {
+	return {
+		id: 'reflection',
+		label: 'Reflection',
+		items: [
+			{
+				id: reflectionItemId('none'),
+				label: 'No Reflection',
+				action: {
+					type: 'shape-format',
+					patch: { reflection: { size: 0, transparency: 0, distance: 0, blur: 0 } },
+				},
+				checked: false,
+			},
+			...VISIO_REFLECTION_PRESETS.map(({ id, label, ...reflection }) => ({
+				id: reflectionItemId(id),
+				label,
+				action: { type: 'shape-format' as const, patch: { reflection } },
+				checked: false,
+			})),
+			options('reflection-options', 'Reflection Options...'),
+		],
+	};
+}
+
+/** Home > Shape Styles > Effects: shadow, reflection, glow and soft edge presets. */
 export function effectsOptions(): CommandSpec[] {
 	return [
 		{
 			id: 'shadow',
 			label: 'Shadow',
-			items: VISIO_SHADOW_PRESETS.map((preset) => ({
-				id: `shadow-${preset}`,
-				label: SHADOW_NAMES[preset],
-				action: { type: 'shape-format' as const, patch: { shadow: preset } },
-				checked: false,
-			})),
+			items: [
+				...VISIO_SHADOW_PRESETS.map((preset) => ({
+					id: `shadow-${preset}`,
+					label: SHADOW_NAMES[preset],
+					action: { type: 'shape-format' as const, patch: { shadow: preset } },
+					checked: false,
+				})),
+				options('shadow-options', 'Shadow Options...'),
+			],
 		},
+		reflectionOptions(),
+		glowOptions(),
+		softEdgeOptions(),
 		...EFFECT_REASONS.map(([id, label, unsupported]) => ({ id, label, unsupported })),
 	];
 }
