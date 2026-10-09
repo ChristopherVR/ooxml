@@ -638,8 +638,7 @@ reopen of these connectors, of point glue and of the `Connections.Xk` naming has
 not been verified; glue in files saved by Visio is still refused for geometry
 edits because their connectors are master instances; dragging a connector
 together with its glued shapes keeping glue is not supported. View > AutoConnect
-stays disabled: hover arrows that add a connected copy need duplication and
-glue in one step, which is not offered yet.
+stays disabled: hover arrows that add a glued copy of a shape are not built yet.
 
 Rectangle creation now shares the line command's DocumentSettings style
 references and inherited-style admission. Native standard and distinct custom

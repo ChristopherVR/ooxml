@@ -122,7 +122,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 							id: 'auto-connect',
 							label: 'AutoConnect',
 							unsupported:
-								'Hover arrows that add a connected copy need shape duplication with glue in one step, which the core does not offer yet.',
+								'Hover arrows that add a glued copy of a shape are not built yet; draw connectors with the Connector tool.',
 						}),
 						check(doc, { id: 'dynamic-grid', label: 'Dynamic Grid', unsupported: EDITING_AIDS }),
 						check(doc, {
