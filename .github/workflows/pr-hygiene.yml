@@ -11,7 +11,7 @@ name: PR hygiene
 # repo code. The PR is only ever read as DATA through the API (commit subjects, title). A job that
 # needs the PR's contents belongs in ci.yml under `pull_request`.
 on:
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] the jobs never check out or run PR code (see above)
     types: [opened, edited, synchronize, reopened, ready_for_review]
 
 permissions:

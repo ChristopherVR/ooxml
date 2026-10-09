@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ inputs.node-version }}
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ inputs.bun-version }}
 
@@ -77,15 +77,20 @@ jobs:
         id: install
         if: steps.bump.outputs.changed == 'true'
         shell: bash
+        # The caller's command reaches bash through the environment, never pasted into the script.
+        env:
+          COMMAND: ${{ inputs.install-command }}
         run: |
-          { ${{ inputs.install-command }}; } 2>&1 | tee "$RUNNER_TEMP/install.log"
+          { bash -c "$COMMAND"; } 2>&1 | tee "$RUNNER_TEMP/install.log"
 
       - name: Verify
         id: verify
         if: steps.bump.outputs.changed == 'true'
         shell: bash
+        env:
+          COMMAND: ${{ inputs.verify-command }}
         run: |
-          { ${{ inputs.verify-command }}; } 2>&1 | tee "$RUNNER_TEMP/verify.log"
+          { bash -c "$COMMAND"; } 2>&1 | tee "$RUNNER_TEMP/verify.log"
 
       - name: Push the bump
         if: steps.bump.outputs.changed == 'true' && steps.verify.outcome == 'success'

@@ -30,7 +30,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 # One release at a time: two overlapping runs would race on the version-bump commit and the tags.
 # Re-publish dispatches (`tag` set) never touch the bump commit or tags, and get a group per tag:
@@ -47,6 +47,9 @@ jobs:
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_dispatch' && inputs.tag == '')
     runs-on: ubuntu-latest
+    # Commits the version bump and pushes the tags.
+    permissions:
+      contents: write
     outputs:
       any_released: ${{ steps.tagged.outputs.any_released || 'false' }}
       release_sha: ${{ steps.tagged.outputs.release_sha || '' }}
@@ -69,7 +72,7 @@ jobs:
         with:
           node-version: 24
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.2
 
@@ -157,7 +160,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Stage each released package's changelog and manifest (version bump) AND the lockfile,
           # so package.json + bun.lock in the repo always match what is published and the tag
-          # points at a commit whose manifests are truthful.
+          # points at a commit whose manifests are truthful. The paths are split into words on purpose.
+          # shellcheck disable=SC2046
           git add $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).flatMap(k=>[p.packages[k].manifest,p.packages[k].changelog]).join(' ')") bun.lock
           if git diff --cached --quiet; then
             echo "No release changes to commit"
@@ -362,7 +366,7 @@ jobs:
         with:
           node-version: 24
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.2
 
@@ -423,7 +427,7 @@ jobs:
 
       - run: npm install --global npm@^11.5.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.2
 

@@ -62,7 +62,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - uses: actions/cache@v6
@@ -151,10 +151,12 @@ jobs:
       - name: Run the affected tests
         env:
           PLAN: ${{ needs.plan.outputs.plan }}
+          SHARD: ${{ matrix.shard }}
+          TOTAL: ${{ strategy.job-total }}
         run: |
           mode=$(node -p "JSON.parse(process.env.PLAN).test.mode")
           base=$(node -p "JSON.parse(process.env.PLAN).base")
-          shard="--shard=${{ matrix.shard }}/${{ strategy.job-total }}"
+          shard="--shard=$SHARD/$TOTAL"
           if [ "$mode" = "related" ]; then
             # A run on the base: the tests related to the branch's changed core sources.
             related=$(node -p "JSON.parse(process.env.PLAN).test.related.join(' ')")
@@ -528,7 +530,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
