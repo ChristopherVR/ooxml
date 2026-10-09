@@ -1,3 +1,4 @@
+import { isLocalBitmapShape } from './edit-foreign-bitmap';
 import { cells, numeric } from './edit-geometry-cells';
 export { cells, numeric, setCell } from './edit-geometry-cells';
 import { assertEllipseResizeRow } from './edit-ellipse-geometry';
@@ -83,11 +84,12 @@ export function admitted(
 			})) ||
 		['1', 'true'].includes(attribute(shape, 'Del') ?? '') ||
 		(children(shape, 'Shapes').length && !rotationGroups.has(shape)) ||
-		children(shape, 'ForeignData').length ||
-		children(shape, 'Rel').length ||
-		(attribute(shape, 'Type') &&
-			attribute(shape, 'Type') !== 'Shape' &&
-			!(attribute(shape, 'Type') === 'Group' && rotationGroups.has(shape)))
+		(!isLocalBitmapShape(shape) &&
+			(children(shape, 'ForeignData').length ||
+				children(shape, 'Rel').length ||
+				(attribute(shape, 'Type') &&
+					attribute(shape, 'Type') !== 'Shape' &&
+					!(attribute(shape, 'Type') === 'Group' && rotationGroups.has(shape)))))
 	)
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',

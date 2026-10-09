@@ -3,6 +3,11 @@ import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-comman
 import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
 import { snapshotPasteShapes } from '../edit-paste-commands';
 import { snapshotChangeShape } from '../edit-change-shape-commands';
+import {
+	isVisioMetadataEdit,
+	snapshotMetadataEdit,
+	snapshotPictureInsert,
+} from '../edit-metadata-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
@@ -23,6 +28,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'duplicate-shapes') return snapshotDuplicateShapes(command);
 		if (command.type === 'paste-shapes') return snapshotPasteShapes(command);
 		if (command.type === 'change-shape') return snapshotChangeShape(command);
+		if (command.type === 'insert-picture') return snapshotPictureInsert(command);
+		if (isVisioMetadataEdit(command)) return snapshotMetadataEdit(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');

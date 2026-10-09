@@ -68,6 +68,11 @@ export {
 	type VisioShapeOrderEdit,
 	type VisioDuplicateShapesEdit,
 	type VisioPasteShapesEdit,
+	type VisioMetadataEdit,
+	type VisioPictureInsertEdit,
+	type VisioShapeHyperlinkEdit,
+	type VisioShapeScreenTipEdit,
+	type VisioHyperlinkFields,
 	type VisioResizeAnchor,
 	type VisioChangeShapeEdit,
 	type VisioChangeShapeTarget,
@@ -135,3 +140,4 @@ export {
 	type VisioFilledArrow,
 	type VisioArrowLineLayout,
 } from './filled-arrow';
+export { VISIO_PICTURE_MAX_BYTES, VISIO_METADATA_TEXT_LIMIT } from './edit-metadata-commands';

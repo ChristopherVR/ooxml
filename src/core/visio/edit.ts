@@ -22,6 +22,9 @@ import { duplicateVisioShapes } from './edit-duplicate';
 import { pasteVisioShapes } from './edit-paste';
 import { deleteVisioShapes, type VisioShapeDelete } from './edit-delete';
 import { changeVisioShape } from './edit-change-shape';
+import { isVisioMetadataEdit } from './edit-metadata-commands';
+import { applyMetadataEdit } from './edit-metadata';
+import { editVsdxPicture } from './edit-picture';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -43,6 +46,11 @@ export type {
 	VisioResizeAnchor,
 	VisioChangeShapeEdit,
 	VisioChangeShapeTarget,
+	VisioMetadataEdit,
+	VisioPictureInsertEdit,
+	VisioShapeHyperlinkEdit,
+	VisioShapeScreenTipEdit,
+	VisioHyperlinkFields,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -85,6 +93,12 @@ export async function editVsdx(
 	if (source.length > limits.maxInputBytes) fail('LIMIT_INPUT', 'ZIP input exceeds limit.');
 	const original = new Uint8Array(source);
 	const { pkg, parts, pages } = await openEditablePackage(original, limits, check);
+	const picture = allCommands.find((command) => command.type === 'insert-picture');
+	if (picture) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_PICTURE_TRANSACTION', 'Picture insertion requires its own transaction.');
+		return editVsdxPicture(pkg, parts, pages, picture, limits, maxOutput, deadline, check);
+	}
 	if (commands.length !== allCommands.length) {
 		if (commands.length)
 			fail(
@@ -112,6 +126,8 @@ export async function editVsdx(
 			command.type !== 'duplicate-shapes' &&
 			command.type !== 'paste-shapes' &&
 			command.type !== 'change-shape' &&
+			command.type !== 'insert-picture' &&
+			!isVisioMetadataEdit(command) &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
@@ -123,6 +139,7 @@ export async function editVsdx(
 				command.type === 'replace-plain-text' ||
 				command.type === 'replace-text-ranges' ||
 				isVisioFormatEdit(command) ||
+				isVisioMetadataEdit(command) ||
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
 				command.type === 'paste-shapes' ||
@@ -161,6 +178,7 @@ export async function editVsdx(
 	let duplicateChanged = false;
 	let pasteChanged = false;
 	let outlineChanged = false;
+	let metadataChanged = false;
 	const deletions = commands.filter(
 		(command): command is VisioShapeDelete => command.type === 'delete-shape',
 	);
@@ -194,6 +212,11 @@ export async function editVsdx(
 				dirty.set(path, root);
 				formatChanged = true;
 			}
+		} else if (isVisioMetadataEdit(command)) {
+			if (applyMetadataEdit(roots, command, check)) {
+				dirty.set(path, root);
+				metadataChanged = true;
+			}
 		} else if (command.type === 'reorder-shape') {
 			if (reorderVisioShape(root, document!, command, check)) {
 				dirty.set(path, root);
@@ -226,7 +249,7 @@ export async function editVsdx(
 			))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			duplicateChanged = true;
-		} else {
+		} else if (command.type !== 'insert-picture') {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 		}
@@ -323,6 +346,15 @@ export async function editVsdx(
 							code: 'edit-change-shape-experimental',
 							message:
 								'Local Geometry sections were replaced with a Basic Shapes outline. Native Visio reopen and rendering fidelity remain unverified.',
+						},
+					]
+				: []),
+			...(metadataChanged
+				? [
+						{
+							code: 'edit-shape-metadata',
+							message:
+								'Local hyperlink rows or the ScreenTip (Comment) cell were changed. Following a link stays an explicit user action.',
 						},
 					]
 				: []),

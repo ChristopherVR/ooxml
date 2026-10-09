@@ -284,7 +284,7 @@ export function shapeMetadata(
 	sheet: Sheet,
 	report: Report,
 	budget = createMetadataBudget(),
-): { shapeData: VisioShapeData[]; hyperlinks: VisioHyperlink[] } {
+): { shapeData: VisioShapeData[]; hyperlinks: VisioHyperlink[]; screenTip?: string } {
 	const shapeData: VisioShapeData[] = [],
 		hyperlinks: VisioHyperlink[] = [];
 	let count = 0;
@@ -299,5 +299,8 @@ export function shapeMetadata(
 			else shapeData.push(property(row, budget, report));
 		}
 	}
-	return { shapeData, hyperlinks };
+	const comment = sheet.cells.get('Comment');
+	const screenTip =
+		comment?.value && comment.error === undefined ? budget.retain(comment.value) : undefined;
+	return { shapeData, hyperlinks, ...(screenTip === undefined ? {} : { screenTip }) };
 }

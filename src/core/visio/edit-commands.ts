@@ -17,6 +17,20 @@ import {
 	snapshotFormatting,
 	type VisioFormatEdit,
 } from './edit-formatting-commands';
+import {
+	isVisioMetadataEdit,
+	snapshotMetadataEdit,
+	snapshotPictureInsert,
+	type VisioMetadataEdit,
+	type VisioPictureInsertEdit,
+} from './edit-metadata-commands';
+export type {
+	VisioMetadataEdit,
+	VisioPictureInsertEdit,
+	VisioShapeHyperlinkEdit,
+	VisioShapeScreenTipEdit,
+	VisioHyperlinkFields,
+} from './edit-metadata-commands';
 export type {
 	VisioFormatEdit,
 	VisioTextFormatEdit,
@@ -100,7 +114,9 @@ export type VisioEdit =
 	| VisioDuplicateShapesEdit
 	| VisioPasteShapesEdit
 	| VisioShapeOrderEdit
-	| VisioChangeShapeEdit;
+	| VisioChangeShapeEdit
+	| VisioMetadataEdit
+	| VisioPictureInsertEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -180,6 +196,8 @@ export function snapshotVisioEdits(
 		if (edit.type === 'duplicate-shapes') return snapshotDuplicateShapes(edit);
 		if (edit.type === 'paste-shapes') return snapshotPasteShapes(edit);
 		if (edit.type === 'change-shape') return snapshotChangeShape(edit);
+		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
+		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {

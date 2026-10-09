@@ -1,3 +1,4 @@
+import { isLocalBitmapShape } from './edit-foreign-bitmap';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
 import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula';
@@ -40,7 +41,7 @@ export function bound(value: number | undefined, fallback: number): number {
 function cellUnit(name: string, relative: boolean): VisioFormulaValue['unit'] {
 	if (/^(Angle|TxtAngle)$/i.test(name)) return 'angle';
 	if (
-		/^(Width|Height|PinX|PinY|LocPinX|LocPinY|BeginX|BeginY|EndX|EndY|TxtPinX|TxtPinY|TxtWidth|TxtHeight|TxtLocPinX|TxtLocPinY|LineWeight|Rounding)$/i.test(
+		/^(Width|Height|PinX|PinY|LocPinX|LocPinY|BeginX|BeginY|EndX|EndY|TxtPinX|TxtPinY|TxtWidth|TxtHeight|TxtLocPinX|TxtLocPinY|LineWeight|Rounding|ImgOffsetX|ImgOffsetY|ImgWidth|ImgHeight)$/i.test(
 			name,
 		)
 	)
@@ -87,10 +88,11 @@ export function indexCells(
 						node.hasAttribute('Master') ||
 						node.hasAttribute('MasterShape') ||
 						attribute(node, 'Type') === 'Group' ||
-						(attribute(node, 'Type') !== undefined && attribute(node, 'Type') !== 'Shape') ||
+						(!isLocalBitmapShape(node) &&
+							((attribute(node, 'Type') !== undefined && attribute(node, 'Type') !== 'Shape') ||
+								children(node, 'ForeignData').length > 0 ||
+								children(node, 'Rel').length > 0)) ||
 						connected.has(shapeId) ||
-						children(node, 'ForeignData').length > 0 ||
-						children(node, 'Rel').length > 0 ||
 						(!options.lineEditShapes?.has(node) &&
 							children(node, 'Cell').some(
 								(cell) =>

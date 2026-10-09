@@ -7,7 +7,7 @@ import { assertShapeLocks } from './edit-style-admission';
 import { encodeVisioPlainText } from './plain-text';
 import { visioBasicShapeOutline, type VisioBasicOutline } from './basic-shapes';
 
-function createShape(root: Element, shapeId: string): Element {
+export function createShape(root: Element, shapeId: string): Element {
 	const doc = root.ownerDocument!;
 	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
 	let container = children(root, 'Shapes')[0];

@@ -236,6 +236,8 @@ export interface VisioShape {
 	foreignVector?: VisioPlacedForeignVector;
 	shapeData?: VisioShapeData[];
 	hyperlinks?: VisioHyperlink[];
+	/** Cached Comment cell text, which Visio shows as the shape's ScreenTip. Inert plain text. */
+	screenTip?: string;
 }
 export interface VisioConnection {
 	fromShapeId: string;

@@ -44,3 +44,4 @@ export * from './change-case';
 export * from './format-painter';
 export * from './svg-stroke';
 export * from './page-size';
+export * from './insert';

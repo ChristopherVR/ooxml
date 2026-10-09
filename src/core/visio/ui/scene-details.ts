@@ -15,6 +15,12 @@ export function assertShapeDetails(shape: VisioShape, budget: DetailBudget): voi
 		(budget.rows += data.length + links.length) > 100_000
 	)
 		throw new Error('The scene exceeds shape metadata row limits.');
+	if (shape.screenTip !== undefined) {
+		if (typeof shape.screenTip !== 'string' || shape.screenTip.length > 8192)
+			throw new Error('The scene has an invalid ScreenTip.');
+		if ((budget.characters += shape.screenTip.length) > 5_000_000)
+			throw new Error('The scene exceeds shape metadata string limits.');
+	}
 	const strings = (record: Record<string, unknown>, names: readonly string[], required = false) => {
 		for (const name of names)
 			if ((required || record[name] !== undefined) && typeof record[name] !== 'string')
