@@ -61,6 +61,11 @@ export {
 	type VisioPageRename,
 	type VisioPageDelete,
 	type VisioPageSizeEdit,
+	type VisioPageSetupEdit,
+	type VisioPagePropertiesEdit,
+	type VisioPageDecorationEdit,
+	type VisioPageSetupEdits,
+	type VisioScaleUnit,
 	type VisioPageEdit,
 	type VisioFormatEdit,
 	type VisioTextFormatEdit,
@@ -124,6 +129,19 @@ export {
 	type VisioOutlinePoint,
 } from './basic-shapes';
 export { isVisioChangeShapeTarget } from './edit-change-shape-commands';
+export { VISIO_SCALE_UNITS } from './edit-page-setup-commands';
+export {
+	VISIO_BACKGROUND_STYLES,
+	VISIO_BORDER_STYLES,
+	VISIO_MANAGED_BACKGROUND,
+	visioBackgroundShapes,
+	visioBorderShapes,
+	visioDecorationName,
+	visioShade,
+	type VisioBackgroundStyle,
+	type VisioBorderStyle,
+	type VisioDecorationShape,
+} from './page-decoration';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,

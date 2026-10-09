@@ -12,6 +12,18 @@ export type { VisioPathCreateEdit, VisioPathSegment } from './edit-path-commands
 import { snapshotChangeShape, type VisioChangeShapeEdit } from './edit-change-shape-commands';
 export type { VisioChangeShapeEdit, VisioChangeShapeTarget } from './edit-change-shape-commands';
 import { isVisioGroupEdit, snapshotGroupEdit, type VisioGroupEdit } from './edit-group-commands';
+import {
+	isVisioPageSetupEdit,
+	snapshotPageSetupEdit,
+	type VisioPageSetupEdits,
+} from './edit-page-setup-commands';
+export type {
+	VisioPageSetupEdit,
+	VisioPagePropertiesEdit,
+	VisioPageDecorationEdit,
+	VisioPageSetupEdits,
+	VisioScaleUnit,
+} from './edit-page-setup-commands';
 export type {
 	VisioGroupEdit,
 	VisioGroupShapesEdit,
@@ -123,7 +135,8 @@ export type VisioPageEdit =
 	| VisioPageReorder
 	| VisioPageRename
 	| VisioPageDelete
-	| VisioPageSizeEdit;
+	| VisioPageSizeEdit
+	| VisioPageSetupEdits;
 export type VisioEdit =
 	| VisioTextEdit
 	| VisioTextRangesEdit
@@ -142,7 +155,8 @@ export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'reorder-page' ||
 	edit.type === 'rename-page' ||
 	edit.type === 'delete-page' ||
-	edit.type === 'set-page-size';
+	edit.type === 'set-page-size' ||
+	isVisioPageSetupEdit(edit);
 
 /** Potential direct changes used by both package and master dependency admission. */
 export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
@@ -219,6 +233,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);
+		if (isVisioPageSetupEdit(edit)) return snapshotPageSetupEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {

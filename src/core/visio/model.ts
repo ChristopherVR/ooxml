@@ -247,6 +247,27 @@ export interface VisioConnection {
 	fromPart?: number;
 	toPart?: number;
 }
+/** Cached Print Properties and drawing scale of a PageSheet. Every field is optional. */
+export interface VisioPageSetup {
+	/** PageScale and DrawingScale in internal inches: `pageScale` on paper equals `drawingScale`. */
+	readonly pageScale?: number;
+	readonly drawingScale?: number;
+	/** DrawingScale display unit (`FT`, `MM`, ...), as saved. */
+	readonly drawingScaleUnit?: string;
+	/** PrintPageOrientation: 0 same as printer, 1 portrait, 2 landscape. */
+	readonly printPageOrientation?: 0 | 1 | 2;
+	/** PaperKind: the Windows DMPAPER code of the printer paper. */
+	readonly paperKind?: number;
+	/** Print margins in inches (PageLeftMargin and the others), only when all four are cached. */
+	readonly margins?: {
+		readonly left: number;
+		readonly right: number;
+		readonly top: number;
+		readonly bottom: number;
+	};
+	/** Print zoom (ScaleX), where 1 prints at 100%. */
+	readonly printZoom?: number;
+}
 export interface VisioPage {
 	id: string;
 	/** Explicit cached drawing page-size modes. Missing or invalid source caches are omitted. */
@@ -256,6 +277,8 @@ export interface VisioPage {
 	 * source-backed geometry edits continue to accept drawing inches. Omitted means 1.
 	 */
 	drawingToPageScale?: number;
+	/** Cached print and drawing-scale settings; absent when none are usable. */
+	pageSetup?: VisioPageSetup;
 	name: string;
 	width: number;
 	height: number;

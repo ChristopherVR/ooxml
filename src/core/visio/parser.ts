@@ -13,6 +13,7 @@ import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadat
 import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
 import { normalizeShapes, type ShapeContext } from './shapes';
 import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
+import { readVisioPageSetup } from './page-setup';
 import { styleSheet, type StyleRecord } from './style-inheritance';
 import {
 	attribute,
@@ -296,6 +297,7 @@ export async function parseVsdx(
 			const value = number(sheet.cells, name, Number.NaN, localReport);
 			if (Number.isSafeInteger(value) && value >= 0 && value <= 255) pageModes[key] = value;
 		}
+		const pageSetup = readVisioPageSetup(sheet.cells);
 		for (const connection of connectors)
 			if (!seen.has(connection.fromShapeId) || !seen.has(connection.toShapeId))
 				localReport('dangling-connection', 'A connection references a missing shape.');
@@ -303,6 +305,7 @@ export async function parseVsdx(
 			id,
 			...pageModes,
 			...(drawingToPageScale === 1 ? {} : { drawingToPageScale }),
+			...(pageSetup ? { pageSetup } : {}),
 			name: metadata(
 				attribute(page, 'Name') ?? attribute(page, 'NameU') ?? `Page ${id}`,
 				4096,

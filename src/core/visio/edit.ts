@@ -27,6 +27,7 @@ import { applyMetadataEdit } from './edit-metadata';
 import { editVsdxPicture } from './edit-picture';
 import { isVisioGroupEdit } from './edit-group-commands';
 import { groupVisioShapes, ungroupVisioShape } from './edit-group';
+import { autoSizePageIds, growAutoSizePages } from './edit-page-auto-size';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -38,6 +39,11 @@ export type {
 	VisioPageRename,
 	VisioPageDelete,
 	VisioPageSizeEdit,
+	VisioPageSetupEdit,
+	VisioPagePropertiesEdit,
+	VisioPageDecorationEdit,
+	VisioPageSetupEdits,
+	VisioScaleUnit,
 	VisioPageEdit,
 	VisioFormatEdit,
 	VisioTextFormatEdit,
@@ -77,11 +83,28 @@ function positive(value: number): number {
 }
 /** Experimental source-backed atomic text and conservative geometry transaction.
  * Untouched part payloads are byte-preserved; edited XML and ZIP representation are not.
+ * A page with Auto Size on (DrawingResizeType 1) grows after shapes leave it.
  */
 export async function editVsdx(
 	input: Uint8Array | ArrayBuffer,
 	edits: readonly VisioEdit[],
 	options: EditVsdxOptions = {},
+): Promise<EditVsdxResult> {
+	const clock = { deadline: 0, autoSize: new Set<string>() };
+	const result = await editVsdxTransaction(input, edits, options, clock);
+	return growAutoSizePages(clock.autoSize, result, (bytes, growth) =>
+		editVsdxTransaction(bytes, growth, {
+			...options,
+			limits: { ...options.limits, maxRuntimeMs: Math.max(1, clock.deadline - Date.now()) },
+		}),
+	);
+}
+
+async function editVsdxTransaction(
+	input: Uint8Array | ArrayBuffer,
+	edits: readonly VisioEdit[],
+	options: EditVsdxOptions,
+	clock = { deadline: 0, autoSize: new Set<string>() },
 ): Promise<EditVsdxResult> {
 	const limits = { ...DEFAULTS, ...options.limits };
 	for (const value of Object.values(limits)) positive(value);
@@ -89,6 +112,7 @@ export async function editVsdx(
 	const maxText = positive(options.maxTextCharacters ?? 1_000_000);
 	const maxOutput = positive(options.maxOutputBytes ?? limits.maxInputBytes);
 	const deadline = Date.now() + limits.maxRuntimeMs;
+	clock.deadline = deadline;
 	const check = () => {
 		if (Date.now() >= deadline) fail('LIMIT_RUNTIME', 'Visio edit deadline exceeded.');
 	};
@@ -99,6 +123,7 @@ export async function editVsdx(
 	if (source.length > limits.maxInputBytes) fail('LIMIT_INPUT', 'ZIP input exceeds limit.');
 	const original = new Uint8Array(source);
 	const { pkg, parts, pages } = await openEditablePackage(original, limits, check);
+	if (commands.length === allCommands.length) clock.autoSize = await autoSizePageIds(pkg, commands);
 	const picture = allCommands.find((command) => command.type === 'insert-picture');
 	if (picture) {
 		if (allCommands.length !== 1)
@@ -106,11 +131,37 @@ export async function editVsdx(
 		return editVsdxPicture(pkg, parts, pages, picture, limits, maxOutput, deadline, check);
 	}
 	if (commands.length !== allCommands.length) {
-		if (commands.length)
+		const pageCommands = allCommands.filter(isVisioPageEdit);
+		// Fit to Drawing: a page resize and the moves that bring the drawing onto it, as one step.
+		const fit =
+			commands.every((command) => command.type === 'move-shape') &&
+			pageCommands.every((command) => command.type === 'set-page-size');
+		if (commands.length && !fit)
 			fail(
 				'EDIT_MIXED_PAGE_TRANSACTION',
 				'Page edits and shape edits require separate transactions.',
 			);
+		if (commands.length) {
+			const resized = await editVsdxPages(
+				original,
+				pkg,
+				parts,
+				pageCommands,
+				limits,
+				maxOutput,
+				deadline,
+				check,
+			);
+			const moved = await editVsdxTransaction(resized.bytes, commands, {
+				...options,
+				limits: { ...options.limits, maxRuntimeMs: Math.max(1, deadline - Date.now()) },
+			});
+			return {
+				bytes: moved.bytes,
+				changedParts: [...new Set([...resized.changedParts, ...moved.changedParts])],
+				diagnostics: [...resized.diagnostics, ...moved.diagnostics],
+			};
+		}
 		return editVsdxPages(
 			original,
 			pkg,
