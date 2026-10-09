@@ -7,7 +7,6 @@ import type { VisioDataCommand } from './ribbon-action';
 import { layoutGroup, reLayoutGallery } from './ribbon-layout';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
-const DESIGN = 'Needs core page setup and theme edits.';
 
 const unsupported = (
 	id: string,
@@ -16,12 +15,6 @@ const unsupported = (
 	reason: string,
 	size?: CommandSpec['size'],
 ) => ({ id, label, icon, unsupported: reason, ...(size ? { size } : {}) }) satisfies CommandSpec;
-const dropdown = (doc: Document, spec: CommandSpec & { reason: string }) =>
-	menu(doc, {
-		...spec,
-		unsupported: spec.reason,
-		items: [{ id: `${spec.id}-more`, label: `${spec.label} options`, unsupported: spec.reason }],
-	});
 
 /**
  * Connector styles. Design > Connectors restyles the selected connectors (and sets the style of

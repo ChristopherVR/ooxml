@@ -7,14 +7,14 @@
 }
 .grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(2.5em, 1fr));
 	gap: var(--office-space-0);
-	max-height: 200px;
+	max-height: 15em;
 	overflow: auto;
 }
 .symbol {
-	min-width: 32px;
-	height: 32px;
+	min-width: 2.5em;
+	height: 2.5em;
 	border: var(--office-border-width) solid var(--office-border);
 	border-radius: var(--office-radius-sm);
 	background: var(--office-field-background);
@@ -52,7 +52,7 @@ input:focus {
 	outline: none;
 }
 .preview {
-	min-width: 32px;
+	min-width: 2.5em;
 	height: var(--office-field-height);
 	font-size: var(--office-font-size-lg);
 	line-height: var(--office-field-height);
