@@ -8,3 +8,7 @@ rules:
         actions/*: ref-pin
         github/*: ref-pin
         '*': hash-pin
+  # Dependabot waits three days before proposing a new version (.github/dependabot.yml).
+  dependabot-cooldown:
+    config:
+      days: 3
