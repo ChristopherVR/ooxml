@@ -50,3 +50,4 @@ export * from './page-setup';
 export * from './insert';
 export * from './diagram-check';
 export * from './shape-report';
+export * from './subprocess';
