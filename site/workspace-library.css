@@ -26,14 +26,18 @@
 	font-size: 13px;
 	color: var(--muted);
 }
-#upload {
+.page-actions {
+	display: flex;
+	gap: 8px;
+}
+.page-actions button {
 	height: 36px;
 	font-size: 12px;
 	border-radius: 5px;
 	white-space: nowrap;
 	padding: 8px 14px;
 }
-#upload .ui-icon {
+.page-actions .ui-icon {
 	width: 16px;
 	height: 16px;
 }
@@ -233,4 +237,8 @@ th:first-child {
 .statusbar {
 	background: var(--surface);
 	font-size: 10px;
+}
+#dialog .create-row {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	margin-bottom: 0;
 }

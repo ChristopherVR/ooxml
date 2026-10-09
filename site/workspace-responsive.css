@@ -96,11 +96,11 @@
 		font-size: 11px;
 		max-width: 170px;
 	}
-	#upload {
+	.page-actions button {
 		font-size: 11px;
 		padding: 7px 9px;
 	}
-	#upload .ui-icon {
+	.page-actions .ui-icon {
 		display: none;
 	}
 	.section-heading h2 {

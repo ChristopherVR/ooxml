@@ -54,8 +54,6 @@ export function mountProduct() {
 	brand.setAttribute('aria-label', `${app.name} home`);
 	for (const button of $('rail').querySelectorAll('[data-app], [data-teams]'))
 		button.hidden = (button.dataset.app || 'teams') !== product;
-	for (const button of $('create-row').querySelectorAll('[data-create]'))
-		button.hidden = button.dataset.create !== product;
 	$('app-launcher').innerHTML =
 		`<div class="launcher-heading"><h2>Your apps</h2></div><div class="launcher-grid"><a href="${new URL('?suite', suiteBase)}">OOXML Office</a>${[...apps, { id: 'teams', name: 'Teams' }].map((a) => `<a href="${new URL(`apps/${productPaths[a.id]}/`, suiteBase)}">${badge(a.id)}<span>${a.name}</span></a>`).join('')}</div>`;
 }

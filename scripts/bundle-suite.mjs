@@ -52,7 +52,7 @@ export async function bundleSuite(outfile) {
 			target: 'es2022',
 			chunkSizeWarningLimit: 4000,
 			rolldownOptions: {
-				input: join(ROOT, 'apps/office-suite/src/main.js'),
+				input: join(ROOT, 'apps/office-suite/src/boot.js'),
 				output: {
 					entryFileNames: 'suite.js',
 					chunkFileNames: 'suite-assets/[name]-[hash].js',

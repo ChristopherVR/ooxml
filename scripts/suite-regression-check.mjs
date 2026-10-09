@@ -7,8 +7,8 @@ const { chromium, expect } = require('@playwright/test');
 const base = process.env.SUITE_URL || 'http://127.0.0.1:8133';
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1440, height: 960 } });
-// Skip the first-visit start chooser; these checks drive the whole suite.
-await context.addInitScript(() => localStorage.setItem('ooxml-start-app', 'office'));
+// Skip the start chooser; these checks drive the whole suite.
+await context.addInitScript(() => sessionStorage.setItem('ooxml-start', 'office'));
 const page = await context.newPage();
 page.setDefaultTimeout(20000);
 const errors = [];
@@ -185,10 +185,28 @@ try {
 	await visitor.reload();
 	await expect(visitor.locator('[data-create=docx]')).toBeVisible();
 	await expect(visitor.locator('#dialog')).not.toBeVisible();
+	// Every new visit asks again, and nothing of the suite shows or loads until it is picked.
+	const again = await fresh.newPage();
+	const editorChunks = [];
+	again.on('request', (r) => /suite-assets\/main-/.test(r.url()) && editorChunks.push(r.url()));
+	await again.goto(base + '/');
+	await expect(again.locator('#dialog [data-start=office]')).toBeVisible();
+	await expect(again.locator('#upload')).not.toBeVisible();
+	assert.deepEqual(editorChunks, []);
+	await again.keyboard.press('Escape');
+	await expect(again.locator('#dialog')).toBeVisible();
+	await again.locator('#dialog [data-start=office]').click();
+	// Each app's view has its own create button beside Upload.
+	await again.locator('#rail [data-app=xlsx]').click();
+	await expect(again.locator('#create-new')).toHaveText('New workbook');
+	await expect(again.locator('#create-row [data-create=xlsx]')).toBeVisible();
+	await expect(again.locator('#create-row [data-create=docx]')).toBeHidden();
+	await again.locator('#create-new').click();
+	await expect(again.locator('xlsx-editor')).toBeVisible();
 	await fresh.close();
 	assert.deepEqual(errors, []);
 	console.log(
-		'Start chooser opens product sites and remembers the suite. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
+		'Start chooser asks on every visit, opens product sites and keeps the suite for the tab; apps have create buttons. PWA: six distinct manifests; all standalone pages and suite reopen offline; Word/Excel/PowerPoint/Visio create offline.',
 	);
 } finally {
 	await browser.close();

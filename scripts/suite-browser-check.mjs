@@ -11,8 +11,8 @@ const { createDocx, createXlsx, setXlsxCells, inspectDocx, readXlsxRange } =
 const JSZip = require('jszip');
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
-// Skip the first-visit start chooser; these checks drive the whole suite.
-await page.addInitScript(() => localStorage.setItem('ooxml-start-app', 'office'));
+// Skip the start chooser; these checks drive the whole suite.
+await page.addInitScript(() => sessionStorage.setItem('ooxml-start', 'office'));
 const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 page.on('console', (message) => {

@@ -299,3 +299,7 @@ body [hidden] {
 .start-chooser small {
 	color: var(--muted);
 }
+/* The root asks what to open before the suite loads: show only the chooser until then. */
+body[data-start] > :not(dialog) {
+	visibility: hidden;
+}

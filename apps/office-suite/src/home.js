@@ -46,7 +46,14 @@ export function renderLibrary(files, filter) {
 				: app
 					? app.name
 					: 'Home';
-	$('create-section').hidden = !!filter || !!query;
+	// An app's own view keeps its create tile; the other library views show files only.
+	const product = document.body.dataset.product;
+	for (const button of $('create-row').querySelectorAll('[data-create]'))
+		button.hidden =
+			(!!product && button.dataset.create !== product) ||
+			(!!app && button.dataset.create !== app.id);
+	$('create-section').hidden =
+		(!!filter && !app) || !!query || !$('create-row').querySelector('[data-create]:not([hidden])');
 	$('welcome').hidden = !!filter || !!query;
 	$('library-title').textContent = query
 		? `Results for “${$('search').value}”`

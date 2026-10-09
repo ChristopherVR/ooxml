@@ -41,9 +41,26 @@ async function refresh() {
 	renderFiles();
 	renderTabs();
 }
+/** The app the home page is about (a rail filter or a standalone product page), if any. */
+function createKind() {
+	return apps.find((a) => a.id === filter || a.id === product)?.id;
+}
 function renderFiles() {
 	renderLibrary(files, filter);
 	disk?.search(filter);
+	const kind = createKind();
+	$('create-new').hidden = product === 'teams';
+	$('create-new').innerHTML =
+		`${icon('add')}<span>${kind ? `New ${blankNames[kind].toLowerCase()}` : 'Create'}</span>`;
+}
+function chooseBlank() {
+	const content = document.createElement('div');
+	content.className = 'create-row';
+	content.innerHTML = $('create-row').innerHTML;
+	content.addEventListener('click', (event) => {
+		if (event.target.closest('[data-create]')) $('dialog').close();
+	});
+	choose('Create something new', content);
 }
 function renderTabs() {
 	document.body.dataset.view = view;
@@ -242,6 +259,7 @@ document.addEventListener('click', (event) => {
 	if (b.dataset.close) task(() => fileActions.closeTabs([b.dataset.close]));
 });
 $('upload').onclick = () => $('file-input').click();
+$('create-new').onclick = () => task(() => (createKind() ? create(createKind()) : chooseBlank()));
 $('file-input').onchange = () =>
 	task(async () => {
 		const items = [...$('file-input').files];
