@@ -61,3 +61,7 @@ export * from './select-by-type';
 export * from './layer-assign';
 export * from './guides';
 export * from './paste-text';
+export * from './text-draft';
+export * from './text-dialog';
+export * from './text-block';
+export * from './text-field-catalog';
