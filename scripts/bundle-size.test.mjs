@@ -88,4 +88,7 @@ test('the comment lists changed, new and removed entry points', () => {
 	assert.equal(unbuilt.changed, 0);
 	assert.ok(!unbuilt.body.includes('ui/y'));
 	assert.ok(compare(base, base).body.includes('No entry point changed size against main.'));
+	// Without a change there is nothing to tabulate.
+	assert.ok(!compare(base, base).body.includes('| Entry point'));
+	assert.ok(body.includes('<details><summary>All entry points</summary>'));
 });

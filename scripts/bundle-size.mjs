@@ -130,7 +130,7 @@ export function compare(base, head, { baseLabel = 'main' } = {}) {
 			...changed.map(row),
 		);
 	}
-	if (names.length) {
+	if (changed.length) {
 		lines.push(
 			'',
 			'<details><summary>All entry points</summary>',
