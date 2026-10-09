@@ -22,7 +22,7 @@ test('Review comments, Shape Reports, Check Diagram and Create New work and save
 
 	// Comments: a shape comment from Review > New Comment, saved in visio/comments.xml.
 	await viewer.getByRole('tab', { name: 'Review', exact: true }).click();
-	await expect(viewer.locator('[command="spelling"] button')).toBeDisabled();
+	await expect(viewer.locator('[command="thesaurus"] button')).toBeDisabled();
 	await shape.click();
 	await viewer.locator('[command="new-comment"] button').click();
 	const pane = viewer.locator('office-ui-comments-pane');

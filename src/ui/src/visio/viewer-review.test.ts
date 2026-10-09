@@ -35,8 +35,10 @@ it('enables comments, reports, checks and subprocess commands honestly', async (
 		view.root.querySelector<HTMLElement & { disabled: boolean }>('[data-menu="check-diagram"]')!
 			.disabled,
 	).toBe(false);
-	expect(view.button('spelling').disabled).toBe(true);
-	expect(view.button('spelling').title).toMatch(/not bundled/);
+	expect(view.button('spelling').disabled).toBe(false);
+	expect(view.button('spelling').title).toMatch(/browser spell checker/);
+	expect(view.button('thesaurus').disabled).toBe(true);
+	expect(view.button('thesaurus').title).toMatch(/No thesaurus dictionary/);
 	expect(view.button('import-rules').title).toMatch(/not evaluated/);
 	expect(view.button('ignore-issue').disabled).toBe(true);
 	for (const id of ['create-new', 'create-from-selection', 'link-existing'])
