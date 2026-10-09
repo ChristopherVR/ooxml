@@ -63,6 +63,16 @@ The release workflow writes `chore(release): bump versions and update changelogs
 
 - Keep pull requests focused; describe what changed and how you checked it. CI runs typecheck, tests, the release-script tests, build and the package smoke test, and must be green (`ci-success`).
 - Releases are cut automatically from `main` (hourly, plus manual dispatch); do not bump versions in pull requests.
+- Besides CI, a pull request gets feedback it does not have to act on to merge:
+  - annotations on the diff from oxlint, CodeQL, and (for workflow changes) actionlint and zizmor;
+  - a **bundle size** comment when an entry point of `ooxml-core` or `ooxml-ui` changes size
+    (`scripts/bundle-size.mjs`, posted by `.github/workflows/bundle-size-comment.yml`);
+  - a **pkg.pr.new** comment with install URLs for preview builds of both packages, so a viewer or
+    app can try the change before it is released (`.github/workflows/preview-packages.yml`);
+  - a review from **CodeRabbit** (`.coderabbit.yaml`): suggestions, not a required check.
+- `ci-success` also requires no em-dash in the lines you add
+  (`scripts/check-em-dashes.mjs`), and the packed packages' types must resolve under NodeNext and
+  bundlers (`scripts/check-package-types.mjs`, Are the Types Wrong).
 - Before pushing, `bun run verify` runs locally what CI would run for your commits (the CI planner's
   lint, format, typecheck, affected-test and viewer checks), without the browser suites unless you
   add `--browser`. Use the Bun version CI uses (`bun-version` in `.github/actions/setup/action.yml`).
@@ -75,9 +85,9 @@ The release workflow writes `chore(release): bump versions and update changelogs
 
 ## Labels, alerts and dependencies
 
-- Pull requests are labelled from the files they touch (`.github/labeler.yml`: `area: *`, `viewer: *`, `ci`, `tests`, `documentation`, `dependencies`), and `breaking` is added for a `!` or `BREAKING CHANGE:` commit. New issues get `needs-triage` and an `area: *` label from the form's dropdown; a bug report without a sample file also gets `needs-repro`. The labels themselves live in `.github/labels.json` and are synced to GitHub by `.github/workflows/labels.yml`.
-- Dependabot (`.github/dependabot.yml`) opens weekly update PRs, grouped: one for production and one for development minor/patch updates, plus lockstep groups (Angular, Playwright, Yjs, Lit, `@types/*`) and one for GitHub Actions. Security updates are grouped separately. TypeScript major bumps are ignored on purpose. Review a grouped PR as one change; if a single dependency in it breaks the build, pin or ignore that one and let the rest through.
-- Dependency review comments on and fails a PR that adds a dependency with a known high-severity vulnerability, and CodeQL scans `main` weekly (`.github/workflows/security.yml`). Dependabot alerts, security updates and secret scanning with push protection are enabled in the repository settings.
+- Pull requests are labelled from the files they touch (`.github/labeler.yml`: `area: *`, `viewer: *`, `ci`, `tests`, `documentation`, `dependencies`), and `breaking` is added for a `!` or `BREAKING CHANGE:` commit. A `size: XS` to `size: XL` label counts the changed lines, leaving out lockfiles, snapshots and fixtures. Issues and pull requests without activity are marked `stale` (90 days for issues, 45 for pull requests) and closed 14 days later unless they are pinned, security, awaiting triage, milestoned or assigned (`.github/workflows/stale.yml`). New issues get `needs-triage` and an `area: *` label from the form's dropdown; a bug report without a sample file also gets `needs-repro`. The labels themselves live in `.github/labels.json` and are synced to GitHub by `.github/workflows/labels.yml`.
+- Dependabot (`.github/dependabot.yml`) opens weekly update PRs, grouped: one for production and one for development minor/patch updates, plus lockstep groups (Angular, Playwright, Yjs, Lit, `@types/*`) and one for GitHub Actions. Security updates are grouped separately; version updates wait seven days after a release, so a compromised version is usually pulled before it is proposed. TypeScript major bumps are ignored on purpose. Review a grouped PR as one change; if a single dependency in it breaks the build, pin or ignore that one and let the rest through.
+- Dependency review comments on and fails a PR that adds a dependency with a known high-severity vulnerability, and CodeQL scans pull requests, `main` and weekly (`.github/workflows/security.yml`). Workflow changes are checked by actionlint and zizmor (`.github/workflows/workflow-lint.yml`, policy in `.github/zizmor.yml`: third-party actions are pinned to a commit SHA), and OpenSSF Scorecard rates the supply-chain setup weekly. A weekly link check keeps one `broken-links` issue up to date. Dependabot alerts, security updates and secret scanning with push protection are enabled in the repository settings.
 
 ## License
 
