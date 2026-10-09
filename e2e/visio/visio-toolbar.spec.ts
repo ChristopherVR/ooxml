@@ -93,7 +93,7 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 		.locator('[data-geometry]')
 		.first()
 		.evaluate((path) => {
-			const svg = path.ownerSVGElement!;
+			const svg = (path as SVGGraphicsElement).ownerSVGElement!;
 			const style = getComputedStyle(path);
 			const inch = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
 			return { fill: style.fill, strokePixels: parseFloat(style.strokeWidth) * inch };
