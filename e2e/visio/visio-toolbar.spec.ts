@@ -79,10 +79,12 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 		.dragTo(viewer.locator('svg.paper'), { targetPosition: { x: 120, y: 120 } });
 	await expect(viewer.locator('svg.paper > g > [data-shape-id]')).toHaveCount(shapesBefore + 1);
 	await expect(viewer.locator('[data-status]')).toHaveText(/added from Basic Shapes/);
-	await expect(viewer.locator('[data-master="circle"]').first()).toHaveAttribute(
-		'aria-disabled',
-		'true',
-	);
+	// Every Basic Shapes master drops; Circle is a native ellipse.
+	const circle = viewer.locator('#shapes-stencils [data-master="circle"]');
+	await expect(circle).not.toHaveAttribute('aria-disabled', 'true');
+	await circle.dragTo(viewer.locator('svg.paper'), { targetPosition: { x: 260, y: 120 } });
+	await expect(viewer.locator('svg.paper > g > [data-shape-id]')).toHaveCount(shapesBefore + 2);
+	await expect(viewer.locator('[data-status]')).toHaveText(/Circle .+ added from Basic Shapes/);
 
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.locator('[data-check="ruler"]').click();
