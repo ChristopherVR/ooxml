@@ -67,10 +67,12 @@ export async function downloadCopy(viewer: Locator): Promise<Locator> {
 	return viewer.locator('[data-backstage-page="save-as"] [data-backstage-action="download"]');
 }
 
-/** File > Export > Export the current page as SVG. */
+/** File > Export > Export the current page as SVG (the first entry; Change File Type repeats it). */
 export async function exportSvgCommand(viewer: Locator): Promise<Locator> {
 	await fileBackstage(viewer, 'export');
-	return viewer.locator('[data-backstage-page="export"] [data-backstage-action="export-svg"]');
+	return viewer
+		.locator('[data-backstage-page="export"] [data-backstage-action="export-svg"]')
+		.first();
 }
 
 /** File > New > the demo's slotted Sample workflow template. */

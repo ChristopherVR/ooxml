@@ -71,7 +71,9 @@ async function lineAction(viewer: Locator, id: string, nested = false) {
 async function properties(viewer: Locator) {
 	await viewer.getByRole('button', { name: 'Fill', exact: true }).click();
 	await viewer.locator('[command="fill-options"]').click();
-	await expect(viewer.locator('.paint-properties-dialog')).toHaveAttribute('open', '');
+	await expect(
+		viewer.locator('.paint-properties-dialog:not(.format-shape-dialog)'),
+	).toHaveAttribute('open', '');
 }
 async function choose(viewer: Locator, field: string, label: string) {
 	const control = viewer.locator(`[data-paint-field="${field}"]`);
@@ -97,13 +99,11 @@ for (const [index, framework] of [
 		const viewer = page.locator('visio-viewer'),
 			scale = [0.5, 1, 2][index % 3]!;
 		const load = async (buffer: Buffer) => {
-			await page
-				.locator('#file')
-				.setInputFiles({
-					name: 'paint.vsdx',
-					mimeType: 'application/vnd.ms-visio.drawing',
-					buffer,
-				});
+			await page.locator('#file').setInputFiles({
+				name: 'paint.vsdx',
+				mimeType: 'application/vnd.ms-visio.drawing',
+				buffer,
+			});
 			await idle(viewer);
 		};
 		await load(await fixture(scale));
@@ -132,7 +132,9 @@ for (const [index, framework] of [
 		expect((await inventory(viewer)).bytes).toEqual(before.bytes);
 		await viewer.locator('[command="paint-apply"] button').click();
 		await idle(viewer);
-		await expect(viewer.locator('.paint-properties-dialog')).not.toHaveAttribute('open', '');
+		await expect(
+			viewer.locator('.paint-properties-dialog:not(.format-shape-dialog)'),
+		).not.toHaveAttribute('open', '');
 		const accepted = await inventory(viewer);
 		expect(accepted.selected).toEqual(['1', '2']);
 		for (const shape of accepted.shapes) {
@@ -166,7 +168,9 @@ for (const [index, framework] of [
 		expect((await inventory(viewer)).shapes).toEqual(accepted.shapes);
 		await viewer.locator('[data-shape-id="1"]').click({ button: 'right' });
 		await viewer.locator('[command="ctx-format"]').click();
-		await expect(viewer.locator('.paint-properties-dialog')).toHaveAttribute('open', '');
+		await expect(
+			viewer.locator('.paint-properties-dialog:not(.format-shape-dialog)'),
+		).toHaveAttribute('open', '');
 		await viewer.locator('[command="paint-cancel"] button').click();
 		await load(await fixture(scale, true));
 		await selectAll(viewer);
