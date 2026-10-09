@@ -54,6 +54,12 @@ export function shapeDetails(shape: VisioShape): DocumentFragment {
 	const title = document.createElement('p');
 	title.textContent = preview(`${shape.name || 'Shape'} · ID ${shape.id}`);
 	fragment.append(title);
+	if (shape.screenTip) {
+		const tip = document.createElement('p');
+		tip.dataset.screenTip = '';
+		tip.textContent = preview(`ScreenTip: ${shape.screenTip}`);
+		fragment.append(tip);
+	}
 	const fields = (shape.shapeData ?? []).filter((field) => !field.invisible);
 	if (fields.length) {
 		const heading = document.createElement('h3');

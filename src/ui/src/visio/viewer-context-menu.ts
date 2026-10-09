@@ -75,7 +75,8 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				id: 'ctx-hyperlink',
 				label: 'Hyperlink...',
 				icon: 'visioLink',
-				unsupported: 'Needs core hyperlink edits.',
+				action: { type: 'insert', item: 'link' },
+				keys: ['Control+K', 'Ctrl+K'],
 			},
 			{
 				id: 'ctx-shape-data',

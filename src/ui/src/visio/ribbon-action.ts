@@ -23,6 +23,8 @@ export type VisioFormattingAction =
 	| { type: 'shape-format'; patch: Omit<VisioShapeFormatEdit, 'type' | 'pageId' | 'shapeId'> }
 	| { type: 'shape-order'; order: 'front' | 'back' | 'forward' | 'backward' }
 	| { type: 'change-case'; mode: TextCaseMode };
+/** Insert-tab items that act on the page or the selected shape. */
+export type VisioInsertItem = 'picture' | 'link' | 'screen-tip';
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
@@ -32,6 +34,7 @@ export type VisioRibbonAction =
 	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'cancel-drawing' }
 	| { type: 'page-insert' }
+	| { type: 'insert'; item: VisioInsertItem }
 	| { type: 'paint-properties' }
 	| { type: 'delete' }
 	| { type: 'duplicate' }

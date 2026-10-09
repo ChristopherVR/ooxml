@@ -158,7 +158,8 @@ function drawShape(
 		group.setAttribute('aria-label', shape.text.plainText || shape.name || `Shape ${shape.id}`);
 	}
 	const title = svgElement('title');
-	title.textContent = shape.text.plainText || shape.name;
+	// Visio shows the Comment cell as the shape's ScreenTip.
+	title.textContent = shape.screenTip || shape.text.plainText || shape.name;
 	group.append(title);
 	parent.append(group);
 	const world = composeVisioTransform(parentTransform, shape.transform);

@@ -1,5 +1,10 @@
 import type { ViewerController } from './controller';
-import type { VisioRibbonAction, CanvasTool, VisioFormattingAction } from './ribbon-action';
+import type {
+	VisioRibbonAction,
+	CanvasTool,
+	VisioFormattingAction,
+	VisioInsertItem,
+} from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
 export interface RibbonTargets {
@@ -17,6 +22,7 @@ export interface RibbonTargets {
 	setTool(tool: CanvasTool): void;
 	cancelDrawing(): void;
 	insertPage(): void;
+	insert(item: VisioInsertItem): void;
 	showPaintProperties(): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
@@ -74,6 +80,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.cancelDrawing();
 		case 'page-insert':
 			return targets.insertPage();
+		case 'insert':
+			return targets.insert(action.item);
 		case 'paint-properties':
 			return targets.showPaintProperties();
 		case 'grid':

@@ -579,6 +579,7 @@ export class ViewerController {
 						'create-line',
 						'create-text-box',
 						'create-path',
+						'insert-picture',
 					].includes(command.type) ||
 					command.pageId !== context.pageId ||
 					!('shapeId' in command),

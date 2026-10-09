@@ -1,7 +1,7 @@
 import { check, command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 
 const PAGES = 'Needs core page insertion.';
-const MEDIA = 'Needs core image and object insertion.';
+const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 const PARTS = 'Needs core container, callout and connector edits.';
 const DESIGN = 'Needs core page setup and theme edits.';
 const DATA = 'Needs core data linking and data graphics.';
@@ -35,7 +35,12 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 				}),
 			]),
 			group(doc, 'Illustrations', [
-				command(doc, unsupported('pictures', 'Pictures', 'visioPicture', MEDIA)),
+				command(doc, {
+					id: 'pictures',
+					label: 'Pictures',
+					icon: 'visioPicture',
+					action: { type: 'insert', item: 'picture' },
+				}),
 				command(
 					doc,
 					unsupported(
@@ -45,8 +50,19 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 						'Documents stay local; nothing is fetched.',
 					),
 				),
-				command(doc, unsupported('chart', 'Chart', 'visioChart', MEDIA)),
-				command(doc, unsupported('cad-drawing', 'CAD Drawing', 'visioCad', MEDIA)),
+				command(
+					doc,
+					unsupported('chart', 'Chart', 'visioChart', 'Embedded Excel charts are not supported.'),
+				),
+				command(
+					doc,
+					unsupported(
+						'cad-drawing',
+						'CAD Drawing',
+						'visioCad',
+						'DWG and DXF import is not supported.',
+					),
+				),
 			]),
 			group(doc, 'Diagram Parts', [
 				dropdown(doc, { id: 'container', label: 'Container', icon: 'rectangle', reason: PARTS }),
@@ -59,7 +75,13 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 				}),
 			]),
 			group(doc, 'Links', [
-				command(doc, unsupported('link', 'Link', 'visioLink', 'Needs core hyperlink edits.')),
+				command(doc, {
+					id: 'link',
+					label: 'Link',
+					icon: 'visioLink',
+					action: { type: 'insert', item: 'link' },
+					keys: ['Control+K', 'Ctrl+K'],
+				}),
 			]),
 			group(doc, 'Text', [
 				command(doc, {
@@ -69,12 +91,24 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 					action: { type: 'tool', tool: 'text' },
 				}),
 				stack(doc, [
-					command(doc, unsupported('screen-tip', 'ScreenTip', 'message', REVIEW, 'small')),
+					command(doc, {
+						id: 'screen-tip',
+						label: 'ScreenTip',
+						icon: 'message',
+						size: 'small',
+						action: { type: 'insert', item: 'screen-tip' },
+					}),
 					command(
 						doc,
-						unsupported('field', 'Field', 'textBox', 'Needs core text field edits.', 'small'),
+						unsupported(
+							'field',
+							'Field',
+							'textBox',
+							'Text fields need a Field section and <fld> text runs with evaluated formulas, which the text editor does not support.',
+							'small',
+						),
 					),
-					command(doc, unsupported('object', 'Object', 'visioPicture', MEDIA, 'small')),
+					command(doc, unsupported('object', 'Object', 'visioPicture', OBJECTS, 'small')),
 				]),
 				dropdown(doc, {
 					id: 'symbol',

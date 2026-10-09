@@ -23,6 +23,7 @@ import { ViewerArrangement } from './viewer-arrangement';
 import { ViewerChangeShape } from './viewer-change-shape';
 import { ViewerDuplication } from './viewer-duplication';
 import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
+import { ViewerInsert } from './viewer-insert';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -73,6 +74,7 @@ export class ViewerCommands {
 	#changeShape: ViewerChangeShape;
 	#duplication: ViewerDuplication;
 	#clipboard: ViewerClipboard;
+	#insert: ViewerInsert;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -89,6 +91,9 @@ export class ViewerCommands {
 		});
 		this.#formatting = new ViewerFormatting(host.root, host.controller, (run, success) => {
 			void this.#edit(run, success);
+		});
+		this.#insert = new ViewerInsert(host.root, host.controller, host.announce, (run, message) => {
+			void this.#edit(run, message);
 		});
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#painter = new ViewerFormatPainter(host.root, host.controller, host.announce, (run, m) => {
@@ -128,6 +133,7 @@ export class ViewerCommands {
 				this.#text.cancel();
 			},
 			insertPage: () => this.#insertPage(),
+			insert: (item) => this.#insert.open(item),
 			showPaintProperties: () => this.#paint.show(),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
@@ -228,6 +234,7 @@ export class ViewerCommands {
 		const disposeClipboard = this.#clipboard.wire();
 		const disposePaint = this.#paint.wire();
 		const disposePainter = this.#painter.wire();
+		const disposeInsert = this.#insert.wire(viewport);
 		return () => {
 			this.#pageOrder.close();
 			this.#pageRename.close();
@@ -239,6 +246,7 @@ export class ViewerCommands {
 			disposeClipboard();
 			disposePaint();
 			disposePainter();
+			disposeInsert();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -396,6 +404,7 @@ export class ViewerCommands {
 		}
 		if (control && !event.shiftKey && key === 'a') return { type: 'selection', mode: 'all' };
 		if (control && !event.shiftKey && key === 'd') return { type: 'duplicate' };
+		if (control && !event.shiftKey && key === 'k') return { type: 'insert', item: 'link' };
 		if (control && !event.shiftKey && key === 'b') return { type: 'text-toggle', property: 'bold' };
 		if (control && !event.shiftKey && key === 'i')
 			return { type: 'text-toggle', property: 'italic' };
@@ -437,6 +446,7 @@ export class ViewerCommands {
 		this.#changeShape.render(state);
 		this.#paint.render(state);
 		this.#painter.render(state);
+		this.#insert.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

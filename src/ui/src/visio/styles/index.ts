@@ -6,6 +6,7 @@ import sizePosition from './size-position.css?raw';
 import textTool from './text-tool.css?raw';
 import paintProperties from './paint-properties.css?raw';
 import presentation from './presentation.css?raw';
+import insert from './insert.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -21,6 +22,7 @@ export const canvasAndRibbonStyles = [
 	textTool,
 	paintProperties,
 	presentation,
+	insert,
 	visioThemeBridge,
 ].join('\n');
 
