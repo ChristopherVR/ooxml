@@ -56,16 +56,16 @@ jobs:
       # The commit the other jobs check out: empty (the event's own) unless a run on the base.
       ref: ${{ steps.plan.outputs.ref }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
-      - uses: actions/cache@v6
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
@@ -86,7 +86,7 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).typecheck.strict || fromJSON(needs.plan.outputs.plan).typecheck.pptx || fromJSON(needs.plan.outputs.plan).typecheck.ui
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
@@ -99,12 +99,12 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).base != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: No em-dashes in added lines
@@ -117,7 +117,7 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).typecheck.strict
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
@@ -128,7 +128,7 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).typecheck.pptx
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
@@ -139,11 +139,11 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).typecheck.ui
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
@@ -163,7 +163,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.plan).test.shards }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
           fetch-depth: 0
@@ -193,7 +193,7 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
@@ -207,7 +207,7 @@ jobs:
         run: node scripts/check-package-types.mjs src/core
       - if: fromJSON(needs.plan.outputs.plan).checks.core
         run: node scripts/check-core-ui-boundary.mjs
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: core-dist
           path: src/core/dist
@@ -219,11 +219,11 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).ui
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
@@ -234,7 +234,7 @@ jobs:
         run: bun run --cwd src/ui test:package
       - if: fromJSON(needs.plan.outputs.plan).checks.ui
         run: node scripts/check-package-types.mjs src/ui --esm-only
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ui-dist
           path: src/ui/dist
@@ -250,25 +250,25 @@ jobs:
       (github.event_name == 'pull_request' || github.event_name == 'push')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
       # The ui job is skipped when nothing reaches ooxml-ui; the comparison then leaves it out.
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         if: needs.ui.result == 'success'
         with:
           name: ui-dist
           path: src/ui/dist
       - run: node scripts/bundle-size.mjs measure src/core src/ui > bundle-size.json
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bundle-size
           path: bundle-size.json
@@ -280,7 +280,7 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).scripts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
@@ -292,7 +292,7 @@ jobs:
     if: fromJSON(needs.plan.outputs.plan).mcp
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
@@ -315,15 +315,15 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.plan).viewers }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: src/ui/dist
@@ -339,7 +339,7 @@ jobs:
           done <<< "$VERIFY"
       - name: Preserve browser test evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: browser-test-results-${{ matrix.name }}
           path: ${{ matrix.dir }}/test-results/
@@ -360,15 +360,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: src/ui/dist
@@ -388,7 +388,7 @@ jobs:
       # Every package's dist, and the sources the Angular build generates, for the jobs below. Only
       # the generated files: re-extracting a tracked source would make it newer than the build, and
       # the e2e freshness guard (e2e/pptx/dist-freshness.ts) would then refuse to run.
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pptx-dist
           path: |
@@ -411,19 +411,19 @@ jobs:
       matrix:
         leg: ${{ fromJSON(needs.plan.outputs.plan).pptx.tests }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: src/ui/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: pptx-dist
           path: viewers/pptx/packages
@@ -457,19 +457,19 @@ jobs:
         project: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.projects }}
         shard: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.shards }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: src/ui/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: pptx-dist
           path: viewers/pptx/packages
@@ -507,7 +507,7 @@ jobs:
           exit $status
       - name: Preserve the report
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pptx-playwright-${{ matrix.project }}-${{ matrix.shard }}
           path: |
@@ -524,19 +524,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: src/core/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: src/ui/dist
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: pptx-dist
           path: viewers/pptx/packages
@@ -553,7 +553,7 @@ jobs:
         run: bun run e2e:packaged -- --workers=2 --reporter=list,html,github
       - name: Preserve the report
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pptx-playwright-packaged
           path: |
@@ -577,16 +577,16 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.plan).consumers }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
           path: ooxml
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
           repository: ${{ matrix.repo }}
           path: viewer
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -594,12 +594,12 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
         working-directory: ooxml
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: core-dist
           path: ooxml/src/core/dist
         continue-on-error: true
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: ui-dist
           path: ooxml/src/ui/dist

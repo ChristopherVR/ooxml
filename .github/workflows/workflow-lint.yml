@@ -38,7 +38,7 @@ jobs:
     name: actionlint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       # Info and style notes from shellcheck are left out; deliberate word splitting is marked
@@ -57,7 +57,7 @@ jobs:
     name: zizmor
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       # The token lets the online audits look up action tags, commits and advisories (read only).
