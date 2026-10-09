@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.5.0) - 2026-10-09
+
+### Features
+
+- **ui:** Enable every master in the visio shapes window ([5066db2](https://github.com/ChristopherVR/ooxml/commit/5066db2dba537952c8c282161b924b3e92d2c85b))
+
+### Bug Fixes
+
+- **pptx:** Keep exact line spacing when a line holds a larger run ([6b8fd6a](https://github.com/ChristopherVR/ooxml/commit/6b8fd6a42dee5e0c879a98e3e945bf01d9b2bc5e))
+
 ## [1.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.4.1) - 2026-10-08
 
 ### Bug Fixes

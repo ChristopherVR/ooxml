@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.5.0) - 2026-10-09
+
+### Features
+
+- **visio:** Create every basic shapes outline ([10e2e82](https://github.com/ChristopherVR/ooxml/commit/10e2e825b041ff9dec6cf2555234f386c86ddfac))
+
+### Bug Fixes
+
+- **xlsx:** Clear stale filter row state ([#36](https://github.com/ChristopherVR/ooxml/issues/36)) ([158f6cc](https://github.com/ChristopherVR/ooxml/commit/158f6ccfb54b6965dedda325d2cc2df3adb187ef))
+
 ## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.4.0) - 2026-10-08
 
 ### Features
