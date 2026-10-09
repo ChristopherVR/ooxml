@@ -8,6 +8,7 @@ import { lineCap } from './line-style';
 import { linePattern } from './line-pattern';
 import { sourcePaint } from './source-paint';
 import { shapeShadow } from './shadow';
+import { shapeEffects } from './effects';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { textParagraphs, type ParagraphMarker } from './paragraphs';
@@ -144,6 +145,11 @@ export function shapeStyle(
 		(name, fallback) => color(cells, name, fallback, resources, report),
 		report,
 	);
+	const effects = shapeEffects(
+		cells,
+		(name, fallback) => color(cells, name, fallback, resources, report),
+		report,
+	);
 	const cap = lineCap(cells, resources, report);
 	return {
 		fill:
@@ -171,6 +177,7 @@ export function shapeStyle(
 		startArrowSize: number(cells, 'BeginArrowSize', 2, report),
 		endArrowSize: number(cells, 'EndArrowSize', 2, report),
 		...(shadow ? { shadow } : {}),
+		...effects,
 	};
 }
 function font(cells: Cells, resources: Resources): string {

@@ -85,6 +85,7 @@ export {
 	type VisioChangeShapeEdit,
 	type VisioChangeShapeTarget,
 	type VisioConnectorGlue,
+	type VisioPageThemeEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';
@@ -111,6 +112,7 @@ export {
 } from './path-fit';
 export {
 	VISIO_QUICK_STYLE_COLORS,
+	VISIO_QUICK_STYLE_VARIANT_COLORS,
 	VISIO_SHADOW_PRESETS,
 	isVisioQuickStyleColor,
 	isVisioShadowPreset,
@@ -120,6 +122,24 @@ export {
 	type VisioQuickStyleColor,
 	type VisioShadowPreset,
 } from './edit-formatting-effects';
+export {
+	VISIO_GLOW_SIZES,
+	VISIO_GLOW_TRANSPARENCY,
+	VISIO_SOFT_EDGE_SIZES,
+	VISIO_REFLECTION_PRESETS,
+	type VisioGlowEffect,
+	type VisioReflectionEffect,
+} from './edit-formatting-glow';
+export {
+	VISIO_BUILT_IN_THEMES,
+	VISIO_BUILT_IN_THEME_IDS,
+	isVisioBuiltInThemeId,
+	visioBuiltInTheme,
+	visioThemeVariantColors,
+	type VisioBuiltInTheme,
+	type VisioBuiltInThemeId,
+} from './theme-builtins';
+export { visioThemeXml } from './theme-write';
 export {
 	VISIO_BASIC_SHAPES,
 	isVisioBasicShape,

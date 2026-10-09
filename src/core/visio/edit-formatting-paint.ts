@@ -4,6 +4,7 @@ import { assertNonGradientPaint } from './edit-formatting-paint-scope';
 import type { VisioPackage } from './package';
 import type { FormattingRowContext } from './edit-style-admission';
 import { quickStyleWrites, shadowWrites } from './edit-formatting-effects';
+import { effectWrites } from './edit-formatting-glow';
 
 export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWrite[] {
 	const writes = new Map<string, FormattingWrite>();
@@ -85,6 +86,7 @@ export async function shapeFormattingPlan(
 		? await quickStyleWrites(pkg, document, shape, edit.pageId, edit.quickStyle, add, check)
 		: undefined;
 	if (edit.shadow) shadowWrites(edit.shadow, add);
+	effectWrites(edit, add);
 	return { writes: [...writes.values()], ...(rows ? { rows } : {}) };
 }
 export async function assertShapeFormattingPaintScope(

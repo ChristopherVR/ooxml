@@ -4,6 +4,7 @@ import { prepareImages } from './prepare-images';
 import type { VisioImageOptions } from './media';
 import { createLayerBudget, indexLayers, pageLayers } from './layers';
 import { loadVisioThemes } from './theme';
+import { visioPageTheme } from './page-theme';
 import type { Resources } from './style';
 import { elements } from '../xml/index';
 import type { VisioDocument, VisioPage } from './model';
@@ -247,6 +248,7 @@ export async function parseVsdx(
 					pageCells.set(name, cell);
 		}
 		resources.pageCells = new Map([...pageCells, ...sheet.cells]);
+		const theme = visioPageTheme(resources.themes, resources.pageCells);
 		const layers = pageLayers(sheet, resources, localReport);
 		context.layers = indexLayers(layers);
 		const drawingToPageScale = visioPageGeometryScale(sheet.cells, localReport);
@@ -318,6 +320,7 @@ export async function parseVsdx(
 			shapes,
 			connectors,
 			layers,
+			...(theme ? { theme } : {}),
 		});
 	}
 	checkTime();

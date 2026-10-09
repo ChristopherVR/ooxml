@@ -30,6 +30,8 @@ export type {
 	VisioUngroupShapeEdit,
 } from './edit-group-commands';
 export type { VisioPasteShapesEdit } from './edit-paste-commands';
+import { snapshotPageTheme, type VisioPageThemeEdit } from './edit-page-theme-commands';
+export type { VisioPageThemeEdit } from './edit-page-theme-commands';
 import {
 	isVisioFormatEdit,
 	snapshotFormatting,
@@ -149,7 +151,8 @@ export type VisioEdit =
 	| VisioChangeShapeEdit
 	| VisioMetadataEdit
 	| VisioPictureInsertEdit
-	| VisioGroupEdit;
+	| VisioGroupEdit
+	| VisioPageThemeEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -231,6 +234,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'paste-shapes') return snapshotPasteShapes(edit);
 		if (edit.type === 'change-shape') return snapshotChangeShape(edit);
 		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
+		if (edit.type === 'set-page-theme') return snapshotPageTheme(edit);
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);
 		if (isVisioPageSetupEdit(edit)) return snapshotPageSetupEdit(edit);

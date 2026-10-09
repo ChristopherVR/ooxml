@@ -28,6 +28,7 @@ import { editVsdxPicture } from './edit-picture';
 import { isVisioGroupEdit } from './edit-group-commands';
 import { groupVisioShapes, ungroupVisioShape } from './edit-group';
 import { autoSizePageIds, growAutoSizePages } from './edit-page-auto-size';
+import { editVsdxPageTheme } from './edit-page-theme';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -63,6 +64,7 @@ export type {
 	VisioShapeScreenTipEdit,
 	VisioHyperlinkFields,
 	VisioConnectorGlue,
+	VisioPageThemeEdit,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -130,6 +132,12 @@ async function editVsdxTransaction(
 			fail('EDIT_MIXED_PICTURE_TRANSACTION', 'Picture insertion requires its own transaction.');
 		return editVsdxPicture(pkg, parts, pages, picture, limits, maxOutput, deadline, check);
 	}
+	const theme = allCommands.find((command) => command.type === 'set-page-theme');
+	if (theme) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_THEME_TRANSACTION', 'A page theme edit requires its own transaction.');
+		return editVsdxPageTheme(pkg, parts, pages, theme, limits, maxOutput, deadline, check);
+	}
 	if (commands.length !== allCommands.length) {
 		const pageCommands = allCommands.filter(isVisioPageEdit);
 		// Fit to Drawing: a page resize and the moves that bring the drawing onto it, as one step.
@@ -184,6 +192,7 @@ async function editVsdxTransaction(
 			command.type !== 'paste-shapes' &&
 			command.type !== 'change-shape' &&
 			command.type !== 'insert-picture' &&
+			command.type !== 'set-page-theme' &&
 			!isVisioMetadataEdit(command) &&
 			!isVisioGroupEdit(command) &&
 			!isVisioFormatEdit(command),
@@ -314,7 +323,7 @@ async function editVsdxTransaction(
 			))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			duplicateChanged = true;
-		} else if (command.type !== 'insert-picture') {
+		} else if (command.type !== 'insert-picture' && command.type !== 'set-page-theme') {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 		}

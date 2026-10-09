@@ -5,6 +5,13 @@ import {
 	type VisioQuickStyle,
 	type VisioShadowPreset,
 } from './edit-formatting-effects';
+import {
+	snapshotGlow,
+	snapshotReflection,
+	snapshotSoftEdges,
+	type VisioGlowEffect,
+	type VisioReflectionEffect,
+} from './edit-formatting-glow';
 
 interface Target {
 	pageId: string;
@@ -48,6 +55,12 @@ export interface VisioShapeFormatEdit extends Target {
 	quickStyle?: VisioQuickStyle;
 	/** Outer shadow preset; `none` turns the shape shadow off. */
 	shadow?: VisioShadowPreset;
+	/** Glow; size 0 removes it. */
+	glow?: VisioGlowEffect;
+	/** Soft edge radius in points; 0 removes it. */
+	softEdges?: number;
+	/** Reflection; size 0 removes it. */
+	reflection?: VisioReflectionEffect;
 }
 export type VisioFormatEdit = VisioTextFormatEdit | VisioShapeFormatEdit;
 export const isVisioFormatEdit = (edit: { type: string }): edit is VisioFormatEdit =>
@@ -128,8 +141,16 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 			if (
 				Object.keys(edit).some(
 					(key) =>
-						!['type', 'pageId', 'shapeId', 'quickStyle', 'shadow'].includes(key) &&
-						edit[key as keyof VisioShapeFormatEdit] !== undefined,
+						![
+							'type',
+							'pageId',
+							'shapeId',
+							'quickStyle',
+							'shadow',
+							'glow',
+							'softEdges',
+							'reflection',
+						].includes(key) && edit[key as keyof VisioShapeFormatEdit] !== undefined,
 				)
 			)
 				fail('INVALID_EDIT', 'A Quick Style replaces fill, line and font paint as a whole.');
@@ -138,6 +159,9 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 			if (!isVisioShadowPreset(edit.shadow)) fail('INVALID_EDIT', 'Unknown shadow preset.');
 			result.shadow = edit.shadow;
 		}
+		if (edit.glow !== undefined) result.glow = snapshotGlow(edit.glow);
+		if (edit.softEdges !== undefined) result.softEdges = snapshotSoftEdges(edit.softEdges);
+		if (edit.reflection !== undefined) result.reflection = snapshotReflection(edit.reflection);
 		if (result.fillColor === 'none' && result.fillPattern !== undefined && result.fillPattern !== 0)
 			fail('INVALID_EDIT', 'No fill conflicts with a visible fill pattern.');
 	}

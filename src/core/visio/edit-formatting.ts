@@ -85,7 +85,7 @@ export async function applyFormattingEdit(
 		const effective = effectiveShapeCell(shape, document, write.name, write.category, rowContext);
 		assertEditableFormattingCell(effective);
 		if (
-			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd|ShdwPattern|ShdwForegndTrans|ShapeShdwType|QuickStyle[A-Za-z]+)$/.test(
+			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd|ShdwPattern|ShdwForegndTrans|ShapeShdwType|GlowColorTrans|ReflectionTrans|ReflectionSize|QuickStyle[A-Za-z]+)$/.test(
 				write.name,
 			) &&
 			effective?.hasAttribute('U') &&

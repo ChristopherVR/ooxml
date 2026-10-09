@@ -78,6 +78,21 @@ export function assertViewableDocument(model: VisioDocument): void {
 			for (const flag of [layer.visible, layer.printable, layer.locked])
 				member(flag, [true, false], 'layer flag');
 		}
+		if (page.theme !== undefined) {
+			label(page.theme.name, 256);
+			if (page.theme.builtIn !== undefined) label(page.theme.builtIn, 64);
+			member(page.theme.variant, [0, 1, 2, 3], 'theme variant');
+			const colors = [page.theme.accents, ...(page.theme.variants ?? [])];
+			if (!Array.isArray(page.theme.variants) || page.theme.variants.length > 4)
+				throw new Error('The scene has an invalid theme variant list.');
+			for (const list of colors)
+				if (
+					!Array.isArray(list) ||
+					list.length > 7 ||
+					list.some((color) => typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color))
+				)
+					throw new Error('The scene has invalid theme colours.');
+		}
 		finite(page.width, 'page width', 0.001);
 		finite(page.height, 'page height', 0.001);
 		if (page.drawingToPageScale !== undefined)
@@ -173,6 +188,21 @@ export function assertViewableDocument(model: VisioDocument): void {
 			finite(shadow.offsetX, 'shadow offset', -1000, 1000);
 			finite(shadow.offsetY, 'shadow offset', -1000, 1000);
 			finite(shadow.blur, 'shadow blur', 0, 10);
+		}
+		const glow = shape.style.glow;
+		if (glow !== undefined) {
+			if (typeof glow.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(glow.color))
+				throw new Error('The scene has an invalid glow color.');
+			finite(glow.opacity, 'glow opacity', 0, 1);
+			finite(glow.size, 'glow size', 0, 10);
+		}
+		if (shape.style.softEdges !== undefined) finite(shape.style.softEdges, 'soft edge size', 0, 10);
+		const reflection = shape.style.reflection;
+		if (reflection !== undefined) {
+			finite(reflection.opacity, 'reflection opacity', 0, 1);
+			finite(reflection.size, 'reflection size', 0, 1);
+			finite(reflection.distance, 'reflection distance', 0, 10);
+			finite(reflection.blur, 'reflection blur', 0, 10);
 		}
 		finite(shape.style.lineOpacity, 'line opacity', 0, 1);
 		if (shape.style.lineDashDotLength !== undefined)

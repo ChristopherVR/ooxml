@@ -14,6 +14,7 @@ import { snapshotResizeAnchor } from '../resize-anchor';
 import { snapshotConnectorGlue } from '../edit-commands';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
+import { snapshotPageTheme } from '../edit-page-theme-commands';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -32,6 +33,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'paste-shapes') return snapshotPasteShapes(command);
 		if (command.type === 'change-shape') return snapshotChangeShape(command);
 		if (command.type === 'insert-picture') return snapshotPictureInsert(command);
+		if (command.type === 'set-page-theme') return snapshotPageTheme(command);
 		if (isVisioMetadataEdit(command)) return snapshotMetadataEdit(command);
 		if (isVisioGroupEdit(command)) return snapshotGroupEdit(command);
 		if (isVisioPageSetupEdit(command)) return snapshotPageSetupEdit(command);

@@ -40,6 +40,7 @@ export * from './draw-plan';
 export * from './draw-path-plan';
 export * from './line-dash';
 export * from './shape-formatting';
+export * from './shape-effects';
 export * from './text-replace';
 export * from './change-case';
 export * from './format-painter';

@@ -67,6 +67,21 @@ export interface VisioShadow {
 	offsetY: number;
 	blur: number;
 }
+/** A glow around the shape outline; size is the glow radius in inches. */
+export interface VisioGlow {
+	color: string;
+	opacity: number;
+	size: number;
+}
+/** A mirrored copy below the shape, fading from `opacity` to clear over `size` of its height. */
+export interface VisioReflection {
+	opacity: number;
+	/** Fraction (0-1] of the shape height shown. */
+	size: number;
+	/** Gap below the shape and blur radius, in inches. */
+	distance: number;
+	blur: number;
+}
 export interface VisioStyle {
 	fill: string;
 	/** Supported normalized gradient; fill remains the solid fallback color. */
@@ -103,6 +118,10 @@ export interface VisioStyle {
 	startArrowSize?: number;
 	endArrowSize?: number;
 	shadow?: VisioShadow;
+	glow?: VisioGlow;
+	/** Soft edge radius in inches. */
+	softEdges?: number;
+	reflection?: VisioReflection;
 }
 export interface VisioTextRun {
 	text: string;
@@ -268,6 +287,18 @@ export interface VisioPageSetup {
 	/** Print zoom (ScaleX), where 1 prints at 100%. */
 	readonly printZoom?: number;
 }
+/** The theme a page uses, for the Design tab. Colours are `#rrggbb`. */
+export interface VisioPageTheme {
+	name: string;
+	/** Set when the theme part is one of the built-in themes this package writes. */
+	builtIn?: string;
+	/** Selected variant, 0-3. */
+	variant: number;
+	/** Accent 1-6. */
+	accents: string[];
+	/** Each variant's seven variant colours. */
+	variants: string[][];
+}
 export interface VisioPage {
 	id: string;
 	/** Explicit cached drawing page-size modes. Missing or invalid source caches are omitted. */
@@ -287,6 +318,7 @@ export interface VisioPage {
 	shapes: VisioShape[];
 	connectors: VisioConnection[];
 	layers?: VisioLayer[];
+	theme?: VisioPageTheme;
 }
 export interface VisioDocument {
 	format: 'vsdx' | 'vsd';
