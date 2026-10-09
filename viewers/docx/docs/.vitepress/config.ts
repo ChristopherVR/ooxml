@@ -36,6 +36,12 @@ export default defineConfig({
 	themeConfig: {
 		nav: [
 			{
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
+			{
 				text: 'Developer Guide',
 				link: '/getting-started',
 				activeMatch: '/(getting-started|architecture|bindings|model-units|api|theming)',

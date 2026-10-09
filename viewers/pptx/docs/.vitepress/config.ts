@@ -35,6 +35,12 @@ export default defineConfig({
 			link: '/fr/',
 			themeConfig: {
 				nav: [
+					{
+						text: 'OOXML Office',
+						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Guide developpeur', link: '/fr/guide/', activeMatch: '/fr/guide/' },
 					{ text: 'Guide utilisateur', link: '/user/', activeMatch: '/user/' },
 					{
@@ -89,6 +95,12 @@ export default defineConfig({
 			link: '/es/',
 			themeConfig: {
 				nav: [
+					{
+						text: 'OOXML Office',
+						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Guia del desarrollador', link: '/es/guide/', activeMatch: '/es/guide/' },
 					{ text: 'Guia de usuario', link: '/user/', activeMatch: '/user/' },
 					{
@@ -143,6 +155,12 @@ export default defineConfig({
 			link: '/de/',
 			themeConfig: {
 				nav: [
+					{
+						text: 'OOXML Office',
+						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Entwicklerhandbuch', link: '/de/guide/', activeMatch: '/de/guide/' },
 					{ text: 'Benutzerhandbuch', link: '/user/', activeMatch: '/user/' },
 					{
@@ -220,6 +238,12 @@ export default defineConfig({
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
+			{
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
 			{ text: 'Developer Guide', link: '/guide/', activeMatch: '/guide/' },
 			{ text: 'User Guide', link: '/user/', activeMatch: '/user/' },
 			{
@@ -474,7 +498,9 @@ export default defineConfig({
 			],
 		},
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx' }],
+		socialLinks: [
+			{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx' },
+		],
 
 		editLink: {
 			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/pptx/docs/:path',
