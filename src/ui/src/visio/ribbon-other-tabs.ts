@@ -2,6 +2,7 @@ export { buildProcessPanel, buildReviewPanel } from './ribbon-review';
 import { check, command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { backgroundsGroup, pageSetupGroup } from './ribbon-page-setup';
 import { themesGallery, variantOptions, variantsGallery } from './ribbon-themes';
+import { diagramPartGallery } from './ribbon-diagram-parts';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 const PARTS = 'Needs core container, callout and connector edits.';
@@ -65,8 +66,8 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 				),
 			]),
 			group(doc, 'Diagram Parts', [
-				dropdown(doc, { id: 'container', label: 'Container', icon: 'rectangle', reason: PARTS }),
-				dropdown(doc, { id: 'callout', label: 'Callout', icon: 'message', reason: PARTS }),
+				diagramPartGallery(doc, 'container'),
+				diagramPartGallery(doc, 'callout'),
 				dropdown(doc, {
 					id: 'insert-connector',
 					label: 'Connector',

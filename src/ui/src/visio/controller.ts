@@ -6,7 +6,13 @@ import {
 	type VsdxExportResult,
 } from 'ooxml-core/visio/ui';
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor';
-import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
+import {
+	MAX_INPUT_BYTES,
+	visioCalloutCommand,
+	visioContainerCommand,
+	visioWithContainerMembers,
+} from 'ooxml-core/visio/ui';
+import type { VisioCalloutStyle, VisioContainerStyle } from 'ooxml-core/visio';
 import {
 	loadVisio,
 	createVsdx,
@@ -537,8 +543,11 @@ export class ViewerController {
 		this.#assertAlive();
 		const revision = this.#revision;
 		const state = this.#state;
-		const pageId = state.document?.pages[state.pageIndex]?.id;
-		const selected = new Set(state.selectedShapes.map((shape) => shape.id));
+		const page = state.document?.pages[state.pageIndex];
+		const pageId = page?.id;
+		const ids = state.selectedShapes.map((shape) => shape.id);
+		// Members of a selected container move with it, as in Visio.
+		const selected = new Set(page ? visioWithContainerMembers(page, ids) : ids);
 		const commands = snapshotEdits(edits);
 		if (this.#destroyed || revision !== this.#revision)
 			throw new DOMException('The selection edit was superseded or cancelled.', 'AbortError');
@@ -653,6 +662,33 @@ export class ViewerController {
 		return this.#mutate('edit', snapshotEdits([command]), undefined, {
 			pageId: page.id,
 			shapeIds: Object.freeze(shapeIds),
+		});
+	}
+	/** Insert > Container or Callout for the selection as one edit; the new part is selected. */
+	async insertDiagramPart(
+		part:
+			| { kind: 'container'; style: VisioContainerStyle }
+			| { kind: 'callout'; style: VisioCalloutStyle },
+	): Promise<void> {
+		this.#assertAlive();
+		const page = this.#state.document?.pages[this.#state.pageIndex];
+		const selected = this.#state.selectedShapes;
+		if (!page || !selected.every((shape) => visioSelectionIsOnPage(shape, page.id)))
+			throw new Error('Select shapes on the current page first.');
+		const ids = selected.map((shape) => shape.id);
+		const command =
+			part.kind === 'container'
+				? visioContainerCommand(page, ids, part.style)
+				: visioCalloutCommand(page, ids, part.style);
+		if (!command)
+			throw new Error(
+				part.kind === 'container'
+					? 'Select top-level shapes on this page to contain.'
+					: 'Select one two-dimensional shape for the callout.',
+			);
+		return this.#mutate('edit', snapshotEdits([command]), undefined, {
+			pageId: page.id,
+			shapeIds: Object.freeze([command.shapeId]),
 		});
 	}
 	captureClipboardToken(): ViewerClipboardToken {

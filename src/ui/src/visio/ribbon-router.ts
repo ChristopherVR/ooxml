@@ -17,6 +17,7 @@ export interface RibbonTargets {
 	rotateSelection(direction: 'left' | 'right'): void;
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
 	changeShape(shape: Extract<VisioRibbonAction, { type: 'change-shape' }>['shape']): void;
+	insertDiagramPart(action: Extract<VisioRibbonAction, { type: 'diagram-part' }>): void;
 	formatSelection(action: VisioFormattingAction): void;
 	formatPainter(mode: 'once' | 'sticky' | 'cancel'): void;
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
@@ -82,6 +83,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.flipSelection(action.axis);
 		case 'change-shape':
 			return targets.changeShape(action.shape);
+		case 'diagram-part':
+			return targets.insertDiagramPart(action);
 		case 'tool':
 			return targets.setTool(action.tool);
 		case 'cancel-drawing':

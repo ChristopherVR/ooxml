@@ -6,7 +6,10 @@ import { BASIC_SHAPES, createShapesWindow } from './shapes-window';
 import { wireStencil } from './viewer-stencil';
 import type { CancellableEditor } from './worker-editor';
 
-afterEach(() => document.body.replaceChildren());
+afterEach(() => {
+	document.body.replaceChildren();
+	localStorage.clear();
+});
 
 async function setup(source = true, delay = 0) {
 	const edits: VisioEdit[][] = [];
@@ -48,10 +51,10 @@ describe("Visio's Shapes window", () => {
 			expect(master.hasAttribute('aria-disabled')).toBe(false);
 			expect(master.title).not.toMatch(/not available/);
 		}
-		// More Shapes and Quick Shapes need stencil files, which are not supported yet.
+		// More Shapes and Quick Shapes work over the built-in stencils.
 		expect(
-			[...pane.querySelectorAll<HTMLButtonElement>('.shapes-row')].every((row) => row.disabled),
-		).toBe(true);
+			[...pane.querySelectorAll<HTMLButtonElement>('.shapes-row')].map((row) => row.disabled),
+		).toEqual([false, false]);
 	});
 
 	it('adds masters at the page centre through core', async () => {
@@ -119,10 +122,15 @@ describe("Visio's Shapes window", () => {
 		expect(document.activeElement).toBe(field);
 		field.value = 'star';
 		field.dispatchEvent(new Event('input'));
-		const visible = [...pane.querySelectorAll<HTMLElement>('#shapes-search li')].filter(
-			(item) => !item.hidden,
-		);
-		expect(visible.map((item) => item.dataset.name)).toEqual(['5-point star']);
+		const visible = () =>
+			[...pane.querySelectorAll<HTMLElement>('#shapes-search li')]
+				.filter((item) => !item.hidden)
+				.map((item) => item.dataset.name);
+		// Search covers the built-in stencils too, open or not.
+		expect(visible()).toEqual(['5-point star', 'Start/End']);
+		field.value = 'arrow';
+		field.dispatchEvent(new Event('input'));
+		expect(visible()).toContain('Curved arrow');
 		field.value = 'zzz';
 		field.dispatchEvent(new Event('input'));
 		expect(pane.querySelector<HTMLElement>('.shapes-empty')!.hidden).toBe(false);

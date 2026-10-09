@@ -1,6 +1,7 @@
 import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
 import {
 	visioMoveCommands,
+	visioMoveTargets,
 	visioMovementShape,
 	visioPageDragDelta,
 	visioMarqueeBox,
@@ -179,10 +180,14 @@ export class ViewerPointerGestures {
 				);
 				return false;
 			}
+			// Container members move with their container, so they preview with it too.
 			drag.preview = createMovementPreview(
 				drag.svg,
 				drag.page,
-				drag.selection.map((shape) => shape.id),
+				visioMoveTargets(
+					drag.page,
+					drag.selection.map((shape) => shape.id),
+				),
 			);
 			drag.showOverlays = hideGestureOverlays(
 				this.viewport,

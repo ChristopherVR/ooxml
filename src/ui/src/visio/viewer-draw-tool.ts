@@ -1,4 +1,4 @@
-import type { VisioPage, VisioEdit, VisioGeometryEdit, VisioBasicShape } from 'ooxml-core/visio';
+import type { VisioPage, VisioEdit, VisioGeometryEdit, VisioOutlineShape } from 'ooxml-core/visio';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -29,7 +29,7 @@ export async function insertRectangle(
 export async function insertMaster(
 	controller: ViewerController,
 	page: VisioPage,
-	master: { kind: 'ellipse' } | { kind: 'rectangle'; shape: VisioBasicShape },
+	master: { kind: 'ellipse' } | { kind: 'rectangle'; shape: VisioOutlineShape },
 	centre: VisioDrawingPoint,
 	size: { width: number; height: number },
 ): Promise<string> {

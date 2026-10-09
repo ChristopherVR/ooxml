@@ -6,6 +6,7 @@ import {
 	visioQuarterTurnCommand,
 	visioLocalRotationShape,
 	visioSelectionIsOnPage,
+	visioWithCalloutLeaders,
 } from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
@@ -30,6 +31,7 @@ import { ViewerPageSetup } from './viewer-page-setup';
 import { ViewerThemes } from './viewer-themes';
 import { ViewerFormatShape } from './viewer-format-shape';
 import { ViewerReview } from './viewer-review';
+import { ViewerDiagramParts } from './viewer-diagram-parts';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -87,6 +89,7 @@ export class ViewerCommands {
 	#themes: ViewerThemes;
 	#formatShape: ViewerFormatShape;
 	#review: ViewerReview;
+	#parts: ViewerDiagramParts;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -124,6 +127,12 @@ export class ViewerCommands {
 			host.controller,
 			host.announce,
 			(run, message) => void this.#edit(run, message),
+		);
+		this.#parts = new ViewerDiagramParts(
+			host.root,
+			host.controller,
+			(run, message) => void this.#edit(run, message),
+			() => host.reveal('edit', true),
 		);
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
@@ -166,6 +175,7 @@ export class ViewerCommands {
 			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			changeShape: (shape) => this.#changeShape.run(shape),
+			insertDiagramPart: (action) => this.#parts.run(action),
 			formatSelection: (action) => this.#formatting.run(action),
 			formatPainter: (mode) => this.#painter.run(mode),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
@@ -327,7 +337,8 @@ export class ViewerCommands {
 	#delete(): void {
 		const state = this.host.controller.state;
 		const shapes = state.selectedShapes;
-		const pageId = state.document?.pages[state.pageIndex]?.id;
+		const page = state.document?.pages[state.pageIndex];
+		const pageId = page?.id;
 		if (
 			!shapes.length ||
 			pageId === undefined ||
@@ -338,7 +349,11 @@ export class ViewerCommands {
 		void this.#edit(
 			() =>
 				this.host.controller.applyEdits(
-					shapes.map((shape) => ({ type: 'delete-shape', pageId, shapeId: shape.id })),
+					// A callout takes its own leader connector with it.
+					visioWithCalloutLeaders(
+						page!,
+						shapes.map((shape) => shape.id),
+					).map((shapeId) => ({ type: 'delete-shape', pageId, shapeId })),
 				),
 			shapes.length === 1
 				? `Deleted ${shapes[0]!.name || `shape ${shapes[0]!.id}`}.`
@@ -505,6 +520,7 @@ export class ViewerCommands {
 		this.#clipboard.render(state);
 		this.#formatting.render(state);
 		this.#changeShape.render(state);
+		this.#parts.render(state);
 		this.#paint.render(state);
 		this.#painter.render(state);
 		this.#insert.render(state);

@@ -1,11 +1,11 @@
 import type { ViewerController } from './controller';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
-import { MASTER_MIME, masterCreation } from './shapes-window';
+import { MASTER_MIME, findMaster, masterCreation } from './shapes-window';
 import { insertMaster, pagePoint } from './viewer-draw-tool';
 
 /**
  * Shapes window interaction: drag a master onto the page to drop it there, or activate it to add
- * it at the page centre. Ellipse and Circle are native ellipses; the rest are core outlines.
+ * it at the page centre. Ellipses and circles are native ellipses; the rest are core outlines.
  */
 export function wireStencil(
 	pane: HTMLElement,
@@ -63,8 +63,8 @@ export function wireStencil(
 				const target = current.document?.pages[current.pageIndex];
 				if (!target || target.id !== page.id || !editable()) return;
 				const shapeId = await insertMaster(controller, target, master.create, { x, y }, size);
-				const name = pane.querySelector(`[data-master="${id}"] span`)?.textContent ?? 'Shape';
-				announce(`${name} ${shapeId} added from Basic Shapes.`);
+				const found = findMaster(id);
+				announce(`${found?.master.name ?? 'Shape'} ${shapeId} added from ${found?.stencil.name}.`);
 			} catch (error) {
 				if (!isEditCancellation(error) && !controller.state.edit.error)
 					announce(editErrorMessage(error));

@@ -1,6 +1,8 @@
 import type {
 	VisioBuiltInThemeId,
+	VisioCalloutStyle,
 	VisioChangeShapeTarget,
+	VisioContainerStyle,
 	VisioShapeFormatEdit,
 } from 'ooxml-core/visio';
 import type { TextCaseMode, VisioArrangement, VisioRuleSetId } from 'ooxml-core/visio/ui';
@@ -46,6 +48,10 @@ export type VisioReviewCommand =
 	| 'subprocess-new'
 	| 'subprocess-existing'
 	| 'subprocess-selection';
+/** Insert > Diagram Parts: a container or callout in one of its styles. */
+export type VisioDiagramPartAction =
+	| { type: 'diagram-part'; part: 'container'; style: VisioContainerStyle }
+	| { type: 'diagram-part'; part: 'callout'; style: VisioCalloutStyle };
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
@@ -67,6 +73,7 @@ export type VisioRibbonAction =
 	| { type: 'rotate'; direction: 'left' | 'right' }
 	| { type: 'flip'; axis: 'horizontal' | 'vertical' }
 	| { type: 'change-shape'; shape: VisioChangeShapeTarget }
+	| VisioDiagramPartAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }
