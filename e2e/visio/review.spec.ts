@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { parseVsdx } from 'ooxml-core/visio';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('Review comments, Shape Reports, Check Diagram and Create New work and save', async ({
 	page,
@@ -9,7 +10,7 @@ test('Review comments, Shape Reports, Check Diagram and Create New work and save
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toContainText('Release workflow');
 	await page.locator('#file').setInputFiles({
@@ -17,6 +18,7 @@ test('Review comments, Shape Reports, Check Diagram and Create New work and save
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await createVsdxFixture('Review target'),
 	});
+	await expect(page.locator('#file-name')).toHaveText('Review.vsdx');
 	await expect(viewer.locator('svg.paper')).toContainText('Review target');
 	const shape = viewer.locator('svg.paper [data-shape-id]').first();
 

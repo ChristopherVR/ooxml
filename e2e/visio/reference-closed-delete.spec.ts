@@ -2,6 +2,7 @@ import { expect, test, type Locator } from '@playwright/test';
 import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 async function fixture() {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Closed first'));
@@ -77,13 +78,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			});
 		});
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer');
 		await page.locator('#file').setInputFiles({
 			name: 'closed-set.vsdx',
 			mimeType: 'application/vnd.ms-visio.drawing',
 			buffer: await fixture(),
 		});
+		await expect(page.locator('#file-name')).toHaveText('closed-set.vsdx');
 		await expect(viewer.locator('svg.paper')).toContainText('Retained control');
 		await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 		const original = await bytes(viewer);

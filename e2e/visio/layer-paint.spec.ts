@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { join } from 'node:path';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import reference from '../../src/core/visio/__fixtures__/layer-colors-native.json' with { type: 'json' };
+import { openDemo } from './demo-page';
 
 const nativeDirectory = process.env.VISIO_NATIVE_LAYER_COLORS_DIR;
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
@@ -12,7 +13,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			!nativeDirectory,
 			'Set VISIO_NATIVE_LAYER_COLORS_DIR to the native oracle directory.',
 		);
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		await page.locator('#file').setInputFiles(join(nativeDirectory!, 'layer-colors.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('layer-colors.vsdx');
 		await expect(page.locator('visio-viewer svg text')).toContainText('Layer color');

@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { openFind, taskPane, zoomPreset } from './ribbon';
+import { openDemo } from './demo-page';
 
 test('shared editor matches compact chrome geometry and keeps all navigation functional', async ({
 	page,
 }) => {
 	await page.setViewportSize({ width: 1440, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toHaveCount(1);
 	await expect(viewer.getByRole('tab', { name: 'Home', exact: true })).toHaveAttribute(
@@ -61,7 +62,7 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 	await (await openFind(viewer)).fill('framework');
 	await viewer.getByRole('button', { name: 'Next matching shape' }).click();
 	await expect(viewer.locator('.shape-inspector')).toBeVisible();
-	await expect(viewer.locator('.shape-inspector')).toContainText('Your framework');
+	await expect(viewer.locator('.shape-inspector')).toContainText('ID 1');
 	await viewer.locator('.notes-strip button').click();
 	await expect(viewer.locator('.notes')).toHaveAttribute('open', '');
 	await expect(viewer.locator('.notes summary')).toBeFocused();
@@ -72,7 +73,7 @@ test('mobile keeps page navigation, editing disclosures and zoom controls reacha
 	page,
 }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('.shapes-pane')).toBeHidden();
 	await expect(viewer.locator('svg.paper')).toBeVisible();
@@ -108,7 +109,7 @@ test('mobile keeps page navigation, editing disclosures and zoom controls reacha
 test.describe('touch-enabled tablet chrome', () => {
 	test.use({ hasTouch: true, viewport: { width: 1024, height: 900 } });
 	test('enlarges compact commands to touch targets for coarse pointers', async ({ page }) => {
-		await page.goto('/demo/?sample=1');
+		await openDemo(page);
 		const viewer = page.locator('visio-viewer');
 		await expect(viewer.locator('svg.paper')).toBeVisible();
 		for (const selector of [

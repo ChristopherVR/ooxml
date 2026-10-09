@@ -5,6 +5,7 @@ import { parseVsdx } from 'ooxml-core/visio';
 import { downloadCopy } from './ribbon';
 import { nativeSvgLineEndpoints } from './native-line-svg';
 import { dragLineEndpoint } from './line-endpoint';
+import { openDemo } from './demo-page';
 
 interface NativeEndpointEvidence {
 	pageScale?: number;
@@ -44,7 +45,7 @@ test('vanilla: endpoint drag cancellation and clicks preserve source bytes and h
 }) => {
 	const directory = process.env.VISIO_NATIVE_LINE_END_DIR;
 	test.skip(!directory, 'Set VISIO_NATIVE_LINE_END_DIR to the native capture.');
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 	await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 	const viewer = page.locator('visio-viewer');
@@ -77,7 +78,10 @@ for (const variable of endpointDirectories) {
 			const evidence = JSON.parse(
 				(await readFile(join(directory!, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
 			) as NativeEndpointEvidence;
-			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+			await openDemo(
+				page,
+				framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+			);
 			await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 			const native = await parseVsdx(await readFile(join(directory!, 'endpoint.vsdx')));
@@ -160,7 +164,10 @@ for (const variable of endpointDirectories) {
 			const evidence = JSON.parse(
 				(await readFile(join(directory!, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
 			) as NativeEndpointEvidence;
-			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+			await openDemo(
+				page,
+				framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+			);
 			await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 			const viewer = page.locator('visio-viewer');
@@ -244,7 +251,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			}[];
 		};
 		const native = await parseVsdx(await readFile(join(resizeDirectory!, 'resized.vsdx')));
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		await page.locator('#file').setInputFiles(join(resizeDirectory!, 'moved.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 		const viewer = page.locator('visio-viewer');
@@ -306,7 +316,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			cases: { shapeId: string; after: Record<string, { value: number }> }[];
 		};
 		const nativeMoved = await parseVsdx(await readFile(join(directory!, 'moved.vsdx')));
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		await page.locator('#file').setInputFiles(join(directory!, 'original.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('original.vsdx');
 		const viewer = page.locator('visio-viewer');
@@ -379,7 +392,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			controlShapeId: string;
 		};
 		const native = await parseVsdx(await readFile(join(deletionDirectory!, 'deleted.vsdx')));
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		await page.locator('#file').setInputFiles(join(deletionDirectory!, 'original.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('original.vsdx');
 		const viewer = page.locator('visio-viewer');

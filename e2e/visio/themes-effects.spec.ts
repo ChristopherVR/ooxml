@@ -1,5 +1,6 @@
 import { test, expect, type Locator } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 async function menuItem(viewer: Locator, path: readonly string[]): Promise<void> {
 	const effects = viewer.locator('office-ui-menu-button[data-menu="effects"]');
@@ -25,12 +26,13 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	await page.locator('#file').setInputFiles({
 		name: 'themes.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await createVsdxFixture('Theme me'),
 	});
+	await expect(page.locator('#file-name')).toHaveText('themes.vsdx');
 	const viewer = page.locator('visio-viewer');
 	const shape = viewer.locator('svg.paper [data-shape-id="1"]');
 	await shape.click();

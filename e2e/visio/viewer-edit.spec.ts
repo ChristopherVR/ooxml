@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { downloadCopy, loadSampleTemplate, saveCommand, taskPane } from './ribbon';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX copy', async ({
 	page,
@@ -11,8 +12,9 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
-	await page.goto('/demo/?sample=1');
-	await expect(saveCommand(page.locator('visio-viewer'))).toBeDisabled();
+	await openDemo(page);
+	// The sample is a real package, so it can be saved as it is.
+	await expect(saveCommand(page.locator('visio-viewer'))).toBeEnabled();
 	await page.locator('#file').setInputFiles({
 		name: 'editable.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
@@ -63,7 +65,7 @@ test('mobile editor preserves literal drafts, keyboard cancellation and touch ta
 	page,
 }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	await page.locator('#file').setInputFiles({
 		name: 'mobile.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',

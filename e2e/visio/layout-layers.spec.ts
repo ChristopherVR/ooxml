@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { fileBackstage } from './ribbon';
+import { openDemo } from './demo-page';
 
 /** Three rectangles: the fixture's shape 1 at (4, 7), shape 2 at (2, 2.2) and shape 3 at (7, 2). */
 async function layoutFixture(): Promise<Buffer> {
@@ -30,7 +31,7 @@ const pins = (viewer: Locator) =>
 	);
 async function open(page: Page): Promise<Locator> {
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await page.locator('#file').setInputFiles({
 		name: 'layout.vsdx',

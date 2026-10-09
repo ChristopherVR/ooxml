@@ -1,15 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', async ({
 	page,
 }) => {
 	await page.setViewportSize({ width: 1440, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	const ribbon = (name: string) =>
 		viewer.locator('.toolbar').getByRole('button', { name, exact: true });
-	await expect(ribbon('Rectangle')).toBeDisabled();
+	// The sample is editable, so its drawing tools are available before any file is opened.
+	await expect(ribbon('Rectangle')).toBeEnabled();
 	await page.locator('#file').setInputFiles({
 		name: 'toolbar.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',

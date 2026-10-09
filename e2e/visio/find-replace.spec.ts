@@ -2,6 +2,7 @@ import { expect, test, type Locator } from '@playwright/test';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { replaceFixture } from '../../src/ui/src/visio/__fixtures__/replace-viewer';
 import { downloadCopy } from './ribbon';
+import { openDemo } from './demo-page';
 
 const idle = (viewer: Locator) =>
 	expect
@@ -44,7 +45,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer');
 		const load = async (bytes: Uint8Array) => {
 			await page.locator('#file').setInputFiles({
@@ -52,6 +56,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				mimeType: 'application/vnd.ms-visio.drawing',
 				buffer: Buffer.from(bytes),
 			});
+			await expect(page.locator('#file-name')).toHaveText('replace.vsdx');
 			await idle(viewer);
 		};
 		await load(await replaceFixture());

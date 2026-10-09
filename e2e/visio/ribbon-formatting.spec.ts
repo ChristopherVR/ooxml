@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
 import { downloadCopy } from './ribbon';
+import { openDemo } from './demo-page';
 
 async function formattingFixture(): Promise<Buffer> {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Format me'));
@@ -32,7 +33,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer');
 		await expect(viewer.locator('[command="bold"] button')).toBeDisabled();
 		await page.locator('#file').setInputFiles({
@@ -40,6 +44,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			mimeType: 'application/vnd.ms-visio.drawing',
 			buffer: await formattingFixture(),
 		});
+		await expect(page.locator('#file-name')).toHaveText('formatting.vsdx');
 		const first = viewer.locator('svg.paper [data-shape-id="1"]');
 		await first.click();
 		const bold = viewer.locator('[command="bold"] button');

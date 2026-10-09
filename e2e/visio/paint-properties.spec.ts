@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { downloadCopy } from './ribbon';
+import { openDemo } from './demo-page';
 
 async function fixture(scale: number, protectedSecond = false) {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Paint source'));
@@ -95,7 +96,10 @@ for (const [index, framework] of [
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer'),
 			scale = [0.5, 1, 2][index % 3]!;
 		const load = async (buffer: Buffer) => {
@@ -104,6 +108,7 @@ for (const [index, framework] of [
 				mimeType: 'application/vnd.ms-visio.drawing',
 				buffer,
 			});
+			await expect(page.locator('#file-name')).toHaveText('paint.vsdx');
 			await idle(viewer);
 		};
 		await load(await fixture(scale));

@@ -2,6 +2,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 /** Two local rectangles: 1 at (2, 7) and 2 at (6, 4), each 2 x 1 inches on an 8.5 x 11 page. */
 async function connectorFixture(): Promise<Buffer> {
@@ -48,13 +49,14 @@ test('connection points, point glue, right-angle routing and connector styles', 
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.setViewportSize({ width: 1500, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await page.locator('#file').setInputFiles({
 		name: 'connectors.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await connectorFixture(),
 	});
+	await expect(page.locator('#file-name')).toHaveText('connectors.vsdx');
 	await expect(viewer.locator('svg.paper')).toContainText('Right box');
 	const button = (name: string) =>
 		viewer.locator('.toolbar').getByRole('button', { name, exact: true });

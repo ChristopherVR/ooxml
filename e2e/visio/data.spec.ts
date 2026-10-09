@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { parseVsdx } from 'ooxml-core/visio';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('Data tab imports a CSV, links a dragged row, refreshes it and adds data graphics', async ({
 	page,
@@ -17,7 +18,7 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 		];
 	});
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toContainText('Release workflow');
 	await page.locator('#file').setInputFiles({
@@ -25,6 +26,7 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await createVsdxFixture('Data target'),
 	});
+	await expect(page.locator('#file-name')).toHaveText('Data.vsdx');
 	await expect(viewer.locator('svg.paper')).toContainText('Data target');
 	await viewer.getByRole('tab', { name: 'Data', exact: true }).click();
 	await expect(viewer.locator('[command="refresh-all"] button')).toBeDisabled();
@@ -88,7 +90,7 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 
 test('Define Shape Data adds a row from the inspector', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toContainText('Release workflow');
 	await page.locator('#file').setInputFiles({
@@ -96,6 +98,7 @@ test('Define Shape Data adds a row from the inspector', async ({ page }) => {
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await createVsdxFixture('Define target'),
 	});
+	await expect(page.locator('#file-name')).toHaveText('Define.vsdx');
 	await expect(viewer.locator('svg.paper')).toContainText('Define target');
 	await viewer.locator('svg.paper [data-shape-id="1"]').click();
 	await viewer.locator('[data-define-shape-data]').click();

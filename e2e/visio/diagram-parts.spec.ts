@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('More Shapes, containers and callouts edit the page as single undoable steps', async ({
 	page,
@@ -8,7 +9,7 @@ test('More Shapes, containers and callouts edit the page as single undoable step
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.addInitScript(() => localStorage.clear());
 	await page.setViewportSize({ width: 1440, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toContainText('Release workflow');
 	await page.locator('#file').setInputFiles({
@@ -16,6 +17,7 @@ test('More Shapes, containers and callouts edit the page as single undoable step
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await createVsdxFixture('Existing shape'),
 	});
+	await expect(page.locator('#file-name')).toHaveText('diagram-parts.vsdx');
 	await expect(viewer.locator('svg.paper')).toContainText('Existing shape');
 	const shapes = viewer.locator('svg.paper > g > [data-shape-id]');
 	const status = viewer.locator('[data-status]');

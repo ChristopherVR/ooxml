@@ -10,6 +10,8 @@ async function loadLiveDemo(page: import('@playwright/test').Page) {
 	// A count-then-click can race that observer while Playwright scrolls the button.
 	await page.locator('#live-demo').scrollIntoViewIfNeeded();
 	await expect(page.locator(demoFrame)).toHaveCount(1);
+	// The embedded demo then swaps its placeholder for the editable sample package.
+	await expect(page.frameLocator(demoFrame).locator('body[data-sample]')).toBeAttached(viewerLoad);
 }
 
 test('shared Office theme changes update the embedded viewer without replacing its diagram', async ({
@@ -28,7 +30,7 @@ test('shared Office theme changes update the embedded viewer without replacing i
 		.locator('visio-viewer')
 		.getByRole('tab', { name: 'Architecture', exact: true })
 		.click();
-	await frame.locator('visio-viewer [data-shape-id="a1"]').click();
+	await frame.locator('visio-viewer [data-shape-id="1"]').click();
 	const svg = frame.locator('visio-viewer svg.paper');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 	// The docs site's own appearance switch writes the shared preference; the embedded viewer follows
@@ -41,7 +43,7 @@ test('shared Office theme changes update the embedded viewer without replacing i
 		.evaluate((el) => getComputedStyle(el).backgroundColor);
 	expect(darkSurface).toBe('rgb(27, 29, 32)');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
-	await expect(frame.locator('visio-viewer [data-shape-id="a1"]')).toHaveAttribute(
+	await expect(frame.locator('visio-viewer [data-shape-id="1"]')).toHaveAttribute(
 		'data-selected',
 		'true',
 	);

@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
 import { downloadCopy } from './ribbon';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
+import { openDemo } from './demo-page';
 
 async function selectionFixture(): Promise<Buffer> {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('First target'));
@@ -25,13 +26,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer');
 		await page.locator('#file').setInputFiles({
 			name: 'selection.vsdx',
 			mimeType: 'application/vnd.ms-visio.drawing',
 			buffer: await selectionFixture(),
 		});
+		await expect(page.locator('#file-name')).toHaveText('selection.vsdx');
 		await expect(viewer.locator('svg.paper')).toContainText('Second target');
 		await viewer.evaluate((node) => {
 			const host = node as VisioViewerElement & {

@@ -1,16 +1,21 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
 import { downloadCopy } from './ribbon';
+import { openDemo } from './demo-page';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: inserts a page through the worker, restores history and reopens the saved package`, async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer');
 		const tabs = viewer.locator('.page-tabs');
-		await expect(tabs.getByRole('button', { name: 'Insert Page', exact: true })).toBeDisabled();
+		// The sample is a real package, so its pages can be inserted too.
+		await expect(tabs.getByRole('button', { name: 'Insert Page', exact: true })).toBeEnabled();
 		await page.locator('#file').setInputFiles({
 			name: 'pages.vsdx',
 			mimeType: 'application/vnd.ms-visio.drawing',

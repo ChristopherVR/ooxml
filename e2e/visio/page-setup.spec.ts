@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
+import { openDemo } from './demo-page';
 
 const pageSize = (viewer: Locator) =>
 	viewer.evaluate((node) => {
@@ -27,7 +28,7 @@ test('Design page setup, backgrounds, borders and page breaks edit the drawing w
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await viewer.locator('office-ui-ribbon .file').click();
 	await viewer.locator('[data-backstage-item="new"]').click();

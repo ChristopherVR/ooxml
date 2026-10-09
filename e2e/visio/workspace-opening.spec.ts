@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { loadSampleTemplate, openFind, taskPane } from './ribbon';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('mobile Tools exposes Visio groups, opens Find and edits text with F2', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
-	await viewer.locator('[data-shape-id="s1"]').click();
+	await viewer.locator('[data-shape-id="1"]').click();
 	const tools = viewer.locator('.ribbon-tools>summary');
 	await tools.click();
 	for (const name of ['Pointer Tool', 'Find', 'Layers'])

@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('geometry controls create, resize, move existing shapes, delete and undo through the isolated worker', async ({
 	page,
 }) => {
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	await page.locator('#file').setInputFiles({
 		name: 'geometry.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',

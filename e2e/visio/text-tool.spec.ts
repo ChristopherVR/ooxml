@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { downloadCopy } from './ribbon';
+import { openDemo } from './demo-page';
 
 async function fixture(scale: number) {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Text tool source'));
@@ -85,7 +86,10 @@ for (const [index, framework] of [
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer'),
 			scale = [0.5, 1, 2][index % 3]!;
 		await page.locator('#file').setInputFiles({
@@ -93,6 +97,7 @@ for (const [index, framework] of [
 			mimeType: 'application/vnd.ms-visio.drawing',
 			buffer: await fixture(scale),
 		});
+		await expect(page.locator('#file-name')).toHaveText('text-tool.vsdx');
 		await idle(viewer);
 		const original = await inventory(viewer);
 		expect(original.shapes).toEqual([]);
@@ -156,6 +161,7 @@ for (const [index, framework] of [
 			mimeType: 'application/vnd.ms-visio.drawing',
 			buffer: Buffer.concat(chunks),
 		});
+		await expect(page.locator('#file-name')).toHaveText('reopened-text.vsdx');
 		await idle(viewer);
 		expect((await inventory(viewer)).shapes).toEqual(created.shapes);
 		await viewer.locator('.viewport').focus();

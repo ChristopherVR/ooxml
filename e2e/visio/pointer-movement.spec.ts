@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { downloadCopy } from './ribbon';
+import { openDemo } from './demo-page';
 
 async function movementFixture(scale: number, protectedSecond = false): Promise<Buffer> {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Pointer anchor'));
@@ -101,7 +102,10 @@ for (const [index, framework] of [
 		const errors: string[] = [];
 		page.on('pageerror', (error) => errors.push(error.message));
 		await page.setViewportSize({ width: 1600, height: 1000 });
-		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await openDemo(
+			page,
+			framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
+		);
 		const viewer = page.locator('visio-viewer');
 		const load = async (protectedSecond = false) => {
 			await page.locator('#file').setInputFiles({
@@ -109,6 +113,7 @@ for (const [index, framework] of [
 				mimeType: 'application/vnd.ms-visio.drawing',
 				buffer: await movementFixture(scale, protectedSecond),
 			});
+			await expect(page.locator('#file-name')).toHaveText('pointer.vsdx');
 			await expect(viewer.locator('svg.paper')).toContainText('Pointer 3');
 			await expect
 				.poll(async () => (await inventory(viewer)).pins)

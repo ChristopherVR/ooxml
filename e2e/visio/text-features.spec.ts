@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { parseVsdx } from 'ooxml-core/visio';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
+import { openDemo } from './demo-page';
 
 test('Text dialog, Text Block tool, Symbol, Field and Spelling edit and export text', async ({
 	page,
@@ -9,7 +10,7 @@ test('Text dialog, Text Block tool, Symbol, Field and Spelling edit and export t
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toContainText('Release workflow');
 	await page.locator('#file').setInputFiles({
@@ -17,6 +18,7 @@ test('Text dialog, Text Block tool, Symbol, Field and Spelling edit and export t
 		mimeType: 'application/vnd.ms-visio.drawing',
 		buffer: await createVsdxFixture('Text target'),
 	});
+	await expect(page.locator('#file-name')).toHaveText('Text.vsdx');
 	const paper = viewer.locator('svg.paper');
 	await expect(paper).toContainText('Text target');
 	const status = viewer.locator('[data-status]');

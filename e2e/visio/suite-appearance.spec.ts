@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { taskPane } from './ribbon';
+import { openDemo } from './demo-page';
 
 for (const theme of ['light', 'dark'] as const) {
 	for (const width of [1440, 768, 390]) {
@@ -9,7 +10,7 @@ for (const theme of ['light', 'dark'] as const) {
 				(value) => localStorage.setItem('vitepress-theme-appearance', value),
 				theme,
 			);
-			await page.goto('/demo/?sample=1');
+			await openDemo(page);
 			const viewer = page.locator('visio-viewer');
 			await expect(viewer.locator('.viewport > svg')).toBeVisible();
 			await expect(page.locator('html')).toHaveAttribute('data-theme', theme);

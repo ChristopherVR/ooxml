@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { nativeSvgLineEndpoints } from './native-line-svg';
+import { openDemo } from './demo-page';
 
 for (const variable of [
 	'VISIO_NATIVE_ROTATE_DIR',
@@ -35,7 +36,8 @@ for (const variable of [
 				const reference = evidence.rotated[kind]!;
 				const expected = native.pages[0]!.shapes.find((shape) => shape.id === reference.shapeId)!;
 				const ratio = native.pages[0]!.drawingToPageScale ?? 1;
-				await page.goto(
+				await openDemo(
+					page,
 					framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
 				);
 				await page.locator('#file').setInputFiles({

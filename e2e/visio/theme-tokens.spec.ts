@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openDemo } from './demo-page';
 
 // The viewer's colours come from the shared `--office-*` theme; a host's `--vv-*` custom
 // properties override them. The demo workspace sets `--vv-*` for both of its themes, so its
@@ -24,13 +25,13 @@ async function paint(page: Page): Promise<Paint> {
 	});
 }
 
-async function openDemo(page: Page, theme: 'light' | 'dark'): Promise<void> {
+async function openThemedDemo(page: Page, theme: 'light' | 'dark'): Promise<void> {
 	await page.emulateMedia({ colorScheme: 'light' });
 	await page.addInitScript(
 		(value) => localStorage.setItem('vitepress-theme-appearance', value),
 		theme,
 	);
-	await page.goto('/demo/?sample=1');
+	await openDemo(page);
 	await expect(page.locator('visio-viewer svg.paper')).toHaveAttribute(
 		'aria-label',
 		'Release workflow',
@@ -60,7 +61,7 @@ const officeDark: Paint = {
 };
 
 test('the demo accent and the theme toggle reach the viewer live', async ({ page }) => {
-	await openDemo(page, 'light');
+	await openThemedDemo(page, 'light');
 	await expect.poll(() => paint(page)).toEqual(demoLight);
 	await page
 		.locator('visio-viewer')
@@ -92,7 +93,7 @@ for (const theme of ['light', 'dark'] as const) {
 	test(`without host tokens the viewer follows the Office theme (${theme} demo)`, async ({
 		page,
 	}) => {
-		await openDemo(page, theme);
+		await openThemedDemo(page, theme);
 		await page.addStyleTag({ content: unsetHostTokens });
 		// The demo's data-theme no longer matters; the shared Office theme decides.
 		await expect.poll(() => paint(page)).toEqual(officeLight);

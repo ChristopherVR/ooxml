@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
 import { nativeSvgLineEndpoints } from './native-line-svg';
+import { openDemo } from './demo-page';
 
 for (const variable of [
 	'VISIO_NATIVE_DRAW_DEFAULTS_DIR',
@@ -45,7 +46,8 @@ for (const variable of [
 						}),
 					),
 				);
-				await page.goto(
+				await openDemo(
+					page,
 					framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
 				);
 				await page.locator('#file').setInputFiles({
