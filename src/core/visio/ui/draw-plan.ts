@@ -1,6 +1,6 @@
 import type { VisioConnectorGlue, VisioGeometryEdit } from '../edit-commands';
 import type { VisioPage } from '../model';
-import type { VisioBasicShape } from '../basic-shapes';
+import type { VisioOutlineShape } from '../stencil-shapes';
 import { visioNextShapeId } from './shape-id';
 import { visioPageEditToDrawing } from './page-edit';
 
@@ -66,7 +66,7 @@ export function visioBoxCreationCommand(
 	size: { width: number; height: number },
 	text?: string,
 	/** A Basic Shapes outline for a rectangle-kind box (see `VISIO_BASIC_SHAPES`). */
-	shape?: VisioBasicShape,
+	shape?: VisioOutlineShape,
 ): VisioGeometryEdit {
 	if (
 		!['rectangle', 'ellipse', 'text'].includes(kind) ||

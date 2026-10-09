@@ -80,6 +80,37 @@ const transformOf = (shape: Element) => {
 	};
 };
 
+/** The page-space bounds of top-level sheets' alignment boxes (through pin, rotation and flips). */
+export function visioShapeBounds(shapes: readonly Element[]): {
+	minX: number;
+	minY: number;
+	maxX: number;
+	maxY: number;
+} {
+	let minX = Infinity,
+		minY = Infinity,
+		maxX = -Infinity,
+		maxY = -Infinity;
+	for (const shape of shapes) {
+		const box = transformOf(shape);
+		const [a, b, c, d, e, f] = box.matrix;
+		for (const [x, y] of [
+			[0, 0],
+			[box.width, 0],
+			[0, box.height],
+			[box.width, box.height],
+		] as const) {
+			const px = a * x + c * y + e,
+				py = b * x + d * y + f;
+			minX = Math.min(minX, px);
+			maxX = Math.max(maxX, px);
+			minY = Math.min(minY, py);
+			maxY = Math.max(maxY, py);
+		}
+	}
+	return { minX, minY, maxX, maxY };
+}
+
 /** Native Group: the new sheet bounds the members' alignment boxes and owns them in its
  * Shapes container. Member pins move into group-local inches; every other cell is preserved.
  */
@@ -117,26 +148,9 @@ export function groupVisioShapes(
 				fail('UNSUPPORTED_GROUP_EDIT', 'Member formulas reference page or document sheets.');
 		}
 	});
-	let minX = Infinity,
-		minY = Infinity,
-		maxX = -Infinity,
-		maxY = -Infinity;
+	const { minX, minY, maxX, maxY } = visioShapeBounds(members);
 	const plans = members.map((member) => {
 		const box = transformOf(member);
-		const [a, b, c, d, e, f] = box.matrix;
-		for (const [x, y] of [
-			[0, 0],
-			[box.width, 0],
-			[0, box.height],
-			[box.width, box.height],
-		] as const) {
-			const px = a * x + c * y + e,
-				py = b * x + d * y + f;
-			minX = Math.min(minX, px);
-			maxX = Math.max(maxX, px);
-			minY = Math.min(minY, py);
-			maxY = Math.max(maxY, py);
-		}
 		return { member, pinX: box.pinX, pinY: box.pinY };
 	});
 	const width = maxX - minX,

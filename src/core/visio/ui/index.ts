@@ -51,3 +51,4 @@ export * from './insert';
 export * from './diagram-check';
 export * from './shape-report';
 export * from './subprocess';
+export * from './diagram-parts';

@@ -32,6 +32,8 @@ import { editVsdxPageTheme } from './edit-page-theme';
 import { isVisioCommentEdit, type VisioCommentEdit } from './edit-comment-commands';
 import { editVsdxComments } from './edit-comments';
 import { editVsdxSubprocess } from './edit-subprocess';
+import { isVisioDiagramPartEdit } from './edit-diagram-parts-commands';
+import { insertVisioCallout, insertVisioContainer } from './edit-diagram-parts';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -56,6 +58,9 @@ export type {
 	VisioDuplicateShapesEdit,
 	VisioPasteShapesEdit,
 	VisioGroupEdit,
+	VisioDiagramPartEdit,
+	VisioInsertContainerEdit,
+	VisioInsertCalloutEdit,
 	VisioGroupShapesEdit,
 	VisioUngroupShapeEdit,
 	VisioResizeAnchor,
@@ -216,6 +221,7 @@ async function editVsdxTransaction(
 			command.type !== 'set-page-theme' &&
 			!isVisioMetadataEdit(command) &&
 			!isVisioGroupEdit(command) &&
+			!isVisioDiagramPartEdit(command) &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
@@ -232,7 +238,8 @@ async function editVsdxTransaction(
 				command.type === 'duplicate-shapes' ||
 				command.type === 'paste-shapes' ||
 				command.type === 'change-shape' ||
-				isVisioGroupEdit(command),
+				isVisioGroupEdit(command) ||
+				isVisioDiagramPartEdit(command),
 		)
 	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
@@ -269,6 +276,7 @@ async function editVsdxTransaction(
 	let outlineChanged = false;
 	let metadataChanged = false;
 	let groupChanged = false;
+	let partChanged = false;
 	const deletions = commands.filter(
 		(command): command is VisioShapeDelete => command.type === 'delete-shape',
 	);
@@ -322,6 +330,14 @@ async function editVsdxTransaction(
 			else ungroupVisioShape(root, document!, command, check);
 			dirty.set(path, root);
 			groupChanged = true;
+		} else if (isVisioDiagramPartEdit(command)) {
+			if (command.type === 'insert-container') {
+				insertVisioContainer(root, document!, command, check);
+				dirty.set(path, root);
+			} else
+				for (const pageId of insertVisioCallout(roots, document!, command, check))
+					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			partChanged = true;
 		} else if (command.type === 'paste-shapes') {
 			for (const pageId of await pasteVisioShapes(
 				pkg,
@@ -464,6 +480,15 @@ async function editVsdxTransaction(
 							code: 'edit-group-experimental',
 							message:
 								'Local shapes were grouped or ungrouped with plain group-local pins; members carry no group-scaling formulas. Native Visio reopen and rendering fidelity remain unverified.',
+						},
+					]
+				: []),
+			...(partChanged
+				? [
+						{
+							code: 'edit-diagram-part-approximate',
+							message:
+								'Containers and callouts record membership and targets in User rows, not in Visio Relationships formulas; Visio reopens them as plain shapes and a glued leader connector.',
 						},
 					]
 				: []),

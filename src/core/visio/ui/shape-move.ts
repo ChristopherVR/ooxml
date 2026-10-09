@@ -3,6 +3,7 @@ import type { VisioMatrix, VisioPage, VisioShape } from '../model';
 import { visioStyleFormattingShape } from './formatting';
 import { visioPageEditToDrawing } from './page-edit';
 import { visioMovableGroup } from './shape-group';
+import { visioWithContainerMembers } from './diagram-parts';
 
 export interface VisioPagePoint {
 	x: number;
@@ -42,12 +43,19 @@ export function visioMovePreviewTransform(
 	const result: VisioMatrix = [a, b, c, d, e + delta.x, f + delta.y];
 	return result.every(Number.isFinite) ? result : undefined;
 }
-/** One common translation over the entire eligible selection; callers commit it atomically. */
+/** The selection plus the movable members of selected containers, which move with them. */
+export function visioMoveTargets(page: VisioPage, ids: readonly string[]): string[] {
+	const extra = new Set(visioWithContainerMembers(page, ids).slice(ids.length));
+	return [...ids, ...[...extra].filter((id) => visioMovementShape(page, id))];
+}
+/** One common translation over the entire eligible selection (and the members of selected
+ * containers); callers commit it atomically. */
 export function visioMoveCommands(
 	page: VisioPage,
-	ids: readonly string[],
+	selection: readonly string[],
 	delta: VisioPagePoint,
 ): VisioEdit[] | undefined {
+	const ids = visioMoveTargets(page, selection);
 	if (
 		!ids.length ||
 		ids.length > 1000 ||

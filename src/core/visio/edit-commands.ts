@@ -1,5 +1,5 @@
 import { fail } from './package-common';
-import { isVisioBasicShape, type VisioBasicShape } from './basic-shapes';
+import { isVisioOutlineShape, type VisioOutlineShape } from './stencil-shapes';
 import { snapshotTextRanges, type VisioTextRangesEdit } from './edit-text-range-commands';
 export type { VisioTextRange, VisioTextRangesEdit } from './edit-text-range-commands';
 import { snapshotResizeAnchor, type VisioResizeAnchor } from './resize-anchor';
@@ -45,6 +45,16 @@ export type {
 } from './edit-comment-commands';
 import { snapshotSubprocessEdit, type VisioSubprocessEdit } from './edit-subprocess-commands';
 export type { VisioSubprocessEdit, VisioSubprocessSelection } from './edit-subprocess-commands';
+import {
+	isVisioDiagramPartEdit,
+	snapshotDiagramPartEdit,
+	type VisioDiagramPartEdit,
+} from './edit-diagram-parts-commands';
+export type {
+	VisioDiagramPartEdit,
+	VisioInsertContainerEdit,
+	VisioInsertCalloutEdit,
+} from './edit-diagram-parts-commands';
 import {
 	isVisioFormatEdit,
 	snapshotFormatting,
@@ -104,7 +114,7 @@ export type VisioGeometryEdit =
 			/** Present for a connector: shape IDs whose PinX each end is glued to (dynamic glue). */
 			connect?: VisioConnectorGlue;
 	  })
-	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioBasicShape })
+	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioOutlineShape })
 	| (BoxCreation & { type: 'create-ellipse' })
 	| (BoxCreation & { type: 'create-text-box'; text: string })
 	| VisioPathCreateEdit
@@ -167,7 +177,8 @@ export type VisioEdit =
 	| VisioGroupEdit
 	| VisioPageThemeEdit
 	| VisioCommentEdit
-	| VisioSubprocessEdit;
+	| VisioSubprocessEdit
+	| VisioDiagramPartEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -255,6 +266,7 @@ export function snapshotVisioEdits(
 		if (isVisioPageSetupEdit(edit)) return snapshotPageSetupEdit(edit);
 		if (isVisioCommentEdit(edit)) return snapshotCommentEdit(edit);
 		if (edit.type === 'create-subprocess') return snapshotSubprocessEdit(edit);
+		if (isVisioDiagramPartEdit(edit)) return snapshotDiagramPartEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {
@@ -336,8 +348,8 @@ export function snapshotVisioEdits(
 			case 'create-rectangle':
 			case 'create-ellipse': {
 				const shape = edit.type === 'create-rectangle' ? edit.shape : undefined;
-				if (shape !== undefined && !isVisioBasicShape(shape))
-					fail('INVALID_EDIT', 'Unknown basic shape.');
+				if (shape !== undefined && !isVisioOutlineShape(shape))
+					fail('INVALID_EDIT', 'Unknown outline shape.');
 				return {
 					...target,
 					type: edit.type,

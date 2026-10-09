@@ -10,6 +10,7 @@ import {
 } from '../edit-metadata-commands';
 import { isVisioGroupEdit, snapshotGroupEdit } from '../edit-group-commands';
 import { isVisioPageSetupEdit, snapshotPageSetupEdit } from '../edit-page-setup-commands';
+import { isVisioDiagramPartEdit, snapshotDiagramPartEdit } from '../edit-diagram-parts-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import { snapshotConnectorGlue } from '../edit-commands';
 import { snapshotTextRanges } from '../edit-text-range-commands';
@@ -41,6 +42,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (isVisioPageSetupEdit(command)) return snapshotPageSetupEdit(command);
 		if (isVisioCommentEdit(command)) return snapshotCommentEdit(command);
 		if (command.type === 'create-subprocess') return snapshotSubprocessEdit(command);
+		if (isVisioDiagramPartEdit(command)) return snapshotDiagramPartEdit(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');

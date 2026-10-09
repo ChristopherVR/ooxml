@@ -2,6 +2,7 @@ import { rootThemeSheet } from './theme-root';
 import { styleSheet, type StyleContext } from './style-inheritance';
 import { metadata } from './metadata';
 import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata';
+import { visioShapeStructure } from './shape-structure';
 import { shapeLayers, type LayerBudget } from './layers';
 import { layerPaintSheet } from './layer-paint';
 import type { VisioLayer, VisioShape } from './model';
@@ -236,6 +237,7 @@ export function normalizeShapes(
 				report('missing-geometry', 'Shape has no supported cached geometry.');
 			return {
 				...shapeMetadata(sheet, report, context.metadataBudget),
+				...structureOf(sheet),
 				id: shape.id,
 				name: shape.attributes.get('Name') ?? shape.attributes.get('NameU') ?? `Shape ${shape.id}`,
 				kind:
@@ -306,4 +308,9 @@ export function normalizeShapes(
 					: {}),
 			};
 		});
+}
+
+function structureOf(sheet: Parameters<typeof visioShapeStructure>[0]) {
+	const structure = visioShapeStructure(sheet);
+	return structure ? { structure } : {};
 }

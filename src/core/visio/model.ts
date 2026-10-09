@@ -259,7 +259,12 @@ export interface VisioShape {
 	hyperlinks?: VisioHyperlink[];
 	/** Cached Comment cell text, which Visio shows as the shape's ScreenTip. Inert plain text. */
 	screenTip?: string;
+	/** A container or callout (User.msvStructureType) with its members or target, when known. */
+	structure?: VisioShapeStructure;
 }
+export type VisioShapeStructure =
+	| { type: 'container'; memberIds: string[] }
+	| { type: 'callout'; targetId?: string; leaderId?: string };
 export interface VisioConnection {
 	fromShapeId: string;
 	toShapeId: string;

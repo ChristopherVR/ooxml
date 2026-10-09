@@ -79,6 +79,9 @@ export {
 	type VisioShapeScreenTipEdit,
 	type VisioHyperlinkFields,
 	type VisioGroupEdit,
+	type VisioDiagramPartEdit,
+	type VisioInsertContainerEdit,
+	type VisioInsertCalloutEdit,
 	type VisioGroupShapesEdit,
 	type VisioUngroupShapeEdit,
 	type VisioResizeAnchor,
@@ -162,6 +165,35 @@ export {
 	type VisioBorderStyle,
 	type VisioDecorationShape,
 } from './page-decoration';
+export {
+	VISIO_FLOWCHART_SHAPES,
+	VISIO_ARROW_SHAPES,
+	isVisioStencilShape,
+	isVisioOutlineShape,
+	visioOutlineShape,
+	visioStencilShapeOutline,
+	type VisioFlowchartShape,
+	type VisioArrowShape,
+	type VisioStencilShape,
+	type VisioOutlineShape,
+} from './stencil-shapes';
+export {
+	VISIO_STENCILS,
+	visioStencilMaster,
+	type VisioStencil,
+	type VisioStencilMaster,
+} from './stencils';
+export {
+	VISIO_CONTAINER_STYLES,
+	VISIO_CALLOUT_STYLES,
+	VISIO_CONTAINER_MARGIN,
+	VISIO_CONTAINER_HEADING,
+	isVisioDiagramPartEdit,
+	type VisioContainerStyle,
+	type VisioCalloutStyle,
+	type VisioPartBox,
+} from './edit-diagram-parts-commands';
+export { visioShapeStructure, type VisioShapeStructure } from './shape-structure';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,
