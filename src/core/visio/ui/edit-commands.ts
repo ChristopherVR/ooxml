@@ -2,6 +2,7 @@ import type { VisioEdit } from '../index';
 import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-commands';
 import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
 import { snapshotPasteShapes } from '../edit-paste-commands';
+import { snapshotChangeShape } from '../edit-change-shape-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
@@ -21,6 +22,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			throw new Error('Invalid edit command.');
 		if (command.type === 'duplicate-shapes') return snapshotDuplicateShapes(command);
 		if (command.type === 'paste-shapes') return snapshotPasteShapes(command);
+		if (command.type === 'change-shape') return snapshotChangeShape(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');

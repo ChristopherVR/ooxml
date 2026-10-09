@@ -12,6 +12,10 @@ const controls = [
 	['D', 'Height', 1],
 ] as const;
 export function appendEllipseGeometry(shape: Element, width: number, height: number): void {
+	shape.appendChild(ellipseGeometrySection(shape, width, height));
+}
+/** A detached native DrawOval Geometry section (IX 0) for a shape of this size. */
+export function ellipseGeometrySection(shape: Element, width: number, height: number): Element {
 	const node = (name: string) => shape.ownerDocument!.createElementNS(shape.namespaceURI, name);
 	const section = node('Section');
 	section.setAttribute('N', 'Geometry');
@@ -26,7 +30,7 @@ export function appendEllipseGeometry(shape: Element, width: number, height: num
 		if (!['X', 'Y'].includes(name)) cells(row).get(name)!.setAttribute('U', 'DL');
 	}
 	section.appendChild(row);
-	shape.appendChild(section);
+	return section;
 }
 /** Admit the native orthogonal row; arbitrary ellipse control axes need their own proof. */
 export function assertEllipseResizeRow(shape: Element, row: Element): void {

@@ -5,7 +5,7 @@ import type { VisioGeometryEdit } from './edit-commands';
 import { appendEllipseGeometry } from './edit-ellipse-geometry';
 import { assertShapeLocks } from './edit-style-admission';
 import { encodeVisioPlainText } from './plain-text';
-import { visioBasicShapeOutline } from './basic-shapes';
+import { visioBasicShapeOutline, type VisioBasicOutline } from './basic-shapes';
 
 function createShape(root: Element, shapeId: string): Element {
 	const doc = root.ownerDocument!;
@@ -83,7 +83,17 @@ export function createRectangle(
 	);
 	if (outline.rounding)
 		setCell(shape, 'Rounding', outline.rounding * Math.min(edit.width, edit.height));
-	for (const [sectionIndex, points] of outline.paths.entries()) {
+	for (const section of outlineGeometrySections(shape, outline)) shape.appendChild(section);
+	const text = node('Text');
+	text.appendChild(doc.createTextNode(encodeVisioPlainText(edit.text ?? '')));
+	shape.appendChild(text);
+	return shape;
+}
+
+/** Detached Geometry sections (IX 0, 1, ...) of closed relative polylines in the shape's box. */
+export function outlineGeometrySections(shape: Element, outline: VisioBasicOutline): Element[] {
+	const node = (name: string) => shape.ownerDocument!.createElementNS(shape.namespaceURI, name);
+	return outline.paths.map((points, sectionIndex) => {
 		const section = node('Section');
 		section.setAttribute('N', 'Geometry');
 		section.setAttribute('IX', String(sectionIndex));
@@ -95,12 +105,8 @@ export function createRectangle(
 			setCell(row, 'Y', y);
 			section.appendChild(row);
 		}
-		shape.appendChild(section);
-	}
-	const text = node('Text');
-	text.appendChild(doc.createTextNode(encodeVisioPlainText(edit.text ?? '')));
-	shape.appendChild(text);
-	return shape;
+		return section;
+	});
 }
 
 export function createEllipse(

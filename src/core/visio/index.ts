@@ -69,6 +69,8 @@ export {
 	type VisioDuplicateShapesEdit,
 	type VisioPasteShapesEdit,
 	type VisioResizeAnchor,
+	type VisioChangeShapeEdit,
+	type VisioChangeShapeTarget,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit';
@@ -101,6 +103,7 @@ export {
 	type VisioBasicOutline,
 	type VisioOutlinePoint,
 } from './basic-shapes';
+export { isVisioChangeShapeTarget } from './edit-change-shape-commands';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,

@@ -21,6 +21,7 @@ import { reorderVisioShape, assertShapeOrderPackageScope } from './edit-shape-or
 import { duplicateVisioShapes } from './edit-duplicate';
 import { pasteVisioShapes } from './edit-paste';
 import { deleteVisioShapes, type VisioShapeDelete } from './edit-delete';
+import { changeVisioShape } from './edit-change-shape';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -40,6 +41,8 @@ export type {
 	VisioDuplicateShapesEdit,
 	VisioPasteShapesEdit,
 	VisioResizeAnchor,
+	VisioChangeShapeEdit,
+	VisioChangeShapeTarget,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -108,6 +111,7 @@ export async function editVsdx(
 			command.type !== 'reorder-shape' &&
 			command.type !== 'duplicate-shapes' &&
 			command.type !== 'paste-shapes' &&
+			command.type !== 'change-shape' &&
 			!isVisioFormatEdit(command),
 	);
 	let document: Element | undefined;
@@ -121,7 +125,8 @@ export async function editVsdx(
 				isVisioFormatEdit(command) ||
 				command.type === 'reorder-shape' ||
 				command.type === 'duplicate-shapes' ||
-				command.type === 'paste-shapes',
+				command.type === 'paste-shapes' ||
+				command.type === 'change-shape',
 		)
 	) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
@@ -155,6 +160,7 @@ export async function editVsdx(
 	let orderChanged = false;
 	let duplicateChanged = false;
 	let pasteChanged = false;
+	let outlineChanged = false;
 	const deletions = commands.filter(
 		(command): command is VisioShapeDelete => command.type === 'delete-shape',
 	);
@@ -192,6 +198,11 @@ export async function editVsdx(
 			if (reorderVisioShape(root, document!, command, check)) {
 				dirty.set(path, root);
 				orderChanged = true;
+			}
+		} else if (command.type === 'change-shape') {
+			if (changeVisioShape(roots, document!, command, check)) {
+				dirty.set(path, root);
+				outlineChanged = true;
 			}
 		} else if (command.type === 'paste-shapes') {
 			for (const pageId of await pasteVisioShapes(
@@ -303,6 +314,15 @@ export async function editVsdx(
 							code: 'edit-formatting-experimental',
 							message:
 								'Text and solid shape formatting was changed without recalculating text layout. Native Visio reopen and rendering fidelity remain unverified.',
+						},
+					]
+				: []),
+			...(outlineChanged
+				? [
+						{
+							code: 'edit-change-shape-experimental',
+							message:
+								'Local Geometry sections were replaced with a Basic Shapes outline. Native Visio reopen and rendering fidelity remain unverified.',
 						},
 					]
 				: []),

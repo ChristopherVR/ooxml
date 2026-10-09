@@ -9,6 +9,8 @@ export type { VisioDuplicateShapesEdit } from './edit-duplicate-commands';
 import { snapshotPasteShapes, type VisioPasteShapesEdit } from './edit-paste-commands';
 import { snapshotPathCreation, type VisioPathCreateEdit } from './edit-path-commands';
 export type { VisioPathCreateEdit, VisioPathSegment } from './edit-path-commands';
+import { snapshotChangeShape, type VisioChangeShapeEdit } from './edit-change-shape-commands';
+export type { VisioChangeShapeEdit, VisioChangeShapeTarget } from './edit-change-shape-commands';
 export type { VisioPasteShapesEdit } from './edit-paste-commands';
 import {
 	isVisioFormatEdit,
@@ -97,7 +99,8 @@ export type VisioEdit =
 	| VisioFormatEdit
 	| VisioDuplicateShapesEdit
 	| VisioPasteShapesEdit
-	| VisioShapeOrderEdit;
+	| VisioShapeOrderEdit
+	| VisioChangeShapeEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -176,6 +179,7 @@ export function snapshotVisioEdits(
 			fail('INVALID_EDIT', 'Invalid edit target.');
 		if (edit.type === 'duplicate-shapes') return snapshotDuplicateShapes(edit);
 		if (edit.type === 'paste-shapes') return snapshotPasteShapes(edit);
+		if (edit.type === 'change-shape') return snapshotChangeShape(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {
