@@ -122,6 +122,12 @@ export function applyKeyTips(toolbar: HTMLElement): void {
 		const controls = panel.querySelectorAll<HTMLElement>(
 			'office-ui-button, office-ui-menu-button, office-ui-select[data-combo], office-ui-checkbox',
 		);
+		// A gallery's KeyTip belongs on its dropdown trigger, which renders once connected; the
+		// viewer copies it there (`syncChangeShape`).
+		for (const gallery of panel.querySelectorAll<HTMLElement>('office-ui-gallery[command]')) {
+			const code = fixed[gallery.getAttribute('command')!];
+			if (code) gallery.dataset.triggerKeytip = code;
+		}
 		for (const control of controls) {
 			const id = controlId(control);
 			if (!id) continue;

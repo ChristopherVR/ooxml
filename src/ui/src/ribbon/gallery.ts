@@ -276,8 +276,20 @@ export class OfficeUiGallery extends OfficeElement {
 		const box = popup.getBoundingClientRect();
 		// Viewport geometry, so it is set inline; the margin keeps the popup off the window edge.
 		const margin = 8;
-		popup.style.left = `${Math.max(margin, Math.min(anchor.left, window.innerWidth - box.width - margin))}px`;
-		popup.style.top = `${Math.max(margin, Math.min(anchor.bottom + 4, window.innerHeight - box.height - margin))}px`;
+		const left = Math.max(margin, Math.min(anchor.left, window.innerWidth - box.width - margin));
+		const top = Math.max(
+			margin,
+			Math.min(anchor.bottom + 4, window.innerHeight - box.height - margin),
+		);
+		popup.style.left = `${left}px`;
+		popup.style.top = `${top}px`;
+		// An ancestor with `contain`, `transform` or `filter` becomes the fixed popup's containing
+		// block and offsets it from the viewport; measure where it landed and take that back out.
+		const placed = popup.getBoundingClientRect();
+		if (placed.width > 0 && (placed.left !== left || placed.top !== top)) {
+			popup.style.left = `${2 * left - placed.left}px`;
+			popup.style.top = `${2 * top - placed.top}px`;
+		}
 	};
 
 	private cleanup(): void {

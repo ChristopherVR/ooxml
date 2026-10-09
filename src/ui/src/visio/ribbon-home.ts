@@ -1,6 +1,7 @@
 import { textGroups } from './ribbon-home-format';
 import { paintOptions } from './ribbon-style-options';
 import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
+import { changeShapeGallery } from './ribbon-change-shape';
 
 const STYLE = 'Needs core fill, line and effect edits.';
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
@@ -256,19 +257,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 		]),
 	]);
 	const editing = group(doc, 'Editing', [
-		menu(doc, {
-			id: 'change-shape',
-			label: 'Change Shape',
-			icon: 'visioChangeShape',
-			unsupported: 'Needs core master replacement.',
-			items: [
-				{
-					id: 'change-shape-item',
-					label: 'Shape gallery',
-					unsupported: 'Needs core master replacement.',
-				},
-			],
-		}),
+		changeShapeGallery(doc),
 		stack(doc, [
 			menu(doc, {
 				id: 'find',

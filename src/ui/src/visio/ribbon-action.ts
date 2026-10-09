@@ -1,4 +1,4 @@
-import type { VisioShapeFormatEdit } from 'ooxml-core/visio';
+import type { VisioChangeShapeTarget, VisioShapeFormatEdit } from 'ooxml-core/visio';
 import type { VisioArrangement } from 'ooxml-core/visio/ui';
 
 export type CanvasTool =
@@ -37,6 +37,7 @@ export type VisioRibbonAction =
 	| { type: 'clipboard'; operation: 'copy' | 'cut' | 'paste'; event?: ClipboardEvent }
 	| { type: 'rotate'; direction: 'left' | 'right' }
 	| { type: 'flip'; axis: 'horizontal' | 'vertical' }
+	| { type: 'change-shape'; shape: VisioChangeShapeTarget }
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }

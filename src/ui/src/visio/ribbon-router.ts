@@ -10,6 +10,7 @@ export interface RibbonTargets {
 	clipboard(action: Extract<VisioRibbonAction, { type: 'clipboard' }>): void;
 	rotateSelection(direction: 'left' | 'right'): void;
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
+	changeShape(shape: Extract<VisioRibbonAction, { type: 'change-shape' }>['shape']): void;
 	formatSelection(action: VisioFormattingAction): void;
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
 	setTool(tool: CanvasTool): void;
@@ -61,6 +62,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.rotateSelection(action.direction);
 		case 'flip':
 			return targets.flipSelection(action.axis);
+		case 'change-shape':
+			return targets.changeShape(action.shape);
 		case 'tool':
 			return targets.setTool(action.tool);
 		case 'cancel-drawing':

@@ -57,7 +57,11 @@ function runCommand(root: ShadowRoot, id: string): void {
 		return;
 	}
 	const control = root.querySelector(`.toolbar [command="${id}"]`);
-	control?.shadowRoot?.querySelector<HTMLButtonElement>('.main, button')?.click();
+	// Shared galleries render their dropdown trigger in the light DOM.
+	(
+		control?.shadowRoot?.querySelector<HTMLButtonElement>('.main, button') ??
+		control?.querySelector<HTMLButtonElement>('.trigger')
+	)?.click();
 }
 
 /** The command list refreshes on focus, so enabled states always match the ribbon. */

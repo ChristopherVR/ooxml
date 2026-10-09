@@ -19,6 +19,7 @@ import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
 import { ViewerPaintProperties } from './viewer-paint-properties';
 import { ViewerArrangement } from './viewer-arrangement';
+import { ViewerChangeShape } from './viewer-change-shape';
 import { ViewerDuplication } from './viewer-duplication';
 import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
 
@@ -67,6 +68,7 @@ export class ViewerCommands {
 	#formatting: ViewerFormatting;
 	#paint: ViewerPaintProperties;
 	#arrangement: ViewerArrangement;
+	#changeShape: ViewerChangeShape;
 	#duplication: ViewerDuplication;
 	#clipboard: ViewerClipboard;
 	readonly #targets: RibbonTargets;
@@ -78,6 +80,9 @@ export class ViewerCommands {
 			void this.#edit(run, message);
 		});
 		this.#arrangement = new ViewerArrangement(host.root, host.controller, (run, message) => {
+			void this.#edit(run, message);
+		});
+		this.#changeShape = new ViewerChangeShape(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
 		});
 		this.#formatting = new ViewerFormatting(host.root, host.controller, (run, success) => {
@@ -108,6 +113,7 @@ export class ViewerCommands {
 			},
 			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
+			changeShape: (shape) => this.#changeShape.run(shape),
 			formatSelection: (action) => this.#formatting.run(action),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
 			setTool: (tool) => this.setTool(tool),
@@ -419,6 +425,7 @@ export class ViewerCommands {
 		this.#duplication.render(state);
 		this.#clipboard.render(state);
 		this.#formatting.render(state);
+		this.#changeShape.render(state);
 		this.#paint.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
