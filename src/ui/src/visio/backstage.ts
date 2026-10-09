@@ -193,7 +193,15 @@ export function createBackstage(doc: Document): HTMLElement {
 	preview.setAttribute('label', 'Print preview of the current page');
 	preview.setAttribute('empty-label', 'Open a drawing to print it.');
 	root.append(
-		page(doc, 'info', 'Info', file, facts, notes),
+		page(
+			doc,
+			'info',
+			'Info',
+			file,
+			facts,
+			action(doc, 'add-comment', 'Add Comment', 'Comment on the current page or selected shape.'),
+			notes,
+		),
 		page(doc, 'new', 'New', templates),
 		page(
 			doc,

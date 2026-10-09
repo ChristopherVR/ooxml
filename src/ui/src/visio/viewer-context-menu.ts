@@ -109,7 +109,7 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				id: 'ctx-comment',
 				label: 'Add Comment',
 				icon: 'message',
-				unsupported: 'Needs core comments.',
+				action: { type: 'review', command: 'new-comment' },
 			},
 		]),
 		contextMenu(doc, 'page', 'Page', [
@@ -140,7 +140,7 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				id: 'ctx-page-comment',
 				label: 'Add Comment',
 				icon: 'message',
-				unsupported: 'Needs core comments.',
+				action: { type: 'review', command: 'page-comment' },
 			},
 		]),
 	];

@@ -1,14 +1,12 @@
+export { buildProcessPanel, buildReviewPanel } from './ribbon-review';
 import { check, command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { backgroundsGroup, pageSetupGroup } from './ribbon-page-setup';
 import { themesGallery, variantOptions, variantsGallery } from './ribbon-themes';
 
-const PAGES = 'Needs core page insertion.';
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 const PARTS = 'Needs core container, callout and connector edits.';
 const DESIGN = 'Needs core page setup and theme edits.';
 const DATA = 'Needs core data linking and data graphics.';
-const PROCESS = 'Needs core diagram validation.';
-const REVIEW = 'Needs core comments and proofing.';
 
 const unsupported = (
 	id: string,
@@ -190,59 +188,6 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 						unsupported: DATA,
 					}),
 				]),
-			]),
-		]),
-	);
-}
-
-/** Visio's Process tab. */
-export function buildProcessPanel(doc: Document, panel: HTMLElement): void {
-	panel.append(
-		commandRow(doc, 'Process commands', [
-			group(doc, 'Subprocess', [
-				command(doc, unsupported('create-new', 'Create New', 'visioPagesPane', PAGES)),
-				command(doc, unsupported('create-from-selection', 'Create from Selection', 'group', PAGES)),
-				command(doc, unsupported('link-existing', 'Link to Existing', 'visioLink', PAGES)),
-			]),
-			group(doc, 'Diagram Validation', [
-				dropdown(doc, {
-					id: 'check-diagram',
-					label: 'Check Diagram',
-					icon: 'check',
-					reason: PROCESS,
-				}),
-				stack(doc, [
-					command(
-						doc,
-						unsupported('ignore-issue', 'Ignore This Issue', 'eyeOff', PROCESS, 'small'),
-					),
-					check(doc, { id: 'issues-window', label: 'Issues Window', unsupported: PROCESS }),
-				]),
-			]),
-		]),
-	);
-}
-
-/** Visio's Review tab: Proofing, Language, Comments and Reports. */
-export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
-	panel.append(
-		commandRow(doc, 'Review commands', [
-			group(doc, 'Proofing', [
-				command(doc, unsupported('spelling', 'Spelling', 'check', REVIEW)),
-				command(doc, unsupported('thesaurus', 'Thesaurus', 'search', REVIEW)),
-			]),
-			group(doc, 'Language', [
-				dropdown(doc, { id: 'language', label: 'Language', icon: 'message', reason: REVIEW }),
-			]),
-			group(doc, 'Comments', [
-				command(doc, unsupported('new-comment', 'New Comment', 'message', REVIEW)),
-				command(doc, unsupported('comments-pane', 'Comments Pane', 'visioInspectorPane', REVIEW)),
-			]),
-			group(doc, 'Reports', [
-				command(
-					doc,
-					unsupported('shape-reports', 'Shape Reports', 'visioData', 'Needs report generation.'),
-				),
 			]),
 		]),
 	);

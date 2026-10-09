@@ -3,7 +3,7 @@ import type {
 	VisioChangeShapeTarget,
 	VisioShapeFormatEdit,
 } from 'ooxml-core/visio';
-import type { TextCaseMode, VisioArrangement } from 'ooxml-core/visio/ui';
+import type { TextCaseMode, VisioArrangement, VisioRuleSetId } from 'ooxml-core/visio/ui';
 import type { VisioPageSetupCommand } from './page-setup-action';
 
 export type CanvasTool =
@@ -33,6 +33,19 @@ export type VisioFormattingAction =
 	| { type: 'change-case'; mode: TextCaseMode };
 /** Insert-tab items that act on the page or the selected shape. */
 export type VisioInsertItem = 'picture' | 'link' | 'screen-tip';
+/** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */
+export type VisioReviewCommand =
+	| 'new-comment'
+	| 'page-comment'
+	| 'comments-pane'
+	| 'shape-reports'
+	| 'check-diagram'
+	| 'issues-window'
+	| 'ignore-issue'
+	| 'rule-set'
+	| 'subprocess-new'
+	| 'subprocess-existing'
+	| 'subprocess-selection';
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
@@ -67,7 +80,8 @@ export type VisioRibbonAction =
 	| { type: 'search' }
 	| { type: 'replace' }
 	| { type: 'page'; step: 1 | -1 }
-	| { type: 'page-setup'; command: VisioPageSetupCommand };
+	| { type: 'page-setup'; command: VisioPageSetupCommand }
+	| { type: 'review'; command: VisioReviewCommand; ruleSet?: VisioRuleSetId };
 
 /** Event name shared by every ribbon control; detail is the typed action. */
 export const RIBBON_ACTION_EVENT = 'ribbon-action';

@@ -8,6 +8,7 @@ import paintProperties from './paint-properties.css?raw';
 import presentation from './presentation.css?raw';
 import insert from './insert.css?raw';
 import pageSetup from './page-setup.css?raw';
+import review from './review.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -25,6 +26,7 @@ export const canvasAndRibbonStyles = [
 	presentation,
 	insert,
 	pageSetup,
+	review,
 	visioThemeBridge,
 ].join('\n');
 

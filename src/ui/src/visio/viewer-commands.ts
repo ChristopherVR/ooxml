@@ -29,6 +29,7 @@ import { ViewerInsert } from './viewer-insert';
 import { ViewerPageSetup } from './viewer-page-setup';
 import { ViewerThemes } from './viewer-themes';
 import { ViewerFormatShape } from './viewer-format-shape';
+import { ViewerReview } from './viewer-review';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -85,6 +86,7 @@ export class ViewerCommands {
 	#pageSetup: ViewerPageSetup;
 	#themes: ViewerThemes;
 	#formatShape: ViewerFormatShape;
+	#review: ViewerReview;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -115,6 +117,13 @@ export class ViewerCommands {
 				void this.#edit(run, message);
 			},
 			host.announce,
+		);
+		this.#review = new ViewerReview(
+			host.root,
+			host.viewport,
+			host.controller,
+			host.announce,
+			(run, message) => void this.#edit(run, message),
 		);
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
@@ -189,6 +198,7 @@ export class ViewerCommands {
 			focusSearch: host.focusSearch,
 			focusReplace: () => host.focusReplace?.(),
 			pageSetup: (command) => this.#pageSetup.run(command),
+			review: (action) => this.#review.run(action),
 		};
 	}
 	get tool(): CanvasTool {
@@ -275,6 +285,7 @@ export class ViewerCommands {
 		const disposeInsert = this.#insert.wire(viewport);
 		const disposePageSetup = this.#pageSetup.wire();
 		const disposeFormatShape = this.#formatShape.wire();
+		const disposeReview = this.#review.wire();
 		return () => {
 			disposePageSetup();
 			this.#pageOrder.close();
@@ -290,6 +301,7 @@ export class ViewerCommands {
 			disposePainter();
 			disposeInsert();
 			disposeFormatShape();
+			disposeReview();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -498,6 +510,7 @@ export class ViewerCommands {
 		this.#insert.render(state);
 		this.#themes.render(state);
 		this.#formatShape.render(state);
+		this.#review.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);
