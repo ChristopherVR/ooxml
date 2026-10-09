@@ -94,6 +94,11 @@ export function shapeDetails(shape: VisioShape): DocumentFragment {
 		empty.textContent = 'No visible shape data.';
 		fragment.append(empty);
 	}
+	const define = document.createElement('button');
+	define.type = 'button';
+	define.dataset.defineShapeData = '';
+	define.textContent = 'Define Shape Data...';
+	fragment.append(define);
 	const links = (shape.hyperlinks ?? []).filter((link) => !link.invisible);
 	if (links.length) {
 		const heading = document.createElement('h3');

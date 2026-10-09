@@ -32,6 +32,7 @@ import { ViewerThemes } from './viewer-themes';
 import { ViewerFormatShape } from './viewer-format-shape';
 import { ViewerReview } from './viewer-review';
 import { ViewerDiagramParts } from './viewer-diagram-parts';
+import { ViewerData } from './viewer-data';
 
 export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
@@ -90,6 +91,7 @@ export class ViewerCommands {
 	#formatShape: ViewerFormatShape;
 	#review: ViewerReview;
 	#parts: ViewerDiagramParts;
+	#data: ViewerData;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#clipboard = new ViewerClipboard(host.root, host.controller, host.announce, () =>
@@ -134,6 +136,9 @@ export class ViewerCommands {
 			(run, message) => void this.#edit(run, message),
 			() => host.reveal('edit', true),
 		);
+		this.#data = new ViewerData(host.root, host.controller, host.announce, (run, message) => {
+			void this.#edit(run, message);
+		});
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
@@ -187,6 +192,7 @@ export class ViewerCommands {
 			},
 			insertPage: () => this.#insertPage(),
 			insert: (item) => this.#insert.open(item),
+			data: (command) => this.#data.handle(command),
 			showPaintProperties: () => this.#paint.show(),
 			showFormatShape: () => this.#formatShape.show(),
 			pageTheme: (action) => this.#themes.run(action),
@@ -296,6 +302,7 @@ export class ViewerCommands {
 		const disposePageSetup = this.#pageSetup.wire();
 		const disposeFormatShape = this.#formatShape.wire();
 		const disposeReview = this.#review.wire();
+		const disposeData = this.#data.wire(viewport);
 		return () => {
 			disposePageSetup();
 			this.#pageOrder.close();
@@ -312,6 +319,7 @@ export class ViewerCommands {
 			disposeInsert();
 			disposeFormatShape();
 			disposeReview();
+			disposeData();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -527,6 +535,7 @@ export class ViewerCommands {
 		this.#themes.render(state);
 		this.#formatShape.render(state);
 		this.#review.render(state);
+		this.#data.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

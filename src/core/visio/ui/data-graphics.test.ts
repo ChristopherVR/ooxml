@@ -150,10 +150,19 @@ describe('data graphics', () => {
 			'Db',
 			'Web',
 		]);
-		const restored = await apply(
+		const relegend = await apply(
 			legend.bytes,
-			visioRemoveDataGraphicEdits(legend.document.pages[0]!, ['1', '2']),
+			[
+				...visioRemoveDataGraphicEdits(legend.document.pages[0]!, ['legend']),
+				...visioLegendEdits(legend.document.pages[0]!, 'Name', rules.rules),
+			],
 		);
+		expect(relegend.document.pages[0]!.shapes.filter((shape) => shape.kind === 'group')).toHaveLength(1);
+		const restored = await apply(
+			relegend.bytes,
+			visioRemoveDataGraphicEdits(relegend.document.pages[0]!, ['1', '2', 'legend']),
+		);
+		expect(restored.document.pages[0]!.shapes.map((shape) => shape.id)).toEqual(['1', '2']);
 		expect(restored.document.pages[0]!.shapes[0]!.style.fill).toBe(original);
 		expect(
 			restored.document.pages[0]!.shapes[0]!.shapeData!.some(

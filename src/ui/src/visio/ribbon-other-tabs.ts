@@ -3,11 +3,11 @@ import { check, command, commandRow, group, menu, stack, type CommandSpec } from
 import { backgroundsGroup, pageSetupGroup } from './ribbon-page-setup';
 import { themesGallery, variantOptions, variantsGallery } from './ribbon-themes';
 import { diagramPartGallery } from './ribbon-diagram-parts';
+import type { VisioDataCommand } from './ribbon-action';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 const PARTS = 'Needs core container, callout and connector edits.';
 const DESIGN = 'Needs core page setup and theme edits.';
-const DATA = 'Needs core data linking and data graphics.';
 
 const unsupported = (
 	id: string,
@@ -155,25 +155,58 @@ export function buildDesignPanel(doc: Document, panel: HTMLElement): void {
 
 /** Visio's Data tab. Shape Data Window maps to the viewer's shape inspector. */
 export function buildDataPanel(doc: Document, panel: HTMLElement): void {
+	const data = (command: VisioDataCommand) => ({ type: 'data', command }) as const;
 	panel.append(
 		commandRow(doc, 'Data commands', [
 			group(doc, 'External Data', [
-				command(doc, unsupported('quick-import', 'Quick Import', 'visioData', DATA)),
-				command(doc, unsupported('custom-import', 'Custom Import', 'visioData', DATA)),
-				dropdown(doc, { id: 'refresh-all', label: 'Refresh All', icon: 'reset', reason: DATA }),
+				command(doc, {
+					id: 'quick-import',
+					label: 'Quick Import',
+					icon: 'visioData',
+					action: data('quick-import'),
+				}),
+				command(doc, {
+					id: 'custom-import',
+					label: 'Custom Import',
+					icon: 'visioData',
+					action: data('custom-import'),
+				}),
+				command(doc, {
+					id: 'refresh-all',
+					label: 'Refresh All',
+					icon: 'reset',
+					action: data('refresh'),
+				}),
 			]),
 			group(doc, 'Display Data', [
-				dropdown(doc, {
+				menu(doc, {
 					id: 'data-graphics',
 					label: 'Data Graphics',
 					icon: 'visioChart',
-					reason: DATA,
+					items: [
+						{ id: 'graphic-text', label: 'Text Callout...', action: data('graphic-text') },
+						{ id: 'graphic-bar', label: 'Data Bar...', action: data('graphic-bar') },
+						{ id: 'graphic-icon', label: 'Icon Set...', action: data('graphic-icon') },
+						{ id: 'graphic-color', label: 'Color by Value...', action: data('graphic-color') },
+						{
+							id: 'graphic-remove',
+							label: 'Remove Data Graphics',
+							action: data('graphic-remove'),
+						},
+					],
 				}),
-				dropdown(doc, {
+				menu(doc, {
 					id: 'insert-legend',
 					label: 'Insert Legend',
 					icon: 'bullets',
-					reason: DATA,
+					items: [
+						{ id: 'legend-vertical', label: 'Vertical', action: data('legend') },
+						{
+							id: 'legend-horizontal',
+							label: 'Horizontal',
+							unsupported: 'Only a vertical legend is drawn.',
+						},
+					],
 				}),
 			]),
 			group(doc, 'Show/Hide', [
@@ -186,7 +219,7 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					check(doc, {
 						id: 'external-data-window',
 						label: 'External Data Window',
-						unsupported: DATA,
+						action: data('external-data-window'),
 					}),
 				]),
 			]),

@@ -4,6 +4,7 @@ import type {
 	CanvasTool,
 	VisioFormattingAction,
 	VisioInsertItem,
+	VisioDataCommand,
 } from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
@@ -25,6 +26,7 @@ export interface RibbonTargets {
 	cancelDrawing(): void;
 	insertPage(): void;
 	insert(item: VisioInsertItem): void;
+	data(command: VisioDataCommand): void;
 	showPaintProperties(): void;
 	showFormatShape(): void;
 	pageTheme(action: Extract<VisioRibbonAction, { type: 'page-theme' }>): void;
@@ -93,6 +95,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.insertPage();
 		case 'insert':
 			return targets.insert(action.item);
+		case 'data':
+			return targets.data(action.command);
 		case 'paint-properties':
 			return targets.showPaintProperties();
 		case 'format-shape-pane':

@@ -52,6 +52,19 @@ export type VisioReviewCommand =
 export type VisioDiagramPartAction =
 	| { type: 'diagram-part'; part: 'container'; style: VisioContainerStyle }
 	| { type: 'diagram-part'; part: 'callout'; style: VisioCalloutStyle };
+/** Data-tab commands: import, refresh, data graphics, legend, windows and Shape Data. */
+export type VisioDataCommand =
+	| 'quick-import'
+	| 'custom-import'
+	| 'refresh'
+	| 'graphic-text'
+	| 'graphic-bar'
+	| 'graphic-icon'
+	| 'graphic-color'
+	| 'graphic-remove'
+	| 'legend'
+	| 'external-data-window'
+	| 'define-shape-data';
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
@@ -62,6 +75,7 @@ export type VisioRibbonAction =
 	| { type: 'cancel-drawing' }
 	| { type: 'page-insert' }
 	| { type: 'insert'; item: VisioInsertItem }
+	| { type: 'data'; command: VisioDataCommand }
 	| { type: 'paint-properties' }
 	| { type: 'format-shape-pane' }
 	| { type: 'page-theme'; theme?: VisioBuiltInThemeId | 'none'; variant?: number }

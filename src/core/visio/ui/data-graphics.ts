@@ -37,9 +37,14 @@ export function visioRemoveDataGraphicEdits(
 	const edits: VisioEdit[] = [];
 	const parts = visioDataGraphicParts(page);
 	for (const owner of shapeIds) {
-		for (const part of parts.get(owner) ?? [])
-			if (!kind || part.kind === kind)
-				edits.push({ type: 'delete-shape', pageId: page.id, shapeId: part.id });
+		for (const part of parts.get(owner) ?? []) {
+			if (kind && part.kind !== kind) continue;
+			// Groups (a legend) are ungrouped first; only plain shapes can be deleted.
+			const group = page.shapes.find((item) => item.id === part.id && item.kind === 'group');
+			if (group) edits.push({ type: 'ungroup-shape', pageId: page.id, shapeId: part.id });
+			for (const id of group ? group.children.map((child) => child.id) : [part.id])
+				edits.push({ type: 'delete-shape', pageId: page.id, shapeId: id });
+		}
 		const shape = page.shapes.find((item) => item.id === owner);
 		const fill = shape && field(shape, VISIO_DATA_GRAPHIC_FILL_ROW);
 		if (shape && fill && (!kind || kind === 'color')) {
