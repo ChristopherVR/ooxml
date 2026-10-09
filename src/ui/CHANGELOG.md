@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.6.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.6.1) - 2026-10-09
+
+### Bug Fixes
+
+- **pptx:** Paint the outline gradient of chart line series ([#41](https://github.com/ChristopherVR/ooxml/issues/41)) ([158d44b](https://github.com/ChristopherVR/ooxml/commit/158d44bd79582591697e9d6ef8ccc5311dc6d1f4))
+
 ## [1.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.6.0) - 2026-10-09
 
 ### Features
