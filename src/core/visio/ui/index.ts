@@ -40,5 +40,7 @@ export * from './draw-path-plan';
 export * from './line-dash';
 export * from './shape-formatting';
 export * from './text-replace';
+export * from './change-case';
+export * from './format-painter';
 export * from './svg-stroke';
 export * from './page-size';
