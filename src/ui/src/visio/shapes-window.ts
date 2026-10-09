@@ -1,3 +1,5 @@
+import type { VisioBasicShape } from 'ooxml-core/visio';
+
 /** Drag payload type for a stencil master; the value is the master id. */
 export const MASTER_MIME = 'application/x-visio-viewer-master';
 
@@ -7,37 +9,48 @@ interface Master {
 	/** Preview outline in a 24x24 box (static application geometry). */
 	path: string;
 	/** Default size in inches when dropped. */
-	size?: { width: number; height: number };
+	size: { width: number; height: number };
 }
-const MASTER_REASON = 'Needs core master drops; only Rectangle is available.';
+/** How the core creates a master: a native ellipse, or a Basic Shapes outline. */
+export type MasterCreation = { kind: 'ellipse' } | { kind: 'rectangle'; shape: VisioBasicShape };
+const ELLIPSES = new Set(['ellipse', 'circle']);
+const unit = { width: 1, height: 1 };
+const wide = { width: 1, height: 0.75 };
 /** Visio's Basic Shapes stencil, in Visio's order. */
 export const BASIC_SHAPES: readonly Master[] = [
-	{ id: 'rectangle', name: 'Rectangle', path: 'M3 6h18v12H3Z', size: { width: 1, height: 0.75 } },
-	{ id: 'square', name: 'Square', path: 'M5 4h14v14H5Z' },
-	{ id: 'ellipse', name: 'Ellipse', path: 'M2 12a10 6.5 0 1 0 20 0 10 6.5 0 1 0-20 0' },
-	{ id: 'circle', name: 'Circle', path: 'M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0' },
-	{ id: 'triangle', name: 'Triangle', path: 'M12 4 21 20H3Z' },
-	{ id: 'right-triangle', name: 'Right triangle', path: 'M4 4v16h16Z' },
-	{ id: 'pentagon', name: 'Pentagon', path: 'M12 3l9 6.5-3.4 10.5H6.4L3 9.5Z' },
-	{ id: 'hexagon', name: 'Hexagon', path: 'M7 4h10l5 8-5 8H7l-5-8Z' },
-	{ id: 'octagon', name: 'Octagon', path: 'M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7Z' },
+	{ id: 'rectangle', name: 'Rectangle', path: 'M3 6h18v12H3Z', size: wide },
+	{ id: 'square', name: 'Square', path: 'M5 4h14v14H5Z', size: unit },
+	{ id: 'ellipse', name: 'Ellipse', path: 'M2 12a10 6.5 0 1 0 20 0 10 6.5 0 1 0-20 0', size: wide },
+	{ id: 'circle', name: 'Circle', path: 'M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0', size: unit },
+	{ id: 'triangle', name: 'Triangle', path: 'M12 4 21 20H3Z', size: unit },
+	{ id: 'right-triangle', name: 'Right triangle', path: 'M4 4v16h16Z', size: unit },
+	{ id: 'pentagon', name: 'Pentagon', path: 'M12 3l9 6.5-3.4 10.5H6.4L3 9.5Z', size: unit },
+	{ id: 'hexagon', name: 'Hexagon', path: 'M7 4h10l5 8-5 8H7l-5-8Z', size: wide },
+	{ id: 'octagon', name: 'Octagon', path: 'M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7Z', size: unit },
 	{
 		id: 'star',
 		name: '5-point star',
 		path: 'm12 2.5 2.8 6.4 6.9.6-5.2 4.6 1.6 6.8L12 17.3l-6.1 3.6 1.6-6.8-5.2-4.6 6.9-.6Z',
+		size: unit,
 	},
-	{ id: 'diamond', name: 'Diamond', path: 'M12 2.5 21.5 12 12 21.5 2.5 12Z' },
+	{ id: 'diamond', name: 'Diamond', path: 'M12 2.5 21.5 12 12 21.5 2.5 12Z', size: unit },
 	{
 		id: 'rounded-rectangle',
 		name: 'Rounded rectangle',
 		path: 'M6 6h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3Z',
+		size: wide,
 	},
-	{ id: 'cross', name: 'Cross', path: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z' },
-	{ id: 'parallelogram', name: 'Parallelogram', path: 'M7 6h15l-5 12H2Z' },
-	{ id: 'trapezoid', name: 'Trapezoid', path: 'M7 6h10l5 12H2Z' },
-	{ id: 'can', name: 'Can', path: 'M5 6a7 2.5 0 1 0 14 0 7 2.5 0 1 0-14 0v12a7 2.5 0 0 0 14 0V6' },
-	{ id: 'cube', name: 'Cube', path: 'M4 8h12v12H4ZM4 8l4-4h12l-4 4M20 4v12l-4 4' },
-	{ id: 'chevron', name: 'Chevron', path: 'M3 5h13l5 7-5 7H3l5-7Z' },
+	{ id: 'cross', name: 'Cross', path: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z', size: unit },
+	{ id: 'parallelogram', name: 'Parallelogram', path: 'M7 6h15l-5 12H2Z', size: wide },
+	{ id: 'trapezoid', name: 'Trapezoid', path: 'M7 6h10l5 12H2Z', size: wide },
+	{
+		id: 'can',
+		name: 'Can',
+		path: 'M5 6a7 2.5 0 1 0 14 0 7 2.5 0 1 0-14 0v12a7 2.5 0 0 0 14 0V6',
+		size: { width: 0.75, height: 1 },
+	},
+	{ id: 'cube', name: 'Cube', path: 'M4 8h12v12H4ZM4 8l4-4h12l-4 4M20 4v12l-4 4', size: unit },
+	{ id: 'chevron', name: 'Chevron', path: 'M3 5h13l5 7-5 7H3l5-7Z', size: wide },
 ];
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -170,23 +183,24 @@ function masterList(doc: Document, masters: readonly Master[]): HTMLUListElement
 		const label = doc.createElement('span');
 		label.textContent = master.name;
 		button.append(preview(doc, master.path), label);
-		if (master.size) {
-			button.draggable = true;
-			button.title = `${master.name}: drag onto the page, or press Enter to add it at the centre.`;
-		} else {
-			button.setAttribute('aria-disabled', 'true');
-			button.dataset.unsupported = '';
-			button.title = `${master.name}: not available yet. ${MASTER_REASON}`;
-		}
+		button.draggable = true;
+		button.title = `${master.name}: drag onto the page, or press Enter to add it at the centre.`;
 		item.append(button);
 		list.append(item);
 	}
 	return list;
 }
 
-/** Default size of a stencil master the viewer can create, or nothing when unsupported. */
-export function masterSize(id: string): { width: number; height: number } | undefined {
-	return BASIC_SHAPES.find((master) => master.id === id)?.size;
+/** Default size and creation of a stencil master, or nothing for an unknown id. */
+export function masterCreation(
+	id: string,
+): { size: { width: number; height: number }; create: MasterCreation } | undefined {
+	const master = BASIC_SHAPES.find((candidate) => candidate.id === id);
+	if (!master) return undefined;
+	const create: MasterCreation = ELLIPSES.has(id)
+		? { kind: 'ellipse' }
+		: { kind: 'rectangle', shape: id as VisioBasicShape };
+	return { size: master.size, create };
 }
 
 /** Visio's minimised Shapes window: a narrow strip that reopens the window. */

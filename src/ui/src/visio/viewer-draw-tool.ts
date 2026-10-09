@@ -1,4 +1,4 @@
-import type { VisioPage, VisioGeometryEdit } from 'ooxml-core/visio';
+import type { VisioPage, VisioGeometryEdit, VisioBasicShape } from 'ooxml-core/visio';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -20,6 +20,20 @@ export async function insertRectangle(
 ): Promise<string> {
 	return insertGeometry(controller, page, () =>
 		visioBoxCreationCommand(page, 'rectangle', centre, size),
+	);
+}
+/** Add a Basic Shapes master: Ellipse and Circle are native ellipses, the rest core outlines. */
+export async function insertMaster(
+	controller: ViewerController,
+	page: VisioPage,
+	master: { kind: 'ellipse' } | { kind: 'rectangle'; shape: VisioBasicShape },
+	centre: VisioDrawingPoint,
+	size: { width: number; height: number },
+): Promise<string> {
+	return insertGeometry(controller, page, () =>
+		master.kind === 'ellipse'
+			? visioBoxCreationCommand(page, 'ellipse', centre, size)
+			: visioBoxCreationCommand(page, 'rectangle', centre, size, undefined, master.shape),
 	);
 }
 export async function insertLine(

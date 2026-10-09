@@ -37,43 +37,43 @@ async function setup(source = true) {
 }
 
 describe("Visio's Shapes window", () => {
-	it('shows the Basic Shapes stencil with only creatable masters enabled', async () => {
-		const { pane, master } = await setup();
+	it('shows the Basic Shapes stencil with every master enabled', async () => {
+		const { pane } = await setup();
 		expect(pane.querySelector('.stencil-title')!.textContent).toBe('Basic Shapes');
-		expect(pane.querySelectorAll('#shapes-stencils [data-master]')).toHaveLength(
-			BASIC_SHAPES.length,
-		);
-		expect(master('rectangle').draggable).toBe(true);
-		expect(master('rectangle').hasAttribute('data-unsupported')).toBe(false);
-		expect(master('circle').getAttribute('aria-disabled')).toBe('true');
-		expect(master('circle').title).toMatch(/not available yet\. Needs core master drops/);
+		const masters = [...pane.querySelectorAll<HTMLButtonElement>('#shapes-stencils [data-master]')];
+		expect(masters).toHaveLength(BASIC_SHAPES.length);
+		for (const master of masters) {
+			expect(master.draggable).toBe(true);
+			expect(master.hasAttribute('aria-disabled')).toBe(false);
+			expect(master.title).not.toMatch(/not available/);
+		}
+		// More Shapes and Quick Shapes need stencil files, which are not supported yet.
 		expect(
 			[...pane.querySelectorAll<HTMLButtonElement>('.shapes-row')].every((row) => row.disabled),
 		).toBe(true);
 	});
 
-	it('adds a Rectangle at the page centre through core and ignores unsupported masters', async () => {
+	it('adds masters at the page centre through core', async () => {
 		const { controller, edits, master, messages, settle } = await setup();
-		master('circle').click();
-		await settle();
-		expect(edits).toEqual([]);
+		const page = demoDocument.pages[0]!;
+		const box = {
+			pageId: page.id,
+			shapeId: expect.any(String),
+			x: page.width / 2,
+			y: page.height / 2,
+		};
 		master('rectangle').click();
 		await settle();
-		const page = demoDocument.pages[0]!;
+		master('circle').click();
+		await settle();
+		master('star').click();
+		await settle();
 		expect(edits).toEqual([
-			[
-				{
-					type: 'create-rectangle',
-					pageId: page.id,
-					shapeId: expect.any(String),
-					x: page.width / 2,
-					y: page.height / 2,
-					width: 1,
-					height: 0.75,
-				},
-			],
+			[{ ...box, type: 'create-rectangle', width: 1, height: 0.75, shape: 'rectangle' }],
+			[{ ...box, type: 'create-ellipse', width: 1, height: 1 }],
+			[{ ...box, type: 'create-rectangle', width: 1, height: 1, shape: 'star' }],
 		]);
-		expect(messages.at(-1)).toMatch(/^Rectangle .+ added from Basic Shapes\.$/);
+		expect(messages.at(-1)).toMatch(/^5-point star .+ added from Basic Shapes\.$/);
 		expect(controller.state.edit.canUndo).toBe(true);
 	});
 

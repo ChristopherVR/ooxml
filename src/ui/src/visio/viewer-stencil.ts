@@ -1,11 +1,11 @@
 import type { ViewerController } from './controller';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
-import { MASTER_MIME, masterSize } from './shapes-window';
-import { insertRectangle, pagePoint } from './viewer-draw-tool';
+import { MASTER_MIME, masterCreation } from './shapes-window';
+import { insertMaster, pagePoint } from './viewer-draw-tool';
 
 /**
  * Shapes window interaction: drag a master onto the page to drop it there, or activate it to add
- * it at the page centre. Only masters the core can create are draggable; the rest stay inert.
+ * it at the page centre. Ellipse and Circle are native ellipses; the rest are core outlines.
  */
 export function wireStencil(
 	pane: HTMLElement,
@@ -21,10 +21,11 @@ export function wireStencil(
 		return edit.sourceAvailable && !edit.busy && !loading;
 	};
 	const add = async (id: string, centre?: { clientX: number; clientY: number }) => {
-		const size = masterSize(id);
+		const master = masterCreation(id);
 		const state = controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		if (!size || !page) return;
+		if (!master || !page) return;
+		const { size } = master;
 		if (!editable()) {
 			announce('Open a .vsdx file to add shapes. Model-only documents are read only.');
 			return;
@@ -41,8 +42,9 @@ export function wireStencil(
 			Math.max(size.height / 2, point?.y ?? page.height / 2),
 		);
 		try {
-			const shapeId = await insertRectangle(controller, page, { x, y }, size);
-			announce(`Rectangle ${shapeId} added from Basic Shapes.`);
+			const shapeId = await insertMaster(controller, page, master.create, { x, y }, size);
+			const name = pane.querySelector(`[data-master="${id}"] span`)?.textContent ?? 'Shape';
+			announce(`${name} ${shapeId} added from Basic Shapes.`);
 		} catch (error) {
 			if (!isEditCancellation(error) && !controller.state.edit.error)
 				announce(editErrorMessage(error));
@@ -52,7 +54,7 @@ export function wireStencil(
 		'dragstart',
 		(event) => {
 			const master = (event.target as Element).closest?.<HTMLElement>('[data-master]');
-			if (!master || !masterSize(master.dataset.master!) || !event.dataTransfer) return;
+			if (!master || !masterCreation(master.dataset.master!) || !event.dataTransfer) return;
 			event.dataTransfer.setData(MASTER_MIME, master.dataset.master!);
 			event.dataTransfer.effectAllowed = 'copy';
 		},
