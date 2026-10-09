@@ -16,6 +16,7 @@ import { wireHandleEvents } from './viewer-handle-events';
 import { documentVisibility } from './viewer-layers';
 import { createMovementPreview } from './viewer-movement-preview';
 import { hideGestureOverlays } from './viewer-gesture-overlays';
+import { pointerShapeTarget } from './viewer-shape-target';
 
 interface Gesture {
 	pointer: number;
@@ -102,7 +103,8 @@ export class ViewerPointerGestures {
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
 		if (!svg || !page || !state.document || state.loading || state.edit.busy || !svg.contains(node))
 			return;
-		const group = node.closest<SVGGElement>('[data-shape-id]');
+		// Dragging inside a group moves the whole top-level group, as in Visio.
+		const group = pointerShapeTarget(node, state.selectedShapes, true);
 		if (
 			group &&
 			(!state.edit.sourceAvailable ||

@@ -244,8 +244,21 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				label: 'Group',
 				icon: 'group',
 				size: 'small',
-				unsupported: ARRANGE,
-				items: [{ id: 'ungroup', label: 'Ungroup', unsupported: ARRANGE }],
+				items: [
+					{
+						id: 'group-shapes',
+						label: 'Group',
+						icon: 'group',
+						action: { type: 'grouping', operation: 'group' },
+						keys: ['Control+Shift+G', 'Ctrl+Shift+G'],
+					},
+					{
+						id: 'ungroup',
+						label: 'Ungroup',
+						action: { type: 'grouping', operation: 'ungroup' },
+						keys: ['Control+Shift+U', 'Ctrl+Shift+U'],
+					},
+				],
 			}),
 		]),
 	]);

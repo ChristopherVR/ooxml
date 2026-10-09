@@ -27,6 +27,7 @@ button[aria-pressed="true"] { color:var(--_vv-accent); background:var(--_vv-acce
 .paper { display:block; flex:none; background:white; box-shadow:var(--_vv-shadow); margin:auto; }
 .paper [data-shape-id] { cursor:pointer; }
 .paper [data-selected="true"] > [data-geometry] { stroke:var(--_vv-accent) !important; stroke-width:.025 !important; }
+.paper [role="group"][data-selected="true"] [data-geometry] { stroke:var(--_vv-accent) !important; stroke-dasharray:.06 .04; }
 .inspector-pane { flex:0 0 288px; width:288px; min-width:0; overflow:auto; border-left:1px solid var(--_vv-border); background:var(--_vv-secondary); }
 .inspector-body { display:flex; flex-direction:column; gap:12px; padding:12px 10px; }
 .inspector-card,.edit-controls,.layer-controls { min-width:0; padding:8px; margin:0; border:1px solid var(--_vv-border); border-radius:4px; background:var(--_vv-surface); font-size:11px; line-height:17px; }

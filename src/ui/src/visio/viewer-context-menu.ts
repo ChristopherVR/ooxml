@@ -1,8 +1,9 @@
 import { selectionKey } from 'ooxml-core/visio/ui';
 import type { ViewerController } from './controller';
 import { contextMenu } from './ribbon-parts';
+import { pointerShapeTarget } from './viewer-shape-target';
 
-const ARRANGE = 'Needs core grouping, container and z-order edits.';
+const ARRANGE = 'Needs core container edits.';
 
 /** Visio's shape and page context menus; commands the core lacks are shown disabled. */
 export function createContextMenus(doc: Document): HTMLElement[] {
@@ -44,7 +45,20 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				action: { type: 'reveal', panel: 'edit', focusText: true },
 			},
 			'-',
-			{ id: 'ctx-group', label: 'Group', icon: 'group', unsupported: ARRANGE },
+			{
+				id: 'ctx-group',
+				label: 'Group',
+				icon: 'group',
+				action: { type: 'grouping', operation: 'group' },
+				keys: ['Control+Shift+G', 'Ctrl+Shift+G'],
+			},
+			{
+				id: 'ctx-ungroup',
+				label: 'Ungroup',
+				icon: 'group',
+				action: { type: 'grouping', operation: 'ungroup' },
+				keys: ['Control+Shift+U', 'Ctrl+Shift+U'],
+			},
 			{ id: 'ctx-container', label: 'Container', icon: 'rectangle', unsupported: ARRANGE },
 			{
 				id: 'ctx-bring-to-front',
@@ -172,7 +186,11 @@ export function wireContextMenus(
 		'contextmenu',
 		(event) => {
 			event.preventDefault();
-			show(targetShape(event.target), event.clientX, event.clientY);
+			show(
+				pointerShapeTarget(event.target, controller.state.selectedShapes),
+				event.clientX,
+				event.clientY,
+			);
 		},
 		{ signal: events.signal },
 	);

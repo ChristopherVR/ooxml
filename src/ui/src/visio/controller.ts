@@ -36,6 +36,8 @@ import {
 	selectionKey,
 	snapshotSelection,
 	visioDuplicateCommand,
+	visioGroupCommand,
+	visioUngroupCommand,
 	visioSelectionIsOnPage,
 	visioPasteCommand,
 } from 'ooxml-core/visio/ui';
@@ -623,6 +625,31 @@ export class ViewerController {
 		return this.#mutate('edit', snapshotEdits([command]), undefined, {
 			pageId: command.pageId,
 			shapeIds: Object.freeze(command.copies.map((copy) => copy.newShapeId)),
+		});
+	}
+	/** Group the selection, or ungroup one selected group, as one edit and selection transition. */
+	async groupSelection(operation: 'group' | 'ungroup'): Promise<void> {
+		this.#assertAlive();
+		const page = this.#state.document?.pages[this.#state.pageIndex];
+		const selected = this.#state.selectedShapes;
+		if (!page || !selected.every((shape) => visioSelectionIsOnPage(shape, page.id)))
+			throw new Error('Select shapes on the current page before grouping.');
+		const ids = selected.map((shape) => shape.id);
+		const command =
+			operation === 'group' ? visioGroupCommand(page, ids) : visioUngroupCommand(page, ids);
+		if (!command)
+			throw new Error(
+				operation === 'group'
+					? 'Select two or more local, unglued top-level shapes to group.'
+					: 'Select one local, unglued group to ungroup.',
+			);
+		const shapeIds =
+			command.type === 'group-shapes'
+				? [command.shapeId]
+				: page.shapes.find((shape) => shape.id === command.shapeId)!.children.map((s) => s.id);
+		return this.#mutate('edit', snapshotEdits([command]), undefined, {
+			pageId: page.id,
+			shapeIds: Object.freeze(shapeIds),
 		});
 	}
 	captureClipboardToken(): ViewerClipboardToken {

@@ -39,6 +39,7 @@ export type VisioRibbonAction =
 	| { type: 'delete' }
 	| { type: 'duplicate' }
 	| { type: 'format-painter'; mode: 'once' | 'sticky' | 'cancel' }
+	| { type: 'grouping'; operation: 'group' | 'ungroup' }
 	| { type: 'clipboard'; operation: 'copy' | 'cut' | 'paste'; event?: ClipboardEvent }
 	| { type: 'rotate'; direction: 'left' | 'right' }
 	| { type: 'flip'; axis: 'horizontal' | 'vertical' }

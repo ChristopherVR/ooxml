@@ -22,6 +22,7 @@ import { ViewerFormatPainter } from './viewer-format-painter';
 import { ViewerArrangement } from './viewer-arrangement';
 import { ViewerChangeShape } from './viewer-change-shape';
 import { ViewerDuplication } from './viewer-duplication';
+import { ViewerGrouping } from './viewer-grouping';
 import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
 import { ViewerInsert } from './viewer-insert';
 
@@ -73,6 +74,7 @@ export class ViewerCommands {
 	#arrangement: ViewerArrangement;
 	#changeShape: ViewerChangeShape;
 	#duplication: ViewerDuplication;
+	#grouping: ViewerGrouping;
 	#clipboard: ViewerClipboard;
 	#insert: ViewerInsert;
 	readonly #targets: RibbonTargets;
@@ -81,6 +83,9 @@ export class ViewerCommands {
 			this.render(host.controller.state),
 		);
 		this.#duplication = new ViewerDuplication(host.root, host.controller, (run, message) => {
+			void this.#edit(run, message);
+		});
+		this.#grouping = new ViewerGrouping(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
 		});
 		this.#arrangement = new ViewerArrangement(host.root, host.controller, (run, message) => {
@@ -116,6 +121,7 @@ export class ViewerCommands {
 			history: (key) => this.#history(key),
 			deleteSelection: () => this.#delete(),
 			duplicateSelection: () => this.#duplication.run(),
+			groupSelection: (operation) => this.#grouping.run(operation),
 			clipboard: (action) => {
 				void this.#clipboard.run(action.operation, action.event).catch((error: unknown) => {
 					if (!isEditCancellation(error)) host.announce(editErrorMessage(error));
@@ -405,6 +411,8 @@ export class ViewerCommands {
 		if (control && !event.shiftKey && key === 'a') return { type: 'selection', mode: 'all' };
 		if (control && !event.shiftKey && key === 'd') return { type: 'duplicate' };
 		if (control && !event.shiftKey && key === 'k') return { type: 'insert', item: 'link' };
+		if (control && event.shiftKey && (key === 'g' || key === 'u'))
+			return { type: 'grouping', operation: key === 'g' ? 'group' : 'ungroup' };
 		if (control && !event.shiftKey && key === 'b') return { type: 'text-toggle', property: 'bold' };
 		if (control && !event.shiftKey && key === 'i')
 			return { type: 'text-toggle', property: 'italic' };
@@ -441,6 +449,7 @@ export class ViewerCommands {
 		this.#draw.render(state);
 		this.#text.render(state);
 		this.#duplication.render(state);
+		this.#grouping.render(state);
 		this.#clipboard.render(state);
 		this.#formatting.render(state);
 		this.#changeShape.render(state);

@@ -323,7 +323,31 @@ arrangement actions at three scales, and 34 distribution overlap/tie cases.
 The [verification record](verification.md) describes the exact scope and numerical
 bounds. General native visual and file compatibility remain unproven.
 
-Remaining functionality includes native clipboard interoperability, grouping and broader
+Group and Ungroup are available from Home > Arrange > Group, the shape context
+menu, Tell me, Ctrl+Shift+G and Ctrl+Shift+U. The core `group-shapes` edit wraps
+two or more admitted top-level local 2D trees in a new `Type="Group"` sheet whose
+pin, width and height bound the members' rotated alignment boxes, places it at the
+topmost member's stacking position and rewrites only member pins into group-local
+inches. `ungroup-shape` returns direct members to page coordinates through the
+group's pin, rotation and flips (angles and flip cells are recomposed exactly) and
+converts native group-scaling member formulas such as `Sheet.N!Width*0.5` to their
+cached values. The parsed page-space transform of every member is unchanged by both
+edits. A top-level group can be moved (pointer drag or the Size & Position pane) as
+one sheet; the first click on a member selects its outermost group and a second
+click subselects one level deeper, as in Visio. Both edits are single undoable
+transactions and the new group, or the former members, become the selection.
+Masters, lines and other 1D sheets, foreign objects, glued shapes, layered
+members, LockGroup or other active protection, formulas that read a member's pin
+(or, on ungroup, its rotation and flips), dynamic or page-referencing member
+formulas, references to the removed group and groups with their own geometry or
+text are refused. Members are written with plain values rather than Visio's
+group-scaling formulas, so resizing or flipping a group remains unsupported here
+and native Visio group-resize behaviour for these groups is unverified; Add to
+Group, Remove from Group, container behaviour and native save/reopen acceptance
+remain open. Evidence: core `edit-group.test.ts` and `ui/shape-group.test.ts`,
+shared UI `viewer-grouping.test.ts`.
+
+Remaining functionality includes native clipboard interoperability, broader
 arrangement admission, master overrides and replacement, connector
 routing/glue, character-range text editing, theme changes and effects other than outer shadows, data/process/review commands, and
 the other capabilities marked missing below.

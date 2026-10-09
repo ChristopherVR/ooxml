@@ -12,6 +12,7 @@ export interface RibbonTargets {
 	history(key: 'undo' | 'redo'): void;
 	deleteSelection(): void;
 	duplicateSelection(): void;
+	groupSelection(operation: 'group' | 'ungroup'): void;
 	clipboard(action: Extract<VisioRibbonAction, { type: 'clipboard' }>): void;
 	rotateSelection(direction: 'left' | 'right'): void;
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
@@ -66,6 +67,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.deleteSelection();
 		case 'duplicate':
 			return targets.duplicateSelection();
+		case 'grouping':
+			return targets.groupSelection(action.operation);
 		case 'clipboard':
 			return targets.clipboard(action);
 		case 'rotate':

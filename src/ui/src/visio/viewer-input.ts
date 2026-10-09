@@ -1,4 +1,5 @@
 import type { ViewerController, ViewerState } from './controller';
+import { pointerShapeTarget } from './viewer-shape-target';
 interface Controls {
 	viewport: HTMLDivElement;
 	zoomSlider: HTMLElement & { value: number };
@@ -32,7 +33,13 @@ export function wireViewerInputs(
 	zoomSlider.addEventListener('input', () => controller.setZoom(zoomSlider.value / 100), options);
 	viewport.addEventListener(
 		'click',
-		(event) => activate(targetShape(event), event.shiftKey || event.ctrlKey || event.metaKey),
+		(event) => {
+			const additive = event.shiftKey || event.ctrlKey || event.metaKey;
+			activate(
+				pointerShapeTarget(event.target, controller.state.selectedShapes, additive),
+				additive,
+			);
+		},
 		options,
 	);
 	viewport.addEventListener(
