@@ -91,7 +91,9 @@ if (p.typecheck.strict) add('bun run typecheck:strict');
 if (p.typecheck.pptx) add('bun run typecheck:pptx');
 if (p.typecheck.ui) add('bun run --cwd src/ui typecheck');
 const changedTests = full ? '' : ` --changed=${base} --passWithNoTests`;
-if (p.test.run) add(`bun run test${changedTests}`);
+// The core suite follows the plan (a manifest or config change runs all of it, as in CI). The
+// ooxml-ui suite takes about a quarter of an hour, so only `--full` runs it whole; CI always does.
+if (p.test.run) add(`bun run test${p.test.mode === 'all' ? '' : changedTests}`);
 if (p.checks.ui) {
 	add(`bunx vitest run${changedTests}`, 'src/ui');
 	add(`bunx vitest run --config vitest.pptx.config.ts${changedTests}`, 'src/ui');
