@@ -36,6 +36,7 @@ export type VisioRibbonAction =
 	| { type: 'sizePosition' }
 	| { type: 'ruler' }
 	| { type: 'fullscreen' }
+	| { type: 'presentation' }
 	| { type: 'zoom'; mode: 'fit' | 'width' | 'actual' }
 	| { type: 'zoomTo'; percent: number }
 	| { type: 'search' }

@@ -6,7 +6,7 @@ const MACROS = 'Macros and add-ons never run in this viewer.';
 
 /**
  * Microsoft Visio's View tab: Views, Show, Zoom, Visual Aids, Window and Macros. Ruler, Grid,
- * Task Panes, Full Screen and every Zoom command work; the rest is shown disabled with a reason.
+ * Task Panes, Presentation Mode, Full Screen and every Zoom command work; the rest is shown disabled with a reason.
  */
 export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
@@ -16,14 +16,14 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 					id: 'presentation',
 					label: 'Presentation Mode',
 					icon: 'visioPresentation',
-					unsupported: 'Needs a page-by-page presentation view.',
+					action: { type: 'presentation' },
+					keys: ['F5', 'F5'],
 				}),
 				command(doc, {
 					id: 'fullscreen',
 					label: 'Full Screen',
 					icon: 'fullscreen',
 					action: { type: 'fullscreen' },
-					keys: ['F5', 'F5'],
 					pressed: false,
 				}),
 			]),

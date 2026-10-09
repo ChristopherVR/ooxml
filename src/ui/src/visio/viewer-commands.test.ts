@@ -74,6 +74,8 @@ async function setup(source = true, noOp = false, model = demoDocument) {
 		reveal: (panel, focusText) => calls.push(`reveal:${panel}:${focusText}`),
 		focusSearch: () => calls.push('search'),
 		togglePanZoom: () => calls.push('pan-zoom'),
+		present: () => calls.push('present'),
+		presenting: () => false,
 		toggleSizePosition: () => calls.push('size-position'),
 		announce: (message) => calls.push(message),
 	});
@@ -134,6 +136,14 @@ describe('Visio ribbon commands', () => {
 		expect(readOnly.commands.tool).toBe('pointer');
 		readOnly.dispose();
 		readOnly.controller.destroy();
+	});
+	it('routes F5 and the View tab Presentation Mode command to the presentation', async () => {
+		const ui = await setup();
+		ui.key({ key: 'F5' });
+		ui.press('presentation');
+		expect(ui.calls.filter((call) => call === 'present')).toHaveLength(2);
+		ui.dispose();
+		ui.controller.destroy();
 	});
 	it('announces unchanged commands without claiming a successful mutation', async () => {
 		const { controller, key, settle, calls } = await setup(true, true);

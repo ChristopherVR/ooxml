@@ -5,6 +5,7 @@ import shapes from './shapes.css?raw';
 import sizePosition from './size-position.css?raw';
 import textTool from './text-tool.css?raw';
 import paintProperties from './paint-properties.css?raw';
+import presentation from './presentation.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -19,6 +20,7 @@ export const canvasAndRibbonStyles = [
 	sizePosition,
 	textTool,
 	paintProperties,
+	presentation,
 	visioThemeBridge,
 ].join('\n');
 

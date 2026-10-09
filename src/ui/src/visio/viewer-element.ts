@@ -33,6 +33,7 @@ import { ViewerEditControls } from './viewer-edit-controls';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome';
 import { ViewerCanvas } from './viewer-canvas';
 import { ViewerCommands } from './viewer-commands';
+import { ViewerPresentation } from './viewer-presentation';
 import { ViewerLineEndpoints } from './viewer-line-endpoints';
 import { ViewerRotationHandle } from './viewer-rotation-handle';
 import { ViewerResizeHandles } from './viewer-resize-handles';
@@ -57,6 +58,7 @@ export class VisioViewerElement extends BaseElement {
 	#shapeStatus: HTMLElement;
 	#announcement: string | undefined;
 	#commands: ViewerCommands;
+	#presentation: ViewerPresentation;
 	#lineEndpoints: ViewerLineEndpoints;
 	#rotationHandle: ViewerRotationHandle;
 	#resizeHandles: ViewerResizeHandles;
@@ -138,6 +140,7 @@ export class VisioViewerElement extends BaseElement {
 			this.#announcement = message;
 			this.#status.textContent = message;
 		});
+		this.#presentation = new ViewerPresentation(this.#root, this.controller);
 		this.#commands = new ViewerCommands({
 			root: this.#root,
 			viewport: this.#viewport,
@@ -153,6 +156,8 @@ export class VisioViewerElement extends BaseElement {
 			reveal: (panel, focusText) => this.#chrome.reveal(panel, focusText),
 			rulers: this.#rulers,
 			togglePanZoom: () => this.#panZoom.toggle(),
+			present: () => this.#presentation.start(),
+			presenting: () => this.#presentation.active,
 			toggleSizePosition: () => this.#sizePosition.toggle(),
 			focusSearch: () => {
 				this.#chrome.closeCompactTools();
@@ -353,6 +358,19 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		return this.controller.exportVsdx();
 	}
+	/** Start Visio's Presentation Mode on the current foreground page (F5). */
+	startPresentation(): void {
+		this.#assertAlive();
+		this.#presentation.start();
+	}
+	/** Leave Presentation Mode; the drawing window's page, zoom and selection are unchanged. */
+	exitPresentation(): void {
+		this.#assertAlive();
+		this.#presentation.exit();
+	}
+	get presenting(): boolean {
+		return this.#presentation.active;
+	}
 	fit(): void {
 		this.#assertAlive();
 		this.#fit('page');
@@ -433,6 +451,7 @@ export class VisioViewerElement extends BaseElement {
 	#wireInputs(): () => void {
 		const disposeChrome = this.#chrome.wire();
 		const disposeCommands = this.#commands.wire();
+		const disposePresentation = this.#presentation.wire();
 		const disposePointer = this.#pointer.wire();
 		const disposeLineEndpoints = this.#lineEndpoints.wire();
 		const disposeRotation = this.#rotationHandle.wire();
@@ -472,6 +491,7 @@ export class VisioViewerElement extends BaseElement {
 		return () => {
 			disposeChrome();
 			disposeCommands();
+			disposePresentation();
 			disposePointer();
 			disposeLineEndpoints();
 			disposeRotation();
@@ -540,6 +560,7 @@ export class VisioViewerElement extends BaseElement {
 				state.layerVisibilityOverrides.length === 0;
 		this.#chrome.render(state, this.#notes.children.length);
 		this.#commands.render(state);
+		this.#presentation.render(state);
 		this.#backstage.render(state);
 		this.#pointer.render(state);
 		this.#panZoom.render();

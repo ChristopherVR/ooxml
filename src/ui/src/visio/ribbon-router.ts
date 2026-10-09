@@ -21,6 +21,7 @@ export interface RibbonTargets {
 	togglePanZoom(): void;
 	toggleSizePosition(): void;
 	toggleFullscreen(): void;
+	present(): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
 	fit(mode: 'page' | 'width'): void;
@@ -78,6 +79,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.toggleSizePosition();
 		case 'fullscreen':
 			return targets.toggleFullscreen();
+		case 'presentation':
+			return targets.present();
 		case 'pane':
 			return targets.togglePane(action.pane);
 		case 'reveal':

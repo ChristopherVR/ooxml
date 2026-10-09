@@ -34,6 +34,10 @@ interface CommandHost {
 	focusSearch(): void;
 	focusReplace?(): void;
 	togglePanZoom(): void;
+	/** Visio's Presentation Mode (F5). */
+	present?(): void;
+	/** True while Presentation Mode owns the screen. */
+	presenting?(): boolean;
 	toggleSizePosition(): void;
 	/** Transient command feedback for the status bar; document text is never interpreted as markup. */
 	announce(message: string): void;
@@ -122,6 +126,7 @@ export class ViewerCommands {
 				this.render(host.controller.state);
 			},
 			toggleFullscreen: () => this.#toggleFullscreen(),
+			present: () => host.present?.(),
 			togglePane: host.togglePane,
 			reveal: host.reveal,
 			fit: host.fit,
@@ -347,6 +352,7 @@ export class ViewerCommands {
 		}
 	}
 	#toggleFullscreen(): void {
+		if (this.host.presenting?.()) return;
 		const host = this.host.root.host as HTMLElement;
 		const doc = this.host.root.ownerDocument;
 		const request =
@@ -365,7 +371,7 @@ export class ViewerCommands {
 		if (control && event.shiftKey && key === 'w') return { type: 'zoom', mode: 'fit' };
 		if (control && (key === 'PageDown' || key === 'PageUp'))
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
-		if (key === 'F5' && !control) return { type: 'fullscreen' };
+		if (key === 'F5' && !control) return { type: 'presentation' };
 		if (key === 'Escape' && (this.#draw.drawing || this.#text.drafting))
 			return { type: 'cancel-drawing' };
 		if (event.composedPath().some(editable)) return undefined;
@@ -477,7 +483,10 @@ export class ViewerCommands {
 		const fullscreen = button('fullscreen');
 		const host = root.host as HTMLElement;
 		fullscreen.disabled = typeof host.requestFullscreen !== 'function';
-		fullscreen.setAttribute('pressed', String(root.ownerDocument.fullscreenElement === host));
+		fullscreen.setAttribute(
+			'pressed',
+			String(root.ownerDocument.fullscreenElement === host && !this.host.presenting?.()),
+		);
 		viewport.dataset.tool = this.#tool;
 		viewport.dataset.grid = String(this.#grid);
 		this.host.rulers.render(this.#ruler && !!page, state.zoom);
