@@ -28,7 +28,14 @@
 		<defs>
 			{#each vm.defs.map(resolveChartSvgDef) as def (def.id)}
 				{#if def.kind === 'linearGradient'}
-					<linearGradient id={def.id} x1={def.x1} y1={def.y1} x2={def.x2} y2={def.y2}>
+					<linearGradient
+						id={def.id}
+						gradientUnits={def.gradientUnits}
+						x1={def.x1}
+						y1={def.y1}
+						x2={def.x2}
+						y2={def.y2}
+					>
 						{#each def.stops as stop, si (si)}
 							<stop offset={stop.offset} stop-color={stop.color} stop-opacity={stop.opacity} />
 						{/each}
