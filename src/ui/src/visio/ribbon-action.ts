@@ -1,5 +1,5 @@
 import type { VisioChangeShapeTarget, VisioShapeFormatEdit } from 'ooxml-core/visio';
-import type { VisioArrangement } from 'ooxml-core/visio/ui';
+import type { TextCaseMode, VisioArrangement } from 'ooxml-core/visio/ui';
 
 export type CanvasTool =
 	| 'pointer'
@@ -21,7 +21,8 @@ export type VisioFormattingAction =
 	| { type: 'text-align'; axis: 'horizontal'; value: 'left' | 'center' | 'right' | 'justify' }
 	| { type: 'text-align'; axis: 'vertical'; value: 'top' | 'middle' | 'bottom' }
 	| { type: 'shape-format'; patch: Omit<VisioShapeFormatEdit, 'type' | 'pageId' | 'shapeId'> }
-	| { type: 'shape-order'; order: 'front' | 'back' | 'forward' | 'backward' };
+	| { type: 'shape-order'; order: 'front' | 'back' | 'forward' | 'backward' }
+	| { type: 'change-case'; mode: TextCaseMode };
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| VisioFormattingAction
@@ -34,6 +35,7 @@ export type VisioRibbonAction =
 	| { type: 'paint-properties' }
 	| { type: 'delete' }
 	| { type: 'duplicate' }
+	| { type: 'format-painter'; mode: 'once' | 'sticky' | 'cancel' }
 	| { type: 'clipboard'; operation: 'copy' | 'cut' | 'paste'; event?: ClipboardEvent }
 	| { type: 'rotate'; direction: 'left' | 'right' }
 	| { type: 'flip'; axis: 'horizontal' | 'vertical' }

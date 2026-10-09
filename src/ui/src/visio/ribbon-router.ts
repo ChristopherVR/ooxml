@@ -12,6 +12,7 @@ export interface RibbonTargets {
 	flipSelection(axis: 'horizontal' | 'vertical'): void;
 	changeShape(shape: Extract<VisioRibbonAction, { type: 'change-shape' }>['shape']): void;
 	formatSelection(action: VisioFormattingAction): void;
+	formatPainter(mode: 'once' | 'sticky' | 'cancel'): void;
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
 	setTool(tool: CanvasTool): void;
 	cancelDrawing(): void;
@@ -49,7 +50,10 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 		case 'text-align':
 		case 'shape-format':
 		case 'shape-order':
+		case 'change-case':
 			return targets.formatSelection(action);
+		case 'format-painter':
+			return targets.formatPainter(action.mode);
 		case 'history':
 			return targets.history(action.key);
 		case 'delete':

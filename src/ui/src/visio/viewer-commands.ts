@@ -18,6 +18,7 @@ import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
 import { ViewerPaintProperties } from './viewer-paint-properties';
+import { ViewerFormatPainter } from './viewer-format-painter';
 import { ViewerArrangement } from './viewer-arrangement';
 import { ViewerChangeShape } from './viewer-change-shape';
 import { ViewerDuplication } from './viewer-duplication';
@@ -67,6 +68,7 @@ export class ViewerCommands {
 	#pageDelete: ViewerPageDelete;
 	#formatting: ViewerFormatting;
 	#paint: ViewerPaintProperties;
+	#painter: ViewerFormatPainter;
 	#arrangement: ViewerArrangement;
 	#changeShape: ViewerChangeShape;
 	#duplication: ViewerDuplication;
@@ -89,6 +91,9 @@ export class ViewerCommands {
 			void this.#edit(run, success);
 		});
 		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
+		this.#painter = new ViewerFormatPainter(host.root, host.controller, host.announce, (run, m) => {
+			void this.#edit(run, m);
+		});
 		this.#pageOrder = new ViewerPageOrder(host.root, host.controller);
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
@@ -115,6 +120,7 @@ export class ViewerCommands {
 			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			changeShape: (shape) => this.#changeShape.run(shape),
 			formatSelection: (action) => this.#formatting.run(action),
+			formatPainter: (mode) => this.#painter.run(mode),
 			arrangeSelection: (action) => this.#arrangement.run(action.operation),
 			setTool: (tool) => this.setTool(tool),
 			cancelDrawing: () => {
@@ -221,6 +227,7 @@ export class ViewerCommands {
 		const disposeText = this.#text.wire();
 		const disposeClipboard = this.#clipboard.wire();
 		const disposePaint = this.#paint.wire();
+		const disposePainter = this.#painter.wire();
 		return () => {
 			this.#pageOrder.close();
 			this.#pageRename.close();
@@ -231,6 +238,7 @@ export class ViewerCommands {
 			disposeText();
 			disposeClipboard();
 			disposePaint();
+			disposePainter();
 		};
 	}
 	setTool(tool: CanvasTool): void {
@@ -381,6 +389,7 @@ export class ViewerCommands {
 		if (key === 'Escape' && (this.#draw.drawing || this.#text.drafting))
 			return { type: 'cancel-drawing' };
 		if (event.composedPath().some(editable)) return undefined;
+		if (key === 'Escape' && this.#painter.armed) return { type: 'format-painter', mode: 'cancel' };
 		if (control && !event.shiftKey && ['c', 'x', 'v'].includes(key)) {
 			const operation = key === 'c' ? 'copy' : key === 'x' ? 'cut' : 'paste';
 			if (this.#clipboard.canUseAsync(operation)) return { type: 'clipboard', operation };
@@ -427,6 +436,7 @@ export class ViewerCommands {
 		this.#formatting.render(state);
 		this.#changeShape.render(state);
 		this.#paint.render(state);
+		this.#painter.render(state);
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
 		this.#pageDelete.render(state);

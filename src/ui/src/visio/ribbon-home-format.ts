@@ -3,7 +3,15 @@ import { fontColorOptions } from './ribbon-style-options';
 
 const TEXT = 'Needs core text formatting edits.';
 const CLIPBOARD = 'Paste Special and native Visio clipboard formats are unsupported.';
-const STYLE = 'Needs core fill, line and effect edits.';
+const caseItems: CommandSpec[] = (
+	[
+		['sentence', 'Sentence case.'],
+		['lower', 'lowercase'],
+		['upper', 'UPPERCASE'],
+		['capitalize', 'Capitalize Each Word'],
+		['toggle', 'tOGGLE cASE'],
+	] as const
+).map(([mode, label]) => ({ id: `case-${mode}`, label, action: { type: 'change-case', mode } }));
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
 
@@ -56,7 +64,8 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 					id: 'format-painter',
 					label: 'Format Painter',
 					icon: 'formatPainter',
-					unsupported: STYLE,
+					pressed: false,
+					action: { type: 'format-painter', mode: 'once' },
 				}),
 			),
 		]),
@@ -152,8 +161,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 							label: 'Change Case',
 							icon: 'changeCase',
 							size: 'icon',
-							unsupported: TEXT,
-							items: [{ id: 'upper', label: 'UPPERCASE', unsupported: TEXT }],
+							items: caseItems,
 						}),
 						menu(doc, {
 							id: 'font-color',

@@ -1,5 +1,7 @@
 import type { VisioEdit, VisioTextFormatEdit } from 'ooxml-core/visio';
 import {
+	visioChangeCaseCommand,
+	visioChangeCaseShape,
 	visioFormattingShape,
 	visioStyleFormattingShape,
 	visioFontFamilies,
@@ -45,6 +47,18 @@ export class ViewerFormatting {
 		)
 			return;
 		if (action.type === 'shape-order' && selections.length > 1) return;
+		if (action.type === 'change-case') {
+			if (selections.some(({ id }) => !visioChangeCaseShape(page, id))) return;
+			const edits = selections
+				.map(({ id }) => visioChangeCaseCommand(page, id, action.mode))
+				.filter((edit) => !!edit);
+			// No command means the text already has that case: the edit runner reports no change.
+			this.edit(
+				async () => (edits.length ? this.controller.applyEdits(edits) : undefined),
+				'Changed text case.',
+			);
+			return;
+		}
 		const candidates = selections.map(({ id }) =>
 			action.type === 'shape-order'
 				? visioOrderingShape(page, id)
@@ -171,6 +185,14 @@ export class ViewerFormatting {
 			indentReason || (!aggregate.canIndentDecrease ? 'The selected text has no left indent.' : ''),
 		);
 		set(button('font-color'), reason);
+		const caseReason =
+			baseReason ||
+			(!page || !currentPage || selections.some((item) => !visioChangeCaseShape(page, item.id))
+				? 'Change Case requires selected shapes with text.'
+				: '');
+		set(this.root.querySelector<RibbonCommand>('[data-menu="change-case"]'), caseReason);
+		for (const mode of ['sentence', 'lower', 'upper', 'capitalize', 'toggle'])
+			set(button(`case-${mode}`), caseReason);
 		for (const item of fontColorOptions()) {
 			const el = button(item.id);
 			set(el, reason);
