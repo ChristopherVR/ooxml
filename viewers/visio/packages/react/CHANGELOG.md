@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.6.2](https://github.com/ChristopherVR/ooxml/releases/tag/visio-react-viewer@0.6.2) - 2026-10-09
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 5 updates ([#42](https://github.com/ChristopherVR/ooxml/issues/42)) ([fda493e](https://github.com/ChristopherVR/ooxml/commit/fda493e2697908c477ce845019d9c2fe8b591ab2))
+
 ## [0.6.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-react-viewer@0.6.1) - 2026-10-08
 
 ### Documentation
