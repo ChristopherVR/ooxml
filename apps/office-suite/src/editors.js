@@ -68,7 +68,11 @@ export async function mountEditor(host, doc, changed, command) {
 	});
 	observer.observe(element, { attributes: true, attributeFilter: ['theme'] });
 	host.append(element);
+	// Visio opens at 100%; fit the page to the canvas once it has a layout, as the Visio demo does.
+	const fit = () =>
+		doc.kind === 'vsdx' && requestAnimationFrame(() => element.isConnected && element.fit());
 	await element.load(doc.bytes, doc.name);
+	fit();
 	for (const name of ['document-change', 'workbook-change'])
 		element.addEventListener(name, changed);
 	let stop;
@@ -93,7 +97,10 @@ export async function mountEditor(host, doc, changed, command) {
 				throw new Error('Finish the current cell edit before saving.');
 			return doc.kind === 'vsdx' ? (await element.exportVsdx()).bytes : element.saveBytes();
 		},
-		load: (bytes) => element.load(bytes, doc.name),
+		load: async (bytes) => {
+			await element.load(bytes, doc.name);
+			fit();
+		},
 		clean: () => element.markClean?.(),
 		flush: () => {
 			if (element.commitEdit && !element.commitEdit())
