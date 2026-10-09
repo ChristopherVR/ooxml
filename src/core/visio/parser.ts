@@ -9,6 +9,7 @@ import type { Resources } from './style';
 import { elements } from '../xml/index';
 import type { VisioDocument, VisioPage } from './model';
 import { diagnosticCollector } from './diagnostics';
+import { readVisioAnnotations, readVisioComments, type VisioComment } from './comments';
 import { metadata, metadataAttributes } from './metadata';
 import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata';
 import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
@@ -222,6 +223,7 @@ export async function parseVsdx(
 	if (!pagesPart) throw new VisioPackageError('INVALID_DOCUMENT', 'Missing Visio pages part.');
 	const pages: VisioPage[] = [],
 		pageIds = new Set<string>();
+	const comments: VisioComment[] = [];
 	for (const page of children(await visioXml(pkg, pagesPart, 'Pages'), 'Page')) {
 		const id = metadata(attribute(page, 'ID') ?? '', 256, 'Page ID');
 		if (!id || pageIds.has(id))
@@ -249,6 +251,7 @@ export async function parseVsdx(
 		}
 		resources.pageCells = new Map([...pageCells, ...sheet.cells]);
 		const theme = visioPageTheme(resources.themes, resources.pageCells);
+		comments.push(...readVisioAnnotations(sheet, id));
 		const layers = pageLayers(sheet, resources, localReport);
 		context.layers = indexLayers(layers);
 		const drawingToPageScale = visioPageGeometryScale(sheet.cells, localReport);
@@ -325,6 +328,12 @@ export async function parseVsdx(
 	}
 	checkTime();
 	validateBackgrounds(pages, report);
+	try {
+		comments.push(...(await readVisioComments(pkg, documentPart, report)));
+	} catch (error) {
+		if (!(error instanceof VisioPackageError) || error.code === 'LIMIT_RUNTIME') throw error;
+		report('invalid-comments', 'The comments part could not be read; comments are not shown.');
+	}
 	report(
 		'cached-values-only',
 		'ShapeSheet formulas, automatic connector routing, and external data are not evaluated; saved cached values and supported theme records are used.',
@@ -335,6 +344,7 @@ export async function parseVsdx(
 		pages,
 		diagnostics: diagnosticState.finish(),
 		fontFamilies: [...new Set(resources.fonts.values())],
+		...(comments.length ? { comments } : {}),
 	};
 }
 

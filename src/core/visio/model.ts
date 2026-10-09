@@ -1,5 +1,7 @@
 import type { VisioForeignVector } from './foreign-vector';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
+import type { VisioComment } from './comments';
+export type { VisioComment } from './comments';
 
 /** Visio's internal distance unit is the inch; angles are radians. */
 export type VisioMatrix = readonly [number, number, number, number, number, number];
@@ -326,4 +328,6 @@ export interface VisioDocument {
 	fontFamilies?: readonly string[];
 	pages: VisioPage[];
 	diagnostics: VisioDiagnostic[];
+	/** Review comments (visio/comments.xml) and read-only Visio 2010 annotations. */
+	comments?: VisioComment[];
 }

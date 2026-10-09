@@ -183,3 +183,16 @@ export {
 	type VisioArrowLineLayout,
 } from './filled-arrow';
 export { VISIO_PICTURE_MAX_BYTES, VISIO_METADATA_TEXT_LIMIT } from './edit-metadata-commands';
+export {
+	VISIO_COMMENT_LIMIT,
+	VISIO_COMMENT_TEXT_LIMIT,
+	VISIO_COMMENT_AUTHOR_LIMIT,
+} from './comments';
+export type {
+	VisioCommentEdit,
+	VisioCommentAddEdit,
+	VisioCommentUpdateEdit,
+	VisioCommentDeleteEdit,
+	VisioSubprocessEdit,
+	VisioSubprocessSelection,
+} from './edit';

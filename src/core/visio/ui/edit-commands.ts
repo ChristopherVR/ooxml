@@ -15,6 +15,8 @@ import { snapshotConnectorGlue } from '../edit-commands';
 import { snapshotTextRanges } from '../edit-text-range-commands';
 import { snapshotPathCreation } from '../edit-path-commands';
 import { snapshotPageTheme } from '../edit-page-theme-commands';
+import { isVisioCommentEdit, snapshotCommentEdit } from '../edit-comment-commands';
+import { snapshotSubprocessEdit } from '../edit-subprocess-commands';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -37,6 +39,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (isVisioMetadataEdit(command)) return snapshotMetadataEdit(command);
 		if (isVisioGroupEdit(command)) return snapshotGroupEdit(command);
 		if (isVisioPageSetupEdit(command)) return snapshotPageSetupEdit(command);
+		if (isVisioCommentEdit(command)) return snapshotCommentEdit(command);
+		if (command.type === 'create-subprocess') return snapshotSubprocessEdit(command);
 		if (command.type === 'reorder-page') {
 			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
 				throw new Error('Invalid page order index.');

@@ -33,6 +33,19 @@ export type { VisioPasteShapesEdit } from './edit-paste-commands';
 import { snapshotPageTheme, type VisioPageThemeEdit } from './edit-page-theme-commands';
 export type { VisioPageThemeEdit } from './edit-page-theme-commands';
 import {
+	isVisioCommentEdit,
+	snapshotCommentEdit,
+	type VisioCommentEdit,
+} from './edit-comment-commands';
+export type {
+	VisioCommentEdit,
+	VisioCommentAddEdit,
+	VisioCommentUpdateEdit,
+	VisioCommentDeleteEdit,
+} from './edit-comment-commands';
+import { snapshotSubprocessEdit, type VisioSubprocessEdit } from './edit-subprocess-commands';
+export type { VisioSubprocessEdit, VisioSubprocessSelection } from './edit-subprocess-commands';
+import {
 	isVisioFormatEdit,
 	snapshotFormatting,
 	type VisioFormatEdit,
@@ -152,7 +165,9 @@ export type VisioEdit =
 	| VisioMetadataEdit
 	| VisioPictureInsertEdit
 	| VisioGroupEdit
-	| VisioPageThemeEdit;
+	| VisioPageThemeEdit
+	| VisioCommentEdit
+	| VisioSubprocessEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
 	edit.type === 'reorder-page' ||
@@ -238,6 +253,8 @@ export function snapshotVisioEdits(
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);
 		if (isVisioPageSetupEdit(edit)) return snapshotPageSetupEdit(edit);
+		if (isVisioCommentEdit(edit)) return snapshotCommentEdit(edit);
+		if (edit.type === 'create-subprocess') return snapshotSubprocessEdit(edit);
 		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'set-page-size')
 			return {

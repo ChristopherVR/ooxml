@@ -29,6 +29,9 @@ import { isVisioGroupEdit } from './edit-group-commands';
 import { groupVisioShapes, ungroupVisioShape } from './edit-group';
 import { autoSizePageIds, growAutoSizePages } from './edit-page-auto-size';
 import { editVsdxPageTheme } from './edit-page-theme';
+import { isVisioCommentEdit, type VisioCommentEdit } from './edit-comment-commands';
+import { editVsdxComments } from './edit-comments';
+import { editVsdxSubprocess } from './edit-subprocess';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -65,6 +68,12 @@ export type {
 	VisioHyperlinkFields,
 	VisioConnectorGlue,
 	VisioPageThemeEdit,
+	VisioCommentEdit,
+	VisioCommentAddEdit,
+	VisioCommentUpdateEdit,
+	VisioCommentDeleteEdit,
+	VisioSubprocessEdit,
+	VisioSubprocessSelection,
 } from './edit-commands';
 
 export interface EditVsdxOptions {
@@ -124,7 +133,19 @@ async function editVsdxTransaction(
 	const source = input instanceof Uint8Array ? input : new Uint8Array(input);
 	if (source.length > limits.maxInputBytes) fail('LIMIT_INPUT', 'ZIP input exceeds limit.');
 	const original = new Uint8Array(source);
+	const subprocess = allCommands.find((command) => command.type === 'create-subprocess');
+	if (subprocess) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_SUBPROCESS_TRANSACTION', 'A subprocess requires its own transaction.');
+		return editVsdxSubprocess(original, subprocess, options);
+	}
 	const { pkg, parts, pages } = await openEditablePackage(original, limits, check);
+	if (allCommands.some(isVisioCommentEdit)) {
+		if (!allCommands.every(isVisioCommentEdit))
+			fail('EDIT_MIXED_COMMENT_TRANSACTION', 'Comment edits require their own transaction.');
+		const comments = allCommands as VisioCommentEdit[];
+		return editVsdxComments(pkg, parts, pages, comments, limits, maxOutput, deadline, check);
+	}
 	if (commands.length === allCommands.length) clock.autoSize = await autoSizePageIds(pkg, commands);
 	const picture = allCommands.find((command) => command.type === 'insert-picture');
 	if (picture) {
@@ -323,7 +344,12 @@ async function editVsdxTransaction(
 			))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			duplicateChanged = true;
-		} else if (command.type !== 'insert-picture' && command.type !== 'set-page-theme') {
+		} else if (
+			command.type !== 'insert-picture' &&
+			command.type !== 'set-page-theme' &&
+			command.type !== 'create-subprocess' &&
+			!isVisioCommentEdit(command)
+		) {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 		}

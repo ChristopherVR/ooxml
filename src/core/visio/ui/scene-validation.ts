@@ -2,6 +2,8 @@ import { assertVisioFillGradient } from './gradient-details';
 import {
 	inspectVisioRasterImage,
 	VISIO_RASTER_IMAGE_LIMITS,
+	VISIO_COMMENT_LIMIT,
+	VISIO_COMMENT_TEXT_LIMIT,
 	type VisioDocument,
 	type VisioShape,
 	type VisioImage,
@@ -18,6 +20,30 @@ function finite(value: number, label: string, min = -MAX_DIMENSION, max = MAX_DI
 }
 function member(value: unknown, choices: readonly unknown[], label: string): void {
 	if (!choices.includes(value)) throw new Error(`The scene has an invalid ${label}.`);
+}
+/** Review comments: bounded plain strings only. */
+function assertViewableComments(comments: VisioDocument['comments']): void {
+	if (comments === undefined) return;
+	if (!Array.isArray(comments) || comments.length > VISIO_COMMENT_LIMIT)
+		throw new Error('The scene has an invalid comment list.');
+	let characters = 0;
+	const text = (value: unknown, limit: number, optional = false) => {
+		if (optional && value === undefined) return;
+		if (typeof value !== 'string' || value.length > limit)
+			throw new Error('The scene has an invalid comment.');
+		characters += value.length;
+	};
+	for (const comment of comments) {
+		text(comment.id, 256);
+		text(comment.pageId, 256);
+		text(comment.shapeId, 256, true);
+		text(comment.author, 256);
+		text(comment.initials, 64, true);
+		text(comment.date, 64, true);
+		text(comment.editDate, 64, true);
+		text(comment.text, VISIO_COMMENT_TEXT_LIMIT);
+	}
+	if (characters > 2_000_000) throw new Error('The scene exceeds aggregate comment limits.');
 }
 /** Defensive display limits also protect callers supplying their own typed scenes. */
 export function assertViewableDocument(model: VisioDocument): void {
@@ -60,6 +86,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		label(diagnostic.message);
 		member(diagnostic.severity, ['info', 'warning'], 'diagnostic severity');
 	}
+	assertViewableComments(model.comments);
 
 	const pageIds = new Set<string>();
 	const stack: Array<{ shape: VisioShape; depth: number; ids: Set<string> }> = [];
