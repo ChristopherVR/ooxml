@@ -4,7 +4,7 @@ import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import { textFormattingWrites } from './edit-formatting-text';
-import { shapeFormattingWrites, assertShapeFormattingPaintScope } from './edit-formatting-paint';
+import { shapeFormattingPlan, assertShapeFormattingPaintScope } from './edit-formatting-paint';
 import { assertFormattingDependencies } from './edit-formatting-scope';
 import {
 	assertEditableFormattingCell,
@@ -73,7 +73,9 @@ export async function applyFormattingEdit(
 		writes = plan.writes;
 		rows = plan.rows;
 	} else {
-		writes = shapeFormattingWrites(edit);
+		const plan = await shapeFormattingPlan(pkg, document, shape, edit, check);
+		writes = plan.writes;
+		rows = plan.rows;
 	}
 	const changed = new Map<string, Element | undefined>();
 	for (const write of writes) {
@@ -83,13 +85,16 @@ export async function applyFormattingEdit(
 		const effective = effectiveShapeCell(shape, document, write.name, write.category, rowContext);
 		assertEditableFormattingCell(effective);
 		if (
-			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd)$/.test(
+			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd|ShdwPattern|ShdwForegndTrans|ShapeShdwType|QuickStyle[A-Za-z]+)$/.test(
 				write.name,
 			) &&
 			effective?.hasAttribute('U') &&
 			visioFormulaCachedValue('0', attribute(effective, 'U')).unit !== 'scalar'
 		)
-			fail('EDIT_FORMULA_UNIT', 'Paint patterns and transparency require scalar units.');
+			fail(
+				'EDIT_FORMULA_UNIT',
+				'Paint patterns, transparency and style selectors require scalar units.',
+			);
 		if (
 			write.unit &&
 			effective?.hasAttribute('U') &&

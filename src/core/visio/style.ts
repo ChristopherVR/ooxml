@@ -7,6 +7,7 @@ import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './th
 import { lineCap } from './line-style';
 import { linePattern } from './line-pattern';
 import { sourcePaint } from './source-paint';
+import { shapeShadow } from './shadow';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { textParagraphs, type ParagraphMarker } from './paragraphs';
@@ -138,8 +139,11 @@ export function shapeStyle(
 	if (lineGradient && (number(cells, 'BeginArrow', 0) || number(cells, 'EndArrow', 0)))
 		report('unsupported-gradient-arrows', 'Arrow markers retain the solid line fallback color.');
 	reportThemeEffects(cells, resources, report);
-	if (number(cells, 'ShdwPattern', 0, report))
-		report('unsupported-shadow', 'Shape shadows are not rendered.');
+	const shadow = shapeShadow(
+		cells,
+		(name, fallback) => color(cells, name, fallback, resources, report),
+		report,
+	);
 	const cap = lineCap(cells, resources, report);
 	return {
 		fill:
@@ -166,6 +170,7 @@ export function shapeStyle(
 		endArrow: number(cells, 'EndArrow', 0, report),
 		startArrowSize: number(cells, 'BeginArrowSize', 2, report),
 		endArrowSize: number(cells, 'EndArrowSize', 2, report),
+		...(shadow ? { shadow } : {}),
 	};
 }
 function font(cells: Cells, resources: Resources): string {

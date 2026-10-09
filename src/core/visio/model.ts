@@ -59,6 +59,14 @@ export interface VisioFillPattern extends VisioImage {
 	height: number;
 	bytes: Uint8Array;
 }
+/** A simple outer shape shadow. Offsets are page inches with Y up; blur is a radius in inches. */
+export interface VisioShadow {
+	color: string;
+	opacity: number;
+	offsetX: number;
+	offsetY: number;
+	blur: number;
+}
 export interface VisioStyle {
 	fill: string;
 	/** Supported normalized gradient; fill remains the solid fallback color. */
@@ -94,6 +102,7 @@ export interface VisioStyle {
 	endArrow: number;
 	startArrowSize?: number;
 	endArrowSize?: number;
+	shadow?: VisioShadow;
 }
 export interface VisioTextRun {
 	text: string;

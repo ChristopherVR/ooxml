@@ -1,4 +1,10 @@
 import { fail } from './package-common';
+import {
+	isVisioQuickStyleColor,
+	isVisioShadowPreset,
+	type VisioQuickStyle,
+	type VisioShadowPreset,
+} from './edit-formatting-effects';
 
 interface Target {
 	pageId: string;
@@ -38,6 +44,10 @@ export interface VisioShapeFormatEdit extends Target {
 	fillBackgroundColor?: string;
 	/** Percent transparency applied to both foreground and background fill. */
 	fillTransparency?: number;
+	/** Theme Quick Style: a colour slot and a style matrix, clearing local paint overrides. */
+	quickStyle?: VisioQuickStyle;
+	/** Outer shadow preset; `none` turns the shape shadow off. */
+	shadow?: VisioShadowPreset;
 }
 export type VisioFormatEdit = VisioTextFormatEdit | VisioShapeFormatEdit;
 export const isVisioFormatEdit = (edit: { type: string }): edit is VisioFormatEdit =>
@@ -104,6 +114,30 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 			if (edit[name] !== undefined) result[name] = Math.round(points(edit[name], 0, 100) * 2) / 2;
 		if (edit.fillBackgroundColor !== undefined)
 			result.fillBackgroundColor = color(edit.fillBackgroundColor);
+		if (edit.quickStyle !== undefined) {
+			const { color: slot, matrix } = edit.quickStyle ?? {};
+			if (
+				!isVisioQuickStyleColor(slot) ||
+				typeof matrix !== 'number' ||
+				!Number.isInteger(matrix) ||
+				matrix < 1 ||
+				matrix > 6
+			)
+				fail('INVALID_EDIT', 'Quick Styles require a theme colour slot and a matrix of 1 to 6.');
+			result.quickStyle = { color: slot, matrix };
+			if (
+				Object.keys(edit).some(
+					(key) =>
+						!['type', 'pageId', 'shapeId', 'quickStyle', 'shadow'].includes(key) &&
+						edit[key as keyof VisioShapeFormatEdit] !== undefined,
+				)
+			)
+				fail('INVALID_EDIT', 'A Quick Style replaces fill, line and font paint as a whole.');
+		}
+		if (edit.shadow !== undefined) {
+			if (!isVisioShadowPreset(edit.shadow)) fail('INVALID_EDIT', 'Unknown shadow preset.');
+			result.shadow = edit.shadow;
+		}
 		if (result.fillColor === 'none' && result.fillPattern !== undefined && result.fillPattern !== 0)
 			fail('INVALID_EDIT', 'No fill conflicts with a visible fill pattern.');
 	}

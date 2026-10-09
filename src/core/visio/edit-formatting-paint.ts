@@ -2,6 +2,8 @@ import type { VisioShapeFormatEdit } from './edit-formatting-commands';
 import type { FormattingWrite } from './edit-formatting';
 import { assertNonGradientPaint } from './edit-formatting-paint-scope';
 import type { VisioPackage } from './package';
+import type { FormattingRowContext } from './edit-style-admission';
+import { quickStyleWrites, shadowWrites } from './edit-formatting-effects';
 
 export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWrite[] {
 	const writes = new Map<string, FormattingWrite>();
@@ -56,6 +58,35 @@ export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWri
 	if (edit.lineWeight !== undefined) add('LineWeight', edit.lineWeight / 72, 'LineStyle', 'PT');
 	return [...writes.values()];
 }
+/** Paint writes plus Shape Styles (Quick Style and shadow) writes; later writes win by name. */
+export async function shapeFormattingPlan(
+	pkg: VisioPackage,
+	document: Element,
+	shape: Element,
+	edit: VisioShapeFormatEdit,
+	check: () => void,
+): Promise<{ writes: FormattingWrite[]; rows?: Map<string, FormattingRowContext> }> {
+	const writes = new Map(shapeFormattingWrites(edit).map((write) => [write.name, write]));
+	const add = (
+		name: string,
+		value: string | number,
+		category: FormattingWrite['category'],
+		unit?: string,
+		formula?: string,
+	) =>
+		writes.set(name, {
+			name,
+			value: String(value),
+			category,
+			...(unit ? { unit } : {}),
+			...(formula ? { formula } : {}),
+		});
+	const rows = edit.quickStyle
+		? await quickStyleWrites(pkg, document, shape, edit.pageId, edit.quickStyle, add, check)
+		: undefined;
+	if (edit.shadow) shadowWrites(edit.shadow, add);
+	return { writes: [...writes.values()], ...(rows ? { rows } : {}) };
+}
 export async function assertShapeFormattingPaintScope(
 	pkg: VisioPackage,
 	document: Element,
@@ -64,6 +95,8 @@ export async function assertShapeFormattingPaintScope(
 	changed: ReadonlyMap<string, Element | undefined>,
 	check: () => void,
 ): Promise<void> {
+	// A Quick Style replaces the whole paint, including any theme gradient.
+	if (edit.quickStyle) return;
 	if (
 		edit.fillColor === undefined &&
 		edit.fillPattern === undefined &&

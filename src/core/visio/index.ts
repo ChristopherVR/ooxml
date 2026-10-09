@@ -96,6 +96,17 @@ export {
 	type VisioPathSegment,
 } from './path-fit';
 export {
+	VISIO_QUICK_STYLE_COLORS,
+	VISIO_SHADOW_PRESETS,
+	isVisioQuickStyleColor,
+	isVisioShadowPreset,
+	visioFallbackQuickStyle,
+	visioShadowPresetGeometry,
+	type VisioQuickStyle,
+	type VisioQuickStyleColor,
+	type VisioShadowPreset,
+} from './edit-formatting-effects';
+export {
 	VISIO_BASIC_SHAPES,
 	isVisioBasicShape,
 	visioBasicShapeOutline,

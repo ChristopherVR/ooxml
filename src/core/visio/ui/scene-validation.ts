@@ -165,6 +165,15 @@ export function assertViewableDocument(model: VisioDocument): void {
 		)
 			throw new Error('The scene has an invalid normalized line cap.');
 		finite(shape.style.fillOpacity, 'fill opacity', 0, 1);
+		const shadow = shape.style.shadow;
+		if (shadow !== undefined) {
+			if (typeof shadow.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(shadow.color))
+				throw new Error('The scene has an invalid shadow color.');
+			finite(shadow.opacity, 'shadow opacity', 0, 1);
+			finite(shadow.offsetX, 'shadow offset', -1000, 1000);
+			finite(shadow.offsetY, 'shadow offset', -1000, 1000);
+			finite(shadow.blur, 'shadow blur', 0, 10);
+		}
 		finite(shape.style.lineOpacity, 'line opacity', 0, 1);
 		if (shape.style.lineDashDotLength !== undefined)
 			finite(shape.style.lineDashDotLength, 'line dash dot length', 0, 1_000_000);

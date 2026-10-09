@@ -9,28 +9,38 @@ import {
 	type VisioFormulaAst,
 } from './formula';
 
+function themeLiteral(node: VisioFormulaAst): boolean {
+	if (node.kind === 'string' || node.kind === 'number') return true;
+	if (node.kind !== 'call' || !node.args.every(themeLiteral)) return false;
+	if (node.name === 'THEMEGUARD') return node.args.length <= 1;
+	if (node.name === 'THEME')
+		return node.args.length === 0 || (node.args.length === 1 && node.args[0]?.kind === 'string');
+	if (node.name !== 'THEMEVAL' || node.args.length > 2) return false;
+	const selector = node.args[0];
+	return (
+		!selector ||
+		selector.kind === 'string' ||
+		(selector.kind === 'number' &&
+			selector.unit === 'scalar' &&
+			Number.isInteger(selector.value) &&
+			selector.value >= 1 &&
+			selector.value <= 8)
+	);
+}
+/** A literal THEMEVAL/THEME/THEMEGUARD lookup, resolved from the theme by readers. */
+export function isThemeLookupFormula(source: string | undefined): boolean {
+	const ast = source ? parseVisioFormula(source) : undefined;
+	return (
+		ast?.kind === 'call' &&
+		['THEMEVAL', 'THEME', 'THEMEGUARD'].includes(ast.name) &&
+		themeLiteral(ast)
+	);
+}
+
 /** Literal native font/color lookups are safe to replace after GUARD and reference analysis. */
 export function assertEditableFormattingCell(cell: Element | undefined): void {
 	const source = executableCellFormula(attribute(cell, 'F'));
 	const ast = source ? parseVisioFormula(source) : undefined;
-	const themeLiteral = (node: VisioFormulaAst): boolean => {
-		if (node.kind === 'string' || node.kind === 'number') return true;
-		if (node.kind !== 'call' || !node.args.every(themeLiteral)) return false;
-		if (node.name === 'THEMEGUARD') return node.args.length <= 1;
-		if (node.name === 'THEME')
-			return node.args.length === 0 || (node.args.length === 1 && node.args[0]?.kind === 'string');
-		if (node.name !== 'THEMEVAL' || node.args.length > 2) return false;
-		const selector = node.args[0];
-		return (
-			!selector ||
-			selector.kind === 'string' ||
-			(selector.kind === 'number' &&
-				selector.unit === 'scalar' &&
-				Number.isInteger(selector.value) &&
-				selector.value >= 1 &&
-				selector.value <= 8)
-		);
-	};
 	// THEMEGUARD is explicitly overridable by manual formatting; GUARD and
 	// SETATREF remain prohibited. Only literal theme lookups are admitted here.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/themeguard-function

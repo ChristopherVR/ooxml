@@ -155,6 +155,9 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 		return {
 			...result,
 			...gradients,
+			...(source.shadow
+				? { shadow: fields(source.shadow, ['color', 'opacity', 'offsetX', 'offsetY', 'blur']) }
+				: {}),
 			...(source.fillPattern
 				? {
 						fillPattern: {

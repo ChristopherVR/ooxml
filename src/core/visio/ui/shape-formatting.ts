@@ -1,4 +1,9 @@
 import type { VisioShape } from '../model';
+import {
+	VISIO_SHADOW_PRESETS,
+	visioShadowPresetGeometry,
+	type VisioShadowPreset,
+} from '../edit-formatting-effects';
 
 export interface VisioShapeFormattingState {
 	linePattern: number | undefined;
@@ -9,6 +14,21 @@ export interface VisioShapeFormattingState {
 	/** Mixed foreground/background values are undefined, including within one shape. */
 	fillTransparency: number | undefined;
 	lineTransparency: number | undefined;
+	/** The common outer shadow preset; undefined when mixed or not a preset. */
+	shadowPreset: VisioShadowPreset | undefined;
+}
+/** The preset whose offset and blur match a rendered shadow, or `none` without one. */
+export function visioShadowPreset(shape: VisioShape): VisioShadowPreset | undefined {
+	const shadow = shape.style.shadow;
+	if (!shadow) return 'none';
+	const near = (left: number, right: number) => Math.abs(left - right) < 1e-6;
+	return VISIO_SHADOW_PRESETS.find((preset) => {
+		if (preset === 'none') return false;
+		const { x, y, blur } = visioShadowPresetGeometry(preset);
+		return (
+			near(shadow.offsetX, x / 72) && near(shadow.offsetY, y / 72) && near(shadow.blur, blur / 72)
+		);
+	});
 }
 /** Source paint values stay independent of gradient and bitmap rendering multipliers. */
 export function visioShapeFormattingState(
@@ -34,6 +54,7 @@ export function visioShapeFormattingState(
 		fillForegroundTransparency: common(foreground),
 		fillBackgroundTransparency: common(background),
 		fillTransparency: common([...foreground, ...background]),
+		shadowPreset: common(shapes.map(visioShadowPreset)),
 		lineTransparency: common(
 			shapes.map((shape) =>
 				percent(
