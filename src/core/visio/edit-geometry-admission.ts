@@ -1,6 +1,7 @@
 import { cells, numeric } from './edit-geometry-cells';
 export { cells, numeric, setCell } from './edit-geometry-cells';
 import { assertEllipseResizeRow } from './edit-ellipse-geometry';
+import { assertRelativeArcResizeRow } from './edit-path-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import {
@@ -266,17 +267,28 @@ export function resizeGeometry(
 		for (const row of children(section, 'Row')) {
 			const type = attribute(row, 'T');
 			if (type === 'Ellipse') assertEllipseResizeRow(shape, row);
+			// Relative curve rows are fractions of Width and Height; the arc ratio needs its own proof.
+			if (type === 'RelEllipticalArcTo') assertRelativeArcResizeRow(shape, row);
+			const controlled = ['Ellipse', 'RelCubBezTo', 'RelEllipticalArcTo'].includes(type ?? '');
 			if (
 				row.hasAttribute('Del') ||
-				!['MoveTo', 'LineTo', 'RelMoveTo', 'RelLineTo', 'Ellipse'].includes(type ?? '')
+				![
+					'MoveTo',
+					'LineTo',
+					'RelMoveTo',
+					'RelLineTo',
+					'Ellipse',
+					'RelCubBezTo',
+					'RelEllipticalArcTo',
+				].includes(type ?? '')
 			)
 				fail(
 					'UNSUPPORTED_GEOMETRY_EDIT',
-					'Only local line-based geometry and canonical ellipses can be resized.',
+					'Only local line-based geometry, relative curves and canonical ellipses can be resized.',
 				);
 			for (const node of children(row, 'Cell')) {
 				if (
-					!(type === 'Ellipse' ? ['X', 'Y', 'A', 'B', 'C', 'D'] : ['X', 'Y']).includes(
+					!(controlled ? ['X', 'Y', 'A', 'B', 'C', 'D'] : ['X', 'Y']).includes(
 						attribute(node, 'N') ?? '',
 					)
 				)

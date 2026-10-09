@@ -48,6 +48,27 @@ export function visioPageEditToDrawing(page: VisioPage, edit: VisioEdit): VisioE
 				width: coordinate(edit.width),
 				height: coordinate(edit.height),
 			};
+		case 'create-path':
+			return {
+				...edit,
+				x: coordinate(edit.x),
+				y: coordinate(edit.y),
+				segments: edit.segments.map((segment) => ({
+					...segment,
+					x: coordinate(segment.x),
+					y: coordinate(segment.y),
+					...(segment.kind === 'cubic'
+						? {
+								x1: coordinate(segment.x1),
+								y1: coordinate(segment.y1),
+								x2: coordinate(segment.x2),
+								y2: coordinate(segment.y2),
+							}
+						: segment.kind === 'arc'
+							? { a: coordinate(segment.a), b: coordinate(segment.b) }
+							: {}),
+				})),
+			};
 		case 'create-line':
 			return {
 				...edit,

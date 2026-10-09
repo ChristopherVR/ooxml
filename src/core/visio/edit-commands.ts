@@ -7,6 +7,8 @@ export type { VisioResizeAnchor } from './resize-anchor';
 import { snapshotDuplicateShapes, type VisioDuplicateShapesEdit } from './edit-duplicate-commands';
 export type { VisioDuplicateShapesEdit } from './edit-duplicate-commands';
 import { snapshotPasteShapes, type VisioPasteShapesEdit } from './edit-paste-commands';
+import { snapshotPathCreation, type VisioPathCreateEdit } from './edit-path-commands';
+export type { VisioPathCreateEdit, VisioPathSegment } from './edit-path-commands';
 export type { VisioPasteShapesEdit } from './edit-paste-commands';
 import {
 	isVisioFormatEdit,
@@ -43,6 +45,7 @@ export type VisioGeometryEdit =
 	| (BoxCreation & { type: 'create-rectangle'; shape?: VisioBasicShape })
 	| (BoxCreation & { type: 'create-ellipse' })
 	| (BoxCreation & { type: 'create-text-box'; text: string })
+	| VisioPathCreateEdit
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number; anchor?: VisioResizeAnchor })
 	| (Target & { type: 'rotate-shape'; angle: number })
@@ -222,6 +225,8 @@ export function snapshotVisioEdits(
 		if (!/^[1-9]\d{0,9}$/.test(edit.shapeId) || Number(edit.shapeId) > 4294967295)
 			fail('INVALID_EDIT', 'Geometry shape IDs must be canonical positive unsigned integers.');
 		switch (edit.type) {
+			case 'create-path':
+				return snapshotPathCreation(edit);
 			case 'create-text-box':
 				return {
 					...target,

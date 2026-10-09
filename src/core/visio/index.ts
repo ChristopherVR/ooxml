@@ -81,6 +81,18 @@ export {
 	type VisioClipboardSnapshot,
 } from './clipboard';
 export { createVsdx, type CreateVsdxOptions } from './create-document';
+export { VISIO_PATH_SEGMENT_LIMIT, type VisioPathCreateEdit } from './edit-path-commands';
+export {
+	visioSimplifyPath,
+	visioFitFreeform,
+	visioFitPencil,
+	visioQuarterArc,
+	visioPathSamples,
+	visioPathBounds,
+	visioCircleThrough,
+	type VisioPathPoint,
+	type VisioPathSegment,
+} from './path-fit';
 export {
 	VISIO_BASIC_SHAPES,
 	isVisioBasicShape,

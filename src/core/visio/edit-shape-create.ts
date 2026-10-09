@@ -33,7 +33,7 @@ function createShape(root: Element, shapeId: string): Element {
 	return shape;
 }
 
-function createBox(
+export function createBox(
 	root: Element,
 	document: Element,
 	edit: Extract<

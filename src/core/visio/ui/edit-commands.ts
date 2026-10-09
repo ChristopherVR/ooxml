@@ -4,6 +4,7 @@ import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
 import { snapshotPasteShapes } from '../edit-paste-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import { snapshotTextRanges } from '../edit-text-range-commands';
+import { snapshotPathCreation } from '../edit-path-commands';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
@@ -73,6 +74,10 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		const target = { pageId: command.pageId, shapeId: command.shapeId };
 		if (isVisioFormatEdit(command)) return snapshotFormatting(command);
 		switch (command.type) {
+			case 'create-path':
+				return snapshotPathCreation(command, (message) => {
+					throw new Error(message);
+				});
 			case 'create-text-box':
 				numbers(command.x, command.y, command.width, command.height);
 				return {

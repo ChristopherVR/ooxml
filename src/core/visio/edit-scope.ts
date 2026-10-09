@@ -231,7 +231,8 @@ export async function assertGeometryPackageScope(
 				(command.type === 'create-rectangle' ||
 					command.type === 'create-ellipse' ||
 					command.type === 'create-text-box' ||
-					command.type === 'create-line') &&
+					command.type === 'create-line' ||
+					command.type === 'create-path') &&
 				command.pageId === pageId &&
 				!shapes.some((shape) => attribute(shape, 'ID') === command.shapeId)
 			) {

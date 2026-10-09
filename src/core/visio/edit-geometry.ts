@@ -3,6 +3,7 @@ import { resizeVisioShapeAtAnchor } from './edit-resize-anchor';
 import { executableCellFormula } from './cell-formula';
 import { editableTransformCell } from './edit-transform-formula';
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
+import { createPath } from './edit-path-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
@@ -65,6 +66,9 @@ export function applyGeometryEdit(
 			y: (edit.beginY + edit.endY) / 2,
 		};
 		for (const name of geometryChangedCells(edit)) add(name);
+	} else if (edit.type === 'create-path') {
+		expected = createPath(root, document, edit);
+		for (const name of ['Width', 'Height', 'PinX', 'PinY']) add(name);
 	} else if (
 		edit.type === 'create-rectangle' ||
 		edit.type === 'create-ellipse' ||
