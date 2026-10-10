@@ -141,7 +141,10 @@ export function indexCells(
 				if (
 					executableCellFormula(source) &&
 					!inertDoubleClickFormula(cell, source!) &&
-					!(glue && isNativeGlueCell(cell, source!))
+					!(glue && isNativeGlueCell(cell, source!)) &&
+					// A trigger only counts events of the sheet it names; an unglued connector keeps one
+					// (Visio's freshly dropped connector names its own sheet).
+					!(/^(BegTrigger|EndTrigger)$/.test(cell) && isNativeGlueCell(cell, source!))
 				) {
 					try {
 						item.formula = parseVisioFormula(source!);

@@ -69,6 +69,9 @@ export function masterCells(
 					node,
 				);
 				if (name !== 'Geometry') add(`${prefix}.${r}.${n}`, node);
+				// Formulas (Visio's point glue among them) name connection points from one.
+				if (prefix === 'Connection' && index !== undefined)
+					add(`Connections.${n}${Number(ix) + 1}`, node);
 				if (prefix === 'Controls' && n === 'X') add(`${prefix}.${r}`, node);
 				if (name !== 'Geometry' && index !== undefined) add(`${prefix}.$row${ix}.${n}`, node);
 			}
