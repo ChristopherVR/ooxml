@@ -37,9 +37,7 @@ describe('text of stencil (master) instances', () => {
 		expect(saved.changedParts).toEqual([PAGE]);
 		const page = await part(saved.bytes, PAGE);
 		// The instance keeps its cells and gains the text after them; no size cell is written.
-		expect(page).toMatch(
-			/<Cell N="PinY" V="6"\/><Text>Typed on an instance\n<\/Text><\/Shape>/,
-		);
+		expect(page).toMatch(/<Cell N="PinY" V="6"\/><Text>Typed on an instance\n<\/Text><\/Shape>/);
 		expect(page).not.toMatch(/N="Height"/);
 		expect(await part(saved.bytes, MASTER)).toBe(await part(bytes, MASTER));
 		const model = await parseVsdx(saved.bytes);
@@ -56,7 +54,9 @@ describe('text of stencil (master) instances', () => {
 		// Typing the master's own text changes nothing.
 		const inherited = await source(instance(), master('<Text>From the master\n</Text>'));
 		expect((await type(inherited, 'From the master')).changedParts).toEqual([]);
-		expect(await part((await type(inherited, 'Mine')).bytes, PAGE)).toContain('<Text>Mine\n</Text>');
+		expect(await part((await type(inherited, 'Mine')).bytes, PAGE)).toContain(
+			'<Text>Mine\n</Text>',
+		);
 	});
 
 	it('edits a sub-shape of a group instance before its own sub-shapes', async () => {
@@ -87,9 +87,9 @@ describe('text of stencil (master) instances', () => {
 			'Allowed here',
 		);
 		expect(await part(unlocked.bytes, PAGE)).toContain('<Text>Allowed here\n</Text>');
-		await expect(
-			type(await source(instance(cell('LockTextEdit', 1))), 'No'),
-		).rejects.toMatchObject({ code: 'EDIT_PROTECTED_CELL' });
+		await expect(type(await source(instance(cell('LockTextEdit', 1))), 'No')).rejects.toMatchObject(
+			{ code: 'EDIT_PROTECTED_CELL' },
+		);
 	});
 
 	it('refuses master text with fields or rich markup, and a missing master', async () => {
@@ -114,17 +114,20 @@ describe('text of stencil (master) instances', () => {
 // Optional: `scripts/record-visio-instance-text.ps1 -OutputDirectory <dir>` saves a real stencil
 // drop before and after Visio set its text; the edit must write the same Text element.
 const native = process.env.VISIO_NATIVE_INSTANCE_TEXT_DIR;
-it.skipIf(!native)('writes the Text element native Visio writes for a dropped stencil shape', async () => {
-	const before = new Uint8Array(await readFile(join(native!, 'before.vsdx')));
-	const after = new Uint8Array(await readFile(join(native!, 'after.vsdx')));
-	const saved = await type(before, 'Typed on an instance', '1');
-	// An XML reader normalises the file's CRLF to a line feed, so compare the text that way.
-	const text = (xml: string) =>
-		/<Shape ID=["']1["'][^>]*>.*?<Text>(.*?)<\/Text>/s.exec(xml)?.[1]?.replace(/\r\n/g, '\n');
-	expect(text(await part(saved.bytes, PAGE))).toBe(text(await part(after, PAGE)));
-	const model = await parseVsdx(saved.bytes);
-	const expected = await parseVsdx(after);
-	expect(model.pages[0]!.shapes[0]!.text.plainText).toBe(
-		expected.pages[0]!.shapes[0]!.text.plainText,
-	);
-});
+it.skipIf(!native)(
+	'writes the Text element native Visio writes for a dropped stencil shape',
+	async () => {
+		const before = new Uint8Array(await readFile(join(native!, 'before.vsdx')));
+		const after = new Uint8Array(await readFile(join(native!, 'after.vsdx')));
+		const saved = await type(before, 'Typed on an instance', '1');
+		// An XML reader normalises the file's CRLF to a line feed, so compare the text that way.
+		const text = (xml: string) =>
+			/<Shape ID=["']1["'][^>]*>.*?<Text>(.*?)<\/Text>/s.exec(xml)?.[1]?.replace(/\r\n/g, '\n');
+		expect(text(await part(saved.bytes, PAGE))).toBe(text(await part(after, PAGE)));
+		const model = await parseVsdx(saved.bytes);
+		const expected = await parseVsdx(after);
+		expect(model.pages[0]!.shapes[0]!.text.plainText).toBe(
+			expected.pages[0]!.shapes[0]!.text.plainText,
+		);
+	},
+);
