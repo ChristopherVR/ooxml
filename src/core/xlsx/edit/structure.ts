@@ -5,6 +5,7 @@ import { type EditContext, type RunInfo, sheetAt } from './context';
 import { shiftFormula } from './deps';
 import { type Axis, type AxisShift, shiftRange } from './range-math';
 import { rewriteFormulas } from './shift-formulas';
+import { rebaseRulesForDeletion } from './shift-rule-anchors';
 import { shiftSheetContent } from './shift-sheet';
 
 function checkSpan(axis: Axis, at: number, count: number): void {
@@ -15,6 +16,7 @@ function checkSpan(axis: Axis, at: number, count: number): void {
 
 /** Applies an axis shift to a sheet and every formula in the workbook (no undo step). */
 export function applyAxisShift(ctx: EditContext, sheet: Worksheet, shift: AxisShift): void {
+	rebaseRulesForDeletion(sheet, shift);
 	const spec = { sheet: sheet.name, axis: shift.axis, at: shift.at, count: shift.count };
 	rewriteFormulas(ctx.workbook, (formula, formulaSheet) =>
 		shiftFormula(formula, formulaSheet, spec),

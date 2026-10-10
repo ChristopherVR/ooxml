@@ -5,6 +5,7 @@ import { type EditContext, isWholeColumns, isWholeRows, sheetAt } from './contex
 import type { AxisShift } from './range-math';
 import { cellRange } from './range-math';
 import { rewriteFormulas } from './shift-formulas';
+import { rebaseRulesForDeletion } from './shift-rule-anchors';
 import { type Band, shiftSheetContent } from './shift-sheet';
 import { deleteColumns, deleteRows, insertColumns, insertRows } from './structure';
 
@@ -23,6 +24,7 @@ function assertBandIntact(sheet: Worksheet, shift: AxisShift, band: Band): void 
 		throw new Error('Cannot shift cells: a table would be split.');
 }
 
+/** Runs one atomic cell-band edit after checking the ranges that must move together. */
 function shiftBand(
 	ctx: EditContext,
 	s: number,
@@ -48,6 +50,7 @@ function shiftBand(
 		'structure',
 		[{ kind: 'shift', sheet: s, shift, band }],
 		() => {
+			rebaseRulesForDeletion(sheet, shift, band);
 			rewriteFormulas(ctx.workbook, (formula, formulaSheet) =>
 				shiftFormulaInBand(formula, formulaSheet, sheet.name, shift, band),
 			);
