@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 import { setupFormattingViewer } from './__fixtures__/formatting-viewer';
 import { VISIO_GUIDE_URL } from './viewer-layout-commands';

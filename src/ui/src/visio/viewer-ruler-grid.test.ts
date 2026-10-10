@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 import { createVsdx, editVsdx, parseVsdx, visioPageLayout, type VisioEdit } from 'ooxml-core/visio';
 import { ViewerController } from './controller';

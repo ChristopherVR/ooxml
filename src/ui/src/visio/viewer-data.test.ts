@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 import { setupFormattingViewer } from './__fixtures__/formatting-viewer';
 // The Data tab loads the workbook reader on first use; load it up front so waits stay short.

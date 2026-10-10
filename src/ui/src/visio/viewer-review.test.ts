@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { clearOfficeProfile, writeOfficeProfile } from '../controls';
 import type { OfficeUiCommentsPane } from '../comments/comments-pane';
