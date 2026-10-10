@@ -1,5 +1,59 @@
 # Visio capability ledger
 
+## Line jumps, Ruler & Grid, Snap & Glue and a horizontal legend, 2026-10-10
+
+Four commands that were shown disabled now work, each as one undoable edit of
+the drawing:
+
+- Design > Connectors > Show Line Jumps. Connectors that cross are drawn with
+  a jump, by the page's LineJumpCode (none, horizontal lines, vertical lines,
+  last or first displayed) and LineJumpStyle (arc, gap, square, two to seven
+  sides), on screen and in SVG export. The toggle writes LineJumpCode 1 or 0.
+  A page without the cells jumps on horizontal lines with arcs, as recorded
+  from Visio 16.
+- View > Show > Ruler & Grid (the group's launcher). Ruler subdivisions and
+  zero point, and the grid's spacing (Fine, Normal, Coarse, Fixed), minimum
+  spacing and origin, per axis, saved as PageSheet cells. The canvas grid, Snap
+  to Grid and the rulers follow them.
+- View > Visual Aids > Snap & Glue (the group's launcher). Whether snapping and
+  gluing are active and the Snap to and Glue to lists, saved as the drawing's
+  DocumentSettings.
+- Data > Insert Legend > Horizontal.
+
+A drawing written with these edits was opened in Visio 16, which read every
+cell and setting back with the saved values and saved the file again.
+
+Not matched, or approximate:
+
+- Only routable or glued connectors with straight segments jump or are jumped;
+  curved connectors and lines drawn with the Line tool do not. The jump width
+  is an estimate (Visio's base size is not documented), and "last routed line"
+  is treated as last displayed. The per-connector jump cells (ConLineJumpCode,
+  ConLineJumpStyle, ConLineJumpDirX/Y) are not read, and the Layout & Routing
+  dialog still has no line jump page.
+- The variable grid's steps at 100% (1/4, 1/2 and 1 inch for Fine, Normal and
+  Coarse) are read off Visio's window. Normal and Coarse rulers show a half
+  and a quarter of the subdivisions, which is a rule of this editor.
+- Snap & Glue acts on Snap (grid and guides), Glue and Glue to connection
+  points. The other choices are saved for Visio only, and the dialog says so.
+  The bit meanings follow Visio's VisSnapSettings and VisGlueSettings
+  enumerations and were not checked against Visio's dialog box by box. Snap to
+  Grid still needs View > Grid on, where Visio snaps to a hidden grid too. View
+  > Dynamic Grid stays a per-viewer toggle and does not write
+  DynamicGridEnabled; the Advanced tab (snap strength, extensions, angles) is
+  not built.
+
+Still disabled, with one plain sentence each:
+
+- Not built yet: Review > Check Accessibility (how Visio stores a shape's alt
+  text was not recorded, so there is no honest Alt Text edit to pair it with),
+  the Text dialog's Tabs tab, Data Graphics Position, Configure and Auto Space,
+  Data Graphic Fields, Advanced Data Graphics and Link Data.
+- No bundled data or codec: Review > Thesaurus, Insert > Object, Chart and CAD
+  Drawing, Import Rules From.
+- Not possible in a browser editor: SharePoint Workflow, New Window, Arrange
+  All, Cascade, Switch Windows, Macros, Add-Ons and Ink.
+
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 
 Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
@@ -180,7 +234,8 @@ Not Visio's router, and still different:
   shape onto an existing connector does not reroute it (Visio does).
 - Master instances are not obstacles, because their size and `ObjType` can live
   in the master. At most the 24 nearest obstacles are considered.
-- No line jumps, no spacing between parallel connectors, no Re-Layout.
+- No spacing between parallel connectors, no Re-Layout. (Line jumps are drawn
+  now; see the section on them above.)
 - Visio's own Dynamic connector (a master instance) still cannot be rerouted or
   re-glued here. The recorded instance keeps `PinX`, `PinY`, `LocPinX`,
   `LocPinY`, `TxtPinX`, `TxtPinY` and the TextPosition control as inherited
@@ -986,7 +1041,7 @@ Right-Angle, Straight (`ShapeRouteStyle` 16, the straight cell form) and Curved
 (`ConLineRouteExt` 2, one `NURBSTo` cubic); Insert > Connector picks the style
 and arms the Connector tool. All of these are ordinary undoable edits.
 
-Limits: the router is not Visio's (it avoids placeable shapes only, see the section on that above; no line jumps,
+Limits: the router is not Visio's (it avoids placeable shapes only, see the section on that above;
 no spacing between parallel connectors, no Re-Layout); right-angle and curved
 connectors cannot be resized, rotated or flipped (they change through their ends
 and route); connection points are added to and glued on local top-level 2D
