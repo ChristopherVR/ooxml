@@ -137,10 +137,10 @@
 		"build": "node scripts/build.mjs",
 		"prepack": "node scripts/ensure-built.mjs",
 		"typecheck": "tsc -p tsconfig.pptx.json --outDir .types-pptx && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.pptx.json --noEmit",
-		"test": "vitest run && vitest run --config vitest.pptx.config.ts",
+		"test": "vitest run",
 		"test:package": "node scripts/package-smoke.mjs",
 		"gen:manifest": "node scripts/gen-manifest.mjs",
-		"test:pptx": "vitest run --config vitest.pptx.config.ts"
+		"test:pptx": "vitest run --project pptx --project pptx-isolated"
 	},
 	"dependencies": {
 		"dompurify": "^3.4.16",

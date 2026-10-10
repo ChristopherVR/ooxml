@@ -96,7 +96,6 @@ const changedTests = full ? '' : ` --changed=${base} --passWithNoTests`;
 if (p.test.run) add(`bun run test${p.test.mode === 'all' ? '' : changedTests}`);
 if (p.checks.ui) {
 	add(`bunx vitest run${changedTests}`, 'src/ui');
-	add(`bunx vitest run --config vitest.pptx.config.ts${changedTests}`, 'src/ui');
 }
 if (p.scripts) add('bun run test:scripts');
 if (p.mcp) add('bun run test:mcp');
