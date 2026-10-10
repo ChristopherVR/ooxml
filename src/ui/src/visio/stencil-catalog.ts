@@ -1,8 +1,9 @@
 import {
+	VISIO_BASIC_STENCIL,
 	VISIO_STENCILS,
+	visioBuiltInMaster,
 	visioOutlineShape,
 	type VisioBasicOutline,
-	type VisioBasicShape,
 	type VisioOutlineShape,
 } from 'ooxml-core/visio';
 
@@ -26,45 +27,34 @@ export interface Stencil {
 /** How the core creates a master: a native ellipse, or a core outline. */
 export type MasterCreation = { kind: 'ellipse' } | { kind: 'rectangle'; shape: VisioOutlineShape };
 
-const ELLIPSES = new Set(['ellipse', 'circle']);
-const unit = { width: 1, height: 1 };
-const wide = { width: 1, height: 0.75 };
+/** Preview outlines of Visio's Basic Shapes, in a 24x24 box; names and sizes come from the core. */
+const BASIC_PATHS: Readonly<Record<string, string>> = {
+	rectangle: 'M3 6h18v12H3Z',
+	square: 'M5 4h14v14H5Z',
+	ellipse: 'M2 12a10 6.5 0 1 0 20 0 10 6.5 0 1 0-20 0',
+	circle: 'M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0',
+	triangle: 'M12 4 21 20H3Z',
+	'right-triangle': 'M4 4v16h16Z',
+	pentagon: 'M12 3l9 6.5-3.4 10.5H6.4L3 9.5Z',
+	hexagon: 'M7 4h10l5 8-5 8H7l-5-8Z',
+	octagon: 'M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7Z',
+	star: 'm12 2.5 2.8 6.4 6.9.6-5.2 4.6 1.6 6.8L12 17.3l-6.1 3.6 1.6-6.8-5.2-4.6 6.9-.6Z',
+	diamond: 'M12 2.5 21.5 12 12 21.5 2.5 12Z',
+	'rounded-rectangle': 'M6 6h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3Z',
+	cross: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z',
+	parallelogram: 'M7 6h15l-5 12H2Z',
+	trapezoid: 'M7 6h10l5 12H2Z',
+	can: 'M5 6a7 2.5 0 1 0 14 0 7 2.5 0 1 0-14 0v12a7 2.5 0 0 0 14 0V6',
+	cube: 'M4 8h12v12H4ZM4 8l4-4h12l-4 4M20 4v12l-4 4',
+	chevron: 'M3 5h13l5 7-5 7H3l5-7Z',
+};
 /** Visio's Basic Shapes stencil, in Visio's order. */
-export const BASIC_SHAPES: readonly Master[] = [
-	{ id: 'rectangle', name: 'Rectangle', path: 'M3 6h18v12H3Z', size: wide },
-	{ id: 'square', name: 'Square', path: 'M5 4h14v14H5Z', size: unit },
-	{ id: 'ellipse', name: 'Ellipse', path: 'M2 12a10 6.5 0 1 0 20 0 10 6.5 0 1 0-20 0', size: wide },
-	{ id: 'circle', name: 'Circle', path: 'M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0', size: unit },
-	{ id: 'triangle', name: 'Triangle', path: 'M12 4 21 20H3Z', size: unit },
-	{ id: 'right-triangle', name: 'Right triangle', path: 'M4 4v16h16Z', size: unit },
-	{ id: 'pentagon', name: 'Pentagon', path: 'M12 3l9 6.5-3.4 10.5H6.4L3 9.5Z', size: unit },
-	{ id: 'hexagon', name: 'Hexagon', path: 'M7 4h10l5 8-5 8H7l-5-8Z', size: wide },
-	{ id: 'octagon', name: 'Octagon', path: 'M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7Z', size: unit },
-	{
-		id: 'star',
-		name: '5-point star',
-		path: 'm12 2.5 2.8 6.4 6.9.6-5.2 4.6 1.6 6.8L12 17.3l-6.1 3.6 1.6-6.8-5.2-4.6 6.9-.6Z',
-		size: unit,
-	},
-	{ id: 'diamond', name: 'Diamond', path: 'M12 2.5 21.5 12 12 21.5 2.5 12Z', size: unit },
-	{
-		id: 'rounded-rectangle',
-		name: 'Rounded rectangle',
-		path: 'M6 6h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3Z',
-		size: wide,
-	},
-	{ id: 'cross', name: 'Cross', path: 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z', size: unit },
-	{ id: 'parallelogram', name: 'Parallelogram', path: 'M7 6h15l-5 12H2Z', size: wide },
-	{ id: 'trapezoid', name: 'Trapezoid', path: 'M7 6h10l5 12H2Z', size: wide },
-	{
-		id: 'can',
-		name: 'Can',
-		path: 'M5 6a7 2.5 0 1 0 14 0 7 2.5 0 1 0-14 0v12a7 2.5 0 0 0 14 0V6',
-		size: { width: 0.75, height: 1 },
-	},
-	{ id: 'cube', name: 'Cube', path: 'M4 8h12v12H4ZM4 8l4-4h12l-4 4M20 4v12l-4 4', size: unit },
-	{ id: 'chevron', name: 'Chevron', path: 'M3 5h13l5 7-5 7H3l5-7Z', size: wide },
-];
+export const BASIC_SHAPES: readonly Master[] = VISIO_BASIC_STENCIL.masters.map((master) => ({
+	id: master.id,
+	name: master.name,
+	path: BASIC_PATHS[master.id] ?? 'M4 6h16v12H4Z',
+	size: master.size,
+}));
 export const BASIC_STENCIL_ID = 'basic';
 
 const n = (value: number) => String(Math.round(value * 100) / 100);
@@ -108,14 +98,6 @@ export const STENCILS: readonly Stencil[] = [
 		})),
 	})),
 ];
-const ELLIPSE_MASTERS = new Set(
-	VISIO_STENCILS.flatMap((stencil) => stencil.masters)
-		.filter((master) => master.shape === 'ellipse')
-		.map((master) => master.id),
-);
-const OUTLINES = new Map(
-	VISIO_STENCILS.flatMap((stencil) => stencil.masters).map((master) => [master.id, master.shape]),
-);
 
 /** The master and its stencil for a master id, or nothing for an unknown id. */
 export function findMaster(id: string): { stencil: Stencil; master: Master } | undefined {
@@ -130,17 +112,11 @@ export function findMaster(id: string): { stencil: Stencil; master: Master } | u
 export function masterCreation(
 	id: string,
 ): { size: { width: number; height: number }; create: MasterCreation } | undefined {
-	const found = findMaster(id);
+	const found = visioBuiltInMaster(id)?.master;
 	if (!found) return undefined;
-	const create: MasterCreation =
-		ELLIPSES.has(id) || ELLIPSE_MASTERS.has(id)
-			? { kind: 'ellipse' }
-			: {
-					kind: 'rectangle',
-					shape:
-						found.stencil.id === BASIC_STENCIL_ID
-							? (id as VisioBasicShape)
-							: (OUTLINES.get(id) as VisioOutlineShape),
-				};
-	return { size: found.master.size, create };
+	return {
+		size: found.size,
+		create:
+			found.shape === 'ellipse' ? { kind: 'ellipse' } : { kind: 'rectangle', shape: found.shape },
+	};
 }

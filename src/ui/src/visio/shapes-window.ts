@@ -2,13 +2,14 @@ import { buildStencilsView, masterList } from './shapes-sections';
 import { STENCILS } from './stencil-catalog';
 import type { ShapesDocument } from './shapes-document';
 
-const views = new WeakMap<HTMLElement, (next: ShapesDocument) => void>();
+const views = new WeakMap<HTMLElement, (next: ShapesDocument, opened: boolean) => void>();
 /**
  * Show a drawing in a Shapes window: its Document Stencil, the stencils it docks, and its masters
- * in Search shapes. Cheap to call again for the same drawing.
+ * in Search shapes. Cheap to call again for the same drawing. `opened` is false when the same
+ * drawing was only edited, so the stencils the user unfolded stay as they are.
  */
-export function setShapesDocument(pane: HTMLElement, next: ShapesDocument): void {
-	views.get(pane)?.(next);
+export function setShapesDocument(pane: HTMLElement, next: ShapesDocument, opened = true): void {
+	views.get(pane)?.(next, opened);
 }
 export {
 	BASIC_SHAPES,
@@ -90,8 +91,8 @@ export function createShapesWindow(doc: Document): HTMLElement {
 	search.append(results, empty);
 	pane.append(heading, box, stencils, search, ...view.menus);
 	let key = '';
-	views.set(pane, (next) => {
-		view.setDocument(next);
+	views.set(pane, (next, opened) => {
+		view.setDocument(next, opened);
 		if (next.key === key) return;
 		key = next.key;
 		results.replaceChildren(...masterList(doc, [...next.masters, ...builtIn]).children);

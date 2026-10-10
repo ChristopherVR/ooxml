@@ -23,6 +23,8 @@ export interface ShapesDocument {
 	masters: readonly Master[];
 	/** Built-in stencils the drawing docks (its Stencil windows), in window order. */
 	docked: readonly string[];
+	/** Docked stencil files with no built-in counterpart, by file name: listed, not openable. */
+	unavailable: readonly string[];
 	/** Masters beyond `DOCUMENT_MASTER_LIMIT` that are not listed. */
 	omitted: number;
 }
@@ -31,6 +33,7 @@ export const EMPTY_SHAPES_DOCUMENT: ShapesDocument = {
 	key: '',
 	masters: [],
 	docked: [],
+	unavailable: [],
 	omitted: 0,
 };
 
@@ -92,10 +95,14 @@ export function shapesDocument(model: VisioDocument | null | undefined): ShapesD
 			}),
 		),
 	];
-	if (!listed.length && !docked.length) return EMPTY_SHAPES_DOCUMENT;
+	const unavailable = [
+		...new Set((model?.stencils ?? []).filter((file) => !visioBuiltInStencil(file))),
+	];
+	if (!listed.length && !docked.length && !unavailable.length) return EMPTY_SHAPES_DOCUMENT;
 	return {
-		key: JSON.stringify([docked, listed.map((master) => [master.id, master.name])]),
+		key: JSON.stringify([docked, unavailable, listed.map((master) => [master.id, master.name])]),
 		docked,
+		unavailable,
 		omitted: all.length - listed.length,
 		masters: listed.map((master) => {
 			const unsupported = visioMasterDropRefusal(master);
@@ -110,4 +117,24 @@ export function shapesDocument(model: VisioDocument | null | undefined): ShapesD
 			};
 		}),
 	};
+}
+
+/** The Shapes window section of a docked stencil file that has no built-in stand-in. */
+export function unavailableStencil(doc: Document, file: string): HTMLElement {
+	const section = doc.createElement('section');
+	section.dataset.stencilFile = file;
+	section.dataset.unavailable = '';
+	section.setAttribute('aria-label', file);
+	const header = doc.createElement('div');
+	header.className = 'stencil-header';
+	const title = doc.createElement('span');
+	title.className = 'stencil-title';
+	title.textContent = file;
+	header.append(title);
+	const note = doc.createElement('p');
+	note.className = 'shapes-empty';
+	note.textContent =
+		'This stencil file is not available here. Its shapes already used in the drawing are in the Document Stencil.';
+	section.append(header, note);
+	return section;
 }

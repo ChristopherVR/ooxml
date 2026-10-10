@@ -286,6 +286,56 @@ colours, theme changes), `edit-formatting-line-ends.test.ts`,
 workflows `color-picker.spec.ts`, `paint-properties.spec.ts` and
 `themes-effects.spec.ts`.
 
+## Masters in the package, 2026-10-10
+
+A shape dragged from a built-in stencil is now what it is in Visio: an instance
+of a master that the drawing carries in its own Document Stencil.
+
+- The first drop of a built-in master (Basic Shapes, Basic Flowchart Shapes,
+  Miscellaneous Flowchart Shapes, Arrow Shapes) copies the master into the
+  drawing (`masters.xml`, a master part, relationships and content types,
+  created when the drawing has none); later drops reuse it. A drawing that
+  already has a master of that name, such as Visio's own Process, gets an
+  instance of its own master instead of a second one.
+- Shapes window drops and activation, Quick Shapes, AutoConnect and the sample
+  drawing all add instances. Change Shape on a stencil shape swaps its master
+  and, as recorded from Visio, keeps position, size, text, formatting and
+  whole-shape glue and renames the shape after the new master.
+- A dropped instance is named as Visio names it (`Process`, then `Process.7`),
+  joins the master's layers (the Flowchart layer is added to the page for the
+  flowchart masters) and grows an Auto Size page.
+- Connectors glue to a dropped instance and follow it when it moves or is
+  resized: the instance keeps its size beside its pin as inherited caches,
+  the form Visio saves for inherited cells.
+- Quick Shapes lists the drawing's own masters first. A stencil file the
+  drawing docks that has no built-in stand-in is listed by its file name as
+  unavailable. The stencil a drawing docks is the one showing; its Document
+  Stencil is listed folded.
+
+Checked against Visio 16 through COM, hidden: the sample and drawings with
+dropped, resized, restyled, connected and changed instances open without
+repair with every instance bound to its master, the masters listed in the
+Document Stencil, names, layers and sizes as written; a file Visio saved again
+is edited further here and the next drop reuses the master Visio kept. Visio
+rewrites the tail of a master's `UniqueID`, so ours are written in that form.
+
+Limits:
+
+- The masters are this editor's outlines in the drawing's default styles: no
+  icon (Visio draws one), connection points, Shape Data or control handles.
+  The theme look of a drop is saved on the instance, not in the master.
+- Change Shape keeps the shape's ID (Visio gives the changed shape a new one)
+  and offers Basic Shapes only. It is refused while a connector is glued to
+  one of the shape's connection points, and for groups.
+- A connector cannot be glued to a stencil instance that carries only its pin
+  (as Visio writes a fresh drop) or to a group instance; the refusal says so.
+  Connectors do not route around stencil instances.
+- An instance cannot be deleted, duplicated, copied or reordered until the
+  core admits those edits for stencil instances; shapes added from the Shapes
+  window are instances, so this now applies to them.
+- Layers are not assigned to the sub-shapes of a group master, and a locked
+  page layer leaves the drop on the master's inherited membership.
+
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 
 Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
@@ -403,9 +453,10 @@ The Shapes window now follows the open drawing, as Visio's does:
   The page gains its relationship to the master part when it has none.
 - The stencils a drawing docks (the Stencil windows of `visio/windows.xml`)
   open with it: Basic Shapes, Basic Flowchart Shapes and Arrow Shapes stand in
-  for Visio's `BASIC`, `BASFLO` and `ARROWS` stencil files. The first of the
-  drawing's stencils is the one showing; the others start folded. The sample
-  flowchart docks Basic Flowchart Shapes.
+  for Visio's `BASIC`, `BASFLO` and `ARROWS` stencil files. The first stencil
+  the drawing docks is the one showing (its Document Stencil when it docks
+  none of them); the others start folded. The sample flowchart docks Basic
+  Flowchart Shapes.
 - Basic Flowchart Shapes has Visio's fourteen masters, names, order and drop
   sizes (Process, Decision, Subprocess, Start/End, Document, Data, Database,
   External Data, Custom 1 to 4, On-page reference, Off-page reference). The
@@ -424,11 +475,15 @@ Limits:
   connector (see the section above).
 - A dropped instance is not put on the master's layers and gets no name
   (Visio names it `Process.5`), and the page is not grown to hold it.
+
+- A 1-D master (Dynamic connector) and a master with more than one top-level
+  shape are listed disabled with the reason; they cannot be dropped.
 - The built-in stencils are this editor's own outlines, not Visio's masters:
   no connection points, Shape Data or shapesheet behaviour. Stencil files
-  (.vssx) are never opened, and other docked stencils are ignored.
-- Masters cannot be edited, renamed, added or deleted, and a built-in master
-  still drops as a local shape, not as a new master of the drawing.
+  (.vssx) are never opened; a docked one without a built-in stand-in is
+  listed by its file name as unavailable.
+- Masters cannot be edited, renamed or deleted. (Names, layers, page growth
+  and built-in masters joining the drawing: see "Masters in the package".)
 - Previews use the first 200 masters and no page theme.
 
 ## Right-angle connectors route around placeable shapes, 2026-10-10

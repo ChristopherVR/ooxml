@@ -56,7 +56,10 @@ test('the sample flowchart opens with Basic Flowchart Shapes showing', async ({ 
 	await expect(viewer.locator('svg.paper')).toContainText('Release workflow');
 	await expect
 		.poll(() => sections(viewer))
+		// The sample's shapes are instances, so it has a Document Stencil; as in Visio the docked
+		// stencil is the one showing.
 		.toEqual([
+			['document', 'false'],
 			['basic-flowchart', 'true'],
 			['basic', 'false'],
 		]);
@@ -75,6 +78,29 @@ test('the sample flowchart opens with Basic Flowchart Shapes showing', async ({ 
 		/Database .+ added from Basic Flowchart Shapes/,
 	);
 	await expect(shapes).toHaveCount(before + 1);
+	// The drop is an instance of a master the drawing now carries, named as Visio names it.
+	const dropped = await viewer.evaluate((node) => {
+		const model = (node as VisioViewerElement).controller.state.document!;
+		const shape = model.pages[0]!.shapes.at(-1)!;
+		return {
+			name: shape.name,
+			master: model.masters!.find((master) => master.id === shape.masterId)?.name,
+			masters: model.masters!.map((master) => master.name),
+		};
+	});
+	expect(dropped).toEqual({
+		name: 'Database',
+		master: 'Database',
+		masters: ['Process', 'Decision', 'Rectangle', 'Database'],
+	});
+	// Editing does not refold what is showing.
+	await expect
+		.poll(() => sections(viewer))
+		.toEqual([
+			['document', 'false'],
+			['basic-flowchart', 'true'],
+			['basic', 'false'],
+		]);
 	// The folded stencil opens from its title.
 	await viewer.locator('[data-stencil="basic"] .stencil-title').click();
 	await expect(viewer.locator('#shapes-stencils [data-master="rectangle"]')).toBeVisible();
@@ -129,9 +155,10 @@ test('a drawing lists its own masters and drops them as master instances', async
 		...(node as VisioViewerElement).controller.exportVsdx().bytes,
 	]);
 	const zip = await JSZip.loadAsync(Buffer.from(saved));
-	// As Visio writes a dropped master: the reference and the pin only.
+	// As Visio writes a dropped master: the reference, its name and the pin; the master's size is
+	// kept beside them as inherited caches.
 	expect(await zip.file('visio/pages/page1.xml')!.async('string')).toMatch(
-		/<Shape ID="2" Type="Shape" Master="2"><Cell N="PinX" V="[\d.]+"\/><Cell N="PinY" V="[\d.]+"\/><\/Shape>/,
+		/<Shape ID="2" Type="Shape" Master="2" NameU="Step" Name="Step"><Cell N="PinX" V="[\d.]+"\/><Cell N="PinY" V="[\d.]+"\/>(<Cell N="(Width|Height|LocPinX|LocPinY)" V="[\d.]+" U="IN" F="Inh"\/>)*<\/Shape>/,
 	);
 	expect(await zip.file('visio/pages/_rels/page1.xml.rels')!.async('string')).toContain(
 		'relationships/master" Target="../masters/master1.xml"',

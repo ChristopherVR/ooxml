@@ -169,7 +169,7 @@ export class ViewerAutoConnect {
 			neighbour
 				? { shapeId: neighbour.id }
 				: master
-					? { master: master.create, size: master.size }
+					? { master: { kind: 'stencil', master: id! }, size: master.size }
 					: { shapeId: '' },
 		);
 		if (!plan) return this.host.announce('AutoConnect cannot connect from this shape.');

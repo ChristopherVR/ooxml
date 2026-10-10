@@ -122,7 +122,7 @@ describe('More Shapes and Quick Shapes', () => {
 		expect(pane().sections()).toEqual(['basic', 'arrow-shapes']);
 	});
 
-	it('drops stencil masters through the default Quick Style insert path', async () => {
+	it('drops stencil masters as instances with the default Quick Style', async () => {
 		const edits: VisioEdit[][] = [];
 		const editor: CancellableEditor = async (_bytes, commands) => {
 			edits.push([...commands]);
@@ -152,11 +152,12 @@ describe('More Shapes and Quick Shapes', () => {
 			.querySelector<HTMLButtonElement>('[data-master="flowchart-on-page-reference"]')!
 			.click();
 		await settle();
+		// Each drop is an instance of the stencil master, which the core adds to the drawing.
 		expect(
-			edits.map(([created]) => [created!.type, (created as { shape?: string }).shape]),
+			edits.map(([created]) => [created!.type, (created as { master?: string }).master]),
 		).toEqual([
-			['create-rectangle', 'flowchart-decision'],
-			['create-ellipse', undefined],
+			['drop-stencil-master', 'flowchart-decision'],
+			['drop-stencil-master', 'flowchart-on-page-reference'],
 		]);
 		expect(edits.every((batch) => batch[1]?.type === 'format-shape')).toBe(true);
 		expect(messages.at(-1)).toMatch(/^On-page reference .+ added from Basic Flowchart Shapes\.$/);

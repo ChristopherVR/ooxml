@@ -1,7 +1,11 @@
 import type { ViewerController } from './controller';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import type { VisioDocument } from 'ooxml-core/visio';
-import { visioMasterDropCommand, visioMasterDropRefusal } from 'ooxml-core/visio/ui';
+import {
+	visioMasterDropCommand,
+	visioMasterDropRefusal,
+	visioStencilDropCommand,
+} from 'ooxml-core/visio/ui';
 import { MASTER_MIME, findMaster, masterCreation, setShapesDocument } from './shapes-window';
 import {
 	DOCUMENT_STENCIL_NAME,
@@ -9,13 +13,14 @@ import {
 	shapesDocument,
 	type ShapesDocument,
 } from './shapes-document';
-import { insertMaster, pagePoint } from './viewer-draw-tool';
+import { MASTER_QUICK_STYLE, pagePoint } from './viewer-draw-tool';
 
 /**
  * Shapes window interaction: drag a master onto the page to drop it there, or activate it to add
- * it at the page centre. Ellipses and circles are native ellipses; the rest are core outlines. A
- * master of the drawing's own Document Stencil is dropped as an instance of that master. The
- * window follows the open drawing: its Document Stencil and the stencils it docks.
+ * it at the page centre. Either way the page gets an instance of a master, as in Visio: a master
+ * of a built-in stencil is first copied into the drawing's own Document Stencil, and a master
+ * that is already there is instanced directly. The window follows the open drawing: its Document
+ * Stencil and the stencils it docks.
  */
 export function wireStencil(
 	pane: HTMLElement,
@@ -46,15 +51,20 @@ export function wireStencil(
 	// Drawing the masters is the costly part, so it is done once per parsed drawing.
 	const drawings = new WeakMap<VisioDocument, ShapesDocument>();
 	let shown: VisioDocument | null | undefined;
+	let generation: number | undefined;
 	const follow = (model: VisioDocument | null): void => {
 		if (model === shown) return;
+		// Edits, undo and redo keep the source epoch; opening or replacing a drawing changes it.
+		// No drawing (closed, or still loading) is never an edit of the one that was showing.
+		const opened = !model || !shown || controller.sourceGeneration !== generation;
+		generation = controller.sourceGeneration;
 		shown = model;
 		let next = model ? drawings.get(model) : undefined;
 		if (!next) {
 			next = shapesDocument(model);
 			if (model) drawings.set(model, next);
 		}
-		setShapesDocument(pane, next);
+		setShapesDocument(pane, next, opened);
 	};
 	follow(controller.state.document);
 	const unfollow = controller.subscribe((state) => follow(state.document));
@@ -103,27 +113,34 @@ export function wireStencil(
 			announce('Open a .vsdx file to add shapes.');
 			return queue;
 		}
-		const { size } = master;
 		const svg = viewport.querySelector<SVGSVGElement>('svg.paper');
 		const point = centre && svg ? pagePoint(svg, page, centre) : undefined;
-		// Keep the whole shape on the page, as the drop point is its centre.
-		const x = Math.min(
-			page.width - size.width / 2,
-			Math.max(size.width / 2, point?.x ?? page.width / 2),
-		);
-		const y = Math.min(
-			page.height - size.height / 2,
-			Math.max(size.height / 2, point?.y ?? page.height / 2),
-		);
 		queue = queue.then(async () => {
 			try {
 				if (controller.state.edit.busy) await idle();
 				const current = controller.state;
 				const target = current.document?.pages[current.pageIndex];
 				if (!target || target.id !== page.id || !editable()) return;
-				const shapeId = await insertMaster(controller, target, master.create, { x, y }, size);
+				// As in Visio: the master joins the drawing's own stencil and the page gets an instance
+				// of it, kept whole on the page, in the theme's default look.
+				const command = visioStencilDropCommand(target, id, point);
+				const token = controller.captureCreationToken(target.id);
+				await controller.applyCreationEdits(
+					[
+						command,
+						{
+							type: 'format-shape',
+							pageId: target.id,
+							shapeId: command.shapeId,
+							quickStyle: MASTER_QUICK_STYLE,
+						},
+					],
+					token,
+				);
 				const found = findMaster(id);
-				announce(`${found?.master.name ?? 'Shape'} ${shapeId} added from ${found?.stencil.name}.`);
+				announce(
+					`${found?.master.name ?? 'Shape'} ${command.shapeId} added from ${found?.stencil.name}.`,
+				);
 			} catch (error) {
 				if (!isEditCancellation(error) && !controller.state.edit.error)
 					announce(editErrorMessage(error));

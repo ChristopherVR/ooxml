@@ -60,12 +60,15 @@ describe("Visio's Shapes window", () => {
 	it('adds masters at the page centre through core', async () => {
 		const { controller, edits, master, messages, settle } = await setup();
 		const page = demoDocument.pages[0]!;
-		const box = {
+		// An instance of the stencil master, pinned at the page centre (the size is the master's).
+		const drop = (id: string) => ({
+			type: 'drop-stencil-master',
 			pageId: page.id,
 			shapeId: expect.any(String),
+			master: id,
 			x: page.width / 2,
 			y: page.height / 2,
-		};
+		});
 		master('rectangle').click();
 		await settle();
 		master('circle').click();
@@ -80,9 +83,9 @@ describe("Visio's Shapes window", () => {
 			quickStyle: { color: 100, matrix: 4 },
 		});
 		expect(edits.map(([created]) => created)).toEqual([
-			{ ...box, type: 'create-rectangle', width: 1, height: 0.75, shape: 'rectangle' },
-			{ ...box, type: 'create-ellipse', width: 1, height: 1 },
-			{ ...box, type: 'create-rectangle', width: 1, height: 1, shape: 'star' },
+			drop('rectangle'),
+			drop('circle'),
+			drop('star'),
 		]);
 		for (const [created, styled, ...rest] of edits) {
 			expect(styled).toEqual(style((created as { shapeId: string }).shapeId));
@@ -97,7 +100,7 @@ describe("Visio's Shapes window", () => {
 		master('square').click();
 		master('triangle').click();
 		await new Promise((resolve) => setTimeout(resolve, 200));
-		expect(edits.map(([created]) => (created as { shape?: string }).shape)).toEqual([
+		expect(edits.map(([created]) => (created as { master?: string }).master)).toEqual([
 			'square',
 			'triangle',
 		]);

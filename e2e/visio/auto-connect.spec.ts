@@ -53,8 +53,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const bar = viewer.locator('.auto-connect-bar');
 		await expect(bar).toBeVisible();
 		await expect(bar.locator('button')).toHaveCount(4);
+		// The sample docks Basic Flowchart Shapes, so these are its Quick Shapes.
 		await expect(bar.locator('button').nth(1)).toHaveAttribute('aria-label', 'Decision');
-		await bar.locator('button').nth(1).click();
+		await bar.locator('[data-auto-connect-master="flowchart-decision"]').click();
 		await expect
 			.poll(async () => (await inventory(viewer)).shapes.length)
 			.toBe(before.shapes.length + 2);

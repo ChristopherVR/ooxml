@@ -94,13 +94,14 @@ it('adds a Quick Shape with a glued connector as one undoable step', async () =>
 		ui.viewport.querySelector<HTMLElement>('[data-auto-connect-master="square"]')!.click();
 		await ui.done();
 		expect(ui.edits).toHaveLength(1);
+		// The added shape is an instance of the stencil master, as a shape dragged from the stencil.
 		expect(ui.edits[0]!.map((edit) => edit.type)).toEqual([
-			'create-rectangle',
+			'drop-stencil-master',
 			'create-line',
 			'format-shape',
 		]);
-		const box = ui.edits[0]![0] as { shapeId: string; width: number; height: number };
-		expect(box).toMatchObject({ width: 1, height: 1 });
+		const box = ui.edits[0]![0] as { shapeId: string; master: string };
+		expect(box).toMatchObject({ master: 'square' });
 		expect(ui.edits[0]![1]).toMatchObject({
 			connect: { begin: '1', end: box.shapeId },
 			route: 'right-angle',
@@ -141,7 +142,7 @@ it('connects to the neighbour an arrow points at, else adds the first Quick Shap
 		ui.auto.connect('down');
 		await vi.waitFor(() => expect(ui.edits).toHaveLength(2));
 		await ui.done();
-		expect(ui.edits[1]![0]).toMatchObject({ type: 'create-rectangle', shape: 'diamond' });
+		expect(ui.edits[1]![0]).toMatchObject({ type: 'drop-stencil-master', master: 'diamond' });
 	} finally {
 		ui.close();
 	}

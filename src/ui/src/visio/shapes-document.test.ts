@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { VisioDocument, VisioEdit, VisioMaster } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
 import { ViewerController } from './controller';
-import { createShapesWindow } from './shapes-window';
+import { createShapesWindow, setShapesDocument } from './shapes-window';
 import { DOCUMENT_MASTER_LIMIT, shapesDocument } from './shapes-document';
 import { wireStencil } from './viewer-stencil';
 import type { CancellableEditor } from './worker-editor';
@@ -170,6 +170,74 @@ describe('the Document Stencil in the Shapes window', () => {
 		// A drawing without masters or stencils is the plain window again.
 		const plain = structuredClone(demoDocument);
 		ui.controller.setDocument(plain);
+		expect(ui.sections()).toEqual([['basic', 'true']]);
+		ui.dispose();
+	});
+
+	it('shows the docked stencil over the Document Stencil, and names stencil files it cannot open', async () => {
+		const ui = await open(drawing({ stencils: ['BASFLO_U.vssx', 'NETWRK_U.vssx'] }));
+		// As in Visio, the stencil the drawing docks is the one showing; its own masters fold.
+		expect(ui.sections()).toEqual([
+			['document', 'false'],
+			['basic-flowchart', 'true'],
+			['basic', 'false'],
+		]);
+		const missing = ui.pane.querySelector<HTMLElement>('[data-stencil-file="NETWRK_U.vssx"]')!;
+		expect(missing.dataset.unavailable).toBe('');
+		expect(missing.querySelector('.stencil-title')!.textContent).toBe('NETWRK_U.vssx');
+		expect(missing.querySelector('.shapes-empty')!.textContent).toMatch(/not available here/);
+		expect(missing.querySelector('[data-master]')).toBeNull();
+		ui.dispose();
+	});
+
+	it('offers the drawing masters in Quick Shapes, without the ones that cannot be dropped', async () => {
+		const ui = await open(drawing());
+		ui.pane.querySelector<HTMLButtonElement>('#shapes-quick-toggle')!.click();
+		const quick = [...ui.pane.querySelectorAll<HTMLElement>('#shapes-quick [data-master]')].map(
+			(item) => item.dataset.master,
+		);
+		expect(quick.slice(0, 2)).toEqual(['document:2', 'document:7']);
+		expect(quick).not.toContain('document:4');
+		expect(quick).toContain('rectangle');
+		ui.dispose();
+	});
+
+	it('keeps the open stencil open when an edit gives the drawing its first master', () => {
+		const pane = createShapesWindow(document);
+		document.body.append(pane);
+		const sections = () =>
+			[...pane.querySelectorAll<HTMLElement>('#shapes-sections [data-stencil]')].map((section) => [
+				section.dataset.stencil,
+				section.querySelector('.stencil-title')!.getAttribute('aria-expanded'),
+			]);
+		expect(sections()).toEqual([['basic', 'true']]);
+		// The first drop of a built-in master copies it into the drawing: the same drawing, edited.
+		setShapesDocument(pane, shapesDocument(drawing()), false);
+		expect(sections()).toEqual([
+			['document', 'false'],
+			['basic', 'true'],
+		]);
+		// Opening that drawing afresh shows its own masters.
+		setShapesDocument(pane, shapesDocument(drawing({ masters: [master('2', 'Process')] })), true);
+		expect(sections()).toEqual([
+			['document', 'true'],
+			['basic', 'false'],
+		]);
+	});
+
+	it('starts a newly opened drawing from its own stencils, whatever the last one showed', async () => {
+		const ui = await open(drawing({ masters: [], stencils: ['BASFLO_U.vssx'] }));
+		expect(ui.sections()).toEqual([
+			['basic-flowchart', 'true'],
+			['basic', 'false'],
+		]);
+		// A plain drawing replaces it: Basic Shapes is open again, with nothing left folded.
+		ui.controller.setDocument(structuredClone(demoDocument));
+		expect(ui.sections()).toEqual([['basic', 'true']]);
+		// And another plain one, which lists the same stencils, is still a fresh start.
+		ui.pane.querySelector<HTMLElement>('[data-stencil="basic"] .stencil-title')!.click();
+		expect(ui.sections()).toEqual([['basic', 'false']]);
+		ui.controller.setDocument(structuredClone(demoDocument));
 		expect(ui.sections()).toEqual([['basic', 'true']]);
 		ui.dispose();
 	});

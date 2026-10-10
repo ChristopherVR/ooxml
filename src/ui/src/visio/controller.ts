@@ -589,6 +589,7 @@ export class ViewerController {
 				'create-path',
 				'insert-picture',
 				'insert-master-instance',
+				'drop-stencil-master',
 			].includes(command.type),
 		);
 		const created = new Set(

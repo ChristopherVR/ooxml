@@ -10,6 +10,7 @@ import {
 	DOCUMENT_STENCIL_ID,
 	DOCUMENT_STENCIL_NAME,
 	EMPTY_SHAPES_DOCUMENT,
+	unavailableStencil,
 	type ShapesDocument,
 } from './shapes-document';
 import { loadShapes as load, saveShapes as save } from './shapes-storage';
@@ -19,8 +20,12 @@ export { SHAPES_STORAGE_KEY, currentQuickShapes } from './shapes-storage';
 export interface StencilsView {
 	/** The More Shapes and master menus; the caller puts them on the pane. */
 	menus: HTMLElement[];
-	/** Show a drawing's document stencil and the stencils it docks; a no-op for the same drawing. */
-	setDocument(next: ShapesDocument): void;
+	/**
+	 * Show a drawing's document stencil and the stencils it docks; a no-op for the same content.
+	 * `opened` is false after an edit of the drawing that is showing: folded and unfolded stencils
+	 * stay as the user has them, and a Document Stencil that appears then starts folded.
+	 */
+	setDocument(next: ShapesDocument, opened?: boolean): void;
 }
 
 /** Visio shows a stencil's first masters as its Quick Shapes until the user changes them. */
@@ -134,9 +139,13 @@ export function buildStencilsView(
 		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
 	const renderQuick = () => {
 		if (quick.hidden) return quick.replaceChildren();
-		const masters = openIds()
-			.map((id) => STENCILS.find((stencil) => stencil.id === id)!)
-			.flatMap((stencil) => quickIds(stencil).map((id) => findMaster(id)!.master));
+		const masters = [
+			// The drawing's own masters lead, as its Document Stencil leads the stencils.
+			...drawing.masters.filter((master) => !master.unsupported).slice(0, DEFAULT_QUICK),
+			...openIds()
+				.map((id) => STENCILS.find((stencil) => stencil.id === id)!)
+				.flatMap((stencil) => quickIds(stencil).map((id) => findMaster(id)!.master)),
+		];
 		const empty = doc.createElement('p');
 		empty.className = 'shapes-empty';
 		empty.textContent = 'No Quick Shapes. Right-click a master to add it.';
@@ -186,6 +195,8 @@ export function buildStencilsView(
 				}
 				return section;
 			}),
+			// Stencil files this viewer cannot open are still named, as Visio lists them.
+			...drawing.unavailable.map((file) => unavailableStencil(doc, file)),
 		);
 	};
 	const renderMenu = () =>
@@ -272,12 +283,23 @@ export function buildStencilsView(
 	return {
 		// The caller puts the menus on the pane, so they open from the Search view too.
 		menus: [moreMenu, masterMenu],
-		setDocument(next) {
-			if (next.key === drawing.key) return;
+		setDocument(next, opened = true) {
+			// An opened drawing always starts from its own stencils, even when it lists what the
+			// last one did (two drawings without masters or docked stencils).
+			if (next.key === drawing.key && !opened) return;
+			if (!opened) {
+				// The first shape dropped in a new drawing gives it a Document Stencil: it is listed,
+				// folded, and the stencil the user is working from stays open.
+				const listed = new Set(sectionIds());
+				drawing = next;
+				for (const id of sectionIds()) if (!listed.has(id)) collapsed.add(id);
+				return render();
+			}
 			drawing = next;
 			docked = next.docked.filter((id) => STENCILS.some((stencil) => stencil.id === id));
-			// The drawing's first stencil is the one showing; the rest fold, as Visio lists them.
-			const showing = next.masters.length ? DOCUMENT_STENCIL_ID : docked[0];
+			// The stencil the drawing docks is the one showing, as in Visio, where the Document Stencil
+			// stays out of the way; a drawing that docks none of ours shows its own masters.
+			const showing = docked[0] ?? (next.masters.length ? DOCUMENT_STENCIL_ID : undefined);
 			collapsed.clear();
 			if (showing) for (const id of sectionIds()) if (id !== showing) collapsed.add(id);
 			render();
