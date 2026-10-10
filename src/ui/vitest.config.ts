@@ -17,7 +17,9 @@ export default {
 	test: {
 		globals: true,
 		// Editor-mounting tests build a full ProseMirror view; under a parallel run they can take 5s+.
-		testTimeout: 20_000,
+		// The Visio viewer tests re-render the whole ribbon in jsdom on every state change (about a
+		// second each), so an edit-and-undo test takes 8s alone and over 20s on a loaded runner.
+		testTimeout: 60_000,
 		// Uncapped, every core runs a worker and the heaviest imports (manifest, SSR) time out; 8 is
 		// both stable and the fastest measured.
 		maxWorkers: 8,
