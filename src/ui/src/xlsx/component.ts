@@ -179,7 +179,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		return this.addIns;
 	}
 	set ribbonAddIns(value: readonly RibbonAddInTab[]) {
-		this.addIns = [...(value ?? [])];
+		this.addIns = value ?? [];
 		this.shell?.ribbon.setAddIns(this.addIns);
 	}
 

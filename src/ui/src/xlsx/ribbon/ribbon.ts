@@ -212,9 +212,12 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		rebuild: build,
 		selectTab: select,
 		setAddIns: (next) => {
-			addIns = [...next];
-			stopOverflow();
+			addIns = next;
+			const before = root.querySelector('[data-add-in]');
 			syncAddIns();
+			// Equal tabs keep their panels; only new panels need the overflow measured again.
+			if (root.querySelector('[data-add-in]') === before) return;
+			stopOverflow();
 			stopOverflow = attachRibbonOverflow(root);
 		},
 		activeTab: () => root.selected || undefined,
