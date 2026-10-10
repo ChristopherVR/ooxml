@@ -34,11 +34,13 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   prune:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # deletes release entries (and tags on request)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 

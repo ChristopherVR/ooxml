@@ -152,31 +152,32 @@ const pad = (value: number, length = 2) => String(value).padStart(length, '0');
 
 function formatDate(date: Date, picture: string): string {
 	const hours = date.getUTCHours();
-	const tokens: Record<string, () => string> = {
-		yyyy: () => pad(date.getUTCFullYear(), 4),
-		yy: () => pad(date.getUTCFullYear() % 100),
-		MMMM: () => MONTHS[date.getUTCMonth()]!,
-		MMM: () => MONTHS[date.getUTCMonth()]!.slice(0, 3),
-		MM: () => pad(date.getUTCMonth() + 1),
-		M: () => String(date.getUTCMonth() + 1),
-		dddd: () => DAYS[date.getUTCDay()]!,
-		ddd: () => DAYS[date.getUTCDay()]!.slice(0, 3),
-		dd: () => pad(date.getUTCDate()),
-		d: () => String(date.getUTCDate()),
-		HH: () => pad(hours),
-		H: () => String(hours),
-		hh: () => pad(hours % 12 || 12),
-		h: () => String(hours % 12 || 12),
-		mm: () => pad(date.getUTCMinutes()),
-		ss: () => pad(date.getUTCSeconds()),
-		tt: () => (hours < 12 ? 'AM' : 'PM'),
-	};
+	const tokens = new Map<string, () => string>(
+		Object.entries({
+			yyyy: () => pad(date.getUTCFullYear(), 4),
+			yy: () => pad(date.getUTCFullYear() % 100),
+			MMMM: () => MONTHS[date.getUTCMonth()]!,
+			MMM: () => MONTHS[date.getUTCMonth()]!.slice(0, 3),
+			MM: () => pad(date.getUTCMonth() + 1),
+			M: () => String(date.getUTCMonth() + 1),
+			dddd: () => DAYS[date.getUTCDay()]!,
+			ddd: () => DAYS[date.getUTCDay()]!.slice(0, 3),
+			dd: () => pad(date.getUTCDate()),
+			d: () => String(date.getUTCDate()),
+			HH: () => pad(hours),
+			H: () => String(hours),
+			hh: () => pad(hours % 12 || 12),
+			h: () => String(hours % 12 || 12),
+			mm: () => pad(date.getUTCMinutes()),
+			ss: () => pad(date.getUTCSeconds()),
+			tt: () => (hours < 12 ? 'AM' : 'PM'),
+		}),
+	);
 	return picture.replace(
 		/yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|ss|tt|"[^"]*"/g,
 		(token) => {
 			if (token.startsWith('"')) return token.slice(1, -1);
-			const format = tokens[token];
-			return typeof format === 'function' ? format() : token;
+			return tokens.get(token)?.() ?? token;
 		},
 	);
 }

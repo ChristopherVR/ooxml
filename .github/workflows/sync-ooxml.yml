@@ -44,12 +44,14 @@ on:
         required: false
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # pushes the dependency bump
+      issues: write # reports a failed verification
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
