@@ -9,7 +9,8 @@ import {
 	type VisioAutoConnectDirection,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
-import { currentQuickShapes } from './shapes-sections';
+import { shapesDocument } from './shapes-document';
+import { currentQuickShapes } from './shapes-storage';
 import { findMaster, masterCreation } from './stencil-catalog';
 import { autoConnectArrow, autoConnectBar } from './viewer-auto-connect-parts';
 import { connectorGlueTarget } from './viewer-connector-tool';
@@ -66,6 +67,13 @@ export class ViewerAutoConnect {
 		);
 		this.render(this.host.controller.state);
 	}
+	/** Quick Shapes of the stencil the Shapes window shows for this drawing. */
+	#quickShapes(state: ViewerState) {
+		return currentQuickShapes(
+			this.host.viewport.ownerDocument,
+			shapesDocument(state.document).docked,
+		);
+	}
 	#page(state: ViewerState): VisioPage | undefined {
 		return state.document?.pages[state.pageIndex];
 	}
@@ -117,7 +125,7 @@ export class ViewerAutoConnect {
 				arrow.direction === 'up' && selected ? (SELECTED_TOP_OFFSET - OFFSET) / scale : 0;
 			return { direction: arrow.direction, ...place({ x: arrow.x, y: arrow.y - lift }) };
 		});
-		const masters = this.#arrow ? currentQuickShapes(this.host.viewport.ownerDocument) : [];
+		const masters = this.#arrow ? this.#quickShapes(state) : [];
 		const signature = JSON.stringify([
 			shape.id,
 			this.#arrow,
@@ -152,9 +160,7 @@ export class ViewerAutoConnect {
 		const source = page && this.#hover ? visioAutoConnectShape(page, this.#hover) : undefined;
 		if (!page || !source || !state.edit.sourceAvailable || state.loading || state.edit.busy) return;
 		const neighbour = masterId ? undefined : visioAutoConnectNeighbor(page, source, direction);
-		const id =
-			masterId ??
-			(neighbour ? undefined : currentQuickShapes(this.host.viewport.ownerDocument)[0]?.id);
+		const id = masterId ?? (neighbour ? undefined : this.#quickShapes(state)[0]?.id);
 		const master = id ? masterCreation(id) : undefined;
 		const plan = visioAutoConnectPlan(
 			page,

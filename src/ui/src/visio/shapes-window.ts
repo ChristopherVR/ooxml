@@ -1,5 +1,15 @@
 import { buildStencilsView, masterList } from './shapes-sections';
 import { STENCILS } from './stencil-catalog';
+import type { ShapesDocument } from './shapes-document';
+
+const views = new WeakMap<HTMLElement, (next: ShapesDocument) => void>();
+/**
+ * Show a drawing in a Shapes window: its Document Stencil, the stencils it docks, and its masters
+ * in Search shapes. Cheap to call again for the same drawing.
+ */
+export function setShapesDocument(pane: HTMLElement, next: ShapesDocument): void {
+	views.get(pane)?.(next);
+}
 export {
 	BASIC_SHAPES,
 	findMaster,
@@ -51,23 +61,21 @@ export function createShapesWindow(doc: Document): HTMLElement {
 
 	const stencils = doc.createElement('div');
 	stencils.id = 'shapes-stencils';
-	const menus = buildStencilsView(doc, stencils, pane);
+	const view = buildStencilsView(doc, stencils, pane);
 
 	const search = doc.createElement('div');
 	search.id = 'shapes-search';
 	search.hidden = true;
 	search.setAttribute('role', 'region');
 	search.setAttribute('aria-label', 'Search results');
-	// Search covers Basic Shapes and every built-in stencil, open or not, as Visio's does.
-	const results = masterList(
-		doc,
-		STENCILS.flatMap((stencil) => stencil.masters),
-	);
+	// Search covers the drawing's masters, Basic Shapes and every built-in stencil, open or not.
+	const builtIn = STENCILS.flatMap((stencil) => stencil.masters);
+	const results = masterList(doc, builtIn);
 	const empty = doc.createElement('p');
 	empty.className = 'shapes-empty';
 	empty.textContent = 'No shapes match your search.';
 	empty.hidden = true;
-	field.addEventListener('input', () => {
+	const filter = () => {
 		const query = field.value.trim().toLowerCase();
 		let shown = 0;
 		for (const item of results.querySelectorAll<HTMLElement>('li')) {
@@ -77,9 +85,18 @@ export function createShapesWindow(doc: Document): HTMLElement {
 		empty.hidden = shown > 0;
 		search.hidden = !query;
 		stencils.hidden = !!query;
-	});
+	};
+	field.addEventListener('input', filter);
 	search.append(results, empty);
-	pane.append(heading, box, stencils, search, ...menus);
+	pane.append(heading, box, stencils, search, ...view.menus);
+	let key = '';
+	views.set(pane, (next) => {
+		view.setDocument(next);
+		if (next.key === key) return;
+		key = next.key;
+		results.replaceChildren(...masterList(doc, [...next.masters, ...builtIn]).children);
+		filter();
+	});
 	return pane;
 }
 

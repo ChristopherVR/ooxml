@@ -37,10 +37,11 @@ describe('More Shapes and Quick Shapes', () => {
 		const items = [...more.querySelectorAll('office-ui-menu-item')];
 		expect(items.map((item) => item.getAttribute('label'))).toEqual([
 			'Basic Flowchart Shapes',
+			'Miscellaneous Flowchart Shapes',
 			'Arrow Shapes',
 			'Open Stencil...',
 		]);
-		expect(items[2]!.hasAttribute('disabled')).toBe(true);
+		expect(items[3]!.hasAttribute('disabled')).toBe(true);
 		command(more, 'stencil:basic-flowchart');
 		expect(sections()).toEqual(['basic', 'basic-flowchart']);
 		expect(more.querySelector('[command="stencil:basic-flowchart"]')!.getAttribute('checked')).toBe(
@@ -48,7 +49,15 @@ describe('More Shapes and Quick Shapes', () => {
 		);
 		const flowchart = element.querySelector<HTMLElement>('[data-stencil="basic-flowchart"]')!;
 		expect(flowchart.querySelector('.stencil-title')!.textContent).toBe('Basic Flowchart Shapes');
-		for (const name of ['Process', 'Decision', 'Start/End', 'Loop limit', 'On-page reference'])
+		for (const name of [
+			'Process',
+			'Decision',
+			'Subprocess',
+			'Start/End',
+			'Database',
+			'Custom 4',
+			'On-page reference',
+		])
 			expect(flowchart.querySelector(`li[data-name="${name}"] [data-master]`)).not.toBeNull();
 		// Collapse and expand, as Visio's stencil title bars do.
 		const title = flowchart.querySelector<HTMLButtonElement>('.stencil-title')!;

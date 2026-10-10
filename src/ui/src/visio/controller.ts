@@ -588,6 +588,7 @@ export class ViewerController {
 				'create-text-box',
 				'create-path',
 				'insert-picture',
+				'insert-master-instance',
 			].includes(command.type),
 		);
 		const created = new Set(

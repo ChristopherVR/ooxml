@@ -5,67 +5,28 @@ import {
 	type Master,
 	type Stencil,
 } from './stencil-catalog';
+import {
+	DOCUMENT_MASTER_LIMIT,
+	DOCUMENT_STENCIL_ID,
+	DOCUMENT_STENCIL_NAME,
+	EMPTY_SHAPES_DOCUMENT,
+	type ShapesDocument,
+} from './shapes-document';
+import { loadShapes as load, saveShapes as save } from './shapes-storage';
+export { SHAPES_STORAGE_KEY, currentQuickShapes } from './shapes-storage';
 
-/** Per-viewer Shapes window preferences: opened stencils and each stencil's Quick Shapes. */
-export const SHAPES_STORAGE_KEY = 'ooxml-ui.visio.shapes';
+/** The Stencils view of one Shapes window. */
+export interface StencilsView {
+	/** The More Shapes and master menus; the caller puts them on the pane. */
+	menus: HTMLElement[];
+	/** Show a drawing's document stencil and the stencils it docks; a no-op for the same drawing. */
+	setDocument(next: ShapesDocument): void;
+}
+
 /** Visio shows a stencil's first masters as its Quick Shapes until the user changes them. */
 const DEFAULT_QUICK = 4;
-interface Saved {
-	open: string[];
-	quick: Record<string, string[]>;
-}
 /** Undefined until the shared menu element is registered. */
 type Menu = HTMLElement & { openAt?(x: number, y: number): void };
-
-function storage(doc: Document): Storage | undefined {
-	try {
-		return doc.defaultView?.localStorage ?? undefined;
-	} catch {
-		return undefined;
-	}
-}
-function load(doc: Document): Saved {
-	const saved: Saved = { open: [], quick: {} };
-	try {
-		const raw = storage(doc)?.getItem(SHAPES_STORAGE_KEY);
-		const value = raw ? (JSON.parse(raw) as Partial<Saved>) : {};
-		const known = new Set(STENCILS.map((stencil) => stencil.id));
-		if (Array.isArray(value.open))
-			saved.open = value.open.filter(
-				(id): id is string => typeof id === 'string' && known.has(id) && id !== BASIC_STENCIL_ID,
-			);
-		for (const [stencil, ids] of Object.entries(value.quick ?? {}))
-			if (known.has(stencil) && Array.isArray(ids))
-				saved.quick[stencil] = ids.filter(
-					(id): id is string => typeof id === 'string' && findMaster(id)?.stencil.id === stencil,
-				);
-	} catch {
-		// Blocked or corrupt storage: start from Visio's defaults.
-	}
-	return saved;
-}
-function save(doc: Document, saved: Saved): void {
-	try {
-		storage(doc)?.setItem(SHAPES_STORAGE_KEY, JSON.stringify(saved));
-	} catch {
-		// Preferences are a convenience; the window works without them.
-	}
-}
-
-/**
- * The Quick Shapes of the current stencil (the one opened last, else Basic Shapes), for the
- * AutoConnect mini toolbar. Reads the saved preferences, so it follows the Shapes window.
- */
-export function currentQuickShapes(doc: Document, limit = DEFAULT_QUICK): Master[] {
-	const saved = load(doc);
-	const id = saved.open.at(-1) ?? BASIC_STENCIL_ID;
-	const stencil = STENCILS.find((candidate) => candidate.id === id) ?? STENCILS[0]!;
-	const ids =
-		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
-	const masters = ids.flatMap((master) => findMaster(master)?.master ?? []);
-	// A stencil whose Quick Shapes were all removed still offers its first masters.
-	return (masters.length ? masters : [...stencil.masters]).slice(0, limit);
-}
 
 /** One master button: drag it onto the page, or activate it to add it at the page centre. */
 export function masterButton(doc: Document, master: Master): HTMLLIElement {
@@ -75,17 +36,27 @@ export function masterButton(doc: Document, master: Master): HTMLLIElement {
 	button.type = 'button';
 	button.className = 'master';
 	button.dataset.master = master.id;
-	const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-	svg.setAttribute('viewBox', '0 0 24 24');
-	svg.setAttribute('aria-hidden', 'true');
-	const outline = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
-	outline.setAttribute('d', master.path);
-	svg.append(outline);
+	let svg = master.draw?.();
+	if (!svg) {
+		svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		svg.setAttribute('viewBox', '0 0 24 24');
+		svg.setAttribute('aria-hidden', 'true');
+		const outline = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
+		outline.setAttribute('d', master.path);
+		svg.append(outline);
+	}
 	const label = doc.createElement('span');
 	label.textContent = master.name;
 	button.append(svg, label);
-	button.draggable = true;
-	button.title = `${master.name}: drag onto the page, or press Enter to add it at the centre.`;
+	if (master.unsupported) {
+		// Listed as Visio lists it, but not offered: the reason is the tooltip.
+		button.dataset.unsupported = '';
+		button.setAttribute('aria-disabled', 'true');
+		button.title = `${master.name}: ${master.unsupported}`;
+	} else {
+		button.draggable = true;
+		button.title = `${master.name}: drag onto the page, or press Enter to add it at the centre.`;
+	}
 	item.append(button);
 	return item;
 }
@@ -112,15 +83,22 @@ function unsupportedItem(item: HTMLElement, reason: string): HTMLElement {
 
 /**
  * The Stencils view below the view tabs: More Shapes (a menu of the built-in stencils), Quick
- * Shapes (favourites across the open stencils) and one collapsible section per open stencil,
- * Basic Shapes first. Opened stencils and Quick Shapes persist per viewer in localStorage.
+ * Shapes (favourites across the open stencils) and one collapsible section per open stencil.
+ * A drawing's own masters come first as its Document Stencil, then the stencils the drawing docks,
+ * then Basic Shapes and the stencils the user opened. The first of the drawing's stencils is the
+ * one showing, as in Visio; the others start folded. Opened stencils and Quick Shapes persist per
+ * viewer in localStorage; what a drawing docks is not persisted.
  */
 export function buildStencilsView(
 	doc: Document,
 	panel: HTMLElement,
 	pane: HTMLElement,
-): HTMLElement[] {
+): StencilsView {
 	const saved = load(doc);
+	let drawing: ShapesDocument = EMPTY_SHAPES_DOCUMENT;
+	/** Docked stencils the user has not closed in this session. */
+	let docked: string[] = [];
+	const collapsed = new Set<string>();
 	const row = (id: string, label: string) => {
 		const button = doc.createElement('button');
 		button.type = 'button';
@@ -150,7 +128,8 @@ export function buildStencilsView(
 	masterMenu.setAttribute('label', 'Master');
 	let menuMaster: string | undefined;
 
-	const openIds = () => [BASIC_STENCIL_ID, ...saved.open];
+	const openIds = () => [...new Set([...docked, BASIC_STENCIL_ID, ...saved.open])];
+	const sectionIds = () => [...(drawing.masters.length ? [DOCUMENT_STENCIL_ID] : []), ...openIds()];
 	const quickIds = (stencil: Stencil) =>
 		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
 	const renderQuick = () => {
@@ -164,14 +143,12 @@ export function buildStencilsView(
 		quick.replaceChildren(masters.length ? masterList(doc, masters) : empty);
 	};
 	const renderSections = () => {
-		const collapsed = new Set(
-			[...sections.querySelectorAll<HTMLElement>('[data-stencil][data-collapsed]')].map(
-				(section) => section.dataset.stencil!,
-			),
-		);
 		sections.replaceChildren(
-			...openIds().map((id) => {
-				const stencil = STENCILS.find((candidate) => candidate.id === id)!;
+			...sectionIds().map((id) => {
+				const stencil: Stencil =
+					id === DOCUMENT_STENCIL_ID
+						? { id, name: DOCUMENT_STENCIL_NAME, masters: drawing.masters }
+						: STENCILS.find((candidate) => candidate.id === id)!;
 				const section = doc.createElement('section');
 				section.dataset.stencil = id;
 				section.setAttribute('aria-label', stencil.name);
@@ -189,7 +166,7 @@ export function buildStencilsView(
 				list.hidden = !open;
 				if (!open) section.dataset.collapsed = '';
 				header.append(title);
-				if (id !== BASIC_STENCIL_ID) {
+				if (id !== BASIC_STENCIL_ID && id !== DOCUMENT_STENCIL_ID) {
 					const close = doc.createElement('button');
 					close.type = 'button';
 					close.className = 'stencil-close';
@@ -200,6 +177,13 @@ export function buildStencilsView(
 					header.append(close);
 				}
 				section.append(header, list);
+				if (id === DOCUMENT_STENCIL_ID && drawing.omitted) {
+					const note = doc.createElement('p');
+					note.className = 'shapes-empty';
+					note.hidden = !open;
+					note.textContent = `Showing the first ${DOCUMENT_MASTER_LIMIT} masters; ${drawing.omitted} more are not listed.`;
+					section.append(note);
+				}
 				return section;
 			}),
 		);
@@ -207,7 +191,7 @@ export function buildStencilsView(
 	const renderMenu = () =>
 		moreMenu.replaceChildren(
 			...STENCILS.filter((stencil) => stencil.id !== BASIC_STENCIL_ID).map((stencil) =>
-				menuItem(doc, `stencil:${stencil.id}`, stencil.name, saved.open.includes(stencil.id)),
+				menuItem(doc, `stencil:${stencil.id}`, stencil.name, openIds().includes(stencil.id)),
 			),
 			doc.createElement('office-ui-menu-separator'),
 			unsupportedItem(
@@ -221,9 +205,11 @@ export function buildStencilsView(
 		renderQuick();
 	};
 	const toggleStencil = (id: string) => {
-		saved.open = saved.open.includes(id)
-			? saved.open.filter((candidate) => candidate !== id)
-			: [...saved.open, id];
+		if (openIds().includes(id)) {
+			docked = docked.filter((candidate) => candidate !== id);
+			saved.open = saved.open.filter((candidate) => candidate !== id);
+		} else saved.open = [...saved.open, id];
+		collapsed.delete(id);
 		save(doc, saved);
 		render();
 	};
@@ -252,7 +238,11 @@ export function buildStencilsView(
 		const open = title.getAttribute('aria-expanded') !== 'true';
 		title.setAttribute('aria-expanded', String(open));
 		section.querySelector<HTMLElement>('.masters')!.hidden = !open;
+		const note = section.querySelector<HTMLElement>('.shapes-empty');
+		if (note) note.hidden = !open;
 		section.toggleAttribute('data-collapsed', !open);
+		if (open) collapsed.delete(section.dataset.stencil!);
+		else collapsed.add(section.dataset.stencil!);
 	});
 	pane.addEventListener('contextmenu', (event) => {
 		const button = (event.target as Element).closest?.<HTMLElement>('[data-master]');
@@ -279,6 +269,18 @@ export function buildStencilsView(
 	});
 	render();
 	panel.append(more, quickToggle, quick, sections);
-	// The caller puts the menus on the pane, so they open from the Search view too.
-	return [moreMenu, masterMenu];
+	return {
+		// The caller puts the menus on the pane, so they open from the Search view too.
+		menus: [moreMenu, masterMenu],
+		setDocument(next) {
+			if (next.key === drawing.key) return;
+			drawing = next;
+			docked = next.docked.filter((id) => STENCILS.some((stencil) => stencil.id === id));
+			// The drawing's first stencil is the one showing; the rest fold, as Visio lists them.
+			const showing = next.masters.length ? DOCUMENT_STENCIL_ID : docked[0];
+			collapsed.clear();
+			if (showing) for (const id of sectionIds()) if (id !== showing) collapsed.add(id);
+			render();
+		},
+	};
 }

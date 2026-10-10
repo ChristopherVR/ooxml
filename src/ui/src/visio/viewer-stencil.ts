@@ -1,11 +1,21 @@
 import type { ViewerController } from './controller';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
-import { MASTER_MIME, findMaster, masterCreation } from './shapes-window';
+import type { VisioDocument } from 'ooxml-core/visio';
+import { visioMasterDropCommand, visioMasterDropRefusal } from 'ooxml-core/visio/ui';
+import { MASTER_MIME, findMaster, masterCreation, setShapesDocument } from './shapes-window';
+import {
+	DOCUMENT_STENCIL_NAME,
+	documentMaster,
+	shapesDocument,
+	type ShapesDocument,
+} from './shapes-document';
 import { insertMaster, pagePoint } from './viewer-draw-tool';
 
 /**
  * Shapes window interaction: drag a master onto the page to drop it there, or activate it to add
- * it at the page centre. Ellipses and circles are native ellipses; the rest are core outlines.
+ * it at the page centre. Ellipses and circles are native ellipses; the rest are core outlines. A
+ * master of the drawing's own Document Stencil is dropped as an instance of that master. The
+ * window follows the open drawing: its Document Stencil and the stencils it docks.
  */
 export function wireStencil(
 	pane: HTMLElement,
@@ -33,9 +43,58 @@ export function wireStencil(
 			});
 			if (done) stop();
 		});
+	// Drawing the masters is the costly part, so it is done once per parsed drawing.
+	const drawings = new WeakMap<VisioDocument, ShapesDocument>();
+	let shown: VisioDocument | null | undefined;
+	const follow = (model: VisioDocument | null): void => {
+		if (model === shown) return;
+		shown = model;
+		let next = model ? drawings.get(model) : undefined;
+		if (!next) {
+			next = shapesDocument(model);
+			if (model) drawings.set(model, next);
+		}
+		setShapesDocument(pane, next);
+	};
+	follow(controller.state.document);
+	const unfollow = controller.subscribe((state) => follow(state.document));
 	// Drops are added one at a time, in the order they were made, each where it was released.
 	let queue = Promise.resolve();
+	/** Drop a master of the drawing's own stencil as an instance of it. */
+	const addInstance = (id: string, centre?: { clientX: number; clientY: number }) => {
+		const state = controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		const master = documentMaster(state.document, id);
+		if (!master || !page) return queue;
+		const refusal = visioMasterDropRefusal(master);
+		if (refusal || !editable()) {
+			announce(refusal ? `${master.name}: ${refusal}` : 'Open a .vsdx file to add shapes.');
+			return queue;
+		}
+		const svg = viewport.querySelector<SVGSVGElement>('svg.paper');
+		const point = centre && svg ? pagePoint(svg, page, centre) : undefined;
+		queue = queue.then(async () => {
+			try {
+				if (controller.state.edit.busy) await idle();
+				const current = controller.state;
+				const target = current.document?.pages[current.pageIndex];
+				const live = documentMaster(current.document, id);
+				if (!target || target.id !== page.id || !live || !editable()) return;
+				const command = visioMasterDropCommand(target, live, point);
+				const token = controller.captureCreationToken(target.id);
+				await controller.applyCreationEdits([command], token);
+				announce(`${live.name} ${command.shapeId} added from ${DOCUMENT_STENCIL_NAME}.`);
+			} catch (error) {
+				if (!isEditCancellation(error) && !controller.state.edit.error)
+					announce(editErrorMessage(error));
+			}
+		});
+		return queue;
+	};
+	const known = (id: string): boolean =>
+		!!masterCreation(id) || !!documentMaster(controller.state.document, id);
 	const add = (id: string, centre?: { clientX: number; clientY: number }) => {
+		if (documentMaster(controller.state.document, id)) return addInstance(id, centre);
 		const master = masterCreation(id);
 		const state = controller.state;
 		const page = state.document?.pages[state.pageIndex];
@@ -76,7 +135,8 @@ export function wireStencil(
 		'dragstart',
 		(event) => {
 			const master = (event.target as Element).closest?.<HTMLElement>('[data-master]');
-			if (!master || !masterCreation(master.dataset.master!) || !event.dataTransfer) return;
+			if (!master || !known(master.dataset.master!) || !event.dataTransfer) return;
+			if ('unsupported' in master.dataset) return event.preventDefault();
 			event.dataTransfer.setData(MASTER_MIME, master.dataset.master!);
 			event.dataTransfer.effectAllowed = 'copy';
 		},
@@ -109,5 +169,8 @@ export function wireStencil(
 		},
 		options,
 	);
-	return () => events.abort();
+	return () => {
+		unfollow();
+		events.abort();
+	};
 }

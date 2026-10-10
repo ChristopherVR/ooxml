@@ -110,6 +110,44 @@ Evidence: `src/core/visio/ui/auto-connect.test.ts`,
 `src/ui/src/visio/viewer-auto-connect.test.ts` and `e2e/visio/auto-connect.spec.ts`
 on all six framework demos.
 
+## Document Stencil and the drawing's own stencils, 2026-10-10
+
+The Shapes window now follows the open drawing, as Visio's does:
+
+- A drawing with masters lists them first as its Document Stencil, each drawn
+  from its own master geometry (without text) and named by its Name or NameU.
+  Dragging one onto the page, or activating it, adds a real master instance:
+  a shape that names the master and carries only its pin, which is what Visio
+  writes for a drop. A group master gets one sub-shape per master sub-shape.
+  The page gains its relationship to the master part when it has none.
+- The stencils a drawing docks (the Stencil windows of `visio/windows.xml`)
+  open with it: Basic Shapes, Basic Flowchart Shapes and Arrow Shapes stand in
+  for Visio's `BASIC`, `BASFLO` and `ARROWS` stencil files. The first of the
+  drawing's stencils is the one showing; the others start folded. The sample
+  flowchart docks Basic Flowchart Shapes.
+- Basic Flowchart Shapes has Visio's fourteen masters, names, order and drop
+  sizes (Process, Decision, Subprocess, Start/End, Document, Data, Database,
+  External Data, Custom 1 to 4, On-page reference, Off-page reference). The
+  other flowchart outlines moved to Miscellaneous Flowchart Shapes.
+
+Checked against Visio 16 through COM, hidden: the stencil's master names and
+sizes; that drawings with instances dropped by this editor (a single-shape
+and a group master) reopen with every instance bound to its master; and that
+the sample reopens with `BASFLO_U.vssx` docked.
+
+Limits:
+
+- A 1-D master (Dynamic connector) and a master with more than one top-level
+  shape are listed disabled with the reason; they cannot be dropped.
+- A dropped instance is not put on the master's layers and gets no name
+  (Visio names it `Process.5`), and the page is not grown to hold it.
+- The built-in stencils are this editor's own outlines, not Visio's masters:
+  no connection points, Shape Data or shapesheet behaviour. Stencil files
+  (.vssx) are never opened, and other docked stencils are ignored.
+- Masters cannot be edited, renamed, added or deleted, and a built-in master
+  still drops as a local shape, not as a new master of the drawing.
+- Previews use the first 200 masters and no page theme.
+
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
 The groups and commands of every tab were read from Visio 16 through UI

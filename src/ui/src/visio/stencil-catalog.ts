@@ -13,6 +13,10 @@ export interface Master {
 	path: string;
 	/** Default size in inches when dropped. */
 	size: { width: number; height: number };
+	/** A drawn preview that replaces `path` (a master of the drawing's own stencil). */
+	draw?: () => SVGElement | undefined;
+	/** Why the master cannot be dropped; it is listed disabled with this reason. */
+	unsupported?: string;
 }
 export interface Stencil {
 	id: string;

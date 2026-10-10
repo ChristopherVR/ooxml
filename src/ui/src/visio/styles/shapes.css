@@ -148,6 +148,11 @@
 	stroke-width: 1;
 	stroke-linejoin: round;
 }
+/* A drawing master's preview is the page renderer's output in inches: keep its lines one pixel. */
+.master svg.master-preview :is(path, ellipse, rect, line, polyline, polygon, circle) {
+	vector-effect: non-scaling-stroke;
+	stroke-width: 1px;
+}
 .master[data-unsupported] {
 	cursor: not-allowed;
 	opacity: 0.45;
