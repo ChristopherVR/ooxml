@@ -7,6 +7,12 @@ import { textFormattingWrites } from './edit-formatting-text';
 import { shapeFormattingPlan, assertShapeFormattingPaintScope } from './edit-formatting-paint';
 import { assertFormattingDependencies } from './edit-formatting-scope';
 import {
+	assertInstanceLayersUnlocked,
+	commitInstanceFormatting,
+	formattingInstance,
+} from './edit-instance-format';
+import { masterTemplate } from './edit-text-scope';
+import {
 	assertEditableFormattingCell,
 	assertShapeLocks,
 	assertUnlayeredShape,
@@ -61,8 +67,13 @@ export async function applyFormattingEdit(
 ): Promise<boolean> {
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
-	const shape = targetShape(root, edit.shapeId);
-	assertUnlayeredShape(shape, document);
+	// A stencil instance is planned on its effective sheet and saved as local overrides.
+	const instance = await formattingInstance(root, edit.shapeId, masterTemplate(pkg));
+	const shape = instance?.view ?? targetShape(root, edit.shapeId);
+	if (instance) {
+		const layers = children(shape, 'Cell').find((cell) => attribute(cell, 'N') === 'LayerMember');
+		await assertInstanceLayersUnlocked(pkg, edit.pageId, attribute(layers, 'V'));
+	} else assertUnlayeredShape(shape, document);
 	assertShapeLocks(
 		shape,
 		document,
@@ -123,7 +134,16 @@ export async function applyFormattingEdit(
 	if (!changed.size) return false;
 	if (edit.type === 'format-shape')
 		await assertShapeFormattingPaintScope(pkg, document, shape, edit, changed, check);
-	await assertFormattingDependencies(pkg, pagePaths, roots, edit.pageId, shape, changed, check);
+	await assertFormattingDependencies(
+		pkg,
+		pagePaths,
+		roots,
+		edit.pageId,
+		shape,
+		changed,
+		check,
+		instance?.view,
+	);
 	for (const write of writes) {
 		check();
 		if (!changed.has(write.name)) continue;
@@ -165,5 +185,6 @@ export async function applyFormattingEdit(
 		if (write.formula) cell.setAttribute('F', write.formula);
 		else if (attribute(cell, 'F') !== 'No Formula') cell.removeAttribute('F');
 	}
+	if (instance) commitInstanceFormatting(instance, changed.keys());
 	return true;
 }

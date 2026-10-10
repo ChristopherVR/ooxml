@@ -12,6 +12,9 @@ import {
 function themeLiteral(node: VisioFormulaAst): boolean {
 	if (node.kind === 'string' || node.kind === 'number') return true;
 	if (node.kind !== 'call' || !node.args.every(themeLiteral)) return false;
+	// A literal colour as the fallback of a lookup: THEMEVAL("LineColor",RGB(0,0,0)).
+	if (node.name === 'RGB')
+		return node.args.length === 3 && node.args.every((arg) => arg.kind === 'number');
 	if (node.name === 'THEMEGUARD') return node.args.length <= 1;
 	if (node.name === 'THEME')
 		return node.args.length === 0 || (node.args.length === 1 && node.args[0]?.kind === 'string');

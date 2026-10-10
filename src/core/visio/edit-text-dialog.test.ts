@@ -145,14 +145,14 @@ describe('Text dialog formatting (Font, Character, Paragraph, Text Block, Bullet
 			expect(() => snapshotEdits([{ ...command, ...bad } as VisioTextFormatEdit])).toThrow();
 		const locked = await source(cell('LockTextEdit', 1));
 		await expect(editVsdx(locked, [{ ...command, textCase: 'all-caps' }])).rejects.toThrow();
-		const master = fixture({
-			masters: [{ id: '2', shapes: shape('1', cell('Width', 1) + cell('Height', 1) + rectangle) }],
+		// A stencil shape whose master cannot be found stays refused.
+		const orphan = fixture({
 			pages: [
 				{ id: '0', contents: `<Shapes>${shape('1', '<Text>x</Text>', 'Master="2"')}</Shapes>` },
 			],
 		});
 		await expect(
-			editVsdx(await master, [
+			editVsdx(await orphan, [
 				{ ...command, textBlock: { x: 0.5, y: 0.5, width: 1, height: 1, angle: 0 } },
 			]),
 		).rejects.toThrow();

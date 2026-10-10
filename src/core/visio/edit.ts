@@ -1,8 +1,13 @@
-import { DEFAULTS, fail, type VisioPackageLimits } from './package-common';
+import { DEFAULTS, fail, VisioPackageError, type VisioPackageLimits } from './package-common';
 import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
-import { replaceScopedPlainText } from './edit-text-scope';
+import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
+import {
+	applyInstanceGeometryEdit,
+	isGlueTarget,
+	isInstanceGeometryEdit,
+} from './edit-instance-geometry';
 import { replaceScopedTextRanges } from './edit-text-ranges';
 import { insertVisioTextField } from './edit-text-field';
 import {
@@ -294,6 +299,7 @@ async function editVsdxTransaction(
 	);
 	let document: Element | undefined;
 	let masterMovePins = emptyMasterMoveProof();
+	const instanceCommands = new Set<VisioGeometryEdit>();
 	if (
 		geometryCommands.length ||
 		commands.some(
@@ -330,14 +336,41 @@ async function editVsdxTransaction(
 		for (const command of geometryCommands)
 			if (!command.type.startsWith('create-') && command.type !== 'delete-shape')
 				refuseStencilConnector(roots.get(command.pageId), command.shapeId);
-		if (geometryCommands.length)
-			masterMovePins = await assertGeometryPackageScope(
-				pkg,
-				new Set(pages.values()),
-				geometryCommands,
-				check,
-				roots,
-			);
+		// Stencil instances take their own path: local overrides over the master's formulas.
+		// A plain move keeps the proven pin-only path unless a connector is glued to the shape.
+		const instanceMoves = new Set<VisioGeometryEdit>();
+		for (const command of geometryCommands)
+			if (isInstanceGeometryEdit(roots, command)) {
+				if (command.type !== 'move-shape' || isGlueTarget(roots, command))
+					instanceCommands.add(command);
+				else instanceMoves.add(command);
+			}
+		const scope = async () => {
+			const local = geometryCommands.filter((command) => !instanceCommands.has(command));
+			if (local.length)
+				masterMovePins = await assertGeometryPackageScope(
+					pkg,
+					new Set(pages.values()),
+					local,
+					check,
+					roots,
+				);
+		};
+		try {
+			await scope();
+		} catch (error) {
+			// When the pin-only proof cannot follow the drawing, stencil moves take the instance path.
+			// A spent proof budget is a limit, not something another path may work around.
+			if (
+				!instanceMoves.size ||
+				!(error instanceof VisioPackageError) ||
+				error.code !== 'EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY' ||
+				/budget/i.test(error.message)
+			)
+				throw error;
+			for (const command of instanceMoves) instanceCommands.add(command);
+			await scope();
+		}
 		const path = await related(pkg, '', 'document');
 		document = await visioXml(pkg, path!, 'VisioDocument');
 	}
@@ -463,8 +496,11 @@ async function editVsdxTransaction(
 			command.type !== 'set-layer-properties' &&
 			command.type !== 'insert-master-instance'
 		) {
-			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
-				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			const changedPages =
+				instanceCommands.has(command) && isInstanceGeometryEdit(roots, command)
+					? await applyInstanceGeometryEdit(roots, command, masterTemplate(pkg), check)
+					: applyGeometryEdit(roots, document!, command, check, masterMovePins);
+			for (const pageId of changedPages) dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 		}
 	}
 	let totalBytes = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0);

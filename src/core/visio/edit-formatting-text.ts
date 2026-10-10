@@ -66,9 +66,11 @@ export function textFormattingWrites(
 			'TextStyle',
 			rows.get(name.split('.')[0]!),
 		);
-		const cached = cell
-			? visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'))
-			: { value: 0, unit: 'scalar' };
+		// A themed style or bullet has no cached number; readers take it as none, and so does this.
+		const cached =
+			cell && attribute(cell, 'V') !== 'Themed'
+				? visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'))
+				: { value: 0, unit: 'scalar' };
 		if (
 			cached.unit !== 'scalar' ||
 			!Number.isSafeInteger(cached.value) ||

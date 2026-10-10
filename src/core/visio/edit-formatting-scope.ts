@@ -18,6 +18,11 @@ export async function assertFormattingDependencies(
 	shape: Element,
 	changed: ReadonlyMap<string, Element | undefined>,
 	check: () => void,
+	/**
+	 * The effective sheet of a stencil instance. Its own master's formulas are then judged as the
+	 * instance's (through this view), and other masters, which cannot read this shape, are skipped.
+	 */
+	instanceView?: Element,
 ): Promise<void> {
 	indexCells(roots, { check });
 	const shapeId = attribute(shape, 'ID')!;
@@ -30,7 +35,15 @@ export async function assertFormattingDependencies(
 			.replace(/^char\.([a-z]+)$/, 'character.0.$1')
 			.replace(/^para\.([a-z]+)$/, 'paragraph.0.$1');
 	const replaced = new Set(changed.values());
-	const inspect = (root: Element, sourcePageId?: string) => {
+	const failure = (): never =>
+		fail(
+			'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY',
+			'Formatting has affected or unknown formula dependencies; dependent caches cannot be recalculated safely.',
+		);
+	// `named`: a formula this editor cannot follow counts only when it names a changed cell.
+	// Stencil masters carry such formulas (menus, container lookups, text-driven sizes that
+	// Visio recalculates when it opens the file) on every shape.
+	const inspect = (root: Element, sourcePageId?: string, named = false) => {
 		for (const node of [root, ...Array.from(root.getElementsByTagName('*'))]) {
 			check();
 			if (![VISIO_NS, VISIO_LEGACY_NS].includes(node.namespaceURI ?? '') || replaced.has(node))
@@ -51,7 +64,22 @@ export async function assertFormattingDependencies(
 				}
 				parent = parent.parentNode;
 			}
-			const analysis = analyzeVisioFormula(source);
+			const mentions = () =>
+				(source.match(/[A-Za-z_][A-Za-z_0-9.]*/g) ?? []).some((token) =>
+					changedNames.has(canonical(token)),
+				);
+			let analysis: ReturnType<typeof analyzeVisioFormula>;
+			try {
+				analysis = analyzeVisioFormula(source);
+			} catch (error) {
+				if (!named) throw error;
+				if (mentions()) failure();
+				continue;
+			}
+			if (named && analysis.dynamic) {
+				if (mentions()) failure();
+				continue;
+			}
 			if (
 				analysis.dynamic ||
 				analysis.references.some(
@@ -63,15 +91,16 @@ export async function assertFormattingDependencies(
 								(localShapeId === shapeId || sourcePageId === undefined))),
 				)
 			)
-				fail(
-					'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY',
-					'Formatting has affected or unknown formula dependencies; dependent caches cannot be recalculated safely.',
-				);
+				failure();
 		}
 	};
 	for (const [id, root] of roots) inspect(root, id);
+	if (instanceView) inspect(instanceView, pageId, true);
 	for (const path of pkg.paths()) {
 		if (!/^visio\/.*\.xml$/i.test(path) || pagePaths.has(path)) continue;
-		inspect(await pkg.readXml(path));
+		const part = await pkg.readXml(path);
+		const master = part.localName === 'MasterContents';
+		if (instanceView && master) continue;
+		inspect(part, undefined, master);
 	}
 }
