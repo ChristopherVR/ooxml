@@ -1,7 +1,7 @@
 import type { VisioPage } from '../model';
 import type { VisioDuplicateShapesEdit } from '../edit-duplicate-commands';
 import { visioNextShapeId } from './shape-id';
-import { visioStyleFormattingShape } from './formatting';
+import { visioLocalFormattingShape } from './formatting';
 
 /** Allocate against the complete page tree; source guards remain authoritative. */
 export function visioDuplicateCommand(
@@ -13,7 +13,7 @@ export function visioDuplicateCommand(
 		shapeIds.length > 1000 ||
 		new Set(shapeIds).size !== shapeIds.length ||
 		shapeIds.some((id) => {
-			const shape = visioStyleFormattingShape(page, id);
+			const shape = visioLocalFormattingShape(page, id);
 			return (
 				!shape ||
 				shape.kind !== 'shape' ||

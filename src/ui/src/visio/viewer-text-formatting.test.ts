@@ -214,7 +214,7 @@ it('refuses the whole incompatible selection instead of editing its primary shap
 			text: 'Second',
 		},
 	]);
-	ui.shape().masterId = 'unsupported-master';
+	ui.shape().layerIds = ['unsupported-layer'];
 	ui.controller.selectShapes([
 		{ id: '1', name: 'First', pageId: '1' },
 		{ id: '2', name: 'Second', pageId: '1' },

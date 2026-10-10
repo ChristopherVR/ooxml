@@ -376,6 +376,23 @@ describe('formatting stencil (master) instances', () => {
 		expect(model.text.runs[0]!.fontSize * 72).toBeCloseTo(9);
 	});
 
+	it('turns the text block (Rotate Text) with local proportional cells', async () => {
+		const bytes = await source({ page: instance('<Text>Label\n</Text>') });
+		const saved = await editVsdx(bytes, [
+			{
+				type: 'format-text',
+				...target,
+				textBlock: { x: 0.5, y: 0.5, width: 0.8, height: 1, angle: Math.PI / 2 },
+			},
+		]);
+		const page = await part(saved.bytes, PAGE);
+		expect(page).toMatch(/<Cell N="TxtAngle" V="1\.57079\d+" U="DEG"\/>/);
+		// Cells that already hold these proportions in the master are not restated.
+		expect(page).not.toContain('N="TxtWidth"');
+		const text = (await first(saved.bytes)).text.transform;
+		expect(Math.atan2(text[1], text[0])).toBeCloseTo(Math.PI / 2);
+	});
+
 	it('refuses protected, locked-layer and formula-fed formatting', async () => {
 		const edit: VisioEdit = { type: 'format-shape', ...target, fillColor: '#ff0000' };
 		expect(

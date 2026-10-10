@@ -4,7 +4,7 @@ import {
 	isEditCancellation,
 	visioPageInsertCommand,
 	visioQuarterTurnCommand,
-	visioLocalRotationShape,
+	visioRotationShape,
 	visioSelectionIsOnPage,
 	visioWithCalloutLeaders,
 } from 'ooxml-core/visio/ui';
@@ -504,7 +504,7 @@ export class ViewerCommands {
 		const command =
 			action.type === 'rotate'
 				? visioQuarterTurnCommand(page, state.selectedShape.id, action.direction)
-				: visioLocalRotationShape(page, state.selectedShape.id, false)
+				: visioRotationShape(page, state.selectedShape.id, false)
 					? {
 							type: 'flip-shape' as const,
 							pageId: page.id,
@@ -657,13 +657,13 @@ export class ViewerCommands {
 			!!state.selectedShape &&
 			visioSelectionIsOnPage(state.selectedShape, page.id) &&
 			state.selectedShapes.length === 1 &&
-			!!visioLocalRotationShape(page, state.selectedShape.id);
+			!!visioRotationShape(page, state.selectedShape.id);
 		for (const name of ['rotate-left', 'rotate-right']) button(name).disabled = !rotating;
 		const flipping =
 			rotating &&
 			!!page &&
 			!!state.selectedShape &&
-			!!visioLocalRotationShape(page, state.selectedShape.id, false);
+			!!visioRotationShape(page, state.selectedShape.id, false);
 		for (const name of ['flip-horizontal', 'flip-vertical']) button(name).disabled = !flipping;
 		root.querySelector<RibbonCommand>('[data-menu="rotate"]')!.disabled = !rotating;
 		const distributing = this.#arrangement.render(state);

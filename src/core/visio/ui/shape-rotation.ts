@@ -1,5 +1,6 @@
 import type { VisioEdit } from '../edit';
 import type { VisioPage, VisioShape } from '../model';
+import { visioStencilInstanceShape } from './formatting';
 /** The model-level scope of local rotation. Source protections remain enforced by core edits. */
 export function visioLocalRotationShape(
 	page: VisioPage,
@@ -39,13 +40,36 @@ export function visioLocalRotationShape(
 		return undefined;
 	return shape;
 }
+/**
+ * What Rotate and Flip act on: a local shape or group, or a one-shape stencil instance, whose
+ * angle and flip flags are saved as local values over its master.
+ */
+export function visioRotationShape(
+	page: VisioPage,
+	shapeId: string,
+	includeGroups = true,
+): VisioShape | undefined {
+	const local = visioLocalRotationShape(page, shapeId, includeGroups);
+	if (local) return local;
+	const shape = visioStencilInstanceShape(page, shapeId);
+	if (
+		!shape?.rotation ||
+		!(shape.width > 0 && shape.height > 0) ||
+		![...shape.transform, shape.rotation.pinX, shape.rotation.pinY, shape.rotation.angle].every(
+			Number.isFinite,
+		) ||
+		page.connectors.some((connection) => connection.fromShapeId === shapeId)
+	)
+		return undefined;
+	return shape;
+}
 /** Native per-shape quarter turns normalize to signed angles while retaining the saved pin. */
 export function visioQuarterTurnCommand(
 	page: VisioPage,
 	shapeId: string,
 	direction: 'left' | 'right',
 ): Extract<VisioEdit, { type: 'rotate-shape' }> | undefined {
-	const shape = visioLocalRotationShape(page, shapeId);
+	const shape = visioRotationShape(page, shapeId);
 	if (!shape?.rotation || !Number.isFinite(shape.rotation.angle)) return undefined;
 	const angle = shape.rotation.angle + ((direction === 'left' ? 1 : -1) * Math.PI) / 2;
 	let normalized = Math.atan2(Math.sin(angle), Math.cos(angle));

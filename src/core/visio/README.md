@@ -670,7 +670,10 @@ contracts. Inherited pin guards and redirection still refuse. Only the two local
 pin caches are written; dimensions, geometry, LocPin caches, master attributes
 and definitions remain unchanged. Any other effective or page cache reading a
 changed pin refuses the whole transaction, including transitive dependencies.
-Master-linked resize and deletion remain unsupported.
+Master-linked deletion remains unsupported. A formula the proof cannot follow
+(menus, add-on calls, container lookups: every Visio stencil shape has some)
+no longer refuses the transaction on its own: it can only read another page
+shape by naming its sheet, and naming an edited or dependent cell still refuses.
 Width, Height and LocPin caches may remain inherited from a resolved master/style.
 Both local cache representations and effective inherited sources undergo error/unit
 checks. No missing transform cells are synthesized, and effective dimensions are
@@ -678,11 +681,55 @@ read-only transaction data keyed by the owned instance DOM.
 Move preparation has an aggregate 100,000-work budget charging formula source
 length, evaluation steps and cell/command checks, with deadline checks throughout.
 
+### Stencil instances: resize, rotate, flip and format
+
+`resize-shape`, `rotate-shape`, `flip-shape`, `format-shape` and `format-text`
+accept a top-level instance of a one-shape master (`edit-instance-*.ts`). What
+is written was recorded from Visio 16 with
+`scripts/record-visio-instance-geometry.ps1`; the optional
+`VISIO_NATIVE_INSTANCE_GEOMETRY_DIR` test compares against those recordings.
+
+- A changed Width, Height, PinX, PinY, Angle or flip flag becomes a local value
+  on the instance (a new Width or Height is tagged `U="IN"`, as Visio's).
+- Every inherited cell whose value follows from it is evaluated over the
+  instance's effective sheet (its own cells over the master's) and written as a
+  refreshed cache marked `F="Inh"`, in the master's section and row, so the
+  master's formula stays in effect. Unchanged values are not written.
+- Only arithmetic, comparisons, `IF`, `MIN`, `MAX`, `AND`/`OR`/`NOT` and
+  same-shape references are evaluated. A drawn cell (transform, text block,
+  geometry, connection point, formatting) that depends on anything else refuses
+  the edit with `EDIT_UNSUPPORTED_DEPENDENCY`. Caches in User, Property,
+  Actions, Scratch and similar data sections that cannot be computed (they
+  usually need text metrics) are left as saved; Visio does not recompute them on
+  open, so a menu entry such as Resize with Text can stay hidden until the
+  shape is next changed in Visio.
+- A dimension that is not changed but follows the other one or the text
+  (`Height = User.ResizeTxtHeight`) is written as a local value too, so the
+  shape keeps the size asked for.
+- Formatting is planned on a detached copy of the master with the instance laid
+  over it and saved as local cells and partial Character and Paragraph rows.
+  Stencil shapes sit on their stencil's layer; they are refused only when that
+  layer is locked.
+- `move-shape` takes this path when a connector is glued to the instance or the
+  pin-only proof above cannot follow the drawing; cells that read the pin are
+  then recomputed instead of refused.
+- Visio does not lay connectors out again when it opens a file. A glued
+  connector that `rerouteConnector` cannot handle (Visio's own Dynamic
+  connector is a master instance) therefore refuses the move, resize or
+  rotation with `UNSUPPORTED_INSTANCE_EDIT` instead of being left behind.
+
+Refused: group masters and sub-shapes of a group instance, masters that inherit
+another master, 1D masters (lines and connectors), locally deleted sections or
+rows, `GUARD`ed sizes and pins, active locks, and another page shape whose
+formula reads a changed cell of the instance. A shape whose master sizes it
+from its text still keeps its saved size after a text edit: `TEXTHEIGHT` needs
+text metrics the core does not have.
+
 This first bundle has deliberate exclusions:
 
 | Exclusion                                                                     | Reason                                                                              | Next expansion                                                                  |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Master-linked resize/delete, unproven master moves, groups and foreign shapes | Broader instance overrides, nested transforms and resource semantics are not proven | Additional scoped master/instance proofs                                        |
+| Master-linked delete, group masters and foreign shapes                        | Nested transforms and resource semantics are not proven                             | Group instance overrides and instance deletion                                  |
 | Glue/Connects participation and broader 1D editing                            | Proven straight-line translation does not establish connector routing or glue       | Endpoint editing and glued connector routing                                    |
 | Non-page affected/unknown dependencies                                        | Page metadata, document, master and style scopes can otherwise retain stale caches  | Scoped package-wide graph, starting with page metadata and pure theme functions |
 | GUARD, SETATREF and referenced transform formulas                             | Direct overwrites would bypass protection/redirection or discard semantics          | Verified redirection commands; never bypass protection                          |

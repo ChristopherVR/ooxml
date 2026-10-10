@@ -190,6 +190,43 @@ Not Visio's router, and still different:
   the master's rows, the text position rule and more recorded cases; it is not
   done, and such connectors are refused with a message rather than rewritten.
 
+## Stencil shapes: move, resize, rotate and format, 2026-10-10
+
+Shapes dropped from a stencil (master instances) made of one plain shape now
+take the resize handles, Size & Position, Rotate and Flip, the rotation handle,
+dragging and nudging, and fill, line and text formatting (ribbon, Format Shape,
+Text dialog, Format Painter, Rotate Text). Before, only their text could change.
+
+- Saved as Visio saves it, recorded from Visio 16: the changed size, pin, angle
+  or format cell becomes a local value on the shape, and every inherited cell
+  that follows from a new size or position (pin, text block, geometry,
+  connection points) gets a refreshed value that keeps the master's formula. For
+  Visio's Process, Decision, Document and Data flowchart shapes the drawn cells
+  written equal Visio's; files written this way were reopened in Visio 16, which
+  showed the new size, position, angle and formatting with the master's formulas
+  still in place.
+- Stencil shapes sit on their stencil's layer. That no longer blocks them; a
+  locked layer still does. Drawn shapes assigned to a layer stay as before.
+- Drawn shapes in a drawing that also holds stencil shapes can be moved and
+  formatted again: the checks that guard saved values no longer stop at the
+  menu, add-on and container formulas every Visio stencil shape carries.
+
+Not done, each refused with a message instead of a wrong result:
+
+- A stencil shape with a Visio connector glued to it cannot be moved, resized
+  or rotated yet. Visio does not lay connectors out again when it opens a file,
+  and this editor cannot reroute Visio's own Dynamic connector, so the connector
+  would be left behind. Formatting and text still work.
+- Stencil shapes made of several shapes (groups), stencil lines and connectors,
+  and shapes inside a group instance.
+- Deleting, duplicating, copying, reordering and Change Shape on stencil shapes.
+- A master formula outside plain arithmetic on the shape's own cells, when a
+  drawn cell depends on it.
+- A stencil shape whose master sizes it from its text keeps its saved size
+  after its text changes; Visio recalculates it. A right-click entry such as
+  Resize with Text can stay hidden in Visio until the shape is next changed
+  there.
+
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
 The groups and commands of every tab were read from Visio 16 through UI

@@ -87,13 +87,13 @@ it('disables model-only, mismatched page and unsupported selections and ignores 
 	expect(ui.edits).toHaveLength(0);
 	await ui.controller.load(ui.bytes);
 	ui.selection();
-	ui.shape().masterId = '42';
+	ui.shape().layerIds = ['42'];
 	ui.commands.render(ui.controller.state);
 	expect(ui.button('bold').disabled).toBe(true);
 	expect(
 		ui.root.querySelector<HTMLElement & { disabled: boolean }>('[data-menu="fill"]')!.disabled,
 	).toBe(true);
-	delete ui.shape().masterId;
+	delete ui.shape().layerIds;
 	ui.controller.selectShape({ id: '1', name: 'Import test', pageId: 'another-page' });
 	expect(ui.button('bold').disabled).toBe(true);
 	ui.dispose();

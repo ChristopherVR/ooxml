@@ -45,7 +45,7 @@ it.each([0.5, 1, 2])('translates every pin by one physical delta at scale %s', (
 it('declines the entire selection when any member is unsupported, glued or ambiguous', () => {
 	for (const patch of [
 		{ kind: 'connector' },
-		{ masterId: '1' },
+		{ masterId: '1', layerIds: ['locked'] },
 		{ layerIds: ['1'] },
 		{ hidden: true },
 		{ children: [page().shapes[0]!] },

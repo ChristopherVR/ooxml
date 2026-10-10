@@ -2,7 +2,7 @@ import { createRotationDrag, resolveRotateHandlePlacement, snapAngle } from 'oox
 import {
 	editErrorMessage,
 	isEditCancellation,
-	visioLocalRotationShape,
+	visioRotationShape,
 	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -59,7 +59,7 @@ export class ViewerRotationHandle {
 			!this.options.active()
 		)
 			return;
-		const shape = visioLocalRotationShape(page, selection.id);
+		const shape = visioRotationShape(page, selection.id);
 		if (!shape?.rotation) return;
 		const group = Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
 			(group) =>

@@ -3,11 +3,11 @@ import type { VisioClipboardSnapshot } from '../clipboard-types';
 import { snapshotVisioClipboard } from '../clipboard-types';
 import type { VisioPasteShapesEdit } from '../edit-paste-commands';
 import { visioNextShapeId } from './shape-id';
-import { visioStyleFormattingShape } from './formatting';
+import { visioLocalFormattingShape } from './formatting';
 
 /** Coarse scene eligibility only; capture validates source locks, formulas and resources. */
 export function visioClipboardShape(page: VisioPage, shapeId: string): VisioShape | undefined {
-	const shape = visioStyleFormattingShape(page, shapeId);
+	const shape = visioLocalFormattingShape(page, shapeId);
 	if (
 		!shape ||
 		shape.kind !== 'shape' ||

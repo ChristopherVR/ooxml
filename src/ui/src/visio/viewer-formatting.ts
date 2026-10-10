@@ -179,12 +179,12 @@ export class ViewerFormatting {
 		const reason =
 			baseReason ||
 			(!shape
-				? 'Text formatting requires a local shape without a master, group, or layer membership.'
+				? 'Text formatting needs a single shape: not a group, a picture, a stencil connector, a drawn shape on a layer or a shape on a locked layer.'
 				: '');
 		const styleReason =
 			baseReason ||
 			(!styleShape
-				? 'Formatting requires a local shape without a master, group, foreign image, or layer membership.'
+				? 'Formatting needs a single shape: not a group, a picture, a stencil connector, a drawn shape on a layer or a shape on a locked layer.'
 				: '');
 		const set = (element: RibbonCommand | null, disabled: string, pressed?: boolean) => {
 			if (!element) return;

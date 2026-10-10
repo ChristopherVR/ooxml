@@ -1,8 +1,11 @@
 import type { VisioDocument, VisioPage, VisioShape, VisioText, VisioTextRun } from '../model';
 import type { VisioTextFormatEdit } from '../edit-formatting-commands';
 
-/** Scene-level candidate only; source formulas, rich markup and locks remain authoritative. */
-export function visioStyleFormattingShape(
+/**
+ * A top-level shape drawn here: no master, group, picture or layer. Copying, duplicating and
+ * reordering still need one; formatting, moving and resizing also take stencil shapes.
+ */
+export function visioLocalFormattingShape(
 	page: VisioPage,
 	shapeId: string,
 ): VisioShape | undefined {
@@ -20,6 +23,39 @@ export function visioStyleFormattingShape(
 	)
 		return undefined;
 	return shape;
+}
+/**
+ * A shape dropped from a stencil (a master instance) made of one plain 2D shape. Its formatting,
+ * size and position are saved as local values over the master. Stencil shapes sit on their
+ * stencil's layer, which only matters when that layer is locked. Groups, pictures, lines and
+ * connectors from a stencil are not edited yet.
+ */
+export function visioStencilInstanceShape(
+	page: VisioPage,
+	shapeId: string,
+): VisioShape | undefined {
+	const candidates = page.shapes.filter((shape) => shape.id === shapeId);
+	const shape = candidates.length === 1 ? candidates[0]! : undefined;
+	if (
+		!shape?.masterId ||
+		shape.hidden ||
+		shape.children.length ||
+		shape.kind !== 'shape' ||
+		shape.image ||
+		shape.foreignVector ||
+		shape.layerIds?.some(
+			(layer) => page.layers?.find((entry) => entry.id === layer)?.locked !== false,
+		)
+	)
+		return undefined;
+	return shape;
+}
+/** Scene-level candidate only; source formulas, rich markup and locks remain authoritative. */
+export function visioStyleFormattingShape(
+	page: VisioPage,
+	shapeId: string,
+): VisioShape | undefined {
+	return visioLocalFormattingShape(page, shapeId) ?? visioStencilInstanceShape(page, shapeId);
 }
 /** Mixed runs can be formatted together; source row admission remains authoritative. */
 export function visioFormattingShape(page: VisioPage, shapeId: string): VisioShape | undefined {
