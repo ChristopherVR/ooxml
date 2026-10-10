@@ -115,7 +115,9 @@ export function applyThemePaletteVariant(hex: string, variant: ThemePaletteVaria
 	if (!rgb) return hex;
 	const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
 	const { lumMod, lumOff } = themePaletteVariantLuminance(variant);
-	const next = hslToRgb(h, s, l * lumMod + (lumOff ?? 0));
+	// Office truncates each channel (recorded from Visio and Word: Accent 1 #4472C4, Lighter 80% is
+	// #D9E2F3, not the rounded #DAE3F3); the epsilon keeps exact values such as 204.0 whole.
+	const next = hslToRgb(h, s, l * lumMod + (lumOff ?? 0), (value) => Math.floor(value + 1e-6));
 	return `#${toHex(next.r)}${toHex(next.g)}${toHex(next.b)}`.toLowerCase();
 }
 

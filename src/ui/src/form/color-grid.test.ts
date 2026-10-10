@@ -33,7 +33,7 @@ describe('office-ui-color-grid', () => {
 		expect(buttons(grid, '.command')).toHaveLength(0);
 		const accent = buttons(grid, '[data-color="#4472c4"]')[0]!;
 		expect(accent.title).toBe('Accent 1');
-		expect(buttons(grid, '[data-color="#dae3f3"]')[0]!.getAttribute('aria-label')).toBe(
+		expect(buttons(grid, '[data-color="#d9e2f3"]')[0]!.getAttribute('aria-label')).toBe(
 			'Accent 1, Lighter 80%',
 		);
 		expect(buttons(grid, '[data-color="#ff0000"]')[0]!.title).toBe('Red');
@@ -163,7 +163,7 @@ describe('office-ui-color-grid', () => {
 		extra[1]!.click();
 		expect(picked).toEqual([
 			{
-				color: '#808080',
+				color: '#7f7f7f',
 				source: 'theme',
 				label: 'Dark, Lighter 50%',
 				theme: { column: 3, variant: { kind: 'lighter', percent: 50 } },

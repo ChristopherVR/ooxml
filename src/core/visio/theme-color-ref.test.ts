@@ -70,8 +70,7 @@ describe('theme colour references', () => {
 			expect(visioThemeColorFormula(ref)).toBe(formula);
 			expect(parseVisioThemeColorFormula(formula)).toEqual(ref);
 			const ours = channels(resolveVisioThemeColor(ref, VISIO_UNTHEMED_COLORS)!);
-			// Visio truncates where the shared HSL maths rounds: one step per channel at most.
-			ours.forEach((value, index) => expect(Math.abs(value - rgb[index]!)).toBeLessThanOrEqual(1));
+			expect(ours).toEqual(rgb);
 		}
 	});
 

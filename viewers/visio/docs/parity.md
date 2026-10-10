@@ -275,9 +275,9 @@ Still different from Visio:
 - Recent colours last for the session of one viewer; they are not saved with
   the drawing.
 - Format Painter still does not copy arrowheads or rounding.
-- Word, Excel and PowerPoint keep their own colour pickers (see the round-two
-  report: each binds its grid to product state the shared element does not
-  carry).
+- Excel (ribbon and Format Cells) and Word now use the same shared colour
+  grid. PowerPoint does not yet: each of its five framework bindings has its
+  own swatch-grid component.
 
 Evidence: `src/core/visio/theme-color-ref.test.ts` (recorded formulas and
 colours, theme changes), `edit-formatting-line-ends.test.ts`,

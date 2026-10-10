@@ -31,11 +31,12 @@ describe('theme palette', () => {
 	});
 
 	it('applies variants in HSL space', () => {
-		// Office's own swatches for Accent 1 (#4472C4): Lighter 80% and Darker 25%.
-		expect(applyThemePaletteVariant('#4472c4', { kind: 'lighter', percent: 80 })).toBe('#dae3f3');
-		expect(applyThemePaletteVariant('#4472c4', { kind: 'darker', percent: 25 })).toBe('#2f5597');
-		expect(applyThemePaletteVariant('#ffffff', { kind: 'darker', percent: 50 })).toBe('#808080');
-		expect(applyThemePaletteVariant('#000000', { kind: 'lighter', percent: 50 })).toBe('#808080');
+		// Office's own swatches for Accent 1 (#4472C4): Lighter 80% and Darker 25%. Office truncates
+		// each channel, so white at Darker 50% is #7F7F7F.
+		expect(applyThemePaletteVariant('#4472c4', { kind: 'lighter', percent: 80 })).toBe('#d9e2f3');
+		expect(applyThemePaletteVariant('#4472c4', { kind: 'darker', percent: 25 })).toBe('#2f5496');
+		expect(applyThemePaletteVariant('#ffffff', { kind: 'darker', percent: 50 })).toBe('#7f7f7f');
+		expect(applyThemePaletteVariant('#000000', { kind: 'lighter', percent: 50 })).toBe('#7f7f7f');
 		expect(applyThemePaletteVariant('nonsense', { kind: 'darker', percent: 50 })).toBe('nonsense');
 	});
 
@@ -46,7 +47,7 @@ describe('theme palette', () => {
 		expect(palette.every((column) => column.variants.length === 5)).toBe(true);
 		expect(palette[4]!.base.label).toBe('Accent 1');
 		expect(palette[4]!.variants[0]).toEqual({
-			hex: '#dae3f3',
+			hex: '#d9e2f3',
 			label: 'Accent 1, Lighter 80%',
 			variant: { kind: 'lighter', percent: 80 },
 		});
