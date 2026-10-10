@@ -150,34 +150,55 @@ const MONTHS = [
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const pad = (value: number, length = 2) => String(value).padStart(length, '0');
 
-function formatDate(date: Date, picture: string): string {
+/** The text of one date-picture token, or `undefined` when `token` is not one. */
+function dateToken(date: Date, token: string): string | undefined {
 	const hours = date.getUTCHours();
-	const tokens = new Map<string, () => string>(
-		Object.entries({
-			yyyy: () => pad(date.getUTCFullYear(), 4),
-			yy: () => pad(date.getUTCFullYear() % 100),
-			MMMM: () => MONTHS[date.getUTCMonth()]!,
-			MMM: () => MONTHS[date.getUTCMonth()]!.slice(0, 3),
-			MM: () => pad(date.getUTCMonth() + 1),
-			M: () => String(date.getUTCMonth() + 1),
-			dddd: () => DAYS[date.getUTCDay()]!,
-			ddd: () => DAYS[date.getUTCDay()]!.slice(0, 3),
-			dd: () => pad(date.getUTCDate()),
-			d: () => String(date.getUTCDate()),
-			HH: () => pad(hours),
-			H: () => String(hours),
-			hh: () => pad(hours % 12 || 12),
-			h: () => String(hours % 12 || 12),
-			mm: () => pad(date.getUTCMinutes()),
-			ss: () => pad(date.getUTCSeconds()),
-			tt: () => (hours < 12 ? 'AM' : 'PM'),
-		}),
-	);
+	switch (token) {
+		case 'yyyy':
+			return pad(date.getUTCFullYear(), 4);
+		case 'yy':
+			return pad(date.getUTCFullYear() % 100);
+		case 'MMMM':
+			return MONTHS[date.getUTCMonth()]!;
+		case 'MMM':
+			return MONTHS[date.getUTCMonth()]!.slice(0, 3);
+		case 'MM':
+			return pad(date.getUTCMonth() + 1);
+		case 'M':
+			return String(date.getUTCMonth() + 1);
+		case 'dddd':
+			return DAYS[date.getUTCDay()]!;
+		case 'ddd':
+			return DAYS[date.getUTCDay()]!.slice(0, 3);
+		case 'dd':
+			return pad(date.getUTCDate());
+		case 'd':
+			return String(date.getUTCDate());
+		case 'HH':
+			return pad(hours);
+		case 'H':
+			return String(hours);
+		case 'hh':
+			return pad(hours % 12 || 12);
+		case 'h':
+			return String(hours % 12 || 12);
+		case 'mm':
+			return pad(date.getUTCMinutes());
+		case 'ss':
+			return pad(date.getUTCSeconds());
+		case 'tt':
+			return hours < 12 ? 'AM' : 'PM';
+		default:
+			return undefined;
+	}
+}
+
+function formatDate(date: Date, picture: string): string {
 	return picture.replace(
 		/yyyy|yy|MMMM|MMM|MM|M|dddd|ddd|dd|d|HH|H|hh|h|mm|ss|tt|"[^"]*"/g,
 		(token) => {
 			if (token.startsWith('"')) return token.slice(1, -1);
-			return tokens.get(token)?.() ?? token;
+			return dateToken(date, token) ?? token;
 		},
 	);
 }
