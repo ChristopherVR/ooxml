@@ -8,7 +8,8 @@ interface SampleBox {
 	width: number;
 	height: number;
 	fill: string;
-	shape?: 'diamond';
+	/** The built-in stencil master the box is an instance of; Basic Shapes' Rectangle by default. */
+	master?: string;
 }
 interface SampleLink {
 	id: string;
@@ -35,6 +36,7 @@ const PAGES: readonly SamplePage[] = [
 			{
 				id: '1',
 				text: 'Start with an idea',
+				master: 'flowchart-process',
 				x: 4.25,
 				y: 5.85,
 				width: 2.8,
@@ -44,6 +46,7 @@ const PAGES: readonly SamplePage[] = [
 			{
 				id: '2',
 				text: 'Design and build',
+				master: 'flowchart-process',
 				x: 4.25,
 				y: 4.65,
 				width: 2.8,
@@ -58,11 +61,12 @@ const PAGES: readonly SamplePage[] = [
 				width: 1.7,
 				height: 1.05,
 				fill: '#DFEBF7',
-				shape: 'diamond',
+				master: 'flowchart-decision',
 			},
 			{
 				id: '4',
 				text: 'Review and release',
+				master: 'flowchart-process',
 				x: 4.25,
 				y: 1.95,
 				width: 2.8,
@@ -115,18 +119,25 @@ function shapeEdits(page: SamplePage): VisioEdit[] {
 	const pageId = page.id;
 	const box = (id: string) => page.boxes.find((candidate) => candidate.id === id)!;
 	return [
+		// Each box is an instance of a stencil master, as a shape dragged from the Shapes window is.
+		// The drops of a transaction run first, so the edits after them find their shapes.
 		...page.boxes.flatMap((shape): VisioEdit[] => [
 			{
-				type: 'create-rectangle',
+				type: 'drop-stencil-master',
 				pageId,
 				shapeId: shape.id,
+				master: shape.master ?? 'rectangle',
 				x: shape.x,
 				y: shape.y,
+			},
+			{
+				type: 'resize-shape',
+				pageId,
+				shapeId: shape.id,
 				width: shape.width,
 				height: shape.height,
-				text: shape.text,
-				...(shape.shape ? { shape: shape.shape } : {}),
 			},
+			{ type: 'replace-plain-text', pageId, shapeId: shape.id, text: shape.text },
 			{ type: 'format-shape', pageId, shapeId: shape.id, fillColor: shape.fill, lineColor: LINE },
 		]),
 		// Connectors start between the shape centres; glue then moves each end onto its shape.
@@ -148,8 +159,9 @@ function shapeEdits(page: SamplePage): VisioEdit[] {
 
 /**
  * The sample drawing as a real VSDX package, built through the same edit API the editor uses, so
- * every shape in it can be selected, moved, retyped and saved. An original drawing, not a
- * Visio-authored reference fixture. Page and shape edits need separate transactions, so this is
+ * every shape in it can be selected, moved, retyped and saved. Its boxes are instances of the
+ * built-in stencil masters, which the drawing carries in its own document stencil, as a Visio
+ * flowchart does. An original drawing, not a Visio-authored reference fixture. Page and shape edits need separate transactions, so this is
  * two edits after the blank drawing.
  */
 export async function createSampleVsdx(): Promise<Uint8Array> {

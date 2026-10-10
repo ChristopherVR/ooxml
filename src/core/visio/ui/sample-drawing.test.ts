@@ -24,4 +24,27 @@ describe('createSampleVsdx', () => {
 		// The glued connectors follow the moved shape.
 		expect(page.connectors.filter((connect) => connect.toShapeId === '2')).toHaveLength(2);
 	});
+
+	it('builds the sample from master instances, connected and editable', async () => {
+		const model = await parseVsdx(await createSampleVsdx());
+		expect(model.masters!.map((master) => master.name)).toEqual([
+			'Process',
+			'Decision',
+			'Rectangle',
+		]);
+		const [workflow, architecture] = model.pages;
+		expect(workflow!.shapes.filter((item) => item.masterId).map((item) => item.name)).toEqual([
+			'Process',
+			'Process.2',
+			'Decision',
+			'Process.4',
+			'Rectangle',
+		]);
+		expect(workflow!.layers!.map((layer) => layer.name)).toEqual(['Flowchart']);
+		expect(architecture!.shapes.filter((item) => item.masterId)).toHaveLength(4);
+		expect({
+			width: workflow!.shapes[2]!.width,
+			height: workflow!.shapes[2]!.height,
+		}).toMatchObject({ width: 1.7, height: 1.05 });
+	});
 });
