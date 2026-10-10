@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { nativeSvgLineEndpoints } from './native-line-svg';
 import { openDemo } from './demo-page';
+import { editSelection } from './ribbon';
 
 for (const variable of [
 	'VISIO_NATIVE_ROTATE_DIR',
@@ -73,10 +74,7 @@ for (const variable of [
 				const before = (await shape.getAttribute('transform'))!;
 				await shape.focus();
 				await shape.press('Enter');
-				const controls = viewer.locator('.edit-controls');
-				await controls.locator('summary').click();
-				const rotate = controls.getByRole('button', { name: 'Rotate selected', exact: true });
-				await expect(rotate).toBeDisabled();
+				await expect(shape).toHaveAttribute('data-selected', 'true');
 				if (variable.includes('_SAME_')) {
 					await viewer
 						.evaluate(
@@ -101,11 +99,10 @@ for (const variable of [
 						.then((state) => expect(state).toEqual({ generation: 1, dirty: true, canUndo: true }));
 					await expect(shape).toHaveAttribute('transform', before);
 				} else {
-					await controls
-						.getByLabel('Angle (degrees)', { exact: true })
-						.fill(String((reference.cells.Angle!.value * 180) / Math.PI));
-					await expect(rotate).toBeEnabled();
-					await rotate.click();
+					await editSelection(viewer, {
+						type: 'rotate-shape',
+						angle: reference.cells.Angle!.value,
+					});
 					await expect(shape).not.toHaveAttribute('transform', before);
 				}
 				const after = (await shape.getAttribute('transform'))!;

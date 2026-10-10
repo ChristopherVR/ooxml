@@ -97,36 +97,11 @@
 	line-height: 1.6;
 }
 
-/* The report is slotted into the viewer's single status row. */
-.workspace-footer {
-	position: relative;
-	min-height: 28px;
-	border: 0;
-	background: transparent;
-	padding: 0 8px;
-	gap: 0;
-}
-.workspace-footer .privacy-note {
-	display: none;
-}
+/* The document report is the demo's own, so it sits in the demo's title bar, not the viewer's. */
 .workspace-footer .document-report summary {
 	min-height: 28px;
 	line-height: 28px;
 	font-size: 11px;
-}
-@media (max-width: 760px) {
-	.workspace-footer {
-		min-height: 44px;
-		padding: 0;
-	}
-	.workspace-footer .report-body {
-		bottom: 50px;
-	}
-	.workspace-footer .document-report summary {
-		min-height: 44px;
-		line-height: 44px;
-		font-size: 10px;
-	}
 }
 body:not([data-workspace]) .workspace-links {
 	position: fixed;
@@ -345,16 +320,9 @@ summary:focus-visible,
 }
 .workspace-footer {
 	position: relative;
-	min-height: 26px;
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 0 10px;
 	color: var(--vv-muted);
-	background: var(--vv-surface);
-	border-top: 1px solid var(--vv-border);
-	font-size: 10px;
 }
 .document-report summary {
 	cursor: pointer;
@@ -366,9 +334,9 @@ summary:focus-visible,
 	font-variant-numeric: tabular-nums;
 }
 .report-body {
-	/* Pinned above the status bar against the window, so it never runs off either edge. */
+	/* Pinned under the title bar against the window, so it never runs off either edge. */
 	position: fixed;
-	bottom: 34px;
+	top: 44px;
 	right: 8px;
 	z-index: 9;
 	width: min(460px, calc(100vw - 16px));
@@ -378,7 +346,7 @@ summary:focus-visible,
 	background: var(--vv-surface);
 	color: var(--vv-ink);
 	border: 1px solid var(--vv-border);
-	border-radius: 6px 6px 0 0;
+	border-radius: 6px;
 	box-shadow: var(--vv-shadow);
 	font-size: 12px;
 	line-height: 1.6;
@@ -465,10 +433,6 @@ summary:focus-visible,
 	.document-report summary {
 		min-height: 44px;
 		line-height: 44px;
-	}
-	.privacy-note {
-		max-width: 145px;
-		text-align: right;
 	}
 }
 @media (pointer: coarse) {
@@ -578,9 +542,6 @@ summary:focus-visible,
 	}
 	.workspace-footer {
 		min-height: 28px;
-	}
-	.privacy-note {
-		display: none;
 	}
 	.document-report summary {
 		min-height: 44px;

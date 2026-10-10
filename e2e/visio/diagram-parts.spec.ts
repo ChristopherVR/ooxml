@@ -47,10 +47,10 @@ test('More Shapes, containers and callouts edit the page as single undoable step
 	await viewer.locator('#shapes-more').click();
 	await menu.locator('office-ui-menu-item[label="Arrow Shapes"]').click();
 	await expect(viewer.locator('[data-stencil="arrow-shapes"] [data-master]')).toHaveCount(13);
-	await viewer.locator('#shapes-search-tab').click();
 	await viewer.locator('.shapes-search-field').fill('loop');
 	await expect(viewer.locator('#shapes-search li:not([hidden])')).toHaveText(['Loop limit']);
-	await viewer.locator('#shapes-stencils-tab').click();
+	await viewer.locator('.shapes-search-field').fill('');
+	await expect(viewer.locator('#shapes-stencils')).toBeVisible();
 
 	// Select both new shapes and wrap them in a container from Insert > Container.
 	// Fix the shapes by ID: the container is inserted behind them, shifting their stacking index.

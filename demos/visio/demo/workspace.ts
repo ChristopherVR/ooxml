@@ -155,9 +155,6 @@ export function createWorkspace(doc: Document = document): Workspace {
 	function attach(mounted: WorkspaceViewer, destroy: () => void = () => {}): void {
 		viewer = mounted;
 		destroyViewer = destroy;
-		const report = doc.querySelector<HTMLElement>('.workspace-footer')!;
-		report.slot = 'workspace-footer';
-		mounted.element.append(report);
 		/** The sample is offered as a template in the viewer's File > New page. */
 		const template = doc.createElement('button');
 		template.type = 'button';

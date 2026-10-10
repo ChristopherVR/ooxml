@@ -184,7 +184,7 @@ for (const [index, framework] of [
 		await viewer.getByRole('spinbutton', { name: 'Line transparency (%)', exact: true }).fill('25');
 		await viewer.locator('[command="paint-apply"] button').click();
 		await idle(viewer);
-		await expect(viewer.locator('[data-paint-error]')).toContainText('EDIT_PROTECTED_CELL');
+		await expect(viewer.locator('[data-paint-error]')).toContainText('protection is active');
 		expect((await inventory(viewer)).bytes).toEqual(protectedSource.bytes);
 		expect((await inventory(viewer)).selected).toEqual(['1', '2']);
 		await viewer.locator('[command="paint-cancel"] button').click();

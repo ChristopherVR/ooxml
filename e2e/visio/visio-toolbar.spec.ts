@@ -36,9 +36,10 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	const created = viewer.locator('svg.paper [data-shape-id="2"]');
 	await expect(created).toHaveCount(1);
 	await expect(viewer.locator('.draw-preview')).toHaveCount(0);
-	await expect(viewer.locator('[data-shape-status]')).toHaveAttribute(
+	await expect(viewer.locator('[data-width-status]')).toHaveAttribute('value', /^Width: .* in\.$/);
+	await expect(viewer.locator('[data-height-status]')).toHaveAttribute(
 		'value',
-		/^Width: .* in {2}Height: .* in$/,
+		/^Height: .* in\.$/,
 	);
 	await expect(page.locator('#file-state')).toContainText('Edited copy');
 
@@ -98,7 +99,9 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 			const svg = (path as SVGGraphicsElement).ownerSVGElement!;
 			const style = getComputedStyle(path);
 			const inch = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
-			return { fill: style.fill, strokePixels: parseFloat(style.strokeWidth) * inch };
+			// The hairline rule computes to `calc(<n>px)` in the SVG's user units.
+			const width = parseFloat(style.strokeWidth.replace(/^calc\(/, ''));
+			return { fill: style.fill, strokePixels: width * inch };
 		});
 	expect(drawn.fill).toBe('rgb(91, 155, 213)');
 	expect(drawn.strokePixels).toBeGreaterThanOrEqual(0.99);

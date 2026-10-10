@@ -135,7 +135,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(status).toHaveText('5 occurrences');
 		await bar.getByRole('button', { name: 'Replace All', exact: true }).click();
 		await idle(viewer);
-		await expect(bar.locator('[role="alert"]')).toContainText('EDIT_PROTECTED_CELL');
+		await expect(bar.locator('[role="alert"]')).toContainText('protection is active');
 		expect((await inventory(viewer)).bytes).toEqual(protectedSource.bytes);
 		await load(await replaceFixture());
 		await query.fill('cat');

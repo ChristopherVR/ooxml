@@ -225,7 +225,7 @@ local Hyperlink section row (Address, SubAddress as a page name, Description).
 Ctrl+click follows the default or first visible link: safe http, https and
 mailto addresses open in a new tab with `noopener`, and page targets switch
 pages; the app itself is never navigated. Insert > ScreenTip sets or clears the
-shape's Comment cell, shown as the SVG tooltip and in the shape inspector.
+shape's Comment cell, shown as the SVG tooltip and in the Shape Data window.
 Both refuse master instances (inherited sections), formula-driven cells and
 drawings whose formulas read `Comment` or `Hyperlink` cells. ScreenTips and
 link fields are single-line (at most 4096 characters) because the XML writer

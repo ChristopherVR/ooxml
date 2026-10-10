@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
-import { downloadCopy } from './ribbon';
+import { downloadCopy, editSelection, history } from './ribbon';
 import { nativeSvgLineEndpoints } from './native-line-svg';
 import { dragLineEndpoint } from './line-endpoint';
 import { openDemo } from './demo-page';
@@ -49,7 +49,6 @@ test('vanilla: endpoint drag cancellation and clicks preserve source bytes and h
 	await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 	await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 	const viewer = page.locator('visio-viewer');
-	await viewer.locator('.edit-controls summary').click();
 	const line = viewer.locator('[data-shape-id="1"]');
 	await line.focus();
 	await line.press('Enter');
@@ -63,9 +62,7 @@ test('vanilla: endpoint drag cancellation and clicks preserve source bytes and h
 	await page.keyboard.press('Escape');
 	await expect(viewer.locator('.endpoint-preview')).toHaveCount(0);
 	await page.mouse.up();
-	await expect(
-		viewer.locator('.edit-controls').getByRole('button', { name: 'Undo', exact: true }),
-	).toBeDisabled();
+	await expect(history(viewer, 'Undo')).toBeDisabled();
 	expect(await downloadBytes(page)).toEqual(await readFile(join(directory!, 'moved.vsdx')));
 });
 for (const variable of endpointDirectories) {
@@ -97,7 +94,6 @@ for (const variable of endpointDirectories) {
 				expect(nativeSvg.lines).toHaveLength(4);
 			}
 			const viewer = page.locator('visio-viewer');
-			await viewer.locator('.edit-controls summary').click();
 			for (const item of evidence.cases) {
 				const { line, handle, before, after } = await dragLineEndpoint(
 					page,
@@ -115,15 +111,9 @@ for (const variable of endpointDirectories) {
 					(shape) => shape.id === item.shapeId,
 				)!.transform;
 				for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(expectedPose[i]!, 4);
-				await viewer
-					.locator('.edit-controls')
-					.getByRole('button', { name: 'Undo', exact: true })
-					.click();
+				await history(viewer, 'Undo').click();
 				await expect(line).toHaveAttribute('transform', before);
-				await viewer
-					.locator('.edit-controls')
-					.getByRole('button', { name: 'Redo', exact: true })
-					.click();
+				await history(viewer, 'Redo').click();
 				await expect(line).toHaveAttribute('transform', after);
 				await expect(handle).toBeVisible();
 			}
@@ -171,7 +161,6 @@ for (const variable of endpointDirectories) {
 			await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 			const viewer = page.locator('visio-viewer');
-			await viewer.locator('.edit-controls summary').click();
 			for (const item of evidence.cases) {
 				const line = viewer.locator(`[data-shape-id="${item.shapeId}"]`);
 				const before = (await line.getAttribute('transform'))!;
@@ -204,15 +193,9 @@ for (const variable of endpointDirectories) {
 							(i >= 4 ? (evidence.pageScale ?? 1) / (evidence.drawingScale ?? 1) : 1),
 						12,
 					);
-				await viewer
-					.locator('.edit-controls')
-					.getByRole('button', { name: 'Undo', exact: true })
-					.click();
+				await history(viewer, 'Undo').click();
 				await expect(line).toHaveAttribute('transform', before);
-				await viewer
-					.locator('.edit-controls')
-					.getByRole('button', { name: 'Redo', exact: true })
-					.click();
+				await history(viewer, 'Redo').click();
 				await expect(line).toHaveAttribute('transform', after);
 			}
 			const bytes = await downloadBytes(page);
@@ -258,20 +241,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.locator('#file').setInputFiles(join(resizeDirectory!, 'moved.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
 		const viewer = page.locator('visio-viewer');
-		await viewer.locator('.edit-controls summary').click();
 		for (const item of evidence.cases) {
 			const line = viewer.locator(`[data-shape-id="${item.shapeId}"]`);
 			await line.focus();
 			await line.press('Enter');
 			await expect(line).toHaveAttribute('data-selected', 'true');
 			const before = (await line.getAttribute('transform'))!;
-			await page
-				.getByLabel('Width (inches)', { exact: true })
-				.fill(String(item.resized.Width!.value));
-			await page.getByLabel('Height (inches)', { exact: true }).fill('0');
-			await page.getByRole('button', { name: 'Resize selected', exact: true }).click();
-			await expect(page.getByLabel('Width (inches)', { exact: true })).toHaveValue('');
-			await expect(viewer.locator('[data-geometry-error]')).toBeHidden();
+			await editSelection(viewer, {
+				type: 'resize-shape',
+				width: item.resized.Width!.value,
+				height: 0,
+			});
 			const pose = await line.evaluate((node) => {
 				// SVGMatrix getters round to float32. Compare the emitted double-precision pose.
 				const source = /^matrix\(([^)]+)\)$/.exec(node.getAttribute('transform') ?? '');
@@ -284,15 +264,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			expect(pose).toHaveLength(6);
 			for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(item.resizedTransform[i]!, 12);
 			const after = (await line.getAttribute('transform'))!;
-			await viewer
-				.locator('.edit-controls')
-				.getByRole('button', { name: 'Undo', exact: true })
-				.click();
+			await history(viewer, 'Undo').click();
 			await expect(line).toHaveAttribute('transform', before);
-			await viewer
-				.locator('.edit-controls')
-				.getByRole('button', { name: 'Redo', exact: true })
-				.click();
+			await history(viewer, 'Redo').click();
 			await expect(line).toHaveAttribute('transform', after);
 		}
 		const bytes = await downloadBytes(page);
@@ -323,7 +297,6 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.locator('#file').setInputFiles(join(directory!, 'original.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('original.vsdx');
 		const viewer = page.locator('visio-viewer');
-		await viewer.locator('.edit-controls summary').click();
 		const transforms = new Map<string, string>();
 		for (const item of evidence.cases) {
 			const line = viewer.locator(`[data-shape-id="${item.shapeId}"]`);
@@ -331,22 +304,16 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await line.press('Enter');
 			await expect(line).toHaveAttribute('data-selected', 'true');
 			const original = (await line.getAttribute('transform'))!;
-			await page.getByLabel('Pin X (inches)').fill(String(item.after.PinX!.value));
-			await page.getByLabel('Pin Y (inches)').fill(String(item.after.PinY!.value));
-			await page.getByRole('button', { name: 'Move selected', exact: true }).click();
-			await expect(page.getByLabel('Pin X (inches)')).toHaveValue('');
-			await expect(viewer.locator('[data-geometry-error]')).toBeHidden();
+			await editSelection(viewer, {
+				type: 'move-shape',
+				x: item.after.PinX!.value,
+				y: item.after.PinY!.value,
+			});
 			await expect(line).not.toHaveAttribute('transform', original);
 			const moved = (await line.getAttribute('transform'))!;
-			await viewer
-				.locator('.edit-controls')
-				.getByRole('button', { name: 'Undo', exact: true })
-				.click();
+			await history(viewer, 'Undo').click();
 			await expect(line).toHaveAttribute('transform', original);
-			await viewer
-				.locator('.edit-controls')
-				.getByRole('button', { name: 'Redo', exact: true })
-				.click();
+			await history(viewer, 'Redo').click();
 			await expect(line).toHaveAttribute('transform', moved);
 			transforms.set(item.shapeId, moved);
 		}
@@ -400,25 +367,17 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(page.locator('#file-name')).toHaveText('original.vsdx');
 		const viewer = page.locator('visio-viewer');
 		await expect(viewer.locator('[data-shape-id]')).toHaveCount(5);
-		await viewer.locator('.edit-controls summary').click();
 		for (const id of evidence.deletedShapeIds) {
 			const line = viewer.locator(`[data-shape-id="${id}"]`);
 			await line.focus();
 			await line.press('Enter');
 			await expect(line).toHaveAttribute('data-selected', 'true');
 			const transform = (await line.getAttribute('transform'))!;
-			await page.getByRole('button', { name: 'Delete selected', exact: true }).click();
+			await editSelection(viewer, { type: 'delete-shape' });
 			await expect(line).toHaveCount(0);
-			await expect(viewer.locator('[data-geometry-error]')).toBeHidden();
-			await viewer
-				.locator('.edit-controls')
-				.getByRole('button', { name: 'Undo', exact: true })
-				.click();
+			await history(viewer, 'Undo').click();
 			await expect(line).toHaveAttribute('transform', transform);
-			await viewer
-				.locator('.edit-controls')
-				.getByRole('button', { name: 'Redo', exact: true })
-				.click();
+			await history(viewer, 'Redo').click();
 			await expect(line).toHaveCount(0);
 		}
 		await expect(viewer.locator('[data-shape-id]')).toHaveCount(1);

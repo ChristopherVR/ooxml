@@ -3,6 +3,7 @@ import { parseVsdx } from 'ooxml-core/visio';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { openDemo } from './demo-page';
+import { taskPane } from './ribbon';
 
 test('Data tab imports a CSV, links a dragged row, refreshes it and adds data graphics', async ({
 	page,
@@ -88,7 +89,7 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 	expect(errors).toEqual([]);
 });
 
-test('Define Shape Data adds a row from the inspector', async ({ page }) => {
+test('Define Shape Data adds a row from the Shape Data window', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 1000 });
 	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
@@ -101,6 +102,11 @@ test('Define Shape Data adds a row from the inspector', async ({ page }) => {
 	await expect(page.locator('#file-name')).toHaveText('Define.vsdx');
 	await expect(viewer.locator('svg.paper')).toContainText('Define target');
 	await viewer.locator('svg.paper [data-shape-id="1"]').click();
+	await taskPane(viewer, 'Shape Data');
+	await expect(viewer.locator('office-ui-task-pane.inspector-pane')).toHaveAttribute(
+		'label',
+		'Shape Data',
+	);
 	await viewer.locator('[data-define-shape-data]').click();
 	const dialog = viewer.locator('.shape-data-dialog');
 	await dialog.locator('[name="label"]').fill('Owner');

@@ -1,16 +1,9 @@
-import type { Locator } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 /** Visio ribbon interactions shared by the browser specs. */
 export async function taskPane(
 	viewer: Locator,
-	name:
-		| 'Shapes'
-		| 'Inspector'
-		| 'Shape Data'
-		| 'Layers'
-		| 'Compatibility Notes'
-		| 'Pan & Zoom'
-		| 'Size & Position',
+	name: 'Shapes' | 'Shape Data' | 'Layers' | 'Pan & Zoom' | 'Size & Position',
 ): Promise<void> {
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.getByRole('button', { name: 'Task Panes', exact: true }).click();
@@ -79,4 +72,46 @@ export async function exportSvgCommand(viewer: Locator): Promise<Locator> {
 export async function loadSampleTemplate(viewer: Locator): Promise<void> {
 	await fileBackstage(viewer, 'new');
 	await viewer.locator('.template-card').click();
+}
+
+/**
+ * Edit a shape's text in place, as in Visio: double-click it, type, then press Esc to keep the
+ * change. The editor closes once the edit is handed to the drawing.
+ */
+export async function editShapeText(viewer: Locator, shapeId: string, text: string): Promise<void> {
+	await viewer.locator(`svg.paper [data-shape-id="${shapeId}"]`).dblclick();
+	const editor = viewer.locator('#edit-text');
+	await expect(editor).toBeFocused();
+	await editor.fill(text);
+	await editor.press('Escape');
+	await expect(editor).toHaveCount(0);
+}
+
+/** The Quick Access Toolbar's Undo or Redo. */
+export function history(viewer: Locator, name: 'Undo' | 'Redo'): Locator {
+	return viewer.locator('.qat').getByRole('button', { name, exact: true });
+}
+
+/**
+ * Apply one edit to the selected shape through the element's public API. The page and shape ids
+ * are filled in from the current selection, so `edit` carries only the command's own fields
+ * (`{ type: 'move-shape', x, y }`, `{ type: 'rotate-shape', angle }` in radians, and so on).
+ */
+export async function editSelection(viewer: Locator, edit: Record<string, unknown>): Promise<void> {
+	await viewer.evaluate(async (node, command) => {
+		const element = node as unknown as {
+			applyEdits(edits: readonly unknown[]): Promise<void>;
+			controller: {
+				state: {
+					pageIndex: number;
+					document: { pages: { id: string }[] } | null;
+					selectedShape: { id: string } | null;
+				};
+			};
+		};
+		const state = element.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		if (!page || !state.selectedShape) throw new Error('Select a shape before editing it.');
+		await element.applyEdits([{ ...command, pageId: page.id, shapeId: state.selectedShape.id }]);
+	}, edit);
 }
