@@ -126,7 +126,8 @@ test('stencil shapes are duplicated, reordered, deleted and changed to another m
 	await trigger.click();
 	const popup = viewer.locator('[data-gallery-popup="change-shape"]');
 	await expect(popup).toBeVisible();
-	await expect(popup.locator('[data-gallery-item]')).toHaveCount(1);
+	// The drawing's other master, then the built-in shapes.
+	await expect(popup.locator('[data-gallery-item^="document:"]')).toHaveCount(1);
 	await popup.locator('[data-gallery-item="document:4"]').click();
 	await expect(status).toHaveText('Changed the shape to Wide.');
 	await expect.poll(() => shapes(viewer)).toEqual(['2:4', '4:2', '1:2']);
@@ -141,7 +142,7 @@ test('stencil shapes are duplicated, reordered, deleted and changed to another m
 	);
 	const zip = await JSZip.loadAsync(new Uint8Array(saved));
 	const xml = await zip.file('visio/pages/page1.xml')!.async('string');
-	expect(xml).toMatch(/<Shape ID="2"[^>]* Master="4">/);
+	expect(xml).toMatch(/<Shape ID="2"[^>]* Master="4"[^>]*>/);
 	expect(xml).toMatch(/<Shape ID="4"[^>]* Master="2">/);
 	expect(xml).not.toContain('ID="3"');
 	expect(await zip.file('visio/pages/_rels/page1.xml.rels')!.async('string')).toContain(

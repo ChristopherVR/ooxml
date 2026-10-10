@@ -26,7 +26,11 @@ export class ViewerChangeShape {
 	#listed = '';
 	#masters: readonly ChangeShapeMaster[] = [];
 	#shown:
-		| { reason: string | undefined; tiles: readonly ChangeShapeMaster[] | undefined }
+		| {
+				reason: string | undefined;
+				tiles: readonly ChangeShapeMaster[] | undefined;
+				builtIn: boolean;
+		  }
 		| undefined;
 	constructor(
 		private readonly root: ShadowRoot,
@@ -112,12 +116,18 @@ export class ViewerChangeShape {
 			this.#shown = undefined;
 			return syncChangeShape(gallery, busy ?? visioChangeShapeRefusal(page, state.selectedShapes));
 		}
+		// A stencil shape changes to another master of the drawing, or to a built-in shape, whose
+		// master is then copied into the drawing.
 		const targets = this.#targets(state);
 		const tiles = targets.masters.length ? this.#tiles(state, targets.masters) : undefined;
+		const refusal = visioChangeShapeRefusal(page, state.selectedShapes);
+		const builtIn = refusal === undefined;
+		const reason = tiles || builtIn ? undefined : refusal;
 		// The tiles carry drawn previews: hand them to the gallery only when they change.
 		const shown = this.#shown;
-		if (shown && shown.reason === targets.reason && shown.tiles === tiles) return;
-		this.#shown = { reason: targets.reason, tiles };
-		syncChangeShape(gallery, targets.reason, tiles);
+		if (shown && shown.reason === reason && shown.tiles === tiles && shown.builtIn === builtIn)
+			return;
+		this.#shown = { reason, tiles, builtIn };
+		syncChangeShape(gallery, reason, tiles, builtIn);
 	}
 }

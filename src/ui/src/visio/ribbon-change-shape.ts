@@ -24,41 +24,47 @@ export interface ChangeShapeMaster {
 }
 
 /**
- * Gallery state: the Basic Shapes outlines for a shape drawn here, or the other masters of the
- * Document Stencil for a stencil shape (`masters`). `reason` disables every tile and names why.
+ * Gallery state: the Basic Shapes for a shape drawn here; for a stencil shape the other masters
+ * of the Document Stencil (`masters`) and, when `builtIn` allows, the Basic Shapes too (the shape
+ * then becomes an instance of that built-in master). `reason` disables every tile and names why.
  */
 export function changeShapeState(
 	reason: string | undefined,
 	masters?: readonly ChangeShapeMaster[],
+	builtIn = !masters?.length,
 ): OfficeGalleryState {
+	const size = { columns: 6, tileWidth: 32, tileHeight: 32 };
 	return {
 		id: 'change-shape',
 		label: LABEL,
 		disabled: reason !== undefined,
 		sections: [
-			masters?.length
-				? {
-						title: DOCUMENT_STENCIL_NAME,
-						columns: 6,
-						tileWidth: 32,
-						tileHeight: 32,
-						items: masters.map((master) => ({
-							id: `${DOCUMENT_MASTER_PREFIX}${master.id}`,
-							label: master.name,
-							preview: master.preview ?? preview('M4 6h16v12H4Z'),
-						})),
-					}
-				: {
-						title: 'Basic Shapes',
-						columns: 6,
-						tileWidth: 32,
-						tileHeight: 32,
-						items: BASIC_SHAPES.map((master) => ({
-							id: master.id,
-							label: master.name,
-							preview: preview(master.path),
-						})),
-					},
+			...(masters?.length
+				? [
+						{
+							title: DOCUMENT_STENCIL_NAME,
+							...size,
+							items: masters.map((master) => ({
+								id: `${DOCUMENT_MASTER_PREFIX}${master.id}`,
+								label: master.name,
+								preview: master.preview ?? preview('M4 6h16v12H4Z'),
+							})),
+						},
+					]
+				: []),
+			...(builtIn
+				? [
+						{
+							title: 'Basic Shapes',
+							...size,
+							items: BASIC_SHAPES.map((master) => ({
+								id: master.id,
+								label: master.name,
+								preview: preview(master.path),
+							})),
+						},
+					]
+				: []),
 		],
 	};
 }
@@ -94,8 +100,9 @@ export function syncChangeShape(
 	gallery: OfficeUiGallery,
 	reason: string | undefined,
 	masters?: readonly ChangeShapeMaster[],
+	builtIn?: boolean,
 ): void {
-	gallery.state = changeShapeState(reason, masters);
+	gallery.state = changeShapeState(reason, masters, builtIn);
 	gallery.toggleAttribute('disabled', reason !== undefined);
 	const title = reason === undefined ? LABEL : `${LABEL}: ${reason}`;
 	gallery.setAttribute('title', title);

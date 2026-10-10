@@ -122,8 +122,11 @@ it('offers Change Shape the other masters of the Document Stencil and replaces t
 	expect(gallery.state!.sections[0]!.title).toBe('Basic Shapes');
 	ui.controller.selectShape({ id: '1', name: 'Process', pageId: '0' });
 	expect(gallery.hasAttribute('disabled')).toBe(false);
-	expect(gallery.state!.sections).toHaveLength(1);
-	expect(gallery.state!.sections[0]!.title).toBe('Document Stencil');
+	// The drawing's other masters first, then the built-in shapes (their master is copied in).
+	expect(gallery.state!.sections.map((section) => section.title)).toEqual([
+		'Document Stencil',
+		'Basic Shapes',
+	]);
 	expect(gallery.state!.sections[0]!.items.map((item) => [item.id, item.label])).toEqual([
 		['document:4', 'Wide'],
 	]);
