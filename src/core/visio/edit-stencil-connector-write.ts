@@ -143,13 +143,6 @@ export function writeStencilConnector(
 		end = vertices.at(-1)!;
 	if (vertices.length < 2 || (same(begin.x, end.x) && same(begin.y, end.y)))
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'The ends of a connector cannot be in the same place.');
-	for (const [name, value] of [
-		['BeginX', begin.x],
-		['BeginY', begin.y],
-		['EndX', end.x],
-		['EndY', end.y],
-	] as const)
-		put(shape, template, name, value);
 	const dx = end.x - begin.x,
 		dy = end.y - begin.y;
 	// Recorded: an extent under a quarter inch takes the quarter-inch box, not only a zero one.
@@ -157,12 +150,19 @@ export function writeStencilConnector(
 		flatY = Math.abs(dy) < FLAT - EPSILON;
 	const width = flatX ? FLAT : dx,
 		height = flatY ? FLAT : dy;
-	put(shape, undefined, 'Width', width, flatX ? 'GUARD(0.25DL)' : 'GUARD(EndX-BeginX)');
-	put(shape, undefined, 'Height', height, flatY ? 'GUARD(0.25DL)' : 'GUARD(EndY-BeginY)');
 	put(shape, template, 'PinX', (begin.x + end.x) / 2, 'Inh');
 	put(shape, template, 'PinY', (begin.y + end.y) / 2, 'Inh');
+	put(shape, undefined, 'Width', width, flatX ? 'GUARD(0.25DL)' : 'GUARD(EndX-BeginX)');
+	put(shape, undefined, 'Height', height, flatY ? 'GUARD(0.25DL)' : 'GUARD(EndY-BeginY)');
 	put(shape, template, 'LocPinX', width / 2, 'Inh');
 	put(shape, template, 'LocPinY', height / 2, 'Inh');
+	for (const [name, value] of [
+		['BeginX', begin.x],
+		['BeginY', begin.y],
+		['EndX', end.x],
+		['EndY', end.y],
+	] as const)
+		put(shape, template, name, value);
 	// Local coordinates run from the box corner the pin and local pin put under the path.
 	const at = (point: VisioRoutePoint): VisioRoutePoint => ({
 		x: point.x - (begin.x + end.x) / 2 + width / 2,

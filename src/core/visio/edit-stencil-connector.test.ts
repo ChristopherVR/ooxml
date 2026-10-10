@@ -315,6 +315,73 @@ describe("Visio's Dynamic connector (a stencil instance)", () => {
 		]);
 	});
 
+	it('drops the connector master as a connector with two free ends, as Visio saves one', async () => {
+		const bytes = await source();
+		const drop = (extra: object = {}): VisioEdit => ({
+			type: 'insert-master-instance',
+			pageId: '0',
+			shapeId: '8',
+			masterId: '4',
+			x: 2,
+			y: 1.5,
+			...extra,
+		});
+		// Recorded from Visio: a connector from (1, 1) to (3, 2). Cells equal to the master's
+		// (BeginX 1, PinY 1.5, the first Geometry row) are not written.
+		const dropped = await edited(bytes, drop({ begin: { x: 1, y: 1 }, end: { x: 3, y: 2 } }));
+		const trigger = '_XFTRIGGER(Sheet.8!EventXFMod)';
+		expect(await connector(dropped, '8')).toBe(
+			shape(
+				'8',
+				c('PinX', 2, 'Inh') +
+					c('Width', 2, 'GUARD(EndX-BeginX)') +
+					c('Height', 1, 'GUARD(EndY-BeginY)') +
+					c('LocPinX', 1, 'Inh') +
+					c('LocPinY', 0.5, 'Inh') +
+					c('BeginY', 1) +
+					c('EndX', 3) +
+					c('EndY', 2) +
+					c('BegTrigger', 1, trigger) +
+					c('EndTrigger', 1, trigger) +
+					c('TxtPinX', 0.5, 'Inh') +
+					c('TxtPinY', 1, 'Inh') +
+					`<Section N="Control"><Row N="TextPosition">${c('X', 0.5)}${c('Y', 1)}${c('XDyn', 0.5, 'Inh')}${c('YDyn', 1, 'Inh')}</Row></Section>` +
+					`<Section N="Geometry" IX="0">${row(2, 'LineTo', c('Y', 1))}${row(3, 'LineTo', c('X', 2) + c('Y', 1))}</Section>`,
+				'Type="Shape" Master="4"',
+			),
+		);
+		// Without ends it keeps the master's own, carried to the drop point.
+		const plain = await connector(await edited(bytes, drop({ x: 5, y: 5 })), '8');
+		expect(plain).toContain(c('BeginX', 4.5) + c('BeginY', 5.5) + c('EndX', 5.5) + c('EndY', 4.5));
+		// The new connector glues, follows and leaves the other shapes editable.
+		const glued = await edited(
+			dropped,
+			{ type: 'glue-connector', pageId: '0', shapeId: '8', endpoint: 'begin', target: '1' },
+			{ type: 'glue-connector', pageId: '0', shapeId: '8', endpoint: 'end', target: '2', point: 0 },
+		);
+		expect(await page(glued)).toContain('FromSheet="8" FromCell="EndX" FromPart="12" ToSheet="2"');
+		const followed = await edited(
+			await edited(glued, move('2', 6, 3)),
+			{ type: 'create-rectangle', pageId: '0', shapeId: '20', x: 4, y: 9, width: 1, height: 1 },
+			{ type: 'move-shape', pageId: '0', shapeId: '20', x: 4.5, y: 9 },
+		);
+		expect(await connector(followed, '8')).toContain(
+			c('EndX', 5.5, 'PAR(PNT(Sheet.2!Connections.X1,Sheet.2!Connections.Y1))'),
+		);
+		// A 2-D master takes no ends, and a line master that is not the Dynamic connector is refused.
+		expect(
+			(await refused(bytes, [drop({ masterId: '2', begin: { x: 1, y: 1 }, end: { x: 2, y: 2 } })]))
+				?.code,
+		).toBe('INVALID_EDIT');
+		const other = await source({ master: DYNAMIC('GUARD(BeginX+Width/2)') });
+		const error = await refused(other, [drop()]);
+		expect(error?.code).toBe('UNSUPPORTED_MASTER_INSTANCE');
+		expect(error?.message).toMatch(/Dynamic connector/);
+		const [, line] = (await parseVsdx(bytes)).masters!;
+		expect(line).toMatchObject({ oneDimensional: true, dynamicConnector: true });
+		expect((await parseVsdx(other)).masters![1]!.dynamicConnector).toBeUndefined();
+	});
+
 	it('refuses a stencil connector that is not built like the Dynamic connector', async () => {
 		const bytes = await source({ master: DYNAMIC('GUARD(BeginX+Width/2)') });
 		const before = bytes.slice();

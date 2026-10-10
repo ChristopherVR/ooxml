@@ -134,6 +134,54 @@ recorded from Visio. While typing, only the editing frame grows (around the
 shape's middle, or away from the edge the text is aligned to); the shape takes
 its new size when the text is saved.
 
+## Visio's Dynamic connector, 2026-10-10
+
+Visio's own connector is a stencil shape (a master instance). Until now every
+edit of it, or of a shape glued to it, was refused. It is now laid out again
+the way Visio saves it, recorded from Visio 16 with
+`scripts/record-visio-instance-connector.ps1` and compared cell for cell:
+
+- A shape glued to a Dynamic connector can be moved, resized and rotated,
+  whether it is drawn or from a stencil; the connector follows. For the
+  recorded cases (a level run, one bend, a plumb run, a resized and a rotated
+  shape, an end on a connection point) the saved connector equals Visio's.
+- The connector takes Design > Connectors (right-angle, straight, curved),
+  can be moved, and shows its two end handles: dragging an end away unglues it
+  as Visio does, and dropping it on a shape or a connection point glues it.
+- The Connector tool and AutoConnect glue to stencil shapes, and stencil shapes
+  made of one shape are obstacles a right-angle connector routes around.
+- The Dynamic connector in the Document Stencil can be dropped on the page: a
+  connector with two free ends, saved as Visio saves a dropped one.
+- The side each end takes follows Visio for the recorded positions: straight
+  across between facing sides (with one jog close to the first shape when they
+  are not level), sideways and then up or down when the shapes overlap or
+  nearly meet in height, otherwise up or down and then in from the side.
+- Drawn shapes in a drawing that has an end glued to a stencil shape's
+  connection point, or a connector with a free end, can be edited again; the
+  checks that guard saved values no longer stop at those two formulas.
+
+Files written this way were reopened in Visio 16: every connector kept its
+master, its glue and its path.
+
+Still different or refused:
+
+- When the simple path is blocked, the shared router finds the detour. Visio
+  may end on another side of the shape (in the recorded detour it ends on the
+  top of the second shape, this editor on its left).
+- An end on a connection point is approached like a free point; Visio takes the
+  side the point sits on into account.
+- A curved connector is this editor's single cubic, not Visio's curve, and a
+  curve between ends less than a quarter inch apart in one direction is drawn
+  as the straight run.
+- A stencil connector whose master is not built like the Dynamic connector, a
+  connector inside a group, and routing styles other than right-angle,
+  straight and curved (tree, organization chart, flowchart directions) are
+  refused with a sentence that says so.
+- Connectors are not rerouted when an unrelated shape is moved onto them, and
+  there are no line jumps.
+- The dropped connector is not put on the Connector layer Visio adds.
+- Deleting, duplicating or copying a stencil connector is still refused.
+
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 
 Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
@@ -271,8 +319,10 @@ the sample reopens with `BASFLO_U.vssx` docked.
 
 Limits:
 
-- A 1-D master (Dynamic connector) and a master with more than one top-level
-  shape are listed disabled with the reason; they cannot be dropped.
+- A line or connector master that is not built like Visio's Dynamic connector
+  and a master with more than one top-level shape are listed disabled with the
+  reason; they cannot be dropped. The Dynamic connector itself drops as a
+  connector (see the section above).
 - A dropped instance is not put on the master's layers and gets no name
   (Visio names it `Process.5`), and the page is not grown to hold it.
 - The built-in stencils are this editor's own outlines, not Visio's masters:
@@ -325,6 +375,9 @@ Not Visio's router, and still different:
   the master's rows, the text position rule and more recorded cases; it is not
   done, and such connectors are refused with a message rather than rewritten.
 
+- No line jumps, no spacing between parallel connectors, no Re-Layout.
+- Visio's own Dynamic connector is now laid out again (see the section above).
+
 ## Stencil shapes: move, resize, rotate and format, 2026-10-10
 
 Shapes dropped from a stencil (master instances) made of one plain shape now
@@ -348,10 +401,9 @@ Text dialog, Format Painter, Rotate Text). Before, only their text could change.
 
 Not done, each refused with a message instead of a wrong result:
 
-- A stencil shape with a Visio connector glued to it cannot be moved, resized
-  or rotated yet. Visio does not lay connectors out again when it opens a file,
-  and this editor cannot reroute Visio's own Dynamic connector, so the connector
-  would be left behind. Formatting and text still work.
+- A stencil shape with a stencil connector glued to it that is not built like
+  Visio's Dynamic connector cannot be moved, resized or rotated. The Dynamic
+  connector itself now follows (see the section above).
 - Stencil shapes made of several shapes (groups), stencil lines and connectors,
   and shapes inside a group instance.
 - Deleting, duplicating, copying, reordering and Change Shape on stencil shapes.

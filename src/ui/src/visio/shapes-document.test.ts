@@ -112,11 +112,26 @@ describe('the Document Stencil in the Shapes window', () => {
 		const connector = ui.pane.querySelector<HTMLButtonElement>('[data-master="document:4"]')!;
 		expect(connector.draggable).toBe(false);
 		expect(connector.getAttribute('aria-disabled')).toBe('true');
-		expect(connector.title).toMatch(/^Dynamic connector: A 1-D master/);
+		expect(connector.title).toMatch(/^Dynamic connector: A line or connector master/);
 		connector.click();
 		await ui.settle();
 		expect(ui.edits).toHaveLength(1);
-		expect(ui.messages.at(-1)).toMatch(/^Dynamic connector: A 1-D master/);
+		expect(ui.messages.at(-1)).toMatch(/^Dynamic connector: A line or connector master/);
+		ui.dispose();
+	});
+
+	it("drops Visio's Dynamic connector as a connector with free ends", async () => {
+		const model = drawing();
+		model.masters![1]!.dynamicConnector = true;
+		const ui = await open(model);
+		const connector = ui.pane.querySelector<HTMLButtonElement>('[data-master="document:4"]')!;
+		expect(connector.getAttribute('aria-disabled')).not.toBe('true');
+		connector.click();
+		await ui.settle();
+		await ui.settle();
+		expect(ui.edits[0]).toEqual([
+			expect.objectContaining({ type: 'insert-master-instance', masterId: '4' }),
+		]);
 		ui.dispose();
 	});
 

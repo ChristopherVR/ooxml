@@ -10,6 +10,7 @@ import { createShape } from './edit-shape-create';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import type { EditVsdxResult } from './edit';
+import { dropStencilConnector } from './edit-stencil-connector-drop';
 
 const MASTER_RELATIONSHIP = 'http://schemas.microsoft.com/visio/2010/relationships/master';
 /** Sub-shapes of one instance; a larger group master is refused rather than half-instanced. */
@@ -29,6 +30,12 @@ export interface VisioMasterInstanceEdit {
 	masterId: string;
 	x: number;
 	y: number;
+	/**
+	 * For a connector master (Visio's Dynamic connector): where its ends go. Without them the
+	 * connector keeps the master's own ends around the drop point, as a drop in Visio does.
+	 */
+	begin?: { x: number; y: number };
+	end?: { x: number; y: number };
 }
 
 const ID = /^[1-9]\d{0,9}$/;
@@ -41,7 +48,12 @@ export function snapshotMasterInstance(edit: VisioMasterInstanceEdit): VisioMast
 		fail('INVALID_EDIT', 'Invalid edit shape target.');
 	if (typeof edit.masterId !== 'string' || !/^(0|[1-9]\d{0,9})$/.test(edit.masterId))
 		fail('INVALID_EDIT', 'Master IDs must be canonical unsigned integers.');
-	for (const value of [edit.x, edit.y])
+	const ends = [edit.begin, edit.end].filter((point) => point !== undefined);
+	if (ends.length === 1) fail('INVALID_EDIT', 'A connector drop needs both ends or neither.');
+	for (const point of ends)
+		if (typeof point !== 'object' || point === null)
+			fail('INVALID_EDIT', 'A connector end must be a point.');
+	for (const value of [edit.x, edit.y, ...ends.flatMap((point) => [point.x, point.y])])
 		if (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > 1e6)
 			fail('INVALID_EDIT', 'The drop point must be finite drawing inches within limits.');
 	return {
@@ -51,6 +63,9 @@ export function snapshotMasterInstance(edit: VisioMasterInstanceEdit): VisioMast
 		masterId: edit.masterId,
 		x: edit.x,
 		y: edit.y,
+		...(edit.begin && edit.end
+			? { begin: { x: edit.begin.x, y: edit.begin.y }, end: { x: edit.end.x, y: edit.end.y } }
+			: {}),
 	};
 }
 
@@ -106,9 +121,16 @@ export async function editVsdxMasterInstance(
 	);
 	if (!roots.length) fail('UNSUPPORTED_MASTER_INSTANCE', 'The master has no shapes to drop.');
 	const base = roots[0]!;
-	for (const top of roots) {
+	const oneDimensional = (top: Element): boolean => {
 		const cellNames = new Set(children(top, 'Cell').map((cell) => attribute(cell, 'N')));
-		if (cellNames.has('BeginX') || cellNames.has('EndX'))
+		return cellNames.has('BeginX') || cellNames.has('EndX');
+	};
+	// A connector master drops as a connector; among several shapes a line is not grouped.
+	const oneD = roots.length === 1 && oneDimensional(base);
+	if (!oneD && (edit.begin || edit.end))
+		fail('INVALID_EDIT', 'Only a connector master takes ends.');
+	for (const top of roots) {
+		if (!oneD && oneDimensional(top))
 			fail(
 				'UNSUPPORTED_MASTER_INSTANCE',
 				'A 1-D master (a connector or a line) cannot be dropped as a shape.',
@@ -153,8 +175,11 @@ export async function editVsdxMasterInstance(
 	const shape = createShape(root, claim(edit.shapeId));
 	shape.setAttribute('Type', type);
 	shape.setAttribute('Master', edit.masterId);
-	setCell(shape, 'PinX', edit.x);
-	setCell(shape, 'PinY', edit.y);
+	if (oneD) dropStencilConnector(shape, base, edit);
+	else {
+		setCell(shape, 'PinX', edit.x);
+		setCell(shape, 'PinY', edit.y);
+	}
 	const node = (name: string) => root.ownerDocument!.createElementNS(root.namespaceURI, name);
 	let count = 0;
 	const inherit = (members: readonly Element[], to: Element): Element[] => {

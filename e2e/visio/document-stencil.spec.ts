@@ -110,7 +110,7 @@ test('a drawing lists its own masters and drops them as master instances', async
 	await expect(step.locator('svg text')).toHaveCount(0);
 	const link = stencil.locator('[data-master="document:4"]');
 	await expect(link).toHaveAttribute('aria-disabled', 'true');
-	await expect(link).toHaveAttribute('title', /1-D master/);
+	await expect(link).toHaveAttribute('title', /not built like Visio's Dynamic connector/);
 
 	const shapes = viewer.locator('svg.paper > g > [data-shape-id]');
 	await expect(shapes).toHaveCount(1);
@@ -138,7 +138,7 @@ test('a drawing lists its own masters and drops them as master instances', async
 	);
 	// The connector master says why it is not dropped.
 	await link.click({ force: true });
-	await expect(status).toHaveText(/Link: A 1-D master/);
+	await expect(status).toHaveText(/Link: A line or connector master/);
 	await expect(shapes).toHaveCount(2);
 	// One undo removes the instance; Search finds the drawing's masters.
 	await history(viewer, 'Undo').click();

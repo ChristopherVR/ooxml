@@ -2,7 +2,7 @@ import type { VisioMaster } from './model';
 import { metadata } from './metadata';
 import { VisioPackageError } from './package';
 import { normalizeShapes, type ShapeContext } from './shapes';
-import { attribute, child, number, readSheet, yes, type RawShape } from './sheet';
+import { attribute, child, number, readSheet, yes, type Cells, type RawShape } from './sheet';
 
 /** What the parser keeps of one `<Master>` element until the shape context exists. */
 export interface MasterRecord {
@@ -53,6 +53,16 @@ export function listVisioMasters(
 		consumeText: () => undefined,
 		consumeParagraph: () => undefined,
 	};
+	// The transform of Visio's Dynamic connector; the edit proves the rest of the master's form.
+	const followsItsEnds = (sheet: Cells) =>
+		(
+			[
+				['PinX', 'guard((beginx+endx)/2)'],
+				['PinY', 'guard((beginy+endy)/2)'],
+				['Width', 'guard(endx-beginx)'],
+				['Height', 'guard(endy-beginy)'],
+			] as const
+		).every(([name, form]) => sheet.get(name)?.formula?.replace(/\s+/g, '').toLowerCase() === form);
 	const result: VisioMaster[] = [];
 	for (const record of records) {
 		context.checkTime();
@@ -83,6 +93,9 @@ export function listVisioMasters(
 			height: size('PageHeight', resolved[0]?.height || 1),
 			rootCount: roots.length,
 			oneDimensional: !!root && root.cells.has('BeginX') && root.cells.has('EndX'),
+			...(root && roots.length === 1 && followsItsEnds(root.cells)
+				? { dynamicConnector: true }
+				: {}),
 			shapes: resolved,
 		});
 	}

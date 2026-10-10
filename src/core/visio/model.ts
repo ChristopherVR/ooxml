@@ -389,6 +389,11 @@ export interface VisioMaster {
 	rootCount: number;
 	/** A 1-D master (a connector or a line), which is glued or stretched rather than dropped. */
 	oneDimensional: boolean;
+	/**
+	 * A 1-D master whose transform follows its ends the way Visio's Dynamic connector does: it can
+	 * be dropped as a connector with two free ends. Other lines and connectors cannot.
+	 */
+	dynamicConnector?: boolean;
 	/** The master's shapes drawn alone, for a preview; empty when they could not be resolved. */
 	shapes: VisioShape[];
 }
