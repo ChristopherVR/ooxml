@@ -5,6 +5,13 @@ import { describe, expect, it } from 'vitest';
 import { editVsdx, type VisioEdit } from './edit';
 import { parseVsdx } from './parser';
 import { fixture, shape } from './test-fixtures';
+import { visioAutoConnectShape } from './ui/auto-connect';
+import {
+	visioConnectorEndHandles,
+	visioConnectorRouteOf,
+	visioGlueableShape,
+} from './ui/connection-points';
+import { visioConnectorMovePreviews } from './ui/connector-preview';
 
 const PAGE = 'visio/pages/page1.xml';
 const c = (name: string, value: string | number, formula = '') =>
@@ -287,6 +294,25 @@ describe("Visio's Dynamic connector (a stencil instance)", () => {
 		// It turns a clearance (3/16 in.) before the shape in its way, as recorded.
 		expect(around).toContain(row(2, 'LineTo', c('X', 1.8125) + c('Y', 0)));
 		expect(around.match(/<Row T="LineTo"/g)!.length).toBeGreaterThan(3);
+	});
+
+	it('is offered by the editor rules and previewed along the route it will take', async () => {
+		const model = (await parseVsdx(await source())).pages[0]!;
+		const [one, two, line] = model.shapes;
+		// Stencil shapes take glue (Connector tool, AutoConnect); the connector shows end handles.
+		expect(visioGlueableShape(one)).toBe(true);
+		expect(visioAutoConnectShape(model, '2')).toBe(two);
+		expect(line!.kind).toBe('connector');
+		expect(visioConnectorRouteOf(line!)).toBe('right-angle');
+		expect(visioConnectorEndHandles(line!)).toBeDefined();
+		// Dragging shape 2 three inches down previews the bend the core then saves.
+		const [preview] = visioConnectorMovePreviews(model, new Set(['2']), { x: 0, y: -3 });
+		expect(preview).toMatchObject({ connectorId: '3', route: 'right-angle' });
+		expect(preview!.points.map((point) => [point.x, model.height - point.y])).toEqual([
+			[2, 5.625],
+			[2, 3],
+			[5.5, 3],
+		]);
 	});
 
 	it('refuses a stencil connector that is not built like the Dynamic connector', async () => {

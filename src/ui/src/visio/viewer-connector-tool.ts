@@ -7,7 +7,7 @@ import {
 import {
 	editErrorMessage,
 	isEditCancellation,
-	visioConnectableShape,
+	visioGlueableShape,
 	visioConnectorCreationCommand,
 	visioDrawIsLargeEnough,
 	visioNearestConnectionPoint,
@@ -29,13 +29,13 @@ export interface ConnectorGlueHit {
 	y?: number;
 }
 
-/** A page shape the core can glue to: a visible, local, top-level 2D shape. */
+/** A page shape the core can glue to: a visible top-level 2D shape, drawn or from a stencil. */
 export function connectorGlueTarget(page: VisioPage, element: Element | null): string | undefined {
 	let group = element?.closest?.<SVGGElement>('[data-shape-id]');
 	while (group) {
 		const id = group.dataset.shapeId,
 			shape = page.shapes.find((candidate) => candidate.id === id);
-		if (shape) return visioConnectableShape(shape) ? shape.id : undefined;
+		if (shape) return visioGlueableShape(shape) ? shape.id : undefined;
 		group = group.parentElement?.closest<SVGGElement>('[data-shape-id]');
 	}
 	return undefined;

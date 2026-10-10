@@ -9,6 +9,8 @@ import {
 	type ConnectorSite,
 } from '../edit-connector-layout';
 import type { VisioGlueBox } from '../edit-connector-glue';
+import { visioWalkRoute } from '../connector-route-walk';
+import { walkShape } from '../edit-stencil-connector-layout';
 
 /** A connector redrawn for a move preview, in page coordinates with y down (SVG page inches). */
 export interface VisioConnectorPreview {
@@ -22,7 +24,7 @@ export interface VisioConnectorPreview {
  * While shapes are dragged, the connectors glued to them re-routed for the translated shapes,
  * with the same site choice and router the core uses when the move is committed, including the
  * detour a right-angle connector takes around the other shapes of the page. Connectors that move
- * themselves, are not local, or cannot be resolved are left out.
+ * themselves or cannot be resolved are left out.
  */
 export function visioConnectorMovePreviews(
 	page: VisioPage,
@@ -41,7 +43,7 @@ export function visioConnectorMovePreviews(
 	};
 	const result: VisioConnectorPreview[] = [];
 	for (const connector of page.shapes) {
-		if (connector.kind !== 'connector' || moved.has(connector.id) || connector.masterId) continue;
+		if (connector.kind !== 'connector' || moved.has(connector.id)) continue;
 		const rows = page.connectors.filter((row) => row.fromShapeId === connector.id);
 		if (!rows.some((row) => moved.has(row.toShapeId)) || !connector.lineEnds) continue;
 		const sites = (cell: 'BeginX' | 'EndX'): ConnectorSite[] | undefined => {
@@ -61,7 +63,14 @@ export function visioConnectorMovePreviews(
 		const begin = sites('BeginX'),
 			end = sites('EndX');
 		if (!begin || !end) continue;
-		const route = connector.connectorRoute ?? 'straight';
+		const walk = (cell: 'BeginX' | 'EndX', found: ConnectorSite[]) => {
+			const row = rows.find((candidate) => candidate.fromCell === cell);
+			const target = row && row.toCell === 'PinX' ? byId.get(row.toShapeId) : undefined;
+			return target ? walkShape(box(target)) : { point: found[0]!.point };
+		};
+		// A stencil connector (Visio's Dynamic connector) is right-angle unless its cells say otherwise.
+		const stencil = connector.masterId !== undefined;
+		const route = connector.connectorRoute ?? (stencil ? 'right-angle' : 'straight');
 		const glued = new Set(rows.map((row) => row.toShapeId));
 		// As the core's `connectorObstacles`: the other local placeable shapes of the page.
 		const obstacles =
@@ -71,7 +80,7 @@ export function visioConnectorMovePreviews(
 							(shape) =>
 								shape.kind !== 'connector' &&
 								shape.placeable === true &&
-								!shape.masterId &&
+								!shape.children.length &&
 								!shape.lineEnds &&
 								!glued.has(shape.id) &&
 								shape.width > 0 &&
@@ -80,7 +89,12 @@ export function visioConnectorMovePreviews(
 						.map((shape) => routeBox(box(shape)))
 				: [];
 		try {
-			const points = routeVertices(route, chooseSites(begin, end), obstacles);
+			const chosen = chooseSites(begin, end);
+			// As the core lays a stencil connector out: Visio's side choice, else the router.
+			const points =
+				(stencil
+					? visioWalkRoute(walk('BeginX', begin), walk('EndX', end), route, obstacles)
+					: undefined) ?? routeVertices(route, chosen, obstacles);
 			result.push({
 				connectorId: connector.id,
 				route,

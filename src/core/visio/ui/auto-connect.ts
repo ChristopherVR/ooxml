@@ -1,7 +1,7 @@
 import type { VisioConnectorRoute, VisioGeometryEdit } from '../edit-commands';
 import type { VisioPage, VisioShape } from '../model';
 import type { VisioOutlineShape } from '../stencil-shapes';
-import { visioConnectableShape } from './connection-points';
+import { visioGlueableShape } from './connection-points';
 import {
 	visioBoxCreationCommand,
 	visioConnectorCreationCommand,
@@ -47,7 +47,7 @@ export interface VisioAutoConnectPlan {
 /** A top-level shape AutoConnect starts from or ends on: visible, local and two-dimensional. */
 export function visioAutoConnectShape(page: VisioPage, shapeId: string): VisioShape | undefined {
 	const shape = page.shapes.find((candidate) => candidate.id === shapeId);
-	return visioConnectableShape(shape) && visioShapePageBox(page, shape) ? shape : undefined;
+	return visioGlueableShape(shape) && visioShapePageBox(page, shape) ? shape : undefined;
 }
 
 const horizontal = (direction: VisioAutoConnectDirection) =>
@@ -108,7 +108,7 @@ export function visioAutoConnectNeighbor(
 	if (!from) return undefined;
 	let best: { shape: VisioShape; gap: number } | undefined;
 	for (const candidate of page.shapes) {
-		if (candidate.id === shape.id || !visioConnectableShape(candidate)) continue;
+		if (candidate.id === shape.id || !visioGlueableShape(candidate)) continue;
 		const box = visioShapePageBox(page, candidate);
 		if (!box) continue;
 		const across = horizontal(direction)

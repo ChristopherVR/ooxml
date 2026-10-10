@@ -40,6 +40,21 @@ export function visioConnectableShape(shape: VisioShape | undefined): shape is V
 	);
 }
 
+/**
+ * A top-level shape a connector end can glue to: a drawn 2D shape, or a stencil shape (master
+ * instance) made of one shape, whose size and connection points the core reads through its master.
+ */
+export function visioGlueableShape(shape: VisioShape | undefined): shape is VisioShape {
+	return (
+		!!shape &&
+		shape.kind === 'shape' &&
+		!shape.hidden &&
+		!shape.children.length &&
+		shape.width > 0 &&
+		shape.height > 0
+	);
+}
+
 /** A connection point in page coordinates. */
 export interface VisioConnectionPointHit {
 	shapeId: string;
@@ -68,7 +83,7 @@ export function visioNearestConnectionPoint(
 	page: VisioPage,
 	point: VisioScenePoint,
 	radius: number,
-	eligible: (shape: VisioShape) => boolean = visioConnectableShape,
+	eligible: (shape: VisioShape) => boolean = visioGlueableShape,
 ): VisioConnectionPointHit | undefined {
 	let best: VisioConnectionPointHit | undefined;
 	for (const candidate of visioPageConnectionPoints(page, eligible)) {
@@ -111,22 +126,29 @@ export function visioConnectorEndHandles(
 ): { begin: VisioScenePoint; end: VisioScenePoint } | undefined {
 	if (
 		shape.kind !== 'connector' ||
-		shape.masterId ||
 		shape.hidden ||
 		shape.children.length ||
 		!shape.lineEnds ||
-		!(shape.connectorRoute === 'right-angle' || shape.connectorRoute === 'curved')
+		// A stencil connector (Visio's Dynamic connector) keeps the routed form for every route.
+		!(
+			shape.masterId !== undefined ||
+			shape.connectorRoute === 'right-angle' ||
+			shape.connectorRoute === 'curved'
+		)
 	)
 		return undefined;
 	return shape.lineEnds;
 }
 
 /**
- * The route of a local dynamic connector whose route Design > Connectors can change: one with
- * route cells (drawn by the Connector tool). Plain lines have none.
+ * The route of a dynamic connector whose route Design > Connectors can change: one with route
+ * cells (drawn by the Connector tool) or a stencil connector. Plain lines have none.
  */
 export function visioConnectorRouteOf(shape: VisioShape): VisioConnectorRoute | undefined {
-	return shape.kind === 'connector' && !shape.masterId && !shape.children.length
-		? shape.connectorRoute
-		: undefined;
+	if (shape.kind !== 'connector' || shape.children.length) return undefined;
+	// Visio's Dynamic connector (a stencil instance) is right-angle until its cells say otherwise.
+	return (
+		shape.connectorRoute ??
+		(shape.masterId !== undefined && shape.lineEnds ? 'right-angle' : undefined)
+	);
 }
