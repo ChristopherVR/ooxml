@@ -8,6 +8,11 @@
  * DOM-free and lives in `ooxml-core/ribbon`, so the binding contracts in the core share it.
  */
 
+import { defineMenuButton } from '../menu/menu-button';
+import { defineMenuItem } from '../menu/menu-item';
+import { defineButton } from './button';
+import { defineRibbonGroup } from './ribbon-group';
+import { defineRibbonStack } from './ribbon-stack';
 import {
 	acceptedRibbonAddIns,
 	findRibbonAddInCommand,
@@ -25,6 +30,23 @@ export {
 	type RibbonAddInGroup,
 	type RibbonAddInTab,
 } from 'ooxml-core/ribbon';
+
+/**
+ * Defines the shared elements an add-in panel is built from. A product whose own ribbon uses
+ * other controls (Word's is hand-built) never registered them, and an undefined
+ * `office-ui-button` is an empty, inert tag: the panel would show nothing.
+ */
+export function defineRibbonAddInElements(registry: CustomElementRegistry | undefined): void {
+	if (!registry) return;
+	for (const define of [
+		defineRibbonGroup,
+		defineRibbonStack,
+		defineButton,
+		defineMenuItem,
+		defineMenuButton,
+	])
+		define(registry);
+}
 
 /** Bubbling and composed, dispatched from the ribbon when an add-in command is chosen. */
 export type OfficeRibbonAddInEvent = CustomEvent<RibbonAddInCommandDetail>;
@@ -46,7 +68,12 @@ function button(doc: Document, spec: RibbonAddInCommand): HTMLElement {
 	el.setAttribute('label', spec.label);
 	el.setAttribute('title', spec.title ?? spec.label);
 	if (spec.icon) el.setAttribute('icon', spec.icon);
-	if (spec.size !== 'small') el.setAttribute('variant', 'stacked');
+	const small = spec.size === 'small';
+	// The shared ribbon sizes: a 32px glyph over the label, or one compact row (three to a column).
+	if (!menu) el.setAttribute('size', small ? 'small' : 'large');
+	else if (!small) el.setAttribute('variant', 'stacked');
+	// A small drop-down has no size of its own: give it the compact row height.
+	else el.style.setProperty('--office-target-size', 'var(--office-control-height)');
 	if (spec.disabled) el.setAttribute('disabled', '');
 	for (const item of spec.items ?? []) {
 		const entry = doc.createElement('office-ui-menu-item');
@@ -115,6 +142,7 @@ export function syncRibbonAddIns(
 ): string[] {
 	const doc = ribbon.ownerDocument;
 	const accepted = acceptedRibbonAddIns(tabs, ownTabs(ribbon));
+	if (accepted.length) defineRibbonAddInElements(doc.defaultView?.customElements);
 	const ids = accepted.map((tab) => tab.id);
 	// Callbacks are not part of the look: JSON leaves functions out.
 	const look = JSON.stringify([options.panelClass ?? '', accepted]);

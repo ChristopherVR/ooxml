@@ -1,6 +1,11 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { registerOfficeUi } from '../index';
-import { RIBBON_ADD_IN_EVENT, syncRibbonAddIns, type RibbonAddInTab } from './add-in-tabs';
+import {
+	defineRibbonAddInElements,
+	RIBBON_ADD_IN_EVENT,
+	syncRibbonAddIns,
+	type RibbonAddInTab,
+} from './add-in-tabs';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());
@@ -74,7 +79,13 @@ describe('ribbon add-in tabs', () => {
 		expect(
 			[...group.querySelectorAll('office-ui-ribbon-stack')].map((stack) => stack.children.length),
 		).toEqual([3, 1]);
-		expect(group.querySelector('[data-add-in-command="create"]')!.getAttribute('variant')).toBe(
+		expect(group.querySelector('[data-add-in-command="create"]')!.getAttribute('size')).toBe(
+			'large',
+		);
+		expect(group.querySelector('[data-add-in-command="preferences"]')!.getAttribute('size')).toBe(
+			'small',
+		);
+		expect(group.querySelector('[data-add-in-command="share"]')!.getAttribute('variant')).toBe(
 			'stacked',
 		);
 		expect(group.querySelector('[data-add-in-command="locked"]')!.hasAttribute('disabled')).toBe(
@@ -147,5 +158,25 @@ describe('ribbon add-in tabs', () => {
 		renamed.remove();
 		syncRibbonAddIns(ribbon, [{ ...pdf(second), label: 'Documents' }], { panelClass: 'panel' });
 		expect(ribbon.querySelector('[data-add-in]')).not.toBeNull();
+	});
+
+	it('defines the elements a panel is built from, for a product that never registered them', () => {
+		// Word's ribbon is hand-built: without this its add-in panel was a row of empty, inert tags.
+		const defined: string[] = [];
+		const registry = {
+			get: () => undefined,
+			define: (tag: string) => void defined.push(tag),
+		} as unknown as CustomElementRegistry;
+		defineRibbonAddInElements(registry);
+		expect(defined).toEqual(
+			expect.arrayContaining([
+				'office-ui-ribbon-group',
+				'office-ui-ribbon-stack',
+				'office-ui-button',
+				'office-ui-menu-item',
+				'office-ui-menu-button',
+			]),
+		);
+		expect(() => defineRibbonAddInElements(undefined)).not.toThrow();
 	});
 });
