@@ -426,9 +426,18 @@ text with fields each inherited Field row is also marked deleted locally; a
 range edit (Find and Replace, editing around a field) works on the local `Text`
 or on a local copy of the master's that keeps its run and field markers. The
 master's `LockTextEdit` applies unless the instance overrides it. An instance
-with its own formatted text accepts range edits only. A master that sizes
-itself from its text (`TEXTHEIGHT(TheText, ...)`) is recalculated by Visio on
-open; the saved size is kept until then.
+with its own formatted text accepts range edits only. A shape that sizes
+itself from its text (`TEXTWIDTH(TheText)`, `TEXTHEIGHT(TheText, ...)`, the
+flowchart masters' Resize with Text) is measured again after a text, font or
+text block edit and after a resize (`edit-text-size.ts`): its size and what
+follows from it are saved as refreshed caches of unchanged formulas. The
+measurer (`text-extent.ts`, `visioTextExtents`) uses the fonts' own advance
+widths as recorded from Visio 16 (`scripts/record-visio-glyph-advances.ps1`,
+`scripts/record-visio-text-extent.ps1`); `setVisioTextMeasurer` lets a UI
+measure other fonts. Text that cannot be measured reliably (an unknown or
+guessed font, bullets, tabs, a line that only just fits) keeps the saved size
+and the result carries an `edit-text-size-kept` diagnostic; a refreshed size
+carries `edit-text-size`.
 Replacement text must contain valid XML
 characters and cannot contain carriage returns. Edited documents containing
 carriage-return text or tab/newline/carriage-return attribute values are rejected
@@ -757,6 +766,13 @@ connectors), locally deleted sections, `GUARD`ed sizes and pins, active locks,
 and another page shape whose formula reads a changed cell of the instance. A shape whose master sizes it
 from its text still keeps its saved size after a text edit: `TEXTHEIGHT` needs
 text metrics the core does not have.
+
+Refused: group masters and sub-shapes of a group instance, masters that inherit
+another master, 1D masters (lines and connectors), locally deleted sections or
+rows, `GUARD`ed sizes and pins, active locks, and another page shape whose
+formula reads a changed cell of the instance. A shape whose master sizes it
+from its text follows the text where it can be measured, and otherwise keeps
+its saved size (see the plain-text section).
 
 This first bundle has deliberate exclusions:
 

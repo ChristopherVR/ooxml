@@ -313,3 +313,12 @@ export type {
 	VisioSubprocessSelection,
 } from './edit';
 export { isVisioLayerName, VISIO_LAYER_NAME_LIMIT } from './edit-layer-commands';
+export {
+	designTextMeasurer,
+	setVisioTextMeasurer,
+	visioTextExtents,
+	type VisioTextExtents,
+	type VisioTextMeasureStyle,
+	type VisioTextMeasurer,
+} from './text-extent';
+export { visioFontAssumed } from './style';

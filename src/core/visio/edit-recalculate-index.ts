@@ -1,3 +1,4 @@
+import { textSizeFormula } from './edit-text-size-formula';
 import { isLocalBitmapShape } from './edit-foreign-bitmap';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
@@ -144,7 +145,10 @@ export function indexCells(
 				) {
 					try {
 						item.formula = parseVisioFormula(source!);
-						const analysis = analyzeVisioFormula(item.formula);
+						// A size measured from the shape's own text reads only the cells it names; the
+						// text itself is followed after text edits (edit-text-size.ts).
+						const plain = analyzeVisioFormula(item.formula);
+						const analysis = (plain.dynamic && textSizeFormula(item.formula)) || plain;
 						if (analysis.dynamic)
 							fail(
 								'EDIT_DYNAMIC_DEPENDENCY',

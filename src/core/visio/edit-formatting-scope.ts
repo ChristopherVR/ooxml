@@ -6,6 +6,7 @@ import { indexCells } from './edit-recalculate-index';
 import { fail } from './package-common';
 import { isThemeLookupFormula } from './edit-formatting-cell-admission';
 import { isConnectedGlueCell } from './edit-connector-glue';
+import { textSizeFormula } from './edit-text-size-formula';
 
 /** Nonnumeric font/color caches cannot be recalculated by the numeric engine.
  * Refuse every dependent formula, including metadata/styles/masters, before writes.
@@ -35,6 +36,12 @@ export async function assertFormattingDependencies(
 			.replace(/^char\.([a-z]+)$/, 'character.0.$1')
 			.replace(/^para\.([a-z]+)$/, 'paragraph.0.$1');
 	const replaced = new Set(changed.values());
+	// Text, characters, paragraphs, margins and the text block decide what the text measures.
+	const textEdit = [...changedNames].some((name) =>
+		/^(thetext$|char\.|para\.|character\.|paragraph\.|(left|right|top|bottom)margin$|txt)/.test(
+			name,
+		),
+	);
 	const failure = (): never =>
 		fail(
 			'EDIT_UNSUPPORTED_FORMAT_DEPENDENCY',
@@ -75,6 +82,15 @@ export async function assertFormattingDependencies(
 				if (!named) throw error;
 				if (mentions()) failure();
 				continue;
+			}
+			// A size taken from the shape's own text (TEXTWIDTH, TEXTHEIGHT) reads nothing hidden:
+			// on the edited shape it is measured again after the edit (edit-text-size.ts), and
+			// elsewhere it follows only the cells it names.
+			const sized =
+				analysis.dynamic && sourcePageId !== undefined ? textSizeFormula(source) : undefined;
+			if (sized) {
+				if (textEdit && localShapeId === shapeId && sourcePageId === pageId) continue;
+				analysis = sized;
 			}
 			if (named && analysis.dynamic) {
 				if (mentions()) failure();

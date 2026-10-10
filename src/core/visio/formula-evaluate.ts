@@ -78,8 +78,6 @@ const staticUnsupported = new Set([
 	'ASIN',
 	'ACOS',
 	'ATAN',
-	'CEILING',
-	'FLOOR',
 	'TRUNC',
 	'AND',
 	'OR',
@@ -250,6 +248,26 @@ export function evaluateVisioFormula(
 			return binary(node.operator, left, right);
 		}
 		const name = node.name;
+		if ((name === 'TEXTWIDTH' || name === 'TEXTHEIGHT') && limits.text) {
+			const text = node.args[0];
+			const count = node.args.length;
+			if (
+				text?.kind !== 'reference' ||
+				text.reference.shapeId !== undefined ||
+				text.reference.cell.toLowerCase() !== 'thetext' ||
+				count > 2 ||
+				(name === 'TEXTHEIGHT' && count !== 2)
+			)
+				return formulaFailure('unsupported', `Unsupported ${name} arguments`);
+			const limit = count === 2 ? evaluate(node.args[1]!, depth + 1) : undefined;
+			if (limit && limit.unit !== 'length' && limit.unit !== 'scalar')
+				return formulaFailure('unit', `${name} requires a length`);
+			const value =
+				name === 'TEXTWIDTH' ? limits.text.width(limit?.value) : limits.text.height(limit!.value);
+			if (value === undefined)
+				return formulaFailure('unsupported', 'The text cannot be measured reliably');
+			return finite({ value, unit: 'length' });
+		}
 		if (!supported.has(name)) return formulaFailure('unsupported', `Unsupported function ${name}`);
 		const arity = (min: number, max = min) => {
 			if (node.args.length < min || node.args.length > max)

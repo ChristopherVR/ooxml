@@ -11,9 +11,11 @@ import {
 	parseVisioFormula,
 	visioFormulaCachedValue,
 	type VisioFormulaAst,
+	type VisioFormulaLimits,
 	type VisioFormulaUnit,
 	type VisioFormulaValue,
 } from './formula';
+import { textSizeFormula } from './edit-text-size-formula';
 import { fail } from './package-common';
 import { attribute } from './sheet';
 
@@ -69,6 +71,8 @@ interface Dependencies {
 	/** The formula was written on the page: its `Sheet.N!` names are page shape IDs. */
 	local: boolean;
 	references: InstanceCell[];
+	/** The formula measures the shape's text (TEXTWIDTH, TEXTHEIGHT). */
+	text?: boolean;
 }
 
 export interface InstanceCacheWrite {
@@ -93,6 +97,11 @@ export function recalculateInstanceCaches(
 	check: () => void,
 	/** Cells that become local values too when they would otherwise follow a changed cell. */
 	pins: ReadonlyMap<InstanceCell, number> = new Map(),
+	/**
+	 * The shape's text was edited: cells that measure it are computed again with these extents,
+	 * and so is everything that follows from them.
+	 */
+	text?: NonNullable<VisioFormulaLimits['text']>,
 ): { writes: InstanceCacheWrite[]; pinned: ReadonlyMap<InstanceCell, number> } {
 	const scope = 'sheets' in target ? target : singleScope(target);
 	const overrides = new Map(changed);
@@ -117,14 +126,22 @@ export function recalculateInstanceCaches(
 			try {
 				const ast = parseVisioFormula(source);
 				const analysis = analyzeVisioFormula(ast);
+				const sized = text && analysis.dynamic ? textSizeFormula(ast) : undefined;
 				// A formula with functions this editor cannot follow is never evaluated.
-				result = analysis.dynamic
-					? { local, references: mentioned() }
-					: {
+				result = sized
+					? {
 							ast,
 							local,
-							references: analysis.references.flatMap((ref) => found(ref.cell, ref.shapeId)),
-						};
+							text: true,
+							references: sized.references.flatMap((ref) => found(ref.cell, ref.shapeId)),
+						}
+					: analysis.dynamic
+						? { local, references: mentioned() }
+						: {
+								ast,
+								local,
+								references: analysis.references.flatMap((ref) => found(ref.cell, ref.shapeId)),
+							};
 			} catch {
 				result = { local, references: mentioned() };
 			}
@@ -141,7 +158,8 @@ export function recalculateInstanceCaches(
 		// A cycle cannot be recomputed; treating it as unaffected keeps its saved cache.
 		if (active.has(cell)) return false;
 		active.add(cell);
-		const result = !!dependenciesOf(cell)?.references.some((item) => isAffected(item, active));
+		const own = dependenciesOf(cell);
+		const result = !!own?.text || !!own?.references.some((item) => isAffected(item, active));
 		active.delete(cell);
 		affected.set(cell, result);
 		return result;
@@ -202,6 +220,7 @@ export function recalculateInstanceCaches(
 						if (--steps < 0)
 							fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');
 					},
+					...(text ? { text } : {}),
 				},
 			);
 		} catch (error) {

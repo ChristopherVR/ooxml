@@ -46,7 +46,7 @@ describe('source-backed atomic text replacement plans', () => {
 	});
 	it.each([
 		cell('LockTextEdit', 1),
-		'<Section N="User"><Row N="Dependent"><Cell N="Value" V="1" F="TEXTWIDTH(TheText)"/></Row></Section>',
+		'<Section N="User"><Row N="Dependent"><Cell N="Value" V="1" F="SHAPETEXT(TheText)"/></Row></Section>',
 	])('refuses a late matched protected/dependent shape atomically %#', async (extra) => {
 		const bytes = await source(extra),
 			before = bytes.slice(),

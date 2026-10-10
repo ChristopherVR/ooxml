@@ -185,15 +185,48 @@ export function shapeStyle(
 		...effects,
 	};
 }
-function font(cells: Cells, resources: Resources): string {
-	const value = cells.get('Font')?.value;
-	return (
-		(value
-			? (resources.fonts.get(value) ??
-				(!/^\d+$/.test(value) && value !== 'Themed' ? value.replace(/^"|"$/g, '') : undefined))
-			: undefined) || 'Arial'
+const literalFont = (value: string | undefined, resources: Resources): string | undefined =>
+	(value
+		? (resources.fonts.get(value) ??
+			(!/^\d+$/.test(value) && value !== 'Themed' ? value.replace(/^"|"$/g, '') : undefined))
+		: undefined) || undefined;
+/**
+ * A `Themed` font where no font theme is selected (FontSchemeIndex 0 on the shape, or inherited
+ * from a page that has none) is the font of the verified No Style root, as for root paint
+ * (MS-VSDX 2.4.4.58). Theme font schemes themselves are not resolved.
+ */
+function rootFont(themeCells: Cells, resources: Resources): string | undefined {
+	const index = (cells: Cells | undefined) => {
+		const value = cells?.get('FontSchemeIndex')?.value;
+		return value !== undefined && /^\d+$/.test(value) ? Number(value) : undefined;
+	};
+	const local = index(themeCells);
+	const selected =
+		local !== undefined && local !== 65534 ? local : (index(resources.pageCells) ?? 0);
+	if (selected !== 0 || !resources.rootSheet) return undefined;
+	return literalFont(
+		sectionRows(resources.rootSheet, 'Character')[0]?.cells.get('Font')?.value,
+		resources,
 	);
 }
+/** The family and whether it is a guess (a missing or unresolved font cell reads as Arial). */
+function fontOf(
+	cells: Cells,
+	resources: Resources,
+	themeCells: Cells,
+): { family: string; assumed: boolean } {
+	const value = cells.get('Font')?.value;
+	const family =
+		literalFont(value, resources) ??
+		(value === 'Themed' ? rootFont(themeCells, resources) : undefined);
+	return { family: family ?? 'Arial', assumed: !family };
+}
+const assumedFonts = new WeakSet<VisioText>();
+/**
+ * True when a font of this parsed text is a guess: its cell was missing, or themed by a font
+ * scheme this parser does not resolve. Anything that needs real metrics must not use it.
+ */
+export const visioFontAssumed = (text: VisioText): boolean => assumedFonts.has(text);
 function runStyle(
 	cells: Cells,
 	resources: Resources,
@@ -203,7 +236,7 @@ function runStyle(
 	const bits = number(cells, 'Style', 0, report);
 	const transparency = clampUnitInterval(number(cells, 'ColorTrans', 0, report));
 	return {
-		fontFamily: font(cells, resources),
+		fontFamily: fontOf(cells, resources, themeCells).family,
 		fontSize: Math.max(0.001, number(cells, 'Size', 10 / 72, report)),
 		color: color(cells, 'Color', '#000000', resources, report, themeCells),
 		...(transparency > 0 ? { opacity: 1 - Math.round(transparency * 255) / 255 } : {}),
@@ -234,9 +267,11 @@ export function shapeText(
 	const fields: VisioTextField[] = [];
 	let textOffset = 0,
 		terminalDirectText = false;
+	const used = new Set<Cells>();
 	const append = (text: string, direct = false) => {
 		terminalDirectText = direct;
 		if (text) {
+			used.add(currentCells);
 			consume(text.length);
 			runs.push({ text, ...runStyle(currentCells, resources, report, cells) });
 			textOffset += text.length;
@@ -294,7 +329,7 @@ export function shapeText(
 	const lastRun = runs.at(-1);
 	if (terminalDirectText && lastRun) lastRun.text = decodeVisioPlainText(lastRun.text);
 	const plainText = runs.map((run) => run.text).join('');
-	return {
+	const result: VisioText = {
 		plainText,
 		...textBackground(cells, resources, report),
 		paragraphs,
@@ -320,4 +355,7 @@ export function shapeText(
 			bottom: number(cells, 'BottomMargin', 0.04, report),
 		},
 	};
+	if ([defaultCells, ...used].some((item) => fontOf(item, resources, cells).assumed))
+		assumedFonts.add(result);
+	return result;
 }

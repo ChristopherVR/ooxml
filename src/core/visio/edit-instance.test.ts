@@ -244,7 +244,7 @@ describe('resizing stencil (master) instances', () => {
 		// A drawn cell with a function outside the evaluated subset.
 		expect(
 			await refused(
-				await source({ definition: master({ geometry: len('X', 1, 'Width*CEILING(1,1)') }) }),
+				await source({ definition: master({ geometry: len('X', 1, 'Width*ROUND(1,0)') }) }),
 				[resize(2, 1)],
 			),
 		).toBe('EDIT_UNSUPPORTED_DEPENDENCY');

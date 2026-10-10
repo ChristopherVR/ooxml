@@ -3,6 +3,8 @@ import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
+import { measuresOwnText, refreshTextSizes, type TextSizeTarget } from './edit-text-size';
+import { takeDeferredTextSizes } from './edit-text-size-formula';
 import {
 	applyInstanceGeometryEdit,
 	isGlueTarget,
@@ -136,8 +138,10 @@ export async function editVsdx(
 	edits: readonly VisioEdit[],
 	options: EditVsdxOptions = {},
 ): Promise<EditVsdxResult> {
-	const clock = { deadline: 0, autoSize: new Set<string>() };
-	const result = await editVsdxTransaction(input, edits, options, clock);
+	const clock = { deadline: 0, autoSize: new Set<string>(), textSizes: [] as TextSizeTarget[] };
+	const edited = await editVsdxTransaction(input, edits, options, clock);
+	// Shapes that size themselves from their text follow it, as far as it can be measured.
+	const result = await refreshTextSizes(clock.textSizes, edited, options, clock.deadline);
 	return growAutoSizePages(clock.autoSize, result, (bytes, growth) =>
 		editVsdxTransaction(bytes, growth, {
 			...options,
@@ -150,7 +154,7 @@ async function editVsdxTransaction(
 	input: Uint8Array | ArrayBuffer,
 	edits: readonly VisioEdit[],
 	options: EditVsdxOptions,
-	clock = { deadline: 0, autoSize: new Set<string>() },
+	clock = { deadline: 0, autoSize: new Set<string>(), textSizes: [] as TextSizeTarget[] },
 ): Promise<EditVsdxResult> {
 	const limits = { ...DEFAULTS, ...options.limits };
 	for (const value of Object.values(limits)) positive(value);
@@ -400,6 +404,11 @@ async function editVsdxTransaction(
 	if (deleteOnly)
 		for (const pageId of deleteVisioShapes(roots, document!, deletions, check))
 			dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+	// A shape that sizes itself from its text follows it after the transaction.
+	const noteTextSize = async (target: { pageId: string; shapeId: string }, root: Element) => {
+		if (await measuresOwnText(root, target.shapeId, masterTemplate(pkg), check))
+			clock.textSizes.push({ pageId: target.pageId, shapeId: target.shapeId });
+	};
 	for (const command of deleteOnly ? [] : commands) {
 		check();
 		const path = pages.get(command.pageId);
@@ -418,6 +427,7 @@ async function editVsdxTransaction(
 			) {
 				dirty.set(path, root);
 				textChanged = true;
+				await noteTextSize(command, root);
 			}
 		} else if (command.type === 'insert-text-field') {
 			if (
@@ -425,6 +435,7 @@ async function editVsdxTransaction(
 			) {
 				dirty.set(path, root);
 				textChanged = true;
+				await noteTextSize(command, root);
 			}
 		} else if (isVisioFormatEdit(command)) {
 			if (
@@ -432,6 +443,7 @@ async function editVsdxTransaction(
 			) {
 				dirty.set(path, root);
 				formatChanged = true;
+				if (command.type === 'format-text') await noteTextSize(command, root);
 			}
 		} else if (isVisioMetadataEdit(command)) {
 			if (applyMetadataEdit(roots, command, check)) {
@@ -507,8 +519,13 @@ async function editVsdxTransaction(
 					? await applyInstanceGeometryEdit(roots, command, masterTemplate(pkg), check)
 					: applyGeometryEdit(roots, document!, command, check, masterMovePins);
 			for (const pageId of changedPages) dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			// A text height that follows the width (a text box, Resize with Text) is measured again.
+			if (command.type === 'resize-shape') await noteTextSize(command, roots.get(command.pageId)!);
 		}
 	}
+	// Cells that measure text kept their caches while geometry was recalculated.
+	for (const [pageId, root] of roots)
+		for (const shapeId of takeDeferredTextSizes(root)) clock.textSizes.push({ pageId, shapeId });
 	let totalBytes = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0);
 	let nodes = 0;
 	for (const [path, root] of dirty) {

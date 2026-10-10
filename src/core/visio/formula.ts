@@ -22,6 +22,15 @@ export interface VisioFormulaLimits {
 	 * are saved in (`Width*0.5+0.0015`). Off by default: callers judging units stay strict.
 	 */
 	bareLengths?: boolean;
+	/**
+	 * The extent of the shape's own text, in inches, for `TEXTWIDTH(TheText[, maximum])` and
+	 * `TEXTHEIGHT(TheText, width)`. Without it, or when it returns `undefined`, those functions
+	 * are unsupported.
+	 */
+	text?: {
+		width(maximum?: number): number | undefined;
+		height(width: number): number | undefined;
+	};
 }
 export type VisioFormulaAst =
 	| { kind: 'number'; value: number; unit: VisioFormulaUnit }
