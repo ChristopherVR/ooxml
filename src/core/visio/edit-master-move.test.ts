@@ -4,7 +4,7 @@ import { parseXml } from '../xml/index';
 import { editVsdx, type VisioEdit } from './edit';
 import { parseVsdx } from './parser';
 import { VisioPackageError } from './package-common';
-import { cell, fixture, rectangle, section, row, shape } from './test-fixtures';
+import { cell, fixture, rectangle, section, shape } from './test-fixtures';
 
 const locks = ['LockMoveX', 'LockMoveY', 'LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'];
 const dimensions = (inherited = false) =>
