@@ -772,6 +772,148 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "form/color-grid.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiColorGrid",
+					"tagName": "office-ui-color-grid",
+					"customElement": true,
+					"description": "`<office-ui-color-grid>`: Office's colour picker body. From the top: an optional `automatic-label` command (Automatic) and `none-label` command (No Fill, No Line), \"Theme Colors\" (ten columns, a base colour over its five lighter and darker variants, built from `themeColors`), \"Standard Colors\", \"Recent Colors\" when `recentColors` has any, and an optional `more-label` command (More Colors...). `value` (`#rrggbb`, `'none'` or `'automatic'`) marks the current choice. Choosing emits `office-color-pick` `{ color, source, label }`; the More Colors command emits `office-color-more`. Arrow keys move through the swatches and commands, Home and End jump to the ends; ArrowUp on the first row and ArrowDown on the last are left for a host menu. The element is only the grid: a product puts it in its own menu, popup or pane.",
+					"attributes": [
+						{
+							"name": "automatic-label"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "more-label"
+						},
+						{
+							"name": "none-label"
+						},
+						{
+							"name": "recent-heading"
+						},
+						{
+							"name": "standard-heading"
+						},
+						{
+							"name": "theme-heading"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "automaticLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "automatic-label"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "moreLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "more-label"
+						},
+						{
+							"kind": "field",
+							"name": "noneLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "none-label"
+						},
+						{
+							"kind": "field",
+							"name": "recentColors"
+						},
+						{
+							"kind": "field",
+							"name": "recentHeading",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "recent-heading"
+						},
+						{
+							"kind": "field",
+							"name": "standardColors"
+						},
+						{
+							"kind": "field",
+							"name": "standardHeading",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "standard-heading"
+						},
+						{
+							"kind": "field",
+							"name": "themeColors"
+						},
+						{
+							"kind": "field",
+							"name": "themeHeading",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "theme-heading"
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-color-more"
+						},
+						{
+							"name": "office-color-pick"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-color-grid",
+					"declaration": {
+						"name": "OfficeUiColorGrid"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "menu/command-search.ts",
 			"declarations": [
 				{
@@ -1501,7 +1643,7 @@
 					"name": "OfficeUiMenuButton",
 					"tagName": "office-ui-menu-button",
 					"customElement": true,
-					"description": "Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers, Align). With a `command` attribute it is a split button: the main part emits that command and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant=\"stacked\"`, `icon-only`, `disabled`, `main-disabled` (split command only), `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move; Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its `office-command` bubbles to the host.",
+					"description": "Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers, Align). With a `command` attribute it is a split button: the main part emits that command and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant=\"stacked\"`, `icon-only`, `disabled`, `main-disabled` (split command only), `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move; Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its `office-command` bubbles to the host. A child marked `data-menu-item` (a colour grid, say) takes part in that focus order through its own `focus()`.",
 					"attributes": [
 						{
 							"name": "command"

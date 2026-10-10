@@ -42,6 +42,7 @@ import { defineTaskPane } from './chrome/task-pane';
 import { defineTitleBar } from './chrome/title-bar';
 import { defineZoomSlider } from './form/zoom-slider';
 import { defineSymbolPicker } from './form/symbol-picker';
+import { defineColorGrid } from './form/color-grid';
 
 export {
 	defineAccount,
@@ -83,8 +84,15 @@ export {
 	defineToolbar,
 	defineZoomSlider,
 	defineSymbolPicker,
+	defineColorGrid,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
+export type {
+	OfficeColorPick,
+	OfficeColorPickEvent,
+	OfficeColorSource,
+	OfficeUiColorGrid,
+} from './form/color-grid';
 export type { OfficeCommandEvent } from './ribbon/button';
 export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog/dialog';
 export type { OfficeSelectOption } from './form/select';
@@ -240,6 +248,7 @@ export const CONTROL_DEFINERS = [
 	defineGallery,
 	defineCommentsPane,
 	defineSymbolPicker,
+	defineColorGrid,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */
