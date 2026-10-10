@@ -191,9 +191,10 @@ coarse pointers (44px targets through `--office-target-size`).
 
 A host application can add its own ribbon tabs after a product's tabs, as an
 Office add-in does (the ACROBAT tab in Visio and Excel). The tab is plain data,
-and the same descriptor works in every editor that has the `ribbonAddIns`
-property: today `<visio-viewer>`, `<xlsx-editor>` and `<docx-editor>`. The
-PowerPoint editor does not have it yet.
+and the same descriptor works in every editor: `ribbonAddIns` is a property of
+`<visio-viewer>`, `<xlsx-editor>` and `<docx-editor>` and a prop of each of their
+framework bindings, and a prop of the five PowerPoint viewers (which draw their
+own ribbon; see `pptx-ui-ribbon-add-in` and `viewers/pptx/docs/guide/customization.md`).
 
 ```ts
 import type { RibbonAddInTab } from 'ooxml-ui';
@@ -221,6 +222,11 @@ editor.addEventListener('office-ribbon-add-in', (event) => {
 - A command runs its `run` callback and then dispatches the bubbling, composed
   `office-ribbon-add-in` event (`{ tab, command }`) from the editor. It never
   reaches the product's own command router, Tell me or key tips.
+- The elements a panel is built from are defined on demand, and a panel whose
+  look did not change is kept across assignments, so passing a new array with
+  new callbacks on every render is cheap and never closes an open drop-down.
+- In the PowerPoint ribbon a drop-down (`items`) is drawn as its items, and the
+  phone toolbar does not list host tabs.
 - `size: 'small'` commands fill columns of three; `items` makes a drop-down.
   `icon` is a name from the shared icon set; `registerIcon` adds your own.
 - Assign a new array to change the tabs; an empty array removes them. A tab
