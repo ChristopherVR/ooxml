@@ -391,14 +391,19 @@ files may grow and exceeding the output limit fails without returning a result.
 
 Only VSDX drawing packages are admitted. Signed/macro-indicated packages,
 deleted targets, missing/ambiguous IDs, rich text, fields and unknown text markup
-are rejected. A stencil (master) instance, or a sub-shape of a group instance,
-accepts whole-text replacement: it gains a local `Text` element and nothing else,
-which is what native Visio 16 saves (`scripts/record-visio-instance-text.ps1`,
-checked by the optional `VISIO_NATIVE_INSTANCE_TEXT_DIR` test). The master's
-`LockTextEdit` applies unless the instance overrides it; master text with fields
-or rich markup is refused. A master that sizes itself from its text
-(`TEXTHEIGHT(TheText, ...)`) is recalculated by Visio on open; the saved size is
-kept until then. Text ranges and fields of instances remain unsupported. Replacement text must contain valid XML
+are rejected for local shapes. A stencil (master) instance, or a sub-shape of a
+group instance, follows what native Visio 16 saves
+(`scripts/record-visio-instance-text.ps1`, checked by the optional
+`VISIO_NATIVE_INSTANCE_TEXT_DIR` test): replacing all its text writes a plain
+local `Text` and nothing else, even over formatted master text; over master
+text with fields each inherited Field row is also marked deleted locally; a
+range edit (Find and Replace, editing around a field) works on the local `Text`
+or on a local copy of the master's that keeps its run and field markers. The
+master's `LockTextEdit` applies unless the instance overrides it. An instance
+with its own formatted text accepts range edits only. A master that sizes
+itself from its text (`TEXTHEIGHT(TheText, ...)`) is recalculated by Visio on
+open; the saved size is kept until then.
+Replacement text must contain valid XML
 characters and cannot contain carriage returns. Edited documents containing
 carriage-return text or tab/newline/carriage-return attribute values are rejected
 conservatively because this slice does not establish their serialization fidelity.

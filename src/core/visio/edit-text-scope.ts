@@ -1,6 +1,7 @@
 import type { VisioPackage } from './package';
 import type { VisioTextEdit } from './edit-commands';
-import { replacePlainText, type MasterTemplate } from './edit-text';
+import { replacePlainText } from './edit-text';
+import type { MasterTemplate } from './edit-text-instance';
 import { assertFormattingDependencies } from './edit-formatting-scope';
 import { masterShapes } from './edit-master-index';
 import { fail } from './package-common';
@@ -8,7 +9,7 @@ import { indexedPart, related, visioXml } from './parts';
 import { attribute, children } from './sheet';
 
 /** The master shape a page instance inherits from: the master's root, or one of its sub-shapes. */
-function masterTemplate(pkg: VisioPackage): MasterTemplate {
+export function masterTemplate(pkg: VisioPackage): MasterTemplate {
 	const missing = (): never =>
 		fail('UNSUPPORTED_TEXT_EDIT', 'The master of this stencil shape cannot be resolved.');
 	return async (masterId, masterShapeId) => {

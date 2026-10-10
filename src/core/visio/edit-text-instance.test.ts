@@ -92,15 +92,29 @@ describe('text of stencil (master) instances', () => {
 		);
 	});
 
-	it('refuses master text with fields or rich markup, and a missing master', async () => {
+	it('types plain text over formatted master text, and marks inherited fields deleted', async () => {
+		// Recorded from Visio 16: typing over bold master text saves a plain local Text.
 		const rich = master('<Text><cp IX="0"/>Rich\n</Text>');
-		await expect(type(await source(instance(), rich), 'Plain')).rejects.toMatchObject({
+		const plain = await type(await source(instance(), rich), 'Plain');
+		expect(await part(plain.bytes, PAGE)).toMatch(/<Cell N="PinY" V="6"\/><Text>Plain\n<\/Text>/);
+		// Typing over a field deletes each inherited Field row locally, then writes the text.
+		const field = master(
+			`<Section N="Field"><Row IX="0">${cell('Value', 1)}</Row><Row IX="1">${cell('Value', 2)}</Row></Section><Text>Page <fld IX="0">1</fld> of <fld IX="1">2</fld>\n</Text>`,
+		);
+		const typed = await type(await source(instance(), field), 'No fields');
+		expect(await part(typed.bytes, PAGE)).toMatch(
+			/<Section N="Field"><Row IX="0" Del="1"\/><Row IX="1" Del="1"\/><\/Section><Text>No fields\n<\/Text><\/Shape>/,
+		);
+		expect((await parseVsdx(typed.bytes)).pages[0]!.shapes[0]!.text.plainText).toBe('No fields');
+	});
+
+	it('refuses unknown master markup, local formatted text and a missing master', async () => {
+		const unknown = master('<Text><x:y xmlns:x="urn:x"/>Odd\n</Text>');
+		await expect(type(await source(instance(), unknown), 'Plain')).rejects.toMatchObject({
 			code: 'UNSUPPORTED_TEXT_EDIT',
 		});
-		const field = master(
-			`<Section N="Field">${`<Row IX="0">${cell('Value', 1)}</Row>`}</Section><Text>Page\n</Text>`,
-		);
-		await expect(type(await source(instance(), field), 'Plain')).rejects.toMatchObject({
+		const local = instance('<Text><cp IX="0"/>Mine\n</Text>');
+		await expect(type(await source(local), 'Plain')).rejects.toMatchObject({
 			code: 'UNSUPPORTED_TEXT_EDIT',
 		});
 		const orphan = await fixture({
@@ -111,23 +125,91 @@ describe('text of stencil (master) instances', () => {
 	});
 });
 
-// Optional: `scripts/record-visio-instance-text.ps1 -OutputDirectory <dir>` saves a real stencil
-// drop before and after Visio set its text; the edit must write the same Text element.
+describe('text ranges of stencil (master) instances', () => {
+	const ranges = (
+		bytes: Uint8Array,
+		expectedText: string,
+		start: number,
+		end: number,
+		text: string,
+	) =>
+		editVsdx(bytes, [
+			{
+				type: 'replace-text-ranges',
+				pageId: '0',
+				shapeId: '1',
+				expectedText,
+				ranges: [{ start, end, text }],
+			},
+		]);
+	const field = master(
+		`<Section N="Field"><Row IX="0">${cell('Value', 2)}</Row></Section><Text>Page <fld IX="0">2</fld>\n</Text>`,
+	);
+
+	it('edits around an inherited field in a local copy that keeps the marker', async () => {
+		// Recorded from Visio 16: "Page" to "Sheet" saves <Text>Sheet <fld IX='0'>2</fld></Text>.
+		const saved = await ranges(await source(instance(), field), 'Page 2', 0, 4, 'Sheet');
+		const page = await part(saved.bytes, PAGE);
+		expect(page).toMatch(/<Text>Sheet <fld IX="0">2<\/fld>\n<\/Text><\/Shape>/);
+		expect(page).not.toMatch(/<Section N="Field"/);
+		expect(await part(saved.bytes, MASTER)).toContain('<Text>Page <fld IX="0">2</fld>');
+	});
+
+	it('replaces part of inherited or local plain text and discards a copy that needs no change', async () => {
+		const inherited = await source(instance(), master('<Text>Old label\n</Text>'));
+		const saved = await ranges(inherited, 'Old label', 0, 3, 'New');
+		expect(await part(saved.bytes, PAGE)).toContain('<Text>New label\n</Text>');
+		const again = await ranges(saved.bytes, 'New label', 4, 9, 'title');
+		expect(await part(again.bytes, PAGE)).toContain('<Text>New title\n</Text>');
+		const same = await ranges(inherited, 'Old label', 0, 3, 'Old');
+		expect(same.changedParts).toEqual([]);
+	});
+
+	it('honours the master text lock', async () => {
+		const locked = master(cell('LockTextEdit', 1) + '<Text>Old label\n</Text>');
+		await expect(
+			ranges(await source(instance(), locked), 'Old label', 0, 3, 'New'),
+		).rejects.toMatchObject({
+			code: 'EDIT_PROTECTED_CELL',
+		});
+	});
+});
+
+// Optional: `scripts/record-visio-instance-text.ps1 -OutputDirectory <dir>` saves real stencil
+// drops before and after Visio edits their text; each edit must write what Visio wrote.
 const native = process.env.VISIO_NATIVE_INSTANCE_TEXT_DIR;
-it.skipIf(!native)(
-	'writes the Text element native Visio writes for a dropped stencil shape',
-	async () => {
-		const before = new Uint8Array(await readFile(join(native!, 'before.vsdx')));
-		const after = new Uint8Array(await readFile(join(native!, 'after.vsdx')));
-		const saved = await type(before, 'Typed on an instance', '1');
-		// An XML reader normalises the file's CRLF to a line feed, so compare the text that way.
-		const text = (xml: string) =>
-			/<Shape ID=["']1["'][^>]*>.*?<Text>(.*?)<\/Text>/s.exec(xml)?.[1]?.replace(/\r\n/g, '\n');
-		expect(text(await part(saved.bytes, PAGE))).toBe(text(await part(after, PAGE)));
-		const model = await parseVsdx(saved.bytes);
-		const expected = await parseVsdx(after);
-		expect(model.pages[0]!.shapes[0]!.text.plainText).toBe(
-			expected.pages[0]!.shapes[0]!.text.plainText,
+// An XML reader normalises the file's CRLF to a line feed, so compare shapes that way.
+const nativeShape = (xml: string, id: string) =>
+	new RegExp(`<Shape ID=["']${id}["'][^>]*>(.*?)</Shape>`, 's')
+		.exec(xml)?.[1]
+		?.replace(/\r\n/g, '\n')
+		.replace(/>\s+</g, '><')
+		.replace(/<Cell [^>]*\/>/g, '')
+		.replaceAll("'", '"');
+describe.skipIf(!native)('native Visio stencil-instance text', () => {
+	const load = async (name: string) => new Uint8Array(await readFile(join(native!, name)));
+	it('writes the Text element Visio writes for a dropped stencil shape', async () => {
+		const saved = await type(await load('before.vsdx'), 'Typed on an instance', '1');
+		expect(nativeShape(await part(saved.bytes, PAGE), '1')).toBe(
+			nativeShape(await part(await load('after.vsdx'), PAGE), '1'),
 		);
-	},
-);
+	});
+	it('matches Visio over formatted master text, over a field and around a field', async () => {
+		const before = await load('rich-before.vsdx');
+		const after = await part(await load('rich-after.vsdx'), PAGE);
+		const bold = await type(before, 'Typed over bold', '3');
+		expect(nativeShape(await part(bold.bytes, PAGE), '3')).toBe(nativeShape(after, '3'));
+		const over = await type(before, 'Typed over a field', '4');
+		expect(nativeShape(await part(over.bytes, PAGE), '4')).toBe(nativeShape(after, '4'));
+		const around = await editVsdx(before, [
+			{
+				type: 'replace-text-ranges',
+				pageId: '0',
+				shapeId: '5',
+				expectedText: (await parseVsdx(before)).pages[0]!.shapes[2]!.text.plainText,
+				ranges: [{ start: 0, end: 4, text: 'Sheet' }],
+			},
+		]);
+		expect(nativeShape(await part(around.bytes, PAGE), '5')).toBe(nativeShape(after, '5'));
+	});
+});

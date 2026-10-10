@@ -145,7 +145,11 @@ export class ViewerInlineText {
 			return;
 		const request = ++this.#request;
 		try {
-			const edit = visioTextDraftEdit(page, session.shapeId, draft);
+			// A local shape with several formatting runs keeps them: only the changed span is
+			// replaced. Typing over a stencil shape's inherited text replaces it whole, as in Visio.
+			const shape = visioTextShape(page, session.shapeId);
+			const rich = !!shape && shape.masterId === undefined && shape.text.runs.length > 1;
+			const edit = visioTextDraftEdit(page, session.shapeId, draft, rich ? { ranges: true } : {});
 			if (edit) await this.controller.applyEdits([edit]);
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))
