@@ -305,8 +305,9 @@ of a master that the drawing carries in its own Document Stencil.
   joins the master's layers (the Flowchart layer is added to the page for the
   flowchart masters) and grows an Auto Size page.
 - Connectors glue to a dropped instance and follow it when it moves or is
-  resized. The instance carries only its pin, as a fresh Visio drop does; its
-  size is read through its master.
+  resized. A dropped one-shape instance keeps its master's size beside its pin
+  as inherited caches, the form Visio saves for inherited cells; an instance
+  with only its pin, as a fresh Visio drop has, is read through its master.
 - Quick Shapes lists the drawing's own masters first. A stencil file the
   drawing docks that has no built-in stand-in is listed by its file name as
   unavailable. The stencil a drawing docks is the one showing; its Document

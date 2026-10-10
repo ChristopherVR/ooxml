@@ -19,6 +19,33 @@ export function nameMasterInstance(root: Element, shape: Element, master: Elemen
 	shape.setAttribute('Name', local + suffix);
 }
 
+/** Cells an instance caches so its size is known without opening its master. */
+const SIZE_CELLS = ['Width', 'Height', 'LocPinX', 'LocPinY'] as const;
+
+/**
+ * Keep the master's size beside the pin as inherited caches (`F="Inh"`), the form Visio itself
+ * saves for an inherited cell and keeps when it saves the drawing again. The instance still
+ * follows its master; edits that read a shape's box from the page alone (containers, Align,
+ * Position, layout) then take a dropped shape like a drawn one.
+ */
+export function cacheMasterInstanceSize(shape: Element, base: Element): void {
+	const source = cells(base);
+	const values = SIZE_CELLS.map((name) => Number(attribute(source.get(name), 'V')));
+	if (values.some((value) => !Number.isFinite(value)) || values[0]! <= 0 || values[1]! <= 0) return;
+	const doc = shape.ownerDocument!;
+	SIZE_CELLS.forEach((name, index) => {
+		const cell = doc.createElementNS(shape.namespaceURI, 'Cell');
+		cell.setAttribute('N', name);
+		cell.setAttribute('V', String(values[index]));
+		cell.setAttribute('U', 'IN');
+		cell.setAttribute('F', 'Inh');
+		const before = Array.from(shape.childNodes).find(
+			(child) => child.nodeType === 1 && (child as Element).localName !== 'Cell',
+		);
+		shape.insertBefore(cell, before ?? null);
+	});
+}
+
 /** Names of the master's layers its top-level shape belongs to, in the master's own order. */
 export function masterInstanceLayers(master: Element, base: Element): string[] {
 	const membership = (attribute(cells(base).get('LayerMember'), 'V') ?? '').trim();

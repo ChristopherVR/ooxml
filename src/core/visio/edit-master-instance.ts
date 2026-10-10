@@ -11,7 +11,11 @@ import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import type { EditVsdxResult } from './edit';
 import { dropStencilConnector } from './edit-stencil-connector-drop';
-import { masterInstanceLayers, nameMasterInstance } from './edit-master-instance-extras';
+import {
+	cacheMasterInstanceSize,
+	masterInstanceLayers,
+	nameMasterInstance,
+} from './edit-master-instance-extras';
 
 const MASTER_RELATIONSHIP = 'http://schemas.microsoft.com/visio/2010/relationships/master';
 /** Sub-shapes of one instance; a larger group master is refused rather than half-instanced. */
@@ -186,6 +190,8 @@ export async function editVsdxMasterInstance(
 		setCell(shape, 'PinY', edit.y);
 	}
 	nameMasterInstance(root, shape, master[0]!);
+	// One plain 2-D shape: its size is cached beside the pin (a group's follows its parts).
+	if (!oneD && !layout && type === 'Shape') cacheMasterInstanceSize(shape, base);
 	// A master without text gives its instance an empty text of its own, so the first character
 	// or paragraph format has somewhere to go, as a drawn shape's has.
 	if (!oneD && type === 'Shape' && !children(base, 'Text').length)

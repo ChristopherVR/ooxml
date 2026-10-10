@@ -71,9 +71,11 @@ files to the built-in stencils; `createVsdx({ stencils })` writes those windows.
 never opened.
 
 `insert-master-instance` drops a master on a page as Visio does: a shape that names the master and
-carries only `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master,
-and the page's relationship to the master part when it is missing. The instance is named as Visio
-names it (the master's name, then `Name.ID` once the page has that name), joins the master's
+carries `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master, and
+the page's relationship to the master part when it is missing. The instance is named as Visio
+names it (the master's name, then `Name.ID` once the page has that name), keeps a one-shape
+master's size beside the pin as inherited caches (`F="Inh"`, the form Visio saves and keeps, so
+edits that read a shape's box from the page take it like a drawn shape), joins the master's
 layers by name (missing layers are added to the page; not for group masters) and grows an Auto
 Size page. A master with several top-level shapes is dropped as the group Visio makes: a
 `Type="Group"` shape that names the master, as large as the shapes together, with each shape as a

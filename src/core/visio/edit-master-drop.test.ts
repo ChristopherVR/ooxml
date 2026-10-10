@@ -62,10 +62,10 @@ describe('dropping a built-in stencil master', () => {
 		const masters = await part(saved.bytes, 'visio/masters/masters.xml');
 		expect(masters).toContain('NameU="Process"');
 		expect(masters).toContain(`UniqueID="${visioBuiltInMaster('flowchart-process')!.uniqueId}"`);
-		// The instance names the master and carries only its pin; its size stays the master's.
+		// The instance names the master and keeps its pin; the size is an inherited cache.
 		const page = await part(saved.bytes, 'visio/pages/page1.xml');
 		expect(page).toContain('<Shape ID="1" Type="Shape" Master="1" NameU="Process" Name="Process">');
-		expect(page).not.toContain('N="Width"');
+		expect(page).toContain('<Cell N="Width" V="1" U="IN" F="Inh"/>');
 		expect(page).not.toContain('Geometry');
 		const model = await parseVsdx(saved.bytes);
 		expect(model.masters!.map((master) => master.name)).toEqual(['Process']);
