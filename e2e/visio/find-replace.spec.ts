@@ -1,7 +1,7 @@
 import { expect, test, type Locator } from '@playwright/test';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { replaceFixture } from '../../src/ui/src/visio/__fixtures__/replace-viewer';
-import { downloadCopy } from './ribbon';
+import { downloadCopy, ribbonGroup } from './ribbon';
 import { openDemo } from './demo-page';
 
 const idle = (viewer: Locator) =>
@@ -34,6 +34,7 @@ async function scope(viewer: Locator, name: string) {
 }
 async function selectAll(viewer: Locator) {
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
+	await ribbonGroup(viewer, 'Editing');
 	await viewer.getByRole('button', { name: 'Select', exact: true }).click();
 	await viewer.locator('[command="select-all"]').click();
 }
@@ -62,6 +63,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await load(await replaceFixture());
 		const original = await inventory(viewer);
 		await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
+		await ribbonGroup(viewer, 'Editing');
 		await viewer.getByRole('button', { name: 'Find', exact: true }).click();
 		await viewer.locator('[command="replace"]').click();
 		const bar = viewer.locator('office-ui-find-bar'),

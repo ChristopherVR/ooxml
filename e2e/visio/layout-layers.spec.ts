@@ -2,7 +2,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
-import { fileBackstage } from './ribbon';
+import { fileBackstage, ribbonGroup } from './ribbon';
 import { openDemo } from './demo-page';
 
 /** Three rectangles: the fixture's shape 1 at (4, 7), shape 2 at (2, 2.2) and shape 3 at (7, 2). */
@@ -48,6 +48,7 @@ async function home(viewer: Locator): Promise<void> {
 }
 async function selectAll(viewer: Locator): Promise<void> {
 	await home(viewer);
+	await ribbonGroup(viewer, 'Editing');
 	await viewer.locator('[data-menu="select"] button').first().click();
 	await viewer.locator('[command="select-all"]').click();
 	await expect(viewer.locator('svg.paper [data-selected="true"]')).toHaveCount(3);
@@ -94,6 +95,7 @@ test('Assign to Layer, Select by Type, Drawing Explorer and guides', async ({ pa
 	page.on('pageerror', (error) => errors.push(error.message));
 	const viewer = await open(page);
 	await selectAll(viewer);
+	await ribbonGroup(viewer, 'Editing');
 	await viewer.locator('[data-menu="layers"] button').first().click();
 	await viewer.locator('[command="assign-layer"]').click();
 	const layers = viewer.locator('.layer-assign-dialog');
@@ -122,6 +124,7 @@ test('Assign to Layer, Select by Type, Drawing Explorer and guides', async ({ pa
 	await expect.poll(() => pins(viewer)).not.toEqual(before);
 
 	await home(viewer);
+	await ribbonGroup(viewer, 'Editing');
 	await viewer.locator('[data-menu="select"] button').first().click();
 	await viewer.locator('[command="select-by-type"]').click();
 	const select = viewer.locator('.select-type-dialog');

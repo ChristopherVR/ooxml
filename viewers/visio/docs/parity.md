@@ -15,6 +15,28 @@ labelled drop-down buttons again at 760 px and narrower. Not matched: Visio's
 row scrolls with up and down arrows above the More button, and its Quick Styles
 row shows the theme's Variant Styles; this row is the first Theme Styles row.
 
+## Collapsing ribbon groups and the External Data window, 2026-10-10
+
+A window too narrow for the ribbon no longer scrolls it sideways under a
+scrollbar. Groups collapse into one button each, from the right (on Home:
+Editing first, Clipboard last), and the button opens the group's commands in a
+popup; Escape, a click elsewhere or a chosen command closes it. Host add-in
+tabs collapse the same way. Below 761 px the phone layout (the Tools
+disclosure) is used instead and nothing collapses. The External Data window is
+now the shared task pane (title and close button), with the recordset picker
+and link commands in a bar above the grid.
+
+Still different from Visio:
+
+- Visio first shrinks large commands to small ones and galleries to fewer
+  columns before it collapses a whole group; here a group is either full or one
+  button.
+- The Home tab is wider than Visio's (about 1620 px against about 1180 px), so
+  Editing already collapses on a 1600 px window where Visio still shows it.
+- Key tips do not reach commands inside a collapsed group.
+- The External Data window is docked under the drawing and cannot be floated,
+  resized or docked elsewhere.
+
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
 The groups and commands of every tab were read from Visio 16 through UI

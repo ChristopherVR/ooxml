@@ -20,11 +20,28 @@ export async function zoomPreset(viewer: Locator, percent: number): Promise<void
 		.click();
 }
 
+/**
+ * A window too narrow for the ribbon collapses groups into buttons, from the right. Opens the
+ * popup of `label` when that group is collapsed, so its commands can be clicked.
+ */
+export async function ribbonGroup(viewer: Locator, label: string): Promise<void> {
+	// The fit runs in an animation frame after a resize or a tab change.
+	await viewer.evaluate(
+		() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+	);
+	const group = viewer.locator(`.ribbon-content:not([hidden]) office-ui-ribbon-group[label="${label}"]`);
+	if ((await group.getAttribute('data-collapsed')) === null) return;
+	if ((await group.getAttribute('data-open')) !== null) return;
+	await group.getByRole('button', { name: label, exact: true }).click();
+	await expect(group).toHaveAttribute('data-open', '');
+}
+
 /** Home > Editing > Find > Find... opens the find bar, as Ctrl+F does. */
 export async function openFind(viewer: Locator): Promise<Locator> {
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 	const tools = viewer.locator('.ribbon-tools');
 	if ((await tools.getAttribute('open')) === null) await tools.locator('summary').click();
+	await ribbonGroup(viewer, 'Editing');
 	await viewer.getByRole('button', { name: 'Find', exact: true }).click();
 	await viewer.locator('office-ui-menu-item[label="Find..."]').click();
 	return viewer.getByRole('searchbox', { name: 'Search diagram text' });

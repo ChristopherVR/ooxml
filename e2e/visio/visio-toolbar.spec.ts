@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
 import { openDemo } from './demo-page';
+import { ribbonGroup } from './ribbon';
 
 test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', async ({
 	page,
@@ -68,6 +69,7 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await expect(ribbon('Bold')).toBeDisabled();
 	await expect(ribbon('Bold')).toHaveAttribute('title', /Select a shape to edit formatting/);
 	// Dropdowns open as top-layer menus that stay inside the window, even at the right edge.
+	await ribbonGroup(viewer, 'Editing');
 	await expect(viewer.getByRole('button', { name: 'Select', exact: true })).toBeEnabled();
 	await viewer.getByRole('button', { name: 'Find', exact: true }).click();
 	const menu = viewer.locator('office-ui-menu-button[data-menu="find"] >> [role="menu"]');

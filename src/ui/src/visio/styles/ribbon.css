@@ -29,6 +29,12 @@
 .ribbon-content {
 	min-height: 96px;
 	padding: 2px 2px 0;
+	/* Groups collapse into buttons when the window narrows (ribbon-overflow.ts), so the panel
+	   only scrolls when even those do not fit, and never shows a scrollbar. */
+	scrollbar-width: none;
+}
+.ribbon-content::-webkit-scrollbar {
+	display: none;
 }
 .ribbon-row {
 	display: flex;

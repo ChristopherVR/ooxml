@@ -138,6 +138,8 @@ export { assignKeyTips, runKeyTips } from './ribbon/keytip-run';
 export type { KeyTipTarget } from './ribbon/keytip-run';
 export { createRibbonOverflow } from './ribbon/overflow';
 export type { RibbonOverflow, RibbonOverflowOptions } from './ribbon/overflow';
+export { attachRibbonGroupOverflow, fitRibbonGroups } from './ribbon/group-overflow';
+export type { RibbonGroupOverflow, RibbonGroupOverflowOptions } from './ribbon/group-overflow';
 export type { OfficeRibbonSelectEvent } from './ribbon/ribbon-tabs';
 export type { OfficeRibbonActionsMode, OfficeRibbonModeEvent } from './ribbon/ribbon-actions';
 export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon/ribbon-section';

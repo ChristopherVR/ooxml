@@ -2,7 +2,7 @@ import { expect, test, type Locator } from '@playwright/test';
 import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
-import { downloadCopy } from './ribbon';
+import { downloadCopy, ribbonGroup } from './ribbon';
 import { openDemo } from './demo-page';
 
 async function fixture(scale: number, protectedSecond = false) {
@@ -56,6 +56,7 @@ async function inventory(viewer: Locator) {
 }
 async function selectAll(viewer: Locator) {
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
+	await ribbonGroup(viewer, 'Editing');
 	await viewer.getByRole('button', { name: 'Select', exact: true }).click();
 	await viewer.locator('[command="select-all"]').click();
 }

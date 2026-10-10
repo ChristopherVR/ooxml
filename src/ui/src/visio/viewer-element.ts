@@ -16,6 +16,7 @@ import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
 import { createTitleBar, renderTitleBar } from './title-bar';
+import { wireRibbonOverflow } from './ribbon-overflow';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
 import { ViewerReplace } from './viewer-replace';
 import { fitZoom } from './viewer-fit';
@@ -605,6 +606,8 @@ export class VisioViewerElement extends BaseElement {
 		const disposeFind = wireFindBar(this.#findBar, this.controller, () =>
 			this.#viewport.focus({ preventScroll: true }),
 		);
+		// Narrow windows collapse ribbon groups into buttons; add-in tabs are refitted as they change.
+		const overflow = wireRibbonOverflow(this.#toolbar);
 		const disposeReplace = this.#replace.wire();
 		const disposeEdit = this.#edit.wire();
 		const disposeInputs = wireViewerInputs(
@@ -641,6 +644,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeRulers();
 			disposeStencil();
 			disposeFind();
+			overflow.destroy();
 			disposeReplace();
 			disposeInputs();
 			disposeEdit();
