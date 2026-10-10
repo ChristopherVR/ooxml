@@ -214,7 +214,13 @@ export function updateTable(ctx: EditContext, s: number, ref: TableRef, patch: T
 			if (patch.columns) {
 				const width = table.range.end.col - table.range.start.col + 1;
 				if (patch.columns.length !== width) throw new Error('Give one column per table column.');
+				const before = table.columns;
 				table.columns = structuredClone(patch.columns);
+				// Replacing properties updates the existing columns, not their source identity.
+				for (const [index, column] of table.columns.entries()) {
+					const sourceId = before[index]?.sourceId;
+					if (column.sourceId === undefined && sourceId !== undefined) column.sourceId = sourceId;
+				}
 			}
 			if (patch.headerRow !== undefined) setHeaderRow(workbook, sheet, id, patch.headerRow);
 			if (patch.totalsRow !== undefined) setTotalsRow(workbook, sheet, id, patch.totalsRow);
