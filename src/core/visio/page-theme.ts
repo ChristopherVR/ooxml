@@ -21,6 +21,8 @@ export function visioPageTheme(
 	const accents = [1, 2, 3, 4, 5, 6].map(
 		(index) => drawingColor(theme.colors.get(`accent${index}`), theme.colors) ?? '#808080',
 	);
+	const light = drawingColor(theme.colors.get('lt1'), theme.colors);
+	const dark = drawingColor(theme.colors.get('dk1'), theme.colors);
 	const builtIn = VISIO_BUILT_IN_THEMES.find(
 		(entry) => entry.schemeId === id && entry.name === theme.name,
 	);
@@ -29,6 +31,8 @@ export function visioPageTheme(
 		...(builtIn ? { builtIn: builtIn.id } : {}),
 		variant,
 		accents,
+		...(light ? { light } : {}),
+		...(dark ? { dark } : {}),
 		variants: theme.variants.map((colors) =>
 			[1, 2, 3, 4, 5, 6, 7].map(
 				(index) => drawingColor(colors.get(String(index)), theme.colors) ?? '#808080',

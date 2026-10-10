@@ -17,8 +17,11 @@ import { setCell } from './edit-geometry-cells';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import { loadVisioThemes, type VisioTheme } from './theme';
-import { visioBuiltInTheme } from './theme-builtins';
+import { visioBuiltInTheme, visioThemeVariantColors } from './theme-builtins';
 import { visioThemeXml } from './theme-write';
+import { refreshThemeColorCaches } from './edit-page-theme-refresh';
+import { VISIO_UNTHEMED_COLORS, type VisioThemeColorValues } from './theme-color-ref';
+import { drawingColor } from './theme-color';
 import { recolorQuickStyledShapes } from './edit-page-theme-recolor';
 import type { VisioPageThemeEdit } from './edit-page-theme-commands';
 import type { EditVsdxResult } from './edit';
@@ -90,6 +93,8 @@ export async function editVsdxPageTheme(
 		);
 		if (attribute(root, 'NameU') !== 'No Style')
 			recolored = recolorQuickStyledShapes(contents, 'fallback', check);
+		// Without a theme the theme-colour formulas resolve to Visio's own colours.
+		recolored = refreshThemeColorCaches(contents, VISIO_UNTHEMED_COLORS, check) || recolored;
 	} else if (edit.theme) {
 		const source = visioBuiltInTheme(edit.theme);
 		const matches = themes.filter((theme) =>
@@ -139,12 +144,35 @@ export async function editVsdxPageTheme(
 		for (const name of ['VariationColorIndex', 'VariationStyleIndex'])
 			setCell(sheet, name, edit.variant ?? 0);
 		recolored = recolorQuickStyledShapes(contents, 'themed', check);
+		// dk1, lt1, dk2, lt2, accent1-6: the theme-colour formulas follow the new theme.
+		const hex = (index: number) => `#${source.colors[index]!.toLowerCase()}`;
+		const variant = visioThemeVariantColors(source, edit.variant ?? 0);
+		const colors: VisioThemeColorValues = { dark: hex(0), light: hex(1) };
+		for (let index = 1; index <= 6; index++) colors[`accent${index}` as 'accent1'] = hex(index + 3);
+		for (let index = 1; index <= 7; index++)
+			colors[`variant${index}` as 'variant1'] = `#${variant[index - 1]!.toLowerCase()}`;
+		recolored = refreshThemeColorCaches(contents, colors, check) || recolored;
 	} else {
 		const current = pageSelectedTheme(themes, sheet);
 		if (!current || current.variants.length <= edit.variant!)
 			fail('UNSUPPORTED_THEME_EDIT', 'The page uses no theme with this variant.');
 		for (const name of ['VariationColorIndex', 'VariationStyleIndex'])
 			setCell(sheet, name, edit.variant!);
+		// Only the variant colours change with the variant.
+		const colors: VisioThemeColorValues = {};
+		for (const [key, value] of current.variants[edit.variant!] ?? []) {
+			const color = drawingColor(value, current.colors);
+			if (color) colors[`variant${key}` as 'variant1'] = color;
+		}
+		for (const [slot, key] of [
+			['light', 'lt1'],
+			['dark', 'dk1'],
+			...[1, 2, 3, 4, 5, 6].map((index) => [`accent${index}`, `accent${index}`]),
+		] as [keyof VisioThemeColorValues, string][]) {
+			const color = drawingColor(current.colors.get(key), current.colors);
+			if (color) colors[slot] = color;
+		}
+		recolored = refreshThemeColorCaches(contents, colors, check);
 	}
 	if (recolored) dirty.set(contentsPath!, contents);
 	if (new Set([...parts.keys(), ...dirty.keys(), ...created.keys()]).size > limits.maxEntries)

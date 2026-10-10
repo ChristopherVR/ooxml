@@ -1,3 +1,4 @@
+import { isVisioThemeColorRef, type VisioThemeColorRef } from './theme-color-ref';
 import { fail } from './package-common';
 import {
 	isVisioQuickStyleColor,
@@ -30,6 +31,8 @@ export interface VisioTextFormatEdit extends Target, VisioTextFormatExtras {
 	fontFamily?: string;
 	/** Opaque custom text color. */
 	fontColor?: string;
+	/** The Theme Colors swatch `fontColor` came from: saved as its theme formula. */
+	fontColorTheme?: VisioThemeColorRef;
 	bold?: boolean;
 	italic?: boolean;
 	underline?: boolean;
@@ -44,7 +47,11 @@ export interface VisioTextFormatEdit extends Target, VisioTextFormatExtras {
 export interface VisioShapeFormatEdit extends Target {
 	type: 'format-shape';
 	fillColor?: string;
+	/** The Theme Colors swatch `fillColor` came from: saved as its theme formula. */
+	fillColorTheme?: VisioThemeColorRef;
 	lineColor?: string;
+	/** The Theme Colors swatch `lineColor` came from. */
+	lineColorTheme?: VisioThemeColorRef;
 	lineWeight?: number;
 	/** Built-in line pattern: 0 hides the line, 1 is solid, 2-23 are dashes. */
 	linePattern?: number;
@@ -85,9 +92,17 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 			fail('INVALID_EDIT', 'Formatting colors require six hexadecimal digits.');
 		return value.toLowerCase();
 	};
+	// A theme reference names where a colour came from; the colour itself is the cached value.
+	const themed = (value: unknown, colour: string | undefined): VisioThemeColorRef => {
+		if (!isVisioThemeColorRef(value) || colour === undefined || colour === 'none')
+			fail('INVALID_EDIT', 'A theme colour needs a theme slot and the colour it stands for.');
+		return { base: value.base, ...(value.tint ? { tint: value.tint } : {}) };
+	};
 	if (edit.type === 'format-text' && result.type === 'format-text') {
 		if (edit.fontSize !== undefined) result.fontSize = points(edit.fontSize, 1, 1000);
 		if (edit.fontColor !== undefined) result.fontColor = color(edit.fontColor);
+		if (edit.fontColorTheme !== undefined)
+			result.fontColorTheme = themed(edit.fontColorTheme, result.fontColor);
 		if (edit.indentLeft !== undefined) result.indentLeft = points(edit.indentLeft, 0, 7200);
 		if (edit.fontFamily !== undefined) {
 			if (
@@ -118,6 +133,10 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 	} else if (edit.type === 'format-shape' && result.type === 'format-shape') {
 		if (edit.fillColor !== undefined) result.fillColor = color(edit.fillColor, true);
 		if (edit.lineColor !== undefined) result.lineColor = color(edit.lineColor);
+		if (edit.fillColorTheme !== undefined)
+			result.fillColorTheme = themed(edit.fillColorTheme, result.fillColor);
+		if (edit.lineColorTheme !== undefined)
+			result.lineColorTheme = themed(edit.lineColorTheme, result.lineColor);
 		if (edit.lineWeight !== undefined) result.lineWeight = points(edit.lineWeight, 0, 100);
 		for (const [name, maximum] of [
 			['linePattern', 23],

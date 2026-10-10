@@ -1,3 +1,4 @@
+import { visioThemeColorFormula } from './theme-color-ref';
 import { attribute } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
@@ -92,7 +93,9 @@ export function textFormattingWrites(
 				name('Color'),
 				edit.fontColor,
 				undefined,
-				`RGB(${[1, 3, 5].map((i) => parseInt(edit.fontColor!.slice(i, i + 2), 16)).join(',')})`,
+				edit.fontColorTheme
+					? visioThemeColorFormula(edit.fontColorTheme)
+					: `RGB(${[1, 3, 5].map((i) => parseInt(edit.fontColor!.slice(i, i + 2), 16)).join(',')})`,
 			);
 			add(name('ColorTrans'), 0);
 		}

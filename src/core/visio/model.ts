@@ -350,6 +350,9 @@ export interface VisioPageTheme {
 	variant: number;
 	/** Accent 1-6. */
 	accents: string[];
+	/** The theme's Light (`lt1`) and Dark (`dk1`) colours, when it has them. */
+	light?: string;
+	dark?: string;
 	/** Each variant's seven variant colours. */
 	variants: string[][];
 }

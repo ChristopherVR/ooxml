@@ -285,7 +285,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			...(page.theme
 				? {
 						theme: {
-							...fields(page.theme, ['name', 'builtIn', 'variant']),
+							...fields(page.theme, ['name', 'builtIn', 'variant', 'light', 'dark']),
 							accents: list(page.theme.accents, 'theme colours', 64, (color) => color),
 							variants: list(page.theme.variants, 'theme variants', 16, (colors) =>
 								list(colors, 'theme colours', 64, (color) => color),

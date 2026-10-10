@@ -112,7 +112,11 @@ export function assertViewableDocument(model: VisioDocument): void {
 			label(page.theme.name, 256);
 			if (page.theme.builtIn !== undefined) label(page.theme.builtIn, 64);
 			member(page.theme.variant, [0, 1, 2, 3], 'theme variant');
-			const colors = [page.theme.accents, ...(page.theme.variants ?? [])];
+			const colors = [
+				page.theme.accents,
+				...(page.theme.variants ?? []),
+				[page.theme.light, page.theme.dark].filter((color) => color !== undefined),
+			];
 			if (!Array.isArray(page.theme.variants) || page.theme.variants.length > 4)
 				throw new Error('The scene has an invalid theme variant list.');
 			for (const list of colors)

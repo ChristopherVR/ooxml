@@ -1,3 +1,4 @@
+import { visioThemeColorFormula } from './theme-color-ref';
 import type { VisioShapeFormatEdit } from './edit-formatting-commands';
 import type { FormattingWrite } from './edit-formatting';
 import { assertNonGradientPaint } from './edit-formatting-paint-scope';
@@ -26,7 +27,13 @@ export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWri
 		add('FillPattern', edit.fillColor === 'none' ? 0 : 1, 'FillStyle');
 		add('FillGradientEnabled', 0, 'FillStyle');
 		if (edit.fillColor !== 'none') {
-			add('FillForegnd', edit.fillColor, 'FillStyle', undefined, rgb(edit.fillColor));
+			add(
+				'FillForegnd',
+				edit.fillColor,
+				'FillStyle',
+				undefined,
+				edit.fillColorTheme ? visioThemeColorFormula(edit.fillColorTheme) : rgb(edit.fillColor),
+			);
 			add('FillForegndTrans', 0, 'FillStyle');
 		}
 	}
@@ -48,7 +55,13 @@ export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWri
 			add(name, edit.fillTransparency / 100, 'FillStyle');
 	}
 	if (edit.lineColor !== undefined) {
-		add('LineColor', edit.lineColor, 'LineStyle', undefined, rgb(edit.lineColor));
+		add(
+			'LineColor',
+			edit.lineColor,
+			'LineStyle',
+			undefined,
+			edit.lineColorTheme ? visioThemeColorFormula(edit.lineColorTheme) : rgb(edit.lineColor),
+		);
 		add('LineColorTrans', 0, 'LineStyle');
 		add('LineGradientEnabled', 0, 'LineStyle');
 	}

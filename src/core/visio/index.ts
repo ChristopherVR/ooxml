@@ -188,6 +188,18 @@ export {
 } from './theme-builtins';
 export { visioThemeXml } from './theme-write';
 export {
+	VISIO_THEME_COLOR_SLOTS,
+	VISIO_UNTHEMED_COLORS,
+	isVisioThemeColorRef,
+	parseVisioThemeColorFormula,
+	resolveVisioThemeColor,
+	visioPageThemeColors,
+	visioThemeColorFormula,
+	type VisioThemeColorRef,
+	type VisioThemeColorSlot,
+	type VisioThemeColorValues,
+} from './theme-color-ref';
+export {
 	VISIO_BASIC_SHAPES,
 	isVisioBasicShape,
 	visioBasicShapeOutline,
