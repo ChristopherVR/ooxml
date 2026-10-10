@@ -12,8 +12,8 @@ export {
 export const MASTER_MIME = 'application/x-visio-viewer-master';
 
 /**
- * Visio's Shapes window: Stencils and Search views, More Shapes and Quick Shapes rows and the
- * open stencils (`shapes-sections.ts`). Masters are dragged onto the page; Enter adds one at the
+ * Visio's Shapes window: the Search shapes box, More Shapes and Quick Shapes rows and the open
+ * stencils (`shapes-sections.ts`). Masters are dragged onto the page; Enter adds one at the
  * page centre.
  */
 export function createShapesWindow(doc: Document): HTMLElement {
@@ -34,41 +34,30 @@ export function createShapesWindow(doc: Document): HTMLElement {
 	collapse.textContent = '‹';
 	heading.append(title, collapse);
 
-	const views = doc.createElement('div');
-	views.className = 'shapes-views';
-	views.setAttribute('role', 'tablist');
-	views.setAttribute('aria-label', 'Shapes views');
-	const view = (key: 'stencils' | 'search', label: string, selected: boolean) => {
-		const tab = doc.createElement('button');
-		tab.type = 'button';
-		tab.id = `shapes-${key}-tab`;
-		tab.dataset.shapesView = key;
-		tab.textContent = label;
-		tab.setAttribute('role', 'tab');
-		tab.setAttribute('aria-selected', String(selected));
-		tab.setAttribute('aria-controls', `shapes-${key}`);
-		tab.tabIndex = selected ? 0 : -1;
-		return tab;
-	};
-	views.append(view('stencils', 'Stencils', true), view('search', 'Search', false));
+	// Visio's Search shapes box sits under the title; typing swaps the stencils for the results.
+	const box = doc.createElement('div');
+	box.className = 'shapes-search-box';
+	const field = doc.createElement('input');
+	field.type = 'search';
+	field.className = 'shapes-search-field';
+	field.placeholder = 'Search shapes';
+	field.setAttribute('aria-label', 'Search shapes');
+	field.setAttribute('aria-controls', 'shapes-search');
+	field.autocomplete = 'off';
+	const glass = doc.createElement('office-ui-icon');
+	glass.setAttribute('name', 'search');
+	glass.setAttribute('aria-hidden', 'true');
+	box.append(field, glass);
 
 	const stencils = doc.createElement('div');
 	stencils.id = 'shapes-stencils';
-	stencils.setAttribute('role', 'tabpanel');
-	stencils.setAttribute('aria-labelledby', 'shapes-stencils-tab');
 	const menus = buildStencilsView(doc, stencils, pane);
 
 	const search = doc.createElement('div');
 	search.id = 'shapes-search';
 	search.hidden = true;
-	search.setAttribute('role', 'tabpanel');
-	search.setAttribute('aria-labelledby', 'shapes-search-tab');
-	const field = doc.createElement('input');
-	field.type = 'search';
-	field.className = 'shapes-search-field';
-	field.placeholder = 'Search for shapes';
-	field.setAttribute('aria-label', 'Search for shapes');
-	field.autocomplete = 'off';
+	search.setAttribute('role', 'region');
+	search.setAttribute('aria-label', 'Search results');
 	// Search covers Basic Shapes and every built-in stencil, open or not, as Visio's does.
 	const results = masterList(
 		doc,
@@ -76,32 +65,21 @@ export function createShapesWindow(doc: Document): HTMLElement {
 	);
 	const empty = doc.createElement('p');
 	empty.className = 'shapes-empty';
-	empty.textContent = 'No matching shapes in the built-in stencils.';
+	empty.textContent = 'No shapes match your search.';
 	empty.hidden = true;
 	field.addEventListener('input', () => {
 		const query = field.value.trim().toLowerCase();
 		let shown = 0;
 		for (const item of results.querySelectorAll<HTMLElement>('li')) {
-			item.hidden = !!query && !item.dataset.name!.toLowerCase().includes(query);
+			item.hidden = !item.dataset.name!.toLowerCase().includes(query);
 			if (!item.hidden) shown++;
 		}
 		empty.hidden = shown > 0;
+		search.hidden = !query;
+		stencils.hidden = !!query;
 	});
-	search.append(field, results, empty);
-
-	views.addEventListener('click', (event) => {
-		const tab = (event.target as Element).closest<HTMLButtonElement>('[data-shapes-view]');
-		if (!tab) return;
-		for (const candidate of views.querySelectorAll<HTMLButtonElement>('[data-shapes-view]')) {
-			const selected = candidate === tab;
-			candidate.setAttribute('aria-selected', String(selected));
-			candidate.tabIndex = selected ? 0 : -1;
-		}
-		stencils.hidden = tab.dataset.shapesView !== 'stencils';
-		search.hidden = !stencils.hidden;
-		if (!search.hidden) field.focus();
-	});
-	pane.append(heading, views, stencils, search, ...menus);
+	search.append(results, empty);
+	pane.append(heading, box, stencils, search, ...menus);
 	return pane;
 }
 

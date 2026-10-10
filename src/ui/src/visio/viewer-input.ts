@@ -67,6 +67,8 @@ export function wireViewerInputs(
 	controller: ViewerController,
 	fit: (mode: 'page' | 'width') => void,
 	announce: (message: string) => void = () => {},
+	/** Typing a character with one shape selected starts editing its text; true when it did. */
+	typeText: (character: string) => boolean = () => false,
 ): () => void {
 	const { viewport, zoomSlider } = controls;
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController,
@@ -93,6 +95,22 @@ export function wireViewerInputs(
 		'keydown',
 		(event) => {
 			if (nudge(event, controller, announce)) return;
+			if (
+				event.key.length === 1 &&
+				event.key !== ' ' &&
+				!event.ctrlKey &&
+				!event.metaKey &&
+				!event.altKey &&
+				!event.isComposing &&
+				!editableTarget(event) &&
+				controller.state.selectedShapes.length === 1 &&
+				controller.state.edit.sourceAvailable &&
+				typeText(event.key)
+			) {
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
 			const target = targetShape(event);
 			if (
 				target &&

@@ -91,7 +91,7 @@ export function shapeDetails(shape: VisioShape): DocumentFragment {
 		fragment.append(list);
 	} else {
 		const empty = document.createElement('p');
-		empty.textContent = 'No visible shape data.';
+		empty.textContent = 'No Shape Data';
 		fragment.append(empty);
 	}
 	const define = document.createElement('button');

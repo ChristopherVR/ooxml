@@ -52,22 +52,12 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 								checked: true,
 							},
 							{
-								id: 'inspector',
-								label: 'Inspector',
-								action: { type: 'pane', pane: 'inspector' },
-								checked: true,
-							},
-							{
 								id: 'shape-data',
 								label: 'Shape Data',
 								action: { type: 'reveal', panel: 'selection' },
+								checked: false,
 							},
 							{ id: 'layers-pane', label: 'Layers', action: { type: 'reveal', panel: 'layers' } },
-							{
-								id: 'notes',
-								label: 'Compatibility Notes',
-								action: { type: 'reveal', panel: 'notes' },
-							},
 							{ id: 'pan-zoom', label: 'Pan & Zoom', action: { type: 'panZoom' }, checked: false },
 							{
 								id: 'size-position',

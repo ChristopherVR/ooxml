@@ -15,7 +15,6 @@ export interface BackstageHost {
 	/** Raster PDF of the foreground pages, or a PNG of the current page (viewer-export). */
 	exportPicture(format: 'pdf' | 'png'): Promise<{ blob: Blob; pageIndex: number }>;
 	closeDocument(): void;
-	revealNotes(): void;
 	showOptions(): void;
 	announce(message: string): void;
 	noteCount(): number;
@@ -140,9 +139,6 @@ export class ViewerBackstage {
 		else if (action === 'page-setup') {
 			this.hide();
 			this.host.pageSetup?.();
-		} else if (action === 'notes') {
-			this.hide();
-			this.host.revealNotes();
 		}
 	}
 	#save(blob: Blob, name: string): void {
@@ -173,9 +169,7 @@ export class ViewerBackstage {
 				`${this.#base()}-${result.dirty ? 'edited' : 'original'}-copy.vsdx`,
 			);
 			this.hide();
-			this.host.announce(
-				'VSDX copy download requested. Native Visio compatibility is not verified.',
-			);
+			this.host.announce('Downloaded a copy of the drawing.');
 		} catch (error) {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}
@@ -258,7 +252,7 @@ export class ViewerBackstage {
 				? 'Legacy VSD preview (read only)'
 				: !state.edit.sourceAvailable
 					? state.document
-						? 'Model-only preview (read only)'
+						? 'Preview (read-only)'
 						: 'None'
 					: state.edit.dirty
 						? 'Edited copy (not saved)'
@@ -266,7 +260,7 @@ export class ViewerBackstage {
 		);
 		const notes = this.host.noteCount();
 		this.#root.querySelector('.backstage-note-count')!.textContent = notes
-			? `${notes} compatibility notes describe what this viewer approximates or omits.`
+			? `${notes === 1 ? 'One part' : `${notes} parts`} of this drawing ${notes === 1 ? 'is' : 'are'} shown approximately or not at all:`
 			: 'No compatibility notes.';
 		const busy = state.loading || state.edit.busy;
 		const blank = this.#root.querySelector<HTMLButtonElement>(
@@ -306,7 +300,5 @@ export class ViewerBackstage {
 			'[data-backstage-action^="export-"], [data-backstage-action="print"]',
 		))
 			node.disabled = !page || busy;
-		this.#root.querySelector<HTMLButtonElement>('[data-backstage-action="notes"]')!.disabled =
-			notes === 0;
 	}
 }

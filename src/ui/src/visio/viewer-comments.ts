@@ -236,7 +236,7 @@ export class ViewerComments {
 		const reason = !page
 			? 'Open a drawing first.'
 			: !state.edit.sourceAvailable
-				? 'Open a .vsdx file to add comments. Model-only documents are read only.'
+				? 'Open a .vsdx file to add comments.'
 				: !editable
 					? 'Wait for the current operation to finish.'
 					: '';

@@ -50,7 +50,7 @@ it('enables comments, reports, checks and subprocess commands honestly', async (
 	view.dispose();
 	const readOnly = await setup(false);
 	expect(readOnly.button('new-comment').disabled).toBe(true);
-	expect(readOnly.button('new-comment').title).toMatch(/read only/);
+	expect(readOnly.button('new-comment').title).toMatch(/Open a .vsdx file/);
 	expect(readOnly.button('shape-reports').disabled).toBe(false);
 	readOnly.dispose();
 });

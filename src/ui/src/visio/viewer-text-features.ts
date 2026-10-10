@@ -81,9 +81,7 @@ export class ViewerTextFeatures {
 	/** The shape text editor, when it holds the caret for the selected shape. */
 	#activeEditor(): HTMLTextAreaElement | undefined {
 		const editor = this.#editor;
-		return editor?.isConnected && !editor.disabled && editor.closest('details')?.open
-			? editor
-			: undefined;
+		return editor?.isConnected && !editor.disabled && !editor.hidden ? editor : undefined;
 	}
 	run(feature: VisioTextFeature): void {
 		const { state, page, editing, shapes, formattable, single } = this.#state();
@@ -194,7 +192,6 @@ export class ViewerTextFeatures {
 			this.#language.dialog.close();
 	}
 	#spelling(page: VisioPage): void {
-		const editor = this.root.querySelector<HTMLTextAreaElement>(EDITOR);
 		const state = this.controller.state;
 		const selected = state.selectedShape;
 		const texts: VisioShape[] = [];
@@ -206,17 +203,15 @@ export class ViewerTextFeatures {
 		};
 		visit(page.shapes);
 		const shape = texts.find((item) => item.id === selected?.id) ?? texts[0];
-		if (!editor || !shape) {
-			this.announce(
-				editor ? 'This page has no shape text to check.' : 'Spelling needs the shape text editor.',
-			);
+		if (!shape) {
+			this.announce('This page has no shape text to check.');
 			return;
 		}
 		if (shape.id !== selected?.id || state.selectedShapes.length !== 1)
 			this.controller.selectShape({ id: shape.id, name: shape.name, pageId: page.id });
 		this.reveal('edit', true);
 		this.announce(
-			`Spelling uses your browser's spell checker: misspelled words in "${shape.name || `Shape ${shape.id}`}" are underlined in the shape text editor. Right-click a word for suggestions, then Apply text. ${texts.length > 1 ? `${texts.length - 1} more shapes on this page have text.` : ''}`.trim(),
+			`Spelling uses your browser's spell checker: misspelled words in "${shape.name || `Shape ${shape.id}`}" are underlined in the shape. Right-click a word for suggestions, then press Esc to keep the change. ${texts.length > 1 ? `${texts.length - 1} more shapes on this page have text.` : ''}`.trim(),
 		);
 	}
 	wire(): () => void {
@@ -224,8 +219,8 @@ export class ViewerTextFeatures {
 			const target = event.composedPath()[0];
 			if (target instanceof HTMLTextAreaElement && target.matches(EDITOR)) this.#editor = target;
 		};
-		const pointer = () => {
-			this.#editor = undefined;
+		const pointer = (event: Event) => {
+			if (event.target !== this.#editor) this.#editor = undefined;
 		};
 		this.root.addEventListener('focusin', focus);
 		this.viewport.addEventListener('pointerdown', pointer, true);

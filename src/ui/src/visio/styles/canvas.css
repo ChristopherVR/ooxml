@@ -13,31 +13,79 @@
 	stroke-dasharray: 0.08 0.05;
 }
 
+/* Visio's selection: white handles with a grey outline on a thin grey frame. */
 .paper [data-line-endpoint],
 .paper [data-resize-handle],
 .rotation-overlay [data-rotation-handle] {
-	fill: var(--_vv-accent);
-	stroke: white;
-	stroke-width: 1.5px;
+	fill: #fff;
+	stroke: var(--_vv-handle, #7a7a7a);
+	stroke-width: 1.25px;
 	cursor: crosshair;
 	touch-action: none;
 	pointer-events: all;
 }
+.paper [data-resize-handle]:hover,
+.paper [data-line-endpoint]:hover,
+.rotation-overlay [data-rotation-handle]:hover {
+	fill: var(--_vv-accent-soft, #dfe5f6);
+	stroke: var(--_vv-accent);
+}
+.paper [data-resize-handle='n'],
+.paper [data-resize-handle='s'] {
+	cursor: ns-resize;
+}
+.paper [data-resize-handle='e'],
+.paper [data-resize-handle='w'] {
+	cursor: ew-resize;
+}
+.paper [data-resize-handle='ne'],
+.paper [data-resize-handle='sw'] {
+	cursor: nesw-resize;
+}
+.paper [data-resize-handle='nw'],
+.paper [data-resize-handle='se'] {
+	cursor: nwse-resize;
+}
+.rotation-overlay [data-rotation-handle] {
+	cursor: grab;
+}
 .paper [data-resize-frame] {
 	fill: none;
-	stroke: var(--_vv-accent);
+	stroke: var(--_vv-handle, #7a7a7a);
 	stroke-width: 1px;
 	pointer-events: none;
+}
+/*
+ * A selection with no frame or endpoint handles (several shapes, a group, a glued connector) is
+ * marked on the shapes themselves; a framed shape keeps its own outline, as in Visio.
+ */
+.viewport:not([data-selection-frame]) .paper [data-selected='true'] > [data-geometry] {
+	stroke: var(--_vv-accent) !important;
+	stroke-width: 0.025 !important;
+}
+.viewport:not([data-selection-frame]) .paper [role='group'][data-selected='true'] [data-geometry] {
+	stroke: var(--_vv-accent) !important;
+	stroke-dasharray: 0.06 0.04;
+}
+/* Handles step aside while a shape's text is edited in place. */
+.viewport[data-text-editing] [data-resize-overlay],
+.viewport[data-text-editing] .rotation-overlay,
+.viewport[data-text-editing] [data-line-endpoint] {
+	display: none;
 }
 .paper [data-resize-frame-preview] {
 	stroke-dasharray: 5 3;
 }
 .paper .endpoint-preview,
-.paper .rotation-preview,
-.rotation-overlay .rotation-stem {
+.paper .rotation-preview {
 	stroke: var(--_vv-accent);
 	stroke-width: 1.5px;
 	stroke-dasharray: 5 3;
+	pointer-events: none;
+}
+.rotation-overlay .rotation-stem {
+	stroke: var(--_vv-handle, #7a7a7a);
+	stroke-width: 1px;
 	pointer-events: none;
 }
 

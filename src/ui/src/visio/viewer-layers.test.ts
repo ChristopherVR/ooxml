@@ -256,10 +256,20 @@ describe('shared layer controls and rendering', () => {
 		document.body.append(host);
 		const viewer = mountViewer(host, { document: model() }),
 			root = viewer.element.shadowRoot!;
-		const panel = root.querySelector<HTMLDetailsElement>('.layer-controls')!;
+		const panel = root.querySelector<HTMLElement>('.layer-controls')!;
 		expect(panel.hidden).toBe(false);
-		expect(panel.querySelector('summary')!.textContent).toBe('Layers');
-		panel.open = true;
+		// Layer Properties shows the Layers view of the task pane.
+		root.querySelector('[command="layer-properties"]')!.dispatchEvent(
+			new CustomEvent('office-command', {
+				detail: { command: 'layer-properties' },
+				bubbles: true,
+				composed: true,
+			}),
+		);
+		const pane = root.querySelector<HTMLElement>('#inspector-pane')!;
+		expect(pane.hidden).toBe(false);
+		expect(pane.getAttribute('label')).toBe('Layers');
+		expect(panel.hasAttribute('data-active')).toBe(true);
 		let input = root.querySelector<HTMLInputElement>('input[data-page-id="1"]')!;
 		expect(input.checked).toBe(true);
 		expect(input.getAttribute('aria-label')).toContain('Layer 0');
@@ -270,7 +280,7 @@ describe('shared layer controls and rendering', () => {
 		input.dispatchEvent(new Event('change', { bubbles: true }));
 		input = root.querySelector<HTMLInputElement>('input[data-page-id="1"]')!;
 		expect(root.activeElement).toBe(input);
-		expect(panel.open).toBe(true);
+		expect(pane.hidden).toBe(false);
 		expect(root.querySelectorAll('svg [data-shape-id]')).toHaveLength(0);
 		expect(panel.textContent).toContain('override hidden');
 		root.querySelector<HTMLButtonElement>('[data-layer-reset="one"]')!.click();

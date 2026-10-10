@@ -141,7 +141,7 @@ it('rejects invalid drafts and any protected target with source and history unto
 	ui.press('paint-apply');
 	await ui.done();
 	await vi.waitFor(() =>
-		expect(dialog(ui).querySelector('[role="alert"]')!.textContent).toMatch(/EDIT_PROTECTED_CELL/),
+		expect(dialog(ui).querySelector('[role="alert"]')!.textContent).toMatch(/protection is active/),
 	);
 	expect(dialog(ui).open).toBe(true);
 	expect(ui.controller.state.edit.canUndo).toBe(false);

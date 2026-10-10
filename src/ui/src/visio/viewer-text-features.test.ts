@@ -174,12 +174,8 @@ it('marks the proofing language, keeps Thesaurus disabled and starts Spelling in
 	await view.done();
 	expect(view.edits[0]![0]).toMatchObject({ type: 'format-text', language: 1036 });
 	expect(view.shape().text.runs[0]!.language).toBe(1036);
+	// Spelling selects the first shape with text and opens it for in-place editing.
 	view.controller.clearSelection();
-	view.press('spelling');
-	expect(view.feedback.at(-1)).toMatch(/text editor/);
-	const editor = document.createElement('textarea');
-	editor.id = 'edit-text';
-	view.root.append(editor);
 	view.press('spelling');
 	expect(view.controller.state.selectedShape?.id).toBe('1');
 	expect(view.feedback.at(-1)).toMatch(/browser's spell checker/);

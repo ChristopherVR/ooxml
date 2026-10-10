@@ -258,11 +258,11 @@ describe('Visio ribbon commands', () => {
 		root.addEventListener('office-command', (event) => raw.push((event as CustomEvent).detail));
 		press('rectangle');
 		press('page-width');
-		press('inspector');
+		press('shapes');
 		expect(actions).toEqual([
 			{ type: 'tool', tool: 'rectangle' },
 			{ type: 'zoom', mode: 'width' },
-			{ type: 'pane', pane: 'inspector' },
+			{ type: 'pane', pane: 'shapes' },
 		]);
 		expect(raw).toEqual([]);
 	});
@@ -346,7 +346,7 @@ describe('Visio ribbon commands', () => {
 	it('keeps drawing and deletion unavailable for model-only documents', async () => {
 		const { controller, command, key, edits, settle } = await setup(false);
 		expect(command('rectangle').disabled).toBe(true);
-		expect(command('rectangle').title).toMatch(/model-only/i);
+		expect(command('rectangle').title).toMatch(/open a .vsdx file/i);
 		key({ key: '8', ctrlKey: true });
 		expect(command('pointer').getAttribute('pressed')).toBe('true');
 		controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
@@ -390,10 +390,12 @@ describe('Visio context menus', () => {
 		expect(viewer.controller.state.selectedShape?.id).toBe('s1');
 		const cut = menu.querySelector<HTMLElement & { disabled: boolean }>('[command="ctx-cut"]')!;
 		expect(cut.disabled).toBe(true);
-		expect(cut.getAttribute('title')).toMatch(/Model-only documents are read only/);
+		expect(cut.getAttribute('title')).toMatch(/Open a .vsdx file/);
 		menu.querySelector('[command="ctx-edit-text"]')!.shadowRoot!.querySelector('button')!.click();
 		expect(menu.open).toBe(false);
-		expect(root.querySelector<HTMLDetailsElement>('.edit-controls')!.open).toBe(true);
+		// Edit Text edits in place; this model-only drawing has no source to edit.
+		expect(root.querySelector('#edit-text')).toBeNull();
+		expect(root.querySelector('[data-status]')!.textContent).toBe('This drawing cannot be edited.');
 		root
 			.querySelector('.viewport')!
 			.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 5, clientY: 5 }));

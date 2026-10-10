@@ -12,6 +12,7 @@ import review from './review.css?raw';
 import data from './data.css?raw';
 import layout from './layout.css?raw';
 import textFeatures from './text-features.css?raw';
+import taskPane from './task-pane.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -33,6 +34,7 @@ export const canvasAndRibbonStyles = [
 	data,
 	layout,
 	textFeatures,
+	taskPane,
 	visioThemeBridge,
 ].join('\n');
 

@@ -41,7 +41,7 @@ export function wireStencil(
 		const page = state.document?.pages[state.pageIndex];
 		if (!master || !page) return queue;
 		if (!editable()) {
-			announce('Open a .vsdx file to add shapes. Model-only documents are read only.');
+			announce('Open a .vsdx file to add shapes.');
 			return queue;
 		}
 		const { size } = master;

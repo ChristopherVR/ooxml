@@ -171,10 +171,11 @@ export function createBackstage(doc: Document): HTMLElement {
 		facts.append(el(doc, 'dt', '', label), value);
 	}
 	const notes = el(doc, 'div', 'backstage-notes');
+	notes.hidden = true;
 	notes.append(
 		el(doc, 'h2', '', 'Compatibility'),
 		el(doc, 'p', 'backstage-note-count'),
-		action(doc, 'notes', 'View compatibility notes', 'What this viewer approximates or omits.'),
+		el(doc, 'ul', 'backstage-notes-list'),
 	);
 	const file = el(doc, 'h2', 'backstage-file');
 	file.dataset.info = 'name';

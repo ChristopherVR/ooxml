@@ -685,7 +685,7 @@ export class ViewerCommands {
 				: 'Open a .vsdx file to add text boxes.';
 		rectangle.title = state.edit.sourceAvailable
 			? 'Rectangle (Ctrl+8)'
-			: 'Rectangle (Ctrl+8): open a .vsdx file to draw. Model-only documents are read only.';
+			: 'Rectangle (Ctrl+8): open a .vsdx file to draw.';
 		box('grid').checked = this.#grid;
 		box('grid').disabled = !page;
 		box('ruler').checked = this.#ruler;

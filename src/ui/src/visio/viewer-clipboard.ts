@@ -41,8 +41,7 @@ export class ViewerClipboard {
 			: this.hasPromiseWrite() || typeof this.clipboard?.writeText === 'function';
 	}
 	private baseReason(state: ViewerState): string {
-		if (!state.edit.sourceAvailable)
-			return 'Open a .vsdx file. Model-only documents are read only.';
+		if (!state.edit.sourceAvailable) return 'Open a .vsdx file.';
 		if (state.loading || state.edit.busy || this.#pending)
 			return 'Wait for the current operation to finish.';
 		if (!state.document?.pages[state.pageIndex]) return 'Open a page before using the clipboard.';

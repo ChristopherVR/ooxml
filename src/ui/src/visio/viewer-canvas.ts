@@ -25,7 +25,7 @@ export class ViewerCanvas {
 		private readonly viewport: HTMLElement,
 		private readonly notes: HTMLUListElement,
 		private readonly notesPanel: HTMLElement,
-		private readonly inspector: HTMLDetailsElement,
+		private readonly inspector: HTMLElement,
 	) {}
 	get warnings(): readonly string[] {
 		return this.#warnings;
@@ -140,8 +140,6 @@ export class ViewerCanvas {
 			const inspected = selectedShape(state.document, selection, state.pageIndex);
 			if (inspected !== this.#inspected) {
 				this.#inspected = inspected;
-				this.inspector.hidden = !inspected;
-				if (inspected) this.inspector.open = true;
 				this.inspector
 					.querySelector('div')!
 					.replaceChildren(...(inspected ? [shapeDetails(inspected)] : []));

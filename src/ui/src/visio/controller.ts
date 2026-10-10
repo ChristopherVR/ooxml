@@ -809,7 +809,7 @@ export class ViewerController {
 	exportVsdx(): VsdxExportResult {
 		this.#assertAlive();
 		if (!this.#history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
-			throw new Error('Load a VSDX file before downloading a source-backed copy.');
+			throw new Error('Open a .vsdx file before downloading a copy.');
 		if (this.#state.edit.busy || this.#state.loading)
 			throw new Error('Wait for the current document operation before downloading.');
 		return this.#history.export();
@@ -966,7 +966,7 @@ export class ViewerController {
 		this.#assertAlive();
 		const history = this.#history;
 		if (!history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
-			throw new Error('Load a VSDX file before editing. Model-only documents are read only.');
+			throw new Error('Open a .vsdx file before editing.');
 		if (this.#state.loading || this.#state.edit.busy)
 			throw new Error('Another document operation is in progress.');
 		const target =

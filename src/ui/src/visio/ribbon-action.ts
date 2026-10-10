@@ -6,7 +6,12 @@ import type {
 	VisioConnectorRoute,
 	VisioShapeFormatEdit,
 } from 'ooxml-core/visio';
-import type { TextCaseMode, VisioArrangement, VisioRuleSetId, VisioLayoutStyle } from 'ooxml-core/visio/ui';
+import type {
+	TextCaseMode,
+	VisioArrangement,
+	VisioRuleSetId,
+	VisioLayoutStyle,
+} from 'ooxml-core/visio/ui';
 import type { VisioPageSetupCommand } from './page-setup-action';
 
 export type CanvasTool =

@@ -179,17 +179,13 @@ office-ui-status-bar.status {
 	padding: 0 8px 0 12px;
 	font-size: 11px;
 	background: var(--_vv-surface);
-	color: var(--_vv-muted);
+	color: var(--_vv-ink);
 }
 office-ui-status-item[value=''] {
 	display: none;
 }
 office-ui-status-item[data-page-status] {
 	color: var(--_vv-ink);
-}
-.status-message {
-	flex: 1;
-	min-width: 0;
 }
 .viewport[data-tool='ellipse'],
 .viewport[data-tool='ellipse'] .paper [data-shape-id],
@@ -271,10 +267,7 @@ path.draw-preview {
 		gap: 4px;
 		min-height: 48px;
 	}
-	office-ui-status-bar .notes-strip,
-	office-ui-status-bar .status-message,
-	office-ui-status-item[data-shape-status],
-	office-ui-status-item[data-page-status] {
+	office-ui-status-item:not([data-page-status]) {
 		display: none;
 	}
 	.zoom-controls {

@@ -109,19 +109,21 @@ describe("Visio's Shapes window", () => {
 		master('rectangle').click();
 		await settle();
 		expect(edits).toEqual([]);
-		expect(messages).toEqual([
-			'Open a .vsdx file to add shapes. Model-only documents are read only.',
-		]);
+		expect(messages).toEqual(['Open a .vsdx file to add shapes.']);
 	});
 
-	it('switches to Search and filters the stencil by name', async () => {
+	it('searches from the box under the title and filters every stencil by name', async () => {
 		const { pane } = await setup();
-		pane.querySelector<HTMLButtonElement>('[data-shapes-view="search"]')!.click();
-		expect(pane.querySelector<HTMLElement>('#shapes-stencils')!.hidden).toBe(true);
+		const stencils = pane.querySelector<HTMLElement>('#shapes-stencils')!;
+		const results = pane.querySelector<HTMLElement>('#shapes-search')!;
 		const field = pane.querySelector<HTMLInputElement>('.shapes-search-field')!;
-		expect(document.activeElement).toBe(field);
+		expect(field.placeholder).toBe('Search shapes');
+		expect(pane.querySelector('[data-shapes-view]')).toBeNull();
+		expect([stencils.hidden, results.hidden]).toEqual([false, true]);
 		field.value = 'star';
 		field.dispatchEvent(new Event('input'));
+		// Typing swaps the stencils for the results; clearing brings them back.
+		expect([stencils.hidden, results.hidden]).toEqual([true, false]);
 		const visible = () =>
 			[...pane.querySelectorAll<HTMLElement>('#shapes-search li')]
 				.filter((item) => !item.hidden)
@@ -134,5 +136,8 @@ describe("Visio's Shapes window", () => {
 		field.value = 'zzz';
 		field.dispatchEvent(new Event('input'));
 		expect(pane.querySelector<HTMLElement>('.shapes-empty')!.hidden).toBe(false);
+		field.value = '';
+		field.dispatchEvent(new Event('input'));
+		expect([stencils.hidden, results.hidden]).toEqual([false, true]);
 	});
 });

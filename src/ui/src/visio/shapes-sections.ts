@@ -116,7 +116,7 @@ export function buildStencilsView(
 	};
 	const more = row('shapes-more', 'More Shapes');
 	more.setAttribute('aria-haspopup', 'menu');
-	more.title = 'More Shapes: open a built-in stencil. Stencil files (.vssx) cannot be opened.';
+	more.title = 'More Shapes: open another stencil.';
 	const quickToggle = row('shapes-quick-toggle', 'Quick Shapes');
 	quickToggle.setAttribute('aria-expanded', 'false');
 	quickToggle.setAttribute('aria-controls', 'shapes-quick');

@@ -49,8 +49,7 @@ export class ViewerSubprocess {
 		return state.selectedShapes.map((shape) => shape.id);
 	}
 	reason(state: ViewerState, mode: Mode): string {
-		if (!state.edit.sourceAvailable)
-			return 'Open a .vsdx file to create subprocesses. Model-only documents are read only.';
+		if (!state.edit.sourceAvailable) return 'Open a .vsdx file to create subprocesses.';
 		if (state.loading || state.edit.busy) return 'Wait for the current operation to finish.';
 		const page = this.#page(state);
 		if (!page || page.isBackground) return 'Open a foreground page.';
