@@ -33,13 +33,16 @@ test('ribbon groups collapse into buttons from the right as the window narrows',
 		const count = (await collapsed(viewer)).length;
 		expect(count).toBeGreaterThanOrEqual(previous);
 		previous = count;
-		expect(await overflow(viewer)).toBeLessThanOrEqual(1);
+		// Collapsing is one group at a time, so the overflow settles a layout pass after the count.
+		await expect.poll(() => overflow(viewer)).toBeLessThanOrEqual(1);
 		// No scrollbar takes room under the commands.
-		expect(
-			await viewer
-				.locator('#home-panel')
-				.evaluate((panel) => (panel as HTMLElement).offsetHeight - panel.clientHeight),
-		).toBe(0);
+		await expect
+			.poll(() =>
+				viewer
+					.locator('#home-panel')
+					.evaluate((panel) => (panel as HTMLElement).offsetHeight - panel.clientHeight),
+			)
+			.toBe(0);
 	}
 	expect(previous).toBeGreaterThan(1);
 

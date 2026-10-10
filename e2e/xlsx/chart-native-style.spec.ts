@@ -276,7 +276,7 @@ for (const framework of FRAMEWORKS)
 		await transparency.fill('37');
 		await transparency.press('Tab');
 		await pane.getByRole('button', { name: 'Color', exact: true }).click();
-		await page.getByRole('menuitem', { name: 'Red', exact: true }).click();
+		await page.getByRole('menuitemradio', { name: 'Red', exact: true }).click();
 		await expect(chart.locator('linearGradient[id$="-s1"] stop').nth(1)).toHaveAttribute(
 			'stop-opacity',
 			'0.63',
