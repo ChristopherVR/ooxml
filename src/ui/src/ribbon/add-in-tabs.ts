@@ -4,42 +4,30 @@
  * product editor exposes the list as its `ribbonAddIns` property and renders it with
  * `syncRibbonAddIns`, so one descriptor works in every editor. An add-in command never reaches
  * the product's own command router: it runs its `run` callback and is announced with the
- * `office-ribbon-add-in` event, which leaves the editor's shadow tree.
+ * `office-ribbon-add-in` event, which leaves the editor's shadow tree. The descriptor itself is
+ * DOM-free and lives in `ooxml-core/ribbon`, so the binding contracts in the core share it.
  */
 
-/** One command of an add-in group. With `items` it is a drop-down of those commands. */
-export interface RibbonAddInCommand {
-	/** Unique within the tab; reported in the event detail. */
-	id: string;
-	label: string;
-	/** A name from the shared icon set (`registerIcon` adds the host's own). */
-	icon?: string;
-	/** `large` (the default) stacks the icon over the label; `small` commands fill columns of three. */
-	size?: 'large' | 'small';
-	/** Tooltip; the label when omitted. */
-	title?: string;
-	disabled?: boolean;
-	items?: readonly RibbonAddInCommand[];
-	run?: () => void;
-}
+import {
+	acceptedRibbonAddIns,
+	findRibbonAddInCommand,
+	RIBBON_ADD_IN_EVENT,
+	type RibbonAddInCommand,
+	type RibbonAddInCommandDetail,
+	type RibbonAddInGroup,
+	type RibbonAddInTab,
+} from 'ooxml-core/ribbon';
 
-export interface RibbonAddInGroup {
-	label: string;
-	commands: readonly RibbonAddInCommand[];
-}
+export {
+	RIBBON_ADD_IN_EVENT,
+	type RibbonAddInCommand,
+	type RibbonAddInCommandDetail,
+	type RibbonAddInGroup,
+	type RibbonAddInTab,
+} from 'ooxml-core/ribbon';
 
-export interface RibbonAddInTab {
-	/** Unique among the add-in tabs and different from the product's tab ids (`home`, `insert`...). */
-	id: string;
-	label: string;
-	/** Key tip of the tab, for products that show key tips. */
-	keytip?: string;
-	groups: readonly RibbonAddInGroup[];
-}
-
-export const RIBBON_ADD_IN_EVENT = 'office-ribbon-add-in';
 /** Bubbling and composed, dispatched from the ribbon when an add-in command is chosen. */
-export type OfficeRibbonAddInEvent = CustomEvent<{ tab: string; command: string }>;
+export type OfficeRibbonAddInEvent = CustomEvent<RibbonAddInCommandDetail>;
 
 export interface RibbonAddInOptions {
 	/** Class of each tab panel, for products that style their own panels (`ribbon-content`). */
@@ -92,9 +80,6 @@ function group(doc: Document, spec: RibbonAddInGroup): HTMLElement {
 	return el;
 }
 
-const flatten = (commands: readonly RibbonAddInCommand[]): RibbonAddInCommand[] =>
-	commands.flatMap((command) => [command, ...flatten(command.items ?? [])]);
-
 /** The tab ids a product ribbon already uses for panels that are not add-in tabs. */
 const ownTabs = (ribbon: HTMLElement): Set<string> =>
 	new Set(
@@ -117,14 +102,10 @@ export function syncRibbonAddIns(
 	options: RibbonAddInOptions = {},
 ): string[] {
 	const doc = ribbon.ownerDocument;
-	const taken = ownTabs(ribbon);
+	const accepted = acceptedRibbonAddIns(tabs, ownTabs(ribbon));
 	for (const child of [...ribbon.children])
 		if (child instanceof HTMLElement && 'addIn' in child.dataset) child.remove();
-	const added: string[] = [];
-	for (const tab of tabs) {
-		if (!tab.id || taken.has(tab.id)) continue;
-		taken.add(tab.id);
-		added.push(tab.id);
+	for (const tab of accepted) {
 		const panel = doc.createElement('div');
 		if (options.panelClass) panel.className = options.panelClass;
 		panel.id = `add-in-${tab.id}-panel`;
@@ -134,15 +115,12 @@ export function syncRibbonAddIns(
 		if (tab.keytip) panel.dataset.tabKeytip = tab.keytip;
 		const groups = tab.groups.map((spec) => group(doc, spec));
 		panel.append(...(options.wrap ? options.wrap(doc, tab, groups) : groups));
-		const commands = new Map(
-			flatten(tab.groups.flatMap((spec) => spec.commands)).map((command) => [command.id, command]),
-		);
 		panel.addEventListener('office-command', (event) => {
 			// The product's router never sees an add-in command.
 			event.stopPropagation();
 			const id = (event as CustomEvent<{ command?: string }>).detail?.command;
-			const command = id === undefined ? undefined : commands.get(id);
-			if (!command || command.disabled) return;
+			const command = findRibbonAddInCommand(tab, id);
+			if (!command) return;
 			command.run?.();
 			ribbon.dispatchEvent(
 				new CustomEvent(RIBBON_ADD_IN_EVENT, {
@@ -154,5 +132,5 @@ export function syncRibbonAddIns(
 		});
 		ribbon.append(panel);
 	}
-	return added;
+	return accepted.map((tab) => tab.id);
 }

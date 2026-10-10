@@ -226,6 +226,8 @@ editor.addEventListener('office-ribbon-add-in', (event) => {
 - Assign a new array to change the tabs; an empty array removes them. A tab
   whose id is empty, repeated or equal to a built-in tab id is skipped, so an
   add-in cannot replace a product tab.
+- The descriptor types and the event name are DOM-free and live in
+  `ooxml-core/ribbon`; `ooxml-ui` re-exports them.
 - Products render the list with `syncRibbonAddIns(ribbon, tabs, options)`
   (`src/ribbon/add-in-tabs.ts`); a new product editor calls it rather than
   building panels itself.
