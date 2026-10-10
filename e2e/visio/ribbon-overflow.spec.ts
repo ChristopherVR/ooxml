@@ -19,15 +19,7 @@ test('ribbon groups collapse into buttons from the right as the window narrows',
 	await expect(viewer.locator('svg.paper')).toHaveCount(1);
 	await expect.poll(() => collapsed(viewer)).toEqual([]);
 
-	const order = [
-		'Clipboard',
-		'Font',
-		'Paragraph',
-		'Tools',
-		'Shape Styles',
-		'Arrange',
-		'Editing',
-	];
+	const order = ['Clipboard', 'Font', 'Paragraph', 'Tools', 'Shape Styles', 'Arrange', 'Editing'];
 	let previous = 0;
 	for (const width of [1600, 1100, 800]) {
 		await page.setViewportSize({ width, height: 1000 });
@@ -78,14 +70,12 @@ test('ribbon groups collapse into buttons from the right as the window narrows',
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await expect
 		.poll(() =>
-			viewer
-				.locator('#view-panel')
-				.evaluate((panel) => panel.scrollWidth - panel.clientWidth <= 1),
+			viewer.locator('#view-panel').evaluate((panel) => panel.scrollWidth - panel.clientWidth <= 1),
 		)
 		.toBe(true);
-	await expect(viewer.locator('#view-panel office-ui-ribbon-group[data-collapsed]')).not.toHaveCount(
-		0,
-	);
+	await expect(
+		viewer.locator('#view-panel office-ui-ribbon-group[data-collapsed]'),
+	).not.toHaveCount(0);
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 	await page.setViewportSize({ width: 2000, height: 1000 });
 	await expect.poll(() => collapsed(viewer)).toEqual([]);

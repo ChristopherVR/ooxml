@@ -160,7 +160,9 @@ export function attachRibbonGroupOverflow(
 		view && 'ResizeObserver' in view ? new view.ResizeObserver(() => schedule(false)) : undefined;
 	// A panel added, removed or shown (a tab chosen in code) changes which groups are measured.
 	const mutation =
-		view && 'MutationObserver' in view ? new view.MutationObserver(() => schedule(true)) : undefined;
+		view && 'MutationObserver' in view
+			? new view.MutationObserver(() => schedule(true))
+			: undefined;
 	resize?.observe(ribbon);
 	watch = () => {
 		mutation?.disconnect();

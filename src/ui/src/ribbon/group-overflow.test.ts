@@ -116,7 +116,11 @@ describe('attachRibbonGroupOverflow', () => {
 		const button = paragraph.querySelector('office-ui-button')!;
 		button.addEventListener('office-command', (event) => event.stopPropagation());
 		button.dispatchEvent(
-			new CustomEvent('office-command', { detail: { command: 'x' }, bubbles: true, composed: true }),
+			new CustomEvent('office-command', {
+				detail: { command: 'x' },
+				bubbles: true,
+				composed: true,
+			}),
 		);
 		await Promise.resolve();
 		expect(paragraph.hasAttribute('data-open')).toBe(false);

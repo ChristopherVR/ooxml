@@ -29,7 +29,9 @@ export async function ribbonGroup(viewer: Locator, label: string): Promise<void>
 	await viewer.evaluate(
 		() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
 	);
-	const group = viewer.locator(`.ribbon-content:not([hidden]) office-ui-ribbon-group[label="${label}"]`);
+	const group = viewer.locator(
+		`.ribbon-content:not([hidden]) office-ui-ribbon-group[label="${label}"]`,
+	);
 	if ((await group.getAttribute('data-collapsed')) === null) return;
 	if ((await group.getAttribute('data-open')) !== null) return;
 	await group.getByRole('button', { name: label, exact: true }).click();
