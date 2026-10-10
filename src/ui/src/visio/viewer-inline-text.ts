@@ -237,5 +237,12 @@ export class ViewerInlineText {
 		style.height = `${Math.max(height, content)}px`;
 		const align = this.input.dataset.verticalAlign;
 		style.paddingTop = `${align === 'top' ? 0 : align === 'bottom' ? free : free / 2}px`;
+		// Text taller than the shape grows the frame the way the shape will: around its middle,
+		// or away from the edge the text is aligned to. A shape sized by its text takes that size
+		// when the edit is saved.
+		const extra = Math.max(0, content - height);
+		const shift = align === 'top' ? 0 : align === 'bottom' ? extra : extra / 2;
+		if (shift)
+			style.top = `${(rect ? rect.top - box.top : 16) + this.viewport.scrollTop - shift}px`;
 	}
 }

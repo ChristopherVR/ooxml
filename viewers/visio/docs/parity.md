@@ -85,6 +85,55 @@ Still refused, each with a plain sentence:
   stores the style on parts without text.
 - Groups drawn on the page (not from a stencil) still move but do not resize.
 
+## Shapes that size themselves from their text, 2026-10-10
+
+A shape whose size follows its text now follows it here too: a text box whose
+height is `TEXTHEIGHT(TheText, Width)`, a label as wide as `TEXTWIDTH(TheText)`,
+and the flowchart shapes' Resize with Text. After a text edit, a font, size or
+weight change, a text block change or a resize, the size and everything that
+follows from it (pin, text block, geometry, connection points, the menu cells
+that show or hide Resize with Text) is computed again, and connectors glued to
+the shape are laid out again. On a stencil shape the new values are saved as
+caches of the master's formulas, which stay in effect.
+
+Recorded from Visio 16: TEXTWIDTH is the widest line from the font's own
+advance widths, without hinting or kerning, plus the advance of one space and
+the left and right margins. TEXTHEIGHT is 120% of the font size per line
+(or the paragraph's own line spacing) plus the top and bottom margins, wrapped
+at the given width less the side margins.
+
+Measured against 192 recorded strings (Calibri, Arial and Segoe UI, regular and
+bold, 8 to 24 pt, with and without margins): every width is within 0.011 pt of
+Visio's. Of 960 wrapped heights, 948 are equal and 12 are left undecided. For a
+flowchart Process shape that Visio grew for a long label, shrinking it and
+typing the label again writes the same cached values Visio wrote, cell for
+cell. Four drawings saved here (11 pt, regular and bold) reopened in Visio with
+the height Visio itself computes.
+
+Kept at the saved size, with a note in the edit's diagnostics, instead of
+writing a doubtful size:
+
+- A font the measurements do not cover. Built in: Calibri, Calibri Light,
+  Arial, Segoe UI and Times New Roman, regular and bold, printable ASCII. In
+  the browser other installed fonts, italics and other characters are measured
+  with the browser's fonts at a 1% tolerance; a font that is not installed is
+  never measured. That browser path is not compared with Visio.
+- A font that is not known for sure: a missing font cell, or one taken from a
+  theme's font scheme. A themed font where no font theme is selected resolves
+  to the No Style root font, as in Visio.
+- A line that fits or overflows by less than the tolerance (0.05% with the
+  built-in tables).
+- Bulleted paragraphs, tab characters, right-to-left paragraphs, superscript,
+  subscript and small caps.
+- A size formula that needs more than arithmetic around the two text
+  functions, another shape whose formulas read the resized shape, and a glued
+  connector that cannot be laid out again.
+
+Not done: paragraph spacing and indents are applied as modelled but were not
+recorded from Visio. While typing, only the editing frame grows (around the
+shape's middle, or away from the edge the text is aligned to); the shape takes
+its new size when the text is saved.
+
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 
 Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
@@ -308,10 +357,9 @@ Not done, each refused with a message instead of a wrong result:
 - Deleting, duplicating, copying, reordering and Change Shape on stencil shapes.
 - A master formula outside plain arithmetic on the shape's own cells, when a
   drawn cell depends on it.
-- A stencil shape whose master sizes it from its text keeps its saved size
-  after its text changes; Visio recalculates it. A right-click entry such as
-  Resize with Text can stay hidden in Visio until the shape is next changed
-  there.
+- A stencil shape whose master sizes it from its text follows the text only
+  where the text can be measured (see the section on shapes that size
+  themselves from their text); otherwise it keeps its saved size.
 
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
