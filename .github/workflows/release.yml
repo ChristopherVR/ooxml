@@ -495,3 +495,44 @@ jobs:
         with:
           node-version: 24
       - run: node scripts/check-published.mjs --wait-minutes 20
+
+  # Attaches each published tarball and a keyless sigstore bundle to its GitHub release, so the
+  # release assets are signed (OpenSSF Scorecard "Signed-Releases"). It runs after the packages are
+  # verifiable on the registry and never gates publishing: a failure here leaves the npm release
+  # intact and only the signatures missing. Re-run it with a `tag` dispatch.
+  sign-release:
+    name: sign release assets
+    needs: [release, publish, verify-published]
+    if: always() && !cancelled() && needs.publish.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # uploads the release assets
+      id-token: write # keyless sigstore signing with the workflow identity
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.tag == '' && needs.release.outputs.release_sha || github.sha }}
+          persist-credentials: false # gh authenticates with GH_TOKEN; git needs no credentials
+
+      - name: Download release plan
+        if: inputs.tag == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-plan-${{ github.run_id }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign and attach the release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            node scripts/sign-release-assets.mjs --tag "$INPUT_TAG"
+          else
+            node scripts/sign-release-assets.mjs --plan release-plan.json
+          fi
