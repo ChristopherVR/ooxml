@@ -111,7 +111,7 @@ for (const [index, framework] of [
 			'stroke',
 			'none',
 		);
-		await pickColor(viewer, 'line', '#4472c4');
+		await pickColor(viewer, 'line', '#0070c0');
 		await idle(viewer);
 		expect((await inventory(viewer)).shapes.map((shape) => shape.line)).toEqual([0, 0]);
 		const before = await inventory(viewer);

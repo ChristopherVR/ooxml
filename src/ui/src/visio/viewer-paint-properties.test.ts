@@ -31,7 +31,7 @@ it('exposes native line choices without color or weight implicitly enabling No L
 	await ui.done();
 	expect(ui.shape().style.linePattern).toBe(0);
 	expect(ui.grid('line').value).toBe('none');
-	ui.pickColor('line', '#4472c4');
+	ui.pickColor('line', '#0070c0');
 	await ui.done();
 	ui.press('line-weight-3');
 	await ui.done();

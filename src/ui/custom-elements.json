@@ -779,7 +779,7 @@
 					"name": "OfficeUiColorGrid",
 					"tagName": "office-ui-color-grid",
 					"customElement": true,
-					"description": "`<office-ui-color-grid>`: Office's colour picker body. From the top: an optional `automatic-label` command (Automatic) and `none-label` command (No Fill, No Line), \"Theme Colors\" (ten columns, a base colour over its five lighter and darker variants, built from `themeColors`), \"Standard Colors\", \"Recent Colors\" when `recentColors` has any, and an optional `more-label` command (More Colors...). `value` (`#rrggbb`, `'none'` or `'automatic'`) marks the current choice. Choosing emits `office-color-pick` `{ color, source, label }`; the More Colors command emits `office-color-more`. Arrow keys move through the swatches and commands, Home and End jump to the ends; ArrowUp on the first row and ArrowDown on the last are left for a host menu. The element is only the grid: a product puts it in its own menu, popup or pane.",
+					"description": "`<office-ui-color-grid>`: Office's colour picker body. From the top: an optional `automatic-label` command (Automatic) and `none-label` command (No Fill, No Line), \"Theme Colors\" (ten columns, a base colour over its five lighter and darker variants, built from `themeColors`), \"Standard Colors\" (preceded by the `extraColors` row when a product has one, such as Visio's variant colours), \"Recent Colors\" when `recentColors` has any, and an optional `more-label` command (More Colors...). `value` (`#rrggbb`, `'none'` or `'automatic'`) marks the current choice. `themeNames` renames the ten columns. Choosing emits `office-color-pick` `{ color, source, label, theme?, index? }` (a theme swatch reports its column and variant, so a product can save a theme reference instead of the colour); the More Colors command emits `office-color-more`. Arrow keys move through the swatches and commands, Home and End jump to the ends; ArrowUp on the first row and ArrowDown on the last are left for a host menu. The element is only the grid: a product puts it in its own menu, popup or pane.",
 					"attributes": [
 						{
 							"name": "automatic-label"
@@ -824,6 +824,10 @@
 							"type": {
 								"text": "boolean"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "extraColors"
 						},
 						{
 							"kind": "field",
@@ -883,6 +887,10 @@
 								"text": "string"
 							},
 							"attribute": "theme-heading"
+						},
+						{
+							"kind": "field",
+							"name": "themeNames"
 						},
 						{
 							"kind": "field",

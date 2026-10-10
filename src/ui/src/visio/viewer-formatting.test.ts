@@ -60,9 +60,9 @@ it('uses shared font combos, size stepping, fill colors and line weights', async
 	ui.pickColor('fill', '#ff0000');
 	await ui.done();
 	expect(ui.shape().style.fill).toBe('#ff0000');
-	ui.pickColor('line', '#4472c4');
+	ui.pickColor('line', '#0070c0');
 	await ui.done();
-	expect(ui.shape().style.lineColor).toBe('#4472c4');
+	expect(ui.shape().style.lineColor).toBe('#0070c0');
 	ui.press('line-weight-3');
 	await ui.done();
 	expect(ui.shape().style.lineWidth * 72).toBeCloseTo(3);
@@ -194,9 +194,9 @@ it('allows fill and line changes while retaining mixed text and enabling text fo
 	)!;
 	expect(fillMenu.disabled).toBe(false);
 	expect(fillMenu.title).toMatch(/source formulas and protection/);
-	ui.pickColor('fill', '#4472c4');
+	ui.pickColor('fill', '#0070c0');
 	await ui.done();
-	expect(ui.shape().style.fill).toBe('#4472c4');
+	expect(ui.shape().style.fill).toBe('#0070c0');
 	ui.pickColor('line', '#ff0000');
 	await ui.done();
 	expect(ui.shape().style.lineColor).toBe('#ff0000');

@@ -10,7 +10,7 @@ import {
 	type PaneTarget,
 } from './format-pane-view';
 import type { VisioFormattingAction, VisioRibbonAction } from './ribbon-action';
-import { colorAction, commonColor } from './ribbon-color-menu';
+import { colorAction, commonColor, pickedThemeColor } from './ribbon-color-menu';
 import { styleSelection, type ViewerColorMenus } from './viewer-color-menus';
 
 type Patch = Omit<VisioShapeFormatEdit, 'type' | 'pageId' | 'shapeId'>;
@@ -96,7 +96,8 @@ export class ViewerFormatPane {
 				(event) => {
 					event.stopPropagation();
 					this.#toggleGrid(part, false);
-					this.run(colorAction(target, (event as CustomEvent<OfficeColorPick>).detail.color));
+					const pick = (event as CustomEvent<OfficeColorPick>).detail;
+					this.run(colorAction(target, pick.color, pickedThemeColor(pick)));
 				},
 				options,
 			);

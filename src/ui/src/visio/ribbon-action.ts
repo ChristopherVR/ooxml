@@ -1,3 +1,4 @@
+import type { VisioThemeColorRef } from 'ooxml-core/visio';
 import type {
 	VisioBuiltInThemeId,
 	VisioCalloutStyle,
@@ -27,7 +28,7 @@ export type CanvasTool =
 	| 'pencil';
 export type VisioFormattingAction =
 	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' | 'strikethrough' }
-	| { type: 'font-color'; value?: string }
+	| { type: 'font-color'; value?: string; theme?: VisioThemeColorRef }
 	| { type: 'text-bullets' }
 	/** Home > Paragraph > Rotate Text: the text block turns 90 degrees counter-clockwise. */
 	| { type: 'text-rotate' }

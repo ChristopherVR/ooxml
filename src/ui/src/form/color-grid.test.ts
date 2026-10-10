@@ -85,7 +85,7 @@ describe('office-ui-color-grid', () => {
 		expect(picked).toEqual([
 			{ color: 'automatic', source: 'automatic', label: 'Automatic' },
 			{ color: 'none', source: 'none', label: 'No Fill' },
-			{ color: '#ed7d31', source: 'theme', label: 'Accent 2' },
+			{ color: '#ed7d31', source: 'theme', label: 'Accent 2', theme: { column: 5 } },
 			{ color: '#7030a0', source: 'standard', label: 'Purple' },
 			{ color: '#abcdef', source: 'recent', label: '#ABCDEF' },
 		]);
@@ -135,6 +135,41 @@ describe('office-ui-color-grid', () => {
 		expect(active().dataset.command).toBe('none');
 		key(active(), 'Escape');
 		expect(host).toHaveBeenCalledTimes(2);
+	});
+
+	it('takes product column names and an extra row, and reports where a swatch came from', () => {
+		const grid = make((el) => {
+			el.themeNames = ['White', 'Black', 'Light', 'Dark'];
+			el.themeColors = ['#ffffff', '#000000', '#ffffff', '#000000'];
+			el.extraColors = [
+				{ hex: '#123456', label: 'Variant Accent 1' },
+				{ hex: '#654321', label: 'Variant Accent 2' },
+			];
+		});
+		const picked: OfficeColorPick[] = [];
+		grid.addEventListener('office-color-pick', (event) =>
+			picked.push((event as CustomEvent<OfficeColorPick>).detail),
+		);
+		// Missing names fall back to the Office ones.
+		expect(buttons(grid, '[data-source="theme"]')[2]!.title).toBe('Light');
+		expect(buttons(grid, '[data-source="theme"]')[4]!.title).toBe('Accent 1');
+		// The extra row sits between the variants and Standard Colors, with no heading of its own.
+		const extra = buttons(grid, '[data-source="extra"]');
+		expect(extra.map((button) => button.title)).toEqual(['Variant Accent 1', 'Variant Accent 2']);
+		expect(
+			[...grid.shadowRoot!.querySelectorAll('.heading')].map((heading) => heading.textContent),
+		).toEqual(['Theme Colors', 'Standard Colors']);
+		buttons(grid, '[aria-label="Dark, Lighter 50%"]')[0]!.click();
+		extra[1]!.click();
+		expect(picked).toEqual([
+			{
+				color: '#808080',
+				source: 'theme',
+				label: 'Dark, Lighter 50%',
+				theme: { column: 3, variant: { kind: 'lighter', percent: 50 } },
+			},
+			{ color: '#654321', source: 'extra', label: 'Variant Accent 2', index: 1 },
+		]);
 	});
 
 	it('does nothing while disabled', () => {

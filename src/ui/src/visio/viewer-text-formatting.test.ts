@@ -189,13 +189,13 @@ it('sets mixed-selection toggles together and preserves all selected targets thr
 	expect(
 		ui.controller.state.document!.pages[0]!.shapes.every((shape) => !shape.text.runs[0]?.bold),
 	).toBe(true);
-	ui.pickColor('fill', '#4472c4');
+	ui.pickColor('fill', '#0070c0');
 	await ui.done();
 	expect(ui.edits.at(-1)).toHaveLength(2);
 	expect(
-		ui.controller.state.document!.pages[0]!.shapes.every((shape) => shape.style.fill === '#4472c4'),
+		ui.controller.state.document!.pages[0]!.shapes.every((shape) => shape.style.fill === '#0070c0'),
 	).toBe(true);
-	expect(ui.grid('fill').value).toBe('#4472c4');
+	expect(ui.grid('fill').value).toBe('#0070c0');
 	ui.dispose();
 	ui.controller.destroy();
 });

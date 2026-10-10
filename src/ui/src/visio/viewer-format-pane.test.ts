@@ -69,7 +69,9 @@ it('applies fill changes at once and follows the selection', async () => {
 	expect(fill.grid.hidden).toBe(false);
 	expect(fill.color.getAttribute('aria-expanded')).toBe('true');
 	expect(fill.grid.hasAttribute('none-label')).toBe(false);
-	fill.grid.shadowRoot!.querySelector<HTMLButtonElement>('[data-color="#ffc000"]')!.click();
+	fill.grid
+		.shadowRoot!.querySelector<HTMLButtonElement>('[data-source="standard"][data-color="#ffc000"]')!
+		.click();
 	await ui.done();
 	expect(ui.edits.at(-1)).toEqual([
 		{ type: 'format-shape', pageId: '1', shapeId: '1', fillColor: '#ffc000' },

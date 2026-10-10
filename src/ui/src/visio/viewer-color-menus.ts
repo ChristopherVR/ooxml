@@ -9,7 +9,14 @@ import {
 import type { OfficeColorPick, OfficeUiColorGrid } from '../controls';
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioFormattingAction } from './ribbon-action';
-import { colorAction, commonColor, pageThemeColors, type ColorTarget } from './ribbon-color-menu';
+import {
+	THEME_COLUMN_NAMES,
+	colorAction,
+	commonColor,
+	pageThemeGrid,
+	pickedThemeColor,
+	type ColorTarget,
+} from './ribbon-color-menu';
 import { ViewerMoreColors } from './viewer-more-colors';
 
 /** The colours the selection has now, per target; undefined when mixed or nothing is selected. */
@@ -100,9 +107,11 @@ export class ViewerColorMenus {
 				const grid = ribbonGrid(event);
 				if (!grid) return;
 				event.stopPropagation();
-				const { color } = (event as CustomEvent<OfficeColorPick>).detail;
+				const pick = (event as CustomEvent<OfficeColorPick>).detail;
 				closeMenu(grid);
-				this.run(colorAction(grid.dataset.colorGrid as ColorTarget, color));
+				this.run(
+					colorAction(grid.dataset.colorGrid as ColorTarget, pick.color, pickedThemeColor(pick)),
+				);
 			},
 			options,
 		);
@@ -128,12 +137,16 @@ export class ViewerColorMenus {
 		};
 	}
 	render(state: ViewerState): void {
-		const theme = pageThemeColors(state.document?.pages[state.pageIndex]);
-		const key = theme.join();
+		const theme = pageThemeGrid(state.document?.pages[state.pageIndex]);
+		const key = JSON.stringify(theme);
 		this.#colors = selectionColors(state);
 		for (const grid of this.#grids()) {
 			// Assigning an equal array would still re-render every swatch.
-			if (key !== this.#theme || !grid.themeColors) grid.themeColors = theme;
+			if (key !== this.#theme || !grid.themeColors) {
+				grid.themeColors = theme.colors;
+				grid.themeNames = THEME_COLUMN_NAMES;
+				grid.extraColors = theme.variants;
+			}
 			if (grid.recentColors !== this.#recent) grid.recentColors = this.#recent;
 			const value = this.#colors[grid.dataset.colorGrid as ColorTarget] ?? null;
 			if (grid.value !== value) grid.value = value;

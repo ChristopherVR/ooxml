@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
+import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { openDemo } from './demo-page';
@@ -53,6 +54,19 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 	await idle(viewer);
 	expect((await style(viewer)).fill).toBe(tintColor);
 	await expect(shape.locator('path').first()).toHaveAttribute('fill', tintColor);
+	// It is saved as Visio's theme formula over the colour, so it follows a later theme change.
+	const saved = await viewer.evaluate((node) =>
+		Array.from((node as VisioViewerElement).exportVsdx().bytes),
+	);
+	const xml = await (await JSZip.loadAsync(new Uint8Array(saved)))
+		.file('visio/pages/page1.xml')!
+		.async('string');
+	expect(xml).toContain('F="THEMEGUARD(MSOTINT(THEMEVAL(&quot;AccentColor2&quot;),40))"');
+	// Visio's own row of variant colours is offered too.
+	await viewer.locator('[data-menu="fill"] button').first().click();
+	await expect(grid.locator('[data-source="extra"]')).toHaveCount(7);
+	await expect(grid.getByRole('menuitemradio', { name: 'Dark, Lighter 50%' })).toBeVisible();
+	await page.keyboard.press('Escape');
 	// The menu closed, and reopening shows the colour as current.
 	await expect(grid.getByText('Theme Colors', { exact: true })).toBeHidden();
 	await viewer.locator('[data-menu="fill"] button').first().click();

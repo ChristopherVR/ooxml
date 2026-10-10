@@ -1,4 +1,4 @@
-import type { VisioEdit, VisioTextFormatEdit } from 'ooxml-core/visio';
+import type { VisioEdit, VisioTextFormatEdit, VisioThemeColorRef } from 'ooxml-core/visio';
 import {
 	visioChangeCaseCommand,
 	visioChangeCaseShape,
@@ -32,6 +32,8 @@ const vertical = ['top', 'middle', 'bottom'] as const;
 /** Selection-aware ribbon presentation; all writes go through the controller's edit worker. */
 export class ViewerFormatting {
 	#fontColor = '#000000';
+	/** The Theme Colors swatch the split button's colour came from, if any. */
+	#fontColorTheme: VisioThemeColorRef | undefined;
 	constructor(
 		private readonly root: ShadowRoot,
 		private readonly controller: ViewerController,
@@ -96,7 +98,10 @@ export class ViewerFormatting {
 		if (candidates.some((shape) => !shape)) return;
 		const shapes = candidates.filter((shape) => !!shape);
 		const aggregate = visioTextFormattingState(shapes);
-		if (action.type === 'font-color' && action.value) this.#fontColor = action.value;
+		if (action.type === 'font-color' && action.value) {
+			this.#fontColor = action.value;
+			this.#fontColorTheme = action.theme;
+		}
 		const commands: VisioEdit[] = shapes.map((shape) => {
 			const target = { pageId: page.id, shapeId: shape.id };
 			if (action.type === 'shape-order')
@@ -121,6 +126,7 @@ export class ViewerFormatting {
 					break;
 				case 'font-color':
 					patch.fontColor = this.#fontColor;
+					if (this.#fontColorTheme) patch.fontColorTheme = this.#fontColorTheme;
 					break;
 				case 'font-family':
 					patch.fontFamily = action.value;

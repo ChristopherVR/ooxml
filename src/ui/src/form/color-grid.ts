@@ -4,18 +4,23 @@ import {
 	buildThemePalette,
 	normalizePaletteHex,
 	type ThemePaletteSwatch,
+	type ThemePaletteVariant,
 } from 'ooxml-core/color';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { definer, emit, present } from '../registry';
 import css from './color-grid.css?raw';
 
 /** Where a picked colour came from. */
-export type OfficeColorSource = 'theme' | 'standard' | 'recent' | 'none' | 'automatic';
+export type OfficeColorSource = 'theme' | 'extra' | 'standard' | 'recent' | 'none' | 'automatic';
 /** Detail of `office-color-pick`: `color` is `#rrggbb`, `'none'` or `'automatic'`. */
 export interface OfficeColorPick {
 	color: string;
 	source: OfficeColorSource;
 	label: string;
+	/** For a Theme Colors swatch: its column (0-9) and, below the base row, its variant. */
+	theme?: { column: number; variant?: ThemePaletteVariant };
+	/** For a swatch of the `extraColors` row: its position. */
+	index?: number;
 }
 export type OfficeColorPickEvent = CustomEvent<OfficeColorPick>;
 
@@ -25,10 +30,13 @@ const COLUMNS = 10;
  * `<office-ui-color-grid>`: Office's colour picker body. From the top: an optional `automatic-label`
  * command (Automatic) and `none-label` command (No Fill, No Line), "Theme Colors" (ten columns, a
  * base colour over its five lighter and darker variants, built from `themeColors`), "Standard
- * Colors", "Recent Colors" when `recentColors` has any, and an optional `more-label` command (More
+ * Colors" (preceded by the `extraColors` row when a product has one, such as Visio's variant
+ * colours), "Recent Colors" when `recentColors` has any, and an optional `more-label` command (More
  * Colors...). `value` (`#rrggbb`, `'none'` or `'automatic'`) marks the current choice.
  *
- * Choosing emits `office-color-pick` `{ color, source, label }`; the More Colors command emits
+ * `themeNames` renames the ten columns. Choosing emits `office-color-pick`
+ * `{ color, source, label, theme?, index? }` (a theme swatch reports its column and variant, so a
+ * product can save a theme reference instead of the colour); the More Colors command emits
  * `office-color-more`. Arrow keys move through the swatches and commands, Home and End jump to
  * the ends; ArrowUp on the first row and ArrowDown on the last are left for a host menu. The
  * element is only the grid: a product puts it in its own menu, popup or pane.
@@ -37,6 +45,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		themeColors: { attribute: false },
+		themeNames: { attribute: false },
+		extraColors: { attribute: false },
 		standardColors: { attribute: false },
 		recentColors: { attribute: false },
 		value: { type: String },
@@ -51,6 +61,10 @@ export class OfficeUiColorGrid extends OfficeElement {
 	};
 	/** Ten base colours in Office's order (Background 1, Text 1, Background 2, Text 2, Accent 1-6). */
 	declare themeColors: readonly (string | undefined)[] | null;
+	/** Names of the ten columns, when they are not Office's. */
+	declare themeNames: readonly string[] | null;
+	/** One more row of theme-bound swatches under the variants. */
+	declare extraColors: readonly ThemePaletteSwatch[];
 	declare standardColors: readonly ThemePaletteSwatch[];
 	declare recentColors: readonly string[];
 	declare value: string | null;
@@ -66,6 +80,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 	constructor() {
 		super();
 		this.themeColors = null;
+		this.themeNames = null;
+		this.extraColors = [];
 		this.standardColors = OFFICE_STANDARD_COLORS;
 		this.recentColors = [];
 		this.value = null;
@@ -91,9 +107,14 @@ export class OfficeUiColorGrid extends OfficeElement {
 		return [...this.renderRoot.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
 	}
 
-	private pick(color: string, source: OfficeColorSource, label: string): void {
+	private pick(
+		color: string,
+		source: OfficeColorSource,
+		label: string,
+		more: Pick<OfficeColorPick, 'theme' | 'index'> = {},
+	): void {
 		if (present(this.disabled)) return;
-		emit(this, 'office-color-pick', { color, source, label } satisfies OfficeColorPick);
+		emit(this, 'office-color-pick', { color, source, label, ...more } satisfies OfficeColorPick);
 	}
 
 	private more(): void {
@@ -181,7 +202,17 @@ export class OfficeUiColorGrid extends OfficeElement {
 				aria-checked=${String(value === item.hex)}
 				style=${`--swatch:${item.hex}`}
 				?disabled=${disabled}
-				@click=${() => this.pick(item.hex, source, item.label)}
+				@click=${() =>
+					this.pick(
+						item.hex,
+						source,
+						item.label,
+						source === 'theme'
+							? { theme: { column, ...(item.variant ? { variant: item.variant } : {}) } }
+							: source === 'extra'
+								? { index: column }
+								: {},
+					)}
 			></button>`;
 		const cells = (items: readonly ThemePaletteSwatch[], source: OfficeColorSource) => {
 			const result = html`<div class="cells" data-cells=${source}
@@ -190,7 +221,8 @@ export class OfficeUiColorGrid extends OfficeElement {
 			row++;
 			return result;
 		};
-		const palette = buildThemePalette(this.themeColors ?? undefined);
+		const palette = buildThemePalette(this.themeColors ?? undefined, this.themeNames ?? undefined);
+		const extra = (this.extraColors ?? []).slice(0, COLUMNS);
 		const recent = (this.recentColors ?? [])
 			.map((hex) => normalizePaletteHex(hex))
 			.filter((hex): hex is string => !!hex)
@@ -224,6 +256,7 @@ export class OfficeUiColorGrid extends OfficeElement {
 					),
 				)}</div
 			>
+			${extra.length ? cells(extra, 'extra') : nothing}
 			<div class="heading">${this.standardHeading}</div>
 			${cells(this.standardColors ?? OFFICE_STANDARD_COLORS, 'standard')}
 			${

@@ -128,12 +128,15 @@ export function describeThemePaletteSwatch(name: string, variant?: ThemePaletteV
 /**
  * The Theme Colors grid for ten base colours in Office's column order (Background 1, Text 1,
  * Background 2, Text 2, Accent 1-6). A missing or unparsable colour falls back to the Office
- * theme's colour for that column, so a partial theme still gives a full grid.
+ * theme's colour for that column, so a partial theme still gives a full grid. `names` replaces
+ * the column names for a product whose grid differs (Visio: White, Black, Light, Dark, accents).
  */
 export function buildThemePalette(
 	colors: readonly (string | undefined)[] = OFFICE_THEME_PALETTE_COLORS,
+	names: readonly string[] = THEME_PALETTE_COLUMN_NAMES,
 ): readonly ThemePaletteColumn[] {
-	return THEME_PALETTE_COLUMN_NAMES.map((name, index) => {
+	return THEME_PALETTE_COLUMN_NAMES.map((fallback, index) => {
+		const name = names[index] ?? fallback;
 		const hex =
 			(colors[index] === undefined ? undefined : normalizePaletteHex(colors[index])) ??
 			OFFICE_THEME_PALETTE_COLORS[index]!;

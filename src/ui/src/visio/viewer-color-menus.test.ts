@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
 import { parseVsdx } from 'ooxml-core/visio';
 import { setupFormattingViewer as setup } from './__fixtures__/formatting-viewer';
-import { colorAction, commonColor, pageThemeColors } from './ribbon-color-menu';
+import { colorAction, commonColor, pageThemeGrid, pickedThemeColor } from './ribbon-color-menu';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -35,22 +35,50 @@ it('maps picked colours to the formatting actions and reads the page theme', () 
 		patch: { lineColor: '#112233' },
 	});
 	expect(colorAction('font', '#112233')).toEqual({ type: 'font-color', value: '#112233' });
-	// A drawing without a theme uses Visio's Office accents (the ones Quick Styles fall back to);
-	// text and background are the palette's.
-	const office = pageThemeColors(undefined);
-	expect(office.slice(0, 4)).toEqual([undefined, undefined, undefined, undefined]);
-	expect(office.slice(4).map((color) => color!.toLowerCase())).toEqual([
-		'#5b9bd5',
-		'#ed7d31',
-		'#a5a5a5',
+	// A theme swatch carries where it came from, so it is saved as a theme formula.
+	expect(colorAction('fill', '#f2dcda', { base: 'accent1', tint: 80 })).toEqual({
+		type: 'shape-format',
+		patch: { fillColor: '#f2dcda', fillColorTheme: { base: 'accent1', tint: 80 } },
+	});
+	expect(colorAction('line', '#9dbb61', { base: 'accent2' })).toEqual({
+		type: 'shape-format',
+		patch: { lineColor: '#9dbb61', lineColorTheme: { base: 'accent2' } },
+	});
+	expect(colorAction('font', '#000000', { base: 'dark' })).toEqual({
+		type: 'font-color',
+		value: '#000000',
+		theme: { base: 'dark' },
+	});
+	// A drawing without a theme shows the colours Visio itself shows there: fixed White and Black,
+	// Light, Dark and its six accents, with the variant colours equal to the accents.
+	const plain = pageThemeGrid(undefined);
+	expect(plain.colors).toEqual([
+		'#ffffff',
+		'#000000',
+		'#ffffff',
+		'#000000',
+		'#c05046',
+		'#9dbb61',
+		'#ab9ac0',
+		'#4bacc6',
+		'#f59d56',
 		'#ffc000',
-		'#4472c4',
-		'#70ad47',
 	]);
-	const themed = pageThemeColors({
-		theme: { accents: ['#101010', '#202020', '#303030', '#404040', '#505050', '#606060'] },
+	expect(plain.variants.map((item) => item.hex)).toEqual([...plain.colors.slice(4), '#000000']);
+	expect(plain.variants[2]!.label).toBe('Variant Accent 3');
+	const themed = pageThemeGrid({
+		theme: {
+			name: 'T',
+			variant: 1,
+			light: '#fafafa',
+			dark: '#0a0a0a',
+			accents: ['#101010', '#202020', '#303030', '#404040', '#505050', '#606060'],
+			variants: [[], ['#a1a1a1']],
+		},
 	} as never);
-	expect(themed.slice(4)).toEqual([
+	expect(themed.colors.slice(2)).toEqual([
+		'#fafafa',
+		'#0a0a0a',
 		'#101010',
 		'#202020',
 		'#303030',
@@ -58,6 +86,22 @@ it('maps picked colours to the formatting actions and reads the page theme', () 
 		'#505050',
 		'#606060',
 	]);
+	expect(themed.variants[0]!.hex).toBe('#a1a1a1');
+	const pick = (more: object) =>
+		pickedThemeColor({ color: '#000000', source: 'theme', label: '', ...more });
+	expect(pick({ theme: { column: 4 } })).toEqual({ base: 'accent1' });
+	expect(pick({ theme: { column: 3, variant: { kind: 'lighter', percent: 35 } } })).toEqual({
+		base: 'dark',
+		tint: 35,
+	});
+	expect(pick({ theme: { column: 0, variant: { kind: 'darker', percent: 15 } } })).toEqual({
+		base: '#ffffff',
+		tint: -15,
+	});
+	// Plain white and black, a standard colour and a recent one are fixed colours.
+	expect(pick({ theme: { column: 1 } })).toBeUndefined();
+	expect(pick({ source: 'standard' })).toBeUndefined();
+	expect(pick({ source: 'extra', index: 6 })).toEqual({ base: 'variant7' });
 	expect(commonColor(['#AA0000', '#aa0000'])).toBe('#aa0000');
 	expect(commonColor(['#aa0000', '#bb0000'])).toBeUndefined();
 	expect(commonColor([])).toBeUndefined();
@@ -72,6 +116,8 @@ it('offers theme and standard colours in Fill, Line and Font Color and follows t
 		);
 		expect(grid.shadowRoot!.querySelectorAll('[data-source="theme"]')).toHaveLength(60);
 		expect(grid.shadowRoot!.querySelectorAll('[data-source="standard"]')).toHaveLength(10);
+		// Visio's row of variant colours sits under the theme grid.
+		expect(grid.shadowRoot!.querySelectorAll('[data-source="extra"]')).toHaveLength(7);
 		expect(grid.shadowRoot!.querySelector('[data-command="more"]')!.textContent).toContain(
 			'More Colors...',
 		);
@@ -88,7 +134,13 @@ it('offers theme and standard colours in Fill, Line and Font Color and follows t
 	tint.click();
 	await ui.done();
 	expect(ui.edits.at(-1)).toEqual([
-		{ type: 'format-shape', pageId: '1', shapeId: '1', fillColor: tint.dataset.color },
+		{
+			type: 'format-shape',
+			pageId: '1',
+			shapeId: '1',
+			fillColor: tint.dataset.color,
+			fillColorTheme: { base: 'accent2', tint: 60 },
+		},
 	]);
 	expect(ui.shape().style.fill).toBe(tint.dataset.color);
 	expect(ui.grid('fill').value).toBe(tint.dataset.color);
