@@ -111,21 +111,7 @@
 .format-pane-links button:hover:not(:disabled) {
 	text-decoration: underline;
 }
-/* More Colors: hex and RGB fields beside the New and Current swatches. */
+/* More Colors: the shared custom colour picker sizes itself. */
 .more-colors-dialog .viewer-dialog-body {
 	min-width: min(260px, 80vw);
-}
-.more-colors-dialog .viewer-dialog-body > label {
-	grid-template-columns: 60px 1fr;
-	align-items: center;
-}
-.more-colors-preview {
-	display: grid;
-	grid-template-columns: 60px 1fr;
-	align-items: center;
-	gap: 4px 0;
-}
-.more-colors-preview [data-color-preview] {
-	height: 24px;
-	border: 1px solid var(--_vv-border);
 }

@@ -43,6 +43,12 @@ import { defineTitleBar } from './chrome/title-bar';
 import { defineZoomSlider } from './form/zoom-slider';
 import { defineSymbolPicker } from './form/symbol-picker';
 import { defineColorGrid } from './form/color-grid';
+export type {
+	OfficeColorChange,
+	OfficeColorChangeEvent,
+	OfficeUiColorCustom,
+} from './form/color-custom';
+import { defineColorCustom } from './form/color-custom';
 
 export {
 	defineAccount,
@@ -85,6 +91,7 @@ export {
 	defineZoomSlider,
 	defineSymbolPicker,
 	defineColorGrid,
+	defineColorCustom,
 };
 export { OFFICE_SYMBOLS, parseOfficeSymbolCode } from './form/symbol-picker';
 export type {
@@ -249,6 +256,7 @@ export const CONTROL_DEFINERS = [
 	defineCommentsPane,
 	defineSymbolPicker,
 	defineColorGrid,
+	defineColorCustom,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

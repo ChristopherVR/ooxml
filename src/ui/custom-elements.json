@@ -772,6 +772,89 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "form/color-custom.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiColorCustom",
+					"tagName": "office-ui-color-custom",
+					"customElement": true,
+					"description": "`<office-ui-color-custom>`: the Custom tab of Office's Colors dialog. A hue (across) and saturation (up) square, a luminance slider, Hex, Red/Green/Blue and Hue/Sat/Lum fields (0-255, as Office shows them) that follow each other, and New over Current swatches. `value` is the colour (`#rrggbb`); `current` the colour being replaced. Every change emits `office-color-change` `{ color }`. The square and the slider take the arrow keys (Shift moves in larger steps), Home and End. The element is only the body: a product puts it in its dialog.",
+					"attributes": [
+						{
+							"name": "current"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "bad"
+						},
+						{
+							"kind": "field",
+							"name": "current",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "hsl"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "typed"
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-color-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-color-custom",
+					"declaration": {
+						"name": "OfficeUiColorCustom"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "form/color-grid.ts",
 			"declarations": [
 				{

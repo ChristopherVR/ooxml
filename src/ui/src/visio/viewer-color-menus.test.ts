@@ -9,7 +9,9 @@ type Ui = Awaited<ReturnType<typeof setup>>;
 const moreColors = (ui: Ui) =>
 	ui.root.querySelector<HTMLElement & { open: boolean }>('.more-colors-dialog')!;
 const field = (ui: Ui, name: string) =>
-	moreColors(ui).querySelector<HTMLInputElement>(`[data-color-field="${name}"]`)!;
+	moreColors(ui)
+		.querySelector('office-ui-color-custom')!
+		.shadowRoot!.querySelector<HTMLInputElement>(`[data-color-field="${name}"]`)!;
 const type = (input: HTMLInputElement, value: string) => {
 	input.value = value;
 	input.dispatchEvent(new Event('input', { bubbles: true }));
