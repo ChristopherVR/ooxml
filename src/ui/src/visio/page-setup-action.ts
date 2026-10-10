@@ -12,4 +12,6 @@ export type VisioPageSetupCommand =
 	| { op: 'background'; style: VisioBackgroundStyle | null }
 	| { op: 'background-color'; color: string }
 	| { op: 'border'; style: VisioBorderStyle | null }
-	| { op: 'page-breaks' };
+	| { op: 'page-breaks' }
+	/** Design > Connectors > Show Line Jumps: the page's LineJumpCode on (1) or off (0). */
+	| { op: 'line-jumps' };

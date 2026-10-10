@@ -1,4 +1,5 @@
 import { fail } from './package-common';
+import { snapshotPageLayoutEdit, type VisioPageLayoutEdit } from './edit-page-layout';
 import {
 	VISIO_BACKGROUND_STYLES,
 	VISIO_BORDER_STYLES,
@@ -50,12 +51,14 @@ export type VisioPageDecorationEdit = {
 export type VisioPageSetupEdits =
 	| VisioPageSetupEdit
 	| VisioPagePropertiesEdit
-	| VisioPageDecorationEdit;
+	| VisioPageDecorationEdit
+	| VisioPageLayoutEdit;
 
 export const isVisioPageSetupEdit = (edit: { type: string }): edit is VisioPageSetupEdits =>
 	edit.type === 'set-page-setup' ||
 	edit.type === 'set-page-properties' ||
-	edit.type === 'set-page-decoration';
+	edit.type === 'set-page-decoration' ||
+	edit.type === 'set-page-layout';
 
 const pageId = (value: unknown, label: string): string => {
 	if (typeof value !== 'string' || !value || value.length > 256)
@@ -75,6 +78,7 @@ const positive = (value: unknown): number => {
 
 /** Copy and validate a page setup command; source admission remains authoritative. */
 export function snapshotPageSetupEdit(edit: VisioPageSetupEdits): VisioPageSetupEdits {
+	if (edit.type === 'set-page-layout') return snapshotPageLayoutEdit(edit);
 	const id = pageId(edit.pageId, 'page');
 	if (edit.type === 'set-page-setup') {
 		const result: VisioPageSetupEdit = { type: edit.type, pageId: id };

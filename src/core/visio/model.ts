@@ -1,3 +1,4 @@
+import type { VisioPageLayout } from './page-layout';
 import type { VisioForeignVector } from './foreign-vector';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 import type { VisioComment } from './comments';
@@ -362,6 +363,8 @@ export interface VisioPage {
 	drawingToPageScale?: number;
 	/** Cached print and drawing-scale settings; absent when none are usable. */
 	pageSetup?: VisioPageSetup;
+	/** Stored line jump, grid and ruler cells; `visioPageLayout(page)` adds Visio's defaults. */
+	layout?: Partial<VisioPageLayout>;
 	name: string;
 	width: number;
 	height: number;

@@ -10,6 +10,7 @@ import { renameVisioPage } from './edit-page-rename';
 import { deleteVisioPage } from './edit-page-delete';
 import { setVisioPageSize } from './edit-page-size';
 import { setVisioPageProperties, setVisioPageSetup } from './edit-page-setup';
+import { setVisioPageLayout } from './edit-page-layout';
 import { setVisioPageDecoration } from './edit-page-decoration';
 import { createVisioPagePart, type VisioPageParts } from './edit-page-create';
 import { relationshipsPartFor } from '../opc/relationships';
@@ -75,6 +76,10 @@ export async function editVsdxPages(
 		const existing = children(pages, 'Page');
 		if (command.type === 'set-page-setup') {
 			await setVisioPageSetup(pkg, pagesPart, pages, pagePaths, dirty, command, check);
+			continue;
+		}
+		if (command.type === 'set-page-layout') {
+			await setVisioPageLayout(pkg, pagesPart, pages, pagePaths, dirty, command, check);
 			continue;
 		}
 		if (command.type === 'set-page-properties') {
@@ -162,7 +167,10 @@ export async function editVsdxPages(
 	}
 	if (
 		commands.some(
-			(command) => command.type !== 'set-page-size' && command.type !== 'set-page-setup',
+			(command) =>
+				command.type !== 'set-page-size' &&
+				command.type !== 'set-page-setup' &&
+				command.type !== 'set-page-layout',
 		)
 	) {
 		await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);

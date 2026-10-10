@@ -48,7 +48,8 @@ const connectorMenu = (doc: Document, id: string, label: string, scope: 'selecti
 						{
 							id: 'line-jumps',
 							label: 'Show Line Jumps',
-							unsupported: 'Line jumps are not drawn where connectors cross.',
+							action: { type: 'page-setup' as const, command: { op: 'line-jumps' as const } },
+							checked: true,
 						},
 					]
 				: []),

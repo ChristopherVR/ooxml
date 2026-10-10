@@ -12,6 +12,7 @@ import {
 	EMPTY_LAYER_OVERRIDES,
 	type LayerVisibilityOverride,
 } from './viewer-layers';
+import { visioLineJumpPaths } from 'ooxml-core/visio';
 import { fillPaint, linePaint } from './render-fill';
 import { renderImage } from './render-image';
 import { renderForeignVectorShape } from './render-foreign-vector-shape';
@@ -65,6 +66,8 @@ interface RenderContext {
 	visible: WeakMap<VisioShape, boolean> | undefined;
 	interactive: boolean;
 	static: boolean;
+	/** Geometry paths with line jumps, for the connectors that cross another one. */
+	jumps: Map<VisioShape, string[]>;
 }
 export function renderPage(
 	model: VisioDocument,
@@ -120,10 +123,14 @@ export function renderPage(
 		visible,
 		interactive: !options.static && options.interactive !== false,
 		static: options.static === true,
+		jumps: new Map(),
 	};
 	try {
-		for (const layer of pages)
+		for (const layer of pages) {
+			// Each page (and background page) jumps by its own LineJumpCode and style.
+			context.jumps = visioLineJumpPaths(layer);
 			for (const shape of layer.shapes) drawShape(shape, root, context, layer.id);
+		}
 	} catch (error) {
 		context.resources.dispose();
 		throw error;
@@ -219,7 +226,8 @@ function drawOwn(
 				])
 			: 'none';
 	const paths: SVGPathElement[] = [];
-	for (const geometry of shape.geometry) {
+	const jumps = context.jumps.get(shape);
+	for (const [index, geometry] of shape.geometry.entries()) {
 		if (++context.nodes > 50_000) {
 			warnings.add(
 				'Some drawing content was omitted because it exceeds the safe rendering node limit.',
@@ -229,7 +237,8 @@ function drawOwn(
 		const path = svgElement('path');
 		if (shape.style.fillPattern) path.setAttribute('shape-rendering', 'crispEdges');
 		if (context.interactive) path.dataset.geometry = '';
-		path.setAttribute('d', geometry.path);
+		path.setAttribute('d', jumps?.[index] ?? geometry.path);
+		if (jumps && context.interactive) path.dataset.lineJumps = '';
 		path.setAttribute('fill', geometry.fill ? fill : 'none');
 		path.setAttribute('fill-opacity', String(shape.style.fillOpacity));
 		const stroked = geometry.stroke && shape.style.linePattern !== 0;

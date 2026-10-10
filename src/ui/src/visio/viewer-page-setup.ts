@@ -1,4 +1,4 @@
-import type { VisioEdit, VisioPage } from 'ooxml-core/visio';
+import { visioPageLayout, type VisioEdit, type VisioPage } from 'ooxml-core/visio';
 import {
 	VISIO_PAPER_SIZES,
 	visioFitToDrawingEdits,
@@ -75,6 +75,14 @@ export class ViewerPageSetup {
 			}
 			case 'fit':
 				return this.#apply(visioFitToDrawingEdits(page), 'Fitted the page to the drawing.');
+			case 'line-jumps': {
+				const on = visioPageLayout(page).lineJumpCode !== 0;
+				// Visio's toggle: horizontal lines jump (its default) or nothing does.
+				return this.#apply(
+					[{ type: 'set-page-layout', pageId: page.id, lineJumpCode: on ? 0 : 1 }],
+					on ? 'Line jumps are hidden.' : 'Line jumps are shown.',
+				);
+			}
 			case 'auto-size':
 				return this.#apply(
 					[{ type: 'set-page-setup', pageId: page.id, autoSize: page.drawingResizeType !== 1 }],
@@ -166,6 +174,15 @@ export class ViewerPageSetup {
 			auto.title =
 				refusal ??
 				'Auto Size: grow the page right and up in page tiles when shapes leave it. Shapes past the left or bottom edge do not grow it.';
+		}
+		const jumps = query('[command="line-jumps"]');
+		if (jumps) {
+			jumps.disabled = refusal !== undefined;
+			jumps.setAttribute('checked', String(!!page && visioPageLayout(page).lineJumpCode !== 0));
+			jumps.title =
+				refusal === undefined
+					? 'Show Line Jumps: draw a jump where one connector crosses another.'
+					: `Show Line Jumps: ${refusal}`;
 		}
 		const group = query<HTMLElement>('office-ui-ribbon-group[launcher="page-setup-dialog"]');
 		group?.toggleAttribute('launcher-disabled', refusal !== undefined);

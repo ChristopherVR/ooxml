@@ -197,6 +197,15 @@ export {
 } from './basic-shapes';
 export { isVisioChangeShapeTarget } from './edit-change-shape-commands';
 export { VISIO_SCALE_UNITS } from './edit-page-setup-commands';
+export type { VisioPageLayoutEdit } from './edit-page-layout';
+export { VISIO_LINE_JUMP_LIMITS, VISIO_LINE_JUMP_WIDTH, visioLineJumpPaths } from './line-jumps';
+export {
+	VISIO_GRID_DENSITIES,
+	VISIO_PAGE_LAYOUT_DEFAULTS,
+	VISIO_RULER_DENSITIES,
+	visioPageLayout,
+	type VisioPageLayout,
+} from './page-layout';
 export {
 	VISIO_BACKGROUND_STYLES,
 	VISIO_BORDER_STYLES,

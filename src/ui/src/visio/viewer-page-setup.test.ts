@@ -186,6 +186,41 @@ it('draws page breaks from the print setup', async () => {
 	ui.dispose();
 });
 
+it('draws line jumps where connectors cross and toggles them from Design > Connectors', async () => {
+	const ui = await setup();
+	const line = (shapeId: string, beginX: number, beginY: number, endX: number, endY: number) =>
+		({
+			type: 'create-line',
+			pageId: '0',
+			shapeId,
+			beginX,
+			beginY,
+			endX,
+			endY,
+			route: 'straight',
+		}) as VisioEdit;
+	await ui.controller.applyEdits([line('2', 1, 2, 7, 2), line('3', 4, 1, 4, 6)]);
+	const jumped = () => [...ui.viewport.querySelectorAll<SVGPathElement>('path[data-line-jumps]')];
+	const item = ui.root.querySelector<HTMLElement>('[command="line-jumps"]')!;
+	// Visio's default: the horizontal connector jumps over the vertical one with an arc.
+	expect(jumped()).toHaveLength(1);
+	expect(jumped()[0]!.getAttribute('d')).toMatch(/ A /);
+	expect(item.getAttribute('checked')).toBe('true');
+	expect(item.hasAttribute('disabled')).toBe(false);
+	ui.run(setupAction({ op: 'line-jumps' }));
+	await ui.done();
+	expect(ui.edits.at(-1)).toEqual([{ type: 'set-page-layout', pageId: '0', lineJumpCode: 0 }]);
+	expect(jumped()).toHaveLength(0);
+	expect(item.getAttribute('checked')).toBe('false');
+	ui.run(setupAction({ op: 'line-jumps' }));
+	await ui.done();
+	expect(jumped()).toHaveLength(1);
+	// Each toggle is one undoable step.
+	await ui.controller.undo();
+	expect(jumped()).toHaveLength(0);
+	ui.dispose();
+});
+
 it('commits the Page Setup dialog as one page transaction', async () => {
 	const ui = await setup();
 	ui.run(setupAction({ op: 'dialog', tab: 'scale' }));
