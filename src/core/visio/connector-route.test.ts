@@ -37,6 +37,32 @@ describe('visioOrthogonalRoute', () => {
 		]);
 	});
 
+	it('keeps close facing sides to one segment, or one Z, without passing stubs', () => {
+		// 0.375 in. apart, as AutoConnect places shapes: less than two 0.25 in. stubs.
+		const begin = { point: { x: 2.5, y: 2 }, normal: { x: 1, y: 0 }, box: box(2, 2) };
+		expect(
+			visioOrthogonalRoute(begin, {
+				point: { x: 2.875, y: 2 },
+				normal: { x: -1, y: 0 },
+				box: box(3.375, 2),
+			}),
+		).toEqual([
+			{ x: 2.5, y: 2 },
+			{ x: 2.875, y: 2 },
+		]);
+		const offset = visioOrthogonalRoute(begin, {
+			point: { x: 2.875, y: 2.25 },
+			normal: { x: -1, y: 0 },
+			box: box(3.375, 2.25),
+		});
+		expect(offset).toEqual([
+			{ x: 2.5, y: 2 },
+			{ x: 2.6875, y: 2 },
+			{ x: 2.6875, y: 2.25 },
+			{ x: 2.875, y: 2.25 },
+		]);
+	});
+
 	it('turns twice between offset facing sides and once between perpendicular sides', () => {
 		const z = visioOrthogonalRoute(
 			{ point: { x: 2.5, y: 2 }, normal: { x: 1, y: 0 }, box: box(2, 2) },

@@ -99,8 +99,15 @@ function score(
 export function visioOrthogonalRoute(begin: VisioRouteEnd, end: VisioRouteEnd): VisioRoutePoint[] {
 	const leave = axisDirection(begin, end.point),
 		arrive = axisDirection(end, begin.point);
+	// Two glued sides that face each other across less than two stubs share the space between
+	// them, so the stubs never pass each other (close shapes get one straight segment or a Z).
+	const between =
+		begin.box && end.box && leave.x === -arrive.x && leave.y === -arrive.y
+			? (end.point.x - begin.point.x) * leave.x + (end.point.y - begin.point.y) * leave.y
+			: Infinity;
+	const reach = between > EPSILON ? Math.min(VISIO_ROUTE_STUB, between / 2) : VISIO_ROUTE_STUB;
 	const stub = (value: VisioRouteEnd, direction: VisioRoutePoint) => {
-		const length = value.box ? VISIO_ROUTE_STUB : 0;
+		const length = value.box ? reach : 0;
 		return { x: value.point.x + direction.x * length, y: value.point.y + direction.y * length };
 	};
 	const b = stub(begin, leave),
