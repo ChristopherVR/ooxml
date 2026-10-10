@@ -108,7 +108,7 @@ describe('presentationTransitionOverlayComponent morph css', () => {
 		// marked node (or the marker moved onto the img) the animation would stop
 		// matching, silently, with every unit test above still green.
 		const container = IMAGE_RENDERER_SOURCE.indexOf('[attr.data-element-id]');
-		const img = IMAGE_RENDERER_SOURCE.indexOf('<img ');
+		const img = IMAGE_RENDERER_SOURCE.search(/<img\b/);
 		expect(container).toBeGreaterThan(-1);
 		expect(img).toBeGreaterThan(container);
 		expect(IMAGE_RENDERER_SOURCE).toContain('[ngStyle]="view().imageStyle"');
