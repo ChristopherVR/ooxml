@@ -38,7 +38,7 @@ test('ribbon groups collapse into buttons from the right as the window narrows',
 		expect(
 			await viewer
 				.locator('#home-panel')
-				.evaluate((panel) => panel.offsetHeight - panel.clientHeight),
+				.evaluate((panel) => (panel as HTMLElement).offsetHeight - panel.clientHeight),
 		).toBe(0);
 	}
 	expect(previous).toBeGreaterThan(1);
