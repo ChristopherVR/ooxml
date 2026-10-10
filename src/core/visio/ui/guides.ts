@@ -85,9 +85,18 @@ export interface VisioSnapOptions {
 	threshold: number;
 	/**
 	 * Snap to Grid: the grid step in page inches. On an axis that did not snap to a shape or guide,
-	 * the selection's nearer edge lands on a grid line. Omitted or zero leaves the grid out.
+	 * the selection's nearer edge lands on a grid line. Omitted or zero leaves the grid out. A
+	 * page whose axes differ, or whose grid does not start at the page corner, gives each axis its
+	 * step and the position of one line (`VisioGridSteps`).
 	 */
-	grid?: number;
+	grid?: number | VisioSnapGrid;
+}
+/** A grid's step and one line's position per axis, in page inches (y up). */
+export interface VisioSnapGrid {
+	x: number;
+	y: number;
+	originX?: number;
+	originY?: number;
 }
 export interface VisioSnapResult {
 	/** Adjusted drag delta (x right, y up), as `visioPageDragDelta` returns it. */
@@ -104,8 +113,20 @@ export function visioSnapMoveDelta(
 	options: VisioSnapOptions,
 ): VisioSnapResult {
 	const unchanged = { delta, lines: [] };
-	const grid = options.grid && options.grid > 0 && Number.isFinite(options.grid) ? options.grid : 0;
-	if ((!options.shapes && !options.guides && !grid) || !(options.threshold > 0)) return unchanged;
+	const usable = (value: number | undefined) =>
+		value !== undefined && value > 0 && Number.isFinite(value) ? value : 0;
+	const source = options.grid;
+	const grid =
+		typeof source === 'object'
+			? {
+					x: usable(source.x),
+					y: usable(source.y),
+					originX: Number.isFinite(source.originX) ? source.originX! : 0,
+					originY: Number.isFinite(source.originY) ? source.originY! : 0,
+				}
+			: { x: usable(source), y: usable(source), originX: 0, originY: 0 };
+	if ((!options.shapes && !options.guides && !grid.x && !grid.y) || !(options.threshold > 0))
+		return unchanged;
 	const moving = new Set(ids);
 	const boxes = ids
 		.map((id) => visioMovementShape(page, id))
@@ -131,11 +152,10 @@ export function visioSnapMoveDelta(
 					: { x: -1e6, y: -guide.position, width: 4e6, height: 0 },
 			);
 	const snapped = computeSnap(box, others, options.threshold);
-	if (grid) {
-		const axes = new Set(snapped.guides.map((line) => line.axis));
-		if (!axes.has('x')) snapped.x = gridEdge(snapped.x, box.width, grid);
-		if (!axes.has('y')) snapped.y = gridEdge(snapped.y, box.height, grid);
-	}
+	const axes = new Set(snapped.guides.map((line) => line.axis));
+	if (grid.x && !axes.has('x')) snapped.x = gridEdge(snapped.x, box.width, grid.x, grid.originX);
+	// Snap boxes use y = -(page y), so a line at page y = origin sits at -origin.
+	if (grid.y && !axes.has('y')) snapped.y = gridEdge(snapped.y, box.height, grid.y, -grid.originY);
 	return {
 		delta: { x: delta.x + snapped.x - box.x, y: delta.y - (snapped.y - box.y) },
 		lines: snapped.guides,
@@ -143,8 +163,9 @@ export function visioSnapMoveDelta(
 }
 
 /** The start of a span whose nearer edge (start or end) is moved onto the nearest grid line. */
-function gridEdge(start: number, size: number, grid: number): number {
-	const lead = Math.round(start / grid) * grid - start;
-	const trail = Math.round((start + size) / grid) * grid - (start + size);
+function gridEdge(start: number, size: number, grid: number, origin = 0): number {
+	const line = (value: number) => Math.round((value - origin) / grid) * grid + origin;
+	const lead = line(start) - start;
+	const trail = line(start + size) - (start + size);
 	return start + (Math.abs(trail) < Math.abs(lead) ? trail : lead);
 }

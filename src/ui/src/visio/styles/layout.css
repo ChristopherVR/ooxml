@@ -37,6 +37,22 @@
 	gap: 6px;
 	align-items: center;
 }
+/* Ruler & Grid and Snap & Glue: a label column, then one column per axis or option list. */
+.ruler-grid-rows {
+	display: grid;
+	grid-template-columns: minmax(120px, auto) 1fr 1fr;
+	gap: 6px 10px;
+	align-items: center;
+}
+.ruler-grid-axis {
+	font-weight: 600;
+}
+.snap-glue-columns {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 12px;
+	align-items: start;
+}
 .viewer-dialog [role='alert'] {
 	margin: 0;
 	color: var(--office-error, #b00020);

@@ -16,6 +16,7 @@ import type { RibbonCommand } from './ribbon-parts';
 import { backgroundsState, bordersState, syncDecorationGallery } from './ribbon-page-setup';
 import { ViewerPageSetupDialog } from './viewer-page-setup-dialog';
 import { drawPageBreaks } from './viewer-page-breaks';
+import { ViewerRulerGrid } from './viewer-ruler-grid';
 
 type Edit = (run: () => Promise<void>, message: string) => void;
 
@@ -27,6 +28,8 @@ type Edit = (run: () => Promise<void>, message: string) => void;
 export class ViewerPageSetup {
 	#breaks = false;
 	readonly dialog: ViewerPageSetupDialog;
+	/** View > Show > Ruler & Grid, and the page's grid and ruler values. */
+	readonly rulerGrid: ViewerRulerGrid;
 	constructor(
 		private readonly root: ShadowRoot,
 		private readonly controller: ViewerController,
@@ -34,6 +37,7 @@ export class ViewerPageSetup {
 		private readonly announce: (message: string) => void,
 	) {
 		this.dialog = new ViewerPageSetupDialog(root, controller, announce);
+		this.rulerGrid = new ViewerRulerGrid(root, controller, announce);
 	}
 	get pageBreaks(): boolean {
 		return this.#breaks;
@@ -135,13 +139,16 @@ export class ViewerPageSetup {
 				this.dialog.show();
 		};
 		this.root.addEventListener('office-command', listener);
+		const disposeRulerGrid = this.rulerGrid.wire();
 		return () => {
 			this.root.removeEventListener('office-command', listener);
 			this.dialog.close();
+			disposeRulerGrid();
 		};
 	}
 	render(state: ViewerState): void {
 		this.dialog.render(state);
+		this.rulerGrid.render(state);
 		const page = state.document?.pages[state.pageIndex];
 		const refusal = this.#refusal(state);
 		const query = <T extends Element = RibbonCommand>(selector: string) =>

@@ -50,6 +50,7 @@ export * from './format-painter';
 export * from './svg-stroke';
 export * from './page-size';
 export * from './page-setup';
+export * from './ruler-grid';
 export * from './insert';
 export * from './diagram-check';
 export * from './shape-report';

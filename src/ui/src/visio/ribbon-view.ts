@@ -81,9 +81,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 						}),
 					]),
 				],
-				{
-					launcher: 'Ruler subdivisions and grid spacing follow the page; they cannot be set yet.',
-				},
+				{ dialog: 'Ruler & Grid' },
 			),
 			group(doc, 'Zoom', [
 				menu(doc, {

@@ -233,12 +233,15 @@ path.draw-preview {
 		linear-gradient(to top, var(--_vv-grid-major) 1px, transparent 1px),
 		linear-gradient(to right, var(--_vv-grid-minor) 1px, transparent 1px),
 		linear-gradient(to top, var(--_vv-grid-minor) 1px, transparent 1px);
+	/* The page's grid (Ruler & Grid): a line every step, a stronger one every fourth step. */
+	--_vv-grid-step-x: var(--_vv-grid-x, calc(var(--vv-inch, 96px) / 4));
+	--_vv-grid-step-y: var(--_vv-grid-y, calc(var(--vv-inch, 96px) / 4));
 	background-size:
-		var(--vv-inch, 96px) var(--vv-inch, 96px),
-		var(--vv-inch, 96px) var(--vv-inch, 96px),
-		calc(var(--vv-inch, 96px) / 4) calc(var(--vv-inch, 96px) / 4),
-		calc(var(--vv-inch, 96px) / 4) calc(var(--vv-inch, 96px) / 4);
-	background-position: left bottom;
+		calc(var(--_vv-grid-step-x) * 4) calc(var(--_vv-grid-step-y) * 4),
+		calc(var(--_vv-grid-step-x) * 4) calc(var(--_vv-grid-step-y) * 4),
+		var(--_vv-grid-step-x) var(--_vv-grid-step-y),
+		var(--_vv-grid-step-x) var(--_vv-grid-step-y);
+	background-position: left var(--_vv-grid-origin-x, 0px) bottom var(--_vv-grid-origin-y, 0px);
 }
 :host(:fullscreen) {
 	width: 100vw;

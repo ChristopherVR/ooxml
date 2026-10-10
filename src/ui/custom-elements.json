@@ -2760,8 +2760,11 @@
 					"name": "OfficeUiRuler",
 					"tagName": "office-ui-ruler",
 					"customElement": true,
-					"description": "`<office-ui-ruler>`: an Office ruler (inches by default). The product positions it and says where zero is: `origin` is the CSS-pixel offset of zero from the ruler's start edge, `scale` the CSS pixels per unit (96 at 100% for inches). `orientation=\"vertical\"` draws a side ruler; `direction=\"reverse\"` makes values grow toward the start edge, as Visio's vertical ruler grows upward from the page bottom. Page rulers add: `extent` (the ruler's own length in px, as long as the page), `marginStart` / `marginEnd` (shaded margin bands), `zoom` (the ruler is shown at that CSS zoom) and `labelsWithinMargins` (whole-unit labels only between the margins, counted up from `origin`). `markers` are draggable: the element fires `ruler-marker-move` while one is dragged (the host answers by updating `markers` to preview), then `ruler-marker-commit` on release or `ruler-marker-cancel`; all carry a `RulerMarkerEventDetail`. Without a `label` the ruler is hidden from assistive technology; with one it is an image with that name.",
+					"description": "`<office-ui-ruler>`: an Office ruler (inches by default). The product positions it and says where zero is: `origin` is the CSS-pixel offset of zero from the ruler's start edge, `scale` the CSS pixels per unit (96 at 100% for inches). `orientation=\"vertical\"` draws a side ruler; `direction=\"reverse\"` makes values grow toward the start edge, as Visio's vertical ruler grows upward from the page bottom. `density` (1 by default) is the share of the subdivisions shown: 0.5 draws every second tick and 0.25 every fourth (Visio's Normal and Coarse ruler subdivisions). Page rulers add: `extent` (the ruler's own length in px, as long as the page), `marginStart` / `marginEnd` (shaded margin bands), `zoom` (the ruler is shown at that CSS zoom) and `labelsWithinMargins` (whole-unit labels only between the margins, counted up from `origin`). `markers` are draggable: the element fires `ruler-marker-move` while one is dragged (the host answers by updating `markers` to preview), then `ruler-marker-commit` on release or `ruler-marker-cancel`; all carry a `RulerMarkerEventDetail`. Without a `label` the ruler is hidden from assistive technology; with one it is an image with that name.",
 					"attributes": [
+						{
+							"name": "density"
+						},
 						{
 							"name": "direction"
 						},
@@ -2794,6 +2797,13 @@
 						}
 					],
 					"members": [
+						{
+							"kind": "field",
+							"name": "density",
+							"type": {
+								"text": "number"
+							}
+						},
 						{
 							"kind": "field",
 							"name": "direction",

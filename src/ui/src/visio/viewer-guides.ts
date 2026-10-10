@@ -6,6 +6,7 @@ import {
 	visioGuideMoveCommand,
 	visioPageGuides,
 	visioSnapMoveDelta,
+	type VisioSnapGrid,
 	type VisioPagePoint,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
@@ -66,7 +67,12 @@ export class ViewerGuides {
 	 * Snap a shape drag; draws alignment hints. `grid` is the Snap to Grid step in page inches (0
 	 * while the grid is hidden). Unchanged when no snapping is active.
 	 */
-	snap(page: VisioPage, ids: readonly string[], delta: VisioPagePoint, grid = 0): VisioPagePoint {
+	snap(
+		page: VisioPage,
+		ids: readonly string[],
+		delta: VisioPagePoint,
+		grid: number | VisioSnapGrid = 0,
+	): VisioPagePoint {
 		const svg = this.#svg();
 		this.clearHints();
 		if (!this.#shown && !this.#dynamic && !grid) return delta;
