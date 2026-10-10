@@ -36,7 +36,7 @@ stylesheet imported as `?raw`, tokens only). The folders are `form/` (checkbox, 
 search, zoom), `ribbon/` (button, group, stack, toolbar, tabs, section, toggle), `menu/` (menu button
 and item, separator, context menu, command search), `dialog/` (dialog, options dialog, dialog footer),
 `notices/` (toasts, read-only banner, paste options), `chrome/` (title bar, status bar and item, tab
-strip, backstage, account, find bar, print preview, ruler), `comments/` (the comments pane), `presence/`,
+strip, task pane, backstage, account, find bar, print preview, ruler), `comments/` (the comments pane), `presence/`,
 `smartart/` and `teams/`.
 
 - **`OfficeElement`** (`base.ts`) is the base class, exported for products that build their own

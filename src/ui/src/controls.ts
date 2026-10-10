@@ -38,6 +38,7 @@ import { defineSelect } from './form/select';
 import { defineStatusBar } from './chrome/status-bar';
 import { defineStatusItem } from './chrome/status-item';
 import { defineTabStrip } from './chrome/tab-strip';
+import { defineTaskPane } from './chrome/task-pane';
 import { defineTitleBar } from './chrome/title-bar';
 import { defineZoomSlider } from './form/zoom-slider';
 import { defineSymbolPicker } from './form/symbol-picker';
@@ -77,6 +78,7 @@ export {
 	defineStatusItem,
 	defineSwitch,
 	defineTabStrip,
+	defineTaskPane,
 	defineTitleBar,
 	defineToolbar,
 	defineZoomSlider,
@@ -215,6 +217,7 @@ export const CONTROL_DEFINERS = [
 	defineStatusItem,
 	defineZoomSlider,
 	defineTabStrip,
+	defineTaskPane,
 	defineOptionsDialog,
 	defineAccount,
 	defineRibbon,

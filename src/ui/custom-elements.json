@@ -3188,7 +3188,7 @@
 					"name": "OfficeUiTabStrip",
 					"tagName": "office-ui-tab-strip",
 					"customElement": true,
-					"description": "Bottom document tabs (Visio pages, Excel sheets). Set `tabs` (`OfficeTab[]`) and `selected` (a tab id). Labels are inserted as text. The previous/next buttons and arrow, Home and End keys move the selection; the tab list uses a roving tabindex. User selection emits `office-tab-select` `{ id }` (cancelable); setting properties never emits. Attributes: `label` (tab list name, default \"Tabs\"), `previous-label` and `next-label` (step button names, default \"Previous\" and \"Next\"), `disabled`, and `add-label` to show an add button after the tabs (Insert Page, New Sheet) that emits `office-command` `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it.",
+					"description": "Bottom document tabs (Visio pages, Excel sheets). Set `tabs` (`OfficeTab[]`) and `selected` (a tab id). Labels are inserted as text. The previous/next buttons and arrow, Home and End keys move the selection; the tab list uses a roving tabindex. User selection emits `office-tab-select` `{ id }` (cancelable); setting properties never emits. Attributes: `label` (tab list name, default \"Tabs\"), `previous-label` and `next-label` (step button names, default \"Previous\" and \"Next\"), `disabled`, and `add-label` to show an add button after the tabs (Insert Page, New Sheet) that emits `office-command` `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it. The `after-tabs` slot sits between the tabs and the add button (Visio's All pages list), and the `plain` attribute draws the selected tab as bold accent text without a box, as Visio does.",
 					"attributes": [
 						{
 							"name": "add-disabled"
@@ -3298,6 +3298,58 @@
 					"name": "office-ui-tab-strip",
 					"declaration": {
 						"name": "OfficeUiTabStrip"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/task-pane.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiTaskPane",
+					"tagName": "office-ui-task-pane",
+					"customElement": true,
+					"description": "`<office-ui-task-pane>`: a docked task pane, as Office shows Format Shape or Shape Data. A header with the `label` as its title and a close button (named by `close-label`, default \"Close <label>\"), then the slotted body. The close button emits `office-pane-close`; the host decides whether to hide the pane. The host is a `complementary` landmark named by the label.",
+					"attributes": [
+						{
+							"name": "close-label"
+						},
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "closeLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "close-label"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-pane-close"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-task-pane",
+					"declaration": {
+						"name": "OfficeUiTaskPane"
 					}
 				}
 			]

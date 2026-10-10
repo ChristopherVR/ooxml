@@ -34,6 +34,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-status-item',
 	'office-ui-zoom-slider',
 	'office-ui-tab-strip',
+	'office-ui-task-pane',
 	'office-ui-options-dialog',
 	'office-ui-account',
 	'office-ui-ribbon',

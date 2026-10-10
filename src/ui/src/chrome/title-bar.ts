@@ -153,16 +153,17 @@ export class OfficeUiTitleBar extends OfficeElement {
 			${repeat(
 				items,
 				(item) => item.id,
-				(item) => html`<button
-					type="button"
-					data-command=${item.id}
-					aria-label=${item.label}
-					title=${ifDefined(item.title)}
-					tabindex=${item === current ? 0 : -1}
-					?disabled=${item.disabled === true}
-					@click=${() => this.activate(item.id)}
-					>${glyph(item.icon, 'icon')}${qa?.showLabels === true ? html`<small>${item.label}</small>` : ''}</button
-				>`,
+				(item) =>
+					html`<button
+						type="button"
+						data-command=${item.id}
+						aria-label=${item.label}
+						title=${ifDefined(item.title)}
+						tabindex=${item === current ? 0 : -1}
+						?disabled=${item.disabled === true}
+						@click=${() => this.activate(item.id)}
+						>${glyph(item.icon, 'icon')}${qa?.showLabels === true ? html`<small>${item.label}</small>` : ''}</button
+					>`,
 			)}
 		</div>`;
 	}
@@ -236,16 +237,17 @@ export class OfficeUiTitleBar extends OfficeElement {
 				${
 					this.found.length > 0
 						? html`<div class="heading">${search.heading}</div> ${this.found.map(
-									(entry, index) => html`<button
-										type="button"
-										role="option"
-										tabindex="-1"
-										aria-selected=${String(index === this.active)}
-										@mousedown=${(event: Event) => pick(event, () => this.commit(entry))}
-										@mouseenter=${() => (this.active = index)}
-										><span>${entry.label}</span
-										><span class="cat">${entry.category ?? ''}</span></button
-									>`,
+									(entry, index) =>
+										html`<button
+											type="button"
+											role="option"
+											tabindex="-1"
+											aria-selected=${String(index === this.active)}
+											@mousedown=${(event: Event) => pick(event, () => this.commit(entry))}
+											@mouseenter=${() => (this.active = index)}
+											><span>${entry.label}</span
+											><span class="cat">${entry.category ?? ''}</span></button
+										>`,
 								)}`
 						: html`<div class="empty">${search.empty}</div>`
 				}

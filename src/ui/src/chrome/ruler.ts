@@ -258,13 +258,14 @@ export class OfficeUiRuler extends OfficeElement {
 				: nothing;
 		return html`${band('start', this.marginStart)}${band('end', this.marginEnd)}<canvas
 			></canvas>${this.markers.map(
-				(marker) => html`<div
-					class="marker ${marker.edge === 'top' ? 'top' : 'bottom'}"
-					data-marker=${marker.name}
-					style="${vertical ? 'top' : 'left'}:${marker.position}px"
-					aria-label=${marker.label ?? nothing}
-					@pointerdown=${(event: PointerEvent) => this.dragMarker(event, marker.name)}
-				></div>`,
+				(marker) =>
+					html`<div
+						class="marker ${marker.edge === 'top' ? 'top' : 'bottom'}"
+						data-marker=${marker.name}
+						style="${vertical ? 'top' : 'left'}:${marker.position}px"
+						aria-label=${marker.label ?? nothing}
+						@pointerdown=${(event: PointerEvent) => this.dragMarker(event, marker.name)}
+					></div>`,
 			)}`;
 	}
 }
