@@ -7,6 +7,19 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.7.0) - 2026-10-10
+
+### Features
+
+- **geometry:** Share arrow-key nudges and Shift angle snapping ([a839871](https://github.com/ChristopherVR/ooxml/commit/a8398713b97bcc9a193e6bd85aba51c55066eba8))
+- **visio:** Nudge with arrow keys and snap moves to the grid ([efacb75](https://github.com/ChristopherVR/ooxml/commit/efacb75c896f64a7252b9200c5e0e0d4ba0f13e9))
+- **ui:** Add office-ui-task-pane and a plain tab strip variant ([8fdee5a](https://github.com/ChristopherVR/ooxml/commit/8fdee5af4f5f7f62dd77bb8974e8312d6900cb58))
+- **visio:** Match Visio's task panes, status bar and in-place text ([c7c0106](https://github.com/ChristopherVR/ooxml/commit/c7c010697f52b2b2e2b580cf1914279c1e99a127))
+- **visio:** Add an Office Theme for the status bar and finish its chrome ([60a8b51](https://github.com/ChristopherVR/ooxml/commit/60a8b51710832eaac158248677da4d3dadeb0052))
+- **visio:** Edit formatted, field and partial text of stencil shapes ([2779656](https://github.com/ChristopherVR/ooxml/commit/27796562ef728a6be884967e9ed84323c480c16b))
+- **visio:** Give the editor Visio's title bar and Office Theme: Black ([9f14793](https://github.com/ChristopherVR/ooxml/commit/9f14793f3dc0bd605454352a858b489c2c59dbbd))
+- **visio:** Add Layer Properties as Visio's dialog, saved to the drawing ([8091265](https://github.com/ChristopherVR/ooxml/commit/809126590cbae8e7e41c80e3261754fe2afbb0ee))
+
 ## [1.6.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.6.2) - 2026-10-09
 
 ### Dependencies

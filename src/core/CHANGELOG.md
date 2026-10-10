@@ -7,6 +7,33 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.7.0) - 2026-10-10
+
+### Features
+
+- **visio:** Add createSampleVsdx, an editable sample drawing ([a8f4f7d](https://github.com/ChristopherVR/ooxml/commit/a8f4f7d1c378ce3a011b6638dedc8c8abb02acc1))
+- **geometry:** Share arrow-key nudges and Shift angle snapping ([a839871](https://github.com/ChristopherVR/ooxml/commit/a8398713b97bcc9a193e6bd85aba51c55066eba8))
+- **visio:** Nudge with arrow keys and snap moves to the grid ([efacb75](https://github.com/ChristopherVR/ooxml/commit/efacb75c896f64a7252b9200c5e0e0d4ba0f13e9))
+- **visio:** Edit the text of stencil (master) instances ([672e65c](https://github.com/ChristopherVR/ooxml/commit/672e65cc1df75dc5cfbb8639938413c7d5e089c2))
+- **visio:** Edit formatted, field and partial text of stencil shapes ([2779656](https://github.com/ChristopherVR/ooxml/commit/27796562ef728a6be884967e9ed84323c480c16b))
+- **visio:** Add Layer Properties as Visio's dialog, saved to the drawing ([8091265](https://github.com/ChristopherVR/ooxml/commit/809126590cbae8e7e41c80e3261754fe2afbb0ee))
+
+### Bug Fixes
+
+- **visio:** Report refused edits in plain words ([41f6e2e](https://github.com/ChristopherVR/ooxml/commit/41f6e2e3cc3dbca4213f79530c802269e3da6603))
+
+### Testing
+
+- **core:** Fuzz the xml, formula, number format and hyperlink parsers ([c6911a0](https://github.com/ChristopherVR/ooxml/commit/c6911a00f79fb07eab294d885b760452b4bdaf72))
+
+### Build & CI
+
+- Scope write permissions to jobs and look up date tokens in a map ([c6021c4](https://github.com/ChristopherVR/ooxml/commit/c6021c46cb93d7531d7b45ec713c74fe81510104))
+
+### Styling
+
+- **visio:** Format the stencil-instance text test ([87608ae](https://github.com/ChristopherVR/ooxml/commit/87608aeb6c37839967137bbdc634fed643e7410b))
+
 ## [1.6.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.6.2) - 2026-10-09
 
 ### Dependencies
