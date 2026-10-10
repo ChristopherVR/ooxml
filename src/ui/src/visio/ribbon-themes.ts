@@ -7,6 +7,7 @@ import {
 } from 'ooxml-core/visio';
 import type { OfficeGalleryState, OfficeUiGallery } from '../ribbon/gallery';
 import { emitRibbonAction } from './ribbon-action';
+import { INLINE_GALLERY_STEPS, inlineGallery } from './ribbon-inline-galleries';
 import { menu, type CommandSpec } from './ribbon-parts';
 
 export const THEMES_HINT =
@@ -55,29 +56,35 @@ export function themesGalleryState(
 	disabled: boolean,
 	current: VisioPageTheme | undefined,
 ): OfficeGalleryState {
+	const items = [
+		{ id: themeItemId('none'), label: 'No Theme', applied: !current, preview: NONE_PREVIEW },
+		...VISIO_BUILT_IN_THEMES.map((theme) => ({
+			id: themeItemId(theme.id),
+			label: theme.name,
+			applied: current?.builtIn === theme.id,
+			preview: themePreview(theme),
+		})),
+	];
+	// The ribbon row starts at the applied theme when it lies beyond the first tiles, so the
+	// page's theme stays in view however few tiles fit.
+	const row = INLINE_GALLERY_STEPS.themes![0]![1];
+	const applied = items.findIndex((item) => item.applied);
+	const start = applied < row ? 0 : Math.min(applied, items.length - row);
 	return {
 		id: 'themes',
 		label: 'Themes',
 		disabled,
-		sections: [
-			{
-				title: 'Office',
-				columns: 4,
-				tileWidth: 64,
-				tileHeight: 44,
-				items: [
-					{ id: themeItemId('none'), label: 'No Theme', applied: !current, preview: NONE_PREVIEW },
-					...VISIO_BUILT_IN_THEMES.map((theme) => ({
-						id: themeItemId(theme.id),
-						label: theme.name,
-						applied: current?.builtIn === theme.id,
-						preview: themePreview(theme),
-					})),
-				],
-			},
-		],
+		inline: items.slice(start, start + row),
+		sections: [{ title: 'Office', columns: 4, tileWidth: 64, tileHeight: 44, items }],
 	};
 }
+
+const blankVariant = (index: number) => ({
+	id: variantItemId(index),
+	label: `Variant ${index + 1}`,
+	preview:
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 44"><rect x="0.5" y="0.5" width="63" height="43" fill="#ffffff" stroke="#c8c8c8"/></svg>',
+});
 
 /** Variants gallery: the page theme's four variants, previewed by their first variant colours. */
 export function variantsGalleryState(
@@ -95,6 +102,8 @@ export function variantsGalleryState(
 		id: 'variants',
 		label: 'Variants',
 		disabled: disabled || !current,
+		// A page without a theme has no variants: the row keeps four empty, disabled tiles.
+		...(current ? {} : { inline: [0, 1, 2, 3].map(blankVariant) }),
 		sections: [
 			{
 				columns: 4,
@@ -117,6 +126,7 @@ export function variantsGalleryState(
 function gallery(doc: Document, state: OfficeGalleryState, icon: string, hint: string) {
 	const element = doc.createElement('office-ui-gallery') as OfficeUiGallery;
 	element.dataset.menu = state.id;
+	inlineGallery(element, state.id);
 	element.setAttribute('icon', icon);
 	element.setAttribute('label', state.label);
 	element.title = hint;

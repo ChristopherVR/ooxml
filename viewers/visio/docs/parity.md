@@ -1,5 +1,20 @@
 # Visio capability ledger
 
+## Inline Quick Styles, Themes and Variants, 2026-10-10
+
+Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
+rows of tiles in the ribbon with a More button that opens the whole gallery, as
+in Visio. They are the shared `office-ui-gallery` in its inline mode. A tile in
+the row applies at once; the row of Themes starts at the page's theme when that
+lies beyond the first tiles, and a page without a theme shows four empty,
+disabled Variants tiles.
+
+The ribbon does not fold its groups, so the viewer's width sets the number of
+tiles: seven, six and four at 1860 px and wider, down to two each, and the
+labelled drop-down buttons again at 760 px and narrower. Not matched: Visio's
+row scrolls with up and down arrows above the More button, and its Quick Styles
+row shows the theme's Variant Styles; this row is the first Theme Styles row.
+
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
 The groups and commands of every tab were read from Visio 16 through UI
@@ -24,8 +39,6 @@ the Ruler & Grid launcher.
 
 Still different from Visio:
 
-- Quick Styles, Themes and Variants are drop-down galleries, not galleries
-  shown inline in the ribbon.
 - Icons are the shared monochrome line icons, not Visio's coloured ones.
 - View > Views keeps Full Screen, which Visio does not have.
 - A narrow ribbon scrolls; Visio collapses groups into buttons.

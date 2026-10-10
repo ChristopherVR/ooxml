@@ -19,7 +19,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		);
 		await page.locator('#file').setInputFiles(join(nativeDirectory!, 'layer-colors.vsdx'));
 		await expect(page.locator('#file-name')).toHaveText('layer-colors.vsdx');
-		await expect(page.locator('visio-viewer svg text')).toContainText('Layer color');
+		await expect(page.locator('visio-viewer svg.paper text')).toContainText('Layer color');
 		const pixels = await page.evaluate(async () => {
 			const load = (path: string) => import(/* @vite-ignore */ path);
 			const { renderPage, exportPageSvg } = await load('/test-api.js');

@@ -276,3 +276,19 @@ path.draw-preview {
 		display: none;
 	}
 }
+
+/*
+ * Quick Styles, Themes and Variants: Visio's row of tiles with a More button. The viewer's width
+ * sets data-inline-tiles (ribbon-inline-galleries.ts); the tiles beyond it stay in the gallery.
+ */
+[data-inline-gallery][mode='inline'] {
+	align-self: center;
+}
+[data-inline-tiles='1'] .strip .tile:nth-child(n + 2),
+[data-inline-tiles='2'] .strip .tile:nth-child(n + 3),
+[data-inline-tiles='3'] .strip .tile:nth-child(n + 4),
+[data-inline-tiles='4'] .strip .tile:nth-child(n + 5),
+[data-inline-tiles='5'] .strip .tile:nth-child(n + 6),
+[data-inline-tiles='6'] .strip .tile:nth-child(n + 7) {
+	display: none;
+}

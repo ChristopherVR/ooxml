@@ -30,16 +30,16 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 	await editor.fill('<script>Literal edited text</script>');
 	await editor.press('Escape');
 	await expect(editor).toHaveCount(0);
-	await expect(page.locator('visio-viewer svg text')).toContainText(
+	await expect(page.locator('visio-viewer svg.paper text')).toContainText(
 		'<script>Literal edited text</script>',
 	);
 	await expect(page.locator('#edit-label')).toHaveText('EDITED COPY');
 	await expect(page.locator('visio-viewer script')).toHaveCount(0);
 	await history(viewer, 'Undo').click();
-	await expect(page.locator('visio-viewer svg text')).toContainText('Before edit');
+	await expect(page.locator('visio-viewer svg.paper text')).toContainText('Before edit');
 	await expect(page.locator('#edit-label')).toHaveText('ORIGINAL');
 	await history(viewer, 'Redo').click();
-	await expect(page.locator('visio-viewer svg text')).toContainText('Literal edited text');
+	await expect(page.locator('visio-viewer svg.paper text')).toContainText('Literal edited text');
 	const saveAs = await downloadCopy(page.locator('visio-viewer'));
 	const downloadEvent = page.waitForEvent('download');
 	await saveAs.click();
@@ -54,7 +54,7 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 		buffer: Buffer.concat(chunks),
 	});
 	await expect(page.locator('#file-name')).toHaveText('reopened.vsdx');
-	await expect(page.locator('visio-viewer svg text')).toContainText('Literal edited text');
+	await expect(page.locator('visio-viewer svg.paper text')).toContainText('Literal edited text');
 	expect(external).toEqual([]);
 });
 
@@ -85,7 +85,7 @@ test('mobile in-place editor types zoom keys as text, keeps the page width and s
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 	await editor.press('Escape');
 	await expect(editor).toHaveCount(0);
-	await expect(viewer.locator('svg text')).toContainText('Original + - 0');
+	await expect(viewer.locator('svg.paper text')).toContainText('Original + - 0');
 	// The sample replaces the drawing and takes no draft with it.
 	await loadSampleTemplate(viewer);
 	await expect(viewer.locator('svg.paper')).toHaveAttribute('aria-label', 'Release workflow');

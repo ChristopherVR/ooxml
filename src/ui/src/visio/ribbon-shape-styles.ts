@@ -10,6 +10,7 @@ import {
 } from 'ooxml-core/visio';
 import type { OfficeGalleryItem, OfficeGalleryState, OfficeUiGallery } from '../ribbon/gallery';
 import { emitRibbonAction } from './ribbon-action';
+import { inlineGallery } from './ribbon-inline-galleries';
 import type { CommandSpec } from './ribbon-parts';
 
 const COLOR_NAMES: Readonly<Partial<Record<VisioQuickStyleColor, string>>> = {
@@ -58,26 +59,33 @@ export function quickStyleItems(): OfficeGalleryItem[] {
 }
 
 export function quickStyleGalleryState(disabled: boolean): OfficeGalleryState {
+	const items = quickStyleItems();
 	return {
 		id: 'quick-styles',
 		label: 'Quick Styles',
 		disabled,
+		// The ribbon row is the first style row, one tile per theme colour, as in Visio.
+		inline: items.slice(0, VISIO_QUICK_STYLE_COLORS.length),
 		sections: [
 			{
 				title: 'Theme Styles',
 				columns: 7,
 				tileWidth: 40,
 				tileHeight: 28,
-				items: quickStyleItems(),
+				items,
 			},
 		],
 	};
 }
 
-/** Home > Shape Styles > Quick Styles: the shared Office gallery raising typed format actions. */
+/**
+ * Home > Shape Styles > Quick Styles: the shared Office gallery, shown as Visio's row of tiles with
+ * a More button, raising typed format actions.
+ */
 export function quickStyleGallery(doc: Document): HTMLElement {
 	const gallery = doc.createElement('office-ui-gallery') as OfficeUiGallery;
 	gallery.dataset.menu = 'quick-styles';
+	inlineGallery(gallery, 'quick-styles');
 	gallery.setAttribute('icon', 'quickStyles');
 	gallery.setAttribute('label', 'Quick Styles');
 	gallery.title = QUICK_STYLES_HINT;

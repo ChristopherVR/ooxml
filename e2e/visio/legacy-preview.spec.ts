@@ -29,7 +29,7 @@ test('shipped worker detects legacy bytes under a modern filename and disables V
 		buffer: await createVsdxFixture('Modern after legacy'),
 	});
 	await expect(page.locator('#file-name')).toHaveText('modern.vsd');
-	await expect(page.locator('visio-viewer svg text')).toContainText('Modern after legacy');
+	await expect(page.locator('visio-viewer svg.paper text')).toContainText('Modern after legacy');
 	await expect(saveCommand(page.locator('visio-viewer'))).toBeEnabled();
 	await page.locator('#file').setInputFiles({
 		name: 'legacy-again.vsd',

@@ -9,6 +9,7 @@ import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
 import { installOfficeUiTheme } from '../theme';
 import { createRibbon } from './ribbon';
+import { wireInlineGalleries } from './ribbon-inline-galleries';
 import { syncRibbonAddIns, type RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { commandRow } from './ribbon-parts';
 import { applyKeyTips } from './ribbon-keytips';
@@ -577,6 +578,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
 		const disposeTellMe = wireTellMe(this.#root);
+		const disposeGalleries = wireInlineGalleries(this, this.#root);
 		const keyTips = attachKeyTips(this.#root);
 		const disposePanZoom = this.#panZoom.wire();
 		const disposeSizePosition = this.#sizePosition.wire();
@@ -629,6 +631,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeBackstage();
 			disposeMenus();
 			disposeTellMe();
+			disposeGalleries();
 			keyTips.dispose();
 			disposePanZoom();
 			disposeSizePosition();

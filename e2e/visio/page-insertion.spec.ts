@@ -22,7 +22,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			buffer: await createVsdxFixture('Original page shape'),
 		});
 		await expect(page.locator('#file-name')).toHaveText('pages.vsdx');
-		await expect(viewer.locator('svg text')).toContainText('Original page shape');
+		await expect(viewer.locator('svg.paper text')).toContainText('Original page shape');
 		await tabs.getByRole('button', { name: 'Insert Page', exact: true }).click();
 		await expect(tabs.getByRole('tab')).toHaveCount(2);
 		await expect(tabs.getByRole('tab', { name: 'Page-2', exact: true })).toHaveAttribute(
@@ -32,7 +32,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(viewer.locator('[data-shape-id]')).toHaveCount(0);
 		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect(tabs.getByRole('tab')).toHaveCount(1);
-		await expect(viewer.locator('svg text')).toContainText('Original page shape');
+		await expect(viewer.locator('svg.paper text')).toContainText('Original page shape');
 		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect(tabs.getByRole('tab')).toHaveCount(2);
 		await tabs.getByRole('tab', { name: 'Page-2', exact: true }).click();

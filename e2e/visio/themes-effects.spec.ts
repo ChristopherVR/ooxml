@@ -36,10 +36,11 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	const viewer = page.locator('visio-viewer');
 	const shape = viewer.locator('svg.paper [data-shape-id="1"]');
 	await shape.click();
-	// A Quick Style, as dropped masters get, so the theme recolours the shape.
+	// A Quick Style, as dropped masters get, so the theme recolours the shape. The ribbon shows a
+	// row of tiles; the More button opens the whole gallery.
 	const quick = viewer.locator('office-ui-gallery[data-menu="quick-styles"]');
 	await quick.locator('.trigger').click();
-	await quick.locator('[data-gallery-item="quick-style-2-4"]').click();
+	await quick.locator('.popup [data-gallery-item="quick-style-2-4"]').click();
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#5b9bd5');
 
 	await viewer.getByRole('tab', { name: 'Design', exact: true }).click();
@@ -47,12 +48,12 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	const variants = viewer.locator('office-ui-gallery[data-menu="variants"]');
 	await expect(variants).toHaveAttribute('disabled', '');
 	await themes.locator('.trigger').click();
-	await themes.locator('[data-gallery-item="theme-harbor"]').click();
+	await themes.locator('.popup [data-gallery-item="theme-harbor"]').click();
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#1f78b4');
 	await expect(variants).not.toHaveAttribute('disabled', '');
 	await expect(viewer.locator('[command="theme-fonts"]')).toHaveAttribute('disabled', '');
 	await variants.locator('.trigger').click();
-	await variants.locator('[data-gallery-item="variant-2"]').click();
+	await variants.locator('.popup [data-gallery-item="variant-2"]').click();
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#1f78b4');
 	await expect(page.locator('#edit-label')).toHaveText('EDITED COPY');
 

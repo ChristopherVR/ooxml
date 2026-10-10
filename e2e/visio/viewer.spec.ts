@@ -72,7 +72,7 @@ test('opens actual synthetic VSDX locally and safely renders literal document te
 		'aria-label',
 		'Imported page',
 	);
-	await expect(page.locator('visio-viewer svg text')).toContainText(
+	await expect(page.locator('visio-viewer svg.paper text')).toContainText(
 		'<script>literal text</script>',
 	);
 	expect(await page.locator('visio-viewer svg script').count()).toBe(0);
