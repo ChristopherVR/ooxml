@@ -30,6 +30,8 @@ import {
 	type RawShape,
 	type Report,
 } from './sheet';
+import { listVisioMasters, type MasterRecord } from './master-list';
+import { readVisioStencilWindows } from './stencil-windows';
 import { readVisioFieldProperties } from './text-field-context';
 import { visioWallClock } from './text-fields';
 
@@ -144,6 +146,7 @@ export async function parseVsdx(
 	const rootStyle = styles.get('0');
 	if (rootStyle?.attributes.get('NameU') === 'No Style') resources.rootSheet = rootStyle.sheet;
 	const masters = new Map<string, RawShape[]>();
+	const masterRecords: MasterRecord[] = [];
 	const mastersPart = await related(pkg, documentPart, 'masters', false);
 	if (mastersPart) {
 		for (const master of children(await visioXml(pkg, mastersPart, 'Masters'), 'Master')) {
@@ -161,6 +164,7 @@ export async function parseVsdx(
 				options.metafileConverter,
 			);
 			masters.set(id, masterShapes);
+			masterRecords.push({ id, node: master, shapes: masterShapes });
 		}
 	}
 	let geometryCount = 0,
@@ -222,6 +226,10 @@ export async function parseVsdx(
 				throw new VisioPackageError('TEXT_LIMIT', 'Text character limit exceeded.');
 		},
 	};
+	const documentMasters = listVisioMasters(masterRecords, context, {
+		metadataBudget: createMetadataBudget(options.metadata),
+		layerBudget: createLayerBudget(),
+	});
 	const pagesPart = await related(pkg, documentPart, 'pages');
 	if (!pagesPart) throw new VisioPackageError('INVALID_DOCUMENT', 'Missing Visio pages part.');
 	const pages: VisioPage[] = [],
@@ -359,6 +367,7 @@ export async function parseVsdx(
 			`Saved external data could not be read and is preserved unchanged: ${error instanceof Error ? error.message : String(error)}`,
 		);
 	}
+	const stencils = await readVisioStencilWindows(pkg, documentPart);
 	report(
 		'cached-values-only',
 		'ShapeSheet formulas, automatic connector routing, and external data are not evaluated; saved cached values and supported theme records are used.',
@@ -367,6 +376,8 @@ export async function parseVsdx(
 	return {
 		format: 'vsdx',
 		pages,
+		...(documentMasters.length ? { masters: documentMasters } : {}),
+		...(stencils.length ? { stencils } : {}),
 		diagnostics: diagnosticState.finish(),
 		...(dataRecordsets.length ? { dataRecordsets } : {}),
 		fontFamilies: [...new Set(resources.fonts.values())],

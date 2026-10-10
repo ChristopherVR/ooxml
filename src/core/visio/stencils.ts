@@ -17,17 +17,19 @@ export interface VisioStencil {
 
 const size = (width: number, height: number) => ({ width, height });
 const step = size(1, 0.75);
-const master = (shape: VisioOutlineShape, name: string, dimensions = step): VisioStencilMaster => ({
-	id: shape,
-	name,
-	shape,
-	size: dimensions,
-});
+const master = (
+	shape: VisioOutlineShape,
+	name: string,
+	dimensions = step,
+	id: string = shape,
+): VisioStencilMaster => ({ id, name, shape, size: dimensions });
 
 /**
  * Built-in stencils More Shapes can open, in Visio's order. They are data over core outlines, not
  * stencil (.vssx) files: Visio's master shapesheets, connection points and Shape Data are not
  * reproduced, and stencil files cannot be opened. Basic Shapes lives with the Shapes window.
+ * Basic Flowchart Shapes has Visio's fourteen masters, names and drop sizes; a master whose
+ * outline another stencil also uses has its own id.
  */
 export const VISIO_STENCILS: readonly VisioStencil[] = [
 	{
@@ -36,10 +38,29 @@ export const VISIO_STENCILS: readonly VisioStencil[] = [
 		masters: [
 			master('flowchart-process', 'Process'),
 			master('flowchart-decision', 'Decision'),
-			master('flowchart-terminator', 'Start/End', size(1, 0.5)),
+			master('flowchart-predefined-process', 'Subprocess'),
+			master('flowchart-terminator', 'Start/End', size(1, 0.375)),
 			master('flowchart-document', 'Document'),
 			master('flowchart-data', 'Data'),
-			master('flowchart-predefined-process', 'Predefined process'),
+			master('can', 'Database', step, 'flowchart-database'),
+			master('flowchart-stored-data', 'External Data', step, 'flowchart-external-data'),
+			master('flowchart-manual-input', 'Custom 1', step, 'flowchart-custom-1'),
+			master('flowchart-manual-operation', 'Custom 2', step, 'flowchart-custom-2'),
+			master('flowchart-card', 'Custom 3', step, 'flowchart-custom-3'),
+			master('flowchart-preparation', 'Custom 4', step, 'flowchart-custom-4'),
+			{
+				id: 'flowchart-on-page-reference',
+				name: 'On-page reference',
+				shape: 'ellipse',
+				size: size(0.375, 0.375),
+			},
+			master('flowchart-off-page-reference', 'Off-page reference', size(0.5, 0.5)),
+		],
+	},
+	{
+		id: 'misc-flowchart',
+		name: 'Miscellaneous Flowchart Shapes',
+		masters: [
 			master('flowchart-stored-data', 'Stored data'),
 			master('flowchart-internal-storage', 'Internal storage', size(0.75, 0.75)),
 			master('flowchart-sequential-data', 'Sequential data', size(0.75, 0.75)),
@@ -47,13 +68,6 @@ export const VISIO_STENCILS: readonly VisioStencil[] = [
 			master('flowchart-manual-input', 'Manual input'),
 			master('flowchart-manual-operation', 'Manual operation'),
 			master('flowchart-preparation', 'Preparation'),
-			master('flowchart-off-page-reference', 'Off-page reference', size(0.5, 0.5)),
-			{
-				id: 'flowchart-on-page-reference',
-				name: 'On-page reference',
-				shape: 'ellipse',
-				size: size(0.375, 0.375),
-			},
 			master('flowchart-card', 'Card'),
 			master('flowchart-paper-tape', 'Paper tape'),
 			master('flowchart-display', 'Display'),

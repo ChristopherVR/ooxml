@@ -19,8 +19,30 @@ describe('built-in stencils', () => {
 		expect(new Set(ids).size).toBe(ids.length);
 		expect(VISIO_STENCILS.map((stencil) => stencil.name)).toEqual([
 			'Basic Flowchart Shapes',
+			'Miscellaneous Flowchart Shapes',
 			'Arrow Shapes',
 		]);
+		// Visio's Basic Flowchart Shapes stencil: its fourteen masters, in its order.
+		expect(VISIO_STENCILS[0]!.masters.map((master) => master.name)).toEqual([
+			'Process',
+			'Decision',
+			'Subprocess',
+			'Start/End',
+			'Document',
+			'Data',
+			'Database',
+			'External Data',
+			'Custom 1',
+			'Custom 2',
+			'Custom 3',
+			'Custom 4',
+			'On-page reference',
+			'Off-page reference',
+		]);
+		expect(visioStencilMaster('flowchart-database')?.master).toMatchObject({
+			shape: 'can',
+			size: { width: 1, height: 0.75 },
+		});
 		for (const stencil of VISIO_STENCILS)
 			for (const master of stencil.masters) {
 				expect(master.shape === 'ellipse' || isVisioOutlineShape(master.shape)).toBe(true);

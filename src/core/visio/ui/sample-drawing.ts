@@ -154,7 +154,12 @@ function shapeEdits(page: SamplePage): VisioEdit[] {
  */
 export async function createSampleVsdx(): Promise<Uint8Array> {
 	const [first, ...rest] = PAGES as [SamplePage, ...SamplePage[]];
-	const blank = await createVsdx({ width: first.width, height: first.height });
+	// A flowchart: Visio's flowchart template docks Basic Flowchart Shapes.
+	const blank = await createVsdx({
+		width: first.width,
+		height: first.height,
+		stencils: ['basic-flowchart'],
+	});
 	const pages = await editVsdx(blank, [
 		{ type: 'rename-page', pageId: first.id, name: first.name },
 		...rest.flatMap((page, index): VisioEdit[] => [

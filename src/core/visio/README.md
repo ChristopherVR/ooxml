@@ -61,6 +61,22 @@ Omitted flags are kept, a missing cell is added, and a flag driven by a formula 
 property edits form their own transaction and change only `pages.xml`. Renaming, removing and
 recolouring layers, and the Active, Snap and Glue flags, are not written.
 
+## Document stencil and docked stencils
+
+`parseVsdx` lists the drawing's visible masters as `document.masters` (`VisioMaster`: `id`, `name`,
+`nameU`, the master page size, `rootCount`, `oneDimensional` and the master's shapes resolved
+alone, for a preview), and the file names of its Stencil windows (`visio/windows.xml`) as
+`document.stencils`. `visioBuiltInStencil` maps Visio's `BASIC`, `BASFLO` and `ARROWS` stencil
+files to the built-in stencils; `createVsdx({ stencils })` writes those windows. Stencil files are
+never opened.
+
+`insert-master-instance` drops a master on a page as Visio does: a shape that names the master and
+carries only `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master,
+and the page's relationship to the master part when it is missing. It forms its own transaction.
+A master with more than one top-level shape, a 1-D master and a master that inherits another are
+refused (`UNSUPPORTED_MASTER_INSTANCE`). Layer membership, a shape name and page auto-size are not
+written. `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit from a pointer position.
+
 ## Text fields
 
 `insert-text-field` adds a `<fld>` and a Field row (Value formula and cache, Format

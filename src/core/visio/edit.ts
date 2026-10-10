@@ -40,6 +40,7 @@ import { isVisioDataEdit } from './edit-data-commands';
 import { editVsdxData } from './edit-data';
 import { editVsdxLayers } from './edit-layers';
 import { editVsdxLayerProperties } from './edit-layer-properties';
+import { editVsdxMasterInstance } from './edit-master-instance';
 import { isVisioGuideEdit } from './edit-guide-commands';
 import { applyGuideEdit } from './edit-guides';
 export type {
@@ -99,6 +100,7 @@ export type {
 	VisioDataUnlinkEdit,
 	VisioAssignLayersEdit,
 	VisioLayerPropertiesEdit,
+	VisioMasterInstanceEdit,
 	VisioGuideEdit,
 } from './edit-commands';
 
@@ -178,6 +180,12 @@ async function editVsdxTransaction(
 		if (allCommands.length !== 1)
 			fail('EDIT_MIXED_PICTURE_TRANSACTION', 'Picture insertion requires its own transaction.');
 		return editVsdxPicture(pkg, parts, pages, picture, limits, maxOutput, deadline, check);
+	}
+	const instance = allCommands.find((command) => command.type === 'insert-master-instance');
+	if (instance) {
+		if (allCommands.length !== 1)
+			fail('EDIT_MIXED_MASTER_TRANSACTION', 'Dropping a master requires its own transaction.');
+		return editVsdxMasterInstance(pkg, parts, pages, instance, limits, maxOutput, deadline, check);
 	}
 	const theme = allCommands.find((command) => command.type === 'set-page-theme');
 	if (theme) {
@@ -447,7 +455,8 @@ async function editVsdxTransaction(
 			!isVisioCommentEdit(command) &&
 			!isVisioDataEdit(command) &&
 			command.type !== 'assign-layers' &&
-			command.type !== 'set-layer-properties'
+			command.type !== 'set-layer-properties' &&
+			command.type !== 'insert-master-instance'
 		) {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);

@@ -367,8 +367,28 @@ export interface VisioPage {
 	layers?: VisioLayer[];
 	theme?: VisioPageTheme;
 }
+/** One master of the drawing's document stencil (visio/masters). */
+export interface VisioMaster {
+	id: string;
+	/** The local name, or the universal one when there is none. */
+	name: string;
+	nameU?: string;
+	/** The master page size in inches. */
+	width: number;
+	height: number;
+	/** Top-level shapes in the master; an instance inherits the only one. */
+	rootCount: number;
+	/** A 1-D master (a connector or a line), which is glued or stretched rather than dropped. */
+	oneDimensional: boolean;
+	/** The master's shapes drawn alone, for a preview; empty when they could not be resolved. */
+	shapes: VisioShape[];
+}
 export interface VisioDocument {
 	format: 'vsdx' | 'vsd';
+	/** The document stencil: visible masters in file order. Absent when the drawing has none. */
+	masters?: VisioMaster[];
+	/** File names of the stencils docked in the drawing window when it was saved (no folders). */
+	stencils?: string[];
 	/** Existing source FaceNames available for conservative source-backed font edits. */
 	fontFamilies?: readonly string[];
 	/** Saved external data (DataRecordSets): cached rows and shape links. Never refreshed here. */

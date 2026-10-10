@@ -92,6 +92,7 @@ export {
 	type VisioPictureInsertEdit,
 	type VisioAssignLayersEdit,
 	type VisioLayerPropertiesEdit,
+	type VisioMasterInstanceEdit,
 	type VisioGuideEdit,
 	type VisioShapeHyperlinkEdit,
 	type VisioShapeScreenTipEdit,
@@ -220,6 +221,11 @@ export {
 	type VisioStencilShape,
 	type VisioOutlineShape,
 } from './stencil-shapes';
+export {
+	VISIO_STENCIL_FILES,
+	visioBuiltInStencil,
+	type VisioBuiltInStencilId,
+} from './stencil-windows';
 export {
 	VISIO_STENCILS,
 	visioStencilMaster,
