@@ -3311,7 +3311,7 @@
 					"name": "OfficeUiTaskPane",
 					"tagName": "office-ui-task-pane",
 					"customElement": true,
-					"description": "`<office-ui-task-pane>`: a docked task pane, as Office shows Format Shape or Shape Data. A header with the `label` as its title and a close button (named by `close-label`, default \"Close <label>\"), then the slotted body. The close button emits `office-pane-close`; the host decides whether to hide the pane. The host is a `complementary` landmark named by the label.",
+					"description": "`<office-ui-task-pane>`: a docked task pane, as Office shows Format Shape or Shape Data. A header with the `label` as its title and a close button (named by `close-label`, default \"Close <label>\"), then the slotted body. The close button emits `office-pane-close`; the host decides whether to hide the pane. The host is a `complementary` landmark named by the label. Parts: `header` and `body`, for a product that lays the pane out differently (a wide pane docked under the document, whose body does not scroll as a whole).",
 					"attributes": [
 						{
 							"name": "close-label"

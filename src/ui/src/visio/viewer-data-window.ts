@@ -17,16 +17,19 @@ const ACTIONS: readonly [DataWindowAction, string, string][] = [
 	['remove', 'Remove', 'Remove this recordset from the drawing; linked shapes keep their data.'],
 ];
 
-/** Visio's External Data window: a docked grid of the drawing's saved recordsets. */
+/**
+ * Visio's External Data window: a grid of the drawing's saved recordsets, docked under the
+ * drawing in the shared `office-ui-task-pane` (title and close button), with the recordset
+ * picker and the link commands in a bar above the grid.
+ */
 export function createExternalDataWindow(doc: Document): HTMLElement {
-	const pane = doc.createElement('section');
+	const pane = doc.createElement('office-ui-task-pane');
 	pane.className = 'external-data';
 	pane.hidden = true;
-	pane.setAttribute('aria-label', 'External Data');
+	pane.setAttribute('label', 'External Data');
+	pane.setAttribute('close-label', 'Close External Data window');
 	const heading = doc.createElement('div');
-	heading.className = 'pane-heading';
-	const title = doc.createElement('span');
-	title.textContent = 'External Data';
+	heading.className = 'external-data-bar';
 	const sets = doc.createElement('select');
 	sets.dataset.recordset = '';
 	sets.setAttribute('aria-label', 'Recordset');
@@ -40,13 +43,7 @@ export function createExternalDataWindow(doc: Document): HTMLElement {
 		button.title = hint;
 		tools.append(button);
 	}
-	const close = doc.createElement('button');
-	close.type = 'button';
-	close.className = 'pane-close';
-	close.dataset.dataAction = 'close';
-	close.setAttribute('aria-label', 'Close External Data window');
-	close.textContent = '×';
-	heading.append(title, sets, tools, close);
+	heading.append(sets, tools);
 	const hint = doc.createElement('p');
 	hint.className = 'external-data-hint';
 	hint.dataset.dataHint = '';

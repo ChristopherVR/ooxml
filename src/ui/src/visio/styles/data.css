@@ -13,20 +13,33 @@
 	color: var(--_vv-ink);
 	border-top: 1px solid var(--_vv-border);
 	box-shadow: 0 -2px 8px #0002;
+	--office-background: var(--_vv-surface);
+	--office-surface: var(--_vv-secondary);
+	--office-foreground: var(--_vv-ink);
 }
 .external-data[hidden] {
 	display: none;
 }
-.external-data .pane-heading {
+/* A wide, short window: a compact title row, and only the grid scrolls. */
+.external-data::part(header) {
+	padding: 4px 8px 4px 12px;
+	border-bottom: 1px solid var(--_vv-border);
+}
+.external-data::part(body) {
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	overflow: hidden;
+}
+.external-data-bar {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
 	padding: 6px 12px;
 	border-bottom: 1px solid var(--_vv-border);
-	font-weight: 600;
 }
-.external-data .pane-heading select,
+.external-data-bar select,
 .external-data-tools button {
 	font: inherit;
 	font-weight: 400;

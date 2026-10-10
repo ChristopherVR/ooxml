@@ -182,6 +182,8 @@ export class ViewerDataLinks {
 		const Abort = this.root.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
 		const options = { signal: events.signal };
+		// The shared task pane's close button.
+		this.pane.addEventListener('office-pane-close', () => this.#act('close'), options);
 		this.pane.addEventListener(
 			'click',
 			(event) => {

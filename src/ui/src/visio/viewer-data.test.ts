@@ -134,6 +134,17 @@ it('quick imports a CSV, shows the External Data window and links a row by drag 
 	await view.done();
 	view.data({ type: 'data', command: 'external-data-window' });
 	expect(view.pane().hidden).toBe(true);
+	// The window is the shared task pane: its title, and its close button hides it again.
+	view.data({ type: 'data', command: 'external-data-window' });
+	expect(view.pane().localName).toBe('office-ui-task-pane');
+	expect(view.pane().shadowRoot!.querySelector('.title')!.textContent).toBe('External Data');
+	const close = view.pane().shadowRoot!.querySelector<HTMLButtonElement>('.close')!;
+	expect(close.getAttribute('aria-label')).toBe('Close External Data window');
+	close.click();
+	expect(view.pane().hidden).toBe(true);
+	expect(
+		view.q<HTMLElement & { checked: boolean }>('[data-check="external-data-window"]').checked,
+	).toBe(false);
 	view.dispose();
 });
 

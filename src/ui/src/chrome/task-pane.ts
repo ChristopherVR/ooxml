@@ -9,6 +9,8 @@ import css from './task-pane.css?raw';
  * header with the `label` as its title and a close button (named by `close-label`, default
  * "Close <label>"), then the slotted body. The close button emits `office-pane-close`; the host
  * decides whether to hide the pane. The host is a `complementary` landmark named by the label.
+ * Parts: `header` and `body`, for a product that lays the pane out differently (a wide pane
+ * docked under the document, whose body does not scroll as a whole).
  */
 export class OfficeUiTaskPane extends OfficeElement {
 	static closeEvent = 'office-pane-close';
@@ -33,7 +35,7 @@ export class OfficeUiTaskPane extends OfficeElement {
 
 	protected override render() {
 		const close = this.closeLabel || `Close ${this.label}`;
-		return html`<div class="header"
+		return html`<div class="header" part="header"
 				><h2 class="title">${this.label}</h2
 				><button
 					type="button"
@@ -43,7 +45,7 @@ export class OfficeUiTaskPane extends OfficeElement {
 					@click=${() => this.fire((this.constructor as typeof OfficeUiTaskPane).closeEvent, {})}
 					>${glyph('close', 'icon')}</button
 				></div
-			><div class="body"><slot></slot></div>`;
+			><div class="body" part="body"><slot></slot></div>`;
 	}
 }
 
