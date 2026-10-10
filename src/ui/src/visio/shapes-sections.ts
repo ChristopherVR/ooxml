@@ -52,6 +52,21 @@ function save(doc: Document, saved: Saved): void {
 	}
 }
 
+/**
+ * The Quick Shapes of the current stencil (the one opened last, else Basic Shapes), for the
+ * AutoConnect mini toolbar. Reads the saved preferences, so it follows the Shapes window.
+ */
+export function currentQuickShapes(doc: Document, limit = DEFAULT_QUICK): Master[] {
+	const saved = load(doc);
+	const id = saved.open.at(-1) ?? BASIC_STENCIL_ID;
+	const stencil = STENCILS.find((candidate) => candidate.id === id) ?? STENCILS[0]!;
+	const ids =
+		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
+	const masters = ids.flatMap((master) => findMaster(master)?.master ?? []);
+	// A stencil whose Quick Shapes were all removed still offers its first masters.
+	return (masters.length ? masters : [...stencil.masters]).slice(0, limit);
+}
+
 /** One master button: drag it onto the page, or activate it to add it at the page centre. */
 export function masterButton(doc: Document, master: Master): HTMLLIElement {
 	const item = doc.createElement('li');

@@ -1,6 +1,7 @@
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioLayoutAction } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
+import { ViewerAutoConnect } from './viewer-auto-connect';
 import { ViewerExplorer } from './viewer-explorer';
 import { ViewerGuides } from './viewer-guides';
 import { ViewerLayerAssign } from './viewer-layer-assign';
@@ -23,12 +24,14 @@ export interface LayoutCommandHost {
 	edit(run: () => Promise<void>, message: string): void;
 	/** Paste the viewer's own shape clipboard, as Ctrl+V does. */
 	pasteShapes(): Promise<void>;
+	/** Whether the Pointer tool is the current tool (AutoConnect arrows belong to it). */
+	pointerTool(): boolean;
 }
 
 /**
  * Arrangement, layout, layers, selection, view aids and help commands: Auto Align & Space,
  * Re-Layout Page and its Layout dialog, Assign to Layer, Layer Properties, Select by Type, Paste Special, Guides,
- * Dynamic Grid, Drawing Explorer, Help and Show Training.
+ * Dynamic Grid, AutoConnect, Drawing Explorer, Help and Show Training.
  */
 export class ViewerLayoutCommands {
 	readonly layout: ViewerLayout;
@@ -38,6 +41,7 @@ export class ViewerLayoutCommands {
 	readonly paste: ViewerPasteSpecial;
 	readonly guides: ViewerGuides;
 	readonly explorer: ViewerExplorer;
+	readonly autoConnect: ViewerAutoConnect;
 	constructor(private readonly host: LayoutCommandHost) {
 		const { root, controller, announce } = host;
 		this.layout = new ViewerLayout(root, controller, host.edit);
@@ -47,6 +51,14 @@ export class ViewerLayoutCommands {
 		this.paste = new ViewerPasteSpecial(root, controller, announce, host.pasteShapes);
 		this.guides = new ViewerGuides(root, host.viewport, host.rulers, controller, announce);
 		this.explorer = new ViewerExplorer(root, controller, announce);
+		this.autoConnect = new ViewerAutoConnect({
+			root,
+			viewport: host.viewport,
+			controller,
+			announce,
+			edit: host.edit,
+			pointerTool: host.pointerTool,
+		});
 	}
 	run(action: VisioLayoutAction): void {
 		switch (action.type) {
@@ -68,6 +80,8 @@ export class ViewerLayoutCommands {
 				return this.guides.toggleGuides();
 			case 'dynamic-grid':
 				return this.guides.toggleDynamicGrid();
+			case 'auto-connect':
+				return this.autoConnect.toggle();
 			case 'drawing-explorer':
 				return this.explorer.open();
 			case 'help': {
@@ -83,7 +97,12 @@ export class ViewerLayoutCommands {
 		}
 	}
 	wire(): () => void {
-		return this.guides.wire();
+		const guides = this.guides.wire(),
+			autoConnect = this.autoConnect.wire();
+		return () => {
+			guides();
+			autoConnect();
+		};
 	}
 	close(): void {
 		for (const dialog of [
@@ -103,6 +122,7 @@ export class ViewerLayoutCommands {
 		this.paste.render(state);
 		this.guides.render(state);
 		this.explorer.render(state);
+		this.autoConnect.render(state);
 		const explorer = this.host.root.querySelector<RibbonCommand>('[command="drawing-explorer"]');
 		if (explorer) explorer.disabled = !state.document;
 	}

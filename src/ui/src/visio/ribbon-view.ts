@@ -123,8 +123,8 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 						check(doc, {
 							id: 'auto-connect',
 							label: 'AutoConnect',
-							unsupported:
-								'Hover arrows that add a glued copy of a shape are not built yet; draw connectors with the Connector tool.',
+							action: { type: 'auto-connect' },
+							checked: true,
 						}),
 						check(doc, {
 							id: 'connection-points',

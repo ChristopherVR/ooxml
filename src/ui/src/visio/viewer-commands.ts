@@ -163,6 +163,7 @@ export class ViewerCommands {
 				void this.#edit(run, message);
 			},
 			pasteShapes: () => this.#clipboard.run('paste'),
+			pointerTool: () => this.#tool === 'pointer',
 		});
 		this.#textFeatures = new ViewerTextFeatures(
 			host.root,

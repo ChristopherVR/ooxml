@@ -37,6 +37,7 @@ export * from './shape-clipboard';
 export * from './shape-move';
 export * from './size-position';
 export * from './marquee';
+export * from './auto-connect';
 export * from './shape-resize';
 export * from './draw-plan';
 export * from './draw-path-plan';

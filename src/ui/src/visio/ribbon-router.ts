@@ -68,6 +68,7 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 		case 'paste-special':
 		case 'guides':
 		case 'dynamic-grid':
+		case 'auto-connect':
 		case 'drawing-explorer':
 		case 'help':
 			return targets.layout(action);

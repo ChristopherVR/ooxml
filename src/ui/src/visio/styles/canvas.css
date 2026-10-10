@@ -133,3 +133,83 @@
 	stroke-dasharray: 4 3;
 	pointer-events: none;
 }
+
+/* View > Visual Aids > AutoConnect: arrows outside a hovered shape and their Quick Shapes bar. */
+.auto-connect {
+	position: absolute;
+	z-index: 2;
+	width: 0;
+	height: 0;
+	pointer-events: none;
+}
+.viewport[data-text-editing] .auto-connect {
+	display: none;
+}
+.auto-connect-arrow {
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	margin: -10px 0 0 -10px;
+	padding: 2px;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.auto-connect-arrow svg {
+	display: block;
+	width: 16px;
+	height: 16px;
+	fill: var(--_vv-accent-soft);
+	stroke: var(--_vv-accent);
+	stroke-width: 1;
+	stroke-linejoin: round;
+}
+.auto-connect-arrow:hover svg {
+	fill: var(--_vv-accent);
+}
+.auto-connect-bar {
+	position: absolute;
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	border: 1px solid var(--_vv-border);
+	border-radius: 3px;
+	background: var(--_vv-surface);
+	box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+	pointer-events: auto;
+}
+.auto-connect-bar[data-side='right'] {
+	transform: translate(9px, -50%);
+}
+.auto-connect-bar[data-side='left'] {
+	transform: translate(calc(-100% - 9px), -50%);
+}
+.auto-connect-bar[data-side='up'] {
+	transform: translate(-50%, calc(-100% - 9px));
+}
+.auto-connect-bar[data-side='down'] {
+	transform: translate(-50%, 9px);
+}
+.auto-connect-bar button {
+	width: 30px;
+	height: 30px;
+	padding: 3px;
+	border: 1px solid transparent;
+	border-radius: 2px;
+	background: none;
+	cursor: pointer;
+}
+.auto-connect-bar button:hover {
+	border-color: var(--_vv-accent);
+	background: var(--_vv-accent-soft);
+}
+.auto-connect-bar svg {
+	display: block;
+	width: 22px;
+	height: 22px;
+	fill: var(--_vv-surface);
+	stroke: var(--_vv-ink);
+	stroke-width: 1;
+	stroke-linejoin: round;
+}

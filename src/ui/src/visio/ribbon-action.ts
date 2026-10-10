@@ -94,6 +94,7 @@ export type VisioLayoutAction =
 	| { type: 'paste-special' }
 	| { type: 'guides' }
 	| { type: 'dynamic-grid' }
+	| { type: 'auto-connect' }
 	| { type: 'drawing-explorer' }
 	| { type: 'help'; topic: 'help' | 'training' };
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
