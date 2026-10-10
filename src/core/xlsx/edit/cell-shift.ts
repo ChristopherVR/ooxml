@@ -1,6 +1,7 @@
 import { type CellRange, MAX_COL, MAX_ROW, normalizeRange, rangesIntersect } from '../address';
 import type { Worksheet } from '../model';
 import { shiftFormulaInBand } from './band-formulas';
+import { assertInsertFits } from './insert-guard';
 import { type EditContext, isWholeColumns, isWholeRows, sheetAt } from './context';
 import type { AxisShift } from './range-math';
 import { cellRange } from './range-math';
@@ -45,6 +46,7 @@ function shiftBand(
 		? { lo: r.start.col, hi: r.end.col }
 		: { lo: r.start.row, hi: r.end.row };
 	assertBandIntact(sheet, shift, band);
+	assertInsertFits(sheet, shift, band);
 	ctx.run(
 		`${insert ? 'Insert' : 'Delete'} cells`,
 		'structure',
