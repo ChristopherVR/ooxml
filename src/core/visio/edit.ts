@@ -58,6 +58,8 @@ import { editVsdxData } from './edit-data';
 import { editVsdxLayers } from './edit-layers';
 import { editVsdxLayerProperties } from './edit-layer-properties';
 import { editVsdxMasterInstance } from './edit-master-instance';
+import { editVsdxMasterDrops, isVisioMasterDrop } from './edit-master-drop';
+import { changeStencilShapeToBuiltIn } from './edit-change-shape-builtin';
 import { isVisioGuideEdit } from './edit-guide-commands';
 import { applyGuideEdit } from './edit-guides';
 export type {
@@ -118,6 +120,7 @@ export type {
 	VisioAssignLayersEdit,
 	VisioLayerPropertiesEdit,
 	VisioMasterInstanceEdit,
+	VisioStencilMasterDropEdit,
 	VisioGuideEdit,
 } from './edit-commands';
 
@@ -186,7 +189,37 @@ async function editVsdxTransaction(
 			fail('EDIT_MIXED_SUBPROCESS_TRANSACTION', 'A subprocess requires its own transaction.');
 		return editVsdxSubprocess(original, subprocess, options);
 	}
+	if (allCommands.some(isVisioMasterDrop))
+		return editVsdxMasterDrops(
+			original,
+			allCommands,
+			options,
+			async (bytes, instance, info) => {
+				const opened = await openEditablePackage(bytes, limits, check);
+				return editVsdxMasterInstance(
+					opened.pkg,
+					opened.parts,
+					opened.pages,
+					instance,
+					limits,
+					maxOutput,
+					deadline,
+					check,
+					info,
+				);
+			},
+			(bytes, rest) => editVsdx(bytes, rest, options),
+		);
 	const { pkg, parts, pages } = await openEditablePackage(original, limits, check);
+	const builtIn = await changeStencilShapeToBuiltIn(
+		original,
+		pkg,
+		pages,
+		allCommands,
+		{ limits, maxOutput, deadline, check },
+		(bytes, edits) => editVsdx(bytes, edits, options),
+	);
+	if (builtIn) return builtIn;
 	if (allCommands.some(isVisioCommentEdit)) {
 		if (!allCommands.every(isVisioCommentEdit))
 			fail('EDIT_MIXED_COMMENT_TRANSACTION', 'Comment edits require their own transaction.');
@@ -199,12 +232,6 @@ async function editVsdxTransaction(
 		if (allCommands.length !== 1)
 			fail('EDIT_MIXED_PICTURE_TRANSACTION', 'Picture insertion requires its own transaction.');
 		return editVsdxPicture(pkg, parts, pages, picture, limits, maxOutput, deadline, check);
-	}
-	const instance = allCommands.find((command) => command.type === 'insert-master-instance');
-	if (instance) {
-		if (allCommands.length !== 1)
-			fail('EDIT_MIXED_MASTER_TRANSACTION', 'Dropping a master requires its own transaction.');
-		return editVsdxMasterInstance(pkg, parts, pages, instance, limits, maxOutput, deadline, check);
 	}
 	const theme = allCommands.find((command) => command.type === 'set-page-theme');
 	if (theme) {
@@ -583,7 +610,7 @@ async function editVsdxTransaction(
 			!isVisioDataEdit(command) &&
 			command.type !== 'assign-layers' &&
 			command.type !== 'set-layer-properties' &&
-			command.type !== 'insert-master-instance'
+			!isVisioMasterDrop(command)
 		) {
 			const changedPages =
 				instanceCommands.has(command) && isInstanceGeometryEdit(roots, command)

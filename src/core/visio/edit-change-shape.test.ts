@@ -130,7 +130,12 @@ describe('change-shape', () => {
 	});
 
 	it.each([
-		['a master instance', local('5', '', rectangle, 'Master="1"'), /Master shapes/],
+		// A real instance changes by its master (edit-master-change.test.ts); this one names none.
+		[
+			'an instance of a missing master',
+			local('5', '', rectangle, 'Master="1"'),
+			/master does not belong to this drawing/,
+		],
 		[
 			'a group',
 			shape(

@@ -126,12 +126,13 @@ describe('dropping a master on a page', () => {
 		await expect(drop(bytes, '2', '2')).rejects.toMatchObject({ code: 'INVALID_SHAPE_ID' });
 		// A dangling Sheet.9! formula must not start pointing at the new shape.
 		await expect(drop(bytes, '2', '9')).rejects.toMatchObject({ code: 'INVALID_SHAPE_ID' });
+		// Other edits of the call run after the drop; one that is refused fails the whole call.
 		await expect(
 			editVsdx(bytes, [
 				{ type: 'insert-master-instance', pageId: '0', shapeId: '1', masterId: '2', x: 1, y: 1 },
-				{ type: 'delete-shape', pageId: '0', shapeId: '2' },
+				{ type: 'delete-shape', pageId: '0', shapeId: '77' },
 			]),
-		).rejects.toMatchObject({ code: 'EDIT_MIXED_MASTER_TRANSACTION' });
+		).rejects.toThrow();
 		await expect(
 			editVsdx(bytes, [
 				{

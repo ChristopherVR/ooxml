@@ -15,9 +15,10 @@ const selected = (
 };
 
 /**
- * Coarse scene admission for Home > Change Shape on a shape drawn here: the reason the selection
- * cannot take another outline, or undefined when it can be tried. Locks, formula dependencies
- * and control handles are checked by `editVsdx`, which refuses the edit with its own reason.
+ * Coarse scene admission for Home > Change Shape to a built-in shape: the reason the selection
+ * cannot change, or undefined when it can be tried. A drawn shape gets a new outline; a stencil
+ * shape becomes an instance of the built-in master. Locks, formula dependencies and control
+ * handles are checked by `editVsdx`, which refuses the edit with its own reason.
  */
 export function visioChangeShapeRefusal(
 	page: VisioPage | undefined,
@@ -25,11 +26,19 @@ export function visioChangeShapeRefusal(
 ): string | undefined {
 	const shape = selected(page, selection);
 	if (typeof shape === 'string') return shape;
-	if (shape.masterId)
-		return 'A stencil shape changes to another shape of the Document Stencil, not to an outline.';
 	if (shape.kind === 'group' || shape.children.length)
 		return 'Groups cannot change shape; change their member shapes instead.';
 	if (shape.kind === 'connector') return 'Lines and connectors (1D shapes) cannot change shape.';
+	if (shape.masterId) {
+		// A stencil shape becomes an instance of the built-in master and keeps its size.
+		if (!(shape.width > 0 && shape.height > 0)) return 'The shape has no width or height.';
+		return page!.connectors.some(
+			(connection) =>
+				connection.toShapeId === shape.id && connection.toCell.startsWith('Connections.'),
+		)
+			? 'A connector is glued to one of its connection points, which the new shape does not have.'
+			: undefined;
+	}
 	if (shape.kind === 'foreign' || shape.image || shape.foreignVector)
 		return 'Pictures and embedded objects have no outline to change.';
 	if (!(shape.width > 0 && shape.height > 0)) return 'The shape has no width or height.';

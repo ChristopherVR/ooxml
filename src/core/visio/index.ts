@@ -93,6 +93,7 @@ export {
 	type VisioAssignLayersEdit,
 	type VisioLayerPropertiesEdit,
 	type VisioMasterInstanceEdit,
+	type VisioStencilMasterDropEdit,
 	type VisioGuideEdit,
 	type VisioShapeHyperlinkEdit,
 	type VisioShapeScreenTipEdit,
@@ -255,6 +256,12 @@ export {
 	visioBuiltInStencil,
 	type VisioBuiltInStencilId,
 } from './stencil-windows';
+export {
+	VISIO_BASIC_STENCIL,
+	VISIO_BUILT_IN_STENCILS,
+	visioBuiltInMaster,
+	type VisioBuiltInMaster,
+} from './stencil-masters';
 export {
 	VISIO_STENCILS,
 	visioStencilMaster,

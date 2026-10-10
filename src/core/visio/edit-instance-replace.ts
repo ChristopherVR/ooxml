@@ -11,6 +11,7 @@ import {
 	type InstanceCell,
 } from './edit-instance-sheet';
 import { assertInstanceUnlocked, stencilInstance } from './edit-instance-shape';
+import { nameMasterInstance } from './edit-master-instance-extras';
 import type { MasterTemplate } from './edit-text-instance';
 import { serializeEditedXml } from './edit-text';
 import { visioFormulaCachedValue } from './formula';
@@ -177,10 +178,12 @@ export async function replaceInstanceMaster(
 
 	stripInheritedCaches(instance);
 	instance.setAttribute('Master', edit.masterId);
-	// The old master's name no longer describes the shape; Visio names it again when it opens.
+	// The old master's name no longer describes the shape: it is named after the new one, as
+	// Visio's own Change Shape names it.
 	instance.removeAttribute('Name');
 	instance.removeAttribute('NameU');
 	instance.removeAttribute('UniqueID');
+	nameMasterInstance(root, instance, master[0]!);
 	let sheet;
 	try {
 		sheet = instanceSheet(instance, replacement);
@@ -195,6 +198,16 @@ export async function replaceInstanceMaster(
 		if (cell?.local && value !== undefined && !executableCellFormula(attribute(cell.local, 'F')))
 			overrides.set(cell, value);
 	}
+	// A shape connectors are glued to keeps the size it shows, so they stay where they end.
+	if (glued.length)
+		['width', 'height'].forEach((name, index) => {
+			const cell = sheet.byName.get(name);
+			const kept = oldSize[index];
+			if (!cell || kept === undefined || overrides.has(cell)) return;
+			if (cell.local && executableCellFormula(attribute(cell.local, 'F'))) return;
+			writeInstanceCell(sheet, cell, String(kept), { unit: 'IN' });
+			overrides.set(cell, kept);
+		});
 	const { writes } = recalculateInstanceCaches(sheet, overrides, check);
 	for (const write of writes) {
 		check();

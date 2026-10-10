@@ -1,7 +1,10 @@
-import type { VisioConnectorRoute, VisioGeometryEdit } from '../edit-commands';
+import type { VisioConnectorRoute } from '../edit-commands';
 import type { VisioPage, VisioShape } from '../model';
 import type { VisioOutlineShape } from '../stencil-shapes';
 import { visioGlueableShape } from './connection-points';
+import type { VisioEdit } from '../edit-commands';
+import { visioBuiltInMaster } from '../stencil-masters';
+import { visioStencilDropCommand } from './master-drop';
 import {
 	visioBoxCreationCommand,
 	visioConnectorCreationCommand,
@@ -31,13 +34,15 @@ const EPSILON = 1e-6;
 /** How the core creates the added shape: a native ellipse or a stencil outline. */
 export type VisioAutoConnectMaster =
 	| { kind: 'ellipse' }
-	| { kind: 'rectangle'; shape: VisioOutlineShape };
+	| { kind: 'rectangle'; shape: VisioOutlineShape }
+	/** A built-in stencil master, dropped as an instance (the size is the master's own). */
+	| { kind: 'stencil'; master: string };
 export type VisioAutoConnectTarget =
 	| { shapeId: string }
 	| { master: VisioAutoConnectMaster; size: { width: number; height: number } };
 export interface VisioAutoConnectPlan {
 	/** The creation edits, in order: the new shape (if any), then the glued connector. */
-	edits: VisioGeometryEdit[];
+	edits: VisioEdit[];
 	connectorId: string;
 	/** The shape the connector ends on: the neighbour, or the shape the plan adds. */
 	targetId: string;
@@ -205,17 +210,21 @@ export function visioAutoConnectPlan(
 	}
 	const point = visioAutoConnectPlacement(page, source, direction, target.size);
 	if (!point) return undefined;
-	const box =
-		target.master.kind === 'ellipse'
-			? visioBoxCreationCommand(page, 'ellipse', point, target.size)
-			: visioBoxCreationCommand(
-					page,
-					'rectangle',
-					point,
-					target.size,
-					undefined,
-					target.master.shape,
-				);
+	const stencil = target.master.kind === 'stencil' ? target.master.master : undefined;
+	if (stencil !== undefined && !visioBuiltInMaster(stencil)) return undefined;
+	const box: VisioEdit & { shapeId: string } =
+		target.master.kind === 'stencil'
+			? visioStencilDropCommand(page, target.master.master, point, false)
+			: target.master.kind === 'ellipse'
+				? visioBoxCreationCommand(page, 'ellipse', point, target.size)
+				: visioBoxCreationCommand(
+						page,
+						'rectangle',
+						point,
+						target.size,
+						undefined,
+						target.master.shape,
+					);
 	const to = {
 		x: point.x - target.size.width / 2,
 		y: point.y - target.size.height / 2,

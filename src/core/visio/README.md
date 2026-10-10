@@ -79,6 +79,38 @@ and size follow the group (`Sheet.N!Width*0.25`). A 1-D master, a master that in
 a master whose top-level shapes are turned or flipped are refused (`UNSUPPORTED_MASTER_INSTANCE`). Layer membership, a shape name and page auto-size are not
 written. `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit from a pointer position.
 
+carries `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master, and
+the page's relationship to the master part when it is missing. The instance is named as Visio
+names it (the master's name, then `Name.ID` once the page has that name), keeps the master's size
+beside the pin as inherited caches (`F="Inh"`, when the master has plain `Width`, `Height`,
+`LocPinX` and `LocPinY` values), joins the master's layers by name (missing layers are added to
+the page; not for group masters) and grows an Auto Size page. A master with more than one
+top-level shape, a 1-D master and a master that inherits another are refused
+(`UNSUPPORTED_MASTER_INSTANCE`). `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit
+from a pointer position.
+
+`drop-stencil-master` drops a master of a built-in stencil (`VISIO_BUILT_IN_STENCILS`: Basic
+Shapes, Basic Flowchart Shapes, Miscellaneous Flowchart Shapes, Arrow Shapes) the way Visio drops
+one from a stencil file: the master is copied into the drawing's document stencil the first time
+(`masters.xml`, its master part, relationships and content types, created when the drawing has
+none) and the page gets an instance of it. A master copied earlier is found by its `UniqueID`; a
+master of the drawing with the same universal name is reused when it is one droppable 2-D shape,
+because the built-in stencils stand in for Visio's stencil files. The masters are this package's
+own geometry in the drawing's default styles (`visioBuiltInMaster` gives each a stable `UniqueID`
+in the form Visio keeps and its own `BaseID`); they carry no icon, connection points or Shape
+Data. `visioStencilDropCommand` builds the edit from a pointer position.
+
+Master drops may share a call with other edits: the drops run first, in order, and the remaining
+edits run after them as one transaction, so a drop can be styled, resized, typed into and
+connected in the same `editVsdx` call. A refusal anywhere fails the whole call.
+
+Connectors glue to a stencil instance that carries its size (the caches a drop writes, or the
+values Visio saves after a resize) and follow it when it moves or is resized. An instance with
+only its pin, and a group instance, still refuse glue with a plain sentence. `change-shape` on a
+stencil instance makes it an instance of the target built-in master; as in Visio it keeps its
+position, size, text, formatting and whole-shape glue and is renamed after the new master (Visio
+also gives it a new ID; here the ID stays). It forms its own transaction.
+
 ## Text fields
 
 `insert-text-field` adds a `<fld>` and a Field row (Value formula and cache, Format

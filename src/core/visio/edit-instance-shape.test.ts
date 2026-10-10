@@ -536,7 +536,7 @@ describe('changing the master of a stencil instance', () => {
 		expect(await ids(saved.bytes)).toEqual(['1:4']);
 		// Recorded from Visio: the local size, fill, character row, layer and text stay.
 		expect(page).toContain(
-			'<Shape ID="1" Type="Shape" Master="4"><Cell N="PinX" V="2"/><Cell N="PinY" V="9"/><Cell N="LayerMember" V="0"/><Cell N="Width" V="3" U="IN"/><Cell N="Height" V="1.5" U="IN"/><Cell N="FillForegnd" V="#ff0000"/>',
+			'<Shape ID="1" Type="Shape" Master="4" NameU="Wide" Name="Wide"><Cell N="PinX" V="2"/><Cell N="PinY" V="9"/><Cell N="LayerMember" V="0"/><Cell N="Width" V="3" U="IN"/><Cell N="Height" V="1.5" U="IN"/><Cell N="FillForegnd" V="#ff0000"/>',
 		);
 		expect(page).toContain(
 			'<Section N="Character"><Row IX="0"><Cell N="Style" V="1"/></Row></Section>',
@@ -564,7 +564,7 @@ describe('changing the master of a stencil instance', () => {
 	it('takes the size of the new master when the shape has none of its own', async () => {
 		const saved = await editVsdx(await source({ page: instance('1', 2, 9) }), [change('4')]);
 		expect(await part(saved.bytes, PAGE)).toContain(
-			'<Shape ID="1" Type="Shape" Master="4"><Cell N="PinX" V="2"/><Cell N="PinY" V="9"/><Cell N="LayerMember" V="0"/></Shape>',
+			'<Shape ID="1" Type="Shape" Master="4" NameU="Wide" Name="Wide"><Cell N="PinX" V="2"/><Cell N="PinY" V="9"/><Cell N="LayerMember" V="0"/></Shape>',
 		);
 		const reopened = (await parseVsdx(saved.bytes)).pages[0]!.shapes[0]!;
 		expect([reopened.width, reopened.height]).toEqual([2, 1]);
@@ -574,8 +574,11 @@ describe('changing the master of a stencil instance', () => {
 	});
 
 	it('refuses what it cannot keep right', async () => {
-		// A glued connector could not follow another size; with the same size the glue just stays.
-		expect(await refused(await source(WIRED), [change('4')])).toBe('UNSUPPORTED_CHANGE_SHAPE');
+		// A shape connectors are glued to keeps the size it shows, so the glue just stays.
+		const wired = await editVsdx(await source(WIRED), [change('4')]);
+		expect(await part(wired.bytes, PAGE)).toMatch(
+			/<Shape ID="1" Type="Shape" Master="4"[^>]*>(?:<Cell [^>]*\/>)*<Cell N="Width" V="1" U="IN"\/>/,
+		);
 		const sized =
 			instance('1', 2, 9, len('Width', 2) + len('Height', 1)) +
 			instance('2', 2, 7) +

@@ -31,13 +31,22 @@ it.each([
 	['nothing selected', page(), [], /exactly one/],
 	['two shapes', page(), [{ id: '7' }, { id: '8' }], /exactly one/],
 	['a nested shape', page(), [{ id: '99' }], /inside groups/],
-	['a stencil shape', page({ masterId: '3' }), one, /Document Stencil/],
 	['a group', page({ kind: 'group' }), one, /Groups/],
 	['a line', page({ kind: 'connector' }), one, /1D shapes/],
 	['a picture', page({ kind: 'foreign' }), one, /Pictures/],
 ])('refuses %s', (_name, scene, selection, reason) => {
 	expect(visioChangeShapeRefusal(scene, selection)).toMatch(reason);
 	expect(visioChangeShapeCommand(scene, selection, 'circle')).toBeUndefined();
+});
+
+it('admits a stencil shape, which changes by its master, unless a connection point is glued', () => {
+	const scene = page({ masterId: '3' });
+	expect(visioChangeShapeRefusal(scene, one)).toBeUndefined();
+	// Whole-shape glue stays: the shape keeps its size.
+	scene.connectors = [{ fromShapeId: '9', toShapeId: '7', fromCell: 'BeginX', toCell: 'PinX' }];
+	expect(visioChangeShapeCommand(scene, one, 'star')).toMatchObject({ shape: 'star' });
+	scene.connectors[0]!.toCell = 'Connections.X1';
+	expect(visioChangeShapeRefusal(scene, one)).toMatch(/connection points/);
 });
 
 it('refuses glued shapes', () => {

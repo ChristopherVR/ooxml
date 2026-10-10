@@ -11,6 +11,7 @@ import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
 import type { EditVsdxResult } from './edit';
 import { dropStencilConnector } from './edit-stencil-connector-drop';
+import { masterInstanceLayers, nameMasterInstance } from './edit-master-instance-extras';
 
 const MASTER_RELATIONSHIP = 'http://schemas.microsoft.com/visio/2010/relationships/master';
 /** Sub-shapes of one instance; a larger group master is refused rather than half-instanced. */
@@ -18,9 +19,11 @@ const MAX_INSTANCE_SHAPES = 2_000;
 
 /**
  * Drop a master of the drawing's document stencil on a page, as Visio does: a shape that names the
- * master and carries only its pin, so size, geometry, text and formatting stay inherited. A master
- * with several top-level shapes becomes a group of them (`edit-master-instance-group.ts`). Drawing
- * inches, bottom-left origin; `x`/`y` is where the master's pin (the group's centre) lands.
+ * master and carries only its pin, so size, geometry, text and formatting stay inherited. It is
+ * named after the master ("Process", then "Process.7") and joins the master's layers. A master
+ * with several top-level shapes becomes a group of them (`edit-master-instance-group.ts`).
+ * Drawing inches, bottom-left origin; `x`/`y` is where the master's pin (the group's centre)
+ * lands. Other edits of the same transaction run after every drop of it.
  */
 export interface VisioMasterInstanceEdit {
 	type: 'insert-master-instance';
@@ -103,6 +106,8 @@ export async function editVsdxMasterInstance(
 	maxOutput: number,
 	deadline: number,
 	check: () => void,
+	/** Filled with what the caller needs to finish the drop: the master's layers and kind. */
+	info?: { layers: string[]; group: boolean },
 ): Promise<EditVsdxResult> {
 	const path = pages.get(edit.pageId);
 	if (!path) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
@@ -179,6 +184,15 @@ export async function editVsdxMasterInstance(
 	else {
 		setCell(shape, 'PinX', edit.x);
 		setCell(shape, 'PinY', edit.y);
+	}
+	nameMasterInstance(root, shape, master[0]!);
+	// A master without text gives its instance an empty text of its own, so the first character
+	// or paragraph format has somewhere to go, as a drawn shape's has.
+	if (!oneD && type === 'Shape' && !children(base, 'Text').length)
+		shape.appendChild(root.ownerDocument!.createElementNS(root.namespaceURI, 'Text'));
+	if (info) {
+		info.layers = masterInstanceLayers(master[0]!, base);
+		info.group = type === 'Group';
 	}
 	const node = (name: string) => root.ownerDocument!.createElementNS(root.namespaceURI, name);
 	let count = 0;

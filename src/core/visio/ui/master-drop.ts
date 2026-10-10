@@ -1,5 +1,7 @@
 import type { VisioMaster, VisioPage, VisioShape } from '../index';
 import type { VisioMasterInstanceEdit } from '../edit-master-instance';
+import type { VisioStencilMasterDropEdit } from '../edit-master-drop';
+import { visioBuiltInMaster } from '../stencil-masters';
 import { visioNextShapeId } from './shape-id';
 
 /** Why a document-stencil master cannot be dropped as a shape, or nothing when it can. */
@@ -92,6 +94,42 @@ export function visioMasterDropCommand(
 		pageId: page.id,
 		shapeId: visioNextShapeId(page),
 		masterId: master.id,
+		x: x / ratio,
+		y: (page.height - y) / ratio,
+	};
+}
+
+/**
+ * Drop the built-in stencil master `master` (`rectangle`, `flowchart-process`...) with its pin at
+ * `centre` (page inches, y down), kept on the page unless `keepOnPage` is off. The core copies the
+ * master into the drawing the first time and drops an instance of it.
+ */
+export function visioStencilDropCommand(
+	page: VisioPage,
+	master: string,
+	centre?: { x: number; y: number },
+	keepOnPage = true,
+): VisioStencilMasterDropEdit {
+	const builtIn = visioBuiltInMaster(master);
+	if (!builtIn) throw new Error('The stencil has no such master.');
+	const ratio = page.drawingToPageScale ?? 1;
+	if (!(ratio > 0) || !Number.isFinite(ratio) || !(page.width > 0) || !(page.height > 0))
+		throw new Error('The page size or drawing scale is unusable for dropping a shape.');
+	const { width, height } = builtIn.master.size;
+	const clamp = (value: number, half: number, extent: number) =>
+		!keepOnPage
+			? value
+			: extent > 2 * half
+				? Math.min(extent - half, Math.max(half, value))
+				: extent / 2;
+	const x = clamp(centre?.x ?? page.width / 2, (width * ratio) / 2, page.width);
+	const y = clamp(centre?.y ?? page.height / 2, (height * ratio) / 2, page.height);
+	if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('Invalid drop point.');
+	return {
+		type: 'drop-stencil-master',
+		pageId: page.id,
+		shapeId: visioNextShapeId(page),
+		master,
 		x: x / ratio,
 		y: (page.height - y) / ratio,
 	};
