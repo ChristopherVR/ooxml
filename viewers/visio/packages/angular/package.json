@@ -1,6 +1,6 @@
 {
 	"name": "visio-angular-viewer",
-	"version": "0.6.2",
+	"version": "0.7.0",
 	"description": "Local-first Visio viewer for angular",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {

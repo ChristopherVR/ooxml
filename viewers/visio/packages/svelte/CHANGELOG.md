@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-svelte-viewer@0.7.0) - 2026-10-10
+
+### Features
+
+- **visio:** Make ribbon add-in tabs a prop and event of every binding ([6e6a157](https://github.com/ChristopherVR/ooxml/commit/6e6a157bbced977145d428e2ca01168e0a413deb))
+
 ## [0.6.2](https://github.com/ChristopherVR/ooxml/releases/tag/visio-svelte-viewer@0.6.2) - 2026-10-09
 
 ### Dependencies

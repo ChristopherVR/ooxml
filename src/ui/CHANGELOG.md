@@ -7,6 +7,68 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.0) - 2026-10-10
+
+### Features
+
+- **ui:** Let a host add ribbon tabs to the Visio, Excel and Word UI ([101c552](https://github.com/ChristopherVR/ooxml/commit/101c552196d3b9e2befa280b8ed795e4cf8a04b8))
+- **visio:** Match Visio's ribbon tabs and title bar layout ([f57ee8e](https://github.com/ChristopherVR/ooxml/commit/f57ee8e649314514faf7f7656cdb7ca719967eea))
+- **visio:** Show Quick Styles, Themes and Variants inline in the ribbon ([30baa65](https://github.com/ChristopherVR/ooxml/commit/30baa655815a974c41c5947e51d9809f3939ef40))
+- **visio:** Collapse ribbon groups into buttons in a narrow window ([a9fd1a1](https://github.com/ChristopherVR/ooxml/commit/a9fd1a1b343068cca5436a0c05539ccd9b3419dc))
+- **ui:** Add office-ui-color-grid, Office's colour picker body ([6d8a8aa](https://github.com/ChristopherVR/ooxml/commit/6d8a8aaa9d9aedd74428b8d37e56286896d9ca05))
+- **visio:** Add Office's colour picker and a Format Shape task pane ([021f43b](https://github.com/ChristopherVR/ooxml/commit/021f43bb4267b4022cd7b771d03aadf2279a6d55))
+- **visio:** Add AutoConnect arrows with a Quick Shapes mini toolbar ([55c5f4b](https://github.com/ChristopherVR/ooxml/commit/55c5f4bb7652d7f3ea70515357ab4815b8461b72))
+- **visio:** Show the drawing's own stencils in the Shapes window ([913edfa](https://github.com/ChristopherVR/ooxml/commit/913edfa639320bb7c5eb0eb6dea91c794dc1e999))
+- **visio:** Offer resize, move, rotate and formatting on stencil shapes ([6795c0e](https://github.com/ChristopherVR/ooxml/commit/6795c0ed6106f781178a49aecefd687993998479))
+- **ribbon:** Add a core area for the ribbon add-in tab descriptor ([7b2fa48](https://github.com/ChristopherVR/ooxml/commit/7b2fa48d2562d7483e03acf573e74404342b8f2a))
+- **visio:** Make ribbon add-in tabs a prop and event of every binding ([6e6a157](https://github.com/ChristopherVR/ooxml/commit/6e6a157bbced977145d428e2ca01168e0a413deb))
+- **docx:** Make ribbon add-in tabs a prop and event of every binding ([819c1a3](https://github.com/ChristopherVR/ooxml/commit/819c1a38c2beb9605676d29994b71a7a6f7e4a15))
+- **xlsx:** Make ribbon add-in tabs a prop and event of every binding ([691f553](https://github.com/ChristopherVR/ooxml/commit/691f5531b9f5b4a5a5ac0645b43c8c0fc55be5d8))
+- **ui:** Add the shared pieces of PowerPoint ribbon add-in tabs ([70a3376](https://github.com/ChristopherVR/ooxml/commit/70a3376eaf1cc1bdbf1208baa626e2a850318261))
+- **visio:** Draw line jumps and toggle them from Design > Connectors ([842ddbb](https://github.com/ChristopherVR/ooxml/commit/842ddbb2f64602a3c201678d73bb01aa45cfd9d7))
+- **visio:** Add the Ruler & Grid dialog, saved to the page ([f6646a8](https://github.com/ChristopherVR/ooxml/commit/f6646a84815af9148b7e18351eb4b2488b47d6d4))
+- **visio:** Add the Snap & Glue dialog, saved to the drawing ([f96c927](https://github.com/ChristopherVR/ooxml/commit/f96c927906a6e4d6872b4667439726460d91dd61))
+- **visio:** Insert a horizontal legend from Data > Insert Legend ([92ac505](https://github.com/ChristopherVR/ooxml/commit/92ac5055f1325d1bff1472d822d31d027d80455c))
+- **visio:** Edit stencil groups and their parts in the viewer ([977bc39](https://github.com/ChristopherVR/ooxml/commit/977bc397b2255bfc8e10462dadfec63544a3816c))
+- **visio:** Measure text in the edit worker, grow the editing frame ([e54f715](https://github.com/ChristopherVR/ooxml/commit/e54f715afe410b209e2d2c01bfc0d68089c4a177))
+- **visio:** Offer glue and end handles on stencil shapes and connectors ([7d815b9](https://github.com/ChristopherVR/ooxml/commit/7d815b9f29508f5427a70abcab7728d9a57a785d))
+- **visio:** Drop the Dynamic connector from the Document Stencil ([93eb00a](https://github.com/ChristopherVR/ooxml/commit/93eb00ae70b5ffd830c7644a1910fac39faf7b68))
+- **visio:** Offer whole-shape commands on stencil shapes ([4734035](https://github.com/ChristopherVR/ooxml/commit/4734035524b0cac0f084dab62db406d2d01e3f07))
+- **visio:** Pick theme colours that follow the page theme ([d29c9c7](https://github.com/ChristopherVR/ooxml/commit/d29c9c7b8ae343821db3461ca55af2283d6a19ef))
+- **ui:** Add office-ui-color-custom, the Colors dialog's Custom tab ([ae061fd](https://github.com/ChristopherVR/ooxml/commit/ae061fd4add660a2c21db5f2c2ffcd15b3b5d975))
+- **visio:** Put patterns, line ends and effects in Format Shape ([bae5aa8](https://github.com/ChristopherVR/ooxml/commit/bae5aa8739754f26fccd429d34224f8f68766368))
+- **visio:** Drop stencil shapes as master instances in the editor ([d9f1a96](https://github.com/ChristopherVR/ooxml/commit/d9f1a96ddc6e13daf9853c43e7475116a090e445))
+- **visio:** Offer built-in shapes in Change Shape on stencil shapes ([e8de13f](https://github.com/ChristopherVR/ooxml/commit/e8de13f6e4500e7312ab39f2d80269a1ec052fff))
+
+### Bug Fixes
+
+- **pptx:** Keep the browser's image drag out of picture moves ([817a36a](https://github.com/ChristopherVR/ooxml/commit/817a36a1eae21a48e149ee5459597577dd2cdf22))
+- **ui:** Keep add-in panels when only their callbacks change ([2ff04e4](https://github.com/ChristopherVR/ooxml/commit/2ff04e4295d102cb9ad1e04cfe3f330aaad26a3f))
+- **ui:** Draw add-in commands in editors that never registered them ([deb027d](https://github.com/ChristopherVR/ooxml/commit/deb027dbaabbe087b488ecef68499cd0e37d7919))
+- **ui:** Honour c:dispBlanksAs in combo line series ([#45](https://github.com/ChristopherVR/ooxml/issues/45)) ([00fd4b2](https://github.com/ChristopherVR/ooxml/commit/00fd4b2a5268974ee19d4f9810d421af161666aa))
+
+### Refactor
+
+- **visio:** Put the External Data window on the shared task pane ([a9c094a](https://github.com/ChristopherVR/ooxml/commit/a9c094a939a110ea31b0feae0b5c2ff7a2a9a58b))
+- **geometry:** Move the orthogonal connector router out of pptx ([7628894](https://github.com/ChristopherVR/ooxml/commit/7628894c847d098846b7250e8cf7cfee0b8e1ecd))
+- **ui:** Move Excel and Word colour pickers onto the shared grid ([ab332b6](https://github.com/ChristopherVR/ooxml/commit/ab332b6ed7a4b80bc5016de05efb3fad694c85de))
+
+### Documentation
+
+- **visio:** Format the Visio and ooxml-ui READMEs ([cd76ee2](https://github.com/ChristopherVR/ooxml/commit/cd76ee27e0961385949517e7e95a8405aecbcf35))
+- **ui:** Describe ribbon add-in tabs as they now work in every editor ([fd056a8](https://github.com/ChristopherVR/ooxml/commit/fd056a85965d1d6a84de4ba3c880b67237632ed8))
+
+### Testing
+
+- **visio:** Align stencil-instance tests with the merged behaviour ([1f184fd](https://github.com/ChristopherVR/ooxml/commit/1f184fde8172da3c5fee2d204b401a11e57633b7))
+- **visio:** Give the effects preset walk a longer timeout ([a0fa1f2](https://github.com/ChristopherVR/ooxml/commit/a0fa1f2b27a745b5b70acabc70d18bb3bd312b1b))
+- **ui:** Run the ui suite on happy-dom by default ([f805e22](https://github.com/ChristopherVR/ooxml/commit/f805e22a365bd2b9493efc3a835e2ef1fa89681c))
+
+### Styling
+
+- **visio:** Format the ribbon overflow files ([235b8f0](https://github.com/ChristopherVR/ooxml/commit/235b8f0fbb7853e240c15a84d30d3416689f0c38))
+- Apply oxfmt to files drifted from the formatter ([daeabf2](https://github.com/ChristopherVR/ooxml/commit/daeabf26125af866f90359ac8a5716234d5b8b36))
+
 ## [1.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.7.0) - 2026-10-10
 
 ### Features
