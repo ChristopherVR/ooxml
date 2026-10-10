@@ -215,21 +215,32 @@ export function visioDataGraphicEdits(
 	return edits;
 }
 
-/** A legend for Color by Value: a title and one swatch and label per rule, grouped. */
+/**
+ * A legend for Color by Value: a title and one swatch and label per rule, grouped, at the top
+ * right of the page. Vertical lists the rules under the title; horizontal puts them in a row
+ * beside it and starts another row when the page is not wide enough.
+ */
 export function visioLegendEdits(
 	page: VisioPage,
 	title: string,
 	rules: readonly VisioColorRule[],
+	orientation: 'vertical' | 'horizontal' = 'vertical',
 ): VisioEdit[] {
 	if (!rules.length) return [];
 	const ratio = page.drawingToPageScale ?? 1;
 	let next = Number(visioNextShapeId(page));
 	const id = () => String(next++);
-	const width = 2.2,
-		row = 0.3;
+	const shown = rules.slice(0, 24);
+	const across = orientation === 'horizontal';
+	const row = 0.3;
 	const right = page.width / ratio - 0.3;
-	const left = right - width;
-	let y = page.height / ratio - 0.4;
+	// One entry is a swatch and its label; the title has its own column in a horizontal legend.
+	const cell = across ? 1.5 : 2.2;
+	const width = across ? 1.2 : cell;
+	const perRow = across ? Math.max(1, Math.floor((right - 0.3 - width) / cell)) : 1;
+	const columns = Math.min(perRow, shown.length);
+	const left = right - (across ? width + cell * columns : width);
+	const top = page.height / ratio - 0.4;
 	const edits: VisioEdit[] = [];
 	const members: string[] = [];
 	const mark = (shapeId: string): VisioEdit => ({
@@ -247,15 +258,16 @@ export function visioLegendEdits(
 			pageId: page.id,
 			shapeId: heading,
 			x: left + width / 2,
-			y,
+			y: top,
 			width,
 			height: row,
 			text: title,
 		},
 		mark(heading),
 	);
-	for (const rule of rules.slice(0, 24)) {
-		y -= row;
+	for (const [index, rule] of shown.entries()) {
+		const x = across ? left + width + cell * (index % perRow) : left;
+		const y = top - row * (across ? Math.floor(index / perRow) : index + 1);
 		const swatch = id(),
 			label = id();
 		members.push(swatch, label);
@@ -264,7 +276,7 @@ export function visioLegendEdits(
 				type: 'create-rectangle',
 				pageId: page.id,
 				shapeId: swatch,
-				x: left + 0.2,
+				x: x + 0.2,
 				y,
 				width: 0.25,
 				height: 0.2,
@@ -281,9 +293,9 @@ export function visioLegendEdits(
 				type: 'create-text-box',
 				pageId: page.id,
 				shapeId: label,
-				x: left + 0.45 + (width - 0.5) / 2,
+				x: x + 0.45 + (cell - 0.5) / 2,
 				y,
-				width: width - 0.5,
+				width: cell - 0.5,
 				height: row,
 				text: rule.label,
 			},

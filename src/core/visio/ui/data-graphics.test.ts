@@ -157,6 +157,29 @@ describe('data graphics', () => {
 		expect(
 			relegend.document.pages[0]!.shapes.filter((shape) => shape.kind === 'group'),
 		).toHaveLength(1);
+		// Horizontal: the same members, with the entries in one row beside the title.
+		const across = await apply(legend.bytes, [
+			...visioRemoveDataGraphicEdits(legend.document.pages[0]!, ['legend']),
+			...visioLegendEdits(legend.document.pages[0]!, 'Name', rules.rules, 'horizontal'),
+		]);
+		const row = across.document.pages[0]!.shapes.at(-1)!;
+		expect(row.kind).toBe('group');
+		expect(row.children.map((child) => child.text.plainText).filter(Boolean)).toEqual([
+			'Name',
+			'Db',
+			'Web',
+		]);
+		expect(row.width).toBeGreaterThan(group.width);
+		expect(row.height).toBeLessThan(group.height);
+		// A page too narrow for one row wraps instead of leaving the page.
+		const narrow = visioLegendEdits(
+			{ ...legend.document.pages[0]!, width: 3.5 },
+			'Name',
+			rules.rules,
+			'horizontal',
+		).filter((edit) => edit.type === 'create-rectangle') as { x: number; y: number }[];
+		expect(narrow[0]!.x).toBe(narrow[1]!.x);
+		expect(narrow[1]!.y).toBeLessThan(narrow[0]!.y);
 		const restored = await apply(
 			relegend.bytes,
 			visioRemoveDataGraphicEdits(relegend.document.pages[0]!, ['1', '2', 'legend']),

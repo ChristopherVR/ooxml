@@ -96,7 +96,8 @@ export class ViewerData {
 			if (!edits.length) return this.announce('No data graphics to remove.');
 			return this.run(() => this.controller.applyEdits(edits), 'Removed data graphics.');
 		}
-		if (command === 'legend') return this.#legend(page);
+		if (command === 'legend') return this.#legend(page, 'vertical');
+		if (command === 'legend-horizontal') return this.#legend(page, 'horizontal');
 		const fields = visioDataGraphicFields(page);
 		if (!fields.length)
 			return this.announce(
@@ -142,7 +143,7 @@ export class ViewerData {
 			`Applied ${KIND_LABELS[Object.values(KINDS).indexOf(kind)]} data graphics.`,
 		);
 	}
-	#legend(page: VisioPage): void {
+	#legend(page: VisioPage, orientation: 'vertical' | 'horizontal'): void {
 		const coloured = page.shapes.filter((shape) =>
 			visioShapeDataRow(shape, VISIO_DATA_GRAPHIC_FILL_ROW),
 		);
@@ -158,7 +159,7 @@ export class ViewerData {
 		// One edit: an earlier legend is replaced, so the legend stays a single undo step.
 		const edits = [
 			...visioRemoveDataGraphicEdits(page, ['legend']),
-			...visioLegendEdits(page, title, rules),
+			...visioLegendEdits(page, title, rules, orientation),
 		];
 		this.run(() => this.controller.applyEdits(edits), 'Inserted a legend for Color by Value.');
 	}
@@ -222,6 +223,7 @@ export class ViewerData {
 			visioShapeDataRow(shape, VISIO_DATA_GRAPHIC_FILL_ROW),
 		);
 		set('legend-vertical', editing && coloured);
+		set('legend-horizontal', editing && coloured);
 		const legend = this.root.querySelector<RibbonCommand>('[data-menu="insert-legend"]');
 		if (legend) {
 			legend.disabled = !editing || !coloured;

@@ -81,6 +81,7 @@ export type VisioDataCommand =
 	| 'graphic-color'
 	| 'graphic-remove'
 	| 'legend'
+	| 'legend-horizontal'
 	| 'external-data-window'
 	| 'define-shape-data';
 /** Arrangement, layout, layer, selection, view and output commands (viewer-layout and friends). */

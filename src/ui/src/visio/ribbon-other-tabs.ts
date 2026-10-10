@@ -215,7 +215,7 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 						{
 							id: 'legend-horizontal',
 							label: 'Horizontal',
-							unsupported: 'Only a vertical legend is drawn.',
+							action: data('legend-horizontal'),
 						},
 					],
 				}),
