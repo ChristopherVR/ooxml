@@ -40,6 +40,10 @@ describe('Word ribbon add-in tabs', () => {
 		expect(run).toHaveBeenCalledTimes(1);
 		expect(heard).toHaveBeenCalledWith({ tab: 'pdf', command: 'create-pdf' });
 		expect(action).not.toHaveBeenCalled();
+		// A locale change translates Word's tabs and leaves the host's label alone.
+		editor.locale = 'fr';
+		expect(panel.dataset.label).toBe('PDF');
+		expect(panel.isConnected).toBe(true);
 		editor.ribbonAddIns = [];
 		expect(ribbon.querySelector('[data-add-in]')).toBeNull();
 		expect(editor.ribbonAddIns).toEqual([]);

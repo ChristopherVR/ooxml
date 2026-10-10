@@ -96,7 +96,7 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 		return this.core.ribbonAddIns;
 	}
 	set ribbonAddIns(value: readonly RibbonAddInTab[]) {
-		this.core.ribbonAddIns = [...(value ?? [])];
+		this.core.ribbonAddIns = value ?? [];
 		applyRibbonAddIns(this.core);
 	}
 

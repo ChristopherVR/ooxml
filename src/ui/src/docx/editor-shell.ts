@@ -214,6 +214,8 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 export function applyRibbonAddIns(core: EditorCore): void {
 	const toolbar = core.shell.toolbar;
 	if (!toolbar) return;
+	const before = toolbar.querySelector('[data-add-in]');
 	syncRibbonAddIns(toolbar, core.ribbonAddIns, { panelClass: 'ribbon-panel' });
-	refitRibbon(toolbar);
+	// Equal tabs keep their panels; only new panels change what fits.
+	if (toolbar.querySelector('[data-add-in]') !== before) refitRibbon(toolbar);
 }
