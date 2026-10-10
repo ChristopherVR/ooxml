@@ -30,8 +30,8 @@ export interface RibbonTargets {
 	insert(item: VisioInsertItem): void;
 	data(command: VisioDataCommand): void;
 	textFeature(feature: VisioTextFeature): void;
-	showPaintProperties(): void;
-	showFormatShape(): void;
+	/** Opens the Format Shape task pane, at a section when given. */
+	showFormatPane(section?: 'fill' | 'line' | 'effects'): void;
 	pageTheme(action: Extract<VisioRibbonAction, { type: 'page-theme' }>): void;
 	toggleGrid(): void;
 	toggleConnectionPoints?(): void;
@@ -120,10 +120,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.data(action.command);
 		case 'text-feature':
 			return targets.textFeature(action.feature);
-		case 'paint-properties':
-			return targets.showPaintProperties();
 		case 'format-shape-pane':
-			return targets.showFormatShape();
+			return targets.showFormatPane(action.section);
 		case 'page-theme':
 			return targets.pageTheme(action);
 		case 'grid':

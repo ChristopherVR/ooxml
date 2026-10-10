@@ -1,24 +1,32 @@
-import type { VisioShapeFormatEdit } from 'ooxml-core/visio';
-import { visioShapeFormattingState } from 'ooxml-core/visio/ui';
+import type { VisioThemeColorRef } from 'ooxml-core/visio';
 import type { OfficeColorPick } from '../controls';
 import type { ViewerController, ViewerState } from './controller';
 import {
+	PANE_FIELDS,
+	glowColorPatch,
+	paneFieldContext,
+	type PaneField,
+	type PanePatch,
+} from './format-pane-fields';
+import {
 	DASH_TYPES,
 	createFormatPaneView,
-	type FormatPaneSection,
+	type FormatPaneColor,
+	type PaneColor,
 	type PaneNumber,
+	type PaneSection,
 	type PaneTarget,
 } from './format-pane-view';
-import type { VisioFormattingAction, VisioRibbonAction } from './ribbon-action';
+import type { VisioFormattingAction } from './ribbon-action';
 import { colorAction, commonColor, pickedThemeColor } from './ribbon-color-menu';
 import { styleSelection, type ViewerColorMenus } from './viewer-color-menus';
 
-type Patch = Omit<VisioShapeFormatEdit, 'type' | 'pageId' | 'shapeId'>;
 const NUMBERS: Readonly<Record<PaneNumber, { label: string; max: number }>> = {
 	fillTransparency: { label: 'a fill transparency', max: 100 },
 	lineTransparency: { label: 'a line transparency', max: 100 },
 	lineWeight: { label: 'a line width', max: 150 },
 };
+const HEX = /^#[0-9a-f]{6}$/;
 const round = (value: number) => String(Math.round(value * 100) / 100);
 
 function reasonFor(state: ViewerState): string {
@@ -28,15 +36,16 @@ function reasonFor(state: ViewerState): string {
 	if (!state.selectedShapes.length) return 'Select a shape to format.';
 	return styleSelection(state)
 		? ''
-		: 'Formatting requires a local shape without a master, group, foreign image, or layer membership.';
+		: 'Formatting requires a single shape that is not a group, a picture or on a locked layer.';
 }
 
 /**
- * Visio's Format Shape task pane (Home > Shape Styles launcher): Fill (none or solid, colour,
- * transparency) and Line (none or solid, colour, transparency, width, dash type). It follows the
- * selection and every change is applied at once as one undoable `format-shape` edit per shape,
- * through the same action the ribbon uses. Effects and fill patterns keep their dialogs, linked
- * from the foot of the pane.
+ * Visio's Format Shape task pane (the Shape Styles launcher, the Fill, Line and Effects menus'
+ * options commands and the shape menu's Format Shape): Fill (none or solid, colour, transparency,
+ * pattern and its background), Line (colour, transparency, width, dash, cap, rounding and line
+ * ends) and Effects (shadow, glow, soft edges, reflection). It follows the selection, and every
+ * change is applied at once as one undoable `format-shape` edit per shape, through the same
+ * action the ribbon uses.
  */
 export class ViewerFormatPane {
 	readonly #view;
@@ -47,7 +56,6 @@ export class ViewerFormatPane {
 		private readonly controller: ViewerController,
 		private readonly colors: ViewerColorMenus,
 		private readonly run: (action: VisioFormattingAction) => void,
-		private readonly raise: (action: VisioRibbonAction) => void,
 		private readonly reveal: () => void,
 		private readonly announce: (message: string) => void,
 	) {
@@ -61,13 +69,28 @@ export class ViewerFormatPane {
 		// A harness without the workspace chrome still gets the view.
 		(root.querySelector('.inspector-pane') ?? root).append(this.#view.section);
 	}
-	/** Show the pane; it explains itself when nothing can be formatted. */
-	show(): void {
+	/** Show the pane, at `section` when given; it explains itself when nothing can be formatted. */
+	show(section?: PaneSection): void {
 		this.render(this.controller.state);
 		this.reveal();
+		if (!section) return;
+		const set = section === 'effects' ? this.#view.effects : this.#view[section].set;
+		set.scrollIntoView?.({ block: 'start' });
+		set
+			.querySelector<HTMLElement>(
+				'input:not(:disabled), select:not(:disabled), button:not(:disabled)',
+			)
+			?.focus();
 	}
-	#format(patch: Patch): void {
+	#format(patch: PanePatch): void {
 		this.run({ type: 'shape-format', patch });
+	}
+	/** What a colour control does with a picked colour. */
+	#pick(name: PaneColor, color: string, theme?: VisioThemeColorRef): void {
+		if (name === 'fill' || name === 'line') return this.run(colorAction(name, color, theme));
+		if (name === 'fillBackground') return this.#format({ fillBackgroundColor: color });
+		const shapes = styleSelection(this.controller.state)?.shapes ?? [];
+		this.#format(glowColorPatch(shapes, color));
 	}
 	wire(): () => void {
 		const Abort = this.root.ownerDocument.defaultView?.AbortController ?? AbortController;
@@ -86,29 +109,31 @@ export class ViewerFormatPane {
 				() => this.#format(target === 'fill' ? { fillColor: this.#last.fill } : { linePattern: 1 }),
 				options,
 			);
-			part.color.addEventListener(
+		}
+		for (const [name, control] of Object.entries(view.colors) as [PaneColor, FormatPaneColor][]) {
+			control.button.addEventListener(
 				'click',
-				() => this.#toggleGrid(part, part.grid.hasAttribute('hidden')),
+				() => this.#toggleGrid(control, control.grid.hasAttribute('hidden')),
 				options,
 			);
-			part.grid.addEventListener(
+			control.grid.addEventListener(
 				'office-color-pick',
 				(event) => {
 					event.stopPropagation();
-					this.#toggleGrid(part, false);
+					this.#toggleGrid(control, false);
 					const pick = (event as CustomEvent<OfficeColorPick>).detail;
-					this.run(colorAction(target, pick.color, pickedThemeColor(pick)));
+					this.#pick(name, pick.color, pickedThemeColor(pick));
 				},
 				options,
 			);
-			part.grid.addEventListener(
+			control.grid.addEventListener(
 				'office-color-more',
 				(event) => {
 					event.stopPropagation();
-					this.#toggleGrid(part, false);
-					this.colors.moreColors.open(part.grid.value ?? undefined, (color) => {
+					this.#toggleGrid(control, false);
+					this.colors.moreColors.open(control.grid.value ?? undefined, (color) => {
 						this.colors.remember(color);
-						this.run(colorAction(target, color));
+						this.#pick(name, color);
 					});
 				},
 				options,
@@ -121,16 +146,8 @@ export class ViewerFormatPane {
 			() => view.dash.value && this.#format({ linePattern: Number(view.dash.value) }),
 			options,
 		);
-		view.effects.addEventListener(
-			'click',
-			() => this.raise({ type: 'format-shape-pane' }),
-			options,
-		);
-		view.patterns.addEventListener(
-			'click',
-			() => this.raise({ type: 'paint-properties' }),
-			options,
-		);
+		for (const field of PANE_FIELDS)
+			view.fields.get(field.key)!.addEventListener('change', () => this.#field(field), options);
 		// Typing in the pane is not a canvas shortcut.
 		view.section.addEventListener(
 			'keydown',
@@ -153,28 +170,40 @@ export class ViewerFormatPane {
 			view.section.remove();
 		};
 	}
-	#toggleGrid(part: FormatPaneSection, open: boolean): void {
-		part.grid.hidden = !open;
-		part.color.setAttribute('aria-expanded', String(open));
-		if (open) part.grid.focus();
+	#toggleGrid(control: FormatPaneColor, open: boolean): void {
+		control.grid.hidden = !open;
+		control.button.setAttribute('aria-expanded', String(open));
+		if (open) control.grid.focus();
+	}
+	#valid(input: HTMLInputElement | HTMLSelectElement, label: string, max: number) {
+		const value = Number(input.value);
+		if (input.value.trim() !== '' && Number.isFinite(value) && value >= 0 && value <= max)
+			return value;
+		this.announce(`Enter ${label} from 0 to ${max}.`);
+		this.render(this.controller.state);
+		return undefined;
 	}
 	#number(field: PaneNumber): void {
-		const input = this.#view.numbers[field];
 		const { label, max } = NUMBERS[field];
-		const value = Number(input.value);
-		if (input.value.trim() === '' || !Number.isFinite(value) || value < 0 || value > max) {
-			this.announce(`Enter ${label} from 0 to ${max}.`);
-			this.render(this.controller.state);
-			return;
-		}
-		this.#format({ [field]: value } as Patch);
+		const value = this.#valid(this.#view.numbers[field], label, max);
+		if (value !== undefined) this.#format({ [field]: value } as PanePatch);
+	}
+	#field(field: PaneField): void {
+		const input = this.#view.fields.get(field.key)!;
+		const shapes = styleSelection(this.controller.state)?.shapes;
+		if (!shapes || input.value === '') return;
+		const value = field.options
+			? Number(input.value)
+			: this.#valid(input, field.name ?? 'a value', field.max ?? 100);
+		if (value !== undefined) this.#format(field.patch(value, paneFieldContext(shapes)));
 	}
 	render(state: ViewerState): void {
 		const view = this.#view;
 		const reason = reasonFor(state);
 		const selection = reason ? undefined : styleSelection(state);
 		const shapes = selection?.shapes ?? [];
-		const common = visioShapeFormattingState(shapes);
+		const context = paneFieldContext(shapes);
+		const common = context.common;
 		const disabled = !!reason || state.edit.busy;
 		view.hint.textContent = reason;
 		view.hint.hidden = !reason;
@@ -191,10 +220,16 @@ export class ViewerFormatPane {
 			fill: { none: fill === 'none', color: fill === 'none' ? undefined : fill, known: !!fill },
 			line: { none: noLine, color: line, known: common.linePattern !== undefined },
 		};
+		const shown: Record<PaneColor, string | undefined> = {
+			fill: current.fill.color,
+			line: current.line.color,
+			fillBackground: common.fillBackgroundColor?.toLowerCase(),
+			glow: commonColor(context.effects.map((values) => values.glow.color)),
+		};
 		for (const target of ['fill', 'line'] as const) {
 			const part = view[target];
 			const { none, color, known } = current[target];
-			if (color && /^#[0-9a-f]{6}$/.test(color)) this.#last[target] = color;
+			if (color && HEX.test(color)) this.#last[target] = color;
 			// While an edit runs the model still has the old value: leave the choice just made alone.
 			if (!state.edit.busy) {
 				part.none.checked = known && none;
@@ -202,11 +237,18 @@ export class ViewerFormatPane {
 				part.details.hidden = shapes.length > 0 && none;
 			}
 			part.none.disabled = part.solid.disabled = disabled;
-			part.color.disabled = disabled;
-			part.color.title = `${target === 'fill' ? 'Fill' : 'Line'} color${color ? `: ${color.toUpperCase()}` : ''}`;
-			(part.color.firstElementChild as HTMLElement).style.background = color ?? 'transparent';
-			part.color.toggleAttribute('data-mixed', !color);
-			if (disabled || none) this.#toggleGrid(part, false);
+		}
+		for (const [name, control] of Object.entries(view.colors) as [PaneColor, FormatPaneColor][]) {
+			const color = shown[name];
+			const label = control.button.getAttribute('aria-label')!;
+			control.button.disabled = disabled;
+			control.button.title = `${label}${color ? `: ${color.toUpperCase()}` : ''}`;
+			(control.button.firstElementChild as HTMLElement).style.background = color ?? 'transparent';
+			control.button.toggleAttribute('data-mixed', !color);
+			// The two paint grids follow the ribbon's; these two are the pane's own.
+			if (name === 'fillBackground' || name === 'glow') control.grid.value = color ?? null;
+			if (disabled || (name in current && current[name as PaneTarget].none))
+				this.#toggleGrid(control, false);
 		}
 		put(
 			view.numbers.fillTransparency,
@@ -224,6 +266,7 @@ export class ViewerFormatPane {
 				? ''
 				: String(common.linePattern),
 		);
-		view.effects.disabled = view.patterns.disabled = disabled;
+		for (const field of PANE_FIELDS)
+			put(view.fields.get(field.key)!, shapes.length ? field.read(context) : '');
 	}
 }

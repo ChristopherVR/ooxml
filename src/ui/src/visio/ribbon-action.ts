@@ -112,8 +112,8 @@ export type VisioRibbonAction =
 	| { type: 'insert'; item: VisioInsertItem }
 	| { type: 'data'; command: VisioDataCommand }
 	| { type: 'text-feature'; feature: VisioTextFeature }
-	| { type: 'paint-properties' }
-	| { type: 'format-shape-pane' }
+	/** Opens the Format Shape task pane, at one of its sections when given. */
+	| { type: 'format-shape-pane'; section?: 'fill' | 'line' | 'effects' }
 	| { type: 'page-theme'; theme?: VisioBuiltInThemeId | 'none'; variant?: number }
 	| { type: 'delete' }
 	| { type: 'duplicate' }

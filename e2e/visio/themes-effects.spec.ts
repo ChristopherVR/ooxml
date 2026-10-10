@@ -70,11 +70,14 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await expect(shape.locator('[data-reflection]')).toHaveCount(1);
 	await expect(viewer.locator('[command="bevel"]')).toHaveAttribute('disabled', '');
 
+	// Glow Options... opens the Format Shape task pane at Effects; a change applies at once.
 	await menuItem(viewer, ['Glow', 'Glow Options...']);
-	const dialog = viewer.locator('.format-shape-dialog');
-	await expect(dialog.locator('[data-format-field="glowSize"]')).toHaveValue('8');
-	await dialog.locator('[data-format-field="softEdges"]').fill('0');
-	await dialog.locator('[command="format-shape-apply"]').click();
+	const pane = viewer.locator('.format-pane');
+	await expect(pane).toBeVisible();
+	await expect(pane.locator('[data-pane-field="glowSize"]')).toHaveValue('8');
+	const soft = pane.locator('[data-pane-field="softEdges"]');
+	await soft.fill('0');
+	await soft.press('Tab');
 	await expect(shape.locator('[data-geometry]').first()).not.toHaveAttribute('filter', /.+/);
 
 	for (let step = 0; step < 6; step++) await viewer.locator('.qat [data-command="undo"]').click();

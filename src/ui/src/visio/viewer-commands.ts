@@ -22,7 +22,6 @@ import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 import { ViewerFormatting } from './viewer-formatting';
-import { ViewerPaintProperties } from './viewer-paint-properties';
 import { ViewerFormatPainter } from './viewer-format-painter';
 import { ViewerArrangement } from './viewer-arrangement';
 import { ViewerChangeShape } from './viewer-change-shape';
@@ -32,7 +31,6 @@ import { ViewerClipboard, type ClipboardOperation } from './viewer-clipboard';
 import { ViewerInsert } from './viewer-insert';
 import { ViewerPageSetup } from './viewer-page-setup';
 import { ViewerThemes } from './viewer-themes';
-import { ViewerFormatShape } from './viewer-format-shape';
 import { ViewerColorMenus } from './viewer-color-menus';
 import { ViewerFormatPane } from './viewer-format-pane';
 import { ViewerReview } from './viewer-review';
@@ -87,7 +85,6 @@ export class ViewerCommands {
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
 	#formatting: ViewerFormatting;
-	#paint: ViewerPaintProperties;
 	#painter: ViewerFormatPainter;
 	#arrangement: ViewerArrangement;
 	#changeShape: ViewerChangeShape;
@@ -97,7 +94,6 @@ export class ViewerCommands {
 	#insert: ViewerInsert;
 	#pageSetup: ViewerPageSetup;
 	#themes: ViewerThemes;
-	#formatShape: ViewerFormatShape;
 	#colors: ViewerColorMenus;
 	#formatPane: ViewerFormatPane;
 	#review: ViewerReview;
@@ -172,11 +168,9 @@ export class ViewerCommands {
 			(run, message) => void this.#edit(run, message),
 			(panel, focus) => host.reveal(panel, focus),
 		);
-		this.#paint = new ViewerPaintProperties(host.root, host.controller, host.announce);
 		this.#themes = new ViewerThemes(host.root, host.controller, (run, message) => {
 			void this.#edit(run, message);
 		});
-		this.#formatShape = new ViewerFormatShape(host.root, host.controller, host.announce);
 		this.#colors = new ViewerColorMenus(host.root, host.controller, (action) =>
 			this.#formatting.run(action),
 		);
@@ -185,7 +179,6 @@ export class ViewerCommands {
 			host.controller,
 			this.#colors,
 			(action) => this.#formatting.run(action),
-			(action) => this.run(action),
 			() => host.reveal('format', false),
 			host.announce,
 		);
@@ -254,8 +247,7 @@ export class ViewerCommands {
 			insert: (item) => this.#insert.open(item),
 			data: (command) => this.#data.handle(command),
 			textFeature: (feature) => this.#textFeatures.run(feature),
-			showPaintProperties: () => this.#paint.show(),
-			showFormatShape: () => this.#formatShape.show(),
+			showFormatPane: (section) => this.#formatPane.show(section),
 			pageTheme: (action) => this.#themes.run(action),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
@@ -377,11 +369,9 @@ export class ViewerCommands {
 		const disposeDraw = this.#draw.wire();
 		const disposeText = this.#text.wire();
 		const disposeClipboard = this.#clipboard.wire();
-		const disposePaint = this.#paint.wire();
 		const disposePainter = this.#painter.wire();
 		const disposeInsert = this.#insert.wire(viewport);
 		const disposePageSetup = this.#pageSetup.wire();
-		const disposeFormatShape = this.#formatShape.wire();
 		const disposeColors = this.#colors.wire();
 		const disposeFormatPane = this.#formatPane.wire();
 		const disposeReview = this.#review.wire();
@@ -399,10 +389,8 @@ export class ViewerCommands {
 			disposePoints();
 			disposeText();
 			disposeClipboard();
-			disposePaint();
 			disposePainter();
 			disposeInsert();
-			disposeFormatShape();
 			disposeColors();
 			disposeFormatPane();
 			disposeReview();
@@ -629,11 +617,9 @@ export class ViewerCommands {
 		this.#formatting.render(state);
 		this.#changeShape.render(state);
 		this.#parts.render(state);
-		this.#paint.render(state);
 		this.#painter.render(state);
 		this.#insert.render(state);
 		this.#themes.render(state);
-		this.#formatShape.render(state);
 		this.#colors.render(state);
 		this.#formatPane.render(state);
 		this.#review.render(state);

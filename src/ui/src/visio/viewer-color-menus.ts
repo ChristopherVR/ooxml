@@ -148,7 +148,10 @@ export class ViewerColorMenus {
 				grid.extraColors = theme.variants;
 			}
 			if (grid.recentColors !== this.#recent) grid.recentColors = this.#recent;
-			const value = this.#colors[grid.dataset.colorGrid as ColorTarget] ?? null;
+			// A pane's other colours (pattern background, glow) are set by the pane.
+			const target = grid.dataset.colorGrid as ColorTarget;
+			if (!(target in this.#colors)) continue;
+			const value = this.#colors[target] ?? null;
 			if (grid.value !== value) grid.value = value;
 		}
 		this.#theme = key;

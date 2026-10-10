@@ -122,7 +122,7 @@ export const reflectionItemId = (id: string) => `reflection-${id}`;
 const options = (id: string, label: string): CommandSpec => ({
 	id,
 	label,
-	action: { type: 'format-shape-pane' },
+	action: { type: 'format-shape-pane', section: 'effects' },
 });
 
 function glowOptions(): CommandSpec {

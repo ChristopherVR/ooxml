@@ -323,10 +323,14 @@ An explicit fill pattern overrides the solid pattern implied by `fillColor`;
 transparency requires explicit paint replacement, while ordinary inherited solid
 theme paints are supported.
 
-The shared Line menu exposes No Line and built-in patterns. Both paint menus and
-the shape context menu open Fill & Line. The dialog applies only changed fields
-in one atomic selection transaction. Mixed or unavailable source values remain
-unset until changed. All six native bindings use the existing `applyEdits()` and
+The shared Line menu exposes No Line and built-in patterns. Both paint menus'
+More Options and the shape context menu open the Format Shape task pane, which
+applies each change at once as one selection transaction. Mixed source values
+show as empty until changed. `fillColorTheme`, `lineColorTheme` and (on
+`format-text`) `fontColorTheme` name the Theme Colors swatch a colour came
+from, so it is saved as Visio's theme formula; `beginArrow`, `endArrow`,
+`beginArrowSize`, `endArrowSize`, `lineCap` and `rounding` set the line ends,
+cap and corner rounding. All six native bindings use the existing `applyEdits()` and
 reactive document/selection events; no framework-specific paint engine is added.
 `visioShapeFormattingState(shapes)` provides aggregate source paint values for
 custom controls. These values are separate from gradient/tile opacity multipliers.

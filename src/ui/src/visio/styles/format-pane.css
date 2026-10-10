@@ -1,4 +1,4 @@
-/* The Format Shape task pane view: Fill and Line sections, as Visio's pane. */
+/* The Format Shape task pane view: Fill, Line and Effects sections, as Visio's pane. */
 .format-pane {
 	display: grid;
 	gap: 12px;
@@ -40,7 +40,7 @@
 }
 .format-pane-row {
 	display: grid;
-	grid-template-columns: 1fr 104px;
+	grid-template-columns: 1fr 112px;
 	align-items: center;
 	gap: 8px;
 }
@@ -82,8 +82,7 @@
 		var(--_vv-border) 3px 4px
 	) !important;
 }
-.format-pane-color:disabled,
-.format-pane-links button:disabled {
+.format-pane-color:disabled {
 	opacity: 0.5;
 	cursor: default;
 }
@@ -95,21 +94,9 @@
 .format-pane office-ui-color-grid[hidden] {
 	display: none;
 }
-.format-pane-links {
-	display: grid;
-	gap: 4px;
-	justify-items: start;
-}
-.format-pane-links button {
-	padding: 2px 0;
-	border: 0;
-	background: none;
-	color: var(--_vv-accent);
-	font: inherit;
-	cursor: pointer;
-}
-.format-pane-links button:hover:not(:disabled) {
-	text-decoration: underline;
+/* Shown so its absence is explained: Visio's Gradient fill cannot be edited yet. */
+.format-pane-choice[data-unsupported] {
+	color: var(--_vv-muted);
 }
 /* More Colors: the shared custom colour picker sizes itself. */
 .more-colors-dialog .viewer-dialog-body {

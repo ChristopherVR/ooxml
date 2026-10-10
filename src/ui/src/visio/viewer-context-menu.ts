@@ -105,7 +105,7 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				id: 'ctx-format',
 				label: 'Format Shape',
 				icon: 'fill',
-				action: { type: 'paint-properties' },
+				action: { type: 'format-shape-pane' },
 			},
 			'-',
 			{

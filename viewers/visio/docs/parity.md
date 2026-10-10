@@ -236,6 +236,56 @@ assigns a new one; a grouped stencil shape gets a plain position in the group
 where Visio writes formulas that scale it with the group; a released
 connector keeps its routing code.
 
+## Theme colour formulas, the full Format Shape pane and the Custom colour tab, 2026-10-10
+
+What every swatch of Visio 16's Fill, Line and Font Color galleries writes was
+recorded through UI Automation, and the pickers now do the same:
+
+- A Theme Colors swatch is saved as Visio's formula over the resolved colour:
+  `THEMEGUARD(THEMEVAL("AccentColor"))` for a base swatch,
+  `THEMEGUARD(MSOTINT(THEMEVAL("AccentColor"),80))` for a lighter one and a
+  negative percent for a darker one. Applying a theme, changing its variant or
+  clearing it recalculates those colours on the page, as Visio does. Files
+  written this way opened in Visio 16 with the formulas intact and the same
+  colours Visio computes.
+- The grid has Visio's columns (White, Black, Light, Dark, Accent 1-6) and its
+  row of seven variant colours, with the page theme's own Light and Dark. A
+  drawing without a theme shows the colours Visio shows there.
+- More Colors is Office's Custom tab (the shared `office-ui-color-custom`): a
+  hue and saturation square, a luminance slider, Hex, Red/Green/Blue and
+  Hue/Sat/Lum fields.
+- The Format Shape task pane has Fill (none or solid, colour, transparency,
+  pattern and pattern background), Line (colour, transparency, width, dash,
+  cap, rounding, begin and end arrow type and size) and Effects (shadow, glow,
+  soft edges, reflection). Line ends, cap and rounding are new `format-shape`
+  properties, saved as Visio saves them. The Fill & Line and Format Shape
+  dialogs are gone: the menus' More Options and Options commands and the shape
+  menu's Format Shape open the pane at the matching section.
+
+Still different from Visio:
+
+- Gradient fill is listed in the pane but disabled: gradients are drawn, but
+  there is no edit for stops, angle or type. Compound lines, join type, bevel
+  and 3-D rotation are not offered either.
+- Arrow types are numbered (Arrow 1 to Arrow 45) with no preview, and fill
+  patterns are numbered with no swatch.
+- Visio also rewrites `FillBkgnd` with a `SHADE` formula when a fill colour is
+  picked; this editor leaves the background as it was.
+- The Standard Colors row is Office's, not Visio's slightly different ten.
+- Recent colours last for the session of one viewer; they are not saved with
+  the drawing.
+- Format Painter still does not copy arrowheads or rounding.
+- Word, Excel and PowerPoint keep their own colour pickers (see the round-two
+  report: each binds its grid to product state the shared element does not
+  carry).
+
+Evidence: `src/core/visio/theme-color-ref.test.ts` (recorded formulas and
+colours, theme changes), `edit-formatting-line-ends.test.ts`,
+`src/ui/src/form/color-custom.test.ts`, `color-grid.test.ts`,
+`viewer-color-menus.test.ts`, `viewer-format-pane.test.ts`, and the browser
+workflows `color-picker.spec.ts`, `paint-properties.spec.ts` and
+`themes-effects.spec.ts`.
+
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 
 Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
@@ -287,20 +337,15 @@ The Shape Styles launcher opens a Format Shape task pane instead of a dialog:
 Fill (No fill or Solid fill, colour, transparency) and Line (No line or Solid
 line, colour, transparency, width, dash type). It follows the selection and
 each change is applied at once as one undoable `format-shape` edit per selected
-shape. Effects and fill patterns keep their dialogs, linked from the pane.
+shape.
 
 Limits, stated plainly:
 
-- A picked colour is saved as plain RGB. Visio saves a theme colour as a
-  `THEMEVAL` formula so it follows a later theme change; this editor does not,
-  so a theme swatch is only a starting colour.
-- The Theme Colors grid takes Accent 1-6 from the page's theme (or the Office
-  accents for a drawing without one). The page model does not expose the
-  theme's text and background colours, so those four columns are Office's.
-- More Colors has no colour wheel and no HSL model; Recent Colors are not saved
-  with the drawing or between sessions.
-- The pane has no gradient or pattern fill, arrowheads, cap or join type, and
-  no Automatic font colour.
+- Superseded by the section at the top: theme swatches are now saved as theme
+  formulas, the grid has Visio's columns, More Colors has the Custom tab, and
+  the pane has patterns, line ends, cap, rounding and effects.
+- Recent Colors are not saved with the drawing or between sessions, and there
+  is no Automatic font colour.
 - Not compared with Visio pixel for pixel; the pane's layout was not measured
   against Visio's.
 

@@ -37,10 +37,8 @@ it('opens from the Shape Styles launcher and explains an empty selection', async
 	const group = ui.root.querySelector('office-ui-ribbon-group[launcher="shape-styles-dialog"]')!;
 	expect(group.hasAttribute('launcher-disabled')).toBe(false);
 	launch(ui);
-	// The task pane, not the old dialog.
-	expect(ui.root.querySelector<HTMLElement & { open: boolean }>('.format-shape-dialog')!.open).toBe(
-		false,
-	);
+	// The task pane; the old Format Shape and Fill & Line dialogs are gone.
+	expect(ui.root.querySelector('.format-shape-dialog, .paint-properties-dialog')).toBeNull();
 	expect(pane(ui).dataset.paneView).toBe('format');
 	expect(pane(ui).querySelector('.format-pane-hint')!.textContent).toBe(
 		'Select a shape to format.',
@@ -53,7 +51,12 @@ it('opens from the Shape Styles launcher and explains an empty selection', async
 	expect([...pane(ui).querySelectorAll('legend')].map((legend) => legend.textContent)).toEqual([
 		'Fill',
 		'Line',
+		'Effects',
 	]);
+	// Visio's Gradient fill is listed, disabled, with what is missing.
+	const gradient = pane(ui).querySelector<HTMLInputElement>('input[value="gradient"]')!;
+	expect(gradient.disabled).toBe(true);
+	expect(gradient.closest('label')!.title).toMatch(/gradient fill is shown as saved/);
 	ui.dispose();
 	ui.controller.destroy();
 });
@@ -151,27 +154,17 @@ it('sets line colour, width, dash type and transparency, and refuses bad numbers
 	ui.controller.destroy();
 });
 
-it('reaches the effects and pattern dialogs and takes a custom colour', async () => {
+it('takes a custom colour from More Colors', async () => {
 	const ui = await setup();
 	ui.selection();
-	pane(ui).querySelector<HTMLButtonElement>('[data-format-link="effects"]')!.click();
-	const effects = ui.root.querySelector<HTMLElement & { open: boolean; close(): void }>(
-		'.format-shape-dialog',
-	)!;
-	expect(effects.open).toBe(true);
-	effects.close();
-	pane(ui).querySelector<HTMLButtonElement>('[data-format-link="patterns"]')!.click();
-	const patterns = ui.root.querySelector<HTMLElement & { open: boolean; close(): void }>(
-		'.paint-properties-dialog:not(.format-shape-dialog)',
-	)!;
-	expect(patterns.open).toBe(true);
-	patterns.close();
 	const fill = part(ui, 'fill');
 	fill.color.click();
 	fill.grid.shadowRoot!.querySelector<HTMLButtonElement>('[data-command="more"]')!.click();
 	const colors = ui.root.querySelector<HTMLElement & { open: boolean }>('.more-colors-dialog')!;
 	expect(colors.open).toBe(true);
-	const hex = colors.querySelector<HTMLInputElement>('[data-color-field="hex"]')!;
+	const hex = colors
+		.querySelector('office-ui-color-custom')!
+		.shadowRoot!.querySelector<HTMLInputElement>('[data-color-field="hex"]')!;
 	hex.value = '#abcdef';
 	hex.dispatchEvent(new Event('input', { bubbles: true }));
 	colors
@@ -181,6 +174,145 @@ it('reaches the effects and pattern dialogs and takes a custom colour', async ()
 	await ui.done();
 	expect(ui.shape().style.fill).toBe('#abcdef');
 	expect(fill.grid.shadowRoot!.querySelector('[data-source="recent"]')).not.toBeNull();
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+it('sets the fill pattern and its background, line ends, cap and rounding', async () => {
+	const ui = await setup();
+	ui.selection();
+	expect(field(ui, 'fillPattern').value).toBe('1');
+	change(field(ui, 'fillPattern'), '6');
+	await ui.done();
+	const background = pane(ui).querySelector<HTMLButtonElement>(
+		'[data-format-color="fillBackground"]',
+	)!;
+	background.click();
+	const grid = pane(ui).querySelector<OfficeUiColorGrid>(
+		'office-ui-color-grid[data-color-grid="fillBackground"]',
+	)!;
+	expect(grid.hidden).toBe(false);
+	grid.shadowRoot!.querySelector<HTMLButtonElement>('[data-color="#00b050"]')!.click();
+	await ui.done();
+	expect(ui.edits.slice(-2).map((edits) => edits[0])).toEqual([
+		{ type: 'format-shape', pageId: '1', shapeId: '1', fillPattern: 6 },
+		{ type: 'format-shape', pageId: '1', shapeId: '1', fillBackgroundColor: '#00b050' },
+	]);
+	expect(background.title).toBe('Pattern background color: #00B050');
+	expect(field(ui, 'fillPattern').value).toBe('6');
+	for (const [name, value] of [
+		['lineCap', '1'],
+		['rounding', '9'],
+		['beginArrow', '4'],
+		['beginArrowSize', '5'],
+		['endArrow', '13'],
+		['endArrowSize', '0'],
+	] as const) {
+		change(field(ui, name), value);
+		await ui.done();
+		// The field shows what the drawing now has.
+		expect(field(ui, name).value).toBe(value);
+	}
+	expect(ui.edits.slice(-6).map((edits) => edits[0])).toEqual([
+		{ type: 'format-shape', pageId: '1', shapeId: '1', lineCap: 1 },
+		{ type: 'format-shape', pageId: '1', shapeId: '1', rounding: 9 },
+		{ type: 'format-shape', pageId: '1', shapeId: '1', beginArrow: 4 },
+		{ type: 'format-shape', pageId: '1', shapeId: '1', beginArrowSize: 5 },
+		{ type: 'format-shape', pageId: '1', shapeId: '1', endArrow: 13 },
+		{ type: 'format-shape', pageId: '1', shapeId: '1', endArrowSize: 0 },
+	]);
+	const saved = (await parseVsdx(ui.controller.exportVsdx().bytes)).pages[0]!.shapes[0]!.style;
+	expect(saved).toMatchObject({
+		startArrow: 4,
+		endArrow: 13,
+		startArrowSize: 5,
+		endArrowSize: 0,
+		lineCap: 'butt',
+		fillPatternIndex: 6,
+	});
+	expect(saved.rounding! * 72).toBeCloseTo(9);
+	const count = ui.edits.length;
+	change(field(ui, 'rounding'), '9999');
+	expect(ui.edits).toHaveLength(count);
+	expect(ui.feedback.at(-1)).toBe('Enter a rounding size from 0 to 720.');
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+it('sets shadow, glow, soft edges and reflection in the Effects section', async () => {
+	const ui = await setup();
+	ui.selection();
+	expect(field(ui, 'glowSize').value).toBe('0');
+	expect(field(ui, 'shadow').value).toBe('0');
+	change(field(ui, 'glowSize'), '11');
+	await ui.done();
+	const glow = pane(ui).querySelector<HTMLButtonElement>('[data-format-color="glow"]')!;
+	glow.click();
+	pane(ui)
+		.querySelector<OfficeUiColorGrid>('office-ui-color-grid[data-color-grid="glow"]')!
+		.shadowRoot!.querySelector<HTMLButtonElement>('[data-color="#0070c0"]')!
+		.click();
+	await ui.done();
+	change(field(ui, 'glowTransparency'), '25');
+	await ui.done();
+	change(field(ui, 'softEdges'), '2.5');
+	await ui.done();
+	change(field(ui, 'reflectionSize'), '40');
+	await ui.done();
+	change(field(ui, 'shadow'), '1');
+	await ui.done();
+	// Each change is one edit; a glow or reflection edit carries the effect's other values.
+	expect(ui.edits.slice(-6).map((edits) => edits[0])).toEqual([
+		{
+			type: 'format-shape',
+			pageId: '1',
+			shapeId: '1',
+			glow: { size: 11, color: '#000000', transparency: 0 },
+		},
+		{
+			type: 'format-shape',
+			pageId: '1',
+			shapeId: '1',
+			glow: { size: 11, color: '#0070c0', transparency: 0 },
+		},
+		{
+			type: 'format-shape',
+			pageId: '1',
+			shapeId: '1',
+			glow: { size: 11, color: '#0070c0', transparency: 25 },
+		},
+		{ type: 'format-shape', pageId: '1', shapeId: '1', softEdges: 2.5 },
+		{
+			type: 'format-shape',
+			pageId: '1',
+			shapeId: '1',
+			reflection: { size: 40, transparency: 0, distance: 0, blur: 0 },
+		},
+		{ type: 'format-shape', pageId: '1', shapeId: '1', shadow: 'bottom-right' },
+	]);
+	expect(ui.shape().style.softEdges).toBeCloseTo(2.5 / 72);
+	expect(field(ui, 'shadow').value).toBe('1');
+	expect(glow.title).toBe('Glow color: #0070C0');
+	const count = ui.edits.length;
+	change(field(ui, 'reflectionSize'), '200');
+	expect(ui.edits).toHaveLength(count);
+	expect(ui.feedback.at(-1)).toBe('Enter a reflection size from 0 to 100.');
+	ui.dispose();
+	ui.controller.destroy();
+});
+
+it('opens at the right section from the menus and the shape menu', async () => {
+	const ui = await setup();
+	ui.selection();
+	const focused = () => (ui.root.activeElement as HTMLElement | null)?.closest('fieldset')?.dataset;
+	ui.press('glow-options');
+	expect(focused()?.formatSection).toBe('effects');
+	ui.press('line-options');
+	expect(focused()?.formatSection).toBe('line');
+	ui.press('fill-options');
+	expect(focused()?.formatSection).toBe('fill');
+	ui.commands.run({ type: 'format-shape-pane' });
+	expect(pane(ui).isConnected).toBe(true);
 	ui.dispose();
 	ui.controller.destroy();
 });

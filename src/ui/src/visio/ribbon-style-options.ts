@@ -31,7 +31,7 @@ export function paintOptions(target: 'fill' | 'line'): CommandSpec[] {
 	items.push({
 		id: `${target}-options`,
 		label: 'More Options...',
-		action: { type: 'paint-properties' },
+		action: { type: 'format-shape-pane', section: target },
 	});
 	return items;
 }

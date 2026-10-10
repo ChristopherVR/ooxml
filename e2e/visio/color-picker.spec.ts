@@ -58,7 +58,9 @@ test('picks a theme colour and a custom colour, and formats in the Format Shape 
 	const saved = await viewer.evaluate((node) =>
 		Array.from((node as VisioViewerElement).exportVsdx().bytes),
 	);
-	const xml = await (await JSZip.loadAsync(new Uint8Array(saved)))
+	const xml = await (
+		await JSZip.loadAsync(new Uint8Array(saved))
+	)
 		.file('visio/pages/page1.xml')!
 		.async('string');
 	expect(xml).toContain('F="THEMEGUARD(MSOTINT(THEMEVAL(&quot;AccentColor2&quot;),40))"');
