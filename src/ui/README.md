@@ -186,6 +186,49 @@ Setting a property never emits an event; only user activation does. Controls hon
 `prefers-color-scheme`, `forced-colors: active` (system colours and a visible focus ring) and
 coarse pointers (44px targets through `--office-target-size`).
 
+## Ribbon add-in tabs
+
+A host application can add its own ribbon tabs after a product's tabs, as an
+Office add-in does (the ACROBAT tab in Visio and Excel). The tab is plain data,
+and the same descriptor works in every editor that has the `ribbonAddIns`
+property: today `<visio-viewer>`, `<xlsx-editor>` and `<docx-editor>`. The
+PowerPoint editor does not have it yet.
+
+```ts
+import type { RibbonAddInTab } from 'ooxml-ui';
+
+const tab: RibbonAddInTab = {
+	id: 'reports',
+	label: 'Reports',
+	groups: [
+		{
+			label: 'Export',
+			commands: [
+				{ id: 'export', label: 'Export', icon: 'save', run: () => exportReport() },
+				{ id: 'options', label: 'Options', icon: 'settings', size: 'small' },
+				{ id: 'send', label: 'Send', items: [{ id: 'send-mail', label: 'By mail' }] },
+			],
+		},
+	],
+};
+editor.ribbonAddIns = [tab];
+editor.addEventListener('office-ribbon-add-in', (event) => {
+	const { tab, command } = event.detail; // 'reports', 'export'
+});
+```
+
+- A command runs its `run` callback and then dispatches the bubbling, composed
+  `office-ribbon-add-in` event (`{ tab, command }`) from the editor. It never
+  reaches the product's own command router, Tell me or key tips.
+- `size: 'small'` commands fill columns of three; `items` makes a drop-down.
+  `icon` is a name from the shared icon set; `registerIcon` adds your own.
+- Assign a new array to change the tabs; an empty array removes them. A tab
+  whose id is empty, repeated or equal to a built-in tab id is skipped, so an
+  add-in cannot replace a product tab.
+- Products render the list with `syncRibbonAddIns(ribbon, tabs, options)`
+  (`src/ribbon/add-in-tabs.ts`); a new product editor calls it rather than
+  building panels itself.
+
 ## Design tokens
 
 Every control is token based: no colour, length, radius, font size, shadow, duration or layer

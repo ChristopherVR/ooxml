@@ -9,6 +9,8 @@ import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
 import { installOfficeUiTheme } from '../theme';
 import { createRibbon } from './ribbon';
+import { syncRibbonAddIns, type RibbonAddInTab } from '../ribbon/add-in-tabs';
+import { commandRow } from './ribbon-parts';
 import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
@@ -83,6 +85,7 @@ export class VisioViewerElement extends BaseElement {
 	#status: HTMLSpanElement;
 	#titleBar: HTMLElement;
 	#toolbar: HTMLDivElement;
+	#ribbonAddIns: readonly RibbonAddInTab[] = [];
 	#chrome: ViewerChrome;
 	#edit: ViewerInlineText;
 	#notes: HTMLUListElement;
@@ -307,6 +310,22 @@ export class VisioViewerElement extends BaseElement {
 			cancelable: true,
 		});
 		if (this.dispatchEvent(event)) this.ownerDocument.documentElement.dataset.officeTheme = scheme;
+	}
+	/**
+	 * Tabs a host adds after Help, as an Office add-in does (Visio's ACROBAT tab). Each command
+	 * runs its `run` callback and dispatches `office-ribbon-add-in` (`{ tab, command }`) from the
+	 * viewer. Assign a new array to change them; a tab cannot take a built-in tab's id.
+	 */
+	get ribbonAddIns(): readonly RibbonAddInTab[] {
+		return this.#ribbonAddIns;
+	}
+	set ribbonAddIns(value: readonly RibbonAddInTab[]) {
+		this.#assertAlive();
+		this.#ribbonAddIns = [...(value ?? [])];
+		syncRibbonAddIns(this.#toolbar, this.#ribbonAddIns, {
+			panelClass: 'ribbon-content',
+			wrap: (doc, tab, groups) => [commandRow(doc, `${tab.label} commands`, groups)],
+		});
 	}
 	get showToolbar(): boolean {
 		return !this.#toolbar.hidden;

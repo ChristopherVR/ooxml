@@ -8,6 +8,7 @@ export * from './base';
 export * from './controls';
 export * from './glyph';
 export * from './icons';
+export * from './ribbon/add-in-tabs';
 export * from './presence';
 export * from './smartart';
 export * from './teams/index';
