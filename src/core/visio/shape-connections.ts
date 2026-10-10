@@ -3,7 +3,7 @@ import { number, sectionRows, type Report, type Sheet } from './sheet';
 
 const MAX_POINTS = 1024;
 
-/** Connection points, local line ends and connector route of a normalized shape sheet. */
+/** Connection points, local line ends, connector route and placement of a normalized shape sheet. */
 export function shapeConnections(
 	sheet: Sheet,
 	local: Sheet,
@@ -11,7 +11,7 @@ export function shapeConnections(
 	transform: VisioMatrix,
 	oneD: boolean,
 	report: Report,
-): Pick<VisioShape, 'connectionPoints' | 'lineEnds' | 'connectorRoute'> {
+): Pick<VisioShape, 'connectionPoints' | 'lineEnds' | 'connectorRoute' | 'placeable'> {
 	const own = new Set(sectionRows(local, 'Connection').map((row) => row.index));
 	const points: VisioConnectionPoint[] = [];
 	for (const row of sectionRows(sheet, 'Connection')) {
@@ -26,7 +26,8 @@ export function shapeConnections(
 		}
 		points.push({ index, x, y, inherited: inheritedSheet && !own.has(row.index) });
 	}
-	const result: Pick<VisioShape, 'connectionPoints' | 'lineEnds' | 'connectorRoute'> = {};
+	const result: Pick<VisioShape, 'connectionPoints' | 'lineEnds' | 'connectorRoute' | 'placeable'> =
+		{};
 	if (points.length) result.connectionPoints = points.sort((a, b) => a.index - b.index);
 	if (oneD && sheet.cells.has('BeginX') && sheet.cells.has('EndX')) {
 		const [a, b, c, d, e, f] = transform;
@@ -42,6 +43,7 @@ export function shapeConnections(
 			};
 		}
 	}
+	if (!oneD && number(sheet.cells, 'ObjType', 0) === 1) result.placeable = true;
 	if (sheet.cells.has('ShapeRouteStyle') || sheet.cells.has('ConLineRouteExt'))
 		result.connectorRoute =
 			number(sheet.cells, 'ConLineRouteExt', 0) === 2

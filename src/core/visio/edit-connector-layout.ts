@@ -122,11 +122,12 @@ const toEnd = (site: ConnectorSite): VisioRouteEnd => ({
 export function routeVertices(
 	route: VisioConnectorRoute,
 	sites: Record<End, ConnectorSite>,
+	obstacles: readonly VisioRouteBox[] = [],
 ): VisioRoutePoint[] {
 	const begin = toEnd(sites.begin),
 		end = toEnd(sites.end);
 	if (route === 'curved') return visioCurvedRoute(begin, end);
-	if (route === 'right-angle') return visioOrthogonalRoute(begin, end);
+	if (route === 'right-angle') return visioOrthogonalRoute(begin, end, obstacles);
 	return [begin.point, end.point];
 }
 
@@ -251,6 +252,7 @@ export function layoutConnectorShape(
 	route: VisioConnectorRoute,
 	sites: Record<End, ConnectorSite>,
 	check: () => void,
+	obstacles: readonly VisioRouteBox[] = [],
 ): readonly string[] {
 	const local = cells(shape);
 	const shapeId = attribute(shape, 'ID')!;
@@ -264,7 +266,7 @@ export function layoutConnectorShape(
 				numeric(local.get(`Lock${prefix(end)}`), 0) !== 0
 			)
 				fail('EDIT_PROTECTED_CELL', `Lock${prefix(end)} prevents rerouting a glued connector.`);
-	writeConnectorShape(shape, route, routeVertices(route, sites));
+	writeConnectorShape(shape, route, routeVertices(route, sites, obstacles));
 	const changed: VisioCellKey[] = ENDS.flatMap((end) =>
 		['X', 'Y'].map((axis) => ({ pageId, shapeId, cell: `${prefix(end)}${axis}` })),
 	);

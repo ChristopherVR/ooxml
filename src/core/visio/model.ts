@@ -292,6 +292,11 @@ export interface VisioShape {
 	lineEnds?: { begin: VisioLocalPoint; end: VisioLocalPoint };
 	/** A dynamic connector's route from its ShapeRouteStyle and ConLineRouteExt caches. */
 	connectorRoute?: 'right-angle' | 'straight' | 'curved';
+	/**
+	 * A two-dimensional shape Visio lays out and routes around (ObjType 1). Visio marks a shape
+	 * placeable when a dynamic connector is glued to it; right-angle connectors avoid these only.
+	 */
+	placeable?: boolean;
 }
 export interface VisioLocalPoint {
 	x: number;

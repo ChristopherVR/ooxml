@@ -148,6 +148,48 @@ Limits:
   still drops as a local shape, not as a new master of the drawing.
 - Previews use the first 200 masters and no page theme.
 
+## Right-angle connectors route around placeable shapes, 2026-10-10
+
+Right-angle connectors drawn here now avoid other shapes the way Visio's do.
+Recorded from Visio 16 (`scripts/record-visio-connector-route.ps1`):
+
+- Visio routes a dynamic connector around placeable shapes only (`ObjType` 1).
+  A shape left at `ObjType` 0 stays in a connector's way, and Visio sets
+  `ObjType` to 1 on both shapes when a dynamic connector is glued to them.
+- Its detour turns 3/16 inch before the shape and passes 3/16 inch over it.
+
+Implemented to match: gluing a connector marks its targets placeable (an
+`ObjType` that is already set, or computed by a formula, is left alone); when a
+right-angle connector is drawn, re-glued or laid out again because a glued
+shape moved or was resized, the route goes around the other local placeable
+shapes of the page with the same 3/16 inch clearance, and the drag preview
+shows the same route. For the recorded scene (two shapes with a three-inch-tall
+placeable shape between them) the first turn and the height of the detour equal
+Visio's. A file saved this way opens in Visio without repair, with the route
+and both glue records intact.
+
+The search is PowerPoint's orthogonal connector router, moved to
+`ooxml-core/geometry` and shared by both products.
+
+Not Visio's router, and still different:
+
+- Visio picks the glued sides together with the route; here the sides are the
+  nearest pair, chosen first. In the recorded scene Visio ends on the top of
+  the second shape and this route ends on its left side.
+- Only a connector being laid out is routed. Dropping or moving an unrelated
+  shape onto an existing connector does not reroute it (Visio does).
+- Master instances are not obstacles, because their size and `ObjType` can live
+  in the master. At most the 24 nearest obstacles are considered.
+- No line jumps, no spacing between parallel connectors, no Re-Layout.
+- Visio's own Dynamic connector (a master instance) still cannot be rerouted or
+  re-glued here. The recorded instance keeps `PinX`, `PinY`, `LocPinX`,
+  `LocPinY`, `TxtPinX`, `TxtPinY` and the TextPosition control as inherited
+  formulas with local caches, `Width` and `Height` as `GUARD` formulas whose
+  form changes with the route (`GUARD(0.25 in)` for a straight run), and its
+  Geometry as partial overrides of the master's rows. Writing that form needs
+  the master's rows, the text position rule and more recorded cases; it is not
+  done, and such connectors are refused with a message rather than rewritten.
+
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
 The groups and commands of every tab were read from Visio 16 through UI
@@ -907,7 +949,7 @@ Right-Angle, Straight (`ShapeRouteStyle` 16, the straight cell form) and Curved
 (`ConLineRouteExt` 2, one `NURBSTo` cubic); Insert > Connector picks the style
 and arms the Connector tool. All of these are ordinary undoable edits.
 
-Limits: the router is not Visio's (no avoidance of other shapes, no line jumps,
+Limits: the router is not Visio's (it avoids placeable shapes only, see the section on that above; no line jumps,
 no spacing between parallel connectors, no Re-Layout); right-angle and curved
 connectors cannot be resized, rotated or flipped (they change through their ends
 and route); connection points are added to and glued on local top-level 2D

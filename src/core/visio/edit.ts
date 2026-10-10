@@ -12,6 +12,7 @@ import {
 	type VisioGeometryEdit,
 } from './edit-commands';
 import { applyGeometryEdit } from './edit-geometry';
+import { refuseStencilConnector } from './edit-connector-reroute';
 import { assertDuplicateScope } from './edit-duplicate-scope';
 import { assertGeometryPackageScope } from './edit-scope';
 import { emptyMasterMoveProof } from './edit-master-move';
@@ -325,6 +326,10 @@ async function editVsdxTransaction(
 			);
 			if (ids.size) await assertDuplicateScope(pkg, new Set(pages.values()), root, ids, check);
 		}
+		// Said plainly first: the master proofs below would refuse the same edit in formula terms.
+		for (const command of geometryCommands)
+			if (!command.type.startsWith('create-') && command.type !== 'delete-shape')
+				refuseStencilConnector(roots.get(command.pageId), command.shapeId);
 		if (geometryCommands.length)
 			masterMovePins = await assertGeometryPackageScope(
 				pkg,

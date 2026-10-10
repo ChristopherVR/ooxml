@@ -18,6 +18,8 @@ import {
 	type End,
 } from './edit-connector-layout';
 import {
+	STENCIL_CONNECTOR,
+	connectRows,
 	glueEnd,
 	glueSites,
 	topShape,
@@ -26,6 +28,7 @@ import {
 	type ConnectorGlue,
 } from './edit-connector';
 import type { VisioRoutePoint } from './connector-route';
+import { connectorObstacles } from './edit-connector-obstacles';
 
 const canonical = (shape: Element, name: string, expected: string) =>
 	executableCellFormula(attribute(cells(shape).get(name), 'F'))
@@ -103,7 +106,17 @@ export function rerouteConnector(
 	)
 		return [];
 	if (options.route) setRouteCells(shape, options.route);
-	const pages = layoutConnectorShape(roots, pageId, shape, route, chosen, check);
+	const obstacles =
+		route === 'right-angle'
+			? connectorObstacles(
+					root,
+					new Set([
+						attribute(shape, 'ID') ?? '',
+						...ENDS.map((end) => glue.ends[end]?.target ?? ''),
+					]),
+				)
+			: [];
+	const pages = layoutConnectorShape(roots, pageId, shape, route, chosen, check, obstacles);
 	proveConnectorShape(shape, route);
 	return pages;
 }
@@ -198,6 +211,22 @@ export function setConnectorRoute(
 	const glue = proveConnector(root, edit.shapeId);
 	const pages = rerouteConnector(roots, edit.pageId, glue, check, { route: edit.route });
 	return pages.length ? pages : [edit.pageId];
+}
+
+/**
+ * Refuse, in plain words, a geometry edit of Visio's own Dynamic connector (a master instance)
+ * or of a shape one is glued to: its inherited cell form cannot be laid out again yet.
+ */
+export function refuseStencilConnector(root: Element | undefined, shapeId: string): void {
+	if (!root) return;
+	for (const row of connectRows(root)) {
+		const from = attribute(row, 'FromSheet') ?? '';
+		if (from !== shapeId && attribute(row, 'ToSheet') !== shapeId) continue;
+		if (!/^(Begin|End)X$/.test(attribute(row, 'FromCell') ?? '')) continue;
+		const connector = topShape(root, from);
+		if (connector?.hasAttribute('Master') || connector?.hasAttribute('MasterShape'))
+			fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR);
+	}
 }
 
 /** Connection-point, glue and route commands. */

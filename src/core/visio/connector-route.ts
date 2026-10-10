@@ -1,3 +1,10 @@
+import {
+	relevantObstacles,
+	routeAroundBoxes,
+	routeCrossings,
+	segmentCrossesBox,
+} from './connector-route-avoid';
+
 /** Page-space point (drawing inches, y up). */
 export interface VisioRoutePoint {
 	x: number;
@@ -53,23 +60,16 @@ export function simplifyVisioRoute(points: readonly VisioRoutePoint[]): VisioRou
 	return result;
 }
 
-function crossesBox(p: VisioRoutePoint, q: VisioRoutePoint, box: VisioRouteBox): boolean {
-	const inset = 1e-6;
-	const [x0, x1] = p.x < q.x ? [p.x, q.x] : [q.x, p.x];
-	const [y0, y1] = p.y < q.y ? [p.y, q.y] : [q.y, p.y];
-	return (
-		x1 > box.minX + inset && x0 < box.maxX - inset && y1 > box.minY + inset && y0 < box.maxY - inset
-	);
-}
-
 function score(
 	path: readonly VisioRoutePoint[],
 	begin: VisioRouteEnd,
 	end: VisioRouteEnd,
 	leave: VisioRoutePoint,
 	arrive: VisioRoutePoint,
+	obstacles: readonly VisioRouteBox[],
 ): number {
-	let total = 0;
+	// Passing through a shape the connector is not glued to is as bad as through one it is.
+	let total = routeCrossings(path, obstacles) * 1000;
 	for (let i = 1; i < path.length; i++) {
 		const p = path[i - 1]!,
 			q = path[i]!;
@@ -78,7 +78,7 @@ function score(
 			[begin.box, i === 1],
 			[end.box, i === path.length - 1],
 		] as const)
-			if (box && !skip && crossesBox(p, q, box)) total += 1000;
+			if (box && !skip && segmentCrossesBox(p, q, box)) total += 1000;
 		if (i >= 2) {
 			const o = path[i - 2]!;
 			// A route that doubles back on itself hides a segment under another.
@@ -94,9 +94,16 @@ function score(
 
 /**
  * A right-angle route between two ends: it leaves each glued end along its side, turns at most a
- * few times and avoids crossing the two glued shapes. A simple candidate search, not Visio's router.
+ * few times and avoids crossing the two glued shapes. `obstacles` are the other shapes of the
+ * page: when every simple candidate passes through one, the shared orthogonal router (the one
+ * PowerPoint uses, `geometry/connector-router`) finds a way around. Not Visio's own router: the
+ * bends differ from the ones Visio would choose.
  */
-export function visioOrthogonalRoute(begin: VisioRouteEnd, end: VisioRouteEnd): VisioRoutePoint[] {
+export function visioOrthogonalRoute(
+	begin: VisioRouteEnd,
+	end: VisioRouteEnd,
+	obstacles: readonly VisioRouteBox[] = [],
+): VisioRoutePoint[] {
 	const leave = axisDirection(begin, end.point),
 		arrive = axisDirection(end, begin.point);
 	// Two glued sides that face each other across less than two stubs share the space between
@@ -113,6 +120,7 @@ export function visioOrthogonalRoute(begin: VisioRouteEnd, end: VisioRouteEnd): 
 	const b = stub(begin, leave),
 		e = stub(end, arrive);
 	const boxes = [begin.box, end.box].filter((box): box is VisioRouteBox => !!box);
+	const others = relevantObstacles(b, e, obstacles);
 	const xs = [(b.x + e.x) / 2],
 		ys = [(b.y + e.y) / 2];
 	if (boxes.length) {
@@ -150,10 +158,16 @@ export function visioOrthogonalRoute(begin: VisioRouteEnd, end: VisioRouteEnd): 
 	for (const middle of middles) {
 		const path = simplifyVisioRoute([begin.point, b, ...middle, e, end.point]);
 		if (path.length < 2) continue;
-		const value = score(path, begin, end, leave, arrive);
+		const value = score(path, begin, end, leave, arrive, others);
 		if (!best || value < best.score - 1e-9) best = { path, score: value };
 	}
-	return best?.path ?? [begin.point, end.point];
+	const chosen = best?.path ?? [begin.point, end.point];
+	const crossed = routeCrossings(chosen, others);
+	if (!crossed) return chosen;
+	const around = routeAroundBoxes(b, e, [...relevantObstacles(b, e, boxes), ...others]);
+	if (!around) return chosen;
+	const detour = simplifyVisioRoute([begin.point, ...around, end.point]);
+	return routeCrossings(detour, others) < crossed ? detour : chosen;
 }
 
 /** One cubic from begin to end whose handles leave each glued end along its side. */

@@ -27,6 +27,9 @@ import {
 
 const triggerName = (end: End) => (end === 'begin' ? 'BegTrigger' : 'EndTrigger');
 const UNSUPPORTED = 'Glued connections outside owned straight dynamic glue are unsupported.';
+/** Visio's own Dynamic connector is a master instance; its inherited cell form is not written yet. */
+export const STENCIL_CONNECTOR =
+	"A connector that comes from a stencil (Visio's Dynamic connector) cannot be rerouted here yet, so it and the shapes glued to it cannot be moved or resized.";
 type LineCreate = Extract<VisioGeometryEdit, { type: 'create-line' }>;
 /** What one connector end is glued to: a shape (dynamic glue) or one of its connection points. */
 export interface GlueEnd {
@@ -120,6 +123,18 @@ export function planConnector(root: Element, edit: LineCreate): LineCreate {
 	};
 }
 
+/**
+ * Visio turns a shape it was left to decide about (ObjType 0 or none) into a placeable one
+ * (ObjType 1) when a dynamic connector is glued to it; other connectors then route around it.
+ * A shape that says otherwise, or computes ObjType with a formula, is left alone.
+ */
+function markPlaceable(target: Element | undefined): void {
+	if (!target) return;
+	const node = cells(target).get('ObjType');
+	if (node && (node.hasAttribute('F') || numeric(node) !== 0)) return;
+	setCell(target, 'ObjType', 1);
+}
+
 /** Glue one end: native formulas, trigger and a Connect row (Visio's dynamic or point glue). */
 export function glueEnd(root: Element, shape: Element, end: End, glue: GlueEnd): void {
 	const doc = root.ownerDocument!;
@@ -138,6 +153,7 @@ export function glueEnd(root: Element, shape: Element, end: End, glue: GlueEnd):
 		container = doc.createElementNS(root.namespaceURI, 'Connects');
 		root.insertBefore(container, children(root, 'Shapes')[0]!.nextSibling);
 	}
+	markPlaceable(topShape(root, glue.target));
 	const row = doc.createElementNS(root.namespaceURI, 'Connect');
 	for (const [name, value] of [
 		['FromSheet', attribute(shape, 'ID')!],
@@ -168,10 +184,10 @@ export function glueNewConnector(root: Element, shape: Element, edit: LineCreate
 /** Prove a connector's Connect rows and glue formulas are the owned dynamic or point glue. */
 export function proveConnector(root: Element, connectorId: string): ConnectorGlue {
 	const shape = topShape(root, connectorId);
+	if (shape?.hasAttribute('Master') || shape?.hasAttribute('MasterShape'))
+		fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR);
 	if (
 		!shape ||
-		shape.hasAttribute('Master') ||
-		shape.hasAttribute('MasterShape') ||
 		(attribute(shape, 'Type') ?? 'Shape') !== 'Shape' ||
 		children(shape, 'Shapes').length
 	)
@@ -190,7 +206,9 @@ export function proveConnector(root: Element, connectorId: string): ConnectorGlu
 			const source = formula(`${prefix(end!)}${axis}`) ?? '';
 			if (!isNativeGlueCell(`${prefix(end!)}${axis}`, source)) return false;
 			const named = visioPointGlueTarget(source);
-			return index === undefined ? !named : !!named && named.shapeId === target && named.index === index;
+			return index === undefined
+				? !named
+				: !!named && named.shapeId === target && named.index === index;
 		};
 		if (
 			!end ||

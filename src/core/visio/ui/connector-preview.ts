@@ -4,6 +4,7 @@ import {
 	chooseSites,
 	dynamicSites,
 	pointSite,
+	routeBox,
 	routeVertices,
 	type ConnectorSite,
 } from '../edit-connector-layout';
@@ -19,8 +20,9 @@ export interface VisioConnectorPreview {
 
 /**
  * While shapes are dragged, the connectors glued to them re-routed for the translated shapes,
- * with the same site choice and router the core uses when the move is committed. Connectors that
- * move themselves, are not local, or cannot be resolved are left out.
+ * with the same site choice and router the core uses when the move is committed, including the
+ * detour a right-angle connector takes around the other shapes of the page. Connectors that move
+ * themselves, are not local, or cannot be resolved are left out.
  */
 export function visioConnectorMovePreviews(
 	page: VisioPage,
@@ -60,8 +62,25 @@ export function visioConnectorMovePreviews(
 			end = sites('EndX');
 		if (!begin || !end) continue;
 		const route = connector.connectorRoute ?? 'straight';
+		const glued = new Set(rows.map((row) => row.toShapeId));
+		// As the core's `connectorObstacles`: the other local placeable shapes of the page.
+		const obstacles =
+			route === 'right-angle'
+				? page.shapes
+						.filter(
+							(shape) =>
+								shape.kind !== 'connector' &&
+								shape.placeable === true &&
+								!shape.masterId &&
+								!shape.lineEnds &&
+								!glued.has(shape.id) &&
+								shape.width > 0 &&
+								shape.height > 0,
+						)
+						.map((shape) => routeBox(box(shape)))
+				: [];
 		try {
-			const points = routeVertices(route, chooseSites(begin, end));
+			const points = routeVertices(route, chooseSites(begin, end), obstacles);
 			result.push({
 				connectorId: connector.id,
 				route,
