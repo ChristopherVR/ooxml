@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.1) - 2026-10-10
+
+### Bug Fixes
+
+- **xlsx:** Reject insertions that discard boundary data ([#49](https://github.com/ChristopherVR/ooxml/issues/49)) ([ee4414d](https://github.com/ChristopherVR/ooxml/commit/ee4414d90569b64f940428108297a5096a6f355f))
+
+### Testing
+
+- **ci:** Share workers across core test files ([a3087e5](https://github.com/ChristopherVR/ooxml/commit/a3087e55b8ac838a6d379cdcd3d05d77870e7c7b))
+
 ## [1.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.0) - 2026-10-10
 
 ### Features

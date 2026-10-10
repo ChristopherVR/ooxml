@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.1) - 2026-10-10
+
+### Testing
+
+- **ui:** Give jsdom viewer tests time to settle under parallel load ([239f9ab](https://github.com/ChristopherVR/ooxml/commit/239f9abf933d35fe13220acc248c6bffd2464715))
+- **ui:** Share workers across files and run one vitest process ([0c7a8e5](https://github.com/ChristopherVR/ooxml/commit/0c7a8e5aa0998d79c5fe6224264a5035a54dc773))
+
 ## [1.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.0) - 2026-10-10
 
 ### Features
