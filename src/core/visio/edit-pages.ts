@@ -11,6 +11,7 @@ import { deleteVisioPage } from './edit-page-delete';
 import { setVisioPageSize } from './edit-page-size';
 import { setVisioPageProperties, setVisioPageSetup } from './edit-page-setup';
 import { setVisioPageLayout } from './edit-page-layout';
+import { setVisioSnapGlue } from './edit-snap-glue';
 import { setVisioPageDecoration } from './edit-page-decoration';
 import { createVisioPagePart, type VisioPageParts } from './edit-page-create';
 import { relationshipsPartFor } from '../opc/relationships';
@@ -76,6 +77,13 @@ export async function editVsdxPages(
 		const existing = children(pages, 'Page');
 		if (command.type === 'set-page-setup') {
 			await setVisioPageSetup(pkg, pagesPart, pages, pagePaths, dirty, command, check);
+			continue;
+		}
+		if (command.type === 'set-snap-glue') {
+			// Document settings live in the document part, saved with the same transaction.
+			const document =
+				dirty.get(documentPart) ?? copy(await visioXml(pkg, documentPart, 'VisioDocument'));
+			if (setVisioSnapGlue(document, command)) dirty.set(documentPart, document);
 			continue;
 		}
 		if (command.type === 'set-page-layout') {
@@ -170,7 +178,8 @@ export async function editVsdxPages(
 			(command) =>
 				command.type !== 'set-page-size' &&
 				command.type !== 'set-page-setup' &&
-				command.type !== 'set-page-layout',
+				command.type !== 'set-page-layout' &&
+				command.type !== 'set-snap-glue',
 		)
 	) {
 		await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);

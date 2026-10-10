@@ -18,6 +18,7 @@ import { normalizeShapes, type ShapeContext } from './shapes';
 import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
 import { readVisioPageSetup } from './page-setup';
 import { readVisioPageLayout } from './page-layout';
+import { readVisioSnapGlue } from './snap-glue';
 import { styleSheet, type StyleRecord } from './style-inheritance';
 import {
 	attribute,
@@ -376,8 +377,10 @@ export async function parseVsdx(
 		'ShapeSheet formulas, automatic connector routing, and external data are not evaluated; saved cached values and supported theme records are used.',
 		{ severity: 'info' },
 	);
+	const snapGlue = readVisioSnapGlue(documentRoot);
 	return {
 		format: 'vsdx',
+		...(snapGlue ? { snapGlue } : {}),
 		pages,
 		...(documentMasters.length ? { masters: documentMasters } : {}),
 		...(stencils.length ? { stencils } : {}),

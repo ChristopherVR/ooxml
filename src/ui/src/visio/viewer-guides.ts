@@ -1,4 +1,4 @@
-import type { VisioPage } from 'ooxml-core/visio';
+import { VISIO_SNAP, visioSnapGlue, type VisioPage } from 'ooxml-core/visio';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -75,11 +75,16 @@ export class ViewerGuides {
 	): VisioPagePoint {
 		const svg = this.#svg();
 		this.clearHints();
-		if (!this.#shown && !this.#dynamic && !grid) return delta;
+		// Snap & Glue: Snap off stops all of it; Grid and Guides can be left out one by one.
+		const settings = visioSnapGlue(this.controller.state.document ?? {}).snapSettings;
+		if (settings & VISIO_SNAP.disabled) return delta;
+		if (!(settings & VISIO_SNAP.grid)) grid = 0;
+		const guides = this.#shown && !!(settings & VISIO_SNAP.guides);
+		if (!guides && !this.#dynamic && !grid) return delta;
 		const zoom = this.controller.state.zoom || 1;
 		const result = visioSnapMoveDelta(page, ids, delta, {
 			shapes: this.#dynamic,
-			guides: this.#shown,
+			guides,
 			threshold: SNAP_PIXELS / (96 * zoom),
 			grid,
 		});

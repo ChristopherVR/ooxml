@@ -1,4 +1,10 @@
-import type { VisioDocument, VisioEdit, VisioPage, VisioShape } from 'ooxml-core/visio';
+import {
+	visioSnapGlue,
+	type VisioDocument,
+	type VisioEdit,
+	type VisioPage,
+	type VisioShape,
+} from 'ooxml-core/visio';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -212,7 +218,13 @@ export class ViewerLineEndpoints {
 				connection.fromShapeId === drag.shapeId &&
 				connection.fromCell === (drag.endpoint === 'begin' ? 'EndX' : 'BeginX'),
 		)?.toShapeId;
-		const hit = connectorGlueAt(this.viewport, drag.page, event, this.controller.state.zoom);
+		const hit = connectorGlueAt(
+			this.viewport,
+			drag.page,
+			event,
+			this.controller.state.zoom,
+			visioSnapGlue(this.controller.state.document ?? {}).glueSettings,
+		);
 		return hit && hit.shapeId !== other ? hit : undefined;
 	}
 	#target(hit: ConnectorGlueHit | undefined): void {

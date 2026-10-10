@@ -198,6 +198,14 @@ export {
 export { isVisioChangeShapeTarget } from './edit-change-shape-commands';
 export { VISIO_SCALE_UNITS } from './edit-page-setup-commands';
 export type { VisioPageLayoutEdit } from './edit-page-layout';
+export type { VisioSnapGlueEdit } from './edit-snap-glue';
+export {
+	VISIO_GLUE,
+	VISIO_SNAP,
+	VISIO_SNAP_GLUE_DEFAULTS,
+	visioSnapGlue,
+	type VisioSnapGlue,
+} from './snap-glue';
 export { VISIO_LINE_JUMP_LIMITS, VISIO_LINE_JUMP_WIDTH, visioLineJumpPaths } from './line-jumps';
 export {
 	VISIO_GRID_DENSITIES,

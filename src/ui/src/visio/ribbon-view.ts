@@ -1,6 +1,5 @@
 import { check, command, commandRow, group, menu, stack } from './ribbon-parts';
 
-const EDITING_AIDS = 'Needs interactive shape editing aids.';
 const WINDOWS = 'The viewer shows one drawing window.';
 const MACROS = 'Macros and add-ons never run in this viewer.';
 
@@ -132,7 +131,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 						}),
 					]),
 				],
-				{ launcher: EDITING_AIDS },
+				{ dialog: 'Snap & Glue' },
 			),
 			group(doc, 'Window', [
 				command(doc, { id: 'new-window', label: 'New Window', icon: 'copy', unsupported: WINDOWS }),

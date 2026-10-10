@@ -308,6 +308,8 @@ export function snapshotVisioEdits(
 		return value;
 	};
 	return Array.from(edits, (edit) => {
+		// Snap & Glue belongs to the drawing, not to a page.
+		if (edit?.type === 'set-snap-glue') return snapshotPageSetupEdit(edit);
 		if (!edit || typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit target.');
 		if (edit.type === 'duplicate-shapes') return snapshotDuplicateShapes(edit);

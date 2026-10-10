@@ -1,4 +1,5 @@
 import type { VisioPageLayout } from './page-layout';
+import type { VisioSnapGlue } from './snap-glue';
 import type { VisioForeignVector } from './foreign-vector';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 import type { VisioComment } from './comments';
@@ -401,6 +402,8 @@ export interface VisioDocument {
 	fontFamilies?: readonly string[];
 	/** Saved external data (DataRecordSets): cached rows and shape links. Never refreshed here. */
 	dataRecordsets?: VisioDataRecordset[];
+	/** Stored Snap & Glue settings; `visioSnapGlue(document)` adds Visio's defaults. */
+	snapGlue?: Partial<VisioSnapGlue>;
 	pages: VisioPage[];
 	diagnostics: VisioDiagnostic[];
 	/** Review comments (visio/comments.xml) and read-only Visio 2010 annotations. */

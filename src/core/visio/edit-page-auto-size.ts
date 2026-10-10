@@ -26,7 +26,8 @@ export async function autoSizePageIds(
 	edits: readonly VisioEdit[],
 ): Promise<Set<string>> {
 	const touched = new Set(
-		edits.filter((edit) => GROWING.has(edit.type)).map((edit) => edit.pageId),
+		// Document-wide edits (Snap & Glue) name no page.
+		edits.flatMap((edit) => ('pageId' in edit && GROWING.has(edit.type) ? [edit.pageId] : [])),
 	);
 	const result = new Set<string>();
 	if (!touched.size) return result;

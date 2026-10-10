@@ -598,6 +598,7 @@ export class ViewerController {
 			!creates.length ||
 			commands.some(
 				(command) =>
+					!('pageId' in command) ||
 					command.pageId !== context.pageId ||
 					!('shapeId' in command) ||
 					// Besides creations, only the new shapes' own formatting (a stencil's style) rides along.

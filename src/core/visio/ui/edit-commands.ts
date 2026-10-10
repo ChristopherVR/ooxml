@@ -37,6 +37,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		throw new Error('At most 1000 edits are accepted per operation.');
 	let characters = 0;
 	return edits.map((command): VisioEdit => {
+		// Snap & Glue belongs to the drawing, not to a page.
+		if (command?.type === 'set-snap-glue') return snapshotPageSetupEdit(command);
 		if (
 			!command ||
 			typeof command.pageId !== 'string' ||

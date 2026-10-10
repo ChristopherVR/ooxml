@@ -1,4 +1,9 @@
-import type { VisioConnectorRoute, VisioPage } from 'ooxml-core/visio';
+import {
+	VISIO_GLUE,
+	visioSnapGlue,
+	type VisioConnectorRoute,
+	type VisioPage,
+} from 'ooxml-core/visio';
 import {
 	editErrorMessage,
 	isEditCancellation,
@@ -45,10 +50,13 @@ export function connectorGlueAt(
 	page: VisioPage,
 	event: Pick<PointerEvent, 'clientX' | 'clientY' | 'target'>,
 	zoom: number,
+	/** The drawing's GlueSettings (Snap & Glue): Glue off glues nothing, and connection points can be left out. */
+	glue: number = VISIO_GLUE.connectionPoints,
 ): ConnectorGlueHit | undefined {
+	if (glue & VISIO_GLUE.disabled) return undefined;
 	const svg = viewport.querySelector<SVGSVGElement>('svg.paper');
 	const point = svg ? pagePoint(svg, page, event, { snap: false, bounded: false }) : undefined;
-	if (point && svg) {
+	if (point && svg && glue & VISIO_GLUE.connectionPoints) {
 		const scale = svg.getScreenCTM?.()?.a || 96 * zoom;
 		const hit = visioNearestConnectionPoint(
 			page,
@@ -186,7 +194,15 @@ export class ViewerConnectorTool {
 	#targetAt(event: PointerEvent): ConnectorGlueHit | undefined {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		return page ? connectorGlueAt(this.viewport, page, event, state.zoom) : undefined;
+		return page
+			? connectorGlueAt(
+					this.viewport,
+					page,
+					event,
+					state.zoom,
+					visioSnapGlue(state.document ?? {}).glueSettings,
+				)
+			: undefined;
 	}
 	#highlight(hit: ConnectorGlueHit | undefined, force = false): void {
 		if (!force && hit?.shapeId === this.#hover?.shapeId && hit?.point === this.#hover?.point)
