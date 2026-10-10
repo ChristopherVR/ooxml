@@ -69,10 +69,13 @@ it('formats, rotates, moves and resizes a stencil shape, saving local values ove
 	expect(ui.shape().layerIds).toEqual(['0']);
 	ui.controller.selectShape({ id: '1', name: 'Process', pageId: '0' });
 	// The ribbon offers formatting and rotation, with no "local shape" refusal.
-	for (const id of ['bold', 'fill-red', 'rotate-left']) expect(ui.button(id).disabled).toBe(false);
+	for (const id of ['bold', 'rotate-left']) expect(ui.button(id).disabled).toBe(false);
+	expect(
+		ui.root.querySelector<HTMLElement & { disabled: boolean }>('[data-menu="fill"]')!.disabled,
+	).toBe(false);
 	ui.press('bold');
 	await ui.done();
-	ui.press('fill-red');
+	ui.pickColor('fill', '#ff0000');
 	await ui.done();
 	expect(ui.shape().text.runs[0]).toMatchObject({ bold: true });
 	expect(ui.shape().style.fill).toBe('#ff0000');
@@ -115,7 +118,10 @@ it('leaves a stencil shape on a locked layer alone', async () => {
 	);
 	await ui.controller.load(await zip.generateAsync({ type: 'uint8array' }));
 	ui.controller.selectShape({ id: '1', name: 'Process', pageId: '0' });
-	for (const id of ['bold', 'fill-red', 'rotate-left']) expect(ui.button(id).disabled).toBe(true);
+	for (const id of ['bold', 'rotate-left']) expect(ui.button(id).disabled).toBe(true);
+	expect(
+		ui.root.querySelector<HTMLElement & { disabled: boolean }>('[data-menu="fill"]')!.disabled,
+	).toBe(true);
 	expect(ui.button('bold').title).toMatch(/single shape/);
 	expect(visioResizeShape(ui.controller.state.document!.pages[0]!, '1')).toBeUndefined();
 	ui.dispose();

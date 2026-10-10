@@ -232,7 +232,8 @@ describe('resizing stencil (master) instances', () => {
 			{ type: 'move-shape', pageId: '0', shapeId: '1', x: 5, y: 6 },
 			{ type: 'rotate-shape', pageId: '0', shapeId: '1', angle: 1 },
 		] as VisioEdit[])
-			expect(await refused(bytes, [edit])).toBe('UNSUPPORTED_INSTANCE_EDIT');
+			// The connector check answers first, in plain words; the instance path would refuse too.
+			expect(await refused(bytes, [edit])).toBe('UNSUPPORTED_GEOMETRY_EDIT');
 		// Formatting does not move anything and stays possible.
 		await editVsdx(bytes, [
 			{ type: 'format-shape', pageId: '0', shapeId: '1', fillColor: '#ff0000' },
