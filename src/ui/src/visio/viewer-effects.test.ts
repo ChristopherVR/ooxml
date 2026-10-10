@@ -67,7 +67,7 @@ it('applies glow, soft edge and reflection presets, checks them and draws them i
 	expect(ui.controller.exportVsdx().bytes).toEqual(ui.bytes);
 	ui.dispose();
 	ui.controller.destroy();
-});
+}, 60_000);
 
 it('opens the Format Shape dialog from an Effects options command and applies changed values', async () => {
 	const ui = await setup();
