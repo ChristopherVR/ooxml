@@ -57,7 +57,7 @@ export class ViewerClipboard {
 				(shape) => !visioSelectionIsOnPage(shape, page.id) || !visioClipboardShape(page, shape.id),
 			)
 		)
-			return 'Copy requires ordinary local two-dimensional shapes on the current page without masters, groups, layers, or connections.';
+			return 'Copy does not take lines, connectors, pictures, groups made here, drawn shapes on a layer or with glue, shapes on a locked layer or shapes glued to another shape.';
 		if (state.clipboard.error) return editErrorMessage(state.clipboard.error);
 		return '';
 	}

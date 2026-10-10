@@ -121,7 +121,8 @@ export type VisioRibbonAction =
 	| { type: 'clipboard'; operation: 'copy' | 'cut' | 'paste'; event?: ClipboardEvent }
 	| { type: 'rotate'; direction: 'left' | 'right' }
 	| { type: 'flip'; axis: 'horizontal' | 'vertical' }
-	| { type: 'change-shape'; shape: VisioChangeShapeTarget }
+	/** A Basic Shapes outline, or `document:<id>` for a master of the drawing's own stencil. */
+	| { type: 'change-shape'; shape: VisioChangeShapeTarget | `document:${string}` }
 	| VisioDiagramPartAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection'; focusText?: boolean }

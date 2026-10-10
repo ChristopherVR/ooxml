@@ -22,7 +22,7 @@ export class ViewerDuplication {
 				state.selectedShapes.map((shape) => shape.id),
 			)
 		)
-			return 'Duplicate requires ordinary local two-dimensional shapes without masters, groups, or connections. Source protection and formulas are checked when applying the edit.';
+			return 'Duplicate does not take lines, connectors, pictures, groups made here, drawn shapes on a layer or with glue, shapes on a locked layer or shapes glued to another shape.';
 		return '';
 	}
 	run(): void {

@@ -27,9 +27,9 @@ export class ViewerGrouping {
 			return 'Select shapes on the current page.';
 		const ids = state.selectedShapes.map((shape) => shape.id);
 		if (operation === 'group' && !visioGroupCommand(page, ids))
-			return 'Select two or more local, unglued top-level shapes without masters, lines or layers.';
+			return 'Select two or more top-level shapes that are not lines or connectors, have no connector glued to them and are not on a locked layer.';
 		if (operation === 'ungroup' && !visioUngroupCommand(page, ids))
-			return 'Select one local, unglued group.';
+			return 'Select one group that was made here and has no connector glued to its shapes.';
 		return '';
 	}
 	run(operation: Operation): void {

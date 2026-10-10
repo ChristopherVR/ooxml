@@ -282,7 +282,7 @@ export class ViewerFormatting {
 				: selections.length > 1
 					? 'Select one shape to change its drawing order.'
 					: !ordering
-						? 'Ordering requires a local shape without a master, group, or layer.'
+						? 'Ordering takes a stencil shape off locked layers, or a drawn shape that is not a group, a picture or on a layer.'
 						: '';
 		const index = ordering && page ? page.shapes.indexOf(ordering) : -1;
 		for (const id of ['bring-to-front', 'bring-forward', 'ctx-bring-to-front', 'ctx-bring-forward'])

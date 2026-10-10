@@ -182,6 +182,60 @@ Still different or refused:
 - The dropped connector is not put on the Connector layer Visio adds.
 - Deleting, duplicating or copying a stencil connector is still refused.
 
+## Whole-shape commands on stencil shapes, 2026-10-10
+
+A shape dropped from a stencil (a master instance) now takes the commands that
+act on the shape as a whole, and stays an instance of its master through each.
+What is saved was recorded from Visio 16 (`scripts/record-visio-instance-shape.ps1`
+in the core); delete, duplicate, bring to front, layer assignment and master
+replacement are compared with those recordings cell for cell, and every file
+written in the checks reopened in Visio 16 with the expected masters, sizes and
+glue.
+
+- Delete removes the shape and leaves its master in the Document Stencil. A
+  connector from a stencil (Visio's Dynamic connector) that was glued to it
+  keeps its end where it was and loses the glue, as in Visio. Deleting such a
+  connector works too.
+- Duplicate (Ctrl+D), Copy, Cut and Paste copy the shape as an instance of the
+  same master. A connector glued to the original stays with the original.
+- Bring to Front, Send to Back and the one-step forms work on a stencil shape,
+  and on a drawn shape that sits among stencil shapes, groups or pictures.
+- Assign to Layer writes the membership on the stencil shape.
+- Group takes stencil shapes that have no connector glued to them. The group
+  can be moved, rotated and ungrouped; a group Visio made is ungrouped too.
+- Change Shape on a stencil shape lists the other shapes of the Document
+  Stencil and makes the shape an instance of the one picked. It keeps its
+  place, its own size if it has one, its text, formatting and layers.
+- Moving, resizing or rotating a stencil shape on a locked layer is refused by
+  the core as well as greyed out.
+
+Before this, any drawing made in Visio refused Duplicate, Copy, ordering,
+Group and new text boxes outright, because every stencil master carries
+formulas the editor treated as unsafe (`SETATREF`, `SHAPETEXT`, a container
+lookup). They are now refused only for what they can disturb: a function the
+editor does not know, a reference built from text, or a container lookup when
+the shape concerned is itself a container.
+
+Still refused, with a plain reason:
+
+- Lines and connectors from a stencil are not duplicated, copied or grouped.
+- Pasting a stencil shape into another drawing, or onto another page: the
+  clipboard needs the same master and the same page settings.
+- Grouping or ungrouping shapes that have a connector glued to them, and
+  ungrouping a rotated or flipped group that holds stencil shapes.
+- Change Shape when a connector is glued to a connection point of the shape,
+  when a glued connector would have to follow another size, or when the shape
+  changed its master's outline by hand. A drawn shape still changes to a Basic
+  Shapes outline, not to a master; a stencil shape changes to a master, not to
+  an outline.
+- Deleting a group that was made here, and duplicating a drawn shape that has a
+  connector glued to it.
+
+Different from Visio: Change Shape keeps the shape's sheet ID where Visio
+assigns a new one; a grouped stencil shape gets a plain position in the group
+where Visio writes formulas that scale it with the group; a released
+connector keeps its routing code.
+
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 
 Home > Shape Styles > Quick Styles, Design > Themes and Design > Variants are
