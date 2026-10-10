@@ -5,7 +5,7 @@ import {
 	visioSelectionIsOnPage,
 	visioShapeEffectValues,
 	visioShapeFormattingState,
-	visioStyleFormattingShape,
+	visioFormatTargetShape,
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { createFormatShapeDialog, type FormatShapeField } from './format-shape-dialog';
@@ -102,7 +102,7 @@ export class ViewerFormatShape {
 			!state.selectedShapes.every((item) => visioSelectionIsOnPage(item, page.id))
 		)
 			return;
-		const shapes = state.selectedShapes.map((item) => visioStyleFormattingShape(page, item.id));
+		const shapes = state.selectedShapes.map((item) => visioFormatTargetShape(page, item.id));
 		if (shapes.some((shape) => !shape)) return;
 		return { page, shapes: shapes.filter((shape) => !!shape) };
 	}

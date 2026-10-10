@@ -100,7 +100,7 @@ it('formats, rotates, moves and resizes a stencil shape, saving local values ove
 	const xml = await saved.file(PAGE)!.async('string');
 	expect(xml).toContain('Master="2"');
 	expect(xml).toContain('<Cell N="Width" V="3" U="IN"/>');
-	expect(xml).toContain('<Cell N="LocPinX" V="1.5" F="Inh"/>');
+	expect(xml).toContain('<Cell N="LocPinX" V="1.5" U="IN" F="Inh"/>');
 	// Every step is one undo.
 	for (let step = 0; step < 6; ++step) await ui.controller.undo();
 	expect(ui.controller.exportVsdx().bytes).toEqual(bytes);
@@ -122,7 +122,7 @@ it('leaves a stencil shape on a locked layer alone', async () => {
 	expect(
 		ui.root.querySelector<HTMLElement & { disabled: boolean }>('[data-menu="fill"]')!.disabled,
 	).toBe(true);
-	expect(ui.button('bold').title).toMatch(/single shape/);
+	expect(ui.button('bold').title).toMatch(/locked layer/);
 	expect(visioResizeShape(ui.controller.state.document!.pages[0]!, '1')).toBeUndefined();
 	ui.dispose();
 	ui.controller.destroy();

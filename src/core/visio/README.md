@@ -73,8 +73,10 @@ never opened.
 `insert-master-instance` drops a master on a page as Visio does: a shape that names the master and
 carries only `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master,
 and the page's relationship to the master part when it is missing. It forms its own transaction.
-A master with more than one top-level shape, a 1-D master and a master that inherits another are
-refused (`UNSUPPORTED_MASTER_INSTANCE`). Layer membership, a shape name and page auto-size are not
+A master with several top-level shapes is dropped as the group Visio makes: a `Type="Group"` shape
+that names the master, as large as the shapes together, with each shape as a sub-shape whose pin
+and size follow the group (`Sheet.N!Width*0.25`). A 1-D master, a master that inherits another and
+a master whose top-level shapes are turned or flipped are refused (`UNSUPPORTED_MASTER_INSTANCE`). Layer membership, a shape name and page auto-size are not
 written. `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit from a pointer position.
 
 ## Text fields
@@ -694,9 +696,11 @@ is written was recorded from Visio 16 with
 - Every inherited cell whose value follows from it is evaluated over the
   instance's effective sheet (its own cells over the master's) and written as a
   refreshed cache marked `F="Inh"`, in the master's section and row, so the
-  master's formula stays in effect. Unchanged values are not written.
-- Only arithmetic, comparisons, `IF`, `MIN`, `MAX`, `AND`/`OR`/`NOT` and
-  same-shape references are evaluated. A drawn cell (transform, text block,
+  master's formula stays in effect. Unchanged values are not written. A
+  refreshed length whose master cell has no unit of its own is tagged
+  `U="IN"`, as Visio's.
+- Only arithmetic, comparisons, `IF`, `MIN`, `MAX`, `BOUND`, `AND`/`OR`/`NOT`
+  and references inside the instance are evaluated. A drawn cell (transform, text block,
   geometry, connection point, formatting) that depends on anything else refuses
   the edit with `EDIT_UNSUPPORTED_DEPENDENCY`. Caches in User, Property,
   Actions, Scratch and similar data sections that cannot be computed (they
@@ -718,10 +722,39 @@ is written was recorded from Visio 16 with
   connector is a master instance) therefore refuses the move, resize or
   rotation with `UNSUPPORTED_INSTANCE_EDIT` instead of being left behind.
 
-Refused: group masters and sub-shapes of a group instance, masters that inherit
-another master, 1D masters (lines and connectors), locally deleted sections or
-rows, `GUARD`ed sizes and pins, active locks, and another page shape whose
-formula reads a changed cell of the instance. A shape whose master sizes it
+#### Instances of group masters
+
+An instance of a group master (Visio's Can, Cube and Pyramid, most network and
+people shapes) takes the same edits (`edit-instance-scope.ts`). Recorded with
+`scripts/record-visio-group-instance.ps1`; the optional
+`VISIO_NATIVE_GROUP_INSTANCE_DIR` test compares cell for cell.
+
+- The scope of the edit is the group and every sub-shape at any depth. A
+  master's formula names the master's shape IDs (`Sheet.5!Width`), a formula
+  written on the page names the page's; both resolve to the instance's sheets,
+  so a resize refreshes the sub-shapes' pins, sizes and geometry as `Inh`
+  caches. Move, rotate and flip write on the group alone.
+- `BOUND` (control handles), percentage literals and a bare constant added to
+  a length (inches) are evaluated; a named `Controls` row resolves by name.
+- `format-shape` and `format-text` on the group reach the group and every
+  sub-shape. A cell a master protects with `GUARD`, and a sub-shape that cannot
+  take the formatting (no text, a lock), is passed over, as Visio's ribbon
+  does; the command fails only when every part refuses.
+- A sub-shape's ID targets it alone, with its own sub-shapes when it is a
+  nested group (Visio's sub-selection). There a protected cell refuses the
+  command. `replace-plain-text` writes a local `Text` on the sub-shape.
+- The group Visio makes for a master with several top-level shapes has no
+  master shape behind it: its cells are local, and its sub-shapes follow it
+  through formulas written on the page, which keep their formulas when resized.
+
+Refused for groups: a resize when a sub-shape keeps a pin or size with no
+formula (Visio scales it; that is not reproduced), a shape added to the
+instance on the page, a picture inside the group, and resizing or moving one
+sub-shape on its own.
+
+Refused: masters that inherit another master, 1D masters (lines and
+connectors), locally deleted sections, `GUARD`ed sizes and pins, active locks,
+and another page shape whose formula reads a changed cell of the instance. A shape whose master sizes it
 from its text still keeps its saved size after a text edit: `TEXTHEIGHT` needs
 text metrics the core does not have.
 

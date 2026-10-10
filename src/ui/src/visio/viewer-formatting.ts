@@ -3,7 +3,7 @@ import {
 	visioChangeCaseCommand,
 	visioChangeCaseShape,
 	visioFormattingShape,
-	visioStyleFormattingShape,
+	visioFormatTargetShape,
 	visioFontFamilies,
 	visioTextBlockEdit,
 	visioTextBlockFrame,
@@ -90,7 +90,7 @@ export class ViewerFormatting {
 			action.type === 'shape-order'
 				? visioOrderingShape(page, id)
 				: action.type === 'shape-format'
-					? visioStyleFormattingShape(page, id)
+					? visioFormatTargetShape(page, id)
 					: visioFormattingShape(page, id),
 		);
 		if (candidates.some((shape) => !shape)) return;
@@ -161,7 +161,7 @@ export class ViewerFormatting {
 		const candidates =
 			page && currentPage ? selections.map((item) => visioFormattingShape(page, item.id)) : [];
 		const styleCandidates =
-			page && currentPage ? selections.map((item) => visioStyleFormattingShape(page, item.id)) : [];
+			page && currentPage ? selections.map((item) => visioFormatTargetShape(page, item.id)) : [];
 		const shapes = candidates.filter((shape) => !!shape);
 		const styleShapes = styleCandidates.filter((shape) => !!shape);
 		const shape = shapes.length === selections.length ? shapes.at(-1) : undefined;
@@ -179,12 +179,12 @@ export class ViewerFormatting {
 		const reason =
 			baseReason ||
 			(!shape
-				? 'Text formatting needs a single shape: not a group, a picture, a stencil connector, a drawn shape on a layer or a shape on a locked layer.'
+				? 'Text formatting needs a shape or a stencil group: not a group drawn on the page, a picture, a stencil connector, a drawn shape on a layer or a shape on a locked layer.'
 				: '');
 		const styleReason =
 			baseReason ||
 			(!styleShape
-				? 'Formatting needs a single shape: not a group, a picture, a stencil connector, a drawn shape on a layer or a shape on a locked layer.'
+				? 'Formatting needs a shape or a stencil group: not a group drawn on the page, a picture, a stencil connector, a drawn shape on a layer or a shape on a locked layer.'
 				: '');
 		const set = (element: RibbonCommand | null, disabled: string, pressed?: boolean) => {
 			if (!element) return;

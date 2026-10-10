@@ -41,7 +41,7 @@ export function visioLocalRotationShape(
 	return shape;
 }
 /**
- * What Rotate and Flip act on: a local shape or group, or a one-shape stencil instance, whose
+ * What Rotate and Flip act on: a local shape or group, or a stencil instance (a group included), whose
  * angle and flip flags are saved as local values over its master.
  */
 export function visioRotationShape(

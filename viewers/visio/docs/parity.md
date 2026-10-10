@@ -40,8 +40,8 @@ Not matched, or approximate:
   enumerations and were not checked against Visio's dialog box by box. Snap to
   Grid still needs View > Grid on, where Visio snaps to a hidden grid too. View
   > Dynamic Grid stays a per-viewer toggle and does not write
-  DynamicGridEnabled; the Advanced tab (snap strength, extensions, angles) is
-  not built.
+  > DynamicGridEnabled; the Advanced tab (snap strength, extensions, angles) is
+  > not built.
 
 Still disabled, with one plain sentence each:
 
@@ -53,6 +53,37 @@ Still disabled, with one plain sentence each:
   Drawing, Import Rules From.
 - Not possible in a browser editor: SharePoint Workflow, New Window, Arrange
   All, Cascade, Switch Windows, Macros, Add-Ons and Ink.
+
+## Stencil groups and their parts, 2026-10-10
+
+Stencil shapes that are groups (Visio's Can, Cube and Pyramid, most network and
+people shapes) are edited like single stencil shapes. What is saved was recorded
+from Visio 16 (`scripts/record-visio-group-instance.ps1`) and matches it cell
+for cell for Can, Cube and the nested Pyramid; files saved here reopen in Visio
+with every part still bound to its master.
+
+- Resize handles, Size & Position, dragging, nudging, Rotate and Flip work on a
+  stencil group; its parts follow through the master's formulas.
+- Fill, line and text formatting of a group reaches every part, as Visio's
+  ribbon does. A part whose master computes its own colour (the shaded faces of
+  the Cube) keeps it.
+- A second click inside a selected group sub-selects one part: it takes fill,
+  line and text formatting and its own text. Its size and place stay with the
+  group.
+- A master with several top-level shapes drops from the Document Stencil as one
+  group, as in Visio.
+
+Still refused, each with a plain sentence:
+
+- Resizing a group one of whose parts keeps a size of its own (Visio scales
+  such a part; that scaling is not reproduced). It still moves and rotates.
+- A group that holds a picture, or a shape added to it on the page.
+- Moving or resizing one part on its own; filling a part whose master protects
+  its fill.
+- A master whose top-level shapes are turned or flipped is not dropped.
+- Text formatting only reaches the parts that already hold text; Visio also
+  stores the style on parts without text.
+- Groups drawn on the page (not from a stencil) still move but do not resize.
 
 ## Inline Quick Styles, Themes and Variants, 2026-10-10
 

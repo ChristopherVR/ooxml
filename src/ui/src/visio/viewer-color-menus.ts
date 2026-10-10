@@ -3,7 +3,7 @@ import type { VisioPage, VisioShape } from 'ooxml-core/visio';
 import {
 	visioFormattingShape,
 	visioShapeFormattingState,
-	visioStyleFormattingShape,
+	visioFormatTargetShape,
 	visioTextFormattingState,
 } from 'ooxml-core/visio/ui';
 import type { OfficeColorPick, OfficeUiColorGrid } from '../controls';
@@ -26,7 +26,7 @@ export function styleSelection(
 	const page = state.document?.pages[state.pageIndex];
 	if (!page || !state.selectedShapes.length) return undefined;
 	if (state.selectedShapes.some((item) => item.pageId && item.pageId !== page.id)) return undefined;
-	const shapes = state.selectedShapes.map((item) => visioStyleFormattingShape(page, item.id));
+	const shapes = state.selectedShapes.map((item) => visioFormatTargetShape(page, item.id));
 	return shapes.every((shape) => !!shape) ? { page, shapes: shapes as VisioShape[] } : undefined;
 }
 
