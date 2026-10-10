@@ -54,6 +54,7 @@ export {
 	RIBBON_ADD_IN_EVENT,
 	type OfficeRibbonAddInEvent,
 	type RibbonAddInCommand,
+	type RibbonAddInCommandDetail,
 	type RibbonAddInGroup,
 	type RibbonAddInTab,
 } from '../ribbon/add-in-tabs';

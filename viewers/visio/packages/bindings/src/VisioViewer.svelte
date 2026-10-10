@@ -3,8 +3,8 @@
   import { readonly, writable } from 'svelte/store';
   import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type VisioShapeSelection, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common';
   type Props = ViewerProps & { class?: string; style?: string; 'aria-label'?: string };
-  let { document, pageIndex, zoom, showToolbar, events, class: className, style, 'aria-label': ariaLabel }: Props = $props();
-  const options = $derived({ document, pageIndex, zoom, showToolbar, events } satisfies Required<ViewerProps>);
+  let { document, pageIndex, zoom, showToolbar, ribbonAddIns, events, class: className, style, 'aria-label': ariaLabel }: Props = $props();
+  const options = $derived({ document, pageIndex, zoom, showToolbar, ribbonAddIns, events } satisfies Required<ViewerProps>);
   let binding: MountedViewer | undefined;
   const handle = viewerHandle(() => binding);
   // The component owns its state store, so subscribers made before mount still see updates.

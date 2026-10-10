@@ -148,12 +148,12 @@ colors, editing and saved print policy are not implemented.
 
 ## Ribbon add-in tabs
 
-A host can add tabs after Help, as an add-in does in Visio. Set
-`viewer.element.ribbonAddIns` (every binding exposes `element` on its handle)
-and listen for `office-ribbon-add-in` on the viewer or any ancestor:
+A host can add tabs after Help, as an add-in does in Visio. `ribbonAddIns` is a
+property of the element and a prop of every framework binding, and
+`office-ribbon-add-in` is part of the event map:
 
-```ts
-viewer.element.ribbonAddIns = [
+```tsx
+const tabs = [
 	{
 		id: 'reports',
 		label: 'Reports',
@@ -165,13 +165,26 @@ viewer.element.ribbonAddIns = [
 		],
 	},
 ];
+
+<VisioViewer
+	ribbonAddIns={tabs}
+	events={{ 'office-ribbon-add-in': ({ tab, command }) => track(tab, command) }}
+/>;
 ```
 
-The descriptor (`RibbonAddInTab`, exported from `ooxml-ui` and `ooxml-ui/visio`)
-is shared with the Word and Excel editors. It is not a binding prop yet: the
-framework components pass it through the element, not through a `ribbonAddIns`
-attribute or prop. A tab cannot take the id of a built-in tab (`home`, `insert`,
-`design`, `data`, `process`, `review`, `view`, `help`).
+Vue takes `:ribbon-add-ins` and emits `office-ribbon-add-in`; Angular takes
+`[ribbonAddIns]` and has the `(ribbonAddIn)` output; the vanilla binding takes
+`mountViewer(host, { ribbonAddIns })` and `viewer.update({ ribbonAddIns })`. On
+the element itself, set `element.ribbonAddIns` and listen for the DOM event.
+
+A command runs its `run` callback and then raises the event. Leaving the prop
+out keeps the current tabs; an empty array removes them. Passing an equal
+descriptor again, as a framework does on every render, keeps the panels and
+only replaces the callbacks. The descriptor (`RibbonAddInTab`, from
+`ooxml-core/ribbon`, also exported by `ooxml-ui` and every framework package) is
+shared with the Word, Excel and PowerPoint editors. A tab cannot take the id of
+a built-in tab (`home`, `insert`, `design`, `data`, `process`, `review`, `view`,
+`help`).
 
 ## Static SVG export
 
