@@ -180,7 +180,7 @@ Still different or refused:
 - Connectors are not rerouted when an unrelated shape is moved onto them, and
   there are no line jumps.
 - The dropped connector is not put on the Connector layer Visio adds.
-- Deleting, duplicating or copying a stencil connector is still refused.
+- Duplicating or copying a stencil connector is still refused.
 
 ## Whole-shape commands on stencil shapes, 2026-10-10
 
@@ -305,8 +305,8 @@ of a master that the drawing carries in its own Document Stencil.
   joins the master's layers (the Flowchart layer is added to the page for the
   flowchart masters) and grows an Auto Size page.
 - Connectors glue to a dropped instance and follow it when it moves or is
-  resized: the instance keeps its size beside its pin as inherited caches,
-  the form Visio saves for inherited cells.
+  resized. The instance carries only its pin, as a fresh Visio drop does; its
+  size is read through its master.
 - Quick Shapes lists the drawing's own masters first. A stencil file the
   drawing docks that has no built-in stand-in is listed by its file name as
   unavailable. The stencil a drawing docks is the one showing; its Document
@@ -324,15 +324,16 @@ Limits:
 - The masters are this editor's outlines in the drawing's default styles: no
   icon (Visio draws one), connection points, Shape Data or control handles.
   The theme look of a drop is saved on the instance, not in the master.
-- Change Shape keeps the shape's ID (Visio gives the changed shape a new one)
-  and offers Basic Shapes only. It is refused while a connector is glued to
-  one of the shape's connection points, and for groups.
-- A connector cannot be glued to a stencil instance that carries only its pin
-  (as Visio writes a fresh drop) or to a group instance; the refusal says so.
-  Connectors do not route around stencil instances.
-- An instance cannot be deleted, duplicated, copied or reordered until the
-  core admits those edits for stencil instances; shapes added from the Shapes
-  window are instances, so this now applies to them.
+- Change Shape keeps the shape's ID (Visio gives the changed shape a new
+  one). It offers the built-in shapes and the other one-shape masters of the
+  Document Stencil, through one core edit. It is refused while a connector is
+  glued to one of the shape's connection points, and for groups. A shape with
+  connectors glued to it keeps the size it shows.
+- A connector cannot be glued to a group instance; the refusal says so.
+- The sample's boxes and shapes added from the Shapes window are instances.
+  They are deleted, duplicated, copied, ordered, grouped, resized, formatted
+  and connected like drawn shapes (`sample-drawing-edits.test.ts`); the
+  limits of those commands on stencil shapes are in the sections below.
 - Layers are not assigned to the sub-shapes of a group master, and a locked
   page layer leaves the drop on the master's inherited membership.
 
@@ -560,7 +561,6 @@ Not done, each refused with a message instead of a wrong result:
   connector itself now follows (see the section above).
 - Stencil shapes made of several shapes (groups), stencil lines and connectors,
   and shapes inside a group instance.
-- Deleting, duplicating, copying, reordering and Change Shape on stencil shapes.
 - A master formula outside plain arithmetic on the shape's own cells, when a
   drawn cell depends on it.
 - A stencil shape whose master sizes it from its text follows the text only

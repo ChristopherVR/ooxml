@@ -72,20 +72,14 @@ never opened.
 
 `insert-master-instance` drops a master on a page as Visio does: a shape that names the master and
 carries only `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master,
-and the page's relationship to the master part when it is missing. It forms its own transaction.
-A master with several top-level shapes is dropped as the group Visio makes: a `Type="Group"` shape
-that names the master, as large as the shapes together, with each shape as a sub-shape whose pin
-and size follow the group (`Sheet.N!Width*0.25`). A 1-D master, a master that inherits another and
-a master whose top-level shapes are turned or flipped are refused (`UNSUPPORTED_MASTER_INSTANCE`). Layer membership, a shape name and page auto-size are not
-written. `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit from a pointer position.
-
-carries `PinX` and `PinY`, plus one `MasterShape` sub-shape per sub-shape of a group master, and
-the page's relationship to the master part when it is missing. The instance is named as Visio
-names it (the master's name, then `Name.ID` once the page has that name), keeps the master's size
-beside the pin as inherited caches (`F="Inh"`, when the master has plain `Width`, `Height`,
-`LocPinX` and `LocPinY` values), joins the master's layers by name (missing layers are added to
-the page; not for group masters) and grows an Auto Size page. A master with more than one
-top-level shape, a 1-D master and a master that inherits another are refused
+and the page's relationship to the master part when it is missing. The instance is named as Visio
+names it (the master's name, then `Name.ID` once the page has that name), joins the master's
+layers by name (missing layers are added to the page; not for group masters) and grows an Auto
+Size page. A master with several top-level shapes is dropped as the group Visio makes: a
+`Type="Group"` shape that names the master, as large as the shapes together, with each shape as a
+sub-shape whose pin and size follow the group (`Sheet.N!Width*0.25`). Visio's Dynamic connector
+master drops as a connector with two free ends (`begin`/`end`). Another 1-D master, a master that
+inherits another and a master whose top-level shapes are turned or flipped are refused
 (`UNSUPPORTED_MASTER_INSTANCE`). `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit
 from a pointer position.
 
@@ -104,12 +98,15 @@ Master drops may share a call with other edits: the drops run first, in order, a
 edits run after them as one transaction, so a drop can be styled, resized, typed into and
 connected in the same `editVsdx` call. A refusal anywhere fails the whole call.
 
-Connectors glue to a stencil instance that carries its size (the caches a drop writes, or the
-values Visio saves after a resize) and follow it when it moves or is resized. An instance with
-only its pin, and a group instance, still refuse glue with a plain sentence. `change-shape` on a
-stencil instance makes it an instance of the target built-in master; as in Visio it keeps its
-position, size, text, formatting and whole-shape glue and is renamed after the new master (Visio
-also gives it a new ID; here the ID stays). It forms its own transaction.
+Connectors glue to a stencil instance and follow it when it moves or is resized; its size and
+connection points are read through its master, so an instance that carries only its pin (as Visio
+and this package write a fresh drop) is a glue target like any other. `change-shape` with a
+built-in `shape` on a stencil instance copies that built-in master into the drawing and makes the
+shape an instance of it, through the same `change-shape` by `masterId` that the Document Stencil
+masters use (`edit-change-shape-builtin.ts`, `edit-instance-replace.ts`). The shape keeps its
+position, text, formatting, layers and whole-shape glue, keeps the size it shows when connectors
+are glued to it, and is renamed after the new master (Visio also gives it a new ID; here the ID
+stays). It forms its own transaction.
 
 ## Text fields
 
