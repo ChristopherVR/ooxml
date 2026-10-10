@@ -202,11 +202,11 @@ export function simplifyPath(points: ReadonlyArray<RouterPoint>): RouterPoint[] 
 	if (points.length <= 2) {
 		return [...points];
 	}
-	const result: RouterPoint[] = [points[0]];
+	const result: RouterPoint[] = [points[0]!];
 	for (let i = 1; i < points.length - 1; i++) {
-		const prev = result[result.length - 1];
-		const curr = points[i];
-		const next = points[i + 1];
+		const prev = result[result.length - 1]!;
+		const curr = points[i]!;
+		const next = points[i + 1]!;
 		const sameX = Math.abs(prev.x - curr.x) < 1 && Math.abs(curr.x - next.x) < 1;
 		const sameY = Math.abs(prev.y - curr.y) < 1 && Math.abs(curr.y - next.y) < 1;
 		if (!sameX && !sameY) {
@@ -219,6 +219,6 @@ export function simplifyPath(points: ReadonlyArray<RouterPoint>): RouterPoint[] 
 		}
 		// else: fully collinear on both axes → drop.
 	}
-	result.push(points[points.length - 1]);
+	result.push(points[points.length - 1]!);
 	return result;
 }
