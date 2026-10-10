@@ -100,7 +100,7 @@
 		"jszip": "^3.10.2",
 		"lib0": "^0.2.119",
 		"lint-staged": "^17.6.0",
-		"oxfmt": "0.72.0",
+		"oxfmt": "^0.72.0",
 		"oxlint": "^1.87.0",
 		"pptx-react-viewer": "workspace:*",
 		"pptx-viewer-core": "workspace:*",
