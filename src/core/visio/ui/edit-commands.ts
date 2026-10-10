@@ -14,6 +14,7 @@ import { isVisioDiagramPartEdit, snapshotDiagramPartEdit } from '../edit-diagram
 import { snapshotShapeDataEdit } from '../edit-shape-data-commands';
 import { isVisioDataEdit, snapshotDataEdit } from '../edit-data-commands';
 import { snapshotAssignLayers } from '../edit-layer-commands';
+import { snapshotLayerProperties } from '../edit-layer-properties';
 import { isVisioGuideEdit, snapshotGuideEdit } from '../edit-guide-commands';
 import { snapshotResizeAnchor } from '../resize-anchor';
 import {
@@ -48,6 +49,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 		if (command.type === 'insert-picture') return snapshotPictureInsert(command);
 		if (command.type === 'set-page-theme') return snapshotPageTheme(command);
 		if (command.type === 'assign-layers') return snapshotAssignLayers(command);
+		if (command.type === 'set-layer-properties') return snapshotLayerProperties(command);
 		if (isVisioGuideEdit(command)) return snapshotGuideEdit(command);
 		if (isVisioMetadataEdit(command)) return snapshotMetadataEdit(command);
 		if (isVisioGroupEdit(command)) return snapshotGroupEdit(command);

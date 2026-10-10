@@ -57,7 +57,6 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 								action: { type: 'reveal', panel: 'selection' },
 								checked: false,
 							},
-							{ id: 'layers-pane', label: 'Layers', action: { type: 'reveal', panel: 'layers' } },
 							{ id: 'pan-zoom', label: 'Pan & Zoom', action: { type: 'panZoom' }, checked: false },
 							{
 								id: 'size-position',

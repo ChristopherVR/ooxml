@@ -87,6 +87,7 @@ export type VisioLayoutAction =
 	| { type: 're-layout'; style: VisioLayoutStyle }
 	| { type: 'layout-options' }
 	| { type: 'assign-layers' }
+	| { type: 'layer-properties' }
 	| { type: 'select-by-type' }
 	| { type: 'paste-special' }
 	| { type: 'guides' }
@@ -119,7 +120,7 @@ export type VisioRibbonAction =
 	| { type: 'change-shape'; shape: VisioChangeShapeTarget }
 	| VisioDiagramPartAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
-	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
+	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection'; focusText?: boolean }
 	| { type: 'grid' }
 	| { type: 'connection-points' }
 	/** Design > Connectors restyles the selection; Insert > Connector arms the tool. */

@@ -45,11 +45,6 @@
 .shape-inspector h3 {
 	font-size: 12px;
 }
-.layer-controls {
-	padding: 0;
-	border: 0;
-	background: transparent;
-}
 
 /* Status bar: Visio's Page, Width, Height, Angle and language; messages are for screen readers. */
 office-ui-status-bar.status {
@@ -137,4 +132,51 @@ office-ui-status-bar.status .zoom-controls {
 		width: min(320px, 100%);
 		box-shadow: -8px 0 24px #0002;
 	}
+}
+
+/* Layer Properties: Visio's table of layers with their flags. */
+.layer-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+}
+.layer-table th,
+.layer-table td {
+	padding: 4px 8px;
+	border: 1px solid var(--_vv-border);
+	text-align: center;
+}
+.layer-table thead th {
+	background: var(--_vv-secondary);
+	font-weight: 600;
+}
+.layer-table tbody th {
+	text-align: left;
+	font-weight: 400;
+	overflow-wrap: anywhere;
+}
+.layer-table .layer-page th {
+	background: var(--_vv-secondary);
+	color: var(--_vv-muted);
+	font-size: 11px;
+}
+.layer-table input {
+	width: 16px;
+	height: 16px;
+	min-height: 16px;
+	padding: 0;
+	accent-color: var(--_vv-accent);
+}
+.layer-colour {
+	display: inline-block;
+	width: 28px;
+	height: 12px;
+	border: 1px solid var(--_vv-border);
+}
+.layer-note:empty {
+	display: none;
+}
+.layer-note {
+	color: var(--_vv-muted);
+	font-size: 12px;
 }

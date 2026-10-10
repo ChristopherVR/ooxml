@@ -1,24 +1,22 @@
 import type { VisioDocument } from 'ooxml-core/visio';
 import type { OfficeTab } from '../controls';
 import type { ViewerController, ViewerState } from './controller';
-import { layerControlsTemplate } from './viewer-layer-controls';
 
 /**
  * Static workspace markup (legacy; migrate to builders when next changed). The ribbon, Shapes
  * window, page tabs and status bar are built by their own modules. Visio keeps pages in the
  * bottom tabs and the All pages list, so there is no page pane. The right task pane shows one
- * view at a time (Shape Data or Layers), as Visio's windows do, and starts closed.
+ * view (Shape Data), as Visio's window does, and starts closed.
  */
 export const viewerChromeTemplate = `<div class="workspace">
   <div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div>
   <office-ui-task-pane id="inspector-pane" class="inspector-pane" label="Shape Data" hidden>
     <section class="shape-inspector" data-pane-view="selection"><p class="selection-hint">No Shape Data</p><div></div></section>
-    ${layerControlsTemplate}
   </office-ui-task-pane>
 </div>`;
 
 /** The titles Visio gives the task pane views. */
-const PANE_TITLES = { selection: 'Shape Data', layers: 'Layers' } as const;
+const PANE_TITLES = { selection: 'Shape Data' } as const;
 export type PaneView = keyof typeof PANE_TITLES;
 
 export type TaskPane = 'shapes' | 'inspector';
@@ -162,7 +160,7 @@ export class ViewerChrome {
 			if (strip) strip.hidden = visible || !!this.#compact?.matches;
 		}
 	}
-	/** Show one task pane view (Shape Data or Layers) and move focus into it. */
+	/** Show a task pane view (Shape Data) and move focus into it. */
 	reveal(kind: PaneView): void {
 		if (this.#compact?.matches) this.#tools.open = false;
 		this.#view = kind;
@@ -249,9 +247,6 @@ export class ViewerChrome {
 				'value',
 				page ? `Page ${state.pageIndex + 1} of ${state.document!.pages.length}` : '',
 			);
-		const layers = Boolean(this.#root.querySelector<HTMLElement>('.layer-controls')!.hidden);
-		for (const id of ['layer-properties', 'layers-pane'])
-			this.#command(id)?.toggleAttribute('disabled', layers);
 		// The Shape Data window says so when nothing with data is selected, as in Visio.
 		this.#root.querySelector<HTMLElement>('.selection-hint')!.hidden = !!state.selectedShape;
 	}

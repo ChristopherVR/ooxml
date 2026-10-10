@@ -4,6 +4,7 @@ import type { RibbonCommand } from './ribbon-parts';
 import { ViewerExplorer } from './viewer-explorer';
 import { ViewerGuides } from './viewer-guides';
 import { ViewerLayerAssign } from './viewer-layer-assign';
+import { ViewerLayerProperties } from './viewer-layer-properties';
 import { ViewerLayout } from './viewer-layout';
 import { ViewerPasteSpecial } from './viewer-paste-special';
 import { ViewerSelectType } from './viewer-select-type';
@@ -26,12 +27,13 @@ export interface LayoutCommandHost {
 
 /**
  * Arrangement, layout, layers, selection, view aids and help commands: Auto Align & Space,
- * Re-Layout Page and its Layout dialog, Assign to Layer, Select by Type, Paste Special, Guides,
+ * Re-Layout Page and its Layout dialog, Assign to Layer, Layer Properties, Select by Type, Paste Special, Guides,
  * Dynamic Grid, Drawing Explorer, Help and Show Training.
  */
 export class ViewerLayoutCommands {
 	readonly layout: ViewerLayout;
 	readonly layers: ViewerLayerAssign;
+	readonly layerProperties: ViewerLayerProperties;
 	readonly select: ViewerSelectType;
 	readonly paste: ViewerPasteSpecial;
 	readonly guides: ViewerGuides;
@@ -40,6 +42,7 @@ export class ViewerLayoutCommands {
 		const { root, controller, announce } = host;
 		this.layout = new ViewerLayout(root, controller, host.edit);
 		this.layers = new ViewerLayerAssign(root, controller, announce);
+		this.layerProperties = new ViewerLayerProperties(root, controller, announce);
 		this.select = new ViewerSelectType(root, controller, announce);
 		this.paste = new ViewerPasteSpecial(root, controller, announce, host.pasteShapes);
 		this.guides = new ViewerGuides(root, host.viewport, host.rulers, controller, announce);
@@ -55,6 +58,8 @@ export class ViewerLayoutCommands {
 				return this.layout.showOptions();
 			case 'assign-layers':
 				return this.layers.open();
+			case 'layer-properties':
+				return this.layerProperties.open();
 			case 'select-by-type':
 				return this.select.open();
 			case 'paste-special':
@@ -93,6 +98,7 @@ export class ViewerLayoutCommands {
 	render(state: ViewerState): void {
 		this.layout.render(state);
 		this.layers.render(state);
+		this.layerProperties.render(state);
 		this.select.render(state);
 		this.paste.render(state);
 		this.guides.render(state);

@@ -26,7 +26,6 @@ button[aria-pressed="true"] { color:var(--_vv-accent); background:var(--_vv-acce
 .paper { display:block; flex:none; background:white; box-shadow:var(--_vv-shadow); margin:auto; }
 .paper [data-shape-id] { cursor:pointer; }
 .inspector-pane { flex:0 0 288px; width:288px; min-width:0; overflow:auto; border-left:1px solid var(--_vv-border); background:var(--_vv-secondary); }
-.layer-controls { min-width:0; padding:8px; margin:0; border:1px solid var(--_vv-border); border-radius:4px; background:var(--_vv-surface); font-size:11px; line-height:17px; }
 summary { cursor:pointer; min-height:22px; line-height:22px; font-weight:500; }
 summary::marker { color:var(--_vv-muted); font-size:10px; }
 .shape-inspector div { max-height:260px; overflow:auto; }
@@ -36,12 +35,6 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
 .shape-inspector dd { margin:0; overflow-wrap:anywhere; white-space:pre-wrap; }
 .shape-inspector h3 { margin:12px 0 5px; font-size:11px; }
 .shape-inspector a { color:var(--_vv-accent); overflow-wrap:anywhere; }
-.layer-controls [data-layer-list] { max-height:240px; overflow:auto; }
-.layer-controls fieldset { border:1px solid var(--_vv-border); margin:6px 0; padding:6px; min-width:0; }
-.layer-controls legend { max-width:100%; overflow-wrap:anywhere; }
-.layer-controls fieldset div { display:flex; align-items:center; gap:6px; margin:3px 0; }
-.layer-controls label { display:flex; align-items:center; gap:6px; overflow-wrap:anywhere; }
-.layer-controls input { flex-shrink:0; width:16px; height:16px; min-height:16px; padding:0; accent-color:var(--_vv-accent); }
 .status { flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; min-height:29px; padding:0 8px 0 12px; border-top:1px solid var(--_vv-border); color:var(--_vv-muted); background:var(--_vv-surface); font-size:10px; }
 .status-message { display:flex; gap:16px; min-width:0; }
 .status-message span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
@@ -59,18 +52,14 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
   .workspace { display:block; overflow:auto; }
   .viewport { height:340px; min-height:260px; padding:16px 4px; }
   .inspector-pane { width:100%; overflow:visible; border-left:0; border-top:1px solid var(--_vv-border); }
-  .layer-controls { font-size:12px; }
-  .layer-controls label { min-height:44px; }
-  .layer-controls input { min-width:20px; width:20px; height:20px; min-height:20px; }
   .status { flex-wrap:wrap; gap:0; padding:4px 8px; }
   .status-message { width:100%; min-height:18px; }
 }
 @media(pointer:coarse) {
   button,select,input,textarea { min-height:44px; }
   button { min-width:44px; }
-  summary,.layer-controls label { min-height:44px; line-height:44px; }
+  summary { min-height:44px; line-height:44px; }
   .ribbon-content { min-height:96px; }
-  .layer-controls input { min-height:20px; }
 }
 /* Suite ribbon: tabs lead directly into Visio command groups. */
 .ribbon-content { min-height:104px; padding:4px 4px; }
@@ -95,7 +84,6 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
 .ribbon-command { font-size:12px; min-width:88px; }
 .ribbon-hint { font-size:12px; line-height:20px; flex:1; }
 .group-label { font-size:11px; line-height:14px; }
-.layer-controls { font-size:12px; line-height:18px; }
 .pane-heading { font-size:12px; }
 .status-message { flex:1; }
 @media(max-width:760px) {

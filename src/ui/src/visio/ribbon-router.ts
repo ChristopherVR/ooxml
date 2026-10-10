@@ -42,7 +42,7 @@ export interface RibbonTargets {
 	toggleFullscreen(): void;
 	present(): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
-	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
+	reveal(panel: 'edit' | 'notes' | 'selection', focusText: boolean): void;
 	fit(mode: 'page' | 'width'): void;
 	focusSearch(): void;
 	focusReplace(): void;
@@ -63,6 +63,7 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 		case 're-layout':
 		case 'layout-options':
 		case 'assign-layers':
+		case 'layer-properties':
 		case 'select-by-type':
 		case 'paste-special':
 		case 'guides':

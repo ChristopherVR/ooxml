@@ -5,7 +5,6 @@ import { ViewerController, type ViewerState } from './controller';
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { selectedShape } from './shape-inspector';
 import { wireViewerInputs } from './viewer-input';
-import { renderLayerControls, wireLayerControls } from './viewer-layer-controls';
 import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
 import { installOfficeUiTheme } from '../theme';
@@ -86,7 +85,6 @@ export class VisioViewerElement extends BaseElement {
 	#toolbar: HTMLDivElement;
 	#chrome: ViewerChrome;
 	#edit: ViewerInlineText;
-	#layers: HTMLDetailsElement;
 	#notes: HTMLUListElement;
 	#unsubscribe: () => void;
 	#eventUnsubscribe: () => void;
@@ -129,7 +127,6 @@ export class VisioViewerElement extends BaseElement {
 			this.#announcement = message;
 			this.#status.textContent = message;
 		});
-		this.#layers = this.#root.querySelector('.layer-controls')!;
 		this.#notes = this.#root.querySelector('.backstage-notes ul')!;
 		this.#canvas = new ViewerCanvas(
 			this.#viewport,
@@ -448,7 +445,7 @@ export class VisioViewerElement extends BaseElement {
 		);
 	}
 	/** Shape text edits in place on the canvas; compatibility notes live in File > Info. */
-	#reveal(panel: 'edit' | 'notes' | 'selection' | 'layers'): void {
+	#reveal(panel: 'edit' | 'notes' | 'selection'): void {
 		if (panel === 'edit') this.#edit.start();
 		else if (panel === 'notes') this.#backstage.show('info');
 		else this.#chrome.reveal(panel);
@@ -589,7 +586,6 @@ export class VisioViewerElement extends BaseElement {
 		);
 		const disposeReplace = this.#replace.wire();
 		const disposeEdit = this.#edit.wire();
-		const disposeLayers = wireLayerControls(this.#layers, this.controller);
 		const disposeInputs = wireViewerInputs(
 			{
 				viewport: this.#viewport,
@@ -625,7 +621,6 @@ export class VisioViewerElement extends BaseElement {
 			disposeFind();
 			disposeReplace();
 			disposeInputs();
-			disposeLayers();
 			disposeEdit();
 		};
 	}
@@ -666,10 +661,6 @@ export class VisioViewerElement extends BaseElement {
 		renderFindBar(this.#findBar, state);
 		this.#replace.render(state);
 		this.#edit.render(state);
-		if (changed) renderLayerControls(this.#layers, state);
-		else
-			this.#layers.querySelector<HTMLButtonElement>('[data-layer-reset="all"]')!.disabled =
-				state.layerVisibilityOverrides.length === 0;
 		this.#chrome.render(state);
 		this.#commands.render(state);
 		this.#presentation.render(state);

@@ -91,6 +91,8 @@ export type {
 } from './edit-diagram-parts-commands';
 import { snapshotAssignLayers, type VisioAssignLayersEdit } from './edit-layer-commands';
 export type { VisioAssignLayersEdit } from './edit-layer-commands';
+import { snapshotLayerProperties, type VisioLayerPropertiesEdit } from './edit-layer-properties';
+export type { VisioLayerPropertiesEdit } from './edit-layer-properties';
 import { isVisioGuideEdit, snapshotGuideEdit, type VisioGuideEdit } from './edit-guide-commands';
 export type { VisioGuideEdit } from './edit-guide-commands';
 import { snapshotTextFieldInsert, type VisioTextFieldInsertEdit } from './edit-text-field-commands';
@@ -221,6 +223,7 @@ export type VisioEdit =
 	| VisioShapeDataEdit
 	| VisioDataEdit
 	| VisioAssignLayersEdit
+	| VisioLayerPropertiesEdit
 	| VisioGuideEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'insert-page' ||
@@ -310,6 +313,7 @@ export function snapshotVisioEdits(
 		if (edit.type === 'insert-picture') return snapshotPictureInsert(edit);
 		if (edit.type === 'set-page-theme') return snapshotPageTheme(edit);
 		if (edit.type === 'assign-layers') return snapshotAssignLayers(edit);
+		if (edit.type === 'set-layer-properties') return snapshotLayerProperties(edit);
 		if (isVisioGuideEdit(edit)) return snapshotGuideEdit(edit);
 		if (isVisioMetadataEdit(edit)) return snapshotMetadataEdit(edit);
 		if (isVisioGroupEdit(edit)) return snapshotGroupEdit(edit);

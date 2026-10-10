@@ -302,7 +302,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 					{
 						id: 'layer-properties',
 						label: 'Layer Properties...',
-						action: { type: 'reveal', panel: 'layers' },
+						action: { type: 'layer-properties' },
 					},
 					{
 						id: 'assign-layer',

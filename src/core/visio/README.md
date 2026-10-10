@@ -53,6 +53,14 @@ formula), `textBackgroundTransparency` and `textBlock` (the Text Block tool: cen
 as fractions of Width/Height and an angle, written as `Width*k`/`Height*k` formulas so
 the block follows later resizes). Tab stops are not written.
 
+## Layer properties
+
+`set-layer-properties` sets a page layer's `visible`, `print` or `lock` flag: the Visible, Print
+and Lock cells of the layer's row in the page's Layer section (Home > Layers > Layer Properties).
+Omitted flags are kept, a missing cell is added, and a flag driven by a formula is refused. Layer
+property edits form their own transaction and change only `pages.xml`. Renaming, removing and
+recolouring layers, and the Active, Snap and Glue flags, are not written.
+
 ## Text fields
 
 `insert-text-field` adds a `<fld>` and a Field row (Value formula and cache, Format

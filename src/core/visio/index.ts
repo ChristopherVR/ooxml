@@ -91,6 +91,7 @@ export {
 	type VisioMetadataEdit,
 	type VisioPictureInsertEdit,
 	type VisioAssignLayersEdit,
+	type VisioLayerPropertiesEdit,
 	type VisioGuideEdit,
 	type VisioShapeHyperlinkEdit,
 	type VisioShapeScreenTipEdit,

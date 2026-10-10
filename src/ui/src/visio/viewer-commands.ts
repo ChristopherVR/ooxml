@@ -46,7 +46,7 @@ interface CommandHost {
 	controller: ViewerController;
 	fit(mode: 'page' | 'width'): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
-	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
+	reveal(panel: 'edit' | 'notes' | 'selection', focusText: boolean): void;
 	focusSearch(): void;
 	focusReplace?(): void;
 	togglePanZoom(): void;

@@ -39,6 +39,7 @@ import { applyShapeDataEdit } from './edit-shape-data';
 import { isVisioDataEdit } from './edit-data-commands';
 import { editVsdxData } from './edit-data';
 import { editVsdxLayers } from './edit-layers';
+import { editVsdxLayerProperties } from './edit-layer-properties';
 import { isVisioGuideEdit } from './edit-guide-commands';
 import { applyGuideEdit } from './edit-guides';
 export type {
@@ -97,6 +98,7 @@ export type {
 	VisioDataLinkEdit,
 	VisioDataUnlinkEdit,
 	VisioAssignLayersEdit,
+	VisioLayerPropertiesEdit,
 	VisioGuideEdit,
 } from './edit-commands';
 
@@ -191,6 +193,21 @@ async function editVsdxTransaction(
 			parts,
 			pages,
 			allCommands.filter(isVisioDataEdit),
+			limits,
+			maxOutput,
+			deadline,
+			check,
+		);
+	}
+	const layerFlags = allCommands.filter((command) => command.type === 'set-layer-properties');
+	if (layerFlags.length) {
+		if (layerFlags.length !== allCommands.length)
+			fail('EDIT_MIXED_LAYER_TRANSACTION', 'Layer properties require their own transaction.');
+		return editVsdxLayerProperties(
+			pkg,
+			parts,
+			pages,
+			layerFlags,
 			limits,
 			maxOutput,
 			deadline,
@@ -429,7 +446,8 @@ async function editVsdxTransaction(
 			command.type !== 'create-subprocess' &&
 			!isVisioCommentEdit(command) &&
 			!isVisioDataEdit(command) &&
-			command.type !== 'assign-layers'
+			command.type !== 'assign-layers' &&
+			command.type !== 'set-layer-properties'
 		) {
 			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);

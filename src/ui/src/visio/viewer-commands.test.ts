@@ -282,10 +282,9 @@ describe('Visio ribbon commands', () => {
 	it('routes shared office-command buttons to pane, zoom and tool commands', async () => {
 		const { calls, command, press, check, viewport, controller } = await setup();
 		press('shapes');
-		press('layer-properties');
 		press('zoom-fit');
 		press('page-width');
-		expect(calls).toEqual(['pane:shapes', 'reveal:layers:false', 'fit:page', 'fit:width']);
+		expect(calls).toEqual(['pane:shapes', 'fit:page', 'fit:width']);
 		press('rectangle');
 		expect(command('rectangle').hasAttribute('data-active')).toBe(true);
 		expect(command('rectangle-item').getAttribute('checked')).toBe('true');
