@@ -1,5 +1,41 @@
 # Visio capability ledger
 
+## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
+
+The groups and commands of every tab were read from Visio 16 through UI
+Automation and compared with this ribbon. Changed to match:
+
+- Home > Paragraph has Rotate Text. As recorded from Visio, each use adds 90
+  degrees to `TxtAngle` and leaves the text block's size and pin alone; it
+  needs a top-level two-dimensional shape.
+- Insert > Pages is New Page (it was Blank Page); Online Pictures is gone,
+  because Visio has no such button.
+- Data has Visio's five groups: External Data, Data Graphics (with Position,
+  Configure and Auto Space), Display Data, Show/Hide (with Data Graphic Fields)
+  and Advanced Data Linking.
+- Process has SharePoint Workflow; Review has Accessibility and Ink; View >
+  Show has the Ruler & Grid launcher and Visio's order of check boxes.
+- The title bar centres the drawing's name and keeps the account at the right.
+
+Commands added only for the match are disabled and say why in their tooltip:
+Position, Configure, Auto Space, Data Graphic Fields, Link Data, Advanced Data
+Graphics, the four SharePoint Workflow commands, Check Accessibility, Ink and
+the Ruler & Grid launcher.
+
+Still different from Visio:
+
+- Quick Styles, Themes and Variants are drop-down galleries, not galleries
+  shown inline in the ribbon.
+- Icons are the shared monochrome line icons, not Visio's coloured ones.
+- View > Views keeps Full Screen, which Visio does not have.
+- A narrow ribbon scrolls; Visio collapses groups into buttons.
+- The Shapes window opens the Basic Shapes stencil for every drawing; Visio
+  opens the stencils saved with the drawing (Basic Flowchart Shapes for a
+  flowchart).
+
+A host can add its own tabs after Help (`ribbonAddIns`, see the API page), as
+an add-in does in Visio. No add-in tab ships with the viewer.
+
 ## Comments, Shape Reports, Check Diagram and Subprocess, 2026-10-09
 
 Review comments are read from `visio/comments.xml` (the Visio 2013 and later
@@ -229,9 +265,9 @@ shape's Comment cell, shown as the SVG tooltip and in the Shape Data window.
 Both refuse master instances (inherited sections), formula-driven cells and
 drawings whose formulas read `Comment` or `Hyperlink` cells. ScreenTips and
 link fields are single-line (at most 4096 characters) because the XML writer
-cannot preserve line breaks in attributes. Object, Chart, CAD Drawing and
-Online Pictures stay disabled with their reasons: OLE objects, Excel charts and
-DWG/DXF import are not supported, and documents stay local.
+cannot preserve line breaks in attributes. Object, Chart and CAD Drawing stay
+disabled with their reasons: OLE objects, Excel charts and DWG/DXF import are
+not supported.
 
 ## Text dialog, Text Block, Symbol, Field and proofing, 2026-10-09
 
@@ -401,7 +437,7 @@ text dependencies. VSDX logical text removes one structural terminal paragraph
 marker while retaining intentional trailing LF characters and styled blank
 paragraphs; legacy VSD behavior remains unchanged.
 
-Insert Blank Page exposes the existing blank-page source command on the Insert
+Insert > New Page exposes the existing blank-page source command on the Insert
 tab. Native logical-text evidence covers ten saved inputs and forty core writer
 outputs, including native resave/reparse. A separate 24-case native fixed-box API
 oracle verifies default and custom Text Only/Arial 18 pt saved styles at three

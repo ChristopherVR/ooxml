@@ -76,6 +76,7 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 		case 'text-toggle':
 		case 'font-color':
 		case 'text-bullets':
+		case 'text-rotate':
 		case 'text-indent':
 		case 'font-family':
 		case 'font-size':

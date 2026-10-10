@@ -12,6 +12,8 @@ export function createTitleBar(doc: Document): HTMLElement {
 	const bar = doc.createElement('office-ui-title-bar');
 	bar.className = 'title-bar';
 	const account = doc.createElement('span');
+	// Visio centres the document name in the title bar.
+	bar.setAttribute('centered', '');
 	account.slot = 'account';
 	account.className = 'title-account';
 	const name = doc.createElement('span');

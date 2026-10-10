@@ -29,6 +29,8 @@ export type VisioFormattingAction =
 	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' | 'strikethrough' }
 	| { type: 'font-color'; value?: string }
 	| { type: 'text-bullets' }
+	/** Home > Paragraph > Rotate Text: the text block turns 90 degrees counter-clockwise. */
+	| { type: 'text-rotate' }
 	| { type: 'text-indent'; direction: 'increase' | 'decrease' }
 	| { type: 'font-family'; value: string }
 	| { type: 'font-size'; value: number }

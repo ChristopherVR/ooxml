@@ -283,3 +283,28 @@ it('preserves the complete source when a later target refuses an atomic formatti
 	ui.dispose();
 	ui.controller.destroy();
 });
+
+it('rotates the text block a quarter turn at a time, as Rotate Text in Visio', async () => {
+	const ui = await setup();
+	expect(ui.button('rotate-text').disabled).toBe(true);
+	ui.selection();
+	expect(ui.button('rotate-text').disabled).toBe(false);
+	const angle = () => {
+		const t = ui.shape().text.transform;
+		return Math.round((Math.atan2(t[1], t[0]) * 180) / Math.PI);
+	};
+	const size = { width: ui.shape().text.width, height: ui.shape().text.height };
+	expect(angle()).toBe(0);
+	const turns: number[] = [];
+	for (let turn = 0; turn < 4; ++turn) {
+		ui.press('rotate-text');
+		await ui.done();
+		turns.push(angle());
+		// Recorded from Visio: TxtAngle gains 90 deg; TxtWidth, TxtHeight and the pin stay.
+		expect(ui.shape().text.width).toBeCloseTo(size.width);
+		expect(ui.shape().text.height).toBeCloseTo(size.height);
+	}
+	expect(turns.map((value) => (value + 360) % 360)).toEqual([90, 180, 270, 0]);
+	ui.dispose();
+	ui.controller.destroy();
+});

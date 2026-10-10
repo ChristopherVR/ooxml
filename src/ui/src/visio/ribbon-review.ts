@@ -4,7 +4,10 @@ import { check, command, commandRow, group, menu, stack } from './ribbon-parts';
 
 const review = (command: VisioReviewCommand) => ({ type: 'review' as const, command });
 
-/** Visio's Process tab: Subprocess and Diagram Validation (this viewer's generic rules). */
+/**
+ * Visio's Process tab: Subprocess, Diagram Validation (this viewer's generic rules) and SharePoint
+ * Workflow, which is shown disabled because no server is connected.
+ */
 export function buildProcessPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
 		commandRow(doc, 'Process commands', [
@@ -16,16 +19,16 @@ export function buildProcessPanel(doc: Document, panel: HTMLElement): void {
 					action: review('subprocess-new'),
 				}),
 				command(doc, {
-					id: 'create-from-selection',
-					label: 'Create from Selection',
-					icon: 'group',
-					action: review('subprocess-selection'),
-				}),
-				command(doc, {
 					id: 'link-existing',
 					label: 'Link to Existing',
 					icon: 'visioLink',
 					action: review('subprocess-existing'),
+				}),
+				command(doc, {
+					id: 'create-from-selection',
+					label: 'Create from Selection',
+					icon: 'group',
+					action: review('subprocess-selection'),
 				}),
 			]),
 			group(doc, 'Diagram Validation', [
@@ -70,11 +73,25 @@ export function buildProcessPanel(doc: Document, panel: HTMLElement): void {
 					}),
 				]),
 			]),
+			group(
+				doc,
+				'SharePoint Workflow',
+				(
+					[
+						['workflow-import', 'Import', 'visioData'],
+						['workflow-export', 'Export', 'visioData'],
+						['workflow-stage-outline', 'Stage Outline', 'bullets'],
+						['workflow-create', 'Create Workflow', 'visioPagesPane'],
+					] as const
+				).map(([id, label, icon]) =>
+					command(doc, { id, label, icon, unsupported: 'No SharePoint server is connected.' }),
+				),
+			),
 		]),
 	);
 }
 
-/** Visio's Review tab: Proofing, Language, Comments and Reports. */
+/** Visio's Review tab: Proofing, Accessibility, Language, Comments and Reports. */
 export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
 		commandRow(doc, 'Review commands', [
@@ -91,6 +108,14 @@ export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
 					label: 'Thesaurus',
 					icon: 'search',
 					unsupported: 'No thesaurus dictionary is bundled with this editor.',
+				}),
+			]),
+			group(doc, 'Accessibility', [
+				command(doc, {
+					id: 'check-accessibility',
+					label: 'Check Accessibility',
+					icon: 'check',
+					unsupported: 'The accessibility checker (alt text, reading order) is not built yet.',
 				}),
 			]),
 			group(doc, 'Language', [
@@ -113,6 +138,12 @@ export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
 					label: 'Comments Pane',
 					icon: 'visioInspectorPane',
 					action: review('comments-pane'),
+				}),
+				command(doc, {
+					id: 'ink',
+					label: 'Ink',
+					icon: 'visioInk',
+					unsupported: 'Ink strokes are not supported.',
 				}),
 			]),
 			group(doc, 'Reports', [

@@ -27,52 +27,64 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 					pressed: false,
 				}),
 			]),
-			group(doc, 'Show', [
-				stack(doc, [
-					check(doc, { id: 'ruler', label: 'Ruler', action: { type: 'ruler' } }),
-					check(doc, {
-						id: 'page-breaks',
-						label: 'Page Breaks',
-						action: { type: 'page-setup', command: { op: 'page-breaks' } },
-					}),
-					check(doc, { id: 'grid', label: 'Grid', action: { type: 'grid' } }),
-				]),
-				stack(doc, [
-					check(doc, { id: 'guides', label: 'Guides', action: { type: 'guides' } }),
-					menu(doc, {
-						id: 'task-panes',
-						label: 'Task Panes',
-						icon: 'visioInspectorPane',
-						size: 'small',
-						items: [
-							{
-								id: 'shapes',
-								label: 'Shapes',
-								action: { type: 'pane', pane: 'shapes' },
-								checked: true,
-							},
-							{
-								id: 'shape-data',
-								label: 'Shape Data',
-								action: { type: 'reveal', panel: 'selection' },
-								checked: false,
-							},
-							{ id: 'pan-zoom', label: 'Pan & Zoom', action: { type: 'panZoom' }, checked: false },
-							{
-								id: 'size-position',
-								label: 'Size & Position',
-								action: { type: 'sizePosition' },
-								checked: false,
-							},
-							{
-								id: 'drawing-explorer',
-								label: 'Drawing Explorer',
-								action: { type: 'drawing-explorer' },
-							},
-						],
-					}),
-				]),
-			]),
+			group(
+				doc,
+				'Show',
+				[
+					stack(doc, [
+						check(doc, { id: 'ruler', label: 'Ruler', action: { type: 'ruler' } }),
+						check(doc, { id: 'grid', label: 'Grid', action: { type: 'grid' } }),
+						check(doc, {
+							id: 'page-breaks',
+							label: 'Page Breaks',
+							action: { type: 'page-setup', command: { op: 'page-breaks' } },
+						}),
+					]),
+					stack(doc, [
+						check(doc, { id: 'guides', label: 'Guides', action: { type: 'guides' } }),
+						menu(doc, {
+							id: 'task-panes',
+							label: 'Task Panes',
+							icon: 'visioInspectorPane',
+							size: 'small',
+							items: [
+								{
+									id: 'shapes',
+									label: 'Shapes',
+									action: { type: 'pane', pane: 'shapes' },
+									checked: true,
+								},
+								{
+									id: 'shape-data',
+									label: 'Shape Data',
+									action: { type: 'reveal', panel: 'selection' },
+									checked: false,
+								},
+								{
+									id: 'pan-zoom',
+									label: 'Pan & Zoom',
+									action: { type: 'panZoom' },
+									checked: false,
+								},
+								{
+									id: 'size-position',
+									label: 'Size & Position',
+									action: { type: 'sizePosition' },
+									checked: false,
+								},
+								{
+									id: 'drawing-explorer',
+									label: 'Drawing Explorer',
+									action: { type: 'drawing-explorer' },
+								},
+							],
+						}),
+					]),
+				],
+				{
+					launcher: 'Ruler subdivisions and grid spacing follow the page; they cannot be set yet.',
+				},
+			),
 			group(doc, 'Zoom', [
 				menu(doc, {
 					id: 'zoom',
@@ -104,15 +116,15 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 				[
 					stack(doc, [
 						check(doc, {
+							id: 'dynamic-grid',
+							label: 'Dynamic Grid',
+							action: { type: 'dynamic-grid' },
+						}),
+						check(doc, {
 							id: 'auto-connect',
 							label: 'AutoConnect',
 							unsupported:
 								'Hover arrows that add a glued copy of a shape are not built yet; draw connectors with the Connector tool.',
-						}),
-						check(doc, {
-							id: 'dynamic-grid',
-							label: 'Dynamic Grid',
-							action: { type: 'dynamic-grid' },
 						}),
 						check(doc, {
 							id: 'connection-points',

@@ -225,6 +225,15 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 								action: { type: 'text-bullets' },
 							}),
 						),
+						command(
+							doc,
+							icon({
+								id: 'rotate-text',
+								label: 'Rotate Text',
+								icon: 'visioRotateText',
+								action: { type: 'text-rotate' },
+							}),
+						),
 					],
 					true,
 				),

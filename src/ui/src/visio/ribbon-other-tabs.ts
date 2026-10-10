@@ -8,6 +8,11 @@ import { layoutGroup, reLayoutGallery } from './ribbon-layout';
 
 const OBJECTS = 'Embedded OLE objects are not supported; only pictures can be inserted.';
 
+const GRAPHICS =
+	'Data graphics are placed at their default position; this option is not built yet.';
+const LINKING =
+	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.';
+
 const unsupported = (
 	id: string,
 	label: string,
@@ -57,7 +62,7 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 			group(doc, 'Pages', [
 				command(doc, {
 					id: 'blank-page',
-					label: 'Blank Page',
+					label: 'New Page',
 					icon: 'visioPagesPane',
 					action: { type: 'page-insert' },
 				}),
@@ -69,15 +74,6 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 					icon: 'visioPicture',
 					action: { type: 'insert', item: 'picture' },
 				}),
-				command(
-					doc,
-					unsupported(
-						'online-pictures',
-						'Online Pictures',
-						'search',
-						'Documents stay local; nothing is fetched.',
-					),
-				),
 				command(
 					doc,
 					unsupported('chart', 'Chart', 'visioChart', 'Embedded Excel charts are not supported.'),
@@ -182,7 +178,7 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 					action: data('refresh'),
 				}),
 			]),
-			group(doc, 'Display Data', [
+			group(doc, 'Data Graphics', [
 				menu(doc, {
 					id: 'data-graphics',
 					label: 'Data Graphics',
@@ -199,6 +195,16 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 						},
 					],
 				}),
+				stack(doc, [
+					command(doc, unsupported('graphic-position', 'Position', 'position', GRAPHICS, 'small')),
+					command(
+						doc,
+						unsupported('graphic-configure', 'Configure', 'settings', GRAPHICS, 'small'),
+					),
+					command(doc, unsupported('graphic-auto-space', 'Auto Space', 'grid', GRAPHICS, 'small')),
+				]),
+			]),
+			group(doc, 'Display Data', [
 				menu(doc, {
 					id: 'insert-legend',
 					label: 'Insert Legend',
@@ -225,7 +231,20 @@ export function buildDataPanel(doc: Document, panel: HTMLElement): void {
 						label: 'External Data Window',
 						action: data('external-data-window'),
 					}),
+					check(doc, {
+						id: 'data-graphic-fields',
+						label: 'Data Graphic Fields',
+						unsupported:
+							'Data graphics are chosen in the Data Graphics menu; there is no fields pane.',
+					}),
 				]),
+			]),
+			group(doc, 'Advanced Data Linking', [
+				command(doc, unsupported('link-data', 'Link Data', 'visioLink', LINKING)),
+				command(
+					doc,
+					unsupported('advanced-data-graphics', 'Advanced Data Graphics', 'visioChart', GRAPHICS),
+				),
 			]),
 		]),
 	);

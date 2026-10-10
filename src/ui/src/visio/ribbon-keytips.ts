@@ -33,6 +33,7 @@ const PANELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 		'align-middle': 'AM',
 		'align-bottom': 'AB',
 		bullets: 'U',
+		'rotate-text': 'AX',
 		'align-left': 'AL',
 		'align-center': 'AC',
 		'align-right': 'AR',

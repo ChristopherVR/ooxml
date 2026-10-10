@@ -5,6 +5,9 @@ import {
 	visioFormattingShape,
 	visioStyleFormattingShape,
 	visioFontFamilies,
+	visioTextBlockEdit,
+	visioTextBlockFrame,
+	visioTextBlockShape,
 	visioOrderingShape,
 	visioTextFormattingState,
 	visioTextIndentCommand,
@@ -67,6 +70,21 @@ export class ViewerFormatting {
 				async () => (edits.length ? this.controller.applyEdits(edits) : undefined),
 				'Changed text case.',
 			);
+			return;
+		}
+		if (action.type === 'text-rotate') {
+			const blocks = selections.map(({ id }) => visioTextBlockShape(page, id));
+			if (blocks.some((shape) => !shape)) return;
+			// As Visio: TxtAngle gains 90 degrees and the block keeps its size and pin.
+			const edits = blocks.map((shape) => {
+				const frame = visioTextBlockFrame(shape!);
+				const turns = Math.round(frame.angle / (Math.PI / 2)) + 1;
+				return visioTextBlockEdit(page, shape!, {
+					...frame,
+					angle: (((((turns + 2) % 4) + 4) % 4) - 2) * (Math.PI / 2),
+				});
+			});
+			this.edit(() => this.controller.applyEdits(edits), 'Rotated the text.');
 			return;
 		}
 		const candidates = selections.map(({ id }) =>
@@ -184,6 +202,13 @@ export class ViewerFormatting {
 			set(button(`align-${value}`), reason, !!shape && aggregate.horizontalAlign === value);
 		set(button('justify'), reason, !!shape && aggregate.horizontalAlign === 'justify');
 		set(button('bullets'), reason, !!shape && aggregate.bullets);
+		set(
+			button('rotate-text'),
+			baseReason ||
+				(!page || !currentPage || selections.some((item) => !visioTextBlockShape(page, item.id))
+					? 'Rotate Text requires top-level two-dimensional shapes.'
+					: ''),
+		);
 		const indentReason =
 			reason ||
 			(!page || !shapes.every((item) => visioTextIndentCommand(page, item.id, 'increase'))

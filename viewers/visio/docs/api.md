@@ -146,6 +146,33 @@ layers and announces truncation; the API allows at most 25,000 document-scoped
 overrides. SVG and print artifacts continue to use saved visibility. Layer
 colors, editing and saved print policy are not implemented.
 
+## Ribbon add-in tabs
+
+A host can add tabs after Help, as an add-in does in Visio. Set
+`viewer.element.ribbonAddIns` (every binding exposes `element` on its handle)
+and listen for `office-ribbon-add-in` on the viewer or any ancestor:
+
+```ts
+viewer.element.ribbonAddIns = [
+	{
+		id: 'reports',
+		label: 'Reports',
+		groups: [
+			{
+				label: 'Export',
+				commands: [{ id: 'export', label: 'Export', icon: 'save', run: () => exportReport() }],
+			},
+		],
+	},
+];
+```
+
+The descriptor (`RibbonAddInTab`, exported from `ooxml-ui` and `ooxml-ui/visio`)
+is shared with the Word and Excel editors. It is not a binding prop yet: the
+framework components pass it through the element, not through a `ribbonAddIns`
+attribute or prop. A tab cannot take the id of a built-in tab (`home`, `insert`,
+`design`, `data`, `process`, `review`, `view`, `help`).
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's
@@ -406,7 +433,7 @@ using default and custom Text Only/Arial 18 pt styles, with core outputs reopene
 in Visio. These saved-style cases do not measure interactive GUI defaults; see
 the [verification record](verification.md).
 
-Insert > Blank Page routes through the existing source-backed page insertion
+Insert > New Page routes through the existing source-backed page insertion
 command, then selects the new page. It shares the page bar's insertion behavior,
 undo/redo and source admission; this does not add template-backed page creation.
 
