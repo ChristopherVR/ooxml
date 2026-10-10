@@ -39,7 +39,8 @@ test('mobile documentation menu keeps the heading near the top and navigates sec
 	await page.goto('/getting-started.html');
 	const title = await page.locator('.vp-doc h1').boundingBox();
 	expect(title!.y).toBeLessThan(260);
-	await page.getByRole('button', { name: 'Menu', exact: true }).click();
+	// VitePress 2 has a navigation hamburger too; this is the page's sidebar menu.
+	await page.locator('button.menu[aria-controls="VPSidebarNav"]').click();
 	await page
 		.getByRole('navigation', { name: 'Sidebar Navigation' })
 		.getByRole('link', { name: 'Architecture', exact: true })
