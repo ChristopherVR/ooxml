@@ -3,6 +3,7 @@ import { transform } from './geometry';
 import { cells } from './edit-geometry-cells';
 import { visioFormulaCachedValue } from './formula';
 import { routeBox } from './edit-connector-layout';
+import { effectiveCells, stencilTemplate } from './edit-stencil-connector';
 import type { VisioRouteBox } from './connector-route';
 
 /** A cell's cached number, or undefined when it is missing, an error or not a finite value. */
@@ -21,21 +22,22 @@ export const VISIO_PLACEABLE = 1;
  * the route already knows). Visio leaves ObjType 0 ("let Visio decide") shapes in a connector's
  * way and makes a shape placeable when a dynamic connector is glued to it, so a plain drawn
  * rectangle is not an obstacle until something connects to it. Read from the shapes' own cached
- * cells, nothing is proven or changed; master instances are left out because their size and
- * ObjType may live in the master, which the drag preview and this reader must agree on.
+ * cells, nothing is proven or changed. One-shape stencil instances count through the cells in
+ * effect over their master; grouped instances are left out.
  */
 export function connectorObstacles(root: Element, exclude: ReadonlySet<string>): VisioRouteBox[] {
 	const result: VisioRouteBox[] = [];
 	for (const shape of children(children(root, 'Shapes')[0], 'Shape')) {
 		if (exclude.has(attribute(shape, 'ID') ?? '')) continue;
-		const local = cells(shape);
+		// A registered one-shape stencil instance is read through its master's cells.
+		const stencil = !!stencilTemplate(shape);
+		const local = stencil ? effectiveCells(shape) : cells(shape);
 		const value = (name: string) => cached(local.get(name));
 		if (
 			['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name)) ||
 			(value('OneD') ?? 0) !== 0 ||
 			attribute(shape, 'Type') === 'Guide' ||
-			shape.hasAttribute('Master') ||
-			shape.hasAttribute('MasterShape') ||
+			(!stencil && (shape.hasAttribute('Master') || shape.hasAttribute('MasterShape'))) ||
 			value('ObjType') !== VISIO_PLACEABLE
 		)
 			continue;

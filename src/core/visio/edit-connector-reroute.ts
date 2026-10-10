@@ -13,6 +13,7 @@ import {
 	connectorRoute,
 	layoutConnectorShape,
 	prefix,
+	routeVertices,
 	setRouteCells,
 	type ConnectorSite,
 	type End,
@@ -20,6 +21,7 @@ import {
 import {
 	STENCIL_CONNECTOR,
 	connectRows,
+	glueBox,
 	glueEnd,
 	glueSites,
 	topShape,
@@ -29,6 +31,25 @@ import {
 } from './edit-connector';
 import type { VisioRoutePoint } from './connector-route';
 import { connectorObstacles } from './edit-connector-obstacles';
+import {
+	effectiveCells,
+	isStencilConnector,
+	proveStencilConnector,
+	stencilConnectorRoute,
+	stencilTemplate,
+} from './edit-stencil-connector';
+import {
+	layoutStencilConnector,
+	stencilConnectorPath,
+	walkShape,
+} from './edit-stencil-connector-layout';
+
+/** The cells in effect on a connector: a stencil connector's ends may be its master's. */
+const connectorCells = (shape: Element) =>
+	isStencilConnector(shape) ? effectiveCells(shape) : cells(shape);
+/** A connector's route, read from its own cells or, for a stencil connector, the ones in effect. */
+export const routeOf = (shape: Element): VisioConnectorRoute =>
+	isStencilConnector(shape) ? stencilConnectorRoute(shape) : connectorRoute(shape);
 
 const canonical = (shape: Element, name: string, expected: string) =>
 	executableCellFormula(attribute(cells(shape).get(name), 'F'))
@@ -37,10 +58,16 @@ const canonical = (shape: Element, name: string, expected: string) =>
 
 /** A right-angle or curved connector this editor wrote (Visio's dynamic-connector cell form). */
 export function isRoutedConnector(shape: Element): boolean {
+	// A stencil connector keeps the dynamic form (no angle) for every route, straight included.
+	if (isStencilConnector(shape)) return true;
 	return isLineSheet(cells(shape)) && connectorRoute(shape) !== 'straight';
 }
 /** Prove a connector's transform is the owned form of its route before it is laid out again. */
-export function proveConnectorShape(shape: Element, route = connectorRoute(shape)): void {
+export function proveConnectorShape(shape: Element, route = routeOf(shape)): void {
+	if (isStencilConnector(shape)) {
+		proveStencilConnector(shape);
+		return;
+	}
 	if (route === 'straight') {
 		proveLocalLine(shape);
 		return;
@@ -78,9 +105,10 @@ export function rerouteConnector(
 ): readonly string[] {
 	const root = roots.get(pageId)!;
 	const shape = glue.shape;
-	const current = connectorRoute(shape);
+	const stencil = isStencilConnector(shape);
+	const current = routeOf(shape);
 	proveConnectorShape(shape, current);
-	const local = cells(shape);
+	const local = connectorCells(shape);
 	const sites = (end: End): ConnectorSite[] => {
 		const target = glue.ends[end];
 		if (target) return glueSites(root, target);
@@ -94,6 +122,12 @@ export function rerouteConnector(
 		];
 	};
 	const chosen = chooseSites(sites('begin'), sites('end'));
+	const walk = (end: End) => {
+		const target = glue.ends[end];
+		return target && target.point === undefined
+			? walkShape(glueBox(root, target.target))
+			: { point: sites(end)[0]!.point };
+	};
 	const route = options.route ?? current;
 	if (
 		route === 'straight' &&
@@ -116,14 +150,29 @@ export function rerouteConnector(
 					]),
 				)
 			: [];
-	const pages = layoutConnectorShape(roots, pageId, shape, route, chosen, check, obstacles);
+	const pages = stencil
+		? layoutStencilConnector(
+				root,
+				pageId,
+				shape,
+				route,
+				// Visio's own side choice first; the general router when that path is blocked.
+				stencilConnectorPath(walk('begin'), walk('end'), route, obstacles) ??
+					routeVertices(route, chosen, obstacles),
+				check,
+			)
+		: layoutConnectorShape(roots, pageId, shape, route, chosen, check, obstacles);
 	proveConnectorShape(shape, route);
 	return pages;
 }
 
 const connectorShape = (root: Element, shapeId: string): Element => {
 	const shape = topShape(root, shapeId);
-	if (!shape || !isLineSheet(cells(shape)) || numeric(cells(shape).get('ObjType'), 0) !== 2)
+	if (
+		!shape ||
+		!isLineSheet(connectorCells(shape)) ||
+		numeric(connectorCells(shape).get('ObjType'), 0) !== 2
+	)
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',
 			'Only connectors drawn with the Connector tool can be glued or rerouted.',
@@ -139,7 +188,7 @@ export function editRoutedConnector(
 ): readonly string[] {
 	const root = roots.get(edit.pageId)!;
 	const glue = proveConnector(root, edit.shapeId);
-	const local = cells(glue.shape);
+	const local = connectorCells(glue.shape);
 	const point = (end: End) => ({
 		x: numeric(local.get(`${prefix(end)}X`)),
 		y: numeric(local.get(`${prefix(end)}Y`)),
@@ -207,15 +256,15 @@ export function setConnectorRoute(
 ): readonly string[] {
 	const root = roots.get(edit.pageId)!;
 	const shape = connectorShape(root, edit.shapeId);
-	if (connectorRoute(shape) === edit.route) return [];
+	if (routeOf(shape) === edit.route) return [];
 	const glue = proveConnector(root, edit.shapeId);
 	const pages = rerouteConnector(roots, edit.pageId, glue, check, { route: edit.route });
 	return pages.length ? pages : [edit.pageId];
 }
 
 /**
- * Refuse, in plain words, a geometry edit of Visio's own Dynamic connector (a master instance)
- * or of a shape one is glued to: its inherited cell form cannot be laid out again yet.
+ * Refuse, in plain words, a geometry edit of a stencil connector this editor cannot lay out again
+ * (a grouped master, or one not built like Visio's Dynamic connector) or of a shape one is glued to.
  */
 export function refuseStencilConnector(root: Element | undefined, shapeId: string): void {
 	if (!root) return;
@@ -224,7 +273,8 @@ export function refuseStencilConnector(root: Element | undefined, shapeId: strin
 		if (from !== shapeId && attribute(row, 'ToSheet') !== shapeId) continue;
 		if (!/^(Begin|End)X$/.test(attribute(row, 'FromCell') ?? '')) continue;
 		const connector = topShape(root, from);
-		if (connector?.hasAttribute('Master') || connector?.hasAttribute('MasterShape'))
+		if (stencilTemplate(connector)) proveStencilConnector(connector!);
+		else if (connector?.hasAttribute('Master') || connector?.hasAttribute('MasterShape'))
 			fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR);
 	}
 }

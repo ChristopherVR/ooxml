@@ -269,7 +269,7 @@ describe('resizing stencil (master) instances', () => {
 		).toBe('EDIT_PROTECTED_CELL');
 		// Stencil lines and connectors, group masters and missing masters.
 		expect(await refused(await withCell(transform + len('BeginX', 0)), [resize(2, 0.75)])).toBe(
-			'UNSUPPORTED_INSTANCE_EDIT',
+			'UNSUPPORTED_GEOMETRY_EDIT',
 		);
 		expect(
 			await refused(

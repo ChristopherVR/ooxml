@@ -15,6 +15,14 @@ import {
 	type VisioGlueBox,
 } from './edit-connector-glue';
 import {
+	effectiveCells,
+	effectiveNumber,
+	effectiveRows,
+	isStencilConnector,
+	proveStencilConnector,
+	stencilTemplate,
+} from './edit-stencil-connector';
+import {
 	ENDS,
 	chooseSites,
 	dynamicSites,
@@ -29,7 +37,7 @@ const triggerName = (end: End) => (end === 'begin' ? 'BegTrigger' : 'EndTrigger'
 const UNSUPPORTED = 'Glued connections outside owned straight dynamic glue are unsupported.';
 /** Visio's own Dynamic connector is a master instance; its inherited cell form is not written yet. */
 export const STENCIL_CONNECTOR =
-	"A connector that comes from a stencil (Visio's Dynamic connector) cannot be rerouted here yet, so it and the shapes glued to it cannot be moved or resized.";
+	'A connector that comes from a grouped or unreadable stencil master cannot be rerouted here, so it and the shapes glued to it cannot be moved or resized.';
 type LineCreate = Extract<VisioGeometryEdit, { type: 'create-line' }>;
 /** What one connector end is glued to: a shape (dynamic glue) or one of its connection points. */
 export interface GlueEnd {
@@ -51,11 +59,15 @@ export function topShape(root: Element, shapeId: string): Element | undefined {
 
 /** A glue target's alignment box and transform, read from its own proven caches. */
 export function glueBox(root: Element, shapeId: string): VisioGlueBox {
-	const shape = admitted(root, shapeId);
-	const local = cells(shape);
+	// A stencil shape's size and pin may live in its master: read the cells in effect.
+	const stencil = topShape(root, shapeId);
+	const shape = stencilTemplate(stencil) ? stencil! : admitted(root, shapeId);
+	const local = stencilTemplate(shape) ? effectiveCells(shape) : cells(shape);
 	if (isLineSheet(local)) fail('UNSUPPORTED_GEOMETRY_EDIT', 'Connectors glue to 2D shapes only.');
 	const width = numeric(local.get('Width')),
 		height = numeric(local.get('Height'));
+	if (!(width > 0) || !(height > 0))
+		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Connectors glue to shapes with a positive size.');
 	const flip = (name: string) => numeric(local.get(name), 0) !== 0;
 	return {
 		width,
@@ -88,9 +100,12 @@ export function connectionRows(shape: Element): Map<number, Element> {
 export function glueSites(root: Element, end: GlueEnd): ConnectorSite[] {
 	const box = glueBox(root, end.target);
 	if (end.point === undefined) return dynamicSites(box);
-	const row = connectionRows(topShape(root, end.target)!).get(end.point);
-	if (!row) fail('EDIT_TARGET_NOT_FOUND', 'The connection point does not exist.');
-	const local = cells(row);
+	const target = topShape(root, end.target)!;
+	// A stencil shape's connection points are its master's rows with any local overrides.
+	const local = stencilTemplate(target)
+		? effectiveRows(target, 'Connection').get(end.point)
+		: ((row) => (row ? cells(row) : undefined))(connectionRows(target).get(end.point));
+	if (!local) fail('EDIT_TARGET_NOT_FOUND', 'The connection point does not exist.');
 	return [pointSite(box, numeric(local.get('X')), numeric(local.get('Y')))];
 }
 const asGlue = (connect: LineCreate['connect'], end: End): GlueEnd | undefined => {
@@ -130,7 +145,7 @@ export function planConnector(root: Element, edit: LineCreate): LineCreate {
  */
 function markPlaceable(target: Element | undefined): void {
 	if (!target) return;
-	const node = cells(target).get('ObjType');
+	const node = (stencilTemplate(target) ? effectiveCells(target) : cells(target)).get('ObjType');
 	if (node && (node.hasAttribute('F') || numeric(node) !== 0)) return;
 	setCell(target, 'ObjType', 1);
 }
@@ -142,11 +157,21 @@ export function glueEnd(root: Element, shape: Element, end: End, glue: GlueEnd):
 	setCell(shape, triggerName(end), 2, visioGlueTrigger(glue.target));
 	for (const axis of ['X', 'Y']) {
 		const name = `${prefix(end)}${axis}`;
-		const formula =
-			glue.point === undefined ? VISIO_WALK_GLUE : visioPointGlue(glue.target, glue.point);
+		// Visio names the end's own trigger first; a stencil connector is written exactly as Visio's.
+		const walk =
+			end === 'end' && stencilTemplate(shape)
+				? '_WALKGLUE(EndTrigger,BegTrigger,WalkPreference)'
+				: VISIO_WALK_GLUE;
+		const formula = glue.point === undefined ? walk : visioPointGlue(glue.target, glue.point);
 		const node = local.get(name);
 		if (node) node.setAttribute('F', formula);
-		else setCell(shape, name, 0, formula);
+		else
+			setCell(
+				shape,
+				name,
+				stencilTemplate(shape) ? effectiveNumber(effectiveCells(shape), name, 0) : 0,
+				formula,
+			);
 	}
 	let container = children(root, 'Connects')[0];
 	if (!container) {
@@ -184,7 +209,9 @@ export function glueNewConnector(root: Element, shape: Element, edit: LineCreate
 /** Prove a connector's Connect rows and glue formulas are the owned dynamic or point glue. */
 export function proveConnector(root: Element, connectorId: string): ConnectorGlue {
 	const shape = topShape(root, connectorId);
-	if (shape?.hasAttribute('Master') || shape?.hasAttribute('MasterShape'))
+	// Visio's own Dynamic connector is a stencil instance: its glue cells are local, as here.
+	if (isStencilConnector(shape)) proveStencilConnector(shape!);
+	else if (shape?.hasAttribute('Master') || shape?.hasAttribute('MasterShape'))
 		fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR);
 	if (
 		!shape ||
@@ -251,9 +278,14 @@ export function unglueConnector(root: Element, glue: ConnectorGlue, ends: readon
 	for (const end of ends) {
 		if (glue.ends[end] === undefined) continue;
 		const local = cells(glue.shape);
-		for (const axis of ['X', 'Y'])
-			setCell(glue.shape, `${prefix(end)}${axis}`, numeric(local.get(`${prefix(end)}${axis}`)));
-		setCell(glue.shape, triggerName(end), 0);
+		if (stencilTemplate(glue.shape)) {
+			// As Visio: the end keeps its value without the glue formula; the trigger is left as it is.
+			for (const axis of ['X', 'Y']) local.get(`${prefix(end)}${axis}`)?.removeAttribute('F');
+		} else {
+			for (const axis of ['X', 'Y'])
+				setCell(glue.shape, `${prefix(end)}${axis}`, numeric(local.get(`${prefix(end)}${axis}`)));
+			setCell(glue.shape, triggerName(end), 0);
+		}
 		for (const row of connectRows(root))
 			if (attribute(row, 'FromSheet') === id && attribute(row, 'FromCell') === `${prefix(end)}X`)
 				row.parentNode!.removeChild(row);

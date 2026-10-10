@@ -20,7 +20,9 @@ import {
 	type VisioGeometryEdit,
 } from './edit-commands';
 import { applyGeometryEdit } from './edit-geometry';
+import { topShape } from './edit-connector';
 import { refuseStencilConnector } from './edit-connector-reroute';
+import { isStencilConnector, registerStencilShapes } from './edit-stencil-connector';
 import { assertDuplicateScope } from './edit-duplicate-scope';
 import { assertGeometryPackageScope } from './edit-scope';
 import { emptyMasterMoveProof } from './edit-master-move';
@@ -337,6 +339,8 @@ async function editVsdxTransaction(
 			);
 			if (ids.size) await assertDuplicateScope(pkg, new Set(pages.values()), root, ids, check);
 		}
+		// Glue and routing read stencil shapes through their masters, resolved before the edits run.
+		await registerStencilShapes(roots, masterTemplate(pkg), check);
 		// Said plainly first: the master proofs below would refuse the same edit in formula terms.
 		for (const command of geometryCommands)
 			if (!command.type.startsWith('create-') && command.type !== 'delete-shape')
@@ -345,8 +349,18 @@ async function editVsdxTransaction(
 		// A plain move keeps the proven pin-only path unless a connector is glued to the shape or
 		// the shape is an instance of a group master, which that path does not take.
 		const instanceMoves = new Set<VisioGeometryEdit>();
+		// A stencil connector (Visio's Dynamic connector) is laid out by its own proven writer.
+		const connectorCommands = new Set(
+			geometryCommands.filter(
+				(command) =>
+					!command.type.startsWith('create-') &&
+					command.type !== 'delete-shape' &&
+					roots.has(command.pageId) &&
+					isStencilConnector(topShape(roots.get(command.pageId)!, command.shapeId)),
+			),
+		);
 		for (const command of geometryCommands)
-			if (isInstanceGeometryEdit(roots, command)) {
+			if (!connectorCommands.has(command) && isInstanceGeometryEdit(roots, command)) {
 				if (
 					command.type !== 'move-shape' ||
 					isGlueTarget(roots, command) ||
@@ -356,7 +370,9 @@ async function editVsdxTransaction(
 				else instanceMoves.add(command);
 			}
 		const scope = async () => {
-			const local = geometryCommands.filter((command) => !instanceCommands.has(command));
+			const local = geometryCommands.filter(
+				(command) => !instanceCommands.has(command) && !connectorCommands.has(command),
+			);
 			if (local.length)
 				masterMovePins = await assertGeometryPackageScope(
 					pkg,
