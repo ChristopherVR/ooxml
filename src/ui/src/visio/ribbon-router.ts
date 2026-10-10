@@ -42,7 +42,7 @@ export interface RibbonTargets {
 	toggleFullscreen(): void;
 	present(): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
-	reveal(panel: 'edit' | 'notes' | 'selection', focusText: boolean): void;
+	reveal(panel: 'edit' | 'notes' | 'selection' | 'format', focusText: boolean): void;
 	fit(mode: 'page' | 'width'): void;
 	focusSearch(): void;
 	focusReplace(): void;

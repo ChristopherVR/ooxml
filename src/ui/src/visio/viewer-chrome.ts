@@ -6,7 +6,7 @@ import type { ViewerController, ViewerState } from './controller';
  * Static workspace markup (legacy; migrate to builders when next changed). The ribbon, Shapes
  * window, page tabs and status bar are built by their own modules. Visio keeps pages in the
  * bottom tabs and the All pages list, so there is no page pane. The right task pane shows one
- * view (Shape Data), as Visio's window does, and starts closed.
+ * view at a time (Shape Data, or Format Shape, which builds its own view), and starts closed.
  */
 export const viewerChromeTemplate = `<div class="workspace">
   <div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div>
@@ -16,7 +16,7 @@ export const viewerChromeTemplate = `<div class="workspace">
 </div>`;
 
 /** The titles Visio gives the task pane views. */
-const PANE_TITLES = { selection: 'Shape Data' } as const;
+const PANE_TITLES = { selection: 'Shape Data', format: 'Format Shape' } as const;
 export type PaneView = keyof typeof PANE_TITLES;
 
 export type TaskPane = 'shapes' | 'inspector';
@@ -160,7 +160,7 @@ export class ViewerChrome {
 			if (strip) strip.hidden = visible || !!this.#compact?.matches;
 		}
 	}
-	/** Show a task pane view (Shape Data) and move focus into it. */
+	/** Show a task pane view (Shape Data, Format Shape) and move focus into it. */
 	reveal(kind: PaneView): void {
 		if (this.#compact?.matches) this.#tools.open = false;
 		this.#view = kind;
@@ -170,7 +170,10 @@ export class ViewerChrome {
 		this.#manual.add('inspector');
 		this.#setPane('inspector', true);
 		const panel = this.#inspector.querySelector<HTMLElement>(`[data-pane-view="${kind}"]`)!;
-		(panel.querySelector<HTMLElement>('input, button, a[href]') ?? this.#inspector).focus();
+		(
+			panel.querySelector<HTMLElement>('input:not(:disabled), button:not(:disabled), a[href]') ??
+			this.#inspector
+		).focus();
 	}
 	render(state: ViewerState): void {
 		const page = state.document?.pages[state.pageIndex];

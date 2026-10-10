@@ -70,10 +70,7 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await expect(shape.locator('[data-reflection]')).toHaveCount(1);
 	await expect(viewer.locator('[command="bevel"]')).toHaveAttribute('disabled', '');
 
-	await viewer
-		.locator('office-ui-ribbon-group[launcher="shape-styles-dialog"]')
-		.getByRole('button', { name: 'Shape Styles options', exact: true })
-		.click();
+	await menuItem(viewer, ['Glow', 'Glow Options...']);
 	const dialog = viewer.locator('.format-shape-dialog');
 	await expect(dialog.locator('[data-format-field="glowSize"]')).toHaveValue('8');
 	await dialog.locator('[data-format-field="softEdges"]').fill('0');

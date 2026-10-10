@@ -1,5 +1,5 @@
 import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-parts';
-import { fontColorOptions } from './ribbon-style-options';
+import { colorGrid } from './ribbon-color-menu';
 
 const caseItems: CommandSpec[] = (
 	[
@@ -12,6 +12,21 @@ const caseItems: CommandSpec[] = (
 ).map(([mode, label]) => ({ id: `case-${mode}`, label, action: { type: 'change-case', mode } }));
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
+
+/** Home > Font Color: the button applies the last colour, the caret opens Office's picker. */
+function fontColorMenu(doc: Document) {
+	const el = menu(doc, {
+		id: 'font-color',
+		label: 'Font Color',
+		icon: 'fontColor',
+		size: 'icon',
+		split: true,
+		action: { type: 'font-color' },
+		items: [],
+	});
+	el.append(colorGrid(doc, 'font'));
+	return el;
+}
 
 /** Visio's Home > Clipboard, Font and Paragraph groups, in Visio's layout. */
 export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElement] {
@@ -161,15 +176,7 @@ export function textGroups(doc: Document): [HTMLElement, HTMLElement, HTMLElemen
 							size: 'icon',
 							items: caseItems,
 						}),
-						menu(doc, {
-							id: 'font-color',
-							label: 'Font Color',
-							icon: 'fontColor',
-							size: 'icon',
-							split: true,
-							action: { type: 'font-color' },
-							items: fontColorOptions(),
-						}),
+						fontColorMenu(doc),
 					],
 					true,
 				),

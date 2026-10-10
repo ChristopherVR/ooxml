@@ -143,3 +143,35 @@ export async function officeTheme(
 	await dialog.locator('[data-key="officeTheme"] select').selectOption({ label: theme });
 	await dialog.locator('[data-action="ok"]').click();
 }
+
+/**
+ * Home > Fill, Line or Font Color: open the menu and choose from Office's colour picker. `color`
+ * is a swatch (`#rrggbb`), `none` (No Fill, No Line) or `more` (More Colors...).
+ */
+export async function pickColor(
+	viewer: Locator,
+	target: 'fill' | 'line' | 'font',
+	color: string,
+): Promise<void> {
+	if (target === 'font') await viewer.locator('[data-menu="font-color"] .caret').click();
+	else await viewer.locator(`[data-menu="${target}"] button`).first().click();
+	const grid = viewer.locator(
+		`office-ui-menu-button office-ui-color-grid[data-color-grid="${target}"]`,
+	);
+	await grid
+		.locator(color.startsWith('#') ? `[data-color="${color}"]` : `[data-command="${color}"]`)
+		.first()
+		.click();
+}
+
+/** Home > Shape Styles launcher: Visio's Format Shape task pane. */
+export async function formatShapePane(viewer: Locator): Promise<Locator> {
+	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
+	await viewer
+		.locator('office-ui-ribbon-group[launcher="shape-styles-dialog"]')
+		.getByRole('button', { name: 'Format Shape', exact: true })
+		.click();
+	const pane = viewer.locator('.format-pane');
+	await expect(pane).toBeVisible();
+	return pane;
+}

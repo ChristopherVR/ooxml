@@ -69,19 +69,10 @@ it('applies glow, soft edge and reflection presets, checks them and draws them i
 	ui.controller.destroy();
 });
 
-it('opens Format Shape from the Shape Styles launcher and applies changed effect values', async () => {
+it('opens the Format Shape dialog from an Effects options command and applies changed values', async () => {
 	const ui = await setup();
-	const group = ui.root.querySelector('office-ui-ribbon-group[launcher="shape-styles-dialog"]')!;
-	expect(group.hasAttribute('launcher-disabled')).toBe(true);
 	ui.selection();
-	expect(group.hasAttribute('launcher-disabled')).toBe(false);
-	group.dispatchEvent(
-		new CustomEvent('office-command', {
-			detail: { command: 'shape-styles-dialog' },
-			bubbles: true,
-			composed: true,
-		}),
-	);
+	ui.press('glow-options');
 	const dialog = ui.root.querySelector<HTMLElement & { open: boolean }>('.format-shape-dialog')!;
 	expect(dialog.open).toBe(true);
 	const field = (name: string) =>
@@ -108,13 +99,7 @@ it('opens Format Shape from the Shape Styles launcher and applies changed effect
 	expect(ui.shape().style.softEdges).toBeCloseTo(2.5 / 72);
 	expect(dialog.open).toBe(false);
 	// Invalid values stay in the dialog with a message.
-	group.dispatchEvent(
-		new CustomEvent('office-command', {
-			detail: { command: 'shape-styles-dialog' },
-			bubbles: true,
-			composed: true,
-		}),
-	);
+	ui.press('glow-options');
 	field('reflectionSize').value = '200';
 	dialog
 		.querySelector('[command="format-shape-apply"]')!

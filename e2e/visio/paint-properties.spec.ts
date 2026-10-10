@@ -2,7 +2,7 @@ import { expect, test, type Locator } from '@playwright/test';
 import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
-import { downloadCopy, ribbonGroup } from './ribbon';
+import { downloadCopy, pickColor, ribbonGroup } from './ribbon';
 import { openDemo } from './demo-page';
 
 async function fixture(scale: number, protectedSecond = false) {
@@ -60,16 +60,6 @@ async function selectAll(viewer: Locator) {
 	await viewer.getByRole('button', { name: 'Select', exact: true }).click();
 	await viewer.locator('[command="select-all"]').click();
 }
-async function lineAction(viewer: Locator, id: string, nested = false) {
-	await viewer.getByRole('button', { name: 'Line', exact: true }).click();
-	if (nested)
-		await viewer
-			.locator('[data-menu="line-pattern"]')
-			.getByRole('button', { name: 'Pattern', exact: true })
-			.click();
-	await viewer.locator(`[command="${id}"]`).click();
-	await idle(viewer);
-}
 async function properties(viewer: Locator) {
 	await viewer.getByRole('button', { name: 'Fill', exact: true }).click();
 	await viewer.locator('[command="fill-options"]').click();
@@ -115,12 +105,14 @@ for (const [index, framework] of [
 		await load(await fixture(scale));
 		await selectAll(viewer);
 		expect((await inventory(viewer)).selected).toEqual(['1', '2']);
-		await lineAction(viewer, 'line-pattern-0');
+		await pickColor(viewer, 'line', 'none');
+		await idle(viewer);
 		await expect(viewer.locator('svg.paper [data-shape-id="1"] > path')).toHaveAttribute(
 			'stroke',
 			'none',
 		);
-		await lineAction(viewer, 'line-blue');
+		await pickColor(viewer, 'line', '#4472c4');
+		await idle(viewer);
 		expect((await inventory(viewer)).shapes.map((shape) => shape.line)).toEqual([0, 0]);
 		const before = await inventory(viewer);
 		await properties(viewer);

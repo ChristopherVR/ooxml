@@ -57,17 +57,17 @@ it('uses shared font combos, size stepping, fill colors and line weights', async
 	ui.select('font', 'Calibri');
 	await ui.done();
 	expect(ui.shape().text.fontFamily).toBe('Calibri');
-	ui.press('fill-red');
+	ui.pickColor('fill', '#ff0000');
 	await ui.done();
 	expect(ui.shape().style.fill).toBe('#ff0000');
-	ui.press('line-blue');
+	ui.pickColor('line', '#4472c4');
 	await ui.done();
 	expect(ui.shape().style.lineColor).toBe('#4472c4');
 	ui.press('line-weight-3');
 	await ui.done();
 	expect(ui.shape().style.lineWidth * 72).toBeCloseTo(3);
 	expect(ui.button('line-weight-3').getAttribute('checked')).toBe('true');
-	ui.press('fill-none');
+	ui.pickColor('fill', 'none');
 	await ui.done();
 	expect(ui.shape().style.fill).toBe('none');
 	ui.dispose();
@@ -90,7 +90,9 @@ it('disables model-only, mismatched page and unsupported selections and ignores 
 	ui.shape().masterId = '42';
 	ui.commands.render(ui.controller.state);
 	expect(ui.button('bold').disabled).toBe(true);
-	expect(ui.button('fill-red').disabled).toBe(true);
+	expect(
+		ui.root.querySelector<HTMLElement & { disabled: boolean }>('[data-menu="fill"]')!.disabled,
+	).toBe(true);
 	delete ui.shape().masterId;
 	ui.controller.selectShape({ id: '1', name: 'Import test', pageId: 'another-page' });
 	expect(ui.button('bold').disabled).toBe(true);
@@ -187,12 +189,15 @@ it('allows fill and line changes while retaining mixed text and enabling text fo
 	expect(ui.shape().text.runs.map((run) => run.bold)).toEqual([false, true]);
 	expect(ui.button('bold').disabled).toBe(false);
 	expect(ui.button('bold').getAttribute('pressed')).toBe('false');
-	expect(ui.button('fill-blue').disabled).toBe(false);
-	expect(ui.button('fill-blue').title).toMatch(/source formulas and protection/);
-	ui.press('fill-blue');
+	const fillMenu = ui.root.querySelector<HTMLElement & { disabled: boolean }>(
+		'[data-menu="fill"]',
+	)!;
+	expect(fillMenu.disabled).toBe(false);
+	expect(fillMenu.title).toMatch(/source formulas and protection/);
+	ui.pickColor('fill', '#4472c4');
 	await ui.done();
 	expect(ui.shape().style.fill).toBe('#4472c4');
-	ui.press('line-red');
+	ui.pickColor('line', '#ff0000');
 	await ui.done();
 	expect(ui.shape().style.lineColor).toBe('#ff0000');
 	expect(ui.shape().text.runs.map((run) => run.bold)).toEqual([false, true]);

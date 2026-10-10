@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
-import { downloadCopy } from './ribbon';
+import { downloadCopy, pickColor } from './ribbon';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { openDemo } from './demo-page';
 
@@ -101,8 +101,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				'text-decoration',
 				'line-through',
 			);
-		await viewer.locator('[data-menu="font-color"] .caret').click();
-		await viewer.locator('[command="font-color-red"]').click();
+		await pickColor(viewer, 'font', '#ff0000');
 		for (const shape of [first, second])
 			await expect(shape.locator('tspan[font-family]').first()).toHaveAttribute('fill', '#ff0000');
 		await viewer.locator('[command="bullets"] button').click();

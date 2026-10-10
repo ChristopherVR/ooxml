@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
-import { downloadCopy } from './ribbon';
+import { downloadCopy, pickColor } from './ribbon';
 import { openDemo } from './demo-page';
 
 async function formattingFixture(): Promise<Buffer> {
@@ -79,8 +79,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			'font-size',
 			String(24 / 72),
 		);
-		await viewer.locator('[data-menu="fill"] button').first().click();
-		await viewer.locator('[command="fill-red"]').click();
+		await pickColor(viewer, 'fill', '#ff0000');
 		await expect(first.locator('path').first()).toHaveAttribute('fill', '#ff0000');
 		await viewer.locator('[command="bring-to-front"] button').first().click();
 		await expect

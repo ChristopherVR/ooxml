@@ -1,5 +1,6 @@
 import { textGroups } from './ribbon-home-format';
 import { paintOptions } from './ribbon-style-options';
+import { colorGrid, type ColorTarget } from './ribbon-color-menu';
 import { effectsOptions, quickStyleGallery } from './ribbon-shape-styles';
 import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { changeShapeGallery } from './ribbon-change-shape';
@@ -7,6 +8,19 @@ import { changeShapeGallery } from './ribbon-change-shape';
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
+
+/** Home > Fill or Line: Office's colour picker over the menu's own commands. */
+function paintMenu(doc: Document, target: Exclude<ColorTarget, 'font'>, label: string) {
+	const el = menu(doc, {
+		id: target,
+		label,
+		icon: target,
+		size: 'small',
+		items: paintOptions(target),
+	});
+	el.prepend(colorGrid(doc, target));
+	return el;
+}
 
 /**
  * Microsoft Visio's Home tab, group for group: Clipboard, Font, Paragraph, Tools, Shape
@@ -134,20 +148,8 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 		[
 			quickStyleGallery(doc),
 			stack(doc, [
-				menu(doc, {
-					id: 'fill',
-					label: 'Fill',
-					icon: 'fill',
-					size: 'small',
-					items: paintOptions('fill'),
-				}),
-				menu(doc, {
-					id: 'line',
-					label: 'Line',
-					icon: 'line',
-					size: 'small',
-					items: paintOptions('line'),
-				}),
+				paintMenu(doc, 'fill', 'Fill'),
+				paintMenu(doc, 'line', 'Line'),
 				menu(doc, {
 					id: 'effects',
 					label: 'Effects',
@@ -157,7 +159,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 				}),
 			]),
 		],
-		{ launcher: 'Select a local shape to format.' },
+		{ dialog: 'Format Shape' },
 	);
 	const arrange = group(doc, 'Arrange', [
 		menu(doc, {

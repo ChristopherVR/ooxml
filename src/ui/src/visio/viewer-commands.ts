@@ -32,6 +32,8 @@ import { ViewerInsert } from './viewer-insert';
 import { ViewerPageSetup } from './viewer-page-setup';
 import { ViewerThemes } from './viewer-themes';
 import { ViewerFormatShape } from './viewer-format-shape';
+import { ViewerColorMenus } from './viewer-color-menus';
+import { ViewerFormatPane } from './viewer-format-pane';
 import { ViewerReview } from './viewer-review';
 import { ViewerDiagramParts } from './viewer-diagram-parts';
 import { ViewerData } from './viewer-data';
@@ -46,7 +48,7 @@ interface CommandHost {
 	controller: ViewerController;
 	fit(mode: 'page' | 'width'): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
-	reveal(panel: 'edit' | 'notes' | 'selection', focusText: boolean): void;
+	reveal(panel: 'edit' | 'notes' | 'selection' | 'format', focusText: boolean): void;
 	focusSearch(): void;
 	focusReplace?(): void;
 	togglePanZoom(): void;
@@ -97,6 +99,8 @@ export class ViewerCommands {
 	#pageSetup: ViewerPageSetup;
 	#themes: ViewerThemes;
 	#formatShape: ViewerFormatShape;
+	#colors: ViewerColorMenus;
+	#formatPane: ViewerFormatPane;
 	#review: ViewerReview;
 	#parts: ViewerDiagramParts;
 	#data: ViewerData;
@@ -173,6 +177,18 @@ export class ViewerCommands {
 			void this.#edit(run, message);
 		});
 		this.#formatShape = new ViewerFormatShape(host.root, host.controller, host.announce);
+		this.#colors = new ViewerColorMenus(host.root, host.controller, (action) =>
+			this.#formatting.run(action),
+		);
+		this.#formatPane = new ViewerFormatPane(
+			host.root,
+			host.controller,
+			this.#colors,
+			(action) => this.#formatting.run(action),
+			(action) => this.run(action),
+			() => host.reveal('format', false),
+			host.announce,
+		);
 		this.#painter = new ViewerFormatPainter(host.root, host.controller, host.announce, (run, m) => {
 			void this.#edit(run, m);
 		});
@@ -366,6 +382,8 @@ export class ViewerCommands {
 		const disposeInsert = this.#insert.wire(viewport);
 		const disposePageSetup = this.#pageSetup.wire();
 		const disposeFormatShape = this.#formatShape.wire();
+		const disposeColors = this.#colors.wire();
+		const disposeFormatPane = this.#formatPane.wire();
 		const disposeReview = this.#review.wire();
 		const disposeData = this.#data.wire(viewport);
 		const disposeLayout = this.layoutCommands.wire();
@@ -385,6 +403,8 @@ export class ViewerCommands {
 			disposePainter();
 			disposeInsert();
 			disposeFormatShape();
+			disposeColors();
+			disposeFormatPane();
 			disposeReview();
 			disposeData();
 			disposeLayout();
@@ -614,6 +634,8 @@ export class ViewerCommands {
 		this.#insert.render(state);
 		this.#themes.render(state);
 		this.#formatShape.render(state);
+		this.#colors.render(state);
+		this.#formatPane.render(state);
 		this.#review.render(state);
 		this.#data.render(state);
 		this.#textFeatures.render(state, this.#tool === 'pointer');

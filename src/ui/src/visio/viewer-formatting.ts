@@ -16,7 +16,6 @@ import {
 import type { ViewerController, ViewerState } from './controller';
 import type { VisioFormattingAction } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
-import { fontColorOptions } from './ribbon-style-options';
 import { renderPaintMenus } from './viewer-paint-menu';
 import { pageAccentColor, renderShapeStyleControls } from './viewer-shape-styles';
 import { VISIO_GLOW_TRANSPARENCY } from 'ooxml-core/visio';
@@ -228,12 +227,6 @@ export class ViewerFormatting {
 		set(this.root.querySelector<RibbonCommand>('[data-menu="change-case"]'), caseReason);
 		for (const mode of ['sentence', 'lower', 'upper', 'capitalize', 'toggle'])
 			set(button(`case-${mode}`), caseReason);
-		for (const item of fontColorOptions()) {
-			const el = button(item.id);
-			set(el, reason);
-			if (el && item.action?.type === 'font-color')
-				el.setAttribute('checked', String(!!shape && aggregate.fontColor === item.action.value));
-		}
 		for (const value of vertical)
 			set(button(`align-${value}`), reason, !!shape && aggregate.verticalAlign === value);
 		for (const [id, direction] of [

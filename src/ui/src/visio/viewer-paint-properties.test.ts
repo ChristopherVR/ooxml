@@ -27,11 +27,11 @@ async function twoShapes(ui: Awaited<ReturnType<typeof setup>>) {
 it('exposes native line choices without color or weight implicitly enabling No Line', async () => {
 	const ui = await setup();
 	ui.selection();
-	ui.press('line-pattern-0');
+	ui.pickColor('line', 'none');
 	await ui.done();
 	expect(ui.shape().style.linePattern).toBe(0);
-	expect(ui.button('line-pattern-0').getAttribute('checked')).toBe('true');
-	ui.press('line-blue');
+	expect(ui.grid('line').value).toBe('none');
+	ui.pickColor('line', '#4472c4');
 	await ui.done();
 	ui.press('line-weight-3');
 	await ui.done();

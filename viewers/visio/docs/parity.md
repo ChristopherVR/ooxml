@@ -37,6 +37,42 @@ Still different from Visio:
 - The External Data window is docked under the drawing and cannot be floated,
   resized or docked elsewhere.
 
+## Office colour picker and Format Shape task pane, 2026-10-10
+
+Home > Fill, Line and Font Color open Office's colour picker (the shared
+`office-ui-color-grid`) instead of a short fixed list: Theme Colors (ten
+columns, each a base colour over five lighter and darker variants, by Office's
+luminance rule), Standard Colors, No Fill or No Line, Recent Colors and More
+Colors. More Colors is a dialog with a hex field and Red, Green and Blue; a
+custom colour is then listed under Recent Colors in every picker for the
+session. The current colour of the selection is marked.
+
+The Shape Styles launcher opens a Format Shape task pane instead of a dialog:
+Fill (No fill or Solid fill, colour, transparency) and Line (No line or Solid
+line, colour, transparency, width, dash type). It follows the selection and
+each change is applied at once as one undoable `format-shape` edit per selected
+shape. Effects and fill patterns keep their dialogs, linked from the pane.
+
+Limits, stated plainly:
+
+- A picked colour is saved as plain RGB. Visio saves a theme colour as a
+  `THEMEVAL` formula so it follows a later theme change; this editor does not,
+  so a theme swatch is only a starting colour.
+- The Theme Colors grid takes Accent 1-6 from the page's theme (or the Office
+  accents for a drawing without one). The page model does not expose the
+  theme's text and background colours, so those four columns are Office's.
+- More Colors has no colour wheel and no HSL model; Recent Colors are not saved
+  with the drawing or between sessions.
+- The pane has no gradient or pattern fill, arrowheads, cap or join type, and
+  no Automatic font colour.
+- Not compared with Visio pixel for pixel; the pane's layout was not measured
+  against Visio's.
+
+Evidence: `src/core/color/theme-palette.test.ts` (variant rule and colours
+against Office's swatches), `src/ui/src/form/color-grid.test.ts`,
+`viewer-color-menus.test.ts`, `viewer-format-pane.test.ts`, and the browser
+workflow `e2e/visio/color-picker.spec.ts`.
+
 ## Ribbon tabs checked against Visio, add-in tabs, 2026-10-10
 
 The groups and commands of every tab were read from Visio 16 through UI
@@ -231,11 +267,12 @@ gradient mask (text is not reflected). Theme-selected effect cells are not
 drawn. Bevel and 3-D Rotation stay disabled: they need a 3-D renderer. These are
 approximations; no pixel comparison with Visio has been made.
 
-The Shape Styles dialog launcher opens Format Shape (shared `office-ui-dialog`)
-with Fill (colour, transparency), Line (colour, width, dash type, transparency)
-and Effects (shadow preset, glow, soft edges, reflection) sections; only changed
-fields are sent, as one undoable `format-shape` edit per selected shape.
-Arrowheads, gradients, bevel and 3-D rotation are not in the pane.
+The Effects menu's Options commands open the Format Shape dialog (shared
+`office-ui-dialog`) with Fill (colour, transparency), Line (colour, width, dash
+type, transparency) and Effects (shadow preset, glow, soft edges, reflection)
+sections; only changed fields are sent, as one undoable `format-shape` edit per
+selected shape. Arrowheads, gradients, bevel and 3-D rotation are not in it.
+(Since 2026-10-10 the Shape Styles launcher opens the Format Shape task pane.)
 
 Evidence: core tests (theme part written and read back by the Visio and shared
 readers, relationship and content type once, page selectors, recolouring and

@@ -466,7 +466,7 @@ export class VisioViewerElement extends BaseElement {
 		);
 	}
 	/** Shape text edits in place on the canvas; compatibility notes live in File > Info. */
-	#reveal(panel: 'edit' | 'notes' | 'selection'): void {
+	#reveal(panel: 'edit' | 'notes' | 'selection' | 'format'): void {
 		if (panel === 'edit') this.#edit.start();
 		else if (panel === 'notes') this.#backstage.show('info');
 		else this.#chrome.reveal(panel);

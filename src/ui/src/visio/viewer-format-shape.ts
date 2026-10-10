@@ -48,7 +48,8 @@ function fieldValues(shapes: readonly VisioShape[]): Map<FormatShapeField, strin
 }
 
 /**
- * Home > Shape Styles dialog launcher: Visio's Format Shape with Fill, Line and Effects sections.
+ * The Format Shape dialog with Fill, Line and Effects fields, opened by the Effects menu's Options
+ * commands and from the Format Shape task pane (which the Shape Styles launcher opens).
  * Every change becomes one undoable format-shape edit per selected shape.
  */
 export class ViewerFormatShape {
@@ -81,15 +82,6 @@ export class ViewerFormatShape {
 			'keydown',
 			(event) => {
 				if (event.key !== 'Escape' && event.key !== 'Tab') event.stopPropagation();
-			},
-			options,
-		);
-		// The Shape Styles group's dialog launcher.
-		this.root.addEventListener(
-			'office-command',
-			(event) => {
-				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'shape-styles-dialog')
-					this.show();
 			},
 			options,
 		);
@@ -140,13 +132,6 @@ export class ViewerFormatShape {
 			!state.edit.busy
 		)
 			this.close();
-		const group = this.root.querySelector('office-ui-ribbon-group[launcher="shape-styles-dialog"]');
-		const usable = !state.edit.busy && !!this.#selection(state);
-		group?.toggleAttribute('launcher-disabled', !usable);
-		if (group)
-			(group as HTMLElement).title = usable
-				? 'Format Shape'
-				: 'Format Shape: select a local shape to format.';
 	}
 	#patch(): Patch {
 		const value = (field: FormatShapeField) => this.#view.fields.get(field)!.value.trim();
