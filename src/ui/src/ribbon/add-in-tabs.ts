@@ -90,11 +90,23 @@ const ownTabs = (ribbon: HTMLElement): Set<string> =>
 		),
 	);
 
+/** What a ribbon currently shows: the look of its add-in tabs and the descriptors behind them. */
+const shown = new WeakMap<HTMLElement, { look: string; tabs: Map<string, RibbonAddInTab> }>();
+
+const addInPanels = (ribbon: HTMLElement): HTMLElement[] =>
+	[...ribbon.children].filter(
+		(child): child is HTMLElement => child instanceof HTMLElement && 'addIn' in child.dataset,
+	);
+
 /**
- * Replaces the add-in panels of `ribbon` (an `office-ui-ribbon`) with `tabs`, after the product's
- * own panels and in the given order. A tab whose id is empty, repeated or already a product tab
- * is skipped, so an add-in can never replace a built-in tab. The selected tab is kept when it
- * still exists. Returns the ids that were added.
+ * Shows `tabs` as the add-in panels of `ribbon` (an `office-ui-ribbon`), after the product's own
+ * panels and in the given order. A tab whose id is empty, repeated or already a product tab is
+ * skipped, so an add-in can never replace a built-in tab. The selected tab is kept when it still
+ * exists. Returns the ids that are shown.
+ *
+ * The panels are rebuilt only when something visible changed. A framework that passes a new
+ * array with new `run` callbacks on every render therefore keeps its panels (and an open
+ * drop-down), and a command always runs the callback of the latest descriptor.
  */
 export function syncRibbonAddIns(
 	ribbon: HTMLElement,
@@ -103,8 +115,20 @@ export function syncRibbonAddIns(
 ): string[] {
 	const doc = ribbon.ownerDocument;
 	const accepted = acceptedRibbonAddIns(tabs, ownTabs(ribbon));
-	for (const child of [...ribbon.children])
-		if (child instanceof HTMLElement && 'addIn' in child.dataset) child.remove();
+	const ids = accepted.map((tab) => tab.id);
+	// Callbacks are not part of the look: JSON leaves functions out.
+	const look = JSON.stringify([options.panelClass ?? '', accepted]);
+	const current = new Map(accepted.map((tab) => [tab.id, tab]));
+	const existing = addInPanels(ribbon);
+	const before = shown.get(ribbon);
+	shown.set(ribbon, { look, tabs: current });
+	if (
+		before?.look === look &&
+		existing.length === ids.length &&
+		existing.every((panel, index) => panel.dataset.ribbonTab === ids[index])
+	)
+		return ids;
+	for (const panel of existing) panel.remove();
 	for (const tab of accepted) {
 		const panel = doc.createElement('div');
 		if (options.panelClass) panel.className = options.panelClass;
@@ -119,7 +143,8 @@ export function syncRibbonAddIns(
 			// The product's router never sees an add-in command.
 			event.stopPropagation();
 			const id = (event as CustomEvent<{ command?: string }>).detail?.command;
-			const command = findRibbonAddInCommand(tab, id);
+			const latest = shown.get(ribbon)?.tabs.get(tab.id);
+			const command = latest && findRibbonAddInCommand(latest, id);
 			if (!command) return;
 			command.run?.();
 			ribbon.dispatchEvent(
@@ -132,5 +157,5 @@ export function syncRibbonAddIns(
 		});
 		ribbon.append(panel);
 	}
-	return accepted.map((tab) => tab.id);
+	return ids;
 }

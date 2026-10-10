@@ -126,4 +126,26 @@ describe('ribbon add-in tabs', () => {
 		expect(syncRibbonAddIns(ribbon, [])).toEqual([]);
 		expect(ribbon.querySelector('[data-add-in]')).toBeNull();
 	});
+
+	it('keeps the panels when only callbacks change and runs the latest one', () => {
+		const ribbon = make();
+		const first = vi.fn();
+		const second = vi.fn();
+		syncRibbonAddIns(ribbon, [pdf(first)], { panelClass: 'panel' });
+		const panel = ribbon.querySelector<HTMLElement>('[data-add-in]')!;
+		// A framework re-render: an equal descriptor with fresh closures.
+		expect(syncRibbonAddIns(ribbon, [pdf(second)], { panelClass: 'panel' })).toEqual(['pdf']);
+		expect(ribbon.querySelector('[data-add-in]')).toBe(panel);
+		click(panel.querySelector('[data-add-in-command="create"]')!, 'create');
+		expect(first).not.toHaveBeenCalled();
+		expect(second).toHaveBeenCalledTimes(1);
+		// A visible change rebuilds, and so does a product that cleared its panels.
+		syncRibbonAddIns(ribbon, [{ ...pdf(second), label: 'Documents' }], { panelClass: 'panel' });
+		const renamed = ribbon.querySelector<HTMLElement>('[data-add-in]')!;
+		expect(renamed).not.toBe(panel);
+		expect(renamed.dataset.label).toBe('Documents');
+		renamed.remove();
+		syncRibbonAddIns(ribbon, [{ ...pdf(second), label: 'Documents' }], { panelClass: 'panel' });
+		expect(ribbon.querySelector('[data-add-in]')).not.toBeNull();
+	});
 });
