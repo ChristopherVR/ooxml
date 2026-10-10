@@ -156,6 +156,8 @@ export function shapeStyle(
 		report,
 	);
 	const cap = lineCap(cells, resources, report);
+	// The geometry reader reports a bad value; here it is only shown to the user.
+	const rounding = number(cells, 'Rounding', 0, () => {});
 	return {
 		fill:
 			pattern === 0
@@ -181,6 +183,7 @@ export function shapeStyle(
 		endArrow: number(cells, 'EndArrow', 0, report),
 		startArrowSize: number(cells, 'BeginArrowSize', 2, report),
 		endArrowSize: number(cells, 'EndArrowSize', 2, report),
+		...(rounding > 0 && rounding <= 100 ? { rounding } : {}),
 		...(shadow ? { shadow } : {}),
 		...effects,
 	};

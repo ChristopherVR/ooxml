@@ -70,6 +70,16 @@ export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWri
 		add('LineColorTrans', edit.lineTransparency / 100, 'LineStyle');
 	}
 	if (edit.lineWeight !== undefined) add('LineWeight', edit.lineWeight / 72, 'LineStyle', 'PT');
+	// As Visio saves them: plain codes, and the rounding radius in inches shown as points.
+	for (const [name, cell] of [
+		['beginArrow', 'BeginArrow'],
+		['endArrow', 'EndArrow'],
+		['beginArrowSize', 'BeginArrowSize'],
+		['endArrowSize', 'EndArrowSize'],
+		['lineCap', 'LineCap'],
+	] as const)
+		if (edit[name] !== undefined) add(cell, edit[name], 'LineStyle');
+	if (edit.rounding !== undefined) add('Rounding', edit.rounding / 72, 'LineStyle', 'PT');
 	return [...writes.values()];
 }
 /** Paint writes plus Shape Styles (Quick Style and shadow) writes; later writes win by name. */

@@ -233,6 +233,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 			finite(glow.size, 'glow size', 0, 10);
 		}
 		if (shape.style.softEdges !== undefined) finite(shape.style.softEdges, 'soft edge size', 0, 10);
+		if (shape.style.rounding !== undefined) finite(shape.style.rounding, 'corner rounding', 0, 100);
 		const reflection = shape.style.reflection;
 		if (reflection !== undefined) {
 			finite(reflection.opacity, 'reflection opacity', 0, 1);

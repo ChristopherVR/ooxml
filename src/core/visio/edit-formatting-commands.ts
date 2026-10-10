@@ -57,6 +57,16 @@ export interface VisioShapeFormatEdit extends Target {
 	linePattern?: number;
 	/** Percent transparency, normalized to native half-percent steps. */
 	lineTransparency?: number;
+	/** Arrowhead codes at the begin and end of the line: 0 is none, 1-45 are Visio's ends. */
+	beginArrow?: number;
+	endArrow?: number;
+	/** Arrowhead sizes, 0 (very small) to 6 (colossal); 2 is Visio's medium. */
+	beginArrowSize?: number;
+	endArrowSize?: number;
+	/** Line cap: 0 round, 1 square, 2 extended. */
+	lineCap?: number;
+	/** Corner rounding radius in points; 0 keeps square corners. */
+	rounding?: number;
 	/** Classic non-gradient fill pattern: 0 hides fill, 1 is solid, 2-24 are hatches. */
 	fillPattern?: number;
 	fillBackgroundColor?: string;
@@ -147,6 +157,20 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 			if (!Number.isInteger(value)) fail('INVALID_EDIT', 'Paint patterns require integers.');
 			result[name] = value;
 		}
+		for (const [name, maximum, label] of [
+			['beginArrow', 45, 'Arrowheads are numbered 0 to 45.'],
+			['endArrow', 45, 'Arrowheads are numbered 0 to 45.'],
+			['beginArrowSize', 6, 'Arrowhead sizes are numbered 0 to 6.'],
+			['endArrowSize', 6, 'Arrowhead sizes are numbered 0 to 6.'],
+			['lineCap', 2, 'Line caps are 0 (round), 1 (square) or 2 (extended).'],
+		] as const) {
+			const value = edit[name];
+			if (value === undefined) continue;
+			if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > maximum)
+				fail('INVALID_EDIT', label);
+			result[name] = value;
+		}
+		if (edit.rounding !== undefined) result.rounding = points(edit.rounding, 0, 720);
 		for (const name of ['lineTransparency', 'fillTransparency'] as const)
 			if (edit[name] !== undefined) result[name] = Math.round(points(edit[name], 0, 100) * 2) / 2;
 		if (edit.fillBackgroundColor !== undefined)

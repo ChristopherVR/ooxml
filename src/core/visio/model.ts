@@ -122,6 +122,8 @@ export interface VisioStyle {
 	endArrow: number;
 	startArrowSize?: number;
 	endArrowSize?: number;
+	/** Saved corner rounding radius in inches (already applied to the geometry); absent when 0. */
+	rounding?: number;
 	shadow?: VisioShadow;
 	glow?: VisioGlow;
 	/** Soft edge radius in inches. */

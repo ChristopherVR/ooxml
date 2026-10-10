@@ -161,6 +161,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 				: {}),
 			...(source.glow ? { glow: fields(source.glow, ['color', 'opacity', 'size']) } : {}),
 			...(source.softEdges === undefined ? {} : { softEdges: source.softEdges }),
+			...(source.rounding === undefined ? {} : { rounding: source.rounding }),
 			...(source.reflection
 				? { reflection: fields(source.reflection, ['opacity', 'size', 'distance', 'blur']) }
 				: {}),
