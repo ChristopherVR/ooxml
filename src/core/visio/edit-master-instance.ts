@@ -5,6 +5,7 @@ import { fail, type VisioPackageLimits } from './package-common';
 import { indexedPart, related, visioXml } from './parts';
 import { attribute, children } from './sheet';
 import { setCell } from './edit-geometry-cells';
+import { groupFraction, masterGroupLayout } from './edit-master-instance-group';
 import { createShape } from './edit-shape-create';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
@@ -16,8 +17,9 @@ const MAX_INSTANCE_SHAPES = 2_000;
 
 /**
  * Drop a master of the drawing's document stencil on a page, as Visio does: a shape that names the
- * master and carries only its pin, so size, geometry, text and formatting stay inherited. Drawing
- * inches, bottom-left origin; `x`/`y` is where the master's pin lands.
+ * master and carries only its pin, so size, geometry, text and formatting stay inherited. A master
+ * with several top-level shapes becomes a group of them (`edit-master-instance-group.ts`). Drawing
+ * inches, bottom-left origin; `x`/`y` is where the master's pin (the group's centre) lands.
  */
 export interface VisioMasterInstanceEdit {
 	type: 'insert-master-instance';
@@ -59,6 +61,9 @@ function copy(root: Element): Element {
 const shapesOf = (parent: Element): Element[] =>
 	children(parent, 'Shapes').flatMap((container) => children(container, 'Shape'));
 
+const live = (parent: Element): Element[] =>
+	shapesOf(parent).filter((member) => attribute(member, 'Del') !== '1');
+
 /** Every shape ID on the page, at any depth. */
 function pageIds(root: Element): Set<string> {
 	const ids = new Set<string>();
@@ -99,23 +104,24 @@ export async function editVsdxMasterInstance(
 	const roots = shapesOf(await visioXml(pkg, masterPart, 'MasterContents')).filter(
 		(shape) => attribute(shape, 'Del') !== '1',
 	);
-	if (roots.length !== 1)
-		fail(
-			'UNSUPPORTED_MASTER_INSTANCE',
-			'Only a master with exactly one top-level shape can be dropped.',
-		);
+	if (!roots.length) fail('UNSUPPORTED_MASTER_INSTANCE', 'The master has no shapes to drop.');
 	const base = roots[0]!;
-	const cellNames = new Set(children(base, 'Cell').map((cell) => attribute(cell, 'N')));
-	if (cellNames.has('BeginX') || cellNames.has('EndX'))
-		fail(
-			'UNSUPPORTED_MASTER_INSTANCE',
-			'A 1-D master (a connector or a line) cannot be dropped as a shape.',
-		);
-	if (base.hasAttribute('Master') || base.hasAttribute('MasterShape'))
-		fail('UNSUPPORTED_MASTER_INSTANCE', 'The master inherits another master.');
-	const type = attribute(base, 'Type') ?? 'Shape';
-	if (type !== 'Shape' && type !== 'Group')
-		fail('UNSUPPORTED_MASTER_INSTANCE', `A ${type} master cannot be dropped.`);
+	for (const top of roots) {
+		const cellNames = new Set(children(top, 'Cell').map((cell) => attribute(cell, 'N')));
+		if (cellNames.has('BeginX') || cellNames.has('EndX'))
+			fail(
+				'UNSUPPORTED_MASTER_INSTANCE',
+				'A 1-D master (a connector or a line) cannot be dropped as a shape.',
+			);
+		if (top.hasAttribute('Master') || top.hasAttribute('MasterShape'))
+			fail('UNSUPPORTED_MASTER_INSTANCE', 'The master inherits another master.');
+		const kind = attribute(top, 'Type') ?? 'Shape';
+		if (kind !== 'Shape' && kind !== 'Group')
+			fail('UNSUPPORTED_MASTER_INSTANCE', `A ${kind} master cannot be dropped.`);
+	}
+	// Several top-level shapes: Visio groups them, and the group names the master.
+	const layout = roots.length > 1 ? masterGroupLayout(roots) : undefined;
+	const type = layout ? 'Group' : (attribute(base, 'Type') ?? 'Shape');
 
 	// A dangling Sheet.N! reference must not start resolving to a new shape.
 	const formulas: string[] = [];
@@ -151,12 +157,11 @@ export async function editVsdxMasterInstance(
 	setCell(shape, 'PinY', edit.y);
 	const node = (name: string) => root.ownerDocument!.createElementNS(root.namespaceURI, name);
 	let count = 0;
-	const inherit = (from: Element, to: Element): void => {
-		const members = shapesOf(from).filter((member) => attribute(member, 'Del') !== '1');
-		if (!members.length) return;
+	const inherit = (members: readonly Element[], to: Element): Element[] => {
+		if (!members.length) return [];
 		const container = node('Shapes');
 		to.appendChild(container);
-		for (const member of members) {
+		return members.map((member) => {
 			check();
 			if (++count > MAX_INSTANCE_SHAPES)
 				fail('UNSUPPORTED_MASTER_INSTANCE', 'The master has too many sub-shapes to drop.');
@@ -168,10 +173,26 @@ export async function editVsdxMasterInstance(
 			child.setAttribute('Type', attribute(member, 'Type') ?? 'Shape');
 			child.setAttribute('MasterShape', id!);
 			container.appendChild(child);
-			inherit(member, child);
-		}
+			inherit(live(member), child);
+			return child;
+		});
 	};
-	inherit(base, shape);
+	if (layout) {
+		setCell(shape, 'Width', layout.width);
+		setCell(shape, 'Height', layout.height);
+		setCell(shape, 'LocPinX', layout.width / 2, 'Width*0.5');
+		setCell(shape, 'LocPinY', layout.height / 2, 'Height*0.5');
+		for (const name of ['Angle', 'FlipX', 'FlipY', 'ResizeMode']) setCell(shape, name, 0);
+		inherit(roots, shape).forEach((child, index) => {
+			const part = layout.parts[index]!;
+			const of = (cell: 'Width' | 'Height', value: number) =>
+				groupFraction(edit.shapeId, cell, value / layout[cell === 'Width' ? 'width' : 'height']);
+			setCell(child, 'PinX', part.pinX, of('Width', part.pinX));
+			setCell(child, 'PinY', part.pinY, of('Height', part.pinY));
+			setCell(child, 'Width', part.width, of('Width', part.width));
+			setCell(child, 'Height', part.height, of('Height', part.height));
+		});
+	} else inherit(live(base), shape);
 
 	const relsPart = relationshipsPartFor(path!);
 	const rels = parts.has(relsPart)

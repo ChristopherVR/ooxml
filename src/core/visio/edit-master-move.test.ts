@@ -212,7 +212,7 @@ describe('proven local master rotation-pin moves', () => {
 		// The pin-only proof refuses these; the instance path then refreshes the inherited caches,
 		// as Visio does, instead of refusing the move.
 		for (const [extra, caches] of [
-			[cell('TxtPinX', 2, 'PinX'), ['<Cell N="TxtPinX" V="5" F="Inh"/>']],
+			[cell('TxtPinX', 2, 'PinX'), ['<Cell N="TxtPinX" V="5" U="IN" F="Inh"/>']],
 			[
 				section(
 					'User',

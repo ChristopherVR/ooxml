@@ -31,7 +31,8 @@ describe('dropping a document-stencil master', () => {
 		const [process, connector, pair] = (await parseVsdx(await drawing())).masters!;
 		expect(visioMasterDropRefusal(process!)).toBeUndefined();
 		expect(visioMasterDropRefusal(connector!)).toMatch(/1-D master/);
-		expect(visioMasterDropRefusal(pair!)).toMatch(/one top-level shape/);
+		// Several top-level shapes drop as the group Visio makes.
+		expect(visioMasterDropRefusal(pair!)).toBeUndefined();
 		const page = (await parseVsdx(await drawing())).pages[0]!;
 		expect(() => visioMasterDropCommand(page, connector!)).toThrow(/1-D master/);
 	});

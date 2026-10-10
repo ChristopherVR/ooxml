@@ -1,19 +1,18 @@
 import { executableCellFormula } from './cell-formula';
 import type { VisioGeometryEdit } from './edit-commands';
 import { glueParticipants } from './edit-connector';
-import { isConnectedGlueCell } from './edit-connector-glue';
 import { rerouteConnector } from './edit-connector-reroute';
 import { assertOverridable, recalculateInstanceCaches } from './edit-instance-recalculate';
+import { assertNoPageDependents, assertPartsFollow, inchTagged } from './edit-instance-checks';
+import { instanceScope, isGroupInstance } from './edit-instance-scope';
 import {
 	effectiveNode,
-	instanceSheet,
-	instanceTarget,
 	writeInstanceCell,
 	type InstanceCell,
 	type InstanceSheet,
 } from './edit-instance-sheet';
 import type { MasterTemplate } from './edit-text-instance';
-import { analyzeVisioFormula, visioFormulaCachedValue } from './formula';
+import { visioFormulaCachedValue } from './formula';
 import { transform } from './geometry';
 import { fail, VisioPackageError } from './package-common';
 import { visioAnchoredResizeGeometry } from './resize-anchor';
@@ -35,6 +34,21 @@ export function isInstanceGeometryEdit(
 	const shapes = root ? children(children(root, 'Shapes')[0], 'Shape') : [];
 	const target = shapes.filter((shape) => attribute(shape, 'ID') === edit.shapeId);
 	return target.length === 1 && target[0]!.hasAttribute('Master');
+}
+
+/** Whether the target is an instance of a group master. */
+export function isGroupInstanceEdit(
+	roots: ReadonlyMap<string, Element>,
+	edit: VisioGeometryEdit,
+): boolean {
+	const root = roots.get(edit.pageId);
+	const shapes = root ? children(children(root, 'Shapes')[0], 'Shape') : [];
+	return shapes.some(
+		(shape) =>
+			attribute(shape, 'ID') === edit.shapeId &&
+			shape.hasAttribute('Master') &&
+			isGroupInstance(shape),
+	);
 }
 
 /** Whether a connector is glued to the shape: its move then has connectors to follow or leave. */
@@ -73,38 +87,6 @@ function reader(sheet: InstanceSheet) {
 	return { cell, number };
 }
 
-/** Formulas of other shapes on the page that read the cells this edit changes are not recalculated. */
-function assertNoPageDependents(
-	root: Element,
-	instance: Element,
-	changed: ReadonlySet<string>,
-	check: () => void,
-): void {
-	const id = attribute(instance, 'ID')!;
-	const mention = new RegExp(`\\bSheet\\.${id}!`, 'i');
-	for (const node of Array.from(root.getElementsByTagName('*'))) {
-		check();
-		const source = executableCellFormula(attribute(node, 'F'));
-		if (!source || !mention.test(source) || isConnectedGlueCell(node, source)) continue;
-		let reads: boolean;
-		try {
-			const analysis = analyzeVisioFormula(source);
-			reads =
-				analysis.dynamic ||
-				analysis.references.some(
-					(ref) => ref.shapeId === id && changed.has(ref.cell.toLowerCase()),
-				);
-		} catch {
-			reads = true;
-		}
-		if (reads)
-			fail(
-				'EDIT_UNSUPPORTED_DEPENDENCY',
-				'Another shape computes its cells from this stencil shape; they cannot be recalculated.',
-			);
-	}
-}
-
 /**
  * Glued connectors follow the shape. Visio does not lay a connector out again when it opens a
  * file, so one this editor cannot reroute (Visio's own Dynamic connector, today) refuses the
@@ -136,8 +118,10 @@ const format = (value: number) => String(Object.is(value, -0) ? 0 : value);
 /**
  * Resize, rotate or flip a stencil instance the way Visio saves it: the changed cells become
  * local values on the instance, and every inherited cell whose value follows from them (geometry
- * rows, the text block, connection points) gets a refreshed cache marked `F="Inh"`, so the
- * master's formulas stay in effect. Recorded with `scripts/record-visio-instance-geometry.ps1`.
+ * rows, the text block, connection points and, in an instance of a group master, the sub-shapes'
+ * pins, sizes and geometry) gets a refreshed cache marked `F="Inh"`, so the master's formulas
+ * stay in effect. Recorded with `scripts/record-visio-instance-geometry.ps1` and
+ * `scripts/record-visio-group-instance.ps1`.
  */
 export async function applyInstanceGeometryEdit(
 	roots: ReadonlyMap<string, Element>,
@@ -147,10 +131,11 @@ export async function applyInstanceGeometryEdit(
 ): Promise<readonly string[]> {
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
-	const target = await instanceTarget(root, edit.shapeId, template);
-	if (!target) fail('EDIT_TARGET_NOT_FOUND', 'A unique top-level stencil shape is required.');
+	const scope = await instanceScope(root, edit.shapeId, template);
+	if (!scope) fail('EDIT_TARGET_NOT_FOUND', 'A unique top-level stencil shape is required.');
 	check();
-	const sheet = instanceSheet(target.instance, target.template);
+	const sheet = scope.root;
+	const target = { instance: sheet.instance };
 	const { cell, number } = reader(sheet);
 	if (['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => cell(name)) || number('OneD', 0) !== 0)
 		fail(
@@ -185,6 +170,7 @@ export async function applyInstanceGeometryEdit(
 		if (taller) unlocked('LockHeight', 'changing its height');
 		if (number('LockAspect', 0) !== 0 && !close(edit.width / width, edit.height / height))
 			fail('EDIT_PROTECTED_CELL', 'The stencil shape keeps its aspect ratio.');
+		assertPartsFollow(scope);
 		if (wider) set('Width', edit.width, 'The width');
 		if (taller) set('Height', edit.height, 'The height');
 		// A dimension that stays but follows the other one (or the text) keeps the size asked for.
@@ -246,7 +232,7 @@ export async function applyInstanceGeometryEdit(
 		}
 	}
 	const { writes, pinned } = recalculateInstanceCaches(
-		sheet,
+		scope,
 		overrides,
 		check,
 		new Map(pins.map((item) => [item, item === cell('Width') ? width : height])),
@@ -269,15 +255,16 @@ export async function applyInstanceGeometryEdit(
 				'The stencil shape places its pin with a formula that does not follow its size.',
 			);
 	}
-	assertNoPageDependents(
-		root,
-		target.instance,
-		new Set([
-			...[...local.keys()].map((name) => name.toLowerCase()),
-			...writes.flatMap((write) => write.cell.names),
-		]),
-		check,
-	);
+	const changed = new Map<string, Set<string>>();
+	const touch = (owner: InstanceSheet, names: readonly string[]) => {
+		const id = attribute(owner.instance, 'ID') ?? '';
+		const set = changed.get(id) ?? new Set<string>();
+		for (const name of names) set.add(name.toLowerCase());
+		changed.set(id, set);
+	};
+	touch(sheet, [...local.keys()]);
+	for (const write of writes) touch(write.sheet, write.cell.names);
+	assertNoPageDependents(root, target.instance, changed, check);
 	for (const [name, value] of local) {
 		const item: InstanceCell = cell(name) ?? { names: [name.toLowerCase()], name, relative: false };
 		const sized = name === 'Width' || name === 'Height';
@@ -293,7 +280,11 @@ export async function applyInstanceGeometryEdit(
 		if (own && executableCellFormula(attribute(own, 'F'))) {
 			own.setAttribute('V', format(write.value));
 			own.removeAttribute('E');
-		} else writeInstanceCell(sheet, write.cell, format(write.value), { formula: 'Inh' });
+		} else
+			writeInstanceCell(write.sheet, write.cell, format(write.value), {
+				formula: 'Inh',
+				...(inchTagged(write) ? { unit: 'IN' } : {}),
+			});
 	}
 	return [...new Set([edit.pageId, ...followConnectors(roots, edit.pageId, edit.shapeId, check)])];
 }

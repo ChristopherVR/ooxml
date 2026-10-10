@@ -1,7 +1,7 @@
 import type { VisioPackage } from './package';
 import type { VisioFormatEdit } from './edit-formatting-commands';
 import { attribute, children } from './sheet';
-import { fail } from './package-common';
+import { fail, VisioPackageError } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import { textFormattingWrites } from './edit-formatting-text';
 import { shapeFormattingPlan, assertShapeFormattingPaintScope } from './edit-formatting-paint';
@@ -9,7 +9,8 @@ import { assertFormattingDependencies } from './edit-formatting-scope';
 import {
 	assertInstanceLayersUnlocked,
 	commitInstanceFormatting,
-	formattingInstance,
+	formattingInstances,
+	type FormattingInstance,
 } from './edit-instance-format';
 import { masterTemplate } from './edit-text-scope';
 import {
@@ -68,7 +69,45 @@ export async function applyFormattingEdit(
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	// A stencil instance is planned on its effective sheet and saved as local overrides.
-	const instance = await formattingInstance(root, edit.shapeId, masterTemplate(pkg));
+	const instances = await formattingInstances(root, edit.shapeId, masterTemplate(pkg));
+	const format = (instance: FormattingInstance | undefined, lenient: boolean) =>
+		formatTarget(pkg, pagePaths, roots, document, edit, check, instance, root, lenient);
+	if (!instances || instances.length === 1) return format(instances?.[0], false);
+	// A group and its sub-shapes, as Visio formats them: a part that is protected or cannot take
+	// the formatting is passed over, and the command fails only when every part refused it.
+	let changed = false;
+	let accepted = false;
+	let refusal: unknown;
+	for (const instance of instances) {
+		try {
+			changed = (await format(instance, true)) || changed;
+			accepted = true;
+		} catch (error) {
+			if (
+				!(error instanceof VisioPackageError) ||
+				error.code.startsWith('LIMIT_') ||
+				error.code === 'INVALID_EDIT'
+			)
+				throw error;
+			refusal ??= error;
+		}
+	}
+	if (!accepted && refusal) throw refusal;
+	return changed;
+}
+
+async function formatTarget(
+	pkg: VisioPackage,
+	pagePaths: ReadonlySet<string>,
+	roots: ReadonlyMap<string, Element>,
+	document: Element,
+	edit: VisioFormatEdit,
+	check: () => void,
+	instance: FormattingInstance | undefined,
+	root: Element,
+	/** A member of a group: a protected cell is passed over instead of refusing the command. */
+	lenient: boolean,
+): Promise<boolean> {
 	const shape = instance?.view ?? targetShape(root, edit.shapeId);
 	if (instance) {
 		const layers = children(shape, 'Cell').find((cell) => attribute(cell, 'N') === 'LayerMember');
@@ -96,7 +135,13 @@ export async function applyFormattingEdit(
 		const [section, index, name] = write.name.split('.');
 		const rowContext = rows?.get(section!);
 		const effective = effectiveShapeCell(shape, document, write.name, write.category, rowContext);
-		assertEditableFormattingCell(effective);
+		try {
+			assertEditableFormattingCell(effective);
+		} catch (error) {
+			if (lenient && error instanceof VisioPackageError && error.code === 'EDIT_PROTECTED_CELL')
+				continue;
+			throw error;
+		}
 		if (
 			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd|ShdwPattern|ShdwForegndTrans|ShapeShdwType|GlowColorTrans|ReflectionTrans|ReflectionSize|QuickStyle[A-Za-z]+)$/.test(
 				write.name,

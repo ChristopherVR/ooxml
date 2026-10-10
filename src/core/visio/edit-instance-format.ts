@@ -1,3 +1,4 @@
+import { isGroupInstance } from './edit-instance-scope';
 import { instanceSheet, instanceTarget, writeInstanceCell } from './edit-instance-sheet';
 import type { InstanceCell } from './edit-instance-sheet';
 import type { MasterTemplate } from './edit-text-instance';
@@ -16,6 +17,8 @@ export interface FormattingInstance {
 	instance: Element;
 	template: Element;
 	view: Element;
+	/** The group of a group instance, or one of its sub-shapes. */
+	member?: boolean;
 }
 
 const ROW_ZERO_SECTIONS = ['Character', 'Paragraph', 'Tabs'];
@@ -46,6 +49,76 @@ function overlayCells(base: Element, local: Element): void {
 	}
 }
 
+/** Sub-shapes of one group instance this editor formats together; a larger group is refused. */
+const MAX_MEMBERS = 2_000;
+const members = (shape: Element): Element[] =>
+	children(shape, 'Shapes').flatMap((container) => children(container, 'Shape'));
+
+/**
+ * The stencil shapes a formatting command for `shapeId` reaches, as Visio applies it: a plain
+ * instance alone; an instance of a group master with every sub-shape; a sub-shape of a group
+ * instance (Visio's sub-selection) alone, with its own sub-shapes when it is a nested group.
+ * `undefined` when `shapeId` is not part of a stencil instance.
+ */
+export async function formattingInstances(
+	root: Element,
+	shapeId: string,
+	template: MasterTemplate,
+): Promise<FormattingInstance[] | undefined> {
+	let found: { node: Element; masterId: string } | undefined;
+	const pending = members(root).map((node) => ({ node, masterId: attribute(node, 'Master') }));
+	for (let count = 0; pending.length;) {
+		const item = pending.pop()!;
+		if (++count > 200_000) fail('LIMIT_XML_NODES', 'The page has too many shapes.');
+		if (attribute(item.node, 'ID') === shapeId) {
+			if (found) fail('INVALID_SHAPE_ID', 'Shape IDs must be unique.');
+			if (item.masterId !== undefined) found = { node: item.node, masterId: item.masterId };
+			else return undefined;
+		}
+		for (const node of members(item.node))
+			pending.push({ node, masterId: attribute(node, 'Master') ?? item.masterId });
+	}
+	if (!found) return undefined;
+	const top = found.node.hasAttribute('Master');
+	if (top && !isGroupInstance(found.node)) {
+		const single = await formattingInstance(root, shapeId, template);
+		return single && [single];
+	}
+	const masterId = found.masterId;
+	const resolved = async (masterShapeId?: string): Promise<Element | undefined> => {
+		try {
+			return await template(masterId, masterShapeId);
+		} catch (error) {
+			if (error instanceof VisioPackageError && error.code === 'UNSUPPORTED_TEXT_EDIT')
+				return undefined;
+			throw error;
+		}
+	};
+	const result: FormattingInstance[] = [];
+	const queue = [found.node];
+	while (queue.length) {
+		const node = queue.shift()!;
+		if (result.length >= MAX_MEMBERS)
+			fail('UNSUPPORTED_FORMAT_EDIT', 'The stencil shape has too many parts to format.');
+		const masterShapeId = attribute(node, 'MasterShape');
+		// The group Visio makes for a master with several top-level shapes has no master shape.
+		const base =
+			node === found.node && top
+				? ((await resolved()) ?? node.ownerDocument!.createElementNS(node.namespaceURI, 'Shape'))
+				: masterShapeId === undefined || node.hasAttribute('Master')
+					? undefined
+					: await resolved(masterShapeId);
+		if (!base)
+			fail(
+				'UNSUPPORTED_FORMAT_EDIT',
+				'The stencil shape holds a part that does not come from its master.',
+			);
+		result.push(formattingView({ instance: node, template: base }, true));
+		queue.push(...members(node));
+	}
+	return result;
+}
+
 export async function formattingInstance(
 	root: Element,
 	shapeId: string,
@@ -53,15 +126,24 @@ export async function formattingInstance(
 ): Promise<FormattingInstance | undefined> {
 	const target = await instanceTarget(root, shapeId, template, 'UNSUPPORTED_FORMAT_EDIT');
 	if (!target) return undefined;
-	// Refuses group masters, sub-shapes, foreign data and deleted sections or rows.
+	return formattingView(target, false);
+}
+
+function formattingView(
+	target: { instance: Element; template: Element },
+	member: boolean,
+): FormattingInstance {
+	// Refuses foreign data, deleted sections and, for a plain instance, group masters.
 	try {
-		instanceSheet(target.instance, target.template);
+		instanceSheet(target.instance, target.template, { group: member });
 	} catch (error) {
 		if (error instanceof VisioPackageError && error.code === 'UNSUPPORTED_INSTANCE_EDIT')
 			fail('UNSUPPORTED_FORMAT_EDIT', error.message);
 		throw error;
 	}
 	const view = target.template.cloneNode(true) as Element;
+	// The planners judge one sheet: the sub-shapes are formatted as members of their own.
+	for (const container of children(view, 'Shapes')) view.removeChild(container);
 	for (const name of ['ID', 'LineStyle', 'FillStyle', 'TextStyle', 'Type']) {
 		const value = attribute(target.instance, name);
 		if (value !== undefined) view.setAttribute(name, value);
@@ -107,7 +189,7 @@ export async function formattingInstance(
 		for (const old of children(view, 'Text')) view.removeChild(old);
 		view.insertBefore(text.cloneNode(true), tail());
 	}
-	return { ...target, view };
+	return { ...target, view, ...(member ? { member } : {}) };
 }
 
 /** Copy the cells `names` (`Cell` or `Section.row.Cell`) from the view onto the instance. */
@@ -115,7 +197,7 @@ export function commitInstanceFormatting(
 	target: FormattingInstance,
 	names: Iterable<string>,
 ): void {
-	const sheet = instanceSheet(target.instance, target.template);
+	const sheet = instanceSheet(target.instance, target.template, { group: !!target.member });
 	for (const path of names) {
 		const [sectionName, index, cellName] = path.split('.');
 		const name = cellName ?? path;

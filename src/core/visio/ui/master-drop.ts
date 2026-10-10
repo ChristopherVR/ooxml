@@ -6,16 +6,21 @@ import { visioNextShapeId } from './shape-id';
 export function visioMasterDropRefusal(master: VisioMaster): string | undefined {
 	if (master.oneDimensional)
 		return 'A 1-D master (a connector or a line) is not dropped as a shape; use the Connector tool.';
-	if (master.rootCount !== 1)
-		return 'Only a master with exactly one top-level shape can be dropped.';
-	const kind = master.shapes[0]?.kind;
-	if (kind !== undefined && kind !== 'shape' && kind !== 'group')
+	if (master.rootCount < 1) return 'The master has no shapes to drop.';
+	if (master.shapes.some((shape) => shape.kind !== 'shape' && shape.kind !== 'group'))
 		return 'A picture or connector master cannot be dropped.';
+	// Several top-level shapes are dropped as one group; turned ones were not recorded from Visio.
+	if (master.rootCount > 1 && master.shapes.some((shape) => shape.rotation?.angle))
+		return 'A master whose shapes are turned cannot be dropped yet.';
 	return undefined;
 }
 
 /** The size a dropped instance inherits from its master, in inches (1 x 1 when unknown). */
 export function visioMasterDropSize(master: VisioMaster): { width: number; height: number } {
+	if (master.rootCount > 1) {
+		const box = visioMasterPreviewBox(master);
+		if (box.width > 0 && box.height > 0) return { width: box.width, height: box.height };
+	}
 	const root = master.shapes[0];
 	return root && root.width > 0 && root.height > 0
 		? { width: root.width, height: root.height }

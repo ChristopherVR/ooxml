@@ -1,3 +1,4 @@
+import { singleScope, type InstanceScope } from './edit-instance-scope';
 import {
 	effectiveFormula,
 	effectiveNode,
@@ -51,6 +52,13 @@ function expectedUnit(cell: InstanceCell): VisioFormulaUnit | undefined {
 	const name = cell.names[0]!;
 	if (/^(angle|txtangle)$/.test(name)) return 'angle';
 	if (LENGTHS.test(name)) return 'length';
+	// Named rows (`Controls.Row_1`) carry no index for the pattern below to recognise.
+	if (
+		cell.section &&
+		['Control', 'Connection'].includes(cell.section.name) &&
+		/^(X|Y|XDyn|YDyn)$/.test(cell.name)
+	)
+		return 'length';
 	return !cell.relative && /^(geometry\d+|connections|controls)\.[xy]\d+$/.test(name)
 		? 'length'
 		: 'scalar';
@@ -58,27 +66,35 @@ function expectedUnit(cell: InstanceCell): VisioFormulaUnit | undefined {
 
 interface Dependencies {
 	ast?: VisioFormulaAst;
+	/** The formula was written on the page: its `Sheet.N!` names are page shape IDs. */
+	local: boolean;
 	references: InstanceCell[];
 }
 
 export interface InstanceCacheWrite {
+	/** The sheet the cell belongs to: the instance, or a sub-shape of a group instance. */
+	sheet: InstanceSheet;
 	cell: InstanceCell;
 	value: number;
+	/** The value is a length in inches. */
+	length: boolean;
 }
 
 /**
  * The inherited caches that change when `overrides` become local values of the instance. Only
  * what master geometry normally uses is evaluated: arithmetic, comparisons, IF, MIN, MAX and the
- * like over cells of the same shape. A drawn cell (transform, text block, geometry, connection
+ * like over cells of the same shape and, in a group instance, of its other sub-shapes
+ * (`Sheet.5!Width`). A drawn cell (transform, text block, geometry, connection
  * point, formatting) that depends on anything else refuses the edit.
  */
 export function recalculateInstanceCaches(
-	sheet: InstanceSheet,
+	target: InstanceSheet | InstanceScope,
 	changed: ReadonlyMap<InstanceCell, number>,
 	check: () => void,
 	/** Cells that become local values too when they would otherwise follow a changed cell. */
 	pins: ReadonlyMap<InstanceCell, number> = new Map(),
 ): { writes: InstanceCacheWrite[]; pinned: ReadonlyMap<InstanceCell, number> } {
+	const scope = 'sheets' in target ? target : singleScope(target);
 	const overrides = new Map(changed);
 	const pinned = new Map<InstanceCell, number>();
 	const dependencies = new Map<InstanceCell, Dependencies | undefined>();
@@ -87,29 +103,30 @@ export function recalculateInstanceCaches(
 		const source = effectiveFormula(cell);
 		let result: Dependencies | undefined;
 		if (source) {
-			const named = (names: readonly string[]) =>
-				names.flatMap((name) => {
-					const found = sheet.byName.get(name.toLowerCase());
-					return found ? [found] : [];
-				});
+			const own = attribute(cell.local, 'F');
+			const local = !!cell.local && own !== undefined && own !== 'Inh';
+			const found = (name: string, shapeId?: string) => {
+				const item = scope.resolve(cell, name, shapeId, local);
+				return item ? [item] : [];
+			};
 			// Every name the text mentions, also inside strings: INDIRECT("Width") reads Width.
-			const mentioned = () => named(source.match(/[A-Za-z_][A-Za-z_0-9.]*/g) ?? []);
+			const mentioned = () =>
+				[...source.matchAll(/(?:\bSheet\.(\d+)!)?([A-Za-z_][A-Za-z_0-9.]*)/g)].flatMap((match) =>
+					found(match[2]!, match[1]),
+				);
 			try {
 				const ast = parseVisioFormula(source);
 				const analysis = analyzeVisioFormula(ast);
 				// A formula with functions this editor cannot follow is never evaluated.
 				result = analysis.dynamic
-					? { references: mentioned() }
+					? { local, references: mentioned() }
 					: {
 							ast,
-							references: named(
-								analysis.references
-									.filter((ref) => ref.shapeId === undefined)
-									.map((ref) => ref.cell),
-							),
+							local,
+							references: analysis.references.flatMap((ref) => found(ref.cell, ref.shapeId)),
 						};
 			} catch {
-				result = { references: mentioned() };
+				result = { local, references: mentioned() };
 			}
 		}
 		dependencies.set(cell, result);
@@ -162,7 +179,8 @@ export function recalculateInstanceCaches(
 		const known = values.get(cell);
 		if (known) return known;
 		if (!isAffected(cell, new Set())) return cached(cell);
-		const ast = dependenciesOf(cell)?.ast;
+		const own = dependenciesOf(cell);
+		const ast = own?.ast;
 		if (!ast || evaluating.has(cell)) throw new Unevaluable();
 		evaluating.add(cell);
 		let result: VisioFormulaValue;
@@ -171,14 +189,15 @@ export function recalculateInstanceCaches(
 				ast,
 				(reference) => {
 					const name = reference.cell.toLowerCase();
-					if (reference.shapeId !== undefined) throw new Unevaluable();
-					if (name === 'true' || name === 'false')
+					if (reference.shapeId === undefined && (name === 'true' || name === 'false'))
 						return { value: Number(name === 'true'), unit: 'scalar' };
-					const target = sheet.byName.get(name);
-					if (!target) throw new Unevaluable();
-					return evaluate(target);
+					// A sheet outside the instance (the page, another shape) is never evaluated.
+					const read = scope.resolve(cell, name, reference.shapeId, own!.local);
+					if (!read) throw new Unevaluable();
+					return evaluate(read);
 				},
 				{
+					bareLengths: true,
 					onStep: () => {
 						if (--steps < 0)
 							fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');
@@ -203,11 +222,14 @@ export function recalculateInstanceCaches(
 		return result;
 	};
 	const writes: InstanceCacheWrite[] = [];
-	for (const cell of sheet.cells) {
+	for (const cell of scope.cells) {
 		if (overrides.has(cell) || !isAffected(cell, new Set())) continue;
 		let value: number;
+		let length: boolean;
 		try {
-			value = evaluate(cell).value;
+			const result = evaluate(cell);
+			value = result.value;
+			length = result.unit === 'length';
 		} catch (error) {
 			if (!(error instanceof Unevaluable)) throw error;
 			if (cell.section && PASSIVE.has(cell.section.name)) continue;
@@ -226,7 +248,7 @@ export function recalculateInstanceCaches(
 			previous === undefined ||
 			Math.abs(previous - value) > 1e-12 * Math.max(1, Math.abs(previous), Math.abs(value))
 		)
-			writes.push({ cell, value });
+			writes.push({ sheet: scope.owner(cell), cell, value, length });
 	}
 	return { writes, pinned };
 }

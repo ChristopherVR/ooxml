@@ -101,7 +101,7 @@ describe('read-only inherited transforms during local master moves', () => {
 		);
 		expect(
 			await (await JSZip.loadAsync(dependent.bytes)).file('visio/pages/page1.xml')!.async('string'),
-		).toContain('<Cell N="LocPinX" V="5" F="Inh"/>');
+		).toContain('<Cell N="LocPinX" V="5" U="IN" F="Inh"/>');
 		await refusal(await source(pins + dimensions, cell('PinY', 3)));
 		await refusal(await source(pins + dimensions, cell('PinX', 2, 'Inh') + cell('PinY', 3)));
 	});
@@ -174,7 +174,7 @@ describe('read-only inherited transforms during local master moves', () => {
 		)
 			.file('visio/pages/page1.xml')!
 			.async('string');
-		expect(page).toContain('<Cell N="LocPinX" V="5" F="Inh"/>');
+		expect(page).toContain('<Cell N="LocPinX" V="5" U="IN" F="Inh"/>');
 		expect(page).toContain('<Row N="Offset"><Cell N="Value" V="5" F="Inh"/></Row>');
 	});
 	it('refuses inherited dimensions depending on another resized or deleted page shape in the batch', async () => {

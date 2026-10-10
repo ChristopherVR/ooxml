@@ -120,7 +120,8 @@ describe('dropping a master on a page', () => {
 			`<Shapes>${shape('2', size + cell('Width', 1, 'Sheet.9!Width'))}</Shapes>`,
 		);
 		await expect(drop(bytes, '4')).rejects.toMatchObject({ code: 'UNSUPPORTED_MASTER_INSTANCE' });
-		await expect(drop(bytes, '7')).rejects.toMatchObject({ code: 'UNSUPPORTED_MASTER_INSTANCE' });
+		// Several top-level shapes drop as a group (edit-instance-group.test.ts).
+		await expect(drop(bytes, '7')).resolves.toMatchObject({ changedParts: expect.any(Array) });
 		await expect(drop(bytes, '3')).rejects.toMatchObject({ code: 'EDIT_TARGET_NOT_FOUND' });
 		await expect(drop(bytes, '2', '2')).rejects.toMatchObject({ code: 'INVALID_SHAPE_ID' });
 		// A dangling Sheet.9! formula must not start pointing at the new shape.

@@ -6,6 +6,7 @@ import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
 import {
 	applyInstanceGeometryEdit,
 	isGlueTarget,
+	isGroupInstanceEdit,
 	isInstanceGeometryEdit,
 } from './edit-instance-geometry';
 import { replaceScopedTextRanges } from './edit-text-ranges';
@@ -337,11 +338,16 @@ async function editVsdxTransaction(
 			if (!command.type.startsWith('create-') && command.type !== 'delete-shape')
 				refuseStencilConnector(roots.get(command.pageId), command.shapeId);
 		// Stencil instances take their own path: local overrides over the master's formulas.
-		// A plain move keeps the proven pin-only path unless a connector is glued to the shape.
+		// A plain move keeps the proven pin-only path unless a connector is glued to the shape or
+		// the shape is an instance of a group master, which that path does not take.
 		const instanceMoves = new Set<VisioGeometryEdit>();
 		for (const command of geometryCommands)
 			if (isInstanceGeometryEdit(roots, command)) {
-				if (command.type !== 'move-shape' || isGlueTarget(roots, command))
+				if (
+					command.type !== 'move-shape' ||
+					isGlueTarget(roots, command) ||
+					isGroupInstanceEdit(roots, command)
+				)
 					instanceCommands.add(command);
 				else instanceMoves.add(command);
 			}

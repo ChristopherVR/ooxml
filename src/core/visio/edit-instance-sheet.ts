@@ -43,11 +43,13 @@ function referenceNames(section: Element, row: Element, cell: string): string[] 
 			? 'Prop'
 			: name === 'Connection'
 				? 'Connections'
-				: name === 'Character'
-					? 'Char'
-					: name === 'Paragraph'
-						? 'Para'
-						: name;
+				: name === 'Control'
+					? 'Controls'
+					: name === 'Character'
+						? 'Char'
+						: name === 'Paragraph'
+							? 'Para'
+							: name;
 	if (['User', 'Prop'].includes(prefix) && named !== undefined)
 		return cell === 'Value'
 			? [`${prefix}.${named}`, `${prefix}.${named}.Value`]
@@ -82,21 +84,29 @@ const cellMap = (parent: Element) =>
 	unique(children(parent, 'Cell'), (cell) => attribute(cell, 'N') ?? '', 'cell');
 
 /**
- * The effective sheet of a top-level stencil instance over its single-shape master. Anything
- * this editor cannot merge exactly is refused: group masters, sub-shapes, foreign data,
- * locally deleted sections or rows, and chained masters.
+ * The effective sheet of a stencil instance over its master shape. Anything this editor cannot
+ * merge exactly is refused: foreign data, locally deleted sections or rows, chained masters and,
+ * unless `group` says the caller handles the sub-shapes (`edit-instance-scope.ts`), groups.
  */
-export function instanceSheet(instance: Element, template: Element): InstanceSheet {
+export function instanceSheet(
+	instance: Element,
+	template: Element,
+	/** A member of a group instance: the group itself or one of its sub-shapes. */
+	options: { group?: boolean } = {},
+): InstanceSheet {
 	for (const node of [instance, template]) {
+		const type = attribute(node, 'Type');
 		if (
-			!['Shape', undefined].includes(attribute(node, 'Type')) ||
-			children(node, 'Shapes').length ||
+			!(options.group ? ['Shape', 'Group', undefined] : ['Shape', undefined]).includes(type) ||
+			(!options.group && children(node, 'Shapes').length > 0) ||
 			children(node, 'ForeignData').length ||
 			deleted(node)
 		)
 			fail(
 				'UNSUPPORTED_INSTANCE_EDIT',
-				'Only stencil shapes made of one plain shape can be changed; grouped, picture and deleted ones cannot.',
+				options.group
+					? 'A stencil shape that holds a picture or a deleted part cannot be changed.'
+					: 'Only stencil shapes made of one plain shape can be changed; grouped, picture and deleted ones cannot.',
 			);
 	}
 	if (template.hasAttribute('Master') || template.hasAttribute('MasterShape'))
@@ -152,8 +162,8 @@ export function instanceSheet(instance: Element, template: Element): InstanceShe
 		for (const id of new Set([...masterRows.keys(), ...localRows.keys()])) {
 			const localRow = localRows.get(id),
 				masterRow = masterRows.get(id);
-			if ((localRow && deleted(localRow)) || (masterRow && deleted(masterRow)))
-				fail('UNSUPPORTED_INSTANCE_EDIT', 'The stencil shape has deleted ShapeSheet rows.');
+			// A row deleted in the master or on the page (unused gradient stops, mostly) has no cells.
+			if ((localRow && deleted(localRow)) || (masterRow && deleted(masterRow))) continue;
 			const row = (masterRow ?? localRow)!;
 			const local = localRow ? cellMap(localRow) : new Map<string, Element>();
 			const inherited = masterRow ? cellMap(masterRow) : new Map<string, Element>();

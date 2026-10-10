@@ -17,6 +17,11 @@ export interface VisioFormulaLimits {
 	maxDepth?: number;
 	maxSteps?: number;
 	onStep?: () => void;
+	/**
+	 * A bare number added to or subtracted from a length is inches, the unit ShapeSheet formulas
+	 * are saved in (`Width*0.5+0.0015`). Off by default: callers judging units stay strict.
+	 */
+	bareLengths?: boolean;
 }
 export type VisioFormulaAst =
 	| { kind: 'number'; value: number; unit: VisioFormulaUnit }
@@ -138,6 +143,10 @@ export function parseVisioFormula(
 					if (!definition) return formulaFailure('unit', `Unsupported unit ${suffix[0]}`);
 					[unit, scale] = definition;
 					offset += suffix[0].length;
+				} else if (source[offset] === '%') {
+					// A percentage literal, as stencil style sheets write transparency: `0%`.
+					scale = 0.01;
+					offset++;
 				}
 				const value = Number(number[0]) * scale;
 				if (!Number.isFinite(value)) return formulaFailure('value', 'Non-finite literal');
