@@ -95,13 +95,13 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		];
 		await expect.poll(() => pins(viewer)).toEqual(aligned);
 		await expectSelection(viewer);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(original);
 		await expectSelection(viewer);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(aligned);
 		await expectSelection(viewer);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(original);
 		await viewer.locator('[data-menu="position"] button').first().click();
 		await viewer.locator('[command="distribute-horizontal"]').click();
@@ -121,10 +121,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		];
 		await expect.poll(() => pins(viewer)).toEqual(distributed);
 		await expectSelection(viewer);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(horizontal);
 		await expectSelection(viewer);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(distributed);
 		await expectSelection(viewer);
 		const downloading = page.waitForEvent('download');
@@ -144,8 +144,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await viewer.locator('.viewport').press('Delete');
 		await expect(viewer.locator('svg.paper [data-shape-id]')).toHaveCount(0);
 		await expect.poll(() => pins(viewer)).toEqual([]);
-		await expect(viewer.locator('[command="undo"] button')).toBeEnabled();
-		await viewer.locator('[command="undo"] button').click();
+		await expect(viewer.locator('.qat [data-command="undo"]')).toBeEnabled();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => pins(viewer)).toEqual(distributed);
 		await expectSelection(viewer);
 		await expect

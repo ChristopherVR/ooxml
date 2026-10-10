@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { openDemo } from './demo-page';
+import { officeTheme } from './ribbon';
 
 // The viewer's colours come from the shared `--office-*` theme; a host's `--vv-*` custom
 // properties override them. The demo workspace sets `--vv-*` for both of its themes, so its
@@ -70,13 +71,13 @@ test('the demo accent and the theme toggle reach the viewer live', async ({ page
 	const svg = page.locator('visio-viewer svg.paper');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 
-	// The workspace's own toggle switches the suite theme; the viewer repaints without reloading.
-	await page.locator('#theme-toggle').click();
+	// Office Theme in File > Options switches the suite theme; the viewer repaints without reloading.
+	await officeTheme(page.locator('visio-viewer'), 'Black');
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	await expect.poll(() => paint(page)).toEqual(demoDark);
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 
-	await page.locator('#theme-toggle').click();
+	await officeTheme(page.locator('visio-viewer'), 'White');
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 	await expect.poll(() => paint(page)).toEqual(demoLight);
 });

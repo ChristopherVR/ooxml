@@ -63,10 +63,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			{ id: '1', x: 4, y: 7, width: 3, height: 1, text: 'Duplicate source' },
 			{ id: '2', x: 4.33, y: 6.67, width: 3, height: 1, text: 'Duplicate source' },
 		]);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect(viewer.locator('svg.paper [data-shape-id]')).toHaveCount(1);
 		await selected(viewer, ['1']);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await selected(viewer, ['2']);
 		await viewer.locator('.viewport').press('Control+a');
 		await selected(viewer, ['1', '2']);
@@ -84,10 +84,10 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			['5', 4.66, 6.34],
 			['6', 4.99, 6.01],
 		]);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect(viewer.locator('svg.paper [data-shape-id]')).toHaveCount(4);
 		await selected(viewer, ['3', '4']);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await selected(viewer, ['5', '6']);
 		const downloading = page.waitForEvent('download');
 		await (await downloadCopy(viewer)).click();

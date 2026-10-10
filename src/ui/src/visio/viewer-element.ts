@@ -13,6 +13,7 @@ import { createRibbon } from './ribbon';
 import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
+import { createTitleBar, renderTitleBar } from './title-bar';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
 import { ViewerReplace } from './viewer-replace';
 import { fitZoom } from './viewer-fit';
@@ -81,6 +82,7 @@ export class VisioViewerElement extends BaseElement {
 	#findBar: FindBar;
 	#replace: ViewerReplace;
 	#status: HTMLSpanElement;
+	#titleBar: HTMLElement;
 	#toolbar: HTMLDivElement;
 	#chrome: ViewerChrome;
 	#edit: ViewerInlineText;
@@ -108,7 +110,8 @@ export class VisioViewerElement extends BaseElement {
 		this.#findBar = createFindBar(document);
 		const ribbon = createRibbon(document);
 		applyKeyTips(ribbon);
-		workspace.before(ribbon, this.#findBar);
+		this.#titleBar = createTitleBar(document);
+		workspace.before(this.#titleBar, ribbon, this.#findBar);
 		workspace.prepend(createShapesStrip(document), createShapesWindow(document));
 		workspace.append(createPanZoom(document), createSizePosition(document));
 		this.#root.append(
@@ -177,10 +180,14 @@ export class VisioViewerElement extends BaseElement {
 				this.#status.textContent = message;
 			},
 		});
-		this.#profile = new ViewerProfile(this.#root, undefined, {
-			get: () => this.statusBar,
+		const profileChanged = (): void =>
+			renderTitleBar(this.#titleBar, this.controller.state, this.#fileName, this.#profile.profile);
+		this.#profile = new ViewerProfile(this.#root, profileChanged, {
+			get: () => (this.#dark() ? 'dark' : this.statusBar),
 			set: (theme) => {
-				this.statusBar = theme;
+				if (theme !== 'dark') this.statusBar = theme;
+				if ((theme === 'dark') !== this.#dark())
+					this.#requestScheme(theme === 'dark' ? 'dark' : 'light');
 			},
 		});
 		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
@@ -285,12 +292,32 @@ export class VisioViewerElement extends BaseElement {
 	set statusBar(value: StatusBarTheme) {
 		this.setAttribute('status-bar', value === 'colorful' ? 'colorful' : 'neutral');
 	}
+	/** Whether the page the viewer sits in is using the dark theme. */
+	#dark(): boolean {
+		const root = this.ownerDocument.documentElement;
+		return (root.dataset.officeTheme ?? root.dataset.theme) === 'dark';
+	}
+	/**
+	 * Light or dark belongs to the page, which every editor on it shares. Ask the host with a
+	 * cancelable `office-theme-request` (`{ scheme }`); when no host takes it, set the shared
+	 * theme's `data-office-theme` on the document.
+	 */
+	#requestScheme(scheme: 'light' | 'dark'): void {
+		const event = new CustomEvent('office-theme-request', {
+			detail: { scheme },
+			bubbles: true,
+			composed: true,
+			cancelable: true,
+		});
+		if (this.dispatchEvent(event)) this.ownerDocument.documentElement.dataset.officeTheme = scheme;
+	}
 	get showToolbar(): boolean {
 		return !this.#toolbar.hidden;
 	}
 	set showToolbar(value: boolean) {
 		this.#assertAlive();
 		this.#toolbar.hidden = !value;
+		this.#titleBar.hidden = !value;
 		this.#root.querySelector<HTMLElement>('.zoom-controls')!.hidden = !value;
 	}
 	get renderWarnings(): readonly string[] {
@@ -538,6 +565,14 @@ export class VisioViewerElement extends BaseElement {
 		const disposePanZoom = this.#panZoom.wire();
 		const disposeSizePosition = this.#sizePosition.wire();
 		const disposeProfile = this.#profile.wire();
+		// The title bar's Quick Access Toolbar: Save downloads a copy, Undo and Redo use the history.
+		const quickAccess = (event: Event): void => {
+			const id = (event as CustomEvent<{ command: string }>).detail.command;
+			event.stopPropagation();
+			if (id === 'save') this.#backstage.download();
+			else if (id === 'undo' || id === 'redo') this.#commands.run({ type: 'history', key: id });
+		};
+		this.#titleBar.addEventListener('office-command', quickAccess);
 		const disposeShare = this.#share.wire();
 		const disposeRulers = this.#rulers.wire();
 		const disposeStencil = wireStencil(
@@ -583,6 +618,7 @@ export class VisioViewerElement extends BaseElement {
 			disposePanZoom();
 			disposeSizePosition();
 			disposeProfile();
+			this.#titleBar.removeEventListener('office-command', quickAccess);
 			disposeShare();
 			disposeRulers();
 			disposeStencil();
@@ -624,6 +660,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		this.#renderStatus(state);
+		renderTitleBar(this.#titleBar, state, this.#fileName, this.#profile.profile);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderFindBar(this.#findBar, state);

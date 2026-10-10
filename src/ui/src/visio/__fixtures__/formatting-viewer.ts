@@ -74,8 +74,12 @@ export async function setupFormattingViewer(source = true, mixedText = false) {
 	controller.subscribe((state) => commands.render(state));
 	const button = (id: string) =>
 		root.querySelector<HTMLElement & { disabled: boolean }>(`[command="${id}"]`)!;
+	// Undo and Redo are on the title bar's Quick Access Toolbar, which this ribbon-only harness
+	// does not mount: run the same history action they emit.
 	const press = (id: string) =>
-		button(id).shadowRoot!.querySelector<HTMLButtonElement>('button')!.click();
+		id === 'undo' || id === 'redo'
+			? commands.run({ type: 'history', key: id })
+			: button(id).shadowRoot!.querySelector<HTMLButtonElement>('button')!.click();
 	const combo = (id: string) =>
 		root.querySelector<HTMLElement & { value: string; disabled: boolean }>(`[data-combo="${id}"]`)!;
 	const select = (id: string, value: string) => {

@@ -132,7 +132,7 @@ test('connection points, point glue, right-angle routing and connector styles', 
 	await viewer.locator('[command="connectors-curved"]').click();
 	await expect.poll(async () => (await model(viewer)).routes[2]).toBe('curved');
 	await viewer.screenshot({ path: test.info().outputPath('curved.png') });
-	await viewer.locator('[command="undo"]').click();
+	await viewer.locator('.qat [data-command="undo"]').click();
 	await expect.poll(async () => (await model(viewer)).routes[2]).toBe('right-angle');
 
 	// View > Connection Points hides the markers.

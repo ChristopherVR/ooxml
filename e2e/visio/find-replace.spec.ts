@@ -81,9 +81,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const first = await inventory(viewer);
 		expect(first.texts).toEqual([['dog cat CAT', 'cat Ω cat'], ['cat tail']]);
 		expect(first.selected).toEqual([['1', '1']]);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		expect((await inventory(viewer)).bytes).toEqual(original.bytes);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		expect((await inventory(viewer)).bytes).toEqual(first.bytes);
 		await expect(query).toHaveValue('cat');
 		await expect(replacement).toHaveValue('dog');
@@ -96,9 +96,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(status).toHaveText('Replaced 3 occurrences.');
 		const selected = await inventory(viewer);
 		expect(selected.texts).toEqual([['dog dog CAT', 'dog Ω dog'], ['cat tail']]);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		expect((await inventory(viewer)).bytes).toEqual(first.bytes);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		expect((await inventory(viewer)).bytes).toEqual(selected.bytes);
 		await scope(viewer, 'All pages');
 		await expect(status).toHaveText('1 occurrence');

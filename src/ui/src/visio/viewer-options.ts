@@ -58,10 +58,11 @@ export const VISIO_OPTION_CATEGORIES: readonly OfficeOptionCategory[] = [
 						kind: 'select',
 						key: 'officeTheme',
 						label: 'Office Theme',
-						info: 'Colorful gives the status bar the Visio colour; White keeps it neutral.',
+						info: 'Colorful gives the status bar the Visio colour, White keeps it neutral and Black is the dark theme.',
 						choices: [
 							{ value: 'colorful', label: 'Colorful' },
 							{ value: 'neutral', label: 'White' },
+							{ value: 'dark', label: 'Black' },
 						],
 					},
 				],
@@ -177,7 +178,12 @@ function writeStatusBarTheme(theme: StatusBarTheme): void {
 	}
 }
 
-function profileValues(profile: OfficeProfile, officeTheme: StatusBarTheme): OfficeOptionValues {
+/** Office Theme as Options offers it: the two light looks, or the dark theme. */
+export type OfficeThemeChoice = StatusBarTheme | 'dark';
+const isOfficeThemeChoice = (value: unknown): value is OfficeThemeChoice =>
+	value === 'dark' || isStatusBarTheme(value);
+
+function profileValues(profile: OfficeProfile, officeTheme: OfficeThemeChoice): OfficeOptionValues {
 	return {
 		officeTheme,
 		miniToolbar: false,
@@ -209,8 +215,8 @@ export class ViewerProfile {
 	constructor(
 		root: ShadowRoot,
 		private readonly onProfile: (profile: OfficeProfile) => void = () => {},
-		/** Reads and applies the status bar theme on the viewer element. */
-		private readonly theme: { get(): StatusBarTheme; set(theme: StatusBarTheme): void } = {
+		/** Reads and applies the Office Theme on the viewer element. */
+		private readonly theme: { get(): OfficeThemeChoice; set(theme: OfficeThemeChoice): void } = {
 			get: () => 'neutral',
 			set: () => {},
 		},
@@ -236,9 +242,10 @@ export class ViewerProfile {
 			'office-options-change',
 			(event) => {
 				const { values } = (event as OfficeOptionsChangeEvent).detail;
-				if (isStatusBarTheme(values.officeTheme) && values.officeTheme !== this.theme.get()) {
+				if (isOfficeThemeChoice(values.officeTheme) && values.officeTheme !== this.theme.get()) {
 					this.theme.set(values.officeTheme);
-					writeStatusBarTheme(values.officeTheme);
+					// The light looks are remembered here; light or dark is the host's preference.
+					if (values.officeTheme !== 'dark') writeStatusBarTheme(values.officeTheme);
 				}
 				const initial = String(values.userInitials ?? '').trim();
 				this.#update({

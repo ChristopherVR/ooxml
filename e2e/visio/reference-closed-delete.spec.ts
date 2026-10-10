@@ -95,7 +95,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await select(viewer, ['2', '1']);
 		await viewer.locator('.viewport').press('Delete');
 		await expect.poll(() => inventory(viewer)).toEqual({ ids: ['3'], selected: [] });
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect
 			.poll(() => inventory(viewer))
 			.toEqual({ ids: ['1', '2', '3'], selected: ['2', '1'] });
@@ -117,15 +117,15 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(content).toContain('F="Sheet.5!PinX"');
 		expect(content).toContain('F="Sheet.4!PinX"');
 		expect(content).toContain('F="Sheet.3!PinX"');
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(() => inventory(viewer)).toEqual({ ids: ['3'], selected: [] });
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect
 			.poll(() => inventory(viewer))
 			.toEqual({ ids: ['1', '2', '3'], selected: ['2', '1'] });
 		expect(await bytes(viewer)).toEqual(original);
-		await viewer.locator('[command="redo"] button').click();
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect
 			.poll(() => inventory(viewer))
 			.toEqual({ ids: ['3', '4', '5'], selected: ['5', '4'] });

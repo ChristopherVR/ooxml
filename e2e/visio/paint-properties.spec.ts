@@ -154,10 +154,10 @@ for (const [index, framework] of [
 		await expect(path).toHaveAttribute('stroke-opacity', '0.375');
 		await expect(path).toHaveAttribute('stroke-dasharray', /\S+/);
 		await expect(path).toHaveAttribute('fill', /^url\(#/u);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await idle(viewer);
 		expect((await inventory(viewer)).bytes).toEqual(before.bytes);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await idle(viewer);
 		expect((await inventory(viewer)).bytes).toEqual(accepted.bytes);
 		await properties(viewer);

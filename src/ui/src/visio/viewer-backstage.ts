@@ -160,6 +160,10 @@ export class ViewerBackstage {
 	#base(): string {
 		return this.host.fileName().replace(/\.vsdx?$/i, '') || 'Drawing';
 	}
+	/** Save: download the edited drawing as a copy (File > Save and the Quick Access Toolbar). */
+	download(): void {
+		this.#download();
+	}
 	#download(): void {
 		if (!this.#state?.edit.sourceAvailable) return;
 		try {

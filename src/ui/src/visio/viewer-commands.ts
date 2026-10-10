@@ -649,8 +649,6 @@ export class ViewerCommands {
 			!rotating && !distributing && !this.layoutCommands.layout.available(state);
 		button('select-all').disabled = !page || state.loading;
 		button('clear-selection').disabled = !state.selectedShapes.length;
-		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
-		button('redo').disabled = !state.edit.canRedo || state.edit.busy || state.loading;
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));
 		button('connector').setAttribute('pressed', String(this.#tool === 'connector'));
 		button('connector').disabled = !editing || !page;

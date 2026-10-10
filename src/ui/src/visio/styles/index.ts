@@ -13,6 +13,7 @@ import data from './data.css?raw';
 import layout from './layout.css?raw';
 import textFeatures from './text-features.css?raw';
 import taskPane from './task-pane.css?raw';
+import titleBar from './title-bar.css?raw';
 import { visioThemeAliases, visioThemeBridge } from './theme';
 
 /**
@@ -35,6 +36,7 @@ export const canvasAndRibbonStyles = [
 	layout,
 	textFeatures,
 	taskPane,
+	titleBar,
 	visioThemeBridge,
 ].join('\n');
 

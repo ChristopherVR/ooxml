@@ -27,7 +27,7 @@ export interface Workspace {
 
 /**
  * The demo workspace around the viewer: title bar, start screen, file opening, drag and drop, the
- * sample template, theme and the document report. Framework-neutral: every framework demo mounts
+ * sample template, theme and the state values the tests read. Framework-neutral: every framework demo mounts
  * the viewer with its own binding and attaches it here, so all six demos behave the same.
  */
 export function createWorkspace(doc: Document = document): Workspace {

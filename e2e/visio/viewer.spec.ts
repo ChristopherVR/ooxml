@@ -82,7 +82,7 @@ test('opens actual synthetic VSDX locally and safely renders literal document te
 test('back and forward navigation leave a working viewer', async ({ page }) => {
 	await openDemo(page);
 	await expect(page.locator('visio-viewer svg.paper')).toBeVisible();
-	await page.locator('a.brand').click();
+	await page.goto('/');
 	await expect(page).toHaveURL(/\/$/);
 	await page.goBack();
 	await expect(page.locator('visio-viewer svg.paper')).toBeVisible();

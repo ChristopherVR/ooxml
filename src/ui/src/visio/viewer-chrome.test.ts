@@ -180,7 +180,14 @@ describe('shared Office-style viewer chrome', () => {
 		expect(command('layer-properties').hasAttribute('disabled')).toBe(true);
 		// The sample is a model-only document: no source bytes means no drawing or deletion.
 		expect(command('rectangle').disabled).toBe(true);
-		expect(command('undo').disabled).toBe(true);
+		// The Quick Access Toolbar is in the title bar: Save, Undo and Redo, all unavailable here.
+		const quick = [
+			...root
+				.querySelector('office-ui-title-bar')!
+				.shadowRoot!.querySelectorAll<HTMLButtonElement>('.qat button'),
+		];
+		expect(quick.map((item) => item.getAttribute('aria-label'))).toEqual(['Save', 'Undo', 'Redo']);
+		expect(quick.every((item) => item.disabled)).toBe(true);
 		// Formatting requires source bytes and explains how to enable it.
 		expect(command('bold').disabled).toBe(true);
 		expect(command('bold').getAttribute('title')).toMatch(/Open a .vsdx file/);

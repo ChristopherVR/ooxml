@@ -10,16 +10,6 @@
 	min-width: 0;
 	border-bottom: 1px solid var(--_vv-border);
 }
-.qat {
-	display: flex;
-	align-items: center;
-	gap: 0;
-	padding: 0 6px;
-	border-right: 1px solid var(--_vv-border);
-}
-.qat office-ui-button {
-	--office-target-size: 30px;
-}
 .ribbon-head .ribbon-tabs {
 	flex: 0 1 auto;
 	min-width: 0;
@@ -253,9 +243,6 @@ path.draw-preview {
 	.ribbon-row {
 		flex: 1;
 		min-width: 0;
-	}
-	.qat office-ui-button {
-		--office-target-size: 44px;
 	}
 	.ribbon-tools .tools-content office-ui-ribbon-group {
 		width: 100%;

@@ -79,7 +79,7 @@ test('applies a page theme and variant, shape effects and Format Shape values', 
 	await dialog.locator('[command="format-shape-apply"]').click();
 	await expect(shape.locator('[data-geometry]').first()).not.toHaveAttribute('filter', /.+/);
 
-	for (let step = 0; step < 6; step++) await viewer.locator('[command="undo"] button').click();
+	for (let step = 0; step < 6; step++) await viewer.locator('.qat [data-command="undo"]').click();
 	await expect(shape.locator('[data-glow]')).toHaveCount(0);
 	await expect(shape.locator('[data-geometry]').first()).toHaveAttribute('fill', '#5b9bd5');
 	expect(errors).toEqual([]);

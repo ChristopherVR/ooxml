@@ -301,14 +301,14 @@ describe('Visio ribbon commands', () => {
 	});
 
 	it('deletes the selection with Delete, then undoes and redoes with Visio shortcuts', async () => {
-		const { controller, command, edits, key, settle, calls } = await setup();
-		expect(command('undo').disabled).toBe(true);
+		const { controller, edits, key, settle, calls } = await setup();
+		expect(controller.state.edit.canUndo).toBe(false);
 		controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
 		key({ key: 'Delete' });
 		await settle();
 		expect(edits).toEqual([[{ type: 'delete-shape', pageId: '1', shapeId: 's1' }]]);
 		expect(calls).toContain('Deleted Start.');
-		expect(command('undo').disabled).toBe(false);
+		expect(controller.state.edit.canUndo).toBe(true);
 		key({ key: 'z', ctrlKey: true });
 		await settle();
 		expect(controller.state.edit.canRedo).toBe(true);

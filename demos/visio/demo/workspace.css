@@ -96,23 +96,6 @@
 	font-size: 11px;
 	line-height: 1.6;
 }
-
-/* The document report is the demo's own, so it sits in the demo's title bar, not the viewer's. */
-.workspace-footer .document-report summary {
-	min-height: 28px;
-	line-height: 28px;
-	font-size: 11px;
-}
-body:not([data-workspace]) .workspace-links {
-	position: fixed;
-	right: 16px;
-	bottom: 16px;
-	z-index: 9;
-	background: var(--vv-surface);
-	padding: 4px 8px;
-	border: 1px solid var(--vv-border);
-	border-radius: 4px;
-}
 body:not([data-workspace]) .notices {
 	position: fixed;
 	left: 24px;
@@ -202,80 +185,10 @@ summary:focus-visible,
 .skip:focus {
 	top: 8px;
 }
-.topbar {
-	display: flex;
-	align-items: center;
-	gap: 18px;
-	padding: 0 9px;
-	height: 36px;
-	min-height: 36px;
-	background: var(--vv-secondary);
-	border-bottom: 1px solid var(--vv-border);
-}
-.brand {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	color: inherit;
-	text-decoration: none;
-	white-space: nowrap;
-	font-size: 11px;
-}
-.brand-mark {
-	display: grid;
-	place-items: center;
-	width: 22px;
-	height: 22px;
-	border-radius: 4px;
-	background: #3955a3;
-	color: #fff;
-	font-size: 13px;
-	font-weight: 700;
-}
-.document-title {
-	display: flex;
-	align-items: baseline;
-	gap: 6px;
-	min-width: 0;
-	flex: 1;
-	font-size: 12px;
-}
 #file-name {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-}
-.document-title small,
-.title-divider {
-	color: var(--vv-muted);
-	font-size: 10px;
-	white-space: nowrap;
-}
-.workspace-links {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-	font-size: 11px;
-}
-.workspace-links a {
-	text-decoration: none;
-	color: var(--vv-muted);
-}
-#theme-toggle {
-	width: 28px;
-	padding: 0;
-	font-size: 17px;
-}
-
-.local-label {
-	color: var(--vv-muted);
-	font-size: 10px;
-	white-space: nowrap;
-}
-.local-label span {
-	font-size: 7px;
-	color: var(--vv-accent);
-	margin-right: 4px;
 }
 .stage {
 	position: relative;
@@ -318,134 +231,28 @@ summary:focus-visible,
 #export-status:empty {
 	display: none;
 }
-.workspace-footer {
-	position: relative;
-	display: flex;
-	align-items: center;
-	color: var(--vv-muted);
-}
-.document-report summary {
-	cursor: pointer;
-	min-height: 25px;
-	line-height: 25px;
-}
-#note-count {
-	margin-left: 5px;
-	font-variant-numeric: tabular-nums;
-}
-.report-body {
-	/* Pinned under the title bar against the window, so it never runs off either edge. */
-	position: fixed;
-	top: 44px;
-	right: 8px;
-	z-index: 9;
-	width: min(460px, calc(100vw - 16px));
-	max-height: min(65vh, calc(100dvh - 120px));
-	overflow: auto;
-	padding: 18px;
-	background: var(--vv-surface);
-	color: var(--vv-ink);
-	border: 1px solid var(--vv-border);
-	border-radius: 6px;
-	box-shadow: var(--vv-shadow);
-	font-size: 12px;
-	line-height: 1.6;
-}
-.report-heading {
-	display: flex;
-	gap: 10px;
-	align-items: center;
-	justify-content: space-between;
-}
-.report-body h1 {
-	font-size: 15px;
-	margin: 0;
-}
-.report-body h2 {
-	font-size: 12px;
-	margin-top: 20px;
-}
-#selection {
-	white-space: pre-line;
-}
-#notes {
-	padding-left: 18px;
-}
-#notes li {
-	margin: 8px 0;
-	overflow-wrap: anywhere;
-}
-.pill {
-	padding: 3px 5px;
-	background: var(--vv-accent-soft);
-	color: var(--vv-accent);
-	font:
-		9px ui-monospace,
-		monospace;
-	white-space: nowrap;
-}
-:root[data-embedded] .brand-name,
-:root[data-embedded] .workspace-footer,
-:root[data-embedded] .workspace-links a,
-:root[data-embedded] .local-label {
-	display: none;
-}
-@media (max-width: 900px) {
-	.brand-name,
-	.document-title small,
-	.title-divider {
-		display: none;
-	}
-}
 @media (max-width: 600px) {
 	body {
 		height: 100dvh;
 		overflow: hidden;
 	}
-	.topbar {
-		min-height: 44px;
-		height: 44px;
-		gap: 10px;
-	}
-	button,
-	#theme-toggle,
-	.workspace-links a {
+	button {
 		min-width: 44px;
 		min-height: 44px;
 	}
-	.workspace-links a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
 
-	.command-divider,
-	.local-label {
+	.command-divider {
 		display: none;
 	}
 	.stage {
 		min-height: 0;
 		flex: 1;
 	}
-	.workspace-footer {
-		min-height: 44px;
-	}
-	.document-report summary {
-		min-height: 44px;
-		line-height: 44px;
-	}
 }
 @media (pointer: coarse) {
-	button,
-	#theme-toggle,
-	.workspace-links a,
-	.document-report summary {
+	button {
 		min-height: 44px;
 		min-width: 44px;
-	}
-	.topbar {
-		height: auto;
-		min-height: 44px;
 	}
 }
 @media (prefers-reduced-motion: reduce) {
@@ -457,95 +264,9 @@ summary:focus-visible,
 		animation: none !important;
 	}
 }
-
-/* File commands share the title row at desktop widths, matching the compact editor. */
-@media (min-width: 1101px) {
-	.topbar {
-		gap: 12px;
-	}
-
-	.local-label {
-		display: none;
-	}
-	.document-title {
-		overflow: hidden;
-	}
-	.document-title small {
-		max-width: 180px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-}
-@media (max-width: 1100px) {
-	.topbar {
-		height: auto;
-		flex-wrap: wrap;
-		gap: 0 10px;
-		padding-top: 3px;
-	}
-	.workspace-links {
-		margin-left: auto;
-	}
-}
-
-/* Keep the same single title row at every size; file commands expand on demand. */
-.topbar {
-	min-height: 40px;
-	height: 40px;
-	flex-wrap: nowrap;
-	gap: 8px;
-	padding: 0 10px;
-	flex: none;
-}
-.brand-name {
-	display: none;
-}
-.brand-mark {
-	width: 22px;
-	height: 22px;
-}
-
-.document-title {
-	font-size: 12px;
-}
-
-@media (max-width: 1100px) {
-	.workspace-links a {
-		display: none;
-	}
-	.document-title small {
-		display: none;
-	}
-}
 @media (max-width: 600px) {
-	.topbar {
-		min-height: 48px;
-		height: 48px;
-		gap: 4px;
-		padding: 0 6px;
-	}
-	.document-title {
-		min-width: 0;
-	}
 	#file-name {
 		font-size: 11px;
-	}
-	.title-divider {
-		display: none;
-	}
-
-	.workspace-links {
-		gap: 0;
-	}
-	#theme-toggle {
-		width: 44px;
-	}
-	.workspace-footer {
-		min-height: 28px;
-	}
-	.document-report summary {
-		min-height: 44px;
-		line-height: 44px;
 	}
 }
 

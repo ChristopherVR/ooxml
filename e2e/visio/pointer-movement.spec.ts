@@ -140,7 +140,7 @@ for (const [index, framework] of [
 		await expect(viewer.locator('[data-movement-preview]')).toHaveCount(2);
 		expect((await inventory(viewer)).pins).toEqual(before.pins);
 		expect(await sourceBytes(viewer)).toEqual(beforeSource);
-		await expect(viewer.locator('[command="undo"] button')).toBeDisabled();
+		await expect(viewer.locator('.qat [data-command="undo"]')).toBeDisabled();
 		await page.mouse.up();
 		// Browser client coordinates and CTM use finite floating point precision.
 		await expect
@@ -154,11 +154,11 @@ for (const [index, framework] of [
 		const movedSource = await sourceBytes(viewer);
 		await selected(viewer, ['1', '2']);
 		expect((await inventory(viewer)).geometry).toEqual(before.geometry);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect.poll(async () => (await inventory(viewer)).pins).toEqual(before.pins);
 		expect(await sourceBytes(viewer)).toEqual(beforeSource);
 		await selected(viewer, ['1', '2']);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect.poll(async () => (await inventory(viewer)).pins).toEqual(moved);
 		expect(await sourceBytes(viewer)).toEqual(movedSource);
 		await selected(viewer, ['1', '2']);
@@ -227,7 +227,7 @@ for (const [index, framework] of [
 		await page.mouse.up();
 		await expect.poll(async () => (await inventory(viewer)).busy).toBe(false);
 		expect((await inventory(viewer)).pins).toEqual(before.pins);
-		await expect(viewer.locator('[command="undo"] button')).toBeDisabled();
+		await expect(viewer.locator('.qat [data-command="undo"]')).toBeDisabled();
 		await expect
 			.poll(() =>
 				viewer.evaluate(

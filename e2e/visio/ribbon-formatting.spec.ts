@@ -55,12 +55,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			'bold',
 		);
 		await expect(page.locator('#edit-label')).toHaveText('EDITED COPY');
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		await expect(first.locator('tspan[font-family]').first()).not.toHaveAttribute(
 			'font-weight',
 			'bold',
 		);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect(first.locator('tspan[font-family]').first()).toHaveAttribute(
 			'font-weight',
 			'bold',

@@ -86,14 +86,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				'bold',
 			);
 		await expect(viewer.locator('svg.paper [data-selected="true"]')).toHaveCount(2);
-		await viewer.locator('[command="undo"] button').click();
+		await viewer.locator('.qat [data-command="undo"]').click();
 		for (const shape of [first, second])
 			await expect(shape.locator('tspan[font-family]').first()).not.toHaveAttribute(
 				'font-weight',
 				'bold',
 			);
 		await expect(viewer.locator('svg.paper [data-selected="true"]')).toHaveCount(2);
-		await viewer.locator('[command="redo"] button').click();
+		await viewer.locator('.qat [data-command="redo"]').click();
 		await expect(viewer.locator('svg.paper [data-selected="true"]')).toHaveCount(2);
 		await viewer.locator('[command="strikethrough"] button').click();
 		for (const shape of [first, second])

@@ -71,7 +71,7 @@ test('Design page setup, backgrounds, borders and page breaks edit the drawing w
 	await expect(tabs.getByRole('tab').first()).toHaveText('Site plan');
 	await page.screenshot({ path: test.info().outputPath('page-setup.png') });
 
-	const undo = viewer.locator('[command="undo"]').getByRole('button');
+	const undo = viewer.locator('.qat [data-command="undo"]');
 	for (let step = 0; step < 6; ++step) await undo.click();
 	await expect(tabs.getByRole('tab')).toHaveCount(1);
 	await expect.poll(() => pageSize(viewer)).toEqual([8.5, 11]);

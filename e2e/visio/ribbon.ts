@@ -115,3 +115,14 @@ export async function editSelection(viewer: Locator, edit: Record<string, unknow
 		await element.applyEdits([{ ...command, pageId: page.id, shapeId: state.selectedShape.id }]);
 	}, edit);
 }
+
+/** File > Options > General > Office Theme: Colorful, White or Black (the dark theme). */
+export async function officeTheme(
+	viewer: Locator,
+	theme: 'Colorful' | 'White' | 'Black',
+): Promise<void> {
+	await fileBackstage(viewer, 'options');
+	const dialog = viewer.locator('office-ui-options-dialog');
+	await dialog.locator('[data-key="officeTheme"] select').selectOption({ label: theme });
+	await dialog.locator('[data-action="ok"]').click();
+}
