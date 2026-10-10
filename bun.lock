@@ -393,10 +393,10 @@
         "zod": "^4.6.5",
       },
       "peerDependencies": {
-        "docx-viewer-mcp": "^0.1.7",
+        "docx-viewer-mcp": "^0.1.8",
         "pptx-viewer-mcp": ">=2.6.0 <3",
-        "visio-viewer-mcp": "^0.3.1",
-        "xlsx-viewer-mcp": "^0.1.7",
+        "visio-viewer-mcp": "^0.3.2",
+        "xlsx-viewer-mcp": "^0.1.8",
       },
       "optionalPeers": [
         "docx-viewer-mcp",
@@ -555,7 +555,7 @@
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.32.1",
-        "ooxml-core": "^1.4.0",
+        "ooxml-core": "^1.6.2",
         "zod": "^4.6.5",
       },
     },
@@ -737,7 +737,7 @@
         "html2canvas-pro": "^2.5.1",
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
-        "ooxml-ui": "^1.6.1",
+        "ooxml-ui": "^1.7.0",
         "opentype.js": "^2.0.0",
         "pptx-viewer-core": "workspace:*",
         "tslib": "^2.8.1",
@@ -975,8 +975,8 @@
         "html2canvas-pro": "^2.5.1",
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
-        "ooxml-core": "^1.6.1",
-        "ooxml-ui": "^1.6.1",
+        "ooxml-core": "^1.7.0",
+        "ooxml-ui": "^1.7.0",
         "opentype.js": "^2.0.0",
       },
       "devDependencies": {
@@ -1026,7 +1026,7 @@
         "@modelcontextprotocol/sdk": "^1.32.1",
         "fast-xml-parser": "^5.11.2",
         "jszip": "^3.10.2",
-        "ooxml-core": "^1.4.0",
+        "ooxml-core": "^1.6.2",
         "zod": "^4.6.5",
       },
       "devDependencies": {
@@ -1054,8 +1054,8 @@
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
         "lucide": "^1.52.0",
-        "ooxml-core": "^1.6.1",
-        "ooxml-ui": "^1.6.1",
+        "ooxml-core": "^1.7.0",
+        "ooxml-ui": "^1.7.0",
         "opentype.js": "^2.0.0",
       },
       "devDependencies": {
@@ -1093,8 +1093,8 @@
         "html2canvas-pro": "^2.5.1",
         "jspdf": "^4.2.1",
         "lucide-vue-next": "^1.0.0",
-        "ooxml-core": "^1.6.1",
-        "ooxml-ui": "^1.6.1",
+        "ooxml-core": "^1.7.0",
+        "ooxml-ui": "^1.7.0",
         "opentype.js": "^2.0.0",
         "tailwind-merge": "^3.7.0",
       },
@@ -1323,7 +1323,7 @@
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.32.1",
-        "ooxml-core": "^1.4.0",
+        "ooxml-core": "^1.6.2",
         "zod": "^4.6.5",
       },
     },
@@ -1484,7 +1484,7 @@
       },
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.32.1",
-        "ooxml-core": "^1.4.0",
+        "ooxml-core": "^1.6.2",
         "zod": "^4.4.3",
       },
     },
@@ -1598,6 +1598,7 @@
     },
   },
   "overrides": {
+    "argparse": "^2.0.1",
     "esbuild": "^0.28.2",
   },
   "packages": {
@@ -2519,7 +2520,7 @@
 
     "anynum": ["anynum@1.0.1", "", {}, "sha512-N6//FLET/tXYNM/F6ABca1oH6fWB+KlTt909Le28WMDBk8oaT4vY17DCrwg2MvmuqUKt3Ni4N5dGJ/EoBgcO6A=="],
 
-    "argparse": ["argparse@1.0.10", "", { "dependencies": { "sprintf-js": "~1.0.2" } }, "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg=="],
+    "argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
     "aria-query": ["aria-query@5.3.1", "", {}, "sha512-Z/ZeOgVl7bcSYZ/u/rh0fOpvEpq//LZmdbkXyc7syVzjPAhfOa9ebsdTSjEBDU4vs5nC98Kfduj1uFo0qyET3g=="],
 
@@ -3504,8 +3505,6 @@
     "source-map-support": ["source-map-support@0.5.21", "", { "dependencies": { "buffer-from": "^1.0.0", "source-map": "^0.6.0" } }, "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="],
 
     "space-separated-tokens": ["space-separated-tokens@2.0.2", "", {}, "sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q=="],
-
-    "sprintf-js": ["sprintf-js@1.0.3", "", {}, "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g=="],
 
     "stackblur-canvas": ["stackblur-canvas@2.7.0", "", {}, "sha512-yf7OENo23AGJhBriGx0QivY5JP6Y1HbrrDI6WLt6C5auYZXlQrheoY8hD4ibekFKz1HOfE48Ww8kMWMnJD/zcQ=="],
 
