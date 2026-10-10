@@ -184,9 +184,6 @@ office-ui-status-bar.status {
 office-ui-status-item[value=''] {
 	display: none;
 }
-office-ui-status-item[data-page-status] {
-	color: var(--_vv-ink);
-}
 .viewport[data-tool='ellipse'],
 .viewport[data-tool='ellipse'] .paper [data-shape-id],
 .viewport[data-tool='rectangle'],

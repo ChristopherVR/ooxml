@@ -106,10 +106,15 @@ export class ViewerRotationHandle {
 		handle.dataset.rotationHandle = shape.id;
 		handle.setAttribute('cx', String(point.x));
 		handle.setAttribute('cy', String(point.y));
-		handle.setAttribute('r', '6');
+		handle.setAttribute('r', '8');
 		handle.setAttribute('vector-effect', 'non-scaling-stroke');
 		handle.setAttribute('aria-label', 'Drag rotation handle');
-		overlay.append(stem, handle);
+		// Visio's rotation handle is a circular arrow; the circle under it is the hit target.
+		const glyph = this.viewport.ownerDocument.createElementNS(SVG, 'path');
+		glyph.classList.add('rotation-glyph');
+		glyph.setAttribute('transform', `translate(${point.x} ${point.y})`);
+		glyph.setAttribute('d', 'M4.6 -2.9A5.4 5.4 0 1 0 5.4 .6M5.6 -5.9V-2.4H2.1');
+		overlay.append(stem, handle, glyph);
 		this.viewport.append(overlay);
 		this.#overlay = overlay;
 	}

@@ -54,7 +54,28 @@
 /* Status bar: Visio's Page, Width, Height, Angle and language; messages are for screen readers. */
 office-ui-status-bar.status {
 	gap: 18px;
-	color: var(--_vv-ink);
+	/* A host may recolour the bar: see the status aliases in theme.ts. */
+	background: var(--_vv-status-bg);
+	color: var(--_vv-status-ink);
+}
+/*
+ * Office Theme "Colorful" (File > Options, or the status-bar attribute): the bar takes the product
+ * colour, as desktop Visio's does, and its controls draw in the bar's own ink.
+ */
+:host([status-bar='colorful']) office-ui-status-bar.status {
+	border-top-color: transparent;
+	accent-color: var(--_vv-status-ink);
+	--office-foreground: currentColor;
+	--office-muted-foreground: currentColor;
+	--office-accent: currentColor;
+	--office-ring: currentColor;
+	--office-border: color-mix(in srgb, currentColor 45%, transparent);
+	--office-surface: color-mix(in srgb, currentColor 18%, transparent);
+	--office-background: color-mix(in srgb, currentColor 18%, transparent);
+}
+:host([status-bar='colorful']) .status-message[data-error] {
+	color: inherit;
+	font-weight: 600;
 }
 /* Presentation Mode sits beside the zoom, at the trailing edge. */
 office-ui-status-bar.status .zoom-controls {

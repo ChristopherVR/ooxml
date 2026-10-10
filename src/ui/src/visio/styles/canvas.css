@@ -28,7 +28,6 @@
 .paper [data-line-endpoint]:hover,
 .rotation-overlay [data-rotation-handle]:hover {
 	fill: var(--_vv-accent-soft, #dfe5f6);
-	stroke: var(--_vv-accent);
 }
 .paper [data-resize-handle='n'],
 .paper [data-resize-handle='s'] {
@@ -47,7 +46,19 @@
 	cursor: nwse-resize;
 }
 .rotation-overlay [data-rotation-handle] {
+	stroke: transparent;
 	cursor: grab;
+}
+.rotation-overlay .rotation-glyph {
+	fill: none;
+	stroke: var(--_vv-handle, #7a7a7a);
+	stroke-width: 1.5px;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	pointer-events: none;
+}
+.rotation-overlay [data-rotation-handle]:hover + .rotation-glyph {
+	stroke: var(--_vv-accent);
 }
 .paper [data-resize-frame] {
 	fill: none;
@@ -83,10 +94,9 @@
 	stroke-dasharray: 5 3;
 	pointer-events: none;
 }
+/* Visio shows no line from the pin to the rotation handle. */
 .rotation-overlay .rotation-stem {
-	stroke: var(--_vv-handle, #7a7a7a);
-	stroke-width: 1px;
-	pointer-events: none;
+	display: none;
 }
 
 .rotation-overlay {

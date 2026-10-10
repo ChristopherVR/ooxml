@@ -25,7 +25,12 @@ import { createSizePosition, ViewerSizePosition } from './viewer-size-position';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu';
 import { wireTellMe } from './viewer-tell-me';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
-import { createOptionsDialog, ViewerProfile } from './viewer-options';
+import {
+	createOptionsDialog,
+	readStatusBarTheme,
+	ViewerProfile,
+	type StatusBarTheme,
+} from './viewer-options';
 import { ViewerShare } from './viewer-share';
 import { wireStencil } from './viewer-stencil';
 import { createRulers, type Rulers } from './viewer-ruler';
@@ -172,7 +177,12 @@ export class VisioViewerElement extends BaseElement {
 				this.#status.textContent = message;
 			},
 		});
-		this.#profile = new ViewerProfile(this.#root);
+		this.#profile = new ViewerProfile(this.#root, undefined, {
+			get: () => this.statusBar,
+			set: (theme) => {
+				this.statusBar = theme;
+			},
+		});
 		this.#pointer = new ViewerPointerGestures(this.#viewport, this.controller, {
 			active: () => this.#commands.tool === 'pointer',
 			announce: (message) => {
@@ -263,6 +273,17 @@ export class VisioViewerElement extends BaseElement {
 	}
 	set zoom(value: number) {
 		this.controller.setZoom(value);
+	}
+	/**
+	 * The status bar's look: `'neutral'` (the suite's bar, the default) or `'colorful'` (Visio's
+	 * product colour). Reflects the `status-bar` attribute; `--vv-status-background` and
+	 * `--vv-status-ink` recolour either.
+	 */
+	get statusBar(): StatusBarTheme {
+		return this.getAttribute('status-bar') === 'colorful' ? 'colorful' : 'neutral';
+	}
+	set statusBar(value: StatusBarTheme) {
+		this.setAttribute('status-bar', value === 'colorful' ? 'colorful' : 'neutral');
 	}
 	get showToolbar(): boolean {
 		return !this.#toolbar.hidden;
@@ -481,6 +502,9 @@ export class VisioViewerElement extends BaseElement {
 	}
 	connectedCallback(): void {
 		if (this.#disposed) return;
+		// Office Theme: the host's status-bar attribute wins; otherwise the choice saved in Options.
+		const savedTheme = readStatusBarTheme();
+		if (!this.hasAttribute('status-bar') && savedTheme) this.statusBar = savedTheme;
 		if (this.#suspended) this.#disposeInputs = this.#wireInputs();
 		this.#suspended = false;
 		this.#fontEvents = this.ownerDocument.fonts;
