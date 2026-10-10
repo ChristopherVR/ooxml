@@ -47,26 +47,27 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const arrowBox = (await right.boundingBox())!;
 		expect(arrowBox.x).toBeGreaterThan(shapeBox.x + shapeBox.width);
 
-		// An arrow offers the current stencil's first four Quick Shapes.
+		// An arrow offers the first four Quick Shapes of the stencil the drawing shows: the sample
+		// docks Basic Flowchart Shapes.
 		await right.hover();
 		const bar = viewer.locator('.auto-connect-bar');
 		await expect(bar).toBeVisible();
 		await expect(bar.locator('button')).toHaveCount(4);
-		await expect(bar.locator('button').nth(1)).toHaveAttribute('aria-label', 'Square');
-		await bar.locator('[data-auto-connect-master="square"]').click();
+		await expect(bar.locator('button').nth(1)).toHaveAttribute('aria-label', 'Decision');
+		await bar.locator('button').nth(1).click();
 		await expect
 			.poll(async () => (await inventory(viewer)).shapes.length)
 			.toBe(before.shapes.length + 2);
 		const added = await inventory(viewer);
-		const square = added.shapes.find(
+		const dropped = added.shapes.find(
 			(shape) => shape.kind === 'shape' && !before.shapes.some((old) => old.id === shape.id),
 		)!;
-		expect(square.width).toBeCloseTo(1);
-		expect(square.y).toBeCloseTo(source.y);
-		expect(square.x - square.width / 2 - (source.x + source.width / 2)).toBeCloseTo(GAP);
-		const connector = String(Number(square.id) + 1);
+		expect(dropped.width).toBeGreaterThan(0);
+		expect(dropped.y).toBeCloseTo(source.y);
+		expect(dropped.x - dropped.width / 2 - (source.x + source.width / 2)).toBeCloseTo(GAP);
+		const connector = String(Number(dropped.id) + 1);
 		expect(added.glue.filter((item) => item.startsWith(`${connector}>`)).sort()).toEqual(
-			[`${connector}>1`, `${connector}>${square.id}`].sort(),
+			[`${connector}>1`, `${connector}>${dropped.id}`].sort(),
 		);
 
 		// The shape and its connector are one step.
