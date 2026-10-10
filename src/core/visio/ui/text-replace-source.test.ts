@@ -83,7 +83,7 @@ describe('source-backed atomic text replacement plans', () => {
 			).bytes,
 		).toEqual(bytes);
 	});
-	it('includes matched master text and refuses the complete source transaction', async () => {
+	it('includes matched stencil-instance text and refuses the complete source transaction', async () => {
 		const bytes = await fixture({
 			masters: [{ id: '0', shapes: local('1', 'a') }],
 			pages: [
@@ -96,7 +96,8 @@ describe('source-backed atomic text replacement plans', () => {
 		const document = await parseVsdx(bytes),
 			plan = visioTextReplacePlan(document, request);
 		expect(plan.edits).toHaveLength(2);
-		await expect(editVsdx(bytes, plan.edits)).rejects.toThrow(/Master-linked/);
+		// Typing replaces a stencil instance's whole text; range edits of one are not supported yet.
+		await expect(editVsdx(bytes, plan.edits)).rejects.toThrow(/stencil shapes/);
 	});
 	it('deletes literal text and preserves exact repeated no-op source bytes', async () => {
 		const bytes = await source(),
