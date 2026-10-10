@@ -17,6 +17,8 @@ async function loadLiveDemo(page: import('@playwright/test').Page) {
 test('shared Office theme changes update the embedded viewer without replacing its diagram', async ({
 	page,
 }) => {
+	// VitePress 2 keeps its appearance switch in the navigation bar only at desktop widths.
+	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto('/');
 	await page.evaluate(() => {
 		localStorage.setItem('vitepress-theme-appearance', 'light');
@@ -35,7 +37,8 @@ test('shared Office theme changes update the embedded viewer without replacing i
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 	// The docs site's own appearance switch writes the shared preference; the embedded viewer follows
 	// it live through the storage event, without reloading.
-	await page.getByRole('switch', { name: /dark theme/i }).click();
+	const appearance = page.getByRole('switch', { name: 'Appearance', exact: true });
+	await appearance.click();
 	await expect(page.locator('html')).toHaveClass(/dark/);
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'dark');
 	const darkSurface = await frame
@@ -47,7 +50,7 @@ test('shared Office theme changes update the embedded viewer without replacing i
 		'data-selected',
 		'true',
 	);
-	await page.getByRole('switch', { name: /light theme/i }).click();
+	await appearance.click();
 	await expect(page.locator('html')).not.toHaveClass(/dark/);
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'light');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
