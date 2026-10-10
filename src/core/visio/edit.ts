@@ -11,6 +11,12 @@ import {
 	isGroupInstanceEdit,
 	isInstanceGeometryEdit,
 } from './edit-instance-geometry';
+import { admitInstanceDeletes } from './edit-instance-delete';
+import { groupInstances } from './edit-instance-group';
+import { replaceInstanceMaster } from './edit-instance-replace';
+import { instanceOrderViews, orderTargetsAreStructural } from './edit-instance-order';
+import { assertInstanceLayerUnlocked, pageShapes } from './edit-instance-shape';
+import { attribute } from './sheet';
 import { replaceScopedTextRanges } from './edit-text-ranges';
 import { insertVisioTextField } from './edit-text-field';
 import {
@@ -307,6 +313,8 @@ async function editVsdxTransaction(
 	let document: Element | undefined;
 	let masterMovePins = emptyMasterMoveProof();
 	const instanceCommands = new Set<VisioGeometryEdit>();
+	let instanceDeletes: ReadonlySet<Element> = new Set();
+	let groupMembers: Awaited<ReturnType<typeof groupInstances>> = new Map();
 	if (
 		geometryCommands.length ||
 		commands.some(
@@ -337,10 +345,14 @@ async function editVsdxTransaction(
 					.filter((command) => command.type === 'create-text-box' && command.pageId === pageId)
 					.map((command) => command.shapeId),
 			);
-			if (ids.size) await assertDuplicateScope(pkg, new Set(pages.values()), root, ids, check);
+			// A text box is never a container, so container lookups elsewhere do not matter.
+			if (ids.size)
+				await assertDuplicateScope(pkg, new Set(pages.values()), root, ids, check, false);
 		}
 		// Glue and routing read stencil shapes through their masters, resolved before the edits run.
 		await registerStencilShapes(roots, masterTemplate(pkg), check);
+		// Stencil shapes that are grouped, or sit in a group that is ungrouped, moved or rotated.
+		groupMembers = await groupInstances(pkg, roots, commands, masterTemplate(pkg), check);
 		// Said plainly first: the master proofs below would refuse the same edit in formula terms.
 		for (const command of geometryCommands)
 			if (!command.type.startsWith('create-') && command.type !== 'delete-shape')
@@ -359,8 +371,24 @@ async function editVsdxTransaction(
 					isStencilConnector(topShape(roots.get(command.pageId)!, command.shapeId)),
 			),
 		);
+		// Deleting a stencil shape removes it whole; it needs no proof about its master's formulas.
+		const removals = geometryCommands.filter((command) => command.type === 'delete-shape');
+		instanceDeletes = await admitInstanceDeletes(pkg, roots, removals, masterTemplate(pkg), check);
+		for (const command of removals)
+			if (
+				pageShapes(roots.get(command.pageId)!).some(
+					(shape) => attribute(shape, 'ID') === command.shapeId && instanceDeletes.has(shape),
+				)
+			)
+				instanceCommands.add(command);
 		for (const command of geometryCommands)
 			if (!connectorCommands.has(command) && isInstanceGeometryEdit(roots, command)) {
+				await assertInstanceLayerUnlocked(
+					pkg,
+					roots.get(command.pageId),
+					command.pageId,
+					command.shapeId,
+				);
 				if (
 					command.type !== 'move-shape' ||
 					isGlueTarget(roots, command) ||
@@ -402,7 +430,11 @@ async function editVsdxTransaction(
 	}
 	let textChanged = false;
 	if (commands.some((command) => command.type === 'reorder-shape' || isVisioGroupEdit(command)))
-		await assertShapeOrderPackageScope(pkg, check);
+		await assertShapeOrderPackageScope(
+			pkg,
+			check,
+			await orderTargetsAreStructural(roots, commands, masterTemplate(pkg)),
+		);
 	let formatChanged = false;
 	let orderChanged = false;
 	let duplicateChanged = false;
@@ -418,7 +450,7 @@ async function editVsdxTransaction(
 	);
 	const deleteOnly = deletions.length > 0 && deletions.length === commands.length;
 	if (deleteOnly)
-		for (const pageId of deleteVisioShapes(roots, document!, deletions, check))
+		for (const pageId of deleteVisioShapes(roots, document!, deletions, check, instanceDeletes))
 			dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 	// A shape that sizes itself from its text follows it after the transaction.
 	const noteTextSize = async (target: { pageId: string; shapeId: string }, root: Element) => {
@@ -472,18 +504,40 @@ async function editVsdxTransaction(
 				shapeDataChanged = true;
 			}
 		} else if (command.type === 'reorder-shape') {
-			if (reorderVisioShape(root, document!, command, check)) {
+			const views = await instanceOrderViews(
+				pkg,
+				command.pageId,
+				root,
+				command.shapeId,
+				masterTemplate(pkg),
+				check,
+			);
+			if (reorderVisioShape(root, document!, command, check, views)) {
 				dirty.set(path, root);
 				orderChanged = true;
 			}
 		} else if (command.type === 'change-shape') {
-			if (changeVisioShape(roots, document!, command, check)) {
+			if (
+				'masterId' in command
+					? await replaceInstanceMaster(
+							pkg,
+							parts,
+							path,
+							root,
+							command,
+							masterTemplate(pkg),
+							limits,
+							check,
+						)
+					: changeVisioShape(roots, document!, command, check)
+			) {
 				dirty.set(path, root);
 				outlineChanged = true;
 			}
 		} else if (isVisioGroupEdit(command)) {
-			if (command.type === 'group-shapes') groupVisioShapes(root, document!, command, check);
-			else ungroupVisioShape(root, document!, command, check);
+			if (command.type === 'group-shapes')
+				groupVisioShapes(root, document!, command, check, groupMembers);
+			else ungroupVisioShape(root, document!, command, check, groupMembers);
 			dirty.set(path, root);
 			groupChanged = true;
 		} else if (isVisioDiagramPartEdit(command)) {
@@ -506,6 +560,7 @@ async function editVsdxTransaction(
 				document!,
 				command,
 				check,
+				path,
 			))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			pasteChanged = true;
@@ -588,7 +643,7 @@ async function editVsdxTransaction(
 						{
 							code: 'edit-duplicate-experimental',
 							message:
-								'Local shape XML was copied and supported pin-dependent caches were recalculated. Native fidelity is limited to tested cases.',
+								'Shape XML was copied and supported pin-dependent caches were recalculated; a stencil shape stays an instance of its master. Native fidelity is limited to tested cases.',
 						},
 					]
 				: []),
@@ -606,7 +661,7 @@ async function editVsdxTransaction(
 						{
 							code: 'edit-delete-experimental',
 							message:
-								'Reference-closed local shapes were deleted. Retained formulas and caches were preserved; glue healing and inherited shape deletion remain unsupported.',
+								'Reference-closed shapes were deleted, stencil shapes with their sub-shapes; their masters stay in the document stencil. Connectors glued to a deleted shape were released and keep their place.',
 						},
 					]
 				: []),
@@ -633,7 +688,7 @@ async function editVsdxTransaction(
 						{
 							code: 'edit-change-shape-experimental',
 							message:
-								'Local Geometry sections were replaced with a Basic Shapes outline. Native Visio reopen and rendering fidelity remain unverified.',
+								'Local Geometry sections were replaced with a Basic Shapes outline, or a stencil shape took another master of the drawing. Native rendering fidelity is limited to tested cases.',
 						},
 					]
 				: []),
@@ -660,7 +715,7 @@ async function editVsdxTransaction(
 						{
 							code: 'edit-group-experimental',
 							message:
-								'Local shapes were grouped or ungrouped with plain group-local pins; members carry no group-scaling formulas. Native Visio reopen and rendering fidelity remain unverified.',
+								'Shapes were grouped or ungrouped with plain group-local pins; members carry no group-scaling formulas, and stencil members stay instances of their masters. Native rendering fidelity is limited to tested cases.',
 						},
 					]
 				: []),
@@ -686,8 +741,7 @@ async function editVsdxTransaction(
 				? [
 						{
 							code: 'edit-shape-order-experimental',
-							message:
-								'Local sibling shape order was changed. Native Visio reopen and rendering fidelity remain unverified.',
+							message: 'The order of sibling shapes was changed; nothing else was rewritten.',
 						},
 					]
 				: []),

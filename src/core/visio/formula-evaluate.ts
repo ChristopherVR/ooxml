@@ -116,6 +116,9 @@ const dynamic = new Set([
 	'PARENT',
 	'PAR',
 ]);
+/** A function the analyser classifies by name, whether or not it can evaluate it. */
+export const isClassifiedVisioFunction = (name: string): boolean =>
+	supported.has(name) || staticUnsupported.has(name) || dynamic.has(name);
 export interface VisioFormulaAnalysis {
 	references: VisioFormulaReference[];
 	unsupportedFunctions: string[];

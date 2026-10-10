@@ -133,8 +133,9 @@ names, preserving source stacking order, mixed text and inert unknown XML. It
 remaps references between copied shapes and proves affected formula caches.
 The `visioDuplicateCommand` helper defaults to 0.33 drawing inches right/down.
 Native Visio 16 capture and reopen cover nine single, multiple and movement-locked
-cases at three scales. Groups, masters, layers, foreign shapes and unsupported
-dependencies remain refused.
+cases at three scales. Groups made here, drawn shapes on a layer, foreign shapes
+and unsupported dependencies remain refused. A 2D stencil instance is copied as
+an instance of its master (see "Stencil instances: whole-shape commands").
 
 `captureVisioClipboard(bytes, pageId, shapeIds)` returns an owned
 `VisioClipboardSnapshot`; `serializeVisioClipboard` and
@@ -163,7 +164,8 @@ without weakening retained-reference protection. Native Visio 16 deletion and
 core capture/delete/paste reopen cover nine cases at three drawing scales,
 including reverse selection order and independent movement locks. Use
 `scripts/record-visio-batch-delete.ps1` and `VISIO_NATIVE_BATCH_DELETE_DIR` for
-the optional oracle. Connector healing and inherited/group deletion remain open.
+the optional oracle. Stencil instances are deleted whole and a stencil connector
+glued to a deleted shape is released; deleting a group made here remains open.
 
 ## Plan literal text replacement
 
@@ -774,17 +776,80 @@ formula reads a changed cell of the instance. A shape whose master sizes it
 from its text follows the text where it can be measured, and otherwise keeps
 its saved size (see the plain-text section).
 
+rows, `GUARD`ed sizes and pins, active locks, a locked layer, and another page
+shape whose formula reads a changed cell of the instance. A shape whose master
+sizes it from its text still keeps its saved size after a text edit:
+`TEXTHEIGHT` needs text metrics the core does not have.
+
+### Stencil instances: whole-shape commands
+
+Delete, Duplicate, Copy and Paste, ordering, layers, Group and Change Shape take
+stencil instances as well (`edit-instance-shape.ts` and its neighbours). What is
+written was recorded from Visio 16 with
+`scripts/record-visio-instance-shape.ps1`; the optional
+`VISIO_NATIVE_INSTANCE_SHAPE_DIR` test compares delete, duplicate, bring to
+front, layer assignment and master replacement against those recordings.
+
+- `delete-shape` removes the instance with its sub-shapes and leaves the master
+  in the document stencil. A stencil connector (Visio's Dynamic connector)
+  glued to a deleted shape keeps its end where it was: the glue and trigger
+  formulas become plain values and the Connect row goes. Deleting such a
+  connector removes its Connect rows. Checked: `LockDelete` in effect (the
+  instance's cell, else its master's) and locked layers. Visio also steps the
+  connector's `ConFixedCode` and drops a released cell that equals the master's;
+  this editor leaves both as they were.
+- `duplicate-shapes` and `paste-shapes` copy a 2D instance as it is: the same
+  master and local cells, a new sheet ID and name (`Process.6`), the pin moved.
+  Sub-shapes of a group instance take the next free IDs. A connector glued to
+  the source stays with the source. A paste needs the same master under the
+  same ID (its UniqueID, BaseID and NameU are captured with the clipboard) and a
+  page already related to it; anything else is a paste between drawings and is
+  refused. Stencil lines and connectors are not copied.
+- `reorder-shape` moves an instance among its siblings, or a drawn shape past
+  instances, groups and pictures. Each sibling must sit in the ordinary display
+  band; an instance's band and locks come from its master when it has none.
+- `assign-layers` writes a local `LayerMember` on an instance.
+- `group-shapes` takes unglued 2D instances as members: each stays an instance
+  and takes its group-local pin as a local value. A group that holds instances
+  can be moved, rotated and ungrouped; `ungroup-shape` also turns the scaling
+  formulas of a group Visio made into values. A rotated or flipped group cannot
+  be ungrouped while it holds instances.
+- `change-shape` with `masterId` makes a one-shape 2D instance an instance of
+  another such master of the drawing: the `Master` attribute changes, the
+  caches of the old master's formulas are dropped, and the caches that follow
+  the shape's own size are evaluated against the new master. Position, a local
+  size, text, formatting, shape data and layers stay; the page gains its
+  relationship to the master's part. Visio also gives the shape a new sheet ID;
+  this editor keeps it, so dynamic glue stays valid. Refused: glue to a
+  connection point, glue when the size would change, a local override of the
+  old master's geometry or other rows, `LockReplace` and locked layers.
+- Moving, resizing, rotating or flipping an instance on a locked layer is
+  refused by the core, not only greyed out by the interface.
+
+Whole-shape commands used to be refused by any formula in the package that the
+analyser called dynamic, which every Visio stencil master has (`SETATREF`,
+`SHAPETEXT`, `CONTAINERSHEETREF`, event functions). `formula-functions.ts`
+lists the ShapeSheet functions Visio documents, and the scope is now: a
+function outside that list refuses; so does a reference built from text
+(`INDIRECT`, `EVALCELL`, `EVALTEXT`, `REF`); a lookup through containers
+(`CONTAINERSHEETREF` and its family) refuses only when the shape being
+reordered, copied or grouped is itself a container or a list. A master's
+`Sheet.N!` reference names a shape of that master and no longer collides with a
+new page shape of the same ID.
+
 This first bundle has deliberate exclusions:
 
-| Exclusion                                                                  | Reason                                                                             | Next expansion                                                                  |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Master-linked delete, group masters and foreign shapes                     | Nested transforms and resource semantics are not proven                            | Group instance overrides and instance deletion                                  |
-| Glue/Connects participation and broader 1D editing                         | Proven straight-line translation does not establish connector routing or glue      | Endpoint editing and glued connector routing                                    |
-| Non-page affected/unknown dependencies                                     | Page metadata, document, master and style scopes can otherwise retain stale caches | Scoped package-wide graph, starting with page metadata and pure theme functions |
-| GUARD, SETATREF and referenced transform formulas                          | Direct overwrites would bypass protection/redirection or discard semantics         | Verified redirection commands; never bypass protection                          |
-| Protected cells and inherited/ambiguous protection                         | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                        | Proven effective protection resolution                                          |
-| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry | Scaling cached coordinates can distort shape semantics                             | Additional row evaluators and explicit scaling proofs                           |
-| Deletion referenced outside a removed set                                  | Retained formulas, Connects or metadata could dangle                               | Explicit validated dependency-removal and connector-healing transactions        |
+| Exclusion                                              | Reason                                                  | Next expansion                                 |
+| ------------------------------------------------------ | ------------------------------------------------------- | ---------------------------------------------- |
+| Master-linked delete, group masters and foreign shapes | Nested transforms and resource semantics are not proven | Group instance overrides and instance deletion |
+
+| Resizing group masters; foreign shapes | Nested transforms and resource semantics are not proven | Group instance overrides |
+| Glue/Connects participation and broader 1D editing | Proven straight-line translation does not establish connector routing or glue | Endpoint editing and glued connector routing |
+| Non-page affected/unknown dependencies | Page metadata, document, master and style scopes can otherwise retain stale caches | Scoped package-wide graph, starting with page metadata and pure theme functions |
+| GUARD, SETATREF and referenced transform formulas | Direct overwrites would bypass protection/redirection or discard semantics | Verified redirection commands; never bypass protection |
+| Protected cells and inherited/ambiguous protection | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored | Proven effective protection resolution |
+| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry | Scaling cached coordinates can distort shape semantics | Additional row evaluators and explicit scaling proofs |
+| Deletion referenced outside a removed set | Retained formulas, Connects or metadata could dangle | Explicit validated dependency-removal and connector-healing transactions |
 
 Relative MoveTo/LineTo geometry scales with Width/Height. Absolute MoveTo/LineTo
 coordinates require a supported transitive dependency on dimensions, except zero

@@ -69,8 +69,16 @@ it('admits local nested groups for rotation while retaining leaf-only flip admis
 	expect(visioLocalRotationShape(page, outer.id)).toBe(outer);
 	expect(visioLocalRotationShape(page, outer.id, false)).toBeUndefined();
 	expect(visioQuarterTurnCommand(page, outer.id, 'left')!.angle).toBe(Math.PI / 2);
+	// A stencil shape inside the group stays an instance and turns with it; a stencil connector
+	// or a stencil shape at the top level is not a group made here.
 	leaf.masterId = '1';
+	expect(visioLocalRotationShape(page, outer.id)).toBe(outer);
+	leaf.kind = 'connector';
 	expect(visioLocalRotationShape(page, outer.id)).toBeUndefined();
+	leaf.kind = 'shape';
+	outer.masterId = '2';
+	expect(visioLocalRotationShape(page, outer.id)).toBeUndefined();
+	delete outer.masterId;
 	delete leaf.masterId;
 	page.connectors = [{ fromShapeId: leaf.id, toShapeId: 'x', fromCell: 'BeginX', toCell: 'PinX' }];
 	expect(visioLocalRotationShape(page, outer.id)).toBeUndefined();

@@ -1,7 +1,11 @@
 import type { VisioEdit } from '../edit';
 import type { VisioPage, VisioShape } from '../model';
 import { visioStencilInstanceShape } from './formatting';
-/** The model-level scope of local rotation. Source protections remain enforced by core edits. */
+/**
+ * The model-level scope of local rotation: a shape or group drawn here. A group may hold 2D
+ * stencil shapes; each stays an instance of its master and moves with the group as one member.
+ * Source protections remain enforced by core edits.
+ */
 export function visioLocalRotationShape(
 	page: VisioPage,
 	shapeId: string,
@@ -13,6 +17,18 @@ export function visioLocalRotationShape(
 		ids = new Set<string>();
 	while (pending.length) {
 		const node = pending.pop()!;
+		if (node !== shape && node.masterId) {
+			if (!['shape', 'group'].includes(node.kind) || !(node.width > 0 && node.height > 0))
+				return undefined;
+			const inner = [node];
+			while (inner.length) {
+				const item = inner.pop()!;
+				if (ids.size >= 10000 || ids.has(item.id)) return undefined;
+				ids.add(item.id);
+				inner.push(...item.children);
+			}
+			continue;
+		}
 		if (
 			ids.size >= 10000 ||
 			ids.has(node.id) ||

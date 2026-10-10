@@ -2,8 +2,9 @@ import type { VisioDocument, VisioPage, VisioShape, VisioText, VisioTextRun } fr
 import type { VisioTextFormatEdit } from '../edit-formatting-commands';
 
 /**
- * A top-level shape drawn here: no master, group, picture or layer. Copying, duplicating and
- * reordering still need one; formatting, moving and resizing also take stencil shapes.
+ * A top-level shape drawn here: no master, group, picture or layer. Stencil shapes take their
+ * own paths: `visioStencilInstanceShape` for formatting and geometry, `visioStencilShape` for
+ * whole-shape commands.
  */
 export function visioLocalFormattingShape(
 	page: VisioPage,
@@ -82,6 +83,27 @@ export function visioStencilSubShape(page: VisioPage, shapeId: string): VisioSha
 /** A shape a fill, line or text formatting command may target, sub-selected parts included. */
 export function visioFormatTargetShape(page: VisioPage, shapeId: string): VisioShape | undefined {
 	return visioStyleFormattingShape(page, shapeId) ?? visioStencilSubShape(page, shapeId);
+}
+/**
+ * A top-level shape dropped from a stencil that whole-shape commands (Duplicate, Copy, Group,
+ * ordering) take as it is: a 2D shape or group that stays an instance of its master. Lines and
+ * connectors from a stencil are left out, and so is a shape on a locked layer.
+ */
+export function visioStencilShape(page: VisioPage, shapeId: string): VisioShape | undefined {
+	const candidates = page.shapes.filter((shape) => shape.id === shapeId);
+	const shape = candidates.length === 1 ? candidates[0]! : undefined;
+	if (
+		!shape?.masterId ||
+		shape.hidden ||
+		!['shape', 'group'].includes(shape.kind) ||
+		shape.image ||
+		shape.foreignVector ||
+		shape.layerIds?.some(
+			(layer) => page.layers?.find((entry) => entry.id === layer)?.locked !== false,
+		)
+	)
+		return undefined;
+	return shape;
 }
 /** Scene-level candidate only; source formulas, rich markup and locks remain authoritative. */
 export function visioStyleFormattingShape(
