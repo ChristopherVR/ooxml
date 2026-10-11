@@ -28,11 +28,15 @@ const DOM_HYGIENE = join(HERE, 'vitest-dom-hygiene.setup.ts');
 
 function walk(dir, out) {
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
-		if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.'))
+		if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name.startsWith('.')) {
 			continue;
+		}
 		const path = join(dir, entry.name);
-		if (entry.isDirectory()) walk(path, out);
-		else if (TEST_FILE.test(entry.name)) out.push(path);
+		if (entry.isDirectory()) {
+			walk(path, out);
+		} else if (TEST_FILE.test(entry.name)) {
+			out.push(path);
+		}
 	}
 	return out;
 }
@@ -44,8 +48,11 @@ export function classifyTestFiles(root) {
 	for (const file of walk(join(root, 'src'), [])) {
 		const name = relative(root, file).split(sep).join('/');
 		const source = readFileSync(file, 'utf8');
-		if (SSR.test(file) || OWN_WORKER.test(source)) alone.push(name);
-		else if (MOCKS.test(source)) mocked.push(name);
+		if (SSR.test(file) || OWN_WORKER.test(source)) {
+			alone.push(name);
+		} else if (MOCKS.test(source)) {
+			mocked.push(name);
+		}
 	}
 	return { mocked, alone };
 }

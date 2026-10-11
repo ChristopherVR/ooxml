@@ -6,7 +6,9 @@ import { e2eServers } from './e2e-servers';
 
 // Machine-specific settings (PPTX_E2E_WORKERS, PPTX_E2E_ALL_BINDINGS, ...) live in the git-ignored
 // `.env.local` next to this file; CI has none and so keeps the defaults below.
-if (existsSync('.env.local')) process.loadEnvFile('.env.local');
+if (existsSync('.env.local')) {
+	process.loadEnvFile('.env.local');
+}
 
 /**
  * One product e2e spec set, run against every framework demo.

@@ -5,7 +5,8 @@
 	 * Pure presentational markup, no state of its own; all maths already
 	 * happened in `buildChartView` / `buildChartViewModel`.
 	 */
-	import { resolveChartSvgDef, type ChartViewModel } from 'ooxml-ui/pptx';
+	import { resolveChartSvgDef } from 'ooxml-ui/pptx';
+import type { ChartViewModel } from 'ooxml-ui/pptx';
 
 	import type { ChartLegendItem } from '../render';
 	import { partAttrs } from '../render';

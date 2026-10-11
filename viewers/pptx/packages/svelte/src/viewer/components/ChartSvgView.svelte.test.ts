@@ -134,7 +134,7 @@ describe('chartSvgView gradient defs (COM: charts-com.pptx slide 23)', () => {
 			'none',
 		);
 		expect(target.querySelector('linearGradient#g-lin')?.getAttribute('y2')).toBe('1');
-		expect(target.querySelector('linearGradient#g-lin')?.hasAttribute('gradientUnits')).toBe(false);
+		expect(target.querySelector('linearGradient#g-lin')?.hasAttribute('gradientUnits')).toBeFalsy();
 		expect(target.querySelector('linearGradient#g-line')?.getAttribute('gradientUnits')).toBe(
 			'userSpaceOnUse',
 		);

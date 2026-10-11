@@ -30,7 +30,7 @@ type NativeMount = (
 	options: ViewerOptions,
 ) => Promise<{
 	handle: ViewerHandle;
-	update(options: ViewerOptions): Promise<void>;
+	update(next: ViewerOptions): Promise<void>;
 	destroy(): Promise<void>;
 }>;
 const mounts: Record<string, NativeMount> = {
@@ -38,8 +38,8 @@ const mounts: Record<string, NativeMount> = {
 		const handle = mountViewer(host, options);
 		return {
 			handle,
-			async update(options) {
-				handle.update(options);
+			async update(next) {
+				handle.update(next);
 			},
 			async destroy() {
 				handle.destroy();
@@ -54,9 +54,9 @@ const mounts: Record<string, NativeMount> = {
 		});
 		return {
 			handle: ref.current!,
-			async update(options) {
+			async update(next) {
 				await act(async () => {
-					root.render(createElement(ReactViewer, { ...options, ref }));
+					root.render(createElement(ReactViewer, { ...next, ref }));
 				});
 			},
 			async destroy() {
@@ -80,8 +80,8 @@ const mounts: Record<string, NativeMount> = {
 		await nextTick();
 		return {
 			handle,
-			async update(options) {
-				props.value = options;
+			async update(next) {
+				props.value = next;
 				await nextTick();
 			},
 			async destroy() {
@@ -100,9 +100,8 @@ const mounts: Record<string, NativeMount> = {
 		component.changeDetectorRef.detectChanges();
 		return {
 			handle: component.instance,
-			async update(options) {
-				for (const key of [...propertyKeys, 'events'] as const)
-					component.setInput(key, options[key]);
+			async update(next) {
+				for (const key of [...propertyKeys, 'events'] as const) component.setInput(key, next[key]);
 				component.changeDetectorRef.detectChanges();
 			},
 			async destroy() {
@@ -144,8 +143,8 @@ const mounts: Record<string, NativeMount> = {
 		);
 		return {
 			handle,
-			async update(options) {
-				setProps(options);
+			async update(next) {
+				setProps(next);
 			},
 			async destroy() {
 				destroy();
@@ -158,8 +157,8 @@ const mounts: Record<string, NativeMount> = {
 		await tick();
 		return {
 			handle: component.getHandle(),
-			async update(options) {
-				component.update(options);
+			async update(next) {
+				component.update(next);
 				flushSync();
 				await tick();
 			},

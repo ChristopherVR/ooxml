@@ -77,11 +77,17 @@ const PIDS = join(STATE, 'pids.json');
 const listening = (port: number): Promise<boolean> =>
 	new Promise((done) => {
 		const socket = createConnection({ port, host: 'localhost' });
-		socket.once('connect', () => (socket.destroy(), done(true)));
+		socket.once('connect', () => {
+			socket.destroy();
+			done(true);
+		});
 		socket.once('error', () => done(false));
 	});
 
-const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
+const sleep = (ms: number) =>
+	new Promise((done) => {
+		setTimeout(done, ms);
+	});
 
 function readPids(): Record<string, number> {
 	return existsSync(PIDS) ? (JSON.parse(readFileSync(PIDS, 'utf8')) as Record<string, number>) : {};
@@ -120,7 +126,9 @@ async function start(): Promise<void> {
 		});
 		child.unref();
 		closeSync(log);
-		if (child.pid) pids[server.name] = child.pid;
+		if (child.pid) {
+			pids[server.name] = child.pid;
+		}
 		pending.push(server);
 	}
 	writeFileSync(PIDS, JSON.stringify(pids));
@@ -143,13 +151,19 @@ function pidsOnPort(port: number): number[] {
 		const out = spawnSync('netstat', ['-ano'], { encoding: 'utf8' }).stdout;
 		for (const line of out.split(/\r?\n/)) {
 			const cells = line.trim().split(/\s+/);
-			if (cells[3] === 'LISTENING' && cells[1]?.endsWith(`:${port}`)) found.add(Number(cells[4]));
+			if (cells[3] === 'LISTENING' && cells[1]?.endsWith(`:${port}`)) {
+				found.add(Number(cells[4]));
+			}
 		}
 	} else {
 		const out = spawnSync('lsof', ['-ti', `tcp:${port}`, '-sTCP:LISTEN'], {
 			encoding: 'utf8',
 		}).stdout;
-		for (const pid of out.split('\n')) if (pid) found.add(Number(pid));
+		for (const pid of out.split('\n')) {
+			if (pid) {
+				found.add(Number(pid));
+			}
+		}
 	}
 	return [...found];
 }
@@ -161,7 +175,9 @@ function stop(): void {
 			console.log(`${server.name}: stopped (${pid})`);
 		}
 	}
-	for (const pid of Object.values(readPids())) kill(pid);
+	for (const pid of Object.values(readPids())) {
+		kill(pid);
+	}
 	rmSync(PIDS, { force: true });
 }
 
@@ -175,14 +191,17 @@ async function status(): Promise<void> {
 
 async function main(): Promise<void> {
 	const command = process.argv[2] ?? 'status';
-	if (command === 'start') await start();
-	else if (command === 'stop') stop();
-	else if (command === 'restart') {
+	if (command === 'start') {
+		await start();
+	} else if (command === 'stop') {
+		stop();
+	} else if (command === 'restart') {
 		stop();
 		await sleep(1000);
 		await start();
-	} else if (command === 'status') await status();
-	else {
+	} else if (command === 'status') {
+		await status();
+	} else {
 		console.error('usage: bun e2e-servers.ts start | stop | restart | status');
 		process.exit(2);
 	}

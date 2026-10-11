@@ -53,8 +53,11 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
 			const entries = listener ? live.get(listener) : undefined;
 			if (entries) {
 				const kept = entries.filter((entry) => !matches(entry, target, type, capture));
-				if (kept.length > 0) live.set(listener!, kept);
-				else live.delete(listener!);
+				if (kept.length > 0) {
+					live.set(listener!, kept);
+				} else {
+					live.delete(listener!);
+				}
 			}
 			return remove.call(this, type, listener, options);
 		} as EventTarget['removeEventListener'];
@@ -64,7 +67,9 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
 		});
 	}
 	afterAll(() => {
-		for (const undo of restore) undo();
+		for (const undo of restore) {
+			undo();
+		}
 		for (const entries of live.values()) {
 			for (const { target, type, listener, capture } of entries) {
 				target.removeEventListener(type, listener, capture);

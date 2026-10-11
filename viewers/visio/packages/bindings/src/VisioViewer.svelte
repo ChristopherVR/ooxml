@@ -24,7 +24,7 @@
   export function getState() { return readonly(state); }
   export function getHandle() { return handle; }
   export function load(source: VsdxSource) { return handle.load(source); }
-  export function createBlankDrawing(options?: CreateVsdxOptions) { return handle.createBlankDrawing(options); }
+  export function createBlankDrawing(blankOptions?: CreateVsdxOptions) { return handle.createBlankDrawing(blankOptions); }
   export function applyEdits(edits: readonly VisioEdit[]) { return handle.applyEdits(edits); }
   export function selectShapes(shapes: readonly VisioShapeSelection[]) { handle.selectShapes(shapes); }
   export function selectAll() { handle.selectAll(); }
@@ -41,7 +41,7 @@
   export function fit() { handle.fit(); }
   export function setLayerVisibility(pageId: string, layerId: string, visible: boolean | null) { handle.setLayerVisibility(pageId, layerId, visible); }
   export function resetLayerVisibility(pageId?: string) { handle.resetLayerVisibility(pageId); }
-  export function exportSvg(options?: SvgExportOptions) { return handle.exportSvg(options); }
-  export function createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions) { return handle.createPrintSnapshot(options); }
+  export function exportSvg(svgOptions?: SvgExportOptions) { return handle.exportSvg(svgOptions); }
+  export function createPrintSnapshot(printOptions?: CurrentPagePrintSnapshotOptions) { return handle.createPrintSnapshot(printOptions); }
 </script>
 <div class={className} {style} aria-label={ariaLabel} use:attach={options}></div>
