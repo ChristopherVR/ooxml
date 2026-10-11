@@ -34,7 +34,9 @@ function step(density: number, spacing: number, zoom: number): number {
 	if (density === 0 && spacing > 0) return spacing;
 	const level = Math.max(-6, Math.min(6, Math.floor(Math.log2(zoom > 0 ? zoom : 1) + 1e-9)));
 	let value = base / 2 ** level;
-	while (spacing > 0 && value < spacing - 1e-9) value *= 2;
+	if (spacing > 0) {
+		while (value < spacing - 1e-9) value *= 2;
+	}
 	return value;
 }
 
