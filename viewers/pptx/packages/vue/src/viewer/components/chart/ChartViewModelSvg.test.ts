@@ -374,7 +374,9 @@ describe('chartViewModelSvg: gradient defs (COM: charts-com.pptx slide 23)', () 
 		expect(wrapper.find('pattern#g-rect image').attributes('preserveAspectRatio')).toBe('none');
 		expect(wrapper.find('linearGradient#g-lin').attributes('y2')).toBe('1');
 		expect(wrapper.find('linearGradient#g-lin').attributes('gradientUnits')).toBeUndefined();
-		expect(wrapper.find('linearGradient#g-line').attributes('gradientUnits')).toBe('userSpaceOnUse');
+		expect(wrapper.find('linearGradient#g-line').attributes('gradientUnits')).toBe(
+			'userSpaceOnUse',
+		);
 		expect(wrapper.findAll('radialGradient#g-rad stop')).toHaveLength(2);
 		expect(wrapper.find('rect').attributes('fill')).toBe('url(#g-rad)');
 	});
