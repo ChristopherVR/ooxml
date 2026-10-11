@@ -24,7 +24,7 @@ export default defineConfig({
 	test: {
 		environment: 'happy-dom',
 		maxWorkers: 4,
-		projects: isolationProjects('angular', import.meta.dirname, ['src/**/*.test.ts']),
+		projects: isolationProjects('angular', import.meta.dirname, 'happy-dom'),
 		globals: true,
 		setupFiles: ['./vitest-setup.ts'],
 	},

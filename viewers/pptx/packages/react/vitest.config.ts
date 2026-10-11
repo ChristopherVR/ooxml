@@ -28,7 +28,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		maxWorkers: 4,
-		projects: isolationProjects('react', __dirname, ['src/**/*.test.{ts,tsx}']),
+		projects: isolationProjects('react', __dirname, 'node'),
 		setupFiles: ['./web-controls.test-setup.ts'],
 	},
 });

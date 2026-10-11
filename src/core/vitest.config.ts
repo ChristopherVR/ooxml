@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,13 +19,24 @@ function testFiles(dir: string, out: string[] = []): string[] {
 	}
 	return out;
 }
-const needsIsolation = testFiles(root)
-	.filter(
-		(file) =>
-			file.endsWith('ssr.test.ts') ||
-			/\bvi\.(?:mock|doMock)\s*[<(]/.test(readFileSync(file, 'utf8')),
-	)
-	.map((file) => relative(root, file).split(sep).join('/'));
+const rel = (file: string) => relative(root, file).split(sep).join('/');
+const needsIsolation: string[] = [];
+// A module cached by one file extends that file's `HTMLElement`, so a file pinned to another
+// DOM (`// @vitest-environment jsdom`) must not share a worker with the node default: each
+// environment is its own project, with its own workers and module cache.
+const byEnvironment = new Map<string, string[]>();
+for (const file of testFiles(root)) {
+	const source = readFileSync(file, 'utf8');
+	if (file.endsWith('ssr.test.ts') || /\bvi\.(?:mock|doMock)\s*[<(]/.test(source)) {
+		needsIsolation.push(rel(file));
+		continue;
+	}
+	const environment = /@vitest-environment\s+([\w-]+)/.exec(source)?.[1] ?? 'node';
+	if (environment !== 'node') {
+		byEnvironment.set(environment, [...(byEnvironment.get(environment) ?? []), rel(file)]);
+	}
+}
+const otherEnvironments = [...byEnvironment.values()].flat();
 
 // The pptx tests read real decks from pptx/__tests__/fixtures (including the e2e snapshot that is
 // committed under fixtures/e2e), so nothing outside this repository is needed.
@@ -38,13 +50,19 @@ const common = {
 		],
 	},
 };
-const project = (name: string, include: string[], exclude: string[], isolate: boolean) => ({
+const project = (
+	name: string,
+	include: string[],
+	exclude: string[],
+	isolate: boolean,
+	environment = 'node',
+) => ({
 	...common,
 	test: {
 		name,
 		isolate,
 		globals: true,
-		environment: 'node',
+		environment,
 		include,
 		exclude: ['node_modules', 'dist', ...exclude],
 		// The pptx area's integration tests load real multi-megabyte decks through the full
@@ -56,9 +74,13 @@ const project = (name: string, include: string[], exclude: string[], isolate: bo
 
 export default {
 	test: {
-		maxWorkers: 4,
+		// Never more than the cores: a 4-core CI runner timed out the heavy imports with more.
+		maxWorkers: Math.min(4, availableParallelism()),
 		projects: [
-			project('core', ['**/*.test.ts'], needsIsolation, false),
+			project('core', ['**/*.test.ts'], [...needsIsolation, ...otherEnvironments], false),
+			...[...byEnvironment].map(([environment, files]) =>
+				project(`core-${environment}`, files, [], false, environment),
+			),
 			...(needsIsolation.length > 0 ? [project('core-isolated', needsIsolation, [], true)] : []),
 		],
 	},

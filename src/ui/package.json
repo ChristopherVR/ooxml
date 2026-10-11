@@ -140,7 +140,7 @@
 		"test": "vitest run",
 		"test:package": "node scripts/package-smoke.mjs",
 		"gen:manifest": "node scripts/gen-manifest.mjs",
-		"test:pptx": "vitest run --project pptx --project pptx-isolated"
+		"test:pptx": "vitest run --project 'pptx*'"
 	},
 	"dependencies": {
 		"dompurify": "^3.4.16",

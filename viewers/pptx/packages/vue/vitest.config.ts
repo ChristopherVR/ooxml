@@ -76,7 +76,7 @@ export default defineConfig({
 		globals: true,
 		environment: 'happy-dom',
 		maxWorkers: 4,
-		projects: isolationProjects('vue', __dirname, ['src/**/*.test.{ts,tsx}']),
+		projects: isolationProjects('vue', __dirname, 'happy-dom'),
 		setupFiles: ['./src/test-setup.ts'],
 	},
 });

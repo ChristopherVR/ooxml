@@ -64,7 +64,7 @@ export default defineConfig({
 		globals: true,
 		environment: 'happy-dom',
 		maxWorkers: 4,
-		projects: isolationProjects('svelte', __dirname, ['src/**/*.test.ts']),
+		projects: isolationProjects('svelte', __dirname, 'happy-dom'),
 		setupFiles: ['./src/web-controls.test-setup.ts'],
 		// The component suite parses a real .pptx fixture per test.
 		testTimeout: 30000,
