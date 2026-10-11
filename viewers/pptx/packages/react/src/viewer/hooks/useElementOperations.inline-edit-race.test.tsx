@@ -47,6 +47,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+	window.getSelection()?.removeAllRanges();
 	container = document.createElement('div');
 	document.body.appendChild(container);
 	root = createRoot(container);

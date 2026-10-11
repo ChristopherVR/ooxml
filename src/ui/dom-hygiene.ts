@@ -1,7 +1,7 @@
 // Runs per test file on a shared worker (`isolate: false`): the DOM is reused across files, so
 // whatever one file leaves on `document` or `window` (listeners, mounted nodes) would be seen by
 // the next. Track the listeners still registered by this file and remove them when it ends, and
-// clear the body and drop focus (a focused element left in a detached tree breaks later
+// clear the body and the selection and drop focus (a focused element left in a detached tree breaks later
 // `activeElement` reads in happy-dom), so a file starts from the DOM an isolated worker would
 // have given it.
 //
@@ -87,6 +87,8 @@ export function installDomHygiene(): void {
 		}
 		live.clear();
 		(document.activeElement as HTMLElement | null)?.blur?.();
+		// A selection left anchored in a mounted editor is read by the next file's inline-edit code.
+		window.getSelection?.()?.removeAllRanges();
 		document.body?.replaceChildren();
 	});
 }
