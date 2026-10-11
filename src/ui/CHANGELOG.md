@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.2) - 2026-10-11
+
+### Bug Fixes
+
+- **ui:** Let bridged themes re-derive the tokens that read them ([531dae6](https://github.com/ChristopherVR/ooxml/commit/531dae6f2fe1cf31894d54b46df31a1de934d954))
+- **ui:** Keep visio drag previews until the source edit settles ([a004a29](https://github.com/ChristopherVR/ooxml/commit/a004a292913c4ec63fe6aa6e21196c36eeef9dff))
+
 ## [1.8.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.1) - 2026-10-10
 
 ### Testing
