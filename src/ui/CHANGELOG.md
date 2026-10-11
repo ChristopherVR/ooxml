@@ -7,6 +7,14 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.4](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.4) - 2026-10-11
+
+### Testing
+
+- **ui:** Clear the text selection between test files ([abb829f](https://github.com/ChristopherVR/ooxml/commit/abb829f2e3a4e6ff0a99a9023012d1d3ad0d8b51))
+- **ui:** Measure the autofit clone against the body it started with ([0336f59](https://github.com/ChristopherVR/ooxml/commit/0336f5963f4422e405cd7a4ad4206ad395643949))
+- **ui:** Compare body children to the starting count in two more tests ([cd39154](https://github.com/ChristopherVR/ooxml/commit/cd3915465a0192b2a6fa1dafde17a77d63c31316))
+
 ## [1.8.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.3) - 2026-10-11
 
 ### Bug Fixes
