@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.3) - 2026-10-11
+
+### Bug Fixes
+
+- **ui:** Refresh the Layouts gallery when the layout library loads ([817daaf](https://github.com/ChristopherVR/ooxml/commit/817daaf54f1f58d8d7b6a44d1c65ddeecb17591a))
+- **ui:** Do not offer a page the autosave snapshot it wrote itself ([e6b2e1a](https://github.com/ChristopherVR/ooxml/commit/e6b2e1a42c58b349a33e8cc17e77918ae96373c4))
+
+### Testing
+
+- **ui:** Keep each DOM environment and test state in its own worker ([6d52bec](https://github.com/ChristopherVR/ooxml/commit/6d52bec41343129aa621e11e173fe3c706e82b6e))
+
+### Styling
+
+- Fix the oxfmt and oxlint warnings outside the viewers ([cd66f32](https://github.com/ChristopherVR/ooxml/commit/cd66f324a45aad1d9bd680d1518f0dbe8baf8fc3))
+
 ## [1.8.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.8.2) - 2026-10-11
 
 ### Bug Fixes

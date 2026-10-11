@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.33.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.33.1) - 2026-10-11
+
+### Bug Fixes
+
+- **angular:** Apply gallery picks by id, not through the memoized descriptor ([43c0c76](https://github.com/ChristopherVR/ooxml/commit/43c0c7602a824b4fb94b4ac5e162df149f3c16db))
+
+### Testing
+
+- **pptx:** Find the angular img tag whatever the template formatting ([fca83d0](https://github.com/ChristopherVR/ooxml/commit/fca83d070c7627dbd2b075d07f8fd92e75808383))
+- **pptx:** Share workers across the binding package unit tests ([d51469c](https://github.com/ChristopherVR/ooxml/commit/d51469cc709e145007222ef0510a19bedbf08728))
+- **ui:** Keep each DOM environment and test state in its own worker ([6d52bec](https://github.com/ChristopherVR/ooxml/commit/6d52bec41343129aa621e11e173fe3c706e82b6e))
+
+### Styling
+
+- **pptx:** Format the pptx viewer with its own oxfmt configuration ([7ca9f51](https://github.com/ChristopherVR/ooxml/commit/7ca9f51be7d0926e28cc5913792cfc1c966c0d35))
+
 ## [4.33.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.33.0) - 2026-10-10
 
 ### Features

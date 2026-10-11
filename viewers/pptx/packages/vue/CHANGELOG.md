@@ -7,6 +7,19 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.33.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.33.1) - 2026-10-11
+
+### Testing
+
+- **pptx:** Wait for the hyperlink deck to load as svelte does ([01d7206](https://github.com/ChristopherVR/ooxml/commit/01d72066f9ab3fce3433426a19e8c337624e087f))
+- **pptx:** Share workers across the binding package unit tests ([d51469c](https://github.com/ChristopherVR/ooxml/commit/d51469cc709e145007222ef0510a19bedbf08728))
+- **ui:** Keep each DOM environment and test state in its own worker ([6d52bec](https://github.com/ChristopherVR/ooxml/commit/6d52bec41343129aa621e11e173fe3c706e82b6e))
+
+### Styling
+
+- Fix the oxfmt and oxlint warnings in the viewers ([db0314f](https://github.com/ChristopherVR/ooxml/commit/db0314f319e3d0508960872260792215477d9ca5))
+- **pptx:** Format the pptx viewer with its own oxfmt configuration ([7ca9f51](https://github.com/ChristopherVR/ooxml/commit/7ca9f51be7d0926e28cc5913792cfc1c966c0d35))
+
 ## [4.33.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.33.0) - 2026-10-10
 
 ### Features
