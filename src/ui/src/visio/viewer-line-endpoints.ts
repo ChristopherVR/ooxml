@@ -235,12 +235,19 @@ export class ViewerLineEndpoints {
 				if (group.dataset.shapeId === hit.shapeId) group.dataset.connectTarget = 'true';
 	}
 	#cancel(): void {
+		this.#release()();
+	}
+	/**
+	 * Ends the gesture and returns the removal of its previews, which a finished drag keeps until its
+	 * source edit settles (removing them first showed the old geometry for as long as the edit took).
+	 */
+	#release(): () => void {
 		const drag = this.#drag;
 		this.#drag = undefined;
 		this.#target(undefined);
-		drag?.preview.remove();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
+		return () => drag?.preview.remove();
 	}
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
@@ -253,13 +260,15 @@ export class ViewerLineEndpoints {
 		event.stopImmediatePropagation();
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		const glue = this.#glueAt(drag, event);
-		this.#cancel();
+		const settle = this.#release();
 		if (
 			!point ||
 			Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 0.5 ||
 			this.controller.state.document !== drag.document
-		)
+		) {
+			settle();
 			return;
+		}
 		const request = ++this.#request;
 		const edit: VisioEdit = glue
 			? {
@@ -287,6 +296,8 @@ export class ViewerLineEndpoints {
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))
 				this.options.announce(editErrorMessage(error));
+		} finally {
+			settle();
 		}
 	}
 }

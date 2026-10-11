@@ -234,13 +234,22 @@ export class ViewerRotationHandle {
 		event.stopImmediatePropagation();
 	}
 	#cancel(): void {
+		this.#release()();
+	}
+	/**
+	 * Ends the gesture and returns the removal of its previews, which a finished drag keeps until its
+	 * source edit settles (removing them first showed the old geometry for as long as the edit took).
+	 */
+	#release(): () => void {
 		const drag = this.#drag;
 		this.#drag = undefined;
-		drag?.preview.remove();
-		drag?.shapePreview.dispose();
-		drag?.showOverlays();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
+		return () => {
+			drag?.preview.remove();
+			drag?.shapePreview.dispose();
+			drag?.showOverlays();
+		};
 	}
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
@@ -253,13 +262,15 @@ export class ViewerRotationHandle {
 		event.stopImmediatePropagation();
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		const angle = point ? radians(drag.rotate(point), event.shiftKey) : undefined;
-		this.#cancel();
+		const settle = this.#release();
 		if (
 			angle === undefined ||
 			Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 0.5 ||
 			this.controller.state.document !== drag.document
-		)
+		) {
+			settle();
 			return;
+		}
 		const request = ++this.#request;
 		try {
 			await this.controller.applyEdits([
@@ -269,6 +280,8 @@ export class ViewerRotationHandle {
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))
 				this.options.announce(editErrorMessage(error));
+		} finally {
+			settle();
 		}
 	}
 }

@@ -261,15 +261,25 @@ export class ViewerPointerGestures {
 		return this.options.snap?.(drag.page, ids, delta) ?? delta;
 	}
 	#cancel(): void {
+		this.#release()();
+	}
+	/**
+	 * Ends the gesture and returns the removal of its previews. A finished move keeps showing the
+	 * preview until its source edit settles; removing it first showed the shape back at its old
+	 * position for as long as the edit took.
+	 */
+	#release(): () => void {
 		const drag = this.#drag;
 		this.#drag = undefined;
 		if (drag?.started) this.#cancelClick = true;
-		drag?.preview?.dispose();
-		drag?.showOverlays?.();
-		drag?.marquee?.remove();
-		if (drag?.preview) this.options.clearSnap?.();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
+		return () => {
+			drag?.preview?.dispose();
+			drag?.showOverlays?.();
+			drag?.marquee?.remove();
+			if (drag?.preview) this.options.clearSnap?.();
+		};
 	}
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
@@ -281,7 +291,8 @@ export class ViewerPointerGestures {
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		this.#cancel();
+		const settle = this.#release();
+		if (!point || !this.#current(drag) || !drag.target) settle();
 		if (!point || !this.#current(drag)) return;
 		if (!drag.target) {
 			const box = visioMarqueeBox(drag.start, point);
@@ -302,7 +313,10 @@ export class ViewerPointerGestures {
 			this.#delta(drag, point),
 		);
 		this.options.clearSnap?.();
-		if (!edits?.length || !this.#current(drag)) return;
+		if (!edits?.length || !this.#current(drag)) {
+			settle();
+			return;
+		}
 		const request = ++this.#request;
 		try {
 			await this.controller.applySelectionEdits(edits);
@@ -310,6 +324,8 @@ export class ViewerPointerGestures {
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))
 				this.options.announce(editErrorMessage(error));
+		} finally {
+			settle();
 		}
 	}
 }
