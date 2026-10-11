@@ -53,7 +53,13 @@ const WORKERS = Number(process.env.PPTX_E2E_WORKERS) || undefined;
  * against it, at a fifth of the cost of running each binding's own copy of the product specs.
  * `--project=<name>` or `PPTX_E2E_ALL_BINDINGS=1` runs the others; CI always runs them all.
  */
-const explicitProject = process.argv.some((arg) => /^(--project|-p)(=|$)/.test(arg));
+// Workers are forked without the CLI flags, so the main process hands them its decision.
+const explicitProject =
+	process.env.PPTX_E2E_EXPLICIT_PROJECT === '1' ||
+	process.argv.some((arg) => /^(--project|-p)(=|$)/.test(arg));
+if (explicitProject) {
+	process.env.PPTX_E2E_EXPLICIT_PROJECT = '1';
+}
 const onlyReference = !isCI && !explicitProject && process.env.PPTX_E2E_ALL_BINDINGS !== '1';
 
 export default defineConfig({
