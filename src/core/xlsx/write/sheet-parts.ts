@@ -9,6 +9,7 @@ import {
 import { parseDrawing } from '../read/drawing';
 import { CONTENT_TYPES, type SourceIndex } from '../read/package';
 import { parseTable } from '../read/tables';
+import { chartWithCurrentCaches } from './chart-cache';
 import { commentParts, type PersonRegistry } from './comments';
 import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing';
 import type { MetadataPlan } from './metadata';
@@ -218,6 +219,11 @@ export function writeSheetDrawing(
 		sourceDrawing && !writer.has(sourceDrawing)
 			? sourceDrawing
 			: writer.uniqueName((n) => `xl/drawings/drawing${n}.xml`, ctx.reserved);
-	if (!writeDrawing(writer, target, sheet.drawings, sourceDrawing)) return '';
+	const drawings = sheet.drawings.map((object) =>
+		object.kind === 'chart' && (!object.partName || !source?.has(object.partName))
+			? chartWithCurrentCaches(ctx.workbook, sheet, object)
+			: object,
+	);
+	if (!writeDrawing(writer, target, drawings, sourceDrawing)) return '';
 	return `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`;
 }
