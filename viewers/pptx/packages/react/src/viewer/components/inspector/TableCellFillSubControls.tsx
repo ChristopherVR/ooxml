@@ -1,3 +1,4 @@
+import { inspectorNumber } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -93,7 +94,7 @@ export function GradientControls({
 							className={NUM}
 							min={0}
 							max={360}
-							value={cellStyle.gradientFillAngle ?? 90}
+							value={inspectorNumber(cellStyle.gradientFillAngle, 90)}
 							onChange={(e) => onUpdateCellStyle({ gradientFillAngle: Number(e.target.value) })}
 						/>
 					</label>

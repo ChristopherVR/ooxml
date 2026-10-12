@@ -1,4 +1,4 @@
-import { withCellStyle } from 'ooxml-ui/pptx';
+import { inspectorNumber, withCellStyle } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -74,7 +74,7 @@ export function TableCellFormattingPanel({
 						className={INPUT}
 						min={6}
 						max={200}
-						value={cs.fontSize ?? 14}
+						value={inspectorNumber(cs.fontSize, 14)}
 						onChange={(e) => updateCellStyle({ fontSize: Number(e.target.value) })}
 					/>
 				</label>
@@ -212,7 +212,7 @@ export function TableCellFormattingPanel({
 										className={cn(INPUT, 'w-14')}
 										min={0}
 										max={10}
-										value={(cs[widthKey] as number | undefined) ?? 1}
+										value={inspectorNumber(cs[widthKey] as number | undefined, 1)}
 										onChange={(e) => updateCellStyle({ [widthKey]: Number(e.target.value) })}
 									/>
 								</div>

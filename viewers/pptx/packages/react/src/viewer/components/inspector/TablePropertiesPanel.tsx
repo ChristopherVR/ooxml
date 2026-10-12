@@ -2,6 +2,7 @@ import {
 	applyTableStylePreset,
 	evenColumnWidths,
 	evenRowHeights,
+	inspectorNumber,
 	redistributeColumnWidth,
 	tableStyleAssignmentUpdate,
 } from 'ooxml-ui/pptx';
@@ -261,7 +262,7 @@ export function TablePropertiesPanel({
 								className={INPUT}
 								min={16}
 								max={500}
-								value={row.height ?? 32}
+								value={inspectorNumber(row.height, 32)}
 								onChange={(e) => {
 									const newRows = td.rows.map((r, i) =>
 										i === ri ? { ...r, height: Number(e.target.value) } : r,
