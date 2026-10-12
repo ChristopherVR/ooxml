@@ -31,6 +31,7 @@ export {
 	verifyWorkbookPassword,
 } from './protection';
 export { MAX_OUTLINE_LEVEL } from './outline';
+export { selectedSparklineGroups, type SparklineGroupPatch } from './sparklines';
 export type { RemoveDuplicatesResult } from './duplicates';
 export { calcModeOf, type CalcMode } from './calc-mode';
 export type { DocumentPropertiesPatch } from './doc-properties';

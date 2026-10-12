@@ -69,6 +69,7 @@ export function workbookXml(
 	sheets: readonly SheetRef[],
 	activeTab: number,
 	sourceXml: string | undefined,
+	pivotCachesXml?: string,
 ): string {
 	const kept = new Map<string, XmlElement>();
 	if (sourceXml) {
@@ -134,7 +135,10 @@ export function workbookXml(
 		: '';
 	const owned = ['fullCalcOnLoad', 'calcId', 'calcMode', 'iterate', 'iterateCount', 'iterateDelta'];
 	out += `<calcPr${copyAttrs(calc, owned)} calcId="191029"${mode}${iterate} fullCalcOnLoad="1"/>`;
-	out += raw(KEPT_TAIL);
+	out +=
+		pivotCachesXml === undefined
+			? raw(KEPT_TAIL)
+			: raw(KEPT_TAIL.slice(0, 2)) + pivotCachesXml + raw(KEPT_TAIL.slice(3));
 	return `${out}</workbook>`;
 }
 

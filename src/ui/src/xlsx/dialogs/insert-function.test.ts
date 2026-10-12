@@ -65,6 +65,21 @@ describe('insert function dialog', () => {
 		expect(beginEdit).toHaveBeenCalledWith('=IF(');
 	});
 
+	it('explains REGEXEXTRACT return modes and inserts a spilling extraction', async () => {
+		const ctx = createTestContext(createWorkbook());
+		registerNavigationDialogs(ctx);
+		const done = ctx.dialogs.open('insert-function', { fn: 'REGEXEXTRACT' });
+		const dialog = dialogEl(ctx, 'insert-function');
+		expect(dialog.querySelector('.xve-note')?.textContent).toContain('all matches (1)');
+		expect(searchFunctions('capture groups').map((fn) => fn.name)).toContain('REGEXEXTRACT');
+		setValue(inputByLabel(dialog, 'Arguments (optional):'), '"order 001, 22","[0-9]+",1');
+		clickButton(dialog, 'OK');
+		expect(await done).toBe('REGEXEXTRACT');
+		const sheet = ctx.workbook()!.sheets[0]!;
+		expect(getCell(sheet, 0, 0)?.value).toBe('001');
+		expect(getCell(sheet, 1, 0)?.value).toBe('22');
+	});
+
 	it('Go runs a search; Cancel and Escape insert nothing', async () => {
 		const ctx = createTestContext(createWorkbook());
 		registerNavigationDialogs(ctx);

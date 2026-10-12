@@ -58,6 +58,7 @@ export function showDialog<T>(
 	defineDialog(ctx.host.ownerDocument.defaultView?.customElements);
 	ensureStyles(ctx);
 	const doc = ctx.host.ownerDocument;
+	const opener = ctx.root.activeElement ?? doc.activeElement;
 	const dialog = doc.createElement('office-ui-dialog');
 	dialog.setAttribute('heading', ctx.t(spec.heading));
 	dialog.dataset.dialog = spec.name;
@@ -80,6 +81,9 @@ export function showDialog<T>(
 			done = true;
 			dialog.removeAttribute('open');
 			dialog.remove();
+			if (ctx.grid()) ctx.grid()?.focus();
+			else if (opener instanceof doc.defaultView!.HTMLElement && opener.isConnected)
+				opener.focus({ preventScroll: true });
 			resolve(result);
 		};
 		// One submit at a time: a double Enter or double click must not apply an async submit twice.

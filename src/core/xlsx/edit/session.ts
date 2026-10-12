@@ -25,6 +25,9 @@ import { SessionCalculator } from './session-calc';
 import * as calcMode from './calc-mode';
 import * as docProps from './doc-properties';
 import * as drawings from './drawings';
+import * as sparklines from './sparklines';
+import * as pivots from './pivots';
+import { rangesIntersect } from '../address';
 import * as cellStyle from './cell-style';
 import * as cfEdits from './conditional-formats';
 import * as charts from './charts';
@@ -32,6 +35,8 @@ import * as tableEdits from './table-edits';
 import * as duplicates from './duplicates';
 import * as outline from './outline';
 import * as page from './page';
+import * as pageBreaks from './page-breaks';
+import * as printTitles from './print-titles';
 import * as protection from './protection';
 import * as merge from './merge';
 import * as rowFit from './row-autofit';
@@ -104,6 +109,17 @@ export function createEditSession(
 		fn: (formulaCells?: readonly CellPosition[]) => T,
 		info: RunInfo = {},
 	): T => {
+		if (kind === 'cells')
+			for (const scope of scopes)
+				if (
+					scope.kind === 'cells' &&
+					workbook.sheets[scope.sheet]?.pivotTables?.some((pivot) =>
+						scope.ranges.some((range) => rangesIntersect(range, pivot.location)),
+					)
+				)
+					throw new Error(
+						'A PivotTable result cannot be edited directly. Refresh or remove the PivotTable instead.',
+					);
 		const outer = !open;
 		const current = open ?? begin(label, kind, info);
 		if (!outer) {
@@ -226,7 +242,16 @@ export function createEditSession(
 		setDefinedName: (name) => view.setDefinedName(ctx, name),
 		deleteDefinedName: (name, localSheet) => view.deleteDefinedName(ctx, name, localSheet),
 		setDrawingAnchor: (s, index, anchor) => drawings.setDrawingAnchor(ctx, s, index, anchor),
+		createPivotTable: (s, destination, options) =>
+			pivots.createPivotTable(ctx, s, destination, options),
+		refreshPivotTable: (s, name, patch) => pivots.refreshPivotTable(ctx, s, name, patch),
+		deletePivotTable: (s, name) => pivots.deletePivotTable(ctx, s, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
+		createSparklineGroup: (s, source, locations, patch) =>
+			sparklines.createSparklineGroup(ctx, s, source, locations, patch),
+		setSparklineGroups: (s, ranges, patch) => sparklines.setSparklineGroups(ctx, s, ranges, patch),
+		deleteSparklines: (s, ranges, wholeGroups) =>
+			sparklines.deleteSparklines(ctx, s, ranges, wholeGroups),
 		addChart: (s, chart) => charts.addChart(ctx, s, chart),
 		updateChart: (s, index, patch) => charts.updateChart(ctx, s, index, patch),
 		addImage: (s, bytes, type, anchor, name) => charts.addImage(ctx, s, bytes, type, anchor, name),
@@ -241,6 +266,10 @@ export function createEditSession(
 		convertTableToRange: (s, table) => tableEdits.convertTableToRange(ctx, s, table),
 		applyCellStyle: (s, ranges, name) => cellStyle.applyCellStyle(ctx, s, ranges, name),
 		setPageSetup: (s, patch) => page.setPageSetup(ctx, s, patch),
+		setPageBreak: (s, axis, before, present) =>
+			pageBreaks.setPageBreak(ctx, s, axis, before, present),
+		resetPageBreaks: (s) => pageBreaks.resetPageBreaks(ctx, s),
+		setPrintTitles: (s, patch) => printTitles.setPrintTitles(ctx, s, patch),
 		setPrintOptions: (s, patch) => page.setPrintOptions(ctx, s, patch),
 		setSheetProtection: (s, p, password) => protection.setSheetProtection(ctx, s, p, password),
 		setWorkbookProtection: (locked, password) =>

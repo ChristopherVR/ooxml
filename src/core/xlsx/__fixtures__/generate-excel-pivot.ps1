@@ -1,0 +1,49 @@
+# Requires desktop Excel. Generates a tabular row/column/value PivotTable reference.
+$ErrorActionPreference = 'Stop'
+$out = Join-Path $PSScriptRoot 'excel-pivot.xlsx'
+$excel = New-Object -ComObject Excel.Application
+$excel.Visible = $false
+$excel.DisplayAlerts = $false
+try {
+	$wb = $excel.Workbooks.Add()
+	$data = $wb.Worksheets.Item(1)
+	$data.Name = 'Data'
+	$rows = @(@('Category','Region','Amount'), @('Fruit','East',10), @('Fruit','West',20), @('Veg','East',5), @('Veg','West',15), @('Fruit','East',7))
+	for ($r = 0; $r -lt $rows.Count; $r++) {
+		for ($c = 0; $c -lt 3; $c++) {
+			$v = $rows[$r][$c]
+			if ($v -is [int]) { $data.Cells.Item($r + 1,$c + 1).Value2 = [double]$v }
+			else { $data.Cells.Item($r + 1,$c + 1).Value2 = [string]$v }
+		}
+	}
+	$summary = $wb.Worksheets.Add()
+	$summary.Name = 'Summary'
+	$cache = $wb.PivotCaches().Create(1, 'Data!R1C1:R6C3', 6)
+	$pivot = $cache.CreatePivotTable($summary.Range('A1'), 'SalesPivot')
+	$pivot.PivotFields('Category').Orientation = 1
+	$pivot.PivotFields('Region').Orientation = 2
+	$pivot.RowAxisLayout(1)
+	[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Sum of Amount', -4157)
+	$wb.SaveAs($out, 51)
+	$wb.Close($false)
+} finally {
+	$excel.Quit()
+	[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)
+}
+
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zip = [IO.Compression.ZipFile]::Open($out, 'Update')
+try {
+	foreach ($name in @('docProps/core.xml','xl/workbook.xml','xl/pivotCache/pivotCacheDefinition1.xml')) {
+		$entry = $zip.GetEntry($name)
+		if (-not $entry) { continue }
+		$reader = [IO.StreamReader]::new($entry.Open()); $text = $reader.ReadToEnd(); $reader.Dispose()
+		$text = [regex]::Replace($text, '<cp:lastModifiedBy>[^<]*</cp:lastModifiedBy>', '<cp:lastModifiedBy>Fixture Author</cp:lastModifiedBy>')
+		$text = [regex]::Replace($text, '<dc:creator>[^<]*</dc:creator>', '<dc:creator>Fixture Author</dc:creator>')
+		$text = [regex]::Replace($text, '<mc:AlternateContent[^>]*><mc:Choice Requires="x15"><x15ac:absPath[^>]*/></mc:Choice></mc:AlternateContent>', '')
+		$text = [regex]::Replace($text, 'refreshedBy="[^"]*"', 'refreshedBy="Fixture Author"')
+		$entry.Delete()
+		$writer = [IO.StreamWriter]::new($zip.CreateEntry($name).Open(), [Text.UTF8Encoding]::new($false)); $writer.Write($text); $writer.Dispose()
+	}
+} finally { $zip.Dispose() }
+Get-Item $out | Select-Object Name, Length

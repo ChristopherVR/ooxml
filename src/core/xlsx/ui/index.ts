@@ -21,6 +21,7 @@ export * from './commands/i18n/rules';
 export * from './commands/i18n/tools';
 export * from './commands/number';
 export * from './commands/page-layout';
+export * from './commands/page-breaks';
 export * from './commands/select-special';
 export * from './commands/sort-filter';
 export * from './commands/style-presets';

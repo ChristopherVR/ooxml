@@ -18,6 +18,34 @@ function open(submit: () => Promise<string | undefined>) {
 }
 
 describe('dialog frame', () => {
+	it('returns to the mounted grid after a dialog completes', async () => {
+		const focus = vi.fn();
+		const ctx = createTestContext(createWorkbook(), { grid: { focus } });
+		const done = showDialog(ctx, {
+			heading: 'Test',
+			name: 'focus-test',
+			body: document.createElement('input'),
+			submit: () => true,
+		});
+		ctx.root.querySelector<HTMLButtonElement>('.xve-btn-primary')!.click();
+		expect(await done).toBe(true);
+		expect(focus).toHaveBeenCalledOnce();
+	});
+	it('restores its opener when there is no mounted grid', async () => {
+		const ctx = createTestContext(createWorkbook());
+		const opener = document.createElement('button');
+		ctx.root.append(opener);
+		opener.focus();
+		const done = showDialog(ctx, {
+			heading: 'Test',
+			name: 'focus-test',
+			body: document.createElement('input'),
+			submit: () => true,
+		});
+		ctx.root.querySelector<HTMLButtonElement>('.xve-btn-primary')!.click();
+		expect(await done).toBe(true);
+		expect(ctx.root.activeElement).toBe(opener);
+	});
 	it('runs an async submit once when OK is clicked twice or Enter is pressed twice', async () => {
 		let release!: (value: string) => void;
 		const submit = vi.fn(() => new Promise<string | undefined>((resolve) => (release = resolve)));

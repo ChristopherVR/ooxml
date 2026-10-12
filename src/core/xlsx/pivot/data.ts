@@ -1,0 +1,84 @@
+import { getCell } from '../cells';
+import { isCellError, type CellValue, type PivotTable, type Workbook } from '../model';
+import { formatRange, quoteSheetName } from '../address';
+import { sparklineDataRange } from '../edit/sparkline-ranges';
+
+export const PIVOT_AGGREGATES = ['sum', 'count', 'average', 'min', 'max'] as const;
+
+/** Reads a rectangular, header-led source, retaining blanks and cached formula values. */
+export function pivotSourceData(
+	workbook: Workbook,
+	sheet: number,
+	source: string,
+): Pick<PivotTable, 'source' | 'fields' | 'records'> {
+	const data = sparklineDataRange(workbook, sheet, source);
+	const ws = workbook.sheets[data.sheet]!;
+	const { start, end } = data.range;
+	if (end.row <= start.row || (end.row - start.row + 1) * (end.col - start.col + 1) > 1_000_000)
+		throw new Error('A PivotTable source needs headers and data, with at most one million cells.');
+	const fields: string[] = [];
+	for (let col = start.col; col <= end.col; col++) {
+		const value = getCell(ws, start.row, col)?.value;
+		if (value === undefined || value === null || isCellError(value) || !String(value).trim())
+			throw new Error('Every PivotTable source column needs a unique, non-empty header.');
+		fields.push(String(value));
+	}
+	if (new Set(fields.map((name) => name.toLowerCase())).size !== fields.length)
+		throw new Error('Every PivotTable source column needs a unique, non-empty header.');
+	const records: CellValue[][] = [];
+	for (let row = start.row + 1; row <= end.row; row++) {
+		const record: CellValue[] = [];
+		for (let col = start.col; col <= end.col; col++)
+			record.push(getCell(ws, row, col)?.value ?? null);
+		records.push(record);
+	}
+	return { source: `${quoteSheetName(ws.name)}!${formatRange(data.range)}`, fields, records };
+}
+
+/** Type tags keep text "1", the number 1, booleans and blanks in distinct groups. */
+export function pivotValueKey(value: CellValue): string {
+	return value === null || value === ''
+		? 'blank'
+		: isCellError(value)
+			? `error:${value.error}`
+			: `${typeof value}:${String(value).toLowerCase()}`;
+}
+
+export function pivotItems(pivot: PivotTable, field: string): CellValue[] {
+	const index = pivot.fields.indexOf(field);
+	const items = new Map<string, CellValue>();
+	for (const record of pivot.records) {
+		const value = record[index] ?? null;
+		const key = pivotValueKey(value);
+		if (!items.has(key)) items.set(key, value);
+	}
+	return [...items.values()].sort((a, b) =>
+		a === null || a === ''
+			? 1
+			: b === null || b === ''
+				? -1
+				: typeof a === 'number' && typeof b === 'number'
+					? a - b
+					: String(a).localeCompare(String(b), 'en', { sensitivity: 'base', numeric: true }),
+	);
+}
+
+export function validatePivotFields(
+	pivot: Pick<PivotTable, 'fields' | 'rowField' | 'columnField' | 'valueField' | 'aggregate'>,
+): void {
+	const used = [
+		pivot.rowField,
+		...(pivot.columnField ? [pivot.columnField] : []),
+		pivot.valueField,
+	];
+	if (
+		!PIVOT_AGGREGATES.includes(pivot.aggregate) ||
+		used.some((field) => !pivot.fields.includes(field)) ||
+		pivot.rowField === pivot.columnField
+	)
+		throw new Error('Choose valid PivotTable fields; row and column fields must differ.');
+}
+
+export function pivotCaption(aggregate: PivotTable['aggregate'], field: string): string {
+	return `${aggregate[0]!.toUpperCase()}${aggregate.slice(1)} of ${field}`;
+}
