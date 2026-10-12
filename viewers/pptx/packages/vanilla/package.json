@@ -103,10 +103,10 @@
 	"dependencies": {
 		"dompurify": "^3.4.16",
 		"fast-xml-parser": "^5.11.2",
-		"html2canvas-pro": "^2.5.1",
+		"html2canvas-pro": "^2.5.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"lucide": "^1.52.0",
+		"lucide": "^1.54.0",
 		"ooxml-core": "^1.8.2",
 		"ooxml-ui": "^1.8.3",
 		"opentype.js": "^2.0.0"

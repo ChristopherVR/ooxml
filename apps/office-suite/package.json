@@ -13,7 +13,7 @@
 		"test:files": "node ../../scripts/suite-files-check.mjs"
 	},
 	"dependencies": {
-		"@tauri-apps/api": "^2.0.0",
+		"@tauri-apps/api": "^2.12.2",
 		"ooxml-core": "workspace:*",
 		"ooxml-ui": "workspace:*",
 		"pptx-vanilla-viewer": "workspace:*"
