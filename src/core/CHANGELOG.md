@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.3) - 2026-10-12
+
+### Bug Fixes
+
+- **xlsx:** Keep hidden records in place when sorting ([#53](https://github.com/ChristopherVR/ooxml/issues/53)) ([d073bec](https://github.com/ChristopherVR/ooxml/commit/d073bec4b4049f523893090fe069d94f28cc1014))
+
+### Testing
+
+- **pptx:** Isolate the raw-key inspector test and widen a perf margin ([e66aaec](https://github.com/ChristopherVR/ooxml/commit/e66aaec24adc0b68472eae1fc42aa4598e09c352))
+
 ## [1.8.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.2) - 2026-10-11
 
 ### Testing
