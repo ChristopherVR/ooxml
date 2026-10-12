@@ -85,6 +85,8 @@ export interface ViewerCanvasAreaProps {
 		findQuery: string;
 		replaceQuery: string;
 		findMatchCase: boolean;
+		findIncludeNotes: boolean;
+		setFindIncludeNotes: (value: boolean) => void;
 		findResults: Array<{
 			slideIndex: number;
 			elementId: string;
@@ -392,6 +394,8 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 					findQuery={findReplace.findQuery}
 					replaceQuery={findReplace.replaceQuery}
 					findMatchCase={findReplace.findMatchCase}
+					findIncludeNotes={findReplace.findIncludeNotes}
+					onSetFindIncludeNotes={findReplace.setFindIncludeNotes}
 					findResults={findReplace.findResults}
 					findResultIndex={findReplace.findResultIndex}
 					onSetFindQuery={findReplace.setFindQuery}

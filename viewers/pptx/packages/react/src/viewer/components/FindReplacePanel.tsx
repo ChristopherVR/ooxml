@@ -13,6 +13,8 @@ export interface FindReplacePanelProps {
 	findQuery: string;
 	replaceQuery: string;
 	findMatchCase: boolean;
+	findIncludeNotes?: boolean;
+	onSetFindIncludeNotes?: (value: boolean) => void;
 	findResults: Array<{
 		slideIndex: number;
 		elementId: string;
@@ -41,6 +43,8 @@ export function FindReplacePanel({
 	findQuery,
 	replaceQuery,
 	findMatchCase,
+	findIncludeNotes = false,
+	onSetFindIncludeNotes,
 	findResults,
 	findResultIndex,
 	onSetFindQuery,
@@ -64,7 +68,7 @@ export function FindReplacePanel({
 	useEffect(() => {
 		onPerformFind();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [findQuery, findMatchCase]);
+	}, [findQuery, findMatchCase, findIncludeNotes]);
 
 	const handleSearchKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -103,6 +107,14 @@ export function FindReplacePanel({
 		<div className='absolute top-2 right-2 z-40 bg-popover border border-border rounded-lg shadow-lg p-3 text-xs text-foreground w-80 backdrop-blur'>
 			{/* Header */}
 			<div className='flex items-center justify-between mb-2'>
+				<label>
+					<input
+						type='checkbox'
+						checked={findIncludeNotes}
+						onChange={(event) => onSetFindIncludeNotes?.(event.target.checked)}
+					/>
+					{t('pptx.findReplace.includeNotes')}
+				</label>
 				<span className='font-semibold text-sm inline-flex items-center gap-1.5'>
 					<LuSearch className={ic} />
 					{t('pptx.findReplace.title')}

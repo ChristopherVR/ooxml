@@ -4,6 +4,11 @@
 	<div class="pptx-ng-sorter-panel" (click)="$event.stopPropagation()">
 		<!-- Header -->
 		<header class="pptx-ng-sorter-header">
+			<pptx-ui-slide-clipboard
+				[labels]="clipboardLabels()"
+				[copyAction]="copySystemSlides() ? copyPackage : undefined"
+				[pasteAction]="canEdit() && pasteSystemSlides() ? pastePackage : undefined"
+			></pptx-ui-slide-clipboard>
 			<h2 class="pptx-ng-sorter-title">{{ 'pptx.slideSorter.title' | translate }}</h2>
 			<span class="pptx-ng-sorter-count">{{
 				'pptx.slideSorter.slideCount' | translate: { count: slides().length }

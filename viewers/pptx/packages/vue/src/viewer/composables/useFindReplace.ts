@@ -21,6 +21,7 @@ export interface UseFindReplaceResult {
 	query: Ref<string>;
 	replacement: Ref<string>;
 	matchCase: Ref<boolean>;
+	includeNotes: Ref<boolean>;
 	matches: ComputedRef<FindResult[]>;
 	matchCount: ComputedRef<number>;
 	currentMatch: Ref<number>;
@@ -55,9 +56,13 @@ export function useFindReplace({
 	const query = ref(''),
 		replacement = ref(''),
 		matchCase = ref(false),
+		includeNotes = ref(false),
 		currentMatch = ref(0),
 		matches = computed<FindResult[]>(() =>
-			findInSlides(slides.value, query.value, { matchCase: matchCase.value }),
+			findInSlides(slides.value, query.value, {
+				matchCase: matchCase.value,
+				includeNotes: includeNotes.value,
+			}),
 		),
 		matchCount = computed(() => matches.value.length);
 
@@ -127,6 +132,7 @@ export function useFindReplace({
 		query,
 		replacement,
 		matchCase,
+		includeNotes,
 		matches,
 		matchCount,
 		currentMatch,

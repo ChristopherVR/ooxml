@@ -1771,3 +1771,4 @@ export * from './slide-sorter-state';
 
 export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
+export * from './slide-package-clipboard';

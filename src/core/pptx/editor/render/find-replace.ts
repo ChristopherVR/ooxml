@@ -5,8 +5,9 @@
  * framework imports, so this is safe to use in web workers or server-side code.
  */
 
-import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
-import { hasTextProperties } from 'ooxml-core/pptx';
+import type { PptxSlide } from '../../index';
+import { findSlideTextTargets, isFindBreak, replaceFindRuns } from './find-text-targets';
+import { replaceFindTarget } from './find-replace-target';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -24,12 +25,24 @@ export interface FindResult {
 	startOffset: number;
 	/** Number of characters matched (equals `query.length`). */
 	length: number;
+	/** Child indexes inside the selected top-level group, when the match is nested. */
+	elementPath?: number[];
+	/** Table-cell coordinates, when the match belongs to a table. */
+	tableCell?: { rowIndex: number; colIndex: number };
+	/** Data-model node id, when the match belongs to SmartArt. */
+	smartArtNodeId?: string;
+	/** Offset within this object's run stream, used to resolve overlapping replacements. */
+	textOffset?: number;
+	/** Speaker-note body match, rather than a canvas element. */
+	notes?: boolean;
 }
 
 /** Options passed to search and replace helpers. */
 export interface FindOptions {
 	/** When `true`, the search is case-sensitive. Defaults to `false`. */
 	matchCase?: boolean;
+	/** Search speaker notes as well as editable slide text. */
+	includeNotes?: boolean;
 }
 
 /** Result returned by {@link replaceInSlides} and {@link replaceMatch}. */
@@ -47,9 +60,8 @@ export interface ReplaceResult {
 /**
  * Search all slides for occurrences of `query` at segment-level precision.
  *
- * - Only elements that pass `hasTextProperties` (text / shape / connector) are
- *   searched; tables, smartArt, and groups are skipped (they have no
- *   `textSegments`).
+ * - Searches shape text, table cells and SmartArt nodes, including nested groups.
+ * - Formatting boundaries do not split a match; explicit paragraph/line markers do.
  * - Overlapping matches are counted (search advances by 1 character after each
  *   hit, not by `query.length`).
  * - Returns an empty array when `query` is empty.
@@ -63,37 +75,48 @@ export function findInSlides(
 		return [];
 	}
 
-	const matchCase = opts.matchCase ?? false;
-	const normalised = matchCase ? query : query.toLowerCase();
+	const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const pattern = new RegExp(`(?=(${escaped}))`, opts.matchCase ? 'gu' : 'giu');
 	const results: FindResult[] = [];
 
 	for (let slideIndex = 0; slideIndex < slides.length; slideIndex++) {
 		const slide = slides[slideIndex];
-		for (const element of slide.elements) {
-			if (!hasTextProperties(element)) {
-				continue;
-			}
-			const segments = element.textSegments ?? [];
-			for (let segIndex = 0; segIndex < segments.length; segIndex++) {
-				const raw = segments[segIndex].text ?? '';
-				const haystack = matchCase ? raw : raw.toLowerCase();
-				let offset = 0;
-				while (offset < haystack.length) {
-					const pos = haystack.indexOf(normalised, offset);
-					if (pos === -1) {
-						break;
-					}
-					results.push({
-						slideIndex,
-						elementId: element.id,
-						segmentIndex: segIndex,
-						startOffset: pos,
-						length: query.length,
-					});
-					// Advance by 1 to allow overlapping matches.
-					offset = pos + 1;
+		for (const { runs, ...target } of findSlideTextTargets(slide, opts.includeNotes)) {
+			let text = '',
+				totalOffset = 0,
+				regionOffset = 0;
+			let positions: { index: number; offset: number; length: number }[] = [];
+			const flush = () => {
+				for (const match of text.matchAll(pattern)) {
+					const pos = match.index!;
+					const run = positions.find(
+						(position) => pos >= position.offset && pos < position.offset + position.length,
+					);
+					if (run)
+						results.push({
+							...target,
+							slideIndex,
+							segmentIndex: run.index,
+							startOffset: pos - run.offset,
+							length: match[1]!.length,
+							textOffset: regionOffset + pos,
+						});
 				}
+				text = '';
+				positions = [];
+			};
+			for (const [index, run] of runs.entries()) {
+				if (isFindBreak(run)) {
+					flush();
+					totalOffset++;
+					regionOffset = totalOffset;
+					continue;
+				}
+				positions.push({ index, offset: text.length, length: run.text.length });
+				text += run.text;
+				totalOffset += run.text.length;
 			}
+			flush();
 		}
 	}
 
@@ -118,10 +141,17 @@ export function applyFindReplacements(
 		return { slides, replacements: 0 };
 	}
 
-	// Group matches by slide + element + segment so we can sort-and-apply per group.
+	// Group by text object, rather than by run: a match can span several runs.
 	const grouped = new Map<string, FindResult[]>();
 	for (const match of toReplace) {
-		const key = `${match.slideIndex}::${match.elementId}::${match.segmentIndex}`;
+		const key = JSON.stringify([
+			match.slideIndex,
+			match.elementId,
+			match.elementPath,
+			match.tableCell,
+			match.smartArtNodeId,
+			match.notes,
+		]);
 		let bucket = grouped.get(key);
 		if (!bucket) {
 			bucket = [];
@@ -136,7 +166,10 @@ export function applyFindReplacements(
 
 	for (const [, matches] of grouped) {
 		// Sort descending by startOffset so slice indices stay valid.
-		const sorted = matches.slice().sort((a, b) => b.startOffset - a.startOffset);
+		const sorted = matches
+			.slice()
+			.sort((a, b) => b.segmentIndex - a.segmentIndex || b.startOffset - a.startOffset);
+		let lastOffset = Infinity;
 
 		for (const match of sorted) {
 			const slide = nextSlides[match.slideIndex];
@@ -144,39 +177,43 @@ export function applyFindReplacements(
 				continue;
 			}
 
+			if (match.notes) {
+				if (match.textOffset !== undefined && match.textOffset + match.length > lastOffset)
+					continue;
+				const runs =
+					slide.notesSegments?.length &&
+					slide.notesSegments.map((run) => run.text).join('') === slide.notes
+						? slide.notesSegments
+						: [{ text: slide.notes ?? '', style: {} }];
+				const updated = replaceFindRuns(
+					runs,
+					match.segmentIndex,
+					match.startOffset,
+					match.length,
+					replacement,
+				);
+				if (!updated) continue;
+				nextSlides[match.slideIndex] = {
+					...slide,
+					notes: updated.map((run) => run.text).join(''),
+					notesSegments: updated,
+				};
+				if (match.textOffset !== undefined) lastOffset = match.textOffset;
+				totalReplacements++;
+				continue;
+			}
 			const elIdx = slide.elements.findIndex((e) => e.id === match.elementId);
 			if (elIdx === -1) {
 				continue;
 			}
 
-			const element = slide.elements[elIdx];
-			if (!hasTextProperties(element)) {
-				continue;
-			}
-
-			const segments = element.textSegments ?? [];
-			const seg = segments[match.segmentIndex];
-			if (!seg) {
-				continue;
-			}
-
-			// Splice the replacement into the segment text.
-			const before = seg.text.slice(0, match.startOffset);
-			const after = seg.text.slice(match.startOffset + match.length);
-			const newSegText = before + replacement + after;
-
-			const nextSegments = segments.slice();
-			nextSegments[match.segmentIndex] = { ...seg, text: newSegText };
-
-			// Rebuild the concatenated top-level `text` field.
-			const nextText = nextSegments.map((s) => s.text).join('');
-
+			if (match.textOffset !== undefined && match.textOffset + match.length > lastOffset) continue;
+			const element = slide.elements[elIdx]!;
+			const updated = replaceFindTarget(element, match, replacement);
+			if (updated === element) continue;
+			if (match.textOffset !== undefined) lastOffset = match.textOffset;
 			const nextElements = slide.elements.slice();
-			nextElements[elIdx] = {
-				...element,
-				text: nextText,
-				textSegments: nextSegments,
-			} as PptxElement;
+			nextElements[elIdx] = updated;
 
 			nextSlides[match.slideIndex] = { ...slide, elements: nextElements };
 			totalReplacements++;

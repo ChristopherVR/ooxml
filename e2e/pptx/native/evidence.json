@@ -1,0 +1,524 @@
+{
+    "officeVersion":  "16.0",
+    "cases":  [
+                  {
+                      "variant":  "standard",
+                      "slideCount":  2,
+                      "file":  "source.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Private unselected slide"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  2
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "standard",
+                      "slideCount":  2,
+                      "file":  "destination.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  0,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "1",
+                                                           "bold":  0
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "2",
+                                                           "bold":  0
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  2
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "standard",
+                      "slideCount":  1,
+                      "file":  "clipboard.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  1
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "standard",
+                      "slideCount":  3,
+                      "file":  "imported.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  258,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  2
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  3
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "standard",
+                      "slideCount":  3,
+                      "file":  "core-resaved.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  258,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  2
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  3
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "standard",
+                      "slideCount":  3,
+                      "file":  "native-resaved.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  258,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  2
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  3
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "boundary-names",
+                      "slideCount":  2,
+                      "file":  "source.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Private unselected slide"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  2
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "boundary-names",
+                      "slideCount":  2,
+                      "file":  "destination.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  2147483647,
+                                         "pictures":  0,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "1",
+                                                           "bold":  0
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "2",
+                                                           "bold":  0
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  2
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "boundary-names",
+                      "slideCount":  1,
+                      "file":  "clipboard.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  1
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "boundary-names",
+                      "slideCount":  3,
+                      "file":  "imported.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  2147483647,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  2
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  3
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "boundary-names",
+                      "slideCount":  3,
+                      "file":  "core-resaved.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  2147483647,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  2
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  3
+                                     }
+                                 ]
+                  },
+                  {
+                      "variant":  "boundary-names",
+                      "slideCount":  3,
+                      "file":  "native-resaved.pptx",
+                      "slides":  [
+                                     {
+                                         "id":  2147483647,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination first"
+                                                   ],
+                                         "colors":  [
+                                                        3351057
+                                                    ],
+                                         "index":  1
+                                     },
+                                     {
+                                         "id":  256,
+                                         "pictures":  1,
+                                         "notes":  [
+                                                       {
+                                                           "text":  "Source rich speaker notes",
+                                                           "bold":  -1
+                                                       }
+                                                   ],
+                                         "texts":  [
+                                                       "Source copied"
+                                                   ],
+                                         "colors":  [
+                                                        15715755
+                                                    ],
+                                         "index":  2
+                                     },
+                                     {
+                                         "id":  257,
+                                         "pictures":  0,
+                                         "notes":  [
+
+                                                   ],
+                                         "texts":  [
+                                                       "Destination last"
+                                                   ],
+                                         "colors":  [
+                                                        0
+                                                    ],
+                                         "index":  3
+                                     }
+                                 ]
+                  }
+              ],
+    "checkedAtUtc":  "2026-10-12T04:29:21.5036810Z"
+}

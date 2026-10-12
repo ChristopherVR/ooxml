@@ -46,11 +46,16 @@ export function createFindReplacePanel(
 	matchCaseInput.setAttribute('aria-label', t('pptx.findReplace.toggleMatchCase'));
 	matchCaseLabel.append(matchCaseInput, doc.createTextNode(t('pptx.findReplace.matchCase')));
 
+	const notesLabel = createEl(doc, 'label', 'pptxv-findreplace-checkbox');
+	const notesInput = createInspectorCheckbox(doc);
+	notesInput.setAttribute('aria-label', t('pptx.findReplace.includeNotes'));
+	notesLabel.append(notesInput, doc.createTextNode(t('pptx.findReplace.includeNotes')));
+
 	const status = createEl(doc, 'span', 'pptxv-findreplace-status');
 	status.setAttribute('aria-live', 'polite');
 
 	const runFind = (): void => {
-		const count = actions.search(queryInput.value, matchCaseInput.checked);
+		const count = actions.search(queryInput.value, matchCaseInput.checked, notesInput.checked);
 		status.textContent =
 			count > 0
 				? t('pptx.findReplace.matchCount', { current: 1, total: count })
@@ -66,7 +71,12 @@ export function createFindReplacePanel(
 		label: t('pptx.findReplace.replaceCurrent'),
 		text: t('pptx.findReplace.replace'),
 		onClick: () => {
-			actions.replaceCurrent(queryInput.value, replaceInput.value, matchCaseInput.checked);
+			actions.replaceCurrent(
+				queryInput.value,
+				replaceInput.value,
+				matchCaseInput.checked,
+				notesInput.checked,
+			);
 			runFind();
 		},
 	});
@@ -74,7 +84,12 @@ export function createFindReplacePanel(
 		label: t('pptx.findReplace.replaceAllMatches'),
 		text: t('pptx.findReplace.replaceAll'),
 		onClick: () => {
-			actions.replaceAll(queryInput.value, replaceInput.value, matchCaseInput.checked);
+			actions.replaceAll(
+				queryInput.value,
+				replaceInput.value,
+				matchCaseInput.checked,
+				notesInput.checked,
+			);
 			runFind();
 		},
 	});
@@ -85,6 +100,7 @@ export function createFindReplacePanel(
 	});
 
 	queryInput.addEventListener('input', runFind);
+	notesInput.addEventListener('change', runFind);
 	// Deliberately NOT a blanket `stopPropagation()`. The shared `mapEditorKey`
 	// already gates on `isEditorTextInputTarget`, and it places `find` and
 	// `Escape` ABOVE those gates on purpose, so swallowing every keydown here
@@ -102,6 +118,7 @@ export function createFindReplacePanel(
 		queryInput,
 		replaceInput,
 		matchCaseLabel,
+		notesLabel,
 		findBtn.btn,
 		replaceBtn.btn,
 		replaceAllBtn.btn,

@@ -15,11 +15,21 @@ import type { EditorOps } from './editor-operations';
  */
 export interface FindReplaceActions {
 	/** Count occurrences of `query` across all slides (does not mutate). */
-	search(query: string, matchCase: boolean): number;
+	search(query: string, matchCase: boolean, includeNotes?: boolean): number;
 	/** Replace the first match of `query`; returns the number replaced (0 or 1). */
-	replaceCurrent(query: string, replacement: string, matchCase: boolean): number;
+	replaceCurrent(
+		query: string,
+		replacement: string,
+		matchCase: boolean,
+		includeNotes?: boolean,
+	): number;
 	/** Replace every match of `query`; returns the number replaced. */
-	replaceAll(query: string, replacement: string, matchCase: boolean): number;
+	replaceAll(
+		query: string,
+		replacement: string,
+		matchCase: boolean,
+		includeNotes?: boolean,
+	): number;
 }
 
 export interface FindReplaceActionsDeps {
@@ -40,31 +50,32 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 	};
 
 	return {
-		search(query, matchCase) {
+		search(query, matchCase, includeNotes) {
 			if (!query) {
 				return 0;
 			}
-			return findInSlides(store.get().slides, query, { matchCase }).length;
+			return findInSlides(store.get().slides, query, { matchCase, includeNotes }).length;
 		},
 
-		replaceCurrent(query, replacement, matchCase) {
+		replaceCurrent(query, replacement, matchCase, includeNotes) {
 			const state = store.get();
 			if (!state.editable || !query) {
 				return 0;
 			}
-			const results = findInSlides(state.slides, query, { matchCase });
+			const results = findInSlides(state.slides, query, { matchCase, includeNotes });
 			const { slides, replacements } = replaceMatch(state.slides, results, 0, replacement);
 			commitReplace(slides, replacements);
 			return replacements;
 		},
 
-		replaceAll(query, replacement, matchCase) {
+		replaceAll(query, replacement, matchCase, includeNotes) {
 			const state = store.get();
 			if (!state.editable || !query) {
 				return 0;
 			}
 			const { slides, replacements } = replaceInSlides(state.slides, query, replacement, {
 				matchCase,
+				includeNotes,
 			});
 			commitReplace(slides, replacements);
 			return replacements;

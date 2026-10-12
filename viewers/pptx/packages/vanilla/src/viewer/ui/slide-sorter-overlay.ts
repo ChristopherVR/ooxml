@@ -10,9 +10,11 @@ import {
 	sorterSelectionIndexes,
 	sorterMenuContext,
 	sorterGridColumns,
+	slideClipboardLabels,
+	sorterPasteInsertAt,
 } from 'ooxml-ui/pptx';
-import type { SlideSorterState, SlideSorterKeyActionName } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { SlideSorterState, SlideSorterKeyActionName, SlidePasteRequest } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
@@ -20,11 +22,18 @@ import { openSlideSorterContextMenu } from './slide-sorter-context-menu';
 
 export interface SlideSorterOptions {
 	slides: readonly PptxSlide[];
+	clipboardTemplates?: Record<string, PptxElement[]>;
 	current: number;
+	renderSlide?(slide: PptxSlide, scale: number): HTMLElement;
 	onSelect(index: number): void;
 	onReorder(from: number, to: number): void;
 	onDelete(index: number): void;
 	onDuplicate(index: number): void;
+	onPaste?(request: SlidePasteRequest): void;
+	onCopySystem?(indexes: number[]): Promise<void>;
+	onPasteSystem?(insertAt: number): Promise<void>;
+	onUndo?(): void;
+	onRedo?(): void;
 	onToggleHidden(index: number): void;
 	/** Whether the host allows edits; gates the deck-writing shortcuts. */
 	canEdit?: boolean;
@@ -55,7 +64,25 @@ export function openSlideSorterOverlay(
 	close.type = 'button';
 	close.textContent = '×';
 	close.setAttribute('aria-label', t('pptx.slideSorter.close'));
-	header.append(title, count, close);
+	const clipboardControl = doc.createElement(
+		'pptx-ui-slide-clipboard',
+	) as import('ooxml-ui/pptx').PptxUiSlideClipboardElement;
+	clipboardControl.labels = slideClipboardLabels(t);
+	clipboardControl.copyAction = options.onCopySystem
+		? () => options.onCopySystem!(sorterSelectionIndexes(sorter, options.slides))
+		: undefined;
+	clipboardControl.pasteAction =
+		options.canEdit !== false && options.onPasteSystem
+			? () =>
+					options.onPasteSystem!(
+						sorterPasteInsertAt(
+							sorterSelectionIndexes(sorter, options.slides),
+							options.current,
+							options.slides.length,
+						),
+					)
+			: undefined;
+	header.append(title, count, clipboardControl, close);
 	overlay.appendChild(header);
 	const grid = createEl(doc, 'div', 'pptxv-sorter-grid');
 
@@ -82,10 +109,20 @@ export function openSlideSorterOverlay(
 		});
 	};
 	const runAction = (action: SlideSorterKeyActionName | 'toggle-hidden'): void => {
-		const result = applySorterAction(sorter, options.slides, action, options.current);
+		const result = applySorterAction(
+			sorter,
+			options.slides,
+			action,
+			options.current,
+			options.slides,
+			options.clipboardTemplates,
+		);
 		sorter = result.state;
 		clipboard.ids = sorter.clipboardIds;
 		clipboard.state = sorter;
+		if (result.paste) {
+			options.onPaste?.(result.paste);
+		}
 		if (result.close) {
 			dismiss();
 		}
@@ -133,6 +170,9 @@ export function openSlideSorterOverlay(
 		const num = createEl(doc, 'span', 'pptxv-sorter-num');
 		num.textContent = String(index + 1);
 		preview.appendChild(num);
+		if (options.renderSlide) {
+			preview.appendChild(options.renderSlide(slide, 0.2));
+		}
 		preview.setAttribute('aria-label', t('pptx.compare.slideNumber', { number: index + 1 }));
 		const cue = hiddenSlideCue(slide.hidden, 'sorter', index);
 		if (cue.marker && cue.labelId) {
@@ -169,13 +209,34 @@ export function openSlideSorterOverlay(
 
 	const dismiss = (): void => {
 		closeMenu?.();
-		doc.removeEventListener('keydown', onKeyDown);
+		doc.removeEventListener('keydown', onKeyDown, true);
 		overlay.remove();
 	};
 	const onKeyDown = (event: KeyboardEvent): void => {
 		if (!overlay.isConnected) {
-			doc.removeEventListener('keydown', onKeyDown);
+			doc.removeEventListener('keydown', onKeyDown, true);
 			return;
+		}
+		if (
+			!isEditorTextInputTarget(event.target) &&
+			(event.ctrlKey || event.metaKey) &&
+			!event.altKey
+		) {
+			const key = event.key.toLowerCase();
+			const historyAction =
+				key === 'z'
+					? event.shiftKey
+						? options.onRedo
+						: options.onUndo
+					: key === 'y'
+						? options.onRedo
+						: undefined;
+			if (historyAction) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				historyAction();
+				return;
+			}
 		}
 		const { action } = mapSlideSorterKey(event, {
 			canEdit: options.canEdit !== false,
@@ -190,7 +251,7 @@ export function openSlideSorterOverlay(
 		event.stopPropagation();
 		runAction(action);
 	};
-	doc.addEventListener('keydown', onKeyDown);
+	doc.addEventListener('keydown', onKeyDown, true);
 
 	const zoom = createEl(doc, 'input');
 	zoom.type = 'range';
@@ -207,4 +268,6 @@ export function openSlideSorterOverlay(
 	refreshSelection();
 	close.addEventListener('click', dismiss);
 	host.appendChild(overlay);
+	overlay.tabIndex = -1;
+	overlay.focus();
 }

@@ -5,9 +5,9 @@ import {
 	sorterSelectionIndexes,
 	selectSorterSlide,
 	sorterGridColumns,
-	slideSorterPasteIndexes,
 } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { SlidePasteRequest } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 
@@ -17,6 +17,7 @@ import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 
 interface UseSlideSorterStateParams {
 	slides: PptxSlide[];
+	templateElementsBySlideId?: Record<string, PptxElement[]>;
 	activeSlideIndex: number;
 	canEdit: boolean;
 	sectionGroups: SlideSectionGroup[];
@@ -24,6 +25,7 @@ interface UseSlideSorterStateParams {
 	onMoveSlide: (fromIndex: number, toIndex: number) => void;
 	onDeleteSlides: (indexes: number[]) => void;
 	onDuplicateSlides: (indexes: number[]) => void;
+	onPasteSlides: (request: SlidePasteRequest) => void;
 	onToggleHideSlides: (indexes: number[]) => void;
 	onClose: () => void;
 }
@@ -32,6 +34,7 @@ interface UseSlideSorterStateParams {
 export function useSlideSorterState(params: UseSlideSorterStateParams) {
 	const {
 		slides,
+		templateElementsBySlideId,
 		activeSlideIndex,
 		canEdit,
 		sectionGroups,
@@ -39,6 +42,7 @@ export function useSlideSorterState(params: UseSlideSorterStateParams) {
 		onMoveSlide,
 		onDeleteSlides,
 		onDuplicateSlides,
+		onPasteSlides,
 		onToggleHideSlides,
 		onClose,
 	} = params;
@@ -126,23 +130,31 @@ export function useSlideSorterState(params: UseSlideSorterStateParams) {
 	}, [selectedIndexes, onDuplicateSlides, closeContextMenu]);
 
 	const handleCopySelected = useCallback(() => {
-		setSorter((previous) => ({
-			...previous,
-			clipboardIds: sorterSelectionIndexes(previous, slides).map((i) => slides[i].id),
-		}));
+		setSorter(
+			(previous) =>
+				applySorterAction(
+					previous,
+					slides,
+					'copy',
+					activeSlideIndex,
+					slides,
+					templateElementsBySlideId,
+				).state,
+		);
 		closeContextMenu();
-	}, [slides, closeContextMenu]);
+	}, [slides, activeSlideIndex, templateElementsBySlideId, closeContextMenu]);
 
 	const handlePaste = useCallback(() => {
 		if (clipboardSlideIds.length === 0) {
 			return;
 		}
-		const indexes = slideSorterPasteIndexes(clipboardSlideIds, slides);
-		if (indexes.length > 0) {
-			onDuplicateSlides(indexes);
+		const result = applySorterAction(sorter, slides, 'paste', activeSlideIndex);
+		if (result.paste) {
+			onPasteSlides(result.paste);
+			setSorter(result.state);
 		}
 		closeContextMenu();
-	}, [clipboardSlideIds, slides, onDuplicateSlides, closeContextMenu]);
+	}, [clipboardSlideIds, sorter, slides, activeSlideIndex, onPasteSlides, closeContextMenu]);
 
 	const handleToggleHideSelected = useCallback(() => {
 		if (selectedIndexes.length === 0) {

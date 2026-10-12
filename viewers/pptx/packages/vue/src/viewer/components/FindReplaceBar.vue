@@ -20,6 +20,7 @@ const { t } = useI18n();
 
 const query = defineModel<string>('query', { default: '' });
 const replacement = defineModel<string>('replacement', { default: '' });
+const includeNotes = defineModel<boolean>('includeNotes', { default: false });
 const matchCase = defineModel<boolean>('matchCase', { default: false });
 
 const emit = defineEmits<{
@@ -54,6 +55,11 @@ const FR_BTN =
 		role="search"
 	>
 		<div class="pptx-vue-fr-row flex items-center gap-1.5">
+			<label
+				><input type="checkbox" v-model="includeNotes" />{{
+					t('pptx.findReplace.includeNotes')
+				}}</label
+			>
 			<input
 				v-model="query"
 				type="text"

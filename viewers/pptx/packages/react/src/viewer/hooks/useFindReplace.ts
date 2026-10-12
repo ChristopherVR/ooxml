@@ -30,6 +30,8 @@ interface UseFindReplaceResult {
 	replaceQuery: string;
 	setReplaceQuery: (query: string) => void;
 	findMatchCase: boolean;
+	findIncludeNotes: boolean;
+	setFindIncludeNotes: (value: boolean) => void;
 	setFindMatchCase: (matchCase: boolean) => void;
 	findResults: FindResult[];
 	findResultIndex: number;
@@ -60,6 +62,7 @@ export function useFindReplace({
 	const [findQuery, setFindQuery] = useState('');
 	const [replaceQuery, setReplaceQuery] = useState('');
 	const [findMatchCase, setFindMatchCase] = useState(false);
+	const [findIncludeNotes, setFindIncludeNotes] = useState(false);
 	const [findResults, setFindResults] = useState<FindResult[]>([]);
 	const [findResultIndex, setFindResultIndex] = useState(-1);
 	/** Set by a replace so the search re-runs once the replaced slides land. */
@@ -79,7 +82,10 @@ export function useFindReplace({
 
 	// ── Search ────────────────────────────────────────────────────────────
 	const performFind = useCallback(() => {
-		const results = findInSlides(slides, findQuery, { matchCase: findMatchCase });
+		const results = findInSlides(slides, findQuery, {
+			matchCase: findMatchCase,
+			includeNotes: findIncludeNotes,
+		});
 
 		if (!findQuery) {
 			setFindResults([]);
@@ -95,7 +101,14 @@ export function useFindReplace({
 			onSetActiveSlideIndex(results[0].slideIndex);
 			onSetSelectedElementId(results[0].elementId);
 		}
-	}, [slides, findQuery, findMatchCase, onSetActiveSlideIndex, onSetSelectedElementId]);
+	}, [
+		slides,
+		findQuery,
+		findMatchCase,
+		findIncludeNotes,
+		onSetActiveSlideIndex,
+		onSetSelectedElementId,
+	]);
 
 	// ── Navigate results ──────────────────────────────────────────────────
 	const navigateFindResult = useCallback(
@@ -200,6 +213,8 @@ export function useFindReplace({
 		setReplaceQuery,
 		findMatchCase,
 		setFindMatchCase,
+		findIncludeNotes,
+		setFindIncludeNotes,
 		findResults,
 		findResultIndex,
 		performFind,

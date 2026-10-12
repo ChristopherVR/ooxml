@@ -138,9 +138,11 @@ describe('vanilla section header menu', () => {
 describe('vanilla slide sorter menu', () => {
 	function openSorter(): {
 		onDuplicate: ReturnType<typeof vi.fn>;
+		onPaste: ReturnType<typeof vi.fn>;
 		onToggleHidden: ReturnType<typeof vi.fn>;
 	} {
 		const onDuplicate = vi.fn();
+		const onPaste = vi.fn();
 		const onToggleHidden = vi.fn();
 		openSlideSorterOverlay(document, document.body, t, {
 			slides: slides(3),
@@ -149,12 +151,44 @@ describe('vanilla slide sorter menu', () => {
 			onReorder: vi.fn(),
 			onDelete: vi.fn(),
 			onDuplicate,
+			onPaste,
 			onToggleHidden,
 		});
-		return { onDuplicate, onToggleHidden };
+		return { onDuplicate, onPaste, onToggleHidden };
 	}
 	const tile = (index: number): Element =>
 		document.querySelectorAll('[data-pptx-chrome="sorter-tile"]')[index];
+
+	it('owns undo and redo before the editor and ignores text inputs', () => {
+		const onUndo = vi.fn(),
+			onRedo = vi.fn(),
+			editorKey = vi.fn();
+		openSlideSorterOverlay(document, document.body, t, {
+			slides: slides(3),
+			current: 0,
+			onSelect: vi.fn(),
+			onReorder: vi.fn(),
+			onDelete: vi.fn(),
+			onDuplicate: vi.fn(),
+			onToggleHidden: vi.fn(),
+			onUndo,
+			onRedo,
+		});
+		const overlay = document.querySelector<HTMLElement>('[data-pptx-slide-sorter]')!;
+		expect(document.activeElement).toBe(overlay);
+		overlay.addEventListener('keydown', editorKey);
+		overlay.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+		overlay.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'z', metaKey: true, shiftKey: true, bubbles: true }),
+		);
+		expect(onUndo).toHaveBeenCalledOnce();
+		expect(onRedo).toHaveBeenCalledOnce();
+		expect(editorKey).not.toHaveBeenCalled();
+		const input = document.createElement('input');
+		overlay.append(input);
+		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+		expect(onUndo).toHaveBeenCalledOnce();
+	});
 
 	it('offers the shared list, with no inline per-card buttons', () => {
 		openSorter();
@@ -169,13 +203,16 @@ describe('vanilla slide sorter menu', () => {
 	});
 
 	it('offers Paste only after Copy and pastes a copy of the copied slide', () => {
-		const { onDuplicate } = openSorter();
+		const { onDuplicate, onPaste } = openSorter();
 		rightClick(tile(1));
 		item('Copy').click();
 		rightClick(tile(1));
 		expect(menuItems().map((candidate) => candidate.textContent)).toContain('Paste');
 		item('Paste').click();
-		expect(onDuplicate).toHaveBeenCalledWith(1);
+		expect(onDuplicate).not.toHaveBeenCalled();
+		expect(onPaste).toHaveBeenCalledWith(
+			expect.objectContaining({ insertAt: 2, sourceIds: [slides(3)[1]!.id] }),
+		);
 	});
 
 	it('toggles Hide and Show on the slide state', () => {

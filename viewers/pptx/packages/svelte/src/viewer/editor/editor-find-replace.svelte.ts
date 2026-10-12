@@ -22,6 +22,7 @@ export class FindReplaceState {
 	query = $state('');
 	replacement = $state('');
 	matchCase = $state(false);
+	includeNotes = $state(false);
 	results = $state.raw<FindResult[]>([]);
 	index = $state(0);
 
@@ -53,7 +54,10 @@ export class FindReplaceState {
 	/** Re-run the search from the current query/matchCase and jump to the first match. */
 	search(): void {
 		this.results = this.query
-			? findInSlides(this.#deps.getSlides(), this.query, { matchCase: this.matchCase })
+			? findInSlides(this.#deps.getSlides(), this.query, {
+					matchCase: this.matchCase,
+					includeNotes: this.includeNotes,
+				})
 			: [];
 		this.index = 0;
 		this.#navigateCurrent();
@@ -99,6 +103,7 @@ export class FindReplaceState {
 		}
 		const result = replaceInSlides(this.#deps.getSlides(), this.query, this.replacement, {
 			matchCase: this.matchCase,
+			includeNotes: this.includeNotes,
 		});
 		this.#deps.commitSlides([...result.slides]);
 		this.search();

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { createSlidePackageClipboard } from 'ooxml-ui/pptx';
 	import type { PptxSlide } from 'pptx-viewer-core';
 	import { resolveAuthoredCustomShowId, shouldShowAutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 	import type { CanvasSize, ThemeCatalogEntry } from 'ooxml-ui/pptx';
@@ -92,6 +94,18 @@
 	}
 	// Host-removed dialogs never open, whatever path set their flag.
 	const customization = useViewerCustomization();
+	const slidePackageClipboard = createSlidePackageClipboard({
+		getSnapshot: () => { const handler = editor.getHandler(); return handler ? { handler, slides: editor.slides, templateElementsBySlideId: editor.templateElementsBySlideId, editable: editor.editable, allowExternalImages: optionsState.options.trust.allowExternalContent } : null; },
+		commit: result => {
+			editor.commitSlides(result.slides, 'Paste slides');
+			editor.adoptHandler(result.handler, true, result.data);
+			editor.templateElementsBySlideId = result.templateElementsBySlideId;
+			editor.slideMasters = result.data.slideMasters ?? [];
+			for (const [path, url] of result.mediaUrls) mediaDataUrls.set(path, url);
+			onselectslide(result.insertAt);
+		},
+	});
+	onDestroy(() => slidePackageClipboard.dispose());
 </script>
 
 {#if ui.setupSlideShowOpen}<SetUpSlideShowDialog properties={editor.presentationProperties} customShows={editor.customShows} slideCount={slides.length} onclose={() => (ui.setupSlideShowOpen = false)} onsave={(next) => { editor.presentationMetadata.updatePresentationProperties(next); ui.activeCustomShowId = resolveAuthoredCustomShowId(next, editor.customShows) ?? null; }} />{/if}
@@ -103,7 +117,7 @@
 <RehearseTimings rehearse={ui.rehearse} onsave={() => ui.rehearse.save(editor)} ondiscard={() => ui.rehearse.discard()} />
 {#if ui.customShowsOpen}<CustomShowsDialog shows={editor.customShows} slides={editor.slides} activeShowId={ui.activeCustomShowId} onclose={() => (ui.customShowsOpen = false)} onsave={(shows) => editor.presentationMetadata.updateCustomShows(shows)} onsetactive={(id) => (ui.activeCustomShowId = id)} />{/if}
 {#if ui.selectionPaneOpen}<SelectionPane {editor} onclose={() => (ui.selectionPaneOpen = false)} />{/if}
-{#if ui.slideSorterOpen}<SlideSorterOverlay {slides} {canvasSize} {mediaDataUrls} {current} canEdit={editor.editable} onselect={onselectslide} onmove={onmoveslide} ondelete={(index) => navigateAfterSlideOp(editor.slidesOps.deleteSlideAtIndex(index))} onduplicate={(index) => navigateAfterSlideOp(editor.slidesOps.duplicateSlideAtIndex(index))} ontogglehidden={(index) => editor.slidesOps.toggleSlideHidden(index)} onclose={() => (ui.slideSorterOpen = false)} />{/if}
+{#if ui.slideSorterOpen}<SlideSorterOverlay {slides} clipboardSourceSlides={editor.slides} clipboardTemplates={editor.templateElementsBySlideId} {canvasSize} {mediaDataUrls} {current} canEdit={editor.editable} onselect={onselectslide} onmove={onmoveslide} ondelete={(index) => navigateAfterSlideOp(editor.slidesOps.deleteSlideAtIndex(index))} onduplicate={(index) => navigateAfterSlideOp(editor.slidesOps.duplicateSlideAtIndex(index))} oncopysystem={(indexes) => slidePackageClipboard.copy(indexes)} onpastesystem={(insertAt) => slidePackageClipboard.paste(insertAt)} onpaste={(request) => navigateAfterSlideOp(editor.slidesOps.pasteSlides(request))} ontogglehidden={(index) => editor.slidesOps.toggleSlideHidden(index)} onclose={() => (ui.slideSorterOpen = false)} />{/if}
 {#if ui.outlineViewOpen}<OutlineViewOverlay slides={editor.slides} {canvasSize} canEdit={editor.editable} oncommit={(next) => editor.commitSlides(next)} onactiveslide={onselectslide} onclose={() => (ui.outlineViewOpen = false)} />{/if}
 {#if ui.readingViewOpen}<ReadingViewOverlay {slides} {canvasSize} {mediaDataUrls} activeSlideIndex={current} onexit={(index) => { ui.readingViewOpen = false; onselectslide(index); }} />{/if}
 <!-- A running show has no editor chrome, and this prompt is modal: left mounted

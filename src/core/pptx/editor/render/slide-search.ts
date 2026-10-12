@@ -41,7 +41,7 @@ function collectSmartArtNodeText(node: PptxSmartArtNode): string {
 /**
  * Collect all visible text from a single {@link PptxElement}.
  *
- * - `text` / `shape` / `connector`: flat `text` field + `textSegments[].text`.
+ * - `text` / `shape` / `connector`: rich `textSegments[].text`, with a plain `text` fallback.
  * - `table`: iterates `tableData.rows[].cells[].text`.
  * - `smartArt`: recursively collects `smartArtData.nodes[].text`.
  * - `group`: recurses into `children`.
@@ -51,16 +51,10 @@ export function collectElementText(element: PptxElement): string {
 	const parts: string[] = [];
 
 	if (element.type === 'text' || element.type === 'shape' || element.type === 'connector') {
-		if (element.text) {
-			parts.push(element.text);
-		}
-		if (element.textSegments) {
-			for (const seg of element.textSegments) {
-				if (seg.text) {
-					parts.push(seg.text);
-				}
-			}
-		}
+		const text = element.textSegments?.length
+			? element.textSegments.map((segment) => segment.text).join('')
+			: element.text;
+		if (text) parts.push(text);
 	} else if (element.type === 'table') {
 		const tableData = element.tableData;
 		if (tableData) {

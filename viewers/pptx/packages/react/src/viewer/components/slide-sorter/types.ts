@@ -1,5 +1,6 @@
 import { SORTER_MAX_ZOOM, SORTER_MIN_ZOOM, SORTER_ZOOM_STEP } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { SlidePasteRequest } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import type { CanvasSize, SlideSectionGroup } from '../../types';
 
@@ -9,6 +10,7 @@ import type { CanvasSize, SlideSectionGroup } from '../../types';
 
 export interface SlideSorterOverlayProps {
 	slides: PptxSlide[];
+	templateElementsBySlideId?: Record<string, PptxElement[]>;
 	activeSlideIndex: number;
 	canvasSize: CanvasSize;
 	canEdit: boolean;
@@ -17,6 +19,9 @@ export interface SlideSorterOverlayProps {
 	onMoveSlide: (fromIndex: number, toIndex: number) => void;
 	onDeleteSlides: (indexes: number[]) => void;
 	onDuplicateSlides: (indexes: number[]) => void;
+	onPasteSlides: (request: SlidePasteRequest) => void;
+	onCopySystemSlides?: (indexes: number[]) => Promise<void>;
+	onPasteSystemSlides?: (insertAt: number) => Promise<void>;
 	onToggleHideSlides: (indexes: number[]) => void;
 	onClose: () => void;
 }

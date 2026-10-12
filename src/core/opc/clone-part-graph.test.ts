@@ -108,3 +108,113 @@ describe('clonePartGraph', () => {
 		expect(relativePartTarget('root.xml', 'other.xml')).toBe('other.xml');
 	});
 });
+
+it('imports a separate archive with shared cyclic infrastructure and conflicting content types', async () => {
+	const source = new JSZip(),
+		zip = new JSZip();
+	source.file(
+		'[Content_Types].xml',
+		buildContentTypesXml({
+			defaults: new Map([['bin', 'source/binary']]),
+			overrides: new Map([
+				['/roots/a.xml', 'source/root'],
+				['/roots/b.xml', 'source/root'],
+				['/parts/master1.xml', 'source/master'],
+			]),
+		}),
+	);
+	zip.file(
+		'[Content_Types].xml',
+		buildContentTypesXml({
+			defaults: new Map([['bin', 'destination/binary']]),
+			overrides: new Map(),
+		}),
+	);
+	source.file('roots/a.xml', '<a/>');
+	source.file('roots/b.xml', '<b/>');
+	source.file('parts/master1.xml', '<master/>');
+	source.file('parts/layout1.bin', new Uint8Array([5, 7]));
+	zip.file('parts/master1.xml', '<destination/>');
+	zip.file('parts/layout1.bin', new Uint8Array([9]));
+	for (const root of ['a', 'b'])
+		source.file(
+			relationshipsPartFor(`roots/${root}.xml`),
+			buildRelationshipsXml(
+				new Map<string, RelationshipInput>([
+					['nativeId', rel('../parts/master1.xml')],
+					[
+						'link',
+						{ type: 'hyperlink', target: 'https://example.com/path?x=1&y=2', mode: 'External' },
+					],
+				]),
+			),
+		);
+	source.file(
+		relationshipsPartFor('parts/master1.xml'),
+		buildRelationshipsXml(new Map([['layout', rel('layout1.bin')]])),
+	);
+	source.file(
+		relationshipsPartFor('parts/layout1.bin'),
+		buildRelationshipsXml(
+			new Map([
+				['master', rel('master1.xml')],
+				['slide', rel('../roots/b.xml')],
+			]),
+		),
+	);
+	const copies = new Map([
+		['roots/a.xml', 'roots/copy1.xml'],
+		['roots/b.xml', 'roots/copy2.xml'],
+	]);
+	for (const root of ['a', 'b'])
+		await clonePartGraph({
+			zip,
+			sourceZip: source,
+			copies,
+			sourcePart: `roots/${root}.xml`,
+			targetPart: copies.get(`roots/${root}.xml`)!,
+			shouldClone: () => true,
+		});
+	expect(copies.size).toBe(4);
+	const master = copies.get('parts/master1.xml')!,
+		layout = copies.get('parts/layout1.bin')!;
+	expect(master).not.toBe('parts/master1.xml');
+	expect(layout).not.toBe('parts/layout1.bin');
+	expect(await zip.file('parts/master1.xml')!.async('string')).toBe('<destination/>');
+	expect(await source.file('parts/master1.xml')!.async('string')).toBe('<master/>');
+	expect(await zip.file(layout)!.async('uint8array')).toEqual(new Uint8Array([5, 7]));
+	const types = parseContentTypes(await zip.file('[Content_Types].xml')!.async('string'));
+	expect(contentTypeForPart(types, layout)).toBe('source/binary');
+	expect(contentTypeForPart(types, 'parts/layout1.bin')).toBe('destination/binary');
+	const layoutRels = parseRelationships(
+		await zip.file(relationshipsPartFor(layout))!.async('string'),
+	);
+	expect(layoutRels.get('slide')?.target).toBe('../roots/copy2.xml');
+	for (const root of ['roots/copy1.xml', 'roots/copy2.xml']) {
+		const rels = parseRelationships(await zip.file(relationshipsPartFor(root))!.async('string'));
+		expect(rels.get('nativeId')?.target).toBe(`../${master}`);
+		expect(rels.get('link')).toMatchObject({
+			target: 'https://example.com/path?x=1&y=2',
+			mode: 'External',
+		});
+	}
+});
+
+it('rejects dependencies absent from the source even when that name exists in the destination', async () => {
+	const zip = new JSZip(),
+		source = new JSZip();
+	zip.file('missing.xml', '<foreign/>');
+	source.file(
+		relationshipsPartFor('source.xml'),
+		buildRelationshipsXml(new Map([['rId1', rel('missing.xml')]])),
+	);
+	await expect(
+		clonePartGraph({
+			zip,
+			sourceZip: source,
+			sourcePart: 'source.xml',
+			targetPart: 'copied.xml',
+			shouldClone: () => true,
+		}),
+	).rejects.toThrow('missing.xml');
+});

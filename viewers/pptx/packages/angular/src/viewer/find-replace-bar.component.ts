@@ -49,6 +49,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 export interface FindEvent {
 	query: string;
 	matchCase: boolean;
+	includeNotes?: boolean;
 }
 
 /** Emitted when the user confirms a replacement action. */
@@ -56,6 +57,7 @@ export interface ReplaceEvent {
 	query: string;
 	replacement: string;
 	matchCase: boolean;
+	includeNotes?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +77,11 @@ export interface ReplaceEvent {
 		>
 			<!-- ── Find row ───────────────────────────────────────────────── -->
 			<div class="pptx-frb__row">
+				<label
+					><input type="checkbox" [checked]="includeNotes()" (change)="toggleIncludeNotes()" />{{
+						'pptx.findReplace.includeNotes' | translate
+					}}</label
+				>
 				<input
 					#findInput
 					class="pptx-frb__input"
@@ -371,6 +378,7 @@ export class FindReplaceBarComponent {
 
 	/** Whether the search should be case-sensitive. */
 	readonly matchCase = signal(false);
+	readonly includeNotes = signal(false);
 
 	// -------------------------------------------------------------------------
 	// Derived
@@ -409,7 +417,11 @@ export class FindReplaceBarComponent {
 	onQueryInput(event: Event): void {
 		const target = event.target as HTMLInputElement;
 		this.query.set(target.value);
-		this.find.emit({ query: target.value, matchCase: this.matchCase() });
+		this.find.emit({
+			query: target.value,
+			matchCase: this.matchCase(),
+			includeNotes: this.includeNotes(),
+		});
 	}
 
 	onReplacementInput(event: Event): void {
@@ -420,9 +432,17 @@ export class FindReplaceBarComponent {
 	toggleCase(): void {
 		const next = !this.matchCase();
 		this.matchCase.set(next);
-		this.find.emit({ query: this.query(), matchCase: next });
+		this.find.emit({ query: this.query(), matchCase: next, includeNotes: this.includeNotes() });
 	}
 
+	toggleIncludeNotes(): void {
+		this.includeNotes.update((value) => !value);
+		this.find.emit({
+			query: this.query(),
+			matchCase: this.matchCase(),
+			includeNotes: this.includeNotes(),
+		});
+	}
 	emitReplaceOne(): void {
 		if (this.matchCount() === 0) {
 			return;
@@ -431,6 +451,7 @@ export class FindReplaceBarComponent {
 			query: this.query(),
 			replacement: this.replacement(),
 			matchCase: this.matchCase(),
+			includeNotes: this.includeNotes(),
 		});
 	}
 
@@ -442,6 +463,7 @@ export class FindReplaceBarComponent {
 			query: this.query(),
 			replacement: this.replacement(),
 			matchCase: this.matchCase(),
+			includeNotes: this.includeNotes(),
 		});
 	}
 

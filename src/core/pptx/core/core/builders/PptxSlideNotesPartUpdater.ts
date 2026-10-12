@@ -91,7 +91,13 @@ export class PptxSlideNotesPartUpdater implements IPptxSlideNotesPartUpdater {
 			init.slideNotesRelationshipType,
 			`../notesSlides/${fileName}`,
 		);
-		init.zip.file(notesPath, init.xmlBuilder.build(this.buildNotesSlide(init.slide, strict)));
+		const notesXmlObject = this.buildNotesSlide(init.slide, strict);
+		init.updateNotesXmlText(
+			notesXmlObject,
+			init.slide.notes ?? init.slide.notesSegments?.map((segment) => segment.text).join('') ?? '',
+			init.slide.notesSegments,
+		);
+		init.zip.file(notesPath, init.xmlBuilder.build(notesXmlObject));
 		init.zip.file(
 			`ppt/notesSlides/_rels/${fileName}.rels`,
 			init.xmlBuilder.build({
