@@ -56,9 +56,11 @@ const FR_BTN =
 	>
 		<div class="pptx-vue-fr-row flex items-center gap-1.5">
 			<label
-				><input type="checkbox" v-model="includeNotes" />{{
-					t('pptx.findReplace.includeNotes')
-				}}</label
+				><pptx-ui-checkbox
+					:checked="includeNotes"
+					@change="includeNotes = ($event.target as HTMLInputElement).checked"
+					:aria-label="t('pptx.findReplace.includeNotes')"
+				/>{{ t('pptx.findReplace.includeNotes') }}</label
 			>
 			<input
 				v-model="query"

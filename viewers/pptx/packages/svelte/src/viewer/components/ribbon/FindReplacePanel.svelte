@@ -39,7 +39,7 @@
 			oninput={(e) => onQueryInput(e.currentTarget.value)}
 			onkeydown={onKeydown}
 		/>
-		<label><input type="checkbox" checked={findReplace.includeNotes} onchange={(e) => { findReplace.includeNotes = e.currentTarget.checked; findReplace.search(); }} />{t('pptx.findReplace.includeNotes')}</label>
+		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeNotes')} checked={findReplace.includeNotes} onchange={(e) => { findReplace.includeNotes = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeNotes')}</label>
 		<label class="pptx-svelte-findreplace-case">
 			<pptx-ui-checkbox
 				checked={findReplace.matchCase}

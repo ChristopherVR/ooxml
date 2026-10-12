@@ -9,6 +9,8 @@ import {
 	LuCaseSensitive,
 } from 'react-icons/lu';
 
+import { WebCheckbox } from './WebControls';
+
 export interface FindReplacePanelProps {
 	findQuery: string;
 	replaceQuery: string;
@@ -108,8 +110,8 @@ export function FindReplacePanel({
 			{/* Header */}
 			<div className='flex items-center justify-between mb-2'>
 				<label>
-					<input
-						type='checkbox'
+					<WebCheckbox
+						aria-label={t('pptx.findReplace.includeNotes')}
 						checked={findIncludeNotes}
 						onChange={(event) => onSetFindIncludeNotes?.(event.target.checked)}
 					/>

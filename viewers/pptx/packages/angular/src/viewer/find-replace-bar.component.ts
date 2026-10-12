@@ -31,6 +31,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	CUSTOM_ELEMENTS_SCHEMA,
 	ElementRef,
 	HostListener,
 	computed,
@@ -65,6 +66,7 @@ export interface ReplaceEvent {
 // ---------------------------------------------------------------------------
 
 @Component({
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	selector: 'pptx-find-replace-bar',
 	standalone: true,
 	imports: [TranslatePipe],
@@ -78,9 +80,12 @@ export interface ReplaceEvent {
 			<!-- ── Find row ───────────────────────────────────────────────── -->
 			<div class="pptx-frb__row">
 				<label
-					><input type="checkbox" [checked]="includeNotes()" (change)="toggleIncludeNotes()" />{{
-						'pptx.findReplace.includeNotes' | translate
-					}}</label
+					><pptx-ui-checkbox
+						[attr.aria-label]="'pptx.findReplace.includeNotes' | translate"
+						[checked]="includeNotes()"
+						(change)="toggleIncludeNotes()"
+					></pptx-ui-checkbox
+					>{{ 'pptx.findReplace.includeNotes' | translate }}</label
 				>
 				<input
 					#findInput
