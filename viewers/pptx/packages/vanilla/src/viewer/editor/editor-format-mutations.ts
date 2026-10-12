@@ -2,6 +2,7 @@ import type { ChangeCaseMode } from 'ooxml-ui/pptx';
 import {
 	applyCaseTransformToSegments,
 	elementBulletKind,
+	mergeTextStyleUpdate,
 	remapTextToSegments,
 	stepFontSizePt,
 	textFontSizePtToPx,
@@ -130,7 +131,7 @@ export function patchTextStyle(el: PptxElement, patch: Partial<TextStyle>): Part
 	if (!canFormatText(el)) {
 		return {};
 	}
-	const textStyle: TextStyle = { ...el.textStyle, ...patch };
+	const textStyle: TextStyle = mergeTextStyleUpdate(el.textStyle, patch);
 	const segments: TextSegment[] | undefined = el.textSegments?.map((seg) =>
 		updateTextSegmentStyle(seg, patch),
 	);
