@@ -1,4 +1,5 @@
 import {
+	shapeOutlineChange,
 	shouldShowAccessibilitySection,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
@@ -90,7 +91,7 @@ export function ShapeTextPanels({
 							onUpdateElementStyle({ fillColor: hex, fillMode: 'solid', fillColorRef: ref })
 						}
 						onSetStrokeColor={(hex, ref) =>
-							onUpdateElementStyle({ strokeColor: hex, strokeColorRef: ref })
+							onUpdateElementStyle(shapeOutlineChange(hex, ref, selectedElement.shapeStyle ?? {}))
 						}
 					/>
 				</div>
