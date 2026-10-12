@@ -43,7 +43,7 @@ export function compareCellValues(a: CellValue, b: CellValue, descending = false
 	return descending ? -result : result;
 }
 
-/** Sorts rows of a range in place (no undo step). Exported for the auto-filter sort. */
+/** Sorts visible rows in place, leaving hidden rows untouched. Used by the auto-filter sort. */
 export function sortRows(
 	sheet: Worksheet,
 	range: CellRange,
@@ -66,6 +66,7 @@ export function sortRows(
 	const sortKeys = keys.length ? keys : [{ col: r.start.col }];
 	const rows: { row: number; cells: Map<number, Cell> }[] = [];
 	for (let row = firstRow; row <= lastRow; row++) {
+		if (sheet.rowInfo.get(row)?.hidden) continue;
 		const cells = new Map<number, Cell>();
 		for (const [col, cell] of sheet.rows.get(row) ?? [])
 			if (col >= r.start.col && col <= r.end.col) cells.set(col, cell);
@@ -83,9 +84,9 @@ export function sortRows(
 		return 0;
 	});
 	for (const { row, cells } of rows) for (const col of cells.keys()) deleteCell(sheet, row, col);
-	moveAnnotations(sheet, dataArea, new Map(sorted.map((source, i) => [source.row, firstRow + i])));
+	moveAnnotations(sheet, dataArea, new Map(sorted.map((source, i) => [source.row, rows[i]!.row])));
 	sorted.forEach((source, i) => {
-		const row = firstRow + i;
+		const row = rows[i]!.row;
 		const dRow = row - source.row;
 		for (const [col, cell] of source.cells) {
 			if (cell.formula !== undefined && dRow) {
