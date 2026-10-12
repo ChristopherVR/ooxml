@@ -129,8 +129,15 @@ export function adaptDocumentModel(
 					: undefined;
 		const image = run.image;
 		if (image?.unsupported === 'Text box') reportOnce(TEXT_BOX_NOTE);
-		const object =
-			image && !image.anchored
+		const object = run.noteSeparator
+			? {
+					partName: '',
+					contentType: '',
+					widthPx: 192,
+					heightPx: 1,
+					noteSeparator: run.noteSeparator,
+				}
+			: image && !image.anchored
 				? {
 						partName: image.partName,
 						contentType: image.contentType,
@@ -142,8 +149,12 @@ export function adaptDocumentModel(
 					}
 				: undefined;
 		return {
+			sourceLength: reviewSourceLength(run),
 			// Hidden text (`w:vanish`) takes no space when printed, as in Word by default.
 			text: image || formatting.vanish ? '' : formatting.caps ? text.toUpperCase() : text,
+			...(run.noteReference?.kind === 'footnote'
+				? { footnoteReferenceId: run.noteReference.id }
+				: {}),
 			...(object ? { object } : {}),
 			...definedProps({
 				bold: formatting.bold,
@@ -266,6 +277,24 @@ export function adaptDocumentModel(
 	groupParagraphBorders(blocks, betweenBorders);
 	const folded = foldDropCaps(model.blocks, blocks);
 	if (folded.size) reportOnce(DROP_CAP_NOTE);
+	if (
+		Object.values(model.footnoteSeparators ?? {}).some((note) =>
+			note.blocks.some((block) => block.type === 'table'),
+		)
+	)
+		reportOnce(
+			'Tables in custom footnote separators are preserved but are not rendered in Print Layout.',
+		);
+	const footnoteSeparators = model.footnoteSeparators
+		? Object.fromEntries(
+				Object.entries(model.footnoteSeparators).map(([kind, note]) => [
+					kind,
+					note.blocks
+						.filter((block): block is Paragraph => block.type === 'paragraph')
+						.map((paragraph) => adaptParagraph(paragraph)),
+				]),
+			)
+		: undefined;
 	const sections = model.sections;
 	if (!sections || !sections.length) {
 		return {
@@ -279,6 +308,7 @@ export function adaptDocumentModel(
 						marginBottomPx: model.page.marginBottom,
 						marginLeftPx: model.page.marginLeft,
 					},
+					...(footnoteSeparators ? { footnoteSeparators } : {}),
 					blocks: blocks.filter((block) => !folded.has(block)),
 				},
 			],
@@ -294,6 +324,7 @@ export function adaptDocumentModel(
 		start = end;
 		const sectionStart = index === 0 ? undefined : sectionBreak(section.type, reportOnce);
 		return {
+			...(footnoteSeparators ? { footnoteSeparators } : {}),
 			page: {
 				widthPx: twipsToPx(section.pageWidthTwips),
 				heightPx: twipsToPx(section.pageHeightTwips),

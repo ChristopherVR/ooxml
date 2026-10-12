@@ -63,6 +63,9 @@ export function placeTable(
 	function startNewFragment() {
 		flushFragment();
 		cursor.newColumn();
+		addHeaders();
+	}
+	function addHeaders() {
 		for (const header of headerRows)
 			fragmentRows.push(toRowBox(layoutRow(header, cursor.columnWidthPx, measurer, note), true));
 	}
@@ -70,6 +73,37 @@ export function placeTable(
 	function placeRow(row: LayoutTableRow, initial: RowLayout, cantSplit: boolean) {
 		let remainingRow: RowLayout | null = initial;
 		while (remainingRow) {
+			const minimum = cantSplit
+				? Math.min(remainingRow.heightPx, cursor.columnHeightPx)
+				: Math.min(
+						...remainingRow.cells.flatMap((cell) =>
+							cell.map(
+								(paragraph) =>
+									paragraph.yPx +
+									(paragraph.lines[0]?.yPx ?? 0) +
+									(paragraph.lines[0]?.heightPx ?? 0),
+							),
+						),
+					);
+			if (fragmentRows.every((item) => item.repeated)) {
+				const width = cursor.columnWidthPx;
+				cursor.advancePastFootnotes(fragmentHeight + (Number.isFinite(minimum) ? minimum : 0));
+				if (width !== cursor.columnWidthPx) {
+					remainingRow = layoutRow(
+						remainingRow === initial ? row : { ...row, heightPx: 0, heightRule: 'atLeast' },
+						cursor.columnWidthPx,
+						measurer,
+						note,
+						remainingRow.cells,
+					);
+					if (fragmentRows.length) {
+						fragmentRows = [];
+						fragmentHeight = 0;
+						addHeaders();
+					}
+					continue;
+				}
+			}
 			const remaining = cursor.remainingHeightPx() - fragmentHeight;
 			if (remainingRow.heightPx <= remaining) {
 				fragmentRows.push(toRowBox(remainingRow, false));
@@ -80,6 +114,18 @@ export function placeTable(
 				if (fragmentRows.length || !cursor.atColumnTop) {
 					startNewFragment();
 					remainingRow = layoutRow(row, cursor.columnWidthPx, measurer, note);
+				}
+				const noteWidth = cursor.columnWidthPx;
+				cursor.advancePastFootnotes(
+					fragmentHeight + Math.min(remainingRow.heightPx, cursor.columnHeightPx),
+				);
+				if (noteWidth !== cursor.columnWidthPx) {
+					remainingRow = layoutRow(row, cursor.columnWidthPx, measurer, note);
+					if (fragmentRows.length) {
+						fragmentRows = [];
+						fragmentHeight = 0;
+						addHeaders();
+					}
 				}
 				const freshRemaining = cursor.remainingHeightPx() - fragmentHeight;
 				if (remainingRow.heightPx > freshRemaining)

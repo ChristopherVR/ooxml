@@ -130,10 +130,14 @@ export interface LayoutPageBox {
 	floats?: LayoutFloatBox[];
 	/** Footnotes at the bottom of the page, in reference order; `yPx` values are within the area. */
 	footnotes?: LayoutFootnoteBox[];
+	/** Selected custom story; absent means the default rule, empty means no separator. */
+	footnoteSeparator?: { heightPx: number; paragraphs: LayoutParagraphBox[] };
 }
 
 export interface LayoutFootnoteBox {
 	id: string;
+	/** This fragment continues the same note from an earlier physical page. */
+	continued?: boolean;
 	/** Top of this note within the footnote area (below the separator). */
 	yPx: number;
 	heightPx: number;

@@ -24,6 +24,37 @@ export function parseNotesPart(
 	return notes;
 }
 
+/** Separator stories are separate from numbered notes and never receive note numbers. */
+export function parseFootnoteSeparators(
+	xml: string,
+	parseBlocks: (container: XmlElement, idPrefix: string) => Block[],
+): { separator?: Note; continuationSeparator?: Note } {
+	const root = parseXml(xml).documentElement;
+	const result: { separator?: Note; continuationSeparator?: Note } = {};
+	for (const element of children(root, 'footnote')) {
+		const type = getW(element, 'type');
+		if (type !== 'separator' && type !== 'continuationSeparator') continue;
+		// Split mixed-content runs so the rule retains its position among surrounding text.
+		for (const run of Array.from(element.getElementsByTagNameNS(root.namespaceURI!, 'r'))) {
+			const content = Array.from(run.childNodes)
+				.filter((child): child is XmlElement => child.nodeType === 1)
+				.filter((child) => child.localName !== 'rPr');
+			if (content.length < 2 || !content.some((child) => skippedTypes.has(child.localName)))
+				continue;
+			const props = children(run, 'rPr')[0];
+			for (const child of content) {
+				const split = run.cloneNode(false) as XmlElement;
+				if (props) split.appendChild(props.cloneNode(true));
+				split.appendChild(child.cloneNode(true));
+				run.parentNode!.insertBefore(split, run);
+			}
+			run.parentNode!.removeChild(run);
+		}
+		result[type] = { id: getW(element, 'id') ?? type, blocks: parseBlocks(element, `fn-${type}-`) };
+	}
+	return result;
+}
+
 const romanNumerals: [number, string][] = [
 	[1000, 'M'],
 	[900, 'CM'],

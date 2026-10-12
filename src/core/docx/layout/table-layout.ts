@@ -32,13 +32,14 @@ export function stackParagraphs(
 		);
 		y += layout.spacingBeforePx;
 		const top = y;
-		const lines = layout.lines.map((line) => ({ ...line, yPx: line.yPx + top }));
+		const lines = layout.lines.map((line) => ({ ...line }));
 		boxes.push({
 			kind: 'paragraph',
 			blockId: paragraph.id,
 			yPx: top,
 			heightPx: layout.contentHeightPx,
 			lines,
+			...(layout.frame ? { frame: layout.frame } : {}),
 		});
 		y += layout.contentHeightPx + layout.spacingAfterPx;
 	}

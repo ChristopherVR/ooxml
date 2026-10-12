@@ -6,7 +6,7 @@ import { layoutRow, stackParagraphs } from './table-layout';
 import { suppressesSpacing } from './keep-rules';
 import type { TextMeasurer } from './measure';
 import type { LayoutBlock, LayoutSection } from './input';
-import type { LayoutPageBox } from './result';
+import type { LayoutFootnoteBox, LayoutLine, LayoutPageBox } from './result';
 import { lineBoxesFor, type Exclusion } from './wrap';
 import { expectDefined } from '../expect-defined';
 
@@ -30,9 +30,25 @@ export class SectionFlow {
 		continueAt?: number,
 		private readonly balance?: { pageIndex: number; heightPx: number },
 	) {
+		if (
+			(section.columns?.count ?? 1) > 1 &&
+			section.blocks.some((block) =>
+				block.kind === 'paragraph'
+					? !!block.footnotes?.length
+					: block.rows.some((row) =>
+							row.cells.some((cell) =>
+								cell.paragraphs.some((paragraph) => !!paragraph.footnotes?.length),
+							),
+						),
+			)
+		)
+			note(
+				'Multi-column footnotes use a page-wide area; native per-column footnote balancing is not yet modeled.',
+			);
 		this.blocks = section.blocks;
 		this.measurer = measurer;
 		this.note = note;
+		const separatorCache = new Map<string, NonNullable<LayoutPageBox['footnoteSeparator']>>();
 		this.cursor = new PageCursor(
 			pages,
 			section.page,
@@ -40,6 +56,37 @@ export class SectionFlow {
 			sectionIndex,
 			continueAt,
 			balance,
+			note,
+			(page, continued) => {
+				const paragraphs =
+					section.footnoteSeparators?.[continued ? 'continuationSeparator' : 'separator'];
+				if (!paragraphs) return undefined;
+				const width = page.widthPx - page.marginLeftPx - page.marginRightPx;
+				const key = `${width}:${continued}`;
+				const cached = separatorCache.get(key);
+				if (cached) return cached;
+				const adapted = paragraphs.map((paragraph) => ({
+					...paragraph,
+					runs: paragraph.runs.map((run) =>
+						run.object?.noteSeparator
+							? {
+									...run,
+									object: {
+										...run.object,
+										widthPx:
+											run.object.noteSeparator === 'continuationSeparator'
+												? width
+												: Math.min(192, width),
+									},
+								}
+							: run,
+					),
+				}));
+				const stacked = stackParagraphs(adapted, width, measurer, note);
+				const result = { heightPx: stacked.heightPx, paragraphs: stacked.boxes };
+				separatorCache.set(key, result);
+				return result;
+			},
 		);
 	}
 
@@ -135,19 +182,36 @@ export class SectionFlow {
 			if (block.afterTableSectionBreak) this.cursor.endBalance();
 			const spacingBeforePx = this.spacingBeforeFor(index);
 			const layout = this.wrappedLayout(index, spacingBeforePx) ?? this.paragraphLayout(index);
-			if (block.footnotes?.length)
-				this.cursor.holdFootnotes(
-					block.id,
-					block.footnotes.map((note) => {
+			const noteCache = new Map<string, LayoutFootnoteBox>();
+			const footnotes = (lines: readonly LayoutLine[], includeUnanchored: boolean) => {
+				const runIds = new Set(
+					lines.flatMap((line) =>
+						line.fragments.map((fragment) => block.runs[fragment.runIndex]?.footnoteReferenceId),
+					),
+				);
+				const anchoredIds = new Set(block.runs.map((run) => run.footnoteReferenceId));
+				return (block.footnotes ?? [])
+					.filter((item) => runIds.has(item.id) || (includeUnanchored && !anchoredIds.has(item.id)))
+					.map((note) => {
+						const key = `${note.id}:${this.cursor.columnWidthPx}`;
+						const cached = noteCache.get(key);
+						if (cached) return cached;
 						const stacked = stackParagraphs(
 							note.paragraphs,
 							this.cursor.columnWidthPx,
 							this.measurer,
 							this.note,
 						);
-						return { id: note.id, yPx: 0, heightPx: stacked.heightPx, paragraphs: stacked.boxes };
-					}),
-				);
+						const box = {
+							id: note.id,
+							yPx: 0,
+							heightPx: stacked.heightPx,
+							paragraphs: stacked.boxes,
+						};
+						noteCache.set(key, box);
+						return box;
+					});
+			};
 			const requiredTogetherPx = block.keepNext
 				? this.requiredKeepHeight(index)
 				: block.keepLines
@@ -163,6 +227,7 @@ export class SectionFlow {
 				{
 					paragraph: block,
 					layout,
+					footnotes,
 					spacingBeforePx,
 					requiredTogetherPx,
 					reflow: (token) =>
@@ -183,5 +248,6 @@ export class SectionFlow {
 			)
 				this.balanceValid = false;
 		}
+		this.cursor.finishFootnotes();
 	}
 }

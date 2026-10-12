@@ -23,6 +23,30 @@ function threeAndTwoLineRow(): LayoutTableRow {
 }
 
 describe('layoutRow', () => {
+	it('keeps line coordinates relative to each stacked paragraph, including cell padding', () => {
+		const row = layoutRow(
+			{
+				cells: [
+					{
+						padding: { top: 5, right: 0, bottom: 5, left: 0 },
+						paragraphs: [cellParagraph('a', 'One'), cellParagraph('b', 'Two')],
+					},
+				],
+			},
+			200,
+			measurer,
+			noop,
+		);
+		expect(row.heightPx).toBe(50);
+		expect(row.cells[0]!.map((paragraph) => [paragraph.yPx, paragraph.lines[0]!.yPx])).toEqual([
+			[5, 0],
+			[25, 0],
+		]);
+		const split = splitRowAtHeight(row, 25);
+		expect(split.before.cells[0]!.map((paragraph) => paragraph.blockId)).toEqual(['a']);
+		expect(split.after!.cells[0]![0]).toMatchObject({ blockId: 'b', yPx: 0 });
+		expect(split.after!.cells[0]![0]!.lines[0]!.yPx).toBe(0);
+	});
 	it('sizes the row to the tallest cell', () => {
 		const row = layoutRow(threeAndTwoLineRow(), 200, measurer, noop);
 		expect(row.heightPx).toBe(60); // 3 lines * 20px

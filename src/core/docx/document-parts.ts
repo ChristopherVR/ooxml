@@ -9,7 +9,7 @@ import { isStNumberFormat, type StNumberFormat } from './generated/wml-simple-ty
 import { enumValue, withParseWarnings } from './parse-diagnostics';
 import { parseRelationships, resolvePartPath, type Relationship } from './relationships';
 import { parseRawSections, type RawHeaderFooterRef } from './sections';
-import { parseNotesPart } from './notes';
+import { parseFootnoteSeparators, parseNotesPart } from './notes';
 import { parseBlocksFromContainer } from './block-parser';
 import type { DrawingContext } from './drawing';
 import { parseRelationships as parsePackageRelationships } from './package-parts';
@@ -94,6 +94,7 @@ async function resolveSlots(
 export interface DocumentPartsResult {
 	sections: SectionProperties[];
 	footnotes?: Note[];
+	footnoteSeparators?: import('./model').DocumentModel['footnoteSeparators'];
 	endnotes?: Note[];
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
@@ -148,6 +149,9 @@ export async function parseDocumentParts(
 	const footnotes = footnotesXml
 		? parseNotesPart(footnotesXml, 'footnote', await notesParser('word/footnotes.xml'))
 		: undefined;
+	const footnoteSeparators = footnotesXml
+		? parseFootnoteSeparators(footnotesXml, await notesParser('word/footnotes.xml'))
+		: undefined;
 	const endnotes = endnotesXml
 		? parseNotesPart(endnotesXml, 'endnote', await notesParser('word/endnotes.xml'))
 		: undefined;
@@ -163,6 +167,7 @@ export async function parseDocumentParts(
 	return {
 		sections,
 		...(footnotes ? { footnotes } : {}),
+		...(footnoteSeparators ? { footnoteSeparators } : {}),
 		...(endnotes ? { endnotes } : {}),
 		...(settings.footnoteNumFmt ? { footnoteNumFmt: settings.footnoteNumFmt } : {}),
 		...(settings.endnoteNumFmt ? { endnoteNumFmt: settings.endnoteNumFmt } : {}),

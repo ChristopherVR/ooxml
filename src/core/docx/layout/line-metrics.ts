@@ -43,7 +43,13 @@ export function lineMetrics(
 	let above = 0;
 	let below = 0;
 	for (const token of tokens) {
-		const extent = tokenExtent(token, paragraph, fonts, measurer);
+		const run = paragraph.runs[token.runIndex];
+		const metrics = run?.object?.noteSeparator
+			? fontMetrics(measurer, fonts[token.runIndex] ?? fontOf(run))
+			: undefined;
+		const extent = metrics
+			? { above: metrics.ascent, below: metrics.descent }
+			: tokenExtent(token, paragraph, fonts, measurer);
 		above = Math.max(above, extent.above);
 		below = Math.max(below, extent.below);
 	}

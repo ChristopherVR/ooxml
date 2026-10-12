@@ -11,6 +11,8 @@ import type { SignedTwips, Twips } from '../index';
 
 export interface LayoutRun {
 	text: string;
+	/** Footnote referenced by this run; its note starts on the page containing this marker. */
+	footnoteReferenceId?: string;
 	/** Omit from layout while retaining its text length in source ranges for following runs. */
 	hidden?: boolean;
 	/** Source length when displayed text is absent or generated; otherwise defaults to text.length. */
@@ -50,6 +52,8 @@ export interface LayoutObject {
 	heightPx: number;
 	/** A chart drawn at this size: the painted SVG markup, or only its frame label. */
 	chart?: { svg?: string; label: string };
+	/** Native note separator rule, drawn without loading a media part. */
+	noteSeparator?: 'separator' | 'continuationSeparator';
 }
 
 /** A floating picture anchored to a paragraph (`wp:anchor`), positioned on the page. */
@@ -126,7 +130,7 @@ export interface LayoutParagraph {
 	floats?: LayoutFloat[];
 	/** Custom tab stops (`w:tabs`). */
 	tabStops?: LayoutTabStop[];
-	/** Footnotes referenced here; they go at the bottom of the page where the paragraph starts. */
+	/** Footnotes referenced here. Runs identify their marker; unanchored notes use the first line. */
 	footnotes?: LayoutNote[];
 	/** Border lines around the paragraph, with each side's gap to the text. */
 	borders?: LayoutParagraphBorders;
@@ -210,6 +214,7 @@ export interface LayoutColumns {
 }
 
 export interface LayoutSection {
+	footnoteSeparators?: { separator?: LayoutParagraph[]; continuationSeparator?: LayoutParagraph[] };
 	page: LayoutPageGeometry;
 	columns?: LayoutColumns;
 	blocks: LayoutBlock[];

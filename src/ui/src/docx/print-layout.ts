@@ -33,8 +33,8 @@ export interface PrintLayoutHandle {
 	 * Best-effort click-to-cursor mapping: given the line element under a
 	 * click and its horizontal offset, measures the displayed text fragments
 	 * and maps to a source boundary. Falls back to proportional mapping for
-	 * older layout results. Print Layout remains a read-only render synced
-	 * from the editor, not a second editing surface.
+	 * older layout results. The editing bridge uses these source boundaries to
+	 * move the existing ProseMirror selection.
 	 */
 	resolveClick(target: Element, clientX: number): { blockId: string; offset: number } | null;
 }
@@ -109,20 +109,28 @@ function renderLine(
 ): HTMLElement {
 	const lineEl = document.createElement('div');
 	lineEl.className = 'dve-print-line';
+	lineEl.dataset.blockId = blockId;
+	lineEl.dataset.sourceStart = String(line.sourceStart);
+	lineEl.dataset.sourceEnd = String(line.sourceEnd);
 	lineEl.style.top = `${line.yPx}px`;
 	lineEl.style.height = `${line.heightPx}px`;
 	const fragments: PrintFragmentHit[] = [];
 	for (const fragment of line.fragments) {
 		if (fragment.object) {
 			const picture = pictureElement(fragment.object, pictureUrl);
+			if (fragment.color) picture.style.color = fragment.color;
 			picture.style.left = `${fragment.xPx}px`;
 			picture.style.top = `${fragment.topPx ?? 0}px`;
+			picture.dataset.sourceStart = String(fragment.sourceStart ?? 0);
+			picture.dataset.sourceEnd = String(fragment.sourceEnd ?? 0);
 			lineEl.append(picture);
 			fragments.push({ element: picture, fragment });
 			continue;
 		}
 		if (fragment.leader) {
 			const leader = leaderElement(fragment);
+			leader.dataset.sourceStart = String(fragment.sourceStart ?? 0);
+			leader.dataset.sourceEnd = String(fragment.sourceEnd ?? 0);
 			lineEl.append(leader);
 			fragments.push({ element: leader, fragment });
 			continue;
@@ -130,6 +138,8 @@ function renderLine(
 		if (!fragment.text && fragment.widthPx === 0) continue;
 		const span = document.createElement('span');
 		styleFragment(span, fragment);
+		span.dataset.sourceStart = String(fragment.sourceStart ?? 0);
+		span.dataset.sourceEnd = String(fragment.sourceEnd ?? 0);
 		lineEl.append(span);
 		fragments.push({ element: span, fragment });
 	}
@@ -199,13 +209,31 @@ function footnoteArea(
 		top: `${page.heightPx - page.marginBottomPx - heightPx}px`,
 		height: `${heightPx}px`,
 	});
-	const separator = document.createElement('div');
-	separator.className = 'dve-print-footnote-separator';
-	area.append(separator);
+	if (page.footnoteSeparator) {
+		const separator = document.createElement('div');
+		separator.className = 'dve-print-custom-footnote-separator';
+		Object.assign(separator.style, {
+			position: 'absolute',
+			top: `${-page.footnoteSeparator.heightPx}px`,
+			width: '100%',
+			height: `${page.footnoteSeparator.heightPx}px`,
+		});
+		for (const paragraph of page.footnoteSeparator.paragraphs)
+			separator.append(renderBlock(paragraph, [], pictureUrl, widthPx));
+		area.append(separator);
+	} else {
+		const separator = document.createElement('div');
+		separator.className = 'dve-print-footnote-separator';
+		if (notes.some((note) => note.continued)) {
+			separator.classList.add('dve-print-footnote-continuation-separator');
+		}
+		area.append(separator);
+	}
 	for (const note of notes) {
 		const noteEl = document.createElement('div');
 		noteEl.className = 'dve-print-footnote';
 		noteEl.dataset.noteId = note.id;
+		if (note.continued) noteEl.dataset.continued = 'true';
 		Object.assign(noteEl.style, { top: `${note.yPx}px`, height: `${note.heightPx}px` });
 		for (const paragraph of note.paragraphs)
 			noteEl.append(renderBlock(paragraph, hitboxes, pictureUrl, widthPx));

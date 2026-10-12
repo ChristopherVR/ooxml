@@ -56,7 +56,14 @@ export async function applyNoteEdits(
 			const original = baseNotes.get(note.id);
 			return !original || JSON.stringify(original.blocks) !== JSON.stringify(note.blocks);
 		});
-		if (!edited.length && !removed.length) continue;
+		const separators = kind === 'footnote' ? model.footnoteSeparators : undefined;
+		const baseSeparators = kind === 'footnote' ? base.footnoteSeparators : undefined;
+		const editedSeparators = (['separator', 'continuationSeparator'] as const).filter(
+			(type) =>
+				separators?.[type] &&
+				JSON.stringify(separators[type]!.blocks) !== JSON.stringify(baseSeparators?.[type]?.blocks),
+		);
+		if (!edited.length && !removed.length && !editedSeparators.length) continue;
 		const file = zip.file(part);
 		const doc = parseXml(file ? await file.async('string') : await createNotesPart(zip, kind));
 		const elements = new Map(
@@ -68,6 +75,24 @@ export async function applyNoteEdits(
 				doc.documentElement.removeChild(element);
 		}
 		const allocator = await allocatorForPart(zip, part, doc, docPrIds);
+		for (const type of editedSeparators) {
+			const separator = separators![type]!;
+			let element = children(doc.documentElement, kind).find((node) => getW(node, 'type') === type);
+			if (!element) {
+				element = doc.createElementNS(WORD_NS, `w:${kind}`);
+				element.setAttributeNS(WORD_NS, 'w:id', separator.id);
+				element.setAttributeNS(WORD_NS, 'w:type', type);
+				doc.documentElement.appendChild(element);
+			}
+			applyBlocks(
+				doc,
+				element,
+				separator.blocks,
+				baseSeparators?.[type]?.blocks ?? [],
+				allocator,
+				contentWidthTwips,
+			);
+		}
 		for (const note of edited) {
 			let element = elements.get(note.id);
 			const original = baseNotes.get(note.id);
