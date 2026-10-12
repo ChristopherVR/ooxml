@@ -19,6 +19,7 @@ import { EXPORT_PROGRESS_CSS } from './export-progress-css';
 import { FILE_INFO_CSS } from './file-info-css';
 import { INSPECTOR_FORMAT_CSS } from './inspector-format-css';
 import { INSPECTOR_PANELS_CSS } from './inspector-panels-css';
+import { INSPECTOR_TABLE_CELL_CSS } from './inspector-table-cell-css';
 import { MASTER_VIEW_CSS } from './master-view-css';
 import { MOBILE_SHEET_CSS } from './mobile-sheet-css';
 import { OPTIONS_DIALOG_CSS } from './options-dialog-css';
@@ -855,6 +856,7 @@ ${OPTIONS_DIALOG_CSS}
 ${ANIMATION_AUTHORING_CSS}
 ${INSPECTOR_PANELS_CSS}
 ${INSPECTOR_FORMAT_CSS}
+${INSPECTOR_TABLE_CELL_CSS}
 ${ACCOUNT_CSS}
 ${AI_CSS}
 ${AI_HISTORY_CSS}
