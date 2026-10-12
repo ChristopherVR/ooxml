@@ -49,7 +49,9 @@ export function pivotCacheDefinitionXml(
 				items.map((value) => (value === null || value === '' ? 'blank' : typeof value)),
 			);
 			const nums = items.filter((value): value is number => typeof value === 'number');
-			return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 0 })}><sharedItems${attrs({ count: items.length, containsString: types.has('string'), containsNumber: !!nums.length, containsInteger: nums.length > 0 && nums.every(Number.isInteger), containsBlank: types.has('blank'), containsMixedTypes: types.size > 1, containsSemiMixedTypes: !nums.length || types.size > 1 })}>${items.map(valueXml).join('')}</sharedItems></cacheField>`;
+			// Excel classifies boolean/error items with strings, and blanks are not a mixed type.
+			const text = items.some((item) => item !== null && item !== '' && typeof item !== 'number');
+			return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 0 })}><sharedItems${attrs({ count: items.length, containsString: !nums.length || text, containsNumber: !!nums.length, containsInteger: nums.length > 0 && nums.every(Number.isInteger), containsBlank: types.has('blank'), containsMixedTypes: nums.length > 0 && text, containsSemiMixedTypes: !nums.length || types.size > 1 })}>${items.map(valueXml).join('')}</sharedItems></cacheField>`;
 		})
 		.join('');
 	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs({ ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name })}/></cacheSource><cacheFields count="${pivot.fields.length}">${fields}</cacheFields></pivotCacheDefinition>`;

@@ -52,15 +52,33 @@ export function pivotItems(pivot: PivotTable, field: string): CellValue[] {
 		const key = pivotValueKey(value);
 		if (!items.has(key)) items.set(key, value);
 	}
-	return [...items.values()].sort((a, b) =>
-		a === null || a === ''
-			? 1
-			: b === null || b === ''
-				? -1
-				: typeof a === 'number' && typeof b === 'number'
-					? a - b
-					: String(a).localeCompare(String(b), 'en', { sensitivity: 'base', numeric: true }),
+	const rank = (value: CellValue) =>
+		value === null || value === ''
+			? 4
+			: isCellError(value)
+				? 3
+				: typeof value === 'boolean'
+					? 2
+					: typeof value === 'string'
+						? 1
+						: 0;
+	return [...items.values()].sort(
+		(a, b) =>
+			rank(a) - rank(b) ||
+			(typeof a === 'number' && typeof b === 'number'
+				? a - b
+				: String(pivotItemLabel(a)).localeCompare(String(pivotItemLabel(b)), 'en', {
+						sensitivity: 'base',
+						numeric: true,
+					})),
 	);
+}
+
+/** Native PivotTable labels display booleans and errors as text; numeric items remain numeric. */
+export function pivotItemLabel(value: CellValue): CellValue {
+	if (value === null || value === '') return '(blank)';
+	if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+	return isCellError(value) ? value.error : value;
 }
 
 export function validatePivotFields(

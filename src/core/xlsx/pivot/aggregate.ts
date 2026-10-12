@@ -6,7 +6,7 @@ import {
 	type PivotTable,
 	type Worksheet,
 } from '../model';
-import { pivotItems, pivotValueKey, validatePivotFields } from './data';
+import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
 
 function aggregate(
 	records: readonly CellValue[][],
@@ -60,8 +60,7 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 			collect(cells, JSON.stringify([key, col]), record);
 		}
 	}
-	const label = (value: CellValue): CellValue =>
-		value === null || value === '' ? '(blank)' : value;
+	const label = pivotItemLabel;
 	const values: CellValue[][] = pivot.columnField
 		? [
 				[pivot.valueCaption, pivot.columnField, ...columnItems.slice(1).map(() => null), null],
