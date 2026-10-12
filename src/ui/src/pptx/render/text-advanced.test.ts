@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	autoFitModeOf,
 	autoFitModePatch,
+	lineSpacingPatch,
 	textAdvancedStateOf,
 	textWrapOf,
 	textWrapPatch,
@@ -81,5 +82,18 @@ describe('autoFitModeOf / autoFitModePatch', () => {
 		expect(autoFitModePatch(el, 'none')).toStrictEqual({
 			textStyle: { fontFamily: 'Arial', autoFitMode: 'none', autoFit: false },
 		});
+	});
+});
+
+describe('lineSpacingPatch', () => {
+	it('also rewrites the line spacing a paragraph authored itself', () => {
+		const el = textEl({
+			textStyle: { lineSpacingExactPt: 12 },
+			textSegments: [{ text: 'hi', style: {}, paragraphProperties: { lineSpacingExactPt: 12 } }],
+		} as Partial<PptxElement>);
+		const patch = lineSpacingPatch(el, 2, null) as Partial<PptxElement> & {
+			textSegments?: { paragraphProperties?: unknown }[];
+		};
+		expect(patch.textSegments?.[0]?.paragraphProperties).toStrictEqual({ lineSpacing: 2 });
 	});
 });

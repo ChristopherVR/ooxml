@@ -16,6 +16,7 @@ import { hasShapeProperties, hasTextProperties } from 'ooxml-core/pptx';
 
 import { textStyleFlagsOf } from './selection-format-state';
 import { textFontSizePxToPt } from './text-format-presets';
+import { paragraphOverridePatch, withExclusiveLineSpacing } from './text-style-scope';
 import { updateTextSegmentStyle } from './update-text-segment-style';
 
 const DEFAULT_FILL = '#ffffff';
@@ -149,17 +150,21 @@ export interface TextStyleChanges {
  */
 export function textStylePatch(el: PptxElement, changes: Partial<TextStyle>): Partial<PptxElement> {
 	const base = hasTextProperties(el) ? (el.textStyle ?? {}) : {};
+	const exclusive = withExclusiveLineSpacing(changes);
+	const paragraphs = paragraphOverridePatch(el, exclusive);
+	const segments = paragraphs.textSegments ?? (hasTextProperties(el) ? el.textSegments : undefined);
 	return {
-		...(hasTextProperties(el) && el.textSegments?.some((segment) => segment.paragraphInsertionStyle)
+		...paragraphs,
+		...(segments?.some((segment) => segment.paragraphInsertionStyle)
 			? {
-					textSegments: el.textSegments.map((segment) =>
-						updateTextSegmentStyle(segment, changes, { updateBodyStyle: false }),
+					textSegments: segments.map((segment) =>
+						updateTextSegmentStyle(segment, exclusive, { updateBodyStyle: false }),
 					),
 				}
 			: {}),
 		textStyle: {
 			...base,
-			...changes,
+			...exclusive,
 		},
 	} as Partial<PptxElement>;
 }

@@ -17,7 +17,13 @@ import type { InlineTextSelection } from './inline-selection-utils';
 import { applyStyleToSelectedSegments } from './inline-selection-utils';
 import type { TextDecorationFlag } from './selection-format-state';
 import { TEXT_DECORATION_FLAGS } from './selection-format-state';
-import { reconcileDecorationFlags, splitTextStyleUpdate } from './text-style-scope';
+import {
+	overrideParagraphIndents,
+	overrideParagraphProperties,
+	reconcileDecorationFlags,
+	splitTextStyleUpdate,
+	withExclusiveLineSpacing,
+} from './text-style-scope';
 import { updateTextSegmentStyle } from './update-text-segment-style';
 
 /** What a text-style update hands back to the binding. */
@@ -46,11 +52,12 @@ export function applyTextStyleUpdate(
 		return { patch: {}, newSelection: null };
 	}
 	const current = segments ?? element.textSegments;
+	const exclusive = withExclusiveLineSpacing(updates);
 
 	if (selection && current && current.length > 0) {
-		const { body, run } = splitTextStyleUpdate(updates);
+		const { body, run } = splitTextStyleUpdate(exclusive);
 		let textStyle: TextStyle = { ...element.textStyle, ...body };
-		let textSegments: TextSegment[] = [...current];
+		let textSegments: TextSegment[] = overrideParagraphProperties(current, exclusive);
 		let newSelection = selection;
 		if (Object.keys(run).length > 0) {
 			const scoped = applyStyleToSelectedSegments(textSegments, selection, run);
@@ -63,13 +70,28 @@ export function applyTextStyleUpdate(
 			textStyle = reconciled.textStyle;
 			textSegments = reconciled.textSegments;
 		}
-		return { patch: { textStyle, textSegments } as Partial<PptxElement>, newSelection };
+		return {
+			patch: {
+				textStyle,
+				textSegments,
+				...overrideParagraphIndents(element, exclusive),
+			} as Partial<PptxElement>,
+			newSelection,
+		};
 	}
 
-	const textStyle: TextStyle = { ...element.textStyle, ...updates };
-	const textSegments = current?.map((segment) => updateTextSegmentStyle(segment, updates));
+	const textStyle: TextStyle = { ...element.textStyle, ...exclusive };
+	const textSegments =
+		current &&
+		overrideParagraphProperties(current, exclusive).map((segment) =>
+			updateTextSegmentStyle(segment, exclusive),
+		);
 	return {
-		patch: (textSegments ? { textStyle, textSegments } : { textStyle }) as Partial<PptxElement>,
+		patch: {
+			textStyle,
+			...(textSegments ? { textSegments } : {}),
+			...overrideParagraphIndents(element, exclusive),
+		} as Partial<PptxElement>,
 		newSelection: null,
 	};
 }

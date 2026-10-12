@@ -166,3 +166,18 @@ describe('shapeStylePatch / textStylePatch theme colour refs (W3-G2)', () => {
 		expect(patch.textStyle).toMatchObject({ color: '#ed7d31', colorRef: { scheme: 'accent2' } });
 	});
 });
+
+describe('textStylePatch over paragraph-level properties', () => {
+	it('reaches paragraphs that author their own line spacing', () => {
+		const el = {
+			...textElement(),
+			textSegments: [{ text: 'a', style: {}, paragraphProperties: { lineSpacingExactPt: 12 } }],
+		} as PptxElement;
+		const patch = textStylePatch(el, { lineSpacing: 1.5 }) as {
+			textStyle?: TextSegment['style'];
+			textSegments?: TextSegment[];
+		};
+		expect(patch.textStyle).toStrictEqual({ lineSpacing: 1.5, lineSpacingExactPt: undefined });
+		expect(patch.textSegments?.[0]?.paragraphProperties).toStrictEqual({ lineSpacing: 1.5 });
+	});
+});

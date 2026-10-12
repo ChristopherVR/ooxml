@@ -17,7 +17,8 @@
  * un-underlined.
  */
 
-import type { TextSegment, TextStyle } from 'ooxml-core/pptx';
+import type { PptxElement, TextSegment, TextStyle } from 'ooxml-core/pptx';
+import { hasTextProperties } from 'ooxml-core/pptx';
 
 import type { TextDecorationFlag } from './selection-format-state';
 import { isContentSegment } from './selection-format-state';
@@ -138,4 +139,117 @@ export function reconcileDecorationFlags(
 		);
 	}
 	return { textStyle: nextStyle, textSegments: nextSegments };
+}
+
+/** `a:lnSpc` holds one of a percentage or an exact size, never both. */
+const LINE_SPACING_TWIN: Partial<Record<keyof TextStyle, keyof TextStyle>> = {
+	lineSpacing: 'lineSpacingExactPt',
+	lineSpacingExactPt: 'lineSpacing',
+};
+
+/**
+ * Clear the other line-spacing mode when an update sets one. Without this a
+ * multiplier applied over an authored `a:spcPts` keeps the exact size, which
+ * the renderer prefers, so the edit shows nothing.
+ */
+export function withExclusiveLineSpacing(updates: Partial<TextStyle>): Partial<TextStyle> {
+	const next: Partial<TextStyle> = { ...updates };
+	for (const key of Object.keys(updates) as (keyof TextStyle)[]) {
+		const twin = LINE_SPACING_TWIN[key];
+		if (twin && updates[key] !== undefined && !(twin in updates)) {
+			next[twin] = undefined;
+		}
+	}
+	return next;
+}
+
+/**
+ * Apply a body-wide paragraph update over each paragraph's own `a:pPr`.
+ *
+ * A paragraph's authored properties (`segment.paragraphProperties`) win over
+ * `element.textStyle` both on screen and on save, so an element-wide line
+ * spacing or indent change is invisible on any paragraph that declares its
+ * own. Only body-level keys the paragraph already declares (or whose
+ * line-spacing twin it declares) are rewritten, so nothing new is pinned onto
+ * its `a:pPr` and run-level keys such as `align` keep their old behaviour.
+ * Pass `updates` through {@link withExclusiveLineSpacing} first.
+ */
+export function overrideParagraphProperties(
+	segments: readonly TextSegment[],
+	updates: Partial<TextStyle>,
+): TextSegment[] {
+	const keys = (Object.keys(updates) as (keyof TextStyle)[]).filter(isBodyTextStyleKey);
+	return segments.map((segment) => {
+		const own = segment.paragraphProperties;
+		const declared = own
+			? keys.filter((key) => {
+					const twin = LINE_SPACING_TWIN[key];
+					return key in own || (twin !== undefined && twin in own);
+				})
+			: [];
+		if (!own || declared.length === 0) {
+			return segment;
+		}
+		const next: TextStyle = { ...own };
+		for (const key of declared) {
+			if (updates[key] === undefined) {
+				delete next[key];
+			} else {
+				Object.assign(next, { [key]: updates[key] });
+			}
+		}
+		return { ...segment, paragraphProperties: next };
+	});
+}
+
+/** The parts of a text element below its body style that a paragraph update rewrites. */
+export interface ParagraphLevelPatch {
+	textSegments?: TextSegment[];
+	paragraphIndents?: { marginLeft?: number; indent?: number }[];
+}
+
+/**
+ * The per-paragraph indents with an element-wide indent applied. The renderer
+ * reads these instead of `textStyle` once a body has any
+ * (`text-block-style.ts`), so without this an indent change only shows after
+ * a save and reload. Empty when there is nothing to rewrite.
+ */
+export function overrideParagraphIndents(
+	element: PptxElement,
+	updates: Partial<TextStyle>,
+): Pick<ParagraphLevelPatch, 'paragraphIndents'> {
+	const { paragraphMarginLeft, paragraphIndent } = updates;
+	if (
+		!hasTextProperties(element) ||
+		!element.paragraphIndents ||
+		(paragraphMarginLeft === undefined && paragraphIndent === undefined)
+	) {
+		return {};
+	}
+	return {
+		paragraphIndents: element.paragraphIndents.map((entry) => ({
+			...entry,
+			...(paragraphMarginLeft === undefined ? {} : { marginLeft: paragraphMarginLeft }),
+			...(paragraphIndent === undefined ? {} : { indent: paragraphIndent }),
+		})),
+	};
+}
+
+/**
+ * The paragraph-level half of an element-wide text-style patch: the segments
+ * whose own `a:pPr` had to change and the rewritten indents. Empty when
+ * nothing below the body changes, so a plain body edit does not resend every
+ * segment. Pass `updates` through {@link withExclusiveLineSpacing} first.
+ */
+export function paragraphOverridePatch(
+	element: PptxElement,
+	updates: Partial<TextStyle>,
+): ParagraphLevelPatch {
+	const current = hasTextProperties(element) ? element.textSegments : undefined;
+	const overridden = current && overrideParagraphProperties(current, updates);
+	const changed = overridden?.some((segment, index) => segment !== current?.[index]);
+	return {
+		...(changed ? { textSegments: overridden } : {}),
+		...overrideParagraphIndents(element, updates),
+	};
 }
