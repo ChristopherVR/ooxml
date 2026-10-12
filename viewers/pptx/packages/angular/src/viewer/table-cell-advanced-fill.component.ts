@@ -21,7 +21,7 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { FILL_MODE_OPTIONS, GRADIENT_TYPE_OPTIONS } from 'ooxml-ui/pptx';
+import { FILL_MODE_OPTIONS, GRADIENT_TYPE_OPTIONS, inspectorNumber } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 
 import { isSelectControl } from './control-event-targets';
@@ -87,7 +87,7 @@ type GradientStop = { color: string; position: number };
 								min="0"
 								max="360"
 								[disabled]="!canEdit()"
-								[value]="cellStyle().gradientFillAngle ?? 90"
+								[value]="gradientAngleValue()"
 								(change)="onAngleChange($event)"
 							/>
 						</label>
@@ -300,7 +300,11 @@ export class TableCellAdvancedFillComponent {
 	);
 
 	protected marginValue(key: 'marginTop' | 'marginBottom' | 'marginLeft' | 'marginRight'): number {
-		return this.cellStyle()[key] ?? 0;
+		return inspectorNumber(this.cellStyle()[key], 0);
+	}
+
+	protected gradientAngleValue(): number {
+		return inspectorNumber(this.cellStyle().gradientFillAngle, 90);
 	}
 
 	protected onFillModeChange(event: Event): void {

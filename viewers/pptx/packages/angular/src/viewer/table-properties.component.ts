@@ -26,6 +26,7 @@ import {
 	applyTableStylePreset,
 	evenColumnWidths,
 	evenRowHeights,
+	inspectorNumber,
 	redistributeColumnWidth,
 	TABLE_STYLE_PRESETS,
 	tableStyleAssignmentUpdate,
@@ -163,7 +164,7 @@ import { TableStyleEditorLauncherComponent } from './table-style-editor-launcher
 							min="16"
 							max="500"
 							[disabled]="!canEdit()"
-							[value]="row.height ?? defaultRowHeight"
+							[value]="rowHeightValue(row.height)"
 							(change)="onRowHeight(ri, $event)"
 						/>
 						<span class="pptx-tp__lbl">px</span>
@@ -286,6 +287,10 @@ export class TablePropertiesComponent {
 	protected readonly toggles = TABLE_STRUCTURE_TOGGLES;
 	protected readonly presets = TABLE_STYLE_PRESETS;
 	protected readonly defaultRowHeight = DEFAULT_TABLE_ROW_HEIGHT;
+
+	protected rowHeightValue(height: number | undefined): number {
+		return inspectorNumber(height, this.defaultRowHeight);
+	}
 
 	protected readonly td = computed(() => this.element().tableData);
 	protected readonly colCount = computed(() => this.td()?.columnWidths.length ?? 0);

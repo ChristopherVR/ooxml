@@ -14,7 +14,7 @@
  */
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { withCellStyle } from 'ooxml-ui/pptx';
+import { inspectorNumber, withCellStyle } from 'ooxml-ui/pptx';
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
@@ -70,7 +70,7 @@ type NumKey =
 						min="6"
 						max="200"
 						[disabled]="!canEdit()"
-						[value]="style().fontSize ?? 14"
+						[value]="fontSizeValue()"
 						(change)="onNumber('fontSize', $event)"
 					/>
 				</label>
@@ -348,7 +348,11 @@ export class TableCellFormattingComponent {
 
 	protected widthOf(key: NumKey): number {
 		const v = this.style()[key];
-		return typeof v === 'number' ? v : 1;
+		return inspectorNumber(typeof v === 'number' ? v : undefined, 1);
+	}
+
+	protected fontSizeValue(): number {
+		return inspectorNumber(this.style().fontSize, 14);
 	}
 
 	protected toggle(key: 'bold' | 'italic' | 'underline'): void {
