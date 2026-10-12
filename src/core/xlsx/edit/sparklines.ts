@@ -4,7 +4,7 @@ import type { SparklineGroup, Worksheet } from '../model';
 import { readSparklineGroup, sheetSparklineGroups } from '../read/sparklines';
 import { el, escapeText } from '../write/xml-out';
 import { type EditContext, sheetAt } from './context';
-import { checkedSparklineRange, newSparklines } from './sparkline-ranges';
+import { checkedSparklineRange, newSparklines, sparklineDataRange } from './sparkline-ranges';
 import {
 	XM,
 	appendSparklineXml,
@@ -178,6 +178,51 @@ export function setSparklineGroups(
 		return true;
 	});
 	save(ctx, s, next, 'Format sparklines', ranges);
+}
+
+/** Sets a continuous date vector for all selected groups; an empty reference clears it. */
+export function setSparklineDateRange(
+	ctx: EditContext,
+	s: number,
+	ranges: CellRange[],
+	source = '',
+): void {
+	ranges = ranges.map(checkedSparklineRange);
+	const sheet = sheetAt(ctx.workbook, s);
+	const groups = selectedSparklineGroups(sheet, ranges);
+	if (!groups.length) return;
+	let formula: string | undefined;
+	if (source.trim()) {
+		const data = sparklineDataRange(ctx.workbook, s, source);
+		const length = (range: CellRange): number => {
+			const rows = range.end.row - range.start.row + 1;
+			const cols = range.end.col - range.start.col + 1;
+			if (rows > 1 && cols > 1) throw new Error('The date range must be one row or column.');
+			return Math.max(rows, cols);
+		};
+		const count = length(data.range);
+		if (count > 10_000) throw new Error('The sparkline date range is too large.');
+		for (const group of groups)
+			for (const line of group.sparklines) {
+				const values = sparklineDataRange(ctx.workbook, s, line.formula ?? '');
+				if (length(values.range) !== count)
+					throw new Error('The data range and date range do not match.');
+			}
+		formula = `'${ctx.workbook.sheets[data.sheet]!.name.replaceAll("'", "''")}'!${formatRange(data.range)}`;
+	}
+	const next = editSparklineXml(sheet, (node, group) => {
+		if (!group.sparklines.some((line) => ranges.some((range) => rangesIntersect(range, line.host))))
+			return false;
+		for (const old of children(node, 'f', XM)) node.removeChild(old);
+		node.setAttribute('dateAxis', formula ? '1' : '0');
+		if (formula) {
+			const value = node.ownerDocument!.createElementNS(XM, 'xm:f');
+			value.textContent = formula;
+			node.insertBefore(value, first(node, 'sparklines', NS.x14) ?? null);
+		}
+		return true;
+	});
+	save(ctx, s, next, 'Change sparkline date axis', ranges);
 }
 
 /** Clears selected hosts, or all sparklines in their groups when wholeGroups is true. */

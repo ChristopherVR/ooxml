@@ -25,6 +25,7 @@ export function openCreateSparklines(
 	const data = textInput(ctx);
 	const locations = textInput(ctx, formatRange(t.range));
 	const kind = select(ctx, TYPES, type);
+	const dates = textInput(ctx);
 	return showDialog(ctx, {
 		name: 'create-sparklines',
 		heading: 'Create Sparklines',
@@ -32,13 +33,17 @@ export function openCreateSparklines(
 			field(ctx, 'Data Range:', data),
 			field(ctx, 'Location Range:', locations),
 			field(ctx, 'Sparkline Type:', kind),
+			field(ctx, 'Date Range (optional):', dates),
 		],
 		opened: () => data.focus(),
 		submit: () => {
 			const range = parseRange(locations.value.trim().replace(/^=/, '').replaceAll('$', ''));
 			if (!range) throw new Error('The reference is not valid.');
-			t.session.createSparklineGroup(t.sheet, data.value, range, {
-				type: kind.value as SparklineType,
+			t.session.batch('Create sparklines', () => {
+				t.session.createSparklineGroup(t.sheet, data.value, range, {
+					type: kind.value as SparklineType,
+				});
+				if (dates.value.trim()) t.session.setSparklineDateRange(t.sheet, [range], dates.value);
 			});
 			ctx.selection.set({ ranges: [range], active: range.start, anchor: range.start });
 			return true;
@@ -51,6 +56,22 @@ export function openSparklineSettings(ctx: EditorContext): Promise<boolean | und
 	const groups = t ? selectedSparklineGroups(t.ws, t.ranges) : [];
 	const group = groups[0];
 	if (!t || !group) return Promise.resolve(undefined);
+	const dates = textInput(ctx, group.dateAxis ? (group.dateFormula ?? '') : '');
+	if (
+		groups.some(
+			(entry) => entry.dateAxis !== group.dateAxis || entry.dateFormula !== group.dateFormula,
+		)
+	) {
+		dates.value = '';
+		dates.placeholder = ctx.t('Mixed');
+	}
+	let datesChanged = false;
+	dates.addEventListener('input', () => {
+		datesChanged = true;
+	});
+	dates.addEventListener('change', () => {
+		datesChanged = true;
+	});
 	const changes = new Map<keyof SparklineGroupPatch, () => SparklineGroupPatch>();
 	const track = (
 		input: HTMLInputElement | HTMLSelectElement,
@@ -178,6 +199,8 @@ export function openSparklineSettings(ctx: EditorContext): Promise<boolean | und
 			text(ctx, 'Only changed settings are applied.'),
 			field(ctx, 'Sparkline Type:', kind),
 			field(ctx, 'Line Weight:', width),
+			field(ctx, 'Date Range (optional):', dates),
+			text(ctx, 'Leave the date range empty for a general axis.'),
 			fieldset(ctx, 'Show', ...checks.map((check) => check.wrapper)),
 			fieldset(
 				ctx,
@@ -209,7 +232,10 @@ export function openSparklineSettings(ctx: EditorContext): Promise<boolean | und
 				(patch.maxAxisType === 'custom' && !max.value.trim())
 			)
 				throw new Error('The sparkline axis limits are not valid.');
-			if (Object.keys(patch).length) t.session.setSparklineGroups(t.sheet, t.ranges, patch);
+			t.session.batch('Format sparklines', () => {
+				if (datesChanged) t.session.setSparklineDateRange(t.sheet, t.ranges, dates.value);
+				if (Object.keys(patch).length) t.session.setSparklineGroups(t.sheet, t.ranges, patch);
+			});
 			return true;
 		},
 	});

@@ -7,7 +7,7 @@ const TABLE: Record<string, string> = {
 		'name cacheId dataCaption updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData multipleFieldFilters rowGrandTotals colGrandTotals',
 	location: 'ref firstHeaderRow firstDataRow firstDataCol',
 	pivotFields: 'count',
-	pivotField: 'axis dataField compact outline showAll',
+	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
 	items: 'count',
 	item: 'x t',
 	rowFields: 'count',
@@ -44,10 +44,20 @@ const CACHE: Record<string, string> = {
 
 function inspect(node: XmlElement, profile: Record<string, string>, cache: boolean): void {
 	if (node.namespaceURI !== NS.x) {
+		const owner = node.parentNode?.parentNode?.parentNode as XmlElement | null | undefined;
 		const known = cache
-			? node.namespaceURI === X14 && node.localName === 'pivotCacheDefinition'
-			: (node.namespaceURI === X14 && node.localName === 'pivotTableDefinition') ||
-				(node.namespaceURI === LAYOUT && node.localName === 'pivotTableDefinition16');
+			? node.namespaceURI === X14 &&
+				node.localName === 'pivotCacheDefinition' &&
+				owner?.localName === 'pivotCacheDefinition'
+			: (node.namespaceURI === X14 &&
+					node.localName === 'pivotTableDefinition' &&
+					owner?.localName === 'pivotTableDefinition') ||
+				(node.namespaceURI === X14 &&
+					node.localName === 'pivotField' &&
+					owner?.localName === 'pivotField') ||
+				(node.namespaceURI === LAYOUT &&
+					node.localName === 'pivotTableDefinition16' &&
+					owner?.localName === 'pivotTableDefinition');
 		if (!known || elements(node).length) throw new Error('Unsupported PivotTable extension');
 		for (let i = 0; i < node.attributes.length; i++) {
 			const attr = node.attributes.item(i)!;
@@ -55,8 +65,17 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 			if (
 				!cache &&
 				node.namespaceURI === X14 &&
+				node.localName === 'pivotTableDefinition' &&
 				attr.name === 'hideValuesRow' &&
 				attr.value === '1'
+			)
+				continue;
+			if (
+				!cache &&
+				node.namespaceURI === X14 &&
+				((node.localName === 'pivotField' && attr.name === 'fillDownLabels') ||
+					(node.localName === 'pivotTableDefinition' && attr.name === 'fillDownLabelsDefault')) &&
+				['0', '1'].includes(attr.value)
 			)
 				continue;
 			throw new Error('Unsupported PivotTable extension option');
@@ -68,7 +87,11 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 	if (node.localName === 'ext') {
 		const uris = cache
 			? ['{725AE2AE-9491-48be-B2B4-4EB974FC3084}']
-			: ['{962EF5D1-5CA2-4c93-8EF4-DBF5C05439D2}', '{747A6164-185A-40DC-8AA5-F01512510D54}'];
+			: [
+					'{962EF5D1-5CA2-4c93-8EF4-DBF5C05439D2}',
+					'{747A6164-185A-40DC-8AA5-F01512510D54}',
+					'{2946ED86-A175-432a-8AC1-64E0C546D7DE}',
+				];
 		if (!uris.includes(node.getAttribute('uri') ?? ''))
 			throw new Error('Unsupported PivotTable extension identity');
 	}
@@ -96,6 +119,18 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 			throw new Error('Unsupported PivotTable option');
 		if (attr.localName === 'numFmtId' && attr.value !== '0')
 			throw new Error('Unsupported PivotTable field number format');
+		if (
+			node.localName === 'item' &&
+			attr.localName === 't' &&
+			!['default', 'data'].includes(attr.value)
+		)
+			throw new Error('Unsupported PivotTable subtotal');
+		if (
+			node.localName === 'pivotField' &&
+			['subtotalTop', 'defaultSubtotal'].includes(attr.localName!) &&
+			!['0', '1'].includes(attr.value)
+		)
+			throw new Error('Unsupported PivotTable subtotal option');
 		if (
 			node.localName === 'pivotField' &&
 			['compact', 'outline', 'showAll'].includes(attr.localName!) &&

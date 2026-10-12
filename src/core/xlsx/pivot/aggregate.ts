@@ -7,6 +7,7 @@ import {
 	type Worksheet,
 } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
+import { hierarchicalPivotGrid } from './hierarchy';
 
 function aggregate(
 	records: readonly CellValue[][],
@@ -31,11 +32,14 @@ export interface PivotGrid {
 	rowItems: CellValue[];
 	columnItems: CellValue[];
 	firstDataRow: number;
+	secondRowItems?: CellValue[];
+	rowEntries?: { indices: number[]; type?: 'default' | 'grand' }[];
 }
 
 /** Tabular output, including grand totals computed from source records (not averages of cells). */
 export function pivotGrid(pivot: PivotTable): PivotGrid {
 	validatePivotFields(pivot);
+	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot, aggregate);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
 	if ((rowItems.length + 3) * (columnItems.length + 2) > 1_000_000)

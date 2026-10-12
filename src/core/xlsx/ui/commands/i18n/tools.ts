@@ -4,6 +4,18 @@
 import type { Translations } from './types';
 
 export const TOOLS_STRINGS: Translations = {
+	'Date Range (optional):': [
+		'Plage de dates (facultative) :',
+		'Datumsbereich (optional):',
+		'Rango de fechas (opcional):',
+		'日期范围（可选）：',
+	],
+	'Leave the date range empty for a general axis.': [
+		'Laissez la plage de dates vide pour un axe général.',
+		'Für eine allgemeine Achse den Datumsbereich leer lassen.',
+		'Deje vacío el rango de fechas para un eje general.',
+		'将日期范围留空以使用常规坐标轴。',
+	],
 	Time: ['Heure', 'Zeit', 'Hora', '时间'],
 	'First Page Header:': [
 		'En-tête de première page :',

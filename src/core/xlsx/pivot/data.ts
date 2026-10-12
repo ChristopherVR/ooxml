@@ -82,17 +82,31 @@ export function pivotItemLabel(value: CellValue): CellValue {
 }
 
 export function validatePivotFields(
-	pivot: Pick<PivotTable, 'fields' | 'rowField' | 'columnField' | 'valueField' | 'aggregate'>,
+	pivot: Pick<
+		PivotTable,
+		| 'fields'
+		| 'rowField'
+		| 'secondRowField'
+		| 'subtotals'
+		| 'repeatLabels'
+		| 'columnField'
+		| 'valueField'
+		| 'aggregate'
+	>,
 ): void {
 	const used = [
 		pivot.rowField,
+		...(pivot.secondRowField ? [pivot.secondRowField] : []),
 		...(pivot.columnField ? [pivot.columnField] : []),
 		pivot.valueField,
 	];
 	if (
 		!PIVOT_AGGREGATES.includes(pivot.aggregate) ||
 		used.some((field) => !pivot.fields.includes(field)) ||
-		pivot.rowField === pivot.columnField
+		new Set([pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean)).size !==
+			[pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean).length ||
+		(pivot.subtotals !== undefined && typeof pivot.subtotals !== 'boolean') ||
+		(pivot.repeatLabels !== undefined && typeof pivot.repeatLabels !== 'boolean')
 	)
 		throw new Error('Choose valid PivotTable fields; row and column fields must differ.');
 }

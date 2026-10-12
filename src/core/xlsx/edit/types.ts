@@ -225,6 +225,8 @@ export interface EditSession {
 	): void;
 	/** Settings affect each group containing a selected sparkline. */
 	setSparklineGroups(sheet: number, ranges: CellRange[], patch: SparklineGroupPatch): void;
+	/** A continuous date vector, or empty to return to a general axis. */
+	setSparklineDateRange(sheet: number, ranges: CellRange[], source?: string): void;
 	/** Clears selected hosts, or their whole groups. Cell contents remain. */
 	deleteSparklines(sheet: number, ranges: CellRange[], wholeGroups?: boolean): void;
 	/** Adds a chart drawn from the model; returns its index in the sheet's drawings. */

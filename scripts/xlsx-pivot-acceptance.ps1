@@ -28,26 +28,36 @@ writeFileSync(join(out,'imported.xlsx'),await saveXlsx(imported));
 edit.refreshPivotTable(0,'SalesPivot',{columnField:'',valueField:'Category',aggregate:'count'});
 writeFileSync(join(out,'count-row.xlsx'),await saveXlsx(imported));
 edit.deletePivotTable(0,'SalesPivot'); writeFileSync(join(out,'deleted.xlsx'),await saveXlsx(imported));
-for (const mode of ['cache-blank', 'cache-numeric', 'cache-boolean', 'cache-error']) {
+for (const mode of ['cache-blank', 'cache-numeric', 'cache-boolean', 'cache-error', 'rows', 'rows-none', 'rows-repeat', 'rows-average', 'rows-column', 'rows-sparse', 'rows-blank', 'rows-numeric', 'rows-boolean', 'rows-error', 'rows-mixed']) {
  const wb=createWorkbook({sheets:['Data','Summary']});const session=createEditSession(wb);
- const rows:(string|number|boolean)[][]=[['Category','Region','Amount'],['Fruit','East',10],['Fruit','West',20],['Veg','East',5],['Veg','West',15],['Fruit','East',7]];
+ const rows:(string|number|boolean)[][]=[['Category','Region','Amount','Quarter'],['Fruit','East',10,'Q1'],['Fruit','West',20,'Q2'],['Veg','East',5,'Q1'],['Veg','West',15,'Q2'],['Fruit','East',7,'Q2']];
+ if(mode==='rows-sparse') rows[3][1]='North';
  for(let r=1;r<rows.length;r++) {
-  if(mode==='cache-blank' && rows[r][0]==='Fruit') rows[r][0]='';
-  if(mode==='cache-numeric') rows[r][0]=rows[r][0]==='Fruit'?2026:2027;
-  if(mode==='cache-boolean') rows[r][0]=rows[r][0]==='Fruit';
-  if(mode==='cache-error' && rows[r][0]==='Fruit') rows[r][0]='=NA()';
+  if(mode.endsWith('-blank') && rows[r][0]==='Fruit') rows[r][0]='';
+  if(mode.endsWith('-numeric')) rows[r][0]=rows[r][0]==='Fruit'?2026:2027;
+  if(mode.endsWith('-boolean')) rows[r][0]=rows[r][0]==='Fruit';
+  if(mode.endsWith('-error') && rows[r][0]==='Fruit') rows[r][0]='=NA()';
  }
+ if(mode==='rows-mixed') [10,"'10",true,'Fruit','=NA()'].forEach((value,index)=>rows[index+1][0]=value);
  rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
- session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:C6',rowField:'Category',columnField:'Region',valueField:'Amount'});
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:D6',rowField:'Category',valueField:'Amount',...(mode.startsWith('cache-')?{columnField:'Region'}:{secondRowField:'Region',subtotals:mode!=='rows-none',repeatLabels:mode==='rows-repeat',aggregate:mode==='rows-average'?'average':'sum',...(mode==='rows-column'?{columnField:'Quarter'}:{})})});
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
  writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[1].pivotTables[0]).values));
 }
+const hierarchy=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-rows-repeat.xlsx'))));
+createEditSession(hierarchy).refreshPivotTable(0,'SalesPivot',{repeatLabels:false,subtotals:false});
+writeFileSync(join(out,'rows-imported.xlsx'),await saveXlsx(hierarchy));
+writeFileSync(join(out,'rows-imported.json'),JSON.stringify(pivotGrid(hierarchy.sheets[0].pivotTables[0]).values));
+createEditSession(hierarchy).refreshPivotTable(0,'SalesPivot',{secondRowField:'',columnField:'Region',repeatLabels:true});
+writeFileSync(join(out,'cache-from-rows.xlsx'),await saveXlsx(hierarchy));
+writeFileSync(join(out,'cache-from-rows.json'),JSON.stringify(pivotGrid(hierarchy.sheets[0].pivotTables[0]).values));
 '@ | Set-Content -LiteralPath $taskScript
 	& bun run $taskScript
 	if ($LASTEXITCODE -ne 0) { throw 'PivotTable generation failed.' }
 	$excel = New-Object -ComObject Excel.Application
 	$excel.Visible = $false; $excel.DisplayAlerts = $false
 	Write-Output ('Native Excel version: '+$excel.Version+', build: '+$excel.Build)
+	Write-Output ('Native Excel file version: '+[Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $excel.Path 'EXCEL.EXE')).FileVersion)
 	foreach ($case in @(@{ Name='sum'; Total=57 }, @{ Name='count'; Total=5 }, @{ Name='average'; Total=11.4 }, @{ Name='min'; Total=5 }, @{ Name='max'; Total=20 }, @{ Name='imported'; Total=147 }, @{ Name='count-row'; Total=5 }, @{ Name='deleted'; Total=$null })) {
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($case.Name+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
@@ -69,30 +79,32 @@ for (const mode of ['cache-blank', 'cache-numeric', 'cache-boolean', 'cache-erro
 		Write-Output ($case.Name+': native Excel accepted cached and refreshed output')
 		$book.Close($false); $book = $null
 	}
-	foreach ($mode in @('cache-blank','cache-numeric','cache-boolean','cache-error')) {
+	foreach ($mode in @('cache-blank','cache-numeric','cache-boolean','cache-error','rows','rows-none','rows-repeat','rows-average','rows-column','rows-sparse','rows-blank','rows-numeric','rows-boolean','rows-error','rows-mixed','rows-imported','cache-from-rows')) {
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($mode+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
 		$pivot = $summary.PivotTables().Item(1)
-		if ($pivot.RowFields().Count -ne 1) { throw ('Wrong PivotTable row field count: '+$mode) }
+		$rowFieldCount = if ($mode.StartsWith('cache-')) { 1 } else { 2 }
+		if ($pivot.RowFields().Count -ne $rowFieldCount) { throw ('Wrong PivotTable row field count: '+$mode) }
 		$expected = Get-Content -Raw -LiteralPath (Join-Path $taskFolder ($mode+'.json')) | ConvertFrom-Json
 		foreach ($phase in @('cached','refreshed')) {
 			if ($phase -eq 'refreshed') { [void]$pivot.RefreshTable() }
-			if ($pivot.TableRange2.Rows.Count -ne $expected.Count) { throw ('Wrong cache row count: '+$mode+' '+$phase) }
-			if ($pivot.TableRange2.Columns.Count -ne $expected[0].Count) { throw ('Wrong cache column count: '+$mode+' '+$phase) }
+			if ($pivot.TableRange2.Rows.Count -ne $expected.Count) { throw ('Wrong hierarchy row count: '+$mode+' '+$phase) }
+			if ($pivot.TableRange2.Columns.Count -ne $expected[0].Count) { throw ('Wrong hierarchy column count: '+$mode+' '+$phase) }
 			for ($r=0; $r -lt $expected.Count; $r++) {
 				for ($c=0; $c -lt $expected[$r].Count; $c++) {
 					$actual=$summary.Cells.Item($r+1,$c+1).Value2
 					$want=$expected[$r][$c]
 					if ($want -is [pscustomobject] -and $want.error) {
-						if ($summary.Cells.Item($r+1,$c+1).Text -cne $want.error) { throw ('Wrong cache error: '+$mode+' '+$phase) }
+						if ($summary.Cells.Item($r+1,$c+1).Text -cne $want.error) { throw ('Wrong hierarchy error: '+$mode+' '+$phase) }
 					} elseif ($want -is [ValueType] -and $want -isnot [bool]) {
-						if ($null -eq $actual) { throw ('Missing numeric cache value: '+$mode+' '+$phase) }
-						if ([Math]::Abs([double]$actual-[double]$want) -gt 0.00001) { throw ('Wrong cache value: '+$mode+' '+$phase+' row'+$r+' col'+$c) }
-					} elseif ([string]$actual -cne [string]$want) { throw ('Wrong cache label: '+$mode+' '+$phase+' row'+$r+' col'+$c+': '+$actual+' expected: '+$want) }
+						if ($null -eq $actual) { throw ('Missing numeric hierarchy value: '+$mode+' '+$phase) }
+						if ($actual -isnot [ValueType] -or $actual -is [bool]) { throw ('Wrong numeric hierarchy type: '+$mode+' '+$phase) }
+						if ([Math]::Abs([double]$actual-[double]$want) -gt 0.00001) { throw ('Wrong hierarchy value: '+$mode+' '+$phase+' row'+$r+' col'+$c) }
+					} elseif ([string]$actual -cne [string]$want -or ($want -is [string] -and $actual -isnot [string])) { throw ('Wrong hierarchy label: '+$mode+' '+$phase+' row'+$r+' col'+$c+': '+$actual+' expected: '+$want) }
 				}
 			}
 		}
-		Write-Output ($mode+': native Excel accepted every cached and refreshed typed-cache cell')
+		Write-Output ($mode+': native Excel accepted every cached and refreshed hierarchy cell')
 		$book.Close($false); $book=$null
 	}
 } finally {

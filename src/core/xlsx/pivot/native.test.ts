@@ -8,6 +8,57 @@ import { saveXlsx } from '../write/index';
 
 const fixture = readFileSync(new URL('../__fixtures__/excel-pivot.xlsx', import.meta.url));
 
+for (const suffix of ['', '-no-subtotals', '-repeat'])
+	it(`reads and refreshes native two-row layout${suffix}`, async () => {
+		const bytes = readFileSync(
+			new URL(`../__fixtures__/excel-pivot-rows${suffix}.xlsx`, import.meta.url),
+		);
+		const wb = await loadXlsx(bytes);
+		expect(wb.warnings).toEqual([]);
+		const summary = wb.sheets.findIndex((sheet) => sheet.name === 'Summary');
+		const data = wb.sheets.findIndex((sheet) => sheet.name === 'Data');
+		const pivot = wb.sheets[summary]!.pivotTables![0]!;
+		expect(pivot).toMatchObject({
+			secondRowField: 'Region',
+			subtotals: suffix !== '-no-subtotals',
+			repeatLabels: suffix === '-repeat',
+		});
+		const original = await JSZip.loadAsync(bytes);
+		const unchanged = await JSZip.loadAsync(await saveXlsx(wb));
+		for (const path of Object.keys(original.files).filter((path) => path.startsWith('xl/pivot')))
+			expect(await unchanged.file(path)?.async('string')).toBe(
+				await original.file(path)!.async('string'),
+			);
+		const edit = createEditSession(wb);
+		edit.setCellInput(data, 1, 2, '100');
+		edit.refreshPivotTable(summary, pivot.name);
+		const reloaded = await loadXlsx(await saveXlsx(wb));
+		expect(reloaded.warnings).toEqual([]);
+		expect(getCell(reloaded.sheets[summary]!, 1, 2)?.value).toBe(107);
+	});
+
+it('preserves unsupported top/custom subtotals and field extensions without admission', async () => {
+	const bytes = readFileSync(
+		new URL('../__fixtures__/excel-pivot-rows-repeat.xlsx', import.meta.url),
+	);
+	const path = 'xl/pivotTables/pivotTable1.xml';
+	for (const patch of [
+		(xml: string) => xml.replace('subtotalTop="0"', 'subtotalTop="1"'),
+		(xml: string) => xml.replace('<item t="default"/>', '<item t="sum"/>'),
+		(xml: string) => xml.replace('fillDownLabels="1"', 'fillDownLabels="0"'),
+		(xml: string) => xml.replace('fillDownLabels="1"', 'fillDownLabels="1" insertBlankRow="1"'),
+	]) {
+		const zip = await JSZip.loadAsync(bytes);
+		const xml = patch(await zip.file(path)!.async('string'));
+		zip.file(path, xml);
+		const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+		expect(wb.warnings.some((warning) => warning.includes('preserved'))).toBe(true);
+		expect(wb.sheets.find((sheet) => sheet.name === 'Summary')?.pivotTables).toBeUndefined();
+		const output = await JSZip.loadAsync(await saveXlsx(wb));
+		expect(await output.file(path)!.async('string')).toBe(xml);
+	}
+});
+
 it('reads a native Excel PivotTable, preserves untouched parts, and refreshes its cache', async () => {
 	const book = await loadXlsx(fixture);
 	expect(book.warnings).toEqual([]);

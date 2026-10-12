@@ -25,7 +25,13 @@ for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) edit.setCellInput(0, r, 
 edit.createSparklineGroup(0, 'A1:C2', parseRange('D1:D2')!, { type: 'column', high: true, negative: true, minAxisType: 'custom', manualMin: -10, maxAxisType: 'custom', manualMax: 10, colorSeries: { rgb: '123456' } });
 edit.createSparklineGroup(0, 'A1:C1', parseRange('E1')!, { type: 'line', markers: true });
 edit.createSparklineGroup(0, 'A2:C2', parseRange('E2')!, { type: 'stacked', negative: true });
+for (let c = 0; c < 3; c++) edit.setCellInput(0, 3, c, String([46000, 46001, 46020][c]));
+edit.setSparklineDateRange(0, [parseRange('E1')!], 'A4:C4');
 writeFileSync(join(out, 'authored.xlsx'), await saveXlsx(wb));
+edit.setSparklineDateRange(0, [parseRange('E1')!]);
+writeFileSync(join(out, 'date-cleared.xlsx'), await saveXlsx(wb));
+edit.undo();
+writeFileSync(join(out, 'date-undone.xlsx'), await saveXlsx(wb));
 edit.deleteSparklines(0, [parseRange('D1:D2')!, parseRange('E1:E2')!], true);
 writeFileSync(join(out, 'cleared.xlsx'), await saveXlsx(wb));
 edit.undo();
@@ -39,6 +45,7 @@ writeFileSync(join(out, 'imported.xlsx'), await saveXlsx(imported));
 	$taskExcel = New-Object -ComObject Excel.Application
 	$taskExcel.Visible = $false
 	$taskExcel.DisplayAlerts = $false
+	Write-Output ('Native Excel version: ' + $taskExcel.Version + ', build: ' + $taskExcel.Build)
 	foreach ($taskCase in @(@{ Name = 'authored'; Count = 3 }, @{ Name = 'cleared'; Count = 0 }, @{ Name = 'undone'; Count = 3 }, @{ Name = 'imported'; Count = 5 })) {
 		$taskBook = $taskExcel.Workbooks.Open((Join-Path $taskFolder ($taskCase.Name + '.xlsx')))
 		$taskSheet = $taskBook.Worksheets.Item(1)
@@ -51,6 +58,14 @@ writeFileSync(join(out, 'imported.xlsx'), await saveXlsx(imported));
 			if ($taskSheet.Range('E1').SparklineGroups.Item(1).Type -ne 1 -or $taskSheet.Range('E2').SparklineGroups.Item(1).Type -ne 3) { throw 'Native line or win/loss type did not survive.' }
 		}
 		Write-Output ($taskCase.Name + ': native Excel accepted ' + $taskCase.Count + ' sparkline groups')
+		$taskBook.Close($false)
+		$taskBook = $null
+	}
+	foreach ($taskCase in @(@{ Name = 'authored'; Date = 'A4:C4' }, @{ Name = 'date-cleared'; Date = '' }, @{ Name = 'date-undone'; Date = 'A4:C4' })) {
+		$taskBook = $taskExcel.Workbooks.Open((Join-Path $taskFolder ($taskCase.Name + '.xlsx')))
+		$taskDate = $taskBook.Worksheets.Item(1).Range('E1').SparklineGroups.Item(1).DateRange
+		if ([string]$taskDate -ne $taskCase.Date) { throw ('Wrong native date range for ' + $taskCase.Name + ': ' + $taskDate) }
+		Write-Output ($taskCase.Name + ': native date range accepted: ' + $taskDate)
 		$taskBook.Close($false)
 		$taskBook = $null
 	}

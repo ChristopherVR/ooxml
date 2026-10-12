@@ -250,6 +250,8 @@ export function createEditSession(
 		createSparklineGroup: (s, source, locations, patch) =>
 			sparklines.createSparklineGroup(ctx, s, source, locations, patch),
 		setSparklineGroups: (s, ranges, patch) => sparklines.setSparklineGroups(ctx, s, ranges, patch),
+		setSparklineDateRange: (s, ranges, source) =>
+			sparklines.setSparklineDateRange(ctx, s, ranges, source),
 		deleteSparklines: (s, ranges, wholeGroups) =>
 			sparklines.deleteSparklines(ctx, s, ranges, wholeGroups),
 		addChart: (s, chart) => charts.addChart(ctx, s, chart),

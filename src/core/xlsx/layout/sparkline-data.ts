@@ -97,15 +97,33 @@ export function readSparklineValues(
 function groupData(workbook: Workbook, sheet: Worksheet, group: SparklineGroup): SparklineData[] {
 	const dateRange = group.dateAxis && group.dateFormula;
 	const dates = dateRange ? resolveSparklineRange(workbook, sheet, dateRange) : undefined;
-	const dateValues = dates
-		? readSparklineValues(dates.sheet, dates.range, group.displayHidden)
-		: undefined;
+	const dateValues = dates ? readSparklineValues(dates.sheet, dates.range, true) : undefined;
 	return group.sparklines.map((line) => {
 		const source = line.formula ? resolveSparklineRange(workbook, sheet, line.formula) : undefined;
+		if (group.dateAxis) {
+			if (!source || !dates || !dateValues) return { values: [], dates: [] };
+			const raw = readSparklineValues(source.sheet, source.range, true);
+			if (raw.length !== dateValues.length) return { values: [], dates: [] };
+			const hidden = (ref: typeof source, i: number): boolean => {
+				const columns = ref.range.end.col - ref.range.start.col + 1;
+				return (
+					rowHidden(ref.sheet, ref.range.start.row + Math.floor(i / columns)) ||
+					colHidden(ref.sheet, ref.range.start.col + (i % columns))
+				);
+			};
+			const pairs = dateValues.flatMap((date, i) =>
+				date === null || (!group.displayHidden && (hidden(source, i) || hidden(dates, i)))
+					? []
+					: [{ date, value: raw[i]! }],
+			);
+			// Excel 16.0.20430.20146 connects points chronologically, retaining equal-date order.
+			pairs.sort((a, b) => a.date - b.date);
+			return { values: pairs.map((pair) => pair.value), dates: pairs.map((pair) => pair.date) };
+		}
 		const values = source
 			? readSparklineValues(source.sheet, source.range, group.displayHidden)
 			: [];
-		return dateValues ? { values, dates: dateValues } : { values };
+		return { values };
 	});
 }
 

@@ -1,6 +1,24 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Second Row Field:': [
+		'Deuxième champ de ligne :',
+		'Zweites Zeilenfeld:',
+		'Segundo campo de fila:',
+		'第二行字段：',
+	],
+	'Show subtotals below each group': [
+		'Afficher les sous-totaux sous chaque groupe',
+		'Teilergebnisse unter jeder Gruppe anzeigen',
+		'Mostrar subtotales debajo de cada grupo',
+		'在每组下方显示分类汇总',
+	],
+	'Repeat row labels': [
+		'Répéter les étiquettes de ligne',
+		'Zeilenbeschriftungen wiederholen',
+		'Repetir etiquetas de fila',
+		'重复行标签',
+	],
 	'Charts, sparklines and worksheet-range PivotTables support editing. Advanced PivotTables, macros and other unsupported parts are preserved.':
 		[
 			'Les graphiques, graphiques sparkline et tableaux croisés dynamiques de plages prennent en charge la modification. Les tableaux avancés, macros et autres éléments non pris en charge sont conservés.',

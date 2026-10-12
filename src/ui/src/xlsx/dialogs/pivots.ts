@@ -7,7 +7,7 @@ import {
 	type PivotAggregate,
 } from 'ooxml-core/xlsx';
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
-import { field, select, textInput } from './fields';
+import { checkbox, field, select, textInput } from './fields';
 import { showDialog } from './frame';
 
 const AGGREGATES = [
@@ -31,6 +31,9 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	source.disabled = settings;
 	destination.disabled = settings;
 	const row = select(ctx, [], '');
+	const second = select(ctx, [['', '(None)']], '');
+	const subtotals = checkbox(ctx, 'Show subtotals below each group', pivot?.subtotals !== false);
+	const repeat = checkbox(ctx, 'Repeat row labels', pivot?.repeatLabels ?? false);
 	const column = select(ctx, [['', '(None)']], '');
 	const value = select(ctx, [], '');
 	const aggregate = select(ctx, AGGREGATES, pivot?.aggregate ?? 'sum');
@@ -43,6 +46,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		}
 		for (const [control, chosen, optional] of [
 			[row, pivot?.rowField, false],
+			[second, pivot?.secondRowField, true],
 			[column, pivot?.columnField, true],
 			[value, pivot?.valueField, false],
 		] as const) {
@@ -61,6 +65,13 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	};
 	source.addEventListener('change', loadFields);
 	loadFields();
+	const updateRows = () => {
+		subtotals.input.disabled = !second.value;
+		repeat.input.disabled = !second.value;
+	};
+	second.addEventListener('change', updateRows);
+	source.addEventListener('change', updateRows);
+	updateRows();
 	return showDialog(ctx, {
 		name: settings ? 'pivot-settings' : 'create-pivot-table',
 		heading: settings ? 'PivotTable Settings' : 'Create PivotTable',
@@ -68,6 +79,9 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Source Range:', source),
 			field(ctx, 'Destination Cell:', destination),
 			field(ctx, 'Row Field:', row),
+			field(ctx, 'Second Row Field:', second),
+			subtotals.wrapper,
+			repeat.wrapper,
 			field(ctx, 'Column Field:', column),
 			field(ctx, 'Value Field:', value),
 			field(ctx, 'Summarize Values By:', aggregate),
@@ -76,6 +90,9 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		submit: () => {
 			const options = {
 				rowField: row.value,
+				secondRowField: second.value,
+				subtotals: subtotals.input.checked,
+				repeatLabels: repeat.input.checked,
 				columnField: column.value,
 				valueField: value.value,
 				aggregate: aggregate.value as PivotAggregate,
@@ -83,6 +100,9 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			if (pivot) {
 				if (
 					pivot.rowField !== options.rowField ||
+					(pivot.secondRowField ?? '') !== options.secondRowField ||
+					(pivot.subtotals !== false) !== options.subtotals ||
+					(pivot.repeatLabels ?? false) !== options.repeatLabels ||
 					(pivot.columnField ?? '') !== options.columnField ||
 					pivot.valueField !== options.valueField ||
 					pivot.aggregate !== options.aggregate

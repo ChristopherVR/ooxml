@@ -16,6 +16,32 @@ const setup = () => {
 };
 
 describe('sparkline authoring', () => {
+	it('authors, clears and restores date vectors through saved XML and history', async () => {
+		const { wb, edit, groups } = setup();
+		edit.createSparklineGroup(0, 'A1:C2', range('D1:D2'));
+		edit.setSparklineDateRange(0, [range('D1')], "'O''Brien'!A1:C1");
+		expect(groups()[0]).toMatchObject({ dateAxis: true, dateFormula: "'O''Brien'!A1:C1" });
+		edit.insertColumns(1, 0, 1);
+		edit.renameSheet(1, 'Dates');
+		expect(groups()[0]?.dateFormula).toBe('Dates!B1:D1');
+		const reloaded = await loadXlsx(await saveXlsx(wb));
+		expect(sheetSparklineGroups(reloaded.sheets[0]!)[0]?.dateFormula).toBe('Dates!B1:D1');
+		edit.setSparklineDateRange(0, [range('D2')]);
+		expect(groups()[0]).toMatchObject({ dateAxis: false });
+		expect(groups()[0]?.dateFormula).toBeUndefined();
+		edit.undo();
+		expect(groups()[0]?.dateAxis).toBe(true);
+		edit.redo();
+		expect(groups()[0]?.dateAxis).toBe(false);
+	});
+	it('rejects invalid date vectors atomically across selected groups', () => {
+		const { edit, groups } = setup();
+		edit.createSparklineGroup(0, 'A1:C1', range('F1'));
+		edit.createSparklineGroup(0, 'A2:D2', range('F2'));
+		for (const ref of ['A3:C3', 'A1:C2', '[Book.xlsx]Sheet1!A1:C1', 'A1:A10001'])
+			expect(() => edit.setSparklineDateRange(0, [range('F1:F2')], ref)).toThrow();
+		expect(groups().every((group) => !group.dateAxis)).toBe(true);
+	});
 	it('normalizes reversed location and selection ranges before overlap checks and edits', () => {
 		const { edit, groups } = setup();
 		const reversed = { start: { row: 1, col: 3 }, end: { row: 0, col: 3 } };

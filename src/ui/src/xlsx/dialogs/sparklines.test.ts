@@ -15,6 +15,38 @@ afterEach(() => {
 });
 
 describe('sparkline dialogs', () => {
+	it('creates and clears a date axis as one undo step and preserves mixed dates on no-op', async () => {
+		const ctx = createTestContext(createWorkbook());
+		registerToolDialogs(ctx);
+		ctx.select('F1');
+		let done = ctx.dialogs.open('create-sparklines');
+		let box = dialogEl(ctx, 'create-sparklines');
+		setValue(inputByLabel(box, 'Data Range:'), 'A1:C1');
+		setValue(inputByLabel(box, 'Date Range (optional):'), 'A2:C2');
+		clickButton(box, 'OK');
+		expect(await done).toBe(true);
+		const groups = () => sheetSparklineGroups(ctx.workbook()!.sheets[0]!);
+		expect(groups()[0]?.dateAxis).toBe(true);
+		ctx.session()!.undo();
+		expect(groups()).toHaveLength(0);
+		ctx.session()!.redo();
+		ctx.session()!.createSparklineGroup(0, 'A3:C3', parseRange('F2')!);
+		ctx.select('F1:F2');
+		done = ctx.dialogs.open('sparkline-settings');
+		box = dialogEl(ctx, 'sparkline-settings');
+		expect(inputByLabel(box, 'Date Range (optional):').placeholder).toBe('Mixed');
+		clickButton(box, 'OK');
+		await done;
+		expect(groups().map((group) => group.dateAxis)).toEqual([true, false]);
+		done = ctx.dialogs.open('sparkline-settings');
+		box = dialogEl(ctx, 'sparkline-settings');
+		setValue(inputByLabel(box, 'Date Range (optional):'), '');
+		clickButton(box, 'OK');
+		await done;
+		expect(groups().map((group) => group.dateAxis)).toEqual([false, false]);
+		ctx.session()!.undo();
+		expect(groups().map((group) => group.dateAxis)).toEqual([true, false]);
+	});
 	it('creates a group from data and location ranges', async () => {
 		const ctx = createTestContext(createWorkbook());
 		registerToolDialogs(ctx);

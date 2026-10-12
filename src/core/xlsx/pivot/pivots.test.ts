@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createWorkbook } from '../workbook';
 import { createEditSession } from '../edit/session';
 import { getCell } from '../cells';
@@ -38,6 +38,119 @@ const setup = () => {
 };
 
 describe('worksheet-range PivotTables', () => {
+	it('indexes sparse tuples without scanning the row-field Cartesian product', () => {
+		const { wb, edit } = setup();
+		edit.createPivotTable(
+			1,
+			{ row: 0, col: 0 },
+			{
+				source: 'Data!A1:C6',
+				rowField: 'Category',
+				secondRowField: 'Region',
+				valueField: 'Amount',
+			},
+		);
+		const pivot = wb.sheets[1]!.pivotTables![0]!;
+		pivot.records = Array.from({ length: 2000 }, (_, i) => [`Group${i}`, `Item${i}`, 1]);
+		const get = Map.prototype.get;
+		let lookups = 0;
+		const spy = vi.spyOn(Map.prototype, 'get').mockImplementation(function (
+			this: Map<unknown, unknown>,
+			key: unknown,
+		) {
+			if (++lookups > 40_000) throw new Error('Sparse pivot performed a Cartesian scan.');
+			return get.call(this, key);
+		});
+		let values;
+		try {
+			values = pivotGrid(pivot).values;
+		} finally {
+			spy.mockRestore();
+		}
+		expect(values).toHaveLength(4002);
+		expect(values.at(-1)).toEqual(['Grand Total', null, 2000]);
+		expect(lookups).toBeLessThan(40_000);
+	});
+	it('aggregates two row fields with native bottom subtotals, repeated labels and undo', async () => {
+		const { wb, edit } = setup();
+		const name = edit.createPivotTable(
+			1,
+			{ row: 0, col: 0 },
+			{
+				source: 'Data!A1:C6',
+				rowField: 'Category',
+				secondRowField: 'Region',
+				valueField: 'Amount',
+			},
+		);
+		const grid = () => pivotGrid(wb.sheets[1]!.pivotTables![0]!).values;
+		expect(grid()).toEqual([
+			['Category', 'Region', 'Sum of Amount'],
+			['Fruit', 'East', 17],
+			[null, 'West', 20],
+			['Fruit Total', null, 37],
+			['Veg', 'East', 5],
+			[null, 'West', 15],
+			['Veg Total', null, 20],
+			['Grand Total', null, 57],
+		]);
+		edit.refreshPivotTable(1, name, { repeatLabels: true, subtotals: false });
+		expect(grid()).toEqual([
+			['Category', 'Region', 'Sum of Amount'],
+			['Fruit', 'East', 17],
+			['Fruit', 'West', 20],
+			['Veg', 'East', 5],
+			['Veg', 'West', 15],
+			['Grand Total', null, 57],
+		]);
+		const loaded = await loadXlsx(await saveXlsx(wb));
+		expect(loaded.warnings).toEqual([]);
+		expect(loaded.sheets[1]!.pivotTables![0]).toMatchObject({
+			secondRowField: 'Region',
+			repeatLabels: true,
+			subtotals: false,
+		});
+		createEditSession(loaded).refreshPivotTable(1, name, {
+			secondRowField: '',
+			columnField: 'Region',
+		});
+		const single = await loadXlsx(await saveXlsx(loaded));
+		expect(single.warnings).toEqual([]);
+		expect(single.sheets[1]!.pivotTables![0]).toMatchObject({
+			subtotals: false,
+			repeatLabels: true,
+		});
+		createEditSession(single).refreshPivotTable(1, name, {
+			secondRowField: 'Region',
+			columnField: '',
+		});
+		expect(pivotGrid(single.sheets[1]!.pivotTables![0]!).values[2]).toEqual(['Fruit', 'West', 20]);
+		edit.undo();
+		expect(grid()).toHaveLength(8);
+		edit.refreshPivotTable(1, name, { secondRowField: '', columnField: 'Region' });
+		expect(grid()).toHaveLength(5);
+		expect(grid()[1]).toEqual(['Category', 'East', 'West', 'Grand Total']);
+	});
+	it('computes average subtotals from records and never invents missing row tuples', () => {
+		const { wb, edit } = setup();
+		edit.setCellInput(0, 3, 1, 'North');
+		edit.createPivotTable(
+			1,
+			{ row: 0, col: 0 },
+			{
+				source: 'Data!A1:C6',
+				rowField: 'Category',
+				secondRowField: 'Region',
+				valueField: 'Amount',
+				aggregate: 'average',
+			},
+		);
+		const values = pivotGrid(wb.sheets[1]!.pivotTables![0]!).values;
+		expect(values.find((line) => line[0] === 'Fruit Total')?.[2]).toBe(37 / 3);
+		expect(values.at(-1)?.[2]).toBe(57 / 5);
+		expect(values.filter((line) => line[1] !== null)).toHaveLength(5);
+		expect(() => edit.refreshPivotTable(1, 'PivotTable1', { columnField: 'Region' })).toThrow();
+	});
 	it('matches native Excel numeric aggregation over text-only groups', () => {
 		const { wb, create } = setup();
 		create();

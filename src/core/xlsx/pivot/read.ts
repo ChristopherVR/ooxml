@@ -88,7 +88,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		NS.x,
 	);
 	if (
-		rowFields.length !== 1 ||
+		rowFields.length < 1 ||
+		rowFields.length > 2 ||
 		colFields.length > 1 ||
 		dataFields.length !== 1 ||
 		first(root, 'pageFields', NS.x) ||
@@ -107,15 +108,48 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
 	const row = names[Number(att(rowFields[0], 'x'))];
+	const second = rowFields[1] && names[Number(att(rowFields[1], 'x'))];
+	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
+	const outer = tableFields[Number(att(rowFields[0], 'x'))];
+	const subtotal = att(outer, 'defaultSubtotal') !== '0';
+	if (second && subtotal && att(outer, 'subtotalTop') !== '0')
+		throw new Error('Top subtotals are preserved but not editable');
+	const repeat = rowFields.map((field) => {
+		const node = tableFields[Number(att(field, 'x'))];
+		const extension = first(first(node, 'extLst', NS.x), 'ext', NS.x);
+		return (
+			att(
+				first(
+					extension,
+					'pivotField',
+					'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
+				),
+				'fillDownLabels',
+			) === '1'
+		);
+	});
+	if (repeat.some((entry) => entry !== repeat[0])) throw new Error('Mixed field label repetition');
 	const col = colFields[0] && names[Number(att(colFields[0], 'x'))];
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
-	if (!row || !data || !location || (colFields.length && !col))
+	if (
+		!row ||
+		!data ||
+		!location ||
+		(colFields.length && !col) ||
+		(rowFields.length === 2 && !second)
+	)
 		throw new Error('Invalid pivot fields');
 	const pivot: PivotTable = {
 		name: att(root, 'name') ?? 'PivotTable',
 		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,
 		rowField: row,
+		...(second
+			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }
+			: {
+					...(subtotal ? {} : { subtotals: false }),
+					...(repeat[0] ? { repeatLabels: true } : {}),
+				}),
 		valueField: data,
 		aggregate,
 		valueCaption: decodeEscapes(att(measure, 'name') ?? data),

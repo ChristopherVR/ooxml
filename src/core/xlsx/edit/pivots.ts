@@ -140,6 +140,9 @@ export function createPivotTable(
 		...data,
 		name,
 		rowField: options.rowField,
+		...(options.secondRowField ? { secondRowField: options.secondRowField } : {}),
+		...(options.subtotals !== undefined ? { subtotals: options.subtotals } : {}),
+		...(options.repeatLabels !== undefined ? { repeatLabels: options.repeatLabels } : {}),
 		valueField: options.valueField,
 		aggregate,
 		valueCaption: pivotCaption(aggregate, options.valueField),
@@ -175,6 +178,12 @@ export function refreshPivotTable(
 		if (patch.columnField) next.columnField = patch.columnField;
 		else delete next.columnField;
 	}
+	if (patch.secondRowField !== undefined) {
+		if (patch.secondRowField) next.secondRowField = patch.secondRowField;
+		else delete next.secondRowField;
+	}
+	if (patch.subtotals !== undefined) next.subtotals = patch.subtotals;
+	if (patch.repeatLabels !== undefined) next.repeatLabels = patch.repeatLabels;
 	validatePivotFields(next);
 	write(ctx, s, next, old);
 }

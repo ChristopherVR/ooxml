@@ -3,12 +3,17 @@ import type { CellValue } from './model';
 
 export type PivotAggregate = 'sum' | 'count' | 'average' | 'min' | 'max';
 
-/** One worksheet-range pivot with one row field, optional column field and one value field. */
+/** A tabular worksheet-range pivot with up to two row fields and one value field. */
 export interface PivotTable {
 	name: string;
 	/** Qualified A1 source range, rewritten with the workbook's other references. */
 	source: string;
 	rowField: string;
+	secondRowField?: string;
+	/** Automatic outer-field totals below each group. Defaults to true. */
+	subtotals?: boolean;
+	/** Repeat outer labels on detail rows. Defaults to false. */
+	repeatLabels?: boolean;
 	columnField?: string;
 	valueField: string;
 	aggregate: PivotAggregate;
@@ -27,6 +32,9 @@ export interface PivotTable {
 export interface PivotTableOptions {
 	source: string;
 	rowField: string;
+	secondRowField?: string;
+	subtotals?: boolean;
+	repeatLabels?: boolean;
 	columnField?: string;
 	valueField: string;
 	aggregate?: PivotAggregate;
@@ -34,5 +42,14 @@ export interface PivotTableOptions {
 }
 
 export type PivotTablePatch = Partial<
-	Pick<PivotTable, 'rowField' | 'columnField' | 'valueField' | 'aggregate'>
+	Pick<
+		PivotTable,
+		| 'rowField'
+		| 'secondRowField'
+		| 'subtotals'
+		| 'repeatLabels'
+		| 'columnField'
+		| 'valueField'
+		| 'aggregate'
+	>
 >;
