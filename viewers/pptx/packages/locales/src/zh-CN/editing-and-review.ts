@@ -1,4 +1,9 @@
 export const translations = {
+	'pptx.findReplace.includeNotes': '包括演讲者备注',
+	'pptx.slideSorter.systemCopy': '将幻灯片复制到系统剪贴板',
+	'pptx.slideSorter.systemPaste': '从系统剪贴板粘贴幻灯片',
+	'pptx.slideSorter.systemCopied': '幻灯片已复制',
+	'pptx.slideSorter.systemPasted': '幻灯片已粘贴',
 	'pptx.findReplace.title': '查找和替换',
 	'pptx.findReplace.closeEscape': '关闭（Esc）',
 	'pptx.findReplace.closeAriaLabel': '关闭查找并替换',

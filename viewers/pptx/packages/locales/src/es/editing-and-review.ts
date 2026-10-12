@@ -1,4 +1,9 @@
 export const translations = {
+	'pptx.findReplace.includeNotes': 'Incluir notas del orador',
+	'pptx.slideSorter.systemCopy': 'Copiar diapositivas al portapapeles del sistema',
+	'pptx.slideSorter.systemPaste': 'Pegar diapositivas desde el portapapeles del sistema',
+	'pptx.slideSorter.systemCopied': 'Diapositivas copiadas',
+	'pptx.slideSorter.systemPasted': 'Diapositivas pegadas',
 	'pptx.findReplace.title': 'Buscar y reemplazar',
 	'pptx.findReplace.closeEscape': 'Cerrar (Esc)',
 	'pptx.findReplace.closeAriaLabel': 'Cerrar buscar y reemplazar',

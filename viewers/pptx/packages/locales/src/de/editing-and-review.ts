@@ -1,4 +1,9 @@
 export const translations = {
+	'pptx.findReplace.includeNotes': 'Sprechernotizen einbeziehen',
+	'pptx.slideSorter.systemCopy': 'Folien in die Systemzwischenablage kopieren',
+	'pptx.slideSorter.systemPaste': 'Folien aus der Systemzwischenablage einfügen',
+	'pptx.slideSorter.systemCopied': 'Folien kopiert',
+	'pptx.slideSorter.systemPasted': 'Folien eingefügt',
 	'pptx.findReplace.title': 'Suchen und ersetzen',
 	'pptx.findReplace.closeEscape': 'Schließen (Esc)',
 	'pptx.findReplace.closeAriaLabel': 'Suchen und Ersetzen schließen',
