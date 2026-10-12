@@ -130,13 +130,30 @@ export interface LayoutPageBox {
 	floats?: LayoutFloatBox[];
 	/** Footnotes at the bottom of the page, in reference order; `yPx` values are within the area. */
 	footnotes?: LayoutFootnoteBox[];
+	/** Maximum column height of an independently balanced native footnote area. */
+	footnoteHeightPx?: number;
 	/** Selected custom story; absent means the default rule, empty means no separator. */
 	footnoteSeparator?: { heightPx: number; paragraphs: LayoutParagraphBox[] };
+	/** Legacy Word attaches independently bottom-aligned note areas to individual body columns. */
+	footnoteColumnAreas?: {
+		columnIndex: number;
+		xPx: number;
+		widthPx: number;
+		yPx: number;
+		heightPx: number;
+		continued: boolean;
+		separator?: { heightPx: number; paragraphs: LayoutParagraphBox[] };
+	}[];
 }
 
 export interface LayoutFootnoteBox {
+	xPx?: number;
+	widthPx?: number;
+	columnIndex?: number;
+	/** Internal token cursors for reflowing the remaining source across unequal note columns. */
+	sourceTokenStarts?: Record<string, number>;
 	id: string;
-	/** This fragment continues the same note from an earlier physical page. */
+	/** This fragment continues the same note from an earlier page or a legacy body column. */
 	continued?: boolean;
 	/** Top of this note within the footnote area (below the separator). */
 	yPx: number;

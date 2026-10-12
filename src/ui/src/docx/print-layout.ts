@@ -198,7 +198,7 @@ function footnoteArea(
 	pictureUrl: PictureUrl | undefined,
 ): HTMLElement {
 	const notes = page.footnotes ?? [];
-	const heightPx = notes.reduce((sum, note) => sum + note.heightPx, 0);
+	const heightPx = page.footnoteHeightPx ?? notes.reduce((sum, note) => sum + note.heightPx, 0);
 	const widthPx = page.widthPx - page.marginLeftPx - page.marginRightPx;
 	const area = document.createElement('div');
 	area.className = 'dve-print-footnotes';
@@ -209,34 +209,62 @@ function footnoteArea(
 		top: `${page.heightPx - page.marginBottomPx - heightPx}px`,
 		height: `${heightPx}px`,
 	});
-	if (page.footnoteSeparator) {
+
+	const appendSeparator = (
+		story: typeof page.footnoteSeparator,
+		x: number,
+		y: number,
+		width: number,
+		continued: boolean,
+	) => {
 		const separator = document.createElement('div');
-		separator.className = 'dve-print-custom-footnote-separator';
-		Object.assign(separator.style, {
-			position: 'absolute',
-			top: `${-page.footnoteSeparator.heightPx}px`,
-			width: '100%',
-			height: `${page.footnoteSeparator.heightPx}px`,
-		});
-		for (const paragraph of page.footnoteSeparator.paragraphs)
-			separator.append(renderBlock(paragraph, [], pictureUrl, widthPx));
-		area.append(separator);
-	} else {
-		const separator = document.createElement('div');
-		separator.className = 'dve-print-footnote-separator';
-		if (notes.some((note) => note.continued)) {
-			separator.classList.add('dve-print-footnote-continuation-separator');
+		if (story) {
+			separator.className = 'dve-print-custom-footnote-separator';
+			Object.assign(separator.style, {
+				position: 'absolute',
+				left: `${x}px`,
+				top: `${y - story.heightPx}px`,
+				width: `${width}px`,
+				height: `${story.heightPx}px`,
+			});
+			for (const paragraph of story.paragraphs)
+				separator.append(renderBlock(paragraph, [], pictureUrl, width));
+		} else {
+			separator.className = 'dve-print-footnote-separator';
+			if (continued) separator.classList.add('dve-print-footnote-continuation-separator');
+			Object.assign(separator.style, {
+				left: `${x}px`,
+				top: `${y - 7}px`,
+				width: `${continued ? width : Math.min(192, width)}px`,
+			});
 		}
 		area.append(separator);
-	}
+	};
+	if (page.footnoteColumnAreas) {
+		for (const column of page.footnoteColumnAreas)
+			appendSeparator(column.separator, column.xPx, column.yPx, column.widthPx, column.continued);
+	} else
+		appendSeparator(
+			page.footnoteSeparator,
+			0,
+			0,
+			widthPx,
+			notes.some((note) => note.continued),
+		);
+
 	for (const note of notes) {
 		const noteEl = document.createElement('div');
 		noteEl.className = 'dve-print-footnote';
 		noteEl.dataset.noteId = note.id;
 		if (note.continued) noteEl.dataset.continued = 'true';
-		Object.assign(noteEl.style, { top: `${note.yPx}px`, height: `${note.heightPx}px` });
+		Object.assign(noteEl.style, {
+			left: `${note.xPx ?? 0}px`,
+			width: `${note.widthPx ?? widthPx}px`,
+			top: `${note.yPx}px`,
+			height: `${note.heightPx}px`,
+		});
 		for (const paragraph of note.paragraphs)
-			noteEl.append(renderBlock(paragraph, hitboxes, pictureUrl, widthPx));
+			noteEl.append(renderBlock(paragraph, hitboxes, pictureUrl, note.widthPx ?? widthPx));
 		area.append(noteEl);
 	}
 	return area;

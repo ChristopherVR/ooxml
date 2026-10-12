@@ -176,3 +176,47 @@ export async function applyTrackChangesSetting(zip: JSZip, enabled: boolean): Pr
 	}
 	await applySettingsFlag(zip, 'trackRevisions', enabled);
 }
+
+/** Changes only the compatibility-mode setting, preserving other compatibility flags. */
+export async function applyCompatibilityMode(zip: JSZip, mode: number | undefined): Promise<void> {
+	if (mode !== undefined && (!Number.isInteger(mode) || mode <= 0 || mode > 2147483647))
+		throw new RangeError('Compatibility mode must be a positive integer.');
+	const file = zip.file(SETTINGS_PATH);
+	if (!file && mode === undefined) return;
+	const doc = parseXml(
+		(await file?.async('string')) ??
+			`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="${WORD_NS}"/>`,
+	);
+	const root = doc.documentElement as XmlElement;
+	let compat = children(root, 'compat')[0];
+	if (!compat && mode !== undefined) {
+		compat = makeW(doc, 'compat');
+		const rank = SETTINGS_ORDER.indexOf('compat');
+		const after = Array.from(root.childNodes).find(
+			(node) =>
+				node.nodeType === 1 && SETTINGS_ORDER.indexOf((node as XmlElement).localName ?? '') > rank,
+		);
+		root.insertBefore(compat, after ?? null);
+	}
+	const uri = 'http://schemas.microsoft.com/office/word';
+	if (compat) {
+		for (const setting of children(compat, 'compatSetting'))
+			if (
+				setting.getAttributeNS(WORD_NS, 'name') === 'compatibilityMode' &&
+				setting.getAttributeNS(WORD_NS, 'uri') === uri
+			)
+				compat.removeChild(setting);
+		if (mode !== undefined) {
+			const setting = makeW(doc, 'compatSetting');
+			setting.setAttributeNS(WORD_NS, 'w:name', 'compatibilityMode');
+			setting.setAttributeNS(WORD_NS, 'w:uri', uri);
+			setting.setAttributeNS(WORD_NS, 'w:val', String(mode));
+			compat.appendChild(setting);
+		}
+	}
+	zip.file(SETTINGS_PATH, buildXml(doc));
+	if (!file) {
+		await ensureContentTypeOverride(zip, SETTINGS_PATH, SETTINGS_CONTENT_TYPE);
+		await ensureDocumentRelationship(zip, SETTINGS_RELATIONSHIP_TYPE, 'settings.xml');
+	}
+}

@@ -214,6 +214,12 @@ export interface LayoutColumns {
 }
 
 export interface LayoutSection {
+	/** Native mode15 column area, independent of the reference body column. */
+	footnoteColumns?: LayoutColumns;
+	/** Native Word mode15 repeats the normal story on continued pages. */
+	modernFootnoteSeparator?: boolean;
+	/** Measured Word compatibility modes 12 and 14 attach notes to body columns. */
+	legacyFootnoteColumns?: boolean;
 	footnoteSeparators?: { separator?: LayoutParagraph[]; continuationSeparator?: LayoutParagraph[] };
 	page: LayoutPageGeometry;
 	columns?: LayoutColumns;

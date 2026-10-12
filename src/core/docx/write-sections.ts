@@ -3,6 +3,7 @@
 // sections, new section breaks (a paragraph-level w:sectPr copied from the following section,
 // as Word does) and removed breaks. Other section properties stay protected.
 import type { Block, HeaderFooterSlots, SectionProperties } from './model';
+import { writeFootnoteColumns } from './write-footnote-columns';
 import { patchPageBorders } from './page-borders';
 import { orderSectionProperties } from './element-order';
 import { orderParagraphProperties } from './tab-stops';
@@ -23,6 +24,7 @@ const WRITABLE = new Set([
 	'footerDistanceTwips',
 	'gutterTwips',
 	'columns',
+	'footnoteColumns',
 	'titlePage',
 	'verticalAlign',
 	'pageNumbering',
@@ -99,6 +101,8 @@ function writeSectionProperties(
 	section: SectionProperties,
 	base?: SectionProperties,
 ) {
+	if (section.footnoteColumns !== base?.footnoteColumns)
+		writeFootnoteColumns(doc, sectPr, section.footnoteColumns);
 	if (section.type === 'nextPage')
 		for (const type of children(sectPr, 'type')) sectPr.removeChild(type);
 	else setW(child(doc, sectPr, 'type', AFTER_TYPE), 'val', section.type);

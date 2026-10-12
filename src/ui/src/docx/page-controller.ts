@@ -101,12 +101,16 @@ export class PageController {
 	}
 
 	/** Layout > More Columns, recorded as one undoable section edit. */
-	applyColumns(columns: SectionProperties['columns']): void {
+	applyColumns(columns: SectionProperties['columns'], footnoteColumns?: number): void {
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return;
 		const model = this.host.model();
 		this.dispatchSections(
-			withSection(model, currentSectionIndex(view, model), (section) => ({ ...section, columns })),
+			withSection(model, currentSectionIndex(view, model), (section) => ({
+				...section,
+				columns,
+				...(footnoteColumns === undefined ? {} : { footnoteColumns }),
+			})),
 		);
 	}
 

@@ -296,6 +296,16 @@ export function adaptDocumentModel(
 			)
 		: undefined;
 	const sections = model.sections;
+	const modernFootnoteSeparator = model.compatibilityMode === 15;
+	const legacyFootnoteColumns = model.compatibilityMode === 12 || model.compatibilityMode === 14;
+	if (
+		!modernFootnoteSeparator &&
+		!legacyFootnoteColumns &&
+		model.sections?.some((section) => section.footnoteColumns !== undefined)
+	)
+		reportOnce(
+			'Footnote column settings are preserved, but this compatibility mode has not been verified against native Word; Print Layout uses the existing page-wide fallback.',
+		);
 	if (!sections || !sections.length) {
 		return {
 			sections: [
@@ -309,6 +319,8 @@ export function adaptDocumentModel(
 						marginLeftPx: model.page.marginLeft,
 					},
 					...(footnoteSeparators ? { footnoteSeparators } : {}),
+					...(modernFootnoteSeparator ? { modernFootnoteSeparator: true } : {}),
+					...(legacyFootnoteColumns ? { legacyFootnoteColumns: true } : {}),
 					blocks: blocks.filter((block) => !folded.has(block)),
 				},
 			],
@@ -322,9 +334,54 @@ export function adaptDocumentModel(
 		const end = Math.max(start, endIndex);
 		const slice = blocks.slice(start, end);
 		start = end;
+		if (legacyFootnoteColumns && section.footnoteColumns)
+			reportOnce(
+				'Independent footnote column counts are preserved but ignored in measured compatibility modes 12 and 14; Print Layout attaches notes to body columns.',
+			);
+		const footnoteWidth =
+			twipsToPx(section.pageWidthTwips) -
+			twipsToPx(section.marginLeftTwips) -
+			twipsToPx(section.marginRightTwips);
+		if (
+			modernFootnoteSeparator &&
+			section.footnoteColumns &&
+			(section.footnoteColumns > 45 || footnoteWidth <= 48 * (section.footnoteColumns - 1))
+		)
+			reportOnce(
+				'Footnote columns exceeding the available page width or 45 rendered columns use one column in Print Layout; the saved count is preserved.',
+			);
 		const sectionStart = index === 0 ? undefined : sectionBreak(section.type, reportOnce);
 		return {
 			...(footnoteSeparators ? { footnoteSeparators } : {}),
+			...(modernFootnoteSeparator ? { modernFootnoteSeparator: true } : {}),
+			...(legacyFootnoteColumns ? { legacyFootnoteColumns: true } : {}),
+			...(section.footnoteColumns !== undefined && modernFootnoteSeparator
+				? {
+						footnoteColumns: {
+							count:
+								section.footnoteColumns &&
+								(section.footnoteColumns > 45 ||
+									footnoteWidth <= 48 * (section.footnoteColumns - 1))
+									? 1
+									: Math.max(1, section.footnoteColumns || section.columns.count),
+							gapPx: section.footnoteColumns
+								? 48
+								: twipsToPx(section.columns.spacingTwips ?? twips(720)),
+							...(!section.footnoteColumns &&
+							!section.columns.equalWidth &&
+							section.columns.widths?.length
+								? {
+										widths: section.columns.widths.map((column) => ({
+											widthPx: twipsToPx(column.widthTwips),
+											gapPx: twipsToPx(
+												column.spacingTwips ?? section.columns.spacingTwips ?? twips(720),
+											),
+										})),
+									}
+								: {}),
+						},
+					}
+				: {}),
 			page: {
 				widthPx: twipsToPx(section.pageWidthTwips),
 				heightPx: twipsToPx(section.pageHeightTwips),

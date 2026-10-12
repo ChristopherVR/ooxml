@@ -3,7 +3,7 @@
 // sections.ts and notes.ts. Kept out of parse.ts so the hub file only needs one hook call.
 import type JSZip from 'jszip';
 import type { Block, HeaderFooterSlots, Note, SectionProperties } from './model';
-import { first, getW, parseXml, type XmlElement } from './xml';
+import { children, first, getW, parseXml, type XmlElement } from './xml';
 import { onOffElement } from './simple-types';
 import { isStNumberFormat, type StNumberFormat } from './generated/wml-simple-types';
 import { enumValue, withParseWarnings } from './parse-diagnostics';
@@ -35,12 +35,21 @@ async function readPart(zip: JSZip, path: string): Promise<string | undefined> {
 interface SettingsInfo {
 	evenAndOddHeaders: boolean;
 	autoHyphenation: boolean;
+	compatibilityMode?: number;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
 }
 function parseSettings(xml: string | undefined): SettingsInfo {
 	if (!xml) return { evenAndOddHeaders: false, autoHyphenation: false };
 	const root = parseXml(xml).documentElement;
+	const compatibility = (
+		first(root, 'compat') ? children(first(root, 'compat')!, 'compatSetting') : []
+	).find(
+		(setting) =>
+			getW(setting, 'name') === 'compatibilityMode' &&
+			getW(setting, 'uri') === 'http://schemas.microsoft.com/office/word',
+	);
+	const compatibilityMode = compatibility ? Number(getW(compatibility, 'val')) : undefined;
 	const footnoteNumFmt = enumValue(
 		isStNumberFormat,
 		getW(first(first(root, 'footnotePr'), 'numFmt'), 'val'),
@@ -52,6 +61,11 @@ function parseSettings(xml: string | undefined): SettingsInfo {
 		'w:endnotePr/w:numFmt',
 	);
 	return {
+		...(compatibilityMode !== undefined &&
+		Number.isInteger(compatibilityMode) &&
+		compatibilityMode > 0
+			? { compatibilityMode }
+			: {}),
 		evenAndOddHeaders: onOffElement(first(root, 'evenAndOddHeaders')) === true,
 		autoHyphenation: onOffElement(first(root, 'autoHyphenation')) === true,
 		...(footnoteNumFmt ? { footnoteNumFmt } : {}),
@@ -96,6 +110,7 @@ export interface DocumentPartsResult {
 	footnotes?: Note[];
 	footnoteSeparators?: import('./model').DocumentModel['footnoteSeparators'];
 	endnotes?: Note[];
+	compatibilityMode?: number;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
 	evenAndOddHeaders?: boolean;
@@ -166,6 +181,9 @@ export async function parseDocumentParts(
 		);
 	return {
 		sections,
+		...(settings.compatibilityMode !== undefined
+			? { compatibilityMode: settings.compatibilityMode }
+			: {}),
 		...(footnotes ? { footnotes } : {}),
 		...(footnoteSeparators ? { footnoteSeparators } : {}),
 		...(endnotes ? { endnotes } : {}),

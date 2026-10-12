@@ -133,7 +133,7 @@ export class EditorCore {
 			columns: {
 				section: () => this.pages.currentSection(),
 				canEdit: () => !this.readOnly && !this.collab.active,
-				apply: (columns) => this.pages.applyColumns(columns),
+				apply: (columns, footnoteColumns) => this.pages.applyColumns(columns, footnoteColumns),
 			},
 		});
 		this.imageMedia = new ImageMediaCache(

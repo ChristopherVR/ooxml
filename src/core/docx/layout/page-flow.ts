@@ -20,6 +20,8 @@ function insertParityBlank(pages: LayoutPageBox[], section: LayoutSection): void
 	const {
 		footnotes: _footnotes,
 		footnoteSeparator: _separator,
+		footnoteHeightPx: _noteHeight,
+		footnoteColumnAreas: _noteColumnAreas,
 		floats: _floats,
 		...geometry
 	} = previous;
@@ -44,10 +46,17 @@ function alignVertically(
 		return;
 	}
 	for (const page of pages) {
-		const footnoteHeight = page.footnotes?.length
-			? (page.footnoteSeparator?.heightPx ?? FOOTNOTE_SEPARATOR_PX) +
-				page.footnotes.reduce((sum, footnote) => sum + footnote.heightPx, 0)
-			: 0;
+		const footnoteHeight = page.footnoteColumnAreas?.length
+			? Math.max(
+					...page.footnoteColumnAreas.map(
+						(area) => area.heightPx + (area.separator?.heightPx ?? FOOTNOTE_SEPARATOR_PX),
+					),
+				)
+			: page.footnotes?.length
+				? (page.footnoteSeparator?.heightPx ?? FOOTNOTE_SEPARATOR_PX) +
+					(page.footnoteHeightPx ??
+						page.footnotes.reduce((sum, footnote) => sum + footnote.heightPx, 0))
+				: 0;
 		const available = page.heightPx - page.marginTopPx - page.marginBottomPx - footnoteHeight;
 		const used = Math.max(
 			0,

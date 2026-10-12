@@ -1,6 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, SectionColumns, SectionProperties } from './model';
-import { children, first, getW, isElement, named, type XmlElement } from './xml';
+import { children, elements, first, getW, isElement, named, type XmlElement } from './xml';
 import { getRelationshipId } from './relationships';
 import { parsePageBorders } from './page-borders';
 import { isStNumberFormat, isStSectionMark, isStVerticalJc } from './generated/wml-simple-types';
@@ -90,6 +90,16 @@ function pageBordersOf(element: XmlElement | undefined) {
 }
 
 function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection {
+	const footnoteColumns = parseUnsignedInteger(
+		getW(
+			elements(section).find(
+				(element) =>
+					element.localName === 'footnoteColumns' &&
+					element.namespaceURI === 'http://schemas.microsoft.com/office/word/2012/wordml',
+			),
+			'val',
+		),
+	);
 	const size = first(section, 'pgSz');
 	const margins = first(section, 'pgMar');
 	const typeValue = enumValue(isStSectionMark, getW(first(section, 'type'), 'val'), 'w:type');
@@ -114,6 +124,7 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 		...(footerDistance !== undefined ? { footerDistanceTwips: footerDistance } : {}),
 		...(gutter !== undefined ? { gutterTwips: gutter } : {}),
 		columns: parseColumns(section),
+		...(footnoteColumns !== undefined ? { footnoteColumns } : {}),
 		...(onOffElement(first(section, 'titlePg')) === true ? { titlePage: true } : {}),
 		...(vAlignValue ? { verticalAlign: vAlignValue } : {}),
 		...(pgNum

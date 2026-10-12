@@ -23,7 +23,7 @@ import {
 export interface ColumnsHost {
 	section(): SectionProperties | undefined;
 	canEdit(): boolean;
-	apply(columns: SectionColumns): void;
+	apply(columns: SectionColumns, footnoteColumns?: number): void;
 	restoreFocus(): void;
 }
 
@@ -31,6 +31,7 @@ export interface ColumnsHost {
 export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 	const element = createDialogShell('Columns', 'dve-format-dialog');
 	const count = numberInput(1, 45, 1);
+	const footnoteCount = numberInput(0, 2147483647, 1);
 	const gap = numberInput(0, 22, 0.01);
 	const width = document.createElement('output');
 	const equal = checkbox('Equal column width');
@@ -47,6 +48,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 		fieldset(
 			'Columns',
 			labelled('Number of columns', count),
+			labelled('Footnote columns (0 matches section)', footnoteCount),
 			row(labelled('Column width (inches)', width), labelled('Column spacing (inches)', gap)),
 			equal.wrapper,
 			separator.wrapper,
@@ -74,6 +76,10 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 		width.value = equal.input.checked && Number.isFinite(size) ? (size / 1440).toFixed(3) : '—';
 		const valid =
 			validCount() &&
+			footnoteCount.value !== '' &&
+			Number.isInteger(Number(footnoteCount.value)) &&
+			Number(footnoteCount.value) >= 0 &&
+			Number(footnoteCount.value) <= 2147483647 &&
 			(equal.input.checked
 				? gap.value !== '' &&
 					Number.isFinite(spacing) &&
@@ -140,6 +146,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 		validate();
 	});
 	gap.addEventListener('input', validate);
+	footnoteCount.addEventListener('input', validate);
 	equal.input.addEventListener('change', () => {
 		if (!equal.input.checked && validCount()) {
 			draft = equalColumnDraft(total(), Number(count.value), Math.round(Number(gap.value) * 1440));
@@ -170,6 +177,9 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 							...(i < draft.widths.length - 1 ? { spacingTwips: twips(draft.gaps[i]!) } : {}),
 						})),
 					},
+			...(source.footnoteColumns === undefined && Number(footnoteCount.value) === 0
+				? []
+				: [Number(footnoteCount.value)]),
 		);
 		hide();
 	};
@@ -197,6 +207,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 			element.replaceChildren(...content);
 			localizeDialog(element, locale);
 			count.value = String(source.columns.count);
+			footnoteCount.value = String(source.footnoteColumns ?? 0);
 			gap.value = String((source.columns.spacingTwips ?? 720) / 1440);
 			equal.input.checked = source.columns.equalWidth;
 			separator.input.checked = Boolean(source.columns.separator);
