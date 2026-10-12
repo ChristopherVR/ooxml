@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-import { STROKE_DASH_OPTIONS } from 'ooxml-ui/pptx';
+import { shapeOutlineChange, STROKE_DASH_OPTIONS } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle, StrokeDashType } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
@@ -47,19 +47,18 @@ function patchShapeStyle(next: Partial<ShapeStyle>): void {
 }
 
 function onColor(event: Event): void {
-	patchShapeStyle({
-		strokeColor: (event.target as HTMLInputElement).value,
-		strokeColorRef: undefined,
-	});
+	patchShapeStyle(
+		shapeOutlineChange((event.target as HTMLInputElement).value, undefined, shapeStyle.value ?? {}),
+	);
 }
 
 function onColorPick(hex: string): void {
-	patchShapeStyle({ strokeColor: hex, strokeColorRef: undefined });
+	patchShapeStyle(shapeOutlineChange(hex, undefined, shapeStyle.value ?? {}));
 	recentColors?.push(hex);
 }
 
 function onThemeColor(commit: ThemeColorPickerCommit): void {
-	patchShapeStyle({ strokeColor: commit.hex, strokeColorRef: commit.ref });
+	patchShapeStyle(shapeOutlineChange(commit.hex, commit.ref, shapeStyle.value ?? {}));
 	recentColors?.push(commit.hex);
 }
 

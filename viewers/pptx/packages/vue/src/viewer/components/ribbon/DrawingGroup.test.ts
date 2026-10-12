@@ -246,3 +246,35 @@ describe('drawingGroup theme colour grid (fill + outline popovers)', () => {
 		);
 	});
 });
+
+describe('drawingGroup outline colour on a shape with no line', () => {
+	it('also turns the line on with the default width', async () => {
+		const onUpdateElementStyle = vi.fn();
+		const wrapper = mount(DrawingGroup, {
+			props: {
+				canEdit: true,
+				selectedElement: shape({
+					shapeStyle: { strokeColor: 'transparent', strokeWidth: 0 },
+				} as Partial<PptxElement>),
+				newShapeType: 'rect',
+				onSetNewShapeType: vi.fn(),
+				onAddShape: vi.fn(),
+				onMoveLayer: vi.fn(),
+				onMoveLayerToEdge: vi.fn(),
+				onUpdateElementStyle,
+			},
+		});
+
+		await wrapper.get('[title="Shape Outline"]').trigger('click');
+		await wrapper.get(`[aria-label="Outline colour ${RIBBON_SHAPE_SWATCHES[2]}"]`).trigger('click');
+
+		expect(onUpdateElementStyle).toHaveBeenCalledWith(
+			expect.objectContaining({
+				strokeColor: RIBBON_SHAPE_SWATCHES[2],
+				strokeWidth: 1,
+				strokeFillMode: 'solid',
+			}),
+		);
+		wrapper.unmount();
+	});
+});

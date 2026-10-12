@@ -100,7 +100,7 @@ function request(event: RibbonHomeRequestEvent): void {
 			colours.push(String(value));
 			break;
 		case 'home.drawing.shapeOutline':
-			props.onUpdateElementStyle?.(shapeOutlineChange(String(value), ref));
+			props.onUpdateElementStyle?.(shapeOutlineChange(String(value), ref, shapeStyle.value ?? {}));
 			colours.push(String(value));
 			break;
 		default: {
