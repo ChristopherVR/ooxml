@@ -13,6 +13,7 @@ import {
 	fontHomeControls,
 	fontPickerHomeControls,
 	stepFontSizePt,
+	textFontFamilyPatch,
 	textFontSizePatch,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
@@ -182,7 +183,7 @@ export class RibbonFontControlsComponent {
 	protected pickerRequest(event: Event): void {
 		const { id, value } = (event as RibbonHomeRequestEvent).detail;
 		if (id === 'home.font.fontFamily') {
-			this.patch({ fontFamily: String(value) });
+			this.patchFontFamily(String(value));
 		} else if (id === 'home.font.fontSize') {
 			this.patchFontSize(textFontSizePtToPx(Number(value)));
 		}
@@ -250,16 +251,29 @@ export class RibbonFontControlsComponent {
 		this.patchFontSize(textFontSizePtToPx(steppedFontSizePt(this.curFontSize(), direction)));
 	}
 	private patchFontSize(fontSize: number): void {
+		this.patchWholeBox({ fontSize }, (element) => textFontSizePatch(element, fontSize));
+	}
+	/**
+	 * Font family follows the size: with no inline selection it goes to every
+	 * run, since the body style alone does not reach runs naming their own font.
+	 */
+	private patchFontFamily(fontFamily: string): void {
+		this.patchWholeBox({ fontFamily }, (element) => textFontFamilyPatch(element, fontFamily));
+	}
+	private patchWholeBox(
+		stylePatch: Parameters<typeof patchTextStyle>[3],
+		wholeBox: (element: PptxElement) => Partial<PptxElement>,
+	): void {
 		const element = this.selectedElement();
 		if (!element || !isTextElement(element)) {
 			return;
 		}
 		const snapshot = this.inlineEditing?.readInlineSnapshot();
 		if (snapshot?.elementId === element.id && snapshot.textSegments) {
-			this.patch({ fontSize });
+			this.patch(stylePatch);
 			return;
 		}
-		this.editor.updateElement(this.slideIndex(), element.id, textFontSizePatch(element, fontSize));
+		this.editor.updateElement(this.slideIndex(), element.id, wholeBox(element));
 	}
 	/** Clear character formatting (bold/italic/underline/strikethrough) on the selection. */
 	protected clearFormatting(): void {
