@@ -74,6 +74,21 @@ function useHarness(
 	return { actions, element: () => currentSlide.value.elements[0], updateElement };
 }
 
+describe('ribbonUpdateTextStyle paragraph formatting', () => {
+	it('reaches line spacing a paragraph authored on its own a:pPr', () => {
+		const source = {
+			...textElement(),
+			textSegments: [
+				{ text: 'hello world', style: {}, paragraphProperties: { lineSpacingExactPt: 12 } },
+			],
+		} as PptxElement;
+		const { actions, element } = useHarness(source);
+		actions.ribbonUpdateTextStyle({ lineSpacing: 2 });
+		const updated = element() as PptxElement & { textSegments: TextSegment[] };
+		expect(updated.textSegments[0]?.paragraphProperties).toStrictEqual({ lineSpacing: 2 });
+	});
+});
+
 describe('ribbonUpdateTextStyle list commands', () => {
 	it('applies a list command only to the live caret paragraph', () => {
 		const source = textElement();
