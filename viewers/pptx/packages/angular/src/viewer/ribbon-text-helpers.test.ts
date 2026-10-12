@@ -44,6 +44,21 @@ function service(el: PptxElement): EditorStateService {
 	return svc;
 }
 
+describe('patchTextStyle paragraph formatting', () => {
+	it('reaches line spacing a paragraph authored on its own a:pPr', () => {
+		const source = textElement();
+		Object.assign(source, {
+			textSegments: [
+				{ text: 'hello world', style: {}, paragraphProperties: { lineSpacingExactPt: 12 } },
+			],
+		});
+		const svc = service(source);
+		patchTextStyle(svc, 0, source, { lineSpacing: 2 });
+		const updated = svc.slides()[0].elements[0] as PptxElement & { textSegments: TextSegment[] };
+		expect(updated.textSegments[0]?.paragraphProperties).toStrictEqual({ lineSpacing: 2 });
+	});
+});
+
 describe('patchTextStyle list commands', () => {
 	it('applies a list command only to the live caret paragraph', () => {
 		const source = textElement();
