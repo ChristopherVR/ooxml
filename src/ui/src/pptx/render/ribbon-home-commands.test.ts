@@ -51,6 +51,28 @@ describe('shape fill / outline changes', () => {
 	});
 });
 
+describe('outline colour on a shape with no line', () => {
+	it('turns the line on when the shape has none', () => {
+		// `a:noFill` parses as width 0; a shape with no `a:ln` has no width at all.
+		for (const current of [{ strokeWidth: 0 }, {}]) {
+			expect(shapeOutlineChange('#c00000', undefined, current)).toStrictEqual({
+				strokeColor: '#c00000',
+				strokeColorRef: undefined,
+				// 0.75pt, PowerPoint's default line: 9525 EMU, one model px.
+				strokeWidth: 1,
+				strokeFillMode: 'solid',
+			});
+		}
+	});
+
+	it('keeps the width of a line that already shows', () => {
+		expect(shapeOutlineChange('#c00000', undefined, { strokeWidth: 3 })).toStrictEqual({
+			strokeColor: '#c00000',
+			strokeColorRef: undefined,
+		});
+	});
+});
+
 describe('ribbonShapeSwatches', () => {
 	it('is a 12-entry grid of hex colours', () => {
 		expect(RIBBON_SHAPE_SWATCHES).toHaveLength(12);
