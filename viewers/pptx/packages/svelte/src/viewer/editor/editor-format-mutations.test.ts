@@ -115,6 +115,18 @@ describe('shape format patches', () => {
 		});
 	});
 
+	it('gives a shape with no line a default width when an outline colour is picked', () => {
+		const noLine = shapeEl({ shapeStyle: { strokeColor: 'transparent', strokeWidth: 0 } });
+		expect(setStrokeColorPatch(noLine, '#654321').shapeStyle).toMatchObject({
+			strokeColor: '#654321',
+			strokeWidth: 1,
+			strokeFillMode: 'solid',
+		});
+		expect(
+			setStrokeColorPatch(shapeEl({ shapeStyle: { strokeWidth: 3 } }), '#654321').shapeStyle,
+		).toMatchObject({ strokeWidth: 3 });
+	});
+
 	it('sets stroke width (clamped >= 0) and reads it back', () => {
 		expect(setStrokeWidthPatch(shapeEl(), 4).shapeStyle).toMatchObject({ strokeWidth: 4 });
 		expect(setStrokeWidthPatch(shapeEl(), -3).shapeStyle).toMatchObject({ strokeWidth: 0 });

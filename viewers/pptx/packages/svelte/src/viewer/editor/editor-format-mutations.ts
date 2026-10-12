@@ -104,7 +104,8 @@ export function setStrokeColorPatch(
 	color: string,
 	ref?: PptxThemeColorRef,
 ): Partial<PptxElement> {
-	return shapeStylePatch(el, shapeOutlineChange(color, ref));
+	const current = hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {};
+	return shapeStylePatch(el, shapeOutlineChange(color, ref, current));
 }
 
 /** Read the shape stroke width (defaults to 1 when unset). */
