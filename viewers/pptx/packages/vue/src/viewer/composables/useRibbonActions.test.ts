@@ -423,3 +423,27 @@ describe('ribbonUpdateTextCase', () => {
 		}
 	});
 });
+
+describe('ribbonUpdateTextStyle font family on a whole box', () => {
+	it('moves the body and run east Asian faces that matched the Latin face', () => {
+		const source = textElement();
+		const sameFace = { fontFamily: 'Old Sans', eastAsiaFont: 'Old Sans' };
+		Object.assign(source, {
+			textStyle: { ...sameFace },
+			textSegments: [{ text: 'hello world', style: { ...sameFace } }],
+		});
+		const harness = useHarness(source);
+
+		harness.actions.ribbonUpdateTextStyle({ fontFamily: 'New Serif' });
+
+		const updated = harness.element();
+		if (!hasTextProperties(updated)) {
+			throw new Error('expected a text element');
+		}
+		expect(updated.textStyle).toMatchObject({ fontFamily: 'New Serif', eastAsiaFont: 'New Serif' });
+		expect(updated.textSegments?.[0]?.style).toMatchObject({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'New Serif',
+		});
+	});
+});
