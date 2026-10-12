@@ -1,0 +1,224 @@
+# Office suite parity review
+
+Reviewed 2026-10-12 against `cd3915465`, with the changes described below.
+This is an evidence-based source review and tested implementation batch, not
+a claim of Microsoft Office equivalence. The consolidated repository contains
+all four engines and product editors, with framework bindings under `viewers/`.
+
+## Current state
+
+| Product    | Working foundation                                                                                                                                                             | Largest remaining workflow gaps                                                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, authority-based and Yjs collaboration      | Header/footer and note-story editing in Print Layout, per-column note placement, vertically justified sections, editable charts/equations and text-box pagination, complex-table structural editing             |
+| PowerPoint | Presentation model and editing, shared rendering and ribbon, slide sorter, multiple framework bindings, import/export and conversion                                           | Full text layout in raster export, native Office clipboard interoperability, search in charts/master text, broader native render comparisons                                                                    |
+| Excel      | Workbook read/write, recalculation and dynamic arrays, editing/history, grid, charts, formula discovery, shared editor and bindings                                            | Advanced pivot layouts and slicers, XLSB and ODS imports, remaining financial/statistical formulas, sparkline style/date-axis/group controls, remaining header formatting/drawing fidelity and page-break views |
+| Visio      | VSDX import and source-backed edits, shapes, grouping, connectors, routing, ShapeSheet subset, page setup, data/metadata, themes, layers, shared ribbon and framework bindings | Full ShapeSheet behavior, complete native geometry/text fidelity, curved connector and native geometry/text comparisons, parts of data graphics and accessibility/proofing workflows                            |
+
+Evidence entry points:
+
+- Word: `src/core/docx/layout/{page-flow,balance-columns,adapter}.ts`,
+  `src/ui/src/docx/{print-layout-view,table-model-adapter,image-media,equation-schema}.ts`,
+  `src/core/docx/ui/yjs-collaboration.ts`.
+- PowerPoint: `src/core/pptx/converter/ShapeTextRenderer.ts`,
+  `src/ui/src/pptx/render/slide-sorter-state.ts` and the shared search/editor modules.
+- Excel: [the focused Excel review](excel-parity-review.md),
+  `src/core/xlsx/read/load.ts`, `src/core/xlsx/load/detect.ts`.
+- Visio: `src/core/visio/{edit,formula,line-jumps}.ts`,
+  `src/ui/src/visio/page-setup-dialog-form.ts` and
+  [the capability ledger](../viewers/visio/docs/parity.md).
+
+Existing capability documents sometimes lag implementation. Disabled ribbon
+controls and package manifests alone are insufficient evidence of support.
+Check the command, renderer, save path and tests together.
+
+## Implemented in this batch
+
+### Word
+
+Centered and bottom-aligned page content now reserves footnote heights and the
+separator. Odd/even section padding pages no longer copy the preceding page's
+footnotes or floating objects. Core regressions and the actual Print Layout DOM
+check overlap and duplicate-note behavior. Real Chromium verified note spacing
+and an odd-page blank using current renderer source and CSS.
+
+Long footnotes now continue at complete line boundaries across physical pages,
+retaining original note IDs, formatting and source ranges. Continuations reserve
+space before later body paragraphs and table rows, finish after body content ends,
+and use full-width continuation rules. A shared double-offset error in stacked
+paragraph lines is corrected. Browser measurement checked 28 unique note lines
+across five pages; save/reopen preserves one original note and custom separator XML.
+Footnote reservations now follow the actual reference line across paragraph
+fragments, including generated list labels, hidden runs and widow/keep handling.
+The focused Word suite passed 1,234 tests and six framework browser edit/history/
+save/reopen workflows. Custom footnote and continuation separator stories now
+retain mixed text and rule markers, reserve their measured height and render in
+Print Layout. Empty separator stories suppress the default rule. Core and UI
+regressions and six framework browser workflows pass. Per-column notes and tables
+inside separator stories remain incomplete. Owned native Word automation is now available; compatibility-specific note-column comparisons are in progress.
+
+Editable Print Layout now routes typing, selection, clipboard input and composition through the existing editor model, with projected caret and selection geometry on paginated pages. Six framework browser suites cover editing, zoom, later pages and columns, read-only mode, and disconnect/reconnect. Immutable document and rendered-line indexes avoid rescanning the document on each caret movement. PageUp/PageDown, Ctrl+Page navigation and edge drag autoscroll now have browser regressions at 100% and 150% zoom, including release and disposal. Dedicated page-story editing remains incomplete.
+
+### PowerPoint
+
+Raster text export honors explicit zero body insets, inherited body styling,
+soft breaks, embedded newlines and empty paragraphs. The slide sorter supports
+additive Ctrl/Meta+Shift range selection, preserving the selection anchor.
+The common sorter implementation was exercised in React, Vue, Angular,
+Svelte and vanilla browser demos.
+
+Find/replace now spans formatting runs and descends into grouped objects, table
+cells and SmartArt nodes. Replacement preserves the starting run's formatting;
+paragraph and soft-break boundaries remain search boundaries. Save/reopen tests
+cover edited nested shapes and rich table text, including hyperlinks and opaque
+XML. Slide sorter paste retains copied-content snapshots after source edits or
+deletion and inserts in clipboard order after the selected destination in one
+history transaction. The original shortcut clipboard remains local to the sorter session. Separate Copy to System Clipboard and Paste from System Clipboard actions now transport selected-slide packages between suite decks in all five bindings. They preserve images, rich notes and independent themes, with undo/redo. Native PowerPoint opens selected-only, imported and core-resaved acceptance decks. This custom browser format does not establish desktop PowerPoint clipboard interoperability. Different slide dimensions, embedded fonts, custom table styles, comments and references to unselected slides are explicitly refused. Charts and inherited master text remain outside search.
+
+An explicit Include Speaker Notes search scope is now available in all five
+PowerPoint bindings. Replacement retains rich note runs, honors subsequent plain
+note edits and updates the native notes part on save. Eleven focused core tests,
+five note-search browser workflows and the prior five rich-search workflows pass.
+Native PowerPoint exposed a new-notes packaging failure: generated notes masters
+now receive an independent theme part, including outgoing theme relationships.
+Native reopen accepts the generated rich-notes fixture after this repair.
+
+### Excel
+
+`REGEXEXTRACT` supports all matches as a vertical spill and capture groups as a
+horizontal spill. Insert Function documents and discovers these modes.
+Tests cover recalculation, grid values, blocked/shrinking spills, undo/redo,
+XLSX round trips and browser insertion. Source demo aliases now include the
+PowerPoint DOM export needed by the shared UI dependency graph.
+
+Sparkline authoring now supports Line, Column and Win/Loss groups, group settings,
+selected/group clearing and history through the existing preserved XML model.
+The translated Insert controls expose source/location ranges, marker flags,
+colors, empty-cell display and axis bounds. Native Excel opens newly authored,
+cleared, undone and extended imported groups, with exact extension URI casing,
+namespace declarations and revision identifiers verified. Keyboard history after
+menu actions restores grid focus. Style galleries, grouping/ungrouping, date-axis
+and source-range editing remain incomplete.
+
+Excel now authors, configures, refreshes and deletes range-based PivotTables with
+one row field, an optional column field and one Sum, Count, Average, Min or Max
+measure. Ribbon dialogs use one undoable edit transaction and save native table,
+cache definition and cache record parts. Sixteen pivot regressions cover output,
+history, save/reopen and preservation; the wider Excel suite passes 6,628 tests.
+Browser creation, settings, refresh, save/reopen, deletion and history pass. Eight
+native Excel acceptance cases include source changes followed by native refresh.
+Advanced layouts, unknown options/extensions, custom field formats, shared caches
+and slicer-connected workbooks stay preserved with warnings. Names from preserved
+unsupported tables are reserved to prevent authoring collisions.
+
+Excel print preview and printing now share a core page plan for paper size,
+margins, orientation, scaling, fit-to-page and page order. Manual row/column
+breaks support insert, remove, reset and history. Native Excel and Chromium
+four-page outputs pass. Leading repeated row/column titles now reserve page capacity, and Page Setup authors native scoped title names. Header/footer sections support page count/number, sheet/file/date/time fields and first/even variants, with raw-code editing that preserves untouched imported formats. Native Excel and browser save/reopen/PDF workflows validate four pages. Non-leading titles, header formatting/images, page offsets and drawings remain explicit preview limits; locale-dependent date text can differ. Merge rendering now indexes covered cells once instead of scanning all merges for every cell.
+
+### Visio
+
+Connector-specific saved jump styles and horizontal/vertical directions are
+read through the existing inheritance pipeline. Page directions can be saved,
+and Page Setup has a Layout and Routing tab for jump placement, style and
+directions, applied as one undoable transaction. An existing native enum error
+is corrected: page `LineJumpStyle` values 0 and 1 both mean Arc, 2 means Gap,
+3 means Square and 9 means seven sides. Print snapshots retain the page layout,
+connector route and glue metadata needed to draw the same jumps as the canvas.
+
+Connector-specific `ConLineJumpCode` is now read and rendered, including Always
+when page jumps are disabled. Conflicting Always/Other policies follow the page
+setting. A recorded Visio 16 SVG corpus tests all 125 combinations of five page
+policies and both connector policies. Format Shape exposes connector-only jump
+policy, style and directions through the existing source-backed undo/save path.
+Native Visio reopened an edited dynamic connector with values 2/3/2/1 intact.
+The recorder is `scripts/record-visio-line-jump-policy.ps1`.
+
+Jump sizing now uses saved axis factors, routing spacing and drawing scale,
+matching 68 recorded Visio 16 cases. Page Setup exposes horizontal/vertical
+size percentages. See `scripts/record-visio-line-jump-sizing.ps1`.
+An additional 160-case native corpus establishes predominant-axis behavior for
+slanted straight connectors and confirms that curved connectors omit jumps.
+Exact 45-degree ties remain sensitive to native endpoint rounding.
+
+Native saved drawings cache jump decorations in Geometry rows. Straight routes
+now rebuild that decoration for display and refresh supported plain caches on
+save. Native reopen/SVG checks verify disabled jumps, gaps, larger arcs and
+reversed directions. This also corrects the ArcTo sweep mapping into local y-up
+coordinates. Page edits admit independent native connector text/self-trigger
+formulas while retaining refusal of affected or unknown dependencies. Unknown
+row metadata and geometry references retain their caches with diagnostics.
+
+Native Shape Data dependency indexing now maps XML Property sections to the
+Prop formula prefix across local and master scopes. A native two-shape fixture
+verifies resize, transitive cache updates and Visio reopen. Native data-graphic
+groups still require broader dynamic formula and text-field recalculation;
+generated local 2D text, bars and icons now follow owner translations through
+native pin formulas, with eight native movement observations and save/history
+regressions. They remain separate shapes; native masters, stencil/group owners,
+rotation-relative positioning and automatic value refresh remain incomplete.
+
+The existing last-routed approximation uses drawing order. Native routing
+chronology and broader geometry/text equivalence remain unverified.
+
+## Validation and acceptance boundaries
+
+The combined core run passed 30,280 tests across 1,761 files, with 16 expected
+failures and 430 skipped tests. Core and UI builds and typechecks passed.
+Focused UI, framework and browser checks supplement the core run; skipped
+coverage is not evidence of support.
+PowerPoint's 15 browser scenarios passed across React, Vue, Angular, Svelte and
+vanilla (14 in the final matrix run and one corrected locator rerun). They cover
+sorter selection, destination paste/history, rich find/replace/history and saved
+XML preservation. The run also exposed and fixed vanilla sorter focus and
+undo/redo refresh behavior.
+
+Regression tests exercise the owning core and UI layers. Browser checks verify
+real rendering and interactions, but do not replace native Office comparisons.
+Word's Chromium check exercises the print renderer, not every editor binding.
+Installed Excel does not support REGEXEXTRACT, so it cannot establish native
+calculation acceptance. The regex engine still uses JavaScript syntax rather
+than all PCRE2 features.
+
+For each subsequent feature, require a real authored file where possible,
+import assertions, edit/undo/redo behavior, preservation and save/reopen tests,
+UI reachability, keyboard behavior and appropriate framework coverage. For
+visual claims, record native Office version, fonts and reference renders.
+Keep unimplemented controls explicit and avoid aggregate parity percentages
+without a defined, weighted and reproducible test set.
+
+Visio now reads and edits native shape accessibility titles and descriptions,
+including local stencil overrides, through Review > Alt Text with normal history.
+The canvas and static SVG expose those descriptions. Check Accessibility finds
+visible graphics without text alternatives and links them to the editing dialog;
+it does not validate reading order or contrast. Native Visio 16 acceptance verifies
+setting and clearing both fields, including multiline descriptions. Formula-driven
+metadata and dependent caches are refused. Page alternatives are now exposed through
+Review > Page Alt Text and validated with native page property getters. The complete
+Office accessibility rule set remains outstanding. Reproduce native acceptance with
+`scripts/visio-alt-text-acceptance.ps1`; core, UI and Chromium regressions cover the
+workflow. The writer now preserves tabs/newlines in XML attributes as character
+references, with tests for unrelated attributes, comments and CDATA.
+
+## Reference projects and next priorities
+
+[Storytold WordCraft](https://github.com/storytold/wordcraft),
+[DeckCraft](https://github.com/storytold/deckcraft) and
+[GridCraft](https://github.com/storytold/gridcraft) are useful workflow references.
+Their advertised feature coverage is not proof of fidelity or a measure of
+this project's parity. Separate command coverage from end-to-end readiness:
+open, render, edit, save and reopen. No reference implementation was copied.
+
+Recommended next batches:
+
+1. Expand native Office acceptance corpora for the most-used document workflows.
+2. Word per-column notes and page-story editing, plus continued editable pagination acceptance.
+3. PowerPoint native rendering comparisons and system/cross-deck clipboard preservation.
+4. Excel advanced pivot layouts, sparkline date axes, and remaining print formatting/drawing fidelity.
+5. Visio geometry/text comparisons and curved connectors, followed by remaining data graphics controls.
+
+Microsoft's [page jump style enum](https://learn.microsoft.com/en-us/office/client-developer/visio/linejumpstyle-cell-page-layout-section),
+[connector jump style enum](https://learn.microsoft.com/en-us/office/client-developer/visio/conlinejumpstyle-cell-shape-layout-section)
+and [horizontal jump direction](https://learn.microsoft.com/en-us/office/client-developer/visio/conlinejumpdirx-cell-shape-layout-section)
+define the Visio mappings used here. The Excel review links the official function contract.
+
+Native Visio inherited string fields now display instance Field.Value caches with FIELDPICTURE(0), including empty and numeric-looking strings, instead of the master's placeholder. A synthetic native master/instance corpus verifies parsing and unrelated-edit round trips. Other internal field pictures retain their stored display pending explicit support.
