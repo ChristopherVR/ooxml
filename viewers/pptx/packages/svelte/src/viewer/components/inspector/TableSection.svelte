@@ -12,6 +12,7 @@
 		evenRowHeights,
 		insertTableElementColumn,
 		insertTableElementRow,
+		inspectorNumber,
 		removeTableElementColumn,
 		removeTableElementRow,
 		redistributeColumnWidth,
@@ -133,7 +134,7 @@
 	{#if table.bandedRows}<label>Row band cycle<input type="number" min="1" value={table.bandRowCycle ?? 1} onchange={(event) => patchData({ bandRowCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
 	{#if table.bandedColumns}<label>Column band cycle<input type="number" min="1" value={table.bandColCycle ?? 1} onchange={(event) => patchData({ bandColCycle: Math.max(1, Number(event.currentTarget.value)) })} /></label>{/if}
 	<details><summary>Column widths</summary><button type="button" onclick={() => patchData({ columnWidths: evenColumnWidths(table.columnWidths.length) })}>Distribute evenly</button>{#each table.columnWidths as width, index}<label>Column {index + 1}<input type="range" min="5" max="80" value={Math.round(width * 100)} onchange={(event) => patchData({ columnWidths: redistributeColumnWidth(table.columnWidths, index, Number(event.currentTarget.value) / 100) })} /></label>{/each}</details>
-	<details><summary>Row heights</summary><button type="button" onclick={() => patchData({ rows: evenRowHeights(table.rows) })}>Distribute evenly</button>{#each table.rows as row, index}<label>Row {index + 1}<input type="number" min="16" max="500" value={row.height ?? 32} onchange={(event) => patchData({rows:table.rows.map((item,i)=>i===index?{...item,height:Number(event.currentTarget.value)}:item)})} /></label>{/each}</details>
+	<details><summary>Row heights</summary><button type="button" onclick={() => patchData({ rows: evenRowHeights(table.rows) })}>Distribute evenly</button>{#each table.rows as row, index}<label>Row {index + 1}<input type="number" min="16" max="500" value={inspectorNumber(row.height, 32)} onchange={(event) => patchData({rows:table.rows.map((item,i)=>i===index?{...item,height:Number(event.currentTarget.value)}:item)})} /></label>{/each}</details>
 	<TableCellSection {editor} {table} onpatch={patchData} />
 {/if}
 
