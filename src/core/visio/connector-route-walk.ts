@@ -5,6 +5,7 @@ import {
 	type VisioRoutePoint,
 } from './connector-route';
 import { VISIO_ROUTE_CLEARANCE, routeCrossings } from './connector-route-avoid';
+import { alignedVisioCurve } from './connector-curve-aligned';
 
 /** One end of a connector for walking glue: a glued shape (its sides) or a fixed point. */
 export interface VisioWalkEnd {
@@ -129,6 +130,10 @@ export function visioWalkRoute(
 		const p = begin.shape ? exit(begin.shape, center(end)) : begin.point!;
 		const q = end.shape ? exit(end.shape, center(begin)) : end.point!;
 		return Math.hypot(q.x - p.x, q.y - p.y) > EPSILON ? [p, q] : undefined;
+	}
+	if (route === 'curved') {
+		const aligned = alignedVisioCurve(begin, end);
+		if (aligned && !routeCrossings(aligned, obstacles)) return aligned;
 	}
 	const path = visioWalkPath(begin, end);
 	if (!path || routeCrossings(path, obstacles)) return undefined;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { visioWalkPath, visioWalkRoute, type VisioWalkEnd } from './connector-route-walk';
+import curveEvidence from './__fixtures__/curved-route-native.json';
 
 /** An unrotated shape one inch wide and three quarters high, as Visio's Process shape. */
 const shape = (x: number, y: number, width = 1, height = 0.75): VisioWalkEnd => {
@@ -33,6 +34,37 @@ const path = (x: number, y: number) =>
 	]);
 
 describe("Visio's walking glue path", () => {
+	it.each(
+		curveEvidence.cases.filter((row) => row.begin[0] === row.end[0] || row.begin[1] === row.end[1]),
+	)('matches native curved facing-side endpoints for $target', (row) => {
+		const [x, y, width = 1, height = 1] = row.target;
+		const curve = visioWalkRoute(shape(2, 6, 1, 1), shape(x!, y!, width, height), 'curved')!;
+		expect(curve).toHaveLength(4);
+		for (const [actual, expected] of [
+			[curve[0]!, row.begin],
+			[curve[3]!, row.end],
+		] as const) {
+			expect(actual.x).toBeCloseTo(expected[0]!, 10);
+			expect(actual.y).toBeCloseTo(expected[1]!, 10);
+		}
+		const constantAxis = row.begin[0] === row.end[0] ? 'x' : 'y';
+		for (const point of curve) expect(point[constantAxis]).toBeCloseTo(curve[0]![constantAxis], 10);
+	});
+
+	it('does not apply overlapping-side curves through obstacles or to rotated outlines', () => {
+		const target = shape(6, 6.2, 1, 1);
+		expect(
+			visioWalkRoute(shape(2, 6, 1, 1), target, 'curved', [{ minX: 3, maxX: 4, minY: 5, maxY: 7 }]),
+		).toBeUndefined();
+		target.shape!.corners = [
+			{ x: 6, y: 5.5 },
+			{ x: 6.7, y: 6.2 },
+			{ x: 6, y: 6.9 },
+			{ x: 5.3, y: 6.2 },
+		];
+		const curve = visioWalkRoute(shape(2, 6, 1, 1), target, 'curved')!;
+		expect(curve[0]!.y).toBe(6);
+	});
 	// Every expectation is a position recorded from Visio 16 for a Process shape at (5, 5)
 	// connected to another one at the given place.
 	it('runs straight or with one near jog between sides that face each other', () => {
