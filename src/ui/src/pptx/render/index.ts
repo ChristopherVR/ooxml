@@ -1095,6 +1095,8 @@ export * from './inspector-helpers';
 // Two-decimal display rounding for the inspector's numeric inputs.
 export { inspectorNumber } from './inspector-number';
 export * from './update-text-segment-style';
+// Font family picks: carry same-face `a:ea` / `a:cs` slots along with `a:latin`.
+export { fontFamilyStyleUpdates, mergeTextStyleUpdate } from './font-family-update';
 // Effects panel: shadow/inner-shadow/glow/reflection/soft-edge state readers +
 // enable/disable/update shapeStyle merge patch builders.
 export * from './effects-helpers';

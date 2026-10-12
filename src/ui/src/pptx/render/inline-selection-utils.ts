@@ -7,6 +7,7 @@
 import type { TextSegment, TextStyle } from 'ooxml-core/pptx';
 
 import { isBulletMarkerSegment } from './bullet-toggle';
+import { mergeTextStyleUpdate } from './font-family-update';
 import { updateTextSegmentStyle } from './update-text-segment-style';
 
 export {
@@ -108,7 +109,7 @@ export function applyStyleToSelectedSegments(
 			if (startOffset === 0) {
 				newStartSegIdx = result.length;
 				newStartOffset = 0;
-				result.push({ ...seg, style: { ...seg.style, ...updates } });
+				result.push({ ...seg, style: mergeTextStyleUpdate(seg.style, updates) });
 			} else {
 				// Before-selection part.
 				const beforeSeg: TextSegment = {
@@ -125,7 +126,7 @@ export function applyStyleToSelectedSegments(
 				newStartOffset = 0;
 				result.push({
 					text: seg.text.slice(startOffset),
-					style: { ...seg.style, ...updates },
+					style: mergeTextStyleUpdate(seg.style, updates),
 				});
 			}
 			continue;
@@ -134,14 +135,14 @@ export function applyStyleToSelectedSegments(
 		// End segment of multi-segment selection.
 		if (i === endSegIdx) {
 			if (endOffset >= seg.text.length) {
-				result.push({ ...seg, style: { ...seg.style, ...updates } });
+				result.push({ ...seg, style: mergeTextStyleUpdate(seg.style, updates) });
 				newEndSegIdx = result.length - 1;
 				newEndOffset = seg.text.length;
 			} else {
 				// Selected part.
 				result.push({
 					text: seg.text.slice(0, endOffset),
-					style: { ...seg.style, ...updates },
+					style: mergeTextStyleUpdate(seg.style, updates),
 				});
 				newEndSegIdx = result.length - 1;
 				newEndOffset = endOffset;
@@ -156,7 +157,7 @@ export function applyStyleToSelectedSegments(
 		}
 
 		// Middle segment: entirely within selection.
-		result.push({ ...seg, style: { ...seg.style, ...updates } });
+		result.push({ ...seg, style: mergeTextStyleUpdate(seg.style, updates) });
 	}
 
 	return {
@@ -179,7 +180,7 @@ function splitSingle(
 ): void {
 	// Entire segment selected.
 	if (startOffset === 0 && endOffset >= seg.text.length) {
-		result.push({ ...seg, style: { ...seg.style, ...updates } });
+		result.push({ ...seg, style: mergeTextStyleUpdate(seg.style, updates) });
 		return;
 	}
 
@@ -198,7 +199,7 @@ function splitSingle(
 	// Selected part.
 	result.push({
 		text: seg.text.slice(startOffset, endOffset),
-		style: { ...seg.style, ...updates },
+		style: mergeTextStyleUpdate(seg.style, updates),
 	});
 
 	// After-selection part.

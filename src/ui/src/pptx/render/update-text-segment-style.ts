@@ -1,5 +1,7 @@
 import type { TextSegment, TextStyle } from 'ooxml-core/pptx';
 
+import { mergeTextStyleUpdate } from './font-family-update';
+
 /** Keep a runless paragraph's future body formatting in the same style edit. */
 export function updateTextSegmentStyle(
 	segment: TextSegment,
@@ -8,9 +10,11 @@ export function updateTextSegmentStyle(
 ): TextSegment {
 	return {
 		...segment,
-		...(options.updateBodyStyle === false ? {} : { style: { ...segment.style, ...updates } }),
+		...(options.updateBodyStyle === false
+			? {}
+			: { style: mergeTextStyleUpdate(segment.style, updates) }),
 		...(segment.paragraphInsertionStyle
-			? { paragraphInsertionStyle: { ...segment.paragraphInsertionStyle, ...updates } }
+			? { paragraphInsertionStyle: mergeTextStyleUpdate(segment.paragraphInsertionStyle, updates) }
 			: {}),
 	};
 }

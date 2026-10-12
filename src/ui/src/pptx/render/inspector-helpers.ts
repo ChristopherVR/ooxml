@@ -14,6 +14,7 @@ import type {
 } from 'ooxml-core/pptx';
 import { hasShapeProperties, hasTextProperties } from 'ooxml-core/pptx';
 
+import { mergeTextStyleUpdate } from './font-family-update';
 import { textStyleFlagsOf } from './selection-format-state';
 import { textFontSizePxToPt } from './text-format-presets';
 import { paragraphOverridePatch, withExclusiveLineSpacing } from './text-style-scope';
@@ -162,21 +163,34 @@ export function textStylePatch(el: PptxElement, changes: Partial<TextStyle>): Pa
 					),
 				}
 			: {}),
-		textStyle: {
-			...base,
-			...exclusive,
-		},
+		textStyle: mergeTextStyleUpdate(base, exclusive),
 	} as Partial<PptxElement>;
 }
 
-/** Apply an ordinary-text model pixel size to the element and all of its runs. */
-export function textFontSizePatch(el: PptxElement, fontSize: number): Partial<PptxElement> {
-	const patch = textStylePatch(el, { fontSize });
+/** Apply `updates` to the element's body style and to every one of its runs. */
+function textRunsPatch(el: PptxElement, updates: Partial<TextStyle>): Partial<PptxElement> {
+	const patch = textStylePatch(el, updates);
 	if (!hasTextProperties(el) || !el.textSegments) {
 		return patch;
 	}
 	return {
 		...patch,
-		textSegments: el.textSegments.map((segment) => updateTextSegmentStyle(segment, { fontSize })),
+		textSegments: el.textSegments.map((segment) => updateTextSegmentStyle(segment, updates)),
 	} as Partial<PptxElement>;
+}
+
+/** Apply an ordinary-text model pixel size to the element and all of its runs. */
+export function textFontSizePatch(el: PptxElement, fontSize: number): Partial<PptxElement> {
+	return textRunsPatch(el, { fontSize });
+}
+
+/**
+ * Apply a font family to the element and all of its runs, the way
+ * {@link textFontSizePatch} applies a size. Setting it on the body alone left
+ * every run that names its own `a:latin` in the old face, so a whole-box pick
+ * from the ribbon changed nothing; the runs also carry the same-face `a:ea` /
+ * `a:cs` slots along (see `font-family-update.ts`).
+ */
+export function textFontFamilyPatch(el: PptxElement, fontFamily: string): Partial<PptxElement> {
+	return textRunsPatch(el, { fontFamily });
 }
