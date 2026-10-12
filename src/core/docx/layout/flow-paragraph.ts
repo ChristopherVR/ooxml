@@ -37,7 +37,31 @@ export function placeParagraph(
 	note: (message: string) => void,
 ): void {
 	const { paragraph, spacingBeforePx, requiredTogetherPx, reflow } = placement;
-	let layout = placement.layout;
+	// Native modes 12/14/15 retain the empty paragraph line after a terminal column break.
+	const trailingBreakLine = (result: ParagraphLayoutResult): ParagraphLayoutResult => {
+		const last = result.lines.at(-1);
+		if (
+			!placement.trimLeadingColumnBreak ||
+			!last ||
+			!result.columnBreakAfterLine.has(result.lines.length - 1)
+		)
+			return result;
+		return {
+			...result,
+			contentHeightPx: result.contentHeightPx + last.heightPx,
+			lines: [
+				...result.lines,
+				{
+					...last,
+					yPx: last.yPx + last.heightPx,
+					fragments: [],
+					sourceStart: last.sourceEnd,
+					sourceEnd: last.sourceEnd,
+				},
+			],
+		};
+	};
+	let layout = trailingBreakLine(placement.layout);
 	let width = cursor.columnWidthPx;
 	if (paragraph.pageBreakBefore && cursor.hasPageContent) cursor.newPage();
 	if (requiredTogetherPx > 0 && placement.footnotes) {
@@ -83,7 +107,7 @@ export function placeParagraph(
 	};
 	const reflowIfNeeded = () => {
 		if (!reflow || cursor.columnWidthPx === width) return;
-		layout = reflow(nextToken);
+		layout = trailingBreakLine(reflow(nextToken));
 		lineCursor = 0;
 		width = cursor.columnWidthPx;
 	};

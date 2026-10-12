@@ -1,3 +1,5 @@
+import { TableFootnotes } from './table-footnotes';
+import type { ReferenceFootnotes } from './reference-footnotes';
 import type { PageCursor } from './page-cursor';
 import { layoutRow, splitRowAtHeight, type RowLayout } from './table-layout';
 import type { TextMeasurer } from './measure';
@@ -16,6 +18,7 @@ export function placeTable(
 	table: LayoutTable,
 	measurer: TextMeasurer,
 	note: (message: string) => void,
+	resolveFootnotes?: ReferenceFootnotes,
 ): void {
 	// Word only repeats the contiguous header group starting at the first row.
 	// A tblHeader flag after the first body row is ignored (ECMA-376 17.4.50).
@@ -33,8 +36,12 @@ export function placeTable(
 	};
 	let fragmentRows: LayoutTableRowBox[] = [];
 	let fragmentHeight = 0;
+	const footnotes = resolveFootnotes
+		? new TableFootnotes(cursor, table, () => fragmentHeight, resolveFootnotes)
+		: undefined;
 
 	const toRowBox = (layout: RowLayout, repeated: boolean): LayoutTableRowBox => {
+		footnotes?.add(layout, repeated);
 		const box: LayoutTableRowBox = {
 			yPx: fragmentHeight,
 			heightPx: layout.heightPx,
@@ -47,7 +54,10 @@ export function placeTable(
 	};
 
 	function flushFragment() {
-		if (!fragmentRows.length) return;
+		if (!fragmentRows.length) {
+			footnotes?.holdFragment();
+			return;
+		}
 		const box: LayoutTableBox = {
 			kind: 'table',
 			blockId: table.id,
@@ -56,7 +66,9 @@ export function placeTable(
 			heightPx: fragmentHeight,
 			rows: fragmentRows,
 		};
+		footnotes?.holdFragment();
 		cursor.place(box, fragmentHeight);
+		footnotes?.flushed();
 		fragmentRows = [];
 		fragmentHeight = 0;
 	}
@@ -101,6 +113,44 @@ export function placeTable(
 						fragmentHeight = 0;
 						addHeaders();
 					}
+					continue;
+				}
+			}
+			if (footnotes) {
+				const selected = footnotes.choose(remainingRow, cantSplit);
+				if (selected) {
+					if (selected.layout === remainingRow) {
+						fragmentRows.push(toRowBox(remainingRow, false));
+						remainingRow = null;
+						continue;
+					}
+					const { before, after } = splitRowAtHeight(remainingRow, selected.cut + 1e-6);
+					fragmentRows.push(toRowBox(before, false));
+					const previousWidth = cursor.columnWidthPx;
+					startNewFragment();
+					remainingRow =
+						after && previousWidth !== cursor.columnWidthPx
+							? layoutRow(
+									{ ...row, heightPx: 0, heightRule: 'atLeast' },
+									cursor.columnWidthPx,
+									measurer,
+									note,
+									after.cells,
+								)
+							: after;
+					continue;
+				}
+				if (fragmentRows.length || !cursor.atColumnTop) {
+					const previousWidth = cursor.columnWidthPx;
+					startNewFragment();
+					if (previousWidth !== cursor.columnWidthPx)
+						remainingRow = layoutRow(
+							remainingRow === initial ? row : { ...row, heightPx: 0, heightRule: 'atLeast' },
+							cursor.columnWidthPx,
+							measurer,
+							note,
+							remainingRow === initial ? undefined : remainingRow.cells,
+						);
 					continue;
 				}
 			}
@@ -165,7 +215,13 @@ export function placeTable(
 
 	for (const row of table.rows) {
 		const layout = layoutRow(row, cursor.columnWidthPx, measurer, note);
-		placeRow(row, layout, Boolean(row.cantSplit) || headerRows.includes(row));
+		placeRow(
+			row,
+			layout,
+			Boolean(row.cantSplit) ||
+				headerRows.includes(row) ||
+				(!!footnotes && row.heightRule === 'exact'),
+		);
 	}
 	flushFragment();
 }

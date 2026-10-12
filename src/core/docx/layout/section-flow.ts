@@ -1,3 +1,4 @@
+import { createReferenceFootnotes, type ReferenceFootnotes } from './reference-footnotes';
 import { NO_TWIPS } from './units';
 import { PageCursor } from './page-cursor';
 import { placeParagraph } from './flow-paragraph';
@@ -19,6 +20,7 @@ export class SectionFlow {
 	private readonly measurer: TextMeasurer;
 	private readonly note: (message: string) => void;
 	private readonly paragraphCache = new Map<string, ParagraphLayoutResult>();
+	private readonly referenceFootnotes: ReferenceFootnotes;
 	private readonly firstRowHeightCache = new Map<string, number>();
 
 	constructor(
@@ -165,6 +167,11 @@ export class SectionFlow {
 			reflow,
 			section.legacyFootnoteColumns,
 		);
+		this.referenceFootnotes = createReferenceFootnotes(
+			() => this.cursor.footnoteWidthPx,
+			measurer,
+			note,
+		);
 	}
 
 	private paragraphLayout(index: number): ParagraphLayoutResult {
@@ -251,7 +258,19 @@ export class SectionFlow {
 		for (let index = 0; index < this.blocks.length; index++) {
 			const block = expectDefined(this.blocks[index], 'flow block index');
 			if (block.kind === 'table') {
-				placeTable(this.cursor, block, this.measurer, this.note);
+				placeTable(
+					this.cursor,
+					block,
+					this.measurer,
+					this.note,
+					block.rows.some((row) =>
+						row.cells.some((cell) =>
+							cell.paragraphs.some((paragraph) => paragraph.footnotes?.length),
+						),
+					)
+						? this.referenceFootnotes
+						: undefined,
+				);
 				if (this.balance?.pageIndex === this.cursor.page.index && !this.cursor.columnContentFits)
 					this.balanceValid = false;
 				continue;
@@ -259,36 +278,8 @@ export class SectionFlow {
 			if (block.afterTableSectionBreak) this.cursor.endBalance();
 			const spacingBeforePx = this.spacingBeforeFor(index);
 			const layout = this.wrappedLayout(index, spacingBeforePx) ?? this.paragraphLayout(index);
-			const noteCache = new Map<string, LayoutFootnoteBox>();
-			const footnotes = (lines: readonly LayoutLine[], includeUnanchored: boolean) => {
-				const runIds = new Set(
-					lines.flatMap((line) =>
-						line.fragments.map((fragment) => block.runs[fragment.runIndex]?.footnoteReferenceId),
-					),
-				);
-				const anchoredIds = new Set(block.runs.map((run) => run.footnoteReferenceId));
-				return (block.footnotes ?? [])
-					.filter((item) => runIds.has(item.id) || (includeUnanchored && !anchoredIds.has(item.id)))
-					.map((note) => {
-						const key = `${note.id}:${this.cursor.footnoteWidthPx}`;
-						const cached = noteCache.get(key);
-						if (cached) return cached;
-						const stacked = stackParagraphs(
-							note.paragraphs,
-							this.cursor.footnoteWidthPx,
-							this.measurer,
-							this.note,
-						);
-						const box = {
-							id: note.id,
-							yPx: 0,
-							heightPx: stacked.heightPx,
-							paragraphs: stacked.boxes,
-						};
-						noteCache.set(key, box);
-						return box;
-					});
-			};
+			const footnotes = (lines: readonly LayoutLine[], includeUnanchored: boolean) =>
+				this.referenceFootnotes(block, lines, includeUnanchored);
 			const requiredTogetherPx = block.keepNext
 				? this.requiredKeepHeight(index)
 				: block.keepLines
