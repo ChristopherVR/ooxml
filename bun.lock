@@ -407,7 +407,7 @@
     },
     "src/core": {
       "name": "ooxml-core",
-      "version": "1.8.3",
+      "version": "1.8.4",
       "bin": {
         "pptx": "./dist/pptx/cli/index.mjs",
       },

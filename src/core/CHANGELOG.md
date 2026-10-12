@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.8.4](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.4) - 2026-10-12
+
+### Bug Fixes
+
+- **xlsx:** Rebind self references when copying sheets ([#55](https://github.com/ChristopherVR/ooxml/issues/55)) ([896fb0f](https://github.com/ChristopherVR/ooxml/commit/896fb0f3bcb5a3c6ac367464a8264e63256c040c))
+
 ## [1.8.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.3) - 2026-10-12
 
 ### Bug Fixes
