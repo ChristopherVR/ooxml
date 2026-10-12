@@ -282,12 +282,30 @@ describe('ribbonDrawingGroupComponent Fill/Outline wiring', () => {
 		});
 	});
 
+	it('turns the line on with the default width when the shape has none', () => {
+		const editor = new EditorStateService();
+		editor.setSlides([
+			slide('s1', [shapeEl({ shapeStyle: { strokeColor: 'transparent', strokeWidth: 0 } })]),
+		]);
+		editor.select(['shape-1']);
+		const group = createGroup(editor);
+		Object.assign(group, {
+			canEdit: () => true,
+			selectedElement: () => editor.slides()[0].elements[0],
+		});
+		handlers(group).onRequest(intent({ id: 'home.drawing.shapeOutline', value: '#ff0000' }));
+		expect(
+			(editor.slides()[0].elements[0] as unknown as { shapeStyle: Record<string, unknown> })
+				.shapeStyle,
+		).toMatchObject({ strokeColor: '#ff0000', strokeWidth: 1, strokeFillMode: 'solid' });
+	});
+
 	it('feeds the shared element with theme colours, recents and gated colour triggers', () => {
 		const source = componentSource(import.meta.dirname, 'ribbon-drawing-group.component.ts');
 		expect(source).toContain('<pptx-ui-ribbon-home-drawing');
 		expect(source).toContain('themeColors');
 		expect(source).toContain('shapeFillChange(String(value), ref)');
-		expect(source).toContain('shapeOutlineChange(String(value), ref)');
+		expect(source).toContain('shapeOutlineChange(String(value), ref, this.currentShapeStyle())');
 		expect(source).toContain("homeGalleryControls('drawing'");
 		expect(source).not.toContain('pptx-ribbon-color-popover');
 	});
