@@ -75,6 +75,32 @@ function updateNode(nodes: PptxSmartArtNode[], nodeId: string, text: string): Pp
 
 /** Apply one match at its leaf without mutating the surrounding group or sibling objects. */
 function replaceLeaf(element: PptxElement, match: FindResult, replacement: string): PptxElement {
+	if (match.chartTitle && element.type === 'chart' && element.chartData) {
+		const data = element.chartData;
+		if (data.titleTextEditable === false)
+			throw new Error('This chart title requires editing in PowerPoint or its source workbook');
+		const runs = data.titleRuns?.length ? data.titleRuns : [{ text: data.title ?? '' }];
+		const next = replaceFindRuns(
+			runs,
+			match.segmentIndex,
+			match.startOffset,
+			match.length,
+			replacement,
+		);
+		if (!next) return element;
+		return {
+			...element,
+			chartData: {
+				...data,
+				title: next[0]?.text ?? '',
+				titleRuns: next,
+				titleTextOnly: true,
+				titleTextOnlyStyles:
+					data.titleTextOnlyStyles ?? runs.map(({ text: _text, ...style }) => style),
+				style: { ...data.style, hasTitle: next.some((run) => run.text.length > 0) },
+			},
+		};
+	}
 	if (match.tableCell && element.type === 'table' && element.tableData) {
 		const { rowIndex, colIndex } = match.tableCell;
 		const row = element.tableData.rows[rowIndex],

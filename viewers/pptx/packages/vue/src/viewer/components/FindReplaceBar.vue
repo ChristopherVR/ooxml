@@ -8,12 +8,15 @@
  * listens for the navigation/replace/close intents as emits.
  */
 import { CaseSensitive, ChevronDown, ChevronUp, X } from 'lucide-vue-next';
+import { findReplacementAvailability } from 'ooxml-ui/pptx';
+import type { FindResult } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
 	matchCount: number;
 	currentIndex: number;
+	matches?: readonly FindResult[];
 }>();
 
 const { t } = useI18n();
@@ -21,6 +24,7 @@ const { t } = useI18n();
 const query = defineModel<string>('query', { default: '' });
 const replacement = defineModel<string>('replacement', { default: '' });
 const includeNotes = defineModel<boolean>('includeNotes', { default: false });
+const includeChartTitles = defineModel<boolean>('includeChartTitles', { default: true });
 const matchCase = defineModel<boolean>('matchCase', { default: false });
 
 const emit = defineEmits<{
@@ -40,6 +44,11 @@ const counter = computed(() => {
 });
 
 const hasMatches = computed(() => props.matchCount > 0);
+const availability = computed(() =>
+	props.matches
+		? findReplacementAvailability(props.matches, props.currentIndex)
+		: { current: hasMatches.value, all: hasMatches.value, hasReadOnly: false },
+);
 
 /** Shared input classes: mirrors React's find/replace inputs. */
 const FR_INPUT =
@@ -55,6 +64,13 @@ const FR_BTN =
 		role="search"
 	>
 		<div class="pptx-vue-fr-row flex items-center gap-1.5">
+			<label
+				><pptx-ui-checkbox
+					:checked="includeChartTitles"
+					@change="includeChartTitles = ($event.target as HTMLInputElement).checked"
+					:aria-label="t('pptx.findReplace.includeChartTitles')"
+				/>{{ t('pptx.findReplace.includeChartTitles') }}</label
+			>
 			<label
 				><pptx-ui-checkbox
 					:checked="includeNotes"
@@ -129,15 +145,15 @@ const FR_BTN =
 				:class="FR_INPUT"
 				:placeholder="t('pptx.findReplace.replacePlaceholder')"
 				:aria-label="t('pptx.findReplace.replacementText')"
-				@keydown.enter.prevent="emit('replace')"
+				@keydown.enter.prevent="availability.current && emit('replace')"
 				@keydown.esc.prevent="emit('close')"
 			/>
 			<button
 				type="button"
 				class="pptx-vue-fr-btn pptx-vue-fr-text !min-w-0"
 				:class="FR_BTN"
-				:disabled="!hasMatches"
-				@click="emit('replace')"
+				:disabled="!availability.current"
+				@click="availability.current && emit('replace')"
 			>
 				{{ t('pptx.findReplace.replace') }}
 			</button>
@@ -145,11 +161,14 @@ const FR_BTN =
 				type="button"
 				class="pptx-vue-fr-btn pptx-vue-fr-text !min-w-0"
 				:class="FR_BTN"
-				:disabled="!hasMatches"
-				@click="emit('replace-all')"
+				:disabled="!availability.all"
+				@click="availability.all && emit('replace-all')"
 			>
 				{{ t('pptx.findReplace.replaceAll') }}
 			</button>
 		</div>
+		<p v-if="availability.hasReadOnly" role="status">
+			{{ t('pptx.findReplace.readOnlyChartTitle') }}
+		</p>
 	</div>
 </template>

@@ -5,6 +5,7 @@
  * framework imports, so this is safe to use in web workers or server-side code.
  */
 
+import { chartSourceReferenceCounts, findMatchChartSource } from './chart-find-source-guards';
 import type { PptxSlide } from '../../index';
 import { findSlideTextTargets, isFindBreak, replaceFindRuns } from './find-text-targets';
 import { replaceFindTarget } from './find-replace-target';
@@ -35,6 +36,10 @@ export interface FindResult {
 	textOffset?: number;
 	/** Speaker-note body match, rather than a canvas element. */
 	notes?: boolean;
+	/** Match in the chart title rather than the shape's own text. */
+	chartTitle?: boolean;
+	/** Linked or complex chart text is searchable but requires source editing. */
+	readOnly?: boolean;
 }
 
 /** Options passed to search and replace helpers. */
@@ -43,6 +48,8 @@ export interface FindOptions {
 	matchCase?: boolean;
 	/** Search speaker notes as well as editable slide text. */
 	includeNotes?: boolean;
+	/** Include chart titles. Enabled by default; disable to replace only ordinary slide text. */
+	includeChartTitles?: boolean;
 }
 
 /** Result returned by {@link replaceInSlides} and {@link replaceMatch}. */
@@ -51,6 +58,19 @@ export interface ReplaceResult {
 	slides: readonly PptxSlide[];
 	/** Number of text replacements actually applied. */
 	replacements: number;
+}
+
+/** Shared replacement gating for searchable text whose source is not safely editable. */
+export function findReplacementAvailability(
+	matches: readonly Pick<FindResult, 'readOnly'>[],
+	index: number,
+) {
+	const hasReadOnly = matches.some((match) => match.readOnly);
+	return {
+		current: Boolean(matches[index] && !matches[index]!.readOnly),
+		all: matches.length > 0 && !hasReadOnly,
+		hasReadOnly,
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -78,10 +98,19 @@ export function findInSlides(
 	const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	const pattern = new RegExp(`(?=(${escaped}))`, opts.matchCase ? 'gu' : 'giu');
 	const results: FindResult[] = [];
+	const chartSources = chartSourceReferenceCounts(slides);
 
 	for (let slideIndex = 0; slideIndex < slides.length; slideIndex++) {
 		const slide = slides[slideIndex];
-		for (const { runs, ...target } of findSlideTextTargets(slide, opts.includeNotes)) {
+		for (const { runs, ...target } of findSlideTextTargets(
+			slide,
+			opts.includeNotes,
+			opts.includeChartTitles,
+		)) {
+			if (target.chartTitle) {
+				const source = findMatchChartSource(slides, { ...target, slideIndex });
+				if (source && (chartSources.get(source) ?? 0) > 1) target.readOnly = true;
+			}
 			let text = '',
 				totalOffset = 0,
 				regionOffset = 0;
@@ -140,6 +169,22 @@ export function applyFindReplacements(
 	if (toReplace.length === 0) {
 		return { slides, replacements: 0 };
 	}
+	if (toReplace.some((match) => match.readOnly))
+		throw new Error(
+			'Linked or complex chart titles must be edited in PowerPoint or their source workbook',
+		);
+
+	const chartSources = chartSourceReferenceCounts(slides);
+	if (
+		toReplace.some((match) => {
+			if (!match.chartTitle) return false;
+			const source = findMatchChartSource(slides, match);
+			return source && (chartSources.get(source) ?? 0) > 1;
+		})
+	)
+		throw new Error(
+			'Text in a shared chart part requires editing in PowerPoint or its source workbook',
+		);
 
 	// Group by text object, rather than by run: a match can span several runs.
 	const grouped = new Map<string, FindResult[]>();
@@ -151,6 +196,7 @@ export function applyFindReplacements(
 			match.tableCell,
 			match.smartArtNodeId,
 			match.notes,
+			match.chartTitle,
 		]);
 		let bucket = grouped.get(key);
 		if (!bucket) {

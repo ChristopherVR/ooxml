@@ -33,6 +33,7 @@ export class ViewerFindReplaceService {
 	readonly activeIndex = signal(-1);
 	private matchCase = false;
 	private includeNotes = false;
+	private includeChartTitles = true;
 
 	/** Navigate the viewer to a slide index (bound from the host component). */
 	private goTo: (index: number) => void = () => undefined;
@@ -51,6 +52,7 @@ export class ViewerFindReplaceService {
 	onFind(evt: FindEvent): void {
 		this.matchCase = evt.matchCase;
 		this.includeNotes = evt.includeNotes ?? false;
+		this.includeChartTitles = evt.includeChartTitles ?? true;
 		this.refreshResults(evt.query);
 	}
 
@@ -67,7 +69,7 @@ export class ViewerFindReplaceService {
 	onReplaceOne(evt: ReplaceEvent): void {
 		const results = this.results();
 		const idx = this.activeIndex();
-		if (idx < 0 || idx >= results.length) {
+		if (idx < 0 || idx >= results.length || results[idx]?.readOnly) {
 			return;
 		}
 		const updated = replaceMatch(this.editor.slides(), results, idx, evt.replacement);
@@ -76,9 +78,13 @@ export class ViewerFindReplaceService {
 	}
 
 	onReplaceAll(evt: ReplaceEvent): void {
+		if (this.results().some((match) => match.readOnly)) {
+			return;
+		}
 		const updated = replaceInSlides(this.editor.slides(), evt.query, evt.replacement, {
 			matchCase: this.matchCase,
 			includeNotes: this.includeNotes,
+			includeChartTitles: this.includeChartTitles,
 		});
 		if (updated.replacements > 0) {
 			this.editor.applyReplacement(
@@ -99,6 +105,7 @@ export class ViewerFindReplaceService {
 		const results = findInSlides(this.editor.slides(), query, {
 			matchCase: this.matchCase,
 			includeNotes: this.includeNotes,
+			includeChartTitles: this.includeChartTitles,
 		});
 		this.results.set(results);
 		this.activeIndex.set(results.length > 0 ? 0 : -1);

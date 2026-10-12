@@ -1,4 +1,7 @@
 export const translations = {
+	'pptx.findReplace.includeChartTitles': 'Diagrammtitel einbeziehen',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Verknüpfte oder komplexe Diagrammtitel können gefunden werden, müssen jedoch in PowerPoint oder ihrer Quellarbeitsmappe bearbeitet werden.',
 	'pptx.findReplace.includeNotes': 'Sprechernotizen einbeziehen',
 	'pptx.slideSorter.systemCopy': 'Folien in die Systemzwischenablage kopieren',
 	'pptx.slideSorter.systemPaste': 'Folien aus der Systemzwischenablage einfügen',

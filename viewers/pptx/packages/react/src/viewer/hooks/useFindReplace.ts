@@ -31,6 +31,8 @@ interface UseFindReplaceResult {
 	setReplaceQuery: (query: string) => void;
 	findMatchCase: boolean;
 	findIncludeNotes: boolean;
+	findIncludeChartTitles: boolean;
+	setFindIncludeChartTitles: (value: boolean) => void;
 	setFindIncludeNotes: (value: boolean) => void;
 	setFindMatchCase: (matchCase: boolean) => void;
 	findResults: FindResult[];
@@ -63,6 +65,7 @@ export function useFindReplace({
 	const [replaceQuery, setReplaceQuery] = useState('');
 	const [findMatchCase, setFindMatchCase] = useState(false);
 	const [findIncludeNotes, setFindIncludeNotes] = useState(false);
+	const [findIncludeChartTitles, setFindIncludeChartTitles] = useState(true);
 	const [findResults, setFindResults] = useState<FindResult[]>([]);
 	const [findResultIndex, setFindResultIndex] = useState(-1);
 	/** Set by a replace so the search re-runs once the replaced slides land. */
@@ -85,6 +88,7 @@ export function useFindReplace({
 		const results = findInSlides(slides, findQuery, {
 			matchCase: findMatchCase,
 			includeNotes: findIncludeNotes,
+			includeChartTitles: findIncludeChartTitles,
 		});
 
 		if (!findQuery) {
@@ -106,6 +110,7 @@ export function useFindReplace({
 		findQuery,
 		findMatchCase,
 		findIncludeNotes,
+		findIncludeChartTitles,
 		onSetActiveSlideIndex,
 		onSetSelectedElementId,
 	]);
@@ -131,6 +136,9 @@ export function useFindReplace({
 	const applyReplacements = useCallback(
 		(toReplace: FindResult[]) => {
 			if (toReplace.length === 0) {
+				return;
+			}
+			if (toReplace.some((match) => match.readOnly)) {
 				return;
 			}
 
@@ -215,6 +223,8 @@ export function useFindReplace({
 		setFindMatchCase,
 		findIncludeNotes,
 		setFindIncludeNotes,
+		findIncludeChartTitles,
+		setFindIncludeChartTitles,
 		findResults,
 		findResultIndex,
 		performFind,

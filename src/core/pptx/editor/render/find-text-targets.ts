@@ -13,6 +13,8 @@ export interface FindTextTarget {
 	elementPath?: number[];
 	tableCell?: { rowIndex: number; colIndex: number };
 	smartArtNodeId?: string;
+	chartTitle?: boolean;
+	readOnly?: boolean;
 	runs: readonly FindTextRun[];
 }
 export interface FindTextRun {
@@ -37,11 +39,12 @@ export function* findTextTargets(
 	element: PptxElement,
 	elementId = element.id,
 	path: number[] = [],
+	includeChartTitles = true,
 ): Generator<FindTextTarget> {
 	const location = { elementId, ...(path.length ? { elementPath: path } : {}) };
 	if (element.type === 'group') {
 		for (const [index, child] of element.children.entries())
-			yield* findTextTargets(child, elementId, [...path, index]);
+			yield* findTextTargets(child, elementId, [...path, index], includeChartTitles);
 	} else if (hasTextProperties(element)) {
 		const runs: readonly TextSegment[] = element.textSegments?.length
 			? element.textSegments
@@ -56,6 +59,15 @@ export function* findTextTargets(
 	} else if (element.type === 'smartArt' && element.smartArtData) {
 		for (const node of smartArtNodes(element.smartArtData.nodes))
 			yield { ...location, smartArtNodeId: node.id, runs: [{ text: node.text }] };
+	} else if (includeChartTitles && element.type === 'chart' && element.chartData) {
+		const chart = element.chartData;
+		if (chart.style?.hasTitle === false) return;
+		const runs = chart.titleRuns?.length
+			? chart.titleRuns
+			: chart.title
+				? [{ text: chart.title }]
+				: [];
+		yield { ...location, chartTitle: true, readOnly: chart.titleTextEditable === false, runs };
 	}
 }
 
@@ -103,8 +115,10 @@ export function replaceFindRuns<R extends FindTextRun>(
 export function* findSlideTextTargets(
 	slide: PptxSlide,
 	includeNotes = false,
+	includeChartTitles = true,
 ): Generator<FindTextTarget> {
-	for (const element of slide.elements) yield* findTextTargets(element);
+	for (const element of slide.elements)
+		yield* findTextTargets(element, element.id, [], includeChartTitles);
 	if (includeNotes && slide.notes) {
 		const runs =
 			slide.notesSegments?.length &&

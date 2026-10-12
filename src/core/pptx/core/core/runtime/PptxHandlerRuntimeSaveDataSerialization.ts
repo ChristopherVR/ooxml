@@ -886,6 +886,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						title: chartData.title,
 						hasTitle: chartData.style?.hasTitle,
 						titleRuns: chartData.titleRuns,
+						titleTextOnly: chartData.titleTextOnly,
+						titleTextOnlyStyles: chartData.titleTextOnlyStyles,
 					},
 					(key) => this.compatibilityService.getXmlLocalName(key),
 				);

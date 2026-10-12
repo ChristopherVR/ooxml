@@ -1057,6 +1057,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				<pptx-find-replace-bar
 					[matchCount]="findReplace.results().length"
 					[matchIndex]="findReplace.activeIndex()"
+					[matches]="findReplace.results()"
 					(find)="findReplace.onFind($event)"
 					(navigate)="findReplace.onNavigate($event)"
 					(replaceOne)="findReplace.onReplaceOne($event)"

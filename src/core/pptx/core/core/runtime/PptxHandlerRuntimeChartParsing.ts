@@ -280,6 +280,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			colorAdapter,
 		);
 		const style = chartStyleFromNeutral(neutral, this.extractChartStyle(chartSpace, chartRoot));
+		const titleTx = reader.xml.getChildByLocalName(
+			reader.xml.getChildByLocalName(chartRoot, 'title'),
+			'tx',
+		);
+		const titleRich = reader.xml.getChildByLocalName(titleTx, 'rich');
+		const titleParagraphs = reader.xml.getChildrenArrayByLocalName(titleRich, 'p');
+		const titleTextEditable = Boolean(
+			titleRuns?.length &&
+			titleParagraphs.length === 1 &&
+			!Object.keys(titleParagraphs[0] ?? {}).some((key) =>
+				['br', 'fld'].includes(reader.localName(key)),
+			),
+		);
 		const groupOptions = groupOptionsFromNeutral(groups[0]?.group, chartType);
 		const linesAndChrome = this.readChartLinesAndChrome(neutral, tree, groups, reader);
 
@@ -335,6 +348,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...built.filtered,
 			title: neutralTitleText(neutral.title),
 			...(titleRuns ? { titleRuns } : {}),
+			titleTextEditable,
 			style,
 			grouping: groupOptions.grouping,
 			...groupOptions,

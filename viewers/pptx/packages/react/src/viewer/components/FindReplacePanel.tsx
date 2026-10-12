@@ -1,3 +1,4 @@
+import { findReplacementAvailability } from 'ooxml-ui/pptx';
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,6 +17,8 @@ export interface FindReplacePanelProps {
 	replaceQuery: string;
 	findMatchCase: boolean;
 	findIncludeNotes?: boolean;
+	findIncludeChartTitles?: boolean;
+	onSetFindIncludeChartTitles?: (value: boolean) => void;
 	onSetFindIncludeNotes?: (value: boolean) => void;
 	findResults: Array<{
 		slideIndex: number;
@@ -23,6 +26,7 @@ export interface FindReplacePanelProps {
 		segmentIndex: number;
 		startOffset: number;
 		length: number;
+		readOnly?: boolean;
 	}>;
 	findResultIndex: number;
 	onSetFindQuery: (query: string) => void;
@@ -46,6 +50,8 @@ export function FindReplacePanel({
 	replaceQuery,
 	findMatchCase,
 	findIncludeNotes = false,
+	findIncludeChartTitles = true,
+	onSetFindIncludeChartTitles,
 	onSetFindIncludeNotes,
 	findResults,
 	findResultIndex,
@@ -70,7 +76,7 @@ export function FindReplacePanel({
 	useEffect(() => {
 		onPerformFind();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [findQuery, findMatchCase, findIncludeNotes]);
+	}, [findQuery, findMatchCase, findIncludeNotes, findIncludeChartTitles]);
 
 	const handleSearchKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -99,6 +105,7 @@ export function FindReplacePanel({
 	);
 
 	const hasResults = findResults.length > 0;
+	const availability = findReplacementAvailability(findResults, findResultIndex);
 	const matchCountLabel = hasResults
 		? t('pptx.findReplace.matchCount', { current: findResultIndex + 1, total: findResults.length })
 		: findQuery.length > 0
@@ -108,6 +115,14 @@ export function FindReplacePanel({
 	return (
 		<div className='absolute top-2 right-2 z-40 bg-popover border border-border rounded-lg shadow-lg p-3 text-xs text-foreground w-80 backdrop-blur'>
 			{/* Header */}
+			<label>
+				<WebCheckbox
+					aria-label={t('pptx.findReplace.includeChartTitles')}
+					checked={findIncludeChartTitles}
+					onChange={(event) => onSetFindIncludeChartTitles?.(event.target.checked)}
+				/>
+				{t('pptx.findReplace.includeChartTitles')}
+			</label>
 			<div className='flex items-center justify-between mb-2'>
 				<label>
 					<WebCheckbox
@@ -206,12 +221,13 @@ export function FindReplacePanel({
 			</div>
 
 			{/* Action buttons */}
+			{availability.hasReadOnly && <p role='status'>{t('pptx.findReplace.readOnlyChartTitle')}</p>}
 			<div className='flex items-center gap-1.5'>
 				<button
 					type='button'
 					className={btnAction}
 					onClick={onReplace}
-					disabled={!hasResults}
+					disabled={!availability.current}
 					title={t('pptx.findReplace.replaceCurrent')}
 				>
 					{t('pptx.findReplace.replace')}
@@ -220,7 +236,7 @@ export function FindReplacePanel({
 					type='button'
 					className={btnAction}
 					onClick={onReplaceAll}
-					disabled={!hasResults}
+					disabled={!availability.all}
 					title={t('pptx.findReplace.replaceAllMatches')}
 				>
 					{t('pptx.findReplace.replaceAll')}

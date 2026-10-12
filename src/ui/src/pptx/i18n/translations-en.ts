@@ -170,6 +170,9 @@ export const translationsEn: Record<string, string> = {
 	'pptx.findReplace.searchText': 'Search text',
 	'pptx.findReplace.matchCase': 'Match case',
 	'pptx.findReplace.includeNotes': 'Include speaker notes',
+	'pptx.findReplace.includeChartTitles': 'Include chart titles',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Linked or complex chart titles can be found, but must be edited in PowerPoint or their source workbook.',
 	'pptx.slideSorter.systemCopy': 'Copy slides to system clipboard',
 	'pptx.slideSorter.systemPaste': 'Paste slides from system clipboard',
 	'pptx.slideSorter.systemCopied': 'Slides copied',

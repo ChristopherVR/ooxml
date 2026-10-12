@@ -1262,6 +1262,12 @@ export interface PptxChartData {
 	 * linked-cell reference.
 	 */
 	titleRuns?: PptxChartTitleRun[];
+	/** Whether parsed title text can be replaced without changing its source or paragraph structure. */
+	titleTextEditable?: boolean;
+	/** A text-only title edit: retain the authored rich XML and change only run text on save. */
+	titleTextOnly?: boolean;
+	/** Run-style snapshot used to stop a text-only edit from masking later formatting changes. */
+	titleTextOnlyStyles?: Omit<PptxChartTitleRun, 'text'>[];
 	chartType: PptxChartType;
 	categories: string[];
 	/**

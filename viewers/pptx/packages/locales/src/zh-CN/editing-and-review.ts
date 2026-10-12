@@ -1,4 +1,7 @@
 export const translations = {
+	'pptx.findReplace.includeChartTitles': '包括图表标题',
+	'pptx.findReplace.readOnlyChartTitle':
+		'可以查找链接或复杂的图表标题，但必须在 PowerPoint 或其源工作簿中编辑。',
 	'pptx.findReplace.includeNotes': '包括演讲者备注',
 	'pptx.slideSorter.systemCopy': '将幻灯片复制到系统剪贴板',
 	'pptx.slideSorter.systemPaste': '从系统剪贴板粘贴幻灯片',

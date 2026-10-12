@@ -73,6 +73,12 @@ export function collectElementText(element: PptxElement): string {
 				parts.push(collectSmartArtNodeText(node));
 			}
 		}
+	} else if (element.type === 'chart' && element.chartData?.style?.hasTitle !== false) {
+		const data = element.chartData;
+		const title = data?.titleRuns?.length
+			? data.titleRuns.map((run) => run.text).join('')
+			: data?.title;
+		if (title) parts.push(title);
 	} else if (element.type === 'group') {
 		for (const child of element.children) {
 			parts.push(collectElementText(child));

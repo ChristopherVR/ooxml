@@ -1,4 +1,7 @@
 export const translations = {
+	'pptx.findReplace.includeChartTitles': 'Inclure les titres des graphiques',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Les titres de graphiques liés ou complexes peuvent être trouvés, mais doivent être modifiés dans PowerPoint ou dans leur classeur source.',
 	'pptx.findReplace.includeNotes': 'Inclure les notes du présentateur',
 	'pptx.slideSorter.systemCopy': 'Copier les diapositives dans le presse-papiers du système',
 	'pptx.slideSorter.systemPaste': 'Coller les diapositives depuis le presse-papiers du système',

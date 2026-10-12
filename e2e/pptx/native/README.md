@@ -21,3 +21,20 @@ The script writes generated decks and `native-acceptance.json` into the supplied
 directory. It opens only those decks and closes its own presentations and application.
 Keep artifacts outside the tracked fixture tree. This checks package transplantation,
 not PowerPoint's private clipboard formats or full Office parity.
+
+## Chart title search and replace
+
+The title check uses a synthetic classic chart with an embedded workbook and rich
+title formatting. It verifies source, replacement, core resave and native resave,
+checking title text, bold formatting, series name, categories and numeric values.
+A linked title remains searchable and is rejected by the replacement operation.
+
+```powershell
+bun e2e/pptx/native/generate-chart-title.ts D:/Temp/pptx-chart-title-acceptance
+powershell -NoProfile -File e2e/pptx/native/verify-chart-title.ps1 -ArtifactDirectory D:/Temp/pptx-chart-title-acceptance
+```
+
+Generated artifacts and `chart-title-acceptance.json` stay in the supplied directory.
+Linked and ChartEx cached titles and modeled text runs in complex titles remain
+searchable, but replacement requires PowerPoint or source-workbook editing. Field
+values are not comprehensively indexed. Series/category find-and-replace is not implemented.

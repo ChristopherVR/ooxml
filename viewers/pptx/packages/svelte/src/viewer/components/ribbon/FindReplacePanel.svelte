@@ -8,9 +8,11 @@
 	 */
 	import { useTranslator } from '../../../i18n/context';
 	import type { FindReplaceState } from '../../editor/editor-find-replace.svelte';
+	import { findReplacementAvailability } from 'ooxml-ui/pptx';
 
 	const { findReplace, editable }: { findReplace: FindReplaceState; editable: boolean } = $props();
 	const t = useTranslator();
+	const availability = $derived(findReplacementAvailability(findReplace.results, findReplace.index));
 
 	function onQueryInput(value: string): void {
 		findReplace.query = value;
@@ -40,6 +42,7 @@
 			onkeydown={onKeydown}
 		/>
 		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeNotes')} checked={findReplace.includeNotes} onchange={(e) => { findReplace.includeNotes = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeNotes')}</label>
+		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartTitles')} checked={findReplace.includeChartTitles} onchange={(e) => { findReplace.includeChartTitles = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartTitles')}</label>
 		<label class="pptx-svelte-findreplace-case">
 			<pptx-ui-checkbox
 				checked={findReplace.matchCase}
@@ -86,7 +89,7 @@
 		/>
 		<button
 			type="button"
-			disabled={!editable || !findReplace.hasResults}
+			disabled={!editable || !availability.current}
 			aria-label={t('pptx.findReplace.replaceCurrent')}
 			onclick={() => findReplace.replaceCurrent()}
 		>
@@ -94,12 +97,13 @@
 		</button>
 		<button
 			type="button"
-			disabled={!editable || !findReplace.hasResults}
+			disabled={!editable || !availability.all}
 			aria-label={t('pptx.findReplace.replaceAllMatches')}
 			onclick={() => findReplace.replaceAll()}
 		>
 			{t('pptx.findReplace.replaceAll')}
 		</button>
+		{#if availability.hasReadOnly}<p role="status">{t('pptx.findReplace.readOnlyChartTitle')}</p>{/if}
 		<button
 			type="button"
 			class="pptx-svelte-findreplace-close"
