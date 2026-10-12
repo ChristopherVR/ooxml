@@ -4,7 +4,7 @@ import {
 	initializeInlineListDom,
 	attachInlineListController,
 } from 'ooxml-ui/pptx';
-import type { PptxElement } from 'pptx-viewer-core';
+import type { PptxElement, TextSegment } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { renderTextBlock } from '../render/elements/text-block';
@@ -123,6 +123,26 @@ describe('editor-paragraph-mutations', () => {
 
 		const spaced = setLineSpacing(textElement(), 1.5) as { textStyle: { lineSpacing?: number } };
 		expect(spaced.textStyle.lineSpacing).toBe(1.5);
+	});
+
+	it('reaches line spacing and indent a paragraph authored on its own a:pPr', () => {
+		const el = {
+			...textElement(),
+			textSegments: [
+				{
+					text: 'hi',
+					style: {},
+					paragraphProperties: { lineSpacingExactPt: 12, paragraphMarginLeft: 0 },
+				},
+			],
+		} as PptxElement;
+		const spaced = setLineSpacing(el, 2) as { textSegments: TextSegment[] };
+		expect(spaced.textSegments[0]?.paragraphProperties).toStrictEqual({
+			paragraphMarginLeft: 0,
+			lineSpacing: 2,
+		});
+		const indented = adjustIndent(el, 1) as { textSegments: TextSegment[] };
+		expect(indented.textSegments[0]?.paragraphProperties?.paragraphMarginLeft).toBe(24);
 	});
 
 	it('is a no-op patch for a non-text element', () => {

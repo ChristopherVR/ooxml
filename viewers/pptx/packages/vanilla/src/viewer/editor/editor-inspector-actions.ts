@@ -14,6 +14,7 @@ import {
 	removeGradientStopPatch,
 	tableInspectorPatch,
 	textAdvancedPatch,
+	textStylePatch,
 	textWrapPatch,
 	updateGradientStopPatch,
 	vAlignPatch,
@@ -168,7 +169,7 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 						...(liveText !== undefined ? { text: liveText } : {}),
 					};
 				}
-				return { textStyle: { ...el.textStyle, ...patch } };
+				return textStylePatch(el, patch);
 			}),
 
 		setFillOpacity: (opacity) =>
