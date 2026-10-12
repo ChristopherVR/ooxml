@@ -1,5 +1,6 @@
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
+	inspectorNumber,
 	schemaLabel,
 	tableCellFillColorCommitPatch,
 	tableCellTextColorCommitPatch,
@@ -202,7 +203,7 @@ export function createTableCellFormatting(
 				col: selected.column + 1,
 			});
 			const style = state.tableCellStyle ?? {};
-			fontSize.value = String(style.fontSize ?? 14);
+			fontSize.value = String(inspectorNumber(style.fontSize, 14));
 			textColor.value = validColor(style.color, '#000000');
 			background.value = validColor(style.backgroundColor, '#ffffff');
 			borderColor.value = validColor(style.borderColor, '#374151');
@@ -212,8 +213,8 @@ export function createTableCellFormatting(
 			backgroundTheme.setThemeColorMap(state.themeColorMap);
 			backgroundTheme.setSelected(style.backgroundColorRef, style.backgroundColor);
 			backgroundTheme.setDisabled(!state.isTable);
-			borderWidth.value = String(style.borderTopWidth ?? 1);
-			margin.value = String(style.marginLeft ?? 4);
+			borderWidth.value = String(inspectorNumber(style.borderTopWidth, 1));
+			margin.value = String(inspectorNumber(style.marginLeft, 4));
 			bold.checked = Boolean(style.bold);
 			italic.checked = Boolean(style.italic);
 			underline.checked = Boolean(style.underline);
