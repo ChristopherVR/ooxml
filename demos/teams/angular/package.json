@@ -8,10 +8,10 @@
 		"build": "vite build"
 	},
 	"dependencies": {
-		"@angular/common": "^22.2.1",
-		"@angular/compiler": "^22.2.1",
-		"@angular/core": "^22.2.1",
-		"@angular/platform-browser": "^22.2.1",
+		"@angular/common": "^22.2.2",
+		"@angular/compiler": "^22.2.2",
+		"@angular/core": "^22.2.2",
+		"@angular/platform-browser": "^22.2.2",
 		"openteams-angular-viewer": "workspace:*",
 		"rxjs": "^7.8.2"
 	}
