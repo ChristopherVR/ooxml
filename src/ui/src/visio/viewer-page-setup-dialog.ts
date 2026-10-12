@@ -1,4 +1,5 @@
 import type { VisioEdit, VisioPage, VisioPageSetupEdit, VisioScaleUnit } from 'ooxml-core/visio';
+import { visioPageLayout, type VisioPageLayoutEdit } from 'ooxml-core/visio';
 import {
 	VISIO_PAPER_SIZES,
 	editErrorMessage,
@@ -75,6 +76,13 @@ export class ViewerPageSetupDialog {
 		this.#generation = this.controller.documentGeneration;
 		const setup = page.pageSetup;
 		const f = (name: SetupField) => this.#field(name);
+		const layout = visioPageLayout(page);
+		f('jump-code').value = String(layout.lineJumpCode);
+		f('jump-style').value = String(layout.lineJumpStyle);
+		f('jump-direction-x').value = String(layout.lineJumpDirectionX ?? 0);
+		f('jump-direction-y').value = String(layout.lineJumpDirectionY ?? 0);
+		f('jump-size-x').value = round((layout.lineJumpFactorX ?? 2 / 3) * 100);
+		f('jump-size-y').value = round((layout.lineJumpFactorY ?? 2 / 3) * 100);
 		f('paper').value =
 			setup?.paperKind !== undefined && visioPaperSize(setup.paperKind)
 				? String(setup.paperKind)
@@ -215,6 +223,32 @@ export class ViewerPageSetupDialog {
 		if ((orientation === 'portrait' || orientation === 'landscape') && orientation !== saved)
 			print.printOrientation = orientation;
 		if (Object.keys(print).length > 2) edits.push(print);
+		const layout = visioPageLayout(page);
+		const jump: VisioPageLayoutEdit = { type: 'set-page-layout', pageId: page.id };
+		for (const [field, key] of [
+			['jump-code', 'lineJumpCode'],
+			['jump-style', 'lineJumpStyle'],
+			['jump-direction-x', 'lineJumpDirectionX'],
+			['jump-direction-y', 'lineJumpDirectionY'],
+		] as const) {
+			const value = Number(f(field));
+			if (value !== (layout[key] ?? 0)) jump[key] = value;
+		}
+		for (const [field, key] of [
+			['jump-size-x', 'lineJumpFactorX'],
+			['jump-size-y', 'lineJumpFactorY'],
+		] as const) {
+			const raw = f(field).trim();
+			const value = Number(raw) / 100;
+			if (!raw || !Number.isFinite(value) || value < 0 || value > 10)
+				return 'Line jump size must be between 0% and 1000% of routing spacing.';
+			if (
+				raw !== round((layout[key] ?? 2 / 3) * 100) &&
+				Math.abs(value - (layout[key] ?? 2 / 3)) > 1e-10
+			)
+				jump[key] = value;
+		}
+		if (Object.keys(jump).length > 2) edits.push(jump);
 		return visioKeepAutoSize(page, edits);
 	}
 	async #apply(): Promise<void> {

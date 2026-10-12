@@ -130,7 +130,7 @@ function writeHyperlink(
 /** Apply a hyperlink or ScreenTip edit to cloned page roots. Returns whether the page changed. */
 export function applyMetadataEdit(
 	roots: ReadonlyMap<string, Element>,
-	edit: VisioMetadataEdit,
+	edit: Exclude<VisioMetadataEdit, { type: 'set-shape-alt-text' }>,
 	check: () => void,
 ): boolean {
 	const root = roots.get(edit.pageId);

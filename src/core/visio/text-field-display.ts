@@ -43,11 +43,18 @@ export function textFieldDisplay(
 		format = row?.cells.get('Format');
 	const formula = value?.formula && value.formula !== 'Inh' ? value.formula : undefined;
 	const result = { cached, ...(formula ? { formula } : {}) };
-	if (!row || !context || (format?.formula && /^\s*FIELDPICTURE\s*\(/i.test(format.formula)))
-		return { text: cached, ...result };
+	if (!row || !context) return { text: cached, ...result };
 	const picture = format?.value ?? '';
 	const evaluated = formula ? evaluateVisioTextField(formula, context) : undefined;
 	const source = evaluated ?? cachedValue(value?.value, value?.unit);
+	// Native inherited fields keep the master's <fld> placeholder while overriding the
+	// instance's cached Value. FIELDPICTURE(0) preserves strings, including numeric text.
+	// Other internal pictures still require explicit support before replacing stored text.
+	if (format?.formula && /^\s*FIELDPICTURE\s*\(/i.test(format.formula)) {
+		const literal =
+			source?.kind === 'string' && /^\s*FIELDPICTURE\s*\(\s*0\s*\)\s*$/i.test(format.formula);
+		return { text: literal ? source.text : cached, ...result };
+	}
 	const text = source ? formatVisioFieldValue(source, picture) : undefined;
 	return { text: text ?? cached, ...result };
 }

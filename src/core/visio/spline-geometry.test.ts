@@ -141,7 +141,7 @@ describe('cached contiguous Visio spline sequences', () => {
 	});
 	it('uses the last spline control point as the next arc endpoint origin', () => {
 		const result = run(quadratic + row(4, 'ArcTo', cells({ X: 4, Y: 0, A: 1 })));
-		expect(result.paths[0]!.path).toMatch(/L 2 0 A 1 1 0 0 0 4 0$/);
+		expect(result.paths[0]!.path).toMatch(/L 2 0 A 1 1 0 0 1 4 0$/);
 	});
 	it('supports successive spline sequences without leaking control points', () => {
 		const second = start({ X: 3, Y: 1 }).replace('IX="2"', 'IX="4"') + knot({ X: 4 }, 5);

@@ -7,6 +7,7 @@ import { assertShapeLocks } from './edit-style-admission';
 import { encodeVisioPlainText } from './plain-text';
 import type { VisioBasicOutline } from './basic-shapes';
 import { visioOutlineShape } from './stencil-shapes';
+import { admitted, cells, numeric, isLineSheet } from './edit-geometry-admission';
 
 export function createShape(root: Element, shapeId: string): Element {
 	const doc = root.ownerDocument!;
@@ -59,6 +60,19 @@ export function createBox(
 			value,
 			name === 'LocPinX' ? 'Width*0.5' : name === 'LocPinY' ? 'Height*0.5' : undefined,
 		);
+	if (edit.followShapeId !== undefined) {
+		const owner = admitted(root, edit.followShapeId);
+		const local = cells(owner);
+		if (isLineSheet(local))
+			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Position followers require a 2D owner.');
+		for (const [name, value] of [
+			['PinX', edit.x],
+			['PinY', edit.y],
+		] as const) {
+			const offset = value - numeric(local.get(name));
+			setCell(shape, name, value, `Sheet.${edit.followShapeId}!${name}+(${offset}IN)`);
+		}
+	}
 	return shape;
 }
 

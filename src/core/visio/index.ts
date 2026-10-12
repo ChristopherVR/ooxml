@@ -78,6 +78,7 @@ export {
 	type VisioPageSizeEdit,
 	type VisioPageSetupEdit,
 	type VisioPagePropertiesEdit,
+	type VisioPageAltTextEdit,
 	type VisioPageDecorationEdit,
 	type VisioPageSetupEdits,
 	type VisioScaleUnit,
@@ -97,6 +98,7 @@ export {
 	type VisioGuideEdit,
 	type VisioShapeHyperlinkEdit,
 	type VisioShapeScreenTipEdit,
+	type VisioShapeAltTextEdit,
 	type VisioHyperlinkFields,
 	type VisioGroupEdit,
 	type VisioDiagramPartEdit,
@@ -341,3 +343,4 @@ export {
 	type VisioTextMeasurer,
 } from './text-extent';
 export { visioFontAssumed } from './style';
+export { checkVisioAlternativeText, type VisioAccessibilityIssue } from './accessibility';

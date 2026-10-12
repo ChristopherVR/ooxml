@@ -72,6 +72,14 @@ export function visioDataGraphicParts(
 	}
 	return parts;
 }
+
+/** Deleting an owner also removes its generated graphic parts in the same history operation. */
+export function visioWithDataGraphics(page: VisioPage, shapeIds: readonly string[]): string[] {
+	const ids = new Set(shapeIds);
+	const parts = visioDataGraphicParts(page);
+	for (const owner of shapeIds) for (const part of parts.get(owner) ?? []) ids.add(part.id);
+	return [...ids];
+}
 /** Color by Value rules: three equal ranges for numbers, one colour per category otherwise. */
 export function visioColorRules(
 	page: VisioPage,

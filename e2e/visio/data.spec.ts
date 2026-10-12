@@ -56,6 +56,47 @@ test('Data tab imports a CSV, links a dragged row, refreshes it and adds data gr
 	await graphics.locator('[name="field"]').selectOption('Name');
 	await graphics.locator('[label="Apply"] button').click();
 	await expect(viewer.locator('svg.paper')).toContainText('Other');
+	const positions = async () => {
+		const bytes = await viewer.evaluate((node) =>
+			Array.from((node as VisioViewerElement).exportVsdx().bytes),
+		);
+		const shapes = (await parseVsdx(new Uint8Array(bytes))).pages[0]!.shapes;
+		return {
+			owner: shapes.find((item) => item.id === '1')!.rotation!.pinX,
+			graphic: shapes.find((item) =>
+				item.shapeData?.some((row) => row.name === '_ooxmlDataGraphic'),
+			)!.rotation!.pinX,
+		};
+	};
+	const beforeMove = await positions();
+	await shape.click();
+	await viewer.locator('.viewport').press('ArrowRight');
+	await expect(async () =>
+		expect((await positions()).owner).toBeGreaterThan(beforeMove.owner),
+	).toPass();
+	const afterMove = await positions();
+	expect(afterMove.graphic - beforeMove.graphic).toBeCloseTo(afterMove.owner - beforeMove.owner);
+	await viewer.locator('.viewport').press('Control+z');
+	await expect(async () =>
+		expect((await positions()).owner).toBeCloseTo(beforeMove.owner),
+	).toPass();
+	expect((await positions()).graphic).toBeCloseTo(beforeMove.graphic);
+	// External data links require explicit unlinking before shape deletion.
+	await viewer.evaluate(async (node) => {
+		await (node as VisioViewerElement).applyEdits([
+			{ type: 'unlink-data-rows', pageId: '1', recordsetId: '0', shapeIds: ['1'] },
+		]);
+	});
+	await viewer.locator('.viewport').press('Delete');
+	await expect(shape).toHaveCount(0);
+	await expect(viewer.locator('svg.paper')).not.toContainText('Other');
+	await viewer.locator('.viewport').press('Control+z');
+	await expect(async () =>
+		expect((await positions()).owner).toBeCloseTo(beforeMove.owner),
+	).toPass();
+	expect((await positions()).graphic).toBeCloseTo(beforeMove.graphic);
+	await viewer.locator('.viewport').press('Control+z');
+	await expect(pane.locator('tbody tr').nth(1)).toHaveText('1Other90');
 	await viewer.getByRole('button', { name: 'Data Graphics', exact: true }).click();
 	await viewer.locator('office-ui-menu-item[command="graphic-color"]').click();
 	await graphics.locator('[name="field"]').selectOption('Load');

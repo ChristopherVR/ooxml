@@ -11,7 +11,11 @@ import type { VisioDocument, VisioPage } from './model';
 import { diagnosticCollector } from './diagnostics';
 import { readVisioAnnotations, readVisioComments, type VisioComment } from './comments';
 import { metadata, metadataAttributes } from './metadata';
-import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata';
+import {
+	alternativeTextMetadata,
+	createMetadataBudget,
+	type VisioMetadataOptions,
+} from './shape-metadata';
 import { readDataRecordsets, type VisioDataRecordset } from './data-recordsets';
 import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
 import { normalizeShapes, type ShapeContext } from './shapes';
@@ -334,6 +338,7 @@ export async function parseVsdx(
 				localReport('dangling-connection', 'A connection references a missing shape.');
 		pages.push({
 			id,
+			...alternativeTextMetadata(sheet, localReport, context.metadataBudget),
 			...pageModes,
 			...(drawingToPageScale === 1 ? {} : { drawingToPageScale }),
 			...(pageSetup ? { pageSetup } : {}),

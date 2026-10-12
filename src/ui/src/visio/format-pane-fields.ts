@@ -12,6 +12,8 @@ export interface PaneFieldContext {
 	effects: readonly ReturnType<typeof visioShapeEffectValues>[];
 }
 export interface PaneField {
+	/** Connector settings are unavailable for a mixed or 2D selection. */
+	connectorOnly?: boolean;
 	key: string;
 	label: string;
 	group: PaneFieldGroup;
@@ -66,6 +68,41 @@ const withReflection = (
  * `format-shape` property, read from the selection and applied at once.
  */
 export const PANE_FIELDS: readonly PaneField[] = [
+	...(
+		[
+			[
+				'lineJumpCode',
+				'Add line jumps',
+				['Page default', 'Never', 'Always', 'Other connector jumps', 'Neither connector jumps'],
+			],
+			[
+				'lineJumpStyle',
+				'Jump style',
+				[
+					'Page default',
+					'Arc',
+					'Gap',
+					'Square',
+					'2 sides',
+					'3 sides',
+					'4 sides',
+					'5 sides',
+					'6 sides',
+					'7 sides',
+				],
+			],
+			['lineJumpDirectionX', 'Horizontal jump direction', ['Page default', 'Up', 'Down']],
+			['lineJumpDirectionY', 'Vertical jump direction', ['Page default', 'Left', 'Right']],
+		] as const
+	).map(([key, label, labels]): PaneField => ({
+		key,
+		label,
+		group: 'line',
+		connectorOnly: true,
+		options: labels.map((label, value) => ({ value: String(value), label })),
+		read: (context) => text(style(context, (shape) => shape[key] ?? 0)),
+		patch: (value) => ({ [key]: value }),
+	})),
 	{
 		key: 'fillPattern',
 		label: 'Pattern',

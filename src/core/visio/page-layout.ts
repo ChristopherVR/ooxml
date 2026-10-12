@@ -8,12 +8,21 @@ export const VISIO_RULER_DENSITIES = Object.freeze([8, 16, 32] as const);
 /**
  * Line jump, grid and ruler cells of a PageSheet. Lengths are inches.
  * `lineJumpCode`: 0 none, 1 horizontal lines, 2 vertical lines, 3 last routed line, 4 last
- * displayed line, 5 first displayed line. `lineJumpStyle`: 0 arc, 1 gap, 2 square, 3 to 8 are
- * two to seven sides.
+ * displayed line, 5 first displayed line. `lineJumpStyle`: 0/1 arc, 2 gap, 3 square, 4 to 9 are
+ * two to seven sides (native ShapeSheet enum).
  */
 export interface VisioPageLayout {
 	lineJumpCode: number;
 	lineJumpStyle: number;
+	/** 0 default, 1 up/left, 2 down/right. */
+	lineJumpDirectionX?: number;
+	lineJumpDirectionY?: number;
+	/** Jump width relative to the page's routing spacing; native range 0 to 10. */
+	lineJumpFactorX?: number;
+	lineJumpFactorY?: number;
+	/** Routing line spacing in drawing inches; multiplied by drawingToPageScale for display. */
+	lineToLineX?: number;
+	lineToLineY?: number;
 	gridDensityX: number;
 	gridDensityY: number;
 	/** Minimum spacing; 0 lets the density choose. With density 0 (Fixed) it is the spacing. */
@@ -32,6 +41,12 @@ export interface VisioPageLayout {
 export const VISIO_PAGE_LAYOUT_DEFAULTS: Readonly<VisioPageLayout> = Object.freeze({
 	lineJumpCode: 1,
 	lineJumpStyle: 0,
+	lineJumpDirectionX: 0,
+	lineJumpDirectionY: 0,
+	lineJumpFactorX: 2 / 3,
+	lineJumpFactorY: 2 / 3,
+	lineToLineX: 0.125,
+	lineToLineY: 0.125,
 	gridDensityX: 8,
 	gridDensityY: 8,
 	gridSpacingX: 0,
@@ -47,6 +62,12 @@ export const VISIO_PAGE_LAYOUT_DEFAULTS: Readonly<VisioPageLayout> = Object.free
 const NAMES: Readonly<Record<keyof VisioPageLayout, string>> = {
 	lineJumpCode: 'LineJumpCode',
 	lineJumpStyle: 'LineJumpStyle',
+	lineJumpDirectionX: 'PageLineJumpDirX',
+	lineJumpDirectionY: 'PageLineJumpDirY',
+	lineJumpFactorX: 'LineJumpFactorX',
+	lineJumpFactorY: 'LineJumpFactorY',
+	lineToLineX: 'LineToLineX',
+	lineToLineY: 'LineToLineY',
 	gridDensityX: 'XGridDensity',
 	gridDensityY: 'YGridDensity',
 	gridSpacingX: 'XGridSpacing',

@@ -42,7 +42,7 @@ describe('Visio geometry normalization', () => {
 				row(2, 'ArcTo', cell('X', 2) + cell('Y', 0) + cell('A', 1)) +
 				row(3, 'ArcTo', cell('X', 3) + cell('Y', 0) + cell('A', 0)),
 		);
-		expect(paths[0]!.path).toBe('M 0 0 A 1 1 0 0 0 2 0 L 3 0');
+		expect(paths[0]!.path).toBe('M 0 0 A 1 1 0 0 1 2 0 L 3 0');
 	});
 	it('converts ellipses into two arcs and closes them', () => {
 		const { paths } = geometry(

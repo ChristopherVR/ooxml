@@ -70,6 +70,48 @@ const setupAction = (command: Record<string, unknown>) =>
 		type: 'page-setup';
 	};
 
+it('edits saved jump settings through Layout and Routing as one undoable transaction', async () => {
+	const ui = await setup();
+	ui.run(setupAction({ op: 'dialog', tab: 'layout' }));
+	const dialog = ui.root.querySelector('.page-setup-dialog')!;
+	expect(dialog.querySelector('[data-setup-tab="layout"]')!.getAttribute('aria-selected')).toBe(
+		'true',
+	);
+	for (const [field, value] of [
+		['jump-code', '2'],
+		['jump-style', '2'],
+		['jump-direction-x', '2'],
+		['jump-direction-y', '1'],
+		['jump-size-x', '50'],
+		['jump-size-y', '125'],
+	])
+		(
+			dialog.querySelector(`[data-setup-field="${field}"]`) as HTMLElement & { value: string }
+		).value = value!;
+	dialog
+		.querySelector('[command="page-setup-ok"]')!
+		.dispatchEvent(new CustomEvent('office-command'));
+	await ui.done();
+	expect(ui.edits.at(-1)).toEqual([
+		{
+			type: 'set-page-layout',
+			pageId: '0',
+			lineJumpCode: 2,
+			lineJumpStyle: 2,
+			lineJumpDirectionX: 2,
+			lineJumpDirectionY: 1,
+			lineJumpFactorX: 0.5,
+			lineJumpFactorY: 1.25,
+		},
+	]);
+	expect(ui.page().layout).toMatchObject({ lineJumpDirectionX: 2, lineJumpDirectionY: 1 });
+	await ui.controller.undo();
+	expect(ui.page().layout?.lineJumpDirectionX).toBeUndefined();
+	await ui.controller.redo();
+	expect(ui.page().layout?.lineJumpDirectionX).toBe(2);
+	ui.dispose();
+});
+
 it('enables Page Setup for a source drawing and explains the read-only case', async () => {
 	const readOnly = await setup(false);
 	const menu = readOnly.root.querySelector<HTMLElement & { disabled: boolean }>(

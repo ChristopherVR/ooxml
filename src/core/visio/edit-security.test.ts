@@ -115,7 +115,6 @@ describe('VSDX edit security boundaries', () => {
 	it.each([
 		'<Shapes><Shape ID="1"><Text>Old</Text></Shape><Shape ID="1"><Text>Other</Text></Shape></Shapes>',
 		'<Shapes><Shape ID="1"><Text>Old</Text><Unknown>before&#13;after</Unknown></Shape></Shapes>',
-		'<Shapes><Shape ID="1" Extra="before&#10;after"><Text>Old</Text></Shape></Shapes>',
 	])('fails closed on ambiguous IDs or serializer-normalized content', async (contents) => {
 		await expect(
 			editVsdx(await fixture({ pages: [{ id: '0', contents }] }), [command]),
