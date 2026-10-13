@@ -4,6 +4,7 @@ import type {
 	VisioTextFieldUpdateEdit,
 } from './edit-text-field-commands';
 import { attribute, children, readCells, yes } from './sheet';
+import { assertEditableFieldRow, assertEditableFieldShape } from './text-field-editability';
 import { textFieldSourceKey } from './text-field-source';
 import { fail } from './package-common';
 import { related, visioXml } from './parts';
@@ -131,12 +132,7 @@ export async function insertVisioTextField(
 		);
 	const rows = formattingRows(shape, 'Field');
 	const updating = edit.type === 'update-text-field';
-	if (
-		updating &&
-		((shape.parentNode?.parentNode as Element | undefined)?.localName !== 'PageContents' ||
-			children(shape, 'Rel').length)
-	)
-		fail('UNSUPPORTED_TEXT_FIELD', 'Existing field edits require a top-level plain local shape.');
+	if (updating) assertEditableFieldShape(shape);
 	const point = insertionPoint(text, updating ? undefined : edit.offset);
 	if ((updating || edit.offset !== undefined) && point.logical !== edit.expectedText)
 		fail('EDIT_STALE_TEXT', 'The shape text changed since the field position was chosen.');
@@ -155,30 +151,7 @@ export async function insertVisioTextField(
 			textFieldSourceKey(readCells(existing)) !== edit.expectedSourceKey
 		)
 			fail('EDIT_STALE_TEXT', 'The field source changed since it was selected.');
-		for (const name of ['Calendar', 'ObjectKind']) {
-			const cell = children(existing, 'Cell').find((cell) => attribute(cell, 'N') === name);
-			if (
-				cell &&
-				(attribute(cell, 'V') !== '0' || cell.hasAttribute('F') || cell.hasAttribute('E'))
-			)
-				fail(
-					'UNSUPPORTED_TEXT_FIELD',
-					'Nonstandard field calendar or object profiles cannot be edited.',
-				);
-		}
-		for (const cell of children(existing, 'Cell')) {
-			const name = attribute(cell, 'N') ?? '';
-			if (
-				/^(value|format|type|calendar|objectkind)$/i.test(name) &&
-				!['Value', 'Format', 'Type', 'Calendar', 'ObjectKind'].includes(name)
-			)
-				fail('UNSUPPORTED_TEXT_FIELD', 'Noncanonical field cell names cannot be edited.');
-			if (
-				['Value', 'Format', 'Type'].includes(attribute(cell, 'N') ?? '') &&
-				(cell.hasAttribute('E') || /^\s*(Inh|GUARD\s*\()/i.test(attribute(cell, 'F') ?? ''))
-			)
-				fail('UNSUPPORTED_TEXT_FIELD', 'Protected or inherited field cells cannot be edited.');
-		}
+		assertEditableFieldRow(existing);
 	}
 	const context = { ...(await pageContext(pkg, edit.pageId)), resolve: shapeResolver(shape) };
 	let value: VisioFieldValue | undefined;

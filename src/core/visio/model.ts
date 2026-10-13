@@ -163,6 +163,8 @@ export interface VisioTextField {
 	index?: string;
 	format?: string;
 	sourceKey?: string;
+	/** Proven local static edit profile; writer still verifies dependencies and source freshness. */
+	editable?: boolean;
 }
 export interface VisioParagraph {
 	/** UTF-16 offsets into plainText. End excludes the paragraph's newline. */

@@ -28,6 +28,7 @@ export interface VisioTextFieldUpdateEdit {
 	shapeId: string;
 	fieldIndex: string;
 	formula: string;
+	/** Omitted or empty format means General, as for insertion. */
 	format?: string;
 	/** Exact source text, cached field text and Field row key from the parsed scene. */
 	expectedText: string;

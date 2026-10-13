@@ -32,3 +32,10 @@ changing only its format, remains outside the insertion formula subset. The
 measured date edit selects the existing supported DOCCREATION function instead.
 Source edit proofs are omitted above 64 row cells or 2,048 proof characters;
 those fields still render, but are not offered as editable targets.
+
+Edit choices require a core source-backed static eligibility hint, not just a
+resolved Field row identity. Inherited, grouped, nested, ambiguous, protected,
+nonstandard calendar and oversized profiles are excluded. Dependency, effective
+protection and stale-source admission remain authoritative atomic writer checks.
+The update API treats an omitted or empty format as General, matching insertion;
+omitting format does not preserve the prior picture.

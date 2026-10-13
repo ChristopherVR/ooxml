@@ -17,7 +17,10 @@ export function populateExistingFields(
 	const choices = [
 		{ value: '', label: 'Insert new field' },
 		...fields
-			.filter((field) => field.index !== undefined && field.sourceKey !== undefined)
+			.filter(
+				(field) =>
+					field.editable === true && field.index !== undefined && field.sourceKey !== undefined,
+			)
 			.map((field) => ({
 				value: field.index!,
 				label: `Edit field ${Number(field.index) + 1}: ${field.cached.slice(0, 80)}`,

@@ -60,6 +60,7 @@ describe('insert-text-field', () => {
 				cached: 'Page 1',
 				formula: 'PAGENAME()',
 				index: '0',
+				editable: true,
 				format: '',
 				sourceKey: '[["Type","0",null,null,null],["Value","Page 1","PAGENAME()","STR",null]]',
 			},
