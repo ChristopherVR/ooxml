@@ -48,5 +48,6 @@ export function getTableCellBandStyle(
 		tableStyleMap: styleCtx?.tableStyleMap,
 		colorScheme: styleCtx?.theme?.colorScheme,
 		fontScheme: styleCtx?.theme?.fontScheme,
+		formatScheme: styleCtx?.theme?.formatScheme,
 	}) as React.CSSProperties | undefined;
 }
