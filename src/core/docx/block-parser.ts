@@ -88,6 +88,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	let breakKind: 'page' | 'column' | undefined;
 	let noteReference: TextRun['noteReference'];
 	let noteMark: TextRun['noteMark'];
+	let noteSeparator: TextRun['noteSeparator'];
 	let fieldChar: TextRun['fieldChar'];
 	const fieldCode =
 		content.length > 0 && content.every((child) => named(child, 'instrText'))
@@ -106,6 +107,8 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 			if (id) noteReference = { kind: 'endnote', id };
 		} else if (named(only, 'footnoteRef')) noteMark = 'footnote';
 		else if (named(only, 'endnoteRef')) noteMark = 'endnote';
+		else if (named(only, 'separator')) noteSeparator = 'separator';
+		else if (named(only, 'continuationSeparator')) noteSeparator = 'continuationSeparator';
 		else if (named(only, 'fldChar')) {
 			const type = getW(only, 'fldCharType');
 			if (type === 'begin' || type === 'separate' || type === 'end') fieldChar = type;
@@ -128,6 +131,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
 	if (noteMark) run.noteMark = noteMark;
+	if (noteSeparator) run.noteSeparator = noteSeparator;
 	if (fieldChar) {
 		run.fieldChar = fieldChar;
 		const flags = parseFieldFlags(only!);

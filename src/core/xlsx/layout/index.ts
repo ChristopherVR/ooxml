@@ -126,3 +126,8 @@ export {
 	lineHeightPoints,
 	wrappedLineCount,
 } from './row-autofit';
+export * from './print-layout';
+export * from './print-breaks';
+export * from './print-titles';
+export * from './header-footer';
+export * from './print-merges';

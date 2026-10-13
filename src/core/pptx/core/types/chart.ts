@@ -36,7 +36,7 @@ export type { PptxChartStyleDefinition, PptxChartStylePartEntry } from './chart-
  * @example
  * ```ts
  * const type: PptxChartType = "bar";
- * // => "bar": one of: "bar" | "line" | "pie" | "doughnut" | "area" | "scatter" | …
+ * // => "bar": one of: "bar" | "line" | "pie" | "doughnut" | "area" | "scatter" | â€¦
  * ```
  */
 export type PptxChartType =
@@ -256,7 +256,7 @@ export type PptxChartMarkerSymbol =
 	| 'auto';
 
 /**
- * `ST_ScatterStyle` (ECMA-376 §21.2.3.40): how a scatter chart joins its points.
+ * `ST_ScatterStyle` (ECMA-376 Â§21.2.3.40): how a scatter chart joins its points.
  * `line`/`lineMarker` connect them with straight segments, `smooth`/
  * `smoothMarker` with a bezier, `marker`/`none` not at all.
  */
@@ -550,7 +550,7 @@ export interface PptxChart3DSurface {
 
 /**
  * One colour band for a surface chart (`c:bandFmts/c:bandFmt`,
- * ECMA-376 §21.2.2.19 / CT_BandFmt). `index` is the band's position
+ * ECMA-376 Â§21.2.2.19 / CT_BandFmt). `index` is the band's position
  * (`c:idx/@val`) among the value axis's major-unit bands, in authored order.
  */
 export interface PptxChartBandFmt {
@@ -1100,6 +1100,8 @@ export interface PptxChartStyle {
  * ```
  */
 export interface PptxExternalData {
+	/** Whether the relationship has TargetMode="External". */
+	isExternal?: boolean;
 	/** Relationship ID referencing the external data source in the chart .rels. */
 	relId: string;
 	/** Resolved external file path or URL from the relationship target. */
@@ -1112,7 +1114,7 @@ export interface PptxExternalData {
 
 /**
  * Options specific to the OOXML "Pie of Pie" / "Bar of Pie" chart
- * (`c:ofPieChart`, ECMA-376 §21.2.2.126 / CT_OfPieChart).
+ * (`c:ofPieChart`, ECMA-376 Â§21.2.2.126 / CT_OfPieChart).
  *
  * The primary discriminator is {@link ofPieType}: `"pie"` produces a
  * pie-of-pie chart whose secondary plot is itself a pie, while `"bar"`
@@ -1120,9 +1122,9 @@ export interface PptxExternalData {
  *
  * - {@link splitType} chooses the split rule.
  * - {@link splitPos} is the threshold value used by `pos`/`val`/`percent`.
- * - {@link secondPieSize} controls the secondary plot's size (5–200%).
+ * - {@link secondPieSize} controls the secondary plot's size (5â€“200%).
  * - {@link serLines} toggles the leader lines connecting the plots.
- * - {@link gapWidth} is the gap between the plots in percent (0–500).
+ * - {@link gapWidth} is the gap between the plots in percent (0â€“500).
  */
 export interface PptxChartOfPieOptions {
 	ofPieType: 'pie' | 'bar';
@@ -1144,16 +1146,16 @@ export interface PptxBubbleChartOptions {
 }
 
 /**
- * 3D viewing parameters for a chart (`c:view3D`, ECMA-376 §21.2.2.228 /
+ * 3D viewing parameters for a chart (`c:view3D`, ECMA-376 Â§21.2.2.228 /
  * CT_View3D).
  *
  * All fields are optional and round-trip verbatim.
  *
- * - {@link rotX}: X-axis rotation in degrees (-90…90).
- * - {@link rotY}: Y-axis rotation in degrees (0…360).
+ * - {@link rotX}: X-axis rotation in degrees (-90â€¦90).
+ * - {@link rotY}: Y-axis rotation in degrees (0â€¦360).
  * - {@link depthPercent}: chart depth as a percentage of base width.
  * - {@link rAngAx}: `true` if axes meet at right angles.
- * - {@link perspective}: perspective angle in degrees (0…240).
+ * - {@link perspective}: perspective angle in degrees (0â€¦240).
  * - {@link hPercent}: height as a percentage of chart width.
  */
 export interface PptxChartView3D {
@@ -1262,6 +1264,18 @@ export interface PptxChartData {
 	 * linked-cell reference.
 	 */
 	titleRuns?: PptxChartTitleRun[];
+	/** Whether parsed title text can be replaced without changing its source or paragraph structure. */
+	titleTextEditable?: boolean;
+	/** Label sources passed atomic embedded-workbook preflight at load. */
+	dataLabelTextEditable?: boolean;
+	/** Source dimensions captured by label preflight, invalidated by structural edits. */
+	dataLabelSourceShape?: { categoryCount: number; seriesValueCounts: number[] };
+	/** Require transactional workbook write-back for label search edits. */
+	dataLabelTextOnly?: boolean;
+	/** A text-only title edit: retain the authored rich XML and change only run text on save. */
+	titleTextOnly?: boolean;
+	/** Run-style snapshot used to stop a text-only edit from masking later formatting changes. */
+	titleTextOnlyStyles?: Omit<PptxChartTitleRun, 'text'>[];
 	chartType: PptxChartType;
 	categories: string[];
 	/**
@@ -1496,7 +1510,7 @@ export interface PptxChartData {
 	 * `c:dispBlanksAs`, `c:showDLblsOverMax`).
 	 *
 	 * Each flag is omitted from the emitted XML when absent on the
-	 * source data, so absence does not produce empty `<c:…/>` placeholders.
+	 * source data, so absence does not produce empty `<c:â€¦/>` placeholders.
 	 */
 	chartChrome?: PptxChartChrome;
 	/** `c:chartSpace/c:printSettings`; `null` removes the container on save. */

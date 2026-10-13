@@ -46,11 +46,50 @@ export function createFindReplacePanel(
 	matchCaseInput.setAttribute('aria-label', t('pptx.findReplace.toggleMatchCase'));
 	matchCaseLabel.append(matchCaseInput, doc.createTextNode(t('pptx.findReplace.matchCase')));
 
+	const notesLabel = createEl(doc, 'label', 'pptxv-findreplace-checkbox');
+	const notesInput = createInspectorCheckbox(doc);
+	notesInput.setAttribute('aria-label', t('pptx.findReplace.includeNotes'));
+	notesLabel.append(notesInput, doc.createTextNode(t('pptx.findReplace.includeNotes')));
+	const chartsLabel = createEl(doc, 'label', 'pptxv-findreplace-checkbox');
+	const chartsInput = createInspectorCheckbox(doc);
+	chartsInput.checked = true;
+	chartsInput.setAttribute('aria-label', t('pptx.findReplace.includeChartTitles'));
+	chartsLabel.append(chartsInput, doc.createTextNode(t('pptx.findReplace.includeChartTitles')));
+	const dataLabel = createEl(doc, 'label', 'pptxv-findreplace-checkbox');
+	const dataInput = createInspectorCheckbox(doc);
+	dataInput.setAttribute('aria-label', t('pptx.findReplace.includeChartData'));
+	dataLabel.append(dataInput, doc.createTextNode(t('pptx.findReplace.includeChartData')));
+
 	const status = createEl(doc, 'span', 'pptxv-findreplace-status');
 	status.setAttribute('aria-live', 'polite');
+	const hint = createEl(doc, 'p');
+	hint.setAttribute('role', 'status');
+	let canEdit = true;
 
 	const runFind = (): void => {
-		const count = actions.search(queryInput.value, matchCaseInput.checked);
+		const count = actions.search(
+			queryInput.value,
+			matchCaseInput.checked,
+			notesInput.checked,
+			chartsInput.checked,
+			dataInput.checked,
+		);
+		const availability = actions.replacementAvailability?.(
+			queryInput.value,
+			matchCaseInput.checked,
+			notesInput.checked,
+			chartsInput.checked,
+			dataInput.checked,
+		);
+		replaceBtn.setDisabled(!canEdit || !(availability?.current ?? count > 0));
+		replaceAllBtn.setDisabled(!canEdit || !(availability?.all ?? count > 0));
+		hint.textContent = availability?.hasReadOnly
+			? t(
+					dataInput.checked
+						? 'pptx.findReplace.readOnlyChartText'
+						: 'pptx.findReplace.readOnlyChartTitle',
+				)
+			: '';
 		status.textContent =
 			count > 0
 				? t('pptx.findReplace.matchCount', { current: 1, total: count })
@@ -66,7 +105,14 @@ export function createFindReplacePanel(
 		label: t('pptx.findReplace.replaceCurrent'),
 		text: t('pptx.findReplace.replace'),
 		onClick: () => {
-			actions.replaceCurrent(queryInput.value, replaceInput.value, matchCaseInput.checked);
+			actions.replaceCurrent(
+				queryInput.value,
+				replaceInput.value,
+				matchCaseInput.checked,
+				notesInput.checked,
+				chartsInput.checked,
+				dataInput.checked,
+			);
 			runFind();
 		},
 	});
@@ -74,7 +120,14 @@ export function createFindReplacePanel(
 		label: t('pptx.findReplace.replaceAllMatches'),
 		text: t('pptx.findReplace.replaceAll'),
 		onClick: () => {
-			actions.replaceAll(queryInput.value, replaceInput.value, matchCaseInput.checked);
+			actions.replaceAll(
+				queryInput.value,
+				replaceInput.value,
+				matchCaseInput.checked,
+				notesInput.checked,
+				chartsInput.checked,
+				dataInput.checked,
+			);
 			runFind();
 		},
 	});
@@ -85,6 +138,9 @@ export function createFindReplacePanel(
 	});
 
 	queryInput.addEventListener('input', runFind);
+	notesInput.addEventListener('change', runFind);
+	dataInput.addEventListener('change', runFind);
+	chartsInput.addEventListener('change', runFind);
 	// Deliberately NOT a blanket `stopPropagation()`. The shared `mapEditorKey`
 	// already gates on `isEditorTextInputTarget`, and it places `find` and
 	// `Escape` ABOVE those gates on purpose, so swallowing every keydown here
@@ -102,12 +158,15 @@ export function createFindReplacePanel(
 		queryInput,
 		replaceInput,
 		matchCaseLabel,
+		notesLabel,
+		chartsLabel,
+		dataLabel,
 		findBtn.btn,
 		replaceBtn.btn,
 		replaceAllBtn.btn,
 		closeBtn.btn,
 	);
-	el.append(row, status);
+	el.append(row, status, hint);
 
 	let open = false;
 	const setOpen = (next: boolean): void => {
@@ -124,9 +183,13 @@ export function createFindReplacePanel(
 		setOpen,
 		isOpen: () => open,
 		setEditable(editable) {
+			canEdit = editable;
 			replaceInput.disabled = !editable;
 			replaceBtn.setDisabled(!editable);
 			replaceAllBtn.setDisabled(!editable);
+			if (open && queryInput.value) {
+				runFind();
+			}
 		},
 	};
 }

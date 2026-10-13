@@ -12,6 +12,7 @@ import {
 	visioDataGraphicParts,
 	visioLegendEdits,
 	visioRemoveDataGraphicEdits,
+	visioWithDataGraphics,
 } from './data-graphics';
 
 async function linked(): Promise<{ bytes: Uint8Array; document: VisioDocument }> {
@@ -59,6 +60,50 @@ const apply = async (bytes: Uint8Array, edits: Parameters<typeof editVsdx>[1]) =
 };
 
 describe('data graphics', () => {
+	it('keeps generated text, bars and icons at their offsets when a local owner moves', async () => {
+		let state = await linked();
+		for (const kind of ['text', 'bar', 'icon'] as const)
+			state = await apply(
+				state.bytes,
+				visioDataGraphicEdits(state.document.pages[0]!, ['1'], {
+					kind,
+					field: 'Load',
+					min: 0,
+					max: 100,
+				}),
+			);
+		const page = state.document.pages[0]!;
+		const ids = new Set(
+			visioDataGraphicParts(page)
+				.get('1')!
+				.map((part) => part.id),
+		);
+		const before = page.shapes.filter((shape) => ids.has(shape.id));
+		const moved = await apply(state.bytes, [
+			{ type: 'move-shape', pageId: page.id, shapeId: '1', x: 4, y: 6 },
+		]);
+		for (const prior of before) {
+			const after = moved.document.pages[0]!.shapes.find((shape) => shape.id === prior.id)!;
+			expect(after.rotation!.pinX - prior.rotation!.pinX).toBeCloseTo(2);
+			expect(after.rotation!.pinY - prior.rotation!.pinY).toBeCloseTo(1);
+		}
+		const removed = await apply(
+			moved.bytes,
+			visioRemoveDataGraphicEdits(moved.document.pages[0]!, ['1']),
+		);
+		expect(visioDataGraphicParts(removed.document.pages[0]!).size).toBe(0);
+		const deleteIds = visioWithDataGraphics(moved.document.pages[0]!, ['1', before[0]!.id]);
+		expect(new Set(deleteIds).size).toBe(deleteIds.length);
+		// Linked external data must be explicitly unlinked before deleting any owner.
+		const unlinked = await apply(moved.bytes, [
+			{ type: 'unlink-data-rows', pageId: page.id, recordsetId: '0', shapeIds: ['1'] },
+		]);
+		const deleted = await apply(
+			unlinked.bytes,
+			deleteIds.map((shapeId) => ({ type: 'delete-shape', pageId: page.id, shapeId })),
+		);
+		expect(deleted.document.pages[0]!.shapes.map((shape) => shape.id)).toEqual(['2']);
+	});
 	it('lists fields and adds text callouts, data bars and icons as marked shapes', async () => {
 		const start = await linked();
 		const page = start.document.pages[0]!;

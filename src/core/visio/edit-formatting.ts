@@ -109,6 +109,21 @@ async function formatTarget(
 	lenient: boolean,
 ): Promise<boolean> {
 	const shape = instance?.view ?? targetShape(root, edit.shapeId);
+	if (
+		edit.type === 'format-shape' &&
+		[edit.lineJumpCode, edit.lineJumpStyle, edit.lineJumpDirectionX, edit.lineJumpDirectionY].some(
+			(value) => value !== undefined,
+		) &&
+		!(
+			children(shape, 'Cell').some(
+				(cell) => attribute(cell, 'N') === 'OneD' && Number(attribute(cell, 'V')) === 1,
+			) ||
+			['BeginX', 'EndX'].every((name) =>
+				children(shape, 'Cell').some((cell) => attribute(cell, 'N') === name),
+			)
+		)
+	)
+		fail('INVALID_EDIT', 'Line jump settings require a connector.');
 	if (instance) {
 		const layers = children(shape, 'Cell').find((cell) => attribute(cell, 'N') === 'LayerMember');
 		await assertInstanceLayersUnlocked(pkg, edit.pageId, attribute(layers, 'V'));
@@ -143,7 +158,7 @@ async function formatTarget(
 			throw error;
 		}
 		if (
-			/^(LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd|ShdwPattern|ShdwForegndTrans|ShapeShdwType|GlowColorTrans|ReflectionTrans|ReflectionSize|QuickStyle[A-Za-z]+)$/.test(
+			/^(ConLineJump(?:Code|Style|DirX|DirY)|LinePattern|FillPattern|FillGradientEnabled|LineGradientEnabled|LineColorTrans|FillForegndTrans|FillBkgndTrans|FillBkgnd|ShdwPattern|ShdwForegndTrans|ShapeShdwType|GlowColorTrans|ReflectionTrans|ReflectionSize|QuickStyle[A-Za-z]+)$/.test(
 				write.name,
 			) &&
 			effective?.hasAttribute('U') &&

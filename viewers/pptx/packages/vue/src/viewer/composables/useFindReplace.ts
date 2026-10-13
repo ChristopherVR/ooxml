@@ -21,6 +21,9 @@ export interface UseFindReplaceResult {
 	query: Ref<string>;
 	replacement: Ref<string>;
 	matchCase: Ref<boolean>;
+	includeNotes: Ref<boolean>;
+	includeChartTitles: Ref<boolean>;
+	includeChartData: Ref<boolean>;
 	matches: ComputedRef<FindResult[]>;
 	matchCount: ComputedRef<number>;
 	currentMatch: Ref<number>;
@@ -55,9 +58,17 @@ export function useFindReplace({
 	const query = ref(''),
 		replacement = ref(''),
 		matchCase = ref(false),
+		includeNotes = ref(false),
+		includeChartTitles = ref(true),
+		includeChartData = ref(false),
 		currentMatch = ref(0),
 		matches = computed<FindResult[]>(() =>
-			findInSlides(slides.value, query.value, { matchCase: matchCase.value }),
+			findInSlides(slides.value, query.value, {
+				matchCase: matchCase.value,
+				includeNotes: includeNotes.value,
+				includeChartTitles: includeChartTitles.value,
+				includeChartData: includeChartData.value,
+			}),
 		),
 		matchCount = computed(() => matches.value.length);
 
@@ -99,6 +110,9 @@ export function useFindReplace({
 
 	function replaceCurrent(): void {
 		clampCurrent();
+		if (matches.value[currentMatch.value]?.readOnly) {
+			return;
+		}
 		if (matches.value.length === 0 || query.value.length === 0) {
 			return;
 		}
@@ -112,6 +126,9 @@ export function useFindReplace({
 	}
 
 	function replaceAll(): void {
+		if (matches.value.some((match) => match.readOnly)) {
+			return;
+		}
 		if (matches.value.length === 0 || query.value.length === 0) {
 			return;
 		}
@@ -127,6 +144,9 @@ export function useFindReplace({
 		query,
 		replacement,
 		matchCase,
+		includeNotes,
+		includeChartTitles,
+		includeChartData,
 		matches,
 		matchCount,
 		currentMatch,

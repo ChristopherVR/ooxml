@@ -80,6 +80,8 @@ export interface TextRun {
 	noteReference?: { kind: 'footnote' | 'endnote'; id: string };
 	/** The automatic number mark (`w:footnoteRef`/`w:endnoteRef`) that starts a note's own text. */
 	noteMark?: 'footnote' | 'endnote';
+	/** Automatic horizontal rule in a note separator story. */
+	noteSeparator?: 'separator' | 'continuationSeparator';
 	/**
 	 * Present on runs holding a field's displayed result (`w:fldSimple`, or text between a complex
 	 * field's `separate` and `end`). Cached display metadata; saving does not recalculate instructions.

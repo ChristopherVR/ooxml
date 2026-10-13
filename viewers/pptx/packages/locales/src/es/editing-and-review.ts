@@ -1,4 +1,15 @@
 export const translations = {
+	'pptx.findReplace.includeChartData': 'Incluir series y etiquetas de categorías de gráficos',
+	'pptx.findReplace.readOnlyChartText':
+		'El texto de gráficos vinculado o no compatible se puede encontrar, pero debe editarse en PowerPoint o en su libro de origen.',
+	'pptx.findReplace.includeChartTitles': 'Incluir títulos de gráficos',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Los títulos de gráficos vinculados o complejos se pueden encontrar, pero deben editarse en PowerPoint o en su libro de origen.',
+	'pptx.findReplace.includeNotes': 'Incluir notas del orador',
+	'pptx.slideSorter.systemCopy': 'Copiar diapositivas al portapapeles del sistema',
+	'pptx.slideSorter.systemPaste': 'Pegar diapositivas desde el portapapeles del sistema',
+	'pptx.slideSorter.systemCopied': 'Diapositivas copiadas',
+	'pptx.slideSorter.systemPasted': 'Diapositivas pegadas',
 	'pptx.findReplace.title': 'Buscar y reemplazar',
 	'pptx.findReplace.closeEscape': 'Cerrar (Esc)',
 	'pptx.findReplace.closeAriaLabel': 'Cerrar buscar y reemplazar',

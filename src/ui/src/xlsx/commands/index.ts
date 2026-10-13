@@ -15,8 +15,11 @@ import { fontCommands } from 'ooxml-core/xlsx/ui';
 import { formulaCommands } from 'ooxml-core/xlsx/ui';
 import { registerSheetIcons } from './register-icons';
 import { insertCommands } from './insert';
+import { sparklineCommands } from './sparklines';
+import { pivotCommands } from './pivots';
 import { numberCommands } from 'ooxml-core/xlsx/ui';
 import { pageLayoutCommands } from 'ooxml-core/xlsx/ui';
+import { pageBreakCommands } from 'ooxml-core/xlsx/ui';
 import { reviewCommands } from './review';
 import { styleCommands } from './styles';
 import { viewCommands } from './view';
@@ -35,7 +38,10 @@ export function allCommands(): Command[] {
 		...editingCommands(),
 		...insertNowCommands(),
 		...insertCommands(),
+		...sparklineCommands(),
+		...pivotCommands(),
 		...pageLayoutCommands(),
+		...pageBreakCommands(),
 		...formulaCommands(),
 		...dataCommands(),
 		...reviewCommands(),

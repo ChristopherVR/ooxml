@@ -1,12 +1,11 @@
-// @vitest-fresh-modules: enableAutoUnmount may run once per module registry, and HomeSection.test.ts
-// also calls it, so this file must not share a registry with it.
-import { enableAutoUnmount, mount } from '@vue/test-utils';
+import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxTableData } from 'pptx-viewer-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
 import TableCellFormattingPanel from './TableCellFormattingPanel.vue';
 
 enableAutoUnmount(afterEach);
+afterAll(disableAutoUnmount);
 
 describe('tableCellFormattingPanel', () => {
 	it('aligns every paragraph of the cell', async () => {

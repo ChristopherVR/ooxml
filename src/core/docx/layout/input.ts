@@ -11,6 +11,8 @@ import type { SignedTwips, Twips } from '../index';
 
 export interface LayoutRun {
 	text: string;
+	/** Footnote referenced by this run; its note starts on the page containing this marker. */
+	footnoteReferenceId?: string;
 	/** Omit from layout while retaining its text length in source ranges for following runs. */
 	hidden?: boolean;
 	/** Source length when displayed text is absent or generated; otherwise defaults to text.length. */
@@ -50,6 +52,8 @@ export interface LayoutObject {
 	heightPx: number;
 	/** A chart drawn at this size: the painted SVG markup, or only its frame label. */
 	chart?: { svg?: string; label: string };
+	/** Native note separator rule, drawn without loading a media part. */
+	noteSeparator?: 'separator' | 'continuationSeparator';
 }
 
 /** A floating picture anchored to a paragraph (`wp:anchor`), positioned on the page. */
@@ -126,7 +130,7 @@ export interface LayoutParagraph {
 	floats?: LayoutFloat[];
 	/** Custom tab stops (`w:tabs`). */
 	tabStops?: LayoutTabStop[];
-	/** Footnotes referenced here; they go at the bottom of the page where the paragraph starts. */
+	/** Footnotes referenced here. Runs identify their marker; unanchored notes use the first line. */
 	footnotes?: LayoutNote[];
 	/** Border lines around the paragraph, with each side's gap to the text. */
 	borders?: LayoutParagraphBorders;
@@ -155,6 +159,8 @@ export interface LayoutCellPadding {
 
 export interface LayoutTableCell {
 	paragraphs: LayoutParagraph[];
+	/** Source child order including read-only nested table stories. */
+	blocks?: LayoutBlock[];
 	/** Column width in CSS pixels; undefined cells share the row's remaining width evenly. */
 	widthPx?: number;
 	/** Left edge from the table's left, from the table grid (merged cells span grid columns). */
@@ -210,6 +216,13 @@ export interface LayoutColumns {
 }
 
 export interface LayoutSection {
+	/** Native mode15 column area, independent of the reference body column. */
+	footnoteColumns?: LayoutColumns;
+	/** Native Word mode15 repeats the normal story on continued pages. */
+	modernFootnoteSeparator?: boolean;
+	/** Measured Word compatibility modes 12 and 14 attach notes to body columns. */
+	legacyFootnoteColumns?: boolean;
+	footnoteSeparators?: { separator?: LayoutParagraph[]; continuationSeparator?: LayoutParagraph[] };
 	page: LayoutPageGeometry;
 	columns?: LayoutColumns;
 	blocks: LayoutBlock[];

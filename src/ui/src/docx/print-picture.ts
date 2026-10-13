@@ -29,9 +29,21 @@ export function pictureElement(
 		widthPx: number;
 		heightPx: number;
 		chart?: { svg?: string; label: string };
+		noteSeparator?: 'separator' | 'continuationSeparator';
 	},
 	pictureUrl: PictureUrl | undefined,
 ): HTMLElement {
+	if (object.noteSeparator) {
+		const rule = document.createElement('span');
+		rule.className = 'dve-print-note-rule';
+		Object.assign(rule.style, {
+			position: 'absolute',
+			width: `${object.widthPx}px`,
+			height: '1px',
+			borderTop: '1px solid currentColor',
+		});
+		return rule;
+	}
 	if (object.chart) {
 		const element = chartElement(object.chart);
 		element.classList.add('dve-print-picture');

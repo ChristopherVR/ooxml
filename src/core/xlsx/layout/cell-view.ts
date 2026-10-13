@@ -40,6 +40,8 @@ export function rotationDegrees(textRotation: number | undefined): {
 }
 
 export interface CellViewOptions {
+	/** Known merge membership from a render index; skips scanning all sheet merges. */
+	merged?: boolean;
 	/** Pixels per indent level (default 9, Excel's step with 11pt Calibri). */
 	indentPx?: number;
 }
@@ -138,7 +140,7 @@ export function cellView(
 			rotation === 0 &&
 			!vertical &&
 			hAlign !== 'fill' &&
-			!sheet.merges.some((m) => rangeContains(m, { row, col })),
+			!(options.merged ?? sheet.merges.some((m) => rangeContains(m, { row, col }))),
 		hasComment: sheet.comments.some((c) => c.address.row === row && c.address.col === col),
 		hasHyperlink: false,
 		validationList: sheet.dataValidations.some(

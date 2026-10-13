@@ -94,8 +94,17 @@ and theme or RGB colours. A sparkline repaints when a cell in its data range
 changes and resizes with its cell. The sparkline XML is saved exactly as loaded,
 and inserted or deleted rows and columns move it with its cells.
 
-Sparklines cannot be created or edited: there is no Sparkline ribbon tab, style
-gallery or group editing. Exact Excel pixel output (marker size, column gap and
+Insert > Sparklines creates line, column and win/loss groups from a data range
+and a location range. A vertical location range maps data rows to individual
+sparklines; a horizontal location range maps data columns. Select a host cell
+and choose Sparkline Settings to change the entire group's type, markers,
+series and negative colors, line weight, empty and hidden cell handling, axis
+visibility, direction and individual, shared or custom vertical limits.
+Clear Selected Sparklines removes the selected hosts; Clear Sparkline Groups
+removes their entire groups. These changes support undo and save/load.
+
+Style galleries, grouping/ungrouping and date-axis authoring are not available.
+Existing date axes are retained. Exact Excel pixel output (marker size, column gap and
 line anti-aliasing) is not matched, and non-numeric cells in a data range are
 treated as empty.
 
@@ -105,7 +114,7 @@ treated as empty.
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Pivot tables and pivot caches       | Kept on save; not shown as pivots and not refreshed.                                                                                                                                                                                                                                                                                                                                                   |
 | Slicers, timelines                  | Kept on save; not drawn.                                                                                                                                                                                                                                                                                                                                                                               |
-| Sparkline authoring                 | Sparklines are drawn (see above) and kept on save; creating them, changing their settings and the style gallery are not implemented.                                                                                                                                                                                                                                                                   |
+| Sparkline authoring                 | Creation, group settings and clearing are supported (see above); style galleries, grouping/ungrouping and date-axis authoring are not implemented.                                                                                                                                                                                                                                                     |
 | Advanced charts and chart options   | Common families and supported formatting are described above. Advanced families, complete axes/labels/effects authoring and exact native layout remain incomplete.                                                                                                                                                                                                                                     |
 | Shapes, SmartArt, form controls     | Pictures display. SmartArt uses the cached drawing through the shared renderer (display only); without a cached drawing, its text is listed. Other drawings show as placeholders.                                                                                                                                                                                                                      |
 | Macros (VBA), add-ins, Power Query  | Never executed; the VBA project is carried through.                                                                                                                                                                                                                                                                                                                                                    |

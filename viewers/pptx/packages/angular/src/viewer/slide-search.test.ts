@@ -98,9 +98,9 @@ describe('collectElementText', () => {
 		expect(result).toContain('Hello world');
 	});
 
-	it('returns text and segment text from a shape element', () => {
+	it('uses authoritative segments instead of stale shape fallback text', () => {
 		const result = collectElementText(shapeEl('Main text', ['seg one', 'seg two']));
-		expect(result).toContain('Main text');
+		expect(result).not.toContain('Main text');
 		expect(result).toContain('seg one');
 		expect(result).toContain('seg two');
 	});
@@ -129,7 +129,7 @@ describe('collectElementText', () => {
 		const group = groupEl([textEl('outer text'), shapeEl('inner shape', ['inner seg'])]);
 		const result = collectElementText(group);
 		expect(result).toContain('outer text');
-		expect(result).toContain('inner shape');
+		expect(result).not.toContain('inner shape');
 		expect(result).toContain('inner seg');
 	});
 

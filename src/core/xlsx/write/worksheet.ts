@@ -99,6 +99,12 @@ export function writeWorksheet(
 		const ids = sourceRelIds(source, sheet.partName);
 		for (const [id, rel] of source.rels(sheet.partName)) {
 			const target = source.target(sheet.partName, rel);
+			if (
+				rel.type === RELATIONSHIP_TYPES.pivotTable &&
+				target &&
+				sheet.preserved.get('source:pivotTables')?.includes(target)
+			)
+				continue;
 			if (rel.type === RELATIONSHIP_TYPES.drawing && id === ids.drawing) sourceDrawing = target;
 			if (
 				REGENERATED.has(rel.type) ||
@@ -156,6 +162,7 @@ export function writeWorksheet(
 	blocks.set('drawing', writeSheetDrawing(ctx, sheet, partName, rels, sourceDrawing));
 	blocks.set('legacyDrawing', writeComments(ctx, sheet, index, partName, rels));
 	blocks.set('tableParts', tableParts);
+	ctx.pivots?.writeSheet(writer, sheet, partName, rels);
 	blocks.set('extLst', conditionalExtensionsXml(sheet));
 	for (const [key, list] of sheet.preserved) {
 		if (key.startsWith('source:') || !ORDER.includes(key) || (blocks.get(key) ?? '') !== '')

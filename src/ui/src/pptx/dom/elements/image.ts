@@ -7,6 +7,7 @@ import {
 	getImageFillCounterTransform,
 	getImageFitStyle,
 	getImageOverflow,
+	getPictureFrameLayers,
 	getImageSrc,
 	getImageTilingStyle,
 	probeNativeImageSize,
@@ -16,7 +17,7 @@ import {
 
 import { applyStyleMap, createEl, createSvgEl, setSvgAttrs } from '../dom';
 import type { ElementRenderer } from '../types';
-import { renderReflectionOverlay } from './shape-filter-defs';
+import { renderReflectionOverlay, renderStrokeOutline } from './shape-filter-defs';
 
 /**
  * Renderer for `image` / `picture` elements: an absolutely positioned box with
@@ -47,20 +48,29 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 	// The clip is load-bearing, not cosmetic: a cropped picture is rendered by
 	// scaling the source up and translating the cropped-away part out of the
 	// frame, so without it the discarded region paints over its neighbours.
+	// The picture's own shape geometry (prstGeom / custGeom) clips the frame,
+	// not the `<img>` - a pixel-space clip on the img would be scaled and
+	// shifted by the crop transform. A picture with a frame (`a:ln`) or an outer
+	// shadow keeps that clip on an inner surface instead, so the centred line
+	// and the shadow can extend past the box (see shared `getPictureFrameLayers`).
+	const layers = getPictureFrameLayers(element, {
+		overflow: getImageOverflow(element),
+		borderRadius: geometry?.kind === 'borderRadius' ? geometry.radius : undefined,
+		clipPath: geometryClipPath ?? cropShapeClipPath,
+	});
 	const el = createEl(doc, 'div', 'pptxv-element pptxv-image', {
 		...getContainerStyle(element, zIndex),
-		overflow: getImageOverflow(element),
-		// The picture's own shape geometry (prstGeom / custGeom) clips the frame,
-		// not the `<img>` - a pixel-space clip on the img would be scaled and
-		// shifted by the crop transform.
-		...(geometry?.kind === 'borderRadius' ? { borderRadius: geometry.radius } : {}),
-		...(geometryClipPath
-			? { clipPath: geometryClipPath }
-			: cropShapeClipPath
-				? { clipPath: cropShapeClipPath }
-				: {}),
+		...layers.box,
 	});
 	el.dataset.elementId = element.id;
+	const surface = layers.surface ? createEl(doc, 'div', 'pptxv-image-surface', layers.surface) : el;
+	if (surface !== el) {
+		el.appendChild(surface);
+		const outline = renderStrokeOutline(doc, element);
+		if (outline) {
+			el.appendChild(outline);
+		}
+	}
 
 	const src = getImageSrc(element, new Map(context.mediaDataUrls));
 	if (!src) {
@@ -80,7 +90,7 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 		filter.innerHTML = f.markup;
 		defs.appendChild(filter);
 		svg.appendChild(defs);
-		el.appendChild(svg);
+		surface.appendChild(svg);
 	}
 
 	// `a:blipFill/a:tile`: a repeating TEXTURE, which an `<img>` cannot express -
@@ -89,6 +99,8 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 	// Mirrored reflection sibling (`a:reflection`): cross-browser, unlike the
 	// `-webkit-box-reflect` this replaced. Pictures never route through the
 	// shape effect layer (`element-styles.ts`), so this is wired directly here.
+	// It hangs off the box, beside a framed picture's clipped surface, as in the
+	// other bindings (their reflection rides `ShapeEffectOverlay` on the box).
 	const reflection = renderReflectionOverlay(doc, element, context.mediaDataUrls);
 
 	// `@sx`/`@sy` (ECMA-376 §20.1.8.58) is a percentage of the picture's own
@@ -113,7 +125,7 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 				return undefined;
 			});
 		}
-		el.appendChild(tile);
+		surface.appendChild(tile);
 		if (reflection) {
 			el.appendChild(reflection);
 		}
@@ -143,7 +155,7 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 	if (fx.opacity !== undefined) {
 		img.style.opacity = String(fx.opacity);
 	}
-	el.appendChild(img);
+	surface.appendChild(img);
 	if (element.type === 'image' || element.type === 'picture') {
 		const clrChange = element.imageEffects?.clrChange;
 		if (clrChange) {
@@ -156,7 +168,7 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 		}
 		const wash = getImageColorWashStyle(element.imageEffects?.colorWash);
 		if (wash) {
-			el.appendChild(
+			surface.appendChild(
 				createEl(doc, 'div', 'pptxv-image-color-wash', {
 					position: 'absolute',
 					inset: '0',

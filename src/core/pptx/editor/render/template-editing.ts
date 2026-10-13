@@ -67,8 +67,8 @@ export function partitionTemplateElements(slides: PptxSlide[]): TemplateElementP
 
 /** Merge editable layout/master elements behind slide-owned elements for save/export. */
 export function buildSaveSlides(
-	slides: PptxSlide[],
-	templateElementsBySlideId: Readonly<Record<string, PptxElement[]>>,
+	slides: readonly PptxSlide[],
+	templateElementsBySlideId: Readonly<Record<string, readonly PptxElement[]>>,
 ): PptxSlide[] {
 	return slides.map((slide) => {
 		const template = templateElementsBySlideId[slide.id];

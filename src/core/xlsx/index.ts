@@ -15,3 +15,4 @@ export * from './read/index';
 export * from './write/index';
 export * from './edit/index';
 export * from './layout/index';
+export * from './pivot/index';

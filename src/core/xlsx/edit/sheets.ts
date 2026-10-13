@@ -9,6 +9,7 @@ import {
 import { type EditContext, sheetAt } from './context';
 import { deleteSheetInFormula, renameSheetInFormula, renameTableInFormula } from './deps';
 import { rewriteFormulas, rewriteSheetFormulas } from './shift-formulas';
+import { reservedPivotNames } from './pivots';
 
 function assertUnlocked(workbook: Workbook): void {
 	if (workbook.structureLocked) throw new Error('The workbook structure is protected.');
@@ -67,6 +68,16 @@ export function deleteSheet(ctx: EditContext, index: number): void {
 	const sheet = sheetAt(workbook, index);
 	if (sheet.state === 'visible' && visibleCount(workbook) <= 1)
 		throw new Error('A workbook must contain at least one visible sheet.');
+	if (
+		workbook.sheets.some(
+			(other) =>
+				other !== sheet &&
+				other.pivotTables?.some(
+					(pivot) => deleteSheetInFormula(pivot.source, sheet.name, []) !== pivot.source,
+				),
+		)
+	)
+		throw new Error('Delete dependent PivotTables before deleting their source worksheet.');
 	ctx.run(
 		'Delete sheet',
 		'sheets',
@@ -190,6 +201,17 @@ export function duplicateSheet(ctx: EditContext, index: number): number {
 			copy.name = copyName(workbook, sheet.name);
 			copy.sheetId = nextSheetId(workbook);
 			delete copy.partName;
+			const pivotNames = reservedPivotNames(workbook);
+			for (const pivot of copy.pivotTables ?? []) {
+				let suffix = 2;
+				while (pivotNames.has(`${pivot.name}_${suffix}`.toLowerCase())) suffix++;
+				pivot.name = `${pivot.name}_${suffix}`;
+				pivotNames.add(pivot.name.toLowerCase());
+				delete pivot.partName;
+				delete pivot.cacheId;
+				delete pivot.sourceXml;
+				pivot.dirty = true;
+			}
 			let nextTableId =
 				Math.max(0, ...workbook.sheets.flatMap((s) => s.tables.map((t) => t.id))) + 1;
 			const used = new Set<string>();

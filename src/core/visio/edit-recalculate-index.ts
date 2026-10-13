@@ -3,7 +3,11 @@ import { isLocalBitmapShape } from './edit-foreign-bitmap';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
 import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula';
-import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
+import {
+	executableCellFormula,
+	inertDoubleClickFormula,
+	shapeDataFormulaSection,
+} from './cell-formula';
 import { isNativeGlueCell } from './edit-connector-glue';
 
 export interface VisioCellKey {
@@ -174,7 +178,8 @@ export function indexCells(
 			for (const node of children(sheet.node, 'Cell'))
 				addNode(node, attribute(node, 'N') ?? '', false, false, glue);
 			for (const section of children(sheet.node, 'Section')) {
-				const name = attribute(section, 'N') ?? '';
+				// VSDX stores Shape Data as Property; ShapeSheet formulas address it as Prop.
+				const name = shapeDataFormulaSection(attribute(section, 'N') ?? '');
 				const prefix =
 					name === 'Geometry' ? `Geometry${Number(attribute(section, 'IX') ?? '0') + 1}` : name;
 				const deleted = ['1', 'true'].includes(attribute(section, 'Del') ?? '');

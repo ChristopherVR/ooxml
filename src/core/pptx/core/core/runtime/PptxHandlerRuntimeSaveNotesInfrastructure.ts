@@ -1,5 +1,6 @@
 import type { PptxSlide, XmlObject } from '../../types';
 import type { PptxSaveConstants } from '../factories';
+import { parseRelationships, resolvePartPath } from '../../../../opc/relationships';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveViewProperties';
 
 const NOTES_MASTER_CONTENT_TYPE =
@@ -34,7 +35,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		constants: PptxSaveConstants,
 	): Promise<void> {
 		const needsNotes = slides.some(
-			(slide) => slide.notes !== undefined || Boolean(slide.notesSegments?.length),
+			(slide) =>
+				Boolean(slide.notes) || Boolean(slide.notesSegments?.some((segment) => segment.text)),
 		);
 		if (
 			!needsNotes ||
@@ -44,12 +46,41 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		) {
 			return;
 		}
+		const relsPath = 'ppt/_rels/presentation.xml.rels';
+		const relsXml = await this.zip.file(relsPath)?.async('string');
+		if (!relsXml || !this.presentationData) return;
+		if (
+			Array.from(parseRelationships(relsXml).values()).some(
+				(relationship) =>
+					relationship.type.endsWith('/notesMaster') &&
+					relationship.mode !== 'External' &&
+					this.zip.file(resolvePartPath('ppt/presentation.xml', relationship.target)),
+			)
+		)
+			return;
 
 		const strict = constants.conformance === 'strict';
 		const masterPath = 'ppt/notesMasters/notesMaster1.xml';
-		const themePath =
+		const sourceThemePath =
 			Object.keys(this.zip.files).find((path) => /^ppt\/theme\/theme\d+\.xml$/u.test(path)) ??
 			'ppt/theme/theme1.xml';
+		// PowerPoint requires the notes master to own an independent theme part.
+		let themeIndex = 1;
+		while (this.zip.file(`ppt/theme/theme${themeIndex}.xml`)) themeIndex += 1;
+		const themePath = `ppt/theme/theme${themeIndex}.xml`;
+		const themeBytes = await this.zip.file(sourceThemePath)?.async('uint8array');
+		const theme = themeBytes ?? this.buildThemeXml(themePath, undefined);
+		if (!theme) throw new Error('Cannot create a notes theme from the presentation state');
+		this.zip.file(themePath, theme);
+		const themeRelationships = await this.zip
+			.file(`ppt/theme/_rels/${sourceThemePath.slice(sourceThemePath.lastIndexOf('/') + 1)}.rels`)
+			?.async('uint8array');
+		if (themeRelationships)
+			this.zip.file(`ppt/theme/_rels/theme${themeIndex}.xml.rels`, themeRelationships);
+		await this.addContentTypeOverride(
+			`/${themePath}`,
+			'application/vnd.openxmlformats-officedocument.theme+xml',
+		);
 		this.zip.file(masterPath, this.builder.build(this.buildDefaultNotesMaster(strict)));
 		this.zip.file(
 			'ppt/notesMasters/_rels/notesMaster1.xml.rels',
@@ -65,11 +96,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}),
 		);
 
-		const relsPath = 'ppt/_rels/presentation.xml.rels';
-		const relsXml = await this.zip.file(relsPath)?.async('string');
-		if (!relsXml || !this.presentationData) {
-			return;
-		}
 		const relsData = this.parser.parse(relsXml) as XmlObject;
 		const relsRoot = (relsData['Relationships'] ?? {}) as XmlObject;
 		const relationships = asArray(relsRoot['Relationship']);

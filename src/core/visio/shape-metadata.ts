@@ -297,11 +297,39 @@ function hyperlink(row: Row, budget: VisioMetadataBudget, report: Report): Visio
  * cell-element-shape-data-sectionvisio-xml and cell-element-hyperlink-rowvisio-xml.
  * Only cached V values are interpreted. Formulas, links and external data are never run.
  */
+export function alternativeTextMetadata(
+	sheet: Sheet,
+	report: Report,
+	budget: VisioMetadataBudget,
+): { accessibilityTitle?: string; alternativeText?: string } {
+	const result: { accessibilityTitle?: string; alternativeText?: string } = {};
+	for (const section of sheet.sections.values()) {
+		if (section.deleted || section.name !== 'User') continue;
+		for (const row of section.rows.values()) {
+			if (row.deleted || !['visAltText', 'visAltDescription'].includes(row.name ?? row.index))
+				continue;
+			budget.consumeRow();
+			const value = cached(row.cells, 'Value', budget, report);
+			if (value !== undefined)
+				result[
+					(row.name ?? row.index) === 'visAltText' ? 'accessibilityTitle' : 'alternativeText'
+				] = value;
+		}
+	}
+	return result;
+}
+
 export function shapeMetadata(
 	sheet: Sheet,
 	report: Report,
 	budget = createMetadataBudget(),
-): { shapeData: VisioShapeData[]; hyperlinks: VisioHyperlink[]; screenTip?: string } {
+): {
+	shapeData: VisioShapeData[];
+	hyperlinks: VisioHyperlink[];
+	screenTip?: string;
+	accessibilityTitle?: string;
+	alternativeText?: string;
+} {
 	const shapeData: VisioShapeData[] = [],
 		hyperlinks: VisioHyperlink[] = [];
 	let count = 0;
@@ -319,5 +347,10 @@ export function shapeMetadata(
 	const comment = sheet.cells.get('Comment');
 	const screenTip =
 		comment?.value && comment.error === undefined ? budget.retain(comment.value) : undefined;
-	return { shapeData, hyperlinks, ...(screenTip === undefined ? {} : { screenTip }) };
+	return {
+		shapeData,
+		hyperlinks,
+		...alternativeTextMetadata(sheet, report, budget),
+		...(screenTip === undefined ? {} : { screenTip }),
+	};
 }

@@ -54,6 +54,8 @@ export function merge(ctx: EditContext, s: number, range: CellRange, mode: Merge
 	if (r.start.row === r.end.row && r.start.col === r.end.col) return;
 	if (sheet.tables.some((t) => rangesIntersect(t.range, r)))
 		throw new Error('Cells inside a table cannot be merged.');
+	if (sheet.pivotTables?.some((pivot) => rangesIntersect(pivot.location, r)))
+		throw new Error('Cells inside a PivotTable cannot be merged.');
 	const targets = mergeTargets(r, mode);
 	if (!targets.length) return;
 	ctx.run(

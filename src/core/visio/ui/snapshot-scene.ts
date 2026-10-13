@@ -8,6 +8,8 @@ import type {
 	VisioText,
 } from '../index';
 import { ForeignVectorBudget } from './foreign-vector-budget';
+import { VISIO_PAGE_LAYOUT_DEFAULTS } from '../page-layout';
+import type { VisioPageLayout } from '../page-layout';
 const RUN_EXTRAS = ['letterSpacing', 'position', 'textCase', 'language'] as const;
 
 /** Copy only named scalar fields, never arbitrary host properties or their getters. */
@@ -35,7 +37,8 @@ const invalid = () => new Error('The scene exceeds safe snapshot copy limits.');
  * @internal Copy a canonically validated scene without retaining any renderer-used mutable input.
  * The caller validates the result before use. Independent allocation caps also bound a host that
  * changes its arrays while fields are read. Shared raster buffers are copied once per invocation.
- * Inspector metadata, connectors, layers and unknown host properties are not used by static SVG.
+ * Inspector metadata, layers and unknown host properties are omitted; connector glue is retained
+ * because static SVG needs it to identify dynamic connectors for line jumps.
  */
 export function copySnapshotScene(model: VisioDocument): VisioDocument {
 	const counts = new Map<string, number>();
@@ -245,8 +248,31 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			if (seen.has(shape)) throw invalid();
 			seen.add(shape);
 			return {
-				...fields(shape, ['id', 'name', 'kind', 'groupDisplayMode', 'width', 'height', 'hidden']),
+				...fields(shape, [
+					'id',
+					'name',
+					'accessibilityTitle',
+					'alternativeText',
+					'kind',
+					'groupDisplayMode',
+					'width',
+					'height',
+					'hidden',
+					'connectorRoute',
+					'lineJumpStyle',
+					'lineJumpCode',
+					'lineJumpDirectionX',
+					'lineJumpDirectionY',
+				]),
 				transform: matrix(shape.transform),
+				...(shape.lineEnds === undefined
+					? {}
+					: {
+							lineEnds: {
+								begin: fields(shape.lineEnds.begin, ['x', 'y']),
+								end: fields(shape.lineEnds.end, ['x', 'y']),
+							},
+						}),
 				geometry: list(shape.geometry, 'geometry', 100_000, (geometry) =>
 					fields(geometry, ['path', 'fill', 'stroke']),
 				),
@@ -275,6 +301,8 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			...fields(page, [
 				'id',
 				'name',
+				'accessibilityTitle',
+				'alternativeText',
 				'width',
 				'height',
 				'isBackground',
@@ -295,7 +323,17 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 					}
 				: {}),
 			shapes: shapes(page.shapes),
-			connectors: [],
+			...(page.layout
+				? {
+						layout: fields(
+							page.layout,
+							Object.keys(VISIO_PAGE_LAYOUT_DEFAULTS) as (keyof VisioPageLayout)[],
+						),
+					}
+				: {}),
+			connectors: list(page.connectors, 'connectors', 100_000, (connection) =>
+				fields(connection, ['fromShapeId', 'toShapeId', 'fromCell', 'toCell']),
+			),
 		})),
 	};
 }

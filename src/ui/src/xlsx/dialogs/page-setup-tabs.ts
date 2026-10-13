@@ -2,6 +2,13 @@
 // PageSetup patch (or an English error message).
 import { type PageSetup, type Worksheet, formatRange, parseRange } from 'ooxml-core/xlsx';
 import { PAPER_SIZES } from 'ooxml-core/xlsx/ui';
+import {
+	printTitles,
+	parsePrintTitleSpan,
+	formatPrintTitleSpan,
+	type PrintTitleSpan,
+} from 'ooxml-core/xlsx';
+export { headerTab } from './page-header';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import {
 	checkbox,
@@ -35,6 +42,12 @@ export const plainHeader = (value: string | undefined): string =>
 	(value ?? '').replace(/&[LCR]/g, '');
 
 export function pageTab(ctx: EditorContext, setup: PageSetup): SetupTab {
+	const firstNumber = numberInput(ctx, setup.firstPageNumber ?? 1, 0, 32767);
+	const useFirstNumber = checkbox(
+		ctx,
+		'Use first page number',
+		setup.firstPageNumber !== undefined,
+	);
 	const orientation = radios(
 		ctx,
 		'Orientation',
@@ -74,12 +87,24 @@ export function pageTab(ctx: EditorContext, setup: PageSetup): SetupTab {
 				field(ctx, 'Pages tall', tall),
 			),
 			field(ctx, 'Paper size', paper),
+			useFirstNumber.wrapper,
+			field(ctx, 'First page number', firstNumber),
 		),
 		read() {
 			const out: Partial<PageSetup> = {
+				firstPageNumber: useFirstNumber.input.checked
+					? Number(firstNumber.value)
+					: (undefined as never),
 				orientation: orientation.get() as 'portrait' | 'landscape',
 				paperSize: Number(paper.value),
 			};
+			if (
+				useFirstNumber.input.checked &&
+				(!Number.isInteger(out.firstPageNumber) ||
+					out.firstPageNumber! < 0 ||
+					out.firstPageNumber! > 32767)
+			)
+				return 'Enter a first page number between 0 and 32767.';
 			if (scaling.get() === 'fit') {
 				const w = Number(wide.value);
 				const h = Number(tall.value);
@@ -147,32 +172,42 @@ export function marginsTab(ctx: EditorContext, setup: PageSetup, ws: Worksheet):
 	};
 }
 
-export function headerTab(ctx: EditorContext, setup: PageSetup): SetupTab {
-	const header = textInput(ctx, plainHeader(setup.header));
-	const footer = textInput(ctx, plainHeader(setup.footer));
-	return {
-		panel: panel(
-			ctx,
-			field(ctx, 'Header:', header),
-			field(ctx, 'Footer:', footer),
-			text(
-				ctx,
-				'The text is centered; left and right sections, fields and fonts are not supported yet.',
-			),
-		),
-		read: () => ({
-			header: header.value ? `&C${header.value}` : (undefined as never),
-			footer: footer.value ? `&C${footer.value}` : (undefined as never),
-		}),
-	};
-}
-
 export interface SheetTab extends SetupTab {
+	titles():
+		| { rows?: PrintTitleSpan | undefined; columns?: PrintTitleSpan | undefined }
+		| string
+		| undefined;
 	gridlines(): boolean;
 	headings(): boolean;
 }
 
 export function sheetTab(ctx: EditorContext, setup: PageSetup, ws: Worksheet): SheetTab {
+	const existingTitles = printTitles(ctx.workbook()!, ctx.activeSheet());
+	const repeatRows = textInput(
+		ctx,
+		existingTitles.rows ? formatPrintTitleSpan(existingTitles.rows, 'row') : '',
+	);
+	const repeatColumns = textInput(
+		ctx,
+		existingTitles.columns ? formatPrintTitleSpan(existingTitles.columns, 'col') : '',
+	);
+	let titlesChanged = false;
+	for (const input of [repeatRows, repeatColumns]) {
+		input.addEventListener('input', () => {
+			titlesChanged = true;
+		});
+		input.addEventListener('change', () => {
+			titlesChanged = true;
+		});
+	}
+	const order = select(
+		ctx,
+		[
+			['downThenOver', 'Down, then over'],
+			['overThenDown', 'Over, then down'],
+		],
+		setup.pageOrder ?? 'downThenOver',
+	);
 	const area = textInput(ctx, setup.printArea ? formatRange(setup.printArea) : '');
 	const gridlines = checkbox(ctx, 'Gridlines', !!ws.printOptions?.gridLines);
 	const headings = checkbox(ctx, 'Row and column headings', !!ws.printOptions?.headings);
@@ -180,16 +215,42 @@ export function sheetTab(ctx: EditorContext, setup: PageSetup, ws: Worksheet): S
 		panel: panel(
 			ctx,
 			field(ctx, 'Print area', area),
+			field(ctx, 'Rows to repeat at top', repeatRows),
+			field(ctx, 'Columns to repeat at left', repeatColumns),
+			...(existingTitles.unsupported
+				? [
+						text(
+							ctx,
+							'Existing print titles are unsupported. Changing a title range replaces them; leaving the fields unchanged preserves them.',
+						),
+					]
+				: []),
+			field(ctx, 'Page order', order),
 			fieldset(ctx, 'Print', gridlines.wrapper, headings.wrapper),
 		),
 		gridlines: () => gridlines.input.checked,
+		titles: () => {
+			if (!titlesChanged) return undefined;
+			try {
+				return {
+					rows: parsePrintTitleSpan(repeatRows.value, 'row'),
+					columns: parsePrintTitleSpan(repeatColumns.value, 'col'),
+				};
+			} catch {
+				return 'Print titles must be whole rows or whole columns.';
+			}
+		},
 		headings: () => headings.input.checked,
 		read() {
 			const value = area.value.trim().replace(/^=/, '').replace(/^.*!/, '').replace(/\$/g, '');
-			if (!value) return { printArea: undefined as never };
+			if (!value)
+				return {
+					printArea: undefined as never,
+					pageOrder: order.value as NonNullable<PageSetup['pageOrder']>,
+				};
 			const range = parseRange(value);
 			if (!range) return 'The reference is not valid.';
-			return { printArea: range };
+			return { printArea: range, pageOrder: order.value as NonNullable<PageSetup['pageOrder']> };
 		},
 	};
 }

@@ -4,6 +4,7 @@ import { parseRange } from '../address';
 import { readFilteredRows } from '../filter-rows';
 import type { Workbook, WorkbookProperties, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
+import { readPivotTables } from '../pivot/read';
 import { parsePersons } from './comments';
 import { CONTENT_TYPES, SourceIndex, readZipParts } from './package';
 import { parseDynamicArrayMetadata } from './metadata';
@@ -84,8 +85,6 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	});
 	if (source.has('xl/vbaProject.bin') || partOf(RELATIONSHIP_TYPES.vbaProject))
 		warn('The workbook contains VBA macros; they are kept on save but never run.');
-	if (partOf(RELATIONSHIP_TYPES.pivotCacheDefinition))
-		warn('Pivot tables are kept on save but are not refreshed or shown as pivot tables.');
 	if (partOf(RELATIONSHIP_TYPES.externalLink))
 		warn('External workbook links are kept but not updated.');
 	const signatures = detectDigitalSignatures([...parts.keys()]);
@@ -128,6 +127,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	await resolveSmartArt(sheets, source, warn);
 	liftPrintAreas(workbook);
 	readFilteredRows(workbook);
+	readPivotTables(workbook, source, warn);
 	return workbook;
 }
 

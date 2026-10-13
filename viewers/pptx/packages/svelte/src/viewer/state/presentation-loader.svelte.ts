@@ -7,6 +7,7 @@ import {
 import type {
 	ParsedTableStyleMap,
 	PptxAppProperties,
+	PptxData,
 	PptxCommentAuthor,
 	PptxCoreProperties,
 	PptxCustomProperty,
@@ -289,12 +290,18 @@ export class PresentationLoader {
 	 * a fresh package rather than a patch). Disposes the previous handler; the
 	 * Blob URLs stay valid because the media parts are unchanged.
 	 */
-	adoptHandler(next: PptxHandler): void {
+	adoptHandler(next: PptxHandler, keepPrevious = false, data?: PptxData): void {
 		if (next === this.handler) {
 			return;
 		}
-		this.handler?.dispose();
+		if (!keepPrevious) {
+			this.handler?.dispose();
+		}
 		this.handler = next;
+		if (data) {
+			this.themeOptions = data.themeOptions ?? [];
+			this.notesMaster = data.notesMaster;
+		}
 	}
 
 	/** Cancel in-flight loads, revoke Blob URLs, dispose the handler. */

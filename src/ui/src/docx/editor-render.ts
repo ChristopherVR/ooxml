@@ -68,6 +68,7 @@ export function renderDocument(core: EditorCore): void {
 	core.view = new EditorView(paper, {
 		state,
 		editable: () => core.canEditBody(),
+		handleScrollToSelection: () => core.pages.viewMode === 'print',
 		dispatchTransaction(transaction) {
 			const view = this as unknown as EditorView;
 			if (view.isDestroyed) return;

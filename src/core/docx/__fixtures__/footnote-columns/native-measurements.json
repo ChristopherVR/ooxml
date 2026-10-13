@@ -1,0 +1,3656 @@
+{
+  "provenance": "Owned Word.Application COM 16.0; synthetic documents; native PDF coordinates in points; generator scripts/record-word-footnote-columns.ps1",
+  "cases": [
+    {
+      "name": "default-two-short",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 1,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              443.136,
+              184.004,
+              443.616
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "one-two-short",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 1,
+      "noteCount": 1,
+      "linesPerNote": 1,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              443.136,
+              184.004,
+              443.616
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-two-short",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 1,
+      "linesPerNote": 1,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              443.136,
+              184.004,
+              443.616
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "three-two-short",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 3,
+      "noteCount": 1,
+      "linesPerNote": 1,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              443.136,
+              184.004,
+              443.616
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "default-two-twenty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              335.11,
+              184.004,
+              335.59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "one-two-twenty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 1,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              215.09,
+              184.004,
+              215.57
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-two-twenty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              335.11,
+              184.004,
+              335.59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "three-two-twenty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 3,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 158.69,
+              "lines": [
+                {
+                  "id": "N0L07",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 277.42,
+              "lines": [
+                {
+                  "id": "N0L14",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 445.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              371.14,
+              184.004,
+              371.62
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "default-three-twenty",
+      "bodyWidths": [
+        93.3,
+        93.3,
+        93.3
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 3,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 153.41,
+              "lines": [
+                {
+                  "id": "N0L07",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 266.71,
+              "lines": [
+                {
+                  "id": "N0L14",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 445.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              371.14,
+              184.004,
+              371.62
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-one-twenty",
+      "bodyWidths": [
+        320.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 1,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              335.11,
+              184.004,
+              335.59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unequal-two-twenty",
+      "bodyWidths": [
+        100.0,
+        200.0
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 160.01,
+              "lines": [
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              335.11,
+              184.004,
+              335.59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "default-two-eighty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 80,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              59.06,
+              184.004,
+              59.54
+            ]
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L66",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L67",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              371.14,
+              184.004,
+              371.62
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-two-eighty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 1,
+      "linesPerNote": 80,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              59.06,
+              184.004,
+              59.54
+            ]
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L66",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L67",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              371.14,
+              184.004,
+              371.62
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "three-two-eighty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 3,
+      "noteCount": 1,
+      "linesPerNote": 80,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 158.69,
+              "lines": [
+                {
+                  "id": "N0L27",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L33",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 277.42,
+              "lines": [
+                {
+                  "id": "N0L54",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L67",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 445.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              131.06,
+              184.004,
+              131.54
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-two-multiple",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 3,
+      "linesPerNote": 12,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N1L00",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N1L01",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N1L02",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N1L03",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N1L04",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N1L05",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N1L06",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N1L07",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N1L08",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N1L09",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N1L10",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N1L11",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N2L00",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N2L01",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N2L02",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N2L03",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N2L04",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N2L05",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N2L06",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N2L07",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N2L08",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N2L09",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N2L10",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N2L11",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              239.09,
+              184.004,
+              239.57
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-two-custom",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 1,
+      "linesPerNote": 20,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              335.11,
+              218.234,
+              335.59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-two-custom-eighty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 2,
+      "noteCount": 1,
+      "linesPerNote": 80,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "wordVersion": "16.0",
+      "compatibilityMode": 15,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              59.06,
+              218.234,
+              59.54
+            ]
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L66",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L67",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 218.11,
+              "lines": [
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              371.14,
+              218.234,
+              371.62
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mode14-two-custom-eighty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 80,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "wordVersion": "16.0",
+      "compatibilityMode": 14,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              244.27,
+              59.06,
+              360.12,
+              59.54
+            ]
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              47.04,
+              190.004,
+              47.52
+            ],
+            [
+              254.23,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mode12-two-custom-eighty",
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "footnoteColumns": 0,
+      "noteCount": 1,
+      "linesPerNote": 80,
+      "bodyColumns": 2,
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "wordVersion": "16.0",
+      "compatibilityMode": 12,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              244.27,
+              59.06,
+              360.12,
+              59.54
+            ]
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              47.04,
+              190.004,
+              47.52
+            ],
+            [
+              254.23,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

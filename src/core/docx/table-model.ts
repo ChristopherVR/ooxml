@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Paragraph } from './model';
+import type { Block, Paragraph } from './model';
 import type { RunFormatting } from './run-style-model';
 import type { ThemeColorReference, ThemeColorToken } from './theme-model';
 import type { StBorder, StVerticalJc } from './generated/wml-simple-types';
@@ -66,6 +66,8 @@ export interface TableCell {
 	margins?: TableCellMargins;
 	/** Tables nested directly in this cell's XML, preserved but read-only in the editor. */
 	nestedTables?: NestedTablePreview[];
+	/** Parsed OOXML child order for cells containing nested tables. Read-only source content. */
+	sourceBlocks?: Block[];
 }
 /** Which `tblStyle` conditional formatting regions apply, from `w:tblLook`. */
 export interface TableLook {

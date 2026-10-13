@@ -224,3 +224,12 @@ export type {
 	PresentationOptions,
 	PresentationThemeInput,
 } from './types';
+
+export { importSlidePackage } from './import-slide-package';
+export type { ImportSlidePackageOptions, ImportSlidePackageResult } from './import-slide-package';
+export { createSlideClipboardPackage } from './import-slide-package';
+export {
+	SLIDE_PACKAGE_CLIPBOARD_MIME,
+	serializeSlidePackageClipboard,
+	deserializeSlidePackageClipboard,
+} from './slide-package-clipboard-codec';

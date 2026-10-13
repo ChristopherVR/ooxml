@@ -40,6 +40,8 @@ export const SUPPORTED_FEATURES = [
 	'Conditional formatting display',
 	'Tables',
 	'Charts (display and basic editing)',
+	'Sparklines (create, format and clear)',
+	'Worksheet-range PivotTables (one row field, optional column field and one value field)',
 	'Comments and notes',
 	'Hyperlinks',
 	'Data validation',
@@ -48,8 +50,7 @@ export const SUPPORTED_FEATURES = [
 ] as const;
 
 export const UNSUPPORTED_FEATURES = [
-	'Pivot tables (kept in the file but not shown)',
-	'Creating or editing sparklines (existing ones are shown)',
+	'Advanced PivotTable layouts, grouping and external data sources (preserved)',
 	'Show Formulas',
 	'Manual calculation',
 	'Outline (grouping) for columns',

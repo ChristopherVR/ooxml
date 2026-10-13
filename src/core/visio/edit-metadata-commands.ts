@@ -1,7 +1,7 @@
 import { fail } from './package-common';
 import { VISIO_RASTER_IMAGE_LIMITS } from './media';
 
-/** Longest ScreenTip (Comment cell) and hyperlink field accepted by the editor. */
+/** Longest ScreenTip, alternative text or hyperlink field accepted by the editor. */
 export const VISIO_METADATA_TEXT_LIMIT = 4096;
 /** Largest picture accepted for insertion; the reader shares the same raster ceiling. */
 export const VISIO_PICTURE_MAX_BYTES = VISIO_RASTER_IMAGE_LIMITS.maxImageBytes;
@@ -40,20 +40,33 @@ export interface VisioPictureInsertEdit {
 	height: number;
 	image: Uint8Array;
 }
-export type VisioMetadataEdit = VisioShapeHyperlinkEdit | VisioShapeScreenTipEdit;
+export interface VisioShapeAltTextEdit {
+	type: 'set-shape-alt-text';
+	pageId: string;
+	shapeId: string;
+	title: string;
+	description: string;
+}
+export type VisioMetadataEdit =
+	| VisioShapeHyperlinkEdit
+	| VisioShapeScreenTipEdit
+	| VisioShapeAltTextEdit;
 
 export const isVisioMetadataEdit = (edit: { type: string }): edit is VisioMetadataEdit =>
-	edit.type === 'set-shape-hyperlink' || edit.type === 'set-shape-screentip';
+	edit.type === 'set-shape-hyperlink' ||
+	edit.type === 'set-shape-screentip' ||
+	edit.type === 'set-shape-alt-text';
 
 const invalidText =
 	/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/u;
-function field(value: unknown, singleLine: boolean): string {
+export function metadataText(value: unknown, singleLine: boolean): string {
 	if (typeof value !== 'string' || value.length > VISIO_METADATA_TEXT_LIMIT)
-		fail('INVALID_EDIT', 'Link and ScreenTip text must be strings within the length limit.');
+		fail('INVALID_EDIT', 'Shape metadata text must be strings within the length limit.');
 	if (invalidText.test(value) || (singleLine && /[\r\n\t]/.test(value)))
-		fail('INVALID_EDIT_TEXT', 'Link or ScreenTip text contains invalid characters.');
+		fail('INVALID_EDIT_TEXT', 'Shape metadata text contains invalid characters.');
 	return value;
 }
+const field = metadataText;
 function target(edit: { pageId: unknown; shapeId: unknown }): { pageId: string; shapeId: string } {
 	if (
 		typeof edit.pageId !== 'string' ||
@@ -70,6 +83,13 @@ function target(edit: { pageId: unknown; shapeId: unknown }): { pageId: string; 
 /** Copy and validate a metadata command; host properties never reach the transaction. */
 export function snapshotMetadataEdit(edit: VisioMetadataEdit): VisioMetadataEdit {
 	const base = target(edit);
+	if (edit.type === 'set-shape-alt-text')
+		return {
+			...base,
+			type: edit.type,
+			title: field(edit.title, true),
+			description: field(edit.description, false),
+		};
 	if (edit.type === 'set-shape-screentip')
 		return { ...base, type: edit.type, text: field(edit.text, true) };
 	if (

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { visioWalkPath, visioWalkRoute, type VisioWalkEnd } from './connector-route-walk';
+import curveEvidence from './__fixtures__/curved-route-native.json';
+import { cornerCurveKnots } from './connector-curve-spans';
 
 /** An unrotated shape one inch wide and three quarters high, as Visio's Process shape. */
 const shape = (x: number, y: number, width = 1, height = 0.75): VisioWalkEnd => {
@@ -33,6 +35,79 @@ const path = (x: number, y: number) =>
 	]);
 
 describe("Visio's walking glue path", () => {
+	it('checks a curved corner against supplied obstacles inside its orthogonal legs', () => {
+		const begin = shape(0, 0, 1, 1),
+			end = shape(3, 3, 1, 1);
+		const blocker = { minX: 0.4, maxX: 0.55, minY: 2.46, maxY: 2.6 };
+		expect(visioWalkRoute(begin, end, 'right-angle', [blocker])).toEqual([
+			{ x: 0, y: 0.5 },
+			{ x: 0, y: 3 },
+			{ x: 2.5, y: 3 },
+		]);
+		expect(visioWalkRoute(begin, end, 'curved')).toHaveLength(5);
+		expect(visioWalkRoute(begin, end, 'curved', [blocker])).toBeUndefined();
+		expect(
+			visioWalkRoute(begin, end, 'curved', [{ minX: 1, maxX: 1.2, minY: 1, maxY: 1.2 }]),
+		).toEqual(visioWalkRoute(begin, end, 'curved'));
+	});
+
+	it.each(
+		curveEvidence.cases.filter((row) => row.begin[0] !== row.end[0] && row.begin[1] !== row.end[1]),
+	)('matches all native corner controls and knots for $target', (row) => {
+		const [x, y, width = 1, height = 1] = row.target;
+		const curve = visioWalkRoute(shape(2, 6, 1, 1), shape(x!, y!, width, height), 'curved')!;
+		const values = row.rows[1]!.cells[6]!.formula.match(/NURBS\((.*)\)/)![1]!
+			.split(',')
+			.map(Number);
+		const dx = row.end[0]! - row.begin[0]!;
+		const dy = row.end[1]! - row.begin[1]!;
+		const expected = [row.begin];
+		for (let i = 4; i < values.length; i += 4)
+			expected.push([
+				row.begin[0]! + values[i]! * (values[2] === 0 ? dx : 1),
+				row.begin[1]! + values[i + 1]! * (values[3] === 0 ? dy : 1),
+			]);
+		expected.push(row.end);
+		expect(curve).toHaveLength(5);
+		curve.forEach((point, i) => {
+			expect(point.x).toBeCloseTo(expected[i]![0]!, 10);
+			expect(point.y).toBeCloseTo(expected[i]![1]!, 10);
+		});
+		const knots = cornerCurveKnots(curve);
+		expect(knots[0]).toBeCloseTo(row.rows[1]!.cells[2]!.value, 10);
+		expect(knots[1]).toBeCloseTo(values[0]!, 10);
+	});
+	it.each(
+		curveEvidence.cases.filter((row) => row.begin[0] === row.end[0] || row.begin[1] === row.end[1]),
+	)('matches native curved facing-side endpoints for $target', (row) => {
+		const [x, y, width = 1, height = 1] = row.target;
+		const curve = visioWalkRoute(shape(2, 6, 1, 1), shape(x!, y!, width, height), 'curved')!;
+		expect(curve).toHaveLength(4);
+		for (const [actual, expected] of [
+			[curve[0]!, row.begin],
+			[curve[3]!, row.end],
+		] as const) {
+			expect(actual.x).toBeCloseTo(expected[0]!, 10);
+			expect(actual.y).toBeCloseTo(expected[1]!, 10);
+		}
+		const constantAxis = row.begin[0] === row.end[0] ? 'x' : 'y';
+		for (const point of curve) expect(point[constantAxis]).toBeCloseTo(curve[0]![constantAxis], 10);
+	});
+
+	it('does not apply overlapping-side curves through obstacles or to rotated outlines', () => {
+		const target = shape(6, 6.2, 1, 1);
+		expect(
+			visioWalkRoute(shape(2, 6, 1, 1), target, 'curved', [{ minX: 3, maxX: 4, minY: 5, maxY: 7 }]),
+		).toBeUndefined();
+		target.shape!.corners = [
+			{ x: 6, y: 5.5 },
+			{ x: 6.7, y: 6.2 },
+			{ x: 6, y: 6.9 },
+			{ x: 5.3, y: 6.2 },
+		];
+		const curve = visioWalkRoute(shape(2, 6, 1, 1), target, 'curved')!;
+		expect(curve[0]!.y).toBe(6);
+	});
 	// Every expectation is a position recorded from Visio 16 for a Process shape at (5, 5)
 	// connected to another one at the given place.
 	it('runs straight or with one near jog between sides that face each other', () => {
@@ -113,7 +188,7 @@ describe("Visio's walking glue path", () => {
 			{ x: 5.5, y: 3.375 },
 		]);
 		const curve = visioWalkRoute(shape(2, 6), shape(6, 3), 'curved')!;
-		expect(curve).toHaveLength(4);
+		expect(curve).toHaveLength(5);
 		// It leaves downwards and arrives from the left, like the right-angle path.
 		expect(curve[1]!.x).toBe(2);
 		expect(curve[2]!.y).toBe(3);

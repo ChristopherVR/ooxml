@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	createSlidePackageClipboard,
 	commitElementUpdateBatch,
 	attachViewerHyperlinks,
 	applyMasterViewCrudAction,
@@ -918,6 +919,10 @@ import { ZoomTargetService } from './zoom-target.service';
 			@if (showSorter()) {
 				<pptx-slide-sorter-overlay
 					[slides]="[...displaySlides()]"
+					[clipboardSourceSlides]="editor.slides()"
+					[clipboardTemplates]="editor.templateElementsBySlideId()"
+					[copySystemSlides]="copySystemSlides"
+					[pasteSystemSlides]="pasteSystemSlides"
 					[canvasSize]="loader.canvasSize()"
 					[mediaDataUrls]="loader.mediaDataUrls()"
 					[activeIndex]="activeSlideIndex()"
@@ -926,6 +931,7 @@ import { ZoomTargetService } from './zoom-target.service';
 					(closed)="showSorter.set(false)"
 					(deleteSlide)="editor.deleteSlide($event)"
 					(duplicateSlide)="editor.duplicateSlide($event)"
+					(pasteSlides)="editor.pasteSlides($event); goTo($event.insertAt)"
 					(toggleHiddenSlide)="toggleHideSlides([$event])"
 				/>
 			}
@@ -1051,6 +1057,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				<pptx-find-replace-bar
 					[matchCount]="findReplace.results().length"
 					[matchIndex]="findReplace.activeIndex()"
+					[matches]="findReplace.results()"
 					(find)="findReplace.onFind($event)"
 					(navigate)="findReplace.onNavigate($event)"
 					(replaceOne)="findReplace.onReplaceOne($event)"
@@ -1633,6 +1640,32 @@ export class PowerPointViewerComponent
 	protected readonly loader = inject(LoadContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
 	protected readonly editor = inject(EditorStateService);
+	private readonly slidePackageClipboard = createSlidePackageClipboard({
+		getSnapshot: () => {
+			const handler = this.loader.getHandler();
+			return handler
+				? {
+						handler,
+						slides: this.editor.slides(),
+						templateElementsBySlideId: this.editor.templateElementsBySlideId(),
+						allowExternalImages: this.viewerOpts.options().trust.allowExternalContent,
+						editable: this.canEdit(),
+					}
+				: null;
+		},
+		commit: (result) => {
+			this.editor.applyReplacement(result.slides, 'Paste slides');
+			this.editor.templateElementsBySlideId.set(result.templateElementsBySlideId);
+			this.loader.adoptMasterViewData(result.handler, result.data, true);
+			this.loader.themeOptions.set(result.data.themeOptions ?? []);
+			for (const [path, url] of result.mediaUrls) {
+				this.loader.mediaDataUrls().set(path, url);
+			}
+			this.goTo(result.insertAt);
+		},
+	});
+	protected copySystemSlides = (indexes: number[]) => this.slidePackageClipboard.copy(indexes);
+	protected pasteSystemSlides = (insertAt: number) => this.slidePackageClipboard.paste(insertAt);
 	private readonly fonts = inject(EmbeddedFontsService);
 	private readonly googleWebfonts = inject(GoogleWebfontsService);
 	protected readonly collab = inject(CollaborationService);
@@ -2802,6 +2835,7 @@ export class PowerPointViewerComponent
 		// being destroyed without a page unload (the `beforeunload` listener
 		// above covers the tab actually closing/navigating away).
 		this.destroyRef.onDestroy(() => {
+			this.slidePackageClipboard.dispose();
 			if (this.viewerOpts.shouldClearCacheOnClose()) {
 				void this.viewerOpts.clearCache().catch(() => {
 					// Browser lifecycle cleanup cannot report an IndexedDB failure.

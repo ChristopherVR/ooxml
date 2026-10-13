@@ -1,0 +1,11 @@
+{
+	"observedOn": "2026-10-13",
+	"excelFileVersion": "16.0.20430.20146",
+	"reproduce": "pwsh -NoProfile -File scripts/xlsx-print-format-acceptance.ps1",
+	"rawHeader": "&C&\"Arial,Bold Italic\"&18&KFF0000Rich &P&B Normal",
+	"nativePdf": { "text": "Rich 1", "font": "Arial-BoldItalicMT", "sizePoints": 18, "colorRgb": "FF0000", "followingText": "Normal", "followingBold": false },
+	"validated": ["authored native header accepted without repair", "native PDF font, size, RGB color and bold toggle", "native underline and strike text accepted", "native save/import/export/reopen", "browser authoring, saved reopen and preview CSS font/weight/italic/color"],
+	"scope": ["bold, italic, single underline and strike toggles", "integer font sizes 1 through 409", "explicit RGB colors", "font names with Regular, Bold, Italic or Bold Italic styles"],
+	"unsupportedPreserved": ["images", "theme colors", "double underline", "superscript and subscript", "unknown font styles", "page offsets"],
+	"limits": ["Fonts must be installed for matching rendering", "Font metrics and printer settings can affect pagination", "Native PDF assertions verify underline and strike text presence, not the decoration geometry"]
+}

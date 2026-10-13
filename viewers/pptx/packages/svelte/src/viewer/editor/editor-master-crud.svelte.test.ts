@@ -109,7 +109,7 @@ describe('svelte master-view CRUD wiring', () => {
 			{ tab: 'slides', masterIndex: 0, layoutIndex: null },
 			{ name: undefined },
 		);
-		expect(setHandler).toHaveBeenCalledWith(newHandler);
+		expect(setHandler).toHaveBeenCalledExactlyOnceWith(newHandler, false, undefined);
 		expect(editor.masterViewTarget).toStrictEqual({
 			tab: 'slides',
 			masterIndex: 0,

@@ -8,6 +8,9 @@ import { RIBBON_HOME_STRINGS } from './ribbon-home';
 import { RULES_STRINGS } from './rules';
 import { RIBBON_TAB_STRINGS } from './ribbon-tabs';
 import { TOOLS_STRINGS } from './tools';
+import { SPARKLINE_STRINGS } from './sparklines';
+import { PIVOT_STRINGS } from './pivots';
+import { PRINT_LAYOUT_STRINGS } from './print-layout';
 import { type CommandLocale, type Translations, flatten } from './types';
 
 export const COMMAND_TABLES: readonly Translations[] = [
@@ -20,6 +23,9 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	RULES_STRINGS,
 	CORE_FEATURE_STRINGS,
 	CHART_SERIES_STRINGS,
+	SPARKLINE_STRINGS,
+	PIVOT_STRINGS,
+	PRINT_LAYOUT_STRINGS,
 ];
 
 export const commandStrings = (locale: CommandLocale): Record<string, string> =>

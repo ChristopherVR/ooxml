@@ -11,6 +11,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { ElementRef, Injector, runInInjectionContext, signal } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import type { SlidePasteRequest } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -22,7 +24,10 @@ const read = (file: string): string => readFileSync(path.join(import.meta.dirnam
 const make = <T>(factory: () => T): T =>
 	runInInjectionContext(
 		Injector.create({
-			providers: [{ provide: ElementRef, useValue: new ElementRef(document.createElement('div')) }],
+			providers: [
+				{ provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },
+				{ provide: TranslateService, useValue: { instant: (key: string) => key } },
+			],
 		}),
 		factory,
 	);
@@ -100,6 +105,8 @@ describe('angular slide sorter menu', () => {
 		const overlay = make(() => new SlideSorterOverlayComponent());
 		Object.assign(overlay, { slides: signal(slideList), canEdit: signal(true) });
 		const duplicated: number[] = [];
+		const pasted: SlidePasteRequest[] = [];
+		overlay.pasteSlides.subscribe((request) => pasted.push(request));
 		const hidden: number[] = [];
 		const deleted: number[] = [];
 		overlay.duplicateSlide.subscribe((index) => duplicated.push(index));
@@ -110,7 +117,7 @@ describe('angular slide sorter menu', () => {
 				{ preventDefault: () => undefined, clientX: 5, clientY: 5 } as MouseEvent,
 				index,
 			);
-		return { overlay, open, duplicated, hidden, deleted };
+		return { overlay, open, duplicated, pasted, hidden, deleted };
 	}
 
 	it('offers the shared list and tags each tile for cross-binding tests', () => {
@@ -129,13 +136,20 @@ describe('angular slide sorter menu', () => {
 	});
 
 	it('offers Paste only after Copy and pastes a copy of the copied slide', () => {
-		const { overlay, open, duplicated } = sorter();
+		const source = slides();
+		source[1]!.hidden = true;
+		const { overlay, open, duplicated, pasted } = sorter(source);
 		open(1);
 		overlay.runMenuCommand('copy');
 		open(2);
 		expect(overlay.menuEntries().map((entry) => entry.id)).toContain('paste');
 		overlay.runMenuCommand('paste');
-		expect(duplicated).toStrictEqual([1]);
+		expect(duplicated).toStrictEqual([]);
+		expect(pasted).toHaveLength(1);
+		expect(pasted[0]).toMatchObject({ insertAt: 3, sourceIds: ['s2'] });
+		expect(pasted[0]!.copies).toHaveLength(1);
+		expect(pasted[0]!.copies[0]!.id).not.toBe('s2');
+		expect(pasted[0]!.copies[0]!.hidden).toBeTruthy();
 	});
 
 	it('routes Hide/Show and Delete to the right-clicked slide', () => {

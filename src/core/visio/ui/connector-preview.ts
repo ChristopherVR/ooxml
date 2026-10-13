@@ -11,12 +11,13 @@ import {
 import type { VisioGlueBox } from '../edit-connector-glue';
 import { visioWalkRoute } from '../connector-route-walk';
 import { walkShape } from '../edit-stencil-connector-layout';
+import { connectorCurveSpans } from '../connector-curve-spans';
 
 /** A connector redrawn for a move preview, in page coordinates with y down (SVG page inches). */
 export interface VisioConnectorPreview {
 	connectorId: string;
 	route: VisioConnectorRoute;
-	/** Route vertices; a curved route has the four controls of one cubic. */
+	/** Route vertices, or four/five controls for a curved connector. */
 	points: { x: number; y: number }[];
 }
 
@@ -112,7 +113,8 @@ export function visioConnectorPreviewPath(preview: VisioConnectorPreview): strin
 	const [first, ...rest] = preview.points;
 	if (!first) return '';
 	const point = (p: { x: number; y: number }) => `${p.x} ${p.y}`;
-	return preview.route === 'curved' && rest.length === 3
-		? `M ${point(first)} C ${rest.map(point).join(' ')}`
+	const spans = preview.route === 'curved' ? connectorCurveSpans(preview.points) : [];
+	return spans.length
+		? `M ${point(first)} ${spans.map((span) => `C ${span.slice(1).map(point).join(' ')}`).join(' ')}`
 		: `M ${point(first)} ${rest.map((p) => `L ${point(p)}`).join(' ')}`;
 }

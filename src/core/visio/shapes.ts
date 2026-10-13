@@ -8,6 +8,7 @@ import { layerPaintSheet } from './layer-paint';
 import type { VisioLayer, VisioShape } from './model';
 import { shapeTransformDetails, geometryPaths } from './geometry';
 import { shapeConnections } from './shape-connections';
+import { readConnectorJumps } from './connector-jumps';
 import { VisioPackageError } from './package';
 import { shapeStyle, shapeText, type Resources } from './style';
 import {
@@ -239,6 +240,7 @@ export function normalizeShapes(
 				report('missing-geometry', 'Shape has no supported cached geometry.');
 			return {
 				...shapeMetadata(sheet, report, context.metadataBudget),
+				...(oneD ? readConnectorJumps(sheet.cells, report) : {}),
 				...structureOf(sheet),
 				id: shape.id,
 				name: shape.attributes.get('Name') ?? shape.attributes.get('NameU') ?? `Shape ${shape.id}`,

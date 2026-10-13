@@ -24,7 +24,9 @@ describe('angular: thin strokes stay one device pixel on screen', () => {
 	});
 
 	it('paints outline, mirror, connector and diagonal strokes through the CSS width', () => {
-		expect(read('element-renderer-shape.component.html')).toContain(
+		// The shape and picture outline markup lives in StrokeOutlineComponent.
+		expect(read('element-renderer-shape.component.html')).toContain('pptx-stroke-outline');
+		expect(read('stroke-outline.component.ts')).toContain(
 			'[style.stroke-width]="strand.cssStrokeWidth"',
 		);
 		expect(read('reflection-mirror-content.component.ts')).toContain(

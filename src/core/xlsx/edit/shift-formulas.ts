@@ -63,6 +63,13 @@ export function rewriteSheetFormulas(
 	formulaCells?: readonly CellAddress[],
 ): void {
 	rewritePreservedFormulas(sheet, rewrite);
+	for (const pivot of sheet.pivotTables ?? []) {
+		const next = safe(rewrite, pivot.source, sheet.name);
+		if (next !== pivot.source) {
+			pivot.source = next;
+			pivot.dirty = true;
+		}
+	}
 	{
 		const name = sheet.name;
 		for (const table of sheet.tables)

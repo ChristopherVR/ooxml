@@ -65,6 +65,11 @@ export interface VisioShapeFormatEdit extends Target {
 	endArrowSize?: number;
 	/** Line cap: 0 round, 1 square, 2 extended. */
 	lineCap?: number;
+	/** Connector-specific Shape Layout settings; zero inherits the page. */
+	lineJumpCode?: number;
+	lineJumpStyle?: number;
+	lineJumpDirectionX?: number;
+	lineJumpDirectionY?: number;
 	/** Corner rounding radius in points; 0 keeps square corners. */
 	rounding?: number;
 	/** Classic non-gradient fill pattern: 0 hides fill, 1 is solid, 2-24 are hatches. */
@@ -163,6 +168,10 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 			['beginArrowSize', 6, 'Arrowhead sizes are numbered 0 to 6.'],
 			['endArrowSize', 6, 'Arrowhead sizes are numbered 0 to 6.'],
 			['lineCap', 2, 'Line caps are 0 (round), 1 (square) or 2 (extended).'],
+			['lineJumpCode', 4, 'Connector jump policies are numbered 0 to 4.'],
+			['lineJumpStyle', 9, 'Connector jump styles are numbered 0 to 9.'],
+			['lineJumpDirectionX', 2, 'Connector jump directions are numbered 0 to 2.'],
+			['lineJumpDirectionY', 2, 'Connector jump directions are numbered 0 to 2.'],
 		] as const) {
 			const value = edit[name];
 			if (value === undefined) continue;

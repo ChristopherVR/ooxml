@@ -22,6 +22,9 @@ export class FindReplaceState {
 	query = $state('');
 	replacement = $state('');
 	matchCase = $state(false);
+	includeNotes = $state(false);
+	includeChartTitles = $state(true);
+	includeChartData = $state(false);
 	results = $state.raw<FindResult[]>([]);
 	index = $state(0);
 
@@ -53,7 +56,12 @@ export class FindReplaceState {
 	/** Re-run the search from the current query/matchCase and jump to the first match. */
 	search(): void {
 		this.results = this.query
-			? findInSlides(this.#deps.getSlides(), this.query, { matchCase: this.matchCase })
+			? findInSlides(this.#deps.getSlides(), this.query, {
+					matchCase: this.matchCase,
+					includeNotes: this.includeNotes,
+					includeChartTitles: this.includeChartTitles,
+					includeChartData: this.includeChartData,
+				})
 			: [];
 		this.index = 0;
 		this.#navigateCurrent();
@@ -84,6 +92,9 @@ export class FindReplaceState {
 
 	/** Replace the current match, then refresh the result set. */
 	replaceCurrent(): void {
+		if (this.results[this.index]?.readOnly) {
+			return;
+		}
 		if (this.results.length === 0) {
 			return;
 		}
@@ -94,11 +105,17 @@ export class FindReplaceState {
 
 	/** Replace every match of the current query, then refresh the result set. */
 	replaceAll(): void {
+		if (this.results.some((match) => match.readOnly)) {
+			return;
+		}
 		if (!this.query) {
 			return;
 		}
 		const result = replaceInSlides(this.#deps.getSlides(), this.query, this.replacement, {
 			matchCase: this.matchCase,
+			includeNotes: this.includeNotes,
+			includeChartTitles: this.includeChartTitles,
+			includeChartData: this.includeChartData,
 		});
 		this.#deps.commitSlides([...result.slides]);
 		this.search();

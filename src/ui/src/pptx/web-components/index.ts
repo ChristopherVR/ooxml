@@ -1,3 +1,6 @@
+import { definePptxSlideClipboard } from './slide-clipboard';
+export { slideClipboardLabels } from './slide-clipboard';
+export type { PptxUiSlideClipboardElement } from './slide-clipboard';
 import { HOST_STYLES } from './host-styles';
 import { definePptxMobileBar } from './mobile-bar';
 import { definePptxMobileToolbar } from './mobile-toolbar';
@@ -172,6 +175,7 @@ const controls = [
 	['pptx-ui-subtitle-settings', definePptxSubtitleSettings],
 	['pptx-ui-theme-editor', definePptxThemeEditor],
 	['pptx-ui-title-bar', definePptxTitleBar],
+	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
 ] as const;
 
 /** Idempotent browser-only registration. Safe to call from every viewer binding. */

@@ -215,7 +215,7 @@ export function geometryPaths(
 					else {
 						const radius = (chord * chord) / (8 * Math.abs(bow)) + Math.abs(bow) / 2;
 						commands.push(
-							`A ${point(radius, radius)} 0 ${Math.abs(bow) > chord / 2 ? 1 : 0} ${bow < 0 ? 1 : 0} ${point(x, y)}`,
+							`A ${point(radius, radius)} 0 ${Math.abs(bow) > chord / 2 ? 1 : 0} ${bow < 0 ? 0 : 1} ${point(x, y)}`,
 						);
 					}
 					break;

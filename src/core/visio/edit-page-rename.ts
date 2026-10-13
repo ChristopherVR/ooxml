@@ -3,13 +3,14 @@ import { fail } from './package-common';
 import type { VisioPackage } from './package';
 import { editableVisioPageRoots } from './edit-page-roots';
 import { mapVisioFormulaSyntax as syntax, unquotedVisioFormula } from './formula-source';
+import { shapeDataFormulaSection } from './cell-formula';
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function localCell(node: Element): string | undefined {
 	const row = node.parentNode as Element | null;
 	const section = row?.parentNode as Element | null;
 	if (row?.localName === 'Row' && section?.localName === 'Section') {
-		const name = attribute(section, 'N'),
+		const name = shapeDataFormulaSection(attribute(section, 'N') ?? ''),
 			rowName = attribute(row, 'N') ?? attribute(row, 'IX');
 		if (!name || !rowName) return undefined;
 		return `${name}.${rowName}${attribute(node, 'N') === 'Value' && ['User', 'Prop'].includes(name) ? '' : `.${attribute(node, 'N')}`}`;

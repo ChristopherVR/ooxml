@@ -1,4 +1,5 @@
 import { fail } from './package-common';
+import { metadataText } from './edit-metadata-commands';
 import { snapshotPageLayoutEdit, type VisioPageLayoutEdit } from './edit-page-layout';
 import { snapshotSnapGlueEdit, type VisioSnapGlueEdit } from './edit-snap-glue';
 import {
@@ -36,6 +37,12 @@ export interface VisioPagePropertiesEdit {
 	/** A background page ID, or null for no background. */
 	backPageId?: string | null;
 }
+export interface VisioPageAltTextEdit {
+	type: 'set-page-alt-text';
+	pageId: string;
+	title: string;
+	description: string;
+}
 /**
  * Design > Backgrounds and Borders & Titles: decoration shapes on the page's Visio-managed
  * background page (`VBackground-n`), created with `backgroundPageId` when the page has none.
@@ -50,6 +57,7 @@ export type VisioPageDecorationEdit = {
 	| { kind: 'border'; style: VisioBorderStyle | null; title?: string }
 );
 export type VisioPageSetupEdits =
+	| VisioPageAltTextEdit
 	| VisioPageSetupEdit
 	| VisioPagePropertiesEdit
 	| VisioPageDecorationEdit
@@ -57,6 +65,7 @@ export type VisioPageSetupEdits =
 	| VisioSnapGlueEdit;
 
 export const isVisioPageSetupEdit = (edit: { type: string }): edit is VisioPageSetupEdits =>
+	edit.type === 'set-page-alt-text' ||
 	edit.type === 'set-page-setup' ||
 	edit.type === 'set-page-properties' ||
 	edit.type === 'set-page-decoration' ||
@@ -84,6 +93,13 @@ export function snapshotPageSetupEdit(edit: VisioPageSetupEdits): VisioPageSetup
 	if (edit.type === 'set-page-layout') return snapshotPageLayoutEdit(edit);
 	if (edit.type === 'set-snap-glue') return snapshotSnapGlueEdit(edit);
 	const id = pageId(edit.pageId, 'page');
+	if (edit.type === 'set-page-alt-text')
+		return {
+			type: edit.type,
+			pageId: id,
+			title: metadataText(edit.title, true),
+			description: metadataText(edit.description, false),
+		};
 	if (edit.type === 'set-page-setup') {
 		const result: VisioPageSetupEdit = { type: edit.type, pageId: id };
 		if (edit.printOrientation !== undefined) {

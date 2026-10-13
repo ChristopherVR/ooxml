@@ -14,9 +14,15 @@ import {
 	sorterSelectionIndexes,
 	sorterMenuContext,
 	sorterGridColumns,
+	slideClipboardLabels,
+	sorterPasteInsertAt,
 } from 'ooxml-ui/pptx';
-import type { SlideSorterKeyActionName, SlideSorterContextMenuCommandId } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type {
+	SlideSorterKeyActionName,
+	SlideSorterContextMenuCommandId,
+	SlidePasteRequest,
+} from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -30,16 +36,21 @@ const { t } = useI18n();
 
 const props = defineProps<{
 	slides: PptxSlide[];
+	clipboardSourceSlides?: PptxSlide[];
+	clipboardTemplates?: Record<string, PptxElement[]>;
 	canvasSize: CanvasSize;
 	mediaDataUrls: Map<string, string>;
 	activeIndex: number;
 	canEdit?: boolean;
+	copySystemSlides?: (indexes: number[]) => Promise<void>;
+	pasteSystemSlides?: (insertAt: number) => Promise<void>;
 }>();
 
 const emit = defineEmits<{
 	select: [index: number];
 	reorder: [from: number, to: number];
 	duplicate: [index: number];
+	paste: [request: SlidePasteRequest];
 	delete: [index: number];
 	'toggle-hidden': [index: number];
 	close: [];
@@ -133,8 +144,18 @@ function openContextMenu(index: number, event: MouseEvent): void {
 }
 
 function runAction(action: SlideSorterKeyActionName | 'toggle-hidden'): void {
-	const result = applySorterAction(sorter.value, props.slides, action, props.activeIndex);
+	const result = applySorterAction(
+		sorter.value,
+		props.slides,
+		action,
+		props.activeIndex,
+		props.clipboardSourceSlides ?? props.slides,
+		props.clipboardTemplates,
+	);
 	sorter.value = result.state;
+	if (result.paste) {
+		emit('paste', result.paste);
+	}
 	if (result.close) {
 		emit('close');
 	}
@@ -200,6 +221,26 @@ onBeforeUnmount(() => {
 <template>
 	<div class="pptx-vue-sorter" role="dialog" :aria-label="t('pptx.slideSorter.title')">
 		<header class="pptx-vue-sorter-head">
+			<pptx-ui-slide-clipboard
+				:labels.prop="slideClipboardLabels(t)"
+				:copyAction.prop="
+					copySystemSlides
+						? () => copySystemSlides!(sorterSelectionIndexes(sorter, slides))
+						: undefined
+				"
+				:pasteAction.prop="
+					canEdit && pasteSystemSlides
+						? () =>
+								pasteSystemSlides!(
+									sorterPasteInsertAt(
+										sorterSelectionIndexes(sorter, slides),
+										activeIndex,
+										slides.length,
+									),
+								)
+						: undefined
+				"
+			/>
 			<h2 class="pptx-vue-sorter-title">{{ t('pptx.slideSorter.title') }}</h2>
 			<button
 				type="button"

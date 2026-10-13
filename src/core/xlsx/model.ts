@@ -613,6 +613,8 @@ export interface PrintOptions {
 }
 
 export interface PageSetup {
+	firstPageNumber?: number;
+	pageOrder?: 'downThenOver' | 'overThenDown';
 	orientation?: 'portrait' | 'landscape';
 	paperSize?: number;
 	scale?: number;
@@ -703,6 +705,8 @@ export interface Worksheet {
 	dataValidations: DataValidation[];
 	tables: Table[];
 	drawings: DrawingObject[];
+	/** Supported worksheet PivotTables; unsupported imported parts stay in the source package. */
+	pivotTables?: import('./model-pivots').PivotTable[];
 	autoFilter?: AutoFilter;
 	pageSetup?: PageSetup;
 	/** Print options; absent means none set. */
@@ -813,3 +817,4 @@ export type {
 	HeadingPair,
 } from '../opc/properties/types';
 export type * from './model-sparklines';
+export type * from './model-pivots';

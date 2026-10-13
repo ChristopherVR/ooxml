@@ -24,6 +24,12 @@ export interface VisioPageLayoutEdit extends Partial<VisioPageLayout> {
 const CELLS: readonly (readonly [keyof VisioPageLayout, string, boolean])[] = [
 	['lineJumpCode', 'LineJumpCode', false],
 	['lineJumpStyle', 'LineJumpStyle', false],
+	['lineJumpDirectionX', 'PageLineJumpDirX', false],
+	['lineJumpDirectionY', 'PageLineJumpDirY', false],
+	['lineJumpFactorX', 'LineJumpFactorX', false],
+	['lineJumpFactorY', 'LineJumpFactorY', false],
+	['lineToLineX', 'LineToLineX', true],
+	['lineToLineY', 'LineToLineY', true],
 	['gridDensityX', 'XGridDensity', false],
 	['gridDensityY', 'YGridDensity', false],
 	['gridSpacingX', 'XGridSpacing', true],
@@ -38,19 +44,26 @@ const CELLS: readonly (readonly [keyof VisioPageLayout, string, boolean])[] = [
 
 function valid(key: keyof VisioPageLayout, value: unknown): number {
 	const number = typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN;
+	if (key.startsWith('lineJumpFactor') || key.startsWith('lineToLine')) {
+		if (!(number >= 0 && number <= (key.startsWith('lineJumpFactor') ? 10 : 1e4)))
+			fail('INVALID_EDIT', `Invalid page layout value for ${key}.`);
+		return number;
+	}
 	const integer = Number.isSafeInteger(number);
 	const ok =
-		key === 'lineJumpCode'
-			? integer && number >= 0 && number <= 5
-			: key === 'lineJumpStyle'
-				? integer && number >= 0 && number <= 8
-				: key.startsWith('gridDensity')
-					? (VISIO_GRID_DENSITIES as readonly number[]).includes(number)
-					: key.startsWith('rulerDensity')
-						? (VISIO_RULER_DENSITIES as readonly number[]).includes(number)
-						: key.startsWith('gridSpacing')
-							? number >= 0 && number <= 1e4
-							: Math.abs(number) <= 1e6;
+		key === 'lineJumpDirectionX' || key === 'lineJumpDirectionY'
+			? integer && number >= 0 && number <= 2
+			: key === 'lineJumpCode'
+				? integer && number >= 0 && number <= 5
+				: key === 'lineJumpStyle'
+					? integer && number >= 0 && number <= 9
+					: key.startsWith('gridDensity')
+						? (VISIO_GRID_DENSITIES as readonly number[]).includes(number)
+						: key.startsWith('rulerDensity')
+							? (VISIO_RULER_DENSITIES as readonly number[]).includes(number)
+							: key.startsWith('gridSpacing')
+								? number >= 0 && number <= 1e4
+								: Math.abs(number) <= 1e6;
 	if (!ok) fail('INVALID_EDIT', `Invalid page layout value for ${key}.`);
 	return number;
 }

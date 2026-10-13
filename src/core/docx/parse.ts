@@ -141,7 +141,9 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		);
 	const parts = await parseDocumentParts(zip, body, blocks, drawings);
 	model.sections = parts.sections;
+	if (parts.compatibilityMode !== undefined) model.compatibilityMode = parts.compatibilityMode;
 	if (parts.footnotes) model.footnotes = parts.footnotes;
+	if (parts.footnoteSeparators) model.footnoteSeparators = parts.footnoteSeparators;
 	if (parts.endnotes) model.endnotes = parts.endnotes;
 	if (parts.footnoteNumFmt) model.footnoteNumFmt = parts.footnoteNumFmt;
 	if (parts.endnoteNumFmt) model.endnoteNumFmt = parts.endnoteNumFmt;
@@ -193,6 +195,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 				Object.values(slots ?? {}).flatMap((content) => content?.blocks ?? []),
 			),
 		),
+		...Object.values(model.footnoteSeparators ?? {}).flatMap((note) => note.blocks),
 		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].flatMap((note) => note.blocks),
 	];
 	await resolveDocumentDiagrams(pictureBlocks, async (partName) =>

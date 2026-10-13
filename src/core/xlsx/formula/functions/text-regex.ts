@@ -1,4 +1,4 @@
-import { ERR, fail, type Value } from '../values';
+import { checkArraySize, ERR, fail, Matrix, type Value } from '../values';
 import { int, optNum, spec, str } from './helpers';
 import type { FunctionSpec } from './types';
 
@@ -44,15 +44,28 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 		'REGEXEXTRACT',
 		C,
 		'REGEXEXTRACT(text, pattern, [return_mode], [case_sensitivity])',
-		'The first part of the text that matches the pattern.',
+		'Extracts the first match (0), all matches (1), or the first match’s capture groups (2).',
 		2,
 		4,
 		(args) => {
-			// Only the first-match mode is implemented; the all-matches and capture-group modes
-			// return arrays whose layout is not confirmed against Excel.
-			if (optNum(args, 2, 0) !== 0) fail(ERR.VALUE);
-			const match = compile(str(args[1]), caseMode(args, 3), false).exec(str(args[0]));
-			return match ? match[0] : fail(ERR.NA);
+			const mode = optNum(args, 2, 0);
+			if (mode !== 0 && mode !== 1 && mode !== 2) fail(ERR.VALUE);
+			const regex = compile(str(args[1]), caseMode(args, 3), mode === 1);
+			const text = str(args[0]);
+			if (mode === 1) {
+				const matches: string[] = [];
+				// matchAll advances after zero-length matches, including Unicode code points.
+				for (const match of text.matchAll(regex)) {
+					checkArraySize(matches.length + 1, 1);
+					matches.push(match[0]);
+				}
+				return matches.length ? new Matrix(matches.map((match) => [match])) : fail(ERR.NA);
+			}
+			const match = regex.exec(text);
+			if (!match) fail(ERR.NA);
+			if (mode === 0) return match[0];
+			if (match.length === 1) fail(ERR.VALUE);
+			return new Matrix([match.slice(1).map((group) => group ?? '')]);
 		},
 	),
 	spec(

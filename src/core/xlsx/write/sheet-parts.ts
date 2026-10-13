@@ -23,6 +23,7 @@ import { resolveTableColumns, resolveTableNames, tableXml, totalsRowFormulas } f
 
 /** Worksheet dependents: comments (+ VML, threads), tables and the drawing part. */
 export interface SaveContext {
+	pivots?: import('../pivot/write').PivotWritePlan;
 	writer: PackageWriter;
 	workbook: Workbook;
 	source: SourceIndex | undefined;

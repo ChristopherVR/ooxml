@@ -178,6 +178,9 @@ a.dve-link[data-anchor^='_Toc'] {
 	width: 192px;
 	border-top: 1px solid currentColor;
 }
+.dve-print-footnote-continuation-separator {
+	width: 100%;
+}
 .dve-print-footnote {
 	position: absolute;
 	left: 0;
@@ -223,4 +226,50 @@ a.dve-link[data-anchor^='_Toc'] {
 		sans-serif;
 	color: #444;
 	pointer-events: none;
+}
+
+/* Native input stays mounted while page geometry supplies the visible selection. */
+.dve-paper.dve-print-input {
+	position: fixed;
+	top: 0;
+	left: 0;
+	margin: 0;
+	opacity: 0;
+	max-height: 1px;
+	overflow: hidden;
+	pointer-events: none;
+	z-index: -1;
+}
+.dve-print-pages {
+	position: relative;
+}
+.dve-print-selection-layer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 3;
+}
+.dve-print-caret,
+.dve-print-selection {
+	position: absolute;
+	pointer-events: none;
+}
+.dve-print-caret {
+	background: currentColor;
+	animation: dve-print-caret-blink 1s step-end infinite;
+}
+.dve-print-selection {
+	background: Highlight;
+	opacity: 0.3;
+}
+@keyframes dve-print-caret-blink {
+	50% {
+		opacity: 0;
+	}
+}
+@media print {
+	.dve-print-input,
+	.dve-print-selection-layer {
+		display: none !important;
+	}
 }

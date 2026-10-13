@@ -2,6 +2,13 @@ import { slideSorterPasteIndexes } from './slide-sorter-context-menu';
 import type { SlideSorterContextMenuContext } from './slide-sorter-context-menu';
 import { clampSorterZoom, SORTER_ZOOM_STEP } from './slide-sorter-keymap';
 import type { SlideSorterKeyActionName } from './slide-sorter-keymap';
+import {
+	captureSlideClipboard,
+	createSlidePaste,
+	captureSlideClipboardTemplates,
+} from './slide-operations';
+import type { SlidePasteRequest } from './slide-operations';
+import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
 export interface SorterSlide {
 	id: string;
@@ -11,6 +18,8 @@ export interface SlideSorterState {
 	selectedIds: string[];
 	anchor: number;
 	clipboardIds: string[];
+	clipboardSlides?: PptxSlide[];
+	clipboardTemplates?: Record<string, PptxElement[]>;
 	zoom: number;
 }
 export function createSlideSorterState(
@@ -35,6 +44,18 @@ export function selectSorterSlide(
 	if (!slide || (context && state.selectedIds.includes(slide.id))) {
 		return state;
 	}
+	if (!context && modifiers.shiftKey) {
+		const range = slides
+			.slice(Math.min(state.anchor, index), Math.max(state.anchor, index) + 1)
+			.map((s) => s.id);
+		return {
+			...state,
+			selectedIds:
+				modifiers.ctrlKey || modifiers.metaKey
+					? [...new Set([...state.selectedIds, ...range])]
+					: range,
+		};
+	}
 	if (!context && (modifiers.ctrlKey || modifiers.metaKey)) {
 		return {
 			...state,
@@ -42,14 +63,6 @@ export function selectSorterSlide(
 			selectedIds: state.selectedIds.includes(slide.id)
 				? state.selectedIds.filter((id) => id !== slide.id)
 				: [...state.selectedIds, slide.id],
-		};
-	}
-	if (!context && modifiers.shiftKey) {
-		return {
-			...state,
-			selectedIds: slides
-				.slice(Math.min(state.anchor, index), Math.max(state.anchor, index) + 1)
-				.map((s) => s.id),
 		};
 	}
 	return { ...state, anchor: index, selectedIds: [slide.id] };
@@ -67,7 +80,9 @@ export function sorterMenuContext(
 	const indexes = sorterSelectionIndexes(state, slides);
 	return {
 		selectedCount: indexes.length,
-		hasClipboard: slideSorterPasteIndexes(state.clipboardIds, slides).length > 0,
+		hasClipboard: Boolean(
+			state.clipboardSlides?.length || slideSorterPasteIndexes(state.clipboardIds, slides).length,
+		),
 		hasHiddenInSelection: indexes.some((i) => slides[i].hidden),
 		hasVisibleInSelection: indexes.some((i) => !slides[i].hidden),
 		wouldDeleteAllSlides: indexes.length >= slides.length,
@@ -82,11 +97,14 @@ export function applySorterAction(
 	slides: readonly SorterSlide[],
 	action: SlideSorterKeyActionName | 'toggle-hidden',
 	active: number,
+	clipboardSourceSlides?: readonly PptxSlide[],
+	clipboardTemplates: Record<string, PptxElement[]> = {},
 ): {
 	state: SlideSorterState;
 	indexes: number[];
 	operation?: 'duplicate' | 'delete' | 'toggle-hidden';
 	close?: boolean;
+	paste?: SlidePasteRequest;
 } {
 	const indexes = sorterSelectionIndexes(state, slides);
 	switch (action) {
@@ -100,7 +118,21 @@ export function applySorterAction(
 		case 'selectAll':
 			return { state: { ...state, selectedIds: slides.map((s) => s.id) }, indexes: [] };
 		case 'copy':
-			return { state: { ...state, clipboardIds: indexes.map((i) => slides[i].id) }, indexes: [] };
+			return {
+				state: {
+					...state,
+					clipboardIds: indexes.map((i) => slides[i].id),
+					clipboardSlides: captureSlideClipboard(
+						clipboardSourceSlides ?? (slides as readonly PptxSlide[]),
+						indexes.map((i) => slides[i].id),
+					),
+					clipboardTemplates: captureSlideClipboardTemplates(
+						clipboardTemplates,
+						indexes.map((i) => slides[i].id),
+					),
+				},
+				indexes: [],
+			};
 		case 'zoomIn':
 		case 'zoomOut':
 			return {
@@ -113,11 +145,16 @@ export function applySorterAction(
 				indexes: [],
 			};
 		case 'paste':
-			return {
-				state,
-				indexes: slideSorterPasteIndexes(state.clipboardIds, slides).reverse(),
-				operation: 'duplicate',
-			};
+			if (!state.clipboardSlides?.length) return { state, indexes: [] };
+			{
+				const insertAt = sorterPasteInsertAt(indexes, active, slides.length);
+				const paste = createSlidePaste(state.clipboardSlides, insertAt, state.clipboardTemplates);
+				return {
+					state: { ...state, selectedIds: paste.copies.map((slide) => slide.id), anchor: insertAt },
+					indexes: [],
+					paste,
+				};
+			}
 		case 'delete':
 			return {
 				state: indexes.length < slides.length ? { ...state, selectedIds: [] } : state,
@@ -128,4 +165,13 @@ export function applySorterAction(
 		case 'toggle-hidden':
 			return { state, indexes: indexes.reverse(), operation: action };
 	}
+}
+
+/** The destination follows the last selected tile, or the active slide. */
+export function sorterPasteInsertAt(
+	indexes: readonly number[],
+	active: number,
+	slideCount: number,
+): number {
+	return Math.min(slideCount, Math.max(0, (indexes.at(-1) ?? active) + 1));
 }

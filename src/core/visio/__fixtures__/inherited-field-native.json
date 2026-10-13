@@ -1,0 +1,29 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "id": 1,
+      "value": "42",
+      "text": "42",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 2,
+      "value": "Ready",
+      "text": "Ready",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 3,
+      "value": "73.50",
+      "text": "73.50",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 4,
+      "value": "",
+      "text": "",
+      "format": "FIELDPICTURE(0)"
+    }
+  ]
+}
