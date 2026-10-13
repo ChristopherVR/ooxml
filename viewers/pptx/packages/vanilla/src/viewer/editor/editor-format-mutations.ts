@@ -132,8 +132,9 @@ export function patchTextStyle(el: PptxElement, patch: Partial<TextStyle>): Part
 		return {};
 	}
 	const textStyle: TextStyle = mergeTextStyleUpdate(el.textStyle, patch);
+	const inherited = el.textStyle;
 	const segments: TextSegment[] | undefined = el.textSegments?.map((seg) =>
-		updateTextSegmentStyle(seg, patch),
+		updateTextSegmentStyle(seg, patch, { inherited }),
 	);
 	return segments ? { textStyle, textSegments: segments } : { textStyle };
 }

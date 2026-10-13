@@ -5,7 +5,10 @@ import { setFontFamily } from './editor-format-mutations';
 
 const sameFace = { fontFamily: 'Old Sans', eastAsiaFont: 'Old Sans' };
 
-function textBox(): PptxElement {
+/** A run that inherits its Latin face from the box but names the old face in `a:ea`. */
+const inheritsLatin = { eastAsiaFont: 'Old Sans', bold: true };
+
+function textBox(runStyle: TextSegment['style'] = sameFace): PptxElement {
 	return {
 		type: 'text',
 		id: 'box',
@@ -15,7 +18,7 @@ function textBox(): PptxElement {
 		height: 40,
 		text: 'Sample',
 		textStyle: { ...sameFace },
-		textSegments: [{ text: 'Sample', style: { ...sameFace } }],
+		textSegments: [{ text: 'Sample', style: { ...runStyle } }],
 	} as PptxElement;
 }
 
@@ -30,6 +33,18 @@ describe('setFontFamily on a whole text box', () => {
 		expect(patch.textSegments[0]?.style).toMatchObject({
 			fontFamily: 'New Serif',
 			eastAsiaFont: 'New Serif',
+		});
+	});
+
+	it('carries an east Asian face that matched the inherited Latin face', () => {
+		const patch = setFontFamily(textBox(inheritsLatin), 'New Serif') as {
+			textSegments: TextSegment[];
+		};
+
+		expect(patch.textSegments[0]?.style).toStrictEqual({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'New Serif',
+			bold: true,
 		});
 	});
 });
