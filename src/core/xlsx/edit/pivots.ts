@@ -174,6 +174,9 @@ export function createPivotTable(
 		valueField: options.valueField,
 		aggregate,
 		valueCaption: pivotCaption(aggregate, options.valueField),
+		...(options.pageFilter !== undefined
+			? { pageFilter: structuredClone(options.pageFilter) }
+			: {}),
 		...(options.valuesAxis !== undefined ? { valuesAxis: options.valuesAxis } : {}),
 		...(options.valuesPosition !== undefined ? { valuesPosition: options.valuesPosition } : {}),
 		...(options.additionalValues
@@ -220,6 +223,10 @@ export function refreshPivotTable(
 	if (patch.layout !== undefined) next.layout = patch.layout;
 	if (patch.subtotalPosition !== undefined) next.subtotalPosition = patch.subtotalPosition;
 	if (patch.valuesAxis !== undefined) next.valuesAxis = patch.valuesAxis;
+	if (patch.pageFilter !== undefined) {
+		if (patch.pageFilter === null) delete next.pageFilter;
+		else next.pageFilter = structuredClone(patch.pageFilter);
+	}
 	if (patch.valuesPosition !== undefined) next.valuesPosition = patch.valuesPosition;
 	else if (patch.valuesAxis === 'columns' || patch.secondRowField === '')
 		delete next.valuesPosition;

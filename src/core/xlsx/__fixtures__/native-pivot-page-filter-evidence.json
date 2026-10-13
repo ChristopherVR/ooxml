@@ -1,0 +1,995 @@
+{
+  "source": "Owned synthetic workbooks created with desktop Excel; no user documents",
+  "excelFileVersion": "16.0.20430.20146",
+  "oracle": "scripts/xlsx-pivot-page-oracle.ps1",
+  "acceptance": "scripts/xlsx-pivot-acceptance.ps1 -ReportFiltersOnly",
+  "nativeAcceptedCases": 395,
+  "newReportFilterCases": 85,
+  "profiles": [
+    {
+      "profile": "compact-All",
+      "values": [
+        [
+          "Region",
+          "(All)",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Column Labels",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2025,
+          null,
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Row Labels",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          10,
+          1,
+          10,
+          27,
+          2,
+          13.5,
+          37,
+          3,
+          12.333333333333334
+        ],
+        [
+          "Veg",
+          5,
+          1,
+          5,
+          15,
+          1,
+          15,
+          20,
+          2,
+          10
+        ],
+        [
+          "Grand Total",
+          15,
+          2,
+          7.5,
+          42,
+          3,
+          14,
+          57,
+          5,
+          11.4
+        ]
+      ],
+      "pageItem": "(All)",
+      "tableRange2": "$A$1:$J$8",
+      "tableRange1": "$A$3:$J$8"
+    },
+    {
+      "profile": "compact-East",
+      "values": [
+        [
+          "Region",
+          "East",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Column Labels",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2025,
+          null,
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Row Labels",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          10,
+          1,
+          10,
+          7,
+          1,
+          7,
+          17,
+          2,
+          8.5
+        ],
+        [
+          "Veg",
+          5,
+          1,
+          5,
+          null,
+          null,
+          null,
+          5,
+          1,
+          5
+        ],
+        [
+          "Grand Total",
+          15,
+          2,
+          7.5,
+          7,
+          1,
+          7,
+          22,
+          3,
+          7.333333333333333
+        ]
+      ],
+      "pageItem": "East",
+      "tableRange2": "$A$1:$J$8",
+      "tableRange1": "$A$3:$J$8"
+    },
+    {
+      "profile": "compact-West",
+      "values": [
+        [
+          "Region",
+          "West",
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Column Labels",
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Row Labels",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          20,
+          1,
+          20,
+          20,
+          1,
+          20
+        ],
+        [
+          "Veg",
+          15,
+          1,
+          15,
+          15,
+          1,
+          15
+        ],
+        [
+          "Grand Total",
+          35,
+          2,
+          17.5,
+          35,
+          2,
+          17.5
+        ]
+      ],
+      "pageItem": "West",
+      "tableRange2": "$A$1:$G$8",
+      "tableRange1": "$A$3:$G$8"
+    },
+    {
+      "profile": "outline-All",
+      "values": [
+        [
+          "Region",
+          "(All)",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Year",
+          "Values",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2025,
+          null,
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Category",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          10,
+          1,
+          10,
+          27,
+          2,
+          13.5,
+          37,
+          3,
+          12.333333333333334
+        ],
+        [
+          "Veg",
+          5,
+          1,
+          5,
+          15,
+          1,
+          15,
+          20,
+          2,
+          10
+        ],
+        [
+          "Grand Total",
+          15,
+          2,
+          7.5,
+          42,
+          3,
+          14,
+          57,
+          5,
+          11.4
+        ]
+      ],
+      "pageItem": "(All)",
+      "tableRange2": "$A$1:$J$8",
+      "tableRange1": "$A$3:$J$8"
+    },
+    {
+      "profile": "outline-East",
+      "values": [
+        [
+          "Region",
+          "East",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Year",
+          "Values",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2025,
+          null,
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Category",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          10,
+          1,
+          10,
+          7,
+          1,
+          7,
+          17,
+          2,
+          8.5
+        ],
+        [
+          "Veg",
+          5,
+          1,
+          5,
+          null,
+          null,
+          null,
+          5,
+          1,
+          5
+        ],
+        [
+          "Grand Total",
+          15,
+          2,
+          7.5,
+          7,
+          1,
+          7,
+          22,
+          3,
+          7.333333333333333
+        ]
+      ],
+      "pageItem": "East",
+      "tableRange2": "$A$1:$J$8",
+      "tableRange1": "$A$3:$J$8"
+    },
+    {
+      "profile": "outline-West",
+      "values": [
+        [
+          "Region",
+          "West",
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Year",
+          "Values",
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Category",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          20,
+          1,
+          20,
+          20,
+          1,
+          20
+        ],
+        [
+          "Veg",
+          15,
+          1,
+          15,
+          15,
+          1,
+          15
+        ],
+        [
+          "Grand Total",
+          35,
+          2,
+          17.5,
+          35,
+          2,
+          17.5
+        ]
+      ],
+      "pageItem": "West",
+      "tableRange2": "$A$1:$G$8",
+      "tableRange1": "$A$3:$G$8"
+    },
+    {
+      "profile": "tabular-All",
+      "values": [
+        [
+          "Region",
+          "(All)",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Year",
+          "Values",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2025,
+          null,
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Category",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          10,
+          1,
+          10,
+          27,
+          2,
+          13.5,
+          37,
+          3,
+          12.333333333333334
+        ],
+        [
+          "Veg",
+          5,
+          1,
+          5,
+          15,
+          1,
+          15,
+          20,
+          2,
+          10
+        ],
+        [
+          "Grand Total",
+          15,
+          2,
+          7.5,
+          42,
+          3,
+          14,
+          57,
+          5,
+          11.4
+        ]
+      ],
+      "pageItem": "(All)",
+      "tableRange2": "$A$1:$J$8",
+      "tableRange1": "$A$3:$J$8"
+    },
+    {
+      "profile": "tabular-East",
+      "values": [
+        [
+          "Region",
+          "East",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Year",
+          "Values",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2025,
+          null,
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Category",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          10,
+          1,
+          10,
+          7,
+          1,
+          7,
+          17,
+          2,
+          8.5
+        ],
+        [
+          "Veg",
+          5,
+          1,
+          5,
+          null,
+          null,
+          null,
+          5,
+          1,
+          5
+        ],
+        [
+          "Grand Total",
+          15,
+          2,
+          7.5,
+          7,
+          1,
+          7,
+          22,
+          3,
+          7.333333333333333
+        ]
+      ],
+      "pageItem": "East",
+      "tableRange2": "$A$1:$J$8",
+      "tableRange1": "$A$3:$J$8"
+    },
+    {
+      "profile": "tabular-West",
+      "values": [
+        [
+          "Region",
+          "West",
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          "Year",
+          "Values",
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          2026,
+          null,
+          null,
+          "Total Sum of Amount",
+          "Total Count of Quantity",
+          "Total Average of Amount"
+        ],
+        [
+          "Category",
+          "Sum of Amount",
+          "Count of Quantity",
+          "Average of Amount",
+          null,
+          null,
+          null
+        ],
+        [
+          "Fruit",
+          20,
+          1,
+          20,
+          20,
+          1,
+          20
+        ],
+        [
+          "Veg",
+          15,
+          1,
+          15,
+          15,
+          1,
+          15
+        ],
+        [
+          "Grand Total",
+          35,
+          2,
+          17.5,
+          35,
+          2,
+          17.5
+        ]
+      ],
+      "pageItem": "West",
+      "tableRange2": "$A$1:$G$8",
+      "tableRange1": "$A$3:$G$8"
+    },
+    {
+      "profile": "blank",
+      "captionType": "System.String",
+      "values": [
+        [
+          "Region",
+          "(blank)"
+        ],
+        [
+          null,
+          null
+        ],
+        [
+          "Category",
+          "Sum of Amount"
+        ],
+        [
+          "Fruit",
+          10
+        ],
+        [
+          "Veg",
+          5
+        ],
+        [
+          "Grand Total",
+          15
+        ]
+      ]
+    },
+    {
+      "profile": "boolean",
+      "captionType": "System.String",
+      "values": [
+        [
+          "Region",
+          "TRUE"
+        ],
+        [
+          null,
+          null
+        ],
+        [
+          "Category",
+          "Sum of Amount"
+        ],
+        [
+          "Fruit",
+          10
+        ],
+        [
+          "Veg",
+          5
+        ],
+        [
+          "Grand Total",
+          15
+        ]
+      ]
+    },
+    {
+      "profile": "error",
+      "captionType": "System.String",
+      "values": [
+        [
+          "Region",
+          "#N/A"
+        ],
+        [
+          null,
+          null
+        ],
+        [
+          "Category",
+          "Sum of Amount"
+        ],
+        [
+          "Fruit",
+          10
+        ],
+        [
+          "Veg",
+          5
+        ],
+        [
+          "Grand Total",
+          15
+        ]
+      ]
+    },
+    {
+      "profile": "number",
+      "captionType": "System.Double",
+      "values": [
+        [
+          "Region",
+          2025
+        ],
+        [
+          null,
+          null
+        ],
+        [
+          "Category",
+          "Sum of Amount"
+        ],
+        [
+          "Fruit",
+          10
+        ],
+        [
+          "Veg",
+          5
+        ],
+        [
+          "Grand Total",
+          15
+        ]
+      ]
+    }
+  ],
+  "limits": "One real row field, Values on columns, 1..16 measures, uniform tabular/compact/outline, optional one column field and one separate report field. All or exact one cached typed literal, no ambiguous captions. Multiple/dynamic filters, nested row fields, Values on rows, custom page captions/layouts, grouping, slicers and shared caches remain preserved unsupported."
+}

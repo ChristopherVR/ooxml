@@ -1,6 +1,7 @@
 import { rangeContains, type CellAddress } from '../address';
 import { type CellValue, type PivotTable, type Worksheet } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
+import { pivotPageProjection, prependPivotPage } from './page-filter';
 import { hierarchicalPivotGrid } from './hierarchy';
 import { pivotHeaderDimensions, pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
 
@@ -19,6 +20,9 @@ export interface PivotGrid {
 /** Pivot output, including grand totals computed from source records (not averages of cells). */
 export function pivotGrid(pivot: PivotTable): PivotGrid {
 	validatePivotFields(pivot);
+	return prependPivotPage(pivotDataGrid(pivotPageProjection(pivot)), pivot);
+}
+function pivotDataGrid(pivot: PivotTable): PivotGrid {
 	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];

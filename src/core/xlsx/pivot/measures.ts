@@ -62,18 +62,18 @@ export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][])
 
 /** Allocation-free header dimensions, including one totals column for every measure. */
 export function pivotHeaderDimensions(
-	pivot: Pick<PivotTable, 'columnField' | 'additionalValues' | 'valuesAxis'>,
+	pivot: Pick<PivotTable, 'columnField' | 'additionalValues' | 'valuesAxis' | 'pageFilter'>,
 	columnItems: number,
 	rowLabels: number,
 ): { rows: number; width: number } {
 	const measures = 1 + (pivot.additionalValues?.length ?? 0);
 	if (pivot.valuesAxis === 'rows')
 		return {
-			rows: pivot.columnField ? 2 : 1,
+			rows: (pivot.columnField ? 2 : 1) + (pivot.pageFilter ? 2 : 0),
 			width: rowLabels + (pivot.columnField ? columnItems + 1 : 1),
 		};
 	return {
-		rows: pivot.columnField ? (measures > 1 ? 3 : 2) : 1,
+		rows: (pivot.columnField ? (measures > 1 ? 3 : 2) : 1) + (pivot.pageFilter ? 2 : 0),
 		width:
 			rowLabels +
 			(pivot.columnField

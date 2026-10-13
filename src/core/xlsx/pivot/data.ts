@@ -3,6 +3,7 @@ import { isCellError, type CellValue, type PivotTable, type Workbook } from '../
 import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
 import { parseXml } from '../../xml/index';
+import { validatePivotPageFilter } from './page-filter';
 
 export const PIVOT_AGGREGATES = ['sum', 'count', 'average', 'min', 'max'] as const;
 
@@ -45,7 +46,10 @@ export function pivotValueKey(value: CellValue): string {
 			: `${typeof value}:${String(value).toLowerCase()}`;
 }
 
-export function pivotItems(pivot: PivotTable, field: string): CellValue[] {
+export function pivotItems(
+	pivot: Pick<PivotTable, 'fields' | 'records'>,
+	field: string,
+): CellValue[] {
 	const index = pivot.fields.indexOf(field);
 	const items = new Map<string, CellValue>();
 	for (const record of pivot.records) {
@@ -100,8 +104,10 @@ export function validatePivotFields(
 		| 'sourceXml'
 		| 'valuesAxis'
 		| 'valuesPosition'
+		| 'pageFilter'
 	>,
 ): void {
+	validatePivotPageFilter(pivot);
 	const used = [
 		pivot.rowField,
 		...(pivot.secondRowField ? [pivot.secondRowField] : []),

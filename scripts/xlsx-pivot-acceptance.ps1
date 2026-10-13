@@ -1,3 +1,4 @@
+param([switch]$ReportFiltersOnly)
 # Manual acceptance against installed desktop Excel; outputs stay in a temporary folder.
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
@@ -243,6 +244,27 @@ for(const from of ['tabular','compact','outline'])for(const to of ['tabular','co
  if(from===to)continue;const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',firstFile(from)))));createEditSession(wb).refreshPivotTable(0,'SalesPivot',{layout:to});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-first-convert-'+from+'-'+to;
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
 }
+for(const layout of ['tabular','compact','outline'])for(const profile of ['all','east','west','all-columns','east-columns','west-columns','two','sixteen','min-max','numeric','boolean','blank','error','sparse','single','single-columns','false','numeric-other','aggregate-error']) {
+ const wb=createWorkbook({sheets:['Data','Summary']});const edit=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ let item=profile.startsWith('west')?'West':'East';
+ if(profile==='numeric'||profile==='numeric-other'){for(let r=1;r<rows.length;r++)rows[r][1]=rows[r][1]==='East'?2025:2026;item=profile==='numeric-other'?2026:2025;}
+ if(profile==='boolean'||profile==='false'){for(let r=1;r<rows.length;r++)rows[r][1]=rows[r][1]==='East';item=profile!=='false';}
+ if(profile==='blank'){for(let r=1;r<rows.length;r++)if(rows[r][1]==='East')rows[r][1]='';item=null;}
+ if(profile==='error'){for(let r=1;r<rows.length;r++)if(rows[r][1]==='East')rows[r][1]='=NA()';item={error:'#N/A'};}
+ if(profile==='sparse')rows[3][1]='North';if(profile==='aggregate-error')rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((v,c)=>edit.setCellInput(0,r,c,String(v))));
+ const extra=profile.startsWith('single')?[]:profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+i})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ edit.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout,additionalValues:extra,pageFilter:{field:'Region',...(profile.startsWith('all')?{}:{item})},...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
+ const mode='page-values-'+layout+'-'+profile+(profile==='single-columns'?'-single':'');const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+}
+for(const profile of ['tabular-all','compact-west','outline-east','tabular-number','tabular-boolean','tabular-blank','tabular-error'])for(const change of ['refresh','all','remove','source']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-page-'+profile+'.xlsx'))));const session=createEditSession(wb);if(change==='source')session.setCellInput(1,1,2,'100');
+ session.refreshPivotTable(0,'SalesPivot',change==='all'?{pageFilter:{field:'Region'}}:change==='remove'?{pageFilter:null}:{});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);
+ const mode='page-values-import-'+profile+'-'+change+(wb.sheets[0].pivotTables[0].additionalValues?.length?'':'-single');
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+}
 '@ | Set-Content -LiteralPath $taskScript -Encoding utf8
 	& bun run $taskScript
 	if ($LASTEXITCODE -ne 0) { throw 'PivotTable generation failed.' }
@@ -250,6 +272,7 @@ for(const from of ['tabular','compact','outline'])for(const to of ['tabular','co
 	$excel.Visible = $false; $excel.DisplayAlerts = $false
 	Write-Output ('Native Excel version: '+$excel.Version+', build: '+$excel.Build)
 	Write-Output ('Native Excel file version: '+[Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $excel.Path 'EXCEL.EXE')).FileVersion)
+	if(-not $ReportFiltersOnly){
 	foreach ($case in @(@{ Name='sum'; Total=57 }, @{ Name='count'; Total=5 }, @{ Name='average'; Total=11.4 }, @{ Name='min'; Total=5 }, @{ Name='max'; Total=20 }, @{ Name='imported'; Total=147 }, @{ Name='count-row'; Total=5 }, @{ Name='deleted'; Total=$null })) {
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($case.Name+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
@@ -271,13 +294,15 @@ for(const from of ['tabular','compact','outline'])for(const to of ['tabular','co
 		Write-Output ($case.Name+': native Excel accepted cached and refreshed output')
 		$book.Close($false); $book = $null
 	}
-	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json') {
+	}
+	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json' | Where-Object { !$ReportFiltersOnly -or $_.BaseName.StartsWith('page-values-') }) {
 		$mode=$expectedFile.BaseName
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($mode+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
 		$pivot = $summary.PivotTables().Item(1)
 		if ($mode.Contains('values') -and $pivot.DataFields().Count -ne $(if($mode.EndsWith('single') -or $mode.EndsWith('to-one-measure')){1}elseif($mode.EndsWith('two')){2}elseif($mode.EndsWith('sixteen')){16}else{3})) { throw ('Wrong PivotTable measure count: '+$mode) }
-		$rowFieldCount = if ($mode.StartsWith('nested-row-values-') -and !$mode.EndsWith('to-columns') -and !$mode.EndsWith('to-one-measure')) { 3 } elseif ($mode.StartsWith('cache-')) { 1 } else { 2 }
+		$rowFieldCount = if ($mode.StartsWith('nested-row-values-') -and !$mode.EndsWith('to-columns') -and !$mode.EndsWith('to-one-measure')) { 3 } elseif ($mode.StartsWith('cache-') -or $mode.StartsWith('page-values-')) { 1 } else { 2 }
+		if($mode.StartsWith('page-values-') -and $pivot.PageFields().Count -ne $(if($mode.Contains('-remove')){0}else{1})){throw ('Wrong report filter count: '+$mode)}
 		if ($pivot.RowFields().Count -ne $rowFieldCount) { throw ('Wrong PivotTable row field count: '+$mode) }
 		$expected = Get-Content -Raw -LiteralPath (Join-Path $taskFolder ($mode+'.json')) | ConvertFrom-Json
 		foreach ($phase in @('cached','refreshed')) {

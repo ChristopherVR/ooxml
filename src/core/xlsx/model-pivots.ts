@@ -3,6 +3,11 @@ import type { CellValue } from './model';
 
 export type PivotAggregate = 'sum' | 'count' | 'average' | 'min' | 'max';
 export type PivotLayout = 'tabular' | 'compact' | 'outline';
+export interface PivotPageFilter {
+	field: string;
+	/** Omitted means All; null selects the cached blank item. */
+	item?: CellValue;
+}
 export interface PivotValueField {
 	field: string;
 	aggregate: PivotAggregate;
@@ -28,6 +33,7 @@ export interface PivotTable {
 	/** Repeat outer labels on detail rows. Defaults to false. */
 	repeatLabels?: boolean;
 	columnField?: string;
+	pageFilter?: PivotPageFilter;
 	valueField: string;
 	aggregate: PivotAggregate;
 	valueCaption: string;
@@ -57,6 +63,7 @@ export interface PivotTableOptions {
 	subtotals?: boolean;
 	repeatLabels?: boolean;
 	columnField?: string;
+	pageFilter?: PivotPageFilter;
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
@@ -80,4 +87,4 @@ export type PivotTablePatch = Partial<
 		| 'valuesAxis'
 		| 'valuesPosition'
 	>
-> & { additionalValues?: PivotValueFieldOptions[] };
+> & { additionalValues?: PivotValueFieldOptions[]; pageFilter?: PivotPageFilter | null };

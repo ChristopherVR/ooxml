@@ -1,4 +1,5 @@
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
+import { pivotItems } from './data';
 import { formatRange } from '../address';
 import type { PivotTable } from '../model';
 import { XML_HEADER, attrs, encodeEscapes } from '../write/xml-out';
@@ -13,6 +14,19 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const grid = pivotGrid(pivot);
 	const row = pivot.fields.indexOf(pivot.rowField);
 	const second = pivot.secondRowField ? pivot.fields.indexOf(pivot.secondRowField) : -1;
+	const page = pivot.pageFilter ? pivot.fields.indexOf(pivot.pageFilter.field) : -1;
+	const pageItems = page >= 0 ? pivotItems(pivot, pivot.pageFilter!.field) : [];
+	const axisItems = (field: string, visible: typeof grid.rowItems) =>
+		page >= 0 ? pivotItems(pivot, field) : visible;
+	const rowItemsFull = axisItems(pivot.rowField, grid.rowItems);
+	const columnItemsFull = pivot.columnField ? axisItems(pivot.columnField, grid.columnItems) : [];
+	const itemIndices = (visible: typeof grid.rowItems, full: typeof grid.rowItems) => {
+		const indices = new Map(full.map((item, index) => [pivotValueKey(item), index]));
+		return visible.map((v) => indices.get(pivotValueKey(v))!);
+	};
+	const rowIndicesFull = itemIndices(grid.rowItems, rowItemsFull),
+		columnIndicesFull = itemIndices(grid.columnItems, columnItemsFull);
+	const pageOffset = page >= 0 ? 2 : 0;
 	const col = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
 	const measures = pivotMeasures(pivot);
 	const multiple = measures.length > 1;
@@ -23,25 +37,32 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const fields = pivot.fields
 		.map((_field, index) => {
 			const items =
-				index === row
-					? grid.rowItems
-					: index === second
-						? grid.secondRowItems
-						: index === col
-							? grid.columnItems
-							: undefined;
+				index === page
+					? pageItems
+					: index === row
+						? rowItemsFull
+						: index === second
+							? grid.secondRowItems
+							: index === col
+								? columnItemsFull
+								: undefined;
 			const subtotal = !(index === row && pivot.subtotals === false);
 			const repeated =
 				pivot.repeatLabels && (index === row || index === second)
 					? '<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" fillDownLabels="1"/></ext></extLst>'
 					: '';
-			return `<pivotField${attrs({ axis: index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
+			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
 		})
 		.join('');
-	const items = (count: number) =>
-		Array.from({ length: count }, (_v, i) => `<i><x v="${i}"/></i>`).join('') +
+	const items = (count: number, indices?: number[]) =>
+		Array.from({ length: count }, (_v, i) => `<i><x v="${indices?.[i] ?? i}"/></i>`).join('') +
 		'<i t="grand"><x/></i>';
-	const header = grid.firstHeaderRow ?? (multiple && col >= 0 ? 1 : grid.firstDataRow - 1);
+	const header =
+		grid.firstHeaderRow !== undefined
+			? grid.firstHeaderRow - pageOffset
+			: multiple && col >= 0
+				? 1
+				: grid.firstDataRow - pageOffset - 1;
 	const rowIndices =
 		rowsAxis && pivot.valuesPosition === 'first'
 			? [-2, row, second]
@@ -66,16 +87,20 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 					.map((index) => `<x${attrs({ v: index || undefined })}/>`)
 					.join('')}</i>`;
 			})
-			.join('') ?? items(grid.rowItems.length);
-	let body = `<location${attrs({ ref: formatRange(pivot.location), firstHeaderRow: header, firstDataRow: grid.firstDataRow, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
+			.join('') ?? items(grid.rowItems.length, rowIndicesFull);
+	let body = `<location${attrs({ ref: formatRange({ ...pivot.location, start: { ...pivot.location.start, row: pivot.location.start.row + pageOffset } }), firstHeaderRow: header, firstDataRow: grid.firstDataRow - pageOffset, rowPageCount: page >= 0 ? 1 : undefined, colPageCount: page >= 0 ? 1 : undefined, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
 	if (multiple && !rowsAxis)
-		body += `<colFields count="${col >= 0 ? 2 : 1}">${col >= 0 ? `<field x="${col}"/>` : ''}<field x="-2"/></colFields>${pivotValueAxisItems(measures.length, col >= 0 ? grid.columnItems.length : undefined)}`;
+		body += `<colFields count="${col >= 0 ? 2 : 1}">${col >= 0 ? `<field x="${col}"/>` : ''}<field x="-2"/></colFields>${pivotValueAxisItems(measures.length, col >= 0 ? grid.columnItems.length : undefined, columnIndicesFull)}`;
 	else if (col >= 0)
-		body += `<colFields count="1"><field x="${col}"/></colFields><colItems count="${grid.columnItems.length + 1}">${items(grid.columnItems.length)}</colItems>`;
+		body += `<colFields count="1"><field x="${col}"/></colFields><colItems count="${grid.columnItems.length + 1}">${items(grid.columnItems.length, columnIndicesFull)}</colItems>`;
 	else
 		body += rowsAxis
 			? '<colItems count="1"><i/></colItems>'
-			: '<colItems count="1"><i><x/></i></colItems>';
+			: page >= 0
+				? '<colItems count="1"><i/></colItems>'
+				: '<colItems count="1"><i><x/></i></colItems>';
+	if (page >= 0)
+		body += `<pageFields count="1"><pageField${attrs({ fld: page, hier: -1, item: pivot.pageFilter!.item !== undefined ? pageItems.findIndex((item) => pivotValueKey(item) === pivotValueKey(pivot.pageFilter!.item!)) : undefined })}/></pageFields>`;
 	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: pivot.fields.indexOf(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0 })}/>`).join('')}</dataFields>`;
 	const doc = parseXml(
 		pivot.sourceXml ??
@@ -136,6 +161,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 		'colFields',
 		'colItems',
 		'dataFields',
+		'pageFields',
 	]);
 	for (const child of elements(root)) if (replaced.has(child.localName!)) root.removeChild(child);
 	const replacement = parseXml(`<root xmlns="${NS.x}">${body}</root>`).documentElement;

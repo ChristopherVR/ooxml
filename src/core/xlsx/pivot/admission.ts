@@ -5,7 +5,9 @@ const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefa
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
 		'name cacheId dataCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
-	location: 'ref firstHeaderRow firstDataRow firstDataCol',
+	location: 'ref firstHeaderRow firstDataRow firstDataCol rowPageCount colPageCount',
+	pageFields: 'count',
+	pageField: 'fld item hier',
 	pivotFields: 'count',
 	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
 	items: 'count',

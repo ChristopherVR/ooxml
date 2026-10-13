@@ -1,4 +1,4 @@
-param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [switch]$ShowValuesRow, [switch]$ValuesOnRows, [ValidateSet('last','between','first')][string]$ValuesPosition='last', [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
+param([string]$PageField='', [string]$PageItem='(All)', [switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [switch]$ShowValuesRow, [switch]$ValuesOnRows, [ValidateSet('last','between','first')][string]$ValuesPosition='last', [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
 # Requires desktop Excel. Generates a tabular PivotTable reference.
 $ErrorActionPreference = 'Stop'
 if ($ValuesPosition -ne 'last' -and (!$ValuesOnRows -or !$Hierarchy)) { throw 'Non-last row Values references require two real row fields.' }
@@ -12,11 +12,13 @@ if ($Hierarchy) {
 }
 $excel = New-Object -ComObject Excel.Application
 if ($MultiValues) {
-	$prefix = if ($ValuesOnRows) { 'excel-pivot-row-values'+$(if($Layout -ne 'tabular'){'-'+$Layout}else{''}) } elseif ($Layout -eq 'tabular') { 'excel-pivot-values' } else { 'excel-pivot-values-'+$Layout }
+	$prefix = if ($PageField) { if($Hierarchy -or $ValuesOnRows){throw 'Report-filter fixtures require one row field and Values on columns.'};$pivot.PivotFields($PageField).Orientation=3;if($PageItem -ne '(All)'){$pivot.PivotFields($PageField).CurrentPage=$PageItem} }
+	if ($ValuesOnRows) { 'excel-pivot-row-values'+$(if($Layout -ne 'tabular'){'-'+$Layout}else{''}) } elseif ($Layout -eq 'tabular') { 'excel-pivot-values' } else { 'excel-pivot-values-'+$Layout }
 	$rowsSuffix = if ($Hierarchy) { '-rows'+$(if($Layout -ne 'tabular'){'-'+$SubtotalPosition}else{''}) } else { '' }
 	$optionsSuffix = if($NoSubtotals){'-no-subtotals'}elseif($RepeatLabels){'-repeat'}else{''}
 	$out = Join-Path $PSScriptRoot ($prefix+$rowsSuffix+$(if($ValuesOnRows -and $ValuesPosition -ne 'last'){'-'+$ValuesPosition}else{''})+$(if($ColumnAxis){'-columns'}else{''})+$optionsSuffix+'.xlsx')
 }
+if ($PageField) { $out=Join-Path $PSScriptRoot ('excel-pivot-page-'+$Layout+'-'+$(if($PageItem -eq '(All)'){'all'}else{$PageItem.ToLowerInvariant()})+'.xlsx') }
 if ($ShowValuesRow) { $out = Join-Path $PSScriptRoot 'excel-pivot-visible-values.xlsx' }
 $excel.Visible = $false
 $excel.DisplayAlerts = $false
@@ -46,6 +48,7 @@ try {
 		[void]$pivot.AddDataField($pivot.PivotFields('Quantity'), 'Count of Quantity', -4112)
 		[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Average of Amount', -4106)
 	}
+	if ($PageField) { if($Hierarchy -or $ValuesOnRows){throw 'Report-filter fixtures require one row field and Values on columns.'};$pivot.PivotFields($PageField).Orientation=3;if($PageItem -ne '(All)'){$pivot.PivotFields($PageField).CurrentPage=$PageItem} }
 	if ($ValuesOnRows) { $pivot.DataPivotField.Orientation = 1; $pivot.DataPivotField.Position = if ($ValuesPosition -eq 'first') { 1 } elseif ($ValuesPosition -eq 'between') { 2 } elseif ($Hierarchy) { 3 } else { 2 } }
 	if ($ShowValuesRow) { $pivot.ShowValuesRow = $true }
 	if ($Hierarchy) {

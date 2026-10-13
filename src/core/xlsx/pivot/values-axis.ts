@@ -18,7 +18,11 @@ export function pivotValueIndex(root: XmlElement, axis: readonly XmlElement[]): 
 	return index;
 }
 /** Native Values-on-columns entries, with each measure nested inside each column item. */
-export function pivotValueAxisItems(measures: number, columns?: number): string {
+export function pivotValueAxisItems(
+	measures: number,
+	columns?: number,
+	columnIndices?: readonly number[],
+): string {
 	const entries: string[] = [];
 	if (columns === undefined) {
 		for (let measure = 0; measure < measures; measure++)
@@ -29,7 +33,7 @@ export function pivotValueAxisItems(measures: number, columns?: number): string 
 		for (let column = 0; column < columns; column++)
 			for (let measure = 0; measure < measures; measure++) {
 				entries.push(
-					`<i${attrs({ r: measure ? 1 : undefined, i: measure || undefined })}>${measure ? '' : `<x${attrs({ v: column || undefined })}/>`}<x${attrs({ v: measure || undefined })}/></i>`,
+					`<i${attrs({ r: measure ? 1 : undefined, i: measure || undefined })}>${measure ? '' : `<x${attrs({ v: (columnIndices?.[column] ?? column) || undefined })}/>`}<x${attrs({ v: measure || undefined })}/></i>`,
 				);
 			}
 		for (let measure = 0; measure < measures; measure++)
