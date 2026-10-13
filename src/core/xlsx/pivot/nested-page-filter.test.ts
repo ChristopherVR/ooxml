@@ -10,7 +10,8 @@ import {
 } from '../index';
 import { pivotGrid } from './aggregate';
 import * as measures from './measures';
-import { children, first, NS, parseXml } from '../../xml/index';
+import { buildXml, children, elements, first, NS, parseXml } from '../../xml/index';
+import { assertPageAxisItems } from './page-filter-admission';
 import evidence from '../__fixtures__/native-pivot-nested-page-evidence.json';
 
 const native = (file = evidence.files[1]!.file) =>
@@ -180,4 +181,73 @@ it('preserves native repeated-column captions rather than discarding the extra h
 		(p) => p.startsWith('xl/pivot') && !source.files[p]!.dir,
 	))
 		expect(await saved.file(part)!.async('string')).toBe(await source.file(part)!.async('string'));
+});
+it.each(
+	[
+		'1',
+		'true',
+		' 1 ',
+		' true ',
+		'0',
+		'false',
+		' 0 ',
+		' false ',
+		'',
+		'TRUE',
+		'yes',
+		'2',
+		'0.0',
+	].flatMap((value) => [false, true].map((later) => [value, later] as const)),
+)('guards repeated-column value %j in a later extension %s', async (value, later) => {
+	const bytes = native('excel-pivot-nested-page-tabular-east-bottom-columns-repeat.xlsx');
+	const wb = await loadXlsx(bytes),
+		pivot = wb.sheets[0]!.pivotTables![0]!;
+	const source = await JSZip.loadAsync(bytes),
+		part = 'xl/pivotTables/pivotTable1.xml';
+	const root = parseXml(await source.file(part)!.async('string')).documentElement;
+	const column = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x)[3]!;
+	const list = parseXml(
+		`<extLst xmlns="${NS.x}">${later ? '<ext uri="{747A6164-185A-40DC-8AA5-F01512510D54}"/>' : ''}<ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" fillDownLabels="${value}"/></ext></extLst>`,
+	).documentElement;
+	column.appendChild(list);
+	const cache = parseXml(
+		await source.file('xl/pivotCache/pivotCacheDefinition1.xml')!.async('string'),
+	).documentElement;
+	const records = parseXml(
+		await source.file('xl/pivotCache/pivotCacheRecords1.xml')!.async('string'),
+	).documentElement;
+	const shared = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x).map((field) =>
+		elements(first(field, 'sharedItems', NS.x)!).map((item) =>
+			item.localName === 'n' ? Number(item.getAttribute('v')) : item.getAttribute('v'),
+		),
+	);
+	// Exercise this guard directly: generic extension admission is deliberately stricter (0/1).
+	const inspect = () => assertPageAxisItems(root, pivot, shared, cache, records);
+	if (['0', 'false'].includes(value.trim())) {
+		expect(inspect).not.toThrow();
+		if (value === '0') {
+			const changed = buildXml(root);
+			source.file(part, changed);
+			const loaded = await loadXlsx(await source.generateAsync({ type: 'uint8array' }));
+			expect(loaded.warnings).toEqual([]);
+			expect(loaded.sheets[0]!.pivotTables).toHaveLength(1);
+			const saved = await JSZip.loadAsync(await saveXlsx(loaded));
+			expect(await saved.file(part)!.async('string')).toBe(changed);
+		}
+		return;
+	}
+	expect(inspect).toThrow(
+		['1', 'true'].includes(value.trim())
+			? 'Repeated report column labels'
+			: 'Invalid report column label repetition',
+	);
+	const changed = buildXml(root);
+	source.file(part, changed);
+	const loaded = await loadXlsx(await source.generateAsync({ type: 'uint8array' }));
+	expect(loaded.sheets[0]!.pivotTables ?? []).toHaveLength(0);
+	const saved = await JSZip.loadAsync(await saveXlsx(loaded));
+	for (const name of Object.keys(source.files).filter(
+		(name) => name.startsWith('xl/pivot') && !source.files[name]!.dir,
+	))
+		expect(await saved.file(name)!.async('string')).toBe(await source.file(name)!.async('string'));
 });

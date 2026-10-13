@@ -4,6 +4,7 @@ import { pivotItems, pivotValueKey } from './data';
 import { pivotPageProjection } from './page-filter';
 import { pivotGrid } from './aggregate';
 import { remapPivotRowEntries } from './values-axis';
+import { booleanAttribute } from '../../drawingml/dom';
 const integer = (value: string | null, fallback?: number) =>
 	value === null
 		? (fallback ?? NaN)
@@ -37,13 +38,21 @@ export function assertPageAxisItems(
 		const column = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x)[
 			pivot.fields.indexOf(pivot.columnField)
 		];
-		const extension = first(first(column, 'extLst', NS.x), 'ext', NS.x);
+		const list = first(column, 'extLst', NS.x);
+		const extensions = list ? children(list, 'ext', NS.x) : [];
 		if (
-			first(
-				extension,
-				'pivotField',
-				'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
-			)?.getAttribute('fillDownLabels') === '1'
+			extensions.some((extension) =>
+				children(
+					extension,
+					'pivotField',
+					'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
+				).some((field) => {
+					const raw = field.getAttribute('fillDownLabels');
+					if (raw !== null && !['0', '1', 'false', 'true'].includes(raw.trim()))
+						throw new Error('Invalid report column label repetition');
+					return booleanAttribute(field, 'fillDownLabels') === true;
+				}),
+			)
 		)
 			throw new Error('Repeated report column labels are preserved');
 	}
