@@ -429,6 +429,16 @@ export interface PptxTableData {
 	lastCol?: boolean;
 	/** Table style ID from `a:tblPr/a:tblStyle@val` or `a:tblPr@tblStyle`. */
 	tableStyleId?: string;
+	/**
+	 * Set by a table style pick (which, like PowerPoint's, clears every cell's
+	 * direct fill and borders): the next save drops the direct `a:tcPr` fills,
+	 * lines and `a:cell3D` the cells' model styles no longer carry, even when
+	 * `tableStyleId` ends up equal to the file's (the same style picked again,
+	 * or a pick of B then back to A). Not read from or written to the file.
+	 * It stays set after a save, which is harmless: a later save only removes
+	 * children the model still has no value for.
+	 */
+	clearDirectCellFormatting?: boolean;
 	/** Number of rows per banding group (default 1). */
 	bandRowCycle?: number;
 	/** Number of columns per banding group (default 1). */
