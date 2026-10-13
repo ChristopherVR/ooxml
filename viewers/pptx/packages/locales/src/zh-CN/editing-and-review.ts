@@ -1,4 +1,7 @@
 export const translations = {
+	'pptx.findReplace.includeChartData': '包括图表系列和类别标签',
+	'pptx.findReplace.readOnlyChartText':
+		'可以查找链接或不受支持的图表文本，但必须在 PowerPoint 或其源工作簿中编辑。',
 	'pptx.findReplace.includeChartTitles': '包括图表标题',
 	'pptx.findReplace.readOnlyChartTitle':
 		'可以查找链接或复杂的图表标题，但必须在 PowerPoint 或其源工作簿中编辑。',

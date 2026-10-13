@@ -43,6 +43,7 @@
 		/>
 		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeNotes')} checked={findReplace.includeNotes} onchange={(e) => { findReplace.includeNotes = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeNotes')}</label>
 		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartTitles')} checked={findReplace.includeChartTitles} onchange={(e) => { findReplace.includeChartTitles = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartTitles')}</label>
+		<label><pptx-ui-checkbox aria-label={t('pptx.findReplace.includeChartData')} checked={findReplace.includeChartData} onchange={(e) => { findReplace.includeChartData = e.currentTarget.checked; findReplace.search(); }}></pptx-ui-checkbox>{t('pptx.findReplace.includeChartData')}</label>
 		<label class="pptx-svelte-findreplace-case">
 			<pptx-ui-checkbox
 				checked={findReplace.matchCase}
@@ -103,7 +104,7 @@
 		>
 			{t('pptx.findReplace.replaceAll')}
 		</button>
-		{#if availability.hasReadOnly}<p role="status">{t('pptx.findReplace.readOnlyChartTitle')}</p>{/if}
+		{#if availability.hasReadOnly}<p role="status">{t(findReplace.includeChartData ? 'pptx.findReplace.readOnlyChartText' : 'pptx.findReplace.readOnlyChartTitle')}</p>{/if}
 		<button
 			type="button"
 			class="pptx-svelte-findreplace-close"

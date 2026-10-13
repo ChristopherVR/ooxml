@@ -25,6 +25,7 @@ const query = defineModel<string>('query', { default: '' });
 const replacement = defineModel<string>('replacement', { default: '' });
 const includeNotes = defineModel<boolean>('includeNotes', { default: false });
 const includeChartTitles = defineModel<boolean>('includeChartTitles', { default: true });
+const includeChartData = defineModel<boolean>('includeChartData', { default: false });
 const matchCase = defineModel<boolean>('matchCase', { default: false });
 
 const emit = defineEmits<{
@@ -70,6 +71,13 @@ const FR_BTN =
 					@change="includeChartTitles = ($event.target as HTMLInputElement).checked"
 					:aria-label="t('pptx.findReplace.includeChartTitles')"
 				/>{{ t('pptx.findReplace.includeChartTitles') }}</label
+			>
+			<label
+				><pptx-ui-checkbox
+					:checked="includeChartData"
+					@change="includeChartData = ($event.target as HTMLInputElement).checked"
+					:aria-label="t('pptx.findReplace.includeChartData')"
+				/>{{ t('pptx.findReplace.includeChartData') }}</label
 			>
 			<label
 				><pptx-ui-checkbox
@@ -168,7 +176,13 @@ const FR_BTN =
 			</button>
 		</div>
 		<p v-if="availability.hasReadOnly" role="status">
-			{{ t('pptx.findReplace.readOnlyChartTitle') }}
+			{{
+				t(
+					includeChartData
+						? 'pptx.findReplace.readOnlyChartText'
+						: 'pptx.findReplace.readOnlyChartTitle',
+				)
+			}}
 		</p>
 	</div>
 </template>

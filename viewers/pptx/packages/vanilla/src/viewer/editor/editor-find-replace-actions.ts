@@ -24,6 +24,7 @@ export interface FindReplaceActions {
 		matchCase: boolean,
 		includeNotes?: boolean,
 		includeChartTitles?: boolean,
+		includeChartData?: boolean,
 	): ReturnType<typeof findReplacementAvailability>;
 	/** Count occurrences of `query` across all slides (does not mutate). */
 	search(
@@ -31,6 +32,7 @@ export interface FindReplaceActions {
 		matchCase: boolean,
 		includeNotes?: boolean,
 		includeChartTitles?: boolean,
+		includeChartData?: boolean,
 	): number;
 	/** Replace the first match of `query`; returns the number replaced (0 or 1). */
 	replaceCurrent(
@@ -39,6 +41,7 @@ export interface FindReplaceActions {
 		matchCase: boolean,
 		includeNotes?: boolean,
 		includeChartTitles?: boolean,
+		includeChartData?: boolean,
 	): number;
 	/** Replace every match of `query`; returns the number replaced. */
 	replaceAll(
@@ -47,6 +50,7 @@ export interface FindReplaceActions {
 		matchCase: boolean,
 		includeNotes?: boolean,
 		includeChartTitles?: boolean,
+		includeChartData?: boolean,
 	): number;
 }
 
@@ -68,13 +72,18 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 	};
 
 	return {
-		replacementAvailability(query, matchCase, includeNotes, includeChartTitles) {
+		replacementAvailability(query, matchCase, includeNotes, includeChartTitles, includeChartData) {
 			return findReplacementAvailability(
-				findInSlides(store.get().slides, query, { matchCase, includeNotes, includeChartTitles }),
+				findInSlides(store.get().slides, query, {
+					matchCase,
+					includeNotes,
+					includeChartTitles,
+					includeChartData,
+				}),
 				0,
 			);
 		},
-		search(query, matchCase, includeNotes, includeChartTitles) {
+		search(query, matchCase, includeNotes, includeChartTitles, includeChartData) {
 			if (!query) {
 				return 0;
 			}
@@ -82,10 +91,18 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 				matchCase,
 				includeNotes,
 				includeChartTitles,
+				includeChartData,
 			}).length;
 		},
 
-		replaceCurrent(query, replacement, matchCase, includeNotes, includeChartTitles) {
+		replaceCurrent(
+			query,
+			replacement,
+			matchCase,
+			includeNotes,
+			includeChartTitles,
+			includeChartData,
+		) {
 			const state = store.get();
 			if (!state.editable || !query) {
 				return 0;
@@ -94,6 +111,7 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 				matchCase,
 				includeNotes,
 				includeChartTitles,
+				includeChartData,
 			});
 			if (results[0]?.readOnly) {
 				return 0;
@@ -103,15 +121,18 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 			return replacements;
 		},
 
-		replaceAll(query, replacement, matchCase, includeNotes, includeChartTitles) {
+		replaceAll(query, replacement, matchCase, includeNotes, includeChartTitles, includeChartData) {
 			const state = store.get();
 			if (!state.editable || !query) {
 				return 0;
 			}
 			if (
-				findInSlides(state.slides, query, { matchCase, includeNotes, includeChartTitles }).some(
-					(match) => match.readOnly,
-				)
+				findInSlides(state.slides, query, {
+					matchCase,
+					includeNotes,
+					includeChartTitles,
+					includeChartData,
+				}).some((match) => match.readOnly)
 			) {
 				return 0;
 			}
@@ -119,6 +140,7 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 				matchCase,
 				includeNotes,
 				includeChartTitles,
+				includeChartData,
 			});
 			commitReplace(slides, replacements);
 			return replacements;

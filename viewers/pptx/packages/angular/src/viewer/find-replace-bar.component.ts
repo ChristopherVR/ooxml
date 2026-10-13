@@ -54,6 +54,7 @@ export interface FindEvent {
 	matchCase: boolean;
 	includeNotes?: boolean;
 	includeChartTitles?: boolean;
+	includeChartData?: boolean;
 }
 
 /** Emitted when the user confirms a replacement action. */
@@ -63,6 +64,7 @@ export interface ReplaceEvent {
 	matchCase: boolean;
 	includeNotes?: boolean;
 	includeChartTitles?: boolean;
+	includeChartData?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +92,14 @@ export interface ReplaceEvent {
 						(change)="toggleIncludeChartTitles()"
 					></pptx-ui-checkbox
 					>{{ 'pptx.findReplace.includeChartTitles' | translate }}</label
+				>
+				<label
+					><pptx-ui-checkbox
+						[attr.aria-label]="'pptx.findReplace.includeChartData' | translate"
+						[checked]="includeChartData()"
+						(change)="toggleIncludeChartData()"
+					></pptx-ui-checkbox
+					>{{ 'pptx.findReplace.includeChartData' | translate }}</label
 				>
 				<label
 					><pptx-ui-checkbox
@@ -200,7 +210,14 @@ export interface ReplaceEvent {
 				</button>
 			</div>
 			@if (availability().hasReadOnly) {
-				<p role="status">{{ 'pptx.findReplace.readOnlyChartTitle' | translate }}</p>
+				<p role="status">
+					{{
+						(includeChartData()
+							? 'pptx.findReplace.readOnlyChartText'
+							: 'pptx.findReplace.readOnlyChartTitle'
+						) | translate
+					}}
+				</p>
 			}
 		</div>
 	`,
@@ -406,6 +423,7 @@ export class FindReplaceBarComponent {
 	readonly matchCase = signal(false);
 	readonly includeNotes = signal(false);
 	readonly includeChartTitles = signal(true);
+	readonly includeChartData = signal(false);
 
 	// -------------------------------------------------------------------------
 	// Derived
@@ -449,6 +467,7 @@ export class FindReplaceBarComponent {
 			matchCase: this.matchCase(),
 			includeNotes: this.includeNotes(),
 			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
 		});
 	}
 
@@ -465,6 +484,7 @@ export class FindReplaceBarComponent {
 			matchCase: next,
 			includeNotes: this.includeNotes(),
 			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
 		});
 	}
 
@@ -475,6 +495,7 @@ export class FindReplaceBarComponent {
 			matchCase: this.matchCase(),
 			includeNotes: this.includeNotes(),
 			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
 		});
 	}
 	toggleIncludeChartTitles(): void {
@@ -484,6 +505,17 @@ export class FindReplaceBarComponent {
 			matchCase: this.matchCase(),
 			includeNotes: this.includeNotes(),
 			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
+		});
+	}
+	toggleIncludeChartData(): void {
+		this.includeChartData.update((value) => !value);
+		this.find.emit({
+			query: this.query(),
+			matchCase: this.matchCase(),
+			includeNotes: this.includeNotes(),
+			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
 		});
 	}
 	emitReplaceOne(): void {
@@ -496,6 +528,7 @@ export class FindReplaceBarComponent {
 			matchCase: this.matchCase(),
 			includeNotes: this.includeNotes(),
 			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
 		});
 	}
 
@@ -509,6 +542,7 @@ export class FindReplaceBarComponent {
 			matchCase: this.matchCase(),
 			includeNotes: this.includeNotes(),
 			includeChartTitles: this.includeChartTitles(),
+			includeChartData: this.includeChartData(),
 		});
 	}
 

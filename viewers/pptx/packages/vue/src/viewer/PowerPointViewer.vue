@@ -2012,6 +2012,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				v-model:match-case="find.matchCase.value"
 				v-model:include-notes="find.includeNotes.value"
 				v-model:include-chart-titles="find.includeChartTitles.value"
+				v-model:include-chart-data="find.includeChartData.value"
 				:match-count="find.matchCount.value"
 				:current-index="find.currentMatch.value"
 				:matches="find.matches.value"

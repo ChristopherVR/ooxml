@@ -1,3 +1,4 @@
+import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
 /**
  * @fileoverview Chart parsing orchestrator for OOXML chart graphic frames.
  *
@@ -303,6 +304,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			? { ...rawDateCategories, date1904: neutral.date1904 ?? workbook?.date1904 ?? false }
 			: undefined;
 		const filled = applyEmbeddedWorkbookFallback(chartType, categories, built.series, workbook);
+		const dataLabelTextEditable =
+			!categoryLevels &&
+			!dateCategories &&
+			(await chartLabelsHaveEditableSources(
+				reader.xml,
+				this.zip,
+				chartSpace,
+				built.seriesNodes,
+				filled.series,
+				filled.categories,
+				facts.externalData,
+				chartPartPath,
+				this.resolveImagePath.bind(this),
+			));
 
 		// Resolve c:dPt/c:ser picture fills to image URLs (only when a series or point has one).
 		const hasPicture = filled.series.some(
@@ -349,6 +364,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			title: neutralTitleText(neutral.title),
 			...(titleRuns ? { titleRuns } : {}),
 			titleTextEditable,
+			dataLabelTextEditable,
+			...(dataLabelTextEditable
+				? {
+						dataLabelSourceShape: {
+							categoryCount: filled.categories.length,
+							seriesValueCounts: filled.series.map((series) => series.values.length),
+						},
+					}
+				: {}),
 			style,
 			grouping: groupOptions.grouping,
 			...groupOptions,

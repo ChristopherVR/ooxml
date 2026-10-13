@@ -1,0 +1,38 @@
+{
+	"officeVersion": "16.0",
+	"cases": [
+		{
+			"seriesName": "Dataset",
+			"unchangedCell": "001 untouched ",
+			"categories": ["Q1", "Q2"],
+			"workbookCategory": "Q1",
+			"workbookName": "Dataset",
+			"file": "source-labels.pptx"
+		},
+		{
+			"seriesName": "Renamed dataset",
+			"unchangedCell": "001 untouched ",
+			"categories": ["First quarter", "Q2"],
+			"workbookCategory": "First quarter",
+			"workbookName": "Renamed dataset",
+			"file": "labels-replaced.pptx"
+		},
+		{
+			"seriesName": "Renamed dataset",
+			"unchangedCell": "001 untouched ",
+			"categories": ["First quarter", "Q2"],
+			"workbookCategory": "First quarter",
+			"workbookName": "Renamed dataset",
+			"file": "labels-resaved.pptx"
+		},
+		{
+			"seriesName": "Renamed dataset",
+			"unchangedCell": "001 untouched ",
+			"categories": ["First quarter", "Q2"],
+			"workbookCategory": "First quarter",
+			"workbookName": "Renamed dataset",
+			"file": "native-resaved.pptx"
+		}
+	],
+	"checkedAtUtc": "2026-10-13T05:46:48.6157584Z"
+}

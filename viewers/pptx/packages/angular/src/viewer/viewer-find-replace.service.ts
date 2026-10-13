@@ -34,6 +34,7 @@ export class ViewerFindReplaceService {
 	private matchCase = false;
 	private includeNotes = false;
 	private includeChartTitles = true;
+	private includeChartData = false;
 
 	/** Navigate the viewer to a slide index (bound from the host component). */
 	private goTo: (index: number) => void = () => undefined;
@@ -53,6 +54,7 @@ export class ViewerFindReplaceService {
 		this.matchCase = evt.matchCase;
 		this.includeNotes = evt.includeNotes ?? false;
 		this.includeChartTitles = evt.includeChartTitles ?? true;
+		this.includeChartData = evt.includeChartData ?? false;
 		this.refreshResults(evt.query);
 	}
 
@@ -85,6 +87,7 @@ export class ViewerFindReplaceService {
 			matchCase: this.matchCase,
 			includeNotes: this.includeNotes,
 			includeChartTitles: this.includeChartTitles,
+			includeChartData: this.includeChartData,
 		});
 		if (updated.replacements > 0) {
 			this.editor.applyReplacement(
@@ -106,6 +109,7 @@ export class ViewerFindReplaceService {
 			matchCase: this.matchCase,
 			includeNotes: this.includeNotes,
 			includeChartTitles: this.includeChartTitles,
+			includeChartData: this.includeChartData,
 		});
 		this.results.set(results);
 		this.activeIndex.set(results.length > 0 ? 0 : -1);

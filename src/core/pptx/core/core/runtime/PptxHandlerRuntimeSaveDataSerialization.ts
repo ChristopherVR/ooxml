@@ -140,7 +140,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				return;
 			}
 
-			// ── Serialize table-level properties (tblPr) ──────────────
+			// â”€â”€ Serialize table-level properties (tblPr) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 			serializeTablePropertyFlags(tbl, tableData);
 			// a:tblPr's OWN fill/effectLst (issue G6 write-side): parsed by
 			// PptxTableDataParser into tableFill/tableEffects but otherwise
@@ -148,7 +148,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// silently dropped on save.
 			writeTablePropertiesOwnFillAndEffects((tbl as XmlObject)['a:tblPr'] as XmlObject, tableData);
 
-			// ── Detect structural changes (row/column count mismatch) ──
+			// â”€â”€ Detect structural changes (row/column count mismatch) â”€â”€
 			const xmlRows = this.ensureArray(tbl['a:tr']);
 			const xmlColCount = this.ensureArray(xmlChild(tbl, 'a:tblGrid')?.['a:gridCol']).length;
 			const dataRowCount = tableData.rows.length;
@@ -194,7 +194,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				return;
 			}
 
-			// ── No structural change: update cells in place ──
+			// â”€â”€ No structural change: update cells in place â”€â”€
 			writeTableColumnWidths(tbl as XmlObject, tableData.columnWidths);
 			for (let rIdx = 0; rIdx < Math.min(tableData.rows.length, xmlRows.length); rIdx++) {
 				const dataRow = tableData.rows[rIdx];
@@ -380,7 +380,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					continue;
 				}
 
-				// ── Handle chart type change ──────────────────────────────
+				// â”€â”€ Handle chart type change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				// Renaming the container is not enough: `CT_PieChart` allows none of
 				// `c:barDir` / `c:gapWidth` / `c:overlap` / `c:axId`, and the axes the
 				// old type referenced are left orphaned under `c:plotArea`. Rebuild the
@@ -445,7 +445,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
-				// ── Update series data ────────────────────────────────────
+				// â”€â”€ Update series data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				const seriesNodes = this.xmlLookupService.getChildrenArrayByLocalName(
 					chartTypeContainer,
 					'ser',
@@ -657,7 +657,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					}
 				}
 
-				// ── Add new series (when data has more series than XML) ───
+				// â”€â”€ Add new series (when data has more series than XML) â”€â”€â”€
 				if (chartData.series.length > seriesNodes.length) {
 					// Use the last existing series as a template, or build minimal
 					const templateSeries =
@@ -686,7 +686,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					chartTypeContainer[seriesKey] = [...existingSeriesArray, ...newSeriesXmlNodes];
 				}
 
-				// ── Remove excess series (when data has fewer series than XML)
+				// â”€â”€ Remove excess series (when data has fewer series than XML)
 				if (chartData.series.length < seriesNodes.length) {
 					const existingSeriesArray = Array.isArray(chartTypeContainer[seriesKey])
 						? (chartTypeContainer[seriesKey] as XmlObject[])
@@ -721,7 +721,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
-				// ── Per-series combo types ────────────────────────────
+				// â”€â”€ Per-series combo types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				// When series carry differing `seriesChartType` values, split the
 				// single chart-type container into per-type sibling containers under
 				// c:plotArea (PowerPoint's combo-chart shape).
@@ -789,7 +789,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					}
 				}
 
-				// ── ofPieChart options round-trip (CT_OfPieChart) ─────────
+				// â”€â”€ ofPieChart options round-trip (CT_OfPieChart) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				if (chartData.ofPieOptions) {
 					this.applyOfPieOptions(chartTypeContainer, chartData.ofPieOptions);
 				}
@@ -851,7 +851,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
-				// ── bar3D shape / radar style / surface wireframe round-trip ──
+				// â”€â”€ bar3D shape / radar style / surface wireframe round-trip â”€â”€
 				if (chartData.barShape !== undefined && chartData.chartType === 'bar3D') {
 					applyBar3DShapeToXml(chartTypeContainer, containerLocalName, chartData.barShape, (key) =>
 						this.compatibilityService.getXmlLocalName(key),
@@ -884,17 +884,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
-				// ── view3D round-trip (CT_View3D) ─────────────────────────
+				// â”€â”€ view3D round-trip (CT_View3D) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				if (chartData.view3D) {
 					this.applyView3D(chartRoot, chartData.view3D);
 				}
 
-				// ── Chart chrome flags round-trip ─────────────────────────
+				// â”€â”€ Chart chrome flags round-trip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				if (chartData.chartChrome) {
 					this.applyChartChrome(chartRoot, chartData.chartChrome);
 				}
 
-				// ── Title (c:title / c:autoTitleDeleted) ──────────────────
+				// â”€â”€ Title (c:title / c:autoTitleDeleted) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				// After the chrome flags: a loaded chart carries the parsed
 				// `autoTitleDeleted`, which must not clobber the value a newly
 				// added or removed title decides.
@@ -934,7 +934,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
-				// ── Legend round-trip (c:legend / c:legendPos) ────────────
+				// â”€â”€ Legend round-trip (c:legend / c:legendPos) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				if (chartData.style) {
 					applyChartLegendToXml(
 						chartRoot,
@@ -962,7 +962,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
-				// ── Data labels round-trip (chart-level c:dLbls) ──────────
+				// â”€â”€ Data labels round-trip (chart-level c:dLbls) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				if (chartData.style) {
 					applyChartDataLabelsToXml(plotArea, chartData.style, (key) =>
 						this.compatibilityService.getXmlLocalName(key),
@@ -1126,7 +1126,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				await this.syncChartUserShapesToXml(chartSpace, chartData, chartPartPath);
 
 				// Write updated chart XML back
-				this.zip.file(chartPartPath, this.builder.build(chartXmlData));
+				// Delay committing the chart part until workbook reconciliation succeeds.
 
 				// Mirror the same edit into the embedded workbook (`ppt/embeddings/*.xlsx`)
 				// so "Edit Data in Excel" and any Excel recalculation see the new
@@ -1153,15 +1153,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						slidePath,
 						chartData.externalData,
 						workbookWrites,
+						chartData.dataLabelTextOnly ?? false,
 					);
 					this.chartWorkbookDataBaselines.set(chartPartPath, {
 						signature: complete ? signature : (previousSignature ?? signature),
 						pending: !complete,
 					});
 				}
+				this.zip.file(chartPartPath, this.builder.build(chartXmlData));
 				// Subsequent saves compare against the model now stored in this mutable ZIP.
 				this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 			} catch (e) {
+				if (chartData.dataLabelTextOnly) {
+					throw e;
+				}
 				console.warn(`[pptx-save] Failed to serialize chart data for ${chartPartPath}:`, e);
 			}
 		}

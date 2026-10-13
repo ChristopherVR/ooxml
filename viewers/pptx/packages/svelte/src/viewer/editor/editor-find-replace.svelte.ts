@@ -24,6 +24,7 @@ export class FindReplaceState {
 	matchCase = $state(false);
 	includeNotes = $state(false);
 	includeChartTitles = $state(true);
+	includeChartData = $state(false);
 	results = $state.raw<FindResult[]>([]);
 	index = $state(0);
 
@@ -59,6 +60,7 @@ export class FindReplaceState {
 					matchCase: this.matchCase,
 					includeNotes: this.includeNotes,
 					includeChartTitles: this.includeChartTitles,
+					includeChartData: this.includeChartData,
 				})
 			: [];
 		this.index = 0;
@@ -113,6 +115,7 @@ export class FindReplaceState {
 			matchCase: this.matchCase,
 			includeNotes: this.includeNotes,
 			includeChartTitles: this.includeChartTitles,
+			includeChartData: this.includeChartData,
 		});
 		this.#deps.commitSlides([...result.slides]);
 		this.search();

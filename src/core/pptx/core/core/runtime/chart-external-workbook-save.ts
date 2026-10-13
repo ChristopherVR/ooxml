@@ -10,7 +10,8 @@
  * part, or individual writes the range parser could not place) degrades
  * safely: the chart's `c:numCache`/`c:strCache` edit (already applied by
  * the caller) stands as the saved result, and a {@link CompatibilityWarningInput}
- * is reported instead of throwing.
+ * is reported instead of throwing. Opt-in atomic label edits throw instead, so
+ * callers cannot publish mismatched chart caches and workbook cells.
  *
  * @module chart-external-workbook-save
  */
@@ -31,7 +32,7 @@ export interface ChartExternalWorkbookSaveDeps {
 
 /**
  * Rewrite a chart's embedded workbook to match its edited series/category/
- * name data, or report why it could not be, without ever throwing.
+ * name data. Atomic label edits throw on unsupported sources; other edits report warnings.
  */
 export async function saveChartExternalWorkbookUpdates(
 	deps: ChartExternalWorkbookSaveDeps,
@@ -39,7 +40,11 @@ export async function saveChartExternalWorkbookUpdates(
 	slidePath: string,
 	externalData: PptxExternalData | undefined,
 	writes: readonly PptxChartWorkbookWrite[],
+	atomic = false,
 ): Promise<boolean> {
+	if (atomic && externalData && (!externalData.targetPath || externalData.isExternal)) {
+		throw new Error('Chart label replacement cannot update an external or missing workbook.');
+	}
 	if (writes.length === 0 || !externalData?.targetPath) {
 		// No data edits collected, or the chart has no linked external data at
 		// all (the normal case for most charts) - nothing to reconcile.
@@ -48,7 +53,10 @@ export async function saveChartExternalWorkbookUpdates(
 
 	const embeddingPath = deps.resolveImagePath(chartPartPath, externalData.targetPath);
 	const looksEmbedded = embeddingPath.includes('embeddings/') && /\.xlsx$/iu.test(embeddingPath);
-	if (!looksEmbedded) {
+	if (!looksEmbedded || externalData.isExternal) {
+		if (atomic) {
+			throw new Error('Chart label replacement requires an embedded .xlsx workbook.');
+		}
 		// e.g. TargetMode="External" pointing outside the package, or a legacy
 		// .xls/.xlsb workbook this module does not parse.
 		deps.reportWarning({
@@ -65,6 +73,9 @@ export async function saveChartExternalWorkbookUpdates(
 
 	const xlsxFile = deps.zip.file(embeddingPath);
 	if (!xlsxFile) {
+		if (atomic) {
+			throw new Error('Chart label replacement workbook is missing.');
+		}
 		deps.reportWarning({
 			code: 'CHART_EMBEDDED_WORKBOOK_MISSING',
 			message:
@@ -81,6 +92,9 @@ export async function saveChartExternalWorkbookUpdates(
 	try {
 		xlsxBytes = await xlsxFile.async('uint8array');
 	} catch {
+		if (atomic) {
+			throw new Error('Chart label replacement workbook cannot be read.');
+		}
 		deps.reportWarning({
 			code: 'CHART_EMBEDDED_WORKBOOK_UNREADABLE',
 			message:
@@ -93,7 +107,7 @@ export async function saveChartExternalWorkbookUpdates(
 		return false;
 	}
 
-	const result = await writeChartWorkbookUpdates(xlsxBytes, writes);
+	const result = await writeChartWorkbookUpdates(xlsxBytes, writes, { atomic });
 	if (result.bytes) {
 		deps.zip.file(embeddingPath, result.bytes);
 	}

@@ -55,6 +55,10 @@ export function createFindReplacePanel(
 	chartsInput.checked = true;
 	chartsInput.setAttribute('aria-label', t('pptx.findReplace.includeChartTitles'));
 	chartsLabel.append(chartsInput, doc.createTextNode(t('pptx.findReplace.includeChartTitles')));
+	const dataLabel = createEl(doc, 'label', 'pptxv-findreplace-checkbox');
+	const dataInput = createInspectorCheckbox(doc);
+	dataInput.setAttribute('aria-label', t('pptx.findReplace.includeChartData'));
+	dataLabel.append(dataInput, doc.createTextNode(t('pptx.findReplace.includeChartData')));
 
 	const status = createEl(doc, 'span', 'pptxv-findreplace-status');
 	status.setAttribute('aria-live', 'polite');
@@ -68,16 +72,24 @@ export function createFindReplacePanel(
 			matchCaseInput.checked,
 			notesInput.checked,
 			chartsInput.checked,
+			dataInput.checked,
 		);
 		const availability = actions.replacementAvailability?.(
 			queryInput.value,
 			matchCaseInput.checked,
 			notesInput.checked,
 			chartsInput.checked,
+			dataInput.checked,
 		);
 		replaceBtn.setDisabled(!canEdit || !(availability?.current ?? count > 0));
 		replaceAllBtn.setDisabled(!canEdit || !(availability?.all ?? count > 0));
-		hint.textContent = availability?.hasReadOnly ? t('pptx.findReplace.readOnlyChartTitle') : '';
+		hint.textContent = availability?.hasReadOnly
+			? t(
+					dataInput.checked
+						? 'pptx.findReplace.readOnlyChartText'
+						: 'pptx.findReplace.readOnlyChartTitle',
+				)
+			: '';
 		status.textContent =
 			count > 0
 				? t('pptx.findReplace.matchCount', { current: 1, total: count })
@@ -99,6 +111,7 @@ export function createFindReplacePanel(
 				matchCaseInput.checked,
 				notesInput.checked,
 				chartsInput.checked,
+				dataInput.checked,
 			);
 			runFind();
 		},
@@ -113,6 +126,7 @@ export function createFindReplacePanel(
 				matchCaseInput.checked,
 				notesInput.checked,
 				chartsInput.checked,
+				dataInput.checked,
 			);
 			runFind();
 		},
@@ -125,6 +139,7 @@ export function createFindReplacePanel(
 
 	queryInput.addEventListener('input', runFind);
 	notesInput.addEventListener('change', runFind);
+	dataInput.addEventListener('change', runFind);
 	chartsInput.addEventListener('change', runFind);
 	// Deliberately NOT a blanket `stopPropagation()`. The shared `mapEditorKey`
 	// already gates on `isEditorTextInputTarget`, and it places `find` and
@@ -145,6 +160,7 @@ export function createFindReplacePanel(
 		matchCaseLabel,
 		notesLabel,
 		chartsLabel,
+		dataLabel,
 		findBtn.btn,
 		replaceBtn.btn,
 		replaceAllBtn.btn,

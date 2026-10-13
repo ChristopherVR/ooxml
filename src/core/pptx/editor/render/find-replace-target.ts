@@ -13,6 +13,7 @@ import { reconcileSmartArtTextParagraphs } from '../../core/core/runtime/smartar
 import type { FindResult } from './find-replace';
 import { isFindBreak, replaceFindRuns, smartArtNodes } from './find-text-targets';
 import { remapTextToSegments } from './remap-text';
+import { chartLabelsAreEditable } from './chart-label-editability';
 
 function patchTableXml(
 	element: PptxElement,
@@ -75,6 +76,46 @@ function updateNode(nodes: PptxSmartArtNode[], nodeId: string, text: string): Pp
 
 /** Apply one match at its leaf without mutating the surrounding group or sibling objects. */
 function replaceLeaf(element: PptxElement, match: FindResult, replacement: string): PptxElement {
+	if (
+		(match.chartSeriesIndex !== undefined || match.chartCategoryIndex !== undefined) &&
+		element.type === 'chart' &&
+		element.chartData
+	) {
+		const data = element.chartData;
+		if (!chartLabelsAreEditable(element))
+			throw new Error('Chart labels require editing in PowerPoint or their source workbook');
+		const text =
+			match.chartSeriesIndex !== undefined
+				? data.series[match.chartSeriesIndex]?.name
+				: data.categories[match.chartCategoryIndex!];
+		if (text === undefined) return element;
+		const next = replaceFindRuns(
+			[{ text }],
+			match.segmentIndex,
+			match.startOffset,
+			match.length,
+			replacement,
+		);
+		if (!next) return element;
+		return {
+			...element,
+			chartData: {
+				...data,
+				dataLabelTextOnly: true,
+				...(match.chartSeriesIndex !== undefined
+					? {
+							series: data.series.map((series, index) =>
+								index === match.chartSeriesIndex ? { ...series, name: next[0]!.text } : series,
+							),
+						}
+					: {
+							categories: data.categories.map((category, index) =>
+								index === match.chartCategoryIndex ? next[0]!.text : category,
+							),
+						}),
+			},
+		};
+	}
 	if (match.chartTitle && element.type === 'chart' && element.chartData) {
 		const data = element.chartData;
 		if (data.titleTextEditable === false)

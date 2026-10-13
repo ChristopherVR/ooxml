@@ -38,6 +38,8 @@ export interface FindResult {
 	notes?: boolean;
 	/** Match in the chart title rather than the shape's own text. */
 	chartTitle?: boolean;
+	chartSeriesIndex?: number;
+	chartCategoryIndex?: number;
 	/** Linked or complex chart text is searchable but requires source editing. */
 	readOnly?: boolean;
 }
@@ -50,6 +52,8 @@ export interface FindOptions {
 	includeNotes?: boolean;
 	/** Include chart titles. Enabled by default; disable to replace only ordinary slide text. */
 	includeChartTitles?: boolean;
+	/** Opt-in search of series names and category labels, with transactional source editing. */
+	includeChartData?: boolean;
 }
 
 /** Result returned by {@link replaceInSlides} and {@link replaceMatch}. */
@@ -106,8 +110,13 @@ export function findInSlides(
 			slide,
 			opts.includeNotes,
 			opts.includeChartTitles,
+			opts.includeChartData,
 		)) {
-			if (target.chartTitle) {
+			if (
+				target.chartTitle ||
+				target.chartSeriesIndex !== undefined ||
+				target.chartCategoryIndex !== undefined
+			) {
 				const source = findMatchChartSource(slides, { ...target, slideIndex });
 				if (source && (chartSources.get(source) ?? 0) > 1) target.readOnly = true;
 			}
@@ -171,13 +180,18 @@ export function applyFindReplacements(
 	}
 	if (toReplace.some((match) => match.readOnly))
 		throw new Error(
-			'Linked or complex chart titles must be edited in PowerPoint or their source workbook',
+			'Linked or complex chart text must be edited in PowerPoint or their source workbook',
 		);
 
 	const chartSources = chartSourceReferenceCounts(slides);
 	if (
 		toReplace.some((match) => {
-			if (!match.chartTitle) return false;
+			if (
+				!match.chartTitle &&
+				match.chartSeriesIndex === undefined &&
+				match.chartCategoryIndex === undefined
+			)
+				return false;
 			const source = findMatchChartSource(slides, match);
 			return source && (chartSources.get(source) ?? 0) > 1;
 		})
@@ -197,6 +211,8 @@ export function applyFindReplacements(
 			match.smartArtNodeId,
 			match.notes,
 			match.chartTitle,
+			match.chartSeriesIndex,
+			match.chartCategoryIndex,
 		]);
 		let bucket = grouped.get(key);
 		if (!bucket) {

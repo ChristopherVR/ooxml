@@ -166,6 +166,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			series: result.series,
 			title: cxTitleText,
 			titleTextEditable: false,
+			dataLabelTextEditable: false,
 			style: chartStyle,
 			chartPartPath,
 			chartRelationshipId,

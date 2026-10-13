@@ -1,4 +1,7 @@
 export const translations = {
+	'pptx.findReplace.includeChartData': 'Diagrammreihen und Kategoriebezeichnungen einbeziehen',
+	'pptx.findReplace.readOnlyChartText':
+		'Verknüpfter oder nicht unterstützter Diagrammtext kann gefunden werden, muss jedoch in PowerPoint oder seiner Quellarbeitsmappe bearbeitet werden.',
 	'pptx.findReplace.includeChartTitles': 'Diagrammtitel einbeziehen',
 	'pptx.findReplace.readOnlyChartTitle':
 		'Verknüpfte oder komplexe Diagrammtitel können gefunden werden, müssen jedoch in PowerPoint oder ihrer Quellarbeitsmappe bearbeitet werden.',

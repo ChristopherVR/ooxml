@@ -37,4 +37,28 @@ powershell -NoProfile -File e2e/pptx/native/verify-chart-title.ps1 -ArtifactDire
 Generated artifacts and `chart-title-acceptance.json` stay in the supplied directory.
 Linked and ChartEx cached titles and modeled text runs in complex titles remain
 searchable, but replacement requires PowerPoint or source-workbook editing. Field
-values are not comprehensively indexed. Series/category find-and-replace is not implemented.
+values are not comprehensively indexed. Series/category find-and-replace is supported separately for validated literal source cells.
+
+## Chart series and category label transactions
+
+Build core, then run the synthetic label acceptance harness:
+
+```powershell
+bun e2e/pptx/native/generate-chart-labels.ts D:/Temp/pptx-chart-label-acceptance
+powershell -NoProfile -File e2e/pptx/native/verify-chart-labels.ps1 -ArtifactDirectory D:/Temp/pptx-chart-label-acceptance
+```
+
+This opens only generated decks, activates their embedded workbooks in Excel,
+checks changed source cells and preserved unrelated cells, refreshes the charts,
+and saves and reopens a native copy. Existing PowerPoint or Excel processes cause
+the isolated harness to stop before opening anything.
+
+The search scope defaults off and covers series names and category strings,
+including grouped charts. Numeric values are excluded. Editing supports direct
+literal chart data or direct references to literal cells in a single embedded
+`.xlsx` workbook with consistent chart caches. External and shared workbooks,
+formula-dependent worksheets, rich worksheet strings, complex/missing ranges,
+other chart formula consumers, date/multilevel categories and ChartEx sources
+require source editing. All source ranges are validated before any workbook
+bytes change; a failed reconciliation stops export instead of returning a
+cache-only result. These cases do not establish full chart or Office parity.

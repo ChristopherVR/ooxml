@@ -6,6 +6,7 @@ import type {
 	TextSegment,
 } from '../../index';
 import { hasTextProperties } from '../../index';
+import { chartLabelsAreEditable } from './chart-label-editability';
 
 export interface FindTextTarget {
 	elementId: string;
@@ -14,6 +15,8 @@ export interface FindTextTarget {
 	tableCell?: { rowIndex: number; colIndex: number };
 	smartArtNodeId?: string;
 	chartTitle?: boolean;
+	chartSeriesIndex?: number;
+	chartCategoryIndex?: number;
 	readOnly?: boolean;
 	runs: readonly FindTextRun[];
 }
@@ -40,11 +43,18 @@ export function* findTextTargets(
 	elementId = element.id,
 	path: number[] = [],
 	includeChartTitles = true,
+	includeChartData = false,
 ): Generator<FindTextTarget> {
 	const location = { elementId, ...(path.length ? { elementPath: path } : {}) };
 	if (element.type === 'group') {
 		for (const [index, child] of element.children.entries())
-			yield* findTextTargets(child, elementId, [...path, index], includeChartTitles);
+			yield* findTextTargets(
+				child,
+				elementId,
+				[...path, index],
+				includeChartTitles,
+				includeChartData,
+			);
 	} else if (hasTextProperties(element)) {
 		const runs: readonly TextSegment[] = element.textSegments?.length
 			? element.textSegments
@@ -59,15 +69,23 @@ export function* findTextTargets(
 	} else if (element.type === 'smartArt' && element.smartArtData) {
 		for (const node of smartArtNodes(element.smartArtData.nodes))
 			yield { ...location, smartArtNodeId: node.id, runs: [{ text: node.text }] };
-	} else if (includeChartTitles && element.type === 'chart' && element.chartData) {
+	} else if (element.type === 'chart' && element.chartData) {
 		const chart = element.chartData;
-		if (chart.style?.hasTitle === false) return;
-		const runs = chart.titleRuns?.length
-			? chart.titleRuns
-			: chart.title
-				? [{ text: chart.title }]
-				: [];
-		yield { ...location, chartTitle: true, readOnly: chart.titleTextEditable === false, runs };
+		if (includeChartTitles && chart.style?.hasTitle !== false) {
+			const runs = chart.titleRuns?.length
+				? chart.titleRuns
+				: chart.title
+					? [{ text: chart.title }]
+					: [];
+			yield { ...location, chartTitle: true, readOnly: chart.titleTextEditable === false, runs };
+		}
+		if (includeChartData) {
+			const readOnly = !chartLabelsAreEditable(element);
+			for (const [chartSeriesIndex, series] of chart.series.entries())
+				yield { ...location, chartSeriesIndex, readOnly, runs: [{ text: series.name }] };
+			for (const [chartCategoryIndex, text] of chart.categories.entries())
+				yield { ...location, chartCategoryIndex, readOnly, runs: [{ text }] };
+		}
 	}
 }
 
@@ -116,9 +134,10 @@ export function* findSlideTextTargets(
 	slide: PptxSlide,
 	includeNotes = false,
 	includeChartTitles = true,
+	includeChartData = false,
 ): Generator<FindTextTarget> {
 	for (const element of slide.elements)
-		yield* findTextTargets(element, element.id, [], includeChartTitles);
+		yield* findTextTargets(element, element.id, [], includeChartTitles, includeChartData);
 	if (includeNotes && slide.notes) {
 		const runs =
 			slide.notesSegments?.length &&

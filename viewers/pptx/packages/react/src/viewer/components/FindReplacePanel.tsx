@@ -18,7 +18,9 @@ export interface FindReplacePanelProps {
 	findMatchCase: boolean;
 	findIncludeNotes?: boolean;
 	findIncludeChartTitles?: boolean;
+	findIncludeChartData?: boolean;
 	onSetFindIncludeChartTitles?: (value: boolean) => void;
+	onSetFindIncludeChartData?: (value: boolean) => void;
 	onSetFindIncludeNotes?: (value: boolean) => void;
 	findResults: Array<{
 		slideIndex: number;
@@ -51,7 +53,9 @@ export function FindReplacePanel({
 	findMatchCase,
 	findIncludeNotes = false,
 	findIncludeChartTitles = true,
+	findIncludeChartData = false,
 	onSetFindIncludeChartTitles,
+	onSetFindIncludeChartData,
 	onSetFindIncludeNotes,
 	findResults,
 	findResultIndex,
@@ -76,7 +80,7 @@ export function FindReplacePanel({
 	useEffect(() => {
 		onPerformFind();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [findQuery, findMatchCase, findIncludeNotes, findIncludeChartTitles]);
+	}, [findQuery, findMatchCase, findIncludeNotes, findIncludeChartTitles, findIncludeChartData]);
 
 	const handleSearchKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -122,6 +126,14 @@ export function FindReplacePanel({
 					onChange={(event) => onSetFindIncludeChartTitles?.(event.target.checked)}
 				/>
 				{t('pptx.findReplace.includeChartTitles')}
+			</label>
+			<label>
+				<WebCheckbox
+					aria-label={t('pptx.findReplace.includeChartData')}
+					checked={findIncludeChartData}
+					onChange={(event) => onSetFindIncludeChartData?.(event.target.checked)}
+				/>
+				{t('pptx.findReplace.includeChartData')}
 			</label>
 			<div className='flex items-center justify-between mb-2'>
 				<label>
@@ -221,7 +233,15 @@ export function FindReplacePanel({
 			</div>
 
 			{/* Action buttons */}
-			{availability.hasReadOnly && <p role='status'>{t('pptx.findReplace.readOnlyChartTitle')}</p>}
+			{availability.hasReadOnly && (
+				<p role='status'>
+					{t(
+						findIncludeChartData
+							? 'pptx.findReplace.readOnlyChartText'
+							: 'pptx.findReplace.readOnlyChartTitle',
+					)}
+				</p>
+			)}
 			<div className='flex items-center gap-1.5'>
 				<button
 					type='button'

@@ -1,4 +1,7 @@
 export const translations = {
+	'pptx.findReplace.includeChartData': 'Incluir series y etiquetas de categorías de gráficos',
+	'pptx.findReplace.readOnlyChartText':
+		'El texto de gráficos vinculado o no compatible se puede encontrar, pero debe editarse en PowerPoint o en su libro de origen.',
 	'pptx.findReplace.includeChartTitles': 'Incluir títulos de gráficos',
 	'pptx.findReplace.readOnlyChartTitle':
 		'Los títulos de gráficos vinculados o complejos se pueden encontrar, pero deben editarse en PowerPoint o en su libro de origen.',

@@ -6,7 +6,7 @@
  * a chart part's `.rels` relationship file.
  *
  * Mixin chain position:
- *   `PptxHandlerRuntimeChartParsingHelpers` → **this** → `PptxHandlerRuntimeChartColorStyle`
+ *   `PptxHandlerRuntimeChartParsingHelpers` â†’ **this** â†’ `PptxHandlerRuntimeChartColorStyle`
  */
 
 import { XmlObject } from '../../types';
@@ -61,6 +61,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			false;
 
 		// Resolve the external target from the chart part's .rels file
+		let isExternal = false;
 		let targetPath: string | undefined;
 		try {
 			const chartDir = chartPartPath.substring(0, chartPartPath.lastIndexOf('/') + 1);
@@ -79,6 +80,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					for (const rel of rels) {
 						if (String(rel?.['@_Id'] || '') === relId) {
 							targetPath = String(rel?.['@_Target'] || '').trim() || undefined;
+							isExternal = String(rel?.['@_TargetMode'] || '') === 'External';
 							break;
 						}
 					}
@@ -90,7 +92,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		// Attempt to read embedded xlsx workbook from the ZIP archive
 		let embeddedWorkbookData: Uint8Array | undefined;
-		if (targetPath) {
+		if (targetPath && !isExternal) {
 			try {
 				const embeddingPath = this.resolveImagePath(chartPartPath, targetPath);
 				if (embeddingPath.includes('embeddings/') && embeddingPath.endsWith('.xlsx')) {
@@ -106,6 +108,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		return {
 			relId,
+			...(isExternal ? { isExternal: true } : {}),
 			targetPath,
 			autoUpdate,
 			...(embeddedWorkbookData ? { embeddedWorkbookData } : {}),
