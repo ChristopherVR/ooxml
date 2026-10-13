@@ -251,4 +251,20 @@ describe('home drawing triggers', () => {
 			expect.objectContaining({ fillColor: '#c00000' }),
 		);
 	});
+
+	it('turns the line on with the default width when the shape has none', () => {
+		const noLine = {
+			...shape,
+			shapeStyle: { strokeColor: 'transparent', strokeWidth: 0 },
+		} as PptxElement;
+		const props = mountDrawing(noLine);
+		act(() => button('home.drawing.shapeOutline').click());
+		const swatch = control('home.drawing.shapeOutline').querySelector<HTMLElement>(
+			'button[aria-label="Outline colour #c00000"]',
+		)!;
+		act(() => swatch.click());
+		expect(props.onUpdateElementStyle).toHaveBeenCalledWith(
+			expect.objectContaining({ strokeColor: '#c00000', strokeWidth: 1, strokeFillMode: 'solid' }),
+		);
+	});
 });

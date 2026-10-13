@@ -14,7 +14,7 @@ import type { Guide, InsertChartKind, ShapePresetType } from 'ooxml-ui/pptx';
    (many independent short-lived `const`s per action); merging them isn't a
    style choice here. */
 import type { PptxElement, PptxHandler, SmartArtLayout } from 'pptx-viewer-core';
-import { isImageLikeElement, MIN_ELEMENT_SIZE } from 'pptx-viewer-core';
+import { hasShapeProperties, isImageLikeElement, MIN_ELEMENT_SIZE } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';
@@ -233,7 +233,12 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 		},
 		setShapeStroke: (color, ref) => {
 			recordRecentColor(store, color);
-			applyToSelected((el) => patchShapeStyle(el, shapeOutlineChange(color, ref)));
+			applyToSelected((el) =>
+				patchShapeStyle(
+					el,
+					shapeOutlineChange(color, ref, hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {}),
+				),
+			);
 		},
 		setShapeStrokeWidth: (width) =>
 			applyToSelected((el) => patchShapeStyle(el, { strokeWidth: Math.max(0, width) })),

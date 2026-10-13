@@ -13,6 +13,8 @@
  */
 import type { PptxSlide, PptxThemeColorRef, ShapeStyle } from 'ooxml-core/pptx';
 
+import { DEFAULT_STROKE_WIDTH } from './arrange-extras';
+
 /**
  * The layout PowerPoint's Home > Reset re-applies to the active slide,
  * restoring inherited placeholder geometry and formatting. Returns undefined
@@ -34,9 +36,28 @@ export function shapeFillChange(hex: string, ref?: PptxThemeColorRef): Partial<S
 	return { fillColor: hex, fillColorRef: ref, fillMode: 'solid' };
 }
 
-/** The style change Home > Shape Outline commits for a picked swatch. Same `ref` contract as {@link shapeFillChange}. */
-export function shapeOutlineChange(hex: string, ref?: PptxThemeColorRef): Partial<ShapeStyle> {
-	return { strokeColor: hex, strokeColorRef: ref };
+/**
+ * The style change an outline colour pick commits (Home > Shape Outline and
+ * the inspector's line colour). Same `ref` contract as {@link shapeFillChange}.
+ *
+ * Pass the element's `current` style: a shape with no visible line (no width,
+ * or a zero width from `a:noFill`) only got the colour, so nothing appeared.
+ * Such a pick also turns the line on with {@link DEFAULT_STROKE_WIDTH} (1px,
+ * which is PowerPoint's default 0.75pt line) and a solid line fill, the way
+ * PowerPoint does; a line that already shows keeps its width and fill.
+ */
+export function shapeOutlineChange(
+	hex: string,
+	ref?: PptxThemeColorRef,
+	current?: Pick<ShapeStyle, 'strokeWidth'>,
+): Partial<ShapeStyle> {
+	const change: Partial<ShapeStyle> = { strokeColor: hex, strokeColorRef: ref };
+	const lineShows = (current?.strokeWidth ?? 0) > 0;
+	if (current && !lineShows) {
+		change.strokeWidth = DEFAULT_STROKE_WIDTH;
+		change.strokeFillMode = 'solid';
+	}
+	return change;
 }
 
 /**

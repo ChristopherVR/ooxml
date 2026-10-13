@@ -33,6 +33,7 @@ import {
 	isElementLocked,
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
+	shapeOutlineChange,
 	textFontSizePtToPx,
 } from 'ooxml-ui/pptx';
 import type {
@@ -1263,7 +1264,10 @@ export class InspectorPanelComponent {
 		this.editor.updateElement(
 			this.slideIndex(),
 			cur.id,
-			shapeStylePatch(cur, { strokeColor: color, strokeColorRef: ref }),
+			shapeStylePatch(
+				cur,
+				shapeOutlineChange(color, ref, hasShapeProperties(cur) ? (cur.shapeStyle ?? {}) : {}),
+			),
 		);
 		this.recentColors.push(color);
 	}

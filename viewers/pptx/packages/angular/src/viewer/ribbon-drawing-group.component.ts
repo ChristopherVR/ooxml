@@ -18,6 +18,7 @@ import {
 	withHomeGalleries,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
+import { hasShapeProperties } from 'pptx-viewer-core';
 
 import { newPresetShapeElement } from './editor-insert';
 import { EditorStateService } from './editor-state.service';
@@ -133,7 +134,7 @@ export class RibbonDrawingGroupComponent {
 				this.recentColors?.push(String(value));
 				break;
 			case 'home.drawing.shapeOutline':
-				this.patchShapeStyle(shapeOutlineChange(String(value), ref));
+				this.patchShapeStyle(shapeOutlineChange(String(value), ref, this.currentShapeStyle()));
 				this.recentColors?.push(String(value));
 				break;
 			default:
@@ -142,6 +143,12 @@ export class RibbonDrawingGroupComponent {
 					{ editor: this.editor, slideIndex: this.slideIndex(), themes: this.themes },
 				);
 		}
+	}
+
+	/** The selection's shape style, or an empty one when it has none. */
+	private currentShapeStyle(): ShapeStyle {
+		const el = this.selectedElement();
+		return el && hasShapeProperties(el) ? (el.shapeStyle ?? {}) : {};
 	}
 
 	/** Merge a Fill/Outline patch into the selection's shape style, if it has one. */

@@ -122,6 +122,31 @@ describe('createEditActions formatting', () => {
 		expect(el.shapeStyle.fillColor).toBe('#ffffff');
 	});
 
+	it('gives a shape with no line a default width when an outline colour is picked', () => {
+		const noLine = {
+			...shape('a'),
+			shapeStyle: { fillColor: '#ffffff', strokeColor: 'transparent', strokeWidth: 0 },
+		} as PptxElement;
+		const { store, actions } = setup({ slides: [slide([noLine])] });
+		actions.setShapeStroke('#123456');
+		const el = elementById(store, 'a') as PptxElement & {
+			shapeStyle: { strokeColor?: string; strokeWidth?: number; strokeFillMode?: string };
+		};
+		expect(el.shapeStyle).toMatchObject({
+			strokeColor: '#123456',
+			strokeWidth: 1,
+			strokeFillMode: 'solid',
+		});
+	});
+
+	it('keeps the width of a visible outline when its colour changes', () => {
+		const { store, actions } = setup();
+		actions.setShapeStroke('#123456');
+		const el = elementById(store, 'a') as PptxElement & { shapeStyle: { strokeWidth?: number } };
+		expect(el.shapeStyle.strokeWidth).toBe(1);
+		expect('strokeFillMode' in el.shapeStyle).toBeFalsy();
+	});
+
 	it('does nothing when the viewer is not editable', () => {
 		const { store, ops, actions } = setup({ editable: false });
 		actions.toggleBold();

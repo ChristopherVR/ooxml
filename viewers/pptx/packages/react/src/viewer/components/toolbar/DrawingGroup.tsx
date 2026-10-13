@@ -100,7 +100,7 @@ export function DrawingGroup(p: DrawingGroupProps): React.ReactElement {
 					pushColor(String(value));
 					break;
 				case 'home.drawing.shapeOutline':
-					onUpdateElementStyle?.(shapeOutlineChange(String(value), intent?.ref));
+					onUpdateElementStyle?.(shapeOutlineChange(String(value), intent?.ref, style ?? {}));
 					pushColor(String(value));
 					break;
 				default:
@@ -120,6 +120,7 @@ export function DrawingGroup(p: DrawingGroupProps): React.ReactElement {
 			onUpdateElementStyle,
 			pushColor,
 			commands,
+			style,
 		],
 	);
 
