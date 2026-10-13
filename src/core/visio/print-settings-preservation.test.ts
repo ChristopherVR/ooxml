@@ -79,6 +79,44 @@ describe('unsupported count metadata preservation and edit admission', () => {
 			);
 		},
 	);
+	it.each(['PagesX', 'PagesY'])(
+		'preserves invalid explicit %s after refusal and unrelated rename',
+		async (name) => {
+			const bytes = await patch((page) => {
+				local(page, name, { V: '-1.5' });
+			});
+			const before = await parseVsdx(bytes);
+			expect(visioPrintTileCount(before.pages[0]!)).toEqual({
+				kind: 'unsupported',
+				reason: 'invalid-local-setting',
+			});
+			expect((await editVsdx(bytes, [])).bytes).toEqual(bytes);
+			const saved = await editVsdx(bytes, [
+				{ type: 'rename-page', pageId: before.pages[0]!.id, name: 'Invalid target preserved' },
+			]);
+			await unchanged(bytes, saved.bytes, ['visio/pages/pages.xml', 'docProps/app.xml']);
+			const after = await parseVsdx(saved.bytes);
+			expect(after.pages[0]!.pageSetup).toEqual(before.pages[0]!.pageSetup);
+			expect(visioPrintTileCount(after.pages[0]!)).toEqual({
+				kind: 'unsupported',
+				reason: 'invalid-local-setting',
+			});
+			const zip = await JSZip.loadAsync(saved.bytes);
+			const cells = children(
+				child(
+					child(
+						parseXml(await zip.file('visio/pages/pages.xml')!.async('string')).documentElement,
+						'Page',
+					),
+					'PageSheet',
+				),
+				'Cell',
+			);
+			expect(
+				cells.filter((node) => attribute(node, 'N') === name).map((node) => attribute(node, 'V')),
+			).toEqual(['-1.5']);
+		},
+	);
 	it('retains duplicate local print cells on no-op and unrelated edit', async () => {
 		const bytes = await patch((page) => {
 			const node = local(page, 'PaperKind', { V: '1' });

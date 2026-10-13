@@ -66,6 +66,15 @@ describe('explicit non-fit count admission', () => {
 		});
 		expect(count(16.5, 1)).toMatchObject({ kind: 'supported', total: 2 });
 	});
+	it('treats valid fit targets as inactive non-fit metadata and refuses unmeasured numbers', () => {
+		expect(count(17, 22, { printPagesAcross: 2, printPagesDown: 3 })).toEqual(count());
+		for (const value of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, '2' as never])
+			for (const key of ['printPagesAcross', 'printPagesDown'] as const)
+				expect(count(17, 22, { [key]: value })).toEqual({
+					kind: 'unsupported',
+					reason: 'invalid-local-setting',
+				});
+	});
 	it('bounds counts without allocating geometry', () => {
 		expect(count(1e9, 1e9)).toEqual({ kind: 'unsupported', reason: 'count-budget' });
 		expect(count(1000, 1000)).toEqual({ kind: 'unsupported', reason: 'count-budget' });

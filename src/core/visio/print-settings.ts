@@ -191,7 +191,13 @@ export function readVisioPrintCountSettings(
 		['PagesY', 'printPagesDown'],
 	] as const) {
 		const value = values.get(name);
-		if (value !== undefined) setup[key] = value;
+		if (value !== undefined) {
+			// PagesX/Y are inactive in explicit non-fit mode, but unmeasured numeric
+			// metadata must not silently admit an otherwise supported source profile.
+			if ((name === 'PagesX' || name === 'PagesY') && (!Number.isSafeInteger(value) || value < 1))
+				refuse(local.has(name) ? 'invalid-local-setting' : 'invalid-document-setting');
+			else setup[key] = value;
+		}
 	}
 	for (const [name, key] of [
 		['OnPage', 'printFitToPages'],

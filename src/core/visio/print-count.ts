@@ -68,6 +68,14 @@ export function visioPrintTileCount(
 	)
 		return unsupported('invalid-local-setting');
 	if (setup.printFitToPages) return unsupported('fit-mode');
+	// PagesX/Y control fit mode only. Retain them without using them in count math,
+	// but refuse explicit non-positive, fractional or non-finite metadata.
+	if (
+		[setup.printPagesAcross, setup.printPagesDown].some(
+			(value) => value !== undefined && (!Number.isSafeInteger(value) || value < 1),
+		)
+	)
+		return unsupported('invalid-local-setting');
 	if (setup.printCenterX || setup.printCenterY) return unsupported('centering-unmeasured');
 	const zoom = setup.printZoom!;
 	if (

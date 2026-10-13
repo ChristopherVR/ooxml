@@ -30,6 +30,27 @@ const count = (setup: ReturnType<typeof read>) =>
 	visioPrintTileCount({ width: 17, height: 22, pageSetup: setup });
 
 describe('measured No Style0 print defaults', () => {
+	it('does not use valid fit targets in non-fit count arithmetic', () => {
+		expect(count(read(cell('PagesX', 2) + cell('PagesY', 3)))).toMatchObject({
+			kind: 'supported',
+			total: 9,
+		});
+	});
+	it.each(['PagesX', 'PagesY'])(
+		'refuses explicit unmeasured %s numeric metadata without fallback',
+		(name) => {
+			for (const value of [0, -1, 1.5, 'bad', '1e999', '9007199254740992']) {
+				expect(count(read(cell(name, value)))).toEqual({
+					kind: 'unsupported',
+					reason: 'invalid-local-setting',
+				});
+				expect(count(read('', defaults.replace(cell(name, 1), cell(name, value))))).toEqual({
+					kind: 'unsupported',
+					reason: 'invalid-document-setting',
+				});
+			}
+		},
+	);
 	it('resolves missing page cells, overrides per cell and ignores DocumentSheet print cells', () => {
 		expect(read()).toMatchObject({ paperKind: 1, printFitToPages: false, printZoomY: 1 });
 		expect(count(read())).toMatchObject({ kind: 'supported', total: 9 });
