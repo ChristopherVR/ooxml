@@ -2,6 +2,7 @@ import { isSafeHyperlinkHref } from '../opc/safe-href';
 import { metadata } from './metadata';
 import { VisioPackageError } from './package';
 import type { Cells, Report, Row, Sheet } from './sheet';
+import { visioIsoDateSerial } from './date-cache';
 
 export interface VisioShapeData {
 	id: string;
@@ -142,16 +143,6 @@ function booleanValue(text: string): boolean | undefined {
 	const value = numeric(text);
 	return value === undefined ? undefined : value !== 0;
 }
-/** VSDX saves Shape Data dates as ISO text (U="DATE"); the model keeps serial days. */
-function isoSerialDays(text: string): number | undefined {
-	const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}(?:\.\d+)?))?)?$/.exec(
-		text.trim(),
-	);
-	if (!match) return undefined;
-	const [year, month, day, hour, minute, second] = match.slice(1).map((part) => Number(part ?? 0));
-	const time = Date.UTC(year!, month! - 1, day!, hour, minute, second);
-	return Number.isFinite(time) ? (time - Date.UTC(1899, 11, 30)) / 86_400_000 : undefined;
-}
 function property(row: Row, budget: VisioMetadataBudget, report: Report): VisioShapeData {
 	const get = (key: string) => cached(row.cells, key, budget, report);
 	const rawType = get('Type'),
@@ -170,7 +161,7 @@ function property(row: Row, budget: VisioMetadataBudget, report: Report): VisioS
 	if (rawValue !== undefined && row.cells.get('Value')?.error === undefined) {
 		if (type === 0 || type === 1 || type === 4) value = budget.retain(rawValue);
 		else if (type === 3) value = booleanValue(rawValue);
-		else if (type === 5) value = numeric(rawValue) ?? isoSerialDays(rawValue);
+		else if (type === 5) value = numeric(rawValue) ?? visioIsoDateSerial(rawValue);
 		else if (valueKind !== 'unparsed') value = numeric(rawValue);
 	}
 	if (value === undefined) {

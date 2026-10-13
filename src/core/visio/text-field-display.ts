@@ -1,6 +1,7 @@
 import { visioFormulaCachedValue } from './formula';
 import { visioFieldCase } from './text-field-case';
 import { numericFieldPicture } from './text-field-numeric';
+import { visioIsoDateSerial } from './date-cache';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	evaluateVisioTextField,
@@ -18,7 +19,7 @@ function cachedValue(
 	if (value === undefined) return undefined;
 	if (unit === 'STR') return { kind: 'string', text: value };
 	if (unit === 'DATE') {
-		const date = visioSerialDate(Number(value));
+		const date = visioSerialDate(visioIsoDateSerial(value) ?? Number(value));
 		return date ? { kind: 'date', date } : undefined;
 	}
 	try {
@@ -61,6 +62,14 @@ export function textFieldDisplay(
 		}
 		if (source?.kind === 'number' && code !== undefined)
 			text = numericFieldPicture(source, Number(code), value?.unit) ?? cached;
+		if (
+			source?.kind === 'date' &&
+			code === '20' &&
+			Number.isFinite(source.date.getTime()) &&
+			source.date.getTime() >= Date.UTC(1899, 11, 30) &&
+			source.date.getUTCFullYear() <= 9999
+		)
+			text = formatVisioFieldValue(source, '{{yyyy-MM-dd}}') ?? cached;
 		return { text, ...result };
 	}
 	const text = source ? formatVisioFieldValue(source, picture) : undefined;

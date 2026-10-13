@@ -16,6 +16,18 @@ const read = (data: string) => {
 };
 
 describe('cached Visio shape data', () => {
+	it('retains ISO date milliseconds and refuses invalid calendar metadata', () => {
+		const date = read(
+			prop(named('Date', cell('Type', 5) + cell('Value', '2024-02-29T23:59:59.999'))),
+		).shapeData[0]!;
+		expect(date.valueKind).toBe('date');
+		expect(date.value).toBe(
+			(Date.UTC(2024, 1, 29, 23, 59, 59, 999) - Date.UTC(1899, 11, 30)) / 86_400_000,
+		);
+		const invalid = read(prop(named('Date', cell('Type', 5) + cell('Value', '2026-02-30'))));
+		expect(invalid.shapeData[0]).toMatchObject({ valueKind: 'unparsed', rawValue: '2026-02-30' });
+		expect(invalid.reports).toContain('unsupported-shape-data-value');
+	});
 	it.each([
 		[0, 'hello &amp; goodbye', 'string', 'hello & goodbye'],
 		[1, 'Option A', 'fixed-list', 'Option A'],

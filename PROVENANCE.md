@@ -2304,3 +2304,12 @@ The duplicated picture-versus-shape overlay ordering and background paint-layer 
 ## PowerPoint background-only animation paint
 
 Source: ChristopherVR/ooxml, commit `cfcfd67ee`, `viewers/pptx/packages/react/src/viewer/components/ElementRenderer.tsx`. Synthetic background target selection now lives in `src/ui/src/pptx/render/background-animation-layers.ts`, together with a pure split of paint CSS from positioning CSS. All five bindings use the target selector; Vue, Svelte, Angular and the shared DOM renderer use the split for shape/text paint while leaving foreground text visible. Existing React picture-frame compatibility remains, without claiming background-only chart or SmartArt support.
+
+## Visio ISO date cache parsing
+
+Source: ChristopherVR/ooxml, commit `1b709efbd`,
+`src/core/visio/shape-metadata.ts` (`isoSerialDays`). The timezone-free cache
+parser now lives in `src/core/visio/date-cache.ts` and is shared by shape metadata
+and text fields. Changes: reject normalized invalid Gregorian dates, preserve
+cached milliseconds, and avoid JavaScript's special handling of years 0 to 99.
+Inherited date fields admit the native ISO date-only picture separately.
