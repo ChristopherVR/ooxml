@@ -57,7 +57,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		],
 		pivot?.valuesAxis ?? 'columns',
 	);
-	const multipleNotice = text(ctx, 'Values on rows with two row fields require tabular layout.');
+	const multipleNotice = text(ctx, 'Values are listed after the row fields.');
 	const extras = pivotValueControls(
 		ctx,
 		pivot?.additionalValues ?? [],
@@ -98,17 +98,19 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const updateRows = () => {
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
-		axis.querySelector<HTMLOptionElement>('[value="rows"]')!.disabled =
-			!!second.value && layout.value !== 'tabular';
 		const rowsAxis = axis.value === 'rows';
-		second.disabled = rowsAxis && layout.value !== 'tabular';
-		for (const option of layout.options)
-			option.disabled = rowsAxis && !!second.value && option.value !== 'tabular';
 		multipleNotice.hidden = !rowsAxis;
 		subtotals.input.disabled = !second.value;
 		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
-		position.disabled = !second.value || !subtotals.input.checked || layout.value === 'tabular';
-		tabularNotice.hidden = !second.value || !subtotals.input.checked || layout.value !== 'tabular';
+		position.disabled =
+			!second.value || !subtotals.input.checked || layout.value === 'tabular' || rowsAxis;
+		tabularNotice.textContent = ctx.t(
+			rowsAxis
+				? 'Values on rows display subtotals below groups.'
+				: 'Tabular layout displays subtotals below groups.',
+		);
+		tabularNotice.hidden =
+			!second.value || !subtotals.input.checked || !(layout.value === 'tabular' || rowsAxis);
 	};
 	axis.addEventListener('change', updateRows);
 	layout.addEventListener('change', updateRows);

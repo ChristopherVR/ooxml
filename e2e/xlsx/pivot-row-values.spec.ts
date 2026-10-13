@@ -43,9 +43,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 		await create.getByLabel('Report Layout:', { exact: true }).selectOption(layout);
 		await create.getByLabel('Values Axis:', { exact: true }).selectOption('rows');
 		await expect(create.getByLabel('Report Layout:', { exact: true })).toHaveValue(layout);
-		if (layout === 'tabular')
-			await expect(create.getByLabel('Second Row Field:', { exact: true })).toBeEnabled();
-		else await expect(create.getByLabel('Second Row Field:', { exact: true })).toBeDisabled();
+		await expect(create.getByLabel('Second Row Field:', { exact: true })).toBeEnabled();
 		if (layout !== 'compact') await create.getByLabel('Repeat row labels', { exact: true }).check();
 		await page.screenshot({ path: info.outputPath('pivot-values-on-rows.png') });
 		await create.getByRole('button', { name: 'OK', exact: true }).click();
@@ -98,20 +96,28 @@ for (const layout of ['tabular', 'compact', 'outline'])
 		await expect.poll(() => formulaBarValue(page)).toBe('125');
 	});
 
-for (const profile of ['tabular', 'compact', 'outline', 'outline-repeat'])
+for (const profile of [
+	'tabular',
+	'compact',
+	'outline',
+	'outline-repeat',
+	'nested-compact',
+	'nested-outline',
+	'nested-outline-repeat',
+])
 	test(`keeps native ${profile} Values-on-rows definitions verbatim when accepting unchanged settings`, async ({
 		page,
 	}) => {
-		const suffix =
-			profile === 'tabular' ? '' : profile === 'outline-repeat' ? '-outline' : '-' + profile;
-		const repeatSuffix = profile === 'outline-repeat' ? '-repeat' : '';
-		const layout =
-			profile === 'tabular' ? 'tabular' : profile === 'compact' ? 'compact' : 'outline';
+		const nested = profile.startsWith('nested-');
+		const form = profile.replace('nested-', '');
+		const suffix = form === 'tabular' ? '' : form === 'outline-repeat' ? '-outline' : '-' + form;
+		const repeatSuffix = form === 'outline-repeat' ? '-repeat' : '';
+		const layout = form === 'tabular' ? 'tabular' : form === 'compact' ? 'compact' : 'outline';
+		const filename = nested
+			? `excel-pivot-row-values-${layout}-rows-bottom-columns${repeatSuffix}.xlsx`
+			: `excel-pivot-row-values${suffix}-columns${repeatSuffix}.xlsx`;
 		const bytes = readFileSync(
-			new URL(
-				`../../src/core/xlsx/__fixtures__/excel-pivot-row-values${suffix}-columns${repeatSuffix}.xlsx`,
-				import.meta.url,
-			),
+			new URL(`../../src/core/xlsx/__fixtures__/${filename}`, import.meta.url),
 		);
 		const original = await JSZip.loadAsync(bytes);
 		await newWorkbook(page);
@@ -123,7 +129,18 @@ for (const profile of ['tabular', 'compact', 'outline', 'outline-repeat'])
 				),
 			[...bytes],
 		);
-		await goToCell(page, profile === 'tabular' ? 'E9' : profile === 'compact' ? 'D11' : 'E11');
+		await goToCell(
+			page,
+			nested
+				? layout === 'compact'
+					? 'D27'
+					: 'F27'
+				: layout === 'tabular'
+					? 'E9'
+					: layout === 'compact'
+						? 'D11'
+						: 'E11',
+		);
 		await expect.poll(() => formulaBarValue(page)).toBe('57');
 		await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
 		await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
@@ -132,6 +149,8 @@ for (const profile of ['tabular', 'compact', 'outline', 'outline-repeat'])
 		await expect(settings.getByLabel('Values Axis:', { exact: true })).toHaveValue('rows');
 		await expect(settings.getByLabel('Report Layout:', { exact: true })).toHaveValue(layout);
 		await expect(settings.locator('[data-pivot-value]')).toHaveCount(2);
+		if (nested)
+			await expect(settings.getByLabel('Second Row Field:', { exact: true })).toHaveValue('Region');
 		await settings.getByRole('button', { name: 'OK', exact: true }).click();
 		const output = await editor(page).evaluate(async (node) => [
 			...new Uint8Array(

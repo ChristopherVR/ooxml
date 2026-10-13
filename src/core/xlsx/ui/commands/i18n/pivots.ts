@@ -9,11 +9,17 @@ export const PIVOT_STRINGS: Translations = {
 		'值显示在列上',
 	],
 	'Values on Rows': ['Valeurs en lignes', 'Werte in Zeilen', 'Valores en filas', '值显示在行上'],
-	'Values on rows with two row fields require tabular layout.': [
-		'Les valeurs en lignes avec deux champs de ligne nécessitent une disposition tabulaire.',
-		'Werte in Zeilen mit zwei Zeilenfeldern benötigen ein Tabellenlayout.',
-		'Los valores en filas con dos campos de fila requieren un diseño tabular.',
-		'两个行字段的值显示在行上时需要表格布局。',
+	'Values are listed after the row fields.': [
+		'Les valeurs sont affichées après les champs de ligne.',
+		'Werte werden nach den Zeilenfeldern aufgeführt.',
+		'Los valores aparecen después de los campos de fila.',
+		'值列在行字段之后。',
+	],
+	'Values on rows display subtotals below groups.': [
+		'Les valeurs en lignes affichent les sous-totaux sous les groupes.',
+		'Werte in Zeilen zeigen Teilergebnisse unter den Gruppen an.',
+		'Los valores en filas muestran los subtotales debajo de los grupos.',
+		'行上的值将分类汇总显示在组下方。',
 	],
 	'Multiple value fields use Values on columns.': [
 		'Plusieurs champs de valeur utilisent les valeurs en colonnes.',

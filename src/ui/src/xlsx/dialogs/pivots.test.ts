@@ -308,53 +308,56 @@ it('authors Values last on rows, preserves unchanged settings and removes the fi
 	});
 });
 
-it('allows two real row fields on the Rows axis only with tabular layout', async () => {
-	const wb = createWorkbook();
-	const ctx = createTestContext(wb);
-	const edit = ctx.session()!;
-	[
-		['Category', 'Region', 'Amount'],
-		['Fruit', 'East', 10],
-	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
-	ctx.select('A1:C2');
-	registerToolDialogs(ctx);
-	const done = ctx.dialogs.open('create-pivot-table');
-	const dialog = dialogEl(ctx, 'create-pivot-table');
-	clickButton(dialog, 'Add Value Field');
-	setValue(
-		inputByLabel<HTMLSelectElement>(
-			dialog.querySelector<HTMLElement>('[data-pivot-value]')!,
-			'Summarize Values By:',
-		),
-		'count',
-	);
-	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
-	expect(
-		inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
-			'[value="rows"]',
-		)!.disabled,
-	).toBe(true);
-	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'tabular');
-	expect(
-		inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
-			'[value="rows"]',
-		)!.disabled,
-	).toBe(false);
-	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
-	expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(false);
-	const layout = inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:');
-	expect(layout.querySelector<HTMLOptionElement>('[value="compact"]')!.disabled).toBe(true);
-	expect(layout.querySelector<HTMLOptionElement>('[value="outline"]')!.disabled).toBe(true);
-	clickButton(dialog, 'OK');
-	await done;
-	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
-		secondRowField: 'Region',
-		valuesAxis: 'rows',
-		layout: 'tabular',
-	});
-	edit.undo();
-	expect(wb.sheets[0]!.pivotTables?.length ?? 0).toBe(0);
-});
+it.each(['compact', 'outline', 'tabular'])(
+	'authors two real row fields on the Rows axis in %s layout',
+	async (form) => {
+		const wb = createWorkbook();
+		const ctx = createTestContext(wb);
+		const edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Amount'],
+			['Fruit', 'East', 10],
+		].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+		ctx.select('A1:C2');
+		registerToolDialogs(ctx);
+		const done = ctx.dialogs.open('create-pivot-table');
+		const dialog = dialogEl(ctx, 'create-pivot-table');
+		clickButton(dialog, 'Add Value Field');
+		setValue(
+			inputByLabel<HTMLSelectElement>(
+				dialog.querySelector<HTMLElement>('[data-pivot-value]')!,
+				'Summarize Values By:',
+			),
+			'count',
+		);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		expect(
+			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
+				'[value="rows"]',
+			)!.disabled,
+		).toBe(false);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), form);
+		expect(
+			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
+				'[value="rows"]',
+			)!.disabled,
+		).toBe(false);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(false);
+		const layout = inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:');
+		expect(layout.querySelector<HTMLOptionElement>('[value="compact"]')!.disabled).toBe(false);
+		expect(layout.querySelector<HTMLOptionElement>('[value="outline"]')!.disabled).toBe(false);
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
+			secondRowField: 'Region',
+			valuesAxis: 'rows',
+			layout: form,
+		});
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables?.length ?? 0).toBe(0);
+	},
+);
 
 it('keeps compact Values-row layout and switches to outline repeated labels with history', async () => {
 	const wb = createWorkbook();
