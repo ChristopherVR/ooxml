@@ -160,10 +160,10 @@ describe('getTextLayoutStyle', () => {
 	});
 
 	// ── Text wrap ───────────────────────────────────────────────
-	it('sets whiteSpace nowrap when textWrap is "none"', () => {
+	it('sets whiteSpace pre when textWrap is "none"', () => {
 		const el = makeTextElement({ textWrap: 'none' });
 		const style = getTextLayoutStyle(el);
-		expect(style.whiteSpace).toBe('nowrap');
+		expect(style.whiteSpace).toBe('pre');
 		expect(style.overflow).toBe('visible');
 	});
 
