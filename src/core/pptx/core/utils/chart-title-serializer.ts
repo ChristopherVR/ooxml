@@ -13,6 +13,7 @@
 import type { PptxChartTitleRun, XmlObject } from '../types';
 import { buildTitleNode, buildTitleText, buildTitleTextFromRuns } from './chart-title-node-builder';
 import { realignOrCollapseTitleRuns } from './chart-title-run-alignment';
+import { patchChartTitleRunText } from './chart-title-text-edit';
 import type { GetLocalName } from './chart-title-xml-ops';
 import {
 	collectAllText,
@@ -51,6 +52,9 @@ export interface ChartTitleModel {
 	 * retype a chart title.
 	 */
 	titleRuns?: PptxChartTitleRun[];
+	/** Preserve authored rich XML when only run text changed. */
+	titleTextOnly?: boolean;
+	titleTextOnlyStyles?: Omit<PptxChartTitleRun, 'text'>[];
 }
 
 export interface ChartTitleOptions {
@@ -143,6 +147,15 @@ export function applyChartTitleToXml(
 	}
 
 	let titleNode = existingKey ? (chartRoot[existingKey] as XmlObject | undefined) : undefined;
+	const textOnlyStylesMatch = Boolean(
+		runs &&
+		model.titleTextOnlyStyles?.length === runs.length &&
+		runs.every((run, index) =>
+			(['bold', 'italic', 'fontSize', 'color'] as const).every(
+				(key) => run[key] === model.titleTextOnlyStyles![index]![key],
+			),
+		),
+	);
 
 	// An untouched multi-run title (every run's TEXT matches what is already
 	// authored, in order) skips the rebuild entirely: rebuilding from the
@@ -158,6 +171,7 @@ export function applyChartTitleToXml(
 		collectAllText(titleNode, getLocalName, existingTexts);
 		const newTexts = runs.map((run) => run.text);
 		if (
+			(!model.titleTextOnly || textOnlyStylesMatch) &&
 			existingTexts.length === newTexts.length &&
 			existingTexts.every((text, index) => text === newTexts[index])
 		) {
@@ -172,6 +186,12 @@ export function applyChartTitleToXml(
 			insertAt(chartRoot, 0, `${prefix}:title`, titleNode);
 		}
 	} else if (runs) {
+		if (model.titleTextOnly && textOnlyStylesMatch) {
+			if (!patchChartTitleRunText(titleNode, runs, getLocalName))
+				throw new Error('This chart title cannot be replaced without changing its text source');
+			if (prefix === 'c') setAutoTitleDeleted(chartRoot, false, getLocalName);
+			return true;
+		}
 		// Multi-run text REPLACES the whole rich body rather than patching the
 		// first run in place, since a prior save may have had a different
 		// number of runs.

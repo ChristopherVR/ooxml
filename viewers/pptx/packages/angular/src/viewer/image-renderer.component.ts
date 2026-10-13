@@ -1,4 +1,4 @@
-import { NgStyle } from '@angular/common';
+import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import type { SafeHtml } from '@angular/platform-browser';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -6,24 +6,33 @@ import {
 	elementHitTargetStyle,
 	getCachedNativeImageSize,
 	getImageOverflow,
+	getPictureFrameLayers,
 	probeNativeImageSize,
 	shouldRenderHitTarget,
+	strokeOutlineViewBox,
 } from 'ooxml-ui/pptx';
-import type { NativeImageSize } from 'ooxml-ui/pptx';
+import type { NativeImageSize, PictureFrameLayers } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { ColorChangedImageComponent } from './color-changed-image.component';
-import { getReflectionOverlay } from './element-effect-defs';
+import { getReflectionOverlay, getStrokeOutline } from './element-effect-defs';
 import type { ReflectionOverlay } from './element-effect-defs';
 import { getContainerStyle, getImageSrc } from './element-style';
 import { buildAngularImageRenderView } from './image-renderer-helpers';
 import { ReflectionMirrorContentComponent } from './reflection-mirror-content.component';
+import { StrokeOutlineComponent } from './stroke-outline.component';
 
 @Component({
 	selector: 'pptx-image-renderer',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [NgStyle, ColorChangedImageComponent, ReflectionMirrorContentComponent],
+	imports: [
+		NgStyle,
+		NgTemplateOutlet,
+		ColorChangedImageComponent,
+		ReflectionMirrorContentComponent,
+		StrokeOutlineComponent,
+	],
 	template: `
 		<div
 			class="pptx-ng-element pptx-ng-image"
@@ -36,6 +45,33 @@ import { ReflectionMirrorContentComponent } from './reflection-mirror-content.co
 			@if (hitTargetStyle(); as hit) {
 				<div aria-hidden="true" data-pptx-hit-target="true" [ngStyle]="hit"></div>
 			}
+			<!-- A framed or shadowed picture clips its pixels on an inner surface, so
+			     the centred frame and the shadow extend past the box. -->
+			@if (frameLayers().surface; as surface) {
+				<div class="pptx-ng-image-surface" [ngStyle]="surface">
+					<ng-container [ngTemplateOutlet]="pixels" />
+				</div>
+			} @else {
+				<ng-container [ngTemplateOutlet]="pixels" />
+			}
+			@if (frameOutline(); as outline) {
+				<svg
+					pptx-stroke-outline
+					[outline]="outline"
+					aria-hidden="true"
+					[attr.viewBox]="outlineViewBox()"
+					preserveAspectRatio="none"
+					style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none"
+				></svg>
+			}
+			<!-- a:reflection mirror. -->
+			@if (reflection(); as refl) {
+				<div class="pptx-ng-reflection" aria-hidden="true" [ngStyle]="refl.wrapperStyle">
+					<pptx-reflection-mirror-content [element]="element()" [mediaDataUrls]="mediaDataUrls()" />
+				</div>
+			}
+		</div>
+		<ng-template #pixels>
 			@for (filter of safeFilters(); track filter.id) {
 				<svg
 					width="0"
@@ -80,15 +116,7 @@ import { ReflectionMirrorContentComponent } from './reflection-mirror-content.co
 			@if (view().colorWashStyle; as washStyle) {
 				<div class="pptx-ng-image-color-wash" [ngStyle]="washStyle"></div>
 			}
-			<!-- a:reflection mirror. This never rendered at all before: the
-			     shape/text branch mounted its own reflection block, but a
-			     picture routed through this component instead and got none. -->
-			@if (reflection(); as refl) {
-				<div class="pptx-ng-reflection" aria-hidden="true" [ngStyle]="refl.wrapperStyle">
-					<pptx-reflection-mirror-content [element]="element()" [mediaDataUrls]="mediaDataUrls()" />
-				</div>
-			}
-		</div>
+		</ng-template>
 	`,
 })
 export class ImageRendererComponent {
@@ -139,12 +167,26 @@ export class ImageRendererComponent {
 
 	// The clip is load-bearing, not cosmetic: a cropped picture is rendered by
 	// scaling the source up and translating the cropped-away part out of the
-	// frame, so without it the discarded region paints over its neighbours.
+	// frame, so without it the discarded region paints over its neighbours. A
+	// picture with a frame (`a:ln`) or an outer shadow keeps that clip on the
+	// inner surface instead (shared `getPictureFrameLayers`).
+	readonly frameLayers = computed<PictureFrameLayers>(() => {
+		const mask = this.view().frameGeometryMask;
+		return getPictureFrameLayers(this.element(), {
+			overflow: getImageOverflow(this.element()),
+			borderRadius: mask?.['border-radius'] as string | undefined,
+			clipPath: mask?.['clip-path'] as string | undefined,
+		});
+	});
 	readonly containerStyle = computed(() => ({
 		...getContainerStyle(this.element(), this.zIndex()),
-		overflow: getImageOverflow(this.element()),
-		...(this.view().frameGeometryMask ?? {}),
+		...this.frameLayers().box,
 	}));
+	/** The picture's own frame (`a:ln`), stroked beside the clipped surface. */
+	readonly frameOutline = computed(() =>
+		this.frameLayers().surface ? getStrokeOutline(this.element()) : undefined,
+	);
+	readonly outlineViewBox = computed(() => strokeOutlineViewBox(this.element()));
 	readonly imageSrc = computed(() => getImageSrc(this.element(), this.mediaDataUrls()));
 
 	/**

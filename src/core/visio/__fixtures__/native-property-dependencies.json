@@ -1,0 +1,7 @@
+{
+  "version": "16.0",
+  "width": 8.0,
+  "property": 2.0,
+  "dependentPinX": 2.0,
+  "formula": "Sheet.1!Prop.Offset*1 in"
+}

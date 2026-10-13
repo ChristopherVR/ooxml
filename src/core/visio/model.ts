@@ -288,6 +288,10 @@ export interface VisioShape {
 	hyperlinks?: VisioHyperlink[];
 	/** Cached Comment cell text, which Visio shows as the shape's ScreenTip. Inert plain text. */
 	screenTip?: string;
+	/** Native User.visAltText title, distinct from the hover ScreenTip. */
+	accessibilityTitle?: string;
+	/** Native User.visAltDescription text for assistive technology. */
+	alternativeText?: string;
 	/** A container or callout (User.msvStructureType) with its members or target, when known. */
 	structure?: VisioShapeStructure;
 	/** Connection rows in local y-up coordinates; `index` is the zero-based row IX. */
@@ -296,6 +300,13 @@ export interface VisioShape {
 	lineEnds?: { begin: VisioLocalPoint; end: VisioLocalPoint };
 	/** A dynamic connector's route from its ShapeRouteStyle and ConLineRouteExt caches. */
 	connectorRoute?: 'right-angle' | 'straight' | 'curved';
+	/** Connector override: 0 page default, 1 arc, 2 gap, 3 square, 4-9 polygon. */
+	lineJumpStyle?: number;
+	/** Connector jump policy: 0 page, 1 never, 2 always, 3 other connector, 4 neither. */
+	lineJumpCode?: number;
+	/** 0 page default, 1 up/left, 2 down/right, in page coordinates. */
+	lineJumpDirectionX?: number;
+	lineJumpDirectionY?: number;
 	/**
 	 * A two-dimensional shape Visio lays out and routes around (ObjType 1). Visio marks a shape
 	 * placeable when a dynamic connector is glued to it; right-angle connectors avoid these only.
@@ -360,6 +371,8 @@ export interface VisioPageTheme {
 }
 export interface VisioPage {
 	id: string;
+	accessibilityTitle?: string;
+	alternativeText?: string;
 	/** Explicit cached drawing page-size modes. Missing or invalid source caches are omitted. */
 	drawingSizeType?: number;
 	drawingResizeType?: number;

@@ -15,10 +15,11 @@ export function assertShapeDetails(shape: VisioShape, budget: DetailBudget): voi
 		(budget.rows += data.length + links.length) > 100_000
 	)
 		throw new Error('The scene exceeds shape metadata row limits.');
-	if (shape.screenTip !== undefined) {
-		if (typeof shape.screenTip !== 'string' || shape.screenTip.length > 8192)
-			throw new Error('The scene has an invalid ScreenTip.');
-		if ((budget.characters += shape.screenTip.length) > 5_000_000)
+	for (const value of [shape.screenTip, shape.accessibilityTitle, shape.alternativeText]) {
+		if (value === undefined) continue;
+		if (typeof value !== 'string' || value.length > 8192)
+			throw new Error('The scene has invalid accessibility or ScreenTip text.');
+		if ((budget.characters += value.length) > 5_000_000)
 			throw new Error('The scene exceeds shape metadata string limits.');
 	}
 	assertConnectionDetails(shape);
@@ -92,6 +93,14 @@ const finitePoint = (value: unknown): boolean =>
 	Number.isFinite((value as { y?: unknown }).y);
 /** Connection points, line ends and connector routes are plain bounded numbers and enums. */
 function assertConnectionDetails(shape: VisioShape): void {
+	for (const [value, maximum] of [
+		[shape.lineJumpStyle, 9],
+		[shape.lineJumpCode, 4],
+		[shape.lineJumpDirectionX, 2],
+		[shape.lineJumpDirectionY, 2],
+	] as const)
+		if (value !== undefined && (!Number.isInteger(value) || value < 0 || value > maximum))
+			throw new Error('The scene has invalid connector jump settings.');
 	const points = shape.connectionPoints;
 	if (
 		points !== undefined &&

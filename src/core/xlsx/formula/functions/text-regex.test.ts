@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calc, E } from '../test-helpers';
+import { calc, calcArray, E } from '../test-helpers';
 
 describe('ENCODEURL', () => {
 	it('encodes like Microsoft documents it', () => {
@@ -23,7 +23,36 @@ describe('regular expression functions', () => {
 	it('REGEXEXTRACT returns the first match or #N/A', () => {
 		expect(calc('REGEXEXTRACT("order 4521 shipped","[0-9]+")')).toBe('4521');
 		expect(calc('REGEXEXTRACT("none","[0-9]+")')).toEqual(E.NA);
-		expect(calc('REGEXEXTRACT("a1b2","[0-9]",1)')).toEqual(E.VALUE);
+		expect(calc('REGEXEXTRACT("a1b2","[0-9]",3)')).toEqual(E.VALUE);
+	});
+
+	it('spills all matches down rows, retaining numeric text', () => {
+		expect(calcArray('REGEXEXTRACT("a01b22c333","[0-9]+",1)', {}, 3, 1)).toEqual([
+			['01'],
+			['22'],
+			['333'],
+		]);
+		expect(calcArray('REGEXEXTRACT("aAbB","[a-b]",1,1)', {}, 4, 1)).toEqual([
+			['a'],
+			['A'],
+			['b'],
+			['B'],
+		]);
+		expect(calc('REGEXEXTRACT("none","[0-9]+",1)')).toEqual(E.NA);
+	});
+
+	it('spills only the first match’s capture groups', () => {
+		expect(calcArray('REGEXEXTRACT("John Smith; Jane Doe","(\\w+) (\\w+)",2)', {}, 1, 2)).toEqual([
+			['John', 'Smith'],
+		]);
+		expect(calcArray('REGEXEXTRACT("b","(a)?(b)",2)', {}, 1, 2)).toEqual([['', 'b']]);
+		expect(calc('REGEXEXTRACT("none","([0-9]+)",2)')).toEqual(E.NA);
+		expect(calc('REGEXEXTRACT("abc","abc",2)')).toEqual(E.VALUE);
+	});
+
+	it('advances safely for zero-length and Unicode matches', () => {
+		expect(calcArray('REGEXEXTRACT("ab","(?=.)",1)', {}, 2, 1)).toEqual([[''], ['']]);
+		expect(calcArray('REGEXEXTRACT("😀a",".",1)', {}, 2, 1)).toEqual([['😀'], ['a']]);
 	});
 
 	it('REGEXREPLACE replaces all, the nth or the nth from the end', () => {

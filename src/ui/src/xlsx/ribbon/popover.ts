@@ -56,11 +56,14 @@ export function mountPopover(
 	doc.addEventListener('pointerdown', outside, true);
 	doc.addEventListener('keydown', escape, true);
 	closeOpen = () => {
+		const active = root instanceof ShadowRoot ? root.activeElement : doc.activeElement;
+		const restoreFocus = active !== null && pop.contains(active);
 		doc.removeEventListener('pointerdown', outside, true);
 		doc.removeEventListener('keydown', escape, true);
 		pop.remove();
 		expanded.setAttribute('aria-expanded', 'false');
 		closeOpen = undefined;
+		if (restoreFocus && anchor.isConnected) anchor.focus({ preventScroll: true });
 		onClose?.();
 	};
 	return true;

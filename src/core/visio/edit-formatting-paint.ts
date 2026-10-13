@@ -77,6 +77,10 @@ export function shapeFormattingWrites(edit: VisioShapeFormatEdit): FormattingWri
 		['beginArrowSize', 'BeginArrowSize'],
 		['endArrowSize', 'EndArrowSize'],
 		['lineCap', 'LineCap'],
+		['lineJumpCode', 'ConLineJumpCode'],
+		['lineJumpStyle', 'ConLineJumpStyle'],
+		['lineJumpDirectionX', 'ConLineJumpDirX'],
+		['lineJumpDirectionY', 'ConLineJumpDirY'],
 	] as const)
 		if (edit[name] !== undefined) add(cell, edit[name], 'LineStyle');
 	if (edit.rounding !== undefined) add('Rounding', edit.rounding / 72, 'LineStyle', 'PT');

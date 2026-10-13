@@ -1,0 +1,61 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "source": "authored",
+      "shape": 2,
+      "x": 4.0,
+      "y": 4.3,
+      "formula": "Sheet.1!PinX+(0 in)"
+    },
+    {
+      "source": "authored",
+      "shape": 3,
+      "x": 4.0,
+      "y": 4.35,
+      "formula": "Sheet.1!PinX+(0 in)"
+    },
+    {
+      "source": "authored",
+      "shape": 4,
+      "x": 3.42,
+      "y": 4.35,
+      "formula": "Sheet.1!PinX+(-0.58 in)"
+    },
+    {
+      "source": "authored",
+      "shape": 5,
+      "x": 5.15,
+      "y": 5.390000000000001,
+      "formula": "Sheet.1!PinX+(1.15 in)"
+    },
+    {
+      "source": "core-moved",
+      "shape": 2,
+      "x": 4.0,
+      "y": 4.3,
+      "formula": "Sheet.1!PinX+(0 in)"
+    },
+    {
+      "source": "core-moved",
+      "shape": 3,
+      "x": 4.0,
+      "y": 4.35,
+      "formula": "Sheet.1!PinX+(0 in)"
+    },
+    {
+      "source": "core-moved",
+      "shape": 4,
+      "x": 3.42,
+      "y": 4.35,
+      "formula": "Sheet.1!PinX+(-0.58 in)"
+    },
+    {
+      "source": "core-moved",
+      "shape": 5,
+      "x": 5.15,
+      "y": 5.390000000000001,
+      "formula": "Sheet.1!PinX+(1.15 in)"
+    }
+  ]
+}

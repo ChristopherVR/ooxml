@@ -93,8 +93,9 @@ describe('help dialogs', () => {
 		await help;
 		const about = ctx.dialogs.open('feature-status');
 		const text = dialogEl(ctx, 'feature-status').textContent ?? '';
-		expect(text).toContain('Pivot tables (kept in the file');
-		expect(text).toContain('Creating or editing sparklines');
+		expect(text).toContain('Worksheet-range PivotTables');
+		expect(text).toContain('Advanced PivotTable layouts');
+		expect(text).toContain('Sparklines (create, format and clear)');
 		expect(text).toContain('Freeze panes');
 		pressKey(dialogEl(ctx, 'feature-status').querySelector('button')!, 'Escape');
 		expect(await about).toBeUndefined();

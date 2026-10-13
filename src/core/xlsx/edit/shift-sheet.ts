@@ -49,6 +49,13 @@ export function shiftSheetContent(sheet: Worksheet, shift: AxisShift, band?: Ban
 		return range ? [{ ...c, address: range.start }] : [];
 	});
 	sheet.tables = sheet.tables.flatMap((t) => shiftTable(sheet, t, shift, moveRange));
+	for (const pivot of sheet.pivotTables ?? []) {
+		const location = moveRange(pivot.location);
+		if (location) {
+			pivot.location = location;
+			pivot.dirty = true;
+		}
+	}
 	for (const drawing of sheet.drawings) shiftAnchor(drawing.anchor, shift, band);
 	if (!band) shiftAxisFormats(sheet, shift);
 	if (sheet.autoFilter) {

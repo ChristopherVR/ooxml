@@ -21,6 +21,12 @@ export type SetupField =
 	| 'scale-unit'
 	| 'type'
 	| 'name'
+	| 'jump-code'
+	| 'jump-style'
+	| 'jump-direction-x'
+	| 'jump-direction-y'
+	| 'jump-size-x'
+	| 'jump-size-y'
 	| 'back-page';
 export type SetupControl = HTMLInputElement | SetupSelect;
 export const SETUP_TABS: readonly [VisioPageSetupTab, string][] = [
@@ -28,6 +34,7 @@ export const SETUP_TABS: readonly [VisioPageSetupTab, string][] = [
 	['size', 'Page Size'],
 	['scale', 'Drawing Scale'],
 	['properties', 'Page Properties'],
+	['layout', 'Layout and Routing'],
 ];
 export const UNIT_INCHES: Record<string, number> = {
 	IN: 1,
@@ -132,6 +139,43 @@ export function createPageSetupDialog(doc: Document) {
 			]),
 			input('name', 'Name', 'text'),
 			select('back-page', 'Background', [['', 'None']]),
+		],
+		layout: [
+			select('jump-code', 'Add line jumps to', [
+				['0', 'None'],
+				['1', 'Horizontal lines'],
+				['2', 'Vertical lines'],
+				['3', 'Last routed line'],
+				['4', 'Last displayed line'],
+				['5', 'First displayed line'],
+			]),
+			select('jump-style', 'Line jump style', [
+				['0', 'Default (Arc)'],
+				['1', 'Arc'],
+				['2', 'Gap'],
+				['3', 'Square'],
+				['4', 'Triangle'],
+				['5', '3 sides'],
+				['6', '4 sides'],
+				['7', '5 sides'],
+				['8', '6 sides'],
+				['9', '7 sides'],
+			]),
+			select('jump-direction-x', 'Horizontal jump direction', [
+				['0', 'Default'],
+				['1', 'Up'],
+				['2', 'Down'],
+			]),
+			select('jump-direction-y', 'Vertical jump direction', [
+				['0', 'Default'],
+				['1', 'Left'],
+				['2', 'Right'],
+			]),
+			input('jump-size-x', 'Horizontal jump size (%)', 'number'),
+			input('jump-size-y', 'Vertical jump size (%)', 'number'),
+			hint(
+				'Connector-specific styles and directions override these page settings. Curved connectors do not show jumps. Last routed uses display order.',
+			),
 		],
 	};
 	const tabs = doc.createElement('div');

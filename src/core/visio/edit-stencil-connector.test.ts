@@ -200,6 +200,33 @@ describe("Visio's Dynamic connector (a stencil instance)", () => {
 			expect(moved).toContain(cell);
 	});
 
+	it('saves curved walking glue through the midpoint of overlapping facing sides', async () => {
+		const initial = await source();
+		const curved = await edited(initial, {
+			type: 'set-connector-route',
+			pageId: '0',
+			shapeId: '3',
+			route: 'curved',
+		});
+		const moved = await edited(curved, move('2', 6, 6.2));
+		const xml = await connector(moved);
+		for (const cell of [
+			c('BeginX', 2.5, WALK),
+			c('BeginY', 6.1, WALK),
+			c('EndX', 5.5, WALK_END),
+			c('EndY', 6.1, WALK_END),
+		])
+			expect(xml).toContain(cell);
+		expect(xml).toContain(c('ConLineRouteExt', 2));
+		expect(
+			(await parseVsdx(moved)).pages[0]!.shapes.find((s) => s.id === '3')!.connectorRoute,
+		).toBe('curved');
+		const restored = await edited(moved, move('2', 6, 6));
+		expect(await connector(restored)).toContain(c('BeginY', 6, WALK));
+		expect(await connector(restored)).toContain(c('EndY', 6, WALK_END));
+		expect(await page(initial)).toContain(c('BeginY', 6, WALK));
+	});
+
 	it('changes route, moves, unglues and glues again', async () => {
 		const bytes = await edited(await source(), move('2', 6, 3));
 		// Centre to centre: between the outlines along the line that joins the middles.

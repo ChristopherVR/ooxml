@@ -131,6 +131,7 @@ function positions(group: SparklineGroup, data: SparklineData, n: number): (numb
 			return dates.map((d) => (d === null ? null : width ? (d - span.min) / width : 0.5));
 		}
 	}
+	if (group.dateAxis) return Array.from({ length: n }, () => null);
 	return Array.from({ length: n }, (_, i) => (n === 1 ? 0.5 : i / (n - 1)));
 }
 
@@ -223,7 +224,8 @@ export function sparklineView(
 		});
 		if (segment.length) view.lines.push(segment);
 	} else {
-		const slot = 1 / n;
+		const dates = group.dateAxis && data.dates ? extent(data.dates) : undefined;
+		const slot = dates ? 1 / Math.max(1, dates.max - dates.min + 1) : 1 / n;
 		const w = slot * (1 - COLUMN_GAP);
 		// Columns grow from zero, or from the scale's edge when zero is outside it.
 		const base = yOf(Math.max(scale.min, Math.min(scale.max, 0)));

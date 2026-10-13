@@ -109,11 +109,16 @@ export function duplicateSlide(slide: PptxSlide, newSlideNumber: number): PptxSl
 	// Update animation element references to use the new IDs
 	if (cloned.animations && cloned.animations.length > 0) {
 		const idMap = new Map<string, string>();
-		slide.elements.forEach((originalEl, idx) => {
-			if (idx < cloned.elements.length) {
-				idMap.set(originalEl.id, cloned.elements[idx].id);
-			}
-		});
+		const mapElements = (originals: PptxElement[], copies: PptxElement[]): void => {
+			originals.forEach((original, index) => {
+				const copy = copies[index];
+				if (!copy) return;
+				idMap.set(original.id, copy.id);
+				if (original.type === 'group' && copy.type === 'group')
+					mapElements(original.children, copy.children);
+			});
+		};
+		mapElements(slide.elements, cloned.elements);
 
 		cloned.animations = cloned.animations.map((anim) => ({
 			...anim,

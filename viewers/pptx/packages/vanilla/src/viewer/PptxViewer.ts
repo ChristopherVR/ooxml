@@ -1,4 +1,7 @@
 import {
+	createSlidePackageClipboard,
+	insertSlidePaste,
+	applySlidePasteTemplates,
 	commitElementUpdateBatch,
 	buildDeckSaveOptions,
 	buildPresentationAudienceUrl,
@@ -54,6 +57,8 @@ import {
 	subtitleSettingsFromOptions,
 } from 'ooxml-ui/pptx';
 import type {
+	SlidePackageClipboard,
+	SlidePasteRequest,
 	ElementUpdate,
 	ElementUpdateOptions,
 	PresentationSnapshot,
@@ -180,6 +185,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	editor!: EditorController;
 	protected readonly exporter: ExportLifecycle;
 	private readonly loading: LoadingController;
+	private readonly slidePackageClipboard: SlidePackageClipboard;
 	private readonly registry: ElementRendererRegistry;
 	private readonly sessions: SessionControllers;
 	private readonly controls: ViewerControls;
@@ -496,7 +502,38 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			// recovery snapshots off (see `render/autosave-policy` in shared).
 			{ initial: { save: { autoSave: options.autosave ?? true } } },
 		);
+		this.slidePackageClipboard = createSlidePackageClipboard({
+			getSnapshot: () => {
+				const handler = this.loading.getHandler(),
+					state = this.store.get();
+				return handler
+					? {
+							handler,
+							slides: state.slides,
+							templateElementsBySlideId: state.templateElementsBySlideId,
+							editable: state.editable,
+							allowExternalImages: this.optionsController.getOptions().trust.allowExternalContent,
+						}
+					: null;
+			},
+			commit: (result) => {
+				this.loading.setHandler(result.handler, true);
+				const mediaDataUrls = this.store.get().mediaDataUrls;
+				for (const [path, url] of result.mediaUrls) {
+					mediaDataUrls.set(path, url);
+				}
+				this.editor.commitSlides(result.slides, result.insertAt);
+				this.store.set({
+					templateElementsBySlideId: result.templateElementsBySlideId,
+					slideMasters: result.data.slideMasters ?? [],
+					themeOptions: result.data.themeOptions ?? [],
+					notesMaster: result.data.notesMaster,
+					mediaDataUrls,
+				});
+			},
+		});
 		const parityWorkflowHost: ParityWorkflowHost = {
+			slidePackageClipboard: this.slidePackageClipboard,
 			doc: this.doc,
 			t: this.t,
 			store: this.store,
@@ -523,6 +560,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getLocaleState: () => ({ code: this.currentLocale, catalog: this.availableLocales }),
 			slideOps: {
 				duplicateSlides: (indexes) => this.duplicateSlides(indexes),
+				pasteSlides: (request) => this.pasteSlides(request),
 				deleteSlides: (indexes) => this.deleteSlides(indexes),
 				toggleHideSlides: (indexes) => this.toggleHideSlides(indexes),
 				moveSlide: (from, to) => this.moveSlide(from, to),
@@ -1034,6 +1072,16 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		if (next.length > 0) {
 			this.editor.commitSlides(this.renumber(next));
 		}
+	};
+	pasteSlides = (request: SlidePasteRequest): void => {
+		if (!request.copies.length || !this.store.get().editable) {
+			return;
+		}
+		const state = this.store.get();
+		this.editor.commitSlides(insertSlidePaste(state.slides, request), request.insertAt);
+		this.store.set({
+			templateElementsBySlideId: applySlidePasteTemplates(state.templateElementsBySlideId, request),
+		});
 	};
 	duplicateSlides = (indexes: number[]): void => {
 		const selected = new Set(indexes);
@@ -2018,6 +2066,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			return;
 		}
 		this.destroyed = true;
+		this.slidePackageClipboard.dispose();
 		this.customization.destroy();
 		// File > Options > Save > "clear cache on close": wipe recovery snapshots
 		// before the options store that answers the question is disposed below.

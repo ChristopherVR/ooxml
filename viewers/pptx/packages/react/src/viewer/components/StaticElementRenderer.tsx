@@ -146,7 +146,7 @@ function StaticElementRendererImpl({
 		>
 			{/* Soft-edge <filter> defs + DAG fill-overlay tint layer + (unless
 			    suppressed) this element's own reflection mirror. */}
-			<ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />
+			{!isImage && <ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />}
 			{element.type === 'group' ? (
 				<div className='relative w-full h-full'>
 					{((element as GroupPptxElement).children ?? []).map((child, index) => (
@@ -220,6 +220,8 @@ function StaticElementRendererImpl({
 					canEditChart: false,
 				})
 			)}
+			{/* A picture's overlay (its centred `a:ln` frame) paints over the picture. */}
+			{isImage && <ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />}
 		</div>
 	);
 }

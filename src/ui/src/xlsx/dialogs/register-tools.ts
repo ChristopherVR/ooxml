@@ -13,12 +13,23 @@ import { openRemoveDuplicates } from './remove-duplicates';
 import { openSymbol } from './symbol';
 import { openTextToColumns } from './text-to-columns';
 import { openZoom } from './zoom';
+import { openCreateSparklines, openSparklineSettings } from './sparklines';
+import { openPivotTable } from './pivots';
+import { openPrintPreview } from './print-preview';
+import type { SparklineType } from 'ooxml-core/xlsx';
 
 const props = <T>(value: unknown): T =>
 	value && typeof value === 'object' ? (value as T) : ({} as T);
 
 export function registerToolDialogs(ctx: EditorContext): void {
 	const d = ctx.dialogs;
+	d.register('print-preview', (c) => openPrintPreview(c));
+	d.register('create-pivot-table', (c) => openPivotTable(c));
+	d.register('pivot-settings', (c) => openPivotTable(c, true));
+	d.register('create-sparklines', (c, p) =>
+		openCreateSparklines(c, props<{ type?: SparklineType }>(p).type),
+	);
+	d.register('sparkline-settings', (c) => openSparklineSettings(c));
 	d.register('insert-chart', (c, p) => openInsertChart(c, props<InsertChartProps>(p)));
 	d.register('paste-special', (c) => openPasteSpecial(c));
 	d.register('page-setup', (c, p) => openPageSetup(c, props<PageSetupProps>(p)));

@@ -39,6 +39,7 @@ import {
 export type {
 	VisioPageSetupEdit,
 	VisioPagePropertiesEdit,
+	VisioPageAltTextEdit,
 	VisioPageDecorationEdit,
 	VisioPageSetupEdits,
 	VisioScaleUnit,
@@ -118,6 +119,7 @@ export type {
 	VisioPictureInsertEdit,
 	VisioShapeHyperlinkEdit,
 	VisioShapeScreenTipEdit,
+	VisioShapeAltTextEdit,
 	VisioHyperlinkFields,
 } from './edit-metadata-commands';
 export type {
@@ -143,7 +145,15 @@ interface Target {
 	pageId: string;
 	shapeId: string;
 }
-type BoxCreation = Target & { x: number; y: number; width: number; height: number; text?: string };
+type BoxCreation = Target & {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	text?: string;
+	/** Keep the initial pin offset from a local 2D shape using native ShapeSheet formulas. */
+	followShapeId?: string;
+};
 /** Drawing inches; bottom-left origin, up-positive rotation pin. Rotation angles use radians. */
 export type VisioGeometryEdit =
 	| (Target & {
@@ -277,6 +287,21 @@ export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
 	return ['PinX', 'PinY', 'Width', 'Height'];
 }
 
+export function snapshotPositionFollower(
+	value: string | undefined,
+	own: string,
+): { followShapeId?: string } {
+	if (value === undefined) return {};
+	if (
+		typeof value !== 'string' ||
+		!/^[1-9]\d{0,9}$/.test(value) ||
+		Number(value) > 0xffffffff ||
+		value === own
+	)
+		fail('INVALID_EDIT', 'A distinct numeric owner shape ID is required.');
+	return { followShapeId: value };
+}
+
 export function snapshotVisioEdits(
 	edits: readonly VisioEdit[],
 	maxEdits: number,
@@ -389,6 +414,7 @@ export function snapshotVisioEdits(
 			case 'create-text-box':
 				return {
 					...target,
+					...snapshotPositionFollower(edit.followShapeId, edit.shapeId),
 					type: edit.type,
 					x: numeric(edit.x),
 					y: numeric(edit.y),
@@ -422,6 +448,7 @@ export function snapshotVisioEdits(
 					fail('INVALID_EDIT', 'Unknown outline shape.');
 				return {
 					...target,
+					...snapshotPositionFollower(edit.followShapeId, edit.shapeId),
 					type: edit.type,
 					x: numeric(edit.x),
 					y: numeric(edit.y),

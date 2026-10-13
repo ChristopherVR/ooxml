@@ -62,6 +62,11 @@ export function resolveIndents(paragraph: LayoutParagraph): {
 	};
 }
 
+/** Source atoms occupy one editor position even when they have no visible text. */
+export function sourceLengthOf(run: LayoutRun): number {
+	return run.sourceLength ?? (run.object ? 1 : run.text.length || (run.breakAfter ? 1 : 0));
+}
+
 export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	tokens: BreakToken[];
 	runOffsets: number[];
@@ -72,7 +77,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	paragraph.runs.forEach((run, runIndex) => {
 		runOffsets.push(cursor);
 		if (run.hidden) {
-			if (!run.synthetic) cursor += run.sourceLength ?? run.text.length;
+			if (!run.synthetic) cursor += sourceLengthOf(run);
 			return;
 		}
 		if (run.object) tokens.push({ kind: 'object', runIndex, sourceStart: 0 });
@@ -91,7 +96,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 		// A list label maps to the start of the paragraph's text for click-to-cursor.
 		if (run.synthetic) {
 			for (const token of tokens) if (token.runIndex === runIndex) token.sourceStart = 0;
-		} else cursor += run.sourceLength ?? run.text.length;
+		} else cursor += sourceLengthOf(run);
 	});
 	return { tokens, runOffsets };
 }

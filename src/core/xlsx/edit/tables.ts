@@ -33,6 +33,8 @@ export function createTable(
 	if (r.start.row === r.end.row && r.start.col === r.end.col) r = currentRegion(sheet, r.start);
 	if (sheet.tables.some((t) => rangesIntersect(t.range, r)))
 		throw new Error('A table cannot overlap another table.');
+	if (sheet.pivotTables?.some((pivot) => rangesIntersect(pivot.location, r)))
+		throw new Error('A table cannot overlap a PivotTable.');
 	if (sheet.merges.some((m) => rangesIntersect(m, r)))
 		throw new Error('A table cannot contain merged cells.');
 	return ctx.run(

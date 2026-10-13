@@ -33,6 +33,7 @@ import { buildAngularParagraphs } from './paragraph-view';
 import type { Paragraph } from './paragraph-view';
 import { ReflectionMirrorContentComponent } from './reflection-mirror-content.component';
 import { SlideTextBlockComponent } from './slide-text-block.component';
+import { StrokeOutlineComponent } from './stroke-outline.component';
 import { getTextWarp } from './text-warp';
 import type { TextWarpGlyphDef, TextWarpPathDef } from './text-warp';
 
@@ -62,6 +63,7 @@ import type { TextWarpGlyphDef, TextWarpPathDef } from './text-warp';
 		Extrusion3DOverlayComponent,
 		ReflectionMirrorContentComponent,
 		SlideTextBlockComponent,
+		StrokeOutlineComponent,
 	],
 	templateUrl: './element-renderer-shape.component.html',
 })

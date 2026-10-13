@@ -56,6 +56,9 @@ export type VisioTextFeature =
 export type VisioInsertItem = 'picture' | 'link' | 'screen-tip';
 /** Review and Process tab commands: comments, shape reports, diagram checks and subprocesses. */
 export type VisioReviewCommand =
+	| 'check-accessibility'
+	| 'alt-text'
+	| 'page-alt-text'
 	| 'new-comment'
 	| 'page-comment'
 	| 'comments-pane'

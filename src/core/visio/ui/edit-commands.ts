@@ -1,3 +1,4 @@
+import { snapshotPositionFollower } from '../edit-commands';
 import type { VisioEdit } from '../index';
 import { isVisioFormatEdit, snapshotFormatting } from '../edit-formatting-commands';
 import { snapshotDuplicateShapes } from '../edit-duplicate-commands';
@@ -132,6 +133,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					y: command.y,
 					width: command.width,
 					height: command.height,
+					...snapshotPositionFollower(command.followShapeId, command.shapeId),
 					text: text(command.text),
 				};
 			case 'reorder-shape':
@@ -204,6 +206,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 					y: command.y,
 					width: command.width,
 					height: command.height,
+					...snapshotPositionFollower(command.followShapeId, command.shapeId),
 					...(command.text === undefined ? {} : { text: text(command.text) }),
 					...(command.type !== 'create-rectangle' || command.shape === undefined
 						? {}

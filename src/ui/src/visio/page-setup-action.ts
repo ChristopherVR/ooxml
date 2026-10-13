@@ -1,7 +1,7 @@
 import type { VisioBackgroundStyle, VisioBorderStyle } from 'ooxml-core/visio';
 
 /** The Page Setup dialog's tabs, as Visio orders them. */
-export type VisioPageSetupTab = 'print' | 'size' | 'scale' | 'properties';
+export type VisioPageSetupTab = 'print' | 'size' | 'scale' | 'properties' | 'layout';
 /** Design > Page Setup, Backgrounds and Borders & Titles, and View > Page Breaks. */
 export type VisioPageSetupCommand =
 	| { op: 'orientation'; value: 'portrait' | 'landscape' }

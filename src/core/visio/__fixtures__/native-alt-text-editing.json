@@ -1,0 +1,19 @@
+{
+  "source": "Microsoft Visio 16.0 COM, 2026-10-12",
+  "cases": [
+    {
+      "name": "edited",
+      "title": "Service status",
+      "description": "Green rectangle\nAll services operational.",
+      "pageTitle": "Process overview",
+      "pageDescription": "Requests arrive\nthen proceed to approval."
+    },
+    {
+      "name": "cleared",
+      "title": "",
+      "description": "",
+      "pageTitle": "",
+      "pageDescription": ""
+    }
+  ]
+}

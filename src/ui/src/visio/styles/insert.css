@@ -1,4 +1,5 @@
 .link-dialog label,
+.alt-text-dialog label,
 .screen-tip-dialog label {
 	display: grid;
 	gap: 4px;
@@ -7,6 +8,8 @@
 }
 .link-dialog input,
 .link-dialog select,
+.alt-text-dialog input,
+.alt-text-dialog textarea,
 .screen-tip-dialog input {
 	box-sizing: border-box;
 	width: 100%;
@@ -15,8 +18,29 @@
 	background: var(--_vv-surface);
 	border: 1px solid var(--_vv-border);
 	border-radius: 3px;
+	font: inherit;
+}
+.alt-text-dialog textarea {
+	resize: vertical;
+	min-height: 90px;
+}
+.accessibility-dialog [aria-live] {
+	max-height: 50vh;
+	overflow: auto;
+}
+.accessibility-dialog [aria-live] > button {
+	display: block;
+	width: 100%;
+	padding: 8px;
+	text-align: left;
+	color: inherit;
+	background: var(--_vv-surface);
+	border: 1px solid var(--_vv-border);
+	font: inherit;
+	cursor: pointer;
 }
 .link-dialog [role='alert'],
+.alt-text-dialog [role='alert'],
 .screen-tip-dialog [role='alert'] {
 	margin: 0;
 	color: var(--office-error, #b00020);

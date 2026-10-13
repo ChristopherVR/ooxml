@@ -1,10 +1,11 @@
-import { enableAutoUnmount, mount } from '@vue/test-utils';
+import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxTableData } from 'pptx-viewer-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
 import TableCellFormattingPanel from './TableCellFormattingPanel.vue';
 
 enableAutoUnmount(afterEach);
+afterAll(disableAutoUnmount);
 
 describe('tableCellFormattingPanel', () => {
 	it('aligns every paragraph of the cell', async () => {

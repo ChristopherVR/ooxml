@@ -102,10 +102,16 @@ export function renderPage(
 		);
 	svg.setAttribute('viewBox', `0 0 ${page.width} ${page.height}`);
 	svg.setAttribute('role', options.static ? 'img' : 'group');
-	svg.setAttribute('aria-label', page.name);
+	svg.setAttribute('aria-label', page.accessibilityTitle || page.name);
+	if (page.alternativeText) svg.setAttribute('aria-description', page.alternativeText);
 	const title = svgElement('title');
-	title.textContent = page.name;
+	title.textContent = page.accessibilityTitle || page.name;
 	svg.append(title);
+	if (page.alternativeText) {
+		const description = svgElement('desc');
+		description.textContent = page.alternativeText;
+		svg.append(description);
+	}
 	const defs = svgElement('defs');
 	svg.append(defs);
 	const root = svgElement('g');
@@ -163,12 +169,26 @@ function drawShape(
 		group.dataset.pageId = pageId;
 		group.setAttribute('role', shape.kind === 'group' ? 'group' : 'button');
 		group.setAttribute('tabindex', '-1');
-		group.setAttribute('aria-label', shape.text.plainText || shape.name || `Shape ${shape.id}`);
+		group.setAttribute(
+			'aria-label',
+			shape.accessibilityTitle ||
+				shape.alternativeText ||
+				shape.text.plainText ||
+				shape.name ||
+				`Shape ${shape.id}`,
+		);
+		if (shape.alternativeText) group.setAttribute('aria-description', shape.alternativeText);
 	}
 	const title = svgElement('title');
 	// Visio shows the Comment cell as the shape's ScreenTip.
-	title.textContent = shape.screenTip || shape.text.plainText || shape.name;
+	title.textContent =
+		shape.screenTip || shape.accessibilityTitle || shape.text.plainText || shape.name;
 	group.append(title);
+	if (shape.alternativeText) {
+		const description = svgElement('desc');
+		description.textContent = shape.alternativeText;
+		group.append(description);
+	}
 	parent.append(group);
 	const world = composeVisioTransform(parentTransform, shape.transform);
 	const own = () => drawOwn(shape, group, context, world);

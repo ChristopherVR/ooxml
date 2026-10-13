@@ -11,6 +11,7 @@ import { editorStyleText } from './styles';
 import { runRibbonCommand } from './editor-commands';
 import { createSearchPanel } from './search-panel';
 import { createPrintLayoutController } from './print-layout-view';
+import { createPrintEditingBridge } from './print-editing';
 import { moveCursorToBlock } from './print-layout-cursor';
 import { ReviewController } from './review-controller';
 import { EditorChrome } from './editor-chrome';
@@ -102,7 +103,10 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 /** Builds the shadow-DOM shell (ribbon, canvas, panels, chrome) once; later calls are no-ops. */
 export function buildShell(core: EditorCore, api: ShellApi): void {
 	const { element, shell } = core;
-	if (shell.toolbar) return;
+	if (shell.toolbar) {
+		attachPrintEditing(core);
+		return;
+	}
 	element.classList.add('dve-host');
 	const root = element.attachShadow({ mode: 'open' });
 	const style = document.createElement('style');
@@ -125,7 +129,9 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		(partName, contentType) => core.imageMedia.urlFor(partName, contentType),
 		() => core.refreshControls(),
 		() => core.reviewDisplayMode,
+		() => core.pages.viewMode === 'print',
 	);
+
 	canvas.append(printLayout.element);
 	canvas.addEventListener('scroll', () => {
 		if (core.pages.viewMode === 'print') {
@@ -201,6 +207,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	if (core.pendingFileName) chrome.fileName = core.pendingFileName;
 	root.append(style, frame);
 	Object.assign(shell, { toolbar, canvas, paper });
+	attachPrintEditing(core);
 	applyRibbonAddIns(core);
 	// After the toolbar is registered: the File tab label is localized through the shell.
 	chrome.setLocale(core.locale);
@@ -218,4 +225,18 @@ export function applyRibbonAddIns(core: EditorCore): void {
 	syncRibbonAddIns(toolbar, core.ribbonAddIns, { panelClass: 'ribbon-panel' });
 	// Equal tabs keep their panels; only new panels change what fits.
 	if (toolbar.querySelector('[data-add-in]') !== before) refitRibbon(toolbar);
+}
+
+/** A disconnected editor releases input listeners; reconnection binds the retained shell again. */
+function attachPrintEditing(core: EditorCore): void {
+	const { shell } = core;
+	if (shell.printEditing || !shell.printLayout || !shell.paper) return;
+	shell.printEditing = createPrintEditingBridge(
+		shell.printLayout.element,
+		shell.paper,
+		() => core.view,
+		shell.printLayout.resolveClick,
+		shell.canvas,
+	);
+	shell.printEditing.setActive(core.pages.viewMode === 'print');
 }

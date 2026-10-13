@@ -8,6 +8,8 @@ import { setCell } from './edit-geometry-cells';
 import { fail } from './package-common';
 import type { VisioPackage } from './package';
 import type { VisioPageSizeEdit } from './edit-commands';
+import { visioGlueTriggerTarget } from './edit-connector-glue';
+import { textSizeFormula } from './edit-text-size-formula';
 
 /** A proven explicit numeric page setting: no inheritance, error or dependent formula. */
 export function pageSettingConstant(node: Element | undefined, length: boolean): number {
@@ -69,6 +71,9 @@ function assertDependencies(
 			)
 		: undefined;
 	const paths = new Map([...pagePaths].map(([id, path]) => [path, id]));
+	const jumpDecorationOnly = changed.every((name) =>
+		/^(LineJumpCode|LineJumpStyle|PageLineJumpDir[XY]|LineJumpFactor[XY])$/.test(name),
+	);
 	for (const [path, root] of roots)
 		for (const node of [root, ...Array.from(root.getElementsByTagName('*'))]) {
 			check();
@@ -113,8 +118,34 @@ function assertDependencies(
 					)) ||
 					(/^(BegTrigger|EndTrigger)$/.test(name) &&
 						/^\s*_XFTRIGGER\(Sheet\.[1-9]\d*!EventXFMod\)\s*$/i.test(code)));
+			// Unglued native master instances keep self-transform notifications. Jump
+			// decorations do not alter their endpoints or transform caches.
+			const nativeJumpTrigger =
+				jumpDecorationOnly &&
+				paths.has(path) &&
+				node.localName === 'Cell' &&
+				node.namespaceURI === root.namespaceURI &&
+				/^(BegTrigger|EndTrigger)$/.test(name) &&
+				owner?.localName === 'Shape' &&
+				owner.namespaceURI === root.namespaceURI &&
+				container?.localName === 'Shapes' &&
+				container.parentNode === root &&
+				!!ownerId &&
+				visioGlueTriggerTarget(formula) === ownerId;
+			// Native connector text controls read only the named local cells/text.
+			// Retain them for decoration-only edits; every referenced formula elsewhere
+			// in the package still passes this same dependency scan.
+			const nativeJumpText =
+				jumpDecorationOnly &&
+				node.localName === 'Cell' &&
+				node.namespaceURI === root.namespaceURI &&
+				((/^(TxtPinX|TxtPinY)$/.test(name) &&
+					/^\s*SETATREF\(Controls\.TextPosition(?:\.Y)?\)\s*$/i.test(formula)) ||
+					!!textSizeFormula(formula) ||
+					(name === 'XCon' &&
+						/^\s*IF\(OR\(STRSAME\(SHAPETEXT\(TheText\),""\),HideText\),5,0\)\s*$/i.test(formula)));
 			let dynamic = false;
-			if (!nativeGlue) {
+			if (!nativeGlue && !nativeJumpTrigger && !nativeJumpText) {
 				try {
 					dynamic = analyzeVisioFormula(
 						mapVisioFormulaSyntax(formula, (part) =>
@@ -130,7 +161,7 @@ function assertDependencies(
 			if (dynamic)
 				fail(
 					'EDIT_UNSUPPORTED_PAGE_SIZE_DEPENDENCY',
-					'Dynamic or unknown page-size dependencies cannot be safely refreshed.',
+					`Dynamic or unknown page-size dependencies cannot be safely refreshed (${path}, ${name}).`,
 				);
 			let local = paths.get(path);
 			if (path === pagesPart) {

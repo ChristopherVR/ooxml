@@ -1,0 +1,32 @@
+{
+	"observedOn": "2026-10-12",
+	"excelFileVersion": "16.0.20430.20146",
+	"reproduce": "pwsh -NoProfile -File scripts/xlsx-print-acceptance.ps1",
+	"validated": {
+		"paper": "A4 landscape",
+		"scalePercent": 75,
+		"firstPageNumber": 5,
+		"nativePdfPages": 4,
+		"printTitleRows": "$1:$1",
+		"printTitleColumns": "$A:$A",
+		"nativeRepeatedTitleInstances": 4,
+		"printedHeaders": ["First 5 of 4", "Even 6 of 4", "Page 7 of 4", "Even 8 of 4"],
+		"fileField": "authored.xlsx",
+		"nativeDateFormatObserved": "yyyy-MM-dd",
+		"nativeTimeFormatObserved": "h:mm AM/PM",
+		"nativeRoundTrip": "Excel-authored page break removed, title and header fields saved and reopened"
+	},
+	"unsupportedOffsetProbe": {
+		"rawOddHeaderXml": "<oddHeader>&amp;L&amp;A&amp;CReport&amp;RPage &amp;P of &amp;N | Offset &amp;P+2</oddHeader>",
+		"physicalPage": 3,
+		"printedPageNumber": 7,
+		"nativeExtractedText": "Sheet1 Report Page 7 of 4 | Offset 72",
+		"previewPolicy": "Preserve the raw offset token, report it as unsupported, and do not assume arithmetic evaluation"
+	},
+	"limits": [
+		"Native observations apply to the exact Excel build above",
+		"Viewer date and time formatting uses its requested locale",
+		"Non-leading title ranges, unsupported title definitions, header images and unsupported formatting codes are preserved but not rendered",
+		"Fonts and printer margins can change native pagination"
+	]
+}

@@ -17,6 +17,7 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { resolveViewerComponentResources } from './component-resources.test-support';
 import { ElementRendererShapeComponent } from './element-renderer-shape.component';
 import { ReflectionMirrorContentComponent } from './reflection-mirror-content.component';
+import { StrokeOutlineComponent } from './stroke-outline.component';
 
 beforeAll(async () => {
 	TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
@@ -40,7 +41,7 @@ function render<T>(component: Type<T>, template?: string): HTMLElement {
 	TestBed.overrideComponent(component, {
 		set: {
 			...(template ? { templateUrl: '', template } : {}),
-			imports: [NgStyle],
+			imports: [NgStyle, StrokeOutlineComponent],
 			schemas: [NO_ERRORS_SCHEMA],
 		},
 	});

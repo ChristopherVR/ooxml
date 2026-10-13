@@ -161,6 +161,8 @@ function resizeTableIn(workbook: Workbook, sheet: Worksheet, id: number, range: 
 		throw new Error('The table range is too small.');
 	if (sheet.tables.some((t) => t !== table && rangesIntersect(t.range, r)))
 		throw new Error('A table cannot overlap another table.');
+	if (sheet.pivotTables?.some((pivot) => rangesIntersect(pivot.location, r)))
+		throw new Error('A table cannot overlap a PivotTable.');
 	if (sheet.merges.some((m) => rangesIntersect(m, r)))
 		throw new Error('A table cannot contain merged cells.');
 	const oldEnd = table.range.end.row;

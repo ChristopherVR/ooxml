@@ -1,4 +1,16 @@
 export const translations = {
+	'pptx.findReplace.includeChartData':
+		'Inclure les séries et les libellés de catégories des graphiques',
+	'pptx.findReplace.readOnlyChartText':
+		'Le texte de graphique lié ou non pris en charge peut être trouvé, mais doit être modifié dans PowerPoint ou dans son classeur source.',
+	'pptx.findReplace.includeChartTitles': 'Inclure les titres des graphiques',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Les titres de graphiques liés ou complexes peuvent être trouvés, mais doivent être modifiés dans PowerPoint ou dans leur classeur source.',
+	'pptx.findReplace.includeNotes': 'Inclure les notes du présentateur',
+	'pptx.slideSorter.systemCopy': 'Copier les diapositives dans le presse-papiers du système',
+	'pptx.slideSorter.systemPaste': 'Coller les diapositives depuis le presse-papiers du système',
+	'pptx.slideSorter.systemCopied': 'Diapositives copiées',
+	'pptx.slideSorter.systemPasted': 'Diapositives collées',
 	'pptx.findReplace.title': 'Rechercher et remplacer',
 	'pptx.findReplace.closeEscape': 'Fermer (Échap)',
 	'pptx.findReplace.closeAriaLabel': 'Fermer la recherche et le remplacement',

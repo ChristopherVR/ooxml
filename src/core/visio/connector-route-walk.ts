@@ -5,6 +5,8 @@ import {
 	type VisioRoutePoint,
 } from './connector-route';
 import { VISIO_ROUTE_CLEARANCE, routeCrossings } from './connector-route-avoid';
+import { alignedVisioCurve } from './connector-curve-aligned';
+import { cornerCurve, flattenCornerCurve } from './connector-curve-spans';
 
 /** One end of a connector for walking glue: a glued shape (its sides) or a fixed point. */
 export interface VisioWalkEnd {
@@ -117,7 +119,8 @@ function exit(shape: NonNullable<VisioWalkEnd['shape']>, target: VisioRoutePoint
  * The vertices of Visio's Dynamic connector between two ends for a route style, or undefined
  * when the simple path is blocked or the shapes overlap (the caller's router then takes over).
  * Straight (centre to centre) runs between the outlines along the line that joins the middles;
- * curved is one cubic that leaves and arrives the way the right-angle path would.
+ * curved uses native two-span corner geometry between axis-aligned shapes, with
+ * a general single-cubic fallback for other endpoints.
  */
 export function visioWalkRoute(
 	begin: VisioWalkEnd,
@@ -130,9 +133,33 @@ export function visioWalkRoute(
 		const q = end.shape ? exit(end.shape, center(begin)) : end.point!;
 		return Math.hypot(q.x - p.x, q.y - p.y) > EPSILON ? [p, q] : undefined;
 	}
+	if (route === 'curved') {
+		const aligned = alignedVisioCurve(begin, end);
+		if (aligned && !routeCrossings(aligned, obstacles)) return aligned;
+	}
 	const path = visioWalkPath(begin, end);
 	if (!path || routeCrossings(path, obstacles)) return undefined;
 	if (route === 'right-angle') return path;
+	// Native single-corner curves have five controls. Restrict this to axis-aligned
+	// shape sides; fixed or rotated endpoints retain the general cubic router.
+	if (
+		path.length === 3 &&
+		begin.shape &&
+		end.shape &&
+		[begin.shape, end.shape].every((shape) =>
+			shape.sites.every(
+				(site) => Math.abs(site.normal.x) < EPSILON || Math.abs(site.normal.y) < EPSILON,
+			),
+		)
+	) {
+		const curve = cornerCurve(path);
+		if (obstacles.length) {
+			// A corner's inward bow can intersect a box that misses both orthogonal legs.
+			const sampled = flattenCornerCurve(curve);
+			if (!sampled || routeCrossings(sampled, obstacles)) return undefined;
+		}
+		return curve;
+	}
 	const unit = (p: VisioRoutePoint, q: VisioRoutePoint): VisioRoutePoint => {
 		const length = Math.hypot(q.x - p.x, q.y - p.y) || 1;
 		return { x: (q.x - p.x) / length, y: (q.y - p.y) / length };

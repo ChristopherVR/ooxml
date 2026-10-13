@@ -79,6 +79,8 @@ export interface SectionProperties {
 	footerDistanceTwips?: Twips;
 	gutterTwips?: Twips;
 	columns: SectionColumns;
+	/** w15:footnoteColumns; zero or absent matches the section columns. */
+	footnoteColumns?: number;
 	/** `w:titlePg`: the section's first page uses distinct first-page headers/footers. */
 	titlePage?: boolean;
 	verticalAlign?: StVerticalJc;

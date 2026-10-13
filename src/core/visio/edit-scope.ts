@@ -4,7 +4,11 @@ import { analyzeVisioFormula } from './formula';
 import { fail } from './package-common';
 import { VISIO_NS, VISIO_LEGACY_NS, attribute, children } from './sheet';
 import { createVisioDependencyQuery } from './edit-recalculate';
-import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
+import {
+	executableCellFormula,
+	inertDoubleClickFormula,
+	shapeDataFormulaSection,
+} from './cell-formula';
 import { assertVisioMasterIndependence } from './edit-master-scope';
 import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
 import { applyShapeCreationStyles } from './edit-shape-create';
@@ -21,7 +25,7 @@ function cells(sheet: Element): Map<string, Element> {
 	};
 	for (const node of children(sheet, 'Cell')) add(attribute(node, 'N') ?? '', node);
 	for (const section of children(sheet, 'Section')) {
-		const name = attribute(section, 'N') ?? '';
+		const name = shapeDataFormulaSection(attribute(section, 'N') ?? '');
 		const prefix =
 			name === 'Geometry' ? `Geometry${Number(attribute(section, 'IX') ?? '0') + 1}` : name;
 		for (const node of children(section, 'Cell'))

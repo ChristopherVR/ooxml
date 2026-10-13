@@ -40,6 +40,9 @@ export * from './svg-gradient-paint';
 export * from './stroke-outline';
 export * from './stroke-only-preset';
 export * from './stroke-paint';
+// A picture's own frame and outer shadow, and the box/surface split that lets
+// them extend past the clipped picture.
+export * from './picture-frame';
 // Pure per-sub-path paint decision (fill colour adjustment for lighten/darken/
 // none, and the stroke opt-out), shared by custom geometry AND multi-sub-path
 // preset shapes. The mechanism behind `subpath-fill-overlay`.
@@ -1771,3 +1774,4 @@ export * from './slide-sorter-state';
 
 export * from './viewer-root-options';
 export * from './viewer-hyperlinks';
+export * from './slide-package-clipboard';

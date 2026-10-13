@@ -1,3 +1,5 @@
+import { slideClipboardLabels, sorterPasteInsertAt } from 'ooxml-ui/pptx';
+import type { PptxUiSlideClipboardElement } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +18,7 @@ import { useSlideSorterState } from './slide-sorter/useSlideSorterState';
 
 export function SlideSorterOverlay({
 	slides,
+	templateElementsBySlideId,
 	activeSlideIndex,
 	canvasSize,
 	canEdit,
@@ -24,6 +27,9 @@ export function SlideSorterOverlay({
 	onMoveSlide,
 	onDeleteSlides,
 	onDuplicateSlides,
+	onPasteSlides,
+	onCopySystemSlides,
+	onPasteSystemSlides,
 	onToggleHideSlides,
 	onClose,
 }: SlideSorterOverlayProps): React.ReactElement {
@@ -31,6 +37,7 @@ export function SlideSorterOverlay({
 
 	const state = useSlideSorterState({
 		slides,
+		templateElementsBySlideId,
 		activeSlideIndex,
 		canEdit,
 		sectionGroups,
@@ -38,6 +45,7 @@ export function SlideSorterOverlay({
 		onMoveSlide,
 		onDeleteSlides,
 		onDuplicateSlides,
+		onPasteSlides,
 		onToggleHideSlides,
 		onClose,
 	});
@@ -92,6 +100,24 @@ export function SlideSorterOverlay({
 					)}
 				</div>
 
+				{React.createElement('pptx-ui-slide-clipboard', {
+					ref: (node: PptxUiSlideClipboardElement | null) => {
+						if (!node) {
+							return;
+						}
+						node.labels = slideClipboardLabels((key) => t(key));
+						node.copyAction = onCopySystemSlides
+							? () => onCopySystemSlides(state.selectedIndexes)
+							: undefined;
+						node.pasteAction =
+							canEdit && onPasteSystemSlides
+								? () =>
+										onPasteSystemSlides(
+											sorterPasteInsertAt(state.selectedIndexes, activeSlideIndex, slides.length),
+										)
+								: undefined;
+					},
+				})}
 				{/* Close button */}
 				<button
 					type='button'

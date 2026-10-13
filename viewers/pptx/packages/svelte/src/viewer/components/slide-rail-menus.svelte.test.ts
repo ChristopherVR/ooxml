@@ -158,6 +158,7 @@ describe('svelte slide rail footer', () => {
 describe('svelte slide sorter menu', () => {
 	function sorter() {
 		const onduplicate = vi.fn();
+		const onpaste = vi.fn();
 		const ontogglehidden = vi.fn();
 		const target = render(SlideSorterOverlay as never, {
 			slides: deck(),
@@ -169,12 +170,13 @@ describe('svelte slide sorter menu', () => {
 			onmove: () => undefined,
 			ondelete: () => undefined,
 			onduplicate,
+			onpaste,
 			ontogglehidden,
 			onclose: () => undefined,
 		});
 		const tile = (index: number): Element =>
 			target.querySelectorAll('[data-pptx-chrome="sorter-tile"]')[index];
-		return { tile, onduplicate, ontogglehidden };
+		return { tile, onduplicate, onpaste, ontogglehidden };
 	}
 
 	it('offers the shared list and no inline per-card action buttons', () => {
@@ -185,7 +187,7 @@ describe('svelte slide sorter menu', () => {
 	});
 
 	it('offers Paste only after Copy and pastes a copy of the copied slide', () => {
-		const { tile, onduplicate } = sorter();
+		const { tile, onduplicate, onpaste } = sorter();
 		rightClick(tile(1));
 		item('Copy').click();
 		flushSync();
@@ -193,7 +195,13 @@ describe('svelte slide sorter menu', () => {
 		expect(labels()).toContain('Paste');
 		item('Paste').click();
 		flushSync();
-		expect(onduplicate).toHaveBeenCalledWith(1);
+		expect(onpaste).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({ insertAt: 3, sourceIds: ['s2'] }),
+		);
+		const request = onpaste.mock.calls[0]![0];
+		expect(request.copies).toHaveLength(1);
+		expect(request.copies[0].id).not.toBe('s2');
+		expect(onduplicate).not.toHaveBeenCalled();
 	});
 
 	it('routes Hide to the right-clicked slide', () => {

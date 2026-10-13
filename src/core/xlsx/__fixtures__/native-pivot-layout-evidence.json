@@ -1,0 +1,16 @@
+{
+	"observedOn": "2026-10-13",
+	"application": "Microsoft Excel",
+	"version": "16.0.20430.20146",
+	"applicationVersion": "16.0",
+	"build": "20430",
+	"generator": "generate-excel-pivot.ps1",
+	"acceptanceScript": "scripts/xlsx-pivot-acceptance.ps1",
+	"acceptanceCases": 46,
+	"checks": ["cached cell values and types", "refreshed cell values and types", "report dimensions", "compact child indentation and left alignment"],
+	"fixtures": ["excel-pivot-compact-top.xlsx", "excel-pivot-compact-bottom.xlsx", "excel-pivot-compact-bottom-no-subtotals.xlsx", "excel-pivot-outline-top.xlsx", "excel-pivot-outline-bottom.xlsx", "excel-pivot-outline-top-repeat.xlsx"],
+	"supported": ["compact, outline and tabular forms", "one or two row fields", "one optional column field", "one value field", "sum, count, average, min and max", "automatic subtotals above or below groups", "no subtotals", "repeat labels in outline and tabular forms", "compact child indentation of one"],
+	"behavior": ["new UI reports default to compact form", "API defaults remain tabular for compatibility", "tabular subtotals display below groups while preserving inactive top preference", "compact form ignores inactive repeat-label preference"],
+	"unsupportedPreserved": ["more than two row fields", "multiple value fields", "custom compact indentation", "mixed per-field layouts", "grouping", "filters and slicers", "shared caches", "custom subtotals", "custom or localized row/column header captions", "collapsed items"],
+	"validationBoundary": "Native acceptance covers these tested report profiles, not complete Excel parity. Unsupported imported profiles remain preserved and cannot be refreshed or configured."
+}

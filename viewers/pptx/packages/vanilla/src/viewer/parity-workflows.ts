@@ -1,3 +1,13 @@
+import type {
+	SlidePackageClipboard,
+	ResolvedCustomization,
+	ThemeCatalogEntry,
+	ViewerAddinStatus,
+	ViewerOptionsStore,
+	ViewerOptionsTabId,
+	ViewerTheme,
+	SlidePasteRequest,
+} from 'ooxml-ui/pptx';
 import {
 	applyAcceptAllSlides,
 	applyAcceptSlide,
@@ -6,14 +16,6 @@ import {
 	openPptxFile,
 	resolveAuthoredCustomShowId,
 	resolveDefaultPrintSettings,
-} from 'ooxml-ui/pptx';
-import type {
-	ResolvedCustomization,
-	ThemeCatalogEntry,
-	ViewerAddinStatus,
-	ViewerOptionsStore,
-	ViewerOptionsTabId,
-	ViewerTheme,
 } from 'ooxml-ui/pptx';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import type { PptxSlide } from 'pptx-viewer-core';
@@ -40,6 +42,7 @@ import { openSlideShowDialog } from './ui/slide-show-dialog';
 import { openSlideSorterOverlay } from './ui/slide-sorter-overlay';
 
 export interface ParityWorkflowHost {
+	slidePackageClipboard?: SlidePackageClipboard;
 	doc: Document;
 	t: Translator;
 	store: Store<ViewerState>;
@@ -87,6 +90,7 @@ export interface ParityWorkflowHost {
 	 */
 	slideOps: {
 		duplicateSlides(indexes: number[]): void;
+		pasteSlides(request: SlidePasteRequest): void;
 		deleteSlides(indexes: number[]): void;
 		toggleHideSlides(indexes: number[]): void;
 		moveSlide(from: number, to: number): void;
@@ -328,6 +332,17 @@ function openSorter(
 	const refresh = (): void => openSorter(host, clipboard);
 	openSlideSorterOverlay(host.doc, host.root(), host.t, {
 		slides: current.slides,
+		clipboardTemplates: current.templateElementsBySlideId,
+		renderSlide: host.renderSlideNode,
+		onCopySystem: host.slidePackageClipboard
+			? (indexes) => host.slidePackageClipboard!.copy(indexes)
+			: undefined,
+		onPasteSystem: host.slidePackageClipboard
+			? async (insertAt) => {
+					await host.slidePackageClipboard!.paste(insertAt);
+					refresh();
+				}
+			: undefined,
 		current: current.currentSlide,
 		clipboard,
 		// Gates the sorter's Delete / Ctrl+D on the host being editable, the same
@@ -344,6 +359,18 @@ function openSorter(
 		},
 		onDuplicate: (index) => {
 			host.slideOps.duplicateSlides([index]);
+			refresh();
+		},
+		onUndo: () => {
+			host.editor.undo();
+			refresh();
+		},
+		onRedo: () => {
+			host.editor.redo();
+			refresh();
+		},
+		onPaste: (request) => {
+			host.slideOps.pasteSlides(request);
 			refresh();
 		},
 		onToggleHidden: (index) => {

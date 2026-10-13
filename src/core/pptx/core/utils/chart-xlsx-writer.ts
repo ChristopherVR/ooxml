@@ -34,6 +34,7 @@ import JSZip from 'jszip';
 import type { IPptxXmlLookupService } from '../services';
 import type { XmlObject } from '../types';
 import { expandRangeAddresses, parseChartFormulaRange } from './chart-xlsx-cellref';
+import { validateAtomicChartWorkbookWrites } from './chart-xlsx-write-validation';
 import type { ChartCellWrite } from './chart-xlsx-sheet-cells';
 import { applyCellWritesToWorksheet } from './chart-xlsx-sheet-cells';
 import { xmlAttr, xmlChild, xmlChildren } from './xml-access';
@@ -88,6 +89,7 @@ function createSpreadsheetXmlParser(): XMLParser {
 		ignoreAttributes: false,
 		attributeNamePrefix: '@_',
 		trimValues: false,
+		parseTagValue: false,
 		tagValueProcessor: (tagName: string, tagValue: string) =>
 			preservesSpreadsheetXmlWhitespace(tagName) ? tagValue : tagValue.trim(),
 	});
@@ -166,6 +168,7 @@ interface ResolvedWrite {
 export async function writeChartWorkbookUpdates(
 	xlsxBytes: Uint8Array,
 	writes: readonly PptxChartWorkbookWrite[],
+	options: { atomic?: boolean; requireCurrentValues?: boolean } = {},
 ): Promise<ChartWorkbookWriteResult> {
 	if (writes.length === 0) {
 		return { unresolved: 0 };
@@ -175,11 +178,24 @@ export async function writeChartWorkbookUpdates(
 	try {
 		xlsxZip = await JSZip.loadAsync(xlsxBytes);
 	} catch {
+		if (options.atomic) {
+			throw new Error('Chart label replacement requires a readable embedded workbook.');
+		}
 		return { unresolved: writes.length };
 	}
 
 	const parser = createSpreadsheetXmlParser();
 	const sheetPathByName = await resolveWorksheetPathsByName(xlsxZip, parser);
+
+	if (options.atomic) {
+		await validateAtomicChartWorkbookWrites(
+			xlsxZip,
+			parser,
+			sheetPathByName,
+			writes,
+			options.requireCurrentValues ?? false,
+		);
+	}
 
 	const writesBySheetPath = new Map<string, ResolvedWrite[]>();
 	let unresolved = 0;
@@ -216,6 +232,10 @@ export async function writeChartWorkbookUpdates(
 		} catch {
 			unresolved += resolvedWrites.length;
 		}
+	}
+
+	if (options.atomic && unresolved > 0) {
+		throw new Error('Chart label replacement could not update every source range.');
 	}
 
 	if (!changedAny) {

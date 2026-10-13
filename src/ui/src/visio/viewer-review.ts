@@ -4,6 +4,7 @@ import { ViewerComments } from './viewer-comments';
 import { ViewerIssues } from './viewer-issues';
 import { ViewerShapeReport } from './viewer-shape-report';
 import { ViewerSubprocess } from './viewer-subprocess';
+import { ViewerAccessibility } from './viewer-accessibility';
 
 type Run = (action: () => Promise<void>, success: string) => void;
 type ReviewAction = Extract<VisioRibbonAction, { type: 'review' }>;
@@ -14,6 +15,7 @@ export class ViewerReview {
 	readonly issues: ViewerIssues;
 	readonly report: ViewerShapeReport;
 	readonly subprocess: ViewerSubprocess;
+	readonly accessibility: ViewerAccessibility;
 	constructor(
 		private readonly root: ShadowRoot,
 		viewport: HTMLElement,
@@ -25,9 +27,16 @@ export class ViewerReview {
 		this.issues = new ViewerIssues(root, controller, announce);
 		this.report = new ViewerShapeReport(root, controller, announce);
 		this.subprocess = new ViewerSubprocess(root, controller, announce, run);
+		this.accessibility = new ViewerAccessibility(root, controller, announce);
 	}
 	run(action: ReviewAction): void {
 		switch (action.command) {
+			case 'check-accessibility':
+				return this.accessibility.check();
+			case 'alt-text':
+				return this.accessibility.edit();
+			case 'page-alt-text':
+				return this.accessibility.edit(true);
 			case 'new-comment':
 			case 'page-comment':
 				return this.comments.newComment(action.command === 'page-comment');
@@ -76,12 +85,14 @@ export class ViewerReview {
 			disposeIssues();
 			this.report.dispose();
 			this.subprocess.close();
+			this.accessibility.close();
 		};
 	}
 	render(state: ViewerState): void {
 		this.comments.render(state);
 		this.issues.render(state);
 		this.subprocess.render(state);
+		this.accessibility.render(state);
 		const editable = state.edit.sourceAvailable && !state.loading && !state.edit.busy;
 		const reports = this.root.querySelector<HTMLElement & { disabled: boolean }>(
 			'[command="shape-reports"]',

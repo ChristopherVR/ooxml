@@ -13,6 +13,7 @@ import { repairCollaborativeDocumentIds, isWordYjsRemoteTransaction } from 'ooxm
 import type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';
 import type { EditorLocale } from './localization';
 import { findLocalizedControl } from './localization';
+import type { PrintEditingBridge } from './print-editing';
 import type { PrintLayoutController } from './print-layout-view';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
 import type { ReviewDisplayMode } from './review-display';
@@ -45,6 +46,7 @@ export interface ShellParts {
 	review?: ReviewController;
 	chrome?: EditorChrome;
 	printLayout?: PrintLayoutController;
+	printEditing?: PrintEditingBridge;
 	navigator?: PageNavigator;
 	headings?: HeadingNavigator;
 }
@@ -131,7 +133,7 @@ export class EditorCore {
 			columns: {
 				section: () => this.pages.currentSection(),
 				canEdit: () => !this.readOnly && !this.collab.active,
-				apply: (columns) => this.pages.applyColumns(columns),
+				apply: (columns, footnoteColumns) => this.pages.applyColumns(columns, footnoteColumns),
 			},
 		});
 		this.imageMedia = new ImageMediaCache(
@@ -171,6 +173,7 @@ export class EditorCore {
 			toolbar: () => this.shell.toolbar,
 			statusBar: () => this.shell.chrome?.statusBar,
 			printLayout: () => this.shell.printLayout,
+			printEditing: (active) => this.shell.printEditing?.setActive(active),
 			refreshControls: () => this.refreshControls(),
 		});
 	}
@@ -275,7 +278,10 @@ export class EditorCore {
 		searchPanel?.refresh();
 		// The open pane follows the caret's thread and whether a selection can take a comment.
 		if (review?.commentsOpen) review.commentsPanel.refresh();
-		if (this.pages.viewMode === 'print') printLayout?.refreshCurrentPage();
+		if (this.pages.viewMode === 'print') {
+			printLayout?.refreshCurrentPage();
+			this.shell.printEditing?.refresh();
+		}
 		const status = refreshEditorControls(
 			toolbar,
 			this.targetView(),

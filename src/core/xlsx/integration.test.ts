@@ -62,7 +62,10 @@ function viewEverything(workbook: Workbook): number {
 /** A sequence of edits touching structure, sheets, formulas and clipboard. */
 function edit(workbook: Workbook): void {
 	const s = createEditSession(workbook);
-	const first = workbook.sheets.findIndex((sheet) => sheet.state === 'visible');
+	// Ordinary cell edits belong outside PivotTable output, which has its own edit tests.
+	const first = workbook.sheets.findIndex(
+		(sheet) => sheet.state === 'visible' && !sheet.pivotTables?.length,
+	);
 	s.insertRows(first, 1, 2);
 	s.insertColumns(first, 0, 1);
 	s.setCellInput(first, 0, 0, '=SEQUENCE(2,2)');

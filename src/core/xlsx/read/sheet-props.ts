@@ -193,6 +193,11 @@ export function readPageSetup(
 ): PageSetup | undefined {
 	const page: PageSetup = {};
 	if (setup) {
+		if (/^(1|true)$/.test(att(setup, 'useFirstPageNumber') ?? '')) {
+			page.firstPageNumber = numAttr(setup, 'firstPageNumber') ?? 1;
+		}
+		const order = att(setup, 'pageOrder');
+		if (order === 'downThenOver' || order === 'overThenDown') page.pageOrder = order;
 		const orientation = att(setup, 'orientation');
 		if (orientation && ORIENTATIONS.has(orientation))
 			page.orientation = orientation as 'portrait' | 'landscape';

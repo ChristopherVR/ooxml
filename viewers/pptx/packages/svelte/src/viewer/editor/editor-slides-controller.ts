@@ -1,5 +1,5 @@
-import { resetSlideLayoutPath } from 'ooxml-ui/pptx';
-import type { SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
+import { resetSlideLayoutPath, insertSlidePaste, applySlidePasteTemplates } from 'ooxml-ui/pptx';
+import type { SlidePasteRequest, SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per action, several separated by
    `await`); merging them isn't a style choice here. */
@@ -115,6 +115,16 @@ export class EditorSlidesController {
 		return index < this.#editor.currentSlideIndex
 			? this.#editor.currentSlideIndex + 1
 			: this.#editor.currentSlideIndex;
+	}
+
+	pasteSlides(request: SlidePasteRequest): number | null {
+		if (!this.#editor.editable || !request.copies.length) {
+			return null;
+		}
+		const templates = applySlidePasteTemplates(this.#editor.templateElementsBySlideId, request);
+		this.#editor.commitSlides(insertSlidePaste(this.#editor.slides, request));
+		this.#editor.templateElementsBySlideId = templates;
+		return request.insertAt;
 	}
 
 	/**

@@ -3,6 +3,24 @@
 import type { Translations } from './types';
 
 export const NAVIGATION_STRINGS: Translations = {
+	'Sparklines (create, format and clear)': [
+		'Graphiques sparkline (création, mise en forme et suppression)',
+		'Sparklines (erstellen, formatieren und löschen)',
+		'Minigráficos (crear, dar formato y borrar)',
+		'迷你图（创建、格式设置和清除）',
+	],
+	'Worksheet-range PivotTables (one row field, optional column field and one value field)': [
+		'Tableaux croisés dynamiques de plages (un champ de ligne, un champ de colonne facultatif et un champ de valeur)',
+		'PivotTables aus Arbeitsblattbereichen (ein Zeilenfeld, optionales Spaltenfeld und ein Wertfeld)',
+		'Tablas dinámicas de rangos (un campo de fila, columna opcional y un valor)',
+		'工作表区域数据透视表（一个行字段、可选列字段和一个值字段）',
+	],
+	'Advanced PivotTable layouts, grouping and external data sources (preserved)': [
+		'Dispositions avancées, regroupements et sources externes de tableaux croisés dynamiques (conservés)',
+		'Erweiterte PivotTable-Layouts, Gruppierung und externe Datenquellen (erhalten)',
+		'Diseños avanzados, agrupación y fuentes externas de tablas dinámicas (conservados)',
+		'高级数据透视表布局、分组和外部数据源（保留）',
+	],
 	OK: ['OK', 'OK', 'Aceptar', '确定'],
 	Cancel: ['Annuler', 'Abbrechen', 'Cancelar', '取消'],
 	Close: ['Fermer', 'Schließen', 'Cerrar', '关闭'],

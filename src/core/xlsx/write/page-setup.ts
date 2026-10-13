@@ -23,6 +23,8 @@ function setupXml(sheet: Worksheet, page: PageSetup): string {
 	const source = snapshotElement(sheet, 'pageSetup');
 	const fit = page.fitToWidth !== undefined || page.fitToHeight !== undefined;
 	const pick = (p: PageSetup) => ({
+		firstPageNumber: p.firstPageNumber,
+		pageOrder: p.pageOrder,
 		orientation: p.orientation,
 		paperSize: p.paperSize,
 		scale: p.scale,
@@ -30,6 +32,8 @@ function setupXml(sheet: Worksheet, page: PageSetup): string {
 		fitToHeight: p.fitToHeight,
 	});
 	const modelled =
+		page.firstPageNumber !== undefined ||
+		page.pageOrder !== undefined ||
 		fit ||
 		page.orientation !== undefined ||
 		page.paperSize !== undefined ||
@@ -41,7 +45,18 @@ function setupXml(sheet: Worksheet, page: PageSetup): string {
 	}
 	// `fitToWidth`/`fitToHeight` only mean something with `fitToPage`; without it they are kept.
 	const fitValues = fit ? { fitToWidth: page.fitToWidth, fitToHeight: page.fitToHeight } : {};
+	const numbering =
+		page.firstPageNumber !== undefined ||
+		!source ||
+		readPageSetup(undefined, source, undefined, fit)?.firstPageNumber !== undefined
+			? {
+					firstPageNumber: page.firstPageNumber,
+					useFirstPageNumber: page.firstPageNumber !== undefined ? true : undefined,
+				}
+			: {};
 	return `<pageSetup${mergedAttrs(source, {
+		...numbering,
+		pageOrder: page.pageOrder,
 		paperSize: page.paperSize,
 		scale: page.scale,
 		...fitValues,

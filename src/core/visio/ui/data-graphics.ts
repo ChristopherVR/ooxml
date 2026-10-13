@@ -65,8 +65,9 @@ export function visioRemoveDataGraphicEdits(
 
 /**
  * Apply one data graphic to top-level shapes that have the field. Text callouts, data bars and
- * icons are separate marked shapes placed under or beside each shape (they do not follow it
- * when it moves); Color by Value changes the shape's own fill and remembers the old one.
+ * icons are separate marked shapes. Local 2D owners provide native pin formulas so their
+ * graphics follow translations. Stencil/group graphics retain fixed positions. Color by Value
+ * changes the shape's own fill and remembers the old one.
  */
 export function visioDataGraphicEdits(
 	page: VisioPage,
@@ -115,7 +116,12 @@ export function visioDataGraphicEdits(
 		const top = (page.height - box.y) / ratio;
 		const width = box.width / ratio;
 		const value = values[index];
-		const target = { pageId: page.id };
+		const target = {
+			pageId: page.id,
+			...(shape.kind === 'shape' && !shape.masterId && !shape.children.length
+				? { followShapeId: shape.id }
+				: {}),
+		};
 		if (options.kind === 'text') {
 			const text = visioShapeDataText(shape, options.field) ?? '';
 			const shapeId = id();

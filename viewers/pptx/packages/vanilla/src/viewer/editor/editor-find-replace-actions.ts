@@ -1,4 +1,9 @@
-import { findInSlides, replaceInSlides, replaceMatch } from 'ooxml-ui/pptx';
+import {
+	findInSlides,
+	findReplacementAvailability,
+	replaceInSlides,
+	replaceMatch,
+} from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
@@ -14,12 +19,39 @@ import type { EditorOps } from './editor-operations';
  * Every replace is history-integrated like every other editor action.
  */
 export interface FindReplaceActions {
+	replacementAvailability?(
+		query: string,
+		matchCase: boolean,
+		includeNotes?: boolean,
+		includeChartTitles?: boolean,
+		includeChartData?: boolean,
+	): ReturnType<typeof findReplacementAvailability>;
 	/** Count occurrences of `query` across all slides (does not mutate). */
-	search(query: string, matchCase: boolean): number;
+	search(
+		query: string,
+		matchCase: boolean,
+		includeNotes?: boolean,
+		includeChartTitles?: boolean,
+		includeChartData?: boolean,
+	): number;
 	/** Replace the first match of `query`; returns the number replaced (0 or 1). */
-	replaceCurrent(query: string, replacement: string, matchCase: boolean): number;
+	replaceCurrent(
+		query: string,
+		replacement: string,
+		matchCase: boolean,
+		includeNotes?: boolean,
+		includeChartTitles?: boolean,
+		includeChartData?: boolean,
+	): number;
 	/** Replace every match of `query`; returns the number replaced. */
-	replaceAll(query: string, replacement: string, matchCase: boolean): number;
+	replaceAll(
+		query: string,
+		replacement: string,
+		matchCase: boolean,
+		includeNotes?: boolean,
+		includeChartTitles?: boolean,
+		includeChartData?: boolean,
+	): number;
 }
 
 export interface FindReplaceActionsDeps {
@@ -40,31 +72,75 @@ export function createFindReplaceActions(deps: FindReplaceActionsDeps): FindRepl
 	};
 
 	return {
-		search(query, matchCase) {
+		replacementAvailability(query, matchCase, includeNotes, includeChartTitles, includeChartData) {
+			return findReplacementAvailability(
+				findInSlides(store.get().slides, query, {
+					matchCase,
+					includeNotes,
+					includeChartTitles,
+					includeChartData,
+				}),
+				0,
+			);
+		},
+		search(query, matchCase, includeNotes, includeChartTitles, includeChartData) {
 			if (!query) {
 				return 0;
 			}
-			return findInSlides(store.get().slides, query, { matchCase }).length;
+			return findInSlides(store.get().slides, query, {
+				matchCase,
+				includeNotes,
+				includeChartTitles,
+				includeChartData,
+			}).length;
 		},
 
-		replaceCurrent(query, replacement, matchCase) {
+		replaceCurrent(
+			query,
+			replacement,
+			matchCase,
+			includeNotes,
+			includeChartTitles,
+			includeChartData,
+		) {
 			const state = store.get();
 			if (!state.editable || !query) {
 				return 0;
 			}
-			const results = findInSlides(state.slides, query, { matchCase });
+			const results = findInSlides(state.slides, query, {
+				matchCase,
+				includeNotes,
+				includeChartTitles,
+				includeChartData,
+			});
+			if (results[0]?.readOnly) {
+				return 0;
+			}
 			const { slides, replacements } = replaceMatch(state.slides, results, 0, replacement);
 			commitReplace(slides, replacements);
 			return replacements;
 		},
 
-		replaceAll(query, replacement, matchCase) {
+		replaceAll(query, replacement, matchCase, includeNotes, includeChartTitles, includeChartData) {
 			const state = store.get();
 			if (!state.editable || !query) {
 				return 0;
 			}
+			if (
+				findInSlides(state.slides, query, {
+					matchCase,
+					includeNotes,
+					includeChartTitles,
+					includeChartData,
+				}).some((match) => match.readOnly)
+			) {
+				return 0;
+			}
 			const { slides, replacements } = replaceInSlides(state.slides, query, replacement, {
 				matchCase,
+				includeNotes,
+				includeChartTitles,
+				includeChartData,
 			});
 			commitReplace(slides, replacements);
 			return replacements;

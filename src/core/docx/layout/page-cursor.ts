@@ -1,9 +1,10 @@
 import type { LayoutColumns, LayoutPageGeometry } from './input';
+import { footnoteColumns, type ReflowFootnote } from './footnote-columns';
 import { expectDefined } from '../expect-defined';
+import { FootnoteFlow } from './footnote-flow';
+import { LegacyFootnoteFlow } from './legacy-footnote-flow';
+export { FOOTNOTE_SEPARATOR_PX } from './footnote-flow';
 import type { LayoutBlockBox, LayoutColumnBox, LayoutFootnoteBox, LayoutPageBox } from './result';
-
-/** Space for the short rule above a page's footnotes. */
-export const FOOTNOTE_SEPARATOR_PX = 12;
 
 /**
  * Mutable fill-position bookkeeping for one section: which page/column is
@@ -22,10 +23,7 @@ export class PageCursor {
 	private yPx = 0;
 	private readonly sectionIndex: number;
 	private pageInSection = 0;
-	/** Height taken by footnotes (and their separator) at the bottom of the current page. */
-	private reservedPx = 0;
-	/** Footnotes of the paragraph about to be placed; they join the page its first box lands on. */
-	private pending: { blockId: string; notes: LayoutFootnoteBox[]; heightPx: number } | undefined;
+	private readonly footnotes: FootnoteFlow | LegacyFootnoteFlow;
 
 	constructor(
 		pages: LayoutPageBox[],
@@ -34,7 +32,15 @@ export class PageCursor {
 		sectionIndex = 0,
 		continueAt?: number,
 		private balance?: { pageIndex: number; heightPx: number },
+		report: (message: string) => void = () => {},
+		separator?: (page: LayoutPageBox, continued: boolean) => LayoutPageBox['footnoteSeparator'],
+		private readonly noteColumns?: LayoutColumns,
+		reflow?: ReflowFootnote,
+		private readonly legacyFootnoteColumns = false,
 	) {
+		this.footnotes = legacyFootnoteColumns
+			? new LegacyFootnoteFlow(report, separator, reflow)
+			: new FootnoteFlow(report, separator, noteColumns, reflow);
 		this.sectionIndex = sectionIndex;
 		this.pages = pages;
 		this.geometry = geometry;
@@ -93,7 +99,7 @@ export class PageCursor {
 		this.columnIndex = 0;
 		this.columnTopPx = 0;
 		this.yPx = 0;
-		this.reservedPx = 0;
+		this.footnotes.resume(this.page, this.physicalColumnHeightPx);
 	}
 
 	get page(): LayoutPageBox {
@@ -101,6 +107,9 @@ export class PageCursor {
 	}
 	get column(): LayoutColumnBox {
 		return expectDefined(this.activeColumns[this.columnIndex], 'current page column');
+	}
+	private get noteColumnIndex(): number {
+		return this.legacyFootnoteColumns ? this.page.columns.indexOf(this.column) : this.columnIndex;
 	}
 	get columnWidthPx(): number {
 		return this.column.widthPx;
@@ -115,6 +124,11 @@ export class PageCursor {
 	}
 	endBalance(): void {
 		this.balance = undefined;
+	}
+	get footnoteWidthPx(): number {
+		return this.noteColumns
+			? footnoteColumns(this.page, this.noteColumns)[0]!.widthPx
+			: this.columnWidthPx;
 	}
 	get y(): number {
 		return this.yPx;
@@ -142,7 +156,10 @@ export class PageCursor {
 	}
 	remainingHeightPx(): number {
 		return (
-			this.columnHeightPx - (this.yPx - this.columnTopPx) - this.reservedPx - this.pendingHeightPx()
+			this.columnHeightPx -
+			(this.yPx - this.columnTopPx) -
+			this.footnotes.reserved(this.page, this.noteColumnIndex) -
+			this.pendingHeightPx()
 		);
 	}
 
@@ -164,17 +181,57 @@ export class PageCursor {
 	}
 
 	private pendingHeightPx(): number {
-		if (!this.pending) return 0;
-		return this.pending.heightPx + (this.page.footnotes?.length ? 0 : FOOTNOTE_SEPARATOR_PX);
+		return this.footnotes.pendingHeight(
+			this.page,
+			this.columnHeightPx,
+			this.usedColumnHeightPx,
+			this.noteColumnIndex,
+		);
 	}
 
 	/**
 	 * Reserves room for a paragraph's footnotes on whichever page its first box is placed, so the
 	 * notes print on the same page as their reference, as Word does.
 	 */
-	holdFootnotes(blockId: string, notes: LayoutFootnoteBox[]): void {
-		const heightPx = notes.reduce((sum, note) => sum + note.heightPx, 0);
-		this.pending = notes.length ? { blockId, notes, heightPx } : undefined;
+	holdFootnotes(
+		blockId: string,
+		notes: LayoutFootnoteBox[],
+		bodyMinimum = 0,
+		freshBodyMinimum = bodyMinimum,
+	): void {
+		this.footnotes.hold(blockId, notes, bodyMinimum, freshBodyMinimum);
+	}
+
+	/** Finish long notes even when the section has no more body paragraphs. */
+	finishFootnotes(): void {
+		while (this.footnotes.hasContinuation) {
+			if (this.legacyFootnoteColumns) this.newColumn();
+			else this.newPage();
+		}
+	}
+
+	/** Continued notes can occupy an otherwise empty page, before body/table content starts. */
+	advancePastFootnotes(minimumBodyHeight: number): void {
+		while (
+			(this.page.footnotes?.length &&
+				this.atColumnTop &&
+				this.remainingHeightPx() < minimumBodyHeight - 1e-6) ||
+			(this.columnIndex > 0 &&
+				this.footnotes.blockedByEarlierColumn(
+					this.page,
+					this.columnHeightPx,
+					Math.max(
+						0,
+						...this.activeColumns
+							.slice(0, this.columnIndex)
+							.flatMap((column) =>
+								column.blocks.map((block) => block.yPx + block.heightPx - this.columnTopPx),
+							),
+					),
+				))
+		)
+			if (this.legacyFootnoteColumns) this.newColumn();
+			else this.newPage();
 	}
 
 	newPage(): void {
@@ -185,6 +242,8 @@ export class PageCursor {
 		if (this.columnIndex + 1 < this.columns.count) {
 			this.columnIndex++;
 			this.yPx = this.columnTopPx;
+			if (this.legacyFootnoteColumns)
+				this.footnotes.resume(this.page, this.physicalColumnHeightPx, this.noteColumnIndex);
 		} else {
 			this.pushPage();
 		}
@@ -202,15 +261,21 @@ export class PageCursor {
 		box.yPx = this.yPx;
 		this.column.blocks.push(box);
 		this.yPx += advancePx;
-		if (this.pending && this.pending.blockId === box.blockId) {
-			this.reservedPx += this.pendingHeightPx();
-			const page = this.page;
-			let top = page.footnotes?.reduce((sum, note) => sum + note.heightPx, 0) ?? 0;
-			for (const note of this.pending.notes) {
-				(page.footnotes ??= []).push({ ...note, yPx: top });
-				top += note.heightPx;
-			}
-			this.pending = undefined;
-		}
+		const bodyBottom = this.legacyFootnoteColumns
+			? this.yPx
+			: Math.max(
+					this.yPx,
+					...this.activeColumns.flatMap((column) =>
+						column.blocks.map((block) => block.yPx + block.heightPx),
+					),
+				);
+		this.footnotes.commit(
+			box.blockId,
+			this.page,
+			this.columnHeightPx -
+				(bodyBottom - this.columnTopPx) -
+				this.footnotes.reserved(this.page, this.noteColumnIndex),
+			this.noteColumnIndex,
+		);
 	}
 }

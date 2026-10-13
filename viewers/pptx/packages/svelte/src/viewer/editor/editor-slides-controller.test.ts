@@ -1,3 +1,8 @@
+import {
+	captureSlideClipboard,
+	createSlidePaste,
+	captureSlideClipboardTemplates,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -24,6 +29,46 @@ function setup(current: number): { editor: EditorState } {
 }
 
 describe('svelte slides controller: arbitrary-index operations', () => {
+	it('pastes the copied template artwork after deleting its source and template cache', () => {
+		const { editor } = setup(0);
+		const artwork = {
+			id: 'template',
+			type: 'text',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 30,
+			text: 'Captured artwork',
+		} as PptxElement;
+		editor.templateElementsBySlideId = { a: [artwork] };
+		const clipboard = captureSlideClipboard(editor.slides, ['a']);
+		const templates = captureSlideClipboardTemplates(editor.templateElementsBySlideId, ['a']);
+		(artwork as PptxElement & { text: string }).text = 'Changed artwork';
+		editor.slidesOps.deleteSlideAtIndex(0);
+		expect(editor.templateElementsBySlideId.a).toBeUndefined();
+		const request = createSlidePaste(clipboard, 2, templates);
+		editor.slidesOps.pasteSlides(request);
+		expect(
+			(
+				editor.templateElementsBySlideId[request.copies[0]!.id]![0] as PptxElement & {
+					text: string;
+				}
+			).text,
+		).toBe('Captured artwork');
+		editor.undo();
+		expect(editor.slides.map((item) => item.id)).toStrictEqual(['b', 'c']);
+	});
+
+	it('pastes a range after the destination and undoes the whole paste in one step', () => {
+		const { editor } = setup(0);
+		const clipboard = captureSlideClipboard(editor.slides, ['a', 'b']);
+		expect(editor.slidesOps.pasteSlides(createSlidePaste(clipboard, 3))).toBe(3);
+		expect(editor.slides).toHaveLength(5);
+		expect(editor.slides.slice(3).map((item) => item.sourceSlideId)).toStrictEqual(['a', 'b']);
+		editor.undo();
+		expect(editor.slides.map((item) => item.id)).toStrictEqual(['a', 'b', 'c']);
+	});
+
 	it('deleteSlideAtIndex on a non-active slide keeps the active slide the same logical slide', () => {
 		const { editor } = setup(1); // active slide is 'b'
 		const nextIndex = editor.slidesOps.deleteSlideAtIndex(0); // delete 'a'

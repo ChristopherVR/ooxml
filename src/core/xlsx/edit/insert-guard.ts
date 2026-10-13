@@ -9,6 +9,22 @@ import { hasPreservedOverflow } from './shift-preserved';
 
 /** Refuses an insertion that would discard cells or clip positioned metadata at the grid edge. */
 export function assertInsertFits(sheet: Worksheet, shift: AxisShift, band?: Band): void {
+	// Preflight before a shift snapshot: inverse restoration assumes cells already moved.
+	for (const pivot of sheet.pivotTables ?? []) {
+		const start = pivot.location.start[shift.axis];
+		const end = pivot.location.end[shift.axis];
+		const other = shift.axis === 'row' ? 'col' : 'row';
+		if (band && (band.hi < pivot.location.start[other] || band.lo > pivot.location.end[other]))
+			continue;
+		const partial =
+			band && (band.lo > pivot.location.start[other] || band.hi < pivot.location.end[other]);
+		const overlap =
+			shift.count > 0
+				? shift.at > start && shift.at <= end
+				: shift.at <= end && shift.at - shift.count > start;
+		if (overlap || (partial && shift.at <= end))
+			throw new Error('Cannot move or remove part of a PivotTable. Delete the PivotTable first.');
+	}
 	if (shift.count <= 0) return;
 	const max = shift.axis === 'row' ? MAX_ROW : MAX_COL;
 	if (shift.at + shift.count > max + 1)

@@ -19,6 +19,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
+	PptxData,
 	PptxCommentAuthor,
 	PptxCoreProperties,
 	PptxCustomProperty,
@@ -108,7 +109,7 @@ export interface EditorStateDeps {
 	 * new `PptxHandler`; the loader owns handler lifecycle, so it disposes the
 	 * previous one here. Optional for out-of-tree mounts and the unit tests.
 	 */
-	setHandler?: (handler: PptxHandler) => void;
+	setHandler?: (handler: PptxHandler, keepPrevious?: boolean, data?: PptxData) => void;
 	onChange?: () => void;
 }
 
@@ -357,8 +358,8 @@ export class EditorState {
 	}
 
 	/** Hand a rebuilt handler to the loader (see `EditorStateDeps.setHandler`). */
-	adoptHandler(handler: PptxHandler): void {
-		this.#deps.setHandler?.(handler);
+	adoptHandler(handler: PptxHandler, keepPrevious = false, data?: PptxData): void {
+		this.#deps.setHandler?.(handler, keepPrevious, data);
 	}
 
 	/**

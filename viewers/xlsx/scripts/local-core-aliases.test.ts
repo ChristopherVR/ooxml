@@ -21,6 +21,7 @@ describe('local source aliases', () => {
 		};
 		expect(mapped('ooxml-ui/xlsx')).toBe(resolve(checkout, 'src/ui/src/xlsx/index.ts'));
 		expect(mapped('ooxml-ui/controls')).toBe(resolve(checkout, 'src/ui/src/controls.ts'));
+		expect(mapped('ooxml-ui/pptx/dom')).toBe(resolve(checkout, 'src/ui/src/pptx/dom/index.ts'));
 		expect(mapped('ooxml-core/xlsx/ui')).toBe(resolve(checkout, 'src/core/xlsx/ui/index.ts'));
 		expect(mapped('ooxml-core/xlsx/load')).toBe(resolve(checkout, 'src/core/xlsx/load/index.ts'));
 	});

@@ -1,4 +1,15 @@
 export const translations = {
+	'pptx.findReplace.includeChartData': 'Diagrammreihen und Kategoriebezeichnungen einbeziehen',
+	'pptx.findReplace.readOnlyChartText':
+		'Verknüpfter oder nicht unterstützter Diagrammtext kann gefunden werden, muss jedoch in PowerPoint oder seiner Quellarbeitsmappe bearbeitet werden.',
+	'pptx.findReplace.includeChartTitles': 'Diagrammtitel einbeziehen',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Verknüpfte oder komplexe Diagrammtitel können gefunden werden, müssen jedoch in PowerPoint oder ihrer Quellarbeitsmappe bearbeitet werden.',
+	'pptx.findReplace.includeNotes': 'Sprechernotizen einbeziehen',
+	'pptx.slideSorter.systemCopy': 'Folien in die Systemzwischenablage kopieren',
+	'pptx.slideSorter.systemPaste': 'Folien aus der Systemzwischenablage einfügen',
+	'pptx.slideSorter.systemCopied': 'Folien kopiert',
+	'pptx.slideSorter.systemPasted': 'Folien eingefügt',
 	'pptx.findReplace.title': 'Suchen und ersetzen',
 	'pptx.findReplace.closeEscape': 'Schließen (Esc)',
 	'pptx.findReplace.closeAriaLabel': 'Suchen und Ersetzen schließen',

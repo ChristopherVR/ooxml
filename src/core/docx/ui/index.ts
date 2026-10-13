@@ -14,6 +14,7 @@ export * from './yjs-presence';
 export * from './defined';
 export * from './dirty-state';
 export * from './field-guard';
+export * from './table-structure-guard';
 export * from './field-results';
 export * from './header-footer-history';
 export * from './hard-break-command';

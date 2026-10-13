@@ -2,10 +2,12 @@ import type { PageCursor } from './page-cursor';
 import { adjustForWidowOrphan, widowControlEnabled } from './keep-rules';
 import type { ParagraphLayoutResult } from './paragraph-layout';
 import type { LayoutParagraph } from './input';
-import type { LayoutParagraphBox } from './result';
+import type { LayoutFootnoteBox, LayoutLine, LayoutParagraphBox } from './result';
 import { expectDefined } from '../expect-defined';
 
 export interface ParagraphPlacement {
+	/** Measured Word compatibility modes do not reserve a text line for an empty column-break marker. */
+	trimLeadingColumnBreak?: boolean;
 	paragraph: LayoutParagraph;
 	layout: ParagraphLayoutResult;
 	/** Spacing-before in px, with `w:contextualSpacing` suppression already resolved by the caller. */
@@ -18,6 +20,8 @@ export interface ParagraphPlacement {
 	requiredTogetherPx: number;
 	/** Lays unconsumed tokens out at the cursor's new column width. */
 	reflow?: (startToken: number) => ParagraphLayoutResult;
+	/** Notes referenced by these lines, laid out at the cursor's current column width. */
+	footnotes?: (lines: readonly LayoutLine[], includeUnanchored: boolean) => LayoutFootnoteBox[];
 }
 
 /**
@@ -33,9 +37,41 @@ export function placeParagraph(
 	note: (message: string) => void,
 ): void {
 	const { paragraph, spacingBeforePx, requiredTogetherPx, reflow } = placement;
-	let layout = placement.layout;
+	// Native modes 12/14/15 retain the empty paragraph line after a terminal column break.
+	const trailingBreakLine = (result: ParagraphLayoutResult): ParagraphLayoutResult => {
+		const last = result.lines.at(-1);
+		if (
+			!placement.trimLeadingColumnBreak ||
+			!last ||
+			!result.columnBreakAfterLine.has(result.lines.length - 1)
+		)
+			return result;
+		return {
+			...result,
+			contentHeightPx: result.contentHeightPx + last.heightPx,
+			lines: [
+				...result.lines,
+				{
+					...last,
+					yPx: last.yPx + last.heightPx,
+					fragments: [],
+					sourceStart: last.sourceEnd,
+					sourceEnd: last.sourceEnd,
+				},
+			],
+		};
+	};
+	let layout = trailingBreakLine(placement.layout);
 	let width = cursor.columnWidthPx;
 	if (paragraph.pageBreakBefore && cursor.hasPageContent) cursor.newPage();
+	if (requiredTogetherPx > 0 && placement.footnotes) {
+		cursor.holdFootnotes(
+			paragraph.id,
+			placement.footnotes(layout.lines, true),
+			requiredTogetherPx,
+			layout.lines[0]?.heightPx ?? 0,
+		);
+	}
 	if (
 		requiredTogetherPx > 0 &&
 		requiredTogetherPx <= cursor.columnHeightPx &&
@@ -49,9 +85,29 @@ export function placeParagraph(
 	let lineCursor = 0;
 	let nextToken = 0;
 	let firstSegment = true;
+	const lineHeight = (line: LayoutLine, index: number) =>
+		placement.trimLeadingColumnBreak &&
+		layout.columnBreakAfterLine.has(index) &&
+		line.fragments.every((fragment) => !fragment.text && !fragment.object)
+			? 0
+			: line.heightPx;
+	const placedNotes = new Set<string>();
+	const notesFor = (lines: readonly LayoutLine[]): LayoutFootnoteBox[] =>
+		(placement.footnotes?.(lines, firstSegment) ?? []).filter((item) => !placedNotes.has(item.id));
+	const hold = (lines: readonly LayoutLine[], bodyMinimum: number): LayoutFootnoteBox[] => {
+		const notes = notesFor(lines);
+		if (placement.footnotes)
+			cursor.holdFootnotes(
+				paragraph.id,
+				notes,
+				bodyMinimum,
+				Math.max(0, ...lines.map((line) => line.heightPx)),
+			);
+		return notes;
+	};
 	const reflowIfNeeded = () => {
 		if (!reflow || cursor.columnWidthPx === width) return;
-		layout = reflow(nextToken);
+		layout = trailingBreakLine(reflow(nextToken));
 		lineCursor = 0;
 		width = cursor.columnWidthPx;
 	};
@@ -66,7 +122,16 @@ export function placeParagraph(
 	}
 	while (lineCursor < layout.lines.length) {
 		reflowIfNeeded();
-		const budget = cursor.remainingHeightPx() - (firstSegment ? spacingBeforePx : 0);
+		hold(
+			layout.lines.slice(lineCursor, lineCursor + 1),
+			layout.lines[lineCursor] ? lineHeight(layout.lines[lineCursor]!, lineCursor) : 0,
+		);
+		// A continuation can fill an otherwise empty physical page. Advance before applying the
+		// oversized-body-line fallback; the notes have made progress even though the body has not.
+		cursor.advancePastFootnotes(
+			layout.lines[lineCursor] ? lineHeight(layout.lines[lineCursor]!, lineCursor) : 0,
+		);
+		reflowIfNeeded();
 		let cumulative = 0;
 		let end = lineCursor;
 		let forced: 'page' | 'column' | undefined;
@@ -75,9 +140,14 @@ export function placeParagraph(
 			// starts it at the top of a new column or page.
 			const line = expectDefined(layout.lines[i], 'paragraph line index');
 			const gap = i === lineCursor && !firstSegment ? 0 : (line.gapBeforePx ?? 0);
-			const height = line.heightPx + gap;
+			const height = lineHeight(line, i) + gap;
+			hold(
+				layout.lines.slice(lineCursor, i + 1),
+				cumulative + height + (firstSegment ? spacingBeforePx : 0),
+			);
+			const budget = cursor.remainingHeightPx() - (firstSegment ? spacingBeforePx : 0);
 			// A line that does not fit waits for the next column, unless the column is empty.
-			if (cumulative + height > budget && (end > lineCursor || !cursor.atColumnTop)) break;
+			if (cumulative + height > budget + 1e-6 && (end > lineCursor || !cursor.atColumnTop)) break;
 			cumulative += height;
 			end = i + 1;
 			if (layout.pageBreakAfterLine.has(i)) {
@@ -102,14 +172,23 @@ export function placeParagraph(
 			);
 			placedCount = Math.max(1, end - lineCursor);
 		}
+		const committedNotes = hold(
+			layout.lines.slice(lineCursor, lineCursor + placedCount),
+			cumulative + (firstSegment ? spacingBeforePx : 0),
+		);
 		const first = expectDefined(layout.lines[lineCursor], 'first line of paragraph segment');
 		const origin = first.yPx - (firstSegment ? (first.gapBeforePx ?? 0) + layout.insetTopPx : 0);
 		const segmentLines = layout.lines
 			.slice(lineCursor, lineCursor + placedCount)
-			.map((line) => ({ ...line, yPx: line.yPx - origin }));
+			.map((line, index) => ({
+				...line,
+				yPx: line.yPx - origin,
+				heightPx: lineHeight(line, lineCursor + index),
+			}));
 		const isFinal = lineCursor + placedCount >= layout.lines.length;
 		const lastLine = segmentLines.at(-1);
 		const isLastSegment = lineCursor + placedCount >= layout.lines.length;
+
 		const segmentHeight =
 			(lastLine ? lastLine.yPx + lastLine.heightPx : 0) +
 			(isLastSegment ? layout.insetBottomPx : 0);
@@ -124,6 +203,7 @@ export function placeParagraph(
 		const advance =
 			(firstSegment ? spacingBeforePx : 0) + segmentHeight + (isFinal ? layout.spacingAfterPx : 0);
 		cursor.place(box, advance);
+		for (const item of committedNotes) placedNotes.add(item.id);
 		nextToken = layout.lines[lineCursor + placedCount - 1]?.nextToken ?? nextToken;
 		lineCursor += placedCount;
 		firstSegment = false;

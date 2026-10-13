@@ -1,5 +1,11 @@
-import { createBlankSlide, makeSlideId } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import {
+	createBlankSlide,
+	makeSlideId,
+	insertSlidePaste,
+	applySlidePasteTemplates,
+} from 'ooxml-ui/pptx';
+import type { SlidePasteRequest } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { duplicateSlide as duplicateCoreSlide } from 'pptx-viewer-core';
 import type { Ref } from 'vue';
 
@@ -26,6 +32,7 @@ export interface UseSlideOperationsInput {
 	activeSlideIndex: Ref<number>;
 	/** Snapshot current state onto the undo stack before mutating. */
 	pushHistory: () => void;
+	templateElementsBySlideId?: Ref<Record<string, PptxElement[]>>;
 }
 
 export interface UseSlideOperationsResult {
@@ -35,6 +42,7 @@ export interface UseSlideOperationsResult {
 	deleteSlide: (index: number) => void;
 	/** Deep-clone the slide at `index` and insert the copy right after it. */
 	duplicateSlide: (index: number) => void;
+	pasteSlides: (request: SlidePasteRequest) => void;
 	/** Reorder the slide at `from` to position `to`. */
 	moveSlide: (from: number, to: number) => void;
 }
@@ -91,5 +99,19 @@ export function useSlideOperations(input: UseSlideOperationsInput): UseSlideOper
 		activeSlideIndex.value = to;
 	};
 
-	return { addSlide, deleteSlide, duplicateSlide, moveSlide };
+	const pasteSlides = (request: SlidePasteRequest): void => {
+		if (!request.copies.length) {
+			return;
+		}
+		pushHistory();
+		slides.value = insertSlidePaste(slides.value, request);
+		if (input.templateElementsBySlideId) {
+			input.templateElementsBySlideId.value = applySlidePasteTemplates(
+				input.templateElementsBySlideId.value,
+				request,
+			);
+		}
+		activeSlideIndex.value = request.insertAt;
+	};
+	return { addSlide, deleteSlide, duplicateSlide, pasteSlides, moveSlide };
 }

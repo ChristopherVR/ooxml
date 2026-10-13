@@ -14,6 +14,7 @@ import { themePart } from './theme';
 import { regeneratesRootRel, writeDocProps } from './doc-props';
 import { workbookXml, type SheetRef } from './workbook-part';
 import { writeWorksheet, type SaveContext } from './worksheet';
+import { PivotWritePlan } from '../pivot/write';
 
 /** Workbook relationships regenerated on save (everything else in the source is kept). */
 const REGENERATED = new Set<string>([
@@ -27,6 +28,7 @@ const REGENERATED = new Set<string>([
 	RELATIONSHIP_TYPES.calcChain,
 	RELATIONSHIP_TYPES.person,
 	RELATIONSHIP_TYPES.sheetMetadata,
+	RELATIONSHIP_TYPES.pivotCacheDefinition,
 ]);
 
 const SHEET_TYPES: Record<string, string> = {
@@ -90,6 +92,7 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		}
 	}
 
+	ctx.pivots = new PivotWritePlan(writer, workbook, source, bookPart, rels, reserved);
 	// Excel refuses a workbook whose sheets are all hidden.
 	const states = workbook.sheets.map((sheet) => sheet.state);
 	if (!states.includes('visible')) states[0] = 'visible';
@@ -167,7 +170,7 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 	const sourceXml = sourceBook ? source?.text(sourceBook) : undefined;
 	writer.add(
 		bookPart,
-		workbookXml(workbook, sheetRefs, Math.max(0, activeTab), sourceXml),
+		workbookXml(workbook, sheetRefs, Math.max(0, activeTab), sourceXml, ctx.pivots.cachesXml),
 		keptVba ? CONTENT_TYPES.workbookMacro : CONTENT_TYPES.workbook,
 	);
 	writer.rels(bookPart, rels);

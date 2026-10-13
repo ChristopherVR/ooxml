@@ -29,6 +29,7 @@ function render(overrides: Partial<Record<string, unknown>> = {}) {
 	const onmove = vi.fn();
 	const ondelete = vi.fn();
 	const onduplicate = vi.fn();
+	const onpaste = vi.fn();
 	const ontogglehidden = vi.fn();
 	const onclose = vi.fn();
 	const target = document.createElement('div');
@@ -45,6 +46,7 @@ function render(overrides: Partial<Record<string, unknown>> = {}) {
 			onmove,
 			ondelete,
 			onduplicate,
+			onpaste,
 			ontogglehidden,
 			onclose,
 			...overrides,
@@ -55,7 +57,7 @@ function render(overrides: Partial<Record<string, unknown>> = {}) {
 		void unmount(instance);
 		target.remove();
 	};
-	return { target, onselect, onmove, ondelete, onduplicate, ontogglehidden, onclose };
+	return { target, onselect, onmove, ondelete, onduplicate, onpaste, ontogglehidden, onclose };
 }
 
 function rightClick(article: Element): void {
@@ -144,7 +146,7 @@ describe('slideSorterOverlay context menu', () => {
 });
 
 test('copies a range and changes zoom through the keyboard adapter', () => {
-	const { target, onduplicate } = render();
+	const { target, onduplicate, onpaste } = render();
 	target
 		.querySelectorAll('button.preview')[1]!
 		.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
@@ -154,7 +156,19 @@ test('copies a range and changes zoom through the keyboard adapter', () => {
 	flushSync();
 	window.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', ctrlKey: true }));
 	flushSync();
-	expect(onduplicate.mock.calls).toStrictEqual([[1], [0]]);
+	expect(onpaste).toHaveBeenCalledExactlyOnceWith(
+		expect.objectContaining({
+			insertAt: 2,
+			sourceIds: ['a', 'b'],
+		}),
+	);
+	const request = onpaste.mock.calls[0]![0];
+	expect(request.copies).toHaveLength(2);
+	expect(new Set(request.copies.map((slide: PptxSlide) => slide.id)).size).toBe(2);
+	expect(request.copies.every((slide: PptxSlide) => !request.sourceIds.includes(slide.id))).toBe(
+		true,
+	);
+	expect(onduplicate).not.toHaveBeenCalled();
 	window.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
 	flushSync();
 	expect(target.querySelector<HTMLInputElement>('input[type=range]')!.value).toBe('110');

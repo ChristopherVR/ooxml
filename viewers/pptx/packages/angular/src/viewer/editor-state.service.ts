@@ -15,6 +15,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
+	insertSlidePaste,
+	applySlidePasteTemplates,
 	applyPasteSpecialFormat,
 	applyReroutedConnectors,
 	buildSlideTemplateSlide,
@@ -27,7 +29,7 @@ import {
 	slideSpaceElement,
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
-import type { PasteSpecialFormat, SlideTemplateId } from 'ooxml-ui/pptx';
+import type { PasteSpecialFormat, SlideTemplateId, SlidePasteRequest } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import {
 	cloneElement,
@@ -974,6 +976,20 @@ export class EditorStateService {
 	}
 
 	/** Duplicate a slide, inserting the copy after it (records history). */
+	pasteSlides(request: SlidePasteRequest): void {
+		if (!request.copies.length) {
+			return;
+		}
+		this.history.record(this.captureSnapshot(), this.t('pptx.undoAction.duplicateSlide'));
+		this.slides.set(insertSlidePaste(this.slides(), request));
+		this.templateElementsBySlideId.set(
+			applySlidePasteTemplates(this.templateElementsBySlideId(), request),
+		);
+		this.selectedIds.set([]);
+		this.dirty.set(true);
+		this.syncHistory();
+	}
+
 	duplicateSlide(index: number): void {
 		const slides = this.slides();
 		if (!slides[index]) {

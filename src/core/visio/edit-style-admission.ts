@@ -147,6 +147,9 @@ export function effectiveShapeCell(
 	)
 		fail('EDIT_PROTECTED_CELL', 'Inherited formatting cells cannot be overwritten.');
 	if (local && !cellName) return local;
+	// Shape Layout cells inherit through masters (materialized by the instance view),
+	// never through LineStyle. Do not mistake an unrelated style cell for a jump policy.
+	if (/^ConLineJump(?:Code|Style|DirX|DirY)$/.test(name)) return undefined;
 	if (cellName) {
 		const sources = rows?.source ?? effectiveFormattingRows(shape, document, section!);
 		const cells = sources.get(index!) ?? sources.get('0');

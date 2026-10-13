@@ -81,7 +81,7 @@ export interface LoadingController {
 	 * built from the current archive). Disposes the previous handler; leaves
 	 * Blob URLs and the load token alone, since this is not a new document.
 	 */
-	setHandler(next: PptxHandler): void;
+	setHandler(next: PptxHandler, keepPrevious?: boolean): void;
 	/** Invalidate any in-flight load so it discards its result on resolution. */
 	invalidate(): void;
 }
@@ -247,8 +247,10 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		load,
 		releaseLoaded,
 		getHandler: () => handler,
-		setHandler: (next) => {
-			handler?.dispose();
+		setHandler: (next, keepPrevious = false) => {
+			if (!keepPrevious) {
+				handler?.dispose();
+			}
 			handler = next;
 		},
 		invalidate: () => {

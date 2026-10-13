@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
 import { ensureContentTypeOverride } from './package';
-import { parseContentTypes } from './content-types';
+import { contentTypeForPart, parseContentTypes } from './content-types';
 import {
 	buildRelationshipsXml,
 	parseRelationships,
@@ -22,6 +22,10 @@ export function relativePartTarget(basePart: string, targetPart: string): string
 
 export interface ClonePartGraphOptions {
 	zip: JSZip;
+	/** Separate source archive for cross-package imports. Defaults to zip. */
+	sourceZip?: JSZip;
+	/** Shared source-to-target map, optionally seeded with all imported roots. */
+	copies?: Map<string, string>;
 	sourcePart: string;
 	targetPart: string;
 	/** Return false for shared infrastructure or references to other document parts. */
@@ -36,10 +40,13 @@ export interface ClonePartGraphOptions {
  */
 export async function clonePartGraph(options: ClonePartGraphOptions): Promise<Map<string, string>> {
 	const { zip, sourcePart, targetPart, shouldClone } = options;
-	const copies = new Map<string, string>([[sourcePart, targetPart]]);
-	const types = parseContentTypes(await zip.file('[Content_Types].xml')?.async('string'));
+	const sourceZip = options.sourceZip ?? zip;
+	const copies = options.copies ?? new Map<string, string>();
+	copies.set(sourcePart, targetPart);
+	const types = parseContentTypes(await sourceZip.file('[Content_Types].xml')?.async('string'));
 	const reserved = new Set(Object.keys(zip.files));
 	reserved.add(targetPart);
+	for (const target of copies.values()) reserved.add(target);
 
 	const allocate = (source: string): string => {
 		const match = /^(?<stem>.*?)(?:\d+)?(?<extension>\.[^/.]+)$/u.exec(source);
@@ -53,9 +60,9 @@ export async function clonePartGraph(options: ClonePartGraphOptions): Promise<Ma
 	};
 
 	const copyRelationships = async (source: string, destination: string): Promise<void> => {
-		const contentType = types.overrides.get(`/${source}`);
+		const contentType = contentTypeForPart(types, source);
 		if (contentType) await ensureContentTypeOverride(zip, destination, contentType);
-		const xml = await zip.file(relationshipsPartFor(source))?.async('string');
+		const xml = await sourceZip.file(relationshipsPartFor(source))?.async('string');
 		if (!xml) return;
 		const relationships = parseRelationships(xml);
 		for (const relationship of relationships.values()) {
@@ -63,7 +70,7 @@ export async function clonePartGraph(options: ClonePartGraphOptions): Promise<Ma
 			const originalTarget = resolvePartPath(source, relationship.target);
 			let newTarget = copies.get(originalTarget);
 			if (!newTarget && shouldClone(relationship, originalTarget)) {
-				const file = zip.file(originalTarget);
+				const file = sourceZip.file(originalTarget);
 				if (!file) throw new Error(`Cannot clone missing package part: ${originalTarget}`);
 				newTarget = allocate(originalTarget);
 				copies.set(originalTarget, newTarget);

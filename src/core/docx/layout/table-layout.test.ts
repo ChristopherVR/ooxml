@@ -23,6 +23,37 @@ function threeAndTwoLineRow(): LayoutTableRow {
 }
 
 describe('layoutRow', () => {
+	it('keeps line coordinates relative to each stacked paragraph, including cell padding', () => {
+		const row = layoutRow(
+			{
+				cells: [
+					{
+						padding: { top: 5, right: 0, bottom: 5, left: 0 },
+						paragraphs: [cellParagraph('a', 'One'), cellParagraph('b', 'Two')],
+					},
+				],
+			},
+			200,
+			measurer,
+			noop,
+		);
+		expect(row.heightPx).toBe(50);
+		expect(row.cells[0]!.map((paragraph) => [paragraph.yPx, paragraph.lines[0]!.yPx])).toEqual([
+			[5, 0],
+			[25, 0],
+		]);
+		// A complete line needs both cell margins on each physical fragment.
+		expect(splitRowAtHeight(row, 25).before.cells[0]).toEqual([]);
+		const split = splitRowAtHeight(row, 30);
+		expect(split.before.cells[0]!.map((paragraph) => paragraph.blockId)).toEqual(['a']);
+		expect(split.after!.cells[0]![0]).toMatchObject({ blockId: 'b', yPx: 5 });
+		expect(split.after!.cells[0]![0]!.lines[0]!.yPx).toBe(0);
+		expect([split.before.heightPx, split.after!.heightPx]).toEqual([30, 30]);
+		expect([
+			split.before.geometry[0]!.contentHeightPx,
+			split.after!.geometry[0]!.contentHeightPx,
+		]).toEqual([30, 30]);
+	});
 	it('sizes the row to the tallest cell', () => {
 		const row = layoutRow(threeAndTwoLineRow(), 200, measurer, noop);
 		expect(row.heightPx).toBe(60); // 3 lines * 20px
