@@ -61,7 +61,7 @@ export function applyTextStyleUpdate(
 		let textSegments: TextSegment[] = overrideParagraphProperties(current, exclusive);
 		let newSelection = selection;
 		if (Object.keys(run).length > 0) {
-			const scoped = applyStyleToSelectedSegments(textSegments, selection, run);
+			const scoped = applyStyleToSelectedSegments(textSegments, selection, run, element.textStyle);
 			textSegments = scoped.newSegments;
 			newSelection = scoped.newSelection;
 		}
@@ -85,7 +85,7 @@ export function applyTextStyleUpdate(
 	const textSegments =
 		current &&
 		overrideParagraphProperties(current, exclusive).map((segment) =>
-			updateTextSegmentStyle(segment, exclusive),
+			updateTextSegmentStyle(segment, exclusive, { inherited: element.textStyle }),
 		);
 	return {
 		patch: {

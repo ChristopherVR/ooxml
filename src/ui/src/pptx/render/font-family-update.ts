@@ -21,6 +21,12 @@
  * A concrete family also drops the theme token of each face it replaces. The
  * writer prefers the token (`+mn-lt`) over the concrete name, so leaving it in
  * place lost the choice on save.
+ *
+ * "Same face" is judged against the run's EFFECTIVE Latin face: a run with no
+ * `fontFamily` of its own inherits it from the text box, so the caller passes
+ * the box's (pre-edit) style as `inherited`. A script slot matches when its
+ * concrete face equals that Latin face or its theme token equals the Latin
+ * theme token (a token-only slot has no concrete face to compare).
  */
 
 import type { TextStyle } from 'ooxml-core/pptx';
@@ -36,13 +42,14 @@ const SCRIPT_FACES: ReadonlyArray<{ face: ScriptFaceKey; token: ScriptTokenKey }
 /**
  * Expand a style update for `style`: when it sets a concrete `fontFamily`,
  * carry the change to the script faces that were the same face as the old
- * Latin one and drop the theme tokens of the faces it replaces. Any other
+ * effective Latin one (the run's own, else `inherited`'s) and drop the theme tokens of the faces it replaces. Any other
  * update comes back unchanged, and a script face the update names itself is
  * kept as given.
  */
 export function fontFamilyStyleUpdates(
 	style: TextStyle | undefined,
 	updates: Partial<TextStyle>,
+	inherited?: TextStyle,
 ): Partial<TextStyle> {
 	const family = updates.fontFamily;
 	if (typeof family !== 'string' || family.length === 0) {
@@ -52,13 +59,18 @@ export function fontFamilyStyleUpdates(
 	if (!('latinFontThemeToken' in updates) && style?.latinFontThemeToken !== undefined) {
 		next.latinFontThemeToken = undefined;
 	}
-	const latinFace = style?.fontFamily;
+	const ownsLatin = style?.fontFamily !== undefined;
+	const latinFace = ownsLatin ? style?.fontFamily : inherited?.fontFamily;
+	const latinToken =
+		style?.latinFontThemeToken ?? (ownsLatin ? undefined : inherited?.latinFontThemeToken);
 	for (const { face, token } of SCRIPT_FACES) {
 		if (face in updates || token in updates) {
 			continue;
 		}
 		const current = style?.[face];
-		if (current === undefined || current !== latinFace) {
+		const sameConcreteFace = current !== undefined && current === latinFace;
+		const sameThemeFace = style?.[token] !== undefined && style?.[token] === latinToken;
+		if (!sameConcreteFace && !sameThemeFace) {
 			continue;
 		}
 		next[face] = family;
@@ -69,10 +81,14 @@ export function fontFamilyStyleUpdates(
 	return next;
 }
 
-/** Merge `updates` over `style`, applying {@link fontFamilyStyleUpdates}. */
+/**
+ * Merge `updates` over `style`, applying {@link fontFamilyStyleUpdates}.
+ * `inherited` is the style a run without its own Latin face inherits from.
+ */
 export function mergeTextStyleUpdate(
 	style: TextStyle | undefined,
 	updates: Partial<TextStyle>,
+	inherited?: TextStyle,
 ): TextStyle {
-	return { ...style, ...fontFamilyStyleUpdates(style, updates) };
+	return { ...style, ...fontFamilyStyleUpdates(style, updates, inherited) };
 }

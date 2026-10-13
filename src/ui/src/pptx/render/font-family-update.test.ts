@@ -85,6 +85,54 @@ describe('fontFamilyStyleUpdates', () => {
 		});
 	});
 
+	it('follows a script token that matches the Latin token without a concrete face', () => {
+		const style = {
+			fontFamily: 'Theme Body',
+			latinFontThemeToken: '+mn-lt',
+			eastAsiaFontThemeToken: '+mn-lt',
+			bold: true,
+		};
+		expect(mergeTextStyleUpdate(style, { fontFamily: 'New Serif' })).toStrictEqual({
+			fontFamily: 'New Serif',
+			latinFontThemeToken: undefined,
+			eastAsiaFont: 'New Serif',
+			eastAsiaFontThemeToken: undefined,
+			bold: true,
+		});
+	});
+
+	it('compares an inherited Latin face against the text box style', () => {
+		const run = { eastAsiaFont: 'Old Sans', italic: true };
+		expect(mergeTextStyleUpdate(run, { fontFamily: 'New Serif' }, sameFace)).toStrictEqual({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'New Serif',
+			italic: true,
+		});
+		const distinct = { eastAsiaFont: 'Asian Gothic' };
+		expect(mergeTextStyleUpdate(distinct, { fontFamily: 'New Serif' }, sameFace)).toStrictEqual({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'Asian Gothic',
+		});
+	});
+
+	it('prefers the run Latin face over the inherited one', () => {
+		const run = { fontFamily: 'Run Latin', eastAsiaFont: 'Old Sans' };
+		expect(mergeTextStyleUpdate(run, { fontFamily: 'New Serif' }, sameFace)).toStrictEqual({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'Old Sans',
+		});
+	});
+
+	it('matches an inherited Latin theme token', () => {
+		const box = { fontFamily: 'Theme Body', latinFontThemeToken: '+mn-lt' };
+		const run = { eastAsiaFontThemeToken: '+mn-lt' };
+		expect(mergeTextStyleUpdate(run, { fontFamily: 'New Serif' }, box)).toStrictEqual({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'New Serif',
+			eastAsiaFontThemeToken: undefined,
+		});
+	});
+
 	it('leaves other updates and explicit script faces alone', () => {
 		const bold = { bold: true };
 		expect(fontFamilyStyleUpdates(sameFace, bold)).toBe(bold);
@@ -135,5 +183,28 @@ describe('font family edits on a whole text box', () => {
 		);
 		expect(newSegments[0]?.style.eastAsiaFont).toBe('Old Sans');
 		expect(newSegments[1]?.style.eastAsiaFont).toBe('New Serif');
+	});
+
+	it('carries an east Asian face that matched the inherited Latin face', () => {
+		const inheriting: TextSegment[] = [
+			{ text: 'Sample ', style: { bold: true } },
+			{ text: '文字', style: { eastAsiaFont: 'Old Sans', underline: true } },
+		];
+		const box = textBox(inheriting);
+		const expected = [
+			{ fontFamily: 'New Serif', bold: true },
+			{ fontFamily: 'New Serif', eastAsiaFont: 'New Serif', underline: true },
+		];
+		const whole = textFontFamilyPatch(box, 'New Serif') as { textSegments: TextSegment[] };
+		expect(whole.textSegments.map((run) => run.style)).toStrictEqual(expected);
+		const { patch } = applyTextStyleUpdate(box, { fontFamily: 'New Serif' }, null);
+		const runs = (patch as { textSegments: TextSegment[] }).textSegments;
+		expect(runs.map((run) => run.style)).toStrictEqual(expected);
+		const selected = applyTextStyleUpdate(
+			box,
+			{ fontFamily: 'New Serif' },
+			{ startSegIdx: 1, startOffset: 0, endSegIdx: 1, endOffset: 2 },
+		).patch as { textSegments: TextSegment[] };
+		expect(selected.textSegments[1]?.style).toStrictEqual(expected[1]);
 	});
 });

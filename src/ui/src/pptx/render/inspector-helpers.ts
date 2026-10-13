@@ -159,7 +159,10 @@ export function textStylePatch(el: PptxElement, changes: Partial<TextStyle>): Pa
 		...(segments?.some((segment) => segment.paragraphInsertionStyle)
 			? {
 					textSegments: segments.map((segment) =>
-						updateTextSegmentStyle(segment, exclusive, { updateBodyStyle: false }),
+						updateTextSegmentStyle(segment, exclusive, {
+							updateBodyStyle: false,
+							inherited: base,
+						}),
 					),
 				}
 			: {}),
@@ -173,9 +176,12 @@ function textRunsPatch(el: PptxElement, updates: Partial<TextStyle>): Partial<Pp
 	if (!hasTextProperties(el) || !el.textSegments) {
 		return patch;
 	}
+	const inherited = el.textStyle;
 	return {
 		...patch,
-		textSegments: el.textSegments.map((segment) => updateTextSegmentStyle(segment, updates)),
+		textSegments: el.textSegments.map((segment) =>
+			updateTextSegmentStyle(segment, updates, { inherited }),
+		),
 	} as Partial<PptxElement>;
 }
 
