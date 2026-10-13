@@ -64,6 +64,7 @@ export function layoutRow(
 	remaining?: LayoutParagraphBox[][],
 	startTokens?: ReadonlyMap<string, number>,
 	frameBorders = false,
+	frameLeftBorderPx?: number,
 ): RowLayout {
 	const count = row.cells.length || 1;
 	let x = 0;
@@ -88,9 +89,12 @@ export function layoutRow(
 			: margins;
 		const externalRight =
 			frameBorders && geometry.length === row.cells.length - 1 ? rightBorder : 0;
+		const paintWidth =
+			widthPx + (frameBorders ? (leftBorder - rightBorder) / 2 + externalRight : 0);
+		const frameX = frameBorders ? ((frameLeftBorderPx ?? leftBorder) - leftBorder) / 2 : 0;
 		const content = stackCellBlocks(
 			cell,
-			Math.max(1, widthPx - padding.left - padding.right),
+			Math.max(1, paintWidth - padding.left - padding.right - externalRight),
 			measurer,
 			note,
 			padding.top,
@@ -98,8 +102,8 @@ export function layoutRow(
 		);
 		const heightPx = content.heightPx + padding.bottom;
 		geometry.push({
-			xPx: cell.xPx ?? x,
-			widthPx: widthPx + externalRight,
+			xPx: (cell.xPx ?? x) + frameX,
+			widthPx: paintWidth,
 			...(frameBorders ? { borderInsetsReserved: true } : {}),
 			paddingLeftPx: padding.left,
 			paddingRightPx: padding.right + externalRight,

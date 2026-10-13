@@ -1,4 +1,4 @@
-import { nestedFrameBorderWidth } from './nested-frame-profile';
+import { nestedFrameProfile } from './nested-frame-profile';
 import { cellVerticalOffset } from './result';
 import type { LayoutBlock, LayoutParagraph, LayoutTableCell } from './input';
 import type { LayoutParagraphBox, LayoutTableBox } from './result';
@@ -44,13 +44,13 @@ export function stackCellBlocks(
 			continue;
 		}
 		const tableWidth = block.widthPx ?? width;
-		const profileWidth = nestedFrameBorderWidth(block);
-		const reserveBorders = profileWidth !== undefined;
+		const profile = nestedFrameProfile(block, tableWidth);
+		const reserveBorders = profile !== undefined;
 		if (!reserveBorders)
 			note(
-				'Nested table border occupancy is approximate for mixed widths, missing edges or non-solid borders; native evidence covers uniform single-line borders.',
+				'Nested table border occupancy is approximate for missing edges, non-solid or conflicting shared borders and changing row grids.',
 			);
-		const externalRight = profileWidth ?? 0;
+		const externalRight = profile ? (profile.leftPx + profile.rightPx) / 2 : 0;
 		const paintedWidth = tableWidth + externalRight;
 		const x =
 			block.alignment === 'center'
@@ -73,7 +73,16 @@ export function stackCellBlocks(
 				!row.cells.some((nested) => cellParagraphs(nested).some((p) => starts.has(p.id)))
 			)
 				continue;
-			const layout = layoutRow(row, tableWidth, measurer, note, undefined, starts, reserveBorders);
+			const layout = layoutRow(
+				row,
+				tableWidth,
+				measurer,
+				note,
+				undefined,
+				starts,
+				reserveBorders,
+				profile?.leftPx,
+			);
 			frame.rows.push({
 				yPx: y - frame.yPx,
 				heightPx: layout.heightPx,
@@ -105,7 +114,7 @@ export function stackCellBlocks(
 			});
 			y += layout.heightPx;
 		}
-		const bottomBorder = profileWidth ?? 0;
+		const bottomBorder = profile?.bottomPx ?? 0;
 		if (frame.rows.length) frame.rows.at(-1)!.heightPx += bottomBorder;
 		y += bottomBorder;
 		frame.heightPx = y - frame.yPx;

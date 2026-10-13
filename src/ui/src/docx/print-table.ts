@@ -48,6 +48,8 @@ export function renderTable(
 		rowEl.style.height = `${row.heightPx}px`;
 		if (row.repeated) rowEl.dataset.repeated = 'true';
 		const lastRow = rowIndex === box.rows.length - 1;
+		rowEl.style.isolation = 'isolate';
+		const frameLayers: HTMLElement[] = [];
 		row.cells.forEach((paragraphs, cellIndex) => {
 			const geometry = geometryOf(row, cellIndex, columnWidthPx);
 			const cell = document.createElement('div');
@@ -65,18 +67,55 @@ export function renderTable(
 			if (lastRow) cell.style.borderBottom = cssBorder(borders?.bottom);
 			const content = document.createElement('div');
 			content.className = 'dve-print-cell-content';
+			content.style.zIndex = '2';
 			const offset = cellVerticalOffset(geometry, row.heightPx);
 			Object.assign(content.style, {
 				left: `${geometry.paddingLeftPx - (geometry.borderInsetsReserved ? (borders?.left?.widthPx ?? 0) : 0)}px`,
 				right: `${geometry.paddingRightPx - (geometry.borderInsetsReserved && cellIndex === row.cells.length - 1 ? (borders?.right?.widthPx ?? 0) : 0)}px`,
 				top: `${offset - (geometry.borderInsetsReserved ? (borders?.top?.widthPx ?? 0) : 0)}px`,
 			});
-			for (const nested of row.cellTables?.[cellIndex] ?? []) {
-				const frame = renderTable(nested, nested.widthPx ?? geometry.widthPx, () => null);
-				frame.classList.add('dve-print-nested-table');
-				frame.setAttribute('aria-hidden', 'true');
-				frame.style.pointerEvents = 'none';
-				content.append(frame);
+			const nestedTables = row.cellTables?.[cellIndex] ?? [];
+			if (nestedTables.length) {
+				const layer = document.createElement('div');
+				layer.className = 'dve-print-cell-frame-layer';
+				layer.setAttribute('aria-hidden', 'true');
+				Object.assign(layer.style, {
+					position: 'absolute',
+					left: `${geometry.xPx}px`,
+					top: '0px',
+					width: `${geometry.widthPx}px`,
+					height: `${row.heightPx}px`,
+					overflowX: 'visible',
+					overflowY: 'clip',
+					pointerEvents: 'none',
+					zIndex: '1',
+				});
+
+				// Ordinary content coordinates start inside the CSS borders. Reserved nested coordinates
+				// already include source border insets, so their decorative origins stay in row coordinates.
+				if (!geometry.borderInsetsReserved) {
+					layer.style.boxSizing = 'border-box';
+					layer.style.borderLeft = cssBorder(borders?.left);
+					layer.style.borderTop = cssBorder(borders?.top);
+					layer.style.borderLeftColor = 'transparent';
+					layer.style.borderTopColor = 'transparent';
+				}
+				const origin = document.createElement('div');
+				origin.className = 'dve-print-cell-frame-origin';
+				Object.assign(origin.style, {
+					position: 'absolute',
+					left: `${geometry.paddingLeftPx}px`,
+					top: `${offset}px`,
+				});
+				for (const nested of nestedTables) {
+					const frame = renderTable(nested, nested.widthPx ?? geometry.widthPx, () => null);
+					frame.classList.add('dve-print-nested-table');
+					frame.setAttribute('aria-hidden', 'true');
+					frame.style.pointerEvents = 'none';
+					origin.append(frame);
+				}
+				layer.append(origin);
+				frameLayers.push(layer);
 			}
 			for (const paragraph of paragraphs) {
 				const element = renderParagraph(paragraph);
@@ -85,6 +124,7 @@ export function renderTable(
 			cell.append(content);
 			rowEl.append(cell);
 		});
+		rowEl.append(...frameLayers);
 		table.append(rowEl);
 	});
 	return table;
