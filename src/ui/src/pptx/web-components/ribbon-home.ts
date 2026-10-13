@@ -29,6 +29,7 @@ declare global {
 		'pptx-ui-ribbon-home-font-picker': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-arrange-painter': PptxUiRibbonHomeElement;
 		'pptx-ui-ribbon-home-arrange-shape': PptxUiRibbonHomeElement;
+		'pptx-ui-ribbon-home-picture-size': PptxUiRibbonHomeElement;
 	}
 }
 
@@ -110,3 +111,5 @@ export const definePptxRibbonHomeArrangePainter = (registry: CustomElementRegist
 	definePptxRibbonHome(registry, 'arrange-painter');
 export const definePptxRibbonHomeArrangeShape = (registry: CustomElementRegistry) =>
 	definePptxRibbonHome(registry, 'arrange-shape');
+export const definePptxRibbonHomePictureSize = (registry: CustomElementRegistry) =>
+	definePptxRibbonHome(registry, 'picture-size');

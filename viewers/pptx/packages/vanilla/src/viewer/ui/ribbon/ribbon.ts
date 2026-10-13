@@ -24,6 +24,7 @@ import { createFindReplacePanel } from './find-replace-panel';
 import { createFormatBackgroundPanel } from './format-background-panel';
 import { createContextualTabPanes, mountVisibleContextualPanes } from './gallery/contextual-tabs';
 import { createRibbonGalleryHub } from './gallery/gallery-hub';
+import { createPictureSizeStrip } from './gallery/picture-size-strip';
 import type { HomeTab } from './home/home-tab';
 import { createHomeTab } from './home/home-tab';
 import type { Ribbon } from './ribbon-api';
@@ -200,7 +201,10 @@ export function createRibbon(
 
 	// Contextual tabs (Shape Format, ...) sit after the fixed tabs, mounted only
 	// while the selection brings them up (`mountVisibleContextualPanes`).
-	const contextualPanes = createContextualTabPanes(doc, t, galleryHub);
+	const pictureSize = createPictureSizeStrip(doc, t, handlers.edit, hiddenActions);
+	const contextualPanes = createContextualTabPanes(doc, t, galleryHub, {
+		'picture-size': pictureSize.el,
+	});
 	for (const [id, pane] of contextualPanes) {
 		pane.hidden = true;
 		detachOverflow.push(attachRibbonOverflow(pane, { launchers }));
@@ -249,6 +253,7 @@ export function createRibbon(
 		galleryHub.sync(latestExtra.galleryContext, lastEditable);
 		syncContextual();
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
+		pictureSize.update({ ...latestExtra, editable: lastEditable });
 	};
 	const syncAnimations = (): void => {
 		animationsTab?.update({

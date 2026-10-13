@@ -8,7 +8,6 @@ import {
 	canSetStrokeWidth,
 	canUngroupSelection,
 	isActionHidden,
-	parseCropValue,
 	strokeWidthOf,
 } from 'ooxml-ui/pptx';
 import type { MergeShapeOperation, PptxElement } from 'pptx-viewer-core';
@@ -16,9 +15,11 @@ import type { MergeShapeOperation, PptxElement } from 'pptx-viewer-core';
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';
 import { tagRibbonGroup } from '../ribbon-tagging';
+import type { CropHandlers } from './crop-request';
+import { runCropRequest } from './crop-request';
 import { createSharedHomeStrip } from './shared-strip';
 
-export interface ArrangeGroupHandlers {
+export interface ArrangeGroupHandlers extends CropHandlers {
 	bringForward(): void;
 	sendBackward(): void;
 	bringToFront(): void;
@@ -34,10 +35,6 @@ export interface ArrangeGroupHandlers {
 	ungroupSelected(): void;
 	setStrokeWidth(width: number): void;
 	mergeShapes(operation: MergeShapeOperation): void;
-	toggleCropMode(): void;
-	cropToAspect(ratioWidth: number, ratioHeight: number): void;
-	cropFill(): void;
-	cropFit(): void;
 }
 
 export interface ArrangeGroupState {
@@ -107,17 +104,8 @@ export function createArrangeGroup(
 				handlers.mergeShapes(value as MergeShapeOperation);
 			} else if (id === 'home.arrange.outlineWidth') {
 				handlers.setStrokeWidth(Number(value));
-			} else if (value === undefined) {
-				handlers.toggleCropMode();
 			} else {
-				const crop = parseCropValue(value);
-				if (crop?.kind === 'aspect') {
-					handlers.cropToAspect(crop.width, crop.height);
-				} else if (crop?.kind === 'fill') {
-					handlers.cropFill();
-				} else if (crop?.kind === 'fit') {
-					handlers.cropFit();
-				}
+				runCropRequest(handlers, value);
 			}
 		}),
 		order: createSharedHomeStrip(doc, t, 'arrange-order', ({ id }) =>

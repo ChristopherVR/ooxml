@@ -1,16 +1,24 @@
-import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import React from 'react';
 
+import { PictureSizeStrip } from './PictureSizeStrip';
 import { RibbonGallery } from './RibbonGallery';
 import { useTranslateOr } from './useGalleryTranslation';
 import { WebRibbonGroup } from './WebRibbonControls';
 
 /**
  * A contextual tab's ribbon content (Shape Format, Picture Format, Table
- * Design, ...): the groups shared lists for it, each holding its galleries.
+ * Design, ...): the groups shared lists for it, each holding its galleries
+ * and, for a command group such as Picture Format > Size, its shared strip.
  */
-export function ContextualTabSection({ tab }: { tab: RibbonContextualTabId }): React.ReactElement {
+export function ContextualTabSection({
+	tab,
+	hiddenActions,
+}: {
+	tab: RibbonContextualTabId;
+	hiddenActions?: readonly ToolbarActionId[];
+}): React.ReactElement {
 	const translateOr = useTranslateOr();
 	return (
 		<>
@@ -23,6 +31,7 @@ export function ContextualTabSection({ tab }: { tab: RibbonContextualTabId }): R
 					{group.galleries.map((placement) => (
 						<RibbonGallery key={placement.control} placement={placement} />
 					))}
+					{group.strip === 'picture-size' && <PictureSizeStrip hiddenActions={hiddenActions} />}
 				</WebRibbonGroup>
 			))}
 		</>

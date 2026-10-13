@@ -220,7 +220,7 @@ const CONTEXTUAL: {
 		label: 'Picture Format',
 		fixture: 'ribbon-galleries.pptx',
 		tab: 'pictureFormat',
-		groups: ['Adjust', 'Picture Styles'],
+		groups: ['Adjust', 'Picture Styles', 'Size'],
 		pick: (page) => elementsOfType(page, 'image').first(),
 	},
 	{

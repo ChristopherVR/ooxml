@@ -1,4 +1,5 @@
 import { parseOoxmlPercent } from '../../../../color/color-primitives';
+import { readPathListCommandOrder } from '../../geometry/custom-geometry-command-order';
 import { parseStructuredCustomGeometry } from '../../geometry/custom-geometry-parser';
 import {
 	parseGuideDefinitions,
@@ -235,6 +236,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const pathLst = custGeom['a:pathLst'];
 		if (isNonEmpty(pathLst)) {
 			result.pathLstXml = pathLst;
+			const pathCommandOrder = readPathListCommandOrder(pathLst);
+			if (pathCommandOrder) {
+				result.pathCommandOrder = pathCommandOrder;
+			}
 		}
 		return Object.keys(result).length > 0 ? result : undefined;
 	}

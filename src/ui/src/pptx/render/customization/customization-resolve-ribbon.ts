@@ -6,7 +6,9 @@
  *
  * Two ribbon controls are also legacy toolbar buttons (`mergeShapes`,
  * `crop`); naming either spelling hides both, so a host does not need to know
- * which one a binding happens to check.
+ * which one a binding happens to check. `crop` (or `home.arrange.crop`) also
+ * hides the second crop entry point, Picture Format > Size > Crop; naming
+ * `pictureFormat.size.crop` hides only that one.
  *
  * @module render/customization/customization-resolve-ribbon
  */
@@ -16,10 +18,16 @@ import type { RibbonCustomization } from './customization-types';
 import type { RibbonControlId, RibbonGroupId } from './ribbon-control-ids';
 import { isRibbonControlId, isRibbonGroupId } from './ribbon-control-visibility';
 
-/** Legacy toolbar-button ids that are also catalogued ribbon controls. */
-const BUTTON_CONTROL_ALIASES: ReadonlyArray<readonly [ToolbarActionId, RibbonControlId]> = [
+/**
+ * Legacy toolbar-button ids that are also catalogued ribbon controls: the
+ * control the button has always named, then any further controls the button
+ * also hides.
+ */
+const BUTTON_CONTROL_ALIASES: ReadonlyArray<
+	readonly [ToolbarActionId, RibbonControlId, ...RibbonControlId[]]
+> = [
 	['mergeShapes', 'home.arrange.mergeShapes'],
-	['crop', 'home.arrange.crop'],
+	['crop', 'home.arrange.crop', 'pictureFormat.size.crop'],
 ];
 
 const CONTEXTUAL_TAB_IDS: ReadonlySet<string> = new Set(RIBBON_CONTEXTUAL_TABS.map((t) => t.id));
@@ -58,9 +66,12 @@ export function resolveRibbonCustomization(
 			actions.add(button as ToolbarActionId);
 		}
 	}
-	for (const [action, control] of BUTTON_CONTROL_ALIASES) {
+	for (const [action, control, ...also] of BUTTON_CONTROL_ALIASES) {
 		if (actions.has(action)) {
 			controls.add(control);
+			for (const extra of also) {
+				controls.add(extra);
+			}
 		} else if (controls.has(control)) {
 			actions.add(action);
 		}

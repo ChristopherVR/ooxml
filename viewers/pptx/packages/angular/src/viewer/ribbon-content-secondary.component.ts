@@ -168,6 +168,7 @@ import { RibbonViewSectionComponent } from './ribbon-view-section.component';
 						[selectedElement]="selectedElement()"
 						[slideIndex]="slideIndex()"
 						[canEdit]="canEdit()"
+						[hiddenActions]="hiddenActions()"
 					/>
 				}
 			}

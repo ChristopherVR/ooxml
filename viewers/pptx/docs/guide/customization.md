@@ -139,8 +139,11 @@ const customization: ViewerCustomization = {
 `ribbon.hiddenButtons` takes both kinds of id: the older top-level toolbar
 buttons (`share`, `zoom`, ...) and the catalogued ribbon controls.
 `mergeShapes` / `home.arrange.mergeShapes` and `crop` / `home.arrange.crop`
-name the same control, so either spelling hides it. The full lists are in the
-[reference](#ribbon-groups-ribbon-hiddengroups) below.
+name the same control, so either spelling hides it. Either crop spelling also
+hides the second crop entry point, `pictureFormat.size.crop` (Picture Format >
+Size); naming `pictureFormat.size` or `pictureFormat.size.crop` hides only that
+one.
+The full lists are in the [reference](#ribbon-groups-ribbon-hiddengroups) below.
 
 Every binding tags its ribbon markup with `data-ribbon-group` and
 `data-ribbon-control` and renders one stylesheet the shared model generates
@@ -583,6 +586,7 @@ unit test fails if an id is missing here.
 | `shapeFormat.wordArtStyles`         | WordArt Styles           |
 | `pictureFormat.adjust`              | Adjust                   |
 | `pictureFormat.pictureStyles`       | Picture Styles           |
+| `pictureFormat.size`                | Size                     |
 | `tableDesign.tableStyles`           | Table Styles             |
 | `chartDesign.chartLayouts`          | Chart Layouts            |
 | `chartDesign.chartStyles`           | Chart Styles             |
@@ -769,6 +773,7 @@ unit test fails if an id is missing here.
 | `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery            |
 | `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery              |
 | `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery             |
+| `pictureFormat.size.crop`                         | Crop                                |
 | `tableDesign.tableStyles.gallery`                 | Table Styles gallery                |
 | `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                |
 | `chartDesign.chartStyles.changeColors`            | Change Colors gallery               |
@@ -802,7 +807,7 @@ unit test fails if an id is missing here.
 | `zoom`        | The zoom cluster (zoom in, zoom out, fit).                                                               |
 | `navigation`  | The previous / next slide cluster.                                                                       |
 | `mergeShapes` | The Merge Shapes dropdown (Union, Combine, Fragment, Intersect, Subtract) in the Home tab Arrange group. |
-| `crop`        | The picture Crop control (crop mode, Crop to Aspect Ratio, Fill, Fit) in the Home tab Arrange group.     |
+| `crop`        | Both picture Crop buttons (crop mode, aspect ratio, Fill, Fit): Home > Arrange, Picture Format > Size.   |
 
 ### Options pages (`options.hiddenPages`)
 

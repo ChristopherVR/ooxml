@@ -21,25 +21,13 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import {
 	arrangeShapeHomeControls,
-	canCropElement,
 	canGroupSelection,
 	canSetStrokeWidth,
 	canUngroupSelection,
-	cropFill,
-	cropFit,
-	cropToAspectRatio,
-	getCachedNativeImageSize,
-	getImageSrc,
 	MERGE_SHAPES_LABEL_KEY,
-	parseCropValue,
 	strokeWidthOf,
 } from 'ooxml-ui/pptx';
-import type {
-	CropElementUpdate,
-	MergeShapeOperation,
-	RibbonHomeRequestEvent,
-	ToolbarActionId,
-} from 'ooxml-ui/pptx';
+import type { MergeShapeOperation, RibbonHomeRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 
@@ -48,6 +36,7 @@ import { canGroupSelected } from './group-lock-guard';
 import { LoadContentService } from './load-content.service';
 import { canMergeSelection, runMergeShapes } from './merge-shapes-action';
 import { PictureCropService } from './picture-crop.service';
+import { createRibbonCropCommands } from './ribbon-crop-commands';
 import { homeLanguage, homeTranslator } from './ribbon-home-lang';
 
 export { canGroupSelection, canSetStrokeWidth, canUngroupSelection, strokeWidthOf };
@@ -108,10 +97,14 @@ export class RibbonShapeExtrasComponent {
 		canSetStrokeWidth(this.canEdit(), this.selectedElement()),
 	);
 	protected readonly strokeWidth = computed(() => strokeWidthOf(this.selectedElement()));
-	/** The single selected picture, when it can be cropped. */
-	private readonly cropTarget = computed<PptxElement | null>(() => {
-		const el = this.selectedElement();
-		return this.editor.selectedIds().length === 1 && canCropElement(el) ? el : null;
+	/** Crop toggle and menu, shared with Picture Format > Size. */
+	private readonly cropCommands = createRibbonCropCommands({
+		editor: this.editor,
+		crop: this.crop,
+		loader: this.loader,
+		slideIndex: () => this.slideIndex(),
+		selectedElement: () => this.selectedElement(),
+		canEdit: () => this.canEdit(),
 	});
 
 	protected view() {
@@ -121,8 +114,8 @@ export class RibbonShapeExtrasComponent {
 				canGroup: this.canGroup(),
 				canUngroup: this.canUngroup(),
 				canMerge: canMergeSelection(this.editor, this.slideIndex()),
-				canCrop: this.cropTarget() !== null,
-				cropActive: this.crop?.isCropping(this.cropTarget()?.id ?? null) ?? false,
+				canCrop: this.cropCommands.target() !== null,
+				cropActive: this.cropCommands.active(),
 				canStrokeWidth: this.canSetStroke(),
 				strokeWidth: this.strokeWidth(),
 				hideMerge: this.hiddenActions().includes('mergeShapes'),
@@ -154,7 +147,7 @@ export class RibbonShapeExtrasComponent {
 				);
 				break;
 			case 'home.arrange.crop':
-				this.onCrop(value);
+				this.cropCommands.run(value);
 		}
 	}
 
@@ -170,35 +163,5 @@ export class RibbonShapeExtrasComponent {
 		this.editor.updateElement(this.slideIndex(), element.id, {
 			shapeStyle: { ...element.shapeStyle, strokeWidth: Math.max(0, next) },
 		} as Partial<PptxElement>);
-	}
-
-	/** The Crop button toggles crop mode; its menu crops in one undoable update. */
-	private onCrop(value: string | number | undefined): void {
-		const choice = parseCropValue(value);
-		if (!choice) {
-			this.crop?.toggle(this.slideIndex(), this.cropTarget());
-			return;
-		}
-		this.applyOneClick((el) => {
-			if (choice.kind === 'aspect') {
-				return cropToAspectRatio(el, choice.width, choice.height);
-			}
-			const src = getImageSrc(el, this.loader?.mediaDataUrls() ?? new Map<string, string>());
-			const natural = getCachedNativeImageSize(src);
-			return choice.kind === 'fill' ? cropFill(el, natural) : cropFit(el, natural);
-		});
-	}
-
-	/** Commit any live crop session, then apply `compute` as ONE undoable update. */
-	private applyOneClick(compute: (el: PptxElement) => CropElementUpdate): void {
-		this.crop?.commit();
-		const id = this.cropTarget()?.id;
-		const el = id
-			? this.editor.slides()[this.slideIndex()]?.elements.find((item) => item.id === id)
-			: undefined;
-		if (!el || !this.canEdit()) {
-			return;
-		}
-		this.editor.updateElement(this.slideIndex(), el.id, compute(el) as Partial<PptxElement>);
 	}
 }

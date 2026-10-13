@@ -596,11 +596,11 @@ describe('getTextLayoutStyle', () => {
 		expect(style.writingMode).toBe('vertical-lr');
 	});
 
-	it('should apply whiteSpace nowrap when textWrap is none', () => {
+	it('should apply whiteSpace pre when textWrap is none', () => {
 		const el = makeTextElement({ textStyle: { textWrap: 'none' } });
 		const style = getTextLayoutStyle(el);
 
-		expect(style.whiteSpace).toBe('nowrap');
+		expect(style.whiteSpace).toBe('pre');
 		expect(style.overflow).toBe('visible');
 	});
 
@@ -804,13 +804,13 @@ describe('getTextStyleForElement', () => {
 		expect(style.overflow).toBe('visible');
 	});
 
-	it('should apply nowrap for textWrap none', () => {
+	it('should apply pre for textWrap none', () => {
 		const el = makeTextElement({
 			textStyle: { textWrap: 'none' },
 		});
 		const style = getTextStyleForElement(el, DEFAULT_TEXT_COLOR);
 
-		expect(style.whiteSpace).toBe('nowrap');
+		expect(style.whiteSpace).toBe('pre');
 		expect(style.overflow).toBe('visible');
 	});
 });

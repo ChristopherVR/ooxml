@@ -331,7 +331,11 @@ onBeforeUnmount(() => detachOverflow?.());
 
 				<RibbonTailSections v-bind="props" />
 
-				<ContextualTabSection v-if="activeContextualTab" :tab="activeContextualTab" />
+				<ContextualTabSection
+					v-if="activeContextualTab"
+					:tab="activeContextualTab"
+					:hidden-actions="props.hiddenActions"
+				/>
 			</template>
 		</div>
 	</div>

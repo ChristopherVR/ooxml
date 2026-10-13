@@ -152,6 +152,16 @@ export interface CustomGeometryRawData {
 	 * `geometry/custom-geometry-live-eval.ts`.
 	 */
 	pathLstXml?: unknown;
+	/**
+	 * Source command order of each `a:path` in {@link pathLstXml} (one list per
+	 * path, in document order). The parsed tree groups a path's commands by
+	 * type, and the order the parser attaches to it is keyed by object
+	 * identity, so it does not survive a copy (undo snapshots, duplicate,
+	 * paste, `structuredClone`, reactive proxies). Kept here as plain data so
+	 * re-evaluating a copied `pathLstXml` still draws and saves the commands
+	 * in their authored order; see `restorePathListCommandOrder`.
+	 */
+	pathCommandOrder?: string[][];
 }
 
 // ==========================================================================

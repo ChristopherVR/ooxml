@@ -197,6 +197,58 @@ export function inheritCustomGeometryCommandOrder(
 	}
 }
 
+/** The `a:path` objects of a parsed `a:pathLst`, in document order. */
+function pathListPaths(pathLst: unknown): XmlObject[] {
+	if (!pathLst || typeof pathLst !== 'object') {
+		return [];
+	}
+	return ensureArrayLocal(childByLocalName(pathLst as XmlObject, 'path')).filter(
+		(path): path is XmlObject => Boolean(path) && typeof path === 'object',
+	);
+}
+
+/**
+ * The source command order of every `a:path` in a parsed `a:pathLst`, as plain
+ * data (one list per path, empty when none was recorded), or `undefined` when
+ * no path carries an order.
+ *
+ * The order the parser attaches lives in a WeakMap keyed by the parsed object,
+ * so it is lost by anything that copies the tree: the undo history and
+ * duplicate/paste (`deepCloneData`), `structuredClone`, a JSON round trip, a
+ * framework's reactive proxy. Keeping it beside the tree as data (on
+ * `CustomGeometryRawData.pathCommandOrder`) lets
+ * {@link restorePathListCommandOrder} put it back on whatever copy is
+ * evaluated later.
+ */
+export function readPathListCommandOrder(pathLst: unknown): string[][] | undefined {
+	const orders = pathListPaths(pathLst).map((path) => [...(commandOrder.get(path) ?? [])]);
+	return orders.some((order) => order.length > 0) ? orders : undefined;
+}
+
+/**
+ * Re-attach orders recorded by {@link readPathListCommandOrder} to the paths of
+ * a (possibly copied) `a:pathLst`. A path that already carries an order keeps
+ * it, and an order whose command multiset does not match its path is ignored,
+ * so a stale or foreign order can never truncate or reshape a path.
+ */
+export function restorePathListCommandOrder(
+	pathLst: unknown,
+	orders: readonly (readonly string[])[] | undefined,
+): void {
+	if (!orders || orders.length === 0) {
+		return;
+	}
+	pathListPaths(pathLst).forEach((path, index) => {
+		const order = orders[index];
+		if (!order || order.length === 0 || commandOrder.has(path)) {
+			return;
+		}
+		if (orderSignature([...order]) === pathSignature(path)) {
+			commandOrder.set(path, [...order]);
+		}
+	});
+}
+
 /** Create an internal ordered key for a repeated non-adjacent XML element. */
 export function orderedXmlKey(baseName: string, order: number): string {
 	return `${baseName}${ORDER_SUFFIX}${order}`;

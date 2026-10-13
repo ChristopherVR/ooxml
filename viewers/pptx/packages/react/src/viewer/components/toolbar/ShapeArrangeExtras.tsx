@@ -4,7 +4,6 @@ import {
 	canGroupSelection,
 	canSetStrokeWidth,
 	canUngroupSelection,
-	parseCropValue,
 	strokeWidthOf,
 } from 'ooxml-ui/pptx';
 import type { MergeShapeOperation, PptxElement, ShapeStyle } from 'pptx-viewer-core';
@@ -12,6 +11,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';
 import { useShapeFormatContext } from '../shape-format-context';
+import { runCropRequest } from './crop-request';
 import { WebHomeControls } from './WebHomeControls';
 
 export interface ShapeArrangeExtrasProps {
@@ -80,18 +80,8 @@ export function ShapeArrangeExtras(p: ShapeArrangeExtrasProps): React.ReactEleme
 				case 'home.arrange.outlineWidth':
 					onUpdateElementStyle({ strokeWidth: Math.max(0, Number(value)) });
 					break;
-				case 'home.arrange.crop': {
-					const action = parseCropValue(value);
-					if (!action) {
-						crop?.toggle();
-					} else if (action.kind === 'aspect') {
-						crop?.cropToAspect(action.width, action.height);
-					} else if (action.kind === 'fill') {
-						crop?.fill();
-					} else {
-						crop?.fit();
-					}
-				}
+				case 'home.arrange.crop':
+					runCropRequest(crop, value);
 			}
 		},
 		[onGroupElements, onUngroupElement, onUpdateElementStyle, commands, crop],
