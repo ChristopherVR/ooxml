@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { NS, buildXml, elements, parseXml } from 'ooxml-core/xml';
+import { NS, buildXml, elements, parseXml } from '../../../xml';
 import { PresentationBuilder } from 'ooxml-core/pptx';
 
 const PIXEL =
