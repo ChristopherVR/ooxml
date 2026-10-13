@@ -82,9 +82,10 @@ export function getTextLayoutStyle(element: PptxElement): React.CSSProperties {
 					overflow: 'visible' as const,
 				}
 			: {}),
+		// `pre`, not `nowrap`, which also collapses runs of spaces (shared rule).
 		...(textWrapNone
 			? {
-					whiteSpace: 'nowrap' as const,
+					whiteSpace: 'pre' as const,
 					overflow: 'visible' as const,
 				}
 			: {}),
