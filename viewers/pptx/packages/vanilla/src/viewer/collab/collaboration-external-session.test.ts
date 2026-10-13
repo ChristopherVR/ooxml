@@ -111,6 +111,29 @@ afterEach(() => {
 });
 
 describe('host-owned Vanilla collaboration', () => {
+	it('keeps a borrowed session usable when its host has an opaque origin', async () => {
+		const origin = vi.spyOn(window.location, 'origin', 'get').mockReturnValue('null');
+		const room = host(true);
+		const container = document.createElement('div');
+		document.body.appendChild(container);
+		const viewer = createPptxViewer(container, { editable: true });
+		try {
+			await viewer.startCollaboration(config(room.session));
+			expect(viewer.getMode()).toBe('edit');
+			(viewer as PptxViewer).openShare();
+			expect(
+				[...document.querySelectorAll<HTMLInputElement>('input[readonly]')].map(
+					(input) => input.value,
+				),
+			).toContain('external-room');
+		} finally {
+			viewer.destroy();
+			room.doc.destroy();
+			container.remove();
+			origin.mockRestore();
+		}
+	});
+
 	it('releases a pending native composition when its chrome is forcibly detached', async () => {
 		const room = host(true);
 		const container = document.createElement('div');
