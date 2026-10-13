@@ -1,0 +1,13 @@
+{
+  "application": "Microsoft PowerPoint, Windows COM",
+  "measured": "2026-10-14",
+  "sourceFixture": "src/core/pptx/__tests__/fixtures/e2e/linked-textbox.pptx",
+  "sourceTextBodyXml": "<p:txBody><a:bodyPr/><a:lstStyle><a:lvl1pPr><a:lnSpc><a:spcPct val=\"150000\"/></a:lnSpc></a:lvl1pPr></a:lstStyle><a:p><a:pPr><a:lnSpc><a:spcPct val=\"120000\"/></a:lnSpc></a:pPr><a:r><a:rPr sz=\"2400\"/><a:t>First</a:t></a:r></a:p><a:p><a:r><a:rPr sz=\"2400\"/><a:t>Second</a:t></a:r></a:p></p:txBody>",
+  "nativeBefore": [{"paragraph":1,"lineRuleWithin":-1,"spaceWithin":1.2},{"paragraph":2,"lineRuleWithin":-1,"spaceWithin":1.5}],
+  "command": "shape.TextFrame.TextRange.ParagraphFormat.LineRuleWithin = -1; shape.TextFrame.TextRange.ParagraphFormat.SpaceWithin = 1.2",
+  "nativeAfter": [{"paragraph":1,"lineRuleWithin":-1,"spaceWithin":1.2},{"paragraph":2,"lineRuleWithin":-1,"spaceWithin":1.2}],
+  "nativeSavedSecondParagraphXml": "<a:p><a:pPr><a:lnSpc><a:spcPct val=\"120000\"/></a:lnSpc></a:pPr><a:r><a:rPr sz=\"2400\"/><a:t>Second</a:t></a:r></a:p>",
+  "nativeListStyleRetained": "<a:lvl1pPr><a:lnSpc><a:spcPct val=\"150000\"/></a:lnSpc></a:lvl1pPr>",
+  "coreExportNativeOpen": [{"paragraph":1,"lineRuleWithin":-1,"spaceWithin":1.2},{"paragraph":2,"lineRuleWithin":-1,"spaceWithin":1.2}],
+  "limits": "One whole-text proportional spacing command. COM paragraph properties and saved XML, not pixel/video measurements. No new claim for exact spacing, paragraph before/after spacing, indentation, selection ranges or unparsed inheritance."
+}
