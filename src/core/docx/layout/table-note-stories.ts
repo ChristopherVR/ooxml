@@ -31,6 +31,17 @@ export function independentNoteStories(cell: LayoutTableCell): Map<string, strin
 		)
 	)
 		return undefined;
+	// Only one reference is measured. Multiple interacting notes need dynamic story constraints.
+	const references = row.cells.flatMap(cellParagraphs).reduce((count, paragraph) => {
+		const markers = paragraph.runs.filter((run) => run.footnoteReferenceId !== undefined);
+		const anchored = new Set(markers.map((run) => run.footnoteReferenceId));
+		return (
+			count +
+			markers.length +
+			(paragraph.footnotes ?? []).filter((note) => !anchored.has(note.id)).length
+		);
+	}, 0);
+	if (references > 1) return undefined;
 	const groups = new Map<string, string>();
 	row.cells.forEach((inner, index) => {
 		for (const paragraph of cellParagraphs(inner)) groups.set(paragraph.id, first.id + ':' + index);

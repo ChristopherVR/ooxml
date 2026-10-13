@@ -88,3 +88,28 @@ it('does not admit cached paragraph IDs absent from authoritative source blocks'
 		['b', 'inner:1'],
 	]);
 });
+
+it('admits one actual marker without double counting its associated note metadata', () => {
+	const cell = blocksOnly(),
+		table = cell.blocks![0] as LayoutTable;
+	const paragraph = table.rows[0]!.cells[0]!.blocks![0]!;
+	if (paragraph.kind !== 'paragraph') throw new Error('Expected paragraph');
+	paragraph.runs = [{ text: '1', footnoteReferenceId: 'note1' }];
+	paragraph.footnotes = [{ id: 'note1', paragraphs: [] }];
+	expect(independentNoteStories(cell)?.size).toBe(2);
+});
+it.each(['distinct', 'reused', 'unanchored'] as const)(
+	'refuses multiple interacting inner references: %s',
+	(kind) => {
+		const cell = blocksOnly(),
+			table = cell.blocks![0] as LayoutTable;
+		const a = table.rows[0]!.cells[0]!.blocks![0]!,
+			b = table.rows[0]!.cells[1]!.blocks![0]!;
+		if (a.kind !== 'paragraph' || b.kind !== 'paragraph') throw new Error('Expected paragraph');
+		a.runs = [{ text: '1', footnoteReferenceId: 'note1' }];
+		a.footnotes = [{ id: 'note1', paragraphs: [] }];
+		if (kind === 'unanchored') b.footnotes = [{ id: 'note2', paragraphs: [] }];
+		else b.runs = [{ text: '2', footnoteReferenceId: kind === 'reused' ? 'note1' : 'note2' }];
+		expect(independentNoteStories(cell)).toBeUndefined();
+	},
+);
