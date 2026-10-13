@@ -12,6 +12,7 @@
 
 import type { PptxElement, TextSegment, TextStyle } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
+import { textRunsStylePatch } from 'ooxml-core/pptx/editor/render/text-runs-style-patch';
 
 import { mergeTextStyleUpdate } from './font-family-update';
 import type { InlineTextSelection } from './inline-selection-utils';
@@ -25,7 +26,6 @@ import {
 	splitTextStyleUpdate,
 	withExclusiveLineSpacing,
 } from './text-style-scope';
-import { updateTextSegmentStyle } from './update-text-segment-style';
 
 /** What a text-style update hands back to the binding. */
 export interface TextStyleUpdateResult {
@@ -81,16 +81,16 @@ export function applyTextStyleUpdate(
 		};
 	}
 
-	const textStyle: TextStyle = mergeTextStyleUpdate(element.textStyle, exclusive);
-	const textSegments =
-		current &&
-		overrideParagraphProperties(current, exclusive).map((segment) =>
-			updateTextSegmentStyle(segment, exclusive, { inherited: element.textStyle }),
-		);
+	const wholeText = textRunsStylePatch(
+		{
+			...element,
+			textSegments: current && overrideParagraphProperties(current, exclusive),
+		} as PptxElement,
+		exclusive,
+	);
 	return {
 		patch: {
-			textStyle,
-			...(textSegments ? { textSegments } : {}),
+			...wholeText,
 			...overrideParagraphIndents(element, exclusive),
 		} as Partial<PptxElement>,
 		newSelection: null,

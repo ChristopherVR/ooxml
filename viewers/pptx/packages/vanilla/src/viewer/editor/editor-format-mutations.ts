@@ -1,13 +1,12 @@
+import { textRunsStylePatch } from 'ooxml-core/pptx/editor/render/text-runs-style-patch';
 import type { ChangeCaseMode } from 'ooxml-ui/pptx';
 import {
 	applyCaseTransformToSegments,
 	elementBulletKind,
-	mergeTextStyleUpdate,
 	remapTextToSegments,
 	stepFontSizePt,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
-	updateTextSegmentStyle,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
@@ -15,7 +14,6 @@ import type {
 	PptxElementWithText,
 	PptxThemeColorRef,
 	ShapeStyle,
-	TextSegment,
 	TextStyle,
 } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
@@ -131,12 +129,7 @@ export function patchTextStyle(el: PptxElement, patch: Partial<TextStyle>): Part
 	if (!canFormatText(el)) {
 		return {};
 	}
-	const textStyle: TextStyle = mergeTextStyleUpdate(el.textStyle, patch);
-	const inherited = el.textStyle;
-	const segments: TextSegment[] | undefined = el.textSegments?.map((seg) =>
-		updateTextSegmentStyle(seg, patch, { inherited }),
-	);
-	return segments ? { textStyle, textSegments: segments } : { textStyle };
+	return textRunsStylePatch(el, patch);
 }
 
 /** Toggle a boolean character property (bold/italic/underline) element-wide. */

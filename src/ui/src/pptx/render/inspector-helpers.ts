@@ -13,6 +13,7 @@ import type {
 	TextStyle,
 } from 'ooxml-core/pptx';
 import { hasShapeProperties, hasTextProperties } from 'ooxml-core/pptx';
+import { textRunsStylePatch } from 'ooxml-core/pptx/editor/render/text-runs-style-patch';
 
 import { mergeTextStyleUpdate } from './font-family-update';
 import { textStyleFlagsOf } from './selection-format-state';
@@ -176,12 +177,10 @@ function textRunsPatch(el: PptxElement, updates: Partial<TextStyle>): Partial<Pp
 	if (!hasTextProperties(el) || !el.textSegments) {
 		return patch;
 	}
-	const inherited = el.textStyle;
+	const runs = textRunsStylePatch(el, updates);
 	return {
 		...patch,
-		textSegments: el.textSegments.map((segment) =>
-			updateTextSegmentStyle(segment, updates, { inherited }),
-		),
+		textSegments: runs.textSegments,
 	} as Partial<PptxElement>;
 }
 

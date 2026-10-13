@@ -100,6 +100,10 @@ export default defineConfig({
 		'pptx/editor/render/table-style-editor-parts': 'pptx/editor/render/table-style-editor-parts.ts',
 		'pptx/editor/render/table-style-map-edits': 'pptx/editor/render/table-style-map-edits.ts',
 		'pptx/editor/render/template-editing': 'pptx/editor/render/template-editing.ts',
+		'pptx/editor/render/font-family-update': 'pptx/editor/render/font-family-update.ts',
+		'pptx/editor/render/text-runs-style-patch': 'pptx/editor/render/text-runs-style-patch.ts',
+		'pptx/editor/render/update-text-segment-style':
+			'pptx/editor/render/update-text-segment-style.ts',
 		'pptx/editor/render/text-segment-paragraph-break':
 			'pptx/editor/render/text-segment-paragraph-break.ts',
 		'pptx/editor/render/text-theme': 'pptx/editor/render/text-theme.ts',
