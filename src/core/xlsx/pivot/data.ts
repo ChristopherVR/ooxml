@@ -113,12 +113,6 @@ export function validatePivotFields(
 	if (pivot.valuesAxis === 'rows' && (!Array.isArray(extras) || !extras.length))
 		throw new Error('Values on rows require multiple measures.');
 	if (
-		pivot.valuesAxis === 'rows' &&
-		pivot.secondRowField &&
-		(pivot.layout ?? 'tabular') !== 'tabular'
-	)
-		throw new Error('Values on rows with two row fields require tabular layout.');
-	if (
 		extras.length > 0 &&
 		pivot.sourceXml &&
 		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !== 'Values'

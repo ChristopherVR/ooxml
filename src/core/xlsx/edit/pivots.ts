@@ -101,12 +101,17 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 		],
 		() => {
 			const compact = pivot.layout === 'compact';
-			const indents = [
-				stylePatcher(ctx.workbook, {
-					alignment: { indent: 0, ...(compact ? { horizontal: 'left' } : {}) },
-				}),
-				stylePatcher(ctx.workbook, { alignment: { indent: 1, horizontal: 'left' } }),
-			];
+			const indents = new Map(
+				[...new Set([0, ...(grid.indents ?? [])])].map(
+					(indent) =>
+						[
+							indent,
+							stylePatcher(ctx.workbook, {
+								alignment: { indent, ...(compact || indent > 0 ? { horizontal: 'left' } : {}) },
+							}),
+						] as const,
+				),
+			);
 			const styles = new Map<string, number>();
 			forEachCellInRange(sheet, location, (cell, row, col) => {
 				if (cell.styleId !== undefined) styles.set(`${row}:${col}`, cell.styleId);
@@ -134,7 +139,7 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 							(alignment?.indent ?? 0) !== indent ||
 							(compact && alignment?.horizontal !== 'left')
 						)
-							styleId = indents[indent]!(styleId);
+							styleId = indents.get(indent)!(styleId);
 					}
 					putCell(sheet, r, c, { value, ...(styleId !== undefined ? { styleId } : {}) });
 				}),

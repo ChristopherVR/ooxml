@@ -58,32 +58,42 @@ it('refreshes nested row measures from source records, saves and restores histor
 });
 
 it.each(['compact', 'outline'] as const)(
-	'refuses unmodeled nested row %s layouts atomically',
+	'converts nested row measures to %s and restores history',
 	async (layout) => {
 		const wb = await loadXlsx(native());
 		const edit = createEditSession(wb);
 		const pivot = wb.sheets[0]!.pivotTables![0]!;
-		expect(() => edit.refreshPivotTable(0, pivot.name, { layout })).toThrow('tabular');
-		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
-		expect(edit.canUndo()).toBe(false);
+		edit.refreshPivotTable(0, pivot.name, { layout });
+		const grid = pivotGrid(wb.sheets[0]!.pivotTables![0]!);
+		expect(grid.values).toHaveLength(29);
+		expect(grid.rowLabelColumns).toBe(layout === 'compact' ? 1 : 3);
+		const loaded = await loadXlsx(await saveXlsx(wb));
+		expect(loaded.warnings).toEqual([]);
+		expect(pivotGrid(loaded.sheets[0]!.pivotTables![0]!).values).toEqual(grid.values);
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables![0]).toStrictEqual(pivot);
 	},
 );
 
-it('rejects oversized nested measure output before allocating headers or measure rows', async () => {
-	const wb = await loadXlsx(native());
-	const pivot = wb.sheets[0]!.pivotTables![0]!;
-	delete pivot.columnField;
-	pivot.additionalValues = Array.from({ length: 15 }, (_, i) => ({
-		field: 'Amount',
-		aggregate: 'sum' as const,
-		caption: `Measure ${i}`,
-	}));
-	pivot.records = Array.from({ length: 20_000 }, (_, i) => ['Fruit', i, 10, 2, 2025]);
-	const headers = vi.spyOn(measures, 'pivotHeaders');
-	try {
-		expect(() => pivotGrid(pivot)).toThrow('too large');
-		expect(headers).not.toHaveBeenCalled();
-	} finally {
-		headers.mockRestore();
-	}
-});
+it.each(['tabular', 'compact', 'outline'] as const)(
+	'rejects oversized %s nested measure output before allocating headers or measure rows',
+	async (layout) => {
+		const wb = await loadXlsx(native());
+		const pivot = wb.sheets[0]!.pivotTables![0]!;
+		delete pivot.columnField;
+		pivot.layout = layout;
+		pivot.additionalValues = Array.from({ length: 15 }, (_, i) => ({
+			field: 'Amount',
+			aggregate: 'sum' as const,
+			caption: `Measure ${i}`,
+		}));
+		pivot.records = Array.from({ length: 35_000 }, (_, i) => ['Fruit', i, 10, 2, 2025]);
+		const headers = vi.spyOn(measures, 'pivotHeaders');
+		try {
+			expect(() => pivotGrid(pivot)).toThrow('too large');
+			expect(headers).not.toHaveBeenCalled();
+		} finally {
+			headers.mockRestore();
+		}
+	},
+);

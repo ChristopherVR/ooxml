@@ -174,14 +174,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const col = hasColumn ? names[Number(att(colFields[0], 'x'))] : undefined;
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
-	if (
-		!row ||
-		!data ||
-		!location ||
-		(hasColumn && !col) ||
-		(realRows.length === 2 && !second) ||
-		(rowsAxis && realRows.length === 2 && layout !== 'tabular')
-	)
+	if (!row || !data || !location || (hasColumn && !col) || (realRows.length === 2 && !second))
 		throw new Error('Invalid pivot fields');
 	const pivot: PivotTable = {
 		name: att(root, 'name') ?? 'PivotTable',

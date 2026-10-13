@@ -1,0 +1,29 @@
+{
+  "observedOn": "2026-10-14",
+  "excelFileVersion": "16.0.20430.20146",
+  "nativeOracleBase": "11951e800f69f468d3cf78f646055227bb03c597",
+  "oracle": "powershell -NoProfile -File scripts/xlsx-pivot-nested-row-oracle.ps1",
+  "acceptance": "powershell -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+  "nativeCases": 179,
+  "newCases": 39,
+  "oracleProfiles": 18,
+  "fixtures": [
+    {
+      "file": "excel-pivot-row-values-compact-rows-bottom-columns.xlsx",
+      "sha256": "8f2a26cbd2a8b5c0e7f83510faab0e25cc9dffe8e87475ef09ec24b276c8a841"
+    },
+    {
+      "file": "excel-pivot-row-values-outline-rows-bottom-columns.xlsx",
+      "sha256": "d7a7250afd65537550f50553ba6e546079d690b6464da4f4b9f3a8bea40b6c1d"
+    },
+    {
+      "file": "excel-pivot-row-values-outline-rows-bottom-columns-repeat.xlsx",
+      "sha256": "e46368b6ab4ee45c9e4416353f24243137f33c50c3cb092763e62f50d272a9f1"
+    }
+  ],
+  "nativeBehavior": "Compact and outline two-real-row reports followed by Values have separate outer and inner heading rows. Compact indentation is 0 for outer headings, 1 for inner headings, 2 for measure rows, and 0 for subtotal/grand rows. Top and bottom automatic subtotal flags both render below the group when Values is on rows.",
+  "supported": "Tabular/compact/outline, one or two real row fields then Values, 2 to 16 measures, optional one column field, automatic or disabled outer subtotals and repeated outline/tabular labels.",
+  "preserved": "Values before/between real fields, custom indentation/subtotals, grouping/filters/slicers/shared cache/visible or custom Values header profiles remain unsupported and preserved.",
+  "tests": "Every native cached/refreshed cell value/type/dimension, compact indentation and left alignment; all six layout conversions, source changes, collapse to one row/measure, source XML preservation, browser history/save/reopen.",
+  "reuse": "Extends shared indexed hierarchy aggregation, headers, row-item serialization and stylePatcher. UI contains no pivot calculation or format logic."
+}

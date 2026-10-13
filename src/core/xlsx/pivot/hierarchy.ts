@@ -17,7 +17,9 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const compact = layout === 'compact';
 	const rowsAxis = pivot.valuesAxis === 'rows';
 	const measures = pivotMeasures(pivot);
+	// Native row Values keep automatic subtotals below groups in every report layout.
 	const top =
+		!rowsAxis &&
 		layout !== 'tabular' &&
 		pivot.subtotals !== false &&
 		(pivot.subtotalPosition ?? 'top') === 'top';
@@ -50,6 +52,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const rows =
 		(details.size + rowItems.length * Number(bottom) + 1) * (rowsAxis ? measures.length : 1) +
 		rowItems.length * Number(layout !== 'tabular') +
+		details.size * Number(rowsAxis && layout !== 'tabular') +
 		dimensions.rows;
 	if (rows * dimensions.width > 1_000_000) throw new Error('The PivotTable result is too large.');
 	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
@@ -85,13 +88,21 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 		measures.forEach((measure, m) =>
 			append(
 				type
-					? [`${type === 'grand' ? 'Total' : String(labels[0])} ${measure.caption}`, null, null]
-					: [
-							...labels.map((label) => (m === 0 || pivot.repeatLabels ? label : null)),
-							measure.caption,
-						],
+					? [
+							`${type === 'grand' ? 'Total' : String(labels[0])} ${measure.caption}`,
+							...Array<CellValue>(rowLabelColumns - 1).fill(null),
+						]
+					: compact
+						? [measure.caption]
+						: [
+								...labels.map((label) =>
+									(layout === 'tabular' && m === 0) || pivot.repeatLabels ? label : null,
+								),
+								measure.caption,
+							],
 				values.map((band) => band[m] ?? null),
 				{ indices: type ? indices : [...indices, m], measure: m, ...(type ? { type } : {}) },
+				compact && !type ? 2 : 0,
 			),
 		);
 	};
@@ -99,7 +110,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 		const key = pivotValueKey(outer);
 		if (layout !== 'tabular')
 			append(
-				[label(outer), ...(compact ? [] : [null])],
+				[label(outer), ...Array<CellValue>(rowLabelColumns - 1).fill(null)],
 				top
 					? numbers([key], groups.get(key) ?? [])
 					: Array(dimensions.width - rowLabelColumns).fill(null),
@@ -115,6 +126,15 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 				const records = details.get(JSON.stringify(keys));
 				if (!records) return;
 				if (rowsAxis) {
+					if (layout !== 'tabular')
+						append(
+							compact
+								? [label(inner)]
+								: [pivot.repeatLabels ? label(outer) : null, label(inner), null],
+							Array<CellValue>(dimensions.width - rowLabelColumns).fill(null),
+							{ indices: [outerIndex, innerIndex] },
+							compact ? 1 : 0,
+						);
 					appendMeasures(
 						[pivot.repeatLabels || first ? label(outer) : null, label(inner)],
 						keys,
