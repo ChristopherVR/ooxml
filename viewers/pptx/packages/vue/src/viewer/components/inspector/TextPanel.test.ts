@@ -142,3 +142,29 @@ describe('textPanel theme colour picker', () => {
 		expect(patch.textStyle?.colorRef).toBeFalsy();
 	});
 });
+
+describe('textPanel font family', () => {
+	it('applies a picked font to every run, not only the body', async () => {
+		const sameFace = { fontFamily: 'Old Sans', eastAsiaFont: 'Old Sans' };
+		const element = {
+			...textEl({ ...sameFace }),
+			text: 'Sample',
+			textSegments: [{ text: 'Sample', style: { ...sameFace } }],
+		} as PptxElement;
+		const wrapper = mount(TextPanel, { props: { element } });
+
+		const font = wrapper
+			.findAll('pptx-ui-select')
+			.find((select) => select.find('option[value="Georgia"]').exists());
+		await setControlValue(font!, 'Georgia');
+
+		const patch = wrapper.emitted('update')?.at(-1)?.[0] as {
+			textSegments?: Array<{ style: TextStyle }>;
+		};
+		wrapper.unmount();
+		expect(patch.textSegments?.[0]?.style).toMatchObject({
+			fontFamily: 'Georgia',
+			eastAsiaFont: 'Georgia',
+		});
+	});
+});
