@@ -6,7 +6,7 @@ import {
 } from './connector-route';
 import { VISIO_ROUTE_CLEARANCE, routeCrossings } from './connector-route-avoid';
 import { alignedVisioCurve } from './connector-curve-aligned';
-import { cornerCurve } from './connector-curve-spans';
+import { cornerCurve, flattenCornerCurve } from './connector-curve-spans';
 
 /** One end of a connector for walking glue: a glued shape (its sides) or a fixed point. */
 export interface VisioWalkEnd {
@@ -151,8 +151,15 @@ export function visioWalkRoute(
 				(site) => Math.abs(site.normal.x) < EPSILON || Math.abs(site.normal.y) < EPSILON,
 			),
 		)
-	)
-		return cornerCurve(path);
+	) {
+		const curve = cornerCurve(path);
+		if (obstacles.length) {
+			// A corner's inward bow can intersect a box that misses both orthogonal legs.
+			const sampled = flattenCornerCurve(curve);
+			if (!sampled || routeCrossings(sampled, obstacles)) return undefined;
+		}
+		return curve;
+	}
 	const unit = (p: VisioRoutePoint, q: VisioRoutePoint): VisioRoutePoint => {
 		const length = Math.hypot(q.x - p.x, q.y - p.y) || 1;
 		return { x: (q.x - p.x) / length, y: (q.y - p.y) / length };

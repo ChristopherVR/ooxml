@@ -47,19 +47,27 @@ export function connectorPolylineMiddle(points: readonly VisioRoutePoint[]): Vis
 	return points.at(-1)!;
 }
 
+/** Sample the native corner geometry for text placement and conservative collision checks. */
+export function flattenCornerCurve(
+	points: readonly VisioRoutePoint[],
+): VisioRoutePoint[] | undefined {
+	const [internal, last] = cornerCurveKnots(points);
+	const flattened = flattenNurbs(
+		points.map((p) => ({ ...p, weight: 1 })),
+		[0, 0, 0, 0, internal, last, last, last, last],
+		3,
+		() => {},
+		() => {},
+	);
+	return flattened ? [points[0]!, ...flattened] : undefined;
+}
+
 /** Estimate the corner curve's arc midpoint using the shared bounded NURBS flattener. */
 export function connectorCurveMiddle(points: readonly VisioRoutePoint[]): VisioRoutePoint {
 	const spans = connectorCurveSpans(points);
 	if (points.length === 5) {
-		const [internal, last] = cornerCurveKnots(points);
-		const flattened = flattenNurbs(
-			points.map((p) => ({ ...p, weight: 1 })),
-			[0, 0, 0, 0, internal, last, last, last, last],
-			3,
-			() => {},
-			() => {},
-		);
-		if (flattened) return connectorPolylineMiddle([points[0]!, ...flattened]);
+		const flattened = flattenCornerCurve(points);
+		if (flattened) return connectorPolylineMiddle(flattened);
 		return mix(points[0]!, points.at(-1)!, 0.5);
 	}
 	const row = [...spans[0]!];

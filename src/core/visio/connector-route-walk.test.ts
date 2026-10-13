@@ -35,6 +35,22 @@ const path = (x: number, y: number) =>
 	]);
 
 describe("Visio's walking glue path", () => {
+	it('checks a curved corner against supplied obstacles inside its orthogonal legs', () => {
+		const begin = shape(0, 0, 1, 1),
+			end = shape(3, 3, 1, 1);
+		const blocker = { minX: 0.4, maxX: 0.55, minY: 2.46, maxY: 2.6 };
+		expect(visioWalkRoute(begin, end, 'right-angle', [blocker])).toEqual([
+			{ x: 0, y: 0.5 },
+			{ x: 0, y: 3 },
+			{ x: 2.5, y: 3 },
+		]);
+		expect(visioWalkRoute(begin, end, 'curved')).toHaveLength(5);
+		expect(visioWalkRoute(begin, end, 'curved', [blocker])).toBeUndefined();
+		expect(
+			visioWalkRoute(begin, end, 'curved', [{ minX: 1, maxX: 1.2, minY: 1, maxY: 1.2 }]),
+		).toEqual(visioWalkRoute(begin, end, 'curved'));
+	});
+
 	it.each(
 		curveEvidence.cases.filter((row) => row.begin[0] !== row.end[0] && row.begin[1] !== row.end[1]),
 	)('matches all native corner controls and knots for $target', (row) => {
