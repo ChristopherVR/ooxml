@@ -21,6 +21,44 @@ const setup = async (source = true) => {
 	return { ...view, dialog, dialogButton, launcher, input };
 };
 
+it('edits a selected existing field through the reachable Field dialog and history', async () => {
+	const view = await setup();
+	view.selection();
+	view.press('field');
+	const category = view.input<HTMLSelectElement>('field-category');
+	category.value = 'page';
+	category.dispatchEvent(new Event('change'));
+	view.dialogButton('field-dialog', 'OK');
+	await vi.waitFor(() => expect(view.edits).toHaveLength(1));
+	await view.done();
+	const original = view.shape().text.plainText;
+	view.press('field');
+	const target = view.input<HTMLSelectElement>('field-target');
+	expect([...target.options].map((option) => option.value)).toEqual(['', '0']);
+	target.value = '0';
+	target.dispatchEvent(new Event('change'));
+	expect(view.input<HTMLInputElement>('field-formula').value).toBe('PAGENAME()');
+	view.input<HTMLInputElement>('field-formula').value = 'Width*2';
+	view.input<HTMLSelectElement>('field-format').value = '0.00';
+	view.dialogButton('field-dialog', 'OK');
+	await vi.waitFor(() => expect(view.edits).toHaveLength(2));
+	await view.done();
+	expect(view.edits[1]![0]).toMatchObject({
+		type: 'update-text-field',
+		fieldIndex: '0',
+		formula: 'Width*2',
+		format: '0.00',
+	});
+	expect(view.shape().text.fields).toHaveLength(1);
+	const edited = view.shape().text.plainText;
+	expect(edited).not.toBe(original);
+	await view.controller.undo();
+	expect(view.shape().text.plainText).toBe(original);
+	await view.controller.redo();
+	expect(view.shape().text.plainText).toBe(edited);
+	view.dispose();
+});
+
 it('opens the Text dialog from the Font and Paragraph launchers and writes only changes', async () => {
 	const view = await setup();
 	expect(view.launcher('font-dialog').hasAttribute('launcher-disabled')).toBe(true);
