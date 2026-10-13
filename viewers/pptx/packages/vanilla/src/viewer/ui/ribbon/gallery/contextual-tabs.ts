@@ -32,12 +32,18 @@ export function createRibbonGroupShell(
 	return { el, row: el };
 }
 
+/** Elements a command group draws after its galleries, by `strip` (Picture Format > Size). */
+export type ContextualStrips = Partial<
+	Record<NonNullable<RibbonGalleryGroupPlacement['strip']>, HTMLElement>
+>;
+
 /** One shared gallery group placement (a contextual tab's Shape Styles, ...). */
 export function createGalleryGroup(
 	doc: Document,
 	t: Translator,
 	group: RibbonGalleryGroupPlacement,
 	hub: RibbonGalleryHub,
+	strips: ContextualStrips = {},
 ): HTMLElement {
 	const shell = createRibbonGroupShell(
 		doc,
@@ -46,6 +52,10 @@ export function createGalleryGroup(
 	);
 	for (const placement of group.galleries) {
 		shell.row.appendChild(createRibbonGallery(doc, t, placement, hub).el);
+	}
+	const strip = group.strip ? strips[group.strip] : undefined;
+	if (strip) {
+		shell.row.appendChild(strip);
 	}
 	return shell.el;
 }
@@ -60,13 +70,14 @@ export function createContextualTabPanes(
 	doc: Document,
 	t: Translator,
 	hub: RibbonGalleryHub,
+	strips: ContextualStrips = {},
 ): Map<RibbonContextualTabId, HTMLElement> {
 	const panes = new Map<RibbonContextualTabId, HTMLElement>();
 	for (const { id } of RIBBON_CONTEXTUAL_TABS) {
 		const pane = createEl(doc, 'div', 'pptxv-ribbon-tab-content pptxv-ribbon-contextual-content');
 		pane.dataset.ribbonContextualPane = id;
 		for (const group of CONTEXTUAL_TAB_GROUPS[id]) {
-			pane.appendChild(createGalleryGroup(doc, t, group, hub));
+			pane.appendChild(createGalleryGroup(doc, t, group, hub, strips));
 		}
 		panes.set(id, pane);
 	}
