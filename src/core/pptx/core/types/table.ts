@@ -641,6 +641,13 @@ export interface ParsedTableStyleBorder {
 	color?: string;
 	/** The line was `a:noFill` - an explicit "no border" that clears lower layers. */
 	noFill?: boolean;
+	/**
+	 * Theme line-style reference (`<a:lnRef idx="N">`, the choice sibling of
+	 * `a:ln`), as the "Themed Style" built-ins use. Set alone: the line's
+	 * width, dash and colour come from the theme's `a:lnStyleLst[idx - 1]`
+	 * with its `phClr` replaced by the reference's own colour.
+	 */
+	lnRef?: import('./table-style-edit').ParsedTableFillRef;
 }
 
 /**

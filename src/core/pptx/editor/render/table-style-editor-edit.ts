@@ -85,8 +85,14 @@ function patchBorderSide(
 	side: TableStyleBorderSide,
 	patch: Partial<ParsedTableStyleBorder>,
 ): ParsedTableStyleBorders {
-	const current = borders?.[side] ?? {};
-	return { ...borders, [side]: { ...current, ...patch } };
+	const { lnRef, ...current } = borders?.[side] ?? {};
+	// Editing a theme line reference (`a:lnRef`) makes it a concrete line: its
+	// colour becomes the line's fill unless the edit sets one.
+	const base: ParsedTableStyleBorder =
+		lnRef?.color && current.fill === undefined && current.color === undefined
+			? { ...current, fill: lnRef.color }
+			: current;
+	return { ...borders, [side]: { ...base, ...patch } };
 }
 
 /**

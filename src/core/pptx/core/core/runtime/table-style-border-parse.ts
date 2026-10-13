@@ -100,16 +100,35 @@ export function parseSolidFillStyle(
 	};
 }
 
+/**
+ * Parse `a:lnRef` (CT_StyleMatrixReference) into a border holding only the
+ * reference. Its colour is an `a:schemeClr` (with tint/shade/alpha) or an
+ * `a:srgbClr`, as `a:tblBg/a:fillRef` is read.
+ */
+function parseLineRef(lnRef: XmlObject | undefined): ParsedTableStyleBorder | undefined {
+	const idx = parseInt(String(lnRef?.['@_idx'] ?? ''), 10);
+	if (!lnRef || !Number.isFinite(idx)) {
+		return undefined;
+	}
+	const hex = String((lnRef['a:srgbClr'] as XmlObject | undefined)?.['@_val'] ?? '').trim();
+	const color =
+		parseSolidFillStyle(lnRef) ??
+		(hex ? { schemeColor: '', color: hex.startsWith('#') ? hex : `#${hex}` } : undefined);
+	return { lnRef: color ? { idx, color } : { idx } };
+}
+
 /** Parse a single `a:tcBdr` side (`a:left`, `a:top`, ...) into a border. */
 function parseBorderSide(side: XmlObject | undefined): ParsedTableStyleBorder | undefined {
 	if (!side) {
 		return undefined;
 	}
 	// The side wraps either an `a:ln` (concrete line) or an `a:lnRef` (theme
-	// style-matrix reference). We can only resolve the concrete line here.
+	// style-matrix reference). The reference needs the theme's line styles,
+	// so it is kept as is and resolved by the renderer
+	// (`resolveTableStyleLineRef`).
 	const ln = side['a:ln'] as XmlObject | undefined;
 	if (!ln) {
-		return undefined;
+		return parseLineRef(side['a:lnRef'] as XmlObject | undefined);
 	}
 
 	const border: ParsedTableStyleBorder = {};

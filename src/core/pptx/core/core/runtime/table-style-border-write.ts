@@ -59,6 +59,22 @@ function mergeBorderSideXml(border: ParsedTableStyleBorder, existingSide: unknow
 		existingSide && typeof existingSide === 'object' && !Array.isArray(existingSide)
 			? (existingSide as XmlObject)
 			: {};
+	const concrete =
+		border.width !== undefined ||
+		border.dash !== undefined ||
+		border.fill !== undefined ||
+		border.color !== undefined ||
+		border.noFill !== undefined;
+	if (border.lnRef && !concrete) {
+		// A theme line-style reference alone: write it back as `a:lnRef`.
+		delete existing['a:ln'];
+		const ref: XmlObject = { '@_idx': String(border.lnRef.idx) };
+		if (border.lnRef.color) {
+			Object.assign(ref, colorChoiceXml(border.lnRef.color));
+		}
+		existing['a:lnRef'] = ref;
+		return existing;
+	}
 	// `ln`/`lnRef` are a choice: a concrete line replaces a style-matrix reference.
 	delete existing['a:lnRef'];
 	const ln = ensureChild(existing, 'a:ln');

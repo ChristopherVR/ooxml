@@ -160,6 +160,10 @@ function borderSideColor(
 	if (border?.color) {
 		return { hex: border.color, ref: undefined };
 	}
+	// A theme line reference (`a:lnRef`, "Themed Style 1/2") carries its colour.
+	if (border?.lnRef?.color) {
+		return fillToColor(border.lnRef.color, themeColorMap, DEFAULT_BORDER_HEX);
+	}
 	return { hex: DEFAULT_BORDER_HEX, ref: undefined };
 }
 
