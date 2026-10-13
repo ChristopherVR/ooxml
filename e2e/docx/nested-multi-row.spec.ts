@@ -76,45 +76,56 @@ for (const { native, root } of [
 				const pages = editor.locator('.dve-print-page');
 				await expect(pages).toHaveCount(native.measurements.length);
 				for (const [index, sample] of native.measurements.entries()) {
-					const rendered = pages.nth(index),
-						frame = rendered.locator('.dve-print-nested-table');
-					await expect(frame).toHaveCount(1);
-					await expect(frame).toHaveText('');
-					await expect(frame).toHaveCSS('pointer-events', 'none');
-					const tokens = (await rendered.textContent())?.match(/T[01]R\dC\dL\d{2}/g) ?? [];
-					expect(tokens.sort()).toEqual(
-						sample.lines
-							.filter((l) => /^T[01]/.test(l.text))
-							.map((l) => l.text.trim())
-							.sort(),
-					);
+					// Scheduled relayout can replace pages between awaited geometry reads.
+					// Capture markers, frame and ink together from one connected visible page.
+					const readSnapshot = () =>
+						pages.nth(index).evaluate((node) => {
+							const frames = node.querySelectorAll<HTMLElement>('.dve-print-nested-table');
+							const frame = frames[0],
+								ink = node.querySelector<HTMLElement>('.dve-print-block[data-read-only="true"]');
+							if (!node.isConnected || frames.length !== 1 || !frame || !ink) return null;
+							const bounds = frame.getBoundingClientRect(),
+								inkBounds = ink.getBoundingClientRect();
+							if (!bounds.width || !bounds.height || !inkBounds.width || !inkBounds.height)
+								return null;
+							const rows = frame.querySelectorAll<HTMLElement>(':scope > .dve-print-row');
+							const first = rows[0]?.querySelector<HTMLElement>('.dve-print-cell'),
+								last = rows[rows.length - 1]?.querySelector<HTMLElement>('.dve-print-cell');
+							if (!first || !last) return null;
+							return {
+								tokens: (node.textContent?.match(/T[01]R\dC\dL\d{2}/g) ?? []).sort(),
+								frameText: frame.textContent ?? '',
+								pointerEvents: getComputedStyle(frame).pointerEvents,
+								height: bounds.height,
+								ink: inkBounds.y - bounds.y,
+								topBorder: parseFloat(first.style.borderTopWidth),
+								bottomBorder: parseFloat(last.style.borderBottomWidth),
+							};
+						});
+					let snapshot = await readSnapshot();
+					await expect
+						.poll(async () => {
+							snapshot = await readSnapshot();
+							return snapshot?.tokens;
+						})
+						.toEqual(
+							sample.lines
+								.filter((line) => /^T[01]/.test(line.text))
+								.map((line) => line.text.trim())
+								.sort(),
+						);
+					if (!snapshot) throw new Error('Missing connected visible print snapshot');
+					expect(snapshot.frameText).toBe('');
+					expect(snapshot.pointerEvents).toBe('none');
 					const top = Math.min(...sample.borders.map((b) => b.rectPt[1]!)),
-						bottom = Math.max(...sample.borders.map((b) => b.rectPt[3]!));
-					const bounds = await frame.boundingBox();
-					expect(Math.abs(bounds!.height * 0.75 - (bottom - top))).toBeLessThan(0.2);
-					const ink = await rendered
-						.locator('.dve-print-block[data-read-only="true"]')
-						.first()
-						.boundingBox();
-					const firstNative = sample.lines.find((line) => /^T1/.test(line.text))!;
-					expect(
-						Math.abs((ink!.y - bounds!.y) * 0.75 - (firstNative.baselinePt - 9.6 - top)),
-					).toBeLessThan(0.15);
-
-					const rows = frame.locator(':scope > .dve-print-row');
-					const edge = async (position: 'first' | 'last', side: 'Top' | 'Bottom') =>
-						rows[position]()
-							.locator('.dve-print-cell')
-							.first()
-							.evaluate(
-								(node, edge) =>
-									parseFloat(
-										(node as HTMLElement).style[('border' + edge + 'Width') as 'borderTopWidth'],
-									),
-								side,
-							);
-					expect(await edge('first', 'Top')).toBeCloseTo(8 / 3);
-					expect(await edge('last', 'Bottom')).toBeCloseTo(2 / 3);
+						bottom = Math.max(...sample.borders.map((b) => b.rectPt[3]!)),
+						firstNative = sample.lines.find((line) => /^T1/.test(line.text))!;
+					expect(Math.abs(snapshot.height * 0.75 - (bottom - top))).toBeLessThan(0.2);
+					expect(Math.abs(snapshot.ink * 0.75 - (firstNative.baselinePt - 9.6 - top))).toBeLessThan(
+						0.15,
+					);
+					expect(snapshot.topBorder).toBeCloseTo(8 / 3);
+					expect(snapshot.bottomBorder).toBeCloseTo(2 / 3);
 				}
 			};
 			await check();
