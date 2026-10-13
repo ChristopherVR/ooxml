@@ -14,6 +14,72 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
+it('authors multiple values in tabular form and preserves no-op settings before removal and undo', async () => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	const edit = ctx.session()!;
+	[
+		['Category', 'Amount', 'Quantity'],
+		['Fruit', 10, 2],
+		['Fruit', 20, 3],
+		['Veg', 5, 4],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	ctx.select('A1:C4');
+	registerToolDialogs(ctx);
+	let done = ctx.dialogs.open('create-pivot-table');
+	let dialog = dialogEl(ctx, 'create-pivot-table');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+	clickButton(dialog, 'Add Value Field');
+	const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
+	setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
+	setValue(inputByLabel<HTMLSelectElement>(extra, 'Summarize Values By:'), 'count');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('tabular');
+	expect(
+		inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').querySelector<HTMLOptionElement>(
+			'[value="compact"]',
+		)!.disabled,
+	).toBe(true);
+	clickButton(dialog, 'OK');
+	await done;
+	const pivot = wb.sheets[0]!.pivotTables![0]!;
+	expect(pivot.additionalValues).toEqual([
+		{ field: 'Quantity', aggregate: 'count', caption: 'Count of Quantity' },
+	]);
+	expect(getCell(wb.sheets[0]!, 1, 5)?.value).toBe(30);
+	expect(getCell(wb.sheets[0]!, 1, 6)?.value).toBe(2);
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	expect(
+		inputByLabel<HTMLSelectElement>(dialog.querySelector('[data-pivot-value]')!, 'Value Field:')
+			.value,
+	).toBe('Quantity');
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	const measure = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
+	const caption = inputByLabel<HTMLInputElement>(measure, 'Value Caption:');
+	setValue(caption, 'Units');
+	caption.dispatchEvent(new Event('input', { bubbles: true }));
+	setValue(inputByLabel<HTMLSelectElement>(measure, 'Summarize Values By:'), 'max');
+	expect(caption.value).toBe('Units');
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]?.additionalValues![0]).toMatchObject({
+		caption: 'Units',
+		aggregate: 'max',
+	});
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	clickButton(dialog, 'Remove Value Field');
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]?.additionalValues).toBeUndefined();
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]?.additionalValues).toHaveLength(1);
+});
+
 it('defaults to compact and switches outline subtotal placement with undo', async () => {
 	const wb = createWorkbook();
 	const ctx = createTestContext(wb);

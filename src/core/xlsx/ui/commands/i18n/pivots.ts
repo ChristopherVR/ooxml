@@ -1,6 +1,31 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Add Value Field': [
+		'Ajouter un champ de valeur',
+		'Wertfeld hinzufügen',
+		'Añadir campo de valor',
+		'添加值字段',
+	],
+	'Remove Value Field': [
+		'Supprimer le champ de valeur',
+		'Wertfeld entfernen',
+		'Quitar campo de valor',
+		'删除值字段',
+	],
+	'Additional Value Field': [
+		'Champ de valeur supplémentaire',
+		'Zusätzliches Wertfeld',
+		'Campo de valor adicional',
+		'附加值字段',
+	],
+	'Value Caption:': ['Libellé de valeur :', 'Wertbeschriftung:', 'Título del valor:', '值标题：'],
+	'Multiple value fields use tabular layout with Values on columns.': [
+		'Plusieurs champs de valeur utilisent la forme tabulaire avec les valeurs en colonnes.',
+		'Mehrere Wertfelder verwenden das Tabellenformat mit Werten in Spalten.',
+		'Varios campos de valor usan el formato tabular con Valores en columnas.',
+		'多个值字段使用表格布局，值位于列轴上。',
+	],
 	'Compact Form': ['Forme compacte', 'Kompaktformat', 'Formato compacto', '压缩形式'],
 	'Outline Form': ['Forme de plan', 'Gliederungsformat', 'Formato de esquema', '大纲形式'],
 	'Tabular Form': ['Forme tabulaire', 'Tabellenformat', 'Formato tabular', '表格形式'],
