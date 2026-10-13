@@ -262,6 +262,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 			headerFooter: editor.headerFooter,
 			customProperties: editor.customProperties,
 			slide: derived.activeSlide,
+			firstSlideNumber: loader.firstSlideNumber,
 		});
 	}
 	// A getter closure (not a snapshot) keeps the runes reads live for consumers.
