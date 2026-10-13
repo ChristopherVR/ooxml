@@ -25,11 +25,21 @@ const threeEvidence = JSON.parse(
 		'utf8',
 	),
 ) as typeof evidence;
+const structuralEvidence = JSON.parse(
+	readFileSync(
+		new NodeURL(
+			'../../../core/docx/__fixtures__/nested-structural-rows/native-measurements.json',
+			import.meta.url,
+		),
+		'utf8',
+	),
+) as typeof evidence;
 for (const { native, directory } of [
 	...evidence.cases.map((native) => ({ native, directory: 'nested-multi-row' })),
 	...threeEvidence.cases.map((native) => ({ native, directory: 'nested-three-row' })),
+	...structuralEvidence.cases.map((native) => ({ native, directory: 'nested-structural-rows' })),
 ])
-	it('paints source outer edges once across two-row fragments: ' + native.name, async () => {
+	it('paints source outer edges once across automatic row fragments: ' + native.name, async () => {
 		const loaded = await loadDocx(
 			new Uint8Array(
 				readFileSync(

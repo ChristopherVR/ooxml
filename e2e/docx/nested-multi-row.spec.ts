@@ -26,12 +26,26 @@ const threeRoot = new URL('../../src/core/docx/__fixtures__/nested-three-row/', 
 const threeEvidence = JSON.parse(
 	readFileSync(new URL('native-measurements.json', threeRoot), 'utf8'),
 ) as typeof evidence;
+const structuralRoot = new URL(
+	'../../src/core/docx/__fixtures__/nested-structural-rows/',
+	import.meta.url,
+);
+const structuralEvidence = JSON.parse(
+	readFileSync(new URL('native-measurements.json', structuralRoot), 'utf8'),
+) as typeof evidence;
 for (const { native, root } of [
 	...evidence.cases.map((native) => ({ native, root: twoRoot })),
 	...threeEvidence.cases.map((native) => ({ native, root: threeRoot })),
+	...structuralEvidence.cases
+		.filter((native) => /-(4-first|8-short|8-all-long|8-minimal)$/.test(native.name))
+		.map((native) => ({ native, root: structuralRoot })),
 ])
 	test(
-		(native.name.startsWith('nested-three') ? 'three' : 'two') +
+		(native.name.startsWith('nested-structural')
+			? 'structural'
+			: native.name.startsWith('nested-three')
+				? 'three'
+				: 'two') +
 			'-row nested fragments preserve native bands and guarded editing: ' +
 			native.name,
 		async ({ page }) => {
