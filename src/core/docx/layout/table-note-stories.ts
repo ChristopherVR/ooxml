@@ -1,0 +1,50 @@
+import type { LayoutTableCell } from './input';
+import { cellParagraphs } from './table-cell-layout';
+import { nestedFrameProfile } from './nested-frame-profile';
+/** Native-measured bounded profile: one automatic, top-aligned nested row, then direct text. */
+export function independentNoteStories(cell: LayoutTableCell): Map<string, string> | undefined {
+	const first = cell.blocks?.[0];
+	if (
+		first?.kind !== 'table' ||
+		first.rows.length !== 1 ||
+		(cell.verticalAlign && cell.verticalAlign !== 'top')
+	)
+		return undefined;
+	if (cell.blocks!.slice(1).some((block) => block.kind !== 'paragraph' || block.footnotes?.length))
+		return undefined;
+	const row = first.rows[0]!;
+	if (
+		row.heightPx !== undefined ||
+		row.cantSplit ||
+		row.isHeader ||
+		!nestedFrameProfile(first, first.widthPx)
+	)
+		return undefined;
+	if (
+		row.cells.some(
+			(inner) =>
+				inner.blocks?.some((block) => block.kind === 'table') ||
+				cellParagraphs(inner).some(
+					(paragraph) => paragraph.keepLines || paragraph.keepNext || paragraph.pageBreakBefore,
+				) ||
+				(inner.verticalAlign && inner.verticalAlign !== 'top'),
+		)
+	)
+		return undefined;
+	// Only one reference is measured. Multiple interacting notes need dynamic story constraints.
+	const references = row.cells.flatMap(cellParagraphs).reduce((count, paragraph) => {
+		const markers = paragraph.runs.filter((run) => run.footnoteReferenceId !== undefined);
+		const anchored = new Set(markers.map((run) => run.footnoteReferenceId));
+		return (
+			count +
+			markers.length +
+			(paragraph.footnotes ?? []).filter((note) => !anchored.has(note.id)).length
+		);
+	}, 0);
+	if (references > 1) return undefined;
+	const groups = new Map<string, string>();
+	row.cells.forEach((inner, index) => {
+		for (const paragraph of cellParagraphs(inner)) groups.set(paragraph.id, first.id + ':' + index);
+	});
+	return groups.size ? groups : undefined;
+}

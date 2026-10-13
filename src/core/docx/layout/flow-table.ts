@@ -1,3 +1,4 @@
+import { independentNoteStories } from './table-note-stories';
 import { layoutBorderedRow, TableFragmentBorders } from './table-border-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
 import { cellParagraphs } from './table-cell-layout';
@@ -173,12 +174,17 @@ export function placeTable(
 						remainingRow,
 						selected.cut + 1e-6,
 						selected.cellCuts?.map((cut) => cut + 1e-6),
+						selected.paragraphCuts
+							? new Map([...selected.paragraphCuts].map(([id, cut]) => [id, cut + 1e-6]))
+							: undefined,
 					);
 					fragmentRows.push(toRowBox(before, false));
 					const previousWidth = cursor.columnWidthPx;
 					startNewFragment();
+					// Independent inner stories resume at different tokens; source reflow restores each
+					// cell origin and places following direct text after the longest continuation.
 					remainingRow =
-						after && previousWidth !== cursor.columnWidthPx
+						after && (selected.paragraphCuts || previousWidth !== cursor.columnWidthPx)
 							? layoutRow(
 									{ ...row, heightPx: 0, heightRule: 'atLeast' },
 									cursor.columnWidthPx,
@@ -269,6 +275,7 @@ export function placeTable(
 			layout.heightPx > cursor.remainingHeightPx() &&
 			row.cells.some(
 				(cell) =>
+					!independentNoteStories(cell) &&
 					cell.blocks?.some((block) => block.kind === 'table') &&
 					cellParagraphs(cell).some((p) => p.footnotes?.length),
 			)

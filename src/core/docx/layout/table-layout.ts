@@ -147,12 +147,17 @@ interface CellSplit {
 }
 
 /** Splits one cell's already-laid-out paragraph boxes at `cutHeightPx`, never mid-line. */
-function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): CellSplit {
+function splitCellAtHeight(
+	boxes: LayoutParagraphBox[],
+	cutHeightPx: number,
+	paragraphCuts?: ReadonlyMap<string, number>,
+): CellSplit {
 	const before: LayoutParagraphBox[] = [];
 	const after: LayoutParagraphBox[] = [];
 	let beforeHeightPx = 0;
 	for (const box of boxes) {
-		if (box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cutHeightPx) {
+		const cut = paragraphCuts?.get(box.blockId) ?? cutHeightPx;
+		if (box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cut) {
 			before.push(box);
 			beforeHeightPx = Math.max(
 				beforeHeightPx,
@@ -161,8 +166,7 @@ function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): Ce
 			continue;
 		}
 		const beforeLines = box.lines.filter(
-			(line) =>
-				box.yPx + line.yPx + line.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cutHeightPx,
+			(line) => box.yPx + line.yPx + line.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cut,
 		);
 		const afterLines = box.lines.slice(beforeLines.length);
 		if (beforeLines.length) {
@@ -198,6 +202,8 @@ export interface RowSplit {
  * Splits a row that does not fit in `cutHeightPx` of remaining page/column
  * space, including bottom padding. Cells normally share the same cut; optional
  * individual cuts defer a marker without truncating neighboring unreferenced cells.
+ * Paragraph-specific cuts are used for independently continued inner stories; their tail
+ * must be source-reflowed by the table flow before placement to restore independent origins.
  * Splits never cut a line, and continuation fragments retain their top and bottom padding.
  * Returns `after: null` when every cell fit (nothing left to continue).
  */
@@ -205,10 +211,23 @@ export function splitRowAtHeight(
 	row: RowLayout,
 	cutHeightPx: number,
 	cellCuts?: readonly number[],
+	paragraphCuts?: ReadonlyMap<string, number>,
 ): RowSplit {
 	const splits = row.cells.map((cell, index) => {
 		const padding = row.cellPadding?.[index] ?? { top: 0, bottom: 0 };
-		const split = splitCellAtHeight(cell, (cellCuts?.[index] ?? cutHeightPx) - padding.bottom);
+		const cuts = paragraphCuts
+			? new Map(
+					cell.flatMap((box) => {
+						const cut = paragraphCuts.get(box.blockId);
+						return cut === undefined ? [] : [[box.blockId, cut - padding.bottom] as const];
+					}),
+				)
+			: undefined;
+		const split = splitCellAtHeight(
+			cell,
+			(cellCuts?.[index] ?? cutHeightPx) - padding.bottom,
+			cuts,
+		);
 		if (split.before.length) split.beforeHeightPx += padding.bottom;
 		if (split.after.length)
 			split.after = split.after.map((box) => ({ ...box, yPx: box.yPx + padding.top }));

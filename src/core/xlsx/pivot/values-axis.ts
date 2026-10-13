@@ -21,7 +21,7 @@ export function pivotValueAxisItems(measures: number, columns?: number): string 
 	return `<colItems count="${entries.length}">${entries.join('')}</colItems>`;
 }
 
-/** Values are modeled last on their axis; row placement has one real tabular row field. */
+/** Values are modeled last on their axis, following one or two real row fields. */
 export function supportedPivotAxes(
 	rows: readonly XmlElement[],
 	columns: readonly XmlElement[],
@@ -36,9 +36,9 @@ export function supportedPivotAxes(
 	if (valuesOnRows)
 		return (
 			measures > 1 &&
-			rows.length === 2 &&
-			index(rows[0]) >= 0 &&
-			index(rows[1]) === -2 &&
+			(rows.length === 2 || rows.length === 3) &&
+			rows.slice(0, -1).every((field) => index(field) >= 0) &&
+			index(rows.at(-1)) === -2 &&
 			columns.length <= 1 &&
 			(!columns.length || index(columns[0]) >= 0)
 		);

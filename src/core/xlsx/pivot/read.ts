@@ -91,7 +91,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	);
 	if (
 		rowFields.length < 1 ||
-		rowFields.length > 2 ||
+		rowFields.length > (rowsAxis ? 3 : 2) ||
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
 		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
@@ -135,7 +135,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
 	const row = names[Number(att(rowFields[0], 'x'))];
-	const second = !rowsAxis && rowFields[1] ? names[Number(att(rowFields[1], 'x'))] : undefined;
+	const realRows = rowsAxis ? rowFields.slice(0, -1) : rowFields;
+	const second = realRows[1] ? names[Number(att(realRows[1], 'x'))] : undefined;
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const outer = tableFields[Number(att(rowFields[0], 'x'))];
 	const compact = att(outer, 'compact') !== '0';
@@ -154,7 +155,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Mixed field layouts or custom compact indentation are preserved');
 	const subtotal = att(outer, 'defaultSubtotal') !== '0';
-	const repeat = (rowsAxis ? rowFields.slice(0, 1) : rowFields).map((field) => {
+	const repeat = realRows.map((field) => {
 		const node = tableFields[Number(att(field, 'x'))];
 		const extension = first(first(node, 'extLst', NS.x), 'ext', NS.x);
 		return (
@@ -178,7 +179,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		!data ||
 		!location ||
 		(hasColumn && !col) ||
-		(!rowsAxis && rowFields.length === 2 && !second)
+		(realRows.length === 2 && !second) ||
+		(rowsAxis && realRows.length === 2 && layout !== 'tabular')
 	)
 		throw new Error('Invalid pivot fields');
 	const pivot: PivotTable = {
