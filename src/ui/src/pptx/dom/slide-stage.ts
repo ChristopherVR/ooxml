@@ -8,6 +8,7 @@ import type {
 	PptxSlide,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
 import type {
 	CanvasSize,
@@ -44,6 +45,8 @@ export interface SlideStageOptions {
 	colorScheme?: PptxThemeColorScheme;
 	/** Optional presentation theme font scheme for table-style font resolution. */
 	fontScheme?: PptxThemeFontScheme;
+	/** Optional presentation theme format scheme for table-style theme references. */
+	formatScheme?: PptxThemeFormatScheme;
 	/** Optional parsed table-style definitions for theme-aware table rendering. */
 	tableStyleMap?: ParsedTableStyleMap;
 	fieldContext?: FieldSubstitutionContext;
@@ -175,6 +178,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		mediaDataUrls,
 		colorScheme: options.colorScheme,
 		fontScheme: options.fontScheme,
+		formatScheme: options.formatScheme,
 		tableStyleMap: options.tableStyleMap,
 		fieldContext: options.fieldContext,
 		presentationStates: options.presentationStates,

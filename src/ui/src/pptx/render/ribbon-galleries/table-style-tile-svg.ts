@@ -7,7 +7,7 @@
  *
  * @module render/ribbon-galleries/table-style-tile-svg
  */
-import type { PptxTableData, PptxThemeColorScheme } from 'ooxml-core/pptx';
+import type { PptxTableData, PptxThemeColorScheme, PptxThemeFormatScheme } from 'ooxml-core/pptx';
 
 import type { TableCellCss } from '../table-style';
 import { getTableCellBandStyle } from '../table-style';
@@ -77,12 +77,17 @@ export function tileBorderStroke(
 		: { width: Math.min(Math.max(Number(match[1]) / 2, 0.5), 2), color };
 }
 
-/** The mini-table tile for built-in style `styleId` under `colorScheme` and `options`. */
+/**
+ * The mini-table tile for built-in style `styleId` under `colorScheme` and
+ * `options`, with the theme's `formatScheme` for the styles that draw through
+ * theme fill and line references ("Themed Style 1/2").
+ */
 export function tableStyleTileSvg(
 	styleId: string,
 	colorScheme: PptxThemeColorScheme,
 	size: { width: number; height: number },
 	options: TableStyleTileOptions = DEFAULT_OPTIONS,
+	formatScheme?: PptxThemeFormatScheme,
 ): string {
 	const tableData: PptxTableData = {
 		rows: [],
@@ -111,7 +116,8 @@ export function tableStyleTileSvg(
 	};
 	for (let r = 0; r < ROWS; r++) {
 		for (let c = 0; c < COLS; c++) {
-			const css = getTableCellBandStyle(tableData, r, c, ROWS, COLS, { colorScheme }) ?? {};
+			const css =
+				getTableCellBandStyle(tableData, r, c, ROWS, COLS, { colorScheme, formatScheme }) ?? {};
 			const x = inset + c * cw;
 			const y = inset + r * rh;
 			const fill = cellFill(css);

@@ -7,7 +7,7 @@
 import type { ParsedTableStyleEntry, PptxThemeColorScheme } from 'ooxml-core/pptx';
 
 /** Default `p:clrMap` aliases (ECMA-376 19.3.1.6) for scheme keys a clrScheme lacks. */
-const SCHEME_ALIASES: Readonly<Record<string, string>> = {
+export const SCHEME_ALIASES: Readonly<Record<string, string>> = {
 	tx1: 'dk1',
 	bg1: 'lt1',
 	tx2: 'dk2',

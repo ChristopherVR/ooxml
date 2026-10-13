@@ -88,6 +88,7 @@ export const renderTableElement: ElementRenderer = (element, zIndex, context) =>
 					colorScheme: context.colorScheme,
 					tableStyleMap: context.tableStyleMap,
 					fontScheme: context.fontScheme,
+					formatScheme: context.formatScheme,
 				}),
 			);
 		});

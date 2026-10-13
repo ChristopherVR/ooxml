@@ -26,6 +26,7 @@ import type {
 import { screenBorder } from './device-pixel-stroke';
 import { ooxmlDashToCssBorderStyle } from './table-style';
 import type { DiagonalBorderInfo } from './table-style';
+import { isLineRefOnly } from './table-style-theme-refs';
 
 /** CSS shorthand for a cell's four edges (any subset may be present). */
 export interface CellBorderCss {
@@ -74,7 +75,8 @@ function borderToCss(
 	border: ParsedTableStyleBorder | undefined,
 	resolve: ResolveBorderColor,
 ): string | undefined {
-	if (!border) {
+	// An unresolved theme line reference is not a line (see table-style-theme-refs).
+	if (!border || isLineRefOnly(border)) {
 		return undefined;
 	}
 	if (border.noFill) {
@@ -311,12 +313,12 @@ export function resolveStyleDiagonalBorders(
 
 	const info: DiagonalBorderInfo = {};
 	let applied = false;
-	if (tl2br && !tl2br.noFill) {
+	if (tl2br && !tl2br.noFill && !isLineRefOnly(tl2br)) {
 		info.diagDownColor = tl2br.color ?? resolve(tl2br.fill) ?? '#000000';
 		info.diagDownWidth = tl2br.width ?? 1;
 		applied = true;
 	}
-	if (tr2bl && !tr2bl.noFill) {
+	if (tr2bl && !tr2bl.noFill && !isLineRefOnly(tr2bl)) {
 		info.diagUpColor = tr2bl.color ?? resolve(tr2bl.fill) ?? '#000000';
 		info.diagUpWidth = tr2bl.width ?? 1;
 		applied = true;
