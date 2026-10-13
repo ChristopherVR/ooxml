@@ -10,6 +10,41 @@ const base = {
 };
 
 describe('resolveParagraphSpacing', () => {
+	it('uses inherited level spacing instead of the first paragraph direct formatting (#74)', () => {
+		const bodyStyle = {
+			lineSpacingExactPt: 12.86,
+			paragraphSpacingAfter: (3.8 * 96) / 72,
+			inheritedParagraphSpacing: {
+				0: { lineSpacing: 1, paragraphSpacingAfter: 0 },
+				1: { lineSpacingExactPt: 18, paragraphSpacingAfter: 8 },
+			},
+		};
+		expect(resolveParagraphSpacing({ paraProps: undefined, bodyStyle })).toEqual({
+			lineHeight: 1.2,
+		});
+		expect(resolveParagraphSpacing({ paraProps: undefined, bodyStyle, paragraphLevel: 1 })).toEqual(
+			{ lineHeight: '24px', runLineHeight: 0, spaceAfterPx: 8 },
+		);
+		expect(
+			resolveParagraphSpacing({
+				paraProps: { lineSpacingExactPt: 12.86, paragraphSpacingAfter: 4 },
+				bodyStyle,
+			}),
+		).toEqual({ lineHeight: `${(12.86 * 96) / 72}px`, runLineHeight: 0, spaceAfterPx: 4 });
+	});
+
+	it('continues applying body-wide line spacing edits after loading (#74)', () => {
+		expect(
+			resolveParagraphSpacing({
+				paraProps: undefined,
+				bodyStyle: {
+					lineSpacing: 2,
+					resolvedParagraphGeometry: { lineSpacingExactPt: 12.86 },
+					inheritedParagraphSpacing: { 0: { lineSpacing: 1 } },
+				},
+			}),
+		).toEqual({ lineHeight: 2.4 });
+	});
 	it('returns nothing when neither the paragraph nor the body sets spacing', () => {
 		expect(resolveParagraphSpacing({ ...base, paraProps: undefined })).toStrictEqual({});
 		expect(

@@ -209,6 +209,7 @@ export function buildParagraphs(
 					: undefined;
 			const bulletStyle = buildBulletMarkerStyle(bullet, firstSeg, fontScale, textIndentPx);
 			const spacing = resolveParagraphSpacing({
+				paragraphLevel: firstSeg?.paragraphLevel,
 				paraProps: propsCarrier?.paragraphProperties,
 				bodyStyle,
 				isFirst: paraIndex === 0,

@@ -45,6 +45,52 @@ class ParagraphPropertiesRuntime extends PptxHandlerRuntime {
 
 const runtime = new ParagraphPropertiesRuntime();
 
+describe('paragraph spacing inheritance (#74)', () => {
+	it('keeps first-paragraph direct spacing out of inherited defaults', () => {
+		const style: TextStyle = {};
+		runtime.resolveParagraphStyle(
+			{
+				'a:pPr': {
+					'a:lnSpc': { 'a:spcPts': { '@_val': '1286' } },
+					'a:spcAft': { 'a:spcPts': { '@_val': '380' } },
+				},
+			},
+			style,
+			makeContext(),
+		);
+		runtime.resolveParagraphStyle({}, style, makeContext());
+		expect(style.lineSpacingExactPt).toBe(12.86);
+		expect(style.paragraphSpacingAfter).toBeCloseTo((3.8 * 96) / 72);
+		expect(style.inheritedParagraphSpacing?.[0]).toEqual({
+			lineSpacing: 1,
+			paragraphSpacingBefore: 0,
+			paragraphSpacingAfter: 0,
+		});
+	});
+
+	it('resolves body levels above master and presentation defaults', () => {
+		const style: TextStyle = {};
+		const ctx = makeContext({
+			txBody: { 'a:lstStyle': { 'a:lvl2pPr': { 'a:spcAft': { 'a:spcPts': { '@_val': '600' } } } } },
+			effectiveLevelStyles: {
+				'-1': { lineSpacing: 1.1, spaceAfter: 2 },
+				1: { lineSpacingExactPt: 18, spaceAfter: 4 },
+			},
+		});
+		runtime.resolveParagraphStyle({}, style, ctx);
+		expect(style.inheritedParagraphSpacing?.[0]).toEqual({
+			lineSpacing: 1.1,
+			paragraphSpacingBefore: 0,
+			paragraphSpacingAfter: 2,
+		});
+		expect(style.inheritedParagraphSpacing?.[1]).toEqual({
+			lineSpacingExactPt: 18,
+			paragraphSpacingBefore: 0,
+			paragraphSpacingAfter: 8,
+		});
+	});
+});
+
 function makeContext(overrides: Partial<ShapeTextParsingContext> = {}): ShapeTextParsingContext {
 	return {
 		txBody: undefined,

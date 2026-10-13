@@ -60,6 +60,8 @@ export interface ParagraphSpacingInput {
 	paraProps: TextStyle | undefined;
 	/** The text body's style, used as the inheritance fallback. */
 	bodyStyle?: TextStyle | undefined;
+	/** OOXML outline level (zero when omitted). */
+	paragraphLevel?: number | undefined;
 	/** True for the first paragraph in the body. */
 	isFirst?: boolean;
 	/** True for the last paragraph in the body. */
@@ -168,12 +170,29 @@ export function resolveParagraphSpacing(input: ParagraphSpacingInput): Paragraph
 		lineSpacingReduction,
 	} = input;
 	const out: ParagraphSpacing = {};
+	const inherited = bodyStyle?.inheritedParagraphSpacing?.[input.paragraphLevel ?? 0];
+	const fallback = inherited ? { ...inherited } : bodyStyle;
+	// Element-wide edits still override the parsed baseline for all paragraphs.
+	if (inherited && fallback && bodyStyle?.resolvedParagraphGeometry) {
+		for (const key of ['paragraphSpacingBefore', 'paragraphSpacingAfter'] as const) {
+			if (bodyStyle[key] !== bodyStyle.resolvedParagraphGeometry[key]) {
+				fallback[key] = bodyStyle[key];
+			}
+		}
+		if (
+			bodyStyle.lineSpacing !== bodyStyle.resolvedParagraphGeometry.lineSpacing ||
+			bodyStyle.lineSpacingExactPt !== bodyStyle.resolvedParagraphGeometry.lineSpacingExactPt
+		) {
+			fallback.lineSpacing = bodyStyle.lineSpacing;
+			fallback.lineSpacingExactPt = bodyStyle.lineSpacingExactPt;
+		}
+	}
 
-	const before = paraProps?.paragraphSpacingBefore ?? bodyStyle?.paragraphSpacingBefore;
+	const before = paraProps?.paragraphSpacingBefore ?? fallback?.paragraphSpacingBefore;
 	const effectiveBefore =
 		typeof before === 'number' && before > 0 && (!isFirst || spaceFirstLast) ? before : 0;
 
-	const after = paraProps?.paragraphSpacingAfter ?? bodyStyle?.paragraphSpacingAfter;
+	const after = paraProps?.paragraphSpacingAfter ?? fallback?.paragraphSpacingAfter;
 	const effectiveAfter =
 		typeof after === 'number' && after > 0 && (!isLast || spaceFirstLast) ? after : 0;
 
@@ -186,7 +205,7 @@ export function resolveParagraphSpacing(input: ParagraphSpacingInput): Paragraph
 
 	const hasOwnLineSpacing =
 		paraProps?.lineSpacing !== undefined || paraProps?.lineSpacingExactPt !== undefined;
-	const lineSource = hasOwnLineSpacing ? paraProps : bodyStyle;
+	const lineSource = hasOwnLineSpacing ? paraProps : fallback;
 	const exactPt = lineSource?.lineSpacingExactPt;
 	const multiplier = lineSource?.lineSpacing;
 	if (typeof exactPt === 'number' && exactPt > 0) {

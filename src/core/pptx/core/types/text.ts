@@ -115,6 +115,8 @@ export interface TextStyle {
 	 * @see element-paragraph-geometry.ts
 	 */
 	resolvedParagraphGeometry?: TextStyle;
+	/** Inherited paragraph spacing by outline level, excluding direct sibling formatting. */
+	inheritedParagraphSpacing?: Record<number, TextStyle>;
 	/**
 	 * Snapshot of the ELEMENT-scope `a:bodyPr` properties (vertical anchor,
 	 * text direction, columns, overflow, autofit, body insets, text wrap, and

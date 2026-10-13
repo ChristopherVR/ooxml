@@ -175,6 +175,41 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			),
 		);
 		const pPr = this.mergeXmlObjects(lstStyleParagraphDefaults, directPPr);
+		// Retain the cascade separately from the first paragraph's direct values.
+		// Populate every level so newly inserted paragraphs inherit correctly too.
+		if (!textStyle.inheritedParagraphSpacing) {
+			textStyle.inheritedParagraphSpacing = {};
+			for (let spacingLevel = 0; spacingLevel < 9; spacingLevel++) {
+				const key = `a:lvl${spacingLevel + 1}pPr`;
+				const defaults = this.mergeXmlObjects(
+					this.mergeXmlObjects(
+						inheritedLstStyle?.['a:defPPr'] as XmlObject,
+						inheritedLstStyle?.[key] as XmlObject,
+					),
+					this.mergeXmlObjects(
+						ownLstStyle?.['a:defPPr'] as XmlObject,
+						ownLstStyle?.[key] as XmlObject,
+					),
+				);
+				const inherited = this.mergeXmlObjects(
+					defaults,
+					inheritedParagraph?.['a:pPr'] as XmlObject,
+				);
+				const spacing =
+					this.extractParagraphOwnProperties({ 'a:pPr': inherited }, textStyle.fontSize) ?? {};
+				const phLevel = ctx.effectiveLevelStyles?.[spacingLevel];
+				const phBase = ctx.effectiveLevelStyles?.[-1];
+				if (phLevel) this.applyPlaceholderLevelDefaults(spacing, phLevel);
+				if (phBase) this.applyPlaceholderLevelDefaults(spacing, phBase);
+				textStyle.inheritedParagraphSpacing[spacingLevel] = {
+					paragraphSpacingBefore: spacing.paragraphSpacingBefore ?? 0,
+					paragraphSpacingAfter: spacing.paragraphSpacingAfter ?? 0,
+					...(spacing.lineSpacingExactPt !== undefined
+						? { lineSpacingExactPt: spacing.lineSpacingExactPt }
+						: { lineSpacing: spacing.lineSpacing ?? 1 }),
+				};
+			}
+		}
 		const paragraphRtl = this.parseOptionalBooleanAttr(pPr?.['@_rtl']);
 		if (paragraphRtl !== undefined && textStyle.rtl === undefined) {
 			textStyle.rtl = paragraphRtl;
