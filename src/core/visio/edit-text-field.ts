@@ -14,7 +14,6 @@ import {
 	VISIO_FIELD_FUNCTIONS,
 	evaluateVisioTextField,
 	formatVisioFieldValue,
-	visioDateSerial,
 	visioWallClock,
 	type VisioFieldContext,
 	type VisioFieldValue,
@@ -76,7 +75,8 @@ function shapeResolver(shape: Element) {
 
 function valueCell(value: VisioFieldValue): { v: string; u?: string; type: number } {
 	if (value.kind === 'string') return { v: value.text, u: 'STR', type: 0 };
-	if (value.kind === 'date') return { v: String(visioDateSerial(value.date)), u: 'DATE', type: 5 };
+	if (value.kind === 'date')
+		return { v: value.date.toISOString().replace(/Z$/, ''), u: 'DATE', type: 5 };
 	const unit = value.unit === 'length' ? 'IN' : value.unit === 'angle' ? 'DEG' : undefined;
 	return { v: String(Number(value.value.toFixed(10))), ...(unit ? { u: unit } : {}), type: 2 };
 }
@@ -173,7 +173,8 @@ export async function insertVisioTextField(
 	};
 	const stored = valueCell(value);
 	cell('Value', stored.v, { ...(stored.u ? { U: stored.u } : {}), F: edit.formula });
-	if (edit.format) cell('Format', edit.format, { F: `"${edit.format.replaceAll('"', '""')}"` });
+	if (edit.format)
+		cell('Format', edit.format, { U: 'STR', F: `"${edit.format.replaceAll('"', '""')}"` });
 	cell('Type', String(stored.type));
 	section.appendChild(row);
 	const field = owner.createElementNS(ns, 'fld');
