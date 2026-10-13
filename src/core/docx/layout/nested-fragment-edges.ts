@@ -22,6 +22,8 @@ export function nestedFragmentEdges(table: LayoutTable) {
 				row.cells.length !== 2 ||
 				row.cells.some(
 					(cell) =>
+						(cell.gridSpan ?? 1) !== 1 ||
+						cell.verticalMerge !== undefined ||
 						(cell.verticalAlign && cell.verticalAlign !== 'top') ||
 						cell.blocks?.some((block) => block.kind !== 'paragraph') ||
 						!(cell.blocks ?? cell.paragraphs).every(
@@ -41,6 +43,7 @@ export function reflowNestedFragments(row: LayoutTableRow): boolean {
 		return false;
 	let tables = 0;
 	for (const cell of row.cells) {
+		if ((cell.gridSpan ?? 1) !== 1 || cell.verticalMerge !== undefined) return false;
 		if (cell.verticalAlign && cell.verticalAlign !== 'top') return false;
 		for (const [index, block] of (cell.blocks ?? cell.paragraphs).entries()) {
 			if (block.kind === 'paragraph') {
