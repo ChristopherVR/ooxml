@@ -77,7 +77,8 @@ function effectsOf(editor: EditorState): PptxImageEffects | undefined {
 
 describe('picture adjust galleries', () => {
 	it('mounts the Adjust group on the Picture Format tab', () => {
-		const target = mountComponent(makeEditor(), ContextualTab, { tab: 'pictureFormat' });
+		const editor = makeEditor();
+		const target = mountComponent(editor, ContextualTab, { tab: 'pictureFormat', editor });
 		expect(target.querySelector('[data-ribbon-group="pictureFormat.adjust"]')).not.toBeNull();
 		for (const gallery of ['pictureCorrections', 'pictureColor', 'pictureArtisticEffects']) {
 			expect(target.querySelector(`[data-ribbon-gallery="${gallery}"]`)).not.toBeNull();

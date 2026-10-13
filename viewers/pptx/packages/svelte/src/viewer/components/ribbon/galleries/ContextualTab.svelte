@@ -4,15 +4,26 @@
 	 * Format, Table Design, Chart Design, SmartArt Design). Which groups it
 	 * shows, and which galleries sit in them in which mode, is shared's
 	 * `CONTEXTUAL_TAB_GROUPS`; this file only maps that list onto ribbon groups.
+	 * A command group (Picture Format > Size) draws its shared strip as well.
 	 */
 	import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
-	import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
+	import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
+	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import PictureSizeStrip from './PictureSizeStrip.svelte';
 	import RibbonGallery from './RibbonGallery.svelte';
 	import { translatedOr } from './gallery-labels';
 
-	const { tab }: { tab: RibbonContextualTabId } = $props();
+	const {
+		tab,
+		editor,
+		hiddenActions,
+	}: {
+		tab: RibbonContextualTabId;
+		editor: EditorState;
+		hiddenActions?: readonly ToolbarActionId[];
+	} = $props();
 	const t = useTranslator();
 	const groups = $derived(CONTEXTUAL_TAB_GROUPS[tab]);
 </script>
@@ -23,6 +34,9 @@
 			{#each group.galleries as placement (placement.control)}
 				<RibbonGallery {placement} />
 			{/each}
+			{#if group.strip === 'picture-size'}
+				<PictureSizeStrip {editor} {hiddenActions} />
+			{/if}
 		</pptx-ui-ribbon-group>
 	{/each}
 </div>

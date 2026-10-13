@@ -1,6 +1,8 @@
-import { cropFill, cropFit, cropToAspectRatio, parseCropValue } from 'ooxml-ui/pptx';
+import { cropFill, cropFit, cropToAspectRatio, dispatchCropRequest } from 'ooxml-ui/pptx';
 import type { CropElementUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
+
+import type { EditorState } from '../../../editor/editor-state.svelte';
 
 /** The rendered bitmap's natural size, when its <img> is on the canvas. */
 function naturalSizeOf(element: PptxElement): NaturalImageSize | undefined {
@@ -15,19 +17,23 @@ function naturalSizeOf(element: PptxElement): NaturalImageSize | undefined {
 		: undefined;
 }
 
-/** The crop update a Crop menu value stands for (aspect ratio, Fill or Fit), if any. */
-export function cropUpdateFor(
-	element: PptxElement,
-	value: string | number | undefined,
-): CropElementUpdate | undefined {
-	const action = parseCropValue(value);
-	if (!action) {
-		return undefined;
-	}
-	if (action.kind === 'aspect') {
-		return cropToAspectRatio(element, action.width, action.height);
-	}
-	return action.kind === 'fill'
-		? cropFill(element, naturalSizeOf(element))
-		: cropFit(element, naturalSizeOf(element));
+/**
+ * Run a Crop split button's request through the shared `dispatchCropRequest`:
+ * the main half toggles crop mode, a menu pick applies its aspect ratio, Fill
+ * or Fit to the selected picture as one undoable update. Both crop entry
+ * points (Home > Arrange and Picture Format > Size) call this.
+ */
+export function runCropRequest(editor: EditorState, value: string | number | undefined): void {
+	const apply = (compute: (element: PptxElement) => CropElementUpdate) => {
+		const element = editor.selectedElement;
+		if (element) {
+			editor.cropOps.applyOnce(compute(element));
+		}
+	};
+	dispatchCropRequest(value, {
+		toggle: () => editor.cropOps.toggle(),
+		aspect: (width, height) => apply((el) => cropToAspectRatio(el, width, height)),
+		fill: () => apply((el) => cropFill(el, naturalSizeOf(el))),
+		fit: () => apply((el) => cropFit(el, naturalSizeOf(el))),
+	});
 }
