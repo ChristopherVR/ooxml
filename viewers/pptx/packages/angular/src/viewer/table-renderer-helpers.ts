@@ -16,7 +16,13 @@ import { cellParagraphBlocks, getCellDiagonalBorders, tableCellCss } from 'ooxml
  *   - packages/react/src/viewer/utils/table-band-style.tsx   (banding)
  *   - packages/react/src/viewer/utils/table-diagonal-borders.tsx (diagonals)
  */
-import type { PptxElement, PptxTableCell, TablePptxElement } from 'pptx-viewer-core';
+import type {
+	ParsedTableStyleMap,
+	PptxElement,
+	PptxTableCell,
+	PptxTheme,
+	TablePptxElement,
+} from 'pptx-viewer-core';
 
 import type { StyleMap } from './element-style';
 import type { CellParagraph } from './table-cell-style';
@@ -44,6 +50,24 @@ export {
 } from './table-cell-style';
 export type { CellParagraph, CellTextRun } from './table-cell-style';
 export type { DiagonalBorderInfo };
+
+/**
+ * The table-style context the renderer resolves cells with: the parsed style
+ * map plus the theme's colour, font and format schemes. The format scheme lets
+ * a style's `a:tblBg/a:fillRef` and `a:lnRef` borders ("Themed Style 1/2")
+ * resolve to the theme's fill and line styles.
+ */
+export function tableStyleContextFor(
+	tableStyleMap: ParsedTableStyleMap | undefined,
+	theme: PptxTheme | undefined,
+): TableStyleContext {
+	return {
+		tableStyleMap,
+		colorScheme: theme?.colorScheme,
+		fontScheme: theme?.fontScheme,
+		formatScheme: theme?.formatScheme,
+	};
+}
 
 // ==========================================================================
 // View-model types

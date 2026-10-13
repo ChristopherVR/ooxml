@@ -24,7 +24,11 @@ import type { PptxElement, PptxTableData, PptxTableRow, TablePptxElement } from 
 
 import type { StyleMap } from './element-style';
 import { LoadContentService } from './load-content.service';
-import { buildColStyles, buildTableViewModel } from './table-renderer-helpers';
+import {
+	buildColStyles,
+	buildTableViewModel,
+	tableStyleContextFor,
+} from './table-renderer-helpers';
 import type { CellParagraph, TableRowViewModel } from './table-renderer-helpers';
 import { TableResizeOverlayComponent } from './table-resize-overlay.component';
 import { TableSelectionService } from './table-selection.service';
@@ -138,17 +142,11 @@ export class TableRendererComponent {
 	 * deck loader, or `undefined` outside the viewer subtree. `fontScheme` lets a
 	 * table style's `a:fontRef@idx` resolve to a concrete font family.
 	 */
-	private readonly styleCtx = computed<TableStyleContext | undefined>(() => {
-		if (!this.loader) {
-			return undefined;
-		}
-		const theme = this.loader.theme();
-		return {
-			tableStyleMap: this.loader.tableStyleMap(),
-			colorScheme: theme?.colorScheme,
-			fontScheme: theme?.fontScheme,
-		};
-	});
+	private readonly styleCtx = computed<TableStyleContext | undefined>(() =>
+		this.loader
+			? tableStyleContextFor(this.loader.tableStyleMap(), this.loader.theme())
+			: undefined,
+	);
 
 	/** Projected view-model rows with merged-cell resolution + banding applied. */
 	readonly rows = computed<TableRowViewModel[]>(() =>
