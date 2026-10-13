@@ -9,6 +9,10 @@ for (const name of [
 	'align-top',
 	'align-center',
 	'align-bottom',
+	'border-half',
+	'border-two',
+	'border-three-margin',
+	'margin',
 ])
 	test(`nested table frames ${name} survive save and reopen`, async ({ page }) => {
 		await page.goto('/?framework=vanilla');
@@ -42,7 +46,18 @@ for (const name of [
 			await expect(first).toHaveCSS('border-left-color', 'rgb(255, 0, 0)');
 			expect(
 				await first.evaluate((node) => parseFloat((node as HTMLElement).style.borderLeftWidth)),
-			).toBeCloseTo(4 / 3, 1);
+			).toBeCloseTo(
+				((name === 'border-half'
+					? 0.5
+					: name === 'border-two'
+						? 2
+						: name === 'border-three-margin'
+							? 3
+							: 1) *
+					4) /
+					3,
+				1,
+			);
 			await expect(frames.first()).toHaveText('');
 			if (name.startsWith('align-')) {
 				const paragraph = editor
@@ -55,7 +70,7 @@ for (const name of [
 					.first()
 					.evaluate((node) => parseFloat((node as HTMLElement).style.top));
 				expect(paragraphY - frameY).toBeCloseTo(
-					name === 'align-center' ? 12 : name === 'align-bottom' ? 24 : 0,
+					name === 'align-center' ? 38 / 3 : name === 'align-bottom' ? 24 : 4 / 3,
 					1,
 				);
 			}

@@ -59,6 +59,8 @@ export interface LayoutParagraphBox {
 	readOnly?: boolean;
 	/** Paragraph borders and shading, spanning the box's height at these horizontal bounds. */
 	frame?: LayoutParagraphFrame;
+	/** Nested frame edges required again at physical continuation cuts. */
+	tableFrameInsets?: { top: number; bottom: number };
 }
 
 export interface LayoutParagraphFrame {
@@ -79,6 +81,9 @@ export interface LayoutCellGeometry {
 	verticalAlign?: 'top' | 'center' | 'bottom';
 	/** Height of the cell's content (with its top and bottom padding), for vertical alignment. */
 	contentHeightPx: number;
+	/** Nested frame borders are already included in source-coordinate content insets. */
+	borderInsetsReserved?: boolean;
+	alignmentHeightPx?: number;
 }
 
 export interface LayoutTableRowBox {
@@ -189,7 +194,7 @@ export interface LayoutResult {
 
 /** Shared row alignment for projected text and recursive decorative cell contents. */
 export function cellVerticalOffset(geometry: LayoutCellGeometry, rowHeightPx: number): number {
-	const free = Math.max(0, rowHeightPx - geometry.contentHeightPx);
+	const free = Math.max(0, (geometry.alignmentHeightPx ?? rowHeightPx) - geometry.contentHeightPx);
 	return geometry.verticalAlign === 'center'
 		? free / 2
 		: geometry.verticalAlign === 'bottom'

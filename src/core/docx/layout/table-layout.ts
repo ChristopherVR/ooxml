@@ -62,6 +62,7 @@ export function layoutRow(
 	note: (message: string) => void,
 	remaining?: LayoutParagraphBox[][],
 	startTokens?: ReadonlyMap<string, number>,
+	frameBorders = false,
 ): RowLayout {
 	const count = row.cells.length || 1;
 	let x = 0;
@@ -72,7 +73,20 @@ export function layoutRow(
 			? new Map(continuation.map((box) => [box.blockId, box.lines[0]?.firstToken ?? 0]))
 			: startTokens;
 		const widthPx = cell.widthPx ?? tableWidthPx / count;
-		const padding = cell.padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
+
+		const margins = cell.padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
+		const leftBorder = frameBorders ? (cell.borders?.left?.widthPx ?? 0) : 0;
+		const rightBorder = frameBorders ? (cell.borders?.right?.widthPx ?? 0) : 0;
+		const padding = frameBorders
+			? {
+					top: margins.top + (cell.borders?.top?.widthPx ?? 0),
+					bottom: margins.bottom,
+					left: leftBorder / 2 + Math.max(margins.left, leftBorder / 2),
+					right: Math.max(margins.right, rightBorder / 2) - rightBorder / 2,
+				}
+			: margins;
+		const externalRight =
+			frameBorders && geometry.length === row.cells.length - 1 ? rightBorder : 0;
 		const content = stackCellBlocks(
 			cell,
 			Math.max(1, widthPx - padding.left - padding.right),
@@ -84,9 +98,10 @@ export function layoutRow(
 		const heightPx = content.heightPx + padding.bottom;
 		geometry.push({
 			xPx: cell.xPx ?? x,
-			widthPx,
+			widthPx: widthPx + externalRight,
+			...(frameBorders ? { borderInsetsReserved: true } : {}),
 			paddingLeftPx: padding.left,
-			paddingRightPx: padding.right,
+			paddingRightPx: padding.right + externalRight,
 			contentHeightPx: heightPx,
 			...(cell.borders ? { borders: cell.borders } : {}),
 			...(cell.shading ? { shading: cell.shading } : {}),
@@ -102,6 +117,7 @@ export function layoutRow(
 			: row.heightRule === 'exact'
 				? row.heightPx
 				: Math.max(content, row.heightPx);
+	if (frameBorders) for (const cell of geometry) cell.alignmentHeightPx = heightPx;
 	return {
 		heightPx,
 		cells: laidOut.map((cell) => cell.boxes),
@@ -129,19 +145,26 @@ function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): Ce
 	const after: LayoutParagraphBox[] = [];
 	let beforeHeightPx = 0;
 	for (const box of boxes) {
-		if (box.yPx + box.heightPx <= cutHeightPx) {
+		if (box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cutHeightPx) {
 			before.push(box);
-			beforeHeightPx = Math.max(beforeHeightPx, box.yPx + box.heightPx);
+			beforeHeightPx = Math.max(
+				beforeHeightPx,
+				box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0),
+			);
 			continue;
 		}
 		const beforeLines = box.lines.filter(
-			(line) => box.yPx + line.yPx + line.heightPx <= cutHeightPx,
+			(line) =>
+				box.yPx + line.yPx + line.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cutHeightPx,
 		);
 		const afterLines = box.lines.slice(beforeLines.length);
 		if (beforeLines.length) {
 			const bottom = beforeLines.at(-1)!.yPx + beforeLines.at(-1)!.heightPx;
 			before.push({ ...box, heightPx: bottom, lines: beforeLines });
-			beforeHeightPx = Math.max(beforeHeightPx, box.yPx + bottom);
+			beforeHeightPx = Math.max(
+				beforeHeightPx,
+				box.yPx + bottom + (box.tableFrameInsets?.bottom ?? 0),
+			);
 		}
 		if (afterLines.length) {
 			const shift = expectDefined(afterLines[0], 'first line after split').yPx;
@@ -154,7 +177,7 @@ function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): Ce
 		}
 	}
 	// Nested cells have paragraphs running in parallel, rather than a single sequential story.
-	const afterOrigin = Math.min(...after.map((box) => box.yPx));
+	const afterOrigin = Math.min(...after.map((box) => box.yPx - (box.tableFrameInsets?.top ?? 0)));
 	for (const box of after) box.yPx -= afterOrigin;
 	return { before, after, beforeHeightPx, ...(after.length ? { afterOrigin } : {}) };
 }
@@ -209,6 +232,7 @@ export function splitRowAtHeight(
 				split.after.length
 					? split.after.at(-1)!.yPx +
 						split.after.at(-1)!.heightPx +
+						(split.after.at(-1)!.tableFrameInsets?.bottom ?? 0) +
 						(row.cellPadding?.[index]?.bottom ?? 0)
 					: 0,
 			),
@@ -233,6 +257,7 @@ export function splitRowAtHeight(
 			contentHeightPx: splits[index]!.after.length
 				? splits[index]!.after.at(-1)!.yPx +
 					splits[index]!.after.at(-1)!.heightPx +
+					(splits[index]!.after.at(-1)!.tableFrameInsets?.bottom ?? 0) +
 					(row.cellPadding?.[index]?.bottom ?? 0)
 				: 0,
 		})),

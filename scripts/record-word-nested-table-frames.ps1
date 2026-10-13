@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 New-Item -ItemType Directory -Path $OutputDirectory -Force|Out-Null
 $root=Split-Path $PSScriptRoot -Parent
-$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'})
+$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'},@{name='nested-frame-border-half';source='nested-table-reference';border='4'},@{name='nested-frame-border-two';source='nested-table-reference';border='16'},@{name='nested-frame-border-three-margin';source='nested-table-reference';border='24';margin='120'},@{name='nested-frame-margin';source='nested-table-reference';margin='120'})
 $app=$null;$owned=$false;$records=@()
 try{
  $app=New-Object -ComObject Word.Application;$owned=$app.Documents.Count-eq0
@@ -23,11 +23,19 @@ try{
    $borders=$xml.CreateElement('w','tblBorders',$ns.LookupNamespace('w'))
    foreach($side in @('top','left','bottom','right','insideH','insideV')){
     $edge=$xml.CreateElement('w',$side,$ns.LookupNamespace('w'))
-    foreach($attribute in @(@('val','single'),@('sz','8'),@('color','FF0000'))){$a=$xml.CreateAttribute('w',$attribute[0],$ns.LookupNamespace('w'));$a.Value=$attribute[1];[void]$edge.Attributes.Append($a)}
+    foreach($attribute in @(@('val','single'),@('sz',$(if($case.border){$case.border}else{'8'})),@('color','FF0000'))){$a=$xml.CreateAttribute('w',$attribute[0],$ns.LookupNamespace('w'));$a.Value=$attribute[1];[void]$edge.Attributes.Append($a)}
     [void]$borders.AppendChild($edge)
    }
    [void]$props.AppendChild($borders)
    if($case.twoRows){$row=$inner.SelectSingleNode('w:tr',$ns).CloneNode($true);foreach($reference in $row.SelectNodes('.//w:footnoteReference',$ns)){[void]$reference.ParentNode.RemoveChild($reference)};foreach($text in $row.SelectNodes('.//w:t',$ns)){$text.InnerText=$text.InnerText.Replace('T1R0','T1R1')};[void]$inner.AppendChild($row)}
+   if($case.margin){
+    foreach($cell in $inner.SelectNodes('w:tr/w:tc',$ns)){
+     $tcProps=$cell.SelectSingleNode('w:tcPr',$ns);$old=$tcProps.SelectSingleNode('w:tcMar',$ns);if($old){[void]$tcProps.RemoveChild($old)}
+     $margins=$xml.CreateElement('w','tcMar',$ns.LookupNamespace('w'))
+     foreach($side in @('top','left','bottom','right')){$margin=$xml.CreateElement('w',$side,$ns.LookupNamespace('w'));$margin.SetAttribute('w',$ns.LookupNamespace('w'),$case.margin)|Out-Null;$margin.SetAttribute('type',$ns.LookupNamespace('w'),'dxa')|Out-Null;[void]$margins.AppendChild($margin)}
+     [void]$tcProps.AppendChild($margins)
+    }
+   }
    if($case.align){
     foreach($row in $inner.SelectNodes('w:tr',$ns)){
      $trProps=$row.SelectSingleNode('w:trPr',$ns);if(-not$trProps){$trProps=$xml.CreateElement('w','trPr',$ns.LookupNamespace('w'));[void]$row.PrependChild($trProps)}

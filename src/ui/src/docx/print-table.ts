@@ -67,9 +67,9 @@ export function renderTable(
 			content.className = 'dve-print-cell-content';
 			const offset = cellVerticalOffset(geometry, row.heightPx);
 			Object.assign(content.style, {
-				left: `${geometry.paddingLeftPx}px`,
-				right: `${geometry.paddingRightPx}px`,
-				top: `${offset}px`,
+				left: `${geometry.paddingLeftPx - (geometry.borderInsetsReserved ? (borders?.left?.widthPx ?? 0) : 0)}px`,
+				right: `${geometry.paddingRightPx - (geometry.borderInsetsReserved && cellIndex === row.cells.length - 1 ? (borders?.right?.widthPx ?? 0) : 0)}px`,
+				top: `${offset - (geometry.borderInsetsReserved ? (borders?.top?.widthPx ?? 0) : 0)}px`,
 			});
 			for (const nested of row.cellTables?.[cellIndex] ?? []) {
 				const frame = renderTable(nested, nested.widthPx ?? geometry.widthPx, () => null);

@@ -39,6 +39,7 @@ export function cssHex(value: string | undefined): string | undefined {
 export function border(
 	side: TableBorderSide | undefined,
 	theme: DocumentModel['theme'],
+	preserveSingleWidth = false,
 ): LayoutBorder | undefined {
 	if (!side?.style || side.style === 'none' || side.style === 'nil') return undefined;
 	const style: LayoutBorder['style'] = side.style.startsWith('double')
@@ -55,7 +56,7 @@ export function border(
 	const hex = cssHex(side.color);
 	// `sz` is in eighths of a point; a double line needs room for both strokes.
 	const widthPx = Math.max(
-		style === 'double' ? 3 : 1,
+		style === 'double' ? 3 : preserveSingleWidth && style === 'solid' ? 0 : 1,
 		(((side.sizeEighthPoints ?? 4) / 8) * 96) / 72,
 	);
 	return { widthPx, style, color: themed ?? hex ?? '#000000' };
@@ -84,6 +85,7 @@ export function adaptTable(
 	table: Table,
 	model: DocumentModel,
 	adaptParagraph: (paragraph: Paragraph) => LayoutParagraph,
+	nested = false,
 ): LayoutTable {
 	const grid = table.grid?.map(twipsToPx);
 	const columnCount = grid?.length ?? Math.max(1, ...table.rows.map((row) => row.length));
@@ -128,7 +130,7 @@ export function adaptTable(
 				);
 				const borders: LayoutCellBorders = {};
 				for (const side of ['top', 'right', 'bottom', 'left'] as const) {
-					const resolved = border(visuals.borders?.[side], model.theme);
+					const resolved = border(visuals.borders?.[side], model.theme, nested);
 					if (resolved) borders[side] = resolved;
 				}
 				if (cell.verticalMerge === 'continue') delete borders.top;
@@ -151,7 +153,7 @@ export function adaptTable(
 								blocks: cellSourceBlocks(cell).map((block) =>
 									block.type === 'paragraph'
 										? adaptParagraph(block)
-										: adaptTable(block, model, adaptParagraph),
+										: adaptTable(block, model, adaptParagraph, true),
 								),
 							}
 						: {}),

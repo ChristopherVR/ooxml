@@ -1,3 +1,4 @@
+import { nestedFrameBorderWidth } from './nested-frame-profile';
 import { cellVerticalOffset } from './result';
 import type { LayoutBlock, LayoutParagraph, LayoutTableCell } from './input';
 import type { LayoutParagraphBox, LayoutTableBox } from './result';
@@ -43,17 +44,25 @@ export function stackCellBlocks(
 			continue;
 		}
 		const tableWidth = block.widthPx ?? width;
+		const profileWidth = nestedFrameBorderWidth(block);
+		const reserveBorders = profileWidth !== undefined;
+		if (!reserveBorders)
+			note(
+				'Nested table border occupancy is approximate for mixed widths, missing edges or non-solid borders; native evidence covers uniform single-line borders.',
+			);
+		const externalRight = profileWidth ?? 0;
+		const paintedWidth = tableWidth + externalRight;
 		const x =
 			block.alignment === 'center'
-				? Math.max(0, (width - tableWidth) / 2)
+				? Math.max(0, (width - paintedWidth) / 2)
 				: block.alignment === 'right'
-					? Math.max(0, width - tableWidth)
+					? Math.max(0, width - paintedWidth)
 					: (block.indentPx ?? 0);
 		const frame: LayoutTableBox = {
 			kind: 'table',
 			blockId: block.id,
 			xPx: x,
-			widthPx: tableWidth,
+			widthPx: paintedWidth,
 			yPx: y,
 			heightPx: 0,
 			rows: [],
@@ -64,7 +73,7 @@ export function stackCellBlocks(
 				!row.cells.some((nested) => cellParagraphs(nested).some((p) => starts.has(p.id)))
 			)
 				continue;
-			const layout = layoutRow(row, tableWidth, measurer, note, undefined, starts);
+			const layout = layoutRow(row, tableWidth, measurer, note, undefined, starts, reserveBorders);
 			frame.rows.push({
 				yPx: y - frame.yPx,
 				heightPx: layout.heightPx,
@@ -84,10 +93,21 @@ export function stackCellBlocks(
 							paragraph.widthPx ??
 							Math.max(1, geometry.widthPx - geometry.paddingLeftPx - geometry.paddingRightPx),
 						readOnly: true,
+						tableFrameInsets: {
+							top:
+								(paragraph.tableFrameInsets?.top ?? 0) +
+								(reserveBorders ? (geometry.borders?.top?.widthPx ?? 0) : 0),
+							bottom:
+								(paragraph.tableFrameInsets?.bottom ?? 0) +
+								(reserveBorders ? (geometry.borders?.bottom?.widthPx ?? 0) : 0),
+						},
 					});
 			});
 			y += layout.heightPx;
 		}
+		const bottomBorder = profileWidth ?? 0;
+		if (frame.rows.length) frame.rows.at(-1)!.heightPx += bottomBorder;
+		y += bottomBorder;
 		frame.heightPx = y - frame.yPx;
 		if (frame.rows.length) tables.push(frame);
 	}
