@@ -42,7 +42,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 		Array.from({ length: count }, (_v, i) => `<i><x v="${i}"/></i>`).join('') +
 		'<i t="grand"><x/></i>';
 	const header = grid.firstHeaderRow ?? (multiple && col >= 0 ? 1 : grid.firstDataRow - 1);
-	const rowIndices = [row, ...(rowsAxis ? [-2] : second >= 0 ? [second] : [])];
+	const rowIndices = [row, ...(second >= 0 ? [second] : []), ...(rowsAxis ? [-2] : [])];
 	let previous: number[] = [];
 	const rowItems =
 		grid.rowEntries

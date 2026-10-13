@@ -1,0 +1,141 @@
+{
+  "observedOn": "2026-10-13",
+  "excelFileVersion": "16.0.20430.20146",
+  "oracle": "powershell -NoProfile -File scripts/xlsx-pivot-nested-row-oracle.ps1",
+  "acceptance": "powershell -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+  "acceptanceCases": 140,
+  "newAcceptanceCases": 15,
+  "sourceFixture": "excel-pivot-values-rows-columns.xlsx",
+  "authoringFixture": "excel-pivot-row-values-rows-columns.xlsx",
+  "profiles": [
+    {
+      "profile": "compact-bottom-columns",
+      "rows": 29,
+      "columns": 4,
+      "nativeWorkbookSha256": "d63f34938f85ca28642be765433fba91e2eb531dcfce239e496ad74437ca7f7e",
+      "gridSha256": "1ea8e373132b736b358a5da7dd5371d218d61410af9b3cdddc5eab329d42d6c5"
+    },
+    {
+      "profile": "compact-bottom",
+      "rows": 28,
+      "columns": 2,
+      "nativeWorkbookSha256": "84e4bc8ae0e2e10ca84ced56b3610fbf0e0ddeaf8396387404d3b11b0d993cc5",
+      "gridSha256": "251eab9269fc44051f8b31ecb8476776261a0cd3bf75de9460cdd356d5c5d78d"
+    },
+    {
+      "profile": "compact-none-columns",
+      "rows": 23,
+      "columns": 4,
+      "nativeWorkbookSha256": "4224a13fcf2fc06b24af7a306e0d4969232b928b24e2d02527f765e827bf8ab5",
+      "gridSha256": "b5180e1399d0bc435acfa0d485fbd54055049f15e49a71c2b02a66e770aef49e"
+    },
+    {
+      "profile": "compact-none",
+      "rows": 22,
+      "columns": 2,
+      "nativeWorkbookSha256": "973487293a523259850e540fcab865d739e1e803a2b02bd1bc504a72708d2378",
+      "gridSha256": "2cf84cbd2824b8e9fea59306164390aae8aa063db7b16c08079dc5fdb6cfe814"
+    },
+    {
+      "profile": "compact-top-columns",
+      "rows": 29,
+      "columns": 4,
+      "nativeWorkbookSha256": "6ad80c279f0657f8661b15a9a0c0b52781fe2e4ca76078f99d88a798574f5bca",
+      "gridSha256": "1ea8e373132b736b358a5da7dd5371d218d61410af9b3cdddc5eab329d42d6c5"
+    },
+    {
+      "profile": "compact-top",
+      "rows": 28,
+      "columns": 2,
+      "nativeWorkbookSha256": "dd5723850f4aeced003add68d1f8647b58b378a41e4af685222954f00f835436",
+      "gridSha256": "251eab9269fc44051f8b31ecb8476776261a0cd3bf75de9460cdd356d5c5d78d"
+    },
+    {
+      "profile": "outline-bottom-columns",
+      "rows": 29,
+      "columns": 6,
+      "nativeWorkbookSha256": "efd13ab4cd4c3cc5cb8e98be10e8d37f0c2abeb8539d3f12d65ab9d94d9c1c44",
+      "gridSha256": "2fd9af12b4d1560bd0b8e02dfef41a203c8a31c686fe07d4c4e4a32f7ea580f1"
+    },
+    {
+      "profile": "outline-bottom",
+      "rows": 28,
+      "columns": 4,
+      "nativeWorkbookSha256": "8bc8e691646fec66c275ebdf0724d738662ba80003b0c69fbfbe9bae702cf27e",
+      "gridSha256": "241d48c9e130e5e125b6f540cd80c7004b1406aa4c6b9f879a7e3dd396f83fd9"
+    },
+    {
+      "profile": "outline-none-columns",
+      "rows": 23,
+      "columns": 6,
+      "nativeWorkbookSha256": "fb0b44162f26c1be46c2b39055dfe34d9bdff8e96110e3a969f568097052048c",
+      "gridSha256": "fc444281a45914bbddba67ebb4a653886582dedb0c7e0690d85a33a491d390da"
+    },
+    {
+      "profile": "outline-none",
+      "rows": 22,
+      "columns": 4,
+      "nativeWorkbookSha256": "e2c467baf1c593554ddbffa702718f828bc8795b011b092f9cf3913960db9b9e",
+      "gridSha256": "8ab836861093db312b17038c2f066ce9e09880bbdc5d1125ea60cb6877f49622"
+    },
+    {
+      "profile": "outline-top-columns",
+      "rows": 29,
+      "columns": 6,
+      "nativeWorkbookSha256": "2d94424a42bffcd9278178f5c70abbab231016cac4ae5c849aff7473d3dfc8f0",
+      "gridSha256": "2fd9af12b4d1560bd0b8e02dfef41a203c8a31c686fe07d4c4e4a32f7ea580f1"
+    },
+    {
+      "profile": "outline-top",
+      "rows": 28,
+      "columns": 4,
+      "nativeWorkbookSha256": "19761342c8d378bc446cb0183afca62de947a09abda664739f5393e3b3f15e18",
+      "gridSha256": "241d48c9e130e5e125b6f540cd80c7004b1406aa4c6b9f879a7e3dd396f83fd9"
+    },
+    {
+      "profile": "tabular-bottom-columns",
+      "rows": 23,
+      "columns": 6,
+      "nativeWorkbookSha256": "940f415f45a25083d1d526e1986b083784fa04eb915bba6971141d35f9e8267a",
+      "gridSha256": "df6b8be56e60009f9451b29724d96ad32cec02309c4044fa639e08acafec35f2"
+    },
+    {
+      "profile": "tabular-bottom",
+      "rows": 22,
+      "columns": 4,
+      "nativeWorkbookSha256": "6265efd443a731544f38d5a024d61814cd289d06af24914a0d716dcba0ad7111",
+      "gridSha256": "8fd79e0d615f532d3ba7eff91d65feaaf2b95ce4a40b7a30a09baee9d9565aad"
+    },
+    {
+      "profile": "tabular-none-columns",
+      "rows": 17,
+      "columns": 6,
+      "nativeWorkbookSha256": "330390f01e9407cb1583689efe372ab0b21654622a96b5e728a9a4bfed0a27c1",
+      "gridSha256": "105f1d8fd515ef0138e8c2ef636f12789122fbba2ed060ae92bda1cae14433ee"
+    },
+    {
+      "profile": "tabular-none",
+      "rows": 16,
+      "columns": 4,
+      "nativeWorkbookSha256": "f256e8339791ef8f8772e9e2bee3f0da2df99150f336ae438e81f3ed5c0dd30d",
+      "gridSha256": "2be0653f18d7e5eff0ad289cfebe5a0220790dbdd459efb2796dac0f6c7f260a"
+    },
+    {
+      "profile": "tabular-top-columns",
+      "rows": 23,
+      "columns": 6,
+      "nativeWorkbookSha256": "abd86bf2076b1f6647b8be46400cafa0af7a30b0cb9c4647240333741290509c",
+      "gridSha256": "df6b8be56e60009f9451b29724d96ad32cec02309c4044fa639e08acafec35f2"
+    },
+    {
+      "profile": "tabular-top",
+      "rows": 22,
+      "columns": 4,
+      "nativeWorkbookSha256": "64b0f269401abb6a5aab4d41a7a2aada6e2afb4fcdf68f3f16de9ffafeae4f99",
+      "gridSha256": "8fd79e0d615f532d3ba7eff91d65feaaf2b95ce4a40b7a30a09baee9d9565aad"
+    }
+  ],
+  "supported": "Tabular, two distinct real row fields followed by Values, optional one column field, bottom or disabled outer subtotals, repeated labels, 2 to 16 measures. Tabular top is rendered as bottom by native Excel.",
+  "preserved": "Compact/outline nested row Values, Values before/between real fields, grouped/cache-shared/slicer/filter profiles remain unsupported and preserved.",
+  "nativeXml": "rowFields [0,1,-2]; rowItems i is the measure index; repeated details use r=2. location firstHeaderRow=1, firstDataCol=3."
+}

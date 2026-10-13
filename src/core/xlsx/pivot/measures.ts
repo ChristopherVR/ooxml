@@ -90,17 +90,17 @@ export function pivotHeaders(
 ): CellValue[][] {
 	const measures = pivotMeasures(pivot);
 	if (pivot.valuesAxis === 'rows') {
-		const labels = pivot.layout === 'compact' ? ['Row Labels'] : [pivot.rowField, 'Values'];
+		const rowLabels = pivot.layout === 'compact' ? ['Row Labels'] : [...labels, 'Values'];
 		return pivot.columnField
 			? [
 					[
-						...labels.map(() => null),
+						...rowLabels.map(() => null),
 						pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField,
 						...columns.map(() => null),
 					],
-					[...labels, ...columns.map(label), 'Grand Total'],
+					[...rowLabels, ...columns.map(label), 'Grand Total'],
 				]
-			: [[...labels, null]];
+			: [[...rowLabels, null]];
 	}
 	if (!pivot.columnField) return [[...labels, ...measures.map((measure) => measure.caption)]];
 	if (measures.length === 1)

@@ -58,9 +58,9 @@ it('switches Values placement atomically and requires a supported profile', asyn
 	edit.refreshPivotTable(0, current().name, { layout: 'compact' });
 	expect(current().layout).toBe('compact');
 	edit.undo();
-	expect(() => edit.refreshPivotTable(0, current().name, { secondRowField: 'Region' })).toThrow(
-		'one row',
-	);
+	expect(() =>
+		edit.refreshPivotTable(0, current().name, { secondRowField: 'Region', layout: 'compact' }),
+	).toThrow('tabular');
 	expect(() => edit.refreshPivotTable(0, current().name, { additionalValues: [] })).toThrow(
 		'multiple',
 	);

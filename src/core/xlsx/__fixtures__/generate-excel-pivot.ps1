@@ -1,7 +1,7 @@
 param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [switch]$ShowValuesRow, [switch]$ValuesOnRows, [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
 # Requires desktop Excel. Generates a tabular PivotTable reference.
 $ErrorActionPreference = 'Stop'
-if ($ValuesOnRows -and (!$MultiValues -or $Hierarchy)) { throw 'Values-on-rows references require multiple measures, one real row field.' }
+if ($ValuesOnRows -and !$MultiValues) { throw 'Values-on-rows references require multiple measures.' }
 if ($ShowValuesRow -and ($MultiValues -or $Hierarchy -or $ColumnAxis)) { throw 'The visible Values reference uses a single measure and the default row/column fields.' }
 $out = Join-Path $PSScriptRoot 'excel-pivot.xlsx'
 if ($Hierarchy) {
@@ -45,7 +45,7 @@ try {
 		[void]$pivot.AddDataField($pivot.PivotFields('Quantity'), 'Count of Quantity', -4112)
 		[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Average of Amount', -4106)
 	}
-	if ($ValuesOnRows) { $pivot.DataPivotField.Orientation = 1; $pivot.DataPivotField.Position = 2 }
+	if ($ValuesOnRows) { $pivot.DataPivotField.Orientation = 1; $pivot.DataPivotField.Position = if ($Hierarchy) { 3 } else { 2 } }
 	if ($ShowValuesRow) { $pivot.ShowValuesRow = $true }
 	if ($Hierarchy) {
 		$pivot.PivotFields('Category').LayoutSubtotalLocation = if ($SubtotalPosition -eq 'top') { 1 } else { 2 }
