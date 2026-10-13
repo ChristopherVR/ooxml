@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import type { Workbook } from 'ooxml-core/xlsx';
 import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
 test('Formats paste copies conditional rules through the native clipboard and refreshes the grid', async ({
@@ -117,7 +118,33 @@ test('Validation paste copies a blank cell rule and enforces it without replacin
 				).workbook.sheets[0]!.rows.get(0)?.get(2)?.value,
 		);
 	await expect.poll(value).toBe(9);
+	// The unchanged value is already 9 before the asynchronous native clipboard read completes.
+	// Wait for the pasted rule itself before testing invalid entry against that rule.
+	const validation = () =>
+		editor(page).evaluate((node) =>
+			(node as unknown as { workbook: Workbook }).workbook.sheets[0]!.dataValidations.find((rule) =>
+				rule.ranges.some(
+					(range) =>
+						range.start.row <= 0 &&
+						range.end.row >= 0 &&
+						range.start.col <= 2 &&
+						range.end.col >= 2,
+				),
+			),
+		);
+	await expect.poll(validation).toMatchObject({
+		type: 'whole',
+		operator: 'between',
+		formula1: '1',
+		formula2: '5',
+		showErrorMessage: true,
+		errorStyle: 'stop',
+	});
 	await typeInActiveCell(page, '10');
+	await expect(editor(page).getByRole('alertdialog')).toBeVisible();
+	await expect(
+		editor(page).getByRole('alertdialog').getByRole('button', { name: 'Retry', exact: true }),
+	).toBeVisible();
 	await expect.poll(value).toBe(9);
 	await page.keyboard.press('Escape');
 	await goToCell(page, 'C1');
