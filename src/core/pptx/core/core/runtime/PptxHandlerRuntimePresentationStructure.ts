@@ -12,6 +12,10 @@ import { extractSectionMap as parseSectionMap } from '../../utils/presentation-s
 import { readHeaderFooterFromMaster } from './header-footer-parts';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartParsing';
 
+/** `xsd:int` bounds (XML Schema Part 2 §3.3.17). */
+const XSD_INT_MIN = -2_147_483_648;
+const XSD_INT_MAX = 2_147_483_647;
+
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected parseEditorAnimations(
 		slideXml: XmlObject | undefined,
@@ -243,12 +247,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/**
 	 * Extract `p:presentation/@firstSlideNum` (ECMA-376 §19.2.1.26, an
-	 * `xsd:int`). `undefined` when absent or not an integer, so the spec
-	 * default (`1`) is never forced onto the typed model.
+	 * `xsd:int`). `undefined` when absent, not an integer, or outside the
+	 * `xsd:int` range (-2147483648 to 2147483647, which also rejects digit
+	 * strings too long to parse), so the spec default (`1`) is never forced
+	 * onto the typed model.
 	 */
 	protected extractFirstSlideNumber(): number | undefined {
 		const pres = this.presentationData?.['p:presentation'] as XmlObject | undefined;
 		const lexical = String(pres?.['@_firstSlideNum'] ?? '').trim();
-		return /^[+-]?\d+$/.test(lexical) ? Number.parseInt(lexical, 10) : undefined;
+		if (!/^[+-]?\d+$/.test(lexical)) {
+			return undefined;
+		}
+		const value = Number(lexical);
+		return value >= XSD_INT_MIN && value <= XSD_INT_MAX ? value : undefined;
 	}
 }

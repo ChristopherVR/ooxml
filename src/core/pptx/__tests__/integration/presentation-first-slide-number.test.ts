@@ -52,6 +52,19 @@ describe('p:presentation/@firstSlideNum', () => {
 		expect(junk.data.firstSlideNumber).toBeUndefined();
 	});
 
+	it('accepts the xsd:int bounds and rejects values outside them', async () => {
+		const firstSlideNumber = async (lexical: string) =>
+			(await load(await deckWithPresentationAttributes(`firstSlideNum="${lexical}"`))).data
+				.firstSlideNumber;
+		expect(await firstSlideNumber('2147483647')).toBe(2_147_483_647);
+		expect(await firstSlideNumber('-2147483648')).toBe(-2_147_483_648);
+		expect(await firstSlideNumber('2147483648')).toBeUndefined();
+		expect(await firstSlideNumber('-2147483649')).toBeUndefined();
+		// Parses to Infinity / -Infinity.
+		expect(await firstSlideNumber('9'.repeat(400))).toBeUndefined();
+		expect(await firstSlideNumber(`-${'9'.repeat(400)}`)).toBeUndefined();
+	});
+
 	it('survives a save that rewrites presentation.xml and reloads as the same value', async () => {
 		const { handler, data } = await load(
 			await deckWithPresentationAttributes('firstSlideNum="45"'),
