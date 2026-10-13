@@ -170,6 +170,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				presentationProperties: loaded.presentationProperties,
 				viewProperties: loaded.viewProperties,
 				headerFooter: loaded.headerFooter,
+				firstSlideNumber: loaded.firstSlideNumber,
 				coreProperties: loaded.coreProperties,
 				appProperties: loaded.appProperties,
 				customProperties: loaded.customProperties,
