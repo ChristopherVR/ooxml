@@ -32,3 +32,10 @@ occupancy and report a layout warning until those profiles have native evidence.
 
 Browser CSS can snap thin border strokes to device pixels; these comparisons assert
 source geometry and text placement, not identical rasterization or glyph metrics.
+
+An unequal 20/18-line case records native parallel continuations: 16 lines per cell on
+page one, followed by four lines in the first cell and two in the second. Native row
+bands contain the longer story and the associated note starts with N0L00 on page one and continues with N0L01/N0L02 on page two. A final
+outer paragraph can mask the shared-layout last-box height defect in parsed OOXML;
+the direct split regression checks both paragraph orders, including margins and frame
+edges, independently of that trailing paragraph.

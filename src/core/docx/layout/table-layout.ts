@@ -1,3 +1,4 @@
+import { cellContentBottom } from './table-content';
 import { clipTableFrames } from './table-frames';
 import type { TextMeasurer } from './measure';
 import { layoutParagraph } from './paragraph-layout';
@@ -229,12 +230,7 @@ export function splitRowAtHeight(
 		heightPx: Math.max(
 			0,
 			...splits.map((split, index) =>
-				split.after.length
-					? split.after.at(-1)!.yPx +
-						split.after.at(-1)!.heightPx +
-						(split.after.at(-1)!.tableFrameInsets?.bottom ?? 0) +
-						(row.cellPadding?.[index]?.bottom ?? 0)
-					: 0,
+				cellContentBottom(split.after, row.cellPadding?.[index]?.bottom ?? 0),
 			),
 		),
 		cells: splits.map((split) => split.after),
@@ -254,12 +250,10 @@ export function splitRowAtHeight(
 			: {}),
 		geometry: row.geometry.map((geometry, index) => ({
 			...geometry,
-			contentHeightPx: splits[index]!.after.length
-				? splits[index]!.after.at(-1)!.yPx +
-					splits[index]!.after.at(-1)!.heightPx +
-					(splits[index]!.after.at(-1)!.tableFrameInsets?.bottom ?? 0) +
-					(row.cellPadding?.[index]?.bottom ?? 0)
-				: 0,
+			contentHeightPx: cellContentBottom(
+				splits[index]!.after,
+				row.cellPadding?.[index]?.bottom ?? 0,
+			),
 		})),
 		...(row.cellPadding ? { cellPadding: row.cellPadding } : {}),
 	};

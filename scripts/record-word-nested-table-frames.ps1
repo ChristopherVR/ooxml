@@ -1,9 +1,10 @@
-param([string]$OutputDirectory=(Join-Path $env:TEMP ('ooxml-word-nested-frames-'+[guid]::NewGuid().ToString('N'))))
+param([string]$OutputDirectory=(Join-Path $env:TEMP ('ooxml-word-nested-frames-'+[guid]::NewGuid().ToString('N'))),[string[]]$CaseNames)
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 New-Item -ItemType Directory -Path $OutputDirectory -Force|Out-Null
 $root=Split-Path $PSScriptRoot -Parent
-$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'},@{name='nested-frame-border-half';source='nested-table-reference';border='4'},@{name='nested-frame-border-two';source='nested-table-reference';border='16'},@{name='nested-frame-border-three-margin';source='nested-table-reference';border='24';margin='120'},@{name='nested-frame-margin';source='nested-table-reference';margin='120'})
+$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'},@{name='nested-frame-border-half';source='nested-table-reference';border='4'},@{name='nested-frame-border-two';source='nested-table-reference';border='16'},@{name='nested-frame-border-three-margin';source='nested-table-reference';border='24';margin='120'},@{name='nested-frame-margin';source='nested-table-reference';margin='120'},@{name='nested-frame-unequal-split';source='nested-split-late';unequal=$true})
+if($CaseNames){$cases=@($cases|Where-Object{$_.name-in$CaseNames})}
 $app=$null;$owned=$false;$records=@()
 try{
  $app=New-Object -ComObject Word.Application;$owned=$app.Documents.Count-eq0
@@ -46,6 +47,7 @@ try{
      }
     }
    }
+   if($case.unequal){$second=$inner.SelectSingleNode('w:tr/w:tc[2]/w:p',$ns);foreach($run in @($second.SelectNodes('w:r[w:t="T1R0C1L18" or w:t="T1R0C1L19"]',$ns))){[void]$second.RemoveChild($run)}}
    $rowIndex=0
    foreach($row in $inner.SelectNodes('w:tr',$ns)){
     $cellIndex=0

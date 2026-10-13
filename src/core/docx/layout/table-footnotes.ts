@@ -1,3 +1,4 @@
+import { cellContentBottom } from './table-content';
 import type { LayoutParagraph, LayoutTable } from './input';
 import type { LayoutFootnoteBox } from './result';
 import type { RowLayout } from './table-layout';
@@ -50,15 +51,7 @@ function prefix(row: RowLayout, cut: number, cellCuts?: readonly number[]): RowL
 		cells,
 		heightPx: Math.max(
 			0,
-			...cells.flatMap((cell, index) =>
-				cell.map(
-					(box) =>
-						box.yPx +
-						box.heightPx +
-						(box.tableFrameInsets?.bottom ?? 0) +
-						(row.cellPadding?.[index]?.bottom ?? 0),
-				),
-			),
+			...cells.map((cell, index) => cellContentBottom(cell, row.cellPadding?.[index]?.bottom ?? 0)),
 		),
 	};
 }
@@ -125,13 +118,7 @@ export class TableFootnotes {
 				refs.set(ref.note.id, { ...ref, bottom: this.height() + ref.bottom });
 		const referenceBottom = Math.max(0, ...[...refs.values()].map((ref) => ref.bottom));
 		const contentBottom =
-			this.height() +
-			Math.max(
-				0,
-				...row.cells.flatMap((cell) =>
-					cell.map((box) => box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0)),
-				),
-			);
+			this.height() + Math.max(0, ...row.cells.map((cell) => cellContentBottom(cell)));
 		const paddingBottom = Math.max(0, ...(row.cellPadding ?? []).map((padding) => padding.bottom));
 		this.hold(
 			refs,

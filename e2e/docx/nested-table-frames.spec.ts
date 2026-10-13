@@ -13,6 +13,7 @@ for (const name of [
 	'border-two',
 	'border-three-margin',
 	'margin',
+	'unequal-split',
 ])
 	test(`nested table frames ${name} survive save and reopen`, async ({ page }) => {
 		await page.goto('/?framework=vanilla');
@@ -39,7 +40,7 @@ for (const name of [
 		};
 		await print();
 		const frames = editor.locator('.dve-print-nested-table');
-		await expect(frames).toHaveCount(name === 'split' ? 2 : 1);
+		await expect(frames).toHaveCount(name.endsWith('split') ? 2 : 1);
 		const check = async () => {
 			const first = frames.first().locator('.dve-print-cell').first();
 			await expect(first).toHaveCSS('background-color', 'rgb(255, 255, 0)');
@@ -59,6 +60,20 @@ for (const name of [
 				1,
 			);
 			await expect(frames.first()).toHaveText('');
+			if (name === 'unequal-split') {
+				const continued = editor.locator('.dve-print-page').nth(1);
+				await expect(continued).toContainText('T1R0C0L19');
+				await expect(continued).toContainText('T1R0C1L17');
+				await expect(continued).not.toContainText('T1R0C1L18');
+				const long = continued
+					.locator('.dve-print-block[data-read-only="true"]')
+					.filter({ hasText: 'T1R0C0L19' });
+				const box = await long.boundingBox();
+				const cell = await continued.locator('.dve-print-cell').first().boundingBox();
+				expect(box!.y + box!.height).toBeLessThanOrEqual(cell!.y + cell!.height);
+				await expect(continued.locator('.dve-print-footnote')).toContainText('N0L02');
+			}
+
 			if (name.startsWith('align-')) {
 				const paragraph = editor
 					.locator('.dve-print-block[data-read-only="true"]')

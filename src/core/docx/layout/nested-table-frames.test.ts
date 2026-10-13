@@ -15,6 +15,7 @@ it.each([
 	'border-two',
 	'border-three-margin',
 	'margin',
+	'unequal-split',
 ])('preserves and projects native nested frames: %s', async (name) => {
 	const bytes = new Uint8Array(
 		readFileSync(
@@ -47,7 +48,7 @@ it.each([
 		}
 	}
 	if (name === 'centered') expect(frames[0]!.xPx).toBeCloseTo((19.5 * 4) / 3);
-	if (name === 'split')
+	if (name.endsWith('split'))
 		expect(
 			layout.pages.filter((page) =>
 				page.columns.some((column) =>
@@ -136,6 +137,7 @@ it.each([
 	'border-two',
 	'border-three-margin',
 	'margin',
+	'unequal-split',
 	'align-top',
 	'align-center',
 	'align-bottom',
@@ -231,4 +233,34 @@ it('matches native bordered continuation bands and reference-line pagination', a
 			row.heightPx + 0.001,
 		);
 	}
+});
+
+it('keeps unequal native nested continuations and their note inside the row band', async () => {
+	const loaded = await loadDocx(
+		new Uint8Array(
+			readFileSync(
+				new URL(
+					'../__fixtures__/nested-table-frames/nested-frame-unequal-split.docx',
+					import.meta.url,
+				),
+			),
+		),
+	);
+	const layout = layoutDocumentModel(loaded.model, {
+		widthOf: (text) => text.length * 5,
+		lineHeightOf: () => 16,
+	});
+	expect(layout.pages).toHaveLength(2);
+	const table = layout.pages[1]!.columns[0]!.blocks.find((block) => block.kind === 'table');
+	if (!table || table.kind !== 'table') throw new Error('Expected table');
+	const row = table.rows[0]!;
+	const paragraphs = row.cells[0]!.filter((box) => box.readOnly);
+	expect(paragraphs.map((box) => box.lines.length)).toEqual([4, 2]);
+	const bottom = Math.max(
+		...paragraphs.map((box) => box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0)),
+	);
+	expect(row.heightPx).toBeGreaterThanOrEqual(bottom);
+	expect(row.geometry![0]!.contentHeightPx).toBeGreaterThanOrEqual(bottom);
+	expect(layout.pages[0]!.footnotes).toHaveLength(1);
+	expect(layout.pages[1]!.footnotes).toHaveLength(1);
 });

@@ -71,3 +71,46 @@ it('reserves nested frame edges again on a physical row continuation', () => {
 	expect(split.after!.heightPx).toBe(40);
 	expect(split.after!.cellTables![0]![0]!.yPx).toBe(0);
 });
+
+it('measures the longest parallel nested continuation regardless of paragraph ordering', () => {
+	const lines = (count: number) =>
+		Array.from({ length: count }, (_, i) => ({
+			yPx: i * 16,
+			heightPx: 16,
+			firstToken: i,
+			lastToken: i + 1,
+			sourceStart: i,
+			sourceEnd: i + 1,
+			fragments: [],
+		}));
+	const long = {
+		kind: 'paragraph' as const,
+		blockId: 'long',
+		yPx: 4,
+		heightPx: 64,
+		tableFrameInsets: { top: 4, bottom: 4 },
+		lines: lines(4),
+	};
+	const short = { ...long, blockId: 'short', heightPx: 48, lines: lines(3) };
+	for (const cells of [
+		[long, short],
+		[short, long],
+	]) {
+		const row = {
+			heightPx: 72,
+			cells: [cells],
+			geometry: [
+				{ xPx: 0, widthPx: 160, paddingLeftPx: 0, paddingRightPx: 0, contentHeightPx: 72 },
+			],
+			cellPadding: [{ top: 2, bottom: 3 }],
+		};
+		const { after } = splitRowAtHeight(row, 27);
+		expect(after!.heightPx).toBe(61);
+		expect(after!.geometry[0]!.contentHeightPx).toBe(61);
+		expect(after!.cells[0]!.map((box) => [box.blockId, box.yPx, box.heightPx])).toContainEqual([
+			'long',
+			6,
+			48,
+		]);
+	}
+});

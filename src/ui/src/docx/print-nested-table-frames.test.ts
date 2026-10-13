@@ -16,6 +16,7 @@ it.each([
 	'border-two',
 	'border-three-margin',
 	'margin',
+	'unequal-split',
 ])('paints nested source frames without duplicating ink: %s', async (name) => {
 	const loaded = await loadDocx(
 		new Uint8Array(
@@ -48,5 +49,5 @@ it.each([
 	const text = element.textContent ?? '';
 	expect(text.match(/T1R0C0L00/g)).toHaveLength(1);
 	expect(text.match(/T1R0C1L00/g)).toHaveLength(1);
-	if (name === 'split') expect(frames).toHaveLength(2);
+	if (name.endsWith('split')) expect(frames).toHaveLength(2);
 });
