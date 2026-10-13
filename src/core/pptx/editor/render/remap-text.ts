@@ -7,6 +7,7 @@ import type { TextSegment, TextStyle } from 'ooxml-core/pptx';
 
 import { isBulletMarkerSegment } from './bullet-toggle';
 import { remapEmptyParagraph } from './remap-empty-paragraph';
+import { softBreakBetween } from './remap-line-breaks';
 import { alignParagraphSources, restoreParagraphMetadata } from './remap-paragraph-sources';
 import {
 	continueListParagraph,
@@ -89,14 +90,14 @@ export function remapTextToSegments(
 		return [{ text: newText, style: fallbackStyle }];
 	}
 
-	// Split original segments into paragraphs by paragraph-break markers. Keep
-	// each terminator because an authored empty paragraph has no content run, so
-	// core carries its paragraph metadata on the terminator itself.
+	// Split into editor lines at paragraph and soft (`a:br`) breaks, both "\n" in
+	// editor text. Keep each terminator: an empty paragraph's metadata lives on
+	// it, and `softBreakBetween` re-emits a soft one between lines of a paragraph.
 	const originalParagraphs: Array<{ segments: TextSegment[]; terminator?: TextSegment }> = [
 		{ segments: [] },
 	];
 	for (const seg of originalSegments) {
-		if (seg.text === '\n' || seg.isParagraphBreak) {
+		if (seg.text === '\n' || seg.isParagraphBreak || seg.isLineBreak) {
 			originalParagraphs[originalParagraphs.length - 1].terminator = seg;
 			originalParagraphs.push({ segments: [] });
 		} else {
@@ -244,7 +245,10 @@ export function remapTextToSegments(
 	let precedingParagraph: TextSegment[] | undefined;
 
 	for (let pi = 0; pi < newParagraphTexts.length; pi++) {
-		if (pi > 0) {
+		const softBreak = softBreakBetween(paragraphSources, pi, originalParagraphs);
+		if (softBreak) {
+			output.push(softBreak);
+		} else if (pi > 0) {
 			const precedingOrigPara = originalParagraphs[paragraphSources[pi - 1] ?? -1]?.segments ?? [];
 			const breakStyle = precedingOrigPara[0]?.style
 				? { ...precedingOrigPara[0].style }
