@@ -446,4 +446,25 @@ describe('ribbonUpdateTextStyle font family on a whole box', () => {
 			eastAsiaFont: 'New Serif',
 		});
 	});
+
+	it('carries an east Asian face that matched the inherited Latin face', () => {
+		const source = textElement();
+		Object.assign(source, {
+			textStyle: { fontFamily: 'Old Sans', eastAsiaFont: 'Old Sans' },
+			textSegments: [{ text: 'hello world', style: { eastAsiaFont: 'Old Sans', bold: true } }],
+		});
+		const harness = useHarness(source);
+
+		harness.actions.ribbonUpdateTextStyle({ fontFamily: 'New Serif' });
+
+		const updated = harness.element();
+		if (!hasTextProperties(updated)) {
+			throw new Error('expected a text element');
+		}
+		expect(updated.textSegments?.[0]?.style).toStrictEqual({
+			fontFamily: 'New Serif',
+			eastAsiaFont: 'New Serif',
+			bold: true,
+		});
+	});
 });
