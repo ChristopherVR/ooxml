@@ -48,7 +48,7 @@
 		"prosemirror-view": "^1.42.6",
 		"rollup": "^4.64.3",
 		"rollup-plugin-dts": "^6.5.1",
-		"solid-js": "^1.9.16",
+		"solid-js": "^1.9.17",
 		"svelte-check": "^4.7.6",
 		"tailwindcss": "^4.3.3",
 		"typescript": "~6.0.3",
