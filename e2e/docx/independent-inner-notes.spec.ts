@@ -78,19 +78,38 @@ for (const sample of evidence.cases)
 		const direct = editor
 			.locator('.dve-print-table:not(.dve-print-nested-table) > .dve-print-row > .dve-print-cell')
 			.nth(1);
-		await direct.click({ position: { x: 15, y: 8 } });
+		await direct
+			.locator('.dve-print-block')
+			.first()
+			.click({ position: { x: 15, y: 8 } });
+		// Pixel hit testing can land inside the marker on another platform.
+		await page.keyboard.press('Home');
 		await page.keyboard.type('Edit');
-		await expect(input).toContainText('Edit');
+		await expect(input).toContainText('EditT0R0C1L00');
+		await expect(editor.locator('.dve-print-pages').first()).toContainText('EditT0R0C1L00');
 		await page.keyboard.press('Control+z');
 		await expect(input).not.toContainText('Edit');
+		await expect(editor.locator('.dve-print-pages').first()).not.toContainText('Edit');
 		await check();
 		await page.keyboard.press('Control+y');
-		await expect(input).toContainText('Edit');
+		await expect(input).toContainText('EditT0R0C1L00');
+		await expect(editor.locator('.dve-print-pages').first()).toContainText('EditT0R0C1L00');
 		const bytes = await editor.evaluate(async (node) =>
 			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
 		);
+		const oldInput = await input.elementHandle();
+		const oldPrintPage = await editor.locator('.dve-print-page').first().elementHandle();
+		expect(oldInput).not.toBeNull();
+		expect(oldPrintPage).not.toBeNull();
 		await upload(Buffer.from(bytes));
-		await expect(input).toContainText('Edit');
+		// The previous editor already contains Edit: wait for the actual reopened document.
+		await expect.poll(() => oldInput!.evaluate((node) => node.isConnected)).toBe(false);
+		await oldInput!.dispose();
+		await expect(input).toContainText('EditT0R0C1L00');
 		await print();
+		// Reopening schedules a fresh print projection; identical text is not a generation signal.
+		await expect.poll(() => oldPrintPage!.evaluate((node) => node.isConnected)).toBe(false);
+		await oldPrintPage!.dispose();
+		await expect(editor.locator('.dve-print-pages').first()).toContainText('EditT0R0C1L00');
 		await check();
 	});
