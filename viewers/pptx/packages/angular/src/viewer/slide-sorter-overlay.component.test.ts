@@ -1,4 +1,5 @@
 import { DestroyRef, Injector, runInInjectionContext, signal } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { insertSlidePaste } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
@@ -7,7 +8,10 @@ import { SlideSorterOverlayComponent } from './slide-sorter-overlay.component';
 describe('sorter selection adapter', () => {
 	it('pastes a range after the destination and zooms without leaving the sorter', () => {
 		const injector = Injector.create({
-			providers: [{ provide: DestroyRef, useValue: { onDestroy: () => () => undefined } }],
+			providers: [
+				{ provide: DestroyRef, useValue: { onDestroy: () => () => undefined } },
+				{ provide: TranslateService, useValue: { instant: (key: string) => key } },
+			],
 		});
 		const component = runInInjectionContext(injector, () => new SlideSorterOverlayComponent());
 		Object.defineProperty(component, 'slides', {
