@@ -275,4 +275,12 @@ Animated picture frames paint above their image pixels while retaining the crop 
 
 Supported shape/text background targets now select and split their paint through shared UI descriptors used across all five bindings. Background fill/stroke animation leaves foreground text visible; independent whole-element opacity remains on its positioning box. Svelte presentation exit clears animation state. Ten browser cases verify background color, opacity ramps and stop/re-entry across all bindings; native PowerPoint preserves the independent effects and target XML on resave/reopen.
 
-This establishes supported behavior and package preservation, not native slideshow pixel equivalence. Committed p:set opacity, background-only chart/SmartArt targets and broader animation combinations remain gaps.
+This establishes supported behavior and package preservation, not native slideshow pixel equivalence. Background-only fixed p:set opacity, chart/SmartArt targets and broader animation combinations remain gaps.
+
+### PowerPoint whole-shape fixed opacity
+
+Finite, isolated whole-shape p:set style.opacity now uses shared core admission and shared UI playback/rendering across all five bindings. Plain decimal numeric strings and finite numeric fltVal values are accepted; scientific-notation strings are refused. Missing effect/behavior fill restores the authored opacity after the active interval. Explicit hold or freeze on both retains it; remove on either restores it. Delayed starts, seek, backward end-state projection and presentation exit/reset are covered.
+
+Native PowerPoint 16 video samples from synthetic whole-shape fixtures distinguish transparent fill and gray foreground text under hold from restored opaque fill and black text under remove. Package preservation and native rendered playback are separate checks. Ten browser cases pass across all five bindings; 35 focused parser/resolver/round-trip tests, shared opacity playback/style/timeline tests and per-binding regressions cover the supported slice. Reproduce with the generator and native video script in e2e/pptx/native.
+
+Background-only numeric sets remain refused because measured native composition differs from simple CSS paint/body multiplication. Text/subshape targets, hover, repeated/reversed/additive or mixed behavior trees, unresolved event/indefinite child timing and multiple or unsupported legacy image hints remain preserved but unsupported. This bounded slice does not establish general animation or slideshow pixel parity.
