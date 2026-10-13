@@ -210,9 +210,12 @@ Still different or refused:
   top of the second shape, this editor on its left).
 - An end on a connection point is approached like a free point; Visio takes the
   side the point sits on into account.
-- A curved connector is this editor's single cubic, not Visio's curve, and a
-  curve between ends less than a quarter inch apart in one direction is drawn
-  as the straight run.
+- Axis-aligned Dynamic connectors use native facing-side endpoints and five-control,
+  two-span corner curves. Seventeen native captures cover endpoints, and ten edited
+  drawings reopen in Visio. The six corner cases also match control points and knots;
+  text placement agrees within 0.0002 inches. A browser regression covers the two-span
+  drag preview, save and undo/redo. Rotated/fixed endpoints and other routes retain the
+  general single-cubic approximation; short unsupported curves can become straight runs.
 - A stencil connector whose master is not built like the Dynamic connector, a
   connector inside a group, and routing styles other than right-angle,
   straight and curved (tree, organization chart, flowchart directions) are

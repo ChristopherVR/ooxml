@@ -93,6 +93,54 @@ const saved = async (viewer: Locator) => {
 	return page.replace(/'/g, '"');
 };
 
+test('curved stencil connectors keep two-span previews, saved geometry and undo', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1600, height: 1000 });
+	await openDemo(page);
+	const viewer = page.locator('visio-viewer');
+	await page.locator('#file').setInputFiles({
+		name: 'corner-curve.vsdx',
+		mimeType: 'application/vnd.ms-visio.drawing',
+		buffer: await connectedDrawing(),
+	});
+	await expect(page.locator('#file-name')).toHaveText('corner-curve.vsdx');
+	await idle(viewer);
+	await viewer.evaluate((node) =>
+		(node as VisioViewerElement).selectShapes([{ id: '3', name: 'Dynamic connector' }]),
+	);
+	await viewer.getByRole('tab', { name: 'Design', exact: true }).click();
+	await viewer.locator('[data-menu="connectors"]').click();
+	await viewer.locator('[command="connectors-curved"]').click();
+	await idle(viewer);
+	const original = await saved(viewer);
+	const target = viewer.locator('svg.paper [data-shape-id="2"]');
+	const scale = await viewer
+		.locator('svg.paper')
+		.evaluate((node) => (node as SVGSVGElement).getScreenCTM()!.a);
+	const box = (await target.boundingBox())!;
+	const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	await page.mouse.move(start.x, start.y);
+	await page.mouse.down();
+	await page.mouse.move(start.x, start.y + scale * 3, { steps: 8 });
+	await expect(viewer.locator('.connector-preview')).toHaveAttribute('d', / C .* C /);
+	await page.mouse.up();
+	await idle(viewer);
+	const result = await saved(viewer);
+	const line = /<Shape ID="3".*?<\/Shape>/s.exec(result)![0];
+	expect(line).toContain('T="NURBSTo"');
+	const nurbs = /F="NURBS\(([^\"]+)\)"/.exec(line)![1]!.split(',');
+	expect(nurbs).toHaveLength(16);
+	expect(Number(nurbs[0])).toBeGreaterThan(0);
+	await viewer.evaluate((node) => (node as VisioViewerElement).undo());
+	expect(await saved(viewer)).toBe(original);
+	await viewer.evaluate((node) => (node as VisioViewerElement).redo());
+	expect(await saved(viewer)).toBe(result);
+	await viewer
+		.locator('svg.paper')
+		.screenshot({ path: test.info().outputPath('corner-curve.png') });
+});
+
 test('a shape glued to a stencil connector moves, and the connector follows as Visio saves it', async ({
 	page,
 }) => {
