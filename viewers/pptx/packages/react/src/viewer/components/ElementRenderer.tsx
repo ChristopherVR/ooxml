@@ -4,6 +4,7 @@ import {
 	getGroupChildParentFill,
 	getShapeEffectLayerPlacement,
 	getShapeEffectAnimationLayerStyle,
+	getBackgroundAnimationState,
 	isHollowShapeElement,
 	isMediaFullscreenActive,
 	resolveElementAriaAttributes,
@@ -112,7 +113,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 		// One shared verdict on what `a:spLocks` still allows, rather than five
 		// bindings each reading a different subset of the flags off the element.
 		const allow = resolveElementInteractivity(el);
-		const backgroundAnimationState = presentationElementStates?.get(`${el.id}::pptx-bg`);
+		const backgroundAnimationState = getBackgroundAnimationState(el, presentationElementStates);
 		const effectPlacement = getShapeEffectLayerPlacement(el);
 		const visualAnimationState = backgroundAnimationState ?? animationState;
 		const isTxt = isEditableTextElement(el) && allow.textEditable;

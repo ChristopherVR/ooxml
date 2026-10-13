@@ -6,6 +6,8 @@ import {
 	buildTextBody3DSceneStyle,
 	elementHitTargetStyle,
 	getOverflowSegments,
+	getBackgroundAnimationLayers,
+	getBackgroundAnimationState,
 	placeholderPromptDescriptor,
 	shouldRenderHitTarget,
 	strokeOutlineViewBox,
@@ -88,6 +90,16 @@ export class ElementRendererShapeComponent {
 	 * `null`. See `ElementRendererComponent.editingElementId`'s doc.
 	 */
 	readonly editingElementId = input<string | null>(null);
+	readonly backgroundState = computed(() =>
+		getBackgroundAnimationState(this.element(), this.subElementAnimStates()),
+	);
+	readonly backgroundLayers = computed(() =>
+		getBackgroundAnimationLayers(
+			this.element(),
+			this.shapeContainerStyle(),
+			this.backgroundState(),
+		),
+	);
 
 	/** This exact element is open in the element-level inline text editor right now. */
 	readonly isBeingInlineEdited = computed(() => this.element().id === this.editingElementId());

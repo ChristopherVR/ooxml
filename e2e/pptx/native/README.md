@@ -62,3 +62,7 @@ other chart formula consumers, date/multilevel categories and ChartEx sources
 require source editing. All source ranges are validated before any workbook
 bytes change; a failed reconciliation stops export instead of returning a
 cache-only result. These cases do not establish full chart or Office parity.
+
+## Shape background-only animation acceptance
+
+Build core and the viewer core compatibility entries first. Generate a synthetic PresentationML `p:spTgt/p:bg` fixture with `bun e2e/pptx/native/generate-background-animation.ts output.pptx`, then run `verify-background-animation.ps1 -InputPath output.pptx -OutputDirectory acceptance`. The harness refuses an existing PowerPoint process, opens only its owned fixture, checks its single native effect and foreground text, exports a static PNG, resaves and reopens it, and verifies every saved shape target remains background-only. Native PowerPoint may add a visibility-setting behavior, hence more than one `p:spTgt` for the one effect. This proves package acceptance and preservation, not native slideshow pixel equivalence. The five-binding browser spec separately checks hidden paint, visible foreground text, click playback and exit.

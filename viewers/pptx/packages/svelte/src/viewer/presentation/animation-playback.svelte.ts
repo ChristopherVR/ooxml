@@ -157,11 +157,11 @@ export class AnimationPlayback {
 	 * controller builds the timeline engine (expanding text-build animations) and
 	 * derives keyframes CSS, trigger-shape ids, and the tracked element id list.
 	 */
-	reset(options?: { completed?: boolean }): void {
+	reset(options?: { completed?: boolean; stopped?: boolean }): void {
 		this.clearTimers();
 		this.#seededCompleted = false;
 		const slide = this.#deps.getSlide();
-		if (!slide || !this.#animationsEnabled()) {
+		if (options?.stopped || !slide || !this.#animationsEnabled()) {
 			this.#controller = null;
 			this.#ctx.mediaTimeNodeElementIds = new Map();
 			this.#ctx.mediaBookmarkTimesMs = new Map();

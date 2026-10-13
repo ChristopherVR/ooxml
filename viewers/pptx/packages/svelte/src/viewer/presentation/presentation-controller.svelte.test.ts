@@ -32,6 +32,28 @@ class Deck {
 }
 
 describe('presentationController (native-timing)', () => {
+	it('clears declarative animation state on exit and rebuilds it on reentry', () => {
+		const slides = [
+			slide('s1', {
+				elements: [shapeElement('e1')],
+				nativeAnimations: [entranceAnim('e1')],
+			}),
+		];
+		const controller = new PresentationController({
+			getSlides: () => slides,
+			getCurrentIndex: () => 0,
+			navigate: vi.fn(),
+		});
+		controller.start();
+		expect(controller.elementStates.get('e1')?.visible).toBe(false);
+		controller.stop();
+		expect(controller.elementStates.size).toBe(0);
+		expect(controller.keyframesCss).toBe('');
+		controller.start();
+		expect(controller.elementStates.get('e1')?.visible).toBe(false);
+		controller.stop();
+	});
+
 	it('advance steps the current slide builds before navigating', () => {
 		const deck = new Deck();
 		deck.slides = [

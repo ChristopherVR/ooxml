@@ -43,6 +43,7 @@ export * from './stroke-paint';
 // A picture's own frame and outer shadow, and the box/surface split that lets
 // them extend past the clipped picture.
 export * from './picture-frame';
+export * from './background-animation-layers';
 // Pure per-sub-path paint decision (fill colour adjustment for lighten/darken/
 // none, and the stroke opt-out), shared by custom geometry AND multi-sub-path
 // preset shapes. The mechanism behind `subpath-fill-overlay`.

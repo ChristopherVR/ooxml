@@ -544,7 +544,7 @@ export class PresentationController {
 	/** Leaving presentation: clear timers, reset builds, drop any overlay. */
 	stop(): void {
 		this.playback.clearTimers();
-		this.playback.reset();
+		this.playback.reset({ stopped: true });
 		this.#transition = null;
 		this.#endOfShow = false;
 		this.#runProgramNotices = [];
