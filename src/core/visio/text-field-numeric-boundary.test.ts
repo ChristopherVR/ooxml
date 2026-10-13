@@ -15,7 +15,9 @@ it('matches native decimal ties, zeros, scientific small values and large decima
 		new URL('./__fixtures__/numeric-field-boundary-native.vsdx', import.meta.url),
 	);
 	const source = (await parseVsdx(bytes)).pages[0]!;
-	const edited = await editVsdx(bytes, [{ type: 'rename-page', pageId: source.id, name: 'Boundary' }]);
+	const edited = await editVsdx(bytes, [
+		{ type: 'rename-page', pageId: source.id, name: 'Boundary' },
+	]);
 	const page = (await parseVsdx(edited.bytes)).pages[0]!;
 	for (const item of evidence.cases)
 		expect(
