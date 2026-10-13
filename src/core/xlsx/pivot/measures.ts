@@ -57,6 +57,25 @@ export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][])
 		aggregate(records, pivot.fields.indexOf(measure.field), measure.aggregate),
 	);
 
+/** Allocation-free header dimensions, including one totals column for every measure. */
+export function pivotHeaderDimensions(
+	pivot: Pick<PivotTable, 'columnField' | 'additionalValues'>,
+	columnItems: number,
+	rowLabels: number,
+): { rows: number; width: number } {
+	const measures = 1 + (pivot.additionalValues?.length ?? 0);
+	return {
+		rows: pivot.columnField ? (measures > 1 ? 3 : 2) : 1,
+		width:
+			rowLabels +
+			(pivot.columnField
+				? measures === 1
+					? Math.max(1, columnItems) + 1
+					: (columnItems + 1) * measures
+				: measures),
+	};
+}
+
 /** Values follows the optional column field; native totals have one column per measure. */
 export function pivotHeaders(
 	pivot: PivotTable,
@@ -77,7 +96,7 @@ export function pivotHeaders(
 			],
 			[...labels, ...columns.map(label), 'Grand Total'],
 		];
-	const width = labels.length + (columns.length + 1) * measures.length;
+	const { width } = pivotHeaderDimensions(pivot, columns.length, labels.length);
 	const first: CellValue[] = Array(width).fill(null);
 	first[labels.length] = pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField;
 	if (pivot.layout !== 'compact') first[labels.length + 1] = 'Values';

@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import type { PivotTable } from '../model';
 import { pivotGrid } from './aggregate';
+import * as measures from './measures';
 
 for (const [suffix, layout] of [
 	['compact', 'compact'],
@@ -70,7 +71,13 @@ it.each([false, true])(
 			]),
 			...(hierarchy ? { secondRowField: 'Inner' } : {}),
 		};
-		expect(() => pivotGrid(pivot)).toThrow('too large');
+		const headers = vi.spyOn(measures, 'pivotHeaders');
+		try {
+			expect(() => pivotGrid(pivot)).toThrow('too large');
+			expect(headers).not.toHaveBeenCalled();
+		} finally {
+			headers.mockRestore();
+		}
 	},
 );
 

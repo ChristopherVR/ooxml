@@ -2,7 +2,7 @@ import type { CellValue, PivotTable } from '../model';
 import type { PivotGrid } from './aggregate';
 import { pivotItemLabel, pivotItems, pivotValueKey } from './data';
 
-import { pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
+import { pivotHeaderDimensions, pivotHeaders, pivotNumbers } from './measures';
 const label = pivotItemLabel;
 
 /** Two-field report layouts share the same indexed tuples and aggregate buckets. */
@@ -44,14 +44,15 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 				collect(buckets, JSON.stringify([...key, column]), record);
 		}
 	}
-	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
-	const values = pivotHeaders(pivot, columnItems, labels, label);
+	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowLabelColumns);
 	const rows =
 		details.size +
 		rowItems.length * (Number(layout !== 'tabular') + Number(bottom)) +
-		values.length +
+		dimensions.rows +
 		1;
-	if (rows * values[0]!.length > 1_000_000) throw new Error('The PivotTable result is too large.');
+	if (rows * dimensions.width > 1_000_000) throw new Error('The PivotTable result is too large.');
+	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
+	const values = pivotHeaders(pivot, columnItems, labels, label);
 	const firstDataRow = values.length;
 	const indents = values.map(() => 0);
 	const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];
@@ -78,7 +79,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 				[label(outer), ...(compact ? [] : [null])],
 				top
 					? numbers([key], groups.get(key) ?? [])
-					: Array((columnItems.length + 1) * pivotMeasures(pivot).length).fill(null),
+					: Array(dimensions.width - rowLabelColumns).fill(null),
 				{ indices: [outerIndex] },
 			);
 		let first = true;
