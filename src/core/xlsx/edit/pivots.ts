@@ -169,6 +169,7 @@ export function createPivotTable(
 		valueField: options.valueField,
 		aggregate,
 		valueCaption: pivotCaption(aggregate, options.valueField),
+		...(options.valuesAxis !== undefined ? { valuesAxis: options.valuesAxis } : {}),
 		...(options.additionalValues
 			? { additionalValues: normalizedPivotMeasures(options.additionalValues) }
 			: {}),
@@ -212,6 +213,7 @@ export function refreshPivotTable(
 	if (patch.repeatLabels !== undefined) next.repeatLabels = patch.repeatLabels;
 	if (patch.layout !== undefined) next.layout = patch.layout;
 	if (patch.subtotalPosition !== undefined) next.subtotalPosition = patch.subtotalPosition;
+	if (patch.valuesAxis !== undefined) next.valuesAxis = patch.valuesAxis;
 	if (patch.additionalValues !== undefined) {
 		const measures = normalizedPivotMeasures(patch.additionalValues);
 		if (measures.length) next.additionalValues = measures;

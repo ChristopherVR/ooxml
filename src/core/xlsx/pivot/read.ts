@@ -8,6 +8,7 @@ import { att, decodeEscapes } from '../read/xml-util';
 import { PIVOT_AGGREGATES } from './data';
 import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
+import { supportedPivotAxes } from './values-axis';
 
 function value(node: XmlElement): CellValue {
 	const v = att(node, 'v') ?? '';
@@ -43,6 +44,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const dataSheet = sourceNode && att(sourceNode, 'sheet');
 	const dataRange = sourceNode && parseRange(att(sourceNode, 'ref') ?? '');
 	const recordPart = source.targetOfType(cachePart, `${NS.r}/pivotCacheRecords`);
+	const rowsAxis = att(root, 'dataOnRows') === '1';
 	if (
 		!dataSheet ||
 		!dataRange ||
@@ -92,13 +94,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		rowFields.length > 2 ||
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
-		rowFields.some((field) => Number(att(field, 'x')) < 0) ||
-		(dataFields.length === 1
-			? colFields.length > 1
-			: colFields.length < 1 ||
-				colFields.length > 2 ||
-				Number(att(colFields.at(-1), 'x')) !== -2 ||
-				(colFields.length === 2 && Number(att(colFields[0], 'x')) < 0)) ||
+		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
 		first(root, 'pageFields', NS.x) ||
 		first(root, 'filters', NS.x) ||
 		root.getAttribute('rowGrandTotals') === '0' ||
@@ -118,8 +114,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	if (dataFields.length > 1 && att(definition, 'hideValuesRow') !== '1')
 		throw new Error('Visible Values header rows are preserved');
 	for (const [axis, count] of [
-		['rowItems', 1],
-		['colItems', dataFields.length],
+		['rowItems', rowsAxis ? dataFields.length : 1],
+		['colItems', rowsAxis ? 1 : dataFields.length],
 	] as const) {
 		for (const item of children(
 			first(root, axis, NS.x) ?? parseXml('<root/>').documentElement,
@@ -139,12 +135,14 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
 	const row = names[Number(att(rowFields[0], 'x'))];
-	const second = rowFields[1] && names[Number(att(rowFields[1], 'x'))];
+	const second = !rowsAxis && rowFields[1] ? names[Number(att(rowFields[1], 'x'))] : undefined;
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const outer = tableFields[Number(att(rowFields[0], 'x'))];
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
 	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
+	if (rowsAxis && layout !== 'tabular')
+		throw new Error('Values on rows currently require tabular layout');
 	if (
 		tableFields.some(
 			(field) =>
@@ -158,7 +156,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Mixed field layouts or custom compact indentation are preserved');
 	const subtotal = att(outer, 'defaultSubtotal') !== '0';
-	const repeat = rowFields.map((field) => {
+	const repeat = (rowsAxis ? rowFields.slice(0, 1) : rowFields).map((field) => {
 		const node = tableFields[Number(att(field, 'x'))];
 		const extension = first(first(node, 'extLst', NS.x), 'ext', NS.x);
 		return (
@@ -173,17 +171,24 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		);
 	});
 	if (repeat.some((entry) => entry !== repeat[0])) throw new Error('Mixed field label repetition');
-	const hasColumn = colFields.length > (dataFields.length > 1 ? 1 : 0);
+	const hasColumn = colFields.length > (dataFields.length > 1 && !rowsAxis ? 1 : 0);
 	const col = hasColumn ? names[Number(att(colFields[0], 'x'))] : undefined;
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
-	if (!row || !data || !location || (hasColumn && !col) || (rowFields.length === 2 && !second))
+	if (
+		!row ||
+		!data ||
+		!location ||
+		(hasColumn && !col) ||
+		(!rowsAxis && rowFields.length === 2 && !second)
+	)
 		throw new Error('Invalid pivot fields');
 	const pivot: PivotTable = {
 		name: att(root, 'name') ?? 'PivotTable',
 		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,
 		rowField: row,
 		layout,
+		...(rowsAxis ? { valuesAxis: 'rows' as const } : {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
 		...(second
 			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }

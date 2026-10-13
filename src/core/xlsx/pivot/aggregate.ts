@@ -2,7 +2,7 @@ import { rangeContains, type CellAddress } from '../address';
 import { type CellValue, type PivotTable, type Worksheet } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
 import { hierarchicalPivotGrid } from './hierarchy';
-import { pivotHeaderDimensions, pivotHeaders, pivotNumbers } from './measures';
+import { pivotHeaderDimensions, pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
 
 export interface PivotGrid {
 	values: CellValue[][];
@@ -12,7 +12,8 @@ export interface PivotGrid {
 	rowLabelColumns?: number;
 	indents?: number[];
 	secondRowItems?: CellValue[];
-	rowEntries?: { indices: number[]; type?: 'default' | 'grand' }[];
+	rowEntries?: { indices: number[]; type?: 'default' | 'grand'; measure?: number }[];
+	firstHeaderRow?: number;
 }
 
 /** Tabular output, including grand totals computed from source records (not averages of cells). */
@@ -21,8 +22,11 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
-	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, 1);
-	if ((rowItems.length + dimensions.rows + 1) * dimensions.width > 1_000_000)
+	const rowsAxis = pivot.valuesAxis === 'rows';
+	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowsAxis ? 2 : 1);
+	const dataRows =
+		(rowItems.length + 1) * (rowsAxis ? 1 + (pivot.additionalValues?.length ?? 0) : 1);
+	if ((dataRows + dimensions.rows) * dimensions.width > 1_000_000)
 		throw new Error('The PivotTable result is too large.');
 	const label = pivotItemLabel;
 	const values = pivotHeaders(
@@ -51,6 +55,55 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 		}
 	}
 	const firstDataRow = values.length;
+	if (rowsAxis) {
+		const measures = pivotMeasures(pivot);
+		const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];
+		const append = (caption: CellValue, bands: CellValue[][], index: number, grand = false) => {
+			measures.forEach((measure, m) => {
+				values.push([
+					grand ? `Total ${measure.caption}` : m === 0 || pivot.repeatLabels ? caption : null,
+					grand ? null : measure.caption,
+					...bands.map((band) => band[m] ?? null),
+				]);
+				rowEntries.push({
+					indices: grand ? [0] : [index, m],
+					measure: m,
+					...(grand ? { type: 'grand' as const } : {}),
+				});
+			});
+		};
+		rowItems.forEach((item, index) => {
+			const key = pivotValueKey(item);
+			append(
+				label(item),
+				[
+					...columnItems.map((col) =>
+						pivotNumbers(pivot, cells.get(JSON.stringify([key, pivotValueKey(col)])) ?? []),
+					),
+					pivotNumbers(pivot, groups.get(key) ?? []),
+				],
+				index,
+			);
+		});
+		append(
+			'Grand Total',
+			[
+				...columnItems.map((col) => pivotNumbers(pivot, columns.get(pivotValueKey(col)) ?? [])),
+				pivotNumbers(pivot, pivot.records),
+			],
+			0,
+			true,
+		);
+		return {
+			values,
+			rowItems,
+			columnItems,
+			firstDataRow,
+			rowLabelColumns: 2,
+			firstHeaderRow: 1,
+			rowEntries,
+		};
+	}
 	for (const row of rowItems) {
 		const records = groups.get(pivotValueKey(row)) ?? [];
 		values.push([

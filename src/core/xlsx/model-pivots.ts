@@ -14,7 +14,7 @@ export interface PivotValueFieldOptions {
 	caption?: string;
 }
 
-/** A worksheet-range pivot with up to two row fields and sixteen column measures. */
+/** A worksheet-range pivot with up to two row fields and sixteen measures. */
 export interface PivotTable {
 	name: string;
 	/** Qualified A1 source range, rewritten with the workbook's other references. */
@@ -31,8 +31,10 @@ export interface PivotTable {
 	valueField: string;
 	aggregate: PivotAggregate;
 	valueCaption: string;
-	/** Extra measures in column order. The existing value fields remain the primary measure. */
+	/** Extra measures in Values axis order. The existing value fields remain the primary measure. */
 	additionalValues?: PivotValueField[];
+	/** Values on rows currently require multiple measures, tabular form and one real row field. */
+	valuesAxis?: 'columns' | 'rows';
 	/** Cached source fields and records. Refresh replaces these together with the output cells. */
 	fields: string[];
 	records: CellValue[][];
@@ -55,6 +57,7 @@ export interface PivotTableOptions {
 	columnField?: string;
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
+	valuesAxis?: 'columns' | 'rows';
 	aggregate?: PivotAggregate;
 	name?: string;
 }
@@ -71,5 +74,6 @@ export type PivotTablePatch = Partial<
 		| 'columnField'
 		| 'valueField'
 		| 'aggregate'
+		| 'valuesAxis'
 	>
 > & { additionalValues?: PivotValueFieldOptions[] };

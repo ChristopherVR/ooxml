@@ -16,6 +16,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const col = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
 	const measures = pivotMeasures(pivot);
 	const multiple = measures.length > 1;
+	const rowsAxis = pivot.valuesAxis === 'rows';
 	const compact = pivot.layout === 'compact';
 	const outline = pivot.layout === 'compact' || pivot.layout === 'outline';
 	const top = (pivot.subtotalPosition ?? (outline ? 'top' : 'bottom')) === 'top';
@@ -40,8 +41,8 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const items = (count: number) =>
 		Array.from({ length: count }, (_v, i) => `<i><x v="${i}"/></i>`).join('') +
 		'<i t="grand"><x/></i>';
-	const header = multiple && col >= 0 ? 1 : grid.firstDataRow - 1;
-	const rowIndices = [row, ...(second >= 0 ? [second] : [])];
+	const header = grid.firstHeaderRow ?? (multiple && col >= 0 ? 1 : grid.firstDataRow - 1);
+	const rowIndices = [row, ...(rowsAxis ? [-2] : second >= 0 ? [second] : [])];
 	let previous: number[] = [];
 	const rowItems =
 		grid.rowEntries
@@ -51,18 +52,21 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 					while (prefix < entry.indices.length - 1 && entry.indices[prefix] === previous[prefix])
 						prefix++;
 				previous = entry.type ? [] : entry.indices;
-				return `<i${attrs({ t: entry.type, r: prefix || undefined })}>${entry.indices
+				return `<i${attrs({ t: entry.type, r: prefix || undefined, i: entry.measure || undefined })}>${entry.indices
 					.slice(prefix)
 					.map((index) => `<x${attrs({ v: index || undefined })}/>`)
 					.join('')}</i>`;
 			})
 			.join('') ?? items(grid.rowItems.length);
 	let body = `<location${attrs({ ref: formatRange(pivot.location), firstHeaderRow: header, firstDataRow: grid.firstDataRow, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
-	if (multiple)
+	if (multiple && !rowsAxis)
 		body += `<colFields count="${col >= 0 ? 2 : 1}">${col >= 0 ? `<field x="${col}"/>` : ''}<field x="-2"/></colFields>${pivotValueAxisItems(measures.length, col >= 0 ? grid.columnItems.length : undefined)}`;
 	else if (col >= 0)
 		body += `<colFields count="1"><field x="${col}"/></colFields><colItems count="${grid.columnItems.length + 1}">${items(grid.columnItems.length)}</colItems>`;
-	else body += '<colItems count="1"><i><x/></i></colItems>';
+	else
+		body += rowsAxis
+			? '<colItems count="1"><i/></colItems>'
+			: '<colItems count="1"><i><x/></i></colItems>';
 	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: pivot.fields.indexOf(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0 })}/>`).join('')}</dataFields>`;
 	const doc = parseXml(
 		pivot.sourceXml ??
@@ -71,6 +75,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const root = doc.documentElement;
 	root.setAttribute('name', pivot.name);
 	root.setAttribute('cacheId', String(cacheId));
+	root.setAttribute('dataOnRows', rowsAxis ? '1' : '0');
 	root.setAttribute('compact', compact ? '1' : '0');
 	root.setAttribute('compactData', compact ? '1' : '0');
 	root.setAttribute('outline', outline ? '1' : '0');

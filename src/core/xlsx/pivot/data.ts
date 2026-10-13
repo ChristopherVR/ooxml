@@ -98,6 +98,7 @@ export function validatePivotFields(
 		| 'valueCaption'
 		| 'additionalValues'
 		| 'sourceXml'
+		| 'valuesAxis'
 	>,
 ): void {
 	const used = [
@@ -107,6 +108,16 @@ export function validatePivotFields(
 		pivot.valueField,
 	];
 	const extras = pivot.additionalValues ?? [];
+	if (pivot.valuesAxis !== undefined && !['columns', 'rows'].includes(pivot.valuesAxis))
+		throw new Error('Choose a valid Values axis.');
+	if (
+		pivot.valuesAxis === 'rows' &&
+		(!Array.isArray(extras) ||
+			!extras.length ||
+			pivot.secondRowField ||
+			(pivot.layout !== undefined && pivot.layout !== 'tabular'))
+	)
+		throw new Error('Values on rows require multiple measures, one row field and tabular layout.');
 	if (
 		extras.length > 0 &&
 		pivot.sourceXml &&

@@ -1,6 +1,7 @@
-param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [switch]$ShowValuesRow, [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
+param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [switch]$ShowValuesRow, [switch]$ValuesOnRows, [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
 # Requires desktop Excel. Generates a tabular PivotTable reference.
 $ErrorActionPreference = 'Stop'
+if ($ValuesOnRows -and (!$MultiValues -or $Hierarchy -or $Layout -ne 'tabular')) { throw 'Values-on-rows references require multiple measures, one real row field and tabular layout.' }
 if ($ShowValuesRow -and ($MultiValues -or $Hierarchy -or $ColumnAxis)) { throw 'The visible Values reference uses a single measure and the default row/column fields.' }
 $out = Join-Path $PSScriptRoot 'excel-pivot.xlsx'
 if ($Hierarchy) {
@@ -10,7 +11,7 @@ if ($Hierarchy) {
 }
 $excel = New-Object -ComObject Excel.Application
 if ($MultiValues) {
-	$prefix = if ($Layout -eq 'tabular') { 'excel-pivot-values' } else { 'excel-pivot-values-'+$Layout }
+	$prefix = if ($ValuesOnRows) { 'excel-pivot-row-values' } elseif ($Layout -eq 'tabular') { 'excel-pivot-values' } else { 'excel-pivot-values-'+$Layout }
 	$rowsSuffix = if ($Hierarchy) { '-rows'+$(if($Layout -ne 'tabular'){'-'+$SubtotalPosition}else{''}) } else { '' }
 	$optionsSuffix = if($NoSubtotals){'-no-subtotals'}elseif($RepeatLabels){'-repeat'}else{''}
 	$out = Join-Path $PSScriptRoot ($prefix+$rowsSuffix+$(if($ColumnAxis){'-columns'}else{''})+$optionsSuffix+'.xlsx')
@@ -44,14 +45,15 @@ try {
 		[void]$pivot.AddDataField($pivot.PivotFields('Quantity'), 'Count of Quantity', -4112)
 		[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Average of Amount', -4106)
 	}
+	if ($ValuesOnRows) { $pivot.DataPivotField.Orientation = 1; $pivot.DataPivotField.Position = 2 }
 	if ($ShowValuesRow) { $pivot.ShowValuesRow = $true }
 	if ($Hierarchy) {
 		$pivot.PivotFields('Category').LayoutSubtotalLocation = if ($SubtotalPosition -eq 'top') { 1 } else { 2 }
 		if ($NoSubtotals) {
 			$pivot.PivotFields('Category').Subtotals = @($false,$false,$false,$false,$false,$false,$false,$false,$false,$false,$false,$false)
 		}
-		if ($RepeatLabels) { $pivot.RepeatAllLabels(2) }
 	}
+	if ($RepeatLabels) { $pivot.RepeatAllLabels(2) }
 	$wb.SaveAs($out, 51)
 	$wb.Close($false)
 } finally {

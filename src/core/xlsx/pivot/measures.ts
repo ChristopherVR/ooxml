@@ -59,11 +59,16 @@ export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][])
 
 /** Allocation-free header dimensions, including one totals column for every measure. */
 export function pivotHeaderDimensions(
-	pivot: Pick<PivotTable, 'columnField' | 'additionalValues'>,
+	pivot: Pick<PivotTable, 'columnField' | 'additionalValues' | 'valuesAxis'>,
 	columnItems: number,
 	rowLabels: number,
 ): { rows: number; width: number } {
 	const measures = 1 + (pivot.additionalValues?.length ?? 0);
+	if (pivot.valuesAxis === 'rows')
+		return {
+			rows: pivot.columnField ? 2 : 1,
+			width: rowLabels + (pivot.columnField ? columnItems + 1 : 1),
+		};
 	return {
 		rows: pivot.columnField ? (measures > 1 ? 3 : 2) : 1,
 		width:
@@ -84,6 +89,13 @@ export function pivotHeaders(
 	label: (value: CellValue) => CellValue,
 ): CellValue[][] {
 	const measures = pivotMeasures(pivot);
+	if (pivot.valuesAxis === 'rows')
+		return pivot.columnField
+			? [
+					[null, null, pivot.columnField, ...columns.map(() => null)],
+					[pivot.rowField, 'Values', ...columns.map(label), 'Grand Total'],
+				]
+			: [[pivot.rowField, 'Values', null]];
 	if (!pivot.columnField) return [[...labels, ...measures.map((measure) => measure.caption)]];
 	if (measures.length === 1)
 		return [
