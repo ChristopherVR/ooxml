@@ -148,7 +148,7 @@ describe('element styles (shared render helpers)', () => {
 			text: 'hi',
 			textStyle: { textWrap: 'none' },
 		} as PptxElement);
-		expect(noWrap.whiteSpace).toBe('nowrap');
+		expect(noWrap.whiteSpace).toBe('pre');
 	});
 
 	it('never shrinks the font for spAutoFit, however much text overflows', () => {
