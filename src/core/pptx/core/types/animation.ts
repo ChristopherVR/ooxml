@@ -525,6 +525,8 @@ export interface PptxNativeAnimation {
 	 * because it changes write semantics for subsequent timing nodes.
 	 */
 	cTnAttributes?: Record<string, unknown>;
+	/** Parent timing cannot be reduced to the bounded fixed-opacity interval. */
+	unsupportedOpacitySetTiming?: boolean;
 	/**
 	 * Whether the OOXML `p:cTn/@afterEffect` flag is set. Indicates this node
 	 * runs after the parent effect's main body has completed; affects how

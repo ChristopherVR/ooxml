@@ -17,6 +17,14 @@ const holds = (fill: string | undefined) => fill === 'hold' || fill === 'freeze'
  * Repeated, additive, reversed and mixed behavior trees remain unsupported here.
  */
 export function resolveOpacitySet(anim: PptxNativeAnimation): PptxOpacitySet | undefined {
+	if (
+		anim.unsupportedOpacitySetTiming ||
+		anim.endConditions?.length ||
+		anim.rawEndCondLst !== undefined ||
+		anim.cTnAttributes?.['@_tmFilter'] !== undefined ||
+		anim.cTnAttributes?.['@_endSync'] !== undefined
+	)
+		return undefined;
 	if (anim.afterAnimationAction !== undefined) return undefined;
 	if (
 		anim.target?.type === 'shape' &&
