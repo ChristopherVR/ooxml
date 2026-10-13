@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { openDemo } from './demo-page';
 
-for (const name of ['field-iso-date-native']) {
+for (const name of ['field-iso-date-native', 'field-iso-date204-native']) {
 	const native = new URL(`../../src/core/visio/__fixtures__/${name}.vsdx`, import.meta.url);
 	const evidence = JSON.parse(
 		readFileSync(
