@@ -112,12 +112,9 @@ export function validatePivotFields(
 		throw new Error('Choose a valid Values axis.');
 	if (
 		pivot.valuesAxis === 'rows' &&
-		(!Array.isArray(extras) ||
-			!extras.length ||
-			pivot.secondRowField ||
-			(pivot.layout !== undefined && pivot.layout !== 'tabular'))
+		(!Array.isArray(extras) || !extras.length || pivot.secondRowField)
 	)
-		throw new Error('Values on rows require multiple measures, one row field and tabular layout.');
+		throw new Error('Values on rows require multiple measures and one row field.');
 	if (
 		extras.length > 0 &&
 		pivot.sourceXml &&

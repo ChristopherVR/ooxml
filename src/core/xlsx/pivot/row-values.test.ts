@@ -55,7 +55,9 @@ it('switches Values placement atomically and requires a supported profile', asyn
 	);
 	const edit = createEditSession(wb);
 	const current = () => wb.sheets[0]!.pivotTables![0]!;
-	expect(() => edit.refreshPivotTable(0, current().name, { layout: 'compact' })).toThrow('tabular');
+	edit.refreshPivotTable(0, current().name, { layout: 'compact' });
+	expect(current().layout).toBe('compact');
+	edit.undo();
 	expect(() => edit.refreshPivotTable(0, current().name, { secondRowField: 'Region' })).toThrow(
 		'one row',
 	);

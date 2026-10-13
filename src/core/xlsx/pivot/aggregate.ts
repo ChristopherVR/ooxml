@@ -16,16 +16,19 @@ export interface PivotGrid {
 	firstHeaderRow?: number;
 }
 
-/** Tabular output, including grand totals computed from source records (not averages of cells). */
+/** Pivot output, including grand totals computed from source records (not averages of cells). */
 export function pivotGrid(pivot: PivotTable): PivotGrid {
 	validatePivotFields(pivot);
 	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
 	const rowsAxis = pivot.valuesAxis === 'rows';
-	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowsAxis ? 2 : 1);
+	const compact = pivot.layout === 'compact';
+	const headings = rowsAxis && pivot.layout !== undefined && pivot.layout !== 'tabular';
+	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowsAxis && !compact ? 2 : 1);
 	const dataRows =
-		(rowItems.length + 1) * (rowsAxis ? 1 + (pivot.additionalValues?.length ?? 0) : 1);
+		(rowItems.length + 1) * (rowsAxis ? 1 + (pivot.additionalValues?.length ?? 0) : 1) +
+		(headings ? rowItems.length : 0);
 	if ((dataRows + dimensions.rows) * dimensions.width > 1_000_000)
 		throw new Error('The PivotTable result is too large.');
 	const label = pivotItemLabel;
@@ -58,13 +61,23 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 	if (rowsAxis) {
 		const measures = pivotMeasures(pivot);
 		const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];
+		const indents = values.map(() => 0);
 		const append = (caption: CellValue, bands: CellValue[][], index: number, grand = false) => {
 			measures.forEach((measure, m) => {
 				values.push([
-					grand ? `Total ${measure.caption}` : m === 0 || pivot.repeatLabels ? caption : null,
-					grand ? null : measure.caption,
+					...(compact
+						? [grand ? `Total ${measure.caption}` : measure.caption]
+						: [
+								grand
+									? `Total ${measure.caption}`
+									: pivot.repeatLabels || (!headings && m === 0)
+										? caption
+										: null,
+								grand ? null : measure.caption,
+							]),
 					...bands.map((band) => band[m] ?? null),
 				]);
+				indents.push(compact && !grand ? 1 : 0);
 				rowEntries.push({
 					indices: grand ? [0] : [index, m],
 					measure: m,
@@ -74,6 +87,11 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 		};
 		rowItems.forEach((item, index) => {
 			const key = pivotValueKey(item);
+			if (headings) {
+				values.push([label(item), ...Array<CellValue>(dimensions.width - 1).fill(null)]);
+				rowEntries.push({ indices: [index] });
+				indents.push(0);
+			}
 			append(
 				label(item),
 				[
@@ -99,7 +117,8 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 			rowItems,
 			columnItems,
 			firstDataRow,
-			rowLabelColumns: 2,
+			rowLabelColumns: compact ? 1 : 2,
+			indents,
 			firstHeaderRow: 1,
 			rowEntries,
 		};

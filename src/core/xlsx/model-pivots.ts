@@ -33,7 +33,7 @@ export interface PivotTable {
 	valueCaption: string;
 	/** Extra measures in Values axis order. The existing value fields remain the primary measure. */
 	additionalValues?: PivotValueField[];
-	/** Values on rows currently require multiple measures, tabular form and one real row field. */
+	/** Values on rows require multiple measures and one real row field, with Values placed last. */
 	valuesAxis?: 'columns' | 'rows';
 	/** Cached source fields and records. Refresh replaces these together with the output cells. */
 	fields: string[];
