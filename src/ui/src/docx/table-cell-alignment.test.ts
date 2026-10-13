@@ -36,6 +36,8 @@ function setup(multiple = false, imported: TableCell['verticalAlign'] = 'bottom'
 		if (node.type.name === 'paragraph') positions.set(String(node.attrs.id), pos + 1);
 	});
 	const view = new EditorView(document.body.appendChild(document.createElement('div')), {
+		// JSDOM has no range geometry; this test verifies alignment and history.
+		handleScrollToSelection: () => true,
 		state: EditorState.create({
 			doc,
 			selection: TextSelection.create(
