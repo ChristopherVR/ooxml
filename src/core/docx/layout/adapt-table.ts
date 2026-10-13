@@ -68,6 +68,7 @@ function rowLayout(
 ): Partial<LayoutTableRow> {
 	if (!props) return {};
 	return {
+		...(props.heightTwips !== undefined ? { heightSpecified: true } : {}),
 		...(props.heightTwips
 			? { heightPx: twipsToPx(props.heightTwips), heightRule: props.heightRule ?? 'atLeast' }
 			: {}),
@@ -148,6 +149,8 @@ export function adaptTable(
 				const fill = cssHex(visuals.shadingFill);
 				return {
 					paragraphs: cell.paragraphs.map(adaptParagraph),
+					...(cell.gridSpan !== undefined ? { gridSpan: cell.gridSpan } : {}),
+					...(cell.verticalMerge ? { verticalMerge: cell.verticalMerge } : {}),
 					...(cell.sourceBlocks
 						? {
 								blocks: cellSourceBlocks(cell).map((block) =>

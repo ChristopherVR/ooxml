@@ -1,4 +1,5 @@
 import { reflowNestedFragments } from './nested-fragment-edges';
+import { tableParagraphKeeps } from './table-paragraph-keeps';
 import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import { layoutBorderedRow, TableFragmentBorders } from './table-border-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
@@ -31,6 +32,11 @@ export function placeTable(
 	const headerRows = table.rows.slice(0, firstBodyRow < 0 ? table.rows.length : firstBodyRow);
 	// Continuation rows retain their source cells even when their height constraint is reset.
 	const nativeFragments = new Map(table.rows.map((row) => [row, reflowNestedFragments(row)]));
+	const paragraphKeeps = tableParagraphKeeps(table);
+	const hasParagraphKeeps = table.rows.some((row) =>
+		row.cells.some((cell) => cellParagraphs(cell).some((paragraph) => paragraph.keepLines)),
+	);
+	let keepWarning = false;
 
 	// Table indent, or alignment of the grid within the column.
 	const xPosition = () => {
@@ -132,6 +138,29 @@ export function placeTable(
 		let remainingRow: RowLayout | null = initial;
 		while (remainingRow) {
 			fragmentHeight += fragmentBorders.remove(fragmentRows.at(-1));
+			const keeps =
+				paragraphKeeps &&
+				cursor.page.columns.length === 1 &&
+				cursor.column.startYPx === undefined &&
+				Math.abs(cursor.remainingHeightPx() - (cursor.columnHeightPx - cursor.usedColumnHeightPx)) <
+					1e-6
+					? paragraphKeeps
+					: undefined;
+			if (hasParagraphKeeps && !keeps && !keepWarning) {
+				note(
+					'Table-cell keep-lines pagination remains approximate outside the measured ordinary automatic two-cell, top-aligned, single-column, note-free row with direct exact-spaced paragraphs, zero paragraph spacing and widow control off.',
+				);
+				keepWarning = true;
+			}
+			if (
+				keeps &&
+				remainingRow === initial &&
+				!cursor.atColumnTop &&
+				keeps.startupMinimum(remainingRow) > cursor.remainingHeightPx() - fragmentHeight + 1e-6
+			) {
+				startNewFragment();
+				continue;
+			}
 			const minimum = cantSplit
 				? Math.min(remainingRow.heightPx, cursor.columnHeightPx)
 				: Math.min(
@@ -168,7 +197,7 @@ export function placeTable(
 					continue;
 				}
 			}
-			if (footnotes) {
+			if (footnotes && !keeps) {
 				const selected = footnotes.choose(remainingRow, cantSplit);
 				if (selected) {
 					if (selected.layout === remainingRow) {
@@ -247,7 +276,17 @@ export function placeTable(
 				remainingRow = null;
 				continue;
 			}
-			const { before, after } = splitRowAtHeight(remainingRow, Math.max(0, remaining));
+			const paragraphCuts = keeps?.cuts(
+				remainingRow,
+				remaining,
+				cursor.atColumnTop && fragmentRows.length === 0,
+			);
+			const { before, after } = splitRowAtHeight(
+				remainingRow,
+				Math.max(0, remaining),
+				undefined,
+				paragraphCuts,
+			);
 			if (
 				!before.cells.some((cell) => cell.length) &&
 				cursor.atColumnTop &&
@@ -264,7 +303,8 @@ export function placeTable(
 			if (before.cells.some((cell) => cell.length)) fragmentRows.push(toRowBox(before, false));
 			startNewFragment();
 			remainingRow =
-				after && (previousWidth !== cursor.columnWidthPx || nativeFragments.get(row))
+				after &&
+				(paragraphCuts || previousWidth !== cursor.columnWidthPx || nativeFragments.get(row))
 					? layoutRow(
 							{ ...row, heightPx: 0, heightRule: 'atLeast' },
 							cursor.columnWidthPx,

@@ -159,6 +159,9 @@ export interface LayoutCellPadding {
 
 export interface LayoutTableCell {
 	paragraphs: LayoutParagraph[];
+	/** Source merge provenance, retained for bounded paragraph-keeping admission. */
+	gridSpan?: number;
+	verticalMerge?: 'restart' | 'continue';
 	/** Source child order including read-only nested table stories. */
 	blocks?: LayoutBlock[];
 	/** Column width in CSS pixels; undefined cells share the row's remaining width evenly. */
@@ -175,6 +178,8 @@ export interface LayoutTableCell {
 
 export interface LayoutTableRow {
 	cells: LayoutTableCell[];
+	/** Source height provenance, including zero heights not retained by the existing box adapter. */
+	heightSpecified?: boolean;
 	/** `w:trPr/w:cantSplit`: this row must stay on one page. */
 	cantSplit?: boolean;
 	/** `w:trHeight`: a minimum (`atLeast`) or fixed (`exact`) row height. */
