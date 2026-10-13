@@ -211,9 +211,9 @@ open, render, edit, save and reopen. No reference implementation was copied.
 Recommended next batches:
 
 1. Expand native Office acceptance corpora for the most-used document workflows.
-2. Word per-column notes and page-story editing, plus continued editable pagination acceptance.
-3. PowerPoint native rendering comparisons and system/cross-deck clipboard preservation.
-4. Excel advanced pivot layouts, sparkline date axes, and remaining print formatting/drawing fidelity.
+2. Word nested and vertically merged table pagination, page-story editing and continuous sections with notes.
+3. PowerPoint native rendering comparisons, chart series/category editing and broader clipboard preservation.
+4. Excel compact/outline and multi-measure pivot layouts, plus remaining print formatting/drawing fidelity.
 5. Visio geometry/text comparisons and curved connectors, followed by remaining data graphics controls.
 
 Microsoft's [page jump style enum](https://learn.microsoft.com/en-us/office/client-developer/visio/linejumpstyle-cell-page-layout-section),
@@ -233,4 +233,6 @@ PowerPoint chart titles are searchable across all five bindings. Simple rich tit
 
 Visio curved walking glue now matches the overlap midpoint of facing, axis-aligned sides, including unequal target sizes and reversed directions. Seventeen native captures establish the routing boundary; four edited drawings reopen and save successfully in Visio with matching endpoints. Rotated targets, obstacles and corner-turning curves retain the existing path: native corner curves use multiple NURBS spans, which the current single-cubic authoring approximation does not reproduce. Reproduce with `scripts/record-visio-curved-route.ps1`, the `VISIO_NATIVE_CURVE_DIR` regression and `-VerifyCore` acceptance.
 
-Body-table footnote references now reserve note space during row splitting, preserve clipped logical references and avoid duplicating stories for repeated headers. Twenty-one native cases and three edited native reopen/PDF checks cover modern and legacy columns, long notes, late markers, row heights and padding. Core round-trip and browser editing tests cover the same paths. Nested cells, vertically merged cells, partially split padded cells and complex interacting long notes remain unverified.
+Body-table footnote references now reserve note space during row splitting, preserve clipped logical references and avoid duplicating stories for repeated headers. Twenty-three native layout cases cover modern and legacy columns, long notes, late markers, row heights and padding, including partially split padded cells. Split fragments retain cell margins and allow independent cuts for unreferenced neighboring cells. Core round-trip, browser editing and edited native reopen/PDF checks cover these paths. Native probes confirm remaining gaps: nested table contents and their references are preserved but omitted from Print Layout, and vertically merged cells can paginate differently. Complex interacting long notes remain unverified.
+
+PowerPoint title-only saves preserve embedded workbook bytes, including rich shared strings. Repeated saves track chart XML and workbook reconciliation separately, so saving data, undoing it and changing a title restores the workbook source cells. Failed or partial workbook writes remain eligible for retry on a later save.
