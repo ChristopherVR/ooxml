@@ -53,7 +53,7 @@ it.each([
 	['212', '2026-01-01 1:02 AM'],
 	['212', '2026-01-01 1:02:03 am'],
 	['212', '01/01/2026 1:02:03 AM'],
-	['201', 'Thursday, January 1, 2026'],
+	['201', 'Donnerstag, 1. Januar 2026'],
 ])('retains an unmeasured or invalid system profile %s: %s', (code, cached) => {
 	expect(systemDatePicture(new Date('2026-10-13T14:15:16Z'), code!, cached!)).toBeUndefined();
 });

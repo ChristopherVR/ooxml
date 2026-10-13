@@ -21,6 +21,7 @@ export and reopen. An owned native app also opened, saved and reopened that
 core export: all thirty text, value-formula and picture-formula checks matched.
 The reproduction checker is `scripts/visio-system-date-reopen.ps1`.
 
-This does not establish other system date/time locales, English long-date
-pictures 21/201, or other date picture codes. It does not change field insertion
+This corpus does not establish other system date/time locales or other date
+picture codes. The companion `field-system-long-date-native.md` records the
+separately validated English long-date pictures 21/201. It does not change field insertion
 choices or claim general Visio formatting parity.

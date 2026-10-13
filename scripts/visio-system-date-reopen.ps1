@@ -13,12 +13,12 @@ try {
   try {
    foreach($case in $cases) {
     $shape=$doc.Pages.Item(1).Shapes.ItemFromID($case.id)
-    if($shape.Characters.Text -cne $case.text){throw "Mismatch id $($case.id)"}
+    if($case.supported -ne $false -and $shape.Characters.Text -cne $case.text){throw "Mismatch id $($case.id)"}
     if($shape.CellsU('Fields.Value').FormulaU -cne $case.valueFormula){throw 'Value formula changed'}
     if($shape.CellsU('Fields.Format').FormulaU -cne "FIELDPICTURE($($case.code))"){throw 'Picture changed'}
    }
    if($round -eq 0){$doc.Save()|Out-Null}
   } finally {$doc.Saved=$true;$doc.Close()}
  }
- 'Native core-export open/save/reopen matched all text/formula/picture cases.'
+ 'Native core-export open/save/reopen matched admitted text and all formula/picture cases.'
 } finally {$app.Quit();[Runtime.InteropServices.Marshal]::FinalReleaseComObject($app)|Out-Null}
