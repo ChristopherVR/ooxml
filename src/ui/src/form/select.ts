@@ -33,10 +33,10 @@ let uid = 0;
  * Enter/Space, Escape, Tab; disabled and hidden choices are skipped. The popup is a top-layer
  * `popover`, flipped above the trigger when there is more room. `input` then `change` bubble on a
  * user choice; setting a property is silent. Form-associated.
+ * The presence of `commit-on-reselect` opts into one bubbling input/change pair when the user
+ * chooses the current value (pointer or keyboard). Programmatic value writes stay silent,
+ * and disabled controls cannot commit. Omitted: change-only select.
  */
-// `commit-on-reselect` opts into one bubbling input/change pair when the user
-// chooses the current value (pointer or keyboard). Programmatic value writes
-// stay silent, and disabled controls cannot commit. Omitted: change-only select.
 export class OfficeUiSelect extends OfficeElement {
 	static formAssociated = true;
 	static override shadowRootOptions = { ...LitElement.shadowRootOptions, delegatesFocus: true };
@@ -57,7 +57,7 @@ export class OfficeUiSelect extends OfficeElement {
 	declare opened: boolean;
 
 	/** Attributes the trigger renders from: a change repaints it (a relabel on a language switch). */
-	static override watched = ['aria-label', 'variant', 'data-font-picker'];
+	static override watched = ['aria-label', 'variant', 'data-font-picker', 'commit-on-reselect'];
 
 	private readonly internals: ElementInternals | undefined;
 	private readonly observer: MutationObserver | undefined;

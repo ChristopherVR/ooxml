@@ -16,6 +16,22 @@ function field(value: string, options: string) {
 }
 
 describe('ribbon font select', () => {
+	it('uses attribute presence and keeps programmatic writes silent', () => {
+		const select = field('24', '<option value="24">24</option><option value="36">36</option>');
+		const input = vi.fn();
+		const change = vi.fn();
+		select.addEventListener('input', input);
+		select.addEventListener('change', change);
+		select.setAttribute('commit-on-reselect', 'false');
+		select.value = '36';
+		select.setAttribute('value', '24');
+		expect(input).not.toHaveBeenCalled();
+		expect(change).not.toHaveBeenCalled();
+		select.shadowRoot!.querySelector<HTMLButtonElement>('button')!.click();
+		select.shadowRoot!.querySelector<HTMLElement>('[role="option"]')!.click();
+		expect(input).toHaveBeenCalledOnce();
+		expect(change).toHaveBeenCalledOnce();
+	});
 	it.each([
 		[false, 'pointer'],
 		[true, 'pointer'],

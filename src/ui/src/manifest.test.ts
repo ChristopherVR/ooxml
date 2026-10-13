@@ -24,6 +24,19 @@ describe('custom-elements.json', () => {
 		expect(button.description).toContain('Command button');
 	});
 
+	it('documents the select reapply opt-in as an attribute without losing its class description', () => {
+		const select = buildManifest()
+			.modules.flatMap((module) => module.declarations)
+			.find((declaration) => declaration.tagName === 'office-ui-select')!;
+		expect(select.attributes.map((attribute) => attribute.name)).toContain('commit-on-reselect');
+		expect(select.attributes.find((attribute) => attribute.name === 'commit-on-reselect')).toEqual({
+			name: 'commit-on-reselect',
+		});
+		expect(select.description).toContain('Single-select combobox');
+		expect(select.description).toContain('The presence of `commit-on-reselect`');
+		expect(select.description).toContain('Omitted: change-only select');
+	});
+
 	// Run `bun run gen:manifest` after changing an element; the file ships with the package.
 	it('is up to date', () => {
 		const next = `${JSON.stringify(buildManifest(), null, '\t')}\n`;
