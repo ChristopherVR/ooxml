@@ -117,13 +117,15 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		extras.load(pageData.fields.filter((name) => name !== page.source.value));
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
-		page.update(!!second.value || axis.value === 'rows', [
+		page.update(axis.value === 'rows', [
 			row.value,
+			second.value,
 			column.value,
 			value.value,
 			...extras.read().map((v) => v.field),
 		]);
-		second.disabled = !!page.source.value;
+		for (const option of second.options)
+			option.disabled = !!page.source.value && option.value === page.source.value;
 		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled = !!page.source.value;
 		const rowsAxis = axis.value === 'rows';
 		valuesPlacement.disabled = !rowsAxis || !second.value;

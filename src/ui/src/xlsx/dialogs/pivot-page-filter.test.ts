@@ -34,7 +34,12 @@ it.each(['compact', 'outline', 'tabular'])(
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Column Field:'), 'Year');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:'), 'Region');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:'), '1');
-		expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(true);
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(false);
+		expect(
+			inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').querySelector<HTMLOptionElement>(
+				'option[value=Region]',
+			)!.disabled,
+		).toBe(true);
 		expect(
 			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
 				'[value=rows]',
@@ -61,6 +66,53 @@ it.each(['compact', 'outline', 'tabular'])(
 		clickButton(dialog, 'OK');
 		await done;
 		expect(wb.sheets[0]!.pivotTables![0]!.pageFilter).toBeUndefined();
+	},
+);
+it.each(['tabular', 'compact', 'outline'])(
+	'authors %s nested filters without dropping the selected page field',
+	async (layout) => {
+		const wb = createWorkbook(),
+			ctx = createTestContext(wb),
+			edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Market', 'Amount', 'Year', 'Quantity'],
+			['Fruit', 'North', 'East', 10, 2025, 2],
+			['Fruit', 'South', 'West', 20, 2026, 3],
+			['Veg', 'North', 'East', 5, 2025, 4],
+		].forEach((line, r) => line.forEach((v, c) => edit.setCellInput(0, r, c, String(v))));
+		ctx.select('A1:F4');
+		registerToolDialogs(ctx);
+		let done = ctx.dialogs.open('create-pivot-table'),
+			dialog = dialogEl(ctx, 'create-pivot-table');
+		setValue(inputByLabel<HTMLInputElement>(dialog, 'Destination Cell:'), 'H1');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:'), 'Market');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:'), '1');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), layout);
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:').value).toBe('Market');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:').value).toBe('1');
+		clickButton(dialog, 'OK');
+		await done;
+		const pivot = wb.sheets[0]!.pivotTables![0]!;
+		expect(pivot.secondRowField).toBe('Region');
+		expect(pivot.pageFilter).toEqual({ field: 'Market', item: 'West' });
+		expect(pivot.records).toHaveLength(3);
+		ctx.select('H1');
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:'), '');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]!.pageFilter).toEqual({ field: 'Market' });
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables![0]!.pageFilter).toEqual({ field: 'Market', item: 'West' });
+		expect(wb.sheets[0]!.pivotTables![0]!.secondRowField).toBe('Region');
 	},
 );
 it('preserves untouched native filter/cache definitions when accepting settings', async () => {
