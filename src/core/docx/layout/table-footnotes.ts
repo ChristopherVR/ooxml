@@ -3,6 +3,7 @@ import type { LayoutFootnoteBox } from './result';
 import type { RowLayout } from './table-layout';
 import type { PageCursor } from './page-cursor';
 import type { ReferenceFootnotes } from './reference-footnotes';
+import { cellParagraphs } from './table-cell-layout';
 interface RowReference {
 	note: LayoutFootnoteBox;
 	bottom: number;
@@ -25,7 +26,8 @@ function prefix(row: RowLayout, cut: number, cellCuts?: readonly number[]): RowL
 			}
 			if (lines.length)
 				boxes.push({ ...box, lines, heightPx: lines.at(-1)!.yPx + lines.at(-1)!.heightPx });
-			break;
+			// A nested row can have another paragraph beginning at the same y in its other cell.
+			continue;
 		}
 		return boxes;
 	});
@@ -62,7 +64,7 @@ export class TableFootnotes {
 	) {
 		for (const row of table.rows)
 			for (const cell of row.cells)
-				for (const paragraph of cell.paragraphs)
+				for (const paragraph of cellParagraphs(cell))
 					if (paragraph.footnotes?.length) this.paragraphs.set(paragraph.id, paragraph);
 	}
 	private references(row: RowLayout): RowReference[] {

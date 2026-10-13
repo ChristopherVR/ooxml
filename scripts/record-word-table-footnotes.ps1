@@ -2,6 +2,9 @@ param([string]$OutputDirectory = (Join-Path $env:TEMP ('ooxml-native-word-table-
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $cases = @(
+ @{name='nested-split-early';rows=1;cellLines=1;noteRow=0;noteCell=0;noteLine=0;noteLines=3;nested=$true;nestedLines=20},
+ @{name='nested-split-late';rows=1;cellLines=1;noteRow=0;noteCell=0;noteLine=15;noteLines=3;nested=$true;nestedLines=20},
+ @{name='nested-second-cell-late';rows=1;cellLines=1;noteRow=0;noteCell=1;noteLine=15;noteLines=3;nested=$true;nestedLines=20},
  @{name='padded-split-early';rows=1;cellLines=20;noteRow=0;noteCell=0;noteLine=0;noteLines=3;padding=4},
  @{name='padded-split-late';rows=1;cellLines=20;noteRow=0;noteCell=0;noteLine=15;noteLines=3;padding=4},
  @{name='vertical-merge-reference';rows=2;cellLines=12;noteRow=1;noteCell=0;noteLine=2;noteLines=3;merge=$true},
@@ -60,7 +63,7 @@ try {
     for($cell=0;$cell-lt2;$cell++) {
      $lines=0..($count-1) | ForEach-Object {
       $text='T0R'+$row+'C'+$cell+'L'+$_.ToString('D2')
-      if($row-eq$case.noteRow-and$cell-eq$case.noteCell-and$_-eq$case.noteLine){$text+=' REF0'}
+      if(-not$case.nested-and$row-eq$case.noteRow-and$cell-eq$case.noteCell-and$_-eq$case.noteLine){$text+=' REF0'}
       if($case.twoNotes-and$row-eq0-and$cell-eq1-and$_-eq0){$text+=' REF1'}
       $text
      }
@@ -75,7 +78,11 @@ try {
     $inner=$doc.Tables.Add($range,1,2)
     $inner.AllowAutoFit=$false;$inner.Columns.SetWidth(80,0)
     $inner.TopPadding=0;$inner.BottomPadding=0;$inner.LeftPadding=0;$inner.RightPadding=0;$inner.Borders.Enable=0
-    $inner.Cell(1,1).Range.Text='T1R0C0L00 REF0';$inner.Cell(1,2).Range.Text='T1R0C1L00'
+    $innerCount=if($case.nestedLines){$case.nestedLines}else{1}
+    foreach($innerCell in 0..1){
+     $innerLines=0..($innerCount-1)|ForEach-Object {'T1R0C'+$innerCell+'L'+$_.ToString('D2')+$(if($innerCell-eq$case.noteCell-and$_-eq$case.noteLine){' REF0'}else{''})}
+     $inner.Cell(1,$innerCell+1).Range.Text=$innerLines -join ([string][char]11)
+    }
    }
    $table.Rows.AllowBreakAcrossPages=-not$case.cantSplit
    if($case.header){$table.Rows.Item(1).HeadingFormat=$true}
@@ -109,7 +116,7 @@ try {
    Write-Output ('Recorded '+$case.name)
   } finally {if($null-ne$doc){$doc.Close(0);[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($doc)}}
  }
- $records | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'native-cases.json')
+ ConvertTo-Json -InputObject @($records) -Depth 5 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'native-cases.json')
  Write-Output $OutputDirectory
 } finally {
  if($null-ne$app-and$owned){$app.Quit(0)}

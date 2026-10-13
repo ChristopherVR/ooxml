@@ -159,6 +159,8 @@ export interface LayoutCellPadding {
 
 export interface LayoutTableCell {
 	paragraphs: LayoutParagraph[];
+	/** Source child order including read-only nested table stories. */
+	blocks?: LayoutBlock[];
 	/** Column width in CSS pixels; undefined cells share the row's remaining width evenly. */
 	widthPx?: number;
 	/** Left edge from the table's left, from the table grid (merged cells span grid columns). */

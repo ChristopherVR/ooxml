@@ -269,7 +269,7 @@ export function adaptDocumentModel(
 		reportOnce(VERTICAL_MERGE_NOTE);
 		if (block.rows.some((row) => row.some((cell) => cell.nestedTables?.length)))
 			reportOnce(
-				'Nested table contents, including their footnote references, are preserved in the source package but are not drawn in Print Layout.',
+				'Nested tables are projected as read-only cell paragraphs in Print Layout; their borders, shading, vertical merge and repeated header geometry are not rendered.',
 			);
 		return adaptTable(block, model, adaptParagraph);
 	}

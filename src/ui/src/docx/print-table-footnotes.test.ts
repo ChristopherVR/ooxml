@@ -5,6 +5,9 @@ import { loadDocx } from 'ooxml-core/docx';
 import { layoutDocumentModel } from 'ooxml-core/docx/layout';
 import { renderPrintLayout } from './print-layout';
 it.each([
+	'nested-table-reference',
+	'nested-split-late',
+	'nested-second-cell-late',
 	'padded-split-early',
 	'padded-split-late',
 	'split-late-reference',

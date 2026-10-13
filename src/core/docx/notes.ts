@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, Note, Paragraph } from './model';
+import { cellSourceBlocks } from './cell-blocks';
 import { children, getW, parseXml, type XmlElement } from './xml';
 
 const skippedTypes = new Set(['separator', 'continuationSeparator']);
@@ -125,7 +126,7 @@ function walkBlocks(blocks: Block[], kind: 'footnote' | 'endnote', order: Map<st
 		if (block.type === 'paragraph') walkParagraph(block, kind, order);
 		else
 			for (const row of block.rows)
-				for (const cell of row) walkBlocks(cell.paragraphs, kind, order);
+				for (const cell of row) walkBlocks(cellSourceBlocks(cell), kind, order);
 	}
 }
 

@@ -1,4 +1,5 @@
 import { createReferenceFootnotes, type ReferenceFootnotes } from './reference-footnotes';
+import { cellParagraphs } from './table-cell-layout';
 import { NO_TWIPS } from './units';
 import { PageCursor } from './page-cursor';
 import { placeParagraph } from './flow-paragraph';
@@ -45,7 +46,7 @@ export class SectionFlow {
 					? !!block.footnotes?.length
 					: block.rows.some((row) =>
 							row.cells.some((cell) =>
-								cell.paragraphs.some((paragraph) => !!paragraph.footnotes?.length),
+								cellParagraphs(cell).some((paragraph) => !!paragraph.footnotes?.length),
 							),
 						),
 			)
@@ -58,7 +59,7 @@ export class SectionFlow {
 			const paragraphs =
 				block.kind === 'paragraph'
 					? [block]
-					: block.rows.flatMap((row) => row.cells.flatMap((cell) => cell.paragraphs));
+					: block.rows.flatMap((row) => row.cells.flatMap(cellParagraphs));
 			for (const paragraph of paragraphs)
 				for (const source of paragraph.footnotes ?? []) sources.set(source.id, source);
 		}
@@ -265,7 +266,7 @@ export class SectionFlow {
 					this.note,
 					block.rows.some((row) =>
 						row.cells.some((cell) =>
-							cell.paragraphs.some((paragraph) => paragraph.footnotes?.length),
+							cellParagraphs(cell).some((paragraph) => paragraph.footnotes?.length),
 						),
 					)
 						? this.referenceFootnotes

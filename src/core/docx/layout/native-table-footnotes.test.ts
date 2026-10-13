@@ -4,6 +4,7 @@ import { loadDocx } from '../index';
 import { adaptDocumentModel } from './adapter';
 import { layoutDocumentModel } from './layout';
 import type { LayoutParagraph } from './input';
+import { cellParagraphs } from './table-cell-layout';
 interface NativeCase {
 	name: string;
 	references: { id: string; page: number }[];
@@ -30,10 +31,19 @@ const complexCorpus = JSON.parse(
 	),
 ) as { cases: NativeCase[] };
 const measurer = { widthOf: (text: string) => text.length * 5, lineHeightOf: () => 16 };
+const nestedCorpus = JSON.parse(
+	readFileSync(
+		new URL('../__fixtures__/table-footnotes/nested-native-measurements.json', import.meta.url),
+		'utf8',
+	),
+) as { cases: NativeCase[] };
 describe('native Word table footnote pagination', () => {
 	it.each([
 		...corpus.cases,
-		...complexCorpus.cases.filter((native) => native.name.startsWith('padded-')),
+		...complexCorpus.cases.filter(
+			(native) => native.name.startsWith('padded-') || native.name === 'nested-table-reference',
+		),
+		...nestedCorpus.cases,
 	])(
 		'$name preserves native cell boundaries, reference pages and every note line',
 		async (native) => {
@@ -46,7 +56,8 @@ describe('native Word table footnote pagination', () => {
 					if (block.kind === 'table')
 						for (const row of block.rows)
 							for (const cell of row.cells)
-								for (const paragraph of cell.paragraphs) paragraphs.set(paragraph.id, paragraph);
+								for (const paragraph of cellParagraphs(cell))
+									paragraphs.set(paragraph.id, paragraph);
 			const ids = new Map(
 				(loaded.model.footnotes ?? []).map((note) => [
 					note.id,
@@ -114,7 +125,8 @@ describe('native Word table footnote pagination', () => {
 															column.xPx +
 															(block.xPx ?? 0) +
 															row.geometry![cellIndex]!.xPx +
-															row.geometry![cellIndex]!.paddingLeftPx) *
+															row.geometry![cellIndex]!.paddingLeftPx +
+															(paragraph.xPx ?? 0)) *
 														0.75,
 												});
 										}

@@ -16,7 +16,7 @@ it.each(['nested-table-reference', 'vertical-merge-reference'])(
 			lineHeightOf: () => 16,
 		});
 		expect(result.approximations.join(' ')).toContain(
-			name.startsWith('nested') ? 'Nested table contents' : 'Vertically merged',
+			name.startsWith('nested') ? 'Nested tables are projected' : 'Vertically merged',
 		);
 		const reopened = await loadDocx(await loaded.save(loaded.model));
 		expect(reopened.model).toEqual(loaded.model);

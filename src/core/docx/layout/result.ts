@@ -53,6 +53,10 @@ export interface LayoutParagraphBox {
 	yPx: number;
 	heightPx: number;
 	lines: LayoutLine[];
+	/** Local bounds for paragraphs projected from a read-only nested table cell. */
+	xPx?: number;
+	widthPx?: number;
+	readOnly?: boolean;
 	/** Paragraph borders and shading, spanning the box's height at these horizontal bounds. */
 	frame?: LayoutParagraphFrame;
 }

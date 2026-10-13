@@ -3,6 +3,7 @@ import { layoutParagraph } from './paragraph-layout';
 import type { LayoutParagraph, LayoutTableRow } from './input';
 import type { LayoutCellGeometry, LayoutParagraphBox } from './result';
 import { expectDefined } from '../expect-defined';
+import { stackCellBlocks } from './table-cell-layout';
 
 export interface RowLayout {
 	heightPx: number;
@@ -58,6 +59,7 @@ export function layoutRow(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	remaining?: LayoutParagraphBox[][],
+	startTokens?: ReadonlyMap<string, number>,
 ): RowLayout {
 	const count = row.cells.length || 1;
 	let x = 0;
@@ -66,11 +68,11 @@ export function layoutRow(
 		const continuation = remaining?.[geometry.length];
 		const starts = continuation
 			? new Map(continuation.map((box) => [box.blockId, box.lines[0]?.firstToken ?? 0]))
-			: undefined;
+			: startTokens;
 		const widthPx = cell.widthPx ?? tableWidthPx / count;
 		const padding = cell.padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
-		const content = stackParagraphs(
-			starts ? cell.paragraphs.filter((paragraph) => starts.has(paragraph.id)) : cell.paragraphs,
+		const content = stackCellBlocks(
+			cell,
 			Math.max(1, widthPx - padding.left - padding.right),
 			measurer,
 			note,
@@ -119,21 +121,11 @@ interface CellSplit {
 function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): CellSplit {
 	const before: LayoutParagraphBox[] = [];
 	const after: LayoutParagraphBox[] = [];
-	let afterOrigin: number | null = null;
 	let beforeHeightPx = 0;
 	for (const box of boxes) {
-		if (afterOrigin !== null) {
-			after.push({ ...box, yPx: box.yPx - afterOrigin });
-			continue;
-		}
 		if (box.yPx + box.heightPx <= cutHeightPx) {
 			before.push(box);
-			beforeHeightPx = box.yPx + box.heightPx;
-			continue;
-		}
-		if (box.yPx >= cutHeightPx) {
-			afterOrigin = box.yPx;
-			after.push({ ...box, yPx: 0 });
+			beforeHeightPx = Math.max(beforeHeightPx, box.yPx + box.heightPx);
 			continue;
 		}
 		const beforeLines = box.lines.filter(
@@ -143,21 +135,21 @@ function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): Ce
 		if (beforeLines.length) {
 			const bottom = beforeLines.at(-1)!.yPx + beforeLines.at(-1)!.heightPx;
 			before.push({ ...box, heightPx: bottom, lines: beforeLines });
-			beforeHeightPx = box.yPx + bottom;
+			beforeHeightPx = Math.max(beforeHeightPx, box.yPx + bottom);
 		}
 		if (afterLines.length) {
 			const shift = expectDefined(afterLines[0], 'first line after split').yPx;
-			afterOrigin = box.yPx + shift;
 			after.push({
 				...box,
-				yPx: 0,
+				yPx: box.yPx + shift,
 				heightPx: afterLines.at(-1)!.yPx + afterLines.at(-1)!.heightPx - shift,
 				lines: afterLines.map((line) => ({ ...line, yPx: line.yPx - shift })),
 			});
-		} else {
-			afterOrigin = box.yPx + box.heightPx;
 		}
 	}
+	// Nested cells have paragraphs running in parallel, rather than a single sequential story.
+	const afterOrigin = Math.min(...after.map((box) => box.yPx));
+	for (const box of after) box.yPx -= afterOrigin;
 	return { before, after, beforeHeightPx };
 }
 

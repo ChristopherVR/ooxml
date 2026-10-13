@@ -191,6 +191,10 @@ export function createPrintEditingBridge(
 		'pointerdown',
 		(event) => {
 			if (!active || event.button !== 0) return;
+			if (event.target instanceof Element && event.target.closest('[data-read-only="true"]')) {
+				getView()?.dom.blur();
+				return;
+			}
 			const target = hit(event);
 			if (!target || !select(target.blockId, target.offset, event.shiftKey)) return;
 			event.preventDefault();

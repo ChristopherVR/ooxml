@@ -68,6 +68,21 @@ function parseCell(
 	if (margins) result.margins = margins;
 	const nested = children(cell, 'tbl').map(nestedPreview);
 	if (nested.length) result.nestedTables = nested;
+	if (nested.length) {
+		let paragraphIndex = 0,
+			tableIndex = 0;
+		result.sourceBlocks = Array.from(cell.childNodes).flatMap(
+			(child): import('./model').Block[] => {
+				if (child.nodeType !== 1) return [];
+				const element = child as XmlElement;
+				if (element.namespaceURI !== WORD_NS) return [];
+				if (element.localName === 'p') return [result.paragraphs[paragraphIndex++]!];
+				if (element.localName === 'tbl')
+					return [parseTable(element, `${id}-nested${tableIndex++}`, parseParagraph)];
+				return [];
+			},
+		);
+	}
 	return result;
 }
 
