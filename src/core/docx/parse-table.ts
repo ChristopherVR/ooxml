@@ -137,7 +137,7 @@ function parseRowProperties(row: XmlElement): TableRowProperties {
 	const result: TableRowProperties = {};
 	const height = first(trPr, 'trHeight');
 	const heightTwips = dxa(getW(height, 'val'));
-	if (heightTwips) {
+	if (heightTwips !== undefined) {
 		result.heightTwips = heightTwips;
 		result.heightRule = getW(height, 'hRule') === 'exact' ? 'exact' : 'atLeast';
 	}

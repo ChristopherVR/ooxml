@@ -17,6 +17,7 @@ export function nestedFragmentEdges(table: LayoutTable) {
 		table.rows.some(
 			(row) =>
 				row.heightPx !== undefined ||
+				row.heightSpecified ||
 				row.cantSplit ||
 				row.isHeader ||
 				row.cells.length !== 2 ||
@@ -39,7 +40,13 @@ export function nestedFragmentEdges(table: LayoutTable) {
 }
 /** The enclosing story must also remain within the measured automatic, note-free profile. */
 export function reflowNestedFragments(row: LayoutTableRow): boolean {
-	if (row.heightPx !== undefined || row.cantSplit || row.isHeader || row.cells.length !== 2)
+	if (
+		row.heightPx !== undefined ||
+		row.heightSpecified ||
+		row.cantSplit ||
+		row.isHeader ||
+		row.cells.length !== 2
+	)
 		return false;
 	let tables = 0;
 	for (const cell of row.cells) {
