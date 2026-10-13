@@ -14,6 +14,55 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
+it.each(['tabular', 'compact', 'outline'])(
+	'authors %s between Values, preserves settings and converts with history',
+	async (form) => {
+		const wb = createWorkbook(),
+			ctx = createTestContext(wb),
+			edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Amount', 'Quantity'],
+			['Fruit', 'East', 10, 2],
+			['Fruit', 'West', 20, 3],
+		].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+		ctx.select('A1:D3');
+		registerToolDialogs(ctx);
+		let done = ctx.dialogs.open('create-pivot-table'),
+			dialog = dialogEl(ctx, 'create-pivot-table');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(true);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), form);
+		clickButton(dialog, 'Add Value Field');
+		const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
+		setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
+		setValue(inputByLabel<HTMLSelectElement>(extra, 'Summarize Values By:'), 'count');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(false);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:'), 'between');
+		clickButton(dialog, 'OK');
+		await done;
+		const pivot = wb.sheets[0]!.pivotTables![0]!;
+		expect(pivot).toMatchObject({ layout: form, valuesPosition: 'between', valuesAxis: 'rows' });
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').value).toBe('between');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'columns');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(true);
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').value).toBe('last');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]?.valuesAxis).toBe('columns');
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables![0]?.valuesPosition).toBe('between');
+	},
+);
+
 it('keeps compact multiple measures on unchanged settings and switches to outline subtotals with undo', async () => {
 	const wb = createWorkbook();
 	const ctx = createTestContext(wb);

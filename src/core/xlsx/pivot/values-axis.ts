@@ -38,7 +38,7 @@ export function pivotValueAxisItems(measures: number, columns?: number): string 
 	return `<colItems count="${entries.length}">${entries.join('')}</colItems>`;
 }
 
-/** Values are modeled last on their axis, following one or two real row fields. */
+/** Values follow the column field, or sit last/between two real row fields. */
 export function supportedPivotAxes(
 	rows: readonly XmlElement[],
 	columns: readonly XmlElement[],

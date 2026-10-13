@@ -58,6 +58,14 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		pivot?.valuesAxis ?? 'columns',
 	);
 	const multipleNotice = text(ctx, 'Values are listed after the row fields.');
+	const valuesPlacement = select(
+		ctx,
+		[
+			['last', 'After row fields'],
+			['between', 'Between row fields'],
+		],
+		pivot?.valuesPosition ?? 'last',
+	);
 	const extras = pivotValueControls(
 		ctx,
 		pivot?.additionalValues ?? [],
@@ -99,6 +107,13 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
 		const rowsAxis = axis.value === 'rows';
+		valuesPlacement.disabled = !rowsAxis || !second.value;
+		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
+		multipleNotice.textContent = ctx.t(
+			valuesPlacement.value === 'between'
+				? 'Values are listed between the row fields.'
+				: 'Values are listed after the row fields.',
+		);
 		multipleNotice.hidden = !rowsAxis;
 		subtotals.input.disabled = !second.value;
 		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
@@ -113,6 +128,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			!second.value || !subtotals.input.checked || !(layout.value === 'tabular' || rowsAxis);
 	};
 	axis.addEventListener('change', updateRows);
+	valuesPlacement.addEventListener('change', updateRows);
 	layout.addEventListener('change', updateRows);
 	subtotals.input.addEventListener('change', updateRows);
 	second.addEventListener('change', updateRows);
@@ -136,6 +152,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Summarize Values By:', aggregate),
 			extras.host,
 			field(ctx, 'Values Axis:', axis),
+			field(ctx, 'Values Placement:', valuesPlacement),
 			multipleNotice,
 		],
 		opened: () => (settings ? row : source).focus(),
@@ -143,6 +160,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			const options = {
 				rowField: row.value,
 				valuesAxis: axis.value as 'columns' | 'rows',
+				valuesPosition: valuesPlacement.value as 'last' | 'between',
 				layout: layout.value as PivotLayout,
 				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,
@@ -157,6 +175,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 				if (
 					pivot.rowField !== options.rowField ||
 					(pivot.valuesAxis ?? 'columns') !== options.valuesAxis ||
+					(pivot.valuesPosition ?? 'last') !== options.valuesPosition ||
 					(pivot.layout ?? 'tabular') !== options.layout ||
 					(pivot.subtotalPosition ?? 'bottom') !== options.subtotalPosition ||
 					(pivot.secondRowField ?? '') !== options.secondRowField ||

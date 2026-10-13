@@ -1,6 +1,31 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Values Placement:': [
+		'Position des valeurs :',
+		'Anordnung der Werte:',
+		'Posición de los valores:',
+		'值位置：',
+	],
+	'After row fields': [
+		'Après les champs de ligne',
+		'Nach den Zeilenfeldern',
+		'Después de los campos de fila',
+		'行字段之后',
+	],
+	'Between row fields': [
+		'Entre les champs de ligne',
+		'Zwischen den Zeilenfeldern',
+		'Entre los campos de fila',
+		'行字段之间',
+	],
+	'Values are listed between the row fields.': [
+		'Les valeurs sont affichées entre les champs de ligne.',
+		'Werte werden zwischen den Zeilenfeldern aufgeführt.',
+		'Los valores aparecen entre los campos de fila.',
+		'值列在行字段之间。',
+	],
+
 	'Values Axis:': ['Axe des valeurs :', 'Werteachse:', 'Eje de valores:', '值轴：'],
 	'Values on Columns': [
 		'Valeurs en colonnes',

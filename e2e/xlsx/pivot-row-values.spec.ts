@@ -84,6 +84,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
 		const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 		await expect(settings.getByLabel('Values Axis:', { exact: true })).toHaveValue('rows');
+		await expect(settings.getByLabel('Values Placement:', { exact: true })).toHaveValue('last');
 		if (layout === 'compact')
 			await expect(settings.getByLabel('Repeat row labels', { exact: true })).not.toBeChecked();
 		else await expect(settings.getByLabel('Repeat row labels', { exact: true })).toBeChecked();
@@ -104,18 +105,27 @@ for (const profile of [
 	'nested-compact',
 	'nested-outline',
 	'nested-outline-repeat',
+	'between-tabular',
+	'between-compact',
+	'between-outline',
+	'between-outline-repeat',
 ])
 	test(`keeps native ${profile} Values-on-rows definitions verbatim when accepting unchanged settings`, async ({
 		page,
 	}) => {
-		const nested = profile.startsWith('nested-');
-		const form = profile.replace('nested-', '');
+		const between = profile.startsWith('between-');
+		const nested = profile.startsWith('nested-') || between;
+		const form = profile.replace(/^(nested-|between-)/, '');
 		const suffix = form === 'tabular' ? '' : form === 'outline-repeat' ? '-outline' : '-' + form;
 		const repeatSuffix = form === 'outline-repeat' ? '-repeat' : '';
 		const layout = form === 'tabular' ? 'tabular' : form === 'compact' ? 'compact' : 'outline';
-		const filename = nested
-			? `excel-pivot-row-values-${layout}-rows-bottom-columns${repeatSuffix}.xlsx`
-			: `excel-pivot-row-values${suffix}-columns${repeatSuffix}.xlsx`;
+		const filename = between
+			? layout === 'tabular'
+				? 'excel-pivot-row-values-rows-between-columns.xlsx'
+				: `excel-pivot-row-values-${layout}-rows-bottom-between-columns${repeatSuffix}.xlsx`
+			: nested
+				? `excel-pivot-row-values-${layout}-rows-bottom-columns${repeatSuffix}.xlsx`
+				: `excel-pivot-row-values${suffix}-columns${repeatSuffix}.xlsx`;
 		const bytes = readFileSync(
 			new URL(`../../src/core/xlsx/__fixtures__/${filename}`, import.meta.url),
 		);
@@ -131,15 +141,21 @@ for (const profile of [
 		);
 		await goToCell(
 			page,
-			nested
-				? layout === 'compact'
-					? 'D27'
-					: 'F27'
-				: layout === 'tabular'
-					? 'E9'
+			between
+				? layout === 'tabular'
+					? 'F21'
 					: layout === 'compact'
-						? 'D11'
-						: 'E11',
+						? 'D29'
+						: 'F29'
+				: nested
+					? layout === 'compact'
+						? 'D27'
+						: 'F27'
+					: layout === 'tabular'
+						? 'E9'
+						: layout === 'compact'
+							? 'D11'
+							: 'E11',
 		);
 		await expect.poll(() => formulaBarValue(page)).toBe('57');
 		await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
@@ -147,6 +163,9 @@ for (const profile of [
 		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
 		const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 		await expect(settings.getByLabel('Values Axis:', { exact: true })).toHaveValue('rows');
+		await expect(settings.getByLabel('Values Placement:', { exact: true })).toHaveValue(
+			between ? 'between' : 'last',
+		);
 		await expect(settings.getByLabel('Report Layout:', { exact: true })).toHaveValue(layout);
 		await expect(settings.locator('[data-pivot-value]')).toHaveCount(2);
 		if (nested)
