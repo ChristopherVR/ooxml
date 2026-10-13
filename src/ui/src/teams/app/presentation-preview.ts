@@ -153,6 +153,7 @@ export class TeamsPresentationPreview extends LitElement {
 				headerFooter: data.headerFooter,
 				customProperties: data.customProperties,
 				slide,
+				firstSlideNumber: data.firstSlideNumber,
 			}),
 			reading: true,
 		});

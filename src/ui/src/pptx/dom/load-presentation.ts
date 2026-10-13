@@ -63,6 +63,7 @@ export interface LoadedPresentation {
 	 */
 	viewProperties?: PptxViewProperties;
 	headerFooter: PptxHeaderFooter;
+	firstSlideNumber?: number | undefined;
 	coreProperties?: PptxCoreProperties;
 	appProperties?: PptxAppProperties;
 	customProperties: PptxCustomProperty[];
@@ -160,6 +161,7 @@ export async function loadPresentation(
 			presentationProperties: parsed.presentationProperties ?? {},
 			viewProperties: parsed.viewProperties,
 			headerFooter: parsed.headerFooter ?? {},
+			firstSlideNumber: parsed.firstSlideNumber,
 			coreProperties: parsed.coreProperties,
 			appProperties: parsed.appProperties,
 			customProperties: parsed.customProperties ?? [],

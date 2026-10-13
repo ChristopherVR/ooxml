@@ -240,4 +240,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const lexical = String(raw).trim().toLowerCase();
 		return lexical !== '0' && lexical !== 'false';
 	}
+
+	/**
+	 * Extract `p:presentation/@firstSlideNum` (ECMA-376 §19.2.1.26, an
+	 * `xsd:int`). `undefined` when absent or not an integer, so the spec
+	 * default (`1`) is never forced onto the typed model.
+	 */
+	protected extractFirstSlideNumber(): number | undefined {
+		const pres = this.presentationData?.['p:presentation'] as XmlObject | undefined;
+		const lexical = String(pres?.['@_firstSlideNum'] ?? '').trim();
+		return /^[+-]?\d+$/.test(lexical) ? Number.parseInt(lexical, 10) : undefined;
+	}
 }

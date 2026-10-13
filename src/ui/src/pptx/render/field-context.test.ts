@@ -6,6 +6,7 @@ import {
 	deriveSlideFieldContext,
 	resolveSlideTitle,
 } from './field-context';
+import { substituteFieldText } from './text-field-substitution';
 
 function slideWith(slideNumber: number, title?: string): PptxSlide {
 	return {
@@ -112,6 +113,13 @@ describe('deriveSlideFieldContext', () => {
 		expect(derived?.slideTitle).toBe('Results');
 		// Deck-wide fields survive the re-point.
 		expect(derived?.footerText).toBe('Confidential');
+	});
+
+	it('keeps the deck start number when re-pointed at another slide', () => {
+		const base = buildFieldSubstitutionContext({ firstSlideNumber: 45, slide: slideWith(1) });
+		expect(base.firstSlideNumber).toBe(45);
+		const derived = deriveSlideFieldContext(base, slideWith(3));
+		expect(substituteFieldText('3', 'slidenum', derived)).toBe('47');
 	});
 
 	it('stays undefined without a base context', () => {

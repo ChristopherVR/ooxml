@@ -3,13 +3,18 @@ import {
 	type TeamsPresentationPreview,
 } from './presentation-preview';
 
-const engine = vi.hoisted(() => ({ load: vi.fn(), dispose: vi.fn(), revoke: vi.fn() }));
+const engine = vi.hoisted(() => ({
+	load: vi.fn(),
+	dispose: vi.fn(),
+	revoke: vi.fn(),
+	fieldContext: vi.fn(() => ({})),
+}));
 vi.mock('ooxml-ui/pptx/dom', () => ({
 	loadPresentation: engine.load,
 	revokeBlobUrls: engine.revoke,
 	createDefaultRegistry: () => ({}),
 	createTranslator: () => (key: string) => key,
-	buildFieldSubstitutionContext: () => ({}),
+	buildFieldSubstitutionContext: engine.fieldContext,
 	buildEmbeddedFontStyles: () => ({ fontFaceCss: '', objectUrls: [] }),
 	glyphOutlineFontCache: { registerEmbeddedFonts: vi.fn() },
 	renderSlideStage: ({ slide }: { slide: { id: string } }) => {
@@ -87,6 +92,15 @@ describe('presentation reading preview', () => {
 		preview.remove();
 		expect(engine.dispose).toHaveBeenCalledTimes(1);
 		expect(engine.revoke).toHaveBeenCalledWith(['blob:one']);
+	});
+	it('passes the deck start slide number to the field context', async () => {
+		engine.load.mockResolvedValue({ ...deck(), firstSlideNumber: 45 });
+		const preview = await mount();
+		await preview.load(new Uint8Array([1]));
+		expect(engine.fieldContext).toHaveBeenLastCalledWith(
+			expect.objectContaining({ firstSlideNumber: 45 }),
+		);
+		preview.remove();
 	});
 	it('disposes a superseded load without replacing the current slide', async () => {
 		let finish!: (value: ReturnType<typeof deck>) => void;

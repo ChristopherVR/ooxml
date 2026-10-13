@@ -2,10 +2,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import JSZip from 'jszip';
 import type { MediaPptxElement, PptxHandler, PptxSlide } from 'ooxml-core/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
+import { buildFieldSubstitutionContext } from '../render/field-context';
+import { substituteFieldText } from '../render/text-field-substitution';
 import { createDefaultRegistry, renderSlideStage } from './index';
 import { loadPresentation, resolveMediaUrls } from './load-presentation';
 
@@ -41,6 +44,28 @@ describe('loadPresentation (real .pptx happy path)', () => {
 				scale: 0.5,
 			});
 			expect(stage.querySelectorAll('[data-element-id]').length).toBeGreaterThan(0);
+		} finally {
+			loaded.handler.dispose();
+		}
+	});
+
+	// `p:presentation/@firstSlideNum="45"` must reach the field context, or a
+	// `slidenum` field on slide 1 shows its position (1) instead of 45.
+	it('carries the start slide number into the field context', async () => {
+		const zip = await JSZip.loadAsync(readFixture());
+		const xml = await zip.file('ppt/presentation.xml')!.async('string');
+		zip.file(
+			'ppt/presentation.xml',
+			xml.replace('<p:presentation ', '<p:presentation firstSlideNum="45" '),
+		);
+		const loaded = await loadPresentation(await zip.generateAsync({ type: 'arraybuffer' }));
+		try {
+			expect(loaded.firstSlideNumber).toBe(45);
+			const ctx = buildFieldSubstitutionContext({
+				slide: loaded.slides[0],
+				firstSlideNumber: loaded.firstSlideNumber,
+			});
+			expect(substituteFieldText('1', 'slidenum', ctx)).toBe('45');
 		} finally {
 			loaded.handler.dispose();
 		}

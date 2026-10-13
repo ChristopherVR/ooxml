@@ -150,6 +150,30 @@ assign(['presentation:attribute:embedTrueTypeFonts'], {
 	],
 });
 
+assign(['presentation:attribute:firstSlideNum'], {
+	parse: 'native',
+	preserve: 'native',
+	edit: 'unassessed',
+	serialize: 'unassessed',
+	note: '`p:presentation/@firstSlideNum` is parsed onto `PptxData.firstSlideNumber` (absent or non-integer stays `undefined`, spec default 1) and the shared field substitution shows `firstSlideNumber + index` for `slidenum` fields. A save keeps the attribute because the loaded presentation.xml object is rewritten in place; there is no save option to change it.',
+	evidence: [
+		testEvidence(
+			'src/__tests__/integration/presentation-first-slide-number.test.ts',
+			[
+				'is undefined (spec default: 1) when the attribute is absent',
+				'parses an explicit @firstSlideNum onto the typed model',
+				'accepts zero and ignores a value that is not an integer',
+			],
+			['parse'],
+		),
+		testEvidence(
+			'src/__tests__/integration/presentation-first-slide-number.test.ts',
+			['survives a save that rewrites presentation.xml and reloads as the same value'],
+			['preserve'],
+		),
+	],
+});
+
 assign(['presentation:element:smartTags', 'presentation:complexType:CT_SmartTags'], {
 	parse: 'native',
 	preserve: 'native',

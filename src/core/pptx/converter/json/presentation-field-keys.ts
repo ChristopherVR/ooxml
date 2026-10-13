@@ -58,6 +58,7 @@ export const PRESENTATION_FIELD_KEYS: Record<keyof Omit<PptxData, 'slides'>, tru
 	modernCommentAuthors: true,
 	conformance: true,
 	embedTrueTypeFonts: true,
+	firstSlideNumber: true,
 	defaultTextStyle: true,
 };
 
