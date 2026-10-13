@@ -1,3 +1,5 @@
+import { inspectorNumber } from 'ooxml-ui/pptx';
+
 import type { Translator } from '../../i18n';
 import type { InspectorHandlers, InspectorState } from './types';
 
@@ -80,7 +82,7 @@ export function createTableStructureControls(
 			columnWidth.value = cell
 				? String(Math.round((next.tableColumnWidths[cell.column] ?? 0) * 100))
 				: '';
-			rowHeight.value = cell ? String(next.tableRowHeights[cell.row] ?? 32) : '';
+			rowHeight.value = cell ? String(inspectorNumber(next.tableRowHeights[cell.row], 32)) : '';
 			for (const control of controls) {
 				control.disabled = !cell;
 			}

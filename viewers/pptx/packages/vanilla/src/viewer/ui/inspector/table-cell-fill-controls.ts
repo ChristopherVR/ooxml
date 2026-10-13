@@ -1,4 +1,4 @@
-import { FILL_PATTERN_LABEL_KEYS, schemaLabel } from 'ooxml-ui/pptx';
+import { FILL_PATTERN_LABEL_KEYS, inspectorNumber, schemaLabel } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
@@ -151,7 +151,7 @@ export function createTableCellFillControls(
 			const style = next.tableCellStyle ?? {};
 			fillMode.value = style.fillMode ?? 'solid';
 			gradientType.value = style.gradientFillType ?? 'linear';
-			gradientAngle.value = String(style.gradientFillAngle ?? 90);
+			gradientAngle.value = String(inspectorNumber(style.gradientFillAngle, 90));
 			gradientStart.value = style.gradientFillStops?.[0]?.color ?? '#ff0000';
 			gradientEnd.value = style.gradientFillStops?.at(-1)?.color ?? '#0000ff';
 			pattern.value = style.patternFillPreset ?? 'ltDnDiag';
@@ -159,7 +159,12 @@ export function createTableCellFillControls(
 			patternBackground.value = style.patternFillBackground ?? '#ffffff';
 			const suffix = `${edge.value[0].toUpperCase()}${edge.value.slice(1)}`;
 			edgeColor.value = String(style[`border${suffix}Color` as keyof typeof style] ?? '#374151');
-			edgeWidth.value = String(style[`border${suffix}Width` as keyof typeof style] ?? 1);
+			edgeWidth.value = String(
+				inspectorNumber(
+					style[`border${suffix}Width` as keyof typeof style] as number | undefined,
+					1,
+				),
+			);
 			for (const input of all) {
 				input.disabled = !next.isTable;
 			}

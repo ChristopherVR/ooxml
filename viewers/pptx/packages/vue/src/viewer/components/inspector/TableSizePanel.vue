@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { evenColumnWidths, evenRowHeights, redistributeColumnWidth } from 'ooxml-ui/pptx';
+import {
+	evenColumnWidths,
+	evenRowHeights,
+	inspectorNumber,
+	redistributeColumnWidth,
+} from 'ooxml-ui/pptx';
 import type { PptxTableData } from 'pptx-viewer-core';
 import { useI18n } from 'vue-i18n';
 
@@ -98,7 +103,7 @@ function evenRows(): void {
 					:disabled="!canEdit"
 					min="16"
 					max="500"
-					:value="row.height ?? 32"
+					:value="inspectorNumber(row.height, 32)"
 					@input="setRowHeight(ri, Number(($event.target as HTMLInputElement).value))"
 				/>
 				<span class="w-6 text-muted-foreground">px</span>

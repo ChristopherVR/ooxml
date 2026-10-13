@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { FILL_MODE_OPTIONS, GRADIENT_TYPE_OPTIONS, PATTERN_PRESET_OPTIONS } from 'ooxml-ui/pptx';
+import {
+	FILL_MODE_OPTIONS,
+	GRADIENT_TYPE_OPTIONS,
+	inspectorNumber,
+	PATTERN_PRESET_OPTIONS,
+} from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -35,7 +40,7 @@ const MARGIN_FIELDS: Array<[keyof PptxTableCellStyle, string]> = [
 
 const fillMode = computed(() => props.cellStyle.fillMode ?? 'solid');
 const gradientType = computed(() => props.cellStyle.gradientFillType ?? 'linear');
-const gradientAngle = computed(() => props.cellStyle.gradientFillAngle ?? 90);
+const gradientAngle = computed(() => inspectorNumber(props.cellStyle.gradientFillAngle, 90));
 const gradientStops = computed(() => props.cellStyle.gradientFillStops ?? []);
 
 function onFillModeChange(event: Event): void {
@@ -227,7 +232,7 @@ function addStop(): void {
 						:disabled="!canEdit"
 						min="0"
 						max="200"
-						:value="(cellStyle[key] as number | undefined) ?? 0"
+						:value="inspectorNumber(cellStyle[key] as number | undefined, 0)"
 						@input="emit('update', { [key]: Number(($event.target as HTMLInputElement).value) })"
 					/>
 				</label>

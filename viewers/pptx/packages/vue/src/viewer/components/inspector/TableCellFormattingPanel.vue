@@ -3,6 +3,7 @@ import {
 	computeMergeCellDown,
 	computeMergeCellRight,
 	computeSplitCell,
+	inspectorNumber,
 	withCellStyle,
 } from 'ooxml-ui/pptx';
 import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
@@ -120,7 +121,7 @@ function split(): void {
 				:disabled="!canEdit"
 				min="6"
 				max="200"
-				:value="cs.fontSize ?? 14"
+				:value="inspectorNumber(cs.fontSize, 14)"
 				@input="updateCellStyle({ fontSize: Number(($event.target as HTMLInputElement).value) })"
 			/>
 		</label>
@@ -212,7 +213,7 @@ function split(): void {
 							:disabled="!canEdit"
 							min="0"
 							max="10"
-							:value="(cs[widthKey] as number | undefined) ?? 1"
+							:value="inspectorNumber(cs[widthKey] as number | undefined, 1)"
 							@input="
 								updateCellStyle({ [widthKey]: Number(($event.target as HTMLInputElement).value) })
 							"

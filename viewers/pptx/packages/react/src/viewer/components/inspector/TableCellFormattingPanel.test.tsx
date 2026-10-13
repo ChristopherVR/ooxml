@@ -58,4 +58,48 @@ describe('tableCellFormattingPanel', () => {
 			paragraphs: [{ align: 'left' }, { align: 'left' }],
 		});
 	});
+	it('shows EMU-derived widths and margins with two decimals at most', () => {
+		// 1.52pt borders and 4pt margins, read back from EMU as px.
+		const border = 19304 / 9525;
+		const margin = 50800 / 9525;
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [
+				{
+					cells: [
+						{
+							text: 'one',
+							style: {
+								borderTopWidth: border,
+								borderBottomWidth: border,
+								borderLeftWidth: border,
+								borderRightWidth: border,
+								marginTop: margin,
+								marginBottom: margin,
+								marginLeft: margin,
+								marginRight: margin,
+							},
+						},
+					],
+				},
+			],
+		};
+		act(() => {
+			root.render(
+				<TableCellFormattingPanel
+					tableData={tableData}
+					tableEditorState={{ rowIndex: 0, columnIndex: 0, elementId: 'table' }}
+					canEdit
+					onUpdateTableData={() => {}}
+					onUpdateMergeRows={() => {}}
+				/>,
+			);
+		});
+		const values = [...container.querySelectorAll<HTMLInputElement>('input[type="number"]')].map(
+			(input) => input.value,
+		);
+		expect(values.filter((value) => value === '2.03')).toHaveLength(4);
+		expect(values.filter((value) => value === '5.33')).toHaveLength(4);
+		expect(values.filter((value) => /\.\d{3,}/u.test(value))).toStrictEqual([]);
+	});
 });
