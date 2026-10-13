@@ -11,12 +11,21 @@ const BLUE_PNG =
  * are written into the saved slide XML so the deck is exactly what PowerPoint
  * produces, independent of the editor's own style writer.
  */
-export async function pictureFrameDeck(): Promise<Buffer> {
+export async function pictureFrameDeck(animated = false): Promise<Buffer> {
 	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
 	data.slides[0].elements = [
 		ImageBuilder.create(BLUE_PNG).position(200, 120).size(300, 220).build(),
 	];
 	data.slides[0].isDirty = true;
+	if (animated)
+		data.slides[0].animations = [
+			{
+				elementId: data.slides[0].elements[0]!.id,
+				entrance: 'fadeIn',
+				durationMs: 1000,
+				trigger: 'onClick',
+			},
+		];
 	const zip = await JSZip.loadAsync(await handler.save(data.slides));
 	handler.dispose();
 	const frame =

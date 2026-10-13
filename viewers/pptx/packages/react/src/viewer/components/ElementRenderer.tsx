@@ -2,6 +2,8 @@ import {
 	buildTextStyleOverrideCss,
 	elementHitTargetStyle,
 	getGroupChildParentFill,
+	getShapeEffectLayerPlacement,
+	getShapeEffectAnimationLayerStyle,
 	isHollowShapeElement,
 	isMediaFullscreenActive,
 	resolveElementAriaAttributes,
@@ -111,6 +113,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 		// bindings each reading a different subset of the flags off the element.
 		const allow = resolveElementInteractivity(el);
 		const backgroundAnimationState = presentationElementStates?.get(`${el.id}::pptx-bg`);
+		const effectPlacement = getShapeEffectLayerPlacement(el);
 		const visualAnimationState = backgroundAnimationState ?? animationState;
 		const isTxt = isEditableTextElement(el) && allow.textEditable;
 		const txtSE = hasTextProperties(el) ? el.textStyle : undefined;
@@ -252,6 +255,9 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 			: undefined;
 
 		const isFocusable = effectiveCanInteract || isActionable;
+		const backgroundLayerStyle = backgroundAnimationState
+			? (getShapeEffectAnimationLayerStyle(el, ss, backgroundAnimationState) as CSSProperties)
+			: undefined;
 		const containerStyle = getContainerStyle({
 			el,
 			isFullscreenMedia,
@@ -337,19 +343,8 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 						style={hitTargetStyle as CSSProperties}
 					/>
 				)}
-				{backgroundAnimationState ? (
-					<div
-						data-pptx-animation-layer='background'
-						style={{
-							...ss,
-							position: 'absolute',
-							inset: 0,
-							transformOrigin: 'center',
-							visibility: backgroundAnimationState.visible === false ? 'hidden' : 'visible',
-							animation: backgroundAnimationState.cssAnimation,
-							pointerEvents: 'none',
-						}}
-					>
+				{backgroundAnimationState && effectPlacement.beforeBody ? (
+					<div data-pptx-animation-layer='background' style={backgroundLayerStyle}>
 						<ShapeEffectOverlay
 							element={el}
 							animatesFill={visualAnimationState?.animatesFill}
@@ -363,7 +358,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 						{/* A picture's overlay (its centred `a:ln` frame) paints over the
 						    picture, after the body below; under it the photo covered the
 						    inner half of the line. */}
-						{!isImg && (
+						{effectPlacement.beforeBody && (
 							<ShapeEffectOverlay
 								element={el}
 								animatesFill={visualAnimationState?.animatesFill}
@@ -445,12 +440,17 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 					onUpdateChartElement: chartUpdateHandler,
 					onFormatText,
 				})}
-				{isImg && !backgroundAnimationState && (
-					<ShapeEffectOverlay
-						element={el}
-						animatesFill={visualAnimationState?.animatesFill}
-						animatesStroke={visualAnimationState?.animatesStroke}
-					/>
+				{effectPlacement.afterBody && (
+					<div
+						data-pptx-animation-layer={backgroundAnimationState ? 'background' : undefined}
+						style={backgroundLayerStyle ?? { display: 'contents' }}
+					>
+						<ShapeEffectOverlay
+							element={el}
+							animatesFill={visualAnimationState?.animatesFill}
+							animatesStroke={visualAnimationState?.animatesStroke}
+						/>
+					</div>
 				)}
 				<ActionAffordances affordance={actionAffordance} />
 				{/* Resize/rotate/adjustment handles do NOT render here. This div

@@ -2295,3 +2295,8 @@ The DOM-free `printRange` helper moves to
 pagination using existing grid metrics. Cell CSS remains in the UI and is
 extracted to `src/ui/src/xlsx/print-cell.ts`. Browser preview and printing consume
 the shared core page plan.
+
+## PowerPoint picture effect paint placement
+
+Source: ChristopherVR/ooxml, commit `2c73b55ed`, `viewers/pptx/packages/react/src/viewer/components/ElementRenderer.tsx` and `StaticElementRenderer.tsx`.
+The duplicated picture-versus-shape overlay ordering and background paint-layer CSS now live in `src/ui/src/pptx/render/picture-frame.ts`. React keeps its JSX bindings and consumes those shared descriptors; animated picture frames paint after their image surface.

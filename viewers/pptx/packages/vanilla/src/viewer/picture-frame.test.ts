@@ -55,6 +55,9 @@ describe('vanilla: a picture paints its own frame and outer shadow', () => {
 		expect(box?.querySelector('.pptxv-image-surface img')).not.toBeNull();
 		const path = box?.querySelector(':scope > svg path');
 		expect(path?.getAttribute('stroke')).toBe('#FF0000');
+		expect(
+			box!.querySelector('img')!.compareDocumentPosition(path!) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 	});
 
 	it('keeps an unframed picture in its single clipped box', () => {
