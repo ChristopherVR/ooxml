@@ -7,6 +7,39 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.10.0) - 2026-10-13
+
+### Features
+
+- **ui:** Configure multiple pivot value fields ([eede3cb](https://github.com/ChristopherVR/ooxml/commit/eede3cb1b058435cac114e716db834ffe5757685))
+- **ui:** Enable multi-measure pivot report layouts ([bf559ec](https://github.com/ChristopherVR/ooxml/commit/bf559ec8eb746c7b3a1d1869d04e0a4a51467c94))
+- **ui:** Expose pivot values axis settings ([9a6164f](https://github.com/ChristopherVR/ooxml/commit/9a6164f7e0fa3ed23b337a601eba0524c4921323))
+- **ui:** Add a Size group with Crop to the Picture Format tab ([58f5906](https://github.com/ChristopherVR/ooxml/commit/58f5906b157cf2503b9348f671da76c591117cc6))
+- **ui:** Enable compact and outline pivot row values ([87535e3](https://github.com/ChristopherVR/ooxml/commit/87535e36cbf34ff04e0811d2db8ab70f15268580))
+- **pptx:** Support native whole-shape fixed opacity ([7b0372e](https://github.com/ChristopherVR/ooxml/commit/7b0372ed918da963bf662a302334e68ccae972e2))
+- **xlsx:** Author nested values rows in tabular reports ([fc94245](https://github.com/ChristopherVR/ooxml/commit/fc94245e3f5f2caf6529a2daabf4f0e25229c47e))
+- **xlsx:** Configure nested row values in all report layouts ([f85cf7d](https://github.com/ChristopherVR/ooxml/commit/f85cf7d8c2580d5b4bc1b0fb8a0451efe577dc9a))
+- **xlsx:** Configure between-field values placement ([07357bd](https://github.com/ChristopherVR/ooxml/commit/07357bde39824b7f433be2d6b7e7529b1ed041b0))
+- **xlsx:** Configure values before row fields ([4f33bd0](https://github.com/ChristopherVR/ooxml/commit/4f33bd0d2e27dd113ef21aeead69b8940a70b8bb))
+
+### Bug Fixes
+
+- **pptx:** Paint animated picture frames above their images ([55ac6e8](https://github.com/ChristopherVR/ooxml/commit/55ac6e8d9ae5b4c74d0f1bd18b783864c9d446c1))
+- **docx:** Paint nested table frames in print layout ([0415699](https://github.com/ChristopherVR/ooxml/commit/04156990666eb0a9f7b449c78266000578ea3797))
+- **docx:** Align nested print text with cell frames ([66a9030](https://github.com/ChristopherVR/ooxml/commit/66a9030394475733f58f06541206274e27652c15))
+- **docx:** Reserve measured nested table border insets ([d59a6ea](https://github.com/ChristopherVR/ooxml/commit/d59a6ea69bad31c395f58caed8160ebac082209f))
+- **docx:** Measure parallel table continuation bottoms ([854baa9](https://github.com/ChristopherVR/ooxml/commit/854baa92664b927016425e8b1edaf7148d7d387b))
+- **pptx:** Animate shape backgrounds independently of text ([1c2568b](https://github.com/ChristopherVR/ooxml/commit/1c2568b9fc5712ae34b9e0a11f530d4b298eb8a7))
+- **pptx:** Preserve background paint colors and whole opacity ([afd6e3b](https://github.com/ChristopherVR/ooxml/commit/afd6e3b5e372a5d05c723e1cdb55c6c001f241dc))
+- **ui:** Keep spaces and line breaks in a wrap="none" text body ([12297d1](https://github.com/ChristopherVR/ooxml/commit/12297d13787c6230e406ab52d53c07365bcae185))
+- **docx:** Align asymmetric nested borders and paint layers ([7540cb1](https://github.com/ChristopherVR/ooxml/commit/7540cb1e6224298dec801134537512383aee007b))
+- **docx:** Reserve ordinary table border occupancy ([b7c904e](https://github.com/ChristopherVR/ooxml/commit/b7c904edc474c2704075a97ad029890c42b46d7c))
+- **pptx:** Preserve native after-state and honor explicit clears ([aed6a6d](https://github.com/ChristopherVR/ooxml/commit/aed6a6d03410a3487589edfa6f57bde243885a45))
+- **pptx:** Number slide-number fields from the deck's firstSlideNum ([ec9b18d](https://github.com/ChristopherVR/ooxml/commit/ec9b18da409c971d08491b612db228fa32608c8b))
+- **pptx:** Drop cleared cell fills and borders when the style changes ([99dbeba](https://github.com/ChristopherVR/ooxml/commit/99dbebabe7fd885998c52360610781e10ad3bca4))
+- **ui:** Match table style previews to the table's style options ([2fcf53c](https://github.com/ChristopherVR/ooxml/commit/2fcf53c1eb19488b0a7873761a43b9df51532e01))
+- **ui:** Apply a picked font family to the whole text box ([5c20e49](https://github.com/ChristopherVR/ooxml/commit/5c20e4945a8b35bf68169715f3f4bd926ecfac86))
+
 ## [1.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.9.0) - 2026-10-13
 
 ### Features

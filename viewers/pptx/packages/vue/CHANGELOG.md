@@ -7,6 +7,29 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.35.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.35.0) - 2026-10-13
+
+### Features
+
+- **ui:** Add a Size group with Crop to the Picture Format tab ([58f5906](https://github.com/ChristopherVR/ooxml/commit/58f5906b157cf2503b9348f671da76c591117cc6))
+- **pptx:** Support native whole-shape fixed opacity ([7b0372e](https://github.com/ChristopherVR/ooxml/commit/7b0372ed918da963bf662a302334e68ccae972e2))
+- **pptx:** Expose supported imported after-effect clearing ([936e248](https://github.com/ChristopherVR/ooxml/commit/936e248374a57fa90882879ab0a2ea607b4a4796))
+
+### Bug Fixes
+
+- **pptx:** Paint animated picture frames above their images ([55ac6e8](https://github.com/ChristopherVR/ooxml/commit/55ac6e8d9ae5b4c74d0f1bd18b783864c9d446c1))
+- **pptx:** Animate shape backgrounds independently of text ([1c2568b](https://github.com/ChristopherVR/ooxml/commit/1c2568b9fc5712ae34b9e0a11f530d4b298eb8a7))
+- **pptx:** Preserve background paint colors and whole opacity ([afd6e3b](https://github.com/ChristopherVR/ooxml/commit/afd6e3b5e372a5d05c723e1cdb55c6c001f241dc))
+- **core:** Keep custom-geometry command order through undo and copies ([3ea38e4](https://github.com/ChristopherVR/ooxml/commit/3ea38e4e1bda2a59e7677b3c1783d53a89d1ab75))
+- **ui:** Keep spaces and line breaks in a wrap="none" text body ([12297d1](https://github.com/ChristopherVR/ooxml/commit/12297d13787c6230e406ab52d53c07365bcae185))
+- **pptx:** Bound legacy opacity image hint admission ([a37cf62](https://github.com/ChristopherVR/ooxml/commit/a37cf62761132b312825d3fe9d317a28317c7e85))
+- **pptx:** Refuse unresolved opacity parent timing ([8d71f85](https://github.com/ChristopherVR/ooxml/commit/8d71f852f4f0f4305cf18dbafcb151f6c7fac280))
+- **pptx:** Preserve native after-state and honor explicit clears ([aed6a6d](https://github.com/ChristopherVR/ooxml/commit/aed6a6d03410a3487589edfa6f57bde243885a45))
+- **pptx:** Number slide-number fields from the deck's firstSlideNum ([ec9b18d](https://github.com/ChristopherVR/ooxml/commit/ec9b18da409c971d08491b612db228fa32608c8b))
+- **pptx:** Keep a:br line breaks soft through an inline text edit ([02e40ae](https://github.com/ChristopherVR/ooxml/commit/02e40aed4dc8388676d5b852d73e5065d1b3846f))
+- **pptx:** Drop cleared cell fills and borders when the style changes ([99dbeba](https://github.com/ChristopherVR/ooxml/commit/99dbebabe7fd885998c52360610781e10ad3bca4))
+- **ui:** Apply a picked font family to the whole text box ([5c20e49](https://github.com/ChristopherVR/ooxml/commit/5c20e4945a8b35bf68169715f3f4bd926ecfac86))
+
 ## [4.34.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.34.0) - 2026-10-13
 
 ### Features
