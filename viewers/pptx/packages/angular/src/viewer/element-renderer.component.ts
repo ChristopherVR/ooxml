@@ -5,6 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import {
 	buildTextStyleOverrideCss,
 	getGroupChildParentFill,
+	getBackgroundAnimationState,
 	isElementHidden,
 	inlineElementPointerEvents,
 } from 'ooxml-ui/pptx';
@@ -253,7 +254,9 @@ export class ElementRendererComponent {
 	);
 	/** Fill/stroke/effects container style; see `buildShapeContainerStyle`'s doc. */
 	readonly shapeContainerStyle = computed<StyleMap>(() => {
-		const state = this.animationState();
+		const state =
+			getBackgroundAnimationState(this.element(), this.subElementAnimStates()) ??
+			this.animationState();
 		return buildShapeContainerStyle(
 			this.element(),
 			this.zIndex(),

@@ -17,8 +17,7 @@ export function getBackgroundAnimationState(
 		: undefined;
 }
 
-const PAINT =
-	/^(?:background|border|stroke|fill)|^(?:filter|boxShadow|mixBlendMode|clipPath|opacity)$/;
+const PAINT = /^(?:background|border|stroke|fill)|^(?:filter|boxShadow|mixBlendMode|clipPath)$/;
 
 /** Move visual paint off the positioning box so a background target leaves text visible. */
 export function getBackgroundAnimationLayers<T extends object>(

@@ -15,12 +15,17 @@ test('animates the paint layer independently from the shape text and resets to s
 		width: 200,
 		height: 100,
 		shapeType: 'rect',
-		shapeStyle: { fillColor: '#ff0000' },
+		shapeStyle: { fillColor: '#ff0000', strokeColor: '#0000ff', strokeWidth: 4 },
 		text: 'Persistent text',
 		textSegments: [{ text: 'Persistent text', style: {} }],
 	} as PptxElement;
 	const states = shallowRef(
-		new Map([['s::pptx-bg', { visible: false, cssAnimation: 'fade 1s both' }]]),
+		new Map([
+			[
+				's::pptx-bg',
+				{ visible: false, cssAnimation: 'fade 1s both', animatesFill: true, animatesStroke: true },
+			],
+		]),
 	);
 	const wrapper = mount(ElementRenderer, {
 		props: { element, mediaDataUrls: new Map(), zIndex: 0 },
@@ -30,6 +35,9 @@ test('animates the paint layer independently from the shape text and resets to s
 		const root = wrapper.get('[data-element-id="s"]').element as HTMLElement;
 		const paint = root.querySelector<HTMLElement>('[data-pptx-animation-layer="background"]')!;
 		expect(paint.style.visibility).toBe('hidden');
+		expect(paint.style.backgroundColor).toBe('');
+		expect(paint.style.getPropertyValue('--pptx-animation-fill-base')).toBe('#ff0000');
+		expect(paint.style.getPropertyValue('--pptx-animation-stroke-base')).toBe('#0000ff');
 		expect(paint.style.animation).toContain('fade');
 		expect(root.style.backgroundColor).toBe('');
 		expect(root.textContent).toContain('Persistent text');

@@ -145,8 +145,8 @@ const shapeStyle = computed<CSSProperties>(() =>
 	getShapeFillStrokeStyle(
 		props.element,
 		props.parentGroupFill,
-		animationState.value?.animatesFill,
-		animationState.value?.animatesStroke,
+		(backgroundState.value ?? animationState.value)?.animatesFill,
+		(backgroundState.value ?? animationState.value)?.animatesStroke,
 	),
 );
 /**

@@ -14,11 +14,16 @@ test('updates background paint independently without hiding the shape text', () 
 		width: 200,
 		height: 100,
 		shapeType: 'rect',
-		shapeStyle: { fillColor: '#ff0000' },
+		shapeStyle: { fillColor: '#ff0000', strokeColor: '#0000ff', strokeWidth: 4 },
 		text: 'Persistent text',
 		textSegments: [{ text: 'Persistent text', style: {} }],
 	} as PptxElement;
-	const states = new Map([['s::pptx-bg', { visible: false, cssAnimation: 'fade 1s both' }]]);
+	const states = new Map([
+		[
+			's::pptx-bg',
+			{ visible: false, cssAnimation: 'fade 1s both', animatesFill: true, animatesStroke: true },
+		],
+	]);
 	const stage = renderSlideStage({
 		document,
 		slide: { id: 'slide', rId: 'rId1', slideNumber: 1, elements: [element] } as PptxSlide,
@@ -34,6 +39,9 @@ test('updates background paint independently without hiding the shape text', () 
 	const root = stage.querySelector<HTMLElement>('[data-element-id="s"]')!;
 	const paint = root.querySelector<HTMLElement>('[data-pptx-animation-layer="background"]')!;
 	expect(paint.style.visibility).toBe('hidden');
+	expect(paint.style.backgroundColor).toBe('');
+	expect(paint.style.getPropertyValue('--pptx-animation-fill-base')).toBe('#ff0000');
+	expect(paint.style.getPropertyValue('--pptx-animation-stroke-base')).toBe('#0000ff');
 	expect(root.style.backgroundColor).toBe('');
 	expect(root.textContent).toContain('Persistent text');
 	expect(paint.textContent).not.toContain('Persistent text');

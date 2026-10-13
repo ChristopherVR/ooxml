@@ -119,7 +119,8 @@
 	/** Whole map, so a staged text build can find its `::c` / `::w` sub-states. */
 	const allAnimStates = $derived(getAllAnimStates?.());
 	const backgroundState = $derived(getBackgroundAnimationState(element, allAnimStates));
-	const backgroundLayers = $derived(getBackgroundAnimationLayers(element, getShapeBoxStyle(element, zIndex, parentGroupFill, animationState?.animatesFill, animationState?.animatesStroke), backgroundState));
+	const visualState = $derived(backgroundState ?? animationState);
+	const backgroundLayers = $derived(getBackgroundAnimationLayers(element, getShapeBoxStyle(element, zIndex, parentGroupFill, visualState?.animatesFill, visualState?.animatesStroke), backgroundState));
 
 	/**
 	 * The host's resolved 3D flags (provided by PowerPointViewer). Charts

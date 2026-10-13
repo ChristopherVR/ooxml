@@ -37,10 +37,12 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 	// During a `p:animClr` colour animation the shape relinquishes its static
 	// fill / stroke so the wrapper-level colour keyframes surface (presentation).
 	const animState = context.presentationStates?.get(element.id);
+	const background = getBackgroundAnimationState(element, context.presentationStates);
+	const visualState = background ?? animState;
 	const shape = getShapeFillStrokeStyle(
 		element,
-		animState?.animatesFill,
-		animState?.animatesStroke,
+		visualState?.animatesFill,
+		visualState?.animatesStroke,
 	);
 	// The shape style may carry a 3D transform; compose it with the container's
 	// rotation/flip transform instead of letting the merge clobber it.
@@ -50,7 +52,6 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 		merged['transform'] = transform;
 	}
 
-	const background = getBackgroundAnimationState(element, context.presentationStates);
 	const layers = getBackgroundAnimationLayers(element, merged, background);
 	const el = createEl(context.document, 'div', 'pptxv-element pptxv-shape', layers.box);
 	el.dataset.elementId = element.id;

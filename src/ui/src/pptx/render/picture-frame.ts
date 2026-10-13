@@ -19,6 +19,7 @@
  * @module render/picture-frame
  */
 import type { PptxElement } from 'ooxml-core/pptx';
+import { getAnimationColorBaseStyle } from './animation-color-base-style';
 import { hasShapeProperties, isImageLikeElement } from 'ooxml-core/pptx';
 
 import type { CssStyleMap } from './element-style-transform';
@@ -61,6 +62,7 @@ export function getShapeEffectAnimationLayerStyle<T extends object>(
 	state: ElementAnimationState,
 ) {
 	return {
+		...getAnimationColorBaseStyle(element, state),
 		...visualStyle,
 		...(isImageLikeElement(element) ? { clipPath: 'none', overflow: 'visible' } : {}),
 		position: 'absolute',
