@@ -43,7 +43,9 @@ for (const layout of ['tabular', 'compact', 'outline'])
 		await create.getByLabel('Report Layout:', { exact: true }).selectOption(layout);
 		await create.getByLabel('Values Axis:', { exact: true }).selectOption('rows');
 		await expect(create.getByLabel('Report Layout:', { exact: true })).toHaveValue(layout);
-		await expect(create.getByLabel('Second Row Field:', { exact: true })).toBeDisabled();
+		if (layout === 'tabular')
+			await expect(create.getByLabel('Second Row Field:', { exact: true })).toBeEnabled();
+		else await expect(create.getByLabel('Second Row Field:', { exact: true })).toBeDisabled();
 		if (layout !== 'compact') await create.getByLabel('Repeat row labels', { exact: true }).check();
 		await page.screenshot({ path: info.outputPath('pivot-values-on-rows.png') });
 		await create.getByRole('button', { name: 'OK', exact: true }).click();

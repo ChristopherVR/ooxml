@@ -57,7 +57,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		],
 		pivot?.valuesAxis ?? 'columns',
 	);
-	const multipleNotice = text(ctx, 'Values on rows require one row field.');
+	const multipleNotice = text(ctx, 'Values on rows with two row fields require tabular layout.');
 	const extras = pivotValueControls(
 		ctx,
 		pivot?.additionalValues ?? [],
@@ -98,9 +98,12 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const updateRows = () => {
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
-		axis.querySelector<HTMLOptionElement>('[value="rows"]')!.disabled = !!second.value;
+		axis.querySelector<HTMLOptionElement>('[value="rows"]')!.disabled =
+			!!second.value && layout.value !== 'tabular';
 		const rowsAxis = axis.value === 'rows';
-		second.disabled = rowsAxis;
+		second.disabled = rowsAxis && layout.value !== 'tabular';
+		for (const option of layout.options)
+			option.disabled = rowsAxis && !!second.value && option.value !== 'tabular';
 		multipleNotice.hidden = !rowsAxis;
 		subtotals.input.disabled = !second.value;
 		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
