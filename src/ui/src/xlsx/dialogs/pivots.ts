@@ -63,6 +63,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		[
 			['last', 'After row fields'],
 			['between', 'Between row fields'],
+			['first', 'Before row fields'],
 		],
 		pivot?.valuesPosition ?? 'last',
 	);
@@ -110,22 +111,29 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		valuesPlacement.disabled = !rowsAxis || !second.value;
 		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
 		multipleNotice.textContent = ctx.t(
-			valuesPlacement.value === 'between'
-				? 'Values are listed between the row fields.'
-				: 'Values are listed after the row fields.',
+			valuesPlacement.value === 'first'
+				? 'Values are listed before the row fields.'
+				: valuesPlacement.value === 'between'
+					? 'Values are listed between the row fields.'
+					: 'Values are listed after the row fields.',
 		);
 		multipleNotice.hidden = !rowsAxis;
 		subtotals.input.disabled = !second.value;
 		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
 		position.disabled =
-			!second.value || !subtotals.input.checked || layout.value === 'tabular' || rowsAxis;
+			!second.value ||
+			!subtotals.input.checked ||
+			layout.value === 'tabular' ||
+			(rowsAxis && valuesPlacement.value !== 'first');
 		tabularNotice.textContent = ctx.t(
 			rowsAxis
 				? 'Values on rows display subtotals below groups.'
 				: 'Tabular layout displays subtotals below groups.',
 		);
 		tabularNotice.hidden =
-			!second.value || !subtotals.input.checked || !(layout.value === 'tabular' || rowsAxis);
+			!second.value ||
+			!subtotals.input.checked ||
+			!(layout.value === 'tabular' || (rowsAxis && valuesPlacement.value !== 'first'));
 	};
 	axis.addEventListener('change', updateRows);
 	valuesPlacement.addEventListener('change', updateRows);
@@ -160,7 +168,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			const options = {
 				rowField: row.value,
 				valuesAxis: axis.value as 'columns' | 'rows',
-				valuesPosition: valuesPlacement.value as 'last' | 'between',
+				valuesPosition: valuesPlacement.value as 'last' | 'between' | 'first',
 				layout: layout.value as PivotLayout,
 				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,

@@ -105,6 +105,10 @@ for (const profile of [
 	'nested-compact',
 	'nested-outline',
 	'nested-outline-repeat',
+	'first-tabular',
+	'first-compact',
+	'first-outline',
+	'first-outline-repeat',
 	'between-tabular',
 	'between-compact',
 	'between-outline',
@@ -113,19 +117,22 @@ for (const profile of [
 	test(`keeps native ${profile} Values-on-rows definitions verbatim when accepting unchanged settings`, async ({
 		page,
 	}) => {
+		const leading = profile.startsWith('first-');
 		const between = profile.startsWith('between-');
-		const nested = profile.startsWith('nested-') || between;
-		const form = profile.replace(/^(nested-|between-)/, '');
+		const nested = profile.startsWith('nested-') || between || leading;
+		const form = profile.replace(/^(nested-|between-|first-)/, '');
 		const suffix = form === 'tabular' ? '' : form === 'outline-repeat' ? '-outline' : '-' + form;
 		const repeatSuffix = form === 'outline-repeat' ? '-repeat' : '';
 		const layout = form === 'tabular' ? 'tabular' : form === 'compact' ? 'compact' : 'outline';
-		const filename = between
-			? layout === 'tabular'
-				? 'excel-pivot-row-values-rows-between-columns.xlsx'
-				: `excel-pivot-row-values-${layout}-rows-bottom-between-columns${repeatSuffix}.xlsx`
-			: nested
-				? `excel-pivot-row-values-${layout}-rows-bottom-columns${repeatSuffix}.xlsx`
-				: `excel-pivot-row-values${suffix}-columns${repeatSuffix}.xlsx`;
+		const placement = leading ? 'first' : 'between';
+		const filename =
+			between || leading
+				? layout === 'tabular'
+					? `excel-pivot-row-values-rows-${placement}-columns.xlsx`
+					: `excel-pivot-row-values-${layout}-rows-bottom-${placement}-columns${repeatSuffix}.xlsx`
+				: nested
+					? `excel-pivot-row-values-${layout}-rows-bottom-columns${repeatSuffix}.xlsx`
+					: `excel-pivot-row-values${suffix}-columns${repeatSuffix}.xlsx`;
 		const bytes = readFileSync(
 			new URL(`../../src/core/xlsx/__fixtures__/${filename}`, import.meta.url),
 		);
@@ -141,21 +148,27 @@ for (const profile of [
 		);
 		await goToCell(
 			page,
-			between
+			leading
 				? layout === 'tabular'
 					? 'F21'
 					: layout === 'compact'
-						? 'D29'
-						: 'F29'
-				: nested
-					? layout === 'compact'
-						? 'D27'
-						: 'F27'
-					: layout === 'tabular'
-						? 'E9'
+						? 'D30'
+						: 'F30'
+				: between
+					? layout === 'tabular'
+						? 'F21'
 						: layout === 'compact'
-							? 'D11'
-							: 'E11',
+							? 'D29'
+							: 'F29'
+					: nested
+						? layout === 'compact'
+							? 'D27'
+							: 'F27'
+						: layout === 'tabular'
+							? 'E9'
+							: layout === 'compact'
+								? 'D11'
+								: 'E11',
 		);
 		await expect.poll(() => formulaBarValue(page)).toBe('57');
 		await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
@@ -164,7 +177,7 @@ for (const profile of [
 		const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 		await expect(settings.getByLabel('Values Axis:', { exact: true })).toHaveValue('rows');
 		await expect(settings.getByLabel('Values Placement:', { exact: true })).toHaveValue(
-			between ? 'between' : 'last',
+			leading ? 'first' : between ? 'between' : 'last',
 		);
 		await expect(settings.getByLabel('Report Layout:', { exact: true })).toHaveValue(layout);
 		await expect(settings.locator('[data-pivot-value]')).toHaveCount(2);

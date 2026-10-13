@@ -26,7 +26,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const firstValues = rowsAxis && pivot.valuesPosition === 'first';
 	const between = rowsAxis && pivot.valuesPosition === 'between';
 	const measures = pivotMeasures(pivot);
-	// Native row Values keep automatic subtotals below groups in every report layout.
+	// Last/between row Values put subtotals below groups; first Values honor top outside tabular.
 	const top =
 		(!rowsAxis || firstValues) &&
 		layout !== 'tabular' &&

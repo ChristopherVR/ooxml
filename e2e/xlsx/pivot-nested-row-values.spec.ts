@@ -8,7 +8,7 @@ import {
 	typeInActiveCell,
 } from './helpers';
 
-for (const placement of ['last', 'between'])
+for (const placement of ['last', 'between', 'first'])
 	for (const layout of ['tabular', 'compact', 'outline'])
 		for (const columns of [false, true])
 			test(`authors ${layout} ${placement} nested row Values with columns ${columns}, history and save/reopen`, async ({
@@ -42,7 +42,9 @@ for (const placement of ['last', 'between'])
 				await extra.getByLabel('Summarize Values By:', { exact: true }).selectOption('count');
 				await dialog.getByLabel('Values Axis:', { exact: true }).selectOption('rows');
 				await dialog.getByLabel('Values Placement:', { exact: true }).selectOption(placement);
-				if (placement === 'between' && layout !== 'compact')
+				if (placement === 'first' && layout !== 'tabular')
+					await dialog.getByLabel('Subtotal Position:', { exact: true }).selectOption('bottom');
+				if (placement !== 'last' && layout !== 'compact')
 					await dialog.getByLabel('Repeat row labels', { exact: true }).check();
 				await expect(dialog.getByLabel('Second Row Field:', { exact: true })).toBeEnabled();
 				await expect(
@@ -51,7 +53,7 @@ for (const placement of ['last', 'between'])
 				await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 				const totalColumn = layout === 'compact' ? (columns ? 'J' : 'H') : columns ? 'L' : 'J';
 				const totalRow =
-					(columns ? 13 : 12) + (layout === 'tabular' ? 0 : 5 + (placement === 'between' ? 1 : 0));
+					(columns ? 13 : 12) + (layout === 'tabular' ? 0 : 5 + (placement !== 'last' ? 1 : 0));
 				const total = `${totalColumn}${totalRow}`;
 				await goToCell(page, total);
 				await expect.poll(() => formulaBarValue(page)).toBe('35');

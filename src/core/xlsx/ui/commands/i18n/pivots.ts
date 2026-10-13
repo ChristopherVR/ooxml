@@ -1,6 +1,18 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Before row fields': [
+		'Avant les champs de ligne',
+		'Vor den Zeilenfeldern',
+		'Antes de los campos de fila',
+		'行字段之前',
+	],
+	'Values are listed before the row fields.': [
+		'Les valeurs sont affichées avant les champs de ligne.',
+		'Werte werden vor den Zeilenfeldern aufgeführt.',
+		'Los valores aparecen antes de los campos de fila.',
+		'值列在行字段之前。',
+	],
 	'Values Placement:': [
 		'Position des valeurs :',
 		'Anordnung der Werte:',

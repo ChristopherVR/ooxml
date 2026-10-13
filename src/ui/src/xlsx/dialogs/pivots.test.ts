@@ -444,3 +444,41 @@ it('keeps compact Values-row layout and switches to outline repeated labels with
 	edit.undo();
 	expect(wb.sheets[0]!.pivotTables![0]?.layout).toBe('compact');
 });
+
+it.each(['compact', 'outline', 'tabular'])(
+	'authors first Values with native subtotal eligibility in %s',
+	async (layout) => {
+		const wb = createWorkbook();
+		const ctx = createTestContext(wb);
+		const edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Amount'],
+			['Fruit', 'East', 10],
+		].forEach((line, r) => line.forEach((v, c) => edit.setCellInput(0, r, c, String(v))));
+		ctx.select('A1:C2');
+		registerToolDialogs(ctx);
+		const done = ctx.dialogs.open('create-pivot-table');
+		const dialog = dialogEl(ctx, 'create-pivot-table');
+		clickButton(dialog, 'Add Value Field');
+		setValue(
+			inputByLabel<HTMLSelectElement>(
+				dialog.querySelector<HTMLElement>('[data-pivot-value]')!,
+				'Summarize Values By:',
+			),
+			'count',
+		);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), layout);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:'), 'first');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Subtotal Position:').disabled).toBe(
+			layout === 'tabular',
+		);
+		expect(dialog.textContent).toContain('Values are listed before the row fields.');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({ valuesPosition: 'first', layout });
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables?.length ?? 0).toBe(0);
+	},
+);
