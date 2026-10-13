@@ -16,6 +16,11 @@ export {
 } from './edit-shape-data-commands';
 export { visioLinkedRowNames } from './edit-data';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
+export {
+	visioPrintTileCount,
+	VISIO_PRINT_COUNT_LIMITS,
+	type VisioPrintTileCountResult,
+} from './print-count';
 export { loadVisio } from './load';
 export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy';
 export { VisioPackageError, type VisioPackageLimits } from './package';

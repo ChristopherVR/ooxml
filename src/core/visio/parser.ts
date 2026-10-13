@@ -21,6 +21,7 @@ import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './pack
 import { normalizeShapes, type ShapeContext } from './shapes';
 import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
 import { readVisioPageSetup } from './page-setup';
+import { createVisioPrintSettingsReader } from './print-settings';
 import { readVisioPageLayout } from './page-layout';
 import { readVisioSnapGlue } from './snap-glue';
 import { styleSheet, type StyleRecord } from './style-inheritance';
@@ -151,6 +152,13 @@ export async function parseVsdx(
 		});
 	const rootStyle = styles.get('0');
 	if (rootStyle?.attributes.get('NameU') === 'No Style') resources.rootSheet = rootStyle.sheet;
+	const printStyleGroups = children(documentRoot, 'StyleSheets');
+	const readPrintSettings = createVisioPrintSettingsReader(
+		children(documentRoot, 'DocumentSheet'),
+		printStyleGroups.length === 1
+			? children(printStyleGroups[0], 'StyleSheet').filter((node) => attribute(node, 'ID') === '0')
+			: [],
+	);
 	const masters = new Map<string, RawShape[]>();
 	const masterRecords: MasterRecord[] = [];
 	const mastersPart = await related(pkg, documentPart, 'masters', false);
@@ -331,7 +339,18 @@ export async function parseVsdx(
 			const value = number(sheet.cells, name, Number.NaN, localReport);
 			if (Number.isSafeInteger(value) && value >= 0 && value <= 255) pageModes[key] = value;
 		}
-		const pageSetup = readVisioPageSetup(sheet.cells);
+		const { paperKind, printPageOrientation, margins, printZoom, ...countMetadata } =
+			readPrintSettings(children(page, 'PageSheet'));
+		const pageSetup = {
+			...readVisioPageSetup(sheet.cells),
+			...countMetadata,
+			printCountSettings: {
+				...(paperKind === undefined ? {} : { paperKind }),
+				...(printPageOrientation === undefined ? {} : { printPageOrientation }),
+				...(margins === undefined ? {} : { margins }),
+				...(printZoom === undefined ? {} : { printZoom }),
+			},
+		};
 		const layout = readVisioPageLayout(sheet.cells);
 		for (const connection of connectors)
 			if (!seen.has(connection.fromShapeId) || !seen.has(connection.toShapeId))

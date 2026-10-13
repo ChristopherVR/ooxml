@@ -36,6 +36,16 @@ export function visioPaperSize(paperKind: number): VisioPaperSize | undefined {
 	return VISIO_PAPER_SIZES.find((item) => item.paperKind === paperKind);
 }
 
+/** Physical paper dimensions shared by approximate tiles and strict count admission. */
+export function visioOrientedPaperSize(
+	paper: VisioPaperSize,
+	landscape: boolean,
+): { width: number; height: number } {
+	const short = Math.min(paper.width, paper.height),
+		long = Math.max(paper.width, paper.height);
+	return { width: landscape ? long : short, height: landscape ? short : long };
+}
+
 /**
  * The printable tile of one printed sheet in physical page inches: the saved printer paper in
  * its print orientation, less the margins, at the print zoom. Undefined without a known paper.
@@ -52,11 +62,10 @@ export function visioPrintTile(
 	const landscape =
 		setup?.printPageOrientation === 2 ||
 		(setup?.printPageOrientation !== 1 && page.width > page.height);
-	const short = Math.min(paper.width, paper.height),
-		long = Math.max(paper.width, paper.height);
+	const oriented = visioOrientedPaperSize(paper, landscape);
 	const margins = setup?.margins ?? { left: 0, right: 0, top: 0, bottom: 0 };
 	const zoom = setup?.printZoom ?? 1;
-	const width = ((landscape ? long : short) - margins.left - margins.right) / zoom;
-	const height = ((landscape ? short : long) - margins.top - margins.bottom) / zoom;
+	const width = (oriented.width - margins.left - margins.right) / zoom;
+	const height = (oriented.height - margins.top - margins.bottom) / zoom;
 	return width > 0.01 && height > 0.01 ? { width, height } : undefined;
 }

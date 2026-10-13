@@ -359,7 +359,39 @@ export interface VisioPageSetup {
 	};
 	/** Print zoom (ScaleX), where 1 prints at 100%. */
 	readonly printZoom?: number;
+	/** Resolved count inputs only; never used by the legacy display or edit projection. */
+	readonly printCountSettings?: Pick<
+		VisioPageSetup,
+		'paperKind' | 'printPageOrientation' | 'margins' | 'printZoom'
+	>;
+	/** Separately resolved ScaleY; missing does not imply ScaleX. */
+	readonly printZoomY?: number;
+	readonly printFitToPages?: boolean;
+	readonly printPagesAcross?: number;
+	readonly printPagesDown?: number;
+	readonly printCenterX?: boolean;
+	readonly printCenterY?: boolean;
+	/** Count admission only; cached display metadata never grants editing permission. */
+	readonly printCountRefusal?: VisioPrintCountRefusal;
 }
+export type VisioPrintCountRefusal =
+	| 'missing-setting'
+	| 'invalid-local-setting'
+	| 'invalid-document-setting'
+	| 'ambiguous-document-sheet'
+	| 'ambiguous-page-sheet'
+	| 'duplicate-setting'
+	| 'dynamic-setting'
+	| 'fit-mode'
+	| 'unequal-scale'
+	| 'unknown-paper'
+	| 'printer-orientation'
+	| 'centering-unmeasured'
+	| 'unusable-drawing-scale'
+	| 'unusable-print-area'
+	| 'count-budget'
+	| 'boundary-precision'
+	| 'unsupported-print-style';
 /** The theme a page uses, for the Design tab. Colours are `#rrggbb`. */
 export interface VisioPageTheme {
 	name: string;
