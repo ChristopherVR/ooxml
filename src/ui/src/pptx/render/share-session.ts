@@ -112,7 +112,10 @@ export function buildCollaborationShareUrl(
 	config: Pick<CollaborationConfig, 'roomId' | 'serverUrl' | 'transport' | 'signaling'>,
 	location?: { origin: string; pathname: string },
 ): string {
-	if (!location) {
+	if (!location || location.origin === 'null' || location.origin === '') {
+		// Opaque origins (file:, about:blank or sandboxed hosts) cannot carry
+		// an absolute invitation. As for an absent location, use a joinable room code.
+		// Room codes use the recipient's fallback server and cannot carry custom signaling.
 		return config.roomId;
 	}
 	const url = new URL(location.pathname, location.origin);

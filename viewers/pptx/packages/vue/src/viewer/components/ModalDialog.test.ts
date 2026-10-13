@@ -1,10 +1,21 @@
-import { mount } from '@vue/test-utils';
+import { mount as mountComponent } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import { h } from 'vue';
 
 import ModalDialog from './ModalDialog.vue';
 
+const mounted = new Set<ReturnType<typeof mountComponent>>();
+function mount(...args: Parameters<typeof mountComponent>): ReturnType<typeof mountComponent> {
+	const wrapper = mountComponent(...args);
+	mounted.add(wrapper);
+	return wrapper;
+}
+
 afterEach(() => {
+	for (const wrapper of mounted) {
+		wrapper.unmount();
+	}
+	mounted.clear();
 	document.body.innerHTML = '';
 });
 

@@ -1,17 +1,60 @@
-import { mount } from '@vue/test-utils';
+import { mount as mountComponent } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import BroadcastDialog from './BroadcastDialog.vue';
 import { footerAction } from './dialog-footer.test-support';
 
+const mounted = new Set<ReturnType<typeof mountComponent>>();
+function mount(...args: Parameters<typeof mountComponent>): ReturnType<typeof mountComponent> {
+	const wrapper = mountComponent(...args);
+	mounted.add(wrapper);
+	return wrapper;
+}
+
 /** ModalDialog teleports to `body`; stub teleport so content renders inline. */
 const mountOptions = { global: { stubs: { teleport: true } } } as const;
 
 afterEach(() => {
+	for (const wrapper of mounted) {
+		wrapper.unmount();
+	}
+	mounted.clear();
 	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
 });
 
 describe('broadcastDialog', () => {
+	it('removes its real teleported dialog even when clipboard completion is pending', async () => {
+		vi.useFakeTimers();
+		try {
+			let complete!: () => void;
+			vi.stubGlobal('navigator', {
+				clipboard: {
+					writeText: () =>
+						new Promise<void>((resolve) => {
+							complete = resolve;
+						}),
+				},
+			});
+			const wrapper = mount(BroadcastDialog, {
+				props: { open: true, active: true, viewerUrl: 'https://app.test/?broadcast=room-1' },
+			});
+			document.body
+				.querySelector<HTMLButtonElement>('.pptx-vue-broadcast-link-row button')!
+				.click();
+			wrapper.unmount();
+			mounted.delete(wrapper);
+			complete();
+			await wrapper.vm.$nextTick();
+			await vi.runOnlyPendingTimersAsync();
+			expect(vi.getTimerCount()).toBe(0);
+			expect(document.body.querySelector('.pptx-vue-modal-panel')).toBeNull();
+		} finally {
+			vi.clearAllTimers();
+			vi.useRealTimers();
+		}
+	});
+
 	it('emits start with the room id, server url, and websocket transport', async () => {
 		const wrapper = mount(BroadcastDialog, {
 			...mountOptions,
