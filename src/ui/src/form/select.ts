@@ -34,6 +34,9 @@ let uid = 0;
  * `popover`, flipped above the trigger when there is more room. `input` then `change` bubble on a
  * user choice; setting a property is silent. Form-associated.
  */
+// `commit-on-reselect` opts into one bubbling input/change pair when the user
+// chooses the current value (pointer or keyboard). Programmatic value writes
+// stay silent, and disabled controls cannot commit. Omitted: change-only select.
 export class OfficeUiSelect extends OfficeElement {
 	static formAssociated = true;
 	static override shadowRootOptions = { ...LitElement.shadowRootOptions, delegatesFocus: true };
@@ -256,7 +259,9 @@ export class OfficeUiSelect extends OfficeElement {
 		this.value = choice.value;
 		this.close();
 		this.trigger?.focus();
-		if (changed) {
+		// Formatting commands can intentionally reapply the displayed value to a
+		// mixed selection. Ordinary selects retain their change-only behaviour.
+		if (changed || this.hasAttribute('commit-on-reselect')) {
 			this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
 			this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
 		}

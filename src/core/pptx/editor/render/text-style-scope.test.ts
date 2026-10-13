@@ -156,6 +156,87 @@ describe('overrideParagraphProperties', () => {
 		expect(out[0]).toBe(segment);
 		expect(out[1]).toBe(plain);
 	});
+
+	it('overrides conflicting inherited spacing only at paragraph starts', () => {
+		const source: TextSegment[] = [
+			para({ lineSpacing: 1.2, align: 'center' }),
+			seg('tail'),
+			{ text: '\n', isParagraphBreak: true },
+			{ text: 'second', paragraphLevel: 1 },
+			seg('tail'),
+		];
+		const before = structuredClone(source);
+		const inherited = { 0: { lineSpacing: 1.2 }, 1: { lineSpacingExactPt: 18 } };
+		const out = overrideParagraphProperties(
+			source,
+			withExclusiveLineSpacing({ lineSpacing: 1.2 }),
+			inherited,
+		);
+		expect(out[0]?.paragraphProperties).toEqual({ lineSpacing: 1.2, align: 'center' });
+		expect(out[3]?.paragraphProperties).toEqual({ lineSpacing: 1.2 });
+		expect(out[1]).toBe(source[1]);
+		expect(out[2]).toBe(source[2]);
+		expect(out[4]).toBe(source[4]);
+		expect(source).toEqual(before);
+		expect(inherited).toEqual({ 0: { lineSpacing: 1.2 }, 1: { lineSpacingExactPt: 18 } });
+	});
+
+	it('leaves matching inheritance and unrelated paragraph geometry unpinned', () => {
+		const source = [seg('first'), { text: '\n', isParagraphBreak: true }, seg('second')];
+		const out = overrideParagraphProperties(
+			source,
+			{ lineSpacing: 1.2, paragraphIndent: 5 },
+			{ 0: { lineSpacing: 1.2 } },
+		);
+		expect(out).toEqual(source);
+		expect(out.every((segment, index) => segment === source[index])).toBe(true);
+	});
+
+	it('recognises legacy paragraph separators without treating soft breaks as paragraphs', () => {
+		const source: TextSegment[] = [
+			seg('first'),
+			{ text: '\n', isLineBreak: true },
+			seg('continued'),
+			{ text: '\n' },
+			seg('second'),
+		];
+		const out = overrideParagraphProperties(
+			source,
+			withExclusiveLineSpacing({ lineSpacing: 1.2 }),
+			{ 0: { lineSpacing: 1.5 } },
+		);
+		expect(out[0]?.paragraphProperties).toEqual({ lineSpacing: 1.2 });
+		expect(out[2]).toBe(source[2]);
+		expect(out[4]?.paragraphProperties).toEqual({ lineSpacing: 1.2 });
+	});
+
+	it.each(['bullet', 'numbered'])(
+		'uses the %s marker and empty terminator as paragraph carriers',
+		(kind) => {
+			const marker: TextSegment =
+				kind === 'bullet'
+					? { text: '• ', bulletInfo: { char: '•' } }
+					: { text: '1. ', bulletInfo: { autoNumType: 'arabicPeriod', paragraphIndex: 0 } };
+			const source: TextSegment[] = [
+				marker,
+				seg('content'),
+				{ text: '\n' },
+				{ text: '\n' },
+				{ text: 'unknown level', paragraphLevel: 1 },
+			];
+			const out = overrideParagraphProperties(
+				source,
+				withExclusiveLineSpacing({ lineSpacing: 1.2 }),
+				{ 0: { lineSpacing: 1.5 }, 1: { paragraphSpacingAfter: 12 } },
+			);
+			expect(out[0]?.paragraphProperties).toEqual({ lineSpacing: 1.2 });
+			expect(out[0]?.bulletInfo).toBe(marker.bulletInfo);
+			expect(out[1]).toBe(source[1]);
+			expect(out[2]).toBe(source[2]);
+			expect(out[3]?.paragraphProperties).toEqual({ lineSpacing: 1.2 });
+			expect(out[4]).toBe(source[4]);
+		},
+	);
 });
 
 describe('paragraph overrides leave run-level keys alone', () => {

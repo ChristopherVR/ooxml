@@ -58,7 +58,11 @@ export function applyTextStyleUpdate(
 	if (selection && current && current.length > 0) {
 		const { body, run } = splitTextStyleUpdate(exclusive);
 		let textStyle: TextStyle = mergeTextStyleUpdate(element.textStyle, body);
-		let textSegments: TextSegment[] = overrideParagraphProperties(current, exclusive);
+		let textSegments: TextSegment[] = overrideParagraphProperties(
+			current,
+			exclusive,
+			element.textStyle?.inheritedParagraphSpacing,
+		);
 		let newSelection = selection;
 		if (Object.keys(run).length > 0) {
 			const scoped = applyStyleToSelectedSegments(textSegments, selection, run, element.textStyle);
@@ -84,7 +88,13 @@ export function applyTextStyleUpdate(
 	const wholeText = textRunsStylePatch(
 		{
 			...element,
-			textSegments: current && overrideParagraphProperties(current, exclusive),
+			textSegments:
+				current &&
+				overrideParagraphProperties(
+					current,
+					exclusive,
+					element.textStyle?.inheritedParagraphSpacing,
+				),
 		} as PptxElement,
 		exclusive,
 	);

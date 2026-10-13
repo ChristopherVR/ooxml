@@ -16,6 +16,42 @@ function field(value: string, options: string) {
 }
 
 describe('ribbon font select', () => {
+	it.each([
+		[false, 'pointer'],
+		[true, 'pointer'],
+		[false, 'keyboard'],
+		[true, 'keyboard'],
+	])('reapplying a value is opt-in: %s via %s', (enabled, activation) => {
+		const select = field('24', '<option value="24">24</option><option value="36">36</option>');
+		if (enabled) select.setAttribute('commit-on-reselect', '');
+		const change = vi.fn();
+		const input = vi.fn();
+		select.addEventListener('change', change);
+		select.addEventListener('input', input);
+		const trigger = select.shadowRoot!.querySelector<HTMLButtonElement>('button')!;
+		trigger.click();
+		if (activation === 'keyboard') {
+			trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		} else {
+			select.shadowRoot!.querySelector<HTMLElement>('[role="option"]')!.click();
+		}
+		expect(select.value).toBe('24');
+		expect(change).toHaveBeenCalledTimes(enabled ? 1 : 0);
+		expect(input).toHaveBeenCalledTimes(enabled ? 1 : 0);
+	});
+
+	it('does not commit a reselect while disabled', () => {
+		const select = field('24', '<option value="24">24</option>');
+		select.setAttribute('commit-on-reselect', '');
+		select.disabled = true;
+		const change = vi.fn();
+		select.addEventListener('change', change);
+		const trigger = select.shadowRoot!.querySelector<HTMLButtonElement>('button')!;
+		trigger.click();
+		trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		expect(change).not.toHaveBeenCalled();
+		expect(select.hasAttribute('open')).toBe(false);
+	});
 	it.each(['40.5', 'Deck-specific font'])(
 		'retains an authored value outside the presets: %s',
 		(value) => {

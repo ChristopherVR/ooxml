@@ -198,6 +198,9 @@ export function buildSelectControl(
 	const select = doc.createElement('pptx-ui-select') as SelectElement;
 	select.setAttribute('variant', control.select?.icon ? 'ribbon-icon' : 'ribbon-font');
 	select.dataset.ribbonControl = control.id;
+	if (control.id === 'home.paragraph.lineSpacing') {
+		select.setAttribute('commit-on-reselect', '');
+	}
 	if (control.select?.picker) {
 		select.dataset.fontPicker = control.select.picker;
 	}

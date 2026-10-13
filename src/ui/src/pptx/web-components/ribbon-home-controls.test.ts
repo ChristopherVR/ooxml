@@ -54,6 +54,7 @@ describe('home select controls', () => {
 		);
 		const family = control(host, 'home.font.fontFamily');
 		expect(family.tagName).toBe('PPTX-UI-SELECT');
+		expect(family.hasAttribute('commit-on-reselect')).toBe(false);
 		expect(family.dataset.fontPicker).toBe('family');
 		expect(family.getAttribute('variant')).toBe('ribbon-font');
 		expect(family.getAttribute('aria-label')).toBe('Font family');
@@ -62,6 +63,7 @@ describe('home select controls', () => {
 		const read = intents(host);
 		const size = control(host, 'home.font.fontSize') as HTMLElement & { value: string };
 		expect(size.value).toBe('24');
+		expect(size.hasAttribute('commit-on-reselect')).toBe(false);
 		size.value = '36';
 		size.dispatchEvent(new Event('change', { bubbles: true }));
 		expect(read()).toStrictEqual([{ id: 'home.font.fontSize', value: '36' }]);
@@ -73,6 +75,10 @@ describe('home select controls', () => {
 		expect(spacing.getAttribute('variant')).toBe('ribbon-icon');
 		expect(spacing.querySelector('svg[slot="icon"]')).toBeTruthy();
 		expect(spacing.value).toBe('1.5');
+		expect(spacing.hasAttribute('commit-on-reselect')).toBe(true);
+		for (const id of ['home.paragraph.textDirection', 'home.paragraph.columns']) {
+			expect(control(host, id).hasAttribute('commit-on-reselect')).toBe(false);
+		}
 		const read = intents(host);
 		spacing.value = '2';
 		spacing.dispatchEvent(new Event('change', { bubbles: true }));

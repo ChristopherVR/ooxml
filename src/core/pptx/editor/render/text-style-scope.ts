@@ -169,25 +169,48 @@ export function withExclusiveLineSpacing(updates: Partial<TextStyle>): Partial<T
  * A paragraph's authored properties (`segment.paragraphProperties`) win over
  * `element.textStyle` both on screen and on save, so an element-wide line
  * spacing or indent change is invisible on any paragraph that declares its
- * own. Only body-level keys the paragraph already declares (or whose
- * line-spacing twin it declares) are rewritten, so nothing new is pinned onto
- * its `a:pPr` and run-level keys such as `align` keep their old behaviour.
+ * own. Body-level keys the paragraph already declares (or whose line-spacing
+ * twin it declares) are rewritten; run-level keys keep their old behaviour.
+ * When parsed inheritance is available, an explicit line-spacing edit overrides
+ * a conflicting inherited value on the paragraph's first segment. Equal body
+ * values still represent an edit, so comparing against the body baseline cannot
+ * determine authoring intent. The inheritance snapshot itself stays unchanged.
  * Pass `updates` through {@link withExclusiveLineSpacing} first.
  */
 export function overrideParagraphProperties(
 	segments: readonly TextSegment[],
 	updates: Partial<TextStyle>,
+	inheritedSpacing?: TextStyle['inheritedParagraphSpacing'],
 ): TextSegment[] {
 	const keys = (Object.keys(updates) as (keyof TextStyle)[]).filter(isBodyTextStyleKey);
-	return segments.map((segment) => {
+	return segments.map((segment, index) => {
 		const own = segment.paragraphProperties;
-		const declared = own
-			? keys.filter((key) => {
-					const twin = LINE_SPACING_TWIN[key];
-					return key in own || (twin !== undefined && twin in own);
-				})
-			: [];
-		if (!own || declared.length === 0) {
+		const previous = segments[index - 1];
+		const inherited =
+			index === 0 ||
+			previous?.isParagraphBreak ||
+			(previous?.text === '\n' && !previous.isLineBreak)
+				? inheritedSpacing?.[segment.paragraphLevel ?? 0]
+				: undefined;
+		const pinned = keys.filter(
+			(key) =>
+				(key === 'lineSpacing' || key === 'lineSpacingExactPt') &&
+				updates[key] !== undefined &&
+				inherited &&
+				(inherited.lineSpacing !== undefined || inherited.lineSpacingExactPt !== undefined) &&
+				(inherited[key] !== updates[key] ||
+					(LINE_SPACING_TWIN[key] !== undefined &&
+						inherited[LINE_SPACING_TWIN[key]!] !== undefined)),
+		);
+		const declared = keys.filter((key) => {
+			const twin = LINE_SPACING_TWIN[key];
+			return (
+				(own && (key in own || (twin !== undefined && twin in own))) ||
+				pinned.includes(key) ||
+				(twin !== undefined && pinned.includes(twin))
+			);
+		});
+		if (declared.length === 0) {
 			return segment;
 		}
 		const next: TextStyle = { ...own };
@@ -246,7 +269,13 @@ export function paragraphOverridePatch(
 	updates: Partial<TextStyle>,
 ): ParagraphLevelPatch {
 	const current = hasTextProperties(element) ? element.textSegments : undefined;
-	const overridden = current && overrideParagraphProperties(current, updates);
+	const overridden =
+		current &&
+		overrideParagraphProperties(
+			current,
+			updates,
+			hasTextProperties(element) ? element.textStyle?.inheritedParagraphSpacing : undefined,
+		);
 	const changed = overridden?.some((segment, index) => segment !== current?.[index]);
 	return {
 		...(changed ? { textSegments: overridden } : {}),
