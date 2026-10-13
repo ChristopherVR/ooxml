@@ -9,7 +9,9 @@
  * `scripts/capture-data-galleries-com.ps1` applies Table.ApplyStyle(guid) to
  * cells carrying a direct fill, font colour, bold and a border, and the saved
  * cells come back as a bare `<a:tcPr/>` with the `a:rPr` colour/bold intact
- * (with SaveFormatting true, false and omitted alike). The pick does the same.
+ * (with SaveFormatting true, false and omitted alike). The pick does the same,
+ * and sets `clearDirectCellFormatting` so the save drops the cleared `a:tcPr`
+ * children even when the GUID ends up equal to the file's.
  *
  * @module render/ribbon-galleries/table-styles-gallery
  */
@@ -85,6 +87,7 @@ export function applyTableStyleToData(tableData: PptxTableData, styleId: string)
 	return {
 		...tableData,
 		tableStyleId: styleId,
+		clearDirectCellFormatting: true,
 		rows: tableData.rows.map((row) => ({
 			...row,
 			cells: row.cells.map((cell) => {
