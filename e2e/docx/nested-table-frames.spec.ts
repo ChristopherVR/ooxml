@@ -1,7 +1,15 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileInput } from './helpers';
-for (const name of ['short', 'two-rows', 'centered', 'split'])
+for (const name of [
+	'short',
+	'two-rows',
+	'centered',
+	'split',
+	'align-top',
+	'align-center',
+	'align-bottom',
+])
 	test(`nested table frames ${name} survive save and reopen`, async ({ page }) => {
 		await page.goto('/?framework=vanilla');
 		const editor = page.locator('docx-editor');
@@ -36,6 +44,22 @@ for (const name of ['short', 'two-rows', 'centered', 'split'])
 				await first.evaluate((node) => parseFloat((node as HTMLElement).style.borderLeftWidth)),
 			).toBeCloseTo(4 / 3, 1);
 			await expect(frames.first()).toHaveText('');
+			if (name.startsWith('align-')) {
+				const paragraph = editor
+					.locator('.dve-print-block[data-read-only="true"]')
+					.filter({ hasText: 'T1R0C0L00' });
+				const paragraphY = await paragraph.evaluate((node) =>
+					parseFloat((node as HTMLElement).style.top),
+				);
+				const frameY = await frames
+					.first()
+					.evaluate((node) => parseFloat((node as HTMLElement).style.top));
+				expect(paragraphY - frameY).toBeCloseTo(
+					name === 'align-center' ? 12 : name === 'align-bottom' ? 24 : 0,
+					1,
+				);
+			}
+
 			await expect(
 				editor.locator('.dve-print-block[data-read-only="true"]').filter({ hasText: 'T1R0C0L00' }),
 			).toHaveCount(1);

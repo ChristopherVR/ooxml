@@ -1,3 +1,4 @@
+import { cellVerticalOffset } from 'ooxml-core/docx/layout';
 import type {
 	LayoutBorder,
 	LayoutCellGeometry,
@@ -64,13 +65,7 @@ export function renderTable(
 			if (lastRow) cell.style.borderBottom = cssBorder(borders?.bottom);
 			const content = document.createElement('div');
 			content.className = 'dve-print-cell-content';
-			const free = Math.max(0, row.heightPx - geometry.contentHeightPx);
-			const offset =
-				geometry.verticalAlign === 'center'
-					? free / 2
-					: geometry.verticalAlign === 'bottom'
-						? free
-						: 0;
+			const offset = cellVerticalOffset(geometry, row.heightPx);
 			Object.assign(content.style, {
 				left: `${geometry.paddingLeftPx}px`,
 				right: `${geometry.paddingRightPx}px`,

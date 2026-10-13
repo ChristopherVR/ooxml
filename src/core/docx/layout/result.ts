@@ -186,3 +186,13 @@ export interface LayoutResult {
 	/** Honest, human-readable notes on approximations relative to Word (see docs/parity-roadmap.md §3). */
 	approximations: string[];
 }
+
+/** Shared row alignment for projected text and recursive decorative cell contents. */
+export function cellVerticalOffset(geometry: LayoutCellGeometry, rowHeightPx: number): number {
+	const free = Math.max(0, rowHeightPx - geometry.contentHeightPx);
+	return geometry.verticalAlign === 'center'
+		? free / 2
+		: geometry.verticalAlign === 'bottom'
+			? free
+			: 0;
+}

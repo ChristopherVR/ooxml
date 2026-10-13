@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 New-Item -ItemType Directory -Path $OutputDirectory -Force|Out-Null
 $root=Split-Path $PSScriptRoot -Parent
-$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'})
+$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'})
 $app=$null;$owned=$false;$records=@()
 try{
  $app=New-Object -ComObject Word.Application;$owned=$app.Documents.Count-eq0
@@ -28,6 +28,16 @@ try{
    }
    [void]$props.AppendChild($borders)
    if($case.twoRows){$row=$inner.SelectSingleNode('w:tr',$ns).CloneNode($true);foreach($reference in $row.SelectNodes('.//w:footnoteReference',$ns)){[void]$reference.ParentNode.RemoveChild($reference)};foreach($text in $row.SelectNodes('.//w:t',$ns)){$text.InnerText=$text.InnerText.Replace('T1R0','T1R1')};[void]$inner.AppendChild($row)}
+   if($case.align){
+    foreach($row in $inner.SelectNodes('w:tr',$ns)){
+     $trProps=$row.SelectSingleNode('w:trPr',$ns);if(-not$trProps){$trProps=$xml.CreateElement('w','trPr',$ns.LookupNamespace('w'));[void]$row.PrependChild($trProps)}
+     $height=$xml.CreateElement('w','trHeight',$ns.LookupNamespace('w'));$height.SetAttribute('val',$ns.LookupNamespace('w'),'600')|Out-Null;$height.SetAttribute('hRule',$ns.LookupNamespace('w'),'exact')|Out-Null;[void]$trProps.AppendChild($height)
+     foreach($cell in $row.SelectNodes('w:tc',$ns)){
+      $tcProps=$cell.SelectSingleNode('w:tcPr',$ns);$old=$tcProps.SelectSingleNode('w:vAlign',$ns);if($old){[void]$tcProps.RemoveChild($old)}
+      $align=$xml.CreateElement('w','vAlign',$ns.LookupNamespace('w'));$align.SetAttribute('val',$ns.LookupNamespace('w'),$case.align)|Out-Null;[void]$tcProps.AppendChild($align)
+     }
+    }
+   }
    $rowIndex=0
    foreach($row in $inner.SelectNodes('w:tr',$ns)){
     $cellIndex=0

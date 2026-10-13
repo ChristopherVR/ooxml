@@ -19,3 +19,10 @@ reserve. Exact glyph metrics, vertically merged inner cells and repeated inner h
 are not asserted as native parity. Center alignment uses source grid width, while native
 Word also includes the external border extent. The tests deliberately preserve existing
 text and note pagination rather than claiming those remaining offsets are resolved.
+
+Three additional exact-height (30 point) cases measure vertical alignment. Native first
+text baselines are 50.66, 59.18 and 67.58 points for top, center and bottom respectively.
+Projected text now shares the painter's vertical offset. Remaining center/bottom offsets
+of approximately 0.48/1.08 points are attributable to unreserved border thickness in this
+model. The split fixture contains native top and bottom red horizontal borders on both
+physical page fragments, supporting border painting at each measured cut edge.

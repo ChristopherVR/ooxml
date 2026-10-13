@@ -1,3 +1,4 @@
+import { cellVerticalOffset } from './result';
 import type { LayoutBlock, LayoutParagraph, LayoutTableCell } from './input';
 import type { LayoutParagraphBox, LayoutTableBox } from './result';
 import type { TextMeasurer } from './measure';
@@ -77,7 +78,7 @@ export function stackCellBlocks(
 				for (const paragraph of paragraphs)
 					boxes.push({
 						...paragraph,
-						yPx: y + paragraph.yPx,
+						yPx: y + paragraph.yPx + cellVerticalOffset(geometry, layout.heightPx),
 						xPx: x + geometry.xPx + geometry.paddingLeftPx + (paragraph.xPx ?? 0),
 						widthPx:
 							paragraph.widthPx ??

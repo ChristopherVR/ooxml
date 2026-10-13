@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { loadDocx } from 'ooxml-core/docx';
 import { layoutDocumentModel } from 'ooxml-core/docx/layout';
 import { renderPrintLayout } from './print-layout';
-it.each(['short', 'two-rows', 'centered', 'split'])(
+it.each(['short', 'two-rows', 'centered', 'split', 'align-top', 'align-center', 'align-bottom'])(
 	'paints nested source frames without duplicating ink: %s',
 	async (name) => {
 		const loaded = await loadDocx(
