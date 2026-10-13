@@ -22,7 +22,7 @@ for name, counts in CASES:
   for trpr in row.findall('w:trPr', NS): row.remove(trpr)
   for ci, cell in enumerate(row.findall('w:tc', NS)):
    pr = cell.find('w:tcPr', NS)
-   for tag in ['vMerge', 'vAlign']: 
+   for tag in ['vMerge', 'vAlign']:
     for old in pr.findall('w:'+tag, NS): pr.remove(old)
    paragraph = cell.find('w:p', NS)
    ppr = copy.deepcopy(paragraph.find('w:pPr', NS))
