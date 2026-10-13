@@ -1,4 +1,4 @@
-param([string]$OutputDirectory=(Join-Path $env:TEMP 'ooxml-word-nested-multi-row'),[switch]$VerifyCore,[ValidateSet('two','three')][string]$Profile='two')
+param([string]$OutputDirectory=(Join-Path $env:TEMP 'ooxml-word-nested-multi-row'),[switch]$VerifyCore,[ValidateSet('two','three','structural')][string]$Profile='two')
 $ErrorActionPreference='Stop'
 $OutputDirectory=[IO.Path]::GetFullPath($OutputDirectory)
 python (Join-Path $PSScriptRoot 'generate-word-nested-multi-row.py') $OutputDirectory $Profile

@@ -22,12 +22,23 @@ const source = (count = 2): LayoutTable => ({
 		})),
 	})),
 });
-it.each([2, 3])('retains original outer edges across %i rows', (count) => {
+it.each([2, 3, 4, 8, 32])('retains original outer edges across %i rows', (count) => {
 	const table = source(count);
 	expect(nestedFragmentEdges(table)?.top[0]?.widthPx).toBe(3);
 	expect(nestedFragmentEdges(table)?.bottom[0]?.widthPx).toBe(1);
+	expect(
+		reflowNestedFragments({
+			cells: [
+				{ paragraphs: [], blocks: [table] },
+				{ paragraphs: [{ kind: 'paragraph', id: 'other', runs: [{ text: 'Other' }] }] },
+			],
+		}),
+	).toBe(true);
 });
-for (const count of [2, 3])
+it.each([0, 1])('refuses %i rows outside multi-row reflow', (count) => {
+	expect(nestedFragmentEdges(source(count))).toBeUndefined();
+});
+for (const count of [2, 3, 4, 8])
 	it.each([
 		'note',
 		'keep',
@@ -36,7 +47,11 @@ for (const count of [2, 3])
 		'merge',
 		'nested',
 		'center',
-		'four',
+		'one-row',
+		'cant-split',
+		'keep-lines',
+		'page-break',
+		'three-cells',
 		'outer-note',
 		'auto-width',
 		'multiple-tables',
@@ -52,8 +67,11 @@ for (const count of [2, 3])
 		if (kind === 'merge') delete cell.borders!.bottom;
 		if (kind === 'nested') cell.blocks = [source()];
 		if (kind === 'center') cell.verticalAlign = 'center';
-		if (kind === 'four')
-			while (table.rows.length < 4) table.rows.push(structuredClone(table.rows[0]!));
+		if (kind === 'one-row') table.rows = [table.rows[0]!];
+		if (kind === 'cant-split') table.rows.at(-1)!.cantSplit = true;
+		if (kind === 'keep-lines') p.keepLines = true;
+		if (kind === 'page-break') p.pageBreakBefore = true;
+		if (kind === 'three-cells') table.rows.at(-1)!.cells.push(structuredClone(cell));
 		const outer: LayoutTableRow = {
 			cells: [
 				{

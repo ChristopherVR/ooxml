@@ -6,13 +6,13 @@ const plain = (paragraph: LayoutParagraph) =>
 	!paragraph.pageBreakBefore &&
 	!paragraph.footnotes?.length &&
 	!paragraph.runs.some((run) => run.footnoteReferenceId !== undefined || run.breakAfter);
-/** Native corpus: two or three automatic top-aligned rows with direct paragraphs and complete shared edges. */
+/** Two or more automatic top-aligned rows with direct paragraphs and complete shared edges. */
 export function nestedFragmentEdges(table: LayoutTable) {
 	if (
 		table.widthPx === undefined ||
 		!Number.isFinite(table.widthPx) ||
 		table.widthPx <= 0 ||
-		![2, 3].includes(table.rows.length) ||
+		table.rows.length < 2 ||
 		!nestedFrameProfile(table, table.widthPx) ||
 		table.rows.some(
 			(row) =>

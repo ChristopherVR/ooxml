@@ -1,4 +1,4 @@
-"""Build bounded two/three-row nested-table probes from the existing native enclosing fixture."""
+"""Build structurally bounded nested-table probes from the existing native enclosing fixture."""
 import copy, json, sys
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -7,10 +7,28 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
 CASES = [('short', ((3, 2), (3, 2))), ('row-boundary', ((16, 14), (3, 2))), ('first-row-split', ((20, 18), (6, 4))), ('second-row-split', ((5, 3), (20, 18))), ('both-long', ((20, 18), (20, 16)))]
 profile = sys.argv[2] if len(sys.argv) > 2 else 'two'
-if profile not in ['two', 'three']: raise ValueError('Profile must be two or three')
+if profile not in ['two', 'three', 'structural']: raise ValueError('Profile must be two, three or structural')
 if profile == 'three':
  CASES = [('short', ((3, 2), (3, 2), (3, 2))), ('row-boundary', ((16, 14), (3, 2), (3, 2))), ('first-row-split', ((20, 18), (4, 2), (4, 2))), ('middle-row-split', ((4, 2), (20, 18), (4, 2))), ('last-row-split', ((4, 2), (4, 2), (20, 18))), ('all-long', ((20, 18), (20, 16), (20, 18)))]
 prefix = 'nested-three' if profile == 'three' else 'nested-multi'
+if profile == 'structural':
+ CASES = []
+ for count in [4, 8]:
+  for name in ['short', 'boundary', 'first', 'middle', 'last', 'all-long', 'minimal', 'empty-first', 'empty-middle', 'empty-last', 'all-empty']:
+   rows = [(3, 2)] * count
+   if name == 'boundary': rows[0] = (16, 14)
+   if name in ['first', 'middle', 'last']:
+    row = 0 if name == 'first' else count // 2 if name == 'middle' else count - 1
+    rows[row] = (20, 18)
+   if name == 'all-long': rows = [(20, 18 if i % 2 == 0 else 16) for i in range(count)]
+   if name in ['minimal', 'empty-first', 'empty-middle', 'empty-last', 'all-empty']:
+    rows = [(1, 1)] * count
+    if name.startswith('empty-'):
+     row = 0 if name == 'empty-first' else count // 2 if name == 'empty-middle' else count - 1
+     rows[row] = (0, 0)
+    if name == 'all-empty': rows = [(0, 0)] * count
+   CASES.append((f'{count}-{name}', tuple(rows)))
+ prefix = 'nested-structural'
 source = ROOT / 'src/core/docx/__fixtures__/ordinary-table-borders/enclosing-border-split.docx'
 with ZipFile(source) as z: parts = {n: z.read(n) for n in z.namelist()}
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'; NS = {'w': W}

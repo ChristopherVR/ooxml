@@ -1,0 +1,530 @@
+[
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-short-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-short-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-short-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-short-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-boundary-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-boundary-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-boundary-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-boundary-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-first-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-first-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-first-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-first-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-middle-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-middle-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-middle-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-middle-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-last-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-last-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-4-last-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-4-last-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 5,
+    "name": "nested-structural-4-all-long-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 5,
+    "name": "nested-structural-4-all-long-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 5,
+    "name": "nested-structural-4-all-long-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 5,
+    "name": "nested-structural-4-all-long-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-minimal-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-minimal-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-minimal-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-minimal-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-empty-first-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-empty-first-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-empty-first-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-empty-first-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-empty-middle-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-empty-middle-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-empty-middle-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-empty-middle-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-empty-last-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-empty-last-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-empty-last-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-empty-last-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-all-empty-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-all-empty-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-4-all-empty-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-4-all-empty-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-8-short-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-8-short-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 2,
+    "name": "nested-structural-8-short-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 2,
+    "name": "nested-structural-8-short-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-boundary-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-boundary-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-boundary-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-boundary-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-first-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-first-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-first-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-first-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-middle-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-middle-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-middle-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-middle-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-last-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-last-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 3,
+    "name": "nested-structural-8-last-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 3,
+    "name": "nested-structural-8-last-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 10,
+    "name": "nested-structural-8-all-long-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 10,
+    "name": "nested-structural-8-all-long-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 10,
+    "name": "nested-structural-8-all-long-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 10,
+    "name": "nested-structural-8-all-long-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-minimal-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-minimal-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-minimal-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-minimal-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-empty-first-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-empty-first-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-empty-first-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-empty-first-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-empty-middle-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-empty-middle-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-empty-middle-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-empty-middle-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-empty-last-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-empty-last-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-empty-last-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-empty-last-core-edit"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-all-empty-core-noop"
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-all-empty-core-noop"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "pages": 1,
+    "name": "nested-structural-8-all-empty-core-edit"
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "pages": 1,
+    "name": "nested-structural-8-all-empty-core-edit"
+  }
+]

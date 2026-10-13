@@ -20,9 +20,14 @@ const threeRoot = new URL('../__fixtures__/nested-three-row/', import.meta.url);
 const threeEvidence = JSON.parse(
 	readFileSync(new URL('native-measurements.json', threeRoot), 'utf8'),
 ) as typeof evidence;
+const structuralRoot = new URL('../__fixtures__/nested-structural-rows/', import.meta.url);
+const structuralEvidence = JSON.parse(
+	readFileSync(new URL('native-measurements.json', structuralRoot), 'utf8'),
+) as typeof evidence;
 for (const { native, root } of [
 	...evidence.cases.map((native) => ({ native, root: twoRoot })),
 	...threeEvidence.cases.map((native) => ({ native, root: threeRoot })),
+	...structuralEvidence.cases.map((native) => ({ native, root: structuralRoot })),
 ])
 	it('matches native multi-row physical bands and preserves source: ' + native.name, async () => {
 		const bytes = new Uint8Array(readFileSync(new URL(native.name + '.docx', root))),
@@ -62,19 +67,38 @@ for (const { native, root } of [
 			expect(Math.abs(frame.widthPx! * 0.75 - (right - left))).toBeLessThan(0.1);
 			expect(frame.rows[0]!.geometry![0]!.borders!.top!.widthPx * 0.75).toBe(2);
 			expect(frame.rows.at(-1)!.geometry![0]!.borders!.bottom!.widthPx * 0.75).toBe(0.5);
-			const first = lines.find((l) => l.text.startsWith('T1'))!,
-				nativeFirst = sample.lines.find((l) => l.text.trim() === first.text)!;
-			expect(
-				Math.abs(first.top - frame.yPx * 0.75 - (nativeFirst.baselinePt - 9.6 - top)),
-			).toBeLessThan(0.15);
+			const first = lines.find((l) => l.text.startsWith('T1'));
+			const nativeFirst = sample.lines.find((l) => l.text.trim() === first?.text);
+			if (first) {
+				if (!nativeFirst) throw new Error('Missing native first ink');
+				expect(
+					Math.abs(first.top - frame.yPx * 0.75 - (nativeFirst.baselinePt - 9.6 - top)),
+				).toBeLessThan(0.15);
+			} else expect(nativeFirst).toBeUndefined();
+			// Separate all-line bound: reference three-row maximum is 0.176 PDF points.
+			// This retains the stronger first-ink bound and does not assert glyph parity.
+			for (const line of lines.filter((l) => l.text.startsWith('T1'))) {
+				const reference = sample.lines.find((l) => l.text.trim() === line.text)!;
+				expect(
+					Math.abs(line.top - frame.yPx * 0.75 - (reference.baselinePt - 9.6 - top)),
+				).toBeLessThan(0.2);
+			}
 			const outer = lines.find((l) => l.text === 'T2R0C0L00');
-			if (outer)
+			if (outer && first && nativeFirst)
 				expect(
 					Math.abs(
 						outer.top -
 							first.top -
 							(sample.lines.find((l) => l.text.startsWith('T2'))!.baselinePt -
 								nativeFirst.baselinePt),
+					),
+				).toBeLessThan(0.2);
+			else if (outer)
+				expect(
+					Math.abs(
+						outer.top -
+							frame.yPx * 0.75 -
+							(sample.lines.find((l) => l.text.startsWith('T2'))!.baselinePt - 9.6 - top),
 					),
 				).toBeLessThan(0.2);
 		}
