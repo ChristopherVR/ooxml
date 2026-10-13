@@ -29,6 +29,23 @@ afterEach(() => {
 });
 
 describe('afterAnimationRow', () => {
+	it('keeps imported theme dim selectable without inventing a color swatch', () => {
+		act(() =>
+			root.render(
+				<AfterAnimationRow
+					action='dimToColor'
+					color={undefined}
+					showColor={false}
+					canEdit
+					onActionChange={() => undefined}
+					onColorChange={() => undefined}
+				/>,
+			),
+		);
+		expect(container.querySelector('pptx-ui-select')!.value).toBe('dimToColor');
+		expect(container.querySelector('input[type="color"]')).toBeNull();
+	});
+
 	it('defaults to "none" and hides the colour swatch', () => {
 		act(() => {
 			root.render(

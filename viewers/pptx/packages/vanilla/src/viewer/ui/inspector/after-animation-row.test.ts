@@ -23,6 +23,13 @@ function colorInputOf(el: HTMLElement): HTMLInputElement {
 }
 
 describe('createAfterAnimationRow', () => {
+	it('keeps imported theme dim selectable without inventing a color swatch', () => {
+		const row = createAfterAnimationRow(document, t, vi.fn(), vi.fn());
+		row.update({ action: 'dimToColor', color: undefined, editable: true, showColor: false });
+		expect(selectOf(row.el).value).toBe('dimToColor');
+		expect(row.el.querySelector('label:last-child')?.hasAttribute('hidden')).toBeTruthy();
+	});
+
 	it('offers all four actions', () => {
 		const row = createAfterAnimationRow(document, t, vi.fn(), vi.fn());
 		const select = selectOf(row.el);

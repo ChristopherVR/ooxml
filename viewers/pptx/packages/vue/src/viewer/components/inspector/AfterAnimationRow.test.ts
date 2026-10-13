@@ -16,6 +16,16 @@ function mountRow(props: Record<string, unknown> = {}, global?: Record<string, u
 }
 
 describe('afterAnimationRow', () => {
+	it('keeps imported theme dim selectable without inventing a color swatch', () => {
+		const wrapper = mountRow({ action: 'dimToColor', showColor: false });
+		try {
+			expect(wrapper.find('pptx-ui-select').exists()).toBeTruthy();
+			expect(wrapper.find('input[type="color"]').exists()).toBeFalsy();
+		} finally {
+			wrapper.unmount();
+		}
+	});
+
 	it('offers all four actions', () => {
 		const wrapper = mountRow();
 		const options = wrapper.findAll('option');

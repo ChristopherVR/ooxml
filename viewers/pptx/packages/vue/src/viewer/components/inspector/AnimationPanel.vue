@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import {
 	animationCatalogPresetLabelKey,
+	getAfterAnimationState,
+	isNativeAfterAnimationOnly,
+	setAfterAnimation,
+	setAfterAnimationColor,
 	applyMotionPathPreset,
 	clearMotionPath,
 	getDensePanelTouchTargetPx,
@@ -24,6 +28,7 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useIsMobile } from '../../composables/useIsMobile';
+import AfterAnimationRow from './AfterAnimationRow.vue';
 import type { AnimationCategory } from './animation-panel-model';
 import { createElementAnimation, patchElementAnimation } from './animation-panel-model';
 import { previewVueAnimation } from './animation-preview-player';
@@ -155,16 +160,38 @@ function changeMotionPath(pathPresetId: string): void {
 			{{ t('pptx.animation.title') }}
 		</div>
 		<div v-if="currentAnimations.length" class="space-y-2">
-			<AnimationEditorControls
+			<template
 				v-for="(animation, index) in currentAnimations"
 				:key="`${animation.elementId}-${index}`"
-				:animation="animation"
-				:elements="slideElements"
-				:touch-target-px="touchTargetPx"
-				@patch="patchAnimation(index, $event)"
-				@remove="removeAnimation(index)"
-				@preview="previewVueAnimation(animation)"
-			/>
+			>
+				<AfterAnimationRow
+					v-if="isNativeAfterAnimationOnly(animation)"
+					:action="getAfterAnimationState(animation).action"
+					:color="getAfterAnimationState(animation).color"
+					:show-color="getAfterAnimationState(animation).showColor"
+					:can-edit="canEdit"
+					@action="
+						(action) =>
+							emit('updateSlideAnimations', setAfterAnimation(slideAnimations, element.id, action))
+					"
+					@color="
+						(color) =>
+							emit(
+								'updateSlideAnimations',
+								setAfterAnimationColor(slideAnimations, element.id, color),
+							)
+					"
+				/>
+				<AnimationEditorControls
+					v-else
+					:animation="animation"
+					:elements="slideElements"
+					:touch-target-px="touchTargetPx"
+					@patch="patchAnimation(index, $event)"
+					@remove="removeAnimation(index)"
+					@preview="previewVueAnimation(animation)"
+				/>
+			</template>
 		</div>
 		<p v-else class="text-muted-foreground">{{ t('pptx.animation.noAnimations') }}</p>
 

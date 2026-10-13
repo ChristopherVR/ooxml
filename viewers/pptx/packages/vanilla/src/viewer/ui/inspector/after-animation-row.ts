@@ -9,6 +9,7 @@ export interface AfterAnimationRowState {
 	action: PptxAfterAnimationAction;
 	color: string | undefined;
 	editable: boolean;
+	showColor?: boolean;
 }
 
 export interface AfterAnimationRow {
@@ -60,7 +61,7 @@ export function createAfterAnimationRow(
 			select.value = state.action;
 			select.disabled = !state.editable;
 			const isDim = state.action === 'dimToColor';
-			colorLabel.hidden = !isDim;
+			colorLabel.hidden = !isDim || state.showColor === false;
 			colorInput.value = state.color ?? '#808080';
 			colorInput.disabled = !state.editable;
 		},

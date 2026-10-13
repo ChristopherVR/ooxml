@@ -69,6 +69,15 @@ function choose(select: HTMLSelectElement, value: string): void {
 }
 
 describe('afterAnimationRow', () => {
+	it('exposes imported native-only dim without creating an authored color', () => {
+		const { target, select, editor } = mountPanel([
+			{ elementId: 'shape-1', nativeAfterAnimation: 'dimToColor' },
+		]);
+		expect(select.value).toBe('dimToColor');
+		expect(target.querySelector('input[type="color"]')).toBeNull();
+		expect(editor.slides[0]?.animations?.[0]?.afterAnimation).toBeUndefined();
+	});
+
 	it('offers all four actions', () => {
 		const { select } = mountPanel();
 		expect([...select.querySelectorAll('option')].map((option) => option.value)).toStrictEqual([
