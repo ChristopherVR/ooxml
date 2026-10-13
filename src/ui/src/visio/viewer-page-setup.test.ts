@@ -7,6 +7,8 @@ import { createRibbon } from './ribbon';
 import { createRulers } from './viewer-ruler';
 import { registerViewerControls } from './office-ui';
 import { renderPage } from './render-svg';
+import { createContextMenus } from './viewer-context-menu';
+import JSZip from 'jszip';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -35,7 +37,7 @@ async function setup(source = true) {
 	const root = host.attachShadow({ mode: 'open' });
 	const viewport = document.createElement('div');
 	viewport.className = 'viewport';
-	root.append(createRibbon(document), viewport);
+	root.append(createRibbon(document), viewport, ...createContextMenus(document));
 	const feedback: string[] = [];
 	const commands = new ViewerCommands({
 		root,
@@ -260,6 +262,72 @@ it('draws line jumps where connectors cross and toggles them from Design > Conne
 	// Each toggle is one undoable step.
 	await ui.controller.undo();
 	expect(jumped()).toHaveLength(0);
+	ui.dispose();
+});
+
+it('routes the page context menu to the existing dialog and cancels without edits', async () => {
+	const ui = await setup();
+	const menu = ui.root.querySelector<
+		HTMLElement & { openAt(x: number, y: number): void; open: boolean }
+	>('[data-context-menu="page"]')!;
+	menu.openAt(5, 5);
+	const button = menu.querySelector<HTMLElement & { disabled: boolean }>(
+		'[command="ctx-page-setup"]',
+	)!;
+	expect(button.hasAttribute('data-unsupported')).toBe(false);
+	expect(button.disabled).toBe(false);
+	button.shadowRoot!.querySelector('button')!.click();
+	const dialog = ui.root.querySelector<HTMLElement & { open: boolean }>('.page-setup-dialog')!;
+	expect(menu.open).toBe(false);
+	expect(dialog.open).toBe(true);
+	expect(dialog.querySelector('[data-setup-tab="print"]')!.getAttribute('aria-selected')).toBe(
+		'true',
+	);
+	dialog
+		.querySelector<HTMLElement>('[command="page-setup-cancel"]')!
+		.dispatchEvent(new CustomEvent('office-command', { bubbles: true }));
+	expect(dialog.open).toBe(false);
+	expect(ui.edits).toEqual([]);
+	ui.dispose();
+});
+
+it('keeps context menu dialog routing inert without editable source or a document', async () => {
+	const ui = await setup(false);
+	const button = ui.root.querySelector('[command="ctx-page-setup"]')!;
+	const dialog = ui.root.querySelector<HTMLElement & { open: boolean }>('.page-setup-dialog')!;
+	button.shadowRoot!.querySelector('button')!.click();
+	expect(dialog.open).toBe(false);
+	ui.controller.setDocument(null);
+	button.shadowRoot!.querySelector('button')!.click();
+	expect(dialog.open).toBe(false);
+	expect(ui.edits).toEqual([]);
+	ui.dispose();
+});
+
+it('retains protected page settings when a context dialog edit is refused', async () => {
+	const ui = await setup();
+	const zip = await JSZip.loadAsync(ui.bytes);
+	const path = 'visio/pages/pages.xml';
+	const xml = await zip.file(path)!.async('string');
+	const protectedXml = xml.replace(/(<Cell\b[^>]*N="PageWidth")/, '$1 F="GUARD(8.5)"');
+	expect(protectedXml).not.toBe(xml);
+	zip.file(path, protectedXml);
+	await ui.controller.load(await zip.generateAsync({ type: 'uint8array' }));
+	ui.root.querySelector('[command="ctx-page-setup"]')!.shadowRoot!.querySelector('button')!.click();
+	const dialog = ui.root.querySelector<HTMLElement & { open: boolean }>('.page-setup-dialog')!;
+	expect(dialog.open).toBe(true);
+	dialog.querySelector<HTMLElement & { value: string }>('[data-setup-field="size-mode"]')!.value =
+		'custom';
+	dialog.querySelector<HTMLElement & { value: string }>('[data-setup-field="width"]')!.value = '17';
+	dialog
+		.querySelector<HTMLElement>('[command="page-setup-ok"]')!
+		.dispatchEvent(new CustomEvent('office-command', { bubbles: true }));
+	await vi.waitFor(() =>
+		expect(dialog.querySelector('[data-setup-error]')!.textContent).toMatch(/protected/i),
+	);
+	expect(dialog.open).toBe(true);
+	expect(ui.page().width).toBe(8.5);
+	expect(ui.controller.state.edit.canUndo).toBe(false);
 	ui.dispose();
 });
 

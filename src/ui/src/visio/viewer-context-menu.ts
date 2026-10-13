@@ -137,7 +137,7 @@ export function createContextMenus(doc: Document): HTMLElement[] {
 				id: 'ctx-page-setup',
 				label: 'Page Setup...',
 				icon: 'visioPagesPane',
-				unsupported: 'Needs core page setup edits.',
+				action: { type: 'page-setup', command: { op: 'dialog' } },
 			},
 			{
 				id: 'ctx-page-comment',
