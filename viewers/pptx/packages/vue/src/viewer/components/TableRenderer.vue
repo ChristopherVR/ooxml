@@ -220,9 +220,10 @@ const rows = computed<RenderableRow[]>(() => {
 	const colorScheme = props.colorScheme ?? injected?.colorScheme;
 	const tableStyleMap = props.tableStyleMap ?? injected?.tableStyleMap;
 	const fontScheme = injected?.fontScheme;
+	const formatScheme = injected?.formatScheme;
 	const styleCtx: TableStyleContext | undefined =
-		colorScheme || tableStyleMap || fontScheme
-			? { colorScheme, tableStyleMap, fontScheme }
+		colorScheme || tableStyleMap || fontScheme || formatScheme
+			? { colorScheme, tableStyleMap, fontScheme, formatScheme }
 			: undefined;
 
 	return td.rows.map((row, rowIndex) => {

@@ -105,7 +105,7 @@ import { MergeCropKey } from './composables/merge-crop-context';
 import { RecentColorsKey } from './composables/recent-colors-context';
 import { Rendering3DFlagsKey } from './composables/rendering-3d-flags';
 import { RibbonAddInsKey } from './composables/ribbon-add-ins';
-import { TableThemeKey } from './composables/table-theme';
+import { TableThemeKey, tableThemeContextFor } from './composables/table-theme';
 import { ThemeColorMapKey } from './composables/theme-color-map-context';
 import { useAccessibility } from './composables/useAccessibility';
 import { useAlignGroup } from './composables/useAlignGroup';
@@ -385,11 +385,7 @@ function createPresentation(templateId: string): void {
 // cells (banded/header colour resolution by table-style GUID) via
 // provide/inject, avoiding theme prop-threading through the hot
 // SlideStage -> ElementRenderer chain.
-provide(TableThemeKey, () => ({
-	colorScheme: pptxTheme.value?.colorScheme,
-	tableStyleMap: tableStyleMap.value,
-	fontScheme: pptxTheme.value?.fontScheme,
-}));
+provide(TableThemeKey, () => tableThemeContextFor(pptxTheme.value, tableStyleMap.value));
 
 // "Recent colours" (`p:clrMru`): one shared list every colour-picking panel
 // in the inspector reads and pushes to, so a colour picked in Fill shows up

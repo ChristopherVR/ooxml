@@ -2,6 +2,8 @@ import type {
 	ParsedTableStyleMap,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
+	PptxTheme,
 } from 'pptx-viewer-core';
 import type { InjectionKey, MaybeRefOrGetter } from 'vue';
 import { inject, toValue } from 'vue';
@@ -23,6 +25,8 @@ export interface TableThemeContext {
 	 * can resolve to a concrete font family in banded/header cell text.
 	 */
 	fontScheme?: PptxThemeFontScheme;
+	/** Theme format scheme, so a style's `a:tblBg/a:fillRef` and `a:lnRef` borders resolve. */
+	formatScheme?: PptxThemeFormatScheme;
 }
 
 /** Typed injection key for the table theme context (reactive getter or ref). */
@@ -43,4 +47,20 @@ export function resolveTableTheme(
 	source: MaybeRefOrGetter<TableThemeContext | undefined> | undefined,
 ): TableThemeContext | undefined {
 	return source ? toValue(source) : undefined;
+}
+
+/**
+ * The table theme context the viewer root provides: the deck's parsed table
+ * styles plus its theme's colour, font and format schemes.
+ */
+export function tableThemeContextFor(
+	theme: PptxTheme | undefined,
+	tableStyleMap: ParsedTableStyleMap | undefined,
+): TableThemeContext {
+	return {
+		colorScheme: theme?.colorScheme,
+		tableStyleMap,
+		fontScheme: theme?.fontScheme,
+		formatScheme: theme?.formatScheme,
+	};
 }
