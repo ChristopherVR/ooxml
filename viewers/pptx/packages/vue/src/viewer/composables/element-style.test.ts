@@ -243,7 +243,7 @@ describe('getTextBlockStyle', () => {
 				}),
 			).fontSize,
 		).toBe('28px');
-		expect(getTextBlockStyle(shape({ textStyle: { textWrap: 'none' } })).whiteSpace).toBe('nowrap');
+		expect(getTextBlockStyle(shape({ textStyle: { textWrap: 'none' } })).whiteSpace).toBe('pre');
 		expect(getTextBlockStyle(shape({ textStyle: {} })).whiteSpace).toBe('pre-wrap');
 	});
 
