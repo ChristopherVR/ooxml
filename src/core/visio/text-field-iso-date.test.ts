@@ -32,3 +32,21 @@ it('matches eleven admitted native ISO date fields through source-preserving edi
 				item.formula,
 			).toBe(item.formula === 'DATE(1899,12,29)' ? '2026-01-01' : item.text);
 });
+
+it('keeps unmeasured system short-date locale placeholders unchanged', async () => {
+	const { fixture, shape } = await import('./test-fixtures');
+	for (const cached of ['01/01/2026', '1.1.2026', '2026-02-30', '']) {
+		const bytes = await fixture({
+			pages: [
+				{
+					id: '0',
+					contents: `<Shapes>${shape(
+						'1',
+						`<Section N="Field"><Row IX="0"><Cell N="Value" V="2026-10-13T00:00:00" U="DATE"/><Cell N="Format" V="ddddd" F="FIELDPICTURE(20)"/></Row></Section><Text><fld IX="0">${cached}</fld></Text>`,
+					)}</Shapes>`,
+				},
+			],
+		});
+		expect((await parseVsdx(bytes)).pages[0]!.shapes[0]!.text.plainText).toBe(cached);
+	}
+});

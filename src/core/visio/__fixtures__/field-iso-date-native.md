@@ -6,8 +6,8 @@ master text and instance DATE caches. `valueFormula` records the native Field
 Value formula, not its unit. The saved caches use `U="DATE"` and timezone-free
 ISO text.
 
-Eleven Gregorian dates from 1899-12-30 onward match native `FIELDPICTURE(20)`
-(`yyyy-MM-dd`) in core parsing, unrelated page editing, and browser export/reopen.
+Eleven Gregorian dates from 1899-12-30 onward match native system short-date `FIELDPICTURE(20)`
+(the measured Windows `yyyy-MM-dd` configuration) in core parsing, unrelated page editing, and browser export/reopen.
 The corpus includes leap days, midnight boundaries, and fractional seconds.
 Core-written output also reopens and resaves in native Visio with all twelve
 native displays retained because page and master shape XML stays unchanged.
@@ -18,3 +18,6 @@ falls outside the admitted four-digit ISO range. Core keeps the inherited
 native underflow case, not an asserted display match. Other date/time pictures,
 locale calendars, timezone-bearing caches and general formula evaluation are
 outside this evidence.
+Regeneration requires a valid stored `yyyy-MM-dd` placeholder. Other short-date
+locale placeholders retain cached text. The format code itself does not promise
+ISO output; see Microsoft's [VisFieldFormats enumeration](https://learn.microsoft.com/en-us/office/vba/api/visio.visfieldformats).

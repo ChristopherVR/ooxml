@@ -65,6 +65,9 @@ export function textFieldDisplay(
 		if (
 			source?.kind === 'date' &&
 			code === '20' &&
+			// The system short-date picture is admitted only for stored ISO text.
+			/^\d{4}-\d{2}-\d{2}$/.test(cached) &&
+			visioIsoDateSerial(cached) !== undefined &&
 			Number.isFinite(source.date.getTime()) &&
 			source.date.getTime() >= Date.UTC(1899, 11, 30) &&
 			source.date.getUTCFullYear() <= 9999
