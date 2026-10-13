@@ -1,5 +1,6 @@
 import {
 	elementContainerHeightStyle,
+	getAnimationOpacity,
 	MEDIA_FULLSCREEN_OVERLAY_STYLE,
 	paintedElementSize,
 } from 'ooxml-ui/pptx';
@@ -149,10 +150,12 @@ export function getContainerStyle({
 		// bindings multiply the two; React spread the shape style over its own
 		// `opacity` key, so a half-transparent element carrying a DAG alpha
 		// rendered at the DAG's alpha alone.
-		opacity:
+		opacity: getAnimationOpacity(
+			animationState,
 			typeof shapeVisualStyle.opacity === 'number'
 				? (opacity ?? 1) * shapeVisualStyle.opacity
 				: opacity,
+		),
 		// Editable-template affordance: a distinct amber dashed ring + slight
 		// transparency so inherited master/layout shapes read as "template" while
 		// edit-template mode is on. Applied after the shape style so it wins; never

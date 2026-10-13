@@ -1,0 +1,89 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "id": 1,
+      "formula": "DATE(2026,10,13)",
+      "text": "2026-10-13",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13"
+    },
+    {
+      "id": 2,
+      "formula": "DATE(2024,2,29)",
+      "text": "2024-02-29",
+      "valueFormula": "User.DateValue",
+      "value": "2024-02-29"
+    },
+    {
+      "id": 3,
+      "formula": "DATE(1900,2,28)",
+      "text": "1900-02-28",
+      "valueFormula": "User.DateValue",
+      "value": "1900-02-28"
+    },
+    {
+      "id": 4,
+      "formula": "DATE(1900,3,1)",
+      "text": "1900-03-01",
+      "valueFormula": "User.DateValue",
+      "value": "1900-03-01"
+    },
+    {
+      "id": 5,
+      "formula": "DATE(1899,12,30)",
+      "text": "1899-12-30",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-30 12:00:00 AM"
+    },
+    {
+      "id": 6,
+      "formula": "DATE(1899,12,31)",
+      "text": "1899-12-31",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-31"
+    },
+    {
+      "id": 7,
+      "formula": "DATE(1899,12,29)",
+      "text": "",
+      "valueFormula": "User.DateValue",
+      "value": "30177-04-13"
+    },
+    {
+      "id": 8,
+      "formula": "DATE(2026,10,13)+TIME(14,15,16)",
+      "text": "2026-10-13",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 2:15:16 PM"
+    },
+    {
+      "id": 9,
+      "formula": "DATE(2026,10,13)+TIME(23,59,59.999)",
+      "text": "2026-10-13",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 11:59:59 PM"
+    },
+    {
+      "id": 10,
+      "formula": "DATE(2026,12,31)+TIME(23,59,59)",
+      "text": "2026-12-31",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-31 11:59:59 PM"
+    },
+    {
+      "id": 11,
+      "formula": "DATE(2000,2,29)",
+      "text": "2000-02-29",
+      "valueFormula": "User.DateValue",
+      "value": "2000-02-29"
+    },
+    {
+      "id": 12,
+      "formula": "DATE(2100,3,1)",
+      "text": "2100-03-01",
+      "valueFormula": "User.DateValue",
+      "value": "2100-03-01"
+    }
+  ]
+}

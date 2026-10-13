@@ -107,7 +107,7 @@ export interface PlaybackContext {
 /** The staged-build fields of a state, carried across the step writes below. */
 type BuildStateFields = Pick<
 	ElementAnimationState,
-	'build' | 'chartReveal' | 'diagramReveal' | 'textStyle'
+	'build' | 'chartReveal' | 'diagramReveal' | 'textStyle' | 'opacity'
 >;
 
 /**
@@ -123,6 +123,7 @@ export function carryBuildState(state: ElementAnimationState | undefined): Build
 		return {};
 	}
 	const carried: BuildStateFields = {};
+	if (state.opacity !== undefined) carried.opacity = state.opacity;
 	if (state.build) {
 		carried.build = state.build;
 	}

@@ -1,0 +1,23 @@
+import { expect, it } from 'vitest';
+import { TableFragmentBorders } from './table-border-layout';
+import type { LayoutTableRowBox } from './result';
+it('shares the last stroke once and restores it on a physical fragment flush', () => {
+	const borders = new TableFragmentBorders();
+	const first: LayoutTableRowBox = { yPx: 0, heightPx: 20, repeated: false, cells: [] };
+	borders.record(4);
+	expect(borders.remove(first)).toBe(-4);
+	expect(borders.remove(first)).toBe(0);
+	expect(first.heightPx).toBe(16);
+	expect(borders.restore(first)).toBe(4);
+	expect(borders.restore(first)).toBe(0);
+	expect(first.heightPx).toBe(20);
+	borders.remove(first);
+	const next: LayoutTableRowBox = { yPx: 16, heightPx: 30, repeated: false, cells: [] };
+	borders.record(2);
+	expect(borders.remove(next)).toBe(-2);
+	expect(first.heightPx).toBe(16);
+	expect(borders.restore(next)).toBe(2);
+	expect(next.heightPx).toBe(30);
+	expect(borders.remove(undefined)).toBe(0);
+	expect(borders.restore(undefined)).toBe(0);
+});

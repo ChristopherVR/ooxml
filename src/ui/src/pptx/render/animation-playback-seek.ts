@@ -30,6 +30,7 @@ import type {
 	PlaybackContext,
 	StatesSetter,
 } from './animation-playback-engine';
+import { resetOpacitySetPlayback, finishOpacitySetSteps } from './animation-opacity-playback';
 import {
 	cancelBuildReveal,
 	playGroup,
@@ -208,6 +209,7 @@ export interface SeekableAnimationController extends PlaybackAnimationController
  * seek target: a stale group from the previous slide must never be seeked.
  */
 export function clearPlaybackTimers(ctx: PlaybackContext, active?: ActiveAnimationGroup): void {
+	resetOpacitySetPlayback(ctx.timers);
 	for (const timer of ctx.timers) {
 		window.clearTimeout(timer);
 	}
@@ -247,6 +249,7 @@ export function advanceMainSequence(
 		finishDomAnimationsForGroup(group, ctx.frameRoot?.() ?? document);
 		const buildIds = PresentationAnimationController.collectBuildStepIds(group);
 		const completedStates = controller.computeStatesFor(buildIds);
+		finishOpacitySetSteps(group, ctx);
 		clearPlaybackTimers(ctx, active);
 		finishAnimationGroupSteps(group, ctx.setStates, completedStates);
 		scheduleAutoAdvanceChain(controller, ctx);

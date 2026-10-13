@@ -1,3 +1,4 @@
+import { measuredBorderWidth } from './print-border-width';
 import { cellVerticalOffset } from 'ooxml-core/docx/layout';
 import type {
 	LayoutBorder,
@@ -70,9 +71,9 @@ export function renderTable(
 			content.style.zIndex = '2';
 			const offset = cellVerticalOffset(geometry, row.heightPx);
 			Object.assign(content.style, {
-				left: `${geometry.paddingLeftPx - (geometry.borderInsetsReserved ? (borders?.left?.widthPx ?? 0) : 0)}px`,
-				right: `${geometry.paddingRightPx - (geometry.borderInsetsReserved && cellIndex === row.cells.length - 1 ? (borders?.right?.widthPx ?? 0) : 0)}px`,
-				top: `${offset - (geometry.borderInsetsReserved ? (borders?.top?.widthPx ?? 0) : 0)}px`,
+				left: `${geometry.paddingLeftPx - (geometry.borderInsetsReserved ? measuredBorderWidth(cssBorder(borders?.left), borders?.left?.widthPx ?? 0) : 0)}px`,
+				right: `${geometry.paddingRightPx - (geometry.borderInsetsReserved && cellIndex === row.cells.length - 1 ? measuredBorderWidth(cssBorder(borders?.right), borders?.right?.widthPx ?? 0) : 0)}px`,
+				top: `${offset - (geometry.borderInsetsReserved ? measuredBorderWidth(cssBorder(borders?.top), borders?.top?.widthPx ?? 0) : 0)}px`,
 			});
 			const nestedTables = row.cellTables?.[cellIndex] ?? [];
 			if (nestedTables.length) {

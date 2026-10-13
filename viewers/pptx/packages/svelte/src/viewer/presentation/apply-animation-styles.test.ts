@@ -29,6 +29,18 @@ afterEach(() => {
 const empty: Map<string, ElementAnimationState> = new Map();
 
 describe('applyAnimationStyles', () => {
+	it('applies fixed whole opacity without CSS and restores authored alpha', () => {
+		const { root, e1 } = makeStage();
+		e1.style.opacity = '0.6';
+		applyAnimationStyles(
+			root,
+			new Map([['e1', { visible: true, cssAnimation: undefined, opacity: 0.4 }]]),
+		);
+		expect(e1.style.opacity).toBe('0.4');
+		expect(e1.style.animation).toBe('');
+		applyAnimationStyles(root, empty);
+		expect(e1.style.opacity).toBe('0.6');
+	});
 	it('marks animation triggers and clears the marker on reset', () => {
 		const { root, e1 } = makeStage();
 		applyAnimationStyles(root, empty, new Set(['e1']));

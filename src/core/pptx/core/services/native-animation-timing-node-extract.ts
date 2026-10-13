@@ -252,6 +252,8 @@ export function buildTimingNodeAnimation(
 		commandString: cmdInfo.commandString,
 		textTarget: textTarget ?? undefined,
 		cTnAttributes: roundTripAttrs,
+		unsupportedOpacitySetTiming:
+			cTn['@_dur'] === 'indefinite' || cTn['p:endSync'] !== undefined || undefined,
 		afterEffect: afterEffectFlag,
 		afterAnimationAction: parsedAfterAnimation?.action,
 		afterAnimationColor: parsedAfterAnimation?.color,

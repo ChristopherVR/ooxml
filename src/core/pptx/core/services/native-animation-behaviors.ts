@@ -55,6 +55,34 @@ function readTiming(cTn: XmlObject | undefined): PptxAnimationBehaviorTiming {
 		return {};
 	}
 	const timing: PptxAnimationBehaviorTiming = {};
+	const starts = ensureArray((cTn['p:stCondLst'] as XmlObject | undefined)?.['p:cond']);
+	if (
+		starts.length > 1 ||
+		cTn['@_dur'] === 'indefinite' ||
+		cTn['@_repeatCount'] === 'indefinite' ||
+		cTn['@_repeatDur'] !== undefined ||
+		cTn['p:endCondLst'] !== undefined ||
+		cTn['p:endSync'] !== undefined ||
+		starts.some(
+			(condition) =>
+				condition === null ||
+				typeof condition !== 'object' ||
+				condition['@_evt'] !== undefined ||
+				condition['@_tn'] !== undefined ||
+				condition['@_rtn'] !== undefined ||
+				condition['p:tn'] !== undefined ||
+				condition['p:rtn'] !== undefined ||
+				condition['p:tgtEl'] !== undefined ||
+				(condition['@_delay'] !== undefined && !/^\d+$/u.test(String(condition['@_delay']))) ||
+				condition['@_delay'] === 'indefinite',
+		)
+	) {
+		timing.unsupportedSetTiming = true;
+	}
+	const fill = cTn['@_fill'];
+	if (fill === 'remove' || fill === 'freeze' || fill === 'hold' || fill === 'transition') {
+		timing.fill = fill;
+	}
 	const durationMs = readTimingAttr(cTn['@_dur']);
 	if (durationMs !== undefined) {
 		timing.durationMs = durationMs;

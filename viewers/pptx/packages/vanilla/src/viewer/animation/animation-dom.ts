@@ -1,5 +1,6 @@
 import {
 	ANIMATION_KEYFRAMES_CSS,
+	applyAnimationOpacity,
 	buildTextStyleOverrideCss,
 	PRESENTATION_ANIM_TRIGGER_ATTRIBUTE,
 	PRESENTATION_HIT_TEST_CSS,
@@ -111,6 +112,7 @@ export function applyElementAnimationStyles(
 			return;
 		}
 		const state = states.get(id);
+		applyAnimationOpacity(el, state);
 		el.style.animation = state?.cssAnimation ?? '';
 		el.style.visibility = state?.visible === false ? 'hidden' : '';
 		const isTriggerShape = interactiveTriggerShapeIds.has(id) || hoverTriggerShapeIds.has(id);
@@ -134,6 +136,7 @@ export function applyElementAnimationStyles(
 			return;
 		}
 		const state = states.get(id);
+		applyAnimationOpacity(el, state);
 		el.style.animation = state?.cssAnimation ?? '';
 		el.style.visibility = state?.visible === false ? 'hidden' : '';
 	});

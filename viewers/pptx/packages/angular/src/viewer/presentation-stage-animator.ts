@@ -1,4 +1,4 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE, applyAnimationOpacity } from 'ooxml-ui/pptx';
 /**
  * presentation-stage-animator.ts: applies the slide show's native-animation
  * state to the rendered DOM, and tracks the hover-trigger shape under the
@@ -90,6 +90,7 @@ export class PresentationStageAnimator {
 				return;
 			}
 			const state = states.get(id);
+			applyAnimationOpacity(el, state);
 			el.style.animation = state?.cssAnimation ?? '';
 			el.style.visibility = state?.visible === false ? 'hidden' : '';
 			el.style.cursor = interactive.has(id) || hover.has(id) ? 'pointer' : '';

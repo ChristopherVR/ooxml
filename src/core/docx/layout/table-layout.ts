@@ -12,6 +12,8 @@ export interface RowLayout {
 	cells: LayoutParagraphBox[][];
 	geometry: LayoutCellGeometry[];
 	cellTables?: LayoutTableBox[][];
+	/** Final physical edge reserved until a following row shares it. */
+	borderBottomPx?: number;
 	/** Vertical cell margins apply to every physical row fragment. */
 	cellPadding?: { top: number; bottom: number }[];
 }
@@ -213,30 +215,38 @@ export function splitRowAtHeight(
 		return split;
 	});
 	const anyAfter = splits.some((split) => split.after.length > 0);
+	const beforeHeightPx = Math.max(0, ...splits.map((split) => split.beforeHeightPx));
 	const before: RowLayout = {
-		heightPx: Math.max(0, ...splits.map((split) => split.beforeHeightPx)),
+		heightPx: beforeHeightPx,
 		cells: splits.map((split) => split.before),
 		...(row.cellTables
 			? {
 					cellTables: row.cellTables.map((tables, index) =>
-						clipTableFrames(tables, 0, splits[index]!.beforeHeightPx),
+						clipTableFrames(
+							tables,
+							0,
+							splits[index]!.beforeHeightPx - (row.cellPadding?.[index]?.bottom ?? 0),
+						),
 					),
 				}
 			: {}),
 		geometry: row.geometry.map((geometry, index) => ({
 			...geometry,
 			contentHeightPx: splits[index]!.beforeHeightPx,
+			...(row.borderBottomPx !== undefined ? { alignmentHeightPx: beforeHeightPx } : {}),
 		})),
 		...(row.cellPadding ? { cellPadding: row.cellPadding } : {}),
+		...(row.borderBottomPx !== undefined ? { borderBottomPx: row.borderBottomPx } : {}),
 	};
 	if (!anyAfter) return { before, after: null };
-	const after: RowLayout = {
-		heightPx: Math.max(
-			0,
-			...splits.map((split, index) =>
-				cellContentBottom(split.after, row.cellPadding?.[index]?.bottom ?? 0),
-			),
+	const afterHeightPx = Math.max(
+		0,
+		...splits.map((split, index) =>
+			cellContentBottom(split.after, row.cellPadding?.[index]?.bottom ?? 0),
 		),
+	);
+	const after: RowLayout = {
+		heightPx: afterHeightPx,
 		cells: splits.map((split) => split.after),
 		...(row.cellTables
 			? {
@@ -258,8 +268,10 @@ export function splitRowAtHeight(
 				splits[index]!.after,
 				row.cellPadding?.[index]?.bottom ?? 0,
 			),
+			...(row.borderBottomPx !== undefined ? { alignmentHeightPx: afterHeightPx } : {}),
 		})),
 		...(row.cellPadding ? { cellPadding: row.cellPadding } : {}),
+		...(row.borderBottomPx !== undefined ? { borderBottomPx: row.borderBottomPx } : {}),
 	};
 	return { before, after };
 }

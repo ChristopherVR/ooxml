@@ -8,7 +8,11 @@
  * @module render/animation-timeline-step
  */
 
-import type { AnimationConditionEvent, PptxAnimationTrigger } from 'ooxml-core/pptx';
+import type {
+	AnimationConditionEvent,
+	PptxAnimationTrigger,
+	PptxOpacitySet,
+} from 'ooxml-core/pptx';
 
 import type { TextStyleAnimationDescriptor } from './animation-text-style-resolve';
 import type {
@@ -46,6 +50,8 @@ export interface TimelineStepCommand {
 
 /** A single animation applied to one element within a click-group. */
 export interface TimelineStep {
+	/** Isolated native fixed-opacity behavior with its own active interval. */
+	opacitySet?: PptxOpacitySet;
 	/** Target element ID. */
 	elementId: string;
 	/** CSS animation shorthand to apply (e.g. "pptx-fadeIn 500ms ease 0ms 1 both"). */

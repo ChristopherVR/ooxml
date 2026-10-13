@@ -1,4 +1,4 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE, applyAnimationOpacity } from 'ooxml-ui/pptx';
 import type { ElementAnimationState } from 'ooxml-ui/pptx';
 
 /**
@@ -39,6 +39,7 @@ export function applyAnimationStyles(
 			return;
 		}
 		const state = states.get(id);
+		applyAnimationOpacity(el, state);
 		el.style.animation = state?.cssAnimation ?? '';
 		el.style.visibility = state?.visible === false ? 'hidden' : '';
 		el.style.cursor = interactiveIds.has(id) || hoverIds.has(id) ? 'pointer' : '';
@@ -58,6 +59,7 @@ export function applyAnimationStyles(
 			return;
 		}
 		const state = states.get(id);
+		applyAnimationOpacity(el, state);
 		el.style.animation = state?.cssAnimation ?? '';
 		el.style.visibility = state?.visible === false ? 'hidden' : '';
 	});

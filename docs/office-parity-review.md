@@ -275,4 +275,20 @@ Animated picture frames paint above their image pixels while retaining the crop 
 
 Supported shape/text background targets now select and split their paint through shared UI descriptors used across all five bindings. Background fill/stroke animation leaves foreground text visible; independent whole-element opacity remains on its positioning box. Svelte presentation exit clears animation state. Ten browser cases verify background color, opacity ramps and stop/re-entry across all bindings; native PowerPoint preserves the independent effects and target XML on resave/reopen.
 
-This establishes supported behavior and package preservation, not native slideshow pixel equivalence. Committed p:set opacity, background-only chart/SmartArt targets and broader animation combinations remain gaps.
+This establishes supported behavior and package preservation, not native slideshow pixel equivalence. Background-only fixed p:set opacity, chart/SmartArt targets and broader animation combinations remain gaps.
+
+### PowerPoint whole-shape fixed opacity
+
+Finite, isolated whole-shape p:set style.opacity now uses shared core admission and shared UI playback/rendering across all five bindings. Plain decimal numeric strings and finite numeric fltVal values are accepted; scientific-notation strings are refused. Missing effect/behavior fill restores the authored opacity after the active interval. Explicit hold or freeze on both retains it; remove on either restores it. Delayed starts, seek, backward end-state projection and presentation exit/reset are covered.
+
+Native PowerPoint 16 video samples from synthetic whole-shape fixtures distinguish transparent fill and gray foreground text under hold from restored opaque fill and black text under remove. Package preservation and native rendered playback are separate checks. Ten browser cases pass across all five bindings; 35 focused parser/resolver/round-trip tests, shared opacity playback/style/timeline tests and per-binding regressions cover the supported slice. Reproduce with the generator and native video script in e2e/pptx/native.
+
+Background-only numeric sets remain refused because measured native composition differs from simple CSS paint/body multiplication. Text/subshape targets, hover, repeated/reversed/additive or mixed behavior trees, unresolved event/indefinite child timing, indefinite effect duration, typed/raw end conditions, end sync, time filters and multiple or unsupported legacy image hints remain preserved but unsupported. This bounded slice does not establish general animation or slideshow pixel parity.
+
+### Visio inherited ISO date fields
+
+Inherited DATE fields regenerate ISO date-only text for the native-verified explicit FIELDPICTURE(204) profile. System short-date picture 20 is admitted only with a valid ISO cached placeholder; other locale, invalid or empty caches remain preserved. Two native corpora cover 22 admitted dates and 24 source edit/save/reopen preservation cases, including unsupported pre-epoch/locale profiles. Core parsing and text-field regressions, 3,831 Visio tests and two browser cases validate this bounded scope. Explicit picture 204 does not broaden picture 20 to other system locales.
+
+### Word ordinary table border occupancy
+
+Ordinary table rows reserve measured border occupancy through the core layout helper and shared print UI border-width interpretation. Thirteen supported native profiles cover ordinary and enclosing auto/exact/clipped borders, early/late splits, margins and repeated headers. Diagnostic nested cuts remain approximate rather than establishing nested-table parity. Validation includes 1,387 Word tests, 184 print UI tests, 20 final repeated browser cases and 37 related browser cases. Native fixtures and measurement scripts preserve the distinction between supported ordinary rows and unsupported interacting nested border profiles.

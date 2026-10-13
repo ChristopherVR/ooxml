@@ -88,3 +88,4 @@ export {
 	type PptxGraphicBuildEntry,
 } from './animation-target-build-helpers';
 export { parseAnimEffectFilter, parseFilterToken } from './animation-effect-filter-parsing';
+export { resolveOpacitySet, type PptxOpacitySet } from './animation-opacity-set';
