@@ -3,6 +3,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { savedShapeGeometry, syncedShapeGeometry } from './support/collaboration-snapshot-geometry';
 import {
 	expectHostOwnedShell,
 	hostOwnedSessionUrl,
@@ -386,7 +387,10 @@ test.describe('host-owned collaboration', () => {
 				).toBeVisible();
 				await peer.screenshot({ path: info.outputPath('read-only-peer.png') });
 				if (readOnly.editable === '0') {
+					const elementId = 'ppt/slides/slide1.xml-shape-6';
+					const model = await syncedShapeGeometry(peer, room, elementId);
 					const path = await saveSnapshot(peer);
+					const expected = await savedShapeGeometry(path, elementId, model);
 					const reopened = await browser.newPage({
 						baseURL,
 						viewport: { width: 1440, height: 1000 },
@@ -397,11 +401,9 @@ test.describe('host-owned collaboration', () => {
 						await expect(
 							elements(reopened).filter({ hasText: 'Updated for read-only peer' }),
 						).toBeVisible({ timeout: 30_000 });
-						// Shape parsing rounds OpenXML EMUs to whole slide pixels.
-						// Keep live-peer geometry strict, but match that reopen contract.
-						expect(await geometry(shape(reopened))).toEqual(
-							(await geometry(shape(peer))).map(Math.round),
-						);
+						// CSS serializes near-half values with less precision than the
+						// synced model. Assert saved EMUs above, then exact parsed pixels.
+						expect(await geometry(shape(reopened))).toEqual(expected);
 						await reopened.screenshot({ path: info.outputPath('read-only-snapshot.png') });
 					} finally {
 						await reopened.close();
