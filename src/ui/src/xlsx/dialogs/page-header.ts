@@ -65,17 +65,42 @@ export function headerTab(ctx: EditorContext, setup: PageSetup): SetupTab {
 		],
 		'',
 	);
-	insert.addEventListener('change', () => {
-		if (!insert.value || active.disabled) return;
-		active.setRangeText(insert.value, active.selectionStart, active.selectionEnd, 'end');
+	const insertCode = (control: HTMLSelectElement, wrap = false) => {
+		if (!control.value || active.disabled) return;
+		const start = active.selectionStart;
+		const selected = wrap ? active.value.slice(start, active.selectionEnd) : '';
+		active.setRangeText(
+			control.value + selected + (selected ? control.value : ''),
+			start,
+			active.selectionEnd,
+			'end',
+		);
 		active.dispatchEvent(new ctx.host.ownerDocument.defaultView!.Event('input', { bubbles: true }));
-		insert.value = '';
+		control.value = '';
 		active.focus();
-	});
+	};
+	insert.addEventListener('change', () => insertCode(insert));
+	const formatting = select(
+		ctx,
+		[
+			['', 'Insert Formatting'],
+			['&B', 'Bold'],
+			['&I', 'Italic'],
+			['&U', 'Underline'],
+			['&S', 'Strikethrough'],
+		],
+		'',
+	);
+	formatting.addEventListener('change', () => insertCode(formatting, true));
 	return {
 		panel: panel(
 			ctx,
 			row(ctx, field(ctx, 'Insert Field', insert)),
+			row(ctx, field(ctx, 'Insert Formatting', formatting)),
+			text(
+				ctx,
+				'Formatting: &B bold, &I italic, &U underline, &S strike, &18 font size, &KFF0000 RGB color, &"Arial,Regular" font.',
+			),
 			...checks.map((check) => check.wrapper),
 			text(
 				ctx,

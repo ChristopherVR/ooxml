@@ -5,7 +5,26 @@ export type HeaderFooterField = 'page' | 'pages' | 'sheet' | 'file' | 'date' | '
 export type HeaderFooterToken =
 	| { type: 'text'; value: string }
 	| { type: 'field'; field: HeaderFooterField }
+	| {
+			type: 'format';
+			property: keyof HeaderFooterStyle;
+			value: string | number | boolean;
+			raw: string;
+	  }
 	| { type: 'unsupported'; raw: string };
+export interface HeaderFooterStyle {
+	font?: string;
+	size?: number;
+	bold?: boolean;
+	italic?: boolean;
+	underline?: boolean;
+	strike?: boolean;
+	color?: string;
+}
+export interface HeaderFooterRun {
+	text: string;
+	style: HeaderFooterStyle;
+}
 export interface ParsedHeaderFooter {
 	sections: Record<HeaderFooterSection, HeaderFooterToken[]>;
 	unsupported: string[];
@@ -73,6 +92,44 @@ export function parseHeaderFooter(value: string): ParsedHeaderFooter {
 			i += 2;
 			continue;
 		}
+		const format = (
+			property: keyof HeaderFooterStyle,
+			value: string | number | boolean,
+			raw: string,
+		) => {
+			result.sections[section].push({ type: 'format', property, value, raw });
+		};
+		const toggles: Record<string, keyof HeaderFooterStyle> = {
+			B: 'bold',
+			I: 'italic',
+			U: 'underline',
+			S: 'strike',
+		};
+		if (toggles[code]) {
+			format(toggles[code]!, true, value.slice(i, i + 2));
+			i += 2;
+			continue;
+		}
+		const size = /^&(\d+)(?![\d.])/.exec(value.slice(i));
+		if (size && Number(size[1]) >= 1 && Number(size[1]) <= 409) {
+			format('size', Number(size[1]), size[0]);
+			i += size[0].length;
+			continue;
+		}
+		const color = /^&K([0-9A-Fa-f]{6})/.exec(value.slice(i));
+		if (color) {
+			format('color', `#${color[1]}`, color[0]);
+			i += color[0].length;
+			continue;
+		}
+		const font = /^&"([^",]+),(Regular|Bold|Italic|Bold Italic)"/.exec(value.slice(i));
+		if (font) {
+			format('font', font[1]!, font[0]);
+			format('bold', font[2]!.includes('Bold'), font[0]);
+			format('italic', font[2]!.includes('Italic'), font[0]);
+			i += font[0].length;
+			continue;
+		}
 		const field = FIELDS[code];
 		if (field) {
 			const offset = field === 'page' ? /^[+-]\d+/.exec(value.slice(i + 2))?.[0] : undefined;
@@ -95,10 +152,10 @@ export function parseHeaderFooter(value: string): ParsedHeaderFooter {
 	return result;
 }
 
-export function renderHeaderFooter(
+export function renderHeaderFooterRuns(
 	value: string,
 	context: HeaderFooterContext,
-): { sections: Record<HeaderFooterSection, string>; unsupported: string[] } {
+): { sections: Record<HeaderFooterSection, HeaderFooterRun[]>; unsupported: string[] } {
 	const parsed = parseHeaderFooter(value);
 	const date = context.date ?? new Date();
 	const field = (token: Extract<HeaderFooterToken, { type: 'field' }>) => {
@@ -111,14 +168,38 @@ export function renderHeaderFooter(
 			token.field === 'date' ? { dateStyle: 'short' } : { hour: 'numeric', minute: '2-digit' },
 		).format(date);
 	};
-	const render = (section: HeaderFooterSection) =>
-		parsed.sections[section]
-			.map((token) =>
-				token.type === 'text' ? token.value : token.type === 'field' ? field(token) : '',
-			)
-			.join('');
+	const render = (section: HeaderFooterSection) => {
+		const runs: HeaderFooterRun[] = [];
+		let style: HeaderFooterStyle = {};
+		for (const token of parsed.sections[section]) {
+			if (token.type === 'format') {
+				const toggle = /^&[BIUS]$/.test(token.raw);
+				style = { ...style, [token.property]: toggle ? !style[token.property] : token.value };
+			} else if (token.type !== 'unsupported') {
+				const text = token.type === 'text' ? token.value : field(token);
+				const previous = runs.at(-1);
+				if (text && previous && JSON.stringify(previous.style) === JSON.stringify(style))
+					previous.text += text;
+				else if (text) runs.push({ text, style: { ...style } });
+			}
+		}
+		return runs;
+	};
 	return {
 		sections: { left: render('left'), center: render('center'), right: render('right') },
 		unsupported: parsed.unsupported,
+	};
+}
+
+export function renderHeaderFooter(
+	value: string,
+	context: HeaderFooterContext,
+): { sections: Record<HeaderFooterSection, string>; unsupported: string[] } {
+	const result = renderHeaderFooterRuns(value, context);
+	const text = (section: HeaderFooterSection) =>
+		result.sections[section].map((run) => run.text).join('');
+	return {
+		sections: { left: text('left'), center: text('center'), right: text('right') },
+		unsupported: result.unsupported,
 	};
 }

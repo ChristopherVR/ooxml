@@ -2,6 +2,20 @@ import { expect, it, vi } from 'vitest';
 import { createWorkbook, createEditSession } from 'ooxml-core/xlsx';
 import { buildPrintHtml } from './print-pages';
 
+it('prints rich header runs safely with scaled font sizes and preserved field formatting', () => {
+	const wb = createWorkbook();
+	const edit = createEditSession(wb);
+	edit.setCellInput(0, 0, 0, 'Cell');
+	edit.setPageSetup(0, { scale: 75, header: '&C&"Arial,Bold Italic"&18&KFF0000Page &P&U <title>' });
+	const html = buildPrintHtml(wb, 0, 'Book.xlsx');
+	expect(html).toContain(
+		'font-family:Arial;font-size:18px;color:#FF0000;font-weight:700;font-style:italic',
+	);
+	expect(html).toContain('text-decoration:underline');
+	expect(html).toContain('&#60;title&#62;');
+	expect(html).not.toContain(' <title></span>');
+});
+
 it('renders separate physical pages from the core plan with settings, headings and escaping', () => {
 	const wb = createWorkbook();
 	const edit = createEditSession(wb);

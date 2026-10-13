@@ -2,8 +2,26 @@
 // Protect Sheet, Insert / Delete cells, Remove Duplicates, Text to Columns, Symbol, Series,
 // Create Table): English key -> [fr, de, es, zh-CN].
 import type { Translations } from './types';
+import { RIBBON_HOME_STRINGS } from './ribbon-home';
 
 export const TOOLS_STRINGS: Translations = {
+	Bold: RIBBON_HOME_STRINGS.Bold!,
+	Italic: RIBBON_HOME_STRINGS.Italic!,
+	Underline: RIBBON_HOME_STRINGS.Underline!,
+	Strikethrough: RIBBON_HOME_STRINGS.Strikethrough!,
+	'Insert Formatting': [
+		'Insérer une mise en forme',
+		'Formatierung einfügen',
+		'Insertar formato',
+		'插入格式',
+	],
+	'Formatting: &B bold, &I italic, &U underline, &S strike, &18 font size, &KFF0000 RGB color, &"Arial,Regular" font.':
+		[
+			'Format : &B gras, &I italique, &U souligné, &S barré, &18 taille, &KFF0000 couleur RVB, &"Arial,Regular" police.',
+			'Format: &B fett, &I kursiv, &U unterstrichen, &S durchgestrichen, &18 Schriftgröße, &KFF0000 RGB-Farbe, &"Arial,Regular" Schriftart.',
+			'Formato: &B negrita, &I cursiva, &U subrayado, &S tachado, &18 tamaño, &KFF0000 color RGB, &"Arial,Regular" fuente.',
+			'格式：&B 粗体、&I 斜体、&U 下划线、&S 删除线、&18 字号、&KFF0000 RGB 颜色、&"Arial,Regular" 字体。',
+		],
 	'Date Range (optional):': [
 		'Plage de dates (facultative) :',
 		'Datumsbereich (optional):',

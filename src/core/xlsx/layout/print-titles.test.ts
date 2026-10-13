@@ -58,12 +58,7 @@ it('evaluates field codes, sections, escaped ampersands and localized date/time'
 	expect(result.sections.center).toContain('12/10/26');
 	expect(result.sections.center).toMatch(/1:04/);
 	expect(result.unsupported).toEqual([]);
-	expect(parseHeaderFooter('&C&"Calibri,Bold"&12&BHello &G').unsupported).toEqual([
-		'&"Calibri,Bold"',
-		'&12',
-		'&B',
-		'&G',
-	]);
+	expect(parseHeaderFooter('&C&"Calibri,Bold"&12&BHello &G').unsupported).toEqual(['&G']);
 	expect(
 		pageHeaderFooter(
 			{

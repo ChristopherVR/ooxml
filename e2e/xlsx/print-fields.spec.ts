@@ -32,7 +32,16 @@ test('authors repeated titles and native header fields with numbering and saved 
 	await setup.getByLabel('Header:', { exact: true }).fill('&L&A&RPage &P of &N');
 	await setup.getByLabel('Footer:', { exact: true }).fill('&L&F&R&D &T');
 	await setup.getByLabel('Different first page', { exact: true }).check();
-	await setup.getByLabel('First Page Header:', { exact: true }).fill('&CFirst &P of &N');
+	await setup
+		.getByLabel('First Page Header:', { exact: true })
+		.fill('&C&"Arial,Regular"&18&KFF0000First &P of &N');
+	await setup.getByLabel('Insert Formatting', { exact: true }).selectOption('&B');
+	await expect(setup.getByLabel('First Page Header:', { exact: true })).toHaveValue(
+		'&C&"Arial,Regular"&18&KFF0000First &P of &N&B',
+	);
+	await setup
+		.getByLabel('First Page Header:', { exact: true })
+		.fill('&C&"Arial,Bold Italic"&18&KFF0000First &P of &N');
 	await setup.getByLabel('Different odd and even pages', { exact: true }).check();
 	await setup.getByLabel('Even Page Header:', { exact: true }).fill('&CEven &P of &N');
 	await setup.getByLabel('Even Page Footer:', { exact: true }).fill('&L&F&R&D &T');
@@ -56,6 +65,11 @@ test('authors repeated titles and native header fields with numbering and saved 
 	const pages = preview.frameLocator('iframe').locator('.xve-print-page');
 	await expect(pages).toHaveCount(4);
 	await expect(pages.first().locator('.xve-print-header')).toContainText('First 5 of 4');
+	const rich = pages.first().locator('.xve-print-header span span').first();
+	await expect(rich).toHaveCSS('font-family', 'Arial');
+	await expect(rich).toHaveCSS('font-weight', '700');
+	await expect(rich).toHaveCSS('font-style', 'italic');
+	await expect(rich).toHaveCSS('color', 'rgb(255, 0, 0)');
 	await preview.getByRole('button', { name: 'Next Page', exact: true }).click();
 	await expect(pages.nth(1).locator('.xve-print-header')).toContainText('Even 6 of 4');
 	await expect(pages.nth(1).locator('.xve-print-footer')).toContainText('print-fields.xlsx');
