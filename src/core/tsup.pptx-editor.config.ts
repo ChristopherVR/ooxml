@@ -78,6 +78,8 @@ export default defineConfig({
 		'pptx/editor/render/template-editing': 'pptx/editor/render/template-editing.ts',
 		'pptx/editor/render/font-family-update': 'pptx/editor/render/font-family-update.ts',
 		'pptx/editor/render/text-runs-style-patch': 'pptx/editor/render/text-runs-style-patch.ts',
+		'pptx/editor/render/text-style-scope': 'pptx/editor/render/text-style-scope.ts',
+		'pptx/editor/render/text-content-style': 'pptx/editor/render/text-content-style.ts',
 		'pptx/editor/render/update-text-segment-style':
 			'pptx/editor/render/update-text-segment-style.ts',
 		'pptx/editor/render/text-segment-paragraph-break':

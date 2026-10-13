@@ -16,34 +16,20 @@
 import type { PptxElement, TextSegment, TextStyle } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
 
-import { isBulletMarkerSegment } from './bullet-toggle';
+import {
+	isContentSegment,
+	TEXT_DECORATION_FLAGS,
+	type TextDecorationFlag,
+} from 'ooxml-core/pptx/editor/render/text-content-style';
+export { isContentSegment, TEXT_DECORATION_FLAGS };
+export type { TextDecorationFlag };
 import type { InlineTextSelection } from './inline-selection-utils';
 
 /** The pressed state of one toggle over the selected runs. */
 export type TextStyleFlagState = 'on' | 'off' | 'mixed';
 
-/** The boolean run decorations the ribbon toggles. */
-export type TextDecorationFlag = 'bold' | 'italic' | 'underline' | 'strikethrough';
-
-export const TEXT_DECORATION_FLAGS: readonly TextDecorationFlag[] = [
-	'bold',
-	'italic',
-	'underline',
-	'strikethrough',
-];
-
 /** Per-toggle tri-state, one entry per {@link TextDecorationFlag}. */
 export type SelectionTextStyleFlags = Record<TextDecorationFlag, TextStyleFlagState>;
-
-/** A run that carries text: not a paragraph break, not a display-only bullet marker. */
-export function isContentSegment(segment: TextSegment): boolean {
-	return (
-		!segment.isParagraphBreak &&
-		segment.text !== '\n' &&
-		segment.text.length > 0 &&
-		!isBulletMarkerSegment(segment)
-	);
-}
 
 /**
  * The content runs a toggle acts on: those inside the selection's segment

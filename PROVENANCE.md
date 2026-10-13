@@ -2328,3 +2328,10 @@ Source: ChristopherVR/ooxml, commit `448f1720b9c2f9af9b16f325b3174c484242c65a` (
 
 - `src/ui/src/pptx/render/font-family-update.ts` and `update-text-segment-style.ts` move verbatim, except type imports, to `src/core/pptx/editor/render/`; UI paths re-export the core functions. Pure font-family rule tests move alongside core; selection and inspector integration tests remain UI.
 - Whole-run body/run merging previously repeated by UI `text-style-update.ts`, `inspector-helpers.ts` and Vanilla `editor-format-mutations.ts` is centralized in core `text-runs-style-patch.ts`. It retains pre-edit body inheritance and paragraph insertion styles. UI paragraph overrides, selection coordinates, DOM selection restoration and framework history remain in their existing owners. No native font-family semantic change is inferred by this extraction.
+
+## PowerPoint paragraph and run style editing scope
+
+Source: ChristopherVR/ooxml, commit `49b768561413d95cbfe4a1fd3d5dded9f721317c`.
+
+- `src/ui/src/pptx/render/text-style-scope.ts` and its pure tests move to `src/core/pptx/editor/render/`, changing only model/dependency imports. Body/run partitioning, line-spacing exclusivity, authored paragraph/indent overrides and effective decoration reconciliation retain their existing behavior; the UI path remains a compatibility export.
+- `TextDecorationFlag`, `TEXT_DECORATION_FLAGS` and `isContentSegment` move from UI `selection-format-state.ts` to core `text-content-style.ts`, reusing the existing core bullet-marker predicate. UI selection range filtering, pressed-state computation and exports remain in place. No DOM, selection restoration, history or framework logic moves into core, and this extraction establishes no new native paragraph semantics.
