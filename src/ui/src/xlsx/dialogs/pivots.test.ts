@@ -270,13 +270,14 @@ it('authors Values last on rows, preserves unchanged settings and removes the fi
 	const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
 	setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
 	setValue(inputByLabel<HTMLSelectElement>(extra, 'Summarize Values By:'), 'count');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'tabular');
 	setValue(axis, 'rows');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('tabular');
 	expect(
 		inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').querySelector<HTMLOptionElement>(
 			'[value="compact"]',
 		)!.disabled,
-	).toBe(true);
+	).toBe(false);
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(true);
 	const repeat = inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels');
 	expect(repeat.disabled).toBe(false);
@@ -334,4 +335,41 @@ it('keeps Values on rows unavailable while a second real row field is selected',
 	).toBe(false);
 	clickButton(dialog, 'Cancel');
 	await done;
+});
+
+it('keeps compact Values-row layout and switches to outline repeated labels with history', async () => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	const edit = ctx.session()!;
+	[
+		['Category', 'Amount', 'Quantity'],
+		['Fruit', 10, 2],
+		['Veg', 5, 4],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	ctx.select('A1:C3');
+	registerToolDialogs(ctx);
+	let done = ctx.dialogs.open('create-pivot-table');
+	let dialog = dialogEl(ctx, 'create-pivot-table');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+	clickButton(dialog, 'Add Value Field');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('compact');
+	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(true);
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({ valuesAxis: 'rows', layout: 'compact' });
+	expect(getCell(wb.sheets[0]!, 1, 4)?.value).toBe('Fruit');
+	expect(getCell(wb.sheets[0]!, 2, 4)?.value).toBe('Sum of Amount');
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'outline');
+	const repeat = inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels');
+	expect(repeat.disabled).toBe(false);
+	repeat.click();
+	clickButton(dialog, 'OK');
+	await done;
+	expect(getCell(wb.sheets[0]!, 2, 4)?.value).toBe('Fruit');
+	expect(getCell(wb.sheets[0]!, 2, 5)?.value).toBe('Sum of Amount');
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]?.layout).toBe('compact');
 });
