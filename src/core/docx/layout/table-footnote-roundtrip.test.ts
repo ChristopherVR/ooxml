@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
 import { loadDocx } from '../index';
 import { layoutDocumentModel } from './layout';
 const measurer = { widthOf: (text: string) => text.length * 5, lineHeightOf: () => 16 };
