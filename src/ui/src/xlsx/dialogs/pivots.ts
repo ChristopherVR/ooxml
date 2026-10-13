@@ -49,15 +49,11 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const column = select(ctx, [['', '(None)']], '');
 	const value = select(ctx, [], '');
 	const aggregate = select(ctx, PIVOT_AGGREGATE_OPTIONS, pivot?.aggregate ?? 'sum');
-	const multipleNotice = text(
-		ctx,
-		'Multiple value fields use tabular layout with Values on columns.',
-	);
+	const multipleNotice = text(ctx, 'Multiple value fields use Values on columns.');
 	const extras = pivotValueControls(
 		ctx,
 		pivot?.additionalValues ?? [],
 		() => {
-			if (extras.count()) layout.value = 'tabular';
 			updateRows();
 		},
 		pivot?.fields,
@@ -92,8 +88,6 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	source.addEventListener('change', loadFields);
 	loadFields();
 	const updateRows = () => {
-		for (const option of layout.options)
-			option.disabled = extras.count() > 0 && option.value !== 'tabular';
 		multipleNotice.hidden = extras.count() === 0;
 		subtotals.input.disabled = !second.value;
 		repeat.input.disabled = !second.value || layout.value === 'compact';

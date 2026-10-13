@@ -14,6 +14,56 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
+it('keeps compact multiple measures on unchanged settings and switches to outline subtotals with undo', async () => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	const edit = ctx.session()!;
+	[
+		['Category', 'Region', 'Amount', 'Quantity'],
+		['Fruit', 'East', 10, 2],
+		['Fruit', 'West', 20, 3],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	edit.createPivotTable(
+		0,
+		{ row: 0, col: 5 },
+		{
+			source: 'A1:D3',
+			rowField: 'Category',
+			secondRowField: 'Region',
+			valueField: 'Amount',
+			layout: 'compact',
+			additionalValues: [{ field: 'Quantity', aggregate: 'count' }],
+		},
+	);
+	ctx.select('F1');
+	registerToolDialogs(ctx);
+	const pivot = wb.sheets[0]!.pivotTables![0]!;
+	let done = ctx.dialogs.open('pivot-settings');
+	let dialog = dialogEl(ctx, 'pivot-settings');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('compact');
+	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(true);
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'outline');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Subtotal Position:'), 'bottom');
+	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(false);
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
+		layout: 'outline',
+		subtotalPosition: 'bottom',
+	});
+	expect(getCell(wb.sheets[0]!, 4, 5)?.value).toBe('Fruit Total');
+	expect(getCell(wb.sheets[0]!, 4, 7)?.value).toBe(30);
+	expect(getCell(wb.sheets[0]!, 4, 8)?.value).toBe(2);
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]?.layout).toBe('compact');
+	expect(getCell(wb.sheets[0]!, 1, 6)?.value).toBe(30);
+});
+
 it('authors multiple values in tabular form and preserves no-op settings before removal and undo', async () => {
 	const wb = createWorkbook();
 	const ctx = createTestContext(wb);
@@ -29,6 +79,7 @@ it('authors multiple values in tabular form and preserves no-op settings before 
 	let done = ctx.dialogs.open('create-pivot-table');
 	let dialog = dialogEl(ctx, 'create-pivot-table');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'tabular');
 	clickButton(dialog, 'Add Value Field');
 	const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
 	setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
@@ -38,7 +89,7 @@ it('authors multiple values in tabular form and preserves no-op settings before 
 		inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').querySelector<HTMLOptionElement>(
 			'[value="compact"]',
 		)!.disabled,
-	).toBe(true);
+	).toBe(false);
 	clickButton(dialog, 'OK');
 	await done;
 	const pivot = wb.sheets[0]!.pivotTables![0]!;

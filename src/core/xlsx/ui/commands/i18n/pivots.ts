@@ -1,6 +1,12 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Multiple value fields use Values on columns.': [
+		'Plusieurs champs de valeur utilisent les valeurs en colonnes.',
+		'Mehrere Wertfelder verwenden Werte in Spalten.',
+		'Varios campos de valor usan Valores en columnas.',
+		'多个值字段的值位于列轴上。',
+	],
 	'Add Value Field': [
 		'Ajouter un champ de valeur',
 		'Wertfeld hinzufügen',

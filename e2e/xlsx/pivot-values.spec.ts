@@ -35,6 +35,7 @@ test('authors three pivot measures with nested rows, refreshes, undoes and reope
 	await create.getByLabel('Second Row Field:', { exact: true }).selectOption('Region');
 	await create.getByLabel('Column Field:', { exact: true }).selectOption('Year');
 	await create.getByLabel('Value Field:', { exact: true }).selectOption('Amount');
+	await create.getByLabel('Report Layout:', { exact: true }).selectOption('tabular');
 	await create.getByRole('button', { name: 'Add Value Field', exact: true }).click();
 	const extras = create.locator('[data-pivot-value]');
 	await extras.nth(0).getByLabel('Value Field:', { exact: true }).selectOption('Quantity');
