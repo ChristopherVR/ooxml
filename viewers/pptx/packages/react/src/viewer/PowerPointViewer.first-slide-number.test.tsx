@@ -27,6 +27,8 @@ const { PowerPointViewer } = await import('../index');
 type Handle = import('../index').PowerPointViewerHandle;
 
 test('numbers slide-number fields from the deck start number', async () => {
+	const hadActEnvironment = Object.hasOwn(globalThis, 'IS_REACT_ACT_ENVIRONMENT');
+	const previousActEnvironment = globalThis.IS_REACT_ACT_ENVIRONMENT;
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 	const container = document.createElement('div');
 	document.body.append(container);
@@ -56,6 +58,10 @@ test('numbers slide-number fields from the deck start number', async () => {
 	} finally {
 		await act(async () => root.unmount());
 		container.remove();
-		globalThis.IS_REACT_ACT_ENVIRONMENT = false;
+		if (hadActEnvironment) {
+			globalThis.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
+		} else {
+			delete globalThis.IS_REACT_ACT_ENVIRONMENT;
+		}
 	}
 });
