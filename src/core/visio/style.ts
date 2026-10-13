@@ -297,6 +297,9 @@ export function shapeText(
 						end: textOffset + field.text.length,
 						cached: field.cached,
 						...(field.formula ? { formula: field.formula } : {}),
+						...(field.index === undefined
+							? {}
+							: { index: field.index, format: field.format!, sourceKey: field.sourceKey! }),
 					});
 					append(field.text);
 				} else if (element.localName !== 'pp' && element.localName !== 'tp') {

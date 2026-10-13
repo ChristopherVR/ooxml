@@ -1,0 +1,25 @@
+{
+  "version": "16.0",
+  "result": "native field updates matched through save/reopen",
+  "cases": [
+    {
+      "id": "1",
+      "formula": "Width*2",
+      "format": "0.00",
+      "text": "Before 8.00 | 1 After"
+    },
+    {
+      "id": "2",
+      "formula": "DOCCREATION()",
+      "format": "{{yyyy-MM-dd}}",
+      "text": "Before 2026-10-14 | 1 After"
+    },
+    {
+      "id": "3",
+      "formula": "TITLE()",
+      "format": "@",
+      "text": "Before  | 1 After"
+    }
+  ],
+  "timezone": "E. Australia Standard Time (Australia/Brisbane)"
+}

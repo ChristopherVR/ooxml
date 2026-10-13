@@ -21,6 +21,60 @@ export interface VisioTextFieldInsertEdit {
 	expectedText?: string;
 }
 
+/** Atomically update one live local Field row and its unique <fld>, retaining its IX. */
+export interface VisioTextFieldUpdateEdit {
+	type: 'update-text-field';
+	pageId: string;
+	shapeId: string;
+	fieldIndex: string;
+	formula: string;
+	format?: string;
+	/** Exact source text, cached field text and Field row key from the parsed scene. */
+	expectedText: string;
+	expectedCached: string;
+	expectedSourceKey: string;
+}
+
+export function snapshotTextFieldUpdate(edit: VisioTextFieldUpdateEdit): VisioTextFieldUpdateEdit {
+	const insert = snapshotTextFieldInsert({
+		type: 'insert-text-field',
+		pageId: edit.pageId,
+		shapeId: edit.shapeId,
+		formula: edit.formula,
+		...(edit.format === undefined ? {} : { format: edit.format }),
+	});
+	if (
+		analyzeVisioFormula(parseVisioFormula(insert.formula)).references.some((ref) =>
+			/^fields?\./i.test(ref.cell),
+		)
+	)
+		fail('UNSUPPORTED_TEXT_FIELD', 'Existing field formulas cannot reference Field rows.');
+	if (
+		typeof edit.fieldIndex !== 'string' ||
+		!/^(0|[1-9]\d{0,9})$/.test(edit.fieldIndex) ||
+		Number(edit.fieldIndex) > 0xffffffff
+	)
+		fail('INVALID_EDIT', 'An existing field needs a canonical row index.');
+	if (
+		[edit.expectedText, edit.expectedCached, edit.expectedSourceKey].some(
+			(value) => typeof value !== 'string' || value.length > 1_000_000,
+		) ||
+		!edit.expectedSourceKey
+	)
+		fail('INVALID_EDIT', 'An existing field needs its source text and row identity.');
+	return {
+		type: 'update-text-field',
+		pageId: insert.pageId,
+		shapeId: insert.shapeId,
+		fieldIndex: edit.fieldIndex,
+		formula: insert.formula,
+		format: insert.format!,
+		expectedText: edit.expectedText,
+		expectedCached: edit.expectedCached,
+		expectedSourceKey: edit.expectedSourceKey,
+	};
+}
+
 export function snapshotTextFieldInsert(edit: VisioTextFieldInsertEdit): VisioTextFieldInsertEdit {
 	const { pageId, shapeId } = edit;
 	if ([pageId, shapeId].some((id) => typeof id !== 'string' || !id || id.length > 256))

@@ -1,6 +1,10 @@
 import type { VisioPackage } from './package';
-import type { VisioTextFieldInsertEdit } from './edit-text-field-commands';
-import { attribute, children, yes } from './sheet';
+import type {
+	VisioTextFieldInsertEdit,
+	VisioTextFieldUpdateEdit,
+} from './edit-text-field-commands';
+import { attribute, children, readCells, yes } from './sheet';
+import { textFieldSourceKey } from './text-field-source';
 import { fail } from './package-common';
 import { related, visioXml } from './parts';
 import { visioFormulaCachedValue, type VisioFormulaReference } from './formula';
@@ -108,7 +112,7 @@ export async function insertVisioTextField(
 	pagePaths: ReadonlySet<string>,
 	roots: ReadonlyMap<string, Element>,
 	document: Element,
-	edit: VisioTextFieldInsertEdit,
+	edit: VisioTextFieldInsertEdit | VisioTextFieldUpdateEdit,
 	check: () => void,
 ): Promise<boolean> {
 	const shape = localTextTarget(roots.get(edit.pageId)!, document, edit.shapeId, check);
@@ -126,9 +130,56 @@ export async function insertVisioTextField(
 			effectiveFormattingRows(shape, document, 'Paragraph'),
 		);
 	const rows = formattingRows(shape, 'Field');
-	const point = insertionPoint(text, edit.offset);
-	if (edit.offset !== undefined && point.logical !== edit.expectedText)
+	const updating = edit.type === 'update-text-field';
+	if (
+		updating &&
+		((shape.parentNode?.parentNode as Element | undefined)?.localName !== 'PageContents' ||
+			children(shape, 'Rel').length)
+	)
+		fail('UNSUPPORTED_TEXT_FIELD', 'Existing field edits require a top-level plain local shape.');
+	const point = insertionPoint(text, updating ? undefined : edit.offset);
+	if ((updating || edit.offset !== undefined) && point.logical !== edit.expectedText)
 		fail('EDIT_STALE_TEXT', 'The shape text changed since the field position was chosen.');
+	const existing = updating ? rows.get(edit.fieldIndex) : undefined;
+	const markers = updating
+		? children(text, 'fld').filter((field) => attribute(field, 'IX') === edit.fieldIndex)
+		: [];
+	if (updating) {
+		if (!existing || markers.length !== 1)
+			fail(
+				'UNSUPPORTED_TEXT_FIELD',
+				'Existing fields require one live local row and unique text marker.',
+			);
+		if (
+			markers[0]!.textContent !== edit.expectedCached ||
+			textFieldSourceKey(readCells(existing)) !== edit.expectedSourceKey
+		)
+			fail('EDIT_STALE_TEXT', 'The field source changed since it was selected.');
+		for (const name of ['Calendar', 'ObjectKind']) {
+			const cell = children(existing, 'Cell').find((cell) => attribute(cell, 'N') === name);
+			if (
+				cell &&
+				(attribute(cell, 'V') !== '0' || cell.hasAttribute('F') || cell.hasAttribute('E'))
+			)
+				fail(
+					'UNSUPPORTED_TEXT_FIELD',
+					'Nonstandard field calendar or object profiles cannot be edited.',
+				);
+		}
+		for (const cell of children(existing, 'Cell')) {
+			const name = attribute(cell, 'N') ?? '';
+			if (
+				/^(value|format|type|calendar|objectkind)$/i.test(name) &&
+				!['Value', 'Format', 'Type', 'Calendar', 'ObjectKind'].includes(name)
+			)
+				fail('UNSUPPORTED_TEXT_FIELD', 'Noncanonical field cell names cannot be edited.');
+			if (
+				['Value', 'Format', 'Type'].includes(attribute(cell, 'N') ?? '') &&
+				(cell.hasAttribute('E') || /^\s*(Inh|GUARD\s*\()/i.test(attribute(cell, 'F') ?? ''))
+			)
+				fail('UNSUPPORTED_TEXT_FIELD', 'Protected or inherited field cells cannot be edited.');
+		}
+	}
 	const context = { ...(await pageContext(pkg, edit.pageId)), resolve: shapeResolver(shape) };
 	let value: VisioFieldValue | undefined;
 	try {
@@ -141,9 +192,23 @@ export async function insertVisioTextField(
 			'UNSUPPORTED_TEXT_FIELD',
 			`This editor cannot evaluate the field formula. Supported: ${VISIO_FIELD_FUNCTIONS.join(', ')}, PAGENUMBER, PAGECOUNT and numeric formulas on this shape.`,
 		);
-	const display = formatVisioFieldValue(value, edit.format ?? '');
+	const format = edit.format ?? '';
+	const display = formatVisioFieldValue(value, format);
 	if (display === undefined)
 		fail('UNSUPPORTED_TEXT_FIELD', 'The field format does not suit the field value.');
+	const prepared = valueCell(value);
+	if (existing && markers[0]!.textContent === display) {
+		const same = (name: string, v: string, u: string | undefined, f: string | undefined) => {
+			const cell = children(existing, 'Cell').find((cell) => attribute(cell, 'N') === name);
+			return attribute(cell, 'V') === v && attribute(cell, 'U') === u && attribute(cell, 'F') === f;
+		};
+		if (
+			same('Value', prepared.v, prepared.u, edit.formula) &&
+			same('Format', format, 'STR', `"${format.replaceAll('"', '""')}"`) &&
+			same('Type', String(prepared.type), undefined, undefined)
+		)
+			return false;
+	}
 	if (texts[0])
 		await assertFormattingDependencies(
 			pkg,
@@ -151,32 +216,55 @@ export async function insertVisioTextField(
 			roots,
 			edit.pageId,
 			shape,
-			new Map([['TheText', text]]),
+			new Map<string, Element | undefined>([
+				['TheText', text],
+				...(existing
+					? ['Value', 'Format', 'Type'].flatMap((name) => {
+							const cell = children(existing, 'Cell').find((cell) => attribute(cell, 'N') === name);
+							return [
+								[`Field.${updating ? edit.fieldIndex : ''}.${name}`, cell] as const,
+								[`Fields.${name}`, cell] as const,
+							];
+						})
+					: []),
+			]),
 			check,
 		);
 	check();
-	const index = String(rows.size ? Math.max(...[...rows.keys()].map(Number)) + 1 : 0);
+	const index = updating
+		? edit.fieldIndex
+		: String(rows.size ? Math.max(...[...rows.keys()].map(Number)) + 1 : 0);
 	let section = children(shape, 'Section').find((node) => attribute(node, 'N') === 'Field');
 	if (!section) {
 		section = owner.createElementNS(ns, 'Section');
 		section.setAttribute('N', 'Field');
 		shape.insertBefore(section, texts[0] ?? null);
 	}
-	const row = owner.createElementNS(ns, 'Row');
-	row.setAttribute('IX', index);
+	const row = existing ?? owner.createElementNS(ns, 'Row');
+	if (!existing) row.setAttribute('IX', index);
 	const cell = (name: string, v: string, extra: Record<string, string> = {}) => {
-		const node = owner.createElementNS(ns, 'Cell');
+		const node =
+			children(row, 'Cell').find((cell) => attribute(cell, 'N') === name) ??
+			owner.createElementNS(ns, 'Cell');
 		node.setAttribute('N', name);
 		node.setAttribute('V', v);
+		if (updating) {
+			node.removeAttribute('U');
+			node.removeAttribute('F');
+		}
 		for (const [key, item] of Object.entries(extra)) node.setAttribute(key, item);
-		row.appendChild(node);
+		if (!node.parentNode) row.appendChild(node);
 	};
-	const stored = valueCell(value);
+	const stored = prepared;
 	cell('Value', stored.v, { ...(stored.u ? { U: stored.u } : {}), F: edit.formula });
-	if (edit.format)
-		cell('Format', edit.format, { U: 'STR', F: `"${edit.format.replaceAll('"', '""')}"` });
+	if (format || updating)
+		cell('Format', format, { U: 'STR', F: `"${format.replaceAll('"', '""')}"` });
 	cell('Type', String(stored.type));
-	section.appendChild(row);
+	if (!row.parentNode) section.appendChild(row);
+	if (updating) {
+		markers[0]!.textContent = display;
+		return true;
+	}
 	const field = owner.createElementNS(ns, 'fld');
 	field.setAttribute('IX', index);
 	field.appendChild(owner.createTextNode(display));

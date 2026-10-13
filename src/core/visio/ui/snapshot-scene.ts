@@ -224,7 +224,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			? {}
 			: {
 					fields: list(source.fields, 'text fields', 10_000, (field) =>
-						fields(field, ['start', 'end', 'cached', 'formula']),
+						fields(field, ['start', 'end', 'cached', 'formula', 'index', 'format', 'sourceKey']),
 					),
 				}),
 		runs: list(source.runs, 'text runs', 100_000, (run) => ({

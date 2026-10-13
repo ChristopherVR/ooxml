@@ -53,7 +53,17 @@ describe('insert-text-field', () => {
 		);
 		const parsed = await text(saved.bytes);
 		expect(parsed.plainText).toBe('Hello Page 1');
-		expect(parsed.fields).toEqual([{ start: 6, end: 12, cached: 'Page 1', formula: 'PAGENAME()' }]);
+		expect(parsed.fields).toEqual([
+			{
+				start: 6,
+				end: 12,
+				cached: 'Page 1',
+				formula: 'PAGENAME()',
+				index: '0',
+				format: '',
+				sourceKey: '[["Type","0",null,null,null],["Value","Page 1","PAGENAME()","STR",null]]',
+			},
+		]);
 	});
 
 	it('evaluates page number and count, document properties and dates', async () => {

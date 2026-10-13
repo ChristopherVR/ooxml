@@ -118,6 +118,15 @@ It evaluates `NOW()`, the document date functions, `TITLE()`, `CREATOR()` and th
 document-property functions, `PAGENAME()`, `PAGENUMBER()`, `PAGECOUNT()` and numeric
 formulas over the shape's own cells; anything else is refused. Format pictures are the
 `VISIO_FIELD_FORMATS` subset (`{{date picture}}`, `0`, `0.00`, `#,##0`, ` u` units, `@`).
+`update-text-field` atomically edits one live local Field row and its unique text marker.
+It uses the same formula evaluation, cache units and explicit format subset, retains the
+existing IX and surrounding formatting, and compares source text, cached field text and
+the parsed row's `sourceKey` before writing. Field-row references, protected cells,
+nonstandard calendars/objects, nested/grouped or inherited shapes and ambiguous markers
+are refused. Native internal-picture source admission is bounded to measured 2/37/204;
+unmeasured pictures remain unsupported. The Field dialog's Insert or edit choice exposes
+this workflow. Selecting an unsupported stored picture requires choosing an explicit
+supported output format; this does not broaden source dependency admission.
 The parser shows evaluated page and document context and cached Values; other fields keep
 their stored text. Range edits treat a field as one atomic token and refuse ranges that
 touch it; whole-text replacement of a shape with fields is refused. Visio reopening

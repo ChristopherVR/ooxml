@@ -3,6 +3,7 @@ import { visioFieldCase } from './text-field-case';
 import { numericFieldPicture } from './text-field-numeric';
 import { visioIsoDateSerial } from './date-cache';
 import { systemDatePicture } from './text-field-system-date';
+import { textFieldSourceKey } from './text-field-source';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	evaluateVisioTextField,
@@ -39,14 +40,26 @@ export function textFieldDisplay(
 	element: Element,
 	sheet: Sheet,
 	context: VisioFieldContext | undefined,
-): { text: string; cached: string; formula?: string } {
+): {
+	text: string;
+	cached: string;
+	formula?: string;
+	index?: string;
+	format?: string;
+	sourceKey?: string;
+} {
 	const cached = element.textContent ?? '';
 	const index = element.getAttribute('IX') ?? '0';
 	const row = sectionRows(sheet, 'Field').find((candidate) => candidate.index === index);
 	const value = row?.cells.get('Value'),
 		format = row?.cells.get('Format');
 	const formula = value?.formula && value.formula !== 'Inh' ? value.formula : undefined;
-	const result = { cached, ...(formula ? { formula } : {}) };
+	const sourceKey = row ? textFieldSourceKey(row.cells) : undefined;
+	const result = {
+		cached,
+		...(formula ? { formula } : {}),
+		...(sourceKey !== undefined ? { index, format: format?.value ?? '', sourceKey } : {}),
+	};
 	if (!row || !context) return { text: cached, ...result };
 	const picture = format?.value ?? '';
 	const evaluated = formula ? evaluateVisioTextField(formula, context) : undefined;

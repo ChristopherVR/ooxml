@@ -7,6 +7,7 @@ import { fail } from './package-common';
 import { isThemeLookupFormula } from './edit-formatting-cell-admission';
 import { isConnectedGlueCell, visioGlueTriggerTarget } from './edit-connector-glue';
 import { textSizeFormula } from './edit-text-size-formula';
+import { independentTextFieldFormula } from './text-field-independent';
 
 /** Nonnumeric font/color caches cannot be recalculated by the numeric engine.
  * Refuse every dependent formula, including metadata/styles/masters, before writes.
@@ -60,6 +61,7 @@ export async function assertFormattingDependencies(
 				continue;
 			const source = executableCellFormula(attribute(node, 'F'));
 			if (!source || inertDoubleClickFormula(attribute(node, 'N') ?? '', source)) continue;
+			if (independentTextFieldFormula(node, source)) continue;
 			// A 'Themed' cache is resolved from the current selectors on every read, so a
 			// literal theme lookup never goes stale when Quick Style selectors change.
 			if (attribute(node, 'V') === 'Themed' && isThemeLookupFormula(source)) continue;
