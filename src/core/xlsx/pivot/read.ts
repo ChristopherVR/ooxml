@@ -141,8 +141,6 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
 	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
-	if (rowsAxis && layout !== 'tabular')
-		throw new Error('Values on rows currently require tabular layout');
 	if (
 		tableFields.some(
 			(field) =>

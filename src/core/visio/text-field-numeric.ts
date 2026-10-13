@@ -1,4 +1,5 @@
 import { formatVisioFieldValue, type VisioFieldValue } from './text-fields';
+import { fractionalFieldNumber } from './text-field-fraction';
 
 /** Native FIELDPICTURE numeric formats use the Value cell's display unit. */
 export function numericFieldPicture(
@@ -6,7 +7,14 @@ export function numericFieldPicture(
 	code: number,
 	displayUnit: string | undefined,
 ): string | undefined {
-	if (value.kind !== 'number' || code < 0 || code > 9 || !Number.isInteger(code)) return undefined;
+	if (
+		value.kind !== 'number' ||
+		code < 0 ||
+		code > 18 ||
+		(code > 9 && code < 15) ||
+		!Number.isInteger(code)
+	)
+		return undefined;
 	const unit = displayUnit?.toUpperCase() ?? 'NUM';
 	const units: Record<string, [typeof value.unit, number, string]> = {
 		NUM: ['scalar', 1, ''],
@@ -18,13 +26,17 @@ export function numericFieldPicture(
 		RAD: ['angle', 1, ' rad.'],
 	};
 	const definition = Object.hasOwn(units, unit) ? units[unit] : undefined;
-	// Page-dependent units, fractions, dates and locale pictures remain cached.
+	// Page-dependent units, compound feet/inches, dates and locale pictures remain cached.
 	if (!definition || definition[0] !== value.unit) return undefined;
 	const general = code < 2;
 	const decimals = general ? 4 : Math.floor((code - 2) / 2);
 	const picture = general ? '0.####' : decimals ? `0.${'0'.repeat(decimals)}` : '0';
 	const displayed = value.value * definition[1];
 	if (!Number.isFinite(displayed)) return undefined;
+	if (code >= 15) {
+		const fraction = fractionalFieldNumber(displayed, code < 17 ? 9 : 99);
+		return fraction === undefined ? undefined : fraction + (code % 2 === 0 ? definition[2] : '');
+	}
 	// Integer overflow and larger general-number precision remain unverified.
 	if ((general || !decimals) && Math.abs(displayed) > 1e15) return undefined;
 	const scientific =

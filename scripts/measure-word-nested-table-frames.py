@@ -21,7 +21,7 @@ for case in cases:
    for block in page.get_text('dict')['blocks']:
     for line in block.get('lines',[]):
      text=''.join(span['text'] for span in line['spans'])
-     if re.search(r'T\dR\d+C\d+L\d+|N0L\d+',text):lines.append({'text':text,'leftPt':round(line['bbox'][0],3),'baselinePt':round(line['spans'][-1]['origin'][1],3)})
+     if re.search(r'T\dR\d+C\d+L\d+|N0L\d+|D[01]',text):lines.append({'text':text,'leftPt':round(line['bbox'][0],3),'baselinePt':round(line['spans'][-1]['origin'][1],3)})
    case['measurements'].append({'fills':fills,'borders':borders,'lines':lines})
 (root/'native-measurements.json').write_text(json.dumps({'unit':'PDF points','cases':cases},indent=2)+'\n',encoding='utf-8')
 for case in cases:print(case['name'],[(p['fills'],len(p['borders']),[l for l in p['lines'] if 'T1R0C0L00' in l['text']])for p in case['measurements']])

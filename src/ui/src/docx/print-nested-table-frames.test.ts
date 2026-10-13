@@ -17,6 +17,13 @@ it.each([
 	'border-three-margin',
 	'margin',
 	'unequal-split',
+	'mixed',
+	'mixed-margin',
+	'mixed-centered',
+	'mixed-two-rows',
+	'mixed-split',
+	'mixed-outer-border',
+	'mixed-deep',
 ])('paints nested source frames without duplicating ink: %s', async (name) => {
 	const loaded = await loadDocx(
 		new Uint8Array(
@@ -43,11 +50,11 @@ it.each([
 			'rgb(255, 0, 0)',
 		);
 		expect(frame.querySelector<HTMLElement>('.dve-print-cell')?.style.background).toBe(
-			'rgb(255, 255, 0)',
+			name === 'mixed-deep' && frame === frames[1] ? '' : 'rgb(255, 255, 0)',
 		);
 	}
 	const text = element.textContent ?? '';
 	expect(text.match(/T1R0C0L00/g)).toHaveLength(1);
 	expect(text.match(/T1R0C1L00/g)).toHaveLength(1);
-	if (name.endsWith('split')) expect(frames).toHaveLength(2);
+	if (name.endsWith('split') || name === 'mixed-deep') expect(frames).toHaveLength(2);
 });

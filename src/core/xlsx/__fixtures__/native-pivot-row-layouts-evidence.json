@@ -1,0 +1,34 @@
+{
+  "observedOn": "2026-10-13",
+  "excelFileVersion": "16.0.20430.20146",
+  "reproduce": "pwsh -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+  "acceptanceCases": 125,
+  "newRowLayoutCases": 29,
+  "fixtures": [
+    "excel-pivot-row-values-compact.xlsx",
+    "excel-pivot-row-values-compact-columns.xlsx",
+    "excel-pivot-row-values-outline.xlsx",
+    "excel-pivot-row-values-outline-columns.xlsx",
+    "excel-pivot-row-values-outline-columns-repeat.xlsx"
+  ],
+  "nativeStructure": {
+    "profile": "one real row field followed by Values, multiple measures, optional real column axis",
+    "compact": "one label column; blank outer heading, indented measure rows and one total row per measure",
+    "outline": "Category/Values columns; blank outer heading before measure rows, optional repeated Category labels",
+    "rowItems": "outer heading then compressed prefix r=1 for each measure; i indexes measures",
+    "headers": "one row without columns, two with columns; compact uses Row Labels and Column Labels",
+    "indent": "root indent=0, cell indent=1 for compact measure labels, zero elsewhere",
+    "subtotals": "automatic outer subtotals and their position do not add rows across the Values pseudo field"
+  },
+  "coverage": [
+    "every cached/refreshed value, type, row/column dimension and label indentation",
+    "sum/count/average/min/max, repeated source measures, custom measure captions, source errors and sparse column groups",
+    "two/three measures with optional real column field and repeat-label preferences",
+    "five native imports, explicit refresh after source edit and save/reopen",
+    "all six conversions between tabular, compact and outline with Values remaining last on rows"
+  ],
+  "limits": [
+    "two real row fields plus Values on rows remains unsupported",
+    "Values first, custom indentation, custom Values headers, grouping, slicers and shared caches remain preserved without refresh"
+  ]
+}

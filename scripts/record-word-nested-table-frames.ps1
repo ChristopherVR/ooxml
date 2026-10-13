@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 New-Item -ItemType Directory -Path $OutputDirectory -Force|Out-Null
 $root=Split-Path $PSScriptRoot -Parent
-$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'},@{name='nested-frame-border-half';source='nested-table-reference';border='4'},@{name='nested-frame-border-two';source='nested-table-reference';border='16'},@{name='nested-frame-border-three-margin';source='nested-table-reference';border='24';margin='120'},@{name='nested-frame-margin';source='nested-table-reference';margin='120'},@{name='nested-frame-unequal-split';source='nested-split-late';unequal=$true})
+$cases=@(@{name='nested-frame-short';source='nested-table-reference'},@{name='nested-frame-two-rows';source='nested-table-reference';twoRows=$true},@{name='nested-frame-centered';source='nested-table-reference';center=$true},@{name='nested-frame-split';source='nested-split-late'},@{name='nested-frame-align-top';source='nested-table-reference';align='top'},@{name='nested-frame-align-center';source='nested-table-reference';align='center'},@{name='nested-frame-align-bottom';source='nested-table-reference';align='bottom'},@{name='nested-frame-border-half';source='nested-table-reference';border='4'},@{name='nested-frame-border-two';source='nested-table-reference';border='16'},@{name='nested-frame-border-three-margin';source='nested-table-reference';border='24';margin='120'},@{name='nested-frame-margin';source='nested-table-reference';margin='120'},@{name='nested-frame-unequal-split';source='nested-split-late';unequal=$true},@{name='nested-frame-mixed';source='nested-table-reference';mixed=$true},@{name='nested-frame-mixed-margin';source='nested-table-reference';mixed=$true;margin='120'},@{name='nested-frame-mixed-centered';source='nested-table-reference';mixed=$true;center=$true},@{name='nested-frame-mixed-two-rows';source='nested-table-reference';mixed=$true;twoRows=$true},@{name='nested-frame-mixed-split';source='nested-split-late';mixed=$true},@{name='nested-frame-mixed-outer-border';source='nested-table-reference';mixed=$true;outerBorder=$true},@{name='nested-frame-mixed-deep';source='nested-table-reference';mixed=$true;outerBorder=$true;deep=$true})
 if($CaseNames){$cases=@($cases|Where-Object{$_.name-in$CaseNames})}
 $app=$null;$owned=$false;$records=@()
 try{
@@ -25,6 +25,7 @@ try{
    foreach($side in @('top','left','bottom','right','insideH','insideV')){
     $edge=$xml.CreateElement('w',$side,$ns.LookupNamespace('w'))
     foreach($attribute in @(@('val','single'),@('sz',$(if($case.border){$case.border}else{'8'})),@('color','FF0000'))){$a=$xml.CreateAttribute('w',$attribute[0],$ns.LookupNamespace('w'));$a.Value=$attribute[1];[void]$edge.Attributes.Append($a)}
+    if($case.mixed){$weights=@{top='16';left='8';bottom='4';right='24';insideH='12';insideV='16'};$edge.SetAttribute('sz',$ns.LookupNamespace('w'),$weights[$side])|Out-Null}
     [void]$borders.AppendChild($edge)
    }
    [void]$props.AppendChild($borders)
@@ -48,6 +49,18 @@ try{
     }
    }
    if($case.unequal){$second=$inner.SelectSingleNode('w:tr/w:tc[2]/w:p',$ns);foreach($run in @($second.SelectNodes('w:r[w:t="T1R0C1L18" or w:t="T1R0C1L19"]',$ns))){[void]$second.RemoveChild($run)}}
+
+   if($case.outerBorder){
+    $outer=$inner.ParentNode.ParentNode.ParentNode;$outerProps=$outer.SelectSingleNode('w:tblPr',$ns);$old=$outerProps.SelectSingleNode('w:tblBorders',$ns);if($old){[void]$outerProps.RemoveChild($old)}
+    $outerEdges=$borders.CloneNode($true);foreach($edge in $outerEdges.ChildNodes){$edge.SetAttribute('sz',$ns.LookupNamespace('w'),'24')|Out-Null;$edge.SetAttribute('color',$ns.LookupNamespace('w'),'000000')|Out-Null};[void]$outerProps.AppendChild($outerEdges)
+   }
+   if($case.deep){
+    $deep=$inner.CloneNode($true);foreach($reference in @($deep.SelectNodes('.//w:footnoteReference',$ns))){[void]$reference.ParentNode.RemoveChild($reference)}
+    foreach($width in $deep.SelectNodes('w:tblPr/w:tblW|w:tr/w:tc/w:tcPr/w:tcW',$ns)){$width.SetAttribute('w',$ns.LookupNamespace('w'),$(if($width.LocalName-eq'tblW'){'1200'}else{'600'}))|Out-Null}
+    foreach($grid in $deep.SelectNodes('w:tblGrid/w:gridCol',$ns)){$grid.SetAttribute('w',$ns.LookupNamespace('w'),'600')|Out-Null}
+    $index=0;foreach($cell in $deep.SelectNodes('w:tr/w:tc',$ns)){foreach($text in $cell.SelectNodes('.//w:t',$ns)){$text.InnerText='D'+$index};$index++}
+    $parent=$inner.SelectSingleNode('w:tr/w:tc',$ns);[void]$parent.InsertBefore($deep,$parent.SelectSingleNode('w:p',$ns))
+   }
    $rowIndex=0
    foreach($row in $inner.SelectNodes('w:tr',$ns)){
     $cellIndex=0

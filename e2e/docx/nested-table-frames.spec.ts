@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileInput } from './helpers';
 for (const name of [
 	'short',
@@ -14,6 +15,13 @@ for (const name of [
 	'border-three-margin',
 	'margin',
 	'unequal-split',
+	'mixed',
+	'mixed-margin',
+	'mixed-centered',
+	'mixed-two-rows',
+	'mixed-split',
+	'mixed-outer-border',
+	'mixed-deep',
 ])
 	test(`nested table frames ${name} survive save and reopen`, async ({ page }) => {
 		await page.goto('/?framework=vanilla');
@@ -40,7 +48,7 @@ for (const name of [
 		};
 		await print();
 		const frames = editor.locator('.dve-print-nested-table');
-		await expect(frames).toHaveCount(name.endsWith('split') ? 2 : 1);
+		await expect(frames).toHaveCount(name.endsWith('split') || name === 'mixed-deep' ? 2 : 1);
 		const check = async () => {
 			const first = frames.first().locator('.dve-print-cell').first();
 			await expect(first).toHaveCSS('background-color', 'rgb(255, 255, 0)');
@@ -60,6 +68,101 @@ for (const name of [
 				1,
 			);
 			await expect(frames.first()).toHaveText('');
+			const layer = frames
+				.first()
+				.locator('xpath=ancestor::*[contains(@class,"dve-print-cell-frame-layer")][1]');
+			await expect(layer).toHaveCSS('overflow-x', 'visible');
+			await expect(layer).toHaveCSS('overflow-y', 'clip');
+			await expect(layer).toHaveCSS('pointer-events', 'none');
+			expect(await layer.evaluate((node) => node.closest('.dve-print-cell'))).toBeNull();
+			const frameBounds = await frames.first().boundingBox();
+			const bodyCell = await editor
+				.locator('.dve-print-page')
+				.first()
+				.locator('.dve-print-row > .dve-print-cell')
+				.first()
+				.boundingBox();
+			const evidenceDirectory = process.env.WORD_FRAME_PAINT_EVIDENCE_DIRECTORY;
+			if (name === 'mixed' && evidenceDirectory) {
+				mkdirSync(evidenceDirectory, { recursive: true });
+				const ink = await editor
+					.locator('.dve-print-block[data-read-only="true"]')
+					.filter({ hasText: 'T1R0C0L00' })
+					.boundingBox();
+				await page.screenshot({ path: join(evidenceDirectory, 'word-mixed-frame.png') });
+				const originalHeight = await layer.evaluate((node) => (node as HTMLElement).style.height);
+				try {
+					await layer.evaluate((node) => {
+						(node as HTMLElement).style.height = '8px';
+					});
+					await page.screenshot({ path: join(evidenceDirectory, 'word-mixed-frame-clipped.png') });
+				} finally {
+					await layer.evaluate((node, height) => {
+						(node as HTMLElement).style.height = height;
+					}, originalHeight);
+				}
+
+				writeFileSync(
+					join(evidenceDirectory, 'word-mixed-frame-geometry.json'),
+					JSON.stringify(
+						{ frame: frameBounds, body: bodyCell, ink, viewport: page.viewportSize() },
+						null,
+						2,
+					),
+					'utf8',
+				);
+			}
+
+			if (name !== 'centered' && name !== 'mixed-centered')
+				expect(frameBounds!.x + frameBounds!.width).toBeGreaterThan(
+					bodyCell!.x + bodyCell!.width + 0.4,
+				);
+
+			if (name === 'mixed-outer-border' || name === 'mixed-deep') {
+				const paragraph = editor
+					.locator('.dve-print-block[data-read-only="true"]')
+					.filter({ hasText: 'T1R0C0L00' });
+				const ink = await paragraph.boundingBox();
+				expect(ink!.x - frameBounds!.x).toBeCloseTo(4 / 3, 1);
+				expect(ink!.y - frameBounds!.y).toBeCloseTo(
+					((name === 'mixed-deep' ? 16.5 : 2) * 4) / 3,
+					1,
+				);
+				if (name === 'mixed-deep') {
+					const deepFrame = await frames.nth(1).boundingBox();
+					const deepInk = await editor
+						.locator('.dve-print-block[data-read-only="true"]')
+						.filter({ hasText: 'D0' })
+						.boundingBox();
+					expect(deepFrame!.x - frameBounds!.x).toBeCloseTo(4 / 3, 1);
+					expect(deepFrame!.y - frameBounds!.y).toBeCloseTo(8 / 3, 1);
+					expect(deepInk!.x - deepFrame!.x).toBeCloseTo(4 / 3, 1);
+					expect(deepInk!.y - deepFrame!.y).toBeCloseTo(8 / 3, 1);
+				}
+			}
+			if (name.startsWith('mixed')) {
+				const firstGeometry = await frames
+					.first()
+					.locator('.dve-print-cell')
+					.first()
+					.evaluate((node) => ({
+						left: parseFloat((node as HTMLElement).style.left),
+						width: parseFloat((node as HTMLElement).style.width),
+					}));
+				const secondGeometry = await frames
+					.first()
+					.locator('.dve-print-cell')
+					.nth(1)
+					.evaluate((node) => ({
+						left: parseFloat((node as HTMLElement).style.left),
+						width: parseFloat((node as HTMLElement).style.width),
+					}));
+				expect(secondGeometry.left).toBeCloseTo(firstGeometry.left + firstGeometry.width, 1);
+				expect(
+					parseFloat(await frames.first().evaluate((node) => (node as HTMLElement).style.width)),
+				).toBeCloseTo(((name === 'mixed-centered' ? 122 : 162) * 4) / 3, 1);
+			}
+
 			if (name === 'unequal-split') {
 				const continued = editor.locator('.dve-print-page').nth(1);
 				await expect(continued).toContainText('T1R0C0L19');

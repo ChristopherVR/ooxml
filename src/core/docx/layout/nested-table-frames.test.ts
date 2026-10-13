@@ -16,6 +16,13 @@ it.each([
 	'border-three-margin',
 	'margin',
 	'unequal-split',
+	'mixed',
+	'mixed-margin',
+	'mixed-centered',
+	'mixed-two-rows',
+	'mixed-split',
+	'mixed-outer-border',
+	'mixed-deep',
 ])('preserves and projects native nested frames: %s', async (name) => {
 	const bytes = new Uint8Array(
 		readFileSync(
@@ -138,6 +145,11 @@ it.each([
 	'border-three-margin',
 	'margin',
 	'unequal-split',
+	'mixed',
+	'mixed-margin',
+	'mixed-centered',
+	'mixed-two-rows',
+	'mixed-split',
 	'align-top',
 	'align-center',
 	'align-bottom',

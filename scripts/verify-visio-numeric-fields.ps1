@@ -4,7 +4,7 @@ $InputDirectory=(Resolve-Path -LiteralPath $InputDirectory).Path
 $app=New-Object -ComObject Visio.InvisibleApp
 $app.AlertResponse=7
 try {
- foreach($name in @('numeric-field-native','numeric-field-boundary-native','numeric-field-general-native')) {
+ foreach($name in @('numeric-field-native','numeric-field-boundary-native','numeric-field-general-native','numeric-field-fraction-native')) {
   $evidence=Get-Content -Raw -Encoding utf8 -LiteralPath (Join-Path $InputDirectory ($name+'.json'))|ConvertFrom-Json
   $source=Join-Path $InputDirectory ($name+'.vsdx')
   $resaved=Join-Path $InputDirectory ($name+'-resaved.vsdx')
