@@ -208,7 +208,11 @@ function formatNumber(value: number, picture: string): string | undefined {
 	if (!match) return undefined;
 	const decimals = match[2]?.length ?? 0;
 	const optional = match[2]?.startsWith('#') ?? false;
-	let text = value.toFixed(decimals);
+	// Shift decimal digits before rounding to avoid binary half-decimal errors.
+	const [coefficient, exponent = '0'] = Math.abs(value).toString().split('e');
+	const shifted = Number(coefficient + 'e' + (Number(exponent) + decimals));
+	const rounded = Math.floor(shifted + 0.5) / 10 ** decimals;
+	let text = (Math.sign(value) * rounded).toFixed(decimals);
 	if (optional && text.includes('.')) text = text.replace(/\.?0+$/, '');
 	if (match[1]) {
 		const [whole, fraction] = text.split('.');

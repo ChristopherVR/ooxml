@@ -1,0 +1,509 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "id": 1,
+      "code": 2,
+      "formula": "1.005",
+      "text": "1",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 2,
+      "code": 2,
+      "formula": "-1.005",
+      "text": "-1",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 3,
+      "code": 2,
+      "formula": "2.675",
+      "text": "3",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 4,
+      "code": 2,
+      "formula": "-0.0001",
+      "text": "0",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 5,
+      "code": 2,
+      "formula": "0",
+      "text": "0",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 6,
+      "code": 2,
+      "formula": "-0.1",
+      "text": "0",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 7,
+      "code": 2,
+      "formula": "0.001",
+      "text": "0",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 8,
+      "code": 2,
+      "formula": "0.00001",
+      "text": "0",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 9,
+      "code": 2,
+      "formula": "1000000000000000",
+      "text": "1000000000000000",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 10,
+      "code": 3,
+      "formula": "1.005",
+      "text": "1",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 11,
+      "code": 3,
+      "formula": "-1.005",
+      "text": "-1",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 12,
+      "code": 3,
+      "formula": "2.675",
+      "text": "3",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 13,
+      "code": 3,
+      "formula": "-0.0001",
+      "text": "0",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 14,
+      "code": 3,
+      "formula": "0",
+      "text": "0",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 15,
+      "code": 3,
+      "formula": "-0.1",
+      "text": "0",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 16,
+      "code": 3,
+      "formula": "0.001",
+      "text": "0",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 17,
+      "code": 3,
+      "formula": "0.00001",
+      "text": "0",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 18,
+      "code": 3,
+      "formula": "1000000000000000",
+      "text": "1000000000000000",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 19,
+      "code": 4,
+      "formula": "1.005",
+      "text": "1.0",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 20,
+      "code": 4,
+      "formula": "-1.005",
+      "text": "-1.0",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 21,
+      "code": 4,
+      "formula": "2.675",
+      "text": "2.7",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 22,
+      "code": 4,
+      "formula": "-0.0001",
+      "text": "-1.E-4",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 23,
+      "code": 4,
+      "formula": "0",
+      "text": "0.0",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 24,
+      "code": 4,
+      "formula": "-0.1",
+      "text": "-0.1",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 25,
+      "code": 4,
+      "formula": "0.001",
+      "text": "1.E-3",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 26,
+      "code": 4,
+      "formula": "0.00001",
+      "text": "1.E-5",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 27,
+      "code": 4,
+      "formula": "1000000000000000",
+      "text": "1.0E15",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 28,
+      "code": 5,
+      "formula": "1.005",
+      "text": "1.0",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 29,
+      "code": 5,
+      "formula": "-1.005",
+      "text": "-1.0",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 30,
+      "code": 5,
+      "formula": "2.675",
+      "text": "2.7",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 31,
+      "code": 5,
+      "formula": "-0.0001",
+      "text": "-1.e-4",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 32,
+      "code": 5,
+      "formula": "0",
+      "text": "0.0",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 33,
+      "code": 5,
+      "formula": "-0.1",
+      "text": "-0.1",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 34,
+      "code": 5,
+      "formula": "0.001",
+      "text": "1.e-3",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 35,
+      "code": 5,
+      "formula": "0.00001",
+      "text": "1.e-5",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 36,
+      "code": 5,
+      "formula": "1000000000000000",
+      "text": "1.0e15",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 37,
+      "code": 6,
+      "formula": "1.005",
+      "text": "1.01",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 38,
+      "code": 6,
+      "formula": "-1.005",
+      "text": "-1.01",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 39,
+      "code": 6,
+      "formula": "2.675",
+      "text": "2.68",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 40,
+      "code": 6,
+      "formula": "-0.0001",
+      "text": "-1.0E-4",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 41,
+      "code": 6,
+      "formula": "0",
+      "text": "0.00",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 42,
+      "code": 6,
+      "formula": "-0.1",
+      "text": "-0.10",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 43,
+      "code": 6,
+      "formula": "0.001",
+      "text": "1.0E-3",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 44,
+      "code": 6,
+      "formula": "0.00001",
+      "text": "1.0E-5",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 45,
+      "code": 6,
+      "formula": "1000000000000000",
+      "text": "1.00E15",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 46,
+      "code": 7,
+      "formula": "1.005",
+      "text": "1.01",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 47,
+      "code": 7,
+      "formula": "-1.005",
+      "text": "-1.01",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 48,
+      "code": 7,
+      "formula": "2.675",
+      "text": "2.68",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 49,
+      "code": 7,
+      "formula": "-0.0001",
+      "text": "-1.0e-4",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 50,
+      "code": 7,
+      "formula": "0",
+      "text": "0.00",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 51,
+      "code": 7,
+      "formula": "-0.1",
+      "text": "-0.10",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 52,
+      "code": 7,
+      "formula": "0.001",
+      "text": "1.0e-3",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 53,
+      "code": 7,
+      "formula": "0.00001",
+      "text": "1.0e-5",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 54,
+      "code": 7,
+      "formula": "1000000000000000",
+      "text": "1.00e15",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 55,
+      "code": 8,
+      "formula": "1.005",
+      "text": "1.005",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 56,
+      "code": 8,
+      "formula": "-1.005",
+      "text": "-1.005",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 57,
+      "code": 8,
+      "formula": "2.675",
+      "text": "2.675",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 58,
+      "code": 8,
+      "formula": "-0.0001",
+      "text": "-1.00E-4",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 59,
+      "code": 8,
+      "formula": "0",
+      "text": "0.000",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 60,
+      "code": 8,
+      "formula": "-0.1",
+      "text": "-0.100",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 61,
+      "code": 8,
+      "formula": "0.001",
+      "text": "0.001",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 62,
+      "code": 8,
+      "formula": "0.00001",
+      "text": "1.00E-5",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 63,
+      "code": 8,
+      "formula": "1000000000000000",
+      "text": "1.000E15",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 64,
+      "code": 9,
+      "formula": "1.005",
+      "text": "1.005",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 65,
+      "code": 9,
+      "formula": "-1.005",
+      "text": "-1.005",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 66,
+      "code": 9,
+      "formula": "2.675",
+      "text": "2.675",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 67,
+      "code": 9,
+      "formula": "-0.0001",
+      "text": "-1.00e-4",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 68,
+      "code": 9,
+      "formula": "0",
+      "text": "0.000",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 69,
+      "code": 9,
+      "formula": "-0.1",
+      "text": "-0.100",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 70,
+      "code": 9,
+      "formula": "0.001",
+      "text": "0.001",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 71,
+      "code": 9,
+      "formula": "0.00001",
+      "text": "1.00e-5",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 72,
+      "code": 9,
+      "formula": "1000000000000000",
+      "text": "1.000e15",
+      "format": "FIELDPICTURE(9)"
+    }
+  ]
+}

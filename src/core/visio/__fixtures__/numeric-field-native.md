@@ -24,3 +24,10 @@ and explicit numeric pictures in
 [FORMAT](https://learn.microsoft.com/en-us/office/client-developer/visio/format-function).
 The concrete code mapping and unit conversion here are verified by the native
 fixture rather than inferred from those examples.
+
+The boundary fixture adds 72 native cases for positive/negative half-decimal
+rounding, zero, nonzero values smaller than the fixed-decimal precision and
+15-digit numbers. Regenerate it with the same script and -BoundaryCases.
+Native uses scientific notation for nonzero values that would round to zero;
+unit-bearing picture codes use a lower-case exponent. Integer overflow beyond
+15 digits remains unverified and keeps stored text.

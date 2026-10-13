@@ -22,9 +22,19 @@ export function numericFieldPicture(
 	if (!definition || definition[0] !== value.unit) return undefined;
 	const decimals = Math.floor((code - 2) / 2);
 	const picture = decimals ? `0.${'0'.repeat(decimals)}` : '0';
-	const text = formatVisioFieldValue(
-		{ kind: 'number', value: value.value * definition[1], unit: 'scalar' },
-		picture,
-	);
+	const displayed = value.value * definition[1];
+	// Native fixed-decimal pictures use scientific notation when nonzero values
+	// would round to zero, or at 15 integer digits. Integer overflow is unverified.
+	if (!decimals && Math.abs(displayed) > 1e15) return undefined;
+	const scientific =
+		decimals > 0 &&
+		(Math.abs(displayed) >= 1e15 ||
+			(displayed !== 0 && Math.abs(displayed) < 0.5 / 10 ** decimals));
+	const text = scientific
+		? displayed
+				.toExponential(Math.abs(displayed) >= 1e15 ? decimals : decimals - 1)
+				.replace(/e\+?/, code % 2 ? 'e' : 'E')
+				.replace(/^(-?\d)([Ee])/, '$1.$2')
+		: formatVisioFieldValue({ kind: 'number', value: displayed, unit: 'scalar' }, picture);
 	return text === undefined ? undefined : text + (code % 2 ? definition[2] : '');
 }

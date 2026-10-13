@@ -248,3 +248,5 @@ PowerPoint has an opt-in series/category label scope across all five bindings. L
 - Added FIELDPICTURE 2 through 9 display for inherited instance numeric values, retaining explicit inches, millimeters, centimeters, feet, degrees and radians.
 - All 64 synthetic native Visio cases match core parsing and unrelated edit/save/reopen. Browser coverage checks each rendered field and export/reopen.
 - Reuses the existing core number-picture formatter. No formatter logic is duplicated in UI or bindings. Other internal numeric/date pictures and page-dependent units remain cached and unsupported.
+
+- Boundary verification adds 72 native cases: half-decimal rounding, zero, small-number scientific notation and large decimals. Integer overflow beyond 15 digits remains cached. The shared Visio numeric formatter now rounds decimal ties consistently.
