@@ -44,14 +44,16 @@ for (const suffix of ['', '-columns', '-rows-columns'])
 		]);
 	});
 
-it('switches measure counts atomically and refuses unsupported layouts or duplicate captions', async () => {
+it('switches measure counts atomically and rejects invalid aggregates or captions', async () => {
 	const wb = await loadXlsx(
 		readFileSync(new URL('../__fixtures__/excel-pivot-values.xlsx', import.meta.url)),
 	);
 	const edit = createEditSession(wb);
 	const summary = wb.sheets.findIndex((sheet) => sheet.name === 'Summary');
 	const name = wb.sheets[summary]!.pivotTables![0]!.name;
-	expect(() => edit.refreshPivotTable(summary, name, { layout: 'compact' })).toThrow('tabular');
+	edit.refreshPivotTable(summary, name, { layout: 'compact' });
+	expect(pivotGrid(wb.sheets[summary]!.pivotTables![0]!).values[0]![0]).toBe('Row Labels');
+	edit.undo();
 	expect(() =>
 		edit.refreshPivotTable(summary, name, {
 			additionalValues: [{ field: 'Amount', caption: 'Sum of Amount' }],

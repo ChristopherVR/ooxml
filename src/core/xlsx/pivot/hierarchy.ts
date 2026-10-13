@@ -44,11 +44,14 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 				collect(buckets, JSON.stringify([...key, column]), record);
 		}
 	}
-	const rows = details.size + rowItems.length * (Number(layout !== 'tabular') + Number(bottom)) + 3;
-	if (rows * (rowLabelColumns + (columnItems.length + 1) * pivotMeasures(pivot).length) > 1_000_000)
-		throw new Error('The PivotTable result is too large.');
 	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
 	const values = pivotHeaders(pivot, columnItems, labels, label);
+	const rows =
+		details.size +
+		rowItems.length * (Number(layout !== 'tabular') + Number(bottom)) +
+		values.length +
+		1;
+	if (rows * values[0]!.length > 1_000_000) throw new Error('The PivotTable result is too large.');
 	const firstDataRow = values.length;
 	const indents = values.map(() => 0);
 	const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];

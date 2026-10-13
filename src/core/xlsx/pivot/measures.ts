@@ -79,8 +79,8 @@ export function pivotHeaders(
 		];
 	const width = labels.length + (columns.length + 1) * measures.length;
 	const first: CellValue[] = Array(width).fill(null);
-	first[labels.length] = pivot.columnField;
-	first[labels.length + 1] = 'Values';
+	first[labels.length] = pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField;
+	if (pivot.layout !== 'compact') first[labels.length + 1] = 'Values';
 	return [
 		first,
 		[

@@ -2,7 +2,7 @@ import { rangeContains, type CellAddress } from '../address';
 import { type CellValue, type PivotTable, type Worksheet } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
 import { hierarchicalPivotGrid } from './hierarchy';
-import { pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
+import { pivotHeaders, pivotNumbers } from './measures';
 
 export interface PivotGrid {
 	values: CellValue[][];
@@ -21,10 +21,14 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
-	if (
-		(rowItems.length + 3) * ((columnItems.length + 1) * pivotMeasures(pivot).length + 1) >
-		1_000_000
-	)
+	const label = pivotItemLabel;
+	const values = pivotHeaders(
+		pivot,
+		columnItems,
+		[pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField],
+		label,
+	);
+	if ((rowItems.length + values.length + 1) * values[0]!.length > 1_000_000)
 		throw new Error('The PivotTable result is too large.');
 	const rowField = pivot.fields.indexOf(pivot.rowField);
 	const colField = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
@@ -45,13 +49,6 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 			collect(cells, JSON.stringify([key, col]), record);
 		}
 	}
-	const label = pivotItemLabel;
-	const values = pivotHeaders(
-		pivot,
-		columnItems,
-		[pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField],
-		label,
-	);
 	const firstDataRow = values.length;
 	for (const row of rowItems) {
 		const records = groups.get(pivotValueKey(row)) ?? [];

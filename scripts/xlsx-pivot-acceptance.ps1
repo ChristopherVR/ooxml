@@ -73,6 +73,20 @@ for (const mode of ['cache-values','cache-values-columns','values-rows','values-
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
  writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[1].pivotTables[0]).values));
 }
+for (const layout of ['compact','outline']) for (const profile of ['one','one-columns','top','bottom','none','top-columns','bottom-columns','none-columns','repeat']) {
+ const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout,subtotalPosition:profile.startsWith('bottom')?'bottom':'top',subtotals:!profile.startsWith('none'),repeatLabels:profile==='repeat',additionalValues:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}],...(!profile.startsWith('one')?{secondRowField:'Region'}:{}),...(profile.endsWith('columns')?{columnField:'Year'}:{})});
+ const mode=(profile.startsWith('one')?'cache-':'')+'values-'+layout+'-'+profile; const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb)); writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values)); writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents??grid.values.map(()=>0)));
+}
+for (const suffix of ['compact','outline','compact-rows-top-columns','outline-rows-bottom-columns']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-values-'+suffix+'.xlsx')))); const session=createEditSession(wb);
+ session.setCellInput(1,1,2,'100'); session.refreshPivotTable(0,'SalesPivot');
+ const mode=(suffix.includes('rows')?'':'cache-')+'values-import-'+suffix; const grid=pivotGrid(wb.sheets[0].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb)); writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values)); writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents??grid.values.map(()=>0)));
+}
 for (const flag of ['visible','omitted']) {
  const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-visible-values.xlsx'))));
  const session=createEditSession(wb); const pivot=wb.sheets[0].pivotTables[0];
@@ -162,6 +176,14 @@ for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotal
 		Write-Output ($mode+': native Excel accepted every cached and refreshed hierarchy cell')
 		$book.Close($false); $book=$null
 	}
+	$book = $excel.Workbooks.Open((Join-Path $taskRoot 'src/core/xlsx/__fixtures__/excel-pivot-values-compact-rows-top-columns.xlsx'))
+	$summary = $book.Worksheets.Item('Summary'); $pivot = $summary.PivotTables().Item(1)
+	$pivot.DataPivotField.Name = 'Metrics'
+	if ($summary.Range('B1').Text -ne 'Column Labels') { throw 'Native compact header exposed a custom Values caption.' }
+	$pivot.RowAxisLayout(2)
+	if ($summary.Range('C1').Text -ne 'Year' -or $summary.Range('D1').Text -ne 'Metrics') { throw 'Native outline custom Values caption was not surfaced.' }
+	Write-Output 'custom Values caption: hidden in compact, visible after switching to outline (unsupported preserved profile)'
+	$book.Close($false); $book=$null
 } finally {
 	if ($book) { $book.Close($false) }
 	if ($excel) { $excel.Quit(); [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel) }

@@ -2,6 +2,7 @@ import { getCell } from '../cells';
 import { isCellError, type CellValue, type PivotTable, type Workbook } from '../model';
 import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
+import { parseXml } from '../../xml/index';
 
 export const PIVOT_AGGREGATES = ['sum', 'count', 'average', 'min', 'max'] as const;
 
@@ -96,6 +97,7 @@ export function validatePivotFields(
 		| 'aggregate'
 		| 'valueCaption'
 		| 'additionalValues'
+		| 'sourceXml'
 	>,
 ): void {
 	const used = [
@@ -105,6 +107,12 @@ export function validatePivotFields(
 		pivot.valueField,
 	];
 	const extras = pivot.additionalValues ?? [];
+	if (
+		extras.length > 0 &&
+		pivot.sourceXml &&
+		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !== 'Values'
+	)
+		throw new Error('This PivotTable uses unsupported Values header captions.');
 	if (
 		!Array.isArray(extras) ||
 		extras.length > 15 ||
@@ -118,7 +126,6 @@ export function validatePivotFields(
 				measure.caption.length > 255 ||
 				pivot.fields.some((field) => field.toLowerCase() === measure.caption.toLowerCase()),
 		) ||
-		(extras.length > 0 && pivot.layout !== undefined && pivot.layout !== 'tabular') ||
 		new Set(
 			[pivot.valueCaption, ...extras.map((measure) => measure.caption)].map((caption) =>
 				caption?.toLowerCase(),
@@ -126,7 +133,7 @@ export function validatePivotFields(
 		).size !==
 			extras.length + 1
 	)
-		throw new Error('Multiple PivotTable values require tabular layout and unique captions.');
+		throw new Error('Choose PivotTable value fields with valid aggregates and unique captions.');
 	if (
 		(pivot.layout !== undefined && !['tabular', 'compact', 'outline'].includes(pivot.layout)) ||
 		(pivot.subtotalPosition !== undefined && !['top', 'bottom'].includes(pivot.subtotalPosition)) ||
