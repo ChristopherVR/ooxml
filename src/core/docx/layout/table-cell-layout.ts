@@ -115,10 +115,12 @@ export function stackCellBlocks(
 			y += layout.heightPx;
 		}
 		const bottomBorder = profile?.bottomPx ?? 0;
-		if (frame.rows.length) frame.rows.at(-1)!.heightPx += bottomBorder;
-		y += bottomBorder;
-		frame.heightPx = y - frame.yPx;
-		if (frame.rows.length) tables.push(frame);
+		if (frame.rows.length) {
+			frame.rows.at(-1)!.heightPx += bottomBorder;
+			y += bottomBorder;
+			frame.heightPx = y - frame.yPx;
+			tables.push(frame);
+		}
 	}
 	// Cell paragraphs can run in parallel across a nested row; shared split machinery expects y order.
 	boxes.sort((a, b) => a.yPx - b.yPx);

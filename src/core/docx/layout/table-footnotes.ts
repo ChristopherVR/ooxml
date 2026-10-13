@@ -1,3 +1,4 @@
+import { independentNoteStories } from './table-note-stories';
 import { cellContentBottom } from './table-content';
 import type { LayoutParagraph, LayoutTable } from './input';
 import type { LayoutFootnoteBox } from './result';
@@ -10,12 +11,21 @@ interface RowReference {
 	bottom: number;
 }
 /** Preview only the bounded visible prefix, avoiding repeated copies of a long row's tail. */
-function prefix(row: RowLayout, cut: number, cellCuts?: readonly number[]): RowLayout {
+function prefix(
+	row: RowLayout,
+	cut: number,
+	cellCuts?: readonly number[],
+	paragraphCuts?: ReadonlyMap<string, number>,
+): RowLayout {
 	const cells = row.cells.map((cell, index) => {
-		const contentCut = (cellCuts?.[index] ?? cut) - (row.cellPadding?.[index]?.bottom ?? 0);
+		const padding = row.cellPadding?.[index]?.bottom ?? 0;
 		const boxes = [];
 		for (const box of cell) {
-			if (box.yPx >= contentCut + 1e-6) break;
+			const contentCut = (paragraphCuts?.get(box.blockId) ?? cellCuts?.[index] ?? cut) - padding;
+			if (box.yPx >= contentCut + 1e-6) {
+				if (!paragraphCuts?.size) break;
+				continue;
+			}
 			if (box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= contentCut + 1e-6) {
 				boxes.push(box);
 				continue;
@@ -57,6 +67,8 @@ function prefix(row: RowLayout, cut: number, cellCuts?: readonly number[]): RowL
 }
 export class TableFootnotes {
 	private readonly paragraphs = new Map<string, LayoutParagraph>();
+	private readonly stories = new Map<string, string>();
+	private readonly constrainedStories = new Set<string>();
 	private readonly placed = new Set<string>();
 	private readonly fragment = new Map<string, RowReference>();
 	constructor(
@@ -66,9 +78,14 @@ export class TableFootnotes {
 		private readonly resolve: ReferenceFootnotes,
 	) {
 		for (const row of table.rows)
-			for (const cell of row.cells)
+			for (const cell of row.cells) {
 				for (const paragraph of cellParagraphs(cell))
 					if (paragraph.footnotes?.length) this.paragraphs.set(paragraph.id, paragraph);
+				for (const [id, group] of independentNoteStories(cell) ?? []) {
+					this.stories.set(id, group);
+					if (this.paragraphs.has(id)) this.constrainedStories.add(group);
+				}
+			}
 	}
 	private references(row: RowLayout): RowReference[] {
 		const refs = new Map<string, RowReference>();
@@ -131,7 +148,9 @@ export class TableFootnotes {
 	choose(
 		row: RowLayout,
 		atomic: boolean,
-	): { layout: RowLayout; cut: number; cellCuts?: number[] } | undefined {
+	):
+		| { layout: RowLayout; cut: number; cellCuts?: number[]; paragraphCuts?: Map<string, number> }
+		| undefined {
 		this.cursor.holdFootnotes(this.table.id, [], 0);
 		const available = this.cursor.remainingHeightPx() - this.height();
 		if (row.heightPx <= available + 1e-6) {
@@ -165,10 +184,22 @@ export class TableFootnotes {
 					const cellCuts = row.cells.map((cell) =>
 						cell.some((box) => this.paragraphs.has(box.blockId)) ? cut : space,
 					);
-					const expanded = prefix(row, cut, cellCuts);
+					const paragraphCuts = new Map<string, number>();
+					for (const cell of row.cells)
+						for (const box of cell) {
+							const group = this.stories.get(box.blockId);
+							if (group !== undefined)
+								paragraphCuts.set(box.blockId, this.constrainedStories.has(group) ? cut : space);
+						}
+					const expanded = prefix(row, cut, cellCuts, paragraphCuts);
 					this.holdCandidate(expanded);
 					if (expanded.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6)
-						return { layout: expanded, cut, cellCuts };
+						return {
+							layout: expanded,
+							cut,
+							cellCuts,
+							...(paragraphCuts.size ? { paragraphCuts } : {}),
+						};
 					this.holdCandidate(candidate);
 					return { layout: candidate, cut };
 				}

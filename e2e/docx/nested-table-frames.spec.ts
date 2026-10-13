@@ -75,13 +75,31 @@ for (const name of [
 			await expect(layer).toHaveCSS('overflow-y', 'clip');
 			await expect(layer).toHaveCSS('pointer-events', 'none');
 			expect(await layer.evaluate((node) => node.closest('.dve-print-cell'))).toBeNull();
-			const frameBounds = await frames.first().boundingBox();
-			const bodyCell = await editor
-				.locator('.dve-print-page')
-				.first()
-				.locator('.dve-print-row > .dve-print-cell')
-				.first()
-				.boundingBox();
+			// Read the frame and enclosing cell from one paint, including asynchronous reopen.
+			type Bounds = {
+				frameBounds: { x: number; y: number; width: number; height: number };
+				bodyCell: { x: number; y: number; width: number; height: number };
+			};
+			const snapshot = { bounds: null as Bounds | null };
+			await expect
+				.poll(async () => {
+					snapshot.bounds = await editor.evaluate((root) => {
+						const rendered = root.shadowRoot ?? root;
+						const frame = rendered.querySelector('.dve-print-nested-table');
+						const body = rendered.querySelector('.dve-print-page .dve-print-row > .dve-print-cell');
+						if (!frame || !body) return null;
+						const a = frame.getBoundingClientRect(),
+							b = body.getBoundingClientRect();
+						if (!a.width || !b.width) return null;
+						return {
+							frameBounds: { x: a.x, y: a.y, width: a.width, height: a.height },
+							bodyCell: { x: b.x, y: b.y, width: b.width, height: b.height },
+						};
+					});
+					return snapshot.bounds !== null;
+				})
+				.toBe(true);
+			const { frameBounds, bodyCell } = snapshot.bounds!;
 			const evidenceDirectory = process.env.WORD_FRAME_PAINT_EVIDENCE_DIRECTORY;
 			if (name === 'mixed' && evidenceDirectory) {
 				mkdirSync(evidenceDirectory, { recursive: true });
