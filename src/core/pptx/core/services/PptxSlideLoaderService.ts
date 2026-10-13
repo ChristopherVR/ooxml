@@ -19,6 +19,7 @@ import { mergeNativeSoundIntoEditorAnimations } from './animation-sound-merge';
 import { reconcileAnimationTargets } from './animation-target-reconcile';
 import { computeAnimationTimelineOrder } from './animation-timeline-anchors';
 import { attachRealMediaDurations } from './native-animation-media-duration';
+import { mergeNativeAfterAnimationIntoEditorAnimations } from './editor-animation-after-effect';
 import type { IPptxSlideLoaderService, PptxSlideLoaderParams } from './slide-loader-types';
 import { readCommonSlideDataName } from './slide-name';
 import { resolveSlideTimingNode } from './slide-transition-envelope';
@@ -348,6 +349,8 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 			// See `animation-sound-merge`: without this, the surgical timing writer
 			// would delete a deck's own effect sound the first time the user edits
 			// any other field on that effect via the animation panel.
+			animations ??= [];
+			mergeNativeAfterAnimationIntoEditorAnimations(nativeAnimations, animations, rawTiming);
 			mergeNativeSoundIntoEditorAnimations(nativeAnimations, animations);
 			// See `animation-build-template-merge`: seeds a loaded per-build-level
 			// `p:tmplLst` onto the editor list so a full timing-tree rebuild (no

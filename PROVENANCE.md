@@ -2313,3 +2313,7 @@ parser now lives in `src/core/visio/date-cache.ts` and is shared by shape metada
 and text fields. Changes: reject normalized invalid Gregorian dates, preserve
 cached milliseconds, and avoid JavaScript's special handling of years 0 to 99.
 Inherited date fields admit the native ISO date-only picture separately.
+
+## PowerPoint after-effect editing and precedence
+
+Source: ChristopherVR/ooxml, commit 6f239a48c, src/ui/src/pptx/render/animation-after-effect-authoring.ts, animation-authoring.ts (animationFor/upsert/hasAnimation), and animation-after-effect.ts (applyAfterAnimationFromEditorList). DOM-free editor entry updates, after-effect authoring and native/editor precedence move into src/core/pptx/core/services/editor-animation-entry.ts, editor-animation-after-effect.ts and editor-animation-after-effect-precedence.ts. Shared UI retains compatibility exports; explicit none now distinguishes a user clear from untouched undefined. Surgical saving clears only recognized after-state nodes, preserving other sub-timing content.

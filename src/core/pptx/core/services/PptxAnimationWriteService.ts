@@ -69,10 +69,12 @@ export class PptxAnimationWriteService implements IPptxAnimationWriteService {
 					? structuredClone(existingRawTiming)
 					: JSON.parse(JSON.stringify(existingRawTiming))
 			) as XmlObject;
-			return surgicallyUpdateTimingTree(cloned, validAnimations);
+			return surgicallyUpdateTimingTree(cloned, animations);
 		}
 
 		if (validAnimations.length === 0) {
+			if (animations.some((entry) => entry.afterAnimation !== undefined))
+				throw new Error('Cannot edit after-animation without a supported native effect');
 			return undefined;
 		}
 

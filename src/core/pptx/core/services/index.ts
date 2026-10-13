@@ -73,6 +73,24 @@ export {
 export { capturedPresetNativeAnimation } from './animation-behavior-native';
 export { buildSingleEffectNode, applySoundToEffectCTn } from './animation-write-node-builders';
 export { applyAfterAnimationBehavior } from './animation-after-effect-write';
+export {
+	animationFor,
+	hasAnimation,
+	upsert,
+	DEFAULT_ANIMATION_DURATION_MS,
+	DEFAULT_ANIMATION_TRIGGER,
+} from './editor-animation-entry';
+export {
+	AFTER_ANIMATION_VALUES,
+	DEFAULT_AFTER_ANIMATION_DIM_COLOR,
+	setAfterAnimation,
+	setAfterAnimationColor,
+	getAfterAnimation,
+	getAfterAnimationState,
+	isNativeAfterAnimationOnly,
+	mergeNativeAfterAnimationIntoEditorAnimations,
+} from './editor-animation-after-effect';
+export { applyAfterAnimationFromEditorList } from './editor-animation-after-effect-precedence';
 export { extractAfterAnimationFromSubTnLst } from './native-animation-after-effect';
 export {
 	parseCondition,

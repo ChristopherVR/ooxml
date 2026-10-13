@@ -19,6 +19,7 @@
  * @module render/animation-timeline-rows
  */
 import type { PptxAnimationTimelineAnchor, PptxElementAnimation } from 'ooxml-core/pptx';
+import { isNativeAfterAnimationOnly } from 'ooxml-core/pptx';
 
 /** One row in the merged, orderable animation timeline. */
 export type AnimationTimelineRow =
@@ -55,12 +56,14 @@ export function buildAnimationTimelineRows(
 	animations: readonly PptxElementAnimation[],
 	anchors: readonly PptxAnimationTimelineAnchor[] = [],
 ): AnimationTimelineRow[] {
-	const editorRows: AnimationTimelineRow[] = animations.map((anim) => ({
-		kind: 'editor',
-		key: `editor:${anim.elementId}`,
-		order: anim.order ?? 0,
-		elementId: anim.elementId,
-	}));
+	const editorRows: AnimationTimelineRow[] = animations
+		.filter((anim) => !isNativeAfterAnimationOnly(anim))
+		.map((anim) => ({
+			kind: 'editor',
+			key: `editor:${anim.elementId}`,
+			order: anim.order ?? 0,
+			elementId: anim.elementId,
+		}));
 	const nativeRows: AnimationTimelineRow[] = anchors.map((anchor) => ({
 		kind: 'native',
 		key: nativeRowKey(anchor),

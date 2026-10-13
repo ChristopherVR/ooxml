@@ -10,6 +10,7 @@
  * @module PptxEditorAnimationService
  */
 import type { PptxElementAnimation, XmlObject } from '../types';
+import { isNativeAfterAnimationFallback } from './editor-animation-after-effect';
 import {
 	normalizeAnimationPreset,
 	normalizeTrigger,
@@ -192,7 +193,9 @@ export class PptxEditorAnimationService implements IPptxEditorAnimationService {
 		// Validate, sanitize, and convert each animation to XML attribute format
 		// Sequence by the model `order` up front (stable; missing counts as 0):
 		// `@order` itself may be omitted below, so it cannot drive the sort.
-		const sequenced = [...animations].sort((left, right) => sortOrder(left) - sortOrder(right));
+		const sequenced = animations
+			.filter((entry) => !isNativeAfterAnimationFallback(entry))
+			.sort((left, right) => sortOrder(left) - sortOrder(right));
 		const sanitizedAnimations = sequenced
 			.map((animation) => {
 				const elementId = String(animation.elementId || '').trim();
@@ -232,7 +235,13 @@ export class PptxEditorAnimationService implements IPptxEditorAnimationService {
 						? animation.repeatCount
 						: undefined;
 
-				if (!entrance && !exit && !emphasis && !animation.motionPath) {
+				if (
+					!entrance &&
+					!exit &&
+					!emphasis &&
+					!animation.motionPath &&
+					animation.afterAnimation === undefined
+				) {
 					return null;
 				}
 

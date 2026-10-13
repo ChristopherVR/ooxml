@@ -1012,6 +1012,9 @@ export interface PptxElementAnimation {
 	afterAnimation?: PptxAfterAnimationAction;
 	/** Dim-to color hex (used when afterAnimation is "dimToColor"). */
 	afterAnimationColor?: string;
+	/** Imported after-state for controls, not an authored override or serialized extension. */
+	nativeAfterAnimation?: PptxAfterAnimationAction;
+	nativeAfterAnimationColor?: string;
 	/** SVG motion path string for custom motion path animations. */
 	motionPath?: string;
 	/**
