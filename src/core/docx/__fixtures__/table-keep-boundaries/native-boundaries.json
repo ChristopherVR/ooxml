@@ -1,0 +1,1035 @@
+{
+  "unit": "PDF points",
+  "wordVersion": "16.0",
+  "wordBuild": "16.0.20430",
+  "cases": [
+    {
+      "name": "keep-boundary-b3-p0-left-d-1-off",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 77,
+      "minimumPt": 78,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04"
+          ],
+          "topPt": 183.07,
+          "bottomPt": 249.096,
+          "firstBaselinePt": 195.67
+        },
+        {
+          "body": [
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 81.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "3c19b1bfe88fc72bba66f4845be962bdc263911ad01b18433623704549f8dd7f",
+      "inputSHA256": "7819e4800ae089d95244c30278f140c0f10ba252fcf0815a91a5c4111e2544cf"
+    },
+    {
+      "name": "keep-boundary-b3-p0-left-d-1-on",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 77,
+      "minimumPt": 78,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [],
+          "topPt": null,
+          "bottomPt": null,
+          "firstBaselinePt": null
+        },
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 142.01,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "f7ed0e328b757a9e1118551c0ee749684962a3c4ea7f915eb2b4269f3c3ac922",
+      "inputSHA256": "0e928a30d802af966564168ebcf6e50d7185bfc35eeaa2ff0672355ea2bbef48"
+    },
+    {
+      "name": "keep-boundary-b3-p0-left-d0-off",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 78,
+      "minimumPt": 78,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 182.11,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 194.71
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "33a252bc46a1b3faa22d2dd4a801314e3f3b17c77fac49f35905bca6f64848c8",
+      "inputSHA256": "975a736e396a4989e5a05b68d0d3a36395bb54f81e4113d6c90afa2e13c86f29"
+    },
+    {
+      "name": "keep-boundary-b3-p0-left-d0-on",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 78,
+      "minimumPt": 78,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 182.11,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 194.71
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "2503e454bec8e9c3399cd2928e26119df916d24644320fd01d7eddaa84762b98",
+      "inputSHA256": "357e8b1e8fe8736a54d9cd65e5597e27cce2cb38a6ca5087d35b25e8f03ff3bc"
+    },
+    {
+      "name": "keep-boundary-b3-p0-left-d1-off",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 79,
+      "minimumPt": 78,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 181.03,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 193.63
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "c834675b8cfc60501aa1a09a5c153b70184d125c0e87bd5860a484608117849e",
+      "inputSHA256": "2e9d8cbd21f5e1f38464dc02b1c8509ee40ce4d3641d6ae1474243f47e9e2f3f"
+    },
+    {
+      "name": "keep-boundary-b3-p0-left-d1-on",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 79,
+      "minimumPt": 78,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 181.03,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 193.63
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "51928d65b91c376535a58268c35581b8af693dd73fec1558a1765bd3e5002861",
+      "inputSHA256": "710bd5ebca16169c2fae032158eeedf36a558ab56b9e000d7c59d14b9c8ed67e"
+    },
+    {
+      "name": "keep-boundary-b3-p0-right-d-1-off",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 77,
+      "minimumPt": 78,
+      "keep": false,
+      "mirror": true,
+      "pages": [
+        {
+          "body": [
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04"
+          ],
+          "topPt": 183.07,
+          "bottomPt": 249.096,
+          "firstBaselinePt": 195.67
+        },
+        {
+          "body": [
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07",
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 81.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "cba1a0aec17b457d7f3a565d833d04c5fdeeda970262141c180cb0970855e0e6",
+      "inputSHA256": "c1837cd8b615fe37b56f54c306261840f93f57aa60f8935dc00a96b7756e9f3c"
+    },
+    {
+      "name": "keep-boundary-b3-p0-right-d-1-on",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 77,
+      "minimumPt": 78,
+      "keep": true,
+      "mirror": true,
+      "pages": [
+        {
+          "body": [],
+          "topPt": null,
+          "bottomPt": null,
+          "firstBaselinePt": null
+        },
+        {
+          "body": [
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07",
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 142.01,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "5c2736f397095467eed81e0a83eebef0857ceca9381554ceb970bfe1a2f98e47",
+      "inputSHA256": "e0ffb4607c3d5315a869a0ef95948e7819c77ac315d05b49757502c559b153a9"
+    },
+    {
+      "name": "keep-boundary-b3-p0-right-d0-off",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 78,
+      "minimumPt": 78,
+      "keep": false,
+      "mirror": true,
+      "pages": [
+        {
+          "body": [
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05"
+          ],
+          "topPt": 182.11,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 194.71
+        },
+        {
+          "body": [
+            "T1R0C1LR06",
+            "T1R0C1LR07",
+            "T1R0C0LS00",
+            "T1R0C0LS01"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "561bfa3e17b8a41f2cb90facbc957f48950e4e2ef122b814d78e2a8d49d452b4",
+      "inputSHA256": "1dafadb996d6fa2daee1d938875fc7e9a399915a0330893988b41caa57b46eb2"
+    },
+    {
+      "name": "keep-boundary-b3-p0-right-d0-on",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 78,
+      "minimumPt": 78,
+      "keep": true,
+      "mirror": true,
+      "pages": [
+        {
+          "body": [
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05"
+          ],
+          "topPt": 182.11,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 194.71
+        },
+        {
+          "body": [
+            "T1R0C1LR06",
+            "T1R0C1LR07",
+            "T1R0C0LS00",
+            "T1R0C0LS01"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "404e68206e186dd3df04670d136568ae152d331483c5b9567598ff86336e82f9",
+      "inputSHA256": "8be0a101b958b84342b2cc8369bd10a6df72fd4e0ee987bda55513995421eaea"
+    },
+    {
+      "name": "keep-boundary-b3-p0-right-d1-off",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 79,
+      "minimumPt": 78,
+      "keep": false,
+      "mirror": true,
+      "pages": [
+        {
+          "body": [
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05"
+          ],
+          "topPt": 181.03,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 193.63
+        },
+        {
+          "body": [
+            "T1R0C1LR06",
+            "T1R0C1LR07",
+            "T1R0C0LS00",
+            "T1R0C0LS01"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "6fcf4c3e1ff3221d1070c6d7fd2a8bd65a37e955dc2546357d1883dba0243c7c",
+      "inputSHA256": "114719c599e166d29d7f5301fb1a2e64b8ae731af07e14af60384ed77c89160a"
+    },
+    {
+      "name": "keep-boundary-b3-p0-right-d1-on",
+      "borderPt": 3,
+      "paddingPt": 0,
+      "remainingPt": 79,
+      "minimumPt": 78,
+      "keep": true,
+      "mirror": true,
+      "pages": [
+        {
+          "body": [
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05"
+          ],
+          "topPt": 181.03,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 193.63
+        },
+        {
+          "body": [
+            "T1R0C1LR06",
+            "T1R0C1LR07",
+            "T1R0C0LS00",
+            "T1R0C0LS01"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "3cdc93682e055e367b8e7407ad7894f64cbffee917ec0a7254291b9b64868cb6",
+      "inputSHA256": "f63fb9917dae4ee23c8eaca6adf3906dbbec00db306786f3a3deeaa770115c8b"
+    },
+    {
+      "name": "keep-boundary-b6-p2-left-d-1-off",
+      "borderPt": 6,
+      "paddingPt": 2,
+      "remainingPt": 87,
+      "minimumPt": 88,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04"
+          ],
+          "topPt": 173.11,
+          "bottomPt": 249.096,
+          "firstBaselinePt": 190.63
+        },
+        {
+          "body": [
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 92.09,
+          "firstBaselinePt": 57.62
+        }
+      ],
+      "sourceSHA256": "bb159060404c3eba0dac0ea7b069dc2b132264066695757344ff98546cbf2439",
+      "inputSHA256": "cece9ba6fe6289d15103d63d767b45eccfbccd395b82624ffd55604d05a75865"
+    },
+    {
+      "name": "keep-boundary-b6-p2-left-d-1-on",
+      "borderPt": 6,
+      "paddingPt": 2,
+      "remainingPt": 87,
+      "minimumPt": 88,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [],
+          "topPt": null,
+          "bottomPt": null,
+          "firstBaselinePt": null
+        },
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 152.11,
+          "firstBaselinePt": 57.62
+        }
+      ],
+      "sourceSHA256": "b8e5cb4bcd395891d7ea1042d777de2e68cf886fd9d1f3e2424767a7a0a574dc",
+      "inputSHA256": "d6b6a7e6059ac1196f1c0ff4b56a54ef8f226f679400d1bd03b9e7623f7e826e"
+    },
+    {
+      "name": "keep-boundary-b6-p2-left-d0-off",
+      "borderPt": 6,
+      "paddingPt": 2,
+      "remainingPt": 88,
+      "minimumPt": 88,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 172.03,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 189.67
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 80.06,
+          "firstBaselinePt": 57.62
+        }
+      ],
+      "sourceSHA256": "bc0a930fd0a641e063d428bedff0a970ad16334fc60192d9c1d8c4654ad9fb58",
+      "inputSHA256": "20671ec71b1e5e4e0dd9c5738ac6f3792ff280e00af25e04d3c3a2b2c2911640"
+    },
+    {
+      "name": "keep-boundary-b6-p2-left-d0-on",
+      "borderPt": 6,
+      "paddingPt": 2,
+      "remainingPt": 88,
+      "minimumPt": 88,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 172.03,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 189.67
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 80.06,
+          "firstBaselinePt": 57.62
+        }
+      ],
+      "sourceSHA256": "1781ac1aaca98213f1fbc36cec275c5cb4aea3cbb13039f61443c9c183d3362e",
+      "inputSHA256": "70d5383beeb9cf7d797b4ae5ccd34ffa39277d1bbeab8bd83fdc1c38044dd13f"
+    },
+    {
+      "name": "keep-boundary-b6-p2-left-d1-off",
+      "borderPt": 6,
+      "paddingPt": 2,
+      "remainingPt": 89,
+      "minimumPt": 88,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 171.07,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 188.71
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 80.06,
+          "firstBaselinePt": 57.62
+        }
+      ],
+      "sourceSHA256": "ef9330c811bc896d936c3aac448e4469112b7f2af1b985247d8f0b9a98ad8c1b",
+      "inputSHA256": "0b286f53dc1b206d1dfbac75eaf8b822f0190db88e363ca1af3097d2e9d2cb1b"
+    },
+    {
+      "name": "keep-boundary-b6-p2-left-d1-on",
+      "borderPt": 6,
+      "paddingPt": 2,
+      "remainingPt": 89,
+      "minimumPt": 88,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 171.07,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 188.71
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 80.06,
+          "firstBaselinePt": 57.62
+        }
+      ],
+      "sourceSHA256": "98913ec14722c698675b022c93aac10672fb49a95d43c03a1d78854b2be90633",
+      "inputSHA256": "6c9e856b21da61ab61bd8c34234cb7bae574c9b3a2d7f8b2ef72c0b3af7e1ee4"
+    },
+    {
+      "name": "keep-boundary-b1.5-p1.5-left-d-1-off",
+      "borderPt": 1.5,
+      "paddingPt": 1.5,
+      "remainingPt": 77.0,
+      "minimumPt": 78.0,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04"
+          ],
+          "topPt": 183.07,
+          "bottomPt": 249.096,
+          "firstBaselinePt": 195.67
+        },
+        {
+          "body": [
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 81.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "4f3ae7a4046c2aad6d03fd2f194b81c68d7e8f91e1701b36e0b592881ea67491",
+      "inputSHA256": "eb86c3ff97b5ee20cd1cbf94b497643c48f75ee0649311ffe1e363586594f8a1"
+    },
+    {
+      "name": "keep-boundary-b1.5-p1.5-left-d-1-on",
+      "borderPt": 1.5,
+      "paddingPt": 1.5,
+      "remainingPt": 77.0,
+      "minimumPt": 78.0,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [],
+          "topPt": null,
+          "bottomPt": null,
+          "firstBaselinePt": null
+        },
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 142.01,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "9a884cb2be2ff690395f71d4cdad40c5a79f43495a3509fe1c3c4ace214c33af",
+      "inputSHA256": "781504a0835d02cdeb5a505fc7788b43b684b2a6709d98900f7aafa34ffcf7cc"
+    },
+    {
+      "name": "keep-boundary-b1.5-p1.5-left-d0-off",
+      "borderPt": 1.5,
+      "paddingPt": 1.5,
+      "remainingPt": 78.0,
+      "minimumPt": 78.0,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 182.11,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 194.71
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "425cd9bf7a6aae69e2f35892e711792a77c72b94c4d122f985156cd0fd18add1",
+      "inputSHA256": "0c17a9c4647503e8008959d91bafe56761b43e2f7f4e3958e93c52312d80e76f"
+    },
+    {
+      "name": "keep-boundary-b1.5-p1.5-left-d0-on",
+      "borderPt": 1.5,
+      "paddingPt": 1.5,
+      "remainingPt": 78.0,
+      "minimumPt": 78.0,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 182.11,
+          "bottomPt": 260.136,
+          "firstBaselinePt": 194.71
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "6f9c8d4c5e9410b812be07d8053a9b9ccea2f9d91da1036f7d9658ca67a5db3a",
+      "inputSHA256": "fb08ba63f3a616623ab7116ca175b211d692bd7cf0614996b489bb36d9186e49"
+    },
+    {
+      "name": "keep-boundary-b1.5-p1.5-left-d1-off",
+      "borderPt": 1.5,
+      "paddingPt": 1.5,
+      "remainingPt": 79.0,
+      "minimumPt": 78.0,
+      "keep": false,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 181.03,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 193.63
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "80938482f1d81c121773ab164462431ae344c84e60f4a56e14a7787ebdfe3fa5",
+      "inputSHA256": "633b0ea1bbacabbdb4649cefbc7d9d16f432e19f647e3ca7c96f51f54f0d7bd3"
+    },
+    {
+      "name": "keep-boundary-b1.5-p1.5-left-d1-on",
+      "borderPt": 1.5,
+      "paddingPt": 1.5,
+      "remainingPt": 79.0,
+      "minimumPt": 78.0,
+      "keep": true,
+      "mirror": false,
+      "pages": [
+        {
+          "body": [
+            "T1R0C0LK00",
+            "T1R0C0LK01",
+            "T1R0C0LK02",
+            "T1R0C0LK03",
+            "T1R0C0LK04",
+            "T1R0C0LK05",
+            "T1R0C1LR00",
+            "T1R0C1LR01",
+            "T1R0C1LR02",
+            "T1R0C1LR03",
+            "T1R0C1LR04",
+            "T1R0C1LR05"
+          ],
+          "topPt": 181.03,
+          "bottomPt": 259.056,
+          "firstBaselinePt": 193.63
+        },
+        {
+          "body": [
+            "T1R0C0LS00",
+            "T1R0C0LS01",
+            "T1R0C1LR06",
+            "T1R0C1LR07"
+          ],
+          "topPt": 39.98,
+          "bottomPt": 69.98,
+          "firstBaselinePt": 52.58
+        }
+      ],
+      "sourceSHA256": "92230ea9d40886df5f5dedc537f588e3a962dcf8a9838d417ba2ae92d663cab8",
+      "inputSHA256": "f806d1ea5a9f61dcede0ccf23fab0a25ba113b5612b7b62ec8fc2e4a707f4c86"
+    }
+  ]
+}
