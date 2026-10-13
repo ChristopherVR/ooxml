@@ -1,0 +1,578 @@
+{
+  "application": "Microsoft Visio",
+  "version": "16.0.20430.20146",
+  "source": "Owned independent synthetic COM precedence controls",
+  "nativeReopenedCases": 0,
+  "limits": "Counts and saved source only. Direct DocumentSheet cells do not provide print defaults. Style API write refusals do not prove global style protection. No printer output or tile geometry acceptance.",
+  "cases": [
+    {
+      "id": "root-paper",
+      "resolved": {
+        "PaperKind": {
+          "formula": "1",
+          "value": 1
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "PaperKind": "9"
+      },
+      "count": 9,
+      "writeRefusal": "\n\nAn exception occurred.",
+      "target": "root",
+      "file": "root-paper.vsdx",
+      "sha256": "e082ccfb11a9e24a060a57e385b5443edaed8a79986e0f312f748c45d8a7c41e"
+    },
+    {
+      "id": "document-paper",
+      "resolved": {
+        "PaperKind": {
+          "formula": "1",
+          "value": 1
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "PaperKind": "9"
+      },
+      "count": 9,
+      "writeRefusal": null,
+      "target": "document",
+      "file": "document-paper.vsdx",
+      "sha256": "ebadbc71e4926efcf6a21ae31fc10c0345f07f75982821cfa3e397eccf05039b"
+    },
+    {
+      "id": "page-paper",
+      "resolved": {
+        "PaperKind": {
+          "formula": "9",
+          "value": 9
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "PaperKind": "9"
+      },
+      "count": 6,
+      "writeRefusal": null,
+      "target": "page",
+      "file": "page-paper.vsdx",
+      "sha256": "f19c23ac072b6bcaa9987a32b28da9a4e0294005fe1df49c4e9e243392fb6a69"
+    },
+    {
+      "id": "root-fit",
+      "resolved": {
+        "PaperKind": {
+          "formula": "1",
+          "value": 1
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "OnPage": "1"
+      },
+      "count": 9,
+      "writeRefusal": "\n\nAn exception occurred.",
+      "target": "root",
+      "file": "root-fit.vsdx",
+      "sha256": "cd13f2e90f3aae297b65593ac91cf7becde92171f8f331967345a1aa4d595494"
+    },
+    {
+      "id": "document-fit",
+      "resolved": {
+        "PaperKind": {
+          "formula": "1",
+          "value": 1
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "OnPage": "1"
+      },
+      "count": 9,
+      "writeRefusal": null,
+      "target": "document",
+      "file": "document-fit.vsdx",
+      "sha256": "d2ce9d3ee70cc212b681de50d982f875e77cd0926eb569b81155e5e71e5b0319"
+    },
+    {
+      "id": "root-zoom",
+      "resolved": {
+        "PaperKind": {
+          "formula": "1",
+          "value": 1
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "ScaleX": ".5",
+        "ScaleY": ".5"
+      },
+      "count": 9,
+      "writeRefusal": "\n\nAn exception occurred.",
+      "target": "root",
+      "file": "root-zoom.vsdx",
+      "sha256": "4eb156b65590127280ce47795bf28a62d7b6355ce7745787996fc0efe449c873"
+    },
+    {
+      "id": "document-zoom",
+      "resolved": {
+        "PaperKind": {
+          "formula": "1",
+          "value": 1
+        },
+        "PrintPageOrientation": {
+          "formula": "1",
+          "value": 1
+        },
+        "ScaleX": {
+          "formula": "100%",
+          "value": 1
+        },
+        "ScaleY": {
+          "formula": "100%",
+          "value": 1
+        },
+        "OnPage": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterX": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "CenterY": {
+          "formula": "FALSE",
+          "value": 0
+        },
+        "PagesX": {
+          "formula": "1",
+          "value": 1
+        },
+        "PagesY": {
+          "formula": "1",
+          "value": 1
+        },
+        "PageLeftMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageRightMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageTopMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageBottomMargin": {
+          "formula": "0.25 in",
+          "value": 0.25
+        },
+        "PageWidth": {
+          "formula": "17 in",
+          "value": 17
+        },
+        "PageHeight": {
+          "formula": "22 in",
+          "value": 22
+        },
+        "PageScale": {
+          "formula": "1 in",
+          "value": 1
+        },
+        "DrawingScale": {
+          "formula": "1 in",
+          "value": 1
+        }
+      },
+      "requested": {
+        "ScaleX": ".5",
+        "ScaleY": ".5"
+      },
+      "count": 9,
+      "writeRefusal": null,
+      "target": "document",
+      "file": "document-zoom.vsdx",
+      "sha256": "f99731a5debab0de2e36a20697e02100c075226838f304717971b3b181976938"
+    }
+  ]
+}
