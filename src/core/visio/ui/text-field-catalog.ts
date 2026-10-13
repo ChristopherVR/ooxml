@@ -13,6 +13,7 @@ export interface VisioFieldCategorySpec {
 }
 const dateFormats = [
 	{ label: 'Short date (10/9/2026)', format: F.shortDate },
+	{ label: 'ISO date (2026-10-09)', format: F.isoDate },
 	{ label: 'Long date (Friday, October 9, 2026)', format: F.longDate },
 	{ label: 'Time (2:05 PM)', format: F.time },
 	{ label: 'Date and time', format: F.dateTime },
