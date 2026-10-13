@@ -1,7 +1,7 @@
 import { MERGE_SHAPES_HINT_KEY } from './merge-shapes/merge-shapes-menu';
 import { control, pills, strip, text } from './ribbon-home-family-helpers';
+import { cropControlSpec } from './ribbon-home-crop';
 import {
-	HOME_CROP_ITEMS,
 	HOME_DRAWING_ARRANGE_ITEMS,
 	HOME_FONT_SIZE_ITEMS,
 	HOME_MERGE_ITEMS,
@@ -24,7 +24,10 @@ const alignControl = ([part, key, fallback]: (typeof ALIGN_PARTS)[number]) =>
 		icon: `home.arrange.align.${part === 'centerH' ? 'center' : part}`,
 	});
 
-/** Slides, Drawing, Arrange and the Font picker: the object-level Home families. */
+/**
+ * Slides, Drawing, Arrange and the Font picker: the object-level Home families,
+ * plus Picture Format's Size strip, which reuses the Home Crop split button.
+ */
 export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 	Record<
 		| 'slides'
@@ -35,7 +38,8 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 		| 'arrange-edit'
 		| 'font-picker'
 		| 'arrange-painter'
-		| 'arrange-shape',
+		| 'arrange-shape'
+		| 'picture-size',
 		RibbonHomeFamilySpec
 	>
 > = {
@@ -266,23 +270,16 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 					hintKey: MERGE_SHAPES_HINT_KEY,
 					attrs: { 'data-pptx-ribbon-control': 'merge-shapes' },
 				}),
-				control('home.arrange.crop', 'pptx.image.crop', 'Crop', undefined, {
-					kind: 'menu',
-					popup: true,
-					items: HOME_CROP_ITEMS,
-					hintKey: 'pptx.image.cropHint',
-					attrs: { 'data-pptx-ribbon-control': 'crop', 'data-pptx-chrome': 'crop-main' },
-					caret: {
-						labelKey: 'pptx.image.cropToAspectRatio',
-						fallback: 'Crop to Aspect Ratio',
-						attrs: { 'data-pptx-ribbon-control': 'crop-menu', 'data-pptx-chrome': 'crop-caret' },
-					},
-				}),
+				cropControlSpec('home.arrange.crop'),
 				control('home.arrange.outlineWidth', 'pptx.ribbon.strokeWidth', 'Stroke width', undefined, {
 					kind: 'number',
 					number: { min: 0, max: 120, step: 0.5 },
 				}),
 			),
 		],
+	},
+	// Picture Format > Size: the binding draws the group around it, as for the galleries.
+	'picture-size': {
+		clusters: [pills(undefined, cropControlSpec('pictureFormat.size.crop', true))],
 	},
 };

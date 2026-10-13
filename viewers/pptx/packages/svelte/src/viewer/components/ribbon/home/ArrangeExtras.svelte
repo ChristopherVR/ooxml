@@ -25,7 +25,7 @@
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import { setStrokeWidthPatch } from '../../../editor';
 	import { refocusViewerRoot } from '../anchored-popup';
-	import { cropUpdateFor } from './home-crop';
+	import { runCropRequest } from './home-crop';
 
 	const {
 		editor,
@@ -83,14 +83,7 @@
 				);
 				break;
 			case 'home.arrange.crop':
-				if (value === undefined) {
-					editor.cropOps.toggle();
-				} else if (el) {
-					const update = cropUpdateFor(el, value);
-					if (update) {
-						editor.cropOps.applyOnce(update);
-					}
-				}
+				runCropRequest(editor, value);
 				break;
 			case 'home.arrange.outlineWidth':
 				if (el) {

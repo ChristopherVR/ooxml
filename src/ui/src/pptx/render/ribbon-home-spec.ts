@@ -18,7 +18,8 @@ export type RibbonHomeFamily =
 	| 'arrange-edit'
 	| 'font-picker'
 	| 'arrange-painter'
-	| 'arrange-shape';
+	| 'arrange-shape'
+	| 'picture-size';
 
 /** How a control behaves beyond a plain command button. */
 export type RibbonHomeKind =

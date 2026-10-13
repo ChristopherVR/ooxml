@@ -6,6 +6,7 @@ export * from './ribbon-home-spec';
 export * from './ribbon-home-state-objects';
 export * from './ribbon-home-state-extras';
 export * from './ribbon-home-menus';
+export * from './ribbon-home-crop';
 
 /** A colour trigger's current value and the data its popover shows. */
 export interface HomeColourInput {

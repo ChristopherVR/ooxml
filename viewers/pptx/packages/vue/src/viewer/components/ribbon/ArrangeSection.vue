@@ -23,13 +23,13 @@ import {
 	canSetStrokeWidth,
 	canUngroupSelection,
 	homeSnapshotTranslator,
-	parseCropValue,
 	strokeWidthOf,
 } from 'ooxml-ui/pptx';
 import type { MergeShapeOperation, PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { runCropRequest } from '../../composables/crop-request';
 import { MergeCropKey } from '../../composables/merge-crop-context';
 import { useToolbarVisibility } from '../../composables/useToolbarVisibility';
 
@@ -128,18 +128,8 @@ function requestShape(event: RibbonHomeRequestEvent): void {
 		case 'home.arrange.mergeShapes':
 			controller?.merge(String(value) as MergeShapeOperation);
 			break;
-		case 'home.arrange.crop': {
-			const crop = parseCropValue(value);
-			if (!crop) {
-				controller?.toggleCrop();
-			} else if (crop.kind === 'aspect') {
-				controller?.applyAspect(`${crop.width}:${crop.height}`);
-			} else if (crop.kind === 'fill') {
-				controller?.applyFill();
-			} else {
-				controller?.applyFit();
-			}
-		}
+		case 'home.arrange.crop':
+			runCropRequest(controller, value);
 	}
 }
 

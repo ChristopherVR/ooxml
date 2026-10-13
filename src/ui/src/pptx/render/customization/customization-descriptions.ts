@@ -28,7 +28,7 @@ export const TOOLBAR_BUTTON_DESCRIPTIONS: Record<ToolbarButtonId, string> = {
 	navigation: 'The previous / next slide cluster.',
 	mergeShapes:
 		'The Merge Shapes dropdown (Union, Combine, Fragment, Intersect, Subtract) in the Home tab Arrange group.',
-	crop: 'The picture Crop control (crop mode, Crop to Aspect Ratio, Fill, Fit) in the Home tab Arrange group.',
+	crop: 'Both picture Crop buttons (crop mode, aspect ratio, Fill, Fit): Home > Arrange, Picture Format > Size.',
 };
 
 export const VIEWER_PANEL_DESCRIPTIONS: Record<ViewerPanelId, string> = {

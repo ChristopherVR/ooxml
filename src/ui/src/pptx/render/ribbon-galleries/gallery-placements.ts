@@ -1,7 +1,5 @@
 /**
- * Where each gallery sits in the ribbon, and which contextual tabs the
- * current selection shows. Bindings render these lists; they never decide
- * placement themselves.
+ * Where each gallery sits and which contextual tabs a selection shows; bindings only render it.
  *
  * @module render/ribbon-galleries/gallery-placements
  */
@@ -31,6 +29,8 @@ export interface RibbonGalleryGroupPlacement {
 	labelKey: string;
 	label: string;
 	galleries: readonly RibbonGalleryPlacement[];
+	/** The `pptx-ui-ribbon-home-<strip>` drawn after the galleries (Picture Format > Size). */
+	strip?: 'picture-size';
 }
 
 /** The groups each contextual tab renders, in order. */
@@ -96,6 +96,13 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 					mode: 'dropdown',
 				},
 			],
+		},
+		{
+			group: 'pictureFormat.size',
+			labelKey: 'pptx.ribbon.groupSize',
+			label: 'Size',
+			galleries: [],
+			strip: 'picture-size',
 		},
 	],
 	tableDesign: [
