@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
-import { textFontSizePatch, textFontSizePtToPx, textFontSizePxToPt } from 'ooxml-ui/pptx';
+import {
+	textFontSizePatch,
+	textFontSizePtToPx,
+	textFontSizePxToPt,
+	textStylePatch,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTextWarpPreset, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 import { computed } from 'vue';
@@ -89,7 +94,7 @@ const align = computed<AlignValue | undefined>(() => textStyle.value?.align);
 const vAlign = computed<VAlignValue | undefined>(() => textStyle.value?.vAlign);
 
 function patchTextStyle(next: Partial<TextStyle>): void {
-	emit('update', { textStyle: { ...textStyle.value, ...next } } as Partial<PptxElement>);
+	emit('update', textStylePatch(props.element, next));
 }
 
 function onFontFamily(event: Event): void {

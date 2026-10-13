@@ -1,10 +1,11 @@
 import {
+	applyTextStyleUpdate,
 	getInlineEditorSelectionResult,
 	remapTextToSegments,
 	toggleSelectionBullets,
 } from 'ooxml-ui/pptx';
 import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
-import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
+import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 
 import { canFormatText, readTextFormatState } from './editor-format-mutations';
 import { currentInlineEditorText } from './inline-text-editor';
@@ -24,12 +25,7 @@ function patchTextStyle(el: PptxElement, patch: Partial<TextStyle>): Partial<Ppt
 	if (!canFormatText(el)) {
 		return {};
 	}
-	const textStyle: TextStyle = { ...el.textStyle, ...patch };
-	const segments: TextSegment[] | undefined = el.textSegments?.map((seg) => ({
-		...seg,
-		style: { ...seg.style, ...patch },
-	}));
-	return segments ? { textStyle, textSegments: segments } : { textStyle };
+	return applyTextStyleUpdate(el, patch, null).patch;
 }
 
 /** Toggle the selected paragraphs' list type; without an inline selection, target the element. */

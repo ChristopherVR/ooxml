@@ -13,6 +13,8 @@
 import type { PptxElement, TextStyle } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
 
+import { paragraphOverridePatch, withExclusiveLineSpacing } from './text-style-scope';
+
 /**
  * The advanced text properties surfaced to the panel.
  *
@@ -137,10 +139,12 @@ export function textAdvancedPatch(
 	changes: TextAdvancedChanges,
 ): Partial<PptxElement> {
 	const base: TextStyle = hasTextProperties(el) ? (el.textStyle ?? {}) : {};
+	const exclusive = withExclusiveLineSpacing(changes);
 	return {
+		...paragraphOverridePatch(el, exclusive),
 		textStyle: {
 			...base,
-			...changes,
+			...exclusive,
 		},
 	} as Partial<PptxElement>;
 }

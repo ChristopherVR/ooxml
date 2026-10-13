@@ -16,6 +16,7 @@
 		autoFitModePatch,
 		textAdvancedStateOf,
 		textColorOf,
+		textStylePatch,
 		textWrapOf,
 		textWrapPatch,
 		vAlignPatch,
@@ -57,7 +58,7 @@
 		commitTextColor(commit.hex, commit.ref);
 	}
 	function patchText(next: Partial<TextStyle>): void {
-		editor.patchSelected({ textStyle: { ...textStyle, ...next } } as Partial<PptxElement>);
+		editor.patchSelected(textStylePatch(el, next));
 	}
 </script>
 

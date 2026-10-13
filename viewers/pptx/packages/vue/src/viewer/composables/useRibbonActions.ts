@@ -1,5 +1,6 @@
 import type { AlignEdge, ChangeCaseMode, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import {
+	applyTextStyleUpdate,
 	readEditableText,
 	buildInlineListStylePatch,
 	getInlineEditorSelectionResult,
@@ -7,7 +8,6 @@ import {
 	setElementBullets,
 	transformTextCase,
 	transformInlineListCase,
-	updateTextSegmentStyle,
 	withCellStyle,
 } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
@@ -189,15 +189,9 @@ export function useRibbonActions(input: UseRibbonActionsInput) {
 		if (!hasTextProperties(listed)) {
 			return;
 		}
-		const textStyle = { ...listed.textStyle, ...styleUpdates };
-		const segments =
-			listed.textSegments && listed.textSegments.length > 0
-				? listed.textSegments.map((s) => updateTextSegmentStyle(s, styleUpdates))
-				: undefined;
 		ops.updateElement(id, {
 			...(liveText !== undefined ? { text: liveText } : {}),
-			textStyle,
-			...(segments ? { textSegments: segments } : {}),
+			...applyTextStyleUpdate(listed, styleUpdates, null).patch,
 		});
 	}
 

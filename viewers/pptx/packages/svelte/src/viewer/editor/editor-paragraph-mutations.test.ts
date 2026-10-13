@@ -131,6 +131,18 @@ describe('editor-paragraph-mutations setAlignPatch / setLineSpacingPatch', () =>
 		expect(setLineSpacingPatch(base, 1.5).textStyle).toStrictEqual({
 			bold: true,
 			lineSpacing: 1.5,
+			lineSpacingExactPt: undefined,
 		});
+	});
+
+	it('reaches line spacing a paragraph authored on its own a:pPr', () => {
+		const el = {
+			...textEl({ lineSpacingExactPt: 12 }),
+			textSegments: [{ text: 'a', style: {}, paragraphProperties: { lineSpacingExactPt: 12 } }],
+		} as PptxElement;
+		const patch = setLineSpacingPatch(el, 2) as {
+			textSegments?: { paragraphProperties?: unknown }[];
+		};
+		expect(patch.textSegments?.[0]?.paragraphProperties).toStrictEqual({ lineSpacing: 2 });
 	});
 });

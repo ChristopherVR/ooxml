@@ -113,9 +113,39 @@ describe('applyTextStyleUpdate without a selection', () => {
 			null,
 		);
 		const p = patch as TextPatch;
-		expect(p.textStyle).toStrictEqual({ fontSize: 18, bold: true, lineSpacing: 1.5 });
+		expect(p.textStyle).toStrictEqual({
+			fontSize: 18,
+			bold: true,
+			lineSpacing: 1.5,
+			lineSpacingExactPt: undefined,
+		});
 		expect(p.textSegments?.every((s) => s.style.bold && s.style.lineSpacing === 1.5)).toBeTruthy();
 		expect(newSelection).toBeNull();
+	});
+
+	it('overrides line spacing a paragraph authored on its own a:pPr', () => {
+		const authored: TextSegment = {
+			text: 'a',
+			style: { lineSpacingExactPt: 10.4 },
+			paragraphProperties: { lineSpacingExactPt: 10.4 },
+		};
+		const el = textElement([authored], { lineSpacingExactPt: 10.4 });
+		const p = applyTextStyleUpdate(el, { lineSpacing: 2 }, null).patch as TextPatch;
+		expect(p.textStyle?.lineSpacingExactPt).toBeUndefined();
+		expect(p.textSegments?.[0]?.style.lineSpacingExactPt).toBeUndefined();
+		expect(p.textSegments?.[0]?.paragraphProperties).toStrictEqual({ lineSpacing: 2 });
+	});
+
+	it('overrides an authored indent with an inline selection too', () => {
+		const authored: TextSegment = {
+			text: 'Hello world',
+			style: {},
+			paragraphProperties: { paragraphMarginLeft: 0 },
+		};
+		const selection = { startSegIdx: 0, startOffset: 0, endSegIdx: 0, endOffset: 5 };
+		const p = applyTextStyleUpdate(textElement([authored]), { paragraphMarginLeft: 24 }, selection)
+			.patch as TextPatch;
+		expect(p.textSegments?.[0]?.paragraphProperties).toStrictEqual({ paragraphMarginLeft: 24 });
 	});
 
 	it('omits textSegments when the element carries none', () => {

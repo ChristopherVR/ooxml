@@ -2,6 +2,7 @@ import {
 	getInlineEditorSelectionResult,
 	readEditableText,
 	remapTextToSegments,
+	textStylePatch,
 	toggleSelectionBullets,
 } from 'ooxml-ui/pptx';
 import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
@@ -59,15 +60,15 @@ export function toggleListTypePatch(
 export function adjustIndentPatch(el: PptxElement, delta: 1 | -1): Partial<PptxElement> {
 	const base = textStyleBase(el);
 	const next = Math.max(0, (base.paragraphMarginLeft ?? 0) + delta * INDENT_STEP_PX);
-	return { textStyle: { ...base, paragraphMarginLeft: next } } as Partial<PptxElement>;
+	return textStylePatch(el, { paragraphMarginLeft: next });
 }
 
 /** Set the paragraph alignment. */
 export function setAlignPatch(el: PptxElement, align: TextStyle['align']): Partial<PptxElement> {
-	return { textStyle: { ...textStyleBase(el), align } } as Partial<PptxElement>;
+	return textStylePatch(el, { align });
 }
 
 /** Set the line spacing multiplier (e.g. 1.15 = 115%). */
 export function setLineSpacingPatch(el: PptxElement, lineSpacing: number): Partial<PptxElement> {
-	return { textStyle: { ...textStyleBase(el), lineSpacing } } as Partial<PptxElement>;
+	return textStylePatch(el, { lineSpacing });
 }
