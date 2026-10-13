@@ -7,23 +7,43 @@
  * stable object at construction time while the underlying `EditActions`
  * instance is swapped in once the editor controller exists (and again on
  * `setLocale`'s chrome remount).
+ *
+ * Nested action groups (`EditActions.sections`, `.comments`, `.masterView`)
+ * resolve the same way: `lazy.sections.addSection(...)` forwards to
+ * `getActions().sections.addSection(...)` at call time.
  */
 export function createLazyActions<T extends object>(getActions: () => T): T {
-	const cache = new Map<string, (...args: unknown[]) => unknown>();
-	return new Proxy({} as T, {
-		get(_target, prop) {
-			if (typeof prop !== 'string') {
-				return undefined;
-			}
-			let fn = cache.get(prop);
-			if (!fn) {
-				fn = (...args: unknown[]) => {
-					const actions = getActions() as unknown as Record<string, (...a: unknown[]) => unknown>;
-					return actions[prop](...args);
-				};
-				cache.set(prop, fn);
-			}
-			return fn;
-		},
+	return new Proxy<T>({} as T, { get: lazyMembers(getActions) });
+}
+
+type Callable = (...args: unknown[]) => unknown;
+type Bag = Record<string, unknown>;
+
+/** A `get` trap that hands out one cached {@link lazyMember} per property name. */
+function lazyMembers(resolve: () => object): (target: object, prop: string | symbol) => unknown {
+	const cache = new Map<string, Callable>();
+	return (_target, prop) => {
+		if (typeof prop !== 'string') {
+			return undefined;
+		}
+		let member = cache.get(prop);
+		if (!member) {
+			member = lazyMember(resolve, prop);
+			cache.set(prop, member);
+		}
+		return member;
+	};
+}
+
+/**
+ * The forwarder for `resolve()[prop]`: calling it calls that method on the
+ * current owner (so `this` stays the owner), and reading a property from it
+ * descends into that member as a nested action group.
+ */
+function lazyMember(resolve: () => object, prop: string): Callable {
+	const owner = (): Bag => resolve() as Bag;
+	return new Proxy<Callable>((() => undefined) as Callable, {
+		apply: (_target, _this, args: unknown[]) => (owner()[prop] as Callable).apply(owner(), args),
+		get: lazyMembers(() => owner()[prop] as object),
 	});
 }
