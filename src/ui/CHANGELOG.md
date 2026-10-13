@@ -7,6 +7,45 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.11.0) - 2026-10-13
+
+### Features
+
+- **ui:** Expose existing visio field editing in the dialog ([0a66e1c](https://github.com/ChristopherVR/ooxml/commit/0a66e1c00a30f6ca5609ae51c3caeef36bb6a942))
+- **xlsx:** Configure cached report filter selections ([993a5a5](https://github.com/ChristopherVR/ooxml/commit/993a5a5922656ccf90f8eece099a804200a7bc43))
+- **ui:** Customize inspector startup and deck card visibility ([ada4979](https://github.com/ChristopherVR/ooxml/commit/ada49799906e5ed99159b1f326ae0cb1c737017e))
+- **ui:** Configure nested pivot report filters ([6b3ec8a](https://github.com/ChristopherVR/ooxml/commit/6b3ec8af611429ce8bf75d7d0ef91ed2eae574ec))
+
+### Bug Fixes
+
+- **pptx:** Honor bounded native visibility timing ([a9a70ee](https://github.com/ChristopherVR/ooxml/commit/a9a70ee8c87abfb32ab3d6999c633073bf5e3ddd))
+- **visio:** Restrict existing field choices to local sources ([4b718d5](https://github.com/ChristopherVR/ooxml/commit/4b718d5d178485377044635f9f110d583aabdfe0))
+- **ui:** Defer title bar search hooks until rendering ([8a78d7d](https://github.com/ChristopherVR/ooxml/commit/8a78d7d082b4f54f2ff30558abc0463160f5b47a))
+- **pptx:** Separate inherited paragraph spacing from direct values ([0c23aac](https://github.com/ChristopherVR/ooxml/commit/0c23aac22831cff4dd4a7dcce79d48ffdaab27b4))
+- **ui:** Describe measured pivot report filter limits ([e3adfc8](https://github.com/ChristopherVR/ooxml/commit/e3adfc800a994de92d717bcc8cfa3d5aa62be0d4))
+- **ui:** Open Visio page setup from context menu ([9ba68d4](https://github.com/ChristopherVR/ooxml/commit/9ba68d4fb3c2e449bc1ac50ac0e8fa215f652327))
+- **pptx:** Apply explicit line spacing over inherited paragraphs ([aad8c3d](https://github.com/ChristopherVR/ooxml/commit/aad8c3deba0eb8d4034b208e732136a5fc24cc92))
+- **ui:** Declare and document select reapply metadata ([820df4b](https://github.com/ChristopherVR/ooxml/commit/820df4b5130a893b11e23cce63453437e53c72df))
+
+### Refactor
+
+- **pptx:** Move native effect timing decisions into core ([61e030a](https://github.com/ChristopherVR/ooxml/commit/61e030a0ae01032d36da6211577bf340187052c8))
+- **pptx:** Share font and whole-text edits in core ([94be138](https://github.com/ChristopherVR/ooxml/commit/94be138efc09b3eb881436eb07be54af0460fb45))
+- **pptx:** Move paragraph and run style scope into core ([3ba3c32](https://github.com/ChristopherVR/ooxml/commit/3ba3c321af80efed2da4c6d58a377070c59b7c07))
+- **pptx:** Move paragraph geometry cascade into core ([2dfc204](https://github.com/ChristopherVR/ooxml/commit/2dfc204f3ae6a84fed476073b3aefae261ab8d6b))
+
+### Testing
+
+- **docx:** Verify two-row nested print workflows ([d4514b9](https://github.com/ChristopherVR/ooxml/commit/d4514b9eca4d70fbd032747e5e477fb54782a575))
+- **pptx:** Preserve inherited spacing through core body edits ([29c3b46](https://github.com/ChristopherVR/ooxml/commit/29c3b469141f3d338cfc2f8af44aea80f1963807))
+- **docx:** Verify native three-row print workflows ([b2414f7](https://github.com/ChristopherVR/ooxml/commit/b2414f77b1bac171f73948f0aec8b6a173888d1d))
+- **docx:** Verify structural nested row print workflows ([b269d5b](https://github.com/ChristopherVR/ooxml/commit/b269d5bd94bff77850327e4ca9bc3514f2061430))
+- **ui:** Assert measured pivot help bounds ([51e7641](https://github.com/ChristopherVR/ooxml/commit/51e76418c8428a3101d93a0d3f24df193bbf05ec))
+
+### Dependencies
+
+- **deps:** Update production dependencies ([bbd7b53](https://github.com/ChristopherVR/ooxml/commit/bbd7b530c7a15ae48c0c0a2ff4ea7dcdfe2aa9d3))
+
 ## [1.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.10.0) - 2026-10-13
 
 ### Features

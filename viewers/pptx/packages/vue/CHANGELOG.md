@@ -7,6 +7,29 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.36.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.36.0) - 2026-10-13
+
+### Features
+
+- **ui:** Customize inspector startup and deck card visibility ([ada4979](https://github.com/ChristopherVR/ooxml/commit/ada49799906e5ed99159b1f326ae0cb1c737017e))
+
+### Bug Fixes
+
+- **pptx:** Honor bounded native visibility timing ([a9a70ee](https://github.com/ChristopherVR/ooxml/commit/a9a70ee8c87abfb32ab3d6999c633073bf5e3ddd))
+- **pptx:** Separate inherited paragraph spacing from direct values ([0c23aac](https://github.com/ChristopherVR/ooxml/commit/0c23aac22831cff4dd4a7dcce79d48ffdaab27b4))
+- **pptx:** Apply explicit line spacing over inherited paragraphs ([aad8c3d](https://github.com/ChristopherVR/ooxml/commit/aad8c3deba0eb8d4034b208e732136a5fc24cc92))
+
+### Refactor
+
+- **pptx:** Move native effect timing decisions into core ([61e030a](https://github.com/ChristopherVR/ooxml/commit/61e030a0ae01032d36da6211577bf340187052c8))
+- **pptx:** Share font and whole-text edits in core ([94be138](https://github.com/ChristopherVR/ooxml/commit/94be138efc09b3eb881436eb07be54af0460fb45))
+- **pptx:** Move paragraph and run style scope into core ([3ba3c32](https://github.com/ChristopherVR/ooxml/commit/3ba3c321af80efed2da4c6d58a377070c59b7c07))
+- **pptx:** Move paragraph geometry cascade into core ([2dfc204](https://github.com/ChristopherVR/ooxml/commit/2dfc204f3ae6a84fed476073b3aefae261ab8d6b))
+
+### Dependencies
+
+- **deps:** Update production dependencies ([bbd7b53](https://github.com/ChristopherVR/ooxml/commit/bbd7b530c7a15ae48c0c0a2ff4ea7dcdfe2aa9d3))
+
 ## [4.35.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@4.35.0) - 2026-10-13
 
 ### Features
