@@ -94,7 +94,12 @@ describe('help dialogs', () => {
 		const about = ctx.dialogs.open('feature-status');
 		const text = dialogEl(ctx, 'feature-status').textContent ?? '';
 		expect(text).toContain('Worksheet-range PivotTables');
-		expect(text).toContain('Advanced PivotTable layouts');
+		expect(text).toContain('up to two row fields and sixteen values');
+		expect(text).toContain('one optional column field and one cached report filter');
+		expect(text).toContain('Unmodeled PivotTable layouts');
+		expect(text).toContain(
+			'Values-on-rows report filters, multiple/dynamic filters and repeated column captions (preserved)',
+		);
 		expect(text).toContain('Sparklines (create, format and clear)');
 		expect(text).toContain('Freeze panes');
 		pressKey(dialogEl(ctx, 'feature-status').querySelector('button')!, 'Escape');
