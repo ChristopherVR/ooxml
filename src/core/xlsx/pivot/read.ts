@@ -135,13 +135,13 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
-	const row = names[Number(att(rowFields[0], 'x'))];
 	const realRows = rowsAxis
 		? rowFields.filter((field) => pivotFieldIndex(field) !== -2)
 		: rowFields;
+	const row = names[pivotFieldIndex(realRows[0])];
 	const second = realRows[1] ? names[Number(att(realRows[1], 'x'))] : undefined;
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
-	const outer = tableFields[Number(att(rowFields[0], 'x'))];
+	const outer = tableFields[pivotFieldIndex(realRows[0])];
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
 	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
@@ -185,8 +185,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		rowField: row,
 		layout,
 		...(rowsAxis ? { valuesAxis: 'rows' as const } : {}),
-		...(rowsAxis && realRows.length === 2 && valueIndex === 1
-			? { valuesPosition: 'between' as const }
+		...(rowsAxis && realRows.length === 2 && valueIndex < 2
+			? { valuesPosition: valueIndex === 0 ? ('first' as const) : ('between' as const) }
 			: {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
 		...(second

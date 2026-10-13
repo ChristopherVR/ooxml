@@ -1,6 +1,7 @@
 import type { CellValue, PivotTable } from '../model';
 import type { PivotGrid } from './aggregate';
 import { pivotItemLabel, pivotItems, pivotValueKey } from './data';
+import { appendFirstPivotValues } from './hierarchy-first';
 
 import {
 	pivotHeaderDimensions,
@@ -22,11 +23,12 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const layout = pivot.layout ?? 'tabular';
 	const compact = layout === 'compact';
 	const rowsAxis = pivot.valuesAxis === 'rows';
+	const firstValues = rowsAxis && pivot.valuesPosition === 'first';
 	const between = rowsAxis && pivot.valuesPosition === 'between';
 	const measures = pivotMeasures(pivot);
 	// Native row Values keep automatic subtotals below groups in every report layout.
 	const top =
-		!rowsAxis &&
+		(!rowsAxis || firstValues) &&
 		layout !== 'tabular' &&
 		pivot.subtotals !== false &&
 		(pivot.subtotalPosition ?? 'top') === 'top';
@@ -58,8 +60,8 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowLabelColumns);
 	const rows =
 		(details.size + rowItems.length * Number(bottom) + 1) * (rowsAxis ? measures.length : 1) +
-		rowItems.length * Number(layout !== 'tabular') +
-		(between ? rowItems.length * measures.length : details.size) *
+		rowItems.length * Number(layout !== 'tabular') * (firstValues ? measures.length : 1) +
+		(firstValues ? measures.length : between ? rowItems.length * measures.length : details.size) *
 			Number(rowsAxis && layout !== 'tabular') +
 		dimensions.rows;
 	if (rows * dimensions.width > 1_000_000) throw new Error('The PivotTable result is too large.');
@@ -114,112 +116,129 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 			),
 		);
 	};
-	rowItems.forEach((outer, outerIndex) => {
-		const key = pivotValueKey(outer);
-		if (layout !== 'tabular')
-			append(
-				[label(outer), ...Array<CellValue>(rowLabelColumns - 1).fill(null)],
-				top
-					? numbers([key], groups.get(key) ?? [])
-					: Array(dimensions.width - rowLabelColumns).fill(null),
-				{ indices: [outerIndex] },
+	if (firstValues)
+		appendFirstPivotValues(pivot, {
+			rowItems,
+			secondRowItems,
+			columnItems,
+			children,
+			innerIndices,
+			groups,
+			details,
+			buckets,
+			width: dimensions.width,
+			rowLabels: rowLabelColumns,
+			top,
+			bottom,
+			append,
+		});
+	else
+		rowItems.forEach((outer, outerIndex) => {
+			const key = pivotValueKey(outer);
+			if (layout !== 'tabular')
+				append(
+					[label(outer), ...Array<CellValue>(rowLabelColumns - 1).fill(null)],
+					top
+						? numbers([key], groups.get(key) ?? [])
+						: Array(dimensions.width - rowLabelColumns).fill(null),
+					{ indices: [outerIndex] },
+				);
+			let first = true;
+			const innerKeys = [...children.get(key)!].sort(
+				(a, b) => innerIndices.get(a)! - innerIndices.get(b)!,
 			);
-		let first = true;
-		const innerKeys = [...children.get(key)!].sort(
-			(a, b) => innerIndices.get(a)! - innerIndices.get(b)!,
-		);
-		if (between)
-			measures.forEach((measure, m) => {
-				if (layout !== 'tabular')
-					append(
-						compact
-							? [measure.caption]
-							: [pivot.repeatLabels ? label(outer) : null, measure.caption, null],
-						Array<CellValue>(dimensions.width - rowLabelColumns).fill(null),
-						{ indices: [outerIndex, m], measure: m },
-						compact ? 1 : 0,
-					);
-				innerKeys.forEach((innerKey, child) => {
-					const innerIndex = innerIndices.get(innerKey)!;
-					const keys = [key, innerKey];
-					const records = details.get(JSON.stringify(keys))!;
-					append(
-						compact
-							? [label(secondRowItems[innerIndex]!)]
-							: [
-									pivot.repeatLabels || (layout === 'tabular' && m === 0 && child === 0)
-										? label(outer)
-										: null,
-									layout === 'tabular' && child === 0 ? measure.caption : null,
-									label(secondRowItems[innerIndex]!),
-								],
-						[
-							...columnItems.map((column) =>
-								pivotMeasureNumber(
-									pivot,
-									buckets.get(JSON.stringify([...keys, pivotValueKey(column)])) ?? [],
-									measure,
-								),
-							),
-							pivotMeasureNumber(pivot, records, measure),
-						],
-						{ indices: [outerIndex, m, innerIndex], measure: m },
-						compact ? 2 : 0,
-					);
-				});
-			});
-		else
-			innerKeys.forEach((innerKey) => {
-				const innerIndex = innerIndices.get(innerKey)!;
-				const inner = secondRowItems[innerIndex]!;
-				const keys = [key, innerKey];
-				const records = details.get(JSON.stringify(keys));
-				if (!records) return;
-				if (rowsAxis) {
+			if (between)
+				measures.forEach((measure, m) => {
 					if (layout !== 'tabular')
 						append(
 							compact
-								? [label(inner)]
-								: [pivot.repeatLabels ? label(outer) : null, label(inner), null],
+								? [measure.caption]
+								: [pivot.repeatLabels ? label(outer) : null, measure.caption, null],
 							Array<CellValue>(dimensions.width - rowLabelColumns).fill(null),
-							{ indices: [outerIndex, innerIndex] },
+							{ indices: [outerIndex, m], measure: m },
 							compact ? 1 : 0,
 						);
-					appendMeasures(
-						[pivot.repeatLabels || first ? label(outer) : null, label(inner)],
-						keys,
-						records,
-						[outerIndex, innerIndex],
+					innerKeys.forEach((innerKey, child) => {
+						const innerIndex = innerIndices.get(innerKey)!;
+						const keys = [key, innerKey];
+						const records = details.get(JSON.stringify(keys))!;
+						append(
+							compact
+								? [label(secondRowItems[innerIndex]!)]
+								: [
+										pivot.repeatLabels || (layout === 'tabular' && m === 0 && child === 0)
+											? label(outer)
+											: null,
+										layout === 'tabular' && child === 0 ? measure.caption : null,
+										label(secondRowItems[innerIndex]!),
+									],
+							[
+								...columnItems.map((column) =>
+									pivotMeasureNumber(
+										pivot,
+										buckets.get(JSON.stringify([...keys, pivotValueKey(column)])) ?? [],
+										measure,
+									),
+								),
+								pivotMeasureNumber(pivot, records, measure),
+							],
+							{ indices: [outerIndex, m, innerIndex], measure: m },
+							compact ? 2 : 0,
+						);
+					});
+				});
+			else
+				innerKeys.forEach((innerKey) => {
+					const innerIndex = innerIndices.get(innerKey)!;
+					const inner = secondRowItems[innerIndex]!;
+					const keys = [key, innerKey];
+					const records = details.get(JSON.stringify(keys));
+					if (!records) return;
+					if (rowsAxis) {
+						if (layout !== 'tabular')
+							append(
+								compact
+									? [label(inner)]
+									: [pivot.repeatLabels ? label(outer) : null, label(inner), null],
+								Array<CellValue>(dimensions.width - rowLabelColumns).fill(null),
+								{ indices: [outerIndex, innerIndex] },
+								compact ? 1 : 0,
+							);
+						appendMeasures(
+							[pivot.repeatLabels || first ? label(outer) : null, label(inner)],
+							keys,
+							records,
+							[outerIndex, innerIndex],
+						);
+						first = false;
+						return;
+					}
+					append(
+						compact
+							? [label(inner)]
+							: [
+									pivot.repeatLabels || (layout === 'tabular' && first) ? label(outer) : null,
+									label(inner),
+								],
+						numbers(keys, records),
+						{ indices: [outerIndex, innerIndex] },
+						compact ? 1 : 0,
 					);
 					first = false;
+				});
+			if (bottom) {
+				if (rowsAxis) {
+					appendMeasures([label(outer)], [key], groups.get(key) ?? [], [outerIndex], 'default');
 					return;
 				}
+				const caption = String(label(outer));
 				append(
-					compact
-						? [label(inner)]
-						: [
-								pivot.repeatLabels || (layout === 'tabular' && first) ? label(outer) : null,
-								label(inner),
-							],
-					numbers(keys, records),
-					{ indices: [outerIndex, innerIndex] },
-					compact ? 1 : 0,
+					[`${caption} Total`, ...(compact ? [] : [null])],
+					numbers([key], groups.get(key) ?? []),
+					{ indices: [outerIndex], type: 'default' },
 				);
-				first = false;
-			});
-		if (bottom) {
-			if (rowsAxis) {
-				appendMeasures([label(outer)], [key], groups.get(key) ?? [], [outerIndex], 'default');
-				return;
 			}
-			const caption = String(label(outer));
-			append(
-				[`${caption} Total`, ...(compact ? [] : [null])],
-				numbers([key], groups.get(key) ?? []),
-				{ indices: [outerIndex], type: 'default' },
-			);
-		}
-	});
+		});
 	if (rowsAxis) appendMeasures([], [], pivot.records, [0], 'grand');
 	else
 		append(['Grand Total', ...(compact ? [] : [null])], numbers([], pivot.records), {

@@ -96,9 +96,11 @@ export function pivotHeaders(
 		const rowLabels =
 			pivot.layout === 'compact'
 				? ['Row Labels']
-				: pivot.valuesPosition === 'between'
-					? [labels[0]!, 'Values', labels[1]!]
-					: [...labels, 'Values'];
+				: pivot.valuesPosition === 'first'
+					? ['Values', ...labels]
+					: pivot.valuesPosition === 'between'
+						? [labels[0]!, 'Values', labels[1]!]
+						: [...labels, 'Values'];
 		return pivot.columnField
 			? [
 					[

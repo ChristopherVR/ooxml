@@ -7,14 +7,14 @@ export function pivotFieldIndex(field: XmlElement | undefined): number {
 	return Number.isSafeInteger(value) ? value : NaN;
 }
 
-/** Native between-field row Values carry an explicit position matching their axis slot. */
+/** Native leading or between-field row Values carry an explicit position matching their axis slot. */
 export function pivotValueIndex(root: XmlElement, axis: readonly XmlElement[]): number {
 	const index = axis.findIndex((field) => pivotFieldIndex(field) === -2);
 	const position = root.getAttribute('dataPosition');
 	if (position !== null && (!/^\d+$/.test(position.trim()) || Number(position) !== index))
 		throw new Error('Inconsistent Values axis position');
-	if (axis.length === 3 && index === 1 && position === null)
-		throw new Error('Missing between-field Values position');
+	if (axis.length === 3 && index < 2 && position === null)
+		throw new Error('Missing leading or between-field Values position');
 	return index;
 }
 /** Native Values-on-columns entries, with each measure nested inside each column item. */
@@ -38,7 +38,7 @@ export function pivotValueAxisItems(measures: number, columns?: number): string 
 	return `<colItems count="${entries.length}">${entries.join('')}</colItems>`;
 }
 
-/** Values follow the column field, or sit last/between two real row fields. */
+/** Values follow the column field, or sit last/between/before two real row fields. */
 export function supportedPivotAxes(
 	rows: readonly XmlElement[],
 	columns: readonly XmlElement[],
@@ -50,7 +50,7 @@ export function supportedPivotAxes(
 		return (
 			measures > 1 &&
 			(rows.length === 2 || rows.length === 3) &&
-			index(rows[0]) >= 0 &&
+			(index(rows[0]) >= 0 || rows.length === 3) &&
 			rows.filter((field) => index(field) === -2).length === 1 &&
 			rows.filter((field) => index(field) !== -2).every((field) => index(field) >= 0) &&
 			columns.length <= 1 &&

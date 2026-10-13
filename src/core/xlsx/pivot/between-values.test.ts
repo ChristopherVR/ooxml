@@ -74,7 +74,7 @@ it.each([
 	expect(wb.sheets[0]!.pivotTables![0]?.valuesPosition).toBe('between');
 });
 
-it.each(['first', '', null, 1, false])(
+it.each(['unsupported', '', null, 1, false])(
 	'refuses malformed public Values position %s atomically',
 	async (position) => {
 		const wb = await loadXlsx(native()),
@@ -143,7 +143,7 @@ it.each([undefined, '', '0', '2', '1.5', '1.0', 'NaN'])(
 	},
 );
 
-it('preserves actual native Values-first parts instead of admitting an unmodeled order', async () => {
+it('admits actual native Values-first while retaining untouched source parts', async () => {
 	const source = await JSZip.loadAsync(
 		readFileSync(
 			new URL(
@@ -153,7 +153,7 @@ it('preserves actual native Values-first parts instead of admitting an unmodeled
 		),
 	);
 	const wb = await loadXlsx(await source.generateAsync({ type: 'uint8array' }));
-	expect(wb.sheets[0]!.pivotTables ?? []).toHaveLength(0);
+	expect(wb.sheets[0]!.pivotTables?.[0]?.valuesPosition).toBe('first');
 	const saved = await JSZip.loadAsync(await saveXlsx(wb));
 	for (const part of Object.keys(source.files).filter(
 		(name) => name.startsWith('xl/pivot') && !source.files[name]!.dir,

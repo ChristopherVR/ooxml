@@ -111,10 +111,16 @@ export function validatePivotFields(
 	const extras = pivot.additionalValues ?? [];
 	if (pivot.valuesAxis !== undefined && !['columns', 'rows'].includes(pivot.valuesAxis))
 		throw new Error('Choose a valid Values axis.');
-	if (pivot.valuesPosition !== undefined && !['last', 'between'].includes(pivot.valuesPosition))
+	if (
+		pivot.valuesPosition !== undefined &&
+		!['last', 'between', 'first'].includes(pivot.valuesPosition)
+	)
 		throw new Error('Choose a valid Values position.');
-	if (pivot.valuesPosition === 'between' && (pivot.valuesAxis !== 'rows' || !pivot.secondRowField))
-		throw new Error('Values between fields require two row fields and Values on rows.');
+	if (
+		(pivot.valuesPosition === 'between' || pivot.valuesPosition === 'first') &&
+		(pivot.valuesAxis !== 'rows' || !pivot.secondRowField)
+	)
+		throw new Error('Values before or between fields require two row fields and Values on rows.');
 	if (pivot.valuesAxis === 'rows' && (!Array.isArray(extras) || !extras.length))
 		throw new Error('Values on rows require multiple measures.');
 	if (

@@ -35,8 +35,8 @@ export interface PivotTable {
 	additionalValues?: PivotValueField[];
 	/** Values on rows require multiple measures and one or two real row fields. */
 	valuesAxis?: 'columns' | 'rows';
-	/** Row Values follow both real fields by default, or sit between two real fields. */
-	valuesPosition?: 'last' | 'between';
+	/** Row Values follow both real fields by default, or sit between/before two real fields. */
+	valuesPosition?: 'last' | 'between' | 'first';
 	/** Cached source fields and records. Refresh replaces these together with the output cells. */
 	fields: string[];
 	records: CellValue[][];
@@ -60,7 +60,7 @@ export interface PivotTableOptions {
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
-	valuesPosition?: 'last' | 'between';
+	valuesPosition?: 'last' | 'between' | 'first';
 	aggregate?: PivotAggregate;
 	name?: string;
 }

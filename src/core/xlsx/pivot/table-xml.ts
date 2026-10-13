@@ -43,18 +43,24 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 		'<i t="grand"><x/></i>';
 	const header = grid.firstHeaderRow ?? (multiple && col >= 0 ? 1 : grid.firstDataRow - 1);
 	const rowIndices =
-		rowsAxis && pivot.valuesPosition === 'between'
-			? [row, -2, second]
-			: [row, ...(second >= 0 ? [second] : []), ...(rowsAxis ? [-2] : [])];
+		rowsAxis && pivot.valuesPosition === 'first'
+			? [-2, row, second]
+			: rowsAxis && pivot.valuesPosition === 'between'
+				? [row, -2, second]
+				: [row, ...(second >= 0 ? [second] : []), ...(rowsAxis ? [-2] : [])];
 	let previous: number[] = [];
 	const rowItems =
 		grid.rowEntries
 			?.map((entry) => {
 				let prefix = 0;
-				if (!entry.type)
+				if (entry.type === 'default' && rowsAxis && pivot.valuesPosition === 'first') prefix = 1;
+				else if (!entry.type)
 					while (prefix < entry.indices.length - 1 && entry.indices[prefix] === previous[prefix])
 						prefix++;
-				previous = entry.type ? [] : entry.indices;
+				previous =
+					entry.type && !(entry.type === 'default' && pivot.valuesPosition === 'first')
+						? []
+						: entry.indices;
 				return `<i${attrs({ t: entry.type, r: prefix || undefined, i: entry.measure || undefined })}>${entry.indices
 					.slice(prefix)
 					.map((index) => `<x${attrs({ v: index || undefined })}/>`)
@@ -79,7 +85,8 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	root.setAttribute('name', pivot.name);
 	root.setAttribute('cacheId', String(cacheId));
 	root.setAttribute('dataOnRows', rowsAxis ? '1' : '0');
-	if (rowsAxis && pivot.valuesPosition === 'between') root.setAttribute('dataPosition', '1');
+	if (rowsAxis && (pivot.valuesPosition === 'between' || pivot.valuesPosition === 'first'))
+		root.setAttribute('dataPosition', pivot.valuesPosition === 'first' ? '0' : '1');
 	else root.removeAttribute('dataPosition');
 	root.setAttribute('compact', compact ? '1' : '0');
 	root.setAttribute('compactData', compact ? '1' : '0');
