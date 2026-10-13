@@ -34,7 +34,7 @@ import { createInspectorDeckActions, provideInspectorDeck } from './inspector-de
 import { createOpenFile } from './open-file';
 import { PresentationLoader } from './presentation-loader.svelte';
 import { runQuickAccessCommand } from './quick-access-commands';
-import { provideRenderContext } from './render-context';
+import { provideRenderContext, renderContextSourceFor } from './render-context';
 import { provideRendering3DFlags } from './rendering-3d-flags-context';
 import { provideTableCellSelection } from './table-cell-selection-context';
 import { ViewerState } from './viewer-state.svelte';
@@ -101,12 +101,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	};
 
 	const loader = new PresentationLoader();
-	provideRenderContext({
-		getColorScheme: () => loader.colorScheme,
-		getTableStyleMap: () => loader.tableStyleMap,
-		getFontScheme: () => loader.presentationTheme?.fontScheme,
-		getCanvasSize: () => loader.canvasSize,
-	});
+	provideRenderContext(renderContextSourceFor(loader));
 	const viewer = new ViewerState();
 	// The `use*Cluster` helpers below are named after this codebase's
 	// pre-existing Svelte `$effect`-registering-function convention (e.g.
