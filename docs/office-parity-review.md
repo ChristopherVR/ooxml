@@ -213,7 +213,7 @@ Recommended next batches:
 1. Expand native Office acceptance corpora for the most-used document workflows.
 2. Word nested and vertically merged table pagination, page-story editing and continuous sections with notes.
 3. PowerPoint native rendering comparisons, chart series/category editing and broader clipboard preservation.
-4. Excel compact/outline and multi-measure pivot layouts, plus remaining print formatting/drawing fidelity.
+4. Excel multi-measure pivot layouts, grouping and remaining print formatting/drawing fidelity.
 5. Visio geometry/text comparisons and curved connectors, followed by remaining data graphics controls.
 
 Microsoft's [page jump style enum](https://learn.microsoft.com/en-us/office/client-developer/visio/linejumpstyle-cell-page-layout-section),
@@ -227,7 +227,9 @@ Word compatibility mode 15 supports independent, balanced footnote columns, incl
 
 Excel sparkline date axes now have authoring and settings controls, chronological point ordering, paired hidden-cell filtering and native-measured column widths. The saved date range supports clear and undo. Native Excel acceptance covers these paths; fractional and out-of-calendar serials remain independently unvalidated.
 
-Tabular PivotTables now support two row fields, optional bottom automatic subtotals and repeated labels, with one measure and an optional column axis. Native Excel acceptance compares every cached and refreshed output cell across 25 cases, including blank, numeric, boolean and error labels. More than two row fields, compact/outline layouts, top/custom subtotals, multiple measures and grouping remain unsupported and preserved. Typed-cache flags and text labels were also corrected for the existing one-row authoring path.
+PivotTables support tabular, compact and outline layouts with one or two row fields, one measure and an optional column axis. Compact/outline layouts offer top, bottom or no automatic subtotals; outline/tabular layouts support repeated labels. Native Excel acceptance compares every cached and refreshed output cell, type, dimension and compact indentation across 46 cases. More than two row fields, custom subtotals/indentation, multiple measures, grouping, mixed field layouts and shared caches remain unsupported and preserved. Conflicting global layout flags are rejected for editing rather than normalized on refresh. Typed-cache flags and text labels are also covered.
+
+Excel print headers and footers now render styled runs for font family, font size, RGB color and bold/italic/underline/strike toggles, with formatting controls in Page Setup. Native Excel PDF checks verify font, size and color, and browser checks cover save/reopen, computed preview styles and a four-page PDF. Theme colors, images, page offsets, double underline, superscript/subscript and unknown font styles remain preserved but unsupported in this preview.
 
 PowerPoint chart titles are searchable across all five bindings. Simple rich titles support replacement, history and saving while preserving authored run/paragraph XML and embedded workbook bytes. Linked, ChartEx, shared-part and complex titles are read-only search targets; replacement rejects them atomically, and the chart-title scope can be excluded. Complex field values are not comprehensively indexed, and chart series/category replacement remains unimplemented. Ten browser cases and five native PowerPoint reopen cases cover this batch. Speaker-note and clipboard controls use the shared UI components and translated labels.
 

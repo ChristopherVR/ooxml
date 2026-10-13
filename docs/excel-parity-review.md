@@ -105,3 +105,19 @@ editor remain the implementation path.
 
 The browser test inspects visible cells because the grid pools hidden nodes
 whose text remains in the DOM after their cells disappear.
+
+## Subsequent native-validated workflows
+
+Pivot authoring now supports tabular, compact and outline layouts, one or two
+row fields, one value field and an optional column field. Automatic subtotals
+can appear above or below compact/outline groups, or be hidden. Outline and
+tabular layouts support repeated labels. The native corpus contains 46 cases
+with cached/refreshed cell values, types, dimensions and compact indentation
+checked. Custom or conflicting layout profiles remain preserved and read-only.
+Multi-value layouts, grouping, slicers and shared-cache refresh remain gaps.
+
+Paginated preview and print fields support saved page setup, header/footer
+fields and rich formatting: font family/size, RGB color, bold, italic,
+underline and strike. Native PDF checks and browser save/reopen tests verify
+the supported styles. Theme colors, images, page offsets, double underline,
+super/subscript and unknown font styles remain outside preview support.
