@@ -7,6 +7,7 @@ for (const name of [
 	'numeric-field-native',
 	'numeric-field-boundary-native',
 	'numeric-field-general-native',
+	'numeric-field-fraction-native',
 ]) {
 	const native = new URL(`../../src/core/visio/__fixtures__/${name}.vsdx`, import.meta.url);
 	const evidence = JSON.parse(

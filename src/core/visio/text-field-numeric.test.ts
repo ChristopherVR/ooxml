@@ -37,7 +37,7 @@ describe('native decimal text field pictures', () => {
 		const length = { kind: 'number', value: 2, unit: 'length' } as const;
 		expect(numericFieldPicture(length, 3, 'DL')).toBeUndefined();
 		expect(numericFieldPicture(length, 3, 'DEG')).toBeUndefined();
-		expect(numericFieldPicture(length, 15, 'IN')).toBeUndefined();
+		expect(numericFieldPicture(length, 13, 'IN')).toBeUndefined();
 		expect(numericFieldPicture(length, 3.5, 'IN')).toBeUndefined();
 	});
 });

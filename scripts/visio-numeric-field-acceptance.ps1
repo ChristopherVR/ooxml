@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$OutputDirectory, [switch]$BoundaryCases, [switch]$GeneralCases)
+param([Parameter(Mandatory=$true)][string]$OutputDirectory, [switch]$BoundaryCases, [switch]$GeneralCases, [switch]$FractionCases)
 $ErrorActionPreference='Stop'
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $OutputDirectory=(Resolve-Path -LiteralPath $OutputDirectory).Path
@@ -9,6 +9,11 @@ if ($GeneralCases) {
  $prefix='numeric-field-general-native'
 }
 $codes=if($GeneralCases){0..1}else{2..9}
+if($FractionCases) {
+ $codes=15..18
+ $values=@('1.23456','-1.23456','0.125','-0.125','0','0.05','-0.05','0.0555555555555556','-0.0555555555555556','0.5','0.9999','1.9999','-0.9999','0.333333333333333','2.666666666666667','1.25 in','31.75 mm','3.175 cm','1.25 ft','45.125 deg','0.625 rad','0.000001','999.9999','-999.9999')
+ $prefix='numeric-field-fraction-native'
+}
 $app=New-Object -ComObject Visio.InvisibleApp
 $app.AlertResponse=7
 try {
