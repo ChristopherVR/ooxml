@@ -1,5 +1,6 @@
 import { visioFormulaCachedValue } from './formula';
 import { visioFieldCase } from './text-field-case';
+import { numericFieldPicture } from './text-field-numeric';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	evaluateVisioTextField,
@@ -58,6 +59,8 @@ export function textFieldDisplay(
 			if (code === '0' || code === '37') text = source.text;
 			else if (code === '38' || code === '39') text = visioFieldCase(source.text, code === '39');
 		}
+		if (source?.kind === 'number' && code !== undefined)
+			text = numericFieldPicture(source, Number(code), value?.unit) ?? cached;
 		return { text, ...result };
 	}
 	const text = source ? formatVisioFieldValue(source, picture) : undefined;

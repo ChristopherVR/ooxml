@@ -1,0 +1,453 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "id": 1,
+      "code": 2,
+      "formula": "73.456",
+      "text": "73",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 2,
+      "code": 2,
+      "formula": "-2.3456",
+      "text": "-2",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 3,
+      "code": 2,
+      "formula": "73.456 in",
+      "text": "73",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 4,
+      "code": 2,
+      "formula": "73.456 mm",
+      "text": "73",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 5,
+      "code": 2,
+      "formula": "7.3456 cm",
+      "text": "7",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 6,
+      "code": 2,
+      "formula": "2.3456 ft",
+      "text": "2",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 7,
+      "code": 2,
+      "formula": "45.6789 deg",
+      "text": "46",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 8,
+      "code": 2,
+      "formula": "0.73456 rad",
+      "text": "1",
+      "format": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 9,
+      "code": 3,
+      "formula": "73.456",
+      "text": "73",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 10,
+      "code": 3,
+      "formula": "-2.3456",
+      "text": "-2",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 11,
+      "code": 3,
+      "formula": "73.456 in",
+      "text": "73 in.",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 12,
+      "code": 3,
+      "formula": "73.456 mm",
+      "text": "73 mm.",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 13,
+      "code": 3,
+      "formula": "7.3456 cm",
+      "text": "7 cm.",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 14,
+      "code": 3,
+      "formula": "2.3456 ft",
+      "text": "2 ft.",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 15,
+      "code": 3,
+      "formula": "45.6789 deg",
+      "text": "46 deg.",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 16,
+      "code": 3,
+      "formula": "0.73456 rad",
+      "text": "1 rad.",
+      "format": "FIELDPICTURE(3)"
+    },
+    {
+      "id": 17,
+      "code": 4,
+      "formula": "73.456",
+      "text": "73.5",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 18,
+      "code": 4,
+      "formula": "-2.3456",
+      "text": "-2.3",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 19,
+      "code": 4,
+      "formula": "73.456 in",
+      "text": "73.5",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 20,
+      "code": 4,
+      "formula": "73.456 mm",
+      "text": "73.5",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 21,
+      "code": 4,
+      "formula": "7.3456 cm",
+      "text": "7.3",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 22,
+      "code": 4,
+      "formula": "2.3456 ft",
+      "text": "2.3",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 23,
+      "code": 4,
+      "formula": "45.6789 deg",
+      "text": "45.7",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 24,
+      "code": 4,
+      "formula": "0.73456 rad",
+      "text": "0.7",
+      "format": "FIELDPICTURE(4)"
+    },
+    {
+      "id": 25,
+      "code": 5,
+      "formula": "73.456",
+      "text": "73.5",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 26,
+      "code": 5,
+      "formula": "-2.3456",
+      "text": "-2.3",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 27,
+      "code": 5,
+      "formula": "73.456 in",
+      "text": "73.5 in.",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 28,
+      "code": 5,
+      "formula": "73.456 mm",
+      "text": "73.5 mm.",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 29,
+      "code": 5,
+      "formula": "7.3456 cm",
+      "text": "7.3 cm.",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 30,
+      "code": 5,
+      "formula": "2.3456 ft",
+      "text": "2.3 ft.",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 31,
+      "code": 5,
+      "formula": "45.6789 deg",
+      "text": "45.7 deg.",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 32,
+      "code": 5,
+      "formula": "0.73456 rad",
+      "text": "0.7 rad.",
+      "format": "FIELDPICTURE(5)"
+    },
+    {
+      "id": 33,
+      "code": 6,
+      "formula": "73.456",
+      "text": "73.46",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 34,
+      "code": 6,
+      "formula": "-2.3456",
+      "text": "-2.35",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 35,
+      "code": 6,
+      "formula": "73.456 in",
+      "text": "73.46",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 36,
+      "code": 6,
+      "formula": "73.456 mm",
+      "text": "73.46",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 37,
+      "code": 6,
+      "formula": "7.3456 cm",
+      "text": "7.35",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 38,
+      "code": 6,
+      "formula": "2.3456 ft",
+      "text": "2.35",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 39,
+      "code": 6,
+      "formula": "45.6789 deg",
+      "text": "45.68",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 40,
+      "code": 6,
+      "formula": "0.73456 rad",
+      "text": "0.73",
+      "format": "FIELDPICTURE(6)"
+    },
+    {
+      "id": 41,
+      "code": 7,
+      "formula": "73.456",
+      "text": "73.46",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 42,
+      "code": 7,
+      "formula": "-2.3456",
+      "text": "-2.35",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 43,
+      "code": 7,
+      "formula": "73.456 in",
+      "text": "73.46 in.",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 44,
+      "code": 7,
+      "formula": "73.456 mm",
+      "text": "73.46 mm.",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 45,
+      "code": 7,
+      "formula": "7.3456 cm",
+      "text": "7.35 cm.",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 46,
+      "code": 7,
+      "formula": "2.3456 ft",
+      "text": "2.35 ft.",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 47,
+      "code": 7,
+      "formula": "45.6789 deg",
+      "text": "45.68 deg.",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 48,
+      "code": 7,
+      "formula": "0.73456 rad",
+      "text": "0.73 rad.",
+      "format": "FIELDPICTURE(7)"
+    },
+    {
+      "id": 49,
+      "code": 8,
+      "formula": "73.456",
+      "text": "73.456",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 50,
+      "code": 8,
+      "formula": "-2.3456",
+      "text": "-2.346",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 51,
+      "code": 8,
+      "formula": "73.456 in",
+      "text": "73.456",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 52,
+      "code": 8,
+      "formula": "73.456 mm",
+      "text": "73.456",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 53,
+      "code": 8,
+      "formula": "7.3456 cm",
+      "text": "7.346",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 54,
+      "code": 8,
+      "formula": "2.3456 ft",
+      "text": "2.346",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 55,
+      "code": 8,
+      "formula": "45.6789 deg",
+      "text": "45.679",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 56,
+      "code": 8,
+      "formula": "0.73456 rad",
+      "text": "0.735",
+      "format": "FIELDPICTURE(8)"
+    },
+    {
+      "id": 57,
+      "code": 9,
+      "formula": "73.456",
+      "text": "73.456",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 58,
+      "code": 9,
+      "formula": "-2.3456",
+      "text": "-2.346",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 59,
+      "code": 9,
+      "formula": "73.456 in",
+      "text": "73.456 in.",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 60,
+      "code": 9,
+      "formula": "73.456 mm",
+      "text": "73.456 mm.",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 61,
+      "code": 9,
+      "formula": "7.3456 cm",
+      "text": "7.346 cm.",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 62,
+      "code": 9,
+      "formula": "2.3456 ft",
+      "text": "2.346 ft.",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 63,
+      "code": 9,
+      "formula": "45.6789 deg",
+      "text": "45.679 deg.",
+      "format": "FIELDPICTURE(9)"
+    },
+    {
+      "id": 64,
+      "code": 9,
+      "formula": "0.73456 rad",
+      "text": "0.735 rad.",
+      "format": "FIELDPICTURE(9)"
+    }
+  ]
+}
