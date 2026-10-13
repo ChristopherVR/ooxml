@@ -83,6 +83,15 @@ describe('resolveTitleBarStrip', () => {
 });
 
 describe('pptx-ui-title-bar', () => {
+	it('keeps search hooks when a capture library shallow-clones the title bar', () => {
+		const host = mount();
+		const clone = host.cloneNode(false) as typeof host;
+		document.body.append(clone);
+		const search = root(clone).querySelector('[part="search"]');
+		expect(search?.hasAttribute('data-pptx-search-surface')).toBe(true);
+		expect(search?.hasAttribute('data-pptx-search-input')).toBe(true);
+	});
+
 	it('renders the row, names, status and gates editing-only parts', () => {
 		const host = mount();
 		expect(host.hasAttribute('data-pptx-title-bar')).toBeTruthy();

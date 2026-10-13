@@ -204,6 +204,8 @@ test.describe('raster export fidelity: foreignObject vs html2canvas vs on-screen
 			viewport: VIEWPORT,
 			deviceScaleFactor: 2,
 		});
+		const fallbackErrors: string[] = [];
+		html2canvasPage.on('pageerror', (error) => fallbackErrors.push(error.message));
 		await forceHtml2CanvasFallback(html2canvasPage);
 		await observeHtml2CanvasRuns(html2canvasPage);
 		await loadDeck(html2canvasPage, FIDELITY_DECK);
@@ -213,6 +215,7 @@ test.describe('raster export fidelity: foreignObject vs html2canvas vs on-screen
 		const forcedFailures = await countForcedFallbacks(html2canvasPage);
 		const fallbackHtml2CanvasRuns = await countHtml2CanvasRuns(html2canvasPage);
 		await html2canvasPage.close();
+		expect(fallbackErrors, 'capture must not throw while cloning the viewer chrome').toEqual([]);
 		expect(forcedFailures, 'the forced-failure stub must have fired').toBeGreaterThan(0);
 		expect(fallbackHtml2CanvasRuns, 'the forced page must have run html2canvas').toBeGreaterThan(0);
 

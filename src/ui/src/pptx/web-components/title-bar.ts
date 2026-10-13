@@ -152,8 +152,6 @@ export function definePptxTitleBar(registry: CustomElementRegistry): void {
 			if (this.shadowRoot) {
 				attachControlStyles(this.shadowRoot, bridgeCss('pptx-ui-title-bar'));
 			}
-			this.searchField.setAttribute('data-pptx-search-surface', '');
-			this.searchField.setAttribute('data-pptx-search-input', '');
 		}
 		get state(): TitleBarViewState {
 			return this.#model;
@@ -174,6 +172,10 @@ export function definePptxTitleBar(registry: CustomElementRegistry): void {
 			this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
 		}
 		rendered(): void {
+			// Capture libraries clone disconnected custom elements before their search field exists.
+			const search = this.shadowRoot?.querySelector('[part="search"]');
+			search?.setAttribute('data-pptx-search-surface', '');
+			search?.setAttribute('data-pptx-search-input', '');
 			const below = this.placement === 'belowRibbon';
 			// Stable hooks for tests and host CSS; the row is `[data-pptx-title-bar]`.
 			this.toggleAttribute('data-pptx-title-bar', !below);
