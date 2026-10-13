@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { PptxRuntimeDependencyFactory } from '../core/factories/PptxRuntimeDependencyFactory';
 import type { XmlObject } from '../types';
 import { customGeometryPathsToXml } from './custom-geometry';
+import {
+	orderedPathCommandEntries,
+	readPathListCommandOrder,
+	restorePathListCommandOrder,
+} from './custom-geometry-command-order';
 import { parseStructuredCustomGeometry } from './custom-geometry-parser';
 
 const ensureArray = (value: unknown): unknown[] =>
@@ -62,5 +67,64 @@ describe('custom geometry command order', () => {
 			'lineTo',
 			'close',
 		]);
+	});
+
+	describe('order as plain data (survives a copy of the tree)', () => {
+		const xml =
+			'<p:sp xmlns:p="urn:p" xmlns:a="urn:a"><p:spPr><a:custGeom><a:pathLst>' +
+			'<a:path w="100" h="100"><a:moveTo><a:pt x="0" y="0"/></a:moveTo>' +
+			'<a:cubicBezTo><a:pt x="1" y="1"/><a:pt x="2" y="2"/><a:pt x="3" y="3"/></a:cubicBezTo>' +
+			'<a:lnTo><a:pt x="4" y="4"/></a:lnTo>' +
+			'<a:cubicBezTo><a:pt x="5" y="5"/><a:pt x="6" y="6"/><a:pt x="7" y="7"/></a:cubicBezTo>' +
+			'<a:close/></a:path>' +
+			'<a:path w="10" h="10"><a:moveTo><a:pt x="0" y="0"/></a:moveTo>' +
+			'<a:lnTo><a:pt x="10" y="0"/></a:lnTo></a:path>' +
+			'</a:pathLst></a:custGeom></p:spPr></p:sp>';
+		const order = ['moveTo', 'cubicBezTo', 'lnTo', 'cubicBezTo', 'close'];
+		const names = (path: XmlObject): string[] =>
+			orderedPathCommandEntries(path, ensureArray).map(([key]) => key.replace('a:', ''));
+		const pathLstOf = (parsed: XmlObject): XmlObject =>
+			customGeometryFrom(parsed)['a:pathLst'] as XmlObject;
+		const firstPath = (pathLst: XmlObject): XmlObject =>
+			ensureArray(pathLst['a:path'])[0] as XmlObject;
+
+		it('loses the order on a copy, and restores it from the recorded data', () => {
+			const parsed = new PptxRuntimeDependencyFactory().createParser().parse(xml) as XmlObject;
+			const pathLst = pathLstOf(parsed);
+			expect(names(firstPath(pathLst))).toStrictEqual(order);
+
+			const recorded = readPathListCommandOrder(pathLst);
+			expect(recorded).toStrictEqual([order, ['moveTo', 'lnTo']]);
+
+			const copy = structuredClone(pathLst);
+			// The copy's objects were never annotated: grouped by type.
+			expect(names(firstPath(copy))).toStrictEqual([
+				'moveTo',
+				'cubicBezTo',
+				'cubicBezTo',
+				'lnTo',
+				'close',
+			]);
+			restorePathListCommandOrder(copy, structuredClone(recorded));
+			expect(names(firstPath(copy))).toStrictEqual(order);
+		});
+
+		it('ignores an order whose commands do not match the path', () => {
+			const parsed = new PptxRuntimeDependencyFactory().createParser().parse(xml) as XmlObject;
+			const copy = structuredClone(pathLstOf(parsed));
+			restorePathListCommandOrder(copy, [['moveTo', 'lnTo', 'close']]);
+			expect(names(firstPath(copy))).toStrictEqual([
+				'moveTo',
+				'cubicBezTo',
+				'cubicBezTo',
+				'lnTo',
+				'close',
+			]);
+		});
+
+		it('returns undefined when no path carries an order', () => {
+			expect(readPathListCommandOrder(undefined)).toBeUndefined();
+			expect(readPathListCommandOrder({ 'a:path': { 'a:moveTo': {} } })).toBeUndefined();
+		});
 	});
 });

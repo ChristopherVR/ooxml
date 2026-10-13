@@ -31,6 +31,7 @@ import type {
 } from '../types';
 import { ensureArrayValue } from '../utils';
 import { customGeometryPathsToXml } from './custom-geometry';
+import { restorePathListCommandOrder } from './custom-geometry-command-order';
 import { resolveCustomGeometryGuideContext } from './custom-geometry-guides';
 import { buildCustomGeometryPathsFromNodes } from './custom-geometry-parser';
 import { evaluateGeometryPaths } from './guide-formula-paths';
@@ -38,9 +39,16 @@ import { evaluateGeometryPaths } from './guide-formula-paths';
 /** `(value) => unknown[]`, wrapping the generic `ensureArrayValue` for callers below. */
 const ensureArray = (value: unknown): unknown[] => ensureArrayValue<unknown>(value);
 
-/** The `a:pathLst/a:path` node array preserved on `rawData.pathLstXml`, or empty. */
+/**
+ * The `a:pathLst/a:path` node array preserved on `rawData.pathLstXml`, or
+ * empty, with each path's recorded source command order re-attached: the raw
+ * data may be a copy (an undo snapshot, a duplicate) whose path objects never
+ * passed through the parser, and without the order the evaluation below would
+ * emit the commands grouped by type (a rounded pill saved as a bowtie).
+ */
 function pathNodesOf(rawData: CustomGeometryRawData | undefined): XmlObject[] {
 	const pathLst = rawData?.pathLstXml as XmlObject | undefined;
+	restorePathListCommandOrder(pathLst, rawData?.pathCommandOrder);
 	return ensureArrayValue(pathLst?.['a:path']) as XmlObject[];
 }
 
