@@ -356,7 +356,9 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 
 					<ToolbarLateTabs p={p} section={section} />
 
-					{contextual.active && !addIns.active && <ContextualTabSection tab={contextual.active} />}
+					{contextual.active && !addIns.active && (
+						<ContextualTabSection tab={contextual.active} hiddenActions={p.hiddenActions} />
+					)}
 
 					{addIns.active && <RibbonAddInSection tab={addIns.active} />}
 				</div>
