@@ -115,3 +115,4 @@ export {
 	shouldHoldEndState,
 } from './animation-effect-timing';
 export type { EffectTimingInput, EffectTimingResolution } from './animation-effect-timing';
+export { resolveVisibilitySetTiming } from './native-animation-visibility-timing';

@@ -527,6 +527,10 @@ export interface PptxNativeAnimation {
 	cTnAttributes?: Record<string, unknown>;
 	/** Parent timing cannot be reduced to the bounded fixed-opacity interval. */
 	unsupportedOpacitySetTiming?: boolean;
+	/** Admitted isolated held whole-shape visibility flip from native preset zero. */
+	visibilitySetTiming?: PptxVisibilitySetTiming;
+	/** A retained preset-zero visibility body has an unmeasured target, value or clock. */
+	unsupportedVisibilitySet?: boolean;
 	/**
 	 * Whether the OOXML `p:cTn/@afterEffect` flag is set. Indicates this node
 	 * runs after the parent effect's main body has completed; affects how
@@ -1109,4 +1113,11 @@ export interface PptxAnimationTimelineAnchor {
 	targetIds: string[];
 	/** Effect preset classes present in the group (entr/exit/emph/path). */
 	presetClasses: Array<'entr' | 'exit' | 'emph' | 'path'>;
+}
+
+export interface PptxVisibilitySetTiming {
+	/** Delay from effect start until the shape becomes visible. */
+	delayMs: number;
+	/** Native one-millisecond visibility behavior interval. */
+	durationMs: number;
 }
