@@ -1,6 +1,20 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Report Filter Field:': [
+		'Champ de filtre du rapport :',
+		'Berichtsfilterfeld:',
+		'Campo de filtro del informe:',
+		'报表筛选字段：',
+	],
+	'Report Filter Item:': [
+		'Élément du filtre du rapport :',
+		'Berichtsfilterelement:',
+		'Elemento de filtro del informe:',
+		'报表筛选项：',
+	],
+	'(All)': ['(Tous)', '(Alle)', '(Todos)', '（全部）'],
+	'(blank)': ['(vide)', '(leer)', '(en blanco)', '（空白）'],
 	'Before row fields': [
 		'Avant les champs de ligne',
 		'Vor den Zeilenfeldern',

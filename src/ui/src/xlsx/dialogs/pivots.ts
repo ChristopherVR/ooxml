@@ -10,6 +10,7 @@ import {
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
+import { pivotPageControls } from './pivot-page-filter';
 import { pivotValueControls, PIVOT_AGGREGATE_OPTIONS } from './pivot-values';
 
 export function openPivotTable(ctx: EditorContext, settings = false): Promise<boolean | undefined> {
@@ -75,12 +76,20 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		},
 		pivot?.fields,
 	);
+	let pageData: Pick<import('ooxml-core/xlsx').PivotTable, 'fields' | 'records'> = pivot ?? {
+		fields: [],
+		records: [],
+	};
+	const page = pivotPageControls(ctx, pivot?.pageFilter, () => pageData);
 	const loadFields = () => {
 		let fields: string[];
 		try {
-			fields = pivotSourceData(ctx.workbook()!, t.sheet, source.value).fields;
+			const data = pivotSourceData(ctx.workbook()!, t.sheet, source.value);
+			fields = data.fields;
+			pageData = pivot ?? data;
 		} catch {
 			fields = [];
+			pageData = pivot ?? { fields: [], records: [] };
 		}
 		extras.load(fields);
 		for (const [control, chosen, optional] of [
@@ -105,8 +114,17 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	source.addEventListener('change', loadFields);
 	loadFields();
 	const updateRows = () => {
+		extras.load(pageData.fields.filter((name) => name !== page.source.value));
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
+		page.update(!!second.value || axis.value === 'rows', [
+			row.value,
+			column.value,
+			value.value,
+			...extras.read().map((v) => v.field),
+		]);
+		second.disabled = !!page.source.value;
+		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled = !!page.source.value;
 		const rowsAxis = axis.value === 'rows';
 		valuesPlacement.disabled = !rowsAxis || !second.value;
 		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
@@ -139,6 +157,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	valuesPlacement.addEventListener('change', updateRows);
 	layout.addEventListener('change', updateRows);
 	subtotals.input.addEventListener('change', updateRows);
+	for (const control of [page.source, row, column, value, extras.host])
+		control.addEventListener('change', updateRows);
 	second.addEventListener('change', updateRows);
 	source.addEventListener('change', updateRows);
 	updateRows();
@@ -156,6 +176,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			tabularNotice,
 			repeat.wrapper,
 			field(ctx, 'Column Field:', column),
+			...page.body,
 			field(ctx, 'Value Field:', value),
 			field(ctx, 'Summarize Values By:', aggregate),
 			extras.host,
@@ -165,7 +186,9 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		],
 		opened: () => (settings ? row : source).focus(),
 		submit: () => {
+			const pageFilter = page.read();
 			const options = {
+				...(pageFilter ? { pageFilter } : {}),
 				rowField: row.value,
 				valuesAxis: axis.value as 'columns' | 'rows',
 				valuesPosition: valuesPlacement.value as 'last' | 'between' | 'first',
@@ -181,6 +204,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			};
 			if (pivot) {
 				if (
+					(pivot.pageFilter?.field ?? '') !== (pageFilter?.field ?? '') ||
+					JSON.stringify(pivot.pageFilter?.item) !== JSON.stringify(pageFilter?.item) ||
 					pivot.rowField !== options.rowField ||
 					(pivot.valuesAxis ?? 'columns') !== options.valuesAxis ||
 					(pivot.valuesPosition ?? 'last') !== options.valuesPosition ||
@@ -194,7 +219,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					pivot.aggregate !== options.aggregate ||
 					JSON.stringify(pivot.additionalValues ?? []) !== JSON.stringify(options.additionalValues)
 				)
-					t.session.refreshPivotTable(t.sheet, pivot.name, options);
+					t.session.refreshPivotTable(t.sheet, pivot.name, { ...options, pageFilter });
 			} else {
 				const at = parseAddress(destination.value.trim().replaceAll('$', ''));
 				if (!at) throw new Error('The reference is not valid.');
