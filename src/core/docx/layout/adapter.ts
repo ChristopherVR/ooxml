@@ -267,6 +267,10 @@ export function adaptDocumentModel(
 		if (block.type === 'paragraph') return adaptParagraph(block);
 		reportOnce(TABLE_ROW_NOTE);
 		reportOnce(VERTICAL_MERGE_NOTE);
+		if (block.rows.some((row) => row.some((cell) => cell.nestedTables?.length)))
+			reportOnce(
+				'Nested table contents, including their footnote references, are preserved in the source package but are not drawn in Print Layout.',
+			);
 		return adaptTable(block, model, adaptParagraph);
 	}
 

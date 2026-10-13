@@ -8,18 +8,19 @@ interface RowReference {
 	bottom: number;
 }
 /** Preview only the bounded visible prefix, avoiding repeated copies of a long row's tail. */
-function prefix(row: RowLayout, cut: number): RowLayout {
-	const cells = row.cells.map((cell) => {
+function prefix(row: RowLayout, cut: number, cellCuts?: readonly number[]): RowLayout {
+	const cells = row.cells.map((cell, index) => {
+		const contentCut = (cellCuts?.[index] ?? cut) - (row.cellPadding?.[index]?.bottom ?? 0);
 		const boxes = [];
 		for (const box of cell) {
-			if (box.yPx >= cut + 1e-6) break;
-			if (box.yPx + box.heightPx <= cut + 1e-6) {
+			if (box.yPx >= contentCut + 1e-6) break;
+			if (box.yPx + box.heightPx <= contentCut + 1e-6) {
 				boxes.push(box);
 				continue;
 			}
 			const lines = [];
 			for (const line of box.lines) {
-				if (box.yPx + line.yPx + line.heightPx > cut + 1e-6) break;
+				if (box.yPx + line.yPx + line.heightPx > contentCut + 1e-6) break;
 				lines.push(line);
 			}
 			if (lines.length)
@@ -41,7 +42,12 @@ function prefix(row: RowLayout, cut: number): RowLayout {
 	return {
 		...row,
 		cells,
-		heightPx: Math.max(0, ...cells.flatMap((cell) => cell.map((box) => box.yPx + box.heightPx))),
+		heightPx: Math.max(
+			0,
+			...cells.flatMap((cell, index) =>
+				cell.map((box) => box.yPx + box.heightPx + (row.cellPadding?.[index]?.bottom ?? 0)),
+			),
+		),
 	};
 }
 export class TableFootnotes {
@@ -106,10 +112,19 @@ export class TableFootnotes {
 		const contentBottom =
 			this.height() +
 			Math.max(0, ...row.cells.flatMap((cell) => cell.map((box) => box.yPx + box.heightPx)));
-		this.hold(refs, contentBottom <= referenceBottom + 1e-6 ? this.height() + row.heightPx : 0);
+		const paddingBottom = Math.max(0, ...(row.cellPadding ?? []).map((padding) => padding.bottom));
+		this.hold(
+			refs,
+			contentBottom <= referenceBottom + 1e-6
+				? this.height() + row.heightPx
+				: referenceBottom + paddingBottom,
+		);
 	}
 	/** Largest complete prefix that keeps each new marker with available note content. */
-	choose(row: RowLayout, atomic: boolean): { layout: RowLayout; cut: number } | undefined {
+	choose(
+		row: RowLayout,
+		atomic: boolean,
+	): { layout: RowLayout; cut: number; cellCuts?: number[] } | undefined {
 		this.cursor.holdFootnotes(this.table.id, [], 0);
 		const available = this.cursor.remainingHeightPx() - this.height();
 		if (row.heightPx <= available + 1e-6) {
@@ -119,11 +134,12 @@ export class TableFootnotes {
 		}
 		if (!atomic) {
 			const cuts = new Set<number>();
-			for (const cell of row.cells)
+			for (const [index, cell] of row.cells.entries())
 				for (const box of cell) {
 					if (box.yPx > available + 1e-6) break;
 					for (const line of box.lines) {
-						const bottom = box.yPx + line.yPx + line.heightPx;
+						const bottom =
+							box.yPx + line.yPx + line.heightPx + (row.cellPadding?.[index]?.bottom ?? 0);
 						if (bottom > available + 1e-6) break;
 						if (bottom > 0) cuts.add(bottom);
 					}
@@ -131,8 +147,20 @@ export class TableFootnotes {
 			for (const cut of [...cuts].sort((a, b) => b - a)) {
 				const candidate = prefix(row, cut);
 				this.holdCandidate(candidate);
-				if (candidate.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6)
+				if (candidate.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6) {
+					// A delayed marker constrains its own cell; neighboring cells without references
+					// can consume the remaining row space (native padded split-row behavior).
+					const space = this.cursor.remainingHeightPx() - this.height();
+					const cellCuts = row.cells.map((cell) =>
+						cell.some((box) => this.paragraphs.has(box.blockId)) ? cut : space,
+					);
+					const expanded = prefix(row, cut, cellCuts);
+					this.holdCandidate(expanded);
+					if (expanded.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6)
+						return { layout: expanded, cut, cellCuts };
+					this.holdCandidate(candidate);
 					return { layout: candidate, cut };
+				}
 			}
 		}
 		this.holdFragment();

@@ -1,7 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileInput } from './helpers';
-for (const name of ['split-late-reference', 'repeated-header', 'mode14-split-long-note-columns'])
+for (const name of [
+	'padded-split-early',
+	'padded-split-late',
+	'split-late-reference',
+	'repeated-header',
+	'mode14-split-long-note-columns',
+])
 	test(`table notes ${name} retain pagination through edit undo and reopen`, async ({ page }) => {
 		await page.goto('/?framework=vanilla');
 		await (
@@ -32,6 +38,17 @@ for (const name of ['split-late-reference', 'repeated-header', 'mode14-split-lon
 			name === 'mode14-split-long-note-columns' ? 4 : name === 'repeated-header' ? 3 : 2,
 		);
 		await expect(notes.first()).toContainText('N0L00');
+		if (name === 'padded-split-early') {
+			await expect(pages.nth(0).locator('.dve-print-cell').first()).toContainText('T0R0C0L12');
+			await expect(pages.nth(0).locator('.dve-print-cell').first()).not.toContainText('T0R0C0L13');
+			await expect(pages.nth(1).locator('.dve-print-cell').first()).toContainText('T0R0C0L13');
+		}
+		if (name === 'padded-split-late') {
+			await expect(pages.nth(0).locator('.dve-print-footnote')).toHaveCount(0);
+			await expect(pages.nth(0).locator('.dve-print-cell').first()).not.toContainText('T0R0C0L15');
+			await expect(pages.nth(0).locator('.dve-print-cell').nth(1)).toContainText('T0R0C1L16');
+			await expect(pages.nth(1).locator('.dve-print-cell').first()).toContainText('T0R0C0L15');
+		}
 		if (name === 'split-late-reference') {
 			await expect(pages.nth(0).locator('.dve-print-footnote')).toContainText('N0L00');
 			await expect(pages.nth(1).locator('.dve-print-footnote')).toContainText('N0L02');

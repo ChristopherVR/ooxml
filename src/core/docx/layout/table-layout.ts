@@ -8,6 +8,8 @@ export interface RowLayout {
 	heightPx: number;
 	cells: LayoutParagraphBox[][];
 	geometry: LayoutCellGeometry[];
+	/** Vertical cell margins apply to every physical row fragment. */
+	cellPadding?: { top: number; bottom: number }[];
 }
 
 /** Lays out paragraphs stacked top to bottom (a table cell's or a footnote's content). */
@@ -96,7 +98,15 @@ export function layoutRow(
 			: row.heightRule === 'exact'
 				? row.heightPx
 				: Math.max(content, row.heightPx);
-	return { heightPx, cells: laidOut.map((cell) => cell.boxes), geometry };
+	return {
+		heightPx,
+		cells: laidOut.map((cell) => cell.boxes),
+		geometry,
+		cellPadding: row.cells.map((cell) => ({
+			top: cell.padding?.top ?? 0,
+			bottom: cell.padding?.bottom ?? 0,
+		})),
+	};
 }
 
 interface CellSplit {
@@ -158,28 +168,56 @@ export interface RowSplit {
 
 /**
  * Splits a row that does not fit in `cutHeightPx` of remaining page/column
- * space. Every cell is clipped at the same shared line boundary (never
- * mid-line); a cell shorter than the cut simply has nothing in `after`.
+ * space, including bottom padding. Cells normally share the same cut; optional
+ * individual cuts defer a marker without truncating neighboring unreferenced cells.
+ * Splits never cut a line, and continuation fragments retain their top and bottom padding.
  * Returns `after: null` when every cell fit (nothing left to continue).
  */
-export function splitRowAtHeight(row: RowLayout, cutHeightPx: number): RowSplit {
-	const splits = row.cells.map((cell) => splitCellAtHeight(cell, cutHeightPx));
+export function splitRowAtHeight(
+	row: RowLayout,
+	cutHeightPx: number,
+	cellCuts?: readonly number[],
+): RowSplit {
+	const splits = row.cells.map((cell, index) => {
+		const padding = row.cellPadding?.[index] ?? { top: 0, bottom: 0 };
+		const split = splitCellAtHeight(cell, (cellCuts?.[index] ?? cutHeightPx) - padding.bottom);
+		if (split.before.length) split.beforeHeightPx += padding.bottom;
+		if (split.after.length)
+			split.after = split.after.map((box) => ({ ...box, yPx: box.yPx + padding.top }));
+		return split;
+	});
 	const anyAfter = splits.some((split) => split.after.length > 0);
 	const before: RowLayout = {
 		heightPx: Math.max(0, ...splits.map((split) => split.beforeHeightPx)),
 		cells: splits.map((split) => split.before),
-		geometry: row.geometry,
+		geometry: row.geometry.map((geometry, index) => ({
+			...geometry,
+			contentHeightPx: splits[index]!.beforeHeightPx,
+		})),
+		...(row.cellPadding ? { cellPadding: row.cellPadding } : {}),
 	};
 	if (!anyAfter) return { before, after: null };
 	const after: RowLayout = {
 		heightPx: Math.max(
 			0,
-			...splits.map((split) =>
-				split.after.reduce((max, box) => Math.max(max, box.yPx + box.heightPx), 0),
+			...splits.map((split, index) =>
+				split.after.length
+					? split.after.at(-1)!.yPx +
+						split.after.at(-1)!.heightPx +
+						(row.cellPadding?.[index]?.bottom ?? 0)
+					: 0,
 			),
 		),
 		cells: splits.map((split) => split.after),
-		geometry: row.geometry,
+		geometry: row.geometry.map((geometry, index) => ({
+			...geometry,
+			contentHeightPx: splits[index]!.after.length
+				? splits[index]!.after.at(-1)!.yPx +
+					splits[index]!.after.at(-1)!.heightPx +
+					(row.cellPadding?.[index]?.bottom ?? 0)
+				: 0,
+		})),
+		...(row.cellPadding ? { cellPadding: row.cellPadding } : {}),
 	};
 	return { before, after };
 }

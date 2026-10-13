@@ -5,6 +5,8 @@ import { loadDocx } from '../index';
 import { layoutDocumentModel } from './layout';
 const measurer = { widthOf: (text: string) => text.length * 5, lineHeightOf: () => 16 };
 it.each([
+	'padded-split-early',
+	'padded-split-late',
 	'split-late-reference',
 	'repeated-header',
 	'exact-clipped-reference',

@@ -42,10 +42,17 @@ describe('layoutRow', () => {
 			[5, 0],
 			[25, 0],
 		]);
-		const split = splitRowAtHeight(row, 25);
+		// A complete line needs both cell margins on each physical fragment.
+		expect(splitRowAtHeight(row, 25).before.cells[0]).toEqual([]);
+		const split = splitRowAtHeight(row, 30);
 		expect(split.before.cells[0]!.map((paragraph) => paragraph.blockId)).toEqual(['a']);
-		expect(split.after!.cells[0]![0]).toMatchObject({ blockId: 'b', yPx: 0 });
+		expect(split.after!.cells[0]![0]).toMatchObject({ blockId: 'b', yPx: 5 });
 		expect(split.after!.cells[0]![0]!.lines[0]!.yPx).toBe(0);
+		expect([split.before.heightPx, split.after!.heightPx]).toEqual([30, 30]);
+		expect([
+			split.before.geometry[0]!.contentHeightPx,
+			split.after!.geometry[0]!.contentHeightPx,
+		]).toEqual([30, 30]);
 	});
 	it('sizes the row to the tallest cell', () => {
 		const row = layoutRow(threeAndTwoLineRow(), 200, measurer, noop);

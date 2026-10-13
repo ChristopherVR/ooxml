@@ -2,6 +2,10 @@ param([string]$OutputDirectory = (Join-Path $env:TEMP ('ooxml-native-word-table-
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $cases = @(
+ @{name='padded-split-early';rows=1;cellLines=20;noteRow=0;noteCell=0;noteLine=0;noteLines=3;padding=4},
+ @{name='padded-split-late';rows=1;cellLines=20;noteRow=0;noteCell=0;noteLine=15;noteLines=3;padding=4},
+ @{name='vertical-merge-reference';rows=2;cellLines=12;noteRow=1;noteCell=0;noteLine=2;noteLines=3;merge=$true},
+ @{name='nested-table-reference';rows=1;cellLines=1;noteRow=0;noteCell=0;noteLine=0;noteLines=3;nested=$true},
  @{name='short-table';rows=2;cellLines=1;noteRow=0;noteCell=0;noteLine=0;noteLines=3},
  @{name='partial-late-row';rows=1;cellLines=1;noteRow=0;noteCell=0;noteLine=0;noteLines=3;opening=15},
  @{name='late-table-row-group';rows=15;cellLines=1;noteRow=14;noteCell=0;noteLine=0;noteLines=3},
@@ -62,6 +66,16 @@ try {
      }
      $table.Cell($row+1,$cell+1).Range.Text=$lines -join ([string][char]11)
     }
+   }
+   if($case.merge){$table.Cell(1,1).Merge($table.Cell(2,1))}
+   if($case.nested){
+    $range=$table.Cell(1,1).Range.Duplicate
+    $range.Text='Outer cell'
+    $range=$table.Cell(1,1).Range.Duplicate;$range.Collapse(1)
+    $inner=$doc.Tables.Add($range,1,2)
+    $inner.AllowAutoFit=$false;$inner.Columns.SetWidth(80,0)
+    $inner.TopPadding=0;$inner.BottomPadding=0;$inner.LeftPadding=0;$inner.RightPadding=0;$inner.Borders.Enable=0
+    $inner.Cell(1,1).Range.Text='T1R0C0L00 REF0';$inner.Cell(1,2).Range.Text='T1R0C1L00'
    }
    $table.Rows.AllowBreakAcrossPages=-not$case.cantSplit
    if($case.header){$table.Rows.Item(1).HeadingFormat=$true}

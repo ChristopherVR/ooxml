@@ -23,9 +23,18 @@ const corpus = JSON.parse(
 		'utf8',
 	),
 ) as { cases: NativeCase[] };
+const complexCorpus = JSON.parse(
+	readFileSync(
+		new URL('../__fixtures__/table-footnotes/complex-native-measurements.json', import.meta.url),
+		'utf8',
+	),
+) as { cases: NativeCase[] };
 const measurer = { widthOf: (text: string) => text.length * 5, lineHeightOf: () => 16 };
 describe('native Word table footnote pagination', () => {
-	it.each(corpus.cases)(
+	it.each([
+		...corpus.cases,
+		...complexCorpus.cases.filter((native) => native.name.startsWith('padded-')),
+	])(
 		'$name preserves native cell boundaries, reference pages and every note line',
 		async (native) => {
 			const loaded = await loadDocx(fixture(native.name));

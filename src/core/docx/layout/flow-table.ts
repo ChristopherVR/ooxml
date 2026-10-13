@@ -124,7 +124,11 @@ export function placeTable(
 						remainingRow = null;
 						continue;
 					}
-					const { before, after } = splitRowAtHeight(remainingRow, selected.cut + 1e-6);
+					const { before, after } = splitRowAtHeight(
+						remainingRow,
+						selected.cut + 1e-6,
+						selected.cellCuts?.map((cut) => cut + 1e-6),
+					);
 					fragmentRows.push(toRowBox(before, false));
 					const previousWidth = cursor.columnWidthPx;
 					startNewFragment();

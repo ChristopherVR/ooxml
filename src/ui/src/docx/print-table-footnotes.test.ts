@@ -5,6 +5,8 @@ import { loadDocx } from 'ooxml-core/docx';
 import { layoutDocumentModel } from 'ooxml-core/docx/layout';
 import { renderPrintLayout } from './print-layout';
 it.each([
+	'padded-split-early',
+	'padded-split-late',
 	'split-late-reference',
 	'repeated-header',
 	'exact-clipped-reference',
