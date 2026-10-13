@@ -1,6 +1,20 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Values Axis:': ['Axe des valeurs :', 'Werteachse:', 'Eje de valores:', '值轴：'],
+	'Values on Columns': [
+		'Valeurs en colonnes',
+		'Werte in Spalten',
+		'Valores en columnas',
+		'值显示在列上',
+	],
+	'Values on Rows': ['Valeurs en lignes', 'Werte in Zeilen', 'Valores en filas', '值显示在行上'],
+	'Values on rows require one row field and tabular layout.': [
+		'Les valeurs en lignes nécessitent un champ de ligne et une disposition tabulaire.',
+		'Werte in Zeilen benötigen ein Zeilenfeld und das Tabellenformat.',
+		'Los valores en filas requieren un campo de fila y formato tabular.',
+		'值显示在行上需要一个行字段和表格布局。',
+	],
 	'Multiple value fields use Values on columns.': [
 		'Plusieurs champs de valeur utilisent les valeurs en colonnes.',
 		'Mehrere Wertfelder verwenden Werte in Spalten.',

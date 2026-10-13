@@ -49,7 +49,15 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const column = select(ctx, [['', '(None)']], '');
 	const value = select(ctx, [], '');
 	const aggregate = select(ctx, PIVOT_AGGREGATE_OPTIONS, pivot?.aggregate ?? 'sum');
-	const multipleNotice = text(ctx, 'Multiple value fields use Values on columns.');
+	const axis = select(
+		ctx,
+		[
+			['columns', 'Values on Columns'],
+			['rows', 'Values on Rows'],
+		],
+		pivot?.valuesAxis ?? 'columns',
+	);
+	const multipleNotice = text(ctx, 'Values on rows require one row field and tabular layout.');
 	const extras = pivotValueControls(
 		ctx,
 		pivot?.additionalValues ?? [],
@@ -88,12 +96,20 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	source.addEventListener('change', loadFields);
 	loadFields();
 	const updateRows = () => {
-		multipleNotice.hidden = extras.count() === 0;
+		axis.disabled = extras.count() === 0;
+		if (axis.disabled) axis.value = 'columns';
+		axis.querySelector<HTMLOptionElement>('[value="rows"]')!.disabled = !!second.value;
+		const rowsAxis = axis.value === 'rows';
+		if (rowsAxis) layout.value = 'tabular';
+		second.disabled = rowsAxis;
+		for (const option of layout.options) option.disabled = rowsAxis && option.value !== 'tabular';
+		multipleNotice.hidden = !rowsAxis;
 		subtotals.input.disabled = !second.value;
-		repeat.input.disabled = !second.value || layout.value === 'compact';
+		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
 		position.disabled = !second.value || !subtotals.input.checked || layout.value === 'tabular';
 		tabularNotice.hidden = !second.value || !subtotals.input.checked || layout.value !== 'tabular';
 	};
+	axis.addEventListener('change', updateRows);
 	layout.addEventListener('change', updateRows);
 	subtotals.input.addEventListener('change', updateRows);
 	second.addEventListener('change', updateRows);
@@ -116,12 +132,14 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Value Field:', value),
 			field(ctx, 'Summarize Values By:', aggregate),
 			extras.host,
+			field(ctx, 'Values Axis:', axis),
 			multipleNotice,
 		],
 		opened: () => (settings ? row : source).focus(),
 		submit: () => {
 			const options = {
 				rowField: row.value,
+				valuesAxis: axis.value as 'columns' | 'rows',
 				layout: layout.value as PivotLayout,
 				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,
@@ -135,6 +153,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			if (pivot) {
 				if (
 					pivot.rowField !== options.rowField ||
+					(pivot.valuesAxis ?? 'columns') !== options.valuesAxis ||
 					(pivot.layout ?? 'tabular') !== options.layout ||
 					(pivot.subtotalPosition ?? 'bottom') !== options.subtotalPosition ||
 					(pivot.secondRowField ?? '') !== options.secondRowField ||

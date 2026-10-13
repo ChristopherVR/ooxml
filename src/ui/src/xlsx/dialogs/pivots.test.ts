@@ -248,3 +248,90 @@ it('guards authoring commands when the sheet is protected', () => {
 	wb.sheets[0]!.protection = { sheet: true };
 	for (const command of pivotCommands()) expect(command.enabled?.(ctx)).toBe(false);
 });
+
+it('authors Values last on rows, preserves unchanged settings and removes the final extra with undo', async () => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	const edit = ctx.session()!;
+	[
+		['Category', 'Amount', 'Quantity'],
+		['Fruit', 10, 2],
+		['Fruit', 20, 3],
+		['Veg', 5, 4],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	ctx.select('A1:C4');
+	registerToolDialogs(ctx);
+	let done = ctx.dialogs.open('create-pivot-table');
+	let dialog = dialogEl(ctx, 'create-pivot-table');
+	const axis = inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:');
+	expect(axis.disabled).toBe(true);
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+	clickButton(dialog, 'Add Value Field');
+	const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
+	setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
+	setValue(inputByLabel<HTMLSelectElement>(extra, 'Summarize Values By:'), 'count');
+	setValue(axis, 'rows');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('tabular');
+	expect(
+		inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').querySelector<HTMLOptionElement>(
+			'[value="compact"]',
+		)!.disabled,
+	).toBe(true);
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(true);
+	const repeat = inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels');
+	expect(repeat.disabled).toBe(false);
+	repeat.click();
+	clickButton(dialog, 'OK');
+	await done;
+	const pivot = wb.sheets[0]!.pivotTables![0]!;
+	expect(pivot).toMatchObject({ valuesAxis: 'rows', layout: 'tabular', repeatLabels: true });
+	expect(getCell(wb.sheets[0]!, 2, 4)?.value).toBe('Fruit');
+	expect(getCell(wb.sheets[0]!, 2, 6)?.value).toBe(2);
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	clickButton(dialog, 'Remove Value Field');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').value).toBe('columns');
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({ valuesAxis: 'columns' });
+	expect(wb.sheets[0]!.pivotTables![0]?.additionalValues).toBeUndefined();
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
+		valuesAxis: 'rows',
+		additionalValues: [{ field: 'Quantity' }],
+	});
+});
+
+it('keeps Values on rows unavailable while a second real row field is selected', async () => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	const edit = ctx.session()!;
+	[
+		['Category', 'Region', 'Amount'],
+		['Fruit', 'East', 10],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	ctx.select('A1:C2');
+	registerToolDialogs(ctx);
+	const done = ctx.dialogs.open('create-pivot-table');
+	const dialog = dialogEl(ctx, 'create-pivot-table');
+	clickButton(dialog, 'Add Value Field');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+	expect(
+		inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
+			'[value="rows"]',
+		)!.disabled,
+	).toBe(true);
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), '');
+	expect(
+		inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
+			'[value="rows"]',
+		)!.disabled,
+	).toBe(false);
+	clickButton(dialog, 'Cancel');
+	await done;
+});
