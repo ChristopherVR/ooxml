@@ -120,6 +120,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		) ||
 		(att(root, 'compact') !== '0') !== compact ||
 		(att(root, 'compactData') !== '0') !== compact ||
+		(att(root, 'outline') === '1') !== outline ||
+		(att(root, 'outlineData') === '1') !== outline ||
 		(layout === 'compact' && att(root, 'indent') !== '0')
 	)
 		throw new Error('Mixed field layouts or custom compact indentation are preserved');

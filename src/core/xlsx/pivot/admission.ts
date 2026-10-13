@@ -120,6 +120,12 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 		if (attr.localName === 'numFmtId' && attr.value !== '0')
 			throw new Error('Unsupported PivotTable field number format');
 		if (
+			node.localName === 'pivotTableDefinition' &&
+			['compact', 'compactData', 'outline', 'outlineData'].includes(attr.localName!) &&
+			!['0', '1'].includes(attr.value)
+		)
+			throw new Error('Unsupported PivotTable global layout');
+		if (
 			node.localName === 'item' &&
 			attr.localName === 't' &&
 			!['default', 'data'].includes(attr.value)

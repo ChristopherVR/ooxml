@@ -17,27 +17,36 @@ const cases = [
 	['outline-top-repeat', 'outline', 'top', 8],
 ] as const;
 
-it.each(['custom indentation', 'mixed field layout'])(
-	'preserves unsupported compact %s',
-	async (kind) => {
-		const zip = await JSZip.loadAsync(
-			readFileSync(new URL('../__fixtures__/excel-pivot-compact-top.xlsx', import.meta.url)),
-		);
-		const path = 'xl/pivotTables/pivotTable1.xml';
-		const original = await zip.file(path)!.async('string');
-		const xml =
-			kind === 'custom indentation'
-				? original.replace('indent="0"', 'indent="2"')
-				: original.replace('<pivotField ', '<pivotField compact="0" ');
-		expect(xml).not.toBe(original);
-		zip.file(path, xml);
-		const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
-		expect(wb.sheets.every((sheet) => !sheet.pivotTables)).toBe(true);
-		expect(wb.warnings.some((warning) => warning.includes('cannot be refreshed'))).toBe(true);
-		const saved = await JSZip.loadAsync(await saveXlsx(wb));
-		expect(await saved.file(path)!.async('string')).toBe(xml);
-	},
-);
+it.each([
+	'custom indentation',
+	'mixed field layout',
+	'conflicting outline',
+	'conflicting data outline',
+	'malformed global layout',
+])('preserves unsupported compact %s', async (kind) => {
+	const zip = await JSZip.loadAsync(
+		readFileSync(new URL('../__fixtures__/excel-pivot-compact-top.xlsx', import.meta.url)),
+	);
+	const path = 'xl/pivotTables/pivotTable1.xml';
+	const original = await zip.file(path)!.async('string');
+	const xml =
+		kind === 'custom indentation'
+			? original.replace('indent="0"', 'indent="2"')
+			: kind === 'mixed field layout'
+				? original.replace('<pivotField ', '<pivotField compact="0" ')
+				: kind === 'conflicting outline'
+					? original.replace('outline="1"', 'outline="0"')
+					: kind === 'conflicting data outline'
+						? original.replace('outlineData="1"', 'outlineData="0"')
+						: original.replace('<pivotTableDefinition ', '<pivotTableDefinition compact="2" ');
+	expect(xml).not.toBe(original);
+	zip.file(path, xml);
+	const wb = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+	expect(wb.sheets.every((sheet) => !sheet.pivotTables)).toBe(true);
+	expect(wb.warnings.some((warning) => warning.includes('cannot be refreshed'))).toBe(true);
+	const saved = await JSZip.loadAsync(await saveXlsx(wb));
+	expect(await saved.file(path)!.async('string')).toBe(xml);
+});
 
 for (const [name, layout, subtotalPosition, rows] of cases)
 	it(`imports and refreshes native ${name} without losing its untouched parts`, async () => {
