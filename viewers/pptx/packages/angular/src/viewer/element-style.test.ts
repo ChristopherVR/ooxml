@@ -171,7 +171,7 @@ describe('getTextBlockStyle', () => {
 			textElement({ fontSize: 40, autoFit: true, autoFitMode: 'normal', autoFitFontScale: 0.7 }),
 		);
 		expect(autofit['font-size']).toBe('28px');
-		expect(getTextBlockStyle(textElement({ textWrap: 'none' }))['white-space']).toBe('nowrap');
+		expect(getTextBlockStyle(textElement({ textWrap: 'none' }))['white-space']).toBe('pre');
 		expect(getTextBlockStyle(textElement({}))['white-space']).toBe('pre-wrap');
 	});
 
