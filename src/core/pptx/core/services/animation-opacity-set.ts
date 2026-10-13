@@ -55,6 +55,19 @@ export function resolveOpacitySet(anim: PptxNativeAnimation): PptxOpacitySet | u
 		return undefined;
 	const sets = behaviors.filter((b) => b.kind === 'set');
 	if (sets.length !== 1) return undefined;
+	// Only one ordinary legacy hint was measured in native playback. Do not
+	// discard extra filter behaviors or unresolved timing as harmless metadata.
+	const hints = behaviors.filter((b) => b.kind === 'animEffect');
+	if (hints.length > 1) return undefined;
+	const hint = hints[0];
+	if (
+		hint &&
+		(hint.timing.unsupportedSetTiming ||
+			hint.timing.autoReverse ||
+			(hint.timing.repeatCount ?? 1) !== 1 ||
+			hint.timing.tmFilter !== undefined)
+	)
+		return undefined;
 	const set = sets[0]!;
 	if (
 		set.attrNames.length !== 1 ||

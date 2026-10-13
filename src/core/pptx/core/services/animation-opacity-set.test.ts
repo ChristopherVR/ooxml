@@ -66,6 +66,29 @@ describe('resolveOpacitySet', () => {
 		});
 		expect(resolveOpacitySet(anim)?.value).toBe(0.2);
 	});
+	it('refuses multiple legacy image hints', () => {
+		const anim = native();
+		anim.behaviors!.push(
+			{ kind: 'animEffect', filter: 'image', timing: { durationMs: 500 }, attrNames: [] },
+			{ kind: 'animEffect', filter: 'image', timing: { durationMs: 500 }, attrNames: [] },
+		);
+		expect(resolveOpacitySet(anim)).toBeUndefined();
+	});
+	it.each([
+		{ unsupportedSetTiming: true },
+		{ repeatCount: 2 },
+		{ autoReverse: true },
+		{ tmFilter: '0,0;1,1' },
+	])('refuses unsupported legacy image hint timing %j', (timing) => {
+		const anim = native();
+		anim.behaviors!.push({
+			kind: 'animEffect',
+			filter: 'image',
+			timing: { durationMs: 500, ...timing },
+			attrNames: [],
+		});
+		expect(resolveOpacitySet(anim)).toBeUndefined();
+	});
 	it.each([true, '', 'red', 'Infinity', '0.2junk', -1, 1.1, NaN])(
 		'rejects unsupported value %s',
 		(value) => {
