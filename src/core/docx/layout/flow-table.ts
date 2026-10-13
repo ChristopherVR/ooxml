@@ -1,7 +1,10 @@
+import { layoutBorderedRow, TableFragmentBorders } from './table-border-layout';
+import { nestedFrameProfile } from './nested-frame-profile';
+import { cellParagraphs } from './table-cell-layout';
 import { TableFootnotes } from './table-footnotes';
 import type { ReferenceFootnotes } from './reference-footnotes';
 import type { PageCursor } from './page-cursor';
-import { layoutRow, splitRowAtHeight, type RowLayout } from './table-layout';
+import { splitRowAtHeight, type RowLayout } from './table-layout';
 import type { TextMeasurer } from './measure';
 import type { LayoutTable, LayoutTableRow } from './input';
 import type { LayoutTableBox, LayoutTableRowBox } from './result';
@@ -27,13 +30,40 @@ export function placeTable(
 
 	// Table indent, or alignment of the grid within the column.
 	const xPosition = () => {
-		const width = table.widthPx ?? cursor.columnWidthPx;
+		const width =
+			(table.widthPx ?? cursor.columnWidthPx) +
+			(activeBorders ? (profile!.leftPx + profile!.rightPx) / 2 : 0);
 		return table.alignment === 'center'
 			? Math.max(0, (cursor.columnWidthPx - width) / 2)
 			: table.alignment === 'right'
 				? Math.max(0, cursor.columnWidthPx - width)
 				: (table.indentPx ?? 0);
 	};
+
+	const profile = nestedFrameProfile(table, table.widthPx ?? cursor.columnWidthPx);
+	const activeBorders =
+		profile !== undefined && (profile.leftPx > 0 || profile.rightPx > 0 || profile.bottomPx > 0);
+	if (!profile && table.rows.some((row) => row.cells.some((cell) => cell.borders)))
+		note(
+			'Ordinary table border occupancy remains approximate for missing edges, non-solid or conflicting shared borders and changing row grids.',
+		);
+
+	const layoutRow = (
+		row: LayoutTableRow,
+		width: number,
+		m: TextMeasurer,
+		n: (message: string) => void,
+		remaining?: import('./result').LayoutParagraphBox[][],
+	) =>
+		layoutBorderedRow(
+			row,
+			activeBorders ? (table.widthPx ?? width) : width,
+			m,
+			n,
+			profile,
+			remaining,
+		);
+	const fragmentBorders = new TableFragmentBorders();
 	let fragmentRows: LayoutTableRowBox[] = [];
 	let fragmentHeight = 0;
 	const footnotes = resolveFootnotes
@@ -41,6 +71,7 @@ export function placeTable(
 		: undefined;
 
 	const toRowBox = (layout: RowLayout, repeated: boolean): LayoutTableRowBox => {
+		fragmentHeight += fragmentBorders.remove(fragmentRows.at(-1));
 		footnotes?.add(layout, repeated);
 		const box: LayoutTableRowBox = {
 			yPx: fragmentHeight,
@@ -51,10 +82,12 @@ export function placeTable(
 			...(layout.cellTables ? { cellTables: layout.cellTables } : {}),
 		};
 		fragmentHeight += layout.heightPx;
+		fragmentBorders.record(layout.borderBottomPx);
 		return box;
 	};
 
 	function flushFragment() {
+		fragmentHeight += fragmentBorders.restore(fragmentRows.at(-1));
 		if (!fragmentRows.length) {
 			footnotes?.holdFragment();
 			return;
@@ -62,6 +95,12 @@ export function placeTable(
 		const box: LayoutTableBox = {
 			kind: 'table',
 			blockId: table.id,
+			...(activeBorders
+				? {
+						widthPx:
+							(table.widthPx ?? cursor.columnWidthPx) + (profile!.leftPx + profile!.rightPx) / 2,
+					}
+				: {}),
 			...(xPosition() ? { xPx: xPosition() } : {}),
 			yPx: 0,
 			heightPx: fragmentHeight,
@@ -86,15 +125,20 @@ export function placeTable(
 	function placeRow(row: LayoutTableRow, initial: RowLayout, cantSplit: boolean) {
 		let remainingRow: RowLayout | null = initial;
 		while (remainingRow) {
+			fragmentHeight += fragmentBorders.remove(fragmentRows.at(-1));
 			const minimum = cantSplit
 				? Math.min(remainingRow.heightPx, cursor.columnHeightPx)
 				: Math.min(
-						...remainingRow.cells.flatMap((cell) =>
+						...remainingRow.cells.flatMap((cell, index) =>
 							cell.map(
 								(paragraph) =>
 									paragraph.yPx +
 									(paragraph.lines[0]?.yPx ?? 0) +
-									(paragraph.lines[0]?.heightPx ?? 0),
+									(paragraph.lines[0]?.heightPx ?? 0) +
+									(remainingRow!.borderBottomPx !== undefined
+										? (remainingRow!.cellPadding?.[index]?.bottom ?? 0) +
+											(paragraph.tableFrameInsets?.bottom ?? 0)
+										: 0),
 							),
 						),
 					);
@@ -220,6 +264,18 @@ export function placeTable(
 
 	for (const row of table.rows) {
 		const layout = layoutRow(row, cursor.columnWidthPx, measurer, note);
+		if (
+			activeBorders &&
+			layout.heightPx > cursor.remainingHeightPx() &&
+			row.cells.some(
+				(cell) =>
+					cell.blocks?.some((block) => block.kind === 'table') &&
+					cellParagraphs(cell).some((p) => p.footnotes?.length),
+			)
+		)
+			note(
+				'Independent inner-cell continuation around nested note references remains approximate when an enclosing bordered row splits.',
+			);
 		placeRow(
 			row,
 			layout,

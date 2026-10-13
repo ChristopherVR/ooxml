@@ -85,7 +85,7 @@ export function adaptTable(
 	table: Table,
 	model: DocumentModel,
 	adaptParagraph: (paragraph: Paragraph) => LayoutParagraph,
-	nested = false,
+	_nested = false,
 ): LayoutTable {
 	const grid = table.grid?.map(twipsToPx);
 	const columnCount = grid?.length ?? Math.max(1, ...table.rows.map((row) => row.length));
@@ -130,7 +130,7 @@ export function adaptTable(
 				);
 				const borders: LayoutCellBorders = {};
 				for (const side of ['top', 'right', 'bottom', 'left'] as const) {
-					const resolved = border(visuals.borders?.[side], model.theme, nested);
+					const resolved = border(visuals.borders?.[side], model.theme, true);
 					if (resolved) borders[side] = resolved;
 				}
 				if (cell.verticalMerge === 'continue') delete borders.top;
