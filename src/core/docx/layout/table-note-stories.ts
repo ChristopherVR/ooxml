@@ -1,4 +1,5 @@
 import type { LayoutTableCell } from './input';
+import { cellParagraphs } from './table-cell-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
 /** Native-measured bounded profile: one automatic, top-aligned nested row, then direct text. */
 export function independentNoteStories(cell: LayoutTableCell): Map<string, string> | undefined {
@@ -23,7 +24,7 @@ export function independentNoteStories(cell: LayoutTableCell): Map<string, strin
 		row.cells.some(
 			(inner) =>
 				inner.blocks?.some((block) => block.kind === 'table') ||
-				inner.paragraphs.some(
+				cellParagraphs(inner).some(
 					(paragraph) => paragraph.keepLines || paragraph.keepNext || paragraph.pageBreakBefore,
 				) ||
 				(inner.verticalAlign && inner.verticalAlign !== 'top'),
@@ -32,7 +33,7 @@ export function independentNoteStories(cell: LayoutTableCell): Map<string, strin
 		return undefined;
 	const groups = new Map<string, string>();
 	row.cells.forEach((inner, index) => {
-		for (const paragraph of inner.paragraphs) groups.set(paragraph.id, first.id + ':' + index);
+		for (const paragraph of cellParagraphs(inner)) groups.set(paragraph.id, first.id + ':' + index);
 	});
-	return groups;
+	return groups.size ? groups : undefined;
 }

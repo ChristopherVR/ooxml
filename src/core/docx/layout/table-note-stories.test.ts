@@ -44,3 +44,47 @@ it.each(['center', 'exact', 'multiple', 'deep', 'header', 'leading', 'keep'] as 
 		expect(independentNoteStories(cell)).toBeUndefined();
 	},
 );
+
+const blocksOnly = (): LayoutTableCell => {
+	const cell = create(),
+		table = cell.blocks![0] as LayoutTable;
+	for (const inner of table.rows[0]!.cells) {
+		inner.blocks = inner.paragraphs;
+		inner.paragraphs = [];
+	}
+	return cell;
+};
+it('groups the actual blocks-only paragraph stories used by source layout', () => {
+	expect([...independentNoteStories(blocksOnly())!]).toEqual([
+		['a', 'inner:0'],
+		['b', 'inner:1'],
+	]);
+});
+it.each(['keepLines', 'keepNext', 'pageBreakBefore'] as const)(
+	'refuses blocks-only story with %s',
+	(property) => {
+		const cell = blocksOnly(),
+			table = cell.blocks![0] as LayoutTable;
+		const paragraph = table.rows[0]!.cells[0]!.blocks![0]!;
+		if (paragraph.kind !== 'paragraph') throw new Error('Expected paragraph');
+		paragraph[property] = true;
+		expect(independentNoteStories(cell)).toBeUndefined();
+	},
+);
+it('refuses an empty story map when authoritative blocks omit cached paragraphs', () => {
+	const cell = create(),
+		table = cell.blocks![0] as LayoutTable;
+	for (const inner of table.rows[0]!.cells) inner.blocks = [];
+	expect(independentNoteStories(cell)).toBeUndefined();
+});
+it('does not admit cached paragraph IDs absent from authoritative source blocks', () => {
+	const cell = blocksOnly(),
+		table = cell.blocks![0] as LayoutTable;
+	table.rows[0]!.cells[0]!.paragraphs = [
+		{ kind: 'paragraph', id: 'stale', runs: [], keepLines: true },
+	];
+	expect([...independentNoteStories(cell)!]).toEqual([
+		['a', 'inner:0'],
+		['b', 'inner:1'],
+	]);
+});
