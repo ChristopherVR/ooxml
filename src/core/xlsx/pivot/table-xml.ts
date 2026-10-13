@@ -107,6 +107,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 			'pivotTableDefinition',
 			'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
 		);
+		if (multiple && definition) definition.setAttribute('hideValuesRow', '1');
 		if (definition?.hasAttribute('fillDownLabelsDefault'))
 			definition.setAttribute('fillDownLabelsDefault', pivot.repeatLabels ? '1' : '0');
 	}

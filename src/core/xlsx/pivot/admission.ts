@@ -67,7 +67,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 				node.namespaceURI === X14 &&
 				node.localName === 'pivotTableDefinition' &&
 				attr.name === 'hideValuesRow' &&
-				attr.value === '1'
+				['0', '1'].includes(attr.value)
 			)
 				continue;
 			if (

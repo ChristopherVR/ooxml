@@ -63,14 +63,30 @@ for (const mode of layouts) {
  writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
  writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents??grid.values.map(()=>0)));
 }
-for (const mode of ['cache-values','cache-values-columns','values-rows','values-rows-columns','values-no-subtotals','values-repeat','cache-values-min-max','cache-values-errors']) {
+for (const mode of ['cache-values','cache-values-columns','values-rows','values-rows-columns','values-no-subtotals','values-repeat','cache-values-min-max','cache-values-errors','cache-values-two','cache-values-custom']) {
  const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
  const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
  if(mode.endsWith('errors')) rows[1][2]='=NA()';
  rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
- session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout:'tabular',additionalValues:mode.endsWith('min-max')?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}],...(!mode.startsWith('cache-')?{secondRowField:'Region'}:{}),...(mode.endsWith('columns')?{columnField:'Year'}:{}),subtotals:mode!=='values-no-subtotals',repeatLabels:mode==='values-repeat'});
+ const additionalValues=mode.endsWith('min-max')?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:mode.endsWith('two')?[{field:'Quantity',aggregate:'count'}]:mode.endsWith('custom')?[{field:'Quantity',aggregate:'count',caption:'Units'},{field:'Amount',aggregate:'average',caption:'Per item'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout:'tabular',additionalValues,...(!mode.startsWith('cache-')?{secondRowField:'Region'}:{}),...(mode.endsWith('columns')?{columnField:'Year'}:{}),subtotals:mode!=='values-no-subtotals',repeatLabels:mode==='values-repeat'});
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
  writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[1].pivotTables[0]).values));
+}
+for (const flag of ['visible','omitted']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-visible-values.xlsx'))));
+ const session=createEditSession(wb); const pivot=wb.sheets[0].pivotTables[0];
+ if(flag==='omitted') pivot.sourceXml=pivot.sourceXml.replace('hideValuesRow="0"','');
+ session.refreshPivotTable(0,pivot.name,{additionalValues:[{field:'Amount',aggregate:'count'}]});
+ const mode='cache-values-'+flag+'-two';
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
+ writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[0].pivotTables[0]).values));
+}
+for (const [mode,suffix] of [['cache-values-imported',''],['values-imported','-rows-columns'],['cache-values-single','']]) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-values'+suffix+'.xlsx'))));
+ const session=createEditSession(wb); session.setCellInput(1,1,2,'100'); session.refreshPivotTable(0,'SalesPivot',mode.endsWith('single')?{additionalValues:[],layout:'compact'}:{});
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
+ writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[0].pivotTables[0]).values));
 }
 for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotals','outline-top','outline-bottom','outline-top-repeat']) {
  const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-'+suffix+'.xlsx'))));
@@ -113,6 +129,7 @@ for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotal
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($mode+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
 		$pivot = $summary.PivotTables().Item(1)
+		if ($mode.Contains('values') -and $pivot.DataFields().Count -ne $(if($mode.EndsWith('single')){1}elseif($mode.EndsWith('two')){2}else{3})) { throw ('Wrong PivotTable measure count: '+$mode) }
 		$rowFieldCount = if ($mode.StartsWith('cache-')) { 1 } else { 2 }
 		if ($pivot.RowFields().Count -ne $rowFieldCount) { throw ('Wrong PivotTable row field count: '+$mode) }
 		$expected = Get-Content -Raw -LiteralPath (Join-Path $taskFolder ($mode+'.json')) | ConvertFrom-Json

@@ -1,6 +1,8 @@
-param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
+param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [switch]$MultiValues, [switch]$ColumnAxis, [switch]$ShowValuesRow, [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
 # Requires desktop Excel. Generates a tabular PivotTable reference.
 $ErrorActionPreference = 'Stop'
+if ($MultiValues -and $Layout -ne 'tabular') { throw 'Multi-value reference fixtures use tabular layout.' }
+if ($ShowValuesRow -and ($MultiValues -or $Hierarchy -or $ColumnAxis)) { throw 'The visible Values reference uses a single measure and the default row/column fields.' }
 $out = Join-Path $PSScriptRoot 'excel-pivot.xlsx'
 if ($Hierarchy) {
 	$suffix = if ($NoSubtotals) { '-no-subtotals' } elseif ($RepeatLabels) { '-repeat' } else { '' }
@@ -9,6 +11,7 @@ if ($Hierarchy) {
 }
 $excel = New-Object -ComObject Excel.Application
 if ($MultiValues) { $out = Join-Path $PSScriptRoot ('excel-pivot-values' + $(if ($Hierarchy) {'-rows'} else {''}) + $(if ($ColumnAxis) {'-columns'} else {''}) + '.xlsx') }
+if ($ShowValuesRow) { $out = Join-Path $PSScriptRoot 'excel-pivot-visible-values.xlsx' }
 $excel.Visible = $false
 $excel.DisplayAlerts = $false
 try {
@@ -37,6 +40,7 @@ try {
 		[void]$pivot.AddDataField($pivot.PivotFields('Quantity'), 'Count of Quantity', -4112)
 		[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Average of Amount', -4106)
 	}
+	if ($ShowValuesRow) { $pivot.ShowValuesRow = $true }
 	if ($Hierarchy) {
 		$pivot.PivotFields('Category').LayoutSubtotalLocation = if ($SubtotalPosition -eq 'top') { 1 } else { 2 }
 		if ($NoSubtotals) {

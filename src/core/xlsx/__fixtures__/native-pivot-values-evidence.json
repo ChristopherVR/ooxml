@@ -2,12 +2,48 @@
 	"observedOn": "2026-10-13",
 	"excelFileVersion": "16.0.20430.20146",
 	"reproduce": "pwsh -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
-	"acceptanceCases": 54,
-	"newMultipleValueCases": 8,
-	"fixtures": ["excel-pivot-values.xlsx", "excel-pivot-values-columns.xlsx", "excel-pivot-values-rows-columns.xlsx"],
-	"nativeStructure": { "valuesFieldIndex": -2, "valuesAxis": "columns, after the optional real column field", "columnItemMeasureIndex": "i", "firstDataRowWithColumn": 3, "firstHeaderRowWithColumn": 1, "hideValuesRow": "x14:pivotTableDefinition hideValuesRow=1" },
-	"validated": ["three measures, including the same source field with sum and average", "count, min and max", "one or two row fields", "optional column field", "sparse intersections", "error values", "automatic bottom subtotals or no subtotals", "repeated row labels", "every cached and refreshed cell value/type and report dimension", "native rejects a value caption matching an existing source field name"],
+	"acceptanceCases": 61,
+	"newMultipleValueCases": 15,
+	"fixtures": [
+		"excel-pivot-values.xlsx",
+		"excel-pivot-values-columns.xlsx",
+		"excel-pivot-values-rows-columns.xlsx",
+		"excel-pivot-visible-values.xlsx"
+	],
+	"nativeStructure": {
+		"valuesFieldIndex": -2,
+		"valuesAxis": "columns, after the optional real column field",
+		"columnItemMeasureIndex": "i",
+		"firstDataRowWithColumn": 3,
+		"firstHeaderRowWithColumn": 1,
+		"hideValuesRow": "x14:pivotTableDefinition hideValuesRow=1"
+	},
+	"validated": [
+		"three measures, including the same source field with sum and average",
+		"count, min and max",
+		"one or two row fields",
+		"optional column field",
+		"sparse intersections",
+		"error values",
+		"automatic bottom subtotals or no subtotals",
+		"repeated row labels",
+		"every cached and refreshed cell value/type and report dimension",
+		"native rejects a value caption matching an existing source field name",
+		"native-authored multi-measure refresh and conversion back to one compact measure",
+		"two measures and custom value captions",
+		"conversion from native single-measure hideValuesRow=0 or omitted to multiple, setting hideValuesRow=1"
+	],
 	"scope": "Tabular layout with Values on columns. The API bounds total measures to sixteen; native acceptance exercises three.",
-	"unsupportedPreserved": ["Values on rows or before the column field", "compact and outline with multiple measures", "more than two row fields", "grouping", "slicers", "shared caches", "custom measure calculations", "unsupported extensions"],
+	"unsupportedPreserved": [
+		"Values on rows or before the column field",
+		"compact and outline with multiple measures",
+		"more than two row fields",
+		"grouping",
+		"slicers",
+		"shared caches",
+		"custom measure calculations",
+		"unsupported extensions",
+		"multiple-measure imported reports with visible or unspecified Values header row"
+	],
 	"limits": "Native observations apply to this Excel build and tested profiles, not full PivotTable parity."
 }

@@ -106,6 +106,17 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Unsupported pivot layout');
 	const measure = dataFields[0]!;
+	const definition = elements(first(root, 'extLst', NS.x) ?? parseXml('<root/>').documentElement)
+		.map((extension) =>
+			first(
+				extension,
+				'pivotTableDefinition',
+				'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
+			),
+		)
+		.find(Boolean);
+	if (dataFields.length > 1 && att(definition, 'hideValuesRow') !== '1')
+		throw new Error('Visible Values header rows are preserved');
 	for (const [axis, count] of [
 		['rowItems', 1],
 		['colItems', dataFields.length],
