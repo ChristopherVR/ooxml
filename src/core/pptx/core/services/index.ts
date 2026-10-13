@@ -107,3 +107,11 @@ export {
 } from './animation-target-build-helpers';
 export { parseAnimEffectFilter, parseFilterToken } from './animation-effect-filter-parsing';
 export { resolveOpacitySet, type PptxOpacitySet } from './animation-opacity-set';
+
+export {
+	applySpeedToDuration,
+	resolveEffectTiming,
+	resolveIterationCount,
+	shouldHoldEndState,
+} from './animation-effect-timing';
+export type { EffectTimingInput, EffectTimingResolution } from './animation-effect-timing';

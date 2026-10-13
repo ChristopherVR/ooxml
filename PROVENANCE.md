@@ -2317,3 +2317,7 @@ Inherited date fields admit the native ISO date-only picture separately.
 ## PowerPoint after-effect editing and precedence
 
 Source: ChristopherVR/ooxml, commit 6f239a48c, src/ui/src/pptx/render/animation-after-effect-authoring.ts, animation-authoring.ts (animationFor/upsert/hasAnimation), and animation-after-effect.ts (applyAfterAnimationFromEditorList). DOM-free editor entry updates, after-effect authoring and native/editor precedence move into src/core/pptx/core/services/editor-animation-entry.ts, editor-animation-after-effect.ts and editor-animation-after-effect-precedence.ts. Shared UI retains compatibility exports; explicit none now distinguishes a user clear from untouched undefined. Surgical saving clears only recognized after-state nodes, preserving other sub-timing content.
+
+## PowerPoint native effect timing decisions
+
+Source: ChristopherVR/ooxml, commit 7916b9eb9079b447bce545ef527b1680f711728a, src/ui/src/pptx/render/animation-fill-repeat.ts and its tests. DOM-free speed, repeat-count, active-window and end-state hold calculations move verbatim into src/core/pptx/core/services/animation-effect-timing.ts, with the behavior tests alongside them. Shared UI retains compatibility exports. No timing semantics change in this extraction.
