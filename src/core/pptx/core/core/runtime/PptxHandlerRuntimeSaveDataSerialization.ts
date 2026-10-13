@@ -111,6 +111,10 @@ import {
 	serializeTablePropertyFlags,
 } from './save-table-merge-helpers';
 import { writeTableColumnWidths } from './table-column-width-save';
+import {
+	clearCellFormattingForStyleChange,
+	tableStyleIdChanged,
+} from './table-style-change-cell-clear';
 import { recordTableParagraphOrder } from './table-paragraph-save-order';
 import { rebuildTableXmlFromData } from './table-structural-ops';
 import { writeTablePropertiesOwnFillAndEffects } from './table-tblpr-save';
@@ -141,6 +145,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 
 			// â”€â”€ Serialize table-level properties (tblPr) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+			// A new table style, or a style pick, clears the direct cell fills
+			// and borders the model dropped (PowerPoint's pick does the same).
+			const styleChanged =
+				tableData.clearDirectCellFormatting === true ||
+				tableStyleIdChanged(tbl['a:tblPr'], tableData.tableStyleId);
 			serializeTablePropertyFlags(tbl, tableData);
 			// a:tblPr's OWN fill/effectLst (issue G6 write-side): parsed by
 			// PptxTableDataParser into tableFill/tableEffects but otherwise
@@ -185,6 +194,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						if (cell.text !== undefined) {
 							this.writeTableCellText(xmlCell, cell.text);
 						}
+						if (styleChanged) {
+							clearCellFormattingForStyleChange(xmlCell, cell.style);
+						}
 						if (cell.style) {
 							this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs);
 						}
@@ -219,6 +231,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					}
 
 					// Update cell style
+					if (styleChanged) {
+						clearCellFormattingForStyleChange(xmlCell, cell.style);
+					}
 					if (cell.style) {
 						this.writeTableCellStyle(xmlCell, cell.style, cell.paragraphs);
 					}
