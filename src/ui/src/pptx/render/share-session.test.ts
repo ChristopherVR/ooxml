@@ -7,6 +7,34 @@ import {
 } from './share-session';
 
 describe('share session helpers', () => {
+	it('joins the opaque-origin room code with the recipient default WebRTC settings', () => {
+		const config = { roomId: 'p2p-room', serverUrl: '', transport: 'webrtc' as const };
+		const invitation = buildCollaborationShareUrl(config, { origin: 'null', pathname: '/' });
+		expect(invitation).toBe(config.roomId);
+		expect(
+			buildJoinCollaborationConfig({ invitation, userName: 'Guest', serverUrl: '' }),
+		).toMatchObject({
+			roomId: config.roomId,
+			serverUrl: '',
+			transport: 'webrtc',
+			sessionIntent: 'join',
+		});
+	});
+	it('retains the absent-location room code and exposes malformed nonopaque locations', () => {
+		const config = { roomId: 'external-room', serverUrl: 'wss://relay.example' };
+		expect(buildCollaborationShareUrl(config)).toBe(config.roomId);
+		expect(() =>
+			buildCollaborationShareUrl(config, { origin: 'not a URL', pathname: '/' }),
+		).toThrow();
+	});
+	it.each(['null', ''])('keeps a joinable room code for unavailable origin %s', (origin) => {
+		const config = { roomId: 'external-room', serverUrl: 'wss://relay.example' };
+		const invitation = buildCollaborationShareUrl(config, { origin, pathname: '/' });
+		expect(invitation).toBe(config.roomId);
+		expect(
+			buildJoinCollaborationConfig({ invitation, userName: 'Host', serverUrl: config.serverUrl }),
+		).toMatchObject({ roomId: config.roomId, serverUrl: config.serverUrl });
+	});
 	it('builds an explicitly created websocket session', () => {
 		expect(
 			buildCreateCollaborationConfig({

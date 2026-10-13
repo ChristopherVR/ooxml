@@ -146,9 +146,16 @@ describe('vanilla read-only recommendation password prompt', () => {
 			new Event('submit', { cancelable: true }),
 		);
 
-		await vi.waitFor(() => {
-			expect(container.querySelector('.pptxv')?.classList.contains('pptxv-editable')).toBeTruthy();
-		});
+		// Unlock builds the editable ribbon and canvas after verification. Keep the
+		// real password/UI assertions, allowing that work to finish on shared CI workers.
+		await vi.waitFor(
+			() => {
+				expect(
+					container.querySelector('.pptxv')?.classList.contains('pptxv-editable'),
+				).toBeTruthy();
+			},
+			{ timeout: 5000 },
+		);
 		expect(
 			container.querySelector<HTMLElement>('[data-testid="pptx-readonly-banner"]')?.hidden,
 		).toBeTruthy();
