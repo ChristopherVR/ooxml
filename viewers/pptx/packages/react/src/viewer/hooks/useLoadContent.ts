@@ -74,6 +74,7 @@ export interface UseLoadContentInput {
 	/** Seeds the EMU `p:sldSz` that a save persists (see `ViewerCoreState.slideSizeEmu`). */
 	setSlideSizeEmu: React.Dispatch<React.SetStateAction<SlideSizeEmu | undefined>>;
 	setHeaderFooter: React.Dispatch<React.SetStateAction<PptxHeaderFooter>>;
+	setFirstSlideNumber: React.Dispatch<React.SetStateAction<number | undefined>>;
 	setLayoutOptions: React.Dispatch<React.SetStateAction<Array<{ path: string; name: string }>>>;
 	setSlideMasters: React.Dispatch<React.SetStateAction<PptxSlideMaster[]>>;
 	setModernCommentAuthors: React.Dispatch<React.SetStateAction<PptxModernCommentAuthor[]>>;
@@ -162,6 +163,7 @@ export function useLoadContent({
 	setCanvasSize,
 	setSlideSizeEmu,
 	setHeaderFooter,
+	setFirstSlideNumber,
 	setLayoutOptions,
 	setSlideMasters,
 	setModernCommentAuthors,
@@ -371,6 +373,7 @@ export function useLoadContent({
 						: undefined,
 				);
 				setHeaderFooter(parsed.headerFooter ?? {});
+				setFirstSlideNumber(parsed.firstSlideNumber);
 				setLayoutOptions(parsed.layoutOptions ?? []);
 				setSlideMasters(parsed.slideMasters ?? []);
 				setModernCommentAuthors(parsed.modernCommentAuthors ?? []);

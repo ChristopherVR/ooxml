@@ -100,6 +100,7 @@ function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
 		setCanvasSize: noopDispatch<CanvasSize>(),
 		setSlideSizeEmu: noopDispatch<SlideSizeEmu | undefined>(),
 		setHeaderFooter: noopDispatch<PptxHeaderFooter>(),
+		setFirstSlideNumber: noopDispatch<number | undefined>(),
 		setLayoutOptions: noopDispatch<Array<{ path: string; name: string }>>(),
 		setSlideMasters: noopDispatch<PptxSlideMaster[]>(),
 		setModernCommentAuthors: noopDispatch<PptxModernCommentAuthor[]>(),

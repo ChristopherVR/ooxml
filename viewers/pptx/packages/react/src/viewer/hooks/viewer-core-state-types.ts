@@ -168,6 +168,8 @@ export interface ViewerCoreState extends InlineEditingState, EditPointsModeState
 	/** Header/footer configuration for the presentation. */
 	headerFooter: PptxHeaderFooter;
 	setHeaderFooter: React.Dispatch<React.SetStateAction<PptxHeaderFooter>>;
+	firstSlideNumber: number | undefined;
+	setFirstSlideNumber: React.Dispatch<React.SetStateAction<number | undefined>>;
 	/** Available slide layout options (path + display name). */
 	layoutOptions: Array<{ path: string; name: string }>;
 	setLayoutOptions: React.Dispatch<React.SetStateAction<Array<{ path: string; name: string }>>>;

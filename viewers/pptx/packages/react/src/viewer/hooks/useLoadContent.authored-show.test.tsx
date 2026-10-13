@@ -111,6 +111,7 @@ function Harness({ content }: { content: ArrayBuffer }): null {
 		setCanvasSize: noopDispatch<CanvasSize>(),
 		setSlideSizeEmu,
 		setHeaderFooter: noopDispatch<PptxHeaderFooter>(),
+		setFirstSlideNumber: noopDispatch<number | undefined>(),
 		setLayoutOptions: noopDispatch<Array<{ path: string; name: string }>>(),
 		setSlideMasters: noopDispatch<PptxSlideMaster[]>(),
 		setModernCommentAuthors: noopDispatch<PptxModernCommentAuthor[]>(),
