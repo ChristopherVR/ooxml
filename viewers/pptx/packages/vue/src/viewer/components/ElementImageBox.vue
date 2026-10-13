@@ -14,6 +14,7 @@ import {
 	getImageFitStyle,
 	getImageOverflow,
 	getImageTilingStyle,
+	getPictureFrameLayers,
 	resolveShapeGeometry,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
@@ -74,13 +75,26 @@ const cropShapeClip = computed<string | undefined>(() =>
 
 // The clip is load-bearing, not cosmetic: a cropped picture is rendered by
 // scaling the source up and translating the cropped-away part out of the frame,
-// so without it the discarded region paints over its neighbours.
+// so without it the discarded region paints over its neighbours. A picture with
+// a frame (`a:ln`) or an outer shadow keeps that clip on the inner surface
+// instead, so the centred line (`ShapeEffectOverlay`) and the shadow can extend
+// past the box (shared `getPictureFrameLayers`).
+const frameLayers = computed(() =>
+	getPictureFrameLayers(props.element, {
+		overflow: getImageOverflow(props.element),
+		borderRadius: geometryMask.value?.borderRadius as string | undefined,
+		clipPath: (geometryMask.value?.clipPath as string | undefined) ?? cropShapeClip.value,
+	}),
+);
 const containerStyle = computed<CSSProperties>(() => ({
 	...getContainerStyle(props.element, props.zIndex),
-	overflow: getImageOverflow(props.element),
-	...(geometryMask.value ?? {}),
-	clipPath: geometryMask.value?.clipPath ?? cropShapeClip.value,
+	...(frameLayers.value.box as CSSProperties),
 }));
+// Without a frame the surface takes no box of its own, so the markup lays out
+// exactly as the single clipped box did.
+const surfaceStyle = computed<CSSProperties>(
+	() => (frameLayers.value.surface as CSSProperties | undefined) ?? { display: 'contents' },
+);
 const imageFitStyle = computed<CSSProperties>(
 	() => getImageFitStyle(props.element) as CSSProperties,
 );
@@ -159,58 +173,58 @@ const hitTargetStyle = useElementHitTargetStyle(
 			data-pptx-hit-target="true"
 			:style="hitTargetStyle"
 		/>
-		<!-- SVG <filter> defs for duotone / advanced-alpha / artistic image effects. -->
-		<svg
-			v-for="f in imageFx.svgFilters"
-			:key="f.id"
-			width="0"
-			height="0"
-			aria-hidden="true"
-			style="position: absolute; width: 0; height: 0; overflow: hidden"
-		>
-			<defs>
-				<filter :id="f.id" color-interpolation-filters="sRGB" v-html="f.markup" />
-			</defs>
-		</svg>
-		<div
-			v-if="tilingStyle"
-			class="pptx-vue-image-tile"
-			:style="{ ...tilingStyle, filter: imageFx.filter, opacity: imageFx.opacity }"
-		/>
-		<!-- Not draggable: the browser's own image drag would cancel the pointer
+		<div class="pptx-vue-image-surface" :style="surfaceStyle">
+			<!-- SVG <filter> defs for duotone / advanced-alpha / artistic image effects. -->
+			<svg
+				v-for="f in imageFx.svgFilters"
+				:key="f.id"
+				width="0"
+				height="0"
+				aria-hidden="true"
+				style="position: absolute; width: 0; height: 0; overflow: hidden"
+			>
+				<defs>
+					<filter :id="f.id" color-interpolation-filters="sRGB" v-html="f.markup" />
+				</defs>
+			</svg>
+			<div
+				v-if="tilingStyle"
+				class="pptx-vue-image-tile"
+				:style="{ ...tilingStyle, filter: imageFx.filter, opacity: imageFx.opacity }"
+			/>
+			<!-- Not draggable: the browser's own image drag would cancel the pointer
 		     stream of the editor's move gesture. -->
-		<img
-			v-else-if="imageSrc"
-			:src="displaySrc ?? imageSrc"
-			alt=""
-			draggable="false"
-			:style="{
-				...imageFitStyle,
-				display: 'block',
-				filter: imageFx.filter,
-				opacity: imageFx.opacity,
-				...(fillCounterTransform
-					? { transform: fillCounterTransform, transformOrigin: 'center' }
-					: {}),
-			}"
-		/>
-		<div
-			v-if="colorWash"
-			class="pptx-vue-image-color-wash"
-			:style="{
-				position: 'absolute',
-				inset: '0',
-				pointerEvents: 'none',
-				backgroundColor: colorWash.backgroundColor,
-				opacity: colorWash.opacity,
-			}"
-		/>
-		<!-- DAG fill-overlay tint + `a:reflection` mirror. A picture has no
-		     gradient/pattern outline or soft edge of its own to add here (those
-		     builders return undefined for an image), but the reflection mirror
-		     was missing entirely before this: `ElementImageBox` never mounted
-		     `ShapeEffectOverlay` at all, so a reflected picture rendered nothing
-		     extra despite the component supporting one. -->
+			<img
+				v-else-if="imageSrc"
+				:src="displaySrc ?? imageSrc"
+				alt=""
+				draggable="false"
+				:style="{
+					...imageFitStyle,
+					display: 'block',
+					filter: imageFx.filter,
+					opacity: imageFx.opacity,
+					...(fillCounterTransform
+						? { transform: fillCounterTransform, transformOrigin: 'center' }
+						: {}),
+				}"
+			/>
+			<div
+				v-if="colorWash"
+				class="pptx-vue-image-color-wash"
+				:style="{
+					position: 'absolute',
+					inset: '0',
+					pointerEvents: 'none',
+					backgroundColor: colorWash.backgroundColor,
+					opacity: colorWash.opacity,
+				}"
+			/>
+		</div>
+		<!-- DAG fill-overlay tint, `a:reflection` mirror and the picture's own
+		     frame (`a:ln`, the centred outline from `buildStrokeOutline`). It sits
+		     beside the clipped surface, on the box, so the half of the line that
+		     falls outside the picture is not cut. -->
 		<ShapeEffectOverlay :element="element" :media-data-urls="mediaDataUrls" />
 	</div>
 </template>
