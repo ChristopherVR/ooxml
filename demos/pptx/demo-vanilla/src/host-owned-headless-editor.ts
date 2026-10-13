@@ -107,6 +107,7 @@ export function mountHostOwnedHeadlessEditor(
 				mediaDataUrls: loaded?.mediaDataUrls ?? new Map(),
 				colorScheme: loaded?.colorScheme,
 				fontScheme: loaded?.fontScheme,
+				formatScheme: loaded?.formatScheme,
 				tableStyleMap: loaded?.tableStyleMap,
 				interactive: true,
 			}),
