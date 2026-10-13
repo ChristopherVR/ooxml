@@ -64,6 +64,48 @@ test.use({ viewport: VIEWPORT, deviceScaleFactor: 2 });
 // warms fonts and stylesheets) plus three in-page pixel diffs.
 test.describe.configure({ timeout: 240_000 });
 
+/** Surface a capture exception before it becomes a misleading download timeout. */
+interface PageErrorSource {
+	on(event: 'pageerror', listener: (error: Error) => void): unknown;
+	off(event: 'pageerror', listener: (error: Error) => void): unknown;
+}
+async function withoutPageErrors<T>(page: PageErrorSource, capture: () => Promise<T>): Promise<T> {
+	let reportError: (error: Error) => void = () => {};
+	const error = new Promise<never>((_resolve, reject) => {
+		reportError = reject;
+	});
+	page.on('pageerror', reportError);
+	try {
+		return await Promise.race([capture(), error]);
+	} finally {
+		page.off('pageerror', reportError);
+	}
+}
+
+test('capture errors and download failures retain their cause and remove the diagnostic listener', async () => {
+	const listeners = new Set<(error: Error) => void>();
+	const page: PageErrorSource = {
+		on: (_event, listener) => listeners.add(listener),
+		off: (_event, listener) => listeners.delete(listener),
+	};
+	const original = new TypeError("Cannot read properties of null (reading 'setAttribute')");
+	await expect(
+		withoutPageErrors(page, async () => {
+			queueMicrotask(() => {
+				for (const listener of listeners) listener(original);
+			});
+			return new Promise<never>(() => {});
+		}),
+	).rejects.toBe(original);
+	const downloadError = new Error('download failed');
+	await expect(
+		withoutPageErrors(page, async () => {
+			throw downloadError;
+		}),
+	).rejects.toBe(downloadError);
+	expect(listeners.size).toBe(0);
+});
+
 test.describe('selection chrome is absent from raster exports', () => {
 	test.use({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 	// These elements exercise the rounded shape, clipped shape, and connector
@@ -206,15 +248,24 @@ test.describe('raster export fidelity: foreignObject vs html2canvas vs on-screen
 		});
 		const fallbackErrors: string[] = [];
 		html2canvasPage.on('pageerror', (error) => fallbackErrors.push(error.message));
-		await forceHtml2CanvasFallback(html2canvasPage);
-		await observeHtml2CanvasRuns(html2canvasPage);
-		await loadDeck(html2canvasPage, FIDELITY_DECK);
-		await injectFidelityTestStyles(html2canvasPage, SHAPE_SELECTOR, { transform3d: false });
-		await openBackstageExport(html2canvasPage);
-		const html2canvasBytes = await downloadBytes(await downloadViaCard(html2canvasPage, PNG_CARD));
-		const forcedFailures = await countForcedFallbacks(html2canvasPage);
-		const fallbackHtml2CanvasRuns = await countHtml2CanvasRuns(html2canvasPage);
-		await html2canvasPage.close();
+		let html2canvasBytes: Uint8Array;
+		let forcedFailures: number;
+		let fallbackHtml2CanvasRuns: number;
+		try {
+			await forceHtml2CanvasFallback(html2canvasPage);
+			await observeHtml2CanvasRuns(html2canvasPage);
+			await loadDeck(html2canvasPage, FIDELITY_DECK);
+			await injectFidelityTestStyles(html2canvasPage, SHAPE_SELECTOR, { transform3d: false });
+			await openBackstageExport(html2canvasPage);
+			expect(fallbackErrors, 'loading the capture page must not throw').toEqual([]);
+			html2canvasBytes = await withoutPageErrors(html2canvasPage, async () =>
+				downloadBytes(await downloadViaCard(html2canvasPage, PNG_CARD)),
+			);
+			forcedFailures = await countForcedFallbacks(html2canvasPage);
+			fallbackHtml2CanvasRuns = await countHtml2CanvasRuns(html2canvasPage);
+		} finally {
+			await html2canvasPage.close();
+		}
 		expect(fallbackErrors, 'capture must not throw while cloning the viewer chrome').toEqual([]);
 		expect(forcedFailures, 'the forced-failure stub must have fired').toBeGreaterThan(0);
 		expect(fallbackHtml2CanvasRuns, 'the forced page must have run html2canvas').toBeGreaterThan(0);
