@@ -7,16 +7,17 @@ for case in cases:
  case['measurements']=[]
  with fitz.open(root/(case['name']+'.pdf')) as pdf:
   for page in pdf:
-   borders=[];fills=[];lines=[]
+   borders=[];fills=[];lines=[];rules=[]
    for drawing in page.get_drawings():
     fill=drawing['fill'];rgb=tuple(round(c*255)for c in fill)if fill else None
+    if rgb==(0,0,0)and drawing['rect'].width>20 and drawing['rect'].height<2:rules.append([round(v,3)for v in drawing['rect']])
     if rgb in [(255,0,0),(0,0,255)]:borders.append({'role':'outer'if rgb==(255,0,0)else'nested','rectPt':[round(v,3)for v in drawing['rect']]})
     if rgb in [(255,255,0),(0,255,255),(0,255,0),(255,0,255)]:fills.append({'color':'#'+''.join(f'{v:02X}'for v in rgb),'rectPt':[round(v,3)for v in drawing['rect']]})
    for block in page.get_text('dict')['blocks']:
     for line in block.get('lines',[]):
      text=''.join(span['text']for span in line['spans'])
      if re.search(r'T\dR\d+C\d+L\d+|N\d+L\d+|Outer cell',text):lines.append({'text':text,'leftPt':round(line['bbox'][0],3),'baselinePt':round(line['spans'][-1]['origin'][1],3)})
-   measurement={'borders':borders,'fills':fills,'lines':lines}
+   measurement={'borders':borders,'fills':fills,'lines':lines,'rules':rules}
    if case['name'].startswith('enclosing-border-') and case['name']!='enclosing-border-split':
     # Colored frame/fill pixels are excluded: this crop measures retained dark glyph ink.
     crop=fitz.Rect(44,58,103,69);scale=4

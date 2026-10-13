@@ -1,0 +1,11 @@
+# Long interacting inner footnote continuations
+
+Seven owned Word 16 probes extend the earlier two/three-reference nested fixtures to forty explicit paragraphs per long note. `generate-word-long-inner-notes.py` creates synthetic copies from the published multiple-note corpus; `record-word-long-inner-notes.ps1` saves native DOCX and exports PDF. `measure-word-table-borders.py` records every body/note line and outer/nested border rectangles in PDF points. No user documents are opened.
+
+The published source already matches all seven probes. There is no product-code change in this acceptance slice. The cases cover a long first or second inner note, two long notes, a consumed marker followed by another inner or enclosing-cell marker, two notes in one inner story, and three notes with long first/last bodies. They span four to eight pages, including note-only pages and later body resumption. Shared source-token reflow, currently unplaced story constraints and existing footnote continuation helpers produce the native partitions.
+
+For example, `long-note-inner-first` places one body line per story and fifteen note lines on page one, seventeen note lines on a note-only page two, then eight body/eight note lines on page three and eleven body lines plus the second three-line note on page four. `long-note-three` covers eight pages and distinct independent inner/enclosing cuts around the later references.
+
+Tests compare every page's body/note sets, every body/note baseline and physical table band within 0.2 pt, body ink x positions, continuation flags, absence of table frames on note-only pages, exact document/footnote XML and saved/reopened source models. Browser cases cover continued-note separators, frame bands, body editing history and save/reopen. Native glyph raster parity is not claimed.
+
+This evidence is specific to the existing one automatic, top-aligned inner row, stable complete solid borders, single-column bottom footnotes, fixed twelve-point line spacing and up to three distinct anchored references. Reused IDs, multiple unanchored notes, four references, complex inner structures, long interacting independently balanced note columns, altered separator stories, different note paragraph keeping and other formatting profiles remain outside these probes. Published structural and reference-count refusal gates are unchanged.
