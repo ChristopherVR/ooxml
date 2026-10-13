@@ -17,8 +17,10 @@
  * than in a consumer's app.
  */
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
+import { motion, MotionConfig } from 'framer-motion';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, {
 	act,
@@ -137,5 +139,50 @@ describe('react major compatibility', () => {
 			root.render(<PowerPointViewer canEdit />);
 		});
 		expect(container.firstElementChild).toBe(first);
+	});
+
+	it('includes the installed Motion major in the supported peer contract', () => {
+		const manifest = JSON.parse(
+			readFileSync(path.resolve(import.meta.dirname, '../../package.json'), 'utf8'),
+		) as { peerDependencies: Record<string, string> };
+		const installed = JSON.parse(
+			readFileSync(createRequire(import.meta.url).resolve('framer-motion/package.json'), 'utf8'),
+		) as { version: string };
+		const declared = [...manifest.peerDependencies['framer-motion']!.matchAll(/\^(\d+)\./gu)].map(
+			(match) => match[1],
+		);
+		expect(declared).toStrictEqual(['12', '13', '14']);
+		expect(declared).toContain(installed.version.split('.')[0]);
+	});
+
+	it('coexists with a real Motion host through animation update and viewer unmount', async () => {
+		const ref = createRef<ViewerHandle>();
+		const render = (opacity: number) =>
+			root.render(
+				<MotionConfig reducedMotion='always'>
+					<motion.div
+						data-testid='motion-peer-host'
+						initial={false}
+						animate={{ opacity }}
+						transition={{ duration: 0 }}
+					>
+						<PowerPointViewer ref={ref} canEdit />
+					</motion.div>
+				</MotionConfig>,
+			);
+		act(() => render(1));
+		const host = container.querySelector<HTMLElement>('[data-testid="motion-peer-host"]')!;
+		const shell = host.firstElementChild;
+		expect(shell).not.toBeNull();
+		expect(ref.current?.getContent).toBeTypeOf('function');
+		await act(async () => {
+			render(0.5);
+		});
+		await vi.waitFor(() => expect(host.style.opacity).toBe('0.5'));
+		expect(host.firstElementChild).toBe(shell);
+		expect(ref.current?.getContent).toBeTypeOf('function');
+		act(() => root.render(null));
+		expect(host.isConnected).toBeFalsy();
+		expect(ref.current).toBeNull();
 	});
 });
