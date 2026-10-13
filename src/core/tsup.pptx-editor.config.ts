@@ -54,6 +54,8 @@ export default defineConfig({
 		'pptx/editor/render/group-drill': 'pptx/editor/render/group-drill.ts',
 		'pptx/editor/render/group-ops': 'pptx/editor/render/group-ops.ts',
 		'pptx/editor/render/inline-list-body': 'pptx/editor/render/inline-list-body.ts',
+		'pptx/editor/render/paragraph-geometry-overrides':
+			'pptx/editor/render/paragraph-geometry-overrides.ts',
 		'pptx/editor/render/remap-empty-paragraph': 'pptx/editor/render/remap-empty-paragraph.ts',
 		'pptx/editor/render/remap-paragraph-sources': 'pptx/editor/render/remap-paragraph-sources.ts',
 		'pptx/editor/render/remap-text-bullets': 'pptx/editor/render/remap-text-bullets.ts',

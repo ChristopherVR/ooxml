@@ -2335,3 +2335,9 @@ Source: ChristopherVR/ooxml, commit `49b768561413d95cbfe4a1fd3d5dded9f721317c`.
 
 - `src/ui/src/pptx/render/text-style-scope.ts` and its pure tests move to `src/core/pptx/editor/render/`, changing only model/dependency imports. Body/run partitioning, line-spacing exclusivity, authored paragraph/indent overrides and effective decoration reconciliation retain their existing behavior; the UI path remains a compatibility export.
 - `TextDecorationFlag`, `TEXT_DECORATION_FLAGS` and `isContentSegment` move from UI `selection-format-state.ts` to core `text-content-style.ts`, reusing the existing core bullet-marker predicate. UI selection range filtering, pressed-state computation and exports remain in place. No DOM, selection restoration, history or framework logic moves into core, and this extraction establishes no new native paragraph semantics.
+
+## PowerPoint per-paragraph geometry cascade
+
+Source: ChristopherVR/ooxml, commit `963ea270bdbc76057406b7e438619f34311309bd` (module last changed in `ba4cd0dc64707ed32d4386c14b80b0ad8a50300a`).
+
+`src/ui/src/pptx/render/paragraph-geometry-overrides.ts` and its three pure tests move to `src/core/pptx/editor/render/`, changing only model imports. The five-field paragraph-own/body fallback cascade is unchanged; the UI path remains a thin compatibility export. Paragraph DOM assembly, CSS mapping, selection and history stay in shared UI and the bindings. This extraction does not resolve the existing body fallback policy or establish new native geometry semantics.
