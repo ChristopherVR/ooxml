@@ -30,6 +30,19 @@ export function clipTableFrames(
 				},
 			];
 		});
+		if (table.fragmentEdges && rows.length) {
+			const edges = table.fragmentEdges;
+			for (const [row, side] of [
+				[rows[0]!, 'top'],
+				[rows.at(-1)!, 'bottom'],
+			] as const) {
+				if (row.geometry)
+					row.geometry = row.geometry.map((cell, index) => ({
+						...cell,
+						borders: { ...cell.borders, [side]: edges[side][index]! },
+					}));
+			}
+		}
 		return [{ ...table, yPx: top - start + inset, heightPx: bottom - top, rows }];
 	});
 }

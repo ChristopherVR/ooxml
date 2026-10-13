@@ -1,3 +1,4 @@
+import { reflowNestedFragments } from './nested-fragment-edges';
 import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import { layoutBorderedRow, TableFragmentBorders } from './table-border-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
@@ -28,6 +29,8 @@ export function placeTable(
 	// A tblHeader flag after the first body row is ignored (ECMA-376 17.4.50).
 	const firstBodyRow = table.rows.findIndex((row) => !row.isHeader);
 	const headerRows = table.rows.slice(0, firstBodyRow < 0 ? table.rows.length : firstBodyRow);
+	// Continuation rows retain their source cells even when their height constraint is reset.
+	const nativeFragments = new Map(table.rows.map((row) => [row, reflowNestedFragments(row)]));
 
 	// Table indent, or alignment of the grid within the column.
 	const xPosition = () => {
@@ -55,6 +58,7 @@ export function placeTable(
 		m: TextMeasurer,
 		n: (message: string) => void,
 		remaining?: import('./result').LayoutParagraphBox[][],
+		sourceRow = row,
 	) =>
 		layoutBorderedRow(
 			row,
@@ -63,6 +67,7 @@ export function placeTable(
 			n,
 			profile,
 			remaining,
+			nativeFragments.get(sourceRow) ?? false,
 		);
 	const fragmentBorders = new TableFragmentBorders();
 	let fragmentRows: LayoutTableRowBox[] = [];
@@ -153,6 +158,7 @@ export function placeTable(
 						measurer,
 						note,
 						remainingRow.cells,
+						row,
 					);
 					if (fragmentRows.length) {
 						fragmentRows = [];
@@ -191,6 +197,7 @@ export function placeTable(
 									measurer,
 									note,
 									after.cells,
+									row,
 								)
 							: after;
 					continue;
@@ -205,6 +212,7 @@ export function placeTable(
 							measurer,
 							note,
 							remainingRow === initial ? undefined : remainingRow.cells,
+							row,
 						);
 					continue;
 				}
@@ -256,13 +264,14 @@ export function placeTable(
 			if (before.cells.some((cell) => cell.length)) fragmentRows.push(toRowBox(before, false));
 			startNewFragment();
 			remainingRow =
-				after && previousWidth !== cursor.columnWidthPx
+				after && (previousWidth !== cursor.columnWidthPx || nativeFragments.get(row))
 					? layoutRow(
 							{ ...row, heightPx: 0, heightRule: 'atLeast' },
 							cursor.columnWidthPx,
 							measurer,
 							note,
 							after.cells,
+							row,
 						)
 					: after;
 		}
@@ -270,6 +279,17 @@ export function placeTable(
 
 	for (const row of table.rows) {
 		const layout = layoutRow(row, cursor.columnWidthPx, measurer, note);
+		if (
+			layout.heightPx > cursor.remainingHeightPx() &&
+			!nativeFragments.get(row) &&
+			row.cells.some((cell) =>
+				cell.blocks?.some((block) => block.kind === 'table' && block.rows.length > 1),
+			)
+		)
+			note(
+				'Nested physical border edges at page cuts remain approximate outside two automatic, note-free rows with direct paragraphs and complete shared borders.',
+			);
+
 		if (
 			activeBorders &&
 			layout.heightPx > cursor.remainingHeightPx() &&

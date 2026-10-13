@@ -61,6 +61,8 @@ export interface LayoutParagraphBox {
 	frame?: LayoutParagraphFrame;
 	/** Nested frame edges required again at physical continuation cuts. */
 	tableFrameInsets?: { top: number; bottom: number };
+	/** Measured physical bottom edge width, distinct from an interior shared row edge. */
+	tableFragmentBottomPx?: number;
 }
 
 export interface LayoutParagraphFrame {
@@ -107,6 +109,11 @@ export interface LayoutTableBox {
 	yPx: number;
 	heightPx: number;
 	rows: LayoutTableRowBox[];
+	/** Source outer edges repainted at each measured nested physical fragment. */
+	fragmentEdges?: {
+		top: (import('./input').LayoutBorder | undefined)[];
+		bottom: (import('./input').LayoutBorder | undefined)[];
+	};
 }
 
 export type LayoutBlockBox = LayoutParagraphBox | LayoutTableBox;

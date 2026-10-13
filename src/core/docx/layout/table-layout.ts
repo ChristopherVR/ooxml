@@ -1,3 +1,4 @@
+import { reflowNestedFragments } from './nested-fragment-edges';
 import { cellContentBottom } from './table-content';
 import { clipTableFrames } from './table-frames';
 import type { TextMeasurer } from './measure';
@@ -67,6 +68,7 @@ export function layoutRow(
 	startTokens?: ReadonlyMap<string, number>,
 	frameBorders = false,
 	frameLeftBorderPx?: number,
+	physicalFragments = reflowNestedFragments(row),
 ): RowLayout {
 	const count = row.cells.length || 1;
 	let x = 0;
@@ -101,6 +103,7 @@ export function layoutRow(
 			note,
 			padding.top,
 			starts,
+			physicalFragments,
 		);
 		const heightPx = content.heightPx + padding.bottom;
 		geometry.push({
@@ -157,16 +160,24 @@ function splitCellAtHeight(
 	let beforeHeightPx = 0;
 	for (const box of boxes) {
 		const cut = paragraphCuts?.get(box.blockId) ?? cutHeightPx;
-		if (box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cut) {
+		if (
+			box.yPx + box.heightPx + (box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0) <=
+			cut
+		) {
 			before.push(box);
 			beforeHeightPx = Math.max(
 				beforeHeightPx,
-				box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0),
+				box.yPx + box.heightPx + (box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0),
 			);
 			continue;
 		}
 		const beforeLines = box.lines.filter(
-			(line) => box.yPx + line.yPx + line.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cut,
+			(line) =>
+				box.yPx +
+					line.yPx +
+					line.heightPx +
+					(box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0) <=
+				cut,
 		);
 		const afterLines = box.lines.slice(beforeLines.length);
 		if (beforeLines.length) {
@@ -174,7 +185,7 @@ function splitCellAtHeight(
 			before.push({ ...box, heightPx: bottom, lines: beforeLines });
 			beforeHeightPx = Math.max(
 				beforeHeightPx,
-				box.yPx + bottom + (box.tableFrameInsets?.bottom ?? 0),
+				box.yPx + bottom + (box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0),
 			);
 		}
 		if (afterLines.length) {
