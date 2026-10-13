@@ -1,18 +1,18 @@
 # Office suite parity review
 
-Reviewed 2026-10-13, including integration against `630adbb3a` and the changes below.
+Reviewed 2026-10-13, including the native acceptance and integration batches below.
 This is an evidence-based source review and tested implementation batch, not
 a claim of Microsoft Office equivalence. The consolidated repository contains
 all four engines and product editors, with framework bindings under `viewers/`.
 
 ## Current state
 
-| Product    | Working foundation                                                                                                                                                             | Largest remaining workflow gaps                                                                                                                                                                                 |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, authority-based and Yjs collaboration      | Header/footer and note-story editing in Print Layout, per-column note placement, vertically justified sections, editable charts/equations and text-box pagination, complex-table structural editing             |
-| PowerPoint | Presentation model and editing, shared rendering and ribbon, slide sorter, multiple framework bindings, import/export and conversion                                           | Full text layout in raster export, native Office clipboard interoperability, search in charts/master text, broader native render comparisons                                                                    |
-| Excel      | Workbook read/write, recalculation and dynamic arrays, editing/history, grid, charts, formula discovery, shared editor and bindings                                            | Advanced pivot layouts and slicers, XLSB and ODS imports, remaining financial/statistical formulas, sparkline style/date-axis/group controls, remaining header formatting/drawing fidelity and page-break views |
-| Visio      | VSDX import and source-backed edits, shapes, grouping, connectors, routing, ShapeSheet subset, page setup, data/metadata, themes, layers, shared ribbon and framework bindings | Full ShapeSheet behavior, complete native geometry/text fidelity, curved connector and native geometry/text comparisons, parts of data graphics and accessibility/proofing workflows                            |
+| Product    | Working foundation                                                                                                                                                             | Largest remaining workflow gaps                                                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Word       | OOXML editing and preservation, section pagination, continuous section bands, column balancing, tables, footnotes, review features, authority-based and Yjs collaboration      | Header/footer and note-story editing in Print Layout, vertically justified sections, editable charts/equations and text-box pagination, complex-table structural editing                                                         |
+| PowerPoint | Presentation model and editing, shared rendering and ribbon, slide sorter, multiple framework bindings, import/export and conversion                                           | Full text layout in raster export, desktop Office clipboard interoperability, inherited master-text search, remaining animation target modes and broader native render comparisons                                               |
+| Excel      | Workbook read/write, recalculation and dynamic arrays, editing/history, grid, charts, formula discovery, shared editor and bindings                                            | Pivot grouping, filters, slicers and Values-on-rows, XLSB and ODS imports, remaining financial/statistical formulas, sparkline style/date-axis/group controls, remaining header formatting/drawing fidelity and page-break views |
+| Visio      | VSDX import and source-backed edits, shapes, grouping, connectors, routing, ShapeSheet subset, page setup, data/metadata, themes, layers, shared ribbon and framework bindings | Full ShapeSheet behavior, complete native geometry/text fidelity, unmeasured routing profiles, parts of data graphics and accessibility/proofing workflows                                                                       |
 
 Evidence entry points:
 
@@ -250,3 +250,23 @@ PowerPoint has an opt-in series/category label scope across all five bindings. L
 - Reuses the existing core number-picture formatter. No formatter logic is duplicated in UI or bindings. Other internal numeric/date pictures and page-dependent units remain cached and unsupported.
 
 - Boundary verification adds 72 native cases: half-decimal rounding, zero, small-number scientific notation and large decimals. Integer overflow beyond 15 digits remains cached. The shared Visio numeric formatter now rounds decimal ties consistently.
+
+### Nested Word table frames and native border occupancy
+
+Nested Print Layout tables retain resolved row/cell geometry and paint borders and shading through the existing table renderer. Fixed-width alignment and center/bottom text alignment use shared core geometry. Decorations do not create another editable story or intercept text hit targets.
+
+Eleven synthetic native Word profiles cover one/two rows, centered placement, fixed-height vertical alignment, uniform 0.5/1/2/3 point solid borders, margins and split rows. Ink positions match within 0.15 points and frame dimensions within 0.2 points; the split case matches native 16/4 line placement. Core checks source XML preservation for every fixture. Validation includes 1,347 Word tests, 171 print UI tests and browser editing guard/history/export/reopen cases.
+
+Border reservation is admitted for the measured complete uniform solid-edge profile. Mixed widths, missing edges and other styles report approximate occupancy. Inner vertical merges, repeated inner headers, glyph metrics and rasterization remain limits. Native evidence and regeneration instructions are in [the nested-frame corpus](../src/core/docx/__fixtures__/nested-table-frames/README.md).
+
+### Excel multiple-measure report layouts
+
+PivotTables now support up to sixteen Values-on-columns measures in tabular, compact and outline reports, with one/two row fields and an optional column field. The model, per-measure aggregation, headers, source cache and Values-axis XML remain in core; the shared UI configures fields, aggregates, captions and layout. Refresh, undo/redo and save/reopen reuse existing editing transactions.
+
+Eighty-three native Excel cases compare every cached/refreshed cell value, type and dimension, including repeated measures, errors, sparse intersections, subtotals and label repetition. Existing x14 Values-header extensions are normalized on conversion. Output budgets are checked before header allocation. Validation includes 6,782 Excel tests, 376 UI tests and repeated production browser workflows.
+
+Values-on-rows, visible/custom Values-header variants, grouping, filters, slicers and shared cache profiles remain preserved unsupported cases. The native acceptance script is `scripts/xlsx-pivot-acceptance.ps1`.
+
+### PowerPoint picture effect extraction
+
+Animated picture frames paint above their image pixels while retaining the crop and external shadow. The duplicate placement decision and background paint-layer CSS move from React's interactive/static renderers into `src/ui/src/pptx/render/picture-frame.ts`, with provenance recorded. Ten static/animated browser cases across all five bindings and focused renderer regressions pass. Broader animation targets and native slideshow pixel comparisons remain separate limits.
