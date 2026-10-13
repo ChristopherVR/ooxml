@@ -35,7 +35,7 @@ describe('getTextBlockStyle', () => {
 			textElement({ fontSize: 40, autoFit: true, autoFitMode: 'normal', autoFitFontScale: 0.7 }),
 		);
 		expect(autofit['fontSize']).toBe('28px');
-		expect(getTextBlockStyle(textElement({ textWrap: 'none' }))['whiteSpace']).toBe('nowrap');
+		expect(getTextBlockStyle(textElement({ textWrap: 'none' }))['whiteSpace']).toBe('pre');
 		expect(getTextBlockStyle(textElement({}))['whiteSpace']).toBe('pre-wrap');
 	});
 

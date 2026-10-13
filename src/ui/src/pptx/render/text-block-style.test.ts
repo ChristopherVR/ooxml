@@ -84,8 +84,19 @@ describe('buildTextBlockStyle', () => {
 	// Defect B: `a:bodyPr/@wrap="none"` was applied by React alone.
 	it('never wraps a wrap="none" body, even with the flex body layout', () => {
 		const style = buildTextBlockStyle(textEl({ textWrap: 'none' }), { bodyLayout: true });
-		expect(style.whiteSpace).toBe('nowrap');
+		expect(style.whiteSpace).toBe('pre');
 		expect(style.overflow).toBe('visible');
+	});
+
+	// `nowrap` stops wrapping but also collapses white space: PowerPoint keeps
+	// "A        B" in a wrap="none" box, and an editor surface that holds the
+	// body as "line\nline" text showed every line joined on one line.
+	it('keeps spaces and line breaks in a wrap="none" body', () => {
+		for (const options of [{}, { bodyLayout: true }, { pxLengths: true }]) {
+			const style = buildTextBlockStyle(textEl({ textWrap: 'none' }), options);
+			expect(style.whiteSpace).not.toBe('nowrap');
+			expect(style.whiteSpace).toBe('pre');
+		}
 	});
 
 	it('defaults a wrapping body to pre-wrap only under bodyLayout', () => {

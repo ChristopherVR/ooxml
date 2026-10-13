@@ -265,7 +265,7 @@ describe('buildTextBlockStyle bodyLayout', () => {
 		const style = buildTextBlockStyle(textElement({ textWrap: 'none', vertOverflow: 'clip' }), {
 			bodyLayout: true,
 		});
-		expect(style.whiteSpace).toBe('nowrap');
+		expect(style.whiteSpace).toBe('pre');
 		expect(style.overflow).toBe('hidden');
 	});
 

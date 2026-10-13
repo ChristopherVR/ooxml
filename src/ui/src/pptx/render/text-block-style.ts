@@ -175,7 +175,7 @@ export function buildTextBlockStyle(
 	const style: TextBlockStyle = {};
 
 	// Layout first: the typography below must win on any shared property (a
-	// `wrap="none"` body's `nowrap` has to beat the default `pre-wrap`).
+	// `wrap="none"` body's `pre` has to beat the default `pre-wrap`).
 	// `bodyLayoutStyle` may itself declare `direction` (`a:bodyPr/@rtlCol` on a
 	// multi-column body); captured here so the unconditional `style.direction`
 	// assignment below can fall back to it instead of clobbering it back to
@@ -271,9 +271,10 @@ export function buildTextBlockStyle(
 		style.textOrientation = textOrientation;
 	}
 
-	// `a:bodyPr/@wrap="none"`: PowerPoint lets the line run past the shape.
+	// `a:bodyPr/@wrap="none"`: the line runs past the shape. `pre`, not `nowrap`:
+	// `nowrap` also collapses runs of spaces and "\n" breaks (editor surfaces).
 	if (ts?.textWrap === 'none') {
-		style.whiteSpace = 'nowrap';
+		style.whiteSpace = 'pre';
 		style.overflow = 'visible';
 	}
 
