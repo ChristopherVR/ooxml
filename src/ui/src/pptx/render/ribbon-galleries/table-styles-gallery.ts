@@ -19,7 +19,7 @@ import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
 import type { RibbonGalleryContext, RibbonGalleryDescriptor } from './gallery-types';
 import { normaliseTableStyleId, tableStyleGallerySections } from './table-style-gallery-catalog';
-import { tableStyleTileSvg } from './table-style-tile-svg';
+import { tableStyleTileOptions, tableStyleTileSvg } from './table-style-tile-svg';
 
 const TILE = { width: 60, height: 44 };
 
@@ -100,6 +100,7 @@ function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 	const tableData = tableDataOf(ctx.element);
 	const current = normaliseTableStyleId(tableData?.tableStyleId);
 	const colorScheme = galleryColorScheme(ctx);
+	const options = tableData ? tableStyleTileOptions(tableData) : undefined;
 	return {
 		id: 'tableStyles',
 		labelKey: 'pptx.gallery.tableStyles.title',
@@ -117,7 +118,7 @@ function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 				labelKey: entry.labelKey,
 				...(entry.labelParams && { labelParams: entry.labelParams }),
 				label: entry.name,
-				previewSvg: tableStyleTileSvg(entry.id, colorScheme, TILE),
+				previewSvg: tableStyleTileSvg(entry.id, colorScheme, TILE, options),
 				applied: current === entry.id,
 			})),
 		})),
