@@ -3,6 +3,23 @@
 Reviewed 2026-10-12 against `cd3915465` in the `ooxml-core` checkout.
 This is a focused source review and implementation, not an Excel parity certification.
 
+## Current PivotTable status
+
+The dated source audit below records the initial implementation. Subsequent
+native-backed batches support one or two real row fields, up to sixteen
+measures, uniform tabular/compact/outline layouts and an optional column axis.
+One report filter supports All or one exact cached source value when Values
+are on columns. Both row levels retain complete cache item indexes; selection,
+source refresh, history and save/reopen reuse the existing indexed engine.
+
+The nested report-filter corpus contains 509 native cached/refreshed cases,
+including 114 new cases and 108 owned native layout profiles. Multiple or
+dynamic filters, Values-on-rows filters, grouping, slicers, shared caches,
+mixed/custom layouts, ambiguous captions and repeated column captions remain
+preserved unsupported profiles. Native English caption forms are measured.
+See [the current suite evidence](office-parity-review.md) and
+`native-pivot-nested-page-evidence.json` for bounds and reproduction scripts.
+
 ## Implemented
 
 `src/core/xlsx/formula/functions/text-regex.ts` previously rejected every

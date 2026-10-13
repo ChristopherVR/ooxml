@@ -9,18 +9,26 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Minigráficos (crear, dar formato y borrar)',
 		'迷你图（创建、格式设置和清除）',
 	],
-	'Worksheet-range PivotTables (one row field, optional column field and one value field)': [
-		'Tableaux croisés dynamiques de plages (un champ de ligne, un champ de colonne facultatif et un champ de valeur)',
-		'PivotTables aus Arbeitsblattbereichen (ein Zeilenfeld, optionales Spaltenfeld und ein Wertfeld)',
-		'Tablas dinámicas de rangos (un campo de fila, columna opcional y un valor)',
-		'工作表区域数据透视表（一个行字段、可选列字段和一个值字段）',
+	'Worksheet-range PivotTables (up to two row fields and sixteen values, one optional column field and one cached report filter)':
+		[
+			'Tableaux croisés dynamiques de plages (jusqu’à deux champs de ligne et seize valeurs, un champ de colonne facultatif et un filtre de rapport mis en cache)',
+			'PivotTables aus Arbeitsblattbereichen (bis zu zwei Zeilenfelder und sechzehn Werte, ein optionales Spaltenfeld und ein zwischengespeicherter Berichtsfilter)',
+			'Tablas dinámicas de rangos (hasta dos campos de fila y dieciséis valores, un campo de columna opcional y un filtro de informe en caché)',
+			'工作表区域数据透视表（最多两个行字段和十六个值字段、一个可选列字段和一个缓存报表筛选器）',
+		],
+	'Unmodeled PivotTable layouts, grouping, slicers and external data sources (preserved)': [
+		'Dispositions non prises en charge, regroupements, segments et sources externes de tableaux croisés dynamiques (conservés)',
+		'Nicht modellierte PivotTable-Layouts, Gruppierung, Datenschnitte und externe Datenquellen (erhalten)',
+		'Diseños de tablas dinámicas no modelados, agrupación, segmentaciones y fuentes externas (conservados)',
+		'未建模的数据透视表布局、分组、切片器和外部数据源（保留）',
 	],
-	'Advanced PivotTable layouts, grouping and external data sources (preserved)': [
-		'Dispositions avancées, regroupements et sources externes de tableaux croisés dynamiques (conservés)',
-		'Erweiterte PivotTable-Layouts, Gruppierung und externe Datenquellen (erhalten)',
-		'Diseños avanzados, agrupación y fuentes externas de tablas dinámicas (conservados)',
-		'高级数据透视表布局、分组和外部数据源（保留）',
-	],
+	'Values-on-rows report filters, multiple/dynamic filters and repeated column captions (preserved)':
+		[
+			'Filtres de rapport avec valeurs en lignes, filtres multiples ou dynamiques et libellés de colonnes répétés (conservés)',
+			'Berichtsfilter mit Werten in Zeilen, mehrere/dynamische Filter und wiederholte Spaltenbeschriftungen (erhalten)',
+			'Filtros de informe con valores en filas, filtros múltiples o dinámicos y títulos de columna repetidos (conservados)',
+			'值位于行上的报表筛选器、多重或动态筛选器和重复列标题（保留）',
+		],
 	OK: ['OK', 'OK', 'Aceptar', '确定'],
 	Cancel: ['Annuler', 'Abbrechen', 'Cancelar', '取消'],
 	Close: ['Fermer', 'Schließen', 'Cerrar', '关闭'],

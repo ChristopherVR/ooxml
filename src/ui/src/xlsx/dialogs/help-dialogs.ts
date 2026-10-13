@@ -41,7 +41,7 @@ export const SUPPORTED_FEATURES = [
 	'Tables',
 	'Charts (display and basic editing)',
 	'Sparklines (create, format and clear)',
-	'Worksheet-range PivotTables (one row field, optional column field and one value field)',
+	'Worksheet-range PivotTables (up to two row fields and sixteen values, one optional column field and one cached report filter)',
 	'Comments and notes',
 	'Hyperlinks',
 	'Data validation',
@@ -50,7 +50,8 @@ export const SUPPORTED_FEATURES = [
 ] as const;
 
 export const UNSUPPORTED_FEATURES = [
-	'Advanced PivotTable layouts, grouping and external data sources (preserved)',
+	'Unmodeled PivotTable layouts, grouping, slicers and external data sources (preserved)',
+	'Values-on-rows report filters, multiple/dynamic filters and repeated column captions (preserved)',
 	'Show Formulas',
 	'Manual calculation',
 	'Outline (grouping) for columns',
