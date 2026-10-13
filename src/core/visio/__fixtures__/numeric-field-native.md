@@ -45,14 +45,19 @@ native resave/reopen. Run `scripts/verify-visio-numeric-fields.ps1` against a
 directory containing the three core-edited drawings and their JSON evidence.
 These checks compare field text, not general document geometry or locale parity.
 
-The fractional fixture adds 96 native cases for FIELDPICTURE 15 through 18:
+The fractional fixture adds 120 native cases for FIELDPICTURE 15 through 18:
 nearest one/two-digit denominators, with or without explicit units. Positive
 and negative values, zero, small fractions, whole-number carries, near-half
 boundaries, thirds and all seven admitted units are included. The bounded core
 formatter searches denominators up to 9 or 99, without allocating candidate
 arrays. Values above 1e15 and nonfinite values remain unsupported.
 
-Regenerate with `-FractionCases`. All four corpora (310 fields) pass core
+Regenerate with `-FractionCases`. All four corpora (334 fields) pass core
 edit/save/reopen, browser export/reopen and native resave/reopen. Compound
 feet/inches pictures 10/13/14 and explicit FORMAT fraction strings are separate
 unsupported profiles; the new formatter does not claim those behaviors.
+
+Visio uses the nearest admitted fraction: 0.06 with a one-digit denominator is
+1/9, unlike Excel's continued-fraction convergent of 0/1. Cross-product number
+formatters therefore retain their native-specific admission policies. The
+expanded corpus includes those differing cases and negative counterparts.

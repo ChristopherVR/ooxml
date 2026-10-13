@@ -4,14 +4,14 @@ import { parseVsdx } from './parser';
 import { editVsdx } from './edit';
 import { fractionalFieldNumber } from './text-field-fraction';
 
-it('matches 96 native fractional inherited fields before and after edit/reopen', async () => {
+it('matches 120 native fractional inherited fields before and after edit/reopen', async () => {
 	const evidence = JSON.parse(
 		readFileSync(
 			new URL('./__fixtures__/numeric-field-fraction-native.json', import.meta.url),
 			'utf8',
 		).replace(/^\uFEFF/, ''),
 	) as { cases: { id: number; code: number; formula: string; text: string }[] };
-	expect(evidence.cases).toHaveLength(96);
+	expect(evidence.cases).toHaveLength(120);
 	const bytes = readFileSync(
 		new URL('./__fixtures__/numeric-field-fraction-native.vsdx', import.meta.url),
 	);
