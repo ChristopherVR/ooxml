@@ -7,6 +7,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { serializePptxToJson } from '../../converter/json';
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../core/PptxHandler';
 
@@ -67,5 +68,21 @@ describe('p:presentation/@firstSlideNum', () => {
 		const reloaded = await load(saved);
 		expect(reloaded.data.firstSlideNumber).toBe(45);
 		expect(reloaded.data.slides).toHaveLength(2);
+	});
+
+	it('keeps the number through JSON import -> save -> reopen', async () => {
+		const { data } = await load(await deckWithPresentationAttributes('firstSlideNum="45"'));
+		const json = new TextEncoder().encode(serializePptxToJson(data));
+		const handler = new PptxHandler();
+		const imported = await handler.load(json.buffer as ArrayBuffer);
+		expect(imported.firstSlideNumber).toBe(45);
+
+		const saved = await handler.save(imported.slides);
+		const zip = await JSZip.loadAsync(saved);
+		const presentationXml = await zip.file('ppt/presentation.xml')!.async('string');
+		expect(presentationXml).toContain('firstSlideNum="45"');
+
+		const reopened = await load(saved);
+		expect(reopened.data.firstSlideNumber).toBe(45);
 	});
 });

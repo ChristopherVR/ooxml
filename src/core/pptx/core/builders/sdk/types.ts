@@ -331,6 +331,12 @@ export interface PresentationOptions {
 	 * Default: 0 (no slides). Slides use the "Blank" layout.
 	 */
 	initialSlideCount?: number;
+	/**
+	 * `p:presentation/@firstSlideNum` (ECMA-376 §19.2.1.26): the number a
+	 * slide-number field shows on the first slide. Omitted when undefined, so
+	 * the spec default (`1`) applies.
+	 */
+	firstSlideNumber?: number;
 }
 
 export interface PresentationThemeInput {
