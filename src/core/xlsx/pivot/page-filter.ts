@@ -32,15 +32,16 @@ export function validatePivotPageFilter(
 		Object.keys(filter).some((key) => key !== 'field' && key !== 'item') ||
 		typeof filter.field !== 'string' ||
 		!pivot.fields.includes(filter.field) ||
-		[pivot.rowField, pivot.columnField, pivot.valueField, ...extras.map((v) => v?.field)].includes(
-			filter.field,
-		) ||
-		pivot.secondRowField ||
+		[
+			pivot.rowField,
+			pivot.secondRowField,
+			pivot.columnField,
+			pivot.valueField,
+			...extras.map((v) => v?.field),
+		].includes(filter.field) ||
 		pivot.valuesAxis === 'rows'
 	)
-		throw new Error(
-			'Report filters require one row field, Values on columns and a separate source field.',
-		);
+		throw new Error('Report filters require Values on columns and a separate source field.');
 	if (
 		filter.item !== undefined &&
 		!(

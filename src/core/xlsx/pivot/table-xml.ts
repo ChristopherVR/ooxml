@@ -7,7 +7,7 @@ import { pivotGrid } from './aggregate';
 import { pivotValueKey } from './data';
 import type { PivotCacheData } from './cache-xml';
 import { pivotMeasures } from './measures';
-import { pivotValueAxisItems } from './values-axis';
+import { pivotValueAxisItems, remapPivotRowEntries } from './values-axis';
 
 /** Writes the supported table structure while retaining unrelated native attributes/extensions. */
 export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCacheData): string {
@@ -19,13 +19,21 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const axisItems = (field: string, visible: typeof grid.rowItems) =>
 		page >= 0 ? pivotItems(pivot, field) : visible;
 	const rowItemsFull = axisItems(pivot.rowField, grid.rowItems);
+	const secondRowItemsFull = pivot.secondRowField
+		? axisItems(pivot.secondRowField, grid.secondRowItems!)
+		: [];
 	const columnItemsFull = pivot.columnField ? axisItems(pivot.columnField, grid.columnItems) : [];
 	const itemIndices = (visible: typeof grid.rowItems, full: typeof grid.rowItems) => {
 		const indices = new Map(full.map((item, index) => [pivotValueKey(item), index]));
 		return visible.map((v) => indices.get(pivotValueKey(v))!);
 	};
 	const rowIndicesFull = itemIndices(grid.rowItems, rowItemsFull),
+		secondRowIndicesFull = itemIndices(grid.secondRowItems ?? [], secondRowItemsFull),
 		columnIndicesFull = itemIndices(grid.columnItems, columnItemsFull);
+	const rowEntries =
+		page >= 0 && grid.rowEntries
+			? remapPivotRowEntries(grid.rowEntries, [rowIndicesFull, secondRowIndicesFull])
+			: grid.rowEntries;
 	const pageOffset = page >= 0 ? 2 : 0;
 	const col = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
 	const measures = pivotMeasures(pivot);
@@ -42,7 +50,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 					: index === row
 						? rowItemsFull
 						: index === second
-							? grid.secondRowItems
+							? secondRowItemsFull
 							: index === col
 								? columnItemsFull
 								: undefined;
@@ -71,7 +79,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 				: [row, ...(second >= 0 ? [second] : []), ...(rowsAxis ? [-2] : [])];
 	let previous: number[] = [];
 	const rowItems =
-		grid.rowEntries
+		rowEntries
 			?.map((entry) => {
 				let prefix = 0;
 				if (entry.type === 'default' && rowsAxis && pivot.valuesPosition === 'first') prefix = 1;

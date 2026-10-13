@@ -1,4 +1,4 @@
-param([switch]$ReportFiltersOnly)
+param([switch]$ReportFiltersOnly, [switch]$NestedReportFiltersOnly)
 # Manual acceptance against installed desktop Excel; outputs stay in a temporary folder.
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
@@ -265,6 +265,36 @@ for(const profile of ['tabular-all','compact-west','outline-east','tabular-numbe
  const mode='page-values-import-'+profile+'-'+change+(wb.sheets[0].pivotTables[0].additionalValues?.length?'':'-single');
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
 }
+
+const nestedPageProfiles=['all','east','west','all-columns','east-columns','west-columns','top-columns','none-columns','repeat-columns','sixteen','min-max','single','single-columns','numeric','boolean','blank','error','sparse','aggregate-error','inner-numeric','inner-boolean','inner-error'];
+const emitNestedPage=async(wb,sheet,mode)=>{
+ const pivot=wb.sheets[sheet].pivotTables[0],grid=pivotGrid(pivot);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));if(grid.indents)writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+ writeFileSync(join(out,mode+'.counts'),JSON.stringify({rows:pivot.secondRowField?2:1,measures:1+(pivot.additionalValues?.length??0),pages:pivot.pageFilter?1:0}));
+};
+for(const layout of ['tabular','compact','outline'])for(const profile of nestedPageProfiles){
+ const wb=createWorkbook({sheets:['Data','Summary']}),edit=createEditSession(wb);
+ const rows=[['Category','Region','Market','Year','Amount','Quantity'],['Fruit','North','East',2025,10,2],['Fruit','North','West',2026,20,3],['Fruit','South','East',2026,7,4],['Veg','South','West',2025,15,5],['Veg','North','East',2025,5,6],['Berry','Islands','West',2026,9,7],['Fruit','South','East',2025,3,8]];
+ let item=profile.startsWith('west')?'West':'East';
+ if(profile==='numeric'){for(let r=1;r<rows.length;r++)rows[r][2]=rows[r][2]==='East'?2025:2026;item=2025;}
+ if(profile==='boolean'){for(let r=1;r<rows.length;r++)rows[r][2]=rows[r][2]==='East';item=true;}
+ if(profile==='blank'){for(let r=1;r<rows.length;r++)if(rows[r][2]==='East')rows[r][2]='';item=null;}
+ if(profile==='error'){for(let r=1;r<rows.length;r++)if(rows[r][2]==='East')rows[r][2]='=NA()';item={error:'#N/A'};}
+ if(profile==='sparse')rows[3][3]=2027;if(profile==='aggregate-error')rows[1][4]='=NA()';
+ if(profile==='inner-numeric')for(let r=1;r<rows.length;r++)rows[r][1]=rows[r][1]==='North'?1:rows[r][1]==='South'?2:3;
+ if(profile==='inner-boolean')for(let r=1;r<rows.length;r++)rows[r][1]=rows[r][1]==='North';
+ if(profile==='inner-error')for(let r=1;r<rows.length;r++)if(rows[r][1]==='North')rows[r][1]='=NA()';
+ rows.forEach((line,r)=>line.forEach((v,c)=>edit.setCellInput(0,r,c,String(v))));
+ const extras=profile.startsWith('single')?[]:profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+i})):profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count',caption:'Count of Quantity'},{field:'Amount',aggregate:'average',caption:'Average of Amount'}];
+ edit.createPivotTable(1,{row:0,col:0},{source:'Data!A1:F8',rowField:'Category',secondRowField:'Region',valueField:'Amount',layout,additionalValues:extras,pageFilter:{field:'Market',...(profile.startsWith('all')?{}:{item})},subtotals:profile!=='none-columns',subtotalPosition:profile==='top-columns'?'top':'bottom',repeatLabels:profile==='repeat-columns',...(profile.includes('columns')||profile==='sparse'||profile==='sixteen'?{columnField:'Year'}:{})});
+ await emitNestedPage(wb,1,'page-values-nested-'+layout+'-'+profile);
+}
+for(const profile of ['tabular-all-bottom','tabular-east-bottom-columns','compact-west-top-columns','compact-east-bottom','outline-east-none-columns','outline-west-top','tabular-east-bottom-columns-repeat','outline-west-none-columns-repeat'])for(const change of ['refresh','all','remove','source','to-one-row','to-one-measure']){
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-nested-page-'+profile+'.xlsx'))));const edit=createEditSession(wb);if(change==='source')edit.setCellInput(1,1,4,'100');
+ edit.refreshPivotTable(0,'SalesPivot',change==='all'?{pageFilter:{field:'Market'}}:change==='remove'?{pageFilter:null}:change==='to-one-row'?{secondRowField:''}:change==='to-one-measure'?{additionalValues:[]}:{});
+ await emitNestedPage(wb,0,'page-values-nested-import-'+profile+'-'+change);
+}
+
 '@ | Set-Content -LiteralPath $taskScript -Encoding utf8
 	& bun run $taskScript
 	if ($LASTEXITCODE -ne 0) { throw 'PivotTable generation failed.' }
@@ -272,7 +302,7 @@ for(const profile of ['tabular-all','compact-west','outline-east','tabular-numbe
 	$excel.Visible = $false; $excel.DisplayAlerts = $false
 	Write-Output ('Native Excel version: '+$excel.Version+', build: '+$excel.Build)
 	Write-Output ('Native Excel file version: '+[Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $excel.Path 'EXCEL.EXE')).FileVersion)
-	if(-not $ReportFiltersOnly){
+	if(-not $ReportFiltersOnly -and -not $NestedReportFiltersOnly){
 	foreach ($case in @(@{ Name='sum'; Total=57 }, @{ Name='count'; Total=5 }, @{ Name='average'; Total=11.4 }, @{ Name='min'; Total=5 }, @{ Name='max'; Total=20 }, @{ Name='imported'; Total=147 }, @{ Name='count-row'; Total=5 }, @{ Name='deleted'; Total=$null })) {
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($case.Name+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
@@ -295,15 +325,18 @@ for(const profile of ['tabular-all','compact-west','outline-east','tabular-numbe
 		$book.Close($false); $book = $null
 	}
 	}
-	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json' | Where-Object { !$ReportFiltersOnly -or $_.BaseName.StartsWith('page-values-') }) {
+	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json' | Where-Object { (!$ReportFiltersOnly -or $_.BaseName.StartsWith('page-values-')) -and (!$NestedReportFiltersOnly -or $_.BaseName.StartsWith('page-values-nested-')) }) {
 		$mode=$expectedFile.BaseName
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($mode+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
 		$pivot = $summary.PivotTables().Item(1)
-		if ($mode.Contains('values') -and $pivot.DataFields().Count -ne $(if($mode.EndsWith('single') -or $mode.EndsWith('to-one-measure')){1}elseif($mode.EndsWith('two')){2}elseif($mode.EndsWith('sixteen')){16}else{3})) { throw ('Wrong PivotTable measure count: '+$mode) }
+		$countsFile=Join-Path $taskFolder ($mode+'.counts')
+		$counts=if(Test-Path -LiteralPath $countsFile){Get-Content -Raw -LiteralPath $countsFile|ConvertFrom-Json}else{$null}
+		if($counts -and ($pivot.DataFields().Count -ne $counts.measures -or $pivot.RowFields().Count -ne $counts.rows -or $pivot.PageFields().Count -ne $counts.pages)){throw ('Wrong nested report field counts: '+$mode)}
+		if (!$counts -and $mode.Contains('values') -and $pivot.DataFields().Count -ne $(if($mode.EndsWith('single') -or $mode.EndsWith('to-one-measure')){1}elseif($mode.EndsWith('two')){2}elseif($mode.EndsWith('sixteen')){16}else{3})) { throw ('Wrong PivotTable measure count: '+$mode) }
 		$rowFieldCount = if ($mode.StartsWith('nested-row-values-') -and !$mode.EndsWith('to-columns') -and !$mode.EndsWith('to-one-measure')) { 3 } elseif ($mode.StartsWith('cache-') -or $mode.StartsWith('page-values-')) { 1 } else { 2 }
-		if($mode.StartsWith('page-values-') -and $pivot.PageFields().Count -ne $(if($mode.Contains('-remove')){0}else{1})){throw ('Wrong report filter count: '+$mode)}
-		if ($pivot.RowFields().Count -ne $rowFieldCount) { throw ('Wrong PivotTable row field count: '+$mode) }
+		if(!$counts -and $mode.StartsWith('page-values-') -and $pivot.PageFields().Count -ne $(if($mode.Contains('-remove')){0}else{1})){throw ('Wrong report filter count: '+$mode)}
+		if (!$counts -and $pivot.RowFields().Count -ne $rowFieldCount) { throw ('Wrong PivotTable row field count: '+$mode) }
 		$expected = Get-Content -Raw -LiteralPath (Join-Path $taskFolder ($mode+'.json')) | ConvertFrom-Json
 		foreach ($phase in @('cached','refreshed')) {
 			if ($phase -eq 'refreshed') { [void]$pivot.RefreshTable() }

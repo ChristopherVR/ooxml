@@ -152,23 +152,16 @@ it('includes the two report rows in the output budget before allocating headers'
 	expect(name).toBe(pivot.name);
 });
 
-it.each(['second', 'rows'])(
-	'refuses unmeasured page-axis combinations %s before history',
-	async (mode) => {
-		const wb = await loadXlsx(native()),
-			edit = createEditSession(wb),
-			pivot = wb.sheets[0]!.pivotTables![0]!;
-		expect(() =>
-			edit.refreshPivotTable(
-				0,
-				pivot.name,
-				mode === 'second' ? { secondRowField: 'Year' } : { valuesAxis: 'rows' },
-			),
-		).toThrow('Report filters require');
-		expect(edit.canUndo()).toBe(false);
-		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
-	},
-);
+it('refuses report filters with Values on rows before history', async () => {
+	const wb = await loadXlsx(native()),
+		edit = createEditSession(wb),
+		pivot = wb.sheets[0]!.pivotTables![0]!;
+	expect(() => edit.refreshPivotTable(0, pivot.name, { valuesAxis: 'rows' })).toThrow(
+		'Report filters require',
+	);
+	expect(edit.canUndo()).toBe(false);
+	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+});
 it('refuses ambiguous typed item captions without changing source or report', () => {
 	const wb = createWorkbook(),
 		edit = createEditSession(wb);

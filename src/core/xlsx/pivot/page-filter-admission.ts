@@ -2,6 +2,8 @@ import { children, elements, first, NS, type XmlElement } from '../../xml/index'
 import type { CellValue, PivotTable } from '../model';
 import { pivotItems, pivotValueKey } from './data';
 import { pivotPageProjection } from './page-filter';
+import { pivotGrid } from './aggregate';
+import { remapPivotRowEntries } from './values-axis';
 const integer = (value: string | null, fallback?: number) =>
 	value === null
 		? (fallback ?? NaN)
@@ -31,6 +33,20 @@ export function assertPageAxisItems(
 	literals(cache);
 	literals(recordRoot);
 	const cacheFields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
+	if (pivot.columnField) {
+		const column = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x)[
+			pivot.fields.indexOf(pivot.columnField)
+		];
+		const extension = first(first(column, 'extLst', NS.x), 'ext', NS.x);
+		if (
+			first(
+				extension,
+				'pivotField',
+				'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
+			)?.getAttribute('fillDownLabels') === '1'
+		)
+			throw new Error('Repeated report column labels are preserved');
+	}
 	if (
 		integer(first(cache, 'cacheFields', NS.x)?.getAttribute('count') ?? null) !==
 			pivot.fields.length ||
@@ -38,7 +54,12 @@ export function assertPageAxisItems(
 		integer(recordRoot.getAttribute('count')) !== pivot.records.length
 	)
 		throw new Error('Inconsistent report cache counts');
-	for (const name of [pivot.rowField, pivot.columnField, pivot.pageFilter.field].filter(Boolean)) {
+	for (const name of [
+		pivot.rowField,
+		pivot.secondRowField,
+		pivot.columnField,
+		pivot.pageFilter.field,
+	].filter(Boolean)) {
 		const field = pivot.fields.indexOf(name!);
 		if (
 			integer(first(cacheFields[field], 'sharedItems', NS.x)?.getAttribute('count') ?? null) !==
@@ -91,18 +112,34 @@ export function assertPageAxisItems(
 	};
 	const rows = axisValues(pivot.rowField, 'axisRow'),
 		rowItems = read('rowItems');
-	if (rowItems.length !== rows.length + 1) throw new Error('Invalid page row items');
+	const grid = pivotGrid(pivot);
+	const entries = grid.rowEntries
+		? remapPivotRowEntries(grid.rowEntries, [
+				rows,
+				pivot.secondRowField ? axisValues(pivot.secondRowField, 'axisRow') : [],
+			])
+		: [
+				...rows.map((index) => ({ indices: [index], type: undefined })),
+				{ indices: [0], type: 'grand' },
+			];
+	if (rowItems.length !== entries.length) throw new Error('Invalid page row items');
+	let previousRow: number[] = [];
 	rowItems.forEach((item, i) => {
-		const xs = children(item, 'x', NS.x),
-			grand = i === rows.length;
+		const expected = entries[i]!;
+		const xs = children(item, 'x', NS.x).map((x) => integer(x.getAttribute('v'), 0)),
+			prefix = integer(item.getAttribute('r'), 0);
 		if (
-			item.getAttribute('t') !== (grand ? 'grand' : null) ||
-			integer(item.getAttribute('r'), 0) !== 0 ||
+			item.getAttribute('t') !== (expected.type ?? null) ||
+			!Number.isInteger(prefix) ||
+			prefix < 0 ||
+			prefix > previousRow.length ||
+			prefix >= expected.indices.length ||
+			(expected.type && prefix !== 0) ||
 			integer(item.getAttribute('i'), 0) !== 0 ||
-			xs.length !== 1 ||
-			integer(xs[0]!.getAttribute('v'), 0) !== (grand ? 0 : rows[i])
+			JSON.stringify([...previousRow.slice(0, prefix), ...xs]) !== JSON.stringify(expected.indices)
 		)
 			throw new Error('Unmodeled page row item');
+		previousRow = expected.type ? [] : expected.indices;
 	});
 	const measures = 1 + (pivot.additionalValues?.length ?? 0),
 		columns = pivot.columnField ? axisValues(pivot.columnField, 'axisCol') : undefined,

@@ -1,5 +1,25 @@
 import type { XmlElement } from '../../xml/index';
 import { attrs } from '../write/xml-out';
+import type { PivotGrid } from './aggregate';
+
+/** Selected reports retain the full cache axis lists; hierarchy tuples use their item indexes. */
+export function remapPivotRowEntries(
+	entries: NonNullable<PivotGrid['rowEntries']>,
+	axes: readonly (readonly number[])[],
+): NonNullable<PivotGrid['rowEntries']> {
+	return entries.map((entry) =>
+		entry.type === 'grand'
+			? entry
+			: {
+					...entry,
+					indices: entry.indices.map((item, axis) => {
+						const index = axes[axis]?.[item];
+						if (index === undefined) throw new Error('Invalid report row axis item');
+						return index;
+					}),
+				},
+	);
+}
 export function pivotFieldIndex(field: XmlElement | undefined): number {
 	const raw = field?.getAttribute('x');
 	if (raw === null || raw === undefined || !/^-?\d+$/.test(raw.trim())) return NaN;
