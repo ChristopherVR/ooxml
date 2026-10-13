@@ -90,8 +90,15 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	if (
 		rowFields.length < 1 ||
 		rowFields.length > 2 ||
-		colFields.length > 1 ||
-		dataFields.length !== 1 ||
+		dataFields.length < 1 ||
+		dataFields.length > 16 ||
+		rowFields.some((field) => Number(att(field, 'x')) < 0) ||
+		(dataFields.length === 1
+			? colFields.length > 1
+			: colFields.length < 1 ||
+				colFields.length > 2 ||
+				Number(att(colFields.at(-1), 'x')) !== -2 ||
+				(colFields.length === 2 && Number(att(colFields[0], 'x')) < 0)) ||
 		first(root, 'pageFields', NS.x) ||
 		first(root, 'filters', NS.x) ||
 		root.getAttribute('rowGrandTotals') === '0' ||
@@ -99,6 +106,20 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Unsupported pivot layout');
 	const measure = dataFields[0]!;
+	for (const [axis, count] of [
+		['rowItems', 1],
+		['colItems', dataFields.length],
+	] as const) {
+		for (const item of children(
+			first(root, axis, NS.x) ?? parseXml('<root/>').documentElement,
+			'i',
+			NS.x,
+		)) {
+			const index = Number(att(item, 'i') ?? '0');
+			if (!Number.isInteger(index) || index < 0 || index >= count)
+				throw new Error('Unsupported Values axis item');
+		}
+	}
 	const aggregate = (att(measure, 'subtotal') ?? 'sum') as PivotTable['aggregate'];
 	if (
 		!PIVOT_AGGREGATES.includes(aggregate) ||
@@ -113,6 +134,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
 	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
+	if (dataFields.length > 1 && layout !== 'tabular')
+		throw new Error('Multiple values currently require tabular layout');
 	if (
 		tableFields.some(
 			(field) =>
@@ -141,16 +164,11 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		);
 	});
 	if (repeat.some((entry) => entry !== repeat[0])) throw new Error('Mixed field label repetition');
-	const col = colFields[0] && names[Number(att(colFields[0], 'x'))];
+	const hasColumn = colFields.length > (dataFields.length > 1 ? 1 : 0);
+	const col = hasColumn ? names[Number(att(colFields[0], 'x'))] : undefined;
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
-	if (
-		!row ||
-		!data ||
-		!location ||
-		(colFields.length && !col) ||
-		(rowFields.length === 2 && !second)
-	)
+	if (!row || !data || !location || (hasColumn && !col) || (rowFields.length === 2 && !second))
 		throw new Error('Invalid pivot fields');
 	const pivot: PivotTable = {
 		name: att(root, 'name') ?? 'PivotTable',
@@ -167,6 +185,21 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		valueField: data,
 		aggregate,
 		valueCaption: decodeEscapes(att(measure, 'name') ?? data),
+		...(dataFields.length > 1
+			? {
+					additionalValues: dataFields.slice(1).map((measure) => {
+						const field = names[Number(att(measure, 'fld'))];
+						const aggregate = (att(measure, 'subtotal') ?? 'sum') as PivotTable['aggregate'];
+						if (
+							!field ||
+							!PIVOT_AGGREGATES.includes(aggregate) ||
+							(att(measure, 'showDataAs') && att(measure, 'showDataAs') !== 'normal')
+						)
+							throw new Error('Unsupported pivot measure');
+						return { field, aggregate, caption: decodeEscapes(att(measure, 'name') ?? field) };
+					}),
+				}
+			: {}),
 		fields: names,
 		records,
 		location,

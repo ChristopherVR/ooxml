@@ -94,6 +94,8 @@ export function validatePivotFields(
 		| 'columnField'
 		| 'valueField'
 		| 'aggregate'
+		| 'valueCaption'
+		| 'additionalValues'
 	>,
 ): void {
 	const used = [
@@ -102,6 +104,29 @@ export function validatePivotFields(
 		...(pivot.columnField ? [pivot.columnField] : []),
 		pivot.valueField,
 	];
+	const extras = pivot.additionalValues ?? [];
+	if (
+		!Array.isArray(extras) ||
+		extras.length > 15 ||
+		extras.some(
+			(measure) =>
+				!measure ||
+				!pivot.fields.includes(measure.field) ||
+				!PIVOT_AGGREGATES.includes(measure.aggregate) ||
+				typeof measure.caption !== 'string' ||
+				!measure.caption.trim() ||
+				measure.caption.length > 255 ||
+				pivot.fields.some((field) => field.toLowerCase() === measure.caption.toLowerCase()),
+		) ||
+		(extras.length > 0 && pivot.layout !== undefined && pivot.layout !== 'tabular') ||
+		new Set(
+			[pivot.valueCaption, ...extras.map((measure) => measure.caption)].map((caption) =>
+				caption?.toLowerCase(),
+			),
+		).size !==
+			extras.length + 1
+	)
+		throw new Error('Multiple PivotTable values require tabular layout and unique captions.');
 	if (
 		(pivot.layout !== undefined && !['tabular', 'compact', 'outline'].includes(pivot.layout)) ||
 		(pivot.subtotalPosition !== undefined && !['top', 'bottom'].includes(pivot.subtotalPosition)) ||

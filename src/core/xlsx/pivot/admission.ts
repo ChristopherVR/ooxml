@@ -15,7 +15,7 @@ const TABLE: Record<string, string> = {
 	field: 'x',
 	rowItems: 'count',
 	colItems: 'count',
-	i: 't r',
+	i: 't r i',
 	x: 'v',
 	dataFields: 'count',
 	dataField: 'name fld subtotal baseField baseItem showDataAs',

@@ -63,6 +63,15 @@ for (const mode of layouts) {
  writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
  writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents??grid.values.map(()=>0)));
 }
+for (const mode of ['cache-values','cache-values-columns','values-rows','values-rows-columns','values-no-subtotals','values-repeat','cache-values-min-max','cache-values-errors']) {
+ const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ if(mode.endsWith('errors')) rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout:'tabular',additionalValues:mode.endsWith('min-max')?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}],...(!mode.startsWith('cache-')?{secondRowField:'Region'}:{}),...(mode.endsWith('columns')?{columnField:'Year'}:{}),subtotals:mode!=='values-no-subtotals',repeatLabels:mode==='values-repeat'});
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
+ writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[1].pivotTables[0]).values));
+}
 for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotals','outline-top','outline-bottom','outline-top-repeat']) {
  const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-'+suffix+'.xlsx'))));
  const session=createEditSession(wb);session.setCellInput(1,1,2,'100');session.refreshPivotTable(0,'SalesPivot');
