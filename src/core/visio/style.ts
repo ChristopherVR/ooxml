@@ -1,3 +1,4 @@
+import { editableTextFieldIndices } from './text-field-editability';
 import { savedShapeGradient } from './saved-fill-gradient';
 import { legacyFillGradient } from './legacy-fill-gradient';
 import { cachedFillPattern } from './fill-pattern';
@@ -259,7 +260,9 @@ export function shapeText(
 	report: Report,
 	consume: (length: number) => void,
 	consumeParagraph: () => void,
+	allowFieldEditing = false,
 ): VisioText {
+	const editableFields = editableTextFieldIndices(node, allowFieldEditing);
 	const cells = sheet.cells;
 	const characters = new Map(sectionRows(sheet, 'Character').map((row) => [row.index, row.cells]));
 	const defaultCells =
@@ -296,7 +299,13 @@ export function shapeText(
 						start: textOffset,
 						end: textOffset + field.text.length,
 						cached: field.cached,
+						...(field.index !== undefined && editableFields.has(field.index)
+							? { editable: true }
+							: {}),
 						...(field.formula ? { formula: field.formula } : {}),
+						...(field.index === undefined
+							? {}
+							: { index: field.index, format: field.format!, sourceKey: field.sourceKey! }),
 					});
 					append(field.text);
 				} else if (element.localName !== 'pp' && element.localName !== 'tp') {

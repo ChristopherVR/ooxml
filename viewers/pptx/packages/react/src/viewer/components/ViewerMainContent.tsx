@@ -2,7 +2,7 @@
  * ViewerMainContent: The primary content area containing sidebars,
  * canvas, context menu, and side panels.
  */
-import { setMasterViewBackgroundColor } from 'ooxml-ui/pptx';
+import { buildFieldSubstitutionContext, setMasterViewBackgroundColor } from 'ooxml-ui/pptx';
 import { useMemo, useRef, useState } from 'react';
 
 import { SlidesPaneSidebar, MasterViewSidebar } from '.';
@@ -72,17 +72,16 @@ export function ViewerMainContent(props: ViewerMainContentProps) {
 
 	// Presentation-wide field/table context so sidebar thumbnails substitute
 	// fields and resolve table theme colours identically to the canvas. Kept
-	// stable so the memoised SlideThumbnails don't re-render every frame.
-	const hf = state.headerFooter;
+	// stable so the memoised SlideThumbnails don't re-render every frame. Each
+	// thumbnail re-points the per-slide number and title at its own slide.
 	const thumbnailFieldContext = useMemo(
-		() => ({
-			dateTimeText: hf.dateTimeText,
-			dateFormat: hf.dateFormat,
-			footerText: hf.footerText,
-			headerText: hf.headerText,
-			customProperties: state.customProperties.map((p) => ({ name: p.name, value: p.value })),
-		}),
-		[hf.dateTimeText, hf.dateFormat, hf.footerText, hf.headerText, state.customProperties],
+		() =>
+			buildFieldSubstitutionContext({
+				headerFooter: state.headerFooter,
+				customProperties: state.customProperties,
+				firstSlideNumber: state.firstSlideNumber,
+			}),
+		[state.headerFooter, state.customProperties, state.firstSlideNumber],
 	);
 	const thumbnailTableStyleContext = useMemo(
 		() =>

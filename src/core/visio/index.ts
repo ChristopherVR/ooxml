@@ -71,6 +71,7 @@ export {
 	type VisioTextRange,
 	type VisioTextRangesEdit,
 	type VisioTextFieldInsertEdit,
+	type VisioTextFieldUpdateEdit,
 	type VisioPageInsert,
 	type VisioPageReorder,
 	type VisioPageRename,

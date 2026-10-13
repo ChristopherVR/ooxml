@@ -13,7 +13,10 @@ import { formatLocalizedDateTimeField, isEnglishLocale } from './text-field-date
 
 /** Context for substituting field placeholders (slide number, date/time, header/footer, etc.). */
 export interface FieldSubstitutionContext {
+	/** 1-based document position of the slide (`PptxSlide.slideNumber`). */
 	slideNumber?: number;
+	/** `PptxData.firstSlideNumber`; see {@link resolveDisplaySlideNumber}. */
+	firstSlideNumber?: number;
 	dateTimeText?: string;
 	/**
 	 * The deck's master date-field default TYPE (`a:fld/@type` on the slide
@@ -34,6 +37,18 @@ export interface FieldSubstitutionContext {
 	locale?: string;
 	/** Title text extracted from the first title placeholder on the slide. */
 	slideTitle?: string;
+}
+
+/**
+ * The number a `slidenum` field displays: PowerPoint numbers slide `i`
+ * (0-based) as `firstSlideNum + i`, so a deck whose `p:presentation` carries
+ * `firstSlideNum="45"` shows 45 on its first slide. `slideNumber` is the
+ * 1-based document position; an unset `firstSlideNumber` is the spec default 1.
+ * A position below 1 (the master view's pseudo-slide is 0) is not a slide, so
+ * it is returned unchanged rather than offset.
+ */
+export function resolveDisplaySlideNumber(slideNumber: number, firstSlideNumber = 1): number {
+	return slideNumber < 1 ? slideNumber : firstSlideNumber + slideNumber - 1;
 }
 
 /**
@@ -191,7 +206,7 @@ export function substituteFieldText(
 	const fl = fieldType.toLowerCase();
 	const locale = runLocale ?? ctx.locale;
 	if (fl === 'slidenum' && ctx.slideNumber !== undefined) {
-		return String(ctx.slideNumber);
+		return String(resolveDisplaySlideNumber(ctx.slideNumber, ctx.firstSlideNumber));
 	}
 	if (fl.startsWith('datetime')) {
 		// Use format-aware date text (the field's own type wins; `dateFormat`

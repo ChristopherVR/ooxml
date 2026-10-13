@@ -12,7 +12,9 @@
 
 import type { PptxElement, TextSegment, TextStyle } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
+import { textRunsStylePatch } from 'ooxml-core/pptx/editor/render/text-runs-style-patch';
 
+import { mergeTextStyleUpdate } from './font-family-update';
 import type { InlineTextSelection } from './inline-selection-utils';
 import { applyStyleToSelectedSegments } from './inline-selection-utils';
 import type { TextDecorationFlag } from './selection-format-state';
@@ -24,7 +26,6 @@ import {
 	splitTextStyleUpdate,
 	withExclusiveLineSpacing,
 } from './text-style-scope';
-import { updateTextSegmentStyle } from './update-text-segment-style';
 
 /** What a text-style update hands back to the binding. */
 export interface TextStyleUpdateResult {
@@ -56,11 +57,11 @@ export function applyTextStyleUpdate(
 
 	if (selection && current && current.length > 0) {
 		const { body, run } = splitTextStyleUpdate(exclusive);
-		let textStyle: TextStyle = { ...element.textStyle, ...body };
+		let textStyle: TextStyle = mergeTextStyleUpdate(element.textStyle, body);
 		let textSegments: TextSegment[] = overrideParagraphProperties(current, exclusive);
 		let newSelection = selection;
 		if (Object.keys(run).length > 0) {
-			const scoped = applyStyleToSelectedSegments(textSegments, selection, run);
+			const scoped = applyStyleToSelectedSegments(textSegments, selection, run, element.textStyle);
 			textSegments = scoped.newSegments;
 			newSelection = scoped.newSelection;
 		}
@@ -80,16 +81,16 @@ export function applyTextStyleUpdate(
 		};
 	}
 
-	const textStyle: TextStyle = { ...element.textStyle, ...exclusive };
-	const textSegments =
-		current &&
-		overrideParagraphProperties(current, exclusive).map((segment) =>
-			updateTextSegmentStyle(segment, exclusive),
-		);
+	const wholeText = textRunsStylePatch(
+		{
+			...element,
+			textSegments: current && overrideParagraphProperties(current, exclusive),
+		} as PptxElement,
+		exclusive,
+	);
 	return {
 		patch: {
-			textStyle,
-			...(textSegments ? { textSegments } : {}),
+			...wholeText,
 			...overrideParagraphIndents(element, exclusive),
 		} as Partial<PptxElement>,
 		newSelection: null,

@@ -1,0 +1,29 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "id": 1,
+      "mode": "numeric",
+      "text": "Before 4 | 1 After",
+      "source": "Before ￼ | ￼ After",
+      "valueFormula": "Width",
+      "formatFormula": "FIELDPICTURE(2)"
+    },
+    {
+      "id": 2,
+      "mode": "date",
+      "text": "Before 2026-01-01 | 1 After",
+      "source": "Before ￼ | ￼ After",
+      "valueFormula": "DATE(2026,1,1)",
+      "formatFormula": "FIELDPICTURE(204)"
+    },
+    {
+      "id": 3,
+      "mode": "string",
+      "text": "Before Page-1 | 1 After",
+      "source": "Before ￼ | ￼ After",
+      "valueFormula": "PAGENAME()",
+      "formatFormula": "FIELDPICTURE(37)"
+    }
+  ]
+}

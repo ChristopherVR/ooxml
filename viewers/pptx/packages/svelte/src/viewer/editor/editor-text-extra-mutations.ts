@@ -3,6 +3,7 @@ import {
 	applyCaseTransformToSegments,
 	readEditableText,
 	remapTextToSegments,
+	textFontFamilyPatch,
 	textStylePatch,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
@@ -26,9 +27,12 @@ export function toggleStrikethroughPatch(el: PptxElement): Partial<PptxElement> 
 	return textStylePatch(el, { strikethrough: !base.strikethrough });
 }
 
-/** Set the font family, preserving other text-style fields. */
+/**
+ * Set the font family on the body and every run, like `setFontSizePatch`.
+ * Patching only the body left runs that name their own font unchanged.
+ */
 export function setFontFamilyPatch(el: PptxElement, fontFamily: string): Partial<PptxElement> {
-	return textStylePatch(el, { fontFamily });
+	return textFontFamilyPatch(el, fontFamily);
 }
 
 /** Set the character spacing (1/100 pt, OOXML `spc` units). */

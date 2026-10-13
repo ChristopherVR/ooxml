@@ -9,7 +9,9 @@
  * `scripts/capture-data-galleries-com.ps1` applies Table.ApplyStyle(guid) to
  * cells carrying a direct fill, font colour, bold and a border, and the saved
  * cells come back as a bare `<a:tcPr/>` with the `a:rPr` colour/bold intact
- * (with SaveFormatting true, false and omitted alike). The pick does the same.
+ * (with SaveFormatting true, false and omitted alike). The pick does the same,
+ * and sets `clearDirectCellFormatting` so the save drops the cleared `a:tcPr`
+ * children even when the GUID ends up equal to the file's.
  *
  * @module render/ribbon-galleries/table-styles-gallery
  */
@@ -19,7 +21,7 @@ import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
 import type { RibbonGalleryContext, RibbonGalleryDescriptor } from './gallery-types';
 import { normaliseTableStyleId, tableStyleGallerySections } from './table-style-gallery-catalog';
-import { tableStyleTileSvg } from './table-style-tile-svg';
+import { tableStyleTileOptions, tableStyleTileSvg } from './table-style-tile-svg';
 
 const TILE = { width: 60, height: 44 };
 
@@ -85,6 +87,7 @@ export function applyTableStyleToData(tableData: PptxTableData, styleId: string)
 	return {
 		...tableData,
 		tableStyleId: styleId,
+		clearDirectCellFormatting: true,
 		rows: tableData.rows.map((row) => ({
 			...row,
 			cells: row.cells.map((cell) => {
@@ -100,6 +103,7 @@ function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 	const tableData = tableDataOf(ctx.element);
 	const current = normaliseTableStyleId(tableData?.tableStyleId);
 	const colorScheme = galleryColorScheme(ctx);
+	const options = tableData ? tableStyleTileOptions(tableData) : undefined;
 	return {
 		id: 'tableStyles',
 		labelKey: 'pptx.gallery.tableStyles.title',
@@ -117,7 +121,7 @@ function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 				labelKey: entry.labelKey,
 				...(entry.labelParams && { labelParams: entry.labelParams }),
 				label: entry.name,
-				previewSvg: tableStyleTileSvg(entry.id, colorScheme, TILE),
+				previewSvg: tableStyleTileSvg(entry.id, colorScheme, TILE, options),
 				applied: current === entry.id,
 			})),
 		})),

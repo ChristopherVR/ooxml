@@ -3,6 +3,11 @@ import type { CellValue } from './model';
 
 export type PivotAggregate = 'sum' | 'count' | 'average' | 'min' | 'max';
 export type PivotLayout = 'tabular' | 'compact' | 'outline';
+export interface PivotPageFilter {
+	field: string;
+	/** Omitted means All; null selects the cached blank item. */
+	item?: CellValue;
+}
 export interface PivotValueField {
 	field: string;
 	aggregate: PivotAggregate;
@@ -28,13 +33,16 @@ export interface PivotTable {
 	/** Repeat outer labels on detail rows. Defaults to false. */
 	repeatLabels?: boolean;
 	columnField?: string;
+	pageFilter?: PivotPageFilter;
 	valueField: string;
 	aggregate: PivotAggregate;
 	valueCaption: string;
 	/** Extra measures in Values axis order. The existing value fields remain the primary measure. */
 	additionalValues?: PivotValueField[];
-	/** Values on rows require multiple measures and one real row field, with Values placed last. */
+	/** Values on rows require multiple measures and one or two real row fields. */
 	valuesAxis?: 'columns' | 'rows';
+	/** Row Values follow both real fields by default, or sit between/before two real fields. */
+	valuesPosition?: 'last' | 'between' | 'first';
 	/** Cached source fields and records. Refresh replaces these together with the output cells. */
 	fields: string[];
 	records: CellValue[][];
@@ -55,9 +63,11 @@ export interface PivotTableOptions {
 	subtotals?: boolean;
 	repeatLabels?: boolean;
 	columnField?: string;
+	pageFilter?: PivotPageFilter;
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
+	valuesPosition?: 'last' | 'between' | 'first';
 	aggregate?: PivotAggregate;
 	name?: string;
 }
@@ -75,5 +85,6 @@ export type PivotTablePatch = Partial<
 		| 'valueField'
 		| 'aggregate'
 		| 'valuesAxis'
+		| 'valuesPosition'
 	>
-> & { additionalValues?: PivotValueFieldOptions[] };
+> & { additionalValues?: PivotValueFieldOptions[]; pageFilter?: PivotPageFilter | null };

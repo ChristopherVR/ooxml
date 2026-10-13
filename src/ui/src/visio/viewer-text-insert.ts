@@ -1,3 +1,8 @@
+import {
+	editableFieldFormats,
+	populateExistingFields,
+	populateExistingFormat,
+} from './viewer-field-choice';
 import type { VisioEdit, VisioPage } from 'ooxml-core/visio';
 import {
 	VISIO_FIELD_CATEGORIES,
@@ -50,6 +55,8 @@ export class ViewerTextInsert {
 	#fieldError: HTMLElement;
 	#selects: Record<'category' | 'field' | 'format', HTMLSelectElement>;
 	#formula: HTMLInputElement;
+	#existing: HTMLSelectElement;
+	#sync: () => void;
 	#target: TextInsertTarget | undefined;
 	#generation = -1;
 	#pending = false;
@@ -88,6 +95,8 @@ export class ViewerTextInsert {
 			field: select('field', 'Field name'),
 			format: select('format', 'Format'),
 		};
+		this.#existing = select('target', 'Insert or edit');
+		this.field.insertBefore(this.#existing.parentElement!, this.#selects.category.parentElement!);
 		const formula = doc.createElement('label');
 		const caption = doc.createElement('span');
 		caption.textContent = 'Custom formula';
@@ -102,7 +111,7 @@ export class ViewerTextInsert {
 			formula,
 			note(
 				doc,
-				"Fields are evaluated when inserted. Page, document and date fields show current values when the drawing is opened; Width, Height, Angle and custom formulas use the shape's own cells.",
+				"Fields are evaluated when inserted or updated. Page, document and date fields show current values when the drawing is opened; Width, Height, Angle and custom formulas use the shape's own cells.",
 			),
 			this.#fieldError,
 		);
@@ -127,12 +136,30 @@ export class ViewerTextInsert {
 			);
 			options(
 				this.#selects.format,
-				category.formats.map((item) => [item.format, item.label]),
+				(this.#existing.value && category.id === 'custom'
+					? editableFieldFormats()
+					: category.formats
+				).map((item) => [item.format, item.label]),
 			);
 			this.#selects.field.parentElement!.hidden = category.id === 'custom';
 			formula.hidden = category.id !== 'custom';
 		};
 		this.#selects.category.addEventListener('change', sync);
+		this.#sync = sync;
+		this.#existing.addEventListener('change', () => {
+			const target = this.#target;
+			const field = target
+				? visioTextShape(target.page, target.shapeId)?.text.fields?.find(
+						(field) => field.index === this.#existing.value,
+					)
+				: undefined;
+			if (field) {
+				this.#selects.category.value = 'custom';
+				this.#formula.value = field.formula ?? '';
+			}
+			sync();
+			if (field) populateExistingFormat(this.#selects.format, field);
+		});
 		sync();
 		footer(this.field, ['OK', 'Cancel'], (name) =>
 			name === 'OK' ? void this.#insertField() : this.field.close(),
@@ -151,6 +178,11 @@ export class ViewerTextInsert {
 		const dialog = kind === 'symbol' ? this.symbol : this.field;
 		this.#symbolError.textContent = '';
 		this.#fieldError.textContent = '';
+		if (kind === 'field') {
+			const fields = visioTextShape(target.page, target.shapeId)?.text.fields ?? [];
+			populateExistingFields(this.#existing, fields);
+			this.#sync();
+		}
 		dialog.show();
 		if (kind === 'field') this.#selects.category.focus();
 	}
@@ -218,6 +250,16 @@ export class ViewerTextInsert {
 		}
 		const shape = visioTextShape(target.page, target.shapeId);
 		if (!shape) return;
+		const selected = shape.text.fields?.find((field) => field.index === this.#existing.value);
+		if (this.#existing.value && !selected) {
+			this.#fieldError.textContent =
+				'The selected field is no longer available. Reopen the Field dialog.';
+			return;
+		}
+		if (this.#selects.format.value === '__choose_format__') {
+			this.#fieldError.textContent = 'Choose a supported format for the edited field.';
+			return;
+		}
 		const placement: { offset?: number; expectedText?: string } = {};
 		const editor = target.editor;
 		if (editor?.isConnected && !editor.disabled) {
@@ -228,22 +270,40 @@ export class ViewerTextInsert {
 			}
 			const source = visioTextSource(shape.text);
 			const caret = editor.selectionStart;
-			if (source.fieldAt(caret)) {
+			if (!selected && source.fieldAt(caret)) {
 				this.#fieldError.textContent = 'Move the caret out of the field first.';
 				return;
 			}
 			placement.offset = source.toSource(caret);
 			placement.expectedText = source.source;
 		}
-		const edit: VisioEdit = {
-			type: 'insert-text-field',
-			pageId: target.page.id,
-			shapeId: target.shapeId,
-			formula,
-			format: this.#selects.format.value,
-			...placement,
-		};
-		if (await this.#apply(edit, this.#fieldError, `Inserted a ${category.label} field.`))
+		const edit: VisioEdit = selected
+			? {
+					type: 'update-text-field',
+					pageId: target.page.id,
+					shapeId: target.shapeId,
+					fieldIndex: selected.index!,
+					formula,
+					format: this.#selects.format.value,
+					expectedText: visioTextSource(shape.text).source,
+					expectedCached: selected.cached,
+					expectedSourceKey: selected.sourceKey!,
+				}
+			: {
+					type: 'insert-text-field',
+					pageId: target.page.id,
+					shapeId: target.shapeId,
+					formula,
+					format: this.#selects.format.value,
+					...placement,
+				};
+		if (
+			await this.#apply(
+				edit,
+				this.#fieldError,
+				selected ? 'Updated the selected field.' : `Inserted a ${category.label} field.`,
+			)
+		)
 			this.field.close();
 	}
 }

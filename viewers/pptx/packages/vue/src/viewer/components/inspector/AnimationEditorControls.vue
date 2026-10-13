@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next';
 import {
+	getAfterAnimationState,
 	directionValuesFor,
 	effectiveDirection,
 	effectiveTimingCurve,
@@ -287,8 +288,9 @@ function curveLabel(curve: PptxAnimationTimingCurve): string {
 			@pick-stock="(id) => emit('patch', soundStockPatch(id))"
 		/>
 		<AfterAnimationRow
-			:action="animation.afterAnimation ?? 'none'"
-			:color="animation.afterAnimationColor"
+			:action="getAfterAnimationState(animation).action"
+			:color="getAfterAnimationState(animation).color"
+			:show-color="getAfterAnimationState(animation).showColor"
 			@action="(action) => emit('patch', afterAnimationPatch(action))"
 			@color="(color) => emit('patch', afterAnimationColorPatch(color))"
 		/>

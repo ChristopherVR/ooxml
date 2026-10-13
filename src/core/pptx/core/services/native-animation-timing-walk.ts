@@ -10,6 +10,7 @@ import { childGroupContext, isMainSequence } from './animation-group-context';
 import type { AnimationGroupContext } from './animation-group-context';
 import { extractSeqAttrs } from './animation-timing-attrs';
 import { ensureArray } from './native-animation-helpers';
+import { unsupportedVisibilityContainerTiming } from './native-animation-visibility-timing';
 import { isInteractiveSequence } from './native-animation-interactive-predicate';
 import {
 	buildTimingNodeAnimation,
@@ -49,6 +50,7 @@ export function walkTimingTree(
 	currentTrigger: PptxAnimationTrigger,
 	group: AnimationGroupContext,
 	ctx: TimingWalkContext,
+	unsupportedVisibilityAncestor = false,
 ): void {
 	if (!node) {
 		return;
@@ -57,10 +59,13 @@ export function walkTimingTree(
 	const cTn = node['p:cTn'] as XmlObject | undefined;
 	if (cTn) {
 		const trigger = resolveNodeTrigger(cTn, currentTrigger);
-		const animation = buildTimingNodeAnimation(cTn, trigger, group);
+		const animation = buildTimingNodeAnimation(cTn, trigger, group, unsupportedVisibilityAncestor);
 		if (animation) {
 			animations.push(animation);
 		}
+
+		const unsupportedChildVisibility =
+			unsupportedVisibilityAncestor || unsupportedVisibilityContainerTiming(cTn);
 
 		// Recurse into child containers (parallel, sequence, exclusive).
 		// A direct `p:par` child of the mainSeq is a click step, so its own
@@ -88,6 +93,7 @@ export function walkTimingTree(
 								: undefined,
 					}),
 					ctx,
+					unsupportedChildVisibility,
 				);
 			}
 			for (const sequence of sequences) {
@@ -98,12 +104,19 @@ export function walkTimingTree(
 				// `@concurrent`/`@nextAc`/`@prevAc` are attributes of `<p:seq>`
 				// itself (ECMA-376 S19.5.60), not of its nested `<p:cTn>`.
 				const seqAttrs = extractSeqAttrs(sequence);
-				walkTimingTree(sequence, animations, trigger, { ...group, ...seqAttrs }, ctx);
+				walkTimingTree(
+					sequence,
+					animations,
+					trigger,
+					{ ...group, ...seqAttrs },
+					ctx,
+					unsupportedChildVisibility,
+				);
 			}
 			// Exclusive containers: animations are mutually exclusive at runtime
 			for (const excl of exclusives) {
 				const exclAnims: PptxNativeAnimation[] = [];
-				walkTimingTree(excl, exclAnims, trigger, group, ctx);
+				walkTimingTree(excl, exclAnims, trigger, group, ctx, true);
 				const exclGroupId = ctx.allocateExclGroupId();
 				for (const a of exclAnims) {
 					a.exclusive = true;
@@ -126,6 +139,7 @@ export function walkTimingTree(
 				isClickLevelGroup: false,
 			}),
 			ctx,
+			unsupportedVisibilityAncestor,
 		);
 	}
 	for (const sequence of directSequences) {
@@ -136,6 +150,13 @@ export function walkTimingTree(
 		// `@concurrent`/`@nextAc`/`@prevAc` are attributes of `<p:seq>` itself
 		// (ECMA-376 S19.5.60), not of its nested `<p:cTn>`.
 		const seqAttrs = extractSeqAttrs(sequence);
-		walkTimingTree(sequence, animations, currentTrigger, { ...group, ...seqAttrs }, ctx);
+		walkTimingTree(
+			sequence,
+			animations,
+			currentTrigger,
+			{ ...group, ...seqAttrs },
+			ctx,
+			unsupportedVisibilityAncestor,
+		);
 	}
 }

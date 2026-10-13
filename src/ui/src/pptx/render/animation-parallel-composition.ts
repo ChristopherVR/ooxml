@@ -85,7 +85,11 @@ export function keyframeAnimatedProperties(keyframeName: string): Set<string> {
 		return props;
 	}
 	props = new Set();
-	if (TRANSFORM_KEYFRAME_NAME.test(keyframeName)) {
+	if (/^pptx-tl-visibility-/u.test(keyframeName)) {
+		props.add('visibility');
+	} else if (/^pptx-tl-tav-/u.test(keyframeName)) {
+		props.add('opacity');
+	} else if (TRANSFORM_KEYFRAME_NAME.test(keyframeName)) {
 		props.add('transform');
 		if (keyframeName.endsWith('-visibility')) {
 			props.add('opacity');
@@ -118,7 +122,11 @@ export function keyframeAnimatedProperties(keyframeName: string): Set<string> {
 			props.add('unknown');
 		}
 	}
-	if (!/^pptx-(?:tl-)?(?:motion|rotate|scale|transform|color|tavclr|emph)-/u.test(keyframeName)) {
+	if (
+		!/^pptx-(?:tl-)?(?:motion|rotate|scale|transform|color|tav|tavclr|emph|visibility)-/u.test(
+			keyframeName,
+		)
+	) {
 		animatedPropertyCache.set(keyframeName, props);
 	}
 	return props;

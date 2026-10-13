@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
+	textFontFamilyPatch,
 	textFontSizePatch,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
@@ -99,7 +100,12 @@ function patchTextStyle(next: Partial<TextStyle>): void {
 
 function onFontFamily(event: Event): void {
 	const value = (event.target as HTMLSelectElement).value;
-	patchTextStyle({ fontFamily: value.length > 0 ? value : undefined });
+	if (value.length === 0) {
+		patchTextStyle({ fontFamily: undefined });
+		return;
+	}
+	// Like the size field: the runs carry their own font, so the body alone is not enough.
+	emit('update', textFontFamilyPatch(props.element, value));
 }
 
 function onFontSize(event: Event): void {

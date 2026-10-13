@@ -100,8 +100,16 @@ import { snapshotStencilMasterDrop, type VisioStencilMasterDropEdit } from './ed
 export type { VisioStencilMasterDropEdit } from './edit-master-drop';
 import { isVisioGuideEdit, snapshotGuideEdit, type VisioGuideEdit } from './edit-guide-commands';
 export type { VisioGuideEdit } from './edit-guide-commands';
-import { snapshotTextFieldInsert, type VisioTextFieldInsertEdit } from './edit-text-field-commands';
-export type { VisioTextFieldInsertEdit } from './edit-text-field-commands';
+import {
+	snapshotTextFieldInsert,
+	snapshotTextFieldUpdate,
+	type VisioTextFieldInsertEdit,
+	type VisioTextFieldUpdateEdit,
+} from './edit-text-field-commands';
+export type {
+	VisioTextFieldInsertEdit,
+	VisioTextFieldUpdateEdit,
+} from './edit-text-field-commands';
 import {
 	isVisioFormatEdit,
 	snapshotFormatting,
@@ -220,6 +228,7 @@ export type VisioEdit =
 	| VisioTextEdit
 	| VisioTextRangesEdit
 	| VisioTextFieldInsertEdit
+	| VisioTextFieldUpdateEdit
 	| VisioGeometryEdit
 	| VisioPageEdit
 	| VisioFormatEdit
@@ -400,6 +409,14 @@ export function snapshotVisioEdits(
 			return { ...target, type: edit.type, text: text(edit.text) };
 		if (edit.type === 'replace-text-ranges') return snapshotTextRanges(edit, text);
 		if (edit.type === 'insert-text-field') return snapshotTextFieldInsert(edit);
+		if (edit.type === 'update-text-field') {
+			const update = snapshotTextFieldUpdate(edit);
+			update.formula = text(update.formula);
+			update.expectedText = text(update.expectedText);
+			update.expectedCached = text(update.expectedCached);
+			update.expectedSourceKey = text(update.expectedSourceKey);
+			return update;
+		}
 		if (isVisioFormatEdit(edit)) return snapshotFormatting(edit);
 		if (edit.type === 'reorder-shape') {
 			if (!['front', 'back', 'forward', 'backward'].includes(edit.order))

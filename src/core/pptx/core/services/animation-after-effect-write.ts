@@ -8,6 +8,85 @@
  * @module services/animation-after-effect-write
  */
 import type { PptxElementAnimation, XmlObject } from '../types';
+import { extractAfterAnimationFromSubTnLst } from './native-animation-after-effect';
+import { ensureArray, isXmlObject } from './native-animation-helpers';
+
+/** Reject unmodeled targets/after-state before a clear mutates the timing tree. */
+export function assertAfterAnimationClearSupported(effectCTn: XmlObject): void {
+	const shapeIds = new Set<string>();
+	const checkTarget = (value: unknown): void => {
+		if (Array.isArray(value)) {
+			value.forEach(checkTarget);
+			return;
+		}
+		if (!isXmlObject(value)) return;
+		const shapeTarget = value['p:spTgt'];
+		if (isXmlObject(shapeTarget) && shapeTarget['@_spid'] !== undefined)
+			shapeIds.add(String(shapeTarget['@_spid']));
+		if (
+			[
+				'p:bg',
+				'p:txEl',
+				'p:subSp',
+				'p:graphicEl',
+				'p:oleChartEl',
+				'p:sndTgt',
+				'p:inkTgt',
+				'p:sldTgt',
+			].some((key) => value[key] !== undefined)
+		)
+			throw new Error('Clearing after-animation supports whole-shape targets only');
+		Object.values(value).forEach(checkTarget);
+	};
+	checkTarget(effectCTn['p:childTnLst']);
+	if (shapeIds.size > 1)
+		throw new Error('Editing after-animation supports a single whole-shape target only');
+	const sub = effectCTn['p:subTnLst'];
+	if (!isXmlObject(sub)) return;
+	const countAfterFlags = (value: unknown): number => {
+		if (Array.isArray(value))
+			return value.reduce((count, child) => count + countAfterFlags(child), 0);
+		if (!isXmlObject(value)) return 0;
+		return Object.entries(value).reduce(
+			(count, [key, child]) =>
+				count +
+				(key === '@_afterEffect' && ['1', 'true'].includes(String(child))
+					? 1
+					: countAfterFlags(child)),
+			0,
+		);
+	};
+	for (const [key, value] of Object.entries(sub)) {
+		for (const node of ensureArray(value)) {
+			const flags = countAfterFlags(node);
+			if (!flags) continue;
+			if (
+				flags !== 1 ||
+				!extractAfterAnimationFromSubTnLst({ 'p:subTnLst': { [key]: node } as XmlObject })
+			)
+				throw new Error('Cannot clear an unsupported native after-animation behavior');
+			checkTarget(node);
+		}
+	}
+	if (shapeIds.size > 1)
+		throw new Error('Editing after-animation supports a single whole-shape target only');
+}
+
+/** Clear only recognized after-state nodes, retaining sounds and opaque timing. */
+export function clearAfterAnimationBehavior(effectCTn: XmlObject): void {
+	const sub = effectCTn['p:subTnLst'];
+	if (!isXmlObject(sub)) return;
+	for (const key of Object.keys(sub)) {
+		const nodes = ensureArray(sub[key]);
+		const remaining = nodes.filter(
+			(node) => !extractAfterAnimationFromSubTnLst({ 'p:subTnLst': { [key]: node } as XmlObject }),
+		);
+		if (remaining.length === nodes.length) continue;
+		if (remaining.length === 0) delete sub[key];
+		else sub[key] = remaining.length === 1 ? remaining[0] : remaining;
+	}
+	if (Object.keys(sub).length === 0) delete effectCTn['p:subTnLst'];
+}
 
 /**
  * Apply (or clear) PowerPoint's genuine "after animation" behaviour
@@ -52,24 +131,40 @@ export function applyAfterAnimationBehavior(
 	anim: Pick<PptxElementAnimation, 'afterAnimation' | 'afterAnimationColor'>,
 	shapeId: string,
 ): void {
-	delete effectCTn['p:subTnLst'];
+	if (anim.afterAnimation === undefined) return;
+	if (anim.afterAnimation === 'none') {
+		assertAfterAnimationClearSupported(effectCTn);
+		clearAfterAnimationBehavior(effectCTn);
+		return;
+	}
+	assertAfterAnimationClearSupported(effectCTn);
+	clearAfterAnimationBehavior(effectCTn);
 	// The old (incorrect) placement of this flag on the entrance/emphasis
 	// effect's own outer `p:cTn`; strip it so a previously-corrupted node
 	// gets cleaned up the next time it is surgically patched.
 	delete effectCTn['@_afterEffect'];
 
 	if (anim.afterAnimation === 'dimToColor' && anim.afterAnimationColor) {
-		effectCTn['p:subTnLst'] = buildDimSubTnLst(shapeId, anim.afterAnimationColor);
+		appendAfterAnimationBehavior(effectCTn, buildDimSubTnLst(shapeId, anim.afterAnimationColor));
 		return;
 	}
 	if (anim.afterAnimation === 'hideAfterAnimation') {
 		const entranceId = effectCTn['@_id'] !== undefined ? String(effectCTn['@_id']) : '0';
-		effectCTn['p:subTnLst'] = buildHideSubTnLst(shapeId, 'sameClick', entranceId);
+		appendAfterAnimationBehavior(effectCTn, buildHideSubTnLst(shapeId, 'sameClick', entranceId));
 		return;
 	}
 	if (anim.afterAnimation === 'hideOnNextClick') {
-		effectCTn['p:subTnLst'] = buildHideSubTnLst(shapeId, 'nextClick');
+		appendAfterAnimationBehavior(effectCTn, buildHideSubTnLst(shapeId, 'nextClick'));
 	}
+}
+
+function appendAfterAnimationBehavior(effect: XmlObject, addition: XmlObject): void {
+	const sub = isXmlObject(effect['p:subTnLst']) ? (effect['p:subTnLst'] as XmlObject) : {};
+	for (const [key, value] of Object.entries(addition)) {
+		const nodes = [...ensureArray(sub[key]), ...ensureArray(value)];
+		sub[key] = nodes.length === 1 ? nodes[0] : nodes;
+	}
+	effect['p:subTnLst'] = sub;
 }
 
 /** The `p:subTnLst` for a dim-to-colour after-effect (see module doc). */

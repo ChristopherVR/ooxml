@@ -7,6 +7,7 @@
 import type { TextSegment, TextStyle } from 'ooxml-core/pptx';
 
 import { isBulletMarkerSegment } from './bullet-toggle';
+import { mergeTextStyleUpdate } from './font-family-update';
 import { updateTextSegmentStyle } from './update-text-segment-style';
 
 export {
@@ -40,6 +41,7 @@ export function getPendingSelectionRestore(): InlineTextSelection | null {
  * Apply `updates` only to the characters within the selection range. Segments
  * at the boundaries are split; segments outside the range are copied unchanged.
  * Paragraph-break segments (`\n`) are always passed through unchanged.
+ * `inherited` is the text box style a run without its own Latin face uses.
  *
  * Returns the new segments array AND the selection coordinates mapped to the
  * new segment indices (for cursor restoration).
@@ -48,8 +50,10 @@ export function applyStyleToSelectedSegments(
 	segments: TextSegment[],
 	selection: InlineTextSelection,
 	updates: Partial<TextStyle>,
+	inherited?: TextStyle,
 ): { newSegments: TextSegment[]; newSelection: InlineTextSelection } {
 	const { startSegIdx, startOffset, endSegIdx, endOffset } = selection;
+	const restyle = (style: TextStyle): TextStyle => mergeTextStyleUpdate(style, updates, inherited);
 	const result: TextSegment[] = [];
 
 	// Track new indices for the start/end of the selected text in the new array.
@@ -61,7 +65,7 @@ export function applyStyleToSelectedSegments(
 	for (let i = 0; i < segments.length; i++) {
 		const seg =
 			i >= startSegIdx && i <= endSegIdx
-				? updateTextSegmentStyle(segments[i], updates, { updateBodyStyle: false })
+				? updateTextSegmentStyle(segments[i], updates, { updateBodyStyle: false, inherited })
 				: segments[i];
 
 		// Paragraph-break segments always pass through.
@@ -91,7 +95,7 @@ export function applyStyleToSelectedSegments(
 		}
 
 		if (i === startSegIdx && i === endSegIdx) {
-			splitSingle(seg, startOffset, endOffset, updates, result);
+			splitSingle(seg, startOffset, endOffset, restyle, result);
 			// Track the new selection: the selected part is at `result.length - 1`
 			// (or `result.length - 2` if there's an after part).
 			const partsAdded = (startOffset > 0 ? 1 : 0) + 1 + (endOffset < seg.text.length ? 1 : 0);
@@ -108,7 +112,7 @@ export function applyStyleToSelectedSegments(
 			if (startOffset === 0) {
 				newStartSegIdx = result.length;
 				newStartOffset = 0;
-				result.push({ ...seg, style: { ...seg.style, ...updates } });
+				result.push({ ...seg, style: restyle(seg.style) });
 			} else {
 				// Before-selection part.
 				const beforeSeg: TextSegment = {
@@ -125,7 +129,7 @@ export function applyStyleToSelectedSegments(
 				newStartOffset = 0;
 				result.push({
 					text: seg.text.slice(startOffset),
-					style: { ...seg.style, ...updates },
+					style: restyle(seg.style),
 				});
 			}
 			continue;
@@ -134,14 +138,14 @@ export function applyStyleToSelectedSegments(
 		// End segment of multi-segment selection.
 		if (i === endSegIdx) {
 			if (endOffset >= seg.text.length) {
-				result.push({ ...seg, style: { ...seg.style, ...updates } });
+				result.push({ ...seg, style: restyle(seg.style) });
 				newEndSegIdx = result.length - 1;
 				newEndOffset = seg.text.length;
 			} else {
 				// Selected part.
 				result.push({
 					text: seg.text.slice(0, endOffset),
-					style: { ...seg.style, ...updates },
+					style: restyle(seg.style),
 				});
 				newEndSegIdx = result.length - 1;
 				newEndOffset = endOffset;
@@ -156,7 +160,7 @@ export function applyStyleToSelectedSegments(
 		}
 
 		// Middle segment: entirely within selection.
-		result.push({ ...seg, style: { ...seg.style, ...updates } });
+		result.push({ ...seg, style: restyle(seg.style) });
 	}
 
 	return {
@@ -174,12 +178,12 @@ function splitSingle(
 	seg: TextSegment,
 	startOffset: number,
 	endOffset: number,
-	updates: Partial<TextStyle>,
+	restyle: (style: TextStyle) => TextStyle,
 	result: TextSegment[],
 ): void {
 	// Entire segment selected.
 	if (startOffset === 0 && endOffset >= seg.text.length) {
-		result.push({ ...seg, style: { ...seg.style, ...updates } });
+		result.push({ ...seg, style: restyle(seg.style) });
 		return;
 	}
 
@@ -198,7 +202,7 @@ function splitSingle(
 	// Selected part.
 	result.push({
 		text: seg.text.slice(startOffset, endOffset),
-		style: { ...seg.style, ...updates },
+		style: restyle(seg.style),
 	});
 
 	// After-selection part.

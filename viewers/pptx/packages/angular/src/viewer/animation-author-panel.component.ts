@@ -1,3 +1,12 @@
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	inject,
+	input,
+	output,
+	CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 /**
  * animation-author-panel.component.ts: Animation authoring inspector sub-panel.
  *
@@ -24,19 +33,10 @@
  *
  * @module viewer/animation-author-panel
  */
-
-import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	inject,
-	input,
-	output,
-	CUSTOM_ELEMENTS_SCHEMA,
-} from '@angular/core';
 import { LucideArrowDown, LucideArrowUp, LucideX } from '@lucide/angular';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+	getAfterAnimationState,
 	applyMotionPathPreset,
 	clearMotionPath,
 	effectiveTimingCurve,
@@ -166,6 +166,7 @@ export class AnimationAuthorPanelComponent {
 	// ── Derived animation state ───────────────────────────────────────────────
 
 	/** The animation entry for the currently selected element, if any. */
+	protected readonly getAfterAnimationState = getAfterAnimationState;
 	protected readonly current = computed(() => animationFor(this.animations(), this.element().id));
 	/** Unset curve shows as `linear`: that is what the writer saves and PowerPoint plays. */
 	protected readonly currentTimingCurve = computed(() =>

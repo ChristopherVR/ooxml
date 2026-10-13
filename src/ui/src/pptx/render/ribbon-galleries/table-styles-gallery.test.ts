@@ -83,6 +83,7 @@ describe('table Styles gallery', () => {
 		}
 		const data = (result.patch as { tableData: PptxTableData }).tableData;
 		expect(data.tableStyleId).toBe(MEDIUM_2_ACCENT_1);
+		expect(data.clearDirectCellFormatting).toBeTruthy();
 		expect(data.rows[0].cells[0].style).toStrictEqual({ bold: true });
 		expect(data.rows[1].cells[0].style).toStrictEqual({ color: '#0000FF' });
 		expect(
@@ -147,5 +148,54 @@ describe('table Styles gallery round trip', () => {
 		const reloaded = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
 		const table2 = reloaded.slides[0].elements.find((e) => e.type === 'table');
 		expect(table2?.type === 'table' && table2.tableData?.tableStyleId).toBe(NO_STYLE_NO_GRID);
+	});
+
+	it.each([
+		['a different style', '{2D5ABB26-0587-4C30-8999-92F81FD0307C}'],
+		['the same style again', MEDIUM_2_ACCENT_1],
+	])('keeps the cleared cell fills and borders cleared after picking %s', async (_, fileStyle) => {
+		const load = async (bytes: Uint8Array) => {
+			const handler = new PptxHandler();
+			const deck = await handler.load(bytes.slice().buffer as ArrayBuffer);
+			const element = deck.slides[0].elements.find((e) => e.type === 'table');
+			if (element?.type !== 'table' || !element.tableData) {
+				throw new Error('expected a table');
+			}
+			const save = (tableData: PptxTableData) =>
+				handler.save([
+					{
+						...deck.slides[0],
+						elements: deck.slides[0].elements.map((e) =>
+							e.id === element.id ? ({ ...element, tableData } as PptxElement) : e,
+						),
+					},
+					...deck.slides.slice(1),
+				]);
+			return { element, tableData: element.tableData, save };
+		};
+		const first = await load(new Uint8Array(readFileSync(FIXTURE)));
+		const formatted = structuredClone(first.tableData);
+		formatted.tableStyleId = fileStyle;
+		formatted.rows[0].cells[0].style = {
+			backgroundColor: '#00FF00',
+			borderTopWidth: 3,
+			borderTopColor: '#FF0000',
+			bold: true,
+		};
+		const second = await load(await first.save(formatted));
+		const result = applyRibbonGalleryItem('tableStyles', MEDIUM_2_ACCENT_1, {
+			element: second.element,
+		});
+		if (result?.kind !== 'element') {
+			throw new Error('expected an element patch');
+		}
+		const picked = (result.patch as { tableData: PptxTableData }).tableData;
+		const reloaded = await load(await second.save(picked));
+		const style = reloaded.tableData.rows[0].cells[0].style;
+		expect(reloaded.tableData.tableStyleId).toBe(MEDIUM_2_ACCENT_1);
+		expect(style?.backgroundColor).toBeUndefined();
+		expect(style?.borderTopWidth).toBeUndefined();
+		expect(style?.borderTopColor).toBeUndefined();
+		expect(style?.bold).toBeTruthy();
 	});
 });

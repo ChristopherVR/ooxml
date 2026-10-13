@@ -183,8 +183,9 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 				headerFooter: s.headerFooter,
 				customProperties: s.customProperties,
 				slide: activeSlide,
+				firstSlideNumber: s.firstSlideNumber,
 			}),
-		[s.headerFooter, s.customProperties, activeSlide],
+		[s.headerFooter, s.customProperties, activeSlide, s.firstSlideNumber],
 	);
 
 	// ── Table style context (theme + table style map for band colours) ──

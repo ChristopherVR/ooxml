@@ -14,6 +14,7 @@ import { resolveOpacitySet } from 'ooxml-core/pptx';
 import type { PptxNativeAnimation, PptxOpacitySet } from 'ooxml-core/pptx';
 
 import { buildBehaviorKeyframes } from './animation-behavior-keyframes';
+import { buildVisibilitySetKeyframe } from './animation-visibility-keyframe';
 import { buildDirectionalKeyframe } from './animation-directional';
 import { resolveFilterPresetSubtype } from './animation-filter-effects';
 import { isMediaCommandAnimation } from './animation-media-commands';
@@ -77,6 +78,37 @@ export function resolveStepEffect(
 	pixelateMosaic?: boolean,
 ): StepEffectResolution {
 	let dynamicUid = dynamicUidStart;
+	const visibility = buildVisibilitySetKeyframe(singleAnim, dynamicUid);
+	if (visibility)
+		return {
+			effect: undefined,
+			keyframe: visibility.keyframeName,
+			isCommand: false,
+			tavColorApplied: false,
+			dynamicCss: visibility.css,
+			nextDynamicUid: dynamicUid + 1,
+			skip: false,
+			easing: visibility.easing,
+		};
+	if (
+		singleAnim.unsupportedVisibilitySet ||
+		(singleAnim.presetClass === 'entr' &&
+			singleAnim.presetId === 0 &&
+			singleAnim.behaviors?.some(
+				(behavior) => behavior.kind === 'set' && behavior.attrNames.includes('style.visibility'),
+			))
+	) {
+		console.warn('Unsupported native visibility set target or timing profile', singleAnim.targetId);
+		return {
+			effect: undefined,
+			keyframe: '',
+			isCommand: false,
+			tavColorApplied: false,
+			dynamicCss: undefined,
+			nextDynamicUid: dynamicUid,
+			skip: true,
+		};
+	}
 	const opacitySet = resolveOpacitySet(singleAnim);
 	if (opacitySet) {
 		return {

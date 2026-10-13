@@ -1,5 +1,6 @@
 import type { AnimationGroup } from 'ooxml-ui/pptx';
 import {
+	getAfterAnimationState,
 	buildAnimationTimelineRows,
 	directionValuesFor,
 	effectiveDirection,
@@ -188,7 +189,7 @@ export function createAnimationPanel(
 			handlers.pushRecentColor(color);
 		},
 	);
-	options.appendChild(afterAnimationRow.el);
+	el.appendChild(afterAnimationRow.el);
 
 	const timingTitle = createEl(doc, 'span', 'pptxv-inspector-section-title');
 	timingTitle.textContent = t('pptx.animation.timing');
@@ -279,6 +280,7 @@ export function createAnimationPanel(
 			motionPath.update({ motionPath: animation?.motionPath, editable: state.editable });
 			previewBtn.hidden = !hasEffect;
 			options.hidden = !hasEffect;
+			afterAnimationRow.el.hidden = !hasEffect && !animation?.nativeAfterAnimation;
 			// Only the directions PowerPoint has a variant for (shared catalogue).
 			const directions = animation ? directionValuesFor([animation], animation.elementId) : [];
 			const activeDirection = effectiveDirection(animation, directions);
@@ -294,8 +296,9 @@ export function createAnimationPanel(
 				editable: state.editable,
 			});
 			afterAnimationRow.update({
-				action: animation?.afterAnimation ?? 'none',
-				color: animation?.afterAnimationColor,
+				action: getAfterAnimationState(animation).action,
+				color: getAfterAnimationState(animation).color,
+				showColor: getAfterAnimationState(animation).showColor,
 				editable: state.editable,
 			});
 			trigger.value = animation?.trigger ?? 'onClick';

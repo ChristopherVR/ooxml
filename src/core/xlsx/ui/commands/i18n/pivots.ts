@@ -1,6 +1,57 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Report Filter Field:': [
+		'Champ de filtre du rapport :',
+		'Berichtsfilterfeld:',
+		'Campo de filtro del informe:',
+		'报表筛选字段：',
+	],
+	'Report Filter Item:': [
+		'Élément du filtre du rapport :',
+		'Berichtsfilterelement:',
+		'Elemento de filtro del informe:',
+		'报表筛选项：',
+	],
+	'(All)': ['(Tous)', '(Alle)', '(Todos)', '（全部）'],
+	'(blank)': ['(vide)', '(leer)', '(en blanco)', '（空白）'],
+	'Before row fields': [
+		'Avant les champs de ligne',
+		'Vor den Zeilenfeldern',
+		'Antes de los campos de fila',
+		'行字段之前',
+	],
+	'Values are listed before the row fields.': [
+		'Les valeurs sont affichées avant les champs de ligne.',
+		'Werte werden vor den Zeilenfeldern aufgeführt.',
+		'Los valores aparecen antes de los campos de fila.',
+		'值列在行字段之前。',
+	],
+	'Values Placement:': [
+		'Position des valeurs :',
+		'Anordnung der Werte:',
+		'Posición de los valores:',
+		'值位置：',
+	],
+	'After row fields': [
+		'Après les champs de ligne',
+		'Nach den Zeilenfeldern',
+		'Después de los campos de fila',
+		'行字段之后',
+	],
+	'Between row fields': [
+		'Entre les champs de ligne',
+		'Zwischen den Zeilenfeldern',
+		'Entre los campos de fila',
+		'行字段之间',
+	],
+	'Values are listed between the row fields.': [
+		'Les valeurs sont affichées entre les champs de ligne.',
+		'Werte werden zwischen den Zeilenfeldern aufgeführt.',
+		'Los valores aparecen entre los campos de fila.',
+		'值列在行字段之间。',
+	],
+
 	'Values Axis:': ['Axe des valeurs :', 'Werteachse:', 'Eje de valores:', '值轴：'],
 	'Values on Columns': [
 		'Valeurs en colonnes',
@@ -9,11 +60,17 @@ export const PIVOT_STRINGS: Translations = {
 		'值显示在列上',
 	],
 	'Values on Rows': ['Valeurs en lignes', 'Werte in Zeilen', 'Valores en filas', '值显示在行上'],
-	'Values on rows require one row field.': [
-		'Les valeurs en lignes nécessitent un champ de ligne.',
-		'Werte in Zeilen benötigen ein Zeilenfeld.',
-		'Los valores en filas requieren un campo de fila.',
-		'值显示在行上需要一个行字段。',
+	'Values are listed after the row fields.': [
+		'Les valeurs sont affichées après les champs de ligne.',
+		'Werte werden nach den Zeilenfeldern aufgeführt.',
+		'Los valores aparecen después de los campos de fila.',
+		'值列在行字段之后。',
+	],
+	'Values on rows display subtotals below groups.': [
+		'Les valeurs en lignes affichent les sous-totaux sous les groupes.',
+		'Werte in Zeilen zeigen Teilergebnisse unter den Gruppen an.',
+		'Los valores en filas muestran los subtotales debajo de los grupos.',
+		'行上的值将分类汇总显示在组下方。',
 	],
 	'Multiple value fields use Values on columns.': [
 		'Plusieurs champs de valeur utilisent les valeurs en colonnes.',

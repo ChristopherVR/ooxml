@@ -17,12 +17,13 @@ import type { ViewerState } from './state';
  * actually painting.
  */
 export function buildRenderFieldContext(
-	state: Pick<ViewerState, 'customProperties' | 'headerFooter'>,
+	state: Pick<ViewerState, 'customProperties' | 'headerFooter' | 'firstSlideNumber'>,
 	slide: PptxSlide,
 ): FieldSubstitutionContext {
 	return buildFieldSubstitutionContext({
 		headerFooter: state.headerFooter,
 		customProperties: state.customProperties,
 		slide,
+		firstSlideNumber: state.firstSlideNumber,
 	});
 }

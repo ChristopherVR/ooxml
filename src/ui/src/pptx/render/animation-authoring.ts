@@ -163,8 +163,12 @@ export const SEQUENCE_VALUES: readonly PptxAnimationSequence[] = [
 // Defaults for a freshly-created animation entry
 // ==========================================================================
 
-const DEFAULT_DURATION_MS = 500;
-const DEFAULT_TRIGGER: PptxAnimationTrigger = 'onClick';
+import {
+	upsert,
+	DEFAULT_ANIMATION_DURATION_MS as DEFAULT_DURATION_MS,
+	DEFAULT_ANIMATION_TRIGGER as DEFAULT_TRIGGER,
+} from 'ooxml-core/pptx';
+export { animationFor, upsert } from 'ooxml-core/pptx';
 
 // ==========================================================================
 // Readers
@@ -174,12 +178,6 @@ const DEFAULT_TRIGGER: PptxAnimationTrigger = 'onClick';
  * Returns the `PptxElementAnimation` for the given element id, or `undefined`
  * when none is present.
  */
-export function animationFor(
-	slideAnimations: readonly PptxElementAnimation[],
-	elementId: string,
-): PptxElementAnimation | undefined {
-	return slideAnimations.find((a) => a.elementId === elementId);
-}
 
 /**
  * Returns `true` when the element has at least one active effect (entrance,
@@ -189,13 +187,7 @@ export function animationFor(
  * fields: without it, a motion-path-only element would hide its own
  * duration / delay / trigger controls.
  */
-export function hasAnimation(
-	slideAnimations: readonly PptxElementAnimation[],
-	elementId: string,
-): boolean {
-	const entry = animationFor(slideAnimations, elementId);
-	return Boolean(entry && (entry.entrance || entry.exit || entry.emphasis || entry.motionPath));
-}
+export { hasAnimation } from 'ooxml-core/pptx';
 
 /**
  * Returns `true` when the active animation entry has a preset that supports
@@ -221,32 +213,6 @@ export function showDirectionPicker(
  * animation") share the exact same create/merge/remove semantics instead of
  * re-implementing them.
  */
-export function upsert(
-	anims: readonly PptxElementAnimation[],
-	elementId: string,
-	updater: (current: PptxElementAnimation) => PptxElementAnimation | null,
-): PptxElementAnimation[] {
-	const idx = anims.findIndex((a) => a.elementId === elementId);
-	if (idx >= 0) {
-		const updated = updater({ ...anims[idx] });
-		if (updated === null) {
-			return anims.filter((a) => a.elementId !== elementId);
-		}
-		return anims.map((a, i) => (i === idx ? updated : a));
-	}
-	// No existing entry  -  create one and then apply the updater.
-	const created: PptxElementAnimation = {
-		elementId,
-		durationMs: DEFAULT_DURATION_MS,
-		order: anims.length,
-		trigger: DEFAULT_TRIGGER,
-	};
-	const updated = updater(created);
-	if (updated === null) {
-		return [...anims];
-	}
-	return [...anims, updated];
-}
 
 function setEffect(
 	anims: readonly PptxElementAnimation[],

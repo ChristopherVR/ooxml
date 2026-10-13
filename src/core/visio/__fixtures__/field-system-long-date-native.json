@@ -1,0 +1,415 @@
+{
+  "version": "16.0",
+  "culture": "en-US",
+  "shortDate": "yyyy-MM-dd",
+  "cases": [
+    {
+      "id": 1,
+      "code": 21,
+      "formula": "DATE(2026,10,13)+TIME(14,15,16)",
+      "text": "Tuesday, October 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 2:15:16 PM",
+      "supported": true
+    },
+    {
+      "id": 2,
+      "code": 21,
+      "formula": "DATE(2024,2,29)",
+      "text": "Thursday, February 29, 2024",
+      "valueFormula": "User.DateValue",
+      "value": "2024-02-29",
+      "supported": true
+    },
+    {
+      "id": 3,
+      "code": 21,
+      "formula": "DATE(1900,2,28)+TIME(0,0,1)",
+      "text": "Wednesday, February 28, 1900",
+      "valueFormula": "User.DateValue",
+      "value": "1900-02-28",
+      "supported": true
+    },
+    {
+      "id": 4,
+      "code": 21,
+      "formula": "DATE(1900,3,1)+TIME(12,0,0)",
+      "text": "Thursday, March 1, 1900",
+      "valueFormula": "User.DateValue",
+      "value": "1900-03-01 12:00:00 PM",
+      "supported": true
+    },
+    {
+      "id": 5,
+      "code": 21,
+      "formula": "DATE(1899,12,30)",
+      "text": "Saturday, December 30, 1899",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-30 12:00:00 AM",
+      "supported": true
+    },
+    {
+      "id": 6,
+      "code": 21,
+      "formula": "DATE(1899,12,29)",
+      "text": "Friday, April 13, 30177",
+      "valueFormula": "User.DateValue",
+      "value": "30177-04-13",
+      "supported": false
+    },
+    {
+      "id": 7,
+      "code": 21,
+      "formula": "DATE(2026,10,13)+TIME(23,59,59.999)",
+      "text": "Tuesday, October 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 11:59:59 PM",
+      "supported": true
+    },
+    {
+      "id": 8,
+      "code": 21,
+      "formula": "DATE(2026,12,31)+TIME(23,59,59)",
+      "text": "Thursday, December 31, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-31 11:59:59 PM",
+      "supported": true
+    },
+    {
+      "id": 9,
+      "code": 21,
+      "formula": "DATE(2000,2,29)+TIME(1,2,3)",
+      "text": "Tuesday, February 29, 2000",
+      "valueFormula": "User.DateValue",
+      "value": "2000-02-29 1:02:03 AM",
+      "supported": true
+    },
+    {
+      "id": 10,
+      "code": 21,
+      "formula": "DATE(2100,3,1)+TIME(9,5,6)",
+      "text": "Monday, March 1, 2100",
+      "valueFormula": "User.DateValue",
+      "value": "2100-03-01 9:05:06 AM",
+      "supported": true
+    },
+    {
+      "id": 11,
+      "code": 21,
+      "formula": "DATE(2026,1,13)",
+      "text": "Tuesday, January 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-01-13",
+      "supported": true
+    },
+    {
+      "id": 12,
+      "code": 21,
+      "formula": "DATE(2026,2,13)",
+      "text": "Friday, February 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-02-13",
+      "supported": true
+    },
+    {
+      "id": 13,
+      "code": 21,
+      "formula": "DATE(2026,3,13)",
+      "text": "Friday, March 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-03-13",
+      "supported": true
+    },
+    {
+      "id": 14,
+      "code": 21,
+      "formula": "DATE(2026,4,13)",
+      "text": "Monday, April 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-04-13",
+      "supported": true
+    },
+    {
+      "id": 15,
+      "code": 21,
+      "formula": "DATE(2026,5,13)",
+      "text": "Wednesday, May 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-05-13",
+      "supported": true
+    },
+    {
+      "id": 16,
+      "code": 21,
+      "formula": "DATE(2026,6,13)",
+      "text": "Saturday, June 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-06-13",
+      "supported": true
+    },
+    {
+      "id": 17,
+      "code": 21,
+      "formula": "DATE(2026,7,13)",
+      "text": "Monday, July 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-07-13",
+      "supported": true
+    },
+    {
+      "id": 18,
+      "code": 21,
+      "formula": "DATE(2026,8,13)",
+      "text": "Thursday, August 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-08-13",
+      "supported": true
+    },
+    {
+      "id": 19,
+      "code": 21,
+      "formula": "DATE(2026,9,13)",
+      "text": "Sunday, September 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-09-13",
+      "supported": true
+    },
+    {
+      "id": 20,
+      "code": 21,
+      "formula": "DATE(2026,10,13)",
+      "text": "Tuesday, October 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13",
+      "supported": true
+    },
+    {
+      "id": 21,
+      "code": 21,
+      "formula": "DATE(2026,11,13)",
+      "text": "Friday, November 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-11-13",
+      "supported": true
+    },
+    {
+      "id": 22,
+      "code": 21,
+      "formula": "DATE(2026,12,13)",
+      "text": "Sunday, December 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-13",
+      "supported": true
+    },
+    {
+      "id": 23,
+      "code": 201,
+      "formula": "DATE(2026,10,13)+TIME(14,15,16)",
+      "text": "Tuesday, October 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 2:15:16 PM",
+      "supported": true
+    },
+    {
+      "id": 24,
+      "code": 201,
+      "formula": "DATE(2024,2,29)",
+      "text": "Thursday, February 29, 2024",
+      "valueFormula": "User.DateValue",
+      "value": "2024-02-29",
+      "supported": true
+    },
+    {
+      "id": 25,
+      "code": 201,
+      "formula": "DATE(1900,2,28)+TIME(0,0,1)",
+      "text": "Wednesday, February 28, 1900",
+      "valueFormula": "User.DateValue",
+      "value": "1900-02-28",
+      "supported": true
+    },
+    {
+      "id": 26,
+      "code": 201,
+      "formula": "DATE(1900,3,1)+TIME(12,0,0)",
+      "text": "Thursday, March 1, 1900",
+      "valueFormula": "User.DateValue",
+      "value": "1900-03-01 12:00:00 PM",
+      "supported": true
+    },
+    {
+      "id": 27,
+      "code": 201,
+      "formula": "DATE(1899,12,30)",
+      "text": "Saturday, December 30, 1899",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-30 12:00:00 AM",
+      "supported": true
+    },
+    {
+      "id": 28,
+      "code": 201,
+      "formula": "DATE(1899,12,29)",
+      "text": "",
+      "valueFormula": "User.DateValue",
+      "value": "30177-04-13",
+      "supported": false
+    },
+    {
+      "id": 29,
+      "code": 201,
+      "formula": "DATE(2026,10,13)+TIME(23,59,59.999)",
+      "text": "Tuesday, October 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 11:59:59 PM",
+      "supported": true
+    },
+    {
+      "id": 30,
+      "code": 201,
+      "formula": "DATE(2026,12,31)+TIME(23,59,59)",
+      "text": "Thursday, December 31, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-31 11:59:59 PM",
+      "supported": true
+    },
+    {
+      "id": 31,
+      "code": 201,
+      "formula": "DATE(2000,2,29)+TIME(1,2,3)",
+      "text": "Tuesday, February 29, 2000",
+      "valueFormula": "User.DateValue",
+      "value": "2000-02-29 1:02:03 AM",
+      "supported": true
+    },
+    {
+      "id": 32,
+      "code": 201,
+      "formula": "DATE(2100,3,1)+TIME(9,5,6)",
+      "text": "Monday, March 1, 2100",
+      "valueFormula": "User.DateValue",
+      "value": "2100-03-01 9:05:06 AM",
+      "supported": true
+    },
+    {
+      "id": 33,
+      "code": 201,
+      "formula": "DATE(2026,1,13)",
+      "text": "Tuesday, January 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-01-13",
+      "supported": true
+    },
+    {
+      "id": 34,
+      "code": 201,
+      "formula": "DATE(2026,2,13)",
+      "text": "Friday, February 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-02-13",
+      "supported": true
+    },
+    {
+      "id": 35,
+      "code": 201,
+      "formula": "DATE(2026,3,13)",
+      "text": "Friday, March 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-03-13",
+      "supported": true
+    },
+    {
+      "id": 36,
+      "code": 201,
+      "formula": "DATE(2026,4,13)",
+      "text": "Monday, April 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-04-13",
+      "supported": true
+    },
+    {
+      "id": 37,
+      "code": 201,
+      "formula": "DATE(2026,5,13)",
+      "text": "Wednesday, May 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-05-13",
+      "supported": true
+    },
+    {
+      "id": 38,
+      "code": 201,
+      "formula": "DATE(2026,6,13)",
+      "text": "Saturday, June 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-06-13",
+      "supported": true
+    },
+    {
+      "id": 39,
+      "code": 201,
+      "formula": "DATE(2026,7,13)",
+      "text": "Monday, July 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-07-13",
+      "supported": true
+    },
+    {
+      "id": 40,
+      "code": 201,
+      "formula": "DATE(2026,8,13)",
+      "text": "Thursday, August 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-08-13",
+      "supported": true
+    },
+    {
+      "id": 41,
+      "code": 201,
+      "formula": "DATE(2026,9,13)",
+      "text": "Sunday, September 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-09-13",
+      "supported": true
+    },
+    {
+      "id": 42,
+      "code": 201,
+      "formula": "DATE(2026,10,13)",
+      "text": "Tuesday, October 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13",
+      "supported": true
+    },
+    {
+      "id": 43,
+      "code": 201,
+      "formula": "DATE(2026,11,13)",
+      "text": "Friday, November 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-11-13",
+      "supported": true
+    },
+    {
+      "id": 44,
+      "code": 201,
+      "formula": "DATE(2026,12,13)",
+      "text": "Sunday, December 13, 2026",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-13",
+      "supported": true
+    }
+  ],
+  "unsupportedReopen": [
+    {
+      "id": 6,
+      "sourceText": "Sunday, April 13, 30177",
+      "coreExportText": "Sunday, April 13, 30177"
+    },
+    {
+      "id": 28,
+      "sourceText": "",
+      "coreExportText": ""
+    }
+  ]
+}

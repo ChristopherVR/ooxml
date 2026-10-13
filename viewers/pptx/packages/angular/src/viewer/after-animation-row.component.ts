@@ -48,7 +48,7 @@ import { isSelectControl } from './control-event-targets';
 					}
 				</pptx-ui-select>
 			</label>
-			@if (action() === 'dimToColor') {
+			@if (action() === 'dimToColor' && showColor()) {
 				<label class="pptx-ng-after-animation__color">
 					<span class="pptx-ng-anim__label">{{
 						'pptx.animation.afterAnimation.color' | translate
@@ -83,6 +83,7 @@ import { isSelectControl } from './control-event-targets';
 })
 export class AfterAnimationRowComponent {
 	readonly action = input.required<PptxAfterAnimationAction>();
+	readonly showColor = input(true);
 	readonly color = input<string | undefined>(undefined);
 	readonly canEdit = input<boolean>(true);
 	readonly actionChange = output<PptxAfterAnimationAction>();

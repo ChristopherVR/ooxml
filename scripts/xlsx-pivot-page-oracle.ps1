@@ -1,0 +1,18 @@
+$ErrorActionPreference='Stop'
+$root=Split-Path -Parent $PSScriptRoot;$out=Join-Path $env:TEMP ('ooxml-pivot-page-oracle-'+[Guid]::NewGuid().ToString('N'));New-Item -ItemType Directory $out|Out-Null
+$excel=New-Object -ComObject Excel.Application;$excel.Visible=$false;$excel.DisplayAlerts=$false;$book=$null
+try {
+ foreach($layout in @('tabular','compact','outline')){foreach($selection in @('All','East','West')){
+ $book=$excel.Workbooks.Open((Join-Path $root 'src/core/xlsx/__fixtures__/excel-pivot-values-rows-columns.xlsx'));$sheet=$book.Worksheets.Item('Summary');$p=$sheet.PivotTables().Item(1)
+ $p.PivotFields('Region').Orientation=3;$p.RowAxisLayout($(switch($layout){compact{0}outline{2}default{1}}));if($selection -ne 'All'){$p.PivotFields('Region').CurrentPage=$selection};[void]$p.RefreshTable()
+ $values=@();for($r=1;$r -le $p.TableRange2.Rows.Count;$r++){$line=@();for($c=1;$c -le $p.TableRange2.Columns.Count;$c++){$line+=,$sheet.Cells.Item($r,$c).Value2};$values+=,$line}
+ $name=$layout+'-'+$selection;[IO.File]::WriteAllText((Join-Path $out ($name+'.json')),(@{values=$values;tableRange1=$p.TableRange1.Address();tableRange2=$p.TableRange2.Address();pageItem=$sheet.Cells.Item(1,2).Value2} | ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false));$book.SaveAs((Join-Path $out ($name+'.xlsx')),51);$book.Close($false);$book=$null;Write-Output $name
+ }}
+}finally{if($book){$book.Close($false)};$excel.Quit();[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)}
+Write-Output ('Oracle folder: '+$out)
+
+$ErrorActionPreference='Stop';$out=Join-Path $env:TEMP ('ooxml-pivot-page-types-'+[Guid]::NewGuid().ToString('N'));New-Item -ItemType Directory $out|Out-Null;$excel=New-Object -ComObject Excel.Application;$excel.Visible=$false;$excel.DisplayAlerts=$false;$book=$null
+try{foreach($type in @('number','boolean','blank','error')){
+$book=$excel.Workbooks.Add();$data=$book.Worksheets.Item(1);$data.Name='Data';$summary=$book.Worksheets.Add();$summary.Name='Summary';$rows=@(@('Category','Region','Amount'),@('Fruit','East',10),@('Fruit','West',20),@('Veg','East',5));for($r=0;$r -lt 4;$r++){for($c=0;$c -lt 3;$c++){$v=$rows[$r][$c];if($v -is [int]){$data.Cells.Item($r+1,$c+1).Value2=[double]$v}else{$data.Cells.Item($r+1,$c+1).Value2=[string]$v}}};switch($type){number{$data.Range('B2').Value2=[double]2025;$data.Range('B3').Value2=[double]2026;$data.Range('B4').Value2=[double]2025}boolean{$data.Range('B2').Value2=$true;$data.Range('B3').Value2=$false;$data.Range('B4').Value2=$true}blank{$data.Range('B2').ClearContents();$data.Range('B4').ClearContents()}error{$data.Range('B2').Formula='=NA()';$data.Range('B4').Formula='=NA()'}}
+$p=$book.PivotCaches().Create(1,'Data!R1C1:R4C3',6).CreatePivotTable($summary.Range('A1'),'SalesPivot');$p.PivotFields('Category').Orientation=1;$p.PivotFields('Region').Orientation=3;[void]$p.AddDataField($p.PivotFields('Amount'),'Sum of Amount',-4157);$p.RowAxisLayout(1);$want=switch($type){number{'2025'}boolean{'TRUE'}blank{'(blank)'}error{'#N/A'}};$p.PivotFields('Region').CurrentPage=$want;[void]$p.RefreshTable();$vals=@();for($r=1;$r -le $p.TableRange2.Rows.Count;$r++){$line=@();for($c=1;$c -le $p.TableRange2.Columns.Count;$c++){$v=$summary.Cells.Item($r,$c).Value2;$line+=,$v};$vals+=,$line};[IO.File]::WriteAllText((Join-Path $out ($type+'.json')),(@{values=$vals;captionType=$summary.Range('B1').Value2.GetType().FullName}|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false));$book.SaveAs((Join-Path $out ($type+'.xlsx')),51);$book.Close($false);$book=$null;Write-Output $type
+}}finally{if($book){$book.Close($false)};$excel.Quit();[void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($excel)};Write-Output ('Oracle folder: '+$out)

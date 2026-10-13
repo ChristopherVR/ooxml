@@ -1,3 +1,4 @@
+import { nestedFragmentEdges } from './nested-fragment-edges';
 import { nestedFrameProfile } from './nested-frame-profile';
 import { cellVerticalOffset } from './result';
 import type { LayoutBlock, LayoutParagraph, LayoutTableCell } from './input';
@@ -22,6 +23,7 @@ export function stackCellBlocks(
 	note: (message: string) => void,
 	top: number,
 	starts?: ReadonlyMap<string, number>,
+	physicalFragments = false,
 ): { heightPx: number; boxes: LayoutParagraphBox[]; tables?: LayoutTableBox[] } {
 	if (!cell.blocks)
 		return stackParagraphs(
@@ -43,6 +45,7 @@ export function stackCellBlocks(
 			y = result.heightPx;
 			continue;
 		}
+		const edges = physicalFragments ? nestedFragmentEdges(block) : undefined;
 		const tableWidth = block.widthPx ?? width;
 		const profile = nestedFrameProfile(block, tableWidth);
 		const reserveBorders = profile !== undefined;
@@ -66,6 +69,7 @@ export function stackCellBlocks(
 			yPx: y,
 			heightPx: 0,
 			rows: [],
+			...(edges ? { fragmentEdges: edges } : {}),
 		};
 		for (const row of block.rows) {
 			if (
@@ -73,8 +77,18 @@ export function stackCellBlocks(
 				!row.cells.some((nested) => cellParagraphs(nested).some((p) => starts.has(p.id)))
 			)
 				continue;
+			const visibleRow =
+				edges && starts && !frame.rows.length
+					? {
+							...row,
+							cells: row.cells.map((cell, index) => ({
+								...cell,
+								borders: { ...cell.borders, top: edges.top[index]! },
+							})),
+						}
+					: row;
 			const layout = layoutRow(
-				row,
+				visibleRow,
 				tableWidth,
 				measurer,
 				note,
@@ -102,6 +116,7 @@ export function stackCellBlocks(
 							paragraph.widthPx ??
 							Math.max(1, geometry.widthPx - geometry.paddingLeftPx - geometry.paddingRightPx),
 						readOnly: true,
+						...(edges ? { tableFragmentBottomPx: edges.bottom[index]!.widthPx } : {}),
 						tableFrameInsets: {
 							top:
 								(paragraph.tableFrameInsets?.top ?? 0) +
@@ -115,10 +130,12 @@ export function stackCellBlocks(
 			y += layout.heightPx;
 		}
 		const bottomBorder = profile?.bottomPx ?? 0;
-		if (frame.rows.length) frame.rows.at(-1)!.heightPx += bottomBorder;
-		y += bottomBorder;
-		frame.heightPx = y - frame.yPx;
-		if (frame.rows.length) tables.push(frame);
+		if (frame.rows.length) {
+			frame.rows.at(-1)!.heightPx += bottomBorder;
+			y += bottomBorder;
+			frame.heightPx = y - frame.yPx;
+			tables.push(frame);
+		}
 	}
 	// Cell paragraphs can run in parallel across a nested row; shared split machinery expects y order.
 	boxes.sort((a, b) => a.yPx - b.yPx);

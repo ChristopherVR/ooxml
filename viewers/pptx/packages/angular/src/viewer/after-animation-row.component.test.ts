@@ -90,7 +90,7 @@ describe('after animation row template contract', () => {
 	});
 
 	it('shows the colour swatch only for dimToColor', () => {
-		expect(ROW_SOURCE).toContain(`@if (action() === 'dimToColor') {`);
+		expect(ROW_SOURCE).toContain(`@if (action() === 'dimToColor' && showColor()) {`);
 		expect(ROW_SOURCE).toContain(`'pptx.animation.afterAnimation.color' | translate`);
 	});
 

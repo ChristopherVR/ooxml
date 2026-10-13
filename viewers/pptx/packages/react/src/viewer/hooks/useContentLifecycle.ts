@@ -119,6 +119,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		setCanvasSize: state.setCanvasSize,
 		setSlideSizeEmu: state.setSlideSizeEmu,
 		setHeaderFooter: state.setHeaderFooter,
+		setFirstSlideNumber: state.setFirstSlideNumber,
 		setLayoutOptions: state.setLayoutOptions,
 		setSlideMasters: state.setSlideMasters,
 		setModernCommentAuthors: state.setModernCommentAuthors,

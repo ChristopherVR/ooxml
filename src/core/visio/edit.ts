@@ -70,6 +70,7 @@ export type {
 	VisioTextRange,
 	VisioTextRangesEdit,
 	VisioTextFieldInsertEdit,
+	VisioTextFieldUpdateEdit,
 	VisioGeometryEdit,
 	VisioPageInsert,
 	VisioPageReorder,
@@ -354,6 +355,7 @@ async function editVsdxTransaction(
 			command.type !== 'replace-plain-text' &&
 			command.type !== 'replace-text-ranges' &&
 			command.type !== 'insert-text-field' &&
+			command.type !== 'update-text-field' &&
 			command.type !== 'reorder-shape' &&
 			command.type !== 'duplicate-shapes' &&
 			command.type !== 'paste-shapes' &&
@@ -379,6 +381,7 @@ async function editVsdxTransaction(
 				command.type === 'replace-plain-text' ||
 				command.type === 'replace-text-ranges' ||
 				command.type === 'insert-text-field' ||
+				command.type === 'update-text-field' ||
 				isVisioFormatEdit(command) ||
 				isVisioMetadataEdit(command) ||
 				command.type === 'set-shape-data' ||
@@ -534,7 +537,7 @@ async function editVsdxTransaction(
 				textChanged = true;
 				await noteTextSize(command, root);
 			}
-		} else if (command.type === 'insert-text-field') {
+		} else if (command.type === 'insert-text-field' || command.type === 'update-text-field') {
 			if (
 				await insertVisioTextField(pkg, new Set(pages.values()), roots, document!, command, check)
 			) {

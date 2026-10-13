@@ -14,6 +14,55 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
+it.each(['tabular', 'compact', 'outline'])(
+	'authors %s between Values, preserves settings and converts with history',
+	async (form) => {
+		const wb = createWorkbook(),
+			ctx = createTestContext(wb),
+			edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Amount', 'Quantity'],
+			['Fruit', 'East', 10, 2],
+			['Fruit', 'West', 20, 3],
+		].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+		ctx.select('A1:D3');
+		registerToolDialogs(ctx);
+		let done = ctx.dialogs.open('create-pivot-table'),
+			dialog = dialogEl(ctx, 'create-pivot-table');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(true);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), form);
+		clickButton(dialog, 'Add Value Field');
+		const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
+		setValue(inputByLabel<HTMLSelectElement>(extra, 'Value Field:'), 'Quantity');
+		setValue(inputByLabel<HTMLSelectElement>(extra, 'Summarize Values By:'), 'count');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(false);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:'), 'between');
+		clickButton(dialog, 'OK');
+		await done;
+		const pivot = wb.sheets[0]!.pivotTables![0]!;
+		expect(pivot).toMatchObject({ layout: form, valuesPosition: 'between', valuesAxis: 'rows' });
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').value).toBe('between');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'columns');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(true);
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').value).toBe('last');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]?.valuesAxis).toBe('columns');
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables![0]?.valuesPosition).toBe('between');
+	},
+);
+
 it('keeps compact multiple measures on unchanged settings and switches to outline subtotals with undo', async () => {
 	const wb = createWorkbook();
 	const ctx = createTestContext(wb);
@@ -278,7 +327,7 @@ it('authors Values last on rows, preserves unchanged settings and removes the fi
 			'[value="compact"]',
 		)!.disabled,
 	).toBe(false);
-	expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(true);
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(false);
 	const repeat = inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels');
 	expect(repeat.disabled).toBe(false);
 	repeat.click();
@@ -308,34 +357,56 @@ it('authors Values last on rows, preserves unchanged settings and removes the fi
 	});
 });
 
-it('keeps Values on rows unavailable while a second real row field is selected', async () => {
-	const wb = createWorkbook();
-	const ctx = createTestContext(wb);
-	const edit = ctx.session()!;
-	[
-		['Category', 'Region', 'Amount'],
-		['Fruit', 'East', 10],
-	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
-	ctx.select('A1:C2');
-	registerToolDialogs(ctx);
-	const done = ctx.dialogs.open('create-pivot-table');
-	const dialog = dialogEl(ctx, 'create-pivot-table');
-	clickButton(dialog, 'Add Value Field');
-	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
-	expect(
-		inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
-			'[value="rows"]',
-		)!.disabled,
-	).toBe(true);
-	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), '');
-	expect(
-		inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
-			'[value="rows"]',
-		)!.disabled,
-	).toBe(false);
-	clickButton(dialog, 'Cancel');
-	await done;
-});
+it.each(['compact', 'outline', 'tabular'])(
+	'authors two real row fields on the Rows axis in %s layout',
+	async (form) => {
+		const wb = createWorkbook();
+		const ctx = createTestContext(wb);
+		const edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Amount'],
+			['Fruit', 'East', 10],
+		].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+		ctx.select('A1:C2');
+		registerToolDialogs(ctx);
+		const done = ctx.dialogs.open('create-pivot-table');
+		const dialog = dialogEl(ctx, 'create-pivot-table');
+		clickButton(dialog, 'Add Value Field');
+		setValue(
+			inputByLabel<HTMLSelectElement>(
+				dialog.querySelector<HTMLElement>('[data-pivot-value]')!,
+				'Summarize Values By:',
+			),
+			'count',
+		);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		expect(
+			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
+				'[value="rows"]',
+			)!.disabled,
+		).toBe(false);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), form);
+		expect(
+			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
+				'[value="rows"]',
+			)!.disabled,
+		).toBe(false);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(false);
+		const layout = inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:');
+		expect(layout.querySelector<HTMLOptionElement>('[value="compact"]')!.disabled).toBe(false);
+		expect(layout.querySelector<HTMLOptionElement>('[value="outline"]')!.disabled).toBe(false);
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
+			secondRowField: 'Region',
+			valuesAxis: 'rows',
+			layout: form,
+		});
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables?.length ?? 0).toBe(0);
+	},
+);
 
 it('keeps compact Values-row layout and switches to outline repeated labels with history', async () => {
 	const wb = createWorkbook();
@@ -373,3 +444,41 @@ it('keeps compact Values-row layout and switches to outline repeated labels with
 	edit.undo();
 	expect(wb.sheets[0]!.pivotTables![0]?.layout).toBe('compact');
 });
+
+it.each(['compact', 'outline', 'tabular'])(
+	'authors first Values with native subtotal eligibility in %s',
+	async (layout) => {
+		const wb = createWorkbook();
+		const ctx = createTestContext(wb);
+		const edit = ctx.session()!;
+		[
+			['Category', 'Region', 'Amount'],
+			['Fruit', 'East', 10],
+		].forEach((line, r) => line.forEach((v, c) => edit.setCellInput(0, r, c, String(v))));
+		ctx.select('A1:C2');
+		registerToolDialogs(ctx);
+		const done = ctx.dialogs.open('create-pivot-table');
+		const dialog = dialogEl(ctx, 'create-pivot-table');
+		clickButton(dialog, 'Add Value Field');
+		setValue(
+			inputByLabel<HTMLSelectElement>(
+				dialog.querySelector<HTMLElement>('[data-pivot-value]')!,
+				'Summarize Values By:',
+			),
+			'count',
+		);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), layout);
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:'), 'first');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Subtotal Position:').disabled).toBe(
+			layout === 'tabular',
+		);
+		expect(dialog.textContent).toContain('Values are listed before the row fields.');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({ valuesPosition: 'first', layout });
+		edit.undo();
+		expect(wb.sheets[0]!.pivotTables?.length ?? 0).toBe(0);
+	},
+);

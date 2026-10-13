@@ -224,6 +224,7 @@ function formatNumber(value: number, picture: string): string | undefined {
 /** Supported format pictures: `{{date picture}}`, `0`, `0.00`, `0.##`, `#,##0` (with ` u`), `@`. */
 export const VISIO_FIELD_FORMATS = {
 	shortDate: '{{M/d/yyyy}}',
+	isoDate: '{{yyyy-MM-dd}}',
 	longDate: '{{dddd, MMMM d, yyyy}}',
 	time: '{{h:mm tt}}',
 	dateTime: '{{M/d/yyyy h:mm tt}}',

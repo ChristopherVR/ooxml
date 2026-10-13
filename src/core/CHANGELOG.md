@@ -7,6 +7,70 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.10.0) - 2026-10-13
+
+### Features
+
+- **xlsx:** Author tabular pivots with multiple measures ([177a04d](https://github.com/ChristopherVR/ooxml/commit/177a04dce47fc620c5d54c32fbdc91a5188e73cc))
+- **ui:** Configure multiple pivot value fields ([eede3cb](https://github.com/ChristopherVR/ooxml/commit/eede3cb1b058435cac114e716db834ffe5757685))
+- **xlsx:** Support multiple measures in compact pivot layouts ([a58f7c1](https://github.com/ChristopherVR/ooxml/commit/a58f7c106f90f844e2ebe5497e9ece34ae956612))
+- **ui:** Enable multi-measure pivot report layouts ([bf559ec](https://github.com/ChristopherVR/ooxml/commit/bf559ec8eb746c7b3a1d1869d04e0a4a51467c94))
+- **xlsx:** Support tabular pivot values on rows ([7234296](https://github.com/ChristopherVR/ooxml/commit/72342960fccb8037decc6a411af5b70171a5a821))
+- **ui:** Expose pivot values axis settings ([9a6164f](https://github.com/ChristopherVR/ooxml/commit/9a6164f7e0fa3ed23b337a601eba0524c4921323))
+- **visio:** Match native general numeric field pictures ([ebf9f7a](https://github.com/ChristopherVR/ooxml/commit/ebf9f7aed842a097fe8d0d622b49846c5729dd48))
+- **xlsx:** Support compact and outline pivot row values ([f9e5e70](https://github.com/ChristopherVR/ooxml/commit/f9e5e70bcc839049540f04a35dc5f6b7d60d0f0f))
+- **ui:** Enable compact and outline pivot row values ([87535e3](https://github.com/ChristopherVR/ooxml/commit/87535e36cbf34ff04e0811d2db8ab70f15268580))
+- **visio:** Format native fractional text field pictures ([ae6b922](https://github.com/ChristopherVR/ooxml/commit/ae6b9228565b246178a71b2ebd016e3736364db6))
+- **pptx:** Support native whole-shape fixed opacity ([7b0372e](https://github.com/ChristopherVR/ooxml/commit/7b0372ed918da963bf662a302334e68ccae972e2))
+- **visio:** Render explicit iso date field pictures ([ea3b0fa](https://github.com/ChristopherVR/ooxml/commit/ea3b0faf51ab3f37956cfbae7e5649555ee22ce4))
+- **xlsx:** Support nested tabular values on rows ([a00cff7](https://github.com/ChristopherVR/ooxml/commit/a00cff761b229bbd4570eefa34dad291290dec10))
+- **xlsx:** Author nested values rows in tabular reports ([fc94245](https://github.com/ChristopherVR/ooxml/commit/fc94245e3f5f2caf6529a2daabf4f0e25229c47e))
+- **visio:** Offer iso dates in the field dialog ([53ed043](https://github.com/ChristopherVR/ooxml/commit/53ed043f3b2a46e7736f7389eabcbb5f409cd859))
+- **xlsx:** Support nested compact and outline row values ([9a56995](https://github.com/ChristopherVR/ooxml/commit/9a56995bcbaa095984639b33034aa62fdb05ffad))
+- **xlsx:** Configure nested row values in all report layouts ([f85cf7d](https://github.com/ChristopherVR/ooxml/commit/f85cf7d8c2580d5b4bc1b0fb8a0451efe577dc9a))
+- **xlsx:** Place row values between two pivot fields ([a8ad158](https://github.com/ChristopherVR/ooxml/commit/a8ad158fd445a23eeef478e8b2f1d93c0e4e3ac7))
+- **xlsx:** Configure between-field values placement ([07357bd](https://github.com/ChristopherVR/ooxml/commit/07357bde39824b7f433be2d6b7e7529b1ed041b0))
+- **xlsx:** Place pivot values before two row fields ([3e77360](https://github.com/ChristopherVR/ooxml/commit/3e77360b8c63d7f82c874e5ce013bee93b55bd48))
+- **xlsx:** Configure values before row fields ([4f33bd0](https://github.com/ChristopherVR/ooxml/commit/4f33bd0d2e27dd113ef21aeead69b8940a70b8bb))
+
+### Bug Fixes
+
+- **visio:** Match native decimal rounding and scientific display ([0c0f505](https://github.com/ChristopherVR/ooxml/commit/0c0f5054904f40bf76342767a5c708989323c152))
+- **docx:** Paint nested table frames in print layout ([0415699](https://github.com/ChristopherVR/ooxml/commit/04156990666eb0a9f7b449c78266000578ea3797))
+- **docx:** Align nested print text with cell frames ([66a9030](https://github.com/ChristopherVR/ooxml/commit/66a9030394475733f58f06541206274e27652c15))
+- **xlsx:** Normalize Values headers during pivot conversion ([231be1f](https://github.com/ChristopherVR/ooxml/commit/231be1f2c3eb74521ede5e6f818753c15f3451e5))
+- **xlsx:** Check pivot budgets before allocating headers ([ccfc390](https://github.com/ChristopherVR/ooxml/commit/ccfc39065ae692a1fe6bfef975545f50e4edf4f8))
+- **docx:** Reserve measured nested table border insets ([d59a6ea](https://github.com/ChristopherVR/ooxml/commit/d59a6ea69bad31c395f58caed8160ebac082209f))
+- **docx:** Measure parallel table continuation bottoms ([854baa9](https://github.com/ChristopherVR/ooxml/commit/854baa92664b927016425e8b1edaf7148d7d387b))
+- **core:** Keep custom-geometry command order through undo and copies ([3ea38e4](https://github.com/ChristopherVR/ooxml/commit/3ea38e4e1bda2a59e7677b3c1783d53a89d1ab75))
+- **docx:** Align asymmetric nested borders and paint layers ([7540cb1](https://github.com/ChristopherVR/ooxml/commit/7540cb1e6224298dec801134537512383aee007b))
+- **pptx:** Bound legacy opacity image hint admission ([a37cf62](https://github.com/ChristopherVR/ooxml/commit/a37cf62761132b312825d3fe9d317a28317c7e85))
+- **pptx:** Refuse unresolved opacity parent timing ([8d71f85](https://github.com/ChristopherVR/ooxml/commit/8d71f852f4f0f4305cf18dbafcb151f6c7fac280))
+- **visio:** Render inherited native iso date fields ([2aaa106](https://github.com/ChristopherVR/ooxml/commit/2aaa1064bb88df629aa37299fbd0271c1857d040))
+- **visio:** Preserve unmeasured short date locale caches ([0a8e568](https://github.com/ChristopherVR/ooxml/commit/0a8e568bc9d5c19054db6dfc95e856d029f5996f))
+- **docx:** Reserve ordinary table border occupancy ([b7c904e](https://github.com/ChristopherVR/ooxml/commit/b7c904edc474c2704075a97ad029890c42b46d7c))
+- **docx:** Continue nested footnote cells independently ([9317984](https://github.com/ChristopherVR/ooxml/commit/931798444bea75834fff1b6c3d04ddc1b0489529))
+- **visio:** Write native date field and format caches ([81e07a7](https://github.com/ChristopherVR/ooxml/commit/81e07a7b82fbc10e2de04c21947efddaa919d345))
+- **docx:** Gate note cuts on authoritative cell stories ([e52268d](https://github.com/ChristopherVR/ooxml/commit/e52268d975814e50130b6d30b29539f201193c97))
+- **docx:** Bound independent note cuts to one reference ([752edb8](https://github.com/ChristopherVR/ooxml/commit/752edb8f988980e0edfa0a52591c74a42d65c4e3))
+- **docx:** Release consumed nested footnote constraints ([00753c3](https://github.com/ChristopherVR/ooxml/commit/00753c3bb0bc287a1e47072a7c42965822ac8533))
+- **pptx:** Preserve native after-state and honor explicit clears ([aed6a6d](https://github.com/ChristopherVR/ooxml/commit/aed6a6d03410a3487589edfa6f57bde243885a45))
+- **docx:** Finish nested note tails in balanced columns ([c2cfc99](https://github.com/ChristopherVR/ooxml/commit/c2cfc99df37ae572d650bea9b50d64546199a967))
+- **pptx:** Number slide-number fields from the deck's firstSlideNum ([ec9b18d](https://github.com/ChristopherVR/ooxml/commit/ec9b18da409c971d08491b612db228fa32608c8b))
+- **pptx:** Keep a:br line breaks soft through an inline text edit ([02e40ae](https://github.com/ChristopherVR/ooxml/commit/02e40aed4dc8388676d5b852d73e5065d1b3846f))
+- **pptx:** Drop cleared cell fills and borders when the style changes ([99dbeba](https://github.com/ChristopherVR/ooxml/commit/99dbebabe7fd885998c52360610781e10ad3bca4))
+- **visio:** Refresh measured inherited system date fields ([9eaf6b8](https://github.com/ChristopherVR/ooxml/commit/9eaf6b86c522596ac1ce4ba9112cfa797de5b0a7))
+- **visio:** Refresh validated inherited english long dates ([f80dd00](https://github.com/ChristopherVR/ooxml/commit/f80dd00cdf77ecc13bf6b56d63acd44552b31a91))
+
+### Testing
+
+- **visio:** Cover native fraction approximation boundaries ([b92ced3](https://github.com/ChristopherVR/ooxml/commit/b92ced30232d2c916394abfab15bd718c59c8e97))
+- **docx:** Record native long interacting note continuations ([327efc9](https://github.com/ChristopherVR/ooxml/commit/327efc9c91f5bd2491a0ee71ed63dd6eb55be92a))
+
+### Styling
+
+- **visio:** Format native boundary regression ([8fd285d](https://github.com/ChristopherVR/ooxml/commit/8fd285d5a90976f7ef02e654b3f056b79d2120f5))
+
 ## [1.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.9.0) - 2026-10-13
 
 ### Features

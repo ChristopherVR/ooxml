@@ -10,6 +10,7 @@ export interface AfterAnimationRowProps {
 	action: PptxAfterAnimationAction;
 	color: string | undefined;
 	canEdit: boolean;
+	showColor?: boolean;
 	onActionChange: (action: PptxAfterAnimationAction) => void;
 	onColorChange: (color: string) => void;
 }
@@ -24,6 +25,7 @@ export function AfterAnimationRow({
 	action,
 	color,
 	canEdit,
+	showColor = true,
 	onActionChange,
 	onColorChange,
 }: AfterAnimationRowProps): React.ReactElement {
@@ -50,7 +52,7 @@ export function AfterAnimationRow({
 					))}
 				</WebSelect>
 			</label>
-			{action === 'dimToColor' && (
+			{action === 'dimToColor' && showColor && (
 				<label className='flex items-center gap-2'>
 					<span className='text-muted-foreground text-[11px]'>
 						{t('pptx.animation.afterAnimation.color')}

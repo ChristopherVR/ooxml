@@ -23,7 +23,7 @@ import type { Locator, Page } from '@playwright/test';
 
 import { chooseCommand, openMenuOn, readMenu, report } from './support/context-menu';
 import type { MenuSnapshot } from './support/context-menu';
-import { loadDeckAt, SAMPLE_DECK, slideStage, thumbnail } from './support/deck';
+import { loadDeckAt, openRibbonTab, SAMPLE_DECK, slideStage, thumbnail } from './support/deck';
 import { byBinding, inspect } from './support/menu-report';
 import { acrossFrameworks } from './support/parity';
 
@@ -114,6 +114,36 @@ test.describe('cross-binding slide rail menus', () => {
 			}
 			if (value.added !== 1) {
 				issues.push(`Add Slide changed the slide count by ${value.added}, not 1`);
+			}
+			return report(name, issues);
+		});
+		expect(problems.join('\n')).toBe('');
+	});
+
+	test('Home > Section adds a section at the current slide', async ({ browser }, testInfo) => {
+		const results = await acrossFrameworks(
+			browser,
+			testInfo,
+			async (page, origin) => {
+				await openDeck(page, origin);
+				const errors: string[] = [];
+				page.on('pageerror', (error) => errors.push(error.message));
+				const before = await sectionHeaders(page).count();
+				await openRibbonTab(page, 'Home');
+				await page.locator('[data-ribbon-control="home.slides.section"]').click();
+				await page.waitForTimeout(300);
+				return { added: (await sectionHeaders(page).count()) - before, errors };
+			},
+			{ viewport: VIEWPORT },
+		);
+
+		const problems = byBinding(results).flatMap(({ name, value }) => {
+			const issues: string[] = [];
+			if (value.added !== 1) {
+				issues.push(`Section changed the section count by ${value.added}, not 1`);
+			}
+			for (const error of value.errors) {
+				issues.push(`threw: ${error}`);
 			}
 			return report(name, issues);
 		});

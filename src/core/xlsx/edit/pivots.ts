@@ -101,12 +101,17 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 		],
 		() => {
 			const compact = pivot.layout === 'compact';
-			const indents = [
-				stylePatcher(ctx.workbook, {
-					alignment: { indent: 0, ...(compact ? { horizontal: 'left' } : {}) },
-				}),
-				stylePatcher(ctx.workbook, { alignment: { indent: 1, horizontal: 'left' } }),
-			];
+			const indents = new Map(
+				[...new Set([0, ...(grid.indents ?? [])])].map(
+					(indent) =>
+						[
+							indent,
+							stylePatcher(ctx.workbook, {
+								alignment: { indent, ...(compact || indent > 0 ? { horizontal: 'left' } : {}) },
+							}),
+						] as const,
+				),
+			);
 			const styles = new Map<string, number>();
 			forEachCellInRange(sheet, location, (cell, row, col) => {
 				if (cell.styleId !== undefined) styles.set(`${row}:${col}`, cell.styleId);
@@ -134,7 +139,7 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 							(alignment?.indent ?? 0) !== indent ||
 							(compact && alignment?.horizontal !== 'left')
 						)
-							styleId = indents[indent]!(styleId);
+							styleId = indents.get(indent)!(styleId);
 					}
 					putCell(sheet, r, c, { value, ...(styleId !== undefined ? { styleId } : {}) });
 				}),
@@ -169,7 +174,11 @@ export function createPivotTable(
 		valueField: options.valueField,
 		aggregate,
 		valueCaption: pivotCaption(aggregate, options.valueField),
+		...(options.pageFilter !== undefined
+			? { pageFilter: structuredClone(options.pageFilter) }
+			: {}),
 		...(options.valuesAxis !== undefined ? { valuesAxis: options.valuesAxis } : {}),
+		...(options.valuesPosition !== undefined ? { valuesPosition: options.valuesPosition } : {}),
 		...(options.additionalValues
 			? { additionalValues: normalizedPivotMeasures(options.additionalValues) }
 			: {}),
@@ -214,6 +223,13 @@ export function refreshPivotTable(
 	if (patch.layout !== undefined) next.layout = patch.layout;
 	if (patch.subtotalPosition !== undefined) next.subtotalPosition = patch.subtotalPosition;
 	if (patch.valuesAxis !== undefined) next.valuesAxis = patch.valuesAxis;
+	if (patch.pageFilter !== undefined) {
+		if (patch.pageFilter === null) delete next.pageFilter;
+		else next.pageFilter = structuredClone(patch.pageFilter);
+	}
+	if (patch.valuesPosition !== undefined) next.valuesPosition = patch.valuesPosition;
+	else if (patch.valuesAxis === 'columns' || patch.secondRowField === '')
+		delete next.valuesPosition;
 	if (patch.additionalValues !== undefined) {
 		const measures = normalizedPivotMeasures(patch.additionalValues);
 		if (measures.length) next.additionalValues = measures;

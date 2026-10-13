@@ -58,9 +58,9 @@ it('switches Values placement atomically and requires a supported profile', asyn
 	edit.refreshPivotTable(0, current().name, { layout: 'compact' });
 	expect(current().layout).toBe('compact');
 	edit.undo();
-	expect(() => edit.refreshPivotTable(0, current().name, { secondRowField: 'Region' })).toThrow(
-		'one row',
-	);
+	edit.refreshPivotTable(0, current().name, { secondRowField: 'Region', layout: 'compact' });
+	expect(current().secondRowField).toBe('Region');
+	edit.undo();
 	expect(() => edit.refreshPivotTable(0, current().name, { additionalValues: [] })).toThrow(
 		'multiple',
 	);
@@ -180,7 +180,7 @@ it.each(['', 'other', false])(
 	},
 );
 
-it.each(['', 'x=""', 'x="0.5"', 'x="NaN"'])(
+it.each(['', 'x=""', 'x="0.5"', 'x="0.0"', 'x="NaN"'])(
 	'refuses malformed Values axis field index %s',
 	(attribute) => {
 		const fields = elements(

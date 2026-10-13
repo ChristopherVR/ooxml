@@ -23,6 +23,7 @@
 		PptxElementAnimation,
 	} from 'pptx-viewer-core';
 	import {
+	getAfterAnimationState,
 		animationFor,
 		applyMotionPathPreset,
 		clearMotionPath,
@@ -232,18 +233,22 @@
 			onpick={onEffectSoundPick}
 			onpickstock={onEffectStockSoundPick}
 		/>
-			<AfterAnimationRow
-				action={anim?.afterAnimation ?? 'none'}
-				color={anim?.afterAnimationColor}
-				{canEdit}
-				onaction={onAfterAnimationChange}
-				oncolor={onAfterAnimationColorChange}
-			/>
+
 
 			<AnimationTimingFields {editor} />
 		{/if}
 
-		<AnimationTimelineSection {editor} selectedElementId={el.id} />
+		{#if hasAnim || anim?.nativeAfterAnimation}
+<AfterAnimationRow
+				action={getAfterAnimationState(anim).action}
+				color={getAfterAnimationState(anim).color}
+			showColor={getAfterAnimationState(anim).showColor}
+				{canEdit}
+				onaction={onAfterAnimationChange}
+				oncolor={onAfterAnimationColorChange}
+			/>
+{/if}
+<AnimationTimelineSection {editor} selectedElementId={el.id} />
 	</div>
 {/if}
 

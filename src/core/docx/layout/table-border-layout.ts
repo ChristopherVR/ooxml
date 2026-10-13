@@ -11,6 +11,7 @@ export function layoutBorderedRow(
 	note: (message: string) => void,
 	profile: NestedFrameProfile | undefined,
 	remaining?: LayoutParagraphBox[][],
+	physicalFragments?: boolean,
 ): RowLayout {
 	const reserved =
 		profile !== undefined && (profile.leftPx > 0 || profile.rightPx > 0 || profile.bottomPx > 0);
@@ -23,6 +24,7 @@ export function layoutBorderedRow(
 		undefined,
 		reserved,
 		profile?.leftPx,
+		physicalFragments,
 	);
 	if (!reserved) return layout;
 	const bottom = Math.max(0, ...layout.geometry.map((cell) => cell.borders?.bottom?.widthPx ?? 0));

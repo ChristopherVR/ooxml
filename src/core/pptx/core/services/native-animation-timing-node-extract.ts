@@ -40,6 +40,10 @@ import {
 	extractAfterEffect,
 	parseTimingPercentFraction,
 } from './native-animation-helpers';
+import {
+	extractVisibilitySetTiming,
+	hasNativeVisibilitySet,
+} from './native-animation-visibility-timing';
 import { extractSetAnimations } from './native-animation-set-components';
 
 /**
@@ -96,9 +100,11 @@ export function buildTimingNodeAnimation(
 	cTn: XmlObject,
 	trigger: PptxAnimationTrigger,
 	group: AnimationGroupContext,
+	unsupportedVisibilityAncestor = false,
 ): PptxNativeAnimation | undefined {
 	const presetClass = cTn['@_presetClass'] as string | undefined;
-	const presetId = cTn['@_presetID'] ? Number.parseInt(String(cTn['@_presetID']), 10) : undefined;
+	const presetId =
+		cTn['@_presetID'] !== undefined ? Number.parseInt(String(cTn['@_presetID']), 10) : undefined;
 	const presetSubtype =
 		cTn['@_presetSubtype'] !== undefined
 			? Number.parseInt(String(cTn['@_presetSubtype']), 10)
@@ -110,10 +116,20 @@ export function buildTimingNodeAnimation(
 	// dropped both, so a "fade in after 1s over 0.4s" effect played
 	// immediately at the 500ms default and no longer matched PowerPoint.
 	const childAutoReverseTiming = extractChildAutoReverseTiming(cTn, ensureArray);
+	const visibilitySetTiming =
+		!unsupportedVisibilityAncestor &&
+		group.seqConcurrent === true &&
+		group.seqNextAction === 'seek' &&
+		['onClick', 'withPrevious'].includes(trigger)
+			? extractVisibilitySetTiming(cTn)
+			: undefined;
 	const durationMs =
 		readTimingAttr(cTn['@_dur']) ??
 		childAutoReverseTiming?.durationMs ??
-		extractChildBehaviourDurationMs(cTn, ensureArray);
+		extractChildBehaviourDurationMs(cTn, ensureArray) ??
+		(visibilitySetTiming
+			? visibilitySetTiming.delayMs + visibilitySetTiming.durationMs
+			: undefined);
 	const delayMs = readTimingAttr(cTn['@_delay']) ?? extractStartConditionDelayMs(cTn);
 	const accel = parseTimingPercentFraction(cTn['@_accel']);
 	const decel = parseTimingPercentFraction(cTn['@_decel']);
@@ -204,6 +220,8 @@ export function buildTimingNodeAnimation(
 		presetId,
 		presetSubtype,
 		durationMs,
+		visibilitySetTiming,
+		unsupportedVisibilitySet: (hasNativeVisibilitySet(cTn) && !visibilitySetTiming) || undefined,
 		delayMs,
 		accel,
 		decel,

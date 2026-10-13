@@ -1,0 +1,32 @@
+{
+  "version": "16.0",
+  "timezone": "Australia/Brisbane",
+  "cases": [
+    {
+      "name": "short",
+      "format": "{{M/d/yyyy}}",
+      "text": "Created: 10/13/2026"
+    },
+    {
+      "name": "iso",
+      "format": "{{yyyy-MM-dd}}",
+      "text": "Created: 2026-10-13"
+    },
+    {
+      "name": "long",
+      "format": "{{dddd, MMMM d, yyyy}}",
+      "text": "Created: Tuesday, October 13, 2026"
+    },
+    {
+      "name": "time",
+      "format": "{{h:mm tt}}",
+      "text": "Created: 11:48 PM"
+    },
+    {
+      "name": "date-time",
+      "format": "{{M/d/yyyy h:mm tt}}",
+      "text": "Created: 10/13/2026 11:48 PM"
+    }
+  ],
+  "result": "native save/reopen matched"
+}

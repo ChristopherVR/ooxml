@@ -1,7 +1,28 @@
 import type { XmlElement } from '../../xml/index';
 import { attrs } from '../write/xml-out';
+export function pivotFieldIndex(field: XmlElement | undefined): number {
+	const raw = field?.getAttribute('x');
+	if (raw === null || raw === undefined || !/^-?\d+$/.test(raw.trim())) return NaN;
+	const value = Number(raw);
+	return Number.isSafeInteger(value) ? value : NaN;
+}
+
+/** Native leading or between-field row Values carry an explicit position matching their axis slot. */
+export function pivotValueIndex(root: XmlElement, axis: readonly XmlElement[]): number {
+	const index = axis.findIndex((field) => pivotFieldIndex(field) === -2);
+	const position = root.getAttribute('dataPosition');
+	if (position !== null && (!/^\d+$/.test(position.trim()) || Number(position) !== index))
+		throw new Error('Inconsistent Values axis position');
+	if (axis.length === 3 && index < 2 && position === null)
+		throw new Error('Missing leading or between-field Values position');
+	return index;
+}
 /** Native Values-on-columns entries, with each measure nested inside each column item. */
-export function pivotValueAxisItems(measures: number, columns?: number): string {
+export function pivotValueAxisItems(
+	measures: number,
+	columns?: number,
+	columnIndices?: readonly number[],
+): string {
 	const entries: string[] = [];
 	if (columns === undefined) {
 		for (let measure = 0; measure < measures; measure++)
@@ -12,7 +33,7 @@ export function pivotValueAxisItems(measures: number, columns?: number): string 
 		for (let column = 0; column < columns; column++)
 			for (let measure = 0; measure < measures; measure++) {
 				entries.push(
-					`<i${attrs({ r: measure ? 1 : undefined, i: measure || undefined })}>${measure ? '' : `<x${attrs({ v: column || undefined })}/>`}<x${attrs({ v: measure || undefined })}/></i>`,
+					`<i${attrs({ r: measure ? 1 : undefined, i: measure || undefined })}>${measure ? '' : `<x${attrs({ v: (columnIndices?.[column] ?? column) || undefined })}/>`}<x${attrs({ v: measure || undefined })}/></i>`,
 				);
 			}
 		for (let measure = 0; measure < measures; measure++)
@@ -21,24 +42,21 @@ export function pivotValueAxisItems(measures: number, columns?: number): string 
 	return `<colItems count="${entries.length}">${entries.join('')}</colItems>`;
 }
 
-/** Values are modeled last on their axis; row placement has one real tabular row field. */
+/** Values follow the column field, or sit last/between/before two real row fields. */
 export function supportedPivotAxes(
 	rows: readonly XmlElement[],
 	columns: readonly XmlElement[],
 	measures: number,
 	valuesOnRows: boolean,
 ): boolean {
-	const index = (field: XmlElement | undefined) => {
-		const raw = field?.getAttribute('x');
-		const value = raw === null || raw === undefined || !raw.trim() ? NaN : Number(raw);
-		return Number.isInteger(value) ? value : NaN;
-	};
+	const index = pivotFieldIndex;
 	if (valuesOnRows)
 		return (
 			measures > 1 &&
-			rows.length === 2 &&
-			index(rows[0]) >= 0 &&
-			index(rows[1]) === -2 &&
+			(rows.length === 2 || rows.length === 3) &&
+			(index(rows[0]) >= 0 || rows.length === 3) &&
+			rows.filter((field) => index(field) === -2).length === 1 &&
+			rows.filter((field) => index(field) !== -2).every((field) => index(field) >= 0) &&
 			columns.length <= 1 &&
 			(!columns.length || index(columns[0]) >= 0)
 		);

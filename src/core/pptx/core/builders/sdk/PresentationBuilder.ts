@@ -170,7 +170,12 @@ function rootRelsXml(): string {
 </Relationships>`;
 }
 
-function presentationXml(width: number, height: number, slideCount: number): string {
+function presentationXml(
+	width: number,
+	height: number,
+	slideCount: number,
+	firstSlideNumber?: number,
+): string {
 	// Slide rIds start after the fixed relationships:
 	// rId1 = slideMaster, rId2 = theme, rId3 = presProps, rId4 = viewProps, rId5 = tableStyles
 	const slideIdBase = 256; // slide IDs (distinct from rIds)
@@ -183,6 +188,8 @@ function presentationXml(width: number, height: number, slideCount: number): str
 					(_, i) => `    <p:sldId id="${slideIdBase + i}" r:id="rId${slideRIdBase + i}"/>`,
 				).join('\n')}\n  </p:sldIdLst>`
 			: '';
+	const firstSlideNum =
+		firstSlideNumber === undefined ? '' : ` firstSlideNum="${Math.trunc(firstSlideNumber)}"`;
 
 	return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -191,7 +198,7 @@ function presentationXml(width: number, height: number, slideCount: number): str
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main"
   xmlns:p15="http://schemas.microsoft.com/office/powerpoint/2012/main"
-  saveSubsetFonts="1">
+  saveSubsetFonts="1"${firstSlideNum}>
   <p:sldMasterIdLst>
     <p:sldMasterId id="2147483648" r:id="rId1"/>
   </p:sldMasterIdLst>
@@ -474,7 +481,10 @@ export async function buildBlankPresentationArchive(
 
 	zip.file('[Content_Types].xml', contentTypesXml(layoutCount, initialSlideCount));
 	zip.file('_rels/.rels', rootRelsXml());
-	zip.file('ppt/presentation.xml', presentationXml(width, height, initialSlideCount));
+	zip.file(
+		'ppt/presentation.xml',
+		presentationXml(width, height, initialSlideCount, options?.firstSlideNumber),
+	);
 	zip.file('ppt/_rels/presentation.xml.rels', presentationRelsXml(layoutCount, initialSlideCount));
 	zip.file('ppt/slideMasters/slideMaster1.xml', slideMasterXml(layoutCount));
 	zip.file('ppt/slideMasters/_rels/slideMaster1.xml.rels', slideMasterRelsXml(layoutCount));

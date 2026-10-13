@@ -153,13 +153,6 @@
 			(pick)="onEffectSoundPick($event)"
 			(pickStock)="onEffectStockSoundPick($event)"
 		/>
-		<pptx-after-animation-row
-			[action]="current()?.afterAnimation ?? 'none'"
-			[color]="current()?.afterAnimationColor"
-			[canEdit]="canEdit()"
-			(actionChange)="onAfterAnimationChange($event)"
-			(colorChange)="onAfterAnimationColorChange($event)"
-		/>
 
 		<!-- ── Timing heading ────────────────────────────────────────── -->
 		<div class="pptx-ng-anim__subheading">{{ 'pptx.animations.timing' | translate }}</div>
@@ -388,4 +381,14 @@
 		/>
 	}
 	<!-- end @if (currentHasAnimation()) -->
+	@if (currentHasAnimation() || current()?.nativeAfterAnimation) {
+		<pptx-after-animation-row
+			[action]="getAfterAnimationState(current()).action"
+			[color]="getAfterAnimationState(current()).color"
+			[showColor]="getAfterAnimationState(current()).showColor"
+			[canEdit]="canEdit()"
+			(actionChange)="onAfterAnimationChange($event)"
+			(colorChange)="onAfterAnimationColorChange($event)"
+		/>
+	}
 </aside>

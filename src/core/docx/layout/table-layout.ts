@@ -1,3 +1,4 @@
+import { reflowNestedFragments } from './nested-fragment-edges';
 import { cellContentBottom } from './table-content';
 import { clipTableFrames } from './table-frames';
 import type { TextMeasurer } from './measure';
@@ -67,6 +68,7 @@ export function layoutRow(
 	startTokens?: ReadonlyMap<string, number>,
 	frameBorders = false,
 	frameLeftBorderPx?: number,
+	physicalFragments = reflowNestedFragments(row),
 ): RowLayout {
 	const count = row.cells.length || 1;
 	let x = 0;
@@ -101,6 +103,7 @@ export function layoutRow(
 			note,
 			padding.top,
 			starts,
+			physicalFragments,
 		);
 		const heightPx = content.heightPx + padding.bottom;
 		geometry.push({
@@ -147,22 +150,34 @@ interface CellSplit {
 }
 
 /** Splits one cell's already-laid-out paragraph boxes at `cutHeightPx`, never mid-line. */
-function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): CellSplit {
+function splitCellAtHeight(
+	boxes: LayoutParagraphBox[],
+	cutHeightPx: number,
+	paragraphCuts?: ReadonlyMap<string, number>,
+): CellSplit {
 	const before: LayoutParagraphBox[] = [];
 	const after: LayoutParagraphBox[] = [];
 	let beforeHeightPx = 0;
 	for (const box of boxes) {
-		if (box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cutHeightPx) {
+		const cut = paragraphCuts?.get(box.blockId) ?? cutHeightPx;
+		if (
+			box.yPx + box.heightPx + (box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0) <=
+			cut
+		) {
 			before.push(box);
 			beforeHeightPx = Math.max(
 				beforeHeightPx,
-				box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0),
+				box.yPx + box.heightPx + (box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0),
 			);
 			continue;
 		}
 		const beforeLines = box.lines.filter(
 			(line) =>
-				box.yPx + line.yPx + line.heightPx + (box.tableFrameInsets?.bottom ?? 0) <= cutHeightPx,
+				box.yPx +
+					line.yPx +
+					line.heightPx +
+					(box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0) <=
+				cut,
 		);
 		const afterLines = box.lines.slice(beforeLines.length);
 		if (beforeLines.length) {
@@ -170,7 +185,7 @@ function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): Ce
 			before.push({ ...box, heightPx: bottom, lines: beforeLines });
 			beforeHeightPx = Math.max(
 				beforeHeightPx,
-				box.yPx + bottom + (box.tableFrameInsets?.bottom ?? 0),
+				box.yPx + bottom + (box.tableFragmentBottomPx ?? box.tableFrameInsets?.bottom ?? 0),
 			);
 		}
 		if (afterLines.length) {
@@ -198,6 +213,8 @@ export interface RowSplit {
  * Splits a row that does not fit in `cutHeightPx` of remaining page/column
  * space, including bottom padding. Cells normally share the same cut; optional
  * individual cuts defer a marker without truncating neighboring unreferenced cells.
+ * Paragraph-specific cuts are used for independently continued inner stories; their tail
+ * must be source-reflowed by the table flow before placement to restore independent origins.
  * Splits never cut a line, and continuation fragments retain their top and bottom padding.
  * Returns `after: null` when every cell fit (nothing left to continue).
  */
@@ -205,10 +222,23 @@ export function splitRowAtHeight(
 	row: RowLayout,
 	cutHeightPx: number,
 	cellCuts?: readonly number[],
+	paragraphCuts?: ReadonlyMap<string, number>,
 ): RowSplit {
 	const splits = row.cells.map((cell, index) => {
 		const padding = row.cellPadding?.[index] ?? { top: 0, bottom: 0 };
-		const split = splitCellAtHeight(cell, (cellCuts?.[index] ?? cutHeightPx) - padding.bottom);
+		const cuts = paragraphCuts
+			? new Map(
+					cell.flatMap((box) => {
+						const cut = paragraphCuts.get(box.blockId);
+						return cut === undefined ? [] : [[box.blockId, cut - padding.bottom] as const];
+					}),
+				)
+			: undefined;
+		const split = splitCellAtHeight(
+			cell,
+			(cellCuts?.[index] ?? cutHeightPx) - padding.bottom,
+			cuts,
+		);
 		if (split.before.length) split.beforeHeightPx += padding.bottom;
 		if (split.after.length)
 			split.after = split.after.map((box) => ({ ...box, yPx: box.yPx + padding.top }));

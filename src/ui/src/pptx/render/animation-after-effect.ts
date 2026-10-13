@@ -16,7 +16,7 @@
  *
  * @module render/animation-after-effect
  */
-import type { PptxElementAnimation, PptxNativeAnimation } from 'ooxml-core/pptx';
+import type { PptxNativeAnimation } from 'ooxml-core/pptx';
 import { resolveThemeColorRef } from 'ooxml-core/pptx';
 
 import type { TimelineClickGroup, TimelineStep } from './animation-timeline-types';
@@ -28,41 +28,7 @@ import type { TimelineClickGroup, TimelineStep } from './animation-timeline-type
  * after-animation behaviour describes what happens once an entrance or
  * emphasis effect finishes, not an exit (which already ends by hiding).
  */
-export function applyAfterAnimationFromEditorList(
-	nativeAnimations: readonly PptxNativeAnimation[],
-	editorAnimations: readonly PptxElementAnimation[] | undefined,
-): PptxNativeAnimation[] {
-	if (!editorAnimations || editorAnimations.length === 0) {
-		return [...nativeAnimations];
-	}
-	const byElement = new Map<string, PptxElementAnimation>();
-	for (const ea of editorAnimations) {
-		if (ea.afterAnimation && ea.afterAnimation !== 'none') {
-			byElement.set(ea.elementId, ea);
-		}
-	}
-	if (byElement.size === 0) {
-		return [...nativeAnimations];
-	}
-	return nativeAnimations.map((anim) => {
-		if (!anim.targetId || anim.presetClass === undefined || anim.presetClass === 'exit') {
-			return anim;
-		}
-		const ea = byElement.get(anim.targetId);
-		if (!ea) {
-			return anim;
-		}
-		return {
-			...anim,
-			afterAnimationAction: ea.afterAnimation,
-			afterAnimationColor: ea.afterAnimationColor,
-			// The editor's own model has no theme-colour-ref concept (it always
-			// writes a concrete hex); clear a native scheme ref so a stale one
-			// never survives an edit that overrides the colour.
-			afterAnimationColorRef: undefined,
-		};
-	});
-}
+export { applyAfterAnimationFromEditorList } from 'ooxml-core/pptx';
 
 /**
  * Build a single-ended `@keyframes` block that recolors an element's text

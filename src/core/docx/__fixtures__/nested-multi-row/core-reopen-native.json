@@ -1,0 +1,122 @@
+[
+  {
+    "pages": 1,
+    "pass": 1,
+    "name": "nested-multi-short-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 1,
+    "pass": 2,
+    "name": "nested-multi-short-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 1,
+    "pass": 1,
+    "name": "nested-multi-short-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 1,
+    "pass": 2,
+    "name": "nested-multi-short-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 1,
+    "name": "nested-multi-row-boundary-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 2,
+    "name": "nested-multi-row-boundary-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 1,
+    "name": "nested-multi-row-boundary-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 2,
+    "name": "nested-multi-row-boundary-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 1,
+    "name": "nested-multi-first-row-split-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 2,
+    "name": "nested-multi-first-row-split-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 1,
+    "name": "nested-multi-first-row-split-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 2,
+    "name": "nested-multi-first-row-split-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 1,
+    "name": "nested-multi-second-row-split-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 2,
+    "name": "nested-multi-second-row-split-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 1,
+    "name": "nested-multi-second-row-split-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 2,
+    "pass": 2,
+    "name": "nested-multi-second-row-split-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 3,
+    "pass": 1,
+    "name": "nested-multi-both-long-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 3,
+    "pass": 2,
+    "name": "nested-multi-both-long-core-noop",
+    "outerText": "T2R0C0L00"
+  },
+  {
+    "pages": 3,
+    "pass": 1,
+    "name": "nested-multi-both-long-core-edit",
+    "outerText": "E2R0C0L00"
+  },
+  {
+    "pages": 3,
+    "pass": 2,
+    "name": "nested-multi-both-long-core-edit",
+    "outerText": "E2R0C0L00"
+  }
+]

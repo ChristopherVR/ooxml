@@ -208,6 +208,7 @@ export class LoadContentService {
 	readonly modernCommentAuthors = signal<PptxModernCommentAuthor[]>([]);
 	/** Header/footer settings (footer/header/date-time text + format) for field substitution. */
 	readonly headerFooter = signal<PptxHeaderFooter | undefined>(undefined);
+	readonly firstSlideNumber = signal<number | undefined>(undefined);
 	/** Whether the presentation contains digital signatures. */
 	/** Parsed digital signatures (empty when unsigned or parsing fails). */
 	readonly signatures = signal<ParsedSignature[]>([]);
@@ -574,6 +575,7 @@ export class LoadContentService {
 			this.tagCollections.set(parsed.tags ?? []);
 			this.modernCommentAuthors.set(parsed.modernCommentAuthors ?? []);
 			this.headerFooter.set(parsed.headerFooter);
+			this.firstSlideNumber.set(parsed.firstSlideNumber);
 			this.hasDigitalSignatures.set(parsed.hasDigitalSignatures ?? false);
 			this.digitalSignatureCount.set(parsed.digitalSignatureCount ?? 0);
 

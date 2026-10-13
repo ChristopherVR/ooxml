@@ -132,6 +132,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	const [clipboardPayload, setClipboardPayload] = useState<ElementClipboardPayload | null>(null);
 	const [pointerCommitNonce, setPointerCommitNonce] = useState(0);
 	const [headerFooter, setHeaderFooter] = useState<PptxHeaderFooter>({});
+	const [firstSlideNumber, setFirstSlideNumber] = useState<number | undefined>();
 	const [layoutOptions, setLayoutOptions] = useState<Array<{ path: string; name: string }>>([]);
 	const [slideMasters, setSlideMasters] = useState<PptxSlideMaster[]>([]);
 	const [modernCommentAuthors, setModernCommentAuthors] = useState<PptxModernCommentAuthor[]>([]);
@@ -229,6 +230,8 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		setPointerCommitNonce,
 		headerFooter,
 		setHeaderFooter,
+		firstSlideNumber,
+		setFirstSlideNumber,
 		layoutOptions,
 		setLayoutOptions,
 		slideMasters,

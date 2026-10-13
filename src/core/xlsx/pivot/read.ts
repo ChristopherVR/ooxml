@@ -8,7 +8,9 @@ import { att, decodeEscapes } from '../read/xml-util';
 import { PIVOT_AGGREGATES } from './data';
 import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
-import { supportedPivotAxes } from './values-axis';
+import { assertPageAxisItems } from './page-filter-admission';
+import { readPivotPageFilter } from './page-filter';
+import { supportedPivotAxes, pivotFieldIndex, pivotValueIndex } from './values-axis';
 
 function value(node: XmlElement): CellValue {
 	const v = att(node, 'v') ?? '';
@@ -52,22 +54,22 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		!workbook.sheets.some((sheet) => sheet.name === dataSheet)
 	)
 		throw new Error('Unsupported pivot source');
-	assertPivotRecords(parseXml(source.text(recordPart)!).documentElement);
+	const recordRoot = parseXml(source.text(recordPart)!).documentElement;
+	assertPivotRecords(recordRoot);
 	const fields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
 	if (fields.some((field) => first(field, 'fieldGroup', NS.x) || field.hasAttribute('formula')))
 		throw new Error('Grouped or calculated cache field');
 	const shared = fields.map((field) =>
 		elements(first(field, 'sharedItems', NS.x) ?? parseXml('<root/>').documentElement).map(value),
 	);
-	const records = children(parseXml(source.text(recordPart)!).documentElement, 'r', NS.x).map(
-		(record) =>
-			elements(record).map((node, field): CellValue => {
-				if (node.localName !== 'x') return value(node);
-				const index = Number(att(node, 'v'));
-				if (!Number.isInteger(index) || index < 0 || index >= (shared[field]?.length ?? 0))
-					throw new Error('Invalid pivot cache index');
-				return shared[field]![index]!;
-			}),
+	const records = children(recordRoot, 'r', NS.x).map((record) =>
+		elements(record).map((node, field): CellValue => {
+			if (node.localName !== 'x') return value(node);
+			const index = Number(att(node, 'v'));
+			if (!Number.isInteger(index) || index < 0 || index >= (shared[field]?.length ?? 0))
+				throw new Error('Invalid pivot cache index');
+			return shared[field]![index]!;
+		}),
 	);
 	if (
 		records.some((record) => record.length !== fields.length) ||
@@ -91,16 +93,16 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	);
 	if (
 		rowFields.length < 1 ||
-		rowFields.length > 2 ||
+		rowFields.length > (rowsAxis ? 3 : 2) ||
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
 		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
-		first(root, 'pageFields', NS.x) ||
 		first(root, 'filters', NS.x) ||
 		root.getAttribute('rowGrandTotals') === '0' ||
 		root.getAttribute('colGrandTotals') === '0'
 	)
 		throw new Error('Unsupported pivot layout');
+	const valueIndex = pivotValueIndex(root, rowsAxis ? rowFields : colFields);
 	const measure = dataFields[0]!;
 	const definition = elements(first(root, 'extLst', NS.x) ?? parseXml('<root/>').documentElement)
 		.map((extension) =>
@@ -134,10 +136,14 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
-	const row = names[Number(att(rowFields[0], 'x'))];
-	const second = !rowsAxis && rowFields[1] ? names[Number(att(rowFields[1], 'x'))] : undefined;
+	const realRows = rowsAxis
+		? rowFields.filter((field) => pivotFieldIndex(field) !== -2)
+		: rowFields;
+	const row = names[pivotFieldIndex(realRows[0])];
+	const second = realRows[1] ? names[Number(att(realRows[1], 'x'))] : undefined;
+	const pageFilter = readPivotPageFilter(root, names, shared);
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
-	const outer = tableFields[Number(att(rowFields[0], 'x'))];
+	const outer = tableFields[pivotFieldIndex(realRows[0])];
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
 	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
@@ -154,7 +160,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Mixed field layouts or custom compact indentation are preserved');
 	const subtotal = att(outer, 'defaultSubtotal') !== '0';
-	const repeat = (rowsAxis ? rowFields.slice(0, 1) : rowFields).map((field) => {
+	const repeat = realRows.map((field) => {
 		const node = tableFields[Number(att(field, 'x'))];
 		const extension = first(first(node, 'extLst', NS.x), 'ext', NS.x);
 		return (
@@ -173,20 +179,22 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const col = hasColumn ? names[Number(att(colFields[0], 'x'))] : undefined;
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
-	if (
-		!row ||
-		!data ||
-		!location ||
-		(hasColumn && !col) ||
-		(!rowsAxis && rowFields.length === 2 && !second)
-	)
+	if (!row || !data || !location || (hasColumn && !col) || (realRows.length === 2 && !second))
 		throw new Error('Invalid pivot fields');
+	if (pageFilter) {
+		if (location.start.row < 2) throw new Error('Invalid report filter location');
+		location.start.row -= 2;
+	}
 	const pivot: PivotTable = {
+		...(pageFilter ? { pageFilter } : {}),
 		name: att(root, 'name') ?? 'PivotTable',
 		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,
 		rowField: row,
 		layout,
 		...(rowsAxis ? { valuesAxis: 'rows' as const } : {}),
+		...(rowsAxis && realRows.length === 2 && valueIndex < 2
+			? { valuesPosition: valueIndex === 0 ? ('first' as const) : ('between' as const) }
+			: {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
 		...(second
 			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }
@@ -220,6 +228,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		sourceXml: xml,
 		...(col ? { columnField: col } : {}),
 	};
+	assertPageAxisItems(root, pivot, shared, cache, recordRoot);
 	return pivot;
 }
 

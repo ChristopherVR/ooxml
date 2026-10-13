@@ -53,7 +53,18 @@ describe('insert-text-field', () => {
 		);
 		const parsed = await text(saved.bytes);
 		expect(parsed.plainText).toBe('Hello Page 1');
-		expect(parsed.fields).toEqual([{ start: 6, end: 12, cached: 'Page 1', formula: 'PAGENAME()' }]);
+		expect(parsed.fields).toEqual([
+			{
+				start: 6,
+				end: 12,
+				cached: 'Page 1',
+				formula: 'PAGENAME()',
+				index: '0',
+				editable: true,
+				format: '',
+				sourceKey: '[["Type","0",null,null,null],["Value","Page 1","PAGENAME()","STR",null]]',
+			},
+		]);
 	});
 
 	it('evaluates page number and count, document properties and dates', async () => {
@@ -67,7 +78,9 @@ describe('insert-text-field', () => {
 		const parsed = await text(saved.bytes);
 		expect(parsed.plainText).toBe(`12Plan${new Date().getFullYear()}`);
 		expect(parsed.fields).toHaveLength(5);
-		expect(await xml(saved.bytes)).toMatch(/N="Value" V="\d+\.\d+" U="DATE" F="NOW\(\)"/);
+		expect(await xml(saved.bytes)).toMatch(
+			/N="Value" V="\d{4}-\d{2}-\d{2}T[^"]+" U="DATE" F="NOW\(\)"/,
+		);
 	});
 
 	it('inserts a geometry field at an offset and follows later resizes', async () => {

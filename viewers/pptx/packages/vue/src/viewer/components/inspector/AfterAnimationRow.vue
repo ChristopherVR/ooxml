@@ -5,10 +5,15 @@ import { useI18n } from 'vue-i18n';
 
 import { injectRecentColors } from '../../composables/recent-colors-context';
 
-defineProps<{
-	action: PptxAfterAnimationAction;
-	color: string | undefined;
-}>();
+withDefaults(
+	defineProps<{
+		action: PptxAfterAnimationAction;
+		color: string | undefined;
+		canEdit?: boolean;
+		showColor?: boolean;
+	}>(),
+	{ canEdit: true, showColor: true },
+);
 const emit = defineEmits<{
 	action: [action: PptxAfterAnimationAction];
 	color: [color: string];
@@ -33,6 +38,7 @@ function onColorChange(event: Event): void {
 			<pptx-ui-select
 				:aria-label="t('pptx.animation.afterAnimation')"
 				:value="action"
+				:disabled="!canEdit"
 				@change="onActionChange"
 			>
 				<option v-for="value in AFTER_ANIMATION_VALUES" :key="value" :value="value">
@@ -40,12 +46,13 @@ function onColorChange(event: Event): void {
 				</option>
 			</pptx-ui-select>
 		</label>
-		<label v-if="action === 'dimToColor'" class="pptx-vue-after-animation-color"
+		<label v-if="action === 'dimToColor' && showColor" class="pptx-vue-after-animation-color"
 			>{{ t('pptx.animation.afterAnimation.color') }}
 			<input
 				type="color"
 				:aria-label="t('pptx.animation.afterAnimation.color')"
 				:value="color ?? '#808080'"
+				:disabled="!canEdit"
 				@change="onColorChange"
 			/>
 		</label>

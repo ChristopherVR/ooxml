@@ -13,12 +13,14 @@
 		action,
 		color,
 		canEdit,
+		showColor = true,
 		onaction,
 		oncolor,
 	}: {
 		action: PptxAfterAnimationAction;
 		color: string | undefined;
 		canEdit: boolean;
+		showColor?: boolean;
 		onaction: (action: PptxAfterAnimationAction) => void;
 		oncolor: (color: string) => void;
 	} = $props();
@@ -41,7 +43,7 @@
 			{/each}
 		</pptx-ui-select>
 	</label>
-	{#if action === 'dimToColor'}
+	{#if action === 'dimToColor' && showColor}
 		<label class="pptx-svelte-after-animation-color">
 			<span>{t('pptx.animation.afterAnimation.color')}</span>
 			<input

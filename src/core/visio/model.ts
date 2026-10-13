@@ -159,6 +159,12 @@ export interface VisioTextField {
 	cached: string;
 	/** The Field row's Value formula, when it has one. */
 	formula?: string;
+	/** Source Field row identity and cache proof for local atomic edits. */
+	index?: string;
+	format?: string;
+	sourceKey?: string;
+	/** Proven local static edit profile; writer still verifies dependencies and source freshness. */
+	editable?: boolean;
 }
 export interface VisioParagraph {
 	/** UTF-16 offsets into plainText. End excludes the paragraph's newline. */

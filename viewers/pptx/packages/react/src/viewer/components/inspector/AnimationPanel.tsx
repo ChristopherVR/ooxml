@@ -1,4 +1,5 @@
 import {
+	getAfterAnimationState,
 	effectiveDirection,
 	effectiveTimingCurve,
 	getDensePanelTouchTargetPx,
@@ -267,13 +268,6 @@ export function AnimationPanel({
 							onPick={handleEffectSoundPick}
 							onPickStock={handleEffectStockSoundPick}
 						/>
-						<AfterAnimationRow
-							action={selectedElementAnimation?.afterAnimation ?? 'none'}
-							color={selectedElementAnimation?.afterAnimationColor}
-							canEdit={canEdit}
-							onActionChange={handleAfterAnimationChange}
-							onColorChange={handleAfterAnimationColorChange}
-						/>
 					</div>
 
 					<div className='text-[11px] uppercase tracking-wide text-muted-foreground pt-1 border-t border-border'>
@@ -424,6 +418,16 @@ export function AnimationPanel({
 				</>
 			)}
 
+			{(hasAnimation || selectedElementAnimation?.nativeAfterAnimation) && (
+				<AfterAnimationRow
+					action={getAfterAnimationState(selectedElementAnimation).action}
+					color={getAfterAnimationState(selectedElementAnimation).color}
+					showColor={getAfterAnimationState(selectedElementAnimation).showColor}
+					canEdit={canEdit}
+					onActionChange={handleAfterAnimationChange}
+					onColorChange={handleAfterAnimationColorChange}
+				/>
+			)}
 			{/* Timeline sections */}
 			<AnimationTimelineSection
 				selectedElementId={selectedElement.id}

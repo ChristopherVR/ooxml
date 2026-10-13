@@ -1,3 +1,4 @@
+param([switch]$ReportFiltersOnly)
 # Manual acceptance against installed desktop Excel; outputs stay in a temporary folder.
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
@@ -78,7 +79,7 @@ for (const profile of ['plain','columns','repeat','columns-repeat','two','min-ma
  const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
  if(profile==='errors') rows[1][2]='=NA()'; if(profile==='sparse') rows[3][4]=2027;
  rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
- const additionalValues=profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ const additionalValues=profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+(i+1)})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
  session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout:'tabular',valuesAxis:'rows',additionalValues,repeatLabels:profile.includes('repeat'),...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
  const mode='row-values-'+profile;
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(pivotGrid(wb.sheets[1].pivotTables[0]).values));
@@ -91,7 +92,7 @@ for(const layout of ['compact','outline']) for(const profile of ['plain','column
  const wb=createWorkbook({sheets:['Data','Summary']});const session=createEditSession(wb);const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
  if(profile==='errors')rows[1][2]='=NA()';if(profile==='sparse')rows[3][4]=2027;
  rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
- const additionalValues=profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:profile==='custom'?[{field:'Quantity',aggregate:'count',caption:'Units'},{field:'Amount',aggregate:'average',caption:'Per item'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ const additionalValues=profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+(i+1)})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:profile==='custom'?[{field:'Quantity',aggregate:'count',caption:'Units'},{field:'Amount',aggregate:'average',caption:'Per item'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
  session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout,valuesAxis:'rows',additionalValues,repeatLabels:profile.includes('repeat'),...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});const grid=pivotGrid(wb.sheets[1].pivotTables[0]);const mode='row-values-'+layout+'-'+profile;
  writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
 }
@@ -147,13 +148,131 @@ for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotal
  writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
  writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
 }
-'@ | Set-Content -LiteralPath $taskScript
+for (const profile of ['plain','top','columns','none','columns-none','repeat','columns-repeat','sparse','errors','two','min-max']) {
+ const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ if(profile==='sparse') rows[3][1]='North'; if(profile==='errors') rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ const additionalValues=profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+(i+1)})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',secondRowField:'Region',valueField:'Amount',layout:'tabular',valuesAxis:'rows',additionalValues,subtotalPosition:profile==='top'?'top':'bottom',subtotals:!profile.endsWith('none'),repeatLabels:profile.endsWith('repeat'),...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
+ const mode='nested-row-values-'+profile; const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb)); writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+}
+for (const profile of ['refresh','to-columns','to-one-row','to-one-measure']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-row-values-rows-columns.xlsx'))));const session=createEditSession(wb);
+ session.setCellInput(1,1,2,'100'); session.refreshPivotTable(0,'SalesPivot',profile==='to-columns'?{valuesAxis:'columns'}:profile==='to-one-row'?{secondRowField:''}:profile==='to-one-measure'?{valuesAxis:'columns',additionalValues:[]}:{});
+ const mode=(profile==='to-one-row'?'row-values-':'nested-row-values-')+profile;const grid=pivotGrid(wb.sheets[0].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+}
+for (const layout of ['compact','outline']) for (const profile of ['top','bottom','none','top-columns','bottom-columns','none-columns','repeat','columns-repeat','two','sixteen','min-max','sparse','errors']) {
+ const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ if(profile==='sparse') rows[3][1]='North'; if(profile==='errors') rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ const additionalValues=profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+(i+1)})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',secondRowField:'Region',valueField:'Amount',layout,valuesAxis:'rows',additionalValues,subtotalPosition:profile.startsWith('bottom')?'bottom':'top',subtotals:!profile.startsWith('none'),repeatLabels:profile.endsWith('repeat'),...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
+ const mode='nested-row-values-'+layout+'-'+profile; const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for (const profile of ['compact','outline','outline-repeat']) {
+ const layout=profile.split('-')[0],suffix=profile.endsWith('repeat')?'-repeat':'';
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-row-values-'+layout+'-rows-bottom-columns'+suffix+'.xlsx'))));const session=createEditSession(wb);
+ session.setCellInput(1,1,2,'100');session.refreshPivotTable(0,'SalesPivot');const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-imported-'+profile;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const from of ['tabular','compact','outline']) for(const to of ['tabular','compact','outline']) {
+ if(from===to)continue;
+ const filename=from==='tabular'?'excel-pivot-row-values-rows-columns.xlsx':'excel-pivot-row-values-'+from+'-rows-bottom-columns.xlsx';
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',filename))));createEditSession(wb).refreshPivotTable(0,'SalesPivot',{layout:to});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-convert-'+from+'-'+to;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const layout of ['compact','outline'])for(const profile of ['to-one-row','to-one-measure']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-row-values-'+layout+'-rows-bottom-columns.xlsx'))));createEditSession(wb).refreshPivotTable(0,'SalesPivot',profile==='to-one-row'?{secondRowField:''}:{valuesAxis:'columns',additionalValues:[]});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode=(profile==='to-one-row'?'row-values-':'nested-row-values-')+layout+'-'+profile;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const layout of ['tabular','compact','outline'])for(const profile of ['top','bottom','none','top-columns','bottom-columns','none-columns','repeat','columns-repeat','two','sixteen','min-max','sparse','errors']) {
+ const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ if(profile==='sparse') rows[3][1]='North';if(profile==='errors')rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ const additionalValues=profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+(i+1)})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',secondRowField:'Region',valueField:'Amount',layout,valuesAxis:'rows',valuesPosition:'between',additionalValues,subtotalPosition:profile.startsWith('bottom')?'bottom':'top',subtotals:!profile.startsWith('none'),repeatLabels:profile.endsWith('repeat'),...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
+ const mode='nested-row-values-between-'+layout+'-'+profile;const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+const betweenFile=(layout,repeat=false)=>layout==='tabular'?'excel-pivot-row-values-rows-between-columns.xlsx':'excel-pivot-row-values-'+layout+'-rows-bottom-between-columns'+(repeat?'-repeat':'')+'.xlsx';
+for(const profile of ['tabular','compact','outline','outline-repeat']) {
+ const layout=profile.split('-')[0];const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',betweenFile(layout,profile.endsWith('repeat'))))));const session=createEditSession(wb);
+ session.setCellInput(1,1,2,'100');session.refreshPivotTable(0,'SalesPivot');const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-between-imported-'+profile;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const layout of ['tabular','compact','outline'])for(const profile of ['to-last','from-last','to-columns','to-one-row','to-one-measure']) {
+ const lastFile=layout==='tabular'?'excel-pivot-row-values-rows-columns.xlsx':'excel-pivot-row-values-'+layout+'-rows-bottom-columns.xlsx';
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',profile==='from-last'?lastFile:betweenFile(layout)))));
+ createEditSession(wb).refreshPivotTable(0,'SalesPivot',profile==='to-last'?{valuesPosition:'last'}:profile==='from-last'?{valuesPosition:'between'}:profile==='to-columns'?{valuesAxis:'columns'}:profile==='to-one-row'?{secondRowField:''}:{valuesAxis:'columns',additionalValues:[]});
+ const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode=(profile==='to-one-row'?'row-values-':'nested-row-values-')+'between-'+layout+'-'+profile;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const from of ['tabular','compact','outline'])for(const to of ['tabular','compact','outline']) {
+ if(from===to)continue;const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',betweenFile(from)))));createEditSession(wb).refreshPivotTable(0,'SalesPivot',{layout:to});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-between-convert-'+from+'-'+to;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const layout of ['tabular','compact','outline'])for(const profile of ['top','bottom','none','top-columns','bottom-columns','none-columns','repeat','columns-repeat','two','sixteen','min-max','sparse','errors']) {
+ const wb=createWorkbook({sheets:['Data','Summary']}); const session=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ if(profile==='sparse') rows[3][1]='North';if(profile==='errors')rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ const additionalValues=profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+(i+1)})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',secondRowField:'Region',valueField:'Amount',layout,valuesAxis:'rows',valuesPosition:'first',additionalValues,subtotalPosition:profile.startsWith('bottom')?'bottom':'top',subtotals:!profile.startsWith('none'),repeatLabels:profile.endsWith('repeat'),...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
+ const mode='nested-row-values-first-'+layout+'-'+profile;const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+const firstFile=(layout,repeat=false)=>layout==='tabular'?'excel-pivot-row-values-rows-first-columns.xlsx':'excel-pivot-row-values-'+layout+'-rows-bottom-first-columns'+(repeat?'-repeat':'')+'.xlsx';
+for(const profile of ['tabular','compact','outline','outline-repeat']) {
+ const layout=profile.split('-')[0];const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',firstFile(layout,profile.endsWith('repeat'))))));const session=createEditSession(wb);
+ session.setCellInput(1,1,2,'100');session.refreshPivotTable(0,'SalesPivot');const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-first-imported-'+profile;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const layout of ['tabular','compact','outline'])for(const profile of ['to-last','from-last','to-between','to-columns','to-one-row','to-one-measure']) {
+ const lastFile=layout==='tabular'?'excel-pivot-row-values-rows-columns.xlsx':'excel-pivot-row-values-'+layout+'-rows-bottom-columns.xlsx';
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',profile==='from-last'?lastFile:firstFile(layout)))));
+ createEditSession(wb).refreshPivotTable(0,'SalesPivot',profile==='to-last'?{valuesPosition:'last'}:profile==='from-last'?{valuesPosition:'first'}:profile==='to-between'?{valuesPosition:'between'}:profile==='to-columns'?{valuesAxis:'columns'}:profile==='to-one-row'?{secondRowField:''}:{valuesAxis:'columns',additionalValues:[]});
+ const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode=(profile==='to-one-row'?'row-values-':'nested-row-values-')+'first-'+layout+'-'+profile;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const from of ['tabular','compact','outline'])for(const to of ['tabular','compact','outline']) {
+ if(from===to)continue;const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__',firstFile(from)))));createEditSession(wb).refreshPivotTable(0,'SalesPivot',{layout:to});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);const mode='nested-row-values-first-convert-'+from+'-'+to;
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
+for(const layout of ['tabular','compact','outline'])for(const profile of ['all','east','west','all-columns','east-columns','west-columns','two','sixteen','min-max','numeric','boolean','blank','error','sparse','single','single-columns','false','numeric-other','aggregate-error']) {
+ const wb=createWorkbook({sheets:['Data','Summary']});const edit=createEditSession(wb);
+ const rows=[['Category','Region','Amount','Quantity','Year'],['Fruit','East',10,2,2025],['Fruit','West',20,3,2026],['Veg','East',5,4,2025],['Veg','West',15,5,2026],['Fruit','East',7,6,2026]];
+ let item=profile.startsWith('west')?'West':'East';
+ if(profile==='numeric'||profile==='numeric-other'){for(let r=1;r<rows.length;r++)rows[r][1]=rows[r][1]==='East'?2025:2026;item=profile==='numeric-other'?2026:2025;}
+ if(profile==='boolean'||profile==='false'){for(let r=1;r<rows.length;r++)rows[r][1]=rows[r][1]==='East';item=profile!=='false';}
+ if(profile==='blank'){for(let r=1;r<rows.length;r++)if(rows[r][1]==='East')rows[r][1]='';item=null;}
+ if(profile==='error'){for(let r=1;r<rows.length;r++)if(rows[r][1]==='East')rows[r][1]='=NA()';item={error:'#N/A'};}
+ if(profile==='sparse')rows[3][1]='North';if(profile==='aggregate-error')rows[1][2]='=NA()';
+ rows.forEach((line,r)=>line.forEach((v,c)=>edit.setCellInput(0,r,c,String(v))));
+ const extra=profile.startsWith('single')?[]:profile==='sixteen'?Array.from({length:15},(_,i)=>({field:'Amount',aggregate:'sum',caption:'Measure '+i})):profile==='two'?[{field:'Quantity',aggregate:'count'}]:profile==='min-max'?[{field:'Amount',aggregate:'min'},{field:'Amount',aggregate:'max'}]:[{field:'Quantity',aggregate:'count'},{field:'Amount',aggregate:'average'}];
+ edit.createPivotTable(1,{row:0,col:0},{source:'Data!A1:E6',rowField:'Category',valueField:'Amount',layout,additionalValues:extra,pageFilter:{field:'Region',...(profile.startsWith('all')?{}:{item})},...(profile.includes('columns')||profile==='sparse'?{columnField:'Year'}:{})});
+ const mode='page-values-'+layout+'-'+profile+(profile==='single-columns'?'-single':'');const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+}
+for(const profile of ['tabular-all','compact-west','outline-east','tabular-number','tabular-boolean','tabular-blank','tabular-error'])for(const change of ['refresh','all','remove','source']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-page-'+profile+'.xlsx'))));const session=createEditSession(wb);if(change==='source')session.setCellInput(1,1,2,'100');
+ session.refreshPivotTable(0,'SalesPivot',change==='all'?{pageFilter:{field:'Region'}}:change==='remove'?{pageFilter:null}:{});const grid=pivotGrid(wb.sheets[0].pivotTables[0]);
+ const mode='page-values-import-'+profile+'-'+change+(wb.sheets[0].pivotTables[0].additionalValues?.length?'':'-single');
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+}
+'@ | Set-Content -LiteralPath $taskScript -Encoding utf8
 	& bun run $taskScript
 	if ($LASTEXITCODE -ne 0) { throw 'PivotTable generation failed.' }
 	$excel = New-Object -ComObject Excel.Application
 	$excel.Visible = $false; $excel.DisplayAlerts = $false
 	Write-Output ('Native Excel version: '+$excel.Version+', build: '+$excel.Build)
 	Write-Output ('Native Excel file version: '+[Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $excel.Path 'EXCEL.EXE')).FileVersion)
+	if(-not $ReportFiltersOnly){
 	foreach ($case in @(@{ Name='sum'; Total=57 }, @{ Name='count'; Total=5 }, @{ Name='average'; Total=11.4 }, @{ Name='min'; Total=5 }, @{ Name='max'; Total=20 }, @{ Name='imported'; Total=147 }, @{ Name='count-row'; Total=5 }, @{ Name='deleted'; Total=$null })) {
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($case.Name+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
@@ -175,13 +294,15 @@ for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotal
 		Write-Output ($case.Name+': native Excel accepted cached and refreshed output')
 		$book.Close($false); $book = $null
 	}
-	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json') {
+	}
+	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json' | Where-Object { !$ReportFiltersOnly -or $_.BaseName.StartsWith('page-values-') }) {
 		$mode=$expectedFile.BaseName
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($mode+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
 		$pivot = $summary.PivotTables().Item(1)
-		if ($mode.Contains('values') -and $pivot.DataFields().Count -ne $(if($mode.EndsWith('single')){1}elseif($mode.EndsWith('two')){2}else{3})) { throw ('Wrong PivotTable measure count: '+$mode) }
-		$rowFieldCount = if ($mode.StartsWith('cache-')) { 1 } else { 2 }
+		if ($mode.Contains('values') -and $pivot.DataFields().Count -ne $(if($mode.EndsWith('single') -or $mode.EndsWith('to-one-measure')){1}elseif($mode.EndsWith('two')){2}elseif($mode.EndsWith('sixteen')){16}else{3})) { throw ('Wrong PivotTable measure count: '+$mode) }
+		$rowFieldCount = if ($mode.StartsWith('nested-row-values-') -and !$mode.EndsWith('to-columns') -and !$mode.EndsWith('to-one-measure')) { 3 } elseif ($mode.StartsWith('cache-') -or $mode.StartsWith('page-values-')) { 1 } else { 2 }
+		if($mode.StartsWith('page-values-') -and $pivot.PageFields().Count -ne $(if($mode.Contains('-remove')){0}else{1})){throw ('Wrong report filter count: '+$mode)}
 		if ($pivot.RowFields().Count -ne $rowFieldCount) { throw ('Wrong PivotTable row field count: '+$mode) }
 		$expected = Get-Content -Raw -LiteralPath (Join-Path $taskFolder ($mode+'.json')) | ConvertFrom-Json
 		foreach ($phase in @('cached','refreshed')) {
@@ -206,7 +327,7 @@ for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotal
 				$indents=Get-Content -Raw -LiteralPath $indentFile | ConvertFrom-Json
 				for ($r=0; $r -lt $indents.Count; $r++) {
 					if ($summary.Cells.Item($r+1,1).IndentLevel -ne $indents[$r]) { throw ('Wrong report indentation: '+$mode+' '+$phase+' row'+$r) }
-					if ($indents[$r] -eq 1 -and $summary.Cells.Item($r+1,1).HorizontalAlignment -ne -4131) { throw ('Wrong compact child alignment: '+$mode+' '+$phase) }
+					if ($indents[$r] -gt 0 -and $summary.Cells.Item($r+1,1).HorizontalAlignment -ne -4131) { throw ('Wrong compact child alignment: '+$mode+' '+$phase) }
 				}
 			}
 		}

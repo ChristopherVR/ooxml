@@ -275,6 +275,11 @@ export function normalizeShapes(
 					report,
 					context.consumeText,
 					context.consumeParagraph,
+					depth === 0 &&
+						masterId === undefined &&
+						!sheet.cells.get('LockTextEdit')?.error &&
+						!sheet.cells.get('LockTextEdit')?.formula &&
+						number(sheet.cells, 'LockTextEdit', 0, report) === 0,
 				),
 				hidden:
 					membership.hidden || type === 'Guide' || number(sheet.cells, 'NoShow', 0, report) !== 0,

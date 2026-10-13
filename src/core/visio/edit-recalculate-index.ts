@@ -2,6 +2,7 @@ import { textSizeFormula } from './edit-text-size-formula';
 import { isLocalBitmapShape } from './edit-foreign-bitmap';
 import { children, attribute } from './sheet';
 import { fail } from './package-common';
+import { independentTextFieldFormula } from './text-field-independent';
 import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula';
 import {
 	executableCellFormula,
@@ -144,6 +145,7 @@ export function indexCells(
 				// Native dynamic glue is re-evaluated by Visio; the editor reads and writes its caches.
 				if (
 					executableCellFormula(source) &&
+					!independentTextFieldFormula(node, source!) &&
 					!inertDoubleClickFormula(cell, source!) &&
 					!(glue && isNativeGlueCell(cell, source!)) &&
 					// A trigger only counts events of the sheet it names; an unglued connector keeps one

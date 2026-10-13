@@ -150,6 +150,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			)
 			.withConformance(this.isStrictOoxml ? 'strict' : 'transitional')
 			.withEmbedTrueTypeFonts(embedTrueTypeFonts)
+			.withFirstSlideNumber(this.extractFirstSlideNumber())
 			.withDefaultTextStyle(defaultTextStyle)
 			.build();
 	}

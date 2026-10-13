@@ -4,8 +4,10 @@ const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
-		'name cacheId dataCaption dataOnRows updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
-	location: 'ref firstHeaderRow firstDataRow firstDataCol',
+		'name cacheId dataCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
+	location: 'ref firstHeaderRow firstDataRow firstDataCol rowPageCount colPageCount',
+	pageFields: 'count',
+	pageField: 'fld item hier',
 	pivotFields: 'count',
 	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
 	items: 'count',

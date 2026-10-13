@@ -23,6 +23,8 @@ export interface FieldContextSources {
 	customProperties?: readonly PptxCustomProperty[];
 	/** The slide being rendered; supplies its number and title. */
 	slide?: PptxSlide;
+	/** `PptxData.firstSlideNumber`, the number a `slidenum` field shows on slide 1. */
+	firstSlideNumber?: number | undefined;
 	/** Locale for `currentdate` / `currenttime` fields (browser default when unset). */
 	locale?: string;
 }
@@ -70,6 +72,9 @@ export function buildFieldSubstitutionContext(
 			value: String(p.value),
 		})),
 		...(sources.locale === undefined ? {} : { locale: sources.locale }),
+		...(sources.firstSlideNumber === undefined
+			? {}
+			: { firstSlideNumber: sources.firstSlideNumber }),
 	};
 }
 

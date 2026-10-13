@@ -154,6 +154,10 @@ export class PageCursor {
 			this.page.heightPx - this.page.marginTopPx - this.geometry.marginBottomPx - this.columnTopPx,
 		);
 	}
+	/** Number of independently balanced note columns, distinct from legacy body-column notes. */
+	get footnoteColumnCount(): number {
+		return this.legacyFootnoteColumns ? 1 : (this.noteColumns?.count ?? 1);
+	}
 	remainingHeightPx(): number {
 		return (
 			this.columnHeightPx -

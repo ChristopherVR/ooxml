@@ -18,7 +18,11 @@
  * @module services/animation-timing-surgical
  */
 import type { PptxAnimationPreset, PptxElementAnimation, XmlObject } from '../types';
-import { applyAfterAnimationBehavior } from './animation-after-effect-write';
+import { hasAuthoredAnimationEffect } from './editor-animation-entry';
+import {
+	applyAfterAnimationBehavior,
+	assertAfterAnimationClearSupported,
+} from './animation-after-effect-write';
 import { getCapturedPreset } from './animation-behavior-captured';
 import { reconcileBuildList } from './animation-timing-build-surgical';
 import {
@@ -107,10 +111,10 @@ function presetNameForClass(
  * Patch an existing effect node's timing attributes from the editor animation,
  * leaving its structure (behaviour children, end conditions, iteration) alone.
  *
- * Also (re-)applies the effect's sound action and its "after animation"
- * end-state behaviour (dim / hide / hide-on-next-click) every time: these are
- * cheap to re-derive from the editor entry and, unlike the other attributes
- * here, an absent value must actively CLEAR whatever the node currently has
+ * Sound is re-derived from the editor entry. An absent sound value clears
+ * the sound action; imported sound is seeded into the editor entry at load.
+ * Undefined after-animation state preserves native sub-timing; explicit none
+ * removes only a recognized whole-shape after-action.
  * (see `mergeNativeSoundIntoEditorAnimations`, which seeds `anim.soundRId`
  * from the deck's own `p:stSnd` at load time precisely so an untouched sound
  * is never mistaken for "no sound" and deleted here).
@@ -170,6 +174,42 @@ export function surgicallyUpdateTimingTree(
 	rawTiming: XmlObject,
 	animations: PptxElementAnimation[],
 ): XmlObject {
+	// After-state-only entries must not create, retime, reorder or take ownership of
+	// the deck's effects. Undefined leaves imported native after-state intact.
+	const sourceRefs = indexEffectNodes(rawTiming);
+	for (const entry of animations.filter((animation) => animation.afterAnimation !== undefined)) {
+		if (
+			sourceRefs.filter(
+				(ref) => ref.spid === entry.elementId && ['entr', 'emph'].includes(ref.presetClass),
+			).length > 1
+		)
+			throw new Error(
+				'Cannot edit an ambiguous native after-animation target with multiple effects',
+			);
+	}
+	const explicitClears = new Map(
+		animations
+			.filter((a) => a.afterAnimation !== undefined && !hasAuthoredAnimationEffect(a))
+			.map((a) => [a.elementId, a]),
+	);
+	const clearRefs = sourceRefs.filter(
+		(ref) =>
+			ref.spid &&
+			explicitClears.has(ref.spid) &&
+			(ref.presetClass === 'entr' || ref.presetClass === 'emph'),
+	);
+	for (const target of explicitClears.keys()) {
+		if (!clearRefs.some((ref) => ref.spid === target))
+			throw new Error('Cannot edit after-animation without a supported native effect');
+		if (clearRefs.filter((ref) => ref.spid === target).length > 1)
+			throw new Error(
+				'Cannot clear an ambiguous native after-animation target with multiple effects',
+			);
+	}
+	clearRefs.forEach((ref) => assertAfterAnimationClearSupported(ref.cTn));
+	clearRefs.forEach((ref) =>
+		applyAfterAnimationBehavior(ref.cTn, explicitClears.get(ref.spid!)!, ref.spid!),
+	);
 	const desired = collectDesiredEffects(animations);
 	const previouslyOwned = readOwnedEffectKeys(rawTiming);
 	if (desired.length === 0 && previouslyOwned.size === 0) {
