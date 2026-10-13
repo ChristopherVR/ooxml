@@ -13,6 +13,7 @@ export const galleryTranslationsEn: Record<string, string> = {
 	'pptx.ribbon.tab.smartArtDesign': 'SmartArt Design',
 	'pptx.ribbon.groupWordArtStyles': 'WordArt Styles',
 	'pptx.ribbon.groupPictureStyles': 'Picture Styles',
+	'pptx.ribbon.groupSize': 'Size',
 	'pptx.ribbon.groupTableStyles': 'Table Styles',
 	'pptx.ribbon.groupChartLayouts': 'Chart Layouts',
 	'pptx.ribbon.groupChartStyles': 'Chart Styles',

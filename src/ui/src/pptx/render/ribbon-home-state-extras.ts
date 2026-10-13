@@ -2,6 +2,7 @@ import { buildFontCatalog } from './font-catalog';
 import type { FontCatalogInput } from './font-catalog';
 import { applyRibbonGalleryItem, buildRibbonGallery } from './ribbon-galleries';
 import type { RibbonGalleryContext, RibbonGalleryId } from './ribbon-galleries';
+import { cropHomeControls } from './ribbon-home-crop';
 import type {
 	RibbonHomeControlState,
 	RibbonHomeFamily,
@@ -110,7 +111,6 @@ export interface ArrangeShapeHomeInput {
 export function arrangeShapeHomeControls(
 	input: ArrangeShapeHomeInput,
 ): RibbonHomeViewState['controls'] {
-	const crop = { disabled: !input.editable || !input.canCrop, hidden: input.hideCrop };
 	return {
 		'home.arrange.group': { disabled: !input.canGroup },
 		'home.arrange.ungroup': { disabled: !input.canUngroup },
@@ -118,8 +118,7 @@ export function arrangeShapeHomeControls(
 			disabled: !input.editable || !input.canMerge,
 			hidden: input.hideMerge,
 		},
-		'home.arrange.crop': { ...crop, pressed: input.cropActive },
-		'home.arrange.crop#caret': crop,
+		...cropHomeControls('home.arrange.crop', input),
 		'home.arrange.outlineWidth': { disabled: !input.canStrokeWidth, value: input.strokeWidth },
 	};
 }

@@ -7,6 +7,7 @@ export const translations: Record<string, string> = {
 	'pptx.ribbon.tab.smartArtDesign': 'Création SmartArt',
 	'pptx.ribbon.groupWordArtStyles': 'Styles WordArt',
 	'pptx.ribbon.groupPictureStyles': "Styles d'image",
+	'pptx.ribbon.groupSize': 'Taille',
 	'pptx.ribbon.groupTableStyles': 'Styles de tableau',
 	'pptx.ribbon.groupChartLayouts': 'Dispositions du graphique',
 	'pptx.ribbon.groupChartStyles': 'Styles du graphique',
