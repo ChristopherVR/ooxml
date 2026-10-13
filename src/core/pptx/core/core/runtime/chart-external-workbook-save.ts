@@ -39,11 +39,11 @@ export async function saveChartExternalWorkbookUpdates(
 	slidePath: string,
 	externalData: PptxExternalData | undefined,
 	writes: readonly PptxChartWorkbookWrite[],
-): Promise<void> {
+): Promise<boolean> {
 	if (writes.length === 0 || !externalData?.targetPath) {
 		// No data edits collected, or the chart has no linked external data at
 		// all (the normal case for most charts) - nothing to reconcile.
-		return;
+		return writes.length === 0;
 	}
 
 	const embeddingPath = deps.resolveImagePath(chartPartPath, externalData.targetPath);
@@ -60,7 +60,7 @@ export async function saveChartExternalWorkbookUpdates(
 			slideId: slidePath,
 			xmlPath: chartPartPath,
 		});
-		return;
+		return false;
 	}
 
 	const xlsxFile = deps.zip.file(embeddingPath);
@@ -74,7 +74,7 @@ export async function saveChartExternalWorkbookUpdates(
 			slideId: slidePath,
 			xmlPath: embeddingPath,
 		});
-		return;
+		return false;
 	}
 
 	let xlsxBytes: Uint8Array;
@@ -90,7 +90,7 @@ export async function saveChartExternalWorkbookUpdates(
 			slideId: slidePath,
 			xmlPath: embeddingPath,
 		});
-		return;
+		return false;
 	}
 
 	const result = await writeChartWorkbookUpdates(xlsxBytes, writes);
@@ -107,4 +107,5 @@ export async function saveChartExternalWorkbookUpdates(
 			xmlPath: embeddingPath,
 		});
 	}
+	return result.unresolved === 0;
 }

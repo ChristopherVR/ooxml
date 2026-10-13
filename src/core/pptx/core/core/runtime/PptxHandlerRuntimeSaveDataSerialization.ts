@@ -1,6 +1,9 @@
+import { chartWorkbookDataSignature } from '../../utils/chart-workbook-data-signature';
 import { XmlObject } from '../../types';
 import type {
 	PptxChartChrome,
+	PptxElement,
+	PptxSlide,
 	PptxChartData,
 	PptxChartOfPieOptions,
 	PptxChartSeries,
@@ -233,12 +236,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
-	/** Pending chart data updates to process in the async save method. */
-	protected pendingChartUpdates?: Array<{
-		chartData: PptxChartData;
-		slidePath: string;
-	}>;
-
 	/**
 	 * Record `chartData` as parsed, straight off `enrichChartData`, as this
 	 * chart's load-time baseline. See {@link chartDataBaselines}.
@@ -248,6 +245,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return;
 		}
 		this.chartDataBaselines.set(chartData.chartPartPath, JSON.stringify(chartData));
+		this.chartWorkbookDataBaselines.set(chartData.chartPartPath, {
+			signature: chartWorkbookDataSignature(chartData),
+			pending: false,
+		});
 	}
 
 	/**
@@ -266,11 +267,27 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
 	 * Process all pending chart data updates (called from the async save method).
 	 */
-	protected async processPendingChartUpdates(): Promise<void> {
+	protected async processPendingChartUpdates(slides?: readonly PptxSlide[]): Promise<void> {
 		if (!this.pendingChartUpdates || this.pendingChartUpdates.length === 0) {
 			return;
 		}
 
+		if (slides) {
+			const current = new Map<string, { chartData: PptxChartData; slidePath: string }>();
+			const visit = (elements: readonly PptxElement[], slidePath: string): void => {
+				for (const element of elements) {
+					if (element.type === 'group') visit(element.children, slidePath);
+					else if (element.type === 'chart' && element.chartData?.chartPartPath) {
+						current.set(element.chartData.chartPartPath, {
+							chartData: element.chartData,
+							slidePath,
+						});
+					}
+				}
+			};
+			for (const slide of slides) visit(slide.elements, slide.id);
+			this.pendingChartUpdates = [...current.values()];
+		}
 		for (const { chartData, slidePath } of this.pendingChartUpdates) {
 			// An untouched chart's `chartData` is byte-identical (as JSON) to what
 			// `enrichChartData` parsed off this same part at load time: nothing
@@ -283,6 +300,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// sibling, and let the original bytes flow through.
 			if (
 				chartData.chartPartPath &&
+				!this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending &&
 				this.chartDataBaselines.get(chartData.chartPartPath) === JSON.stringify(chartData)
 			) {
 				continue;
@@ -1115,23 +1133,44 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// values too, instead of silently reverting them. Degrades to a
 				// compatibility warning, never throws; see
 				// `saveChartExternalWorkbookUpdates`.
-				await saveChartExternalWorkbookUpdates(
-					{
-						zip: this.zip,
-						resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
-						reportWarning: (warning) => this.compatibilityService.reportWarning(warning),
-					},
-					chartPartPath,
-					slidePath,
-					chartData.externalData,
-					workbookWrites,
-				);
+				const serializedBaseline = this.chartDataBaselines.get(chartPartPath);
+				const signature = chartWorkbookDataSignature(chartData);
+				const workbookBaseline = this.chartWorkbookDataBaselines.get(chartPartPath);
+				const previousSignature =
+					workbookBaseline?.signature ??
+					(serializedBaseline
+						? chartWorkbookDataSignature(JSON.parse(serializedBaseline) as PptxChartData)
+						: undefined);
+				const workbookDataChanged = workbookBaseline?.pending || signature !== previousSignature;
+				if (workbookDataChanged) {
+					const complete = await saveChartExternalWorkbookUpdates(
+						{
+							zip: this.zip,
+							resolveImagePath: (basePath, target) => this.resolveImagePath(basePath, target),
+							reportWarning: (warning) => this.compatibilityService.reportWarning(warning),
+						},
+						chartPartPath,
+						slidePath,
+						chartData.externalData,
+						workbookWrites,
+					);
+					this.chartWorkbookDataBaselines.set(chartPartPath, {
+						signature: complete ? signature : (previousSignature ?? signature),
+						pending: !complete,
+					});
+				}
+				// Subsequent saves compare against the model now stored in this mutable ZIP.
+				this.chartDataBaselines.set(chartPartPath, JSON.stringify(chartData));
 			} catch (e) {
 				console.warn(`[pptx-save] Failed to serialize chart data for ${chartPartPath}:`, e);
 			}
 		}
 
-		this.pendingChartUpdates = undefined;
+		this.pendingChartUpdates = this.pendingChartUpdates.filter(
+			({ chartData }) =>
+				chartData.chartPartPath &&
+				this.chartWorkbookDataBaselines.get(chartData.chartPartPath)?.pending,
+		);
 	}
 
 	/**

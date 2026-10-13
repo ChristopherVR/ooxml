@@ -295,7 +295,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			saveSession,
 			saveConstants,
 		);
-		await this.processPendingChartUpdates();
+		await this.processPendingChartUpdates(slides);
 		await this.ensureChartPartContentTypes();
 		await this.ensureOleEmbeddingContentTypes();
 		await this.processPendingOleContentUpdates();
