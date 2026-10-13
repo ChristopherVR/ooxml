@@ -1,7 +1,8 @@
+import { clipTableFrames } from './table-frames';
 import type { TextMeasurer } from './measure';
 import { layoutParagraph } from './paragraph-layout';
 import type { LayoutParagraph, LayoutTableRow } from './input';
-import type { LayoutCellGeometry, LayoutParagraphBox } from './result';
+import type { LayoutCellGeometry, LayoutParagraphBox, LayoutTableBox } from './result';
 import { expectDefined } from '../expect-defined';
 import { stackCellBlocks } from './table-cell-layout';
 
@@ -9,6 +10,7 @@ export interface RowLayout {
 	heightPx: number;
 	cells: LayoutParagraphBox[][];
 	geometry: LayoutCellGeometry[];
+	cellTables?: LayoutTableBox[][];
 	/** Vertical cell margins apply to every physical row fragment. */
 	cellPadding?: { top: number; bottom: number }[];
 }
@@ -91,7 +93,7 @@ export function layoutRow(
 			...(cell.verticalAlign ? { verticalAlign: cell.verticalAlign } : {}),
 		});
 		x = (cell.xPx ?? x) + widthPx;
-		return { heightPx, boxes: content.boxes };
+		return { heightPx, boxes: content.boxes, tables: content.tables ?? [] };
 	});
 	const content = Math.max(0, ...laidOut.map((cell) => cell.heightPx));
 	const heightPx =
@@ -104,6 +106,9 @@ export function layoutRow(
 		heightPx,
 		cells: laidOut.map((cell) => cell.boxes),
 		geometry,
+		...(laidOut.some((cell) => cell.tables.length)
+			? { cellTables: laidOut.map((cell) => cell.tables) }
+			: {}),
 		cellPadding: row.cells.map((cell) => ({
 			top: cell.padding?.top ?? 0,
 			bottom: cell.padding?.bottom ?? 0,
@@ -115,6 +120,7 @@ interface CellSplit {
 	before: LayoutParagraphBox[];
 	after: LayoutParagraphBox[];
 	beforeHeightPx: number;
+	afterOrigin?: number;
 }
 
 /** Splits one cell's already-laid-out paragraph boxes at `cutHeightPx`, never mid-line. */
@@ -150,7 +156,7 @@ function splitCellAtHeight(boxes: LayoutParagraphBox[], cutHeightPx: number): Ce
 	// Nested cells have paragraphs running in parallel, rather than a single sequential story.
 	const afterOrigin = Math.min(...after.map((box) => box.yPx));
 	for (const box of after) box.yPx -= afterOrigin;
-	return { before, after, beforeHeightPx };
+	return { before, after, beforeHeightPx, ...(after.length ? { afterOrigin } : {}) };
 }
 
 export interface RowSplit {
@@ -182,6 +188,13 @@ export function splitRowAtHeight(
 	const before: RowLayout = {
 		heightPx: Math.max(0, ...splits.map((split) => split.beforeHeightPx)),
 		cells: splits.map((split) => split.before),
+		...(row.cellTables
+			? {
+					cellTables: row.cellTables.map((tables, index) =>
+						clipTableFrames(tables, 0, splits[index]!.beforeHeightPx),
+					),
+				}
+			: {}),
 		geometry: row.geometry.map((geometry, index) => ({
 			...geometry,
 			contentHeightPx: splits[index]!.beforeHeightPx,
@@ -201,6 +214,20 @@ export function splitRowAtHeight(
 			),
 		),
 		cells: splits.map((split) => split.after),
+		...(row.cellTables
+			? {
+					cellTables: row.cellTables.map((tables, index) =>
+						splits[index]!.after.length
+							? clipTableFrames(
+									tables,
+									splits[index]!.afterOrigin ?? 0,
+									row.heightPx,
+									row.cellPadding?.[index]?.top ?? 0,
+								)
+							: [],
+					),
+				}
+			: {}),
 		geometry: row.geometry.map((geometry, index) => ({
 			...geometry,
 			contentHeightPx: splits[index]!.after.length

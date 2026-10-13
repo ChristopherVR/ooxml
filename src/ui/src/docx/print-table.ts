@@ -32,12 +32,13 @@ function geometryOf(row: LayoutTableRowBox, index: number, widthPx: number): Lay
 export function renderTable(
 	box: LayoutTableBox,
 	columnWidthPx: number,
-	renderParagraph: (paragraph: LayoutParagraphBox) => HTMLElement,
+	renderParagraph: (paragraph: LayoutParagraphBox) => HTMLElement | null,
 ): HTMLElement {
 	const table = document.createElement('div');
 	table.className = 'dve-print-block dve-print-table';
 	table.style.top = `${box.yPx}px`;
 	table.style.height = `${box.heightPx}px`;
+	if (box.widthPx !== undefined) table.style.width = `${box.widthPx}px`;
 	if (box.xPx) table.style.left = `${box.xPx}px`;
 	box.rows.forEach((row, rowIndex) => {
 		const rowEl = document.createElement('div');
@@ -75,7 +76,17 @@ export function renderTable(
 				right: `${geometry.paddingRightPx}px`,
 				top: `${offset}px`,
 			});
-			for (const paragraph of paragraphs) content.append(renderParagraph(paragraph));
+			for (const nested of row.cellTables?.[cellIndex] ?? []) {
+				const frame = renderTable(nested, nested.widthPx ?? geometry.widthPx, () => null);
+				frame.classList.add('dve-print-nested-table');
+				frame.setAttribute('aria-hidden', 'true');
+				frame.style.pointerEvents = 'none';
+				content.append(frame);
+			}
+			for (const paragraph of paragraphs) {
+				const element = renderParagraph(paragraph);
+				if (element) content.append(element);
+			}
 			cell.append(content);
 			rowEl.append(cell);
 		});

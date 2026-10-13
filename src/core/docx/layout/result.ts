@@ -89,6 +89,8 @@ export interface LayoutTableRowBox {
 	cells: LayoutParagraphBox[][];
 	/** Per-cell position and appearance, parallel to `cells`. */
 	geometry?: LayoutCellGeometry[];
+	/** Decorative nested frames, relative to each cell content origin. Text remains in cells. */
+	cellTables?: LayoutTableBox[][];
 }
 
 export interface LayoutTableBox {
@@ -96,6 +98,7 @@ export interface LayoutTableBox {
 	blockId: string;
 	/** Offset from the column's left edge (table indent or alignment). */
 	xPx?: number;
+	widthPx?: number;
 	yPx: number;
 	heightPx: number;
 	rows: LayoutTableRowBox[];
