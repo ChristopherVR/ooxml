@@ -7,6 +7,18 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.33.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.33.2) - 2026-10-13
+
+### Bug Fixes
+
+- **ui:** Apply line spacing and indent over a paragraph's own a:pPr ([#62](https://github.com/ChristopherVR/ooxml/issues/62)) ([d8a24e6](https://github.com/ChristopherVR/ooxml/commit/d8a24e6740d773e4e4c49c8089f7ca4db20b3b3b))
+- **ui:** Give a shape with no line a default width on outline colour ([#67](https://github.com/ChristopherVR/ooxml/issues/67)) ([2db8c24](https://github.com/ChristopherVR/ooxml/commit/2db8c2451264edc18a0c79d8a62fbd268fee6111))
+
+### Testing
+
+- **ui:** Clear the text selection between test files ([abb829f](https://github.com/ChristopherVR/ooxml/commit/abb829f2e3a4e6ff0a99a9023012d1d3ad0d8b51))
+- **pptx:** Isolate the raw-key inspector test and widen a perf margin ([e66aaec](https://github.com/ChristopherVR/ooxml/commit/e66aaec24adc0b68472eae1fc42aa4598e09c352))
+
 ## [4.33.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@4.33.1) - 2026-10-11
 
 ### Testing
