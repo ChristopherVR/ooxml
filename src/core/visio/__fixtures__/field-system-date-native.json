@@ -1,0 +1,247 @@
+{
+  "version": "16.0",
+  "culture": "en-US",
+  "shortDate": "yyyy-MM-dd",
+  "cases": [
+    {
+      "id": 1,
+      "code": 200,
+      "formula": "DATE(2026,10,13)+TIME(14,15,16)",
+      "text": "2026-10-13",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 2:15:16 PM"
+    },
+    {
+      "id": 2,
+      "code": 200,
+      "formula": "DATE(2024,2,29)",
+      "text": "2024-02-29",
+      "valueFormula": "User.DateValue",
+      "value": "2024-02-29"
+    },
+    {
+      "id": 3,
+      "code": 200,
+      "formula": "DATE(1900,2,28)+TIME(0,0,1)",
+      "text": "1900-02-28",
+      "valueFormula": "User.DateValue",
+      "value": "1900-02-28"
+    },
+    {
+      "id": 4,
+      "code": 200,
+      "formula": "DATE(1900,3,1)+TIME(12,0,0)",
+      "text": "1900-03-01",
+      "valueFormula": "User.DateValue",
+      "value": "1900-03-01 12:00:00 PM"
+    },
+    {
+      "id": 5,
+      "code": 200,
+      "formula": "DATE(1899,12,30)",
+      "text": "1899-12-30",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-30 12:00:00 AM"
+    },
+    {
+      "id": 6,
+      "code": 200,
+      "formula": "DATE(1899,12,29)",
+      "text": "",
+      "valueFormula": "User.DateValue",
+      "value": "30177-04-13"
+    },
+    {
+      "id": 7,
+      "code": 200,
+      "formula": "DATE(2026,10,13)+TIME(23,59,59.999)",
+      "text": "2026-10-13",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 11:59:59 PM"
+    },
+    {
+      "id": 8,
+      "code": 200,
+      "formula": "DATE(2026,12,31)+TIME(23,59,59)",
+      "text": "2026-12-31",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-31 11:59:59 PM"
+    },
+    {
+      "id": 9,
+      "code": 200,
+      "formula": "DATE(2000,2,29)+TIME(1,2,3)",
+      "text": "2000-02-29",
+      "valueFormula": "User.DateValue",
+      "value": "2000-02-29 1:02:03 AM"
+    },
+    {
+      "id": 10,
+      "code": 200,
+      "formula": "DATE(2100,3,1)+TIME(9,5,6)",
+      "text": "2100-03-01",
+      "valueFormula": "User.DateValue",
+      "value": "2100-03-01 9:05:06 AM"
+    },
+    {
+      "id": 11,
+      "code": 211,
+      "formula": "DATE(2026,10,13)+TIME(14,15,16)",
+      "text": "2026-10-13 2:15 PM",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 2:15:16 PM"
+    },
+    {
+      "id": 12,
+      "code": 211,
+      "formula": "DATE(2024,2,29)",
+      "text": "2024-02-29 12:00 AM",
+      "valueFormula": "User.DateValue",
+      "value": "2024-02-29"
+    },
+    {
+      "id": 13,
+      "code": 211,
+      "formula": "DATE(1900,2,28)+TIME(0,0,1)",
+      "text": "1900-02-28 12:00 AM",
+      "valueFormula": "User.DateValue",
+      "value": "1900-02-28"
+    },
+    {
+      "id": 14,
+      "code": 211,
+      "formula": "DATE(1900,3,1)+TIME(12,0,0)",
+      "text": "1900-03-01 12:00 PM",
+      "valueFormula": "User.DateValue",
+      "value": "1900-03-01 12:00:00 PM"
+    },
+    {
+      "id": 15,
+      "code": 211,
+      "formula": "DATE(1899,12,30)",
+      "text": "1899-12-30 12:00 AM",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-30 12:00:00 AM"
+    },
+    {
+      "id": 16,
+      "code": 211,
+      "formula": "DATE(1899,12,29)",
+      "text": "",
+      "valueFormula": "User.DateValue",
+      "value": "30177-04-13"
+    },
+    {
+      "id": 17,
+      "code": 211,
+      "formula": "DATE(2026,10,13)+TIME(23,59,59.999)",
+      "text": "2026-10-13 11:59 PM",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 11:59:59 PM"
+    },
+    {
+      "id": 18,
+      "code": 211,
+      "formula": "DATE(2026,12,31)+TIME(23,59,59)",
+      "text": "2026-12-31 11:59 PM",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-31 11:59:59 PM"
+    },
+    {
+      "id": 19,
+      "code": 211,
+      "formula": "DATE(2000,2,29)+TIME(1,2,3)",
+      "text": "2000-02-29 1:02 AM",
+      "valueFormula": "User.DateValue",
+      "value": "2000-02-29 1:02:03 AM"
+    },
+    {
+      "id": 20,
+      "code": 211,
+      "formula": "DATE(2100,3,1)+TIME(9,5,6)",
+      "text": "2100-03-01 9:05 AM",
+      "valueFormula": "User.DateValue",
+      "value": "2100-03-01 9:05:06 AM"
+    },
+    {
+      "id": 21,
+      "code": 212,
+      "formula": "DATE(2026,10,13)+TIME(14,15,16)",
+      "text": "2026-10-13 2:15:16 PM",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 2:15:16 PM"
+    },
+    {
+      "id": 22,
+      "code": 212,
+      "formula": "DATE(2024,2,29)",
+      "text": "2024-02-29 12:00:00 AM",
+      "valueFormula": "User.DateValue",
+      "value": "2024-02-29"
+    },
+    {
+      "id": 23,
+      "code": 212,
+      "formula": "DATE(1900,2,28)+TIME(0,0,1)",
+      "text": "1900-02-28 12:00:01 AM",
+      "valueFormula": "User.DateValue",
+      "value": "1900-02-28"
+    },
+    {
+      "id": 24,
+      "code": 212,
+      "formula": "DATE(1900,3,1)+TIME(12,0,0)",
+      "text": "1900-03-01 12:00:00 PM",
+      "valueFormula": "User.DateValue",
+      "value": "1900-03-01 12:00:00 PM"
+    },
+    {
+      "id": 25,
+      "code": 212,
+      "formula": "DATE(1899,12,30)",
+      "text": "1899-12-30 12:00:00 AM",
+      "valueFormula": "User.DateValue",
+      "value": "1899-12-30 12:00:00 AM"
+    },
+    {
+      "id": 26,
+      "code": 212,
+      "formula": "DATE(1899,12,29)",
+      "text": "",
+      "valueFormula": "User.DateValue",
+      "value": "30177-04-13"
+    },
+    {
+      "id": 27,
+      "code": 212,
+      "formula": "DATE(2026,10,13)+TIME(23,59,59.999)",
+      "text": "2026-10-13 11:59:59 PM",
+      "valueFormula": "User.DateValue",
+      "value": "2026-10-13 11:59:59 PM"
+    },
+    {
+      "id": 28,
+      "code": 212,
+      "formula": "DATE(2026,12,31)+TIME(23,59,59)",
+      "text": "2026-12-31 11:59:59 PM",
+      "valueFormula": "User.DateValue",
+      "value": "2026-12-31 11:59:59 PM"
+    },
+    {
+      "id": 29,
+      "code": 212,
+      "formula": "DATE(2000,2,29)+TIME(1,2,3)",
+      "text": "2000-02-29 1:02:03 AM",
+      "valueFormula": "User.DateValue",
+      "value": "2000-02-29 1:02:03 AM"
+    },
+    {
+      "id": 30,
+      "code": 212,
+      "formula": "DATE(2100,3,1)+TIME(9,5,6)",
+      "text": "2100-03-01 9:05:06 AM",
+      "valueFormula": "User.DateValue",
+      "value": "2100-03-01 9:05:06 AM"
+    }
+  ]
+}
