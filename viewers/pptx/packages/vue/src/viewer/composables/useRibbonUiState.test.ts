@@ -6,6 +6,13 @@ import type { UseRibbonPropsInput } from './ribbon-props-types';
 import { useRibbonUiState } from './useRibbonUiState';
 
 describe('useRibbonUiState', () => {
+	it('starts the inspector closed on request and lets the launcher open it (#61)', () => {
+		const state = useRibbonUiState(false);
+		expect(state.inspectorOpen.value).toBe(false);
+		state.inspectorOpen.value = true;
+		expect(state.inspectorOpen.value).toBe(true);
+		expect(useRibbonUiState().inspectorOpen.value).toBe(true);
+	});
 	it('toggles the ribbon eyedropper state', () => {
 		const state = useRibbonUiState();
 		const actions = buildRibbonPropsActions({

@@ -36,6 +36,13 @@ function createService(isMobile: boolean): ViewerInspectorPanelService {
 }
 
 describe('viewerInspectorPanelService', () => {
+	it('honours the initial host option and can still be opened afterward (#61)', () => {
+		const svc = createService(false);
+		svc.initializeVisibility(false);
+		expect(svc.inspectorPaneOpen()).toBe(false);
+		svc.openFormatPanel();
+		expect(svc.inspectorPaneOpen()).toBe(true);
+	});
 	it('starts with the format pane open on desktop', () => {
 		const svc = createService(false);
 		expect(svc.formatPanelClosed()).toBeFalsy();

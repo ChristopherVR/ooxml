@@ -3,6 +3,7 @@
  *
  * Separated from core state to keep each hook focused and under 300 lines.
  */
+import { initialInspectorOpen } from 'ooxml-ui/pptx';
 import { useState } from 'react';
 
 import type {
@@ -101,7 +102,7 @@ export interface ViewerUIState {
 /*  Hook                                                              */
 /* ------------------------------------------------------------------ */
 
-export function useViewerUIState(): ViewerUIState {
+export function useViewerUIState(inspectorInitiallyOpen?: boolean): ViewerUIState {
 	// ── UI Panel State ────────────────────────────────────────────────
 	const [isCompactToolbarOpen, setIsCompactToolbarOpen] = useState(false);
 	const [toolbarSection, setToolbarSection] = useState<ToolbarSection>('home');
@@ -114,7 +115,10 @@ export function useViewerUIState(): ViewerUIState {
 	// canvas owns the screen on first paint (same reasoning as isSlidesPaneOpen
 	// above - mobile opens it via the bottom bar's "Format" button instead).
 	const [isInspectorPaneOpen, setIsInspectorPaneOpen] = useState(() =>
-		typeof window === 'undefined' ? true : window.innerWidth >= 768,
+		initialInspectorOpen(
+			inspectorInitiallyOpen,
+			typeof window === 'undefined' || window.innerWidth >= 768,
+		),
 	);
 	const [isSlideNotesCollapsed, setIsSlideNotesCollapsed] = useState(true);
 	const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);

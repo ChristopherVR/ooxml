@@ -50,6 +50,38 @@ async function callCustomization(page: Page, ...call: CustomizationCall): Promis
 }
 
 test.describe('UI customization', () => {
+	test('the inspector can start closed and be opened on demand (#61)', async ({ page }) => {
+		await loadDeck(page, SAMPLE_DECK, '/?inspectorInitiallyOpen=0');
+		const deck = page.locator('[data-pptx-chrome="deck-properties"]');
+		await expect(deck).not.toBeVisible();
+		await page
+			.getByRole('button', { name: /toggle.*inspector|show.*inspector|properties pane/i })
+			.first()
+			.click();
+		await expect(deck).toBeVisible();
+	});
+	test('inspector cards can be hidden and restored through customization (#61)', async ({
+		page,
+	}) => {
+		await loadDeck(
+			page,
+			SAMPLE_DECK,
+			withCustomization({
+				inspector: { hiddenCards: ['presentation', 'theme', 'themeOverride', 'slideSize'] },
+			}),
+		);
+		const card = (id: string) =>
+			page
+				.locator(`[data-pptx-chrome="deck-properties"] [data-pptx-inspector-card="${id}"]`)
+				.first();
+		for (const id of ['presentation', 'theme', 'themeOverride', 'slideSize'])
+			await expect(card(id)).not.toBeVisible();
+		await expect(card('document')).toBeVisible();
+		await callCustomization(page, 'updateCustomization', { inspector: { hiddenCards: [] } });
+		await expect(card('presentation')).toBeVisible();
+		await expect(card('theme')).toBeVisible();
+		await expect(card('slideSize')).toBeVisible();
+	});
 	test('File > Options checkboxes expose one accessible Space-key contract', async ({ page }) => {
 		await loadDeck(page);
 		let dialog = await openOptionsDialog(page, OPTIONS_TITLES);

@@ -72,7 +72,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-// ── Theme selection (React's useInspectorPaneState) ─────────────────────
+// â”€â”€ Theme selection (React's useInspectorPaneState) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const activeThemePath = computed(() => props.slideMasters?.[0]?.themePath);
 const effectiveThemeOptions = computed<PptxThemeOption[]>(() => {
 	const options = props.themeOptions ?? [];
@@ -94,24 +94,32 @@ watch(
 
 <template>
 	<div data-pptx-chrome="deck-properties" class="space-y-3">
-		<div v-if="props.presentationProperties" :class="`${CARD} pptx-editor-presentation-card`">
+		<div
+			data-pptx-inspector-card="presentation"
+			v-if="props.presentationProperties"
+			:class="`${CARD} pptx-editor-presentation-card`"
+		>
 			<div :class="HEADING">{{ t('pptx.slideInspector.presentation') }}</div>
-			<PresentationSettingsCard
-				:presentation-properties="props.presentationProperties"
+			<div data-pptx-inspector-card="presentation">
+				<PresentationSettingsCard
+					:presentation-properties="props.presentationProperties"
+					:can-edit="props.canEdit"
+					@update="(patch) => emit('presentation-update', patch)"
+				/>
+			</div>
+		</div>
+
+		<div data-pptx-inspector-card="theme">
+			<ThemeSelectorCard
+				:theme-options="effectiveThemeOptions"
+				:selected-theme-path="selectedThemePath"
 				:can-edit="props.canEdit"
-				@update="(patch) => emit('presentation-update', patch)"
+				@select-theme-path="(path) => (selectedThemePath = path)"
+				@apply-theme="(path, allMasters) => emit('apply-theme', path, allMasters)"
 			/>
 		</div>
 
-		<ThemeSelectorCard
-			:theme-options="effectiveThemeOptions"
-			:selected-theme-path="selectedThemePath"
-			:can-edit="props.canEdit"
-			@select-theme-path="(path) => (selectedThemePath = path)"
-			@apply-theme="(path, allMasters) => emit('apply-theme', path, allMasters)"
-		/>
-
-		<div :class="CARD">
+		<div data-pptx-inspector-card="themeOverride" :class="CARD">
 			<div :class="HEADING">{{ t('pptx.themeOverride.heading') }}</div>
 			<SlideThemeOverridePanel
 				:slide="props.slide"
@@ -121,50 +129,57 @@ watch(
 			/>
 		</div>
 
-		<SlideSizeCard
-			v-if="props.canvasSize"
-			:canvas-size="props.canvasSize"
-			:slide-size="props.slideSize"
-			:can-edit="props.canEdit"
-			@update="(size) => emit('canvas-size-update', size)"
-			@update-slide-size="(size, canvas) => emit('slide-size-update', size, canvas)"
-		/>
+		<div v-if="props.canvasSize" data-pptx-inspector-card="slideSize">
+			<SlideSizeCard
+				:canvas-size="props.canvasSize"
+				:slide-size="props.slideSize"
+				:can-edit="props.canEdit"
+				@update="(size) => emit('canvas-size-update', size)"
+				@update-slide-size="(size, canvas) => emit('slide-size-update', size, canvas)"
+			/>
+		</div>
 
 		<!-- SLIDE TRANSITION sits beside SLIDE SIZE, matching React, Angular,
 		     Svelte and Vanilla. This section and its `SlideTransitionPanel` were
 		     built and then never mounted, which combined with an inert ribbon left
 		     Vue with no way to author a transition at all. -->
-		<div :class="CARD">
+		<div data-pptx-inspector-card="slideTransition" :class="CARD">
 			<SlideTransitionSection
 				:slide="props.slide"
 				@transition-update="(next) => emit('slide-update', { transition: next })"
 			/>
 		</div>
 
-		<NotesHandoutCard
-			:notes-canvas-size="props.notesCanvasSize"
-			:notes-master="props.notesMaster"
-			:handout-master="props.handoutMaster"
-		/>
+		<div data-pptx-inspector-card="notesHandout">
+			<NotesHandoutCard
+				:notes-canvas-size="props.notesCanvasSize"
+				:notes-master="props.notesMaster"
+				:handout-master="props.handoutMaster"
+			/>
+		</div>
 
-		<DocumentPropertiesCard
-			:core-properties="props.coreProperties"
-			:app-properties="props.appProperties"
-			:custom-properties="props.customProperties ?? []"
-			:can-edit="props.canEdit"
-			@update-core="(patch) => emit('update-core-properties', patch)"
-			@update-app="(patch) => emit('update-app-properties', patch)"
-			@update-custom="(next) => emit('update-custom-properties', next)"
-		/>
+		<div data-pptx-inspector-card="document">
+			<DocumentPropertiesCard
+				:core-properties="props.coreProperties"
+				:app-properties="props.appProperties"
+				:custom-properties="props.customProperties ?? []"
+				:can-edit="props.canEdit"
+				@update-core="(patch) => emit('update-core-properties', patch)"
+				@update-app="(patch) => emit('update-app-properties', patch)"
+				@update-custom="(next) => emit('update-custom-properties', next)"
+			/>
+		</div>
 
-		<TagsSection
-			v-if="props.tagCollections"
-			:tag-collections="props.tagCollections"
-			:can-edit="props.canEdit"
-			@update="(next) => emit('update-tag-collections', next)"
-		/>
+		<div data-pptx-inspector-card="tags">
+			<TagsSection
+				v-if="props.tagCollections"
+				:tag-collections="props.tagCollections"
+				:can-edit="props.canEdit"
+				@update="(next) => emit('update-tag-collections', next)"
+			/>
+		</div>
 
-		<div v-if="props.slide" :class="[CARD, 'space-y-1']">
+		<div data-pptx-inspector-card="slide" v-if="props.slide" :class="[CARD, 'space-y-1']">
 			<div :class="HEADING">Slide</div>
 			<div class="text-[11px] text-muted-foreground">
 				{{ props.slide.elements?.length ?? 0 }} elements

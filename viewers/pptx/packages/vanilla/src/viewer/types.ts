@@ -185,6 +185,8 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	 * on the returned instance (`hideRibbonTab`, `setCustomization`, ...)
 	 * change it live. {@link hiddenActions} still applies and is unioned with it.
 	 */
+	/** Initial inspector visibility; omitted preserves the desktop/mobile default. */
+	inspectorInitiallyOpen?: boolean;
 	customization?: ViewerCustomization;
 	/**
 	 * Ribbon tabs the host adds after Help, as an Office add-in does. Each command runs its `run`

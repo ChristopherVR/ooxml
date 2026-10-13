@@ -185,6 +185,8 @@ export type ViewerExportFormatId = 'pdf' | 'png' | 'video' | 'gif' | 'json' | 'c
  * nothing and lock nothing.
  */
 export interface ViewerCustomization {
+	/** Hide individual cards in the no-selection property inspector. */
+	inspector?: { hiddenCards?: readonly import('./inspector-customization').InspectorCardId[] };
 	ribbon?: RibbonCustomization;
 	options?: OptionsCustomization;
 	backstage?: BackstageCustomization;

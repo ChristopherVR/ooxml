@@ -236,6 +236,8 @@ export interface PowerPointViewerProps {
 	 * handle (`hideRibbonTab`, `lockSetting`, ...) edit the same state, and a
 	 * NEW object passed here replaces those imperative edits wholesale.
 	 */
+	/** Initial inspector visibility; omitted preserves the desktop/mobile default. */
+	inspectorInitiallyOpen?: boolean;
 	customization?: ViewerCustomization;
 	/**
 	 * Initial theme-catalog selection key (e.g. `'vermilionDark'`), used only

@@ -1,3 +1,4 @@
+import { initialInspectorOpen } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 
@@ -52,14 +53,14 @@ export interface UseRibbonUiStateResult {
  * UI-state refs so `PowerPointViewer.vue` doesn't declare them inline.
  * Extracted verbatim from `PowerPointViewer.vue`.
  */
-export function useRibbonUiState(): UseRibbonUiStateResult {
+export function useRibbonUiState(inspectorInitiallyOpen?: boolean): UseRibbonUiStateResult {
 	return {
 		toolbarSection: ref<ToolbarSection>('home'),
 		newShapeType: ref<SupportedShapeType>('rect'),
 		activeTool: ref<DrawingTool>('select'),
 		drawingColor: ref('#000000'),
 		drawingWidth: ref(2),
-		inspectorOpen: ref(true),
+		inspectorOpen: ref(initialInspectorOpen(inspectorInitiallyOpen)),
 		sidebarCollapsed: ref(false),
 		ribbonExpanded: ref(true),
 		overflowOpen: ref(false),

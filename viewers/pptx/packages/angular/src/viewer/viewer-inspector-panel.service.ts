@@ -15,6 +15,7 @@
  */
 
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { initialInspectorOpen } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import { IsMobileService } from './is-mobile';
@@ -64,6 +65,11 @@ export class ViewerInspectorPanelService {
 	readonly inspectorDrag = createSwipeDismissDrag(() => this.dismissMobileInspector());
 
 	private host: InspectorPanelHost | null = null;
+
+	/** Called once after the viewer inputs are bound. Later toggles own the state. */
+	initializeVisibility(option: boolean | undefined): void {
+		this.formatPanelClosed.set(!initialInspectorOpen(option, !this.mobile.isMobile()));
+	}
 
 	/** Wire the host accessors (called once from the component constructor). */
 	bind(host: InspectorPanelHost): void {

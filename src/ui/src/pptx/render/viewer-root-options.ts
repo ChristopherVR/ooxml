@@ -22,6 +22,8 @@
 
 /** The host-facing root display options, all optional. */
 export interface ViewerRootOptions {
+	/** Initial property inspector visibility. Omitted preserves the binding's default. */
+	inspectorInitiallyOpen?: boolean | undefined;
 	/** Zero-based slide shown after load. Default `0`; clamped into the deck. */
 	initialSlide?: number | undefined;
 	/** Show the editor chrome (title bar, ribbon, toolbar, status bar). Default `true`. */

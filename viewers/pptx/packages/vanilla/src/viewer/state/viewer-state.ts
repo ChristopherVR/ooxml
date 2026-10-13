@@ -1,3 +1,4 @@
+import { initialInspectorOpen } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	CompatibilityWarningToast,
@@ -341,7 +342,7 @@ export interface ViewerState {
 	runProgramNotices: RunProgramNotice[];
 }
 
-export function createInitialViewerState(): ViewerState {
+export function createInitialViewerState(inspectorInitiallyOpen?: boolean): ViewerState {
 	return {
 		slides: [],
 		sections: [],
@@ -403,7 +404,7 @@ export function createInitialViewerState(): ViewerState {
 		dirty: false,
 		interactionActive: false,
 		notesExpanded: false,
-		inspectorOpen: true,
+		inspectorOpen: initialInspectorOpen(inspectorInitiallyOpen),
 		remotePresences: [],
 		cursors: [],
 		followedClientId: null,

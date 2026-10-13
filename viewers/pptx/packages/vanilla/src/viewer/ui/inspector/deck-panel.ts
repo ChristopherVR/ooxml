@@ -104,6 +104,19 @@ export function createDeckPanel(
 		createSlideBackgroundFillCard(doc, t, handlers),
 		createSlideBackgroundCard(doc, t, handlers),
 	];
+	const ids = [
+		'presentation',
+		'theme',
+		'themeOverride',
+		'slideSize',
+		'slideTransition',
+		'notesHandout',
+		'document',
+		'tags',
+		'slideBackground',
+		'templateBackground',
+	];
+	for (const [index, card] of cards.entries()) card.el.dataset.pptxInspectorCard = ids[index];
 	el.append(...cards.map((card) => card.el));
 
 	return {

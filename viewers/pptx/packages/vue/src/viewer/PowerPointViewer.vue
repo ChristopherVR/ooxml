@@ -873,7 +873,7 @@ provide(MergeCropKey, mergeCrop);
 // time for the keyboard-shortcut registry's drawing-tool guard, and
 // `inspectorOpen` exists in time for the context menu's format-object
 // commands (Edit Alt Text / Size and Position / Format Shape).
-const ribbonUi = useRibbonUiState();
+const ribbonUi = useRibbonUiState(props.inspectorInitiallyOpen);
 const {
 	activeTool,
 	drawingColor,

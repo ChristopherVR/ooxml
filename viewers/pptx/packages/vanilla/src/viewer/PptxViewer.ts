@@ -254,7 +254,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		);
 		this.t = createTranslator(this.currentLocale, options.messages);
 		this.registry = options.registry ?? createDefaultRegistry();
-		this.store = createStore(createInitialViewerState());
+		this.store = createStore(createInitialViewerState(options.inspectorInitiallyOpen));
 		this.loading = createLoadingController({
 			options,
 			store: this.store,

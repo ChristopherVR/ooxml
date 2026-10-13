@@ -5,6 +5,7 @@ export * from './customization-merge';
 export * from './customization-resolve';
 export * from './customization-surfaces';
 export * from './customization-types';
+export * from './inspector-customization';
 export * from './customization-descriptions';
 export * from './host-menu-commands';
 export * from './ribbon-control-catalog';

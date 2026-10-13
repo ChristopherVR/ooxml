@@ -98,6 +98,7 @@ type DemoContent = Uint8Array | ArrayBuffer;
 					[showToolbar]="rootOptions.showToolbar"
 					[showThumbnails]="rootOptions.showThumbnails"
 					[initialSlide]="rootOptions.initialSlide"
+					[inspectorInitiallyOpen]="rootOptions.inspectorInitiallyOpen"
 					[smartArt3D]="smartArt3D"
 					[surfaceChart3D]="surfaceChart3D"
 					[barChart3D]="barChart3D"

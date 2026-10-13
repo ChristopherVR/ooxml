@@ -1567,6 +1567,7 @@ export class PowerPointViewerComponent
 	 * customisation, including edits made through the imperative helpers
 	 * (`hideRibbonTab`, `lockSetting`, ...).
 	 */
+	readonly inspectorInitiallyOpen = input<boolean | undefined>(undefined);
 	readonly customization = input<ViewerCustomization | undefined>(undefined);
 	/**
 	 * Ribbon tabs the host adds after Help, as an Office add-in does. Each
@@ -2244,6 +2245,14 @@ export class PowerPointViewerComponent
 
 	constructor() {
 		super();
+		let inspectorInitialized = false;
+		effect(() => {
+			const initiallyOpen = this.inspectorInitiallyOpen();
+			if (!inspectorInitialized) {
+				inspectorInitialized = true;
+				this.inspectorPanel.initializeVisibility(initiallyOpen);
+			}
+		});
 		// Wire the AI panel store to the live canvas selection so its
 		// follow-selection focus (and the bridge's getFocusedTargets) stay current.
 		this.aiPanelStore.bind({

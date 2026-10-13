@@ -155,6 +155,8 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * helpers (`hideRibbonTab`, `lockSetting`, ...) on the component instance;
 	 * mutating the same object in place is not observed.
 	 */
+	/** Initial inspector visibility; omitted preserves the desktop/mobile default. */
+	inspectorInitiallyOpen?: boolean;
 	customization?: ViewerCustomization;
 	/**
 	 * Show the speaker-notes panel and its toolbar toggle. Default true. The

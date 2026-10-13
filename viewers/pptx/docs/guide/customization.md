@@ -5,6 +5,26 @@ description: Hide, lock and remap any part of the viewer chrome from code - ribb
 
 # UI Customization
 
+Set the viewer's `inspectorInitiallyOpen` option to `false` to start with the
+property inspector closed. The panel toggle and ribbon group launchers can
+still open it. Omit the option to preserve the binding's desktop/mobile default;
+later changes to this initial option do not reset the user's panel state.
+
+Hide individual no-selection inspector cards with the shared customization:
+
+```ts
+const customization: ViewerCustomization = {
+	inspector: { hiddenCards: ['presentation', 'theme', 'themeOverride', 'slideSize'] },
+};
+```
+
+Card ids are `presentation`, `theme`, `themeOverride`, `slideSize`,
+`slideTransition`, `notesHandout`, `document`, `tags`, `slide`, `slideBackground`
+and `templateBackground`. Each id hides that card wherever the binding provides
+it. `updateCustomization({ inspector: { hiddenCards: [] } })` restores the cards
+live. Card visibility is scoped to each viewer, independently of inspector
+opening and closing.
+
 Every binding renders the same PowerPoint-style chrome: a ribbon, a File tab,
 a File > Options (Settings) dialog, right-click menus, a keyboard map, a slide
 rail, an inspector, a status bar and a handful of dialogs. Most embeddings do

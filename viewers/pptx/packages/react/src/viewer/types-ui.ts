@@ -610,6 +610,8 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Unioned with `hiddenActions`. A new object replaces the whole
 	 * customisation, including edits made through the handle helpers.
 	 */
+	/** Initial inspector visibility; omitted preserves the desktop/mobile default. */
+	inspectorInitiallyOpen?: boolean;
 	customization?: ViewerCustomization;
 }
 

@@ -9,7 +9,12 @@
 /** The inspector pane's tab strip, matching React's `InspectorTab`. */
 export type InspectorTabId = 'elements' | 'properties' | 'comments';
 
+import { initialInspectorOpen } from 'ooxml-ui/pptx';
+
 export class ChromeUiState {
+	constructor(inspectorInitiallyOpen?: boolean) {
+		this.inspectorOpen = initialInspectorOpen(inspectorInitiallyOpen);
+	}
 	/** Left thumbnail rail visibility (React: `isSidebarCollapsed`). */
 	sidebarCollapsed = $state(false);
 	/** Right inspector pane visibility (React: `isInspectorPaneOpen`). */

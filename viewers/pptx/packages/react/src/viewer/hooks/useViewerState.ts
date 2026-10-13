@@ -29,6 +29,7 @@ import type { ViewerUIState } from './useViewerUIState';
 export interface UseViewerStateInput {
 	content: ArrayBuffer | Uint8Array | null | undefined;
 	canEdit: boolean;
+	inspectorInitiallyOpen?: boolean | undefined;
 }
 
 /**
@@ -55,7 +56,7 @@ export function useViewerState(input: UseViewerStateInput): ViewerState {
 	// Core state: slides, elements, selection, masters, theme, etc.
 	const core = useViewerCoreState(input);
 	// UI state: toolbar, panels, drawing tools, grid, snapping, etc.
-	const ui = useViewerUIState();
+	const ui = useViewerUIState(input.inspectorInitiallyOpen);
 	// On-canvas picture crop session (read by the history gate).
 	const crop = useCropSessionState();
 	return { ...core, ...ui, ...crop };

@@ -44,6 +44,7 @@ export function toViewerStateOptions(
 ): CreateViewerStateOptions {
 	return {
 		...dom,
+		inspectorInitiallyOpen: getProps().inspectorInitiallyOpen,
 		getSource: () => getProps().source,
 		// Deliberately NOT defaulted: the host prop is a ceiling, and `undefined`
 		// ("the host said nothing") permits autosave, which is not the same answer

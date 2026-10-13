@@ -18,6 +18,7 @@
 
 /** The subset of the root display options given on the query string. */
 export interface DemoRootOptions {
+	inspectorInitiallyOpen?: boolean;
 	showToolbar?: boolean;
 	showThumbnails?: boolean;
 	initialSlide?: number;
@@ -37,6 +38,8 @@ function parseFlag(raw: string | null): boolean | undefined {
 export function parseDemoRootOptions(search: string): DemoRootOptions {
 	const params = new URLSearchParams(search);
 	const options: DemoRootOptions = {};
+	const inspectorInitiallyOpen = parseFlag(params.get('inspectorInitiallyOpen'));
+	if (inspectorInitiallyOpen !== undefined) options.inspectorInitiallyOpen = inspectorInitiallyOpen;
 	const showToolbar = parseFlag(params.get('showToolbar'));
 	if (showToolbar !== undefined) {
 		options.showToolbar = showToolbar;

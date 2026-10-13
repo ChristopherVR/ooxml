@@ -34,6 +34,7 @@ import { useZoomViewport } from './useZoomViewport';
 export interface UseViewerBuildingBlocksCoreInput extends ViewportFitOptions {
 	content: ArrayBuffer | Uint8Array | null;
 	canEdit: boolean;
+	inspectorInitiallyOpen?: boolean | undefined;
 }
 
 export interface ViewerBuildingBlocksCore {
@@ -75,7 +76,11 @@ export function useViewerBuildingBlocksCore(
 ): ViewerBuildingBlocksCore {
 	const { content, canEdit } = input;
 
-	const state = useViewerState({ content, canEdit });
+	const state = useViewerState({
+		content,
+		canEdit,
+		inspectorInitiallyOpen: input.inspectorInitiallyOpen,
+	});
 	const {
 		containerRef,
 		mode,

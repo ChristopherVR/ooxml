@@ -39,6 +39,7 @@ import type { RibbonControlId, RibbonGroupId } from './ribbon-control-ids';
 
 /** The normalised, set-based view of a customisation. Treat as immutable. */
 export interface ResolvedCustomization {
+	hiddenInspectorCards: ReadonlySet<import('./inspector-customization').InspectorCardId>;
 	hiddenActions: ReadonlySet<ToolbarActionId>;
 	/** Contextual tabs (`shapeFormat`, ...) the host never wants shown. */
 	hiddenContextualTabs: ReadonlySet<RibbonContextualTabId>;
@@ -135,6 +136,7 @@ export function resolveCustomization(
 	}
 	return {
 		hiddenActions,
+		hiddenInspectorCards: new Set(c.inspector?.hiddenCards ?? []),
 		hiddenContextualTabs: ribbon.contextualTabs,
 		hiddenRibbonGroups: ribbon.groups,
 		hiddenRibbonControls: ribbon.controls,

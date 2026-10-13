@@ -47,6 +47,7 @@ export type { CanvasSize };
  * whichever component renders the actual markup.
  */
 export interface CreateViewerStateOptions {
+	inspectorInitiallyOpen?: boolean | undefined;
 	getSource: () => Uint8Array | ArrayBuffer | null | undefined;
 	collaboration?: CollaborationConfig;
 	shareDefaults?: ShareDefaultsInput;

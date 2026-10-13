@@ -120,21 +120,25 @@ export function PresentationPropertiesPanel({
 
 	return (
 		<div data-pptx-chrome='deck-properties' className='space-y-3'>
-			<PresentationSettingsCard
-				presentationProperties={presentationProperties}
-				canEdit={canEdit}
-				onUpdate={onUpdatePresentationProperties}
-			/>
+			<div data-pptx-inspector-card='presentation'>
+				<PresentationSettingsCard
+					presentationProperties={presentationProperties}
+					canEdit={canEdit}
+					onUpdate={onUpdatePresentationProperties}
+				/>
+			</div>
 
-			<ThemeSelectorCard
-				themeOptions={themeOptions}
-				selectedThemePath={selectedThemePath}
-				setSelectedThemePath={setSelectedThemePath}
-				canEdit={canEdit}
-				onApplyTheme={onApplyTheme}
-			/>
+			<div data-pptx-inspector-card='theme'>
+				<ThemeSelectorCard
+					themeOptions={themeOptions}
+					selectedThemePath={selectedThemePath}
+					setSelectedThemePath={setSelectedThemePath}
+					canEdit={canEdit}
+					onApplyTheme={onApplyTheme}
+				/>
+			</div>
 
-			<div className={CARD}>
+			<div data-pptx-inspector-card='themeOverride' className={CARD}>
 				<div className={HEADING}>{t('pptx.themeOverride.heading')}</div>
 				<SlideThemeOverridePanel
 					activeSlide={activeSlide}
@@ -144,49 +148,59 @@ export function PresentationPropertiesPanel({
 				/>
 			</div>
 
-			<SlideSizeCard
-				canvasSize={canvasSize}
-				slideSizeEmu={slideSizeEmu}
-				canEdit={canEdit}
-				onUpdate={onUpdateCanvasSize}
-				onUpdateSlideSize={onUpdateSlideSize}
-				hasContent={hasContent}
-			/>
+			<div data-pptx-inspector-card='slideSize'>
+				<SlideSizeCard
+					canvasSize={canvasSize}
+					slideSizeEmu={slideSizeEmu}
+					canEdit={canEdit}
+					onUpdate={onUpdateCanvasSize}
+					onUpdateSlideSize={onUpdateSlideSize}
+					hasContent={hasContent}
+				/>
+			</div>
 
 			{/* SLIDE TRANSITION sits beside SLIDE SIZE, matching where Angular,
 			    Svelte and Vanilla place it in their deck-properties panes. */}
-			<SlideTransitionSection
-				activeSlide={activeSlide ?? null}
-				canEdit={canEdit}
-				onTransitionChange={handleTransitionChange}
-			/>
+			<div data-pptx-inspector-card='slideTransition'>
+				<SlideTransitionSection
+					activeSlide={activeSlide ?? null}
+					canEdit={canEdit}
+					onTransitionChange={handleTransitionChange}
+				/>
+			</div>
 
-			<NotesHandoutCard
-				notesCanvasSize={notesCanvasSize}
-				notesMaster={notesMaster}
-				handoutMaster={handoutMaster}
-			/>
+			<div data-pptx-inspector-card='notesHandout'>
+				<NotesHandoutCard
+					notesCanvasSize={notesCanvasSize}
+					notesMaster={notesMaster}
+					handoutMaster={handoutMaster}
+				/>
+			</div>
 
-			<DocumentPropertiesCard
-				coreProperties={coreProperties}
-				appProperties={appProperties}
-				customProperties={customProperties}
-				canEdit={canEdit}
-				onUpdateCoreProperties={onUpdateCoreProperties}
-				onUpdateAppProperties={onUpdateAppProperties}
-				onUpdateCustomProperties={onUpdateCustomProperties}
-			/>
+			<div data-pptx-inspector-card='document'>
+				<DocumentPropertiesCard
+					coreProperties={coreProperties}
+					appProperties={appProperties}
+					customProperties={customProperties}
+					canEdit={canEdit}
+					onUpdateCoreProperties={onUpdateCoreProperties}
+					onUpdateAppProperties={onUpdateAppProperties}
+					onUpdateCustomProperties={onUpdateCustomProperties}
+				/>
+			</div>
 
 			{tagCollections && onUpdateTagCollections && (
-				<TagsSection
-					tagCollections={tagCollections}
-					onUpdateTagCollections={onUpdateTagCollections}
-					canEdit={canEdit}
-				/>
+				<div data-pptx-inspector-card='tags'>
+					<TagsSection
+						tagCollections={tagCollections}
+						onUpdateTagCollections={onUpdateTagCollections}
+						canEdit={canEdit}
+					/>
+				</div>
 			)}
 
 			{activeSlide && (
-				<div className={cn(CARD, 'space-y-1')}>
+				<div data-pptx-inspector-card='slide' className={cn(CARD, 'space-y-1')}>
 					<div className={HEADING}>Slide</div>
 					<div className='text-[11px] text-muted-foreground'>
 						{activeSlide.elements?.length ?? 0} elements

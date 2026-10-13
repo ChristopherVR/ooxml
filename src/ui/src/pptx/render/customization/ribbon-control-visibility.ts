@@ -18,6 +18,7 @@
  *
  * @module render/customization/ribbon-control-visibility
  */
+import { INSPECTOR_CARD_IDS } from './inspector-customization';
 import type { ResolvedCustomization } from './customization-resolve';
 import { RIBBON_CONTROL_IDS, RIBBON_GROUP_IDS } from './ribbon-control-ids';
 import type { RibbonControlId, RibbonGroupId } from './ribbon-control-ids';
@@ -90,6 +91,11 @@ function attrSelector(scope: string | undefined, attr: string, id: string): stri
 export function ribbonCustomizationCss(resolved: ResolvedCustomization, scope?: string): string {
 	const safeScope = scope && /^[\w-]+$/u.test(scope) ? scope : undefined;
 	const selectors: string[] = [];
+	for (const id of resolved.hiddenInspectorCards) {
+		if (INSPECTOR_CARD_IDS.includes(id)) {
+			selectors.push(attrSelector(safeScope, 'data-pptx-inspector-card', id));
+		}
+	}
 	for (const id of resolved.hiddenRibbonGroups) {
 		if (isRibbonGroupId(id)) {
 			selectors.push(attrSelector(safeScope, RIBBON_GROUP_ATTR, id));

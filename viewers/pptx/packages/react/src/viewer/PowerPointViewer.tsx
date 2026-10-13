@@ -432,7 +432,11 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		// the ref is attached. We re-create the hook input after state init.
 
 		// ── All state via custom hook ─────────────────────────────────
-		const state = useViewerState({ content, canEdit });
+		const state = useViewerState({
+			content,
+			canEdit,
+			inspectorInitiallyOpen: props.inspectorInitiallyOpen,
+		});
 		const {
 			containerRef,
 			mode,

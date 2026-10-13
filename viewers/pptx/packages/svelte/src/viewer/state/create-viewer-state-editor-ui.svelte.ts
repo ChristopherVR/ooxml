@@ -106,7 +106,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 	// keeps it in sync with the six legacy preference toggles both ways.
 	const optionsState = new ViewerOptionsState();
 	provideViewerOptions(optionsState);
-	const chromeUi = new ChromeUiState();
+	const chromeUi = new ChromeUiState(options.inspectorInitiallyOpen);
 	provideZoomNavigation({
 		// A zoom tile is only clickable while presenting (`ZoomView.svelte`'s
 		// `clickable`), so the presentation controller is always assigned by the

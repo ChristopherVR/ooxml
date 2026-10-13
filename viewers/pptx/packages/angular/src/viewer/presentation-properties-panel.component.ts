@@ -40,10 +40,17 @@ import { ThemeSelectorCardComponent } from './theme-selector-card.component';
 		TagsCardComponent,
 	],
 	template: `
-		<pptx-presentation-settings-card [canEdit]="canEdit()" />
-		<pptx-theme-selector-card [canEdit]="canEdit()" />
+		<pptx-presentation-settings-card
+			data-pptx-inspector-card="presentation"
+			[canEdit]="canEdit()"
+		/>
+		<pptx-theme-selector-card data-pptx-inspector-card="theme" [canEdit]="canEdit()" />
 		@if (activeSlide(); as sl) {
-			<section class="icard" data-pptx-chrome="inspector-card">
+			<section
+				data-pptx-inspector-card="themeOverride"
+				class="icard"
+				data-pptx-chrome="inspector-card"
+			>
 				<h3 class="icard__heading" data-pptx-chrome="inspector-heading">
 					{{ 'pptx.themeOverride.heading' | translate }}
 				</h3>
@@ -54,11 +61,15 @@ import { ThemeSelectorCardComponent } from './theme-selector-card.component';
 				/>
 			</section>
 		}
-		<pptx-slide-size-card [canEdit]="canEdit()" />
-		<pptx-slide-transition-card [slideIndex]="slideIndex()" [canEdit]="canEdit()" />
-		<pptx-notes-handout-card />
-		<pptx-document-properties-card [canEdit]="canEdit()" />
-		<pptx-tags-card [canEdit]="canEdit()" />
+		<pptx-slide-size-card data-pptx-inspector-card="slideSize" [canEdit]="canEdit()" />
+		<pptx-slide-transition-card
+			data-pptx-inspector-card="slideTransition"
+			[slideIndex]="slideIndex()"
+			[canEdit]="canEdit()"
+		/>
+		<pptx-notes-handout-card data-pptx-inspector-card="notesHandout" />
+		<pptx-document-properties-card data-pptx-inspector-card="document" [canEdit]="canEdit()" />
+		<pptx-tags-card data-pptx-inspector-card="tags" [canEdit]="canEdit()" />
 	`,
 	styles: [
 		`
