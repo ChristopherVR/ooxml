@@ -51,6 +51,26 @@ writeFileSync(join(out,'rows-imported.json'),JSON.stringify(pivotGrid(hierarchy.
 createEditSession(hierarchy).refreshPivotTable(0,'SalesPivot',{secondRowField:'',columnField:'Region',repeatLabels:true});
 writeFileSync(join(out,'cache-from-rows.xlsx'),await saveXlsx(hierarchy));
 writeFileSync(join(out,'cache-from-rows.json'),JSON.stringify(pivotGrid(hierarchy.sheets[0].pivotTables[0]).values));
+const layouts = ['compact-top','compact-bottom','compact-none','compact-repeat','compact-column','compact-average','compact-numeric-child','cache-compact-single','outline-top','outline-bottom','outline-none','outline-repeat','outline-column','outline-average','cache-outline-single'];
+for (const mode of layouts) {
+ const wb=createWorkbook({sheets:['Data','Summary']});const session=createEditSession(wb);
+ const rows:(string|number)[][]=[['Category','Region','Amount','Quarter'],['Fruit','East',10,'Q1'],['Fruit','West',20,'Q2'],['Veg','East',5,'Q1'],['Veg','West',15,'Q2'],['Fruit','East',7,'Q2']];
+ if(mode.endsWith('numeric-child')) for(let r=1;r<rows.length;r++) rows[r][1]=rows[r][1]==='East'?2026:2027;
+ rows.forEach((line,r)=>line.forEach((value,c)=>session.setCellInput(0,r,c,String(value))));
+ session.createPivotTable(1,{row:0,col:0},{source:'Data!A1:D6',rowField:'Category',valueField:'Amount',layout:mode.includes('compact')?'compact':'outline',subtotalPosition:mode.endsWith('bottom')?'bottom':'top',subtotals:!mode.endsWith('none'),repeatLabels:mode.endsWith('repeat'),aggregate:mode.endsWith('average')?'average':'sum',...(!mode.startsWith('cache-')?{secondRowField:'Region'}:{}),...(mode.endsWith('column')?{columnField:'Quarter'}:{})});
+ const grid=pivotGrid(wb.sheets[1].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
+ writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+ writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents??grid.values.map(()=>0)));
+}
+for (const suffix of ['compact-top','compact-bottom','compact-bottom-no-subtotals','outline-top','outline-bottom','outline-top-repeat']) {
+ const wb=await loadXlsx(new Uint8Array(readFileSync(join(root,'src/core/xlsx/__fixtures__/excel-pivot-'+suffix+'.xlsx'))));
+ const session=createEditSession(wb);session.setCellInput(1,1,2,'100');session.refreshPivotTable(0,'SalesPivot');
+ const mode='import-'+suffix; const grid=pivotGrid(wb.sheets[0].pivotTables[0]);
+ writeFileSync(join(out,mode+'.xlsx'),await saveXlsx(wb));
+ writeFileSync(join(out,mode+'.json'),JSON.stringify(grid.values));
+ writeFileSync(join(out,mode+'.indent'),JSON.stringify(grid.indents));
+}
 '@ | Set-Content -LiteralPath $taskScript
 	& bun run $taskScript
 	if ($LASTEXITCODE -ne 0) { throw 'PivotTable generation failed.' }
@@ -79,7 +99,8 @@ writeFileSync(join(out,'cache-from-rows.json'),JSON.stringify(pivotGrid(hierarch
 		Write-Output ($case.Name+': native Excel accepted cached and refreshed output')
 		$book.Close($false); $book = $null
 	}
-	foreach ($mode in @('cache-blank','cache-numeric','cache-boolean','cache-error','rows','rows-none','rows-repeat','rows-average','rows-column','rows-sparse','rows-blank','rows-numeric','rows-boolean','rows-error','rows-mixed','rows-imported','cache-from-rows')) {
+	foreach ($expectedFile in Get-ChildItem -LiteralPath $taskFolder -Filter '*.json') {
+		$mode=$expectedFile.BaseName
 		$book = $excel.Workbooks.Open((Join-Path $taskFolder ($mode+'.xlsx')))
 		$summary = $book.Worksheets.Item('Summary')
 		$pivot = $summary.PivotTables().Item(1)
@@ -101,6 +122,14 @@ writeFileSync(join(out,'cache-from-rows.json'),JSON.stringify(pivotGrid(hierarch
 						if ($actual -isnot [ValueType] -or $actual -is [bool]) { throw ('Wrong numeric hierarchy type: '+$mode+' '+$phase) }
 						if ([Math]::Abs([double]$actual-[double]$want) -gt 0.00001) { throw ('Wrong hierarchy value: '+$mode+' '+$phase+' row'+$r+' col'+$c) }
 					} elseif ([string]$actual -cne [string]$want -or ($want -is [string] -and $actual -isnot [string])) { throw ('Wrong hierarchy label: '+$mode+' '+$phase+' row'+$r+' col'+$c+': '+$actual+' expected: '+$want) }
+				}
+			}
+			$indentFile=Join-Path $taskFolder ($mode+'.indent')
+			if (Test-Path -LiteralPath $indentFile) {
+				$indents=Get-Content -Raw -LiteralPath $indentFile | ConvertFrom-Json
+				for ($r=0; $r -lt $indents.Count; $r++) {
+					if ($summary.Cells.Item($r+1,1).IndentLevel -ne $indents[$r]) { throw ('Wrong report indentation: '+$mode+' '+$phase+' row'+$r) }
+					if ($indents[$r] -eq 1 -and $summary.Cells.Item($r+1,1).HorizontalAlignment -ne -4131) { throw ('Wrong compact child alignment: '+$mode+' '+$phase) }
 				}
 			}
 		}

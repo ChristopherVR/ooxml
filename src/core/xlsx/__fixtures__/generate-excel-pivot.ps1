@@ -1,10 +1,11 @@
-param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels)
+param([switch]$Hierarchy, [switch]$NoSubtotals, [switch]$RepeatLabels, [ValidateSet('tabular','compact','outline')][string]$Layout='tabular', [ValidateSet('top','bottom')][string]$SubtotalPosition='bottom')
 # Requires desktop Excel. Generates a tabular PivotTable reference.
 $ErrorActionPreference = 'Stop'
 $out = Join-Path $PSScriptRoot 'excel-pivot.xlsx'
 if ($Hierarchy) {
 	$suffix = if ($NoSubtotals) { '-no-subtotals' } elseif ($RepeatLabels) { '-repeat' } else { '' }
 	$out = Join-Path $PSScriptRoot ('excel-pivot-rows' + $suffix + '.xlsx')
+	if ($Layout -ne 'tabular') { $out = Join-Path $PSScriptRoot ('excel-pivot-' + $Layout + '-' + $SubtotalPosition + $suffix + '.xlsx') }
 }
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
@@ -27,10 +28,10 @@ try {
 	$pivot = $cache.CreatePivotTable($summary.Range('A1'), 'SalesPivot')
 	$pivot.PivotFields('Category').Orientation = 1
 	$pivot.PivotFields('Region').Orientation = if ($Hierarchy) { 1 } else { 2 }
-	$pivot.RowAxisLayout(1)
+	$pivot.RowAxisLayout($(switch ($Layout) { 'compact' { 0 } 'outline' { 2 } default { 1 } }))
 	[void]$pivot.AddDataField($pivot.PivotFields('Amount'), 'Sum of Amount', -4157)
 	if ($Hierarchy) {
-		$pivot.PivotFields('Category').LayoutSubtotalLocation = 2
+		$pivot.PivotFields('Category').LayoutSubtotalLocation = if ($SubtotalPosition -eq 'top') { 1 } else { 2 }
 		if ($NoSubtotals) {
 			$pivot.PivotFields('Category').Subtotals = @($false,$false,$false,$false,$false,$false,$false,$false,$false,$false,$false,$false)
 		}

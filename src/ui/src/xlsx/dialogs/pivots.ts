@@ -5,9 +5,10 @@ import {
 	pivotSourceData,
 	pivotTableAt,
 	type PivotAggregate,
+	type PivotLayout,
 } from 'ooxml-core/xlsx';
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
-import { checkbox, field, select, textInput } from './fields';
+import { checkbox, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 
 const AGGREGATES = [
@@ -32,7 +33,25 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	destination.disabled = settings;
 	const row = select(ctx, [], '');
 	const second = select(ctx, [['', '(None)']], '');
-	const subtotals = checkbox(ctx, 'Show subtotals below each group', pivot?.subtotals !== false);
+	const layout = select(
+		ctx,
+		[
+			['compact', 'Compact Form'],
+			['outline', 'Outline Form'],
+			['tabular', 'Tabular Form'],
+		],
+		pivot ? (pivot.layout ?? 'tabular') : 'compact',
+	);
+	const position = select(
+		ctx,
+		[
+			['top', 'Above each group'],
+			['bottom', 'Below each group'],
+		],
+		pivot?.subtotalPosition ?? (pivot ? 'bottom' : 'top'),
+	);
+	const subtotals = checkbox(ctx, 'Show subtotals', pivot?.subtotals !== false);
+	const tabularNotice = text(ctx, 'Tabular layout displays subtotals below groups.');
 	const repeat = checkbox(ctx, 'Repeat row labels', pivot?.repeatLabels ?? false);
 	const column = select(ctx, [['', '(None)']], '');
 	const value = select(ctx, [], '');
@@ -67,8 +86,12 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	loadFields();
 	const updateRows = () => {
 		subtotals.input.disabled = !second.value;
-		repeat.input.disabled = !second.value;
+		repeat.input.disabled = !second.value || layout.value === 'compact';
+		position.disabled = !second.value || !subtotals.input.checked || layout.value === 'tabular';
+		tabularNotice.hidden = !second.value || !subtotals.input.checked || layout.value !== 'tabular';
 	};
+	layout.addEventListener('change', updateRows);
+	subtotals.input.addEventListener('change', updateRows);
 	second.addEventListener('change', updateRows);
 	source.addEventListener('change', updateRows);
 	updateRows();
@@ -80,7 +103,10 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Destination Cell:', destination),
 			field(ctx, 'Row Field:', row),
 			field(ctx, 'Second Row Field:', second),
+			field(ctx, 'Report Layout:', layout),
 			subtotals.wrapper,
+			field(ctx, 'Subtotal Position:', position),
+			tabularNotice,
 			repeat.wrapper,
 			field(ctx, 'Column Field:', column),
 			field(ctx, 'Value Field:', value),
@@ -90,6 +116,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		submit: () => {
 			const options = {
 				rowField: row.value,
+				layout: layout.value as PivotLayout,
+				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,
 				subtotals: subtotals.input.checked,
 				repeatLabels: repeat.input.checked,
@@ -100,6 +128,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			if (pivot) {
 				if (
 					pivot.rowField !== options.rowField ||
+					(pivot.layout ?? 'tabular') !== options.layout ||
+					(pivot.subtotalPosition ?? 'bottom') !== options.subtotalPosition ||
 					(pivot.secondRowField ?? '') !== options.secondRowField ||
 					(pivot.subtotals !== false) !== options.subtotals ||
 					(pivot.repeatLabels ?? false) !== options.repeatLabels ||

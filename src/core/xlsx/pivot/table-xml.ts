@@ -13,6 +13,9 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const second = pivot.secondRowField ? pivot.fields.indexOf(pivot.secondRowField) : -1;
 	const col = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
 	const value = pivot.fields.indexOf(pivot.valueField);
+	const compact = pivot.layout === 'compact';
+	const outline = pivot.layout === 'compact' || pivot.layout === 'outline';
+	const top = (pivot.subtotalPosition ?? (outline ? 'top' : 'bottom')) === 'top';
 	const fields = pivot.fields
 		.map((_field, index) => {
 			const items =
@@ -28,7 +31,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 				pivot.repeatLabels && (index === row || index === second)
 					? '<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" fillDownLabels="1"/></ext></extLst>'
 					: '';
-			return `<pivotField${attrs({ axis: index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: index === value ? true : undefined, compact: false, outline: false, showAll: false, subtotalTop: index === row && second >= 0 ? false : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
+			return `<pivotField${attrs({ axis: index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: index === value ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
 		})
 		.join('');
 	const items = (count: number) =>
@@ -51,7 +54,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 					.join('')}</i>`;
 			})
 			.join('') ?? items(grid.rowItems.length);
-	let body = `<location${attrs({ ref: formatRange(pivot.location), firstHeaderRow: header, firstDataRow: grid.firstDataRow, firstDataCol: rowIndices.length })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
+	let body = `<location${attrs({ ref: formatRange(pivot.location), firstHeaderRow: header, firstDataRow: grid.firstDataRow, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
 	if (col >= 0)
 		body += `<colFields count="1"><field x="${col}"/></colFields><colItems count="${grid.columnItems.length + 1}">${items(grid.columnItems.length)}</colItems>`;
 	else body += '<colItems count="1"><i><x/></i></colItems>';
@@ -63,8 +66,11 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const root = doc.documentElement;
 	root.setAttribute('name', pivot.name);
 	root.setAttribute('cacheId', String(cacheId));
-	root.setAttribute('compact', '0');
-	root.setAttribute('compactData', '0');
+	root.setAttribute('compact', compact ? '1' : '0');
+	root.setAttribute('compactData', compact ? '1' : '0');
+	root.setAttribute('outline', outline ? '1' : '0');
+	root.setAttribute('outlineData', outline ? '1' : '0');
+	if (compact) root.setAttribute('indent', '0');
 	root.setAttribute('rowGrandTotals', '1');
 	root.setAttribute('colGrandTotals', '1');
 	for (const extension of elements(

@@ -2,13 +2,16 @@ import type { CellRange } from './address';
 import type { CellValue } from './model';
 
 export type PivotAggregate = 'sum' | 'count' | 'average' | 'min' | 'max';
+export type PivotLayout = 'tabular' | 'compact' | 'outline';
 
-/** A tabular worksheet-range pivot with up to two row fields and one value field. */
+/** A worksheet-range pivot with up to two row fields and one value field. */
 export interface PivotTable {
 	name: string;
 	/** Qualified A1 source range, rewritten with the workbook's other references. */
 	source: string;
 	rowField: string;
+	layout?: PivotLayout;
+	subtotalPosition?: 'top' | 'bottom';
 	secondRowField?: string;
 	/** Automatic outer-field totals below each group. Defaults to true. */
 	subtotals?: boolean;
@@ -32,6 +35,8 @@ export interface PivotTable {
 export interface PivotTableOptions {
 	source: string;
 	rowField: string;
+	layout?: PivotLayout;
+	subtotalPosition?: 'top' | 'bottom';
 	secondRowField?: string;
 	subtotals?: boolean;
 	repeatLabels?: boolean;
@@ -45,6 +50,8 @@ export type PivotTablePatch = Partial<
 	Pick<
 		PivotTable,
 		| 'rowField'
+		| 'layout'
+		| 'subtotalPosition'
 		| 'secondRowField'
 		| 'subtotals'
 		| 'repeatLabels'

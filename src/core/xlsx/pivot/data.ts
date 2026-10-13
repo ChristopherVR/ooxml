@@ -86,6 +86,8 @@ export function validatePivotFields(
 		PivotTable,
 		| 'fields'
 		| 'rowField'
+		| 'layout'
+		| 'subtotalPosition'
 		| 'secondRowField'
 		| 'subtotals'
 		| 'repeatLabels'
@@ -101,6 +103,8 @@ export function validatePivotFields(
 		pivot.valueField,
 	];
 	if (
+		(pivot.layout !== undefined && !['tabular', 'compact', 'outline'].includes(pivot.layout)) ||
+		(pivot.subtotalPosition !== undefined && !['top', 'bottom'].includes(pivot.subtotalPosition)) ||
 		!PIVOT_AGGREGATES.includes(pivot.aggregate) ||
 		used.some((field) => !pivot.fields.includes(field)) ||
 		new Set([pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean)).size !==

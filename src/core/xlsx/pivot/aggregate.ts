@@ -32,6 +32,8 @@ export interface PivotGrid {
 	rowItems: CellValue[];
 	columnItems: CellValue[];
 	firstDataRow: number;
+	rowLabelColumns?: number;
+	indents?: number[];
 	secondRowItems?: CellValue[];
 	rowEntries?: { indices: number[]; type?: 'default' | 'grand' }[];
 }
@@ -67,10 +69,19 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 	const label = pivotItemLabel;
 	const values: CellValue[][] = pivot.columnField
 		? [
-				[pivot.valueCaption, pivot.columnField, ...columnItems.slice(1).map(() => null), null],
-				[pivot.rowField, ...columnItems.map(label), 'Grand Total'],
+				[
+					pivot.valueCaption,
+					pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField,
+					...columnItems.slice(1).map(() => null),
+					null,
+				],
+				[
+					pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField,
+					...columnItems.map(label),
+					'Grand Total',
+				],
 			]
-		: [[pivot.rowField, pivot.valueCaption]];
+		: [[pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField, pivot.valueCaption]];
 	for (const row of rowItems) {
 		const records = groups.get(pivotValueKey(row)) ?? [];
 		values.push([

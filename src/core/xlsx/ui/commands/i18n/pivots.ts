@@ -1,6 +1,45 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Compact Form': ['Forme compacte', 'Kompaktformat', 'Formato compacto', '压缩形式'],
+	'Outline Form': ['Forme de plan', 'Gliederungsformat', 'Formato de esquema', '大纲形式'],
+	'Tabular Form': ['Forme tabulaire', 'Tabellenformat', 'Formato tabular', '表格形式'],
+	'Report Layout:': [
+		'Disposition du rapport :',
+		'Berichtslayout:',
+		'Diseño del informe:',
+		'报表布局：',
+	],
+	'Subtotal Position:': [
+		'Position des sous-totaux :',
+		'Position der Teilergebnisse:',
+		'Posición de subtotales:',
+		'分类汇总位置：',
+	],
+	'Above each group': [
+		'Au-dessus de chaque groupe',
+		'Über jeder Gruppe',
+		'Encima de cada grupo',
+		'每组上方',
+	],
+	'Below each group': [
+		'Sous chaque groupe',
+		'Unter jeder Gruppe',
+		'Debajo de cada grupo',
+		'每组下方',
+	],
+	'Show subtotals': [
+		'Afficher les sous-totaux',
+		'Teilergebnisse anzeigen',
+		'Mostrar subtotales',
+		'显示分类汇总',
+	],
+	'Tabular layout displays subtotals below groups.': [
+		'La disposition tabulaire affiche les sous-totaux sous les groupes.',
+		'Das tabellarische Layout zeigt Teilergebnisse unter den Gruppen.',
+		'El diseño tabular muestra subtotales debajo de los grupos.',
+		'表格布局在组下方显示分类汇总。',
+	],
 	'Second Row Field:': [
 		'Deuxième champ de ligne :',
 		'Zweites Zeilenfeld:',

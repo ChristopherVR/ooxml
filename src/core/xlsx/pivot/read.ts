@@ -95,8 +95,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		first(root, 'pageFields', NS.x) ||
 		first(root, 'filters', NS.x) ||
 		root.getAttribute('rowGrandTotals') === '0' ||
-		root.getAttribute('colGrandTotals') === '0' ||
-		root.getAttribute('compact') !== '0'
+		root.getAttribute('colGrandTotals') === '0'
 	)
 		throw new Error('Unsupported pivot layout');
 	const measure = dataFields[0]!;
@@ -111,9 +110,20 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const second = rowFields[1] && names[Number(att(rowFields[1], 'x'))];
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const outer = tableFields[Number(att(rowFields[0], 'x'))];
+	const compact = att(outer, 'compact') !== '0';
+	const outline = att(outer, 'outline') !== '0';
+	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
+	if (
+		tableFields.some(
+			(field) =>
+				(att(field, 'compact') !== '0') !== compact || (att(field, 'outline') !== '0') !== outline,
+		) ||
+		(att(root, 'compact') !== '0') !== compact ||
+		(att(root, 'compactData') !== '0') !== compact ||
+		(layout === 'compact' && att(root, 'indent') !== '0')
+	)
+		throw new Error('Mixed field layouts or custom compact indentation are preserved');
 	const subtotal = att(outer, 'defaultSubtotal') !== '0';
-	if (second && subtotal && att(outer, 'subtotalTop') !== '0')
-		throw new Error('Top subtotals are preserved but not editable');
 	const repeat = rowFields.map((field) => {
 		const node = tableFields[Number(att(field, 'x'))];
 		const extension = first(first(node, 'extLst', NS.x), 'ext', NS.x);
@@ -144,6 +154,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		name: att(root, 'name') ?? 'PivotTable',
 		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,
 		rowField: row,
+		layout,
+		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
 		...(second
 			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }
 			: {

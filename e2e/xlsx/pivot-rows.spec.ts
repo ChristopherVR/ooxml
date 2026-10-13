@@ -33,6 +33,7 @@ test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens
 	await create.getByLabel('Destination Cell:', { exact: true }).fill('E1');
 	await create.getByLabel('Row Field:', { exact: true }).selectOption('Category');
 	await create.getByLabel('Second Row Field:', { exact: true }).selectOption('Region');
+	await create.getByLabel('Report Layout:', { exact: true }).selectOption('tabular');
 	await create.getByLabel('Value Field:', { exact: true }).selectOption('Amount');
 	await create.getByRole('button', { name: 'OK', exact: true }).click();
 	await goToCell(page, 'G4');
@@ -42,7 +43,7 @@ test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens
 	await menu();
 	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
-	await settings.getByLabel('Show subtotals below each group', { exact: true }).uncheck();
+	await settings.getByLabel('Show subtotals', { exact: true }).uncheck();
 	await settings.getByLabel('Repeat row labels', { exact: true }).check();
 	await page.screenshot({ path: info.outputPath('pivot-row-layout.png') });
 	await settings.getByRole('button', { name: 'OK', exact: true }).click();
@@ -78,9 +79,7 @@ test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens
 	await menu();
 	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
 	await expect(settings.getByLabel('Second Row Field:', { exact: true })).toHaveValue('Region');
-	await expect(
-		settings.getByLabel('Show subtotals below each group', { exact: true }),
-	).not.toBeChecked();
+	await expect(settings.getByLabel('Show subtotals', { exact: true })).not.toBeChecked();
 	await expect(settings.getByLabel('Repeat row labels', { exact: true })).toBeChecked();
 	await settings.getByRole('button', { name: 'Cancel', exact: true }).click();
 });

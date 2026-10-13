@@ -37,13 +37,12 @@ for (const suffix of ['', '-no-subtotals', '-repeat'])
 		expect(getCell(reloaded.sheets[summary]!, 1, 2)?.value).toBe(107);
 	});
 
-it('preserves unsupported top/custom subtotals and field extensions without admission', async () => {
+it('preserves unsupported custom subtotals and field extensions without admission', async () => {
 	const bytes = readFileSync(
 		new URL('../__fixtures__/excel-pivot-rows-repeat.xlsx', import.meta.url),
 	);
 	const path = 'xl/pivotTables/pivotTable1.xml';
 	for (const patch of [
-		(xml: string) => xml.replace('subtotalTop="0"', 'subtotalTop="1"'),
 		(xml: string) => xml.replace('<item t="default"/>', '<item t="sum"/>'),
 		(xml: string) => xml.replace('fillDownLabels="1"', 'fillDownLabels="0"'),
 		(xml: string) => xml.replace('fillDownLabels="1"', 'fillDownLabels="1" insertBlankRow="1"'),

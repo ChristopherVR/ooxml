@@ -13,6 +13,8 @@ import { pivotGrid } from '../pivot/aggregate';
 import { pivotCaption, pivotSourceData, validatePivotFields } from '../pivot/data';
 import { sparklineDataRange } from './sparkline-ranges';
 import { type EditContext, sheetAt } from './context';
+import { stylePatcher } from './format';
+import { styleAt } from '../styles';
 
 function pivotAt(ctx: EditContext, sheet: number, name: string): PivotTable {
 	const pivot = sheetAt(ctx.workbook, sheet).pivotTables?.find((entry) => entry.name === name);
@@ -97,6 +99,13 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 			{ kind: 'cells', sheet: s, ranges },
 		],
 		() => {
+			const compact = pivot.layout === 'compact';
+			const indents = [
+				stylePatcher(ctx.workbook, {
+					alignment: { indent: 0, ...(compact ? { horizontal: 'left' } : {}) },
+				}),
+				stylePatcher(ctx.workbook, { alignment: { indent: 1, horizontal: 'left' } }),
+			];
 			const styles = new Map<string, number>();
 			forEachCellInRange(sheet, location, (cell, row, col) => {
 				if (cell.styleId !== undefined) styles.set(`${row}:${col}`, cell.styleId);
@@ -116,7 +125,16 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 				line.forEach((value, col) => {
 					const r = startRow(location, row);
 					const c = location.start.col + col;
-					const styleId = styles.get(`${r}:${c}`);
+					let styleId = styles.get(`${r}:${c}`);
+					if (col < (grid.rowLabelColumns ?? 1)) {
+						const indent = col === 0 ? (grid.indents?.[row] ?? 0) : 0;
+						const alignment = styleAt(ctx.workbook, styleId).alignment;
+						if (
+							(alignment?.indent ?? 0) !== indent ||
+							(compact && alignment?.horizontal !== 'left')
+						)
+							styleId = indents[indent]!(styleId);
+					}
 					putCell(sheet, r, c, { value, ...(styleId !== undefined ? { styleId } : {}) });
 				}),
 			);
@@ -140,6 +158,10 @@ export function createPivotTable(
 		...data,
 		name,
 		rowField: options.rowField,
+		layout: options.layout ?? 'tabular',
+		subtotalPosition:
+			options.subtotalPosition ??
+			(options.layout && options.layout !== 'tabular' ? 'top' : 'bottom'),
 		...(options.secondRowField ? { secondRowField: options.secondRowField } : {}),
 		...(options.subtotals !== undefined ? { subtotals: options.subtotals } : {}),
 		...(options.repeatLabels !== undefined ? { repeatLabels: options.repeatLabels } : {}),
@@ -184,6 +206,8 @@ export function refreshPivotTable(
 	}
 	if (patch.subtotals !== undefined) next.subtotals = patch.subtotals;
 	if (patch.repeatLabels !== undefined) next.repeatLabels = patch.repeatLabels;
+	if (patch.layout !== undefined) next.layout = patch.layout;
+	if (patch.subtotalPosition !== undefined) next.subtotalPosition = patch.subtotalPosition;
 	validatePivotFields(next);
 	write(ctx, s, next, old);
 }

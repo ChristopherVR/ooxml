@@ -14,6 +14,43 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
+it('defaults to compact and switches outline subtotal placement with undo', async () => {
+	const wb = createWorkbook();
+	const ctx = createTestContext(wb);
+	const edit = ctx.session()!;
+	[
+		['Category', 'Region', 'Amount'],
+		['Fruit', 'East', 10],
+		['Fruit', 'West', 20],
+	].forEach((line, r) => line.forEach((value, c) => edit.setCellInput(0, r, c, String(value))));
+	ctx.select('A1:C3');
+	registerToolDialogs(ctx);
+	let done = ctx.dialogs.open('create-pivot-table');
+	let dialog = dialogEl(ctx, 'create-pivot-table');
+	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('compact');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(true);
+	clickButton(dialog, 'OK');
+	await done;
+	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
+		layout: 'compact',
+		subtotalPosition: 'top',
+	});
+	expect(getCell(wb.sheets[0]!, 1, 5)?.value).toBe(30);
+	done = ctx.dialogs.open('pivot-settings');
+	dialog = dialogEl(ctx, 'pivot-settings');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'outline');
+	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(false);
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Subtotal Position:'), 'bottom');
+	clickButton(dialog, 'OK');
+	await done;
+	expect(getCell(wb.sheets[0]!, 4, 4)?.value).toBe('Fruit Total');
+	expect(getCell(wb.sheets[0]!, 4, 6)?.value).toBe(30);
+	edit.undo();
+	expect(wb.sheets[0]!.pivotTables![0]?.layout).toBe('compact');
+	expect(getCell(wb.sheets[0]!, 1, 5)?.value).toBe(30);
+});
+
 it('authors hierarchical row fields and reconfigures subtotals with one undo step', async () => {
 	const wb = createWorkbook();
 	const ctx = createTestContext(wb);
@@ -28,10 +65,9 @@ it('authors hierarchical row fields and reconfigures subtotals with one undo ste
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table');
 	let dialog = dialogEl(ctx, 'create-pivot-table');
-	expect(inputByLabel<HTMLInputElement>(dialog, 'Show subtotals below each group').disabled).toBe(
-		true,
-	);
+	expect(inputByLabel<HTMLInputElement>(dialog, 'Show subtotals').disabled).toBe(true);
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
+	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'tabular');
 	clickButton(dialog, 'OK');
 	expect(await done).toBe(true);
 	expect(wb.sheets[0]!.pivotTables![0]).toMatchObject({
@@ -42,7 +78,7 @@ it('authors hierarchical row fields and reconfigures subtotals with one undo ste
 	expect(getCell(wb.sheets[0]!, 3, 4)?.value).toBe('Fruit Total');
 	done = ctx.dialogs.open('pivot-settings');
 	dialog = dialogEl(ctx, 'pivot-settings');
-	inputByLabel<HTMLInputElement>(dialog, 'Show subtotals below each group').click();
+	inputByLabel<HTMLInputElement>(dialog, 'Show subtotals').click();
 	inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').click();
 	clickButton(dialog, 'OK');
 	expect(await done).toBe(true);

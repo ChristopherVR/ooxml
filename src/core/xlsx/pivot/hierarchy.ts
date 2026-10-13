@@ -9,7 +9,7 @@ type Aggregate = (
 ) => CellValue;
 const label = pivotItemLabel;
 
-/** Native tabular two-field layout: actual tuples, bottom automatic subtotals and grand totals. */
+/** Two-field report layouts share the same indexed tuples and aggregate buckets. */
 export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): PivotGrid {
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const secondRowItems = pivotItems(pivot, pivot.secondRowField!);
@@ -18,6 +18,14 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 	const innerField = pivot.fields.indexOf(pivot.secondRowField!);
 	const columnField = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
 	const valueField = pivot.fields.indexOf(pivot.valueField);
+	const layout = pivot.layout ?? 'tabular';
+	const compact = layout === 'compact';
+	const top =
+		layout !== 'tabular' &&
+		pivot.subtotals !== false &&
+		(pivot.subtotalPosition ?? 'top') === 'top';
+	const bottom = pivot.subtotals !== false && !top;
+	const rowLabelColumns = compact ? 1 : 2;
 	const groups = new Map<string, CellValue[][]>();
 	const details = new Map<string, CellValue[][]>();
 	const children = new Map<string, Set<string>>();
@@ -41,22 +49,34 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 				collect(buckets, JSON.stringify([...key, column]), record);
 		}
 	}
-	const rows = details.size + (pivot.subtotals !== false ? rowItems.length : 0) + 3;
+	const rows = details.size + rowItems.length * (Number(layout !== 'tabular') + Number(bottom)) + 3;
 	if (rows * (columnItems.length + 3) > 1_000_000)
 		throw new Error('The PivotTable result is too large.');
+	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
 	const values: CellValue[][] = pivot.columnField
 		? [
 				[
 					pivot.valueCaption,
-					null,
-					pivot.columnField,
+					...(compact ? [] : [null]),
+					compact ? 'Column Labels' : pivot.columnField,
 					...columnItems.slice(1).map(() => null),
 					null,
 				],
-				[pivot.rowField, pivot.secondRowField!, ...columnItems.map(label), 'Grand Total'],
+				[...labels, ...columnItems.map(label), 'Grand Total'],
 			]
-		: [[pivot.rowField, pivot.secondRowField!, pivot.valueCaption]];
+		: [[...labels, pivot.valueCaption]];
+	const indents = values.map(() => 0);
 	const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];
+	const append = (
+		labels: CellValue[],
+		numbers: CellValue[],
+		entry: NonNullable<PivotGrid['rowEntries']>[number],
+		indent = 0,
+	) => {
+		values.push([...labels, ...numbers]);
+		rowEntries.push(entry);
+		indents.push(indent);
+	};
 	const numbers = (keys: string[], records: CellValue[][]): CellValue[] => [
 		...columnItems.map((column) =>
 			aggregate(
@@ -69,6 +89,12 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 	];
 	rowItems.forEach((outer, outerIndex) => {
 		const key = pivotValueKey(outer);
+		if (layout !== 'tabular')
+			append(
+				[label(outer), ...(compact ? [] : [null])],
+				top ? numbers([key], groups.get(key) ?? []) : Array(columnItems.length + 1).fill(null),
+				{ indices: [outerIndex] },
+			);
 		let first = true;
 		[...children.get(key)!]
 			.sort((a, b) => innerIndices.get(a)! - innerIndices.get(b)!)
@@ -78,22 +104,32 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 				const keys = [key, innerKey];
 				const records = details.get(JSON.stringify(keys));
 				if (!records) return;
-				values.push([
-					first || pivot.repeatLabels ? label(outer) : null,
-					label(inner),
-					...numbers(keys, records),
-				]);
-				rowEntries.push({ indices: [outerIndex, innerIndex] });
+				append(
+					compact
+						? [label(inner)]
+						: [
+								pivot.repeatLabels || (layout === 'tabular' && first) ? label(outer) : null,
+								label(inner),
+							],
+					numbers(keys, records),
+					{ indices: [outerIndex, innerIndex] },
+					compact ? 1 : 0,
+				);
 				first = false;
 			});
-		if (pivot.subtotals !== false) {
+		if (bottom) {
 			const caption = String(label(outer));
-			values.push([`${caption} Total`, null, ...numbers([key], groups.get(key) ?? [])]);
-			rowEntries.push({ indices: [outerIndex], type: 'default' });
+			append(
+				[`${caption} Total`, ...(compact ? [] : [null])],
+				numbers([key], groups.get(key) ?? []),
+				{ indices: [outerIndex], type: 'default' },
+			);
 		}
 	});
-	values.push(['Grand Total', null, ...numbers([], pivot.records)]);
-	rowEntries.push({ indices: [0], type: 'grand' });
+	append(['Grand Total', ...(compact ? [] : [null])], numbers([], pivot.records), {
+		indices: [0],
+		type: 'grand',
+	});
 	return {
 		values,
 		rowItems,
@@ -101,5 +137,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 		columnItems,
 		rowEntries,
 		firstDataRow: pivot.columnField ? 2 : 1,
+		rowLabelColumns,
+		indents,
 	};
 }

@@ -4,7 +4,7 @@ const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
-		'name cacheId dataCaption updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData multipleFieldFilters rowGrandTotals colGrandTotals',
+		'name cacheId dataCaption updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
 	location: 'ref firstHeaderRow firstDataRow firstDataCol',
 	pivotFields: 'count',
 	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
@@ -133,8 +133,8 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 			throw new Error('Unsupported PivotTable subtotal option');
 		if (
 			node.localName === 'pivotField' &&
-			['compact', 'outline', 'showAll'].includes(attr.localName!) &&
-			attr.value !== '0'
+			((attr.localName === 'showAll' && attr.value !== '0') ||
+				(['compact', 'outline'].includes(attr.localName!) && !['0', '1'].includes(attr.value)))
 		)
 			throw new Error('Unsupported PivotTable field layout');
 	}
