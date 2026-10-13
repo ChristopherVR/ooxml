@@ -12,6 +12,22 @@ describe('substituteFieldText', () => {
 		expect(substituteFieldText('1', 'slidenum', { slideNumber: 42 })).toBe('42');
 	});
 
+	// `p:presentation/@firstSlideNum="45"`: PowerPoint shows firstSlideNum + index,
+	// so the first slide reads 45 and the third 47, not their positions 1 and 3.
+	it('offsets the slide number by the deck start number', () => {
+		expect(substituteFieldText('1', 'slidenum', { slideNumber: 1, firstSlideNumber: 45 })).toBe(
+			'45',
+		);
+		expect(substituteFieldText('3', 'slidenum', { slideNumber: 3, firstSlideNumber: 45 })).toBe(
+			'47',
+		);
+		expect(substituteFieldText('1', 'slidenum', { slideNumber: 2, firstSlideNumber: 0 })).toBe('1');
+		// The master view's pseudo-slide (position 0) is not offset.
+		expect(substituteFieldText('#', 'slidenum', { slideNumber: 0, firstSlideNumber: 45 })).toBe(
+			'0',
+		);
+	});
+
 	it('substitutes header and footer text', () => {
 		expect(substituteFieldText('', 'footer', { footerText: 'Foot' })).toBe('Foot');
 		expect(substituteFieldText('', 'header', { headerText: 'Head' })).toBe('Head');

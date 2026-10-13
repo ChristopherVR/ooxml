@@ -417,6 +417,7 @@ provide(FieldContextKey, () =>
 		headerFooter: headerFooter.value,
 		customProperties: customProperties.value,
 		slide: activeSlide.value,
+		firstSlideNumber: deck.firstSlideNumber.value,
 	}),
 );
 

@@ -60,6 +60,7 @@ export class PresentationLoader {
 	handoutMaster = $state.raw<PptxHandoutMaster | undefined>(undefined);
 	sections = $state.raw<PptxSection[]>([]);
 	headerFooter = $state.raw<PptxHeaderFooter>({});
+	firstSlideNumber = $state<number | undefined>(undefined);
 	presentationProperties = $state.raw<PptxPresentationProperties>({});
 	/**
 	 * View properties (`ppt/viewProps.xml`, `p:viewPr`): grid spacing, snap /
@@ -215,6 +216,7 @@ export class PresentationLoader {
 			this.handoutMaster = parsed.handoutMaster;
 			this.sections = parsed.sections ?? [];
 			this.headerFooter = parsed.headerFooter ?? {};
+			this.firstSlideNumber = parsed.firstSlideNumber;
 			this.presentationProperties = parsed.presentationProperties ?? {};
 			this.viewProperties = parsed.viewProperties;
 			this.modifyVerifier = parsed.modifyVerifier;

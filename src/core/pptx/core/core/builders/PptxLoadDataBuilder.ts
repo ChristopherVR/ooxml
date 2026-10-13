@@ -117,6 +117,7 @@ export class PptxLoadDataBuilder {
 	private conformance: 'strict' | 'transitional' | undefined;
 
 	private embedTrueTypeFonts: boolean | undefined;
+	private firstSlideNumber: number | undefined;
 
 	private defaultTextStyle: PptxTextStyleLevels | undefined;
 
@@ -331,6 +332,11 @@ export class PptxLoadDataBuilder {
 		return this;
 	}
 
+	public withFirstSlideNumber(firstSlideNumber: number | undefined): this {
+		this.firstSlideNumber = firstSlideNumber;
+		return this;
+	}
+
 	public withDefaultTextStyle(defaultTextStyle: PptxTextStyleLevels | undefined): this {
 		this.defaultTextStyle = defaultTextStyle;
 		return this;
@@ -383,6 +389,7 @@ export class PptxLoadDataBuilder {
 			modernCommentAuthors: this.modernCommentAuthors,
 			conformance: this.conformance,
 			embedTrueTypeFonts: this.embedTrueTypeFonts,
+			firstSlideNumber: this.firstSlideNumber,
 			defaultTextStyle: this.defaultTextStyle,
 		};
 	}

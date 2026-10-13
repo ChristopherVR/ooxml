@@ -34,6 +34,7 @@ export class FieldContextService {
 		buildFieldSubstitutionContext({
 			headerFooter: this.load.headerFooter(),
 			customProperties: this.load.customProperties(),
+			firstSlideNumber: this.load.firstSlideNumber(),
 		}),
 	);
 

@@ -692,6 +692,11 @@ export interface PptxData {
 	 */
 	embedTrueTypeFonts?: boolean;
 	/**
+	 * `p:presentation/@firstSlideNum`: a `slidenum` field on slide `i` (0-based)
+	 * shows `firstSlideNumber + i`. Absent means the spec default, 1.
+	 */
+	firstSlideNumber?: number;
+	/**
 	 * Presentation-level default text style (`p:defaultTextStyle`): the
 	 * last-resort paragraph/run-property fallback for every shape (placeholder
 	 * or not) whose local and inherited cascade leaves a field undefined.

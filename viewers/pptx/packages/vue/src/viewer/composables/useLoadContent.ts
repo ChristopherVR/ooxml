@@ -228,6 +228,7 @@ export interface UseLoadContentResult {
 	viewProperties: ShallowRef<PptxViewProperties | undefined>;
 	/** Presentation-level header/footer settings, or `undefined`. */
 	headerFooter: ShallowRef<PptxHeaderFooter | undefined>;
+	firstSlideNumber: ShallowRef<number | undefined>;
 	/** Parsed notes master, or `undefined` when absent. */
 	notesMaster: ShallowRef<PptxNotesMaster | undefined>;
 	/** Parsed handout master, or `undefined` when absent. */
@@ -341,6 +342,7 @@ export function useLoadContent(
 	const presentationProperties = shallowRef<PptxPresentationProperties>({});
 	const viewProperties = shallowRef<PptxViewProperties | undefined>(undefined);
 	const headerFooter = shallowRef<PptxHeaderFooter | undefined>(undefined);
+	const firstSlideNumber = shallowRef<number | undefined>(undefined);
 	const notesMaster = shallowRef<PptxNotesMaster | undefined>(undefined);
 	const handoutMaster = shallowRef<PptxHandoutMaster | undefined>(undefined);
 	const themeOptions = shallowRef<PptxThemeOption[]>([]);
@@ -547,6 +549,7 @@ export function useLoadContent(
 			presentationProperties.value = parsed.presentationProperties ?? {};
 			viewProperties.value = parsed.viewProperties;
 			headerFooter.value = parsed.headerFooter;
+			firstSlideNumber.value = parsed.firstSlideNumber;
 			notesMaster.value = parsed.notesMaster;
 			handoutMaster.value = parsed.handoutMaster;
 			themeOptions.value = parsed.themeOptions ?? [];
@@ -719,6 +722,7 @@ export function useLoadContent(
 		presentationProperties,
 		viewProperties,
 		headerFooter,
+		firstSlideNumber,
 		notesMaster,
 		handoutMaster,
 		themeOptions,

@@ -100,6 +100,7 @@ export function buildCanvasProps(input: BuildCanvasPropsInput): SlideCanvasProps
 		headerFooter: s.headerFooter,
 		customProperties: s.customProperties,
 		slide: activeSlide,
+		firstSlideNumber: s.firstSlideNumber,
 	});
 
 	// ── Table style context (theme + table style map for band colours) ──

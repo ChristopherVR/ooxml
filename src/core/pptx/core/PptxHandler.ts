@@ -118,6 +118,9 @@ export class PptxHandler extends PptxHandlerCore {
 		const blankBytes = await buildBlankPresentationArchive({
 			width: imported.widthEmu,
 			height: imported.heightEmu,
+			// Saving writes presentation.xml from the loaded archive, not from
+			// the overlaid model, so the archive must carry the value itself.
+			firstSlideNumber: imported.firstSlideNumber,
 		});
 		const base = await super.load(blankBytes, options);
 		return applyImportedPptxData(base, imported);

@@ -75,6 +75,7 @@ export interface ViewerState {
 	 */
 	viewProperties: PptxViewProperties | undefined;
 	headerFooter: PptxHeaderFooter;
+	firstSlideNumber?: number | undefined;
 	coreProperties?: PptxCoreProperties;
 	appProperties?: PptxAppProperties;
 	customProperties: PptxCustomProperty[];
