@@ -1,0 +1,30 @@
+{
+  "source": "Microsoft Visio 16.0 COM SVG export, 2026-10-12",
+  "cases": [
+    {
+      "name": "off",
+      "paths": [
+        "M0 783 L288 783"
+      ]
+    },
+    {
+      "name": "gap",
+      "paths": [
+        "M0 783 L141 783",
+        "M147 783 L288 783"
+      ]
+    },
+    {
+      "name": "size",
+      "paths": [
+        "M0 783 L135 783 A9 9 0 0 1 153 783 L288 783"
+      ]
+    },
+    {
+      "name": "reverse",
+      "paths": [
+        "M0 783 L141 783 A3.00002 3.00002 -180 1 0 147 783 L288 783"
+      ]
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { changedSince, plan } from './ci-plan.mjs';
+import { argumentBatches } from './verify-arguments.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -81,7 +82,7 @@ for (const file of present) {
 	byViewer.set(dir, [...(byViewer.get(dir) ?? []), dir === '.' ? file : relative(dir, file)]);
 }
 for (const [dir, list] of byViewer)
-	add(`bunx oxfmt --check ${list.map((file) => JSON.stringify(file)).join(' ')}`, dir);
+	for (const command of argumentBatches('bunx oxfmt --check', list)) add(command, dir);
 
 if (p.build) {
 	add('bun run build');
@@ -134,9 +135,10 @@ for (const [index, step] of steps.entries()) {
 	const label = `[${index + 1}/${steps.length}] ${step.cwd === '.' ? '' : `${step.cwd}: `}${step.cmd}`;
 	console.log(`\n${label}`);
 	const at = Date.now();
-	const result = spawnSync(shell, ['-e', '-o', 'pipefail', '-c', step.cmd], {
+	const result = spawnSync(shell, ['-e', '-o', 'pipefail', '-s'], {
 		cwd: join(ROOT, step.cwd),
-		stdio: 'inherit',
+		stdio: ['pipe', 'inherit', 'inherit'],
+		input: step.cmd + '\n',
 		env,
 	});
 	if (result.status !== 0) fail(`failed: ${label}\nFix it, or push anyway with --no-verify.`);

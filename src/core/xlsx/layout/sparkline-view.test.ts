@@ -161,14 +161,14 @@ describe('sparkline layout', () => {
 			THEME,
 		);
 		expect(dated.lines[0]!.map((p) => p.x)).toEqual([0, 0.1, 1]);
-		// Dates that do not match the values fall back to even spacing.
+		// An unusable date vector has no plotted points, never a general-axis fallback.
 		const uneven = sparklineView(
 			group({ dateAxis: true }),
 			{ values: [1, 2, 3], dates: [1] },
 			{ min: 1, max: 3 },
 			THEME,
 		);
-		expect(uneven.lines[0]!.map((p) => p.x)).toEqual([0, 0.5, 1]);
+		expect(uneven.lines).toEqual([]);
 		const rtl = layout(group({ rightToLeft: true }), [1, 2]);
 		expect(rtl.lines[0]!.map((p) => p.x)).toEqual([1, 0]);
 	});

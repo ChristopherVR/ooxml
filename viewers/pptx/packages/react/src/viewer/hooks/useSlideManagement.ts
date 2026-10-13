@@ -2,9 +2,11 @@ import {
 	buildSlideTemplateSlide,
 	createBlankSlide,
 	makeSlideId,
+	insertSlidePaste,
+	applySlidePasteTemplates,
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
-import type { SlideTemplateId } from 'ooxml-ui/pptx';
+import type { SlideTemplateId, SlidePasteRequest } from 'ooxml-ui/pptx';
 /**
  * useSlideManagement: Slide CRUD operations: add, move, delete,
  * duplicate, toggle-hide, insert-from-layout, and context menu.
@@ -42,6 +44,7 @@ export interface SlideManagementHandlers {
 	handleSlideContextMenu: (e: React.MouseEvent, index: number) => void;
 	handleDeleteSlides: (indexes: number[]) => void;
 	handleDuplicateSlides: (indexes: number[]) => void;
+	handlePasteSlides: (request: SlidePasteRequest) => void;
 	handleToggleHideSlides: (indexes: number[]) => void;
 	handleInsertSlideFromLayout: (layoutPath: string, layoutName?: string) => void;
 	handleInsertSlideFromTemplate: (templateId: SlideTemplateId) => void;
@@ -129,6 +132,16 @@ export function useSlideManagement(input: UseSlideManagementInput): SlideManagem
 				Math.max(slides.length - indexes.length - 1, 0),
 			),
 		);
+		history.markDirty();
+	};
+
+	const handlePasteSlides = (request: SlidePasteRequest) => {
+		if (!request.copies.length) {
+			return;
+		}
+		ops.updateSlides((previous) => insertSlidePaste(previous, request));
+		setTemplateElementsBySlideId?.((previous) => applySlidePasteTemplates(previous, request));
+		setActiveSlideIndex(request.insertAt);
 		history.markDirty();
 	};
 
@@ -236,6 +249,7 @@ export function useSlideManagement(input: UseSlideManagementInput): SlideManagem
 		handleSlideContextMenu,
 		handleDeleteSlides,
 		handleDuplicateSlides,
+		handlePasteSlides,
 		handleToggleHideSlides,
 		handleInsertSlideFromLayout,
 		handleInsertSlideFromTemplate,

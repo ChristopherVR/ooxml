@@ -5,6 +5,7 @@ import { serializeEditedXml } from './edit-text';
 import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
 import { measuresOwnText, refreshTextSizes, type TextSizeTarget } from './edit-text-size';
 import { takeDeferredTextSizes } from './edit-text-size-formula';
+import { refreshLineJumpCaches } from './edit-line-jump-cache';
 import {
 	applyInstanceGeometryEdit,
 	isGlueTarget,
@@ -42,6 +43,7 @@ import { deleteVisioShapes, type VisioShapeDelete } from './edit-delete';
 import { changeVisioShape } from './edit-change-shape';
 import { isVisioMetadataEdit } from './edit-metadata-commands';
 import { applyMetadataEdit } from './edit-metadata';
+import { applyShapeAltText } from './edit-alt-text-scope';
 import { editVsdxPicture } from './edit-picture';
 import { isVisioGroupEdit } from './edit-group-commands';
 import { groupVisioShapes, ungroupVisioShape } from './edit-group';
@@ -76,6 +78,7 @@ export type {
 	VisioPageSizeEdit,
 	VisioPageSetupEdit,
 	VisioPagePropertiesEdit,
+	VisioPageAltTextEdit,
 	VisioPageDecorationEdit,
 	VisioPageSetupEdits,
 	VisioScaleUnit,
@@ -99,6 +102,7 @@ export type {
 	VisioPictureInsertEdit,
 	VisioShapeHyperlinkEdit,
 	VisioShapeScreenTipEdit,
+	VisioShapeAltTextEdit,
 	VisioHyperlinkFields,
 	VisioConnectorGlue,
 	VisioPageThemeEdit,
@@ -149,10 +153,23 @@ export async function editVsdx(
 	edits: readonly VisioEdit[],
 	options: EditVsdxOptions = {},
 ): Promise<EditVsdxResult> {
-	const clock = { deadline: 0, autoSize: new Set<string>(), textSizes: [] as TextSizeTarget[] };
+	const clock = {
+		deadline: 0,
+		autoSize: new Set<string>(),
+		textSizes: [] as TextSizeTarget[],
+		jumpPages: new Set<string>(),
+		jumpSource: undefined as Uint8Array | undefined,
+	};
 	const edited = await editVsdxTransaction(input, edits, options, clock);
 	// Shapes that size themselves from their text follow it, as far as it can be measured.
-	const result = await refreshTextSizes(clock.textSizes, edited, options, clock.deadline);
+	const resized = await refreshTextSizes(clock.textSizes, edited, options, clock.deadline);
+	const result = await refreshLineJumpCaches(
+		clock.jumpPages,
+		clock.jumpSource,
+		resized,
+		options,
+		clock.deadline,
+	);
 	return growAutoSizePages(clock.autoSize, result, (bytes, growth) =>
 		editVsdxTransaction(bytes, growth, {
 			...options,
@@ -165,7 +182,13 @@ async function editVsdxTransaction(
 	input: Uint8Array | ArrayBuffer,
 	edits: readonly VisioEdit[],
 	options: EditVsdxOptions,
-	clock = { deadline: 0, autoSize: new Set<string>(), textSizes: [] as TextSizeTarget[] },
+	clock = {
+		deadline: 0,
+		autoSize: new Set<string>(),
+		textSizes: [] as TextSizeTarget[],
+		jumpPages: new Set<string>(),
+		jumpSource: undefined as Uint8Array | undefined,
+	},
 ): Promise<EditVsdxResult> {
 	const limits = { ...DEFAULTS, ...options.limits };
 	for (const value of Object.values(limits)) positive(value);
@@ -179,10 +202,17 @@ async function editVsdxTransaction(
 	};
 	// Copy commands before the first await: caller mutation cannot change the transaction.
 	const allCommands = snapshotVisioEdits(edits, maxEdits, maxText);
+	for (const command of allCommands)
+		if (
+			(command.type === 'set-page-layout' || command.type === 'format-shape') &&
+			Object.keys(command).some((key) => /^lineJump|^lineToLine/.test(key))
+		)
+			clock.jumpPages.add(command.pageId);
 	const commands = allCommands.filter((command) => !isVisioPageEdit(command));
 	const source = input instanceof Uint8Array ? input : new Uint8Array(input);
 	if (source.length > limits.maxInputBytes) fail('LIMIT_INPUT', 'ZIP input exceeds limit.');
 	const original = new Uint8Array(source);
+	if (clock.jumpPages.size) clock.jumpSource ??= original;
 	const subprocess = allCommands.find((command) => command.type === 'create-subprocess');
 	if (subprocess) {
 		if (allCommands.length !== 1)
@@ -521,7 +551,11 @@ async function editVsdxTransaction(
 				if (command.type === 'format-text') await noteTextSize(command, root);
 			}
 		} else if (isVisioMetadataEdit(command)) {
-			if (applyMetadataEdit(roots, command, check)) {
+			if (
+				command.type === 'set-shape-alt-text'
+					? await applyShapeAltText(pkg, new Set(pages.values()), roots, command, check)
+					: applyMetadataEdit(roots, command, check)
+			) {
 				dirty.set(path, root);
 				metadataChanged = true;
 			}

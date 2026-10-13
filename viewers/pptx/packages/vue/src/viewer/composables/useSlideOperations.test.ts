@@ -1,3 +1,4 @@
+import { captureSlideClipboard, createSlidePaste } from 'ooxml-ui/pptx';
 // oxlint-disable react-hooks/rules-of-hooks
 import type { ChartPptxElement, PptxSlide } from 'pptx-viewer-core';
 import { createChartElement } from 'pptx-viewer-core';
@@ -19,6 +20,15 @@ function setup(initial: PptxSlide[], active = 0) {
 }
 
 describe('useSlideOperations', () => {
+	it('pastes a retained multi-slide clipboard after the destination in one history step', () => {
+		const initial = [makeSlide('a', 1), makeSlide('b', 2), makeSlide('c', 3)];
+		const clipboard = captureSlideClipboard(initial, ['a', 'b']);
+		const { slides, activeSlideIndex, pushHistory, ops } = setup([initial[2]!]);
+		ops.pasteSlides(createSlidePaste(clipboard, 1));
+		expect(pushHistory).toHaveBeenCalledOnce();
+		expect(slides.value.map((item) => item.sourceSlideId)).toStrictEqual([undefined, 'a', 'b']);
+		expect(activeSlideIndex.value).toBe(1);
+	});
 	describe('addSlide', () => {
 		it('increases the slide count and snapshots history', () => {
 			const { slides, pushHistory, ops } = setup([makeSlide('a', 1)]);

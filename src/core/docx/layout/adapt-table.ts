@@ -10,6 +10,7 @@ import {
 	type TableCellMargins,
 } from '../index';
 import { expectDefined } from '../expect-defined';
+import { cellSourceBlocks } from '../cell-blocks';
 import type {
 	LayoutBorder,
 	LayoutCellBorders,
@@ -145,6 +146,15 @@ export function adaptTable(
 				const fill = cssHex(visuals.shadingFill);
 				return {
 					paragraphs: cell.paragraphs.map(adaptParagraph),
+					...(cell.sourceBlocks
+						? {
+								blocks: cellSourceBlocks(cell).map((block) =>
+									block.type === 'paragraph'
+										? adaptParagraph(block)
+										: adaptTable(block, model, adaptParagraph),
+								),
+							}
+						: {}),
 					...(width !== undefined ? { widthPx: width } : {}),
 					...(grid && xPx !== undefined ? { xPx } : {}),
 					padding,

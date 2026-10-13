@@ -24,6 +24,7 @@
  *  - `theme` context      -> `provideViewerTheme` + `useThemeStyle`.
  */
 import { ShieldAlert } from 'lucide-vue-next';
+import { createSlidePackageClipboard } from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
 	attachViewerHyperlinks,
@@ -691,7 +692,12 @@ const inspector = useInspectorWiring({
 });
 
 // -- Slide operations (add / duplicate / delete / reorder) -------------
-const slideOps = useSlideOperations({ slides, activeSlideIndex, pushHistory: history.pushHistory });
+const slideOps = useSlideOperations({
+	slides,
+	activeSlideIndex,
+	pushHistory: history.pushHistory,
+	templateElementsBySlideId,
+});
 
 const clipboard = useElementClipboard({
 	findSlideElement: (id) => activeSlide.value?.elements.find((e) => e.id === id),
@@ -1800,6 +1806,31 @@ defineExpose<PowerPointViewerExpose>({
 	}),
 	...customization.api,
 });
+const slidePackageClipboard = createSlidePackageClipboard({
+	getSnapshot: () =>
+		handler.value
+			? {
+					handler: handler.value,
+					slides: slides.value,
+					templateElementsBySlideId: templateElementsBySlideId.value,
+					allowExternalImages: viewerOptions.value.trust.allowExternalContent,
+					editable: canEditEffective.value,
+				}
+			: null,
+	commit: (result) => {
+		history.pushHistory();
+		handler.value = result.handler;
+		slides.value = result.slides;
+		templateElementsBySlideId.value = result.templateElementsBySlideId;
+		slideMasters.value = result.data.slideMasters ?? [];
+		deck.layoutOptions.value = result.data.layoutOptions ?? [];
+		deck.themeOptions.value = result.data.themeOptions ?? [];
+		for (const [path, url] of result.mediaUrls) mediaDataUrls.value.set(path, url);
+		activeSlideIndex.value = result.insertAt;
+		autosave.isDirty.value = true;
+	},
+});
+onBeforeUnmount(() => slidePackageClipboard.dispose());
 </script>
 
 <template>
@@ -1979,8 +2010,12 @@ defineExpose<PowerPointViewerExpose>({
 				v-model:query="find.query.value"
 				v-model:replacement="find.replacement.value"
 				v-model:match-case="find.matchCase.value"
+				v-model:include-notes="find.includeNotes.value"
+				v-model:include-chart-titles="find.includeChartTitles.value"
+				v-model:include-chart-data="find.includeChartData.value"
 				:match-count="find.matchCount.value"
 				:current-index="find.currentMatch.value"
+				:matches="find.matches.value"
 				@next="find.next"
 				@prev="find.prev"
 				@replace="find.replaceCurrent"
@@ -2375,6 +2410,7 @@ defineExpose<PowerPointViewerExpose>({
 			:on-hyperlink-click="props.onHyperlinkClick"
 			:presentation="presentation"
 			:merged-slides="mergedSlides"
+			:clipboard-templates="templateElementsBySlideId"
 			:slides="slides"
 			:canvas-size="canvasSize"
 			:media-data-urls="mediaDataUrls"
@@ -2390,6 +2426,9 @@ defineExpose<PowerPointViewerExpose>({
 			:show-popup-toolbar="viewerOptions.advanced.slideShowShowPopupToolbar"
 			:pixelate-mosaic-animation="viewerOptions.advanced.pixelateMosaicAnimation"
 			:duplicate-slide="slideOps.duplicateSlide"
+			:paste-slides="slideOps.pasteSlides"
+			:copy-system-slides="(indexes: number[]) => slidePackageClipboard.copy(indexes)"
+			:paste-system-slides="(insertAt: number) => slidePackageClipboard.paste(insertAt)"
 			:delete-slide="slideOps.deleteSlide"
 			:toggle-slide-hidden="toggleSlideHidden"
 		/>

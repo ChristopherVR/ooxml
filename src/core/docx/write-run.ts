@@ -285,6 +285,10 @@ export function createRun(
 		node.appendChild(code);
 		return node;
 	}
+	if (run.noteSeparator) {
+		node.appendChild(makeW(doc, run.noteSeparator));
+		return node;
+	}
 	if (run.noteMark) {
 		node.appendChild(makeW(doc, run.noteMark === 'footnote' ? 'footnoteRef' : 'endnoteRef'));
 		return node;

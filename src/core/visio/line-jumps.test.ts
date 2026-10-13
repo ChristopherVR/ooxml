@@ -36,6 +36,58 @@ const across = () => line('h', 'M 0 0 L 4 0', 1, 2);
 const down = () => line('v', 'M 0 0 L 0 4', 3, 0);
 
 describe('line jumps', () => {
+	it('skips geometry work when page jumps are disabled and no policy enables them', () => {
+		const h = across(),
+			v = down();
+		Object.defineProperty(h, 'geometry', {
+			get: () => {
+				throw new Error('disabled jumps should not read geometry');
+			},
+		});
+		expect(visioLineJumpPaths(page([h, v], { lineJumpCode: 0 })).size).toBe(0);
+	});
+	it('keeps the jump facing down when endpoints reverse or local coordinates are reflected', () => {
+		const r = Number(HALF.toFixed(6));
+		const reversed = line('h', 'M 4 0 L 0 0', 1, 2, { lineJumpStyle: 3, lineJumpDirectionX: 2 });
+		expect(visioLineJumpPaths(page([reversed, down()])).get(reversed)![0]).toContain(` ${-r} L `);
+		const flipped = line('h', 'M 0 0 L 4 0', 1, 2, {
+			lineJumpStyle: 3,
+			lineJumpDirectionX: 2,
+			transform: [1, 0, 0, -1, 1, 2],
+		});
+		// Positive local y maps to negative page y for a reflected connector.
+		expect(visioLineJumpPaths(page([flipped, down()])).get(flipped)![0]).toContain(` ${r} L `);
+	});
+	it('honors connector style and direction overrides in page coordinates', () => {
+		const h = across();
+		h.lineJumpStyle = 3;
+		h.lineJumpDirectionX = 2;
+		const r = Number(HALF.toFixed(6));
+		const path = visioLineJumpPaths(page([h, down()])).get(h)![0]!;
+		expect(path).toContain(`L ${Number((2 - HALF).toFixed(6))} ${-r}`);
+		expect(path).not.toContain(' A ');
+		h.lineJumpStyle = 2;
+		expect(
+			visioLineJumpPaths(page([h, down()]))
+				.get(h)![0]!
+				.match(/M /g),
+		).toHaveLength(2);
+	});
+	it('inherits page directions and lets explicit connector directions override them', () => {
+		const h = across();
+		const p = page([h, down()], { lineJumpDirectionX: 2 });
+		expect(visioLineJumpPaths(p).get(h)![0]).toContain(' 0 0 1 ');
+		h.lineJumpDirectionX = 1;
+		expect(visioLineJumpPaths(p).get(h)![0]).toContain(' 0 0 0 ');
+		h.lineJumpDirectionX = 0;
+		expect(visioLineJumpPaths(p).get(h)![0]).toContain(' 0 0 1 ');
+		const v = down();
+		v.lineJumpStyle = 3;
+		const vertical = visioLineJumpPaths(
+			page([across(), v], { lineJumpCode: 2, lineJumpDirectionY: 2 }),
+		).get(v)![0]!;
+		expect(vertical).toContain(`L ${Number(HALF.toFixed(6))} ${Number((2 - HALF).toFixed(6))}`);
+	});
 	it('lets the horizontal line jump over the vertical one by default', () => {
 		const h = across(),
 			v = down();
@@ -66,11 +118,12 @@ describe('line jumps', () => {
 		const from = Number((2 - HALF).toFixed(6)),
 			to = Number((2 + HALF).toFixed(6)),
 			up = Number(HALF.toFixed(6));
-		expect(style(1)).toBe(`M 0 0 L ${from} 0 M ${to} 0 L 4 0`);
-		expect(style(2)).toBe(`M 0 0 L ${from} 0 L ${from} ${up} L ${to} ${up} L ${to} 0 L 4 0`);
+		expect(style(1)).toBe(style(0));
+		expect(style(2)).toBe(`M 0 0 L ${from} 0 M ${to} 0 L 4 0`);
+		expect(style(3)).toBe(`M 0 0 L ${from} 0 L ${from} ${up} L ${to} ${up} L ${to} 0 L 4 0`);
 		// Two sides meet at the top of the half circle.
-		expect(style(3)).toBe(`M 0 0 L ${from} 0 L 2 ${up} L ${to} 0 L 4 0`);
-		expect(style(8).match(/L /g)).toHaveLength(9);
+		expect(style(4)).toBe(`M 0 0 L ${from} 0 L 2 ${up} L ${to} 0 L 4 0`);
+		expect(style(9).match(/L /g)).toHaveLength(9);
 	});
 
 	it('does not jump at a shared end, a T junction, or right beside an end', () => {

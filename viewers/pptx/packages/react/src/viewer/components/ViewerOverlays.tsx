@@ -1,3 +1,4 @@
+import type { SlidePasteRequest } from 'ooxml-ui/pptx';
 /**
  * ViewerOverlays: Shortcut, Accessibility, and Slide Sorter overlay panels.
  *
@@ -27,6 +28,7 @@ export interface ViewerOverlaysProps {
 	showOutlineView: boolean;
 	/** Master/layout elements drawn beneath the slide's own, in Reading View. */
 	templateElements: PptxElement[];
+	templateElementsBySlideId?: Record<string, PptxElement[]>;
 	accessibilityIssues: AccessibilityIssue[];
 	slides: PptxSlide[];
 	activeSlideIndex: number;
@@ -39,6 +41,9 @@ export interface ViewerOverlaysProps {
 	onMoveSlide: (fromIndex: number, toIndex: number) => void;
 	onDeleteSlides: (indexes: number[]) => void;
 	onDuplicateSlides: (indexes: number[]) => void;
+	onPasteSlides: (request: SlidePasteRequest) => void;
+	onCopySystemSlides?: (indexes: number[]) => Promise<void>;
+	onPasteSystemSlides?: (insertAt: number) => Promise<void>;
 	onToggleHideSlides: (indexes: number[]) => void;
 	onCloseSorter: () => void;
 	/** Receives the slide the reader ended Reading View on. */
@@ -65,6 +70,7 @@ export function ViewerOverlays({
 	showReadingView,
 	showOutlineView,
 	templateElements,
+	templateElementsBySlideId,
 	accessibilityIssues,
 	slides,
 	activeSlideIndex,
@@ -77,6 +83,9 @@ export function ViewerOverlays({
 	onMoveSlide,
 	onDeleteSlides,
 	onDuplicateSlides,
+	onPasteSlides,
+	onCopySystemSlides,
+	onPasteSystemSlides,
 	onToggleHideSlides,
 	onCloseSorter,
 	onCloseReadingView,
@@ -114,6 +123,7 @@ export function ViewerOverlays({
 			{showSlideSorter && (
 				<SlideSorterOverlay
 					slides={slides}
+					templateElementsBySlideId={templateElementsBySlideId}
 					activeSlideIndex={activeSlideIndex}
 					canvasSize={canvasSize}
 					canEdit={canEdit}
@@ -122,6 +132,9 @@ export function ViewerOverlays({
 					onMoveSlide={onMoveSlide}
 					onDeleteSlides={onDeleteSlides}
 					onDuplicateSlides={onDuplicateSlides}
+					onPasteSlides={onPasteSlides}
+					onCopySystemSlides={onCopySystemSlides}
+					onPasteSystemSlides={onPasteSystemSlides}
 					onToggleHideSlides={onToggleHideSlides}
 					onClose={onCloseSorter}
 				/>

@@ -19,6 +19,7 @@
  * applications can call `getContent()` to retrieve the current file bytes.
  */
 import type {
+	SlidePackageClipboard,
 	CollabLoadOrigin,
 	CollaborationLivePatcher,
 	DeckSaveState,
@@ -27,6 +28,7 @@ import type {
 	ViewerSettings,
 } from 'ooxml-ui/pptx';
 import {
+	createSlidePackageClipboard,
 	applyAutoCorrect,
 	attachViewerHyperlinks,
 	applyPreferenceToOptions,
@@ -977,6 +979,38 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 		// a View-ribbon toggle back into `state.viewProperties` so a save
 		// round-trips it (see `useSerialize`'s `viewProperties` save option).
 		// ── Ribbon style galleries + group/control customisation ──────
+		const slidePackageClipboardRef = useRef<SlidePackageClipboard | null>(null);
+		const slidePackageHost = {
+			getSnapshot: () =>
+				handlerRef.current
+					? {
+							handler: handlerRef.current,
+							slides: state.slides,
+							templateElementsBySlideId: state.templateElementsBySlideId,
+							allowExternalImages: viewerOptions.trust.allowExternalContent,
+							editable: canEdit,
+						}
+					: null,
+			commit: (result: import('ooxml-ui/pptx').SlidePackageClipboardPaste) => {
+				history.commitSlides(result.slides);
+				handlerRef.current = result.handler;
+				actionSoundHandlerRef.current = result.handler;
+				state.setTemplateElementsBySlideId(result.templateElementsBySlideId);
+				state.setSlideMasters(result.data.slideMasters ?? []);
+				state.setLayoutOptions(result.data.layoutOptions ?? []);
+				state.setThemeOptions(result.data.themeOptions ?? []);
+				for (const [path, url] of result.mediaUrls) {
+					state.mediaDataUrls.set(path, url);
+				}
+				state.setActiveSlideIndex(result.insertAt);
+				history.markDirty();
+			},
+		};
+		if (!slidePackageClipboardRef.current) {
+			slidePackageClipboardRef.current = createSlidePackageClipboard(slidePackageHost);
+		}
+		slidePackageClipboardRef.current.updateHost(slidePackageHost);
+		useEffect(() => () => slidePackageClipboardRef.current?.dispose(), []);
 		const ribbonGalleries = useRibbonGalleryCommands({
 			selectedElement,
 			theme: state.theme,
@@ -1535,6 +1569,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 					showReadingView={state.showReadingView}
 					showOutlineView={state.showOutlineView}
 					templateElements={state.templateElements}
+					templateElementsBySlideId={state.templateElementsBySlideId}
 					accessibilityIssues={state.accessibilityIssues}
 					slides={slides}
 					activeSlideIndex={activeSlideIndex}
@@ -1550,6 +1585,9 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 					onMoveSlide={editorOps.slideOps.handleMoveSlide}
 					onDeleteSlides={editorOps.slideOps.handleDeleteSlides}
 					onDuplicateSlides={editorOps.slideOps.handleDuplicateSlides}
+					onPasteSlides={editorOps.slideOps.handlePasteSlides}
+					onCopySystemSlides={(indexes) => slidePackageClipboardRef.current!.copy(indexes)}
+					onPasteSystemSlides={(insertAt) => slidePackageClipboardRef.current!.paste(insertAt)}
 					onToggleHideSlides={editorOps.slideOps.handleToggleHideSlides}
 					onCloseSorter={() => state.setShowSlideSorter(false)}
 					onCloseReadingView={(slideIndex) => {

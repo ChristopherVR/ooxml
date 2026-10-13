@@ -169,6 +169,17 @@ export const translationsEn: Record<string, string> = {
 	'pptx.findReplace.findPlaceholder': 'Find…',
 	'pptx.findReplace.searchText': 'Search text',
 	'pptx.findReplace.matchCase': 'Match case',
+	'pptx.findReplace.includeNotes': 'Include speaker notes',
+	'pptx.findReplace.includeChartData': 'Include chart series and category labels',
+	'pptx.findReplace.readOnlyChartText':
+		'Linked or unsupported chart text can be found, but must be edited in PowerPoint or its source workbook.',
+	'pptx.findReplace.includeChartTitles': 'Include chart titles',
+	'pptx.findReplace.readOnlyChartTitle':
+		'Linked or complex chart titles can be found, but must be edited in PowerPoint or their source workbook.',
+	'pptx.slideSorter.systemCopy': 'Copy slides to system clipboard',
+	'pptx.slideSorter.systemPaste': 'Paste slides from system clipboard',
+	'pptx.slideSorter.systemCopied': 'Slides copied',
+	'pptx.slideSorter.systemPasted': 'Slides pasted',
 	'pptx.findReplace.toggleMatchCase': 'Toggle match case',
 	'pptx.findReplace.previousMatch': 'Previous match',
 	'pptx.findReplace.nextMatch': 'Next match',

@@ -7,6 +7,8 @@ import type {
 	CellValue,
 	ChartObject,
 	Color,
+	PivotTableOptions,
+	PivotTablePatch,
 	ConditionalFormat,
 	ImageObject,
 	DataValidation,
@@ -27,6 +29,7 @@ import type { StylePatch } from '../styles';
 import type { CalcEngine } from './deps';
 import type { ChartPatch } from './charts';
 import type { TablePatch, TableRef } from './table-edits';
+import type { SparklineGroupPatch } from './sparklines';
 
 /** Border presets of the ribbon's border drop-down. */
 export type BorderPreset =
@@ -207,6 +210,25 @@ export interface EditSession {
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;
+	/** Creates a worksheet-range PivotTable and its cached output. */
+	createPivotTable(sheet: number, destination: CellAddress, options: PivotTableOptions): string;
+	/** Refreshes cached records and output; an optional patch reconfigures fields. */
+	refreshPivotTable(sheet: number, name: string, patch?: PivotTablePatch): void;
+	/** Removes the PivotTable and its output cells as one undo step. */
+	deletePivotTable(sheet: number, name: string): void;
+	/** Creates a group, mapping data rows or columns to a one-dimensional location range. */
+	createSparklineGroup(
+		sheet: number,
+		source: string,
+		locations: CellRange,
+		patch?: SparklineGroupPatch,
+	): void;
+	/** Settings affect each group containing a selected sparkline. */
+	setSparklineGroups(sheet: number, ranges: CellRange[], patch: SparklineGroupPatch): void;
+	/** A continuous date vector, or empty to return to a general axis. */
+	setSparklineDateRange(sheet: number, ranges: CellRange[], source?: string): void;
+	/** Clears selected hosts, or their whole groups. Cell contents remain. */
+	deleteSparklines(sheet: number, ranges: CellRange[], wholeGroups?: boolean): void;
 	/** Adds a chart drawn from the model; returns its index in the sheet's drawings. */
 	addChart(sheet: number, chart: Omit<ChartObject, 'kind'>): number;
 	/** Edits the chart at `index` of the sheet's drawings (a loaded chart part is patched on save). */
@@ -250,6 +272,15 @@ export interface EditSession {
 	applyCellStyle(sheet: number, ranges: CellRange[], name: string): void;
 	/** Patches the page setup; `undefined` entries clear a setting. */
 	setPageSetup(sheet: number, patch: { [K in keyof PageSetup]?: PageSetup[K] | undefined }): void;
+	setPageBreak(sheet: number, axis: 'row' | 'col', before: number, present?: boolean): void;
+	resetPageBreaks(sheet: number): void;
+	setPrintTitles(
+		sheet: number,
+		patch: {
+			rows?: import('../layout/print-titles').PrintTitleSpan | undefined;
+			columns?: import('../layout/print-titles').PrintTitleSpan | undefined;
+		},
+	): void;
 	/** Patches the print options (gridlines, headings, centring); false clears one. */
 	setPrintOptions(sheet: number, patch: Partial<PrintOptions>): void;
 	/**

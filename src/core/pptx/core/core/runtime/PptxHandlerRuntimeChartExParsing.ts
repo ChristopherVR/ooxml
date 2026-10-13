@@ -165,6 +165,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...(result.categoryLevels ? { categoryLevels: result.categoryLevels } : {}),
 			series: result.series,
 			title: cxTitleText,
+			titleTextEditable: false,
+			dataLabelTextEditable: false,
 			style: chartStyle,
 			chartPartPath,
 			chartRelationshipId,

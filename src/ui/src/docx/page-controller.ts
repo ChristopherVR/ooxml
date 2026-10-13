@@ -28,6 +28,7 @@ export interface PageControllerHost extends EditorHost {
 	toolbar(): HTMLElement | undefined;
 	statusBar(): StatusBar | undefined;
 	printLayout(): PrintLayoutController | undefined;
+	printEditing?(active: boolean): void;
 	refreshControls(): void;
 }
 
@@ -100,12 +101,16 @@ export class PageController {
 	}
 
 	/** Layout > More Columns, recorded as one undoable section edit. */
-	applyColumns(columns: SectionProperties['columns']): void {
+	applyColumns(columns: SectionProperties['columns'], footnoteColumns?: number): void {
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return;
 		const model = this.host.model();
 		this.dispatchSections(
-			withSection(model, currentSectionIndex(view, model), (section) => ({ ...section, columns })),
+			withSection(model, currentSectionIndex(view, model), (section) => ({
+				...section,
+				columns,
+				...(footnoteColumns === undefined ? {} : { footnoteColumns }),
+			})),
 		);
 	}
 
@@ -301,13 +306,14 @@ export class PageController {
 		this.host.statusBar()?.setZoom(percent);
 	}
 
-	/** Switches between the continuous editing surface and the paginated Print Layout render. */
+	/** Switches between continuous and paginated presentations of the existing editor. */
 	setViewMode(mode: 'draft' | 'print'): void {
 		this.viewMode = mode;
 		const printLayout = this.host.printLayout();
 		printLayout?.setActive(mode === 'print');
 		const paper = this.host.paper();
-		if (paper) paper.hidden = mode === 'print';
+		if (paper) paper.hidden = false;
+		this.host.printEditing?.(mode === 'print');
 		// Print Layout shows notes on their pages; the notes editing panel belongs to the editing view.
 		paper?.parentElement?.toggleAttribute('data-print-view', mode === 'print');
 		const toolbar = this.host.toolbar();

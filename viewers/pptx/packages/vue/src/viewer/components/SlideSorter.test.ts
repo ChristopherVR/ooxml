@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { insertSlidePaste, type SlidePasteRequest } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, test } from 'vitest';
 
@@ -162,15 +163,24 @@ describe('slideSorter', () => {
 		});
 
 		it('offers Paste only after Copy and pastes a copy of the copied slide', async () => {
-			const wrapper = mountEditable(makeSlides(3));
+			const slides = makeSlides(3);
+			slides[1]!.hidden = true;
+			const wrapper = mountEditable(slides);
 			await wrapper.findAll('.pptx-vue-sorter-tile')[1]!.trigger('contextmenu');
 			click('copy');
 			await wrapper.vm.$nextTick();
+			slides[1]!.hidden = false;
 			await wrapper.findAll('.pptx-vue-sorter-tile')[2]!.trigger('contextmenu');
 			expect(itemLabels()).toContain('Paste');
 			click('paste');
 			await wrapper.vm.$nextTick();
-			expect(wrapper.emitted('duplicate')).toStrictEqual([[1]]);
+			const request = wrapper.emitted('paste')?.[0]?.[0] as SlidePasteRequest;
+			expect(request).toMatchObject({ insertAt: 3, sourceIds: ['slide-1'] });
+			expect(request.copies).toHaveLength(1);
+			expect(request.copies[0]!.id).not.toBe('slide-1');
+			expect(request.copies[0]!.hidden).toBe(true);
+			expect(request.copies[0]).not.toBe(slides[1]);
+			expect(wrapper.emitted('duplicate')).toBeUndefined();
 		});
 
 		it('emits toggle-hidden for the right-clicked tile', async () => {
@@ -190,9 +200,10 @@ describe('slideSorter', () => {
 });
 
 test('copies a range and changes thumbnail zoom', async () => {
+	const slides = makeSlides(4);
 	const wrapper = mount(SlideSorter, {
 		props: {
-			slides: makeSlides(4),
+			slides,
 			canvasSize,
 			mediaDataUrls: new Map(),
 			activeIndex: 0,
@@ -206,7 +217,13 @@ test('copies a range and changes thumbnail zoom', async () => {
 		expect(wrapper.findAll('[data-pptx-selected="true"]')).toHaveLength(3);
 		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true }));
 		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', ctrlKey: true }));
-		expect(wrapper.emitted('duplicate')).toStrictEqual([[2], [1], [0]]);
+		const request = wrapper.emitted('paste')?.[0]?.[0] as SlidePasteRequest;
+		expect(request).toMatchObject({ insertAt: 3, sourceIds: ['slide-0', 'slide-1', 'slide-2'] });
+		expect(request.copies).toHaveLength(3);
+		expect(new Set(request.copies.map((slide) => slide.id)).size).toBe(3);
+		expect(request.copies.every((slide) => !request.sourceIds.includes(slide.id))).toBe(true);
+		expect(wrapper.emitted('duplicate')).toBeUndefined();
+		await wrapper.setProps({ slides: insertSlidePaste(slides, request) });
 		window.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
 		await wrapper.vm.$nextTick();
 		expect((wrapper.find('input[type=range]').element as HTMLInputElement).value).toBe('110');

@@ -1,4 +1,5 @@
 import { buildXml } from '../xml/index';
+import { preserveAttributeWhitespace } from './xml-attribute-whitespace';
 import { fail, type VisioPackageLimits } from './package-common';
 import { attribute, children } from './sheet';
 import { inspectXml, inspectNamespaces } from './xml-validation';
@@ -54,21 +55,16 @@ export function serializeEditedXml(
 	check: () => void,
 ): { bytes: Uint8Array; nodes: number } {
 	check();
-	// XMLSerializer writes normalized whitespace literally; reject instead of silently
-	// changing character-reference CR text or tab/newline attribute values on reopen.
+	// CR text still needs a content-aware serializer; do not normalize it silently.
 	const pending: Node[] = [root.ownerDocument!];
 	while (pending.length) {
 		check();
 		const node = pending.pop()!;
 		if ((node.nodeType === 3 || node.nodeType === 4) && node.nodeValue?.includes('\r'))
 			fail('UNSUPPORTED_XML_EDIT', 'Carriage-return text cannot be preserved by this writer.');
-		if (node.nodeType === 1)
-			for (const attr of Array.from((node as Element).attributes))
-				if (/[\t\r\n]/.test(attr.value))
-					fail('UNSUPPORTED_XML_EDIT', 'Attribute whitespace cannot be preserved by this writer.');
 		for (const child of Array.from(node.childNodes)) pending.push(child);
 	}
-	let xml = buildXml(root.ownerDocument!);
+	let xml = preserveAttributeWhitespace(buildXml(root.ownerDocument!));
 	// Serialization produces UTF-8 bytes, including for a UTF-16 source document.
 	xml = xml.replace(/^<\?xml\s[^?]*\?>/, (declaration) =>
 		declaration.replace(/encoding\s*=\s*(['"])[^'"]*\1/, 'encoding="UTF-8"'),

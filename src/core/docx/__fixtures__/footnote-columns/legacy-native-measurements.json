@@ -1,0 +1,4113 @@
+{
+  "provenance": "Owned Word.Application COM 16.0; synthetic documents; native PDF coordinates in points; generator scripts/record-word-footnote-columns.ps1",
+  "cases": [
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "compatibilityMode": 14,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "name": "mode14-two-custom-twenty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 20,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              244.27,
+              215.09,
+              360.12,
+              215.57
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 1,
+      "compatibilityMode": 12,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "name": "mode12-two-custom-twenty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 20,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              244.27,
+              215.09,
+              360.12,
+              215.57
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "compatibilityMode": 14,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "name": "mode14-left-custom-eighty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 80,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              59.06,
+              190.004,
+              59.54
+            ],
+            [
+              254.23,
+              47.04,
+              360.12,
+              47.52
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Reference body 1.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              299.11,
+              190.004,
+              299.59
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Right body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "compatibilityMode": 12,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "name": "mode12-left-custom-eighty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 80,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              59.06,
+              190.004,
+              59.54
+            ],
+            [
+              254.23,
+              47.04,
+              360.12,
+              47.52
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Reference body 1.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              299.11,
+              190.004,
+              299.59
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Right body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "compatibilityMode": 14,
+      "bodyWidths": [
+        100.0,
+        200.0
+      ],
+      "name": "mode14-unequal-custom-eighty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 80,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 160.01,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              194.21,
+              59.06,
+              338.26,
+              59.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 160.01,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 160.01,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              47.04,
+              139.968,
+              47.52
+            ],
+            [
+              204.19,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ],
+          "bodyLines": []
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "compatibilityMode": 12,
+      "bodyWidths": [
+        100.0,
+        200.0
+      ],
+      "name": "mode12-unequal-custom-eighty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 80,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 160.01,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              194.21,
+              59.06,
+              338.26,
+              59.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 160.01,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 160.01,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              47.04,
+              139.968,
+              47.52
+            ],
+            [
+              204.19,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ],
+          "bodyLines": []
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "compatibilityMode": 14,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "name": "mode14-two-standard-eighty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 80,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              210.07,
+              59.06,
+              354.09,
+              59.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              47.04,
+              190.004,
+              47.52
+            ],
+            [
+              210.07,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ],
+          "bodyLines": []
+        }
+      ]
+    },
+    {
+      "wordVersion": "16.0",
+      "wordBuild": "16.0.20430",
+      "nativePages": 2,
+      "compatibilityMode": 12,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "name": "mode12-two-standard-eighty",
+      "noteCount": 1,
+      "footnoteColumns": 0,
+      "bodyColumns": 2,
+      "linesPerNote": 80,
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              210.07,
+              59.06,
+              354.09,
+              59.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [],
+          "rulesPt": [
+            [
+              39.984,
+              47.04,
+              190.004,
+              47.52
+            ],
+            [
+              210.07,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ],
+          "bodyLines": []
+        }
+      ]
+    },
+    {
+      "compatibilityMode": 14,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "noteCount": 1,
+      "wordVersion": "16.0",
+      "footnoteColumns": 2,
+      "linesPerNote": 80,
+      "nativePages": 2,
+      "wordBuild": "16.0.20430",
+      "bodyColumns": 2,
+      "name": "mode14-explicit-two-eighty",
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              244.27,
+              59.06,
+              360.12,
+              59.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              47.04,
+              190.004,
+              47.52
+            ],
+            [
+              254.23,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ],
+          "bodyLines": []
+        }
+      ]
+    },
+    {
+      "compatibilityMode": 12,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "noteCount": 1,
+      "wordVersion": "16.0",
+      "footnoteColumns": 2,
+      "linesPerNote": 80,
+      "nativePages": 2,
+      "wordBuild": "16.0.20430",
+      "bodyColumns": 2,
+      "name": "mode12-explicit-two-eighty",
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources"
+          ],
+          "rulesPt": [
+            [
+              244.27,
+              59.06,
+              360.12,
+              59.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Left body text.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Reference body 1.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        },
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 61.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L60",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L61",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L62",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L63",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L64",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L65",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L66",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L67",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L68",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L69",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L70",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L71",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L72",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L73",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L74",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L75",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L76",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L77",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L78",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L79",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Continued",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              84.144,
+              47.04,
+              190.004,
+              47.52
+            ],
+            [
+              254.23,
+              299.11,
+              360.12,
+              299.59
+            ]
+          ],
+          "bodyLines": []
+        }
+      ]
+    },
+    {
+      "name": "mode14-left-custom-sixty",
+      "footnoteColumns": 0,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "bodyColumns": 2,
+      "compatibilityMode": 14,
+      "wordBuild": "16.0.20430",
+      "linesPerNote": 60,
+      "noteCount": 1,
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              59.06,
+              190.004,
+              59.54
+            ],
+            [
+              254.23,
+              131.06,
+              360.12,
+              131.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Reference body 1.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Right body text.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mode12-left-custom-sixty",
+      "footnoteColumns": 0,
+      "bodyWidths": [
+        150.0,
+        150.0
+      ],
+      "bodyColumns": 2,
+      "compatibilityMode": 12,
+      "wordBuild": "16.0.20430",
+      "linesPerNote": 60,
+      "noteCount": 1,
+      "nativePages": 1,
+      "wordVersion": "16.0",
+      "pages": [
+        {
+          "widthPt": 399.9599914550781,
+          "heightPt": 500.0400085449219,
+          "columns": [
+            {
+              "leftPt": 39.984,
+              "lines": [
+                {
+                  "id": "N0L00",
+                  "baselinePt": 73.58
+                },
+                {
+                  "id": "N0L01",
+                  "baselinePt": 85.58
+                },
+                {
+                  "id": "N0L02",
+                  "baselinePt": 97.58
+                },
+                {
+                  "id": "N0L03",
+                  "baselinePt": 109.58
+                },
+                {
+                  "id": "N0L04",
+                  "baselinePt": 121.58
+                },
+                {
+                  "id": "N0L05",
+                  "baselinePt": 133.58
+                },
+                {
+                  "id": "N0L06",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L07",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L08",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L09",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L10",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L11",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L12",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L13",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L14",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L15",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L16",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L17",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L18",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L19",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L20",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L21",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L22",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L23",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L24",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L25",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L26",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L27",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L28",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L29",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L30",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L31",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L32",
+                  "baselinePt": 457.656
+                }
+              ]
+            },
+            {
+              "leftPt": 210.07,
+              "lines": [
+                {
+                  "id": "N0L33",
+                  "baselinePt": 145.58
+                },
+                {
+                  "id": "N0L34",
+                  "baselinePt": 157.61
+                },
+                {
+                  "id": "N0L35",
+                  "baselinePt": 169.61
+                },
+                {
+                  "id": "N0L36",
+                  "baselinePt": 181.61
+                },
+                {
+                  "id": "N0L37",
+                  "baselinePt": 193.61
+                },
+                {
+                  "id": "N0L38",
+                  "baselinePt": 205.61
+                },
+                {
+                  "id": "N0L39",
+                  "baselinePt": 217.61
+                },
+                {
+                  "id": "N0L40",
+                  "baselinePt": 229.61
+                },
+                {
+                  "id": "N0L41",
+                  "baselinePt": 241.61
+                },
+                {
+                  "id": "N0L42",
+                  "baselinePt": 253.61
+                },
+                {
+                  "id": "N0L43",
+                  "baselinePt": 265.63
+                },
+                {
+                  "id": "N0L44",
+                  "baselinePt": 277.63
+                },
+                {
+                  "id": "N0L45",
+                  "baselinePt": 289.63
+                },
+                {
+                  "id": "N0L46",
+                  "baselinePt": 301.63
+                },
+                {
+                  "id": "N0L47",
+                  "baselinePt": 313.63
+                },
+                {
+                  "id": "N0L48",
+                  "baselinePt": 325.63
+                },
+                {
+                  "id": "N0L49",
+                  "baselinePt": 337.63
+                },
+                {
+                  "id": "N0L50",
+                  "baselinePt": 349.63
+                },
+                {
+                  "id": "N0L51",
+                  "baselinePt": 361.63
+                },
+                {
+                  "id": "N0L52",
+                  "baselinePt": 373.66
+                },
+                {
+                  "id": "N0L53",
+                  "baselinePt": 385.66
+                },
+                {
+                  "id": "N0L54",
+                  "baselinePt": 397.66
+                },
+                {
+                  "id": "N0L55",
+                  "baselinePt": 409.656
+                },
+                {
+                  "id": "N0L56",
+                  "baselinePt": 421.656
+                },
+                {
+                  "id": "N0L57",
+                  "baselinePt": 433.656
+                },
+                {
+                  "id": "N0L58",
+                  "baselinePt": 445.656
+                },
+                {
+                  "id": "N0L59",
+                  "baselinePt": 457.656
+                }
+              ]
+            }
+          ],
+          "separatorCaptions": [
+            "Sources",
+            "Continued"
+          ],
+          "rulesPt": [
+            [
+              74.184,
+              59.06,
+              190.004,
+              59.54
+            ],
+            [
+              254.23,
+              131.06,
+              360.12,
+              131.54
+            ]
+          ],
+          "bodyLines": [
+            {
+              "text": "Reference body 1.",
+              "leftPt": 39.984,
+              "baselinePt": 49.58
+            },
+            {
+              "text": "Right body text.",
+              "leftPt": 210.07,
+              "baselinePt": 49.58
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

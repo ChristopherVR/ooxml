@@ -111,7 +111,19 @@ export function menuEntries(scope: RenderScope, items: RibbonMenuItem[]): MenuEn
 			...(command.shortcut ? { shortcut: command.shortcut } : {}),
 			...(checked === undefined ? {} : { checked }),
 			disabled: !ctx.commands.isEnabled(command.id),
-			run: () => void ctx.commands.run(command.id, item.arg),
+			run: () => {
+				const origin = ctx.root.activeElement;
+				void Promise.resolve(ctx.commands.run(command.id, item.arg)).then(() => {
+					// A command can disable its menu trigger while it runs. In that case the
+					// browser drops focus to body; return to the grid so shortcuts keep working.
+					const active = ctx.root.activeElement;
+					if (
+						(active === origin && active?.closest('[part~="ribbon"]')) ||
+						(!active && ctx.host.ownerDocument.activeElement === ctx.host.ownerDocument.body)
+					)
+						ctx.grid()?.focus();
+				});
+			},
 		});
 	}
 	while (entries.length && 'separator' in entries[entries.length - 1]!) entries.pop();

@@ -115,7 +115,19 @@ export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
 					id: 'check-accessibility',
 					label: 'Check Accessibility',
 					icon: 'check',
-					unsupported: 'The accessibility checker (alt text, reading order) is not built yet.',
+					action: review('check-accessibility'),
+				}),
+				command(doc, {
+					id: 'alt-text',
+					label: 'Alt Text',
+					icon: 'message',
+					action: review('alt-text'),
+				}),
+				command(doc, {
+					id: 'page-alt-text',
+					label: 'Page Alt Text',
+					icon: 'message',
+					action: review('page-alt-text'),
 				}),
 			]),
 			group(doc, 'Language', [

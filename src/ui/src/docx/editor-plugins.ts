@@ -3,7 +3,7 @@ import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import type { Plugin } from 'prosemirror-state';
 import { editorKeymap } from './editor-commands';
-import { fieldGuardPlugin } from 'ooxml-core/docx/ui';
+import { fieldGuardPlugin, tableStructureGuardPlugin } from 'ooxml-core/docx/ui';
 import { tabStopsPlugin } from './tab-stops-view';
 import { noteNumberingPlugin } from './note-commands';
 import { paragraphStylesPlugin } from './paragraph-styles';
@@ -35,6 +35,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		noteNumberingPlugin(),
 		sectionBreaksPlugin(),
 		fieldGuardPlugin(),
+		tableStructureGuardPlugin(),
 		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
 		tabStopsPlugin(),
 		keymap({

@@ -1,0 +1,29 @@
+{
+	"observedOn": "2026-10-12",
+	"excelFileVersion": "16.0.20430.20146",
+	"reproduceAuthoring": "pwsh -NoProfile -File scripts/xlsx-sparkline-acceptance.ps1",
+	"authoring": {
+		"source": "Sales!A1:C1",
+		"dateRange": "Sales!A4:C4",
+		"nativeDateRange": "A4:C4",
+		"clearedDateRange": "",
+		"undoDateRange": "A4:C4"
+	},
+	"nativePdfGeometry": {
+		"sourceValues": [10, 20, 30, 40],
+		"dateSerials": [46000, 46001, 46010, 46020],
+		"lineNormalizedX": [0, 0.05, 0.5, 1],
+		"unsortedDateSerials": [46010, 46000, 46020, 46001],
+		"connectionOrder": "chronological",
+		"allBlankDateRangePdfSparklineImages": 0,
+		"allHiddenDateRangePdfSparklineImages": 0,
+		"lastBlankDate": "remaining three points retain full vertical extent",
+		"columnRasterSize": [323, 104],
+		"columnBluePixelSpans": [[5, 15], [20, 30], [156, 166], [307, 317]],
+		"columnSlotDays": 21
+	},
+	"limits": [
+		"Authoring accepts one continuous row or column with matching series length, up to 10000 points.",
+		"Evidence covers numeric Excel date serials with unequal whole-day spacing; fractional and out-of-calendar serial behavior is not independently validated."
+	]
+}

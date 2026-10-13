@@ -13,19 +13,12 @@ import { decoratePages } from './print-header-footer';
 
 const RELAYOUT_DEBOUNCE_MS = 150;
 
-/**
- * Print Layout view: a read-only, paginated render kept in sync with the
- * editor model on a debounced relayout, rather than a second live editing
- * surface. Clicking a line asks the caller to move the real ProseMirror
- * cursor to the nearest editor position (see `print-layout.ts`'s
- * `resolveClick`), which is the chosen approach for keeping a single
- * source of truth for editing while still allowing click-to-place-cursor
- * from the paginated view.
- */
+/** Paginated document projection, with native editing supplied by the ProseMirror input bridge. */
 export interface PrintLayoutController {
 	/** Mount this in the DOM alongside the continuous editing surface. */
 	element: HTMLElement;
 	setActive(active: boolean): void;
+	resolveClick(target: Element, clientX: number): { blockId: string; offset: number } | null;
 	scheduleRelayout(model: DocumentModel): void;
 	/** Recomputes which page is most visible; call on the scroll container's `scroll` event. */
 	refreshCurrentPage(): void;
@@ -49,6 +42,7 @@ export function createPrintLayoutController(
 	pictureUrl?: PictureUrl,
 	onLayout?: () => void,
 	getReviewMode: () => ReviewDisplayMode = () => 'all',
+	isEditing: () => boolean = () => false,
 ): PrintLayoutController {
 	let measurer = createCanvasMeasurer();
 	let lastModel: DocumentModel | null = null;
@@ -119,7 +113,7 @@ export function createPrintLayoutController(
 	}
 
 	function onClick(event: MouseEvent) {
-		if (!handle || !(event.target instanceof Element)) return;
+		if (isEditing() || !handle || !(event.target instanceof Element)) return;
 		const hit = handle.resolveClick(event.target, event.clientX);
 		if (hit) onRequestCursor(hit.blockId, hit.offset);
 	}
@@ -146,6 +140,7 @@ export function createPrintLayoutController(
 
 	return {
 		element,
+		resolveClick: (target, clientX) => handle?.resolveClick(target, clientX) ?? null,
 		setActive(active) {
 			element.hidden = !active;
 		},

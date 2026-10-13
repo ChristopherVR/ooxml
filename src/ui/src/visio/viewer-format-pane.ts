@@ -266,7 +266,14 @@ export class ViewerFormatPane {
 				? ''
 				: String(common.linePattern),
 		);
-		for (const field of PANE_FIELDS)
-			put(view.fields.get(field.key)!, shapes.length ? field.read(context) : '');
+		for (const field of PANE_FIELDS) {
+			const input = view.fields.get(field.key)!;
+			put(input, shapes.length ? field.read(context) : '');
+			if (field.connectorOnly) {
+				const applicable = shapes.length > 0 && shapes.every((shape) => shape.kind === 'connector');
+				input.closest('label')!.hidden = !applicable;
+				input.disabled ||= !applicable;
+			}
+		}
 	}
 }

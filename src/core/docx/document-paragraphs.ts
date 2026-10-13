@@ -9,6 +9,7 @@ export function documentBlockLists(model: DocumentModel): Block[][] {
 				Object.values(slots ?? {}).flatMap((content) => (content ? [content.blocks] : [])),
 			),
 		),
+		...Object.values(model.footnoteSeparators ?? {}).map((note) => note.blocks),
 		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].map((note) => note.blocks),
 	];
 }
@@ -53,6 +54,16 @@ export function mapDocumentParagraphs(
 						...(section.headers ? { headers: slots(section.headers) } : {}),
 						...(section.footers ? { footers: slots(section.footers) } : {}),
 					})),
+				}
+			: {}),
+		...(model.footnoteSeparators
+			? {
+					footnoteSeparators: Object.fromEntries(
+						Object.entries(model.footnoteSeparators).map(([kind, note]) => [
+							kind,
+							{ ...note, blocks: mapBlockParagraphs(note.blocks, map) },
+						]),
+					),
 				}
 			: {}),
 		...(model.footnotes

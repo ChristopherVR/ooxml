@@ -84,4 +84,33 @@ describe('More Columns', () => {
 			separator: false,
 		});
 	});
+	it('applies independent footnote columns together with body columns and rejects fractions', () => {
+		const section = sectionsOf(createDocument())[0]!;
+		section.footnoteColumns = 2;
+		const apply = vi.fn();
+		const dialog = createColumnsDialog({
+			section: () => section,
+			canEdit: () => true,
+			apply,
+			restoreFocus: () => {},
+		});
+		dialog.open();
+		const count = dialog.element.querySelector<HTMLInputElement>(
+			'[aria-label="Footnote columns (0 matches section)"]',
+		)!;
+		expect(count.value).toBe('2');
+		const ok = [...dialog.element.querySelectorAll('button')].find(
+			(button) => button.textContent === 'OK',
+		)!;
+		count.value = '2.5';
+		count.dispatchEvent(new Event('input'));
+		expect(ok.disabled).toBe(true);
+		count.value = '3';
+		count.dispatchEvent(new Event('input'));
+		ok.click();
+		expect(apply).toHaveBeenCalledWith(
+			expect.objectContaining({ count: section.columns.count }),
+			3,
+		);
+	});
 });

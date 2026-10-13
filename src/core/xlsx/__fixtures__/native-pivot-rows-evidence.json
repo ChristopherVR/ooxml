@@ -1,0 +1,19 @@
+{
+	"observedOn": "2026-10-12",
+	"excelFileVersion": "16.0.20430.20146",
+	"bunVersion": "1.4.2",
+	"reproduce": "pwsh -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+	"nativeCases": 25,
+	"validated": {
+		"rowFields": ["Category", "Region"],
+		"outerSubtotals": [37, 20],
+		"grandTotal": 57,
+		"subtotalLocation": "below each outer group",
+		"variants": ["automatic subtotals", "no subtotals", "repeated labels", "average", "column field", "sparse tuples", "blank labels", "numeric labels", "boolean labels", "error labels", "mixed label types", "imported repeat/subtotal clearing"],
+		"checks": ["native table row-field count", "every cached output cell", "every native-refreshed output cell", "result row and column counts", "numeric versus text label types"],
+		"booleanLabels": ["FALSE", "TRUE"],
+		"errorLabel": "#N/A",
+		"nativeFixtures": ["excel-pivot-rows.xlsx", "excel-pivot-rows-no-subtotals.xlsx", "excel-pivot-rows-repeat.xlsx"]
+	},
+	"preservedUnsupported": ["more than two row fields", "compact and outline layouts", "top subtotals", "custom subtotals", "mixed field repetition", "grouped/calculated fields", "filters/slicers/shared caches", "unmodeled options or extensions"]
+}

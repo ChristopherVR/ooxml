@@ -2,8 +2,155 @@
 // Protect Sheet, Insert / Delete cells, Remove Duplicates, Text to Columns, Symbol, Series,
 // Create Table): English key -> [fr, de, es, zh-CN].
 import type { Translations } from './types';
+import { RIBBON_HOME_STRINGS } from './ribbon-home';
 
 export const TOOLS_STRINGS: Translations = {
+	Bold: RIBBON_HOME_STRINGS.Bold!,
+	Italic: RIBBON_HOME_STRINGS.Italic!,
+	Underline: RIBBON_HOME_STRINGS.Underline!,
+	Strikethrough: RIBBON_HOME_STRINGS.Strikethrough!,
+	'Insert Formatting': [
+		'Insérer une mise en forme',
+		'Formatierung einfügen',
+		'Insertar formato',
+		'插入格式',
+	],
+	'Formatting: &B bold, &I italic, &U underline, &S strike, &18 font size, &KFF0000 RGB color, &"Arial,Regular" font.':
+		[
+			'Format : &B gras, &I italique, &U souligné, &S barré, &18 taille, &KFF0000 couleur RVB, &"Arial,Regular" police.',
+			'Format: &B fett, &I kursiv, &U unterstrichen, &S durchgestrichen, &18 Schriftgröße, &KFF0000 RGB-Farbe, &"Arial,Regular" Schriftart.',
+			'Formato: &B negrita, &I cursiva, &U subrayado, &S tachado, &18 tamaño, &KFF0000 color RGB, &"Arial,Regular" fuente.',
+			'格式：&B 粗体、&I 斜体、&U 下划线、&S 删除线、&18 字号、&KFF0000 RGB 颜色、&"Arial,Regular" 字体。',
+		],
+	'Date Range (optional):': [
+		'Plage de dates (facultative) :',
+		'Datumsbereich (optional):',
+		'Rango de fechas (opcional):',
+		'日期范围（可选）：',
+	],
+	'Leave the date range empty for a general axis.': [
+		'Laissez la plage de dates vide pour un axe général.',
+		'Für eine allgemeine Achse den Datumsbereich leer lassen.',
+		'Deje vacío el rango de fechas para un eje general.',
+		'将日期范围留空以使用常规坐标轴。',
+	],
+	Time: ['Heure', 'Zeit', 'Hora', '时间'],
+	'First Page Header:': [
+		'En-tête de première page :',
+		'Kopfzeile der ersten Seite:',
+		'Encabezado de primera página:',
+		'首页页眉：',
+	],
+	'First Page Footer:': [
+		'Pied de première page :',
+		'Fußzeile der ersten Seite:',
+		'Pie de primera página:',
+		'首页页脚：',
+	],
+	'Even Page Header:': [
+		'En-tête des pages paires :',
+		'Kopfzeile gerader Seiten:',
+		'Encabezado de páginas pares:',
+		'偶数页页眉：',
+	],
+	'Even Page Footer:': [
+		'Pied des pages paires :',
+		'Fußzeile gerader Seiten:',
+		'Pie de páginas pares:',
+		'偶数页页脚：',
+	],
+	'Different first page': [
+		'Première page différente',
+		'Erste Seite anders',
+		'Primera página diferente',
+		'首页不同',
+	],
+	'Different odd and even pages': [
+		'Pages paires et impaires différentes',
+		'Gerade und ungerade Seiten unterschiedlich',
+		'Páginas pares e impares diferentes',
+		'奇偶页不同',
+	],
+	'Scale header and footer with document': [
+		'Mettre l’en-tête et le pied à l’échelle du document',
+		'Kopf- und Fußzeile mit Dokument skalieren',
+		'Escalar encabezado y pie con el documento',
+		'随文档缩放页眉和页脚',
+	],
+	'Align header and footer with margins': [
+		'Aligner l’en-tête et le pied sur les marges',
+		'Kopf- und Fußzeile an Rändern ausrichten',
+		'Alinear encabezado y pie con los márgenes',
+		'将页眉和页脚与页边距对齐',
+	],
+	'Insert Field': ['Insérer un champ', 'Feld einfügen', 'Insertar campo', '插入字段'],
+	'Page Number': ['Numéro de page', 'Seitenzahl', 'Número de página', '页码'],
+	'Total Pages': ['Nombre de pages', 'Gesamtseitenzahl', 'Total de páginas', '总页数'],
+	'Sheet Name': ['Nom de feuille', 'Blattname', 'Nombre de hoja', '工作表名称'],
+	'File Name': ['Nom de fichier', 'Dateiname', 'Nombre de archivo', '文件名'],
+	'Rows to repeat at top': [
+		'Lignes à répéter en haut',
+		'Wiederholungszeilen oben',
+		'Filas a repetir arriba',
+		'顶端标题行',
+	],
+	'Columns to repeat at left': [
+		'Colonnes à répéter à gauche',
+		'Wiederholungsspalten links',
+		'Columnas a repetir a la izquierda',
+		'左端标题列',
+	],
+	'Use first page number': [
+		'Utiliser le premier numéro de page',
+		'Erste Seitenzahl verwenden',
+		'Usar primer número de página',
+		'使用起始页码',
+	],
+	'First page number': [
+		'Premier numéro de page',
+		'Erste Seitenzahl',
+		'Primer número de página',
+		'起始页码',
+	],
+	'Enter a first page number between 0 and 32767.': [
+		'Entrez un premier numéro entre 0 et 32767.',
+		'Geben Sie eine erste Seitenzahl zwischen 0 und 32767 ein.',
+		'Introduzca un primer número entre 0 y 32767.',
+		'请输入 0 到 32767 之间的起始页码。',
+	],
+	'Print titles must be whole rows or whole columns.': [
+		'Les titres doivent être des lignes ou colonnes entières.',
+		'Drucktitel müssen ganze Zeilen oder Spalten sein.',
+		'Los títulos deben ser filas o columnas completas.',
+		'打印标题必须为整行或整列。',
+	],
+	'Existing print titles are unsupported. Changing a title range replaces them; leaving the fields unchanged preserves them.':
+		[
+			'Les titres existants ne sont pas pris en charge. Modifier une plage les remplace ; conserver les champs les préserve.',
+			'Vorhandene Drucktitel werden nicht unterstützt. Eine Bereichsänderung ersetzt sie; unveränderte Felder bewahren sie.',
+			'Los títulos existentes no son compatibles. Cambiar un rango los reemplaza; dejar los campos sin cambios los conserva.',
+			'不支持现有打印标题。更改标题区域会替换它们；保持字段不变可保留它们。',
+		],
+	'Use &L, &C and &R for sections. Fields: &P page, &N total pages, &A sheet, &F file, &D date, &T time. Use && for an ampersand. Unsupported formatting codes are preserved.':
+		[
+			'Utilisez &L, &C et &R pour les sections. Champs : &P page, &N total, &A feuille, &F fichier, &D date, &T heure. && affiche une esperluette. Les codes non pris en charge sont conservés.',
+			'Verwenden Sie &L, &C und &R für Abschnitte. Felder: &P Seite, &N Gesamtseiten, &A Blatt, &F Datei, &D Datum, &T Zeit. && ergibt ein Und-Zeichen. Nicht unterstützte Formatcodes bleiben erhalten.',
+			'Use &L, &C y &R para secciones. Campos: &P página, &N total, &A hoja, &F archivo, &D fecha, &T hora. && muestra un ampersand. Se conservan los códigos no compatibles.',
+			'使用 &L、&C、&R 指定区域。字段：&P 页码、&N 总页数、&A 工作表、&F 文件、&D 日期、&T 时间。&& 表示 &。保留不支持的格式代码。',
+		],
+	'Page order': ['Ordre des pages', 'Seitenreihenfolge', 'Orden de páginas', '页序'],
+	'Down, then over': [
+		'Vers le bas, puis à droite',
+		'Nach unten, dann nach rechts',
+		'Hacia abajo, luego a la derecha',
+		'先向下，再向右',
+	],
+	'Over, then down': [
+		'À droite, puis vers le bas',
+		'Nach rechts, dann nach unten',
+		'A la derecha, luego hacia abajo',
+		'先向右，再向下',
+	],
 	// Insert Chart
 	'Insert Chart': ['Insérer un graphique', 'Diagramm einfügen', 'Insertar gráfico', '插入图表'],
 	'Change Chart Type': [

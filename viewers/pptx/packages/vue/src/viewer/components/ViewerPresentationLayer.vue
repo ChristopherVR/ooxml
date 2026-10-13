@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AuthoredSlideRange, HyperlinkClickHandler } from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, HyperlinkClickHandler, SlidePasteRequest } from 'ooxml-ui/pptx';
 /**
  * ViewerPresentationLayer: the full-viewport surfaces that temporarily replace
  * the editing canvas (Slide Sorter, Outline View, Reading View, the slide show
@@ -10,7 +10,12 @@ import type { AuthoredSlideRange, HyperlinkClickHandler } from 'ooxml-ui/pptx';
  * chrome. Their controllers arrive whole (`deckViews`, `presentation`) rather
  * than unpacked, so this file stays markup.
  */
-import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
+import type {
+	PptxCustomShow,
+	PptxPresentationProperties,
+	PptxSlide,
+	PptxElement,
+} from 'pptx-viewer-core';
 
 import type { UseDeckViewsResult } from '../composables/useDeckViews';
 import type { UsePresentationControlsResult } from '../composables/usePresentationControls';
@@ -27,6 +32,7 @@ defineProps<{
 	presentation: UsePresentationControlsResult;
 	/** Slides with their template layer merged in: what every VISUAL surface paints. */
 	mergedSlides: PptxSlide[];
+	clipboardTemplates?: Record<string, PptxElement[]>;
 	/** The editable deck, without the template layer merged in. */
 	slides: PptxSlide[];
 	canvasSize: CanvasSize;
@@ -52,6 +58,9 @@ defineProps<{
 	 */
 	pixelateMosaicAnimation: boolean;
 	duplicateSlide: (index: number) => void;
+	pasteSlides: (request: SlidePasteRequest) => void;
+	copySystemSlides?: (indexes: number[]) => Promise<void>;
+	pasteSystemSlides?: (insertAt: number) => Promise<void>;
 	deleteSlide: (index: number) => void;
 	toggleSlideHidden: (index: number) => void;
 }>();
@@ -62,6 +71,8 @@ defineProps<{
 	<SlideSorter
 		v-if="deckViews.showSorter.value"
 		:slides="mergedSlides"
+		:clipboard-source-slides="slides"
+		:clipboard-templates="clipboardTemplates"
 		:canvas-size="canvasSize"
 		:media-data-urls="mediaDataUrls"
 		:content="content"
@@ -70,6 +81,9 @@ defineProps<{
 		@select="deckViews.onSorterSelect"
 		@reorder="deckViews.onSorterReorder"
 		@duplicate="duplicateSlide"
+		@paste="pasteSlides"
+		:copy-system-slides="copySystemSlides"
+		:paste-system-slides="pasteSystemSlides"
 		@delete="deleteSlide"
 		@toggle-hidden="toggleSlideHidden"
 		@close="deckViews.showSorter.value = false"

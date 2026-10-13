@@ -1,6 +1,8 @@
 import { NgStyle } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
+	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
 	Component,
 	HostListener,
 	computed,
@@ -8,7 +10,7 @@ import {
 	output,
 	signal,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
 	buildSlideSorterContextMenuEntries,
 	HIDDEN_SLIDE_LABEL_KEY,
@@ -23,6 +25,8 @@ import {
 	sorterSelectionIndexes,
 	sorterMenuContext,
 	sorterGridColumns,
+	slideClipboardLabels,
+	sorterPasteInsertAt,
 } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
@@ -31,8 +35,9 @@ import type {
 	SlideSorterState,
 	SlideSorterContextMenuCommandId,
 	SlideSorterContextMenuEntry,
+	SlidePasteRequest,
 } from 'ooxml-ui/pptx';
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
 import { SlideCanvasComponent } from './slide-canvas.component';
 import { thumbnailHeight, thumbnailZoom } from './slide-sorter-overlay-helpers';
@@ -70,12 +75,31 @@ const THUMB_W = 200;
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [NgStyle, SlideCanvasComponent, TranslatePipe],
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	templateUrl: './slide-sorter-overlay.component.html',
 	styleUrl: './slide-sorter-overlay.component.css',
 })
 export class SlideSorterOverlayComponent {
+	private readonly translation = inject(TranslateService);
+	readonly copySystemSlides = input<((indexes: number[]) => Promise<void>) | undefined>();
+	readonly pasteSystemSlides = input<((insertAt: number) => Promise<void>) | undefined>();
+	clipboardLabels = () => slideClipboardLabels((key) => this.translation.instant(key));
+	copyPackage = async (): Promise<void> => {
+		await this.copySystemSlides()?.(sorterSelectionIndexes(this.state(), this.slides()));
+	};
+	pastePackage = async (): Promise<void> => {
+		await this.pasteSystemSlides()?.(
+			sorterPasteInsertAt(
+				sorterSelectionIndexes(this.state(), this.slides()),
+				this.activeIndex(),
+				this.slides().length,
+			),
+		);
+	};
 	/** Full list of slides to display. */
 	readonly slides = input.required<PptxSlide[]>();
+	readonly clipboardSourceSlides = input<readonly PptxSlide[]>();
+	readonly clipboardTemplates = input<Record<string, PptxElement[]>>({});
 
 	/** Natural (100 %) canvas dimensions, passed through to SlideCanvasComponent. */
 	readonly canvasSize = input.required<CanvasSize>();
@@ -100,6 +124,7 @@ export class SlideSorterOverlayComponent {
 
 	/** Duplicate the active slide (Ctrl/Cmd+D). */
 	readonly duplicateSlide = output<number>();
+	readonly pasteSlides = output<SlidePasteRequest>();
 
 	/** Toggle the hidden flag on a slide (context-menu only, no keyboard chord). */
 	readonly toggleHiddenSlide = output<number>();
@@ -160,8 +185,18 @@ export class SlideSorterOverlayComponent {
 		this.sorter.set({ ...this.state(), zoom: Number((event.target as HTMLInputElement).value) });
 	}
 	private runAction(action: SlideSorterKeyActionName | 'toggle-hidden'): void {
-		const result = applySorterAction(this.state(), this.slides(), action, this.activeIndex());
+		const result = applySorterAction(
+			this.state(),
+			this.slides(),
+			action,
+			this.activeIndex(),
+			this.clipboardSourceSlides() ?? this.slides(),
+			this.clipboardTemplates(),
+		);
 		this.sorter.set(result.state);
+		if (result.paste) {
+			this.pasteSlides.emit(result.paste);
+		}
 		if (result.close) {
 			this.closed.emit();
 		}

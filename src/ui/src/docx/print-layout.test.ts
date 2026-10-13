@@ -328,4 +328,21 @@ describe('Print Layout footnotes', () => {
 		expect(mark.textContent).toBe('1');
 		expect(mark.style.fontSize).toBe('7.15pt');
 	});
+	it('positions balanced columns against the maximum height rather than their combined height', () => {
+		const result = sampleResult(),
+			page = result.pages[0]!;
+		page.footnoteHeightPx = 30;
+		page.footnotes = [
+			{ id: '1', yPx: 0, heightPx: 30, xPx: 0, widthPx: 120, columnIndex: 0, paragraphs: [] },
+			{ id: '1', yPx: 0, heightPx: 20, xPx: 160, widthPx: 120, columnIndex: 1, paragraphs: [] },
+		];
+		const { element } = renderPrintLayout(result);
+		const area = element.querySelector<HTMLElement>('.dve-print-footnotes')!;
+		expect(area.style.top).toBe('160px');
+		const notes = [...area.querySelectorAll<HTMLElement>('.dve-print-footnote')];
+		expect(notes.map((note) => [note.style.left, note.style.width, note.style.top])).toEqual([
+			['0px', '120px', '0px'],
+			['160px', '120px', '0px'],
+		]);
+	});
 });

@@ -7,6 +7,7 @@ export interface FieldSpec {
 	choices?: boolean;
 	maxLength?: number;
 	placeholder?: string;
+	multiline?: boolean;
 	/** A checkbox (read with `checked`) or a number field instead of text. */
 	input?: 'checkbox' | 'number';
 }
@@ -18,7 +19,7 @@ export interface FieldSpec {
 export class InsertDialog {
 	readonly dialog: Dialog;
 	readonly error: HTMLElement;
-	readonly fields = new Map<string, HTMLInputElement | HTMLSelectElement>();
+	readonly fields = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
 	readonly buttons = new Map<string, Button>();
 	constructor(
 		root: ShadowRoot,
@@ -35,11 +36,15 @@ export class InsertDialog {
 		for (const spec of specs) {
 			const label = doc.createElement('label');
 			label.textContent = spec.label;
-			const field = doc.createElement(spec.choices ? 'select' : 'input') as
-				| HTMLInputElement
-				| HTMLSelectElement;
+			const field = doc.createElement(
+				spec.choices ? 'select' : spec.multiline ? 'textarea' : 'input',
+			) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 			field.name = spec.name;
 			field.setAttribute('aria-label', spec.label);
+			if (field instanceof HTMLTextAreaElement) {
+				field.maxLength = spec.maxLength ?? 4096;
+				field.rows = 5;
+			}
 			if (field instanceof HTMLInputElement) {
 				field.type = spec.input ?? 'text';
 				if (spec.input === 'number') field.step = 'any';

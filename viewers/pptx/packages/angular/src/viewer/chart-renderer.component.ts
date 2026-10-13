@@ -154,9 +154,8 @@ const LEGEND_SWATCH_SIZE = 10;
 								[attr.font-style]="run.fontStyle"
 								[attr.font-family]="run.fontFamily"
 								[attr.fill]="run.fill"
-							>
-								{{ run.text }}
-							</tspan>
+								[textContent]="run.text"
+							></tspan>
 						}
 					} @else {
 						{{ vm().title }}

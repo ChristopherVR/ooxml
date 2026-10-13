@@ -1,4 +1,5 @@
 import { visioFormulaCachedValue } from './formula';
+import { visioFieldCase } from './text-field-case';
 import { sectionRows, type Sheet } from './sheet';
 import {
 	evaluateVisioTextField,
@@ -43,11 +44,22 @@ export function textFieldDisplay(
 		format = row?.cells.get('Format');
 	const formula = value?.formula && value.formula !== 'Inh' ? value.formula : undefined;
 	const result = { cached, ...(formula ? { formula } : {}) };
-	if (!row || !context || (format?.formula && /^\s*FIELDPICTURE\s*\(/i.test(format.formula)))
-		return { text: cached, ...result };
+	if (!row || !context) return { text: cached, ...result };
 	const picture = format?.value ?? '';
 	const evaluated = formula ? evaluateVisioTextField(formula, context) : undefined;
 	const source = evaluated ?? cachedValue(value?.value, value?.unit);
+	// Native inherited fields keep the master's <fld> placeholder while overriding the
+	// instance's cached Value. Native string pictures include normal/lower/upper case.
+	// Other internal pictures still require explicit support before replacing stored text.
+	if (format?.formula && /^\s*FIELDPICTURE\s*\(/i.test(format.formula)) {
+		const code = /^\s*FIELDPICTURE\s*\(\s*(\d+)\s*\)\s*$/i.exec(format.formula)?.[1];
+		let text = cached;
+		if (source?.kind === 'string') {
+			if (code === '0' || code === '37') text = source.text;
+			else if (code === '38' || code === '39') text = visioFieldCase(source.text, code === '39');
+		}
+		return { text, ...result };
+	}
 	const text = source ? formatVisioFieldValue(source, picture) : undefined;
 	return { text: text ?? cached, ...result };
 }

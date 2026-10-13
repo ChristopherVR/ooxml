@@ -34,6 +34,7 @@ import type {
 import { PlaceholderDefaults, PptxElement, PptxLayoutOption, XmlObject } from '../../types';
 import type {
 	PptxCommentAuthor,
+	PptxChartData,
 	PptxModernCommentAuthor,
 	PptxCustomXmlPart,
 	PptxEmbeddedFont,
@@ -105,7 +106,7 @@ export class PptxHandlerRuntime {
 	protected savedSlideFingerprints: Map<string, string> = new Map();
 
 	/**
-	 * `chartData` exactly as it stood right after `enrichChartData` parsed it,
+	 * `chartData` as parsed or last serialized into the current ZIP,
 	 * serialized to JSON and keyed by `chartPartPath`. The save pipeline used
 	 * to re-serialize EVERY chart part on any slide rewrite regardless of
 	 * whether the chart itself was touched, which materializes the load-time
@@ -118,6 +119,10 @@ export class PptxHandlerRuntime {
 	 * untouched chart part pass through byte-for-byte instead.
 	 */
 	protected chartDataBaselines: Map<string, string> = new Map();
+	/** Pending chart requests also retain warned workbook writes for later retry. */
+	protected pendingChartUpdates?: Array<{ chartData: PptxChartData; slidePath: string }>;
+	/** Last fully reconciled workbook data plus whether a write-back needs retry. */
+	protected chartWorkbookDataBaselines = new Map<string, { signature: string; pending: boolean }>();
 
 	/** Per-slide relationship maps: slide path -> (rId -> target path). */
 	protected slideRelsMap: Map<string, Map<string, string>> = new Map();

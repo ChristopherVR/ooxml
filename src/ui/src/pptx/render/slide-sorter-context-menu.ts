@@ -100,11 +100,9 @@ export function slideSorterContextMenuLabel(
 }
 
 /**
- * Where a paste lands: the current positions of the slides that were copied,
- * in deck order. A copied slide that has since been deleted is skipped, so a
- * paste after a delete never throws. Paste inserts a copy after each source
- * slide (a duplicate of the copied slides), which is React's long-standing
- * behaviour; positional paste is not implemented.
+ * Resolve slide identities to current positions in deck order. Used for sorter
+ * selection; paste itself uses the retained snapshots and destination in the
+ * shared sorter state, so deleting a copied source does not empty the clipboard.
  */
 export function slideSorterPasteIndexes(
 	clipboardSlideIds: readonly string[],

@@ -12,7 +12,7 @@ import { applyStyleNumbering, differsOnlyByStyleNumbering } from './style-number
 import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer';
 import { applyNoteEdits } from './write-notes';
 import { writeNewRelationships } from './part-relationships';
-import { applySettingsFlag, applyTrackChangesSetting } from './settings';
+import { applyCompatibilityMode, applySettingsFlag, applyTrackChangesSetting } from './settings';
 import { applyPageBackground } from './page-background';
 import { applyComments } from './write-comments';
 import { numberCommentIds } from './comment-spans';
@@ -135,6 +135,8 @@ export async function saveDocx(
 	await applyNumberingCatalog(zip, model, binding);
 	await applyCoreProperties(zip, model.properties, binding?.base.properties);
 	if (binding) await applyStyleNumbering(zip, model, binding.base);
+	if (model.compatibilityMode !== binding?.base.compatibilityMode)
+		await applyCompatibilityMode(zip, model.compatibilityMode);
 	if (Boolean(model.evenAndOddHeaders) !== Boolean(binding?.base.evenAndOddHeaders))
 		await applySettingsFlag(zip, 'evenAndOddHeaders', Boolean(model.evenAndOddHeaders));
 	// Word shows a page colour only when settings.xml asks for background shapes.

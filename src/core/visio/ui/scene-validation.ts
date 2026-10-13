@@ -98,6 +98,8 @@ export function assertViewableDocument(model: VisioDocument): void {
 		if (pageIds.has(page.id)) throw new Error('The scene has duplicate page identities.');
 		pageIds.add(page.id);
 		label(page.name);
+		if (page.accessibilityTitle !== undefined) label(page.accessibilityTitle, 8192);
+		if (page.alternativeText !== undefined) label(page.alternativeText, 8192);
 		if (page.layers !== undefined && !Array.isArray(page.layers))
 			throw new Error('The scene has an invalid layer list.');
 		layerCount += page.layers?.length ?? 0;

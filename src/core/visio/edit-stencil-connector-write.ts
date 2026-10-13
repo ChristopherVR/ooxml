@@ -1,5 +1,10 @@
 import type { VisioConnectorRoute } from './edit-connector-commands';
 import type { VisioRoutePoint } from './connector-route';
+import {
+	connectorCurveMiddle,
+	connectorPolylineMiddle,
+	cornerCurveKnots,
+} from './connector-curve-spans';
 import { effectiveCells, effectiveNumber, proveStencilConnector } from './edit-stencil-connector';
 import { fail } from './package-common';
 import { attribute, children } from './sheet';
@@ -59,35 +64,6 @@ function put(
 	node.removeAttribute('E');
 	if (formula !== undefined) node.setAttribute('F', formula);
 }
-
-/** The point halfway along a polyline, where Visio puts a connector's text. */
-function midpoint(points: readonly VisioRoutePoint[]): VisioRoutePoint {
-	const lengths = points
-		.slice(1)
-		.map((point, index) => Math.hypot(point.x - points[index]!.x, point.y - points[index]!.y));
-	let left = lengths.reduce((sum, value) => sum + value, 0) / 2;
-	for (const [index, length] of lengths.entries()) {
-		if (left <= length && length > 0) {
-			const from = points[index]!,
-				to = points[index + 1]!;
-			return {
-				x: from.x + ((to.x - from.x) * left) / length,
-				y: from.y + ((to.y - from.y) * left) / length,
-			};
-		}
-		left -= length;
-	}
-	return points.at(-1)!;
-}
-const bezier = (p: readonly VisioRoutePoint[], t: number): VisioRoutePoint => {
-	const u = 1 - t;
-	const mix = (key: 'x' | 'y') =>
-		u * u * u * p[0]![key] +
-		3 * u * u * t * p[1]![key] +
-		3 * u * t * t * p[2]![key] +
-		t * t * t * p[3]![key];
-	return { x: mix('x'), y: mix('y') };
-};
 
 function section(shape: Element, name: string, index?: string): Element {
 	let node = children(shape, 'Section').find((item) => attribute(item, 'N') === name);
@@ -169,8 +145,10 @@ export function writeStencilConnector(
 		y: point.y - (begin.y + end.y) / 2 + height / 2,
 	});
 	// A curve between level or plumb ends is the straight run itself.
-	const curved = route === 'curved' && !flatX && !flatY && vertices.length === 4;
+	const curved =
+		route === 'curved' && (vertices.length === 5 || (!flatX && !flatY && vertices.length === 4));
 	const local = (curved || route !== 'curved' ? vertices : [begin, end]).map(at);
+	const [internalKnot, lastKnot] = local.length === 5 ? cornerCurveKnots(local) : [0, 1];
 	const masterGeometry = children(template, 'Section').find(
 		(item) => attribute(item, 'N') === 'Geometry',
 	)!;
@@ -196,15 +174,18 @@ export function writeStencilConnector(
 				{
 					type: 'NURBSTo',
 					cells: [
-						['X', local[3]!.x, flatX ? undefined : 'Width*1'],
-						['Y', local[3]!.y, flatY ? undefined : 'Height*1'],
-						['A', 0],
+						['X', local.at(-1)!.x, flatX ? undefined : 'Width*1'],
+						['Y', local.at(-1)!.y, flatY ? undefined : 'Height*1'],
+						['A', internalKnot],
 						['B', 1],
 						['C', 0],
 						['D', 1],
 						[
 							'E',
-							`NURBS(1,3,1,1,${text(local[1]!.x - local[0]!.x)},${text(local[1]!.y - local[0]!.y)},0,1,${text(local[2]!.x - local[0]!.x)},${text(local[2]!.y - local[0]!.y)},0,1)`,
+							`NURBS(${text(lastKnot)},3,1,1,${local
+								.slice(1, -1)
+								.map((point) => `${text(point.x)},${text(point.y)},0,1`)
+								.join(',')})`,
 						],
 					],
 				},
@@ -242,7 +223,7 @@ export function writeStencilConnector(
 		}
 	}
 	drop(shape, geometry);
-	const middle = curved ? bezier(local, 0.5) : midpoint(local);
+	const middle = curved ? connectorCurveMiddle(local) : connectorPolylineMiddle(local);
 	const masterControl = children(template, 'Section')
 		.filter((item) => attribute(item, 'N') === 'Control')
 		.flatMap((item) => children(item, 'Row'))

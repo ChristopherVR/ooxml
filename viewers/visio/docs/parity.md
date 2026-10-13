@@ -1,5 +1,45 @@
 # Visio capability ledger
 
+## Connector jump formatting and print preservation, 2026-10-12
+
+Page Setup now includes Layout and Routing controls for jump placement, style,
+and horizontal/vertical direction. Changes save as one undoable transaction.
+Saved connector style and direction overrides follow master inheritance and
+override the page settings in canvas and SVG output. Print snapshots now retain
+the route, glue and page layout information required to keep those jumps.
+
+The native page style enum is corrected: 0 and 1 are Arc, 2 is Gap, 3 is Square,
+and 4 through 9 are two through seven sides. Earlier code interpreted these as
+a zero-based style list and refused 9. The mappings follow Microsoft's
+[LineJumpStyle reference](https://learn.microsoft.com/en-us/office/client-developer/visio/linejumpstyle-cell-page-layout-section).
+
+Core tests cover cached/inherited overrides, page direction save/reopen,
+native style values and direction under reflected/reversed geometry. UI tests
+cover the dialog, undo/redo and print snapshots, including glued connectors
+without explicit route metadata. A real Chromium test covers the new tab,
+native Gap value, saved directions, history and matching print geometry.
+
+Connector jump policy, style and directions are now editable in Format Shape.
+The policy renderer matches 125 measured Visio 16 SVG cases, including conflicts
+between connector overrides. Native Visio reopened all four edited settings.
+
+Jump widths now use saved horizontal/vertical factors, routing spacing and
+drawing scale, matching 68 native Visio 16 measurements. Page Setup also exposes
+size percentages. Another 160 native observations establish predominant-axis
+sizing/policy for slanted straight lines and confirm that curved connectors omit
+jumps. Exact 45-degree ties and routing chronology remain limited.
+
+Saved native straight connectors cache jumps in Geometry rows. Supported plain
+rows now refresh on save as well as display; native reopen/SVG acceptance covers
+disabled jumps, gaps, larger arcs and reversed direction. The y-up ArcTo sweep
+mapping is corrected. Unknown row metadata and geometry formula references keep
+their cache with a diagnostic, and unchanged jump settings do not rewrite it.
+See `scripts/visio-line-jump-acceptance.ps1` and the evidence under
+`src/core/visio/__fixtures__/native-line-jumps.md`.
+
+These changes do not establish native Visio visual parity. The entry below records the earlier
+2026-10-10 state; its missing direction/style controls are superseded here.
+
 ## Line jumps, Ruler & Grid, Snap & Glue and a horizontal legend, 2026-10-10
 
 Four commands that were shown disabled now work, each as one undoable edit of
@@ -170,9 +210,12 @@ Still different or refused:
   top of the second shape, this editor on its left).
 - An end on a connection point is approached like a free point; Visio takes the
   side the point sits on into account.
-- A curved connector is this editor's single cubic, not Visio's curve, and a
-  curve between ends less than a quarter inch apart in one direction is drawn
-  as the straight run.
+- Axis-aligned Dynamic connectors use native facing-side endpoints and five-control,
+  two-span corner curves. Seventeen native captures cover endpoints, and ten edited
+  drawings reopen in Visio. The six corner cases also match control points and knots;
+  text placement agrees within 0.0002 inches. A browser regression covers the two-span
+  drag preview, save and undo/redo. Rotated/fixed endpoints and other routes retain the
+  general single-cubic approximation; short unsupported curves can become straight runs.
 - A stencil connector whose master is not built like the Dynamic connector, a
   connector inside a group, and routing styles other than right-angle,
   straight and curved (tree, organization chart, flowchart directions) are

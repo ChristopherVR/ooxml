@@ -380,6 +380,7 @@ describe('workspace parity panels', () => {
 
 test('copies a sorter range and keeps its zoom control synchronized', () => {
 	const onDuplicate = vi.fn();
+	const onPaste = vi.fn();
 	openSlideSorterOverlay(document, document.body, createTranslator(), {
 		slides: ['a', 'b', 'c'].map((id, i) => ({ id, rId: id, slideNumber: i + 1, elements: [] })),
 		current: 0,
@@ -387,6 +388,7 @@ test('copies a sorter range and keeps its zoom control synchronized', () => {
 		onReorder: vi.fn(),
 		onDelete: vi.fn(),
 		onDuplicate,
+		onPaste,
 		onToggleHidden: vi.fn(),
 	});
 	document
@@ -395,7 +397,16 @@ test('copies a sorter range and keeps its zoom control synchronized', () => {
 	expect(document.querySelectorAll('[data-pptx-selected="true"]')).toHaveLength(2);
 	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', ctrlKey: true }));
 	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', ctrlKey: true }));
-	expect(onDuplicate.mock.calls).toStrictEqual([[1], [0]]);
+	expect(onPaste).toHaveBeenCalledExactlyOnceWith(
+		expect.objectContaining({ insertAt: 2, sourceIds: ['a', 'b'] }),
+	);
+	const request = onPaste.mock.calls[0]![0];
+	expect(request.copies).toHaveLength(2);
+	expect(new Set(request.copies.map((slide: PptxSlide) => slide.id)).size).toBe(2);
+	expect(request.copies.every((slide: PptxSlide) => !request.sourceIds.includes(slide.id))).toBe(
+		true,
+	);
+	expect(onDuplicate).not.toHaveBeenCalled();
 	document.dispatchEvent(new KeyboardEvent('keydown', { key: '+', ctrlKey: true }));
 	expect(document.querySelector<HTMLInputElement>('input[type=range]')!.value).toBe('110');
 	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

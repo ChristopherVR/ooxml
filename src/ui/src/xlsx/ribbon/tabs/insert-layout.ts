@@ -14,7 +14,19 @@ export function insertTab(): RibbonTab {
 			{
 				id: 'tables',
 				label: 'Tables',
-				controls: [{ kind: 'button', command: 'insert.table', size: 'large' }],
+				controls: [
+					{ kind: 'button', command: 'insert.table', size: 'large' },
+					{ kind: 'button', command: 'insert.pivot-table', size: 'large' },
+					{
+						kind: 'menu',
+						label: 'PivotTable',
+						items: [
+							{ command: 'pivot.settings' },
+							{ command: 'pivot.refresh' },
+							{ command: 'pivot.delete' },
+						],
+					},
+				],
 			},
 			{
 				id: 'illustrations',
@@ -47,6 +59,30 @@ export function insertTab(): RibbonTab {
 				id: 'links',
 				label: 'Links',
 				controls: [{ kind: 'button', command: 'insert.link', size: 'large' }],
+			},
+			{
+				id: 'sparklines',
+				label: 'Sparklines',
+				launcher: 'sparkline.settings',
+				controls: [
+					{ kind: 'button', command: 'insert.sparkline-line', size: 'large' },
+					{ kind: 'button', command: 'insert.sparkline-column', size: 'large' },
+					{ kind: 'button', command: 'insert.sparkline-stacked', size: 'large' },
+					{
+						kind: 'stack',
+						controls: [
+							{ kind: 'button', command: 'sparkline.settings' },
+							{
+								kind: 'menu',
+								label: 'Clear Sparklines',
+								items: [
+									{ command: 'sparkline.clear-selected' },
+									{ command: 'sparkline.clear-groups' },
+								],
+							},
+						],
+					},
+				],
 			},
 			{
 				id: 'comments',
@@ -116,6 +152,22 @@ export function pageLayoutTab(): RibbonTab {
 						size: 'large',
 						items: [{ command: 'page.print-area-set' }, { command: 'page.print-area-clear' }],
 					},
+					{
+						kind: 'menu',
+						label: 'Breaks',
+						icon: 'xl-printArea',
+						size: 'large',
+						items: [
+							{ command: 'page.break-row-insert' },
+							{ command: 'page.break-col-insert' },
+							sep,
+							{ command: 'page.break-row-remove' },
+							{ command: 'page.break-col-remove' },
+							sep,
+							{ command: 'page.breaks-reset' },
+						],
+					},
+					{ kind: 'button', command: 'page.preview', size: 'large' },
 				],
 			},
 			{

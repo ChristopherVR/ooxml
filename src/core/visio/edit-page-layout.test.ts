@@ -78,7 +78,7 @@ describe('page layout cells', () => {
 		for (const edit of [
 			layout({}),
 			layout({ lineJumpCode: 6 }),
-			layout({ lineJumpStyle: 9 }),
+			layout({ lineJumpStyle: 10 }),
 			layout({ gridDensityX: 3 }),
 			layout({ rulerDensityX: 4 }),
 			layout({ gridSpacingY: -1 }),

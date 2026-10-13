@@ -360,11 +360,16 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 					</div>
 				) : (
 					<>
-						<ShapeEffectOverlay
-							element={el}
-							animatesFill={visualAnimationState?.animatesFill}
-							animatesStroke={visualAnimationState?.animatesStroke}
-						/>
+						{/* A picture's overlay (its centred `a:ln` frame) paints over the
+						    picture, after the body below; under it the photo covered the
+						    inner half of the line. */}
+						{!isImg && (
+							<ShapeEffectOverlay
+								element={el}
+								animatesFill={visualAnimationState?.animatesFill}
+								animatesStroke={visualAnimationState?.animatesStroke}
+							/>
+						)}
 						{extrusionData.hasExtrusion && <Extrusion3DOverlay data={extrusionData} />}
 					</>
 				)}
@@ -440,6 +445,13 @@ export const ElementRenderer: React.FC<ElementRendererProps> = React.memo(
 					onUpdateChartElement: chartUpdateHandler,
 					onFormatText,
 				})}
+				{isImg && !backgroundAnimationState && (
+					<ShapeEffectOverlay
+						element={el}
+						animatesFill={visualAnimationState?.animatesFill}
+						animatesStroke={visualAnimationState?.animatesStroke}
+					/>
+				)}
 				<ActionAffordances affordance={actionAffordance} />
 				{/* Resize/rotate/adjustment handles do NOT render here. This div
 				    carries the preset's `clip-path` (`shapeVisualStyle`'s clipPath

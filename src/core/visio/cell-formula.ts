@@ -11,3 +11,7 @@ export function executableCellFormula(source: string | undefined): string | unde
 export function inertDoubleClickFormula(cell: string, source: string): boolean {
 	return cell === 'EventDblClick' && /^\s*=?\s*(OPENTEXTWIN|DEFAULTEVENT)\(\s*\)\s*$/i.test(source);
 }
+
+/** Shape Data uses the XML section Property and the formula prefix Prop. */
+export const shapeDataFormulaSection = (name: string): string =>
+	name === 'Property' ? 'Prop' : name;

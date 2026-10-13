@@ -1,6 +1,7 @@
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
+import { shapeDataFormulaSection } from './cell-formula';
 
 function inheritedProtection(node: Element, ancestor: Element | undefined): void {
 	try {
@@ -40,7 +41,7 @@ export function masterCells(
 	};
 	for (const node of children(sheet, 'Cell')) add(attribute(node, 'N') ?? '', node);
 	for (const section of children(sheet, 'Section')) {
-		const name = attribute(section, 'N') ?? '';
+		const name = shapeDataFormulaSection(attribute(section, 'N') ?? '');
 		const prefix =
 			name === 'Geometry'
 				? `Geometry${Number(attribute(section, 'IX') ?? '0') + 1}`

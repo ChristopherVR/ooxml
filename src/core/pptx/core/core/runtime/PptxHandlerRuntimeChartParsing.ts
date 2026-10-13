@@ -1,3 +1,4 @@
+import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
 /**
  * @fileoverview Chart parsing orchestrator for OOXML chart graphic frames.
  *
@@ -280,6 +281,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			colorAdapter,
 		);
 		const style = chartStyleFromNeutral(neutral, this.extractChartStyle(chartSpace, chartRoot));
+		const titleTx = reader.xml.getChildByLocalName(
+			reader.xml.getChildByLocalName(chartRoot, 'title'),
+			'tx',
+		);
+		const titleRich = reader.xml.getChildByLocalName(titleTx, 'rich');
+		const titleParagraphs = reader.xml.getChildrenArrayByLocalName(titleRich, 'p');
+		const titleTextEditable = Boolean(
+			titleRuns?.length &&
+			titleParagraphs.length === 1 &&
+			!Object.keys(titleParagraphs[0] ?? {}).some((key) =>
+				['br', 'fld'].includes(reader.localName(key)),
+			),
+		);
 		const groupOptions = groupOptionsFromNeutral(groups[0]?.group, chartType);
 		const linesAndChrome = this.readChartLinesAndChrome(neutral, tree, groups, reader);
 
@@ -290,6 +304,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			? { ...rawDateCategories, date1904: neutral.date1904 ?? workbook?.date1904 ?? false }
 			: undefined;
 		const filled = applyEmbeddedWorkbookFallback(chartType, categories, built.series, workbook);
+		const dataLabelTextEditable =
+			!categoryLevels &&
+			!dateCategories &&
+			(await chartLabelsHaveEditableSources(
+				reader.xml,
+				this.zip,
+				chartSpace,
+				built.seriesNodes,
+				filled.series,
+				filled.categories,
+				facts.externalData,
+				chartPartPath,
+				this.resolveImagePath.bind(this),
+			));
 
 		// Resolve c:dPt/c:ser picture fills to image URLs (only when a series or point has one).
 		const hasPicture = filled.series.some(
@@ -335,6 +363,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			...built.filtered,
 			title: neutralTitleText(neutral.title),
 			...(titleRuns ? { titleRuns } : {}),
+			titleTextEditable,
+			dataLabelTextEditable,
+			...(dataLabelTextEditable
+				? {
+						dataLabelSourceShape: {
+							categoryCount: filled.categories.length,
+							seriesValueCounts: filled.series.map((series) => series.values.length),
+						},
+					}
+				: {}),
 			style,
 			grouping: groupOptions.grouping,
 			...groupOptions,

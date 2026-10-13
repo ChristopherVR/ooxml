@@ -11,6 +11,7 @@ import { deleteVisioPage } from './edit-page-delete';
 import { setVisioPageSize } from './edit-page-size';
 import { setVisioPageProperties, setVisioPageSetup } from './edit-page-setup';
 import { setVisioPageLayout } from './edit-page-layout';
+import { setVisioPageAltText } from './edit-page-alt-text';
 import { setVisioSnapGlue } from './edit-snap-glue';
 import { setVisioPageDecoration } from './edit-page-decoration';
 import { createVisioPagePart, type VisioPageParts } from './edit-page-create';
@@ -75,6 +76,10 @@ export async function editVsdxPages(
 	for (const command of commands) {
 		check();
 		const existing = children(pages, 'Page');
+		if (command.type === 'set-page-alt-text') {
+			await setVisioPageAltText(pkg, pagesPart, pages, dirty, command, check);
+			continue;
+		}
 		if (command.type === 'set-page-setup') {
 			await setVisioPageSetup(pkg, pagesPart, pages, pagePaths, dirty, command, check);
 			continue;
@@ -179,6 +184,7 @@ export async function editVsdxPages(
 				command.type !== 'set-page-size' &&
 				command.type !== 'set-page-setup' &&
 				command.type !== 'set-page-layout' &&
+				command.type !== 'set-page-alt-text' &&
 				command.type !== 'set-snap-glue',
 		)
 	) {

@@ -24,25 +24,40 @@ export function drawTextSegments(
 	scaleFactor = 1,
 ): void {
 	// Use body insets if available, else a small fraction of dimensions.
-	const padL = bodyStyle?.bodyInsetLeft
-		? bodyStyle.bodyInsetLeft * scaleFactor
-		: Math.round(w * FALLBACK_PAD_FACTOR);
-	const padR = bodyStyle?.bodyInsetRight
-		? bodyStyle.bodyInsetRight * scaleFactor
-		: Math.round(w * FALLBACK_PAD_FACTOR);
-	const padT = bodyStyle?.bodyInsetTop
-		? bodyStyle.bodyInsetTop * scaleFactor
-		: Math.round(h * FALLBACK_PAD_FACTOR);
-	const padB = bodyStyle?.bodyInsetBottom
-		? bodyStyle.bodyInsetBottom * scaleFactor
-		: Math.round(h * FALLBACK_PAD_FACTOR);
+	const padL =
+		bodyStyle?.bodyInsetLeft !== undefined
+			? bodyStyle.bodyInsetLeft * scaleFactor
+			: Math.round(w * FALLBACK_PAD_FACTOR);
+	const padR =
+		bodyStyle?.bodyInsetRight !== undefined
+			? bodyStyle.bodyInsetRight * scaleFactor
+			: Math.round(w * FALLBACK_PAD_FACTOR);
+	const padT =
+		bodyStyle?.bodyInsetTop !== undefined
+			? bodyStyle.bodyInsetTop * scaleFactor
+			: Math.round(h * FALLBACK_PAD_FACTOR);
+	const padB =
+		bodyStyle?.bodyInsetBottom !== undefined
+			? bodyStyle.bodyInsetBottom * scaleFactor
+			: Math.round(h * FALLBACK_PAD_FACTOR);
 
 	const maxWidth = w - padL - padR;
 	if (maxWidth <= 0) {
 		return;
 	}
 
-	const paragraphs = splitIntoParagraphs(segments);
+	const paragraphs = splitIntoParagraphs(
+		segments.map((segment) => ({
+			...segment,
+			style: {
+				...bodyStyle,
+				...Object.fromEntries(
+					Object.entries(segment.style).filter(([, value]) => value !== undefined),
+				),
+			},
+		})),
+		bodyStyle,
+	);
 	const lines = layoutParagraphs(ctx, paragraphs, maxWidth, scaleFactor);
 	if (lines.length === 0) {
 		return;
@@ -104,47 +119,83 @@ interface TextLine {
 	align?: TextStyle['align'];
 }
 
+interface TextParagraph {
+	segments: TextSegment[];
+	style: TextStyle;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Paragraph splitting & layout                                      */
 /* ------------------------------------------------------------------ */
 
-function splitIntoParagraphs(segments: TextSegment[]): TextSegment[][] {
-	const paragraphs: TextSegment[][] = [[]];
+function splitIntoParagraphs(
+	segments: TextSegment[],
+	bodyStyle: TextStyle | undefined,
+): TextParagraph[] {
+	const paragraphs: TextParagraph[] = [{ segments: [], style: bodyStyle ?? {} }];
 	for (const seg of segments) {
-		if (seg.isParagraphBreak) {
-			paragraphs.push([]);
-		} else if (seg.text) {
-			paragraphs[paragraphs.length - 1].push(seg);
+		if (seg.isParagraphBreak || (seg.text === '\n' && !seg.isLineBreak)) {
+			paragraphs.push({ segments: [], style: seg.style });
+		} else if (seg.text || seg.isLineBreak) {
+			paragraphs[paragraphs.length - 1].segments.push(seg);
 		}
 	}
-	return paragraphs.filter((p) => p.length > 0);
+	return paragraphs;
 }
 
 function layoutParagraphs(
 	ctx: CanvasRenderingContext2D,
-	paragraphs: TextSegment[][],
+	paragraphs: TextParagraph[],
 	maxWidth: number,
 	scaleFactor: number,
 ): TextLine[] {
 	const lines: TextLine[] = [];
 
-	for (const para of paragraphs) {
-		const paraAlign = para[0]?.style?.align;
+	for (const paragraph of paragraphs) {
+		const para = paragraph.segments;
+		const paraAlign = para[0]?.style.align ?? paragraph.style.align;
 		let currentLine: TextRun[] = [];
 		let lineWidth = 0;
 		let lineHeight = 0;
+		let fallbackHeight =
+			(para[0]?.style.fontSize ?? paragraph.style.fontSize ?? DEFAULT_FONT_SIZE) *
+			scaleFactor *
+			1.2;
+		const flushLine = () => {
+			while (currentLine.length > 0 && /^\s+$/.test(currentLine[currentLine.length - 1].text)) {
+				lineWidth -= currentLine.pop()!.measuredWidth;
+			}
+			lines.push({
+				runs: currentLine,
+				width: lineWidth,
+				height: lineHeight || fallbackHeight,
+				align: paraAlign,
+			});
+			currentLine = [];
+			lineWidth = 0;
+			lineHeight = 0;
+		};
 
 		for (const seg of para) {
 			ctx.font = buildFont(seg.style, scaleFactor);
 			const fontSize = (seg.style.fontSize ?? DEFAULT_FONT_SIZE) * scaleFactor;
 			const segHeight = fontSize * 1.2;
+			fallbackHeight = segHeight;
+			if (seg.isLineBreak) {
+				flushLine();
+				continue;
+			}
 
 			// Split into words while preserving whitespace boundaries.
-			// A segment may be a single space (" ") between runs — we
+			// A segment may be a single space (" ") between runs; we
 			// must ensure that space is kept.
-			const tokens = seg.text.split(/(?<=\s)(?=\S)|(?<=\S)(?=\s)/);
+			const tokens = seg.text.split(/(\r\n|\r|\n)|(?<=\s)(?=\S)|(?<=\S)(?=\s)/);
 			for (const raw of tokens) {
 				if (!raw) {
+					continue;
+				}
+				if (/^(\r\n|\r|\n)$/.test(raw)) {
+					flushLine();
 					continue;
 				}
 
@@ -168,20 +219,7 @@ function layoutParagraphs(
 				const wordW = ctx.measureText(word).width;
 
 				if (lineWidth + wordW > maxWidth && currentLine.length > 0) {
-					// Trim trailing whitespace runs before pushing.
-					while (currentLine.length > 0 && /^\s+$/.test(currentLine[currentLine.length - 1].text)) {
-						const removed = currentLine.pop()!;
-						lineWidth -= removed.measuredWidth;
-					}
-					lines.push({
-						runs: currentLine,
-						width: lineWidth,
-						height: lineHeight,
-						align: paraAlign,
-					});
-					currentLine = [];
-					lineWidth = 0;
-					lineHeight = 0;
+					flushLine();
 				}
 
 				currentLine.push({
@@ -194,14 +232,7 @@ function layoutParagraphs(
 			}
 		}
 
-		if (currentLine.length > 0) {
-			lines.push({
-				runs: currentLine,
-				width: lineWidth,
-				height: lineHeight,
-				align: paraAlign,
-			});
-		}
+		flushLine();
 	}
 
 	return lines;

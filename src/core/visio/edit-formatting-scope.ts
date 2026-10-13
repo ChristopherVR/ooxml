@@ -5,7 +5,7 @@ import { analyzeVisioFormula } from './formula';
 import { indexCells } from './edit-recalculate-index';
 import { fail } from './package-common';
 import { isThemeLookupFormula } from './edit-formatting-cell-admission';
-import { isConnectedGlueCell } from './edit-connector-glue';
+import { isConnectedGlueCell, visioGlueTriggerTarget } from './edit-connector-glue';
 import { textSizeFormula } from './edit-text-size-formula';
 
 /** Nonnumeric font/color caches cannot be recalculated by the numeric engine.
@@ -28,6 +28,9 @@ export async function assertFormattingDependencies(
 	indexCells(roots, { check });
 	const shapeId = attribute(shape, 'ID')!;
 	const changedNames = new Set([...changed.keys()].map((name) => name.toLowerCase()));
+	const jumpOnly = [...changedNames].every((name) =>
+		/^conlinejump(code|style|dirx|diry)$/.test(name),
+	);
 	// Native ShapeSheet names differ from XML section/row names for text cells.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/style-cell-character-section
 	const canonical = (name: string) =>
@@ -62,6 +65,18 @@ export async function assertFormattingDependencies(
 			if (attribute(node, 'V') === 'Themed' && isThemeLookupFormula(source)) continue;
 			// Dynamic glue follows geometry only; text and formatting never feed it.
 			if (isConnectedGlueCell(node, source)) continue;
+			// Native unglued dynamic connectors retain self transform triggers. Jump decoration
+			// does not change endpoint geometry; keep these triggers and their caches intact.
+			const owner = node.parentNode as Element | null;
+			if (
+				jumpOnly &&
+				node.localName === 'Cell' &&
+				/^(BegTrigger|EndTrigger)$/.test(attribute(node, 'N') ?? '') &&
+				owner?.localName === 'Shape' &&
+				(owner.parentNode?.parentNode as Element | undefined)?.localName === 'PageContents' &&
+				visioGlueTriggerTarget(source) === attribute(owner, 'ID')
+			)
+				continue;
 			let localShapeId: string | undefined;
 			let parent: Node | null = node;
 			while (parent?.nodeType === 1) {

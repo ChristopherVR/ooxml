@@ -15,6 +15,7 @@
 		getImageFitStyle,
 		getImageOverflow,
 		getImageTilingStyle,
+		getPictureFrameLayers,
 		probeNativeImageSize,
 		resolveColorChangedImageSource,
 		resolveShapeGeometry,
@@ -83,14 +84,18 @@
 	// The clip is load-bearing, not cosmetic: a cropped picture is rendered by
 	// scaling the source up and translating the cropped-away part out of the
 	// frame, so without it the discarded region paints over its neighbours.
-	const resolvedClip = $derived(geometryClipPath ?? cropShapeClip);
-	const containerStyle = $derived(
-		styleToString({
-			...getContainerStyle(element, zIndex),
+	// A picture with a frame (`a:ln`) or an outer shadow keeps that clip on an
+	// inner surface instead, so the centred line (`ShapeEffectOverlay`) and the
+	// shadow can extend past the box (shared `getPictureFrameLayers`).
+	const frameLayers = $derived(
+		getPictureFrameLayers(element, {
 			overflow: getImageOverflow(element),
-			...(geometryBorderRadius ? { borderRadius: geometryBorderRadius } : {}),
-			...(resolvedClip ? { clipPath: resolvedClip } : {}),
+			borderRadius: geometryBorderRadius,
+			clipPath: geometryClipPath ?? cropShapeClip,
 		}),
+	);
+	const containerStyle = $derived(
+		styleToString({ ...getContainerStyle(element, zIndex), ...frameLayers.box }),
 	);
 	const imageSrc = $derived(getImageSrc(element, mediaDataUrls));
 	const imageEffects = $derived(
@@ -177,6 +182,20 @@
 	{#if hitTarget}
 		<div aria-hidden="true" data-pptx-hit-target="true" style={styleToString(hitTarget)}></div>
 	{/if}
+	{#if frameLayers.surface}
+		<div class="pptx-svelte-image-surface" style={styleToString(frameLayers.surface)}>
+			{@render pixels()}
+		</div>
+	{:else}
+		{@render pixels()}
+	{/if}
+	<!-- DAG fill-overlay tint, a:reflection mirror and the picture's own frame
+	     (a:ln, the centred outline from buildStrokeOutline). It sits beside the
+	     clipped surface, on the box, so the outer half of the line is not cut. -->
+	<ShapeEffectOverlay {element} {mediaDataUrls} {zIndex} />
+</div>
+
+{#snippet pixels()}
 	<!-- SVG <filter> defs for duotone / advanced-alpha / artistic image effects. -->
 	{#each imageFx.svgFilters as f (f.id)}
 		<svg width="0" height="0" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -207,9 +226,4 @@
 			></div>
 		{/if}
 	{/if}
-	<!-- DAG fill-overlay tint + a:reflection mirror. This never rendered at
-	     all before: ElementRenderer only ever mounted ShapeEffectOverlay on
-	     its text/shape branch, so a reflected picture rendered nothing extra
-	     despite ShapeEffectOverlay itself supporting pictures. -->
-	<ShapeEffectOverlay {element} {mediaDataUrls} {zIndex} />
-</div>
+{/snippet}

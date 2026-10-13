@@ -54,7 +54,14 @@ export function openPageSetup(
 				}
 				Object.assign(patch, result);
 			}
+			const titles = sheet.titles();
+			if (typeof titles === 'string') {
+				view.show('sheet');
+				ctx.toast(ctx.t(titles), 'warning');
+				return undefined;
+			}
 			t.session.batch('Page Setup', () => {
+				if (titles) t.session.setPrintTitles(t.sheet, titles);
 				t.session.setPageSetup(t.sheet, patch);
 				const named = t.workbook.definedNames.some(
 					(n) => n.name === '_xlnm.Print_Area' && n.localSheet === t.sheet,

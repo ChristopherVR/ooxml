@@ -8,6 +8,7 @@ import {
 	visioRotationShape,
 	visioSelectionIsOnPage,
 	visioWithCalloutLeaders,
+	visioWithDataGraphics,
 } from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
@@ -436,10 +437,13 @@ export class ViewerCommands {
 		void this.#edit(
 			() =>
 				this.host.controller.applyEdits(
-					// A callout takes its own leader connector with it.
+					// Keep generated graphics and callout leaders with their deleted owners.
 					visioWithCalloutLeaders(
 						page!,
-						shapes.map((shape) => shape.id),
+						visioWithDataGraphics(
+							page!,
+							shapes.map((shape) => shape.id),
+						),
 					).map((shapeId) => ({ type: 'delete-shape', pageId, shapeId })),
 				),
 			shapes.length === 1

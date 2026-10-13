@@ -2285,3 +2285,13 @@ and `connector-router-types.ts` are now re-exports, so the PowerPoint bindings k
 their import surface; the 71 moved tests and the bindings' own router tests pass
 unchanged. `src/core/visio/connector-route-avoid.ts` is the first non-PowerPoint
 caller: it scales page inches to the router's pixel-like units and back.
+
+## Excel print range and pagination
+
+Source: ChristopherVR/ooxml, private integration snapshot
+`157753102cc6927e6f1ca9da54ca52d3fbef44db`, `src/ui/src/xlsx/print.ts`.
+The DOM-free `printRange` helper moves to
+`src/core/xlsx/layout/print-layout.ts`, with normalized print areas and new core
+pagination using existing grid metrics. Cell CSS remains in the UI and is
+extracted to `src/ui/src/xlsx/print-cell.ts`. Browser preview and printing consume
+the shared core page plan.

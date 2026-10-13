@@ -1,12 +1,8 @@
 import type { VisioMatrix, VisioPage, VisioShape } from './model';
 import { visioPageLayout } from './page-layout';
 
-/**
- * Width of a line jump in inches. Visio sizes jumps from the page's LineJumpFactor cells (2/3 by
- * default) over a base it does not document; 1/6 inch gives the size seen at 100% and is an
- * approximation, not a recorded value.
- */
-export const VISIO_LINE_JUMP_WIDTH = (2 / 3) * (1 / 6);
+/** Default jump width in inches at 1:1 scale, measured in Visio 16 (factor * routing spacing). */
+export const VISIO_LINE_JUMP_WIDTH = (2 / 3) * 0.125;
 /** Connectors and crossings beyond these are drawn without jumps. */
 export const VISIO_LINE_JUMP_LIMITS = Object.freeze({ connectors: 2000, segments: 20_000 });
 
@@ -69,8 +65,9 @@ function invert(m: VisioMatrix): VisioMatrix | undefined {
 }
 const clean = (value: number) => (Math.abs(value) < 1e-9 ? 0 : Number(value.toFixed(6)));
 const text = (p: Point) => `${clean(p.x)} ${clean(p.y)}`;
-const horizontal = (s: Segment) => Math.abs(s.a.y - s.b.y) < 1e-6 && Math.abs(s.a.x - s.b.x) > 1e-6;
-const vertical = (s: Segment) => Math.abs(s.a.x - s.b.x) < 1e-6 && Math.abs(s.a.y - s.b.y) > 1e-6;
+// Native Visio classifies slanted straight segments by their predominant axis.
+const horizontal = (s: Segment) => Math.abs(s.b.x - s.a.x) > Math.abs(s.b.y - s.a.y);
+const vertical = (s: Segment) => Math.abs(s.b.y - s.a.y) > Math.abs(s.b.x - s.a.x);
 
 /** Parameter along `s` where `other` properly crosses it, away from both segments' ends. */
 function crossing(s: Segment, other: Segment, margin: number): number | undefined {
@@ -92,7 +89,15 @@ function crossing(s: Segment, other: Segment, margin: number): number | undefine
 }
 
 /** Which of two crossing segments jumps, by the page's LineJumpCode. */
-function jumps(code: number, s: Segment, other: Segment): boolean {
+function jumps(code: number, s: Segment, other: Segment, shapes: readonly VisioShape[]): boolean {
+	const own = shapes[s.owner]?.lineJumpCode ?? 0;
+	const peer = shapes[other.owner]?.lineJumpCode ?? 0;
+	// Measured in native Visio: conflicting Always/Other policies use the page rule.
+	if (own === 4 || peer === 4 || own === 1) return false;
+	if (own !== peer) {
+		if (own === 2 || peer === 3) return true;
+		if (own === 3 || peer === 2) return false;
+	}
 	if (code === 1) return horizontal(s) && !horizontal(other);
 	if (code === 2) return vertical(s) && !vertical(other);
 	// Routing order is not stored: "last routed" is taken as the later connector in drawing order.
@@ -101,7 +106,13 @@ function jumps(code: number, s: Segment, other: Segment): boolean {
 }
 
 /** The drawing commands for one jump from `from` to `to` (page space), mapped to local space. */
-function jump(style: number, from: Point, to: Point, local: (p: Point) => Point): string {
+function jump(
+	style: number,
+	from: Point,
+	to: Point,
+	local: (p: Point) => Point,
+	reverse: boolean,
+): string {
 	const half = Math.hypot(to.x - from.x, to.y - from.y) / 2;
 	const ux = (to.x - from.x) / (2 * half),
 		uy = (to.y - from.y) / (2 * half);
@@ -109,6 +120,10 @@ function jump(style: number, from: Point, to: Point, local: (p: Point) => Point)
 	let nx = -uy,
 		ny = ux;
 	if (ny < -1e-9 || (Math.abs(ny) <= 1e-9 && nx > 0)) {
+		nx = -nx;
+		ny = -ny;
+	}
+	if (reverse) {
 		nx = -nx;
 		ny = -ny;
 	}
@@ -154,18 +169,35 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 	const result = new Map<VisioShape, string[]>();
 	const layout = visioPageLayout(page);
 	const code = layout.lineJumpCode;
-	if (code < 1 || code > 5) return result;
 	const glued = new Set(page.connectors.map((connection) => connection.fromShapeId));
 	const shapes = page.shapes
 		.filter((shape) => connector(shape, glued))
 		.slice(0, VISIO_LINE_JUMP_LIMITS.connectors);
+	// Visio persists jump decorations inside a dynamic connector's Geometry rows.
+	// A straight route's endpoints are authoritative: rebuild its baseline before
+	// applying current jump settings, including when jumps have been turned off.
+	for (const shape of shapes) {
+		if (shape.connectorRoute !== 'straight' || !shape.lineEnds) continue;
+		if (shape.geometry.length !== 1) continue;
+		const geometry = shape.geometry[0]!;
+		if (!geometry.stroke || geometry.fill) continue;
+		const { begin, end } = shape.lineEnds;
+		if (![begin.x, begin.y, end.x, end.y].every(Number.isFinite)) continue;
+		const path = `M ${text(begin)} L ${text(end)}`;
+		if (geometry.path !== path) result.set(shape, [path]);
+	}
 	if (shapes.length < 2) return result;
+	if (
+		(code < 1 || code > 5) &&
+		!shapes.some((shape) => shape.lineJumpCode === 2 || shape.lineJumpCode === 3)
+	)
+		return result;
 	const lines: { shape: VisioShape; owner: number; geometry: number; points: Polyline }[] = [];
 	const segments: Segment[] = [];
 	shapes.forEach((shape, owner) => {
 		shape.geometry.forEach((geometry, index) => {
 			if (!geometry.stroke || geometry.fill) return;
-			for (const line of polylines(geometry.path) ?? []) {
+			for (const line of polylines(result.get(shape)?.[index] ?? geometry.path) ?? []) {
 				const points = line.map((point) => apply(shape.transform, point));
 				lines.push({ shape, owner, geometry: index, points });
 				for (let i = 1; i < points.length; ++i)
@@ -174,7 +206,17 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 		});
 	});
 	if (segments.length > VISIO_LINE_JUMP_LIMITS.segments) return result;
-	const half = VISIO_LINE_JUMP_WIDTH / 2;
+	const bounded = (value: number | undefined, fallback: number, max: number) =>
+		typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max
+			? value
+			: fallback;
+	const scale = bounded(page.drawingToPageScale, 1, Number.MAX_VALUE);
+	const halfX =
+		(bounded(layout.lineJumpFactorX, 2 / 3, 10) * bounded(layout.lineToLineX, 0.125, 1e4) * scale) /
+		2;
+	const halfY =
+		(bounded(layout.lineJumpFactorY, 2 / 3, 10) * bounded(layout.lineToLineY, 0.125, 1e4) * scale) /
+		2;
 	const paths = new Map<VisioShape, Map<number, string[]>>();
 	const any = new Set<VisioShape>();
 	for (const line of lines) {
@@ -185,8 +227,13 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 		for (let i = 1; i < line.points.length; ++i) {
 			const s: Segment = { a: line.points[i - 1]!, b: line.points[i]!, owner: line.owner };
 			const length = Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
+			const half = vertical(s) ? halfY : halfX;
+			if (half <= 0) {
+				out += ` L ${text(local(s.b))}`;
+				continue;
+			}
 			const hits = segments
-				.filter((other) => other.owner !== s.owner && jumps(code, s, other))
+				.filter((other) => other.owner !== s.owner && jumps(code, s, other, shapes))
 				.flatMap((other) => crossing(s, other, half * 1.5) ?? [])
 				.sort((a, b) => a - b);
 			let last = -Infinity;
@@ -198,7 +245,15 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 					x: s.a.x + ((s.b.x - s.a.x) * (t * length + offset)) / length,
 					y: s.a.y + ((s.b.y - s.a.y) * (t * length + offset)) / length,
 				});
-				out += ` L ${text(local(at(-half)))} ${jump(layout.lineJumpStyle, at(-half), at(half), local)}`;
+				const override = line.shape.lineJumpStyle ?? 0;
+				const savedStyle = override >= 1 && override <= 9 ? override : layout.lineJumpStyle;
+				const style = savedStyle >= 1 && savedStyle <= 9 ? savedStyle - 1 : 0;
+				const direction = horizontal(s)
+					? line.shape.lineJumpDirectionX || layout.lineJumpDirectionX
+					: vertical(s)
+						? line.shape.lineJumpDirectionY || layout.lineJumpDirectionY
+						: 0;
+				out += ` L ${text(local(at(-half)))} ${jump(style, at(-half), at(half), local, direction === 2)}`;
 				any.add(line.shape);
 			}
 			out += ` L ${text(local(s.b))}`;
@@ -211,7 +266,10 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 		const byGeometry = paths.get(shape)!;
 		result.set(
 			shape,
-			shape.geometry.map((geometry, index) => byGeometry.get(index)?.join(' ') ?? geometry.path),
+			shape.geometry.map(
+				(geometry, index) =>
+					byGeometry.get(index)?.join(' ') ?? result.get(shape)?.[index] ?? geometry.path,
+			),
 		);
 	}
 	return result;

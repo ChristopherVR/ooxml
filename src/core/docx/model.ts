@@ -119,6 +119,10 @@ export interface DocumentModel {
 	/** Page colour (`w:document/w:background`), six uppercase hex digits without `#`; unset for none. */
 	pageColor?: string;
 	footnotes?: Note[];
+	/** Saved Word layout compatibility mode; native mode15 footnotes use independent columns. */
+	compatibilityMode?: number;
+	/** Custom separator stories, including explicitly empty separators. */
+	footnoteSeparators?: { separator?: Note; continuationSeparator?: Note };
 	endnotes?: Note[];
 	/** Raw `w:footnotePr/w:numFmt` token from settings.xml; defaults to `decimal`. */
 	footnoteNumFmt?: StNumberFormat;

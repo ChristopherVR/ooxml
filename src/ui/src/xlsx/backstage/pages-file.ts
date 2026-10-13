@@ -125,7 +125,7 @@ export function renderPrint(page: PageContext): void {
 		paragraph(
 			page,
 			t(
-				'Printing uses the browser print dialog and prints the active sheet as a table. Page breaks, headers, footers and scaling are approximate.',
+				'Browser printing includes page setup, manual breaks, leading print titles and header/footer fields. Drawings and unsupported formatting are preserved but not rendered.',
 			),
 			'xve-backstage-muted',
 		),

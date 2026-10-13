@@ -1,4 +1,5 @@
 import { SectionFlow } from './section-flow';
+import { FOOTNOTE_SEPARATOR_PX } from './page-cursor';
 import { balanceColumns, canBalanceBlock } from './balance-columns';
 import type { TextMeasurer } from './measure';
 import type { LayoutDocumentInput, LayoutSection } from './input';
@@ -15,8 +16,17 @@ function insertParityBlank(pages: LayoutPageBox[], section: LayoutSection): void
 	const nextNumber = pages.length + 1;
 	const wanted = section.break === 'evenPage' ? 0 : 1;
 	if (nextNumber % 2 === wanted) return;
+	// Carry page geometry and section identity, never the preceding page's stories.
+	const {
+		footnotes: _footnotes,
+		footnoteSeparator: _separator,
+		footnoteHeightPx: _noteHeight,
+		footnoteColumnAreas: _noteColumnAreas,
+		floats: _floats,
+		...geometry
+	} = previous;
 	pages.push({
-		...previous,
+		...geometry,
 		index: pages.length,
 		pageInSection: previous.pageInSection + 1,
 		columns: previous.columns.map((column) => ({ ...column, blocks: [] })),
@@ -36,7 +46,18 @@ function alignVertically(
 		return;
 	}
 	for (const page of pages) {
-		const available = page.heightPx - page.marginTopPx - page.marginBottomPx;
+		const footnoteHeight = page.footnoteColumnAreas?.length
+			? Math.max(
+					...page.footnoteColumnAreas.map(
+						(area) => area.heightPx + (area.separator?.heightPx ?? FOOTNOTE_SEPARATOR_PX),
+					),
+				)
+			: page.footnotes?.length
+				? (page.footnoteSeparator?.heightPx ?? FOOTNOTE_SEPARATOR_PX) +
+					(page.footnoteHeightPx ??
+						page.footnotes.reduce((sum, footnote) => sum + footnote.heightPx, 0))
+				: 0;
+		const available = page.heightPx - page.marginTopPx - page.marginBottomPx - footnoteHeight;
 		const used = Math.max(
 			0,
 			...page.columns.flatMap((column) => column.blocks.map((block) => block.yPx + block.heightPx)),

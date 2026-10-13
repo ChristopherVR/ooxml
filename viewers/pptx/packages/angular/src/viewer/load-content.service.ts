@@ -634,10 +634,14 @@ export class LoadContentService {
 	 * references are unaffected by a master/layout CRUD action, and a newly
 	 * inserted layout carries no images at all.
 	 */
-	adoptMasterViewData(handler: PptxHandler, data: PptxData): void {
-		this.disposeHandler();
+	adoptMasterViewData(handler: PptxHandler, data: PptxData, keepPrevious = false): void {
+		if (!keepPrevious) {
+			this.disposeHandler();
+		}
 		this.handler = handler;
-		this.slides.set(data.slides);
+		if (!keepPrevious) {
+			this.slides.set(data.slides);
+		}
 		this.slideMasters.set(data.slideMasters ?? []);
 		this.notesMaster.set(data.notesMaster);
 		this.handoutMaster.set(data.handoutMaster);

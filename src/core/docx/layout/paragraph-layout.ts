@@ -9,6 +9,7 @@ import {
 	runTextWidth,
 	resolveIndents,
 	tokenizeParagraph,
+	sourceLengthOf,
 	type PlacedToken,
 } from './paragraph-tokens';
 import { lineMetrics, tokenExtent } from './line-metrics';
@@ -61,8 +62,20 @@ export function layoutParagraph(
 	const bodyWidth = Math.max(1, contentWidthPx - leftPx - rightPx);
 	const fonts = paragraph.runs.map(fontOf);
 	const { tokens, runOffsets } = tokenizeParagraph(paragraph);
-	const globalOffset = (token: BreakToken) =>
-		expectDefined(runOffsets[token.runIndex], 'run offset index') + token.sourceStart;
+	const globalOffset = (token: BreakToken, advance = 0) => {
+		const run = expectDefined(paragraph.runs[token.runIndex], 'source run');
+		const length = sourceLengthOf(run);
+		const offset = run.synthetic
+			? 0
+			: Math.max(
+					0,
+					Math.min(
+						length,
+						Math.round(((token.sourceStart + advance) * length) / Math.max(1, run.text.length)),
+					),
+				);
+		return expectDefined(runOffsets[token.runIndex], 'run offset index') + offset;
+	};
 	const effectiveAlign = paragraph.align ?? (paragraph.direction === 'rtl' ? 'right' : 'left');
 
 	const lines: LayoutLine[] = [];
@@ -153,7 +166,7 @@ export function layoutParagraph(
 		const start = firstPlaced ? globalOffset(firstPlaced.token) : 0;
 		const last = placed.at(-1)?.token;
 		const end = last
-			? globalOffset(last) + (last.kind === 'word' || last.kind === 'space' ? last.text.length : 1)
+			? globalOffset(last, last.kind === 'word' || last.kind === 'space' ? last.text.length : 1)
 			: start;
 		const gapBeforePx = boxFor(lineIndex).gapBeforePx;
 		const { heightPx, baselinePx } = lineMetrics(placed, fonts, paragraph, measurer);
@@ -162,13 +175,10 @@ export function layoutParagraph(
 			const extent = tokenExtent(token, paragraph, fonts, measurer);
 			const fragment = expectDefined(fragments[index], 'fragment for rendered token');
 			fragment.sourceStart = globalOffset(token);
-			fragment.sourceEnd =
-				fragment.sourceStart +
-				(paragraph.runs[token.runIndex]?.synthetic
-					? 0
-					: token.kind === 'word' || token.kind === 'space'
-						? token.text.length
-						: 1);
+			fragment.sourceEnd = globalOffset(
+				token,
+				token.kind === 'word' || token.kind === 'space' ? token.text.length : 1,
+			);
 			fragment.topPx = baselinePx - extent.above;
 			if (token.kind !== 'object') fragment.boxHeightPx = extent.ascent + extent.descent;
 		});

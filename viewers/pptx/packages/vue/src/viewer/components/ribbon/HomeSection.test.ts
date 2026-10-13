@@ -1,14 +1,15 @@
-import { enableAutoUnmount, mount } from '@vue/test-utils';
+import { disableAutoUnmount, enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxUiSelectElement } from 'ooxml-ui/pptx';
 import { createRibbonControlIcon } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 
 import FontHomeControls from './FontHomeControls.vue';
 import FontPickers from './FontPickers.vue';
 
 enableAutoUnmount(afterEach);
+afterAll(disableAutoUnmount);
 
 function displayedValue(picker: Element): string {
 	return picker.shadowRoot!.querySelector('[part="value"]')!.textContent!;

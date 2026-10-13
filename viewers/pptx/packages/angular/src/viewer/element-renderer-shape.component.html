@@ -83,6 +83,8 @@
 	     outline an open preset (`line`, `arc`) at all. -->
 	@if (gradientOutline(); as go) {
 		<svg
+			pptx-stroke-outline
+			[outline]="go"
 			class="pptx-ng-gradient-outline"
 			aria-hidden="true"
 			[attr.viewBox]="outlineViewBox()"
@@ -97,81 +99,7 @@
 				overflow: visible;
 				pointer-events: none;
 			"
-		>
-			@if (go.paint; as paint) {
-				<defs>
-					@if (paint.kind === 'pattern') {
-						<pattern
-							[attr.id]="paint.id"
-							[attr.width]="paint.width"
-							[attr.height]="paint.height"
-							patternUnits="userSpaceOnUse"
-						>
-							<image
-								[attr.href]="paint.href"
-								[attr.width]="paint.width"
-								[attr.height]="paint.height"
-							/>
-						</pattern>
-					} @else if (paint.kind === 'rectPath') {
-						<pattern [attr.id]="paint.id" patternUnits="objectBoundingBox" width="1" height="1">
-							<image
-								[attr.href]="paint.href"
-								x="0"
-								y="0"
-								width="1"
-								height="1"
-								preserveAspectRatio="none"
-							/>
-						</pattern>
-					} @else if (paint.kind === 'radial') {
-						<radialGradient
-							[attr.id]="paint.id"
-							[attr.cx]="paint.cx"
-							[attr.cy]="paint.cy"
-							[attr.r]="paint.r"
-						>
-							@for (stop of paint.stops; track $index) {
-								<stop
-									[attr.offset]="stop.offset"
-									[attr.stop-color]="stop.color"
-									[attr.stop-opacity]="stop.opacity"
-								/>
-							}
-						</radialGradient>
-					} @else {
-						<linearGradient
-							[attr.id]="paint.id"
-							[attr.x1]="paint.x1"
-							[attr.y1]="paint.y1"
-							[attr.x2]="paint.x2"
-							[attr.y2]="paint.y2"
-						>
-							@for (stop of paint.stops; track $index) {
-								<stop
-									[attr.offset]="stop.offset"
-									[attr.stop-color]="stop.color"
-									[attr.stop-opacity]="stop.opacity"
-								/>
-							}
-						</linearGradient>
-					}
-				</defs>
-			}
-			@for (strand of go.strands; track $index) {
-				<path
-					[attr.d]="go.d"
-					fill="none"
-					[attr.stroke]="go.stroke"
-					[attr.stroke-width]="strand.strokeWidth"
-					[style.stroke-width]="strand.cssStrokeWidth"
-					[attr.stroke-dasharray]="go.dashArray"
-					[attr.stroke-linecap]="go.lineCap"
-					[attr.stroke-linejoin]="go.lineJoin"
-					[style.transform]="strand.offset !== 0 ? 'translate(0, ' + strand.offset + 'px)' : null"
-				/>
-			}
-		</svg>
+		></svg>
 	}
 	<!-- While this element is open in the inline text editor, its live text
 	     is drawn by that overlay instead (see `isBeingInlineEdited`);
