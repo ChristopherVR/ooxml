@@ -153,7 +153,13 @@ describe('findInSlides', () => {
 			],
 		};
 		const results = findInSlides([slide], 'hello');
-		expect(results).toHaveLength(0); // no segments → no results
+		expect(results).toHaveLength(1);
+		expect(results[0]).toMatchObject({
+			elementId: 'e1',
+			segmentIndex: 0,
+			startOffset: 0,
+			length: 5,
+		});
 	});
 });
 
