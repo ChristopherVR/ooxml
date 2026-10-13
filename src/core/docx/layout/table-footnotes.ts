@@ -1,3 +1,4 @@
+import { completedNoteStoryMinimum } from './table-note-completion';
 import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import { cellContentBottom } from './table-content';
 import type { LayoutParagraph, LayoutTable } from './input';
@@ -153,7 +154,7 @@ export class TableFootnotes {
 			this.cursor.usedColumnHeightPx + referenceBottom,
 		);
 	}
-	private holdCandidate(row: RowLayout): void {
+	private holdCandidate(row: RowLayout, completionMinimum = 0): void {
 		const refs = new Map(this.fragment);
 		for (const ref of this.references(row))
 			if (!refs.has(ref.note.id))
@@ -164,9 +165,12 @@ export class TableFootnotes {
 		const paddingBottom = Math.max(0, ...(row.cellPadding ?? []).map((padding) => padding.bottom));
 		this.hold(
 			refs,
-			contentBottom <= referenceBottom + 1e-6
-				? this.height() + row.heightPx
-				: referenceBottom + paddingBottom,
+			Math.max(
+				completionMinimum,
+				contentBottom <= referenceBottom + 1e-6
+					? this.height() + row.heightPx
+					: referenceBottom + paddingBottom,
+			),
 		);
 	}
 	/** Largest complete prefix that keeps each new marker with available note content. */
@@ -189,6 +193,18 @@ export class TableFootnotes {
 			);
 			// Resolve the long remaining row only once; candidate prefixes are bounded by the page.
 			const pending = independent ? this.references(row) : [];
+			const completing =
+				(this.cursor.footnoteColumnCount === 2 || this.cursor.footnoteColumnCount === 3) &&
+				pending.length === 1 &&
+				!this.stories.has(pending[0]!.blockId)
+					? completedNoteStoryMinimum(
+							row,
+							this.stories,
+							new Set(pending.map((ref) => ref.blockId)),
+							available,
+						)
+					: 0;
+
 			const cuts = new Set<number>();
 			for (const [index, cell] of row.cells.entries())
 				for (const box of cell) {
@@ -206,12 +222,16 @@ export class TableFootnotes {
 				}
 			for (const cut of [...cuts].sort((a, b) => b - a)) {
 				const candidate = prefix(row, cut);
-				this.holdCandidate(candidate);
+				const included = new Set(this.references(candidate).map((ref) => ref.note.id));
+				const completion =
+					completing > 0 && included.has(pending[0]?.note.id ?? '')
+						? this.height() + completing
+						: 0;
+				this.holdCandidate(candidate, completion);
 				if (candidate.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6) {
 					// A delayed marker constrains its own cell; neighboring cells without references
 					// can consume the remaining row space (native padded split-row behavior).
 					const space = this.cursor.remainingHeightPx() - this.height();
-					const included = new Set(this.references(candidate).map((ref) => ref.note.id));
 					const cellCuts = row.cells.map((cell, index) =>
 						independent
 							? this.storyCut(
@@ -250,7 +270,7 @@ export class TableFootnotes {
 						}
 					}
 					const expanded = prefix(row, cut, cellCuts, paragraphCuts);
-					this.holdCandidate(expanded);
+					this.holdCandidate(expanded, completion);
 					if (expanded.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6)
 						return {
 							layout: expanded,
@@ -258,7 +278,7 @@ export class TableFootnotes {
 							cellCuts,
 							...(paragraphCuts.size ? { paragraphCuts } : {}),
 						};
-					this.holdCandidate(candidate);
+					this.holdCandidate(candidate, completion);
 					return { layout: candidate, cut };
 				}
 			}

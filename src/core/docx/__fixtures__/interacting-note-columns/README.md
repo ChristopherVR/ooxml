@@ -1,0 +1,11 @@
+# Interacting long notes in independent columns
+
+Eleven owned Word 16 probes derive from the published two/three-reference nested table corpus. `generate-word-interacting-note-columns.py` extends note bodies to forty or sixty paragraphs. `record-word-interacting-note-columns.ps1` sets the native section FootnoteOptions.LayoutColumns to two or three, saves DOCX and exports PDF. `measure-word-table-borders.py` records every body/note line and physical border band. No user documents are opened.
+
+Seven initial cases matched the existing engine. The two-column enclosing-marker case instead delayed the final unreferenced inner lines to the next page. Sixty-line controls reproduce that final-line behavior with three note columns. They also show that globally releasing all unused note-column space is incorrect: longer inner stories must stay within the reference band even when complete note lines leave slack.
+
+The bounded correction reserves the shared geometry minimum needed to finish a single remaining line in an admitted, unreferenced inner story, only for two/three independent note columns and one pending enclosing-cell marker. It uses existing source-token reflow and footnote holds. It does not change the global footnote column preview, single-column behavior, reference-count or structural admission gates. Modern fragments within the same physical page are not marked as continued-page fragments; the tests verify that distinction.
+
+Regression checks compare every page's body/note sets, body and note baselines, body/column x positions and table bands within 0.2 pt, physical-page continuation flags, exact document/footnote XML and reopened source models. Forty- and sixty-line controls protect the distinction between a final leaf line and a longer story. Browser checks cover the repaired page, note column offsets, editable body history and save/reopen.
+
+These probes use one automatic top-aligned inner row, complete stable solid borders, one body column, fixed twelve-point line spacing and up to three distinct anchored references. Other note-column counts, independently balanced note columns under different paragraph keeping/spacing or section profiles, reused IDs, multiple unanchored references and complex inner structures remain outside this evidence. No raster or general Office parity is claimed.
