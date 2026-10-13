@@ -33,8 +33,10 @@ export interface PivotTable {
 	valueCaption: string;
 	/** Extra measures in Values axis order. The existing value fields remain the primary measure. */
 	additionalValues?: PivotValueField[];
-	/** Values on rows require multiple measures and one real row field, with Values placed last. */
+	/** Values on rows require multiple measures and one or two real row fields. */
 	valuesAxis?: 'columns' | 'rows';
+	/** Row Values follow both real fields by default, or sit between two real fields. */
+	valuesPosition?: 'last' | 'between';
 	/** Cached source fields and records. Refresh replaces these together with the output cells. */
 	fields: string[];
 	records: CellValue[][];
@@ -58,6 +60,7 @@ export interface PivotTableOptions {
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
+	valuesPosition?: 'last' | 'between';
 	aggregate?: PivotAggregate;
 	name?: string;
 }
@@ -75,5 +78,6 @@ export type PivotTablePatch = Partial<
 		| 'valueField'
 		| 'aggregate'
 		| 'valuesAxis'
+		| 'valuesPosition'
 	>
 > & { additionalValues?: PivotValueFieldOptions[] };

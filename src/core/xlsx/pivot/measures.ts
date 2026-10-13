@@ -52,10 +52,13 @@ function aggregate(
 	const sum = numbers.reduce((total, value) => total + value, 0);
 	return type === 'average' ? sum / numbers.length : sum;
 }
+export const pivotMeasureNumber = (
+	pivot: Pick<PivotTable, 'fields'>,
+	records: readonly CellValue[][],
+	measure: PivotValueField,
+): CellValue => aggregate(records, pivot.fields.indexOf(measure.field), measure.aggregate);
 export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][]): CellValue[] =>
-	pivotMeasures(pivot).map((measure) =>
-		aggregate(records, pivot.fields.indexOf(measure.field), measure.aggregate),
-	);
+	pivotMeasures(pivot).map((measure) => pivotMeasureNumber(pivot, records, measure));
 
 /** Allocation-free header dimensions, including one totals column for every measure. */
 export function pivotHeaderDimensions(
@@ -90,7 +93,12 @@ export function pivotHeaders(
 ): CellValue[][] {
 	const measures = pivotMeasures(pivot);
 	if (pivot.valuesAxis === 'rows') {
-		const rowLabels = pivot.layout === 'compact' ? ['Row Labels'] : [...labels, 'Values'];
+		const rowLabels =
+			pivot.layout === 'compact'
+				? ['Row Labels']
+				: pivot.valuesPosition === 'between'
+					? [labels[0]!, 'Values', labels[1]!]
+					: [...labels, 'Values'];
 		return pivot.columnField
 			? [
 					[

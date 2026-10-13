@@ -42,7 +42,10 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 		Array.from({ length: count }, (_v, i) => `<i><x v="${i}"/></i>`).join('') +
 		'<i t="grand"><x/></i>';
 	const header = grid.firstHeaderRow ?? (multiple && col >= 0 ? 1 : grid.firstDataRow - 1);
-	const rowIndices = [row, ...(second >= 0 ? [second] : []), ...(rowsAxis ? [-2] : [])];
+	const rowIndices =
+		rowsAxis && pivot.valuesPosition === 'between'
+			? [row, -2, second]
+			: [row, ...(second >= 0 ? [second] : []), ...(rowsAxis ? [-2] : [])];
 	let previous: number[] = [];
 	const rowItems =
 		grid.rowEntries
@@ -76,6 +79,8 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	root.setAttribute('name', pivot.name);
 	root.setAttribute('cacheId', String(cacheId));
 	root.setAttribute('dataOnRows', rowsAxis ? '1' : '0');
+	if (rowsAxis && pivot.valuesPosition === 'between') root.setAttribute('dataPosition', '1');
+	else root.removeAttribute('dataPosition');
 	root.setAttribute('compact', compact ? '1' : '0');
 	root.setAttribute('compactData', compact ? '1' : '0');
 	root.setAttribute('outline', outline ? '1' : '0');

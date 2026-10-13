@@ -2,7 +2,13 @@ import type { CellValue, PivotTable } from '../model';
 import type { PivotGrid } from './aggregate';
 import { pivotItemLabel, pivotItems, pivotValueKey } from './data';
 
-import { pivotHeaderDimensions, pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
+import {
+	pivotHeaderDimensions,
+	pivotHeaders,
+	pivotNumbers,
+	pivotMeasures,
+	pivotMeasureNumber,
+} from './measures';
 const label = pivotItemLabel;
 
 /** Two-field report layouts share the same indexed tuples and aggregate buckets. */
@@ -16,6 +22,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const layout = pivot.layout ?? 'tabular';
 	const compact = layout === 'compact';
 	const rowsAxis = pivot.valuesAxis === 'rows';
+	const between = rowsAxis && pivot.valuesPosition === 'between';
 	const measures = pivotMeasures(pivot);
 	// Native row Values keep automatic subtotals below groups in every report layout.
 	const top =
@@ -52,7 +59,8 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const rows =
 		(details.size + rowItems.length * Number(bottom) + 1) * (rowsAxis ? measures.length : 1) +
 		rowItems.length * Number(layout !== 'tabular') +
-		details.size * Number(rowsAxis && layout !== 'tabular') +
+		(between ? rowItems.length * measures.length : details.size) *
+			Number(rowsAxis && layout !== 'tabular') +
 		dimensions.rows;
 	if (rows * dimensions.width > 1_000_000) throw new Error('The PivotTable result is too large.');
 	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
@@ -117,9 +125,51 @@ export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 				{ indices: [outerIndex] },
 			);
 		let first = true;
-		[...children.get(key)!]
-			.sort((a, b) => innerIndices.get(a)! - innerIndices.get(b)!)
-			.forEach((innerKey) => {
+		const innerKeys = [...children.get(key)!].sort(
+			(a, b) => innerIndices.get(a)! - innerIndices.get(b)!,
+		);
+		if (between)
+			measures.forEach((measure, m) => {
+				if (layout !== 'tabular')
+					append(
+						compact
+							? [measure.caption]
+							: [pivot.repeatLabels ? label(outer) : null, measure.caption, null],
+						Array<CellValue>(dimensions.width - rowLabelColumns).fill(null),
+						{ indices: [outerIndex, m], measure: m },
+						compact ? 1 : 0,
+					);
+				innerKeys.forEach((innerKey, child) => {
+					const innerIndex = innerIndices.get(innerKey)!;
+					const keys = [key, innerKey];
+					const records = details.get(JSON.stringify(keys))!;
+					append(
+						compact
+							? [label(secondRowItems[innerIndex]!)]
+							: [
+									pivot.repeatLabels || (layout === 'tabular' && m === 0 && child === 0)
+										? label(outer)
+										: null,
+									layout === 'tabular' && child === 0 ? measure.caption : null,
+									label(secondRowItems[innerIndex]!),
+								],
+						[
+							...columnItems.map((column) =>
+								pivotMeasureNumber(
+									pivot,
+									buckets.get(JSON.stringify([...keys, pivotValueKey(column)])) ?? [],
+									measure,
+								),
+							),
+							pivotMeasureNumber(pivot, records, measure),
+						],
+						{ indices: [outerIndex, m, innerIndex], measure: m },
+						compact ? 2 : 0,
+					);
+				});
+			});
+		else
+			innerKeys.forEach((innerKey) => {
 				const innerIndex = innerIndices.get(innerKey)!;
 				const inner = secondRowItems[innerIndex]!;
 				const keys = [key, innerKey];

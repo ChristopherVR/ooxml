@@ -8,7 +8,7 @@ import { att, decodeEscapes } from '../read/xml-util';
 import { PIVOT_AGGREGATES } from './data';
 import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
-import { supportedPivotAxes } from './values-axis';
+import { supportedPivotAxes, pivotFieldIndex, pivotValueIndex } from './values-axis';
 
 function value(node: XmlElement): CellValue {
 	const v = att(node, 'v') ?? '';
@@ -101,6 +101,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		root.getAttribute('colGrandTotals') === '0'
 	)
 		throw new Error('Unsupported pivot layout');
+	const valueIndex = pivotValueIndex(root, rowsAxis ? rowFields : colFields);
 	const measure = dataFields[0]!;
 	const definition = elements(first(root, 'extLst', NS.x) ?? parseXml('<root/>').documentElement)
 		.map((extension) =>
@@ -135,7 +136,9 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
 	const row = names[Number(att(rowFields[0], 'x'))];
-	const realRows = rowsAxis ? rowFields.slice(0, -1) : rowFields;
+	const realRows = rowsAxis
+		? rowFields.filter((field) => pivotFieldIndex(field) !== -2)
+		: rowFields;
 	const second = realRows[1] ? names[Number(att(realRows[1], 'x'))] : undefined;
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const outer = tableFields[Number(att(rowFields[0], 'x'))];
@@ -182,6 +185,9 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		rowField: row,
 		layout,
 		...(rowsAxis ? { valuesAxis: 'rows' as const } : {}),
+		...(rowsAxis && realRows.length === 2 && valueIndex === 1
+			? { valuesPosition: 'between' as const }
+			: {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
 		...(second
 			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }

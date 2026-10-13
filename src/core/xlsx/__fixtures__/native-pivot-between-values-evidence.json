@@ -1,0 +1,42 @@
+{
+  "observedOn": "2026-10-14",
+  "excelFileVersion": "16.0.20430.20146",
+  "baseline": "c1e100bb3086864178658e3ce96d87fe0c7f9dcc",
+  "nativeCases": 243,
+  "newNativeCases": 64,
+  "oracleCases": 54,
+  "supportedOracleCases": 36,
+  "preservedFirstOracleCases": 18,
+  "oracleCommands": [
+    "powershell -NoProfile -Command \"& './scripts/xlsx-pivot-nested-row-oracle.ps1' -ValuesPositions @(1,2)\"",
+    "powershell -NoProfile -Command \"& './scripts/xlsx-pivot-nested-row-oracle.ps1' -ValuesPositions @(2) -RepeatLabels\""
+  ],
+  "acceptance": "powershell -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+  "fixtures": [
+    {
+      "file": "excel-pivot-row-values-rows-between-columns.xlsx",
+      "sha256": "09a5b9f029923528711d830306574d59a45f03acb68cc5c9193a5d64dd40efe5"
+    },
+    {
+      "file": "excel-pivot-row-values-compact-rows-bottom-between-columns.xlsx",
+      "sha256": "b030fdceea45150d1c7e2a125fdcdb69ff377d6691b9082be53abe78748315b1"
+    },
+    {
+      "file": "excel-pivot-row-values-outline-rows-bottom-between-columns.xlsx",
+      "sha256": "985aa9724f911b678338623cdad72bf106def7b6680e4c2d552c721ac35029dd"
+    },
+    {
+      "file": "excel-pivot-row-values-outline-rows-bottom-between-columns-repeat.xlsx",
+      "sha256": "da003e3551c3ccaab951455622d3bb4f72a751f5e08ad1f99ae9626281a4a065"
+    },
+    {
+      "file": "excel-pivot-row-values-compact-rows-bottom-first-columns.xlsx",
+      "sha256": "5bd199de0b4114f2ffc9f912eecb09d43782cc40db7e300eafe2ebc4f2b50abf"
+    }
+  ],
+  "supported": "Values between two distinct real row fields in tabular/compact/outline, 2 to 16 measures, optional column axis, automatic/disabled subtotals and repeated real row labels. The Values pseudo-field caption itself is not repeated by RepeatAllLabels.",
+  "nativeXml": "rowFields [real,-2,real], dataPosition=1, measure-major tuples [outer,measure,inner], rowItems i is measure index, prefix r=2 repeats outer/measure. Layout conversions retain this placement. Last/columns/one-row/one-measure transitions clear stale metadata.",
+  "preserved": "Values first, custom Values captions/visible headers, grouping/filters/slicers/shared cache/custom indentation/subtotals and malformed or inconsistent dataPosition remain unsupported.",
+  "scope": "Every native cached/refreshed cell value/type/dimension, compact indentation and left alignment, errors/sparse/min/max/16 measures/repeated labels, six layout conversions and fifteen axis/placement/collapse transitions. Source XML preservation, history and browser export/reopen are checked.",
+  "reuse": "Existing indexed hierarchy buckets and aggregate primitive; single-measure projection avoids recomputing all measures for each between-field detail row. No parallel engine or relevant PPTX migration."
+}

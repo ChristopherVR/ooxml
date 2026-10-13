@@ -180,7 +180,7 @@ it.each(['', 'other', false])(
 	},
 );
 
-it.each(['', 'x=""', 'x="0.5"', 'x="NaN"'])(
+it.each(['', 'x=""', 'x="0.5"', 'x="0.0"', 'x="NaN"'])(
 	'refuses malformed Values axis field index %s',
 	(attribute) => {
 		const fields = elements(

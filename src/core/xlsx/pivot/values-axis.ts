@@ -1,5 +1,22 @@
 import type { XmlElement } from '../../xml/index';
 import { attrs } from '../write/xml-out';
+export function pivotFieldIndex(field: XmlElement | undefined): number {
+	const raw = field?.getAttribute('x');
+	if (raw === null || raw === undefined || !/^-?\d+$/.test(raw.trim())) return NaN;
+	const value = Number(raw);
+	return Number.isSafeInteger(value) ? value : NaN;
+}
+
+/** Native between-field row Values carry an explicit position matching their axis slot. */
+export function pivotValueIndex(root: XmlElement, axis: readonly XmlElement[]): number {
+	const index = axis.findIndex((field) => pivotFieldIndex(field) === -2);
+	const position = root.getAttribute('dataPosition');
+	if (position !== null && (!/^\d+$/.test(position.trim()) || Number(position) !== index))
+		throw new Error('Inconsistent Values axis position');
+	if (axis.length === 3 && index === 1 && position === null)
+		throw new Error('Missing between-field Values position');
+	return index;
+}
 /** Native Values-on-columns entries, with each measure nested inside each column item. */
 export function pivotValueAxisItems(measures: number, columns?: number): string {
 	const entries: string[] = [];
@@ -28,17 +45,14 @@ export function supportedPivotAxes(
 	measures: number,
 	valuesOnRows: boolean,
 ): boolean {
-	const index = (field: XmlElement | undefined) => {
-		const raw = field?.getAttribute('x');
-		const value = raw === null || raw === undefined || !raw.trim() ? NaN : Number(raw);
-		return Number.isInteger(value) ? value : NaN;
-	};
+	const index = pivotFieldIndex;
 	if (valuesOnRows)
 		return (
 			measures > 1 &&
 			(rows.length === 2 || rows.length === 3) &&
-			rows.slice(0, -1).every((field) => index(field) >= 0) &&
-			index(rows.at(-1)) === -2 &&
+			index(rows[0]) >= 0 &&
+			rows.filter((field) => index(field) === -2).length === 1 &&
+			rows.filter((field) => index(field) !== -2).every((field) => index(field) >= 0) &&
 			columns.length <= 1 &&
 			(!columns.length || index(columns[0]) >= 0)
 		);
