@@ -16,13 +16,25 @@ const evidence = JSON.parse(
 ) as {
 	cases: { name: string; measurements: { lines: { text: string }[] }[] }[];
 };
-for (const native of evidence.cases)
+const threeEvidence = JSON.parse(
+	readFileSync(
+		new NodeURL(
+			'../../../core/docx/__fixtures__/nested-three-row/native-measurements.json',
+			import.meta.url,
+		),
+		'utf8',
+	),
+) as typeof evidence;
+for (const { native, directory } of [
+	...evidence.cases.map((native) => ({ native, directory: 'nested-multi-row' })),
+	...threeEvidence.cases.map((native) => ({ native, directory: 'nested-three-row' })),
+])
 	it('paints source outer edges once across two-row fragments: ' + native.name, async () => {
 		const loaded = await loadDocx(
 			new Uint8Array(
 				readFileSync(
 					new NodeURL(
-						'../../../core/docx/__fixtures__/nested-multi-row/' + native.name + '.docx',
+						'../../../core/docx/__fixtures__/' + directory + '/' + native.name + '.docx',
 						import.meta.url,
 					),
 				),

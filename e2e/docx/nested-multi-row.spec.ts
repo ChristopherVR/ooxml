@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { parseXml, buildXml } from '../../src/core/xml/index';
 import { fileInput } from './helpers';
-const root = new URL('../../src/core/docx/__fixtures__/nested-multi-row/', import.meta.url);
-const evidence = JSON.parse(readFileSync(new URL('native-measurements.json', root), 'utf8')) as {
+const twoRoot = new URL('../../src/core/docx/__fixtures__/nested-multi-row/', import.meta.url);
+const evidence = JSON.parse(readFileSync(new URL('native-measurements.json', twoRoot), 'utf8')) as {
 	cases: {
 		name: string;
 		measurements: {
@@ -22,9 +22,18 @@ const nested = (xml: string) =>
 			),
 		)[1]!,
 	);
-for (const native of evidence.cases)
+const threeRoot = new URL('../../src/core/docx/__fixtures__/nested-three-row/', import.meta.url);
+const threeEvidence = JSON.parse(
+	readFileSync(new URL('native-measurements.json', threeRoot), 'utf8'),
+) as typeof evidence;
+for (const { native, root } of [
+	...evidence.cases.map((native) => ({ native, root: twoRoot })),
+	...threeEvidence.cases.map((native) => ({ native, root: threeRoot })),
+])
 	test(
-		'two-row nested fragments preserve native bands and guarded editing: ' + native.name,
+		(native.name.startsWith('nested-three') ? 'three' : 'two') +
+			'-row nested fragments preserve native bands and guarded editing: ' +
+			native.name,
 		async ({ page }) => {
 			await page.goto('/?framework=vanilla');
 			const editor = page.locator('docx-editor'),
