@@ -84,6 +84,21 @@ function harness(root: () => HTMLElement | null) {
 }
 
 describe('presentationStageAnimator synchronous playback apply', () => {
+	it('applies fixed whole opacity without CSS and restores authored alpha', () => {
+		const root = stage(['a']);
+		const { playback, animator } = harness(() => root);
+		const shape = nodeFor(root, 'a');
+		shape.style.opacity = '0.6';
+		playback.presentationElementStates.set(
+			new Map([['a', { visible: true, cssAnimation: undefined, opacity: 0.4 }]]),
+		);
+		animator.applyAnimationStyles();
+		expect(shape.style.opacity).toBe('0.4');
+		expect(shape.style.animation).toBe('');
+		playback.presentationElementStates.set(new Map());
+		animator.applyAnimationStyles();
+		expect(shape.style.opacity).toBe('0.6');
+	});
 	beforeEach(() => {
 		vi.useFakeTimers();
 	});

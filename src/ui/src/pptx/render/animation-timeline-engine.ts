@@ -7,7 +7,7 @@
  * @module render/animation-timeline-engine
  */
 
-import type { PptxNativeAnimation } from 'ooxml-core/pptx';
+import type { PptxNativeAnimation, PptxOpacitySet } from 'ooxml-core/pptx';
 
 import { applyStepBuildMetadata } from './animation-build';
 import type { ElementBuildStateOptions } from './animation-build';
@@ -62,6 +62,13 @@ export class TimelineEngine {
 	 * `animatesStroke` on {@link ElementAnimationState}.
 	 */
 	private readonly activeSteps: Map<string, TimelineStep>;
+	/** End-state projection for backward navigation, independent of active paint metadata. */
+	private readonly committedOpacity = new Map<string, number>();
+	private readonly activeOpacity = new Map<
+		string,
+		Array<{ set: PptxOpacitySet; startMs: number }>
+	>();
+	private opacityClockBase = 0;
 	/**
 	 * Cumulative (oldest-first) history of fired chart-build steps per element,
 	 * keyed by elementId. See {@link StepApplicationState.chartRevealHistory}
@@ -373,6 +380,17 @@ export class TimelineEngine {
 				cssAnimation: this.activeAnimations.get(id),
 			};
 			applyStepBuildMetadata(state, this.activeSteps.get(id), options);
+			const opacity = this.committedOpacity.get(id);
+			if (opacity !== undefined) state.opacity = opacity;
+			const nowMs =
+				options?.elapsedMs === undefined ? Date.now() : this.opacityClockBase + options.elapsedMs;
+			for (const entry of this.activeOpacity.get(id) ?? []) {
+				if (
+					nowMs >= entry.startMs &&
+					(entry.set.holdEndState || nowMs < entry.startMs + entry.set.durationMs)
+				)
+					state.opacity = entry.set.value;
+			}
 			const chartInfo = this.chartBuildInfo.get(id);
 			if (chartInfo) {
 				const descriptor = resolveChartRevealDescriptor(
@@ -525,6 +543,8 @@ export class TimelineEngine {
 		this.reset();
 		for (const group of this.timeline.clickGroups) {
 			for (const step of group.steps) {
+				if (step.opacitySet?.holdEndState)
+					this.committedOpacity.set(step.elementId, step.opacitySet.value);
 				if (step.build || step.colorTargets) {
 					this.activeSteps.set(step.elementId, step);
 				}
@@ -556,6 +576,8 @@ export class TimelineEngine {
 		this.currentGroupIndex = -1;
 		this.activeAnimations.clear();
 		this.activeSteps.clear();
+		this.committedOpacity.clear();
+		this.activeOpacity.clear();
 		this.chartRevealHistory.clear();
 		this.diagramRevealHistory.clear();
 		this.revealedElements.clear();
@@ -588,6 +610,7 @@ export class TimelineEngine {
 	 * unchanged.
 	 */
 	private applyGroupSteps(group: TimelineClickGroup, nowMs: number): TimelineClickGroup {
+		this.opacityClockBase = nowMs;
 		let appliedSteps: TimelineStep[] | undefined;
 		for (let i = 0; i < group.steps.length; i++) {
 			const step = group.steps[i];
@@ -604,6 +627,14 @@ export class TimelineEngine {
 			if (!applied) {
 				appliedSteps ??= group.steps.slice(0, i);
 				continue;
+			}
+			if (step.opacitySet) {
+				const history = this.activeOpacity.get(step.elementId) ?? [];
+				history.push({
+					set: step.opacitySet,
+					startMs: nowMs + step.delayMs + step.opacitySet.delayMs,
+				});
+				this.activeOpacity.set(step.elementId, history);
 			}
 			if (step.exclGroupId !== undefined) {
 				const holder = this.exclusiveHolders.get(step.exclGroupId);

@@ -69,6 +69,23 @@ function props(): ElementRendererProps {
 }
 
 describe('background-only presentation animation', () => {
+	it('applies a committed whole-shape set without CSS and restores authored opacity', () => {
+		const input = props();
+		input.element.opacity = 0.6;
+		input.opacity = 0.6;
+		input.animationState = { visible: true, cssAnimation: undefined, opacity: 0.4 };
+		input.presentationElementStates = new Map([
+			['shape-1', { visible: true, cssAnimation: undefined, opacity: 0.4 }],
+		]);
+		act(() => root.render(<ElementRenderer {...input} />));
+		const outer = container.querySelector<HTMLElement>('[data-element-id="shape-1"]')!;
+		expect(outer.style.opacity).toBe('0.4');
+		expect(outer.style.animation).toBe('');
+		input.presentationElementStates = new Map();
+		input.animationState = undefined;
+		act(() => root.render(<ElementRenderer {...input} />));
+		expect(outer.style.opacity).toBe('0.6');
+	});
 	it('animates a separate paint layer without hiding the shape text', () => {
 		act(() => root.render(<ElementRenderer {...props()} />));
 

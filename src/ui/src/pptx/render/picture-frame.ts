@@ -20,6 +20,7 @@
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 import { getAnimationColorBaseStyle } from './animation-color-base-style';
+import { getAnimationOpacity } from './animation-opacity-style';
 import { hasShapeProperties, isImageLikeElement } from 'ooxml-core/pptx';
 
 import type { CssStyleMap } from './element-style-transform';
@@ -64,6 +65,7 @@ export function getShapeEffectAnimationLayerStyle<T extends object>(
 	return {
 		...getAnimationColorBaseStyle(element, state),
 		...visualStyle,
+		...(state.opacity !== undefined ? { opacity: getAnimationOpacity(state, undefined) } : {}),
 		...(isImageLikeElement(element) ? { clipPath: 'none', overflow: 'visible' } : {}),
 		position: 'absolute',
 		inset: '0',

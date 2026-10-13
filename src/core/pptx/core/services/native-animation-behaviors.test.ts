@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { XmlObject } from '../types';
 import { capturedPresetNativeAnimation } from './animation-behavior-native';
 import { extractBehaviors } from './native-animation-behaviors';
+import { resolveOpacitySet } from './animation-opacity-set';
 
 function cBhvr(attr: string | undefined, cTn: XmlObject, extra: XmlObject = {}): XmlObject {
 	return {
@@ -14,6 +15,26 @@ function cBhvr(attr: string | undefined, cTn: XmlObject, extra: XmlObject = {}):
 }
 
 describe('extractBehaviors', () => {
+	it.each([
+		{ '@_repeatCount': 'indefinite' },
+		{ '@_repeatDur': '500' },
+		{ '@_dur': 'indefinite' },
+		{ 'p:stCondLst': { 'p:cond': { '@_delay': 'indefinite' } } },
+		{ 'p:stCondLst': { 'p:cond': { '@_delay': 'invalid' } } },
+		{ 'p:stCondLst': { 'p:cond': { '@_evt': 'onBegin', '@_delay': '0' } } },
+		{ 'p:stCondLst': { 'p:cond': { 'p:tn': { '@_val': '10' }, '@_delay': '0' } } },
+		{ 'p:stCondLst': { 'p:cond': [{ '@_delay': '0' }, { '@_delay': '100' }] } },
+		{ 'p:endCondLst': { 'p:cond': { '@_evt': 'onClick' } } },
+	])('retains unresolved one-shot set timing profile %j', (extra) => {
+		const behaviors = extractBehaviors({
+			'p:set': {
+				'p:cBhvr': cBhvr('style.opacity', { '@_dur': '500', ...extra }),
+				'p:to': { 'p:strVal': { '@_val': '0.4' } },
+			},
+		});
+		expect(behaviors[0]?.timing.unsupportedSetTiming).toBeTruthy();
+		expect(resolveOpacitySet({ targetId: 's', presetClass: 'emph', behaviors })).toBeUndefined();
+	});
 	it('keeps every behaviour with its own timing, additive mode and values', () => {
 		const behaviors = extractBehaviors({
 			'p:set': {

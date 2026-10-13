@@ -87,6 +87,8 @@ export interface AnimationTimeline {
 
 /** Snapshot of a single element's animation state at a point in the timeline. */
 export interface ElementAnimationState {
+	/** Active fixed opacity from a native set, separate from animated CSS opacity. */
+	opacity?: number;
 	/** Whether the element should be visible. */
 	visible: boolean;
 	/** CSS animation shorthand to apply (undefined = no active animation). */

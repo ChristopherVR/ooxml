@@ -1,4 +1,4 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE, applyAnimationOpacity } from 'ooxml-ui/pptx';
 /**
  * usePresentationAnimationStyles: pushes each element's native-animation state
  * onto its rendered DOM node, and routes the two pointer triggers
@@ -61,6 +61,7 @@ export function usePresentationAnimationStyles(
 				return;
 			}
 			const state = states.get(id);
+			applyAnimationOpacity(el, state);
 			el.style.animation = state?.cssAnimation ?? '';
 			el.style.visibility = state?.visible === false ? 'hidden' : '';
 			el.style.cursor = interactive.has(id) || hover.has(id) ? 'pointer' : '';

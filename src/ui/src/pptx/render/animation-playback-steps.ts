@@ -1,4 +1,5 @@
 import { wireMediaBookmarkSteps } from './animation-media-bookmark-gating';
+import { applyOpacitySetSteps } from './animation-opacity-playback';
 import { wireMediaEndedSteps } from './animation-media-end-gating';
 import { executeMediaCommandInDom } from './animation-media-playback';
 import { keyframeAnimatedProperties } from './animation-parallel-composition';
@@ -29,7 +30,7 @@ export function applyAnimationGroupSteps(group: TimelineClickGroup, ctx: Playbac
 	const owners = playbackOwners.get(ctx.setStates) ?? new Map<string, symbol>();
 	playbackOwners.set(ctx.setStates, owners);
 	for (const step of group.steps) {
-		if (step.elementId && !step.command) {
+		if (step.elementId && !step.command && !step.opacitySet) {
 			owners.set(step.elementId, owner);
 		}
 	}
@@ -87,7 +88,7 @@ export function applyAnimationGroupSteps(group: TimelineClickGroup, ctx: Playbac
 		}
 		const componentsByElement = new Map<string, AnimationComponent[]>();
 		for (const step of group.steps) {
-			if (step.command || !step.elementId) {
+			if (step.command || !step.elementId || step.opacitySet) {
 				continue;
 			}
 			const current = next.get(step.elementId);
@@ -144,11 +145,12 @@ export function applyAnimationGroupSteps(group: TimelineClickGroup, ctx: Playbac
 		}
 		return next;
 	});
+	applyOpacitySetSteps(group, ctx);
 
 	// Cleanup after each step completes: clear the animation, hide finished exits,
 	// and drop the colour-target flags so the static paint is restored.
 	for (const step of group.steps) {
-		if (step.command || !step.elementId) {
+		if (step.command || !step.elementId || step.opacitySet) {
 			continue;
 		}
 		const timer = window.setTimeout(

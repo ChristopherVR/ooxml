@@ -212,9 +212,10 @@ export function processRegularAnimation(
 
 		const iterStr = iterCount === Infinity ? 'infinite' : String(iterCount);
 		const easing = resolved.easing ?? cssEasingForAnimation(singleAnim);
-		const baseCssAnimation = isCommand
-			? ''
-			: `${keyframe} ${duration}ms ${easing} ${delayMs}ms ${iterStr} ${direction} ${fill}`;
+		const baseCssAnimation =
+			isCommand || resolved.opacitySet
+				? ''
+				: `${keyframe} ${duration}ms ${easing} ${delayMs}ms ${iterStr} ${direction} ${fill}`;
 
 		// "After animation" end state (dim-to-color / hide), merged in from
 		// the editor's per-element animation list by
@@ -234,6 +235,7 @@ export function processRegularAnimation(
 		}
 
 		const step: TimelineStep = {
+			opacitySet: resolved.opacitySet,
 			elementId,
 			cssAnimation: afterFields.cssAnimation,
 			keyframeName: keyframe,

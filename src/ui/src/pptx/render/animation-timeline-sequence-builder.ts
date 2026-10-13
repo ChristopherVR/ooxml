@@ -166,9 +166,10 @@ export function buildSequenceGroups(
 
 			const iterStr = iterCount === Infinity ? 'infinite' : String(iterCount);
 			const easing = resolved.easing ?? cssEasingForAnimation(anim);
-			const baseCssAnimation = isCommand
-				? ''
-				: `${keyframe} ${duration}ms ${easing} ${delayMs}ms ${iterStr} ${direction} ${fill}`;
+			const baseCssAnimation =
+				isCommand || resolved.opacitySet
+					? ''
+					: `${keyframe} ${duration}ms ${easing} ${delayMs}ms ${iterStr} ${direction} ${fill}`;
 
 			// Same "after animation" resolution as the main click-group loop, so
 			// an onShapeClick/onHover-triggered effect honours dim-to-color /
@@ -189,6 +190,7 @@ export function buildSequenceGroups(
 			}
 
 			const step: TimelineStep = {
+				opacitySet: resolved.opacitySet,
 				elementId,
 				cssAnimation: afterFields.cssAnimation,
 				keyframeName: keyframe,

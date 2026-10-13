@@ -10,7 +10,8 @@
  * @module render/animation-timeline-step-effect
  */
 
-import type { PptxNativeAnimation } from 'ooxml-core/pptx';
+import { resolveOpacitySet } from 'ooxml-core/pptx';
+import type { PptxNativeAnimation, PptxOpacitySet } from 'ooxml-core/pptx';
 
 import { buildBehaviorKeyframes } from './animation-behavior-keyframes';
 import { buildDirectionalKeyframe } from './animation-directional';
@@ -34,6 +35,7 @@ import { hasAuthoredTransform } from './animation-transform-keyframes';
 
 /** Result of resolving one step's effect / dynamic keyframe / command kind. */
 export interface StepEffectResolution {
+	opacitySet?: PptxOpacitySet;
 	/** Static effect name to add to the timeline's needed-keyframes set, if any. */
 	effect: EffectName | undefined;
 	/** CSS `@keyframes` name for this step (blank for a command step). */
@@ -75,6 +77,38 @@ export function resolveStepEffect(
 	pixelateMosaic?: boolean,
 ): StepEffectResolution {
 	let dynamicUid = dynamicUidStart;
+	const opacitySet = resolveOpacitySet(singleAnim);
+	if (opacitySet) {
+		return {
+			opacitySet,
+			effect: undefined,
+			keyframe: '',
+			isCommand: false,
+			tavColorApplied: false,
+			dynamicCss: undefined,
+			nextDynamicUid: dynamicUid,
+			skip: false,
+		};
+	}
+	if (
+		singleAnim.behaviors?.some(
+			(behavior) => behavior.kind === 'set' && behavior.attrNames.includes('style.opacity'),
+		)
+	) {
+		console.warn(
+			'Unsupported native opacity set target, value or timing profile',
+			singleAnim.targetId,
+		);
+		return {
+			effect: undefined,
+			keyframe: '',
+			isCommand: false,
+			tavColorApplied: false,
+			dynamicCss: undefined,
+			nextDynamicUid: dynamicUid,
+			skip: true,
+		};
+	}
 	const box = boxForAnimation(singleAnim, renderContext);
 	// PowerPoint's own behaviour tree wins over any preset approximation when
 	// it carries a transform the player can resolve (Fly from the slide edge,
