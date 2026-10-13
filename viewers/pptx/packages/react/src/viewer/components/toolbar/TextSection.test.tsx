@@ -78,7 +78,9 @@ function buttonTitled(...titles: string[]): HTMLButtonElement {
 		titles.includes(b.title),
 	);
 	if (!match) {
-		throw new Error(`missing button: ${titles.join(' / ')}`);
+		throw new Error(
+			`missing button: ${titles.join(' / ')}; rendered titles: ${[...container.querySelectorAll<HTMLButtonElement>('button')].map((button) => button.title).join(' / ')}`,
+		);
 	}
 	return match;
 }
