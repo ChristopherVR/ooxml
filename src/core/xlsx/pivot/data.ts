@@ -2,6 +2,7 @@ import { getCell } from '../cells';
 import { isCellError, type CellValue, type PivotTable, type Workbook } from '../model';
 import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
+import { parseXml } from '../../xml/index';
 
 export const PIVOT_AGGREGATES = ['sum', 'count', 'average', 'min', 'max'] as const;
 
@@ -94,6 +95,10 @@ export function validatePivotFields(
 		| 'columnField'
 		| 'valueField'
 		| 'aggregate'
+		| 'valueCaption'
+		| 'additionalValues'
+		| 'sourceXml'
+		| 'valuesAxis'
 	>,
 ): void {
 	const used = [
@@ -102,6 +107,44 @@ export function validatePivotFields(
 		...(pivot.columnField ? [pivot.columnField] : []),
 		pivot.valueField,
 	];
+	const extras = pivot.additionalValues ?? [];
+	if (pivot.valuesAxis !== undefined && !['columns', 'rows'].includes(pivot.valuesAxis))
+		throw new Error('Choose a valid Values axis.');
+	if (
+		pivot.valuesAxis === 'rows' &&
+		(!Array.isArray(extras) ||
+			!extras.length ||
+			pivot.secondRowField ||
+			(pivot.layout !== undefined && pivot.layout !== 'tabular'))
+	)
+		throw new Error('Values on rows require multiple measures, one row field and tabular layout.');
+	if (
+		extras.length > 0 &&
+		pivot.sourceXml &&
+		parseXml(pivot.sourceXml).documentElement.getAttribute('dataCaption') !== 'Values'
+	)
+		throw new Error('This PivotTable uses unsupported Values header captions.');
+	if (
+		!Array.isArray(extras) ||
+		extras.length > 15 ||
+		extras.some(
+			(measure) =>
+				!measure ||
+				!pivot.fields.includes(measure.field) ||
+				!PIVOT_AGGREGATES.includes(measure.aggregate) ||
+				typeof measure.caption !== 'string' ||
+				!measure.caption.trim() ||
+				measure.caption.length > 255 ||
+				pivot.fields.some((field) => field.toLowerCase() === measure.caption.toLowerCase()),
+		) ||
+		new Set(
+			[pivot.valueCaption, ...extras.map((measure) => measure.caption)].map((caption) =>
+				caption?.toLowerCase(),
+			),
+		).size !==
+			extras.length + 1
+	)
+		throw new Error('Choose PivotTable value fields with valid aggregates and unique captions.');
 	if (
 		(pivot.layout !== undefined && !['tabular', 'compact', 'outline'].includes(pivot.layout)) ||
 		(pivot.subtotalPosition !== undefined && !['top', 'bottom'].includes(pivot.subtotalPosition)) ||

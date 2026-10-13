@@ -1,7 +1,13 @@
 import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { getPictureFrameLayers, getPictureShadowFilter, hasPictureFrame } from './picture-frame';
+import {
+	getPictureFrameLayers,
+	getPictureShadowFilter,
+	hasPictureFrame,
+	getShapeEffectLayerPlacement,
+	getShapeEffectAnimationLayerStyle,
+} from './picture-frame';
 
 /** The frame a Picture Styles pick writes: a centred red line and an outer shadow. */
 const FRAMED: ShapeStyle = {
@@ -29,6 +35,35 @@ function picture(shapeStyle?: ShapeStyle): PptxElement {
 }
 
 const CLIP = { overflow: 'hidden', borderRadius: '12px', clipPath: 'inset(0)' } as const;
+
+it('keeps shadow paint on an animated layer without mutating the static style', () => {
+	const original = { filter: 'drop-shadow(1px 2px 3px black)', clipPath: 'inset(0)' };
+	const style = getShapeEffectAnimationLayerStyle(picture(FRAMED), original, {
+		visible: false,
+		cssAnimation: 'fade 1s both',
+	});
+	expect(style).toMatchObject({
+		...original,
+		clipPath: 'none',
+		overflow: 'visible',
+		position: 'absolute',
+		inset: '0',
+		visibility: 'hidden',
+		animation: 'fade 1s both',
+	});
+	expect(original).toEqual({ filter: 'drop-shadow(1px 2px 3px black)', clipPath: 'inset(0)' });
+});
+
+it('places picture effects above pixels and shape effects below text on every surface', () => {
+	expect(getShapeEffectLayerPlacement(picture(FRAMED))).toEqual({
+		beforeBody: false,
+		afterBody: true,
+	});
+	expect(getShapeEffectLayerPlacement({ ...picture(), type: 'shape' } as PptxElement)).toEqual({
+		beforeBody: true,
+		afterBody: false,
+	});
+});
 
 describe('getPictureFrameLayers', () => {
 	it('keeps the clip on the box when the picture has no frame', () => {

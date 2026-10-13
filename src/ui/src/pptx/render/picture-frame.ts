@@ -19,9 +19,11 @@
  * @module render/picture-frame
  */
 import type { PptxElement } from 'ooxml-core/pptx';
+import { getAnimationColorBaseStyle } from './animation-color-base-style';
 import { hasShapeProperties, isImageLikeElement } from 'ooxml-core/pptx';
 
 import type { CssStyleMap } from './element-style-transform';
+import type { ElementAnimationState } from './animation-timeline-group';
 import { buildStrokeOutline } from './stroke-outline';
 import { getCompositeOuterShadowFilterCss } from './visual-effects';
 
@@ -42,6 +44,34 @@ export interface PictureFrameLayers {
 	 * the box itself clips them (no frame).
 	 */
 	surface: CssStyleMap | undefined;
+}
+
+/** Paint order applies to every surface, including separately animated background paint. */
+export function getShapeEffectLayerPlacement(element: PptxElement): {
+	beforeBody: boolean;
+	afterBody: boolean;
+} {
+	const afterBody = isImageLikeElement(element);
+	return { beforeBody: !afterBody, afterBody };
+}
+
+/** A separately animated paint layer must keep the same effect styling and visibility. */
+export function getShapeEffectAnimationLayerStyle<T extends object>(
+	element: PptxElement,
+	visualStyle: T,
+	state: ElementAnimationState,
+) {
+	return {
+		...getAnimationColorBaseStyle(element, state),
+		...visualStyle,
+		...(isImageLikeElement(element) ? { clipPath: 'none', overflow: 'visible' } : {}),
+		position: 'absolute',
+		inset: '0',
+		transformOrigin: 'center',
+		visibility: state.visible === false ? 'hidden' : 'visible',
+		...(state.cssAnimation ? { animation: state.cssAnimation } : {}),
+		pointerEvents: 'none',
+	};
 }
 
 /** The composite outer shadow a picture casts, or `undefined` without one. */

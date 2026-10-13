@@ -1,0 +1,15 @@
+{
+	"observedOn": "2026-10-13",
+	"excelFileVersion": "16.0.20430.20146",
+	"reproduce": "pwsh -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+	"baseline": "4d711e496c34540c674e2c263d9b3887eda20bc1",
+	"acceptanceCases": 83,
+	"addedLayoutCases": 22,
+	"fixtures": ["excel-pivot-values-compact.xlsx", "excel-pivot-values-outline.xlsx", "excel-pivot-values-compact-rows-top-columns.xlsx", "excel-pivot-values-outline-rows-bottom-columns.xlsx"],
+	"validated": ["three measures in compact and outline forms", "one or two row fields", "optional column field followed by Values", "top, bottom and omitted subtotals", "repeated outer row labels in outline", "inactive repetition preference retained in compact", "every cached/refreshed cell value, type and report dimension", "native compact indentation and left alignment", "imported native refresh"],
+	"compactHeader": "With a real column field, the first header row shows Column Labels, without the separate Values caption used in outline and tabular forms.",
+	"customCaptionProbe": { "set": "PivotTable.DataPivotField.Name = Metrics", "compactB1": "Column Labels", "outlineC1": "Year", "outlineD1": "Metrics", "policy": "Preserve unsupported custom Values captions, including those hidden in compact form." },
+	"supersedes": "The compact/outline limitation recorded by the initial native-pivot-values-evidence.json batch is lifted for these validated profiles.",
+	"unsupportedPreserved": ["Values on rows", "Values before the real column field", "custom dataCaption including captions hidden by compact form", "visible or unspecified Values header rows", "mixed per-field layouts", "more than two row fields", "grouping", "slicers", "shared caches", "custom measure calculations", "unsupported extensions"],
+	"limits": "Acceptance exercises three measures in Excel 16.0.20430.20146. Fonts and locales can differ. This evidence does not establish full PivotTable parity."
+}

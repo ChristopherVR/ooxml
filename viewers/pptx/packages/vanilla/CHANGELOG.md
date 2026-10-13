@@ -7,6 +7,31 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.34.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.34.0) - 2026-10-13
+
+### Features
+
+- **pptx:** Add rich search and cross-deck slide clipboard ([736dbf9](https://github.com/ChristopherVR/ooxml/commit/736dbf94f7fac5226accea2e942db2e5f9e08063))
+- **pptx:** Edit rich chart titles across viewer bindings ([e27970e](https://github.com/ChristopherVR/ooxml/commit/e27970e7791e8b1d2287619aa338ac907e25758d))
+- **pptx:** Replace chart labels with coherent workbook updates ([df616f7](https://github.com/ChristopherVR/ooxml/commit/df616f7f14674af9e41fd579b6860280ef45b9ac))
+
+### Bug Fixes
+
+- **ui:** Round the table cell panel numbers for display ([#65](https://github.com/ChristopherVR/ooxml/issues/65)) ([964a96f](https://github.com/ChristopherVR/ooxml/commit/964a96f3c9c04e5bb186b1459d9089d8e6cf06ee))
+- **pptx:** Translate notes and clipboard controls ([73e9449](https://github.com/ChristopherVR/ooxml/commit/73e9449cd2e40635fac1c2d13ff82dfc95d1cb5e))
+- **pptx:** Preserve chart workbooks across repeated saves ([b684d66](https://github.com/ChristopherVR/ooxml/commit/b684d66f7da744b8d322178e9db0b5df05fcf0fa))
+- **pptx:** Typecheck clipboard fixture without build output ([ee3769f](https://github.com/ChristopherVR/ooxml/commit/ee3769ffce40280cde48317020fb62b858e4a6ed))
+- **ui:** Paint picture frames and shadows across bindings ([#69](https://github.com/ChristopherVR/ooxml/issues/69)) ([c012f08](https://github.com/ChristopherVR/ooxml/commit/c012f08aa95ca069f2164f9f50e15208a793ba8e))
+- **pptx:** Handle opaque share origins and clean up dialog tests ([2c73b55](https://github.com/ChristopherVR/ooxml/commit/2c73b55ed37381c6b7f51cefe72bd2439d5e03af))
+
+### Testing
+
+- **pptx:** Update angular and vanilla sorter expectations ([036e64c](https://github.com/ChristopherVR/ooxml/commit/036e64c20671b0d2ecae675fed5232a32719848d))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group across 1 directory with 3 updates ([#60](https://github.com/ChristopherVR/ooxml/issues/60)) ([630adbb](https://github.com/ChristopherVR/ooxml/commit/630adbb3aa8d0a22007233ae64b999edf559115c))
+
 ## [3.33.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.33.2) - 2026-10-13
 
 ### Bug Fixes

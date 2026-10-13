@@ -1,6 +1,51 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	'Values Axis:': ['Axe des valeurs :', 'Werteachse:', 'Eje de valores:', '值轴：'],
+	'Values on Columns': [
+		'Valeurs en colonnes',
+		'Werte in Spalten',
+		'Valores en columnas',
+		'值显示在列上',
+	],
+	'Values on Rows': ['Valeurs en lignes', 'Werte in Zeilen', 'Valores en filas', '值显示在行上'],
+	'Values on rows require one row field and tabular layout.': [
+		'Les valeurs en lignes nécessitent un champ de ligne et une disposition tabulaire.',
+		'Werte in Zeilen benötigen ein Zeilenfeld und das Tabellenformat.',
+		'Los valores en filas requieren un campo de fila y formato tabular.',
+		'值显示在行上需要一个行字段和表格布局。',
+	],
+	'Multiple value fields use Values on columns.': [
+		'Plusieurs champs de valeur utilisent les valeurs en colonnes.',
+		'Mehrere Wertfelder verwenden Werte in Spalten.',
+		'Varios campos de valor usan Valores en columnas.',
+		'多个值字段的值位于列轴上。',
+	],
+	'Add Value Field': [
+		'Ajouter un champ de valeur',
+		'Wertfeld hinzufügen',
+		'Añadir campo de valor',
+		'添加值字段',
+	],
+	'Remove Value Field': [
+		'Supprimer le champ de valeur',
+		'Wertfeld entfernen',
+		'Quitar campo de valor',
+		'删除值字段',
+	],
+	'Additional Value Field': [
+		'Champ de valeur supplémentaire',
+		'Zusätzliches Wertfeld',
+		'Campo de valor adicional',
+		'附加值字段',
+	],
+	'Value Caption:': ['Libellé de valeur :', 'Wertbeschriftung:', 'Título del valor:', '值标题：'],
+	'Multiple value fields use tabular layout with Values on columns.': [
+		'Plusieurs champs de valeur utilisent la forme tabulaire avec les valeurs en colonnes.',
+		'Mehrere Wertfelder verwenden das Tabellenformat mit Werten in Spalten.',
+		'Varios campos de valor usan el formato tabular con Valores en columnas.',
+		'多个值字段使用表格布局，值位于列轴上。',
+	],
 	'Compact Form': ['Forme compacte', 'Kompaktformat', 'Formato compacto', '压缩形式'],
 	'Outline Form': ['Forme de plan', 'Gliederungsformat', 'Formato de esquema', '大纲形式'],
 	'Tabular Form': ['Forme tabulaire', 'Tabellenformat', 'Formato tabular', '表格形式'],

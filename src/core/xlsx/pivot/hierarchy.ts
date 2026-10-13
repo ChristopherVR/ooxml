@@ -1,23 +1,18 @@
-import type { CellValue, PivotAggregate, PivotTable } from '../model';
+import type { CellValue, PivotTable } from '../model';
 import type { PivotGrid } from './aggregate';
 import { pivotItemLabel, pivotItems, pivotValueKey } from './data';
 
-type Aggregate = (
-	records: readonly CellValue[][],
-	field: number,
-	type: PivotAggregate,
-) => CellValue;
+import { pivotHeaderDimensions, pivotHeaders, pivotNumbers } from './measures';
 const label = pivotItemLabel;
 
 /** Two-field report layouts share the same indexed tuples and aggregate buckets. */
-export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): PivotGrid {
+export function hierarchicalPivotGrid(pivot: PivotTable): PivotGrid {
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const secondRowItems = pivotItems(pivot, pivot.secondRowField!);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
 	const outerField = pivot.fields.indexOf(pivot.rowField);
 	const innerField = pivot.fields.indexOf(pivot.secondRowField!);
 	const columnField = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
-	const valueField = pivot.fields.indexOf(pivot.valueField);
 	const layout = pivot.layout ?? 'tabular';
 	const compact = layout === 'compact';
 	const top =
@@ -49,22 +44,16 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 				collect(buckets, JSON.stringify([...key, column]), record);
 		}
 	}
-	const rows = details.size + rowItems.length * (Number(layout !== 'tabular') + Number(bottom)) + 3;
-	if (rows * (columnItems.length + 3) > 1_000_000)
-		throw new Error('The PivotTable result is too large.');
+	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowLabelColumns);
+	const rows =
+		details.size +
+		rowItems.length * (Number(layout !== 'tabular') + Number(bottom)) +
+		dimensions.rows +
+		1;
+	if (rows * dimensions.width > 1_000_000) throw new Error('The PivotTable result is too large.');
 	const labels = compact ? ['Row Labels'] : [pivot.rowField, pivot.secondRowField!];
-	const values: CellValue[][] = pivot.columnField
-		? [
-				[
-					pivot.valueCaption,
-					...(compact ? [] : [null]),
-					compact ? 'Column Labels' : pivot.columnField,
-					...columnItems.slice(1).map(() => null),
-					null,
-				],
-				[...labels, ...columnItems.map(label), 'Grand Total'],
-			]
-		: [[...labels, pivot.valueCaption]];
+	const values = pivotHeaders(pivot, columnItems, labels, label);
+	const firstDataRow = values.length;
 	const indents = values.map(() => 0);
 	const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];
 	const append = (
@@ -78,21 +67,19 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 		indents.push(indent);
 	};
 	const numbers = (keys: string[], records: CellValue[][]): CellValue[] => [
-		...columnItems.map((column) =>
-			aggregate(
-				buckets.get(JSON.stringify([...keys, pivotValueKey(column)])) ?? [],
-				valueField,
-				pivot.aggregate,
-			),
+		...columnItems.flatMap((column) =>
+			pivotNumbers(pivot, buckets.get(JSON.stringify([...keys, pivotValueKey(column)])) ?? []),
 		),
-		aggregate(records, valueField, pivot.aggregate),
+		...pivotNumbers(pivot, records),
 	];
 	rowItems.forEach((outer, outerIndex) => {
 		const key = pivotValueKey(outer);
 		if (layout !== 'tabular')
 			append(
 				[label(outer), ...(compact ? [] : [null])],
-				top ? numbers([key], groups.get(key) ?? []) : Array(columnItems.length + 1).fill(null),
+				top
+					? numbers([key], groups.get(key) ?? [])
+					: Array(dimensions.width - rowLabelColumns).fill(null),
 				{ indices: [outerIndex] },
 			);
 		let first = true;
@@ -136,7 +123,7 @@ export function hierarchicalPivotGrid(pivot: PivotTable, aggregate: Aggregate): 
 		secondRowItems,
 		columnItems,
 		rowEntries,
-		firstDataRow: pivot.columnField ? 2 : 1,
+		firstDataRow,
 		rowLabelColumns,
 		indents,
 	};

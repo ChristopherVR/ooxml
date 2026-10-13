@@ -2,6 +2,7 @@ import {
 	getAriaLabel,
 	getAriaRoleDescription,
 	getGroupChildParentFill,
+	getShapeEffectLayerPlacement,
 	isElementRendered,
 } from 'ooxml-ui/pptx';
 import type { GroupPptxElement } from 'pptx-viewer-core';
@@ -146,7 +147,9 @@ function StaticElementRendererImpl({
 		>
 			{/* Soft-edge <filter> defs + DAG fill-overlay tint layer + (unless
 			    suppressed) this element's own reflection mirror. */}
-			{!isImage && <ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />}
+			{getShapeEffectLayerPlacement(element).beforeBody && (
+				<ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />
+			)}
 			{element.type === 'group' ? (
 				<div className='relative w-full h-full'>
 					{((element as GroupPptxElement).children ?? []).map((child, index) => (
@@ -221,7 +224,9 @@ function StaticElementRendererImpl({
 				})
 			)}
 			{/* A picture's overlay (its centred `a:ln` frame) paints over the picture. */}
-			{isImage && <ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />}
+			{getShapeEffectLayerPlacement(element).afterBody && (
+				<ShapeEffectOverlay element={element} suppressReflection={suppressReflection} />
+			)}
 		</div>
 	);
 }

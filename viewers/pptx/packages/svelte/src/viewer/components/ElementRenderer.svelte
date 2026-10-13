@@ -7,7 +7,7 @@
 	 * `unknown` still falls through to the typed placeholder.
 	 */
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-	import { build3DExtrusionData, buildParagraphs, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, getShapeBoxStyle, getShapeFillStrokeStyle, getTextBlockStyle, mergeStyles, styleToString } from '../style';
 	import { getFieldContextGetter } from '../state/field-context';
@@ -118,6 +118,9 @@
 	const getAllAnimStates = getPresentationElementStatesGetter();
 	/** Whole map, so a staged text build can find its `::c` / `::w` sub-states. */
 	const allAnimStates = $derived(getAllAnimStates?.());
+	const backgroundState = $derived(getBackgroundAnimationState(element, allAnimStates));
+	const visualState = $derived(backgroundState ?? animationState);
+	const backgroundLayers = $derived(getBackgroundAnimationLayers(element, getShapeBoxStyle(element, zIndex, parentGroupFill, visualState?.animatesFill, visualState?.animatesStroke), backgroundState));
 
 	/**
 	 * The host's resolved 3D flags (provided by PowerPointViewer). Charts
@@ -272,7 +275,7 @@
 	<!-- Text / shape: shared fill/stroke/effects/geometry + rich text block. -->
 	<div
 		class="pptx-svelte-element pptx-svelte-shape"
-		style={styleToString(mergeStyles(getShapeBoxStyle(element, zIndex, parentGroupFill, animationState?.animatesFill, animationState?.animatesStroke), rootPointerEventsStyle))}
+		style={styleToString(mergeStyles(backgroundLayers.box, rootPointerEventsStyle))}
 		data-element-id={element.id}
 		data-pptx-element={elementMarked ? 'true' : undefined}
 	>
@@ -289,8 +292,10 @@
 		     `INK_REPLAY_KEYFRAMES` precedent), so this uses the `svelte:element`
 		     escape hatch instead. -->
 		{#if textStyleOverrideCss}<svelte:element this={'style'}>{textStyleOverrideCss}</svelte:element>{/if}
+		<div style={styleToString(backgroundLayers.paint ?? { display: 'contents' })} data-anim-id={backgroundLayers.targetId} data-pptx-animation-layer={backgroundState ? 'background' : undefined}>
 		<ShapeEffectOverlay {element} {mediaDataUrls} {zIndex} />
 		{#if extrusion.hasExtrusion}<Extrusion3D data={extrusion} />{/if}
+		</div>
 		<!-- While this element is open in the inline text editor, its live text is
 		     drawn by that overlay instead; rendering it here too duplicates it
 		     underneath (issue #182). -->

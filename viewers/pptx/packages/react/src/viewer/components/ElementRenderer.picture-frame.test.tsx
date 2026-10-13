@@ -84,6 +84,30 @@ function frameFollowsImage(): boolean {
 }
 
 describe('react picture frame paints over the picture', () => {
+	it('keeps its separately animated background frame above the image', () => {
+		act(() =>
+			root.render(
+				<ElementRenderer
+					{...props(PICTURE)}
+					presentationElementStates={
+						new Map([
+							[
+								`${PICTURE.id}::pptx-bg`,
+								{ visible: true, cssAnimation: 'pptx-fade-in 500ms ease 0ms 1 normal both' },
+							],
+						])
+					}
+				/>,
+			),
+		);
+		expect(frameFollowsImage()).toBeTruthy();
+		const background = container.querySelector<HTMLElement>(
+			'[data-pptx-animation-layer="background"]',
+		);
+		expect(background?.style.animation).toContain('pptx-fade-in');
+		expect(background?.querySelector('svg path')).not.toBeNull();
+	});
+
 	it('on the interactive canvas', () => {
 		act(() => root.render(<ElementRenderer {...props(PICTURE)} />));
 		expect(frameFollowsImage()).toBe(true);

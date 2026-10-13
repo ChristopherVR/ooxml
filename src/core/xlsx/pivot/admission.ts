@@ -4,7 +4,7 @@ const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
-		'name cacheId dataCaption updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
+		'name cacheId dataCaption dataOnRows updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
 	location: 'ref firstHeaderRow firstDataRow firstDataCol',
 	pivotFields: 'count',
 	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
@@ -15,7 +15,7 @@ const TABLE: Record<string, string> = {
 	field: 'x',
 	rowItems: 'count',
 	colItems: 'count',
-	i: 't r',
+	i: 't r i',
 	x: 'v',
 	dataFields: 'count',
 	dataField: 'name fld subtotal baseField baseItem showDataAs',
@@ -67,7 +67,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 				node.namespaceURI === X14 &&
 				node.localName === 'pivotTableDefinition' &&
 				attr.name === 'hideValuesRow' &&
-				attr.value === '1'
+				['0', '1'].includes(attr.value)
 			)
 				continue;
 			if (
@@ -121,7 +121,9 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 			throw new Error('Unsupported PivotTable field number format');
 		if (
 			node.localName === 'pivotTableDefinition' &&
-			['compact', 'compactData', 'outline', 'outlineData'].includes(attr.localName!) &&
+			['compact', 'compactData', 'outline', 'outlineData', 'dataOnRows'].includes(
+				attr.localName!,
+			) &&
 			!['0', '1'].includes(attr.value)
 		)
 			throw new Error('Unsupported PivotTable global layout');

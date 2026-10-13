@@ -47,6 +47,9 @@ describe('element image box picture frame (a:ln + a:outerShdw)', () => {
 			(p) => p.getAttribute('stroke') === '#FF0000',
 		);
 		expect(path).toBeDefined();
+		expect(
+			box.querySelector('img')!.compareDocumentPosition(path!) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 		// The outline is not inside the clipped surface, so its outer half shows.
 		expect(surface?.contains(path ?? null)).toBe(false);
 	});

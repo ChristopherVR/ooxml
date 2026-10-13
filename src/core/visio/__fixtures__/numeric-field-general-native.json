@@ -1,0 +1,327 @@
+{
+  "version": "16.0",
+  "cases": [
+    {
+      "id": 1,
+      "code": 0,
+      "formula": "1.23456789",
+      "text": "1.2346",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 2,
+      "code": 0,
+      "formula": "-1.23456789",
+      "text": "-1.2346",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 3,
+      "code": 0,
+      "formula": "73.456789",
+      "text": "73.4568",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 4,
+      "code": 0,
+      "formula": "0.0000123456789",
+      "text": "1.235E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 5,
+      "code": 0,
+      "formula": "-0.0000123456789",
+      "text": "-1.235E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 6,
+      "code": 0,
+      "formula": "0.00001",
+      "text": "1E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 7,
+      "code": 0,
+      "formula": "0.00005",
+      "text": "0.0001",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 8,
+      "code": 0,
+      "formula": "0.00004999",
+      "text": "4.999E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 9,
+      "code": 0,
+      "formula": "0",
+      "text": "0",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 10,
+      "code": 0,
+      "formula": "-0.1",
+      "text": "-0.1",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 11,
+      "code": 0,
+      "formula": "12345678.9",
+      "text": "12345678.9",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 12,
+      "code": 0,
+      "formula": "1.005",
+      "text": "1.005",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 13,
+      "code": 0,
+      "formula": "999999999.995",
+      "text": "999999999.995",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 14,
+      "code": 0,
+      "formula": "1000000000000000",
+      "text": "1E15",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 15,
+      "code": 0,
+      "formula": "73.456789 in",
+      "text": "73.4568",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 16,
+      "code": 0,
+      "formula": "73.456789 mm",
+      "text": "73.4568",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 17,
+      "code": 0,
+      "formula": "7.3456789 cm",
+      "text": "7.3457",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 18,
+      "code": 0,
+      "formula": "2.3456789 ft",
+      "text": "2.3457",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 19,
+      "code": 0,
+      "formula": "45.67891234 deg",
+      "text": "45.6789",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 20,
+      "code": 0,
+      "formula": "0.73456789 rad",
+      "text": "0.7346",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 21,
+      "code": 0,
+      "formula": "0.000010005",
+      "text": "1.001E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 22,
+      "code": 0,
+      "formula": "-0.000010005",
+      "text": "-1.001E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 23,
+      "code": 0,
+      "formula": "0.0000099995",
+      "text": "1E-5",
+      "format": "FIELDPICTURE(0)"
+    },
+    {
+      "id": 24,
+      "code": 1,
+      "formula": "1.23456789",
+      "text": "1.2346",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 25,
+      "code": 1,
+      "formula": "-1.23456789",
+      "text": "-1.2346",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 26,
+      "code": 1,
+      "formula": "73.456789",
+      "text": "73.4568",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 27,
+      "code": 1,
+      "formula": "0.0000123456789",
+      "text": "1.235e-5",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 28,
+      "code": 1,
+      "formula": "-0.0000123456789",
+      "text": "-1.235e-5",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 29,
+      "code": 1,
+      "formula": "0.00001",
+      "text": "1e-5",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 30,
+      "code": 1,
+      "formula": "0.00005",
+      "text": "0.0001",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 31,
+      "code": 1,
+      "formula": "0.00004999",
+      "text": "4.999e-5",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 32,
+      "code": 1,
+      "formula": "0",
+      "text": "0",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 33,
+      "code": 1,
+      "formula": "-0.1",
+      "text": "-0.1",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 34,
+      "code": 1,
+      "formula": "12345678.9",
+      "text": "12345678.9",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 35,
+      "code": 1,
+      "formula": "1.005",
+      "text": "1.005",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 36,
+      "code": 1,
+      "formula": "999999999.995",
+      "text": "999999999.995",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 37,
+      "code": 1,
+      "formula": "1000000000000000",
+      "text": "1e15",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 38,
+      "code": 1,
+      "formula": "73.456789 in",
+      "text": "73.4568 in.",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 39,
+      "code": 1,
+      "formula": "73.456789 mm",
+      "text": "73.4568 mm.",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 40,
+      "code": 1,
+      "formula": "7.3456789 cm",
+      "text": "7.3457 cm.",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 41,
+      "code": 1,
+      "formula": "2.3456789 ft",
+      "text": "2.3457 ft.",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 42,
+      "code": 1,
+      "formula": "45.67891234 deg",
+      "text": "45.6789 deg.",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 43,
+      "code": 1,
+      "formula": "0.73456789 rad",
+      "text": "0.7346 rad.",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 44,
+      "code": 1,
+      "formula": "0.000010005",
+      "text": "1.001e-5",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 45,
+      "code": 1,
+      "formula": "-0.000010005",
+      "text": "-1.001e-5",
+      "format": "FIELDPICTURE(1)"
+    },
+    {
+      "id": 46,
+      "code": 1,
+      "formula": "0.0000099995",
+      "text": "1e-5",
+      "format": "FIELDPICTURE(1)"
+    }
+  ]
+}

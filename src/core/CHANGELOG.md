@@ -7,6 +7,38 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.9.0) - 2026-10-13
+
+### Features
+
+- **docx:** Improve footnote flow and print editing ([2fff641](https://github.com/ChristopherVR/ooxml/commit/2fff64125254edb739e874101007b189a1609a19))
+- **xlsx:** Add sparkline pivot and print workflows ([bb34ffb](https://github.com/ChristopherVR/ooxml/commit/bb34ffb060b12049a780b68fc3c0ff3db0b4682a))
+- **visio:** Match native routing and shape data behavior ([be1519c](https://github.com/ChristopherVR/ooxml/commit/be1519c203226dd531a3b147b9f2a532cd1945ba))
+- **pptx:** Add rich search and cross-deck slide clipboard ([736dbf9](https://github.com/ChristopherVR/ooxml/commit/736dbf94f7fac5226accea2e942db2e5f9e08063))
+- **docx:** Support native footnote columns across compatibility modes ([8033fec](https://github.com/ChristopherVR/ooxml/commit/8033fece4e1f8030216fca267939aea4587f2fc5))
+- **xlsx:** Add hierarchical pivots and sparkline date axes ([81001cd](https://github.com/ChristopherVR/ooxml/commit/81001cd74e185a4a507e0b1524f1b1998333273a))
+- **pptx:** Edit rich chart titles across viewer bindings ([e27970e](https://github.com/ChristopherVR/ooxml/commit/e27970e7791e8b1d2287619aa338ac907e25758d))
+- **xlsx:** Author compact and outline pivot layouts ([611f377](https://github.com/ChristopherVR/ooxml/commit/611f37708c99b86e2a220f3c90458c54154a3c8b))
+- **xlsx:** Render rich print header formatting ([ca16fe3](https://github.com/ChristopherVR/ooxml/commit/ca16fe39e5bc39cecf82ce57611f3d2062147d5b))
+- **pptx:** Replace chart labels with coherent workbook updates ([df616f7](https://github.com/ChristopherVR/ooxml/commit/df616f7f14674af9e41fd579b6860280ef45b9ac))
+
+### Bug Fixes
+
+- **xlsx:** Write native-compatible typed pivot caches ([a4ace48](https://github.com/ChristopherVR/ooxml/commit/a4ace48e4fb207971c60f570698d20c6f72bdc6f))
+- **visio:** Match native field casing and curved walking glue ([7238edb](https://github.com/ChristopherVR/ooxml/commit/7238edb1e571320ae2e50f40946ce963a89a24a3))
+- **docx:** Paginate footnotes referenced inside body tables ([e137736](https://github.com/ChristopherVR/ooxml/commit/e137736a5c11cc791f4a02da87e3f517205de1e4))
+- **docx:** Retain cell padding when splitting table footnotes ([0e36444](https://github.com/ChristopherVR/ooxml/commit/0e36444a381f527d8cd03729e7bedd079ef3d29e))
+- **pptx:** Preserve chart workbooks across repeated saves ([b684d66](https://github.com/ChristopherVR/ooxml/commit/b684d66f7da744b8d322178e9db0b5df05fcf0fa))
+- **visio:** Match native corner curves and text placement ([0b50379](https://github.com/ChristopherVR/ooxml/commit/0b50379d172a1c8e50b8bd849c03d0713f31a6e5))
+- **xlsx:** Preserve conflicting pivot layout definitions ([333c74d](https://github.com/ChristopherVR/ooxml/commit/333c74d403380c141becf9ccb3bc573d8c35e5b5))
+- **docx:** Paginate nested table notes and guard source structure ([f67b8c3](https://github.com/ChristopherVR/ooxml/commit/f67b8c3491464230a3f8fd9dddf7654615d37af5))
+- **visio:** Check supplied obstacles along corner curves ([59b3fa5](https://github.com/ChristopherVR/ooxml/commit/59b3fa52b867a7adff98bacd0ab08edefab10a53))
+- **pptx:** Typecheck clipboard fixture without build output ([ee3769f](https://github.com/ChristopherVR/ooxml/commit/ee3769ffce40280cde48317020fb62b858e4a6ed))
+
+### Testing
+
+- **docx:** Remove unused round-trip test import ([9c913bd](https://github.com/ChristopherVR/ooxml/commit/9c913bdce9a207f063a48414658ab6844083c98d))
+
 ## [1.8.4](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.8.4) - 2026-10-12
 
 ### Bug Fixes

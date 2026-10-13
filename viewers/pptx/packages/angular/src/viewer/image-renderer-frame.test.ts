@@ -71,6 +71,9 @@ describe('imageRendererComponent picture frame (a:ln + a:outerShdw)', () => {
 		expect(surface?.querySelector('img')).not.toBeNull();
 		const path = box.querySelector(':scope > svg path');
 		expect(path?.getAttribute('stroke')).toBe('#FF0000');
+		expect(
+			box!.querySelector('img')!.compareDocumentPosition(path!) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 		expect(Number(path?.getAttribute('stroke-width'))).toBeCloseTo(10.67);
 	});
 

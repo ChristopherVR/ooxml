@@ -1,31 +1,8 @@
 import { rangeContains, type CellAddress } from '../address';
-import {
-	isCellError,
-	type CellValue,
-	type PivotAggregate,
-	type PivotTable,
-	type Worksheet,
-} from '../model';
+import { type CellValue, type PivotTable, type Worksheet } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
 import { hierarchicalPivotGrid } from './hierarchy';
-
-function aggregate(
-	records: readonly CellValue[][],
-	field: number,
-	type: PivotAggregate,
-): CellValue {
-	if (!records.length) return null;
-	const values = records.map((record) => record[field] ?? null);
-	if (type === 'count') return values.filter((value) => value !== null && value !== '').length;
-	const error = values.find(isCellError);
-	if (error) return error;
-	const numbers = values.filter((value): value is number => typeof value === 'number');
-	if (!numbers.length) return type === 'average' ? { error: '#DIV/0!' } : 0;
-	if (type === 'min') return numbers.reduce((a, b) => Math.min(a, b));
-	if (type === 'max') return numbers.reduce((a, b) => Math.max(a, b));
-	const sum = numbers.reduce((total, value) => total + value, 0);
-	return type === 'average' ? sum / numbers.length : sum;
-}
+import { pivotHeaderDimensions, pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
 
 export interface PivotGrid {
 	values: CellValue[][];
@@ -35,20 +12,31 @@ export interface PivotGrid {
 	rowLabelColumns?: number;
 	indents?: number[];
 	secondRowItems?: CellValue[];
-	rowEntries?: { indices: number[]; type?: 'default' | 'grand' }[];
+	rowEntries?: { indices: number[]; type?: 'default' | 'grand'; measure?: number }[];
+	firstHeaderRow?: number;
 }
 
 /** Tabular output, including grand totals computed from source records (not averages of cells). */
 export function pivotGrid(pivot: PivotTable): PivotGrid {
 	validatePivotFields(pivot);
-	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot, aggregate);
+	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
-	if ((rowItems.length + 3) * (columnItems.length + 2) > 1_000_000)
+	const rowsAxis = pivot.valuesAxis === 'rows';
+	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, rowsAxis ? 2 : 1);
+	const dataRows =
+		(rowItems.length + 1) * (rowsAxis ? 1 + (pivot.additionalValues?.length ?? 0) : 1);
+	if ((dataRows + dimensions.rows) * dimensions.width > 1_000_000)
 		throw new Error('The PivotTable result is too large.');
+	const label = pivotItemLabel;
+	const values = pivotHeaders(
+		pivot,
+		columnItems,
+		[pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField],
+		label,
+	);
 	const rowField = pivot.fields.indexOf(pivot.rowField);
 	const colField = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
-	const valueField = pivot.fields.indexOf(pivot.valueField);
 	const groups = new Map<string, CellValue[][]>();
 	const cells = new Map<string, CellValue[][]>();
 	const columns = new Map<string, CellValue[][]>();
@@ -66,44 +54,75 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 			collect(cells, JSON.stringify([key, col]), record);
 		}
 	}
-	const label = pivotItemLabel;
-	const values: CellValue[][] = pivot.columnField
-		? [
+	const firstDataRow = values.length;
+	if (rowsAxis) {
+		const measures = pivotMeasures(pivot);
+		const rowEntries: NonNullable<PivotGrid['rowEntries']> = [];
+		const append = (caption: CellValue, bands: CellValue[][], index: number, grand = false) => {
+			measures.forEach((measure, m) => {
+				values.push([
+					grand ? `Total ${measure.caption}` : m === 0 || pivot.repeatLabels ? caption : null,
+					grand ? null : measure.caption,
+					...bands.map((band) => band[m] ?? null),
+				]);
+				rowEntries.push({
+					indices: grand ? [0] : [index, m],
+					measure: m,
+					...(grand ? { type: 'grand' as const } : {}),
+				});
+			});
+		};
+		rowItems.forEach((item, index) => {
+			const key = pivotValueKey(item);
+			append(
+				label(item),
 				[
-					pivot.valueCaption,
-					pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField,
-					...columnItems.slice(1).map(() => null),
-					null,
+					...columnItems.map((col) =>
+						pivotNumbers(pivot, cells.get(JSON.stringify([key, pivotValueKey(col)])) ?? []),
+					),
+					pivotNumbers(pivot, groups.get(key) ?? []),
 				],
-				[
-					pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField,
-					...columnItems.map(label),
-					'Grand Total',
-				],
-			]
-		: [[pivot.layout === 'compact' ? 'Row Labels' : pivot.rowField, pivot.valueCaption]];
+				index,
+			);
+		});
+		append(
+			'Grand Total',
+			[
+				...columnItems.map((col) => pivotNumbers(pivot, columns.get(pivotValueKey(col)) ?? [])),
+				pivotNumbers(pivot, pivot.records),
+			],
+			0,
+			true,
+		);
+		return {
+			values,
+			rowItems,
+			columnItems,
+			firstDataRow,
+			rowLabelColumns: 2,
+			firstHeaderRow: 1,
+			rowEntries,
+		};
+	}
 	for (const row of rowItems) {
 		const records = groups.get(pivotValueKey(row)) ?? [];
 		values.push([
 			label(row),
-			...columnItems.map((col) =>
-				aggregate(
+			...columnItems.flatMap((col) =>
+				pivotNumbers(
+					pivot,
 					cells.get(JSON.stringify([pivotValueKey(row), pivotValueKey(col)])) ?? [],
-					valueField,
-					pivot.aggregate,
 				),
 			),
-			aggregate(records, valueField, pivot.aggregate),
+			...pivotNumbers(pivot, records),
 		]);
 	}
 	values.push([
 		'Grand Total',
-		...columnItems.map((col) =>
-			aggregate(columns.get(pivotValueKey(col)) ?? [], valueField, pivot.aggregate),
-		),
-		aggregate(pivot.records, valueField, pivot.aggregate),
+		...columnItems.flatMap((col) => pivotNumbers(pivot, columns.get(pivotValueKey(col)) ?? [])),
+		...pivotNumbers(pivot, pivot.records),
 	]);
-	return { values, rowItems, columnItems, firstDataRow: pivot.columnField ? 2 : 1 };
+	return { values, rowItems, columnItems, firstDataRow };
 }
 
 export function pivotTableAt(sheet: Worksheet, at: CellAddress): PivotTable | undefined {

@@ -1,3 +1,4 @@
+import { cellVerticalOffset } from 'ooxml-core/docx/layout';
 import type {
 	LayoutBorder,
 	LayoutCellGeometry,
@@ -32,12 +33,13 @@ function geometryOf(row: LayoutTableRowBox, index: number, widthPx: number): Lay
 export function renderTable(
 	box: LayoutTableBox,
 	columnWidthPx: number,
-	renderParagraph: (paragraph: LayoutParagraphBox) => HTMLElement,
+	renderParagraph: (paragraph: LayoutParagraphBox) => HTMLElement | null,
 ): HTMLElement {
 	const table = document.createElement('div');
 	table.className = 'dve-print-block dve-print-table';
 	table.style.top = `${box.yPx}px`;
 	table.style.height = `${box.heightPx}px`;
+	if (box.widthPx !== undefined) table.style.width = `${box.widthPx}px`;
 	if (box.xPx) table.style.left = `${box.xPx}px`;
 	box.rows.forEach((row, rowIndex) => {
 		const rowEl = document.createElement('div');
@@ -63,19 +65,23 @@ export function renderTable(
 			if (lastRow) cell.style.borderBottom = cssBorder(borders?.bottom);
 			const content = document.createElement('div');
 			content.className = 'dve-print-cell-content';
-			const free = Math.max(0, row.heightPx - geometry.contentHeightPx);
-			const offset =
-				geometry.verticalAlign === 'center'
-					? free / 2
-					: geometry.verticalAlign === 'bottom'
-						? free
-						: 0;
+			const offset = cellVerticalOffset(geometry, row.heightPx);
 			Object.assign(content.style, {
-				left: `${geometry.paddingLeftPx}px`,
-				right: `${geometry.paddingRightPx}px`,
-				top: `${offset}px`,
+				left: `${geometry.paddingLeftPx - (geometry.borderInsetsReserved ? (borders?.left?.widthPx ?? 0) : 0)}px`,
+				right: `${geometry.paddingRightPx - (geometry.borderInsetsReserved && cellIndex === row.cells.length - 1 ? (borders?.right?.widthPx ?? 0) : 0)}px`,
+				top: `${offset - (geometry.borderInsetsReserved ? (borders?.top?.widthPx ?? 0) : 0)}px`,
 			});
-			for (const paragraph of paragraphs) content.append(renderParagraph(paragraph));
+			for (const nested of row.cellTables?.[cellIndex] ?? []) {
+				const frame = renderTable(nested, nested.widthPx ?? geometry.widthPx, () => null);
+				frame.classList.add('dve-print-nested-table');
+				frame.setAttribute('aria-hidden', 'true');
+				frame.style.pointerEvents = 'none';
+				content.append(frame);
+			}
+			for (const paragraph of paragraphs) {
+				const element = renderParagraph(paragraph);
+				if (element) content.append(element);
+			}
 			cell.append(content);
 			rowEl.append(cell);
 		});

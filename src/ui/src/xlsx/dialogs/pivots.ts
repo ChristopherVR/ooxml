@@ -10,14 +10,7 @@ import {
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
-
-const AGGREGATES = [
-	['sum', 'Sum'],
-	['count', 'Count'],
-	['average', 'Average'],
-	['min', 'Min'],
-	['max', 'Max'],
-] as const;
+import { pivotValueControls, PIVOT_AGGREGATE_OPTIONS } from './pivot-values';
 
 export function openPivotTable(ctx: EditorContext, settings = false): Promise<boolean | undefined> {
 	const t = target(ctx);
@@ -55,7 +48,24 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const repeat = checkbox(ctx, 'Repeat row labels', pivot?.repeatLabels ?? false);
 	const column = select(ctx, [['', '(None)']], '');
 	const value = select(ctx, [], '');
-	const aggregate = select(ctx, AGGREGATES, pivot?.aggregate ?? 'sum');
+	const aggregate = select(ctx, PIVOT_AGGREGATE_OPTIONS, pivot?.aggregate ?? 'sum');
+	const axis = select(
+		ctx,
+		[
+			['columns', 'Values on Columns'],
+			['rows', 'Values on Rows'],
+		],
+		pivot?.valuesAxis ?? 'columns',
+	);
+	const multipleNotice = text(ctx, 'Values on rows require one row field and tabular layout.');
+	const extras = pivotValueControls(
+		ctx,
+		pivot?.additionalValues ?? [],
+		() => {
+			updateRows();
+		},
+		pivot?.fields,
+	);
 	const loadFields = () => {
 		let fields: string[];
 		try {
@@ -63,6 +73,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		} catch {
 			fields = [];
 		}
+		extras.load(fields);
 		for (const [control, chosen, optional] of [
 			[row, pivot?.rowField, false],
 			[second, pivot?.secondRowField, true],
@@ -85,11 +96,20 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	source.addEventListener('change', loadFields);
 	loadFields();
 	const updateRows = () => {
+		axis.disabled = extras.count() === 0;
+		if (axis.disabled) axis.value = 'columns';
+		axis.querySelector<HTMLOptionElement>('[value="rows"]')!.disabled = !!second.value;
+		const rowsAxis = axis.value === 'rows';
+		if (rowsAxis) layout.value = 'tabular';
+		second.disabled = rowsAxis;
+		for (const option of layout.options) option.disabled = rowsAxis && option.value !== 'tabular';
+		multipleNotice.hidden = !rowsAxis;
 		subtotals.input.disabled = !second.value;
-		repeat.input.disabled = !second.value || layout.value === 'compact';
+		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
 		position.disabled = !second.value || !subtotals.input.checked || layout.value === 'tabular';
 		tabularNotice.hidden = !second.value || !subtotals.input.checked || layout.value !== 'tabular';
 	};
+	axis.addEventListener('change', updateRows);
 	layout.addEventListener('change', updateRows);
 	subtotals.input.addEventListener('change', updateRows);
 	second.addEventListener('change', updateRows);
@@ -111,11 +131,15 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Column Field:', column),
 			field(ctx, 'Value Field:', value),
 			field(ctx, 'Summarize Values By:', aggregate),
+			extras.host,
+			field(ctx, 'Values Axis:', axis),
+			multipleNotice,
 		],
 		opened: () => (settings ? row : source).focus(),
 		submit: () => {
 			const options = {
 				rowField: row.value,
+				valuesAxis: axis.value as 'columns' | 'rows',
 				layout: layout.value as PivotLayout,
 				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,
@@ -124,10 +148,12 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 				columnField: column.value,
 				valueField: value.value,
 				aggregate: aggregate.value as PivotAggregate,
+				additionalValues: extras.read(),
 			};
 			if (pivot) {
 				if (
 					pivot.rowField !== options.rowField ||
+					(pivot.valuesAxis ?? 'columns') !== options.valuesAxis ||
 					(pivot.layout ?? 'tabular') !== options.layout ||
 					(pivot.subtotalPosition ?? 'bottom') !== options.subtotalPosition ||
 					(pivot.secondRowField ?? '') !== options.secondRowField ||
@@ -135,7 +161,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					(pivot.repeatLabels ?? false) !== options.repeatLabels ||
 					(pivot.columnField ?? '') !== options.columnField ||
 					pivot.valueField !== options.valueField ||
-					pivot.aggregate !== options.aggregate
+					pivot.aggregate !== options.aggregate ||
+					JSON.stringify(pivot.additionalValues ?? []) !== JSON.stringify(options.additionalValues)
 				)
 					t.session.refreshPivotTable(t.sheet, pivot.name, options);
 			} else {

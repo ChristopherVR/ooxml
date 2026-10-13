@@ -48,6 +48,7 @@ export function placeTable(
 			repeated,
 			cells: layout.cells,
 			geometry: layout.geometry,
+			...(layout.cellTables ? { cellTables: layout.cellTables } : {}),
 		};
 		fragmentHeight += layout.heightPx;
 		return box;

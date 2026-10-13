@@ -15,6 +15,7 @@ import { sparklineDataRange } from './sparkline-ranges';
 import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
 import { styleAt } from '../styles';
+import { normalizedPivotMeasures } from '../pivot/measures';
 
 function pivotAt(ctx: EditContext, sheet: number, name: string): PivotTable {
 	const pivot = sheetAt(ctx.workbook, sheet).pivotTables?.find((entry) => entry.name === name);
@@ -168,6 +169,10 @@ export function createPivotTable(
 		valueField: options.valueField,
 		aggregate,
 		valueCaption: pivotCaption(aggregate, options.valueField),
+		...(options.valuesAxis !== undefined ? { valuesAxis: options.valuesAxis } : {}),
+		...(options.additionalValues
+			? { additionalValues: normalizedPivotMeasures(options.additionalValues) }
+			: {}),
 		location: { start: { ...destination }, end: { ...destination } },
 		...(options.columnField ? { columnField: options.columnField } : {}),
 	};
@@ -208,6 +213,12 @@ export function refreshPivotTable(
 	if (patch.repeatLabels !== undefined) next.repeatLabels = patch.repeatLabels;
 	if (patch.layout !== undefined) next.layout = patch.layout;
 	if (patch.subtotalPosition !== undefined) next.subtotalPosition = patch.subtotalPosition;
+	if (patch.valuesAxis !== undefined) next.valuesAxis = patch.valuesAxis;
+	if (patch.additionalValues !== undefined) {
+		const measures = normalizedPivotMeasures(patch.additionalValues);
+		if (measures.length) next.additionalValues = measures;
+		else delete next.additionalValues;
+	}
 	validatePivotFields(next);
 	write(ctx, s, next, old);
 }

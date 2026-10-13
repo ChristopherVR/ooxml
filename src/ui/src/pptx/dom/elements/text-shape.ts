@@ -3,6 +3,8 @@ import {
 	elementHitTargetStyle,
 	getContainerStyle,
 	getOverflowSegments,
+	getBackgroundAnimationState,
+	getBackgroundAnimationLayers,
 	placeholderPromptDescriptor,
 } from '../../index';
 
@@ -35,10 +37,12 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 	// During a `p:animClr` colour animation the shape relinquishes its static
 	// fill / stroke so the wrapper-level colour keyframes surface (presentation).
 	const animState = context.presentationStates?.get(element.id);
+	const background = getBackgroundAnimationState(element, context.presentationStates);
+	const visualState = background ?? animState;
 	const shape = getShapeFillStrokeStyle(
 		element,
-		animState?.animatesFill,
-		animState?.animatesStroke,
+		visualState?.animatesFill,
+		visualState?.animatesStroke,
 	);
 	// The shape style may carry a 3D transform; compose it with the container's
 	// rotation/flip transform instead of letting the merge clobber it.
@@ -48,8 +52,15 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 		merged['transform'] = transform;
 	}
 
-	const el = createEl(context.document, 'div', 'pptxv-element pptxv-shape', merged);
+	const layers = getBackgroundAnimationLayers(element, merged, background);
+	const el = createEl(context.document, 'div', 'pptxv-element pptxv-shape', layers.box);
 	el.dataset.elementId = element.id;
+	const paint = layers.paint ? createEl(context.document, 'div', undefined, layers.paint) : el;
+	if (paint !== el) {
+		paint.dataset.animId = layers.targetId;
+		paint.dataset.pptxAnimationLayer = 'background';
+		el.appendChild(paint);
+	}
 
 	// Interaction-only affordance for a degenerate (sub-MIN_ELEMENT_SIZE) shape:
 	// a bigger, invisible, centred click/drag target, kept separate from the
@@ -71,38 +82,38 @@ export const renderTextShapeElement: ElementRenderer = (element, zIndex, context
 	// since it substitutes for the container's own (now suppressed) fill.
 	const subpathFill = renderShapeSubpathFillOverlay(context.document, element);
 	if (subpathFill) {
-		el.appendChild(subpathFill);
+		paint.appendChild(subpathFill);
 	}
 	const extrusion = renderExtrusionOverlay(context.document, element);
 	if (extrusion) {
-		el.appendChild(extrusion);
+		paint.appendChild(extrusion);
 	}
 	const filterDefs = renderShapeFilterDefs(context.document, element);
 	if (filterDefs) {
-		el.appendChild(filterDefs);
+		paint.appendChild(filterDefs);
 	}
 	// DAG fill-overlay tint: a blended layer over the fill but beneath the text,
 	// so the tint applies to the fill without washing out the text/children.
 	const fillOverlay = renderShapeFillOverlay(context.document, element);
 	if (fillOverlay) {
-		el.appendChild(fillOverlay);
+		paint.appendChild(fillOverlay);
 	}
 	// Gradient / pattern outline: a CSS border takes one flat colour only.
 	const gradientOutline = renderStrokeOutline(context.document, element);
 	if (gradientOutline) {
-		el.appendChild(gradientOutline);
+		paint.appendChild(gradientOutline);
 	}
 	// An unfilled, textless shape is a FRAME: its box is pointer-events:none so
 	// clicks fall through, and this transparent band opts its OUTLINE back in.
 	const hollowHit = renderHollowHitOutline(context.document, element);
 	if (hollowHit) {
-		el.appendChild(hollowHit);
+		paint.appendChild(hollowHit);
 	}
 	// Mirrored reflection sibling (`a:reflection`): cross-browser, unlike the
 	// `-webkit-box-reflect` `element-styles.ts` used to set.
 	const reflection = renderReflectionOverlay(context.document, element, context.mediaDataUrls);
 	if (reflection) {
-		el.appendChild(reflection);
+		paint.appendChild(reflection);
 	}
 
 	const equation = renderEquations(element, context);

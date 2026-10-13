@@ -66,6 +66,9 @@ describe('image box picture frame (a:ln + a:outerShdw)', () => {
 			(p) => p.getAttribute('stroke') === '#FF0000',
 		);
 		expect(path).toBeDefined();
+		expect(
+			box.querySelector('img')!.compareDocumentPosition(path!) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
 		expect(surface?.contains(path ?? null)).toBe(false);
 	});
 

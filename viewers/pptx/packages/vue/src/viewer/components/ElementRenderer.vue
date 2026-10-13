@@ -4,6 +4,8 @@ import {
 	buildTextBody3DSceneStyle,
 	buildTextStyleOverrideCss,
 	getGroupChildParentFill,
+	getBackgroundAnimationState,
+	getBackgroundAnimationLayers,
 	getOverflowSegments,
 	hasTextWarp,
 	inlineElementPointerEvents,
@@ -119,6 +121,9 @@ const slideElementsSource = injectSlideElements();
  */
 const presentationStates = injectPresentationElementStates();
 const animationState = computed(() => presentationStates.value.get(props.element.id));
+const backgroundState = computed(() =>
+	getBackgroundAnimationState(props.element, presentationStates.value),
+);
 /**
  * A font-style emphasis effect (Bold Flash, Bold Reveal, Underline, Change
  * Font Style/Size) overrides the runs' own inline bold/italic/underline/size,
@@ -140,8 +145,8 @@ const shapeStyle = computed<CSSProperties>(() =>
 	getShapeFillStrokeStyle(
 		props.element,
 		props.parentGroupFill,
-		animationState.value?.animatesFill,
-		animationState.value?.animatesStroke,
+		(backgroundState.value ?? animationState.value)?.animatesFill,
+		(backgroundState.value ?? animationState.value)?.animatesStroke,
 	),
 );
 /**
@@ -167,6 +172,9 @@ const shapeDivStyle = computed<CSSProperties>(() => {
 	}
 	return merged;
 });
+const backgroundLayers = computed(() =>
+	getBackgroundAnimationLayers(props.element, shapeDivStyle.value, backgroundState.value),
+);
 const textStyle = computed<CSSProperties>(() => {
 	const base = getTextBlockStyle(props.element);
 	// Text body 3D scene (a:bodyPr/a:scene3d -> perspective + rotate transform),
@@ -536,7 +544,7 @@ const hitTargetStyle = useElementHitTargetStyle(
 		v-else-if="isShapeLike"
 		class="pptx-vue-element pptx-vue-shape"
 		:class="templateClass"
-		:style="[shapeDivStyle, rootPointerEvents]"
+		:style="[backgroundLayers.box, rootPointerEvents]"
 		:data-element-id="element.id"
 		:data-pptx-element="elementMarker"
 	>
@@ -555,10 +563,16 @@ const hitTargetStyle = useElementHitTargetStyle(
 		-->
 		<component :is="'style'" v-if="textStyleOverrideCss">{{ textStyleOverrideCss }}</component>
 		<!-- Soft-edge <filter> defs + DAG fill-overlay tint layer + reflection. -->
-		<ShapeEffectOverlay :element="element" :media-data-urls="mediaDataUrls" />
-		<Extrusion3DOverlay v-if="extrusionData.hasExtrusion" :data="extrusionData" />
-		<!-- Action-button glyph (home/help/sound/arrows/...); self-hides for non-buttons. -->
-		<ActionButtonGlyphOverlay :element="element" />
+		<div
+			:style="backgroundLayers.paint || { display: 'contents' }"
+			:data-anim-id="backgroundLayers.targetId"
+			:data-pptx-animation-layer="backgroundState ? 'background' : undefined"
+		>
+			<ShapeEffectOverlay :element="element" :media-data-urls="mediaDataUrls" />
+			<Extrusion3DOverlay v-if="extrusionData.hasExtrusion" :data="extrusionData" />
+			<!-- Action-button glyph (home/help/sound/arrows/...); self-hides for non-buttons. -->
+			<ActionButtonGlyphOverlay :element="element" />
+		</div>
 		<!-- While this element is open in the inline text editor, its live text is
 		     drawn by that overlay instead (see `isBeingInlineEdited`); rendering it
 		     here too produced a duplicate, offset "text shadow" (issue #182). -->

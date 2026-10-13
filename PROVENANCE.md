@@ -2295,3 +2295,12 @@ The DOM-free `printRange` helper moves to
 pagination using existing grid metrics. Cell CSS remains in the UI and is
 extracted to `src/ui/src/xlsx/print-cell.ts`. Browser preview and printing consume
 the shared core page plan.
+
+## PowerPoint picture effect paint placement
+
+Source: ChristopherVR/ooxml, commit `2c73b55ed`, `viewers/pptx/packages/react/src/viewer/components/ElementRenderer.tsx` and `StaticElementRenderer.tsx`.
+The duplicated picture-versus-shape overlay ordering and background paint-layer CSS now live in `src/ui/src/pptx/render/picture-frame.ts`. React keeps its JSX bindings and consumes those shared descriptors; animated picture frames paint after their image surface.
+
+## PowerPoint background-only animation paint
+
+Source: ChristopherVR/ooxml, commit `cfcfd67ee`, `viewers/pptx/packages/react/src/viewer/components/ElementRenderer.tsx`. Synthetic background target selection now lives in `src/ui/src/pptx/render/background-animation-layers.ts`, together with a pure split of paint CSS from positioning CSS. All five bindings use the target selector; Vue, Svelte, Angular and the shared DOM renderer use the split for shape/text paint while leaving foreground text visible. Existing React picture-frame compatibility remains, without claiming background-only chart or SmartArt support.

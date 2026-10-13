@@ -1,0 +1,38 @@
+{
+  "observedOn": "2026-10-13",
+  "excelFileVersion": "16.0.20430.20146",
+  "reproduce": "pwsh -NoProfile -File scripts/xlsx-pivot-acceptance.ps1",
+  "acceptanceCases": 96,
+  "newValuesOnRowsCases": 13,
+  "fixtures": [
+    "excel-pivot-row-values.xlsx",
+    "excel-pivot-row-values-columns.xlsx"
+  ],
+  "nativeStructure": {
+    "valuesAxis": "rows, last after one real row field, tabular only",
+    "rowFields": [
+      "actual source field index",
+      -2
+    ],
+    "rootDataOnRows": "1",
+    "rowItemMeasureIndex": "i, omitted means zero",
+    "rowItemRepeatedPrefix": "r=1 for later measures in a group",
+    "grandTotalRows": "one per measure, caption Total <measure caption>, blank Values label",
+    "firstHeaderRow": 1,
+    "headerRowsWithoutColumn": 1,
+    "headerRowsWithColumn": 2,
+    "columnItems": "ordinary real column items, no Values pseudo field"
+  },
+  "coverage": [
+    "cached/refreshed every cell value, type and range dimensions",
+    "two/three measures, repeated source field, optional column axis, repeated row labels",
+    "sum/count/average/min/max, source errors and sparse column groups",
+    "native import, source edit, refresh and save",
+    "conversion columns to rows, rows to columns, rows to single measure"
+  ],
+  "limits": [
+    "tabular one real row field, Values last",
+    "compact/outline Values on rows and two real row fields remain preserved without refresh",
+    "custom Values headers, grouping, slicers and shared caches remain unsupported"
+  ]
+}
