@@ -287,7 +287,7 @@ export function placeTable(
 			)
 		)
 			note(
-				'Nested physical border edges at page cuts remain approximate outside two automatic, note-free rows with direct paragraphs and complete shared borders.',
+				'Nested physical border edges at page cuts remain approximate outside measured two or three automatic, note-free rows with direct paragraphs and complete shared borders.',
 			);
 
 		if (

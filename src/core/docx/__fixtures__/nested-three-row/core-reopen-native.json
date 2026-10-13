@@ -1,0 +1,146 @@
+[
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-short-core-noop",
+    "pages": 1
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-short-core-noop",
+    "pages": 1
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-short-core-edit",
+    "pages": 1
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-short-core-edit",
+    "pages": 1
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-row-boundary-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-row-boundary-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-row-boundary-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-row-boundary-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-first-row-split-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-first-row-split-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-first-row-split-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-first-row-split-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-middle-row-split-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-middle-row-split-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-middle-row-split-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-middle-row-split-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-last-row-split-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-last-row-split-core-noop",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-last-row-split-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-last-row-split-core-edit",
+    "pages": 2
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-all-long-core-noop",
+    "pages": 4
+  },
+  {
+    "outerText": "T2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-all-long-core-noop",
+    "pages": 4
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 1,
+    "name": "nested-three-all-long-core-edit",
+    "pages": 4
+  },
+  {
+    "outerText": "E2R0C0L00",
+    "pass": 2,
+    "name": "nested-three-all-long-core-edit",
+    "pages": 4
+  }
+]

@@ -4,8 +4,8 @@ import JSZip from 'jszip';
 import { loadDocx } from '../index';
 import { layoutDocumentModel } from './layout';
 import { parseXml, buildXml } from '../../xml';
-const root = new URL('../__fixtures__/nested-multi-row/', import.meta.url);
-const evidence = JSON.parse(readFileSync(new URL('native-measurements.json', root), 'utf8')) as {
+const twoRoot = new URL('../__fixtures__/nested-multi-row/', import.meta.url);
+const evidence = JSON.parse(readFileSync(new URL('native-measurements.json', twoRoot), 'utf8')) as {
 	cases: {
 		name: string;
 		pages: number;
@@ -16,7 +16,14 @@ const evidence = JSON.parse(readFileSync(new URL('native-measurements.json', roo
 	}[];
 };
 const measure = { widthOf: (text: string) => text.length * 5, lineHeightOf: () => 16 };
-for (const native of evidence.cases)
+const threeRoot = new URL('../__fixtures__/nested-three-row/', import.meta.url);
+const threeEvidence = JSON.parse(
+	readFileSync(new URL('native-measurements.json', threeRoot), 'utf8'),
+) as typeof evidence;
+for (const { native, root } of [
+	...evidence.cases.map((native) => ({ native, root: twoRoot })),
+	...threeEvidence.cases.map((native) => ({ native, root: threeRoot })),
+])
 	it('matches native multi-row physical bands and preserves source: ' + native.name, async () => {
 		const bytes = new Uint8Array(readFileSync(new URL(native.name + '.docx', root))),
 			loaded = await loadDocx(bytes);

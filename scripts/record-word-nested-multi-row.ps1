@@ -1,7 +1,7 @@
-param([string]$OutputDirectory=(Join-Path $env:TEMP 'ooxml-word-nested-multi-row'),[switch]$VerifyCore)
+param([string]$OutputDirectory=(Join-Path $env:TEMP 'ooxml-word-nested-multi-row'),[switch]$VerifyCore,[ValidateSet('two','three')][string]$Profile='two')
 $ErrorActionPreference='Stop'
 $OutputDirectory=[IO.Path]::GetFullPath($OutputDirectory)
-python (Join-Path $PSScriptRoot 'generate-word-nested-multi-row.py') $OutputDirectory
+python (Join-Path $PSScriptRoot 'generate-word-nested-multi-row.py') $OutputDirectory $Profile
 if($LASTEXITCODE-ne0){throw 'Probe generation failed'}
 $cases=Get-Content -Raw -Encoding utf8 (Join-Path $OutputDirectory 'probe-cases.json')|ConvertFrom-Json
 $app=$null;$owned=$false;$records=@()
