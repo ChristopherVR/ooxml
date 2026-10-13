@@ -15,7 +15,7 @@ for case in cases:
    for block in page.get_text('dict')['blocks']:
     for line in block.get('lines',[]):
      text=''.join(span['text']for span in line['spans'])
-     if re.search(r'T\dR\d+C\d+L\d+|N0L\d+|Outer cell',text):lines.append({'text':text,'leftPt':round(line['bbox'][0],3),'baselinePt':round(line['spans'][-1]['origin'][1],3)})
+     if re.search(r'T\dR\d+C\d+L\d+|N\d+L\d+|Outer cell',text):lines.append({'text':text,'leftPt':round(line['bbox'][0],3),'baselinePt':round(line['spans'][-1]['origin'][1],3)})
    measurement={'borders':borders,'fills':fills,'lines':lines}
    if case['name'].startswith('enclosing-border-') and case['name']!='enclosing-border-split':
     # Colored frame/fill pixels are excluded: this crop measures retained dark glyph ink.

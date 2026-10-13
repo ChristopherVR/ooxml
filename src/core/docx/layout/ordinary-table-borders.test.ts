@@ -23,16 +23,24 @@ const innerNative = JSON.parse(
 		'utf8',
 	),
 ) as { cases: Evidence[] };
-it.each([...native.cases, ...innerNative.cases])(
+const multipleNative = JSON.parse(
+	readFileSync(
+		new URL('../__fixtures__/multiple-inner-notes/native-measurements.json', import.meta.url),
+		'utf8',
+	),
+) as { cases: Evidence[] };
+it.each([...native.cases, ...innerNative.cases, ...multipleNative.cases])(
 	'matches native ordinary border row bands and source preservation: $name',
 	async (sample) => {
 		const bytes = new Uint8Array(
 			readFileSync(
 				new URL(
 					'../__fixtures__/' +
-						(sample.name.startsWith('inner-note-')
-							? 'independent-inner-notes/'
-							: 'ordinary-table-borders/') +
+						(sample.name.startsWith('multi-note-')
+							? 'multiple-inner-notes/'
+							: sample.name.startsWith('inner-note-')
+								? 'independent-inner-notes/'
+								: 'ordinary-table-borders/') +
 						sample.name +
 						'.docx',
 					import.meta.url,
@@ -81,18 +89,61 @@ it.each([...native.cases, ...innerNative.cases])(
 						line.fragments
 							.map((fragment) => fragment.text)
 							.join('')
-							.match(/N0L\d+/g) ?? [],
+							.match(/N\d+L\d+/g) ?? [],
 				)
 				.sort();
 			expect(noteMarkers).toEqual(
 				sample.measurements[index]!.lines.flatMap(
-					(line) => line.text.match(/N0L\d+/g) ?? [],
+					(line) => line.text.match(/N\d+L\d+/g) ?? [],
 				).sort(),
 			);
+
+			if (sample.name.startsWith('multi-note-')) {
+				const notes = page.footnotes ?? [];
+				const areaTop =
+					page.heightPx -
+					page.marginBottomPx -
+					(page.footnoteHeightPx ?? notes.reduce((height, note) => height + note.heightPx, 0));
+				for (const note of notes)
+					for (const box of note.paragraphs)
+						for (const line of box.lines) {
+							const marker = line.fragments
+								.map((fragment) => fragment.text)
+								.join('')
+								.match(/N\d+L\d+/)?.[0];
+							if (!marker) continue;
+							const nativeLine = sample.measurements[index]!.lines.find((line) =>
+								line.text.includes(marker),
+							)!;
+							expect(
+								Math.abs(
+									(areaTop + note.yPx + box.yPx + line.yPx) * 0.75 + 9.6 - nativeLine.baselinePt,
+								),
+								marker,
+							).toBeLessThan(0.2);
+						}
+			}
 
 			for (const row of table.rows)
 				for (const [column, boxes] of row.cells.entries()) {
 					for (const box of boxes) {
+						for (const line of box.lines) {
+							const marker = line.fragments
+								.map((fragment) => fragment.text)
+								.join('')
+								.match(/T\dR\d+C\d+L\d+/)?.[0];
+							if (!marker) continue;
+							const nativeLine = sample.measurements[index]!.lines.find((line) =>
+								line.text.includes(marker),
+							)!;
+							expect(
+								Math.abs(
+									(row.yPx + box.yPx + line.yPx) * 0.75 - (nativeLine.baselinePt - 9.6 - 40),
+								),
+								marker,
+							).toBeLessThan(0.2);
+						}
+
 						const text = box.lines[0]?.fragments.map((fragment) => fragment.text).join('') ?? '';
 						const match = sample.measurements[index]!.lines.find((line) =>
 							text.includes(line.text.trim().split(' ')[0]!),
@@ -118,9 +169,12 @@ it.each([...native.cases, ...innerNative.cases])(
 		const saved = await loaded.save(loaded.model),
 			before = await JSZip.loadAsync(bytes),
 			after = await JSZip.loadAsync(saved);
-		expect(await after.file('word/document.xml')!.async('string')).toBe(
-			await before.file('word/document.xml')!.async('string'),
-		);
+		for (const part of ['word/document.xml', 'word/footnotes.xml']) {
+			const original = before.file(part);
+			if (original)
+				expect(await after.file(part)!.async('string')).toBe(await original.async('string'));
+		}
+
 		expect((await loadDocx(saved)).model).toEqual(loaded.model);
 	},
 );

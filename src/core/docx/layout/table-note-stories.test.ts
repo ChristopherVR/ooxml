@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { independentNoteStories } from './table-note-stories';
+import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import type { LayoutTable, LayoutTableCell } from './input';
 const create = (): LayoutTableCell => ({
 	paragraphs: [],
@@ -98,7 +98,7 @@ it('admits one actual marker without double counting its associated note metadat
 	paragraph.footnotes = [{ id: 'note1', paragraphs: [] }];
 	expect(independentNoteStories(cell)?.size).toBe(2);
 });
-it.each(['distinct', 'reused', 'unanchored'] as const)(
+it.each(['reused', 'unanchored'] as const)(
 	'refuses multiple interacting inner references: %s',
 	(kind) => {
 		const cell = blocksOnly(),
@@ -113,3 +113,37 @@ it.each(['distinct', 'reused', 'unanchored'] as const)(
 		expect(independentNoteStories(cell)).toBeUndefined();
 	},
 );
+
+it.each([2, 3])(
+	'admits native-measured %i distinct markers in the actual source stories',
+	(count) => {
+		const cell = blocksOnly(),
+			table = cell.blocks![0] as LayoutTable;
+		const paragraph = table.rows[0]!.cells[0]!.blocks![0]!;
+		if (paragraph.kind !== 'paragraph') throw new Error('Expected paragraph');
+		paragraph.runs = Array.from({ length: count }, (_, index) => ({
+			text: String(index),
+			footnoteReferenceId: 'note' + index,
+		}));
+		expect(independentNoteStories(cell)?.size).toBe(2);
+	},
+);
+it('refuses four actual references including an enclosing-cell marker', () => {
+	const cell = blocksOnly(),
+		table = cell.blocks![0] as LayoutTable;
+	const paragraph = table.rows[0]!.cells[0]!.blocks![0]!;
+	if (paragraph.kind !== 'paragraph') throw new Error('Expected paragraph');
+	paragraph.runs = [0, 1, 2].map((index) => ({
+		text: String(index),
+		footnoteReferenceId: 'note' + index,
+	}));
+	expect(independentNoteStories(cell)?.size).toBe(2);
+	expect(
+		measuredNoteReferences([
+			paragraph,
+			{ kind: 'paragraph', id: 'outside', runs: [{ text: '4', footnoteReferenceId: 'note3' }] },
+		]),
+	).toBe(false);
+	paragraph.runs.push({ text: '4', footnoteReferenceId: 'note3' });
+	expect(independentNoteStories(cell)).toBeUndefined();
+});

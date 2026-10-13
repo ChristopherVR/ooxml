@@ -1,4 +1,4 @@
-import { independentNoteStories } from './table-note-stories';
+import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import { cellContentBottom } from './table-content';
 import type { LayoutParagraph, LayoutTable } from './input';
 import type { LayoutFootnoteBox } from './result';
@@ -9,6 +9,8 @@ import { cellParagraphs } from './table-cell-layout';
 interface RowReference {
 	note: LayoutFootnoteBox;
 	bottom: number;
+	before: number;
+	blockId: string;
 }
 /** Preview only the bounded visible prefix, avoiding repeated copies of a long row's tail. */
 function prefix(
@@ -68,7 +70,6 @@ function prefix(
 export class TableFootnotes {
 	private readonly paragraphs = new Map<string, LayoutParagraph>();
 	private readonly stories = new Map<string, string>();
-	private readonly constrainedStories = new Set<string>();
 	private readonly placed = new Set<string>();
 	private readonly fragment = new Map<string, RowReference>();
 	constructor(
@@ -77,15 +78,16 @@ export class TableFootnotes {
 		private readonly height: () => number,
 		private readonly resolve: ReferenceFootnotes,
 	) {
-		for (const row of table.rows)
+		for (const row of table.rows) {
+			const measured = measuredNoteReferences(row.cells.flatMap(cellParagraphs));
 			for (const cell of row.cells) {
 				for (const paragraph of cellParagraphs(cell))
 					if (paragraph.footnotes?.length) this.paragraphs.set(paragraph.id, paragraph);
-				for (const [id, group] of independentNoteStories(cell) ?? []) {
+				for (const [id, group] of (measured ? independentNoteStories(cell) : undefined) ?? []) {
 					this.stories.set(id, group);
-					if (this.paragraphs.has(id)) this.constrainedStories.add(group);
 				}
 			}
+		}
 	}
 	private references(row: RowLayout): RowReference[] {
 		const refs = new Map<string, RowReference>();
@@ -113,10 +115,33 @@ export class TableFootnotes {
 							(box.tableFrameInsets?.bottom ?? 0),
 					);
 					const prior = refs.get(note.id);
-					if (!prior || bottom < prior.bottom) refs.set(note.id, { note, bottom });
+					if (!prior || bottom < prior.bottom)
+						refs.set(note.id, {
+							note,
+							bottom,
+							blockId: box.blockId,
+							before: box.yPx + (line?.yPx ?? 0) + (box.tableFrameInsets?.bottom ?? 0),
+						});
 				}
 			}
 		return [...refs.values()];
+	}
+	/** A consumed marker no longer constrains its story. Deferred markers stop just before
+	 * their own line, allowing another pending story to use a different complete prefix. */
+	private storyCut(
+		pending: RowReference[],
+		boxes: RowLayout['cells'][number],
+		padding: number,
+		cut: number,
+		space: number,
+		included: Set<string>,
+	): number {
+		const ids = new Set(boxes.map((box) => box.blockId));
+		const refs = pending.filter((ref) => ids.has(ref.blockId));
+		let limit = refs.some((ref) => included.has(ref.note.id)) ? Math.min(cut, space) : space;
+		for (const ref of refs)
+			if (!included.has(ref.note.id)) limit = Math.min(limit, ref.before + padding);
+		return limit;
 	}
 	private hold(refs: Map<string, RowReference>, minimumBody = 0): void {
 		const referenceBottom = Math.max(0, ...[...refs.values()].map((ref) => ref.bottom));
@@ -159,6 +184,11 @@ export class TableFootnotes {
 				return { layout: row, cut: row.heightPx };
 		}
 		if (!atomic) {
+			const independent = row.cells.some((cell) =>
+				cell.some((box) => this.stories.has(box.blockId)),
+			);
+			// Resolve the long remaining row only once; candidate prefixes are bounded by the page.
+			const pending = independent ? this.references(row) : [];
 			const cuts = new Set<number>();
 			for (const [index, cell] of row.cells.entries())
 				for (const box of cell) {
@@ -181,16 +211,44 @@ export class TableFootnotes {
 					// A delayed marker constrains its own cell; neighboring cells without references
 					// can consume the remaining row space (native padded split-row behavior).
 					const space = this.cursor.remainingHeightPx() - this.height();
-					const cellCuts = row.cells.map((cell) =>
-						cell.some((box) => this.paragraphs.has(box.blockId)) ? cut : space,
+					const included = new Set(this.references(candidate).map((ref) => ref.note.id));
+					const cellCuts = row.cells.map((cell, index) =>
+						independent
+							? this.storyCut(
+									pending,
+									cell,
+									row.cellPadding?.[index]?.bottom ?? 0,
+									cut,
+									space,
+									included,
+								)
+							: cell.some((box) => this.paragraphs.has(box.blockId))
+								? cut
+								: space,
 					);
 					const paragraphCuts = new Map<string, number>();
-					for (const cell of row.cells)
+					for (const [index, cell] of row.cells.entries()) {
+						const groups = new Map<string, typeof cell>();
 						for (const box of cell) {
 							const group = this.stories.get(box.blockId);
-							if (group !== undefined)
-								paragraphCuts.set(box.blockId, this.constrainedStories.has(group) ? cut : space);
+							if (group !== undefined) {
+								const boxes = groups.get(group) ?? [];
+								boxes.push(box);
+								groups.set(group, boxes);
+							}
 						}
+						for (const boxes of groups.values()) {
+							const limit = this.storyCut(
+								pending,
+								boxes,
+								row.cellPadding?.[index]?.bottom ?? 0,
+								cut,
+								space,
+								included,
+							);
+							for (const box of boxes) paragraphCuts.set(box.blockId, limit);
+						}
+					}
 					const expanded = prefix(row, cut, cellCuts, paragraphCuts);
 					this.holdCandidate(expanded);
 					if (expanded.heightPx <= this.cursor.remainingHeightPx() - this.height() + 1e-6)

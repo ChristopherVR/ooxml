@@ -1,4 +1,4 @@
-import { independentNoteStories } from './table-note-stories';
+import { independentNoteStories, measuredNoteReferences } from './table-note-stories';
 import { layoutBorderedRow, TableFragmentBorders } from './table-border-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
 import { cellParagraphs } from './table-cell-layout';
@@ -275,7 +275,8 @@ export function placeTable(
 			layout.heightPx > cursor.remainingHeightPx() &&
 			row.cells.some(
 				(cell) =>
-					!independentNoteStories(cell) &&
+					(!measuredNoteReferences(row.cells.flatMap(cellParagraphs)) ||
+						!independentNoteStories(cell)) &&
 					cell.blocks?.some((block) => block.kind === 'table') &&
 					cellParagraphs(cell).some((p) => p.footnotes?.length),
 			)

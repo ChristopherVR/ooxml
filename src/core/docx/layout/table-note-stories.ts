@@ -1,4 +1,4 @@
-import type { LayoutTableCell } from './input';
+import type { LayoutTableCell, LayoutParagraph } from './input';
 import { cellParagraphs } from './table-cell-layout';
 import { nestedFrameProfile } from './nested-frame-profile';
 /** Native-measured bounded profile: one automatic, top-aligned nested row, then direct text. */
@@ -31,20 +31,30 @@ export function independentNoteStories(cell: LayoutTableCell): Map<string, strin
 		)
 	)
 		return undefined;
-	// Only one reference is measured. Multiple interacting notes need dynamic story constraints.
-	const references = row.cells.flatMap(cellParagraphs).reduce((count, paragraph) => {
-		const markers = paragraph.runs.filter((run) => run.footnoteReferenceId !== undefined);
-		const anchored = new Set(markers.map((run) => run.footnoteReferenceId));
-		return (
-			count +
-			markers.length +
-			(paragraph.footnotes ?? []).filter((note) => !anchored.has(note.id)).length
-		);
-	}, 0);
-	if (references > 1) return undefined;
+	if (!measuredNoteReferences(row.cells.flatMap(cellParagraphs))) return undefined;
 	const groups = new Map<string, string>();
 	row.cells.forEach((inner, index) => {
 		for (const paragraph of cellParagraphs(inner)) groups.set(paragraph.id, first.id + ':' + index);
 	});
 	return groups.size ? groups : undefined;
+}
+
+/** Count the complete enclosing row too, so extra outside markers cannot bypass the native cap. */
+export function measuredNoteReferences(paragraphs: LayoutParagraph[]): boolean {
+	const markers = paragraphs.flatMap((paragraph) =>
+		paragraph.runs.flatMap((run) =>
+			run.footnoteReferenceId === undefined ? [] : [run.footnoteReferenceId],
+		),
+	);
+	const ids = new Set(markers);
+	const unanchored = paragraphs.flatMap((paragraph) =>
+		(paragraph.footnotes ?? []).filter(
+			(note) => !paragraph.runs.some((run) => run.footnoteReferenceId === note.id),
+		),
+	).length;
+	return (
+		markers.length + unanchored <= 3 &&
+		ids.size === markers.length &&
+		!(markers.length + unanchored > 1 && unanchored)
+	);
 }
