@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [3.36.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.36.1) - 2026-10-14
+
+### Bug Fixes
+
+- **ui:** Restore native touch dragging across office editors ([6dc56a1](https://github.com/ChristopherVR/ooxml/commit/6dc56a1ba920b230d2a2d23572378305e74fe48c))
+
 ## [3.36.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vanilla-viewer@3.36.0) - 2026-10-13
 
 ### Features

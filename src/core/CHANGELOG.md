@@ -7,6 +7,30 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.12.0) - 2026-10-14
+
+### Features
+
+- **docx:** Honor measured ordinary-cell paragraph keeping ([d4eba24](https://github.com/ChristopherVR/ooxml/commit/d4eba244e7a90bac3fb8350e39b34dc716a96499))
+- **visio:** Count bounded non-fit print tiles ([df10a0a](https://github.com/ChristopherVR/ooxml/commit/df10a0a989a43c3478c9bb4844b358241874d708))
+- **ui:** Align word excel and visio toolbar surfaces ([9decf56](https://github.com/ChristopherVR/ooxml/commit/9decf563e3c58be4fd7c767a4a459fad3a45029f))
+
+### Bug Fixes
+
+- **docx:** Refuse merged nested fragment profiles ([46d8b5a](https://github.com/ChristopherVR/ooxml/commit/46d8b5a922097a0a84a48b48d40acd50dc31bc83))
+- **docx:** Retain zero row heights for bounded admission ([3ff4272](https://github.com/ChristopherVR/ooxml/commit/3ff42724e5577091af186b5fd7e1f783b1747b03))
+- **visio:** Refuse unmeasured print fit-target metadata ([b59d87b](https://github.com/ChristopherVR/ooxml/commit/b59d87b87a40b1713ad4e754c11d28758da69d53))
+- **ui:** Restore native touch dragging across office editors ([6dc56a1](https://github.com/ChristopherVR/ooxml/commit/6dc56a1ba920b230d2a2d23572378305e74fe48c))
+
+### Performance
+
+- **docx:** Reduce typing and print layout work ([5b06c49](https://github.com/ChristopherVR/ooxml/commit/5b06c49ece0ecb00bd24c40db9df6ac7777e3525))
+
+### Testing
+
+- **docx:** Measure border and margin startup fit boundaries ([5c87bd9](https://github.com/ChristopherVR/ooxml/commit/5c87bd99873000445bd3e5625af256f9d663e5ed))
+- **visio:** Preserve native print-default precedence ([b9e027a](https://github.com/ChristopherVR/ooxml/commit/b9e027af9e4838f2fba8629edfef3c771442d48c))
+
 ## [1.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.11.0) - 2026-10-13
 
 ### Features

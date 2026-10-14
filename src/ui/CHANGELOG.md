@@ -7,6 +7,25 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.12.0) - 2026-10-14
+
+### Features
+
+- **ui:** Align word excel and visio toolbar surfaces ([9decf56](https://github.com/ChristopherVR/ooxml/commit/9decf563e3c58be4fd7c767a4a459fad3a45029f))
+
+### Bug Fixes
+
+- **ui:** Restore native touch dragging across office editors ([6dc56a1](https://github.com/ChristopherVR/ooxml/commit/6dc56a1ba920b230d2a2d23572378305e74fe48c))
+- **ui:** Correct mobile interaction test fixtures ([14dd76f](https://github.com/ChristopherVR/ooxml/commit/14dd76f4e5c2f988b0d145962523a564702201f1))
+
+### Performance
+
+- **docx:** Reduce typing and print layout work ([5b06c49](https://github.com/ChristopherVR/ooxml/commit/5b06c49ece0ecb00bd24c40db9df6ac7777e3525))
+
+### Testing
+
+- **docx:** Cover native table keeping controls and history ([ccefed0](https://github.com/ChristopherVR/ooxml/commit/ccefed0e453d1b880bd70d0f6f57d75fca2300c9))
+
 ## [1.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.11.0) - 2026-10-13
 
 ### Features
