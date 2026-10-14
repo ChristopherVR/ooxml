@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Schema } from 'prosemirror-model';
-import { EditorState, type Transaction } from 'prosemirror-state';
+import { EditorState, TextSelection, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { history, undo, redo } from 'prosemirror-history';
 import { trackChangesPlugin } from './track-changes-mode';
@@ -9,6 +9,8 @@ import {
 	acceptAllChanges,
 	acceptRevisionRange,
 	collectRevisionRanges,
+	hasAnyChange,
+	hasChangeAtCursor,
 	rejectRevisionRange,
 } from './review-commands';
 
@@ -47,6 +49,27 @@ function view(editable = true, recording = false): EditorView {
 	return host as unknown as EditorView;
 }
 describe('shared revision resolution', () => {
+	it('reuses review queries while the caret moves and invalidates them on accept and undo', () => {
+		const editor = view(true, true);
+		expect(hasAnyChange(editor)).toBe(true);
+		expect(hasChangeAtCursor(editor)).toBe(true);
+		const scan = vi.spyOn(editor.state.doc, 'descendants');
+		try {
+			editor.dispatch(editor.state.tr.setSelection(TextSelection.create(editor.state.doc, 4)));
+			expect(hasAnyChange(editor)).toBe(true);
+			expect(hasChangeAtCursor(editor)).toBe(true);
+			expect(scan).not.toHaveBeenCalled();
+		} finally {
+			scan.mockRestore();
+		}
+		acceptAllChanges(editor);
+		expect(hasAnyChange(editor)).toBe(false);
+		expect(hasChangeAtCursor(editor)).toBe(false);
+		expect(undo(editor.state, (tr) => editor.dispatch(tr))).toBe(true);
+		expect(hasAnyChange(editor)).toBe(true);
+		expect(hasChangeAtCursor(editor)).toBe(true);
+	});
+
 	it('undoes and redoes resolution without changing the original author', () => {
 		const editor = view(true, true);
 		const before = editor.state.doc;

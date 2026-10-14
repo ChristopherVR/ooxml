@@ -1,5 +1,6 @@
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import type { Node } from 'prosemirror-model';
 import { dispatchIsolatedCommand } from './command-history';
 import { inlineTextRevision, clearInlineTextRevisions } from './review-inline-revisions';
 import { trackChangesPluginKey } from './track-changes-mode';
@@ -23,6 +24,19 @@ export interface RevisionRange {
 	author: string;
 	/** The move this range is one side of; both sides are accepted or rejected together. */
 	move?: string;
+}
+
+// Selection changes retain the immutable document. Do not reconstruct every run just to
+// refresh the review buttons, and let old documents leave the cache when history releases them.
+const reviewQueries = new WeakMap<Node, { ranges: RevisionRange[]; anyChange?: boolean }>();
+
+function reviewQuery(doc: Node) {
+	let cached = reviewQueries.get(doc);
+	if (!cached) {
+		cached = { ranges: collectRevisionRanges(doc) };
+		reviewQueries.set(doc, cached);
+	}
+	return cached;
 }
 
 /** Merges adjacent inline nodes sharing the same revision identity into one range. */
@@ -93,7 +107,7 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 }
 
 function revisionNear(view: EditorView): RevisionRange | undefined {
-	const ranges = collectRevisionRanges(view.state.doc);
+	const { ranges } = reviewQuery(view.state.doc);
 	const { from, to } = view.state.selection;
 	return (
 		ranges.find((range) => range.from < to && range.to > from) ?? ranges.find((r) => r.from >= to)
@@ -101,12 +115,12 @@ function revisionNear(view: EditorView): RevisionRange | undefined {
 }
 
 export function hasAnyChange(view: EditorView | undefined): boolean {
-	return Boolean(
-		view &&
-		(collectRevisionRanges(view.state.doc).length ||
-			hasNoteRevisions(view.state.doc) ||
-			hasSectionPartRevisions(view.state.doc)),
-	);
+	if (!view) return false;
+	const doc = view.state.doc;
+	const cached = reviewQuery(doc);
+	return (cached.anyChange ??= Boolean(
+		cached.ranges.length || hasNoteRevisions(doc) || hasSectionPartRevisions(doc),
+	));
 }
 export function hasChangeAtCursor(view: EditorView | undefined): boolean {
 	return Boolean(view && revisionNear(view));

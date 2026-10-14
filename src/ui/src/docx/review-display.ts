@@ -16,11 +16,15 @@ import type { ReviewDisplayMode } from 'ooxml-core/docx';
 
 /** Hides insertion or deletion runs via decorations rather than mutating the document. */
 export function reviewDisplayPlugin(getMode: () => ReviewDisplayMode): Plugin {
+	let cachedDoc: import('prosemirror-model').Node | undefined;
+	let cachedMode: ReviewDisplayMode | undefined;
+	let cachedDecorations: DecorationSet | null | undefined;
 	return new Plugin({
 		props: {
 			attributes: () => ({ 'data-review-display': getMode() }),
 			decorations(state) {
 				const mode = getMode();
+				if (state.doc === cachedDoc && mode === cachedMode) return cachedDecorations;
 				const decorations: Decoration[] = [];
 				state.doc.descendants((node, pos) => {
 					if (mode === 'all' && paragraphFormattingRevision(node))
@@ -43,7 +47,12 @@ export function reviewDisplayPlugin(getMode: () => ReviewDisplayMode): Plugin {
 							Decoration.inline(pos, pos + node.nodeSize, { class: 'dve-revision-hidden' }),
 						);
 				});
-				return decorations.length ? DecorationSet.create(state.doc, decorations) : null;
+				cachedDoc = state.doc;
+				cachedMode = mode;
+				cachedDecorations = decorations.length
+					? DecorationSet.create(state.doc, decorations)
+					: null;
+				return cachedDecorations;
 			},
 		},
 	});

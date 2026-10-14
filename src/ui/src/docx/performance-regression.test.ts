@@ -11,6 +11,7 @@ import { renderPrintLayout } from './print-layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { DecorationSet } from 'prosemirror-view';
 import { PrintEditingIndex } from './print-editing-index';
+import { reviewDisplayPlugin, type ReviewDisplayMode } from './review-display';
 
 function model(): DocumentModel {
 	return {
@@ -29,6 +30,48 @@ function model(): DocumentModel {
 }
 
 describe('Word performance regression coverage', () => {
+	it('reuses review decorations for caret moves, including documents without revisions', () => {
+		const state = EditorState.create({ doc: modelToDoc(model()) });
+		const plugin = reviewDisplayPlugin(() => 'all');
+		const decorations = plugin.props.decorations!.call(plugin, state);
+		const scan = vi.spyOn(state.doc, 'descendants');
+		try {
+			const moved = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 4)));
+			expect(plugin.props.decorations!.call(plugin, moved)).toBe(decorations);
+			expect(scan).not.toHaveBeenCalled();
+		} finally {
+			scan.mockRestore();
+		}
+	});
+
+	it('refreshes cached review decorations after an edit or review mode change', () => {
+		const source = model();
+		source.blocks = [
+			{
+				type: 'paragraph',
+				id: 'a',
+				runs: [
+					{ text: 'Added', revision: { id: 'i', kind: 'insert', author: 'Ada' } },
+					{ text: 'Removed', revision: { id: 'd', kind: 'delete', author: 'Ada' } },
+				],
+			},
+		];
+		let mode: ReviewDisplayMode = 'final';
+		const plugin = reviewDisplayPlugin(() => mode);
+		const state = EditorState.create({ doc: modelToDoc(source) });
+		const get = (next: EditorState) =>
+			plugin.props.decorations!.call(plugin, next) as DecorationSet;
+		expect(get(state).find()).toMatchObject([{ from: 6, to: 13 }]);
+		mode = 'original';
+		expect(get(state).find()).toMatchObject([{ from: 1, to: 6 }]);
+		const edited = state.apply(state.tr.insertText('x', 1));
+		expect(get(edited)).toEqual(
+			reviewDisplayPlugin(() => mode).props.decorations!.call(plugin, edited),
+		);
+		mode = 'all';
+		expect(get(edited)).toBeNull();
+	});
+
 	it('reuses Unicode counts for unchanged paragraphs across typing and undo', () => {
 		const source = model();
 		const doc = modelToDoc(source);
