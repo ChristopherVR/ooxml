@@ -1,0 +1,60 @@
+/** Turn the existing suite build into a runnable, commit-specific pkg.pr.new template. */
+import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+export async function preparePreviewTemplate(root, source) {
+	const { repository, sha, prUrl = '' } = source;
+	if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !/^[a-f0-9]{40}$/.test(sha))
+		throw new Error('Preview source must include a repository and full commit SHA');
+	if (prUrl && !/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+$/.test(prUrl))
+		throw new Error('Invalid preview pull request URL');
+	const out = join(root, 'suite-dist');
+	const html = await readFile(join(out, 'index.html'), 'utf8');
+	const commitUrl = `https://github.com/${repository}/commit/${sha}`;
+	await mkdir(join(out, 'scripts'), { recursive: true });
+	await cp(new URL('./preview-site.mjs', import.meta.url), join(out, 'scripts/preview-site.mjs'));
+	await writeFile(
+		join(out, 'package.json'),
+		JSON.stringify(
+			{
+				name: 'ooxml-office-preview',
+				version: '0.0.0',
+				private: true,
+				type: 'module',
+				description: `Office suite from ${repository}@${sha.slice(0, 7)}`,
+				scripts: { start: 'node scripts/preview-site.mjs 5173 .' },
+				// pkg.pr.new replaces these with the same commit's published preview URLs.
+				dependencies: { 'ooxml-core': '*', 'ooxml-ui': '*' },
+				stackblitz: { startCommand: 'npm start' },
+			},
+			null,
+			2,
+		) + '\n',
+	);
+	await writeFile(
+		join(out, 'README.md'),
+		`# OOXML Office preview\n\nSource: [${repository}@${sha.slice(0, 7)}](${commitUrl}).\n` +
+			(prUrl ? `\n[Pull request](${prUrl}).\n` : '') +
+			'\nRun `npm start` to open the Office suite. Create a document or open your own file.\n' +
+			'\nThe application assets were bundled in CI from this exact source commit, including ' +
+			'its core, UI and PowerPoint binding. Editing an installed package does not rebuild ' +
+			'the bundled application. The preview dependencies in package.json are available ' +
+			'for separate package experiments.\n',
+	);
+	await writeFile(join(out, 'preview-source.json'), JSON.stringify(source, null, 2) + '\n');
+	await writeFile(
+		join(out, 'index.html'),
+		html.replace(
+			'<title>OOXML Office</title>',
+			`<title>OOXML Office preview: ${sha.slice(0, 7)}</title>`,
+		),
+	);
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href)
+	await preparePreviewTemplate(process.cwd(), {
+		repository: process.env.PREVIEW_REPOSITORY ?? '',
+		sha: process.env.PREVIEW_SHA ?? '',
+		prUrl: process.env.PREVIEW_PR_URL ?? '',
+	});

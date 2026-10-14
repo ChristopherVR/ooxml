@@ -1,11 +1,11 @@
 /** Serve the built Office application, including standalone PWA routes. */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { dirname, extname, join, resolve } from 'node:path';
+import { dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE = join(ROOT, 'suite-dist');
+const SITE = resolve(ROOT, process.argv[3] ?? 'suite-dist');
 const port = Number(process.argv[2] ?? 8123);
 const TYPES = {
 	'.html': 'text/html; charset=utf-8',
@@ -16,7 +16,7 @@ const TYPES = {
 	'.webmanifest': 'application/manifest+json',
 };
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
 	const path = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
 	const file = resolve(SITE, `.${path.endsWith('/') ? path + 'index.html' : path}`);
 	if (!file.startsWith(SITE + '/') && !file.startsWith(SITE + '\\'))
@@ -29,4 +29,7 @@ createServer(async (req, res) => {
 	} catch {
 		res.writeHead(404).end('Not found');
 	}
-}).listen(port, '127.0.0.1', () => console.log(`Suite on http://localhost:${port}/`));
+});
+server.listen(port, '127.0.0.1', () =>
+	console.log(`Suite on http://localhost:${server.address().port}/`),
+);

@@ -13,6 +13,15 @@ on:
     paths:
       - 'src/core/**'
       - 'src/ui/**'
+      - 'apps/office-suite/**'
+      - 'site/**'
+      - 'viewers/pptx/packages/vanilla/**'
+      - 'scripts/build-suite.mjs'
+      - 'scripts/bundle-suite.mjs'
+      - 'scripts/build-pwa.mjs'
+      - 'scripts/pwa/**'
+      - 'scripts/prepare-preview-template.mjs'
+      - 'scripts/preview-site.mjs'
       - 'scripts/esm-declarations.mjs'
       - 'bun.lock'
       - '.github/workflows/preview-packages.yml'
@@ -33,9 +42,30 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup
+          # Build the fork's actual commit, rather than GitHub's synthetic merge commit.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      # Keep preview infrastructure available even when an older fork lacks the new scripts.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: .preview-tools
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/actions/setup/
+            /scripts/prepare-preview-template.mjs
+            /scripts/preview-site.mjs
+      - uses: ./.preview-tools/.github/actions/setup
       - run: bun run build
       - run: bun run --cwd src/ui build
+      - name: Build the Office suite template
+        run: node scripts/build-suite.mjs
+      - name: Record the preview source and configure StackBlitz
+        env:
+          PREVIEW_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          PREVIEW_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PREVIEW_PR_URL: ${{ github.event.pull_request.html_url }}
+        run: node .preview-tools/scripts/prepare-preview-template.mjs
       # --compact gives short URLs (pkg.pr.new/ooxml-core@<sha>); it works because both packages
       # are on npm with this repository in their `repository` field.
       # Until the app is installed the upload is refused with "is not installed on or does not have
@@ -44,7 +74,7 @@ jobs:
       - name: Publish to pkg.pr.new
         run: |
           set +e
-          bunx pkg-pr-new@0.0.88 publish --compact --comment=update ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
+          bunx pkg-pr-new@0.0.88 publish --compact --comment=update --commentWithSha --template ./suite-dist ./src/core ./src/ui 2>&1 | tee "$RUNNER_TEMP/pkg-pr-new.log"
           status=${PIPESTATUS[0]}
           set -e
           if [ "$status" -ne 0 ] && grep -q 'is not installed on or does not have access to' "$RUNNER_TEMP/pkg-pr-new.log"; then

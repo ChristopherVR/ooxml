@@ -14,6 +14,10 @@ permissions:
 
 jobs:
   welcome:
+    # Test the author, not github.actor: a maintainer can trigger an event for a bot's PR.
+    if: >-
+      (github.event.issue.user.type == 'User' || github.event.pull_request.user.type == 'User') &&
+      (github.event.issue.user.login || github.event.pull_request.user.login) != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       issues: write
