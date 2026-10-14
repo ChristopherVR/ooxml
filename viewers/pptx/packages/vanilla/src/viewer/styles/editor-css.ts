@@ -309,6 +309,10 @@ export const EDITOR_CSS = `
 	margin-bottom: 8px;
 }
 .pptxv-inspector-row-label { color: var(--pptx-muted-foreground); }
+/* Fill & Stroke: one group per target (picker, theme grid, recent colours). */
+.pptxv-inspector-color-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.pptxv-inspector-color-group > .pptxv-inspector-row { margin-bottom: 0; }
+.pptxv-inspector-color-group > .pptxv-inspector-row > .pptxv-inspector-row-label { min-width: 32px; font-weight: 600; color: var(--pptx-foreground); }
 
 /* Table quick-style preset swatch gallery. */
 .pptxv-table-presets-label { display: block; margin: 8px 0 4px; font-size: 10px; color: var(--pptx-muted-foreground); }
