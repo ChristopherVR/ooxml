@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.12.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.12.1) - 2026-10-14
+
+### Performance
+
+- **docx:** Cache review data during caret updates ([e03f8c8](https://github.com/ChristopherVR/ooxml/commit/e03f8c82fdb7418e84bc0c041139e969c1633e17))
+
 ## [1.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.12.0) - 2026-10-14
 
 ### Features
