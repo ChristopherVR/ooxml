@@ -29,6 +29,7 @@ export function renderSharedGallery(
 			disabled: !ctx.commands.isEnabled(command.id),
 			sections: control.sections?.(ctx) ?? [],
 		};
+		tagCommand(gallery, command);
 		const trigger = gallery.querySelector<HTMLButtonElement>('.trigger');
 		if (trigger) tagCommand(trigger, command);
 	});

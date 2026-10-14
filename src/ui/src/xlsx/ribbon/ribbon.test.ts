@@ -243,8 +243,8 @@ describe('ribbon renderer', () => {
 
 	it('opens galleries and skips menu items whose command is missing', () => {
 		const { ribbon, extra, core, commands } = setup();
-		$(ribbon.element, '[data-command="home.cell-styles"]').click();
-		const tile = $(core.ctx.root, '.ribbon-gallery-menu [role="menuitem"]') as HTMLButtonElement;
+		$(ribbon.element, '.xve-cell-styles .trigger').click();
+		const tile = $(core.ctx.root, '.xve-cell-styles .popup .tile') as HTMLButtonElement;
 		expect(tile.getAttribute('aria-label')).toBe('Good');
 		tile.click();
 		expect(extra.styles.runs).toEqual(['Good']);

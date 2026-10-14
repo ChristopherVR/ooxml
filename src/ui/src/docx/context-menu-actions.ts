@@ -58,12 +58,12 @@ export async function clipboardReadAllowed(): Promise<boolean> {
 }
 
 /** Uses ProseMirror's HTML parser for formatted content, with a plain-text API fallback. */
-export async function pasteClipboard(view: EditorView): Promise<boolean> {
+export async function pasteClipboard(view: EditorView, plainText = false): Promise<boolean> {
 	if (!view.editable) return false;
 	try {
 		if (navigator.clipboard.read) {
 			const items = await navigator.clipboard.read();
-			for (const item of items) {
+			for (const item of plainText ? [] : items) {
 				if (!item.types.includes('text/html')) continue;
 				const html = await (await item.getType('text/html')).text();
 				if (!view.editable || view.isDestroyed) return false;

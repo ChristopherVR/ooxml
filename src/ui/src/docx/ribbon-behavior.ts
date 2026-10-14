@@ -5,10 +5,13 @@ import { fileButton, panelOf, tabButtons } from './ribbon-tab-api';
 const KEY_TIPS: Record<string, string> = {
 	home: 'H',
 	insert: 'N',
+	design: 'G',
 	layout: 'P',
 	references: 'S',
+	mailings: 'M',
 	review: 'R',
 	view: 'W',
+	help: 'Y',
 	table: 'T',
 	'header-footer': 'J',
 };

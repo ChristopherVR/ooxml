@@ -37,6 +37,7 @@ export function createRibbon(doc: Document): HTMLElement {
 	ribbon.setAttribute('aria-label', 'Diagram controls');
 	ribbon.setAttribute('label', 'Ribbon');
 	ribbon.setAttribute('selected', 'home');
+	ribbon.setAttribute('collapsible', '');
 	const tellMe = createTellMe(doc);
 	tellMe.slot = 'search';
 	ribbon.append(tellMe);

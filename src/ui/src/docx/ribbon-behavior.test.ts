@@ -37,7 +37,7 @@ describe('tab KeyTips', () => {
 		const ribbon = mount();
 		await ribbonTab(ribbon, 'home');
 		ribbon.dispatchEvent(new CustomEvent('dve-keytips'));
-		expect(await badges(ribbon)).toEqual(['H', 'N', 'P', 'S', 'R', 'W']);
+		expect(await badges(ribbon)).toEqual(['H', 'N', 'G', 'P', 'S', 'M', 'R', 'W', 'Y']);
 		expect((await ribbonFile(ribbon)).querySelector('.dve-keytip')?.textContent).toBe('F');
 		ribbon.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' }));
 		expect((await ribbonTab(ribbon, 'insert')).getAttribute('aria-selected')).toBe('true');

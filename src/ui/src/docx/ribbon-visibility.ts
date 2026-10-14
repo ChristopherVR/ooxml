@@ -36,6 +36,12 @@ export function applyRibbonVisibility(
 		split
 			.querySelector('[data-split-caret]')
 			?.toggleAttribute(HIDDEN, Boolean(split.querySelector(`button[${HIDDEN}]`)));
+	for (const split of toolbar.querySelectorAll('.ribbon-command-split')) {
+		const isHidden = Boolean(split.querySelector(`button[${HIDDEN}]`));
+		split.toggleAttribute(HIDDEN, isHidden);
+		const menu = split.querySelector('select');
+		menu?.toggleAttribute(HIDDEN, isHidden || menu.hasAttribute(HIDDEN));
+	}
 	for (const group of toolbar.querySelectorAll('.ribbon-group'))
 		group.toggleAttribute(HIDDEN, allHidden(group));
 	for (const panel of panelsOf(toolbar))

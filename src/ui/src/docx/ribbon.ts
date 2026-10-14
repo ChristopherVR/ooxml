@@ -10,6 +10,7 @@ import {
 } from './localization';
 import type { RibbonAction } from './ribbon-action';
 import { buildHomePanel } from './ribbon-home';
+import { buildNativeTabs } from './ribbon-native-tabs';
 import { attachRibbonBehavior } from './ribbon-behavior';
 import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
@@ -32,10 +33,13 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	for (const name of [
 		'Home',
 		'Insert',
+		'Design',
 		'Layout',
 		'References',
+		'Mailings',
 		'Review',
 		'View',
+		'Help',
 		'Table',
 		'Header & Footer',
 	]) {
@@ -52,6 +56,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	}
 	buildHomePanel(panels);
 	buildOtherPanels(panels);
+	buildNativeTabs(panels);
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
 	for (const panel of panels.values()) root.append(panel);
 	// Table tools are contextual: the tab appears only while the selection is in a table.
@@ -86,6 +91,7 @@ export function syncSelectTitles(root: ParentNode): void {
 /** Gives every text button its full label as a tooltip, for when a narrow slot truncates it. */
 function syncButtonTitles(root: ParentNode): void {
 	for (const button of root.querySelectorAll('button')) {
+		if (button.hasAttribute('data-unavailable')) continue;
 		const label = button.getAttribute('aria-label');
 		if (!label) continue;
 		const hint = shortcutHint(button.dataset.localearialabel ?? label);

@@ -20,6 +20,7 @@ import { closeRibbonPopover } from './popover';
 import { showTabKeyTips } from './keytips';
 import { isTabHidden, selectTab, setTabHidden, type RibbonElement } from 'ooxml-core/xlsx/ui';
 import { applyRibbonVisibility } from './visibility';
+import { wireCellStyleGalleries } from './cell-style-gallery';
 
 export interface RibbonHandlers {
 	openBackstage(): void;
@@ -138,6 +139,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	let scope: RenderScope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
 	let tabs: RibbonTab[] = [];
 	let stopOverflow = () => {};
+	let stopGalleries = () => {};
 	let addIns: readonly RibbonAddInTab[] = [];
 	const syncAddIns = () => syncRibbonAddIns(root, addIns, { panelClass: 'ribbon-panel' });
 
@@ -164,6 +166,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 
 	const build = () => {
 		stopOverflow();
+		stopGalleries();
 		closeRibbonPopover();
 		scope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
 		tabs = [...ribbonTabs()];
@@ -188,6 +191,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		syncAddIns();
 		refresh();
 		stopOverflow = attachRibbonOverflow(root);
+		stopGalleries = wireCellStyleGalleries(root);
 	};
 
 	const refresh = () => {
@@ -229,6 +233,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		destroy: () => {
 			stopListening();
 			stopOverflow();
+			stopGalleries();
 			closeRibbonPopover();
 		},
 	};

@@ -164,6 +164,8 @@ describe('Go To panel and Editing controls', () => {
 		select.dispatchEvent(new Event('change'));
 		expect(seen).toEqual([{ type: 'goTo' }, { type: 'selectObjects' }]);
 		expect(find.selectedIndex).toBe(-1);
-		expect(ribbon.querySelectorAll('.ribbon-split-inline')).toHaveLength(2);
+		expect(
+			ribbon.querySelectorAll('[data-panel="Home"] [data-label="Editing"] .ribbon-split-inline'),
+		).toHaveLength(2);
 	});
 });

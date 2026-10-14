@@ -78,9 +78,9 @@ describe('contextual Table tab', () => {
 
 	it('skips the hidden tab when arrowing through the tab strip', async () => {
 		const ribbon = mount();
-		const view = await ribbonTab(ribbon, 'view');
-		view.focus();
-		view.dispatchEvent(
+		const help = await ribbonTab(ribbon, 'help');
+		help.focus();
+		help.dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, composed: true }),
 		);
 		await settle(ribbon);

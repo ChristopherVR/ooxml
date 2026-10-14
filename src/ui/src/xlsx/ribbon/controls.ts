@@ -149,7 +149,11 @@ function renderSplit(
 	const { ctx, doc } = scope;
 	const large = control.size === 'large';
 	const wrap = el(doc, 'div', large ? 'ribbon-split ribbon-split-large' : 'ribbon-split');
-	const main = commandButton(scope, command, { size: control.size ?? 'small', caption: false });
+	const main = commandButton(scope, command, {
+		size: control.size ?? 'small',
+		caption: false,
+		...(control.showLabel === undefined ? {} : { showLabel: control.showLabel }),
+	});
 	const label = ctx.t(command.label);
 	const caret = caretButton(scope, label);
 	if (large) {

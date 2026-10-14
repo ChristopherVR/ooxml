@@ -1,0 +1,20 @@
+/* Styled runs paint their own underline. Do not superimpose the semantic mark's single line. */
+.ProseMirror u:has([data-run-props*='"underlineStyle"']) {
+	text-decoration-line: none;
+}
+.ProseMirror [data-run-props*='"underlineStyle":"double"'] {
+	--dve-underline-style: double;
+}
+.ProseMirror [data-run-props*='"underlineStyle":"dotted"'] {
+	--dve-underline-style: dotted;
+}
+.ProseMirror [data-run-props*='"underlineStyle":"dash"'] {
+	--dve-underline-style: dashed;
+}
+.ProseMirror [data-run-props*='"underlineStyle":"wave"'] {
+	--dve-underline-style: wavy;
+}
+/* Inherited decorations sit inside direct run properties, including ranges sharing one u mark. */
+.ProseMirror [data-run-props*='"underlineStyle"'] span[style*='text-decoration-line'] {
+	text-decoration-style: var(--dve-underline-style, solid);
+}

@@ -1,0 +1,17 @@
+.xve-cell-styles[mode='inline'] .strip {
+	display: grid;
+	grid-template-columns: repeat(2, 106px);
+	grid-template-rows: repeat(2, 30px);
+	padding: 2px;
+}
+.xve-cell-styles[mode='inline'] .trigger {
+	min-width: 18px;
+	width: 18px;
+	max-width: 18px;
+	height: 66px;
+	padding: 0;
+}
+.xve-cell-styles[mode='inline'] .trigger > span:not([aria-hidden]),
+.xve-cell-styles[mode='inline'] .trigger > svg {
+	display: none;
+}

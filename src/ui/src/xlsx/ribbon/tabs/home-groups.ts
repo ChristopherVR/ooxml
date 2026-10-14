@@ -127,7 +127,13 @@ export function homeStyleGroups(): RibbonGroup[] {
 			id: 'editing',
 			label: 'Editing',
 			controls: [
-				{ kind: 'split', command: 'home.autosum', size: 'small', menu: AUTOSUM_MENU },
+				{
+					kind: 'split',
+					command: 'home.autosum',
+					size: 'small',
+					showLabel: true,
+					menu: AUTOSUM_MENU,
+				},
 				{
 					kind: 'menu',
 					label: 'Fill',

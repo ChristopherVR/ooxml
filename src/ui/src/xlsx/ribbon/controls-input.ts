@@ -7,6 +7,7 @@ import { ribbonIcon } from './icons';
 import type { RibbonControl, RibbonOption } from 'ooxml-core/xlsx/ui';
 import { arrowNavigation, closeRibbonPopover, mountPopover, openList } from './popover';
 import { renderSharedGallery } from './shared-gallery';
+import { renderCellStyleGallery } from './cell-style-gallery';
 
 type SelectControl = Extract<RibbonControl, { kind: 'select' }>;
 type GalleryControl = Extract<RibbonControl, { kind: 'gallery' }>;
@@ -193,6 +194,8 @@ export function renderGallery(
 	control: GalleryControl,
 	command: Command,
 ): HTMLElement {
+	if (command.id === 'home.cell-styles' && !control.sections)
+		return renderCellStyleGallery(scope, control, command);
 	if (control.sections) return renderSharedGallery(scope, control, command);
 	const { ctx, doc } = scope;
 	const label = ctx.t(command.label);

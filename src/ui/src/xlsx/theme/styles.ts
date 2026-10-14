@@ -4,6 +4,7 @@ import type { XlsxTheme } from 'ooxml-core/xlsx/ui';
 import { shadcnBridge } from '../../theme-bridge';
 import shell from './shell.css?raw';
 import ribbon from './ribbon.css?raw';
+import ribbonParity from './ribbon-parity.css?raw';
 import popups from './popups.css?raw';
 import backstage from './backstage.css?raw';
 import chartSeries from './chart-series.css?raw';
@@ -33,6 +34,7 @@ export const editorStyleText = [
 	}),
 	shell,
 	ribbon,
+	ribbonParity,
 	popups,
 	backstage,
 	chartSeries,

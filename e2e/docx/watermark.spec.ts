@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { newDocument, saveButton, dialogByHeading } from './helpers';
 
-test('Layout > Watermark prints behind the text in Print Layout, undoes and exports VML', async ({
+test('Design > Watermark prints behind the text in Print Layout, undoes and exports VML', async ({
 	page,
 }) => {
 	await page.setViewportSize({ width: 1700, height: 720 });
@@ -12,7 +12,7 @@ test('Layout > Watermark prints behind the text in Print Layout, undoes and expo
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Body text');
-	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Design', exact: true }).click();
 	await editor.getByRole('button', { name: 'Watermark', exact: true }).click();
 	const dialog = dialogByHeading(editor, 'Printed watermark');
 	await expect(dialog).toBeVisible();

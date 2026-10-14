@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { newDocument, saveButton, dialogByHeading } from './helpers';
 
-test('Layout > Page Borders draws a box in Print Layout, undoes and exports pgBorders', async ({
+test('Design > Page Borders draws a box in Print Layout, undoes and exports pgBorders', async ({
 	page,
 }) => {
 	await page.setViewportSize({ width: 1700, height: 720 });
@@ -12,7 +12,7 @@ test('Layout > Page Borders draws a box in Print Layout, undoes and exports pgBo
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Bordered page');
-	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Design', exact: true }).click();
 	await editor.getByRole('button', { name: 'Page borders', exact: true }).click();
 	const dialog = dialogByHeading(editor, 'Page borders');
 	await expect(dialog).toBeVisible();

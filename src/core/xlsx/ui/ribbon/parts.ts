@@ -24,7 +24,13 @@ export interface RibbonOption {
 export type RibbonControl =
 	| { kind: 'button'; command: string; size?: 'large' | 'small'; showLabel?: boolean }
 	| { kind: 'toggle'; command: string; size?: 'large' | 'small'; showLabel?: boolean }
-	| { kind: 'split'; command: string; menu: RibbonMenuItem[]; size?: 'large' | 'small' }
+	| {
+			kind: 'split';
+			command: string;
+			menu: RibbonMenuItem[];
+			size?: 'large' | 'small';
+			showLabel?: boolean;
+	  }
 	| {
 			kind: 'menu';
 			label: string;

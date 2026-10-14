@@ -1,5 +1,6 @@
 import { lineSpacingOptions } from 'ooxml-core/docx';
 import { menuGallery } from './ribbon-gallery-menu';
+import { listSplit, pasteSplit, underlineSplit } from './ribbon-home-menus';
 import {
 	comboBox,
 	FONT_FAMILIES,
@@ -79,7 +80,7 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 	home.append(
 		group(
 			'Clipboard',
-			tool('Paste', 'paste', { type: 'clipboard', key: 'paste' }, { large: true }),
+			pasteSplit(),
 			stack(
 				tool('Cut', 'cut', { type: 'clipboard', key: 'cut' }, { inline: true }),
 				tool('Copy', 'copy', { type: 'clipboard', key: 'copy' }, { inline: true }),
@@ -126,7 +127,7 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 			row(
 				tool('Bold', 'bold', { type: 'format', key: 'bold' }),
 				tool('Italic', 'italic', { type: 'format', key: 'italic' }),
-				tool('Underline', 'underline', { type: 'format', key: 'underline' }),
+				underlineSplit(),
 				tool('Strikethrough', 'strike', { type: 'format', key: 'strike' }),
 				tool('Subscript', 'subscript', { type: 'format', key: 'subscript' }),
 				tool('Superscript', 'superscript', { type: 'format', key: 'superscript' }),
@@ -205,8 +206,8 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 		group(
 			'Paragraph',
 			row(
-				tool('Bulleted list', 'bullets', { type: 'list', key: 'bullet' }),
-				tool('Numbered list', 'numbering', { type: 'list', key: 'number' }),
+				listSplit('bullet'),
+				listSplit('number'),
 				menuSelect(
 					'Multilevel list',
 					'multilevel',

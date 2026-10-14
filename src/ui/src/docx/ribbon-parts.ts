@@ -6,13 +6,22 @@ import { openSwatchPopover } from './ribbon-popover';
 import { swatchColor } from 'ooxml-core/docx/ui';
 
 /** Building blocks for ribbon tabs: buttons, selects, labelled groups and rows. */
-export const button = (label: string, text: string, action: RibbonAction, className = '') => {
+export const button = (
+	label: string,
+	text: string,
+	action: RibbonAction | null,
+	className = '',
+) => {
 	const el = document.createElement('button');
 	el.type = 'button';
 	el.textContent = text;
 	el.setAttribute('aria-label', label);
 	el.addEventListener('mousedown', (event) => event.preventDefault());
-	el.dataset.action = JSON.stringify(action);
+	if (action) el.dataset.action = JSON.stringify(action);
+	else {
+		el.disabled = true;
+		el.dataset.unavailable = '';
+	}
 	if (className) el.className = className;
 	return el;
 };
@@ -155,11 +164,11 @@ export const row = (...children: HTMLElement[]) => {
 export const tool = (
 	label: string,
 	icon: RibbonIcon,
-	action: RibbonAction,
+	action: RibbonAction | null,
 	options: { large?: boolean; inline?: boolean; caption?: string; className?: string } = {},
 ) => {
 	const el = button(label, '', action, options.className);
-	el.title = label;
+	el.title = action ? label : 'Not available in this editor';
 	el.classList.add(
 		options.large ? 'ribbon-large' : options.inline ? 'ribbon-inline' : 'ribbon-small',
 	);

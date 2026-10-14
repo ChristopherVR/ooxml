@@ -1,0 +1,9 @@
+/* Keep the drawing stationary when switching between Visio's tabs. */
+@media (min-width: 761px) {
+	.ribbon-content {
+		box-sizing: border-box;
+		height: 104px;
+		min-height: 104px;
+		max-height: 104px;
+	}
+}

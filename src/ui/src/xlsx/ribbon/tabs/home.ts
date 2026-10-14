@@ -33,9 +33,9 @@ export function homeTab(): RibbonTab {
 					{
 						kind: 'stack',
 						controls: [
-							{ kind: 'button', command: 'home.cut' },
-							{ kind: 'button', command: 'home.copy' },
-							{ kind: 'toggle', command: 'home.format-painter' },
+							{ kind: 'button', command: 'home.cut', showLabel: true },
+							{ kind: 'button', command: 'home.copy', showLabel: true },
+							{ kind: 'toggle', command: 'home.format-painter', showLabel: true },
 						],
 					},
 				],
@@ -112,7 +112,7 @@ export function homeTab(): RibbonTab {
 							{ command: 'home.alignment-settings' },
 						],
 					},
-					{ kind: 'toggle', command: 'home.wrap-text', size: 'small' },
+					{ kind: 'toggle', command: 'home.wrap-text', size: 'small', showLabel: true },
 					{ kind: 'separator' },
 					{ kind: 'toggle', command: 'home.align-left', size: 'small' },
 					{ kind: 'toggle', command: 'home.align-center', size: 'small' },
@@ -123,6 +123,7 @@ export function homeTab(): RibbonTab {
 						kind: 'split',
 						command: 'home.merge-center',
 						size: 'small',
+						showLabel: true,
 						menu: items(
 							'home.merge-center',
 							'home.merge-across',

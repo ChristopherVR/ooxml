@@ -1,0 +1,23 @@
+.ribbon-command-split {
+	flex: none;
+	height: 28px;
+}
+.ribbon-command-split .ribbon-menu.ribbon-menu-caret {
+	width: 14px;
+	height: 28px;
+}
+.ribbon-command-split-large {
+	flex-direction: column;
+	height: 74px;
+}
+.ribbon-group .ribbon-command-split-large .ribbon-large {
+	height: 56px;
+	min-height: 56px;
+}
+.ribbon-command-split-large .ribbon-menu.ribbon-menu-caret {
+	width: 100%;
+	height: 18px;
+}
+.ribbon-command-split[data-dve-hidden] {
+	display: none;
+}

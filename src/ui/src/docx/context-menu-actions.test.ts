@@ -33,6 +33,13 @@ afterEach(() => {
 });
 
 describe('formatted ribbon and context-menu clipboard', () => {
+	it('pastes text only without retaining rich clipboard formatting', async () => {
+		clipboard({ read: async () => [htmlItem('<p><strong>formatted</strong></p>')] });
+		const view = makeView();
+		expect(await pasteClipboard(view, true)).toBe(true);
+		expect(view.state.doc.textContent).toBe('flattened');
+		expect(view.state.doc.firstChild!.firstChild!.marks).toEqual([]);
+	});
 	it('prefers HTML and retains formatting, links, paragraphs and table structure', async () => {
 		clipboard({
 			read: async () => [

@@ -39,28 +39,30 @@ export function refreshEditorControls(
 		.forEach((control) => {
 			const label = control.dataset.localearialabel ?? control.getAttribute('aria-label');
 			control.disabled =
-				readOnly &&
-				![
-					'Find and replace',
-					'Zoom',
-					'Show hidden text',
-					'Page thumbnails',
-					'Navigation pane',
-					'Layout view',
-					'Print',
-					'Copy',
-					'Select all',
-					'Show paragraph marks',
-					'Zoom to 100%',
-					'Page width',
-					'One page',
-					'Word count',
-					'Spelling',
-					'Read aloud',
-					'Gridlines',
-					'Ruler',
-					'Comments',
-				].includes(label ?? '');
+				control.hasAttribute('data-unavailable') ||
+				(readOnly &&
+					![
+						'Find and replace',
+						'Zoom',
+						'Show hidden text',
+						'Page thumbnails',
+						'Navigation pane',
+						'Layout view',
+						'Print',
+						'Copy',
+						'Help',
+						'Select all',
+						'Show paragraph marks',
+						'Zoom to 100%',
+						'Page width',
+						'One page',
+						'Word count',
+						'Spelling',
+						'Read aloud',
+						'Gridlines',
+						'Ruler',
+						'Comments',
+					].includes(label ?? ''));
 		});
 	if (!view) return undefined;
 	const { state } = view;

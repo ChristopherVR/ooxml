@@ -11,7 +11,9 @@ import ribbonWidgets from './ribbon-widgets.css?raw';
 import ribbonStylesGroup from './ribbon-styles-group.css?raw';
 import ribbonPopups from './ribbon-popups.css?raw';
 import ribbonPolish from './ribbon-polish.css?raw';
+import ribbonHomeMenus from './ribbon-home-menus.css?raw';
 import documentCss from './document.css?raw';
+import underline from './underline.css?raw';
 import print from './print.css?raw';
 import titlebar from './chrome-titlebar.css?raw';
 import backstage from './backstage.css?raw';
@@ -48,7 +50,9 @@ export const editorStyleText = [
 	ribbonStylesGroup,
 	ribbonPopups,
 	ribbonPolish,
+	ribbonHomeMenus,
 	documentCss,
+	underline,
 	print,
 	titlebar,
 	backstage,

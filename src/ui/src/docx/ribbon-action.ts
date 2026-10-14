@@ -4,6 +4,7 @@ import type { ReviewDisplayMode } from './review-display';
 
 /** Every command the ribbon can raise, dispatched as a `ribbon-action` event. */
 export type RibbonAction =
+	| { type: 'help' }
 	| {
 			type: 'format';
 			key: 'bold' | 'italic' | 'underline' | 'strike' | 'superscript' | 'subscript';
@@ -14,7 +15,8 @@ export type RibbonAction =
 	| { type: 'clear' }
 	| { type: 'table'; rows?: number; columns?: number }
 	| { type: 'tablePicker' }
-	| { type: 'clipboard'; key: 'cut' | 'copy' | 'paste' }
+	| { type: 'clipboard'; key: 'cut' | 'copy' | 'paste'; plainText?: boolean }
+	| { type: 'underline'; value: import('./font-format').UnderlineKind }
 	| { type: 'fontStep'; direction: 'grow' | 'shrink' }
 	| { type: 'insertBreak'; kind: 'page' | 'column' }
 	| { type: 'tableEdit'; key: TableCommand }

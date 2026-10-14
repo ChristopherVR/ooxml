@@ -21,21 +21,36 @@ import { toggleFormatPainter } from './format-painter';
 import { withHeaderFooterDistance } from './header-footer-position';
 import { closeHistory } from 'prosemirror-history';
 import { sectionLayoutJson } from 'ooxml-core/docx';
+import { applyFontFormat } from './font-format';
 
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
 	const { inserts, pages, parts, shell } = core;
+	if (action.type === 'help') {
+		core.element.ownerDocument.defaultView?.open(
+			'https://christophervr.github.io/ooxml/docx/',
+			'_blank',
+			'noopener,noreferrer',
+		);
+		return;
+	}
 	if (inserts.handle(action)) return;
 	const target = core.targetView();
 	if (action.type === 'history' && parts.usesBodyHistory()) {
 		parts.runHistory(action.key);
 	} else if (action.type === 'clipboard') {
 		if (!target || (action.key !== 'copy' && !target.editable)) return;
-		const done = action.key === 'paste' ? pasteClipboard(target) : copyOrCut(target, action.key);
+		const done =
+			action.key === 'paste'
+				? pasteClipboard(target, action.plainText)
+				: copyOrCut(target, action.key);
 		void done.then((ok) => {
 			if (!ok)
 				emit(core.element, 'document-warning', translate(core.locale, 'menu.clipboardDenied'));
 		});
+	} else if (action.type === 'underline' && target?.editable && !core.readOnly) {
+		applyFontFormat(target, { underline: action.value });
+		focusView(target);
 	} else if (action.type === 'search') shell.searchPanel?.open(action.focus);
 	else if (action.type === 'selectAll' && target) {
 		selectAll(target.state, target.dispatch);
