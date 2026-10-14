@@ -1120,6 +1120,11 @@ export class SlideCanvasComponent implements SlideContext {
 	}
 
 	onEditorKeydown(event: KeyboardEvent): void {
+		// Keys typed into an open IME composition belong to the IME, Enter and
+		// Escape included: committing or cancelling here would cut it short.
+		if (event.isComposing) {
+			return;
+		}
 		const editor = event.target as HTMLTextAreaElement;
 		// Inline formatting shortcuts (Ctrl/Cmd + B/I/U), matching React/Vue.
 		const property = mapInlineTextFormatKey(event);
@@ -1129,14 +1134,20 @@ export class SlideCanvasComponent implements SlideContext {
 			this.emitTextFormat(property);
 			return;
 		}
+		const chord = mapInlineEditorChord(event);
 		if (event.key === 'Escape') {
 			event.preventDefault();
 			this.editCancelled = true;
 			editor.blur();
-		} else if (mapInlineEditorChord(event) === 'suppress') {
-			// Ctrl/Cmd+D: the viewer keymap stands down mid-edit, so nothing else
-			// stops the browser opening its bookmark dialog over the deck.
+		} else if (chord) {
+			// Before the plain Enter rules: Ctrl/Cmd+Shift+Enter is a `commit` too and
+			// must not reach the Shift+Enter line break. Ctrl/Cmd+D is only cancelled:
+			// the viewer keymap stands down mid-edit, so nothing else stops the
+			// browser opening its bookmark dialog over the deck.
 			event.preventDefault();
+			if (chord === 'commit') {
+				editor.blur();
+			}
 		} else if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			editor.blur();
