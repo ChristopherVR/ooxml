@@ -21,7 +21,7 @@ import type {
 	PptxThemeColorRef,
 	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
-import { resolveTableStyleLineRef } from 'ooxml-core/pptx';
+import { resolveTableStyleLineRef, resolveTableStyleLineRefColor } from 'ooxml-core/pptx';
 
 import { colorToFill } from './table-style-editor-descriptor';
 import type { TableStyleBorderSide, TableStyleEditorPartId } from './table-style-editor-parts';
@@ -114,8 +114,9 @@ function patchBorderSide(
 		return { ...borders, [side]: { lnRef: { ...lnRef, color: patch.fill } } };
 	}
 	// Otherwise the side becomes a concrete line. Its starting point is the
-	// referenced theme line when the scheme is known (width, dash, no-line),
-	// and its colour is the reference's colour unless the edit sets one.
+	// referenced theme line when the scheme is known (width, dash, no-line, and
+	// the colour it draws in: its own, or the reference's through its phClr),
+	// else the reference's colour. An edit that sets a colour replaces it.
 	const resolved = formatScheme
 		? resolveTableStyleLineRef(lnRef, formatScheme, undefined)
 		: undefined;
@@ -129,9 +130,10 @@ function patchBorderSide(
 	if (resolved?.noFill) {
 		fromTheme.noFill = true;
 	}
+	const colour = resolveTableStyleLineRefColor(lnRef, formatScheme);
 	const base: ParsedTableStyleBorder =
-		lnRef.color && current.fill === undefined && current.color === undefined && !resolved?.noFill
-			? { ...fromTheme, ...current, fill: lnRef.color }
+		colour && current.fill === undefined && current.color === undefined && !resolved?.noFill
+			? { ...fromTheme, ...current, ...colour }
 			: { ...fromTheme, ...current };
 	return { ...borders, [side]: { ...base, ...patch } };
 }

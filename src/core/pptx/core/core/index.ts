@@ -64,4 +64,7 @@ export {
 	TABLE_STYLE_PART_SEQUENCE,
 	type TableStylePartName,
 } from './runtime/table-style-entry-parse';
-export { resolveTableStyleLineRef } from './runtime/table-style-line-ref';
+export {
+	resolveTableStyleLineRef,
+	resolveTableStyleLineRefColor,
+} from './runtime/table-style-line-ref';

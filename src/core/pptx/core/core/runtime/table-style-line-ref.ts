@@ -13,9 +13,11 @@
  * @module table-style-line-ref
  */
 import { applyDrawingColorTransforms } from '../../color';
+import { parseSolidFillStyle } from './table-style-border-parse';
 import type {
 	ParsedTableFillRef,
 	ParsedTableStyleBorder,
+	ParsedTableStyleFill,
 	PptxThemeFormatScheme,
 	XmlObject,
 } from '../../types';
@@ -81,6 +83,72 @@ export function resolveTableStyleLineRef(
 		border.color = line.color;
 	}
 	return border;
+}
+
+/** `a:tint`/`a:shade` compose by multiplying in linear light, so two of a kind fold into one. */
+function foldPercent(a: number | undefined, b: number | undefined): number | undefined {
+	if (a === undefined || b === undefined) {
+		return a ?? b;
+	}
+	return Math.round((a * b) / 100_000);
+}
+
+/** A reference colour as a border colour: `fill` when theme-linked, `color` for sRGB. */
+function refBorderColor(
+	ref: ParsedTableStyleFill | undefined,
+): Pick<ParsedTableStyleBorder, 'fill' | 'color'> | undefined {
+	if (ref?.schemeColor) {
+		return { fill: ref };
+	}
+	// The border writer emits sRGB from `color` only (without transforms).
+	return ref?.color ? { color: ref.color } : undefined;
+}
+
+/**
+ * The colour an `a:lnRef` side draws in, as a theme-linked border colour
+ * (`fill` for a scheme colour, `color` for sRGB), for an edit that turns the
+ * reference into a concrete line while leaving its colour alone. A theme line
+ * with a colour of its own keeps that colour; a `phClr` line takes the
+ * reference's colour with the line's tint, shade and alpha folded in. Other
+ * transforms (`satMod`, `lumMod`, ...) have no place in the table-style fill
+ * model and are dropped, as when any table-style colour is parsed. Without
+ * the scheme, or a solid colour on the theme line, it is the reference's
+ * colour as is.
+ */
+export function resolveTableStyleLineRefColor(
+	lnRef: ParsedTableFillRef,
+	formatScheme: PptxThemeFormatScheme | undefined,
+): Pick<ParsedTableStyleBorder, 'fill' | 'color'> | undefined {
+	const ref = lnRef.color;
+	const line = lnRef.idx > 0 ? formatScheme?.lineStyles[lnRef.idx - 1] : undefined;
+	const solidFill = (line?.rawNode as XmlObject | undefined)?.['a:solidFill'] as
+		| XmlObject
+		| undefined;
+	const own = parseSolidFillStyle(solidFill);
+	if (!own) {
+		const hex = String((solidFill?.['a:srgbClr'] as XmlObject | undefined)?.['@_val'] ?? '');
+		return hex ? { color: hex.startsWith('#') ? hex : `#${hex}` } : refBorderColor(ref);
+	}
+	if (own.schemeColor !== 'phClr') {
+		return { fill: own };
+	}
+	if (!ref?.schemeColor) {
+		return refBorderColor(ref);
+	}
+	const fill: ParsedTableStyleFill = { schemeColor: ref.schemeColor };
+	const tint = foldPercent(ref.tint, own.tint);
+	const shade = foldPercent(ref.shade, own.shade);
+	const alpha = own.alpha ?? ref.alpha;
+	if (tint !== undefined) {
+		fill.tint = tint;
+	}
+	if (shade !== undefined) {
+		fill.shade = shade;
+	}
+	if (alpha !== undefined) {
+		fill.alpha = alpha;
+	}
+	return { fill };
 }
 
 /** The reference's own colour (`a:schemeClr` with its tint/shade/alpha) as hex. */

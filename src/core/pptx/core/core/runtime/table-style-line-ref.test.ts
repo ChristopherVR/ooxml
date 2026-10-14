@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { PptxThemeFormatScheme, XmlObject } from '../../types';
 import { parseTableStyleBorders } from './table-style-border-parse';
 import { writeTableStyleSectionBorders } from './table-style-border-write';
-import { resolveTableStyleLineRef } from './table-style-line-ref';
+import { resolveTableStyleLineRef, resolveTableStyleLineRefColor } from './table-style-line-ref';
 
 const ACCENT1 = { schemeColor: 'accent1' };
 
@@ -125,5 +125,28 @@ describe('table style a:lnRef borders', () => {
 		expect(resolveTableStyleLineRef({ idx: 1, color: ACCENT1 }, own, COLOR_MAP)?.color).toBe(
 			'#00FF00',
 		);
+	});
+});
+
+describe('resolveTableStyleLineRefColor', () => {
+	it("folds the phClr line's shade into the reference colour, keeping it theme-linked", () => {
+		expect(
+			resolveTableStyleLineRefColor(
+				{ idx: 2, color: { schemeColor: 'accent1', shade: 80000, alpha: 60000 } },
+				FORMAT_SCHEME,
+			),
+		).toStrictEqual({ fill: { schemeColor: 'accent1', shade: 40000, alpha: 60000 } });
+	});
+
+	it('falls back to the reference colour without a scheme or a solid theme line', () => {
+		expect(resolveTableStyleLineRefColor({ idx: 1, color: ACCENT1 }, undefined)).toStrictEqual({
+			fill: ACCENT1,
+		});
+		expect(
+			resolveTableStyleLineRefColor(
+				{ idx: 9, color: { schemeColor: '', color: '#123456' } },
+				FORMAT_SCHEME,
+			),
+		).toStrictEqual({ color: '#123456' });
 	});
 });
