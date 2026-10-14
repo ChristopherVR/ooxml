@@ -2,9 +2,9 @@
  * The theme colour grid and the Quick Styles gallery name their swatches in the viewer's locale
  * (tooltip and accessible name), not in hard-coded English.
  */
+import { translationsDe } from 'pptx-viewer-locales';
 import { describe, expect, it, vi } from 'vitest';
 
-import { translationsDe } from '../../../../locales/src';
 import { createTranslator } from '../i18n';
 import { createQuickStylesGallery } from './inspector/quick-styles-gallery';
 import { createThemeColorSwatchGrid } from './theme-color-swatch-grid';

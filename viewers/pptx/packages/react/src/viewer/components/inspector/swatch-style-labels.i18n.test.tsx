@@ -4,12 +4,12 @@
  * i18next dictionary (tooltip and accessible name), not in hard-coded English.
  */
 import { createInstance } from 'i18next';
+import { translationsDe } from 'pptx-viewer-locales';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { describe, expect, it, vi } from 'vitest';
 
-import { translationsDe } from '../../../../../locales/src';
 import { translationsEn } from '../../../i18n';
 import { QuickStylesGallery } from './QuickStylesGallery';
 import { ThemeColorMapProvider } from './ThemeColorMapContext';

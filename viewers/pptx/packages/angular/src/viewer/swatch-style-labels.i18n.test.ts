@@ -7,10 +7,10 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import type { ShapeQuickStyle, ThemeColorSwatchColumn } from 'ooxml-ui/pptx';
 import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
+import { translationsDe } from 'pptx-viewer-locales';
 import { Subject } from 'rxjs';
 import { describe, expect, it } from 'vitest';
 
-import { translationsDe } from '../../../locales/src';
 import { LoadContentService } from './load-content.service';
 import { ShapeAuthoringPanelComponent } from './shape-authoring-panel.component';
 import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.component';

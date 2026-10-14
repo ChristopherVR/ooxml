@@ -3,10 +3,10 @@
  * translator (tooltip and accessible name), not in hard-coded English.
  */
 import type { PptxElement } from 'pptx-viewer-core';
+import { translationsDe } from 'pptx-viewer-locales';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { translationsDe } from '../../../../../locales/src';
 import { I18N_CONTEXT_KEY } from '../../../i18n/context';
 import { interpolate, translate } from '../../../i18n/translator';
 import type { Translator } from '../../../i18n/translator';

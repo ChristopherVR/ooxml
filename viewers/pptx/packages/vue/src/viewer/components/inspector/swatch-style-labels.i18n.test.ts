@@ -3,11 +3,11 @@
  * (tooltip and accessible name), not in hard-coded English.
  */
 import { mount } from '@vue/test-utils';
+import { translationsDe } from 'pptx-viewer-locales';
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 import { createI18n } from 'vue-i18n';
 
-import { translationsDe } from '../../../../../locales/src';
 import { toVueI18nSyntax, translationsEn } from '../../../i18n';
 import { ThemeColorMapKey } from '../../composables/theme-color-map-context';
 import QuickStylesGallery from './QuickStylesGallery.vue';
