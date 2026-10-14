@@ -95,6 +95,13 @@ export interface UseEditorHistoryOptions {
 	 * Advanced > "Maximum number of undos" threads `resolveHistoryDepth` here.
 	 */
 	maxDepth?: number;
+	/**
+	 * The slide on screen. An undo or redo can shorten the deck under it (undoing
+	 * New Slide on the last slide removes the very slide being shown), so the
+	 * index is pulled back into the restored deck, as React's history does.
+	 * Without it the stage pointed past the end of the deck and drew nothing.
+	 */
+	activeSlideIndex?: Ref<number>;
 }
 
 /**
@@ -141,6 +148,13 @@ export function useEditorHistory(
 		slides.value = snap.slides.map(cloneSlide);
 		if (templateElementsBySlideId) {
 			templateElementsBySlideId.value = cloneTemplateMap(snap.template);
+		}
+		const active = options?.activeSlideIndex;
+		if (active) {
+			const last = Math.max(snap.slides.length - 1, 0);
+			if (active.value > last) {
+				active.value = last;
+			}
 		}
 	};
 

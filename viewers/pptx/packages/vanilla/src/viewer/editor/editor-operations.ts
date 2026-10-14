@@ -33,6 +33,7 @@ import type {
 } from 'pptx-viewer-core';
 import { duplicateElement } from 'pptx-viewer-core';
 
+import { clampSlideIndex } from '../state';
 import type { Store, ViewerState } from '../state';
 import {
 	findActiveElement,
@@ -212,6 +213,10 @@ export function createEditorOps(deps: EditorOpsDeps): EditorOps {
 			presentationProperties: structuredClone(next.presentationProperties),
 			headerFooter: structuredClone(next.headerFooter),
 			customShows: structuredClone(next.customShows),
+			// Undo or redo can shorten the deck under the slide on screen: undoing
+			// New Slide on the last slide removes the slide being shown, and the
+			// stage then pointed past the end of the deck and drew nothing.
+			currentSlide: clampSlideIndex(store.get().currentSlide, next.slides.length),
 			interactionActive: false,
 		});
 		commitChange();

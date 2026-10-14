@@ -41,6 +41,31 @@ describe('duplicateSlide', () => {
 	});
 });
 
+describe('addSlide then undo', () => {
+	it('brings the stage back to a slide that exists when the new slide was the last one', () => {
+		const store = createStore({
+			...createInitialViewerState(),
+			slides: buildSlides(3),
+			currentSlide: 2,
+			editable: true,
+		});
+		const ops = createEditorOps({ store, getHandler: () => null, onHistoryChange: vi.fn() });
+		createSlideActions({ store, ops, getHandler: () => null }).addSlide();
+		expect(store.get().slides).toHaveLength(4);
+		expect(store.get().currentSlide).toBe(3);
+
+		ops.undo();
+
+		// Before the fix `currentSlide` stayed 3 on a three-slide deck, so the
+		// stage looked up a slide that no longer existed and drew nothing.
+		expect(store.get().slides).toHaveLength(3);
+		expect(store.get().currentSlide).toBe(2);
+		ops.redo();
+		expect(store.get().slides).toHaveLength(4);
+		expect(store.get().currentSlide).toBe(2);
+	});
+});
+
 describe('insertSlideFromTemplate', () => {
 	it('inserts the built template after the current slide, selected and history-integrated', () => {
 		const store = createStore({
