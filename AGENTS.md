@@ -166,8 +166,8 @@ Unit tests in the folder you changed are not what CI runs. Every one of these sl
   pushed with yours. Push with `git push origin HEAD:main`.
 - **Parallel agents each take their own worktree and port** (`PLAYWRIGHT_PORT` for the viewers'
   browser suites), or their servers and timeouts collide and real failures hide among flaky ones.
-- **Integrate, verify once, push once.** Each push to `main` cancels the CI run before it, so a
-  string of quick pushes leaves every run but the last unfinished.
+- **Integrate, verify once, push once.** Each push to `main` runs its own incremental CI plan,
+  so a string of quick pushes needlessly duplicates builds and consumes runner capacity.
 - **Use CI's Bun** (`bun-version` in `.github/actions/setup/action.yml`); another version writes a
   different `bun.lock`. `verify` warns when they differ.
 

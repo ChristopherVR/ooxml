@@ -40,9 +40,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ (github.event_name == 'push' || github.event_name == 'pull_request') && (github.event.pull_request.number || github.ref) || github.run_id }}
-  # A newer push or PR update supersedes the run in flight; scheduled and manual runs always finish.
-  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+  group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  # PR plans include the whole branch, so a newer update supersedes them. Push plans cover only
+  # that push: cancelling one would leave its changes unchecked by the next incremental plan.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   BUN_VERSION: 1.4.2
@@ -495,6 +496,13 @@ jobs:
               "${retry_args[@]}" && exit 0
             status=$?
             echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
+            # Playwright clears its output on the next run. Keep the original traces even when
+            # the retry passes, so a flaky test or runner crash can still be investigated.
+            evidence="ci-evidence/attempt-$attempt"
+            mkdir -p "$evidence"
+            for report in test-results playwright-report; do
+              if [ -d "$report" ]; then cp -R "$report" "$evidence/"; fi
+            done
             # Avoid repeating a whole shard when Playwright recorded the failures.
             # A crash before that report exists still retries the complete shard.
             if node -e 'try { const run = JSON.parse(require("node:fs").readFileSync("test-results/.last-run.json", "utf8")); process.exit(run.status !== "passed" && run.failedTests?.length > 0 ? 0 : 1); } catch { process.exit(1); }'; then
@@ -502,17 +510,19 @@ jobs:
             else
               retry_args=()
             fi
-            sleep 15
+            if [ "$attempt" -lt 2 ]; then sleep 15; fi
           done
           exit $status
       - name: Preserve the report
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pptx-playwright-${{ matrix.project }}-${{ matrix.shard }}
           path: |
             viewers/pptx/playwright-report/
             viewers/pptx/test-results/
+            viewers/pptx/ci-evidence/
+          if-no-files-found: ignore
           retention-days: 7
 
   pptx-e2e-packaged:
