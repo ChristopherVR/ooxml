@@ -1,4 +1,3 @@
-import { MIN_ELEMENT_SIZE } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {

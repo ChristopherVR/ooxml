@@ -14,6 +14,7 @@ for (const framework of FRAMEWORKS)
 		const workbook = createWorkbook();
 		createEditSession(workbook).addChart(0, {
 			chartType: 'column',
+			showLegend: false,
 			title: 'Touch chart',
 			series: [{ name: 'Sales', categories: ['A', 'B'], values: [10, 20] }],
 			anchor: {
