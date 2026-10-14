@@ -223,6 +223,10 @@ test.describe('raster export fidelity: foreignObject vs html2canvas vs on-screen
 		page,
 		browser,
 	}) => {
+		// The forced legacy capture can spend over a minute flushing and encoding its canvas on
+		// a desktop, and exceed the ordinary 120s download budget on a hosted software renderer.
+		// Give this measured comparison its own budget while retaining all path and pixel checks.
+		test.setTimeout(360_000);
 		// 1. Default path. Prove it really was foreignObject.
 		const warnings = collectRasterFallbackWarnings(page);
 		await observeHtml2CanvasRuns(page);
@@ -259,7 +263,7 @@ test.describe('raster export fidelity: foreignObject vs html2canvas vs on-screen
 			await openBackstageExport(html2canvasPage);
 			expect(fallbackErrors, 'loading the capture page must not throw').toEqual([]);
 			html2canvasBytes = await withoutPageErrors(html2canvasPage, async () =>
-				downloadBytes(await downloadViaCard(html2canvasPage, PNG_CARD)),
+				downloadBytes(await downloadViaCard(html2canvasPage, PNG_CARD, 240_000)),
 			);
 			forcedFailures = await countForcedFallbacks(html2canvasPage);
 			fallbackHtml2CanvasRuns = await countHtml2CanvasRuns(html2canvasPage);
