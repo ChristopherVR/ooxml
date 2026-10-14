@@ -36,7 +36,7 @@
 
 	const t = useTranslator();
 
-	const columns = $derived(buildThemeColorSwatchGrid(themeColorMap));
+	const columns = $derived(buildThemeColorSwatchGrid(themeColorMap, t));
 	const rows = $derived(themeColorSwatchRows(columns));
 	const selected = $derived(findSelectedThemeSwatch(columns, selectedRef, selectedHex));
 </script>

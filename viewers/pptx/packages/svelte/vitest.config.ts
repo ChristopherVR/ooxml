@@ -55,6 +55,7 @@ export default defineConfig({
 				replacement: resolve(__dirname, '../core/src/math/index.ts'),
 			},
 			{ find: 'pptx-viewer-core', replacement: resolve(__dirname, '../core/src/index.ts') },
+			{ find: 'pptx-viewer-locales', replacement: resolve(__dirname, '../locales/src/index.ts') },
 		],
 		// Svelte 5 ships separate client/server runtimes; without the browser
 		// condition Vitest resolves the server runtime and `mount()` throws.

@@ -37,7 +37,11 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const themeColorMap = injectThemeColorMap();
 
-const columns = computed(() => buildThemeColorSwatchGrid(themeColorMap?.value));
+const columns = computed(() =>
+	buildThemeColorSwatchGrid(themeColorMap?.value, (key, params) =>
+		params ? t(key, { ...params }) : t(key),
+	),
+);
 const rows = computed(() => themeColorSwatchRows(columns.value));
 const selected = computed(() =>
 	findSelectedThemeSwatch(columns.value, props.selectedRef, props.selectedHex),

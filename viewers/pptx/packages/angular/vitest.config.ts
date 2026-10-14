@@ -19,7 +19,11 @@ export default defineConfig({
 	resolve: {
 		// Keep leaf-module mocks attached to the renderer implementation rather
 		// than a separately bundled copy of the same helper.
-		alias: { 'ooxml-ui/pptx': resolve(import.meta.dirname, '../../../../src/ui/src/pptx') },
+		alias: {
+			'ooxml-ui/pptx': resolve(import.meta.dirname, '../../../../src/ui/src/pptx'),
+			// Test against the locale sources, not a possibly stale dist.
+			'pptx-viewer-locales': resolve(import.meta.dirname, '../locales/src/index.ts'),
+		},
 	},
 	test: {
 		environment: 'happy-dom',

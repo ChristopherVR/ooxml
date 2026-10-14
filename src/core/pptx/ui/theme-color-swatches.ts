@@ -24,6 +24,7 @@ import {
 	themePaletteVariantsForLuminance,
 	type ThemePaletteVariant,
 } from '../../color/index';
+import { translateOr, type Translate } from '../../i18n/index';
 import { resolveThemeColorRef } from '../core/color/theme-color-ref';
 import type { PptxThemeColorRef, PptxThemeColorSchemeName } from '../core/types/color-ref';
 import { THEME_COLOR_PALETTE_COLUMNS } from '../core/types/color-ref';
@@ -34,7 +35,10 @@ export interface ThemeColorSwatch {
 	readonly ref: PptxThemeColorRef;
 	/** Resolved `#rrggbb` for painting the swatch. */
 	readonly hex: string;
-	/** English label, e.g. "Accent 1, Lighter 80%" (for `title` / `aria-label`). */
+	/**
+	 * Label for `title` / `aria-label`, e.g. "Accent 1, Lighter 80%": translated when the grid was
+	 * built with the binding's translator, English otherwise.
+	 */
 	readonly label: string;
 	/** Structured variant, for hosts that localise the label themselves. */
 	readonly variant: ThemeColorVariant | undefined;
@@ -69,6 +73,32 @@ const COLUMN_LABELS: Readonly<Record<string, string>> = {
 	folHlink: 'Followed Hyperlink',
 };
 
+/** Translation keys of {@link COLUMN_LABELS}, scheme by scheme. */
+export const THEME_COLOR_SWATCH_COLUMN_LABEL_KEYS: Readonly<Record<string, string>> = {
+	bg1: 'pptx.themeColor.background1',
+	tx1: 'pptx.themeColor.text1',
+	bg2: 'pptx.themeColor.background2',
+	tx2: 'pptx.themeColor.text2',
+	accent1: 'pptx.themeColor.accent1',
+	accent2: 'pptx.themeColor.accent2',
+	accent3: 'pptx.themeColor.accent3',
+	accent4: 'pptx.themeColor.accent4',
+	accent5: 'pptx.themeColor.accent5',
+	accent6: 'pptx.themeColor.accent6',
+	dk1: 'pptx.themeColor.text1',
+	lt1: 'pptx.themeColor.background1',
+	dk2: 'pptx.themeColor.text2',
+	lt2: 'pptx.themeColor.background2',
+	hlink: 'pptx.themeColor.hyperlink',
+	folHlink: 'pptx.themeColor.followedHyperlink',
+};
+
+/** Translation keys of a variant swatch's name ("{{color}}, Lighter {{percent}}%"). */
+export const THEME_COLOR_SWATCH_VARIANT_LABEL_KEYS = {
+	lighter: 'pptx.themeColor.swatchLighter',
+	darker: 'pptx.themeColor.swatchDarker',
+} as const satisfies Record<ThemeColorVariant['kind'], string>;
+
 const lighter = (percent: number): ThemeColorVariant => ({ kind: 'lighter', percent });
 const darker = (percent: number): ThemeColorVariant => ({ kind: 'darker', percent });
 
@@ -88,17 +118,29 @@ export function themeColorVariantToRef(
 	return { scheme, ...themePaletteVariantLuminance(variant) };
 }
 
-/** Human label for a swatch: "Accent 1" or "Accent 1, Lighter 80%". */
+/**
+ * Human label for a swatch: "Accent 1" or "Accent 1, Lighter 80%". With the binding's
+ * `translate`, the column name and the variant wording come from its dictionary (falling back to
+ * English for a key it lacks), so a swatch's tooltip follows the viewer's locale.
+ */
 export function describeThemeColorSwatch(
 	ref: PptxThemeColorRef,
 	variant: ThemeColorVariant | undefined,
+	translate?: Translate,
 ): string {
-	const column = COLUMN_LABELS[ref.scheme] ?? ref.scheme;
+	const englishColumn = COLUMN_LABELS[ref.scheme] ?? ref.scheme;
+	const columnKey = THEME_COLOR_SWATCH_COLUMN_LABEL_KEYS[ref.scheme];
+	const column = columnKey ? translateOr(translate, columnKey, englishColumn) : englishColumn;
 	if (!variant) {
 		return column;
 	}
 	const word = variant.kind === 'lighter' ? 'Lighter' : 'Darker';
-	return `${column}, ${word} ${variant.percent}%`;
+	return translateOr(
+		translate,
+		THEME_COLOR_SWATCH_VARIANT_LABEL_KEYS[variant.kind],
+		`${column}, ${word} ${variant.percent}%`,
+		{ color: column, percent: variant.percent },
+	);
 }
 
 /**
@@ -120,10 +162,12 @@ export function themeColorVariantOfRef(ref: PptxThemeColorRef): ThemeColorVarian
  * Build the palette for a deck's resolved theme colour map (`PptxData.themeColorMap`,
  * which already applies the slide master's `p:clrMap` aliases). Columns whose
  * base colour the map cannot resolve are skipped, so a partial map still yields
- * a usable palette.
+ * a usable palette. `translate` (the binding's translator) names the swatches in the viewer's
+ * locale; without it the labels are English.
  */
 export function buildThemeColorSwatchGrid(
 	themeColorMap: Readonly<Record<string, string>> | undefined,
+	translate?: Translate,
 ): readonly ThemeColorSwatchColumn[] {
 	if (!themeColorMap) {
 		return [];
@@ -142,7 +186,12 @@ export function buildThemeColorSwatchGrid(
 			const ref = themeColorVariantToRef(scheme, variant);
 			const hex = resolveThemeColorRef(ref, themeColorMap);
 			if (hex) {
-				variants.push({ ref, hex, label: describeThemeColorSwatch(ref, variant), variant });
+				variants.push({
+					ref,
+					hex,
+					label: describeThemeColorSwatch(ref, variant, translate),
+					variant,
+				});
 			}
 		}
 		columns.push({
@@ -150,7 +199,7 @@ export function buildThemeColorSwatchGrid(
 			base: {
 				ref: baseRef,
 				hex: baseHex,
-				label: describeThemeColorSwatch(baseRef, undefined),
+				label: describeThemeColorSwatch(baseRef, undefined, translate),
 				variant: undefined,
 			},
 			variants,

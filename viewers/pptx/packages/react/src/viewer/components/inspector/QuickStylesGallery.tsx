@@ -1,4 +1,8 @@
-import { getDensePanelTouchTargetPx, quickStyleSwatchCss } from 'ooxml-ui/pptx';
+import {
+	getDensePanelTouchTargetPx,
+	quickStyleSwatchCss,
+	shapeQuickStyleLabel,
+} from 'ooxml-ui/pptx';
 import type { ShapeStyle } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,8 +42,8 @@ export function QuickStylesGallery({
 					<button
 						key={idx}
 						type='button'
-						title={qs.name}
-						aria-label={qs.name}
+						title={shapeQuickStyleLabel(qs, (key) => t(key))}
+						aria-label={shapeQuickStyleLabel(qs, (key) => t(key))}
 						className='w-full rounded border border-border hover:border-primary transition-colors'
 						style={{ ...quickStyleSwatchCss(qs), minHeight: swatchMinHeight }}
 						onClick={() => onUpdateShapeStyle(qs.style)}

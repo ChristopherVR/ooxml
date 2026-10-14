@@ -109,7 +109,12 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 					chevron: true,
 					kind: 'colour',
 					popup: true,
-					colour: { swatches: 'shape', theme: true, swatchLabelPrefix: 'Fill colour' },
+					colour: {
+						swatches: 'shape',
+						theme: true,
+						swatchLabelPrefix: 'Fill colour',
+						swatchLabelKey: 'pptx.colorPicker.fillSwatch',
+					},
 				}),
 				control(
 					'home.drawing.shapeOutline',
@@ -121,7 +126,12 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 						chevron: true,
 						kind: 'colour',
 						popup: true,
-						colour: { swatches: 'shape', theme: true, swatchLabelPrefix: 'Outline colour' },
+						colour: {
+							swatches: 'shape',
+							theme: true,
+							swatchLabelPrefix: 'Outline colour',
+							swatchLabelKey: 'pptx.colorPicker.outlineSwatch',
+						},
 					},
 				),
 				control(

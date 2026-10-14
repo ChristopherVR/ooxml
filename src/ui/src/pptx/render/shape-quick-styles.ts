@@ -5,10 +5,14 @@
  */
 import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
+import { translateOr, type Translate } from 'ooxml-core/i18n';
 
 /** A named preset shape style used in the Quick Styles gallery. */
 export interface ShapeQuickStyle {
+	/** English name (fallback for {@link shapeQuickStyleLabel}). */
 	name: string;
+	/** Dictionary key of the name (`pptx.shape.quickStylePreset.*`). */
+	labelKey: string;
 	style: Partial<ShapeStyle>;
 }
 
@@ -68,60 +72,78 @@ export function shapeQuickStylePatch(
 	return { shapeStyle: { ...base, ...style } } as Partial<PptxElement>;
 }
 
+/** A preset's name in the viewer's locale, for its swatch's `title` and `aria-label`. */
+export function shapeQuickStyleLabel(quickStyle: ShapeQuickStyle, translate?: Translate): string {
+	return translateOr(translate, quickStyle.labelKey, quickStyle.name);
+}
+
 export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 	// Row 1: Solid fills (theme-inspired palette)
 	{
 		name: 'Blue Fill',
+		labelKey: 'pptx.shape.quickStylePreset.blueFill',
 		style: { fillMode: 'solid', fillColor: '#4472C4', strokeColor: '#2F5597', strokeWidth: 1 },
 	},
 	{
 		name: 'Orange Fill',
+		labelKey: 'pptx.shape.quickStylePreset.orangeFill',
 		style: { fillMode: 'solid', fillColor: '#ED7D31', strokeColor: '#C55A11', strokeWidth: 1 },
 	},
 	{
 		name: 'Grey Fill',
+		labelKey: 'pptx.shape.quickStylePreset.greyFill',
 		style: { fillMode: 'solid', fillColor: '#A5A5A5', strokeColor: '#7F7F7F', strokeWidth: 1 },
 	},
 	{
 		name: 'Gold Fill',
+		labelKey: 'pptx.shape.quickStylePreset.goldFill',
 		style: { fillMode: 'solid', fillColor: '#FFC000', strokeColor: '#BF9000', strokeWidth: 1 },
 	},
 	{
 		name: 'Green Fill',
+		labelKey: 'pptx.shape.quickStylePreset.greenFill',
 		style: { fillMode: 'solid', fillColor: '#70AD47', strokeColor: '#548235', strokeWidth: 1 },
 	},
 	{
 		name: 'Teal Fill',
+		labelKey: 'pptx.shape.quickStylePreset.tealFill',
 		style: { fillMode: 'solid', fillColor: '#5B9BD5', strokeColor: '#2E75B6', strokeWidth: 1 },
 	},
 	// Row 2: Outline-only styles
 	{
 		name: 'Blue Outline',
+		labelKey: 'pptx.shape.quickStylePreset.blueOutline',
 		style: { fillMode: 'none', fillColor: 'transparent', strokeColor: '#4472C4', strokeWidth: 2 },
 	},
 	{
 		name: 'Orange Outline',
+		labelKey: 'pptx.shape.quickStylePreset.orangeOutline',
 		style: { fillMode: 'none', fillColor: 'transparent', strokeColor: '#ED7D31', strokeWidth: 2 },
 	},
 	{
 		name: 'Grey Outline',
+		labelKey: 'pptx.shape.quickStylePreset.greyOutline',
 		style: { fillMode: 'none', fillColor: 'transparent', strokeColor: '#A5A5A5', strokeWidth: 2 },
 	},
 	{
 		name: 'Gold Outline',
+		labelKey: 'pptx.shape.quickStylePreset.goldOutline',
 		style: { fillMode: 'none', fillColor: 'transparent', strokeColor: '#FFC000', strokeWidth: 2 },
 	},
 	{
 		name: 'Green Outline',
+		labelKey: 'pptx.shape.quickStylePreset.greenOutline',
 		style: { fillMode: 'none', fillColor: 'transparent', strokeColor: '#70AD47', strokeWidth: 2 },
 	},
 	{
 		name: 'Teal Outline',
+		labelKey: 'pptx.shape.quickStylePreset.tealOutline',
 		style: { fillMode: 'none', fillColor: 'transparent', strokeColor: '#5B9BD5', strokeWidth: 2 },
 	},
 	// Row 3: Fills with shadow
 	{
 		name: 'Blue Shadow',
+		labelKey: 'pptx.shape.quickStylePreset.blueShadow',
 		style: {
 			fillMode: 'solid',
 			fillColor: '#4472C4',
@@ -134,6 +156,7 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 	},
 	{
 		name: 'Orange Shadow',
+		labelKey: 'pptx.shape.quickStylePreset.orangeShadow',
 		style: {
 			fillMode: 'solid',
 			fillColor: '#ED7D31',
@@ -146,6 +169,7 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 	},
 	{
 		name: 'Dark Fill',
+		labelKey: 'pptx.shape.quickStylePreset.darkFill',
 		style: {
 			fillMode: 'solid',
 			fillColor: '#2F5597',
@@ -158,6 +182,7 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 	},
 	{
 		name: 'Dark Orange',
+		labelKey: 'pptx.shape.quickStylePreset.darkOrange',
 		style: {
 			fillMode: 'solid',
 			fillColor: '#C55A11',
@@ -170,6 +195,7 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 	},
 	{
 		name: 'Dark Green',
+		labelKey: 'pptx.shape.quickStylePreset.darkGreen',
 		style: {
 			fillMode: 'solid',
 			fillColor: '#548235',
@@ -182,6 +208,7 @@ export const SHAPE_QUICK_STYLES: ShapeQuickStyle[] = [
 	},
 	{
 		name: 'White Fill',
+		labelKey: 'pptx.shape.quickStylePreset.whiteFill',
 		style: {
 			fillMode: 'solid',
 			fillColor: '#FFFFFF',

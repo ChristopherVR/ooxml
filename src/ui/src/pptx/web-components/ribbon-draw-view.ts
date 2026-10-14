@@ -1,4 +1,10 @@
-import { DRAW_RIBBON_TOOLS, DRAW_WIDTH_PRESETS, OFFICE_COLOR_SWATCHES, drawLabel } from '../render';
+import {
+	DRAW_RIBBON_TOOLS,
+	DRAW_WIDTH_PRESETS,
+	OFFICE_COLOR_SWATCHES,
+	drawLabel,
+	officeColorSwatchLabel,
+} from '../render';
 import type { RibbonDrawIntent, RibbonDrawViewState } from '../render';
 
 /** All Draw markup lives here. The host only reflects state and routes native intents. */
@@ -136,13 +142,19 @@ export function createRibbonDrawView(doc: Document, request: (intent: RibbonDraw
 		}
 		presets.value = String(state.width);
 		colorInput.disabled = range.disabled = presets.disabled = !state.editable;
-		for (const button of standard.querySelectorAll('button')) {
+		standard.querySelectorAll('button').forEach((button, index) => {
+			const color = OFFICE_COLOR_SWATCHES[index];
+			if (color) {
+				const name = officeColorSwatchLabel(color, state.translate);
+				button.title = name;
+				button.setAttribute('aria-label', name);
+			}
 			button.disabled = !state.editable;
 			button.setAttribute(
 				'aria-pressed',
 				String(button.dataset.drawColor?.toLowerCase() === state.color.toLowerCase()),
 			);
-		}
+		});
 		const nextKey = `${state.editable}:${state.recentColors?.join(',') ?? ''}`;
 		if (recentKey !== nextKey) {
 			recent.replaceChildren(

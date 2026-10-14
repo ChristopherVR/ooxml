@@ -41,7 +41,12 @@ export function galleryItemLabel(
 	item: RibbonGalleryItem,
 	translate: (key: string, params?: Readonly<Record<string, string | number>>) => string,
 ): string {
-	const translated = translate(item.labelKey, item.labelParams);
+	const params: Record<string, string | number> = { ...item.labelParams };
+	for (const [name, { key, fallback }] of Object.entries(item.labelParamKeys ?? {})) {
+		const value = translate(key);
+		params[name] = value && value !== key ? value : fallback;
+	}
+	const translated = translate(item.labelKey, params);
 	return translated && translated !== item.labelKey ? translated : item.label;
 }
 

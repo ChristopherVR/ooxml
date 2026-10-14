@@ -1,4 +1,4 @@
-import { OFFICE_COLOR_SWATCHES } from 'ooxml-ui/pptx';
+import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -147,8 +147,8 @@ export function ColorPickerRow({
 							type='button'
 							className={`${SWATCH} ${DIS}`}
 							style={{ backgroundColor: c.hex }}
-							title={`${label} ${c.label}`}
-							aria-label={`${label} ${c.label}`}
+							title={`${label} ${officeColorSwatchLabel(c, (key) => t(key))}`}
+							aria-label={`${label} ${officeColorSwatchLabel(c, (key) => t(key))}`}
 							data-pptx-compact
 							disabled={disabled}
 							onClick={() => commit(c.hex)}

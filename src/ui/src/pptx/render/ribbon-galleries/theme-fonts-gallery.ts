@@ -44,6 +44,16 @@ function deckFonts(ctx: RibbonGalleryContext): { major: string; minor: string } 
 	return major && minor ? { major, minor } : undefined;
 }
 
+/**
+ * The schemes named after Office rather than after their fonts: their names are words a
+ * dictionary translates, where "Calibri" or "Arial Black-Arial" stay as written.
+ */
+const OFFICE_FONT_SCHEMES: ReadonlySet<string> = new Set([
+	'Office',
+	'Office 2013 - 2022',
+	'Office 2007 - 2010',
+]);
+
 function tile(
 	id: string,
 	name: string,
@@ -56,6 +66,11 @@ function tile(
 		id,
 		labelKey,
 		labelParams: { name, major, minor },
+		...(OFFICE_FONT_SCHEMES.has(name) && {
+			labelParamKeys: {
+				name: { key: `pptx.gallery.themeFonts.name.${schemeSlug(name)}`, fallback: name },
+			},
+		}),
 		label: `${name}: ${major} / ${minor}`,
 		previewSvg: fontSchemeTileSvg(major, minor),
 		applied,

@@ -21,7 +21,11 @@ import { registerPptxWebControls } from './index';
 beforeAll(registerPptxWebControls);
 afterEach(() => document.body.replaceChildren());
 
-function mount(tag: RibbonHomeFamily, controls = {}, translate?: (key: string) => string) {
+function mount(
+	tag: RibbonHomeFamily,
+	controls = {},
+	translate?: (key: string, params?: Readonly<Record<string, string | number>>) => string,
+) {
 	const host = document.createElement(`pptx-ui-ribbon-home-${tag}`);
 	host.state = { controls, translate };
 	document.body.append(host);
@@ -169,6 +173,57 @@ describe('home menus, colours and numbers', () => {
 		highlight.querySelector('button')!.click();
 		expect(highlight.querySelector('[data-theme-swatch]')).toBeNull();
 		expect(highlight.querySelector('.custom')).toBeTruthy();
+	});
+
+	it('names the colour swatches through the host translator', () => {
+		const ko: Record<string, string> = {
+			'pptx.themeColor.accent1': '강조 1',
+			'pptx.themeColor.swatchLighter': '{{color}}, {{percent}}% 더 밝게',
+			'pptx.colorPicker.standard.red': '빨강',
+			'pptx.colorPicker.fillSwatch': '채우기 색 {{hex}}',
+		};
+		const translate = (key: string, params?: Readonly<Record<string, string | number>>) =>
+			(ko[key] ?? key).replace(/\{\{(\w+)\}\}/gu, (_, name: string) => String(params?.[name]));
+		const themeColors = {
+			dk1: '#000000',
+			lt1: '#ffffff',
+			dk2: '#222222',
+			lt2: '#eeeeee',
+			accent1: '#4472c4',
+		};
+		const host = mount(
+			'font',
+			fontHomeControls({
+				...font,
+				fontColor: { value: '#336699', themeColors },
+				highlight: { value: '#ffff00' },
+			}),
+			homeSnapshotTranslator(['font'], translate),
+		);
+		const slot = control(host, 'home.font.fontColor');
+		slot.querySelector('button')!.click();
+		const accent1 = [...slot.querySelectorAll<HTMLElement>('[data-theme-swatch="accent1"]')];
+		expect(accent1.map((swatch) => swatch.title).slice(0, 2)).toStrictEqual([
+			'강조 1',
+			'강조 1, 80% 더 밝게',
+		]);
+		expect(accent1[1]!.getAttribute('aria-label')).toBe('강조 1, 80% 더 밝게');
+		expect(slot.querySelector<HTMLElement>('.std-grid [title="빨강"]')).toBeTruthy();
+
+		const drawing = mount(
+			'drawing',
+			drawingHomeControls({
+				editable: true,
+				hasSelection: true,
+				fill: { value: '#ff0000', themeColors },
+			}),
+			translate,
+		);
+		const fill = control(drawing, 'home.drawing.shapeFill');
+		fill.querySelector('button')!.click();
+		expect(fill.querySelector('.std-grid button')!.getAttribute('aria-label')).toMatch(
+			/^채우기 색 #/u,
+		);
 	});
 
 	it('emits the outline width and the crop menu intents with their hooks', () => {

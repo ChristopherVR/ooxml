@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { getDensePanelTouchTargetPx, SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
+import {
+	getDensePanelTouchTargetPx,
+	SHAPE_QUICK_STYLES,
+	shapeQuickStyleLabel,
+} from 'ooxml-ui/pptx';
 import type { ShapeStyle } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -20,6 +24,8 @@ defineEmits<{
 }>();
 
 const { t } = useI18n();
+const quickStyleLabel = (index: number): string =>
+	shapeQuickStyleLabel(SHAPE_QUICK_STYLES[index], (key) => t(key));
 // Each preset is a dense-gallery swatch but, unlike a colour swatch, a
 // discrete individually-named action button, so it gets the shared WCAG
 // touch-target decision below the mobile breakpoint rather than an
@@ -59,8 +65,8 @@ function swatchBorder(style: Partial<ShapeStyle>): string | undefined {
 				v-for="(qs, idx) in SHAPE_QUICK_STYLES"
 				:key="idx"
 				type="button"
-				:title="qs.name"
-				:aria-label="qs.name"
+				:title="quickStyleLabel(idx)"
+				:aria-label="quickStyleLabel(idx)"
 				class="pptx-vue-quickstyles-swatch w-full rounded border border-border hover:border-primary transition-colors"
 				:style="{
 					background: swatchBackground(qs.style),

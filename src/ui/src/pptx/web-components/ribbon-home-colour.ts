@@ -7,6 +7,7 @@ import {
 	buildThemeColorSwatchGrid,
 	findSelectedThemeSwatch,
 	homeLabel,
+	officeColorSwatchLabel,
 	themeColorSwatchRows,
 	themeSwatchCommit,
 } from '../render';
@@ -19,15 +20,26 @@ interface Swatch {
 	label: string;
 }
 
-function standardSwatches(spec: RibbonHomeColourSpec): readonly Swatch[] {
+function standardSwatches(
+	spec: RibbonHomeColourSpec,
+	state: RibbonHomeViewState,
+): readonly Swatch[] {
 	if (spec.swatches === 'office') {
-		return OFFICE_COLOR_SWATCHES;
+		return OFFICE_COLOR_SWATCHES.map((swatch) => ({
+			hex: swatch.hex,
+			label: officeColorSwatchLabel(swatch, state.translate),
+		}));
 	}
 	const hexes = spec.swatches === 'shape' ? RIBBON_SHAPE_SWATCHES : HOME_HIGHLIGHT_PRESETS;
-	return hexes.map((hex) => ({
-		hex,
-		label: spec.swatchLabelPrefix ? `${spec.swatchLabelPrefix} ${hex}` : hex,
-	}));
+	return hexes.map((hex) => {
+		const english = spec.swatchLabelPrefix ? `${spec.swatchLabelPrefix} ${hex}` : hex;
+		return {
+			hex,
+			label: spec.swatchLabelKey
+				? homeLabel(state, spec.swatchLabelKey, english, { hex })
+				: english,
+		};
+	});
 }
 
 /** Paint the colour popover: theme palette, standard swatches, recent colours, custom colour. */
@@ -62,7 +74,7 @@ export function paintHomeColour(
 	};
 	const sections: HTMLElement[] = [];
 
-	const columns = spec.theme ? buildThemeColorSwatchGrid(model?.themeColors) : [];
+	const columns = spec.theme ? buildThemeColorSwatchGrid(model?.themeColors, state.translate) : [];
 	if (columns.length > 0) {
 		const selected = findSelectedThemeSwatch(columns, model?.selectedRef, current);
 		const grid = doc.createElement('div');
@@ -87,7 +99,7 @@ export function paintHomeColour(
 
 	const standard = doc.createElement('div');
 	standard.className = 'std-grid';
-	for (const { hex, label } of standardSwatches(spec)) {
+	for (const { hex, label } of standardSwatches(spec, state)) {
 		standard.append(swatch(hex, label, current === hex.toLowerCase(), () => pick(hex)));
 	}
 	sections.push(heading('pptx.colorPicker.standardColors', 'Standard Colors'), standard);

@@ -1,5 +1,6 @@
 import {
 	ACTION_BUTTON_PRESETS,
+	actionButtonLabelKey,
 	FREEFORM_TOOL_IDS,
 	FREEFORM_TOOL_LABEL_KEYS,
 	INSERT_CHART_TYPES,
@@ -180,7 +181,7 @@ export function createRibbonInsertView(
 			actionTitle,
 			ACTION_BUTTON_PRESETS.map((item) => ({
 				id: item.shapeType,
-				label: item.label,
+				label: text([actionButtonLabelKey(item.shapeType), item.label]),
 				glyph: item.iconPath,
 			})),
 			disabled,

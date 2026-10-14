@@ -40,6 +40,15 @@ import type { ShapePresetStyleSpec, ShapeStyleColumn } from './shape-style-catal
 import { fallbackResolveStyleMatrix } from './style-matrix-fallback';
 
 const TILE = { width: 44, height: 32 };
+const COLUMN_LABEL_KEYS: Record<ShapeStyleColumn, string> = {
+	dk1: 'pptx.themeColor.dark1',
+	accent1: 'pptx.themeColor.accent1',
+	accent2: 'pptx.themeColor.accent2',
+	accent3: 'pptx.themeColor.accent3',
+	accent4: 'pptx.themeColor.accent4',
+	accent5: 'pptx.themeColor.accent5',
+	accent6: 'pptx.themeColor.accent6',
+};
 const COLUMN_LABELS: Record<ShapeStyleColumn, string> = {
 	dk1: 'Dark 1',
 	accent1: 'Accent 1',
@@ -208,6 +217,7 @@ function item(
 		id,
 		labelKey: `pptx.gallery.shapeStyles.${row.key}`,
 		labelParams: { color: COLUMN_LABELS[column] },
+		labelParamKeys: { color: { key: COLUMN_LABEL_KEYS[column], fallback: COLUMN_LABELS[column] } },
 		label: `${row.label} - ${COLUMN_LABELS[column]}`,
 		previewSvg: shapeTileSvg(tileSpecFromShapeStyle(`gss-${id}`, style, TILE, resolved?.fontColor)),
 		applied: styleMatches(ctx.element, style),
