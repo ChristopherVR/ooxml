@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { newDocument, reveal, saveButton } from './helpers';
 
-test('Layout > Page Color paints the page, saves w:background and undoes', async ({ page }) => {
+test('Design > Page Color paints the page, saves w:background and undoes', async ({ page }) => {
 	await page.setViewportSize({ width: 1700, height: 800 });
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
@@ -11,7 +11,7 @@ test('Layout > Page Color paints the page, saves w:background and undoes', async
 	const paper = editor.getByLabel('Document page', { exact: true });
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Tinted page');
-	await editor.locator('[role="tab"][data-tab="layout"]').click();
+	await editor.getByRole('tab', { name: 'Design', exact: true }).click();
 	const caret = editor.locator('[aria-label="Page color"] + [data-split-caret]');
 	await reveal(editor, caret);
 	await caret.click();

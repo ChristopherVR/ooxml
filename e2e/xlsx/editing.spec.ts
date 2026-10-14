@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+	clickRibbonControl,
 	editor,
 	formulaBarValue,
 	goToCell,
@@ -62,7 +63,10 @@ test('rows insert and delete from the ribbon, moving formulas', async ({ page })
 	await editor(page).evaluate((node) =>
 		(node as unknown as { select(ref: string): void }).select('1:1'),
 	);
-	await ribbon(page).locator('[data-command="cells.insert-split"]').first().click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).locator('[data-command="cells.insert-split"]').first(),
+	);
 	expect(await cellValue(page, 0, 1, 0)).toBe(5);
 	expect(await cellValue(page, 0, 2, 0)).toBe(10);
 	await goToCell(page, 'A3');
@@ -70,7 +74,10 @@ test('rows insert and delete from the ribbon, moving formulas', async ({ page })
 	await editor(page).evaluate((node) =>
 		(node as unknown as { select(ref: string): void }).select('1:1'),
 	);
-	await ribbon(page).locator('[data-command="cells.delete-split"]').first().click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).locator('[data-command="cells.delete-split"]').first(),
+	);
 	expect(await cellValue(page, 0, 0, 0)).toBe(5);
 	expect(await cellValue(page, 0, 1, 0)).toBe(10);
 });

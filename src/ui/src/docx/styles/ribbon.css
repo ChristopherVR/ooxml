@@ -56,6 +56,7 @@
 	border-right: 1px solid var(--line);
 }
 .ribbon-row {
+	min-width: 0;
 	display: flex;
 	flex: 0 0 100%;
 	flex-wrap: nowrap;
@@ -89,7 +90,7 @@
 }
 .ribbon-panel[data-panel='Home'] .ribbon-group[data-label='Paragraph'] {
 	/* The list-level and indent commands need room before the Sort and paragraph-mark buttons. */
-	width: 288px;
+	width: 310px;
 	max-width: none;
 }
 .ribbon-group[data-label='Paragraph'] .ribbon-small {

@@ -39,6 +39,7 @@ for (const profile of ['partial', 'fresh', 'oversize', 'consumed', 'mirror-fresh
 				await editor
 					.getByRole('combobox', { name: 'Layout view', exact: true })
 					.selectOption('print');
+				await expect(editor.locator('.dve-print-pages').first()).toBeVisible();
 			};
 			await print();
 			const check = async (native: typeof on) => {
@@ -71,18 +72,24 @@ for (const profile of ['partial', 'fresh', 'oversize', 'consumed', 'mirror-fresh
 							.sort(),
 					);
 					if (sample.borders.length) {
-						const bounds = (await frame.boundingBox())!;
 						const top = Math.min(...sample.borders.map((b) => b.rectPt[1]!));
 						const bottom = Math.max(...sample.borders.map((b) => b.rectPt[3]!));
-						expect(Math.abs(bounds.height * 0.75 - (bottom - top))).toBeLessThan(0.2);
-						const first = (await rendered
-							.locator('.dve-print-cell-content > .dve-print-block')
-							.first()
-							.boundingBox())!;
 						const nativeFirst = sample.lines.find((line) => /^T1/.test(line.text))!;
-						expect(
-							Math.abs((first.y - bounds.y) * 0.75 - (nativeFirst.baselinePt - 9.6 - top)),
-						).toBeLessThan(0.15);
+						// A pending relayout can replace the page after reopening: read both boxes together.
+						await expect(async () => {
+							const geometry = await frame.evaluate((node) => {
+								const first = node.querySelector('.dve-print-cell-content > .dve-print-block')!;
+								const bounds = node.getBoundingClientRect();
+								return {
+									height: bounds.height,
+									offset: first.getBoundingClientRect().y - bounds.y,
+								};
+							});
+							expect(Math.abs(geometry.height * 0.75 - (bottom - top))).toBeLessThan(0.2);
+							expect(
+								Math.abs(geometry.offset * 0.75 - (nativeFirst.baselinePt - 9.6 - top)),
+							).toBeLessThan(0.15);
+						}).toPass({ timeout: 5000 });
 					}
 				}
 			};

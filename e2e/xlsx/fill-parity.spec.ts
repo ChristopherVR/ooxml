@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { editor, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
+import { clickRibbonControl, editor, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
 test('Fill Down and Fill Right copy weekday text rather than generating a series', async ({
 	page,
@@ -48,7 +48,10 @@ test('ribbon Fill Up copies weekdays and supports undo', async ({ page }) => {
 	await editor(page).evaluate((node) =>
 		(node as unknown as { select(ref: string): void }).select('A1:A3'),
 	);
-	await ribbon(page).getByRole('button', { name: 'Fill', exact: true }).click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).getByRole('button', { name: 'Fill', exact: true, includeHidden: true }),
+	);
 	await editor(page).getByRole('menuitem', { name: 'Up', exact: true }).click();
 	const values = () =>
 		editor(page).evaluate((node) => {

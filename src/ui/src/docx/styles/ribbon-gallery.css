@@ -42,13 +42,13 @@
 	border-color: var(--blue);
 }
 .ribbon-panel[data-panel='Home'] .ribbon-group[data-label='Styles'] {
-	width: 270px;
+	width: 240px;
 	max-width: none;
 	flex-wrap: nowrap;
 }
 .ribbon-panel[data-panel='Home'] .ribbon-group[data-label='Styles']:not([data-collapsed]) {
-	flex: 1 0 270px;
-	min-width: 270px;
+	flex: 1 0 240px;
+	min-width: 240px;
 }
 .ribbon-panel[data-panel='Home'] .ribbon-group[data-label='Styles'] .ribbon-gallery {
 	flex: 1;

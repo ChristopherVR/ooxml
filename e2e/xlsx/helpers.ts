@@ -17,6 +17,21 @@ export const sheetTabs = (page: Page) => part(page, 'sheet-tabs');
 export const ribbon = (page: Page) => part(page, 'ribbon');
 export const statusBar = (page: Page) => part(page, 'status-bar');
 
+/** Opens the live controls of a folded ribbon group before using its command. */
+export async function clickRibbonControl(page: Page, target: Locator) {
+	if (!(await target.isVisible())) {
+		const label = await target.evaluate(
+			(node) => node.closest<HTMLElement>('.ribbon-group')?.dataset.label,
+		);
+		if (!label) throw new Error('Ribbon control has no group');
+		await ribbon(page)
+			.locator('.ribbon-group[data-collapsed] .ribbon-overflow-button')
+			.filter({ hasText: label })
+			.click();
+	}
+	await target.click();
+}
+
 const landingVisible = (page: Page) => page.locator('#landing').isVisible();
 /** Waits until the demo script has wired the landing page's buttons. */
 export const demoReady = (page: Page) =>

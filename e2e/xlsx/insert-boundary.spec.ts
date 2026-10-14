@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { getCell, loadXlsx, type Workbook } from 'ooxml-core/xlsx';
-import { editor, editorProperty, FRAMEWORKS, newWorkbook, pageErrors, ribbon } from './helpers';
+import {
+	clickRibbonControl,
+	editor,
+	editorProperty,
+	FRAMEWORKS,
+	newWorkbook,
+	pageErrors,
+	ribbon,
+} from './helpers';
 
 interface BoundaryEditor extends HTMLElement {
 	workbook: Workbook;
@@ -34,7 +42,10 @@ for (const framework of FRAMEWORKS) {
 				},
 				{ selection, row, col },
 			);
-			await ribbon(page).locator('[data-command="cells.insert-split"]').first().click();
+			await clickRibbonControl(
+				page,
+				ribbon(page).locator('[data-command="cells.insert-split"]').first(),
+			);
 			await expect(editor(page)).toHaveAttribute('data-insert-error', /pushed off the sheet/);
 			await expect(editor(page)).toContainText(
 				'Cannot insert cells: non-empty cells would be pushed off the sheet.',
@@ -61,7 +72,10 @@ for (const framework of FRAMEWORKS) {
 			element.workbook = workbook;
 			element.select('A:A');
 		});
-		await ribbon(page).locator('[data-command="cells.insert-split"]').first().click();
+		await clickRibbonControl(
+			page,
+			ribbon(page).locator('[data-command="cells.insert-split"]').first(),
+		);
 		await expect.poll(() => editorProperty(page, 'dirty')).toBe(true);
 		const bytes = await editor(page).evaluate(async (node) =>
 			Array.from(await (node as BoundaryEditor).saveBytes()),

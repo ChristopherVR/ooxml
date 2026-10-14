@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import {
+	clickRibbonControl,
 	FRAMEWORKS,
 	editor,
 	goToCell,
@@ -130,7 +131,10 @@ test('editing the data range repaints the sparkline and a wider column widens it
 		.not.toBe(before.polylines[0]);
 
 	await goToCell(page, 'F1');
-	await ribbon(page).getByRole('button', { name: 'Format', exact: true }).click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).getByRole('button', { name: 'Format', exact: true, includeHidden: true }),
+	);
 	await editor(page).getByRole('menuitem', { name: 'Column Width...', exact: true }).click();
 	const dialog = editor(page).locator('[data-dialog="column-width"]');
 	await dialog.getByLabel('Column width:', { exact: true }).fill('30');

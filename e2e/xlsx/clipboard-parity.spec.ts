@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 import type { Workbook } from 'ooxml-core/xlsx';
-import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
+import {
+	clickRibbonControl,
+	editor,
+	goToCell,
+	grid,
+	newWorkbook,
+	ribbon,
+	typeInActiveCell,
+} from './helpers';
 
 test('Formats paste copies conditional rules through the native clipboard and refreshes the grid', async ({
 	page,
@@ -201,7 +209,10 @@ test('Column Widths uses the native clipboard, retains content and undoes once',
 	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 	await newWorkbook(page);
 	await goToCell(page, 'A1');
-	await ribbon(page).getByRole('button', { name: 'Format', exact: true }).click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).getByRole('button', { name: 'Format', exact: true, includeHidden: true }),
+	);
 	await editor(page).getByRole('menuitem', { name: 'Column Width...', exact: true }).click();
 	const widthDialog = editor(page).locator('[data-dialog="column-width"]');
 	await widthDialog.getByLabel('Column width:', { exact: true }).fill('20');

@@ -50,6 +50,7 @@ for (const name of [
 			await editor
 				.getByRole('combobox', { name: 'Layout view', exact: true })
 				.selectOption('print');
+			await expect(editor.locator('.dve-print-pages').first()).toBeVisible();
 		};
 		await print();
 		const cell = editor
@@ -113,7 +114,7 @@ for (const name of [
 			await expect(input).toContainText('Edit');
 			await page.keyboard.press('Control+z');
 			await expect(input).not.toContainText('Edit');
-			expect(await snapshot()).toEqual(before);
+			await expect.poll(snapshot).toEqual(before);
 		}
 		const bytes = await editor.evaluate(async (node) =>
 			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
@@ -121,7 +122,7 @@ for (const name of [
 		await upload(Buffer.from(bytes));
 		await expect(input).toContainText(name.startsWith('enclosing') ? 'Outer cell' : 'T0');
 		await print();
-		expect(await snapshot()).toEqual(before);
+		await expect.poll(snapshot).toEqual(before);
 		await expect(cell).toHaveCSS('border-top-color', 'rgb(255, 0, 0)');
 	});
 }

@@ -170,7 +170,10 @@ test.describe('Word-style ribbon', () => {
 		await expect(editor.getByRole('button', { name: 'Cut', exact: true })).toBeEnabled();
 		await editor.getByRole('button', { name: 'Font settings' }).click();
 		await editor.getByLabel('Small caps', { exact: true }).check();
-		await editor.getByLabel('Underline style', { exact: true }).selectOption('double');
+		await editor
+			.locator('.dve-font-dialog')
+			.getByLabel('Underline style', { exact: true })
+			.selectOption('double');
 		await editor.getByRole('button', { name: 'OK', exact: true }).click();
 		await expect(editor.locator('.dve-font-dialog')).toBeHidden();
 		await expect(surface.locator('[data-run-props]').first()).toHaveCSS(
