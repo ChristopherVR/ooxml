@@ -76,6 +76,19 @@ function inner<T extends HTMLElement = HTMLElement>(
 	);
 }
 
+/** Verification also rebuilds the editable ribbon and canvas on shared CI workers. */
+async function expectUnlocked(container: HTMLElement): Promise<void> {
+	await vi.waitFor(
+		() => {
+			expect(container.querySelector('.pptxv')?.classList.contains('pptxv-editable')).toBeTruthy();
+			expect(
+				container.querySelector<HTMLElement>('[data-testid="pptx-readonly-banner"]')?.hidden,
+			).toBeTruthy();
+		},
+		{ timeout: 5000 },
+	);
+}
+
 describe('vanilla read-only recommendation password prompt', () => {
 	let protectedDeck: Uint8Array;
 	let saltlessDeck: Uint8Array;
@@ -146,19 +159,7 @@ describe('vanilla read-only recommendation password prompt', () => {
 			new Event('submit', { cancelable: true }),
 		);
 
-		// Unlock builds the editable ribbon and canvas after verification. Keep the
-		// real password/UI assertions, allowing that work to finish on shared CI workers.
-		await vi.waitFor(
-			() => {
-				expect(
-					container.querySelector('.pptxv')?.classList.contains('pptxv-editable'),
-				).toBeTruthy();
-			},
-			{ timeout: 5000 },
-		);
-		expect(
-			container.querySelector<HTMLElement>('[data-testid="pptx-readonly-banner"]')?.hidden,
-		).toBeTruthy();
+		await expectUnlocked(container);
 	});
 
 	describe('salt-less modifyVerifier (no saltData attribute at all)', () => {
@@ -211,11 +212,7 @@ describe('vanilla read-only recommendation password prompt', () => {
 				'[data-testid="pptx-readonly-password-form"]',
 			)!.dispatchEvent(new Event('submit', { cancelable: true }));
 
-			await vi.waitFor(() => {
-				expect(
-					container.querySelector('.pptxv')?.classList.contains('pptxv-editable'),
-				).toBeTruthy();
-			});
+			await expectUnlocked(container);
 		});
 	});
 });
