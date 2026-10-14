@@ -209,6 +209,7 @@ export function createRenderController(deps: RenderControllerDeps): RenderContro
 			mediaDataUrls: state.mediaDataUrls,
 			colorScheme: state.colorScheme,
 			fontScheme: state.fontScheme,
+			formatScheme: state.formatScheme,
 			tableStyleMap: state.tableStyleMap,
 			fieldContext: buildRenderFieldContext(state, slide),
 			registry,

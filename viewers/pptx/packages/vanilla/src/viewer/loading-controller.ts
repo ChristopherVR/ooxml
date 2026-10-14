@@ -212,6 +212,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				mediaDataUrls: loaded.mediaDataUrls,
 				colorScheme: loaded.colorScheme,
 				fontScheme: loaded.fontScheme,
+				formatScheme: loaded.formatScheme,
 				themeName: loaded.themeName,
 				tagCollections: loaded.tagCollections,
 				tableStyleMap: loaded.tableStyleMap,

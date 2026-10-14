@@ -27,6 +27,7 @@ import type {
 	PptxTableData,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
 
 import { screenBorder } from './device-pixel-stroke';
@@ -44,6 +45,7 @@ import {
 } from './table-style-fill';
 import { cellImageFillCss } from './table-style-image';
 import { styleDeclaresFills } from './table-style-scheme';
+import { resolveTableStyleThemeRefs } from './table-style-theme-refs';
 import { isKoreanLanguage } from './text-east-asian-breaks';
 import { authoredLetterSpacingPx } from './text-run-spacing';
 import { BASELINE_FONT_SCALE } from './text-run-style';
@@ -221,6 +223,24 @@ export interface TableStyleContext {
 	 * font family. Optional: when absent, `fontRefIdx` is left unresolved.
 	 */
 	fontScheme?: PptxThemeFontScheme;
+	/**
+	 * Theme format scheme (`a:fmtScheme`), so a style's `a:tblBg/a:fillRef`
+	 * and `a:lnRef` borders ("Themed Style 1/2") resolve to the theme's fill
+	 * and line styles. Optional: without it those references draw nothing.
+	 */
+	formatScheme?: PptxThemeFormatScheme;
+}
+
+/** The table style entry for `tableData`, with its theme references resolved. */
+function styleEntryFor(
+	tableData: PptxTableData,
+	styleCtx: TableStyleContext | undefined,
+): ParsedTableStyleEntry | undefined {
+	return resolveTableStyleThemeRefs(
+		resolveTableStyleEntry(tableData.tableStyleId, styleCtx?.tableStyleMap),
+		styleCtx?.formatScheme,
+		styleCtx?.colorScheme,
+	);
 }
 
 /**
@@ -546,7 +566,7 @@ export function getCellDiagonalBorders(
 ): DiagonalBorderInfo | null {
 	let styleDiagonals: DiagonalBorderInfo | undefined;
 	if (tableData) {
-		const entry = resolveTableStyleEntry(tableData.tableStyleId, styleCtx?.tableStyleMap);
+		const entry = styleEntryFor(tableData, styleCtx);
 		styleDiagonals = resolveStyleDiagonalBorders(entry, tableData, pos, (fill) =>
 			resolveStyleFillColor(fill, styleCtx?.colorScheme),
 		);
@@ -577,7 +597,7 @@ export function getTableCellBandStyle(
 		return undefined;
 	}
 
-	const styleEntry = resolveTableStyleEntry(tableData.tableStyleId, styleCtx?.tableStyleMap);
+	const styleEntry = styleEntryFor(tableData, styleCtx);
 	// A style that declares its own fills (every built-in does) decides each
 	// section itself: one without a band1H / firstRow part ("No Style, No
 	// Grid") paints nothing there. The generic tints only stand in for none.

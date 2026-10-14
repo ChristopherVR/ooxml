@@ -46,6 +46,7 @@ export function getCellDiagonalBorders(
 		tableStyleMap: styleCtx?.tableStyleMap,
 		colorScheme: styleCtx?.theme?.colorScheme,
 		fontScheme: styleCtx?.theme?.fontScheme,
+		formatScheme: styleCtx?.theme?.formatScheme,
 	});
 }
 

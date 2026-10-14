@@ -148,6 +148,7 @@ export class TeamsPresentationPreview extends LitElement {
 			t: renderer.createTranslator(),
 			...(data.colorScheme ? { colorScheme: data.colorScheme } : {}),
 			...(data.fontScheme ? { fontScheme: data.fontScheme } : {}),
+			...(data.formatScheme ? { formatScheme: data.formatScheme } : {}),
 			...(data.tableStyleMap ? { tableStyleMap: data.tableStyleMap } : {}),
 			fieldContext: renderer.buildFieldSubstitutionContext({
 				headerFooter: data.headerFooter,

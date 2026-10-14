@@ -37,6 +37,7 @@ import type {
 	PptxTagCollection,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
 	PptxThemeOption,
 	PptxViewProperties,
 } from 'pptx-viewer-core';
@@ -165,6 +166,8 @@ export interface ViewerState {
 	colorScheme?: PptxThemeColorScheme;
 	/** Presentation theme fonts used by table-style font resolution. */
 	fontScheme?: PptxThemeFontScheme;
+	/** Presentation theme format scheme, for table styles' theme fill and line references. */
+	formatScheme?: PptxThemeFormatScheme;
 	/** The loaded theme's name (inspector THEME EDITOR card). */
 	themeName?: string;
 	/**
@@ -379,6 +382,7 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		mediaDataUrls: new Map(),
 		colorScheme: undefined,
 		fontScheme: undefined,
+		formatScheme: undefined,
 		themeName: undefined,
 		tagCollections: [],
 		tableStyleMap: undefined,

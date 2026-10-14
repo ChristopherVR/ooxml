@@ -5,6 +5,7 @@ import type {
 	PptxSlide,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
 import type {
 	CanvasSize,
@@ -71,6 +72,11 @@ export interface ElementRenderContext {
 	 * `a:fontRef@idx` (`minor`/`major`) to a concrete font family.
 	 */
 	readonly fontScheme?: PptxThemeFontScheme;
+	/**
+	 * Presentation theme format scheme, so table styles resolve their
+	 * `a:tblBg/a:fillRef` and `a:lnRef` borders ("Themed Style 1/2").
+	 */
+	readonly formatScheme?: PptxThemeFormatScheme;
 	/** Parsed `ppt/tableStyles.xml` definitions used by table band/header styling. */
 	readonly tableStyleMap?: ParsedTableStyleMap;
 	readonly fieldContext?: FieldSubstitutionContext;

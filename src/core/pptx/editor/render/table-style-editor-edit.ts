@@ -19,7 +19,9 @@ import type {
 	ParsedTableStyleText,
 	PptxTableCell3D,
 	PptxThemeColorRef,
+	PptxThemeFormatScheme,
 } from 'ooxml-core/pptx';
+import { resolveTableStyleLineRef, resolveTableStyleLineRefColor } from 'ooxml-core/pptx';
 
 import { colorToFill } from './table-style-editor-descriptor';
 import type { TableStyleBorderSide, TableStyleEditorPartId } from './table-style-editor-parts';
@@ -80,13 +82,60 @@ type SectionKeyed = Record<
 	| undefined
 >;
 
+/** What the edit path knows about the theme, for sides that reference it. */
+export interface TableStyleEditContext {
+	/**
+	 * The theme's `a:fmtScheme`. With it, editing one facet of a theme line
+	 * reference (`a:lnRef`) starts from the referenced line, so the facets the
+	 * edit does not touch (width, dash) keep the theme's values.
+	 */
+	readonly formatScheme?: PptxThemeFormatScheme;
+}
+
 function patchBorderSide(
 	borders: ParsedTableStyleBorders | undefined,
 	side: TableStyleBorderSide,
 	patch: Partial<ParsedTableStyleBorder>,
+	formatScheme: PptxThemeFormatScheme | undefined,
 ): ParsedTableStyleBorders {
-	const current = borders?.[side] ?? {};
-	return { ...borders, [side]: { ...current, ...patch } };
+	const { lnRef, ...current } = borders?.[side] ?? {};
+	if (!lnRef) {
+		return { ...borders, [side]: { ...current, ...patch } };
+	}
+	const concrete = Object.keys(current).length > 0;
+	const colourOnly =
+		patch.fill !== undefined &&
+		Object.keys(patch).every((key) => key === 'fill' || key === 'color');
+	// A colour edit with no theme to resolve against keeps the reference and
+	// swaps its colour, which is what the referenced line's `phClr` takes: the
+	// theme line's width and dash survive the save. Turning it into a concrete
+	// line here would drop them.
+	if (colourOnly && !formatScheme && !concrete) {
+		return { ...borders, [side]: { lnRef: { ...lnRef, color: patch.fill } } };
+	}
+	// Otherwise the side becomes a concrete line. Its starting point is the
+	// referenced theme line when the scheme is known (width, dash, no-line, and
+	// the colour it draws in: its own, or the reference's through its phClr),
+	// else the reference's colour. An edit that sets a colour replaces it.
+	const resolved = formatScheme
+		? resolveTableStyleLineRef(lnRef, formatScheme, undefined)
+		: undefined;
+	const fromTheme: ParsedTableStyleBorder = {};
+	if (resolved?.width !== undefined) {
+		fromTheme.width = resolved.width;
+	}
+	if (resolved?.dash !== undefined) {
+		fromTheme.dash = resolved.dash;
+	}
+	if (resolved?.noFill) {
+		fromTheme.noFill = true;
+	}
+	const colour = resolveTableStyleLineRefColor(lnRef, formatScheme);
+	const base: ParsedTableStyleBorder =
+		colour && current.fill === undefined && current.color === undefined && !resolved?.noFill
+			? { ...fromTheme, ...current, ...colour }
+			: { ...fromTheme, ...current };
+	return { ...borders, [side]: { ...base, ...patch } };
 }
 
 /**
@@ -100,7 +149,9 @@ export function applyTableStyleFieldEdit(
 	entry: ParsedTableStyleEntry,
 	part: TableStyleEditorPartId,
 	edit: TableStyleEditorFieldEdit,
+	context: TableStyleEditContext = {},
 ): TableStyleEditorEditResult {
+	const { formatScheme } = context;
 	if (part === 'background') {
 		return applyBackgroundEdit(entry, edit);
 	}
@@ -153,6 +204,7 @@ export function applyTableStyleFieldEdit(
 				keyed[bordersKey] as ParsedTableStyleBorders | undefined,
 				edit.side,
 				{ fill: colorToFill(edit.hex, edit.ref), color: edit.ref ? undefined : edit.hex },
+				formatScheme,
 			);
 			break;
 		case 'borderWidth':
@@ -160,6 +212,7 @@ export function applyTableStyleFieldEdit(
 				keyed[bordersKey] as ParsedTableStyleBorders | undefined,
 				edit.side,
 				{ width: edit.width },
+				formatScheme,
 			);
 			break;
 		case 'borderDash':
@@ -167,6 +220,7 @@ export function applyTableStyleFieldEdit(
 				keyed[bordersKey] as ParsedTableStyleBorders | undefined,
 				edit.side,
 				{ dash: edit.dash },
+				formatScheme,
 			);
 			break;
 		case 'borderNone':
@@ -174,6 +228,7 @@ export function applyTableStyleFieldEdit(
 				keyed[bordersKey] as ParsedTableStyleBorders | undefined,
 				edit.side,
 				{ noFill: edit.noFill },
+				formatScheme,
 			);
 			break;
 		case 'cell3DBevelWidth':

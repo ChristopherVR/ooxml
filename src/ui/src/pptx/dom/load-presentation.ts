@@ -20,6 +20,7 @@ import type {
 	PptxTagCollection,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
+	PptxThemeFormatScheme,
 	PptxThemeOption,
 	PptxViewProperties,
 } from 'ooxml-core/pptx';
@@ -89,6 +90,8 @@ export interface LoadedPresentation {
 	colorScheme?: PptxThemeColorScheme;
 	/** Presentation theme fonts used by table-style font resolution. */
 	fontScheme?: PptxThemeFontScheme;
+	/** Presentation theme format scheme, for table styles' theme fill and line references. */
+	formatScheme?: PptxThemeFormatScheme;
 	/** The theme part's name, seeding the inspector's THEME EDITOR card. */
 	themeName?: string;
 	/** Tag collections from `ppt/tags/*.xml` (inspector TAGS card). */
@@ -179,6 +182,7 @@ export async function loadPresentation(
 			mediaDataUrls,
 			colorScheme: parsed.theme?.colorScheme,
 			fontScheme: parsed.theme?.fontScheme,
+			formatScheme: parsed.theme?.formatScheme,
 			themeName: parsed.theme?.name,
 			tagCollections: parsed.tags ?? [],
 			tableStyleMap,

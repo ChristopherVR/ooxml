@@ -47,6 +47,7 @@ export function renderTableFromTableData(
 		tableStyleMap: options?.styleCtx?.tableStyleMap,
 		colorScheme: options?.styleCtx?.theme?.colorScheme,
 		fontScheme: options?.styleCtx?.theme?.fontScheme,
+		formatScheme: options?.styleCtx?.theme?.formatScheme,
 	};
 	const cellCss = (cell: PptxTableCell, rowIndex: number, cellIndex: number): TableCellCss =>
 		tableCellCss(
