@@ -70,6 +70,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect
 			.poll(async () => (await shape.boundingBox())?.width ?? 0)
 			.toBeCloseTo(resizeBefore!.width, 1);
+		await expect
+			.poll(() =>
+				viewer.evaluate((node) => (node as VisioViewerElement).controller.state.edit.busy),
+			)
+			.toBe(false);
 		// Empty canvas remains pannable after selection mode takes ownership of touch.
 		await viewer.evaluate((node) => {
 			(node as VisioViewerElement).zoom = 2;
@@ -78,13 +83,32 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect
 			.poll(() => viewport.evaluate((node) => node.scrollHeight > node.clientHeight))
 			.toBe(true);
-		await viewport.evaluate((node) => {
+		await viewport.evaluate(async (node) => {
 			node.scrollTop = 100;
 			node.scrollLeft = 100;
+			// Native touch uses compositor hit testing, which must catch up with the scroll.
+			await new Promise<void>((resolve) =>
+				requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+			);
 		});
 		const port = (await viewport.boundingBox())!;
 		const px = Math.round(port.x + 30),
 			py = Math.round(port.y + 60);
+		// Verify the gesture starts on empty canvas, so a shape drag cannot mask a pan.
+		await expect
+			.poll(() =>
+				viewer.evaluate(
+					(node, point) => {
+						const target = node.shadowRoot!.elementFromPoint(point.x, point.y);
+						return (
+							!!target?.closest('.viewport') &&
+							!target.closest('[data-shape-id], [data-resize-handle], [data-rotation-handle]')
+						);
+					},
+					{ x: px, y: py },
+				),
+			)
+			.toBe(true);
 		const scrollBefore = await viewport.evaluate((node) => node.scrollTop);
 		await cdp.send('Input.dispatchTouchEvent', {
 			type: 'touchStart',

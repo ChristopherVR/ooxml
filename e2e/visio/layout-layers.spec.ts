@@ -152,9 +152,11 @@ test('Assign to Layer, Select by Type, Drawing Explorer and guides', async ({ pa
 	await expect(viewer.locator('[data-status]')).toHaveText('Added a guide.');
 	await expect(viewer.locator('svg.paper [data-guide-id]')).toHaveCount(1);
 	// SVG guide lines have zero geometric width, so click their painted stroke on the page.
-	const guide = await viewer.locator('svg.paper [data-guide-id] .guide-hit').boundingBox();
-	expect(guide).not.toBeNull();
-	await page.mouse.click(guide!.x, paper.y + 100);
+	const guideX = await viewer.locator('svg.paper [data-guide-id] .guide-hit').evaluate((node) => {
+		const line = node as SVGLineElement;
+		return new DOMPoint(line.x1.baseVal.value, 0).matrixTransform(line.getScreenCTM()!).x;
+	});
+	await page.mouse.click(guideX, paper.y + 100);
 	await expect(viewer.locator('svg.paper [data-guide-id]')).toHaveAttribute('aria-pressed', 'true');
 	await viewer.locator('.viewport').press('Delete');
 	await expect(viewer.locator('[data-status]')).toHaveText('Deleted the guide.');
