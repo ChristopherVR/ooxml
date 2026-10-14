@@ -10,7 +10,7 @@
 One package, one XML model, every format: Word, PowerPoint, Excel and the shared building blocks beneath them. Visio VSDX parsing and bounded editing are available through `ooxml-core/visio`.
 
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](../../CODE_OF_CONDUCT.md)
 
 [**Try the apps**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
 [**Packages and areas**](#features-and-api-one-package-many-areas) &nbsp;&middot;&nbsp;

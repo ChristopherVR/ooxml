@@ -9,7 +9,7 @@ This repository publishes two packages to npm, each with its own version line, t
 
 The UI package depends on the core, never the reverse. Viewers depend on both, so users never install the UI separately.
 
-Releases are automatic: an hourly workflow (and a manual dispatch) looks at the conventional commits on `main` since each package's last release tag and, for every package whose published files changed, bumps the version, writes the changelog, tags, creates a GitHub release and publishes with provenance. The flow is the one used by [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer) and [docx-viewer](https://github.com/ChristopherVR/docx-viewer); scripts that are copies say so in their header comments.
+Releases are automatic: an hourly workflow (and a manual dispatch) looks at the conventional commits on `main` since each package's last release tag and, for every package whose published files changed, bumps the version, writes the changelog, tags, creates a GitHub release and publishes with provenance. The flow is the one used by [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer) and `docx-viewer`; scripts that are copies say so in their header comments.
 
 ## How a release is decided
 
