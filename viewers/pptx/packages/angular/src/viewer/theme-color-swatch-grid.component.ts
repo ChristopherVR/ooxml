@@ -17,7 +17,7 @@
  * @module viewer/theme-color-swatch-grid
  */
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	buildThemeColorSwatchGrid,
@@ -28,6 +28,7 @@ import {
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 
 import { LoadContentService } from './load-content.service';
+import { homeLanguage, ngxTranslate } from './ribbon-home-lang';
 
 @Component({
 	selector: 'pptx-theme-color-swatch-grid',
@@ -122,6 +123,9 @@ import { LoadContentService } from './load-content.service';
 })
 export class ThemeColorSwatchGridComponent {
 	private readonly loader = inject(LoadContentService);
+	private readonly translation = inject(TranslateService, { optional: true });
+	/** Read so a language switch re-labels the swatches. */
+	private readonly language = homeLanguage(this.translation);
 
 	readonly disabled = input<boolean>(false);
 	/** The element's current theme ref, if any (highlights the matching swatch). */
@@ -131,9 +135,10 @@ export class ThemeColorSwatchGridComponent {
 	/** A swatch was clicked: both the resolved hex and the ref to store. */
 	readonly pick = output<ThemeColorPickerCommit>();
 
-	protected readonly columns = computed(() =>
-		buildThemeColorSwatchGrid(this.loader.themeColorMap()),
-	);
+	protected readonly columns = computed(() => {
+		this.language();
+		return buildThemeColorSwatchGrid(this.loader.themeColorMap(), ngxTranslate(this.translation));
+	});
 	protected readonly rows = computed(() => themeColorSwatchRows(this.columns()));
 	protected readonly selected = computed(() =>
 		findSelectedThemeSwatch(this.columns(), this.selectedRef(), this.selectedHex()),

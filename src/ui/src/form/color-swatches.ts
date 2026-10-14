@@ -9,14 +9,13 @@
  * identical 10-colour list; this module is the single source of truth going
  * forward so no binding drifts from the others.
  *
- * There is no shared-i18n dictionary key for individual colour names yet
- * (only the `pptx.ribbon.customColour` "Custom colour..." row label exists),
- * so {@link OfficeColorSwatch.label} is a plain English fallback rather than
- * an `i18nKey`, matching the optional-label convention used elsewhere in this
- * module family (e.g. `LineSpacingOption` in `text-format-presets.ts`).
+ * Each swatch carries the dictionary key of its name (`labelKey`) beside the
+ * English `label`; {@link officeColorSwatchLabel} resolves it through the
+ * binding's translator so a tooltip follows the viewer's locale.
  *
  * @module render/color-swatches
  */
+import { translateOr, type Translate } from 'ooxml-core/i18n';
 
 /** One entry in the Office standard colour swatch grid. */
 export interface OfficeColorSwatch {
@@ -24,6 +23,8 @@ export interface OfficeColorSwatch {
 	hex: string;
 	/** English fallback name for the swatch (used for tooltips/aria-labels). */
 	label: string;
+	/** Dictionary key of the name (`pptx.colorPicker.standard.*`). */
+	labelKey: string;
 }
 
 /**
@@ -33,16 +34,16 @@ export interface OfficeColorSwatch {
  * binding.
  */
 export const OFFICE_COLOR_SWATCHES: readonly OfficeColorSwatch[] = [
-	{ hex: '#000000', label: 'Black' },
-	{ hex: '#ffffff', label: 'White' },
-	{ hex: '#ff0000', label: 'Red' },
-	{ hex: '#00aa00', label: 'Green' },
-	{ hex: '#0000ff', label: 'Blue' },
-	{ hex: '#ff8800', label: 'Orange' },
-	{ hex: '#8800cc', label: 'Purple' },
-	{ hex: '#00cccc', label: 'Cyan' },
-	{ hex: '#ff69b4', label: 'Pink' },
-	{ hex: '#808080', label: 'Gray' },
+	{ hex: '#000000', label: 'Black', labelKey: 'pptx.colorPicker.standard.black' },
+	{ hex: '#ffffff', label: 'White', labelKey: 'pptx.colorPicker.standard.white' },
+	{ hex: '#ff0000', label: 'Red', labelKey: 'pptx.colorPicker.standard.red' },
+	{ hex: '#00aa00', label: 'Green', labelKey: 'pptx.colorPicker.standard.green' },
+	{ hex: '#0000ff', label: 'Blue', labelKey: 'pptx.colorPicker.standard.blue' },
+	{ hex: '#ff8800', label: 'Orange', labelKey: 'pptx.colorPicker.standard.orange' },
+	{ hex: '#8800cc', label: 'Purple', labelKey: 'pptx.colorPicker.standard.purple' },
+	{ hex: '#00cccc', label: 'Cyan', labelKey: 'pptx.colorPicker.standard.cyan' },
+	{ hex: '#ff69b4', label: 'Pink', labelKey: 'pptx.colorPicker.standard.pink' },
+	{ hex: '#808080', label: 'Gray', labelKey: 'pptx.colorPicker.standard.gray' },
 ];
 
 /**
@@ -54,3 +55,8 @@ export const OFFICE_COLOR_SWATCHES: readonly OfficeColorSwatch[] = [
 export const OFFICE_COLOR_SWATCH_HEXES: readonly string[] = OFFICE_COLOR_SWATCHES.map(
 	(swatch) => swatch.hex,
 );
+
+/** A standard swatch's name in the viewer's locale (English without a translator or a key). */
+export function officeColorSwatchLabel(swatch: OfficeColorSwatch, translate?: Translate): string {
+	return translateOr(translate, swatch.labelKey, swatch.label);
+}

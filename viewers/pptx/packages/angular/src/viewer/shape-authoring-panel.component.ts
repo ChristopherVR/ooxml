@@ -5,7 +5,9 @@ import {
 	input,
 	output,
 	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
 } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import {
 	clampShapeAdjustmentValue,
 	DEFAULT_ROUND_RECT_ADJUSTMENT,
@@ -13,9 +15,13 @@ import {
 	SHAPE_ADJUSTMENT_MIN,
 	SHAPE_PRESET_DEFS,
 	SHAPE_QUICK_STYLES,
+	shapeQuickStyleLabel,
 } from 'ooxml-ui/pptx';
+import type { ShapeQuickStyle } from 'ooxml-ui/pptx';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
+
+import { homeLanguage, ngxTranslate } from './ribbon-home-lang';
 
 export function shapeTypePatch(element: PptxElement, shapeType: string): Partial<PptxElement> {
 	if (!hasShapeProperties(element)) {
@@ -94,8 +100,8 @@ export function shapeTypePatch(element: PptxElement, shapeType: string): Partial
 						@for (style of quickStyles; track style.name) {
 							<button
 								type="button"
-								[title]="style.name"
-								[attr.aria-label]="style.name"
+								[title]="quickStyleLabel(style)"
+								[attr.aria-label]="quickStyleLabel(style)"
 								[style.background]="style.style.fillColor ?? 'transparent'"
 								[style.border-color]="style.style.strokeColor ?? null"
 								[style.box-shadow]="shadow(style.style)"
@@ -163,6 +169,13 @@ export class ShapeAuthoringPanelComponent {
 	readonly patch = output<Partial<PptxElement>>();
 	protected readonly presets = SHAPE_PRESET_DEFS.filter((preset) => preset.type !== 'connector');
 	protected readonly quickStyles = SHAPE_QUICK_STYLES;
+	private readonly translation = inject(TranslateService, { optional: true });
+	/** Read so a language switch re-labels the presets. */
+	private readonly language = homeLanguage(this.translation);
+	protected quickStyleLabel(style: ShapeQuickStyle): string {
+		this.language();
+		return shapeQuickStyleLabel(style, ngxTranslate(this.translation));
+	}
 	protected readonly adjustmentMin = SHAPE_ADJUSTMENT_MIN;
 	protected readonly adjustmentMax = SHAPE_ADJUSTMENT_MAX;
 	protected readonly supported = computed(() => ['shape', 'text'].includes(this.element().type));

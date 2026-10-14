@@ -48,7 +48,7 @@ export function createThemeColorSwatchGrid(
 	let disabled = false;
 	let selectedRef: PptxThemeColorRef | undefined;
 	let selectedHex: string | undefined;
-	let columns = buildThemeColorSwatchGrid(undefined);
+	let columns = buildThemeColorSwatchGrid(undefined, t);
 	const buttons: HTMLButtonElement[] = [];
 
 	const rebuild = (): void => {
@@ -83,7 +83,7 @@ export function createThemeColorSwatchGrid(
 	return {
 		el,
 		setThemeColorMap(themeColorMap) {
-			columns = buildThemeColorSwatchGrid(themeColorMap);
+			columns = buildThemeColorSwatchGrid(themeColorMap, t);
 			rebuild();
 		},
 		setSelected(ref, hex) {

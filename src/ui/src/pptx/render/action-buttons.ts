@@ -30,6 +30,12 @@ const ACTION_BUTTONS: Record<string, { label: string; jump?: keyof typeof JUMP_A
 	actionButtonBlank: { label: 'Custom' },
 };
 
+/** Dictionary key of an action button's name (Insert > Action menu), by shape type. */
+export function actionButtonLabelKey(shapeType: string): string {
+	const suffix = shapeType.replace(/^actionButton/u, '');
+	return `pptx.insert.actionButton.${suffix.charAt(0).toLowerCase()}${suffix.slice(1)}`;
+}
+
 /** Whether `shapeType` is a known OOXML action button. */
 export function isActionButton(shapeType: string): boolean {
 	return shapeType in ACTION_BUTTONS;

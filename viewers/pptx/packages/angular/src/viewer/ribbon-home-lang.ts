@@ -11,9 +11,12 @@ import type { Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import type { TranslateService } from '@ngx-translate/core';
 import { homeSnapshotTranslator } from 'ooxml-ui/pptx';
-import type { RibbonHomeFamily } from 'ooxml-ui/pptx';
+import type { RibbonHomeFamily, RibbonHomeViewState } from 'ooxml-ui/pptx';
 import { merge } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+
+/** The shared elements' translator: `params` fill a key's `{{name}}` placeholders. */
+export type Translate = NonNullable<RibbonHomeViewState['translate']>;
 
 /** Changes on every language or dictionary update; must run in an injection context. */
 export function homeLanguage(translation: TranslateService | null): Signal<number> {
@@ -31,7 +34,15 @@ export function homeTranslator(
 	translation: TranslateService | null,
 	language: Signal<number>,
 	families: readonly RibbonHomeFamily[],
-): (key: string) => string {
+): Translate {
 	language();
-	return homeSnapshotTranslator(families, (key) => translation?.instant(key) ?? key);
+	return homeSnapshotTranslator(families, ngxTranslate(translation));
+}
+
+/** `TranslateService.instant` as a shared `Translate` (the key itself when there is no service). */
+export function ngxTranslate(translation: TranslateService | null): Translate {
+	return (key, params) => {
+		const text: unknown = translation?.instant(key, params ? { ...params } : undefined);
+		return typeof text === 'string' ? text : key;
+	};
 }

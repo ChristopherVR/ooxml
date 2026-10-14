@@ -1,4 +1,4 @@
-import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
+import { SHAPE_QUICK_STYLES, shapeQuickStyleLabel } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
@@ -24,8 +24,9 @@ export function createQuickStylesGallery(
 	for (const preset of SHAPE_QUICK_STYLES) {
 		const button = createEl(doc, 'button', 'pptxv-quick-style');
 		button.type = 'button';
-		button.title = preset.name;
-		button.setAttribute('aria-label', preset.name);
+		const label = shapeQuickStyleLabel(preset, t);
+		button.title = label;
+		button.setAttribute('aria-label', label);
 		button.style.background = preset.style.fillGradient || preset.style.fillColor || 'transparent';
 		if (preset.style.strokeColor) {
 			button.style.border = `${preset.style.strokeWidth ?? 1}px solid ${preset.style.strokeColor}`;

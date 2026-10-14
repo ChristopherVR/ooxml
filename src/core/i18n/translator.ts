@@ -46,3 +46,19 @@ export function createTranslator(
 		return interpolate(text ?? options.missing?.(key) ?? key, params, placeholder);
 	};
 }
+
+/**
+ * `translate(key, params)` when the binding's dictionary has `key`, else `fallback`. Every
+ * binding's translator answers a miss with the key itself, which is what this checks for, so a
+ * host with no dictionary entry still shows the English name.
+ */
+export function translateOr(
+	translate: Translate | undefined,
+	key: string,
+	fallback: string,
+	params?: MessageParams,
+): string {
+	if (!translate) return fallback;
+	const text = translate(key, params);
+	return text && text !== key ? text : fallback;
+}

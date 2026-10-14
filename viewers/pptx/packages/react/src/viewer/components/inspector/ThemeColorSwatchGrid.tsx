@@ -42,7 +42,10 @@ export function ThemeColorSwatchGrid({
 }: ThemeColorSwatchGridProps): React.ReactElement | null {
 	const { t } = useTranslation();
 	const themeColorMap = useThemeColorMap();
-	const columns = useMemo(() => buildThemeColorSwatchGrid(themeColorMap), [themeColorMap]);
+	const columns = useMemo(
+		() => buildThemeColorSwatchGrid(themeColorMap, (key, params) => t(key, params)),
+		[themeColorMap, t],
+	);
 	const rows = useMemo(() => themeColorSwatchRows(columns), [columns]);
 	const selected = useMemo(
 		() => findSelectedThemeSwatch(columns, selectedRef, selectedHex),

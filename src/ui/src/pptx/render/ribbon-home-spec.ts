@@ -1,8 +1,14 @@
+import type { Translate } from 'ooxml-core/i18n';
 import type { PptxLayoutPreview, PptxThemeColorRef } from 'ooxml-core/pptx';
 
 import type { RibbonControlId, RibbonGroupId } from './customization/ribbon-control-ids';
 import type { RibbonGalleryDescriptor } from './ribbon-galleries';
 import { RIBBON_HOME_FAMILIES } from './ribbon-home-families';
+import { OFFICE_COLOR_SWATCHES } from './color-swatches';
+import {
+	THEME_COLOR_SWATCH_COLUMN_LABEL_KEYS,
+	THEME_COLOR_SWATCH_VARIANT_LABEL_KEYS,
+} from './theme-color-swatches';
 
 /** Home group families that share one framework-neutral view. */
 export type RibbonHomeFamily =
@@ -71,8 +77,10 @@ export interface RibbonHomeColourSpec {
 	readonly custom?: boolean;
 	/** Show the deck's theme palette when the state carries theme colours. */
 	readonly theme?: boolean;
-	/** Prefix of each standard swatch's accessible name (when it has no label). */
+	/** English prefix of each standard swatch's accessible name (when it has no label). */
 	readonly swatchLabelPrefix?: string;
+	/** Dictionary key of that name, a `{{hex}}` template ("Fill colour {{hex}}"). */
+	readonly swatchLabelKey?: string;
 }
 
 export interface RibbonHomeControlSpec {
@@ -184,7 +192,8 @@ export type RibbonHomeKey = RibbonControlId | `${RibbonControlId}#${string}`;
 export interface RibbonHomeViewState {
 	/** Missing entries are enabled, unpressed and visible. */
 	controls: Readonly<Partial<Record<RibbonHomeKey, RibbonHomeControlState>>>;
-	translate?: (key: string) => string;
+	/** The binding's translator; `params` fill a key's `{{name}}` placeholders. */
+	translate?: Translate;
 }
 
 export interface RibbonHomeIntent {
@@ -197,13 +206,26 @@ export interface RibbonHomeIntent {
 	ref?: PptxThemeColorRef;
 }
 
-/** Headings and actions of the shared colour popover. */
-export const HOME_COLOUR_KEYS = [
+/** Every key a theme swatch's name is built from (column names and the variant templates). */
+const THEME_COLOR_SWATCH_LABEL_KEYS: readonly string[] = [
+	...new Set([
+		...Object.values(THEME_COLOR_SWATCH_COLUMN_LABEL_KEYS),
+		...Object.values(THEME_COLOR_SWATCH_VARIANT_LABEL_KEYS),
+	]),
+];
+
+/** Headings, actions and swatch names of the shared colour popover. */
+export const HOME_COLOUR_KEYS: readonly string[] = [
 	'pptx.colorPicker.themeColors',
 	'pptx.colorPicker.standardColors',
 	'pptx.colorPicker.recentColors',
 	'pptx.ribbon.customColour',
-] as const;
+	// Swatch names (tooltips and accessible names of the theme and standard rows).
+	...THEME_COLOR_SWATCH_LABEL_KEYS,
+	...OFFICE_COLOR_SWATCHES.map((swatch) => swatch.labelKey),
+	'pptx.colorPicker.fillSwatch',
+	'pptx.colorPicker.outlineSwatch',
+];
 
 export const homeControlKey = (spec: { id: RibbonControlId; part?: string }): RibbonHomeKey =>
 	spec.part ? `${spec.id}#${spec.part}` : spec.id;
@@ -214,8 +236,13 @@ export function homeFamilyControls(family: RibbonHomeFamily): readonly RibbonHom
 	return RIBBON_HOME_FAMILIES[family].clusters.flatMap((cluster) => cluster.controls);
 }
 
-export function homeLabel(state: RibbonHomeViewState, key: string, fallback: string): string {
-	const value = state.translate?.(key);
+export function homeLabel(
+	state: RibbonHomeViewState,
+	key: string,
+	fallback: string,
+	params?: Readonly<Record<string, string | number>>,
+): string {
+	const value = state.translate?.(key, params);
 	return value && value !== key ? value : fallback;
 }
 
@@ -313,13 +340,15 @@ export function homeFamilyKeys(family: RibbonHomeFamily): string[] {
  */
 export function homeSnapshotTranslator(
 	families: readonly RibbonHomeFamily[],
-	t: (key: string) => string,
-): (key: string) => string {
+	t: Translate,
+): Translate {
 	const labels = new Map<string, string>();
 	for (const family of families) {
 		for (const key of homeFamilyKeys(family)) {
 			labels.set(key, t(key));
 		}
 	}
-	return (key) => labels.get(key) ?? t(key);
+	// A label with placeholders (a theme swatch's "{{color}}, Lighter {{percent}}%") is filled by
+	// the binding's own translator, which knows its dictionary's placeholder syntax.
+	return (key, params) => (params ? t(key, params) : (labels.get(key) ?? t(key)));
 }

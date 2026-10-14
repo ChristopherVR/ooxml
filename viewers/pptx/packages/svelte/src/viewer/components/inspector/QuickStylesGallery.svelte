@@ -17,6 +17,7 @@
 	import {
 		quickStyleSwatchStyleAttr,
 		SHAPE_QUICK_STYLES,
+		shapeQuickStyleLabel,
 		shapeQuickStylePatch,
 	} from 'ooxml-ui/pptx';
 
@@ -35,8 +36,8 @@
 			<button
 				type="button"
 				disabled={!canEdit}
-				title={quickStyle.name}
-				aria-label={quickStyle.name}
+				title={shapeQuickStyleLabel(quickStyle, t)}
+				aria-label={shapeQuickStyleLabel(quickStyle, t)}
 				style={quickStyleSwatchStyleAttr(quickStyle)}
 				onclick={() => editor.applyElementPatch(el.id, shapeQuickStylePatch(el, quickStyle.style))}
 			></button>

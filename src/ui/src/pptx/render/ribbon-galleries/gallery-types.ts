@@ -62,6 +62,11 @@ export interface RibbonGalleryItem {
 	labelKey: string;
 	/** `{{name}}` interpolation values for `labelKey`. */
 	labelParams?: Readonly<Record<string, string | number>>;
+	/**
+	 * Interpolation values that are themselves translatable names ("Accent 1" in "Colored Fill -
+	 * Accent 1"): param name -> `{ key, fallback }`, resolved before `labelKey` is filled.
+	 */
+	labelParamKeys?: Readonly<Record<string, { readonly key: string; readonly fallback: string }>>;
 	/** English fallback for bindings whose dictionary lacks `labelKey`. */
 	label: string;
 	/**

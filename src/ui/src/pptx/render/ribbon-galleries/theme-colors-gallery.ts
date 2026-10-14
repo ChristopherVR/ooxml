@@ -22,6 +22,7 @@ import { THEME_COLOR_SCHEME_ROWS } from './theme-color-schemes-data';
 
 const TILE = { width: 96, height: 14 };
 const CURRENT_ID = 'current';
+const SCHEME_LABEL_KEY = 'pptx.gallery.themeColors.scheme';
 
 export interface ThemeColorSchemeEntry {
 	name: string;
@@ -65,12 +66,19 @@ function tile(
 	name: string,
 	scheme: PptxThemeColorScheme,
 	applied: boolean,
-	labelKey = 'pptx.gallery.themeColors.scheme',
+	labelKey = SCHEME_LABEL_KEY,
 ): RibbonGalleryItem {
 	return {
 		id,
 		labelKey,
 		labelParams: { name },
+		// A built-in scheme's name is a word the dictionary translates ("Blue Warm"); the current
+		// deck's tile has a key of its own.
+		...(labelKey === SCHEME_LABEL_KEY && {
+			labelParamKeys: {
+				name: { key: `pptx.gallery.themeColors.name.${schemeSlug(name)}`, fallback: name },
+			},
+		}),
 		label: name,
 		previewSvg: swatchStripSvg(swatches(scheme), TILE),
 		applied,
