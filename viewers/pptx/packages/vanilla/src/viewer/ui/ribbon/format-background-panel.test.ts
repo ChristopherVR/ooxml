@@ -107,6 +107,43 @@ describe('createFormatBackgroundPanel', () => {
 		}
 	});
 
+	it('hands focus back even when hiding the panel blurs its focused control', () => {
+		const t = createTranslator();
+		const panel = createFormatBackgroundPanel(document, t, {
+			setSlideBackgroundColor: vi.fn(),
+			clearSlideBackground: vi.fn(),
+			setHideBackgroundGraphics: vi.fn(),
+		});
+		const opener = document.createElement('button');
+		document.body.append(opener, panel.el);
+		// A browser drops focus from a control the moment its container is hidden;
+		// happy-dom does not, so mimic it on this one element.
+		const hidden = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'hidden')!;
+		Object.defineProperty(panel.el, 'hidden', {
+			configurable: true,
+			get() {
+				return hidden.get!.call(this);
+			},
+			set(value: boolean) {
+				hidden.set!.call(this, value);
+				if (value && this.contains(document.activeElement)) {
+					(document.activeElement as HTMLElement).blur();
+				}
+			},
+		});
+		try {
+			opener.focus();
+			panel.setOpen(true);
+			expect(panel.el.contains(document.activeElement)).toBeTruthy();
+
+			panel.setOpen(false);
+			expect(document.activeElement).toBe(opener);
+		} finally {
+			opener.remove();
+			panel.el.remove();
+		}
+	});
+
 	it('has a style rule for every class it renders', () => {
 		const t = createTranslator();
 		const panel = createFormatBackgroundPanel(document, t, {

@@ -85,6 +85,9 @@ export function createFormatBackgroundPanel(
 			return;
 		}
 		open = next;
+		// Read before hiding: a browser drops focus from a control the moment its
+		// container is hidden, and then the panel no longer looks focused.
+		const focusInside = el.contains(doc.activeElement);
 		el.hidden = !open;
 		if (open) {
 			const active = doc.activeElement;
@@ -92,7 +95,7 @@ export function createFormatBackgroundPanel(
 			// Into the panel, like the find bar, so Escape reaches it straight away.
 			(el.querySelector<HTMLElement>('input:not(:disabled)') ?? closeBtn.btn).focus();
 		} else {
-			if (el.contains(doc.activeElement) && opener?.isConnected) {
+			if (focusInside && opener?.isConnected) {
 				opener.focus();
 			}
 			opener = null;
