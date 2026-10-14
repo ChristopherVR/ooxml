@@ -27,6 +27,7 @@ import {
 	output,
 	viewChild,
 } from '@angular/core';
+import type { OnDestroy, OnInit } from '@angular/core';
 import { LucideX } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
@@ -36,6 +37,7 @@ import {
 	OUTLINE_VIEW_ATTR,
 	applyOutlineEdit,
 	buildOutline,
+	listenForOutlineViewDismiss,
 	mapOutlineKey,
 } from 'ooxml-ui/pptx';
 import type { CanvasSize, OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
@@ -112,7 +114,7 @@ export interface OutlineCommit {
 		</div>
 	`,
 })
-export class OutlineViewOverlayComponent {
+export class OutlineViewOverlayComponent implements OnInit, OnDestroy {
 	/** The editable (template-free) deck. See the class docstring for why. */
 	readonly slides = input<readonly PptxSlide[]>([]);
 	readonly canvasSize = input.required<CanvasSize>();
@@ -127,6 +129,20 @@ export class OutlineViewOverlayComponent {
 	protected readonly rows = computed<OutlineRow[]>(() => buildOutline(this.slides()));
 
 	private readonly rowsHost = viewChild<ElementRef<HTMLElement>>('rowsHost');
+
+	private stopDismiss: (() => void) | null = null;
+
+	ngOnInit(): void {
+		// Escape returns to Normal view, like the close button, wherever focus is
+		// (it stays on the ribbon button that opened the view). A document capture
+		// listener, so it cannot be a @HostListener.
+		this.stopDismiss = listenForOutlineViewDismiss(document, () => this.closed.emit());
+	}
+
+	ngOnDestroy(): void {
+		this.stopDismiss?.();
+		this.stopDismiss = null;
+	}
 
 	protected onInput(event: Event, key: string): void {
 		const target = event.target as HTMLInputElement | null;

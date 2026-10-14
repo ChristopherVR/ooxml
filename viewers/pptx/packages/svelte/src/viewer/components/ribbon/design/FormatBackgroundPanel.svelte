@@ -23,14 +23,38 @@
 
 	function onKeydown(event: KeyboardEvent): void {
 		event.stopPropagation();
-		if (event.key === 'Escape') {
+		if (event.key === 'Escape' && !event.isComposing) {
+			event.preventDefault();
 			onclose();
 		}
 	}
+
+	// A rune so the effect below re-runs once the box is mounted (and unmounted).
+	let panel = $state<HTMLElement | undefined>();
+
+	// The Escape handler above sits on the panel, but opening it left focus on
+	// the ribbon command, so Escape never reached it. Move focus in on open (as
+	// the find bar does) and hand it back to the opener on close.
+	$effect(() => {
+		if (!open || !panel) {
+			return;
+		}
+		const box = panel;
+		const active = document.activeElement;
+		const opener = active instanceof HTMLElement && !box.contains(active) ? active : null;
+		(box.querySelector<HTMLElement>('input:not(:disabled), button:not(:disabled)') ?? box).focus();
+		return () => {
+			const now = document.activeElement;
+			if (opener?.isConnected && (!now || now === document.body || box.contains(now))) {
+				opener.focus();
+			}
+		};
+	});
 </script>
 
 {#if open}
 	<div
+		bind:this={panel}
 		class="pptx-svelte-formatbg"
 		role="dialog"
 		tabindex="-1"

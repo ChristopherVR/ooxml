@@ -255,4 +255,25 @@ describe('outline view overlay', () => {
 		expect(stop).toHaveBeenCalledOnce();
 		expect(document.querySelector(`[${OUTLINE_VIEW_ATTR}]`)).toBeNull();
 	});
+
+	it('returns to Normal view on Escape, wherever focus is', () => {
+		const stop = vi.fn();
+		const { onClose } = open({ subscribe: () => stop });
+		// Focus stays outside the overlay (on the ribbon button that opened it).
+		const opener = document.createElement('button');
+		document.body.append(opener);
+		const editorKeys = vi.fn();
+		opener.addEventListener('keydown', editorKeys);
+		const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+		opener.dispatchEvent(escape);
+		expect(onClose).toHaveBeenCalledOnce();
+		expect(stop).toHaveBeenCalledOnce();
+		expect(escape.defaultPrevented).toBeTruthy();
+		expect(editorKeys).not.toHaveBeenCalled();
+		expect(document.querySelector(`[${OUTLINE_VIEW_ATTR}]`)).toBeNull();
+		// Closed: a later Escape belongs to the editor again.
+		opener.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(onClose).toHaveBeenCalledOnce();
+		expect(editorKeys).toHaveBeenCalledOnce();
+	});
 });

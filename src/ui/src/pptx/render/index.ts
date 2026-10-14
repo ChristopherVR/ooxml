@@ -1239,6 +1239,8 @@ export * from './reading-view';
 // `outline-view-edit` turns a keystroke into a new deck.
 export * from './outline-view';
 export * from './outline-view-edit';
+// `outline-view-dismiss` is Escape back to Normal view, shared so no binding misses it.
+export * from './outline-view-dismiss';
 // Editor keyboard map: the editing shortcut set (clipboard, history, nudge,
 // group, select-all, slide paging, help) as one shared mapping, so the five
 // bindings cannot disagree about what Ctrl+D or an arrow key does.

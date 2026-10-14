@@ -16,7 +16,7 @@ import { OUTLINE_LEVEL_ATTR, OUTLINE_ROW_ATTR, OUTLINE_VIEW_ATTR } from 'ooxml-u
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import OutlineViewOverlay from './OutlineViewOverlay.svelte';
 
@@ -262,5 +262,34 @@ describe('outlineViewOverlay', () => {
 		flushSync();
 
 		expect(harness.closed()).toBe(1);
+	});
+
+	it('returns to Normal view on Escape, wherever focus is', () => {
+		const harness = mountOverlay();
+		// Focus is still on the ribbon button that opened the view, outside the pane.
+		const opener = document.createElement('button');
+		document.body.appendChild(opener);
+		const editorKeys = vi.fn();
+		opener.addEventListener('keydown', editorKeys);
+		try {
+			const escape = new KeyboardEvent('keydown', {
+				key: 'Escape',
+				bubbles: true,
+				cancelable: true,
+			});
+			opener.dispatchEvent(escape);
+			flushSync();
+			expect(harness.closed()).toBe(1);
+			expect(escape.defaultPrevented).toBeTruthy();
+			// The editor's own Escape (clear the selection) must not run underneath.
+			expect(editorKeys).not.toHaveBeenCalled();
+			cleanup?.();
+			cleanup = undefined;
+			opener.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			expect(harness.closed()).toBe(1);
+			expect(editorKeys).toHaveBeenCalledOnce();
+		} finally {
+			opener.remove();
+		}
 	});
 });

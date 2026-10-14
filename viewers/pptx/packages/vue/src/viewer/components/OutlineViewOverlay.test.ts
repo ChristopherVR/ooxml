@@ -12,7 +12,7 @@ import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
 import { OUTLINE_LEVEL_ATTR, OUTLINE_ROW_ATTR, OUTLINE_VIEW_ATTR } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, nextTick, reactive } from 'vue';
 
 import type { CanvasSize } from '../types';
@@ -176,5 +176,28 @@ describe('outline view overlay', () => {
 		await nextTick();
 		expect(commits()).toBe(0);
 		wrapper.unmount();
+	});
+
+	it('returns to Normal view on Escape, wherever focus is', () => {
+		const wrapper = mount(OutlineViewOverlay, {
+			props: { slides: deck(), canvasSize, canEdit: true },
+			attachTo: document.body,
+		});
+		// Focus is still on the ribbon button that opened the view, outside the pane.
+		const opener = document.createElement('button');
+		document.body.appendChild(opener);
+		const editorKeys = vi.fn();
+		opener.addEventListener('keydown', editorKeys);
+		const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+		opener.dispatchEvent(escape);
+		expect(wrapper.emitted('close')).toHaveLength(1);
+		expect(escape.defaultPrevented).toBeTruthy();
+		// The editor's own Escape (clear the selection) must not run underneath.
+		expect(editorKeys).not.toHaveBeenCalled();
+		wrapper.unmount();
+		// Unmounted: a later Escape belongs to the editor again.
+		opener.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(editorKeys).toHaveBeenCalledOnce();
+		opener.remove();
 	});
 });

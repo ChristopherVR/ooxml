@@ -19,12 +19,14 @@
  */
 import { X } from 'lucide-vue-next';
 import {
+	listenForOutlineViewDismiss,
 	OUTLINE_LEVEL_ATTR,
 	OUTLINE_ROW_ATTR,
 	OUTLINE_SLIDE_ATTR,
 	OUTLINE_VIEW_ATTR,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
+import { onBeforeUnmount, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useOutlineView } from '../composables/useOutlineView';
@@ -50,6 +52,14 @@ const { rows, containerRef, run, onRowKeyDown } = useOutlineView({
 	canEdit: () => props.canEdit,
 	commit: (slides, activeSlideIndex) => emit('commit', slides, activeSlideIndex),
 });
+
+// Escape returns to Normal view, like the close button, wherever focus is (it
+// stays on the ribbon button that opened the view).
+let stopDismiss: (() => void) | undefined;
+onMounted(() => {
+	stopDismiss = listenForOutlineViewDismiss(document, () => emit('close'));
+});
+onBeforeUnmount(() => stopDismiss?.());
 
 /** Neutral markers `e2e/` addresses all five bindings through. */
 const rootAttrs = { [OUTLINE_VIEW_ATTR]: 'true' };
