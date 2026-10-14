@@ -20,6 +20,16 @@ import type {
 	XmlObject,
 } from '../../types';
 
+/** Whether a raw XML node has the child `key` at all (`<a:noFill/>` parses as ''). */
+function hasChild(rawNode: unknown, key: string): boolean {
+	return (
+		!!rawNode &&
+		typeof rawNode === 'object' &&
+		Object.prototype.hasOwnProperty.call(rawNode, key) &&
+		(rawNode as XmlObject)[key] !== undefined
+	);
+}
+
 /** The `a:schemeClr val="phClr"` (with its transforms) of a format-scheme line's solid fill. */
 function linePlaceholderColor(rawNode: unknown): XmlObject | undefined {
 	if (!rawNode || typeof rawNode !== 'object') {
@@ -46,6 +56,13 @@ export function resolveTableStyleLineRef(
 	const line = formatScheme?.lineStyles[lnRef.idx - 1];
 	if (!line) {
 		return undefined;
+	}
+	// A theme line that says "no line" stays no line: without this the border
+	// came back with only a width, and the border renderer defaults a colourless
+	// border to black. Key presence, not truthiness: the parser reads
+	// `<a:noFill/>` as ''.
+	if (hasChild(line.rawNode, 'a:noFill')) {
+		return { noFill: true };
 	}
 	const border: ParsedTableStyleBorder = {};
 	if (line.width !== undefined) {

@@ -82,6 +82,18 @@ describe('table style a:lnRef borders', () => {
 		).toBeUndefined();
 	});
 
+	it('resolves a theme line that is a:noFill to no line, read by key presence', () => {
+		// The parser reads `<a:noFill/>` as '': a truthiness check would miss it
+		// and the border would be drawn black (the default for a colourless border).
+		const scheme: PptxThemeFormatScheme = {
+			...FORMAT_SCHEME,
+			lineStyles: [{ width: 1, rawNode: { '@_w': '9525', 'a:noFill': '' } }],
+		};
+		expect(resolveTableStyleLineRef({ idx: 1, color: ACCENT1 }, scheme, COLOR_MAP)).toStrictEqual({
+			noFill: true,
+		});
+	});
+
 	it('writes a reference-only border back as a:lnRef', () => {
 		const section: XmlObject = {};
 		writeTableStyleSectionBorders(section, { top: { lnRef: { idx: 1, color: ACCENT1 } } });

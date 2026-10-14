@@ -126,10 +126,12 @@ function parseBorderSide(side: XmlObject | undefined): ParsedTableStyleBorder | 
 	// style-matrix reference). The reference needs the theme's line styles,
 	// so it is kept as is and resolved by the renderer
 	// (`resolveTableStyleLineRef`).
-	const ln = side['a:ln'] as XmlObject | undefined;
-	if (!ln) {
+	// Key presence, not truthiness: a bare `<a:ln/>` parses as '' and is still
+	// the concrete-line choice, never a reason to read an `a:lnRef`.
+	if (side['a:ln'] === undefined) {
 		return parseLineRef(side['a:lnRef'] as XmlObject | undefined);
 	}
+	const ln = (typeof side['a:ln'] === 'object' ? side['a:ln'] : {}) as XmlObject;
 
 	const border: ParsedTableStyleBorder = {};
 	let has = false;
