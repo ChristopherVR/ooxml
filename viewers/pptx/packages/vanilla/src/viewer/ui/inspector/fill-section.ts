@@ -44,7 +44,6 @@ export function createFillSection(
 	// `pptx-viewer-shared`'s `context-menu-inspector-anchor.ts`.
 	el.setAttribute('data-pptx-inspector-section', 'fill-stroke');
 
-	const fillRow = createEl(doc, 'div', 'pptxv-inspector-row');
 	const fill = makeColorControl(
 		doc,
 		{ label: t('pptx.inspector.fill'), onInput: handlers.setShapeFill },
@@ -55,12 +54,6 @@ export function createFillSection(
 		{ label: t('pptx.inspector.line'), onInput: handlers.setShapeStroke },
 		'#1e3a8a',
 	);
-	const fillLabel = createEl(doc, 'span', 'pptxv-inspector-row-label');
-	fillLabel.textContent = t('pptx.inspector.fill');
-	const lineLabel = createEl(doc, 'span', 'pptxv-inspector-row-label');
-	lineLabel.textContent = t('pptx.inspector.line');
-	fillRow.append(fillLabel, fill.el, lineLabel, stroke.el);
-	el.appendChild(fillRow);
 
 	// W3-G2: the deck's real "Theme Colors" grid, above the recent-colours
 	// row. Clicking a theme swatch commits BOTH the resolved hex and the ref
@@ -69,20 +62,35 @@ export function createFillSection(
 	const fillTheme = createThemeColorSwatchGrid(doc, t, (commit) =>
 		handlers.setShapeFill(commit.hex, commit.ref),
 	);
-	el.appendChild(fillTheme.el);
 	const strokeTheme = createThemeColorSwatchGrid(doc, t, (commit) =>
 		handlers.setShapeStroke(commit.hex, commit.ref),
 	);
-	el.appendChild(strokeTheme.el);
 
 	// B6 (A1/A2): "Recent colours" rows under the fill and stroke pickers.
 	// Clicking a swatch commits through the SAME handler the picker's own
 	// `<input type="color">` uses (`setShapeFill`/`setShapeStroke`), which
 	// already folds the pick back into the deck's MRU list.
 	const fillRecent = createRecentColorsRow(doc, t, handlers.setShapeFill);
-	el.appendChild(fillRecent.el);
 	const strokeRecent = createRecentColorsRow(doc, t, handlers.setShapeStroke);
-	el.appendChild(strokeRecent.el);
+
+	// One labelled group per target, as React, Vue, Angular and Svelte lay it
+	// out and as PowerPoint's Format Shape pane separates Fill from Line: the
+	// picker, then that target's theme grid and recent colours. The two grids
+	// used to be appended one after the other under a single Fill/Line row, so
+	// nothing said which grid set the fill and which the line.
+	const colorGroup = (label: string, control: HTMLElement, ...rest: HTMLElement[]): void => {
+		const group = createEl(doc, 'div', 'pptxv-inspector-color-group');
+		group.setAttribute('role', 'group');
+		group.setAttribute('aria-label', label);
+		const head = createEl(doc, 'div', 'pptxv-inspector-row');
+		const title = createEl(doc, 'span', 'pptxv-inspector-row-label');
+		title.textContent = label;
+		head.append(title, control);
+		group.append(head, ...rest);
+		el.appendChild(group);
+	};
+	colorGroup(t('pptx.inspector.fill'), fill.el, fillTheme.el, fillRecent.el);
+	colorGroup(t('pptx.inspector.line'), stroke.el, strokeTheme.el, strokeRecent.el);
 
 	const strokeWidth = makeNumberField(doc, {
 		label: t('pptx.ribbon.strokeWidth'),

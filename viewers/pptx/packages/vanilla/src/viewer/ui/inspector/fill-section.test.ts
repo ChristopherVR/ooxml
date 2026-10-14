@@ -232,6 +232,45 @@ describe('createFillSection theme colour swatch grid (W3-G2)', () => {
 	});
 });
 
+describe('createFillSection Fill and Line groups', () => {
+	it('puts each picker with its own theme grid and recent colours under a named group', () => {
+		const { section, handlers } = mount();
+		section.update(baseState({ themeColorMap: OFFICE_THEME, recentColors: ['#112233'] }));
+
+		const groups = Array.from(section.el.querySelectorAll<HTMLElement>('[role="group"]'));
+		expect(groups.map((group) => group.getAttribute('aria-label'))).toStrictEqual([
+			'pptx.inspector.fill',
+			'pptx.inspector.line',
+		]);
+		for (const group of groups) {
+			// The visible heading says which target the grid below it sets.
+			expect(group.querySelector('.pptxv-inspector-row-label')?.textContent).toBe(
+				group.getAttribute('aria-label'),
+			);
+			expect(group.querySelectorAll('input[type="color"]')).toHaveLength(1);
+			expect(group.querySelectorAll('.pptxv-theme-swatch-grid')).toHaveLength(1);
+			expect(group.querySelectorAll('[data-testid="pptx-color-recent"]')).toHaveLength(1);
+		}
+		// No grid or recent row is left loose in the section, outside a group.
+		for (const child of Array.from(section.el.children)) {
+			expect(
+				child.matches('.pptxv-theme-swatch-grid, [data-testid="pptx-color-recent"]'),
+			).toBeFalsy();
+		}
+
+		const [fillGroup, lineGroup] = groups;
+		lineGroup.querySelector<HTMLButtonElement>('button[title="Accent 2"]')!.click();
+		expect(handlers.setShapeStroke).toHaveBeenCalledExactlyOnceWith('#ed7d31', {
+			scheme: 'accent2',
+		});
+		expect(handlers.setShapeFill).not.toHaveBeenCalled();
+		fillGroup
+			.querySelector<HTMLButtonElement>('[data-testid="pptx-color-recent"] .pptxv-swatch')!
+			.click();
+		expect(handlers.setShapeFill).toHaveBeenCalledExactlyOnceWith('#112233');
+	});
+});
+
 describe('createFillSection gradient stop theme colour grid', () => {
 	function gradientState(): Partial<InspectorState> {
 		return {
