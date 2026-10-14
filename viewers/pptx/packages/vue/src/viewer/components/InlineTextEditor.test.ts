@@ -196,4 +196,46 @@ describe('inlineTextEditor', () => {
 		await editor.trigger('keydown', { key: 'b', ctrlKey: true, shiftKey: true });
 		expect(wrapper.emitted('format')).toBeUndefined();
 	});
+
+	it('ends the edit on Ctrl+Enter, committing the text', async () => {
+		const wrapper = mount(InlineTextEditor, { attachTo: document.body, props: { element } });
+		try {
+			const editor = wrapper.get('[data-inline-editor]').element as HTMLElement;
+			editor.focus();
+			const event = new KeyboardEvent('keydown', {
+				key: 'Enter',
+				ctrlKey: true,
+				bubbles: true,
+				cancelable: true,
+			});
+			editor.dispatchEvent(event);
+			await wrapper.vm.$nextTick();
+			expect(event.defaultPrevented).toBeTruthy();
+			expect(wrapper.emitted('commit')).toHaveLength(1);
+			expect(wrapper.emitted('cancel')).toBeUndefined();
+		} finally {
+			wrapper.unmount();
+		}
+	});
+
+	it('cancels Ctrl+D (the browser bookmark dialog) and stays in the edit', async () => {
+		const wrapper = mount(InlineTextEditor, { attachTo: document.body, props: { element } });
+		try {
+			const editor = wrapper.get('[data-inline-editor]').element as HTMLElement;
+			editor.focus();
+			const event = new KeyboardEvent('keydown', {
+				key: 'd',
+				metaKey: true,
+				bubbles: true,
+				cancelable: true,
+			});
+			editor.dispatchEvent(event);
+			await wrapper.vm.$nextTick();
+			expect(event.defaultPrevented).toBeTruthy();
+			expect(wrapper.emitted('commit')).toBeUndefined();
+			expect(document.activeElement).toBe(editor);
+		} finally {
+			wrapper.unmount();
+		}
+	});
 });

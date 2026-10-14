@@ -5,6 +5,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	inlineListBodyText,
+	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	placeCaretAt,
 	readEditableText,
@@ -268,6 +269,19 @@ function onKeydown(event: KeyboardEvent): void {
 			listController.dispose();
 		}
 		emit('cancel');
+		return;
+	}
+	// Ctrl/Cmd+Enter leaves the edit, keeping the text (blur is the commit
+	// path, as for a click outside). Ctrl/Cmd+D is only cancelled: the viewer
+	// keymap stands down mid-edit, so nothing else stops the browser opening
+	// its bookmark dialog.
+	const chord = mapInlineEditorChord(event);
+	if (chord) {
+		event.preventDefault();
+		event.stopPropagation();
+		if (chord === 'commit') {
+			editorRef.value?.blur();
+		}
 		return;
 	}
 	if (event.key === 'Enter' && (!listController || (connected && !listSeed.value))) {

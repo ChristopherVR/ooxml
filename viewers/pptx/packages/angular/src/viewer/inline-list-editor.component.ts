@@ -5,6 +5,7 @@ import {
 	attachInlineListController,
 	initializeInlineListDom,
 	inlineListBodyText,
+	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	placeCaretAt,
 	restoreInlineListBodySelection,
@@ -209,13 +210,19 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 		if (event.isComposing) {
 			return;
 		}
+		const chord = mapInlineEditorChord(event);
 		if (event.key === 'Escape') {
 			event.preventDefault();
 			this.cancelled = true;
 			this.blur();
-		} else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+		} else if (chord) {
+			// Ctrl/Cmd+Enter leaves the edit, keeping the text. Ctrl/Cmd+D is only
+			// cancelled: the viewer keymap stands down mid-edit, so nothing else
+			// stops the browser opening its bookmark dialog.
 			event.preventDefault();
-			this.blur();
+			if (chord === 'commit') {
+				this.blur();
+			}
 		} else {
 			const property = mapInlineTextFormatKey(event);
 			if (!property) {

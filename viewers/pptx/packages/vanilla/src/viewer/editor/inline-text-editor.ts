@@ -6,6 +6,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	getInlineEditorSelection,
+	mapInlineEditorChord,
 	placeCaretAt,
 	readEditableText,
 	restoreEditorKeyboardFocus,
@@ -217,9 +218,15 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 		// Keep every keystroke local so viewer navigation/editor shortcuts
 		// (arrows, space, Delete, Ctrl+Z...) never fire while typing.
 		event.stopPropagation();
-		if (event.key === 'Escape') {
+		// Escape and Ctrl/Cmd+Enter both leave the edit, keeping the text.
+		// Ctrl/Cmd+D is only cancelled: the viewer keymap stands down mid-edit,
+		// so nothing else stops the browser opening its bookmark dialog.
+		const chord = mapInlineEditorChord(event);
+		if (event.key === 'Escape' || chord) {
 			event.preventDefault();
-			close(readEditableText(surface));
+			if (chord !== 'suppress') {
+				close(readEditableText(surface));
+			}
 		}
 	});
 	surface.addEventListener('pointerdown', (event) => event.stopPropagation());

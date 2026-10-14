@@ -251,6 +251,35 @@ function getInlineEditor(): HTMLElement {
 	return editor as HTMLElement;
 }
 
+describe('inline editor chords (shared mapInlineEditorChord)', () => {
+	const chord = (key: string): KeyboardEvent =>
+		new KeyboardEvent('keydown', { key, ctrlKey: true, bubbles: true, cancelable: true });
+
+	it('ends the edit on Ctrl+Enter', () => {
+		const commit = vi.fn();
+		mount(makeProps({ onInlineEditCommit: commit }));
+		const event = chord('Enter');
+		act(() => {
+			getInlineEditor().dispatchEvent(event);
+		});
+		expect(event.defaultPrevented).toBeTruthy();
+		expect(commit).toHaveBeenCalledOnce();
+	});
+
+	it('cancels Ctrl+D (the browser bookmark dialog) without leaving the edit', () => {
+		const commit = vi.fn();
+		const cancel = vi.fn();
+		mount(makeProps({ onInlineEditCommit: commit, onInlineEditCancel: cancel }));
+		const event = chord('d');
+		act(() => {
+			getInlineEditor().dispatchEvent(event);
+		});
+		expect(event.defaultPrevented).toBeTruthy();
+		expect(commit).not.toHaveBeenCalled();
+		expect(cancel).not.toHaveBeenCalled();
+	});
+});
+
 describe('elementRenderer live list session transitions', () => {
 	it('activates exactly three list items from native paragraphs ending in a nested metric BR', () => {
 		const change = vi.fn();

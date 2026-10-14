@@ -1,6 +1,7 @@
 import {
 	getInlineEditorSelectionResult,
 	isBulletMarkerSegment,
+	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	placeCaretAt,
 	readEditableText,
@@ -267,9 +268,14 @@ export function InlineTextEditor({
 					onCancel();
 					return;
 				}
-				if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+				// Ctrl/Cmd+Enter leaves the edit, keeping the text. Ctrl/Cmd+D is
+				// only cancelled: the viewer keymap stands down mid-edit, so nothing
+				// else stops the browser opening its bookmark dialog. Shared with
+				// the other four bindings (`mapInlineEditorChord`).
+				const chord = mapInlineEditorChord(e.nativeEvent);
+				if (chord) {
 					e.preventDefault();
-					if (!list.canCommit()) {
+					if (chord === 'suppress' || !list.canCommit()) {
 						return;
 					}
 					handleInput();

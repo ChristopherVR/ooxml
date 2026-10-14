@@ -32,9 +32,13 @@ export {
 	editorNudgeDelta,
 	editorSlideStep,
 } from './editor-keymap-arrows';
-export { mapInlineTextFormatKey } from './editor-keymap-chords';
+export { mapInlineEditorChord, mapInlineTextFormatKey } from './editor-keymap-chords';
 export { isEditorControlTarget, isEditorTextInputTarget } from './editor-key-target';
-export type { InlineTextFormatProperty } from './editor-keymap-chords';
+export type {
+	InlineEditorChord,
+	InlineEditorChordInput,
+	InlineTextFormatProperty,
+} from './editor-keymap-chords';
 
 // ---------------------------------------------------------------------------
 // Steps

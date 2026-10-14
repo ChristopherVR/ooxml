@@ -423,6 +423,28 @@ describe('angular list editor', () => {
 		},
 	);
 
+	it('cancels Ctrl/Cmd+D (the browser bookmark dialog) without leaving the edit', () => {
+		const editor = mountedEditor();
+		const blur = vi.spyOn(editor.component, 'blur');
+		try {
+			editor.root.addEventListener('keydown', (event) => editor.handlers.onKeyDown(event));
+			for (const modifier of [{ ctrlKey: true }, { metaKey: true }]) {
+				const event = new KeyboardEvent('keydown', {
+					key: 'd',
+					...modifier,
+					bubbles: true,
+					cancelable: true,
+				});
+				editor.root.dispatchEvent(event);
+				expect(event.defaultPrevented).toBeTruthy();
+			}
+			expect(blur).not.toHaveBeenCalled();
+			expect(editor.commits).not.toHaveBeenCalled();
+		} finally {
+			editor.cleanup();
+		}
+	});
+
 	it.each([false, true])(
 		'does not intercept IME Enter, including commit modifiers (shift=%s)',
 		(shiftKey) => {
