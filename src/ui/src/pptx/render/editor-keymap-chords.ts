@@ -132,3 +132,48 @@ export function mapInlineTextFormatKey(input: EditorKeyInput): InlineTextFormatP
 			return null;
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Inline text editor chords (leave the edit, keep the browser out)
+// ---------------------------------------------------------------------------
+
+/**
+ * What an inline text editor does with a chord it owns:
+ *  - `commit`: leave the edit, keeping the text (as a click outside does);
+ *  - `suppress`: cancel the browser default and do nothing else.
+ */
+export type InlineEditorChord = 'commit' | 'suppress';
+
+/** Keyboard event shape read by {@link mapInlineEditorChord}. */
+export interface InlineEditorChordInput extends EditorKeyInput {
+	/** True while an IME composition is open; its keys belong to the IME. */
+	isComposing?: boolean;
+}
+
+/**
+ * Resolve the chords every binding's inline text editor handles itself.
+ *
+ * Ctrl/Cmd+Enter ends the edit. React and Angular already did this by hand;
+ * Vanilla, Svelte and Vue let the chord through to the contenteditable, which
+ * left the user in the text box. (PowerPoint uses the chord to move on to the
+ * next placeholder; this viewer has no placeholder walk, so it ends the edit.)
+ *
+ * Ctrl/Cmd+D (and Ctrl/Cmd+Shift+D) is claimed and dropped. The editor keymap
+ * stands down while text is under edit, so nothing cancelled the browser's own
+ * meaning of the chord, which is "bookmark this page": the dialog opened over
+ * the deck mid-sentence. Duplicating the shape from inside the text is not
+ * offered here.
+ */
+export function mapInlineEditorChord(input: InlineEditorChordInput): InlineEditorChord | null {
+	if (input.isComposing || !(input.ctrlKey || input.metaKey) || input.altKey) {
+		return null;
+	}
+	// With or without Shift, as React and Angular already treated it.
+	if (input.key === 'Enter') {
+		return 'commit';
+	}
+	if (input.key.toLowerCase() === 'd') {
+		return 'suppress';
+	}
+	return null;
+}

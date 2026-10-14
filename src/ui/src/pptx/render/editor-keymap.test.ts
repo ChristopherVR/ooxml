@@ -4,6 +4,7 @@ import {
 	editorNudgeDelta,
 	isEditorTextInputTarget,
 	mapEditorKey,
+	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	NUDGE_LARGE,
 	NUDGE_SMALL,
@@ -447,5 +448,27 @@ describe('mapInlineTextFormatKey', () => {
 
 	it('ignores keys outside the b/i/u set', () => {
 		expect(mapInlineTextFormatKey(press('x', { ctrlKey: true }))).toBeNull();
+	});
+});
+
+describe('mapInlineEditorChord', () => {
+	it('ends the edit on Ctrl/Cmd+Enter', () => {
+		expect(mapInlineEditorChord(press('Enter', { ctrlKey: true }))).toBe('commit');
+		expect(mapInlineEditorChord(press('Enter', { metaKey: true }))).toBe('commit');
+		expect(mapInlineEditorChord(press('Enter', { ctrlKey: true, shiftKey: true }))).toBe('commit');
+	});
+
+	it('claims Ctrl/Cmd+D so the browser bookmark dialog cannot open mid-edit', () => {
+		expect(mapInlineEditorChord(press('d', { ctrlKey: true }))).toBe('suppress');
+		expect(mapInlineEditorChord(press('D', { metaKey: true, shiftKey: true }))).toBe('suppress');
+	});
+
+	it('leaves plain typing, Enter, Alt chords and IME keys to the editor', () => {
+		expect(mapInlineEditorChord(press('Enter'))).toBeNull();
+		expect(mapInlineEditorChord(press('d'))).toBeNull();
+		expect(mapInlineEditorChord(press('Enter', { shiftKey: true }))).toBeNull();
+		expect(mapInlineEditorChord(press('d', { ctrlKey: true, altKey: true }))).toBeNull();
+		expect(mapInlineEditorChord({ key: 'Enter', ctrlKey: true, isComposing: true })).toBeNull();
+		expect(mapInlineEditorChord(press('b', { ctrlKey: true }))).toBeNull();
 	});
 });

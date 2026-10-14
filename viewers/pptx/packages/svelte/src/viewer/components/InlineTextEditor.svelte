@@ -17,6 +17,7 @@
 		createInlineListModelObserver,
 		initializeInlineListDom,
 		inlineListBodyText,
+		mapInlineEditorChord,
 		readListActivationSelection,
 		restoreInlineListBodySelection,
 		placeCaretAt,
@@ -155,9 +156,15 @@
 		// etc. props (this component has no direct access to `EditorState`,
 		// only to `EditorController`, via those callbacks).
 		event.stopPropagation();
-		if (event.key === 'Escape') {
+		// Escape and Ctrl/Cmd+Enter both leave the edit, keeping the text.
+		// Ctrl/Cmd+D is only cancelled: the viewer keymap stands down mid-edit,
+		// so nothing else stops the browser opening its bookmark dialog.
+		const chord = mapInlineEditorChord(event);
+		if (event.key === 'Escape' || chord) {
 			event.preventDefault();
-			close(el ? readEditableText(el) : null);
+			if (chord !== 'suppress') {
+				close(el ? readEditableText(el) : null);
+			}
 			return;
 		}
 		if (

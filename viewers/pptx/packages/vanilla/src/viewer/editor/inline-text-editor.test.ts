@@ -781,6 +781,50 @@ describe('openInlineEditor commit ordering', () => {
 	});
 });
 
+describe('openInlineEditor chords it owns', () => {
+	function open() {
+		const overlayRoot = document.createElement('div');
+		document.body.appendChild(overlayRoot);
+		const onCommit = vi.fn();
+		const onClose = vi.fn();
+		const session = openInlineEditor({
+			doc: document,
+			overlayRoot,
+			box: { x: 0, y: 0, width: 200, height: 50, rotation: 0 },
+			scale: 1,
+			element: textElement(),
+			onCommit,
+			onClose,
+		});
+		return { session, onCommit, onClose, done: () => overlayRoot.remove() };
+	}
+
+	const chord = (key: string): KeyboardEvent =>
+		new KeyboardEvent('keydown', { key, ctrlKey: true, bubbles: true, cancelable: true });
+
+	it('ends the edit on Ctrl+Enter, keeping the text', () => {
+		const { session, onCommit, onClose, done } = open();
+		session.el.textContent = 'CHANGED';
+		const event = chord('Enter');
+		session.el.dispatchEvent(event);
+		expect(event.defaultPrevented).toBeTruthy();
+		expect(onCommit).toHaveBeenCalledOnce();
+		expect(onCommit.mock.calls[0]?.[0]).toBe('CHANGED');
+		expect(onClose).toHaveBeenCalledOnce();
+		done();
+	});
+
+	it('cancels Ctrl+D (the browser bookmark dialog) and stays in the edit', () => {
+		const { session, onClose, done } = open();
+		const event = chord('d');
+		session.el.dispatchEvent(event);
+		expect(event.defaultPrevented).toBeTruthy();
+		expect(onClose).not.toHaveBeenCalled();
+		expect(session.el.isConnected).toBeTruthy();
+		done();
+	});
+});
+
 describe('openInlineEditor live-format keys', () => {
 	it('claims a key onLiveFormatKey handles: preventDefault fires and Escape does not also run', () => {
 		const overlayRoot = document.createElement('div');

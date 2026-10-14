@@ -46,6 +46,7 @@ import {
 	getConnectorEndpointHandles,
 	getResizeHandleHitAreaStyle,
 	isTemplateElement,
+	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	resolveConnectorEndpointUpdate,
 	setPendingCaretPoint,
@@ -1132,6 +1133,10 @@ export class SlideCanvasComponent implements SlideContext {
 			event.preventDefault();
 			this.editCancelled = true;
 			editor.blur();
+		} else if (mapInlineEditorChord(event) === 'suppress') {
+			// Ctrl/Cmd+D: the viewer keymap stands down mid-edit, so nothing else
+			// stops the browser opening its bookmark dialog over the deck.
+			event.preventDefault();
 		} else if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			editor.blur();
