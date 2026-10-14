@@ -12,7 +12,7 @@ import { CollaborationSession } from './collaboration-session';
 import { repairCollaborativeDocumentIds, isWordYjsRemoteTransaction } from 'ooxml-core/docx/ui';
 import type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';
 import type { EditorLocale } from './localization';
-import { findLocalizedControl } from './localization';
+import { findLocalizedControl, formatPageStatus } from './localization';
 import type { PrintEditingBridge } from './print-editing';
 import type { PrintLayoutController } from './print-layout-view';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
@@ -83,6 +83,7 @@ export class EditorCore {
 	readonly viewOptions = new ViewOptions();
 	readonly dirtyState: DirtyState;
 	readonly pageTracker: PageTracker;
+	private wordText = '';
 
 	constructor(readonly element: HTMLElement) {
 		this.dirtyState = new DirtyState((dirty) => emit(element, 'dirty-change', dirty));
@@ -220,6 +221,7 @@ export class EditorCore {
 			return;
 		}
 		if (remote) transaction.setMeta(REMOTE_TRANSACTION_META, true);
+		const previousDoc = view.state.doc;
 		const previousParts = view.state.doc.attrs.sectionParts;
 		const previousNotes = view.state.doc.attrs.noteParts;
 		const previousComments = view.state.doc.attrs.commentThreads;
@@ -247,7 +249,7 @@ export class EditorCore {
 					: assignMissingParagraphIds(applied);
 		view.updateState(repaired ? applied.apply(repaired) : applied);
 		if (docChanged) {
-			this.model = docToModel(view.state.doc, this.model);
+			this.model = docToModel(view.state.doc, this.model, previousDoc);
 			if (previousComments !== view.state.doc.attrs.commentThreads)
 				this.shell.review?.commentsPanel.refresh();
 			this.pages.refreshPageStyles();
@@ -294,7 +296,10 @@ export class EditorCore {
 			Boolean(review?.commentsOpen),
 			this.canEditBody() && (!this.collab.active || Boolean(this.collab.yjs?.sharedComments)),
 		);
-		if (status) chrome?.refresh(status.pageText, status.wordText);
+		if (status) {
+			this.wordText = status.wordText;
+			chrome?.refresh(status.pageText, status.wordText);
+		}
 		this.pages.syncControls();
 		if (toolbar)
 			syncHeaderFooterRibbon(
@@ -305,5 +310,19 @@ export class EditorCore {
 			);
 		syncPageState(this);
 		chrome?.ribbonActions.setCommentsOpen(Boolean(review?.commentsOpen));
+	}
+
+	/** Scrolling only changes page state, never formatting controls or document statistics. */
+	refreshPageStatus(): void {
+		const { printLayout, printEditing, chrome } = this.shell;
+		printLayout?.refreshCurrentPage();
+		printEditing?.refresh();
+		const status = printLayout?.pageStatus();
+		if (status)
+			chrome?.statusBar.setPageAndWords(
+				formatPageStatus(this.locale, status.current, status.total),
+				this.wordText,
+			);
+		syncPageState(this);
 	}
 }

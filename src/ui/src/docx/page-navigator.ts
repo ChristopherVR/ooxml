@@ -4,6 +4,7 @@ import { formatPageStatus, translate, type EditorLocale } from './localization';
 export interface PageNavigatorHost {
 	/** Laid-out page sheets in order; empty until a layout exists. */
 	pages(): HTMLElement[];
+	pageSnapshot?(index: number): HTMLElement | undefined;
 	/** Changes whenever the layout was rebuilt. */
 	version(): number;
 	goTo(page: number): void;
@@ -195,7 +196,9 @@ export class PageNavigator {
 
 	private draw({ sheet, source, scale }: Thumb): void {
 		if (sheet.firstChild) return;
-		const clone = source.cloneNode(true) as HTMLElement;
+		const clone =
+			this.host.pageSnapshot?.(Number(source.dataset.pageIndex)) ??
+			(source.cloneNode(true) as HTMLElement);
 		clone.removeAttribute('id');
 		for (const node of clone.querySelectorAll('[id]')) node.removeAttribute('id');
 		clone.inert = true;

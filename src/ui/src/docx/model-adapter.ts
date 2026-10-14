@@ -141,20 +141,43 @@ function keepHeaderFooterSections(
 export function docToModel(
 	doc: ReturnType<typeof modelToDoc>,
 	prior: DocumentModel,
+	previousDoc?: ProseMirrorNode,
 ): DocumentModel {
 	let nextId = 0;
 	const previousParagraphs = new Map<string, Paragraph>();
 	const priorTables = new Map<string, Table>();
-	const remember = (paragraph: Paragraph) => previousParagraphs.set(paragraph.id, paragraph);
+	const duplicateIds = new Set<string>();
+	const remember = (paragraph: Paragraph) => {
+		if (previousParagraphs.has(paragraph.id)) duplicateIds.add(paragraph.id);
+		previousParagraphs.set(paragraph.id, paragraph);
+	};
 	for (const block of prior.blocks) {
 		if (block.type === 'paragraph') remember(block);
 		else {
+			if (priorTables.has(block.id)) duplicateIds.add(block.id);
 			priorTables.set(block.id, block);
 			for (const row of block.rows) for (const cell of row) cell.paragraphs.forEach(remember);
 		}
 	}
 
+	const unchanged = new WeakMap<ProseMirrorNode, Paragraph>();
+	const unchangedTables = new WeakMap<ProseMirrorNode, Table>();
+	previousDoc?.descendants((node) => {
+		if (duplicateIds.has(String(node.attrs.id))) return true;
+		if (node.type.name === 'paragraph') {
+			const paragraph = previousParagraphs.get(String(node.attrs.id));
+			if (paragraph) unchanged.set(node, paragraph);
+			return false;
+		}
+		if (node.type.name === 'table') {
+			const table = priorTables.get(String(node.attrs.id));
+			if (table) unchangedTables.set(node, table);
+		}
+		return true;
+	});
 	const convertParagraph = (node: typeof doc): Paragraph => {
+		const cached = unchanged.get(node);
+		if (cached) return cached;
 		const runs: TextRun[] = [];
 		node.forEach((child) => appendInlineNode(runs, child));
 		if (!runs.length) runs.push({ text: '' });
@@ -202,6 +225,11 @@ export function docToModel(
 	doc.forEach((node) => {
 		if (node.type.name === 'paragraph') blocks.push(convertParagraph(node as typeof doc));
 		if (node.type.name === 'table') {
+			const cached = unchangedTables.get(node);
+			if (cached) {
+				blocks.push(cached);
+				return;
+			}
 			const id = String(node.attrs.id || `t-edit-${++nextId}`);
 			const prior = priorTables.get(id);
 			const asParagraph = (n: unknown) => convertParagraph(n as typeof doc);

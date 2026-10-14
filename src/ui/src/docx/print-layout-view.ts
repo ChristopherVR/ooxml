@@ -6,12 +6,13 @@ import {
 	reviewFormattingWarnings,
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
-import { layoutDocumentModel, type LayoutResult } from 'ooxml-core/docx/layout';
+import { createLayoutSession, type LayoutResult } from 'ooxml-core/docx/layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { renderPrintLayout, type PictureUrl, type PrintLayoutHandle } from './print-layout';
 import { decoratePages } from './print-header-footer';
+import { printBlockPages } from './print-block-pages';
 
-const RELAYOUT_DEBOUNCE_MS = 150;
+const RELAYOUT_DELAY_MS = 32;
 
 /** Paginated document projection, with native editing supplied by the ProseMirror input bridge. */
 export interface PrintLayoutController {
@@ -25,6 +26,8 @@ export interface PrintLayoutController {
 	pageStatus(): { current: number; total: number } | null;
 	/** The laid-out page sheets currently in the DOM, in order. */
 	pageElements(): HTMLElement[];
+	pageSnapshot(index: number): HTMLElement | undefined;
+	ensureBlock(id: string, offset: number): void;
 	/** Increments on every layout pass so dependants (the page navigator) know when to rebuild. */
 	layoutVersion(): number;
 	/** Scrolls the given 1-based page to the top of the scroll container. */
@@ -44,13 +47,19 @@ export function createPrintLayoutController(
 	getReviewMode: () => ReviewDisplayMode = () => 'all',
 	isEditing: () => boolean = () => false,
 ): PrintLayoutController {
-	let measurer = createCanvasMeasurer();
+	let session = createLayoutSession(createCanvasMeasurer());
 	let lastModel: DocumentModel | null = null;
 	// Widths measured before a web font loads come from a fallback font; measure again once it has.
 	const fonts = typeof document === 'undefined' ? undefined : document.fonts;
 	const onFontsLoaded = () => {
-		measurer = createCanvasMeasurer();
-		if (lastModel && !element.hidden) relayout(lastModel);
+		session = createLayoutSession(createCanvasMeasurer());
+		const model = pendingModel ?? lastModel;
+		if (model && !element.hidden) {
+			if (timer) clearTimeout(timer);
+			timer = undefined;
+			pendingModel = null;
+			relayout(model);
+		}
 	};
 	fonts?.addEventListener?.('loadingdone', onFontsLoaded);
 	const element = document.createElement('div');
@@ -62,14 +71,26 @@ export function createPrintLayoutController(
 	let currentPage = 1;
 	let version = 0;
 	let timer: ReturnType<typeof setTimeout> | undefined;
+	let pendingModel: DocumentModel | null = null;
 	let projectionWarnings: string[] = [];
+	let pageSheets: HTMLElement[] = [];
+	let pageForBlock: ReturnType<typeof printBlockPages> | undefined;
+	let pinnedPage: number | undefined;
+	const beforePrint = () => {
+		if (element.isConnected && !element.hidden) handle?.renderAll();
+	};
+	const afterPrint = () => {
+		if (element.isConnected && !element.hidden) handle?.showPages(currentPage - 1, pinnedPage);
+	};
+	window.addEventListener('beforeprint', beforePrint);
+	window.addEventListener('afterprint', afterPrint);
 
 	function relayout(model: DocumentModel) {
 		lastModel = model;
 		const mode = getReviewMode();
 		const projected = reviewDocumentFormatting(model, mode);
 		model = projected.model;
-		result = layoutDocumentModel(model, measurer, { reviewDisplayMode: mode });
+		result = session.layoutDocumentModel(model, { reviewDisplayMode: mode });
 		projectionWarnings = reviewFormattingWarnings(projected.diagnostics);
 		if (
 			mode !== 'all' &&
@@ -81,7 +102,16 @@ export function createPrintLayoutController(
 				'Print Layout retains revised paragraph marks; merging them for review display is not yet supported.',
 			);
 		result.approximations = [...new Set([...result.approximations, ...projectionWarnings])];
+		const pages = result.pages;
+		pageForBlock = printBlockPages(result);
+		pinnedPage = undefined;
 		handle = renderPrintLayout(result, pictureUrl, {
+			virtual: pages.length > 10,
+			onPageRender(sheet, index) {
+				const sheets: HTMLElement[] = [];
+				sheets[index] = sheet;
+				decoratePages(model, pages, sheets, new Date(), pictureUrl, mode);
+			},
 			lineNumbers: (model.sections ?? []).map((section) => section.lineNumberSettings),
 			pageBorders: (model.sections ?? []).map((section) => section.pageBorders),
 			suppressedLineNumberParagraphs: new Set(
@@ -98,15 +128,8 @@ export function createPrintLayoutController(
 		});
 		if (model.pageColor)
 			handle.element.style.setProperty('--dve-page-color', `#${model.pageColor}`);
-		decoratePages(
-			model,
-			result.pages,
-			[...handle.element.querySelectorAll<HTMLElement>('.dve-print-page')],
-			new Date(),
-			pictureUrl,
-			mode,
-		);
 		element.replaceChildren(handle.element);
+		pageSheets = [...handle.element.querySelectorAll<HTMLElement>('.dve-print-page')];
 		version++;
 		refreshCurrentPage();
 		onLayout?.();
@@ -120,22 +143,28 @@ export function createPrintLayoutController(
 	element.addEventListener('click', onClick);
 
 	function refreshCurrentPage() {
-		const pages = element.querySelectorAll<HTMLElement>('.dve-print-page');
+		const pages = pageSheets;
 		if (!pages.length) {
 			currentPage = 1;
 			return;
 		}
 		const anchor = scrollContainer.getBoundingClientRect().top + scrollContainer.clientHeight / 3;
-		let closest = 0;
-		let closestDistance = Number.POSITIVE_INFINITY;
-		pages.forEach((page, index) => {
-			const distance = Math.abs(page.getBoundingClientRect().top - anchor);
-			if (distance < closestDistance) {
-				closestDistance = distance;
-				closest = index;
-			}
-		});
-		currentPage = closest + 1;
+		// Page sheets are ordered vertically, including documents with mixed page sizes.
+		let low = 0;
+		let high = pages.length;
+		while (low < high) {
+			const mid = (low + high) >>> 1;
+			if (pages[mid]!.getBoundingClientRect().top < anchor) low = mid + 1;
+			else high = mid;
+		}
+		const after = Math.min(low, pages.length - 1);
+		const before = Math.max(0, after - 1);
+		currentPage =
+			(Math.abs(pages[before]!.getBoundingClientRect().top - anchor) <=
+			Math.abs(pages[after]!.getBoundingClientRect().top - anchor)
+				? before
+				: after) + 1;
+		handle?.showPages(currentPage - 1, pinnedPage);
 	}
 
 	return {
@@ -143,21 +172,39 @@ export function createPrintLayoutController(
 		resolveClick: (target, clientX) => handle?.resolveClick(target, clientX) ?? null,
 		setActive(active) {
 			element.hidden = !active;
+			if (!active) {
+				if (timer) clearTimeout(timer);
+				timer = undefined;
+				pendingModel = null;
+			}
 		},
 		scheduleRelayout(model) {
-			if (timer) clearTimeout(timer);
-			timer = setTimeout(() => relayout(model), RELAYOUT_DEBOUNCE_MS);
+			pendingModel = model;
+			if (timer !== undefined) return;
+			// Keep displaying input during continuous typing instead of waiting for a typing pause.
+			timer = setTimeout(() => {
+				timer = undefined;
+				const latest = pendingModel;
+				pendingModel = null;
+				if (latest) relayout(latest);
+			}, RELAYOUT_DELAY_MS);
 		},
 		refreshCurrentPage,
 		pageStatus() {
 			return result ? { current: currentPage, total: result.pages.length } : null;
 		},
-		pageElements: () => [...element.querySelectorAll<HTMLElement>('.dve-print-page')],
+		pageElements: () => [...pageSheets],
+		pageSnapshot: (index) => handle?.pageSnapshot(index),
+		ensureBlock(id, offset) {
+			pinnedPage = pageForBlock?.(id, offset);
+			handle?.showPages(currentPage - 1, pinnedPage);
+		},
 		layoutVersion: () => version,
 		scrollToPage(page) {
-			const target = element.querySelectorAll<HTMLElement>('.dve-print-page')[page - 1];
+			const target = pageSheets[page - 1];
 			if (!target) return;
 			currentPage = page;
+			handle?.showPages(page - 1, pinnedPage);
 			target.scrollIntoView?.({ block: 'start' });
 		},
 		approximations() {
@@ -165,15 +212,25 @@ export function createPrintLayoutController(
 		},
 		print(model, note) {
 			if (timer) clearTimeout(timer);
+			timer = undefined;
+			pendingModel = null;
 			relayout(model);
 			for (const warning of projectionWarnings) note(warning);
-			printLayoutResult(result, note);
+			handle?.renderAll();
+			try {
+				printLayoutResult(result, note);
+			} finally {
+				handle?.showPages(currentPage - 1, pinnedPage);
+			}
 		},
 		destroy() {
 			if (timer) clearTimeout(timer);
 			element.removeEventListener('click', onClick);
 			fonts?.removeEventListener?.('loadingdone', onFontsLoaded);
+			window.removeEventListener('beforeprint', beforePrint);
+			window.removeEventListener('afterprint', afterPrint);
 			lastModel = null;
+			pendingModel = null;
 		},
 	};
 }

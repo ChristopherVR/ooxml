@@ -14,6 +14,7 @@ import {
 export function createCanvasMeasurer(): TextMeasurer {
 	let context: CanvasRenderingContext2D | null | undefined;
 	const widthCache = new Map<string, number>();
+	const metricCache = new Map<string, { ascent: number; height: number }>();
 	const fallback = createFakeMeasurer();
 	const ctx = (): CanvasRenderingContext2D | null => {
 		if (context !== undefined) return context;
@@ -27,6 +28,24 @@ export function createCanvasMeasurer(): TextMeasurer {
 	};
 	const fontString = (font: LayoutFontSpec) =>
 		`${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${font.sizePx}px ${cssFontStack(font.family)}`;
+	const metricsOf = (c: CanvasRenderingContext2D, font: LayoutFontSpec) => {
+		const key = fontString(font);
+		const cached = metricCache.get(key);
+		if (cached) return cached;
+		c.font = key;
+		const measured = c.measureText('Mg');
+		const metrics = {
+			ascent: measured.fontBoundingBoxAscent ?? font.sizePx * 0.95,
+			height:
+				measured.fontBoundingBoxAscent !== undefined &&
+				measured.fontBoundingBoxDescent !== undefined
+					? measured.fontBoundingBoxAscent + measured.fontBoundingBoxDescent
+					: font.sizePx * 1.22,
+		};
+		if (metricCache.size >= 256) metricCache.delete(metricCache.keys().next().value!);
+		metricCache.set(key, metrics);
+		return metrics;
+	};
 	return {
 		widthOf(text, font) {
 			const c = ctx();
@@ -56,25 +75,19 @@ export function createCanvasMeasurer(): TextMeasurer {
 					span.remove();
 				}
 			}
-			if (widthCache.size > 20000) widthCache.clear();
+			if (widthCache.size >= 20000) widthCache.delete(widthCache.keys().next().value!);
 			widthCache.set(key, width);
 			return width;
 		},
 		ascentOf(font) {
 			const c = ctx();
 			if (!c) return fallback.lineHeightOf(font) * 0.8;
-			c.font = fontString(font);
-			return c.measureText('Mg').fontBoundingBoxAscent ?? font.sizePx * 0.95;
+			return metricsOf(c, font).ascent;
 		},
 		lineHeightOf(font) {
 			const c = ctx();
 			if (!c) return fallback.lineHeightOf(font);
-			c.font = fontString(font);
-			const metrics = c.measureText('Mg');
-			// Word's single line is the font's ascent plus descent; paragraph line spacing multiplies it.
-			const ascent = metrics.fontBoundingBoxAscent;
-			const descent = metrics.fontBoundingBoxDescent;
-			return ascent !== undefined && descent !== undefined ? ascent + descent : font.sizePx * 1.22;
+			return metricsOf(c, font).height;
 		},
 	};
 }

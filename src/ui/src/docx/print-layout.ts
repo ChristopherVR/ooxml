@@ -9,6 +9,7 @@ import {
 	type LayoutResult,
 } from 'ooxml-core/docx/layout';
 import { renderTable } from './print-table';
+import { PrintPageWindow } from './print-page-window';
 import { lineNumberLabels, type PrintLineNumbering } from './print-line-numbers';
 import { pageBorderBox } from './print-page-borders';
 import { resolveFragmentClick, type PrintFragmentHit } from './print-fragment-hit';
@@ -29,6 +30,9 @@ export interface PrintLayoutHandle {
 	/** The scrollable element holding one sheet per page; mount this in the DOM. */
 	element: HTMLElement;
 	pageCount: number;
+	showPages(center: number, pinned?: number): void;
+	renderAll(): void;
+	pageSnapshot(index: number): HTMLElement | undefined;
 	/**
 	 * Best-effort click-to-cursor mapping: given the line element under a
 	 * click and its horizontal offset, measures the displayed text fragments
@@ -277,6 +281,8 @@ function footnoteArea(
 }
 
 export interface PrintLayoutOptions {
+	virtual?: boolean;
+	onPageRender?: (sheet: HTMLElement, index: number) => void;
 	/** Line numbering by section index; sections without an entry print no numbers. */
 	lineNumbers?: ReadonlyArray<PrintLineNumbering | undefined>;
 	/** Page borders by section index; drawn on each page they apply to. */
@@ -293,7 +299,8 @@ export function renderPrintLayout(
 ): PrintLayoutHandle {
 	const container = document.createElement('div');
 	container.className = 'dve-print-pages';
-	const hitboxes: LineHitBox[] = [];
+	const hits = new Map<Element, LineHitBox>();
+	const window = new PrintPageWindow(container, options.virtual ?? false);
 	const counter = { next: 1, section: -1 };
 	result.pages.forEach((page, pageIndex) => {
 		const sheet = document.createElement('div');
@@ -301,37 +308,7 @@ export function renderPrintLayout(
 		sheet.dataset.pageIndex = String(pageIndex);
 		sheet.style.width = `${page.widthPx}px`;
 		sheet.style.height = `${page.heightPx}px`;
-		const borders = options.pageBorders?.[page.sectionIndex];
-		const borderBox = borders ? pageBorderBox(page, borders) : null;
-		if (borderBox) sheet.append(borderBox);
-		for (const column of page.columns) {
-			const previous = page.columns[page.columns.indexOf(column) - 1];
-			if (
-				(column.separator ?? page.columnSeparator) &&
-				previous &&
-				(previous.sectionIndex ?? page.sectionIndex) === (column.sectionIndex ?? page.sectionIndex)
-			) {
-				const rule = document.createElement('div');
-				rule.className = 'dve-print-column-rule';
-				Object.assign(rule.style, {
-					position: 'absolute',
-					left: `${page.marginLeftPx + (previous.xPx + previous.widthPx + column.xPx) / 2}px`,
-					top: `${page.marginTopPx + (column.startYPx ?? 0)}px`,
-					height: `${(column.endYPx ?? page.heightPx - page.marginTopPx - page.marginBottomPx) - (column.startYPx ?? 0)}px`,
-					borderLeft: '1px solid currentColor',
-				});
-				sheet.append(rule);
-			}
-			const columnEl = document.createElement('div');
-			columnEl.className = 'dve-print-column';
-			columnEl.style.top = `${page.marginTopPx}px`;
-			columnEl.style.left = `${page.marginLeftPx + column.xPx}px`;
-			columnEl.style.width = `${column.widthPx}px`;
-			columnEl.style.height = `${page.heightPx - page.marginTopPx - page.marginBottomPx}px`;
-			for (const block of column.blocks)
-				columnEl.append(renderBlock(block, hitboxes, pictureUrl, column.widthPx));
-			sheet.append(columnEl);
-		}
+		const labels: HTMLElement[] = [];
 		const bands = new Map<number, typeof page.columns>();
 		for (const column of page.columns) {
 			const index = column.sectionIndex ?? page.sectionIndex;
@@ -342,7 +319,7 @@ export function renderPrintLayout(
 		for (const [sectionIndex, columns] of bands) {
 			const numbering = options.lineNumbers?.[sectionIndex];
 			if (numbering)
-				sheet.append(
+				labels.push(
 					...lineNumberLabels(
 						{ ...page, sectionIndex, columns },
 						numbering,
@@ -351,22 +328,67 @@ export function renderPrintLayout(
 					),
 				);
 		}
-		if (page.footnotes?.length) sheet.append(footnoteArea(page, hitboxes, pictureUrl));
-		for (const float of page.floats ?? []) {
-			const picture = pictureElement(float, pictureUrl);
-			picture.classList.add('dve-print-float');
-			if (float.behindText) picture.classList.add('dve-print-float-behind');
-			picture.style.left = `${float.xPx}px`;
-			picture.style.top = `${float.yPx}px`;
-			sheet.append(picture);
-		}
-		container.append(sheet);
+		window.add(sheet, () => {
+			const hitboxes: LineHitBox[] = [];
+			const borders = options.pageBorders?.[page.sectionIndex];
+			const borderBox = borders ? pageBorderBox(page, borders) : null;
+			if (borderBox) sheet.append(borderBox);
+			for (const column of page.columns) {
+				const previous = page.columns[page.columns.indexOf(column) - 1];
+				if (
+					(column.separator ?? page.columnSeparator) &&
+					previous &&
+					(previous.sectionIndex ?? page.sectionIndex) ===
+						(column.sectionIndex ?? page.sectionIndex)
+				) {
+					const rule = document.createElement('div');
+					rule.className = 'dve-print-column-rule';
+					Object.assign(rule.style, {
+						position: 'absolute',
+						left: `${page.marginLeftPx + (previous.xPx + previous.widthPx + column.xPx) / 2}px`,
+						top: `${page.marginTopPx + (column.startYPx ?? 0)}px`,
+						height: `${(column.endYPx ?? page.heightPx - page.marginTopPx - page.marginBottomPx) - (column.startYPx ?? 0)}px`,
+						borderLeft: '1px solid currentColor',
+					});
+					sheet.append(rule);
+				}
+				const columnEl = document.createElement('div');
+				columnEl.className = 'dve-print-column';
+				columnEl.style.top = `${page.marginTopPx}px`;
+				columnEl.style.left = `${page.marginLeftPx + column.xPx}px`;
+				columnEl.style.width = `${column.widthPx}px`;
+				columnEl.style.height = `${page.heightPx - page.marginTopPx - page.marginBottomPx}px`;
+				for (const block of column.blocks)
+					columnEl.append(renderBlock(block, hitboxes, pictureUrl, column.widthPx));
+				sheet.append(columnEl);
+			}
+			if (page.footnotes?.length) sheet.append(footnoteArea(page, hitboxes, pictureUrl));
+			for (const float of page.floats ?? []) {
+				const picture = pictureElement(float, pictureUrl);
+				picture.classList.add('dve-print-float');
+				if (float.behindText) picture.classList.add('dve-print-float-behind');
+				picture.style.left = `${float.xPx}px`;
+				picture.style.top = `${float.yPx}px`;
+				sheet.append(picture);
+			}
+			sheet.append(...labels);
+			options.onPageRender?.(sheet, pageIndex);
+			for (const hit of hitboxes) hits.set(hit.element, hit);
+			return () => {
+				for (const hit of hitboxes) hits.delete(hit.element);
+			};
+		});
 	});
+	window.show(0);
 	return {
 		element: container,
 		pageCount: result.pages.length,
+		showPages: (center, pinned) => window.show(center, pinned),
+		renderAll: () => window.all(),
+		pageSnapshot: (index) => window.snapshot(index),
 		resolveClick(target, clientX) {
-			const hit = hitboxes.find((box) => box.element === target || box.element.contains(target));
+			const line = target.closest('.dve-print-line');
+			const hit = line ? hits.get(line) : undefined;
 			if (!hit) return null;
 			const precise = resolveFragmentClick(hit.fragments, clientX);
 			if (precise !== undefined) return { blockId: hit.blockId, offset: precise };

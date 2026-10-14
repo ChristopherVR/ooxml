@@ -15,6 +15,7 @@ import {
 import { lineMetrics, tokenExtent } from './line-metrics';
 import { alignFragments, buildFragments } from './paragraph-fragments';
 import { expectDefined } from '../expect-defined';
+import { cachedParagraphLayout } from './paragraph-cache';
 
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */
@@ -50,6 +51,28 @@ export type LineBoxFn = (
 ) => { leftInsetPx: number; rightInsetPx: number; gapBeforePx: number };
 
 export function layoutParagraph(
+	paragraph: LayoutParagraph,
+	contentWidthPx: number,
+	measurer: TextMeasurer,
+	note: (message: string) => void,
+	lineBox?: LineBoxFn,
+	startToken = 0,
+): ParagraphLayoutResult {
+	if (lineBox)
+		return measureParagraph(paragraph, contentWidthPx, measurer, note, lineBox, startToken);
+	return cachedParagraphLayout(
+		measurer,
+		() => ({
+			index: JSON.stringify([paragraph.id, contentWidthPx, startToken]),
+			signature: JSON.stringify(paragraph),
+		}),
+		note,
+		(report) =>
+			measureParagraph(paragraph, contentWidthPx, measurer, report, undefined, startToken),
+	);
+}
+
+function measureParagraph(
 	paragraph: LayoutParagraph,
 	contentWidthPx: number,
 	measurer: TextMeasurer,
@@ -125,6 +148,7 @@ export function layoutParagraph(
 					token.text,
 					expectDefined(paragraph.runs[token.runIndex], 'token run'),
 					measurer,
+					fonts[token.runIndex],
 				)
 			: token.kind === 'object'
 				? (paragraph.runs[token.runIndex]?.object?.widthPx ?? 0)

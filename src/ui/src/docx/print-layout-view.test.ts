@@ -19,6 +19,25 @@ function model(): DocumentModel {
 }
 
 describe('createPrintLayoutController', () => {
+	it('renders the latest input during continuous typing without waiting for a pause', () => {
+		vi.useFakeTimers();
+		const controller = createPrintLayoutController(document.createElement('div'), () => {});
+		try {
+			controller.setActive(true);
+			controller.scheduleRelayout(model());
+			vi.advanceTimersByTime(20);
+			const typed = model();
+			typed.blocks = [{ type: 'paragraph', id: 'p1', runs: [{ text: 'Latest input' }] }];
+			controller.scheduleRelayout(typed);
+			vi.advanceTimersByTime(20);
+			expect(controller.layoutVersion()).toBe(1);
+			expect(controller.element.textContent).toContain('Latest input');
+		} finally {
+			controller.destroy();
+			vi.useRealTimers();
+		}
+	});
+
 	it('starts inactive with no page status until a relayout runs', () => {
 		const scrollContainer = document.createElement('div');
 		const controller = createPrintLayoutController(scrollContainer, () => {});

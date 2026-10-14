@@ -27,11 +27,20 @@ export function fontOf(run: LayoutRun): LayoutFontSpec {
 
 const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 /** Word applies additional character spacing after scaling the glyph advances. */
-export function runTextWidth(text: string, run: LayoutRun, measurer: TextMeasurer): number {
+export function runTextWidth(
+	text: string,
+	run: LayoutRun,
+	measurer: TextMeasurer,
+	font = fontOf(run),
+): number {
+	let characters = 0;
+	if (run.characterSpacingPx) {
+		for (const _segment of graphemes.segment(text)) characters++;
+	}
 	return Math.max(
 		0,
-		(measurer.widthOf(text, fontOf(run)) * (run.textScalePercent ?? 100)) / 100 +
-			[...graphemes.segment(text)].length * (run.characterSpacingPx ?? 0),
+		(measurer.widthOf(text, font) * (run.textScalePercent ?? 100)) / 100 +
+			characters * (run.characterSpacingPx ?? 0),
 	);
 }
 

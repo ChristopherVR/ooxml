@@ -17,7 +17,7 @@ import { ReviewController } from './review-controller';
 import { EditorChrome } from './editor-chrome';
 import { dispatchDocumentError } from './editor-host';
 import { routeRibbonAction } from './ribbon-router';
-import { countWords } from 'ooxml-core/docx/ui';
+import { documentWordCount } from 'ooxml-core/docx/ui';
 import { PageNavigator } from './page-navigator';
 import { HeadingNavigator } from './heading-navigator';
 import { applyViewOptions } from './view-options';
@@ -40,9 +40,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		ribbon: () => shell.toolbar,
 		wordCount: () => {
 			const doc = core.view?.state.doc;
-			return doc
-				? countWords(doc.textBetween(0, doc.content.size, ' ').trim(), element.lang || undefined)
-				: 0;
+			return doc ? documentWordCount(doc, element.lang || undefined) : 0;
 		},
 		locale: () => core.locale,
 		readOnly: () => core.readOnly,
@@ -133,15 +131,23 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	);
 
 	canvas.append(printLayout.element);
-	canvas.addEventListener('scroll', () => {
-		if (core.pages.viewMode === 'print') {
-			printLayout.refreshCurrentPage();
-			core.refreshControls();
-		}
-	});
+	let scrollFrame: number | undefined;
+	canvas.addEventListener(
+		'scroll',
+		() => {
+			if (core.pages.viewMode !== 'print' || scrollFrame !== undefined) return;
+			scrollFrame = requestAnimationFrame(() => {
+				scrollFrame = undefined;
+				if (!element.isConnected || core.pages.viewMode !== 'print') return;
+				core.refreshPageStatus();
+			});
+		},
+		{ passive: true },
+	);
 	shell.printLayout = printLayout;
 	shell.navigator = new PageNavigator({
 		pages: () => printLayout.pageElements(),
+		pageSnapshot: (index) => printLayout.pageSnapshot(index),
 		version: () => printLayout.layoutVersion(),
 		goTo: (page) => {
 			printLayout.scrollToPage(page);
@@ -237,6 +243,7 @@ function attachPrintEditing(core: EditorCore): void {
 		() => core.view,
 		shell.printLayout.resolveClick,
 		shell.canvas,
+		(id, offset) => shell.printLayout?.ensureBlock(id, offset),
 	);
 	shell.printEditing.setActive(core.pages.viewMode === 'print');
 }

@@ -18,6 +18,8 @@ import { scaledParagraphBreaks } from './scaled-paragraph-breaks';
 import type { ReviewDisplayMode } from './review-display';
 import { displayParagraph } from './review-paragraph-display';
 import { reviewRunCss } from './review-run-css';
+import { DecorationCache } from './decoration-cache';
+import { ParagraphDecorationCache, ParagraphDecorationBuilder } from './paragraph-decoration-cache';
 
 type Theme = NonNullable<DocumentModel['theme']>;
 
@@ -115,6 +117,8 @@ export function runStylesPlugin(
 	getMode: () => ReviewDisplayMode = () => 'all',
 ) {
 	let measurer = scaleMeasurer();
+	const cache = new DecorationCache();
+	const paragraphs = new ParagraphDecorationCache();
 	return new Plugin({
 		key: runStylesKey,
 		getModel,
@@ -122,6 +126,7 @@ export function runStylesPlugin(
 			const fonts = view.dom.ownerDocument.fonts;
 			const refresh = () => {
 				measurer = scaleMeasurer();
+				cache.clear();
 				view.dispatch(view.state.tr.setMeta('addToHistory', false).setMeta(runStylesKey, 'fonts'));
 			};
 			fonts?.addEventListener?.('loadingdone', refresh);
@@ -131,14 +136,41 @@ export function runStylesPlugin(
 			decorations(state) {
 				const model = getModel();
 				const mode = getMode();
+				const inputs = [
+					model,
+					model.characterStyles,
+					model.paragraphStyles,
+					model.theme,
+					model.tableStyles,
+					mode,
+				];
+				const cached = cache.get(state.doc, inputs);
+				if (cached) return cached;
 				const tables = new Map<string, Table>();
 				for (const block of model.blocks) if (block.type === 'table') tables.set(block.id, block);
 				const decorations: Decoration[] = [];
 				const visitParagraph = (
 					paragraph: ProseMirrorNode,
-					start: number,
+					position: number,
 					tableStyleRun?: RunFormatting,
 				) => {
+					const inputs = [
+						model.characterStyles,
+						model.paragraphStyles,
+						model.theme,
+						mode,
+						measurer,
+						JSON.stringify(tableStyleRun),
+					];
+					const cached = paragraphs.get(paragraph, inputs);
+					if (cached) {
+						decorations.push(...paragraphs.place(cached, position));
+						if (cached.hasScale) decorations.push(...scaledParagraphBreaks(paragraph, position));
+						return;
+					}
+					const start = 1;
+					const localDecorations: Decoration[] = [];
+					const builder = new ParagraphDecorationBuilder();
 					const paragraphStyleId = displayParagraph(paragraph, mode).value.style;
 					let hasScale = false;
 					paragraph.forEach((child, offset) => {
@@ -167,8 +199,8 @@ export function runStylesPlugin(
 								: {};
 						const hidden = resolved.vanish === true;
 						if (!child.isText) {
-							decorations.push(
-								Decoration.node(start + offset, start + offset + child.nodeSize, {
+							localDecorations.push(
+								builder.node(start + offset, start + offset + child.nodeSize, {
 									style: `${runFormattingCss(resolved, model.theme)};${reviewRunCss(resolved)}`,
 									...(run.language ? { lang: run.language } : {}),
 									...(run.rtl !== undefined ? { dir: run.rtl ? 'rtl' : 'ltr' } : {}),
@@ -187,8 +219,8 @@ export function runStylesPlugin(
 						if (segments.length) {
 							hasScale = true;
 							for (const segment of segments)
-								decorations.push(
-									Decoration.inline(
+								localDecorations.push(
+									builder.inline(
 										start + offset + segment.from,
 										start + offset + segment.to,
 										{
@@ -202,15 +234,17 @@ export function runStylesPlugin(
 							return;
 						}
 						if (style || hidden)
-							decorations.push(
-								Decoration.inline(start + offset, start + offset + child.nodeSize, {
+							localDecorations.push(
+								builder.inline(start + offset, start + offset + child.nodeSize, {
 									...originalAttrs,
 									...(style ? { style } : {}),
 									...(hidden ? { class: 'dve-hidden-text' } : {}),
 								}),
 							);
 					});
-					if (hasScale) decorations.push(...scaledParagraphBreaks(paragraph, start));
+					if (hasScale) decorations.push(...scaledParagraphBreaks(paragraph, position));
+					const value = paragraphs.set(paragraph, inputs, builder, hasScale);
+					decorations.push(...paragraphs.place(value, position));
 				};
 				state.doc.forEach((block, blockOffset) => {
 					if (block.type.name === 'paragraph') return visitParagraph(block, blockOffset + 1);
@@ -249,7 +283,7 @@ export function runStylesPlugin(
 						});
 					});
 				});
-				return DecorationSet.create(state.doc, decorations);
+				return cache.set(state.doc, inputs, DecorationSet.create(state.doc, decorations));
 			},
 		},
 	});

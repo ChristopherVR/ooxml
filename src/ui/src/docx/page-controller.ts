@@ -324,7 +324,7 @@ export class PageController {
 		this.host.refreshControls();
 	}
 
-	/** Re-lays out Print Layout after a model change (debounced by the layout view). */
+	/** Re-lays out Print Layout after a model change (coalesced by the layout view). */
 	relayout(): void {
 		if (this.viewMode === 'print') this.host.printLayout()?.scheduleRelayout(this.host.model());
 	}

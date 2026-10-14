@@ -10,7 +10,7 @@ import { syncStylePicker } from './paragraph-styles';
 import { syncCharacterStylePicker } from './character-style-picker';
 import { canExecuteTableCommand } from './table-commands';
 import type { RibbonAction } from './ribbon';
-import { countWords } from 'ooxml-core/docx/ui';
+import { documentWordCount } from 'ooxml-core/docx/ui';
 import { syncSpellingButton } from './spelling';
 import { syncIndentInputs } from './indent-commands';
 import { syncParagraphToggles } from './paragraph-toggle-sync';
@@ -110,8 +110,7 @@ export function refreshEditorControls(
 			if (control) control.disabled = readOnly || !enabled;
 		}
 	}
-	const content = state.doc.textBetween(0, state.doc.content.size, ' ').trim();
-	const words = countWords(content, language || undefined);
+	const words = documentWordCount(state.doc, language || undefined);
 	const pageText = printPageStatus
 		? formatPageStatus(locale, printPageStatus.current, printPageStatus.total)
 		: formatPageStatus(locale, 1, 1);

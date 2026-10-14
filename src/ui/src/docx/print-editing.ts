@@ -19,6 +19,7 @@ export function createPrintEditingBridge(
 	getView: () => EditorView | undefined,
 	resolveHit: (target: Element, clientX: number) => { blockId: string; offset: number } | null,
 	scrollContainer: HTMLElement = pages.parentElement ?? pages,
+	ensureBlock?: (id: string, offset: number) => void,
 ): PrintEditingBridge {
 	let active = false;
 	let destroyed = false;
@@ -71,6 +72,9 @@ export function createPrintEditingBridge(
 			view.dom.dataset.printTabstop = 'true';
 		}
 		const { from, to, head, empty } = view.state.selection;
+		const { $head } = view.state.selection;
+		if ($head.parent.type.name === 'paragraph')
+			ensureBlock?.(String($head.parent.attrs.id), $head.parentOffset);
 		let caret: DOMRect | undefined;
 		index.update(view.state.doc);
 		for (const { id, start, end } of index.between(from, to)) {

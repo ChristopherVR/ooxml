@@ -8,6 +8,7 @@ export interface PrintParagraphPosition {
 export class PrintEditingIndex {
 	private doc: DocumentNode | undefined;
 	private root: Element | null | undefined;
+	private renderVersion: string | undefined;
 	private paragraphs: PrintParagraphPosition[] = [];
 	private positions = new Map<string, PrintParagraphPosition>();
 	private byBlock = new Map<string, HTMLElement[]>();
@@ -35,12 +36,15 @@ export class PrintEditingIndex {
 			});
 		}
 		const root = this.pages.firstElementChild;
-		if (!documentChanged && root === this.root) return;
-		if (root !== this.root)
+		const renderVersion = (root as HTMLElement | null)?.dataset.renderVersion;
+		const renderChanged = root !== this.root || renderVersion !== this.renderVersion;
+		if (!documentChanged && !renderChanged) return;
+		if (renderChanged)
 			this.renderedLines = [
 				...this.pages.querySelectorAll<HTMLElement>('.dve-print-line[data-block-id]'),
 			];
 		this.root = root;
+		this.renderVersion = renderVersion;
 		this.byBlock.clear();
 		this.pageLines.clear();
 		this.linePositions.clear();
