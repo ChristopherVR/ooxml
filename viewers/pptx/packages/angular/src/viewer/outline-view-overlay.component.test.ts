@@ -24,7 +24,7 @@ import type { InputSignal } from '@angular/core';
 import { OUTLINE_ROW_ATTR, OUTLINE_VIEW_ATTR } from 'ooxml-ui/pptx';
 import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { OutlineViewOverlayComponent } from './outline-view-overlay.component';
 import type { OutlineCommit } from './outline-view-overlay.component';
@@ -213,5 +213,41 @@ describe('outline view overlay', () => {
 		overlay.onInput(inputEvent('Nope'), overlay.rows()[1].key);
 		overlay.onRowKeyDown(keyEvent('Tab'), overlay.rows()[1].key);
 		expect(commits).toHaveLength(0);
+	});
+
+	it('returns to Normal view on Escape, wherever focus is', () => {
+		const instance = runInInjectionContext(
+			Injector.create({ providers: [] }),
+			() => new TestOutlineViewOverlay(),
+		);
+		let closed = 0;
+		instance.closed.subscribe(() => {
+			closed += 1;
+		});
+		instance.ngOnInit();
+		// Focus is still on the ribbon button that opened the view, outside the pane.
+		const opener = document.createElement('button');
+		document.body.appendChild(opener);
+		const editorKeys = vi.fn();
+		opener.addEventListener('keydown', editorKeys);
+		try {
+			const escape = new KeyboardEvent('keydown', {
+				key: 'Escape',
+				bubbles: true,
+				cancelable: true,
+			});
+			opener.dispatchEvent(escape);
+			expect(closed).toBe(1);
+			expect(escape.defaultPrevented).toBeTruthy();
+			// The editor's own Escape (clear the selection) must not run underneath.
+			expect(editorKeys).not.toHaveBeenCalled();
+			instance.ngOnDestroy();
+			opener.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			expect(closed).toBe(1);
+			expect(editorKeys).toHaveBeenCalledOnce();
+		} finally {
+			instance.ngOnDestroy();
+			opener.remove();
+		}
 	});
 });

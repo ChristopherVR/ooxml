@@ -1,4 +1,5 @@
 import {
+	listenForOutlineViewDismiss,
 	OUTLINE_LEVEL_ATTR,
 	OUTLINE_ROW_ATTR,
 	OUTLINE_SLIDE_ATTR,
@@ -23,7 +24,7 @@ import {
  * inputs is exactly what the outline is.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';
 
@@ -61,6 +62,10 @@ export function OutlineViewOverlay({
 		setActiveSlideIndex,
 		bumpHistory,
 	});
+
+	// Escape returns to Normal view, like the close button, wherever focus is
+	// (it stays on the ribbon button that opened the view).
+	useEffect(() => listenForOutlineViewDismiss(document, onClose), [onClose]);
 
 	return (
 		<div

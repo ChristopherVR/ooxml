@@ -24,6 +24,7 @@
 		OUTLINE_ROW_ATTR,
 		OUTLINE_SLIDE_ATTR,
 		OUTLINE_VIEW_ATTR,
+		listenForOutlineViewDismiss,
 	} from 'ooxml-ui/pptx';
 	import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 
@@ -78,6 +79,10 @@
 		void rows;
 		session.restoreFocus(container);
 	});
+
+	// Escape returns to Normal view, like the close button, wherever focus is
+	// (it stays on the ribbon button that opened the view).
+	$effect(() => listenForOutlineViewDismiss(document, () => onclose()));
 
 	const rowLabel = (row: OutlineRow): string =>
 		t(row.kind === 'title' ? 'pptx.outline.titleLine' : 'pptx.outline.bodyLine');

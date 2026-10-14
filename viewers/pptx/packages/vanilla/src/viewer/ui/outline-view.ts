@@ -2,6 +2,7 @@ import type { CanvasSize, OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
 import {
 	applyOutlineEdit,
 	buildOutline,
+	listenForOutlineViewDismiss,
 	mapOutlineKey,
 	OUTLINE_LEVEL_ATTR,
 	OUTLINE_ROW_ATTR,
@@ -209,11 +210,18 @@ export function openOutlineViewOverlay(
 		}
 		closed = true;
 		stop?.();
+		stopDismiss();
 		el.remove();
 	}
 
 	render();
 	host.appendChild(el);
+	// Escape returns to Normal view, like the header's close button, wherever
+	// focus is (it stays on the ribbon button that opened the view).
+	const stopDismiss = listenForOutlineViewDismiss(doc, () => {
+		close();
+		options.onClose();
+	});
 
 	return { el, close };
 }

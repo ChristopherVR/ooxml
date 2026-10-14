@@ -134,6 +134,7 @@ let container: HTMLDivElement;
 let root: Root;
 let slides: PptxSlide[];
 let bumped: number;
+let onClose: ReturnType<typeof vi.fn>;
 
 function mount(canEdit = true): void {
 	const setSlides = (next: PptxSlide[]): void => {
@@ -152,7 +153,7 @@ function mount(canEdit = true): void {
 					bumpHistory={() => {
 						bumped += 1;
 					}}
-					onClose={vi.fn()}
+					onClose={onClose}
 				/>,
 			),
 		);
@@ -188,6 +189,7 @@ beforeEach(() => {
 	root = createRoot(container);
 	slides = deck();
 	bumped = 0;
+	onClose = vi.fn();
 });
 
 afterEach(() => {
@@ -257,5 +259,23 @@ describe('outline view overlay', () => {
 		expect(rowInputs().every((input) => input.readOnly)).toBeTruthy();
 		press(rowInputs()[1], { key: 'Tab' });
 		expect(rowInputs()[1].getAttribute(OUTLINE_LEVEL_ATTR)).toBe('1');
+	});
+
+	it('returns to Normal view on Escape, wherever focus is', () => {
+		mount();
+		// Focus is still on the ribbon button that opened the view, outside the pane.
+		const opener = document.createElement('button');
+		document.body.appendChild(opener);
+		const editorKeys = vi.fn();
+		opener.addEventListener('keydown', editorKeys);
+		const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+		act(() => {
+			opener.dispatchEvent(escape);
+		});
+		opener.remove();
+		expect(onClose).toHaveBeenCalledOnce();
+		expect(escape.defaultPrevented).toBeTruthy();
+		// The editor's own Escape (clear the selection) must not run underneath.
+		expect(editorKeys).not.toHaveBeenCalled();
 	});
 });

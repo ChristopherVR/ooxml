@@ -53,7 +53,9 @@ export function createFormatBackgroundPanel(
 		onClick: () => actions.clearSlideBackground(),
 	});
 	const closeBtn = makeButton(doc, {
-		label: t('pptx.findReplace.closeAriaLabel'),
+		// Its own name, not the find bar's: this button was copied from
+		// `find-replace-panel.ts` and announced itself as "Close find and replace".
+		label: t('pptx.common.close'),
 		icon: 'chevron-up',
 		onClick: () => setOpen(false),
 	});
@@ -76,10 +78,36 @@ export function createFormatBackgroundPanel(
 	el.appendChild(hideRow);
 
 	let open = false;
+	// Where focus was when the panel opened (the ribbon command), to hand it back.
+	let opener: HTMLElement | null = null;
 	const setOpen = (next: boolean): void => {
+		if (next === open) {
+			return;
+		}
 		open = next;
 		el.hidden = !open;
+		if (open) {
+			const active = doc.activeElement;
+			opener = active instanceof HTMLElement && !el.contains(active) ? active : null;
+			// Into the panel, like the find bar, so Escape reaches it straight away.
+			(el.querySelector<HTMLElement>('input:not(:disabled)') ?? closeBtn.btn).focus();
+		} else {
+			if (el.contains(doc.activeElement) && opener?.isConnected) {
+				opener.focus();
+			}
+			opener = null;
+		}
 	};
+	// Escape closes the panel, as it does Svelte's (the other docked one) and
+	// PowerPoint's task panes. Stopped here so the editor's own Escape (clear the
+	// selection) does not also run.
+	el.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && !event.isComposing) {
+			event.preventDefault();
+			event.stopPropagation();
+			setOpen(false);
+		}
+	});
 
 	return {
 		el,
