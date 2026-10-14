@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.12.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.12.2) - 2026-10-14
+
+### Bug Fixes
+
+- **ui:** Translate swatch, style and scheme names in pptx menus ([#83](https://github.com/ChristopherVR/ooxml/issues/83)) ([bd2908c](https://github.com/ChristopherVR/ooxml/commit/bd2908c03147486699378b99eccbba6cbd5b8efd))
+- **ui:** Draw the table background and lines of Themed Styles ([#76](https://github.com/ChristopherVR/ooxml/issues/76)) ([8ea2382](https://github.com/ChristopherVR/ooxml/commit/8ea2382e8654a12e5f8f48d1658c8e872b7c9cc0))
+
+### Documentation
+
+- Fix dead docx-viewer and code of conduct links ([fc53a08](https://github.com/ChristopherVR/ooxml/commit/fc53a08ed6e7a0165eba76564026b8ebad5ea0f8))
+
 ## [1.12.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.12.1) - 2026-10-14
 
 ### Performance
