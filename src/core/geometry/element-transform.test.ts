@@ -1,0 +1,106 @@
+import { describe, expect, it } from 'vitest';
+import {
+	DEFAULT_INTERACTION_MIN_SIZE as MIN_ELEMENT_SIZE,
+	applyDragDelta,
+	applyResize,
+	rotateDelta,
+	boxCenter,
+	type InteractionBox,
+} from './element-transform';
+function box(overrides: Partial<InteractionBox> = {}): InteractionBox {
+	return { x: 100, y: 100, width: 200, height: 100, rotation: 0, ...overrides };
+}
+describe('applyDragDelta', () => {
+	it('translates by screen delta divided by zoom', () => {
+		const r = applyDragDelta(box(), 40, 20, 2);
+		expect(r.x).toBe(120);
+		expect(r.y).toBe(110);
+		expect(r.width).toBe(200);
+		expect(r.height).toBe(100);
+	});
+
+	it('treats zoom of 0 as 1 (no divide-by-zero)', () => {
+		const r = applyDragDelta(box(), 10, 10, 0);
+		expect(r.x).toBe(110);
+		expect(r.y).toBe(110);
+	});
+
+	it('ignores rotation for a plain move', () => {
+		const r = applyDragDelta(box({ rotation: 90 }), 10, 0, 1);
+		expect(r.x).toBe(110);
+		expect(r.y).toBe(100);
+		expect(r.rotation).toBe(90);
+	});
+});
+
+describe('rotateDelta', () => {
+	it('is identity at 0 degrees', () => {
+		expect(rotateDelta(10, 5, 0)).toStrictEqual({ x: 10, y: 5 });
+	});
+
+	it('maps a screen +x delta onto the local -y axis at 90deg', () => {
+		const r = rotateDelta(10, 0, 90);
+		expect(r.x).toBeCloseTo(0, 6);
+		expect(r.y).toBeCloseTo(-10, 6);
+	});
+});
+
+describe('applyResize', () => {
+	it('grows from the SE handle keeping the top-left fixed', () => {
+		const r = applyResize(box(), 'se', 50, 30, 1);
+		expect(r.x).toBe(100);
+		expect(r.y).toBe(100);
+		expect(r.width).toBe(250);
+		expect(r.height).toBe(130);
+	});
+
+	it('grows from the NW handle moving the top-left', () => {
+		const r = applyResize(box(), 'nw', -50, -30, 1);
+		expect(r.width).toBe(250);
+		expect(r.height).toBe(130);
+		expect(r.x).toBe(50);
+		expect(r.y).toBe(70);
+	});
+
+	it('resizes a single axis for an edge handle', () => {
+		const r = applyResize(box(), 'e', 40, 999, 1);
+		expect(r.width).toBe(240);
+		expect(r.height).toBe(100);
+		expect(r.x).toBe(100);
+		expect(r.y).toBe(100);
+	});
+
+	it('honours min size and pins the moving edge', () => {
+		const r = applyResize(box(), 'w', 1000, 0, 1, { minSize: 20 });
+		expect(r.width).toBe(20);
+		// Left edge cannot pass the right edge: x = right - minSize = 300 - 20.
+		expect(r.x).toBe(280);
+	});
+
+	it('defaults the min size to MIN_ELEMENT_SIZE', () => {
+		const r = applyResize(box({ width: 20, height: 20 }), 'se', -1000, -1000, 1);
+		expect(r.width).toBe(MIN_ELEMENT_SIZE);
+		expect(r.height).toBe(MIN_ELEMENT_SIZE);
+	});
+
+	it('scales the screen delta by zoom', () => {
+		const r = applyResize(box(), 'e', 100, 0, 2);
+		expect(r.width).toBe(250); // 100px screen / zoom 2 = 50 element px
+	});
+
+	it('rotates the delta into local space for a rotated element', () => {
+		// At 90deg, a screen +x drag on the E handle becomes a local -y drag,
+		// which the E handle ignores (single x-axis), so width is unchanged.
+		const r = applyResize(box({ rotation: 90 }), 'e', 40, 0, 1);
+		expect(r.width).toBeCloseTo(200, 6);
+		// A screen +y drag becomes a local +x drag -> width grows.
+		const r2 = applyResize(box({ rotation: 90 }), 'e', 0, 40, 1);
+		expect(r2.width).toBeCloseTo(240, 6);
+	});
+});
+
+describe('boxCenter', () => {
+	it('returns the geometric center', () => {
+		expect(boxCenter(box())).toStrictEqual({ x: 200, y: 150 });
+	});
+});

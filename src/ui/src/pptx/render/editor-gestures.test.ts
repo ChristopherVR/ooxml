@@ -174,6 +174,8 @@ describe('createGestureController: rotate', () => {
 		expect(recorded.previews[1].transform.rotation).toBeCloseTo(76.6900675);
 		dispatchWindowPointer('pointercancel', pointer());
 		expect(recorded.ends).toHaveLength(1);
+		expect(recorded.ends[0]).toEqual({ transform: null, moved: false, id: 'el1' });
+		expect(recorded.previews.at(-1)?.transform.rotation).toBe(43);
 		expect(controller.isActive()).toBeFalsy();
 	});
 

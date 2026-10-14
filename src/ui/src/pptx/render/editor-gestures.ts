@@ -211,7 +211,17 @@ export function createGestureController(deps: GestureDeps): GestureController {
 	function detach(): void {
 		window.removeEventListener('pointermove', onPointerMove);
 		window.removeEventListener('pointerup', onPointerUp);
-		window.removeEventListener('pointercancel', onPointerUp);
+		window.removeEventListener('pointercancel', onPointerCancel);
+	}
+
+	function onPointerCancel(pointer: PointerLike): void {
+		const g = active;
+		if (!g || pointer.pointerId !== g.pointerId) return;
+		detach();
+		active = null;
+		// Repaint the original geometry without committing the interrupted preview.
+		if (g.moved) deps.onPreview(toTransform(g.id, g.startBox), []);
+		deps.onEnd(null, false, g.id);
 	}
 
 	return {
@@ -237,7 +247,7 @@ export function createGestureController(deps: GestureDeps): GestureController {
 			};
 			window.addEventListener('pointermove', onPointerMove);
 			window.addEventListener('pointerup', onPointerUp);
-			window.addEventListener('pointercancel', onPointerUp);
+			window.addEventListener('pointercancel', onPointerCancel);
 		},
 		isActive() {
 			return active !== null;

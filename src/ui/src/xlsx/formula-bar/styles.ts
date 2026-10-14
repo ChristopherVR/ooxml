@@ -1,4 +1,5 @@
 // Formula bar CSS (Excel for the web look), injected once into the shadow root.
+import { MIN_TOUCH_TARGET_PX, TOUCH_CONTROL_MEDIA } from '../../touch-targets';
 export const FORMULA_BAR_CSS = `
 .xfb{position:relative;display:flex;align-items:stretch;gap:0;min-height:26px;padding:3px 6px;box-sizing:border-box;background:var(--xve-background,#fff);border-bottom:1px solid var(--xve-border,#e1dfdd);font:12px/1.4 'Segoe UI',system-ui,sans-serif;color:var(--xve-foreground,#252423)}
 .xfb-namebox{position:relative;display:flex;align-items:center;width:110px;flex:none;border:1px solid var(--xve-input,#c8c6c4);border-radius:var(--xve-radius,2px);background:var(--xve-background,#fff)}
@@ -29,4 +30,12 @@ export const FORMULA_BAR_CSS = `
 .xfb .xg-formula .xg-field-backdrop{visibility:visible}
 .xfb .xg-formula .xg-field-input{color:transparent;caret-color:var(--xve-foreground,#252423)}
 .xfb .xg-assist{top:100%}
+@media ${TOUCH_CONTROL_MEDIA}{
+.xfb{min-height:${MIN_TOUCH_TARGET_PX + 8}px}
+.xfb-btn,.xfb-name-toggle{min-width:${MIN_TOUCH_TARGET_PX}px;min-height:${MIN_TOUCH_TARGET_PX}px}
+.xfb-namebox{height:${MIN_TOUCH_TARGET_PX}px;width:104px;min-width:104px}
+.xfb-name,.xfb-input{height:${MIN_TOUCH_TARGET_PX}px}
+.xfb .xg-field-input{font-size:16px;line-height:24px;padding-top:9px}
+.xfb-name-item{min-height:${MIN_TOUCH_TARGET_PX}px;display:flex;align-items:center}
+}
 `;

@@ -18,6 +18,7 @@ import { documentVisibility } from './viewer-layers';
 import { createMovementPreview } from './viewer-movement-preview';
 import { hideGestureOverlays } from './viewer-gesture-overlays';
 import { pointerShapeTarget } from './viewer-shape-target';
+import { trackPointerPan } from '../pointer-gesture';
 
 interface Gesture {
 	pointer: number;
@@ -43,6 +44,7 @@ export class ViewerPointerGestures {
 	#drag: Gesture | undefined;
 	#request = 0;
 	#cancelClick = false;
+	#cancelPan: (() => void) | undefined;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -55,6 +57,7 @@ export class ViewerPointerGestures {
 		},
 	) {}
 	render(state: ViewerState): void {
+		this.#cancelPan?.();
 		if (this.#drag && !this.#current(this.#drag, state)) this.#cancel();
 	}
 	wire(): () => void {
@@ -77,6 +80,7 @@ export class ViewerPointerGestures {
 			},
 		});
 		return () => {
+			this.#cancelPan?.();
 			++this.#request;
 			this.viewport.ownerDocument.removeEventListener('pointerup', stopOutside);
 			dispose();
@@ -108,10 +112,33 @@ export class ViewerPointerGestures {
 		const state = this.controller.state,
 			page = state.document?.pages[state.pageIndex];
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
-		if (!svg || !page || !state.document || state.loading || state.edit.busy || !svg.contains(node))
+		if (
+			!svg ||
+			!page ||
+			!state.document ||
+			state.loading ||
+			state.edit.busy ||
+			(!svg.contains(node) && !(node === this.viewport && event.pointerType === 'touch'))
+		)
 			return;
 		// Dragging inside a group moves the whole top-level group, as in Visio.
 		const group = pointerShapeTarget(node, state.selectedShapes, true);
+		// A finger on empty paper pans; shape bodies keep their editing gesture.
+		if (!group && event.pointerType === 'touch') {
+			this.#cancelPan?.();
+			this.#cancelPan = trackPointerPan(
+				this.viewport,
+				event,
+				() => {
+					this.#cancelClick = true;
+				},
+				() => {
+					this.#cancelPan = undefined;
+				},
+			);
+			event.preventDefault();
+			return;
+		}
 		if (
 			group &&
 			(!state.edit.sourceAvailable ||

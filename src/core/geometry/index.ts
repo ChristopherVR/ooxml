@@ -88,3 +88,5 @@ export * from './rotate-handle-placement';
 export * from './graph-layout';
 export * from './auto-align';
 export * from './nudge';
+
+export * from './element-transform';

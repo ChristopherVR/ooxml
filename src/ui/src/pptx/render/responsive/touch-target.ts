@@ -17,7 +17,8 @@
 import { isDensePanelCompact } from './dense-panel-viewport';
 
 /** WCAG 2.5.5 (AAA) / platform-HIG minimum touch target, in CSS pixels. */
-export const MIN_TOUCH_TARGET_PX = 44;
+import { MIN_TOUCH_TARGET_PX } from '../../../touch-targets';
+export { MIN_TOUCH_TARGET_PX } from '../../../touch-targets';
 
 /** The un-adjusted size dense-panel icon/text buttons use above the breakpoint. */
 export const DEFAULT_DENSE_BUTTON_PX = 28;

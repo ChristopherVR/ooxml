@@ -99,7 +99,7 @@ it.each(['Escape', 'pointercancel', 'lostpointercapture', 'selection', 'source',
 		else if (kind === 'selection') ui.controller.clearSelection();
 		else if (kind === 'source') ui.controller.setDocument(null);
 		else if (kind === 'tool') ui.inactive();
-		else ui.pointer(kind, ui.svg);
+		else ui.pointer(kind, kind === 'lostpointercapture' ? ui.viewport : ui.svg);
 		ui.pointer('pointerup', ui.svg, 65, 25);
 		await Promise.resolve();
 		expect(ui.svg.querySelector('[data-resize-frame-preview]')).toBeNull();

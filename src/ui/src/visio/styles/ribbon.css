@@ -207,6 +207,11 @@ office-ui-status-item[value=''] {
 .viewport[data-tool='connector'] {
 	touch-action: none;
 }
+
+/* Selection owns canvas drags. Surrounding chrome retains native scrolling. */
+.viewport[data-tool='pointer'] {
+	touch-action: none;
+}
 /* Connector tool: the shape under the pointer is the glue target (Visio's green glue box). */
 .viewport .paper [data-connect-target='true'] > path[data-geometry] {
 	/* Drawing units (inches), like the canvas focus stroke; wins over a focused shape's dashes. */

@@ -1,6 +1,7 @@
 import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
 import type { ViewerState } from './controller';
 import { visioSelectionIsOnPage } from 'ooxml-core/visio/ui';
+import { ownsCaptureLoss } from '../pointer-gesture';
 export interface HandleGestureSnapshot {
 	pointer: number;
 	svg: SVGSVGElement;
@@ -66,7 +67,13 @@ export function wireHandleEvents(
 		if (event.pointerId === callbacks.pointer()) callbacks.cancel();
 	};
 	viewport.addEventListener('pointercancel', cancel, options);
-	viewport.addEventListener('lostpointercapture', cancel, options);
+	viewport.addEventListener(
+		'lostpointercapture',
+		(event) => {
+			if (ownsCaptureLoss(viewport, event)) cancel(event);
+		},
+		options,
+	);
 	viewport.addEventListener(
 		'keydown',
 		(event) => {

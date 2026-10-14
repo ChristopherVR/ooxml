@@ -1,6 +1,26 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { wireHandleEvents } from './viewer-handle-events';
 afterEach(() => document.body.replaceChildren());
+it('ignores implicit child capture transfer but cancels when the viewport loses capture', () => {
+	const viewport = document.createElement('div');
+	const child = document.createElement('span');
+	viewport.append(child);
+	const cancel = vi.fn();
+	const dispose = wireHandleEvents(viewport, {
+		pointer: () => 7,
+		start: vi.fn(),
+		move: vi.fn(),
+		finish: async () => {},
+		cancel,
+	});
+	for (const target of [child, viewport]) {
+		const event = new Event('lostpointercapture', { bubbles: true });
+		Object.defineProperty(event, 'pointerId', { value: 7 });
+		target.dispatchEvent(event);
+		expect(cancel).toHaveBeenCalledTimes(target === child ? 0 : 1);
+	}
+	dispose();
+});
 it('owns cancelled clicks and resets stale ownership on a new press', () => {
 	const viewport = document.createElement('div');
 	document.body.append(viewport);

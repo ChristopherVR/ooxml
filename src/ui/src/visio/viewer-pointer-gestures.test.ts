@@ -6,6 +6,20 @@ afterEach(() => {
 	document.body.replaceChildren();
 	vi.unstubAllGlobals();
 });
+it('pans empty paper with touch without selecting or editing shapes', async () => {
+	const ui = await pointerViewer();
+	ui.select();
+	ui.viewport.scrollLeft = 100;
+	ui.viewport.scrollTop = 100;
+	ui.pointer('pointerdown', ui.svg, 10, 10, { pointerType: 'touch' });
+	ui.pointer('pointermove', ui.viewport, -30, -20, { pointerType: 'touch' });
+	ui.pointer('pointerup', ui.viewport, -30, -20, { pointerType: 'touch' });
+	expect(ui.viewport.scrollLeft).toBe(140);
+	expect(ui.viewport.scrollTop).toBe(130);
+	expect(ui.edits).toHaveLength(0);
+	expect(ui.svg.querySelector('[data-selection-marquee]')).toBeNull();
+	ui.dispose();
+});
 it('previews one common translation, commits exactly one batch and retains selection through source history', async () => {
 	const ui = await pointerViewer();
 	ui.select(['2', '1']);
@@ -81,7 +95,7 @@ it.each(['Escape', 'lostpointercapture', 'selection', 'source', 'tool'] as const
 		else if (kind === 'selection') ui.controller.selectShape(null);
 		else if (kind === 'source') ui.controller.setDocument(null);
 		else if (kind === 'tool') ui.inactive();
-		else ui.pointer(kind, ui.svg);
+		else ui.pointer(kind, ui.viewport);
 		ui.pointer('pointerup', ui.svg, 50, 40);
 		await Promise.resolve();
 		expect(ui.svg.querySelector('[data-movement-preview]')).toBeNull();

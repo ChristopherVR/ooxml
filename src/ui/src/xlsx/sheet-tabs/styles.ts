@@ -1,4 +1,5 @@
 // Excel-for-the-web sheet tab bar: scroll arrows and "+" on the left, then the tab strip.
+import { MIN_TOUCH_TARGET_PX, TOUCH_CONTROL_MEDIA } from '../../touch-targets';
 export const TABS_CSS = `
 .xst {
 	display: flex;
@@ -109,5 +110,10 @@ export const TABS_CSS = `
 	margin-left: -1px;
 	background: var(--xve-selection-border, #217346);
 	pointer-events: none;
+}
+@media ${TOUCH_CONTROL_MEDIA} {
+.xst{height:${MIN_TOUCH_TARGET_PX + 4}px}
+.xst-btn{width:${MIN_TOUCH_TARGET_PX}px;height:${MIN_TOUCH_TARGET_PX}px}
+.xst-tab{min-width:${MIN_TOUCH_TARGET_PX}px;min-height:${MIN_TOUCH_TARGET_PX}px}
 }
 `;

@@ -17,6 +17,8 @@ import { h, place, svgNode, viewOf } from './dom';
 import { QUADRANTS, type Box } from 'ooxml-core/xlsx/ui';
 import type { GridView } from './grid-view';
 import { paintSmartArt } from './smartart';
+import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
+import { trackPointerGesture } from '../../pointer-gesture';
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
@@ -29,6 +31,7 @@ export class DrawingLayer {
 	#nodes = new Map<string, ObjectNode>();
 	#urls = new Map<string, string>();
 	#generation = 0;
+	#cancelDrag: (() => void) | undefined;
 
 	constructor(view: GridView) {
 		this.#view = view;
@@ -43,6 +46,7 @@ export class DrawingLayer {
 
 	/** Charts depend on cell values: bump after model changes so they redraw. */
 	invalidate(): void {
+		this.#cancelDrag?.();
 		this.#generation++;
 	}
 
@@ -177,6 +181,7 @@ export class DrawingLayer {
 		const view = this.#view;
 		event.stopPropagation();
 		if (event.button !== 0) return;
+		this.#cancelDrag?.();
 		event.preventDefault();
 		const sheet = view.sheet();
 		const drawing = sheet?.drawings[index];
@@ -194,37 +199,25 @@ export class DrawingLayer {
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();
 		if (view.ctx.readOnly() || !session) return;
-		const grip = (event.target as Element).closest<HTMLElement>('[data-grip]')?.dataset.grip;
+		const grip = (event.target as Element).closest<HTMLElement>('[data-grip]')?.dataset.grip as
+			| ResizeHandleId
+			| undefined;
 		const start = view.clientToView(event.clientX, event.clientY);
 		const origin = anchorToPixelBox(sheet, drawing.anchor, view.metrics);
 		let box = origin;
-		node.setPointerCapture?.(event.pointerId);
 		const move = (e: PointerEvent) => {
 			const p = view.clientToView(e.clientX, e.clientY);
 			const dx = p.x - start.x;
 			const dy = p.y - start.y;
-			if (!grip) box = { ...origin, x: Math.max(0, origin.x + dx), y: Math.max(0, origin.y + dy) };
-			else {
-				const left = grip.includes('w')
-					? Math.min(origin.x + dx, origin.x + origin.w - 8)
-					: origin.x;
-				const top = grip.includes('n')
-					? Math.min(origin.y + dy, origin.y + origin.h - 8)
-					: origin.y;
-				const right = grip.includes('e')
-					? Math.max(origin.x + origin.w + dx, left + 8)
-					: origin.x + origin.w;
-				const bottom = grip.includes('s')
-					? Math.max(origin.y + origin.h + dy, top + 8)
-					: origin.y + origin.h;
-				box = { x: Math.max(0, left), y: Math.max(0, top), w: right - left, h: bottom - top };
-			}
+			const startBox = { x: origin.x, y: origin.y, width: origin.w, height: origin.h };
+			const next = grip
+				? applyResize(startBox, grip, dx, dy, 1, { minSize: 8 })
+				: applyDragDelta(startBox, dx, dy, 1);
+			box = { x: Math.max(0, next.x), y: Math.max(0, next.y), w: next.width, h: next.height };
 			place(node, box.x, box.y, box.w, box.h);
 		};
-		const up = (e: PointerEvent) => {
-			node.removeEventListener('pointermove', move);
-			node.removeEventListener('pointerup', up);
-			node.releasePointerCapture?.(e.pointerId);
+		const up = () => {
+			this.#cancelDrag = undefined;
 			if (box.x !== origin.x || box.y !== origin.y || box.w !== origin.w || box.h !== origin.h)
 				session.setDrawingAnchor(
 					view.sheetIndex(),
@@ -232,8 +225,14 @@ export class DrawingLayer {
 					pixelBoxToAnchor(sheet, box, view.metrics, drawing.anchor),
 				);
 		};
-		node.addEventListener('pointermove', move);
-		node.addEventListener('pointerup', up);
+		this.#cancelDrag = trackPointerGesture(node, event.pointerId, {
+			move,
+			commit: up,
+			cancel: () => {
+				this.#cancelDrag = undefined;
+				place(node, origin.x, origin.y, origin.w, origin.h);
+			},
+		});
 	}
 
 	/** Moves the selected drawing by a few pixels (arrow keys); false when nothing is selected. */
@@ -256,6 +255,7 @@ export class DrawingLayer {
 	}
 
 	destroy(): void {
+		this.#cancelDrag?.();
 		const win = viewOf(this.#view.root);
 		for (const url of this.#urls.values()) win?.URL?.revokeObjectURL?.(url);
 		this.#urls.clear();

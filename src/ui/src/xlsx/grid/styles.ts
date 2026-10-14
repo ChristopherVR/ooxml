@@ -1,5 +1,6 @@
 // Grid CSS (shadow DOM). Colours come from the `--xve-*` theme tokens with Excel-like fallbacks;
 // the cell area ("paper") stays white like Excel unless the host overrides --xve-sheet-bg.
+import { MIN_TOUCH_TARGET_PX } from '../../touch-targets';
 export const GRID_CSS = `
 .xg-root [hidden]{display:none!important}
 .xg-root{position:relative;overflow:hidden;width:100%;height:100%;min-height:0;outline:none;
@@ -98,12 +99,13 @@ export const GRID_CSS = `
 .xg-alert button{min-width:64px;padding:4px 10px;border:1px solid var(--xve-border,#c8c8c8);border-radius:3px;background:var(--xve-secondary,#f3f3f3);color:inherit;font:inherit}
 .xg-alert button:first-child{background:var(--xve-selection-border,#217346);color:#fff;border-color:transparent}
 .xg-drawings{z-index:4}
-.xg-obj{position:absolute;box-sizing:border-box;pointer-events:auto;cursor:default}
+.xg-obj{position:absolute;box-sizing:border-box;pointer-events:auto;cursor:default;touch-action:none}
 .xg-obj img,.xg-obj svg{display:block;width:100%;height:100%;pointer-events:none}
 .xg-chart svg [data-chart-series],.xg-chart svg [data-chart-part]{pointer-events:auto}
 .xg-obj.xg-chart{background:#fff;outline:1px solid #d9d9d9;outline-offset:-1px}
 .xg-obj.xg-obj-sel{outline:1px solid #8a8a8a;outline-offset:0}
 .xg-obj .xg-grip{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #555;box-sizing:border-box;border-radius:50%}
+@media(pointer:coarse){.xg-grip::before{content:'';position:absolute;inset:-${(MIN_TOUCH_TARGET_PX - 8) / 2}px;touch-action:none}}
 .xg-obj-unsupported{background:repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 6px,#ececec 6px,#ececec 12px);border:1px dashed #aaa;
 	font-size:11px;color:#555;display:flex;align-items:center;justify-content:center;text-align:center}
 .xg-obj.xg-smartart{overflow:hidden}

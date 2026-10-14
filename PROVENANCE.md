@@ -1,5 +1,11 @@
 # Provenance
 
+## Shared move, resize and touch interaction
+
+Source: ChristopherVR/ooxml, commit `3874d8d63`, `src/ui/src/pptx/render/element-interaction.ts` and its tests. Move/resize transforms, local-axis projection, handle metadata and box centres move to `src/core/geometry/element-transform.ts`, with their behavior tests. The PowerPoint path remains a compatibility export; the 12-unit default remains unchanged and Excel passes its existing 8-unit minimum explicitly. Core no longer imports a PowerPoint constant for these calculations.
+
+The 44-pixel touch target previously defined in `src/ui/src/pptx/render/responsive/touch-target.ts` moves to the neutral UI `touch-targets.ts` and is reused by Excel. Pointer capture ownership and cancellation stay in DOM-only `pointer-gesture.ts`; Visio and Excel consume it. Visio keeps its ShapeSheet and coordinate mapping, Excel its worksheet anchors, and PowerPoint its editing adapters. Native touch regressions distinguish capture transfer from capture loss, and cancellation from release.
+
 ## Shared core build command runner
 
 Source: ChristopherVR/ooxml at `376480f82`, `src/core/scripts/build.mjs`.
