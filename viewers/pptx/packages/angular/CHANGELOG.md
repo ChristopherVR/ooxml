@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.36.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.36.2) - 2026-10-14
+
+### Bug Fixes
+
+- **pptx:** Commit inline edits and suppress bookmark shortcuts ([fea149f](https://github.com/ChristopherVR/ooxml/commit/fea149fff0444996b68d9c869d5209acdc9581ea))
+- **pptx:** Close outline view and format background on escape ([8b837d7](https://github.com/ChristopherVR/ooxml/commit/8b837d71ee66588e7912a958c891c31e4e19868a))
+
 ## [4.36.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.36.1) - 2026-10-14
 
 ### Bug Fixes
