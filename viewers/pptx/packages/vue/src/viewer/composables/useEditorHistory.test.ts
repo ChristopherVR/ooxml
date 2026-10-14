@@ -1,6 +1,6 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 
 import { useEditorHistory } from './useEditorHistory';
 
@@ -36,6 +36,25 @@ describe('useEditorHistory', () => {
 		expect(redoLabel.value).toBe('Delete shape');
 		pushHistory();
 		expect(undoLabel.value).toBeUndefined();
+	});
+
+	it('pulls the active slide back into a deck that undo shortened', () => {
+		// Undoing New Slide on the last slide removes the slide on screen; the
+		// active index used to stay one past the end and the stage drew nothing.
+		const slides = shallowRef<PptxSlide[]>([slide('s1'), slide('s2')]);
+		const activeSlideIndex = ref(1);
+		const { pushHistory, undo, redo } = useEditorHistory(slides, undefined, { activeSlideIndex });
+		pushHistory('New slide');
+		slides.value = [...slides.value, slide('s3')];
+		activeSlideIndex.value = 2;
+
+		undo();
+		expect(slides.value).toHaveLength(2);
+		expect(activeSlideIndex.value).toBe(1);
+
+		redo();
+		expect(slides.value).toHaveLength(3);
+		expect(activeSlideIndex.value).toBe(1);
 	});
 
 	it('starts with no undo/redo available', () => {

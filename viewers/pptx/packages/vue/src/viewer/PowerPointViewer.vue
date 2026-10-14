@@ -503,6 +503,7 @@ const {
 } = selection;
 const history = useEditorHistory(slides, templateElementsBySlideId, {
 	maxDepth: resolveHistoryDepth(viewerOptions.value),
+	activeSlideIndex,
 });
 // File > Options > Advanced > "Maximum number of undos", re-applied whenever
 // it changes mid-session (not just at construction).
