@@ -91,8 +91,10 @@ for (const name of ['nested-table-reference', 'nested-split-late', 'nested-secon
 				.locator('.dve-print-block[data-read-only="true"]');
 			await expect(continued.first()).toHaveCSS('left', '0px');
 			await expect(continued.nth(1)).toHaveCSS('left', '106.667px');
-			expect(
-				await continued.nth(1).evaluate((node) => parseFloat(getComputedStyle(node).width)),
-			).toBeCloseTo(106.6667, 1);
+			// Reflow can replace this block between resolving the locator and reading its style.
+			// Retry the live geometry, as the CSS assertions above do, without widening the tolerance.
+			await expect
+				.poll(() => continued.nth(1).evaluate((node) => parseFloat(getComputedStyle(node).width)))
+				.toBeCloseTo(106.6667, 1);
 		}
 	});
