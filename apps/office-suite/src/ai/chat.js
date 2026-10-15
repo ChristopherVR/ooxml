@@ -30,6 +30,7 @@ import { messageNode, REPLY_FIELDS, selectVersion, snapshot } from './message-vi
 import { acceptDrops, importForChat, noteBadge, pickFiles } from './attach.js';
 import { joinRoom, newRoomId, toShared } from './shared.js';
 import { followRoom } from './shared-room.js';
+import { reviewInDocument } from './review.js';
 
 export function createChat({ root, prefix, deps, empty, placeholder, onChange }) {
 	const { store, sessions, refresh, open, getTeams, openIds, showVersions } = deps;
@@ -193,7 +194,14 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		$(`${prefix}-people`).hidden = !room;
 	}
 	const view = {
-		cardDeps: { store, sessions, refresh, open, showVersions },
+		cardDeps: {
+			store,
+			sessions,
+			refresh,
+			open,
+			showVersions,
+			review: (options) => reviewInDocument({ ...options, store, sessions, open, refresh }),
+		},
 		settings: effectiveSettings,
 		persist: () => void persist(),
 		isLast: (message) => message === conversation?.messages.at(-1),

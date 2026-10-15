@@ -50,6 +50,7 @@ export function proposalCard({
 	refresh,
 	save,
 	showVersions,
+	review,
 }) {
 	validateChanges(changes, refs);
 	const panel = el('div', 'ai-proposal');
@@ -99,7 +100,46 @@ export function proposalCard({
 	const apply = button(changes.length > 1 ? 'Apply selected' : 'Apply changes', true);
 	if (changes.length > 1) apply.setAttribute('aria-label', 'Apply changes');
 	const dismiss = button('Dismiss');
-	actions.append(apply, dismiss);
+	actions.append(apply);
+	// Each file can show its suggestions in place, in its own editor.
+	const files = refs.filter((d) => changes.some((c) => c.documentId === d.id));
+	if (review)
+		for (const ref of files) {
+			const show = button(files.length > 1 ? `Review in ${ref.name}` : 'Review in document');
+			show.title = `Show the suggestions inside ${ref.name}`;
+			show.onclick = () =>
+				task(() =>
+					review({
+						ref,
+						items: changes
+							.map((change, index) => ({ change, detail: details[index], index }))
+							.filter(({ change, index }) => change.documentId === ref.id && boxes[index].checked),
+						applied: (indexes, doc) => {
+							for (const [i, box] of boxes.entries()) {
+								if (changes[i].documentId === ref.id) box.checked = indexes.includes(i);
+								if (changes[i].documentId === ref.id) box.disabled = true;
+							}
+							reviewed.add(ref.id);
+							// Once every file is decided the card becomes a note; until then it stays.
+							if (files.every((f) => reviewed.has(f.id)))
+								save?.({ applied: boxes.map((b) => b.checked && b.disabled) });
+							description.textContent = `Applied ${indexes.length} suggestion${indexes.length === 1 ? '' : 's'} to ${doc.name}. The previous version was kept.`;
+							show.remove();
+							if (!files.some((f) => !reviewed.has(f.id))) {
+								actions.replaceChildren();
+								if (showVersions) {
+									const history = button('Version history');
+									history.onclick = () => showVersions(doc.id);
+									actions.append(history);
+								}
+							}
+						},
+					}),
+				);
+			actions.append(show);
+		}
+	const reviewed = new Set();
+	actions.append(dismiss);
 	panel.append(heading, description, list, details_, actions);
 	dismiss.onclick = () => panel.remove();
 	async function current(docs) {
@@ -115,7 +155,8 @@ export function proposalCard({
 	}
 	apply.onclick = () =>
 		task(async () => {
-			const chosen = changes.filter((_, i) => boxes[i].checked);
+			// Edits already applied from a document review are not applied twice.
+			const chosen = changes.filter((_, i) => boxes[i].checked && !boxes[i].disabled);
 			const targets = refs.filter((d) => chosen.some((c) => c.documentId === d.id));
 			apply.disabled = true;
 			const unlock = sessions.lock(targets.map((d) => d.id));

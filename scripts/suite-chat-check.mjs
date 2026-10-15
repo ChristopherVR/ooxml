@@ -122,6 +122,59 @@ try {
 	await page.locator('.chat-msg.from-user', { hasText: 'budget workbook' }).waitFor();
 	await page.locator('.chat-msg.from-assistant', { hasText: 'budget.xlsx' }).waitFor();
 	console.log('A shared chat synced requests and replies between two pages');
+	await guest.close();
+
+	// Suggestions show inside the document: Word as tracked changes, PowerPoint in place.
+	await page.locator('#rail [data-home]').click();
+	await page.locator('#file-input').setInputFiles({
+		name: 'Plain brief.docx',
+		mimeType: 'application/octet-stream',
+		buffer: Buffer.from(await createDocx(['launch brief', 'ships in november.'])),
+	});
+	await page.locator('docx-editor').last().waitFor();
+	const pane = page.locator('#assistant');
+	if (await pane.isHidden()) await page.locator('#assistant-toggle').click();
+	await page.locator('#ai-new').click();
+	await page.locator('#assistant-toggle').click();
+	await page.locator('#assistant-toggle').click();
+	await page.locator('#ai-scope .chat-chip', { hasText: 'Plain brief.docx' }).waitFor();
+	await page.locator('#ai-input').fill('Title-case this document');
+	await page.locator('#ai-send').click();
+	await pane.getByRole('button', { name: 'Review in document' }).click();
+	const redline = page.locator('docx-editor .dve-revision-insert', {
+		hasText: 'Ships In November.',
+	});
+	await redline.waitFor();
+	await page.locator('docx-editor .dve-revision-delete').first().waitFor();
+	await page.screenshot({ path: join(process.env.TEMP ?? root, 'ooxml-suite-review-word.png') });
+	await page.locator('.review-panel').getByRole('button', { name: 'Accept all' }).click();
+	await page.locator('.review-panel').waitFor({ state: 'detached' });
+	await page.locator('docx-editor', { hasText: 'Ships In November.' }).waitFor();
+	assert.equal(await page.locator('docx-editor .dve-revision-insert').count(), 0);
+	console.log('Word suggestions showed as tracked changes and were accepted');
+
+	await page.locator('#ai-new').click();
+	await page.locator('#ai-input').fill('Create a three-slide presentation about the launch plan');
+	await page.locator('#ai-send').click();
+	await pane.getByRole('button', { name: /^Create/u }).click();
+	await page.locator('.pptxv').last().waitFor();
+	await page.locator('#ai-new').click();
+	await page.locator('#assistant-toggle').click();
+	await page.locator('#assistant-toggle').click();
+	await page.locator('#ai-input').fill('Title-case this deck');
+	await page.locator('#ai-send').click();
+	await pane.getByRole('button', { name: 'Review in document' }).click();
+	const panel = page.locator('.review-panel');
+	await panel.waitFor();
+	const count = await panel.locator('.review-item').count();
+	assert.ok(count > 1, 'the deck has several suggestions');
+	await panel.locator('.review-toggle').first().click();
+	await panel.locator('.review-item.skipped').waitFor();
+	await page.screenshot({ path: join(process.env.TEMP ?? root, 'ooxml-suite-review-deck.png') });
+	await panel.getByRole('button', { name: 'Apply kept changes' }).click();
+	await panel.waitFor({ state: 'detached' });
+	await pane.getByText(`Applied ${count - 1} suggestion`).waitFor();
+	console.log('PowerPoint suggestions showed in place; one was undone and the rest applied');
 	assert.deepEqual(errors, []);
 	await context.close();
 } finally {

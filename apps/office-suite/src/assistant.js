@@ -68,8 +68,7 @@ export function mountAssistant({ deps, getActive, openChat }) {
 		/** Called whenever the pane opens: attach the open document and refresh the suggestions. */
 		async opened() {
 			const active = getActive();
-			if (active && effectiveSettings().attachOpenDocument && !chat.hasAttachments() && !chat.id)
-				await chat.attach([active]);
+			if (active && effectiveSettings().attachOpenDocument && !chat.id) await chat.attach([active]);
 			await renderIntro();
 			chat.render();
 			chat.focus();

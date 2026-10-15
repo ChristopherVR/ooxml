@@ -92,6 +92,11 @@ function sample(kind, topic, count = 4) {
 }
 
 function describe(file) {
+	const text = summary(file);
+	return file.content?.omitted ? `${text}\n\n_${file.content.omitted}_` : text;
+}
+
+function summary(file) {
 	const c = file.content ?? {};
 	if (file.kind === 'docx') {
 		const lines = (c.paragraphs ?? [])
@@ -108,7 +113,7 @@ function describe(file) {
 	}
 	if (file.kind === 'xlsx') {
 		const sheets = c.sheets ?? [];
-		return `**${file.name}** (Excel): ${sheets.map((s) => `${s.name} has ${s.cells.length} filled cell${s.cells.length === 1 ? '' : 's'}`).join('; ')} (${c.scope ?? 'read range'}).`;
+		return `**${file.name}** (Excel): ${sheets.map((s) => `${s.name} has ${s.cells.length} filled cell${s.cells.length === 1 ? '' : 's'}`).join('; ')}.`;
 	}
 	if (file.kind === 'pptx') {
 		const slides = c.slides ?? [];

@@ -1297,3 +1297,98 @@ body:not([data-ai='on']) .ai-only {
 .file-tab.drop-after {
 	box-shadow: inset -2px 0 0 var(--blue);
 }
+
+/* Assistant suggestions shown in the document: a panel floating over the editor. */
+.review-panel {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	z-index: 20;
+	width: min(360px, calc(100% - 32px));
+	max-height: min(60%, 520px);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+	color: var(--text);
+	box-shadow: 0 8px 28px #0000002e;
+	font-size: 13px;
+}
+.review-head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.review-collapse {
+	margin-left: auto;
+	padding: 0 8px;
+	line-height: 22px;
+}
+.review-panel.folded > :not(.review-head) {
+	display: none;
+}
+.review-help {
+	margin: 0;
+	color: var(--muted);
+	font-size: 12px;
+}
+.review-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	overflow: auto;
+	min-height: 0;
+	display: grid;
+	gap: 6px;
+}
+.review-item {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 4px 8px;
+	align-items: start;
+	padding: 8px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+.review-item .ai-diff {
+	grid-column: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+	line-height: 1.5;
+}
+/* Cell suggestions list one cell per line. */
+.review-item .ai-diff > span {
+	display: block;
+}
+.review-item.skipped .ai-diff {
+	opacity: 0.5;
+	text-decoration: line-through;
+}
+.review-where {
+	justify-self: start;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--accent-ink);
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.review-where:disabled {
+	color: var(--muted);
+	cursor: default;
+}
+.review-toggle {
+	grid-row: 1 / span 2;
+	grid-column: 2;
+	font-size: 12px;
+	padding: 4px 10px;
+}
+.review-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}

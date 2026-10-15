@@ -126,3 +126,12 @@ A shared chat is a conversation that lives in its own collaboration room (`creat
 - Whoever asks runs the request with their own model connection and streams the reply into the room; the others watch it arrive and see who is typing or asking.
 - Attached files never leave the asker's device through the room: only their names travel with the request. Proposed edits can be applied only by the person who asked; anyone can create their own copy of a proposed new file.
 - The room id is the only key, so treat invite links as secrets, and authorise rooms on the sync server for anything sensitive. The room content is readable by the sync server, as with Teams chat.
+
+## Reviewing proposed edits in the document
+
+Every proposal card offers **Review in document**, which opens the file in its editor with the suggestions in place:
+
+- **Word** shows them as real tracked changes by "Assistant" (`suggestDocxRunText` in `ooxml-core/automation`). Accept or reject each one from the Review tab and save, or use **Accept all** / **Reject all** in the suggestions panel.
+- **Excel, PowerPoint and Visio** have no tracked changes in their file formats, so the editor shows the file as it would be, read only (Visio has no read-only switch; edits made there while reviewing are discarded). The panel selects each change in the editor (the cells, the slide's shape, or the Visio page and shape), each one can be undone or kept, and **Apply kept changes** saves them as one version. **Discard** returns to the saved file.
+
+The request reads each attached file within its share of `limits.maxContextChars`: Word documents paragraph by paragraph, workbooks as every filled cell of every sheet, decks slide by slide and drawings page by page. When something does not fit, the view carries an `omitted` note saying what was left out, and the model is told to say so.

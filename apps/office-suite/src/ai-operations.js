@@ -1,43 +1,70 @@
 /** The engine loads on first use, so the chat can paint before any Office code arrives. */
 const automation = () => import('ooxml-core/automation');
 
-export async function inspect(doc) {
-	const { inspectDocx, inspectXlsx, readXlsxRange, inspectVisio } = await automation();
+/** Keeps items from the front of `list` while their JSON fits in `budget` characters. */
+function fit(list, budget) {
+	let used = 0,
+		count = 0;
+	for (const item of list) {
+		used += JSON.stringify(item).length + 1;
+		if (used > budget) break;
+		count++;
+	}
+	return count;
+}
+
+/**
+ * A file as the assistant reads it, within `budget` JSON characters. Nothing is cut silently: when
+ * the budget runs out the view says what it left out (`omitted`), so the model can say so too.
+ */
+export async function inspect(doc, budget = 150000) {
+	const { inspectDocx, readXlsxFilledCells, inspectVisio } = await automation();
 	if (doc.kind === 'docx') {
 		const source = await inspectDocx(doc.bytes);
-		const paragraphs = source.blocks.flatMap((b) =>
-			b.type === 'paragraph'
-				? [b]
-				: b.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs)),
-		);
-		return {
-			paragraphs: paragraphs.slice(0, 500).map((p) => ({
+		const paragraphs = source.blocks
+			.flatMap((b) =>
+				b.type === 'paragraph'
+					? [b]
+					: b.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs)),
+			)
+			.map((p) => ({
 				id: p.id,
 				runs: p.runs.map((r, runIndex) => ({ runIndex, text: r.text })),
-			})),
-			truncated: paragraphs.length > 500,
+			}));
+		const kept = fit(paragraphs, budget);
+		return {
+			paragraphs: paragraphs.slice(0, kept),
+			...(kept < paragraphs.length
+				? { omitted: `Paragraphs ${kept + 1} to ${paragraphs.length} were left out to fit.` }
+				: {}),
 		};
 	}
 	if (doc.kind === 'xlsx') {
-		const book = await inspectXlsx(doc.bytes);
-		const sheets = [];
-		for (const sheet of book.sheets.slice(0, 4))
-			sheets.push({
-				...sheet,
-				range: 'A1:AD100',
-				...(await readXlsxRange(doc.bytes, sheet.index, 'A1:AD100')),
-			});
+		// A filled cell is about 60 JSON characters; read as many as the budget holds.
+		const book = await readXlsxFilledCells(doc.bytes, { maxCells: Math.floor(budget / 60) });
+		const left = book.sheets.filter((s) => s.omitted);
 		return {
-			sheets: sheets.map((s) => ({
-				...s,
-				cells: s.cells.filter((c) => c.value !== null || c.formula),
-			})),
-			scope: 'First four sheets, A1:AD100 only',
+			sheets: book.sheets.map(({ index, name, cells }) => ({ index, name, cells })),
+			...(left.length
+				? {
+						omitted: `Left out to fit: ${left.map((s) => `${s.omitted} of ${s.total} filled cells on ${s.name}`).join('; ')}.`,
+					}
+				: {}),
 		};
 	}
-	if (doc.kind === 'vsdx') return inspectVisio(doc.bytes);
-	const { inspectPresentationText } = await import('ooxml-core/pptx');
-	return inspectPresentationText(doc.bytes);
+	const view =
+		doc.kind === 'vsdx'
+			? await inspectVisio(doc.bytes)
+			: await (await import('ooxml-core/pptx')).inspectPresentationText(doc.bytes);
+	const list = doc.kind === 'vsdx' ? view.pages : view.slides;
+	const kept = fit(list ?? [], budget);
+	if (!list || kept >= list.length) return view;
+	const unit = doc.kind === 'vsdx' ? 'Pages' : 'Slides';
+	return {
+		...view,
+		[doc.kind === 'vsdx' ? 'pages' : 'slides']: list.slice(0, kept),
+		omitted: `${unit} ${kept + 1} to ${list.length} were left out to fit.`,
+	};
 }
 
 // Functions that fetch data, open links or load code when a formula is evaluated.
