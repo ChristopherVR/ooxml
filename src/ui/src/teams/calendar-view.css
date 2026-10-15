@@ -1,5 +1,5 @@
 :host {
-	--_hour: 3.6em;
+	--_hour: 4em;
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
@@ -112,6 +112,7 @@ button:hover {
 	grid-template-rows: repeat(24, var(--_hour));
 }
 .hours span {
+	white-space: nowrap;
 	padding-inline-end: var(--office-space-2);
 	color: var(--office-teams-text-subtle);
 	font-size: var(--office-font-size-xs);
@@ -164,6 +165,12 @@ button:hover {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+.event[data-short='true'] {
+	align-content: center;
+}
+.event[data-short='true'] .event-time {
+	display: none;
+}
 .event-time {
 	overflow: hidden;
 	color: var(--office-teams-text-subtle);
@@ -195,7 +202,7 @@ button:hover {
 		--_hour: 4em;
 	}
 	.grid {
-		grid-template-columns: 3em repeat(var(--cols), minmax(0, 1fr));
+		grid-template-columns: 3.8em repeat(var(--cols), minmax(0, 1fr));
 	}
 	.bar button {
 		min-height: 2.75em;

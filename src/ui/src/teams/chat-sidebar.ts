@@ -62,7 +62,11 @@ export class OfficeUiChatSidebar extends TeamsElement {
 		const preview = c.lastMessage
 			? c.lastMessage.system
 				? c.lastMessage.text
-				: `${c.lastMessage.mine ? 'You' : c.lastMessage.authorName}: ${c.lastMessage.text}`
+				: c.lastMessage.mine
+					? `You: ${c.lastMessage.text}`
+					: c.kind === 'direct'
+						? c.lastMessage.text
+						: `${c.lastMessage.authorName}: ${c.lastMessage.text}`
 			: 'No messages yet';
 		return html`
 			<li>

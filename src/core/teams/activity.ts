@@ -180,6 +180,6 @@ export function describeActivity(item: ActivityItem): string {
 		case 'pin':
 			return `${item.actorName} pinned a message in ${where}`;
 		case 'meeting':
-			return `${item.channelName} starts soon`;
+			return `Reminder: ${item.channelName}`;
 	}
 }

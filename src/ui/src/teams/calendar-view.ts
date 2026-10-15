@@ -50,6 +50,8 @@ export class OfficeUiCalendarView extends TeamsElement {
 	declare anchor: number;
 	declare tick: number;
 	private timer: ReturnType<typeof setInterval> | undefined;
+	private scrolled = false;
+	private resize: ResizeObserver | undefined;
 
 	constructor() {
 		super();
@@ -74,16 +76,29 @@ export class OfficeUiCalendarView extends TeamsElement {
 		if (globalThis.matchMedia?.('(max-width: 40em)').matches && this.mode === 'workweek')
 			this.mode = 'day';
 		this.timer = setInterval(() => (this.tick = this.clock()), 60_000);
+		// A phone shows the list first, so the grid may get its size long after it first rendered.
+		if (typeof ResizeObserver !== 'undefined') {
+			this.resize = new ResizeObserver(() => this.scrollToWorkday());
+			this.resize.observe(this);
+		}
 	}
 
 	override disconnectedCallback(): void {
 		clearInterval(this.timer);
+		this.resize?.disconnect();
 		super.disconnectedCallback();
 	}
 
-	protected override firstUpdated(): void {
+	protected override updated(): void {
+		this.scrollToWorkday();
+	}
+
+	/** Start the day at 8:00, once the grid has a size. */
+	private scrollToWorkday(): void {
 		const scroller = this.renderRoot.querySelector<HTMLElement>('.scroller');
-		if (scroller) scroller.scrollTop = (scroller.scrollHeight / 24) * FIRST_VISIBLE_HOUR;
+		if (this.scrolled || !scroller || scroller.clientHeight === 0) return;
+		scroller.scrollTop = (scroller.scrollHeight / 24) * FIRST_VISIBLE_HOUR;
+		this.scrolled = true;
 	}
 
 	protected override willUpdate(changed: PropertyValues<this>): void {
@@ -233,6 +248,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 					class="event"
 					data-live=${String(meeting.live)}
 					data-mine=${String(meeting.mine)}
+					data-short=${String(p.endMinute - p.startMinute <= 30)}
 					aria-label=${`${meeting.title}, ${time}`}
 					style=${`--top:${(p.startMinute / 1440) * 100};--height:${((p.endMinute - p.startMinute) / 1440) * 100};--col:${p.column};--span:${p.columns}`}
 					@click=${(e: Event) => {

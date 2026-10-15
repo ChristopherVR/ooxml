@@ -63,7 +63,7 @@ describe('office-ui-chat-sidebar', () => {
 		expect(rows.map((r) => r.querySelector('.title')!.textContent)).toEqual(['Bob', 'Launch']);
 		expect(rows[0]!.querySelector('office-ui-avatar')!.getAttribute('presence')).toBe('busy');
 		expect(rows[1]!.querySelector('office-ui-avatar')).toBeNull();
-		expect(rows[0]!.querySelector('.preview')!.textContent).toBe('Bob: see you soon');
+		expect(rows[0]!.querySelector('.preview')!.textContent).toBe('see you soon');
 		expect(rows[0]!.querySelector('.count')!.textContent).toBe('3');
 		expect(rows[0]!.dataset.unread).toBe('true');
 		expect(rows[1]!.getAttribute('aria-current')).toBe('true');

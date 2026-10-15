@@ -14,6 +14,11 @@ export {
 	type TeamsState,
 	type ChannelView,
 	type PersonView,
+	type ChatView,
+	type ContactView,
+	type MeetingView,
+	type Meeting,
+	type MeetingFormInput,
 	type FileEntry,
 	type SearchHit,
 } from 'ooxml-core/teams';
