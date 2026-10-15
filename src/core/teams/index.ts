@@ -1,12 +1,14 @@
 // `ooxml-core/teams`: the logic of an open-source, bring-your-own-server team workspace that sits
 // beside Word, Excel, PowerPoint and Visio: channels and chat on Yjs, presence, WebRTC calls with
 // pluggable signaling, and server configuration. No DOM, no UI framework. See docs/teams-area.md.
+export * from './activity';
 export * from './call';
 export * from './content';
 export type { FileOperationOptions, FileTransferProgress } from './file-transfer';
 export * from './chat';
 export * from './mentions';
 export * from './model';
+export * from './notifications';
 export * from './peer';
 export * from './pins';
 export * from './presence';
@@ -20,6 +22,7 @@ export * from './tab-conversation';
 export * from './threads';
 export type { ChatDraft, DraftContext, SavedDraft } from './drafts';
 export type { MessageTransfer } from './message-transfer';
+export type { ActivityReadState } from './activity-state';
 export type { FollowedThread, ThreadFollowSettings } from './followed-threads';
 export * from './view';
 export * from './file-order';

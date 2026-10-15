@@ -615,6 +615,17 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   mention too, which differs from Teams (where only a picked token does). There is no team or
   channel membership model, so `@channel` and `@team` reach the same people and the picker only
   knows people who have written or are online.
+- **Activity feed.** Activity is the first item of the app rail (bottom bar on phones) with an
+  unread badge. It lists, newest first, mentions of you (including `@channel` / `@team`), replies to
+  your messages and to threads you follow, reactions to your messages and pinned-message events,
+  with filter pills (All, Unread, Mentions, Replies, Reactions), per-row mark read / unread and Mark
+  all as read. Clicking an item opens the channel (or thread) scrolled to the message, which flashes
+  once. The feed is a pure projection of the shared document (`deriveActivity` in
+  `ooxml-core/teams`); nothing is added to Yjs for it except that reactions now store the time they
+  were added (older rows without one are not listed). Read state is personal and local to the
+  device (a watermark plus per-item overrides), so it does not follow you to another device; a
+  first run starts at "now" so existing history is not a wall of unread items. Pins by you and
+  your own actions never appear, and there is no per-channel "notify me" setting.
 
 ## Microsoft reference workflows
 

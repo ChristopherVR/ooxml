@@ -1,0 +1,188 @@
+:host {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-2);
+	padding: var(--office-space-3) var(--office-space-3) var(--office-space-1);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+	font-weight: var(--office-font-weight-bold);
+}
+.read-all {
+	padding: var(--office-space-1) var(--office-space-2);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-teams-brand);
+	font-size: var(--office-font-size-sm);
+}
+.read-all:hover:not(:disabled) {
+	background: var(--office-selected);
+}
+.read-all:disabled {
+	color: var(--office-teams-text-subtle);
+	cursor: default;
+}
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-1);
+	padding: var(--office-space-1) var(--office-space-3) var(--office-space-2);
+}
+.filters button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--office-space-1);
+	padding: var(--office-space-1) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-full);
+	background: transparent;
+	font-size: var(--office-font-size-sm);
+}
+.filters button:hover {
+	background: var(--office-selected);
+}
+.filters button[aria-pressed='true'] {
+	border-color: var(--office-teams-brand);
+	background: var(--office-teams-brand-subtle);
+	color: var(--office-teams-brand);
+	font-weight: var(--office-font-weight-bold);
+}
+.count {
+	min-width: 1.4em;
+	padding: 0 var(--office-space-1);
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font-size: var(--office-font-size-3xs);
+	line-height: 1.6;
+	text-align: center;
+}
+ul {
+	flex: 1;
+	min-height: 0;
+	margin: 0;
+	padding: 0 var(--office-space-2) var(--office-space-2);
+	overflow-y: auto;
+	list-style: none;
+}
+li {
+	position: relative;
+}
+.item {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--office-space-3);
+	width: 100%;
+	padding: var(--office-space-2) var(--office-space-3);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: transparent;
+	color: inherit;
+	text-align: start;
+}
+.item:hover {
+	background: var(--office-selected);
+}
+.item[aria-current='true'] {
+	background: var(--office-teams-brand-subtle);
+}
+.face {
+	position: relative;
+	flex: none;
+}
+.kind {
+	position: absolute;
+	inset-block-end: calc(-1 * var(--office-space-1));
+	inset-inline-end: calc(-1 * var(--office-space-1));
+	display: grid;
+	place-items: center;
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+}
+.kind svg {
+	width: 0.9em;
+	height: 0.9em;
+}
+.text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+.line {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+li[data-unread='true'] .line {
+	font-weight: var(--office-font-weight-bold);
+}
+.preview {
+	overflow: hidden;
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-sm);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.when {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: var(--office-space-1);
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-xs);
+}
+.dot {
+	width: 0.7em;
+	height: 0.7em;
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+}
+.toggle {
+	position: absolute;
+	inset-block-end: var(--office-space-1);
+	inset-inline-end: var(--office-space-2);
+	display: none;
+	place-items: center;
+	width: 2em;
+	height: 2em;
+	border: 0;
+	border-radius: var(--office-radius);
+	background: var(--office-popover);
+	color: var(--office-teams-text-subtle);
+	box-shadow: var(--office-shadow-teams);
+}
+li:hover .toggle,
+li:focus-within .toggle {
+	display: grid;
+}
+.empty {
+	margin: 0;
+	padding: var(--office-space-4);
+	color: var(--office-teams-text-subtle);
+	text-align: center;
+}
+@media (pointer: coarse) {
+	.filters button,
+	.read-all {
+		min-height: var(--office-touch-target, 44px);
+	}
+	.toggle {
+		display: grid;
+		width: var(--office-touch-target, 44px);
+		height: var(--office-touch-target, 44px);
+	}
+}

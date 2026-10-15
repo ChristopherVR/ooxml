@@ -227,3 +227,17 @@ blockquote strong {
 .msg[data-mentions-you='true'] .bubble {
 	box-shadow: inset var(--office-border-width-thick) 0 0 var(--office-teams-brand);
 }
+
+/* A message opened from Activity or the pinned bar flashes once. */
+.msg[data-highlight='true'] .bubble {
+	animation: flash 2.4s ease-out;
+}
+@keyframes flash {
+	from {
+		background: var(--office-teams-brand-subtle);
+		outline: var(--office-border-width-thick) solid var(--office-teams-brand);
+	}
+	to {
+		outline: var(--office-border-width-thick) solid transparent;
+	}
+}

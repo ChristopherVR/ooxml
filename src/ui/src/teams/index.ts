@@ -1,3 +1,4 @@
+import { defineActivityFeed } from './activity-feed';
 import { defineAppRail } from './app-rail';
 import { defineAvatar } from './avatar';
 import { defineCallControls } from './call-controls';
@@ -7,6 +8,7 @@ import { defineChatComposer } from './chat-composer';
 import { defineChatList } from './chat-list';
 import { definePrejoin } from './prejoin';
 
+export * from './activity-feed';
 export * from './app-rail';
 export * from './avatar';
 export * from './base';
@@ -22,6 +24,7 @@ export * from './prejoin';
 export const TEAMS_TAGS = [
 	'office-ui-avatar',
 	'office-ui-app-rail',
+	'office-ui-activity-feed',
 	'office-ui-channel-list',
 	'office-ui-chat-list',
 	'office-ui-chat-composer',
@@ -34,6 +37,7 @@ export const TEAMS_TAGS = [
 export function registerTeams(): void {
 	defineAvatar();
 	defineAppRail();
+	defineActivityFeed();
 	defineChannelList();
 	defineChatList();
 	defineChatComposer();

@@ -8,6 +8,7 @@ export function threadPane(
 	client: TeamsClient,
 	openFile: (attachment: Attachment) => void,
 	close: () => void,
+	highlightId = '',
 ) {
 	const thread = state.thread;
 	if (!thread) return nothing;
@@ -26,6 +27,7 @@ export function threadPane(
 			.messages=${[thread.root, ...thread.replies]}
 			.pinnedIds=${state.pinned.map((p) => p.message.id)}
 			self-id=${state.user.id}
+			.highlightId=${highlightId}
 			@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => client.pinMessage(e.detail.messageId)}
 			@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => client.unpinMessage(e.detail.messageId)}
 			@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => client.toggleReaction(e.detail.messageId, e.detail.emoji)}

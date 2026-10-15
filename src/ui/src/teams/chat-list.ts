@@ -56,11 +56,14 @@ export class OfficeUiChatList extends TeamsElement {
 		selfId: { type: String, attribute: 'self-id' },
 		replyCounts: { attribute: false },
 		pinnedIds: { attribute: false },
+		highlightId: { type: String, attribute: 'highlight-id' },
 	};
 	declare messages: ChatMessage[];
 	declare selfId: string;
 	declare replyCounts: Record<string, number>;
 	declare pinnedIds: readonly string[];
+	/** A message to flash briefly, for example one opened from the Activity feed. */
+	declare highlightId: string;
 	private stickToBottom = true;
 
 	constructor() {
@@ -69,6 +72,7 @@ export class OfficeUiChatList extends TeamsElement {
 		this.selfId = '';
 		this.replyCounts = {};
 		this.pinnedIds = [];
+		this.highlightId = '';
 	}
 
 	override connectedCallback(): void {
@@ -114,6 +118,7 @@ export class OfficeUiChatList extends TeamsElement {
 				tabindex="-1"
 				data-message-id=${m.id}
 				data-own=${String(own)}
+				data-highlight=${String(m.id === this.highlightId)}
 				data-grouped=${String(grouped)}
 				data-mentions-you=${String(!m.deleted && mentionsUser(m, this.selfId) && !own)}
 			>

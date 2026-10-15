@@ -3,6 +3,7 @@
 // file only decides what is on screen (`render`) and forwards user intent to client actions.
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import {
+	type ActivityFilter,
 	type FileUploader,
 	type ChannelTab,
 	type OfficeKind,
@@ -66,7 +67,7 @@ export interface OpenFileDetail {
 }
 export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) => void>>;
 
-type RailView = 'teams' | 'calls' | 'files' | 'followed' | 'drafts';
+type RailView = 'activity' | 'teams' | 'calls' | 'files' | 'followed' | 'drafts';
 type Panel = '' | 'chat' | 'people';
 const LOCAL_THEME = THEME_CSS.replaceAll(
 	':root[data-office-theme="dark"]',
@@ -75,6 +76,7 @@ const LOCAL_THEME = THEME_CSS.replaceAll(
 	.replaceAll(':root:not([data-office-theme="light"])', ':host([data-office-theme="system"])')
 	.replaceAll(':root', ':host([data-office-theme])');
 const RAIL = [
+	{ id: 'activity', label: 'Activity', icon: 'bell' },
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
 	{ id: 'files', label: 'Files', icon: 'folder' },
@@ -103,6 +105,8 @@ export class TeamsApp extends LitElement {
 		settingsOpen: { state: true },
 		mobileView: { state: true },
 		toast: { state: true },
+		activityFilter: { state: true },
+		highlightId: { state: true },
 		identity: { state: true },
 		followedUnreadOnly: { state: true },
 		theme: { state: true },
@@ -133,6 +137,9 @@ export class TeamsApp extends LitElement {
 	/** Compact shell only: the channel list or the conversation (and other content). */
 	declare mobileView: 'list' | 'conversation';
 	declare toast: string;
+	declare activityFilter: ActivityFilter;
+	/** A message briefly highlighted after opening it from Activity or the pinned bar. */
+	declare highlightId: string;
 	declare identity: Identity | null;
 	declare followedUnreadOnly: boolean;
 	declare theme: TeamsTheme;
@@ -142,6 +149,7 @@ export class TeamsApp extends LitElement {
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
+	private highlightTimer: ReturnType<typeof setTimeout> | undefined;
 	private stopActivity: (() => void) | undefined;
 	private openRequest = 0;
 	private retainedTab: ChannelTab | undefined;
@@ -175,6 +183,8 @@ export class TeamsApp extends LitElement {
 		this.settingsOpen = false;
 		this.mobileView = 'conversation';
 		this.toast = '';
+		this.activityFilter = 'all';
+		this.highlightId = '';
 		this.identity = null;
 		this.followedUnreadOnly = false;
 		this.theme = 'system';
@@ -375,6 +385,7 @@ export class TeamsApp extends LitElement {
 		this.openRequest++;
 		this.preview = null;
 		clearTimeout(this.toastTimer);
+		clearTimeout(this.highlightTimer);
 		this.stopActivity?.();
 		this.stopActivity = undefined;
 		super.disconnectedCallback();
@@ -463,7 +474,7 @@ export class TeamsApp extends LitElement {
 
 	/** Which screen the compact shell shows: the channel or call list, or the content itself. */
 	private mobileScreen(s: TeamsState): 'list' | 'content' {
-		const listed = this.rail === 'teams' || this.rail === 'calls';
+		const listed = this.rail === 'teams' || this.rail === 'calls' || this.rail === 'activity';
 		return listed && this.mobileView === 'list' && !(this.meeting && s.call) ? 'list' : 'content';
 	}
 
@@ -494,7 +505,7 @@ export class TeamsApp extends LitElement {
 				<div class="body">
 					<office-ui-app-rail
 						.hideLabels=${!this.showAppNames}
-						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}) }))}
+						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}), ...(i.id === 'activity' && s.activityUnread ? { badge: s.activityUnread } : {}) }))}
 						selected=${this.rail}
 						@office-rail-select=${(e: CustomEvent<{ id: RailView }>) => {
 							if (!this.closePreview()) return;
@@ -713,6 +724,15 @@ export class TeamsApp extends LitElement {
 	}
 
 	private sidebar(s: TeamsState) {
+		if (this.rail === 'activity')
+			return html`<office-ui-activity-feed
+				.items=${s.activity}
+				.filter=${this.activityFilter}
+				@office-activity-filter=${(e: CustomEvent<{ filter: ActivityFilter }>) => (this.activityFilter = e.detail.filter)}
+				@office-activity-open=${(e: CustomEvent<{ id: string }>) => void this.openActivity(e.detail.id)}
+				@office-activity-read=${(e: CustomEvent<{ id: string; read: boolean }>) => this.teams.client?.markActivityRead(e.detail.id, e.detail.read)}
+				@office-activity-read-all=${() => this.teams.client?.markAllActivityRead()}
+			></office-ui-activity-feed>`;
 		if (this.rail === 'calls') {
 			const live = s.channels.filter((c) => c.live);
 			return html`
@@ -940,6 +960,7 @@ export class TeamsApp extends LitElement {
 											c,
 											(attachment) => void this.openFile(attachment),
 											() => void this.closeThread(),
+											this.highlightId,
 										)
 									: nothing
 							}
@@ -962,6 +983,7 @@ export class TeamsApp extends LitElement {
 										.replyCounts=${compact ? {} : s.replyCounts}
 										.pinnedIds=${s.pinned.map((p) => p.message.id)}
 										self-id=${s.user.id}
+										.highlightId=${this.highlightId}
 										@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => c?.pinMessage(e.detail.messageId)}
 										@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => c?.unpinMessage(e.detail.messageId)}
 										@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
@@ -999,6 +1021,7 @@ export class TeamsApp extends LitElement {
 												c,
 												(attachment) => void this.openFile(attachment),
 												() => void this.closeThread(),
+												this.highlightId,
 											)
 										: nothing
 								}
@@ -1015,17 +1038,44 @@ export class TeamsApp extends LitElement {
 		this.creatingChannel = false;
 	}
 
-	/** Scroll a pinned message into view, opening its thread when it is a reply. */
+	/** Scroll a message into view and highlight it, opening its thread when it is a reply. */
 	private async revealMessage(id: string): Promise<void> {
 		const message = this.teams.state?.messages.find((m) => m.id === id);
 		if (!message) return;
-		if (message.replyTo) return this.openThread(id);
-		const list = this.shadowRoot?.querySelector('.conversation-main office-ui-chat-list');
-		const row = Array.from(
-			list?.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [],
-		).find((element) => element.dataset.messageId === id);
+		if (message.replyTo) await this.openThread(id);
+		await this.updateComplete;
+		const lists = [...this.renderRoot.querySelectorAll<LitElement>('office-ui-chat-list')];
+		await Promise.all(lists.map((list) => list.updateComplete));
+		const row = lists
+			.flatMap((list) => [
+				...(list.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? []),
+			])
+			.find((element) => element.dataset.messageId === id);
 		row?.scrollIntoView({ block: 'center' });
 		row?.focus();
+		this.highlightId = id;
+		clearTimeout(this.highlightTimer);
+		this.highlightTimer = setTimeout(() => (this.highlightId = ''), 2500);
+	}
+
+	/** Open an Activity item: its channel or thread, scrolled to the message, and mark it read. */
+	private async openActivity(id: string): Promise<void> {
+		const c = this.teams.client;
+		const item = c?.getState().activity.find((entry) => entry.id === id);
+		if (!c || !item || !this.closePreview()) return;
+		c.markActivityRead(id);
+		this.settingsOpen = false;
+		this.addingTab = false;
+		this.creatingChannel = false;
+		this.meeting = false;
+		this.tab = 'posts';
+		this.mobileView = 'conversation';
+		c.select(item.channelId);
+		c.search('');
+		if (item.rootId === item.messageId) c.closeThread();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		await this.updateComplete;
+		await this.revealMessage(item.messageId);
 	}
 
 	private async openThread(id: string, action?: 'reply' | 'edit'): Promise<void> {

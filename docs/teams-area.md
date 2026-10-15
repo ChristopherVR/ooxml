@@ -37,8 +37,11 @@ preview). Every button is an action: `select`, `createChannel`, `send` (with fil
 `startReply`, `startEdit`, `deleteMessage`, `toggleReaction`, `pinMessage`, `unpinMessage`,
 `notifyTyping`, `setAvailability` (with an optional reset-after duration), `setStatusMessage`,
 `setIdleMinutes`, `noteActivity`, `search`, `openCall`, `setPrejoin`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
-`toggleScreenShare`, `toggleHand`, `fileUrl` (async: a short-lived signed link, never the token), `destroy`. Errors a user should see arrive as
-`on('notice', ...)`.
+`toggleScreenShare`, `toggleHand`, `markActivityRead`, `markAllActivityRead`, `setNotificationSettings`, `fileUrl` (async: a short-lived signed link, never the token), `destroy`. State also carries
+`mentionTargets` (who the @ picker offers), `activity` / `activityUnread` (the Activity feed) and
+`notificationSettings`. Errors a user should see arrive as `on('notice', ...)`, and
+`on('notification', item)` fires for each new activity item that the notification settings and
+Do not disturb allow to be announced (the host shows the toast, desktop notification and sound).
 
 This is the shape every binding exposes as a raw hook (`useTeams` in React and Vue,
 `createTeamsClient` in Solid, `teamsStore` in Svelte, `TeamsService` in Angular), so an app can
@@ -64,6 +67,17 @@ configured server's `/files` endpoint) and posts the returned URL. `detectOffice
 ### Mentions
 
 `mentions.ts` holds the pure rules: `resolveMentions(text, targets)` finds `@Name` runs (longest name wins, word boundaries, case-insensitive), `sanitizeMentions` re-validates stored ranges against the text, `mentionQueryAt` / `filterMentionTargets` / `insertMention` drive the composer's picker and `mentionSegments` splits text for rendering. A message row stores `mentions` beside `text`; rows from older clients simply have none. `TeamsState.mentionTargets` lists who the picker offers (people who wrote in the channel or are online, then `@channel` and `@team`) and `send({ text, mentions })` takes the picked people.
+
+### Activity and notifications
+
+`activity.ts` derives the feed with `deriveActivity` from the data every client already shares:
+mentions of you, replies to your messages or followed threads, reactions to your messages (reaction
+rows now store the time they were added) and pins by others, newest first, capped at 200.
+`filterActivity` and `describeActivity` back the filter pills and the row text. Read state
+(`activity-state.ts`) is personal and local to the device: a watermark plus per-item overrides,
+starting at "now" on a first run. `notifications.ts` holds the preferences (all activity, mentions
+only or off, and a sound flag) and `shouldNotify`, which also stays silent in Do not disturb. The
+core only decides and emits; showing a toast, a browser `Notification` or a sound is the UI's job.
 
 ## Calls
 

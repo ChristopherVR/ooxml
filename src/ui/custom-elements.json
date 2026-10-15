@@ -38,6 +38,71 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "teams/activity-feed.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiActivityFeed",
+					"tagName": "office-ui-activity-feed",
+					"customElement": true,
+					"description": "The Teams Activity feed: filter pills (All, Unread, Mentions, Replies, Reactions), a list of what happened to you, newest first, and Mark all as read. Properties: `items` (from `TeamsState.activity`), `filter`, `selectedId`. Events (bubbling, composed): `office-activity-open` `{ id }`, `office-activity-read` `{ id, read }` (the per-row toggle), `office-activity-read-all` `{}` and `office-activity-filter` `{ filter }`. Message text is rendered as text only.",
+					"attributes": [
+						{
+							"name": "filter"
+						},
+						{
+							"name": "selected-id"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "filter",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "items"
+						},
+						{
+							"kind": "field",
+							"name": "selectedId",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "selected-id"
+						}
+					],
+					"events": [
+						{
+							"name": "office-activity-filter"
+						},
+						{
+							"name": "office-activity-open"
+						},
+						{
+							"name": "office-activity-read"
+						},
+						{
+							"name": "office-activity-read-all"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-activity-feed",
+					"declaration": {
+						"name": "OfficeUiActivityFeed"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "teams/app-rail.ts",
 			"declarations": [
 				{
@@ -554,7 +619,7 @@
 					"name": "OfficeUiChatComposer",
 					"tagName": "office-ui-chat-composer",
 					"customElement": true,
-					"description": "The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo` (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`. Events: `office-chat-draft` `{ text, files, missingFiles }` after a user change, `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here: the host stores them wherever its server says and posts a link.",
+					"description": "The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo` (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`. Events: `office-chat-draft` `{ text, files, missingFiles }` after a user change, `office-chat-send` `{ text, files, mentions }`, `office-chat-typing` `{}` (throttled) and `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here: the host stores them wherever its server says and posts a link. Typing `@` opens a people picker over `mentionTargets` (people, then @channel and @team): it filters as you type, Up / Down move, Enter or Tab insert `@Name`, Escape closes it. The people picked go out as `mentions` with the text.",
 					"attributes": [
 						{
 							"name": "disabled"
@@ -594,7 +659,19 @@
 						},
 						{
 							"kind": "field",
+							"name": "mentionTargets"
+						},
+						{
+							"kind": "field",
 							"name": "missingFiles"
+						},
+						{
+							"kind": "field",
+							"name": "picker"
+						},
+						{
+							"kind": "field",
+							"name": "pickerIndex"
 						},
 						{
 							"kind": "field",
@@ -654,13 +731,24 @@
 					"name": "OfficeUiChatList",
 					"tagName": "office-ui-chat-list",
 					"customElement": true,
-					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`, `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin). Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` / `office-chat-unpin` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`. Message text is always rendered as text.",
+					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`, `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin). @mentions are highlighted; those that address `selfId` (or everyone) are emphasised and mark the message. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` / `office-chat-unpin` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`. Message text is always rendered as text.",
 					"attributes": [
+						{
+							"name": "highlight-id"
+						},
 						{
 							"name": "self-id"
 						}
 					],
 					"members": [
+						{
+							"kind": "field",
+							"name": "highlightId",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "highlight-id"
+						},
 						{
 							"kind": "field",
 							"name": "messages"

@@ -28,6 +28,8 @@ const GLYPHS: Record<string, string> = {
 	hand: 'M7 10V4.5a1 1 0 0 1 2 0V9M9 9V3.5a1 1 0 0 1 2 0V9M11 9V4.5a1 1 0 0 1 2 0V10M13 8.5a1 1 0 0 1 2 0V12a5 5 0 0 1-5 5h-.5A4.5 4.5 0 0 1 5 13.5L4 10.5a1 1 0 0 1 2-.5l1 2',
 	phoneOff: 'M3 11c4-3 10-3 14 0l-1.5 2.5-3-1V10a9 9 0 0 0-5 0v2.5l-3 1Z',
 	chat: 'M3 4h14v9H8l-5 4z',
+	bell: 'M5 14h10l-1.5-2V8.5a3.5 3.5 0 0 0-7 0V12ZM8.5 16.5a1.5 1.5 0 0 0 3 0',
+	at: 'M13 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM13 10v1.2a1.8 1.8 0 0 0 3.6 0V10a6.6 6.6 0 1 0-2.6 5.2',
 };
 for (const [name, d] of Object.entries(GLYPHS)) registerIcon(name, d);
 

@@ -10,7 +10,10 @@ import { createClientId } from '../collab/identity';
 import type { ConnectionStatus } from '../collab/provider';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call';
 import type { Attachment, Channel, Message } from './model';
+import type { ActivityItem } from './activity';
+import { createActivityFeed } from './activity-feed';
 import { type MentionTarget, mentionTargetsFor } from './mentions';
+import type { NotificationSettings } from './notifications';
 import { createFileActions } from './files';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
@@ -113,6 +116,10 @@ export interface TeamsState {
 	thread: MessageThread | null;
 	threadFollowed: boolean;
 	followedThreads: FollowedThread[];
+	/** Mentions of you, replies, reactions and pins, newest first, with personal read state. */
+	activity: ActivityItem[];
+	activityUnread: number;
+	notificationSettings: NotificationSettings;
 	threadFollowSettings: ThreadFollowSettings;
 	draft: ChatDraft;
 	drafts: SavedDraft[];
@@ -135,11 +142,21 @@ export interface TeamsState {
 	call: CallView | null;
 }
 
+export interface TeamsEvents {
+	notice: string;
+	notification: ActivityItem;
+}
+
 export interface TeamsClient {
 	getState: () => TeamsState;
 	/** Called after every state change (coalesced per tick); returns the unsubscribe function. */
 	subscribe: (listener: () => void) => () => void;
-	on: Emitter<{ notice: string }>['on'];
+	/**
+	 * `notice`: a message to show the person. `notification`: a new activity item that settings and
+	 * presence (not Do not disturb) allow to be announced; the host shows the toast, desktop
+	 * notification and sound.
+	 */
+	on: Emitter<TeamsEvents>['on'];
 	readonly workspace: TeamsWorkspace;
 	select: (channelId: string) => void;
 	createChannel: (name: string, topic?: string) => void;
@@ -190,6 +207,11 @@ export interface TeamsClient {
 	/** Personal read state for a followed thread, independent of channel read markers. */
 	markThreadRead: (channelId: string, messageId: string, read?: boolean) => boolean;
 	setThreadFollowSettings: (settings: Partial<ThreadFollowSettings>) => void;
+	/** Mark an activity item read (or unread). Personal, kept on this device. */
+	markActivityRead: (id: string, read?: boolean) => boolean;
+	markAllActivityRead: () => boolean;
+	/** What to announce: all activity, mentions only or nothing, and the sound. Kept on this device. */
+	setNotificationSettings: (settings: Partial<NotificationSettings>) => void;
 	startEdit: (messageId: string) => void;
 	cancelCompose: () => void;
 	deleteMessage: (messageId: string) => void;
@@ -250,7 +272,11 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		storage,
 		`teams:followed:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
 	);
-	const notices = new Emitter<{ notice: string }>();
+	const feed = createActivityFeed(
+		storage,
+		`teams:activity:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
+	);
+	const notices = new Emitter<TeamsEvents>();
 	const drafts = createDraftStore(
 		storage,
 		`teams:drafts:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
@@ -336,6 +362,17 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		const threads = channelThreads(messages);
 		const thread = threads.thread(threadId);
 		const channel = channels.find((c) => c.id === selected) ?? null;
+		const activity = feed.update(
+			{
+				selfId: ws.user.id,
+				channels,
+				messagesOf,
+				reactions: ws.chat.reactionEvents(),
+				pinsOf: ws.chat.pinned,
+				isFollowed: (channelId, rootId) => follows.has(channelId, rootId),
+			},
+			presenceView().effective,
+		);
 		const people = peopleViews(
 			{
 				id: ws.user.id,
@@ -378,6 +415,9 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			threadFollowed:
 				!!thread && follows.has(selected, thread.root.id, (id) => threads.thread(id)?.root.id),
 			followedThreads: follows.view(channels, messagesOf, ws.user.id),
+			activity: activity.items,
+			activityUnread: activity.unread,
+			notificationSettings: feed.settings.get(),
 			threadFollowSettings: follows.settings(),
 			messageTransfers: transfers?.list() ?? [],
 			draft: drafts.read(
@@ -429,6 +469,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			if (destroyed) return;
 			state = compute();
 			for (const l of [...listeners]) l();
+			for (const item of feed.drain()) notices.emit('notification', item);
 		});
 	};
 
@@ -754,6 +795,19 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			return changed;
 		},
 		markThreadRead,
+		markActivityRead(id, read = true) {
+			const changed = feed.markRead(id, read);
+			if (changed) refresh();
+			return changed;
+		},
+		markAllActivityRead() {
+			const changed = feed.markAllRead();
+			if (changed) refresh();
+			return changed;
+		},
+		setNotificationSettings: act((settings) => {
+			feed.settings.set(settings);
+		}),
 		setThreadFollowSettings: act((settings) => {
 			follows.configure(settings);
 		}),
