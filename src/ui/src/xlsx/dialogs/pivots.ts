@@ -2,6 +2,7 @@ import {
 	formatAddress,
 	formatRange,
 	parseAddress,
+	pivotAxisChoices,
 	pivotSourceData,
 	pivotTableAt,
 	type PivotAggregate,
@@ -11,6 +12,7 @@ import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 import { pivotPageControls } from './pivot-page-filter';
+import { pivotRowControls } from './pivot-rows';
 import { pivotValueControls, PIVOT_AGGREGATE_OPTIONS } from './pivot-values';
 
 export function openPivotTable(ctx: EditorContext, settings = false): Promise<boolean | undefined> {
@@ -43,6 +45,12 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			['bottom', 'Below each group'],
 		],
 		pivot?.subtotalPosition ?? (pivot ? 'bottom' : 'top'),
+	);
+	const more = pivotRowControls(
+		ctx,
+		pivot?.moreRowFields ?? [],
+		() => updateRows(),
+		pivot ? pivotAxisChoices(pivot) : [],
 	);
 	const subtotals = checkbox(ctx, 'Show subtotals', pivot?.subtotals !== false);
 	const tabularNotice = text(ctx, 'Tabular layout displays subtotals below groups.');
@@ -92,21 +100,27 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			pageData = pivot ?? { fields: [], records: [] };
 		}
 		extras.load(fields);
+		// A report with date groups offers their fields on the axes instead of the date field.
+		const axisFields = pivot
+			? pivotAxisChoices({ ...pivot, fields, records: pageData.records })
+			: fields;
+		more.load(axisFields);
 		for (const [control, chosen, optional] of [
 			[row, pivot?.rowField, false],
 			[second, pivot?.secondRowField, true],
 			[column, pivot?.columnField, true],
 			[value, pivot?.valueField, false],
 		] as const) {
+			const choices = control === value ? fields : axisFields;
 			const previous = chosen ?? control.value;
 			control.replaceChildren();
-			for (const name of [...(optional ? [''] : []), ...fields]) {
+			for (const name of [...(optional ? [''] : []), ...choices]) {
 				const option = ctx.host.ownerDocument.createElement('option');
 				option.value = name;
 				option.textContent = name || ctx.t('(None)');
 				control.append(option);
 			}
-			if (fields.includes(previous ?? '') || (optional && !previous))
+			if (choices.includes(previous ?? '') || (optional && !previous))
 				control.value = previous ?? '';
 			else if (control === value) control.value = fields.at(-1) ?? '';
 		}
@@ -117,16 +131,19 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		extras.load(pageData.fields.filter((name) => name !== page.source.value));
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
+		more.enable(!!second.value);
 		page.update(axis.value === 'rows', [
 			row.value,
 			second.value,
+			...more.read(),
 			column.value,
 			value.value,
 			...extras.read().map((v) => v.field),
 		]);
 		for (const option of second.options)
 			option.disabled = !!page.source.value && option.value === page.source.value;
-		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled = !!page.source.value;
+		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled =
+			!!page.source.value || (more.count() > 0 && !!second.value);
 		const rowsAxis = axis.value === 'rows';
 		valuesPlacement.disabled = !rowsAxis || !second.value;
 		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
@@ -138,7 +155,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					: 'Values are listed after the row fields.',
 		);
 		multipleNotice.hidden = !rowsAxis;
-		subtotals.input.disabled = !second.value;
+		subtotals.input.disabled =
+			!second.value || !!pivot?.fieldSubtotals?.some((entry) => entry.field === pivot.rowField);
 		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
 		position.disabled =
 			!second.value ||
@@ -172,6 +190,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Destination Cell:', destination),
 			field(ctx, 'Row Field:', row),
 			field(ctx, 'Second Row Field:', second),
+			more.host,
 			field(ctx, 'Report Layout:', layout),
 			subtotals.wrapper,
 			field(ctx, 'Subtotal Position:', position),
@@ -197,6 +216,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 				layout: layout.value as PivotLayout,
 				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,
+				moreRowFields: second.value ? more.read() : [],
 				subtotals: subtotals.input.checked,
 				repeatLabels: repeat.input.checked,
 				columnField: column.value,
@@ -214,6 +234,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					(pivot.layout ?? 'tabular') !== options.layout ||
 					(pivot.subtotalPosition ?? 'bottom') !== options.subtotalPosition ||
 					(pivot.secondRowField ?? '') !== options.secondRowField ||
+					JSON.stringify(pivot.moreRowFields ?? []) !== JSON.stringify(options.moreRowFields) ||
 					(pivot.subtotals !== false) !== options.subtotals ||
 					(pivot.repeatLabels ?? false) !== options.repeatLabels ||
 					(pivot.columnField ?? '') !== options.columnField ||

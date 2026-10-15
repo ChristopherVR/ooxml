@@ -1,4 +1,9 @@
-import { pivotGroupableFields, pivotTableAt } from 'ooxml-core/xlsx';
+import {
+	pivotGroupableDateFields,
+	pivotGroupableFields,
+	pivotRowFields,
+	pivotTableAt,
+} from 'ooxml-core/xlsx';
 import { editing, icon, target, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 
 function selected(ctx: EditorContext) {
@@ -48,18 +53,50 @@ export function pivotCommands(): Command[] {
 			run: (ctx) => void ctx.dialogs.open('pivot-group'),
 		}),
 		editing({
+			id: 'pivot.group-selection',
+			label: 'Group Selection',
+			icon: icon('table'),
+			lock: 'objects',
+			enabled: (ctx) => {
+				const selection = selected(ctx);
+				const workbook = ctx.workbook();
+				return (
+					!!selection &&
+					!!workbook &&
+					((selection.pivot.dateGroups?.length ?? 0) > 0 ||
+						pivotGroupableDateFields(workbook, selection.t.sheet, selection.pivot).length > 0)
+				);
+			},
+			run: (ctx) => void ctx.dialogs.open('pivot-group-dates'),
+		}),
+		editing({
 			id: 'pivot.ungroup',
 			label: 'Ungroup',
 			icon: icon('table'),
 			lock: 'objects',
-			enabled: (ctx) => !!selected(ctx)?.pivot.fieldGroups?.length,
+			enabled: (ctx) => {
+				const pivot = selected(ctx)?.pivot;
+				return !!(pivot?.fieldGroups?.length || pivot?.dateGroups?.length);
+			},
 			run: (ctx) => {
 				const selection = selected(ctx);
 				if (selection)
 					selection.t.session.refreshPivotTable(selection.t.sheet, selection.pivot.name, {
 						fieldGroups: [],
+						dateGroups: [],
 					});
 			},
+		}),
+		editing({
+			id: 'pivot.field-settings',
+			label: 'Field Settings',
+			icon: icon('table'),
+			lock: 'objects',
+			enabled: (ctx) => {
+				const pivot = selected(ctx)?.pivot;
+				return !!pivot && pivot.valuesAxis !== 'rows' && pivotRowFields(pivot).length > 1;
+			},
+			run: (ctx) => void ctx.dialogs.open('pivot-field-settings'),
 		}),
 		editing({
 			id: 'pivot.delete',

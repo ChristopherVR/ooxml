@@ -243,7 +243,7 @@ export function validateDateGroups(
 		for (const unit of dateGroupUnits(group)) {
 			const name = dateGroupFieldName(unit, group.field);
 			if (pivot.fields.includes(name))
-				throw new Error(`The source already has a field named "${name}".`);
+				throw new Error('A source field already has the name of a date group field.');
 			if (
 				dateUnitLabels(unit, range, dateGroupDays(group), pivot.date1904 ?? false).length >
 				MAX_ITEMS
@@ -300,3 +300,12 @@ export function defaultDateGroup(
 	const group: PivotDateGroup = existing ?? { field, by: ['months'] };
 	return { ...group, ...dateGroupRange(group, serials) };
 }
+
+/**
+ * The fields an axis can offer: the source fields without the dates that have groups, plus the
+ * derived group fields (`Years (Date)`).
+ */
+export const pivotAxisChoices = (pivot: DateGroupPivot): string[] => {
+	const grouped = new Set((pivot.dateGroups ?? []).map((group) => group.field));
+	return pivotAxisFieldNames(pivot).filter((name) => !grouped.has(name));
+};
