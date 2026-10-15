@@ -89,6 +89,7 @@ describe('the picker rules', () => {
 		expect(mentionQueryAt('mail a@b', 8)).toBeNull();
 		expect(mentionQueryAt('hi @Ada\nnext', 12)).toBeNull();
 		expect(mentionQueryAt('no at', 5)).toBeNull();
+		expect(mentionQueryAt('hi @Ada ', 8)).toBeNull();
 	});
 
 	it('filters by prefix, then word prefix, then substring', () => {

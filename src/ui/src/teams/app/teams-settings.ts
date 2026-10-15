@@ -2,6 +2,7 @@
 // Connection changes are validated by the core before the host applies them.
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import {
+	type NotificationSettings,
 	type TeamsServerConfig,
 	type ThreadFollowSettings,
 	parseServerConfig,
@@ -13,6 +14,7 @@ import { themeChoices } from './settings-theme';
 import { defineSwitch, type OfficeUiSwitch } from '../../form/switch';
 import { iceToText, parseIceLines } from './settings-connection';
 import { densityChoices, type ChatDensity } from './settings-density';
+import { desktopPermission, notificationChoices } from './settings-notifications';
 import { SETTINGS_CATEGORIES as CATEGORIES, settingsSearch } from './settings-search';
 export { iceToText, parseIceLines } from './settings-connection';
 
@@ -32,6 +34,7 @@ export class TeamsSettings extends LitElement {
 		category: { state: true },
 		theme: { attribute: false },
 		followSettings: { attribute: false },
+		notificationSettings: { attribute: false },
 		userName: { attribute: false },
 		fileOpenPreference: { attribute: false },
 		chatDensity: { attribute: false },
@@ -46,6 +49,7 @@ export class TeamsSettings extends LitElement {
 	declare category: string;
 	declare theme: TeamsTheme;
 	declare followSettings: ThreadFollowSettings;
+	declare notificationSettings: NotificationSettings;
 	declare userName: string;
 	declare fileOpenPreference: 'teams' | 'browser';
 	declare chatDensity: ChatDensity;
@@ -61,6 +65,7 @@ export class TeamsSettings extends LitElement {
 		this.category = 'general';
 		this.theme = 'system';
 		this.followSettings = { started: true, replied: true };
+		this.notificationSettings = { level: 'all', sound: true };
 		this.userName = '';
 		this.fileOpenPreference = 'teams';
 		this.chatDensity = 'comfy';
@@ -275,12 +280,24 @@ export class TeamsSettings extends LitElement {
 							?hidden=${!!this.query.trim() || this.category !== 'notifications'}
 						>
 							<h2>Notifications and activity</h2>
+							<h3>Activity notifications</h3>
+							${notificationChoices(this.notificationSettings, desktopPermission(), {
+								change: (detail) =>
+									this.dispatchEvent(
+										new CustomEvent('teams-settings-notifications', {
+											detail,
+											bubbles: true,
+											composed: true,
+										}),
+									),
+								requestPermission: () =>
+									void globalThis.Notification?.requestPermission().then(() =>
+										this.requestUpdate(),
+									),
+							})}
 							<h3>Followed threads</h3>
 							<p class="description">Choose which conversations appear in Followed threads.</p>
 							${(['started', 'replied'] as const).map((key) => html`<label class="preference"><span>${key === 'started' ? 'Threads I start' : 'Threads I reply to'}</span><office-ui-switch aria-label=${key === 'started' ? 'Threads I start' : 'Threads I reply to'} .checked=${this.followSettings[key]} @change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-follow', { detail: { [key]: (event.target as OfficeUiSwitch).checked }, bubbles: true, composed: true }))}></office-ui-switch></label>`)}
-							<p class="description">
-								Desktop, email and activity notifications are not available yet.
-							</p>
 						</section>
 						<section
 							id="panel-files"

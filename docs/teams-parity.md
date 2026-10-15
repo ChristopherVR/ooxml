@@ -13,8 +13,8 @@ No feature is considered equivalent solely because a control is present.
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Channels and posts              | Yjs posts and live thread panes, shared pinned messages with a pinned bar, personal followed threads, replies, reactions, author-side edit/delete checks                                                                                        | Teams hierarchy, private/shared channels, membership enforcement, cross-device follows, thread notifications, moderation                                                           |
 | Direct and group chats          | The channel model has a `direct` kind                                                                                                                                                                                                           | No participant-scoped chat workflow or server-enforced privacy                                                                                                                     |
-| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                                                                                                                                                      | Indexed file contents, filters, shared read receipts                                                                                                                               |
-| Presence                        | Awareness, typing, Available / Busy / Do not disturb / Be right back / Appear away / Appear offline, reset-after durations, status messages with expiry, automatic Away after a configurable idle time (legacy `availability` kept on the wire) | Authenticated identity, scheduled or calendar-driven status, privacy controls, notification suppression for Do not disturb                                                         |
+| Search and unread               | Message search, attachment metadata search, per-channel local read markers, @mentions, an Activity feed with read state and in-page notifications (toast, desktop, sound)                                                                       | Indexed file contents, filters, shared read receipts                                                                                                                               |
+| Presence                        | Awareness, typing, Available / Busy / Do not disturb / Be right back / Appear away / Appear offline, reset-after durations, status messages with expiry, automatic Away after a configurable idle time (legacy `availability` kept on the wire) | Authenticated identity, scheduled or calendar-driven status, privacy controls                                                                                                      |
 | Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                                                                                                                                                             | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                                                                                  |
 | File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links                                                                                                                                     | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                                                                                      |
 | Office content                  | Native Word, Excel and Visio previews; DOM PowerPoint reading view with media; XLSX local editing and channel save copies                                                                                                                       | PowerPoint presentation playback, coediting, write-back/version conflict handling and fidelity acceptance corpus                                                                   |
@@ -600,8 +600,8 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   message that expires on its own. Available turns into Away after a configurable idle time
   (default 5 minutes, `0` never; pure rules in `ooxml-core/teams` `presence`). Peers receive the
   full `status` and a legacy `availability` (Do not disturb as busy, the rest as away) so older
-  clients still render presence. Do not disturb does not yet suppress any notification, because
-  notifications are not implemented. Status is advisory and unauthenticated like all presence.
+  clients still render presence. Do not disturb silences every notification (see below). Status is
+  advisory and unauthenticated like all presence.
 
 ## Mentions, activity and notifications
 
@@ -626,6 +626,16 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   device (a watermark plus per-item overrides), so it does not follow you to another device; a
   first run starts at "now" so existing history is not a wall of unread items. Pins by you and
   your own actions never appear, and there is no per-channel "notify me" setting.
+- **Notifications.** New activity is announced while the app is open: a toast with a View action
+  when the tab is visible, and a browser `Notification` (click focuses the tab and opens the item)
+  when the tab is hidden and the person granted permission. An optional two-note chime plays with
+  either. Settings > Notifications and activity chooses All activity, Mentions only or Off, the
+  sound, and requests the browser permission. Do not disturb suppresses the toast, the desktop
+  notification and the sound (the item still lands in Activity); Be right back, Busy and Appear
+  away do not. These are in-page notifications: the tab (or an installed PWA window) must be open,
+  there is no service worker push, no email and no mobile push, and nothing is announced for
+  history that arrives after a long offline period older than your read watermark. Preferences are
+  kept per user on the device.
 
 ## Microsoft reference workflows
 

@@ -3,6 +3,7 @@
 // for React, Vue, Solid, Svelte and Angular do the same few lines with their own reactivity.
 import type { ReactiveController, ReactiveControllerHost } from 'lit';
 import {
+	type ActivityItem,
 	type TeamsClient,
 	type TeamsClientOptions,
 	type TeamsState,
@@ -18,6 +19,7 @@ export class TeamsController implements ReactiveController {
 	constructor(
 		private readonly host: ReactiveControllerHost,
 		private readonly onNotice: (text: string) => void,
+		private readonly onNotification: (item: ActivityItem) => void = () => undefined,
 	) {
 		host.addController(this);
 	}
@@ -33,6 +35,7 @@ export class TeamsController implements ReactiveController {
 				this.host.requestUpdate();
 			}),
 			client.on('notice', this.onNotice),
+			client.on('notification', this.onNotification),
 		];
 		this.host.requestUpdate();
 	}

@@ -19,7 +19,9 @@ test('finds working settings and saves app labels per user and workspace', async
 	await expect(
 		page.getByRole('tab', { name: 'Appearance and accessibility', exact: true }),
 	).toHaveAttribute('aria-selected', 'true');
-	await expect(page.locator('teams-settings').locator('legend')).toBeFocused();
+	await expect(
+		page.locator('teams-settings').locator('legend', { hasText: 'Chat density' }),
+	).toBeFocused();
 	await expect(search).toHaveValue('');
 	await search.fill('app bar icons');
 	await page.getByRole('button', { name: /^Show app names Appearance/ }).press('Enter');

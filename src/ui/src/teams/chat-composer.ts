@@ -367,7 +367,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 					}}
 					@keydown=${this.onKeydown}
 					@keyup=${(event: KeyboardEvent) => {
-						if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') this.syncPicker();
+						if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) this.syncPicker();
 					}}
 					@click=${this.syncPicker}
 					@blur=${() => (this.picker = null)}

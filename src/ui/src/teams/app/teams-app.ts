@@ -4,6 +4,7 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import {
 	type ActivityFilter,
+	type ActivityItem,
 	type FileUploader,
 	type ChannelTab,
 	type OfficeKind,
@@ -12,6 +13,7 @@ import {
 	type TeamsState,
 	type DraftContext,
 	type TabContent,
+	describeActivity,
 	isPresenceStatus,
 	isStatusDuration,
 	parseServerConfig,
@@ -46,6 +48,7 @@ import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
 import { defineTeamsPinnedBar } from './pinned-bar';
 import { watchActivity } from './activity';
+import { browserDeliveryEnv, deliverNotification } from './notify-delivery';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
 import type { ChatSendDetail } from '../chat-composer';
@@ -105,6 +108,7 @@ export class TeamsApp extends LitElement {
 		settingsOpen: { state: true },
 		mobileView: { state: true },
 		toast: { state: true },
+		activityToast: { state: true },
 		activityFilter: { state: true },
 		highlightId: { state: true },
 		identity: { state: true },
@@ -137,6 +141,8 @@ export class TeamsApp extends LitElement {
 	/** Compact shell only: the channel list or the conversation (and other content). */
 	declare mobileView: 'list' | 'conversation';
 	declare toast: string;
+	/** The newest activity item announced while the tab is visible. */
+	declare activityToast: ActivityItem | null;
 	declare activityFilter: ActivityFilter;
 	/** A message briefly highlighted after opening it from Activity or the pinned bar. */
 	declare highlightId: string;
@@ -147,8 +153,13 @@ export class TeamsApp extends LitElement {
 	declare chatDensity: 'comfy' | 'compact';
 	declare showAppNames: boolean;
 
-	private readonly teams = new TeamsController(this, (text) => this.notify(text));
+	private readonly teams = new TeamsController(
+		this,
+		(text) => this.notify(text),
+		(item) => this.announce(item),
+	);
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
+	private activityToastTimer: ReturnType<typeof setTimeout> | undefined;
 	private highlightTimer: ReturnType<typeof setTimeout> | undefined;
 	private stopActivity: (() => void) | undefined;
 	private openRequest = 0;
@@ -183,6 +194,7 @@ export class TeamsApp extends LitElement {
 		this.settingsOpen = false;
 		this.mobileView = 'conversation';
 		this.toast = '';
+		this.activityToast = null;
 		this.activityFilter = 'all';
 		this.highlightId = '';
 		this.identity = null;
@@ -300,6 +312,20 @@ export class TeamsApp extends LitElement {
 		this.toastTimer = setTimeout(() => (this.toast = ''), 4000);
 	}
 
+	/** Deliver a notification the core allowed: a toast in a visible tab, else a desktop one. */
+	private announce(item: ActivityItem): void {
+		const settings = this.teams.client?.getState().notificationSettings;
+		if (!settings) return;
+		deliverNotification(item, settings, browserDeliveryEnv(), {
+			toast: (entry) => {
+				this.activityToast = entry;
+				clearTimeout(this.activityToastTimer);
+				this.activityToastTimer = setTimeout(() => (this.activityToast = null), 6000);
+			},
+			open: (entry) => void this.openActivity(entry.id),
+		});
+	}
+
 	// ---- intent -> client actions -----------------------------------------------------------
 	private async openFile(
 		a: OpenFileDetail['attachment'],
@@ -385,6 +411,7 @@ export class TeamsApp extends LitElement {
 		this.openRequest++;
 		this.preview = null;
 		clearTimeout(this.toastTimer);
+		clearTimeout(this.activityToastTimer);
 		clearTimeout(this.highlightTimer);
 		this.stopActivity?.();
 		this.stopActivity = undefined;
@@ -552,6 +579,8 @@ export class TeamsApp extends LitElement {
 							);
 						}}
 						.followSettings=${s.threadFollowSettings}
+						.notificationSettings=${s.notificationSettings}
+						@teams-settings-notifications=${(event: CustomEvent<Partial<typeof s.notificationSettings>>) => this.teams.client?.setNotificationSettings(event.detail)}
 						.userName=${s.user.name}
 						@teams-settings-theme=${(event: CustomEvent<{ theme: TeamsTheme }>) => {
 							if (!['system', 'light', 'dark'].includes(event.detail.theme)) return;
@@ -582,6 +611,7 @@ export class TeamsApp extends LitElement {
 					@teams-create-channel-close=${() => (this.creatingChannel = false)}
 				></teams-create-channel-dialog>
 				${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
+				${this.activityToast ? this.activityToastView(this.activityToast) : nothing}
 
 				<teams-add-tab-dialog
 					.open=${this.addingTab}
@@ -721,6 +751,27 @@ export class TeamsApp extends LitElement {
 				</div>
 			</header>
 		`;
+	}
+
+	private activityToastView(item: ActivityItem) {
+		return html`<div class="toast activity-toast" role="status" data-kind=${item.kind}>
+			<span class="toast-text"
+				><strong>${describeActivity(item)}</strong
+				><span class="toast-preview">${item.preview}</span></span
+			>
+			<button
+				type="button"
+				@click=${() => {
+					this.activityToast = null;
+					void this.openActivity(item.id);
+				}}
+			>
+				View
+			</button>
+			<button type="button" aria-label="Dismiss" @click=${() => (this.activityToast = null)}>
+				${icon('close')}
+			</button>
+		</div>`;
 	}
 
 	private sidebar(s: TeamsState) {

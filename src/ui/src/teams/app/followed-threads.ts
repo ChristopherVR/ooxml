@@ -11,7 +11,10 @@ export function followedThreads(
 	const threads = state.followedThreads.filter((thread) => !unreadOnly || thread.unread > 0);
 	return html`<section class="followed-threads" aria-label="Followed threads">
 		<h1>Followed threads</h1>
-		<p>Threads you follow on this device. Notifications are not enabled.</p>
+		<p>
+			Threads you follow on this device. Their replies appear in Activity and notify you according
+			to your notification settings.
+		</p>
 		<fieldset>
 			<legend>Automatically follow</legend>
 			<label

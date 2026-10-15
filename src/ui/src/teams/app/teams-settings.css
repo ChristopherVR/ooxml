@@ -236,3 +236,41 @@ button.primary:hover {
 		border-block-end: var(--office-border-width) solid var(--office-teams-divider);
 	}
 }
+
+.notification-level {
+	display: grid;
+	gap: var(--office-space-2);
+	margin: var(--office-space-3) 0 0;
+	padding: 0;
+	border: 0;
+}
+.notification-level legend {
+	margin-bottom: var(--office-space-2);
+	padding: 0;
+	font-weight: var(--office-font-weight-bold);
+}
+.notification-choice {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--office-space-3);
+	padding: var(--office-space-2) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	cursor: pointer;
+	font-weight: normal;
+}
+.notification-choice:has(input:checked) {
+	border-color: var(--office-teams-brand);
+	background: var(--office-teams-brand-subtle);
+}
+.notification-choice input {
+	margin-block-start: var(--office-space-1);
+	accent-color: var(--office-teams-brand);
+}
+.notification-choice span {
+	display: grid;
+	gap: var(--office-space-1);
+}
+.notification-choice small {
+	color: var(--office-teams-text-subtle);
+}

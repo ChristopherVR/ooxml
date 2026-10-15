@@ -34,6 +34,21 @@ const TOPICS: SettingTopic[] = [
 	},
 	{
 		category: 'notifications',
+		title: 'Activity notifications',
+		description: 'Notify for all activity, mentions only or nothing',
+	},
+	{
+		category: 'notifications',
+		title: 'Sound',
+		description: 'Play a sound for new notifications',
+	},
+	{
+		category: 'notifications',
+		title: 'Desktop notifications',
+		description: 'Browser notifications while this tab is in the background, and Do not disturb',
+	},
+	{
+		category: 'notifications',
 		title: 'Followed threads',
 		description: 'Threads I start and threads I reply to',
 	},

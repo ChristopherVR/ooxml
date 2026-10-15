@@ -141,6 +141,7 @@ clients credentials. TURN entries without credentials are rejected by `parseServ
   no role model, so this is not an enforced permission.
 - No claim of Microsoft Teams feature parity beyond what the UI actually implements (channels,
   posts with replies and thread panes, reactions, pinned messages, files, search, presence with
-  status messages, meetings with screen share and raise hand). Not implemented: 1:1 chats,
-  notifications, calendar, recording,
+  status messages, @mentions, an activity feed, meetings with screen share and raise hand).
+  Notifications are in-page only (toast, browser Notification while the tab is open, sound): no
+  push, email or service worker. Not implemented: 1:1 chats, calendar, recording,
   background blur, live captions.

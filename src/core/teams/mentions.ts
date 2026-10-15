@@ -151,7 +151,8 @@ export function mentionQueryAt(text: string, caret: number): MentionQuery | null
 	const start = head.lastIndexOf('@');
 	if (start < 0 || isWord(head[start - 1])) return null;
 	const query = head.slice(start + 1);
-	if (query.length > MAX_QUERY_CHARS || /[\n\r@]/u.test(query) || /\s{2}/u.test(query)) return null;
+	if (query.length > MAX_QUERY_CHARS || /[\n\r@]/u.test(query) || /\s{2}|\s$/u.test(query))
+		return null;
 	return { start, query };
 }
 
