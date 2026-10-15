@@ -13,6 +13,7 @@ import {
 	verifyAgileDataIntegrity,
 	verifyAgilePassword,
 	verifyStandardPassword,
+	type DecryptOptions,
 } from './decrypt';
 import { openEncryptedPackage, toArrayBuffer, toBytes } from './detect';
 import { encryptAgile, encryptStandard } from './encrypt';
@@ -58,6 +59,7 @@ export {
 	verifyAgileDataIntegrity,
 	verifyAgilePassword,
 	verifyStandardPassword,
+	type DecryptOptions,
 } from './decrypt';
 export { encryptAgilePackage, encryptStandardPackage } from './encrypt';
 export {
@@ -88,12 +90,15 @@ function streams(bytes: Uint8Array): { info: Uint8Array; data: Uint8Array } {
  * Decrypts a password-protected OOXML package (agile or Standard encryption) to the plain zip.
  *
  * @throws IncorrectPasswordError (`code: 'incorrect-password'`) when the password is wrong.
- * @throws DataIntegrityError (`code: 'data-integrity'`) when the agile HMAC does not match.
+ * @throws DataIntegrityError (`code: 'data-integrity'`) when the agile HMAC does not match or
+ *   is absent (pass `allowMissingIntegrity: true` to accept a package without one).
+ *   Standard encryption has no integrity record at all: see {@link inspectOoxmlEncryption}.
  * @throws Error when the bytes are not an encrypted package or the scheme is unsupported.
  */
 export async function decryptOoxmlPackage(
 	input: Uint8Array | ArrayBuffer,
 	password: string,
+	options: DecryptOptions = {},
 ): Promise<Uint8Array> {
 	const { info: infoStream, data } = streams(toBytes(input));
 	const info = parseEncryptionInfo(infoStream);
@@ -102,10 +107,28 @@ export async function decryptOoxmlPackage(
 		if (!key) throw new IncorrectPasswordError();
 		return new Uint8Array(await decryptStandardPackage(data, key));
 	}
-	const key = await verifyAgilePassword(info, password);
+	const key = await verifyAgilePassword(info, password, options);
 	if (!key) throw new IncorrectPasswordError();
-	await verifyAgileDataIntegrity(info, key, data);
+	await verifyAgileDataIntegrity(info, key, data, options);
 	return new Uint8Array(await decryptAgilePackage(data, key, info));
+}
+
+/** What an encrypted package offers, from {@link inspectOoxmlEncryption}. */
+export interface OoxmlEncryptionSummary {
+	scheme: 'agile' | 'standard';
+	/**
+	 * Whether the ciphertext is authenticated. False for Standard encryption (no HMAC exists in
+	 * the scheme, so a decrypted package may have been modified) and for an agile package whose
+	 * `dataIntegrity` was stripped.
+	 */
+	integrityProtected: boolean;
+}
+
+/** The scheme of an encrypted package and whether it is integrity protected; no password needed. */
+export function inspectOoxmlEncryption(input: Uint8Array | ArrayBuffer): OoxmlEncryptionSummary {
+	const info = parseEncryptionInfo(streams(toBytes(input)).info);
+	if (isStandard(info)) return { scheme: 'standard', integrityProtected: false };
+	return { scheme: 'agile', integrityProtected: info.dataIntegrity !== undefined };
 }
 
 /**
@@ -128,6 +151,7 @@ export function encryptOoxmlPackage(
 export async function verifyOoxmlPackagePassword(
 	input: Uint8Array | ArrayBuffer,
 	password: string,
+	options: DecryptOptions = {},
 ): Promise<boolean> {
 	try {
 		const opened = openEncryptedPackage(input);
@@ -135,7 +159,7 @@ export async function verifyOoxmlPackagePassword(
 		const info = parseEncryptionInfo(opened.encryptionInfo);
 		const key = isStandard(info)
 			? await verifyStandardPassword(info, password)
-			: await verifyAgilePassword(info, password);
+			: await verifyAgilePassword(info, password, options);
 		return key !== null;
 	} catch {
 		return false;

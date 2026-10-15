@@ -15,6 +15,7 @@ import {
 	uint32LE,
 } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
 import { digestFunction } from '../digest/digest';
+import { isValidSpinCount, type SpinLimits } from '../digest/password-hash';
 
 /** Well-known block keys for agile encryption as defined in [MS-OFFCRYPTO]. */
 export const BLOCK_KEYS = {
@@ -25,17 +26,23 @@ export const BLOCK_KEYS = {
 	dataIntegrityHmacValue: new Uint8Array([0xa0, 0x67, 0x7f, 0x02, 0xb2, 0x2c, 0x84, 0x33]),
 } as const;
 
-/** The largest spin count honoured; Office writes 100,000, far more is a hostile file. */
-export const MAX_SPIN_COUNT = 10_000_000;
+/** Rounds hashed between two yields to the event loop. */
+const SPIN_CHUNK = 100_000;
 
-/** H0 = H(salt + password), then `spinCount` rounds of Hn = H(iterator + Hn-1). */
+/**
+ * H0 = H(salt + password), then `spinCount` rounds of Hn = H(iterator + Hn-1). The spin limit
+ * is shared with the protection verifiers (`digest/password-hash`): 1,000,000 by default, raised
+ * to at most the spec's 10,000,000 through `limits.maxSpinCount`. Long spins yield to the event
+ * loop every {@link SPIN_CHUNK} rounds so a large (allowed) count does not freeze the thread.
+ */
 async function spinPassword(
 	password: string,
 	salt: Uint8Array,
 	spinCount: number,
 	hashAlgorithm: string,
+	limits: SpinLimits = {},
 ): Promise<Uint8Array> {
-	if (!Number.isInteger(spinCount) || spinCount < 0 || spinCount > MAX_SPIN_COUNT) {
+	if (!isValidSpinCount(spinCount, limits.maxSpinCount)) {
 		throw new Error(`Unsupported encryption spin count: ${spinCount}.`);
 	}
 	const passwordBytes = encodePasswordUtf16LE(password);
@@ -48,6 +55,9 @@ async function spinPassword(
 			view.setUint32(0, i, true);
 			buffer.set(h, 4);
 			h = digest(buffer);
+			if (i % SPIN_CHUNK === SPIN_CHUNK - 1 && i + 1 < spinCount) {
+				await new Promise<void>((resolve) => setTimeout(resolve, 0));
+			}
 		}
 		return h;
 	}
@@ -82,8 +92,9 @@ export function computeAgileKeyBase(
 	salt: Uint8Array,
 	spinCount: number,
 	hashAlgorithm: string,
+	limits: SpinLimits = {},
 ): Promise<Uint8Array> {
-	return spinPassword(password, salt, spinCount, hashAlgorithm);
+	return spinPassword(password, salt, spinCount, hashAlgorithm, limits);
 }
 
 /** Finishes agile key derivation for one block key: Hfinal = H(base + blockKey), sized. */

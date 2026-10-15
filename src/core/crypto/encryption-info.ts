@@ -5,7 +5,9 @@
  */
 
 import { base64Decode } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
+import { parseXml, type XmlElement } from '../xml/xml';
 import type { EncryptionInfo, StandardEncryptionInfo } from './types';
+import { assertValidAgileEncryptionInfo } from './validate';
 
 /**
  * Algorithm ID for RC4 in the [MS-OFFCRYPTO] EncryptionHeader `algId` field.
@@ -96,59 +98,113 @@ function parseStandardEncryptionInfo(data: Uint8Array): StandardEncryptionInfo {
 	};
 }
 
-/** The value of `attr` in the first start tag whose name contains `tag`, or ''. */
-function tagAttribute(xml: string, tag: string, attr: string): string {
-	const tagMatch = xml.match(new RegExp(`<[^>]*${tag}[^>]*>`, 'i'));
-	if (!tagMatch) return '';
-	const attrMatch = tagMatch[0].match(new RegExp(`\\b${attr}="([^"]*)"`, 'i'));
-	return attrMatch?.[1] ?? '';
+const PASSWORD_KEY_ENCRYPTOR_URI = 'http://schemas.microsoft.com/office/2006/keyEncryptor/password';
+
+/** The element children of `parent` named `localName` (any prefix). */
+function childrenNamed(parent: XmlElement, localName: string): XmlElement[] {
+	const found: XmlElement[] = [];
+	for (let node = parent.firstChild; node; node = node.nextSibling) {
+		if (node.nodeType === 1 && (node as XmlElement).localName === localName) {
+			found.push(node as XmlElement);
+		}
+	}
+	return found;
 }
 
-/** Parse agile encryption info (Office 2010+ XML-based format). */
+/** The single child named `localName`, or undefined; more than one is ambiguous and rejected. */
+function singleChild(
+	parent: XmlElement,
+	localName: string,
+	mustExist: boolean,
+): XmlElement | undefined {
+	const matches = childrenNamed(parent, localName);
+	if (matches.length > 1) throw new Error(`The EncryptionInfo has several ${localName} elements.`);
+	if (matches.length === 0 && mustExist) {
+		throw new Error(`The EncryptionInfo has no ${localName} element.`);
+	}
+	return matches[0];
+}
+
+/** A required, non-empty attribute. */
+function required(element: XmlElement, attr: string): string {
+	const value = element.getAttribute(attr);
+	if (!value) throw new Error(`The EncryptionInfo ${element.localName} has no ${attr}.`);
+	return value;
+}
+
+/** A required attribute that must be a plain decimal integer (NaN becomes an error). */
+function requiredInt(element: XmlElement, attr: string): number {
+	const value = required(element, attr);
+	if (!/^\d{1,10}$/.test(value)) {
+		throw new Error(`The EncryptionInfo ${element.localName} ${attr} is not a number: ${value}.`);
+	}
+	return Number(value);
+}
+
+function parseKeyBlock(element: XmlElement) {
+	return {
+		saltSize: requiredInt(element, 'saltSize'),
+		blockSize: requiredInt(element, 'blockSize'),
+		keyBits: requiredInt(element, 'keyBits'),
+		hashSize: requiredInt(element, 'hashSize'),
+		cipherAlgorithm: required(element, 'cipherAlgorithm'),
+		cipherChaining: required(element, 'cipherChaining'),
+		hashAlgorithm: required(element, 'hashAlgorithm'),
+		saltValue: base64Decode(required(element, 'saltValue')),
+	};
+}
+
+/**
+ * Parse agile encryption info (Office 2010+ XML-based format). The XML is parsed with the shared
+ * `xml` area; `keyData` must be unique, the password key encryptor is selected by its `uri`
+ * (never by position), and the cipher, chaining and hash names are checked against what the
+ * scheme allows.
+ */
 function parseAgileEncryptionInfo(data: Uint8Array): EncryptionInfo {
 	// Skip version (4 bytes) and reserved (4 bytes).
-	const xml = new TextDecoder('utf-8').decode(data.subarray(8));
-	const keyData = (attr: string): string => tagAttribute(xml, 'keyData', attr);
-	const integrity = (attr: string): string => tagAttribute(xml, 'dataIntegrity', attr);
-	// The password key encryptor is the (usually `p:`-prefixed) encryptedKey element.
-	const pke = (attr: string): string => tagAttribute(xml, 'encryptedKey', attr);
-	const int = (value: string): number => parseInt(value, 10);
+	const root = parseXml(new TextDecoder('utf-8').decode(data.subarray(8)), {
+		label: 'EncryptionInfo',
+	}).documentElement;
+	if (root.localName !== 'encryption') {
+		throw new Error('The EncryptionInfo root element is not <encryption>.');
+	}
 
-	const encryptedHmacKey = integrity('encryptedHmacKey');
-	return {
+	const keyData = parseKeyBlock(singleChild(root, 'keyData', true)!);
+	const integrity = singleChild(root, 'dataIntegrity', false);
+
+	const encryptors = childrenNamed(singleChild(root, 'keyEncryptors', true)!, 'keyEncryptor');
+	const passwordEncryptors = encryptors.filter(
+		(encryptor) => encryptor.getAttribute('uri') === PASSWORD_KEY_ENCRYPTOR_URI,
+	);
+	if (passwordEncryptors.length !== 1) {
+		throw new Error(
+			passwordEncryptors.length === 0
+				? 'The EncryptionInfo has no password key encryptor.'
+				: 'The EncryptionInfo has several password key encryptors.',
+		);
+	}
+	const pke = singleChild(passwordEncryptors[0]!, 'encryptedKey', true)!;
+
+	const info: EncryptionInfo = {
 		version: { major: 4, minor: 4 },
 		isAgile: true,
-		keyData: {
-			saltSize: int(keyData('saltSize')),
-			blockSize: int(keyData('blockSize')),
-			keyBits: int(keyData('keyBits')),
-			hashSize: int(keyData('hashSize')),
-			cipherAlgorithm: keyData('cipherAlgorithm'),
-			cipherChaining: keyData('cipherChaining'),
-			hashAlgorithm: keyData('hashAlgorithm'),
-			saltValue: base64Decode(keyData('saltValue')),
-		},
-		...(encryptedHmacKey
+		keyData,
+		...(integrity
 			? {
 					dataIntegrity: {
-						encryptedHmacKey: base64Decode(encryptedHmacKey),
-						encryptedHmacValue: base64Decode(integrity('encryptedHmacValue')),
+						encryptedHmacKey: base64Decode(required(integrity, 'encryptedHmacKey')),
+						encryptedHmacValue: base64Decode(required(integrity, 'encryptedHmacValue')),
 					},
 				}
 			: {}),
 		passwordKeyEncryptor: {
-			saltSize: int(pke('saltSize')),
-			blockSize: int(pke('blockSize')),
-			keyBits: int(pke('keyBits')),
-			hashSize: int(pke('hashSize')),
-			cipherAlgorithm: pke('cipherAlgorithm'),
-			cipherChaining: pke('cipherChaining'),
-			hashAlgorithm: pke('hashAlgorithm'),
-			saltValue: base64Decode(pke('saltValue')),
-			spinCount: int(pke('spinCount')),
-			encryptedVerifierHashInput: base64Decode(pke('encryptedVerifierHashInput')),
-			encryptedVerifierHashValue: base64Decode(pke('encryptedVerifierHashValue')),
-			encryptedKeyValue: base64Decode(pke('encryptedKeyValue')),
+			...parseKeyBlock(pke),
+			spinCount: requiredInt(pke, 'spinCount'),
+			encryptedVerifierHashInput: base64Decode(required(pke, 'encryptedVerifierHashInput')),
+			encryptedVerifierHashValue: base64Decode(required(pke, 'encryptedVerifierHashValue')),
+			encryptedKeyValue: base64Decode(required(pke, 'encryptedKeyValue')),
 		},
 	};
+	assertValidAgileEncryptionInfo(info);
+	return info;
 }

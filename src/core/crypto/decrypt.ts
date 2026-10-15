@@ -11,6 +11,8 @@ import {
 	hmac,
 	uint32LE,
 } from '@christophervr/ole2/utils/ooxml-crypto-primitives';
+import type { SpinLimits } from '../digest/password-hash';
+import { timingSafeEqual } from '../digest/timing-safe';
 import { aesEcbDecrypt } from './aes-ecb';
 import { DataIntegrityError } from './errors';
 import {
@@ -21,6 +23,17 @@ import {
 	generateIV,
 } from './key-derivation';
 import type { EncryptionInfo, StandardEncryptionInfo } from './types';
+import { assertValidAgileEncryptionInfo, assertValidStandardEncryptionInfo } from './validate';
+
+/** Options of agile password verification and package decryption. */
+export interface DecryptOptions extends SpinLimits {
+	/**
+	 * Accept an agile package that has no `<dataIntegrity>` element (default false). The HMAC is
+	 * the only protection of the ciphertext against tampering, so a missing element is treated as
+	 * a downgrade attack unless the caller opts out (for example for a legacy writer).
+	 */
+	allowMissingIntegrity?: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Agile Password Verification
@@ -32,15 +45,25 @@ import type { EncryptionInfo, StandardEncryptionInfo } from './types';
  *
  * @param info - Parsed agile encryption info.
  * @param password - The password to verify.
+ * @param limits - The spin-count limit (default 1,000,000; the spec ceiling is 10,000,000).
  * @returns The document encryption key, or null if the password is wrong.
+ * @throws Error when the EncryptionInfo parameters are invalid or the spin count is too large.
  */
 export async function verifyAgilePassword(
 	info: EncryptionInfo,
 	password: string,
+	limits: SpinLimits = {},
 ): Promise<Uint8Array | null> {
+	assertValidAgileEncryptionInfo(info);
 	const pke = info.passwordKeyEncryptor;
 	// The spin is the expensive part and depends only on the password and salt: run it once.
-	const base = await computeAgileKeyBase(password, pke.saltValue, pke.spinCount, pke.hashAlgorithm);
+	const base = await computeAgileKeyBase(
+		password,
+		pke.saltValue,
+		pke.spinCount,
+		pke.hashAlgorithm,
+		limits,
+	);
 	const blockKey = (block: Uint8Array): Promise<Uint8Array> =>
 		deriveAgileKeyFromBase(base, pke.hashAlgorithm, block, pke.keyBits, pke.hashSize);
 
@@ -57,10 +80,9 @@ export async function verifyAgilePassword(
 
 	// Hash the decrypted verifier input and compare up to the hash size.
 	const computedHash = await hash(pke.hashAlgorithm, verifierHashInput.subarray(0, pke.saltSize));
-	if (computedHash.length < pke.hashSize || verifierHashValue.length < pke.hashSize) return null;
-	let difference = 0;
-	for (let i = 0; i < pke.hashSize; i++) difference |= verifierHashValue[i]! ^ computedHash[i]!;
-	if (difference !== 0) return null;
+	// hashSize was validated against the digest length, so the whole digest is compared.
+	if (computedHash.length !== pke.hashSize || verifierHashValue.length < pke.hashSize) return null;
+	if (!timingSafeEqual(verifierHashValue.subarray(0, pke.hashSize), computedHash)) return null;
 
 	// Password verified: decrypt the document encryption key.
 	const decryptedKey = await aesCbcDecryptRaw(
@@ -87,6 +109,7 @@ export async function verifyStandardPassword(
 	info: StandardEncryptionInfo,
 	password: string,
 ): Promise<Uint8Array | null> {
+	assertValidStandardEncryptionInfo(info);
 	const key = await deriveStandardKey(
 		password,
 		info.verifier.salt,
@@ -104,15 +127,8 @@ export async function verifyStandardPassword(
 	// Hash the decrypted verifier
 	const computedHash = await hash('SHA-1', decryptedVerifier);
 
-	// Compare (only first 20 bytes = SHA-1 hash size)
-	const hashSize = info.verifier.verifierHashSize;
-	let match = true;
-	for (let i = 0; i < Math.min(hashSize, 20); i++) {
-		if (computedHash[i] !== decryptedHash[i]) {
-			match = false;
-			break;
-		}
-	}
+	// The verifier hash is SHA-1 (20 bytes, enforced by the validation above): compare all of it.
+	const match = timingSafeEqual(decryptedHash.subarray(0, 20), computedHash);
 
 	return match ? key : null;
 }
@@ -133,18 +149,23 @@ export async function verifyStandardPassword(
  * @param info - Parsed agile encryption info.
  * @param key - The document encryption key.
  * @param encryptedPackage - Raw bytes of the EncryptedPackage stream.
- * @throws DataIntegrityError if the data integrity check fails.
+ * @param options - `allowMissingIntegrity` accepts a package without a dataIntegrity element.
+ * @throws DataIntegrityError if the data integrity check fails, or the element is missing and
+ *   `allowMissingIntegrity` is not set (an attacker could strip it to flip ciphertext bits).
  */
 export async function verifyAgileDataIntegrity(
 	info: EncryptionInfo,
 	key: Uint8Array,
 	encryptedPackage: Uint8Array,
+	options: Pick<DecryptOptions, 'allowMissingIntegrity'> = {},
 ): Promise<void> {
 	const keyData = info.keyData;
 
-	// If no data integrity block is present, skip verification
 	if (!info.dataIntegrity) {
-		return;
+		if (options.allowMissingIntegrity) return;
+		throw new DataIntegrityError(
+			'The encrypted package has no data integrity record, so it cannot be checked for tampering.',
+		);
 	}
 
 	// Decrypt the HMAC key
@@ -179,18 +200,8 @@ export async function verifyAgileDataIntegrity(
 	// The HMAC covers the complete EncryptedPackage stream, including its size prefix.
 	const computedHmac = await hmac(keyData.hashAlgorithm, hmacKey, encryptedPackage);
 
-	// Compare HMACs
-	let match = true;
-	if (computedHmac.length < keyData.hashSize) {
-		match = false;
-	} else {
-		for (let i = 0; i < keyData.hashSize; i++) {
-			if (computedHmac[i] !== expectedHmac[i]) {
-				match = false;
-				break;
-			}
-		}
-	}
+	// Compare HMACs (a length mismatch fails)
+	const match = timingSafeEqual(computedHmac, expectedHmac);
 
 	if (!match) {
 		throw new DataIntegrityError(
@@ -202,6 +213,15 @@ export async function verifyAgileDataIntegrity(
 // ---------------------------------------------------------------------------
 // Package Decryption
 // ---------------------------------------------------------------------------
+
+/** The 8-byte StreamSize prefix: the byte length of the original package. */
+function readOriginalSize(encryptedPackage: Uint8Array, wide: boolean): number {
+	if (encryptedPackage.length < 8) throw new Error('The EncryptedPackage stream is truncated.');
+	const view = new DataView(encryptedPackage.buffer, encryptedPackage.byteOffset, 8);
+	const high = view.getUint32(4, true);
+	// Standard encryption only defines the low 32 bits.
+	return view.getUint32(0, true) + (wide ? high * 0x100000000 : 0);
+}
 
 /**
  * Decrypt the EncryptedPackage stream using the agile encryption key.
@@ -221,11 +241,13 @@ export async function decryptAgilePackage(
 ): Promise<ArrayBuffer> {
 	const keyData = info.keyData;
 
-	// First 8 bytes are the actual (unencrypted) size of the original package
-	const sizeView = new DataView(encryptedPackage.buffer, encryptedPackage.byteOffset, 8);
-	const originalSize = sizeView.getUint32(0, true) + sizeView.getUint32(4, true) * 0x100000000;
+	const originalSize = readOriginalSize(encryptedPackage, true);
 
 	const encryptedData = encryptedPackage.subarray(8);
+	// Reject a declared size the ciphertext cannot hold before allocating the result from it.
+	if (originalSize > encryptedData.length) {
+		throw new Error('The declared package size exceeds the encrypted data.');
+	}
 	const segmentSize = 4096;
 	const result = new Uint8Array(originalSize);
 	let resultOffset = 0;
@@ -270,11 +292,12 @@ export async function decryptStandardPackage(
 	encryptedPackage: Uint8Array,
 	key: Uint8Array,
 ): Promise<ArrayBuffer> {
-	// First 8 bytes are the actual size
-	const sizeView = new DataView(encryptedPackage.buffer, encryptedPackage.byteOffset, 8);
-	const originalSize = sizeView.getUint32(0, true);
+	const originalSize = readOriginalSize(encryptedPackage, false);
 
 	const encryptedData = encryptedPackage.subarray(8);
+	if (originalSize > encryptedData.length) {
+		throw new Error('The declared package size exceeds the encrypted data.');
+	}
 	const decrypted = await aesEcbDecrypt(key, encryptedData);
 
 	// Uint8Array#slice (unlike #subarray) copies into a freshly allocated
