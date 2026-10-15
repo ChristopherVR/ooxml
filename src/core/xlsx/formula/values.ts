@@ -211,6 +211,9 @@ export class RefValue {
 /** Lexical variables of LET and LAMBDA, keyed by upper-case name. */
 export type Scope = ReadonlyMap<string, Value>;
 
+/** Scope key prefix marking a LAMBDA parameter the caller left out (read by ISOMITTED). */
+export const OMITTED_PREFIX = '#omitted:';
+
 /** A LAMBDA closure. */
 export class LambdaValue {
 	constructor(

@@ -8,6 +8,7 @@ import {
 	fail,
 	isError,
 	LambdaValue,
+	OMITTED_PREFIX,
 	Matrix,
 	RefValue,
 	type Scalar,
@@ -252,6 +253,18 @@ export const LOGICAL_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => {
 			const params = args.slice(0, -1).map((a) => localName(a));
 			return new LambdaValue(params, (args[args.length - 1] as LazyArg).node, ctx.frame.scope);
+		},
+	),
+	lazySpec(
+		'ISOMITTED',
+		'ISOMITTED(argument)',
+		'Whether a LAMBDA argument was left out.',
+		1,
+		1,
+		(args, ctx) => {
+			const node = (args[0] as LazyArg).node;
+			if (node.type !== 'name') return ERR.VALUE;
+			return ctx.frame.scope?.get(OMITTED_PREFIX + normalizeLocalName(node.name)) === true;
 		},
 	),
 ];

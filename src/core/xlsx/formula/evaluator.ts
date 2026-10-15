@@ -20,6 +20,7 @@ import {
 	ErrorSignal,
 	isError,
 	LambdaValue,
+	OMITTED_PREFIX,
 	Matrix,
 	RefValue,
 	type Scalar,
@@ -184,7 +185,11 @@ export function invokeLambda(callee: Value, args: Value[], frame: Frame): Value 
 	if (!(callee instanceof LambdaValue)) return ERR.VALUE;
 	if (args.length > callee.params.length) return ERR.VALUE;
 	const scope = new Map<string, Value>(callee.scope ?? []);
-	callee.params.forEach((param, i) => scope.set(param, args[i] ?? null));
+	callee.params.forEach((param, i) => {
+		scope.set(param, args[i] ?? null);
+		// A parameter with no argument (or an empty slot) is "omitted" for ISOMITTED.
+		if (args[i] === undefined || args[i] === null) scope.set(OMITTED_PREFIX + param, true);
+	});
 	return evaluateNode(callee.body, { ...frame, scope, root: undefined });
 }
 

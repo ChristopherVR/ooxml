@@ -1,6 +1,7 @@
 import { toText } from '../coerce';
 import { ERR, fail, type Value } from '../values';
 import { COMPLEX_FUNCTIONS } from './complex';
+import { BESSEL_FUNCTIONS } from './bessel';
 import { CONVERT_FUNCTIONS } from './convert';
 import { int, num, numeric, optNum, scalar, spec, str } from './helpers';
 import type { FunctionSpec } from './types';
@@ -92,6 +93,7 @@ export const ENGINEERING_FUNCTIONS: FunctionSpec[] = [
 	...conversions,
 	...COMPLEX_FUNCTIONS,
 	...CONVERT_FUNCTIONS,
+	...BESSEL_FUNCTIONS,
 	spec('BITAND', C, 'BITAND(number1, number2)', 'Bitwise AND.', 2, 2, (args) =>
 		bitwise(bitArg(args[0]), bitArg(args[1]), (x, y) => x & y),
 	),

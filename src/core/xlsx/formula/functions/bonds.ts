@@ -69,7 +69,7 @@ function duration(bond: Bond, yld: number): number {
 }
 
 /** Quasi-coupon period start dates around `anchor`, covering `from` through `to`. */
-function quasiPeriods(
+export function quasiPeriods(
 	anchor: number,
 	from: number,
 	to: number,

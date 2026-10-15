@@ -3,7 +3,9 @@ import { ERR, fail, type Value } from '../values';
 import { collectNumbers, num, numeric, optNum, spec } from './helpers';
 import type { FunctionSpec } from './types';
 import { BOND_FUNCTIONS } from './bonds';
+import { AMORDEGRC } from './amordegrc';
 import { AMORLINC } from './amorlinc';
+import { ODD_SECURITY_FUNCTIONS } from './odd-securities';
 import { COUPON_FUNCTIONS } from './coupons';
 import { DEPRECIATION_FUNCTIONS } from './depreciation';
 import { SECURITY_FUNCTIONS } from './securities';
@@ -31,7 +33,9 @@ const xnpv = (rate: number, values: number[], dates: number[]): number =>
 	);
 
 export const FINANCIAL_FUNCTIONS: FunctionSpec[] = [
+	AMORDEGRC,
 	AMORLINC,
+	...ODD_SECURITY_FUNCTIONS,
 	...DEPRECIATION_FUNCTIONS,
 	...COUPON_FUNCTIONS,
 	...BOND_FUNCTIONS,

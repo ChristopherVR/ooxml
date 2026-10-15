@@ -11,6 +11,10 @@ import { MATRIX_FUNCTIONS } from './matrix';
 import { STATISTICAL_FUNCTIONS } from './statistical';
 import { DISTRIBUTION_FUNCTIONS } from './distributions';
 import { TEXT_FUNCTIONS } from './text';
+import { BAHTTEXT } from './bahttext';
+import { GETPIVOTDATA } from './getpivotdata';
+import { GROUPBY_FUNCTIONS } from './groupby';
+import { MODERN_FUNCTIONS } from './modern';
 import { TEXT_EXTRA_FUNCTIONS } from './text-extra';
 import type { FunctionInfo, FunctionSpec } from './types';
 
@@ -22,6 +26,10 @@ const ALL: readonly FunctionSpec[] = [
 	...LOGICAL_FUNCTIONS,
 	...TEXT_FUNCTIONS,
 	...TEXT_EXTRA_FUNCTIONS,
+	BAHTTEXT,
+	GETPIVOTDATA,
+	...GROUPBY_FUNCTIONS,
+	...MODERN_FUNCTIONS,
 	...DATETIME_FUNCTIONS,
 	...LOOKUP_FUNCTIONS,
 	...ARRAY_FUNCTIONS,
