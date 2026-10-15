@@ -10,6 +10,9 @@ import { shellLayout } from './shell-layout.js';
  */
 export function mountShell(state) {
 	let expanded = false;
+	let drawerOpen = false;
+	const launcher = $('launcher-toggle');
+	const launcherTarget = launcher.getAttribute('popovertarget');
 	const toggle = $('chrome-toggle');
 	toggle.innerHTML = icon('chevron');
 	$('actions-more').innerHTML = icon('more');
@@ -20,14 +23,42 @@ export function mountShell(state) {
 		return { width: Math.round(viewport?.width ?? window.innerWidth), height };
 	};
 	const apply = () => {
-		const layout = shellLayout({ ...measure(), ...state(), expanded });
+		const layout = shellLayout({
+			...measure(),
+			...state(),
+			expanded,
+			standalone: 'product' in document.body.dataset,
+		});
+		if (!layout.drawer) drawerOpen = false;
+		// The grid button opens the app launcher popover, or the rail drawer when the rail is one.
+		if (layout.drawer) launcher.removeAttribute('popovertarget');
+		else if (launcherTarget) launcher.setAttribute('popovertarget', launcherTarget);
 		const body = document.body;
 		body.dataset.narrow = String(layout.narrow);
+		body.dataset.drawer = String(layout.drawer);
+		body.dataset.drawerOpen = String(drawerOpen);
+		if (layout.drawer) launcher.setAttribute('aria-expanded', String(drawerOpen));
 		body.dataset.hideTabs = String(layout.hideTabs);
 		body.dataset.collapsible = String(layout.collapsible);
 		body.dataset.chrome = layout.collapsed ? 'collapsed' : 'full';
 		toggle.setAttribute('aria-expanded', String(!layout.collapsed));
 	};
+	const setDrawer = (open, restoreFocus) => {
+		drawerOpen = open;
+		apply();
+		if (open) setTimeout(() => $('rail').querySelector('button')?.focus(), 50);
+		else if (restoreFocus) launcher.focus();
+	};
+	launcher.addEventListener('click', () => {
+		if (document.body.dataset.drawer === 'true') setDrawer(!drawerOpen, true);
+	});
+	$('drawer-scrim').addEventListener('click', () => setDrawer(false, true));
+	$('rail').addEventListener('click', (event) => {
+		if (drawerOpen && event.target.closest('button')) setDrawer(false, true);
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && drawerOpen) setDrawer(false, true);
+	});
 	toggle.addEventListener('click', () => {
 		expanded = !expanded;
 		apply();

@@ -104,3 +104,63 @@ body[data-chrome='collapsed'] .suite-layout {
 		height: 44px;
 	}
 }
+
+/* Narrow screens: the app rail is an off-canvas drawer opened by the title bar's grid button. */
+.drawer-scrim {
+	display: none;
+}
+@media (max-width: 640px) {
+	body[data-drawer='true']:not([data-product]) .workspace-sidebar {
+		position: fixed;
+		inset: 0 auto 0 0;
+		z-index: 50;
+		width: min(280px, 85vw);
+		padding: 18px 12px 12px;
+		transform: translateX(-100%);
+		visibility: hidden;
+		box-shadow: 4px 0 24px #0004;
+	}
+	body[data-drawer='true']:not([data-product]) .workspace-switch,
+	body[data-drawer='true']:not([data-product]) .sidebar-footer {
+		display: flex;
+	}
+	body[data-drawer='true']:not([data-product]) .nav-caption {
+		display: block;
+	}
+	body[data-drawer='true']:not([data-product]) .app-rail button {
+		flex-direction: row;
+		min-height: 44px;
+		padding: 8px 12px;
+		gap: 13px;
+		font-size: 13px;
+	}
+	body[data-drawer='true']:not([data-product]) .app-rail .app-badge {
+		width: 20px;
+		height: 23px;
+		font-size: 13px;
+	}
+	body[data-drawer='true']:not([data-product]) .app-rail button[aria-current='true']:before {
+		height: 18px;
+	}
+	body[data-drawer-open='true'][data-drawer='true']:not([data-product]) .workspace-sidebar {
+		transform: none;
+		visibility: visible;
+	}
+	body[data-drawer-open='true'] .drawer-scrim {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 40;
+		background: #0006;
+	}
+	body[data-chrome='collapsed'] .workspace-sidebar {
+		display: flex;
+	}
+}
+@media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
+	body[data-drawer='true']:not([data-product]) .workspace-sidebar {
+		transition:
+			transform 0.18s ease-out,
+			visibility 0.18s;
+	}
+}

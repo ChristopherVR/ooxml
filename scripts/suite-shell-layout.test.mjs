@@ -7,6 +7,7 @@ const base = { width: 1366, height: 768, view: 'editor', documents: 1, teamsOpen
 test('desktop keeps every bar', () => {
 	assert.deepEqual(shellLayout(base), {
 		narrow: false,
+		drawer: false,
 		hideTabs: false,
 		collapsible: false,
 		collapsed: false,
@@ -43,4 +44,11 @@ test('the breakpoints are inclusive', () => {
 	assert.equal(shellLayout({ ...base, width: 641 }).narrow, false);
 	assert.equal(shellLayout({ ...base, height: 500 }).collapsible, true);
 	assert.equal(shellLayout({ ...base, height: 501 }).collapsible, false);
+});
+
+test('the rail is a drawer on narrow screens except in a standalone product', () => {
+	assert.equal(shellLayout({ ...base, width: 375 }).drawer, true);
+	assert.equal(shellLayout({ ...base, width: 375, view: 'home' }).drawer, true);
+	assert.equal(shellLayout({ ...base, width: 375, standalone: true }).drawer, false);
+	assert.equal(shellLayout({ ...base, width: 768 }).drawer, false);
 });
