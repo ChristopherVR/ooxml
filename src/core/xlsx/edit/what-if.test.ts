@@ -34,7 +34,7 @@ describe('Goal Seek', () => {
 			changing: { row: 0, col: 0 },
 		});
 		expect(r.found).toBe(true);
-		expect(value(wb, 0, 0) as number).toBeCloseTo(7, 3);
+		expect(value(wb, 0, 0)).toBe(7);
 		expect(value(wb, 1, 0) as number).toBeCloseTo(25, 3);
 		s.undo();
 		expect(value(wb, 0, 0)).toBe(2);

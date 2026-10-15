@@ -99,10 +99,17 @@ export function goalSeek(ctx: EditContext, request: GoalSeekRequest): GoalSeekRe
 				startValue,
 				settings,
 			);
-			apply(solution.x);
+			// Tidy float noise (6.99999999999999 -> 7) when the rounded input still meets the goal.
+			const tidy = Number(solution.x.toPrecision(12));
+			if (solution.found && tidy !== solution.x) {
+				apply(tidy);
+				const tidied = read();
+				if (typeof tidied !== 'number' || Math.abs(tidied - goal) > settings.maxChange)
+					apply(solution.x);
+			} else apply(solution.x);
 			return {
 				found: solution.found,
-				changingValue: solution.x,
+				changingValue: typeof cell.value === 'number' ? cell.value : solution.x,
 				currentValue: read(),
 				iterations: solution.iterations,
 			};
