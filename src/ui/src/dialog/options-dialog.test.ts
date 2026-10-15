@@ -11,6 +11,9 @@ type OptionsDialog = HTMLElement & {
 	category: string;
 	open: boolean;
 	show(): void;
+	defaults: Record<string, boolean | number | string> | null;
+	labels: Record<string, string>;
+	updateComplete: Promise<unknown>;
 };
 
 const CATEGORIES: OfficeOptionCategory[] = [
@@ -150,6 +153,83 @@ describe('office-ui-options-dialog', () => {
 		expect(root.activeElement).toBe(tab('Advanced'));
 		tab('Advanced').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
 		expect(dialog.category).toBe('trust');
+	});
+
+	it('resets to the defaults, translates its buttons and reports a cancel', async () => {
+		const { dialog, root, field, action } = mount();
+		dialog.show();
+		expect(root.querySelector('[data-action="reset"]')).toBeNull();
+		dialog.defaults = {
+			livePreview: true,
+			screenTips: 'descriptions',
+		};
+		dialog.labels = {
+			ok: 'Aceptar',
+			cancel: 'Cancelar',
+			reset: 'Restablecer',
+		};
+		const cancelled = vi.fn();
+		dialog.addEventListener('office-options-cancel', cancelled);
+		await dialog.updateComplete;
+		expect(action('ok').textContent!.trim()).toBe('Aceptar');
+		expect(action('reset').textContent!.trim()).toBe('Restablecer');
+		field<HTMLInputElement>('livePreview').click();
+		expect(field<HTMLInputElement>('livePreview').checked).toBe(false);
+		action('reset').click();
+		await dialog.updateComplete;
+		expect(field<HTMLInputElement>('livePreview').checked).toBe(true);
+		action('cancel').click();
+		expect(cancelled).toHaveBeenCalledTimes(1);
+		action('ok');
+		dialog.show();
+		action('ok').click();
+		expect(cancelled).toHaveBeenCalledTimes(1);
+	});
+
+	it('enables a dependent field only while its toggle is on, and projects a custom pane', async () => {
+		const { dialog, root, tab } = mount();
+		dialog.categories = [
+			{
+				id: 'calc',
+				label: 'Formulas',
+				sections: [
+					{
+						id: 'iter',
+						title: 'Iteration',
+						controls: [
+							{ kind: 'toggle', key: 'iterate', label: 'Iterate' },
+							{
+								kind: 'number',
+								key: 'count',
+								label: 'Count',
+								min: 1,
+								max: 9,
+								enabledBy: 'iterate',
+							},
+						],
+					},
+				],
+			},
+			{ id: 'ribbon', label: 'Customize Ribbon', sections: [], custom: true },
+		];
+		dialog.values = { iterate: false, count: 3 };
+		const pane = document.createElement('div');
+		pane.slot = 'pane-ribbon';
+		pane.textContent = 'commands';
+		dialog.append(pane);
+		dialog.show();
+		const wait = () =>
+			dialog.updateComplete;
+		await wait();
+		const count = root.querySelector<HTMLInputElement>('[data-key="count"] input')!;
+		expect(count.disabled).toBe(true);
+		root.querySelector<HTMLInputElement>('[data-key="iterate"] input')!.click();
+		await wait();
+		expect(count.disabled).toBe(false);
+		tab('Customize Ribbon').click();
+		await wait();
+		const slot = root.querySelector<HTMLSlotElement>('slot[name="pane-ribbon"]')!;
+		expect(slot.assignedElements()).toEqual([pane]);
 	});
 
 	it('clamps option numbers', () => {

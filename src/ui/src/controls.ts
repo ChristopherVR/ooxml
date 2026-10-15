@@ -210,9 +210,20 @@ export {
 	type OfficeOptionControl,
 	type OfficeOptionSection,
 	type OfficeOptionsChangeEvent,
+	type OfficeOptionsLabels,
 	type OfficeOptionValue,
 	type OfficeOptionValues,
 } from './dialog/options-dialog';
+export {
+	optionsLabels,
+	optionText,
+	personalizeSection,
+	unavailableCategory,
+	unavailableControl,
+	userInterfaceSection,
+	type OptionsContext,
+	type UnavailableKind,
+} from './dialog/options-categories';
 
 /** Every control of this entry. */
 export const CONTROL_DEFINERS = [
