@@ -14,11 +14,15 @@
 	 * is where the slide dimensions live.
 	 */
 
-	import { DESIGN_RIBBON_COMMANDS, DESIGN_RIBBON_GROUPS, designCommandState } from 'ooxml-ui/pptx';
+	import {
+		DESIGN_RIBBON_COMMANDS,
+		DESIGN_RIBBON_GROUPS,
+		FIXED_TAB_GALLERIES,
+		designCommandState,
+	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import { anchoredPopup } from '../anchored-popup';
-	import { fixedGalleryPlacement } from '../galleries/fixed-placements';
 	import { createRibbonGalleryHost, useRibbonGalleryHost } from '../galleries/ribbon-gallery-host';
 	import RibbonGallery from '../galleries/RibbonGallery.svelte';
 	import DeckThemeMenu from './DeckThemeMenu.svelte';
@@ -54,13 +58,14 @@
 	function toggleThemeEditor(): void {
 		editor.themeEditorOpen = !editor.themeEditorOpen;
 	}
-	const VARIANT_COLORS = fixedGalleryPlacement('design.variants.colors');
-	const VARIANT_FONTS = fixedGalleryPlacement('design.variants.fonts');
 </script>
 
 <div class="pptx-svelte-designtab" role="group" aria-label={t('pptx.ribbon.tab.design')}>
  {#each DESIGN_RIBBON_GROUPS as group (group.id)}
   <pptx-ui-ribbon-group data-ribbon-group={group.id} label={t(group.labelKey)}>
+   {#each FIXED_TAB_GALLERIES.filter((placement) => placement.control.startsWith(`${group.id}.`)) as placement (placement.control)}
+    <RibbonGallery {placement} />
+   {/each}
    {#each DESIGN_RIBBON_COMMANDS.filter((item) => item.id.startsWith(`${group.id}.`)) as command (command.id)}
     {@const view = designCommandState(command.id, { editable: editor.editable, galleryOpen, editorOpen, backgroundOpen, hasSlideSize: Boolean(onslidesize) })}
     {#if !view.hidden}
@@ -79,14 +84,10 @@
        disabled={view.disabled || undefined} active={view.active || undefined} expanded={view.expanded === undefined ? undefined : String(view.expanded)}
        oncommand-request={() => { if (command.id === 'design.themes.editTheme') { toggleThemeEditor(); }
         else if (command.id === 'design.customize.slideSize') { onslidesize?.(); }
-        else { backgroundOpen = !backgroundOpen; } }}></pptx-ui-ribbon-command>
+        else if (command.id === 'design.customize.formatBackground') { backgroundOpen = !backgroundOpen; } }}></pptx-ui-ribbon-command>
      {/if}
     {/if}
    {/each}
-   {#if group.id === 'design.variants'}
-    <RibbonGallery placement={VARIANT_COLORS} />
-    <RibbonGallery placement={VARIANT_FONTS} />
-   {/if}
   </pptx-ui-ribbon-group>
  {/each}
  {#if backgroundOpen}

@@ -77,9 +77,16 @@ export function createRibbonGalleryHost(
 			fontScheme: THEME_PRESETS[0].fontScheme,
 		};
 		const next =
-			result.kind === 'themeColorScheme'
-				? await applyThemeColorScheme(editor, handler, current, result.colorScheme)
-				: await applyThemeFontScheme(handler, current, result.fontScheme);
+			result.kind === 'theme'
+				? await applyThemePreset(editor, handler, current, {
+						id: 'gallery',
+						name: result.name,
+						colorScheme: result.colorScheme,
+						fontScheme: result.fontScheme,
+					})
+				: result.kind === 'themeColorScheme'
+					? await applyThemeColorScheme(editor, handler, current, result.colorScheme)
+					: await applyThemeFontScheme(handler, current, result.fontScheme);
 		publishTheme(next);
 	}
 
