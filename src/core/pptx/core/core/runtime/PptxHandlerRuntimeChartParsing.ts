@@ -1,3 +1,4 @@
+import { readChartElementFormatsFromXml } from '../../utils/chart-element-format-read-xml';
 import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
 /**
  * @fileoverview Chart parsing orchestrator for OOXML chart graphic frames.
@@ -350,6 +351,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// The deck theme's accent1..accent6, for rendering a c:style palette only
 		// (never written on save).
 		const themeAccentColors = this.resolveChartThemeAccents();
+		// Format-pane state the part already carries (transparency, line details, effects, the
+		// legend / axis / data-label boxes), so the pane and the renderer see it after reopening.
+		const elementFormats = readChartElementFormatsFromXml(
+			{ chartSpace, seriesNodes: built.seriesNodes },
+			{ axes },
+			reader.localName,
+			(node) => reader.parseColor(node),
+		);
 
 		return {
 			chartType,
@@ -378,6 +387,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			chartRelationshipId,
 			...linesAndChrome,
 			...(axes.length > 0 ? { axes } : {}),
+			...(elementFormats ? { elementFormats } : {}),
 			...(bandFmts ? { bandFmts } : {}),
 			...facts,
 			...(neutral.plotVisibleOnly !== undefined

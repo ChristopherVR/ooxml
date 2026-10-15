@@ -18,6 +18,10 @@ import { applyChartAxisScaling, upsertChartAxisChild } from '../../utils/chart-a
 import { applyChartGroupOptionsToXml } from '../../utils/chart-group-options';
 import { applyChartSpaceFormatToXml } from '../../utils/chart-space-format';
 import {
+	collectChartSeriesNodes,
+	readChartElementFormatsFromXml,
+} from '../../utils/chart-element-format-read-xml';
+import {
 	applyChromeElementFormatsToXml,
 	applySeriesElementFormatsToXml,
 } from '../../utils/chart-element-format-targets';
@@ -259,6 +263,26 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * Record `chartData` as parsed, straight off `enrichChartData`, as this
 	 * chart's load-time baseline. See {@link chartDataBaselines}.
 	 */
+	/** The element formats the original chart part authors (see `chart-element-format-read-xml`). */
+	private readAuthoredChartElementFormats(
+		chartXmlStr: string,
+		chartData: PptxChartData,
+	): PptxChartData['elementFormats'] {
+		const localName = (key: string) => this.compatibilityService.getXmlLocalName(key);
+		const original = this.parser.parse(chartXmlStr) as XmlObject;
+		const chartSpace = this.xmlLookupService.getChildByLocalName(original, 'chartSpace');
+		const plotArea = this.xmlLookupService.getChildByLocalName(
+			this.xmlLookupService.getChildByLocalName(chartSpace, 'chart'),
+			'plotArea',
+		);
+		return readChartElementFormatsFromXml(
+			{ chartSpace, seriesNodes: collectChartSeriesNodes(plotArea, localName) },
+			chartData,
+			localName,
+			(node) => this.parseColor(node),
+		);
+	}
+
 	protected rememberChartDataBaseline(chartData: PptxChartData): void {
 		if (!chartData.chartPartPath) {
 			return;
@@ -351,6 +375,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			try {
 				const chartXmlStr = await chartFile.async('string');
 				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
+				// What the part authored for each element, read off a pristine copy, so only
+				// format sections the user changed are written back.
+				const authoredFormats = chartData.elementFormats
+					? this.readAuthoredChartElementFormats(chartXmlStr, chartData)
+					: undefined;
 				// Collected alongside the cache rewrite below and, once the chart
 				// XML is written back, handed to the embedded-workbook writer so
 				// "Edit Data in Excel" reflects the same edit; see
@@ -747,6 +776,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						this.xmlLookupService.getChildrenArrayByLocalName(chartTypeContainer, 'ser'),
 						chartData,
 						(key) => this.compatibilityService.getXmlLocalName(key),
+						authoredFormats,
 					);
 				}
 
@@ -1135,8 +1165,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Format-pane edits on the chart area, plot area, title, legend, axes
 				// and gridlines: applied last so they win over the flat-field writers.
 				if (chartData.elementFormats) {
-					applyChromeElementFormatsToXml(chartSpace, chartData, (key) =>
-						this.compatibilityService.getXmlLocalName(key),
+					applyChromeElementFormatsToXml(
+						chartSpace,
+						chartData,
+						(key) => this.compatibilityService.getXmlLocalName(key),
+						authoredFormats,
 					);
 				}
 

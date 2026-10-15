@@ -5,7 +5,12 @@
  *
  * @module utils/chart-element-format-targets
  */
-import type { PptxChartData, PptxChartElementFormat, XmlObject } from '../types';
+import type {
+	PptxChartData,
+	PptxChartElementFormat,
+	PptxChartElementFormats,
+	XmlObject,
+} from '../types';
 import { parseChartFormatTargetKey } from './chart-element-format-keys';
 import { applyChartElementFormatToSpPr } from './chart-element-format-xml';
 
@@ -133,9 +138,9 @@ export function applyFormatToOwner(
 }
 
 /** The axis node in `plotArea` the model's `axes[axisIndex]` describes. */
-function findAxisNode(
+export function findChartAxisNode(
 	plotArea: XmlObject,
-	chartData: PptxChartData,
+	chartData: Pick<PptxChartData, 'axes'>,
 	axisIndex: number,
 	getLocalName: GetLocalName,
 ): XmlObject | undefined {
@@ -160,10 +165,49 @@ function findAxisNode(
 	return nodes.filter(({ tag }) => tag === axis.axisType)[sameType]?.node;
 }
 
-function formatEntries(chartData: PptxChartData) {
-	return Object.entries(chartData.elementFormats ?? {}).flatMap(([key, format]) => {
+/** Key-order independent JSON, so a re-read record compares equal to the authored one. */
+function canonical(value: unknown): string {
+	if (Array.isArray(value)) {
+		return `[${value.map(canonical).join(',')}]`;
+	}
+	if (value && typeof value === 'object') {
+		const entries = Object.entries(value as Record<string, unknown>)
+			.filter(([, v]) => v !== undefined)
+			.sort(([a], [b]) => (a < b ? -1 : 1));
+		return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(',')}}`;
+	}
+	return JSON.stringify(value);
+}
+
+/**
+ * The part of `record` that differs from what the chart part authored for the
+ * same element (`authored`, read off the original XML): only edited sections
+ * are written, so a record that came from the file itself leaves the XML alone.
+ */
+function changedSections(
+	record: PptxChartElementFormat,
+	authored: PptxChartElementFormat | undefined,
+): PptxChartElementFormat | undefined {
+	if (record.reset) {
+		return record;
+	}
+	const out: PptxChartElementFormat = {};
+	for (const section of ['fill', 'line', 'effects'] as const) {
+		if (
+			record[section] !== undefined &&
+			canonical(record[section]) !== canonical(authored?.[section])
+		) {
+			Object.assign(out, { [section]: record[section] });
+		}
+	}
+	return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function formatEntries(chartData: PptxChartData, authored?: PptxChartElementFormats) {
+	return Object.entries(chartData.elementFormats ?? {}).flatMap(([key, record]) => {
 		const target = parseChartFormatTargetKey(key);
-		return target ? [{ target, format }] : [];
+		const format = target ? changedSections(record, authored?.[key]) : undefined;
+		return target && format ? [{ target, format }] : [];
 	});
 }
 
@@ -176,8 +220,9 @@ export function applySeriesElementFormatsToXml(
 	seriesNodes: readonly XmlObject[],
 	chartData: PptxChartData,
 	getLocalName: GetLocalName,
+	authored?: PptxChartElementFormats,
 ): void {
-	for (const { target, format } of formatEntries(chartData)) {
+	for (const { target, format } of formatEntries(chartData, authored)) {
 		if (
 			target.kind !== 'series' &&
 			!(target.kind === 'dataLabels' && target.seriesIndex !== undefined)
@@ -233,10 +278,11 @@ export function applyChromeElementFormatsToXml(
 	chartSpace: XmlObject,
 	chartData: PptxChartData,
 	getLocalName: GetLocalName,
+	authored?: PptxChartElementFormats,
 ): void {
 	const chartRoot = child(chartSpace, 'chart', getLocalName);
 	const plotArea = child(chartRoot, 'plotArea', getLocalName);
-	for (const { target, format } of formatEntries(chartData)) {
+	for (const { target, format } of formatEntries(chartData, authored)) {
 		switch (target.kind) {
 			case 'chartArea':
 				applyFormatToOwner(chartSpace, format, CHART_SPACE_AFTER_SP_PR, getLocalName);
@@ -258,7 +304,7 @@ export function applyChromeElementFormatsToXml(
 			case 'majorGridlines':
 			case 'minorGridlines': {
 				const axis = plotArea
-					? findAxisNode(plotArea, chartData, target.axisIndex, getLocalName)
+					? findChartAxisNode(plotArea, chartData, target.axisIndex, getLocalName)
 					: undefined;
 				if (!axis) {
 					break;

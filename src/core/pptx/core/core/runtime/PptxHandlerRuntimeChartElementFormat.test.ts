@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
 import {
+	readChartElementFormat,
 	resetChartElementFormat,
 	withChartElementFormat,
 } from '../../builders/sdk/chart-element-format-operations';
@@ -238,5 +239,61 @@ describe('chart Format pane edits save and reload', () => {
 		data.slides[0].isDirty = true;
 		const zip = await JSZip.loadAsync(await handler.save(data.slides));
 		expect(await zip.file('ppt/charts/chart1.xml')!.async('string')).toBe(BAR_CHART_XML);
+	});
+
+	it('reads the formats back on reopen so the pane shows them', async () => {
+		const { reloaded } = await saveWith((data) => {
+			let next = withChartElementFormat(
+				data,
+				{ kind: 'legend' },
+				{
+					fill: { kind: 'solid', color: '#FFF2CC', transparency: 25 },
+					line: { kind: 'solid', color: '#BF9000', width: 1.5, dash: 'dash', compound: 'dbl' },
+					effects: {
+						shadow: { color: '#000000', transparency: 60, blur: 4, distance: 3, angle: 45 },
+						softEdge: 2,
+					},
+				},
+			);
+			next = withChartElementFormat(
+				next,
+				{ kind: 'series', seriesIndex: 0 },
+				{ fill: { transparency: 30 }, effects: { glow: { color: '#FFC000', radius: 5 } } },
+			);
+			return withChartElementFormat(
+				next,
+				{ kind: 'axis', axisIndex: 0 },
+				{ line: { kind: 'solid', color: '#7F7F7F', endArrow: 'triangle', cap: 'rnd' } },
+			);
+		});
+		const data = reloaded.chart.chartData!;
+		const legend = readChartElementFormat(data, { kind: 'legend' });
+		expect(legend.fill).toMatchObject({ kind: 'solid', transparency: 25 });
+		expect(legend.fill.color?.toUpperCase()).toBe('#FFF2CC');
+		expect(legend.line).toMatchObject({ kind: 'solid', width: 1.5, dash: 'dash', compound: 'dbl' });
+		expect(legend.effects.shadow).toMatchObject({
+			transparency: 60,
+			blur: 4,
+			distance: 3,
+			angle: 45,
+		});
+		expect(legend.effects.softEdge).toBe(2);
+		const series = readChartElementFormat(data, { kind: 'series', seriesIndex: 0 });
+		expect(series.fill).toMatchObject({ kind: 'solid', transparency: 30 });
+		expect(series.effects.glow).toMatchObject({ radius: 5 });
+		expect(readChartElementFormat(data, { kind: 'axis', axisIndex: 0 }).line).toMatchObject({
+			kind: 'solid',
+			endArrow: 'triangle',
+			cap: 'rnd',
+		});
+		// The plot area's authored fill and shadow are read too.
+		expect(data.elementFormats?.plotArea?.effects?.shadow).toBeDefined();
+	});
+
+	it('keeps authored formats untouched when only another part of the chart is edited', async () => {
+		const { xml } = await saveWith((data) => ({ ...data, title: 'Renamed' }));
+		// The series keeps its theme colour and the plot area its shadow, as authored.
+		expect(section(xml, 'c:ser')).toContain('<a:schemeClr val="accent1"/>');
+		expect(section(xml, 'c:plotArea')).toContain('<a:outerShdw blurRad="1"/>');
 	});
 });
