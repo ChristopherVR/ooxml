@@ -45,9 +45,9 @@ describe('Word charts are drawn', () => {
 
 	it('shows a labelled frame for a family the painter does not draw', async () => {
 		const { chart } = await loadChart();
-		const bubble = structuredClone(chart) as DocxChart;
-		bubble.chartSpace!.plotArea.groups[0]!.kind = 'bubble';
-		expect(docxChartPaint(bubble, 100, 100)).toEqual({ label: 'Chart (bubble)' });
+		const surface = structuredClone(chart) as DocxChart;
+		surface.chartSpace!.plotArea.groups[0]!.kind = 'surface';
+		expect(docxChartPaint(surface, 100, 100)).toEqual({ label: 'Chart (surface)' });
 		const { chartSpace: _space, ...unread } = chart;
 		expect(docxChartPaint(unread, 100, 100)).toEqual({ label: 'Chart' });
 	});

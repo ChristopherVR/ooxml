@@ -3,6 +3,8 @@
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
+import type { BubbleRadiusOptions } from '../bubble-radius';
+import type { ParentLabelLayout } from '../hierarchy';
 import type { HistogramOptions } from '../histogram-binning';
 import type { ChartStyleDefinition } from '../style-definition';
 import type { WaterfallOptions } from '../waterfall';
@@ -21,7 +23,9 @@ export type ChartSummaryType =
 	| 'stock'
 	| 'surface'
 	| 'waterfall'
-	| 'histogram';
+	| 'histogram'
+	| 'treemap'
+	| 'sunburst';
 
 export interface ChartSummarySeries {
 	name?: string;
@@ -32,6 +36,10 @@ export interface ChartSummarySeries {
 	/** Cached categories and values from the chart part, used when references cannot resolve. */
 	categories: (string | number)[];
 	values: (number | null)[];
+	/** Bubble charts: the `c:bubbleSize` values, parallel to `values`. */
+	bubbleSizes?: (number | null)[];
+	/** Formula reference for the bubble sizes. */
+	bubbleSizesRef?: string;
 	/** DrawingML fill/line color, including theme transforms. */
 	drawingColor?: DrawingColor;
 	/** Explicit colors of individual points (indexed by c:dPt/c:idx). */
@@ -66,6 +74,20 @@ export interface HistogramSummaryOptions extends HistogramOptions {
 	aggregateByCategory?: boolean | undefined;
 }
 
+/** Bubble display options of `c:bubbleChart`: scale (percent), what the size represents, negatives. */
+export interface BubbleSummaryOptions extends BubbleRadiusOptions {
+	showNegativeBubbles?: boolean | undefined;
+}
+
+/**
+ * The category hierarchy of a treemap or sunburst: the `cx:lvl` levels leaf first (the first level
+ * holds the leaf labels), each parent label written once on the first row it covers.
+ */
+export interface HierarchySummaryOptions {
+	levels: string[][];
+	parentLabelLayout?: ParentLabelLayout | undefined;
+}
+
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
 	/** Bar/column grouping. */
@@ -82,6 +104,10 @@ export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries>
 	waterfall?: WaterfallOptions;
 	/** Histogram: the binning of its `cx:layoutPr`. */
 	histogram?: HistogramSummaryOptions;
+	/** Bubble: the display options of its `c:bubbleChart`. */
+	bubble?: BubbleSummaryOptions;
+	/** Treemap and sunburst: the category levels of its `cx:strDim`. */
+	hierarchy?: HierarchySummaryOptions;
 	showLegend: boolean;
 	legendPosition?: 'r' | 'l' | 't' | 'b' | 'tr';
 	/** Office color-style id (ChartColor). Manual series/point colors retain precedence. */

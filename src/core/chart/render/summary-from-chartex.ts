@@ -1,8 +1,8 @@
 // Builds the painter's chart summary from an Office 2016 extended chart part (`cx:chartSpace`):
-// the waterfall (`layoutId="waterfall"`) and the histogram (`layoutId="clusteredColumn"`). Word
-// reads the cached points of `cx:data`; Excel files carry only the formula (a hidden
-// `_xlchart.v1.N` defined name) and the host resolves it from live cells. Other extended families
-// (funnel, treemap, box and whisker...) are reported by `layoutId` and not summarised.
+// the waterfall (`layoutId="waterfall"`), the histogram (`layoutId="clusteredColumn"`), the treemap
+// and the sunburst. Word reads the cached points of `cx:data`; Excel files carry only the formula
+// (a hidden `_xlchart.v1.N` defined name) and the host resolves it from live cells. Other extended
+// families (funnel, box and whisker...) are reported by `layoutId` and not summarised.
 import { parseDrawingFill } from '../../drawingml/drawing-fill';
 import type { DrawingColor } from '../../drawingml/types';
 import { NS, children, first, parseXml, type XmlElement } from '../../xml/index';
@@ -51,6 +51,23 @@ function dimension(data: XmlElement | undefined, kind: 'strDim' | 'numDim', type
 	}
 	for (let i = 0; i < Math.max(count, out.points.length); i++) out.points[i] ??= '';
 	return out;
+}
+
+/** Every `cx:lvl` of the category dimension, leaf first, holes as `''` (treemap and sunburst). */
+function categoryLevels(data: XmlElement | undefined): string[][] {
+	const element = data
+		? children(data, 'strDim', NS.cx).find((d) => (d.getAttribute('type') ?? '') === 'cat')
+		: undefined;
+	return (element ? children(element, 'lvl', NS.cx) : []).map((level) => {
+		const points: string[] = [];
+		const count = Number(level.getAttribute('ptCount') ?? 0);
+		for (const point of children(level, 'pt', NS.cx)) {
+			const index = Number(point.getAttribute('idx') ?? points.length);
+			if (Number.isInteger(index) && index >= 0) points[index] = text(point);
+		}
+		for (let i = 0; i < Math.max(count, points.length); i++) points[i] ??= '';
+		return points;
+	});
 }
 
 /** The title text: `cx:v` of `cx:txData`, or the runs of `cx:rich`. */
@@ -118,11 +135,17 @@ export function chartExSummary(source: string | XmlElement): ChartExSummary | un
 			? 'waterfall'
 			: layoutId === 'clusteredColumn'
 				? 'histogram'
-				: undefined;
+				: layoutId === 'treemap' || layoutId === 'sunburst'
+					? layoutId
+					: undefined;
 	if (!primary || !chartType) return { layoutId };
 	const data = seriesData(root, primary);
 	const categories = dimension(data, 'strDim', 'cat');
-	const values = dimension(data, 'numDim', 'val');
+	const values = dimension(
+		data,
+		'numDim',
+		chartType === 'treemap' || chartType === 'sunburst' ? 'size' : 'val',
+	);
 	const txData = cx(cx(primary, 'tx'), 'txData');
 	const series: ChartSummarySeries = {
 		categories: categories?.points ?? [],
@@ -157,6 +180,14 @@ export function chartExSummary(source: string | XmlElement): ChartExSummary | un
 					}
 				: {}),
 			...(connectors === '0' || connectors === 'false' ? { connectorLines: false } : {}),
+		};
+	} else if (chartType === 'treemap' || chartType === 'sunburst') {
+		const layout = cx(layoutPr, 'parentLabelLayout')?.getAttribute('val');
+		summary.hierarchy = {
+			levels: categoryLevels(data),
+			...(layout === 'none' || layout === 'banner' || layout === 'overlapping'
+				? { parentLabelLayout: layout }
+				: {}),
 		};
 	} else summary.histogram = histogramOptions(layoutPr);
 	return { layoutId, summary };

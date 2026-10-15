@@ -66,6 +66,7 @@ export function parseChart(
 	if (summary.title !== undefined) object.title = summary.title;
 	if (summary.legendPosition) object.legendPosition = summary.legendPosition;
 	if (summary.extraGroups) object.extraGroups = summary.extraGroups;
+	if (summary.bubble) object.bubble = summary.bubble;
 	if (name) object.name = name;
 	const formatting = readChartFormatting(root);
 	if (formatting) object.formatting = formatting;

@@ -43,12 +43,16 @@ export function chartSummarySeries(
 ): ChartSummarySeries {
 	const categories = source.categories ?? source.xValues;
 	const values = source.values ?? source.yValues;
+	const numeric = (v: string | number | boolean | null | undefined): number | null =>
+		typeof v === 'number' ? v : v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null;
 	const out: ChartSummarySeries = {
 		categories: chartSourceValues(categories),
-		values: chartSourceValues(values).map((v) =>
-			typeof v === 'number' ? v : v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null,
-		),
+		values: chartSourceValues(values).map(numeric),
 	};
+	if (source.bubbleSizes) {
+		out.bubbleSizes = chartSourceValues(source.bubbleSizes).map(numeric);
+		if (source.bubbleSizes.formula) out.bubbleSizesRef = source.bubbleSizes.formula;
+	}
 	if (source.tx?.text !== undefined) out.name = source.tx.text;
 	const nameRef = source.tx?.reference?.formula;
 	if (nameRef) out.nameRef = nameRef;
@@ -139,6 +143,14 @@ export function chartSummaryFromSpace(
 	};
 	const combined = extraGroups(chartSpace, chartType);
 	if (combined.length) summary.extraGroups = combined;
+	if (chartType === 'bubble' && group) {
+		const sizeRepresents = group.sizeRepresents === 'w' ? 'w' : 'area';
+		summary.bubble = {
+			sizeRepresents,
+			...(group.bubbleScale === undefined ? {} : { bubbleScale: group.bubbleScale }),
+			showNegativeBubbles: group.showNegativeBubbles === true,
+		};
+	}
 	const grouping = group?.grouping;
 	if (grouping && GROUPINGS.has(grouping))
 		summary.grouping = grouping as NonNullable<ChartSummary['grouping']>;

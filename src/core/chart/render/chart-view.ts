@@ -1,4 +1,7 @@
+import type { ParentLabelLayout } from '../hierarchy';
+import { bubbleView, hierarchyView } from './chart-view-families';
 import type {
+	BubbleSummaryOptions,
 	ChartSummary,
 	ChartSummaryGroupType,
 	ChartSummarySeries,
@@ -40,8 +43,10 @@ export interface ChartSeriesView {
 	pointGradients?: Record<number, ChartGradientFill>;
 	name: string;
 	values: (number | null)[];
-	/** Scatter X values (numeric categories, or 1..n when the categories are text). */
+	/** Scatter and bubble X values (numeric categories, or 1..n when the categories are text). */
 	xValues?: (number | null)[];
+	/** Bubble sizes, parallel to `values`. */
+	sizes?: (number | null)[];
 	color: string;
 	/** Per-point colours (pie and doughnut vary colours by point). */
 	pointColors?: string[];
@@ -89,11 +94,19 @@ export interface ChartViewModel {
 	secondaryAxis?: ValueAxisView;
 	/** Waterfall: the running-total steps and their bar roles. */
 	waterfall?: WaterfallView;
-	/** Scatter X axis. */
+	/** Bubble: the display options, defaults resolved. */
+	bubble?: BubbleSummaryOptions;
+	/** Treemap and sunburst: category levels (parents filled down, leaf first) and legend branches. */
+	hierarchy?: {
+		levels: string[][];
+		parentLabelLayout: ParentLabelLayout;
+		branches: string[];
+	};
+	/** Scatter and bubble X axis. */
 	xAxis?: AxisScale;
 	/** Bars run horizontally (`bar`), not vertically (`column`). */
 	horizontal: boolean;
-	/** False for chart types this painter does not draw (bubble, stock, surface). */
+	/** False for chart types this painter does not draw (surface). */
 	supported: boolean;
 }
 
@@ -108,6 +121,10 @@ const SUPPORTED: ReadonlySet<ChartSummaryType> = new Set([
 	'radar',
 	'waterfall',
 	'histogram',
+	'bubble',
+	'stock',
+	'treemap',
+	'sunburst',
 ]);
 
 /**
@@ -122,6 +139,8 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 ): ChartViewModel {
 	const type = chart.chartType;
 	const radial = type === 'pie' || type === 'doughnut';
+	// Pie, treemap and sunburst colour by point (branch) and have no value axis.
+	const byPoint = radial || type === 'treemap' || type === 'sunburst';
 	const ctx = seriesContext(chart, theme, options);
 	const { palette, scheme, drawingColor } = ctx;
 	const grouping =
@@ -141,7 +160,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		firstCats[i] !== undefined ? toText(firstCats[i] ?? null) : String(i + 1),
 	);
 
-	if (radial) {
+	if (byPoint) {
 		series.forEach((s, seriesIndex) => {
 			s.pointColors = s.values.map((_, i) => {
 				const explicit = drawingColor(chart.series[seriesIndex]?.pointColors?.[i]);
@@ -198,7 +217,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	const appearance = chartAppearance(chart, theme);
 	if (appearance) model.appearance = appearance;
 
-	if (type === 'scatter') {
+	if (type === 'scatter' || type === 'bubble') {
 		series.forEach((s, i) => {
 			const cats = rawCategories[i] ?? [];
 			const numeric = cats.length > 0 && cats.every((c) => typeof c === 'number');
@@ -207,11 +226,13 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		const xs = series.flatMap((s) => s.xValues ?? []).filter((x): x is number => x !== null);
 		model.xAxis = xs.length ? niceScale(Math.min(...xs), Math.max(...xs)) : niceScale(0, 1);
 	}
+	if (type === 'bubble') bubbleView(chart, model, ctx.evaluateRef);
+	if (type === 'treemap' || type === 'sunburst') hierarchyView(chart, model);
 	if (type === 'histogram') histogramView(chart, model);
 	if (extra.length && (type === 'column' || type === 'line' || type === 'area'))
 		chartExtraView(chart, model, ctx, total, collect);
 	if (type === 'waterfall') waterfallView(chart, model, ctx);
-	else if (!radial) model.valueAxis = valueAxis(model);
+	else if (!byPoint) model.valueAxis = valueAxis(model);
 	chartExtraAxes(model);
 	return model;
 }

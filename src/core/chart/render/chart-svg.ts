@@ -1,5 +1,6 @@
 import { cartesianSvg } from './chart-svg-plots';
 import { pieSvg, radarSvg } from './chart-svg-radial';
+import { sunburstSvg, treemapSvg } from './chart-svg-hierarchy';
 import { esc, n, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes, chartGradientPaint } from './chart-svg-appearance';
@@ -16,7 +17,7 @@ export type { ChartSvgOptions } from './chart-svg-text-metrics';
 
 /**
  * A standalone SVG document for a chart view model: title, legend, axes and series. Every piece
- * of text is escaped. Unsupported chart types (bubble, stock, surface) render a labelled frame.
+ * of text is escaped. Unsupported chart types (surface) render a labelled frame.
  */
 export function renderChartSvg(
 	model: ChartViewModel,
@@ -82,6 +83,8 @@ export function renderChartSvg(
 	if (area.w > 4 && area.h > 4) {
 		if (model.type === 'pie' || model.type === 'doughnut') out.push(pieSvg(model, area));
 		else if (model.type === 'radar') out.push(radarSvg(model, area));
+		else if (model.type === 'treemap') out.push(treemapSvg(model, area));
+		else if (model.type === 'sunburst') out.push(sunburstSvg(model, area));
 		else out.push(cartesianSvg(model, area));
 	}
 	if (legend.foreground) out.push(legend.markup);

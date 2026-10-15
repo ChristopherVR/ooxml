@@ -89,6 +89,16 @@ function legendEntries(model: ChartViewModel): LegendEntry[] {
 			color: first?.pointColors?.[i] ?? first?.color ?? '#4472C4',
 		}));
 	}
+	if ((model.type === 'treemap' || model.type === 'sunburst') && model.hierarchy) {
+		const first = model.series[0];
+		return model.hierarchy.branches.map((label, i) => ({
+			label,
+			color:
+				first?.pointColors?.[i % Math.max(1, first.pointColors.length)] ??
+				first?.color ??
+				'#4472C4',
+		}));
+	}
 	if (model.type === 'waterfall' && model.waterfall)
 		return [
 			{ label: 'Increase', color: model.waterfall.colors.increase },

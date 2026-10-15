@@ -22,6 +22,10 @@ export const DRAWN_CHART_TYPES: ReadonlySet<ChartSummaryType> = new Set([
 	'radar',
 	'waterfall',
 	'histogram',
+	'bubble',
+	'stock',
+	'treemap',
+	'sunburst',
 ]);
 
 /** Theme fonts (latin typefaces) for chart text. */

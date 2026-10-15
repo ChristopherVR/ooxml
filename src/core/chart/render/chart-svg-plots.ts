@@ -1,7 +1,9 @@
 // Which plot painter draws a chart view model: bars, lines and areas (alone or layered in a
 // combination chart), scatter, waterfall and histogram.
 import { bars } from './chart-svg-bars';
-import { cartesianAxes, linesAndAreas, plotted, scatter, type Frame } from './chart-svg-cartesian';
+import { cartesianAxes, linesAndAreas, plotted, type Frame } from './chart-svg-cartesian';
+import { scatter } from './chart-svg-xy';
+import { stockBars } from './chart-svg-stock';
 import { waterfallBars } from './chart-svg-waterfall';
 import type { Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
@@ -24,7 +26,7 @@ function paint(layer: Layer, out: string[]): void {
 /** Paints the plot types that share cartesian axes into `area`. */
 export function cartesianSvg(model: ChartViewModel, area: Rect): string {
 	const out: string[] = [];
-	if (model.type === 'scatter') {
+	if (model.type === 'scatter' || model.type === 'bubble') {
 		scatter(model, area, out);
 		return out.join('');
 	}
@@ -32,6 +34,10 @@ export function cartesianSvg(model: ChartViewModel, area: Rect): string {
 	if (!frame) return '';
 	if (model.type === 'waterfall') {
 		waterfallBars(model, frame, out);
+		return out.join('');
+	}
+	if (model.type === 'stock') {
+		stockBars(model, frame, out);
 		return out.join('');
 	}
 	const layers: Layer[] = [{ model, frame }];

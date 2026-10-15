@@ -60,9 +60,9 @@ describe('renderChartSpaceSvg', () => {
 	it('reports which chart families the painter draws', async () => {
 		const space = await excelChartSpace();
 		expect(chartSpaceKind(space)).toEqual({ type: 'column', drawn: true });
-		const bubble = structuredClone(space);
-		bubble.plotArea.groups[0]!.kind = 'bubble';
-		expect(chartSpaceKind(bubble)).toEqual({ type: 'bubble', drawn: false });
+		const surface = structuredClone(space);
+		surface.plotArea.groups[0]!.kind = 'surface';
+		expect(chartSpaceKind(surface)).toEqual({ type: 'surface', drawn: false });
 		expect(chartSpaceKind({ plotArea: { groups: [], axes: [] } })).toEqual({ drawn: false });
 	});
 });

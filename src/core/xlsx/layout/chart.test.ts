@@ -189,7 +189,7 @@ describe('chartView', () => {
 	});
 
 	it('flags unsupported types honestly', () => {
-		expect(chartView(wb, 0, chart('bubble'), noRefs).supported).toBe(false);
+		expect(chartView(wb, 0, chart('surface'), noRefs).supported).toBe(false);
 	});
 });
 
