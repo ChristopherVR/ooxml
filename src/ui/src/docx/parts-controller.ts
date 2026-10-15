@@ -126,9 +126,9 @@ export class PartsController {
 		closed(): void;
 	}): boolean {
 		if (!this.host.view()?.editable || !this.host.canEditOutsideBody()) return false;
-		const note = this.host
-			.model()
-			[story.kind === 'footnote' ? 'footnotes' : 'endnotes']?.find((item) => item.id === story.id);
+		const model = this.host.model();
+		const notes = story.kind === 'footnote' ? model.footnotes : model.endnotes;
+		const note = notes?.find((item) => item.id === story.id);
 		if (!note) return false;
 		this.closeActive?.();
 		const { editable, mark } = withoutMark(note.blocks);

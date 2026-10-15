@@ -1,4 +1,4 @@
-import { formatAxisValue, type AxisScale } from './chart-scale';
+import { formatAxisValue } from './chart-scale';
 import { fit, line, n, text, textWidth, type Rect } from './chart-svg-util';
 import { categoryTotals, type ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
