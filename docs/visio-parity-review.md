@@ -63,7 +63,23 @@ by Visio when opened and remains a live-routing gap. See
   or grouped cells. ROUND's two-argument form is read as decimal places, which is not yet checked
   against Visio.
 
-## Round four: string, angle and point functions (2026-10-15)
+## Round four: straight stencil connectors, string, angle and point functions (2026-10-15)
+
+- Connectors: Design > Connectors (Right-Angle, Straight, Curved) and the Connector tool's style
+  choice already rewrote `ShapeRouteStyle` / `ConLineRouteExt` and the Geometry rows of drawn and
+  Dynamic connectors. New: straight line masters from the Connectors, Annotations and Arrows
+  stencils (the Angled connector and the other one-dimensional line and arrow masters that are not
+  the Dynamic connector) follow glued shapes, and their own ends can be dragged. The instance is
+  recalculated from its master's formulas and saved as Visio saves it (`F="Inh"` caches, flip flag
+  dropped when it returns to the master's); `scripts/record-visio-stencil-line.ps1` recorded the
+  native files, and the saved cells match them cell for cell (cell order apart), and Visio 16
+  opens them. A master whose formulas do not put the path's ends on the connector's ends is
+  refused, and so is restyling such a line to right-angle or curved (only the Dynamic connector
+  has the routing cells). Still refused: line masters that are groups, hold pictures or chain
+  another master; masters whose text-angle or other drawn cells use functions the evaluator
+  lacks; the elbow, tree and flowchart-direction routing styles. The Design > Connectors menu
+  still offers all three styles for a stencil line, because the model cannot tell it from a
+  Dynamic connector; choosing another style reports the refusal.
 
 - Recalculation: LEN, FIND, STRSAME, LOOKUP, INDEX, MID, LEFT, RIGHT, UPPER, LOWER, TRIM,
   SUBSTITUTE, REPLACE, CHAR and the `&` join evaluate on text written in the formula itself;

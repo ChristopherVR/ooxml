@@ -133,7 +133,7 @@ const LOCAL_FORM: Readonly<Record<string, readonly string[]>> = {
 	Height: ['inh', 'guard(endy-beginy)', 'guard(0.25dl)'],
 };
 
-function masterIsDynamicConnector(template: Element): boolean {
+export function isDynamicConnectorMaster(template: Element): boolean {
 	const cells = cellMap(template);
 	if (!END_CELLS.every((name) => cells.has(name))) return false;
 	if (
@@ -190,7 +190,7 @@ export const STENCIL_CONNECTOR_FORM =
 export function proveStencilConnector(shape: Element): Element {
 	const template = stencilTemplate(shape);
 	const refuse = (): never => fail('UNSUPPORTED_GEOMETRY_EDIT', STENCIL_CONNECTOR_FORM);
-	if (!template || !masterIsDynamicConnector(template)) return refuse();
+	if (!template || !isDynamicConnectorMaster(template)) return refuse();
 	const local = cellMap(shape);
 	for (const [name, forms] of Object.entries(LOCAL_FORM)) {
 		const node = local.get(name);

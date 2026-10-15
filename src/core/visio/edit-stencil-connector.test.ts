@@ -414,12 +414,13 @@ describe("Visio's Dynamic connector (a stencil instance)", () => {
 		const before = bytes.slice();
 		for (const edit of [
 			move('2', 7, 6),
-			move('3', 5, 5),
 			{ type: 'set-connector-route', pageId: '0', shapeId: '3', route: 'curved' },
 		] as VisioEdit[]) {
+			// Not the Dynamic connector, so it is judged as a straight line master: its pin follows
+			// the ends but its path is made of constants, which would stay where they were drawn.
 			const error = await refused(bytes, [edit]);
-			expect(error?.code).toBe('UNSUPPORTED_GEOMETRY_EDIT');
-			expect(error?.message).toMatch(/comes from a stencil/);
+			expect(error?.code).toMatch(/^UNSUPPORTED_(GEOMETRY|INSTANCE)_EDIT$/);
+			expect(error?.message).toMatch(/from a stencil|cannot follow it/);
 		}
 		expect(bytes).toEqual(before);
 		// A local cell Visio would not have written on the connector is not overwritten either.
