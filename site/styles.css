@@ -749,9 +749,23 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	background: var(--canvas);
 	padding: 4px 8px 0;
 	gap: 2px;
+	scrollbar-width: none;
+	overscroll-behavior-x: contain;
+	scroll-padding-inline: 8px;
+}
+@media (max-width: 640px) {
+	/* Tabs fade out at the right edge instead of being cut mid-letter. */
+	.tabs {
+		padding-right: 28px;
+		mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+	}
+}
+.tabs::-webkit-scrollbar {
+	display: none;
 }
 .tabs > button,
 .file-tab > button {
+	flex: none;
 	height: 33px;
 	white-space: nowrap;
 	border-radius: var(--radius) var(--radius) 0 0;
@@ -789,6 +803,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 /* Work area */
 .work-row {
 	position: relative;
+	isolation: isolate;
 	display: flex;
 	flex: 1;
 	min-height: 0;

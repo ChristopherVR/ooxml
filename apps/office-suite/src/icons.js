@@ -8,6 +8,7 @@ const paths = {
 		'<path d="m9 3-1 3-3 1v3l-2 2 2 2v3l3 1 1 3h6l1-3 3-1v-3l2-2-2-2V7l-3-1-1-3z"/><circle cx="12" cy="12" r="3"/>',
 	device: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/>',
 	chevron: '<path d="m8 10 4 4 4-4"/>',
+	back: '<path d="m15 5-7 7 7 7"/>',
 	more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
 	add: '<path d="M12 5v14M5 12h14"/>',
 	search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',

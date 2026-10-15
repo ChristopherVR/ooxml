@@ -858,6 +858,78 @@
 	.document-commandbar .ask-ai span {
 		display: none;
 	}
+	/* Icon only: a plain bar button, not an outlined box. */
+	.document-commandbar button.ask-ai {
+		border-color: transparent;
+		background: none;
+		box-shadow: none;
+		padding: 6px 8px;
+	}
+	.document-commandbar button.ask-ai:hover {
+		background: var(--hover);
+	}
+	.document-commandbar button.ask-ai:focus:not(:focus-visible) {
+		outline: none;
+		box-shadow: none;
+	}
+}
+.chat-history-back {
+	display: none;
+}
+/* A phone shows the chat list or one conversation, each full screen, with a back button. */
+@media (max-width: 640px) {
+	.chat-history {
+		width: 100%;
+		border-right: 0;
+		box-shadow: none;
+		visibility: hidden;
+		transition:
+			transform 0.2s,
+			visibility 0.2s;
+	}
+	.chat-view.history-open .chat-history {
+		visibility: visible;
+	}
+	.chat-history-top {
+		grid-template-columns: 1fr 1fr;
+	}
+	.chat-history-back,
+	.chat-search {
+		grid-column: 1 / -1;
+	}
+	.chat-join {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		min-height: 40px;
+	}
+	.chat-new {
+		min-height: 40px;
+	}
+	.chat-history-back {
+		display: inline-flex;
+		align-items: center;
+		justify-self: start;
+		gap: 4px;
+		border: 0;
+		background: none;
+		padding: 6px 8px 6px 2px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--accent-ink);
+		min-height: 36px;
+	}
+	.chat-history-back .ui-icon {
+		width: 18px;
+		height: 18px;
+	}
+	.chat-header {
+		padding: 0 10px;
+	}
+	.chat-share span {
+		display: none;
+	}
 }
 
 /* The model dialog's provider list matches the dialog's text fields. */

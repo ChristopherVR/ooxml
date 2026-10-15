@@ -45,6 +45,7 @@ function greeting() {
 export function mountChatPage({ host, deps, onRoute }) {
 	host.innerHTML = `<aside class="chat-history" aria-label="Chat history">
 	<div class="chat-history-top">
+		<button type="button" class="chat-history-back" aria-label="Back to the conversation">${icon('back')}<span>Chats</span></button>
 		<button type="button" class="primary chat-new" data-chat-new>${icon('add')}<span>New chat</span></button>
 		<button type="button" class="chat-join" data-chat-join title="Join a chat someone shared with you">${icon('people')}<span>Join</span></button>
 		<label class="chat-search">${icon('search')}<input type="search" placeholder="Search chats" aria-label="Search chats" /></label>
@@ -142,6 +143,7 @@ export function mountChatPage({ host, deps, onRoute }) {
 			setHistory(false);
 			chat.focus();
 		}
+		if (b.classList.contains('chat-history-back')) setHistory(false);
 		if (b.hasAttribute('data-chat-share')) task(share);
 		if (b.hasAttribute('data-chat-join')) joinDialog();
 		if (b.dataset.chatOpen) {

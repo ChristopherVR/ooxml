@@ -127,8 +127,11 @@ body[data-chrome='collapsed'] .suite-layout {
 	body[data-drawer='true']:not([data-product]) .nav-caption {
 		display: block;
 	}
-	body[data-drawer='true']:not([data-product]) .app-rail button {
+	body[data-drawer='true']:not([data-product]) .app-rail button,
+	body[data-drawer='true']:not([data-product]) .app-rail a {
 		flex-direction: row;
+		justify-content: flex-start;
+		text-align: left;
 		min-height: 44px;
 		padding: 8px 12px;
 		gap: 13px;
