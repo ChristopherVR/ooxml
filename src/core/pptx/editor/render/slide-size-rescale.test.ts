@@ -14,7 +14,7 @@ describe('resolveSlideSizeRescaleTransform', () => {
 		const t = resolveSlideSizeRescaleTransform(FOUR_THREE, SIXTEEN_NINE, 'ensureFit');
 		// ratioX = 12192000/9144000 = 1.3333..., ratioY = 1. min = 1.
 		expect(t.scale).toBeCloseTo(1, 10);
-		expect(t.offsetX).toBeCloseTo((SIXTEEN_NINE.widthEmu - FOUR_THREE.widthEmu) / 2, 5);
+		expect(t.offsetX).toBeCloseTo(160, 5);
 		expect(t.offsetY).toBeCloseTo(0, 5);
 	});
 
@@ -22,8 +22,21 @@ describe('resolveSlideSizeRescaleTransform', () => {
 		const t = resolveSlideSizeRescaleTransform(FOUR_THREE, SIXTEEN_NINE, 'maximize');
 		expect(t.scale).toBeCloseTo(12192000 / 9144000, 10);
 		expect(t.offsetX).toBeCloseTo(0, 5);
-		const scaledHeight = FOUR_THREE.heightEmu * t.scale;
-		expect(t.offsetY).toBeCloseTo((SIXTEEN_NINE.heightEmu - scaledHeight) / 2, 5);
+		expect(t.offsetY).toBeCloseTo(-120, 5);
+	});
+
+	it.each([
+		{ mode: 'ensureFit' as const, scale: 0.75, offsetX: 0, offsetY: 210 },
+		{ mode: 'maximize' as const, scale: 4 / 3, offsetX: -280, offsetY: 0 },
+	])('centres a portrait canvas in pixel coordinates for $mode', (expected) => {
+		const t = resolveSlideSizeRescaleTransform(
+			FOUR_THREE,
+			{ widthEmu: 6858000, heightEmu: 9144000 },
+			expected.mode,
+		);
+		expect(t.scale).toBeCloseTo(expected.scale, 10);
+		expect(t.offsetX).toBeCloseTo(expected.offsetX, 5);
+		expect(t.offsetY).toBeCloseTo(expected.offsetY, 5);
 	});
 
 	it('is a no-op transform for a degenerate old size', () => {
@@ -113,8 +126,8 @@ describe('scaleSlidesForSizeChange', () => {
 			height: number;
 			textStyle: { fontSize: number };
 		};
-		// scale = 1 for ensureFit here, offsetX = (12192000-9144000)/2 = 1524000
-		expect(title.x).toBeCloseTo(100 + 1524000, 5);
+		// Element frames use pixels: the extra 320px of canvas leaves a 160px margin.
+		expect(title.x).toBeCloseTo(260, 5);
 		expect(title.y).toBeCloseTo(100, 5);
 		expect(title.width).toBeCloseTo(500, 5);
 		expect(title.textStyle.fontSize).toBeCloseTo(32, 5);
