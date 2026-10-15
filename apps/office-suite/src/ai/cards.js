@@ -1,11 +1,13 @@
 /**
  * The cards under an assistant reply. Nothing the assistant proposes is written until the user
- * presses a card's button: edits are checked against the file revisions the request read, saved
- * as one transaction and can be undone; new files are built by the core and opened in a tab.
+ * presses a card's button. Edits show what they replace, can be picked one by one, are checked
+ * against the file revisions the request read, saved as one transaction (the old bytes kept as a
+ * version) and can be undone; new files are built by the core and opened in a tab.
  */
 import { badge, escape, task } from '../ui.js';
 import { buildFile, prepareChanges, validateChanges } from '../ai-operations.js';
 import { fileName, outline, summarize, validateCreate } from './protocol.js';
+import { wordDiff } from './diff.js';
 
 const el = (tag, className, text) => {
 	const node = document.createElement(tag);
@@ -19,27 +21,70 @@ const button = (label, primary) => {
 	return b;
 };
 
+function preview(change, detail) {
+	if (change.type === 'cells') {
+		const table = el('table', 'ai-cell-diff');
+		table.innerHTML = '<thead><tr><th>Cell</th><th>Now</th><th>Proposed</th></tr></thead>';
+		const body = table.appendChild(el('tbody'));
+		for (const [i, cell] of change.cells.entries()) {
+			const row = body.appendChild(el('tr'));
+			row.append(el('td', '', cell.address));
+			row.appendChild(el('td')).append(el('del', '', detail?.cells?.[i]?.before || '(empty)'));
+			row.appendChild(el('td')).append(el('ins', '', cell.input));
+		}
+		return table;
+	}
+	const diff = el('div', 'ai-diff');
+	if (detail) diff.append(wordDiff(detail.before, detail.after));
+	else diff.append(el('ins', '', change.text));
+	return diff;
+}
+
 /** Edits to attached files. `refs` are the files as the request read them. */
-export function proposalCard({ changes, refs, store, sessions, refresh, save }) {
+export function proposalCard({
+	changes,
+	refs,
+	details = [],
+	store,
+	sessions,
+	refresh,
+	save,
+	showVersions,
+}) {
 	validateChanges(changes, refs);
 	const panel = el('div', 'ai-proposal');
 	const heading = el('div', 'ai-card-heading');
 	heading.innerHTML = `<strong>${changes.length} proposed edit${changes.length === 1 ? '' : 's'}</strong>`;
-	const description = el('p', '', 'Review the exact changes below before applying them.');
-	const list = el('ul', 'ai-change-list');
-	for (const c of changes) {
-		const ref = refs.find((d) => d.id === c.documentId);
-		const li = el('li');
-		li.innerHTML = `${badge(ref.kind)}<span><strong>${escape(ref.name)}</strong> ${escape(
-			c.type === 'cells'
-				? c.cells.map((cell) => `${cell.address} → ${cell.input}`).join(', ')
-				: `→ ${c.text}`,
-		)}</span>`;
-		list.append(li);
-	}
-	const details = el('details');
-	details.append(el('summary', '', 'Show the operations'));
-	details.append(
+	const description = el(
+		'p',
+		'',
+		'Review each change. Untick any you do not want, then apply the rest.',
+	);
+	const list = el('ol', 'ai-change-list');
+	const boxes = changes.map((change, index) => {
+		const ref = refs.find((d) => d.id === change.documentId);
+		// Edits arrive grouped by file; each file is named once, above its edits.
+		if (change.documentId !== changes[index - 1]?.documentId) {
+			const file = list.appendChild(el('li', 'ai-change-file'));
+			file.innerHTML = `${badge(ref.kind)}<strong>${escape(ref.name)}</strong>`;
+		}
+		const li = list.appendChild(el('li', 'ai-change'));
+		const label = li.appendChild(el('label'));
+		const box = label.appendChild(el('input'));
+		box.type = 'checkbox';
+		box.checked = true;
+		box.setAttribute('aria-label', `Apply edit ${index + 1} to ${ref.name}`);
+		label.append(el('small', '', details[index]?.where ?? `Edit ${index + 1}`));
+		li.append(preview(change, details[index]));
+		box.onchange = () => {
+			li.classList.toggle('skipped', !box.checked);
+			apply.disabled = !boxes.some((b) => b.checked);
+		};
+		return box;
+	});
+	const details_ = el('details');
+	details_.append(el('summary', '', 'Show the operations'));
+	details_.append(
 		el(
 			'pre',
 			'',
@@ -51,10 +96,11 @@ export function proposalCard({ changes, refs, store, sessions, refresh, save }) 
 		),
 	);
 	const actions = el('div', 'ai-card-actions');
-	const apply = button('Apply changes', true);
+	const apply = button(changes.length > 1 ? 'Apply selected' : 'Apply changes', true);
+	if (changes.length > 1) apply.setAttribute('aria-label', 'Apply changes');
 	const dismiss = button('Dismiss');
 	actions.append(apply, dismiss);
-	panel.append(heading, description, list, details, actions);
+	panel.append(heading, description, list, details_, actions);
 	dismiss.onclick = () => panel.remove();
 	async function current(docs) {
 		const latest = [];
@@ -69,21 +115,33 @@ export function proposalCard({ changes, refs, store, sessions, refresh, save }) 
 	}
 	apply.onclick = () =>
 		task(async () => {
+			const chosen = changes.filter((_, i) => boxes[i].checked);
+			const targets = refs.filter((d) => chosen.some((c) => c.documentId === d.id));
 			apply.disabled = true;
-			const unlock = sessions.lock(refs.map((d) => d.id));
+			const unlock = sessions.lock(targets.map((d) => d.id));
 			try {
-				const docs = await current(refs);
-				const next = await prepareChanges(changes, docs);
-				await current(refs);
-				await store.commit(next.map((document) => ({ document, expected: document.revision - 1 })));
+				const docs = await current(targets);
+				const next = await prepareChanges(chosen, docs);
+				await current(targets);
+				await store.commit(
+					next.map((document) => ({ document, expected: document.revision - 1 })),
+					'Assistant edits',
+				);
 				for (const doc of next) await sessions.reload(doc);
 				await refresh();
-				save?.({ applied: true });
-				description.textContent =
-					'Changes saved. You can undo this set while the files remain unchanged.';
+				save?.({ applied: boxes.map((b) => b.checked) });
+				for (const box of boxes) box.disabled = true;
+				description.textContent = `Applied ${chosen.length} of ${changes.length}. The previous version of each file was kept, and you can undo this set while the files remain unchanged.`;
 				actions.replaceChildren();
 				const undo = button('Undo these changes');
 				actions.append(undo);
+				if (showVersions)
+					for (const doc of next) {
+						const history = button(next.length > 1 ? `History: ${doc.name}` : 'Version history');
+						history.title = `Version history of ${doc.name}`;
+						history.onclick = () => showVersions(doc.id);
+						actions.append(history);
+					}
 				undo.onclick = () =>
 					task(async () => {
 						await current(next);
@@ -94,6 +152,7 @@ export function proposalCard({ changes, refs, store, sessions, refresh, save }) 
 						}));
 						await store.commit(
 							restored.map((document) => ({ document, expected: document.revision - 1 })),
+							'Undid assistant edits',
 						);
 						for (const doc of restored) await sessions.reload(doc);
 						await refresh();
@@ -111,7 +170,7 @@ export function proposalCard({ changes, refs, store, sessions, refresh, save }) 
 }
 
 /** New files. `created` maps a card's index to the id of the file already made from it. */
-export function creationCards({ items, created = {}, store, open, save }) {
+export function creationCards({ items, created = {}, store, open, save, openCreated = true }) {
 	validateCreate(items);
 	return items.map((item, index) => {
 		const name = fileName(item);
@@ -119,16 +178,16 @@ export function creationCards({ items, created = {}, store, open, save }) {
 		const head = el('div', 'ai-card-heading');
 		head.innerHTML = `${badge(item.type)}<span><strong>${escape(name)}</strong><small>${escape(summarize(item))}</small></span>`;
 		const lines = outline(item).filter((line) => line.trim());
-		const preview = el('ol', 'ai-outline');
-		for (const line of lines.slice(0, 8)) preview.append(el('li', '', line));
-		if (lines.length > 8) preview.append(el('li', 'more', `and ${lines.length - 8} more`));
+		const outlineList = el('ol', 'ai-outline');
+		for (const line of lines.slice(0, 8)) outlineList.append(el('li', '', line));
+		if (lines.length > 8) outlineList.append(el('li', 'more', `and ${lines.length - 8} more`));
 		const actions = el('div', 'ai-card-actions');
-		const make = button(created[index] ? 'Open' : 'Create and open', true);
+		const make = button(created[index] ? 'Open' : openCreated ? 'Create and open' : 'Create', true);
 		actions.append(make);
-		card.append(head, ...(lines.length ? [preview] : []), actions);
+		card.append(head, ...(lines.length ? [outlineList] : []), actions);
 		make.onclick = () =>
 			task(async () => {
-				const existing = created[index] && (await store.get(created[index]));
+				const existing = created[index] && (await store.get(created[index]).catch(() => undefined));
 				if (existing) return open(existing.id);
 				make.disabled = true;
 				try {
@@ -136,7 +195,7 @@ export function creationCards({ items, created = {}, store, open, save }) {
 					created[index] = doc.id;
 					save?.({ created });
 					make.textContent = 'Open';
-					await open(doc.id);
+					if (openCreated) await open(doc.id);
 				} finally {
 					make.disabled = false;
 				}

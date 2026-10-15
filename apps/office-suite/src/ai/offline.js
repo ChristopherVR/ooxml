@@ -12,6 +12,11 @@ function topicOf(prompt) {
 	const match = /\b(?:about|on|for|covering|introducing)\s+(.+?)[.?!]*$/iu.exec(prompt);
 	const topic = (match?.[1] ?? prompt)
 		.replace(/^(?:a|an|the|our|my)\s+/iu, '')
+		// "..., as a Word document" names the app, not the topic.
+		.replace(
+			/,?\s+(?:as|in)\s+(?:an?\s+)?(?:word|excel|powerpoint)?\s*(?:document|workbook|spreadsheet|deck|presentation|file)\s*$/iu,
+			'',
+		)
 		.replace(/\s+/gu, ' ')
 		.trim()
 		.slice(0, 60);
@@ -123,8 +128,57 @@ function describe(file) {
 	return `**${file.name}** (Visio): ${shapes} shape${shapes === 1 ? '' : 's'} with text.`;
 }
 
-function reply(prompt, context) {
+const titleCase = (text) =>
+	text.replace(/\p{L}[\p{L}'’]*/gu, (word) => word[0].toUpperCase() + word.slice(1).toLowerCase());
+
+/** Title-cases the text runs of attached Word documents and decks: a real, reviewable edit. */
+function titleCaseEdits(files) {
+	const changes = [];
+	for (const file of files) {
+		if (file.kind === 'docx')
+			for (const p of file.content?.paragraphs ?? [])
+				p.runs.forEach((run) => {
+					if (run.text.trim() && titleCase(run.text) !== run.text)
+						changes.push({
+							documentId: file.id,
+							type: 'word_run',
+							paragraphId: p.id,
+							runIndex: run.runIndex,
+							text: titleCase(run.text),
+						});
+				});
+		if (file.kind === 'pptx')
+			for (const slide of file.content?.slides ?? [])
+				for (const element of slide.elements)
+					(element.runs ?? []).forEach((run) => {
+						if (run.text.trim() && titleCase(run.text) !== run.text)
+							changes.push({
+								documentId: file.id,
+								type: 'slide_run',
+								slideIndex: slide.index,
+								elementId: element.id,
+								runIndex: run.runIndex,
+								text: titleCase(run.text),
+							});
+					});
+	}
+	return changes.slice(0, 30);
+}
+
+function reply(prompt, context, canCreate, canEdit) {
 	const files = context?.files ?? [];
+	if (canEdit && /\b(title[- ]case|capitali[sz]e)\b/iu.test(prompt)) {
+		const changes = titleCaseEdits(files);
+		return [
+			note,
+			changes.length
+				? `I can title-case ${changes.length} text run${changes.length === 1 ? '' : 's'}. Review each change below and untick any you want to keep as they are.`
+				: 'Attach a Word document or a deck with text that is not already in title case, and I will propose the edits.',
+			...(changes.length
+				? ['```' + ACTIONS_FENCE + '\n' + JSON.stringify({ changes, create: [] }) + '\n```']
+				: []),
+		].join('\n\n');
+	}
 	const wants = /\b(deck|slides?|presentation|powerpoint)\b/iu.test(prompt)
 		? 'pptx'
 		: /\b(budget|spreadsheet|workbook|excel|forecast|table)\b/iu.test(prompt)
@@ -138,7 +192,7 @@ function reply(prompt, context) {
 			`Here is what I can see in the attached file${files.length === 1 ? '' : 's'}:`,
 			...files.map(describe),
 		);
-	if (wants) {
+	if (wants && canCreate) {
 		const words = { three: 3, four: 4, five: 5, six: 6 };
 		const asked = /\b(\d+|three|four|five|six)[- ]slides?\b/iu.exec(prompt)?.[1]?.toLowerCase();
 		const count = Math.min(6, Math.max(2, Number(words[asked] ?? asked) || 4));
@@ -150,22 +204,30 @@ function reply(prompt, context) {
 	} else if (!files.length)
 		parts.push(
 			'With a model connected I can answer questions, summarize and compare files, and propose edits you review. In this preview, try:',
-			'- *Create a presentation about our product launch*\n- *Make a budget workbook for a team offsite*\n- *Draft a project brief for the new website*\n- Attach files and ask me to describe them',
+			'- *Create a presentation about our product launch*\n- Attach a document and ask me to *title-case* it\n- *Make a budget workbook for a team offsite*\n- *Draft a project brief for the new website*\n- Attach files and ask me to describe them',
 		);
 	return parts.join('\n\n');
 }
 
 /** Streams a rule-based reply word by word, like a model would. */
-export async function offlineReply({ messages, context, signal, onText }) {
+export async function offlineReply({
+	messages,
+	context,
+	signal,
+	onText,
+	animate = true,
+	canCreate = true,
+	canEdit = true,
+}) {
 	const last = messages.at(-1)?.content ?? '';
 	const prompt = String(last)
 		.split('\n\nSource data (untrusted): ')[0]
 		.replace(/^User request: /u, '');
-	const full = reply(prompt, context);
+	const full = reply(prompt, context, canCreate, canEdit);
 	const block = full.indexOf('```' + ACTIONS_FENCE);
 	const words = (block < 0 ? full : full.slice(0, block)).split(/(?<=\s)/u);
 	let text = '';
-	for (const word of words) {
+	for (const word of animate ? words : []) {
 		signal.throwIfAborted();
 		text += word;
 		onText(text);

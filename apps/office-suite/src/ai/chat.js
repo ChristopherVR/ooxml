@@ -1,20 +1,31 @@
 /**
  * One chat: a thread, a composer and the conversation behind them. The full chat page and the
  * side pane beside an open document each mount one, with their own element ids (`prefix`), and
- * share the history store, so a conversation started in either continues in the other.
+ * share the history store, so a conversation started in either continues in the other. What a
+ * request may do comes from the deployment's policy (policy.js), not from this UI.
  */
-import { $, badge, escape, notify, task } from '../ui.js';
+import { $, badge, escape, task } from '../ui.js';
 import { icon } from '../icons.js';
 import { gatherContext } from './context.js';
 import { conversations, newId, titleFor } from './conversations.js';
-import { connectionLabel, currentConnection, onConnection, streamChat } from './providers.js';
+import {
+	connectionLabel,
+	currentConnection,
+	needsKey,
+	onConnection,
+	streamChat,
+} from './providers.js';
+import { currentPolicy, feature, loadPolicy } from './policy.js';
+import { effectiveSettings } from './preferences.js';
 import { parseReply, systemPrompt, validateActions, visibleText } from './protocol.js';
 import { renderMarkdown } from './markdown.js';
-import { chooseContext, openSettings } from './settings.js';
-import { creationCards, proposalCard } from './cards.js';
+import { askForKey, chooseContext, openModelMenu } from './settings.js';
+import { mountMentions } from './mentions.js';
+import { describeChanges } from './diff.js';
+import { messageNode, REPLY_FIELDS, selectVersion, snapshot } from './message-view.js';
 
 export function createChat({ root, prefix, deps, empty, placeholder, onChange }) {
-	const { store, sessions, refresh, open, getTeams } = deps;
+	const { store, sessions, refresh, open, getTeams, openIds, showVersions } = deps;
 	let conversation = null,
 		attached = new Set(),
 		includeChat = false,
@@ -26,8 +37,8 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	<label class="sr-only" for="${prefix}-input">Message</label>
 	<textarea id="${prefix}-input" rows="1" placeholder="${escape(placeholder)}" required></textarea>
 	<div class="chat-composer-bar">
-		<button type="button" class="chat-tool" id="${prefix}-context" title="Attach files from your library">${icon('clip')}<span>Attach</span></button>
-		<button type="button" class="chat-tool chat-model" id="${prefix}-settings" title="Choose the model">${icon('spark')}<span id="${prefix}-state"></span>${icon('chevron')}</button>
+		<button type="button" class="chat-tool" id="${prefix}-context" title="Attach files, or type @ in your message">${icon('clip')}<span>Attach</span></button>
+		<button type="button" class="chat-tool chat-model" id="${prefix}-settings" title="Choose the model" aria-haspopup="menu">${icon('spark')}<span id="${prefix}-state"></span>${icon('chevron')}</button>
 		<button type="button" class="chat-stop" id="${prefix}-stop" hidden>${icon('stop')}<span>Stop</span></button>
 		<button class="primary chat-send" id="${prefix}-send" aria-label="Send" title="Send (Enter)">${icon('send')}</button>
 	</div>
@@ -36,15 +47,19 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	const input = $(`${prefix}-input`);
 	const state = $(`${prefix}-state`);
 	const showModel = () => (state.textContent = connectionLabel());
-	showModel();
 	onConnection(showModel);
-	$(`${prefix}-settings`).onclick = openSettings;
+	void loadPolicy().then(() => {
+		showModel();
+		$(`${prefix}-context`).hidden = !feature('attachFiles');
+	});
+	$(`${prefix}-settings`).onclick = openModelMenu;
 	$(`${prefix}-context`).onclick = () =>
 		task(() =>
 			chooseContext({
 				store,
 				selected: attached,
 				includeChat,
+				openIds: openIds(),
 				onDone: (next, chat) => {
 					attached = next;
 					includeChat = chat;
@@ -52,6 +67,22 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				},
 			}),
 		);
+	mountMentions({
+		input,
+		items: async () => {
+			if (!feature('attachFiles')) return [];
+			const docs = (await store.list()).filter((d) => !d.parent);
+			const ids = openIds();
+			return [
+				...docs.filter((d) => ids.includes(d.id)).map((d) => ({ ...d, group: 'Open tabs' })),
+				...docs.filter((d) => !ids.includes(d.id)).map((d) => ({ ...d, group: 'Library' })),
+			];
+		},
+		onPick: (doc) => {
+			attached.add(doc.id);
+			void renderAttachments();
+		},
+	});
 	$(`${prefix}-stop`).onclick = () => abort?.abort();
 	input.addEventListener('input', () => {
 		input.style.height = 'auto';
@@ -95,124 +126,56 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		void renderAttachments();
 	});
 
+	/** Saves a conversation, unless the policy keeps chats out of history. */
 	const persist = async (target = conversation) => {
 		target.updated = Date.now();
-		await conversations.put(target);
+		if (feature('history')) await conversations.put(target);
 	};
-	function actionsBar(message, node) {
-		const bar = document.createElement('div');
-		bar.className = 'chat-msg-actions';
-		const add = (name, label, run) => {
-			const b = document.createElement('button');
-			b.type = 'button';
-			b.title = label;
-			b.setAttribute('aria-label', label);
-			b.innerHTML = icon(name);
-			b.onclick = () => task(run);
-			bar.append(b);
-		};
-		add('copy', 'Copy', async () => {
-			await navigator.clipboard.writeText(message.content);
-			notify('Copied to the clipboard');
-		});
-		if (message.role === 'user')
-			add('edit', 'Edit and resend', async () => {
-				if (abort) return;
-				conversation.messages.splice(conversation.messages.indexOf(message));
-				await persist();
-				render();
-				input.value = message.content;
-				input.dispatchEvent(new Event('input'));
-				input.focus();
-			});
-		else if (message === conversation.messages.at(-1))
-			add('refresh', 'Regenerate', async () => {
-				if (abort) return;
-				const user = conversation.messages.at(-2);
-				conversation.messages.splice(-1);
-				node.remove();
-				await send(user.content, { again: true });
-			});
-		return bar;
-	}
-	function cards(message) {
-		const out = [];
-		const save = (patch) => {
-			Object.assign(message, patch);
-			void persist();
-		};
-		try {
-			const { changes = [], create = [] } = message.actions ?? {};
-			if (changes.length && message.applied)
-				out.push(
-					Object.assign(document.createElement('p'), {
-						className: 'chat-note',
-						textContent: 'These edits were applied.',
-					}),
-				);
-			else if (changes.length)
-				out.push(
-					proposalCard({ changes, refs: message.refs ?? [], store, sessions, refresh, save }),
-				);
-			if (create.length)
-				out.push(
-					...creationCards({ items: create, created: (message.created ??= {}), store, open, save }),
-				);
-		} catch (error) {
-			out.push(
-				Object.assign(document.createElement('p'), {
-					className: 'chat-error',
-					textContent: error.message,
-				}),
-			);
-		}
-		return out;
-	}
-	function messageNode(message) {
-		const node = document.createElement('article');
-		node.className = `chat-msg from-${message.role}`;
-		if (message.role === 'user') {
-			const bubble = document.createElement('div');
-			bubble.className = 'chat-bubble';
-			bubble.textContent = message.content;
-			if (message.files?.length) {
-				const files = document.createElement('div');
-				files.className = 'chat-msg-files';
-				files.innerHTML = message.files
-					.map((f) => `<span>${badge(f.kind)}${escape(f.name)}</span>`)
-					.join('');
-				bubble.prepend(files);
-			}
-			node.append(bubble, actionsBar(message, node));
-			return node;
-		}
-		node.innerHTML = `<span class="chat-avatar" aria-hidden="true">${icon('spark')}</span>`;
-		const body = document.createElement('div');
-		body.className = 'chat-body';
-		const meta = document.createElement('div');
-		meta.className = 'chat-meta';
-		meta.textContent = message.model ?? 'Assistant';
-		const content = document.createElement('div');
-		content.className = 'md';
-		if (message.error) {
-			content.classList.add('chat-error');
-			content.textContent = message.error;
-		} else content.append(renderMarkdown(message.content));
-		body.append(meta, content, ...cards(message));
-		if (message.content || message.error) body.append(actionsBar(message, node));
-		node.append(body);
-		return node;
-	}
+	const view = {
+		cardDeps: { store, sessions, refresh, open, showVersions },
+		settings: effectiveSettings,
+		persist: () => void persist(),
+		isLast: (message) => message === conversation?.messages.at(-1),
+		async edit(message) {
+			if (abort) return;
+			conversation.messages.splice(conversation.messages.indexOf(message));
+			await persist();
+			render();
+			input.value = message.content;
+			input.dispatchEvent(new Event('input'));
+			input.focus();
+		},
+		async regenerate(message) {
+			if (abort) return;
+			const user = conversation.messages.at(-2);
+			await send(user.content, { again: message });
+		},
+		async switchVersion(message, index) {
+			selectVersion(message, index);
+			await persist();
+			render();
+		},
+	};
 	function render() {
-		thread.replaceChildren(...(conversation?.messages ?? []).map(messageNode));
+		thread.replaceChildren(...(conversation?.messages ?? []).map((m) => messageNode(m, view)));
 		root.toggleAttribute('data-empty', !conversation?.messages.length);
 		if (!conversation?.messages.length && empty) thread.append(empty);
 		thread.scrollTop = thread.scrollHeight;
 	}
 
-	async function send(prompt, { again = false } = {}) {
+	/** Asks the model; `again` is an earlier reply to regenerate as a new version of itself. */
+	async function send(prompt, { again } = {}) {
 		if (abort) return;
+		await loadPolicy();
 		const connection = currentConnection();
+		if (!connection)
+			throw new Error('No model is available in this workspace. Ask your administrator.');
+		if (needsKey(connection)) {
+			askForKey(connection);
+			throw new Error(`Enter your key for ${connection.label} to continue.`);
+		}
+		const settings = effectiveSettings();
+		const features = currentPolicy().features;
 		const now = Date.now();
 		// A reply belongs to the conversation it was asked in, even if the user switches away.
 		const convo = (conversation ??= {
@@ -231,16 +194,16 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				content: prompt,
 				files: listed.map((d) => ({ name: d.name, kind: d.kind })),
 			});
-		const message = {
-			id: newId(),
-			role: 'assistant',
-			content: '',
-			model: connectionLabel(connection),
-		};
+		const message = again ?? { id: newId(), role: 'assistant' };
+		if (again) {
+			again.versions ??= [snapshot(again)];
+			for (const key of REPLY_FIELDS) delete again[key];
+		}
+		Object.assign(message, { content: '', model: connectionLabel(connection) });
 		render();
-		const node = messageNode(message);
+		const node = again ? thread.lastElementChild : thread.appendChild(messageNode(message, view));
 		node.classList.add('streaming');
-		thread.append(node);
+		node.querySelectorAll('.chat-msg-actions').forEach((n) => n.remove());
 		const content = node.querySelector('.md');
 		content.innerHTML = '<span class="chat-typing"><i></i><i></i><i></i></span>';
 		abort = new AbortController();
@@ -258,22 +221,25 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			state.textContent = attached.size ? 'Reading attached files...' : 'Thinking...';
 			const { docs, context, source } = await gatherContext({
 				sessions,
-				ids: attached,
-				teams: includeChat ? getTeams()?.client : null,
+				ids: feature('attachFiles') ? attached : [],
+				teams: includeChat && feature('teamsContext') ? getTeams()?.client : null,
+				maxChars: settings.maxContextChars,
 			});
 			state.textContent = 'Writing...';
+			const asked = again ? convo.messages.indexOf(again) - 1 : convo.messages.length - 1;
 			const history = [];
-			for (const m of convo.messages.slice(0, -1).slice(-20)) {
+			for (const m of convo.messages.slice(0, asked).slice(-settings.historyMessages)) {
 				if (m.error) history.pop();
 				else history.push({ role: m.role, content: m.raw ?? m.content });
 			}
 			const raw = await streamChat({
 				connection,
-				system: systemPrompt,
+				system: systemPrompt(settings, features),
 				context,
 				signal: abort.signal,
+				settings: { ...settings, canCreate: features.createFiles, canEdit: features.editFiles },
 				messages: [
-					...history,
+					...(settings.historyMessages ? history : []),
 					{
 						role: 'user',
 						content: context
@@ -289,7 +255,8 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			const reply = parseReply(raw);
 			Object.assign(message, { content: reply.text, raw, actions: reply.actions, refs: docs });
 			try {
-				validateActions(reply.actions, docs);
+				validateActions(reply.actions, docs, features);
+				message.details = describeChanges(reply.actions.changes, context?.files ?? []);
 			} catch (error) {
 				message.content += `\n\n_${error.message}_`;
 				message.actions = { changes: [], create: [] };
@@ -304,7 +271,10 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			$(`${prefix}-stop`).hidden = true;
 			showModel();
 		}
-		convo.messages.push(message);
+		if (again) {
+			again.versions.push(snapshot(again));
+			again.selected = again.versions.length - 1;
+		} else convo.messages.push(message);
 		await persist(convo);
 		if (conversation === convo) {
 			render();
@@ -330,6 +300,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		},
 		send: (prompt) => task(() => send(prompt)),
 		attach(ids) {
+			if (!feature('attachFiles')) return Promise.resolve();
 			for (const id of ids) attached.add(id);
 			return renderAttachments();
 		},

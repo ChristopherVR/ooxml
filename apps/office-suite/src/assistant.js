@@ -5,6 +5,7 @@
 import { $, escape } from './ui.js';
 import { icon } from './icons.js';
 import { createChat } from './ai/chat.js';
+import { effectiveSettings } from './ai/preferences.js';
 
 const suggestions = {
 	docx: [
@@ -30,13 +31,14 @@ const suggestions = {
 	],
 };
 
-export function mountAssistant({ store, sessions, refresh, open, getActive, getTeams, openChat }) {
+export function mountAssistant({ deps, getActive, openChat }) {
+	const { store } = deps;
 	const intro = document.createElement('div');
 	intro.className = 'assistant-intro';
 	const chat = createChat({
 		root: $('assistant-chat'),
 		prefix: 'ai',
-		deps: { store, sessions, refresh, open, getTeams },
+		deps,
 		empty: intro,
 		placeholder: 'Ask about your work...',
 	});
@@ -66,7 +68,8 @@ export function mountAssistant({ store, sessions, refresh, open, getActive, getT
 		/** Called whenever the pane opens: attach the open document and refresh the suggestions. */
 		async opened() {
 			const active = getActive();
-			if (active && !chat.hasAttachments() && !chat.id) await chat.attach([active]);
+			if (active && effectiveSettings().attachOpenDocument && !chat.hasAttachments() && !chat.id)
+				await chat.attach([active]);
 			await renderIntro();
 			chat.render();
 			chat.focus();

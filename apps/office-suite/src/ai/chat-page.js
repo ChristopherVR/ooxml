@@ -7,6 +7,7 @@ import { icon } from '../icons.js';
 import { currentProfile } from '../profile-state.js';
 import { conversations, groupByDate } from './conversations.js';
 import { createChat } from './chat.js';
+import { feature, loadPolicy } from './policy.js';
 
 const starters = [
 	{
@@ -178,6 +179,10 @@ export function mountChatPage({ host, deps, onRoute }) {
 	});
 	chat.render();
 	void renderList();
+	// A workspace whose policy keeps no history shows no history list.
+	void loadPolicy().then(() => {
+		host.querySelector('.chat-history').hidden = !feature('history');
+	});
 	return {
 		show(id) {
 			renderHero();

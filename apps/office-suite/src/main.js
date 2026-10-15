@@ -1,6 +1,8 @@
 import { SuiteDocumentStore } from 'ooxml-ui/suite';
 import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
+import { showVersions, withVersions } from './versions.js';
+import { currentPolicy } from './ai/policy.js';
 import { blankDocument, preloadEditor } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
 import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
@@ -17,7 +19,11 @@ import { mountShell } from './shell.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 
-const store = new SuiteDocumentStore(documentDatabase());
+// Every write keeps the bytes it replaces as a version, unless the AI policy turns history off.
+const store = withVersions(
+	new SuiteDocumentStore(documentDatabase()),
+	() => currentPolicy().features.versions,
+);
 let files = [],
 	active = null,
 	view = 'home',
@@ -136,6 +142,16 @@ async function open(id, origin) {
 	);
 	history.replaceState(null, '', `#/file/${id}`);
 }
+/** What the chat page and the assistant pane need from the shell. */
+const aiDeps = {
+	store,
+	sessions,
+	refresh,
+	open,
+	getTeams: () => teams,
+	openIds: () => [...sessions.sessions.keys()],
+	showVersions: (id) => task(() => showVersions({ id, store, sessions, refresh })),
+};
 /** The chat page; `id` reopens a conversation from the history. */
 async function showChat(id) {
 	chatTabOpen = true;
@@ -145,7 +161,7 @@ async function showChat(id) {
 		const { mountChatPage } = await import('./ai/chat-page.js');
 		chatPage = mountChatPage({
 			host: $('chat'),
-			deps: { store, sessions, refresh, open, getTeams: () => teams },
+			deps: aiDeps,
 			onRoute: (conversation) => {
 				if (view === 'chat')
 					history.replaceState(null, '', conversation ? `#/chat/${conversation}` : '#/chat');
@@ -160,12 +176,8 @@ async function showAssistant(show = true) {
 	if (!assistant) {
 		const { mountAssistant } = await import('./assistant.js');
 		assistant = mountAssistant({
-			store,
-			sessions,
-			refresh,
-			open,
+			deps: aiDeps,
 			getActive: () => (view === 'editor' ? active : null),
-			getTeams: () => teams,
 			openChat: (id) =>
 				task(async () => {
 					await showAssistant(false);
@@ -357,6 +369,7 @@ $('save').onclick = () =>
 	});
 $('download').onclick = () => task(async () => download(await sessions.save(active)));
 $('embedded').onclick = () => task(embeddings);
+$('versions').onclick = () => aiDeps.showVersions(active);
 $('share').onclick = () => task(share);
 $('back-teams').onclick = () =>
 	task(async () => {

@@ -4,7 +4,7 @@
  */
 import { inspect } from '../ai-operations.js';
 
-export async function gatherContext({ sessions, ids, teams: client }) {
+export async function gatherContext({ sessions, ids, teams: client, maxChars = 150000 }) {
 	const docs = [],
 		files = [];
 	for (const id of ids) {
@@ -26,7 +26,7 @@ export async function gatherContext({ sessions, ids, teams: client }) {
 		: undefined;
 	const context = { files, teams };
 	const source = JSON.stringify(context);
-	if (source.length > 150000)
+	if (source.length > maxChars)
 		throw new Error('The attached files are too large. Attach fewer files.');
 	return { docs, context: files.length || teams ? context : null, source };
 }

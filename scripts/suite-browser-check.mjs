@@ -139,6 +139,7 @@ try {
 	});
 	await page.locator('#assistant-toggle').click();
 	await page.locator('#ai-settings').click();
+	await page.getByRole('menuitem', { name: 'Add a model...' }).click();
 	await page.locator('select[name=provider]').selectOption('custom');
 	await page.locator('input[name=endpoint]').fill('https://suite-ai.test/v1/chat/completions');
 	await page.locator('input[name=model]').fill('test-model');
@@ -230,6 +231,48 @@ try {
 	);
 	await page.screenshot({ path: join(process.env.TEMP ?? root, 'ooxml-suite-visio.png') });
 	console.log('Visio parsed, edited and saved through shared suite storage');
+	// A managed deployment: its ai-config.json decides the models, features and instructions.
+	const managed = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+	await managed.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+	await managed.route('**/ai-config.json', (route) =>
+		route.fulfill({
+			json: {
+				connections: [
+					{
+						id: 'company',
+						label: 'Company model',
+						provider: 'gateway',
+						endpoint: 'https://gateway.suite-ai.test/v1/chat/completions',
+						models: ['fast', 'deep'],
+						keyMode: 'none',
+					},
+				],
+				allowUserConnections: false,
+				offline: { enabled: false },
+				behaviour: { instructions: 'Use British spelling.', style: 'concise' },
+			},
+		}),
+	);
+	let sent;
+	await managed.route('https://gateway.suite-ai.test/v1/chat/completions', async (route) => {
+		sent = { body: route.request().postDataJSON(), headers: route.request().headers() };
+		await route.fulfill({ json: { choices: [{ message: { content: 'Managed reply.' } }] } });
+	});
+	await managed.goto(`${base}/#/chat`);
+	await managed.locator('#chat-settings').click();
+	const choices = await managed.getByRole('menuitemradio').allTextContents();
+	assert.deepEqual(choices, ['Company model · fast', 'Company model · deep']);
+	assert.equal(await managed.getByRole('menuitem', { name: 'Add a model...' }).count(), 0);
+	await managed.getByRole('menuitemradio', { name: 'Company model · deep' }).click();
+	await managed.locator('#chat-input').fill('Hello');
+	await managed.locator('#chat-input').press('Enter');
+	await managed.getByText('Managed reply.').waitFor();
+	assert.equal(sent.body.model, 'deep');
+	assert.match(sent.body.messages[0].content, /Use British spelling\./);
+	assert.match(sent.body.messages[0].content, /Keep answers short/);
+	assert.equal(sent.headers.authorization, undefined);
+	await managed.close();
+	console.log('A managed ai-config.json chose the models, instructions and style');
 	assert.deepEqual(errors, []);
 } catch (error) {
 	console.error(error);
