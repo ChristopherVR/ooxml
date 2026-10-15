@@ -177,8 +177,12 @@ line/marker swatches and position-authoring controls remain incomplete.
 3. SmartArt insertion, text editing, reflow and shared layout/color/style UI.
 4. Broader workbook save fidelity across structural edits, unsupported parts,
    drawings, tables, external links and metadata. No blanket lossless claim.
-5. Grid/font/number-format/layout edge cases and native paginated printing,
-   Page Layout and page-break preview.
+5. Grid/font/number-format/layout edge cases and native paginated printing.
+   Page Layout view and Page Break Preview are implemented (page plan, rulers,
+   header/footer editing, break and print-area dragging, saved in
+   `sheetView/@view`); still missing there are Custom Views, copy and paste
+   inside Page Layout view,
+   separate per-view zoom attributes, and native-printer metrics.
 6. Pivot refresh/rendering, slicers, timelines, sparklines, data connections
    and spreadsheet collaboration integration.
 7. Wider formula and clipboard differential coverage. VBA execution, add-ins,

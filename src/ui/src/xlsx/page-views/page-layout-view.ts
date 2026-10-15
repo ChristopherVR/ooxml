@@ -170,7 +170,7 @@ export function createPageLayoutView(
 		}
 		metrics = createGridMetrics(workbook.sheets[sheetIndex()]!, { zoom: 100 });
 		const z = zoom();
-		renderedKey = `${z * 100}|${ctx.locale()}`;
+		renderedKey = `${z}|${ctx.locale()}`;
 		const width = (layout.width + PAD * 2) * z;
 		const height = (layout.height + PAD * 2) * z;
 		canvas.style.cssText = `width:${width}px;height:${height}px`;
