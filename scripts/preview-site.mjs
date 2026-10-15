@@ -22,9 +22,14 @@ const server = createServer(async (req, res) => {
 	if (!file.startsWith(SITE + '/') && !file.startsWith(SITE + '\\'))
 		return res.writeHead(403).end();
 	try {
-		// Read before writing the head, so a missing file is a clean 404 and not a crash.
-		const body = await readFile(file);
-		res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
+		// Read before writing the head, so a missing file is a clean 404 and not a crash. The docs
+		// sites use clean URLs (/getting-started for getting-started.html), so try that second.
+		const body = await readFile(file).catch((error) =>
+			!extname(file) ? readFile(`${file}.html`) : Promise.reject(error),
+		);
+		const type =
+			TYPES[extname(file)] ?? (extname(file) ? 'application/octet-stream' : TYPES['.html']);
+		res.writeHead(200, { 'content-type': type });
 		res.end(body);
 	} catch {
 		res.writeHead(404).end('Not found');
