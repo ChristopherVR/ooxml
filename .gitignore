@@ -37,3 +37,15 @@ site/assets/
 suite-dist/
 desktop/src-tauri/target/
 desktop/src-tauri/gen/
+
+# Secrets and credentials: never commit local env files, keys or registry tokens. The example
+# template stays tracked.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.netrc
