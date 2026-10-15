@@ -155,3 +155,27 @@ it('round-trips the sheet view mode, header/footer and breaks', async () => {
 	loaded = await loadXlsx(await saveXlsx(loaded));
 	expect(loaded.sheets[0]!.view.mode).toBeUndefined();
 });
+
+it('fills each page with every row and column that fits inside the margins', () => {
+	const { wb, edit } = setup();
+	const [only] = pageViewLayout(wb, 0).pages;
+	// Letter portrait: 681.6px of content holds ten default 64px columns and 45 rows of 20px.
+	expect(only!.columns).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+	expect(only!.rows).toHaveLength(45);
+	expect(only!.colLefts[9]).toBe(9 * 64);
+	edit.setPageSetup(0, { orientation: 'landscape' });
+	expect(pageViewLayout(wb, 0).pages[0]!.columns.length).toBeGreaterThan(10);
+	edit.setPageSetup(0, { orientation: 'portrait', scale: 50 });
+	expect(pageViewLayout(wb, 0).pages[0]!.columns).toHaveLength(21);
+	// A manual break keeps the first page short; only the last page of the axis is filled.
+	edit.setPageSetup(0, { scale: 100 });
+	edit.setPageBreak(0, 'col', 2);
+	const pages = pageViewLayout(wb, 0).pages;
+	expect(pages[0]!.columns).toEqual([0, 1]);
+	expect(pages[1]!.columns[0]).toBe(2);
+	expect(pages[1]!.columns.length).toBeGreaterThan(5);
+	// An empty sheet still shows a page of blank cells.
+	const empty = pageViewLayout(createWorkbook(), 0).pages[0]!;
+	expect(empty.blank).toBe(true);
+	expect(empty.columns).toHaveLength(10);
+});

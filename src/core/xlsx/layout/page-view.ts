@@ -1,4 +1,4 @@
-import type { CellRange } from '../address';
+import { MAX_COL, MAX_ROW, type CellRange } from '../address';
 import type { Workbook } from '../model';
 import type { HeaderFooterSection } from './header-footer';
 import { createGridMetrics } from './metrics';
@@ -54,6 +54,26 @@ const offsets = (indices: number[], size: (i: number) => number): number[] => {
 	});
 };
 
+/** Appends the indices after `list` that still fit in `capacity` pixels (hidden ones skipped). */
+function fillTo(
+	list: number[],
+	size: (i: number) => number,
+	hidden: (i: number) => boolean,
+	capacity: number,
+	limit: number,
+): number[] {
+	const out = [...list];
+	let total = out.reduce((sum, i) => sum + size(i), 0);
+	for (let next = (out.at(-1) ?? -1) + 1; next <= limit; next++) {
+		if (hidden(next)) continue;
+		const extent = size(next);
+		if (total + extent > capacity + 0.001) break;
+		out.push(next);
+		total += extent;
+	}
+	return out;
+}
+
 /** Page Layout view geometry: every page placed on a canvas whose origin is (0, 0). */
 export function pageViewLayout(
 	workbook: Workbook,
@@ -83,8 +103,30 @@ export function pageViewLayout(
 		rows: page.rows,
 		columns: page.columns,
 	}));
-	if (!entries.length)
+	const empty = !entries.length;
+	if (empty)
 		entries.push({ number: 1, slotRow: 0, slotCol: 0, range: undefined, rows: [], columns: [] });
+	// Excel fills the last page of each axis with the following blank rows and columns.
+	const lastRow = Math.max(...entries.map((e) => e.rows.at(-1) ?? -1));
+	const lastCol = Math.max(...entries.map((e) => e.columns.at(-1) ?? -1));
+	for (const entry of entries) {
+		if ((entry.rows.at(-1) ?? -1) === lastRow)
+			entry.rows = fillTo(
+				entry.rows,
+				metrics.rowHeight,
+				metrics.isRowHidden,
+				plan.contentHeight / plan.scale,
+				MAX_ROW,
+			);
+		if ((entry.columns.at(-1) ?? -1) === lastCol)
+			entry.columns = fillTo(
+				entry.columns,
+				metrics.colWidth,
+				metrics.isColHidden,
+				plan.contentWidth / plan.scale,
+				MAX_COL,
+			);
+	}
 	const side = margins.left * 96;
 	const alignedWidth = paperWidth - (margins.left + margins.right) * 96;
 	const band = (margin: number, from: number) => Math.max(0, (margin - from) * 96);
@@ -114,7 +156,7 @@ export function pageViewLayout(
 			},
 			rowTops: offsets(entry.rows, metrics.rowHeight),
 			colLefts: offsets(entry.columns, metrics.colWidth),
-			blank: !entry.rows.length || !entry.columns.length,
+			blank: empty,
 		};
 	});
 	return {
@@ -156,7 +198,6 @@ export function pageViewHit(
 		}
 	}
 	if (!inside(page.content, x, y)) return { kind: 'margin', page: page.number };
-	if (page.blank) return { kind: 'blank', page: page.number };
 	const find = (tops: number[], size: (i: number) => number, indices: number[], at: number) => {
 		for (let i = tops.length - 1; i >= 0; i--)
 			if (at >= tops[i]!) return at < tops[i]! + size(indices[i]!) ? indices[i] : undefined;
