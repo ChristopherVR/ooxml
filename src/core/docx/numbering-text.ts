@@ -35,6 +35,8 @@ export function romanNumeral(n: number): string {
 }
 
 const LATIN_LOWER = Array.from('abcdefghijklmnopqrstuvwxyz');
+/** Longest alphabetic label produced; a hostile counter must not build a multi-kilobyte marker. */
+const MAX_LETTER_LABEL = 64;
 /**
  * Word's alphabetic label (lower-case): past `z` the letter repeats rather than
  * counting spreadsheet-style. Adapted from the `repeatedLabel` rule in
@@ -44,7 +46,8 @@ const LATIN_LOWER = Array.from('abcdefghijklmnopqrstuvwxyz');
 export function letterLabel(n: number): string {
 	const index = Math.max(0, Math.trunc(n) - 1);
 	const letter = LATIN_LOWER[index % LATIN_LOWER.length] ?? 'a';
-	return letter.repeat(Math.floor(index / LATIN_LOWER.length) + 1);
+	const repeats = Math.min(Math.floor(index / LATIN_LOWER.length) + 1, MAX_LETTER_LABEL);
+	return letter.repeat(repeats);
 }
 
 const ORDINAL_SUFFIX = (n: number): string => {

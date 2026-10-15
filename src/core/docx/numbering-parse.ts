@@ -15,6 +15,19 @@ import { signedTwips, twips } from './units';
 
 const integer = (value: string | undefined, fallback: number): number =>
 	parseInteger(value) ?? fallback;
+/**
+ * Signed 32-bit range Word accepts for a list start (`w:start`, `w:startOverride`); the repo's
+ * boundary tests pin 2147483647 as valid. Labels stay bounded at format time, see `letterLabel`.
+ */
+const MIN_LIST_START = -2147483648;
+const MAX_LIST_START = 2147483647;
+const clampStart = (value: number): number =>
+	Math.min(Math.max(value, MIN_LIST_START), MAX_LIST_START);
+/** Null-prototype map so ids such as `constructor` or `__proto__` are plain keys. */
+const dictionary = <T>(): Record<string, T> => Object.create(null) as Record<string, T>;
+/** The entry for `key` when it is an own property, so inherited names never resolve. */
+const own = <T>(map: Record<string, T>, key: string): T | undefined =>
+	Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
 const flag = (element: XmlElement | undefined): boolean => onOffElement(element) === true;
 function byName(root: XmlElement, local: string): XmlElement[] {
 	return Array.from(root.getElementsByTagName('*')).filter(
@@ -38,7 +51,7 @@ function parseMarkerFormat(rPr: XmlElement | undefined): NumberingMarkerFormat |
 
 export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 	const level = integer(getW(lvl, 'ilvl'), 0);
-	const start = integer(getW(first(lvl, 'start'), 'val'), 1);
+	const start = clampStart(integer(getW(first(lvl, 'start'), 'val'), 1));
 	const numFmt =
 		enumValue(isStNumberFormat, getW(first(lvl, 'numFmt'), 'val'), 'w:numFmt') ?? 'decimal';
 	const lvlText = getW(first(lvl, 'lvlText'), 'val') ?? '';
@@ -74,7 +87,7 @@ export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 function parseAbstractNum(element: XmlElement): AbstractNumDefinition | undefined {
 	const id = getW(element, 'abstractNumId');
 	if (!id) return undefined;
-	const levels: Record<number, NumberingLevelDefinition> = {};
+	const levels: Record<number, NumberingLevelDefinition> = dictionary();
 	for (const lvl of children(element, 'lvl')) {
 		const parsed = parseNumberingLevel(lvl);
 		levels[parsed.level] = parsed;
@@ -86,12 +99,12 @@ function parseNum(element: XmlElement): NumDefinition | undefined {
 	const id = getW(element, 'numId');
 	if (!id) return undefined;
 	const abstractNumId = getW(first(element, 'abstractNumId'), 'val') ?? '';
-	const levelOverrides: Record<number, NumLevelOverride> = {};
+	const levelOverrides: Record<number, NumLevelOverride> = dictionary();
 	for (const override of children(element, 'lvlOverride')) {
 		const level = integer(getW(override, 'ilvl'), 0);
 		const entry: NumLevelOverride = {};
 		const startOverride = getW(first(override, 'startOverride'), 'val');
-		if (startOverride !== undefined) entry.startOverride = integer(startOverride, 1);
+		if (startOverride !== undefined) entry.startOverride = clampStart(integer(startOverride, 1));
 		const lvl = first(override, 'lvl');
 		if (lvl) entry.lvl = parseNumberingLevel(lvl);
 		if (Object.keys(entry).length) levelOverrides[level] = entry;
@@ -107,7 +120,7 @@ function parseNum(element: XmlElement): NumDefinition | undefined {
 export function parseNumberingCatalog(xml: string): NumberingCatalog {
 	const document = parseXml(xml);
 	const root = document.documentElement;
-	const abstractNums: Record<string, AbstractNumDefinition> = {};
+	const abstractNums = dictionary<AbstractNumDefinition>();
 	const warnings: string[] = [];
 	for (const element of byName(root, 'abstractNum')) {
 		const parsed = parseAbstractNum(element);
@@ -123,7 +136,7 @@ export function parseNumberingCatalog(xml: string): NumberingCatalog {
 				`Numbering definition abstractNum ${parsed.id} uses a picture bullet; picture bullets are not rendered.`,
 			);
 	}
-	const nums: Record<string, NumDefinition> = {};
+	const nums = dictionary<NumDefinition>();
 	for (const element of byName(root, 'num')) {
 		const parsed = parseNum(element);
 		if (parsed) nums[parsed.id] = parsed;
@@ -137,10 +150,10 @@ export function resolveNumberingLevel(
 	numId: string,
 	level: number,
 ): NumberingLevelDefinition | undefined {
-	const num = catalog.nums[numId];
+	const num = own(catalog.nums, numId);
 	if (!num) return undefined;
 	const override = num.levelOverrides?.[level];
-	const sourceAbstract = catalog.abstractNums[num.abstractNumId]?.levels[level];
+	const sourceAbstract = own(catalog.abstractNums, num.abstractNumId)?.levels[level];
 	// An omitted abstract start displays zero in Word; keep raw parser provenance unchanged.
 	const abstract =
 		sourceAbstract?.startWasOmitted && sourceAbstract.start === 1
