@@ -80,11 +80,14 @@ export function createPageLayoutView(
 	const filled = new Set<number>();
 	const pageNodes = new Map<number, HTMLElement>();
 
-	const zoom = () =>
-		Math.max(
-			0.1,
-			(ctx.grid()?.zoom() ?? ctx.workbook()?.sheets[ctx.activeSheet()]?.view.zoom ?? 100) / 100,
-		);
+	/** The user's zoom when set; otherwise the page fitted to the width, never above 100%. */
+	const zoom = () => {
+		const user = ctx.grid()?.zoom() ?? ctx.workbook()?.sheets[ctx.activeSheet()]?.view.zoom ?? 100;
+		if (user !== 100) return Math.max(0.1, user / 100);
+		const available = root.clientWidth - 20;
+		if (available <= 0) return 1;
+		return Math.max(0.1, Math.min(1, available / ((layout?.plan.paperWidth ?? 816) + PAD * 2)));
+	};
 	const sheetIndex = () => ctx.activeSheet();
 	const bandOptions = (): BandOptions | undefined =>
 		layout && ctx.workbook()
@@ -102,7 +105,6 @@ export function createPageLayoutView(
 			const blank = el(doc, 'div', 'xpl-blank');
 			blank.textContent = ctx.t('Click to add data');
 			content.append(blank);
-			return;
 		}
 		const inner = el(doc, 'div', 'xpl-inner');
 		inner.style.transform = `scale(${layout.scale})`;
@@ -134,7 +136,7 @@ export function createPageLayoutView(
 
 	const headings = (page: PageViewPage, node: HTMLElement) => {
 		const sheet = ctx.workbook()?.sheets[sheetIndex()];
-		if (!layout || !metrics || page.blank || sheet?.view.showHeaders === false) return;
+		if (!layout || !metrics || sheet?.view.showHeaders === false) return;
 		page.columns.forEach((col, i) => {
 			const cell = el(doc, 'div', 'xpl-colhdr');
 			cell.textContent = formatAddress({ row: 0, col }).replace(/\d+$/, '');
@@ -212,15 +214,6 @@ export function createPageLayoutView(
 		rectOf: (row, col) => {
 			if (!layout || !metrics) return undefined;
 			const n = pageOfCell(layout, row, col);
-			const page = layout.pages.find((p) => p.number === (n ?? 1));
-			if (page?.blank)
-				return {
-					...page.content,
-					x: page.content.x + PAD,
-					y: page.content.y + PAD,
-					width: 64,
-					height: 20,
-				};
 			const rect = n === undefined ? undefined : pageViewCellRect(layout, metrics, n, row, col);
 			return rect && { ...rect, x: rect.x + PAD, y: rect.y + PAD };
 		},
@@ -233,7 +226,6 @@ export function createPageLayoutView(
 		const sel = ctx.selection.get();
 		if (!layout || !metrics || sel.sheet !== sheetIndex()) return;
 		for (const page of layout.pages) {
-			if (page.blank) continue;
 			for (const range of sel.ranges) {
 				const rows = page.rows.filter((r) => r >= range.start.row && r <= range.end.row);
 				const cols = page.columns.filter((c) => c >= range.start.col && c <= range.end.col);
@@ -326,6 +318,13 @@ export function createPageLayoutView(
 			editor.begin(hit.row, hit.col, cellInputText(workbook, sheetIndex(), hit.row, hit.col));
 	});
 	root.addEventListener('scroll', () => fillVisible(), { passive: true });
+	const resize =
+		typeof ResizeObserver === 'undefined'
+			? undefined
+			: new ResizeObserver(
+					() => active && renderedKey !== `${zoom()}|${ctx.locale()}` && schedule(),
+				);
+	resize?.observe(root);
 	root.addEventListener('keydown', (event) => {
 		if (editor.editing || bandEditing || event.target !== root) return;
 		const sel = ctx.selection.get();
@@ -381,6 +380,7 @@ export function createPageLayoutView(
 		},
 		destroy() {
 			offSelection();
+			resize?.disconnect();
 			offModel();
 			root.remove();
 		},

@@ -101,3 +101,34 @@ test('Page Break Preview moves a manual break by dragging', async ({ page }) => 
 	await page.keyboard.press('Control+z');
 	await expect.poll(top).toBeLessThan(before + 5);
 });
+
+test('Page Layout view fills the page, aligns the rulers and fits narrow screens', async ({
+	page,
+}) => {
+	await seed(page);
+	await view(page, 'pageLayout').click();
+	const first = editor(page).locator('.xpl-page').first();
+	// Default Letter page: ten default columns across, blank cells included.
+	await expect(first.locator('.xpl-colhdr')).toHaveCount(10);
+	await expect(first.locator('.xpl-inner tr').first().locator('td')).toHaveCount(10);
+	const pageBox = (await first.boundingBox())!;
+	const ruler = (await editor(page).locator('.xpl-ruler-h .xpl-ruler-area').first().boundingBox())!;
+	expect(Math.abs(ruler.x - pageBox.x)).toBeLessThan(1.5);
+	expect(Math.abs(ruler.width - pageBox.width)).toBeLessThan(1.5);
+	const rulerV = (await editor(page)
+		.locator('.xpl-ruler-v .xpl-ruler-area')
+		.first()
+		.boundingBox())!;
+	expect(Math.abs(rulerV.width - 20)).toBeLessThan(1.5);
+	await page.setViewportSize({ width: 375, height: 812 });
+	await expect
+		.poll(() =>
+			editor(page)
+				.locator('.xpl-root')
+				.evaluate((n) => n.scrollWidth - n.clientWidth),
+		)
+		.toBeLessThanOrEqual(1);
+	const narrow = (await editor(page).locator('.xpl-page').first().boundingBox())!;
+	const root = (await editor(page).locator('.xpl-root').boundingBox())!;
+	expect(narrow.x + narrow.width).toBeLessThanOrEqual(root.x + root.width + 1);
+});

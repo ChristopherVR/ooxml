@@ -10,16 +10,21 @@ function rule(
 	axis: 'h' | 'v',
 	origin: number,
 	margin: number,
-	content: number,
+	marginEnd: number,
 	paper: number,
 	z: number,
 ): void {
-	const area = doc.createElement('div');
-	area.className = 'xpl-ruler-area';
-	const lead = origin + margin * z;
-	if (axis === 'h') area.style.cssText = `left:${lead}px;width:${content * z}px;top:0;bottom:0`;
-	else area.style.cssText = `top:${lead}px;height:${content * z}px;left:0;right:0`;
-	host.append(area);
+	// The white span is the whole sheet of paper; the margins are shaded on top of it.
+	const span = (from: number, length: number, cls: string) => {
+		const node = doc.createElement('div');
+		node.className = cls;
+		node.style.cssText =
+			axis === 'h' ? `left:${from}px;width:${length}px` : `top:${from}px;height:${length}px`;
+		host.append(node);
+	};
+	span(origin, paper * z, 'xpl-ruler-area');
+	span(origin, margin * z, 'xpl-ruler-margin');
+	span(origin + (paper - marginEnd) * z, marginEnd * z, 'xpl-ruler-margin');
 	const eighths = Math.floor(paper / EIGHTH);
 	for (let i = 0; i <= eighths; i++) {
 		const at = i * EIGHTH;
@@ -55,7 +60,7 @@ export function paintRulers(
 ): void {
 	horizontal.replaceChildren();
 	vertical.replaceChildren();
-	const { margins, paperWidth, paperHeight, contentWidth, contentHeight } = layout.plan;
+	const { margins, paperWidth, paperHeight } = layout.plan;
 	const cols = Math.max(...layout.pages.map((p) => p.slotCol)) + 1;
 	const rows = Math.min(50, Math.max(...layout.pages.map((p) => p.slotRow)) + 1);
 	const gap = PAGE_VIEW_GAP;
@@ -66,7 +71,7 @@ export function paintRulers(
 			'h',
 			(pad + c * (paperWidth + gap)) * z,
 			margins.left * 96,
-			contentWidth,
+			margins.right * 96,
 			paperWidth,
 			z,
 		);
@@ -77,7 +82,7 @@ export function paintRulers(
 			'v',
 			(pad + r * (paperHeight + gap)) * z,
 			margins.top * 96,
-			contentHeight,
+			margins.bottom * 96,
 			paperHeight,
 			z,
 		);
