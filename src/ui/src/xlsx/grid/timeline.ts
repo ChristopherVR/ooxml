@@ -119,7 +119,9 @@ export function paintTimeline(
 		el.style.left = `${group.x}px`;
 		el.style.width = `${group.w}px`;
 		el.style.height = `${TIMELINE_METRICS.groupHeight}px`;
-		el.textContent = group.label;
+		const text = h(doc, 'span');
+		text.textContent = group.label;
+		el.append(text);
 		track.append(el);
 	}
 	for (const cell of geometry.cells) {
