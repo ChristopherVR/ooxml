@@ -261,47 +261,9 @@ export function computeScatterDots(
 // Bubble
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** `c:bubbleScale` / `c:sizeRepresents` inputs to {@link computeBubbleRadius}. */
-export interface BubbleRadiusOptions {
-	/** `c:bubbleScale` (0-300%). PowerPoint's own default, 100, leaves the envelope unscaled. */
-	bubbleScale?: number;
-	/**
-	 * `c:sizeRepresents`. `'area'` (ECMA-376's own default) sizes bubbles so the
-	 * rendered AREA is proportional to the value (radius scales with the square
-	 * root of it); `'w'` sizes so the DIAMETER is proportional (radius scales
-	 * linearly). Defaults to `'w'` here so this raw helper's pre-existing
-	 * 3-argument callers stay byte-identical; `buildBubbles` resolves the
-	 * chart-wide `'area'` default itself before calling in.
-	 */
-	sizeRepresents?: 'area' | 'w';
-}
-
-/**
- * Radius of a bubble given its size value, the max size in the chart, and a
- * median radius derived from the plot area. When no size value is present the
- * bubble uses the median radius (scaled by `bubbleScale`); otherwise it scales
- * from 0.5x to 2x the median, linearly (`sizeRepresents: 'w'`) or by square
- * root (`'area'`, so the bubble's rendered AREA, not its diameter, tracks the
- * value).
- */
-export function computeBubbleRadius(
-	sizeVal: number | undefined,
-	maxBubble: number,
-	medianRadius: number,
-	options?: BubbleRadiusOptions,
-): number {
-	const scale = (options?.bubbleScale ?? 100) / 100;
-	if (sizeVal === undefined) {
-		return medianRadius * scale;
-	}
-	const denom = maxBubble > 0 ? maxBubble : 1,
-		magnitude = Math.abs(sizeVal),
-		ratio =
-			(options?.sizeRepresents ?? 'w') === 'area'
-				? Math.sqrt(magnitude) / Math.sqrt(denom)
-				: magnitude / denom;
-	return medianRadius * scale * 0.5 + ratio * medianRadius * scale * 1.5;
-}
+// Bubble sizing is shared with the Word and Excel painter: `ooxml-core/chart` (`bubble-radius`).
+export { computeBubbleRadius } from 'ooxml-core/chart';
+export type { BubbleRadiusOptions } from 'ooxml-core/chart';
 
 // Radar (spider) chart polar-coordinate geometry lives in its own module
 // (`chart-radar-geometry.ts`); re-exported here so this module's existing

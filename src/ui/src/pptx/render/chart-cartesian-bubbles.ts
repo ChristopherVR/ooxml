@@ -19,6 +19,8 @@ import {
 } from './chart-data-label-text';
 import { resolveDataPointFill } from './chart-datapoint-style';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
+import { maxBubbleSize, medianBubbleRadius } from 'ooxml-core/chart';
+
 import { buildScatterXAxisPlan } from './chart-scatter-x-axis';
 import type { PlotLayout, SvgCircle, SvgPrimitive, SvgText, ValueRange } from './chart-view-model';
 import {
@@ -64,8 +66,8 @@ export function buildBubbles(
 		xDomain = buildScatterXAxisPlan(chartData, layout).range,
 		// One size scale for the whole chart, so bubbles stay comparable across series.
 		allSizes = chartData.series.flatMap((series) => series.bubbleSizes ?? []),
-		maxBubble = allSizes.length > 0 ? Math.max(1, ...allSizes.map(Math.abs)) : 1,
-		medianRadius = Math.min(layout.plotWidth, layout.plotHeight) * 0.04,
+		maxBubble = maxBubbleSize(allSizes),
+		medianRadius = medianBubbleRadius(layout.plotWidth, layout.plotHeight),
 		// c:bubbleScale/c:sizeRepresents/c:showNegBubbles: PowerPoint's own
 		// defaults (100%, area-proportional, negative bubbles hidden) apply even
 		// when the chart authors none of the three `c:bubbleChart` elements.

@@ -134,6 +134,64 @@ function synthetic(): Record<string, PptxChartData> {
 		ofPie: base('ofPie'),
 		regionMap: base('regionMap'),
 		unknown: base('unknown'),
+		bubbleWidthNegative: base('bubble', {
+			bubbleOptions: { sizeRepresents: 'w', bubbleScale: 150, showNegativeBubbles: true },
+			series: [
+				{ name: 'A', values: [3, 5, 4, 8], xValues: [1, 2, 3, 4], bubbleSizes: [5, -10, 3, 8] },
+			],
+		}),
+		bubbleHiddenNegative: base('bubble', {
+			series: [
+				{ name: 'A', values: [3, 5, 4, 8], xValues: [1, 2, 3, 4], bubbleSizes: [5, -10, 3, 8] },
+			],
+		}),
+		stockStyled: base('stock', {
+			hiLowLines: { color: '#FF0000', width: 2 },
+			upDownBars: { upBars: { fillColor: '#00AA00' }, downBars: { fillColor: '#AA0000' } },
+			series: [
+				{ name: 'Open', values: [10, 11, 12, 11] },
+				{ name: 'High', values: [14, 15, 15, 14] },
+				{ name: 'Low', values: [9, 10, 10, 9] },
+				{ name: 'Close', values: [12, 10, 13, 12] },
+			],
+		}),
+		stockVolume: base('combo', {
+			series: [
+				{ name: 'Volume', values: [100, 200, 150, 120], seriesChartType: 'bar' },
+				{ name: 'Open', values: [10, 11, 12, 11], seriesChartType: 'stock', axisId: 2 },
+				{ name: 'High', values: [14, 15, 15, 14], seriesChartType: 'stock', axisId: 2 },
+				{ name: 'Low', values: [9, 10, 10, 9], seriesChartType: 'stock', axisId: 2 },
+				{ name: 'Close', values: [12, 10, 13, 12], seriesChartType: 'stock', axisId: 2 },
+			],
+		}),
+		treemapLevels: base('treemap', {
+			categories: ['a', 'b', 'c', 'd', 'e'],
+			categoryLevels: [
+				['a', 'b', 'c', 'd', 'e'],
+				['Fruit', '', 'Veg', '', 'Nuts'],
+			],
+			series: [{ name: 'Size', values: [30, 20, 10, 5, 8] }],
+		}),
+		treemapSeries: base('treemap', {
+			series: [
+				{ name: 'One', values: [30, 20, 10, 5] },
+				{ name: 'Two', values: [12, 8, 6, 4] },
+			],
+		}),
+		sunburstLevels: base('sunburst', {
+			categories: ['a', 'b', 'c', 'd', 'e'],
+			categoryLevels: [
+				['a', 'b', 'c', 'd', 'e'],
+				['Fruit', '', 'Veg', '', 'Nuts'],
+			],
+			series: [{ name: 'Size', values: [30, 20, 10, 5, 8] }],
+		}),
+		sunburstSeries: base('sunburst', {
+			series: [
+				{ name: 'One', values: [30, 20, 10, 5] },
+				{ name: 'Two', values: [12, 8, 6, 4] },
+			],
+		}),
 		legendRight: base('bar', { style: { hasLegend: true, legendPosition: 'r' } }),
 		legendTop: base('line', { style: { hasLegend: true, legendPosition: 't' } }),
 		noLegend: base('bar', { style: { hasLegend: false } }),

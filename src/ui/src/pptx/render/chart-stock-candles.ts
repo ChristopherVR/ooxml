@@ -19,6 +19,13 @@
  *
  * @module chart-stock-candles
  */
+import {
+	STOCK_DEFAULT_DOWN_FILL,
+	STOCK_DEFAULT_UP_FILL,
+	STOCK_DEFAULT_WICK_COLOR,
+	STOCK_TICK_WIDTH,
+	stockCandle,
+} from 'ooxml-core/chart';
 import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 
 import { seriesColor } from './chart-helpers';
@@ -32,11 +39,6 @@ import type {
 	ValueRange,
 } from './chart-view-model';
 import { valueToY } from './chart-view-model';
-
-/** PowerPoint's own default up/down bar fill when a stock chart carries no `c:upDownBars`. */
-const DEFAULT_UP_FILL = '#FFFFFF';
-const DEFAULT_DOWN_FILL = '#404040';
-const DEFAULT_WICK_COLOR = '#334155';
 
 /** The resolved price series for one candle group, in OOXML stock-series order. */
 export interface StockCandleSeries {
@@ -67,9 +69,7 @@ export function computeStockCandlePrimitives(
 	const { open, high, low, close, closeIndex } = seriesSet;
 	const primitives: SvgPrimitive[] = [];
 	const barGroupWidth = layout.plotWidth / Math.max(catCount, 1);
-	const candleWidth = barGroupWidth * 0.5;
-	const tickHalfWidth = Math.max(candleWidth * 0.4, 4);
-	const wickColor = chartData.hiLowLines?.color ?? DEFAULT_WICK_COLOR;
+	const wickColor = chartData.hiLowLines?.color ?? STOCK_DEFAULT_WICK_COLOR;
 	const wickWidth = chartData.hiLowLines?.width ?? 1;
 	const closeColor = seriesColor(
 		close,
@@ -81,57 +81,55 @@ export function computeStockCandlePrimitives(
 
 	for (let displayIndex = 0; displayIndex < catCount; displayIndex++) {
 		const sourceIndex = sourceIndices[displayIndex] ?? displayIndex;
-		const highVal = high.values[sourceIndex];
-		const lowVal = low.values[sourceIndex];
-		if (highVal === undefined || lowVal === undefined) {
+		const candle = stockCandle({
+			x:
+				xPositions?.[displayIndex] ??
+				layout.plotLeft + barGroupWidth * displayIndex + barGroupWidth / 2,
+			band: barGroupWidth,
+			high: high.values[sourceIndex],
+			low: low.values[sourceIndex],
+			close: close.values[sourceIndex],
+			open: open?.values[sourceIndex],
+			hasOpen: open !== undefined,
+			y: (value) => valueToY(value, range, layout.plotTop, layout.plotBottom),
+		});
+		if (!candle) {
 			continue;
 		}
-		const closeVal = close.values[sourceIndex];
-		const cx =
-			xPositions?.[displayIndex] ??
-			layout.plotLeft + barGroupWidth * displayIndex + barGroupWidth / 2;
-		const highY = valueToY(highVal, range, layout.plotTop, layout.plotBottom);
-		const lowY = valueToY(lowVal, range, layout.plotTop, layout.plotBottom);
-
 		primitives.push({
 			kind: 'line',
-			x1: cx,
-			y1: highY,
-			x2: cx,
-			y2: lowY,
+			x1: candle.wick.x,
+			y1: candle.wick.y1,
+			x2: candle.wick.x,
+			y2: candle.wick.y2,
 			stroke: wickColor,
 			strokeWidth: wickWidth,
 		} satisfies SvgLine);
-
-		const openVal = open?.values[sourceIndex];
-		if (open && openVal !== undefined && closeVal !== undefined) {
+		if (candle.body) {
 			// OHLC: a filled candle body from open to close, coloured by the
 			// chart's own up/down bar formatting (never a hardcoded palette).
-			const isUp = closeVal >= openVal;
-			const openY = valueToY(openVal, range, layout.plotTop, layout.plotBottom);
-			const closeY = valueToY(closeVal, range, layout.plotTop, layout.plotBottom);
-			const barProps = isUp ? upDownBars?.upBars : upDownBars?.downBars;
+			const barProps = candle.body.up ? upDownBars?.upBars : upDownBars?.downBars;
 			primitives.push({
 				kind: 'rect',
-				x: cx - candleWidth / 2,
-				y: Math.min(openY, closeY),
-				w: candleWidth,
-				h: Math.max(Math.abs(openY - closeY), 1),
-				fill: barProps?.fillColor ?? (isUp ? DEFAULT_UP_FILL : DEFAULT_DOWN_FILL),
+				x: candle.body.x,
+				y: candle.body.y,
+				w: candle.body.w,
+				h: candle.body.h,
+				fill:
+					barProps?.fillColor ?? (candle.body.up ? STOCK_DEFAULT_UP_FILL : STOCK_DEFAULT_DOWN_FILL),
 				part: { role: 'dataPoint', seriesIndex: closeIndex, pointIndex: sourceIndex },
 			} satisfies SvgRect);
-		} else if (closeVal !== undefined) {
+		} else if (candle.tick) {
 			// HLC: no body. A short tick to the right of the wick marks the close,
 			// coloured like the Close series itself (matches PowerPoint's legend).
-			const closeY = valueToY(closeVal, range, layout.plotTop, layout.plotBottom);
 			primitives.push({
 				kind: 'line',
-				x1: cx,
-				y1: closeY,
-				x2: cx + tickHalfWidth,
-				y2: closeY,
+				x1: candle.tick.x1,
+				y1: candle.tick.y,
+				x2: candle.tick.x2,
+				y2: candle.tick.y,
 				stroke: closeColor,
-				strokeWidth: 1.5,
+				strokeWidth: STOCK_TICK_WIDTH,
 			} satisfies SvgLine);
 		}
 	}
