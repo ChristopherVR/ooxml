@@ -1,6 +1,8 @@
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
+import { ownOverlay } from './overlay-owner';
+import type { OverlayOwner } from './overlay-owner';
 
 export interface FileInfoDialogShell {
 	overlay: HTMLElement;
@@ -14,11 +16,13 @@ export function openFileInfoDialogShell(
 	doc: Document,
 	t: Translator,
 	titleText: string,
+	/** The viewer: the dialog closes with it. */
+	owner?: OverlayOwner,
 ): FileInfoDialogShell {
 	const overlay = createEl(doc, 'div', 'pptxv-info-overlay');
 	const scrim = createEl(doc, 'button', 'pptxv-info-scrim');
 	const dialog = createEl(doc, 'div', 'pptxv-info-dialog');
-	const close = (): void => overlay.remove();
+	const close = ownOverlay(owner, () => overlay.remove());
 	scrim.type = 'button';
 	scrim.setAttribute('aria-label', t('pptx.common.close'));
 	scrim.addEventListener('click', close);

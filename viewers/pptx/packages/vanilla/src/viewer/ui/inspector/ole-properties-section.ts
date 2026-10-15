@@ -43,6 +43,7 @@ export function createOlePropertiesSection(
 		if (currentOle) {
 			openOleEditorDialog(doc, t, currentOle, {
 				onUpdateElement: (patch) => handlers.setOleContent(patch),
+				regions: handlers.getDialogRegions?.(),
 			});
 		}
 	});

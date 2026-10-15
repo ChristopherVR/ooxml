@@ -37,6 +37,7 @@ import type { ViewerChrome } from '../ui';
 import { rasterizePastedElementAsPicture } from '../ui/context-menu-format-actions';
 import { openHyperlinkEditDialog } from '../ui/hyperlink-edit-dialog';
 import { openPasteSpecialDialog } from '../ui/paste-special-dialog';
+import type { RegionSet } from '../ui/region-set';
 import { syncAlignmentGuides } from './alignment-guide-view';
 import { createChartQuickActionsOverlay } from './chart-quick-actions-overlay';
 import type { ChartQuickActionsOverlay } from './chart-quick-actions-overlay';
@@ -74,6 +75,8 @@ export interface EditorControllerDeps {
 	store: Store<ViewerState>;
 	getChrome(): ViewerChrome;
 	getTranslator(): Translator;
+	/** The viewer's dialog regions: the editor's dialogs close with the viewer. */
+	getDialogRegions?(): RegionSet;
 	getScale(): number;
 	getLivePatcher?(): import('ooxml-ui/pptx').CollaborationLivePatcher | undefined;
 	getHandler(): PptxHandler | null;
@@ -235,8 +238,12 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		if (!element) {
 			return;
 		}
-		openHyperlinkEditDialog(doc, deps.getTranslator(), element, (patch) =>
-			applyElementPatch(element.id, patch),
+		openHyperlinkEditDialog(
+			doc,
+			deps.getTranslator(),
+			element,
+			(patch) => applyElementPatch(element.id, patch),
+			deps.getDialogRegions?.(),
 		);
 	};
 
@@ -582,6 +589,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 						});
 					});
 				},
+				regions: deps.getDialogRegions?.(),
 			});
 		},
 	});

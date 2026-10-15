@@ -612,6 +612,7 @@ export function unmountChrome(
 	// The ribbon registered window/document listeners (group overflow): without this a destroyed
 	// viewer stays reachable from them, pinning the whole ribbon for the life of the page.
 	lifecycle.chrome.ribbon?.destroy();
+	lifecycle.chrome.dispose();
 	// Host-supplied renderers (replaced panels, File tab pages) must not outlive the chrome.
 	// On a rebuild they are parked and adopted by the new chrome when the renderer is unchanged.
 	if (options.keepRegions) {

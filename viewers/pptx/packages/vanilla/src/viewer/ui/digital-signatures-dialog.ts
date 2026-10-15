@@ -1,14 +1,17 @@
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendInfoDoneButton, openFileInfoDialogShell } from './file-info-dialog-shell';
+import type { OverlayOwner } from './overlay-owner';
 
 export function openDigitalSignaturesDialog(
 	doc: Document,
 	t: Translator,
 	hasSignatures: boolean,
 	signatureCount: number,
+	/** The viewer: the dialog closes with it. */
+	owner?: OverlayOwner,
 ): HTMLElement {
-	const shell = openFileInfoDialogShell(doc, t, t('pptx.digitalSignatures.title'));
+	const shell = openFileInfoDialogShell(doc, t, t('pptx.digitalSignatures.title'), owner);
 	const status = createEl(doc, 'div', `pptxv-info-notice${hasSignatures ? ' is-signed' : ''}`);
 	const icon = createEl(doc, 'b');
 	icon.textContent = hasSignatures ? '✓' : 'i';

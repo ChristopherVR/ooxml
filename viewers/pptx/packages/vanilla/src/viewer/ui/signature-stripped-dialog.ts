@@ -2,14 +2,17 @@ import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogFooter } from './dialog-footer';
 import { openFileInfoDialogShell } from './file-info-dialog-shell';
+import type { OverlayOwner } from './overlay-owner';
 
 /** Warn once when editing starts on a digitally signed deck. */
 export function openSignatureStrippedDialog(
 	doc: Document,
 	t: Translator,
 	signatureCount: number,
+	/** The viewer: the dialog closes with it. */
+	owner?: OverlayOwner,
 ): HTMLElement {
-	const shell = openFileInfoDialogShell(doc, t, t('pptx.digitalSignatures.strippedTitle'));
+	const shell = openFileInfoDialogShell(doc, t, t('pptx.digitalSignatures.strippedTitle'), owner);
 	const warning = createEl(doc, 'div', 'pptxv-info-notice is-warning');
 	const icon = createEl(doc, 'b');
 	icon.textContent = '!';

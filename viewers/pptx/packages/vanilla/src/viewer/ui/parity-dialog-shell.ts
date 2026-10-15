@@ -3,6 +3,7 @@ import type { ViewerDialogRegionId } from 'ooxml-ui/pptx';
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { createInspectorCheckbox, createInspectorRadio } from './inspector/controls-extra';
+import { ownOverlay } from './overlay-owner';
 import type { RegionHandle, RegionSet } from './region-set';
 
 export interface DialogShell {
@@ -21,10 +22,13 @@ export interface DialogShell {
 	close(): void;
 }
 
-/** The region a dialog's body can be replaced through. */
+/**
+ * The viewer's dialog regions: the dialog closes with the viewer, and when
+ * `region` is set a host can replace its body through it.
+ */
 export interface DialogRegionBinding {
 	regions: RegionSet;
-	region: ViewerDialogRegionId;
+	region?: ViewerDialogRegionId;
 }
 
 /** Accessible modal shell shared by the remaining React-parity dialogs. */
@@ -56,13 +60,13 @@ export function createParityDialogShell(
 	dialog.append(header, body, footer);
 	doc.body.append(backdrop, dialog);
 	let region: RegionHandle | null = null;
-	const close = (): void => {
+	const close = ownOverlay(binding?.regions, (): void => {
 		doc.removeEventListener('keydown', onKeyDown);
 		region?.destroy();
 		region = null;
 		backdrop.remove();
 		dialog.remove();
-	};
+	});
 	const onKeyDown = (event: KeyboardEvent): void => {
 		if (event.key === 'Escape') {
 			close();
@@ -73,7 +77,7 @@ export function createParityDialogShell(
 	closeButton.addEventListener('click', close);
 	queueMicrotask(() => closeButton.focus());
 	// The frame (backdrop, title, close button, Escape) stays; the host fills the body.
-	region = binding?.regions.mount(binding.region, dialog, { close }) ?? null;
+	region = binding?.region ? binding.regions.mount(binding.region, dialog, { close }) : null;
 	if (region) {
 		body.hidden = true;
 		footer.hidden = true;

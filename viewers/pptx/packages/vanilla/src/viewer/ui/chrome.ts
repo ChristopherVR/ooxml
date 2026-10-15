@@ -161,6 +161,8 @@ export interface ViewerChrome {
 	presentationTouchControls: PresentationTouchControls;
 	/** Auto-hiding floating show toolbar (desktop slide-show chrome). */
 	presentationToolbar: PresentationToolbar;
+	/** Release what the chrome observes (call once, when it is torn down). */
+	dispose(): void;
 	setLoading(loading: boolean): void;
 	setError(message: string | null): void;
 	setEmpty(empty: boolean): void;
@@ -432,12 +434,16 @@ export function buildViewerChrome(
 					(id) => options.onDismissCompatToast(id),
 					() => options.onDismissAllCompatToasts(),
 				);
+	// The observer keeps the notes strip (and through it the whole chrome) alive until disposed.
+	let stopNotesHeight: () => void = () => undefined;
 	if (compatToasts) {
 		root.appendChild(compatToasts.el);
 		// The notes strip is docked between the canvas and the status bar, so the
 		// stack has to clear its live height (it grows when the pane expands and
 		// reads 0 while hidden, e.g. presenting or on mobile).
-		observeElementHeight(notes.el, (height) => compatToasts.setBottomInset(height));
+		stopNotesHeight = observeElementHeight(notes.el, (height) =>
+			compatToasts.setBottomInset(height),
+		);
 	}
 
 	// "Run program" notices for a running show; same anchor as the compat
@@ -480,6 +486,9 @@ export function buildViewerChrome(
 		presentationTouchControls,
 		presentationToolbar,
 		regions,
+		dispose() {
+			stopNotesHeight();
+		},
 		setLoading(loading) {
 			loadingOverlay.hidden = !loading;
 			root.setAttribute('aria-busy', String(loading));

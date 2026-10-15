@@ -186,12 +186,14 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					});
 				},
 				current.customShows,
+				host.regions,
 			);
 		},
 		openHeaderFooter() {
 			openHeaderFooterDialog(host.doc, host.t, {
 				value: state().headerFooter,
 				onApply: (value) => host.editor.updateHeaderFooter(value),
+				regions: host.regions,
 			});
 		},
 		openCompare() {
@@ -286,8 +288,12 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 				({ id }) => id === current.selectedElementId,
 			);
 			if (element) {
-				openHyperlinkEditDialog(host.doc, host.t, element, (patch) =>
-					host.editor.applyElementPatch(element.id, patch),
+				openHyperlinkEditDialog(
+					host.doc,
+					host.t,
+					element,
+					(patch) => host.editor.applyElementPatch(element.id, patch),
+					host.regions,
 				);
 			}
 		},
@@ -309,6 +315,7 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					}
 					void host.enterPresentation();
 				},
+				regions: host.regions,
 			});
 		},
 	};

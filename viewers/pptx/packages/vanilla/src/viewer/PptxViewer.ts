@@ -424,6 +424,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			getChrome: () => this.lifecycle.chrome,
 			getTranslator: () => this.t,
+			getDialogRegions: () => this.getDialogRegions(),
 			getScale: () => this.renderer.effectiveScale(),
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler) => this.loading.setHandler(handler),
@@ -657,7 +658,12 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				!this.signatureWarningAcknowledged
 			) {
 				this.signatureWarningAcknowledged = true;
-				openSignatureStrippedDialog(this.doc, this.t, state.digitalSignatureCount);
+				openSignatureStrippedDialog(
+					this.doc,
+					this.t,
+					state.digitalSignatureCount,
+					this.getDialogRegions(),
+				);
 			}
 		});
 		// Fetch Google-served webfonts for referenced families that are neither
@@ -1285,6 +1291,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			custom: state.customProperties,
 			editable: state.editable,
 			onSave: (core, app, custom) => this.editor.updateDocumentProperties(core, app, custom),
+			owner: this.getDialogRegions(),
 		});
 	}
 
@@ -1301,6 +1308,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			canEmbed: descriptor.interactive,
 			unavailableKey: descriptor.disabledReasonKey,
 			onToggle: (enabled) => this.store.set({ embedFonts: enabled }),
+			owner: this.getDialogRegions(),
 		});
 	}
 
@@ -1314,6 +1322,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			this.t,
 			state.hasDigitalSignatures,
 			state.digitalSignatureCount,
+			this.getDialogRegions(),
 		);
 	}
 
@@ -1331,6 +1340,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			onRemove: () => {
 				this.store.set({ isPasswordProtected: false, presentationPassword: null });
 			},
+			owner: this.getDialogRegions(),
 		});
 	}
 

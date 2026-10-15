@@ -4,11 +4,14 @@ import type { Translator } from '../i18n';
 import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
 import { openFileInfoDialogShell } from './file-info-dialog-shell';
+import type { OverlayOwner } from './overlay-owner';
 
 export interface PasswordProtectionDialogOptions {
 	protected: boolean;
 	onSet(password: string): void;
 	onRemove(): void;
+	/** The viewer: the dialog closes with it. */
+	owner?: OverlayOwner;
 }
 
 export function openPasswordProtectionDialog(
@@ -16,7 +19,12 @@ export function openPasswordProtectionDialog(
 	t: Translator,
 	options: PasswordProtectionDialogOptions,
 ): HTMLElement {
-	const shell = openFileInfoDialogShell(doc, t, t('pptx.security.protectPresentation'));
+	const shell = openFileInfoDialogShell(
+		doc,
+		t,
+		t('pptx.security.protectPresentation'),
+		options.owner,
+	);
 	if (options.protected) {
 		const notice = createEl(doc, 'p', 'pptxv-info-protected');
 		notice.textContent = `✓ ${t('pptx.security.currentlyProtected')}`;
