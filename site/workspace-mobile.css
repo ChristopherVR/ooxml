@@ -158,7 +158,9 @@ body[data-chrome='collapsed'] .suite-layout {
 	}
 }
 @media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
-	body[data-drawer='true']:not([data-product]) .workspace-sidebar {
+	/* Animate only once the first layout is applied, so the drawer never slides in on load. */
+	body[data-shell-ready]:not([data-product])[data-drawer='true']:not([data-product])
+		.workspace-sidebar {
 		transition:
 			transform 0.18s ease-out,
 			visibility 0.18s;

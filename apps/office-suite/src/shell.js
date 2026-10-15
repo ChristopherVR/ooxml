@@ -67,6 +67,7 @@ export function mountShell(state) {
 	window.visualViewport?.addEventListener('resize', apply);
 	mountMoreMenu();
 	apply();
+	requestAnimationFrame(() => requestAnimationFrame(() => (document.body.dataset.shellReady = '')));
 	return apply;
 }
 
