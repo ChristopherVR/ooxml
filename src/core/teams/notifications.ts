@@ -27,7 +27,8 @@ export function shouldNotify(
 	status: PresenceStatus,
 ): boolean {
 	if (item.read || settings.level === 'off' || status === 'dnd') return false;
-	return settings.level === 'all' || item.kind === 'mention';
+	// A meeting reminder is one you asked for, so only Off and Do not disturb silence it.
+	return settings.level === 'all' || item.kind === 'mention' || item.kind === 'meeting';
 }
 
 export interface NotificationSettingsStore {

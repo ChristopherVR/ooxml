@@ -16,6 +16,13 @@ import { type MentionTarget, mentionTargetsFor } from './mentions';
 import { mentionDisplayText, promoteMentions } from './mention-text';
 import type { NotificationSettings } from './notifications';
 import { createFileActions } from './files';
+import { type ChatActions, createChatActions } from './chat-actions';
+import { type ChatView, type ContactView, chatViews, contactViews } from './chat-view';
+import { type MeetingActions, createMeetingActions } from './meeting-actions';
+import { createMeetingReminders } from './meeting-reminders';
+import { type Meeting, meetingCallKey, meetingVisibleTo } from './meetings';
+import { localZone } from './time-zone';
+import { shouldNotify } from './notifications';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
 import { uploadTeamsServerFile } from './server-file-storage';
@@ -81,13 +88,27 @@ export interface TeamsClientOptions extends Omit<WorkspaceOptions, 'doc'> {
 	/** Minutes without activity before showing Away (0 never; default 5). A saved choice wins. */
 	idleMinutes?: number;
 	fetch?: typeof fetch;
+	/** The clock, for reminders; tests pass their own. Default `Date.now`. */
+	now?: () => number;
+	/** How often to check for due meeting reminders, in ms. Default 15 seconds; 0 turns it off. */
+	reminderCheckMs?: number;
 }
 
 export type CallPhase = 'prejoin' | 'joining' | 'connected';
 
+export interface MeetingView extends Meeting {
+	/** Someone is in this meeting's call right now. */
+	live: boolean;
+	/** You organised it. */
+	mine: boolean;
+}
+
 export interface CallView {
+	/** The channel, chat or meeting call key the call belongs to. */
 	channelId: string;
 	channelName: string;
+	/** What the title shows: a channel (# name), a private chat or a scheduled meeting. */
+	kind: 'channel' | 'chat' | 'meeting';
 	phase: CallPhase;
 	/** What the pre-join screen will join with. */
 	prejoin: { audio: boolean; video: boolean };
@@ -107,6 +128,15 @@ export interface TeamsState {
 	/** Your chosen status and message with their expiry, idleness and the idle setting. */
 	presence: PresenceView;
 	channels: ChannelView[];
+	/** Your 1:1 and group chats, most recent first (the Chat app). */
+	chats: ChatView[];
+	/** Everybody on the workspace roster except you, online first (New chat, attendees). */
+	contacts: ContactView[];
+	/** Meetings in your calendar (organiser, attendee or channel meeting), not cancelled. */
+	meetings: MeetingView[];
+	/** The zone the calendar renders in: this device's. */
+	viewerZone: string;
+	/** The selected channel or chat. */
 	selectedChannelId: string;
 	channel: Channel | null;
 	messages: Message[];
@@ -148,7 +178,7 @@ export interface TeamsEvents {
 	notification: ActivityItem;
 }
 
-export interface TeamsClient {
+export interface TeamsClient extends ChatActions, MeetingActions {
 	getState: () => TeamsState;
 	/** Called after every state change (coalesced per tick); returns the unsubscribe function. */
 	subscribe: (listener: () => void) => () => void;
@@ -237,6 +267,8 @@ export interface TeamsClient {
 	 */
 	fileUrl: (attachment: { url?: string | undefined }) => Promise<string | undefined>;
 	openCall: (channelId?: string) => Promise<void>;
+	/** Open the pre-join screen of a scheduled meeting's call; a meeting can be joined early. */
+	joinMeeting: (meetingId: string) => Promise<boolean>;
 	setPrejoin: (next: Partial<{ audio: boolean; video: boolean }>) => Promise<void>;
 	joinCall: () => Promise<void>;
 	leaveCall: () => void;
@@ -268,10 +300,28 @@ function restoreDoc(storage: StorageLike | undefined, id: string): Y.Doc {
 export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 	const { storage, workspaceId } = options;
 	const doc = restoreDoc(storage, workspaceId);
-	const ws = createTeamsWorkspace({ ...options, doc });
+	const now = options.now ?? Date.now;
+	// Each private chat has its own document and local snapshot.
+	const chatDocs = new Map<string, Y.Doc>();
+	let onChatDocUpdate = (): void => undefined;
+	const chatDocKey = (id: string): string => STORAGE_DOC + workspaceId + ':chat:' + id;
+	const ws = createTeamsWorkspace({
+		...options,
+		doc,
+		createChatDoc: (chat) => {
+			const chatDoc = restoreDoc(storage, chatDocKey(chat.id).slice(STORAGE_DOC.length));
+			chatDocs.set(chat.id, chatDoc);
+			chatDoc.on('update', () => onChatDocUpdate());
+			return chatDoc;
+		},
+	});
 	const follows = createThreadFollows(
 		storage,
 		`teams:followed:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
+	);
+	const reminders = createMeetingReminders(
+		storage,
+		`teams:meeting-reminders:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
 	);
 	const feed = createActivityFeed(
 		storage,
@@ -318,6 +368,9 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 
 	interface ActiveCall {
 		channelId: string;
+		kind: 'channel' | 'chat' | 'meeting';
+		/** Title override for a meeting call. */
+		label?: string;
 		phase: CallPhase;
 		prejoin: { audio: boolean; video: boolean };
 		preview: StreamLike | null;
@@ -348,11 +401,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		};
 	};
 	const peers = (): PeerLike[] => ws.session.peers() as unknown as PeerLike[];
+	/** Channels and private chats: everything with messages. */
 	const visibleChannels = (): Channel[] => ws.chat.channels().filter((c) => !c.archived);
 
 	const compute = (): TeamsState => {
-		const channels = visibleChannels();
-		if (!channels.some((c) => c.id === selected)) {
+		const everything = visibleChannels();
+		const channels = everything.filter((c) => c.kind !== 'direct');
+		if (!everything.some((c) => c.id === selected)) {
 			activeDraftId = threadId = replyId = editId = '';
 			selected = channels[0]?.id ?? '';
 			if (selected) ws.setActiveChannel(selected);
@@ -362,11 +417,11 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		const messages = selected ? messagesOf(selected) : [];
 		const threads = channelThreads(messages);
 		const thread = threads.thread(threadId);
-		const channel = channels.find((c) => c.id === selected) ?? null;
+		const channel = everything.find((c) => c.id === selected) ?? null;
 		const activity = feed.update(
 			{
 				selfId: ws.user.id,
-				channels,
+				channels: everything,
 				messagesOf,
 				reactions: ws.chat.reactionEvents(),
 				pinsOf: ws.chat.pinned,
@@ -387,7 +442,21 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		);
 		const session = call?.session ?? null;
 		const participants = session?.participants() ?? [];
-		const channelName = channels.find((c) => c.id === call?.channelId)?.name ?? '';
+		const channelName = call?.label ?? everything.find((c) => c.id === call?.channelId)?.name ?? '';
+		const meetingList: MeetingView[] = ws.meetings
+			.list()
+			.filter((m) => meetingVisibleTo(m, ws.user.id))
+			.map((m) => ({
+				...m,
+				mine: m.organizerId === ws.user.id,
+				live:
+					call?.channelId === meetingCallKey(m.id) ||
+					p.some((peer) => peer.callRoom === callRoomId(workspaceId, meetingCallKey(m.id))),
+			}));
+		const chatCall =
+			call?.session && call.phase === 'connected'
+				? { inCallRoom: callRoomId(workspaceId, call.channelId) }
+				: {};
 		return {
 			status: ws.session.status,
 			mode: ws.config.mode,
@@ -406,6 +475,20 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 					? { inCallRoom: callRoomId(workspaceId, call.channelId) }
 					: {}),
 			}),
+			chats: chatViews({
+				chats: ws.chat.chats(),
+				messagesOf,
+				selfId: ws.user.id,
+				selfStatus: presenceView().effective,
+				lastRead,
+				peers: p,
+				workspaceId,
+				selectedId: selected,
+				...chatCall,
+			}),
+			contacts: contactViews(ws.roster.list(), ws.user.id, p),
+			meetings: meetingList,
+			viewerZone: localZone(),
 			selectedChannelId: selected,
 			channel,
 			messages,
@@ -415,7 +498,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			thread,
 			threadFollowed:
 				!!thread && follows.has(selected, thread.root.id, (id) => threads.thread(id)?.root.id),
-			followedThreads: follows.view(channels, messagesOf, ws.user.id),
+			followedThreads: follows.view(everything, messagesOf, ws.user.id),
 			activity: activity.items,
 			activityUnread: activity.unread,
 			notificationSettings: feed.settings.get(),
@@ -427,28 +510,33 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			),
 			drafts: drafts
 				.list()
-				.filter((draft) => channels.some((channel) => channel.id === draft.context.channelId)),
+				.filter((draft) => everything.some((channel) => channel.id === draft.context.channelId)),
 			files: filesOf(messages),
-			allFiles: allFilesOf(channels, messagesOf),
+			allFiles: allFilesOf(everything, messagesOf),
 			tabs: selected ? ws.tabs.tabs(selected) : [],
 			canUploadFiles: Boolean(
 				options.uploadFile || (ws.config.mode === 'server' && ws.config.syncUrl),
 			),
 			people,
-			mentionTargets: mentionTargetsFor(
-				messages,
-				people.flatMap((p) => (p.userId ? [{ id: p.userId, name: p.name }] : [])),
-				ws.user.id,
-			),
+			mentionTargets: ws.chat.chat(selected)
+				? mentionTargetsFor([], ws.chat.chat(selected)!.members, ws.user.id).filter(
+						(t) => t.kind === 'user',
+					)
+				: mentionTargetsFor(
+						messages,
+						people.flatMap((p) => (p.userId ? [{ id: p.userId, name: p.name }] : [])),
+						ws.user.id,
+					),
 			typing: selected ? typingNames(p, selected) : [],
 			replyingTo: messages.find((m) => m.id === replyId) ?? null,
 			editing: messages.find((m) => m.id === editId) ?? null,
 			searchQuery: query,
-			searchResults: searchMessages(channels, messagesOf, query),
+			searchResults: searchMessages(everything, messagesOf, query),
 			call: call
 				? {
 						channelId: call.channelId,
 						channelName,
+						kind: call.kind,
 						phase: call.phase,
 						prejoin: call.prejoin,
 						preview: call.preview,
@@ -481,6 +569,12 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
 			storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
 			storage.setItem(selectionKey, selected);
+			const mine = new Set(ws.chat.chats().map((c) => c.id));
+			for (const [id, chatDoc] of chatDocs) {
+				// A chat you left is dropped from this device; the rest keep a local copy.
+				const text = mine.has(id) ? toBase64(Y.encodeStateAsUpdate(chatDoc)) : '';
+				if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(chatDocKey(id), text);
+			}
 		} catch {
 			// Blocked or over quota: the convenience is lost, the app keeps working.
 		}
@@ -491,6 +585,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		saveTimer = setTimeout(saveSnapshot, 800);
 	};
 	doc.on('update', scheduleSave);
+	onChatDocUpdate = scheduleSave;
 
 	presence = createPresenceController({
 		storage,
@@ -609,6 +704,40 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			markThreadRead(message.channelId, thread.root.id);
 	};
 
+	const selectId = (id: string): void => {
+		if (id === selected) return;
+		selected = id;
+		activeDraftId = threadId = replyId = editId = '';
+		ws.setActiveChannel(id);
+		scheduleSave();
+	};
+	const chatActions = createChatActions({
+		ws,
+		select: (id) => (selectId(id), refresh()),
+		notice,
+		refresh,
+	});
+	const meetingActions: MeetingActions = createMeetingActions({
+		ws,
+		meetings: ws.meetings,
+		notice,
+		refresh,
+		now,
+	});
+	const checkReminders = (): void => {
+		if (destroyed) return;
+		const settings = feed.settings.get();
+		const status = presenceView().effective;
+		const due = reminders.due(ws.meetings.list(), ws.user.id, now(), (item) =>
+			shouldNotify(item, settings, status),
+		);
+		for (const item of due) notices.emit('notification', item);
+	};
+	const reminderMs = options.reminderCheckMs ?? 15_000;
+	const reminderTimer = reminderMs > 0 ? setInterval(checkReminders, reminderMs) : undefined;
+	(reminderTimer as { unref?: () => void } | undefined)?.unref?.();
+	checkReminders();
+
 	const leave = (): void => {
 		const active = call;
 		if (!active) return;
@@ -626,6 +755,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		on: (event, listener) => notices.on(event, listener),
 		workspace: ws,
+		...chatActions,
+		...meetingActions,
 		addTab(name, content, options) {
 			if (destroyed) return null;
 			const tab = ws.tabs.add(selected, name, content);
@@ -669,13 +800,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				return Boolean(message);
 			},
 		}),
-		select: act((id) => {
-			if (id === selected) return;
-			selected = id;
-			activeDraftId = threadId = replyId = editId = '';
-			ws.setActiveChannel(id);
-			scheduleSave();
-		}),
+		select: act(selectId),
 		createChannel: act((name, topic = '') => {
 			const channel = ws.chat.createChannel({ name, topic });
 			if (channel) {
@@ -839,8 +964,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		toggleReaction: act((id, emoji) => {
 			const mine = find(id)?.reactions[emoji]?.includes(ws.user.id);
-			if (mine) ws.chat.unreact(id, emoji);
-			else ws.chat.react(id, emoji);
+			if (mine) ws.chat.unreact(id, emoji, selected);
+			else ws.chat.react(id, emoji, selected);
 		}),
 		notifyTyping() {
 			if (!selected) return;
@@ -897,6 +1022,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			}
 			call = {
 				channelId,
+				kind: ws.chat.isChat(channelId) ? 'chat' : 'channel',
 				phase: 'prejoin',
 				prejoin: { audio: true, video: true },
 				preview: null,
@@ -907,6 +1033,35 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			refresh();
 			await startPreview();
 			refresh();
+		},
+		async joinMeeting(meetingId) {
+			const meeting = ws.meetings.get(meetingId);
+			if (!meeting || meeting.cancelled || !meetingVisibleTo(meeting, ws.user.id)) {
+				notice('This meeting is not available');
+				return false;
+			}
+			const key = meetingCallKey(meeting.id);
+			if (call?.channelId === key) return true;
+			leave();
+			// The call's chat panel shows the meeting chat (or the channel of a channel meeting).
+			const conversation = meeting.chatId ?? meeting.channelId;
+			if (conversation && visibleChannels().some((c) => c.id === conversation))
+				selectId(conversation);
+			call = {
+				channelId: key,
+				kind: 'meeting',
+				label: meeting.title,
+				phase: 'prejoin',
+				prejoin: { audio: true, video: true },
+				preview: null,
+				session: null,
+				startedAt: null,
+				off: [],
+			};
+			refresh();
+			await startPreview();
+			refresh();
+			return true;
 		},
 		async setPrejoin(next) {
 			if (!call || call.phase !== 'prejoin') return;
@@ -968,6 +1123,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			transfers?.destroy();
 			clearTimeout(typingTimer);
 			clearTimeout(saveTimer);
+			clearInterval(reminderTimer);
 			presence?.destroy();
 			try {
 				storage?.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));

@@ -95,8 +95,9 @@ export function channelViews(input: {
 			const unread =
 				c.id === selectedId
 					? 0
-					: messagesOf(c.id).filter((m) => !m.deleted && m.authorId !== selfId && m.ts > read)
-							.length;
+					: messagesOf(c.id).filter(
+							(m) => !m.deleted && !m.system && m.authorId !== selfId && m.ts > read,
+						).length;
 			const room = callRoomId(workspaceId, c.id);
 			return {
 				id: c.id,

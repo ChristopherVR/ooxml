@@ -8,7 +8,7 @@ import { mentionsUser } from './mentions';
 import type { PinnedMessage } from './pins';
 import { channelThreads } from './threads';
 
-export type ActivityKind = 'mention' | 'reply' | 'reaction' | 'pin';
+export type ActivityKind = 'mention' | 'reply' | 'reaction' | 'pin' | 'meeting';
 
 export interface ActivityItem {
 	/** Stable across recomputation, so read state and notifications can refer to it. */
@@ -27,6 +27,8 @@ export interface ActivityItem {
 	preview: string;
 	/** The emoji, for reactions. */
 	emoji?: string;
+	/** The conversation is a private chat rather than a channel. */
+	chat?: boolean;
 	read: boolean;
 }
 
@@ -78,6 +80,7 @@ export function deriveActivity(input: ActivityInput): ActivityItem[] {
 			names.set(message.authorId, message.authorName);
 			if (message.deleted || message.authorId === selfId) continue;
 			const base = {
+				...(channel.kind === 'direct' ? { chat: true } : {}),
 				channelId: channel.id,
 				channelName: channel.name,
 				messageId: message.id,
@@ -104,6 +107,7 @@ export function deriveActivity(input: ActivityInput): ActivityItem[] {
 			items.push({
 				id,
 				kind: 'pin',
+				...(channel.kind === 'direct' ? { chat: true } : {}),
 				channelId: channel.id,
 				channelName: channel.name,
 				messageId: pin.message.id,
@@ -125,6 +129,7 @@ export function deriveActivity(input: ActivityInput): ActivityItem[] {
 		items.push({
 			id,
 			kind: 'reaction',
+			...(channel.kind === 'direct' ? { chat: true } : {}),
 			channelId: channel.id,
 			channelName: channel.name,
 			messageId: message.id,
@@ -164,14 +169,17 @@ export function filterActivity(
 
 /** The line a feed row shows, like Teams: who did what. */
 export function describeActivity(item: ActivityItem): string {
+	const where = item.chat ? item.channelName : `# ${item.channelName}`;
 	switch (item.kind) {
 		case 'mention':
-			return `${item.actorName} mentioned you in # ${item.channelName}`;
+			return `${item.actorName} mentioned you in ${where}`;
 		case 'reply':
-			return `${item.actorName} replied in # ${item.channelName}`;
+			return `${item.actorName} replied in ${where}`;
 		case 'reaction':
 			return `${item.actorName} reacted ${item.emoji ?? ''} to your message`.replace('  ', ' ');
 		case 'pin':
-			return `${item.actorName} pinned a message in # ${item.channelName}`;
+			return `${item.actorName} pinned a message in ${where}`;
+		case 'meeting':
+			return `${item.channelName} starts soon`;
 	}
 }

@@ -57,6 +57,10 @@ export interface ChatStore {
 			attachments?: Attachment[];
 			/** Who may be mentioned; the `@name` runs of the text that match are stored as mentions. */
 			mentions?: readonly MentionTarget[];
+			/** Mark the row as an app notice (members added or removed). */
+			system?: boolean;
+			/** Announce a scheduled meeting with a card (the text is the fallback for old clients). */
+			meetingId?: string;
 		},
 	) => Message | null;
 	/** Idempotent root creation. Concurrent peers use one stable message id; existing rows survive. */
@@ -77,8 +81,9 @@ export interface ChatStore {
 	pinned: (channelId: string) => PinnedMessage[];
 	/** Every live reaction with the time it was added (0 for rows written by older clients). */
 	reactionEvents: () => ReactionEvent[];
-	react: (messageId: string, emoji: string) => void;
-	unreact: (messageId: string, emoji: string) => void;
+	/** `channelId` routes to a private chat's own document; channels ignore it. */
+	react: (messageId: string, emoji: string, channelId?: string) => void;
+	unreact: (messageId: string, emoji: string, channelId?: string) => void;
 	/** Fires after any channel, message or reaction change (local or remote), coalesced per tick. */
 	observe: (listener: () => void) => () => void;
 	destroy: () => void;
@@ -125,6 +130,10 @@ function readMessage(
 		reactions,
 	};
 	if (isValidId(replyTo)) message.replyTo = replyTo;
+	if (raw.get('system') === true) message.system = true;
+	const meetingId = raw.get('meetingId');
+	if (typeof meetingId === 'string' && /^[\w-]{1,64}$/u.test(meetingId) && !deleted)
+		message.meetingId = meetingId;
 	const tabId = raw.get('tabId');
 	if (typeof tabId === 'string' && !message.replyTo && tabConversationId(tabId) === id)
 		message.tabId = tabId;
@@ -219,7 +228,7 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 			});
 			return out.sort((a, b) => a.ts - b.ts || a.id.localeCompare(b.id));
 		},
-		post(channelId, { text, replyTo, attachments, mentions }) {
+		post(channelId, { text, replyTo, attachments, mentions, system, meetingId }) {
 			if (!isChannelId(channelId) || !channelMap.has(channelId)) return null;
 			const clean = sanitizeMessageText(text);
 			const files = sanitizeAttachments(attachments);
@@ -232,6 +241,8 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 				m.set('text', clean);
 				m.set('ts', Date.now());
 				m.set('deleted', false);
+				if (system) m.set('system', true);
+				if (meetingId && /^[\w-]{1,64}$/u.test(meetingId)) m.set('meetingId', meetingId);
 				if (replyTo && isValidId(replyTo)) m.set('replyTo', replyTo);
 				if (files.length) m.set('attachments', files);
 				const found = resolveMentions(clean, mentions ?? []);

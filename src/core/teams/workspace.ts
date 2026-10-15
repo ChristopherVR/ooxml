@@ -14,6 +14,10 @@ import { createWebSocketTransport } from '../collab/websocket-transport';
 import type { WebSocketConstructor } from '../collab/websocket-transport';
 import { type CallSession, type MediaDevicesLike, createCallSession } from './call';
 import { type ChatStore, createChatStore } from './chat';
+import { type ChatRooms, createChatRooms } from './chat-rooms';
+import { type ChatInfo, chatRoomId } from './chats';
+import { type MeetingStore, createMeetingStore } from './meetings';
+import { type Roster, createRoster } from './roster';
 import { createTabStore, type TabStore } from './tabs';
 import {
 	type LegacyAvailability,
@@ -61,12 +65,18 @@ export interface WorkspaceOptions {
 	mediaDevices?: MediaDevicesLike;
 	createPeerConnection?: PeerConnectionFactory;
 	createStream?: StreamFactory;
+	/** A document for a private chat, for example restored from a local snapshot. */
+	createChatDoc?: (chat: ChatInfo) => Y.Doc;
 }
 
 export interface TeamsWorkspace {
 	readonly user: { id: string; name: string };
 	readonly session: CollabSession<TeamsPresence>;
-	readonly chat: ChatStore;
+	/** Channels and private chats behind one store; chats sync in rooms of their own. */
+	readonly chat: ChatRooms;
+	readonly roster: Roster;
+	/** Scheduled meetings, shared through the workspace document. */
+	readonly meetings: MeetingStore;
 	readonly tabs: TabStore;
 	readonly config: TeamsServerConfig;
 	/** A call for a channel; call `join()` on it. One call per channel per workspace. */
@@ -122,7 +132,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 				})
 			: createBroadcastSignaling({ roomId, ...(bcCtor ? { BroadcastChannel: bcCtor } : {}) });
 
-	let chat!: ChatStore;
+	let channels!: ChatStore;
 	const session = createCollabSession<TeamsPresence>({
 		roomId: options.workspaceId,
 		...(options.doc ? { doc: options.doc } : {}),
@@ -133,20 +143,55 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		teardown: true,
 		// Any writer may seed the default channel; the fixed id makes concurrent seeds converge.
 		onReady: () => {
-			if (chat.channels().length === 0)
-				chat.createChannel({ id: 'general', name: 'General', topic: 'Company-wide announcements' });
+			if (channels.channels().length === 0)
+				channels.createChannel({
+					id: 'general',
+					name: 'General',
+					topic: 'Company-wide announcements',
+				});
 		},
 	});
-	chat = createChatStore(session.doc, user);
+	channels = createChatStore(session.doc, user);
 	const tabs = createTabStore(session.doc, user, (id) =>
-		chat.channels().some((c) => c.id === id && !c.archived),
+		channels.channels().some((c) => c.id === id && !c.archived),
 	);
+	const roster = createRoster(session.doc, user);
+	roster.register();
+	const meetings = createMeetingStore(session.doc, user);
+	// A private chat syncs in a room of its own. The server admits only the members listed in the
+	// chat document, so the user id and the first member list ride along as query parameters.
+	const chat = createChatRooms({
+		doc: session.doc,
+		base: channels,
+		user,
+		...(options.createChatDoc ? { createDoc: options.createChatDoc } : {}),
+		openRoom: (info, doc) => {
+			const roomId = chatRoomId(options.workspaceId, info.id);
+			const members = info.members.map((m) => m.id).join(',');
+			const transport: Transport =
+				config.mode === 'server' && config.syncUrl
+					? createWebSocketTransport({
+							url: endpointUrl(config.syncUrl, roomId, config.token, { user: user.id, members }),
+							...(wsCtor ? { WebSocket: wsCtor } : {}),
+						})
+					: createBroadcastTransport({ roomId, ...(bcCtor ? { BroadcastChannel: bcCtor } : {}) });
+			const chatSession = createCollabSession({
+				roomId,
+				doc,
+				provider: transportProvider({ transport }),
+				user: { name: user.name },
+			});
+			return { destroy: () => chatSession.destroy() };
+		},
+	});
 
 	const calls = new Map<string, CallSession>();
 	return {
 		user,
 		session,
 		chat,
+		roster,
+		meetings,
 		tabs,
 		config,
 		call(channelId) {

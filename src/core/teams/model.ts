@@ -36,6 +36,10 @@ export interface Message {
 	ts: number;
 	editedAt?: number;
 	deleted: boolean;
+	/** A notice the app wrote (someone joined or left a chat), not something a person typed. */
+	system?: boolean;
+	/** A meeting card: the scheduled meeting this message announces. */
+	meetingId?: string;
 	/** Id of the thread root this message answers. */
 	replyTo?: string;
 	/** Shared tab discussed by this root post. Replies use replyTo as usual. */

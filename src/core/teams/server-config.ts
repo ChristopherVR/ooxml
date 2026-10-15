@@ -131,9 +131,17 @@ export function parseServerConfig(
 }
 
 /** `base/room?token=...` for a sync or signaling endpoint. The room is URL-encoded. */
-export function endpointUrl(base: string, roomId: string, token?: string): string {
+export function endpointUrl(
+	base: string,
+	roomId: string,
+	token?: string,
+	params: Record<string, string> = {},
+): string {
 	const url = `${trimTrailingSlashes(base)}/${encodeURIComponent(roomId)}`;
-	return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+	const query = Object.entries(token ? { token, ...params } : params)
+		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+		.join('&');
+	return query ? `${url}?${query}` : url;
 }
 
 /** The local-only config: no server, same-browser tabs. */

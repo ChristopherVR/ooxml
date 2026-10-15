@@ -24,6 +24,7 @@ const KIND_ICON: Record<ActivityKind, string> = {
 	reply: 'reply',
 	reaction: 'smile',
 	pin: 'pin',
+	meeting: 'calendar',
 };
 const EMPTY: Record<ActivityFilter, string> = {
 	all: 'No activity yet. Mentions, replies, reactions and pinned messages show up here.',
