@@ -59,11 +59,11 @@ describe('Excel stock chart', () => {
 		const svg = draw(wb, stock);
 		const candles = svg.match(/<g data-chart-series="3"[\s\S]*?<\/g>/g)!;
 		expect(candles).toHaveLength(4);
-		// Closes 12, 13, 11, 13 against opens 10, 11, 12, 11: the third candle is a down bar.
+		// The third candle is a down bar, painted with the chart's own downBars fill (dk1 65%).
 		expect(candles.map((g) => /<rect [^>]*fill="(#[0-9A-F]+)"/.exec(g)![1])).toEqual([
 			'#FFFFFF',
 			'#FFFFFF',
-			'#404040',
+			'#595959',
 			'#FFFFFF',
 		]);
 		expect(svg).toContain('>Prices<');

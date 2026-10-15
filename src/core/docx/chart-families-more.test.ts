@@ -46,7 +46,7 @@ describe('Word stock chart', () => {
 		expect(candles.map((g) => /<rect [^>]*fill="(#[0-9A-F]+)"/.exec(g)![1])).toEqual([
 			'#FFFFFF',
 			'#FFFFFF',
-			'#404040',
+			'#595959',
 			'#FFFFFF',
 		]);
 		for (const name of ['Open', 'High', 'Low', 'Close']) expect(result.svg).toContain(`>${name}<`);

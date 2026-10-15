@@ -8,6 +8,7 @@ import { autoSeriesColor } from './chart-colors';
 import { niceScale, formatAxisValue } from './chart-scale';
 import type { ChartGroupView, ChartViewModel, ValueAxisView } from './chart-view';
 import { valueExtent } from './chart-value-axis';
+import { stockView } from './chart-view-stock';
 import { seriesView, type ChartRefValue, type SeriesContext } from './chart-view-series';
 import type { ChartSummary, ChartSummarySeries } from './summary';
 
@@ -51,6 +52,7 @@ export function chartExtraView<S extends ChartSummarySeries>(
 			series,
 			secondary: group.secondary,
 		};
+		if (group.chartType === 'stock') view.stock = stockView(group.stock, ctx);
 		if (group.barGapWidth !== undefined) view.barGapWidth = group.barGapWidth;
 		if (group.barOverlap !== undefined) view.barOverlap = group.barOverlap;
 		groups.push(view);

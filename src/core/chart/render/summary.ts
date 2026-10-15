@@ -5,11 +5,12 @@
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
 import type { BubbleRadiusOptions } from '../bubble-radius';
 import type { ParentLabelLayout } from '../hierarchy';
+import type { ChartShapeProperties } from '../model-series';
 import type { HistogramOptions } from '../histogram-binning';
 import type { ChartStyleDefinition } from '../style-definition';
 import type { WaterfallOptions } from '../waterfall';
 
-/** The chart families a summary records; the painter draws all but bubble, stock and surface. */
+/** The chart families a summary records; the painter draws all but surface. */
 export type ChartSummaryType =
 	| 'bar'
 	| 'column'
@@ -53,7 +54,16 @@ export interface ChartSummarySeries {
 }
 
 /** Chart families a combination chart can layer over its first group. */
-export type ChartSummaryGroupType = 'bar' | 'column' | 'line' | 'area';
+export type ChartSummaryGroupType = 'bar' | 'column' | 'line' | 'area' | 'stock';
+
+/** The formatting of a stock group: its `c:hiLowLines`, `c:upBars`, `c:downBars` and bar gap. */
+export interface StockSummaryStyle {
+	hiLowLines?: ChartShapeProperties;
+	upBars?: ChartShapeProperties;
+	downBars?: ChartShapeProperties;
+	/** `c:upDownBars/c:gapWidth` in percent. */
+	gapWidth?: number;
+}
 
 /**
  * A further chart group of a combination chart (`c:lineChart` beside a `c:barChart`): it shares the
@@ -65,6 +75,8 @@ export interface ChartSummaryGroup {
 	barGapWidth?: number;
 	barOverlap?: number;
 	series: ChartSummarySeries[];
+	/** Stock groups: their line and bar formatting. */
+	stock?: StockSummaryStyle;
 	/** Plotted against its own (secondary) value axis, drawn at the right edge. */
 	secondary: boolean;
 }
@@ -104,6 +116,8 @@ export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries>
 	waterfall?: WaterfallOptions;
 	/** Histogram: the binning of its `cx:layoutPr`. */
 	histogram?: HistogramSummaryOptions;
+	/** Stock: the formatting of its `c:stockChart`. */
+	stock?: StockSummaryStyle;
 	/** Bubble: the display options of its `c:bubbleChart`. */
 	bubble?: BubbleSummaryOptions;
 	/** Treemap and sunburst: the category levels of its `cx:strDim`. */

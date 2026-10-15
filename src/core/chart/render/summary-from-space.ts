@@ -11,6 +11,7 @@ import type {
 	ChartSummaryGroup,
 	ChartSummarySeries,
 	ChartSummaryType,
+	StockSummaryStyle,
 } from './summary';
 
 const solidColor = (fill: DrawingFill | undefined): DrawingColor | undefined =>
@@ -91,10 +92,21 @@ function valueAxisId(chartSpace: ChartSpace, axisIds: readonly number[]): number
 	);
 }
 
+/** The line and bar formatting a stock group writes (`c:hiLowLines`, `c:upBars`, `c:downBars`). */
+function stockStyle(group: ChartSpace['plotArea']['groups'][number]): StockSummaryStyle {
+	return {
+		...(group.hiLowLinesSpPr ? { hiLowLines: group.hiLowLinesSpPr } : {}),
+		...(group.upBars?.spPr ? { upBars: group.upBars.spPr } : {}),
+		...(group.downBars?.spPr ? { downBars: group.downBars.spPr } : {}),
+		...(group.upDownBarsGapWidth === undefined ? {} : { gapWidth: group.upDownBarsGapWidth }),
+	};
+}
+
 /**
  * The groups after the first that a combination chart layers over it. Bar, column, line and area
  * groups are kept (bar groups only over a vertical first group); a group on another value axis is
- * secondary. Pie, scatter, radar, stock and surface groups are not combined.
+ * secondary. A stock group is kept over a column first group (volume stock charts). Pie, scatter,
+ * radar and surface groups are not combined.
  */
 function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): ChartSummaryGroup[] {
 	const [first, ...rest] = chartSpace.plotArea.groups;
@@ -102,8 +114,11 @@ function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): Chart
 	const primary = valueAxisId(chartSpace, first.axisIds);
 	const out: ChartSummaryGroup[] = [];
 	for (const group of rest) {
-		if (group.is3D || !['bar', 'line', 'area'].includes(group.kind)) continue;
-		const type = group.kind === 'bar' ? 'column' : (group.kind as 'line' | 'area');
+		// A stock group is layered over volume columns (volume-open-high-low-close).
+		const stockOverColumns = group.kind === 'stock' && firstType === 'column';
+		if (group.is3D || !(['bar', 'line', 'area'].includes(group.kind) || stockOverColumns)) continue;
+		const type: ChartSummaryGroup['chartType'] =
+			group.kind === 'bar' ? 'column' : (group.kind as 'line' | 'area' | 'stock');
 		const entry: ChartSummaryGroup = {
 			chartType: type,
 			series: group.series.map((source) => chartSummarySeries(source, type)),
@@ -111,6 +126,7 @@ function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): Chart
 		};
 		if (group.grouping && GROUPINGS.has(group.grouping))
 			entry.grouping = group.grouping as NonNullable<ChartSummaryGroup['grouping']>;
+		if (type === 'stock') entry.stock = stockStyle(group);
 		if (type === 'column') {
 			if (group.gapWidth !== undefined) entry.barGapWidth = group.gapWidth;
 			if (group.overlap !== undefined) entry.barOverlap = group.overlap;
@@ -143,6 +159,7 @@ export function chartSummaryFromSpace(
 	};
 	const combined = extraGroups(chartSpace, chartType);
 	if (combined.length) summary.extraGroups = combined;
+	if (chartType === 'stock' && group) summary.stock = stockStyle(group);
 	if (chartType === 'bubble' && group) {
 		const sizeRepresents = group.sizeRepresents === 'w' ? 'w' : 'area';
 		summary.bubble = {

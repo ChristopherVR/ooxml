@@ -55,6 +55,8 @@ export interface StockCandleInput {
 	/** Present for OHLC. */
 	open?: Value;
 	hasOpen: boolean;
+	/** Share of the band a body fills (default 0.5, a gap width of 100). */
+	bodyShare?: number;
 	/** Value to pixel. */
 	y: (value: number) => number;
 }
@@ -72,7 +74,7 @@ const present = (v: Value): v is number => v !== null && v !== undefined;
 export function stockCandle(input: StockCandleInput): StockCandle | undefined {
 	const { high, low, close, open, x, band, y } = input;
 	if (!present(high) || !present(low)) return undefined;
-	const candleWidth = band * 0.5;
+	const candleWidth = band * (input.bodyShare ?? 0.5);
 	const candle: StockCandle = { wick: { x, y1: y(high), y2: y(low) } };
 	if (input.hasOpen && present(open) && present(close)) {
 		const openY = y(open);

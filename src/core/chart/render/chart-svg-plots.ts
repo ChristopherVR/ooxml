@@ -14,11 +14,19 @@ interface Layer {
 }
 
 /** Areas sit behind bars, bars behind lines, as Office stacks the groups of a combination. */
-const RANK: Record<string, number> = { area: 0, bar: 1, column: 1, histogram: 1, line: 2 };
+const RANK: Record<string, number> = {
+	area: 0,
+	bar: 1,
+	column: 1,
+	histogram: 1,
+	line: 2,
+	stock: 2,
+};
 
 function paint(layer: Layer, out: string[]): void {
 	const { model, frame } = layer;
-	if (model.type === 'bar' || model.type === 'column' || model.type === 'histogram')
+	if (model.type === 'stock') stockBars(model, frame, out);
+	else if (model.type === 'bar' || model.type === 'column' || model.type === 'histogram')
 		bars(model, frame, out, plotted(model));
 	else linesAndAreas(model, frame, out);
 }
@@ -49,6 +57,8 @@ export function cartesianSvg(model: ChartViewModel, area: Rect): string {
 			series: group.series,
 			horizontal: false,
 		};
+		if (group.stock) grouped.stock = group.stock;
+		else delete grouped.stock;
 		if (group.barGapWidth !== undefined) grouped.barGapWidth = group.barGapWidth;
 		else delete grouped.barGapWidth;
 		if (group.barOverlap !== undefined) grouped.barOverlap = group.barOverlap;

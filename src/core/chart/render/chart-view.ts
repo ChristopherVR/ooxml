@@ -1,5 +1,6 @@
 import type { ParentLabelLayout } from '../hierarchy';
 import { bubbleView, hierarchyView } from './chart-view-families';
+import { stockView, type StockView } from './chart-view-stock';
 import type {
 	BubbleSummaryOptions,
 	ChartSummary,
@@ -64,6 +65,8 @@ export interface ChartGroupView {
 	barGapWidth?: number;
 	barOverlap?: number;
 	series: ChartSeriesView[];
+	/** Stock groups: their resolved formatting. */
+	stock?: StockView;
 	/** Plotted against {@link ChartViewModel.secondaryAxis}. */
 	secondary: boolean;
 }
@@ -94,6 +97,8 @@ export interface ChartViewModel {
 	secondaryAxis?: ValueAxisView;
 	/** Waterfall: the running-total steps and their bar roles. */
 	waterfall?: WaterfallView;
+	/** Stock: the resolved wick and bar formatting. */
+	stock?: StockView;
 	/** Bubble: the display options, defaults resolved. */
 	bubble?: BubbleSummaryOptions;
 	/** Treemap and sunburst: category levels (parents filled down, leaf first) and legend branches. */
@@ -226,6 +231,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		const xs = series.flatMap((s) => s.xValues ?? []).filter((x): x is number => x !== null);
 		model.xAxis = xs.length ? niceScale(Math.min(...xs), Math.max(...xs)) : niceScale(0, 1);
 	}
+	if (type === 'stock') model.stock = stockView(chart.stock, ctx);
 	if (type === 'bubble') bubbleView(chart, model, ctx.evaluateRef);
 	if (type === 'treemap' || type === 'sunburst') hierarchyView(chart, model, ctx.evaluateRef);
 	if (type === 'histogram') histogramView(chart, model);
