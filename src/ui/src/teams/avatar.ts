@@ -4,10 +4,12 @@ import { initialsOf } from '../presence';
 import { TeamsElement, colorFor, withStyles } from './base';
 import css from './avatar.css?raw';
 
-export type Presence = 'available' | 'busy' | 'away' | 'offline';
+export type Presence = 'available' | 'busy' | 'dnd' | 'brb' | 'away' | 'offline';
 const PRESENCE_LABEL: Record<Presence, string> = {
 	available: 'Available',
 	busy: 'Busy',
+	dnd: 'Do not disturb',
+	brb: 'Be right back',
 	away: 'Away',
 	offline: 'Offline',
 };
@@ -15,7 +17,7 @@ const PRESENCE_LABEL: Record<Presence, string> = {
 /**
  * Round avatar with initials and an optional presence badge, like the Teams persona.
  * Attributes: `name`, `color` (default derived from `seed`/`name`), `size` (`sm` | `md` | `lg` |
- * `xl`), `presence` (`available` | `busy` | `away` | `offline`, absent = no badge).
+ * `xl`), `presence` (`available` | `busy` | `dnd` | `brb` | `away` | `offline`, absent = no badge).
  */
 export class OfficeUiAvatar extends TeamsElement {
 	static override styles = withStyles(css);

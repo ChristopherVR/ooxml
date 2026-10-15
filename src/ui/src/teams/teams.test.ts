@@ -62,6 +62,19 @@ describe('office-ui-avatar', () => {
 	});
 });
 
+describe('office-ui-avatar presence states', () => {
+	it.each([
+		['dnd', 'Do not disturb'],
+		['brb', 'Be right back'],
+		['offline', 'Offline'],
+	])('shows %s with its own label', async (presence, label) => {
+		const el = await mount('office-ui-avatar', { name: 'Ada Lovelace', presence } as never);
+		expect(el.getAttribute('aria-label')).toBe(`Ada Lovelace, ${label}`);
+		expect(q(el, '.presence').getAttribute('data-presence')).toBe(presence);
+		expect(q(el, '.presence').getAttribute('title')).toBe(label);
+	});
+});
+
 describe('office-ui-chat-list', () => {
 	it('renders peer text as text, never as markup', async () => {
 		const el = await mount<OfficeUiChatList>('office-ui-chat-list', {

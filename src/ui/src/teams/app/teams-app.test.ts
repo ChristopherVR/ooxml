@@ -169,6 +169,56 @@ describe('<teams-app>', () => {
 		el.remove();
 	});
 
+	it('sets a status with a duration, a status message and the idle time from the profile card', async () => {
+		const el = await mount({
+			'workspace-id': 'ta-presence',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
+		const menu = q<HTMLElement & { updateComplete: Promise<boolean> }>(
+			el.shadowRoot,
+			'teams-profile-menu',
+		);
+		menu.dispatchEvent(
+			new CustomEvent('teams-profile-status', {
+				detail: { availability: 'dnd', duration: '1h' },
+				bubbles: true,
+			}),
+		);
+		menu.dispatchEvent(
+			new CustomEvent('teams-profile-message', {
+				detail: { message: 'Heads down', duration: 'today' },
+				bubbles: true,
+			}),
+		);
+		menu.dispatchEvent(
+			new CustomEvent('teams-profile-idle', { detail: { minutes: 15 }, bubbles: true }),
+		);
+		await tick(10);
+		await el.updateComplete;
+		await menu.updateComplete;
+		const { presence } = el.client!.getState();
+		expect(presence).toMatchObject({ status: 'dnd', message: 'Heads down', idleMinutes: 15 });
+		expect(presence.statusExpiresAt).not.toBeNull();
+		expect(q(menu.shadowRoot, 'office-ui-avatar').getAttribute('presence')).toBe('dnd');
+		expect(q(menu.shadowRoot, '.status-line').textContent).toContain('Do not disturb');
+		expect(q(menu.shadowRoot, '.message').textContent).toBe('Heads down');
+		const options = [...menu.shadowRoot!.querySelectorAll('select')[0]!.options].map(
+			(o) => o.value,
+		);
+		expect(options).toEqual(['available', 'busy', 'dnd', 'brb', 'away', 'offline']);
+		menu.dispatchEvent(
+			new CustomEvent('teams-profile-status', {
+				detail: { availability: 'invisible' },
+				bubbles: true,
+			}),
+		);
+		await tick(10);
+		expect(el.client!.getState().presence.status).toBe('dnd');
+		el.remove();
+	});
+
 	it('restarts the client when the workspace changes', async () => {
 		const el = await mount({
 			'workspace-id': 'ta-one',

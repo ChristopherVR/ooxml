@@ -26,6 +26,12 @@ import {
 import type { StreamLike } from './peer';
 import type { PinnedMessage } from './pins';
 import {
+	type PresenceController,
+	type PresenceView,
+	createPresenceController,
+} from './presence-controller';
+import { defaultPresenceSetting, type StatusDuration } from './presence';
+import {
 	type ChannelView,
 	type FileEntry,
 	type PeerLike,
@@ -67,6 +73,8 @@ export interface TeamsClientOptions extends Omit<WorkspaceOptions, 'doc'> {
 	storage?: StorageLike;
 	/** Where attachments go. Default: the configured server's `/files` endpoint. */
 	uploadFile?: FileUploader;
+	/** Minutes without activity before showing Away (0 never; default 5). A saved choice wins. */
+	idleMinutes?: number;
 	fetch?: typeof fetch;
 }
 
@@ -89,7 +97,10 @@ export interface TeamsState {
 	status: ConnectionStatus;
 	mode: 'local' | 'server';
 	user: { id: string; name: string };
+	/** What others see for you: your chosen status, or Away when idle. */
 	availability: Availability;
+	/** Your chosen status and message with their expiry, idleness and the idle setting. */
+	presence: PresenceView;
 	channels: ChannelView[];
 	selectedChannelId: string;
 	channel: Channel | null;
@@ -176,7 +187,14 @@ export interface TeamsClient {
 	unpinMessage: (messageId: string) => boolean;
 	toggleReaction: (messageId: string, emoji: string) => void;
 	notifyTyping: () => void;
-	setAvailability: (value: Availability) => void;
+	/** Choose a status; `duration` resets it to Available later (default never). */
+	setAvailability: (value: Availability, duration?: StatusDuration) => void;
+	/** Set (or with an empty string clear) the custom status message; `duration` expires it. */
+	setStatusMessage: (message: string, duration?: StatusDuration) => void;
+	/** Minutes without activity before Away (0 never). Remembered in storage. */
+	setIdleMinutes: (minutes: number) => void;
+	/** Report user input so idleness resets. Call it from pointer and key events (throttle freely). */
+	noteActivity: () => void;
 	search: (query: string) => void;
 	/**
 	 * The URL to open for an attachment. On your own server it asks for a short-lived link signed
@@ -248,7 +266,14 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 	let query = '';
 	let replyId = '';
 	let editId = '';
-	let availability: Availability = 'available';
+	let presence: PresenceController | undefined;
+	const presenceView = (): PresenceView =>
+		presence?.view() ?? {
+			...defaultPresenceSetting(),
+			effective: 'available',
+			idle: false,
+			idleMinutes: 0,
+		};
 	let typingTimer: ReturnType<typeof setTimeout> | undefined;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 	let destroyed = false;
@@ -307,7 +332,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			status: ws.session.status,
 			mode: ws.config.mode,
 			user: ws.user,
-			availability,
+			availability: presenceView().effective,
+			presence: presenceView(),
 			channels: channelViews({
 				channels,
 				messagesOf,
@@ -350,7 +376,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 					id: ws.user.id,
 					name: ws.user.name,
 					color: ws.session.identity.userColor,
-					availability,
+					availability: presenceView().effective,
+					statusMessage: presenceView().message,
 					inCall: call?.phase === 'connected',
 				},
 				p,
@@ -405,6 +432,18 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		saveTimer = setTimeout(saveSnapshot, 800);
 	};
 	doc.on('update', scheduleSave);
+
+	presence = createPresenceController({
+		storage,
+		storageKey: `teams:presence:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
+		idleMinutes: options.idleMinutes,
+		publish: (status, message) => {
+			ws.setAvailability(status);
+			ws.setStatusMessage(message);
+		},
+		changed: refresh,
+	});
+	state = compute();
 
 	const unsubs = [
 		ws.chat.observe(refresh),
@@ -733,10 +772,10 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			clearTimeout(typingTimer);
 			typingTimer = setTimeout(() => ws.setTyping(undefined), TYPING_MS);
 		},
-		setAvailability: act((value) => {
-			availability = value;
-			ws.setAvailability(value);
-		}),
+		setAvailability: (value, duration) => presence?.setStatus(value, duration),
+		setStatusMessage: (message, duration) => presence?.setMessage(message, duration),
+		setIdleMinutes: (minutes) => presence?.setIdleMinutes(minutes),
+		noteActivity: () => presence?.noteActivity(),
 		search: act((q) => {
 			query = q;
 		}),
@@ -853,6 +892,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			transfers?.destroy();
 			clearTimeout(typingTimer);
 			clearTimeout(saveTimer);
+			presence?.destroy();
 			try {
 				storage?.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
 			} catch {

@@ -14,6 +14,13 @@ import type { WebSocketConstructor } from '../collab/websocket-transport';
 import { type CallSession, type MediaDevicesLike, createCallSession } from './call';
 import { type ChatStore, createChatStore } from './chat';
 import { createTabStore, type TabStore } from './tabs';
+import {
+	type LegacyAvailability,
+	type PresenceStatus,
+	legacyAvailability,
+	sanitizeStatusMessage,
+	statusFromWire,
+} from './presence';
 import type { PeerConnectionFactory, StreamFactory } from './peer';
 import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config';
 import {
@@ -22,7 +29,8 @@ import {
 	createWebSocketSignaling,
 } from './signaling';
 
-export type Availability = 'available' | 'busy' | 'away';
+/** What a person shows as. Widened from the original three values; see `./presence`. */
+export type Availability = PresenceStatus;
 
 /** What each person publishes with their presence. */
 export interface TeamsPresence {
@@ -30,7 +38,12 @@ export interface TeamsPresence {
 	/** Channel the person is typing in right now. */
 	typingIn?: string;
 	callRoom?: string;
-	availability?: Availability;
+	/** The closest of the original three values, kept so older clients still read presence. */
+	availability?: LegacyAvailability;
+	/** The full status (Do not disturb, Be right back, Appear offline, ...). */
+	status?: PresenceStatus;
+	/** Custom status message. */
+	statusMessage?: string;
 }
 
 export interface WorkspaceOptions {
@@ -58,10 +71,10 @@ export interface TeamsWorkspace {
 	setActiveChannel: (channelId: string | undefined) => void;
 	setTyping: (channelId: string | undefined) => void;
 	setAvailability: (value: Availability) => void;
+	setStatusMessage: (message: string) => void;
 	destroy: () => void;
 }
 
-const AVAILABILITY: readonly Availability[] = ['available', 'busy', 'away'];
 const safeId = (v: unknown): string | undefined =>
 	typeof v === 'string' && /^[\w-]{1,64}$/u.test(v) ? v : undefined;
 
@@ -76,9 +89,10 @@ function sanitizePresence(raw: Record<string, unknown>): TeamsPresence {
 	if (channelId) out.channelId = channelId;
 	if (typingIn) out.typingIn = typingIn;
 	if (callRoom) out.callRoom = callRoom;
-	out.availability = AVAILABILITY.includes(raw.availability as Availability)
-		? (raw.availability as Availability)
-		: 'available';
+	out.status = statusFromWire(raw);
+	out.availability = legacyAvailability(out.status);
+	const statusMessage = sanitizeStatusMessage(raw.statusMessage);
+	if (statusMessage) out.statusMessage = statusMessage;
 	return out;
 }
 
@@ -110,7 +124,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		...(options.doc ? { doc: options.doc } : {}),
 		provider: transportProvider({ transport: syncTransport(options.workspaceId) }),
 		user: { name: user.name, ...(options.user.color ? { color: options.user.color } : {}) },
-		initialPresence: { availability: 'available' },
+		initialPresence: { availability: 'available', status: 'available' },
 		sanitizePayload: sanitizePresence,
 		teardown: true,
 		// Any writer may seed the default channel; the fixed id makes concurrent seeds converge.
@@ -156,7 +170,10 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		},
 		setActiveChannel: (channelId) => session.updatePresence({ channelId: channelId ?? '' }),
 		setTyping: (channelId) => session.updatePresence({ typingIn: channelId ?? '' }),
-		setAvailability: (availability) => session.updatePresence({ availability }),
+		setAvailability: (status) =>
+			session.updatePresence({ status, availability: legacyAvailability(status) }),
+		setStatusMessage: (message) =>
+			session.updatePresence({ statusMessage: sanitizeStatusMessage(message) }),
 		destroy() {
 			for (const c of calls.values()) c.leave();
 			chat.destroy();

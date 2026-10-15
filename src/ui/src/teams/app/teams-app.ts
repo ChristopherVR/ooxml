@@ -11,7 +11,11 @@ import {
 	type TeamsState,
 	type DraftContext,
 	type TabContent,
+	isPresenceStatus,
+	isStatusDuration,
 	parseServerConfig,
+	type PresenceStatus,
+	type StatusDuration,
 } from 'ooxml-core/teams';
 // Registered from the leaf modules, not the package root: the root imports this folder through
 // `teams/index`, so importing it back would make `OFFICE_UI_TAGS` read `TEAMS_TAGS` too early.
@@ -40,6 +44,7 @@ import { filePopoutDetail, filePopoutUrl } from './file-popout';
 import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
 import { defineTeamsPinnedBar } from './pinned-bar';
+import { watchActivity } from './activity';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
 import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
@@ -136,6 +141,7 @@ export class TeamsApp extends LitElement {
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
+	private stopActivity: (() => void) | undefined;
 	private openRequest = 0;
 	private retainedTab: ChannelTab | undefined;
 	private themeStorageKey = '';
@@ -194,6 +200,8 @@ export class TeamsApp extends LitElement {
 		defineTeamsPinnedBar();
 		defineTeamsAddTabDialog();
 		defineTeamsCreateChannelDialog();
+		// Input anywhere in the page keeps the person from showing as Away.
+		this.stopActivity = watchActivity(this.ownerDocument, () => this.teams.client?.noteActivity());
 		super.connectedCallback();
 	}
 
@@ -366,6 +374,8 @@ export class TeamsApp extends LitElement {
 		this.openRequest++;
 		this.preview = null;
 		clearTimeout(this.toastTimer);
+		this.stopActivity?.();
+		this.stopActivity = undefined;
 		super.disconnectedCallback();
 	}
 
@@ -677,11 +687,24 @@ export class TeamsApp extends LitElement {
 					<teams-profile-menu
 						.state=${s}
 						@teams-profile-status=${(
-							event: CustomEvent<{ availability: 'available' | 'busy' | 'away' }>,
+							event: CustomEvent<{ availability: PresenceStatus; duration?: StatusDuration }>,
 						) => {
-							if (['available', 'busy', 'away'].includes(event.detail.availability))
-								this.teams.client?.setAvailability(event.detail.availability);
+							const { availability, duration } = event.detail;
+							if (isPresenceStatus(availability))
+								this.teams.client?.setAvailability(
+									availability,
+									isStatusDuration(duration) ? duration : 'never',
+								);
 						}}
+						@teams-profile-message=${(
+							event: CustomEvent<{ message: string; duration?: StatusDuration }>,
+						) =>
+							this.teams.client?.setStatusMessage(
+								String(event.detail.message ?? ''),
+								isStatusDuration(event.detail.duration) ? event.detail.duration : 'never',
+							)}
+						@teams-profile-idle=${(event: CustomEvent<{ minutes: number }>) =>
+							this.teams.client?.setIdleMinutes(Number(event.detail.minutes))}
 					></teams-profile-menu>
 				</div>
 			</header>

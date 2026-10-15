@@ -504,6 +504,43 @@ describe('teams client', () => {
 		expect(notices).toEqual(['This message cannot be pinned']);
 	});
 
+	it('shares richer presence while older clients still see a legacy value', async () => {
+		const a = make('ada', 'store-presence', { idleMinutes: 0 });
+		const b = make('bob', 'store-presence', { idleMinutes: 0 });
+		await tick(100);
+		b.setAvailability('dnd', '1h');
+		b.setStatusMessage('In a review', 'today');
+		await tick(100);
+		const bob = a.getState().people.find((p) => !p.self)!;
+		expect(bob).toMatchObject({ availability: 'dnd', statusMessage: 'In a review' });
+		const wire = a.workspace.session.peers()[0] as unknown as Record<string, unknown>;
+		expect(wire.availability).toBe('busy');
+		expect(wire.status).toBe('dnd');
+		expect(b.getState().presence).toMatchObject({ status: 'dnd', message: 'In a review' });
+		expect(b.getState().presence.statusExpiresAt).toBeGreaterThan(Date.now());
+		b.setAvailability('available');
+		await tick(100);
+		expect(a.getState().people.find((p) => !p.self)?.availability).toBe('available');
+	});
+
+	it('shows Away after the idle time and Available again on activity', async () => {
+		vi.useFakeTimers();
+		try {
+			const a = make('ada', 'store-idle', { idleMinutes: 5 });
+			await vi.advanceTimersByTimeAsync(5 * 60_000);
+			expect(a.getState().availability).toBe('away');
+			expect(a.getState().presence.idle).toBe(true);
+			a.noteActivity();
+			await vi.advanceTimersByTimeAsync(10);
+			expect(a.getState().availability).toBe('available');
+			a.setIdleMinutes(0);
+			await vi.advanceTimersByTimeAsync(60 * 60_000);
+			expect(a.getState().availability).toBe('available');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('shares state between two clients of one workspace and tracks unread', async () => {
 		const a = make('ada', 'store-pair');
 		const b = make('bob', 'store-pair');

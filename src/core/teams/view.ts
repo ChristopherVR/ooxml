@@ -2,6 +2,7 @@
 // people, typing names, a channel's files and cross-channel message search. No side effects, so
 // every binding (and every test) gets the same answers. New code.
 import type { CallParticipant } from './call';
+import { type PresenceStatus, statusFromWire } from './presence';
 import type { Availability } from './workspace';
 import type { Channel, Message, OfficeKind } from './model';
 
@@ -24,6 +25,8 @@ export interface PeerLike {
 	typingIn?: string;
 	callRoom?: string;
 	availability?: string;
+	status?: string;
+	statusMessage?: string;
 }
 
 export interface PersonView {
@@ -32,6 +35,8 @@ export interface PersonView {
 	color: string;
 	self: boolean;
 	availability: Availability;
+	/** Custom status message, empty when none. */
+	statusMessage: string;
 	inCall: boolean;
 }
 
@@ -66,9 +71,6 @@ export interface SearchHit {
 
 export const callRoomId = (workspaceId: string, channelId: string): string =>
 	`call-${workspaceId}-${channelId}`.slice(0, 128);
-
-const asAvailability = (v: unknown): Availability =>
-	v === 'busy' || v === 'away' ? v : 'available';
 
 /** Unread = messages by other people newer than the channel's read marker (0 when selected). */
 export function channelViews(input: {
@@ -105,17 +107,25 @@ export function channelViews(input: {
 }
 
 export function peopleViews(
-	self: { id: string; name: string; color: string; availability: Availability; inCall: boolean },
+	self: {
+		id: string;
+		name: string;
+		color: string;
+		availability: Availability;
+		statusMessage?: string;
+		inCall: boolean;
+	},
 	peers: PeerLike[],
 ): PersonView[] {
 	return [
-		{ ...self, self: true },
+		{ ...self, statusMessage: self.statusMessage ?? '', self: true },
 		...peers.map((p) => ({
 			id: `peer-${p.clientId}`,
 			name: p.userName,
 			color: p.userColor,
 			self: false,
-			availability: asAvailability(p.availability),
+			availability: statusFromWire(p) satisfies PresenceStatus,
+			statusMessage: p.statusMessage ?? '',
 			inCall: Boolean(p.callRoom),
 		})),
 	];
