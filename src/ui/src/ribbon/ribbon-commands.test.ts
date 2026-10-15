@@ -121,4 +121,21 @@ describe('office-ui-ribbon-group collapse and layout', () => {
 		const mixed = group('<div mode="dropdown"></div><office-ui-button></office-ui-button>');
 		expect(mixed.hasAttribute('data-stack')).toBe(false);
 	});
+
+	it('stacks drop-downs beside an inline gallery and lets the gallery span the rows', () => {
+		vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(
+			DOMRect.fromRect({ width: 40, height: 24 }),
+		);
+		const beside = group(
+			'<div mode="inline"></div><div mode="dropdown"></div><div mode="dropdown"></div>',
+		);
+		expect(beside.hasAttribute('data-stack-beside')).toBe(true);
+		expect(beside.hasAttribute('data-stack')).toBe(false);
+		expect(beside.children[0]!.hasAttribute('data-stack-span')).toBe(true);
+		expect(beside.children[1]!.hasAttribute('data-stack-span')).toBe(false);
+		// One drop-down next to a gallery (Shape Styles) keeps its normal layout.
+		const single = group('<div mode="inline"></div><div mode="dropdown"></div>');
+		expect(single.hasAttribute('data-stack-beside')).toBe(false);
+		expect(single.children[0]!.hasAttribute('data-stack-span')).toBe(false);
+	});
 });

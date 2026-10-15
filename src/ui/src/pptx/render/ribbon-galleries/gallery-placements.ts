@@ -376,8 +376,16 @@ export const FIXED_TAB_GALLERIES: readonly RibbonGalleryPlacement[] = [
 	{ gallery: 'shapeEffects', control: 'home.drawing.shapeEffects', mode: 'dropdown' },
 	{ gallery: 'bullets', control: 'home.paragraph.bullets', mode: 'dropdown' },
 	{ gallery: 'numbering', control: 'home.paragraph.numbering', mode: 'dropdown' },
+	{ gallery: 'themes', control: 'design.themes.gallery', mode: 'inline' },
+	{ gallery: 'themeVariants', control: 'design.variants.gallery', mode: 'inline' },
 	{ gallery: 'themeColors', control: 'design.variants.colors', mode: 'dropdown' },
 	{ gallery: 'themeFonts', control: 'design.variants.fonts', mode: 'dropdown' },
+	{ gallery: 'themeEffects', control: 'design.variants.effects', mode: 'dropdown' },
+	{
+		gallery: 'themeBackgrounds',
+		control: 'design.variants.backgroundStyles',
+		mode: 'dropdown',
+	},
 ];
 
 /** The contextual tabs a selection of `element` brings up, in PowerPoint's order. */

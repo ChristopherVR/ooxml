@@ -1,4 +1,5 @@
 import { animationPresetTranslationsEn } from './translations-en-animation-presets';
+import { designGalleryTranslationsEn } from './translations-en-design-galleries';
 import { galleryTranslationsEn } from './translations-en-galleries';
 import { galleryAdjustTranslationsEn } from './translations-en-galleries-adjust';
 import { galleryDataTranslationsEn } from './translations-en-galleries-data';
@@ -27,6 +28,7 @@ export const translationsEn: Record<string, string> = {
 	...galleryAdjustTranslationsEn,
 	...tableLayoutTranslationsEn,
 	...shapeGalleryTranslationsEn,
+	...designGalleryTranslationsEn,
 
 	// Status bar
 	'pptx.statusBar.allSaved': 'All saved',

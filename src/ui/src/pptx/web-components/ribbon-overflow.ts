@@ -44,6 +44,7 @@ const PATH_FACE: Readonly<Record<string, string>> = {
 	'design.themes': 'palette',
 	'design.variants': 'palette',
 	'design.customize': 'paint',
+	'design.designer': 'lightbulb',
 };
 
 const isGroup = (el: Element): el is HTMLElement => el instanceof HTMLElement;

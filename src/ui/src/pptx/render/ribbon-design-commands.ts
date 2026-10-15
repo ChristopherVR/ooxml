@@ -7,6 +7,7 @@ export const DESIGN_RIBBON_GROUPS: readonly {
 	{ id: 'design.themes', labelKey: 'pptx.ribbon.groupThemes' },
 	{ id: 'design.variants', labelKey: 'pptx.ribbon.groupVariants' },
 	{ id: 'design.customize', labelKey: 'pptx.ribbon.groupCustomize' },
+	{ id: 'design.designer', labelKey: 'pptx.ribbon.groupDesigner' },
 ];
 
 export interface DesignRibbonState {
@@ -21,6 +22,8 @@ export interface DesignRibbonState {
 export function designCommandState(id: RibbonControlId, state: DesignRibbonState) {
 	const slideSize = id === 'design.customize.slideSize';
 	const background = id === 'design.customize.formatBackground';
+	// Designer needs an online service the viewer does not have: always listed, never enabled.
+	const designer = id === 'design.designer.designIdeas';
 	const active =
 		id === 'design.themes.browseThemes'
 			? state.galleryOpen
@@ -30,7 +33,7 @@ export function designCommandState(id: RibbonControlId, state: DesignRibbonState
 					? state.backgroundOpen
 					: false;
 	return {
-		disabled: !slideSize && !state.editable,
+		disabled: designer || (!slideSize && !state.editable),
 		active: Boolean(active),
 		expanded: slideSize ? undefined : Boolean(active),
 		hidden:
@@ -68,5 +71,11 @@ export const DESIGN_RIBBON_COMMANDS: readonly {
 		labelKey: 'pptx.ribbon.formatBackground',
 		titleKey: 'pptx.ribbon.formatBackgroundTitle',
 		icon: 'paint',
+	},
+	{
+		id: 'design.designer.designIdeas',
+		labelKey: 'pptx.ribbon.designIdeas',
+		titleKey: 'pptx.design.designIdeasTooltip',
+		icon: 'lightbulb',
 	},
 ];

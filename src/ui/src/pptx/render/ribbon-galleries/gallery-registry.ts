@@ -30,6 +30,12 @@ import { TABLE_LAYOUT_COMMAND_MODULES } from './table-layout-commands';
 import { TABLE_STYLES_GALLERY } from './table-styles-gallery';
 import { TABLE_TEXT_DIRECTION_GALLERY } from './table-text-direction-gallery';
 import { THEME_COLORS_GALLERY } from './theme-colors-gallery';
+import {
+	THEME_BACKGROUNDS_GALLERY,
+	THEME_EFFECTS_GALLERY,
+	THEME_VARIANTS_GALLERY,
+} from './theme-variants-gallery';
+import { THEMES_GALLERY } from './themes-gallery';
 import { THEME_FONTS_GALLERY } from './theme-fonts-gallery';
 import { WORDART_STYLES_GALLERY } from './wordart-styles-gallery';
 
@@ -53,8 +59,12 @@ const MODULES: Record<RibbonGalleryId, RibbonGalleryModule> = {
 	smartArtColors: SMARTART_COLORS_GALLERY,
 	smartArtLayouts: SMARTART_LAYOUTS_GALLERY,
 	...SMARTART_COMMAND_MODULES,
+	themes: THEMES_GALLERY,
+	themeVariants: THEME_VARIANTS_GALLERY,
 	themeColors: THEME_COLORS_GALLERY,
 	themeFonts: THEME_FONTS_GALLERY,
+	themeEffects: THEME_EFFECTS_GALLERY,
+	themeBackgrounds: THEME_BACKGROUNDS_GALLERY,
 };
 
 /** Every gallery id, for tests and hosts. */

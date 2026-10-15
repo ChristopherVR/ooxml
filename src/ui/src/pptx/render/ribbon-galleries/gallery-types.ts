@@ -73,8 +73,12 @@ export type RibbonGalleryId =
 	| 'smartArtMoveDown'
 	| 'smartArtResetGraphic'
 	| 'smartArtConvert'
+	| 'themes'
+	| 'themeVariants'
 	| 'themeColors'
-	| 'themeFonts';
+	| 'themeFonts'
+	| 'themeEffects'
+	| 'themeBackgrounds';
 
 /** One tile. */
 export interface RibbonGalleryItem {
@@ -127,6 +131,8 @@ export interface RibbonGalleryDescriptor {
 	labelKey: string;
 	label: string;
 	sections: RibbonGallerySection[];
+	/** Tiles an inline gallery shows in the ribbon itself (default 6). */
+	inlineCount?: number;
 	/** True when the selection cannot take this gallery (trigger disabled). */
 	disabled: boolean;
 	/**
@@ -185,6 +191,13 @@ export type RibbonGalleryApplyResult =
 			elementId: string;
 			/** Merge onto the element with the binding's normal update + history path. */
 			patch: Partial<PptxElement>;
+	  }
+	| {
+			/** A whole theme: colour and font scheme together (Design > Themes). */
+			kind: 'theme';
+			colorScheme: PptxThemeColorScheme;
+			fontScheme: PptxThemeFontScheme;
+			name: string;
 	  }
 	| {
 			kind: 'themeColorScheme';
