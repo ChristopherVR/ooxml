@@ -126,3 +126,31 @@ test('the context menu offers Format Data Series on a mark and the pane closes',
 	await pane(page).locator('[data-chart-format-close]').click();
 	await expect(pane(page)).toHaveCount(0);
 });
+
+test('on a phone the pane is a sheet that ends above the bottom bar', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await loadDeck(page, fixture('chart-gallery.pptx'));
+	await selectChart(page);
+	await page
+		.locator(`${SVG} [data-chart-part="dataPoint"][data-chart-series="0"]`)
+		.first()
+		.dblclick();
+	await expect(paneTitle(page)).toHaveText('Format Data Series');
+	const layout = await page.evaluate(() => {
+		const sheet = document.querySelector('pptx-ui-chart-format-pane')!;
+		const bar = document.querySelector('pptx-ui-mobile-bar')!;
+		const box = sheet.getBoundingClientRect();
+		const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+		return {
+			bottom: box.bottom,
+			barTop: bar.getBoundingClientRect().top,
+			width: box.width,
+			zIndex: getComputedStyle(sheet).zIndex,
+			onTop: hit === sheet || sheet.contains(hit),
+		};
+	});
+	expect(layout.bottom).toBeLessThanOrEqual(layout.barTop + 1);
+	expect(layout.width).toBe(390);
+	expect(layout.zIndex).toBe('69');
+	expect(layout.onTop).toBe(true);
+});

@@ -185,7 +185,7 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 					(this as Record<string, unknown>)[name] = value;
 				}
 			}
-			this.#undock = attachThemeEditorDock(this);
+			this.#undock = attachThemeEditorDock(this, { phoneSheet: true });
 			this.#paint();
 		}
 		disconnectedCallback(): void {
