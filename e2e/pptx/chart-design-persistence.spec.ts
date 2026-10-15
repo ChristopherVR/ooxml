@@ -70,19 +70,26 @@ test('chart colours and styles apply and persist through save and reopen', async
 	await expect.poll(() => firstMarkFill(page)).toBe(recoloured);
 });
 
-test('the chart properties put each field on its own row', async ({ page }) => {
+test('the chart properties lead with Title, Chart type and Grouping, one per row', async ({
+	page,
+}) => {
 	await loadDeck(page, fixture('chart-gallery.pptx'));
 	await openChartDesign(page);
 	const panel = inspector(page);
-	const title = panel.getByLabel('Title', { exact: true }).first();
-	const type = panel.getByLabel('Chart type', { exact: true }).first();
-	await expect(title).toBeVisible();
-	const titleBox = await title.boundingBox();
-	const typeBox = await type.boundingBox();
-	expect(titleBox).not.toBeNull();
-	expect(typeBox).not.toBeNull();
-	// Bindings order the two differently; either way neither row may share the other's line.
-	const [upper, lower] = titleBox!.y <= typeBox!.y ? [titleBox!, typeBox!] : [typeBox!, titleBox!];
-	expect(lower.y).toBeGreaterThanOrEqual(upper.y + upper.height - 1);
+	const rows = [
+		panel.getByLabel('Title', { exact: true }).first(),
+		panel.getByLabel('Chart type', { exact: true }).first(),
+		panel.getByLabel('Grouping', { exact: true }).first(),
+	];
+	await expect(rows[0]).toBeVisible();
+	const boxes = await Promise.all(rows.map((row) => row.boundingBox()));
+	// Every binding orders the three the same way, and none shares a line with the next.
+	for (let index = 1; index < boxes.length; index++) {
+		const upper = boxes[index - 1];
+		const lower = boxes[index];
+		expect(upper).not.toBeNull();
+		expect(lower).not.toBeNull();
+		expect(lower!.y).toBeGreaterThanOrEqual(upper!.y + upper!.height - 1);
+	}
 	await expect(panel).not.toContainText(/\{\{\w+\}\}/u);
 });
