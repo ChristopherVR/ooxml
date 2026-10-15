@@ -1,5 +1,5 @@
 import { link, open, realpath, rename, unlink } from 'node:fs/promises';
-import { basename, dirname, extname, isAbsolute, relative, resolve } from 'node:path';
+import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 export interface ByteEditResult {
@@ -10,6 +10,30 @@ export interface ByteEditResult {
 export function createFileOperations(rootDir = process.cwd()) {
 	const pending = new Map<string, Promise<unknown>>();
 	const maxBytes = 64 * 1024 * 1024;
+	/** Root-relative, forward-slash form of a confined absolute path (never the host path). */
+	async function rel(target: string) {
+		const root = await realpath(resolve(rootDir));
+		return relative(root, target).split(sep).join('/') || '.';
+	}
+	/** Replace host paths in an error message so callers only see root-relative text. */
+	async function scrub<T>(action: () => Promise<T>): Promise<T> {
+		try {
+			return await action();
+		} catch (error) {
+			if (!(error instanceof Error)) throw error;
+			const hosts = [resolve(rootDir), await realpath(resolve(rootDir)).catch(() => '')];
+			let message = error.message;
+			for (const host of hosts.filter(Boolean).sort((a, b) => b.length - a.length))
+				message = message
+					.split(host + sep)
+					.join('')
+					.split(host)
+					.join('<root>');
+			const safe = new Error(message, { cause: undefined });
+			(safe as NodeJS.ErrnoException).code = (error as NodeJS.ErrnoException).code;
+			throw safe;
+		}
+	}
 	async function pathFor(file: string, extensions: readonly string[]) {
 		const root = await realpath(resolve(rootDir));
 		const path = resolve(root, file);
@@ -73,7 +97,30 @@ export function createFileOperations(rootDir = process.cwd()) {
 			if (pending.get(path) === current) pending.delete(path);
 		}
 	}
-	return {
+	/** Confine a directory (it may not exist yet) and return its root-relative path. */
+	async function directoryFor(dir: string) {
+		const root = await realpath(resolve(rootDir));
+		let probe = resolve(root, dir);
+		const rest: string[] = [];
+		for (;;) {
+			try {
+				probe = await realpath(probe);
+				break;
+			} catch (error) {
+				if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+				const parent = dirname(probe);
+				if (parent === probe) throw error;
+				rest.unshift(basename(probe));
+				probe = parent;
+			}
+		}
+		const actual = resolve(probe, ...rest);
+		const r = relative(root, actual);
+		if (r === '..' || r.startsWith('../') || r.startsWith('..\\') || isAbsolute(r))
+			throw new Error('Path is outside the configured root');
+		return r.split(sep).join('/') || '.';
+	}
+	const api = {
 		async inspect<T>(
 			file: string,
 			extensions: readonly string[],
@@ -86,7 +133,7 @@ export function createFileOperations(rootDir = process.cwd()) {
 			const path = await pathFor(file, extensions);
 			return serial(path, async () => {
 				await write(path, await create(), false);
-				return { filePath: path, saved: true };
+				return { filePath: await rel(path), saved: true };
 			});
 		},
 		async edit<T extends ByteEditResult>(
@@ -102,8 +149,31 @@ export function createFileOperations(rootDir = process.cwd()) {
 			return serial(path, async () => {
 				const { bytes, ...result } = await edit(await read(path));
 				await write(output, bytes, output === path);
-				return { ...result, filePath: output, saved: true };
+				return { ...result, filePath: await rel(output), saved: true };
 			});
 		},
+		/** Read a confined file (no serialisation; use inside {@link exclusive}). */
+		async readFile(file: string, extensions: readonly string[]) {
+			return read(await pathFor(file, extensions));
+		},
+		/** Atomically replace a confined file (no serialisation; use inside {@link exclusive}). */
+		async writeFile(file: string, extensions: readonly string[], bytes: Uint8Array) {
+			await write(await pathFor(file, extensions), bytes, true);
+		},
+		/** Run `action` holding the per-path lock of a confined file. */
+		async exclusive<T>(file: string, extensions: readonly string[], action: () => Promise<T>) {
+			return serial(await pathFor(file, extensions), action);
+		},
+		/** Confine a directory under the root and return its root-relative path. */
+		directory: directoryFor,
+		/** Root-relative description of a root-confined file path. */
+		relativePath: async (file: string, extensions: readonly string[]) =>
+			rel(await pathFor(file, extensions)),
 	};
+	type Api = typeof api;
+	const wrapped = {} as Record<string, unknown>;
+	for (const [name, fn] of Object.entries(api))
+		wrapped[name] = (...args: unknown[]) =>
+			scrub(() => (fn as (...a: unknown[]) => Promise<unknown>)(...args));
+	return wrapped as unknown as Api;
 }
