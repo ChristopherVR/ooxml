@@ -127,4 +127,13 @@ export const translations = {
 	'pptx.tableStyleEditor.side.insideV': '内部垂直边框',
 	'pptx.tableStyleEditor.side.tl2br': '从左上到右下的对角线',
 	'pptx.tableStyleEditor.side.tr2bl': '右上角到左下角的对角线',
+	'pptx.table.rowNumber': '行',
+	'pptx.table.columnNumber': '列',
+	'pptx.table.insertRow': '插入行',
+	'pptx.table.insertColumn': '插入列',
+	'pptx.table.distributeEvenly': '平均分布',
+	'pptx.table.columnIndex': '第 {{index}} 列',
+	'pptx.table.rowIndex': '第 {{index}} 行',
+	'pptx.table.stopIndex': '色标 {{index}}',
+	'pptx.tableCell.edgeBorderWidthAria': '{{edge}} 边框宽度',
 } as const;

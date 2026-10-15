@@ -1,9 +1,10 @@
 /**
- * The media inspector, the picture inspector and the trim timeline name their
- * captions, aria-labels, titles and placeholders through the translator, not in
+ * The inspector sections (media, picture, table, cell formatting, text effects,
+ * SmartArt and the presentation properties card) name their captions,
+ * aria-labels, titles and placeholders through the translator, not in
  * hard-coded English. Mounted with a marking translator every visible string
- * must come back marked; mounted under German, none of the old English literals
- * may reach the DOM and the German words must.
+ * must come back marked; mounted under German, none of the old English
+ * literals may reach the DOM and the German words must.
  */
 import type { MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 import { translationsDe } from 'pptx-viewer-locales';
@@ -17,6 +18,10 @@ import { EditorState } from '../../editor/editor-state.svelte';
 import ImageSection from './ImageSection.svelte';
 import MediaSection from './MediaSection.svelte';
 import MediaTrimTimeline from './MediaTrimTimeline.svelte';
+import PresentationPropertiesPanel from './PresentationPropertiesPanel.svelte';
+import SmartArtSection from './SmartArtSection.svelte';
+import TableSection from './TableSection.svelte';
+import TextEffectsSection from './TextEffectsSection.svelte';
 
 let cleanups: Array<() => void> = [];
 afterEach(() => {
@@ -34,6 +39,47 @@ const german: Translator = (key, params) => {
 
 /** Data the components render from the document itself (names, not captions). */
 const DATA = new Set(['Commentary', 'Intro']);
+
+/**
+ * Labels the shared catalogues in `ooxml-ui/pptx` hold in English: table style
+ * presets, the text warp, 3D material and bevel presets. Every binding (React,
+ * Vue, Angular, vanilla and Svelte) paints them unchanged, so they are not
+ * Svelte literals. Translating them is a shared change that must reach all
+ * five bindings together, and is tracked as a follow-up.
+ */
+const SHARED_CATALOGUE_LABELS = new Set([
+	'Light 1',
+	'Light 2',
+	'Light 3',
+	'Medium 1',
+	'Medium 2',
+	'Medium 3',
+	'Dark 1',
+	'Dark 2',
+	'Dark 3',
+	'Arch Up',
+	'Arch Down',
+	'Circle',
+	'Wave 1',
+	'Wave 2',
+	'Inflate',
+	'Deflate',
+	'Fade Right',
+	'Slant Up',
+	'Triangle',
+	'Matte',
+	'Plastic',
+	'Metal',
+	'Warm Matte',
+	'Soft Edge',
+	'Flat',
+	'None',
+	'Relaxed Inset',
+	'Cool Slant',
+	'Angle',
+	'Soft Round',
+	'Convex',
+]);
 
 const MEDIA: MediaPptxElement = {
 	type: 'media',
@@ -66,6 +112,89 @@ const IMAGE: PptxElement = {
 	height: 100,
 	imagePath: 'ppt/media/image1.png',
 	imageEffects: { colorWash: { color: '#0066cc', opacity: 40 } },
+} as unknown as PptxElement;
+
+const TABLE = {
+	type: 'table',
+	id: 'tbl1',
+	x: 0,
+	y: 0,
+	width: 200,
+	height: 100,
+	tableData: {
+		rows: [
+			{
+				cells: [
+					{
+						text: 'A',
+						style: {
+							fillMode: 'gradient',
+							gradientFillType: 'linear',
+							gradientFillAngle: 90,
+							gradientFillStops: [
+								{ color: '#000000', position: 0 },
+								{ color: '#ffffff', position: 100000 },
+							],
+						},
+					},
+					{ text: 'B' },
+				],
+			},
+			{ cells: [{ text: 'C' }, { text: 'D' }] },
+		],
+		columnWidths: [0.5, 0.5],
+		bandedRows: true,
+		bandedColumns: true,
+	},
+} as unknown as PptxElement;
+
+const TEXT = {
+	type: 'text',
+	id: 't1',
+	x: 0,
+	y: 0,
+	width: 200,
+	height: 80,
+	textStyle: {
+		textShadowColor: '#000000',
+		textShadowBlur: 4,
+		textShadowOffsetX: 2,
+		textShadowOffsetY: 2,
+		textShadowOpacity: 0.5,
+		textGlowColor: '#ffff00',
+		textGlowRadius: 6,
+		textGlowOpacity: 0.6,
+		textReflection: true,
+		textReflectionBlur: 1,
+		textReflectionOffset: 3,
+		textReflectionStartOpacity: 0.5,
+		textReflectionEndOpacity: 0,
+		textWarpPreset: 'archUp',
+		textWarpAdj: 50000,
+		text3d: {
+			extrusionHeight: 57150,
+			extrusionColor: '#808080',
+			presetMaterial: 'plastic',
+			bevelTopType: 'circle',
+		},
+	},
+} as unknown as PptxElement;
+
+const SMART_ART = {
+	type: 'smartArt',
+	id: 'sa1',
+	x: 0,
+	y: 0,
+	width: 400,
+	height: 300,
+	smartArtData: {
+		nodes: [
+			{ id: 'n1', text: 'One' },
+			{ id: 'n2', text: 'Two' },
+		],
+		resolvedLayoutType: 'list',
+		drawingShapes: [],
+	},
 } as unknown as PptxElement;
 
 function editorWith(element: PptxElement): EditorState {
@@ -117,7 +246,7 @@ function visibleStrings(target: HTMLElement): string[] {
 			}
 		}
 	}
-	return found.filter((text) => !DATA.has(text));
+	return found.filter((text) => !DATA.has(text) && !SHARED_CATALOGUE_LABELS.has(text));
 }
 
 /** The English literals these sections used to hard-code, minus the words German shares. */
@@ -158,11 +287,76 @@ const ENGLISH_LITERALS = [
 	'Trim start',
 	'Trim end',
 	'captions.vtt or data URL',
+	'Cell padding',
+	'Row',
+	'Column',
+	'Insert row',
+	'Insert column',
+	'Delete row',
+	'Delete column',
+	'Row band cycle',
+	'Column band cycle',
+	'Column widths',
+	'Row heights',
+	'Distribute evenly',
+	'Cell formatting',
+	'Text color',
+	'Background',
+	'Font size',
+	'Fill',
+	'Solid',
+	'Pattern',
+	'None',
+	'Horizontal',
+	'Vertical',
+	'Type',
+	'Angle',
+	'Foreground',
+	'Stop ',
+	'Top margin',
+	'Borders',
+	'Merge right',
+	'Merge down',
+	'Split',
+	'Text effects',
+	'Shadow',
+	'Glow',
+	'Reflection',
+	'Warp',
+	'Adjustment 2',
+	'3D and bevel',
+	'Depth (EMU)',
+	'Extrusion',
+	'Bevel',
+	'Blur',
+	'Offset',
+	'Start opacity',
+	'End opacity',
+	'Diagram style',
+	'Add',
+	'Remove',
+	'Up',
+	'Down',
+	'Promote',
+	'Demote',
+	'Font',
+	'Bold',
+	'Italic',
+	'Select item',
+	'Slide',
+	'elements',
 ];
 
 function mountAll(translator: Translator): HTMLElement[] {
 	const media = editorWith(MEDIA);
 	const image = editorWith(IMAGE);
+	const table = editorWith(TABLE);
+	const text = editorWith(TEXT);
+	const smartArt = editorWith(SMART_ART);
+	// A selected node reveals the Fill, Font, Bold and Italic controls.
+	const smartArtTarget = render(SmartArtSection, { editor: smartArt, el: SMART_ART }, translator);
+	smartArtTarget.querySelector<HTMLButtonElement>('.pptx-svelte-smartart-nodes button')?.click();
+	flushSync();
 	return [
 		render(MediaSection, { editor: media }, translator),
 		render(ImageSection, { editor: image, el: IMAGE }, translator),
@@ -179,10 +373,18 @@ function mountAll(translator: Translator): HTMLElement[] {
 			},
 			translator,
 		),
+		render(TableSection, { editor: table, el: TABLE }, translator),
+		render(TextEffectsSection, { editor: text, el: TEXT }, translator),
+		smartArtTarget,
+		render(
+			PresentationPropertiesPanel,
+			{ editor: text, deck: { canvasSize: { width: 960, height: 540 } } },
+			translator,
+		),
 	];
 }
 
-describe('media and image inspectors translation', () => {
+describe('inspector sections translation', () => {
 	it('spells every caption, aria-label, title and placeholder through the translator', () => {
 		const english = mountAll(mark).flatMap((target) => visibleStrings(target));
 
@@ -206,6 +408,14 @@ describe('media and image inspectors translation', () => {
 			'Opazität',
 			'Transparenz',
 			'Spur entfernen',
+			'Zeile einfügen',
+			'Gleichmäßig verteilen',
+			'Zellformatierung',
+			'Anpassung 2',
+			'Element 1 auswählen',
+			'Texteffekte',
+			'Rahmenfarbe',
+			'Elemente',
 		]) {
 			expect(painted.some((text) => text.includes(expected))).toBeTruthy();
 		}

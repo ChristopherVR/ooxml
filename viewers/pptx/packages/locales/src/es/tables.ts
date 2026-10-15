@@ -130,4 +130,13 @@ export const translations = {
 	'pptx.tableStyleEditor.side.insideV': 'Interior vertical',
 	'pptx.tableStyleEditor.side.tl2br': 'Diagonal de arriba a la izquierda a abajo a la derecha',
 	'pptx.tableStyleEditor.side.tr2bl': 'Diagonal de arriba a la derecha a abajo a la izquierda',
+	'pptx.table.rowNumber': 'Fila',
+	'pptx.table.columnNumber': 'Columna',
+	'pptx.table.insertRow': 'Insertar fila',
+	'pptx.table.insertColumn': 'Insertar columna',
+	'pptx.table.distributeEvenly': 'Distribuir por igual',
+	'pptx.table.columnIndex': 'Columna {{index}}',
+	'pptx.table.rowIndex': 'Fila {{index}}',
+	'pptx.table.stopIndex': 'Parada {{index}}',
+	'pptx.tableCell.edgeBorderWidthAria': 'Ancho del borde {{edge}}',
 } as const;

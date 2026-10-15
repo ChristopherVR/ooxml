@@ -3725,6 +3725,18 @@ export const translationsEn: Record<string, string> = {
 	'pptx.media.trackInlineWebVtt': 'Inline WebVTT',
 	'pptx.media.removeTrack': 'Remove track',
 	'pptx.media.addCaptionTrack': 'Add caption track',
+	'pptx.table.rowNumber': 'Row',
+	'pptx.table.columnNumber': 'Column',
+	'pptx.table.insertRow': 'Insert row',
+	'pptx.table.insertColumn': 'Insert column',
+	'pptx.table.distributeEvenly': 'Distribute evenly',
+	'pptx.table.columnIndex': 'Column {{index}}',
+	'pptx.table.rowIndex': 'Row {{index}}',
+	'pptx.table.stopIndex': 'Stop {{index}}',
+	'pptx.tableCell.edgeBorderWidthAria': '{{edge}} border width',
+	'pptx.smartArt.selectItemIndex': 'Select item {{index}}',
+	'pptx.textEffects.adjustment2': 'Adjustment 2',
+	'pptx.inspector.slideElementCount': '{{count}} elements',
 	'pptx.smartArt.fillColor': 'Fill Color',
 
 	// Theme editor swatches

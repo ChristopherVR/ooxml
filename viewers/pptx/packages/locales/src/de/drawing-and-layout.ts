@@ -234,4 +234,5 @@ export const translations = {
 	'pptx.shape.mergeFragment': 'Fragmentieren',
 	'pptx.shape.mergeIntersect': 'Überschneiden',
 	'pptx.shape.mergeSubtract': 'Subtrahieren',
+	'pptx.inspector.slideElementCount': '{{count}} Elemente',
 } as const;

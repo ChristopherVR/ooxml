@@ -174,4 +174,5 @@ export const translations = {
 	'pptx.textFormatting.columns': '列',
 	'pptx.textFormatting.columnSpacing': '列间距',
 	'pptx.textFormatting.strikethrough': '删除线',
+	'pptx.textEffects.adjustment2': '调整 2',
 } as const;

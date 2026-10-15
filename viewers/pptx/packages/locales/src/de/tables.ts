@@ -131,4 +131,13 @@ export const translations = {
 	'pptx.tableStyleEditor.side.insideV': 'Innen vertikal',
 	'pptx.tableStyleEditor.side.tl2br': 'Diagonale oben links nach unten rechts',
 	'pptx.tableStyleEditor.side.tr2bl': 'Diagonale oben rechts nach unten links',
+	'pptx.table.rowNumber': 'Zeile',
+	'pptx.table.columnNumber': 'Spalte',
+	'pptx.table.insertRow': 'Zeile einfügen',
+	'pptx.table.insertColumn': 'Spalte einfügen',
+	'pptx.table.distributeEvenly': 'Gleichmäßig verteilen',
+	'pptx.table.columnIndex': 'Spalte {{index}}',
+	'pptx.table.rowIndex': 'Zeile {{index}}',
+	'pptx.table.stopIndex': 'Stopp {{index}}',
+	'pptx.tableCell.edgeBorderWidthAria': '{{edge}} Rahmenbreite',
 } as const;

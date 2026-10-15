@@ -161,11 +161,10 @@
 		/>
 	</div>
 	{#if activeSlide}
-		<!-- React's SLIDE card: the active slide's element count (literal
-		     "Slide" / "elements" copy, matching React which has no key here). -->
+		<!-- The active slide's element count, under the slide card heading. -->
 		<div class="pptx-svelte-inspector-section" data-pptx-chrome="inspector-card" data-pptx-inspector-card="slide">
-			<h4 data-pptx-chrome="inspector-heading">Slide</h4>
-			<p class="pptx-svelte-inspector-meta">{activeSlide.elements?.length ?? 0} elements</p>
+			<h4 data-pptx-chrome="inspector-heading">{t('pptx.canvas.slide')}</h4>
+			<p class="pptx-svelte-inspector-meta">{t('pptx.inspector.slideElementCount', { count: activeSlide.elements?.length ?? 0 })}</p>
 		</div>
 	{/if}
 {:else}

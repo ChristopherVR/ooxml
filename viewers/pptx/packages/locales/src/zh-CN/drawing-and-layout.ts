@@ -213,4 +213,5 @@ export const translations = {
 	'pptx.editPoints.straightPoint': '直线点',
 	'pptx.editPoints.straightSegment': '直线段',
 	'pptx.freeformTool.overlay': '单击添加顶点；双击或按 Enter 完成',
+	'pptx.inspector.slideElementCount': '{{count}} 个元素',
 } as const;

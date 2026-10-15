@@ -175,4 +175,5 @@ export const translations = {
 	'pptx.textFormatting.columns': 'Colonnes',
 	'pptx.textFormatting.columnSpacing': 'Espacement des colonnes',
 	'pptx.textFormatting.strikethrough': 'Barré',
+	'pptx.textEffects.adjustment2': 'Réglage 2',
 } as const;
