@@ -29,7 +29,11 @@ import {
 	ELEMENT_CONTEXT_MENU_COMMAND_IDS,
 	OPTIONS_SETTING_IDS,
 	TOOLBAR_BUTTON_IDS,
+	VIEWER_BACKSTAGE_REGION_IDS,
+	VIEWER_CAPABILITY_IDS,
 	VIEWER_DIALOG_IDS,
+	VIEWER_DIALOG_REGION_IDS,
+	VIEWER_PANEL_REGION_IDS,
 	VIEWER_EXPORT_FORMAT_IDS,
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
@@ -37,7 +41,10 @@ import {
 import {
 	EDITOR_SHORTCUT_DESCRIPTIONS,
 	TOOLBAR_BUTTON_DESCRIPTIONS,
+	VIEWER_CAPABILITY_DESCRIPTIONS,
 	VIEWER_DIALOG_DESCRIPTIONS,
+	VIEWER_DIALOG_REGION_DESCRIPTIONS,
+	VIEWER_PANEL_REGION_DESCRIPTIONS,
 	VIEWER_EXPORT_FORMAT_DESCRIPTIONS,
 	VIEWER_FEATURE_DESCRIPTIONS,
 	VIEWER_PANEL_DESCRIPTIONS,
@@ -170,6 +177,23 @@ export function buildCustomizationReference(): string {
 		table(['Id', 'What it removes'], describe(VIEWER_DIALOG_IDS, VIEWER_DIALOG_DESCRIPTIONS)),
 		'### Export formats (`hiddenExportFormats`)',
 		table(['Id', 'Format'], describe(VIEWER_EXPORT_FORMAT_IDS, VIEWER_EXPORT_FORMAT_DESCRIPTIONS)),
+		'### Capabilities (`capabilities`)',
+		table(
+			['Id', 'What `false` removes'],
+			describe(VIEWER_CAPABILITY_IDS, VIEWER_CAPABILITY_DESCRIPTIONS),
+		),
+		'### Replaceable regions (`regions`)',
+		table(
+			['Id', 'Region'],
+			[
+				...describe(VIEWER_PANEL_REGION_IDS, VIEWER_PANEL_REGION_DESCRIPTIONS),
+				...describe(VIEWER_DIALOG_REGION_IDS, VIEWER_DIALOG_REGION_DESCRIPTIONS),
+				...VIEWER_BACKSTAGE_REGION_IDS.map((id) => [
+					code(id),
+					`The body of File > ${label(BACKSTAGE_NAV.find((item) => `backstage.${item.id}` === id)?.labelKey ?? id)}.`,
+				]),
+			],
+		),
 		'### Drawing tools (`hiddenDrawingTools`)',
 		table(
 			['Id', 'Tool'],

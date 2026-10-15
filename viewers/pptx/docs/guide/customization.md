@@ -1156,34 +1156,44 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 
 ### Panels (`hiddenPanels`)
 
-| Id                   | Region                                                               |
-| -------------------- | -------------------------------------------------------------------- |
-| `statusBar`          | The status bar under the canvas (slide counter, zoom, view buttons). |
-| `slidesPane`         | The slide thumbnail rail on the left.                                |
-| `inspector`          | The format / properties inspector on the right.                      |
-| `notes`              | The speaker-notes panel under the canvas.                            |
-| `quickAccessToolbar` | The quick-access strip in the title bar (save, undo, redo, ...).     |
-| `titleBar`           | The title bar above the ribbon (file name, quick access, account).   |
+| Id                   | Region                                                                                          |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `statusBar`          | The status bar under the canvas (slide counter, zoom, view buttons).                            |
+| `slidesPane`         | The slide thumbnail rail on the left.                                                           |
+| `inspector`          | The format / properties inspector on the right.                                                 |
+| `notes`              | The speaker-notes panel under the canvas.                                                       |
+| `quickAccessToolbar` | The quick-access strip in the title bar (save, undo, redo, ...).                                |
+| `titleBar`           | The title bar above the ribbon (file name, quick access, account).                              |
+| `selectionPane`      | The Selection Pane and View > Selection Pane.                                                   |
+| `findReplace`        | The Find and Replace panel, Home > Find / Replace and their shortcuts.                          |
+| `accessibilityPane`  | The accessibility checker panel, Review > Check Accessibility and Help > Accessibility checker. |
+| `comparePane`        | The Compare panel and Review > Compare.                                                         |
 
 ### Features (`disabledFeatures`)
 
-| Id              | What it switches off                                                                    |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `ai`            | The AI assistant: toolbar toggle, chat panel, AI context-menu entries, AI Options page. |
-| `collaboration` | Real-time collaboration: Share and Broadcast buttons, dialogs and File pages.           |
-| `comments`      | Commenting: the Add Comment context-menu entry.                                         |
-| `presentMode`   | Slide-show entry points: the Slide Show ribbon tab.                                     |
-| `editPoints`    | Edit Points: the Edit Points context-menu entry and the point-editing mode it opens.    |
+| Id              | What it switches off                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `ai`            | The AI assistant: toolbar toggle, chat panel, AI context-menu entries, AI Options page.      |
+| `collaboration` | Real-time collaboration: Share and Broadcast buttons, dialogs and File pages.                |
+| `comments`      | Commenting: the Add Comment context-menu entry and the Comments groups of Insert and Review. |
+| `presentMode`   | Slide-show entry points: the Slide Show ribbon tab.                                          |
+| `editPoints`    | Edit Points: the Edit Points context-menu entry and the point-editing mode it opens.         |
 
 ### Dialogs (`hiddenDialogs`)
 
-| Id          | What it removes                                                            |
-| ----------- | -------------------------------------------------------------------------- |
-| `options`   | File > Options (the Settings dialog) and the File tab entry that opens it. |
-| `share`     | The Share dialog, its toolbar button, File > Share page and card.          |
-| `broadcast` | The Broadcast dialog and its button.                                       |
-| `print`     | The Print dialog, File > Print page and card.                              |
-| `export`    | File > Export page, its cards and the Export button.                       |
+| Id                   | What it removes                                                                   |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `options`            | File > Options (the Settings dialog) and the File tab entry that opens it.        |
+| `share`              | The Share dialog, its toolbar button, File > Share page and card.                 |
+| `broadcast`          | The Broadcast dialog and its button.                                              |
+| `print`              | The Print dialog, File > Print page and card.                                     |
+| `export`             | File > Export page, its cards and the Export button.                              |
+| `hyperlink`          | The Insert Hyperlink dialog: Insert > Link, the Link menu entry and its shortcut. |
+| `equation`           | The Equation editor and Insert > Equation.                                        |
+| `pasteSpecial`       | The Paste Special dialog and its shortcut.                                        |
+| `slideTemplates`     | The slide template gallery and Home > Slide templates.                            |
+| `passwordProtection` | The password protection dialog and the File > Info Protect card.                  |
+| `signatures`         | The digital signatures dialog and the File > Info Signatures card.                |
 
 ### Export formats (`hiddenExportFormats`)
 
@@ -1195,6 +1205,43 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 | `gif`       | Export the deck as an animated GIF.                  |
 | `json`      | Export the parsed deck as JSON.                      |
 | `copyImage` | Copy the current slide to the clipboard as an image. |
+
+### Capabilities (`capabilities`)
+
+| Id        | What `false` removes                                                                |
+| --------- | ----------------------------------------------------------------------------------- |
+| `edit`    | Editing. `false` opens the deck read-only whatever the edit prop says.              |
+| `export`  | Exporting: the same as hiding the `export` dialog.                                  |
+| `print`   | Printing: the same as hiding the `print` dialog.                                    |
+| `share`   | Sharing: hides the `share` and `broadcast` dialogs.                                 |
+| `copy`    | Copying content out: Copy, Cut, Save as Picture, their shortcuts and Copy as image. |
+| `present` | Presenting: the same as disabling the `presentMode` feature.                        |
+| `comment` | Commenting: the same as disabling the `comments` feature.                           |
+
+### Replaceable regions (`regions`)
+
+| Id                  | Region                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `inspector`         | The right-hand inspector column (the pane, not its open/close state).                                  |
+| `slidesPane`        | The slide thumbnail rail on the left.                                                                  |
+| `notes`             | The speaker-notes panel under the canvas.                                                              |
+| `statusBar`         | The status bar under the canvas.                                                                       |
+| `dialog.options`    | The body of File > Options (the Settings dialog). Context adds `options`, `setOption`, `resetOptions`. |
+| `dialog.share`      | The body of the Share dialog.                                                                          |
+| `dialog.broadcast`  | The body of the Broadcast dialog.                                                                      |
+| `dialog.print`      | The body of the Print dialog.                                                                          |
+| `backstage.home`    | The body of File > Home.                                                                               |
+| `backstage.new`     | The body of File > New.                                                                                |
+| `backstage.open`    | The body of File > Open.                                                                               |
+| `backstage.info`    | The body of File > Info.                                                                               |
+| `backstage.save`    | The body of File > Save.                                                                               |
+| `backstage.saveAs`  | The body of File > Save As.                                                                            |
+| `backstage.print`   | The body of File > Print.                                                                              |
+| `backstage.share`   | The body of File > Share.                                                                              |
+| `backstage.export`  | The body of File > Export.                                                                             |
+| `backstage.close`   | The body of File > Close.                                                                              |
+| `backstage.account` | The body of File > Account.                                                                            |
+| `backstage.options` | The body of File > Options.                                                                            |
 
 ### Drawing tools (`hiddenDrawingTools`)
 

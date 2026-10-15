@@ -10,7 +10,10 @@
  *  - switching off `editPoints` removes the Edit Points menu entry;
  *  - hiding a dialog removes every entry point that opens it (toolbar button,
  *    File tab page, action card);
- *  - hiding every export format removes the Export page and button.
+ *  - hiding every export format removes the Export page and button;
+ *  - `capabilities` expand into the dialogs, features and commands they gate,
+ *    and hiding a dialog or panel removes the buttons, menu entries and
+ *    shortcuts that open it (the tables are in `customization-entry-points.ts`).
  *
  * @module render/customization/customization-resolve
  */
@@ -19,12 +22,27 @@ import type { BackstageCardId } from '../backstage-cards';
 import type { CanvasContextMenuCommandId } from '../canvas-context-menu-commands';
 import type { ContextMenuCommandId } from '../context-menu-commands';
 import type { EditPointsCommandId } from '../edit-points/edit-points-menu';
+import type { EditorKeyActionName } from '../editor-keymap';
 import type { RibbonContextualTabId, ToolbarActionId } from '../toolbar-actions';
 import { VIEWER_EXPORT_FORMAT_IDS } from './customization-catalog';
+import {
+	DIALOG_ENTRY_POINTS,
+	FEATURE_ENTRY_POINTS,
+	PANEL_ENTRY_POINTS,
+	expandCapabilities,
+} from './customization-entry-points';
+import type { EntryPoints } from './customization-entry-points';
 import { resolveKeyboardCustomization } from './customization-keymap';
 import type { ResolvedKeyboardCustomization } from './customization-keymap';
+import type {
+	HostBackstagePage,
+	ViewerRegionId,
+	ViewerRegionRenderer,
+} from './customization-regions';
+import { resolveRegions } from './customization-resolve-regions';
 import { resolveRibbonCustomization } from './customization-resolve-ribbon';
 import type {
+	ViewerCapabilities,
 	OptionsPageId,
 	OptionsSectionId,
 	OptionsSettingId,
@@ -66,19 +84,13 @@ export interface ResolvedCustomization {
 	disabledFeatures: ReadonlySet<ViewerFeatureId>;
 	hiddenDialogs: ReadonlySet<ViewerDialogId>;
 	keyboard: ResolvedKeyboardCustomization;
+	/** The host's capability switches as given (`edit` is read by `isEditingAllowed`). */
+	capabilities: ViewerCapabilities;
+	/** Replaced regions; a hidden region is left out even when the host replaced it. */
+	regions: ReadonlyMap<ViewerRegionId, ViewerRegionRenderer>;
+	/** Host File tab pages, in the order given. */
+	hostBackstagePages: readonly HostBackstagePage[];
 }
-
-/** Which toolbar button, File page and card each dialog owns. */
-const DIALOG_ENTRY_POINTS: Record<
-	ViewerDialogId,
-	{ actions: ToolbarActionId[]; pages: BackstagePage[]; cards: BackstageCardId[] }
-> = {
-	options: { actions: [], pages: ['options'], cards: [] },
-	share: { actions: ['share'], pages: ['share'], cards: ['share'] },
-	broadcast: { actions: ['broadcast'], pages: [], cards: [] },
-	print: { actions: [], pages: ['print'], cards: ['print'] },
-	export: { actions: ['export'], pages: ['export'], cards: [...VIEWER_EXPORT_FORMAT_IDS] },
-};
 
 function addAll<T>(target: Set<T>, values: readonly T[] | undefined): void {
 	for (const value of values ?? []) {
@@ -100,39 +112,67 @@ function resolveDialogs(customization: ViewerCustomization): Set<ViewerDialogId>
 	return dialogs;
 }
 
+/** The resolved sets that entry points add to. */
+interface EntryTargets {
+	actions: Set<ToolbarActionId>;
+	controls: Set<RibbonControlId>;
+	groups: Set<RibbonGroupId>;
+	elementCommands: Set<ContextMenuCommandId>;
+	shortcuts: Set<EditorKeyActionName>;
+	pages: Set<BackstagePage>;
+	cards: Set<BackstageCardId>;
+}
+
+function hideEntryPoints(targets: EntryTargets, entry: EntryPoints | undefined): void {
+	if (!entry) {
+		return;
+	}
+	addAll(targets.actions, entry.actions);
+	addAll(targets.controls, entry.controls);
+	addAll(targets.groups, entry.groups);
+	addAll(targets.elementCommands, entry.elementCommands);
+	addAll(targets.shortcuts, entry.shortcuts);
+	addAll(targets.pages, entry.pages);
+	addAll(targets.cards, entry.cards);
+}
+
 /** Normalise `customization` (undefined means "customise nothing"). */
 export function resolveCustomization(
 	customization: ViewerCustomization | undefined,
 ): ResolvedCustomization {
-	const c = customization ?? {};
+	const c = expandCapabilities(customization ?? {});
 	const ribbon = resolveRibbonCustomization(c.ribbon);
 	const hiddenActions = ribbon.actions;
 	const pages = new Set<BackstagePage>(c.backstage?.hiddenPages ?? []);
 	const cards = new Set<BackstageCardId>(c.backstage?.hiddenCards ?? []);
 	addAll(cards, c.hiddenExportFormats);
 	const dialogs = resolveDialogs(c);
-	for (const dialog of dialogs) {
-		const entry = DIALOG_ENTRY_POINTS[dialog];
-		addAll(hiddenActions, entry.actions);
-		addAll(pages, entry.pages);
-		addAll(cards, entry.cards);
-	}
 	const features = new Set<ViewerFeatureId>(c.disabledFeatures ?? []);
+	const panels = new Set<ViewerPanelId>(c.hiddenPanels ?? []);
 	const elementCommands = new Set<ContextMenuCommandId>(c.contextMenu?.hiddenElementCommands);
+	const keyboard = resolveKeyboardCustomization(c.keyboard);
+	const shortcuts = new Set(keyboard.disabled);
+	const targets: EntryTargets = {
+		actions: hiddenActions,
+		controls: ribbon.controls,
+		groups: ribbon.groups,
+		elementCommands,
+		shortcuts,
+		pages,
+		cards,
+	};
+	for (const dialog of dialogs) {
+		hideEntryPoints(targets, DIALOG_ENTRY_POINTS[dialog]);
+	}
+	for (const panel of panels) {
+		hideEntryPoints(targets, PANEL_ENTRY_POINTS[panel]);
+	}
+	for (const feature of features) {
+		hideEntryPoints(targets, FEATURE_ENTRY_POINTS[feature]);
+	}
 	const optionsPages = new Set<OptionsPageId>(c.options?.hiddenPages ?? []);
 	if (features.has('ai')) {
-		elementCommands.add('ai-ask');
-		elementCommands.add('ai-fix');
 		optionsPages.add('ai');
-	}
-	if (features.has('comments')) {
-		elementCommands.add('comment');
-	}
-	if (features.has('presentMode')) {
-		hiddenActions.add('slideShow');
-	}
-	if (features.has('editPoints')) {
-		elementCommands.add('edit-points');
 	}
 	return {
 		hiddenActions,
@@ -155,10 +195,13 @@ export function resolveCustomization(
 		hiddenDrawingTools: new Set(c.hiddenDrawingTools ?? []),
 		elementMenuEnabled: c.contextMenu?.disableElementMenu !== true,
 		canvasMenuEnabled: c.contextMenu?.disableCanvasMenu !== true,
-		hiddenPanels: new Set(c.hiddenPanels ?? []),
+		hiddenPanels: panels,
 		disabledFeatures: features,
 		hiddenDialogs: dialogs,
-		keyboard: resolveKeyboardCustomization(c.keyboard),
+		keyboard: { ...keyboard, disabled: shortcuts },
+		capabilities: { ...c.capabilities },
+		regions: resolveRegions(c, panels, dialogs, pages),
+		hostBackstagePages: c.backstage?.extraPages ?? [],
 	};
 }
 
@@ -181,6 +224,27 @@ export function resolveEffectiveHiddenActions(
 	const merged = new Set<ToolbarActionId>(legacyHiddenActions ?? []);
 	addAll(merged, [...resolved.hiddenActions]);
 	return [...merged];
+}
+
+/**
+ * True unless the host made the deck read-only (`capabilities.edit: false`).
+ * A binding's effective edit state is its own edit prop AND this.
+ */
+export function isEditingAllowed(resolved: ResolvedCustomization): boolean {
+	return resolved.capabilities.edit !== false;
+}
+
+/** The host renderer replacing `region`, or undefined to render the built-in. */
+export function getRegionRenderer(
+	resolved: ResolvedCustomization,
+	region: ViewerRegionId,
+): ViewerRegionRenderer | undefined {
+	return resolved.regions.get(region);
+}
+
+/** True when the host replaced `region` (and did not also hide it). */
+export function isRegionReplaced(resolved: ResolvedCustomization, region: ViewerRegionId): boolean {
+	return resolved.regions.has(region);
 }
 
 /** True unless the host removed this chrome region. */

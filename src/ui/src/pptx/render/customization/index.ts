@@ -7,6 +7,8 @@ export * from './customization-surfaces';
 export * from './customization-types';
 export * from './inspector-customization';
 export * from './customization-descriptions';
+export * from './customization-entry-points';
+export * from './customization-regions';
 export * from './host-menu-commands';
 export * from './ribbon-control-catalog';
 export * from './ribbon-control-ids';

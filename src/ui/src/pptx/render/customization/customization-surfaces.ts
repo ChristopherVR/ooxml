@@ -9,6 +9,7 @@
  *
  * @module render/customization/customization-surfaces
  */
+import type { HostBackstagePage } from './customization-regions';
 import type { BackstagePage } from '../backstage';
 import type { BackstageCard } from '../backstage-cards';
 import type { CanvasContextMenuEntry } from '../canvas-context-menu-commands';
@@ -182,6 +183,49 @@ export function customizeBackstageNav<T extends { id: BackstagePage }>(
 	resolved: ResolvedCustomization,
 ): T[] {
 	return items.filter((item) => isBackstagePageVisible(resolved, item.id));
+}
+
+/** One File tab nav entry: a built-in page, or a host page (`host` set). */
+export interface BackstageNavEntry {
+	id: string;
+	label: string;
+	/** The i18n key of a built-in page's label; host labels are used as given. */
+	labelKey?: string;
+	group?: 'main' | 'footer';
+	/** Set for a host page; mount its body as region `backstage.host.<id>`. */
+	host?: HostBackstagePage;
+}
+
+/**
+ * The File tab nav a binding renders: the visible built-in pages, then each
+ * host page after the last built-in page of its group.
+ */
+export function backstageNavEntries<
+	T extends { id: BackstagePage; label: string; labelKey?: string; group?: 'main' | 'footer' },
+>(items: readonly T[], resolved: ResolvedCustomization): BackstageNavEntry[] {
+	const entries: BackstageNavEntry[] = customizeBackstageNav(items, resolved).map((item) => ({
+		...item,
+	}));
+	const seen = new Set<string>();
+	for (const page of resolved.hostBackstagePages) {
+		if (seen.has(page.id)) {
+			continue;
+		}
+		seen.add(page.id);
+		const group = page.group ?? 'main';
+		const entry: BackstageNavEntry = {
+			id: `host.${page.id}`,
+			label: page.label,
+			group,
+			host: page,
+		};
+		let at = entries.length;
+		while (at > 0 && (entries[at - 1]?.group ?? 'main') !== group) {
+			at--;
+		}
+		entries.splice(at === 0 ? entries.length : at, 0, entry);
+	}
+	return entries;
 }
 
 /** Filter a page's action cards down to the ones the host kept. */

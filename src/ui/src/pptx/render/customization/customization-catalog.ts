@@ -24,9 +24,16 @@ import { VIEWER_OPTIONS_TABS } from '../options/viewer-options-schema';
 import { TOOLBAR_TABS } from '../toolbar-actions';
 import type { ToolbarButtonId, ToolbarTabId } from '../toolbar-actions';
 import type {
+	ViewerBackstageRegionId,
+	ViewerDialogRegionId,
+	ViewerPanelRegionId,
+	ViewerRegionId,
+} from './customization-regions';
+import type {
 	OptionsPageId,
 	OptionsSectionId,
 	OptionsSettingId,
+	ViewerCapabilityId,
 	ViewerDialogId,
 	ViewerDrawingToolId,
 	ViewerExportFormatId,
@@ -182,6 +189,10 @@ export const VIEWER_PANEL_IDS = exhaustive<ViewerPanelId>()([
 	'notes',
 	'quickAccessToolbar',
 	'titleBar',
+	'selectionPane',
+	'findReplace',
+	'accessibilityPane',
+	'comparePane',
 ]);
 
 export const VIEWER_FEATURE_IDS = exhaustive<ViewerFeatureId>()([
@@ -214,7 +225,48 @@ export const VIEWER_DIALOG_IDS = exhaustive<ViewerDialogId>()([
 	'broadcast',
 	'print',
 	'export',
+	'hyperlink',
+	'equation',
+	'pasteSpecial',
+	'slideTemplates',
+	'passwordProtection',
+	'signatures',
 ]);
+
+export const VIEWER_CAPABILITY_IDS = exhaustive<ViewerCapabilityId>()([
+	'edit',
+	'export',
+	'print',
+	'share',
+	'copy',
+	'present',
+	'comment',
+]);
+
+export const VIEWER_PANEL_REGION_IDS = exhaustive<ViewerPanelRegionId>()([
+	'inspector',
+	'slidesPane',
+	'notes',
+	'statusBar',
+]);
+
+export const VIEWER_DIALOG_REGION_IDS = exhaustive<ViewerDialogRegionId>()([
+	'dialog.options',
+	'dialog.share',
+	'dialog.broadcast',
+	'dialog.print',
+]);
+
+export const VIEWER_BACKSTAGE_REGION_IDS: readonly ViewerBackstageRegionId[] = BACKSTAGE_NAV.map(
+	(item): ViewerBackstageRegionId => `backstage.${item.id}`,
+);
+
+/** Every replaceable region: panels, dialogs, then File tab pages. */
+export const VIEWER_REGION_IDS: readonly ViewerRegionId[] = [
+	...VIEWER_PANEL_REGION_IDS,
+	...VIEWER_DIALOG_REGION_IDS,
+	...VIEWER_BACKSTAGE_REGION_IDS,
+];
 
 export const VIEWER_EXPORT_FORMAT_IDS = exhaustive<ViewerExportFormatId>()([
 	'pdf',

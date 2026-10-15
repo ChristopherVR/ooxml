@@ -8,7 +8,9 @@
  */
 import type { EditorKeyActionName } from '../editor-keymap';
 import type { ToolbarButtonId } from '../toolbar-actions';
+import type { ViewerDialogRegionId, ViewerPanelRegionId } from './customization-regions';
 import type {
+	ViewerCapabilityId,
 	ViewerDialogId,
 	ViewerExportFormatId,
 	ViewerFeatureId,
@@ -38,12 +40,18 @@ export const VIEWER_PANEL_DESCRIPTIONS: Record<ViewerPanelId, string> = {
 	notes: 'The speaker-notes panel under the canvas.',
 	quickAccessToolbar: 'The quick-access strip in the title bar (save, undo, redo, ...).',
 	titleBar: 'The title bar above the ribbon (file name, quick access, account).',
+	selectionPane: 'The Selection Pane and View > Selection Pane.',
+	findReplace: 'The Find and Replace panel, Home > Find / Replace and their shortcuts.',
+	accessibilityPane:
+		'The accessibility checker panel, Review > Check Accessibility and Help > Accessibility checker.',
+	comparePane: 'The Compare panel and Review > Compare.',
 };
 
 export const VIEWER_FEATURE_DESCRIPTIONS: Record<ViewerFeatureId, string> = {
 	ai: 'The AI assistant: toolbar toggle, chat panel, AI context-menu entries, AI Options page.',
 	collaboration: 'Real-time collaboration: Share and Broadcast buttons, dialogs and File pages.',
-	comments: 'Commenting: the Add Comment context-menu entry.',
+	comments:
+		'Commenting: the Add Comment context-menu entry and the Comments groups of Insert and Review.',
 	presentMode: 'Slide-show entry points: the Slide Show ribbon tab.',
 	editPoints:
 		'Edit Points: the Edit Points context-menu entry and the point-editing mode it opens.',
@@ -55,6 +63,37 @@ export const VIEWER_DIALOG_DESCRIPTIONS: Record<ViewerDialogId, string> = {
 	broadcast: 'The Broadcast dialog and its button.',
 	print: 'The Print dialog, File > Print page and card.',
 	export: 'File > Export page, its cards and the Export button.',
+	hyperlink: 'The Insert Hyperlink dialog: Insert > Link, the Link menu entry and its shortcut.',
+	equation: 'The Equation editor and Insert > Equation.',
+	pasteSpecial: 'The Paste Special dialog and its shortcut.',
+	slideTemplates: 'The slide template gallery and Home > Slide templates.',
+	passwordProtection: 'The password protection dialog and the File > Info Protect card.',
+	signatures: 'The digital signatures dialog and the File > Info Signatures card.',
+};
+
+export const VIEWER_CAPABILITY_DESCRIPTIONS: Record<ViewerCapabilityId, string> = {
+	edit: 'Editing. `false` opens the deck read-only whatever the edit prop says.',
+	export: 'Exporting: the same as hiding the `export` dialog.',
+	print: 'Printing: the same as hiding the `print` dialog.',
+	share: 'Sharing: hides the `share` and `broadcast` dialogs.',
+	copy: 'Copying content out: Copy, Cut, Save as Picture, their shortcuts and Copy as image.',
+	present: 'Presenting: the same as disabling the `presentMode` feature.',
+	comment: 'Commenting: the same as disabling the `comments` feature.',
+};
+
+export const VIEWER_PANEL_REGION_DESCRIPTIONS: Record<ViewerPanelRegionId, string> = {
+	inspector: 'The right-hand inspector column (the pane, not its open/close state).',
+	slidesPane: 'The slide thumbnail rail on the left.',
+	notes: 'The speaker-notes panel under the canvas.',
+	statusBar: 'The status bar under the canvas.',
+};
+
+export const VIEWER_DIALOG_REGION_DESCRIPTIONS: Record<ViewerDialogRegionId, string> = {
+	'dialog.options':
+		'The body of File > Options (the Settings dialog). Context adds `options`, `setOption`, `resetOptions`.',
+	'dialog.share': 'The body of the Share dialog.',
+	'dialog.broadcast': 'The body of the Broadcast dialog.',
+	'dialog.print': 'The body of the Print dialog.',
 };
 
 export const VIEWER_EXPORT_FORMAT_DESCRIPTIONS: Record<ViewerExportFormatId, string> = {
