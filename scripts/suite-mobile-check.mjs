@@ -33,6 +33,12 @@ try {
 				colorScheme: scheme,
 			});
 			await context.addInitScript(() => (globalThis.ooxmlSkipStart = true));
+			// The suite opens dark; choose the mode through its own appearance preference.
+			await context.addInitScript(
+				(mode) =>
+					localStorage.setItem('ooxml-suite-theme', JSON.stringify({ mode, accent: 'blue' })),
+				scheme,
+			);
 			const page = await context.newPage();
 			page.on('pageerror', (error) => errors.push(`${label}: ${error.message}`));
 			const shot = (name) =>
@@ -47,6 +53,11 @@ try {
 				);
 			await page.goto(base);
 			await page.locator('[data-create]').first().waitFor({ state: 'attached' });
+			assert.equal(
+				await page.evaluate(() => document.documentElement.dataset.theme),
+				scheme,
+				`${label}: theme applied`,
+			);
 			await noOverflow('home');
 			await shot('home');
 			for (const kind of ['docx', 'xlsx', 'pptx']) {

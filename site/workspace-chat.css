@@ -907,7 +907,7 @@
 	.chat-new {
 		min-height: 40px;
 	}
-	.chat-history-back {
+	.chat-history .chat-history-back {
 		display: inline-flex;
 		align-items: center;
 		justify-self: start;
