@@ -228,6 +228,7 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 	const merges: CellRange[] = [];
 	const hyperlinks: Hyperlink[] = [];
 	let r = 0;
+	let spanned = 0;
 	for (const tr of table.matchAll(/<tr\b[^>]*>([\s\S]*?)(?=<tr\b|<\/tbody|<\/table|$)/gi)) {
 		const row = (grid[r] ??= []);
 		let c = 0;
@@ -245,8 +246,12 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 			if (td[1]?.toLowerCase() === 'h') patch.font = { bold: true, ...patch.font };
 			const text = cellText(inner);
 			row[c] = text === '' && !Object.keys(patch).length ? null : toCell(text, attrs, patch, base);
-			const rowSpan = Math.max(1, Number(attrs.get('rowspan') ?? 1) || 1);
-			const colSpan = Math.max(1, Number(attrs.get('colspan') ?? 1) || 1);
+			if (r >= MAX_PASTE_ROWS || c >= MAX_PASTE_COLS) continue;
+			let rowSpan = clampSpan(attrs.get('rowspan'), MAX_PASTE_ROWS - r);
+			let colSpan = clampSpan(attrs.get('colspan'), MAX_PASTE_COLS - c);
+			// A span that would push the paste past its cell budget is not expanded.
+			if (spanned + rowSpan * colSpan > MAX_PASTE_CELLS) rowSpan = colSpan = 1;
+			spanned += rowSpan * colSpan;
 			const anchor = /<a\b([^>]*)>/i.exec(inner);
 			const linkAttrs = anchor ? parseAttributes(anchor[1] ?? '') : undefined;
 			const link = hyperlinkFromHtmlAttributes(linkAttrs, {
@@ -269,11 +274,24 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 		r++;
 	}
 	const rows = grid.length;
-	const cols = Math.max(0, ...grid.map((g) => g.length));
+	let cols = 0;
+	for (const g of grid) if (g && g.length > cols) cols = g.length;
+	if (rows * cols > MAX_PASTE_CELLS) return undefined;
 	const data = Array.from({ length: rows }, (_v, i) =>
 		Array.from({ length: cols }, (_w, j) => grid[i]?.[j] ?? null),
 	);
 	return rows && cols ? { rows, cols, data, merges, hyperlinks } : undefined;
+}
+
+/** The most rows, columns and (expanded) cells one pasted table may fill. */
+export const MAX_PASTE_ROWS = 1_048_576;
+export const MAX_PASTE_COLS = 16_384;
+export const MAX_PASTE_CELLS = 1_000_000;
+
+/** A rowspan / colspan attribute as a whole number between 1 and `max`. */
+function clampSpan(attr: string | undefined, max: number): number {
+	const n = Math.trunc(Number(attr ?? 1));
+	return Math.min(Math.max(1, Number.isFinite(n) ? n : 1), Math.max(1, max));
 }
 
 function toCell(
