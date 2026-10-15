@@ -6,9 +6,53 @@ export type XmlElement = Element;
 export type XmlNode = Node;
 type XmldomNode = Parameters<InstanceType<typeof XMLSerializer>['serializeToString']>[0];
 
+export interface XmlParseLimits {
+	/** Maximum element nesting depth; defaults to {@link DEFAULT_XML_LIMITS}. */
+	maxDepth?: number;
+	/** Maximum number of element start tags in one part; defaults to {@link DEFAULT_XML_LIMITS}. */
+	maxNodes?: number;
+}
+
 export interface ParseOptions {
 	/** Names the document kind in error messages (`Invalid DOCX XML: ...`); defaults to `OOXML`. */
 	label?: string;
+	/** Resource limits checked by a linear pre-scan before the DOM is built. */
+	limits?: XmlParseLimits;
+}
+
+/** Defaults far above any real OOXML part, low enough to stop stack and memory exhaustion. */
+export const DEFAULT_XML_LIMITS: Readonly<Required<XmlParseLimits>> = {
+	maxDepth: 512,
+	maxNodes: 5_000_000,
+};
+
+// Comments, CDATA and processing instructions are consumed whole so their text never counts as
+// markup. Tags (with quoted attribute values) give: group 1 `/` for end tags, group 2 the name,
+// group 3 `/` for empty-element tags.
+const MARKUP_RE =
+	/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<(\/?)([^\s\/>]+)(?:\s+[^\s=\/>]+\s*=\s*(?:"[^"]*"|'[^']*'))*\s*(\/?)>/g;
+
+/**
+ * Linear pre-scan of the markup: throws when nesting depth or the element count exceeds `limits`.
+ * It does not check well-formedness; the DOM parser still does that afterwards.
+ */
+export function checkXmlLimits(xml: string, label: string, limits: XmlParseLimits = {}): void {
+	const maxDepth = limits.maxDepth ?? DEFAULT_XML_LIMITS.maxDepth;
+	const maxNodes = limits.maxNodes ?? DEFAULT_XML_LIMITS.maxNodes;
+	let depth = 0;
+	let nodes = 0;
+	for (const match of xml.matchAll(MARKUP_RE)) {
+		const [, closing, name, selfClosing] = match;
+		if (name === undefined) continue; // comment, CDATA or processing instruction
+		if (closing) {
+			depth--;
+			continue;
+		}
+		nodes++;
+		if (nodes > maxNodes) throw new Error(`${label} XML exceeds the limit of ${maxNodes} elements`);
+		if (!selfClosing && ++depth > maxDepth)
+			throw new Error(`${label} XML exceeds the nesting depth limit of ${maxDepth}`);
+	}
 }
 
 /**
@@ -19,6 +63,7 @@ export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
 	const label = options.label ?? 'OOXML';
 	if (/<!DOCTYPE|<!ENTITY/i.test(xml))
 		throw new Error(`${label} XML with DTD or entity declarations is not supported`);
+	checkXmlLimits(xml, label, options.limits);
 	let parseError = '';
 	let parsed: XmlDocument;
 	try {
