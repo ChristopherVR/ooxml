@@ -146,6 +146,9 @@ test('calendar: week view, scheduling, details, join and .ics', async ({ browser
 		.click();
 	const own = ada.getByRole('dialog', { name: 'Design sync', exact: true });
 	await own.getByRole('button', { name: 'Edit', exact: true }).click();
+	// A repeating meeting asks whether the change is for this event or the whole series.
+	await own.getByRole('radio', { name: 'All events in the series', exact: true }).check();
+	await own.getByRole('button', { name: 'Continue', exact: true }).click();
 	const form = ada.getByRole('dialog', { name: 'Edit meeting', exact: true });
 	await form.getByRole('textbox', { name: 'Title', exact: true }).fill('Design sync v2');
 	await form.getByRole('button', { name: 'Save', exact: true }).click();
@@ -155,10 +158,10 @@ test('calendar: week view, scheduling, details, join and .ics', async ({ browser
 		.getByRole('button', { name: /^Design sync v2/u })
 		.first()
 		.click();
-	await ada
-		.getByRole('dialog', { name: 'Design sync v2', exact: true })
-		.getByRole('button', { name: 'Cancel meeting' })
-		.click();
+	const cancelling = ada.getByRole('dialog', { name: 'Design sync v2', exact: true });
+	await cancelling.getByRole('button', { name: 'Cancel meeting' }).click();
+	await cancelling.getByRole('radio', { name: 'All events in the series', exact: true }).check();
+	await cancelling.getByRole('button', { name: 'Cancel meeting' }).click();
 	await expect.poll(() => count(bob, 'meetings')).toBe(0);
 	await context.close();
 });

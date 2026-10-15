@@ -242,6 +242,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 		>
 			${placed.map((p) => {
 				const meeting = byKey.get(p.occurrence.key)!;
+				const title = p.occurrence.title ?? meeting.title;
 				const time = `${this.clockText(p.occurrence.start)} - ${this.clockText(p.occurrence.end)}`;
 				return html`<button
 					type="button"
@@ -249,7 +250,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 					data-live=${String(meeting.live)}
 					data-mine=${String(meeting.mine)}
 					data-short=${String(p.endMinute - p.startMinute <= 30)}
-					aria-label=${`${meeting.title}, ${time}`}
+					aria-label=${`${title}, ${time}`}
 					style=${`--top:${(p.startMinute / 1440) * 100};--height:${((p.endMinute - p.startMinute) / 1440) * 100};--col:${p.column};--span:${p.columns}`}
 					@click=${(e: Event) => {
 						e.stopPropagation();
@@ -259,7 +260,7 @@ export class OfficeUiCalendarView extends TeamsElement {
 						});
 					}}
 				>
-					<span class="event-title">${meeting.title}</span>
+					<span class="event-title">${title}</span>
 					<span class="event-time">${time}</span>
 				</button>`;
 			})}

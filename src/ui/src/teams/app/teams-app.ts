@@ -57,7 +57,7 @@ import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
 import { defineTeamsNewChatDialog } from './new-chat-dialog';
 import { defineTeamsChatPeopleDialog } from './chat-people-dialog';
 import { defineTeamsMeetingDialog } from './meeting-dialog';
-import { defineTeamsMeetingDetails } from './meeting-details';
+import { type MeetingChange, defineTeamsMeetingDetails } from './meeting-details';
 import { chatHeader, meetingCards } from './chat-app';
 import { downloadText } from './calendar-app';
 
@@ -164,8 +164,9 @@ export class TeamsApp extends LitElement {
 	declare creatingChannel: boolean;
 	declare newChat: boolean;
 	declare chatPeople: boolean;
-	/** The New / Edit meeting form: the meeting being edited and the prefilled start. */
-	declare meetingForm: { meetingId: string; start: number } | null;
+	/** The New / Edit meeting form: the meeting being edited, the prefilled start and, when only one
+	 * occurrence of a repeating meeting is edited, its original start. */
+	declare meetingForm: { meetingId: string; start: number; occurrence?: number } | null;
 	/** The meeting details dialog: the meeting and the occurrence that was opened. */
 	declare meetingDetails: { meetingId: string; start: number } | null;
 	declare panel: Panel;
@@ -1351,10 +1352,20 @@ export class TeamsApp extends LitElement {
 		}
 	}
 
-	private saveMeeting(form: MeetingFormInput, id?: string): boolean {
+	private saveMeeting(form: MeetingFormInput, id?: string, occurrence?: number): boolean {
 		const c = this.client;
 		if (!c) return false;
-		const saved = id ? c.updateMeeting(id, form) : c.createMeeting(form);
+		const saved =
+			id && occurrence
+				? c.editOccurrence(id, occurrence, {
+						start: form.start,
+						end: form.end,
+						title: form.title,
+						...(form.description !== undefined ? { description: form.description } : {}),
+					})
+				: id
+					? c.updateMeeting(id, form)
+					: c.createMeeting(form);
 		if (!saved) return false;
 		this.meetingForm = null;
 		return true;
@@ -1373,9 +1384,10 @@ export class TeamsApp extends LitElement {
 				?open=${this.meetingForm !== null}
 				.meeting=${editing}
 				.start=${this.meetingForm?.start ?? 0}
+				.occurrence=${this.meetingForm?.occurrence ?? 0}
 				.contacts=${s.contacts}
 				.channels=${s.channels.map((ch) => ({ id: ch.id, name: ch.name }))}
-				.save=${(form: MeetingFormInput, id?: string) => this.saveMeeting(form, id)}
+				.save=${(form: MeetingFormInput, id?: string, occurrence?: number) => this.saveMeeting(form, id, occurrence)}
 				@teams-dialog-close=${() => (this.meetingForm = null)}
 			></teams-meeting-dialog>
 			<teams-meeting-details
@@ -1391,13 +1403,27 @@ export class TeamsApp extends LitElement {
 					this.meetingDetails = null;
 					if (conversation) this.selectChannel(conversation);
 				}}
-				@teams-meeting-edit=${(e: CustomEvent<{ meetingId: string }>) => {
+				@teams-meeting-edit=${(e: CustomEvent<MeetingChange>) => {
+					const { meetingId, scope, recurrenceId } = e.detail;
+					const shown = this.meetingDetails?.start ?? 0;
 					this.meetingDetails = null;
-					this.meetingForm = { meetingId: e.detail.meetingId, start: 0 };
+					this.meetingForm =
+						scope === 'occurrence'
+							? { meetingId, start: shown, occurrence: recurrenceId }
+							: { meetingId, start: 0 };
 				}}
-				@teams-meeting-cancel=${(e: CustomEvent<{ meetingId: string }>) => {
-					if (globalThis.confirm?.('Cancel this meeting for everyone?') === false) return;
-					if (c?.cancelMeeting(e.detail.meetingId)) this.meetingDetails = null;
+				@teams-meeting-cancel=${(e: CustomEvent<MeetingChange>) => {
+					const { meetingId, scope, recurrenceId } = e.detail;
+					if (scope === 'occurrence') {
+						if (c?.cancelOccurrence(meetingId, recurrenceId)) this.meetingDetails = null;
+						return;
+					}
+					const ask =
+						details?.repeat === 'none'
+							? 'Cancel this meeting for everyone?'
+							: 'Cancel every event in this series?';
+					if (globalThis.confirm?.(ask) === false) return;
+					if (c?.cancelMeeting(meetingId)) this.meetingDetails = null;
 				}}
 				@teams-meeting-ics=${(e: CustomEvent<{ meetingId: string }>) => {
 					const file = c?.meetingIcs(e.detail.meetingId);

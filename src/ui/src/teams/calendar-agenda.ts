@@ -97,6 +97,7 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 	}
 
 	private row(o: Occurrence, m: MeetingView, now: number) {
+		const title = o.title ?? m.title;
 		const time = `${this.clock(o.start)} - ${this.clock(o.end)}`;
 		const joinable = m.live || (o.start - now <= JOIN_WINDOW_MS && o.end > now);
 		return html`<li>
@@ -104,11 +105,11 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 				type="button"
 				class="row"
 				data-live=${String(m.live)}
-				aria-label=${`${m.title}, ${time}`}
+				aria-label=${`${title}, ${time}`}
 				@click=${() => this.fire('office-agenda-open', { meetingId: m.id, start: o.start })}
 			>
 				<span class="time">${time}</span>
-				<span class="title">${m.title}</span>
+				<span class="title">${title}</span>
 				<span class="who">${m.mine ? 'You organized' : m.organizerName}</span>
 			</button>
 			${
@@ -116,7 +117,7 @@ export class OfficeUiCalendarAgenda extends TeamsElement {
 					? html`<button
 							type="button"
 							class="join"
-							aria-label=${`Join ${m.title}`}
+							aria-label=${`Join ${title}`}
 							@click=${() => this.fire('office-agenda-join', { meetingId: m.id })}
 						>
 							${m.live ? 'Join now' : 'Join'}

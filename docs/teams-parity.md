@@ -15,7 +15,7 @@ No feature is considered equivalent solely because a control is present.
 | Direct and group chats          | 1:1 and group chats with their own documents and rooms, recent-first list, unread, presence, rename, add, remove, leave, the channel composer features, server-admitted members only                                                            | Authenticated identity, per-chat attachment access, hidden directory, chat calls beyond the mesh, per-chat notifications                                                           |
 | Search and unread               | Message search, attachment metadata search, per-channel local read markers, @mentions, an Activity feed with read state and in-page notifications (toast, desktop, sound)                                                                       | Indexed file contents, filters, shared read receipts                                                                                                                               |
 | Presence                        | Awareness, typing, Available / Busy / Do not disturb / Be right back / Appear away / Appear offline, reset-after durations, status messages with expiry, automatic Away after a configurable idle time (legacy `availability` kept on the wire) | Authenticated identity, scheduled or calendar-driven status, privacy controls                                                                                                      |
-| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC; a week-view calendar with scheduling, repeats, meeting chats, channel meeting cards, .ics export and reminders                                                             | Invitations outside the workspace, RSVP, recurrence exceptions, SFU, lobby, host roles, recording, captions, backgrounds and large calls                                           |
+| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC; a week-view calendar with scheduling, repeats with an end and per-occurrence exceptions, meeting chats, channel meeting cards, .ics export and reminders                   | Invitations outside the workspace, RSVP, SFU, lobby, host roles, recording, captions, backgrounds and large calls                                                                  |
 | File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links                                                                                                                                     | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                                                                                      |
 | Office content                  | Native Word, Excel and Visio previews; DOM PowerPoint reading view with media; XLSX local editing and channel save copies                                                                                                                       | PowerPoint presentation playback, coediting, write-back/version conflict handling and fidelity acceptance corpus                                                                   |
 | Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                                                                                                                                                          | Full CommonMark/GFM, nested structure, reference links and inline precedence                                                                                                       |
@@ -681,17 +681,22 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
 - **Times and zones.** Meetings store UTC instants plus the organizer's IANA zone. A repeat keeps
   the organizer's wall-clock time across daylight saving changes (`ooxml-core/teams` `calendar`,
   `time-zone`; DST gaps move forward and repeated hours take the first); everything is rendered in
-  the viewer's zone. Repeats never end (there is no end date or exception handling), a meeting can
-  last at most 24 hours, and a change applies to the whole series. The `.ics` is written in UTC with
-  an RRULE, so a calendar that does not know the organizer's zone shifts a repeat by an hour across
-  daylight saving; attendee addresses do not exist, so names go in the description.
+  the viewer's zone. A repeat ends never, on a date (the end of that day on the organizer's device)
+  or after N occurrences. The organizer can cancel or change one occurrence (Edit or Cancel on a
+  repeating meeting asks "This event" or "All events in the series"); exceptions are keyed by the
+  occurrence's original start and are voided when the series start or repeat changes. A meeting can
+  last at most 24 hours. The `.ics` carries the organizer's TZID on DTSTART and DTEND with a
+  VTIMEZONE derived from `Intl` (yearly rules where the zone repeats them, each change written out
+  for ten years otherwise), COUNT or UNTIL (UTC), EXDATE for cancelled occurrences and an
+  overriding event with RECURRENCE-ID for changed ones; a UTC organizer gets plain UTC times.
+  Attendee addresses do not exist, so names go in the description.
 - **Reminders.** Five minutes before an occurrence starts the client announces it through the
   Activity notification path: a toast (View opens the meeting), a desktop notification when the tab
   is hidden, and the chime. Off and Do not disturb silence it, and a reminder held back by Do not
   disturb still fires if the status changes before the meeting starts. Each occurrence is announced
   once per device. The tab must be open: there is no push, email or background reminder.
-- **Not implemented.** Meeting lobby, roles, recording, captions, backgrounds, recurrence exceptions
-  and end dates, free/busy and scheduling assistant, RSVP and invitations outside the workspace, an
+- **Not implemented.** Meeting lobby, roles, recording, captions, backgrounds, monthly and yearly repeats,
+  free/busy and scheduling assistant, RSVP and invitations outside the workspace, an
   .ics import, external calendar sync, per-chat notification settings and chat search filters.
 
 ## Microsoft reference workflows
