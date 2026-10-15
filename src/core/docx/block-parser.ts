@@ -13,6 +13,7 @@ import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink';
 import { paragraphBookmarkNames } from './bookmarks';
 import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from './field-runs';
 import { parseEquation } from './equation';
+import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
 import {
 	collectParagraphRuns,
@@ -151,73 +152,85 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 	const props = first(node, 'pPr');
 	let simpleFieldIndex = 0;
 	const trackField = createFieldTracker();
-	const { runs } = collectParagraphRuns(
-		node,
-		(element, revision) => {
-			const run = parseRun(element, revision);
-			if (!fields) return trackField(element, run);
-			const metadata = fields.get(element);
-			if (metadata) {
-				run.field = { ...metadata.field };
-				if (metadata.fieldFlags) run.fieldFlags = { ...metadata.fieldFlags };
-			}
-			return run;
-		},
-		(item) => {
-			const equation = parseEquation(item);
-			if (equation) return [equation];
-			if (!named(item, 'fldSimple')) return undefined;
-			const instr = getW(item, 'instr') ?? '';
-			const link = parseSimpleHyperlinkField(instr);
-			const { runs: results } = collectParagraphRuns(
+	const parseInlineRun = (element: XmlElement, revision?: Revision): TextRun => {
+		const run = parseRun(element, revision);
+		if (!fields) return trackField(element, run);
+		const metadata = fields.get(element);
+		if (metadata) {
+			run.field = { ...metadata.field };
+			if (metadata.fieldFlags) run.fieldFlags = { ...metadata.fieldFlags };
+		}
+		return run;
+	};
+	const resolveInlineLink = (hyperlink: XmlElement) => {
+		if (!activeContext) return undefined;
+		const link = resolveHyperlink(hyperlink, activeContext.rels);
+		return link.href !== undefined || link.anchor !== undefined ? link : undefined;
+	};
+	const parseOther = (item: XmlElement): TextRun[] | undefined => {
+		if (named(item, 'sdt'))
+			return parseInlineControl(
 				item,
-				parseRun,
-				(child) => {
-					const equation = parseEquation(child);
-					return equation ? [equation] : undefined;
-				},
-				undefined,
+				parseInlineRun,
+				parseOther,
+				resolveInlineLink,
 				openComments,
 				openMoves,
 			);
-			if (link) return results.map((run) => ({ ...run, link }));
-			const field = { instr: instr.trim(), simple: true };
-			const flags = parseFieldFlags(item);
-			const fieldState = flags ? { fieldFlags: flags } : {};
-			const fieldInstanceId = `${id}:simple-field-${simpleFieldIndex++}`;
-			// A missing cache can show a placeholder; an explicitly empty cache must stay empty.
-			if (!results.length)
-				return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId, ...fieldState }];
-			if (
-				results.every(
-					(run) =>
-						!run.text &&
-						!run.equation &&
-						!run.image &&
-						!run.break &&
-						!run.noteReference &&
-						!run.noteMark &&
-						!run.fieldChar &&
-						run.fieldCode === undefined,
-				)
-			) {
-				// Empty text cannot carry a field mark in an editor. Reuse complex field markers
-				// so the instruction survives the model/editor round trip without visible text.
-				return [
-					{ text: '', fieldChar: 'begin', ...fieldState },
-					{ text: '', fieldCode: instr },
-					{ text: '', fieldChar: 'separate' },
-					...results,
-					{ text: '', fieldChar: 'end' },
-				];
-			}
-			return results.map((run) => ({ ...run, field, fieldInstanceId, ...fieldState }));
-		},
-		(hyperlink) => {
-			if (!activeContext) return undefined;
-			const link = resolveHyperlink(hyperlink, activeContext.rels);
-			return link.href !== undefined || link.anchor !== undefined ? link : undefined;
-		},
+		const equation = parseEquation(item);
+		if (equation) return [equation];
+		if (!named(item, 'fldSimple')) return undefined;
+		const instr = getW(item, 'instr') ?? '';
+		const link = parseSimpleHyperlinkField(instr);
+		const { runs: results } = collectParagraphRuns(
+			item,
+			parseRun,
+			(child) => {
+				const equation = parseEquation(child);
+				return equation ? [equation] : undefined;
+			},
+			undefined,
+			openComments,
+			openMoves,
+		);
+		if (link) return results.map((run) => ({ ...run, link }));
+		const field = { instr: instr.trim(), simple: true };
+		const flags = parseFieldFlags(item);
+		const fieldState = flags ? { fieldFlags: flags } : {};
+		const fieldInstanceId = `${id}:simple-field-${simpleFieldIndex++}`;
+		// A missing cache can show a placeholder; an explicitly empty cache must stay empty.
+		if (!results.length)
+			return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId, ...fieldState }];
+		if (
+			results.every(
+				(run) =>
+					!run.text &&
+					!run.equation &&
+					!run.image &&
+					!run.break &&
+					!run.noteReference &&
+					!run.noteMark &&
+					!run.fieldChar &&
+					run.fieldCode === undefined,
+			)
+		) {
+			// Empty text cannot carry a field mark in an editor. Reuse complex field markers
+			// so the instruction survives the model/editor round trip without visible text.
+			return [
+				{ text: '', fieldChar: 'begin', ...fieldState },
+				{ text: '', fieldCode: instr },
+				{ text: '', fieldChar: 'separate' },
+				...results,
+				{ text: '', fieldChar: 'end' },
+			];
+		}
+		return results.map((run) => ({ ...run, field, fieldInstanceId, ...fieldState }));
+	};
+	const { runs } = collectParagraphRuns(
+		node,
+		parseInlineRun,
+		parseOther,
+		resolveInlineLink,
 		openComments,
 		openMoves,
 	);
@@ -269,9 +282,12 @@ function parseContainer(container: XmlElement, idPrefix: string): Block[] {
 	const blocks: Block[] = [];
 	const fields = storyFieldResults(container);
 	let index = 0;
-	for (const node of Array.from(container.childNodes).filter(isElement)) {
-		if (named(node, 'p')) blocks.push(parseParagraph(node, `${idPrefix}p${index++}`, fields));
-		else if (named(node, 'tbl')) blocks.push(parseTable(node, `${idPrefix}t${index++}`, fields));
+	for (const { element: node, control } of flatBlocks(container)) {
+		const block = named(node, 'p')
+			? parseParagraph(node, `${idPrefix}p${index++}`, fields)
+			: parseTable(node, `${idPrefix}t${index++}`, fields);
+		if (control) block.contentControl = control;
+		blocks.push(block);
 	}
 	return blocks;
 }

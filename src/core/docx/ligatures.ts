@@ -46,6 +46,17 @@ function extensionPrefix(doc: XmlDocument, ns: string, preferred: string): strin
 	root.setAttributeNS(XMLNS, `xmlns:${prefix}`, ns);
 	return prefix;
 }
+/** Declares a Word extension namespace on the root and lists its prefix as ignorable. */
+export function declareIgnorableExtension(doc: XmlDocument, ns: string, preferred: string): string {
+	const prefix = extensionPrefix(doc, ns, preferred);
+	const mc = extensionPrefix(doc, MC, 'mc');
+	const ignored = new Set(
+		(doc.documentElement.getAttributeNS(MC, 'Ignorable') ?? '').split(/\s+/).filter(Boolean),
+	);
+	ignored.add(prefix);
+	doc.documentElement.setAttributeNS(MC, `${mc}:Ignorable`, [...ignored].join(' '));
+	return prefix;
+}
 export function writeLigatures(
 	doc: XmlDocument,
 	props: XmlElement,
@@ -53,13 +64,7 @@ export function writeLigatures(
 ): void {
 	for (const element of ligatureElements(props)) props.removeChild(element);
 	if (value === undefined) return;
-	const prefix = extensionPrefix(doc, WORD_2010_NS, 'w14');
-	const mc = extensionPrefix(doc, MC, 'mc');
-	const ignored = new Set(
-		(doc.documentElement.getAttributeNS(MC, 'Ignorable') ?? '').split(/\s+/).filter(Boolean),
-	);
-	ignored.add(prefix);
-	doc.documentElement.setAttributeNS(MC, `${mc}:Ignorable`, [...ignored].join(' '));
+	const prefix = declareIgnorableExtension(doc, WORD_2010_NS, 'w14');
 	const element = doc.createElementNS(WORD_2010_NS, `${prefix}:ligatures`);
 	element.setAttributeNS(WORD_2010_NS, `${prefix}:val`, value);
 	props.appendChild(element);

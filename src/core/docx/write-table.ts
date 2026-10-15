@@ -1,3 +1,4 @@
+import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
 import { expectDefined } from './expect-defined';
 import type { Block, Paragraph, Table, TableCell } from './model';
 import {
@@ -156,7 +157,7 @@ export function writeTable(
 		table.rows.some((row) => row.length !== width || row.some((cell) => !cell.paragraphs.length))
 	)
 		throw new Error('Tables must contain rectangular rows and at least one paragraph per cell.');
-	const oldRows = children(node, 'tr');
+	const oldRows = flatRows(node).map((entry) => entry.element);
 	type Source = {
 		row: number;
 		col: number;
@@ -167,7 +168,7 @@ export function writeTable(
 	const sourceById = new Map<string, Source>();
 	base?.rows.forEach((row, ri) =>
 		row.forEach((cell, ci) => {
-			const oldCell = children(expectDefined(oldRows[ri], `table row ${ri}`), 'tc')[ci];
+			const oldCell = flatCells(expectDefined(oldRows[ri], `table row ${ri}`))[ci]?.element;
 			if (oldCell)
 				for (const paragraph of cell.paragraphs)
 					sourceById.set(paragraph.id, {
@@ -196,7 +197,7 @@ export function writeTable(
 			sourceRow === undefined
 				? makeW(doc, 'tr')
 				: expectDefined(oldRows[sourceRow], `table row ${sourceRow}`);
-		const oldCells = children(tr, 'tc');
+		const oldCells = flatCells(tr).map((entry) => entry.element);
 		patchRowProperties(
 			doc,
 			tr,
@@ -224,7 +225,7 @@ export function writeTable(
 			patchCellShading(doc, tc, cell, source?.model);
 			patchCellMargins(doc, tc, cell.margins, source?.model.margins);
 			patchCellVerticalAlignment(doc, tc, cell.verticalAlign, source?.model.verticalAlign);
-			const oldParagraphs = children(tc, 'p');
+			const oldParagraphs = flatCellParagraphs(tc).map((entry) => entry.element);
 			const nextParagraphs = cell.paragraphs.map((paragraph) => {
 				const index = source?.paragraphs.findIndex((p) => p.id === paragraph.id) ?? -1;
 				return writeParagraph(

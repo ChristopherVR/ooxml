@@ -9,6 +9,8 @@ import type {
 import type { Paragraph, Table } from './model';
 import { children, first, getW, type XmlElement, WORD_NS } from './xml';
 import { canEditTableStructure } from './write-table';
+import type { ContentControl } from './content-control-model';
+import { flatCellParagraphs, flatCells, flatRows } from './parse-content-control';
 import { isStJcTable, isStVerticalJc } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 import {
@@ -39,11 +41,17 @@ function parseCell(
 	cell: XmlElement,
 	parseParagraph: (p: XmlElement, id: string) => Paragraph,
 	id: string,
+	control?: ContentControl,
 ): TableCell {
 	const props = first(cell, 'tcPr');
 	const result: TableCell = {
-		paragraphs: children(cell, 'p').map((p, pi) => parseParagraph(p, `${id}p${pi}`)),
+		paragraphs: flatCellParagraphs(cell).map(({ element, control: paragraphControl }, pi) => {
+			const paragraph = parseParagraph(element, `${id}p${pi}`);
+			if (paragraphControl) paragraph.contentControl = paragraphControl;
+			return paragraph;
+		}),
 	};
+	if (control) result.contentControl = control;
 	const gridSpan = parseUnsignedInteger(getW(first(props, 'gridSpan'), 'val'));
 	if (gridSpan !== undefined) result.gridSpan = gridSpan;
 	const vMerge = first(props, 'vMerge');
@@ -152,8 +160,11 @@ export function parseTable(
 	id: string,
 	parseParagraph: (p: XmlElement, id: string) => Paragraph,
 ): Table {
-	const rows = children(node, 'tr').map((row, ri) =>
-		children(row, 'tc').map((cell, ci) => parseCell(cell, parseParagraph, `${id}-r${ri}c${ci}`)),
+	const rowEntries = flatRows(node);
+	const rows = rowEntries.map((row, ri) =>
+		flatCells(row.element).map((cell, ci) =>
+			parseCell(cell.element, parseParagraph, `${id}-r${ri}c${ci}`, cell.control),
+		),
 	);
 	const table: Table = { type: 'table', id, rows, structureEditable: canEditTableStructure(node) };
 	const gridElement = first(node, 'tblGrid');
@@ -194,7 +205,11 @@ export function parseTable(
 	if (look) table.look = look;
 	const cellMargins = parseMargins(first(tblPr, 'tblCellMar'));
 	if (cellMargins) table.cellMargins = cellMargins;
-	const rowProperties = children(node, 'tr').map(parseRowProperties);
+	const rowProperties = rowEntries.map(({ element, control }) => {
+		const properties = parseRowProperties(element);
+		if (control) properties.contentControl = control;
+		return properties;
+	});
 	if (rowProperties.some((row) => Object.keys(row).length)) table.rowProperties = rowProperties;
 	return table;
 }

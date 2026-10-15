@@ -1,5 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, DocumentModel, Paragraph, SectionProperties } from './model';
+import { flatBlocks } from './parse-content-control';
+import { placeBlocksById } from './write-block-placement';
 import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
 import { commentContinuations } from './comment-spans';
 import { annotationIdAllocator, newMoveRangeIds, type CommentSpans } from './write-ranges';
@@ -55,30 +57,24 @@ function replaceSlots(
 	nextNodes: XmlElement[],
 	insertionAnchor: XmlElement | null = null,
 ): void {
+	// Old nodes may sit inside content controls: each slot is replaced in its own parent.
 	const placeholders = oldNodes.map((old) => {
 		const marker = doc.createComment('docx-block-slot');
-		parent.replaceChild(marker, old);
+		(old.parentNode ?? parent).replaceChild(marker, old);
 		return marker;
 	});
 	const shared = Math.min(placeholders.length, nextNodes.length);
 	for (const [i, marker] of placeholders.slice(0, shared).entries()) {
 		const next = nextNodes[i];
-		if (next) parent.replaceChild(next, marker);
+		if (next) (marker.parentNode ?? parent).replaceChild(next, marker);
 	}
-	for (const marker of placeholders.slice(shared)) parent.removeChild(marker);
+	for (const marker of placeholders.slice(shared))
+		(marker.parentNode ?? parent).removeChild(marker);
 	for (const node of nextNodes.slice(shared)) parent.insertBefore(node, insertionAnchor);
 }
 
 function baseMap(blocks: Block[]): Map<string, Block> {
 	return new Map(blocks.map((block) => [block.id, block]));
-}
-function originalNodes(body: XmlElement): XmlElement[] {
-	return Array.from(body.childNodes).filter(
-		(node: ChildNode) =>
-			node.nodeType === 1 &&
-			(node as XmlElement).namespaceURI === WORD_NS &&
-			['p', 'tbl'].includes((node as XmlElement).localName),
-	) as XmlElement[];
 }
 
 /**
@@ -109,7 +105,8 @@ export function applyBlocks(
 		node: XmlElement,
 		base?: Paragraph,
 	) => writeParagraphImpl(writeDoc, paragraph, node, base, allocator, spans);
-	const oldNodes = originalNodes(container);
+	const flat = flatBlocks(container);
+	const oldNodes = flat.map((entry) => entry.element);
 	const oldById = new Map<string, XmlElement>();
 	original.forEach((block, index) => {
 		if (oldNodes[index]) oldById.set(block.id, oldNodes[index]);
@@ -139,7 +136,9 @@ export function applyBlocks(
 					: createTable(doc, block, allocator, contentWidthTwips, spans),
 			);
 	}
-	replaceSlots(doc, container, originalNodes(container), output, anchor);
+	const nested = flat.some((entry) => entry.sdt) || blocks.some((block) => block.contentControl);
+	if (nested && placeBlocksById(doc, container, flat, blocks, output, anchor)) return;
+	replaceSlots(doc, container, oldNodes, output, anchor);
 }
 
 export interface ApplyModelResult {

@@ -14,6 +14,7 @@ export type {
 	TabStop,
 } from './model-paragraph';
 import type { Paragraph } from './model-paragraph';
+export type * from './content-control-model';
 export type { HyperlinkInfo, InlineImage, PicturePlacement, WatermarkSpec } from './inline-model';
 import type { Note, SectionProperties } from './section-model';
 export type {
@@ -68,6 +69,8 @@ import type { TableCell as TableCellShape, TableStyleCatalog } from './table-mod
 export type TableCell = TableCellShape;
 export interface Table {
 	type: 'table';
+	/** The block-level content control (`w:sdt` around the table) this table belongs to. */
+	contentControl?: import('./content-control-model').ContentControl;
 	id: string;
 	/** Whether row, cell and paragraph structure can be edited without losing unsupported table XML. */
 	structureEditable?: boolean;

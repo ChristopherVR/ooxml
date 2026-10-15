@@ -14,6 +14,9 @@ import {
 } from './write-ranges';
 
 import { createRun } from './write-run';
+import { isSdt, sdtContent } from './content-control';
+import { createContentControl, resetContentControl } from './write-content-control';
+import type { ContentControl } from './content-control-model';
 import { inlineSourceLookup } from './inline-source';
 import { takeSimpleFieldCommentEdges } from './simple-field-comments';
 import { writeFieldFlags } from './field-flags';
@@ -95,8 +98,8 @@ function runsOf(
 			if (isCommentReferenceRun(child)) continue;
 			if (!runIsSafe(child)) return false;
 			slots.push({ element: child, ...(container && { container }) });
-		} else if (isRevisionWrapperElement(child) && !container) {
-			if (!runsOf(child, undefined, slots)) return false;
+		} else if (isRevisionWrapperElement(child) && (!container || isSdt(container))) {
+			if (!runsOf(child, container, slots)) return false;
 		} else if ((named(child, 'hyperlink') || named(child, 'fldSimple')) && !container) {
 			const before = slots.length;
 			if (!runsOf(child, child, slots)) return false;
@@ -133,6 +136,11 @@ export function collectInlineSlots(paragraph: XmlElement): InlineSlot[] | undefi
 			slots.push({ element: child });
 		} else if (isRevisionWrapperElement(child)) {
 			if (!runsOf(child, undefined, slots)) return undefined;
+		} else if (isSdt(child)) {
+			const content = sdtContent(child);
+			const before = slots.length;
+			if (content && !runsOf(content, child, slots)) return undefined;
+			if (slots.length === before) slots.push({ container: child });
 		} else if (named(child, 'hyperlink') || named(child, 'fldSimple')) {
 			const before = slots.length;
 			if (!runsOf(child, child, slots)) return undefined;
@@ -151,6 +159,7 @@ export function replaceableInlineChildren(paragraph: XmlElement): XmlElement[] {
 				named(child, 'r') ||
 				named(child, 'hyperlink') ||
 				named(child, 'fldSimple') ||
+				isSdt(child) ||
 				isRevisionWrapperElement(child) ||
 				isCommentAnchorElement(child)),
 	);
@@ -253,13 +262,22 @@ export function buildInlineContent(
 		const reusable =
 			oldContainers.size === 1 &&
 			onlyContainer !== undefined &&
-			onlyContainer.localName === (group.kind === 'link' ? 'hyperlink' : 'fldSimple') &&
+			onlyContainer.localName ===
+				(group.kind === 'link' ? 'hyperlink' : group.kind === 'control' ? 'sdt' : 'fldSimple') &&
 			base?.slice(start, index).every((run) => sameGroup(run && containerGroup(run), group)) ===
 				true;
 		let container: XmlElement;
-		if (reusable) {
+		let target: XmlElement | undefined;
+		if (reusable && group.kind === 'control') {
+			container = onlyContainer;
+			target = resetContentControl(doc, container, group.control);
+		} else if (reusable) {
 			container = onlyContainer;
 			for (const child of Array.from(container.childNodes)) container.removeChild(child);
+		} else if (group.kind === 'control') {
+			const created = createContentControl(doc, group.control);
+			container = created.sdt;
+			target = created.content;
 		} else if (group.kind === 'link') container = newHyperlink(doc, group.link, allocator);
 		else {
 			container = makeW(doc, 'fldSimple');
@@ -271,7 +289,7 @@ export function buildInlineContent(
 				? takeSimpleFieldCommentEdges(doc, runs, start, index, opens, closes)
 				: { before: [], after: [] };
 		for (let item = start; item < index; item++)
-			for (const node of nodesFor(item)) container.appendChild(node);
+			for (const node of nodesFor(item)) (target ?? container).appendChild(node);
 		output.push(...edges.before, container, ...edges.after);
 	}
 	return output;
@@ -279,6 +297,7 @@ export function buildInlineContent(
 
 type ContainerGroup =
 	| { kind: 'link'; link: HyperlinkInfo }
+	| { kind: 'control'; control: ContentControl }
 	| {
 			kind: 'simpleField';
 			instr: string;
@@ -288,6 +307,7 @@ type ContainerGroup =
 
 /** The wrapper a run is written inside: a hyperlink, or a simple field (`w:fldSimple`). */
 function containerGroup(run: TextRun): ContainerGroup | undefined {
+	if (run.contentControl) return { kind: 'control', control: run.contentControl };
 	if (run.link) return { kind: 'link', link: run.link };
 	if (run.field?.simple)
 		return {
@@ -301,6 +321,8 @@ function containerGroup(run: TextRun): ContainerGroup | undefined {
 
 function sameGroup(a: ContainerGroup | undefined, b: ContainerGroup | undefined): boolean {
 	if (!a || !b) return a === b;
+	if (a.kind === 'control' || b.kind === 'control')
+		return a.kind === 'control' && b.kind === 'control' && a.control.id === b.control.id;
 	if (a.kind === 'link' && b.kind === 'link') return sameLink(a.link, b.link);
 	return (
 		a.kind === 'simpleField' &&

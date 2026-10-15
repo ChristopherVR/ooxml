@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { StHighlightColor } from './generated/wml-simple-types';
+import type { ContentControl } from './content-control-model';
 import type { HyperlinkInfo, InlineImage } from './inline-model';
 import type {
 	ThemeColorReference,
@@ -130,6 +131,8 @@ export interface TextRun {
 	fontTheme?: Partial<Record<ThemeFontScript, ThemeFontRole>>;
 	/** Present when this run is an inline picture instead of text; `text` is empty. */
 	image?: InlineImage;
+	/** The inline content control (`w:sdt`) this run sits in; every run of one control shares its `id`. */
+	contentControl?: ContentControl;
 	/** Hyperlink target for this run, from `w:hyperlink` (or a simple `HYPERLINK` field). */
 	link?: HyperlinkInfo;
 }

@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { StJc, StTabJc, StTabTlc } from './generated/wml-simple-types';
+import type { ContentControl } from './content-control-model';
 import type { Revision, TextRun } from './model-run';
 import type { SignedTwips, Twips } from './units';
 
@@ -80,6 +81,8 @@ export interface Paragraph {
 	 * ranges are not modeled.
 	 */
 	bookmarks?: string[];
+	/** The block-level content control (`w:sdt` around paragraphs) this paragraph belongs to. */
+	contentControl?: ContentControl;
 }
 /** Direct paragraph properties supported by the editor, in native Word units. */
 export type ParagraphFormatting = Pick<

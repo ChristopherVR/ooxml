@@ -98,3 +98,5 @@ export * from './case-transform';
 export * from './page-setup-model';
 export * from './page-size';
 export * from './section-edit';
+export * from './content-control-edit';
+export { parseContentControl } from './content-control';
