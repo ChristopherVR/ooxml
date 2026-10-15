@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWaterfallSteps, computeWaterfallRange } from './chart-waterfall-layout';
+import { buildWaterfallSteps, computeWaterfallRange } from './waterfall';
 
 describe('chartEx waterfall layout', () => {
 	it('treats only marked indexes as absolute subtotals and resets the running total', () => {

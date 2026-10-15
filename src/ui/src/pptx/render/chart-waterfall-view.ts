@@ -30,7 +30,7 @@ import {
 	valueToY,
 } from './chart-view-model';
 import { paletteColor } from './chart-view-model-scale';
-import { buildWaterfallSteps, computeWaterfallRange } from './chart-waterfall-layout';
+import { buildWaterfallSteps, computeWaterfallRange } from 'ooxml-core/chart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Waterfall colours: PowerPoint paints the three bar roles with the chart's

@@ -5,6 +5,7 @@ export * from './blank-display';
 export * from './stacked-series';
 export * from './axis-nice';
 export * from './histogram-binning';
+export * from './waterfall';
 export * from './treemap-squarify';
 export * from './trendline-equation';
 export * from './radar-geometry';
