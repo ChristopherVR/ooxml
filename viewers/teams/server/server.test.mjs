@@ -128,9 +128,11 @@ describe('teams server', () => {
 		assert.equal(got.status === 200 || got.status === 404, true);
 		const small = createTeamsServer({ dataDir: dir, maxFileBytes: 10 });
 		const sp = (await small.listen(0, '127.0.0.1')).port;
-		await assert.rejects(
-			fetch(`http://127.0.0.1:${sp}/files/ws1/big.bin`, { method: 'POST', body: 'x'.repeat(5000) }),
-		);
+		const tooBig = await fetch(`http://127.0.0.1:${sp}/files/ws1/big.bin`, {
+			method: 'POST',
+			body: 'x'.repeat(5000),
+		});
+		assert.equal(tooBig.status, 413);
 		await small.close();
 		assert.equal((await fetch(`${base}/files/ws1/nope.docx`)).status, 404);
 		assert.equal((await fetch(`${base}/health`)).status, 200);

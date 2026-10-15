@@ -20,15 +20,16 @@ npx openteams-server                    # listens on 127.0.0.1:8787
 TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 ```
 
-It is configured through the environment only; the command takes no flags.
+It is configured through the environment; the only flag is `--insecure` (see `TEAMS_INSECURE` in the
+[deployment guide](./deploy.md)), which allows a non-loopback `HOST` without a token.
 
-| Variable        | Default     | Meaning                                                                            |
-| --------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `PORT`          | `8787`      | Listen port.                                                                       |
-| `HOST`          | `127.0.0.1` | Listen address. Bind `0.0.0.0` only behind TLS.                                    |
-| `TEAMS_TOKEN`   | none        | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`. |
-| `TEAMS_ORIGINS` | none (any)  | Comma-separated allowed `Origin`s for sockets and files.                           |
-| `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.             |
+| Variable        | Default     | Meaning                                                                                                            |
+| --------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `PORT`          | `8787`      | Listen port.                                                                                                       |
+| `HOST`          | `127.0.0.1` | Listen address. Bind `0.0.0.0` only behind TLS.                                                                    |
+| `TEAMS_TOKEN`   | none        | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                 |
+| `TEAMS_ORIGINS` | none        | Comma-separated allowed `Origin`s for sockets and files. None: any origin with a token, loopback only without one. |
+| `TEAMS_DATA`    | `./data`    | Data directory: `rooms/<room>.bin` snapshots and `files/<workspace>/`.                                             |
 
 Or embed it:
 

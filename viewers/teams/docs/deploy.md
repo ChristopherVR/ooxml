@@ -6,12 +6,18 @@
 cd server && node index.mjs          # PORT=8787 HOST=127.0.0.1 by default
 ```
 
-| Variable        | Meaning                                                                            |
-| --------------- | ---------------------------------------------------------------------------------- |
-| `PORT`, `HOST`  | Listen address. Bind `0.0.0.0` only behind TLS.                                    |
-| `TEAMS_TOKEN`   | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`. |
-| `TEAMS_ORIGINS` | Comma-separated allowed `Origin`s for sockets and files. Empty allows any.         |
-| `TEAMS_DATA`    | Data directory (default `./data`): `rooms/<room>.bin` snapshots and `files/`.      |
+| Variable                                                | Meaning                                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                          |
+| `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
+| `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
+| `TEAMS_DATA`                                            | Data directory (default `./data`): `rooms/<room>.bin` snapshots and `files/`.                                                                                            |
+| `TEAMS_INSECURE`                                        | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
+| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
+| `TEAMS_MAX_ROOMS`                                       | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
+| `TEAMS_MAX_DOC_MB`                                      | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                        |
+| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                           |
+| `TEAMS_FILES_QUOTA_MB`                                  | Total size of the files directory in MB (default 1024); uploads past it get 507.                                                                                         |
 
 It serves `ws /sync/<room>` (y-websocket compatible, one persisted `Y.Doc` per room),
 `ws /signal/<room>` (a JSON relay) and `POST|GET /files/<workspace>/<name>` (25 MB cap, names
@@ -35,6 +41,26 @@ Then point the app at `wss://teams.example.com/sync` and `wss://teams.example.co
 server, it is not per-user authentication. For real accounts, put your own auth in front (a proxy
 that checks a session, or replace `tokenOk` with token verification) and keep the same three
 contracts.
+
+## Security model
+
+- **One shared token opens every room and every file.** There are no per-user or per-room
+  permissions. Treat the token like a team password.
+- **All members of a room trust each other.** The server only moves Yjs bytes, so any member can edit
+  or delete other people's messages and forge author ids and roles. Do not invite people you would
+  not trust with the whole room.
+- **The token travels in the WebSocket query string** (`?token=`), which proxies and access logs can
+  record and browsers can keep in history. Run the server behind TLS and do not log query strings.
+  Files never take the token in a URL: they use the `Authorization` header or a signed link.
+- **Defaults are local.** Without a token the server refuses a non-loopback `HOST` (unless
+  `TEAMS_INSECURE=1`) and accepts only loopback origins, so a website you visit cannot drive a server
+  on your own machine. Set `TEAMS_TOKEN` and `TEAMS_ORIGINS` for any shared deployment.
+- **Use short-lived TURN credentials** (see below); static ones are visible to everyone who opens the app.
+- **Limits** on connections, rooms, document size, message rate and file storage (the variables
+  above) bound abuse, but they do not replace a reverse proxy's own rate limiting.
+- A socket can only speak for the awareness ids and the call peer id it announced itself, and an
+  addressed call signal is delivered to that peer only. An upload never overwrites a file: a name
+  already taken is stored under a new one, returned in the response `url`.
 
 ## Calls across NATs: TURN
 
