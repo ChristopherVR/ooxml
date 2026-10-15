@@ -5,6 +5,7 @@
 import * as Y from 'yjs';
 import { createIdGenerator } from '../collab/identity';
 import { isValidId } from '../collab/validation';
+import { type PinnedMessage, createPinStore } from './pins';
 import { tabConversationId } from './tab-conversation';
 import type { ChannelTab } from './tabs';
 import {
@@ -50,6 +51,11 @@ export interface ChatStore {
 	edit: (channelId: string, messageId: string, text: string) => boolean;
 	/** Soft delete (the row stays so threads keep their shape). Only the author can delete. */
 	remove: (channelId: string, messageId: string) => boolean;
+	/** Pin a live message of the channel; any member may. Returns whether it applied. */
+	pin: (channelId: string, messageId: string) => boolean;
+	unpin: (channelId: string, messageId: string) => boolean;
+	/** Pinned messages of a channel, most recently pinned first. */
+	pinned: (channelId: string) => PinnedMessage[];
 	react: (messageId: string, emoji: string) => void;
 	unreact: (messageId: string, emoji: string) => void;
 	/** Fires after any channel, message or reaction change (local or remote), coalesced per tick. */
@@ -140,6 +146,17 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 		});
 		return out;
 	};
+
+	const messagesOf = (channelId: string): Message[] => {
+		const out: Message[] = [];
+		if (!isChannelId(channelId)) return out;
+		channelMessages(channelId).forEach((raw, id) => {
+			const m = readMessage(channelId, id, raw, {});
+			if (m) out.push(m);
+		});
+		return out;
+	};
+	const pins = createPinStore(doc, user, (id) => isChannelId(id) && channelMap.has(id), messagesOf);
 
 	return {
 		channels() {
@@ -236,6 +253,10 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 			m.set('deleted', true);
 			return true;
 		},
+		pin: (channelId, messageId) =>
+			channelMap.get(channelId)?.get('archived') !== true && pins.pin(channelId, messageId),
+		unpin: (channelId, messageId) => pins.unpin(channelId, messageId),
+		pinned: (channelId) => pins.pinned(channelId),
 		react(messageId, emoji) {
 			const e = sanitizeEmoji(emoji);
 			if (e && isValidId(messageId)) reactionMap.set([messageId, e, user.id].join(SEP), true);

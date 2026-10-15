@@ -192,3 +192,24 @@ blockquote strong {
 .toolbar button:hover {
 	background: var(--office-selected);
 }
+
+.msg:focus {
+	outline: none;
+}
+.pin-mark {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--office-space-1);
+	color: var(--office-teams-brand);
+	font-size: var(--office-font-size-xs);
+}
+.pin-mark svg {
+	width: 1em;
+	height: 1em;
+}
+@media (pointer: coarse) {
+	.toolbar button {
+		min-width: var(--office-touch-target, 44px);
+		height: var(--office-touch-target, 44px);
+	}
+}

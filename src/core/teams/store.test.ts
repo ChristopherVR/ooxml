@@ -483,6 +483,27 @@ describe('teams client', () => {
 		expect(a.getState().messages[0]?.deleted).toBe(true);
 	});
 
+	it('pins messages into state and shares them with another client', async () => {
+		const a = make('ada', 'store-pins');
+		const b = make('bob', 'store-pins');
+		a.createChannel('Ops');
+		await tick(100);
+		await a.send({ text: 'Runbook' });
+		await tick(100);
+		const id = a.getState().messages[0]!.id;
+		expect(a.pinMessage(id)).toBe(true);
+		await tick(100);
+		expect(a.getState().pinned.map((p) => p.message.text)).toEqual(['Runbook']);
+		expect(b.getState().pinned[0]?.pinnedByName).toBe('ada');
+		expect(b.unpinMessage(id)).toBe(true);
+		await tick(100);
+		expect(a.getState().pinned).toEqual([]);
+		const notices: string[] = [];
+		a.on('notice', (text) => notices.push(text));
+		expect(a.pinMessage('missing')).toBe(false);
+		expect(notices).toEqual(['This message cannot be pinned']);
+	});
+
 	it('shares state between two clients of one workspace and tracks unread', async () => {
 		const a = make('ada', 'store-pair');
 		const b = make('bob', 'store-pair');

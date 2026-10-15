@@ -37,9 +37,11 @@ const GROUP_MS = 5 * 60_000;
 
 /**
  * The conversation: messages as Teams-style bubbles with day separators, quoted replies,
- * reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`.
+ * reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`,
+ * `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin).
  * Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle),
- * `office-chat-reply` / `office-chat-edit` / `office-chat-delete` `{ messageId }` and
+ * `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` /
+ * `office-chat-unpin` `{ messageId }` and
  * `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`.
  * Message text is always rendered as text.
  */
@@ -49,10 +51,12 @@ export class OfficeUiChatList extends TeamsElement {
 		messages: { attribute: false },
 		selfId: { type: String, attribute: 'self-id' },
 		replyCounts: { attribute: false },
+		pinnedIds: { attribute: false },
 	};
 	declare messages: ChatMessage[];
 	declare selfId: string;
 	declare replyCounts: Record<string, number>;
+	declare pinnedIds: readonly string[];
 	private stickToBottom = true;
 
 	constructor() {
@@ -60,6 +64,7 @@ export class OfficeUiChatList extends TeamsElement {
 		this.messages = [];
 		this.selfId = '';
 		this.replyCounts = {};
+		this.pinnedIds = [];
 	}
 
 	override connectedCallback(): void {
@@ -102,6 +107,7 @@ export class OfficeUiChatList extends TeamsElement {
 		return html`
 			<article
 				class="msg"
+				tabindex="-1"
 				data-message-id=${m.id}
 				data-own=${String(own)}
 				data-grouped=${String(grouped)}
@@ -122,6 +128,7 @@ export class OfficeUiChatList extends TeamsElement {
 									<time>${formatTime(m.ts)}</time>
 								</header>`
 					}
+					${this.pinMark(m)}
 					<div class="bubble">
 						${
 							parent
@@ -188,6 +195,7 @@ export class OfficeUiChatList extends TeamsElement {
 				>
 					${icon('reply')}
 				</button>
+				${this.pinButton(m)}
 				${
 					own
 						? html`<button
@@ -210,6 +218,26 @@ export class OfficeUiChatList extends TeamsElement {
 				}
 			</div>
 		`;
+	}
+
+	private pinMark(m: ChatMessage) {
+		return !m.deleted && this.pinnedIds.includes(m.id)
+			? html`<span class="pin-mark">${icon('pin')} Pinned</span>`
+			: nothing;
+	}
+
+	private pinButton(m: ChatMessage) {
+		const pinned = this.pinnedIds.includes(m.id);
+		const label = pinned ? 'Unpin' : 'Pin';
+		return html`<button
+			type="button"
+			title=${label}
+			aria-label=${label}
+			aria-pressed=${String(pinned)}
+			@click=${() => this.fire(pinned ? 'office-chat-unpin' : 'office-chat-pin', { messageId: m.id })}
+		>
+			${icon('pin')}
+		</button>`;
 	}
 
 	private files(files: ChatAttachment[]) {

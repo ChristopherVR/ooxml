@@ -23,7 +23,10 @@ export function threadPane(
 		</header>
 		<office-ui-chat-list
 			.messages=${[thread.root, ...thread.replies]}
+			.pinnedIds=${state.pinned.map((p) => p.message.id)}
 			self-id=${state.user.id}
+			@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => client.pinMessage(e.detail.messageId)}
+			@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => client.unpinMessage(e.detail.messageId)}
 			@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => client.toggleReaction(e.detail.messageId, e.detail.emoji)}
 			@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => client.startReply(e.detail.messageId)}
 			@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => client.startEdit(e.detail.messageId)}

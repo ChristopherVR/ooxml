@@ -39,6 +39,7 @@ import { draftList } from './draft-list';
 import { filePopoutDetail, filePopoutUrl } from './file-popout';
 import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
+import { defineTeamsPinnedBar } from './pinned-bar';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
 import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
@@ -190,6 +191,7 @@ export class TeamsApp extends LitElement {
 		defineTeamsChannelTab();
 		defineTeamsFilesPanel();
 		defineTeamsProfileMenu();
+		defineTeamsPinnedBar();
 		defineTeamsAddTabDialog();
 		defineTeamsCreateChannelDialog();
 		super.connectedCallback();
@@ -922,10 +924,22 @@ export class TeamsApp extends LitElement {
 						? this.fileList(s.files, s)
 						: html`<div class="conversation-grid" data-thread=${String(!!s.thread && !compact)}>
 								<div class="conversation-main">
+									${
+										compact || s.pinned.length === 0
+											? nothing
+											: html`<teams-pinned-bar
+													.pinned=${s.pinned}
+													@teams-pinned-open=${(e: CustomEvent<{ messageId: string }>) => void this.revealMessage(e.detail.messageId)}
+													@teams-pinned-unpin=${(e: CustomEvent<{ messageId: string }>) => c?.unpinMessage(e.detail.messageId)}
+												></teams-pinned-bar>`
+									}
 									<office-ui-chat-list
 										.messages=${compact ? s.messages : s.posts}
 										.replyCounts=${compact ? {} : s.replyCounts}
+										.pinnedIds=${s.pinned.map((p) => p.message.id)}
 										self-id=${s.user.id}
+										@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => c?.pinMessage(e.detail.messageId)}
+										@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => c?.unpinMessage(e.detail.messageId)}
 										@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
 										@office-chat-thread=${(e: CustomEvent<{ messageId: string }>) => void this.openThread(e.detail.messageId)}
 										@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startReply(e.detail.messageId) : void this.openThread(e.detail.messageId, 'reply'))}
@@ -974,6 +988,19 @@ export class TeamsApp extends LitElement {
 		this.tab = id;
 		this.addingTab = false;
 		this.creatingChannel = false;
+	}
+
+	/** Scroll a pinned message into view, opening its thread when it is a reply. */
+	private async revealMessage(id: string): Promise<void> {
+		const message = this.teams.state?.messages.find((m) => m.id === id);
+		if (!message) return;
+		if (message.replyTo) return this.openThread(id);
+		const list = this.shadowRoot?.querySelector('.conversation-main office-ui-chat-list');
+		const row = Array.from(
+			list?.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [],
+		).find((element) => element.dataset.messageId === id);
+		row?.scrollIntoView({ block: 'center' });
+		row?.focus();
 	}
 
 	private async openThread(id: string, action?: 'reply' | 'edit'): Promise<void> {

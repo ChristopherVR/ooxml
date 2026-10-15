@@ -7,6 +7,7 @@ export type { FileOperationOptions, FileTransferProgress } from './file-transfer
 export * from './chat';
 export * from './model';
 export * from './peer';
+export * from './pins';
 export * from './server-config';
 export * from './server-file-storage';
 export * from './signaling';

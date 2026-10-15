@@ -24,6 +24,7 @@ import {
 	type ThreadFollowSettings,
 } from './followed-threads';
 import type { StreamLike } from './peer';
+import type { PinnedMessage } from './pins';
 import {
 	type ChannelView,
 	type FileEntry,
@@ -94,6 +95,8 @@ export interface TeamsState {
 	channel: Channel | null;
 	messages: Message[];
 	posts: Message[];
+	/** Pinned messages of the selected channel, most recently pinned first. */
+	pinned: PinnedMessage[];
 	replyCounts: Record<string, number>;
 	thread: MessageThread | null;
 	threadFollowed: boolean;
@@ -168,6 +171,9 @@ export interface TeamsClient {
 	startEdit: (messageId: string) => void;
 	cancelCompose: () => void;
 	deleteMessage: (messageId: string) => void;
+	/** Pin a message of the selected channel (any member may). Shared through the Yjs document. */
+	pinMessage: (messageId: string) => boolean;
+	unpinMessage: (messageId: string) => boolean;
 	toggleReaction: (messageId: string, emoji: string) => void;
 	notifyTyping: () => void;
 	setAvailability: (value: Availability) => void;
@@ -318,6 +324,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			channel,
 			messages,
 			posts: threads.posts,
+			pinned: selected ? ws.chat.pinned(selected) : [],
 			replyCounts: threads.replyCounts,
 			thread,
 			threadFollowed:
@@ -704,6 +711,17 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			activeDraftId = replyId = editId = '';
 		}),
 		deleteMessage: act((id) => void ws.chat.remove(selected, id)),
+		pinMessage(id) {
+			const ok = Boolean(selected) && ws.chat.pin(selected, id);
+			if (ok) refresh();
+			else notice('This message cannot be pinned');
+			return ok;
+		},
+		unpinMessage(id) {
+			const ok = Boolean(selected) && ws.chat.unpin(selected, id);
+			if (ok) refresh();
+			return ok;
+		},
 		toggleReaction: act((id, emoji) => {
 			const mine = find(id)?.reactions[emoji]?.includes(ws.user.id);
 			if (mine) ws.chat.unreact(id, emoji);
