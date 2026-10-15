@@ -6,6 +6,7 @@ import {
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useChartFormatContext } from './chart-format-context';
 import { contextMenuContext, contextMenuHandlers } from './context-menu-dispatch';
 import type { ContextMenuProps } from './context-menu-types';
 import { ContextMenuSurface } from './ContextMenuSurface';
@@ -26,12 +27,25 @@ export function ContextMenu(props: ContextMenuProps): React.ReactElement | null 
 	const { t } = useTranslation();
 	const customization = useViewerCustomizationContext();
 	const shapeFormat = useShapeFormatContext();
+	const chartFormat = useChartFormatContext();
 	const open = Boolean(contextMenuState) && mode === 'edit';
-	const handlers = contextMenuHandlers(props, shapeFormat);
+	const handlers = {
+		...contextMenuHandlers(props, shapeFormat),
+		// "Format Chart Area..." and its siblings open the chart Format pane.
+		'format-chart-element': chartFormat
+			? () => {
+					chartFormat.openPane();
+					onClose();
+				}
+			: undefined,
+	};
 	// Host customisation drops hidden commands; a menu left empty (or one the
 	// host disabled outright) renders nothing at all.
 	const entries = customizeContextMenuEntries(
-		buildContextMenuEntries(contextMenuContext(props, shapeFormat)),
+		buildContextMenuEntries({
+			...contextMenuContext(props, shapeFormat),
+			chartFormatTarget: chartFormat?.target ?? null,
+		}),
 		customization,
 		{
 			slideIndex: props.slideIndex ?? 0,

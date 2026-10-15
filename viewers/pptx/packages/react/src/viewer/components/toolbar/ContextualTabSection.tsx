@@ -2,6 +2,7 @@ import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import React from 'react';
 
+import { ChartSelectionStrip } from './ChartSelectionStrip';
 import { PictureSizeStrip } from './PictureSizeStrip';
 import { RibbonGallery } from './RibbonGallery';
 import { useTranslateOr } from './useGalleryTranslation';
@@ -32,6 +33,7 @@ export function ContextualTabSection({
 						<RibbonGallery key={placement.control} placement={placement} />
 					))}
 					{group.strip === 'picture-size' && <PictureSizeStrip hiddenActions={hiddenActions} />}
+					{group.strip === 'chart-selection' && <ChartSelectionStrip />}
 				</WebRibbonGroup>
 			))}
 		</>

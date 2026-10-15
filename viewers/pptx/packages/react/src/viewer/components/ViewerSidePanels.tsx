@@ -21,6 +21,7 @@ import type { ViewerState } from '../hooks/useViewerState';
 import type { CanvasSize } from '../types';
 import type { ViewerMode } from '../types-core';
 import { AiChatPanelLazy } from './ai';
+import { ChartFormatPanel } from './inspector/ChartFormatPanel';
 import { ThemeEditorPanel } from './inspector/ThemeEditorPanel';
 import { MobileDismissSheet } from './mobile/MobileDismissSheet';
 import { ResizeHandle } from './ResizeHandle';
@@ -219,6 +220,8 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 					onClose={() => s.setIsThemeEditorOpen(false)}
 				/>
 			)}
+
+			{(mode === 'edit' || mode === 'master') && <ChartFormatPanel />}
 
 			{aiPanel?.isOpen && aiConfig && aiBridge && (mode === 'edit' || mode === 'master') && (
 				<AiChatPanelLazy

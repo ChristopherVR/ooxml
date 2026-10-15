@@ -84,6 +84,7 @@ import {
 } from './components';
 // Collaboration
 import { AutosaveRecoveryDialog } from './components/AutosaveRecoveryDialog';
+import { ChartFormatContext } from './components/chart-format-context';
 import {
 	CollaborationProvider,
 	useCollaboration,
@@ -121,6 +122,7 @@ import { useAiPanelController } from './hooks/ai/useAiPanelController';
 import { useBroadcastFollower, useFollowMode } from './hooks/collaboration';
 import { useCollaborationDocumentSync } from './hooks/collaboration/useCollaborationDocumentSync';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
+import { useChartFormatCommands } from './hooks/useChartFormatCommands';
 import { useCompatibilityToastsState } from './hooks/useCompatibilityToastsState';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
 import { useEditorHistory } from './hooks/useEditorHistory';
@@ -1048,6 +1050,11 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			updateThemeFontScheme: themeHandlers.handleUpdateThemeFontScheme,
 			applyThemeData: themeHandlers.handleApplyThemeData,
 		});
+		const chartFormat = useChartFormatCommands({
+			selectedElement,
+			editable: canEdit && (mode === 'edit' || mode === 'master'),
+			updateElementById: editorOps.ops.updateElementById,
+		});
 		const ribbonScope = useRibbonScopeToken();
 
 		const viewPreferencesSync = useViewPreferencesSync({
@@ -1746,7 +1753,9 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 											/>
 											<ShapeFormatContext.Provider value={shapeFormat}>
 												<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
-													{viewerContent}
+													<ChartFormatContext.Provider value={chartFormat}>
+														{viewerContent}
+													</ChartFormatContext.Provider>
 												</RibbonGalleryCommandsContext.Provider>
 											</ShapeFormatContext.Provider>
 										</CollaborationProvider>
