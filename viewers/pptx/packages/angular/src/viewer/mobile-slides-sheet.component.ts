@@ -74,7 +74,11 @@ const THUMB_W = 160;
 						(click)="onThumbClick(i)"
 					>
 						<!-- Thumbnail clipping wrapper -->
-						<div class="pptx-ng-mslides-clip" [ngStyle]="clipStyle()">
+						<div
+							class="pptx-ng-mslides-clip"
+							data-pptx-chrome="slide-frame"
+							[ngStyle]="clipStyle()"
+						>
 							<pptx-slide-canvas
 								[slide]="slide"
 								[canvasSize]="canvasSize()"

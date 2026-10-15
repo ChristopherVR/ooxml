@@ -54,7 +54,7 @@
 <div class="pptx-svelte-mobile-actions">
 	{#if active === 'slides'}
 		<MobileSheet title={t('pptx.sections.slides')} onclose={close}>
-			<ThumbnailRail {slides} {canvasSize} {mediaDataUrls} {current} onselect={selectSlide} />
+			<ThumbnailRail fullWidth {slides} {canvasSize} {mediaDataUrls} {current} onselect={selectSlide} />
 		</MobileSheet>
 	{:else if active === 'inspector'}
 		<MobileSheet title={t('pptx.field.format')} onclose={close}><InspectorPanel {editor} {handler} {presentationTheme} {onthemechange} {mediaDataUrls} /></MobileSheet>
@@ -78,7 +78,7 @@
 	.pptx-svelte-mobile-actions { display: none; }
 	@media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) {
 		.pptx-svelte-mobile-actions { display: contents; }
-		.pptx-svelte-mobile-actions pptx-ui-mobile-bar { position: absolute; z-index: 50; right: 0; bottom: 0; left: 0; }
+		.pptx-svelte-mobile-actions pptx-ui-mobile-bar { position: absolute; z-index: 70; right: 0; bottom: 0; left: 0; }
 		:global(.pptx-svelte-mobile-sheet .pptx-svelte-thumbs) { display:flex !important; max-height:55dvh; border:0; }
 		:global(.pptx-svelte-mobile-sheet .pptx-svelte-insert) { display: flex; flex-wrap: wrap; gap: 8px; }
 		:global(.pptx-svelte-mobile-sheet .pptx-svelte-insert-btn) { min-width: 44px; min-height: 44px; }

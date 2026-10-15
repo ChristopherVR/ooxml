@@ -6,8 +6,9 @@
 
 .pptx-ng-msheet-root {
 	position: fixed;
-	inset: 0;
-	z-index: 60;
+	/* Ends above the 56px bottom action bar, so the sheet's content is never under it. */
+	inset: 0 0 56px;
+	z-index: 69;
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;

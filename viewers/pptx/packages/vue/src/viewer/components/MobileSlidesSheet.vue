@@ -66,6 +66,7 @@ function onSelect(index: number): void {
 		/>
 		<SlidesPaneSidebar
 			v-else
+			full-width
 			:slides="props.slides"
 			:active-index="props.activeIndex"
 			:canvas-size="props.canvasSize"

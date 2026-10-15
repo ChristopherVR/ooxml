@@ -472,6 +472,9 @@
 		color: var(--pptx-foreground, #e2e8f0);
 		outline: none;
 		overflow: hidden;
+		/* Own stacking context: the slide's selection handles and overlays (z-index 57 to 61)
+		 * stay below the phone sheets and whatever the host page stacks above the viewer. */
+		isolation: isolate;
 	}
 
 	.pptx-svelte-fullscreen {

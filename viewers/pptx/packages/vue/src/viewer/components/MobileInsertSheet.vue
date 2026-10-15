@@ -21,7 +21,7 @@ const { t } = useI18n();
 
 <template>
 	<MobileSheet :open="props.open" :title="t('pptx.mobileBar.insert')" @close="emit('close')">
-		<div class="p-3 pb-20">
+		<div class="p-3">
 			<InsertSection
 				phone
 				:on-request-handled="() => emit('close')"

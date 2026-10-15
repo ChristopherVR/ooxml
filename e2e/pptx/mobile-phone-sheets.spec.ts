@@ -87,6 +87,51 @@ test('Insert opens the phone sheet and a Text Box tile inserts and closes it', a
 	await expect(elements).toHaveCount(before + 1);
 });
 
+test('the Slides sheet lists non-overlapping thumbnails across the width and ends above the bar', async ({
+	page,
+}) => {
+	await load(page);
+	await bar(page).getByRole('button', { name: 'Slides' }).tap();
+	await page.waitForTimeout(600);
+	const result = await page.evaluate(() => {
+		const frames = [
+			...document.querySelectorAll<HTMLElement>('[data-pptx-chrome="slide-frame"]'),
+		].filter(
+			(frame) => frame.getBoundingClientRect().width > 0 && frame.getBoundingClientRect().top > 100,
+		);
+		const rects = frames.map((frame) => frame.getBoundingClientRect());
+		let overlaps = 0;
+		for (let a = 0; a < rects.length; a += 1) {
+			for (let b = a + 1; b < rects.length; b += 1) {
+				const x =
+					Math.min(rects[a]!.right, rects[b]!.right) - Math.max(rects[a]!.left, rects[b]!.left);
+				const y =
+					Math.min(rects[a]!.bottom, rects[b]!.bottom) - Math.max(rects[a]!.top, rects[b]!.top);
+				if (x > 1 && y > 1) {
+					overlaps += 1;
+				}
+			}
+		}
+		let scroller: HTMLElement | null = frames[0]?.parentElement ?? null;
+		while (scroller && !/(auto|scroll)/u.test(getComputedStyle(scroller).overflowY)) {
+			scroller = scroller.parentElement;
+		}
+		const area = scroller?.getBoundingClientRect();
+		const navTop = document.querySelector('pptx-ui-mobile-bar')!.getBoundingClientRect().top;
+		return {
+			count: frames.length,
+			overlaps,
+			width: area?.width ?? 0,
+			bottom: area?.bottom ?? 0,
+			navTop,
+		};
+	});
+	expect(result.count).toBeGreaterThanOrEqual(3);
+	expect(result.overlaps).toBe(0);
+	expect(result.width).toBeGreaterThan(412 * 0.9);
+	expect(result.bottom).toBeLessThanOrEqual(result.navTop + 1);
+});
+
 test('the comment box fills the sheet width', async ({ page }) => {
 	await load(page);
 	await bar(page).getByRole('button', { name: 'Comments' }).tap();

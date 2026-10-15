@@ -158,6 +158,7 @@ export function createMobileActionSheets(
 						width: `${MOBILE_THUMB_WIDTH}px`,
 						height: `${Math.round(canvasHeight * scale)}px`,
 					});
+					frame.dataset.pptxChrome = 'slide-frame';
 					frame.appendChild(renderThumbnail(slides[index], scale));
 					button.appendChild(frame);
 				} else {

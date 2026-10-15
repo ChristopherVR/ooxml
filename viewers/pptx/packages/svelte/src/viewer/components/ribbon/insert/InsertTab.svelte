@@ -245,9 +245,7 @@
 	<pptx-ui-ribbon-insert bind:this={host} state={insertState} oninsert-request={request}></pptx-ui-ribbon-insert>
 {:else if open}
 	<MobileSheet title={t('pptx.mobileBar.insert')} onclose={() => onclose?.()}>
-		<div class="pptx-svelte-inserttab-sheet">
-			<pptx-ui-mobile-insert state={insertState} oninsert-request={request}></pptx-ui-mobile-insert>
-		</div>
+		<pptx-ui-mobile-insert state={insertState} oninsert-request={request}></pptx-ui-mobile-insert>
 	</MobileSheet>
 {/if}
 <input bind:this={imageInput} type="file" accept="image/*" class="pptx-svelte-inserttab-file" onchange={onImageFileChange} />
@@ -260,9 +258,5 @@
 <style>
 	.pptx-svelte-inserttab-file {
 		display: none;
-	}
-	/* The bottom action bar overlays the sheet, so keep the last row clear of it. */
-	.pptx-svelte-inserttab-sheet {
-		padding: 12px 12px 72px;
 	}
 </style>
