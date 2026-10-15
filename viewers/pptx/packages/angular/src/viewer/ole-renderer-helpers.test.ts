@@ -534,19 +534,23 @@ describe('isBrowserOpenableMime', () => {
 		expect(isBrowserOpenableMime('application/pdf')).toBeTruthy();
 	});
 
-	it('opens any image type', () => {
+	it('opens raster image types', () => {
 		expect(isBrowserOpenableMime('image/png')).toBeTruthy();
-		expect(isBrowserOpenableMime('image/svg+xml')).toBeTruthy();
 	});
 
-	it('opens any text type', () => {
+	it('opens plain text types', () => {
 		expect(isBrowserOpenableMime('text/plain')).toBeTruthy();
-		expect(isBrowserOpenableMime('text/html')).toBeTruthy();
 	});
 
 	it('opens common application text formats', () => {
 		expect(isBrowserOpenableMime('application/json')).toBeTruthy();
-		expect(isBrowserOpenableMime('application/xml')).toBeTruthy();
+	});
+
+	it('refuses scriptable types that would run in the opener origin', () => {
+		expect(isBrowserOpenableMime('image/svg+xml')).toBeFalsy();
+		expect(isBrowserOpenableMime('text/html')).toBeFalsy();
+		expect(isBrowserOpenableMime('application/xml')).toBeFalsy();
+		expect(isBrowserOpenableMime('application/xhtml+xml')).toBeFalsy();
 	});
 
 	it('does not open binary office formats', () => {
