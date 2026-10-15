@@ -1,4 +1,4 @@
-import type { PicturePlacement } from 'ooxml-core/docx';
+import type { PicturePlacement, ShapeSpec } from 'ooxml-core/docx';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { FloatBox, FloatHandle } from './print-float-geometry';
@@ -15,11 +15,24 @@ const countsAsFloat = (node: ProseMirrorNode): boolean =>
 	node.type.name === 'image' &&
 	Boolean(node.attrs.anchored && (node.attrs.partName || node.attrs.shape));
 
-/** A floating picture the page can select: anchored with media bytes (shapes are not yet). */
-export const isFloat = (node: ProseMirrorNode): boolean =>
-	node.type.name === 'image' && Boolean(node.attrs.anchored && node.attrs.partName);
+/** A float the page can select: an anchored picture with media bytes, or an anchored shape. */
+export const isFloat = (node: ProseMirrorNode): boolean => countsAsFloat(node);
 
-/** The floating picture `index` of a paragraph, in run order. */
+/** Whether a float is a drawing shape or text box rather than a picture. */
+export const isShapeFloat = (node: ProseMirrorNode): boolean =>
+	isFloat(node) && Boolean(node.attrs.shape);
+
+/** The shape spec of a float, when it is a shape. */
+export function shapeSpecOf(node: ProseMirrorNode): ShapeSpec | undefined {
+	if (typeof node.attrs.shape !== 'string') return undefined;
+	try {
+		return JSON.parse(node.attrs.shape) as ShapeSpec;
+	} catch {
+		return undefined;
+	}
+}
+
+/** The float `index` of a paragraph, in run order. */
 export function locateFloat(
 	doc: ProseMirrorNode,
 	blockId: string,
@@ -41,7 +54,7 @@ export function locateFloat(
 	return found;
 }
 
-/** The floating picture a node selection holds, with its paragraph id and index. */
+/** The floating object a node selection holds, with its paragraph id and index. */
 export function selectedFloat(state: EditorState): Located | undefined {
 	const { selection } = state;
 	if (!(selection instanceof NodeSelection) || !isFloat(selection.node)) return undefined;

@@ -355,3 +355,20 @@ a.dve-link[data-anchor^='_Toc'] {
 		display: none !important;
 	}
 }
+/* In-place text editing of a floating shape or text box. */
+.dve-print-float-text {
+	position: absolute;
+	z-index: 5;
+	box-sizing: border-box;
+	padding: 4px 7px;
+	resize: none;
+	overflow: auto;
+	border: 1px dashed var(--word, #2b579a);
+	background: rgb(255 255 255 / 0.85);
+	color: #000;
+	font:
+		14.67px Calibri,
+		Arial,
+		sans-serif;
+	text-align: center;
+}
