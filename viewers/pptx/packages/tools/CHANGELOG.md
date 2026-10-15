@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.8.6](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.6) - 2026-10-15
+
+### Bug Fixes
+
+- **tools:** Move the pptx MCP file io onto confined file operations ([21efcbe](https://github.com/ChristopherVR/ooxml/commit/21efcbe9c80a02c1ac6da0d1a4b2e6933fb146ed))
+
 ## [2.8.5](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.5) - 2026-10-11
 
 ### Styling
