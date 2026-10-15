@@ -503,7 +503,10 @@ describe('mountElementContextMenu', () => {
 		expect(labels()).not.toContain('Format Shape...');
 		clickCommand('Format Data Series...');
 		expect(context.actions.openChartFormatPane).toHaveBeenCalledOnce();
-		expect(context.store.get().chartFormat).toStrictEqual({ elementId: 'chart-1', target: 'series:0' });
+		expect(context.store.get().chartFormat).toStrictEqual({
+			elementId: 'chart-1',
+			target: 'series:0',
+		});
 		context.destroy();
 	});
 });
