@@ -194,7 +194,20 @@ export class ViewerPresentation {
 			},
 			options,
 		);
+		// A host that stops being rendered (a suite tab switched away, display:none) must not keep
+		// presenting: the overlay is fixed and fullscreen, so it would stay painted over whatever
+		// the page shows next.
+		const view = doc.defaultView;
+		const host = this.root.host as HTMLElement;
+		const watcher =
+			view && 'ResizeObserver' in view
+				? new view.ResizeObserver(() => {
+						if (this.#active && host.getClientRects().length === 0) this.exit();
+					})
+				: undefined;
+		watcher?.observe(host);
 		return () => {
+			watcher?.disconnect();
 			events.abort();
 			this.exit();
 		};

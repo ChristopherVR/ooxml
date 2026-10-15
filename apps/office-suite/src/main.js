@@ -95,8 +95,13 @@ function renderTabs() {
 			.join('');
 	$('save-state').textContent =
 		active && sessions.isDirty(active) ? 'Unsaved changes' : 'Saved to this device';
-	for (const s of sessions.sessions.values())
-		s.node.hidden = view !== 'editor' || s.doc.id !== active;
+	for (const s of sessions.sessions.values()) {
+		const hide = view !== 'editor' || s.doc.id !== active;
+		// A hidden editor must not keep a full-screen layer (a Visio presentation) over the next tab.
+		if (hide && !s.node.hidden && s.node.contains(document.fullscreenElement))
+			void document.exitFullscreen?.().catch(() => {});
+		s.node.hidden = hide;
+	}
 	$('home').hidden = view !== 'home';
 	$('chat').hidden = view !== 'chat';
 	$('teams-host').hidden = view !== 'teams';
