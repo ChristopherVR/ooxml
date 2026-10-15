@@ -420,18 +420,26 @@ test.describe('Design', () => {
 			'design.variants.fonts',
 			'design.customize.slideSize',
 			'design.customize.formatBackground',
+			'design.designer.designIdeas',
 		]);
 		expect(groups.map((group) => group.id)).toStrictEqual([
 			'design.themes',
 			'design.variants',
 			'design.customize',
+			'design.designer',
 		]);
-		expect(groups.map((group) => group.caption)).toStrictEqual(['Themes', 'Variants', 'Customize']);
+		expect(groups.map((group) => group.caption)).toStrictEqual([
+			'Themes',
+			'Variants',
+			'Customize',
+			'Designer',
+		]);
 		for (const id of [
 			'design.themes.browseThemes',
 			'design.themes.editTheme',
 			'design.customize.slideSize',
 			'design.customize.formatBackground',
+			'design.designer.designIdeas',
 		]) {
 			expectLarge(controls[id], id);
 		}

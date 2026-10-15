@@ -13,6 +13,14 @@ const INSERT_GROUP_OF: Readonly<Record<string, string>> = {
 	Equation: 'insert.symbols',
 };
 
+/** Design groups also collapse right to left when the window is narrow, as in Office. */
+const DESIGN_GROUP_OF: Readonly<Record<string, string>> = {
+	'Browse Themes': 'design.themes',
+	'Edit Theme': 'design.themes',
+	'Slide Size': 'design.customize',
+	'Format Background': 'design.customize',
+};
+
 /**
  * The command's control box (a split button's face and chevron together) and whether its
  * group is scaled down (`data-scale`), crossing the shadow roots some commands render in.
@@ -47,7 +55,7 @@ for (const width of [1000, 1280]) {
 				await toolbar.getByRole('tab', { name: tab, exact: true }).click();
 				for (const name of commands) {
 					// Near 1000px a group can become a popup (font metrics decide), as in Office: open it.
-					const group = INSERT_GROUP_OF[name];
+					const group = INSERT_GROUP_OF[name] ?? DESIGN_GROUP_OF[name];
 					const collapsed = toolbar.locator(`[data-ribbon-group="${group}"][data-collapsed]`);
 					const popup = group !== undefined && (await collapsed.count()) > 0;
 					if (popup) {

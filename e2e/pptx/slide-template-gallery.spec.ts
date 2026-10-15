@@ -47,10 +47,13 @@ function slideThumbnails(page: Page): Locator {
 	return page.getByRole('button', { name: /^Go to slide \d+$/u });
 }
 
-/** Open the template gallery dialog from the Home tab's Slides group. */
+/** Open the template gallery dialog from the end of the Home > New Slide menu. */
 async function openTemplateGallery(page: Page): Promise<Locator> {
 	await switchToHomeTab(page);
-	const btn = page.getByRole('button', { name: 'Slide Templates' }).first();
+	await page
+		.locator('[data-ribbon-control="home.slides.newSlide"] [data-pptx-chrome="split-caret"]')
+		.click();
+	const btn = page.getByRole('button', { name: 'Slide Templates...' });
 	await expect(btn).toBeVisible();
 	await btn.click();
 	const dialog = page.getByRole('dialog', { name: /Slide Templates/iu });

@@ -53,7 +53,7 @@ test('the new-slide halves stack and large labelled commands keep Office spacing
 				clippedUnderline ||= underlineBottom > bottom + 0.1;
 			}
 		}
-		const labelled = ['slideTemplates', 'layout', 'reset', 'section'].map((name) => {
+		const labelled = ['layout', 'reset', 'section'].map((name) => {
 			const host = document.querySelector(`[data-ribbon-control="home.slides.${name}"]`)!;
 			const button = host.matches('button') ? host : host.querySelector('button')!;
 			const style = getComputedStyle(button);

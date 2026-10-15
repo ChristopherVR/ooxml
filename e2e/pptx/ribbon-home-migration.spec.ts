@@ -309,7 +309,7 @@ test.describe('Home slides', () => {
 	}) => {
 		await openHome(page);
 		await expect(page.locator('[data-ribbon-group="home.slides"]')).toHaveCount(1);
-		for (const id of ['newSlide', 'slideTemplates', 'layout', 'reset', 'section']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			await expect(page.locator(`[data-ribbon-control="home.slides.${id}"]`)).toHaveCount(1);
 		}
 		const before = await rows(page).count();

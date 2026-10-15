@@ -101,7 +101,10 @@ const SURFACES: Surface[] = [
 		primary: /^Insert$/u,
 		open: async (page) => {
 			await tab(page, 'Home');
-			await page.getByRole('button', { name: 'Slide Templates' }).first().click();
+			await page
+				.locator('[data-ribbon-control="home.slides.newSlide"] [data-pptx-chrome="split-caret"]')
+				.click();
+			await page.getByRole('button', { name: 'Slide Templates...' }).click();
 		},
 	},
 	{
