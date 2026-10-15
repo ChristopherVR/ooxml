@@ -1,5 +1,6 @@
 // Reference bring-your-own server for the teams viewers. One process, three jobs:
-//   ws  /sync/<room>      y-websocket compatible Yjs document + awareness server (persisted to disk)
+//   ws  /sync/<room>      y-websocket compatible Yjs document + awareness server (persisted to disk);
+//                         chat-* rooms (private chats) admit only the members listed in the room
 //   ws  /signal/<room>    WebRTC signaling relay (forwards JSON to the other sockets of the room)
 //   http POST|GET /files/<id>/<name>   plain file storage for attachments
 //   http POST /files/link/<id>/<name>  short-lived signed download link (token in Authorization)
@@ -28,6 +29,7 @@ import * as syncProtocol from 'y-protocols/sync';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
+import { authorizeChatJoin, isChatRoom, roomMembers } from './chat-access.mjs';
 import {
 	createBucket,
 	directoryBytes,
@@ -133,6 +135,30 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
+	/** The members stored for a chat room, read without keeping a room that nobody joined. */
+	function membersOf(name) {
+		const live = syncRooms.get(name);
+		if (live) return roomMembers(live.doc);
+		const file = snapshotPath(name);
+		if (!existsSync(file)) return new Set();
+		const doc = new Y.Doc();
+		try {
+			Y.applyUpdate(doc, readFileSync(file));
+			return roomMembers(doc);
+		} catch {
+			return new Set();
+		} finally {
+			doc.destroy();
+		}
+	}
+
+	/** Close the sockets of people who are no longer listed as members of a chat room. */
+	function enforceMembers(room) {
+		const members = roomMembers(room.doc);
+		if (members.size === 0) return;
+		for (const [ws, user] of room.users) if (!members.has(user)) ws.close(1008, 'not a member');
+	}
+
 	function getRoom(name) {
 		let room = syncRooms.get(name);
 		if (room) {
@@ -153,11 +179,14 @@ export function createTeamsServer(options = {}) {
 		}
 		const awareness = new awarenessProtocol.Awareness(doc);
 		awareness.setLocalState(null);
+		if (isChatRoom(name)) doc.on('update', () => enforceMembers(room));
 		room = {
 			doc,
 			awareness,
 			conns: new Map(),
 			owners: new Map([[awareness.clientID, SERVER_OWNER]]),
+			/** socket -> the user it joined as (chat rooms only) */
+			users: new Map(),
 			bytes,
 			timer: null,
 			idle: null,
@@ -200,6 +229,7 @@ export function createTeamsServer(options = {}) {
 
 	function leaveSync(name, room, ws) {
 		const owned = room.conns.get(ws);
+		room.users.delete(ws);
 		room.conns.delete(ws);
 		for (const [id, owner] of room.owners) if (owner === ws) room.owners.delete(id);
 		if (owned?.size) awarenessProtocol.removeAwarenessStates(room.awareness, [...owned], null);
@@ -216,8 +246,16 @@ export function createTeamsServer(options = {}) {
 		}
 	}
 
-	function handleSync(ws, name) {
+	function handleSync(ws, name, admission) {
 		const room = getRoom(name);
+		if (admission) {
+			// A new chat room starts with the members its first socket listed.
+			if (admission.seed.length > 0 && roomMembers(room.doc).size === 0)
+				room.doc.transact(() => {
+					for (const id of admission.seed) room.doc.getMap('teams:chat-members').set(id, true);
+				});
+			room.users.set(ws, admission.user);
+		}
 		room.conns.set(ws, new Set());
 		ws.binaryType = 'arraybuffer';
 		const bucket = createBucket(limits.messageRate, limits.messageBurst);
@@ -492,6 +530,19 @@ export function createTeamsServer(options = {}) {
 		if (name === null || !ROOM.test(name)) return reject(socket, '400 Bad Request');
 		if (!originAllowed(req.headers.origin ?? '')) return reject(socket, '403 Forbidden');
 		if (!tokenOk(url)) return reject(socket, '401 Unauthorized');
+		// Private chats: only the people listed in the room's member map may join.
+		let admission = null;
+		if (m[1] === 'sync' && isChatRoom(name)) {
+			const user = url.searchParams.get('user') ?? '';
+			const verdict = authorizeChatJoin({
+				name,
+				user,
+				members: url.searchParams.get('members'),
+				existing: membersOf(name),
+			});
+			if (!verdict.ok) return reject(socket, '403 Forbidden');
+			admission = { seed: verdict.seed, user };
+		}
 		const ip = req.socket.remoteAddress ?? '';
 		const open = syncWss.clients.size + signalWss.clients.size;
 		const rooms = m[1] === 'sync' ? syncRooms : signalRooms;
@@ -510,7 +561,7 @@ export function createTeamsServer(options = {}) {
 				else perIp.set(ip, left);
 			});
 			try {
-				if (m[1] === 'sync') handleSync(ws, name);
+				if (m[1] === 'sync') handleSync(ws, name, admission);
 				else handleSignal(ws, name);
 			} catch (error) {
 				log(`${m[1]} ${name}: setup failed (${error.message})`);
