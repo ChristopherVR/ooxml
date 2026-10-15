@@ -10,6 +10,8 @@ export const NS = {
 	a: 'http://schemas.openxmlformats.org/drawingml/2006/main',
 	/** DrawingML chart. */
 	c: 'http://schemas.openxmlformats.org/drawingml/2006/chart',
+	/** Office 2016 extended charts (waterfall, histogram, funnel...; `cx:chartSpace`). */
+	cx: 'http://schemas.microsoft.com/office/drawing/2014/chartex',
 	/** Office 2010 chart extensions, including built-in modern chart styles. */
 	c14: 'http://schemas.microsoft.com/office/drawing/2007/8/2/chart',
 	/** DrawingML diagram (SmartArt) main. */

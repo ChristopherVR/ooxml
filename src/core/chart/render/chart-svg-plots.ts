@@ -1,0 +1,61 @@
+// Which plot painter draws a chart view model: bars, lines and areas (alone or layered in a
+// combination chart), scatter, waterfall and histogram.
+import { bars } from './chart-svg-bars';
+import { cartesianAxes, linesAndAreas, plotted, scatter, type Frame } from './chart-svg-cartesian';
+import { waterfallBars } from './chart-svg-waterfall';
+import type { Rect } from './chart-svg-util';
+import type { ChartViewModel } from './chart-view';
+
+interface Layer {
+	model: ChartViewModel;
+	frame: Frame;
+}
+
+/** Areas sit behind bars, bars behind lines, as Office stacks the groups of a combination. */
+const RANK: Record<string, number> = { area: 0, bar: 1, column: 1, histogram: 1, line: 2 };
+
+function paint(layer: Layer, out: string[]): void {
+	const { model, frame } = layer;
+	if (model.type === 'bar' || model.type === 'column' || model.type === 'histogram')
+		bars(model, frame, out, plotted(model));
+	else linesAndAreas(model, frame, out);
+}
+
+/** Paints the plot types that share cartesian axes into `area`. */
+export function cartesianSvg(model: ChartViewModel, area: Rect): string {
+	const out: string[] = [];
+	if (model.type === 'scatter') {
+		scatter(model, area, out);
+		return out.join('');
+	}
+	const frame = cartesianAxes(model, area, out);
+	if (!frame) return '';
+	if (model.type === 'waterfall') {
+		waterfallBars(model, frame, out);
+		return out.join('');
+	}
+	const layers: Layer[] = [{ model, frame }];
+	for (const group of model.extraGroups ?? []) {
+		const grouped: ChartViewModel = {
+			...model,
+			type: group.type,
+			grouping: group.grouping,
+			series: group.series,
+			horizontal: false,
+		};
+		if (group.barGapWidth !== undefined) grouped.barGapWidth = group.barGapWidth;
+		else delete grouped.barGapWidth;
+		if (group.barOverlap !== undefined) grouped.barOverlap = group.barOverlap;
+		else delete grouped.barOverlap;
+		const value = group.secondary && frame.secondary ? frame.secondary : frame.value;
+		layers.push({ model: grouped, frame: { ...frame, value } });
+	}
+	layers
+		.map((layer, order) => ({ layer, order }))
+		.sort(
+			(a, b) =>
+				(RANK[a.layer.model.type] ?? 1) - (RANK[b.layer.model.type] ?? 1) || a.order - b.order,
+		)
+		.forEach(({ layer }) => paint(layer, out));
+	return out.join('');
+}

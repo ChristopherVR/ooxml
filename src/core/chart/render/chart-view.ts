@@ -1,21 +1,37 @@
 import type {
 	ChartSummary,
+	ChartSummaryGroupType,
 	ChartSummarySeries,
 	ChartSummaryType,
 	ChartThemePalette,
 } from './summary';
-import { autoSeriesColor, chartColorScheme } from './chart-colors';
-import { chartPaletteSeriesColor, findChartColorPalette } from '../color-palettes';
-import { resolveDrawingColor } from '../../drawingml/drawing-color';
-import { drawingColorCss } from '../../drawingml/drawing-color-css';
+import { chartPaletteSeriesColor } from '../color-palettes';
+import { autoSeriesColor } from './chart-colors';
 import { niceScale, type AxisScale } from './chart-scale';
 import { valueAxis } from './chart-value-axis';
 export { categoryTotals } from './chart-value-axis';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
-import { resolveChartGradient, type ChartGradientFill } from '../gradient-definition';
-import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../drawingml/drawing-shadow';
+import type { ChartGradientFill } from '../gradient-definition';
+import type { DrawingSvgShadow } from '../../drawingml/drawing-shadow';
 import { chartTitleText, type ChartTitleText } from './chart-title-text';
 import type { ChartManualLayout } from '../manual-layout';
+import {
+	chartExtraAxes,
+	chartExtraView,
+	histogramView,
+	waterfallView,
+	type WaterfallView,
+} from './chart-view-ex';
+import {
+	seriesContext,
+	seriesView,
+	toText,
+	toNumber,
+	type ChartRefValue,
+	type ChartViewOptions,
+} from './chart-view-series';
+export type { ChartRefValue, ChartViewOptions, EvaluateRef } from './chart-view-series';
+export type { WaterfallView } from './chart-view-ex';
 
 export interface ChartSeriesView {
 	shadow?: DrawingSvgShadow;
@@ -34,6 +50,17 @@ export interface ChartSeriesView {
 export interface ValueAxisView extends AxisScale {
 	/** Ticks are fractions shown as percentages (percent-stacked charts). */
 	percent: boolean;
+}
+
+/** A combination chart's further group: its series over the shared categories. */
+export interface ChartGroupView {
+	type: ChartSummaryGroupType;
+	grouping: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
+	barGapWidth?: number;
+	barOverlap?: number;
+	series: ChartSeriesView[];
+	/** Plotted against {@link ChartViewModel.secondaryAxis}. */
+	secondary: boolean;
 }
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
@@ -56,6 +83,12 @@ export interface ChartViewModel {
 	series: ChartSeriesView[];
 	/** Value (Y) axis; for bar charts it runs horizontally. */
 	valueAxis?: ValueAxisView;
+	/** Combination chart: the groups layered over the first one. */
+	extraGroups?: ChartGroupView[];
+	/** Combination chart: the scale of the groups plotted on the secondary (right) value axis. */
+	secondaryAxis?: ValueAxisView;
+	/** Waterfall: the running-total steps and their bar roles. */
+	waterfall?: WaterfallView;
 	/** Scatter X axis. */
 	xAxis?: AxisScale;
 	/** Bars run horizontally (`bar`), not vertically (`column`). */
@@ -63,22 +96,6 @@ export interface ChartViewModel {
 	/** False for chart types this painter does not draw (bubble, stock, surface). */
 	supported: boolean;
 }
-
-/** A value a series reference resolves to: a number, text, boolean, blank or an error value. */
-export type ChartRefValue = number | string | boolean | null | { readonly error: string };
-
-export type EvaluateRef = (ref: string) => ChartRefValue[];
-
-/** How a host resolves live references and its own legacy series colours. */
-export interface ChartViewOptions<S extends ChartSummarySeries> {
-	/** Live values of a series reference; cached values are used when absent or empty. */
-	evaluateRef?: EvaluateRef;
-	/** A host colour for the series, used after its DrawingML paint and before the palette. */
-	seriesColor?: (series: S, index: number) => string | undefined;
-}
-
-const isRefError = (value: unknown): value is { readonly error: string } =>
-	typeof value === 'object' && value !== null && 'error' in value;
 
 const SUPPORTED: ReadonlySet<ChartSummaryType> = new Set([
 	'bar',
@@ -89,38 +106,9 @@ const SUPPORTED: ReadonlySet<ChartSummaryType> = new Set([
 	'doughnut',
 	'scatter',
 	'radar',
+	'waterfall',
+	'histogram',
 ]);
-
-function toText(value: ChartRefValue): string {
-	if (value === null) return '';
-	if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-	if (isRefError(value)) return value.error;
-	return String(value);
-}
-
-const toNumber = (value: ChartRefValue): number | null =>
-	typeof value === 'number' && Number.isFinite(value) ? value : null;
-
-function resolveRef(
-	ref: string | undefined,
-	evaluateRef: EvaluateRef,
-): ChartRefValue[] | undefined {
-	if (!ref) return undefined;
-	try {
-		const values = evaluateRef(ref);
-		return values.length ? values : undefined;
-	} catch {
-		return undefined;
-	}
-}
-
-function seriesName(series: ChartSummarySeries, index: number, evaluateRef: EvaluateRef): string {
-	const fromRef = resolveRef(series.nameRef, evaluateRef)
-		?.map(toText)
-		.filter((t) => t !== '')
-		.join(' ');
-	return fromRef || series.name || `Series${index + 1}`;
-}
 
 /**
  * Resolves a chart's series, from live values when the host gives `evaluateRef` (the values of a
@@ -132,72 +120,24 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 	theme: ChartThemePalette,
 	options: ChartViewOptions<S> = {},
 ): ChartViewModel {
-	const evaluateRef: EvaluateRef = options.evaluateRef ?? (() => []);
 	const type = chart.chartType;
 	const radial = type === 'pie' || type === 'doughnut';
-	const palette =
-		chart.colorPalette === undefined ? undefined : findChartColorPalette(chart.colorPalette);
-	const scheme = chartColorScheme(theme);
-	const drawingColor = (color: ChartSummarySeries['drawingColor']) =>
-		color &&
-		drawingColorCss(
-			resolveDrawingColor(
-				color,
-				{
-					scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-				},
-				{ transformOrder: 'document' },
-			),
-		);
-	const gradient = (fill: ChartSummarySeries['fill']) =>
-		fill?.kind === 'gradient'
-			? resolveChartGradient(fill, (color) =>
-					resolveDrawingColor(
-						color,
-						{
-							scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-						},
-						{ transformOrder: 'document' },
-					),
-				)
-			: undefined;
+	const ctx = seriesContext(chart, theme, options);
+	const { palette, scheme, drawingColor } = ctx;
 	const grouping =
 		chart.grouping ?? (type === 'bar' || type === 'column' ? 'clustered' : 'standard');
-	let categories: string[] = [];
 	const rawCategories: ChartRefValue[][] = [];
-	const series: ChartSeriesView[] = chart.series.map((s, i) => {
-		const values = (resolveRef(s.valuesRef, evaluateRef)?.map(toNumber) ??
-			s.values.map(toNumber)) as (number | null)[];
-		const cats = resolveRef(s.categoriesRef, evaluateRef) ?? s.categories;
-		rawCategories.push(cats);
-		const paletteColor =
-			palette && chartPaletteSeriesColor(palette, i, chart.series.length, scheme);
-		const color =
-			s.fill?.kind === 'none'
-				? 'none'
-				: (drawingColor(s.fill?.kind === 'solid' ? s.fill.color : s.drawingColor) ??
-					options.seriesColor?.(s, i) ??
-					paletteColor ??
-					autoSeriesColor(theme, i));
-		const view: ChartSeriesView = { name: seriesName(s, i, evaluateRef), values, color };
-		const shadow = resolveDrawingShadowXml(s.effectsXml, {
-			scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-		});
-		if (shadow) view.shadow = shadow;
-		const resolvedGradient = gradient(s.fill);
-		if (resolvedGradient) view.gradient = resolvedGradient;
-		const points = Object.fromEntries(
-			Object.entries(s.pointFills ?? {}).flatMap(([key, fill]) => {
-				const value = gradient(fill);
-				return value ? [[key, value]] : [];
-			}),
-		);
-		if (Object.keys(points).length) view.pointGradients = points;
-		return view;
-	});
-	const longest = Math.max(0, ...series.map((s) => s.values.length));
+	const collect = (cats: ChartRefValue[]): void => void rawCategories.push(cats);
+	const extra = chart.extraGroups ?? [];
+	const total = chart.series.length + extra.reduce((n, g) => n + g.series.length, 0);
+	const series = chart.series.map((s, i) => seriesView(ctx, s, i, total, collect));
+	const longest = Math.max(
+		0,
+		...series.map((s) => s.values.length),
+		...extra.flatMap((g) => g.series.map((s) => s.values.length)),
+	);
 	const firstCats = rawCategories.find((c) => c.length > 0) ?? [];
-	categories = Array.from({ length: Math.max(longest, firstCats.length) }, (_, i) =>
+	const categories = Array.from({ length: Math.max(longest, firstCats.length) }, (_, i) =>
 		firstCats[i] !== undefined ? toText(firstCats[i] ?? null) : String(i + 1),
 	);
 
@@ -267,6 +207,11 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		const xs = series.flatMap((s) => s.xValues ?? []).filter((x): x is number => x !== null);
 		model.xAxis = xs.length ? niceScale(Math.min(...xs), Math.max(...xs)) : niceScale(0, 1);
 	}
-	if (!radial) model.valueAxis = valueAxis(model);
+	if (type === 'histogram') histogramView(chart, model);
+	if (extra.length && (type === 'column' || type === 'line' || type === 'area'))
+		chartExtraView(chart, model, ctx, total, collect);
+	if (type === 'waterfall') waterfallView(chart, model, ctx);
+	else if (!radial) model.valueAxis = valueAxis(model);
+	chartExtraAxes(model);
 	return model;
 }

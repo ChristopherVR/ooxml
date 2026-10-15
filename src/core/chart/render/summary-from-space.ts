@@ -6,7 +6,12 @@ import type { ChartGroupKind, ChartSpace } from '../model';
 import type { ChartShapeProperties, ChartSpaceSeries } from '../model-series';
 import type { ChartStyleDefinition } from '../style-definition';
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
-import type { ChartSummary, ChartSummarySeries, ChartSummaryType } from './summary';
+import type {
+	ChartSummary,
+	ChartSummaryGroup,
+	ChartSummarySeries,
+	ChartSummaryType,
+} from './summary';
 
 const solidColor = (fill: DrawingFill | undefined): DrawingColor | undefined =>
 	fill?.kind === 'solid' ? fill.color : undefined;
@@ -75,6 +80,42 @@ export function chartSummarySeries(
 	return out;
 }
 
+/** The id of the value axis a group plots against (its `c:axId` that names a `c:valAx`). */
+function valueAxisId(chartSpace: ChartSpace, axisIds: readonly number[]): number | undefined {
+	return axisIds.find((id) =>
+		chartSpace.plotArea.axes.some((a) => a.id === id && a.kind === 'val'),
+	);
+}
+
+/**
+ * The groups after the first that a combination chart layers over it. Bar, column, line and area
+ * groups are kept (bar groups only over a vertical first group); a group on another value axis is
+ * secondary. Pie, scatter, radar, stock and surface groups are not combined.
+ */
+function extraGroups(chartSpace: ChartSpace, firstType: ChartSummaryType): ChartSummaryGroup[] {
+	const [first, ...rest] = chartSpace.plotArea.groups;
+	if (!first || !['column', 'line', 'area'].includes(firstType)) return [];
+	const primary = valueAxisId(chartSpace, first.axisIds);
+	const out: ChartSummaryGroup[] = [];
+	for (const group of rest) {
+		if (group.is3D || !['bar', 'line', 'area'].includes(group.kind)) continue;
+		const type = group.kind === 'bar' ? 'column' : (group.kind as 'line' | 'area');
+		const entry: ChartSummaryGroup = {
+			chartType: type,
+			series: group.series.map((source) => chartSummarySeries(source, type)),
+			secondary: valueAxisId(chartSpace, group.axisIds) !== primary,
+		};
+		if (group.grouping && GROUPINGS.has(group.grouping))
+			entry.grouping = group.grouping as NonNullable<ChartSummaryGroup['grouping']>;
+		if (type === 'column') {
+			if (group.gapWidth !== undefined) entry.barGapWidth = group.gapWidth;
+			if (group.overlap !== undefined) entry.barOverlap = group.overlap;
+		}
+		if (entry.series.length) out.push(entry);
+	}
+	return out;
+}
+
 /** Part-level metadata read beside the chart model (`readChartFormatting`, style parts). */
 export interface ChartSummaryExtras {
 	formatting?: ChartStyleDefinition;
@@ -96,6 +137,8 @@ export function chartSummaryFromSpace(
 		series,
 		showLegend: chartSpace.legend !== undefined,
 	};
+	const combined = extraGroups(chartSpace, chartType);
+	if (combined.length) summary.extraGroups = combined;
 	const grouping = group?.grouping;
 	if (grouping && GROUPINGS.has(grouping))
 		summary.grouping = grouping as NonNullable<ChartSummary['grouping']>;

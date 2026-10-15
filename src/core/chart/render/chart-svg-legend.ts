@@ -89,7 +89,16 @@ function legendEntries(model: ChartViewModel): LegendEntry[] {
 			color: first?.pointColors?.[i] ?? first?.color ?? '#4472C4',
 		}));
 	}
-	return model.series.map((s) => ({ label: s.name, color: s.color }));
+	if (model.type === 'waterfall' && model.waterfall)
+		return [
+			{ label: 'Increase', color: model.waterfall.colors.increase },
+			{ label: 'Decrease', color: model.waterfall.colors.decrease },
+			{ label: 'Total', color: model.waterfall.colors.total },
+		];
+	return [...model.series, ...(model.extraGroups ?? []).flatMap((g) => g.series)].map((s) => ({
+		label: s.name,
+		color: s.color,
+	}));
 }
 
 /** Draws the legend and returns the area left for the plot. */

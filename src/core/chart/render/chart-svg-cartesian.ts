@@ -2,7 +2,6 @@ import { formatAxisValue, type AxisScale } from './chart-scale';
 import { fit, line, n, text, textWidth, type Rect } from './chart-svg-util';
 import { categoryTotals, type ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
-import { bars } from './chart-svg-bars';
 
 export interface Frame {
 	plot: Rect;
@@ -11,10 +10,12 @@ export interface Frame {
 	/** Category index to the centre of its band along the category axis. */
 	band: (i: number) => number;
 	bandSize: number;
+	/** Value to pixel along the secondary value axis of a combination chart. */
+	secondary?: (v: number) => number;
 }
 
 /** Axes, gridlines and labels; returns the plot frame for the series painters. */
-function axes(model: ChartViewModel, area: Rect, out: string[]): Frame | undefined {
+export function cartesianAxes(model: ChartViewModel, area: Rect, out: string[]): Frame | undefined {
 	const scale = model.valueAxis;
 	if (!scale) return undefined;
 	const labels = scale.ticks.map((t) => formatAxisValue(t, scale.percent));
@@ -33,6 +34,13 @@ function axes(model: ChartViewModel, area: Rect, out: string[]): Frame | undefin
 		area.w * 0.3,
 		Math.max(...model.categories.map((c) => textWidth(c, categorySize)), 8) + 6,
 	);
+	const second = horizontal ? undefined : model.secondaryAxis;
+	const secondLabels = second?.ticks.map((t) => formatAxisValue(t, second.percent)) ?? [];
+	const secondW = second
+		? valueLabels
+			? Math.max(...secondLabels.map((l) => textWidth(l, valueSize)), 8) + 8
+			: 4
+		: 0;
 	const plot: Rect = horizontal
 		? {
 				x: area.x + catW,
@@ -43,7 +51,7 @@ function axes(model: ChartViewModel, area: Rect, out: string[]): Frame | undefin
 		: {
 				x: area.x + labelW,
 				y: area.y + 4,
-				w: Math.max(1, area.w - labelW - 4),
+				w: Math.max(1, area.w - labelW - 4 - secondW),
 				h: Math.max(1, area.h - Math.max(20, categorySize * 1.5)),
 			};
 	const span = scale.max - scale.min || 1;
@@ -96,11 +104,36 @@ function axes(model: ChartViewModel, area: Rect, out: string[]): Frame | undefin
 				}),
 			);
 	});
-	return { plot, value, band, bandSize };
+	const frame: Frame = { plot, value, band, bandSize };
+	if (second) {
+		const secondSpan = second.max - second.min || 1;
+		frame.secondary = (v) => plot.y + plot.h - ((v - second.min) / secondSpan) * plot.h;
+		const secondAxis = chartStroke(model, 'valueAxis');
+		out.push(
+			line(
+				plot.x + plot.w,
+				plot.y,
+				plot.x + plot.w,
+				plot.y + plot.h,
+				secondAxis.color,
+				secondAxis.width,
+			),
+		);
+		if (valueLabels)
+			second.ticks.forEach((t, i) =>
+				out.push(
+					text(plot.x + plot.w + 4, frame.secondary!(t) + valueSize * 0.3, secondLabels[i] ?? '', {
+						anchor: 'start',
+						...valueAttrs,
+					}),
+				),
+			);
+	}
+	return frame;
 }
 
 /** Values to plot per series, after percent-stacking. */
-function plotted(model: ChartViewModel): (number | null)[][] {
+export function plotted(model: ChartViewModel): (number | null)[][] {
 	if (model.grouping !== 'percentStacked') return model.series.map((s) => s.values);
 	const totals = categoryTotals(model);
 	return model.series.map((s) =>
@@ -108,7 +141,7 @@ function plotted(model: ChartViewModel): (number | null)[][] {
 	);
 }
 
-function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void {
+export function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void {
 	const values = plotted(model);
 	const stacked = model.grouping === 'stacked' || model.grouping === 'percentStacked';
 	const acc = new Array<number>(model.categories.length).fill(0);
@@ -168,7 +201,7 @@ function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void
 	}
 }
 
-function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
+export function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
 	const ys = model.valueAxis;
 	const xs = model.xAxis;
 	if (!ys || !xs) return;
@@ -228,18 +261,4 @@ function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
 				`<circle cx="${n(px(x, xs))}" cy="${n(py(v, ys))}" r="3" fill="${s.pointColors?.[i] ?? s.color}"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 			);
 		});
-}
-
-/** Paints bar, column, line, area and scatter charts into `area`. */
-export function cartesianSvg(model: ChartViewModel, area: Rect): string {
-	const out: string[] = [];
-	if (model.type === 'scatter') {
-		scatter(model, area, out);
-		return out.join('');
-	}
-	const frame = axes(model, area, out);
-	if (!frame) return '';
-	if (model.type === 'bar' || model.type === 'column') bars(model, frame, out, plotted(model));
-	else linesAndAreas(model, frame, out);
-	return out.join('');
 }

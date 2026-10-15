@@ -1,6 +1,7 @@
 /** The DOM-free chart painter: a chart summary or a parsed chart part to a standalone SVG. */
 export * from './summary';
 export * from './summary-from-space';
+export * from './summary-from-chartex';
 export * from './render-space';
 export {
 	chartSummaryView,

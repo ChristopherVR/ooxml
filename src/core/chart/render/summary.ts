@@ -3,7 +3,9 @@
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
 import type { DrawingColor, DrawingFill } from '../../drawingml/types';
+import type { HistogramOptions } from '../histogram-binning';
 import type { ChartStyleDefinition } from '../style-definition';
+import type { WaterfallOptions } from '../waterfall';
 
 /** The chart families a summary records; the painter draws all but bubble, stock and surface. */
 export type ChartSummaryType =
@@ -17,7 +19,9 @@ export type ChartSummaryType =
 	| 'radar'
 	| 'bubble'
 	| 'stock'
-	| 'surface';
+	| 'surface'
+	| 'waterfall'
+	| 'histogram';
 
 export interface ChartSummarySeries {
 	name?: string;
@@ -40,6 +44,28 @@ export interface ChartSummarySeries {
 	effectsXml?: string;
 }
 
+/** Chart families a combination chart can layer over its first group. */
+export type ChartSummaryGroupType = 'bar' | 'column' | 'line' | 'area';
+
+/**
+ * A further chart group of a combination chart (`c:lineChart` beside a `c:barChart`): it shares the
+ * category axis of the first group and plots on its value axis or on the secondary one.
+ */
+export interface ChartSummaryGroup {
+	chartType: ChartSummaryGroupType;
+	grouping?: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
+	barGapWidth?: number;
+	barOverlap?: number;
+	series: ChartSummarySeries[];
+	/** Plotted against its own (secondary) value axis, drawn at the right edge. */
+	secondary: boolean;
+}
+
+/** The binning of a histogram summary: `cx:binning` plus whether bars aggregate by category. */
+export interface HistogramSummaryOptions extends HistogramOptions {
+	aggregateByCategory?: boolean | undefined;
+}
+
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {
 	chartType: ChartSummaryType;
 	/** Bar/column grouping. */
@@ -50,6 +76,12 @@ export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries>
 	barOverlap?: number;
 	title?: string;
 	series: S[];
+	/** Combination chart: the groups drawn over the first one, in document order. */
+	extraGroups?: ChartSummaryGroup[];
+	/** Waterfall: the subtotal marks and connector visibility of its `cx:layoutPr`. */
+	waterfall?: WaterfallOptions;
+	/** Histogram: the binning of its `cx:layoutPr`. */
+	histogram?: HistogramSummaryOptions;
 	showLegend: boolean;
 	legendPosition?: 'r' | 'l' | 't' | 'b' | 'tr';
 	/** Office color-style id (ChartColor). Manual series/point colors retain precedence. */

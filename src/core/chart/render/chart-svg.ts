@@ -1,4 +1,4 @@
-import { cartesianSvg } from './chart-svg-cartesian';
+import { cartesianSvg } from './chart-svg-plots';
 import { pieSvg, radarSvg } from './chart-svg-radial';
 import { esc, n, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';

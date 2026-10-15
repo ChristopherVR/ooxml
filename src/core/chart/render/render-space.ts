@@ -7,7 +7,7 @@ import type { ChartSpace } from '../model';
 import { renderChartSvg, type ChartSvgOptions } from './chart-svg';
 import { chartSummaryView } from './chart-view';
 import { chartSummaryFromSpace, type ChartSummaryExtras } from './summary-from-space';
-import type { ChartSummaryType, ChartThemePalette } from './summary';
+import type { ChartSummary, ChartSummaryType, ChartThemePalette } from './summary';
 import { DEFAULT_THEME_COLORS, THEME_SLOTS } from './theme-palette';
 
 /** Chart families the SVG painter draws; the others render a labelled frame. */
@@ -20,6 +20,8 @@ export const DRAWN_CHART_TYPES: ReadonlySet<ChartSummaryType> = new Set([
 	'doughnut',
 	'scatter',
 	'radar',
+	'waterfall',
+	'histogram',
 ]);
 
 /** Theme fonts (latin typefaces) for chart text. */
@@ -74,6 +76,19 @@ export function renderChartSpaceSvg(space: ChartSpace, options: RenderChartSpace
 		...(colorPalette !== undefined ? { colorPalette } : {}),
 		...(styleDefinition ? { styleDefinition } : {}),
 	});
+	const view = chartSummaryView(summary, chartThemePalette(theme, fonts));
+	return renderChartSvg(view, width, height, svg);
+}
+
+/**
+ * A standalone SVG document for a chart summary (an extended chart part read by
+ * `chartExSummary`), from the values it caches.
+ */
+export function renderChartSummarySvg(
+	summary: ChartSummary,
+	options: Omit<RenderChartSpaceOptions, 'formatting' | 'colorPalette' | 'styleDefinition'>,
+): string {
+	const { width, height, theme, fonts, ...svg } = options;
 	const view = chartSummaryView(summary, chartThemePalette(theme, fonts));
 	return renderChartSvg(view, width, height, svg);
 }
