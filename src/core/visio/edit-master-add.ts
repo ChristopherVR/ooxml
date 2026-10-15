@@ -1,7 +1,7 @@
 import { NS, parseXml } from '../xml/index';
 import { relationshipsPartFor } from '../opc/relationships';
 import { decodePath, fail, type VisioPackageLimits } from './package-common';
-import { indexedPart, related, visioXml } from './parts';
+import { related, visioXml } from './parts';
 import { attribute, children } from './sheet';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';

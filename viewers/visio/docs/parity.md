@@ -524,12 +524,34 @@ Limits:
 - A 1-D master (Dynamic connector) and a master with more than one top-level
   shape are listed disabled with the reason; they cannot be dropped.
 - The built-in stencils are this editor's own outlines, not Visio's masters:
-  no connection points, Shape Data or shapesheet behaviour. Stencil files
-  (.vssx) are never opened; a docked one without a built-in stand-in is
-  listed by its file name as unavailable.
+  no connection points, Shape Data or shapesheet behaviour. A docked stencil
+  file without a built-in stand-in is listed by its file name as unavailable;
+  stencil files you open yourself are in "Open Stencil" below.
 - Masters cannot be edited, renamed or deleted. (Names, layers, page growth
   and built-in masters joining the drawing: see "Masters in the package".)
 - Previews use the first 200 masters and no page theme.
+
+## Open Stencil and My Shapes, 2026-10-15
+
+More Shapes > Open Stencil... opens `.vssx` stencils (and `.vstx` / `.vsdx`
+files, read for their masters) from a file picker. Each opens as a section of
+the Shapes pane with the master icons drawn from the masters' shapes. Dropping
+or activating a master copies it, with its style sheets (reused by name, else
+copied), into the drawing's masters part the first time (found again by
+UniqueID) and saves an instance that references it, so its connection points
+and Shape Data come through the master. One undo step; the saved drawing
+reopens with the instance resolved to its master. Right-click a master >
+Add to My Shapes collects it into a My Shapes section for the session.
+
+- Opened stencils and My Shapes last for the session only (the bytes stay in
+  memory); they are not remembered between visits.
+- Legacy `.vss` / `.vst` are refused with a message (ole2 owns binary
+  formats), as are macro-enabled packages and damaged files.
+- A master that owns pictures or other parts is refused when dropped; line
+  and connector masters of a stencil file are listed disabled (use the
+  Connector tool); the existing Document Stencil refusals (turned groups,
+  pictures) apply too.
+- The Shapes pane strings are English only, as before.
 
 ## Right-angle connectors route around placeable shapes, 2026-10-10
 

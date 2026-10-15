@@ -167,7 +167,8 @@
 	padding-right: 28px;
 	border-radius: 0;
 }
-.shapes-empty {
+.shapes-empty,
+.stencil-status {
 	margin: 8px 12px;
 	color: var(--_vv-muted);
 	font-size: 12px;

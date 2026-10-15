@@ -3,9 +3,11 @@ import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import type { VisioDocument } from 'ooxml-core/visio';
 import {
 	visioMasterDropCommand,
+	visioFileMasterDropCommand,
 	visioMasterDropRefusal,
 	visioStencilDropCommand,
 } from 'ooxml-core/visio/ui';
+import { stencilFiles } from './stencil-files';
 import { MASTER_MIME, findMaster, masterCreation, setShapesDocument } from './shapes-window';
 import {
 	DOCUMENT_STENCIL_NAME,
@@ -74,9 +76,10 @@ export function wireStencil(
 	const addInstance = (id: string, centre?: { clientX: number; clientY: number }) => {
 		const state = controller.state;
 		const page = state.document?.pages[state.pageIndex];
-		const master = documentMaster(state.document, id);
+		const file = stencilFiles(pane).fileMaster(id);
+		const master = file?.master ?? documentMaster(state.document, id);
 		if (!master || !page) return queue;
-		const refusal = visioMasterDropRefusal(master);
+		const refusal = file?.listed.unsupported ?? visioMasterDropRefusal(master);
 		if (refusal || !editable()) {
 			announce(refusal ? `${master.name}: ${refusal}` : 'Open a .vsdx file to add shapes.');
 			return queue;
@@ -88,12 +91,16 @@ export function wireStencil(
 				if (controller.state.edit.busy) await idle();
 				const current = controller.state;
 				const target = current.document?.pages[current.pageIndex];
-				const live = documentMaster(current.document, id);
+				const live = file?.master ?? documentMaster(current.document, id);
 				if (!target || target.id !== page.id || !live || !editable()) return;
-				const command = visioMasterDropCommand(target, live, point);
+				const command = file
+					? visioFileMasterDropCommand(target, live, file.bytes, point)
+					: visioMasterDropCommand(target, live, point);
 				const token = controller.captureCreationToken(target.id);
 				await controller.applyCreationEdits([command], token);
-				announce(`${live.name} ${command.shapeId} added from ${DOCUMENT_STENCIL_NAME}.`);
+				announce(
+					`${live.name} ${command.shapeId} added from ${file ? 'the opened stencil' : DOCUMENT_STENCIL_NAME}.`,
+				);
 			} catch (error) {
 				if (!isEditCancellation(error) && !controller.state.edit.error)
 					announce(editErrorMessage(error));
@@ -102,9 +109,12 @@ export function wireStencil(
 		return queue;
 	};
 	const known = (id: string): boolean =>
-		!!masterCreation(id) || !!documentMaster(controller.state.document, id);
+		!!masterCreation(id) ||
+		!!documentMaster(controller.state.document, id) ||
+		!!stencilFiles(pane).fileMaster(id);
 	const add = (id: string, centre?: { clientX: number; clientY: number }) => {
-		if (documentMaster(controller.state.document, id)) return addInstance(id, centre);
+		if (documentMaster(controller.state.document, id) || stencilFiles(pane).fileMaster(id))
+			return addInstance(id, centre);
 		const master = masterCreation(id);
 		const state = controller.state;
 		const page = state.document?.pages[state.pageIndex];

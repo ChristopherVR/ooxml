@@ -41,7 +41,7 @@ describe('More Shapes and Quick Shapes', () => {
 			'Arrow Shapes',
 			'Open Stencil...',
 		]);
-		expect(items[3]!.hasAttribute('disabled')).toBe(true);
+		expect(items[3]!.hasAttribute('disabled')).toBe(false);
 		command(more, 'stencil:basic-flowchart');
 		expect(sections()).toEqual(['basic', 'basic-flowchart']);
 		expect(more.querySelector('[command="stencil:basic-flowchart"]')!.getAttribute('checked')).toBe(

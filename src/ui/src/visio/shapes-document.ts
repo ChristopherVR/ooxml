@@ -51,7 +51,7 @@ export function documentMaster(
  * The master drawn alone, cropped to its shapes: the page renderer over a page that holds only
  * the master, without its text, as Visio's stencil icons are. Nothing when it cannot be drawn.
  */
-function preview(master: VisioMaster): SVGSVGElement | undefined {
+export function masterPreview(master: VisioMaster): SVGSVGElement | undefined {
 	if (!master.shapes.length) return undefined;
 	const page = {
 		id: `master-${master.id}`,
@@ -112,7 +112,7 @@ export function shapesDocument(model: VisioDocument | null | undefined): ShapesD
 				// A plain box until the preview is drawn, and when the master has none.
 				path: 'M4 6h16v12H4Z',
 				size: visioMasterDropSize(master),
-				draw: () => preview(master),
+				draw: () => masterPreview(master),
 				...(unsupported ? { unsupported } : {}),
 			};
 		}),

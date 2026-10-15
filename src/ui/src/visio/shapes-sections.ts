@@ -2,7 +2,6 @@ import {
 	BASIC_STENCIL_ID,
 	STENCILS,
 	findMaster,
-	type Master,
 	type Stencil,
 } from './stencil-catalog';
 import {
@@ -14,6 +13,10 @@ import {
 	type ShapesDocument,
 } from './shapes-document';
 import { loadShapes as load, saveShapes as save } from './shapes-storage';
+import { MY_SHAPES_ID, stencilFiles } from './stencil-files';
+import { masterList, menuItem } from './shapes-master-list';
+export { masterButton, masterList } from './shapes-master-list';
+import { stencilFilePicker } from './shapes-files-ui';
 export { SHAPES_STORAGE_KEY, currentQuickShapes } from './shapes-storage';
 
 /** The Stencils view of one Shapes window. */
@@ -33,59 +36,6 @@ const DEFAULT_QUICK = 4;
 /** Undefined until the shared menu element is registered. */
 type Menu = HTMLElement & { openAt?(x: number, y: number): void };
 
-/** One master button: drag it onto the page, or activate it to add it at the page centre. */
-export function masterButton(doc: Document, master: Master): HTMLLIElement {
-	const item = doc.createElement('li');
-	item.dataset.name = master.name;
-	const button = doc.createElement('button');
-	button.type = 'button';
-	button.className = 'master';
-	button.dataset.master = master.id;
-	let svg = master.draw?.();
-	if (!svg) {
-		svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-		svg.setAttribute('viewBox', '0 0 24 24');
-		svg.setAttribute('aria-hidden', 'true');
-		const outline = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
-		outline.setAttribute('d', master.path);
-		svg.append(outline);
-	}
-	const label = doc.createElement('span');
-	label.textContent = master.name;
-	button.append(svg, label);
-	if (master.unsupported) {
-		// Listed as Visio lists it, but not offered: the reason is the tooltip.
-		button.dataset.unsupported = '';
-		button.setAttribute('aria-disabled', 'true');
-		button.title = `${master.name}: ${master.unsupported}`;
-	} else {
-		button.draggable = true;
-		button.title = `${master.name}: drag onto the page, or press Enter to add it at the centre.`;
-	}
-	item.append(button);
-	return item;
-}
-export function masterList(doc: Document, masters: readonly Master[]): HTMLUListElement {
-	const list = doc.createElement('ul');
-	list.className = 'masters';
-	list.append(...masters.map((master) => masterButton(doc, master)));
-	return list;
-}
-function menuItem(doc: Document, command: string, label: string, checked?: boolean): HTMLElement {
-	const item = doc.createElement('office-ui-menu-item');
-	item.setAttribute('command', command);
-	item.setAttribute('label', label);
-	if (checked !== undefined) item.setAttribute('checked', String(checked));
-	return item;
-}
-
-function unsupportedItem(item: HTMLElement, reason: string): HTMLElement {
-	item.setAttribute('disabled', '');
-	item.dataset.unsupported = '';
-	item.setAttribute('title', reason);
-	return item;
-}
-
 /**
  * The Stencils view below the view tabs: More Shapes (a menu of the built-in stencils), Quick
  * Shapes (favourites across the open stencils) and one collapsible section per open stencil.
@@ -100,6 +50,7 @@ export function buildStencilsView(
 	pane: HTMLElement,
 ): StencilsView {
 	const saved = load(doc);
+	const files = stencilFiles(pane);
 	let drawing: ShapesDocument = EMPTY_SHAPES_DOCUMENT;
 	/** Docked stencils the user has not closed in this session. */
 	let docked: string[] = [];
@@ -125,6 +76,10 @@ export function buildStencilsView(
 	const sections = doc.createElement('div');
 	sections.id = 'shapes-sections';
 
+	const picker = stencilFilePicker(doc, files, (stencil) => {
+		collapsed.delete(stencil.id);
+		render();
+	});
 	const moreMenu = doc.createElement('office-ui-context-menu') as Menu;
 	moreMenu.dataset.shapesMenu = 'more';
 	moreMenu.setAttribute('label', 'More Shapes');
@@ -134,7 +89,22 @@ export function buildStencilsView(
 	let menuMaster: string | undefined;
 
 	const openIds = () => [...new Set([...docked, BASIC_STENCIL_ID, ...saved.open])];
-	const sectionIds = () => [...(drawing.masters.length ? [DOCUMENT_STENCIL_ID] : []), ...openIds()];
+	const fileSections = () => [
+		...files.opened.map((stencil) => stencil.id),
+		...(files.myShapes ? [MY_SHAPES_ID] : []),
+	];
+	const sectionIds = () => [
+		...(drawing.masters.length ? [DOCUMENT_STENCIL_ID] : []),
+		...openIds(),
+		...fileSections(),
+	];
+	const sectionStencil = (id: string): Stencil =>
+		id === DOCUMENT_STENCIL_ID
+			? { id, name: DOCUMENT_STENCIL_NAME, masters: drawing.masters }
+			: id === MY_SHAPES_ID
+				? files.myShapes!
+				: (files.opened.find((candidate) => candidate.id === id) ??
+					STENCILS.find((candidate) => candidate.id === id)!);
 	const quickIds = (stencil: Stencil) =>
 		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
 	const renderQuick = () => {
@@ -154,10 +124,7 @@ export function buildStencilsView(
 	const renderSections = () => {
 		sections.replaceChildren(
 			...sectionIds().map((id) => {
-				const stencil: Stencil =
-					id === DOCUMENT_STENCIL_ID
-						? { id, name: DOCUMENT_STENCIL_NAME, masters: drawing.masters }
-						: STENCILS.find((candidate) => candidate.id === id)!;
+				const stencil = sectionStencil(id);
 				const section = doc.createElement('section');
 				section.dataset.stencil = id;
 				section.setAttribute('aria-label', stencil.name);
@@ -175,7 +142,7 @@ export function buildStencilsView(
 				list.hidden = !open;
 				if (!open) section.dataset.collapsed = '';
 				header.append(title);
-				if (id !== BASIC_STENCIL_ID && id !== DOCUMENT_STENCIL_ID) {
+				if (id !== BASIC_STENCIL_ID && id !== DOCUMENT_STENCIL_ID && id !== MY_SHAPES_ID) {
 					const close = doc.createElement('button');
 					close.type = 'button';
 					close.className = 'stencil-close';
@@ -205,10 +172,9 @@ export function buildStencilsView(
 				menuItem(doc, `stencil:${stencil.id}`, stencil.name, openIds().includes(stencil.id)),
 			),
 			doc.createElement('office-ui-menu-separator'),
-			unsupportedItem(
-				menuItem(doc, 'open-stencil-file', 'Open Stencil...'),
-				'Open Stencil: stencil files (.vssx, .vss) are not supported.',
-			),
+			Object.assign(menuItem(doc, 'open-stencil-file', 'Open Stencil...'), {
+				title: 'Open Stencil: a .vssx stencil file. Legacy .vss files are not supported.',
+			}),
 		);
 	const render = () => {
 		renderMenu();
@@ -216,6 +182,11 @@ export function buildStencilsView(
 		renderQuick();
 	};
 	const toggleStencil = (id: string) => {
+		if (files.opened.some((stencil) => stencil.id === id)) {
+			files.close(id);
+			collapsed.delete(id);
+			return render();
+		}
 		if (openIds().includes(id)) {
 			docked = docked.filter((candidate) => candidate !== id);
 			saved.open = saved.open.filter((candidate) => candidate !== id);
@@ -233,6 +204,7 @@ export function buildStencilsView(
 		event.stopPropagation();
 		const command = (event as CustomEvent<{ command: string }>).detail.command;
 		if (command.startsWith('stencil:')) toggleStencil(command.slice('stencil:'.length));
+		else if (command === 'open-stencil-file') picker.open();
 	});
 	quickToggle.addEventListener('click', () => {
 		quick.hidden = !quick.hidden;
@@ -257,6 +229,21 @@ export function buildStencilsView(
 	});
 	pane.addEventListener('contextmenu', (event) => {
 		const button = (event.target as Element).closest?.<HTMLElement>('[data-master]');
+		const mine = button && files.fileMaster(button.dataset.master!);
+		if (button && mine) {
+			// A master of an opened stencil file can be collected into My Shapes.
+			event.preventDefault();
+			menuMaster = button.dataset.master;
+			masterMenu.replaceChildren(
+				menuItem(
+					doc,
+					'my-shapes',
+					files.inMyShapes(menuMaster!) ? 'Remove from My Shapes' : 'Add to My Shapes',
+				),
+			);
+			masterMenu.openAt?.(event.clientX, event.clientY);
+			return;
+		}
 		const found = button && findMaster(button.dataset.master!);
 		if (!found) return;
 		event.preventDefault();
@@ -269,6 +256,10 @@ export function buildStencilsView(
 	});
 	masterMenu.addEventListener('office-command', (event) => {
 		event.stopPropagation();
+		if (menuMaster && files.fileMaster(menuMaster)) {
+			files.toggleMine(menuMaster);
+			return render();
+		}
 		const found = menuMaster && findMaster(menuMaster);
 		if (!found) return;
 		const ids = quickIds(found.stencil);
@@ -279,7 +270,7 @@ export function buildStencilsView(
 		renderQuick();
 	});
 	render();
-	panel.append(more, quickToggle, quick, sections);
+	panel.append(more, quickToggle, quick, picker.status, sections, picker.input);
 	return {
 		// The caller puts the menus on the pane, so they open from the Search view too.
 		menus: [moreMenu, masterMenu],
