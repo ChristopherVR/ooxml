@@ -26,6 +26,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-status-bar',
 	'pptx-ui-ribbon-gallery',
 	'pptx-ui-ribbon-actions',
+	'pptx-ui-options-dialog',
 ] as const;
 
 /** Every alias maps the shared tokens onto the pptx theme and control tokens. */
@@ -165,6 +166,9 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	// The tab row's Comments and Share at the pptx tab-row scale (11px labels, 24px controls).
 	'pptx-ui-ribbon-actions': `:host { --office-font-size: 11px; --office-control-height-md: 24px;
 	--office-icon-size-md: 14px; --office-font-size-2xs: 8px; padding-inline-start: 0; }`,
+	// File > Options keeps its wide footprint (56rem, a 176px rail) rather than Office's 728px.
+	'pptx-ui-options-dialog': `:host { --office-options-width: min(56rem, calc(100vw - 32px));
+	--office-options-nav-width: 176px; --office-options-height: 540px; --office-z-dialog: 1200; }`,
 	'pptx-ui-context-menu': `:host { --office-menu-min-width: 180px; --office-danger: var(--pptx-destructive, #f87171);
 	--office-selected: var(--pptx-accent, #33334d); --office-radius-md: var(--pptx-radius, 6px); }`,
 };

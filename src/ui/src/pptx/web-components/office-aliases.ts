@@ -49,7 +49,7 @@ interface Stateful extends HTMLElement {
 type Translate = (key: string, params?: Record<string, string>) => string;
 const identity: Translate = (key) => key;
 
-function base(
+export function base(
 	registry: CustomElementRegistry,
 	define: (r: CustomElementRegistry) => void,
 	tag: string,
@@ -59,7 +59,7 @@ function base(
 }
 
 /** A subclass of the shared element carrying the pptx token bridge in its own shadow root. */
-function bridged(Base: Ctor, tag: (typeof OFFICE_ALIAS_TAGS)[number]): Ctor {
+export function bridged(Base: Ctor, tag: (typeof OFFICE_ALIAS_TAGS)[number]): Ctor {
 	return class extends Base {
 		constructor() {
 			super();

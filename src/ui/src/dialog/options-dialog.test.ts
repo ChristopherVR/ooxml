@@ -10,6 +10,7 @@ type OptionsDialog = HTMLElement & {
 	values: Record<string, boolean | number | string>;
 	category: string;
 	open: boolean;
+	live: boolean;
 	show(): void;
 	defaults: Record<string, boolean | number | string> | null;
 	labels: Record<string, string>;
@@ -229,6 +230,78 @@ describe('office-ui-options-dialog', () => {
 		await wait();
 		const slot = root.querySelector<HTMLSlotElement>('slot[name="pane-ribbon"]')!;
 		expect(slot.assignedElements()).toEqual([pane]);
+	});
+
+	it('applies each edit at once in live mode and leaves reset and cancel to the host', async () => {
+		const { dialog, root, tab, field, action } = mount();
+		dialog.live = true;
+		dialog.defaults = { livePreview: true };
+		dialog.categories = [
+			...CATEGORIES.slice(0, 1),
+			{
+				id: 'fonts',
+				label: 'Fonts',
+				sections: [{ id: 'f', title: 'Fonts', controls: [], slot: 'block-fonts' }],
+			},
+		];
+		const block = document.createElement('div');
+		block.slot = 'block-fonts';
+		dialog.append(block);
+		const input = vi.fn();
+		const reset = vi.fn();
+		const cancelled = vi.fn();
+		const changed = vi.fn();
+		const category = vi.fn();
+		dialog.addEventListener('office-option-input', (event) => input((event as CustomEvent).detail));
+		dialog.addEventListener('office-options-reset', reset);
+		dialog.addEventListener('office-options-cancel', cancelled);
+		dialog.addEventListener('office-options-change', changed);
+		dialog.addEventListener('office-options-category', (event) =>
+			category((event as CustomEvent).detail),
+		);
+		dialog.show();
+		await dialog.updateComplete;
+		field<HTMLInputElement>('livePreview').click();
+		expect(input).toHaveBeenCalledWith({ key: 'livePreview', value: false });
+		expect(dialog.values.livePreview).toBe(false);
+		action('reset').click();
+		expect(reset).toHaveBeenCalledTimes(1);
+		expect(dialog.values.livePreview).toBe(false);
+		tab('Fonts').click();
+		await dialog.updateComplete;
+		expect(category).toHaveBeenLastCalledWith({ id: 'fonts' });
+		expect(
+			root.querySelector<HTMLSlotElement>('slot[name="block-fonts"]')!.assignedElements(),
+		).toEqual([block]);
+		// Closing from the title bar keeps the edits; only the Cancel button reports a cancel.
+		root.querySelector('office-ui-dialog')!.dispatchEvent(new CustomEvent('office-dialog-close'));
+		expect(changed).toHaveBeenCalledTimes(1);
+		expect(cancelled).not.toHaveBeenCalled();
+		dialog.show();
+		await dialog.updateComplete;
+		action('cancel').click();
+		expect(cancelled).toHaveBeenCalledTimes(1);
+	});
+
+	it('lets Tab walk through a slotted pane instead of the dialog trap', async () => {
+		const { dialog } = mount();
+		dialog.categories = [
+			{ id: 'ribbon', label: 'Customize Ribbon', sections: [], custom: true },
+			{ id: 'other', label: 'Other', sections: [] },
+		];
+		const field = document.createElement('input');
+		field.slot = 'pane-ribbon';
+		dialog.append(field);
+		dialog.show();
+		await dialog.updateComplete;
+		const tabKey = new KeyboardEvent('keydown', {
+			key: 'Tab',
+			bubbles: true,
+			composed: true,
+			cancelable: true,
+		});
+		field.dispatchEvent(tabKey);
+		expect(tabKey.defaultPrevented).toBe(false);
 	});
 
 	it('clamps option numbers', () => {

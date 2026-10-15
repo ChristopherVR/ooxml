@@ -1,4 +1,6 @@
 export * from './autocorrect';
+export * from './options-dialog-binding';
+export * from './options-dialog-model';
 export * from './quick-access';
 export * from './viewer-addins';
 export * from './viewer-options';

@@ -31,6 +31,12 @@ export interface OfficeOptionSection {
 	title: string;
 	description?: string;
 	controls: readonly OfficeOptionControl[];
+	/**
+	 * The product supplies a block of its own under this section's rows (PowerPoint's theme
+	 * picker): put an element with `slot="<this value>"` in the dialog and it shows there while
+	 * the category is open.
+	 */
+	slot?: string;
 }
 
 export interface OfficeOptionCategory {
@@ -76,11 +82,18 @@ export type OfficeOptionsChangeEvent = CustomEvent<{
  * Cancel, Escape and the close button discard them and emit `office-options-cancel`. "Reset all options" (shown when `defaults` is
  * set) puts the defaults in the draft. `heading` defaults to "Options"; `labels` translates the
  * buttons.
+ *
+ * `live` is PowerPoint's behaviour: every edit applies at once (there is no draft), OK, Escape
+ * and the close button keep the edits and Cancel emits `office-options-cancel` for the host to
+ * restore its snapshot. "Reset all options" then only emits `office-options-reset`; the host
+ * resets and sets `values` again. Live or not, every edit emits `office-option-input` (key and
+ * value) and selecting a category emits `office-options-category`.
  */
 export class OfficeUiOptionsDialog extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		open: flag,
+		live: flag,
 		heading: { type: String },
 		categories: { attribute: false },
 		defaults: { attribute: false },
@@ -89,6 +102,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 		active: { state: true },
 	};
 	declare open: boolean;
+	declare live: boolean;
 	declare heading: string | null;
 	declare categories: readonly OfficeOptionCategory[];
 	declare defaults: OfficeOptionValues | null;
@@ -100,6 +114,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 	constructor() {
 		super();
 		this.open = false;
+		this.live = false;
 		this.heading = null;
 		this.categories = [];
 		this.defaults = null;
@@ -116,7 +131,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 	}
 	set values(value: OfficeOptionValues) {
 		this.committed = { ...value };
-		if (!present(this.open)) this.draftValues = { ...value };
+		if (!present(this.open) || present(this.live)) this.draftValues = { ...value };
 		this.requestUpdate('values');
 	}
 
@@ -149,8 +164,19 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 	}
 
 	private resetAll(): void {
+		if (present(this.live)) {
+			this.fire('office-options-reset', {});
+			return;
+		}
 		this.draftValues = { ...this.draftValues, ...this.defaults };
 		this.requestUpdate();
+	}
+
+	/** Panes the product slots in sit outside the dialog's own focus trap: let Tab walk through them. */
+	private onPaneKey(event: KeyboardEvent): void {
+		if (event.key !== 'Tab') return;
+		const origin = event.composedPath()[0];
+		if (origin instanceof Node && !this.renderRoot.contains(origin)) event.stopPropagation();
 	}
 
 	private onNavKey(event: KeyboardEvent): void {
@@ -171,6 +197,11 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 		this.renderRoot.querySelector<HTMLButtonElement>('nav [aria-selected="true"]')?.focus();
 	}
 
+	protected override updated(changed: PropertyValues<this>): void {
+		if (changed.has('active') && this.active)
+			this.fire('office-options-category', { id: this.active });
+	}
+
 	protected override willUpdate(changed: PropertyValues<this>): void {
 		if (!this.categories.some((category) => category.id === this.active))
 			this.active = this.categories[0]?.id ?? '';
@@ -180,6 +211,8 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 
 	set(key: string, next: OfficeOptionValue): void {
 		this.draftValues[key] = next;
+		if (present(this.live)) this.committed[key] = next;
+		this.fire('office-option-input', { key, value: next });
 		// Other rows may depend on this value (`enabledBy`).
 		this.requestUpdate();
 	}
@@ -195,6 +228,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 						<h3>${section.title}</h3>
 						${section.description ? html`<p class="desc">${section.description}</p>` : ''}
 						${section.controls.map((control) => optionRow(this, control))}
+						${section.slot ? html`<slot name=${section.slot}></slot>` : ''}
 					</section>`,
 			)}
 			${category.custom ? html`<slot name="pane-${category.id}"></slot>` : ''}
@@ -210,7 +244,9 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 				close-label=${text.close}
 				?open=${present(this.open)}
 				@office-dialog-close=${(event: Event) => {
-					if (!event.defaultPrevented) this.close();
+					if (event.defaultPrevented) return;
+					if (present(this.live)) this.commit();
+					else this.close();
 				}}
 			>
 				<div class="layout">
@@ -238,6 +274,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 					<div
 						role="tabpanel"
 						id="pane"
+						@keydown=${this.onPaneKey}
 						aria-labelledby=${ifDefined(category ? `tab-${category.id}` : undefined)}
 						>${this.pane(category)}</div
 					>

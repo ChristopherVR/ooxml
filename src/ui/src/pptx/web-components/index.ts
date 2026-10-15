@@ -21,6 +21,7 @@ import {
 	definePptxSwitch,
 } from './office-aliases';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
+import { definePptxOptionsDialog } from './options-dialog';
 import { definePptxPresentToolbar } from './present-toolbar';
 import { definePptxPresenterConsole } from './presenter-console';
 import { assertWebControlContract, markWebControlContract } from './registration-contract';
@@ -176,6 +177,7 @@ const controls = [
 	['pptx-ui-theme-editor', definePptxThemeEditor],
 	['pptx-ui-title-bar', definePptxTitleBar],
 	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
+	['pptx-ui-options-dialog', definePptxOptionsDialog],
 ] as const;
 
 /** Idempotent browser-only registration. Safe to call from every viewer binding. */
