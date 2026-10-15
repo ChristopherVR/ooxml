@@ -7,8 +7,14 @@ const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 const EMPTY_TYPES = `${XML_DECLARATION}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"></Types>`;
 const EMPTY_RELS = `${XML_DECLARATION}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>`;
 
+/**
+ * Value of attribute `name` on a start tag. The name must follow whitespace or the tag opener, so
+ * `Id` never matches inside `rId`, and either quote style is accepted.
+ */
 function attr(tag: string, name: string): string | undefined {
-	return new RegExp(`${name}="([^"]*)"`).exec(tag)?.[1];
+	const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const match = new RegExp(`(?<=[\\s<])${escaped}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`).exec(tag);
+	return match ? (match[1] ?? match[2]) : undefined;
 }
 
 /**
