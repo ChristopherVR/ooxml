@@ -129,6 +129,24 @@ export function dataTab(): RibbonTab {
 				],
 			},
 			{
+				id: 'forecast',
+				label: 'Forecast',
+				controls: [
+					{
+						kind: 'menu',
+						label: 'What-If Analysis',
+						icon: 'xl-whatIf',
+						size: 'large',
+						items: [
+							{ command: 'data.scenario-manager' },
+							{ command: 'data.goal-seek' },
+							{ command: 'data.data-table' },
+						],
+					},
+					{ kind: 'button', command: 'data.forecast-sheet', size: 'large' },
+				],
+			},
+			{
 				id: 'outline',
 				label: 'Outline',
 				controls: [

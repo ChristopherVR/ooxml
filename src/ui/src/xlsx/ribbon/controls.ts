@@ -79,6 +79,12 @@ export function commandButton(
 	button.addEventListener('click', () => void ctx.commands.run(command.id));
 	scope.updates.push(() => {
 		button.disabled = !ctx.commands.isEnabled(command.id);
+		// An always-disabled command says why in its tooltip and to assistive technology.
+		if (command.unavailable && button.disabled) {
+			const reason = ctx.t(command.unavailable);
+			button.title = `${label}: ${reason}`;
+			button.setAttribute('aria-description', reason);
+		}
 		if (options.toggle)
 			button.setAttribute('aria-pressed', String(safe(() => command.checked?.(ctx)) ?? false));
 	});

@@ -9,7 +9,7 @@ import { alignmentCommands } from 'ooxml-core/xlsx/ui';
 import { cellCommands } from 'ooxml-core/xlsx/ui';
 import { clipboardCommands, installFormatPainter } from 'ooxml-core/xlsx/ui';
 import { contextualCommands } from 'ooxml-core/xlsx/ui';
-import { dataCommands } from 'ooxml-core/xlsx/ui';
+import { dataCommands, whatIfCommands } from 'ooxml-core/xlsx/ui';
 import { editingCommands } from 'ooxml-core/xlsx/ui';
 import { fontCommands } from 'ooxml-core/xlsx/ui';
 import { formulaCommands } from 'ooxml-core/xlsx/ui';
@@ -44,6 +44,7 @@ export function allCommands(): Command[] {
 		...pageBreakCommands(),
 		...formulaCommands(),
 		...dataCommands(),
+		...whatIfCommands(),
 		...reviewCommands(),
 		...viewCommands(),
 		...contextualCommands(),

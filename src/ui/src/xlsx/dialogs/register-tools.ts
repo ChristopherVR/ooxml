@@ -13,6 +13,8 @@ import { openRemoveDuplicates } from './remove-duplicates';
 import { openSymbol } from './symbol';
 import { openTextToColumns } from './text-to-columns';
 import { openZoom } from './zoom';
+import { openDataTable, openGoalSeek } from './what-if';
+import { openScenarioManager } from './scenario-manager';
 import { openCreateSparklines, openSparklineSettings } from './sparklines';
 import { openPivotTable } from './pivots';
 import { openPrintPreview } from './print-preview';
@@ -42,6 +44,9 @@ export function registerToolDialogs(ctx: EditorContext): void {
 	d.register('ungroup', (c) => openOutlineAxis(c, 'ungroup'));
 	d.register('remove-duplicates', (c) => openRemoveDuplicates(c));
 	d.register('text-to-columns', (c) => openTextToColumns(c));
+	d.register('goal-seek', (c) => openGoalSeek(c));
+	d.register('data-table', (c) => openDataTable(c));
+	d.register('scenario-manager', (c) => openScenarioManager(c));
 	d.register('symbol', (c) => openSymbol(c));
 	d.register('fill-series', (c) => openFillSeries(c));
 	d.register('create-table', (c, p) => openCreateTable(c, props<CreateTableProps>(p)));
