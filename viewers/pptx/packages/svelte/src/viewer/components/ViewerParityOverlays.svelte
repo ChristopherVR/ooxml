@@ -13,6 +13,7 @@
 	import type { ViewerOptionsState } from '../state/viewer-options.svelte';
 	import type { ViewerParityUiState } from '../state/viewer-parity-ui.svelte';
 	import AutosaveRecoveryDialog from './AutosaveRecoveryDialog.svelte';
+	import ChartFormatPanel from './inspector/ChartFormatPanel.svelte';
 	import ComparePanel from './ComparePanel.svelte';
 	import CustomShowsDialog from './CustomShowsDialog.svelte';
 	import HeaderFooterPanel from './HeaderFooterPanel.svelte';
@@ -116,6 +117,7 @@
 {#if ui.printSettingsOpen && customization.isDialogAvailable('print')}<PrintDialog slideCount={slides.length} {current} onclose={() => (ui.printSettingsOpen = false)} onprint={(options) => exportUi.runPrint(options)} defaultSettings={optionsState.printDefaults} />{/if}
 <RehearseTimings rehearse={ui.rehearse} onsave={() => ui.rehearse.save(editor)} ondiscard={() => ui.rehearse.discard()} />
 {#if ui.customShowsOpen}<CustomShowsDialog shows={editor.customShows} slides={editor.slides} activeShowId={ui.activeCustomShowId} onclose={() => (ui.customShowsOpen = false)} onsave={(shows) => editor.presentationMetadata.updateCustomShows(shows)} onsetactive={(id) => (ui.activeCustomShowId = id)} />{/if}
+{#if !fullscreen}<ChartFormatPanel {editor} />{/if}
 {#if ui.selectionPaneOpen && customization.isPanelVisible('selectionPane')}<SelectionPane {editor} onclose={() => (ui.selectionPaneOpen = false)} />{/if}
 {#if ui.slideSorterOpen}<SlideSorterOverlay {slides} clipboardSourceSlides={editor.slides} clipboardTemplates={editor.templateElementsBySlideId} {canvasSize} {mediaDataUrls} {current} canEdit={editor.editable} onselect={onselectslide} onmove={onmoveslide} ondelete={(index) => navigateAfterSlideOp(editor.slidesOps.deleteSlideAtIndex(index))} onduplicate={(index) => navigateAfterSlideOp(editor.slidesOps.duplicateSlideAtIndex(index))} oncopysystem={(indexes) => slidePackageClipboard.copy(indexes)} onpastesystem={(insertAt) => slidePackageClipboard.paste(insertAt)} onpaste={(request) => navigateAfterSlideOp(editor.slidesOps.pasteSlides(request))} ontogglehidden={(index) => editor.slidesOps.toggleSlideHidden(index)} onclose={() => (ui.slideSorterOpen = false)} />{/if}
 {#if ui.outlineViewOpen}<OutlineViewOverlay slides={editor.slides} {canvasSize} canEdit={editor.editable} oncommit={(next) => editor.commitSlides(next)} onactiveslide={onselectslide} onclose={() => (ui.outlineViewOpen = false)} />{/if}

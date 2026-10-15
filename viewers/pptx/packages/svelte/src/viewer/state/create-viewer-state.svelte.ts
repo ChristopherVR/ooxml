@@ -15,6 +15,7 @@ import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
 import type { PptxSaveFormat } from 'pptx-viewer-core';
 
 import { provideTranslator } from '../../i18n/context';
+import { provideChartFormat } from '../editor/chart-format-state.svelte';
 import { createDeckApi } from '../editor/deck-api';
 import type { DeckApi } from '../editor/deck-api';
 import { createEditingApi } from '../editor/editing-api';
@@ -228,6 +229,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 			editorUi.optionsState.options,
 		);
 	provideRendering3DFlags(getEffective3D);
+	provideChartFormat(editor.chartFormat);
 
 	// oxlint-disable-next-line react-hooks/rules-of-hooks
 	const ai = useAiCluster({

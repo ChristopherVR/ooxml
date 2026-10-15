@@ -43,6 +43,7 @@ import type {
 } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
 
+import { ChartFormatState } from './chart-format-state.svelte';
 import { EditorAnimationController } from './editor-animation-controller';
 import { EditorArrangeController } from './editor-arrange-controller';
 import { EditorBackgroundController } from './editor-background-controller';
@@ -245,6 +246,8 @@ export class EditorState {
 	readonly arrangeOps = new EditorArrangeController(this);
 	/** On-canvas picture crop mode (ribbon Crop / context-menu Crop). */
 	readonly cropOps = new EditorCropController(this);
+	/** The chart Format pane's target element and open state. */
+	readonly chartFormat = new ChartFormatState();
 	readonly backgroundOps = new EditorBackgroundController(this);
 	readonly transitionOps = new EditorTransitionController(this);
 	readonly animationOps = new EditorAnimationController(this);

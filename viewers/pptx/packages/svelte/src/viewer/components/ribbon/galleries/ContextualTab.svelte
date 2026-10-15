@@ -11,6 +11,7 @@
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import ChartSelectionStrip from './ChartSelectionStrip.svelte';
 	import PictureSizeStrip from './PictureSizeStrip.svelte';
 	import RibbonGallery from './RibbonGallery.svelte';
 	import { translatedOr } from './gallery-labels';
@@ -36,6 +37,8 @@
 			{/each}
 			{#if group.strip === 'picture-size'}
 				<PictureSizeStrip {editor} {hiddenActions} />
+			{:else if group.strip === 'chart-selection'}
+				<ChartSelectionStrip {editor} />
 			{/if}
 		</pptx-ui-ribbon-group>
 	{/each}
