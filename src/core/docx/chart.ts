@@ -46,7 +46,7 @@ export interface DocxChart {
 	chartSpace?: ChartSpace;
 	/**
 	 * An extended chart (`cx:chartSpace`): `layoutId` names its family and `chartEx` is the summary
-	 * of the families the painter draws (waterfall, histogram). `chartSpace` is absent for these.
+	 * of the families the painter draws (waterfall, histogram, treemap, sunburst). `chartSpace` is absent for these.
 	 */
 	layoutId?: string;
 	chartEx?: ChartSummary;
@@ -66,7 +66,7 @@ export interface DocxChart {
 
 /** The honest status shown with every chart. */
 export const CHART_NOTICE =
-	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter and radar charts, bar and line combinations with a secondary axis, waterfalls and histograms; other kinds show a labelled frame). It is not editable, and the chart part and its workbook are preserved unchanged on save.';
+	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter, bubble, stock and radar charts, bar and line combinations with a secondary axis, waterfalls, histograms, treemaps and sunbursts; other kinds show a labelled frame). It is not editable, and the chart part and its workbook are preserved unchanged on save.';
 
 /** Reads the host side of a chart graphic. Synchronous: resolves the relationship, reads no part. */
 export function parseChartGraphic(

@@ -20,9 +20,9 @@ async function load() {
 }
 
 describe('Word combination, waterfall and histogram charts', () => {
-	it('finds all three charts, reading the extended parts through their relationship', async () => {
+	it('finds every chart, reading the extended parts through their relationship', async () => {
 		const { charts, by } = await load();
-		expect(charts).toHaveLength(3);
+		expect(charts).toHaveLength(7);
 		expect(by('Revenue and margin').chartSpace).toBeDefined();
 		expect(by('Cash flow')).toMatchObject({ layoutId: 'waterfall' });
 		expect(by('Cash flow').chartSpace).toBeUndefined();
@@ -73,10 +73,10 @@ describe('Word combination, waterfall and histogram charts', () => {
 		expect(docxChartPaint(funnel, 100, 100)).toEqual({ label: 'Chart (funnel)' });
 	});
 
-	it('carries the three painted charts to the print layout input', async () => {
+	it('carries the seven painted charts to the print layout input', async () => {
 		const { loaded } = await load();
 		const input = adaptDocumentModel(loaded.model);
-		expect(JSON.stringify(input).match(/"chart":\{"svg":"<svg /g)).toHaveLength(3);
+		expect(JSON.stringify(input).match(/"chart":\{"svg":"<svg /g)).toHaveLength(7);
 	});
 
 	it('keeps the extended chart parts and drawings on save', async () => {
