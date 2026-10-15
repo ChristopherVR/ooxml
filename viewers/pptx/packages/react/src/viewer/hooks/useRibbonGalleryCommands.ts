@@ -34,6 +34,12 @@ export interface UseRibbonGalleryCommandsInput {
 	updateElementById: (elementId: string, updates: Partial<PptxElement>) => void;
 	updateThemeColorScheme: (colorScheme: PptxThemeColorScheme) => Promise<void>;
 	updateThemeFontScheme: (fontScheme: PptxThemeFontScheme) => Promise<void>;
+	/** Apply a whole theme (Design > Themes); without it a theme pick is ignored. */
+	applyThemeData?: (
+		colorScheme: PptxThemeColorScheme,
+		fontScheme: PptxThemeFontScheme,
+		themeName?: string,
+	) => Promise<void>;
 }
 
 export function useRibbonGalleryCommands(
@@ -49,6 +55,7 @@ export function useRibbonGalleryCommands(
 		updateElementById,
 		updateThemeColorScheme,
 		updateThemeFontScheme,
+		applyThemeData,
 	} = input;
 	// Read at render time: the handler is created by the load pipeline, which
 	// also replaces `theme`, so a new handler always comes with a re-render.
@@ -74,6 +81,9 @@ export function useRibbonGalleryCommands(
 				case 'element':
 					updateElementById(result.elementId, result.patch);
 					return;
+				case 'theme':
+					void applyThemeData?.(result.colorScheme, result.fontScheme, result.name);
+					return;
 				case 'themeColorScheme':
 					void updateThemeColorScheme(result.colorScheme);
 					return;
@@ -81,7 +91,7 @@ export function useRibbonGalleryCommands(
 					void updateThemeFontScheme(result.fontScheme);
 			}
 		},
-		[editable, updateElementById, updateThemeColorScheme, updateThemeFontScheme],
+		[editable, updateElementById, updateThemeColorScheme, updateThemeFontScheme, applyThemeData],
 	);
 	return useMemo(() => ({ context, editable, dispatch }), [context, editable, dispatch]);
 }

@@ -1046,6 +1046,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			updateElementById: editorOps.ops.updateElementById,
 			updateThemeColorScheme: themeHandlers.handleUpdateThemeColorScheme,
 			updateThemeFontScheme: themeHandlers.handleUpdateThemeFontScheme,
+			applyThemeData: themeHandlers.handleApplyThemeData,
 		});
 		const ribbonScope = useRibbonScopeToken();
 

@@ -43,6 +43,15 @@ export function DesignSection(p: DesignSectionProps): React.ReactElement {
 		<>
 			{DESIGN_RIBBON_GROUPS.map((group) => (
 				<WebRibbonGroup key={group.id} groupId={group.id} label={t(group.labelKey)}>
+					{FIXED_TAB_GALLERIES.filter((placement) =>
+						placement.control.startsWith(`${group.id}.`),
+					).map((placement) => (
+						<RibbonGallery
+							key={placement.control}
+							placement={placement}
+							icon={placement.gallery === 'themeFonts' ? <LuType /> : <LuPalette />}
+						/>
+					))}
 					{DESIGN_RIBBON_COMMANDS.filter((command) => command.id.startsWith(`${group.id}.`)).map(
 						(command) => {
 							const view = designCommandState(command.id, state);
@@ -61,15 +70,6 @@ export function DesignSection(p: DesignSectionProps): React.ReactElement {
 							);
 						},
 					)}
-					{FIXED_TAB_GALLERIES.filter((placement) =>
-						placement.control.startsWith(`${group.id}.`),
-					).map((placement) => (
-						<RibbonGallery
-							key={placement.control}
-							placement={placement}
-							icon={placement.gallery === 'themeFonts' ? <LuType /> : <LuPalette />}
-						/>
-					))}
 				</WebRibbonGroup>
 			))}
 		</>
