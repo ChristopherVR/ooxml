@@ -1,5 +1,6 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, resolve, sep } from 'node:path';
+
+import { createFileOperations } from 'ooxml-core/automation/node';
 
 import { executeToolWithContext } from '../execution';
 import type { ExecutionContext, ToolContext, ToolResult } from '../types';
@@ -24,7 +25,7 @@ export function resolveScopedDir(dir: string, rootDir?: string): string {
 
 	const rootWithSep = root.endsWith(sep) ? root : root + sep;
 	if (resolved !== root && !resolved.startsWith(rootWithSep)) {
-		throw new Error(`MCP tool: path "${dir}" resolves outside the allowed root "${root}"`);
+		throw new Error(`MCP tool: path "${dir}" resolves outside the allowed root`);
 	}
 
 	return resolved;
@@ -61,14 +62,6 @@ export function resolveScopedFilePath(filePath: string, rootDir?: string): strin
 	return resolved;
 }
 
-/** Node.js filesystem provider for the MCP server. */
-const nodeFs = {
-	readFile: async (path: string) => new Uint8Array(await readFile(path)),
-	writeFile: async (path: string, data: Uint8Array) => {
-		await writeFile(path, data);
-	},
-};
-
 /** Optional configuration for the MCP context. */
 export interface McpContextOptions {
 	/**
@@ -78,25 +71,87 @@ export interface McpContextOptions {
 	rootDir?: string;
 }
 
+let warnedCwdRoot = false;
+const operations = new Map<string, ReturnType<typeof createFileOperations>>();
+
+/**
+ * File operations confined (by realpath, not just lexically) to the configured
+ * root. Instances are shared per root so per-path serialisation holds across
+ * tool calls.
+ */
+export function fileOperationsFor(options?: McpContextOptions) {
+	let root = options?.rootDir ?? process.env['PPTX_TOOLS_ROOT'];
+	if (!root) {
+		if (!warnedCwdRoot) {
+			warnedCwdRoot = true;
+			process.stderr.write(
+				'pptx-viewer-tools: no root configured (--root or PPTX_TOOLS_ROOT); using the current working directory\n',
+			);
+		}
+		root = process.cwd();
+	}
+	const key = resolve(root);
+	let files = operations.get(key);
+	if (!files) {
+		files = createFileOperations(key);
+		operations.set(key, files);
+	}
+	return files;
+}
+
+const EXTENSIONS: readonly string[] = [...ALLOWED_EXTENSIONS];
+
 /** Create an ExecutionContext for MCP (no collaboration, no viewer). */
-export function createMcpContext(_options?: McpContextOptions): ExecutionContext {
-	return { filesystem: nodeFs };
+export function createMcpContext(options?: McpContextOptions): ExecutionContext {
+	const files = fileOperationsFor(options);
+	return {
+		filesystem: {
+			readFile: (path: string) => files.readFile(path, EXTENSIONS),
+			writeFile: (path: string, data: Uint8Array) => files.writeFile(path, EXTENSIONS, data),
+		},
+	};
+}
+
+/** Confine an output directory under the root; returns a root-relative path. */
+export function confineOutputDir(dir: string, options?: McpContextOptions): Promise<string> {
+	if (typeof dir !== 'string' || dir.length === 0) {
+		return Promise.reject(new Error('MCP tool: path must be a non-empty string'));
+	}
+	return fileOperationsFor(options).directory(dir);
+}
+
+/** Read-modify-write a confined presentation file under its per-path lock. */
+export function withMcpFile<T>(
+	filePath: string,
+	options: McpContextOptions | undefined,
+	action: (bytes: Uint8Array) => Promise<{ value: T; bytes?: Uint8Array }>,
+): Promise<T> {
+	const files = fileOperationsFor(options);
+	return files.exclusive(filePath, EXTENSIONS, async () => {
+		const { value, bytes } = await action(await files.readFile(filePath, EXTENSIONS));
+		if (bytes) await files.writeFile(filePath, EXTENSIONS, bytes);
+		return value;
+	});
 }
 
 /**
  * Run a tool via MCP, using the shared collaboration-aware execution pipeline.
  * Returns the inner result value (not the full ToolResult wrapper).
  *
- * `filePath` is validated and resolved against the configured rootDir
- * (env `PPTX_TOOLS_ROOT` or process.cwd()) before being handed to the
- * filesystem provider.
+ * `filePath` is confined by realpath to the configured root (option
+ * `rootDir`, env `PPTX_TOOLS_ROOT`, or process.cwd() with a warning), size
+ * capped, and written atomically under a per-path lock.
  */
 export async function runMcpTool<T>(
 	filePath: string,
 	fn: (ctx: ToolContext) => ToolResult<T> | Promise<ToolResult<T>>,
 	options?: McpContextOptions,
 ): Promise<T> {
-	const safePath = resolveScopedFilePath(filePath, options?.rootDir);
+	if (typeof filePath !== 'string' || filePath.length === 0) {
+		throw new Error('MCP tool: filePath must be a non-empty string');
+	}
 	const ctx = createMcpContext(options);
-	return executeToolWithContext(safePath, ctx, fn);
+	return fileOperationsFor(options).exclusive(filePath, EXTENSIONS, () =>
+		executeToolWithContext(filePath, ctx, fn),
+	);
 }
