@@ -1,0 +1,12 @@
+{
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "main-window",
+	"description": "Connected-folder commands for the bundled workspace in the main window",
+	"windows": ["main"],
+	"permissions": [
+		"allow-disk-choose-folder",
+		"allow-disk-scan",
+		"allow-disk-read",
+		"allow-disk-reveal"
+	]
+}
