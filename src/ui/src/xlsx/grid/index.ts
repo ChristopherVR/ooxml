@@ -20,6 +20,7 @@ import { selectCell } from 'ooxml-core/xlsx/ui';
 import { GRID_CSS } from './styles';
 import { ValidationList } from './validation-list';
 import { installRemoteSelections } from './remote-layer';
+import { installPageBreakPreview, PAGE_BREAK_CSS } from './page-break-layer';
 
 export { editBridge, type EditBridge, type EditMode, type EditState } from 'ooxml-core/xlsx/ui';
 
@@ -33,6 +34,7 @@ const structuralKinds = new Set(['structure', 'sheets', 'view', 'undo', 'redo', 
 
 export function mountGrid(ctx: EditorContext, container: HTMLElement): () => void {
 	ensureStyle(ctx.root, 'xg', GRID_CSS);
+	ensureStyle(ctx.root, 'xgpb', PAGE_BREAK_CSS);
 	const view = new GridView(ctx, container);
 	const selection = new GridSelection(view);
 	const editor = new CellEditor(view, (move) => {
@@ -43,6 +45,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	const list = new ValidationList(view, () => editor.focus());
 	const a11y = new GridA11y(view, sink);
 	const removeRemote = installRemoteSelections(view);
+	const removePageBreaks = installPageBreakPreview(view);
 	let marqueeSheet = -1;
 	const clipboard = createGridClipboard({
 		ctx,
@@ -203,6 +206,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		editor.destroy();
 		a11y.destroy();
 		removeRemote();
+		removePageBreaks();
 		view.destroy();
 	};
 }

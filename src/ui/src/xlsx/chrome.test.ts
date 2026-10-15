@@ -83,7 +83,10 @@ describe('status bar', () => {
 		await slider.updateComplete;
 		expect(slider.value).toBe(100);
 		expect(slider.shadowRoot!.querySelector('output')!.textContent).toBe('100%');
-		expect(root.querySelector<HTMLButtonElement>('[data-id="pageLayout"]')!.disabled).toBe(true);
+		// Page Layout and Page Break Preview are real views; Normal is the one pressed.
+		expect(root.querySelector<HTMLButtonElement>('[data-id="pageLayout"]')!.disabled).toBe(false);
+		expect(root.querySelector('[data-id="normal"]')!.getAttribute('aria-pressed')).toBe('true');
+		expect(root.querySelector('[data-id="pageBreak"]')!.getAttribute('aria-pressed')).toBe('false');
 	});
 });
 

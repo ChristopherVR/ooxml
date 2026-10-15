@@ -13,7 +13,13 @@ import type { EditorCore } from './editor-core';
 import { runFileCommand, templateInto, type FileChrome } from './editor-files';
 import { emit, type FileCommand } from './events';
 import { installKeyboard, type ShellAction } from './keyboard';
-import { installCommands, mountFormulaBar, mountGrid, mountSheetTabs } from './modules';
+import {
+	installCommands,
+	mountFormulaBar,
+	mountGrid,
+	mountPageViews,
+	mountSheetTabs,
+} from './modules';
 import { createRibbon, type Ribbon } from './ribbon/ribbon';
 import { createRibbonActions } from './ribbon-actions';
 import { el } from './ribbon/controls';
@@ -207,6 +213,10 @@ export function buildShell(core: EditorCore): Shell {
 
 	safeMount('formula bar', () => mountFormulaBar(ctx, formulaRow));
 	safeMount('grid', () => mountGrid(ctx, gridHost));
+	let pageViews: { refresh(): void } | undefined;
+	safeMount('page views', () => {
+		pageViews = mountPageViews(ctx, gridHost, () => core.fileName);
+	});
 	safeMount('sheet tabs', () => mountSheetTabs(ctx, tabsRow));
 	// Parts the browser specs and hosts style; set on the containers when a module did not.
 	if (!gridHost.querySelector('[part~="grid"]')) gridHost.setAttribute('part', 'grid');
@@ -263,6 +273,7 @@ export function buildShell(core: EditorCore): Shell {
 			titleBar.refresh();
 			ribbonActions.refresh();
 			statusBar.refresh();
+			pageViews?.refresh();
 			chartSeriesPane.refresh();
 			chartAreaPane.refresh();
 			titleBar.setFileName(core.fileName);

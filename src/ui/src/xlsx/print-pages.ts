@@ -10,10 +10,22 @@ import {
 import { cellCss, escapeHtml } from './print-cell';
 import { printPageHeaders, type PrintHeaderOptions } from './print-header';
 
-function pageTable(workbook: Workbook, sheetIndex: number, page: PrintPage): string {
+export interface PageTableOptions {
+	headings?: boolean;
+	gridLines?: boolean;
+}
+
+/** The cells of one page as an HTML table (shared by printing and Page Layout view). */
+export function pageTable(
+	workbook: Workbook,
+	sheetIndex: number,
+	page: Pick<PrintPage, 'rows' | 'columns' | 'width'>,
+	options: PageTableOptions = {},
+): string {
 	const sheet = workbook.sheets[sheetIndex]!;
 	const metrics = createGridMetrics(sheet, { zoom: 100 });
-	const headings = !!sheet.printOptions?.headings;
+	const headings = options.headings ?? !!sheet.printOptions?.headings;
+	const gridLines = options.gridLines ?? !!sheet.printOptions?.gridLines;
 	const merges = createPrintMergeIndex(sheet.merges, page.rows, page.columns);
 	const columns = `${headings ? '<col style="width:24px">' : ''}${page.columns.map((col) => `<col style="width:${metrics.colWidth(col)}px">`).join('')}`;
 	const header = headings
@@ -34,7 +46,7 @@ function pageTable(workbook: Workbook, sheetIndex: number, page: PrintPage): str
 						{ merged: !!merge },
 					);
 					let css = cellCss(view);
-					if (sheet.printOptions?.gridLines)
+					if (gridLines)
 						for (const side of ['top', 'right', 'bottom', 'left'] as const)
 							if (!view.borders[side]) css += `;border-${side}:1px solid #d9d9d9`;
 					const span = `${merge && merge.colspan > 1 ? ` colspan="${merge.colspan}"` : ''}${merge && merge.rowspan > 1 ? ` rowspan="${merge.rowspan}"` : ''}`;

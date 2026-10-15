@@ -5,3 +5,4 @@ export { installCommands } from './commands/index';
 export { mountGrid } from './grid/index';
 export { mountFormulaBar } from './formula-bar/index';
 export { mountSheetTabs } from './sheet-tabs/index';
+export { mountPageViews } from './page-views/index';

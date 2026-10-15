@@ -22,6 +22,12 @@ const VIEW_ICONS = {
 	pageBreakView: 'M5 2h10v16H5z M2 10h3 M7.5 10h2 M11 10h2 M15 10h3',
 };
 
+const VIEW_COMMANDS: Record<string, string> = {
+	normal: 'view.normal',
+	pageLayout: 'view.page-layout',
+	pageBreak: 'view.page-break-preview',
+};
+
 export const ZOOM_MIN = 10;
 export const ZOOM_MAX = 400;
 
@@ -137,10 +143,16 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 	const zoom = () => ctx.grid()?.zoom() ?? 100;
 	slider.addEventListener('input', () => handlers.setZoom(slider.value));
 	element.addEventListener('office-status-activate', (event) => {
-		if ((event as CustomEvent<{ id: string }>).detail.id === 'notes') handlers.showNotes();
+		const id = (event as CustomEvent<{ id: string }>).detail.id;
+		if (id === 'notes') handlers.showNotes();
+		const command = VIEW_COMMANDS[id];
+		if (command) void ctx.commands.run(command);
 	});
 
 	const render = () => {
+		const sheet = ctx.workbook()?.sheets[ctx.activeSheet()];
+		const mode = sheet?.view.mode;
+		const hasSheet = !!sheet;
 		const count = ctx.workbook()?.warnings.length ?? 0;
 		const notesText = ctx.t(
 			count === 1 ? '{count} compatibility note' : '{count} compatibility notes',
@@ -157,18 +169,20 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 			views: !layout.views
 				? false
 				: [
-						{ id: 'normal', icon: 'normalView', label: ctx.t('Normal'), pressed: true },
+						{ id: 'normal', icon: 'normalView', label: ctx.t('Normal'), pressed: !mode },
 						{
 							id: 'pageLayout',
 							icon: 'pageLayoutView',
-							label: ctx.t('Page Layout (not available)'),
-							disabled: true,
+							label: ctx.t('Page Layout'),
+							pressed: mode === 'pageLayout',
+							disabled: !hasSheet,
 						},
 						{
 							id: 'pageBreak',
 							icon: 'pageBreakView',
-							label: ctx.t('Page Break Preview (not available)'),
-							disabled: true,
+							label: ctx.t('Page Break Preview'),
+							pressed: mode === 'pageBreakPreview',
+							disabled: !hasSheet,
 						},
 					],
 		};

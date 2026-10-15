@@ -39,6 +39,7 @@ vi.mock('./modules', () => ({
 	},
 	mountFormulaBar: () => () => undefined,
 	mountSheetTabs: () => () => undefined,
+	mountPageViews: () => ({ refresh: () => undefined, destroy: () => undefined }),
 }));
 
 const { XlsxEditorElement, defineXlsxEditor } = await import('./index');

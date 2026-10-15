@@ -1,6 +1,6 @@
 // View tab: Normal view, Show (formula bar, gridlines, headings), Zoom and Freeze Panes. Also the
 // Help tab commands (keyboard shortcuts, feature status).
-import { createGridMetrics } from 'ooxml-core/xlsx';
+import { createGridMetrics, type SheetViewMode } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { icon } from 'ooxml-core/xlsx/ui';
@@ -50,15 +50,47 @@ interface FormulaBarHost {
 const formulaBarHost = (ctx: EditorContext): FormulaBarHost | undefined =>
 	'showFormulaBar' in ctx.host ? (ctx.host as unknown as FormulaBarHost) : undefined;
 
+const viewMode = (ctx: EditorContext) => target(ctx)?.ws.view.mode;
+
+/** Switches the active sheet's view (`sheetView/@view`); Normal is no mode. */
+export function setViewMode(ctx: EditorContext, mode: SheetViewMode | undefined): void {
+	const t = target(ctx);
+	if (!t || t.ws.view.mode === mode) return;
+	t.session.setSheetView(t.sheet, { mode });
+	ctx.requestRender();
+}
+
+function workbookViewCommands(): Command[] {
+	const entry = (
+		id: string,
+		label: string,
+		glyph: 'normalView' | 'pageLayoutView' | 'pageBreakView',
+		mode: SheetViewMode | undefined,
+	) =>
+		viewing({
+			id,
+			label,
+			icon: icon(glyph),
+			checked: (ctx) => viewMode(ctx) === mode,
+			run: (ctx) => setViewMode(ctx, mode),
+		});
+	return [
+		entry('view.normal', 'Normal', 'normalView', undefined),
+		entry('view.page-break-preview', 'Page Break Preview', 'pageBreakView', 'pageBreakPreview'),
+		entry('view.page-layout', 'Page Layout', 'pageLayoutView', 'pageLayout'),
+		{
+			id: 'view.custom-views',
+			label: 'Custom Views',
+			icon: icon('customViews'),
+			enabled: () => false,
+			run: () => undefined,
+		},
+	];
+}
+
 export function viewCommands(): Command[] {
 	return [
-		viewing({
-			id: 'view.normal',
-			label: 'Normal',
-			icon: icon('normalView'),
-			checked: () => true,
-			run: () => undefined,
-		}),
+		...workbookViewCommands(),
 		{
 			id: 'view.formula-bar',
 			label: 'Formula Bar',
