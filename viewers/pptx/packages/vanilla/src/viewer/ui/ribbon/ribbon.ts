@@ -134,6 +134,7 @@ export function createRibbon(
 				() => equationAvailable() && equationPanel.toggle(),
 				() => handlers.nav.openHeaderFooter(),
 				() => handlers.nav.openHyperlink(),
+				() => handlers.nav.openComments(),
 			);
 	const drawTab: DrawTab | null = hidden('draw') ? null : createDrawTab(doc, t, handlers.draw);
 	let inspectorOpen = false;
@@ -269,6 +270,7 @@ export function createRibbon(
 		galleryHub.sync(latestExtra.galleryContext, lastEditable);
 		syncContextual();
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
+		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
 	};
 	const syncAnimations = (): void => {

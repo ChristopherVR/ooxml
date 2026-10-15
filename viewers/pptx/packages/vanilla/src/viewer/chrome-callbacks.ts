@@ -272,6 +272,9 @@ export function buildChromeCallbacks(
 			insertEquation: (omml) => deps.getEditActions().insertEquation(omml),
 			insertActionButton: (shapeType) => deps.getEditActions().insertActionButton(shapeType),
 			insertField: (fieldType, value) => deps.getEditActions().insertField(fieldType, value),
+			addSlide: () => deps.getEditActions().addSlide(),
+			insertSlideFromLayout: (layoutPath, layoutName) =>
+				deps.getEditActions().insertSlideFromLayout(layoutPath, layoutName),
 			armFreeformTool: (tool) => deps.armFreeformTool?.(tool),
 			visibleDrawingTools: () =>
 				FREEFORM_TOOL_IDS.filter((tool) =>

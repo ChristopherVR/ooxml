@@ -41,14 +41,27 @@ describe('insert section', () => {
 		const { props, wrapper } = mountInsert({ hasSelection: true });
 		for (const id of [
 			'insert.text.textBox',
-			'insert.tables.table',
-			'insert.images.pictures',
-			'insert.media.media',
 			'insert.illustrations.smartArt',
-			'insert.symbols.equation',
 			'insert.links.link',
 		]) {
 			button(document.body, id).click();
+		}
+		document.body
+			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.symbols.equation"] .primary')!
+			.click();
+		for (const [id, item] of [
+			['insert.tables.table', 'insertTable'],
+			['insert.images.pictures', 'thisDevice'],
+			['insert.media.media', 'videoThisDevice'],
+		]) {
+			document.body
+				.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] .trigger`)!
+				.click();
+			document.body
+				.querySelector<HTMLButtonElement>(
+					`[data-ribbon-control="${id}"] [data-insert-item="${item}"]`,
+				)!
+				.click();
 		}
 		expect(props.onAddTextBox).toHaveBeenCalledOnce();
 		expect(props.onAddTable).toHaveBeenCalledOnce();
@@ -95,15 +108,9 @@ describe('insert section', () => {
 
 	it('inserts simple fields directly and opens the native Date/Time dialog', async () => {
 		const { props, wrapper } = mountInsert();
-		const trigger = () =>
-			document.body.querySelector<HTMLButtonElement>(
-				'[data-ribbon-control="insert.text.field"] .trigger',
-			)!;
-		trigger().click();
-		document.body.querySelector<HTMLButtonElement>('[data-insert-item="footer"]')!.click();
-		expect(props.onInsertField).toHaveBeenCalledExactlyOnceWith('footer');
-		trigger().click();
-		document.body.querySelector<HTMLButtonElement>('[data-insert-item="datetime"]')!.click();
+		button(document.body, 'insert.text.slideNumber').click();
+		expect(props.onInsertField).toHaveBeenCalledExactlyOnceWith('slidenum');
+		button(document.body, 'insert.text.dateTime').click();
 		await wrapper.vm.$nextTick();
 		expect(footerAction(document.body, 'insert')).toBeDefined();
 		footerAction(document.body, 'insert')!.click();
@@ -132,7 +139,46 @@ describe('insert section', () => {
 		});
 		const hidden = (selector: string) => document.body.querySelector<HTMLElement>(selector)!.hidden;
 		expect(hidden('[data-ribbon-control="insert.illustrations.chart"]')).toBeTruthy();
-		expect(hidden('[data-ribbon-control="insert.text.field"]')).toBeTruthy();
+		expect(hidden('[data-ribbon-control="insert.text.dateTime"]')).toBeTruthy();
+		expect(hidden('[data-ribbon-control="insert.text.slideNumber"]')).toBeTruthy();
+		wrapper.unmount();
+	});
+
+	it('adds a slide from the layout and opens the comments pane without toggling it shut', async () => {
+		const onInsertSlideFromLayout = vi.fn();
+		const onToggleComments = vi.fn();
+		const layoutOptions = [
+			{ path: 'l1.xml', name: 'Title' },
+			{ path: 'l2.xml', name: 'Content' },
+		];
+		const { wrapper } = mountInsert({
+			layoutOptions,
+			currentLayoutPath: 'l2.xml',
+			onInsertSlideFromLayout,
+			onToggleComments,
+		});
+		const slide = '[data-ribbon-control="insert.slides.newSlide"]';
+		document.body.querySelector<HTMLButtonElement>(`${slide} .primary`)!.click();
+		expect(onInsertSlideFromLayout).toHaveBeenLastCalledWith('l2.xml', 'Content');
+		document.body.querySelector<HTMLButtonElement>(`${slide} .trigger`)!.click();
+		document.body.querySelector<HTMLButtonElement>(`${slide} [data-insert-item="l1.xml"]`)!.click();
+		expect(onInsertSlideFromLayout).toHaveBeenLastCalledWith('l1.xml', 'Title');
+		button(document.body, 'insert.comments.comment').click();
+		expect(onToggleComments).toHaveBeenCalledOnce();
+		await wrapper.setProps({ isCommentsPanelOpen: true });
+		button(document.body, 'insert.comments.comment').click();
+		expect(onToggleComments).toHaveBeenCalledOnce();
+		wrapper.unmount();
+	});
+
+	it('leaves New Slide and Comment disabled when the host offers neither', () => {
+		const { wrapper } = mountInsert();
+		expect(button(document.body, 'insert.comments.comment').disabled).toBeTruthy();
+		expect(
+			document.body.querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="insert.slides.newSlide"] .primary',
+			)!.disabled,
+		).toBeTruthy();
 		wrapper.unmount();
 	});
 });

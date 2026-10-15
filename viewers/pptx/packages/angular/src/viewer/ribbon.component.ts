@@ -132,6 +132,8 @@ import { injectResolvedCustomization } from './viewer-customization.service';
 					[hasMacros]="hasMacros()"
 					[hiddenActions]="hiddenActions()"
 					[accountAuth]="accountAuth()"
+					[commentsOpen]="commentsOpen()"
+					(comments)="comments.emit()"
 					(selectTab)="selectTab($event)"
 					(find)="find.emit()"
 					(share)="share.emit()"

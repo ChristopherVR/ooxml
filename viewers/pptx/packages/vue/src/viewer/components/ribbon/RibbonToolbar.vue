@@ -228,6 +228,11 @@ onBeforeUnmount(() => detachOverflow?.());
 					:on-open-media-picker="props.onOpenMediaPicker"
 					:has-selection="Boolean(props.selectedElement)"
 					:on-open-hyperlink-dialog="props.onOpenHyperlinkDialog"
+					:layout-options="props.layoutOptions"
+					:current-layout-path="props.currentLayoutPath"
+					:on-insert-slide-from-layout="props.onInsertSlideFromLayout"
+					:on-toggle-comments="props.onToggleComments"
+					:is-comments-panel-open="props.isCommentsPanelOpen"
 				/>
 
 				<TextSection

@@ -9,19 +9,35 @@ import { TranslateService } from '@ngx-translate/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { EditorStateService } from './editor-state.service';
+import { LoadContentService } from './load-content.service';
 import { RibbonInsertSectionComponent } from './ribbon-insert-section.component';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 
 function create(hasSelection = false) {
 	const addElement = vi.fn();
+	const addSlide = vi.fn();
 	const showHeaderFooter = { set: vi.fn() };
+	const masters = [
+		{
+			layouts: [
+				{ path: 'l1.xml', name: 'Title' },
+				{ path: 'l2.xml', name: 'Content' },
+			],
+		},
+	];
 	const section = runInInjectionContext(
 		Injector.create({
 			providers: [
 				{
 					provide: EditorStateService,
-					useValue: { addElement, hasSelection: () => hasSelection },
+					useValue: {
+						addElement,
+						addSlide,
+						hasSelection: () => hasSelection,
+						slides: () => [{ layoutPath: 'l2.xml' }],
+					},
 				},
+				{ provide: LoadContentService, useValue: { slideMasters: () => masters } },
 				{ provide: TranslateService, useValue: { instant: (key: string) => key } },
 				{ provide: ViewerDialogsService, useValue: { showHeaderFooter } },
 			],
@@ -29,7 +45,7 @@ function create(hasSelection = false) {
 		() => new RibbonInsertSectionComponent(),
 	);
 	Object.assign(section, { canEdit: signal(true) as unknown as InputSignal<boolean> });
-	return { section, addElement, showHeaderFooter };
+	return { section, addElement, addSlide, showHeaderFooter };
 }
 const intent = (detail: unknown) => new CustomEvent('insert-request', { detail });
 const request = (section: RibbonInsertSectionComponent, detail: unknown) =>
@@ -60,6 +76,27 @@ describe('ribbonInsertSectionComponent', () => {
 		}
 		expect([smartArt, equation, link].map((spy) => spy.mock.calls.length)).toStrictEqual([1, 1, 1]);
 		expect(showHeaderFooter.set).toHaveBeenCalledExactlyOnceWith(true);
+	});
+
+	it('adds a slide on the chosen or active layout and opens the comments pane once', () => {
+		const { section, addSlide } = create();
+		request(section, { kind: 'newSlide', value: null });
+		request(section, { kind: 'newSlide', value: 'l1.xml' });
+		expect(addSlide.mock.calls).toStrictEqual([
+			[0, 'l2.xml'],
+			[0, 'l1.xml'],
+		]);
+		const comments = vi.spyOn(section.toggleComments, 'emit');
+		request(section, { kind: 'command', value: 'comment' });
+		expect(comments).toHaveBeenCalledOnce();
+		Object.assign(section, { commentsOpen: signal(true) });
+		request(section, { kind: 'command', value: 'comment' });
+		expect(comments).toHaveBeenCalledOnce();
+		expect(section['view']()).toMatchObject({
+			newSlideAvailable: true,
+			commentAvailable: true,
+			currentLayoutPath: 'l2.xml',
+		});
 	});
 
 	it('emits the staged shape and chart types back to the owning ribbon', () => {

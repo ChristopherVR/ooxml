@@ -95,21 +95,46 @@ export const RIBBON_CATALOG_CORE_TABS = {
 		},
 	},
 	insert: {
-		slides: { label: 'Slides', controls: { newSlide: 'New Slide' } },
+		slides: { label: 'Slides', controls: { newSlide: 'New Slide', reuseSlides: 'Reuse Slides' } },
 		tables: { label: 'Tables', controls: { table: 'Table' } },
-		images: { label: 'Images', controls: { pictures: 'Pictures' } },
+		images: {
+			label: 'Images',
+			controls: { pictures: 'Pictures', screenshot: 'Screenshot', photoAlbum: 'Photo Album' },
+		},
+		camera: { label: 'Camera', controls: { cameo: 'Cameo' } },
 		illustrations: {
 			label: 'Illustrations',
-			controls: { shapes: 'Shapes', smartArt: 'SmartArt', chart: 'Chart' },
+			controls: {
+				shapes: 'Shapes',
+				icons: 'Icons',
+				threeDModels: '3D Models',
+				smartArt: 'SmartArt',
+				chart: 'Chart',
+			},
 		},
-		links: { label: 'Links', controls: { link: 'Link', action: 'Action button' } },
+		forms: { label: 'Forms', controls: { forms: 'Forms' } },
+		addIns: { label: 'Add-ins', controls: { getAddIns: 'Get Add-ins', myAddIns: 'My Add-ins' } },
+		links: {
+			label: 'Links',
+			controls: { zoom: 'Zoom', link: 'Link', action: 'Action button' },
+		},
 		comments: { label: 'Comments', controls: { comment: 'Comment' } },
 		text: {
 			label: 'Text',
-			controls: { textBox: 'Text Box', field: 'Header, date, slide number field' },
+			controls: {
+				textBox: 'Text Box',
+				headerFooter: 'Header & Footer',
+				wordArt: 'WordArt',
+				dateTime: 'Date & Time',
+				slideNumber: 'Slide Number',
+				object: 'Object',
+			},
 		},
 		symbols: { label: 'Symbols', controls: { equation: 'Equation', symbol: 'Symbol' } },
-		media: { label: 'Media', controls: { media: 'Video / Audio' } },
+		media: {
+			label: 'Media',
+			controls: { media: 'Video', audio: 'Audio', screenRecording: 'Screen Recording' },
+		},
 	},
 	draw: {
 		tools: {

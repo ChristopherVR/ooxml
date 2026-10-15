@@ -1,7 +1,13 @@
-import { DEFAULT_INSERT_CHART_KIND, FREEFORM_TOOL_IDS, isDrawingToolVisible } from 'ooxml-ui/pptx';
+import {
+	DEFAULT_INSERT_CHART_KIND,
+	FREEFORM_TOOL_IDS,
+	isDrawingToolVisible,
+	resolveInsertSlideLayout,
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	InsertChartKind,
+	InsertSlideLayout,
 	PptxUiRibbonInsertElement,
 	RibbonInsertRequestEvent,
 } from 'ooxml-ui/pptx';
@@ -34,6 +40,13 @@ export interface InsertSectionProps {
 	/** True when something is selected, so a link has a target to attach to. */
 	hasSelection: boolean;
 	onOpenHyperlinkDialog: () => void;
+	/** The layouts New Slide offers, and the active slide's layout. */
+	layoutOptions?: readonly InsertSlideLayout[];
+	currentLayoutPath?: string;
+	onInsertSlideFromLayout?: (path: string, name?: string) => void;
+	/** Comment opens the comments pane, as Review > New Comment does. */
+	onToggleComments?: () => void;
+	isCommentsPanelOpen?: boolean;
 }
 
 /**
@@ -63,6 +76,10 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 			chartAvailable: Boolean(p.onAddChart),
 			fieldAvailable: Boolean(p.onInsertField),
 			headerFooterAvailable: Boolean(p.onOpenHeaderFooter),
+			newSlideAvailable: Boolean(p.onInsertSlideFromLayout && p.layoutOptions?.length),
+			commentAvailable: Boolean(p.onToggleComments),
+			layouts: p.layoutOptions ?? [],
+			...(p.currentLayoutPath ? { currentLayoutPath: p.currentLayoutPath } : {}),
 			translate: t,
 		};
 	}, [p, chartKind, customization, t]);
@@ -84,8 +101,21 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 						equation: p.onAddEquation,
 						link: p.onOpenHyperlinkDialog,
 						headerFooter: p.onOpenHeaderFooter,
+						// Opening an already open pane would toggle it shut.
+						comment: p.isCommentsPanelOpen ? undefined : p.onToggleComments,
 					};
 					commands[intent.value]?.();
+					break;
+				}
+				case 'newSlide': {
+					const layout = resolveInsertSlideLayout(
+						p.layoutOptions ?? [],
+						intent.value,
+						p.currentLayoutPath,
+					);
+					if (layout) {
+						p.onInsertSlideFromLayout?.(layout.path, layout.name);
+					}
 					break;
 				}
 				case 'shapeType':

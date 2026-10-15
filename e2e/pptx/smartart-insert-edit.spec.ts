@@ -17,7 +17,7 @@ import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { loadDeck as loadDeckFile, resetTabSession } from './support/deck';
+import { loadDeck as loadDeckFile, resetTabSession, widenForInsert } from './support/deck';
 import { chooseSelectValue } from './support/select-control';
 
 const fixturePath = resolve(fileURLToPath(new URL('./fixtures/sample-deck.pptx', import.meta.url)));
@@ -43,6 +43,7 @@ async function loadDeck(page: Page): Promise<void> {
  * expose ribbon entries as tabs or buttons, so the locator accepts either role.
  */
 async function switchToInsertTab(page: Page): Promise<void> {
+	await widenForInsert(page);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const insertTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
 	await insertTab.click();

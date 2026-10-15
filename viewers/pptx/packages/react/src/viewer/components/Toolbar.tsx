@@ -267,6 +267,11 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 							onOpenMediaPicker={p.onOpenMediaPicker}
 							hasSelection={Boolean(p.selectedElement)}
 							onOpenHyperlinkDialog={p.onOpenHyperlinkDialog}
+							layoutOptions={p.layoutOptions}
+							currentLayoutPath={p.currentLayoutPath}
+							onInsertSlideFromLayout={p.onInsertSlideFromLayout}
+							onToggleComments={p.onToggleComments}
+							isCommentsPanelOpen={p.isCommentsPanelOpen}
 						/>
 					)}
 

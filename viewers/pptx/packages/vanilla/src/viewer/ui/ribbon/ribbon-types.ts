@@ -230,6 +230,9 @@ export interface RibbonInsertHandlers {
 	insertEquation: EditActions['insertEquation'];
 	insertActionButton: EditActions['insertActionButton'];
 	insertField: EditActions['insertField'];
+	/** Insert > Slides > New Slide: a blank slide, or one on the chosen layout. */
+	addSlide?: EditActions['addSlide'];
+	insertSlideFromLayout?: EditActions['insertSlideFromLayout'];
 	/** Arm (or, with null, disarm) a Freeform: Shape / Curve tool. */
 	armFreeformTool?(tool: FreeformToolKind | null): void;
 	/** The drawing tools the host keeps (read when the tab is built). */

@@ -12,6 +12,20 @@ export const RIBBON_INSERT_ICON_PATHS: Readonly<Record<string, string>> = {
 	action: 'M3 3h14v14H3ZM9 6.5l4 3.5-4 3.5',
 	field: 'M3 5h14M3 10h9M3 15h10M14 13.5a2 2 0 1 0 4 0 2 2 0 1 0-4 0',
 	penTool: 'M3 17l2-6 8-8 4 4-8 8ZM3 17l5-2M12 6l4 4',
+	newSlide: 'M2.5 3.5h12v9h-12ZM14.5 11v6M11.5 14h6M5 16.5h4',
+	reuseSlides: 'M3 3h9v7H3ZM8 8h9v7H8ZM5 17h9',
+	screenshot: 'M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4M7 10h6',
+	photoAlbum: 'M4 3h12v14H4ZM4 13l4-4 3 3 2-2 3 3M8 6.5a1 1 0 1 0 2 0 1 1 0 1 0-2 0',
+	icons: 'm10 2.500 2.200 4.600 5 .7-3.600 3.500.9 5-4.500-2.400-4.500 2.400.9-5L2.800 7.800l5-.7Z',
+	model3d: 'M10 2 17 6v8l-7 4-7-4V6ZM3 6l7 4 7-4M10 10v8',
+	forms: 'M4 2.500h12v15H4ZM6.500 6.500l1 1 2-2M12 6.500h2M6.500 11.500l1 1 2-2M12 11.500h2',
+	addIns: 'M3 8h4V6a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v2H3Z',
+	wordArt: 'M4 16 10 3l6 13M6.500 11.500h7M3 18.500h14',
+	slideNumber: 'M7 3 5.500 17M14.500 3 13 17M3.500 7h13M3 13h13',
+	object: 'M4 3h8l4 4v10H4ZM12 3v4h4',
+	symbol:
+		'M3 16.500h4.200C5.200 15.200 4 13 4 10.500a6 6 0 0 1 12 0c0 2.500-1.200 4.700-3.200 6H17',
+	audio: 'M3 8h3l5-4v12l-5-4H3ZM14 7.500a3.500 3.500 0 0 1 0 5M16 5a7 7 0 0 1 0 10',
 	chevronDown: 'm5 8 5 5 5-5',
 };
 

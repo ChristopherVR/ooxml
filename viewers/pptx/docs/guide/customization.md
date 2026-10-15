@@ -913,7 +913,10 @@ unit test fails if an id is missing here.
 | `insert.slides`                     | Slides                   |
 | `insert.tables`                     | Tables                   |
 | `insert.images`                     | Images                   |
+| `insert.camera`                     | Camera                   |
 | `insert.illustrations`              | Illustrations            |
+| `insert.forms`                      | Forms                    |
+| `insert.addIns`                     | Add-ins                  |
 | `insert.links`                      | Links                    |
 | `insert.comments`                   | Comments                 |
 | `insert.text`                       | Text                     |
@@ -1038,19 +1041,35 @@ unit test fails if an id is missing here.
 | `home.editing.replace`                            | Replace                             |
 | `home.editing.select`                             | Select                              |
 | `insert.slides.newSlide`                          | New Slide                           |
+| `insert.slides.reuseSlides`                       | Reuse Slides                        |
 | `insert.tables.table`                             | Table                               |
 | `insert.images.pictures`                          | Pictures                            |
+| `insert.images.screenshot`                        | Screenshot                          |
+| `insert.images.photoAlbum`                        | Photo Album                         |
+| `insert.camera.cameo`                             | Cameo                               |
 | `insert.illustrations.shapes`                     | Shapes                              |
+| `insert.illustrations.icons`                      | Icons                               |
+| `insert.illustrations.threeDModels`               | 3D Models                           |
 | `insert.illustrations.smartArt`                   | SmartArt                            |
 | `insert.illustrations.chart`                      | Chart                               |
+| `insert.forms.forms`                              | Forms                               |
+| `insert.addIns.getAddIns`                         | Get Add-ins                         |
+| `insert.addIns.myAddIns`                          | My Add-ins                          |
+| `insert.links.zoom`                               | Zoom                                |
 | `insert.links.link`                               | Link                                |
 | `insert.links.action`                             | Action button                       |
 | `insert.comments.comment`                         | Comment                             |
 | `insert.text.textBox`                             | Text Box                            |
-| `insert.text.field`                               | Header, date, slide number field    |
+| `insert.text.headerFooter`                        | Header & Footer                     |
+| `insert.text.wordArt`                             | WordArt                             |
+| `insert.text.dateTime`                            | Date & Time                         |
+| `insert.text.slideNumber`                         | Slide Number                        |
+| `insert.text.object`                              | Object                              |
 | `insert.symbols.equation`                         | Equation                            |
 | `insert.symbols.symbol`                           | Symbol                              |
-| `insert.media.media`                              | Video / Audio                       |
+| `insert.media.media`                              | Video                               |
+| `insert.media.audio`                              | Audio                               |
+| `insert.media.screenRecording`                    | Screen Recording                    |
 | `draw.tools.select`                               | Select                              |
 | `draw.tools.pen`                                  | Pen                                 |
 | `draw.tools.highlighter`                          | Highlighter                         |

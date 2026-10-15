@@ -47,7 +47,7 @@ import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { resetTabSession } from './support/deck';
+import { resetTabSession, widenForInsert } from './support/deck';
 
 const fixturePath = resolve(fileURLToPath(new URL('./fixtures/sample-deck.pptx', import.meta.url)));
 const outputDir = resolve(
@@ -72,6 +72,7 @@ function ribbonTab(page: Page, name: string): Locator {
 
 /** Switch to the Insert ribbon tab through the shared tablist contract. */
 async function switchToInsertTab(page: Page): Promise<void> {
+	await widenForInsert(page);
 	await ribbonTab(page, 'Insert').click();
 	await page.waitForTimeout(200);
 }

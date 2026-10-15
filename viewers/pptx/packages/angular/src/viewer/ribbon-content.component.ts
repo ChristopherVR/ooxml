@@ -151,6 +151,8 @@ import type { RibbonTab } from './ribbon-types';
 					(openSmartArtDialog)="openSmartArtDialog.emit()"
 					(openEquationDialog)="openEquationDialog.emit()"
 					(openHyperlink)="link.emit()"
+					[commentsOpen]="commentsOpen()"
+					(toggleComments)="comments.emit()"
 				/>
 			}
 			@case ('text') {
@@ -197,6 +199,8 @@ export class RibbonContentComponent {
 	readonly canActivateFormatPainter = input<boolean>(false);
 	readonly exporting = input<boolean>(false);
 	readonly hasMacros = input<boolean>(false);
+	/** Whether the comments pane is open (Insert > Comment must not toggle it shut). */
+	readonly commentsOpen = input<boolean>(false);
 	/** Toolbar buttons the host wants hidden (threaded to the File and Arrange sections). */
 	readonly hiddenActions = input<ToolbarActionId[]>([]);
 	/** Optional sign-in hook point for File > Account. Absent/disabled by default. */
@@ -235,6 +239,8 @@ export class RibbonContentComponent {
 	 * viewer already owns, so there is nothing for the host to wire up twice.
 	 */
 	readonly link = output<void>();
+	/** Insert > Comment: the host opens the comments pane, as Review > New Comment does. */
+	readonly comments = output<void>();
 	readonly openPassword = output<void>();
 	readonly openFontEmbedding = output<void>();
 	readonly openVersionHistory = output<void>();

@@ -25,6 +25,14 @@ export interface InsertMenuItem {
 	viewBox?: string;
 	/** CSS transform applied to the glyph (rotated or skewed shape presets). */
 	transform?: string;
+	/** Listed but not actionable: the editor has no such feature. */
+	disabled?: boolean;
+	/** Tooltip; the label by default. */
+	title?: string;
+	/** A heading drawn above the first entry of each section. */
+	section?: string;
+	/** Marks the entry that stands for the current choice (the active layout). */
+	current?: boolean;
 }
 
 export interface InsertMenuOptions {
@@ -32,18 +40,28 @@ export interface InsertMenuOptions {
 	large?: boolean;
 	/** Lay the entries out as an icon gallery instead of a list. */
 	grid?: boolean;
+	/** Office split button: the face runs `primary`, the chevron below opens the menu. */
+	split?: { primary: () => void };
+}
+
+export interface InsertMenuView {
+	label: string;
+	/** Tooltip of the face (the title and description). */
+	title: string;
+	/** Name of the chevron of a split button. */
+	menuTitle?: string;
+	items: readonly InsertMenuItem[];
+	disabled: boolean;
+	/** The split button's face can be disabled apart from its chevron. */
+	primaryDisabled?: boolean;
+	menuLabel: string;
 }
 
 export interface InsertMenu {
 	el: HTMLElement;
+	/** The control that opens the menu (the chevron of a split button). */
 	trigger: HTMLButtonElement;
-	sync(
-		label: string,
-		title: string,
-		items: readonly InsertMenuItem[],
-		disabled: boolean,
-		menuLabel: string,
-	): void;
+	sync(view: InsertMenuView): void;
 	close(): void;
 	isOpen(): boolean;
 	place(): void;
@@ -58,23 +76,34 @@ export function createInsertMenu(
 	options: InsertMenuOptions = {},
 ): InsertMenu {
 	const el = doc.createElement('div');
-	el.className = 'menu';
+	el.className = options.split ? 'menu split' : 'menu';
 	el.dataset.ribbonControl = control;
 	const trigger = doc.createElement('button');
 	trigger.type = 'button';
-	trigger.className = options.large ? 'trigger large' : 'trigger';
+	trigger.className = options.large && !options.split ? 'trigger large' : 'trigger';
 	trigger.dataset.pptxCompact = '';
 	trigger.setAttribute('aria-haspopup', 'menu');
 	trigger.setAttribute('aria-expanded', 'false');
 	const text = doc.createElement('span');
 	text.className = 'label';
-	trigger.append(insertIcon(doc, icon), text, insertIcon(doc, 'chevronDown'));
+	const primary = doc.createElement('button');
+	if (options.split) {
+		primary.type = 'button';
+		primary.className = 'primary';
+		primary.dataset.pptxCompact = '';
+		primary.append(insertIcon(doc, icon), text);
+		primary.addEventListener('click', options.split.primary);
+		trigger.classList.add('caret');
+		trigger.append(insertIcon(doc, 'chevronDown'));
+	} else {
+		trigger.append(insertIcon(doc, icon), text, insertIcon(doc, 'chevronDown'));
+	}
 	const list = doc.createElement('div');
 	list.className = options.grid ? 'list grid' : 'list';
 	list.setAttribute('role', 'menu');
 	list.hidden = true;
-	el.append(trigger, list);
-	const items = () => [...list.querySelectorAll<HTMLButtonElement>('button')];
+	el.append(...(options.split ? [primary, trigger, list] : [trigger, list]));
+	const items = () => [...list.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
 	const close = () => {
 		list.hidden = true;
 		trigger.setAttribute('aria-expanded', 'false');
@@ -83,7 +112,7 @@ export function createInsertMenu(
 		if (list.hidden) {
 			return;
 		}
-		const rect = trigger.getBoundingClientRect();
+		const rect = el.getBoundingClientRect();
 		const view = doc.defaultView;
 		const box = list.getBoundingClientRect();
 		const width = view?.innerWidth ?? 1024;
@@ -122,51 +151,81 @@ export function createInsertMenu(
 			event.stopPropagation();
 		}
 	});
+	const entryNode = (item: InsertMenuItem) => {
+		const button = doc.createElement('button');
+		button.type = 'button';
+		button.setAttribute('role', 'menuitem');
+		button.dataset.pptxCompact = '';
+		button.dataset.insertItem = item.id;
+		if (item.disabled) {
+			button.disabled = true;
+		}
+		if (item.current) {
+			button.setAttribute('aria-current', 'true');
+		}
+		if (item.glyph) {
+			const glyph = insertSvg(doc, item.glyph, item.viewBox ?? '0 0 24 24');
+			if (item.transform && item.transform !== 'none') {
+				glyph.style.transform = item.transform;
+			}
+			button.append(glyph);
+		}
+		if (options.grid) {
+			button.title = item.title ?? item.label;
+			button.setAttribute('aria-label', item.label);
+		} else {
+			button.title = item.title ?? '';
+			button.append(doc.createTextNode(item.label));
+		}
+		button.addEventListener('click', () => {
+			close();
+			trigger.focus();
+			pick(item.id);
+		});
+		return button;
+	};
 	return {
 		el,
 		trigger,
 		close,
 		place,
 		isOpen: () => !list.hidden,
-		sync(label, title, entries, disabled, menuLabel) {
-			text.textContent = label;
-			trigger.title = title;
-			trigger.disabled = disabled;
-			list.setAttribute('aria-label', menuLabel);
-			if (disabled) {
+		sync(view) {
+			text.textContent = view.label;
+			if (options.split) {
+				primary.title = view.title;
+				primary.disabled = view.primaryDisabled ?? view.disabled;
+				primary.setAttribute('aria-label', view.label);
+				trigger.title = view.menuTitle ?? view.menuLabel;
+				// The name stays apart from the face's, so each is one button for assistive tech.
+				trigger.setAttribute('aria-label', view.menuLabel);
+			} else {
+				trigger.title = view.title;
+			}
+			trigger.disabled = view.disabled;
+			list.setAttribute('aria-label', view.menuLabel);
+			if (view.disabled) {
 				close();
 			}
-			const key = entries.map((item) => `${item.id}:${item.label}`).join('|');
+			const key = view.items
+				.map((item) => [item.id, item.label, item.disabled, item.title, item.section, item.current])
+				.join('|');
 			if (list.dataset.key !== key) {
 				list.dataset.key = key;
-				list.replaceChildren(
-					...entries.map((item) => {
-						const button = doc.createElement('button');
-						button.type = 'button';
-						button.setAttribute('role', 'menuitem');
-						button.dataset.pptxCompact = '';
-						button.dataset.insertItem = item.id;
-						if (item.glyph) {
-							const glyph = insertSvg(doc, item.glyph, item.viewBox ?? '0 0 24 24');
-							if (item.transform && item.transform !== 'none') {
-								glyph.style.transform = item.transform;
-							}
-							button.append(glyph);
-						}
-						if (options.grid) {
-							button.title = item.label;
-							button.setAttribute('aria-label', item.label);
-						} else {
-							button.append(doc.createTextNode(item.label));
-						}
-						button.addEventListener('click', () => {
-							close();
-							trigger.focus();
-							pick(item.id);
-						});
-						return button;
-					}),
-				);
+				const nodes: HTMLElement[] = [];
+				let section: string | undefined;
+				for (const item of view.items) {
+					if (item.section && item.section !== section) {
+						const heading = doc.createElement('div');
+						heading.className = 'heading';
+						heading.setAttribute('role', 'presentation');
+						heading.textContent = item.section;
+						nodes.push(heading);
+					}
+					section = item.section;
+					nodes.push(entryNode(item));
+				}
+				list.replaceChildren(...nodes);
 			}
 		},
 	};

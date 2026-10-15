@@ -28,6 +28,7 @@ function make(over: Partial<RibbonInsertHandlers> = {}, spies: Record<string, ()
 		spies.equation ?? vi.fn(),
 		spies.headerFooter ?? vi.fn(),
 		spies.hyperlink ?? vi.fn(),
+		spies.comments,
 	);
 	document.body.append(tab.el);
 	return tab;
@@ -46,6 +47,15 @@ function choose(tab: { el: HTMLElement }, id: string, value: string): void {
 		)!
 		.click();
 	vi.runAllTimers();
+}
+/** Open a dropdown and pick one of its entries (no staging timer). */
+function pick(tab: { el: HTMLElement }, id: string, value: string): void {
+	tab.el.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] .trigger`)!.click();
+	tab.el
+		.querySelector<HTMLButtonElement>(
+			`[data-ribbon-control="${id}"] [data-insert-item="${value}"]`,
+		)!
+		.click();
 }
 function dialog(): HTMLElement | null {
 	return document.querySelector<HTMLElement>('[role="dialog"][aria-label="Insert SmartArt"]');
@@ -90,10 +100,15 @@ describe('createInsertTab', () => {
 		const tab = make();
 		expect(tab.el.querySelector('pptx-ui-ribbon-insert')).not.toBeNull();
 		for (const id of [
+			'insert.slides',
 			'insert.tables',
 			'insert.images',
+			'insert.camera',
 			'insert.illustrations',
+			'insert.forms',
+			'insert.addIns',
 			'insert.links',
+			'insert.comments',
 			'insert.text',
 			'insert.symbols',
 			'insert.media',
@@ -104,9 +119,9 @@ describe('createInsertTab', () => {
 			tab.el.querySelectorAll(`[data-ribbon-control="${id}"] [data-insert-item]`);
 		expect(items('insert.illustrations.shapes')).toHaveLength(SHAPE_PRESET_DEFS.length);
 		expect(items('insert.illustrations.chart')).toHaveLength(INSERT_CHART_TYPES.length);
-		// Shapes, Chart, Action and Field are large dropdowns, not selects beside a button.
+		// Shapes, Chart, Action, Table, Pictures and Video are large dropdowns, not selects beside a button.
 		expect(tab.el.querySelectorAll('select')).toHaveLength(0);
-		expect(tab.el.querySelectorAll('.trigger.large')).toHaveLength(4);
+		expect(tab.el.querySelectorAll('.trigger.large')).toHaveLength(10);
 	});
 
 	it('opens the hyperlink editor and needs a selection to be usable', () => {
@@ -130,7 +145,7 @@ describe('createInsertTab', () => {
 		const insert = vi.fn();
 		const tab = make({ insert });
 		control(tab, 'insert.text.textBox').click();
-		control(tab, 'insert.tables.table').click();
+		pick(tab, 'insert.tables.table', 'insertTable');
 		expect(insert).toHaveBeenCalledWith('text');
 		expect(insert).toHaveBeenCalledWith('table');
 	});
@@ -148,8 +163,8 @@ describe('createInsertTab', () => {
 		const insertImage = vi.fn();
 		const insertMedia = vi.fn();
 		const tab = make({ insertImage, insertMedia });
-		control(tab, 'insert.images.pictures').click();
-		control(tab, 'insert.media.media').click();
+		pick(tab, 'insert.images.pictures', 'thisDevice');
+		pick(tab, 'insert.media.media', 'videoThisDevice');
 		expect(insertImage).toHaveBeenCalledOnce();
 		expect(insertMedia).toHaveBeenCalledOnce();
 	});
@@ -170,11 +185,10 @@ describe('createInsertTab', () => {
 		const headerFooter = vi.fn();
 		const equation = vi.fn();
 		const tab = make({}, { headerFooter, equation });
-		const header = [...tab.el.querySelectorAll<HTMLElement>('pptx-ui-ribbon-command')].find(
-			(el) => !el.dataset.ribbonControl && !el.dataset.pptxDrawingTool,
-		)!;
-		header.shadowRoot!.querySelector('button')!.click();
-		control(tab, 'insert.symbols.equation').click();
+		control(tab, 'insert.text.headerFooter').click();
+		tab.el
+			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.symbols.equation"] .primary')!
+			.click();
 		expect(headerFooter).toHaveBeenCalledOnce();
 		expect(equation).toHaveBeenCalledOnce();
 	});
@@ -233,19 +247,56 @@ describe('createInsertTab', () => {
 		const insertActionButton = vi.fn();
 		const insertField = vi.fn();
 		const tab = make({ insertActionButton, insertField });
-		for (const id of ['insert.links.action', 'insert.text.field']) {
-			tab.el.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] .trigger`)!.click();
-			tab.el
-				.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"] [role=menuitem]`)!
-				.click();
-		}
+		tab.el
+			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.links.action"] .trigger')!
+			.click();
+		tab.el
+			.querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="insert.links.action"] [role=menuitem]',
+			)!
+			.click();
+		control(tab, 'insert.text.slideNumber').click();
 		expect(insertActionButton).toHaveBeenCalledOnce();
 		expect(insertField).toHaveBeenCalledWith('slidenum');
 	});
 
+	it('adds a slide on the active layout, or the chosen one, and opens the comments pane', () => {
+		const addSlide = vi.fn();
+		const insertSlideFromLayout = vi.fn();
+		const comments = vi.fn();
+		const tab = make({ addSlide, insertSlideFromLayout }, { comments });
+		tab.setLayouts(
+			[
+				{ path: 'l1.xml', name: 'Title' },
+				{ path: 'l2.xml', name: 'Content' },
+			],
+			'l2.xml',
+		);
+		const slide = '[data-ribbon-control="insert.slides.newSlide"]';
+		tab.el.querySelector<HTMLButtonElement>(`${slide} .primary`)!.click();
+		expect(insertSlideFromLayout).toHaveBeenLastCalledWith('l2.xml', 'Content');
+		pick(tab, 'insert.slides.newSlide', 'l1.xml');
+		expect(insertSlideFromLayout).toHaveBeenLastCalledWith('l1.xml', 'Title');
+		control(tab, 'insert.comments.comment').click();
+		expect(comments).toHaveBeenCalledOnce();
+		tab.setLayouts([]);
+		tab.el.querySelector<HTMLButtonElement>(`${slide} .primary`)!.click();
+		expect(addSlide).toHaveBeenCalledOnce();
+	});
+
+	it('disables New Slide and Comment when the host wires neither', () => {
+		const tab = make();
+		expect(control(tab, 'insert.comments.comment').disabled).toBeTruthy();
+		expect(
+			tab.el.querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="insert.slides.newSlide"] .primary',
+			)!.disabled,
+		).toBeTruthy();
+	});
+
 	it('setEditable disables/enables every editing control but not Link', () => {
 		const tab = make();
-		const editing = ['insert.text.textBox', 'insert.tables.table', 'insert.media.media'];
+		const editing = ['insert.text.textBox', 'insert.text.slideNumber'];
 		tab.setEditable(false);
 		expect(editing.every((id) => control(tab, id).disabled)).toBeTruthy();
 		for (const trigger of tab.el.querySelectorAll<HTMLButtonElement>('.trigger')) {

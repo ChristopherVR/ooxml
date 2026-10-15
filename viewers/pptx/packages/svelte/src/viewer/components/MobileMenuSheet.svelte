@@ -108,7 +108,7 @@
 			{#if active === 'home'}
 				<HomeTab editor={props.editor} findReplace={props.findReplace} onnavigateslide={props.onnavigateslide} hiddenActions={props.hiddenActions} />
 			{:else if active === 'insert'}
-				<InsertTab editor={props.editor} canvasSize={props.canvasSize} onheaderfooter={props.onheaderfooter} />
+				<InsertTab editor={props.editor} canvasSize={props.canvasSize} onheaderfooter={props.onheaderfooter} onnavigateslide={props.onnavigateslide} chromeUi={props.chromeUi} />
 			{:else if active === 'draw'}
 				<DrawTab editor={props.editor} />
 			{:else if active === 'design'}

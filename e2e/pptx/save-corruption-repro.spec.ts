@@ -29,7 +29,7 @@ import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { resetTabSession } from './support/deck';
+import { resetTabSession, widenForInsert } from './support/deck';
 import { validatePptxIntegrity } from './support/pptx-integrity';
 
 const gifFixturePath = resolve(
@@ -44,6 +44,7 @@ const outputDir = fileURLToPath(
 
 /** Switch to the Insert ribbon tab. */
 async function switchToInsertTab(page: Page): Promise<void> {
+	await widenForInsert(page);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const insertTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
 	await insertTab.click();
@@ -84,9 +85,10 @@ async function addGifImage(page: Page): Promise<void> {
 	// Scoped to the ribbon: the inspector can also expose a file input named "Choose Image".
 	await page
 		.getByRole('toolbar', { name: 'Presentation toolbar' })
-		.getByRole('button', { name: /image/iu })
+		.getByRole('button', { name: 'Pictures', exact: true })
 		.first()
 		.click();
+	await page.getByRole('menuitem', { name: 'This Device...', exact: true }).click();
 	const chooser = await chooserPromise;
 	await chooser.setFiles(gifFixturePath);
 	await page.waitForTimeout(500);
@@ -96,6 +98,7 @@ async function addGifImage(page: Page): Promise<void> {
 async function addTable(page: Page): Promise<void> {
 	await switchToInsertTab(page);
 	await page.getByRole('button', { name: /Table/iu }).first().click();
+	await page.getByRole('menuitem', { name: 'Insert Table...', exact: true }).click();
 	await page.waitForTimeout(500);
 }
 

@@ -28,10 +28,15 @@ const CONTROL_FACE: Readonly<Record<string, string>> = {
 };
 /** Shared 20px artwork for the other tabs' groups. */
 const PATH_FACE: Readonly<Record<string, string>> = {
+	'insert.slides': 'newSlide',
 	'insert.tables': 'table',
 	'insert.images': 'image',
+	'insert.camera': 'camera',
 	'insert.illustrations': 'shapes',
+	'insert.forms': 'forms',
+	'insert.addIns': 'addIns',
 	'insert.links': 'link',
+	'insert.comments': 'messagePlus',
 	'insert.text': 'textBox',
 	'insert.symbols': 'equation',
 	'insert.media': 'video',

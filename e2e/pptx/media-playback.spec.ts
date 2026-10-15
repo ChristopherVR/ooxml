@@ -42,7 +42,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { resetTabSession, widenForInsert } from './support/deck';
 
 const sampleDeckPath = resolve(
 	fileURLToPath(new URL('./fixtures/sample-deck.pptx', import.meta.url)),
@@ -72,6 +72,7 @@ async function loadDeck(page: Page): Promise<void> {
  * Bindings may expose the entry as either a tab or a button.
  */
 async function switchToInsertTab(page: Page): Promise<void> {
+	await widenForInsert(page);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const semanticTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
 	const insertTab = (await semanticTab.isVisible())
@@ -92,10 +93,12 @@ async function insertMediaFile(page: Page, filePath: string): Promise<void> {
 	// (Playwright's accessible-name computation folds that into the button's
 	// name, e.g. "🎬 Media"), so an exact "Media" match only works for
 	// some bindings; match the label as a substring across all five.
-	const mediaButton = page.getByRole('button', { name: /media|audio or video/iu });
+	const mediaButton = page.getByRole('button', { name: /video|media/iu });
 	await expect(mediaButton).toBeVisible();
 	const fileChooserPromise = page.waitForEvent('filechooser');
 	await mediaButton.click();
+	// Video is a dropdown, as in PowerPoint: This Device opens the file chooser.
+	await page.getByRole('menuitem', { name: 'This Device...', exact: true }).click();
 	const fileChooser = await fileChooserPromise;
 	await fileChooser.setFiles(filePath);
 	// Let the data-URL read + probe (video intrinsic size / audio) settle.

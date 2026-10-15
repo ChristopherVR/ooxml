@@ -8,11 +8,13 @@
 	 * pickers, the SmartArt gallery, the equation editor and the hyperlink dialog stay
 	 * native to the Svelte binding.
 	 */
-	import type { SmartArtLayout } from 'pptx-viewer-core';
+	import type { PptxLayoutOption, SmartArtLayout } from 'pptx-viewer-core';
 	import {
 		DEFAULT_INSERT_CHART_KIND,
 		FREEFORM_TOOL_IDS,
 		isDrawingToolVisible,
+		resolveInsertSlideLayout,
+		scopeLayoutOptionsToSlide,
 	} from 'ooxml-ui/pptx';
 	import type {
 		CanvasSize,
@@ -38,12 +40,27 @@
 		resolveFieldDisplayText,
 	} from '../../../editor';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import type { ChromeUiState } from '../../../state/chrome-ui.svelte';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import EquationEditorDialog from './EquationEditorDialog.svelte';
 	import HyperlinkDialog from './HyperlinkDialog.svelte';
 	import SmartArtDialog from './SmartArtDialog.svelte';
 
-	const { editor, canvasSize, onheaderfooter }: { editor: EditorState; canvasSize: CanvasSize; onheaderfooter?: () => void } = $props();
+	const {
+		editor,
+		canvasSize,
+		onheaderfooter,
+		onnavigateslide,
+		chromeUi,
+	}: {
+		editor: EditorState;
+		canvasSize: CanvasSize;
+		onheaderfooter?: () => void;
+		/** Select the slide New Slide just added. */
+		onnavigateslide?: (index: number) => void;
+		/** Comment opens the inspector's Comments pane, as Review > New Comment does. */
+		chromeUi?: ChromeUiState;
+	} = $props();
 	const t = useTranslator();
 	const customization = useViewerCustomization();
 
@@ -65,6 +82,15 @@
 		}
 	});
 
+	/** The deck's layouts, loaded once so the New Slide chevron can list them. */
+	let layouts = $state<PptxLayoutOption[]>([]);
+	const currentLayoutPath = $derived(editor.slides[editor.currentSlideIndex]?.layoutPath);
+	/** Scoped to the active slide's own master; dedupes same-named layouts across masters. */
+	const scopedLayouts = $derived(scopeLayoutOptionsToSlide(layouts, currentLayoutPath));
+	$effect(() => {
+		void editor.slidesOps.availableLayouts().then((loaded) => (layouts = loaded));
+	});
+
 	const insertState = $derived({
 		editable: editor.editable,
 		hasSelection: Boolean(editor.selectedElementId),
@@ -73,6 +99,11 @@
 		activeFreeformTool: editor.outlineOps.freeformTool,
 		freeformTools: FREEFORM_TOOL_IDS.filter((tool) => isDrawingToolVisible(customization.resolved, tool)),
 		headerFooterAvailable: Boolean(onheaderfooter),
+		// Like Home, New Slide works without layouts (it adds a blank slide).
+		newSlideAvailable: true,
+		commentAvailable: Boolean(chromeUi),
+		layouts: scopedLayouts.map(({ path, name }) => ({ path, name })),
+		...(currentLayoutPath ? { currentLayoutPath } : {}),
 		translate: t,
 	});
 
@@ -157,8 +188,24 @@
 					case 'equation': equationOpen = !equationOpen; break;
 					case 'link': hyperlinkOpen = true; break;
 					case 'headerFooter': onheaderfooter?.(); break;
+					case 'comment':
+						// Opening an already open pane would toggle it shut.
+						if (chromeUi && !chromeUi.commentsOpen) {
+							chromeUi.toggleComments();
+						}
+						break;
 				}
 				break;
+			case 'newSlide': {
+				const layout = resolveInsertSlideLayout(scopedLayouts, intent.value, currentLayoutPath);
+				const index = layout
+					? editor.slidesOps.insertSlideFromLayout(layout.path, layout.name)
+					: editor.slidesOps.insertSlideAfterCurrent();
+				if (index !== null) {
+					onnavigateslide?.(index);
+				}
+				break;
+			}
 			case 'shapeType': shapeType = intent.value as ShapePresetType; break;
 			case 'shape': editor.insertElement(newPresetShapeElement(intent.value as ShapePresetType)); break;
 			case 'chartType': chartKind = intent.value as InsertChartKind; break;

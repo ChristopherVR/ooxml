@@ -6,8 +6,18 @@
  * Document mutation, the file/SmartArt/equation/hyperlink dialogs and the Date/Time
  * picker stay native to the Vue binding.
  */
-import { DEFAULT_INSERT_CHART_KIND, FREEFORM_TOOL_IDS, isDrawingToolVisible } from 'ooxml-ui/pptx';
-import type { FreeformToolKind, InsertChartKind, RibbonInsertRequestEvent } from 'ooxml-ui/pptx';
+import {
+	DEFAULT_INSERT_CHART_KIND,
+	FREEFORM_TOOL_IDS,
+	isDrawingToolVisible,
+	resolveInsertSlideLayout,
+} from 'ooxml-ui/pptx';
+import type {
+	FreeformToolKind,
+	InsertChartKind,
+	InsertSlideLayout,
+	RibbonInsertRequestEvent,
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -34,6 +44,13 @@ interface Props {
 	onOpenHeaderFooter?: () => void;
 	onOpenImagePicker: () => void;
 	onOpenMediaPicker: () => void;
+	/** The layouts New Slide offers, and the active slide's layout. */
+	layoutOptions?: readonly InsertSlideLayout[];
+	currentLayoutPath?: string;
+	onInsertSlideFromLayout?: (path: string, name?: string) => void;
+	/** Comment opens the comments pane, as Review > New Comment does. */
+	onToggleComments?: () => void;
+	isCommentsPanelOpen?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -56,6 +73,10 @@ const state = computed(() => ({
 	chartAvailable: Boolean(props.onAddChart),
 	fieldAvailable: Boolean(props.onInsertField),
 	headerFooterAvailable: Boolean(props.onOpenHeaderFooter),
+	newSlideAvailable: Boolean(props.onInsertSlideFromLayout && props.layoutOptions?.length),
+	commentAvailable: Boolean(props.onToggleComments),
+	layouts: props.layoutOptions ?? [],
+	...(props.currentLayoutPath ? { currentLayoutPath: props.currentLayoutPath } : {}),
 	translate: t,
 }));
 
@@ -72,8 +93,21 @@ function request(event: RibbonInsertRequestEvent): void {
 				equation: props.onAddEquation,
 				link: props.onOpenHyperlinkDialog,
 				headerFooter: props.onOpenHeaderFooter,
+				// Opening an already open pane would toggle it shut.
+				comment: props.isCommentsPanelOpen ? undefined : props.onToggleComments,
 			};
 			commands[intent.value]?.();
+			break;
+		}
+		case 'newSlide': {
+			const layout = resolveInsertSlideLayout(
+				props.layoutOptions ?? [],
+				intent.value,
+				props.currentLayoutPath,
+			);
+			if (layout) {
+				props.onInsertSlideFromLayout?.(layout.path, layout.name);
+			}
 			break;
 		}
 		case 'shapeType':
