@@ -40,17 +40,27 @@ declare global {
 	}
 }
 
-function signature(model: ChartFormatPaneModel): string {
+/**
+ * What decides the DOM structure, with captions translated: a host that re-sets the same
+ * translator (or the same data) must not rebuild the controls, or a click whose mousedown
+ * triggered that re-render would lose its target.
+ */
+function signature(model: ChartFormatPaneModel, tr: (text: ChartFormatText) => string): string {
 	return JSON.stringify([
-		model.title,
-		model.targets.map((t) => [t.key, t.label]),
-		model.tabs,
+		tr(model.title),
+		model.targets.map((t) => [t.key, tr(t.label)]),
+		model.tabs.map((tab) => [tab.id, tr(tab.label)]),
 		model.activeTab,
 		model.sections.map((s) => [
 			s.id,
-			s.title,
-			s.note,
-			s.fields.map((f) => [f.id, f.kind, f.label, 'choices' in f ? f.choices : 0]),
+			tr(s.title),
+			s.note ? tr(s.note) : '',
+			s.fields.map((f) => [
+				f.id,
+				f.kind,
+				tr(f.label),
+				'choices' in f ? f.choices.map((c) => [c.value, tr(c.label), c.disabled]) : 0,
+			]),
 		]),
 	]);
 }
@@ -156,7 +166,7 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 		}
 		set translateLabel(value: ChartFormatPaneTranslate) {
 			this.#t = value;
-			this.#signature = '';
+			// The signature holds translated captions, so only a real language change rebuilds.
 			this.#paint();
 		}
 		get disabled(): boolean {
@@ -167,6 +177,14 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 			this.#paint();
 		}
 		connectedCallback(): void {
+			// A host may set properties before the element is defined; replay them through the setters.
+			for (const name of ['chartData', 'target', 'translateLabel', 'disabled'] as const) {
+				if (Object.prototype.hasOwnProperty.call(this, name)) {
+					const value = (this as Record<string, unknown>)[name];
+					delete (this as Record<string, unknown>)[name];
+					(this as Record<string, unknown>)[name] = value;
+				}
+			}
 			this.#undock = attachThemeEditorDock(this);
 			this.#paint();
 		}
@@ -230,7 +248,7 @@ export function definePptxChartFormatPane(registry: CustomElementRegistry): void
 				'aria-label',
 				this.#label('pptx.chartFormat.tabs', 'Format categories'),
 			);
-			const next = signature(model);
+			const next = signature(model, this.#tr);
 			if (next !== this.#signature) {
 				this.#signature = next;
 				this.#build(model);

@@ -70,11 +70,21 @@ function nearLine(p: ChartPoint, line: SvgLine, tolerance: number): boolean {
 /** The plot rectangle, from the gridlines (or the axis label band when there are none). */
 function plotBounds(vm: ChartViewModel) {
 	const lines = [...vm.gridlines, ...(vm.secondaryGridlines ?? [])];
-	if (lines.length === 0) {
-		return undefined;
-	}
 	const xs = lines.flatMap((l) => [l.x1, l.x2]);
 	const ys = lines.flatMap((l) => [l.y1, l.y2]);
+	// No gridlines: the data marks bound the plot (a chart drawn without them).
+	for (const prim of vm.primitives) {
+		if (prim.kind === 'rect' && prim.part) {
+			xs.push(prim.x, prim.x + prim.w);
+			ys.push(prim.y, prim.y + prim.h);
+		} else if (prim.kind === 'circle' && prim.part) {
+			xs.push(prim.cx - prim.r, prim.cx + prim.r);
+			ys.push(prim.cy - prim.r, prim.cy + prim.r);
+		}
+	}
+	if (xs.length === 0) {
+		return undefined;
+	}
 	return {
 		left: Math.min(...xs),
 		right: Math.max(...xs),
@@ -176,6 +186,46 @@ export function clientToChartPoint(
 }
 
 /**
+ * The tagged chart part under the pointer. A mark's pointerdown can capture the pointer, which
+ * retargets the following click / double-click to the chart host, so the event path no longer
+ * names the mark; the hit list at the pointer still does.
+ */
+function chartPartUnderPointer(
+	event: ChartFormatPointerEvent,
+	host: Element | null | undefined,
+): Element | null {
+	const doc = host?.ownerDocument;
+	if (!host || !doc || typeof doc.elementsFromPoint !== 'function') {
+		return null;
+	}
+	for (const node of doc.elementsFromPoint(event.clientX, event.clientY)) {
+		if (!host.contains(node)) {
+			continue;
+		}
+		const part = node.closest(`[${CHART_PART_ATTR}]`);
+		if (part) {
+			return part;
+		}
+	}
+	return null;
+}
+
+/** The chart's `<svg>`, also inside a 3D chart view's open shadow root (its 2D chrome overlay). */
+function findChartSvg(host: Element | null | undefined): SVGSVGElement | null {
+	const direct = host?.querySelector('svg');
+	if (direct) {
+		return direct;
+	}
+	for (const node of host?.querySelectorAll('*') ?? []) {
+		const nested = node.shadowRoot?.querySelector('svg');
+		if (nested) {
+			return nested;
+		}
+	}
+	return null;
+}
+
+/**
  * The chart element an event on a rendered chart targets. `host` is the
  * chart's wrapper (any ancestor of its `<svg>`), `element` the chart element.
  * Every binding's click, double-click and context-menu handlers call this.
@@ -188,7 +238,7 @@ export function chartFormatTargetFromEvent(
 	if (!element || element.type !== 'chart' || !element.chartData) {
 		return 'chartArea';
 	}
-	const part = findChartPartElementInEvent(event);
+	const part = findChartPartElementInEvent(event) ?? chartPartUnderPointer(event, host);
 	const role = part?.getAttribute(CHART_PART_ATTR);
 	if (role === 'title') {
 		return 'title';
@@ -199,7 +249,7 @@ export function chartFormatTargetFromEvent(
 			return `series:${series}`;
 		}
 	}
-	const svg = host?.querySelector('svg');
+	const svg = findChartSvg(host);
 	if (!svg) {
 		return 'chartArea';
 	}

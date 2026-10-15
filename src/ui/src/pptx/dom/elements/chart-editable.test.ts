@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ElementRenderContext } from '../types';
 import { renderChartElement } from './chart';
+import { CHART_FORMAT_REQUEST_EVENT } from './chart-editable';
+import type { ChartFormatRequestEvent } from './chart-editable';
 
 /**
  * On-canvas chart value dragging (vanilla).
@@ -425,5 +427,26 @@ describe('vanilla chart title double-click rename', () => {
 		dblclick(titleNode);
 
 		expect(container?.querySelector('.pptxv-chart-title-input')).toBeNull();
+	});
+
+	it('reports the pressed and double-clicked chart element for the Format pane', () => {
+		const onChartPointChange = vi.fn();
+		const container = renderChartElement(element, 1, makeContext({ onChartPointChange }));
+		document.body.appendChild(container as HTMLElement);
+		const requests: Array<{ elementId: string; target: string; open: boolean }> = [];
+		const listen = (event: Event) => requests.push((event as ChartFormatRequestEvent).detail);
+		document.body.addEventListener(CHART_FORMAT_REQUEST_EVENT, listen);
+		try {
+			const bar = container?.querySelector('[data-chart-part="dataPoint"]') as SVGElement;
+			pointer(bar, 'pointerdown', 100);
+			drag(100, 'pointerup');
+			dblclick(bar);
+			expect(requests).toStrictEqual([
+				{ elementId: 'chart-1', target: 'series:0', open: false },
+				{ elementId: 'chart-1', target: 'series:0', open: true },
+			]);
+		} finally {
+			document.body.removeEventListener(CHART_FORMAT_REQUEST_EVENT, listen);
+		}
 	});
 });

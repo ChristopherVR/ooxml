@@ -92,4 +92,23 @@ describe('pptx-ui-chart-format-pane', () => {
 		none.dispatchEvent(new Event('change'));
 		expect(change).not.toHaveBeenCalled();
 	});
+
+	it('replays properties a host set before the element upgraded', () => {
+		const node = document.createElement('pptx-ui-chart-format-pane');
+		// An own data property shadows the accessor, as when a host set it before definition.
+		Object.defineProperty(node, 'target', { value: 'legend', writable: true, configurable: true });
+		node.setAttribute('inline', '');
+		node.translateLabel = t;
+		node.chartData = columnChart();
+		document.body.append(node);
+		expect(q(node, 'h3').textContent).toBe('Format Legend');
+	});
+
+	it('keeps its controls when a host re-sets the same translator and data', () => {
+		const node = pane('legend');
+		const before = q(node, '[data-chart-format-choice="solid"]');
+		node.translateLabel = (key, params) => t(key, params);
+		node.chartData = { ...node.chartData! };
+		expect(q(node, '[data-chart-format-choice="solid"]')).toBe(before);
+	});
 });
