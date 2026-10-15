@@ -29,6 +29,43 @@ export interface ChartLegendStyle {
 	/** Legend position (`b`, `tr`, `l`, `r`, `t`). */
 	legendPosition?: string;
 	legendEntries?: PptxChartLegendEntry[];
+	/** `c:overlay`: the legend floats over the plot. A missing element reads as `true`. */
+	legendOverlay?: boolean;
+}
+
+/**
+ * Reconcile `c:legend/c:overlay` with the model. PowerPoint reads a missing
+ * element as an overlay, so nothing is written while the model agrees.
+ */
+function applyLegendOverlay(
+	legendNode: XmlObject,
+	overlay: boolean | undefined,
+	getLocalName: GetLocalName,
+): void {
+	if (overlay === undefined) {
+		return;
+	}
+	const key = Object.keys(legendNode).find((k) => getLocalName(k) === 'overlay');
+	const node = key ? (legendNode[key] as XmlObject | string | undefined) : undefined;
+	const val = node && typeof node === 'object' ? node['@_val'] : undefined;
+	const authored = key ? !(val === '0' || val === 'false') : true;
+	if (authored === overlay) {
+		return;
+	}
+	const value = { '@_val': overlay ? '1' : '0' };
+	if (key) {
+		legendNode[key] = value;
+		return;
+	}
+	const entries = Object.entries(legendNode);
+	const at = entries.findIndex(([k]) => ['spPr', 'txPr', 'extLst'].includes(getLocalName(k)));
+	entries.splice(at < 0 ? entries.length : at, 0, ['c:overlay', value]);
+	for (const k of Object.keys(legendNode)) {
+		delete legendNode[k];
+	}
+	for (const [k, v] of entries) {
+		legendNode[k] = v;
+	}
 }
 
 type ParseColor = (node: XmlObject | undefined) => string | undefined;
@@ -243,7 +280,7 @@ export function applyChartLegendToXml(
 			'c:legend',
 			{
 				'c:legendPos': { '@_val': style.legendPosition ?? 'r' },
-				'c:overlay': { '@_val': '0' },
+				'c:overlay': { '@_val': style.legendOverlay ? '1' : '0' },
 			},
 			'plotArea',
 			getLocalName,
@@ -269,5 +306,6 @@ export function applyChartLegendToXml(
 			);
 		}
 	}
+	applyLegendOverlay(legendNode, style.legendOverlay, getLocalName);
 	applyLegendEntries(legendNode, style.legendEntries, getLocalName, resolveColor);
 }

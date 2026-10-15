@@ -15,6 +15,7 @@ import type {
 import type { PptxChartAxisLabelFormatting } from './chart-axis';
 import type { ChartGradientFill } from '../../../chart/gradient-definition';
 import type { PptxChartDataPointPicture } from './chart-ex';
+import type { PptxChartElementFormats } from './chart-element-format';
 import type { PptxChartPivotFormats } from './chart-pivot-format';
 import type { PptxChartPivotSource } from './chart-pivot-source';
 import type { PptxChartPrintSettings } from './chart-print-settings';
@@ -1598,4 +1599,12 @@ export interface PptxChartData {
 	 * look via its own bundled defaults).
 	 */
 	chartStyleDefinition?: PptxChartStyleDefinition;
+
+	/**
+	 * Format-pane edits per chart element (fill transparency, line details,
+	 * effects, legend/axis/data-label boxes), written into each element's
+	 * `c:spPr` on save. Absent on a chart the panes never touched. See
+	 * `types/chart-element-format.ts`.
+	 */
+	elementFormats?: PptxChartElementFormats;
 }

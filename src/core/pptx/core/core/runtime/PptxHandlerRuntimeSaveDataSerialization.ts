@@ -18,6 +18,10 @@ import { applyChartAxisScaling, upsertChartAxisChild } from '../../utils/chart-a
 import { applyChartGroupOptionsToXml } from '../../utils/chart-group-options';
 import { applyChartSpaceFormatToXml } from '../../utils/chart-space-format';
 import {
+	applyChromeElementFormatsToXml,
+	applySeriesElementFormatsToXml,
+} from '../../utils/chart-element-format-targets';
+import {
 	applyChartAxisTitleToXml,
 	applyChartAxisTitleStyleToXml,
 } from '../../utils/chart-axis-title-serializer';
@@ -736,6 +740,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					);
 				}
 
+				// Format-pane edits on series and data labels, while the model's series
+				// still line up with the consolidated container's c:ser list.
+				if (chartData.elementFormats) {
+					applySeriesElementFormatsToXml(
+						this.xmlLookupService.getChildrenArrayByLocalName(chartTypeContainer, 'ser'),
+						chartData,
+						(key) => this.compatibilityService.getXmlLocalName(key),
+					);
+				}
+
 				// â”€â”€ Per-series combo types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 				// When series carry differing `seriesChartType` values, split the
 				// single chart-type container into per-type sibling containers under
@@ -1115,6 +1129,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							...this.chartGradientWriteOptions(false),
 							resolveColor: (node) => this.parseColor(node),
 						},
+					);
+				}
+
+				// Format-pane edits on the chart area, plot area, title, legend, axes
+				// and gridlines: applied last so they win over the flat-field writers.
+				if (chartData.elementFormats) {
+					applyChromeElementFormatsToXml(chartSpace, chartData, (key) =>
+						this.compatibilityService.getXmlLocalName(key),
 					);
 				}
 

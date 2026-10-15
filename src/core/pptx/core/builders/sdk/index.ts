@@ -77,6 +77,33 @@ export { setChartSeriesGradient, setChartDataPointGradient } from './chart-gradi
 export { toChartGradientFill } from './chart-gradient-input';
 export { setChartGroupOptions, setChartAreaFormat } from './chart-layout-operations';
 export type { ChartGroupOptionsInput, ChartAreaFormatInput } from './chart-layout-input';
+export {
+	withChartElementFormat,
+	resetChartElementFormat,
+	readChartElementFormat,
+	chartFormatTargetSupports,
+} from './chart-element-format-operations';
+export type {
+	ChartElementFormatPatch,
+	ChartElementFormatView,
+	ChartFormatFillKind,
+	ChartFormatTargetSupport,
+} from './chart-element-format-operations';
+export {
+	withChartSeriesOptions,
+	withChartAxisOptions,
+	withChartLegendOptions,
+	withChartDataLabelOptions,
+} from './chart-format-options-operations';
+export type {
+	ChartAxisOptionsEdit,
+	ChartLegendOptionsEdit,
+	ChartDataLabelOptionsEdit,
+} from './chart-format-options-operations';
+export {
+	chartFormatTargetKey,
+	parseChartFormatTargetKey,
+} from '../../utils/chart-element-format-keys';
 
 // Chart drawing-overlay (c:userShapes) operations
 export {
