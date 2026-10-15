@@ -104,11 +104,18 @@ select {
 	box-sizing: border-box;
 	max-width: 55%;
 	padding: var(--office-space-1) var(--office-space-1-5);
-	border: var(--office-border-width) solid var(--office-border);
-	border-radius: var(--office-radius);
-	background: var(--office-surface);
-	color: inherit;
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-field-radius);
+	background: var(--office-field-background);
+	color: var(--office-field-foreground);
 	font: inherit;
+}
+input[type='text']:focus-visible,
+input[type='number']:focus-visible,
+select:focus-visible {
+	border-color: var(--office-field-border-focus);
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
 }
 input[type='text'] {
 	width: var(--office-options-text-width);
@@ -126,7 +133,37 @@ input[type='checkbox'] {
 	width: var(--office-options-check-size);
 	height: var(--office-options-check-size);
 	margin: 0;
-	accent-color: var(--office-accent);
+	appearance: none;
+	display: inline-grid;
+	place-content: center;
+	box-sizing: border-box;
+	border: var(--office-border-width) solid var(--office-checkbox-border);
+	border-radius: var(--office-checkbox-radius);
+	background: var(--office-checkbox-background);
+	cursor: inherit;
+}
+input[type='checkbox']:checked {
+	border-color: var(--office-checkbox-accent);
+	background: var(--office-checkbox-accent);
+}
+input[type='checkbox']:checked::after {
+	content: '';
+	width: calc(var(--office-options-check-size) * 0.7);
+	height: calc(var(--office-options-check-size) * 0.7);
+	background: var(--office-checkbox-accent-foreground);
+	clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 38% 72%);
+}
+input[type='checkbox']:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+@media (forced-colors: active) {
+	input[type='checkbox']:checked {
+		background: Highlight;
+	}
+	input[type='checkbox']:checked::after {
+		background: HighlightText;
+	}
 }
 .number {
 	display: inline-flex;

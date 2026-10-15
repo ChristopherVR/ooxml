@@ -197,7 +197,21 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 		this.renderRoot.querySelector<HTMLButtonElement>('nav [aria-selected="true"]')?.focus();
 	}
 
+	/** Native controls and popups follow the theme: dark when `--office-background` is dark. */
+	private syncColorScheme(): void {
+		const probe = this.ownerDocument.createElement('span');
+		probe.style.cssText = 'display:none;background-color:var(--office-background)';
+		this.renderRoot.append(probe);
+		const match = /\d+(\.\d+)?/g;
+		const [r = 255, g = 255, b = 255] = (getComputedStyle(probe).backgroundColor.match(match) ?? [])
+			.slice(0, 3)
+			.map(Number);
+		probe.remove();
+		this.style.colorScheme = 0.2126 * r + 0.7152 * g + 0.0722 * b < 128 ? 'dark' : 'light';
+	}
+
 	protected override updated(changed: PropertyValues<this>): void {
+		if (changed.has('open') && present(this.open)) this.syncColorScheme();
 		if (changed.has('active') && this.active)
 			this.fire('office-options-category', { id: this.active });
 	}
