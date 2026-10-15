@@ -32,15 +32,21 @@ describe('spill marking', () => {
 				'<row r="2"><c r="A2"><v>2</v></c><c r="C2"><v>3</v></c></row>',
 		);
 		expect(Date.now() - started).toBeLessThan(1000);
-		expect((sheet.rows.get(1)?.get(0) as { spillAnchor?: unknown }).spillAnchor).toEqual({
+		expect(
+			(sheet.rows.get(1)?.get(0) as { spillAnchor?: unknown } | undefined)?.spillAnchor,
+		).toEqual({
 			row: 0,
 			col: 0,
 		});
-		expect((sheet.rows.get(1)?.get(2) as { spillAnchor?: unknown }).spillAnchor).toEqual({
+		expect(
+			(sheet.rows.get(1)?.get(2) as { spillAnchor?: unknown } | undefined)?.spillAnchor,
+		).toEqual({
 			row: 0,
 			col: 0,
 		});
-		expect((sheet.rows.get(0)?.get(0) as { spillAnchor?: unknown }).spillAnchor).toBeUndefined();
+		expect(
+			(sheet.rows.get(0)?.get(0) as { spillAnchor?: unknown } | undefined)?.spillAnchor,
+		).toBeUndefined();
 	});
 
 	it('leaves cells outside the ref alone', () => {
@@ -48,7 +54,11 @@ describe('spill marking', () => {
 			'<row r="1"><c r="A1" cm="1"><f t="array" ref="A1:A2">SEQUENCE(2)</f><v>1</v></c></row>' +
 				'<row r="2"><c r="A2"><v>2</v></c><c r="B2"><v>3</v></c></row>',
 		);
-		expect((sheet.rows.get(1)?.get(0) as { spillAnchor?: unknown }).spillAnchor).toBeDefined();
-		expect((sheet.rows.get(1)?.get(1) as { spillAnchor?: unknown }).spillAnchor).toBeUndefined();
+		expect(
+			(sheet.rows.get(1)?.get(0) as { spillAnchor?: unknown } | undefined)?.spillAnchor,
+		).toBeDefined();
+		expect(
+			(sheet.rows.get(1)?.get(1) as { spillAnchor?: unknown } | undefined)?.spillAnchor,
+		).toBeUndefined();
 	});
 });
