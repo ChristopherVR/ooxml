@@ -16,6 +16,8 @@ export * from './histogram-binning';
 export * from './waterfall';
 export * from './treemap-squarify';
 export * from './trendline-equation';
+export * from './trendline-fit';
+export * from './error-bar-amount';
 export * from './radar-geometry';
 export * from './pie-best-fit';
 export * from './pie-label-collision';
