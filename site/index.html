@@ -2,6 +2,13 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<!-- GitHub Pages cannot send headers, so the policy is a meta tag. connect-src stays broad on
+		     purpose: the assistant and team servers are user-configured endpoints. ipc: and
+		     http://ipc.localhost are the Tauri desktop IPC channel (the desktop shell loads this page). -->
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https: wss: ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; frame-src 'self' https://christophervr.github.io; manifest-src 'self'"
+		/>
 		<meta name="ooxml-root" content="./" />
 		<meta name="theme-color" content="#0f6cbd" />
 		<link rel="manifest" href="manifest.webmanifest" />
