@@ -11,7 +11,6 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
-import JSZip from 'jszip';
 import { openNestedZip } from './zip-open';
 
 import type { PptxEmbeddedWorkbookData } from '../types';
