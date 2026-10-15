@@ -203,15 +203,24 @@ export function readSheetData(ctx: CellContext, sheetData: XmlElement, sheet: Wo
 function markSpills(sheet: Worksheet, anchors: readonly DynamicAnchor[]): void {
 	for (const anchor of anchors) {
 		const { start, end } = anchor.range;
-		for (let r = start.row; r <= end.row; r++) {
-			const cells = sheet.rows.get(r);
-			if (!cells) continue;
-			for (let c = start.col; c <= end.col; c++) {
-				if (r === anchor.row && c === anchor.col) continue;
-				const cell = cells.get(c);
-				if (!cell || cell.formula !== undefined) continue;
+		// Visit only populated rows and cells: a ref such as A1:XFD1048576 must not cost a million rows.
+		const mark = (r: number, cells: Map<number, Cell>): void => {
+			const visit = (c: number, cell: Cell | undefined): void => {
+				if (c < start.col || c > end.col || (r === anchor.row && c === anchor.col)) return;
+				if (!cell || cell.formula !== undefined) return;
 				(cell as SpilledCell).spillAnchor = { row: anchor.row, col: anchor.col };
+			};
+			if (end.col - start.col + 1 <= cells.size) {
+				for (let c = start.col; c <= end.col; c++) visit(c, cells.get(c));
+			} else for (const [c, cell] of cells) visit(c, cell);
+		};
+		if (end.row - start.row + 1 <= sheet.rows.size) {
+			for (let r = start.row; r <= end.row; r++) {
+				const cells = sheet.rows.get(r);
+				if (cells) mark(r, cells);
 			}
+		} else {
+			for (const [r, cells] of sheet.rows) if (r >= start.row && r <= end.row) mark(r, cells);
 		}
 	}
 }
