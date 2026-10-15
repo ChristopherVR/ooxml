@@ -100,6 +100,7 @@ export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 		rightToLeft: view.rightToLeft || undefined,
 		topLeftCell: !view.freeze && view.topLeft ? formatAddress(view.topLeft) : undefined,
 		showFormulas: view.showFormulas || undefined,
+		view: view.mode,
 		zoomScale: view.zoom !== 100 ? view.zoom : undefined,
 		zoomScaleNormal: view.zoom !== 100 ? view.zoom : undefined,
 		workbookViewId: 0,

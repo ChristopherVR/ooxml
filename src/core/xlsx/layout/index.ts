@@ -131,3 +131,6 @@ export * from './print-breaks';
 export * from './print-titles';
 export * from './header-footer';
 export * from './print-merges';
+export * from './page-view';
+export * from './page-break-view';
+export * from './header-footer-edit';

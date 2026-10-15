@@ -50,6 +50,8 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 	view.rightToLeft = boolAttr(node, 'rightToLeft', false);
 	view.zoom = numAttr(node, 'zoomScale') || 100;
 	if (boolAttr(node, 'showFormulas')) view.showFormulas = true;
+	const mode = att(node, 'view');
+	if (mode === 'pageLayout' || mode === 'pageBreakPreview') view.mode = mode;
 	const pane = xFirst(node, 'pane');
 	const state = att(pane, 'state');
 	const frozen = pane && (state === 'frozen' || state === 'frozenSplit');

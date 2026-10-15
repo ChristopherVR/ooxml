@@ -592,7 +592,12 @@ export interface SmartArtObject {
 
 export type DrawingObject = ImageObject | ChartObject | SmartArtObject | UnsupportedDrawingObject;
 
+/** `sheetView/@view`: absent means Normal. */
+export type SheetViewMode = 'pageLayout' | 'pageBreakPreview';
+
 export interface SheetView {
+	/** Page Layout or Page Break Preview (`view`); absent is Normal view. */
+	mode?: SheetViewMode | undefined;
 	showGridLines: boolean;
 	showHeaders: boolean;
 	showZeros: boolean;
