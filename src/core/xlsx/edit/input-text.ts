@@ -5,6 +5,7 @@ import { getCell } from '../cells';
 import type { Cell, Workbook } from '../model';
 import { isCellError } from '../model';
 import { styleAt } from '../styles';
+import { dataTableFormulaText } from './data-table';
 import { formatValue, isDateFormat, parseCellInput } from './deps';
 
 /** Excel shows 15 significant digits in the formula bar. */
@@ -54,5 +55,7 @@ export function formulaBarText(
 /** The re-typeable content of a cell (formulas with their '='), as the formula bar shows it. */
 export function cellInputText(workbook: Workbook, sheet: number, row: number, col: number): string {
 	const ws = workbook.sheets[sheet];
-	return ws ? formulaBarText(workbook, getCell(ws, row, col)) : '';
+	if (!ws) return '';
+	// Cells of a what-if data table show `{=TABLE(...)}`, as in Excel.
+	return dataTableFormulaText(ws, row, col) ?? formulaBarText(workbook, getCell(ws, row, col));
 }

@@ -110,6 +110,12 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	textColumns: 'M2 4h7v12H2zM11 4h7v12h-7zM4 8h3M13 8h3M4 12h3M13 12h3',
 	removeDuplicates: 'M3 4h9v4H3zM3 11h9v4H3zM14 11l4 4M18 11l-4 4',
 	validation: `${GRID}M3 8h14M7 12l2 2 4-4`,
+	scenarios: 'M3 3h9v11H3zM8 6h9v11H8zM10.5 9h4M10.5 12h4',
+	goalSeek:
+		'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM10 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM10 10 17 3M14.5 3H17v2.5',
+	dataTable: `${GRID}M3 8h14M8 8v9M3 12.5h14M12.5 8v9`,
+	forecast: 'M3 17h14M3 14l4-4 3 3 7-8M13 5h4v4',
+	whatIf: 'M3 3h14v14H3zM7 7.5a3 3 0 1 1 3 3v1.2M10 14h.1M3 10h2M15 10h2',
 	group: 'M3 3v14M3 5h3M3 15h3M9 5h8M9 10h8M9 15h8M5 10h1',
 	ungroup: 'M9 5h8M9 10h8M9 15h8M3 7l3 3-3 3',
 	statistics: 'M4 3h12v14H4zM7 7h6M7 10h6M7 13h3',

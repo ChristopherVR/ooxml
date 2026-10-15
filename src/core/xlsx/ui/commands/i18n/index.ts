@@ -8,6 +8,7 @@ import { RIBBON_HOME_STRINGS } from './ribbon-home';
 import { RULES_STRINGS } from './rules';
 import { RIBBON_TAB_STRINGS } from './ribbon-tabs';
 import { TOOLS_STRINGS } from './tools';
+import { WHAT_IF_STRINGS } from './what-if';
 import { SPARKLINE_STRINGS } from './sparklines';
 import { PIVOT_STRINGS } from './pivots';
 import { PRINT_LAYOUT_STRINGS } from './print-layout';
@@ -26,6 +27,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	SPARKLINE_STRINGS,
 	PIVOT_STRINGS,
 	PRINT_LAYOUT_STRINGS,
+	WHAT_IF_STRINGS,
 ];
 
 export const commandStrings = (locale: CommandLocale): Record<string, string> =>

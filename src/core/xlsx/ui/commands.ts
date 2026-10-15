@@ -13,6 +13,8 @@ export interface Command {
 	shortcut?: string;
 	/** True: disabled in read-only mode. */
 	editing?: boolean;
+	/** English reason a command that is always disabled is not available (shown as its tooltip). */
+	unavailable?: string;
 	enabled?(ctx: EditorContext): boolean;
 	/** Toggle state (bold of the active cell, ...). */
 	checked?(ctx: EditorContext): boolean;

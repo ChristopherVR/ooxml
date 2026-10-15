@@ -6,6 +6,7 @@ export * from './commands/cf-presets';
 export * from './commands/clipboard';
 export * from './commands/contextual';
 export * from './commands/data';
+export * from './commands/what-if';
 export * from './commands/editing';
 export * from './commands/font';
 export * from './commands/formulas';

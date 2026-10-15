@@ -8,7 +8,7 @@ import {
 	parseRange,
 } from '../address';
 import { getCell } from '../cells';
-import type { Scenario, ScenarioCell, ScenarioSet, Worksheet } from '../model';
+import type { Scenario, ScenarioCell, ScenarioSet, Workbook, Worksheet } from '../model';
 import { type EditContext, sheetAt } from './context';
 import { writeInput } from './cell-values';
 import { formulaBarText } from './input-text';
@@ -91,8 +91,8 @@ function cellsOf(addresses: CellAddress[]): CellAddress[] {
 	return addresses;
 }
 
-const textAt = (ctx: EditContext, sheet: Worksheet, a: CellAddress): string =>
-	formulaBarText(ctx.workbook, getCell(sheet, a.row, a.col), { quote: false });
+const textAt = (workbook: Workbook, sheet: Worksheet, a: CellAddress): string =>
+	formulaBarText(workbook, getCell(sheet, a.row, a.col), { quote: false });
 
 export interface ScenarioDraft {
 	name: string;
@@ -111,7 +111,7 @@ function build(ctx: EditContext, sheet: Worksheet, draft: ScenarioDraft, name: s
 	if (!expanded) throw new ScenarioError('bad-cells');
 	const cells: ScenarioCell[] = cellsOf(expanded).map((a) => ({
 		ref: formatAddress(a),
-		value: draft.values?.[formatAddress(a)] ?? textAt(ctx, sheet, a),
+		value: draft.values?.[formatAddress(a)] ?? textAt(ctx.workbook, sheet, a),
 	}));
 	const scenario: Scenario = { name, cells };
 	if (draft.comment) scenario.comment = draft.comment;
@@ -119,6 +119,31 @@ function build(ctx: EditContext, sheet: Worksheet, draft: ScenarioDraft, name: s
 	if (draft.hidden) scenario.hidden = true;
 	if (draft.user) scenario.user = draft.user;
 	return scenario;
+}
+
+/**
+ * Validates a draft's name and changing cells (throwing the same errors as adding it) and
+ * returns the values the Scenario Values dialog starts with: those stored in scenario `except`
+ * (when editing) else the cells' current contents.
+ */
+export function previewScenario(
+	workbook: Workbook,
+	s: number,
+	draft: ScenarioDraft,
+	except?: number,
+): { ref: string; value: string }[] {
+	const sheet = sheetAt(workbook, s);
+	checkName(sheet, draft.name, except);
+	const expanded = expandCells(draft.cells);
+	if (!expanded) throw new ScenarioError('bad-cells');
+	const stored = except === undefined ? undefined : scenariosOf(sheet)[except];
+	return cellsOf(expanded).map((a) => {
+		const ref = formatAddress(a);
+		return {
+			ref,
+			value: stored?.cells.find((c) => c.ref === ref)?.value ?? textAt(workbook, sheet, a),
+		};
+	});
 }
 
 const PARTS = (s: number) => [{ kind: 'parts' as const, sheet: s, parts: ['scenarios' as const] }];

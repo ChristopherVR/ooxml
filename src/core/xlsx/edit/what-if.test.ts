@@ -7,6 +7,7 @@ import type { Workbook } from '../model';
 import { loadXlsx } from '../read/load';
 import { createWorkbook } from '../workbook';
 import { saveXlsx } from '../write/save';
+import { cellInputText } from './input-text';
 import { checkDataTable, dataTableFormulaText, DATA_TABLE_PART_ERROR } from './data-table';
 import { checkGoalSeek } from './goal-seek';
 import { createEditSession } from './session';
@@ -120,6 +121,8 @@ describe('data tables', () => {
 		expect(value(wb, 3, 1)).toBe(30);
 		expect(wb.sheets[0]!.dataTables?.[0]).toMatchObject({ r1: 'A1' });
 		expect(dataTableFormulaText(wb.sheets[0]!, 4, 1)).toBe('{=TABLE(,A1)}');
+		expect(cellInputText(wb, 0, 5, 2)).toBe('{=TABLE(,A1)}');
+		expect(cellInputText(wb, 0, 3, 2)).toBe('=A1*A1+A2');
 	});
 
 	it('recomputes when a precedent changes and on undo', () => {

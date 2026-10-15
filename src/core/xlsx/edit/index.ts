@@ -97,6 +97,7 @@ export {
 	dataTableFormula,
 	dataTableFormulaText,
 	dataTableMessage,
+	parseInputCell,
 	DATA_TABLE_PART_ERROR,
 	refreshDataTables,
 	type DataTableProblem,
@@ -105,7 +106,10 @@ export {
 export {
 	expandCells,
 	MAX_SCENARIO_CELLS,
+	previewScenario,
 	scenarioAddresses,
+	scenarioMessage,
 	scenariosOf,
 	type ScenarioDraft,
 } from './scenarios';
+export { displayText } from '../display-text';
