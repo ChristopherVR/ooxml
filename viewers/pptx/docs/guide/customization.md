@@ -522,6 +522,13 @@ read and write the same settings the built-in dialog does:
 `close`, `setOption` and `resetOptions` are stable: keeping an older context
 and calling them later is safe.
 
+Every binding shows File > Options in the shared `<pptx-ui-options-dialog>`
+element. A replaced body is slotted into it (`slot="body"`), in the page's own
+DOM rather than the element's shadow tree, so your page styles reach it. Your
+view sizes itself; the dialog scrolls it when it is taller than the window.
+The close button and Escape keep your `setOption` edits, as in the built-in
+dialog.
+
 ### Mounting a framework component
 
 The mount function is framework-neutral, so a region can hold a component from

@@ -1,21 +1,18 @@
 /**
  * Builds the region context (`ViewerRegionContext`) for every host-replaced
  * region from the live viewer state. One place, so the inspector, the dialogs
- * and the File tab pages all hand a host the same fields.
+ * and the File tab pages all hand a host the same fields (the shared Options
+ * dialog binding adds the `dialog.options` fields itself).
  *
  * @module viewer/region-support
  */
 import type {
 	HostBackstageRegionId,
-	OptionsSettingId,
 	PowerPointViewerAPI,
 	ResolvedCustomization,
-	ViewerOptionPrimitive,
-	ViewerOptionsGroupId,
 	ViewerOptionsStore,
 	ViewerRegionContext,
 	ViewerRegionId,
-	ViewerSettingsRegionContext,
 } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from './state';
@@ -55,35 +52,7 @@ export function createRegionSupport(deps: RegionSupportDeps): RegionSupport {
 
 	return {
 		getResolved: () => deps.getResolved(),
-		buildContext(region, close) {
-			const base = baseContext(region, close);
-			if (region !== 'dialog.options') {
-				return base;
-			}
-			const options = deps.getOptionsStore();
-			if (!options) {
-				return base;
-			}
-			const settings: ViewerSettingsRegionContext = {
-				...base,
-				region: 'dialog.options',
-				options: options.getOptions(),
-				// The store applies the host's locks to every write, exactly as it
-				// does for the built-in dialog's controls.
-				setOption: (setting: OptionsSettingId, value: ViewerOptionPrimitive) => {
-					const dot = setting.indexOf('.');
-					if (dot > 0) {
-						options.setValue(
-							setting.slice(0, dot) as ViewerOptionsGroupId,
-							setting.slice(dot + 1),
-							value,
-						);
-					}
-				},
-				resetOptions: () => options.reset(),
-			};
-			return settings;
-		},
+		buildContext: baseContext,
 		subscribe(listener) {
 			// The chrome (and its panels) is built before the options store exists,
 			// so the options subscription is made as soon as the store is there.

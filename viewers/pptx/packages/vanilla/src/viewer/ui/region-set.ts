@@ -47,6 +47,8 @@ export interface RegionMountOptions {
 }
 
 export interface RegionSet {
+	/** The context builder and change feed behind the set (absent in {@link NO_REGIONS}). */
+	readonly support?: RegionSupport;
 	/** True when the host replaced `region` (and did not also hide it). */
 	isReplaced(region: ViewerRegionId): boolean;
 	/** Mount the host's renderer for `region` into `parent`, or null when it is not replaced. */
@@ -71,7 +73,13 @@ export interface RegionSet {
 	park(): void;
 	/** Destroy the parked hosts nobody adopted (call once the new chrome is built). */
 	sweep(): void;
-	/** Destroy every live and parked host. */
+	/**
+	 * Run `teardown` when the set is destroyed: the dialogs the viewer mounts on
+	 * `document.body` register their close here (see `overlay-owner`), so they
+	 * close with the viewer. Returns the unregister function.
+	 */
+	own(teardown: () => void): () => void;
+	/** Destroy every live and parked host and run every owned teardown. */
 	destroy(): void;
 }
 
@@ -91,6 +99,7 @@ export const NO_REGIONS: RegionSet = {
 	refresh: () => undefined,
 	park: () => undefined,
 	sweep: () => undefined,
+	own: () => () => undefined,
 	destroy: () => undefined,
 };
 
@@ -101,6 +110,7 @@ export function createRegionSet(support: RegionSupport | undefined): RegionSet {
 	const entries = new Set<Entry>();
 	// Hosts of a chrome being rebuilt: alive, detached, waiting to be adopted.
 	const parked = new Set<Entry>();
+	const owned = new Set<() => void>();
 	let unsubscribe: (() => void) | null = null;
 
 	const render = (entry: Entry): void => {
@@ -164,6 +174,7 @@ export function createRegionSet(support: RegionSupport | undefined): RegionSet {
 	};
 
 	return {
+		support,
 		isReplaced: (region) => getRegionRenderer(support.getResolved(), region) !== undefined,
 		mount(region, parent, options) {
 			const renderer = getRegionRenderer(support.getResolved(), region);
@@ -185,10 +196,18 @@ export function createRegionSet(support: RegionSupport | undefined): RegionSet {
 			}
 			stopIfIdle();
 		},
+		own(teardown) {
+			owned.add(teardown);
+			return () => owned.delete(teardown);
+		},
 		destroy() {
 			for (const entry of [...entries, ...parked]) {
 				release(entry);
 			}
+			for (const teardown of [...owned]) {
+				teardown();
+			}
+			owned.clear();
 		},
 	};
 }

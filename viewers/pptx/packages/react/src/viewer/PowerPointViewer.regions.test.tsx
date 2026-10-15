@@ -163,10 +163,12 @@ describe('powerPointViewer regions', () => {
 		expect(context?.region).toBe('dialog.options');
 		expect(typeof context?.setOption).toBe('function');
 		expect(typeof context?.resetOptions).toBe('function');
-		const title = translationsEn['pptx.options.title'];
-		// The frame stays; the built-in rail and panes are gone.
-		expect(document.body.querySelector(`[role="dialog"][aria-label="${title}"]`)).not.toBeNull();
-		expect(document.body.querySelector(`nav[aria-label="${title}"]`)).toBeNull();
+		// The frame stays; the built-in rail, panes and footer are gone.
+		const dialog = document.body.querySelector('pptx-ui-options-dialog');
+		expect(dialog?.hasAttribute('custom-body')).toBe(true);
+		expect(element?.parentElement?.slot).toBe('body');
+		expect(dialog?.shadowRoot?.querySelector('[role="tablist"]')).toBeNull();
+		expect(dialog?.shadowRoot?.querySelector('[data-action="ok"]')).toBeNull();
 	});
 
 	it('still renders a replaced dialog.options when every Options page is hidden', async () => {

@@ -95,11 +95,13 @@ describe('vanilla replaced regions: dialogs', () => {
 		expect(element).not.toBeNull();
 		expect(element?.context?.region).toBe('dialog.options');
 		expect(typeof (element?.context as { setOption?: unknown }).setOption).toBe('function');
-		// The built-in rail and panes are not built; the frame is.
-		expect(document.querySelector('.pptxv-options-nav')).toBeNull();
-		expect(document.querySelector('.pptxv-parity-dialog')).not.toBeNull();
-		// Escape dismisses the frame and releases the renderer.
-		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+		// The frame stays; the built-in rail, panes and footer are gone.
+		const dialog = document.querySelector('pptx-ui-options-dialog');
+		expect(dialog?.hasAttribute('custom-body')).toBe(true);
+		expect(dialog?.shadowRoot?.querySelector('[role="tablist"]')).toBeNull();
+		// close() dismisses the frame and releases the renderer.
+		element?.context?.close();
+		expect(document.querySelector('pptx-ui-options-dialog')).toBeNull();
 		expect(document.querySelector('test-options-view')).toBeNull();
 	});
 
@@ -136,5 +138,18 @@ describe('vanilla replaced regions: dialogs', () => {
 		expect(document.querySelector('[data-pptx-region="dialog.print"]')).not.toBeNull();
 		viewer.destroy();
 		expect(destroy).toHaveBeenCalledOnce();
+	});
+
+	it('closes an open Options dialog and its host body on viewer destroy', () => {
+		const destroy = vi.fn();
+		const { viewer } = mount({
+			editable: true,
+			customization: { regions: { 'dialog.options': () => destroy } },
+		});
+		internals(viewer).openSettings();
+		expect(document.querySelector('[data-pptx-region="dialog.options"]')).not.toBeNull();
+		viewer.destroy();
+		expect(destroy).toHaveBeenCalledOnce();
+		expect(document.querySelector('pptx-ui-options-dialog')).toBeNull();
 	});
 });

@@ -13,17 +13,12 @@ import type {
 	HostBackstageRegionId,
 	PowerPointViewerAPI,
 	ViewerMode,
-	ViewerOptionPrimitive,
 	ViewerRegionContext,
 	ViewerRegionId,
 	ViewerRegionRenderer,
-	ViewerSettingsRegionContext,
-	OptionsSettingId,
-	ViewerOptionsGroupId,
 } from 'ooxml-ui/pptx';
 
 import { ViewerCustomizationService } from './viewer-customization.service';
-import { ViewerOptionsService } from './viewer-options.service';
 
 /** The viewer state a region context is built from (read inside a reactive context). */
 export interface ViewerRegionBase {
@@ -39,7 +34,6 @@ export interface ViewerRegionBase {
 @Injectable()
 export class ViewerRegionService {
 	private readonly customization = inject(ViewerCustomizationService, { optional: true });
-	private readonly options = inject(ViewerOptionsService, { optional: true });
 	private source: (() => ViewerRegionBase) | undefined;
 
 	/** Called once by the root component with a getter over its signals. */
@@ -66,29 +60,5 @@ export class ViewerRegionService {
 	): ViewerRegionContext | null {
 		const base = this.source?.();
 		return base ? { region, ...base, close } : null;
-	}
-
-	/** The `dialog.options` context: the base plus the options model and its setters. */
-	settingsContext(close: () => void): ViewerSettingsRegionContext | null {
-		const base = this.source?.();
-		const store = this.options;
-		if (!base || !store) {
-			return null;
-		}
-		return {
-			...base,
-			region: 'dialog.options',
-			close,
-			options: store.options(),
-			setOption: (setting: OptionsSettingId, value: ViewerOptionPrimitive) => {
-				const dot = setting.indexOf('.');
-				store.setValue(
-					setting.slice(0, dot) as ViewerOptionsGroupId,
-					setting.slice(dot + 1),
-					value,
-				);
-			},
-			resetOptions: () => store.reset(undefined),
-		};
 	}
 }

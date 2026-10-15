@@ -26,7 +26,7 @@ import {
 	selectElement,
 	slideElements,
 } from './support/deck';
-import { openOptionsDialog, optionsCategory } from './support/settings-dialog';
+import { openOptionsDialog, optionsAction, optionsCategory } from './support/settings-dialog';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -83,10 +83,13 @@ test.describe('UI regions and capabilities', () => {
 		await loadDeck(page, SAMPLE_DECK);
 		await replaceWithProbe(page, 'dialog.options');
 		const dialog = await openOptionsDialog(page, ['Options']);
-		const host = dialog.locator('.test-region-probe');
+		// The host body is slotted into the shared dialog, so it is not inside the role=dialog box.
+		const host = page.locator('pptx-ui-options-dialog .test-region-probe');
 		await expect(host).toHaveText('Host dialog.options');
+		await expect(host).toBeVisible();
 		await expect(host).toHaveAttribute('data-test-has-set-option', 'true');
 		await expect(optionsCategory(dialog, 'General')).toHaveCount(0);
+		await expect(optionsAction(dialog, 'OK')).toHaveCount(0);
 		await page.keyboard.press('Escape');
 		await expect(dialog).toBeHidden();
 	});

@@ -168,7 +168,9 @@ describe('host regions in the svelte viewer', () => {
 		expect(typeof context.setOption).toBe('function');
 		expect(typeof context.resetOptions).toBe('function');
 		expect(context.options).toBeDefined();
-		expect(target.querySelector('[role="dialog"][aria-label="Options"] nav')).toBeNull();
+		const dialog = target.querySelector('pptx-ui-options-dialog');
+		expect(dialog?.hasAttribute('custom-body')).toBe(true);
+		expect(dialog?.shadowRoot?.querySelector('[role="tablist"]')).toBeNull();
 		// The frame stays: close dismisses the dialog.
 		context.close();
 		flushSync();

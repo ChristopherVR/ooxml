@@ -21,12 +21,7 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
-import type {
-	PowerPointViewerAPI,
-	ViewerRegionContext,
-	ViewerRegionRenderer,
-	ViewerSettingsRegionContext,
-} from 'ooxml-ui/pptx';
+import type { PowerPointViewerAPI, ViewerRegionContext, ViewerRegionRenderer } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -162,60 +157,45 @@ describe('unbuildable context (R7)', () => {
 		expect(regions.renderer('notes')).toBeUndefined();
 		regions.attach(baseState({ selection: [] }));
 		expect(regions.renderer('notes')).toBe('x-notes');
-		// No options store: the Options region has no context, so no renderer.
+	});
+
+	it('gives the Options dialog no region context outside a viewer, keeping the built-in body', () => {
+		TestBed.configureTestingModule({
+			providers: [provideTranslateService({ fallbackLang: 'en' })],
+		});
+		const injector = Injector.create({
+			parent: TestBed.inject(Injector),
+			providers: [{ provide: ViewerCustomizationService, deps: [] }],
+		});
 		injector.get(ViewerCustomizationService).api.setRegion('dialog.options', 'x-options');
 		const dialog = runInInjectionContext(injector, () => new SettingsDialogComponent());
-		const view = dialog as unknown as { regionRenderer: () => unknown };
-		expect(view.regionRenderer()).toBeUndefined();
+		const view = dialog as unknown as { regionContext: () => unknown };
+		expect(view.regionContext()).toBeNull();
 	});
 });
 
 describe('dialog.options region', () => {
-	class OptionsElement extends HTMLElement {
-		context: ViewerSettingsRegionContext | undefined;
-	}
-
-	it('hands the dialog body to a host element with a settings context that respects locks', async () => {
-		customElements.get('x-options-view') ?? customElements.define('x-options-view', OptionsElement);
+	it('hands the shared Options dialog the viewer context for a host body', () => {
+		TestBed.configureTestingModule({
+			providers: [provideTranslateService({ fallbackLang: 'en' })],
+		});
 		const injector = Injector.create({
 			parent: TestBed.inject(Injector),
 			providers: [
-				{ provide: ViewerOptionsService, deps: [] },
 				{ provide: ViewerCustomizationService, deps: [] },
 				{ provide: ViewerRegionService, deps: [] },
 			],
 		});
-		const customization = injector.get(ViewerCustomizationService);
-		const options = injector.get(ViewerOptionsService);
-		injector.get(ViewerRegionService).attach(baseState({ selection: [] }));
+		injector.get(ViewerRegionService).attach(baseState({ selection: ['a'] }));
 		const dialog = runInInjectionContext(injector, () => new SettingsDialogComponent());
-		const view = dialog as unknown as {
-			regionRenderer: () => unknown;
-			regionContext: () => ViewerSettingsRegionContext | null;
-		};
-		expect(view.regionRenderer()).toBeUndefined();
-		customization.api.setRegion('dialog.options', 'x-options-view');
-		expect(view.regionRenderer()).toBe('x-options-view');
-
-		// The region host creates the element and keeps its `context` current.
-		const fixture = await mount(ViewerRegionHostComponent, {
-			renderer: 'x-options-view',
-			context: view.regionContext(),
-		});
-		fixture.detectChanges();
-		const element = (fixture.nativeElement as HTMLElement).querySelector<OptionsElement>(
-			'x-options-view',
-		);
-		expect(element?.context?.region).toBe('dialog.options');
-
-		const ctx = view.regionContext();
-		expect(typeof ctx?.setOption).toBe('function');
-		ctx?.setOption('advanced.showGrid', true);
-		expect(options.options().advanced.showGrid).toBeTruthy();
-		customization.api.lockSetting('advanced.showGrid', false);
-		ctx?.setOption('advanced.showGrid', true);
-		expect(options.options().advanced.showGrid).toBeFalsy();
-		ctx?.resetOptions();
+		const closed = vi.fn();
+		dialog.close.subscribe(closed);
+		const view = dialog as unknown as { regionContext: () => ViewerRegionContext | null };
+		const context = view.regionContext();
+		expect(context?.region).toBe('dialog.options');
+		expect(context?.selectedElementIds).toStrictEqual(['a']);
+		context?.close();
+		expect(closed).toHaveBeenCalledOnce();
 	});
 });
 

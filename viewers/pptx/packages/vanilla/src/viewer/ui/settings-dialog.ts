@@ -28,7 +28,9 @@ import {
 	renderQuickAccessPane,
 } from './options/options-pane-quick-access';
 import { renderRibbonPane } from './options/options-pane-ribbon';
+import { ownOverlay } from './overlay-owner';
 import { appendRadioRow, appendSwatchRow } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 import { appendCustomFontsPane } from './settings-custom-fonts';
 
 /** File > Options > General appearance wiring: theme catalog + active key + selection sink. */
@@ -61,6 +63,8 @@ export interface ViewerOptionsDialogDeps {
 	customization?: ResolvedCustomization;
 	/** Chat store the AI export reads from (defaults to the shared store). */
 	aiChatStore?: PptxAiChatStore;
+	/** The viewer's dialog regions: a host `dialog.options` renderer fills the dialog body. */
+	regions?: RegionSet;
 	/**
 	 * Session-scoped custom font registry backing the Fonts section.
 	 *
@@ -108,7 +112,12 @@ export function openSettingsDialog(
 
 	/** Rebuild the product panes of the open category inside their slots. */
 	const renderSlots = (): void => {
-		dialog.replaceChildren();
+		// The host's `dialog.options` body (slot "body") belongs to the shared binding.
+		for (const child of [...dialog.children]) {
+			if (child.slot !== 'body') {
+				child.remove();
+			}
+		}
 		switch (category) {
 			case 'general': {
 				appendSwatchRow(
@@ -197,17 +206,21 @@ export function openSettingsDialog(
 		}
 	};
 
+	const support = deps.regions?.support;
+	// The dialog (and a host body in it) goes away with the viewer.
+	const close = ownOverlay(deps.regions, (): void => {
+		unsubscribe();
+		offRegion?.();
+		binding.dispose();
+		dialog.remove();
+	});
 	const binding = bindPptxOptionsDialog(
 		dialog,
 		{
 			setOption: (group, key, value) => store.setValue(group, key, value),
 			restoreOptions: (snapshot) => store.setOptions(snapshot),
 			resetOptions: () => store.reset(),
-			close: () => {
-				unsubscribe();
-				binding.dispose();
-				dialog.remove();
-			},
+			close,
 			categoryChanged: (id) => {
 				category = id;
 				renderSlots();
@@ -222,6 +235,7 @@ export function openSettingsDialog(
 			languageKey: selectedLocaleCode,
 			customization,
 			aiEnabled: deps.aiEnabled === true,
+			regionContext: support?.buildContext('dialog.options', close) ?? null,
 		});
 	// Live re-render on any store commit (a control edit, reset, or an external change).
 	const unsubscribe = store.subscribe(() => {
@@ -231,6 +245,10 @@ export function openSettingsDialog(
 		}
 		sync();
 		renderSlots();
+	});
+	// A host body follows the viewer too (selection, slide, mode), not only the options.
+	const offRegion = support?.subscribe(() => {
+		if (dialog.isConnected) sync();
 	});
 	doc.body.appendChild(dialog);
 	sync();

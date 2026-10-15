@@ -89,9 +89,11 @@ describe('powerPointViewer host regions', () => {
 		expect(typeof context.resetOptions).toBe('function');
 		expect(context.options.general).toBeDefined();
 		// The frame stays; the built-in rail and footer are gone.
-		expect(document.body.querySelector('.pptx-vue-options-dialog')).not.toBeNull();
-		expect(document.body.querySelector('.pptx-vue-options-rail')).toBeNull();
-		expect(document.body.querySelector('.pptx-vue-options-footer')).toBeNull();
+		const dialog = document.body.querySelector('pptx-ui-options-dialog');
+		expect(dialog?.hasAttribute('custom-body')).toBe(true);
+		expect(element?.parentElement?.slot).toBe('body');
+		expect(dialog?.shadowRoot?.querySelector('[role="tablist"]')).toBeNull();
+		expect(dialog?.shadowRoot?.querySelector('[data-action="ok"]')).toBeNull();
 
 		context.close();
 		await flushPromises();
