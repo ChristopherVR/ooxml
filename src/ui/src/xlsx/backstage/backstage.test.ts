@@ -33,9 +33,16 @@ function setup(workbook = createWorkbook()) {
 		},
 	};
 	const backstage = createBackstage(host);
-	core.ctx.root.append(backstage.element);
+	core.ctx.root.append(backstage.element, backstage.optionsDialog);
 	return { core, backstage, calls, el: backstage.element };
 }
+type OptionsDialog = HTMLElement & { category: string; open: boolean };
+const dialogTabs = (dialog: HTMLElement) =>
+	[...dialog.shadowRoot!.querySelectorAll('[role="tab"]')].map((tab) => tab.textContent);
+const dialogField = <T extends HTMLElement>(dialog: HTMLElement, key: string) =>
+	dialog.shadowRoot!.querySelector<T>(`[data-key="${key}"] input, [data-key="${key}"] select`)!;
+const dialogAction = (dialog: HTMLElement, action: 'ok' | 'cancel' | 'reset') =>
+	dialog.shadowRoot!.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!;
 const button = (root: HTMLElement, text: string) =>
 	[...root.querySelectorAll<HTMLButtonElement>('.xve-backstage-content button')].find(
 		(b) => b.textContent?.trim() === text,
@@ -90,18 +97,67 @@ describe('File backstage', () => {
 		button(el, 'Export as CSV').click();
 		expect(calls).toContainEqual(['file', 'exportCsv', undefined]);
 		backstage.open('options');
-		const calc = el.querySelector<HTMLSelectElement>('select[aria-label="Workbook calculation"]')!;
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		dialog.category = 'formulas';
+		const calc = dialogField<HTMLSelectElement>(dialog, 'calculation');
 		calc.value = 'manual';
 		calc.dispatchEvent(new Event('change'));
-		const language = el.querySelector<HTMLSelectElement>('select[aria-label="Display language"]')!;
+		dialog.category = 'language';
+		const language = dialogField<HTMLSelectElement>(dialog, 'locale');
 		language.value = 'zh-CN';
 		language.dispatchEvent(new Event('change'));
+		expect(calls.filter((call) => call[0] === 'option')).toEqual([]);
+		dialogAction(dialog, 'ok').click();
 		expect(calls).toContainEqual(['option', 'calculation', 'manual']);
 		expect(calls).toContainEqual(['option', 'locale', 'zh-CN']);
 	});
 
+	it('opens Options as a dialog over the workbook, in the Excel Options categories', () => {
+		const { backstage, el } = setup();
+		backstage.open('info');
+		backstage.open('options');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		expect(backstage.isOpen).toBe(false);
+		expect(el.querySelector('[data-backstage-page="options"]')).toBeNull();
+		expect(dialog.open).toBe(true);
+		expect(dialogTabs(dialog)).toEqual([
+			'General',
+			'Formulas',
+			'Data',
+			'Proofing',
+			'Save',
+			'Language',
+			'Accessibility',
+			'Advanced',
+			'Customize Ribbon',
+			'Quick Access Toolbar',
+			'Add-ins',
+			'Trust Center',
+		]);
+		dialog.category = 'data';
+		expect(dialog.shadowRoot!.querySelector('.unavailable')!.textContent).toContain(
+			'Not available yet',
+		);
+		dialog.category = 'formulas';
+		expect(dialogField<HTMLInputElement>(dialog, 'r1c1').disabled).toBe(true);
+	});
+
+	it('resets the Excel options to their defaults from Reset all options', () => {
+		const { backstage, calls } = setup();
+		backstage.open('options');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		dialog.category = 'formulas';
+		const calc = dialogField<HTMLSelectElement>(dialog, 'calculation');
+		calc.value = 'manual';
+		calc.dispatchEvent(new Event('change'));
+		dialogAction(dialog, 'reset').click();
+		expect(dialogField<HTMLSelectElement>(dialog, 'calculation').value).toBe('automatic');
+		dialogAction(dialog, 'ok').click();
+		expect(calls.filter((call) => call[0] === 'option')).toEqual([]);
+	});
+
 	it('hides ribbon commands from Customize Ribbon', () => {
-		const { backstage, el, calls, core } = setup();
+		const { backstage, calls, core } = setup();
 		core.commands.registerAll([
 			spyCommand('home.bold', { label: 'Bold' }),
 			spyCommand('home.italic', { label: 'Italic' }),
@@ -123,7 +179,9 @@ describe('File backstage', () => {
 			},
 		]);
 		backstage.open('customize');
-		const boxes = el.querySelectorAll<HTMLInputElement>('.xve-customize-row input');
+		const boxes = backstage.optionsDialog.querySelectorAll<HTMLInputElement>(
+			'.xve-customize-row input',
+		);
 		expect(boxes).toHaveLength(2);
 		boxes[0]!.checked = false;
 		boxes[0]!.dispatchEvent(new Event('change'));
@@ -131,28 +189,32 @@ describe('File backstage', () => {
 	});
 
 	it('turns iterative calculation on and off from the Formulas options', async () => {
-		const { backstage, el, calls } = setup();
+		const { backstage, calls } = setup();
 		backstage.open('options');
-		const toggle = el.querySelector<HTMLElement & { checked: boolean }>(
-			'[data-backstage-page="options"] office-ui-checkbox',
-		)!;
-		const [count, delta] = [
-			...el.querySelectorAll<HTMLInputElement>(
-				'[data-backstage-page="options"] input[type="number"]',
-			),
-		];
+		const dialog = backstage.optionsDialog as OptionsDialog & { updateComplete: Promise<unknown> };
+		dialog.category = 'formulas';
+		await dialog.updateComplete;
+		const toggle = dialogField<HTMLInputElement>(dialog, 'iterate');
+		const count = dialogField<HTMLInputElement>(dialog, 'iterationCount');
+		const delta = dialogField<HTMLInputElement>(dialog, 'iterationDelta');
 		expect(toggle.checked).toBe(false);
-		expect([count!.disabled, delta!.disabled]).toEqual([true, true]);
+		expect([count.disabled, delta.disabled]).toEqual([true, true]);
 		toggle.click();
-		expect(calls).toContainEqual(['option', 'iteration', { count: 100, delta: 0.001 }]);
-		expect(count!.disabled).toBe(false);
-		count!.value = '50';
-		count!.dispatchEvent(new Event('change'));
-		delta!.value = '0.01';
-		delta!.dispatchEvent(new Event('change'));
+		await dialog.updateComplete;
+		expect(count.disabled).toBe(false);
+		count.value = '50';
+		count.dispatchEvent(new Event('change'));
+		delta.value = '0.01';
+		delta.dispatchEvent(new Event('change'));
+		dialogAction(dialog, 'ok').click();
 		expect(calls.at(-1)).toEqual(['option', 'iteration', { count: 50, delta: 0.01 }]);
-		toggle.click();
-		expect(calls.at(-1)).toEqual(['option', 'iteration', undefined]);
+		backstage.open('options');
+		dialog.category = 'formulas';
+		await dialog.updateComplete;
+		expect(dialogField<HTMLInputElement>(dialog, 'iterate').checked).toBe(false);
+		dialogField<HTMLInputElement>(dialog, 'iterate').click();
+		dialogAction(dialog, 'ok').click();
+		expect(calls.at(-1)).toEqual(['option', 'iteration', { count: 100, delta: 0.001 }]);
 	});
 
 	it('follows the display language', () => {
@@ -179,11 +241,10 @@ describe('File backstage', () => {
 			'share',
 			'export',
 			'options',
-			'customize',
 		]);
 		expect(backstage.isOpen).toBe(true);
-		nav.find((item) => item.dataset.backstageItem === 'options')!.click();
-		expect(el.querySelector<HTMLElement>('[data-backstage-page="options"]')!.hidden).toBe(false);
+		nav.find((item) => item.dataset.backstageItem === 'print')!.click();
+		expect(el.querySelector<HTMLElement>('[data-backstage-page="print"]')!.hidden).toBe(false);
 		expect(el.querySelector<HTMLElement>('[data-backstage-page="info"]')!.hidden).toBe(true);
 		nav.find((item) => item.dataset.backstageItem === 'save')!.click();
 		expect(calls).toContainEqual(['close']);

@@ -8,7 +8,7 @@ import type { OfficeBackstageItem } from '../../controls';
 import type { BackstageHost, PageContext } from './parts';
 import { renderInfo } from './pages-info';
 import { renderExport, renderNew, renderOpen, renderPrint, renderSaveAs } from './pages-file';
-import { renderCustomize, renderOptions } from './pages-options';
+import { createExcelOptions } from './options-dialog';
 import { renderShare } from './pages-share';
 
 export type { BackstageHost, EditorOptions, CalculationMode, IterationSettings } from './parts';
@@ -16,6 +16,7 @@ export { participants, type ShareHost } from './pages-share';
 export { compatibilityNotes, formatNotes } from './pages-info';
 export { createTemplateWorkbook, TEMPLATES, type TemplateId } from 'ooxml-core/xlsx/ui';
 
+/** The File view's pages; `options` and `customize` open the Options dialog instead. */
 export type BackstagePage =
 	| 'info'
 	| 'new'
@@ -26,9 +27,12 @@ export type BackstagePage =
 	| 'export'
 	| 'options'
 	| 'customize';
+type ContentPage = Exclude<BackstagePage, 'options' | 'customize'>;
 
 export interface Backstage {
 	readonly element: HTMLElement;
+	/** File > Options: a dialog over the workbook, as PowerPoint and Visio show it. */
+	readonly optionsDialog: HTMLElement;
 	open(page?: BackstagePage): void;
 	close(): void;
 	readonly isOpen: boolean;
@@ -46,7 +50,7 @@ type BackstageElement = HTMLElement & {
 };
 
 /** Pages in navigation order; Save has no page of its own and Options sit in the footer group. */
-const PAGES: Array<[BackstagePage, string]> = [
+const PAGES: Array<[ContentPage, string]> = [
 	['info', 'Info'],
 	['new', 'New'],
 	['open', 'Open'],
@@ -54,10 +58,8 @@ const PAGES: Array<[BackstagePage, string]> = [
 	['print', 'Print'],
 	['share', 'Share'],
 	['export', 'Export'],
-	['options', 'Options'],
-	['customize', 'Customize Ribbon'],
 ];
-const RENDERERS: Record<BackstagePage, (page: PageContext) => void> = {
+const RENDERERS: Record<ContentPage, (page: PageContext) => void> = {
 	info: renderInfo,
 	new: renderNew,
 	open: renderOpen,
@@ -65,8 +67,6 @@ const RENDERERS: Record<BackstagePage, (page: PageContext) => void> = {
 	print: renderPrint,
 	share: renderShare,
 	export: renderExport,
-	options: renderOptions,
-	customize: renderCustomize,
 };
 
 export function createBackstage(host: BackstageHost): Backstage {
@@ -76,7 +76,7 @@ export function createBackstage(host: BackstageHost): Backstage {
 	const element = doc.createElement('office-ui-backstage') as BackstageElement;
 	element.className = 'xve-backstage';
 	element.setAttribute('part', 'backstage');
-	const contents = new Map<BackstagePage, HTMLElement>();
+	const contents = new Map<ContentPage, HTMLElement>();
 	for (const [page] of PAGES) {
 		const content = doc.createElement('div');
 		content.className = 'xve-backstage-content';
@@ -85,28 +85,25 @@ export function createBackstage(host: BackstageHost): Backstage {
 		contents.set(page, content);
 		element.append(content);
 	}
-	let current: BackstagePage = 'info';
-	// A changed language or theme re-renders the open page so its text follows.
-	const pageHost: BackstageHost = {
-		...host,
-		ctx,
-		setOption(key, value) {
-			host.setOption(key, value);
-			queueMicrotask(() => {
-				if (element.open) show(current);
-			});
-		},
-	};
-	const show = (page: BackstagePage) => {
+	let current: ContentPage = 'info';
+	const options = createExcelOptions(host);
+	const show = (page: ContentPage) => {
 		current = page;
-		RENDERERS[page]({ host: pageHost, content: contents.get(page)!, t: ctx.t, doc });
+		RENDERERS[page]({ host, content: contents.get(page)!, t: ctx.t, doc });
+	};
+	/** Options and Customize Ribbon are one dialog: the backstage steps aside for it. */
+	const showOptions = (category?: string) => {
+		if (element.open) element.close();
+		host.close();
+		options.show(category);
 	};
 	element.addEventListener('office-backstage-select', (event) => {
 		const id = (event as CustomEvent<{ id: string }>).detail.id;
 		if (id === 'save') {
 			host.close();
 			host.fileCommand('save');
-		} else if (contents.has(id as BackstagePage)) show(id as BackstagePage);
+		} else if (id === 'options') showOptions();
+		else if (contents.has(id as ContentPage)) show(id as ContentPage);
 	});
 	// Back and Escape close the element itself; the host restores focus and tracks the state.
 	element.addEventListener('office-backstage-close', (event) => {
@@ -121,7 +118,7 @@ export function createBackstage(host: BackstageHost): Backstage {
 			...(group ? { group } : {}),
 		});
 		const label = new Map(PAGES);
-		const page = (id: BackstagePage, group?: 'footer') => item(id, label.get(id)!, group);
+		const page = (id: ContentPage) => item(id, label.get(id)!);
 		element.items = [
 			page('info'),
 			page('new'),
@@ -131,15 +128,20 @@ export function createBackstage(host: BackstageHost): Backstage {
 			page('print'),
 			page('share'),
 			page('export'),
-			page('options', 'footer'),
-			page('customize', 'footer'),
+			item('options', 'Options', 'footer'),
 		];
+		options.relocalize();
 		if (element.open) show(current);
 	};
 	relocalize();
 	return {
 		element,
+		optionsDialog: options.element,
 		open(page = 'info') {
+			if (page === 'options' || page === 'customize') {
+				showOptions(page === 'customize' ? 'ribbon' : undefined);
+				return;
+			}
 			show(page);
 			element.show(page);
 		},

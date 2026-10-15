@@ -4,11 +4,13 @@ import { mergeStringModules } from '../merge';
 import * as collab from './collab';
 import * as commands from './commands';
 import * as grid from './grid';
+import * as options from './options';
 import * as shell from './shell';
 
 export const zhCN: Readonly<Record<string, string>> = mergeStringModules({
 	'./collab.ts': collab,
 	'./commands.ts': commands,
 	'./grid.ts': grid,
+	'./options.ts': options,
 	'./shell.ts': shell,
 });

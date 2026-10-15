@@ -198,6 +198,7 @@ export function buildShell(core: EditorCore): Shell {
 		canvasRow,
 		statusBar.element,
 		backstage.element,
+		backstage.optionsDialog,
 		help.element,
 		toaster.element,
 	);
