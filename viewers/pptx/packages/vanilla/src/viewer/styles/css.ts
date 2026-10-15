@@ -89,6 +89,9 @@ const CHROME_CSS = `
 	 * and clips text). Mirrors the React theme.css rule. */
 	-webkit-text-size-adjust: none;
 	text-size-adjust: none;
+	/* Own stacking context: the slide, selection handles and every overlay inside stay
+	 * below whatever the host page stacks above the viewer (a drawer, a dialog). */
+	isolation: isolate;
 }
 .pptxv *, .pptxv *::before, .pptxv *::after { box-sizing: border-box; }
 .pptxv:focus { outline: none; }

@@ -126,6 +126,9 @@ export const EDITOR_CSS = `
 	border-bottom: 1px solid var(--pptx-border);
 }
 .pptxv-inspector-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 	padding: 4px 8px;
 	border: none;
 	border-radius: 4px;
@@ -135,6 +138,7 @@ export const EDITOR_CSS = `
 	font-size: 11px;
 	cursor: pointer;
 }
+.pptxv-inspector-tab svg { flex: none; width: 14px; height: 14px; }
 .pptxv-inspector-tab:hover { color: var(--pptx-foreground); background: var(--pptx-accent); }
 .pptxv-inspector-tab.is-active { background: var(--pptx-primary); color: var(--pptx-primary-foreground, #fff); }
 /* Below this width, matches isDensePanelCompact()/MOBILE_BREAKPOINT (768) in

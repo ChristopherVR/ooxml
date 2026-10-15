@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { calculateViewportFit, EDITOR_VIEWPORT_FIT, getSlideBackgroundStyle } from 'ooxml-ui/pptx';
+import { calculateViewportFit, editorViewportFitFor, getSlideBackgroundStyle } from 'ooxml-ui/pptx';
 import type { ViewportFitPadding } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
@@ -134,7 +134,7 @@ function recomputeFit(): void {
 			horizontalGutter: gutter * 2,
 			verticalGutter: gutter,
 		},
-		EDITOR_VIEWPORT_FIT,
+		editorViewportFitFor(el.clientWidth),
 	);
 	emit('update:fitScale', fit.scale);
 }

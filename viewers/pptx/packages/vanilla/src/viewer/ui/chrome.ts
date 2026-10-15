@@ -391,6 +391,7 @@ export function buildViewerChrome(
 				options.onSelectSlide,
 				inspector?.el ?? null,
 				options.hiddenActions,
+				() => ribbon?.el.querySelector('pptx-ui-ribbon-insert') ?? null,
 			)
 		: null;
 	if (mobileActionSheets) {
