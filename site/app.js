@@ -172,6 +172,10 @@ function ensureFrame(tab) {
 		frame = document.createElement('iframe');
 		frame.dataset.tab = tab.id;
 		frame.allow = 'clipboard-read; clipboard-write; fullscreen';
+		// Demos keep allow-same-origin: they persist their theme and sample state in localStorage and
+		// IndexedDB, which an opaque-origin frame cannot reach. The sandbox still blocks top-level
+		// navigation, form-driven popups and the rest of what the frame does not need.
+		frame.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups allow-downloads';
 		frame.addEventListener('load', () => {
 			if (frame?.getAttribute('src')) frame.dataset.loaded = 'true';
 			updateLoading();
