@@ -9,15 +9,15 @@ import {
 	renderInfo,
 	renderNew,
 	renderOpen,
-	renderOptions,
-	renderCustomize,
 	renderPrint,
 	renderSaveAs,
 	type BackstageHandlers,
 	type PageContext,
 } from './backstage-pages';
+import { createWordOptions } from './backstage-options';
 
 export type { BackstageHandlers } from './backstage-pages';
+/** The File view's pages; `options` and `customize` open the Options dialog instead. */
 export type BackstagePage =
 	| 'home'
 	| 'info'
@@ -28,9 +28,12 @@ export type BackstagePage =
 	| 'export'
 	| 'options'
 	| 'customize';
+type ContentPage = Exclude<BackstagePage, 'options' | 'customize'>;
 
 export interface Backstage {
 	element: HTMLElement;
+	/** File > Options: a dialog over the document, as PowerPoint and Visio show it. */
+	optionsDialog: HTMLElement;
 	open(page?: BackstagePage): void;
 	close(): void;
 	readonly isOpen: boolean;
@@ -55,10 +58,9 @@ const NAV: Array<{ id: BackstagePage | 'save'; label: string; footer?: boolean }
 	{ id: 'print', label: 'Print' },
 	{ id: 'export', label: 'Export' },
 	{ id: 'options', label: 'Options', footer: true },
-	{ id: 'customize', label: 'Customize Ribbon', footer: true },
 ];
 
-const RENDERERS: Record<BackstagePage, (context: PageContext) => void> = {
+const RENDERERS: Record<ContentPage, (context: PageContext) => void> = {
 	home: renderHome,
 	info: renderInfo,
 	new: renderNew,
@@ -66,8 +68,6 @@ const RENDERERS: Record<BackstagePage, (context: PageContext) => void> = {
 	saveAs: renderSaveAs,
 	print: renderPrint,
 	export: renderExport,
-	options: renderOptions,
-	customize: renderCustomize,
 };
 
 /**
@@ -84,7 +84,7 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 	const t = (text: string) => translateUiText(element, text);
 	const pages = new Map<BackstagePage, HTMLElement>();
 	for (const { id } of NAV) {
-		if (id === 'save') continue;
+		if (id === 'save' || id === 'options') continue;
 		const page = document.createElement('div');
 		page.className = 'dve-backstage-content';
 		page.dataset.backstagePage = id;
@@ -93,32 +93,20 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 		element.append(page);
 	}
 
-	let current: BackstagePage = 'info';
-	// A changed language or theme re-renders the open page so its text follows.
-	const pageHandlers: BackstageHandlers = {
-		...handlers,
-		setOption(key, value) {
-			const content = pages.get(current)!;
-			const active = (element.getRootNode() as Document | ShadowRoot).activeElement;
-			const label =
-				active instanceof HTMLElement && content.contains(active)
-					? active.getAttribute('aria-label')
-					: null;
-			handlers.setOption(key, value);
-			queueMicrotask(() => {
-				if (!element.open) return;
-				draw(current);
-				if (label)
-					[...content.querySelectorAll<HTMLElement>('[aria-label]')]
-						.find((control) => control.getAttribute('aria-label') === label)
-						?.focus();
-			});
-		},
-	};
-	const draw = (page: BackstagePage) => {
+	let current: ContentPage = 'info';
+	const options = createWordOptions(handlers, t);
+	const draw = (page: ContentPage) => {
 		current = page;
-		const content = pages.get(page)!;
-		RENDERERS[page]({ handlers: pageHandlers, t, content } satisfies PageContext);
+		RENDERERS[page]({ handlers, t, content: pages.get(page)! } satisfies PageContext);
+	};
+	/** Options and Customize Ribbon are one dialog: the backstage steps aside for it. */
+	const showOptions = (category?: string) => {
+		if (element.open) {
+			element.open = false;
+			focus.close();
+		}
+		handlers.close();
+		options.show(category);
 	};
 	const localize = () => {
 		const locale = normalizeEditorLocale(element.dataset.editorLocale);
@@ -138,7 +126,10 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 			event.preventDefault();
 			handlers.close();
 			handlers.fileCommand('save' satisfies FileCommand);
-		} else draw(id as BackstagePage);
+		} else if (id === 'options') {
+			event.preventDefault();
+			showOptions();
+		} else draw(id as ContentPage);
 	});
 	// Back and Escape: the editor decides what closing means (it also closes via `close()`).
 	element.addEventListener('office-backstage-close', (event) => {
@@ -148,7 +139,12 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 	});
 	return {
 		element,
+		optionsDialog: options.element,
 		open(page = 'home') {
+			if (page === 'options' || page === 'customize') {
+				showOptions(page === 'customize' ? 'ribbon' : undefined);
+				return;
+			}
 			focus.open();
 			draw(page);
 			element.show(page);
@@ -162,6 +158,7 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 		},
 		relocalize() {
 			localize();
+			options.relocalize();
 			if (element.open) draw(current);
 		},
 	};

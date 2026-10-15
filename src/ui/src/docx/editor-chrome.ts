@@ -117,7 +117,12 @@ export class EditorChrome {
 	/** Adds the chrome around an existing frame: title bar first, status bar and backstage last. */
 	mount(frame: HTMLElement, ribbon: HTMLElement): void {
 		frame.prepend(this.titleBar.element);
-		frame.append(this.statusBar.element, this.backstage.element, this.fileInput);
+		frame.append(
+			this.statusBar.element,
+			this.backstage.element,
+			this.backstage.optionsDialog,
+			this.fileInput,
+		);
 		this.ribbon = ribbon as RibbonElement;
 		// Editing mode, Comments and Share at the right end of the tab row, as in Word.
 		ribbon.append(this.ribbonActions.element);

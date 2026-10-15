@@ -1,3 +1,4 @@
+import { deOptions } from './options';
 import { deColumns } from './columns';
 import { deMultilevelList } from './multilevel-list';
 import { deFontAdvanced } from './font-advanced';
@@ -11,6 +12,7 @@ import { deTableProperties } from './table-properties';
 import { deRibbon } from './de-ribbon';
 
 export const de: LocaleStrings = {
+	...deOptions,
 	...deRibbon,
 	...deApp,
 	...deTableProperties,

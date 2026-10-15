@@ -1,3 +1,4 @@
+import { frOptions } from './options';
 import { frColumns } from './columns';
 import { frMultilevelList } from './multilevel-list';
 import { frFontAdvanced } from './font-advanced';
@@ -11,6 +12,7 @@ import { frTableProperties } from './table-properties';
 import { frRibbon } from './fr-ribbon';
 
 export const fr: LocaleStrings = {
+	...frOptions,
 	...frRibbon,
 	...frApp,
 	...frTableProperties,

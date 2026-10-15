@@ -33,9 +33,14 @@ function setup(overrides: Partial<BackstageHandlers> = {}) {
 		...overrides,
 	};
 	const backstage = createBackstage(handlers);
-	document.body.append(backstage.element);
+	document.body.append(backstage.element, backstage.optionsDialog);
 	return { backstage, handlers, calls, options, properties, model };
 }
+type OptionsDialog = HTMLElement & { category: string; open: boolean };
+const tabs = (dialog: HTMLElement) =>
+	[...dialog.shadowRoot!.querySelectorAll('[role="tab"]')].map((tab) => tab.textContent);
+const field = <T extends HTMLElement>(dialog: HTMLElement, key: string) =>
+	dialog.shadowRoot!.querySelector<T>(`[data-key="${key}"] input, [data-key="${key}"] select`)!;
 type Updating = HTMLElement & { updateComplete: Promise<unknown> };
 /** The navigation buttons of the shared backstage, once it has rendered. */
 const navButtons = async (root: HTMLElement) => {
@@ -64,7 +69,7 @@ describe('File backstage', () => {
 		document.body.append(opener, disabledRegion);
 		const { backstage } = setup();
 		opener.focus();
-		backstage.open('options');
+		backstage.open('info');
 		expect(opener.inert).toBe(true);
 		backstage.close();
 		expect(document.activeElement).toBe(opener);
@@ -84,7 +89,6 @@ describe('File backstage', () => {
 			'Print',
 			'Export',
 			'Options',
-			'Customize Ribbon',
 		]);
 	});
 
@@ -147,25 +151,73 @@ describe('File backstage', () => {
 		expect(calls).toEqual([['print', undefined]]);
 	});
 
-	it('Options reads the current values and reports changes', async () => {
+	it('Options opens the shared dialog over the document, in the Word Options categories', () => {
+		const { backstage } = setup();
+		backstage.open('info');
+		backstage.open('options');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		expect(backstage.isOpen).toBe(false);
+		expect(dialog.open).toBe(true);
+		expect(tabs(dialog)).toEqual([
+			'General',
+			'Display',
+			'Proofing',
+			'Save',
+			'Language',
+			'Accessibility',
+			'Advanced',
+			'Customize Ribbon',
+			'Quick Access Toolbar',
+			'Add-ins',
+			'Trust Center',
+		]);
+		expect(dialog.getAttribute('heading')).toBe('Options');
+	});
+
+	it('Options reads the current values and applies them on OK', () => {
 		const { backstage, options } = setup();
 		backstage.open('options');
-		const language = backstage.element.querySelector<HTMLSelectElement>(
-			'select[aria-label="Display language"]',
-		)!;
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		const name = field<HTMLInputElement>(dialog, 'author');
+		expect(name.value).toBe('Ann');
+		name.value = 'Bea';
+		name.dispatchEvent(new Event('input'));
+		dialog.category = 'language';
+		const language = field<HTMLSelectElement>(dialog, 'locale');
 		expect(language.value).toBe('en');
 		language.value = 'de';
 		language.dispatchEvent(new Event('change'));
-		const author = backstage.element.querySelector<HTMLInputElement>(
-			'input[aria-label="Author name"]',
-		)!;
-		expect(author.value).toBe('Ann');
-		author.value = 'Bea';
-		author.dispatchEvent(new Event('change'));
+		expect(options).toEqual([]);
+		dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="ok"]')!.click();
 		expect(options).toEqual([
 			['locale', 'de'],
 			['author', 'Bea'],
 		]);
+		expect(dialog.open).toBe(false);
+	});
+
+	it('Options offers only the display settings the editor reports, and marks the rest', () => {
+		const { backstage } = setup({
+			options: () => ({
+				locale: 'en',
+				theme: 'dark',
+				author: 'Ann',
+				spellCheck: true,
+				showRuler: false,
+			}),
+		});
+		backstage.open('options');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		expect(field<HTMLSelectElement>(dialog, 'theme').value).toBe('dark');
+		dialog.category = 'display';
+		expect(field<HTMLInputElement>(dialog, 'showRuler')).toBeTruthy();
+		expect(dialog.shadowRoot!.querySelector('[data-key="showMarks"]')).toBeNull();
+		dialog.category = 'save';
+		expect(dialog.shadowRoot!.querySelector('.unavailable')!.textContent).toContain(
+			'Not available yet',
+		);
+		dialog.category = 'general';
+		expect(field<HTMLInputElement>(dialog, 'miniToolbar').disabled).toBe(true);
 	});
 
 	it('follows the display language', async () => {
@@ -190,17 +242,34 @@ describe('Customize Ribbon', () => {
 			setHiddenActions: (ids) => hidden.push(ids),
 		});
 		backstage.open('customize');
-		const boxes = [
-			...backstage.element.querySelectorAll<HTMLInputElement>('.dve-customize-row input'),
-		];
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		expect(dialog.category).toBe('ribbon');
+		const boxes = [...dialog.querySelectorAll<HTMLInputElement>('.dve-customize-row input')];
 		const named = (label: string) => boxes.find((b) => b.parentElement!.textContent === label)!;
 		expect(boxes.length).toBeGreaterThan(40);
 		expect(named('Bold').checked).toBe(true);
 		expect(named('Italic').checked).toBe(false);
 		named('Bold').click();
 		expect(hidden.at(-1)).toEqual(expect.arrayContaining(['bold', 'italic']));
-		click(backstage.element, 'Reset all customizations');
+		dialog.querySelector<HTMLButtonElement>('.dve-options-action')!.click();
 		expect(hidden.at(-1)).toEqual([]);
+	});
+
+	it('puts the ribbon back when the dialog is cancelled', () => {
+		const ribbon = createRibbon();
+		document.body.append(ribbon);
+		let hiddenNow: string[] = ['italic'];
+		const { backstage } = setup({
+			ribbon: () => ribbon,
+			hiddenActions: () => hiddenNow,
+			setHiddenActions: (ids) => (hiddenNow = ids),
+		});
+		backstage.open('customize');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		dialog.querySelector<HTMLInputElement>('.dve-customize-row input')!.click();
+		expect(hiddenNow).not.toEqual(['italic']);
+		dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="cancel"]')!.click();
+		expect(hiddenNow).toEqual(['italic']);
 	});
 
 	it('shows the Customize Ribbon page in the display language', () => {
@@ -210,9 +279,14 @@ describe('Customize Ribbon', () => {
 			ribbon: () => ribbon,
 		});
 		backstage.element.dataset.editorLocale = 'fr';
+		backstage.relocalize();
 		backstage.open('customize');
-		const text = backstage.element.querySelector('[data-backstage-page="customize"]')!.textContent!;
-		expect(text).toContain('Personnaliser le ruban');
+		const dialog = backstage.optionsDialog as OptionsDialog;
+		expect(tabs(dialog)).toContain('Personnaliser le ruban');
+		expect(dialog.shadowRoot!.querySelector('[data-action="cancel"]')!.textContent).toContain(
+			'Annuler',
+		);
+		const text = dialog.textContent!;
 		expect(text).toContain('Réinitialiser toutes les personnalisations');
 		expect(text).toContain('Choisissez les commandes affichées dans le ruban.');
 	});

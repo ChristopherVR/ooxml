@@ -1,3 +1,4 @@
+import { esOptions } from './options';
 import { esColumns } from './columns';
 import { esMultilevelList } from './multilevel-list';
 import { esFontAdvanced } from './font-advanced';
@@ -11,6 +12,7 @@ import { esTableProperties } from './table-properties';
 import { esRibbon } from './es-ribbon';
 
 export const es: LocaleStrings = {
+	...esOptions,
 	...esRibbon,
 	...esApp,
 	...esTableProperties,

@@ -33,24 +33,30 @@ test.describe('File tab', () => {
 		const editor = await openFile(page);
 		await expect(editor.locator('.dve-backstage-content:not([hidden]) h2')).toHaveText('Home');
 		await navigate(editor, 'Options');
-		await editor.getByRole('checkbox', { name: 'Ruler', exact: true }).check();
-		await expect(editor.locator('.dve-ruler')).toBeAttached();
-		await editor.getByRole('checkbox', { name: 'Show paragraph marks', exact: true }).check();
-		await expect(editor.locator('.dve-paper')).toHaveAttribute('data-show-marks', '');
-		const last = editor.getByRole('checkbox', { name: 'Page thumbnails', exact: true });
-		await last.focus();
-		await page.keyboard.press('Tab');
-		await expect(
-			editor.getByRole('button', { name: 'Back to document', exact: true }),
-		).toBeFocused();
-		await page.keyboard.press('Shift+Tab');
-		await expect(last).toBeFocused();
-		const overflow = await editor
-			.locator('.dve-backstage-content:not([hidden])')
+		const dialog = editor.locator('office-ui-options-dialog');
+		await expect(dialog.getByRole('dialog')).toBeVisible();
+		await dialog.getByRole('tab', { name: 'Display' }).click();
+		await dialog.getByRole('checkbox', { name: 'Ruler', exact: true }).check();
+		await dialog.getByRole('checkbox', { name: 'Show paragraph marks', exact: true }).check();
+		const overflow = await dialog
+			.getByRole('tabpanel')
 			.evaluate((el) => el.scrollWidth > el.clientWidth);
 		expect(overflow).toBe(false);
-		await page.keyboard.press('Escape');
+		await dialog.locator('[data-action="ok"]').click();
+		await expect(editor.locator('.dve-ruler')).toBeAttached();
+		await expect(editor.locator('.dve-paper')).toHaveAttribute('data-show-marks', '');
 		await expect(editor.locator('.dve-ribbon .file')).toBeFocused();
+	});
+
+	test('Options closes with Escape without applying the edits', async ({ page }) => {
+		const editor = await openFile(page);
+		await navigate(editor, 'Options');
+		const dialog = editor.locator('office-ui-options-dialog');
+		await dialog.getByRole('tab', { name: 'Display' }).click();
+		await dialog.getByRole('checkbox', { name: 'Ruler', exact: true }).check();
+		await page.keyboard.press('Escape');
+		await expect(dialog.getByRole('dialog')).toBeHidden();
+		await expect(editor.locator('.dve-ruler')).toHaveCount(0);
 	});
 
 	test('Save As renames the document and downloads it', async ({ page }) => {
@@ -85,12 +91,14 @@ test.describe('File tab', () => {
 	test('Options switches the display language and the review author', async ({ page }) => {
 		const editor = await openFile(page);
 		await navigate(editor, 'Options');
-		await editor.getByLabel('Author name', { exact: true }).fill('Dana');
-		await editor.getByLabel('Author name', { exact: true }).dispatchEvent('change');
+		const dialog = editor.locator('office-ui-options-dialog');
+		await dialog.getByLabel('User name', { exact: true }).fill('Dana');
+		await dialog.getByRole('tab', { name: 'Language' }).click();
+		await dialog.getByLabel('Display language', { exact: true }).selectOption('fr');
+		await dialog.locator('[data-action="ok"]').click();
 		await expect(editor).toHaveAttribute('review-author', 'Dana');
-		await editor.getByLabel('Display language', { exact: true }).selectOption('fr');
 		await expect(editor).toHaveAttribute('locale', 'fr');
-		await expect(editor.locator('.dve-backstage-content:not([hidden]) h2')).toHaveText('Options');
+		await editor.locator('.dve-ribbon .file').click();
 		await expect(editor.locator('.dve-backstage .item', { hasText: 'Exporter' })).toBeVisible();
 	});
 

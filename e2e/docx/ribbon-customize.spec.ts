@@ -15,20 +15,24 @@ test('File > Customize Ribbon hides and restores commands', async ({ page }) => 
 		return true;
 	});
 	expect(events).toBe(true);
-	await editor.locator('.dve-ribbon .file').click();
-	await editor.locator('.dve-backstage .item', { hasText: 'Customize Ribbon' }).click();
+	const dialog = editor.locator('office-ui-options-dialog');
+	const openCustomize = async () => {
+		await editor.locator('.dve-ribbon .file').click();
+		await editor.locator('.dve-backstage .item', { hasText: 'Options' }).click();
+		await dialog.getByRole('tab', { name: 'Customize Ribbon' }).click();
+	};
+	await openCustomize();
 	await editor
 		.locator('.dve-customize-row', { hasText: /^Bold$/ })
 		.locator('input')
 		.uncheck();
-	await editor.getByRole('button', { name: 'Back to document' }).click();
+	await dialog.locator('[data-action="ok"]').click();
 	await expect(editor.getByRole('button', { name: 'Bold', exact: true })).toBeHidden();
 	expect(
 		await page.evaluate(() => (window as unknown as { seen: string[][] }).seen.at(-1)),
 	).toEqual(['bold']);
-	await editor.locator('.dve-ribbon .file').click();
-	await editor.locator('.dve-backstage .item', { hasText: 'Customize Ribbon' }).click();
+	await openCustomize();
 	await editor.getByRole('button', { name: 'Reset all customizations' }).click();
-	await editor.getByRole('button', { name: 'Back to document' }).click();
+	await dialog.locator('[data-action="ok"]').click();
 	await expect(editor.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
 });

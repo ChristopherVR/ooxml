@@ -26,31 +26,36 @@ const inner = async (editor: DocxEditorElement, tag: string) => {
 };
 
 describe('Word window chrome', () => {
-	it('File Options changes live view and spelling preferences without editing the document', async () => {
+	it('File Options changes view and spelling preferences without editing the document', async () => {
 		const editor = mount();
 		const r = root(editor);
 		(await ribbonFile(root(editor))).click();
 		(await inner(editor, 'office-ui-backstage'))
 			.querySelector<HTMLButtonElement>('[data-backstage-item="options"]')!
 			.click();
-		const toggle = async (label: string) => {
-			r.querySelector<HTMLInputElement>(
-				`.dve-backstage-content input[aria-label="${label}"]`,
-			)!.click();
+		const dialog = r.querySelector<
+			HTMLElement & { category: string; updateComplete: Promise<unknown>; show(): void }
+		>('office-ui-options-dialog')!;
+		const apply = async (keys: string[], category: string) => {
+			dialog.category = category;
+			await dialog.updateComplete;
+			for (const key of keys)
+				dialog.shadowRoot!.querySelector<HTMLInputElement>(`[data-key="${key}"] input`)!.click();
+			dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="ok"]')!.click();
 			await Promise.resolve();
 		};
-		await toggle('Ruler');
+		await apply(['showRuler', 'showMarks', 'showThumbnails'], 'display');
 		expect(r.querySelector('.dve-ruler')).not.toBeNull();
-		await toggle('Show paragraph marks');
 		expect(r.querySelector('.dve-paper')?.hasAttribute('data-show-marks')).toBe(true);
-		await toggle('Page thumbnails');
 		expect(editor.hasAttribute('show-thumbnails')).toBe(true);
-		await toggle('Spelling');
+		dialog.show();
+		await apply(['spellCheck'], 'proofing');
 		expect(
 			(editor as unknown as { view: import('prosemirror-view').EditorView }).view.dom.spellcheck,
 		).toBe(false);
 		expect(editor.dirty).toBe(false);
-		await toggle('Ruler');
+		dialog.show();
+		await apply(['showRuler'], 'display');
 		expect(r.querySelector('.dve-ruler')).toBeNull();
 	});
 	afterEach(() => document.body.replaceChildren());

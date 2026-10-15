@@ -1,3 +1,4 @@
+import { zhOptions } from './options';
 import { zhColumns } from './columns';
 import { zhMultilevelList } from './multilevel-list';
 import { zhFontAdvanced } from './font-advanced';
@@ -11,6 +12,7 @@ import { zhTableProperties } from './table-properties';
 import { zhCNRibbon } from './zh-CN-ribbon';
 
 export const zhCN: LocaleStrings = {
+	...zhOptions,
 	...zhCNRibbon,
 	...zhCNApp,
 	...zhTableProperties,

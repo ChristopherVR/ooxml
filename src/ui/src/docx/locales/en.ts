@@ -1,3 +1,4 @@
+import { enOptions } from './options';
 import { enColumns } from './columns';
 import { enMultilevelList } from './multilevel-list';
 import { enFontAdvanced } from './font-advanced';
@@ -14,6 +15,7 @@ import { enRibbon } from './en-ribbon';
  * localizer looks up (or dotted ids for templates); every other locale must define every key.
  */
 export const en = {
+	...enOptions,
 	...enRibbon,
 	...enApp,
 	...enTableProperties,
