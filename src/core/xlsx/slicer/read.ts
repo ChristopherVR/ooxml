@@ -1,4 +1,3 @@
-import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { elements, parseXml } from '../../xml/index';
 import type {
 	SlicerBook,

@@ -1,6 +1,5 @@
 import { getCell } from '../cells';
 import { compareCellValues } from '../edit/sort';
-import { isCellError } from '../model';
 import type { CellValue, PivotTable, SlicerCache, Table, Workbook, Worksheet } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey } from '../pivot/data';
 import { hiddenItemKeys, itemsWithData } from '../pivot/item-filters';
