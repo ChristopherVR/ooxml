@@ -1,7 +1,12 @@
 import { defineStatusBar, defineZoomSlider } from '../controls';
 import type { OfficeStatusBarState } from '../controls';
 import { registerIcon } from '../icons';
-import { statusLayout, watchStatusWidth, type StatusLayout } from '../chrome/status-layout';
+import {
+	compactPageText,
+	statusLayout,
+	watchStatusWidth,
+	type StatusLayout,
+} from '../chrome/status-layout';
 import { AUTO_FIT_MIN } from './auto-fit';
 import { normalizeEditorLocale, translate } from './localization';
 
@@ -70,8 +75,10 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 			items: [
 				{
 					id: 'page',
-					text: model.page,
-					title: translate(t, 'nav.approximate'),
+					text: layout.compactPage ? compactPageText(model.page) : model.page,
+					title: layout.compactPage
+						? `${model.page}. ${translate(t, 'nav.approximate')}`
+						: translate(t, 'nav.approximate'),
 					live: true,
 				},
 				...(layout.words ? [{ id: 'words', text: model.words }] : []),
