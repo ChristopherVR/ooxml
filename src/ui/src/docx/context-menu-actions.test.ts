@@ -30,6 +30,8 @@ afterEach(() => {
 	document.body.replaceChildren();
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
+	//  defines the property directly, which unstubAllGlobals does not undo.
+	Reflect.deleteProperty(navigator, 'clipboard');
 });
 
 describe('formatted ribbon and context-menu clipboard', () => {
