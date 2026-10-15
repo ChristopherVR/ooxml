@@ -73,8 +73,6 @@ export const shell: Record<string, string> = {
 	'Customize Status Bar': '自定义状态栏',
 	'Right-click to choose which statistics to show': '右键单击以选择要显示的统计信息',
 	Normal: '普通',
-	'Page Layout (not available)': '页面布局（不可用）',
-	'Page Break Preview (not available)': '分页预览（不可用）',
 	'Zoom out': '缩小',
 	'Zoom in': '放大',
 	'Zoom level': '缩放级别',

@@ -47,7 +47,12 @@ export function viewTab(): RibbonTab {
 			{
 				id: 'workbook-views',
 				label: 'Workbook Views',
-				controls: [{ kind: 'toggle', command: 'view.normal', size: 'large' }],
+				controls: [
+					{ kind: 'toggle', command: 'view.normal', size: 'large' },
+					{ kind: 'toggle', command: 'view.page-break-preview', size: 'large' },
+					{ kind: 'toggle', command: 'view.page-layout', size: 'large' },
+					{ kind: 'button', command: 'view.custom-views', size: 'large' },
+				],
 			},
 			{
 				id: 'show',

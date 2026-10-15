@@ -74,8 +74,6 @@ export const shell: Record<string, string> = {
 	'Right-click to choose which statistics to show':
 		'Cliquez avec le bouton droit pour choisir les statistiques affichées',
 	Normal: 'Normal',
-	'Page Layout (not available)': 'Mise en page (non disponible)',
-	'Page Break Preview (not available)': 'Aperçu des sauts de page (non disponible)',
 	'Zoom out': 'Zoom arrière',
 	'Zoom in': 'Zoom avant',
 	'Zoom level': 'Niveau de zoom',
