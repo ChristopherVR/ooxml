@@ -13,6 +13,7 @@ import {
 } from 'ooxml-core/teams';
 import { toggleAnchoredPopover } from './anchored-popover';
 import css from './profile-menu.css?raw';
+import { SIGN_IN_STRINGS } from './sign-in-strings';
 
 const idleLabel = (minutes: number): string => (minutes === 0 ? 'Never' : `${minutes} minutes`);
 /** When a status or message ends, as the short sentence under the field ("Until 3:30 PM"). */
@@ -36,12 +37,15 @@ export class TeamsProfileMenu extends LitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		state: { attribute: false },
+		account: { type: String },
 		open: { state: true },
 		draft: { state: true },
 		resetAfter: { state: true },
 		clearAfter: { state: true },
 	};
 	declare state: TeamsState | null;
+	/** The signed-in account's user id on a server with accounts; empty otherwise. */
+	declare account: string;
 	declare open: boolean;
 	/** The unsaved text of the status message field. */
 	declare draft: string | null;
@@ -51,6 +55,7 @@ export class TeamsProfileMenu extends LitElement {
 	constructor() {
 		super();
 		this.state = null;
+		this.account = '';
 		this.open = false;
 		this.draft = null;
 		this.resetAfter = 'never';
@@ -217,6 +222,20 @@ export class TeamsProfileMenu extends LitElement {
 						${IDLE_MINUTE_CHOICES.map((minutes) => html`<option value=${minutes} ?selected=${presence.idleMinutes === minutes}>${idleLabel(minutes)}</option>`)}
 					</select></label
 				>
+				${
+					this.account
+						? html`<div class="account">
+								<span>${SIGN_IN_STRINGS.signedInAs(this.account)}</span>
+								<button
+									type="button"
+									name="sign-out"
+									@click=${() => this.fire('teams-sign-out', {})}
+								>
+									${SIGN_IN_STRINGS.signOut}
+								</button>
+							</div>`
+						: nothing
+				}
 				<p class="connection">
 					${state.mode === 'local' ? 'Local workspace' : 'Workspace server'}: ${state.status}
 				</p>

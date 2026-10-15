@@ -47,6 +47,8 @@ import { draftList } from './draft-list';
 import { filePopoutDetail, filePopoutUrl } from './file-popout';
 import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
+import { SignInFlow } from './sign-in-flow';
+import { defineTeamsSignIn } from './teams-sign-in';
 import { defineTeamsPinnedBar } from './pinned-bar';
 import { watchActivity } from './activity';
 import { browserDeliveryEnv, deliverNotification } from './notify-delivery';
@@ -144,6 +146,7 @@ export class TeamsApp extends LitElement {
 		fileOpenPreference: { state: true },
 		chatDensity: { state: true },
 		showAppNames: { state: true },
+		authRevision: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -186,6 +189,16 @@ export class TeamsApp extends LitElement {
 	declare fileOpenPreference: 'teams' | 'browser';
 	declare chatDensity: 'comfy' | 'compact';
 	declare showAppNames: boolean;
+	/** Bumped when the sign-in state changes, so the client restarts with or without a session. */
+	declare authRevision: number;
+
+	/** Sign-in for servers that require accounts; a server without them never gates the app. */
+	private readonly signIn = new SignInFlow({
+		changed: () => this.authRevision++,
+		emit: (name, detail) =>
+			this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true })),
+	});
+	private authKey = '';
 
 	private readonly teams = new TeamsController(
 		this,
@@ -243,6 +256,7 @@ export class TeamsApp extends LitElement {
 		this.fileOpenPreference = 'teams';
 		this.chatDensity = 'comfy';
 		this.showAppNames = true;
+		this.authRevision = 0;
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -267,9 +281,11 @@ export class TeamsApp extends LitElement {
 		defineTeamsChatPeopleDialog();
 		defineTeamsMeetingDialog();
 		defineTeamsMeetingDetails();
+		defineTeamsSignIn();
 		// Input anywhere in the page keeps the person from showing as Away.
 		this.stopActivity = watchActivity(this.ownerDocument, () => this.teams.client?.noteActivity());
 		super.connectedCallback();
+		if (this.signIn.phase === 'checking') this.authRevision++;
 	}
 
 	// ---- lifecycle --------------------------------------------------------------------------
@@ -287,14 +303,15 @@ export class TeamsApp extends LitElement {
 
 	protected override willUpdate(changed: PropertyValues<this>): void {
 		if (this.popoutRequested) return;
-		const restart = [
-			'workspaceId',
-			'userName',
-			'userId',
-			'serverConfig',
-			'config',
-			'identity',
-		].some((k) => changed.has(k as never));
+		const base = this.resolveConfig();
+		const waiting = this.signIn.gate(base);
+		const authKey = `${waiting}|${this.signIn.session?.token ?? ''}`;
+		const restart =
+			['workspaceId', 'userName', 'userId', 'serverConfig', 'config', 'identity'].some((k) =>
+				changed.has(k as never),
+			) ||
+			(changed.has('authRevision') && authKey !== this.authKey);
+		this.authKey = authKey;
 		if (!restart && this.teams.client) return;
 		this.preview = null;
 		this.tab = 'posts';
@@ -304,10 +321,21 @@ export class TeamsApp extends LitElement {
 		this.meetingForm = this.meetingDetails = null;
 		this.settingsOpen = false;
 		this.openRequest++;
-		const named = this.userName
-			? { id: this.userId || loadIdentity()?.id || crypto.randomUUID(), name: this.userName }
-			: (this.identity ?? loadIdentity());
-		if (this.userName && !this.userId) saveIdentity(named!);
+		// A server that needs accounts: nothing starts until someone signs in, and the account's id
+		// (not a claimed one) is the user.
+		if (waiting) return this.teams.stop();
+		const account = this.signIn.session;
+		const remembered = this.identity ?? loadIdentity();
+		const named = account
+			? {
+					id: account.userId,
+					name:
+						this.userName || (remembered?.id === account.userId ? remembered.name : account.userId),
+				}
+			: this.userName
+				? { id: this.userId || loadIdentity()?.id || crypto.randomUUID(), name: this.userName }
+				: remembered;
+		if (this.userName && !this.userId && !account) saveIdentity(named!);
 		if (!named) return this.teams.stop();
 		const workspaceId = /^[\w-]{1,100}$/u.test(this.workspaceId) ? this.workspaceId : 'demo';
 		this.themeStorageKey = `teams:theme:${encodeURIComponent(workspaceId)}:${encodeURIComponent(named.id)}`;
@@ -332,7 +360,7 @@ export class TeamsApp extends LitElement {
 		this.teams.start({
 			workspaceId,
 			user: named,
-			config: this.resolveConfig(),
+			config: this.signIn.apply(base),
 			storage: safeStorage,
 			...(this.uploadFile ? { uploadFile: this.uploadFile } : {}),
 		});
@@ -344,6 +372,7 @@ export class TeamsApp extends LitElement {
 	protected override updated(): void {
 		this.setAttribute('data-chat-density', this.chatDensity);
 		const state = this.teams.state;
+		this.signIn.watchConnection(state?.status === 'connected', this.resolveConfig());
 		if (state?.channels.some((c) => c.id === state.selectedChannelId))
 			this.lastChannelId = state.selectedChannelId;
 		if (
@@ -474,6 +503,7 @@ export class TeamsApp extends LitElement {
 		clearTimeout(this.highlightTimer);
 		this.stopActivity?.();
 		this.stopActivity = undefined;
+		this.signIn.dispose();
 		super.disconnectedCallback();
 	}
 
@@ -576,6 +606,7 @@ export class TeamsApp extends LitElement {
 						></teams-content-preview>
 					</div>`
 				: html`<p role="alert">The file preview link is invalid.</p>`;
+		if (this.signIn.phase !== 'open') return this.signInScreen();
 		const s = this.teams.state;
 		if (!s) return this.welcome();
 		return html`
@@ -705,6 +736,20 @@ export class TeamsApp extends LitElement {
 		`;
 	}
 
+	private signInScreen() {
+		const flow = this.signIn;
+		return html`<teams-sign-in
+			.userId=${flow.userId}
+			.notice=${flow.notice}
+			.error=${flow.error}
+			.retryAfter=${flow.retryAfterSec}
+			?busy=${flow.busy}
+			?checking=${flow.phase === 'checking'}
+			@teams-sign-in-submit=${(event: CustomEvent<{ userId: string; credential: string }>) =>
+				void flow.submit(this.resolveConfig(), event.detail.userId, event.detail.credential)}
+		></teams-sign-in>`;
+	}
+
 	private welcome() {
 		return html`
 			<div class="welcome">
@@ -792,6 +837,8 @@ export class TeamsApp extends LitElement {
 					</office-ui-menu-button>
 					<teams-profile-menu
 						.state=${s}
+						.account=${this.signIn.session?.userId ?? ''}
+						@teams-sign-out=${() => void this.signIn.signOut(this.resolveConfig())}
 						@teams-profile-status=${(
 							event: CustomEvent<{ availability: PresenceStatus; duration?: StatusDuration }>,
 						) => {
