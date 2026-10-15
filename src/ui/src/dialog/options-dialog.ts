@@ -88,12 +88,17 @@ export type OfficeOptionsChangeEvent = CustomEvent<{
  * restore its snapshot. "Reset all options" then only emits `office-options-reset`; the host
  * resets and sets `values` again. Live or not, every edit emits `office-option-input` (key and
  * value) and selecting a category emits `office-options-category`.
+ *
+ * `custom-body` hands the whole body to the host: the frame, heading and close button stay, and
+ * whatever the host puts in `slot="body"` replaces the category rail, the pane and the footer.
+ * The close button and Escape then behave as they do without it (OK when `live`, else Cancel).
  */
 export class OfficeUiOptionsDialog extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		open: flag,
 		live: flag,
+		customBody: { ...flag, attribute: 'custom-body' },
 		heading: { type: String },
 		categories: { attribute: false },
 		defaults: { attribute: false },
@@ -103,6 +108,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 	};
 	declare open: boolean;
 	declare live: boolean;
+	declare customBody: boolean;
 	declare heading: string | null;
 	declare categories: readonly OfficeOptionCategory[];
 	declare defaults: OfficeOptionValues | null;
@@ -115,6 +121,7 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 		super();
 		this.open = false;
 		this.live = false;
+		this.customBody = false;
 		this.heading = null;
 		this.categories = [];
 		this.defaults = null;
@@ -268,55 +275,63 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 					else this.close();
 				}}
 			>
-				<div class="layout">
-					<nav
-						role="tablist"
-						aria-orientation="vertical"
-						aria-label=${text.categories}
-						@keydown=${this.onNavKey}
-					>
-						${this.categories.map(
-							(entry) =>
-								html`<button
-									type="button"
-									role="tab"
-									id="tab-${entry.id}"
-									data-category=${entry.id}
-									aria-controls="pane"
-									aria-selected=${String(entry.id === this.active)}
-									tabindex=${entry.id === this.active ? 0 : -1}
-									@click=${() => (this.category = entry.id)}
-									>${entry.label}</button
-								>`,
-						)}
-					</nav>
-					<div
-						role="tabpanel"
-						id="pane"
-						@keydown=${this.onPaneKey}
-						aria-labelledby=${ifDefined(category ? `tab-${category.id}` : undefined)}
-						>${this.pane(category)}</div
-					>
-				</div>
-				<div slot="footer" class="actions">
-					${
-						this.defaults
-							? html`<button
-									type="button"
-									class="reset"
-									data-action="reset"
-									@click=${this.resetAll}
-								>
-									${text.reset}
-								</button>`
-							: ''
-					}
-					<button type="button" data-action="cancel" @click=${this.close}>${text.cancel}</button>
-					<button type="button" class="primary" data-action="ok" @click=${this.commit}>
-						${text.ok}
-					</button>
-				</div>
+				${
+					present(this.customBody)
+						? html`<div class="custom" @keydown=${this.onPaneKey}><slot name="body"></slot></div>`
+						: this.layout(category, text)
+				}
 			</office-ui-dialog>
+		`;
+	}
+
+	private layout(
+		category: OfficeOptionCategory | undefined,
+		text: OfficeOptionsLabels,
+	): TemplateResult {
+		return html`
+			<div class="layout">
+				<nav
+					role="tablist"
+					aria-orientation="vertical"
+					aria-label=${text.categories}
+					@keydown=${this.onNavKey}
+				>
+					${this.categories.map(
+						(entry) =>
+							html`<button
+								type="button"
+								role="tab"
+								id="tab-${entry.id}"
+								data-category=${entry.id}
+								aria-controls="pane"
+								aria-selected=${String(entry.id === this.active)}
+								tabindex=${entry.id === this.active ? 0 : -1}
+								@click=${() => (this.category = entry.id)}
+								>${entry.label}</button
+							>`,
+					)}
+				</nav>
+				<div
+					role="tabpanel"
+					id="pane"
+					@keydown=${this.onPaneKey}
+					aria-labelledby=${ifDefined(category ? `tab-${category.id}` : undefined)}
+					>${this.pane(category)}</div
+				>
+			</div>
+			<div slot="footer" class="actions">
+				${
+					this.defaults
+						? html`<button type="button" class="reset" data-action="reset" @click=${this.resetAll}>
+								${text.reset}
+							</button>`
+						: ''
+				}
+				<button type="button" data-action="cancel" @click=${this.close}>${text.cancel}</button>
+				<button type="button" class="primary" data-action="ok" @click=${this.commit}>
+					${text.ok}
+				</button>
+			</div>
 		`;
 	}
 }

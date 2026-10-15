@@ -304,6 +304,29 @@ describe('office-ui-options-dialog', () => {
 		expect(tabKey.defaultPrevented).toBe(false);
 	});
 
+	it('hands the body to the host under custom-body and keeps the close button', async () => {
+		const { dialog } = mount();
+		dialog.live = true;
+		dialog.setAttribute('custom-body', '');
+		const body = document.createElement('div');
+		body.slot = 'body';
+		body.textContent = 'Host settings';
+		dialog.append(body);
+		const changed = vi.fn();
+		dialog.addEventListener('office-options-change', changed);
+		dialog.show();
+		await dialog.updateComplete;
+		const root = dialog.shadowRoot!;
+		expect(root.querySelector('[role="tablist"]')).toBeNull();
+		expect(root.querySelector('[data-action="ok"]')).toBeNull();
+		const slot = root.querySelector<HTMLSlotElement>('slot[name="body"]')!;
+		expect(slot.assignedElements()).toEqual([body]);
+		const frame = root.querySelector('office-ui-dialog')!;
+		frame.dispatchEvent(new CustomEvent('office-dialog-close', { bubbles: true, composed: true }));
+		expect(changed).toHaveBeenCalledTimes(1);
+		expect(dialog.open).toBe(false);
+	});
+
 	it('clamps option numbers', () => {
 		expect(clampOptionNumber('5', 1, 10)).toBe(5);
 		expect(clampOptionNumber('0', 1, 10)).toBe(1);

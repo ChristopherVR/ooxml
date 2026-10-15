@@ -2259,8 +2259,11 @@
 					"name": "OfficeUiOptionsDialog",
 					"tagName": "office-ui-options-dialog",
 					"customElement": true,
-					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them and emit `office-options-cancel`. \"Reset all options\" (shown when `defaults` is set) puts the defaults in the draft. `heading` defaults to \"Options\"; `labels` translates the buttons. `live` is PowerPoint's behaviour: every edit applies at once (there is no draft), OK, Escape and the close button keep the edits and Cancel emits `office-options-cancel` for the host to restore its snapshot. \"Reset all options\" then only emits `office-options-reset`; the host resets and sets `values` again. Live or not, every edit emits `office-option-input` (key and value) and selecting a category emits `office-options-category`.",
+					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them and emit `office-options-cancel`. \"Reset all options\" (shown when `defaults` is set) puts the defaults in the draft. `heading` defaults to \"Options\"; `labels` translates the buttons. `live` is PowerPoint's behaviour: every edit applies at once (there is no draft), OK, Escape and the close button keep the edits and Cancel emits `office-options-cancel` for the host to restore its snapshot. \"Reset all options\" then only emits `office-options-reset`; the host resets and sets `values` again. Live or not, every edit emits `office-option-input` (key and value) and selecting a category emits `office-options-category`. `custom-body` hands the whole body to the host: the frame, heading and close button stay, and whatever the host puts in `slot=\"body\"` replaces the category rail, the pane and the footer. The close button and Escape then behave as they do without it (OK when `live`, else Cancel).",
 					"attributes": [
+						{
+							"name": "custom-body"
+						},
 						{
 							"name": "heading"
 						},
@@ -2283,6 +2286,14 @@
 						{
 							"kind": "field",
 							"name": "category"
+						},
+						{
+							"kind": "field",
+							"name": "customBody",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "custom-body"
 						},
 						{
 							"kind": "field",

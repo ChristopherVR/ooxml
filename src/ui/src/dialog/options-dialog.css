@@ -6,6 +6,11 @@ office-ui-dialog {
 	--office-dialog-max-width: var(--office-options-width);
 	--office-dialog-max-height: 88vh;
 }
+.custom {
+	max-height: calc(88vh - var(--office-options-chrome-height));
+	overflow: auto;
+	font-size: var(--office-font-size-sm);
+}
 .layout {
 	display: grid;
 	grid-template-columns: var(--office-options-nav-width) minmax(0, 1fr);
