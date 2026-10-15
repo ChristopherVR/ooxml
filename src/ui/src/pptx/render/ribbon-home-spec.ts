@@ -25,7 +25,8 @@ export type RibbonHomeFamily =
 	| 'font-picker'
 	| 'arrange-painter'
 	| 'arrange-shape'
-	| 'picture-size';
+	| 'picture-size'
+	| 'chart-selection';
 
 /** How a control behaves beyond a plain command button. */
 export type RibbonHomeKind =

@@ -897,6 +897,7 @@ unit test fails if an id is missing here.
 | `tableDesign`    | Table Design    |
 | `tableLayout`    | Table Layout    |
 | `chartDesign`    | Chart Design    |
+| `chartFormat`    | Chart Format    |
 | `smartArtDesign` | SmartArt Design |
 
 ### Ribbon groups (`ribbon.hiddenGroups`)
@@ -972,6 +973,7 @@ unit test fails if an id is missing here.
 | `tableLayout.arrange`               | Arrange                  |
 | `chartDesign.chartLayouts`          | Chart Layouts            |
 | `chartDesign.chartStyles`           | Chart Styles             |
+| `chartFormat.currentSelection`      | Current Selection        |
 | `smartArtDesign.createGraphic`      | Create Graphic           |
 | `smartArtDesign.layouts`            | Layouts                  |
 | `smartArtDesign.smartArtStyles`     | SmartArt Styles          |
@@ -1206,6 +1208,9 @@ unit test fails if an id is missing here.
 | `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                                                          |
 | `chartDesign.chartStyles.changeColors`            | Change Colors gallery                                                         |
 | `chartDesign.chartStyles.gallery`                 | Chart Styles gallery                                                          |
+| `chartFormat.currentSelection.chartElements`      | Chart Elements                                                                |
+| `chartFormat.currentSelection.formatSelection`    | Format Selection                                                              |
+| `chartFormat.currentSelection.resetToMatchStyle`  | Reset to Match Style                                                          |
 | `smartArtDesign.createGraphic.addShape`           | Add Shape                                                                     |
 | `smartArtDesign.createGraphic.addBullet`          | Add Bullet                                                                    |
 | `smartArtDesign.createGraphic.textPane`           | Text Pane                                                                     |
@@ -1465,6 +1470,7 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 | `edit-alt-text`          | Edit Alt Text...     |
 | `size-and-position`      | Size and Position... |
 | `format-shape`           | Format Shape...      |
+| `format-chart-element`   | Format Chart Area... |
 | `delete`                 | Delete               |
 
 ### Empty-canvas context menu (`contextMenu.hiddenCanvasCommands`)

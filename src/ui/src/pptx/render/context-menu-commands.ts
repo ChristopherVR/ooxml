@@ -22,6 +22,7 @@
  */
 import type { PptxTableData } from 'ooxml-core/pptx';
 
+import { chartFormatContextMenuLabelKey } from './chart-format/chart-format-context-menu';
 import type { EditPointsAvailability } from './edit-points/edit-points-availability';
 import type { MergeShapesCommandId } from './merge-shapes/merge-shapes-menu';
 import { MERGE_SHAPES_MENU_ITEMS } from './merge-shapes/merge-shapes-menu';
@@ -84,6 +85,7 @@ export type ContextMenuCommandId =
 	| 'edit-alt-text'
 	| 'size-and-position'
 	| 'format-shape'
+	| 'format-chart-element'
 	| 'delete';
 
 /** One rendered entry: a command, plus how it is presented. */
@@ -146,6 +148,11 @@ export interface ContextMenuContext {
 	 * binding does not support Edit Points.
 	 */
 	editPoints?: EditPointsAvailability;
+	/**
+	 * For a chart: the element the menu was opened on (`chartFormatTargetFromEvent`),
+	 * which names the format entry ("Format Data Series..."). Omitted means the chart area.
+	 */
+	chartFormatTarget?: string | null;
 }
 
 const LABEL_KEYS: Record<ContextMenuCommandId, string> = {
@@ -185,6 +192,7 @@ const LABEL_KEYS: Record<ContextMenuCommandId, string> = {
 	'edit-alt-text': 'pptx.contextMenu.editAltText',
 	'size-and-position': 'pptx.contextMenu.sizeAndPosition',
 	'format-shape': 'pptx.contextMenu.formatShape',
+	'format-chart-element': 'pptx.contextMenu.formatChartArea',
 	delete: 'pptx.contextMenu.delete',
 };
 
@@ -303,7 +311,12 @@ export function buildContextMenuEntries(context: ContextMenuContext = {}): Conte
 		entry('save-as-picture', { separatorBefore: true }),
 		entry('edit-alt-text'),
 		entry('size-and-position'),
-		entry('format-shape'),
+		// A single chart offers PowerPoint's element-named pane instead of Format Shape.
+		elementType === 'chart' && !hasMultiSelection
+			? entry('format-chart-element', {
+					labelKey: chartFormatContextMenuLabelKey(context.chartFormatTarget),
+				})
+			: entry('format-shape'),
 	);
 	entries.push(entry('delete', { separatorBefore: true, danger: true }));
 	return entries;

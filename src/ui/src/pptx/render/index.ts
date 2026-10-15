@@ -171,6 +171,7 @@ export * from './chart-ext-editor-actions';
 // mutation helpers (axis visibility/title toggles, style-preset apply).
 export * from './chart-quick-actions';
 export * from './chart-quick-action-toggles';
+export * from './chart-format';
 export * from './chart-quick-action-styles';
 // What a data label SAYS: the c:showVal / c:showCatName / c:showSerName /
 // c:showPercent / c:separator cascade (per-point -> series -> chart-type).

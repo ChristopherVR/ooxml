@@ -220,6 +220,16 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 			controls: { changeColors: 'Change Colors gallery', gallery: 'Chart Styles gallery' },
 		},
 	},
+	chartFormat: {
+		currentSelection: {
+			label: 'Current Selection',
+			controls: {
+				chartElements: 'Chart Elements',
+				formatSelection: 'Format Selection',
+				resetToMatchStyle: 'Reset to Match Style',
+			},
+		},
+	},
 	smartArtDesign: {
 		createGraphic: {
 			label: 'Create Graphic',

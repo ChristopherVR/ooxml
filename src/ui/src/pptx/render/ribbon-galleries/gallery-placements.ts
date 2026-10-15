@@ -30,7 +30,7 @@ export interface RibbonGalleryGroupPlacement {
 	label: string;
 	galleries: readonly RibbonGalleryPlacement[];
 	/** The `pptx-ui-ribbon-home-<strip>` drawn after the galleries (Picture Format > Size). */
-	strip?: 'picture-size';
+	strip?: 'picture-size' | 'chart-selection';
 }
 
 /** The groups each contextual tab renders, in order. */
@@ -275,6 +275,15 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 			],
 		},
 	],
+	chartFormat: [
+		{
+			group: 'chartFormat.currentSelection',
+			labelKey: 'pptx.ribbon.groupCurrentSelection',
+			label: 'Current Selection',
+			galleries: [],
+			strip: 'chart-selection',
+		},
+	],
 	smartArtDesign: [
 		{
 			group: 'smartArtDesign.createGraphic',
@@ -400,7 +409,7 @@ export function contextualTabsForElement(element: PptxElement | null): RibbonCon
 		case 'table':
 			return ['tableDesign', 'tableLayout'];
 		case 'chart':
-			return ['chartDesign'];
+			return ['chartDesign', 'chartFormat'];
 		case 'smartArt':
 			return ['smartArtDesign'];
 		default:

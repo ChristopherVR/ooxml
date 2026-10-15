@@ -37,6 +37,7 @@ import {
 	definePptxRibbonHomeArrangePainter,
 	definePptxRibbonHomeArrangeShape,
 	definePptxRibbonHomePictureSize,
+	definePptxRibbonHomeChartSelection,
 	definePptxRibbonHomeFontPicker,
 	definePptxRibbonHomeClipboard,
 	definePptxRibbonHomeDrawing,
@@ -55,9 +56,16 @@ import { definePptxStatusBar } from './status-bar';
 import { definePptxRibbonActions } from './ribbon-actions';
 import { definePptxSubtitleSettings } from './subtitle-settings';
 import { definePptxThemeEditor } from './theme-editor';
+import { definePptxChartFormatPane } from './chart-format-pane';
 import { definePptxTitleBar } from './title-bar';
 
 export type { PptxUiThemeEditorElement, ThemeEditorApplyEvent } from './theme-editor';
+export type {
+	ChartFormatChangeEvent,
+	ChartFormatPaneTranslate,
+	ChartFormatTargetEvent,
+	PptxUiChartFormatPaneElement,
+} from './chart-format-pane';
 export type { CompatToastsRequestEvent, PptxUiCompatToastsElement } from './office-alias-types';
 export type { DialogFooterRequestEvent, PptxUiDialogFooterElement } from './office-alias-types';
 export type { MobileBarRequestEvent, PptxUiMobileBarElement } from './mobile-bar';
@@ -165,6 +173,7 @@ const controls = [
 	['pptx-ui-ribbon-home-arrange-painter', definePptxRibbonHomeArrangePainter],
 	['pptx-ui-ribbon-home-arrange-shape', definePptxRibbonHomeArrangeShape],
 	['pptx-ui-ribbon-home-picture-size', definePptxRibbonHomePictureSize],
+	['pptx-ui-ribbon-home-chart-selection', definePptxRibbonHomeChartSelection],
 	['pptx-ui-ribbon-view', definePptxRibbonView],
 	['pptx-ui-ribbon-transitions', definePptxRibbonTransitions],
 	['pptx-ui-ribbon-group', definePptxRibbonGroup],
@@ -178,6 +187,7 @@ const controls = [
 	['pptx-ui-context-menu', definePptxContextMenu],
 	['pptx-ui-subtitle-settings', definePptxSubtitleSettings],
 	['pptx-ui-theme-editor', definePptxThemeEditor],
+	['pptx-ui-chart-format-pane', definePptxChartFormatPane],
 	['pptx-ui-title-bar', definePptxTitleBar],
 	['pptx-ui-slide-clipboard', definePptxSlideClipboard],
 	['pptx-ui-options-dialog', definePptxOptionsDialog],

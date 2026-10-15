@@ -15,6 +15,7 @@ export const RIBBON_HOME_TAGS = [
 	'pptx-ui-ribbon-home-arrange-painter',
 	'pptx-ui-ribbon-home-arrange-shape',
 	'pptx-ui-ribbon-home-picture-size',
+	'pptx-ui-ribbon-home-chart-selection',
 ] as const;
 
 const RIBBON_HOME_STYLES = `

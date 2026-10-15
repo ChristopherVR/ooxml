@@ -62,6 +62,7 @@ export type RibbonContextualTabId =
 	| 'tableDesign'
 	| 'tableLayout'
 	| 'chartDesign'
+	| 'chartFormat'
 	| 'smartArtDesign';
 
 export interface RibbonContextualTabDefinition {
@@ -76,6 +77,7 @@ export const RIBBON_CONTEXTUAL_TABS: readonly RibbonContextualTabDefinition[] = 
 	{ id: 'tableDesign', labelKey: 'pptx.ribbon.tab.tableDesign' },
 	{ id: 'tableLayout', labelKey: 'pptx.ribbon.tab.tableLayout' },
 	{ id: 'chartDesign', labelKey: 'pptx.ribbon.tab.chartDesign' },
+	{ id: 'chartFormat', labelKey: 'pptx.ribbon.tab.chartFormat' },
 	{ id: 'smartArtDesign', labelKey: 'pptx.ribbon.tab.smartArtDesign' },
 ];
 

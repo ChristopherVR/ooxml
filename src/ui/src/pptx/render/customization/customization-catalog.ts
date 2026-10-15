@@ -136,6 +136,7 @@ export const ELEMENT_CONTEXT_MENU_COMMAND_IDS = exhaustive<ContextMenuCommandId>
 	'edit-alt-text',
 	'size-and-position',
 	'format-shape',
+	'format-chart-element',
 	'delete',
 ]);
 

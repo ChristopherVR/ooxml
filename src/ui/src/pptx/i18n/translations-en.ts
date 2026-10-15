@@ -7,6 +7,7 @@ import { galleryEffectsTranslationsEn } from './translations-en-galleries-effect
 import { galleryPictureTranslationsEn } from './translations-en-galleries-picture';
 import { shapeGalleryTranslationsEn } from './translations-en-shape-gallery';
 import { tableLayoutTranslationsEn } from './translations-en-table-layout';
+import { chartFormatTranslationsEn } from './translations-en-chart-format';
 
 /**
  * The canonical English UI-string dictionary for pptx-viewer. None of the
@@ -29,6 +30,7 @@ export const translationsEn: Record<string, string> = {
 	...tableLayoutTranslationsEn,
 	...shapeGalleryTranslationsEn,
 	...designGalleryTranslationsEn,
+	...chartFormatTranslationsEn,
 
 	// Status bar
 	'pptx.statusBar.allSaved': 'All saved',
