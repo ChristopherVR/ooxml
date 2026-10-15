@@ -1068,7 +1068,7 @@ const wedgeEllipseCallout: PresetShapeGeometryDefinition = {
 		gd('xPos', '+- hc dxPos 0'),
 		gd('yPos', '+- vc dyPos 0'),
 		gd('sdx', '*/ dxPos hd2 wd2'),
-		gd('sdy', '*/ dyPos 1 1'),
+		gd('sdy', '*/ dyPos wd2 hd2'),
 		gd('pang', 'at2 sdx sdy'),
 		gd('stAng', '+- pang 660000 0'),
 		gd('enAng', '+- pang 0 660000'),
@@ -1080,18 +1080,15 @@ const wedgeEllipseCallout: PresetShapeGeometryDefinition = {
 		gd('dy2', 'sin hd2 enAng'),
 		gd('x2', '+- hc dx2 0'),
 		gd('y2', '+- vc dy2 0'),
-		gd('stAng1', 'at2 dx1 dy1'),
-		gd('enAng1', 'at2 dx2 dy2'),
-		gd('swAng1', '+- enAng1 0 stAng1'),
-		gd('swAng2', '+- swAng1 21600000 0'),
-		gd('swAng', '?: swAng1 swAng1 swAng2'),
+		// The arc runs the long way round, from the first pointer edge to the second.
+		gd('swAng', '+- 21600000 0 1320000'),
 	],
 	rect: FULL_RECT,
 	pathLst: [
 		{
 			commands: [
 				{ kind: 'moveTo', x: 'x1', y: 'y1' },
-				{ kind: 'arcTo', wR: 'wd2', hR: 'hd2', stAng: 'stAng1', swAng: 'swAng' },
+				{ kind: 'arcTo', wR: 'wd2', hR: 'hd2', stAng: 'stAng', swAng: 'swAng' },
 				{ kind: 'lnTo', x: 'xPos', y: 'yPos' },
 				{ kind: 'close' },
 			],
