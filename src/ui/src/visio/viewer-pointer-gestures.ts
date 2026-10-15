@@ -1,11 +1,10 @@
-import type { VisioDocument, VisioPage } from 'ooxml-core/visio';
+import type { VisioPage } from 'ooxml-core/visio';
 import {
 	visioMoveCommands,
 	visioMoveTargets,
 	visioMovementShape,
 	visioPageDragDelta,
 	visioMarqueeBox,
-	visioMarqueeSelection,
 	visioSelectionIsOnPage,
 	editErrorMessage,
 	isEditCancellation,
@@ -14,39 +13,23 @@ import {
 import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
 import { wireHandleEvents } from './viewer-handle-events';
-import { documentVisibility } from './viewer-layers';
 import { createMovementPreview } from './viewer-movement-preview';
 import { hideGestureOverlays } from './viewer-gesture-overlays';
 import { pointerShapeTarget } from './viewer-shape-target';
 import { trackPointerPan } from '../pointer-gesture';
 import { ViewerTouchGestures } from './viewer-touch-gestures';
-import { TOUCH_SLOP, LONG_PRESS_MS } from './viewer-touch-math';
+import { TOUCH_SLOP } from './viewer-touch-math';
+import { armLongPress, touchRelease } from './viewer-touch-long-press';
+import {
+	createGesture,
+	createMarqueeRect,
+	marqueeSelect,
+	gestureIsCurrent,
+	selectDragTarget,
+	type Gesture,
+} from './viewer-gesture-state';
 import { nearbyShape } from './viewer-touch-hit';
 
-interface Gesture {
-	pointer: number;
-	svg: SVGSVGElement;
-	document: VisioDocument;
-	page: VisioPage;
-	selection: ViewerState['selectedShapes'];
-	layers: ViewerState['layerVisibilityOverrides'];
-	zoom: number;
-	start: VisioPagePoint;
-	clientX: number;
-	clientY: number;
-	started: boolean;
-	additive: boolean;
-	target?: { id: string; name: string; pageId: string };
-	preview?: ReturnType<typeof createMovementPreview>;
-	marquee?: SVGRectElement;
-	showOverlays?: () => void;
-	touch: boolean;
-	/** The shape was found within the finger's hit tolerance, not under it. */
-	nearby: boolean;
-	longPress?: number | undefined;
-	/** Set once the finger has been held still; lifting it then opens the context menu. */
-	held?: (() => void) | undefined;
-}
 const pointOptions = { snap: false, bounded: false } as const;
 /** Direct pointer movement and full-enclosure marquee; release is the only source edit. */
 export class ViewerPointerGestures {
@@ -110,17 +93,7 @@ export class ViewerPointerGestures {
 		};
 	}
 	#current(drag: Gesture, state = this.controller.state): boolean {
-		return (
-			state.document === drag.document &&
-			state.document?.pages[state.pageIndex] === drag.page &&
-			state.selectedShapes === drag.selection &&
-			state.layerVisibilityOverrides === drag.layers &&
-			state.zoom === drag.zoom &&
-			drag.svg.isConnected &&
-			!state.loading &&
-			!state.edit.busy &&
-			this.options.active()
-		);
+		return gestureIsCurrent(drag, state, this.options.active());
 	}
 	#start(event: PointerEvent): void {
 		this.#cancelClick = false;
@@ -177,50 +150,13 @@ export class ViewerPointerGestures {
 			return;
 		const start = pagePoint(svg, page, event, pointOptions);
 		if (!start) return;
-		const drag: Gesture = {
-			pointer: event.pointerId,
-			svg,
-			page,
-			document: state.document,
-			selection: state.selectedShapes,
-			layers: state.layerVisibilityOverrides,
-			zoom: state.zoom,
-			start,
-			clientX: event.clientX,
-			clientY: event.clientY,
-			started: false,
-			additive: event.shiftKey || event.ctrlKey || event.metaKey,
-			touch,
-			nearby,
-			...(group
-				? {
-						target: {
-							id: group.dataset.shapeId!,
-							name: group.dataset.shapeName ?? '',
-							pageId: page.id,
-						},
-					}
-				: {}),
-		};
+		const drag = createGesture({ event, svg, page, state, start, touch, nearby, group });
 		if (!this.#current(drag)) return;
 		this.#drag = drag;
-		if (touch && group) this.#armLongPress(drag, group, event);
-	}
-	/** Holding a finger still on a shape, then lifting it, opens its context menu like a right-click. */
-	#armLongPress(drag: Gesture, shape: Element, event: PointerEvent): void {
-		const view = this.viewport.ownerDocument.defaultView;
-		if (!view) return;
-		const { clientX, clientY } = event;
-		drag.longPress = view.setTimeout(() => {
-			drag.longPress = undefined;
-			if (this.#drag !== drag || drag.started || !this.#current(drag)) return;
-			// Opened on release, as Windows does: a popover opened under a finger that is still down
-			// is light-dismissed by that finger's own pointerup.
-			drag.held = () =>
-				shape.dispatchEvent(
-					new view.MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX, clientY }),
-				);
-		}, LONG_PRESS_MS);
+		if (touch && group)
+			armLongPress(this.viewport.ownerDocument.defaultView, drag, group, event, () => {
+				return this.#drag === drag && this.#current(drag);
+			});
 	}
 	#begin(drag: Gesture): boolean {
 		if (drag.target) {
@@ -228,25 +164,8 @@ export class ViewerPointerGestures {
 				(shape) => shape.id === drag.target!.id && visioSelectionIsOnPage(shape, drag.page.id),
 			);
 			if (!selected) {
-				const intended = drag.additive ? [...drag.selection, drag.target] : [drag.target];
 				this.#drag = undefined;
-				this.controller.selectShapes(intended);
-				const state = this.controller.state;
-				if (
-					state.document !== drag.document ||
-					state.document.pages[state.pageIndex] !== drag.page ||
-					state.layerVisibilityOverrides !== drag.layers ||
-					state.loading ||
-					state.edit.busy ||
-					!this.options.active() ||
-					state.selectedShapes.length !== intended.length ||
-					!state.selectedShapes.every(
-						(shape, index) =>
-							shape.id === intended[index]!.id && visioSelectionIsOnPage(shape, drag.page.id),
-					)
-				)
-					return false;
-				drag.selection = state.selectedShapes;
+				if (!selectDragTarget(this.controller, drag, this.options.active())) return false;
 				this.#drag = drag;
 			}
 			if (
@@ -276,20 +195,7 @@ export class ViewerPointerGestures {
 				'[data-resize-overlay], .rotation-overlay',
 			);
 		} else {
-			const rect = this.viewport.ownerDocument.createElementNS(
-				'http://www.w3.org/2000/svg',
-				'rect',
-			);
-			rect.dataset.marqueePreview = '';
-			rect.setAttribute('fill', 'var(--_vv-accent)');
-			rect.setAttribute('fill-opacity', '0.12');
-			rect.setAttribute('stroke', 'var(--_vv-accent)');
-			rect.setAttribute('stroke-width', '1.5');
-			rect.setAttribute('vector-effect', 'non-scaling-stroke');
-			rect.setAttribute('aria-hidden', 'true');
-			rect.style.pointerEvents = 'none';
-			drag.svg.append(rect);
-			drag.marquee = rect;
+			drag.marquee = createMarqueeRect(drag.svg);
 		}
 		drag.started = true;
 		drag.held = undefined;
@@ -363,19 +269,12 @@ export class ViewerPointerGestures {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
-		if (drag.held && !drag.started && this.#current(drag)) {
-			const open = drag.held;
+		const tap =
+			!drag.started && this.#current(drag) ? touchRelease(drag, this.controller) : undefined;
+		if (tap) {
 			this.#cancel();
 			this.#cancelClick = true;
-			this.viewport.ownerDocument.defaultView?.setTimeout(open, 100);
-			return;
-		}
-		if (drag.touch && drag.nearby && !drag.started && drag.target && this.#current(drag)) {
-			// A tap beside a thin shape selects it; the browser click landed on empty paper.
-			const target = drag.target;
-			this.#cancel();
-			this.controller.selectShapes([target]);
-			this.#cancelClick = true;
+			tap(this.viewport.ownerDocument.defaultView);
 			return;
 		}
 		if (!this.#current(drag) || !drag.started) {
@@ -389,16 +288,7 @@ export class ViewerPointerGestures {
 		if (!point || !this.#current(drag) || !drag.target) settle();
 		if (!point || !this.#current(drag)) return;
 		if (!drag.target) {
-			const box = visioMarqueeBox(drag.start, point);
-			if (box) {
-				const selected = visioMarqueeSelection(
-					drag.page,
-					box,
-					documentVisibility(drag.document, drag.layers),
-				);
-				if (this.#current(drag))
-					this.controller.selectShapes(drag.additive ? [...drag.selection, ...selected] : selected);
-			}
+			if (this.#current(drag)) marqueeSelect(this.controller, drag, point);
 			return;
 		}
 		const edits = visioMoveCommands(
