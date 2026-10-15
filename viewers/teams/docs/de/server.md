@@ -22,13 +22,13 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 
 Er wird ausschließlich über die Umgebung konfiguriert; der Befehl kennt keine Optionen.
 
-| Variable        | Standard     | Bedeutung                                                                                       |
-| --------------- | ------------ | ----------------------------------------------------------------------------------------------- |
-| `PORT`          | `8787`       | Listen-Port.                                                                                    |
-| `HOST`          | `127.0.0.1`  | Listen-Adresse. Binden Sie `0.0.0.0` nur hinter TLS.                                            |
-| `TEAMS_TOKEN`   | keiner       | Falls gesetzt, erwarten Sockets es als `?token=` und Dateianfragen als `Authorization: Bearer`. |
-| `TEAMS_ORIGINS` | keine (alle) | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien.                                      |
-| `TEAMS_DATA`    | `./data`     | Datenverzeichnis: `rooms/<room>.bin`-Snapshots und `files/<workspace>/`.                        |
+| Variable        | Standard    | Bedeutung                                                                                                               |
+| --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `PORT`          | `8787`      | Listen-Port.                                                                                                            |
+| `HOST`          | `127.0.0.1` | Listen-Adresse. Binden Sie `0.0.0.0` nur hinter TLS.                                                                    |
+| `TEAMS_TOKEN`   | keiner      | Falls gesetzt, erwarten Sockets es als `?token=` und Dateianfragen als `Authorization: Bearer`.                         |
+| `TEAMS_ORIGINS` | keine       | Kommagetrennte erlaubte `Origin`s für Sockets und Dateien. Ohne Angabe: jede Origin mit Token, ohne Token nur Loopback. |
+| `TEAMS_DATA`    | `./data`    | Datenverzeichnis: `rooms/<room>.bin`-Snapshots und `files/<workspace>/`.                                                |
 
 Oder binden Sie ihn ein:
 

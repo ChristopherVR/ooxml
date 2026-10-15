@@ -17,13 +17,13 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 
 Se configura únicamente mediante el entorno; el comando no admite indicadores.
 
-| Variable        | Valor por defecto    | Significado                                                                                                    |
-| --------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `PORT`          | `8787`               | Puerto de escucha.                                                                                             |
-| `HOST`          | `127.0.0.1`          | Dirección de escucha. Enlaza `0.0.0.0` solo detrás de TLS.                                                     |
-| `TEAMS_TOKEN`   | ninguno              | Si se define, los sockets lo reciben como `?token=` y las peticiones de archivos como `Authorization: Bearer`. |
-| `TEAMS_ORIGINS` | ninguno (cualquiera) | `Origin` permitidos, separados por comas, para sockets y archivos.                                             |
-| `TEAMS_DATA`    | `./data`             | Directorio de datos: instantáneas `rooms/<room>.bin` y `files/<workspace>/`.                                   |
+| Variable        | Valor por defecto | Significado                                                                                                                        |
+| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`          | `8787`            | Puerto de escucha.                                                                                                                 |
+| `HOST`          | `127.0.0.1`       | Dirección de escucha. Enlaza `0.0.0.0` solo detrás de TLS.                                                                         |
+| `TEAMS_TOKEN`   | ninguno           | Si se define, los sockets lo reciben como `?token=` y las peticiones de archivos como `Authorization: Bearer`.                     |
+| `TEAMS_ORIGINS` | ninguno           | `Origin` permitidos, separados por comas, para sockets y archivos. Sin valor: cualquier origen con token, solo loopback sin token. |
+| `TEAMS_DATA`    | `./data`          | Directorio de datos: instantáneas `rooms/<room>.bin` y `files/<workspace>/`.                                                       |
 
 O incrústalo:
 
