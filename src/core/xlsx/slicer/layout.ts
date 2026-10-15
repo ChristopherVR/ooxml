@@ -1,5 +1,7 @@
 import { SLICER_DEFAULT_ROW_HEIGHT } from '../model-slicers';
-import type { Slicer } from '../model';
+import { anchorToPixelBox, pixelBoxToAnchor } from '../layout/anchors';
+import { createGridMetrics } from '../layout/metrics';
+import type { DrawingAnchor, Slicer, Worksheet } from '../model';
 import type { SlicerItem, SlicerItemState } from './items';
 
 const EMU_PER_PIXEL = 9525;
@@ -118,5 +120,21 @@ export function slicerHit(
 			x <= button.x + button.w &&
 			y + scroll >= button.y &&
 			y + scroll <= button.y + button.h,
+	);
+}
+
+/** The anchor of a frame resized to a width and/or height in pixels at 100% zoom (top-left kept). */
+export function resizedFrameAnchor(
+	sheet: Worksheet,
+	anchor: DrawingAnchor,
+	size: { width?: number | undefined; height?: number | undefined },
+): DrawingAnchor {
+	const metrics = createGridMetrics(sheet, { zoom: 100 });
+	const box = anchorToPixelBox(sheet, anchor, metrics);
+	return pixelBoxToAnchor(
+		sheet,
+		{ ...box, w: Math.max(40, size.width ?? box.w), h: Math.max(40, size.height ?? box.h) },
+		metrics,
+		anchor,
 	);
 }

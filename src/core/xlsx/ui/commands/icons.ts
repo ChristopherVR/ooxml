@@ -59,6 +59,7 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	sortDesc: 'M5 4v12M2.5 13.5 5 16l2.5-2.5M10 4h4l-4 5h4M10 16l2-5 2 5M10.6 14.5h2.8',
 	sortCustom: 'M5 4v12M2.5 13.5 5 16l2.5-2.5M10 5h7M10 10h5M10 15h3',
 	filter: 'M3 4h14l-5.5 6.5V16l-3 1.5v-7z',
+	slicer: 'M3 3h14v14H3zM3 7h14M6 10h8M6 13h8',
 	filterClear: 'M3 4h14l-5.5 6.5V16l-3 1.5v-7zM13 13l4 4M17 13l-4 4',
 	reapply: 'M4 10a6 6 0 1 1 1.8 4.2M4 6v4h4',
 	findSelect: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4',

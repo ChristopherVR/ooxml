@@ -24,6 +24,7 @@ export * from './commands/number';
 export * from './commands/page-layout';
 export * from './commands/page-breaks';
 export * from './commands/select-special';
+export * from './commands/slicers';
 export * from './commands/sort-filter';
 export * from './commands/style-presets';
 export * from './commands/util';

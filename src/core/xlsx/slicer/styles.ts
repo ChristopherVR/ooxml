@@ -29,7 +29,7 @@ export interface SlicerStyleColors {
 	noDataSelectedFill: string;
 }
 
-const hex = (value: string) => `#${value}`;
+const hex = (value: string) => (value.startsWith('#') ? value : `#${value}`);
 
 /**
  * Colours of a built-in slicer style resolved against the workbook theme (accent 1 to 6 for the
@@ -80,4 +80,27 @@ export function slicerStyleColors(
 		noDataText: hex(applyTint(dark, 0.6)),
 		noDataSelectedFill: tint(0.8),
 	};
+}
+
+/** A 40 x 30 SVG swatch of a slicer style for the Slicer Styles gallery. */
+export function slicerStylePreview(name: string, theme: ThemePalette): string {
+	const c = slicerStyleColors(name, theme);
+	const button = (y: number, fill: string, line: string) =>
+		`<rect x="4" y="${y}" width="32" height="5" fill="${fill}" stroke="${line}" stroke-width="0.6"/>`;
+	return (
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30" width="40" height="30">` +
+		`<rect x="0.5" y="0.5" width="39" height="29" fill="${c.background}" stroke="${c.border}"/>` +
+		`<rect x="1" y="1" width="38" height="6" fill="${c.headerBackground}"/>` +
+		`<path d="M1 7h38" stroke="${c.headerBorder}" stroke-width="1"/>` +
+		button(10, c.selectedFill, c.selectedBorder) +
+		button(17, c.unselectedFill, c.unselectedBorder) +
+		button(24, c.unselectedFill, c.unselectedBorder) +
+		`</svg>`
+	);
+}
+
+/** The family and number of a built-in style (`Light 1`, `Dark 4`, `Other 2`). */
+export function slicerStyleLabel(name: string): { family: string; index: number } {
+	const match = /^SlicerStyle(Light|Dark|Other)(\d)$/.exec(name);
+	return { family: match?.[1] ?? 'Light', index: Number(match?.[2] ?? 1) };
 }

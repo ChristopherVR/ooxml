@@ -14,6 +14,7 @@ export {
 	pixelsToEmu,
 	slicerGeometry,
 	slicerHit,
+	resizedFrameAnchor,
 	type SlicerButtonBox,
 	type SlicerGeometry,
 } from './layout';
@@ -21,6 +22,8 @@ export {
 	DEFAULT_SLICER_STYLE,
 	SLICER_STYLE_NAMES,
 	slicerStyleColors,
+	slicerStyleLabel,
+	slicerStylePreview,
 	type SlicerStyleColors,
 } from './styles';
 export type { SlicerPatch, SlicerSourceRef } from '../edit/slicers';
