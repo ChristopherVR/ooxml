@@ -67,7 +67,7 @@ test('F6 and Shift+F6 cycle ribbon, document and status bar; Alt and F10 focus t
 	page,
 }) => {
 	await startTyping(page);
-	const ribbonTab = editor(page).locator('[role="tab"][aria-selected="true"]');
+	const ribbonTab = editor(page).locator('.dve-ribbon [role="tab"][aria-selected="true"]');
 	const statusButton = editor(page).locator('.dve-status button:visible').first();
 	await page.keyboard.press('F6');
 	await expect(statusButton).toBeFocused();
