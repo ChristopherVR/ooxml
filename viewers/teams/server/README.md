@@ -55,8 +55,14 @@ across NATs. The full deployment guide is
 
 - **One shared token opens every room and every file.** There are no per-user or per-room
   permissions. Treat the token like a team password.
-- **All members of a room trust each other.** The server only moves Yjs bytes, so any member can edit
+- **All members of a room trust each other** (the workspace room, and each private chat's room). The server only moves Yjs bytes, so any member can edit
   or delete other people's messages and forge author ids and roles.
+- **Private chats have their own rooms.** A room named `chat-<16 hex>-<chat id>` admits a socket
+  only when its `?user=<id>` is listed in the room's `teams:chat-members` map; the first socket of a
+  new room lists the members in `?members=<id>,<id>` (a 1:1 `dm-` room must list exactly the two
+  people its id was derived from), and sockets of people removed from the map are closed. This keeps
+  workspace members who are not on the list out of the room. It is not authentication: the `user` is
+  a claim, so anyone holding the token can claim another person's id.
 - **The token travels in the WebSocket query string** (`?token=`), which proxies and access logs can
   record and browsers can keep in history. Run the server behind TLS and do not log query strings.
   Files never take the token in a URL: they use the `Authorization` header or a signed link.

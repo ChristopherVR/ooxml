@@ -12,10 +12,10 @@ No feature is considered equivalent solely because a control is present.
 | Area                            | Evidence in the implementation                                                                                                                                                                                                                  | Remaining work                                                                                                                                                                     |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Channels and posts              | Yjs posts and live thread panes, shared pinned messages with a pinned bar, personal followed threads, replies, reactions, author-side edit/delete checks                                                                                        | Teams hierarchy, private/shared channels, membership enforcement, cross-device follows, thread notifications, moderation                                                           |
-| Direct and group chats          | The channel model has a `direct` kind                                                                                                                                                                                                           | No participant-scoped chat workflow or server-enforced privacy                                                                                                                     |
+| Direct and group chats          | 1:1 and group chats with their own documents and rooms, recent-first list, unread, presence, rename, add, remove, leave, the channel composer features, server-admitted members only                                                            | Authenticated identity, per-chat attachment access, hidden directory, chat calls beyond the mesh, per-chat notifications                                                           |
 | Search and unread               | Message search, attachment metadata search, per-channel local read markers, @mentions, an Activity feed with read state and in-page notifications (toast, desktop, sound)                                                                       | Indexed file contents, filters, shared read receipts                                                                                                                               |
 | Presence                        | Awareness, typing, Available / Busy / Do not disturb / Be right back / Appear away / Appear offline, reset-after durations, status messages with expiry, automatic Away after a configurable idle time (legacy `availability` kept on the wire) | Authenticated identity, scheduled or calendar-driven status, privacy controls                                                                                                      |
-| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                                                                                                                                                             | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                                                                                  |
+| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC; a week-view calendar with scheduling, repeats, meeting chats, channel meeting cards, .ics export and reminders                                                             | Invitations outside the workspace, RSVP, recurrence exceptions, SFU, lobby, host roles, recording, captions, backgrounds and large calls                                           |
 | File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links                                                                                                                                     | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                                                                                      |
 | Office content                  | Native Word, Excel and Visio previews; DOM PowerPoint reading view with media; XLSX local editing and channel save copies                                                                                                                       | PowerPoint presentation playback, coediting, write-back/version conflict handling and fidelity acceptance corpus                                                                   |
 | Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                                                                                                                                                          | Full CommonMark/GFM, nested structure, reference links and inline precedence                                                                                                       |
@@ -642,6 +642,57 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   there is no service worker push, no email and no mobile push, and nothing is announced for
   history that arrives after a long offline period older than your read watermark. Preferences are
   kept per user on the device.
+
+## Chat and Calendar
+
+- **Chat app.** Chat is the second item of the app rail, right after Activity (and sits in the bottom
+  bar on phones). The list is recent first, with presence on each person's avatar, the last
+  message as a preview, the time and an unread badge (the rail item carries the total). New chat
+  picks one person (opens or creates the 1:1 chat, the same chat whoever starts it) or several
+  (a group chat with an optional name). The header has Call (the existing pre-join and mesh call,
+  keyed to the chat) and People, which renames a group, adds or removes people and leaves; each
+  of those writes a centred notice line into the chat ("Dan joined the chat", "Bob left the chat").
+  A 1:1 chat cannot be left or grown. The composer, reactions, @mentions (limited to the chat's
+  members), pins, threads, files, drafts and Activity work as in a channel because a chat is a
+  `ChatStore` channel row. Chats appear in search and the Files view for their members only.
+- **Privacy model.** Each chat has its own Yjs document and sync room
+  (`chat-<workspace hash>-<chat id>`), so people who are not members never receive its messages.
+  The workspace document holds only a directory (who is in which chat, so every client can find its own
+  chats) and a roster of everyone who opened the workspace (so New chat can offer people who are
+  offline). The client model never opens, reads or writes a chat the person is not in. The reference
+  server admits a socket to a chat room only when its `user` query parameter is in the room's
+  `teams:chat-members` map, creates a room from the first socket's `members` list (a 1:1 room must
+  list exactly the two people its id was derived from), and closes the sockets of people removed
+  from a chat. Honest limits: there are no accounts, so identity is a claim and anyone holding the
+  shared token can claim another person's id; the directory (who chats with whom, and group names)
+  is visible to every workspace member; attachments are stored under the workspace and are not
+  access controlled per chat; local mode (same-browser tabs) cannot enforce anything below the
+  client model; a group or meeting chat room is created by whoever connects first; people removed
+  from a chat keep what they already synced.
+- **Calendar app.** Calendar follows Teams in the rail. The week view switches between work week,
+  week and day, has Today and previous / next, lays overlapping meetings side by side and marks
+  the current time. The side list shows the next two weeks with a Join button when a meeting is
+  near or live. New meeting takes a title, attendees (or a channel), start, end, repeat (none,
+  daily, weekly) and details; the organizer can edit or cancel, anyone can Export .ics. A meeting
+  with attendees gets a group chat with a meeting card; a channel meeting posts the card in the
+  channel and is in everyone's calendar. Join opens the existing pre-join screen for a call keyed
+  to the meeting (it can be joined early). On phones the agenda list, the details dialog, the week
+  view and the forms are separate full-screen views.
+- **Times and zones.** Meetings store UTC instants plus the organizer's IANA zone. A repeat keeps
+  the organizer's wall-clock time across daylight saving changes (`ooxml-core/teams` `calendar`,
+  `time-zone`; DST gaps move forward and repeated hours take the first); everything is rendered in
+  the viewer's zone. Repeats never end (there is no end date or exception handling), a meeting can
+  last at most 24 hours, and a change applies to the whole series. The `.ics` is written in UTC with
+  an RRULE, so a calendar that does not know the organizer's zone shifts a repeat by an hour across
+  daylight saving; attendee addresses do not exist, so names go in the description.
+- **Reminders.** Five minutes before an occurrence starts the client announces it through the
+  Activity notification path: a toast (View opens the meeting), a desktop notification when the tab
+  is hidden, and the chime. Off and Do not disturb silence it, and a reminder held back by Do not
+  disturb still fires if the status changes before the meeting starts. Each occurrence is announced
+  once per device. The tab must be open: there is no push, email or background reminder.
+- **Not implemented.** Meeting lobby, roles, recording, captions, backgrounds, recurrence exceptions
+  and end dates, free/busy and scheduling assistant, RSVP and invitations outside the workspace, an
+  .ics import, external calendar sync, per-chat notification settings and chat search filters.
 
 ## Microsoft reference workflows
 

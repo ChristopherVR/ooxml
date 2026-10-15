@@ -37,8 +37,8 @@ preview). Every button is an action: `select`, `createChannel`, `send` (with fil
 `startReply`, `startEdit`, `deleteMessage`, `toggleReaction`, `pinMessage`, `unpinMessage`,
 `notifyTyping`, `setAvailability` (with an optional reset-after duration), `setStatusMessage`,
 `setIdleMinutes`, `noteActivity`, `search`, `openCall`, `setPrejoin`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
-`toggleScreenShare`, `toggleHand`, `markActivityRead`, `markAllActivityRead`, `setNotificationSettings`, `fileUrl` (async: a short-lived signed link, never the token), `destroy`. State also carries
-`mentionTargets` (who the @ picker offers), `activity` / `activityUnread` (the Activity feed) and
+`toggleScreenShare`, `toggleHand`, `markActivityRead`, `markAllActivityRead`, `setNotificationSettings`, the Chat actions (`openDirectChat`, `createGroupChat`, `renameChat`, `addToChat`, `removeFromChat`, `leaveChat`), the Calendar actions (`createMeeting`, `updateMeeting`, `cancelMeeting`, `meetingIcs`, `joinMeeting`), `fileUrl` (async: a short-lived signed link, never the token), `destroy`. State also carries
+`chats` (your 1:1 and group chats, recent first, with unread, preview and presence), `contacts` (the workspace roster with presence), `meetings` (in your calendar) and `viewerZone`, `mentionTargets` (who the @ picker offers), `activity` / `activityUnread` (the Activity feed) and
 `notificationSettings`. Errors a user should see arrive as `on('notice', ...)`, and
 `on('notification', item)` fires for each new activity item that the notification settings and
 Do not disturb allow to be announced (the host shows the toast, desktop notification and sound).
@@ -63,6 +63,14 @@ token. The UI renders text with `textContent` semantics only.
 Files are links, never inlined bytes: `send({ files })` uploads through `uploadFile` (or the
 configured server's `/files` endpoint) and posts the returned URL. `detectOfficeKind` maps a name to
 `docx` / `xlsx` / `pptx` / `vsdx` so a host can open it in the matching viewer.
+
+### Chats
+
+`chats.ts` holds the model: a chat is `direct` (1:1, id derived from the two user ids) or `group`, with a member list. The directory (`teams:chats` in the workspace document) lists who is in which chat so every client can find its own, and `roster.ts` lists everyone who opened the workspace. A chat's messages live in a Y.Doc of their own, synced in a room named `chatRoomId(workspaceId, chatId)`; `chat-rooms.ts` composes the channel store and those documents behind one `ChatStore`, so threads, pins, reactions, mentions, drafts and the activity feed work unchanged in a chat. The room carries a `teams:chat-members` map (kept equal to the directory by every member) that the reference server admits sockets by, and the client never opens, reads or writes a chat the person is not in. Add, remove and leave write a system message (`Message.system`). `chat-view.ts` projects the chat list and the contacts. Honest limits are in `docs/teams-parity.md`.
+
+### Calendar and meetings
+
+`meetings.ts` stores meetings in the workspace document: title, details, attendees, an optional channel and meeting chat, start and end as UTC milliseconds, repeat (none, daily, weekly) and the organizer's IANA zone. `time-zone.ts` does the zone arithmetic with `Intl` (wall time to instant, day starts and steps that keep the local time across daylight saving); `calendar.ts` expands occurrences, builds the day, week and work-week views, lays overlapping meetings out in columns and finds due reminders; `ics.ts` writes an iCalendar file. `meeting-actions.ts` ties a meeting to its conversation: a group chat with a meeting card for attendees, or a card in the channel for a channel meeting. `meeting-reminders.ts` announces each occurrence five minutes ahead once per device through the same `shouldNotify` gate as Activity (Off and Do not disturb silence it). `joinMeeting` opens the pre-join screen for a call keyed to the meeting.
 
 ### Mentions
 
@@ -116,6 +124,8 @@ throws):
    signed for that one file, valid for a few minutes (`?sig=...&exp=...`), so the token never
    appears in a URL.
 
+Private chats add one rule to the sync contract: a room named `chat-<16 hex>-<chat id>` admits a socket only when its `?user=<id>` is in the room's `teams:chat-members` map (a Yjs map of user id to `true`). A room that has no members yet is created by its first socket, which passes `?members=<id>,<id>` and must be one of them; a 1:1 room (`dm-<hash>`) must list exactly the two people the id was derived from. The server closes the sockets of people removed from the map. Identity is a claim, not an authenticated user.
+
 Both sockets receive `?token=<token>` when a token is configured (a browser cannot set headers on
 a WebSocket); enforce it, and an origin allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
 
@@ -137,11 +147,13 @@ clients credentials. TURN entries without credentials are rejected by `parseServ
 - Presence is advisory and unauthenticated, like any Yjs awareness. The wire carries the original
   `availability` (available, busy, away) next to the richer `status` (also Do not disturb, Be right
   back, Appear offline), so older clients still read presence; a status message rides along.
+- Private chat rooms keep non-members from receiving a chat, but identity is the `user` the client claims: anyone with the shared token can claim another person's id, and the chat directory (who talks to whom) and attachments are visible to the workspace. Meeting rows are in the shared document too: the attendee list scopes a calendar, not who could read the row.
 - Pins are shared rows in a per-channel Yjs map; any member may pin or unpin, as in Teams. There is
   no role model, so this is not an enforced permission.
 - No claim of Microsoft Teams feature parity beyond what the UI actually implements (channels,
   posts with replies and thread panes, reactions, pinned messages, files, search, presence with
   status messages, @mentions, an activity feed, meetings with screen share and raise hand).
   Notifications are in-page only (toast, browser Notification while the tab is open, sound): no
-  push, email or service worker. Not implemented: 1:1 chats, calendar, recording,
-  background blur, live captions.
+  push, email or service worker. 1:1 and group chats and a calendar with
+  meetings, repeats, reminders and .ics export exist (see `docs/teams-parity.md` for their limits).
+  Not implemented: recording, background blur, live captions.
