@@ -27,6 +27,7 @@ import {
 	type VisioGeometryEdit,
 } from './edit-commands';
 import { applyGeometryEdit } from './edit-geometry';
+import { rerouteBlockedConnectors } from './edit-connector-follow';
 import { topShape } from './edit-connector';
 import { refuseStencilConnector } from './edit-connector-reroute';
 import { isStencilConnector, registerStencilShapes } from './edit-stencil-connector';
@@ -654,6 +655,18 @@ async function editVsdxTransaction(
 					? await applyInstanceGeometryEdit(roots, command, masterTemplate(pkg), check)
 					: applyGeometryEdit(roots, document!, command, check, masterMovePins);
 			for (const pageId of changedPages) dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			// A shape moved, resized or turned onto a right-angle connector's path pushes it aside.
+			if (
+				changedPages.length &&
+				['move-shape', 'resize-shape', 'rotate-shape', 'flip-shape'].includes(command.type)
+			)
+				for (const pageId of rerouteBlockedConnectors(
+					roots,
+					command.pageId,
+					(command as { shapeId: string }).shapeId,
+					check,
+				))
+					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			// A text height that follows the width (a text box, Resize with Text) is measured again.
 			if (command.type === 'resize-shape') await noteTextSize(command, roots.get(command.pageId)!);
 		}

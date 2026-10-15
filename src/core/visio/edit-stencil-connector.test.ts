@@ -458,6 +458,36 @@ const STEPS: [string, string, VisioEdit[]][] = [
 	],
 	['13-point-glue', '14-point-glue-moved', [move('2', 7, 4)]],
 ];
+const UNLOCKED = [
+	'LockWidth',
+	'LockHeight',
+	'LockMoveX',
+	'LockMoveY',
+	'LockAspect',
+	'LockDelete',
+	'LockRotate',
+	'LockTextEdit',
+	'LockFormat',
+	'LockGroup',
+]
+	.map((name) => c(name, 0))
+	.join('');
+describe('a shape moved onto the connector', () => {
+	it('sends the Dynamic connector around a placeable stencil shape', async () => {
+		const start = await source({
+			page: box('1', 2, 6) + box('2', 6, 6) + box('4', 4, 2, UNLOCKED),
+		});
+		const moved = await edited(start, move('4', 4, 6));
+		const text = await connector(moved);
+		// The level run is replaced by a path that leaves it, and still ends on shapes 1 and 2.
+		expect(text).not.toBe(await connector(start));
+		expect(text).toContain('Master="4"');
+		expect(text).toContain('_WALKGLUE(EndTrigger,BegTrigger,WalkPreference)');
+		const level = await edited(start, move('4', 4, 2));
+		expect(await connector(level)).toBe(await connector(start));
+	});
+});
+
 describe.skipIf(!NATIVE || !existsSync(join(NATIVE, '01-straight.vsdx')))(
 	'against Visio recordings',
 	() => {
