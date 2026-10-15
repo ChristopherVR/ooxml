@@ -627,16 +627,33 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 		</aside>
 	`,
 	styles: `
+		/* Fill the 288px inspector host and never grow past it: as an inline
+		   element with a min-width: 220px column inside, the panel took the
+		   min-content width of its widest row (the chart data grid, the flip
+		   buttons) and pushed every control 124px past the host's right edge,
+		   where the host clipped them. */
+		:host {
+			display: block;
+			min-width: 0;
+			max-width: 100%;
+		}
+
 		.pptx-ng-inspector {
 			display: flex;
 			flex-direction: column;
 			gap: 0;
+			box-sizing: border-box;
+			width: 100%;
 			padding: 0.5rem;
 			background: var(--pptx-inspector-bg, #1e1e1e);
 			color: var(--pptx-inspector-fg, #e0e0e0);
 			font-size: 12px;
-			min-width: 220px;
+			min-width: 0;
 			overflow-y: auto;
+		}
+
+		.pptx-ng-inspector > * {
+			min-width: 0;
 		}
 
 		.pptx-ng-inspector__section {
