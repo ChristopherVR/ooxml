@@ -14,6 +14,7 @@ import {
 } from './write-ranges';
 
 import { createRun } from './write-run';
+import { alternateContentDrawing } from './write-drawing';
 import { isSdt, sdtContent } from './content-control';
 import { createContentControl, resetContentControl } from './write-content-control';
 import type { ContentControl } from './content-control-model';
@@ -74,6 +75,12 @@ function runIsSafe(run: XmlElement): boolean {
 	for (const element of content) {
 		if (element.localName === 'br' && hasSpecialBreak(element)) return false;
 		if (element.localName === 'cr' && element.attributes.length > 0) return false;
+		// A shape or text box Word wrote for old readers too: its `mc:Choice` drawing is the model.
+		if (element.localName === 'AlternateContent') {
+			if (!alternateContentDrawing(element)) return false;
+			kinds.add('drawing');
+			continue;
+		}
 		const allowed = ['t', 'tab', 'br', 'cr', 'noBreakHyphen', 'delText', 'drawing', 'pict'];
 		if (!allowed.includes(element.localName)) return false;
 		kinds.add(element.localName);

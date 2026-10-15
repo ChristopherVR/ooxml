@@ -37,15 +37,16 @@ function rejectUnsafeRunSegmentation(
 			if (!runHasUnknownProperties(node)) return true;
 			const image = base.runs[index]?.image;
 			if (!image) return false;
+			// A drawing without a media part (a shape, text box or chart) is the same drawing when
+			// its model is unchanged; a changed one is rebuilt from its own source element.
 			const remaining = paragraph.runs.filter((run) =>
 				image.partName
 					? samePictureSource(run.image, image)
-					: run.image?.relId === image.relId && run.image?.partName === image.partName,
+					: run.image !== undefined && JSON.stringify(run.image) === JSON.stringify(image),
 			);
 			return (
 				!remaining.length ||
-				(!!image.partName &&
-					remaining.every((run) => run.restoredRunPropertiesXml || run.sourceRunPropertiesXml))
+				remaining.every((run) => run.restoredRunPropertiesXml || run.sourceRunPropertiesXml)
 			);
 		})
 	)

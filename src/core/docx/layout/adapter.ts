@@ -14,6 +14,8 @@ import {
 } from '../index';
 import { floatsOf } from './adapt-floats';
 import { equationObject } from './equation-object';
+import { shapeSvg } from '../shape-svg';
+import type { ShapeSpec } from '../shape-model';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
@@ -57,6 +59,17 @@ function isDisplayEquationParagraph(paragraph: Paragraph): boolean {
 		paragraph.runs.some((run) => run.equation?.display) &&
 		paragraph.runs.every((run) => run.equation?.display || (!run.text && !run.image))
 	);
+}
+
+/** A drawing shape painted as SVG (the engine draws it like a chart); none when it cannot be drawn. */
+function shapeChart(
+	shape: ShapeSpec,
+	widthPx: number,
+	heightPx: number,
+	theme: DocumentModel['theme'],
+): { chart?: { svg: string; label: string } } {
+	const svg = shapeSvg(shape, widthPx, heightPx, theme);
+	return svg ? { chart: { svg, label: 'Shape' } } : {};
 }
 
 function sectionBreak(
@@ -163,6 +176,7 @@ export function adaptDocumentModel(
 							...(image.chart
 								? { chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme) }
 								: {}),
+							...(image.shape ? shapeChart(image.shape, image.widthPx, image.heightPx, theme) : {}),
 						}
 					: undefined);
 		return {
@@ -257,7 +271,7 @@ export function adaptDocumentModel(
 						].sort((a, b) => a.posPx - b.posPx),
 					}
 				: {}),
-			...floatsOf(visible),
+			...floatsOf(visible, model.theme),
 			...definedProps({
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,

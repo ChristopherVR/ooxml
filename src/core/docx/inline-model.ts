@@ -3,6 +3,7 @@
 import type { DocxChart } from './chart';
 import type { DocxDiagram } from './diagram';
 import type { StRelFromH, StRelFromV } from './generated/wml-simple-types';
+import type { ShapeSpec } from './shape-model';
 
 /** An inline drawing (`w:drawing` or legacy `w:pict`) modeled at run granularity. */
 export interface InlineImage {
@@ -33,6 +34,8 @@ export interface InlineImage {
 	textBoxEditable?: boolean;
 	/** For an editable text box: whether it draws an outline (default true). */
 	textBoxBorder?: boolean;
+	/** For a drawing shape (`unsupported: "Shape"`): its preset geometry, fill, outline and text. */
+	shape?: ShapeSpec;
 	/** For SmartArt (`unsupported: "SmartArt"`): its parts, extent and cached drawing; the markup and parts are preserved on save. */
 	diagram?: DocxDiagram;
 	/** For a chart (`unsupported: "Chart"`): its part and the parsed `c:chartSpace`; the markup and parts are preserved on save. */

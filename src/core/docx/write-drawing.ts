@@ -5,6 +5,7 @@ import type { InlineImage, PicturePlacement } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
+import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
@@ -13,10 +14,39 @@ const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDr
 const PIC_NS = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
 const PICTURE_GRAPHIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
 
-export function findDrawingChild(run: XmlElement | undefined): XmlElement | undefined {
+/** The drawing in an `mc:AlternateContent` run child: the `mc:Choice` Word 2010+ reads. */
+export function alternateContentDrawing(content: XmlElement): XmlElement | undefined {
+	const choice = Array.from(content.childNodes)
+		.filter(isElement)
+		.find((node) => node.localName === 'Choice');
+	return choice && findDrawingChild(choice);
+}
+
+/** The run child that holds a drawing: the drawing itself, or the `mc:AlternateContent` around it. */
+function drawingContainer(run: XmlElement | undefined): XmlElement | undefined {
 	if (!run) return undefined;
 	for (const child of Array.from(run.childNodes))
 		if (isElement(child) && (named(child, 'drawing') || named(child, 'pict'))) return child;
+	for (const child of Array.from(run.childNodes))
+		if (
+			isElement(child) &&
+			child.localName === 'AlternateContent' &&
+			alternateContentDrawing(child)
+		)
+			return child;
+	return undefined;
+}
+
+export function findDrawingChild(run: XmlElement | undefined): XmlElement | undefined {
+	if (!run) return undefined;
+	for (const child of Array.from(run.childNodes)) {
+		if (!isElement(child)) continue;
+		if (named(child, 'drawing') || named(child, 'pict')) return child;
+		if (child.localName === 'AlternateContent') {
+			const inner = alternateContentDrawing(child);
+			if (inner) return inner;
+		}
+	}
 	return undefined;
 }
 
@@ -220,18 +250,39 @@ export function createImageRun(
 ): XmlElement {
 	const node = old ?? makeW(doc, 'r');
 	const oldDrawing = findDrawingChild(old);
+	const oldContainer = drawingContainer(old);
 	if (!base && oldDrawing)
 		throw new Error(
 			'Cannot safely insert a picture here: this position lines up with a different existing picture. Edit further away from surrounding pictures, then save.',
 		);
 	if (base && oldDrawing && image.textBoxEditable && base.textBoxEditable) {
 		patchTextBox(doc, oldDrawing, image, base);
-		clearNonProperties(node, oldDrawing);
+		clearNonProperties(node, oldContainer);
 		return node;
 	}
 	// A drawing this model only shows as a placeholder keeps its XML while the rest of the paragraph changes.
 	if (base && oldDrawing && image.unsupported && JSON.stringify(image) === JSON.stringify(base)) {
-		clearNonProperties(node, oldDrawing);
+		clearNonProperties(node, oldContainer);
+		return node;
+	}
+	if (base && oldDrawing && image.shape?.editable && base.shape?.editable) {
+		const next = rebuildShapeDrawing(doc, image, oldDrawing);
+		clearNonProperties(node);
+		node.appendChild(next);
+		return node;
+	}
+	if (!base && image.shape?.editable && !image.partName) {
+		if (!allocator) throw new Error('Cannot insert a shape without an id allocator.');
+		const id = allocator.docPrIds.next();
+		clearNonProperties(node);
+		node.appendChild(
+			buildShapeDrawing(
+				doc,
+				image,
+				{ id, ...(image.altText ? { descr: image.altText } : {}) },
+				251658240 + (Number(id) % 4096) * 1024,
+			),
+		);
 		return node;
 	}
 	if (image.watermark) {
@@ -258,7 +309,7 @@ export function createImageRun(
 			JSON.stringify(image.placement) !== JSON.stringify(base.placement)
 		)
 			updatePlacement(oldDrawing, doc, image.placement);
-		clearNonProperties(node, oldDrawing);
+		clearNonProperties(node, oldContainer);
 		return node;
 	}
 	if (base)
