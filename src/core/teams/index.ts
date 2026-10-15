@@ -13,6 +13,7 @@ export * from './chats';
 export * from './ics';
 export * from './ics-timezone';
 export * from './recurrence';
+export * from './recurrence-calendar';
 export * from './meetings';
 export * from './roster';
 export * from './time-zone';

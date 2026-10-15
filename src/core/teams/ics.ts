@@ -7,6 +7,7 @@
 // New code.
 import { vtimezoneLines } from './ics-timezone';
 import type { Meeting } from './meetings';
+import { ordinalOfDay } from './recurrence-calendar';
 import { zonedParts } from './time-zone';
 
 const pad = (n: number, width = 2): string => String(n).padStart(width, '0');
@@ -76,9 +77,24 @@ function alarm(title: string): string[] {
 	];
 }
 
+const BYDAY = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+/**
+ * The BYMONTHDAY / BYDAY / BYMONTH parts of a monthly or yearly rule, from the start's wall date in
+ * the organiser's zone. RFC 5545 skips a month that lacks the date, which is what the app does.
+ */
+function calendarParts(meeting: Meeting): string {
+	if (meeting.repeat !== 'monthly' && meeting.repeat !== 'yearly') return '';
+	const p = zonedParts(meeting.start, meeting.zone);
+	if (meeting.repeat === 'yearly') return `;BYMONTH=${p.month};BYMONTHDAY=${p.day}`;
+	if (meeting.monthlyBy !== 'weekday') return `;BYMONTHDAY=${p.day}`;
+	const weekday = new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay();
+	return `;BYDAY=${meeting.ordinal ?? ordinalOfDay(p.day)}${BYDAY[weekday]}`;
+}
+
 function recurrenceRule(meeting: Meeting): string[] {
 	if (meeting.repeat === 'none') return [];
-	const freq = meeting.repeat === 'daily' ? 'DAILY' : 'WEEKLY';
+	const freq = meeting.repeat.toUpperCase();
 	// UNTIL is in UTC when DTSTART names a zone (RFC 5545 section 3.3.10).
 	const end =
 		meeting.count !== undefined
@@ -91,7 +107,7 @@ function recurrenceRule(meeting: Meeting): string[] {
 		.filter((e) => e.cancelled)
 		.map((e) => (utc ? icsUtc(e.originalStart) : icsLocal(e.originalStart, meeting.zone)));
 	return [
-		`RRULE:FREQ=${freq}${end}`,
+		`RRULE:FREQ=${freq}${calendarParts(meeting)}${end}`,
 		...(exdates.length
 			? [utc ? `EXDATE:${exdates.join(',')}` : `EXDATE;TZID=${meeting.zone}:${exdates.join(',')}`]
 			: []),
