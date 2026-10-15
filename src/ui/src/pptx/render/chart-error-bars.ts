@@ -1,3 +1,4 @@
+import { chartErrorBarAmount } from 'ooxml-core/chart';
 import type { PptxChartData, PptxChartErrBars, PptxChartSeries } from 'ooxml-core/pptx';
 
 import type { PlotLayout, SvgLine, SvgPrimitive, ValueRange } from './chart-view-model';
@@ -87,23 +88,6 @@ function numericXRange(values: number[]): ValueRange {
 	return { min, max, span: Math.max(max - min, 1) };
 }
 
-/**
- * Sample variance of `values` (Bessel's-corrected, `n - 1` denominator), the
- * same convention Excel's own `STDEV`/`STDEV.S` (and its "Standard
- * Deviation"/"Standard Error" chart error-bar options) use, not the
- * population variance (`n` denominator) `STDEVP`/`STDEV.P` would give. A
- * single-point series has no sample variance; `n - 1` clamped to 1 keeps the
- * result `0` instead of dividing by zero.
- */
-function sampleVariance(values: number[]): number {
-	const count = values.length;
-	if (count === 0) {
-		return 0;
-	}
-	const mean = values.reduce((sum, value) => sum + value, 0) / count;
-	return values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(count - 1, 1);
-}
-
 function errorValue(
 	errBars: PptxChartErrBars,
 	values: number[],
@@ -111,20 +95,18 @@ function errorValue(
 	sourceIndex: number,
 	direction: 'plus' | 'minus',
 ): number {
-	switch (errBars.valType) {
-		case 'fixedVal':
-			return errBars.val ?? 0;
-		case 'percentage':
-			return Math.abs(values[displayIndex] ?? 0) * ((errBars.val ?? 0) / 100);
-		case 'stdDev':
-			return Math.sqrt(sampleVariance(values)) * (errBars.val ?? 1);
-		case 'stdErr':
-			return Math.sqrt(sampleVariance(values) / Math.max(values.length, 1));
-		case 'cust':
-			return direction === 'plus'
-				? (errBars.customPlus?.[sourceIndex] ?? 0)
-				: (errBars.customMinus?.[sourceIndex] ?? 0);
-	}
+	return chartErrorBarAmount(
+		{
+			valueType: errBars.valType,
+			value: errBars.val,
+			customPlus: errBars.customPlus,
+			customMinus: errBars.customMinus,
+		},
+		values,
+		displayIndex,
+		sourceIndex,
+		direction,
+	);
 }
 
 function line(x1: number, y1: number, x2: number, y2: number, color: string): SvgLine {
