@@ -4,6 +4,38 @@
 /** Resolves a package picture part to a displayable URL; undefined draws a placeholder box. */
 export type PictureUrl = (partName: string, contentType: string) => string | undefined;
 
+/**
+ * Whether an SVG `href` / `xlink:href` may stay: an in-document fragment or an
+ * embedded raster image. Anything else (a script URL, a remote resource) goes.
+ */
+function isSafeSvgHref(value: string): boolean {
+	const trimmed = value.trim();
+	return trimmed.startsWith('#') || /^data:image\//iu.test(trimmed);
+}
+
+/**
+ * Strips the active content from a chart SVG before it is imported into the
+ * page: `<script>` and `<foreignObject>` elements, every `on*` event-handler
+ * attribute, and `href` / `xlink:href` values other than fragments or
+ * `data:image` URLs. Mirrors the rules of `src/core/docx/ui/chart-spec.ts`.
+ */
+export function sanitizeChartSvg(svg: Element): void {
+	const elements = [svg, ...Array.from(svg.getElementsByTagName('*'))];
+	for (const element of elements) {
+		const name = element.localName.toLowerCase();
+		if (name === 'script' || name === 'foreignobject') {
+			element.remove();
+			continue;
+		}
+		for (const attr of Array.from(element.attributes)) {
+			const unsafeHref = attr.localName === 'href' && !isSafeSvgHref(attr.value);
+			if (/^on/iu.test(attr.name) || unsafeHref) {
+				element.removeAttribute(attr.name);
+			}
+		}
+	}
+}
+
 /** A chart painted by the core (`LayoutObject.chart`), or its labelled frame. */
 function chartElement(chart: { svg?: string; label: string }): HTMLElement {
 	const element = document.createElement('div');
@@ -12,6 +44,7 @@ function chartElement(chart: { svg?: string; label: string }): HTMLElement {
 		? new DOMParser().parseFromString(chart.svg, 'image/svg+xml').documentElement
 		: undefined;
 	if (svg && svg.localName === 'svg') {
+		sanitizeChartSvg(svg);
 		element.classList.add('dve-print-chart');
 		element.title = chart.label;
 		element.append(document.importNode(svg, true));
