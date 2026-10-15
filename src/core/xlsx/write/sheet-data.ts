@@ -1,5 +1,5 @@
 import { formatAddress, formatRange } from '../address';
-import { isCellError, type Cell, type RowInfo, type Worksheet } from '../model';
+import { isCellError, type Cell, type DataTable, type RowInfo, type Worksheet } from '../model';
 import { isSpilledCell } from '../formula/spill';
 import { addFuturePrefixes } from '../read/formula-text';
 import { SpillPlan } from './dynamic-array';
@@ -37,6 +37,7 @@ function cellXml(
 	source: Cell,
 	row: number,
 	col: number,
+	dataTable?: DataTable,
 ): string {
 	const forced = ctx.formulas?.get(`${row}:${col}`);
 	const cell: Cell = forced ? { ...source, formula: forced } : source;
@@ -50,7 +51,9 @@ function cellXml(
 		return `<c${attrs({ r, s })}/>`;
 	let f = '';
 	let cm: number | undefined;
-	if (cell.formula) {
+	if (dataTable)
+		f = `<f${attrs({ t: 'dataTable', ref: formatRange(dataTable.ref), dt2D: dataTable.dt2D, dtr: dataTable.dtr, r1: dataTable.r1, r2: dataTable.r2, del1: dataTable.del1, del2: dataTable.del2 })}/>`;
+	else if (cell.formula) {
 		const formula = escapeText(addFuturePrefixes(cell.formula));
 		const dynamic = forced ? undefined : spills.dynamicRange(cell, row, col);
 		if (dynamic) {
@@ -128,6 +131,9 @@ export function sheetDataXml(ctx: CellWriteContext, sheet: Worksheet): string {
 		...new Set([...sheet.rows.keys(), ...sheet.rowInfo.keys(), ...headerCols.keys()]),
 	].sort((a, b) => a - b);
 	const spills = new SpillPlan(sheet);
+	const tables = new Map<string, DataTable>();
+	for (const table of sheet.dataTables ?? [])
+		tables.set(`${table.ref.start.row}:${table.ref.start.col}`, table);
 	let out = '';
 	for (const row of rows) {
 		const cells = sheet.rows.get(row);
@@ -136,7 +142,16 @@ export function sheetDataXml(ctx: CellWriteContext, sheet: Worksheet): string {
 			(a, b) => a - b,
 		);
 		const body = cols
-			.map((col) => cellXml(ctx, spills, cells?.get(col) ?? { value: null }, row, col))
+			.map((col) =>
+				cellXml(
+					ctx,
+					spills,
+					cells?.get(col) ?? { value: null },
+					row,
+					col,
+					tables.get(`${row}:${col}`),
+				),
+			)
 			.join('');
 		if (!body && !info) continue;
 		out += body

@@ -75,3 +75,37 @@ export {
 	chartSeriesTransparency,
 	chartSeriesTransparencyPatch,
 } from './chart-series-transparency';
+export {
+	checkGoalSeek,
+	goalSeekMessage,
+	goalSeekSettings,
+	type GoalSeekProblem,
+	type GoalSeekRequest,
+	type GoalSeekResult,
+} from './goal-seek';
+export {
+	DEFAULT_GOAL_ITERATIONS,
+	DEFAULT_GOAL_MAX_CHANGE,
+	solveGoal,
+	type GoalSolution,
+	type GoalSolverOptions,
+} from './goal-solver';
+export {
+	checkDataTable,
+	cutsDataTable,
+	dataTableAt,
+	dataTableFormula,
+	dataTableFormulaText,
+	dataTableMessage,
+	DATA_TABLE_PART_ERROR,
+	refreshDataTables,
+	type DataTableProblem,
+	type DataTableRequest,
+} from './data-table';
+export {
+	expandCells,
+	MAX_SCENARIO_CELLS,
+	scenarioAddresses,
+	scenariosOf,
+	type ScenarioDraft,
+} from './scenarios';

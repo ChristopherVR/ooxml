@@ -240,8 +240,8 @@ const CLEAR_LABELS: Record<ClearWhat, string> = {
 
 /** The sheet properties each kind of clear changes besides the cells. */
 const CLEAR_PARTS: Record<ClearWhat, SheetPart[]> = {
-	all: ['merges', 'conditionalFormats', 'comments', 'hyperlinks'],
-	contents: [],
+	all: ['merges', 'conditionalFormats', 'comments', 'hyperlinks', 'dataTables'],
+	contents: ['dataTables'],
 	formats: ['merges', 'conditionalFormats'],
 	comments: ['comments'],
 	hyperlinks: ['hyperlinks'],
@@ -280,6 +280,13 @@ export function clearIn(ctx: EditContext, sheet: Worksheet, r: CellRange, what: 
 		}
 		if (what === 'contents')
 			for (const [row, col] of positions) syncTableHeader(ctx, sheet, row, col);
+	}
+	if ((what === 'all' || what === 'contents') && sheet.dataTables) {
+		const kept = sheet.dataTables.filter(
+			(t) => !(rangeContains(r, t.ref.start) && rangeContains(r, t.ref.end)),
+		);
+		if (kept.length) sheet.dataTables = kept;
+		else delete sheet.dataTables;
 	}
 	if (what === 'all' || what === 'formats') {
 		sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, r));

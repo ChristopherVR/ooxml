@@ -26,6 +26,7 @@ import {
 	sheetPrXml,
 	sheetViewsXml,
 } from './sheet-props';
+import { scenariosXml } from './scenarios';
 import { XML_HEADER, attrs, inlineFragment } from './xml-out';
 
 export type { SaveContext } from './sheet-parts';
@@ -139,6 +140,7 @@ export function writeWorksheet(
 		),
 	);
 	blocks.set('sheetProtection', protectionXml(sheet));
+	blocks.set('scenarios', scenariosXml(sheet.scenarios));
 	blocks.set('autoFilter', autoFilterXml(sheet));
 	blocks.set('mergeCells', mergeCellsXml(sheet));
 	blocks.set('conditionalFormatting', conditionalFormatsXml(sheet.conditionalFormats, ctx.styles));

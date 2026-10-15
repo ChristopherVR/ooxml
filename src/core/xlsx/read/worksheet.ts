@@ -20,6 +20,7 @@ import {
 	readSheetView,
 	readTabColor,
 } from './sheet-props';
+import { readScenarios } from './scenarios';
 import { readPrintOptions } from './print-options';
 import { parseTable } from './tables';
 import { att, outerXml, selfContainedXml, xChildren } from './xml-util';
@@ -60,6 +61,7 @@ const MODELLED = new Set([
 	'drawing',
 	'legacyDrawing',
 	'tableParts',
+	'scenarios',
 ]);
 
 function keep(sheet: Worksheet, key: string, xml: string): void {
@@ -177,6 +179,8 @@ export function parseWorksheet(
 	sheet.conditionalFormats = readConditionalFormats(cfBlocks, ctx.dxfs, ctx.palette, (m) =>
 		ctx.warn(m),
 	);
+	const scenarios = readScenarios(byName.get('scenarios'));
+	if (scenarios) sheet.scenarios = scenarios;
 	sheet.dataValidations = readDataValidations(byName.get('dataValidations'));
 	readConditionalExtensions(sheet);
 	sheet.hyperlinks = readHyperlinks(ctx, partName, byName.get('hyperlinks'));

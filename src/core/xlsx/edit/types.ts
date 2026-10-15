@@ -1,4 +1,7 @@
 import type { DocumentPropertiesPatch } from './doc-properties';
+import type { DataTableRequest } from './data-table';
+import type { GoalSeekRequest, GoalSeekResult } from './goal-seek';
+import type { ScenarioDraft } from './scenarios';
 import type { ExternalChange } from './external';
 import type { CellAddress, CellRange } from '../address';
 import type {
@@ -309,6 +312,20 @@ export interface EditSession {
 		columns: number[],
 		hasHeader: boolean,
 	): { removed: number; remaining: number };
+	/**
+	 * Goal Seek: changes `changing` until `target` (a formula) equals `goal`, honouring the
+	 * workbook's iteration settings. One undo step; undo it to cancel. Throws when the request is
+	 * not valid (see `checkGoalSeek`).
+	 */
+	goalSeek(request: GoalSeekRequest): GoalSeekResult;
+	/** Turns a selection into a what-if data table `{=TABLE()}` and computes it. */
+	createDataTable(sheet: number, request: DataTableRequest): void;
+	/** Scenario Manager: adds a scenario recording the changing cells; returns its index. */
+	addScenario(sheet: number, draft: ScenarioDraft): number;
+	editScenario(sheet: number, index: number, draft: ScenarioDraft): void;
+	deleteScenario(sheet: number, index: number): void;
+	/** Writes a scenario's values into its changing cells. */
+	showScenario(sheet: number, index: number): void;
 	/** Automatic or manual calculation (saved with the workbook). */
 	setCalcMode(mode: 'auto' | 'manual'): void;
 	/**

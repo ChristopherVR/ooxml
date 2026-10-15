@@ -1,7 +1,14 @@
 import { type CellRange, parseAddress, parseRange } from '../address';
 import type { SpilledCell } from '../formula/spill';
 import { translateFormula } from '../formula/transform';
-import { cellError, isErrorCode, type Cell, type RowInfo, type Worksheet } from '../model';
+import {
+	cellError,
+	isErrorCode,
+	type Cell,
+	type DataTable,
+	type RowInfo,
+	type Worksheet,
+} from '../model';
 import { elements, type XmlElement } from '../../xml/index';
 import { isoToSerial } from './dates';
 import { stripFuturePrefixes } from './formula-text';
@@ -85,6 +92,20 @@ function readValue(ctx: CellContext, c: XmlElement, cell: Cell): void {
 	}
 }
 
+function readDataTable(f: XmlElement): DataTable | undefined {
+	const ref = parseRange(att(f, 'ref') ?? '');
+	const r1 = att(f, 'r1');
+	if (!ref || !r1) return undefined;
+	const table: DataTable = { ref, r1 };
+	const r2 = att(f, 'r2');
+	if (r2) table.r2 = r2;
+	if (boolAttr(f, 'dt2D')) table.dt2D = true;
+	if (boolAttr(f, 'dtr')) table.dtr = true;
+	if (boolAttr(f, 'del1')) table.del1 = true;
+	if (boolAttr(f, 'del2')) table.del2 = true;
+	return table;
+}
+
 function readFormula(
 	ctx: CellContext,
 	f: XmlElement,
@@ -94,6 +115,7 @@ function readFormula(
 	masters: Map<string, SharedMaster>,
 	dynamic: boolean,
 	anchors: DynamicAnchor[],
+	sheet: Worksheet,
 ): void {
 	const kind = att(f, 't') ?? 'normal';
 	if (dynamic) cell.dynamicArray = true;
@@ -115,8 +137,10 @@ function readFormula(
 		return;
 	}
 	if (kind === 'dataTable') {
-		ctx.warn('What-if data table formulas are not supported; their cached values were kept.');
 		delete cell.legacyFormula;
+		const table = readDataTable(f);
+		if (table) (sheet.dataTables ??= []).push(table);
+		else ctx.warn('A what-if data table formula could not be read; its cached values were kept.');
 		return;
 	}
 	if (!text.trim()) return;
@@ -174,7 +198,7 @@ export function readSheetData(ctx: CellContext, sheetData: XmlElement, sheet: Wo
 			if (cm !== undefined && !dynamic) cell.cellMetadata = cm;
 			const vm = numAttr(c, 'vm');
 			if (vm !== undefined) cell.valueMetadata = vm;
-			if (f) readFormula(ctx, f, row, colIndex, cell, masters, dynamic, anchors);
+			if (f) readFormula(ctx, f, row, colIndex, cell, masters, dynamic, anchors, sheet);
 			if (cell.formula === undefined) {
 				delete cell.legacyFormula;
 				delete cell.dynamicArray;

@@ -23,6 +23,9 @@ import {
 } from './history';
 import { SessionCalculator } from './session-calc';
 import * as calcMode from './calc-mode';
+import * as dataTable from './data-table';
+import * as goalSeek from './goal-seek';
+import * as scenarios from './scenarios';
 import * as docProps from './doc-properties';
 import * as drawings from './drawings';
 import * as sparklines from './sparklines';
@@ -71,8 +74,21 @@ export function createEditSession(
 	};
 
 	const calculator = new SessionCalculator(workbook, calc, autoRecalc);
-	const recalc = (step: HistoryStep, mode: 'apply' | 'undo' | 'redo' = 'apply'): void =>
+	const recalc = (step: HistoryStep, mode: 'apply' | 'undo' | 'redo' = 'apply'): void => {
 		calculator.afterStep(step, mode);
+		refreshTables();
+	};
+	// Data table results follow their inputs after every calculation (not in manual mode).
+	const refreshTables = (): void => {
+		if (!autoRecalc || calcMode.calcModeOf(workbook) === 'manual') return;
+		if (!workbook.sheets.some((sheet) => sheet.dataTables?.length)) return;
+		try {
+			dataTable.refreshDataTables(workbook, calc);
+		} catch (error) {
+			const message = `Data table update failed: ${error instanceof Error ? error.message : String(error)}`;
+			if (!workbook.warnings.includes(message)) workbook.warnings.push(message);
+		}
+	};
 
 	const begin = (label: string, kind: WorkbookChangeKind, info: RunInfo): OpenStep => {
 		const step: HistoryStep = { label, entries: [], structural: info.structural ?? false };
@@ -120,6 +136,16 @@ export function createEditSession(
 					throw new Error(
 						'A PivotTable result cannot be edited directly. Refresh or remove the PivotTable instead.',
 					);
+		for (const scope of scopes)
+			if (
+				kind === 'cells' &&
+				scope.kind === 'cells' &&
+				scope.ranges.some((range) => {
+					const sheet = workbook.sheets[scope.sheet];
+					return !!sheet?.dataTables?.length && dataTable.cutsDataTable(sheet, range);
+				})
+			)
+				throw new Error(dataTable.DATA_TABLE_PART_ERROR);
 		const outer = !open;
 		const current = open ?? begin(label, kind, info);
 		if (!outer) {
@@ -283,6 +309,12 @@ export function createEditSession(
 		setDefaultColumnWidth: (s, width) => outline.setDefaultColumnWidth(ctx, s, width),
 		removeDuplicates: (s, range, cols, hasHeader) =>
 			duplicates.removeDuplicates(ctx, s, range, cols, hasHeader),
+		goalSeek: (request) => goalSeek.goalSeek(ctx, request),
+		createDataTable: (s, request) => dataTable.createDataTable(ctx, s, request),
+		addScenario: (s, draft) => scenarios.addScenario(ctx, s, draft),
+		editScenario: (s, i, draft) => scenarios.editScenario(ctx, s, i, draft),
+		deleteScenario: (s, i) => scenarios.deleteScenario(ctx, s, i),
+		showScenario: (s, i) => scenarios.showScenario(ctx, s, i),
 		setCalcMode: (mode) => calcMode.setCalcMode(ctx, mode),
 		setDocumentProperties: (patch) => docProps.setDocumentProperties(ctx, patch),
 		setAutoRecalc: (enabled) => calcMode.setCalcMode(ctx, enabled ? 'auto' : 'manual'),

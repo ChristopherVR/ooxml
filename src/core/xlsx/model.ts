@@ -717,6 +717,10 @@ export interface Worksheet {
 	drawings: DrawingObject[];
 	/** Supported worksheet PivotTables; unsupported imported parts stay in the source package. */
 	pivotTables?: import('./model-pivots').PivotTable[];
+	/** What-if data tables (`{=TABLE()}`); their result cells hold plain values. */
+	dataTables?: import('./model-whatif').DataTable[];
+	/** Scenario Manager scenarios. */
+	scenarios?: import('./model-whatif').ScenarioSet;
 	autoFilter?: AutoFilter;
 	pageSetup?: PageSetup;
 	/** Print options; absent means none set. */
@@ -828,3 +832,4 @@ export type {
 } from '../opc/properties/types';
 export type * from './model-sparklines';
 export type * from './model-pivots';
+export type * from './model-whatif';

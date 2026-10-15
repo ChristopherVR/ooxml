@@ -167,7 +167,50 @@ def date1904() -> None:
     wb.save("openpyxl-1904.xlsx")
 
 
+def what_if() -> None:
+    """Data tables (one- and two-variable) and scenarios, for the What-If Analysis tests."""
+    from openpyxl.worksheet.formula import DataTableFormula
+    from openpyxl.worksheet.scenario import InputCells, Scenario, ScenarioList
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "WhatIf"
+    ws["A1"] = 3
+    ws["A2"] = 4
+    ws["A3"] = "=A1*A2"
+    # One variable, values down the left column (column input cell A1).
+    for i, v in enumerate((1, 2, 3)):
+        ws.cell(row=2 + i, column=3, value=v)
+    ws["D1"] = "=A1*10"
+    ws["E1"] = "=A1*A1"
+    ws["D2"] = DataTableFormula(ref="D2:E4", r1="A1")
+    # Two variables: row input A1 (values across), column input A2 (values down).
+    ws["G1"] = "=A1*A2"
+    for i, v in enumerate((1, 2, 3)):
+        ws.cell(row=1, column=8 + i, value=v)
+        ws.cell(row=2 + i, column=7, value=(i + 1) * 10)
+    ws["H2"] = DataTableFormula(ref="H2:J4", dt2D=True, dtr=True, r1="A1", r2="A2")
+    ws.scenarios = ScenarioList(
+        scenario=[
+            Scenario(
+                name="Low",
+                user="Tester",
+                comment="Pessimistic",
+                inputCells=[InputCells(r="A1", val="1"), InputCells(r="A2", val="2")],
+            ),
+            Scenario(
+                name="High",
+                inputCells=[InputCells(r="A1", val="30"), InputCells(r="A2", val="40")],
+            ),
+        ],
+        current=0,
+        show=0,
+    )
+    wb.save("openpyxl-whatif.xlsx")
+
+
 if __name__ == "__main__":
     styles_and_values()
     features()
     date1904()
+    what_if()
