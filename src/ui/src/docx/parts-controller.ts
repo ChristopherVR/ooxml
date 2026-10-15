@@ -17,7 +17,7 @@ import {
 } from './header-footer-editor';
 import { imageNodeView, type ImageMediaCache } from './image-media';
 import { buildNotesElement } from './notes-view';
-import { attachNoteEditing } from './note-editor';
+import { attachNoteEditing, withMark, withoutMark } from './note-editor';
 import { insertNote, type NoteKind } from './note-commands';
 import { sectionPartsJson, HEADER_FOOTER_INPUT, SectionPartsStep } from 'ooxml-core/docx/ui';
 import { notePartsJson, NotePartsStep } from 'ooxml-core/docx/ui';
@@ -104,6 +104,45 @@ export class PartsController {
 					base.activate?.(view);
 					this.headerContext = { kind: story.kind, slot: story.slot };
 					this.host.refreshControls?.();
+				},
+				deactivate: (view) => {
+					base.deactivate?.(view);
+					story.closed();
+				},
+			},
+		);
+		return true;
+	}
+	/**
+	 * Edits a footnote or endnote in place on a Print Layout page: `container` is the element the
+	 * note is drawn in. The ribbon targets the note until it closes (Escape, or focus leaving), which
+	 * calls `closed`. `opened` receives the editor so the caller can place the caret.
+	 */
+	editNoteOnPage(story: {
+		container: HTMLElement;
+		kind: NoteKind;
+		id: string;
+		opened?(view: EditorView): void;
+		closed(): void;
+	}): boolean {
+		if (!this.host.view()?.editable || !this.host.canEditOutsideBody()) return false;
+		const note = this.host
+			.model()
+			[story.kind === 'footnote' ? 'footnotes' : 'endnotes']?.find((item) => item.id === story.id);
+		if (!note) return false;
+		this.closeActive?.();
+		const { editable, mark } = withoutMark(note.blocks);
+		const base = this.editorOptions();
+		openBlocksEditor(
+			story.container,
+			story.container,
+			editable,
+			(blocks) => this.updateNote(story.kind, story.id, withMark(blocks, mark)),
+			{
+				...base,
+				activate: (view) => {
+					base.activate?.(view);
+					story.opened?.(view);
 				},
 				deactivate: (view) => {
 					base.deactivate?.(view);

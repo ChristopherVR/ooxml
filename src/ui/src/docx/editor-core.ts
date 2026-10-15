@@ -49,6 +49,8 @@ export interface ShellParts {
 	printEditing?: PrintEditingBridge;
 	/** Detaches in-page header and footer editing. */
 	printStoryEditing?: () => void;
+	/** Detaches in-page footnote and endnote editing. */
+	printNoteEditing?: () => void;
 	navigator?: PageNavigator;
 	headings?: HeadingNavigator;
 }

@@ -398,8 +398,9 @@ Still not at parity:
   empty top or bottom margin) edits it in place on the page, with the body dimmed and the Header &
   Footer tab to close it (also Escape or a double-click on the body). Paragraphs in nested
   tables are editable too (Tab continues through nested cells into the enclosing table); a nested
-  table's grid and merged cells stay as authored and cannot be restructured. Limits:
-  footnotes are not edited by clicking on the page; floats, pictures and text boxes are not
+  table's grid and merged cells stay as authored and cannot be restructured. Footnotes and endnotes edit on the page too: press a note's text to open its editor over it, Escape
+  or a press elsewhere returns to the body, and double-clicking a reference mark (or the number in
+  the note) jumps between the reference and the note. Limits: floats, pictures and text boxes are not
   selectable there; the whole document re-lays out on a short debounce after an edit (held while
   a page header or footer is open); a page header or footer editor closes if its virtualised page
   is scrolled out of the rendered window.

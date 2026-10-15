@@ -201,6 +201,24 @@ a.dve-link[data-anchor^='_Toc'] {
 	width: 100%;
 }
 
+/* A note edited in place on its page: its number stays beside the editor. */
+.dve-print-note-container.dve-header-footer-editing {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.25em;
+	z-index: 3;
+	cursor: text;
+}
+.dve-print-note-container .dve-header-footer-editor {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.dve-print-note-label {
+	font-size: 0.65em;
+	line-height: 1.4;
+	vertical-align: baseline;
+}
+
 [data-print-view] .dve-notes-container {
 	display: none;
 }

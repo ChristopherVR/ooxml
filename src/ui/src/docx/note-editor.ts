@@ -11,7 +11,7 @@ export interface NoteEditingOptions {
 }
 
 /** Splits off the note's automatic number mark so it can't be edited away. */
-function withoutMark(blocks: Block[]): { editable: Block[]; mark?: TextRun } {
+export function withoutMark(blocks: Block[]): { editable: Block[]; mark?: TextRun } {
 	const [first, ...rest] = blocks;
 	if (first?.type !== 'paragraph' || !first.runs[0]?.noteMark) return { editable: blocks };
 	const [mark, ...runs] = first.runs;
@@ -21,7 +21,7 @@ function withoutMark(blocks: Block[]): { editable: Block[]; mark?: TextRun } {
 	};
 }
 
-function withMark(blocks: Block[], mark: TextRun | undefined): Block[] {
+export function withMark(blocks: Block[], mark: TextRun | undefined): Block[] {
 	const [first, ...rest] = blocks;
 	if (!mark || first?.type !== 'paragraph') return blocks;
 	const paragraph: Paragraph = { ...first, runs: [mark, ...first.runs] };

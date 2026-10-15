@@ -185,6 +185,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	disconnectedCallback() {
 		const { core } = this;
 		core.shell.printStoryEditing?.();
+		core.shell.printNoteEditing?.();
 		core.shell.printEditing?.destroy();
 		delete core.shell.printEditing;
 		core.collab.presence?.leave();

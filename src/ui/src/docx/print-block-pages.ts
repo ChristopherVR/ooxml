@@ -18,6 +18,9 @@ export function printBlockPages(result: LayoutResult) {
 	}
 	result.pages.forEach((page, index) => {
 		for (const column of page.columns) for (const block of column.blocks) visit(block, index);
+		// Footnote paragraphs live in the page's note area; their pages locate a note for editing.
+		for (const note of page.footnotes ?? [])
+			for (const block of note.paragraphs) visit(block, index);
 	});
 	return (id: string, offset: number): number | undefined => {
 		const list = ranges.get(id);
