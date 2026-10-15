@@ -18,14 +18,14 @@ evidence for specific workflows. We do not yet have Excel-equivalent behavior
 or UI. A supported feature means its listed scope works; it does not mean all
 Excel options, interactions or visual details in that area are implemented.
 
-| Parity dimension               | Assessment   | Evidence or remaining work                                                                                                                                        |
-| ------------------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workbook import and saving     | Partial      | Supported content has round-trip regressions and selected Excel acceptance checks. Unsupported features and structural edits need wider preservation coverage.    |
-| Editing and calculation        | Partial      | Values, formulas, formatting, clipboard, history and structural editing work within supported scope. Missing functions and semantic edge cases remain.            |
-| Charts                         | Partial      | Eight SVG families plus combination, waterfall, histogram, bubble, stock, treemap and sunburst and selected formatting/edit/export workflows are tested. Advanced families, complete controls and exact layout remain open.                   |
-| SmartArt                       | Display-only | Shared cached drawings render; insertion, editing and reflow are absent.                                                                                          |
-| Excel UI and visual appearance | Partial      | Shared ribbon/gallery/fill controls and six bindings are exercised. Full ribbon/dialog behavior, text/layout and raster equivalence are unverified or incomplete. |
-| Whole-product parity           | Not achieved | Missing pivots, advanced data features, native page views, collaboration and macro execution prevent this claim.                                                  |
+| Parity dimension               | Assessment   | Evidence or remaining work                                                                                                                                                                                                  |
+| ------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workbook import and saving     | Partial      | Supported content has round-trip regressions and selected Excel acceptance checks. Unsupported features and structural edits need wider preservation coverage.                                                              |
+| Editing and calculation        | Partial      | Values, formulas, formatting, clipboard, history and structural editing work within supported scope. Missing functions and semantic edge cases remain.                                                                      |
+| Charts                         | Partial      | Eight SVG families plus combination, waterfall, histogram, bubble, stock, treemap and sunburst and selected formatting/edit/export workflows are tested. Advanced families, complete controls and exact layout remain open. |
+| SmartArt                       | Display-only | Shared cached drawings render; insertion, editing and reflow are absent.                                                                                                                                                    |
+| Excel UI and visual appearance | Partial      | Shared ribbon/gallery/fill controls and six bindings are exercised. Full ribbon/dialog behavior, text/layout and raster equivalence are unverified or incomplete.                                                           |
+| Whole-product parity           | Not achieved | Missing pivots, advanced data features, native page views, collaboration and macro execution prevent this claim.                                                                                                            |
 
 The latest diagram/chart/XLSX and PowerPoint layout-parser sweep passed
 **8,591 ordinary tests**, with **17 existing expected raster failures**.

@@ -1,9 +1,4 @@
-import {
-	BASIC_STENCIL_ID,
-	STENCILS,
-	findMaster,
-	type Stencil,
-} from './stencil-catalog';
+import { BASIC_STENCIL_ID, STENCILS, findMaster, type Stencil } from './stencil-catalog';
 import {
 	DOCUMENT_MASTER_LIMIT,
 	DOCUMENT_STENCIL_ID,

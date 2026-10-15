@@ -4,13 +4,7 @@ import JSZip from 'jszip';
 import { history, undo } from 'prosemirror-history';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import {
-	SHAPE_PALETTE,
-	createDocument,
-	loadDocx,
-	saveDocx,
-	type Paragraph,
-} from 'ooxml-core/docx';
+import { SHAPE_PALETTE, createDocument, loadDocx, saveDocx, type Paragraph } from 'ooxml-core/docx';
 import { docToModel, modelToDoc } from './model-adapter';
 import { shapeNodeView } from './shape-node-view';
 import { openShapePicker } from './shape-picker';
@@ -59,9 +53,9 @@ const shapeRuns = (model: ReturnType<typeof docToModel>) =>
 describe('drawing a shape', () => {
 	it('places a floating shape in front of text at the dragged rectangle and selects it', () => {
 		const { view, model } = editor();
-		expect(insertDrawnShape(view, 'rightArrow', 2, { x: 30, y: 12, widthPx: 140, heightPx: 70 })).toBe(
-			true,
-		);
+		expect(
+			insertDrawnShape(view, 'rightArrow', 2, { x: 30, y: 12, widthPx: 140, heightPx: 70 }),
+		).toBe(true);
 		const selected = selectedShape(view.state)!;
 		expect(selected).toMatchObject({ widthPx: 140, heightPx: 70, anchored: true });
 		expect(selected.placement).toMatchObject({
@@ -83,8 +77,19 @@ describe('drawing a shape', () => {
 		const { view } = editor();
 		insertDrawnShape(view, 'ellipse', 2, { x: 0, y: 0 });
 		expect(selectedShape(view.state)).toMatchObject({ widthPx: 96, heightPx: 64 });
-		insertDrawnShape(view, 'line', 2, { x: 5, y: 5, widthPx: 80, heightPx: 40, flipH: true, flipV: true });
-		expect(selectedShape(view.state)?.spec).toMatchObject({ preset: 'line', flipH: true, flipV: true });
+		insertDrawnShape(view, 'line', 2, {
+			x: 5,
+			y: 5,
+			widthPx: 80,
+			heightPx: 40,
+			flipH: true,
+			flipV: true,
+		});
+		expect(selectedShape(view.state)?.spec).toMatchObject({
+			preset: 'line',
+			flipH: true,
+			flipV: true,
+		});
 	});
 
 	it('arms from the gallery, marks the page for drawing and disarms', () => {
@@ -209,13 +214,19 @@ describe('shape gallery and tab', () => {
 		anchor.setAttribute('aria-label', 'Shapes');
 		document.body.append(anchor);
 		let picked = '';
-		openShapePicker(anchor, (preset) => (picked = preset), () => {});
+		openShapePicker(
+			anchor,
+			(preset) => (picked = preset),
+			() => {},
+		);
 		const pop = document.body.querySelector('.shape-picker')!;
 		expect([...pop.querySelectorAll('h4')].map((h) => h.textContent)).toEqual(
 			SHAPE_PALETTE.map((group) => group.name),
 		);
 		const buttons = [...pop.querySelectorAll<HTMLButtonElement>('button[data-preset]')];
-		expect(buttons).toHaveLength(SHAPE_PALETTE.reduce((sum, group) => sum + group.shapes.length, 0));
+		expect(buttons).toHaveLength(
+			SHAPE_PALETTE.reduce((sum, group) => sum + group.shapes.length, 0),
+		);
 		expect(buttons.every((button) => button.querySelector('svg path'))).toBe(true);
 		buttons.find((button) => button.dataset.preset === 'wedgeRectCallout')!.click();
 		expect(picked).toBe('wedgeRectCallout');
@@ -234,7 +245,9 @@ describe('shape gallery and tab', () => {
 		syncShapeFormat(ribbon, view.state, true);
 		expect(tab.hasAttribute('data-tab-hidden')).toBe(false);
 		const input = (label: string) =>
-			tab.querySelector<HTMLInputElement>(`[aria-label="${label}"], [data-localearialabel="${label}"]`)!;
+			tab.querySelector<HTMLInputElement>(
+				`[aria-label="${label}"], [data-localearialabel="${label}"]`,
+			)!;
 		expect(input('Shape width (inches)').value).toBe('2');
 		expect(input('Shape height (inches)').value).toBe('1');
 		expect(input('Wrap text').value).toBe('front');
@@ -248,8 +261,11 @@ describe('shape gallery and tab', () => {
 		const panel = document.createElement('div');
 		buildShapeFormatPanel(panel);
 		const labels = new Set<string>();
-		for (const element of panel.querySelectorAll<HTMLElement>('[aria-label], [data-label], option')) {
-			const label = element.getAttribute('aria-label') ?? element.dataset.label ?? element.textContent;
+		for (const element of panel.querySelectorAll<HTMLElement>(
+			'[aria-label], [data-label], option',
+		)) {
+			const label =
+				element.getAttribute('aria-label') ?? element.dataset.label ?? element.textContent;
 			if (label) labels.add(label.replace(/ controls$/, ''));
 		}
 		for (const group of SHAPE_PALETTE)
