@@ -1,11 +1,29 @@
 import { $, escape, choose, task } from './ui.js';
-import { inspect, operationHelp, prepareChanges, validateChanges } from './ai-operations.js';
+import {
+	describeChanges,
+	inspect,
+	operationHelp,
+	prepareChanges,
+	validateChanges,
+} from './ai-operations.js';
+
+const kilobytes = (value) =>
+	Math.max(1, Math.round(new TextEncoder().encode(JSON.stringify(value)).length / 1024));
 
 export function mountAssistant({ store, sessions, refresh, getActive, getTeams }) {
 	let connection = null,
 		selected = new Set(),
-		includeChat = false,
+		// The Teams channel whose messages the user opted into. Scoped to one channel and cleared
+		// when that channel is no longer selected at send time; never remembered globally.
+		chatChannel = null,
 		busy = false;
+	function currentChannel() {
+		const client = getTeams()?.client;
+		const state = client?.getState();
+		if (!state?.selectedChannelId) return null;
+		const view = state.channels.find((c) => c.id === state.selectedChannelId);
+		return { id: state.selectedChannelId, name: view?.name ?? state.selectedChannelId };
+	}
 	function message(text, user = false) {
 		const node = document.createElement('div');
 		node.className = `ai-message${user ? ' user' : ''}`;
@@ -16,7 +34,7 @@ export function mountAssistant({ store, sessions, refresh, getActive, getTeams }
 	}
 	$('ai-settings').onclick = () => {
 		const form = document.createElement('form');
-		form.innerHTML = `<p>Connect an OpenAI-compatible chat completions endpoint. Selected file content is sent to this provider. Connection credentials are kept only for this session.</p><label>Endpoint URL<input name="endpoint" type="url" placeholder="https://your-provider/v1/chat/completions" value="${escape(connection?.endpoint ?? '')}" required /></label><label>Model<input name="model" value="${escape(connection?.model ?? '')}" required /></label><label>API key<input name="key" type="password" autocomplete="off" /></label><button class="primary">Connect</button>`;
+		form.innerHTML = `<p>Connect an OpenAI-compatible chat completions endpoint. Selected file content is sent to this provider, and Teams messages only when you opt in for a channel. Connection credentials are kept only for this session.</p><label>Endpoint URL<input name="endpoint" type="url" placeholder="https://your-provider/v1/chat/completions" value="${escape(connection?.endpoint ?? '')}" required /></label><label>Model<input name="model" value="${escape(connection?.model ?? '')}" required /></label><label>API key<input name="key" type="password" autocomplete="off" /></label><button class="primary">Connect</button>`;
 		form.onsubmit = (event) => {
 			event.preventDefault();
 			task(async () => {
@@ -43,23 +61,28 @@ export function mountAssistant({ store, sessions, refresh, getActive, getTeams }
 		task(async () => {
 			const docs = await store.list();
 			if (!selected.size && getActive()) selected.add(getActive());
+			const channel = currentChannel();
+			const chatOption = channel
+				? `<label class="context-option"><input name="chat" type="checkbox" ${chatChannel === channel.id ? 'checked' : ''} />Messages from #${escape(channel.name)} (last 50, off unless ticked)</label>`
+				: '<p>Open a Teams channel to include its messages.</p>';
 			const form = document.createElement('form');
 			form.innerHTML =
-				'<p>Only selected files and the optional current Teams conversation are sent with your next request.</p>' +
+				'<p>Only selected files are sent with your next request. Teams messages are included only for the channel ticked here, and only if that channel is still selected when you send.</p>' +
 				docs
 					.map(
 						(d) =>
 							`<label class="context-option"><input type="checkbox" name="document" value="${d.id}" ${selected.has(d.id) ? 'checked' : ''} />${escape(d.name)}</label>`,
 					)
 					.join('') +
-				`<label class="context-option"><input name="chat" type="checkbox" ${includeChat ? 'checked' : ''} />Current Teams channel (last 50 messages)</label><button class="primary">Use selected context</button>`;
+				chatOption +
+				'<button class="primary">Use selected context</button>';
 			form.onsubmit = (event) => {
 				event.preventDefault();
 				const data = new FormData(form);
 				selected = new Set(data.getAll('document'));
-				includeChat = data.has('chat');
+				chatChannel = channel && data.has('chat') ? channel.id : null;
 				$('ai-scope').textContent =
-					`${selected.size} file${selected.size === 1 ? '' : 's'} selected${includeChat ? ' + Teams channel' : ''}`;
+					`${selected.size} file${selected.size === 1 ? '' : 's'} selected${chatChannel ? ` + #${channel.name} messages` : ''}`;
 				$('dialog').close();
 			};
 			choose('Assistant context', form);
@@ -71,25 +94,43 @@ export function mountAssistant({ store, sessions, refresh, getActive, getTeams }
 				throw new Error(`${doc.name} changed. Ask again using the latest version.`);
 		}
 	}
-	function proposal(changes, docs) {
+	async function proposal(changes, docs) {
 		validateChanges(changes, docs);
+		const rows = await describeChanges(changes, docs);
 		const panel = document.createElement('div');
 		panel.className = 'ai-proposal';
 		const description = document.createElement('p');
-		description.textContent = `${changes.length} proposed edit${changes.length === 1 ? '' : 's'}. Review the exact changes below.`;
-		const preview = document.createElement('pre');
-		preview.textContent = JSON.stringify(
+		description.textContent = `${changes.length} proposed edit${changes.length === 1 ? '' : 's'}. Review the changes below.`;
+		const list = document.createElement('ul');
+		list.className = 'ai-changes';
+		for (const row of rows) {
+			const item = document.createElement('li');
+			const heading = document.createElement('strong');
+			heading.textContent = `${row.file}: ${row.target}`;
+			const before = document.createElement('div');
+			before.textContent = `Before: ${row.before === undefined ? 'not shown' : row.before || '(empty)'}`;
+			const after = document.createElement('div');
+			after.textContent = `After: ${row.after || '(empty)'}`;
+			item.append(heading, before, after);
+			list.append(item);
+		}
+		const details = document.createElement('details');
+		const summary = document.createElement('summary');
+		summary.textContent = 'Show raw JSON';
+		const raw = document.createElement('pre');
+		raw.textContent = JSON.stringify(
 			changes.map((c) => ({ file: docs.find((d) => d.id === c.documentId)?.name, ...c })),
 			null,
 			2,
 		);
+		details.append(summary, raw);
 		const apply = document.createElement('button');
 		apply.className = 'primary';
 		apply.textContent = 'Apply changes';
 		const dismiss = document.createElement('button');
 		dismiss.textContent = 'Dismiss';
 		dismiss.onclick = () => panel.remove();
-		panel.append(description, preview, apply, dismiss);
+		panel.append(description, list, details, apply, dismiss);
 		$('ai-messages').append(panel);
 		apply.onclick = () =>
 			task(async () => {
@@ -162,20 +203,28 @@ export function mountAssistant({ store, sessions, refresh, getActive, getTeams }
 					});
 				}
 				const client = getTeams()?.client;
-				const chat =
-					includeChat && client
-						? client
-								.getState()
-								.messages.slice(-50)
-								.map((m) => ({
-									author: m.authorName,
-									text: m.text,
-									attachments: m.attachments.map((a) => ({ name: a.name, kind: a.kind })),
-								}))
-						: undefined;
+				const channel = currentChannel();
+				// The opt-in lasts only while the channel it was given for is still selected.
+				const chatActive = chatChannel !== null && channel?.id === chatChannel;
+				if (!chatActive) chatChannel = null;
+				const chat = chatActive
+					? client
+							.getState()
+							.messages.slice(-50)
+							.map((m) => ({
+								author: m.authorName,
+								text: m.text,
+								attachments: m.attachments.map((a) => ({ name: a.name, kind: a.kind })),
+							}))
+					: undefined;
 				const source = JSON.stringify({ files: context, teams: chat });
 				if (source.length > 150000)
 					throw new Error('Selected context is too large. Choose fewer files.');
+				const attached = [
+					...context.map((f) => `${f.name} (${kilobytes(f)} KB)`),
+					...(chat ? [`${chat.length} Teams messages from #${channel.name}`] : []),
+				];
+				message(`Sending: ${attached.length ? attached.join(', ') : 'your question only'}`);
 				const response = await fetch(connection.endpoint, {
 					method: 'POST',
 					credentials: 'omit',
@@ -208,7 +257,13 @@ export function mountAssistant({ store, sessions, refresh, getActive, getTeams }
 					return;
 				}
 				message(typeof answer.answer === 'string' ? answer.answer : 'Review the proposed changes.');
-				if (answer.changes?.length) proposal(answer.changes, docs);
+				if (answer.changes?.length) {
+					try {
+						await proposal(answer.changes, docs);
+					} catch (error) {
+						message(`The proposed changes were not shown. ${error.message}`);
+					}
+				}
 			} finally {
 				busy = false;
 				$('ai-send').disabled = false;
