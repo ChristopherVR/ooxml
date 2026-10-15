@@ -1,0 +1,34 @@
+h3 {
+	margin: var(--office-space-2) 0 0;
+	font-size: var(--office-font-size);
+}
+.rename {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: end;
+	gap: var(--office-space-2);
+	padding: 0;
+}
+.members {
+	display: grid;
+	gap: var(--office-space-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.members li {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-1) 0;
+}
+.name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+office-ui-people-picker {
+	font-weight: normal;
+}

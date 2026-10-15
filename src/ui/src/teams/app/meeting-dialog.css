@@ -1,0 +1,13 @@
+.times {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--office-space-3);
+}
+office-ui-people-picker {
+	font-weight: normal;
+}
+@media (max-width: 40em) {
+	.times {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

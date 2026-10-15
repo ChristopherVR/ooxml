@@ -1,0 +1,101 @@
+:host {
+	display: block;
+	overflow: auto;
+}
+header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--office-space-3) var(--office-space-3) var(--office-space-2) var(--office-space-4);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+}
+h3 {
+	margin: var(--office-space-3) var(--office-space-4) var(--office-space-1);
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-sm);
+	font-weight: var(--office-font-weight-bold);
+}
+.new {
+	display: grid;
+	place-items: center;
+	width: 2.2em;
+	height: 2.2em;
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: transparent;
+	color: var(--office-teams-brand);
+	cursor: pointer;
+}
+.new:hover {
+	background: var(--office-selected);
+}
+.empty {
+	margin: var(--office-space-4);
+	color: var(--office-teams-text-subtle);
+}
+ul {
+	display: grid;
+	gap: var(--office-space-1);
+	margin: 0;
+	padding: 0 var(--office-space-2);
+	list-style: none;
+}
+li {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+}
+.row {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+	padding: var(--office-space-2) var(--office-space-3);
+	border: 0;
+	border-inline-start: var(--office-border-width-thick) solid var(--office-teams-brand);
+	border-radius: var(--office-radius);
+	background: var(--office-teams-bubble);
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.row:hover {
+	background: var(--office-selected);
+}
+.row[data-live='true'] {
+	border-inline-start-color: var(--office-call-live);
+}
+.time,
+.who {
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-xs);
+}
+.title {
+	overflow: hidden;
+	font-weight: var(--office-font-weight-bold);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.join {
+	padding: var(--office-space-2) var(--office-space-3);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font: inherit;
+	cursor: pointer;
+}
+.join:hover {
+	background: var(--office-teams-brand-hover);
+}
+@media (pointer: coarse) {
+	.new,
+	.row,
+	.join {
+		min-width: var(--office-touch-target, 44px);
+		min-height: var(--office-touch-target, 44px);
+	}
+}

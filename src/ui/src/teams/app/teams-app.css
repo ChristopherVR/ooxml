@@ -709,3 +709,87 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 		min-height: var(--office-touch-target, 44px);
 	}
 }
+
+/* ---- chat and calendar ------------------------------------------------------------------ */
+.chat-head office-ui-avatar {
+	flex: none;
+}
+.group-mark {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 2.3em;
+	height: 2.3em;
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-bubble);
+	color: var(--office-teams-brand);
+}
+.chat-head .chat-people {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--office-space-2);
+}
+.empty-main {
+	display: grid;
+	flex: 1;
+	place-content: center;
+	justify-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-6);
+	color: var(--office-teams-text-subtle);
+	text-align: center;
+}
+.empty-main button {
+	padding: var(--office-space-2) var(--office-space-4);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font: inherit;
+}
+.main > office-ui-calendar-view {
+	flex: 1;
+	min-height: 0;
+}
+.calendar-back {
+	display: none;
+}
+@media (max-width: 56em) {
+	.calendar-back {
+		display: flex;
+		align-items: center;
+		gap: var(--office-space-2);
+		padding: var(--office-space-2) var(--office-space-3);
+		border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+	}
+	.calendar-back button {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--office-space-2);
+		min-height: var(--office-touch-target, 44px);
+		padding: var(--office-space-2) var(--office-space-3);
+		border: 0;
+		border-radius: var(--office-radius-md);
+		background: transparent;
+	}
+	.chat-head .chat-people {
+		min-width: var(--office-touch-target, 44px);
+	}
+}
+.show-calendar {
+	display: none;
+}
+@media (max-width: 56em) {
+	.show-calendar {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--office-space-2);
+		width: calc(100% - 2 * var(--office-space-4));
+		min-height: var(--office-touch-target, 44px);
+		margin: var(--office-space-3) var(--office-space-4);
+		border: var(--office-border-width) solid var(--office-teams-divider);
+		border-radius: var(--office-radius-md);
+		background: var(--office-background);
+	}
+}

@@ -45,3 +45,19 @@ export function formatSize(bytes?: number): string {
 	if (bytes < 1_048_576) return `${Math.round(bytes / 1024)} KB`;
 	return `${(bytes / 1_048_576).toFixed(1)} MB`;
 }
+
+const timeOnly = (ts: number): string =>
+	new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+/** "Thu, Oct 15, 2:00 PM - 3:00 PM" in the viewer's zone (the end shows its date when it differs). */
+export function formatWhen(start: number, end: number): string {
+	const day = new Date(start).toLocaleDateString([], {
+		weekday: 'short',
+		month: 'short',
+		day: 'numeric',
+	});
+	const sameDay = new Date(start).toDateString() === new Date(end).toDateString();
+	const tail = sameDay
+		? timeOnly(end)
+		: `${new Date(end).toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeOnly(end)}`;
+	return `${day}, ${timeOnly(start)} - ${tail}`;
+}

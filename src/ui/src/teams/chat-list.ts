@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import { type Mention, mentionSegments, mentionsUser } from 'ooxml-core/teams';
 import { definer } from '../registry';
-import { TeamsElement, dayLabel, formatSize, formatTime, withStyles } from './base';
+import { TeamsElement, dayLabel, formatSize, formatTime, formatWhen, withStyles } from './base';
 import { icon } from './icons';
 import css from './chat-list.css?raw';
 
@@ -20,12 +20,24 @@ export interface ChatMessage {
 	ts: number;
 	editedAt?: number;
 	deleted?: boolean;
+	/** An app notice (someone joined or left): shown as a centred line, not a bubble. */
+	system?: boolean;
+	/** A meeting card: the scheduled meeting this message announces. */
+	meetingId?: string;
 	replyTo?: string;
 	tabId?: string;
 	attachments?: ChatAttachment[];
 	/** @mentions as ranges of `text`; messages from older clients have none. */
 	mentions?: Mention[];
 	reactions?: Record<string, string[]>;
+}
+
+/** What a meeting card shows; a card whose meeting is missing reads as canceled. */
+export interface MeetingCard {
+	title: string;
+	start: number;
+	end: number;
+	live: boolean;
 }
 
 export const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🎉'] as const;
@@ -46,7 +58,8 @@ const GROUP_MS = 5 * 60_000;
  * Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle),
  * `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` /
  * `office-chat-unpin` `{ messageId }` and
- * `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`.
+ * `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`, and
+ * `office-chat-meeting` `{ meetingId, action: 'join' | 'open' }` from a meeting card (`meetings`).
  * Message text is always rendered as text.
  */
 export class OfficeUiChatList extends TeamsElement {
@@ -57,6 +70,7 @@ export class OfficeUiChatList extends TeamsElement {
 		replyCounts: { attribute: false },
 		pinnedIds: { attribute: false },
 		highlightId: { type: String, attribute: 'highlight-id' },
+		meetings: { attribute: false },
 	};
 	declare messages: ChatMessage[];
 	declare selfId: string;
@@ -64,6 +78,8 @@ export class OfficeUiChatList extends TeamsElement {
 	declare pinnedIds: readonly string[];
 	/** A message to flash briefly, for example one opened from the Activity feed. */
 	declare highlightId: string;
+	/** Meeting cards by meeting id (the meetings in the person's calendar). */
+	declare meetings: Record<string, MeetingCard>;
 	private stickToBottom = true;
 
 	constructor() {
@@ -73,6 +89,7 @@ export class OfficeUiChatList extends TeamsElement {
 		this.replyCounts = {};
 		this.pinnedIds = [];
 		this.highlightId = '';
+		this.meetings = {};
 	}
 
 	override connectedCallback(): void {
@@ -95,6 +112,11 @@ export class OfficeUiChatList extends TeamsElement {
 		const rows: TemplateResult[] = [];
 		let previous: ChatMessage | undefined;
 		for (const m of this.messages) {
+			if (m.system && !m.deleted) {
+				rows.push(html`<div class="system" data-message-id=${m.id} tabindex="-1">${m.text}</div>`);
+				previous = undefined;
+				continue;
+			}
 			if (!previous || dayLabel(previous.ts) !== dayLabel(m.ts))
 				rows.push(html`<div class="day"><span>${dayLabel(m.ts)}</span></div>`);
 			const grouped =
@@ -155,6 +177,7 @@ export class OfficeUiChatList extends TeamsElement {
 											m.editedAt ? html` <span class="edited">(edited)</span>` : nothing
 										}`
 						}
+						${!m.deleted && m.meetingId ? this.meetingCard(m.meetingId) : nothing}
 						${!m.deleted && m.attachments?.length ? this.files(m.attachments) : nothing}
 						${!m.deleted && m.tabId ? html`<button class="thread-link" type="button" @click=${() => this.fire('office-chat-open-tab', { tabId: m.tabId })}>Open tab</button>` : nothing}
 					</div>
@@ -195,6 +218,38 @@ export class OfficeUiChatList extends TeamsElement {
 					>`
 				: segment.text,
 		);
+	}
+
+	private meetingCard(meetingId: string) {
+		const card = this.meetings[meetingId];
+		if (!card)
+			return html`<div class="meeting-card" data-gone="true">
+				<span class="meeting-icon">${icon('calendar')}</span>
+				<span class="meeting-meta">
+					<span class="meeting-title">This meeting was canceled or is not in your calendar</span>
+				</span>
+			</div>`;
+		return html`<div class="meeting-card">
+			<span class="meeting-icon">${icon('calendar')}</span>
+			<span class="meeting-meta">
+				<span class="meeting-title">${card.title}</span>
+				<span class="meeting-time">${formatWhen(card.start, card.end)}</span>
+			</span>
+			<button
+				type="button"
+				class="meeting-open"
+				@click=${() => this.fire('office-chat-meeting', { meetingId, action: 'open' })}
+			>
+				Details
+			</button>
+			<button
+				type="button"
+				class="meeting-join"
+				@click=${() => this.fire('office-chat-meeting', { meetingId, action: 'join' })}
+			>
+				${card.live ? 'Join now' : 'Join'}
+			</button>
+		</div>`;
 	}
 
 	private toolbar(m: ChatMessage, own: boolean) {

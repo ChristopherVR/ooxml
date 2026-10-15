@@ -402,6 +402,146 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "teams/calendar-agenda.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCalendarAgenda",
+					"tagName": "office-ui-calendar-agenda",
+					"customElement": true,
+					"description": "The Calendar app's side list: meetings in the next two weeks grouped by day, each with its time and a Join button once it is near or live. Properties: `meetings`, `zone`, `now` (the clock, for tests). Emits `office-agenda-open` `{ meetingId, start }`, `office-agenda-join` `{ meetingId }` and `office-agenda-new` `{}`.",
+					"attributes": [
+						{
+							"name": "now"
+						},
+						{
+							"name": "zone"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "meetings"
+						},
+						{
+							"kind": "field",
+							"name": "now",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "zone",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-agenda-join"
+						},
+						{
+							"name": "office-agenda-new"
+						},
+						{
+							"name": "office-agenda-open"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-calendar-agenda",
+					"declaration": {
+						"name": "OfficeUiCalendarAgenda"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/calendar-view.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCalendarView",
+					"tagName": "office-ui-calendar-view",
+					"customElement": true,
+					"description": "A Teams-style calendar: a time grid for the work week, the full week or one day in the viewer's zone, with Today, previous and next, and the view switch. Overlapping meetings share a column. Properties: `meetings` (core `MeetingView[]`), `zone` (default: this device's), `now` (the clock, for tests), `mode`. Events: `office-calendar-open` `{ meetingId, start }`, `office-calendar-new` `{ start }` (a click on an empty slot, or the New meeting button), and `office-calendar-mode` `{ mode }`.",
+					"attributes": [
+						{
+							"name": "mode"
+						},
+						{
+							"name": "now"
+						},
+						{
+							"name": "zone"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "anchor"
+						},
+						{
+							"kind": "field",
+							"name": "meetings"
+						},
+						{
+							"kind": "field",
+							"name": "mode",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "now",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "tick"
+						},
+						{
+							"kind": "field",
+							"name": "zone",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-calendar-mode"
+						},
+						{
+							"name": "office-calendar-new"
+						},
+						{
+							"name": "office-calendar-open"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-calendar-view",
+					"declaration": {
+						"name": "OfficeUiCalendarView"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "teams/call-controls.ts",
 			"declarations": [
 				{
@@ -731,7 +871,7 @@
 					"name": "OfficeUiChatList",
 					"tagName": "office-ui-chat-list",
 					"customElement": true,
-					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`, `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin). @mentions are highlighted; those that address `selfId` (or everyone) are emphasised and mark the message. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` / `office-chat-unpin` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`. Message text is always rendered as text.",
+					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`, `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin). @mentions are highlighted; those that address `selfId` (or everyone) are emphasised and mark the message. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` / `office-chat-unpin` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`, and `office-chat-meeting` `{ meetingId, action: 'join' | 'open' }` from a meeting card (`meetings`). Message text is always rendered as text.",
 					"attributes": [
 						{
 							"name": "highlight-id"
@@ -748,6 +888,10 @@
 								"text": "string"
 							},
 							"attribute": "highlight-id"
+						},
+						{
+							"kind": "field",
+							"name": "meetings"
 						},
 						{
 							"kind": "field",
@@ -778,6 +922,9 @@
 							"name": "office-chat-edit"
 						},
 						{
+							"name": "office-chat-meeting"
+						},
+						{
 							"name": "office-chat-open-file"
 						},
 						{
@@ -801,6 +948,55 @@
 					"name": "office-ui-chat-list",
 					"declaration": {
 						"name": "OfficeUiChatList"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/chat-sidebar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChatSidebar",
+					"tagName": "office-ui-chat-sidebar",
+					"customElement": true,
+					"description": "The Chat app's list: 1:1 and group chats, most recent first, with presence on the avatar, the last message and an unread badge. Properties: `chats` (core `ChatView[]`), `selectedId`. Emits `office-chat-select` `{ id }` and `office-chat-new` `{}` (the host asks who to chat with).",
+					"attributes": [
+						{
+							"name": "selected-id"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "chats"
+						},
+						{
+							"kind": "field",
+							"name": "selectedId",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "selected-id"
+						}
+					],
+					"events": [
+						{
+							"name": "office-chat-new"
+						},
+						{
+							"name": "office-chat-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-chat-sidebar",
+					"declaration": {
+						"name": "OfficeUiChatSidebar"
 					}
 				}
 			]
@@ -2180,6 +2376,63 @@
 					"name": "office-ui-paste-options",
 					"declaration": {
 						"name": "OfficeUiPasteOptions"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/people-picker.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiPeoplePicker",
+					"tagName": "office-ui-people-picker",
+					"customElement": true,
+					"description": "Pick people from the workspace roster: a search box and a list of checkable people with their presence. Properties: `contacts` (core `ContactView[]`), `selected` (user ids), `exclude` (user ids not offered, for example people already in the chat), `label`. Emits `office-people-change` `{ selected }` on every toggle.",
+					"attributes": [
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "contacts"
+						},
+						{
+							"kind": "field",
+							"name": "exclude"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "query"
+						},
+						{
+							"kind": "field",
+							"name": "selected"
+						}
+					],
+					"events": [
+						{
+							"name": "office-people-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-people-picker",
+					"declaration": {
+						"name": "OfficeUiPeoplePicker"
 					}
 				}
 			]

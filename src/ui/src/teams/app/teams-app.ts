@@ -12,6 +12,7 @@ import {
 	type TeamsServerConfig,
 	type TeamsState,
 	type DraftContext,
+	type MeetingFormInput,
 	type TabContent,
 	describeActivity,
 	isPresenceStatus,
@@ -53,6 +54,12 @@ import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
 import type { ChatSendDetail } from '../chat-composer';
 import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
+import { defineTeamsNewChatDialog } from './new-chat-dialog';
+import { defineTeamsChatPeopleDialog } from './chat-people-dialog';
+import { defineTeamsMeetingDialog } from './meeting-dialog';
+import { defineTeamsMeetingDetails } from './meeting-details';
+import { chatHeader, meetingCards } from './chat-app';
+import { downloadText } from './calendar-app';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -70,7 +77,15 @@ export interface OpenFileDetail {
 }
 export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) => void>>;
 
-type RailView = 'activity' | 'teams' | 'calls' | 'files' | 'followed' | 'drafts';
+type RailView =
+	| 'activity'
+	| 'chat'
+	| 'teams'
+	| 'calendar'
+	| 'calls'
+	| 'files'
+	| 'followed'
+	| 'drafts';
 type Panel = '' | 'chat' | 'people';
 const LOCAL_THEME = THEME_CSS.replaceAll(
 	':root[data-office-theme="dark"]',
@@ -80,7 +95,9 @@ const LOCAL_THEME = THEME_CSS.replaceAll(
 	.replaceAll(':root', ':host([data-office-theme])');
 const RAIL = [
 	{ id: 'activity', label: 'Activity', icon: 'bell' },
+	{ id: 'chat', label: 'Chat', icon: 'message' },
 	{ id: 'teams', label: 'Teams', icon: 'users' },
+	{ id: 'calendar', label: 'Calendar', icon: 'calendar' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
 	{ id: 'files', label: 'Files', icon: 'folder' },
 	{ id: 'followed', label: 'Followed threads', shortLabel: 'Threads', icon: 'chat' },
@@ -101,6 +118,10 @@ export class TeamsApp extends LitElement {
 		preview: { state: true },
 		addingTab: { state: true },
 		creatingChannel: { state: true },
+		newChat: { state: true },
+		chatPeople: { state: true },
+		meetingForm: { state: true },
+		meetingDetails: { state: true },
 		rail: { state: true },
 		tab: { state: true },
 		panel: { state: true },
@@ -135,6 +156,12 @@ export class TeamsApp extends LitElement {
 	declare tab: string;
 	declare addingTab: boolean;
 	declare creatingChannel: boolean;
+	declare newChat: boolean;
+	declare chatPeople: boolean;
+	/** The New / Edit meeting form: the meeting being edited and the prefilled start. */
+	declare meetingForm: { meetingId: string; start: number } | null;
+	/** The meeting details dialog: the meeting and the occurrence that was opened. */
+	declare meetingDetails: { meetingId: string; start: number } | null;
 	declare panel: Panel;
 	declare meeting: boolean;
 	declare settingsOpen: boolean;
@@ -163,6 +190,8 @@ export class TeamsApp extends LitElement {
 	private highlightTimer: ReturnType<typeof setTimeout> | undefined;
 	private stopActivity: (() => void) | undefined;
 	private openRequest = 0;
+	/** The channel last open in the Teams app, restored when you come back from Chat. */
+	private lastChannelId = '';
 	private retainedTab: ChannelTab | undefined;
 	private themeStorageKey = '';
 	private readonly popoutRequested =
@@ -187,6 +216,10 @@ export class TeamsApp extends LitElement {
 		this.retainedTab = undefined;
 		this.addingTab = false;
 		this.creatingChannel = false;
+		this.newChat = false;
+		this.chatPeople = false;
+		this.meetingForm = null;
+		this.meetingDetails = null;
 		this.rail = 'teams';
 		this.tab = 'posts';
 		this.panel = '';
@@ -223,6 +256,10 @@ export class TeamsApp extends LitElement {
 		defineTeamsPinnedBar();
 		defineTeamsAddTabDialog();
 		defineTeamsCreateChannelDialog();
+		defineTeamsNewChatDialog();
+		defineTeamsChatPeopleDialog();
+		defineTeamsMeetingDialog();
+		defineTeamsMeetingDetails();
 		// Input anywhere in the page keeps the person from showing as Away.
 		this.stopActivity = watchActivity(this.ownerDocument, () => this.teams.client?.noteActivity());
 		super.connectedCallback();
@@ -256,6 +293,8 @@ export class TeamsApp extends LitElement {
 		this.tab = 'posts';
 		this.addingTab = false;
 		this.creatingChannel = false;
+		this.newChat = this.chatPeople = false;
+		this.meetingForm = this.meetingDetails = null;
 		this.settingsOpen = false;
 		this.openRequest++;
 		const named = this.userName
@@ -298,6 +337,8 @@ export class TeamsApp extends LitElement {
 	protected override updated(): void {
 		this.setAttribute('data-chat-density', this.chatDensity);
 		const state = this.teams.state;
+		if (state?.channels.some((c) => c.id === state.selectedChannelId))
+			this.lastChannelId = state.selectedChannelId;
 		if (
 			state?.thread &&
 			document.visibilityState === 'visible' &&
@@ -329,7 +370,10 @@ export class TeamsApp extends LitElement {
 					setTimeout(() => this.dismissToast(entry.id), 6000),
 				);
 			},
-			open: (entry) => void this.openActivity(entry.id),
+			open: (entry) =>
+				entry.kind === 'meeting'
+					? this.openMeeting(entry.messageId)
+					: void this.openActivity(entry.id),
 		});
 	}
 
@@ -471,7 +515,8 @@ export class TeamsApp extends LitElement {
 		void this.teams.client?.openCall(channelId);
 		this.mobileView = 'conversation';
 		this.meeting = true;
-		this.rail = 'teams';
+		const target = channelId ?? this.teams.state?.selectedChannelId;
+		this.rail = this.teams.state?.chats.some((c) => c.id === target) ? 'chat' : 'teams';
 	}
 
 	private selectChannel(id: string): boolean {
@@ -483,7 +528,7 @@ export class TeamsApp extends LitElement {
 		this.teams.client?.search('');
 		this.meeting = false;
 		this.tab = 'posts';
-		this.rail = 'teams';
+		this.rail = this.teams.state?.chats.some((c) => c.id === id) ? 'chat' : 'teams';
 		this.mobileView = 'conversation';
 		return true;
 	}
@@ -509,7 +554,7 @@ export class TeamsApp extends LitElement {
 
 	/** Which screen the compact shell shows: the channel or call list, or the content itself. */
 	private mobileScreen(s: TeamsState): 'list' | 'content' {
-		const listed = this.rail === 'teams' || this.rail === 'calls' || this.rail === 'activity';
+		const listed = ['teams', 'calls', 'activity', 'chat', 'calendar'].includes(this.rail);
 		return listed && this.mobileView === 'list' && !(this.meeting && s.call) ? 'list' : 'content';
 	}
 
@@ -540,11 +585,12 @@ export class TeamsApp extends LitElement {
 				<div class="body">
 					<office-ui-app-rail
 						.hideLabels=${!this.showAppNames}
-						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}), ...(i.id === 'activity' && s.activityUnread ? { badge: s.activityUnread } : {}) }))}
+						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}), ...(i.id === 'activity' && s.activityUnread ? { badge: s.activityUnread } : {}), ...(i.id === 'chat' && s.chats.some((c) => c.unread) ? { badge: s.chats.reduce((n, c) => n + c.unread, 0) } : {}) }))}
 						selected=${this.rail}
 						@office-rail-select=${(e: CustomEvent<{ id: RailView }>) => {
 							if (!this.closePreview()) return;
 							this.settingsOpen = false;
+							if (e.detail.id === 'teams') this.leaveChatSelection();
 							this.rail = e.detail.id;
 							this.meeting = false;
 							this.mobileView = 'list';
@@ -620,7 +666,7 @@ export class TeamsApp extends LitElement {
 				></teams-create-channel-dialog>
 				${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
 				${this.activityToasts.length ? html`<div class="activity-toasts">${this.activityToasts.map((t) => this.activityToastView(t))}</div>` : nothing}
-
+				${this.chatDialogs(s)} ${this.calendarDialogs(s)}
 				<teams-add-tab-dialog
 					.open=${this.addingTab}
 					.client=${this.teams.client}
@@ -713,7 +759,10 @@ export class TeamsApp extends LitElement {
 																}}
 															>
 																<strong>${h.message.authorName}</strong>
-																<span class="in">in # ${h.channelName}</span>
+																<span class="in"
+																	>in
+																	${s.chats.some((c) => c.id === h.channelId) ? '' : '# '}${h.channelName}</span
+																>
 																<span class="snippet">${h.message.text.slice(0, 100)}</span>
 															</button>
 														</li>`,
@@ -777,7 +826,8 @@ export class TeamsApp extends LitElement {
 				type="button"
 				@click=${() => {
 					this.dismissToast(item.id);
-					void this.openActivity(item.id);
+					if (item.kind === 'meeting') this.openMeeting(item.messageId);
+					else void this.openActivity(item.id);
 				}}
 			>
 				View
@@ -789,6 +839,28 @@ export class TeamsApp extends LitElement {
 	}
 
 	private sidebar(s: TeamsState) {
+		if (this.rail === 'chat')
+			return html`<office-ui-chat-sidebar
+				.chats=${s.chats}
+				selected-id=${s.selectedChannelId}
+				@office-chat-select=${(e: CustomEvent<{ id: string }>) => this.selectChannel(e.detail.id)}
+				@office-chat-new=${() => (this.newChat = true)}
+			></office-ui-chat-sidebar>`;
+		if (this.rail === 'calendar')
+			return html`<office-ui-calendar-agenda
+					.meetings=${s.meetings}
+					.zone=${s.viewerZone}
+					@office-agenda-open=${(e: CustomEvent<{ meetingId: string; start: number }>) => (this.meetingDetails = { meetingId: e.detail.meetingId, start: e.detail.start })}
+					@office-agenda-join=${(e: CustomEvent<{ meetingId: string }>) => void this.joinMeeting(e.detail.meetingId)}
+					@office-agenda-new=${() => (this.meetingForm = { meetingId: '', start: 0 })}
+				></office-ui-calendar-agenda>
+				<button
+					type="button"
+					class="show-calendar"
+					@click=${() => (this.mobileView = 'conversation')}
+				>
+					${icon('calendar')} Open calendar
+				</button>`;
 		if (this.rail === 'activity')
 			return html`<office-ui-activity-feed
 				.items=${s.activity}
@@ -855,15 +927,20 @@ export class TeamsApp extends LitElement {
 				},
 			);
 		if (s.call && this.meeting) return this.meetingView(s);
+		if (this.rail === 'calendar') return this.calendarMain(s);
+		if (this.rail === 'chat' && !s.chats.some((c) => c.id === s.selectedChannelId))
+			return this.chatEmpty();
 		return html`
 			${
 				s.call && !this.meeting
 					? html`<div class="callbar">
-							You are in a call in # ${s.call.channelName}
+							You are in a call in ${this.callHeading(s.call)}
 							<button
 								type="button"
 								@click=${() => {
-									if (this.selectChannel(s.call!.channelId)) this.meeting = true;
+									if (s.call!.kind === 'meeting') {
+										if (this.closePreview()) [this.rail, this.meeting] = ['calendar', true];
+									} else if (this.selectChannel(s.call!.channelId)) this.meeting = true;
 								}}
 							>
 								Return to call
@@ -877,6 +954,7 @@ export class TeamsApp extends LitElement {
 
 	private conversation(s: TeamsState, compact = false) {
 		const channel = s.channel;
+		const chat = s.chats.find((x) => x.id === s.selectedChannelId);
 		const c = this.teams.client;
 		const compose = s.editing ?? s.replyingTo;
 		const sharedTab = s.tabs.find((t) => t.id === this.tab);
@@ -890,116 +968,123 @@ export class TeamsApp extends LitElement {
 			${
 				compact
 					? nothing
-					: html`<header class="channel-head">
-							<button
-								type="button"
-								class="back"
-								aria-label="Back to channels"
-								title="Back to channels"
-								@click=${() => (this.mobileView = 'list')}
-							>
-								${icon('back')}
-							</button>
-							<h1><span class="hash">#</span> ${channel?.name ?? 'No channel yet'}</h1>
-							<nav class="tabs" role="tablist">
-								${(['posts', 'files'] as const).map(
-									(t) =>
-										html`<button
-											type="button"
-											role="tab"
-											aria-selected=${String(this.tab === t)}
-											@click=${() => this.selectTab(t)}
-										>
-											${t === 'posts' ? 'Posts' : 'Shared'}
-										</button>`,
-								)}
-								${s.tabs.map((t) => html`<button type="button" role="tab" aria-selected=${String(this.tab === t.id)} @click=${() => this.selectTab(t.id)}>${t.name}</button>`)}
-							</nav>
-							<button
-								type="button"
-								aria-label="Add tab"
-								title="Add tab"
-								?disabled=${!channel}
-								@click=${() => (this.addingTab = !this.addingTab)}
-							>
-								+
-							</button>
-							${
-								sharedTab
-									? html`<button
-											type="button"
-											data-tab-conversation
-											aria-label="Show tab conversation"
-											title="Show tab conversation"
-											aria-expanded=${String(s.thread?.root.tabId === sharedTab.id)}
-											@click=${async () => {
-												if (s.thread?.root.tabId === sharedTab.id) {
-													await this.closeThread();
-													return;
-												}
-												if (!c?.openTabConversation(sharedTab.id)) {
-													this.notify('Could not open this tab conversation');
-													return;
-												}
-												await Promise.resolve();
-												await this.updateComplete;
-												this.shadowRoot
-													?.querySelector<HTMLElement>('[data-thread-heading]')
-													?.focus();
-											}}
-										>
-											${icon('chat')}
-										</button>`
-									: nothing
-							}
-							${
-								sharedTab?.createdBy === s.user.id
-									? html`<office-ui-menu-button
-											label="Tab options"
-											icon="more"
-											icon-only
-											@office-command=${(event: CustomEvent<{ command: string }>) => {
-												if (event.detail.command === 'rename-tab') {
-													const name = globalThis.prompt?.('Tab name', sharedTab.name)?.trim();
-													if (name) c?.renameTab(sharedTab.id, name);
-												} else if (event.detail.command === 'remove-tab') {
-													if (!this.canLeaveContent()) return;
-													if (
-														globalThis.confirm?.(`Remove ${sharedTab.name} from this channel?`) ===
-															true &&
-														c?.removeTab(sharedTab.id)
-													) {
-														this.openRequest++;
-														this.preview = null;
-														this.tab = 'posts';
+					: chat
+						? chatHeader(chat, {
+								back: () => (this.mobileView = 'list'),
+								call: () => this.startMeeting(),
+								people: () => (this.chatPeople = true),
+							})
+						: html`<header class="channel-head">
+								<button
+									type="button"
+									class="back"
+									aria-label="Back to channels"
+									title="Back to channels"
+									@click=${() => (this.mobileView = 'list')}
+								>
+									${icon('back')}
+								</button>
+								<h1><span class="hash">#</span> ${channel?.name ?? 'No channel yet'}</h1>
+								<nav class="tabs" role="tablist">
+									${(['posts', 'files'] as const).map(
+										(t) =>
+											html`<button
+												type="button"
+												role="tab"
+												aria-selected=${String(this.tab === t)}
+												@click=${() => this.selectTab(t)}
+											>
+												${t === 'posts' ? 'Posts' : 'Shared'}
+											</button>`,
+									)}
+									${s.tabs.map((t) => html`<button type="button" role="tab" aria-selected=${String(this.tab === t.id)} @click=${() => this.selectTab(t.id)}>${t.name}</button>`)}
+								</nav>
+								<button
+									type="button"
+									aria-label="Add tab"
+									title="Add tab"
+									?disabled=${!channel}
+									@click=${() => (this.addingTab = !this.addingTab)}
+								>
+									+
+								</button>
+								${
+									sharedTab
+										? html`<button
+												type="button"
+												data-tab-conversation
+												aria-label="Show tab conversation"
+												title="Show tab conversation"
+												aria-expanded=${String(s.thread?.root.tabId === sharedTab.id)}
+												@click=${async () => {
+													if (s.thread?.root.tabId === sharedTab.id) {
+														await this.closeThread();
+														return;
 													}
-												}
-											}}
-											><office-ui-menu-item
-												label="Rename tab"
-												command="rename-tab"
-											></office-ui-menu-item
-											><office-ui-menu-item
-												label="Remove tab"
-												command="remove-tab"
-											></office-ui-menu-item
-										></office-ui-menu-button>`
-									: nothing
-							}
-							<span class="topic">${channel?.topic ?? ''}</span>
-							<div class="people" aria-label="People online">
-								${s.people.slice(0, 5).map((p) => html`<office-ui-avatar size="sm" name=${p.name} seed=${p.id} color=${p.color} presence=${p.availability}></office-ui-avatar>`)}
-								${s.people.length > 5 ? html`<span class="more">+${s.people.length - 5}</span>` : nothing}
-							</div>
-							<button
-								type="button"
-								class="meet"
-								?disabled=${!channel}
-								@click=${() => this.startMeeting()}
-							>
-								${s.channels.find((x) => x.id === s.selectedChannelId)?.live ? 'Join call' : 'Meet now'}
-							</button>
-						</header>`
+													if (!c?.openTabConversation(sharedTab.id)) {
+														this.notify('Could not open this tab conversation');
+														return;
+													}
+													await Promise.resolve();
+													await this.updateComplete;
+													this.shadowRoot
+														?.querySelector<HTMLElement>('[data-thread-heading]')
+														?.focus();
+												}}
+											>
+												${icon('chat')}
+											</button>`
+										: nothing
+								}
+								${
+									sharedTab?.createdBy === s.user.id
+										? html`<office-ui-menu-button
+												label="Tab options"
+												icon="more"
+												icon-only
+												@office-command=${(event: CustomEvent<{ command: string }>) => {
+													if (event.detail.command === 'rename-tab') {
+														const name = globalThis.prompt?.('Tab name', sharedTab.name)?.trim();
+														if (name) c?.renameTab(sharedTab.id, name);
+													} else if (event.detail.command === 'remove-tab') {
+														if (!this.canLeaveContent()) return;
+														if (
+															globalThis.confirm?.(
+																`Remove ${sharedTab.name} from this channel?`,
+															) === true &&
+															c?.removeTab(sharedTab.id)
+														) {
+															this.openRequest++;
+															this.preview = null;
+															this.tab = 'posts';
+														}
+													}
+												}}
+												><office-ui-menu-item
+													label="Rename tab"
+													command="rename-tab"
+												></office-ui-menu-item
+												><office-ui-menu-item
+													label="Remove tab"
+													command="remove-tab"
+												></office-ui-menu-item
+											></office-ui-menu-button>`
+										: nothing
+								}
+								<span class="topic">${channel?.topic ?? ''}</span>
+								<div class="people" aria-label="People online">
+									${s.people.slice(0, 5).map((p) => html`<office-ui-avatar size="sm" name=${p.name} seed=${p.id} color=${p.color} presence=${p.availability}></office-ui-avatar>`)}
+									${s.people.length > 5 ? html`<span class="more">+${s.people.length - 5}</span>` : nothing}
+								</div>
+								<button
+									type="button"
+									class="meet"
+									?disabled=${!channel}
+									@click=${() => this.startMeeting()}
+								>
+									${s.channels.find((x) => x.id === s.selectedChannelId)?.live ? 'Join call' : 'Meet now'}
+								</button>
+							</header>`
 			}
 			${c ? messageTransfers(s, c) : nothing}
 			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
@@ -1049,6 +1134,8 @@ export class TeamsApp extends LitElement {
 										.pinnedIds=${s.pinned.map((p) => p.message.id)}
 										self-id=${s.user.id}
 										.highlightId=${this.highlightId}
+										.meetings=${meetingCards(s.meetings, Date.now())}
+										@office-chat-meeting=${(e: CustomEvent<{ meetingId: string; action: 'join' | 'open' }>) => (e.detail.action === 'join' ? void this.joinMeeting(e.detail.meetingId) : this.openMeeting(e.detail.meetingId))}
 										@office-chat-pin=${(e: CustomEvent<{ messageId: string }>) => c?.pinMessage(e.detail.messageId)}
 										@office-chat-unpin=${(e: CustomEvent<{ messageId: string }>) => c?.unpinMessage(e.detail.messageId)}
 										@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
@@ -1071,7 +1158,7 @@ export class TeamsApp extends LitElement {
 													.mentionTargets=${s.mentionTargets}
 													@office-chat-draft=${(e: CustomEvent<TeamsState['draft']>) => c?.setDraft(e.detail)}
 													?disabled=${!channel}
-													placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
+													placeholder=${chat ? `Message ${chat.title}` : channel ? `Message # ${channel.name}` : 'Create a channel first'}
 													@office-chat-typing=${() => c?.notifyTyping()}
 													@office-chat-cancel=${() => c?.cancelCompose()}
 													@office-chat-send=${(e: CustomEvent<ChatSendDetail>) => void c?.send(e.detail)}
@@ -1152,6 +1239,170 @@ export class TeamsApp extends LitElement {
 		await this.updateComplete;
 		this.shadowRoot?.querySelector<HTMLElement>('[data-thread-heading]')?.focus();
 	}
+	private callHeading(call: NonNullable<TeamsState['call']>): string {
+		return call.kind === 'channel' ? `# ${call.channelName}` : call.channelName;
+	}
+
+	/** Teams rail: if a chat is selected, go back to the channel you were in. */
+	private leaveChatSelection(): void {
+		const st = this.teams.state;
+		const c = this.teams.client;
+		if (!st || !c || !st.chats.some((x) => x.id === st.selectedChannelId)) return;
+		const target = st.channels.some((x) => x.id === this.lastChannelId)
+			? this.lastChannelId
+			: st.channels[0]?.id;
+		if (target) c.select(target);
+	}
+
+	private chatEmpty() {
+		return html`<div class="empty-main">
+			<h1>Chat</h1>
+			<p>Pick a chat from the list, or start a new one.</p>
+			<button type="button" @click=${() => (this.newChat = true)}>New chat</button>
+		</div>`;
+	}
+
+	private commitChat(ids: string[], name: string): boolean {
+		const c = this.client;
+		if (!c || !this.closePreview()) return false;
+		const id = c.createGroupChat(ids, name);
+		if (!id) return false;
+		this.newChat = false;
+		this.rail = 'chat';
+		this.meeting = false;
+		this.tab = 'posts';
+		this.mobileView = 'conversation';
+		return true;
+	}
+
+	private chatDialogs(s: TeamsState) {
+		const c = this.teams.client;
+		const chat = s.chats.find((x) => x.id === s.selectedChannelId) ?? null;
+		return html`
+			<teams-new-chat-dialog
+				?open=${this.newChat}
+				.contacts=${s.contacts}
+				.create=${(ids: string[], name: string) => this.commitChat(ids, name)}
+				@teams-dialog-close=${() => (this.newChat = false)}
+			></teams-new-chat-dialog>
+			<teams-chat-people-dialog
+				?open=${this.chatPeople && chat !== null}
+				.chat=${chat}
+				.contacts=${s.contacts}
+				@teams-chat-rename=${(e: CustomEvent<{ id: string; name: string }>) => c?.renameChat(e.detail.id, e.detail.name)}
+				@teams-chat-add=${(e: CustomEvent<{ id: string; userIds: string[] }>) => c?.addToChat(e.detail.id, e.detail.userIds)}
+				@teams-chat-remove=${(e: CustomEvent<{ id: string; userId: string }>) => c?.removeFromChat(e.detail.id, e.detail.userId)}
+				@teams-chat-leave=${(e: CustomEvent<{ id: string }>) => {
+					if (
+						globalThis.confirm?.('Leave this chat? You will stop receiving its messages.') === false
+					)
+						return;
+					if (c?.leaveChat(e.detail.id)) {
+						this.chatPeople = false;
+						this.mobileView = 'list';
+					}
+				}}
+				@teams-dialog-close=${() => (this.chatPeople = false)}
+			></teams-chat-people-dialog>
+		`;
+	}
+
+	// ---- calendar ---------------------------------------------------------------------------
+	private calendarMain(s: TeamsState) {
+		return html`
+			<div class="calendar-back">
+				<button type="button" @click=${() => (this.mobileView = 'list')}>
+					${icon('back')} Upcoming meetings
+				</button>
+			</div>
+			<office-ui-calendar-view
+				.meetings=${s.meetings}
+				.zone=${s.viewerZone}
+				@office-calendar-open=${(e: CustomEvent<{ meetingId: string; start: number }>) => (this.meetingDetails = { meetingId: e.detail.meetingId, start: e.detail.start })}
+				@office-calendar-new=${(e: CustomEvent<{ start: number }>) => (this.meetingForm = { meetingId: '', start: e.detail.start })}
+			></office-ui-calendar-view>
+		`;
+	}
+
+	/** Open the calendar on a meeting's details, for example from its reminder. */
+	private openMeeting(meetingId: string, start = 0): void {
+		if (!this.closePreview()) return;
+		this.settingsOpen = false;
+		this.meeting = false;
+		this.rail = 'calendar';
+		this.mobileView = 'conversation';
+		this.meetingDetails = { meetingId, start };
+	}
+
+	private async joinMeeting(meetingId: string): Promise<void> {
+		if (!this.closePreview()) return;
+		this.meetingDetails = null;
+		this.settingsOpen = false;
+		if (await this.teams.client?.joinMeeting(meetingId)) {
+			this.meeting = true;
+			this.rail = 'calendar';
+			this.mobileView = 'conversation';
+		}
+	}
+
+	private saveMeeting(form: MeetingFormInput, id?: string): boolean {
+		const c = this.client;
+		if (!c) return false;
+		const saved = id ? c.updateMeeting(id, form) : c.createMeeting(form);
+		if (!saved) return false;
+		this.meetingForm = null;
+		return true;
+	}
+
+	private calendarDialogs(s: TeamsState) {
+		const c = this.teams.client;
+		const editing = this.meetingForm?.meetingId
+			? (s.meetings.find((m) => m.id === this.meetingForm?.meetingId) ?? null)
+			: null;
+		const details = this.meetingDetails
+			? (s.meetings.find((m) => m.id === this.meetingDetails?.meetingId) ?? null)
+			: null;
+		return html`
+			<teams-meeting-dialog
+				?open=${this.meetingForm !== null}
+				.meeting=${editing}
+				.start=${this.meetingForm?.start ?? 0}
+				.contacts=${s.contacts}
+				.channels=${s.channels.map((ch) => ({ id: ch.id, name: ch.name }))}
+				.save=${(form: MeetingFormInput, id?: string) => this.saveMeeting(form, id)}
+				@teams-dialog-close=${() => (this.meetingForm = null)}
+			></teams-meeting-dialog>
+			<teams-meeting-details
+				?open=${details !== null}
+				.meeting=${details}
+				.occurrenceStart=${this.meetingDetails?.start ?? 0}
+				.zone=${s.viewerZone}
+				.channelName=${s.channels.find((ch) => ch.id === details?.channelId)?.name ?? ''}
+				@teams-meeting-join=${(e: CustomEvent<{ meetingId: string }>) => void this.joinMeeting(e.detail.meetingId)}
+				@teams-meeting-chat=${(e: CustomEvent<{ meetingId: string }>) => {
+					const target = s.meetings.find((m) => m.id === e.detail.meetingId);
+					const conversation = target?.chatId ?? target?.channelId;
+					this.meetingDetails = null;
+					if (conversation) this.selectChannel(conversation);
+				}}
+				@teams-meeting-edit=${(e: CustomEvent<{ meetingId: string }>) => {
+					this.meetingDetails = null;
+					this.meetingForm = { meetingId: e.detail.meetingId, start: 0 };
+				}}
+				@teams-meeting-cancel=${(e: CustomEvent<{ meetingId: string }>) => {
+					if (globalThis.confirm?.('Cancel this meeting for everyone?') === false) return;
+					if (c?.cancelMeeting(e.detail.meetingId)) this.meetingDetails = null;
+				}}
+				@teams-meeting-ics=${(e: CustomEvent<{ meetingId: string }>) => {
+					const file = c?.meetingIcs(e.detail.meetingId);
+					if (file && !downloadText(file.name, file.text))
+						this.notify('Could not start the download');
+				}}
+				@teams-dialog-close=${() => (this.meetingDetails = null)}
+			></teams-meeting-details>
+		`;
+	}
+
 	private async resumeDraft(context: DraftContext): Promise<void> {
 		if (!this.closePreview() || !this.teams.client?.openDraft(context)) return;
 		this.rail = 'teams';
@@ -1228,7 +1479,7 @@ export class TeamsApp extends LitElement {
 		if (call.phase === 'prejoin')
 			return html`
 				<office-ui-prejoin
-					heading=${`# ${call.channelName}`}
+					heading=${this.callHeading(call)}
 					name=${s.user.name}
 					.preview=${call.preview as unknown as MediaStream | null}
 					?audio=${call.prejoin.audio}
@@ -1242,7 +1493,7 @@ export class TeamsApp extends LitElement {
 		return html`
 			<section class="meeting">
 				<office-ui-call-controls
-					heading=${`# ${call.channelName}`}
+					heading=${this.callHeading(call)}
 					started-at=${call.startedAt ?? 0}
 					?mic=${self?.state.audio}
 					?camera=${self?.state.video}
