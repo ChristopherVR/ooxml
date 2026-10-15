@@ -4,22 +4,57 @@ import { button } from './frame';
 
 const MAX_EXTRA_ROWS = 62;
 
-/**
- * The third and following row fields: one chooser per field, in nesting order, each with its own
- * remove button. The choosers share the source fields of the first two.
- */
-export function pivotRowControls(
+const LABELS = {
+	row: {
+		add: 'Add Row Field',
+		remove: 'Remove Row Field',
+		group: 'Additional Row Field',
+		field: 'Row Field:',
+		marker: 'pivotRow',
+	},
+	column: {
+		add: 'Add Column Field',
+		remove: 'Remove Column Field',
+		group: 'Additional Column Field',
+		field: 'Column Field:',
+		marker: 'pivotColumn',
+	},
+} as const;
+
+/** The third and following row fields (see `pivotFieldListControls`). */
+export const pivotRowControls = (
 	ctx: EditorContext,
 	initial: readonly string[],
 	changed: () => void,
 	initialFields: readonly string[] = [],
+) => pivotFieldListControls(ctx, 'row', initial, changed, initialFields);
+
+/** The second and following column fields (see `pivotFieldListControls`). */
+export const pivotColumnControls = (
+	ctx: EditorContext,
+	initial: readonly string[],
+	changed: () => void,
+	initialFields: readonly string[] = [],
+) => pivotFieldListControls(ctx, 'column', initial, changed, initialFields);
+
+/**
+ * Further fields of one axis: one chooser per field, in nesting order, each with its own remove
+ * button. The choosers share the source fields of the first ones.
+ */
+function pivotFieldListControls(
+	ctx: EditorContext,
+	axis: keyof typeof LABELS,
+	initial: readonly string[],
+	changed: () => void,
+	initialFields: readonly string[] = [],
 ) {
+	const text = LABELS[axis];
 	const doc = ctx.host.ownerDocument;
 	const host = doc.createElement('div');
 	const controls: { element: HTMLElement; field: HTMLSelectElement }[] = [];
 	let fields: string[] = [...initialFields];
 	let ready = false;
-	const add = button(ctx, 'Add Row Field');
+	const add = button(ctx, text.add);
 	const load = (control: HTMLSelectElement, preferred = control.value) => {
 		control.replaceChildren(
 			...fields.map((name) => {
@@ -35,9 +70,9 @@ export function pivotRowControls(
 		if (controls.length >= MAX_EXTRA_ROWS) return;
 		const source = select(ctx, [], name ?? '');
 		load(source, name ?? fields.find((candidate) => !used().includes(candidate)));
-		const remove = button(ctx, 'Remove Row Field');
-		const element = fieldset(ctx, 'Additional Row Field', field(ctx, 'Row Field:', source), remove);
-		element.dataset.pivotRow = '';
+		const remove = button(ctx, text.remove);
+		const element = fieldset(ctx, text.group, field(ctx, text.field, source), remove);
+		element.dataset[text.marker] = '';
 		const entry = { element, field: source };
 		source.addEventListener('change', () => changed());
 		remove.addEventListener('click', () => {

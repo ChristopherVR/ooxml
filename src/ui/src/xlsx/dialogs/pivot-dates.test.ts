@@ -187,6 +187,26 @@ describe('many row fields and field settings', () => {
 		expect(pivot().moreRowFields).toBeUndefined();
 	});
 
+	it('adds and removes column fields in the PivotTable settings', async () => {
+		const { ctx, pivot } = setup({ columnField: 'Product' });
+		let done = ctx.dialogs.open('pivot-settings');
+		let dialog = dialogEl(ctx, 'pivot-settings');
+		clickButton(dialog, 'Add Column Field');
+		const extra = dialog.querySelector<HTMLElement>('[data-pivot-column]')!;
+		setValue(inputByLabel<HTMLSelectElement>(extra, 'Column Field:'), 'Region');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(pivot()).toMatchObject({ columnField: 'Product', moreColumnFields: ['Region'] });
+		expect(pivotGrid(pivot()).values[1]).toContain('Apple Total');
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		expect(dialog.querySelector('[data-pivot-column]')).not.toBeNull();
+		clickButton(dialog, 'Remove Column Field');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(pivot().moreColumnFields).toBeUndefined();
+	});
+
 	it('sets Automatic, None and custom subtotals per row field', async () => {
 		const { ctx, edit, pivot } = rows();
 		expect(command('pivot.field-settings').enabled?.(ctx)).toBe(true);
@@ -250,6 +270,12 @@ describe('translations of the new text', () => {
 		'Add Row Field',
 		'Remove Row Field',
 		'Additional Row Field',
+		'Add Column Field',
+		'Remove Column Field',
+		'Additional Column Field',
+		'Choose valid PivotTable column fields.',
+		'Values on rows support one column field.',
+		'Report filters support one column field.',
 		'Subtotals',
 		'Select one or more functions:',
 		'Product',

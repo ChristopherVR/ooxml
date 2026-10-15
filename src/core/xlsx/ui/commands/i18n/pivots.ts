@@ -238,6 +238,42 @@ export const PIVOT_STRINGS: Translations = {
 		'Quitar campo de fila',
 		'删除行字段',
 	],
+	'Add Column Field': [
+		'Ajouter un champ de colonne',
+		'Spaltenfeld hinzufügen',
+		'Agregar campo de columna',
+		'添加列字段',
+	],
+	'Remove Column Field': [
+		'Supprimer le champ de colonne',
+		'Spaltenfeld entfernen',
+		'Quitar campo de columna',
+		'删除列字段',
+	],
+	'Additional Column Field': [
+		'Champ de colonne supplémentaire',
+		'Weiteres Spaltenfeld',
+		'Campo de columna adicional',
+		'附加列字段',
+	],
+	'Choose valid PivotTable column fields.': [
+		'Choisissez des champs de colonne de tableau croisé dynamique valides.',
+		'Wählen Sie gültige PivotTable-Spaltenfelder.',
+		'Elija campos de columna de tabla dinámica válidos.',
+		'请选择有效的数据透视表列字段。',
+	],
+	'Values on rows support one column field.': [
+		'Les valeurs en lignes prennent en charge un seul champ de colonne.',
+		'Werte in Zeilen unterstützen nur ein Spaltenfeld.',
+		'Los valores en filas admiten un solo campo de columna.',
+		'行上的值仅支持一个列字段。',
+	],
+	'Report filters support one column field.': [
+		'Les filtres de rapport prennent en charge un seul champ de colonne.',
+		'Berichtsfilter unterstützen nur ein Spaltenfeld.',
+		'Los filtros de informe admiten un solo campo de columna.',
+		'报表筛选器仅支持一个列字段。',
+	],
 	'Additional Row Field': [
 		'Champ de ligne supplémentaire',
 		'Weiteres Zeilenfeld',

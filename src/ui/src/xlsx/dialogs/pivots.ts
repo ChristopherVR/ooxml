@@ -12,7 +12,7 @@ import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 import { pivotPageControls } from './pivot-page-filter';
-import { pivotRowControls } from './pivot-rows';
+import { pivotColumnControls, pivotRowControls } from './pivot-rows';
 import { pivotValueControls, PIVOT_AGGREGATE_OPTIONS } from './pivot-values';
 
 export function openPivotTable(ctx: EditorContext, settings = false): Promise<boolean | undefined> {
@@ -49,6 +49,12 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const more = pivotRowControls(
 		ctx,
 		pivot?.moreRowFields ?? [],
+		() => updateRows(),
+		pivot ? pivotAxisChoices(pivot) : [],
+	);
+	const moreColumns = pivotColumnControls(
+		ctx,
+		pivot?.moreColumnFields ?? [],
 		() => updateRows(),
 		pivot ? pivotAxisChoices(pivot) : [],
 	);
@@ -105,6 +111,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			? pivotAxisChoices({ ...pivot, fields, records: pageData.records })
 			: fields;
 		more.load(axisFields);
+		moreColumns.load(axisFields);
 		for (const [control, chosen, optional] of [
 			[row, pivot?.rowField, false],
 			[second, pivot?.secondRowField, true],
@@ -132,18 +139,22 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		axis.disabled = extras.count() === 0;
 		if (axis.disabled) axis.value = 'columns';
 		more.enable(!!second.value);
+		moreColumns.enable(!!column.value);
 		page.update(axis.value === 'rows', [
 			row.value,
 			second.value,
 			...more.read(),
 			column.value,
+			...moreColumns.read(),
 			value.value,
 			...extras.read().map((v) => v.field),
 		]);
 		for (const option of second.options)
 			option.disabled = !!page.source.value && option.value === page.source.value;
 		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled =
-			!!page.source.value || (more.count() > 0 && !!second.value);
+			!!page.source.value ||
+			(more.count() > 0 && !!second.value) ||
+			(moreColumns.count() > 0 && !!column.value);
 		const rowsAxis = axis.value === 'rows';
 		valuesPlacement.disabled = !rowsAxis || !second.value;
 		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
@@ -197,6 +208,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			tabularNotice,
 			repeat.wrapper,
 			field(ctx, 'Column Field:', column),
+			moreColumns.host,
 			...page.body,
 			field(ctx, 'Value Field:', value),
 			field(ctx, 'Summarize Values By:', aggregate),
@@ -220,6 +232,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 				subtotals: subtotals.input.checked,
 				repeatLabels: repeat.input.checked,
 				columnField: column.value,
+				moreColumnFields: column.value ? moreColumns.read() : [],
 				valueField: value.value,
 				aggregate: aggregate.value as PivotAggregate,
 				additionalValues: extras.read(),
@@ -238,6 +251,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					(pivot.subtotals !== false) !== options.subtotals ||
 					(pivot.repeatLabels ?? false) !== options.repeatLabels ||
 					(pivot.columnField ?? '') !== options.columnField ||
+					JSON.stringify(pivot.moreColumnFields ?? []) !==
+						JSON.stringify(options.moreColumnFields) ||
 					pivot.valueField !== options.valueField ||
 					pivot.aggregate !== options.aggregate ||
 					JSON.stringify(pivot.additionalValues ?? []) !== JSON.stringify(options.additionalValues)
