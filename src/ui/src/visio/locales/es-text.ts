@@ -1,0 +1,105 @@
+/** Visio ribbon strings for the es locale (text), keyed by the English text. Not reviewed by a native speaker. */
+export const esText: Readonly<Record<string, string>> = {
+	'Diagram controls': 'Controles del diagrama',
+	'Home commands': 'Comandos de Inicio',
+	'Insert commands': 'Comandos de Insertar',
+	'Design commands': 'Comandos de Diseño',
+	'Data commands': 'Comandos de Datos',
+	'Process commands': 'Comandos de Proceso',
+	'Review commands': 'Comandos de Revisar',
+	'View commands': 'Comandos de Vista',
+	'Help commands': 'Comandos de Ayuda',
+	'Font Size': 'Tamaño de fuente',
+	'Shape Data Window': 'Ventana Datos de forma',
+	'External Data Window': 'Ventana Datos externos',
+	'Data Graphic Fields': 'Campos de gráficos de datos',
+	'Issues Window': 'Ventana Problemas',
+	Ruler: 'Regla',
+	Grid: 'Cuadrícula',
+	'Page Breaks': 'Saltos de página',
+	Guides: 'Guías',
+	'Dynamic Grid': 'Cuadrícula dinámica',
+	AutoConnect: 'Conexión automática',
+	'Connection Points': 'Puntos de conexión',
+	'Font options (Text dialog)': 'Opciones de fuente (cuadro de diálogo Texto)',
+	'Paragraph options (Text dialog)': 'Opciones de párrafo (cuadro de diálogo Texto)',
+	'Format Shape': 'Formato de forma',
+	'Layout options': 'Opciones de diseño',
+	'Ruler & Grid': 'Regla y cuadrícula',
+	'Snap & Glue': 'Ajustar y pegar',
+	'More Colors...': 'Más colores...',
+	'No Fill': 'Sin relleno',
+	'No Line': 'Sin línea',
+	'Tell me what you want to do': '¿Qué desea hacer?',
+	"Theme styles from the drawing's theme. A drawing without a theme gets the fixed Office colours shown here.":
+		'Estilos del tema del dibujo. Un dibujo sin tema recibe los colores fijos de Office que se muestran aquí.',
+	'Select one shape to change.': 'Seleccione una forma para cambiarla.',
+	'Open a .vsdx file to insert diagram parts.':
+		'Abra un archivo .vsdx para insertar partes de diagrama.',
+	'Apply a theme to the current page.': 'Aplica un tema a la página actual.',
+	'Quick-styled shapes take its colours; text keeps its own font.':
+		'Las formas con estilo rápido toman sus colores; el texto conserva su fuente.',
+	"Pick one of the current theme's four colour variants.":
+		'Elija una de las cuatro variantes de color del tema actual.',
+	'Open a .vsdx file to add backgrounds.': 'Abra un archivo .vsdx para agregar fondos.',
+	'Open a .vsdx file to lay out its shapes.': 'Abra un archivo .vsdx para diseñar sus formas.',
+	'open a .vsdx file to lay out its shapes.': 'Abra un archivo .vsdx para diseñar sus formas.',
+	'3-D rotation needs a 3-D renderer.': 'La rotación 3D requiere un motor de representación 3D.',
+	'Bevel needs 3-D lighting the SVG renderer does not draw.':
+		'El bisel requiere iluminación 3D que el motor SVG no dibuja.',
+	'Custom theme colour sets are not written yet; pick a theme or variant.':
+		'Los conjuntos de colores de tema personalizados aún no se escriben; elija un tema o una variante.',
+	'DWG and DXF import is not supported.': 'No se admite la importación de DWG y DXF.',
+	'Data graphics are chosen in the Data Graphics menu; there is no fields pane.':
+		'Los gráficos de datos se eligen en el menú Gráficos de datos; no hay panel de campos.',
+	'Data graphics are placed at their default position; this option is not built yet.':
+		'Los gráficos de datos se colocan en su posición predeterminada; esta opción aún no está disponible.',
+	'Embedded Excel charts are not supported.': 'No se admiten los gráficos de Excel incrustados.',
+	'Embedded OLE objects are not supported; only pictures can be inserted.':
+		'No se admiten los objetos OLE incrustados; solo se pueden insertar imágenes.',
+	'Embellishment needs theme-driven shape geometry.':
+		'El adorno requiere geometría de forma controlada por el tema.',
+	'Feedback is not collected by this viewer.': 'Este visor no recopila comentarios.',
+	'Ink strokes are not supported.': 'No se admiten los trazos de lápiz.',
+	'Macros and add-ons never run in this viewer.':
+		'Las macros y los complementos nunca se ejecutan en este visor.',
+	'No SharePoint server is connected.': 'No hay ningún servidor de SharePoint conectado.',
+	'No support service is connected.': 'No hay ningún servicio de soporte conectado.',
+	'No thesaurus dictionary is bundled with this editor.':
+		'Este editor no incluye ningún diccionario de sinónimos.',
+	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.':
+		'Las filas se vinculan arrastrándolas desde la ventana Datos externos; el asistente de vinculación aún no está disponible.',
+	'The viewer shows one drawing window.': 'El visor muestra una sola ventana de dibujo.',
+	'Theme connector styles cannot be chosen separately yet.':
+		'Aún no se pueden elegir por separado los estilos de conector del tema.',
+	'Theme effect styles are not rendered yet.':
+		'Los estilos de efecto del tema aún no se representan.',
+	'Theme fonts are written to the theme part, but text does not follow theme fonts yet.':
+		'Las fuentes del tema se escriben en la parte del tema, pero el texto aún no las sigue.',
+	'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.':
+		'Los conjuntos de reglas de Visio (RuleFilter y RuleTest basados en fórmulas) no se evalúan; solo se ejecutan las reglas genéricas integradas.',
+	'Bottom Right': 'Abajo a la derecha',
+	Bottom: 'Abajo',
+	'Bottom Left': 'Abajo a la izquierda',
+	Right: 'Derecha',
+	Left: 'Izquierda',
+	'Top Right': 'Arriba a la derecha',
+	Top: 'Arriba',
+	'Top Left': 'Arriba a la izquierda',
+	Tight: 'Ajustada',
+	Half: 'Media',
+	Full: 'Completa',
+	touching: 'tocando',
+	'More tabs': 'Más pestañas',
+	More: 'Más',
+	File: 'Archivo',
+	'Collapse the ribbon': 'Contraer la cinta de opciones',
+	'{label}: not available yet. {reason}': '{label}: aún no disponible. {reason}',
+	'Pattern {n}': 'Trama {n}',
+	'{n} pt glow': '{n} pt de resplandor',
+	'Glow: {n} pt; Accent color {m}': 'Resplandor: {n} pt; Color de énfasis {m}',
+	'{n} Point': '{n} pt',
+	'Offset: {pos}': 'Desplazamiento: {pos}',
+	'{size} Reflection, touching': 'Reflexión {size}, tocando',
+	'{size} Reflection, {n} pt offset': 'Reflexión {size}, desplazamiento de {n} pt',
+};

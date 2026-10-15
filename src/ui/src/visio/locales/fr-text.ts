@@ -1,0 +1,108 @@
+/** Visio ribbon strings for the fr locale (text), keyed by the English text. Not reviewed by a native speaker. */
+export const frText: Readonly<Record<string, string>> = {
+	'Diagram controls': 'Commandes du diagramme',
+	'Home commands': "Commandes de l'onglet Accueil",
+	'Insert commands': "Commandes de l'onglet Insertion",
+	'Design commands': "Commandes de l'onglet Création",
+	'Data commands': "Commandes de l'onglet Données",
+	'Process commands': "Commandes de l'onglet Processus",
+	'Review commands': "Commandes de l'onglet Révision",
+	'View commands': "Commandes de l'onglet Affichage",
+	'Help commands': "Commandes de l'onglet Aide",
+	'Font Size': 'Taille de police',
+	'Shape Data Window': 'Fenêtre Données de forme',
+	'External Data Window': 'Fenêtre Données externes',
+	'Data Graphic Fields': 'Champs de graphique de données',
+	'Issues Window': 'Fenêtre Problèmes',
+	Ruler: 'Règle',
+	Grid: 'Grille',
+	'Page Breaks': 'Sauts de page',
+	Guides: 'Repères',
+	'Dynamic Grid': 'Grille dynamique',
+	AutoConnect: 'Connexion automatique',
+	'Connection Points': 'Points de connexion',
+	'Font options (Text dialog)': 'Options de police (boîte de dialogue Texte)',
+	'Paragraph options (Text dialog)': 'Options de paragraphe (boîte de dialogue Texte)',
+	'Format Shape': 'Format de la forme',
+	'Layout options': 'Options de disposition',
+	'Ruler & Grid': 'Règle et grille',
+	'Snap & Glue': 'Aimantation et collage',
+	'More Colors...': 'Autres couleurs...',
+	'No Fill': 'Aucun remplissage',
+	'No Line': 'Aucune ligne',
+	'Tell me what you want to do': 'Que voulez-vous faire ?',
+	"Theme styles from the drawing's theme. A drawing without a theme gets the fixed Office colours shown here.":
+		'Styles issus du thème du dessin. Un dessin sans thème reçoit les couleurs Office fixes affichées ici.',
+	'Select one shape to change.': 'Sélectionnez une forme à modifier.',
+	'Open a .vsdx file to insert diagram parts.':
+		'Ouvrez un fichier .vsdx pour insérer des éléments de diagramme.',
+	'Apply a theme to the current page.': 'Appliquer un thème à la page active.',
+	'Quick-styled shapes take its colours; text keeps its own font.':
+		'Les formes à style rapide en prennent les couleurs ; le texte garde sa police.',
+	"Pick one of the current theme's four colour variants.":
+		"Choisissez l'une des quatre variantes de couleur du thème actuel.",
+	'Open a .vsdx file to add backgrounds.':
+		'Ouvrez un fichier .vsdx pour ajouter des arrière-plans.',
+	'Open a .vsdx file to lay out its shapes.': 'Ouvrez un fichier .vsdx pour disposer ses formes.',
+	'open a .vsdx file to lay out its shapes.': 'Ouvrez un fichier .vsdx pour disposer ses formes.',
+	'3-D rotation needs a 3-D renderer.': 'La rotation 3D nécessite un moteur de rendu 3D.',
+	'Bevel needs 3-D lighting the SVG renderer does not draw.':
+		'Le biseau nécessite un éclairage 3D que le moteur SVG ne dessine pas.',
+	'Custom theme colour sets are not written yet; pick a theme or variant.':
+		'Les jeux de couleurs de thème personnalisés ne sont pas encore écrits ; choisissez un thème ou une variante.',
+	'DWG and DXF import is not supported.': "L'importation de DWG et DXF n'est pas prise en charge.",
+	'Data graphics are chosen in the Data Graphics menu; there is no fields pane.':
+		"Les graphiques de données se choisissent dans le menu Graphiques de données ; il n'y a pas de volet des champs.",
+	'Data graphics are placed at their default position; this option is not built yet.':
+		"Les graphiques de données sont placés à leur position par défaut ; cette option n'est pas encore disponible.",
+	'Embedded Excel charts are not supported.':
+		'Les graphiques Excel incorporés ne sont pas pris en charge.',
+	'Embedded OLE objects are not supported; only pictures can be inserted.':
+		'Les objets OLE incorporés ne sont pas pris en charge ; seules les images peuvent être insérées.',
+	'Embellishment needs theme-driven shape geometry.':
+		"L'embellissement nécessite une géométrie de forme pilotée par le thème.",
+	'Feedback is not collected by this viewer.':
+		'Cette visionneuse ne recueille pas de commentaires.',
+	'Ink strokes are not supported.': "Les traits d'encre ne sont pas pris en charge.",
+	'Macros and add-ons never run in this viewer.':
+		"Les macros et compléments ne s'exécutent jamais dans cette visionneuse.",
+	'No SharePoint server is connected.': "Aucun serveur SharePoint n'est connecté.",
+	'No support service is connected.': "Aucun service de support n'est connecté.",
+	'No thesaurus dictionary is bundled with this editor.':
+		"Aucun dictionnaire des synonymes n'est fourni avec cet éditeur.",
+	'Rows are linked by dragging them from the External Data window; the linking wizard is not built yet.':
+		"Les lignes se lient en les faisant glisser depuis la fenêtre Données externes ; l'assistant de liaison n'est pas encore disponible.",
+	'The viewer shows one drawing window.': 'La visionneuse affiche une seule fenêtre de dessin.',
+	'Theme connector styles cannot be chosen separately yet.':
+		'Les styles de connecteur du thème ne peuvent pas encore être choisis séparément.',
+	'Theme effect styles are not rendered yet.':
+		"Les styles d'effet du thème ne sont pas encore rendus.",
+	'Theme fonts are written to the theme part, but text does not follow theme fonts yet.':
+		'Les polices du thème sont écrites dans la partie du thème, mais le texte ne les suit pas encore.',
+	'Visio rule sets (formula-based RuleFilter and RuleTest) are not evaluated; only the built-in generic rules run.':
+		"Les jeux de règles Visio (RuleFilter et RuleTest à base de formules) ne sont pas évalués ; seules les règles génériques intégrées s'exécutent.",
+	'Bottom Right': 'En bas à droite',
+	Bottom: 'En bas',
+	'Bottom Left': 'En bas à gauche',
+	Right: 'À droite',
+	Left: 'À gauche',
+	'Top Right': 'En haut à droite',
+	Top: 'En haut',
+	'Top Left': 'En haut à gauche',
+	Tight: 'Serrée',
+	Half: 'Moitié',
+	Full: 'Complète',
+	touching: 'contigu',
+	'More tabs': 'Autres onglets',
+	More: 'Plus',
+	File: 'Fichier',
+	'Collapse the ribbon': 'Réduire le ruban',
+	'{label}: not available yet. {reason}': '{label} : pas encore disponible. {reason}',
+	'Pattern {n}': 'Motif {n}',
+	'{n} pt glow': 'Lueur de {n} pt',
+	'Glow: {n} pt; Accent color {m}': "Lueur : {n} pt ; Couleur d'accentuation {m}",
+	'{n} Point': '{n} pt',
+	'Offset: {pos}': 'Décalage : {pos}',
+	'{size} Reflection, touching': 'Réflexion : {size}, contiguë',
+	'{size} Reflection, {n} pt offset': 'Réflexion : {size}, décalage de {n} pt',
+};
