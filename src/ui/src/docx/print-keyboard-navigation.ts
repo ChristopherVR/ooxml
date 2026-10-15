@@ -2,29 +2,21 @@ import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { PrintEditingIndex } from './print-editing-index';
 import { caretRect } from './print-editing-geometry';
+import { affinityOnLine, lineForCaret, type CaretAffinity } from './print-caret-affinity';
 interface Options {
 	active(): boolean;
 	getView(): EditorView | undefined;
 	index: PrintEditingIndex;
 	position(id: string, offset: number): number | undefined;
-	select(id: string, offset: number, extend?: boolean): boolean;
+	select(id: string, offset: number, extend?: boolean, affinity?: CaretAffinity): boolean;
 	resolveHit(target: Element, x: number): { blockId: string; offset: number } | null;
 	scrollContainer: HTMLElement;
-	preferredPage(): string | undefined;
-	setPreferredPage(page: string | undefined): void;
+	/** Affinity of the current caret. */
+	affinity(): CaretAffinity;
 }
 export function printKeyboardNavigation(options: Options): (event: KeyboardEvent) => void {
-	const {
-		active,
-		getView,
-		index,
-		position,
-		select,
-		resolveHit,
-		scrollContainer,
-		preferredPage,
-		setPreferredPage,
-	} = options;
+	const { active, getView, index, position, select, resolveHit, scrollContainer, affinity } =
+		options;
 	let verticalX: number | undefined;
 	return (event) => {
 		const pageKey = event.key === 'PageUp' || event.key === 'PageDown';
@@ -60,19 +52,7 @@ export function printKeyboardNavigation(options: Options): (event: KeyboardEvent
 		const head = view.state.selection.head;
 		const paragraph = index.at(head);
 		if (!paragraph) return;
-		const matches = index
-			.block(paragraph.id)
-			.filter(
-				(line) =>
-					head >= paragraph.start + Number(line.dataset.sourceStart) &&
-					head <= paragraph.start + Number(line.dataset.sourceEnd),
-			);
-		const line =
-			matches
-				.filter(
-					(el) => el.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex === preferredPage(),
-				)
-				.at(-1) ?? matches.at(-1);
+		const line = lineForCaret(index.block(paragraph.id), head - paragraph.start, affinity());
 		if (!line) return;
 		let target = line;
 		let offset: number;
@@ -113,8 +93,9 @@ export function printKeyboardNavigation(options: Options): (event: KeyboardEvent
 			target = index.adjacent(line, event.key === 'ArrowUp' ? -1 : 1);
 			offset = resolveHit(target, verticalX)?.offset ?? Number(target.dataset.sourceStart);
 		}
-		setPreferredPage(target.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex);
-		if (select(target.dataset.blockId!, offset, event.shiftKey)) {
+		const targetBlock = index.block(target.dataset.blockId!);
+		const side: CaretAffinity = affinityOnLine(target, offset, targetBlock);
+		if (select(target.dataset.blockId!, offset, event.shiftKey, side)) {
 			event.preventDefault();
 			target.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 		}

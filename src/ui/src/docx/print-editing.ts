@@ -2,6 +2,7 @@ import { printKeyboardNavigation } from './print-keyboard-navigation';
 import { createPrintDragScroll } from './print-drag-scroll';
 import { PrintEditingIndex } from './print-editing-index';
 import { glyphRect, caretRect } from './print-editing-geometry';
+import { affinityOnLine, lineForCaret, type CaretAffinity } from './print-caret-affinity';
 import type { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
 
@@ -9,7 +10,7 @@ export interface PrintEditingBridge {
 	setActive(active: boolean): void;
 	refresh(): void;
 	destroy(): void;
-	select(blockId: string, offset: number, extend?: boolean): boolean;
+	select(blockId: string, offset: number, extend?: boolean, affinity?: CaretAffinity): boolean;
 	/** Place the caret on the line nearest a viewport point (the gutter beside the pages). */
 	selectNearest(clientX: number, clientY: number): boolean;
 }
@@ -35,7 +36,9 @@ export function createPrintEditingBridge(
 	let skipScroll = false;
 	let previousDoc: EditorView['state']['doc'] | undefined;
 	let previousHead = -1;
-	let preferredPage: string | undefined;
+	// Affinity belongs to one selection head; any other head (typing, programmatic) is downstream.
+	let affinity: CaretAffinity = 'downstream';
+	let affinityHead = -1;
 	const overlay = document.createElement('div');
 	overlay.className = 'dve-print-selection-layer';
 	overlay.setAttribute('aria-hidden', 'true');
@@ -85,17 +88,7 @@ export function createPrintEditingBridge(
 			const block = index.block(id);
 			if (head >= start && head <= end) {
 				const offset = head - start;
-				const candidates = block.filter(
-					(el) =>
-						Number(el.dataset.sourceStart) <= offset && Number(el.dataset.sourceEnd) >= offset,
-				);
-				const line =
-					candidates
-						.filter(
-							(el) =>
-								el.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex === preferredPage,
-						)
-						.at(-1) ?? candidates.at(-1);
+				const line = lineForCaret(block, offset, head === affinityHead ? affinity : 'downstream');
 				if (line) caret = caretRect(line, offset);
 			}
 			if (!empty && from <= end && to >= start) {
@@ -146,12 +139,21 @@ export function createPrintEditingBridge(
 		}
 	}
 
+	function currentHead(): number {
+		return getView()?.state.selection.head ?? -1;
+	}
+
 	function refresh() {
 		if (destroyed) return;
 		if (frame !== undefined) cancelAnimationFrame(frame);
 		frame = requestAnimationFrame(draw);
 	}
-	function select(blockId: string, offset: number, extend = false): boolean {
+	function select(
+		blockId: string,
+		offset: number,
+		extend = false,
+		side: CaretAffinity = 'downstream',
+	): boolean {
 		const view = getView(),
 			target = position(blockId, offset);
 		if (!view || target === undefined) return false;
@@ -160,6 +162,8 @@ export function createPrintEditingBridge(
 				TextSelection.create(view.state.doc, extend ? view.state.selection.anchor : target, target),
 			),
 		);
+		affinity = side;
+		affinityHead = view.state.selection.head;
 		if (!view.dom.hasAttribute('tabindex')) {
 			view.dom.tabIndex = 0;
 			view.dom.dataset.printTabstop = 'true';
@@ -174,12 +178,20 @@ export function createPrintEditingBridge(
 	 * nearest line, the way Word places the caret.
 	 */
 	function hit(event: PointerEvent) {
+		const found = locate(event);
+		if (!found) return undefined;
+		return { ...found.target, affinity: sideOf(found.line, found.target) };
+	}
+	function sideOf(line: HTMLElement, target: { blockId: string; offset: number }): CaretAffinity {
+		return affinityOnLine(line, target.offset, index.block(target.blockId));
+	}
+	function locate(event: PointerEvent) {
 		const root = pages.getRootNode() as Document | ShadowRoot;
 		const target = root.elementFromPoint?.(event.clientX, event.clientY);
 		const line = target?.closest<HTMLElement>('.dve-print-line[data-block-id]');
 		if (line && pages.contains(line)) {
-			preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
-			return resolveHit(target!, event.clientX) ?? undefined;
+			const resolved = resolveHit(target!, event.clientX);
+			return resolved ? { line, target: resolved } : undefined;
 		}
 		const origin = event.target instanceof Element ? event.target : target;
 		if (origin?.closest('button, a, input, textarea, select, [contenteditable="true"]'))
@@ -189,8 +201,8 @@ export function createPrintEditingBridge(
 		index.update(view.state.doc);
 		const nearest = index.nearest(event.clientX, event.clientY);
 		if (!nearest) return undefined;
-		preferredPage = nearest.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
-		return resolveHit(nearest, event.clientX) ?? undefined;
+		const resolved = resolveHit(nearest, event.clientX);
+		return resolved ? { line: nearest, target: resolved } : undefined;
 	}
 
 	function selectNearest(x: number, y: number): boolean {
@@ -200,8 +212,7 @@ export function createPrintEditingBridge(
 		const line = index.nearest(x, y);
 		const target = line && resolveHit(line, x);
 		if (!line || !target) return false;
-		preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
-		return select(target.blockId, target.offset);
+		return select(target.blockId, target.offset, false, sideOf(line, target));
 	}
 
 	function extendAt(x: number, y: number) {
@@ -212,8 +223,7 @@ export function createPrintEditingBridge(
 		if (!line) return;
 		const target = resolveHit(line, x);
 		if (!target) return;
-		preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
-		select(target.blockId, target.offset, true);
+		select(target.blockId, target.offset, true, sideOf(line, target));
 	}
 	function move(event: PointerEvent) {
 		if (!dragging) return;
@@ -239,7 +249,8 @@ export function createPrintEditingBridge(
 				return;
 			}
 			const target = hit(event);
-			if (!target || !select(target.blockId, target.offset, event.shiftKey)) return;
+			if (!target || !select(target.blockId, target.offset, event.shiftKey, target.affinity))
+				return;
 			event.preventDefault();
 			dragging = true;
 			window.addEventListener('pointermove', move);
@@ -260,10 +271,7 @@ export function createPrintEditingBridge(
 			select,
 			resolveHit,
 			scrollContainer,
-			preferredPage: () => preferredPage,
-			setPreferredPage: (page) => {
-				preferredPage = page;
-			},
+			affinity: () => (currentHead() === affinityHead ? affinity : 'downstream'),
 		}),
 		{ capture: true, signal: listeners.signal },
 	);
