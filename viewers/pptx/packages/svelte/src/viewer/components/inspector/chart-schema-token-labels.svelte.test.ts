@@ -208,16 +208,13 @@ describe('chartAdvancedSection token selects', () => {
 			onpatch: () => undefined,
 		});
 
-		const type = selectFor(target, 'Series chart type');
-		// The leading '' option ("Chart default") is part of the value set and
+		const type = selectFor(target, 'Series Chart Type');
+		// The leading '' option ("Default") is part of the value set and
 		// must survive untouched.
 		expect(values(type)).toStrictEqual(['', ...seriesTypes]);
-		expect(texts(type)).toStrictEqual([
-			'Chart default',
-			...expected(CHART_TYPE_LABEL_KEYS, seriesTypes),
-		]);
+		expect(texts(type)).toStrictEqual(['Default', ...expected(CHART_TYPE_LABEL_KEYS, seriesTypes)]);
 
-		const marker = selectFor(target, 'Marker');
+		const marker = selectFor(target, 'Marker Type');
 		expect(values(marker)).toStrictEqual(['', ...markers]);
 		expect(texts(marker)).toStrictEqual([
 			'None',
@@ -236,11 +233,11 @@ describe('chartLabelsAxesSection token selects', () => {
 			data: chartData(),
 			onpatch: () => undefined,
 		});
-		const select = selectFor(target, 'Position');
+		const select = selectFor(target, 'Label Position');
 
 		expect(values(select)).toStrictEqual(['', ...positions]);
 		expect(texts(select)).toStrictEqual([
-			'Automatic',
+			'Default',
 			...expected(CHART_DATA_LABEL_POSITION_LABEL_KEYS, positions),
 		]);
 	});
@@ -264,7 +261,7 @@ describe('chartLabelsAxesSection token selects', () => {
 			data: chartData(),
 			onpatch: () => undefined,
 		});
-		const select = selectFor(target, 'Grid dash');
+		const select = selectFor(target, 'Gridline dash');
 
 		// These options carried no `value` attribute before, so their TEXT was
 		// the submitted value. Translating the text without adding `value` would
@@ -282,7 +279,7 @@ describe('chartLabelsAxesSection token selects', () => {
 				patched = patch;
 			},
 		});
-		const select = selectFor(target, 'Grid dash');
+		const select = selectFor(target, 'Gridline dash');
 		select.value = 'lgDash';
 		select.dispatchEvent(new Event('change', { bubbles: true }));
 		flushSync();

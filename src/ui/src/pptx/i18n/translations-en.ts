@@ -697,6 +697,16 @@ export const translationsEn: Record<string, string> = {
 	'pptx.chart.pointLabelOverride': 'Point Label Override',
 	'pptx.chart.pointFill': 'Point fill',
 	'pptx.chart.pointFillClear': 'Clear point fill',
+	'pptx.chart.seriesName': 'Series name',
+	'pptx.chart.seriesValues': 'Series values',
+	'pptx.chart.seriesValueCell': '{{name}} value {{number}}',
+	'pptx.chart.seriesOptions': 'Series options',
+	'pptx.chart.dataLabelOptions': 'Data label options',
+	'pptx.chart.labelSeparator': 'Separator',
+	'pptx.chart.axisHidden': 'Hidden',
+	'pptx.chart.axisOrientation': 'Orientation',
+	'pptx.chart.orientationMinMax': 'Minimum to maximum',
+	'pptx.chart.orientationMaxMin': 'Maximum to minimum',
 	'pptx.chart.pointExplosion': 'Slice explosion',
 
 	// Comments (additions)
