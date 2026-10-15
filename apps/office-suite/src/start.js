@@ -16,24 +16,39 @@ const sites = {
 	teams: 'teams',
 	docs: 'docs',
 };
-const choices = [
-	{ id: 'office', name: 'OOXML Office', detail: 'Every app in one workspace' },
-	...apps.map((a) => ({
-		id: a.id,
-		name: a.name,
-		tag: a.tag,
-		detail: `The .${a.id} editor, its guides and framework demos`,
-	})),
+/** Two groups: the suite with its documentation, and each product on its own site. */
+const groups = [
 	{
-		id: 'teams',
-		name: 'Teams',
-		tag: teamsApp.tag,
-		detail: 'Chat and calls on your own server, guides and demos',
+		title: 'OOXML Office and documentation',
+		choices: [
+			{
+				id: 'office',
+				name: 'OOXML Office',
+				detail: 'Word, Excel, PowerPoint, Visio and Teams in one workspace',
+			},
+			{
+				id: 'docs',
+				name: 'Documentation',
+				detail: 'Use the apps, embed an editor, or build on the library',
+			},
+		],
 	},
 	{
-		id: 'docs',
-		name: 'Documentation',
-		detail: 'Every guide: the apps, the core library, the UI package and the MCP server',
+		title: 'Individual products',
+		choices: [
+			...apps.map((a) => ({
+				id: a.id,
+				name: a.name,
+				tag: a.tag,
+				detail: `The .${a.id} editor on its own site, with its guides and demos`,
+			})),
+			{
+				id: 'teams',
+				name: 'Teams',
+				tag: teamsApp.tag,
+				detail: 'The team workspace on its own site, with its guides and demos',
+			},
+		],
 	},
 ];
 /** A reload always asks again, even when the address points into the suite. */
@@ -66,15 +81,18 @@ const badges = {
  */
 export function showChooser({ required = false, onSuite } = {}) {
 	const content = document.createElement('div');
-	content.className = 'start-chooser';
-	content.innerHTML =
-		'<p>Open every app in one workspace, one product with its guides and demos, or the documentation.</p>' +
-		choices
-			.map(
-				(c) =>
-					`<button data-start="${c.id}">${badges[c.id] ?? badge(c.id)}<span><strong>${escape(c.name)}${tag(c.tag)}</strong><small>${escape(c.detail)}</small></span></button>`,
-			)
-			.join('');
+	content.className = 'start-choices';
+	content.innerHTML = groups
+		.map(
+			(group) =>
+				`<h3 class="start-group">${escape(group.title)}</h3><div class="start-chooser">${group.choices
+					.map(
+						(c) =>
+							`<button data-start="${c.id}">${badges[c.id] ?? badge(c.id)}<span><strong>${escape(c.name)}${tag(c.tag)}</strong><small>${escape(c.detail)}</small></span></button>`,
+					)
+					.join('')}</div>`,
+		)
+		.join('');
 	const dialog = choose('Where would you like to start?', content);
 	$('dialog-close').hidden = required;
 	const block = (event) => event.preventDefault();

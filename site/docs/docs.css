@@ -27,7 +27,8 @@ a {
 	color: var(--accent-ink);
 }
 h1,
-h2 {
+h2,
+h3 {
 	font-family: var(--font-display);
 	font-weight: 600;
 	color: var(--ink-strong);
@@ -127,6 +128,7 @@ code {
 	height: 18px;
 }
 .hub-primary {
+	margin-left: auto;
 	display: inline-flex;
 	align-items: center;
 	height: 34px;
@@ -138,6 +140,9 @@ code {
 	font-weight: 600;
 	text-decoration: none;
 	white-space: nowrap;
+}
+.hub-icon + .hub-primary {
+	margin-left: 0;
 }
 .hub-primary:hover {
 	filter: brightness(0.92);
@@ -166,6 +171,43 @@ code {
 	max-width: 62ch;
 	margin: 20px 0 0;
 	font-size: 17px;
+	color: var(--muted);
+}
+.hub-paths {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1px;
+	margin-top: 32px;
+	background: var(--line);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-panel);
+	overflow: hidden;
+}
+.hub-paths a {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 18px 20px 20px;
+	background: var(--surface);
+	color: var(--text);
+	text-decoration: none;
+	transition:
+		background-color var(--fast) var(--ease),
+		transform var(--fast) var(--ease);
+}
+.hub-paths a:hover {
+	background: var(--selected);
+	transform: translateY(-2px);
+}
+.hub-paths strong {
+	font-family: var(--font-display);
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--accent-ink);
+}
+.hub-paths span {
+	font-size: 13.5px;
+	line-height: 1.5;
 	color: var(--muted);
 }
 .hub-section {
@@ -204,6 +246,7 @@ code {
 	grid-template-rows: auto 1fr auto;
 	gap: 8px 14px;
 	padding: 22px 20px 20px;
+	margin: 0;
 	background: var(--surface);
 	color: var(--text);
 	text-decoration: none;
@@ -214,11 +257,7 @@ code {
 }
 .hub-card:hover {
 	background: var(--selected);
-	transform: translateY(-2px);
 	z-index: 1;
-}
-.hub-card:active {
-	transform: translateY(-1px) scale(0.99);
 }
 .hub-card > .app-badge {
 	grid-row: span 3;
@@ -227,58 +266,48 @@ code {
 .hub-card:not(:has(> .app-badge)) {
 	grid-template-columns: 1fr;
 }
-/* The corner box with an outward arrow: the box is ::after, the arrow a masked ::before. */
-.hub-card::after {
-	content: '';
-	position: absolute;
-	top: 20px;
-	right: 18px;
-	width: 22px;
-	height: 22px;
-	border: 1px solid var(--line);
-	border-radius: var(--radius);
-	transition: border-color var(--fast);
-}
-.hub-card::before {
-	content: '';
-	position: absolute;
-	top: 26px;
-	right: 24px;
-	width: 10px;
-	height: 10px;
-	background: var(--faint);
-	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 8 8 2M3 2h5v5' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-		center / 10px 10px no-repeat;
-	transition: background-color var(--fast);
-}
-.hub-card:hover::after {
-	border-color: var(--blue);
-}
-.hub-card:hover::before {
-	background: var(--blue);
-}
-.hub-card-title {
-	display: block;
-	font-family: var(--font-display);
+.hub-card h3 {
 	font-size: 16px;
-	font-weight: 600;
 	letter-spacing: -0.01em;
-	padding-right: 34px;
+	margin: 0;
+	line-height: 1.3;
 }
-.hub-card-copy {
-	display: block;
+.hub-card p {
+	margin: 0;
 	font-size: 13.5px;
 	line-height: 1.55;
 	color: var(--muted);
 }
-.hub-card-meta {
-	display: block;
-	font-size: 12px;
-	color: var(--muted);
-	padding-top: 4px;
-}
-.hub-card-meta code {
+.hub-card p code {
 	color: var(--text);
+}
+/* The ways in: explicit link labels, never a whole-card click. */
+.hub-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 16px;
+	padding-top: 8px;
+	font-size: 13px;
+}
+.hub-links a {
+	color: var(--accent-ink);
+	text-decoration: none;
+	font-weight: 500;
+	border-bottom: 1px solid transparent;
+	transition:
+		border-color var(--fast) var(--ease),
+		color var(--fast) var(--ease);
+}
+.hub-links a:hover {
+	border-bottom-color: currentColor;
+}
+.app-badge--plain {
+	--app: var(--muted);
+	background: var(--sunken);
+	box-shadow: none;
+	border: 1px solid var(--line-strong);
+	color: var(--text);
+	font-size: 13px;
 }
 .app-badge {
 	display: inline-grid;
@@ -329,7 +358,8 @@ code {
 	}
 }
 @media (max-width: 1000px) {
-	.hub-grid {
+	.hub-grid,
+	.hub-paths {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 	.hub-nav {
@@ -337,7 +367,8 @@ code {
 	}
 }
 @media (max-width: 600px) {
-	.hub-grid {
+	.hub-grid,
+	.hub-paths {
 		grid-template-columns: minmax(0, 1fr);
 	}
 	.hub-section-bar {
@@ -360,7 +391,7 @@ code {
 	.hub-intro > :nth-child(2) {
 		animation-delay: 0.08s;
 	}
-	.hub-section {
+	.reveal-ready .hub-section {
 		opacity: 0;
 		transform: translateY(24px);
 		transition:
@@ -371,7 +402,7 @@ code {
 		opacity: 1;
 		transform: none;
 	}
-	.hub-section .hub-card {
+	.reveal-ready .hub-section .hub-card {
 		opacity: 0;
 	}
 	.hub-section.is-revealed .hub-card {

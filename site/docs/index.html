@@ -7,7 +7,7 @@
 		<title>Documentation - OOXML Office</title>
 		<meta
 			name="description"
-			content="Every guide for OOXML Office: the Word, Excel, PowerPoint, Visio and Teams apps, the ooxml-core library, the ooxml-ui package and the MCP server."
+			content="Where to start with OOXML Office: use the apps, embed an editor in your own site, or build on the library underneath."
 		/>
 		<script src="../appearance-init.js"></script>
 		<link rel="icon" href="../favicon.svg" type="image/svg+xml" />
@@ -21,8 +21,8 @@
 				<span class="brand-symbol"><i></i><i></i><i></i><i></i></span>OOXML <strong>Office</strong>
 			</a>
 			<nav class="hub-nav" aria-label="Sections">
-				<a href="#apps">Apps</a><a href="#build">Build with it</a><a href="#suite">The suite</a
-				><a href="#project">Project</a>
+				<a href="#use">Use the apps</a><a href="#embed">Embed an editor</a
+				><a href="#build">Build on the library</a><a href="#project">Project</a>
 			</nav>
 			<button id="appearance" class="hub-icon" aria-label="Switch appearance" title="Appearance">
 				<svg
@@ -41,178 +41,234 @@
 			<section class="hub-intro">
 				<h1>Documentation</h1>
 				<p>
-					Everything built in this repository, in one place: the five apps and their framework
-					packages, the headless library underneath them, the shared UI elements, the MCP server for
-					agents, and the suite that puts them together.
+					OOXML Office is a set of Office editors that run in the browser: Word, Excel, PowerPoint
+					and Visio files, plus a team workspace. There are three ways in. Use the apps as they are,
+					embed one editor in your own site, or build on the library underneath them.
 				</p>
+				<nav class="hub-paths" aria-label="Start here">
+					<a href="#use"
+						><strong>Use the apps</strong
+						><span>Open a file and work on it. No account, nothing leaves your device.</span></a
+					>
+					<a href="#embed"
+						><strong>Embed an editor</strong
+						><span
+							>Add Word, Excel, PowerPoint, Visio or Teams to a React, Vue, Angular, Svelte, Solid
+							or plain page.</span
+						></a
+					>
+					<a href="#build"
+						><strong>Build on the library</strong
+						><span
+							>Read, change and write the files from code, with no UI, or drive them from an
+							agent.</span
+						></a
+					>
+				</nav>
 			</section>
 
-			<section id="apps" class="hub-section">
+			<section id="use" class="hub-section">
 				<div class="hub-section-bar">
-					<h2>Apps</h2>
-					<span>Each app has its own site with a developer guide, a user guide and live demos</span>
+					<h2>Use the apps</h2>
+					<span>Each guide explains what the app can do today and what it cannot yet</span>
 				</div>
 				<div class="hub-grid">
-					<a class="hub-card" href="../docx/">
-						<span class="app-badge" style="--app: #185abd">W</span>
-						<span class="hub-card-title">Word <i class="app-tag" data-tone="beta">Beta</i></span>
-						<span class="hub-card-copy"
-							>The .docx editor: ribbon, print layout, tracked changes, comments and six framework
-							bindings.</span
-						>
-						<span class="hub-card-meta"><code>npm i docx-react-viewer</code></span>
-					</a>
-					<a class="hub-card" href="../xlsx/">
-						<span class="app-badge" style="--app: #107c41">X</span>
-						<span class="hub-card-title">Excel <i class="app-tag" data-tone="beta">Beta</i></span>
-						<span class="hub-card-copy"
-							>The .xlsx editor: formulas, charts, conditional formats, sorting and filtering, six
-							bindings.</span
-						>
-						<span class="hub-card-meta"><code>npm i @christophervr/xlsx-react-viewer</code></span>
-					</a>
-					<a class="hub-card" href="../pptx/">
-						<span class="app-badge" style="--app: #c43e1c">P</span>
-						<span class="hub-card-title">PowerPoint</span>
-						<span class="hub-card-copy"
-							>The .pptx viewer and editor: rendering, editing, presenting, collaboration and five
-							bindings.</span
-						>
-						<span class="hub-card-meta"><code>npm i pptx-react-viewer</code></span>
-					</a>
-					<a class="hub-card" href="../visio/">
-						<span class="app-badge" style="--app: #3955a3">V</span>
-						<span class="hub-card-title">Visio <i class="app-tag" data-tone="alpha">Alpha</i></span>
-						<span class="hub-card-copy"
-							>The .vsdx viewer: pages, shapes, connectors and text, local-first, with six
-							bindings.</span
-						>
-						<span class="hub-card-meta"><code>npm i visio-react-viewer</code></span>
-					</a>
-					<a class="hub-card" href="../teams/">
-						<span class="app-badge" style="--app: #6264a7">T</span>
-						<span class="hub-card-title">Teams <i class="app-tag" data-tone="alpha">Alpha</i></span>
-						<span class="hub-card-copy"
-							>OpenTeams: channels, chat, presence and calls on a server you run, with Office files
-							in the conversation.</span
-						>
-						<span class="hub-card-meta"><code>npm i openteams-react-viewer</code></span>
-					</a>
-					<a class="hub-card" href="../?suite">
+					<article class="hub-card">
 						<span class="app-badge" style="--app: #0f6cbd">O</span>
-						<span class="hub-card-title">OOXML Office</span>
-						<span class="hub-card-copy"
-							>Every app in one workspace with a shared library, tabs, search and an assistant.
-							Installable, and available as a desktop build.</span
-						>
-						<span class="hub-card-meta">Open the app</span>
-					</a>
+						<h3>OOXML Office</h3>
+						<p>
+							Every app in one workspace, with a shared file library, tabs, search and an assistant.
+							Installs as an app and runs offline.
+						</p>
+						<nav class="hub-links">
+							<a href="../?suite">Open the workspace</a
+							><a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/suite-integration.md"
+								>What it does and does not do</a
+							>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #185abd">W</span>
+						<h3>Word <i class="app-tag" data-tone="beta">Beta</i></h3>
+						<p>
+							Write and format documents with a ribbon, print layout, tracked changes and comments.
+						</p>
+						<nav class="hub-links">
+							<a href="../docx/editing">User guide</a><a href="../docx/demo/">Try the demo</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #107c41">X</span>
+						<h3>Excel <i class="app-tag" data-tone="beta">Beta</i></h3>
+						<p>Workbooks with formulas, charts, conditional formats, sorting and filtering.</p>
+						<nav class="hub-links">
+							<a href="../xlsx/features">What works</a><a href="../xlsx/demo/">Try the demo</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #c43e1c">P</span>
+						<h3>PowerPoint</h3>
+						<p>View, edit and present slide decks, and work on one deck together.</p>
+						<nav class="hub-links">
+							<a href="../pptx/user/">User guide</a><a href="../pptx/demo/">Try the demo</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #3955a3">V</span>
+						<h3>Visio <i class="app-tag" data-tone="alpha">Alpha</i></h3>
+						<p>Open diagrams and flowcharts: pages, shapes, connectors and text.</p>
+						<nav class="hub-links">
+							<a href="../visio/demos">What the viewer shows</a
+							><a href="../visio/demo/">Try the demo</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #6264a7">T</span>
+						<h3>Teams <i class="app-tag" data-tone="alpha">Alpha</i></h3>
+						<p>
+							Channels, chat, presence and calls on a server you run, with Office files in the
+							conversation.
+						</p>
+						<nav class="hub-links">
+							<a href="../teams/collaboration">How it works</a
+							><a href="../teams/demo/">Try the demo</a>
+						</nav>
+					</article>
+				</div>
+			</section>
+
+			<section id="embed" class="hub-section">
+				<div class="hub-section-bar">
+					<h2>Embed an editor</h2>
+					<span>One web component per product, with a thin package for each framework</span>
+				</div>
+				<div class="hub-grid">
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #185abd">W</span>
+						<h3>Word editor</h3>
+						<p>
+							The <code>&lt;docx-editor&gt;</code> element. Install the package for your framework;
+							it brings the editor and the document model with it.
+						</p>
+						<nav class="hub-links">
+							<a href="../docx/getting-started">Getting started</a
+							><a href="../docx/bindings">Framework packages</a><a href="../docx/api">Element API</a
+							><a href="https://www.npmjs.com/package/docx-react-viewer">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #107c41">X</span>
+						<h3>Excel editor</h3>
+						<p>
+							The <code>&lt;xlsx-editor&gt;</code> element, with the same six framework packages.
+						</p>
+						<nav class="hub-links">
+							<a href="../xlsx/getting-started">Getting started</a
+							><a href="../xlsx/bindings">Framework packages</a><a href="../xlsx/api">Element API</a
+							><a href="https://www.npmjs.com/package/@christophervr/xlsx-react-viewer">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #c43e1c">P</span>
+						<h3>PowerPoint viewer and editor</h3>
+						<p>
+							Rendering, editing, presenting and collaboration for React, Vue, Angular, Svelte and
+							plain JavaScript.
+						</p>
+						<nav class="hub-links">
+							<a href="../pptx/guide/">Getting started</a
+							><a href="../pptx/react/">Framework packages</a><a href="../pptx/core/">Core engine</a
+							><a href="https://www.npmjs.com/package/pptx-react-viewer">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #3955a3">V</span>
+						<h3>Visio viewer</h3>
+						<p>
+							The <code>&lt;visio-viewer&gt;</code> element: local-first, six framework packages.
+						</p>
+						<nav class="hub-links">
+							<a href="../visio/getting-started">Getting started</a
+							><a href="../visio/bindings">Framework packages</a
+							><a href="../visio/api">Viewer API</a
+							><a href="https://www.npmjs.com/package/visio-react-viewer">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge" style="--app: #6264a7">T</span>
+						<h3>Team workspace</h3>
+						<p>
+							The <code>&lt;teams-app&gt;</code> element, framework packages with raw hooks, and a
+							small reference server.
+						</p>
+						<nav class="hub-links">
+							<a href="../teams/getting-started">Getting started</a
+							><a href="../teams/frameworks/react">Framework packages</a
+							><a href="../teams/server">Run the server</a
+							><a href="https://www.npmjs.com/package/openteams-react-viewer">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge app-badge--plain">UI</span>
+						<h3>Shared UI elements</h3>
+						<p>
+							The ribbons, menus, dialogs and status bars every editor is built from, published as
+							<code>ooxml-ui</code>, themeable through one set of tokens.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml/blob/main/src/ui/README.md">README</a
+							><a href="../docx/theming">Theming an editor</a
+							><a href="https://www.npmjs.com/package/ooxml-ui">npm</a>
+						</nav>
+					</article>
 				</div>
 			</section>
 
 			<section id="build" class="hub-section">
 				<div class="hub-section-bar">
-					<h2>Build with it</h2>
-					<span>The packages the apps are made of, usable on their own</span>
+					<h2>Build on the library</h2>
+					<span>The headless packages underneath the apps, usable in Node.js and the browser</span>
 				</div>
 				<div class="hub-grid">
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/src/core/README.md"
-					>
-						<span class="hub-card-title">ooxml-core</span>
-						<span class="hub-card-copy"
-							>Parse, edit, validate and write every Office format with no UI: WordprocessingML,
-							SpreadsheetML, PresentationML, DrawingML, charts, SmartArt, maths, encryption and
-							collaboration.</span
-						>
-						<span class="hub-card-meta"><code>npm i ooxml-core</code></span>
-					</a>
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/src/ui/README.md"
-					>
-						<span class="hub-card-title">ooxml-ui</span>
-						<span class="hub-card-copy"
-							>The shared custom elements every app is built from: ribbons, menus, dialogs, title
-							bars, status bars, presence and SmartArt, plus each product editor.</span
-						>
-						<span class="hub-card-meta"><code>npm i ooxml-ui</code></span>
-					</a>
-					<a class="hub-card" href="https://github.com/ChristopherVR/ooxml/blob/main/mcp/README.md">
-						<span class="hub-card-title">ooxml-mcp</span>
-						<span class="hub-card-copy"
-							>One Model Context Protocol server for every format, so an agent can read, create and
-							change documents, workbooks and decks.</span
-						>
-						<span class="hub-card-meta"><code>npm i ooxml-mcp</code></span>
-					</a>
-					<a class="hub-card" href="https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md">
-						<span class="hub-card-title">Agents and automation</span>
-						<span class="hub-card-copy"
-							>How the MCP tools map onto the headless document operations, and how to run them
-							against files on disk.</span
-						>
-						<span class="hub-card-meta">Guide</span>
-					</a>
-					<a class="hub-card" href="https://github.com/ChristopherVR/ole2#readme">
-						<span class="hub-card-title">Legacy formats</span>
-						<span class="hub-card-copy"
-							>The sibling ole2 package reads .doc, .xls and .ppt and the compound-file container,
-							and is inlined into the editors.</span
-						>
-						<span class="hub-card-meta"><code>npm i @christophervr/ole2</code></span>
-					</a>
-					<a class="hub-card" href="https://www.npmjs.com/package/ooxml-core">
-						<span class="hub-card-title">Releases</span>
-						<span class="hub-card-copy"
-							>Every package is versioned from conventional commits and published with provenance.
-							The changelogs are on each package page.</span
-						>
-						<span class="hub-card-meta">npm</span>
-					</a>
-				</div>
-			</section>
-
-			<section id="suite" class="hub-section">
-				<div class="hub-section-bar">
-					<h2>The suite</h2>
-					<span>What the integrated app does today, and what it does not</span>
-				</div>
-				<div class="hub-grid hub-grid--3">
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/apps/office-suite/README.md"
-					>
-						<span class="hub-card-title">OOXML Office</span>
-						<span class="hub-card-copy"
-							>The application package: document sessions, local profiles, shared appearance, Teams
-							integration and the assistant.</span
-						>
-						<span class="hub-card-meta">README</span>
-					</a>
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/docs/suite-integration.md"
-					>
-						<span class="hub-card-title">Integration and limits</span>
-						<span class="hub-card-copy"
-							>Local profiles are not sign-in, there is no cloud drive, and co-authoring is not yet
-							wired to suite files. The full list, kept honest.</span
-						>
-						<span class="hub-card-meta">Guide</span>
-					</a>
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/desktop/README.md"
-					>
-						<span class="hub-card-title">Desktop</span>
-						<span class="hub-card-copy"
-							>The same bundle wrapped as a desktop app, with a native folder picker for searching
-							files on disk.</span
-						>
-						<span class="hub-card-meta">README</span>
-					</a>
+					<article class="hub-card">
+						<span class="app-badge app-badge--plain">C</span>
+						<h3>ooxml-core</h3>
+						<p>
+							Parse, edit, validate and write every Office format with no UI: documents, workbooks,
+							decks and diagrams, charts, SmartArt, maths, encryption and collaboration.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml/blob/main/src/core/README.md"
+								>README</a
+							><a href="https://www.npmjs.com/package/ooxml-core">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge app-badge--plain">AI</span>
+						<h3>Agents and automation</h3>
+						<p>
+							One Model Context Protocol server for every format, so an agent can read, create and
+							change files, plus the headless operations it runs on.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md">Guide</a
+							><a href="https://github.com/ChristopherVR/ooxml/blob/main/mcp/README.md"
+								>Server README</a
+							><a href="https://www.npmjs.com/package/ooxml-mcp">npm</a>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<span class="app-badge app-badge--plain">97</span>
+						<h3>Legacy formats</h3>
+						<p>
+							The sibling package reads .doc, .xls and .ppt and the compound-file container; the
+							editors inline it, so legacy files open without an extra install.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ole2#readme">README</a
+							><a href="https://www.npmjs.com/package/@christophervr/ole2">npm</a>
+						</nav>
+					</article>
 				</div>
 			</section>
 
@@ -221,52 +277,46 @@
 					<h2>Project</h2>
 					<span>Where the work is planned, discussed and contributed</span>
 				</div>
-				<div class="hub-grid hub-grid--3">
-					<a class="hub-card" href="https://github.com/ChristopherVR/ooxml#readme">
-						<span class="hub-card-title">Repository</span>
-						<span class="hub-card-copy"
-							>The source of everything on this site, in one monorepo with the viewers and their
-							history.</span
-						>
-						<span class="hub-card-meta">GitHub</span>
-					</a>
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md"
-					>
-						<span class="hub-card-title">Roadmap</span>
-						<span class="hub-card-copy"
-							>What is being moved into the core, what each app still lacks against the Office
-							applications, and in which order.</span
-						>
-						<span class="hub-card-meta">Guide</span>
-					</a>
-					<a
-						class="hub-card"
-						href="https://github.com/ChristopherVR/ooxml/blob/main/CONTRIBUTING.md"
-					>
-						<span class="hub-card-title">Contributing</span>
-						<span class="hub-card-copy"
-							>Commit conventions, the checks that run before a push, and how a change reaches a
-							release.</span
-						>
-						<span class="hub-card-meta">Guide</span>
-					</a>
-					<a class="hub-card" href="https://github.com/ChristopherVR/ooxml/discussions">
-						<span class="hub-card-title">Discussions</span>
-						<span class="hub-card-copy">Questions, ideas and show-and-tell.</span>
-						<span class="hub-card-meta">GitHub</span>
-					</a>
-					<a class="hub-card" href="https://github.com/ChristopherVR/ooxml/issues">
-						<span class="hub-card-title">Issues</span>
-						<span class="hub-card-copy">Bugs and feature requests for every package and app.</span>
-						<span class="hub-card-meta">GitHub</span>
-					</a>
-					<a class="hub-card" href="https://github.com/ChristopherVR/ooxml/blob/main/LICENSE">
-						<span class="hub-card-title">Licence</span>
-						<span class="hub-card-copy">Apache-2.0, for every package on this site.</span>
-						<span class="hub-card-meta">Apache-2.0</span>
-					</a>
+				<div class="hub-grid">
+					<article class="hub-card">
+						<h3>Repository and roadmap</h3>
+						<p>
+							One monorepo holds every package and app. The roadmap lists what each app still lacks
+							against the Office applications and in which order it is planned.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml#readme">GitHub</a
+							><a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md"
+								>Roadmap</a
+							>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<h3>Contributing and releases</h3>
+						<p>
+							Commit conventions, the checks that run before a push, and how a change becomes a
+							release. Every package is versioned from its commits and published with provenance.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml/blob/main/CONTRIBUTING.md"
+								>Contributing</a
+							><a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/releasing.md"
+								>Releasing</a
+							>
+						</nav>
+					</article>
+					<article class="hub-card">
+						<h3>Questions, bugs and licence</h3>
+						<p>
+							Discussions for questions and ideas, issues for bugs and requests. Everything is
+							Apache-2.0.
+						</p>
+						<nav class="hub-links">
+							<a href="https://github.com/ChristopherVR/ooxml/discussions">Discussions</a
+							><a href="https://github.com/ChristopherVR/ooxml/issues">Issues</a
+							><a href="https://github.com/ChristopherVR/ooxml/blob/main/LICENSE">Licence</a>
+						</nav>
+					</article>
 				</div>
 			</section>
 		</main>

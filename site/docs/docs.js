@@ -45,6 +45,7 @@ for (const section of sections)
 	for (const [i, card] of [...section.querySelectorAll('.hub-card')].entries())
 		card.style.setProperty('--i', i);
 if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+	root.classList.add('reveal-ready');
 	const observer = new IntersectionObserver(
 		(entries) => {
 			for (const entry of entries)
