@@ -63,13 +63,10 @@ jobs:
           exit 1
 
       # This job pushes a version-bump commit straight to `main` with the workflow's own
-      # GITHUB_TOKEN (the workflow has `contents: write`), so no secret is needed while `main` has
-      # no ruleset or branch protection. If protection that direct pushes cannot satisfy is ever
-      # added (GitHub will not let `github-actions[bot]` bypass a ruleset), set RELEASE_TOKEN to a
-      # fine-grained PAT with `Contents: Read and write` on this repo, owned by a repository admin
-      # on the bypass list; it is used in place of GITHUB_TOKEN when present. A PAT push, unlike a
-      # GITHUB_TOKEN one, triggers workflows, but the release commit carries `[skip ci]`, which
-      # GitHub honours natively.
+      # GITHUB_TOKEN (the workflow has `contents: write`). No personal access token is used:
+      # npm publishing goes through trusted publishing (OIDC), and the push relies on `main`
+      # accepting direct pushes from GitHub Actions. If a ruleset is ever added to `main`, it must
+      # let this workflow push, or the release commit is rejected.
       #
       # Credentials are NOT persisted in .git/config: `bun install`, the build and the package
       # smoke tests run third-party code, so the write token must not sit on disk while they run.
@@ -78,7 +75,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+          token: ${{ github.token }}
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -100,7 +97,7 @@ jobs:
       # next run finds it. No-op once the tags exist.
       - name: Adopt baseline tags for packages published by hand
         env:
-          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+          PUSH_TOKEN: ${{ github.token }}
         run: |
           remote="https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           node -e "for (const p of Object.values(require('./release-plan.json').packages)) if (p.adopt) console.log(p.adopt.tag + ' ' + p.adopt.sha)" |
@@ -172,11 +169,8 @@ jobs:
       - name: Commit version bumps and changelogs
         if: steps.plan.outputs.any_changed == 'true'
         env:
-          # Presence check only, never the value; tells "no token configured" apart from "token
-          # configured but still rejected" in the failure branch below.
-          HAVE_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' && '1' || '' }}
           # Authenticates the push and fetch below only; it is not stored in .git/config.
-          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+          PUSH_TOKEN: ${{ github.token }}
         run: |
           # The build and smoke tests ran since the install check; re-check before staging bun.lock.
           node scripts/check-lockfile-drift.mjs
@@ -210,17 +204,9 @@ jobs:
             done
             if [ "$pushed" != "true" ]; then
               echo "::error::Could not push the release commit to main after 3 attempts."
-              if [ -z "$HAVE_RELEASE_TOKEN" ]; then
-                echo "The RELEASE_TOKEN secret is not set, so this pushed as github-actions[bot],"
-                echo "which can never be granted ruleset bypass. Create a fine-grained PAT with"
-                echo "'Contents: Read and write' on this repo, owned by a repository admin, and"
-                echo "save it as the RELEASE_TOKEN secret. Rules: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/rules"
-              else
-                echo "RELEASE_TOKEN is set but the push was still rejected. Check that its owner is"
-                echo "a bypass actor on the ruleset covering main, that the token grants"
-                echo "'Contents: Read and write' on this repo, and that it has not expired."
-                echo "Rules: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/rules"
-              fi
+              echo "The push ran as github-actions[bot] with GITHUB_TOKEN. Check that no ruleset or"
+              echo "branch protection on main rejects pushes from GitHub Actions."
+              echo "Rules: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/rules"
               exit 1
             fi
           fi

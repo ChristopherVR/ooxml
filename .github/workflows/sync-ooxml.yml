@@ -8,13 +8,10 @@ name: Sync ooxml packages
 #     sync:
 #       uses: ChristopherVR/ooxml/.github/workflows/sync-ooxml.yml@main
 #       permissions: { contents: write, issues: write }
-#       secrets: inherit
 #       with: { verify-command: 'bun run typecheck && bun run test' }
 #
-# A repository whose `main` requires a status check (a ruleset the default token cannot bypass) must
-# give the caller a RELEASE_TOKEN secret: a fine-grained PAT with `Contents: Read and write`, owned
-# by an admin on the ruleset's bypass list. Without it the push is rejected. A repository with no
-# such rule needs no secret.
+# It pushes with the default GITHUB_TOKEN only; no personal access token is used. A repository
+# whose `main` has a ruleset must let GitHub Actions push, or the push is rejected.
 #
 # It rewrites the manifests (scripts/sync-ooxml-deps.mjs), installs, runs `verify-command`, and
 # pushes one `build(deps)` commit to main when everything passes. When verification fails it pushes
@@ -38,10 +35,6 @@ on:
       node-version:
         type: string
         default: '24'
-    secrets:
-      RELEASE_TOKEN:
-        description: 'Token that may push to a protected main; the default token is used without it'
-        required: false
 
 permissions:
   contents: read
@@ -56,7 +49,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
-          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+          token: ${{ github.token }}
           # Not persisted: the caller's install and verify commands run third-party code. Only
           # the push step below gets the token, through PUSH_TOKEN.
           persist-credentials: false
@@ -103,7 +96,7 @@ jobs:
         env:
           SUMMARY: ${{ steps.bump.outputs.summary }}
           # Authenticates the pull and push below only; it is not stored in .git/config.
-          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+          PUSH_TOKEN: ${{ github.token }}
         run: |
           remote="https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git config user.name 'github-actions[bot]'
@@ -142,7 +135,7 @@ jobs:
           if [ "$stage" = push ]; then
             title="Adopting $SUMMARY could not be pushed"
             lead="The checks for $SUMMARY passed, but the push to main was rejected, so nothing landed."
-            hint='The repository rejected the push, usually because `main` requires a status check the default token cannot bypass. Give the repository a RELEASE_TOKEN secret and pass it with `secrets: inherit` (see the header of the reusable workflow in `ooxml`). The next scheduled run retries and closes this issue once the bump lands.'
+            hint='The repository rejected the push, usually because `main` requires a status check the default token cannot bypass. Let GitHub Actions push to `main` in the repository's rules (see the header of the reusable workflow in `ooxml`). The next scheduled run retries and closes this issue once the bump lands.'
           else
             title="Adopting $SUMMARY fails verification"
             lead="Bumping to $SUMMARY did not pass the repository checks (the **$stage** step failed), so nothing was pushed."

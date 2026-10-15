@@ -65,7 +65,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 
 **Scheduled or manual run without input** (`release` job, then the publish stage):
 
-1. Check out `main` with full history using `RELEASE_TOKEN` and run the planner with `--write`. If nothing changed the run ends here, which is what a quiet hour looks like.
+1. Check out `main` with full history using the workflow's `GITHUB_TOKEN` and run the planner with `--write`. If nothing changed the run ends here, which is what a quiet hour looks like.
 2. Push the baseline tag of any package that was published by hand (see above).
 3. Fail early if the `NPM_PUBLISH` repository variable is not `true`, so nothing is tagged that cannot be published.
 4. `bun install` (not frozen: the version bump changes the workspace versions in `bun.lock`; `scripts/check-lockfile-drift.mjs` then fails the run unless the lockfile differs from `HEAD` only in workspace package versions, so a new third-party resolution never ships unreviewed), `bun run build`, `bun run test:package` (pack, install into a clean project, import every entry point), then `scripts/build-released.mjs --smoke`, which runs `build` and `test:package` of each released workspace package that defines them. Typecheck and the unit tests are not repeated: `main` is protected by the `ci-success` check. A failure here stops the run before anything is committed or tagged and the next run retries.
@@ -99,9 +99,9 @@ There is no npm token anywhere. The `publish` job requests an OIDC token (`id-to
 ## One-time setup
 
 1. **Rulesets on `main`**: require the `ci-success` and `Conventional Commits` checks; add a bypass for repository admins (the release commit is pushed straight to `main`).
-2. **`RELEASE_TOKEN` secret**: a fine-grained personal access token with `Contents: Read and write` on this repository, owned by a repository admin. The default `GITHUB_TOKEN` cannot be granted ruleset bypass, so without it the release commit and baseline tags cannot be pushed.
+2. **No personal access token**: the release commit and tags are pushed with the workflow's own `GITHUB_TOKEN`, and npm publishing uses trusted publishing (OIDC). `main` must accept direct pushes from GitHub Actions; a ruleset that blocks them makes the release commit fail to push.
 3. **`NPM_PUBLISH` repository variable** set to `true`.
-4. **`npm` environment** (Settings, Environments): restrict **deployment branches to `main`** (a branch rule, not "all branches") and add **required reviewers** with prevent-self-review. This is a repository setting the workflows cannot enforce for you: the in-workflow `refs/heads/main` guard runs only after the environment gate, so the environment's branch rule is what stops a dispatch from another branch from obtaining the `id-token` for npm. Also restrict the `RELEASE_TOKEN` secret, if you use it, to this repository and keep the `NPM_PUBLISH` variable under the same admins.
+4. **`npm` environment** (Settings, Environments): restrict **deployment branches to `main`** (a branch rule, not "all branches") and add **required reviewers** with prevent-self-review. This is a repository setting the workflows cannot enforce for you: the in-workflow `refs/heads/main` guard runs only after the environment gate, so the environment's branch rule is what stops a dispatch from another branch from obtaining the `id-token` for npm. Keep the `NPM_PUBLISH` variable under the same admins.
 5. The trusted publisher for `ooxml-core` and for `ooxml-ui`. npm only lets you add a trusted publisher to a package that exists, so each new package name needs one manual publish first.
 
 ### First publish of a new package name (manual bootstrap)
