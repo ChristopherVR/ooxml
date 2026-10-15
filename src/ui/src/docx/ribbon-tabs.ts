@@ -3,6 +3,7 @@ import { createReviewControls } from './review-ribbon';
 import { buildParagraphSpacing } from './ribbon-home';
 import { SYMBOLS } from './insert-text-commands';
 import { PAGE_SIZE_OPTIONS } from 'ooxml-core/docx';
+import { EQUATION_GALLERY } from 'ooxml-core/math';
 
 const TOC_OPTIONS: Array<[string, string]> = [
 	['3', 'Table of contents, levels 1 to 3'],
@@ -208,6 +209,19 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 		),
 		group(
 			'Symbols',
+			menuSelect(
+				'Equation',
+				'equation',
+				[
+					['edit', 'Insert or Edit Equation…'],
+					...EQUATION_GALLERY.map((entry): [string, string] => [entry.id, entry.name]),
+				],
+				(value) =>
+					value === 'edit'
+						? { type: 'formatDialog', kind: 'equation' }
+						: { type: 'insertEquation', id: value as 'area' },
+				{ momentary: true },
+			),
 			menuSelect(
 				'Symbol',
 				'symbol',

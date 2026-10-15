@@ -19,6 +19,16 @@ export const enObjects = {
 	'Previous month': 'Previous month',
 	'Next month': 'Next month',
 	Today: 'Today',
+	'Insert or Edit Equation…': 'Insert or Edit Equation…',
+	'Area of Circle': 'Area of Circle',
+	'Quadratic Formula': 'Quadratic Formula',
+	'Pythagorean Theorem': 'Pythagorean Theorem',
+	'Binomial Theorem': 'Binomial Theorem',
+	'LaTeX equation': 'LaTeX equation',
+	'Display equation on its own line': 'Display equation on its own line',
+	'Type a LaTeX equation to see a preview.': 'Type a LaTeX equation to see a preview.',
+	'This LaTeX could not be converted to an equation.':
+		'This LaTeX could not be converted to an equation.',
 } as const;
 
 type Keys = keyof typeof enObjects;
@@ -44,6 +54,17 @@ export const frObjects: ObjectStrings = {
 	'Previous month': 'Mois précédent',
 	'Next month': 'Mois suivant',
 	Today: "Aujourd'hui",
+	'Insert or Edit Equation…': 'Insérer ou modifier une équation…',
+	'Area of Circle': "Aire d'un cercle",
+	'Quadratic Formula': 'Formule quadratique',
+	'Pythagorean Theorem': 'Théorème de Pythagore',
+	'Binomial Theorem': 'Formule du binôme',
+	'LaTeX equation': 'Équation LaTeX',
+	'Display equation on its own line': "Afficher l'équation sur sa propre ligne",
+	'Type a LaTeX equation to see a preview.':
+		'Saisissez une équation LaTeX pour afficher un aperçu.',
+	'This LaTeX could not be converted to an equation.':
+		"Ce code LaTeX n'a pas pu être converti en équation.",
 };
 
 export const deObjects: ObjectStrings = {
@@ -66,6 +87,17 @@ export const deObjects: ObjectStrings = {
 	'Previous month': 'Vorheriger Monat',
 	'Next month': 'Nächster Monat',
 	Today: 'Heute',
+	'Insert or Edit Equation…': 'Formel einfügen oder bearbeiten…',
+	'Area of Circle': 'Kreisfläche',
+	'Quadratic Formula': 'Quadratische Lösungsformel',
+	'Pythagorean Theorem': 'Satz des Pythagoras',
+	'Binomial Theorem': 'Binomischer Lehrsatz',
+	'LaTeX equation': 'LaTeX-Formel',
+	'Display equation on its own line': 'Formel in eigener Zeile anzeigen',
+	'Type a LaTeX equation to see a preview.':
+		'Geben Sie eine LaTeX-Formel ein, um eine Vorschau zu sehen.',
+	'This LaTeX could not be converted to an equation.':
+		'Dieser LaTeX-Code konnte nicht in eine Formel umgewandelt werden.',
 };
 
 export const esObjects: ObjectStrings = {
@@ -88,6 +120,17 @@ export const esObjects: ObjectStrings = {
 	'Previous month': 'Mes anterior',
 	'Next month': 'Mes siguiente',
 	Today: 'Hoy',
+	'Insert or Edit Equation…': 'Insertar o editar ecuación…',
+	'Area of Circle': 'Área del círculo',
+	'Quadratic Formula': 'Fórmula cuadrática',
+	'Pythagorean Theorem': 'Teorema de Pitágoras',
+	'Binomial Theorem': 'Teorema del binomio',
+	'LaTeX equation': 'Ecuación LaTeX',
+	'Display equation on its own line': 'Mostrar la ecuación en su propia línea',
+	'Type a LaTeX equation to see a preview.':
+		'Escriba una ecuación LaTeX para ver una vista previa.',
+	'This LaTeX could not be converted to an equation.':
+		'No se pudo convertir este LaTeX en una ecuación.',
 };
 
 export const zhObjects: ObjectStrings = {
@@ -109,4 +152,13 @@ export const zhObjects: ObjectStrings = {
 	'Previous month': '上个月',
 	'Next month': '下个月',
 	Today: '今天',
+	'Insert or Edit Equation…': '插入或编辑公式…',
+	'Area of Circle': '圆的面积',
+	'Quadratic Formula': '二次公式',
+	'Pythagorean Theorem': '勾股定理',
+	'Binomial Theorem': '二项式定理',
+	'LaTeX equation': 'LaTeX 公式',
+	'Display equation on its own line': '公式单独占一行显示',
+	'Type a LaTeX equation to see a preview.': '输入 LaTeX 公式以查看预览。',
+	'This LaTeX could not be converted to an equation.': '无法将此 LaTeX 转换为公式。',
 };

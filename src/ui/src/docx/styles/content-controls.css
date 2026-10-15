@@ -155,3 +155,25 @@ p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
 	display: flex;
 	justify-content: center;
 }
+
+/* Insert > Equation dialog: the LaTeX source and the live preview. */
+.dve-equation-source {
+	width: 100%;
+	box-sizing: border-box;
+	font:
+		13px/1.4 Consolas,
+		'Cascadia Mono',
+		monospace;
+}
+.dve-equation-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 64px;
+	padding: 8px;
+	overflow: auto;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--ink);
+	font-size: 20px;
+}

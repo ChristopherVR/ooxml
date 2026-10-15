@@ -128,6 +128,7 @@ export type RibbonAction =
 	| { type: 'reviewDisplay'; value: ReviewDisplayMode }
 	| { type: 'comments'; key: 'toggle' | 'add' | 'delete' | 'previous' | 'next' }
 	| { type: 'insertPicture' }
+	| { type: 'insertEquation'; id: 'area' | 'quadratic' | 'pythagorean' | 'binomial' }
 	| {
 			type: 'insertContentControl';
 			value: 'richText' | 'text' | 'checkbox' | 'dropDownList' | 'comboBox' | 'date';
