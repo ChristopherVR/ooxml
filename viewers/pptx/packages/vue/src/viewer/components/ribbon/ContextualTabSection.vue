@@ -4,13 +4,15 @@
  * Picture Format, Table Design, Chart Design, SmartArt Design). The groups
  * and the galleries inside them, with their modes, come from the shared
  * `CONTEXTUAL_TAB_GROUPS`; this only maps them onto the ribbon's group markup.
- * A command group (Picture Format > Size) draws its shared strip as well.
+ * A command group (Picture Format > Size, Chart Format > Current Selection)
+ * draws its shared strip as well.
  */
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import ChartSelectionStrip from './ChartSelectionStrip.vue';
 import PictureSizeStrip from './PictureSizeStrip.vue';
 import RibbonGallery from './RibbonGallery.vue';
 
@@ -45,5 +47,6 @@ function caption(labelKey: string, fallback: string): string {
 			:mode="placement.mode"
 		/>
 		<PictureSizeStrip v-if="group.strip === 'picture-size'" :hidden-actions="props.hiddenActions" />
+		<ChartSelectionStrip v-else-if="group.strip === 'chart-selection'" />
 	</pptx-ui-ribbon-group>
 </template>

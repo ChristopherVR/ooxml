@@ -3,6 +3,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import type { ComputedRef, Ref } from 'vue';
 
 import type { ContextMenuItem } from '../components/ContextMenu.vue';
+import type { ChartFormatController } from './chart-format-pane';
 import type { MergeCropController } from './merge-crop-context';
 import type { TableSelectionState } from './table-selection';
 import type { EditorOperations } from './useEditorOperations';
@@ -67,6 +68,8 @@ export interface UseContextMenuInput {
 	onEditPoints?: (element: PptxElement) => void;
 	/** Merge Shapes + picture Crop (the `merge-*` and `crop` entries). */
 	mergeCrop?: MergeCropController;
+	/** Chart Format pane: names the chart entry and opens the pane on the clicked element. */
+	chartFormat?: ChartFormatController;
 }
 
 export interface UseContextMenuResult {

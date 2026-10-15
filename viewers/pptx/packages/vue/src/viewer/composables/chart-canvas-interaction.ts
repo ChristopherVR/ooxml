@@ -1,5 +1,6 @@
 import {
 	canDrillDown,
+	chartFormatTargetFromEvent,
 	findChartPartTarget,
 	formatAxisValue,
 	resolveChartKind,
@@ -22,6 +23,7 @@ import {
 	buildChartMarkDragGeometry,
 	ensureInteractionStyles,
 } from './chart-canvas-interaction-support';
+import { injectChartFormat } from './chart-format-pane';
 import { injectChartCanvasEdit } from './chart-part-selection';
 
 /**
@@ -86,6 +88,10 @@ export function useChartCanvasInteraction(
 	input: ChartCanvasInteractionInput,
 ): ChartCanvasInteraction {
 	const ctx = injectChartCanvasEdit();
+	const chartFormat = injectChartFormat();
+	/** Chart Format: the element under the pointer (series, axis, legend, ...). */
+	const formatTarget = (event: MouseEvent) =>
+		chartFormatTargetFromEvent(event, input.rootEl.value, input.element());
 	const previewData = shallowRef<PptxChartData | null>(null);
 	const dragValue = ref<number | null>(null);
 	const titleDraft = ref<string | null>(null);
@@ -166,6 +172,8 @@ export function useChartCanvasInteraction(
 		if (!canEdit.value) {
 			return;
 		}
+		// Clicking a chart element makes it Chart Format's current selection.
+		chartFormat?.setTarget(formatTarget(event));
 		const part = findChartPartTarget(event.target);
 		if (!part) {
 			return;
@@ -279,9 +287,12 @@ export function useChartCanvasInteraction(
 			titleDraft.value = (input.element() as ChartPptxElement).chartData?.title ?? '';
 			return;
 		}
-		if (findChartPartTarget(event.target)) {
-			// A mark double-click is already handled as two selects; keep it from
-			// bubbling into the element-level inline-text-edit handler.
+		// Any other chart element opens its Format pane, as in PowerPoint; keep the
+		// double-click from bubbling into the element-level inline-text-edit handler.
+		if (chartFormat) {
+			event.stopPropagation();
+			chartFormat.openPane(formatTarget(event));
+		} else if (findChartPartTarget(event.target)) {
 			event.stopPropagation();
 		}
 	}

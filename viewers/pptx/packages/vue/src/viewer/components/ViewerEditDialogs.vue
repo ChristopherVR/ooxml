@@ -28,6 +28,7 @@ import { useResolvedCustomization } from '../composables/useViewerCustomization'
 import type { ContextMenuItem } from './ContextMenu.vue';
 import ContextMenu from './ContextMenu.vue';
 import HyperlinkDialog from './HyperlinkDialog.vue';
+import ChartFormatPanel from './inspector/ChartFormatPanel.vue';
 import ThemeEditorPanel from './inspector/ThemeEditorPanel.vue';
 import PasteOptionsToolbar from './PasteOptionsToolbar.vue';
 import PasteSpecialDialog from './PasteSpecialDialog.vue';
@@ -105,6 +106,9 @@ const layoutGalleryAnchorEl = ref<HTMLElement | null>(null);
 		@apply="themeEditing.applyThemeEdit"
 		@close="onCloseThemeEditor"
 	/>
+
+	<!-- Chart Format pane (Format Chart Area / Data Series / Axis / ...) -->
+	<ChartFormatPanel />
 
 	<!-- Element context menu (edit mode) -->
 	<ContextMenu

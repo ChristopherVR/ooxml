@@ -98,6 +98,7 @@ import ViewerSlideRail from './components/ViewerSlideRail.vue';
 import { AccountAuthKey } from './composables/account-auth';
 import { useAiBridge } from './composables/ai/useAiBridge';
 import { useAiPanelController } from './composables/ai/useAiPanelController';
+import { useChartFormatPane } from './composables/chart-format-pane';
 import { useChartCanvasEditContext } from './composables/chart-part-selection';
 import { useCustomizedRibbonProps } from './composables/customization-ribbon-gates';
 import { readDeckData } from './composables/deck-data';
@@ -757,6 +758,14 @@ useChartCanvasEditContext({
 	updateElement: (id, patch) => ops.updateElement(id, patch),
 });
 
+// Chart Format pane + Chart Format > Current Selection state, injected by the
+// pane host, the ribbon strip, the chart canvas handlers and the context menu.
+const chartFormat = useChartFormatPane({
+	selectedElement: () => (selectedElementIds.value.length === 1 ? selectedElements.value[0] : null),
+	canEdit: () => canEditEffective.value && !presentation.presenting.value,
+	updateElement: (id, patch) => ops.updateElement(id, patch),
+});
+
 const hyperlink = useHyperlinkDialog({
 	findSlideElement: (id) => activeSlide.value?.elements.find((e) => e.id === id),
 	selectedElementIds,
@@ -983,6 +992,7 @@ const { contextMenu, contextItems, onCanvasContextMenu, onContextSelect } = useC
 	customization: () => customization.resolved.value,
 	onEditPoints: outlineAuthoring.startEditPoints,
 	mergeCrop,
+	chartFormat,
 	onAskAi: () => {
 		aiPanel.askAboutSelection();
 		aiPanelOpen.value = true;
