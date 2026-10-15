@@ -9,6 +9,7 @@ export function paragraphFloats(paragraph: Paragraph): LayoutFloat[] {
 		if (!image?.anchored || !image.partName) continue;
 		const placement = image.placement;
 		floats.push({
+			index: floats.length,
 			partName: image.partName,
 			contentType: image.contentType,
 			widthPx: image.widthPx,

@@ -76,4 +76,52 @@ describe('floating pictures', () => {
 		expect(xml).toContain('<wp:align>right</wp:align>');
 		expect(xml).toContain('Edited text');
 	});
+	it('writes a moved and resized floating picture and keeps wrapping and the media', async () => {
+		const loaded = await loadDocx(
+			await fixture(
+				`<w:p>${anchor('<wp:wrapSquare wrapText="bothSides"/>', '<wp:align>right</wp:align>')}<w:r><w:t>Text</w:t></w:r></w:p>`,
+			),
+		);
+		const image = at((at(loaded.model.blocks, 0) as Paragraph).runs, 0).image!;
+		const { align: _align, ...rest } = image.placement!;
+		image.placement = { ...rest, offsetXPx: 48, offsetYPx: 24 };
+		image.widthPx = 120;
+		image.heightPx = 60;
+		const xml = await (
+			await JSZip.loadAsync(await loaded.save(loaded.model))
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(xml).toContain('<wp:wrapSquare wrapText="bothSides"/>');
+		expect(xml).toContain(
+			'<wp:positionH relativeFrom="column"><wp:posOffset>457200</wp:posOffset>',
+		);
+		expect(xml).toContain(
+			'<wp:positionV relativeFrom="paragraph"><wp:posOffset>228600</wp:posOffset>',
+		);
+		expect(xml).not.toContain('<wp:align>right</wp:align>');
+		expect(xml).toContain('cx="1143000" cy="571500"');
+		const again = await loadDocx(await loaded.save(loaded.model));
+		const reread = at((at(again.model.blocks, 0) as Paragraph).runs, 0).image!;
+		expect(reread).toMatchObject({
+			widthPx: 120,
+			heightPx: 60,
+			placement: { wrap: 'square', offsetXPx: 48, offsetYPx: 24 },
+		});
+		expect(reread.placement?.align).toBeUndefined();
+	});
+
+	it('writes an alignment back when a picture is aligned again', async () => {
+		const loaded = await loadDocx(
+			await fixture(`<w:p>${anchor('<wp:wrapNone/>', '<wp:posOffset>95250</wp:posOffset>')}</w:p>`),
+		);
+		const image = at((at(loaded.model.blocks, 0) as Paragraph).runs, 0).image!;
+		image.placement = { ...image.placement!, align: 'center' };
+		const xml = await (
+			await JSZip.loadAsync(await loaded.save(loaded.model))
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(xml).toContain('<wp:positionH relativeFrom="column"><wp:align>center</wp:align>');
+	});
 });

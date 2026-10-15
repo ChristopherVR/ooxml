@@ -89,6 +89,19 @@ export function floatPosition(
 	};
 }
 
+/** Where a float's `posOffset` is measured from: the start of its horizontal and vertical frame. */
+export function floatOrigin(
+	float: LayoutFloat,
+	page: LayoutPageBox,
+	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
+	paragraph: { topPx: number; heightPx: number },
+): { xPx: number; yPx: number } {
+	return {
+		xPx: horizontalArea(float, page, column).start,
+		yPx: verticalArea(float, page, paragraph.topPx, paragraph.heightPx).start,
+	};
+}
+
 /**
  * Positions each paragraph's floating pictures on the page where the paragraph starts, from their
  * `wp:positionH`/`wp:positionV` reference frame, alignment and offset. Returns whether any were placed.
@@ -110,12 +123,14 @@ export function positionFloats(input: LayoutDocumentInput, pages: LayoutPageBox[
 				placed.add(block.blockId);
 				const top = page.marginTopPx + block.yPx;
 				for (const float of floats) {
-					const position = floatPosition(float, page, column, {
-						topPx: top,
-						heightPx: block.heightPx,
-					});
+					const frame = { topPx: top, heightPx: block.heightPx };
+					const position = floatPosition(float, page, column, frame);
+					const origin = floatOrigin(float, page, column, frame);
 					boxes.push({
 						blockId: block.blockId,
+						index: float.index ?? floats.indexOf(float),
+						originXPx: origin.xPx,
+						originYPx: origin.yPx,
 						...position,
 						widthPx: float.widthPx,
 						heightPx: float.heightPx,

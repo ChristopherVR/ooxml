@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes inline picture runs: reuses original wp:inline/pic:pic XML verbatim (only patching
 // extent/alt text) for unchanged pictures, and synthesizes a minimal valid drawing for insertions.
-import type { InlineImage } from './model';
+import type { InlineImage, PicturePlacement } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
@@ -63,6 +63,52 @@ function updateDocPr(
 		else node.removeAttribute('descr');
 		if (title) node.setAttribute('title', title);
 		else node.removeAttribute('title');
+	});
+}
+
+/** Rewrites one `wp:positionH` or `wp:positionV` from the model's alignment or offset. */
+function patchPosition(
+	doc: XmlDocument,
+	anchor: XmlElement,
+	name: 'positionH' | 'positionV',
+	relativeFrom: string | undefined,
+	align: string | undefined,
+	offsetPx: number | undefined,
+): void {
+	const position = Array.from(anchor.childNodes).find(
+		(child): child is XmlElement =>
+			isElement(child) && child.namespaceURI === WP_NS && child.localName === name,
+	);
+	if (!position) return;
+	if (relativeFrom) position.setAttribute('relativeFrom', relativeFrom);
+	for (const child of Array.from(position.childNodes)) position.removeChild(child);
+	const value = align ? makeNS(doc, WP_NS, 'wp:align') : makeNS(doc, WP_NS, 'wp:posOffset');
+	value.appendChild(
+		doc.createTextNode(align ?? String(Math.round((offsetPx ?? 0) * EMU_PER_PIXEL))),
+	);
+	position.appendChild(value);
+}
+
+/** Moves a floating picture: only its position elements change; wrapping and the rest stay. */
+function updatePlacement(drawing: XmlElement, doc: XmlDocument, placement: PicturePlacement): void {
+	walk(drawing, (node) => {
+		if (node.namespaceURI !== WP_NS || node.localName !== 'anchor') return;
+		patchPosition(
+			doc,
+			node,
+			'positionH',
+			placement.relativeFrom,
+			placement.align,
+			placement.offsetXPx,
+		);
+		patchPosition(
+			doc,
+			node,
+			'positionV',
+			placement.relativeFromV,
+			placement.alignV,
+			placement.offsetYPx,
+		);
 	});
 }
 
@@ -206,6 +252,12 @@ export function createImageRun(
 			updateExtent(oldDrawing, image.widthPx, image.heightPx);
 		if (image.altText !== base.altText || image.title !== base.title)
 			updateDocPr(oldDrawing, image.altText, image.title);
+		if (
+			image.anchored &&
+			image.placement &&
+			JSON.stringify(image.placement) !== JSON.stringify(base.placement)
+		)
+			updatePlacement(oldDrawing, doc, image.placement);
 		clearNonProperties(node, oldDrawing);
 		return node;
 	}

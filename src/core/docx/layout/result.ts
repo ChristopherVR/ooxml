@@ -185,6 +185,11 @@ export interface LayoutFootnoteBox {
 
 export interface LayoutFloatBox {
 	blockId: string;
+	/** Which of the anchor paragraph's floating pictures this is, in run order. */
+	index: number;
+	/** Top-left of the frame the picture's offsets are measured from (`wp:positionH/V` origin). */
+	originXPx: number;
+	originYPx: number;
 	xPx: number;
 	yPx: number;
 	widthPx: number;

@@ -95,6 +95,26 @@ describe('pictures in pagination', () => {
 		expect(result.approximations).toContain(FLOAT_WRAP_NOTE);
 	});
 
+	it('reports the frame origin and picture index so an offset can be recomputed', () => {
+		const result = layoutDocument(
+			input([
+				{
+					...anchoredIn('m', { relativeFromH: 'margin', relativeFromV: 'page', offsetXPx: 40 }),
+					floats: [
+						{ ...picture, index: 0, relativeFromH: 'margin', relativeFromV: 'page', offsetXPx: 40 },
+						{ ...picture, index: 1, relativeFromH: 'page', relativeFromV: 'margin', offsetYPx: 7 },
+					],
+				},
+			]),
+			measurer,
+		);
+		const [first, second] = at(result.pages, 0).floats!;
+		expect(first).toMatchObject({ index: 0, originXPx: 100, originYPx: 0, xPx: 140, yPx: 0 });
+		expect(second).toMatchObject({ index: 1, originXPx: 0, originYPx: 100, xPx: 0, yPx: 107 });
+		// A new position is the old origin plus the offset the move produces.
+		expect(first!.xPx - first!.originXPx).toBe(40);
+	});
+
 	it('places a float on the page where its paragraph starts', () => {
 		const filler: LayoutParagraph = {
 			kind: 'paragraph',

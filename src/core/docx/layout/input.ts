@@ -58,6 +58,8 @@ export interface LayoutObject {
 
 /** A floating picture anchored to a paragraph (`wp:anchor`), positioned on the page. */
 export interface LayoutFloat extends LayoutObject {
+	/** Which of the paragraph's floating pictures this is, in run order. */
+	index?: number;
 	/** `wp:positionH/@relativeFrom`: page, margin, column, leftMargin, rightMargin, character… */
 	relativeFromH?: string;
 	alignH?: 'left' | 'center' | 'right' | 'inside' | 'outside';
