@@ -14,10 +14,9 @@ function resolve(href: string, external?: boolean): string {
 	<section class="pv-finale">
 		<div class="pv-finale__inner">
 			<span class="pv-finale__mark" aria-hidden="true"><i></i></span>
-			<p class="pv-kicker pv-finale__kicker" data-reveal>{{ copy.finale.kicker }}</p>
-			<h2 class="pv-finale__title" data-reveal="2">{{ copy.finale.title }}</h2>
-			<p class="pv-finale__sub" data-reveal="3">{{ copy.finale.sub }}</p>
-			<div class="pv-finale__actions" data-reveal="3">
+			<h2 class="pv-finale__title">{{ copy.finale.title }}</h2>
+			<p class="pv-finale__sub">{{ copy.finale.sub }}</p>
+			<div class="pv-finale__actions">
 				<a class="pv-btn pv-btn--accent" :href="withBase(copy.finale.quick.href)">
 					<span>{{ copy.finale.quick.text }}</span>
 				</a>
@@ -52,12 +51,14 @@ function resolve(href: string, external?: boolean): string {
 
 <style scoped>
 .pv-finale {
-	background: #14171b;
-	color: #f0efec;
+	background: #181a1e;
+	color: #f0f0f0;
+	--pv-accent: #5b8fe6;
+	--pv-on-accent: #181a1e;
 }
 
 .dark .pv-finale {
-	background: #0a0c0e;
+	background: #202228;
 	border-top: 1px solid var(--pv-line);
 }
 
@@ -75,7 +76,6 @@ function resolve(href: string, external?: boolean): string {
 	height: 3.2rem;
 	background: var(--pv-accent);
 	border-radius: 6px;
-	transform: rotate(-4deg);
 	margin-bottom: 2rem;
 }
 
@@ -84,11 +84,6 @@ function resolve(href: string, external?: boolean): string {
 	height: calc(1.5rem * 9 / 16);
 	border: 2px solid #fff;
 	border-radius: 2px;
-}
-
-.pv-finale__kicker {
-	display: block;
-	letter-spacing: 0.42em;
 }
 
 .pv-finale__title {
@@ -102,7 +97,7 @@ function resolve(href: string, external?: boolean): string {
 }
 
 .pv-finale__sub {
-	color: rgba(240, 239, 236, 0.62);
+	color: rgba(240, 240, 240, 0.62);
 	line-height: 1.75;
 	max-width: 36rem;
 	margin: 0 auto;
@@ -119,36 +114,29 @@ function resolve(href: string, external?: boolean): string {
 .pv-btn--accent {
 	background: var(--pv-accent);
 	border: 1px solid var(--pv-accent);
-	color: #fff;
-}
-
-.pv-btn--accent::before {
-	background: #fff;
+	color: var(--pv-on-accent);
 }
 
 .pv-btn--accent:hover {
-	color: #14171b;
+	background: #6f9ce9;
+	border-color: #6f9ce9;
 }
 
 .pv-btn--outline {
-	border: 1px solid rgba(240, 239, 236, 0.35);
-	color: #f0efec;
-}
-
-.pv-btn--outline::before {
-	background: #f0efec;
+	border: 1px solid rgba(240, 240, 240, 0.35);
+	color: #f0f0f0;
 }
 
 .pv-btn--outline:hover {
-	color: #14171b;
-	border-color: #f0efec;
+	background: rgba(240, 240, 240, 0.08);
+	border-color: #f0f0f0;
 }
 
 .pv-finale__columns {
 	max-width: 84rem;
 	margin: 0 auto;
 	padding: 3rem clamp(1.4rem, 5vw, 4.5rem);
-	border-top: 1px solid rgba(240, 239, 236, 0.12);
+	border-top: 1px solid rgba(240, 240, 240, 0.12);
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 2rem;
@@ -161,17 +149,15 @@ function resolve(href: string, external?: boolean): string {
 }
 
 .pv-finale__coltitle {
-	font-family: var(--pv-mono);
-	font-size: 0.66rem;
-	letter-spacing: 0.28em;
-	text-transform: uppercase;
-	color: rgba(240, 239, 236, 0.45);
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
+	color: rgba(240, 240, 240, 0.45);
 	margin-bottom: 0.4rem;
 }
 
 .pv-finale__column a {
 	font-size: 0.88rem;
-	color: rgba(240, 239, 236, 0.72);
+	color: rgba(240, 240, 240, 0.72);
 	transition: color 0.2s ease;
 	width: fit-content;
 }
@@ -184,15 +170,14 @@ function resolve(href: string, external?: boolean): string {
 	max-width: 84rem;
 	margin: 0 auto;
 	padding: 1.4rem clamp(1.4rem, 5vw, 4.5rem) 2.4rem;
-	border-top: 1px solid rgba(240, 239, 236, 0.12);
+	border-top: 1px solid rgba(240, 240, 240, 0.12);
 	display: flex;
 	justify-content: space-between;
 	flex-wrap: wrap;
 	gap: 0.8rem;
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.16em;
-	color: rgba(240, 239, 236, 0.45);
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
+	color: rgba(240, 240, 240, 0.45);
 }
 
 @media (max-width: 700px) {

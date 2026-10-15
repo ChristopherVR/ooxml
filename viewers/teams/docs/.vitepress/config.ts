@@ -18,7 +18,7 @@ export default defineConfig({
 	srcExclude: ['**/node_modules/**', 'README.md'],
 	markdown: { theme: { light: 'vitesse-dark', dark: 'vitesse-dark' } },
 	head: [
-		['meta', { name: 'theme-color', content: '#0e8f8f' }],
+		['meta', { name: 'theme-color', content: '#6264a7' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
 		[
@@ -43,6 +43,12 @@ export default defineConfig({
 			{
 				text: 'OOXML Office',
 				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
+			{
+				text: 'All docs',
+				link: 'https://christophervr.github.io/ooxml/docs/',
 				target: '_self',
 				rel: '',
 			},

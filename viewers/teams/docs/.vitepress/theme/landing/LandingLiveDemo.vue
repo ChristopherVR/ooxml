@@ -72,8 +72,10 @@ onBeforeUnmount(() => observer?.disconnect());
 
 <template>
 	<section id="live-demo" ref="section" class="ot-section ot-live">
-		<p class="ot-kicker">Live demo</p>
-		<h2 class="ot-h2">Try it right here</h2>
+		<div class="ot-bar">
+			<h2 class="ot-h2">Try it right here</h2>
+			<p class="ot-bar__note">Live demo</p>
+		</div>
 		<p class="ot-copy">
 			This is the real app running in your browser, with no server behind it: chat, presence and
 			calls travel only between frames and tabs of this browser (BroadcastChannel). Switch to two
@@ -132,7 +134,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			<figure class="ot-live__pane">
 				<figcaption>
 					<span>{{ active.label }} &middot; Ada</span>
-					<a :href="soloSrc" target="_blank" rel="noopener">Open full app &rarr;</a>
+					<a :href="soloSrc" target="_blank" rel="noopener">Open full app</a>
 				</figcaption>
 				<iframe
 					:key="soloSrc"
@@ -146,7 +148,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			<figure class="ot-live__pane">
 				<figcaption>
 					<span>{{ active.label }} &middot; Ada</span>
-					<a :href="adaSrc" target="_blank" rel="noopener">Open full app &rarr;</a>
+					<a :href="adaSrc" target="_blank" rel="noopener">Open full app</a>
 				</figcaption>
 				<iframe
 					:key="adaSrc"
@@ -158,7 +160,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			<figure class="ot-live__pane">
 				<figcaption>
 					<span>{{ guest.label }} &middot; Bob</span>
-					<a :href="bobSrc" target="_blank" rel="noopener">Open full app &rarr;</a>
+					<a :href="bobSrc" target="_blank" rel="noopener">Open full app</a>
 				</figcaption>
 				<iframe
 					:key="bobSrc"
@@ -205,11 +207,7 @@ onBeforeUnmount(() => observer?.disconnect());
 }
 
 .ot-live__tab {
-	font-family: var(--ot-mono);
-	font-size: 0.72rem;
-	font-weight: 500;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
 	color: var(--ot-ink-soft);
 	background: transparent;
 	border: 0;
@@ -262,10 +260,7 @@ onBeforeUnmount(() => observer?.disconnect());
 	justify-content: space-between;
 	gap: 1rem;
 	padding: 0.55rem 0.9rem;
-	font-family: var(--ot-mono);
-	font-size: 0.7rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
 	border-bottom: 1px solid var(--ot-line);
 	color: var(--ot-ink-soft);
 }
@@ -285,10 +280,7 @@ onBeforeUnmount(() => observer?.disconnect());
 	display: inline-flex;
 	align-items: center;
 	gap: 0.6rem;
-	font-family: var(--ot-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
 	color: var(--ot-ink-soft);
 }
 

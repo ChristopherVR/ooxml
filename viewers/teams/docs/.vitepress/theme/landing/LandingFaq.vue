@@ -43,13 +43,15 @@ const items = [
 
 <template>
 	<section class="ot-section ot-faq">
-		<p class="ot-kicker">FAQ</p>
-		<h2 class="ot-h2">Common questions</h2>
+		<div class="ot-bar">
+			<h2 class="ot-h2">Common questions</h2>
+			<p class="ot-bar__note">FAQ</p>
+		</div>
 		<div class="ot-faq__list">
 			<details v-for="item in items" :key="item.q" class="ot-faq__item">
 				<summary>{{ item.q }}</summary>
 				<p>{{ item.a }}</p>
-				<a v-if="item.href" :href="withBase(item.href)">{{ item.link }} &rarr;</a>
+				<a v-if="item.href" :href="withBase(item.href)">{{ item.link }}</a>
 			</details>
 		</div>
 	</section>
@@ -83,10 +85,8 @@ const items = [
 .ot-faq__item a {
 	display: inline-block;
 	margin-top: 0.6rem;
-	font-family: var(--ot-mono);
-	font-size: 0.7rem;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
+	font-weight: 600;
 	color: var(--ot-accent);
 }
 </style>

@@ -1,21 +1,24 @@
 /**
  * Shared token system + utilities for the landing page (LandingHome layout).
  * Everything is scoped under .pv-landing so it cannot leak into docs pages.
+ * Neutrals and rules follow docs/pages-design.md.
  */
 
 .pv-landing {
-	/* Light: a projection screen in a bright room */
-	--pv-canvas: #fbfaf7;
+	--pv-canvas: #f7f8fa;
 	--pv-surface: #ffffff;
-	--pv-ink: #1a1d21;
-	--pv-ink-soft: #5a626e;
-	--pv-line: #e6e2d9;
-	--pv-accent: #c2431f;
-	--pv-accent-deep: #8f2e12;
-	--pv-accent-soft: rgba(194, 67, 31, 0.08);
-	--pv-shadow: 0 24px 60px -24px rgba(26, 29, 33, 0.25);
+	--pv-ink: #242424;
+	--pv-ink-soft: #616161;
+	--pv-line: #e3e6eb;
+	--pv-accent: #3955a3;
+	--pv-accent-deep: #2b407a;
+	--pv-accent-soft: rgba(57, 85, 163, 0.08);
+	--pv-accent-tile: rgba(57, 85, 163, 0.14);
+	--pv-accent-edge: rgba(57, 85, 163, 0.42);
+	--pv-on-accent: #ffffff;
 
 	--pv-display: 'Bricolage Grotesque', var(--vp-font-family-base);
+	--pv-ui: var(--vp-font-family-base);
 	--pv-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
 
 	background: var(--pv-canvas);
@@ -25,16 +28,17 @@
 }
 
 .dark .pv-landing {
-	/* Dark: the presenter room with the lights down */
-	--pv-canvas: #0f1113;
-	--pv-surface: #171a1e;
-	--pv-ink: #f0efec;
-	--pv-ink-soft: #9aa1ab;
-	--pv-line: #272c33;
-	--pv-accent: #e86a40;
-	--pv-accent-deep: #c2431f;
-	--pv-accent-soft: rgba(232, 106, 64, 0.1);
-	--pv-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
+	--pv-canvas: #181a1e;
+	--pv-surface: #202228;
+	--pv-ink: #f0f0f0;
+	--pv-ink-soft: #b5b5b5;
+	--pv-line: #34383f;
+	--pv-accent: #7b93dc;
+	--pv-accent-deep: #5c6ea5;
+	--pv-accent-soft: rgba(123, 147, 220, 0.08);
+	--pv-accent-tile: rgba(123, 147, 220, 0.14);
+	--pv-accent-edge: rgba(123, 147, 220, 0.42);
+	--pv-on-accent: #181a1e;
 }
 
 /* ---- Section shell ------------------------------------------------ */
@@ -42,27 +46,42 @@
 .pv-section {
 	max-width: 84rem;
 	margin: 0 auto;
-	padding: clamp(4.5rem, 11vh, 8.5rem) clamp(1.4rem, 5vw, 4.5rem);
+	padding: clamp(3rem, 8vh, 5.5rem) clamp(1.4rem, 5vw, 4.5rem);
+}
+
+/* Section bar: title left, short note right, hairline below */
+.pv-sectionbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.6rem 2rem;
+	padding-bottom: 1rem;
+	margin-bottom: 1.6rem;
+	border-bottom: 1px solid var(--pv-line);
+}
+
+.pv-sectionbar .pv-h2 {
+	margin: 0;
+}
+
+.pv-sectionbar__note {
+	margin: 0;
+	max-width: 36rem;
+	font-size: 0.9rem;
+	line-height: 1.6;
+	color: var(--pv-ink-soft);
 }
 
 /* ---- Recurring text roles ----------------------------------------- */
 
-.pv-kicker {
-	font-family: var(--pv-mono);
-	font-size: 0.72rem;
-	font-weight: 500;
-	letter-spacing: 0.32em;
-	text-transform: uppercase;
-	color: var(--pv-accent);
-}
-
 .pv-h2 {
 	font-family: var(--pv-display);
-	font-size: clamp(2.1rem, 4.6vw, 3.6rem);
+	font-size: clamp(1.7rem, 3.2vw, 2.4rem);
 	font-weight: 640;
-	line-height: 1.04;
+	line-height: 1.08;
 	letter-spacing: -0.02em;
-	margin: 1.1rem 0 1.2rem;
+	margin: 0 0 1.1rem;
 }
 
 .pv-copy {
@@ -81,84 +100,55 @@
 .pv-link {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.6rem;
-	margin-top: 1.6rem;
-	font-family: var(--pv-mono);
-	font-size: 0.78rem;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
-	color: var(--pv-ink);
-	border-bottom: 1px solid var(--pv-accent);
-	padding-bottom: 0.35rem;
-	transition: gap 0.3s ease;
+	margin-top: 1.4rem;
+	font-family: var(--pv-ui);
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--pv-accent);
+	text-decoration: underline transparent;
+	text-underline-offset: 3px;
+	transition: text-decoration-color 0.18s ease;
 }
 
 .pv-link:hover {
-	gap: 1rem;
-}
-
-.pv-link i {
-	font-style: normal;
-	color: var(--pv-accent);
+	text-decoration-color: currentColor;
 }
 
 /* ---- Buttons ------------------------------------------------------- */
 
 .pv-btn {
 	display: inline-block;
-	font-family: var(--pv-mono);
+	font-family: var(--pv-ui);
 	font-size: 0.8rem;
-	font-weight: 500;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
-	padding: 0.95rem 2.1rem;
-	border-radius: 3px;
-	position: relative;
-	overflow: hidden;
+	font-weight: 600;
+	padding: 0.55rem 1rem;
+	border-radius: 4px;
+	cursor: pointer;
 	transition:
-		color 0.35s ease,
-		border-color 0.35s ease;
-}
-
-.pv-btn span {
-	position: relative;
-	z-index: 1;
-}
-
-.pv-btn::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	transform: translateY(101%);
-	transition: transform 0.45s cubic-bezier(0.7, 0, 0.2, 1);
-}
-
-.pv-btn:hover::before {
-	transform: translateY(0);
+		background-color 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease;
 }
 
 .pv-btn--solid {
 	background: var(--pv-accent);
-	color: #fff;
+	color: var(--pv-on-accent);
 	border: 1px solid var(--pv-accent);
 }
 
-.pv-btn--solid::before {
-	background: var(--pv-accent-deep);
+.pv-btn--solid:hover {
+	background: color-mix(in srgb, var(--pv-accent) 86%, var(--pv-ink));
+	border-color: color-mix(in srgb, var(--pv-accent) 86%, var(--pv-ink));
 }
 
 .pv-btn--ghost {
-	border: 1px solid var(--pv-line);
+	border: 1px solid color-mix(in srgb, var(--pv-ink) 28%, var(--pv-line));
 	color: var(--pv-ink);
 }
 
-.pv-btn--ghost::before {
-	background: var(--pv-ink);
-}
-
 .pv-btn--ghost:hover {
-	color: var(--pv-canvas);
-	border-color: var(--pv-ink);
+	background: var(--pv-accent-soft);
+	border-color: var(--pv-accent);
 }
 
 /* ---- Load-time entrances (no JS needed; used above the fold) ------- */
@@ -188,35 +178,7 @@
 	}
 }
 
-/* ---- Scroll reveals ------------------------------------------------ */
-
-.pv-landing [data-reveal] {
-	opacity: 0;
-	transform: translateY(26px);
-	transition:
-		opacity 0.8s cubic-bezier(0.25, 0.4, 0.25, 1),
-		transform 0.8s cubic-bezier(0.25, 0.4, 0.25, 1);
-}
-
-.pv-landing [data-reveal='2'] {
-	transition-delay: 0.12s;
-}
-
-.pv-landing [data-reveal='3'] {
-	transition-delay: 0.24s;
-}
-
-.pv-landing [data-reveal='4'] {
-	transition-delay: 0.36s;
-}
-
-.pv-landing [data-reveal].is-revealed {
-	opacity: 1;
-	transform: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-	.pv-landing [data-reveal],
 	.pv-enter {
 		opacity: 1;
 		transform: none;
@@ -224,7 +186,7 @@
 		animation: none;
 	}
 
-	.pv-btn::before {
+	.pv-btn {
 		transition: none;
 	}
 }

@@ -13,7 +13,7 @@ export default defineConfig({
 	ignoreDeadLinks: true,
 	markdown: { theme: { light: 'vitesse-dark', dark: 'vitesse-dark' } },
 	head: [
-		['meta', { name: 'theme-color', content: '#c2431f' }],
+		['meta', { name: 'theme-color', content: '#185abd' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
 		[
@@ -38,6 +38,12 @@ export default defineConfig({
 			{
 				text: 'OOXML Office',
 				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
+			{
+				text: 'All docs',
+				link: 'https://christophervr.github.io/ooxml/docs/',
 				target: '_self',
 				rel: '',
 			},

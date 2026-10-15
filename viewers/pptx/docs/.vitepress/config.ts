@@ -41,6 +41,12 @@ export default defineConfig({
 						target: '_self',
 						rel: '',
 					},
+					{
+						text: 'All docs',
+						link: 'https://christophervr.github.io/ooxml/docs/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Guide developpeur', link: '/fr/guide/', activeMatch: '/fr/guide/' },
 					{ text: 'Guide utilisateur', link: '/user/', activeMatch: '/user/' },
 					{
@@ -98,6 +104,12 @@ export default defineConfig({
 					{
 						text: 'OOXML Office',
 						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
+					{
+						text: 'All docs',
+						link: 'https://christophervr.github.io/ooxml/docs/',
 						target: '_self',
 						rel: '',
 					},
@@ -161,6 +173,12 @@ export default defineConfig({
 						target: '_self',
 						rel: '',
 					},
+					{
+						text: 'All docs',
+						link: 'https://christophervr.github.io/ooxml/docs/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Entwicklerhandbuch', link: '/de/guide/', activeMatch: '/de/guide/' },
 					{ text: 'Benutzerhandbuch', link: '/user/', activeMatch: '/user/' },
 					{
@@ -213,7 +231,7 @@ export default defineConfig({
 	},
 
 	head: [
-		['meta', { name: 'theme-color', content: '#c2431f' }],
+		['meta', { name: 'theme-color', content: '#c43e1c' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
 		[
@@ -241,6 +259,12 @@ export default defineConfig({
 			{
 				text: 'OOXML Office',
 				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
+			{
+				text: 'All docs',
+				link: 'https://christophervr.github.io/ooxml/docs/',
 				target: '_self',
 				rel: '',
 			},

@@ -10,22 +10,23 @@ const copy = useLandingCopy();
 
 <template>
 	<section class="pv-section pv-status">
+		<header class="pv-sectionbar">
+			<h2 class="pv-h2">{{ copy.status.title }}</h2>
+		</header>
 		<div class="pv-status__grid">
 			<div class="pv-status__copy">
-				<p class="pv-kicker" data-reveal>{{ copy.status.kicker }}</p>
-				<h2 class="pv-h2" data-reveal="2">{{ copy.status.title }}</h2>
-				<p class="pv-copy" data-reveal="3">{{ copy.status.copy }}</p>
-				<a class="pv-link" :href="withBase(copy.status.link.href)" data-reveal="3">
-					{{ copy.status.link.text }} <i>&rarr;</i>
+				<p class="pv-copy">{{ copy.status.copy }}</p>
+				<a class="pv-link" :href="withBase(copy.status.link.href)">
+					{{ copy.status.link.text }}
 				</a>
 			</div>
-			<div class="pv-status__code" data-reveal="3">
+			<div class="pv-status__code">
 				<CodeCard file="load-save.ts" badge="DOCX &middot; DOC" :code="CORE_SAMPLE" />
 				<aside class="pv-status__note">
 					<strong>{{ copy.status.roadmapTitle }}</strong>
 					<p>{{ copy.status.roadmapCopy }}</p>
 					<a :href="withBase(copy.status.roadmapLink.href)">
-						{{ copy.status.roadmapLink.text }} &rarr;
+						{{ copy.status.roadmapLink.text }}
 					</a>
 				</aside>
 			</div>
@@ -61,10 +62,9 @@ const copy = useLandingCopy();
 }
 
 .pv-status__note strong {
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
+	font-weight: 600;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-accent);
 }
 
@@ -76,9 +76,8 @@ const copy = useLandingCopy();
 }
 
 .pv-status__note a {
-	font-family: var(--pv-mono);
-	font-size: 0.74rem;
-	letter-spacing: 0.08em;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-accent);
 }
 

@@ -11,7 +11,6 @@ const copy = useLandingCopy();
 	<section class="pv-hero">
 		<div class="pv-hero__inner">
 			<div class="pv-hero__copy">
-				<p class="pv-kicker pv-enter">{{ copy.hero.kicker }}</p>
 				<h1 class="pv-hero__title pv-enter pv-enter--2">
 					{{ copy.hero.titleTop }}<br />
 					<em>{{ copy.hero.titleAccent }}</em>
@@ -34,7 +33,7 @@ const copy = useLandingCopy();
 					<span class="pv-hero__framebar">
 						<span class="pv-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
 						<span class="pv-hero__framefile">{{ copy.hero.frameCaption }}</span>
-						<span class="pv-hero__frametry">{{ copy.hero.frameTry }} &rarr;</span>
+						<span class="pv-hero__frametry">{{ copy.hero.frameTry }}</span>
 					</span>
 					<img
 						:src="withBase('/hero-editor.png')"
@@ -59,11 +58,6 @@ const copy = useLandingCopy();
 	min-height: calc(100vh - var(--vp-nav-height, 64px));
 	display: flex;
 	align-items: center;
-	background-image: radial-gradient(
-		color-mix(in srgb, var(--pv-ink) 9%, transparent) 1px,
-		transparent 1px
-	);
-	background-size: 26px 26px;
 }
 
 .pv-hero__inner {
@@ -126,14 +120,10 @@ const copy = useLandingCopy();
 	border: 1px solid var(--pv-line);
 	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: var(--pv-shadow);
-	transition:
-		transform 0.35s cubic-bezier(0.25, 0.6, 0.3, 1),
-		border-color 0.35s ease;
+	transition: border-color 0.2s ease;
 }
 
 .pv-hero__frame:hover {
-	transform: translateY(-4px);
 	border-color: var(--pv-accent);
 }
 
@@ -143,10 +133,9 @@ const copy = useLandingCopy();
 	gap: 0.9rem;
 	padding: 0.6rem 0.9rem;
 	border-bottom: 1px solid var(--pv-line);
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
-	letter-spacing: 0.05em;
 }
 
 .pv-hero__dots {
@@ -164,8 +153,6 @@ const copy = useLandingCopy();
 .pv-hero__frametry {
 	margin-left: auto;
 	color: var(--pv-accent);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
 	white-space: nowrap;
 }
 
@@ -187,10 +174,8 @@ const copy = useLandingCopy();
 }
 
 .pv-hero__cue span {
-	font-family: var(--pv-mono);
-	font-size: 0.66rem;
-	letter-spacing: 0.36em;
-	text-transform: uppercase;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
 }
 

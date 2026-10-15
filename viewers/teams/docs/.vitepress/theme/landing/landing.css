@@ -1,19 +1,20 @@
 /**
  * Token system and shared utilities for the landing page (LandingHome layout), adapted from
  * ChristopherVR/docx-viewer. Everything is scoped under .ot-landing so it cannot leak into docs
- * pages. The accent is a neutral teal: OpenTeams does not use Microsoft's brand colours.
+ * pages. The accent is the Teams purple of the shared Pages design system (docs/pages-design.md).
  */
 
 .ot-landing {
-	--ot-canvas: #fbfaf7;
+	--ot-canvas: #f7f8fa;
 	--ot-surface: #ffffff;
-	--ot-ink: #1a1d21;
-	--ot-ink-soft: #5a626e;
-	--ot-line: #e6e2d9;
-	--ot-accent: #0e8f8f;
-	--ot-accent-deep: #085c5c;
-	--ot-accent-soft: rgba(14, 143, 143, 0.08);
-	--ot-shadow: 0 24px 60px -24px rgba(26, 29, 33, 0.25);
+	--ot-ink: #242424;
+	--ot-ink-soft: #616161;
+	--ot-line: #e3e6eb;
+	--ot-accent: #6264a7;
+	--ot-accent-deep: #4b4d8a;
+	--ot-accent-soft: rgba(98, 100, 167, 0.08);
+	--ot-accent-tile: rgba(98, 100, 167, 0.14);
+	--ot-accent-edge: rgba(98, 100, 167, 0.42);
 
 	--ot-display: 'Bricolage Grotesque', var(--vp-font-family-base);
 	--ot-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
@@ -25,15 +26,16 @@
 }
 
 .dark .ot-landing {
-	--ot-canvas: #0f1113;
-	--ot-surface: #171a1e;
-	--ot-ink: #f0efec;
-	--ot-ink-soft: #9aa1ab;
-	--ot-line: #272c33;
-	--ot-accent: #3bb8b8;
-	--ot-accent-deep: #0e8f8f;
-	--ot-accent-soft: rgba(59, 184, 184, 0.1);
-	--ot-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
+	--ot-canvas: #181a1e;
+	--ot-surface: #202228;
+	--ot-ink: #f0f0f0;
+	--ot-ink-soft: #b5b5b5;
+	--ot-line: #34383f;
+	--ot-accent: #9a9cf0;
+	--ot-accent-deep: #7f81d8;
+	--ot-accent-soft: rgba(154, 156, 240, 0.08);
+	--ot-accent-tile: rgba(154, 156, 240, 0.14);
+	--ot-accent-edge: rgba(154, 156, 240, 0.42);
 }
 
 .ot-section {
@@ -42,14 +44,21 @@
 	padding: clamp(3.5rem, 9vh, 7rem) clamp(1rem, 5vw, 4.5rem);
 }
 
-.ot-kicker {
-	font-family: var(--ot-mono);
-	font-size: 0.72rem;
-	font-weight: 500;
-	letter-spacing: 0.32em;
-	text-transform: uppercase;
-	color: var(--ot-accent);
+.ot-bar {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.6rem 1.5rem;
+	flex-wrap: wrap;
+	padding-bottom: 1rem;
+	margin-bottom: 1.4rem;
+	border-bottom: 1px solid var(--ot-line);
+}
+
+.ot-bar__note {
 	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--ot-ink-soft);
 }
 
 .ot-h2 {
@@ -58,7 +67,7 @@
 	font-weight: 640;
 	line-height: 1.06;
 	letter-spacing: -0.02em;
-	margin: 1rem 0 1.1rem;
+	margin: 0;
 }
 
 .ot-copy {
@@ -71,17 +80,15 @@
 
 .ot-btn {
 	display: inline-block;
-	font-family: var(--ot-mono);
-	font-size: 0.8rem;
-	font-weight: 500;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
-	padding: 0.95rem 2rem;
-	border-radius: 3px;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	padding: 0.55rem 0.95rem;
+	border-radius: 4px;
+	cursor: pointer;
 	transition:
-		background-color 0.3s ease,
-		color 0.3s ease,
-		border-color 0.3s ease;
+		background-color 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease;
 }
 
 .ot-btn--solid {
@@ -93,6 +100,10 @@
 .ot-btn--solid:hover {
 	background: var(--ot-accent-deep);
 	border-color: var(--ot-accent-deep);
+}
+
+.dark .ot-btn--solid {
+	color: #1b1b2e;
 }
 
 .ot-btn--ghost {
@@ -112,7 +123,7 @@
 	border: 1px solid var(--ot-line);
 	border-radius: 8px;
 	overflow: hidden;
-	margin-top: 2.2rem;
+	margin-top: 1.4rem;
 }
 
 .ot-card {
@@ -121,7 +132,7 @@
 	gap: 0.7rem;
 	background: var(--ot-surface);
 	padding: 1.6rem 1.5rem 1.8rem;
-	transition: background-color 0.25s ease;
+	transition: background-color 0.2s ease;
 }
 
 .ot-card:hover {
@@ -146,20 +157,58 @@
 }
 
 .ot-card a.ot-more {
-	font-family: var(--ot-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--ot-ink);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--ot-accent);
 }
 
 .ot-card a.ot-more:hover {
-	color: var(--ot-accent);
+	text-decoration: underline;
 }
 
-.ot-card a.ot-more i {
-	font-style: normal;
+/* Tool card: icon tile top-left, hairline arrow box top-right */
+.ot-tool {
+	position: relative;
+	color: inherit;
+	text-decoration: none;
+}
+
+.ot-tool__icon {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 6px;
+	background: var(--ot-accent-tile);
+	border: 1px solid var(--ot-accent-edge);
 	color: var(--ot-accent);
+	margin-bottom: 0.4rem;
+}
+
+.ot-tool__arrow {
+	position: absolute;
+	top: 1.5rem;
+	right: 1.5rem;
+	display: grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	border: 1px solid var(--ot-line);
+	border-radius: 4px;
+	color: var(--ot-ink-soft);
+	transition:
+		color 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.ot-tool__arrow svg {
+	width: 14px;
+	height: 14px;
+}
+
+.ot-tool:hover .ot-tool__arrow {
+	color: var(--ot-accent);
+	border-color: var(--ot-accent);
 }
 
 .ot-enter {

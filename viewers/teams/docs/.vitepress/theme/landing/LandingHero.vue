@@ -6,8 +6,7 @@ import { withBase } from 'vitepress';
 	<section class="ot-hero">
 		<div class="ot-hero__inner">
 			<div class="ot-hero__copy">
-				<p class="ot-kicker ot-enter">Open source &middot; bring your own server</p>
-				<h1 class="ot-hero__title ot-enter ot-enter--2">
+				<h1 class="ot-hero__title ot-enter">
 					Team chat and calls,<br />
 					<em>on a server you run.</em>
 				</h1>
@@ -29,7 +28,7 @@ npx openteams-server</code></pre>
 					<span class="ot-hero__framebar">
 						<span class="ot-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
 						<span>&lt;teams-app&gt; in local mode</span>
-						<span class="ot-hero__try">Open the demo &rarr;</span>
+						<span class="ot-hero__try">Open the demo</span>
 					</span>
 					<img
 						:src="withBase('/hero-workspace.png')"
@@ -46,11 +45,7 @@ npx openteams-server</code></pre>
 
 <style scoped>
 .ot-hero {
-	background-image: radial-gradient(
-		color-mix(in srgb, var(--ot-ink) 9%, transparent) 1px,
-		transparent 1px
-	);
-	background-size: 26px 26px;
+	border-bottom: 1px solid var(--ot-line);
 }
 
 .ot-hero__inner {
@@ -73,7 +68,7 @@ npx openteams-server</code></pre>
 	font-weight: 680;
 	line-height: 1.02;
 	letter-spacing: -0.025em;
-	margin: 1.3rem 0 1.4rem;
+	margin: 0 0 1.4rem;
 }
 
 .ot-hero__title em {
@@ -101,8 +96,9 @@ npx openteams-server</code></pre>
 	margin: 1.6rem 0 0;
 	padding: 0.9rem 1.1rem;
 	border-radius: 6px;
-	background: #14171b;
-	color: #e6e4df;
+	background: #181a1e;
+	border: 1px solid #34383f;
+	color: #f0f0f0;
 	font-family: var(--ot-mono);
 	font-size: 0.82rem;
 	line-height: 1.7;
@@ -116,14 +112,10 @@ npx openteams-server</code></pre>
 	border: 1px solid var(--ot-line);
 	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: var(--ot-shadow);
-	transition:
-		transform 0.35s cubic-bezier(0.25, 0.6, 0.3, 1),
-		border-color 0.35s ease;
+	transition: border-color 0.2s ease;
 }
 
 .ot-hero__frame:hover {
-	transform: translateY(-4px);
 	border-color: var(--ot-accent);
 }
 
@@ -133,8 +125,7 @@ npx openteams-server</code></pre>
 	gap: 0.9rem;
 	padding: 0.6rem 0.9rem;
 	border-bottom: 1px solid var(--ot-line);
-	font-family: var(--ot-mono);
-	font-size: 0.68rem;
+	font-size: 0.75rem;
 	color: var(--ot-ink-soft);
 }
 
@@ -153,8 +144,7 @@ npx openteams-server</code></pre>
 .ot-hero__try {
 	margin-left: auto;
 	color: var(--ot-accent);
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-weight: 600;
 	white-space: nowrap;
 }
 

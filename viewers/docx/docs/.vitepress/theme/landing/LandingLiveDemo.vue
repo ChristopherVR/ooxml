@@ -30,11 +30,12 @@ const {
 
 <template>
 	<section id="live-demo" ref="section" class="pv-section pv-live">
-		<p class="pv-kicker" data-reveal>{{ copy.demos.kicker }}</p>
-		<h2 class="pv-h2" data-reveal="2">{{ copy.demos.title }}</h2>
-		<p class="pv-copy" data-reveal="3">{{ copy.demos.copy }}</p>
+		<header class="pv-sectionbar">
+			<h2 class="pv-h2">{{ copy.demos.title }}</h2>
+			<p class="pv-sectionbar__note">{{ copy.demos.copy }}</p>
+		</header>
 
-		<div class="pv-live__controls" data-reveal="4">
+		<div class="pv-live__controls">
 			<div class="pv-live__tabs" role="tablist" :aria-label="copy.demos.frameworkLabel">
 				<button
 					v-for="f in DEMO_FRAMEWORKS"
@@ -77,7 +78,7 @@ const {
 			</label>
 		</div>
 
-		<div v-if="!started" class="pv-live__poster" data-reveal="4">
+		<div v-if="!started" class="pv-live__poster">
 			<button type="button" class="pv-btn pv-btn--solid" @click="start">
 				<span>{{ copy.demos.load }}</span>
 			</button>
@@ -138,17 +139,15 @@ const {
 }
 
 .pv-live__tab {
-	font-family: var(--pv-mono);
-	font-size: 0.72rem;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	font-weight: 500;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
 	color: var(--pv-ink-soft);
 	padding: 0.5rem 0.9rem;
 	border-radius: 4px;
 	transition:
-		color 0.25s ease,
-		background-color 0.25s ease;
+		color 0.18s ease,
+		background-color 0.18s ease;
 }
 
 .pv-live__tab:hover {
@@ -164,15 +163,13 @@ const {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.6rem;
-	font-family: var(--pv-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
 }
 
 .pv-live__guestpick select {
-	font-family: var(--pv-mono);
+	font-family: var(--pv-ui);
 	font-size: 0.78rem;
 	color: var(--pv-ink);
 	background: var(--pv-surface);

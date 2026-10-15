@@ -25,16 +25,14 @@ const html = computed(() => highlight(props.code));
 
 <style scoped>
 .pv-code {
-	background: #14171b;
-	border: 1px solid var(--pv-line);
+	background: #181a1e;
+	border: 1px solid #34383f;
 	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: var(--pv-shadow);
 }
 
 .dark .pv-code {
-	background: #101317;
-	border-color: #272c33;
+	background: #202228;
 }
 
 .pv-code__bar {
@@ -42,11 +40,10 @@ const html = computed(() => highlight(props.code));
 	align-items: center;
 	gap: 0.9rem;
 	padding: 0.65rem 1.1rem;
-	border-bottom: 1px solid rgba(240, 239, 236, 0.1);
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.08em;
-	color: rgba(240, 239, 236, 0.55);
+	border-bottom: 1px solid rgba(240, 240, 240, 0.1);
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
+	color: rgba(240, 240, 240, 0.55);
 }
 
 .pv-code__dots {
@@ -58,14 +55,12 @@ const html = computed(() => highlight(props.code));
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	background: rgba(240, 239, 236, 0.18);
+	background: rgba(240, 240, 240, 0.18);
 }
 
 .pv-code__badge {
 	margin-left: auto;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: #e8916f;
+	color: #5b8fe6;
 	white-space: nowrap;
 }
 
@@ -85,7 +80,7 @@ const html = computed(() => highlight(props.code));
 }
 
 .pv-code :deep(.k) {
-	color: #e8916f;
+	color: #5b8fe6;
 }
 
 .pv-code :deep(.s) {

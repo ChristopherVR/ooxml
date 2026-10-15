@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress';
 
+import { icons } from './icons';
+
 import LandingFaq from './LandingFaq.vue';
 import LandingFinale from './LandingFinale.vue';
 import LandingHero from './LandingHero.vue';
@@ -26,36 +28,42 @@ const features = [
 		copy: 'Channels, posts with replies, reactions, author-only edit and delete, search and unread counts, all in one Yjs document that merges concurrent edits.',
 		href: '/getting-started',
 		link: 'Getting started',
+		icon: 'chat',
 	},
 	{
 		title: 'Presence',
 		copy: 'Who is online, typing indicators and an availability you set yourself (available, busy, away). Presence is advisory, like any Yjs awareness.',
 		href: '/architecture',
 		link: 'Architecture',
+		icon: 'people',
 	},
 	{
 		title: 'Meetings over WebRTC',
 		copy: 'Audio, video, screen share and raise hand in a full-mesh call: no media server, honest up to about a dozen people. TURN is yours to run.',
 		href: '/server#calls-stun-and-turn',
 		link: 'Calls and TURN',
+		icon: 'video',
 	},
 	{
 		title: 'Files in the conversation',
 		copy: 'Attachments are uploaded to your server (or your own uploader) and posted as links. Word, Excel, PowerPoint and Visio files are recognised so a host can open them.',
 		href: '/server#files',
 		link: 'File storage',
+		icon: 'file',
 	},
 	{
 		title: 'Bring your own server',
 		copy: 'Three small contracts: y-websocket sync, a JSON signaling relay and optional file storage. openteams-server does all three in one Node process.',
 		href: '/server',
 		link: 'Server guide',
+		icon: 'server',
 	},
 	{
 		title: 'Six frameworks',
 		copy: 'React, Vue, Angular, Svelte, Solid and vanilla bindings. Each gives you the full component and a raw hook over the same client store.',
 		href: '/frameworks/react',
 		link: 'Framework guides',
+		icon: 'code',
 	},
 ];
 
@@ -75,34 +83,45 @@ const limits = [
 		<LandingLiveDemo />
 
 		<section class="ot-section">
-			<p class="ot-kicker">Demo apps</p>
-			<h2 class="ot-h2">Two ways to embed it</h2>
+			<div class="ot-bar">
+				<h2 class="ot-h2">Two ways to embed it</h2>
+				<p class="ot-bar__note">Demo apps</p>
+			</div>
 			<div class="ot-grid ot-grid--two">
 				<article v-for="demo in demos" :key="demo.href" class="ot-card">
 					<h3>{{ demo.title }}</h3>
 					<p>{{ demo.copy }}</p>
-					<a class="ot-more" :href="withBase(demo.href)" target="_self"
-						>Open the demo <i>&rarr;</i></a
-					>
+					<a class="ot-more" :href="withBase(demo.href)" target="_self">Open the demo</a>
 				</article>
 			</div>
 		</section>
 
 		<section class="ot-section">
-			<p class="ot-kicker">What it does</p>
-			<h2 class="ot-h2">A workspace you can host</h2>
+			<div class="ot-bar">
+				<h2 class="ot-h2">A workspace you can host</h2>
+				<p class="ot-bar__note">What it does</p>
+			</div>
 			<div class="ot-grid">
-				<article v-for="item in features" :key="item.title" class="ot-card">
+				<a
+					v-for="item in features"
+					:key="item.title"
+					class="ot-card ot-tool"
+					:href="withBase(item.href)"
+					:aria-label="`${item.title}: ${item.link}`"
+				>
+					<span class="ot-tool__icon" aria-hidden="true" v-html="icons[item.icon]"></span>
+					<span class="ot-tool__arrow" aria-hidden="true" v-html="icons.arrow"></span>
 					<h3>{{ item.title }}</h3>
 					<p>{{ item.copy }}</p>
-					<a class="ot-more" :href="withBase(item.href)">{{ item.link }} <i>&rarr;</i></a>
-				</article>
+				</a>
 			</div>
 		</section>
 
 		<section class="ot-section ot-limits">
-			<p class="ot-kicker">Honest limits</p>
-			<h2 class="ot-h2">What it is not</h2>
+			<div class="ot-bar">
+				<h2 class="ot-h2">What it is not</h2>
+				<p class="ot-bar__note">Honest limits</p>
+			</div>
 			<ul>
 				<li v-for="item in limits" :key="item">{{ item }}</li>
 			</ul>

@@ -62,10 +62,8 @@ async function copyCommand(): Promise<void> {
 }
 
 .pv-install__tab {
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
 	background: none;
 	border: 1px solid transparent;
@@ -115,10 +113,8 @@ async function copyCommand(): Promise<void> {
 }
 
 .pv-install__copy {
-	font-family: var(--pv-mono);
-	font-size: 0.66rem;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-accent);
 	background: none;
 	border: none;

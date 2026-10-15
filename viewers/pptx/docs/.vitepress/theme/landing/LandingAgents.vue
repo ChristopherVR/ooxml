@@ -10,16 +10,17 @@ const copy = useLandingCopy();
 
 <template>
 	<section class="pv-section pv-agents">
+		<header class="pv-sectionbar">
+			<h2 class="pv-h2">{{ copy.agents.title }}</h2>
+		</header>
 		<div class="pv-agents__grid">
 			<div class="pv-agents__copy">
-				<p class="pv-kicker" data-reveal>{{ copy.agents.kicker }}</p>
-				<h2 class="pv-h2" data-reveal="2">{{ copy.agents.title }}</h2>
-				<p class="pv-copy" data-reveal="3">{{ copy.agents.copy }}</p>
-				<a class="pv-link" :href="withBase(copy.agents.link.href)" data-reveal="3">
-					{{ copy.agents.link.text }} <i>&rarr;</i>
+				<p class="pv-copy">{{ copy.agents.copy }}</p>
+				<a class="pv-link" :href="withBase(copy.agents.link.href)">
+					{{ copy.agents.link.text }}
 				</a>
 			</div>
-			<div class="pv-agents__code" data-reveal="3">
+			<div class="pv-agents__code">
 				<CodeCard
 					file=".mcp.json"
 					badge="Claude &middot; Cursor &middot; Copilot"

@@ -16,10 +16,11 @@ function select(id: string): void {
 
 <template>
 	<section class="pv-section pv-quickstart">
-		<p class="pv-kicker" data-reveal>{{ copy.quickstart.kicker }}</p>
-		<h2 class="pv-h2" data-reveal="2">{{ copy.quickstart.title }}</h2>
-		<p class="pv-copy" data-reveal="3">{{ copy.quickstart.copy }}</p>
-		<div class="pv-quickstart__panel" data-reveal="3">
+		<header class="pv-sectionbar">
+			<h2 class="pv-h2">{{ copy.quickstart.title }}</h2>
+			<p class="pv-sectionbar__note">{{ copy.quickstart.copy }}</p>
+		</header>
+		<div class="pv-quickstart__panel">
 			<div class="pv-quickstart__tabs" role="tablist">
 				<button
 					v-for="fw in FRAMEWORKS"
@@ -40,7 +41,7 @@ function select(id: string): void {
 				<pre><code>{{ copy.quickstart.buildCommands }}</code></pre>
 			</div>
 			<a class="pv-link" :href="withBase(active.docsHref)">
-				{{ copy.quickstart.docsLabel }}: {{ active.label }} <i>&rarr;</i>
+				{{ copy.quickstart.docsLabel }}: {{ active.label }}
 			</a>
 		</div>
 	</section>
@@ -60,10 +61,8 @@ function select(id: string): void {
 }
 
 .pv-quickstart__tab {
-	font-family: var(--pv-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
 	background: var(--pv-surface);
 	border: 1px solid var(--pv-line);
@@ -96,10 +95,9 @@ function select(id: string): void {
 }
 
 .pv-quickstart__build strong {
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
+	font-weight: 600;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-accent);
 }
 
@@ -113,7 +111,7 @@ function select(id: string): void {
 .pv-quickstart__build pre {
 	margin: 0;
 	padding: 0.7rem 0.9rem;
-	background: #14171b;
+	background: #181a1e;
 	border-radius: 4px;
 	overflow-x: auto;
 }

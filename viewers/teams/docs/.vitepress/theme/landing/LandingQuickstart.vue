@@ -57,8 +57,10 @@ const active = ref(frameworks[0]);
 
 <template>
 	<section class="ot-section ot-quick">
-		<p class="ot-kicker">Quickstart</p>
-		<h2 class="ot-h2">A workspace in a few lines</h2>
+		<div class="ot-bar">
+			<h2 class="ot-h2">A workspace in a few lines</h2>
+			<p class="ot-bar__note">Quickstart</p>
+		</div>
 		<p class="ot-copy">
 			Install the binding for your framework and render the component. Local mode needs no server;
 			for real use point <code>config</code> at your own sync and signaling endpoints (the reference
@@ -80,9 +82,7 @@ const active = ref(frameworks[0]);
 			</div>
 			<pre class="ot-quick__install"><code>{{ active.install }}</code></pre>
 			<pre class="ot-quick__code"><code>{{ active.code }}</code></pre>
-			<a class="ot-quick__link" :href="withBase(active.href)"
-				>Full guide: {{ active.label }} &rarr;</a
-			>
+			<a class="ot-quick__link" :href="withBase(active.href)">Full guide: {{ active.label }}</a>
 		</div>
 	</section>
 </template>
@@ -105,11 +105,12 @@ const active = ref(frameworks[0]);
 }
 
 .ot-quick__tab {
-	font-family: var(--ot-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
+	font-weight: 500;
 	color: var(--ot-ink-soft);
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
 	background: var(--ot-surface);
 	border: 1px solid var(--ot-line);
 	border-radius: 4px;
@@ -127,9 +128,9 @@ const active = ref(frameworks[0]);
 .ot-quick__code {
 	margin: 0 0 0.8rem;
 	padding: 1rem 1.2rem;
-	background: #14171b;
-	color: #f0efec;
-	border: 1px solid var(--ot-line);
+	background: #181a1e;
+	color: #f0f0f0;
+	border: 1px solid #34383f;
 	border-radius: 8px;
 	overflow-x: auto;
 	font-family: var(--ot-mono);
@@ -138,10 +139,8 @@ const active = ref(frameworks[0]);
 }
 
 .ot-quick__link {
-	font-family: var(--ot-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
+	font-weight: 600;
 	color: var(--ot-accent);
 }
 </style>

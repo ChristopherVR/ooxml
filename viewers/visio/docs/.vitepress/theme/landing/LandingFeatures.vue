@@ -2,21 +2,48 @@
 import { withBase } from 'vitepress';
 
 import { useLandingCopy } from './copy';
+import { featureIcon } from './icons';
 
 const copy = useLandingCopy();
 </script>
 
 <template>
 	<section class="pv-section pv-features">
-		<p class="pv-kicker" data-reveal>{{ copy.features.kicker }}</p>
-		<h2 class="pv-h2" data-reveal="2">{{ copy.features.title }}</h2>
-		<div class="pv-features__grid" data-reveal="3">
-			<article v-for="item in copy.features.items" :key="item.title" class="pv-features__card">
+		<header class="pv-sectionbar">
+			<h2 class="pv-h2">{{ copy.features.title }}</h2>
+		</header>
+		<div class="pv-features__grid">
+			<article
+				v-for="(item, index) in copy.features.items"
+				:key="item.title"
+				class="pv-features__card"
+			>
+				<span class="pv-features__icon" aria-hidden="true">
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.6"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						v-html="featureIcon(item.icon, index)"
+					></svg>
+				</span>
+				<span class="pv-features__go" aria-hidden="true">
+					<svg
+						viewBox="0 0 12 12"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.4"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M3 9l6-6M4 3h5v5" />
+					</svg>
+				</span>
 				<h3>{{ item.title }}</h3>
 				<p>{{ item.copy }}</p>
-				<a class="pv-features__link" :href="withBase(item.link.href)">
-					{{ item.link.text }} <i>&rarr;</i>
-				</a>
+				<a class="pv-features__link" :href="withBase(item.link.href)">{{ item.link.text }}</a>
 			</article>
 		</div>
 	</section>
@@ -31,25 +58,68 @@ const copy = useLandingCopy();
 	border: 1px solid var(--pv-line);
 	border-radius: 8px;
 	overflow: hidden;
-	margin-top: 2.4rem;
 }
 
 .pv-features__card {
+	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 0.8rem;
+	gap: 0.7rem;
 	background: var(--pv-surface);
-	padding: 1.7rem 1.6rem 1.9rem;
-	transition: background-color 0.25s ease;
+	padding: 1.2rem 1.2rem 1.4rem;
+	transition: background-color 0.18s ease;
 }
 
 .pv-features__card:hover {
 	background: var(--pv-accent-soft);
 }
 
+.pv-features__icon {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	margin-bottom: 0.4rem;
+	border-radius: 6px;
+	background: var(--pv-accent-tile);
+	border: 1px solid var(--pv-accent-edge);
+	color: var(--pv-accent);
+}
+
+.pv-features__icon svg {
+	width: 20px;
+	height: 20px;
+}
+
+.pv-features__go {
+	position: absolute;
+	top: 1.2rem;
+	right: 1.2rem;
+	display: grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	border: 1px solid var(--pv-line);
+	border-radius: 4px;
+	color: var(--pv-ink-soft);
+	transition:
+		color 0.18s ease,
+		border-color 0.18s ease;
+}
+
+.pv-features__go svg {
+	width: 10px;
+	height: 10px;
+}
+
+.pv-features__card:hover .pv-features__go {
+	color: var(--pv-accent);
+	border-color: var(--pv-accent);
+}
+
 .pv-features__card h3 {
 	font-family: var(--pv-display);
-	font-size: 1.08rem;
+	font-size: 1rem;
 	font-weight: 640;
 	letter-spacing: -0.01em;
 	line-height: 1.25;
@@ -58,28 +128,31 @@ const copy = useLandingCopy();
 
 .pv-features__card p {
 	flex: 1;
-	font-size: 0.88rem;
-	line-height: 1.7;
+	font-size: 0.86rem;
+	line-height: 1.65;
 	color: var(--pv-ink-soft);
 	margin: 0;
 }
 
 .pv-features__link {
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--pv-ink);
-	transition: color 0.2s ease;
+	font-family: var(--pv-ui);
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--pv-accent);
+	text-decoration: underline transparent;
+	text-underline-offset: 3px;
+	transition: text-decoration-color 0.18s ease;
 }
 
 .pv-features__link:hover {
-	color: var(--pv-accent);
+	text-decoration-color: currentColor;
 }
 
-.pv-features__link i {
-	font-style: normal;
-	color: var(--pv-accent);
+/* The whole card is the link target */
+.pv-features__link::after {
+	content: '';
+	position: absolute;
+	inset: 0;
 }
 
 @media (max-width: 1100px) {

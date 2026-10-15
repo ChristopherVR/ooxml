@@ -45,7 +45,6 @@ const columns = [
 
 <template>
 	<section class="ot-section ot-finale">
-		<p class="ot-kicker">Get started</p>
 		<h2 class="ot-h2">Your workspace, your server.</h2>
 		<p class="ot-copy">
 			Install a binding, start the reference server with <code>npx openteams-server</code>, and try
@@ -107,11 +106,8 @@ const columns = [
 
 .ot-finale__cols h3 {
 	margin: 0 0 0.9rem;
-	font-family: var(--ot-mono);
-	font-size: 0.7rem;
-	font-weight: 500;
-	letter-spacing: 0.24em;
-	text-transform: uppercase;
+	font-size: 0.8125rem;
+	font-weight: 600;
 	color: var(--ot-accent);
 }
 
@@ -138,9 +134,7 @@ const columns = [
 	justify-content: space-between;
 	gap: 0.6rem 2rem;
 	margin: 3rem 0 0;
-	font-family: var(--ot-mono);
-	font-size: 0.7rem;
-	letter-spacing: 0.06em;
+	font-size: 0.75rem;
 	color: var(--ot-ink-soft);
 }
 

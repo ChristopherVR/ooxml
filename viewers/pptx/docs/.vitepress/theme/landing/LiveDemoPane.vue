@@ -70,7 +70,6 @@ defineExpose({ signalLeave });
 	border: 1px solid var(--pv-line);
 	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: var(--pv-shadow);
 	min-width: 0;
 }
 
@@ -80,10 +79,9 @@ defineExpose({ signalLeave });
 	gap: 0.9rem;
 	padding: 0.6rem 0.9rem;
 	border-bottom: 1px solid var(--pv-line);
-	font-family: var(--pv-mono);
-	font-size: 0.68rem;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
-	letter-spacing: 0.05em;
 }
 
 .pv-livepane__dots {
@@ -108,8 +106,6 @@ defineExpose({ signalLeave });
 .pv-livepane__open {
 	margin-left: auto;
 	color: var(--pv-accent);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
 	white-space: nowrap;
 }
 
@@ -136,10 +132,8 @@ defineExpose({ signalLeave });
 	align-items: center;
 	justify-content: center;
 	gap: 0.9rem;
-	font-family: var(--pv-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-ink-soft);
 	background: var(--pv-surface);
 	pointer-events: none;

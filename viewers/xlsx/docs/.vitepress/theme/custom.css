@@ -1,55 +1,62 @@
 /**
  * Site-wide look and feel for the VitePress default theme (all docs pages).
- * The landing page has its own token system in landing/landing.css; the rules
- * here carry the same identity (Excel green accent, Bricolage Grotesque display
- * type, IBM Plex Mono labels) onto every documentation page.
+ * Neutrals and rules follow docs/pages-design.md; the one saturated colour is
+ * the product accent. The landing page has its own tokens in landing/landing.css.
  */
 
 :root {
-	--vp-c-brand-1: #1f9d63;
-	--vp-c-brand-2: #18824f;
-	--vp-c-brand-3: #107c41;
-	--vp-c-brand-soft: rgba(31, 157, 99, 0.14);
+	--vp-c-brand-1: #107c41;
+	--vp-c-brand-2: #0e6d39;
+	--vp-c-brand-3: #0c5d31;
+	--vp-c-brand-soft: rgba(16, 124, 65, 0.14);
 
-	--vp-button-brand-bg: #1f9d63;
-	--vp-button-brand-hover-bg: #18824f;
-	--vp-button-brand-active-bg: #107c41;
+	--vp-button-brand-bg: #107c41;
+	--vp-button-brand-hover-bg: #0e6d39;
+	--vp-button-brand-active-bg: #0c5d31;
+	--vp-button-brand-text: #ffffff;
 
 	--vp-font-family-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
 
-	/* Paper-tinted canvas matching the landing's light palette */
-	--vp-c-bg: #fdfcfa;
-	--vp-c-bg-alt: #f7f5f0;
-	--vp-c-bg-soft: #f7f5f0;
-	--vp-c-divider: #e6e2d9;
-	--vp-c-gutter: #e6e2d9;
+	/* System neutrals: canvas, sunken field, raised surface, one line colour */
+	--vp-c-bg: #f7f8fa;
+	--vp-c-bg-alt: #eceef2;
+	--vp-c-bg-soft: #ffffff;
+	--vp-c-divider: #e3e6eb;
+	--vp-c-gutter: #e3e6eb;
+	--vp-c-text-1: #242424;
+	--vp-c-text-2: #616161;
+	--vp-sidebar-bg-color: #ffffff;
 
-	--vp-code-block-bg: #14171b;
-	--vp-code-tab-divider: rgba(240, 239, 236, 0.14);
-	--vp-code-copy-code-bg: rgba(240, 239, 236, 0.1);
-	--vp-code-copy-code-hover-bg: rgba(240, 239, 236, 0.2);
+	--vp-code-block-bg: #181a1e;
+	--vp-code-tab-divider: rgba(240, 240, 240, 0.14);
+	--vp-code-copy-code-bg: rgba(240, 240, 240, 0.1);
+	--vp-code-copy-code-hover-bg: rgba(240, 240, 240, 0.2);
 
 	--pvd-display: 'Bricolage Grotesque', var(--vp-font-family-base);
 	--pvd-mono: var(--vp-font-family-mono);
 }
 
 .dark {
-	--vp-c-brand-1: #3fbf83;
-	--vp-c-brand-2: #2fae73;
-	--vp-c-brand-3: #1f9d63;
-	--vp-c-brand-soft: rgba(63, 191, 131, 0.16);
+	--vp-c-brand-1: #3fb36b;
+	--vp-c-brand-2: #379e5e;
+	--vp-c-brand-3: #2f8650;
+	--vp-c-brand-soft: rgba(63, 179, 107, 0.16);
 
-	--vp-button-brand-bg: #1f9d63;
-	--vp-button-brand-hover-bg: #2fae73;
-	--vp-button-brand-active-bg: #18824f;
+	--vp-button-brand-bg: #3fb36b;
+	--vp-button-brand-hover-bg: #52bb7a;
+	--vp-button-brand-active-bg: #62c186;
+	--vp-button-brand-text: #181a1e;
 
-	--vp-c-bg: #0f1113;
-	--vp-c-bg-alt: #14171b;
-	--vp-c-bg-soft: #171a1e;
-	--vp-c-divider: #272c33;
-	--vp-c-gutter: #272c33;
+	--vp-c-bg: #181a1e;
+	--vp-c-bg-alt: #121418;
+	--vp-c-bg-soft: #202228;
+	--vp-c-divider: #34383f;
+	--vp-c-gutter: #34383f;
+	--vp-c-text-1: #f0f0f0;
+	--vp-c-text-2: #b5b5b5;
+	--vp-sidebar-bg-color: #202228;
 
-	--vp-code-block-bg: #101317;
+	--vp-code-block-bg: #181a1e;
 }
 
 /* ---- Headings: display face, tight tracking ------------------------ */
@@ -115,20 +122,19 @@
 .vp-doc div[class*='language-'] {
 	border-radius: 8px;
 	border: 1px solid var(--vp-c-divider);
-	box-shadow: 0 14px 34px -22px rgba(26, 29, 33, 0.4);
+	box-shadow: none;
 }
 
 .dark .vp-doc div[class*='language-'] {
-	border-color: #272c33;
-	box-shadow: 0 14px 34px -22px rgba(0, 0, 0, 0.7);
+	border-color: #34383f;
 }
 
 .vp-doc [class*='language-'] > span.lang {
-	font-family: var(--pvd-mono);
-	font-size: 0.66rem;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: rgba(240, 239, 236, 0.55);
+	font-family: var(--vp-font-family-base);
+	font-size: 0.75rem;
+	letter-spacing: 0;
+	text-transform: none;
+	color: rgba(240, 240, 240, 0.55);
 }
 
 .vp-doc [class*='language-'] pre {
@@ -141,10 +147,10 @@
 }
 
 .vp-code-group .tabs label {
-	font-family: var(--pvd-mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.8rem;
+	letter-spacing: 0;
+	text-transform: none;
 }
 
 .vp-code-group div[class*='language-'] {
@@ -175,11 +181,11 @@
 }
 
 .vp-doc .custom-block-title {
-	font-family: var(--pvd-mono);
-	font-size: 0.7rem;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.8rem;
 	font-weight: 600;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
+	letter-spacing: 0;
+	text-transform: none;
 	color: var(--vp-c-brand-1);
 }
 
@@ -205,11 +211,11 @@
 }
 
 .vp-doc th {
-	font-family: var(--pvd-mono);
-	font-size: 0.68rem;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.8rem;
 	font-weight: 600;
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
+	letter-spacing: 0;
+	text-transform: none;
 	text-align: left;
 	background: var(--vp-c-bg-alt);
 }
@@ -223,12 +229,8 @@
 .vp-doc img {
 	border: 1px solid var(--vp-c-divider);
 	border-radius: 8px;
-	box-shadow: 0 18px 40px -26px rgba(26, 29, 33, 0.45);
+	box-shadow: none;
 	margin: 1.4rem 0;
-}
-
-.dark .vp-doc img {
-	box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.8);
 }
 
 /* Inline icons/badges must not get the screenshot frame */
@@ -245,11 +247,11 @@
 /* ---- Sidebar ------------------------------------------------------- */
 
 .VPSidebarItem.level-0 > .item > .text {
-	font-family: var(--pvd-mono);
-	font-size: 0.7rem;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.75rem;
 	font-weight: 600;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
+	letter-spacing: 0;
+	text-transform: none;
 	color: var(--vp-c-text-2);
 }
 
@@ -269,11 +271,11 @@
 }
 
 .VPDocAsideOutline .outline-title {
-	font-family: var(--pvd-mono);
-	font-size: 0.66rem;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.75rem;
 	font-weight: 600;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
+	letter-spacing: 0;
+	text-transform: none;
 	color: var(--vp-c-text-2);
 }
 
@@ -298,7 +300,7 @@
 
 .VPDocFooter .pager-link {
 	border-radius: 8px;
-	transition: border-color 0.25s ease;
+	transition: border-color 0.18s ease;
 }
 
 .VPDocFooter .pager-link:hover {
@@ -306,10 +308,10 @@
 }
 
 .VPDocFooter .pager-link .desc {
-	font-family: var(--pvd-mono);
-	font-size: 0.64rem;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.75rem;
+	letter-spacing: 0;
+	text-transform: none;
 }
 
 .VPDocFooter .pager-link .title {

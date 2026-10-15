@@ -1,9 +1,13 @@
+import type { IconName } from '../icons';
+
 export interface LandingLink {
 	text: string;
 	href: string;
 }
 
 export interface LandingFeatureCopy {
+	/** Glyph for the tool card; defaults to one chosen by position. */
+	icon?: IconName;
 	title: string;
 	copy: string;
 	link: LandingLink;

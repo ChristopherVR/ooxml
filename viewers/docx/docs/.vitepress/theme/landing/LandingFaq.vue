@@ -8,9 +8,10 @@ const copy = useLandingCopy();
 
 <template>
 	<section class="pv-section pv-faq">
-		<p class="pv-kicker" data-reveal>{{ copy.faq.kicker }}</p>
-		<h2 class="pv-h2" data-reveal="2">{{ copy.faq.title }}</h2>
-		<div class="pv-faq__list" data-reveal="3">
+		<header class="pv-sectionbar">
+			<h2 class="pv-h2">{{ copy.faq.title }}</h2>
+		</header>
+		<div class="pv-faq__list">
 			<details v-for="item in copy.faq.items" :key="item.q" class="pv-faq__item">
 				<summary>
 					<span>{{ item.q }}</span>
@@ -18,7 +19,7 @@ const copy = useLandingCopy();
 				</summary>
 				<p>
 					{{ item.a }}
-					<a v-if="item.link" :href="withBase(item.link.href)">{{ item.link.text }} &rarr;</a>
+					<a v-if="item.link" :href="withBase(item.link.href)">{{ item.link.text }}</a>
 				</p>
 			</details>
 		</div>
@@ -62,7 +63,7 @@ const copy = useLandingCopy();
 	font-style: normal;
 	font-family: var(--pv-mono);
 	color: var(--pv-accent);
-	transition: transform 0.25s ease;
+	transition: transform 0.18s ease;
 }
 
 .pv-faq__item[open] summary i {
@@ -79,9 +80,8 @@ const copy = useLandingCopy();
 }
 
 .pv-faq__item p a {
-	font-family: var(--pv-mono);
-	font-size: 0.74rem;
-	letter-spacing: 0.08em;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
 	color: var(--pv-accent);
 	white-space: nowrap;
 }
