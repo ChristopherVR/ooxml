@@ -16,6 +16,7 @@
 import {
 	buildContextMenuEntries,
 	canCropElement,
+	chartFormatTargetFromEvent,
 	canInteractWithElement,
 	canMergeShapes,
 	contextMenuViewItems,
@@ -146,6 +147,21 @@ export function mountElementContextMenu(deps: ElementContextMenuDeps): ElementCo
 			store.set({ selectedTableCell: cell, selectedTableCells: [cell] });
 		}
 
+		// A chart names its format entry after the chart element under the cursor
+		// ("Format Data Series..."), which the entry then opens the pane on.
+		const clicked = findActiveElement(store.get(), id) ?? null;
+		const chartFormatTarget =
+			clicked?.type === 'chart'
+				? chartFormatTargetFromEvent(
+						event,
+						event.target instanceof Element ? event.target.closest('[data-element-id]') : null,
+						clicked,
+					)
+				: null;
+		if (chartFormatTarget) {
+			store.set({ chartFormat: { elementId: id, target: chartFormatTarget } });
+		}
+
 		const next = store.get();
 		const element = findActiveElement(next, id) ?? null;
 		const table = resolveTableTarget(next, element, event.target);
@@ -171,6 +187,7 @@ export function mountElementContextMenu(deps: ElementContextMenuDeps): ElementCo
 					next.selectedElementIds.map((selectedId) => findActiveElement(next, selectedId)),
 				),
 				canCrop: canCropElement(element),
+				chartFormatTarget,
 			}),
 			customization,
 			{ slideIndex: next.currentSlide, elementIds: [...next.selectedElementIds] },

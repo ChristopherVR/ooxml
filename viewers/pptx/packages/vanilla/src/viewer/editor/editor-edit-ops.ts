@@ -26,6 +26,8 @@ import type { ArrangeActions } from './editor-arrange-actions';
 import { createArrangeActions } from './editor-arrange-actions';
 import type { SlideBackgroundActions } from './editor-background-actions';
 import { createSlideBackgroundActions } from './editor-background-actions';
+import type { ChartFormatActions } from './editor-chart-format-actions';
+import { createChartFormatActions } from './editor-chart-format-actions';
 import type { ClipboardActions } from './editor-clipboard-actions';
 import { createClipboardActions } from './editor-clipboard-actions';
 import type { CommentActions } from './editor-comment-actions';
@@ -100,7 +102,8 @@ export interface EditActions
 		DeckActions,
 		GalleryActions,
 		MergeActions,
-		CropActions {
+		CropActions,
+		ChartFormatActions {
 	/** Slide section CRUD and ordering actions. */
 	sections: SectionActions;
 	/** Slide Master view sidebar CRUD (Insert/Duplicate/Delete/Rename Layout/Master). */
@@ -210,6 +213,7 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 		...createGalleryActions({ store, ops, deck: deckActions }),
 		...createMergeActions({ store, ops }),
 		...createCropActions({ doc, store, ops }),
+		...createChartFormatActions({ store, applyToSelected }),
 		sections: createSectionActions(store, ops),
 		masterView: createMasterViewCrudActions({
 			doc,

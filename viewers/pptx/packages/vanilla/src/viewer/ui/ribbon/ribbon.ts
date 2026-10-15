@@ -26,6 +26,7 @@ import { createEl } from '../../render';
 import { createEquationPanel } from './equation-panel';
 import { createFindReplacePanel } from './find-replace-panel';
 import { createFormatBackgroundPanel } from './format-background-panel';
+import { createChartSelectionStrip } from './gallery/chart-selection-strip';
 import { createContextualTabPanes, mountVisibleContextualPanes } from './gallery/contextual-tabs';
 import { createRibbonGalleryHub } from './gallery/gallery-hub';
 import { createPictureSizeStrip } from './gallery/picture-size-strip';
@@ -223,8 +224,10 @@ export function createRibbon(
 	// Contextual tabs (Shape Format, ...) sit after the fixed tabs, mounted only
 	// while the selection brings them up (`mountVisibleContextualPanes`).
 	const pictureSize = createPictureSizeStrip(doc, t, handlers.edit, hiddenActions);
+	const chartSelection = createChartSelectionStrip(doc, t, handlers.edit);
 	const contextualPanes = createContextualTabPanes(doc, t, galleryHub, {
 		'picture-size': pictureSize.el,
+		'chart-selection': chartSelection.el,
 	});
 	for (const [id, pane] of contextualPanes) {
 		pane.hidden = true;
@@ -277,6 +280,11 @@ export function createRibbon(
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
 		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
+		chartSelection.update({
+			editable: lastEditable,
+			element: latestSelected,
+			chartFormatTarget: latestExtra.chartFormatTarget,
+		});
 	};
 	const syncAnimations = (): void => {
 		animationsTab?.update({

@@ -11,6 +11,7 @@ import type { ViewerChrome } from '../ui';
 import { combineCommentMentionAuthors } from '../ui/comment-mention-typeahead';
 import type { LayoutOption } from '../ui/ribbon/ribbon-types';
 import { findActiveElement } from './editor-active-elements';
+import { chartFormatTargetOf } from './editor-chart-format-actions';
 import { currentRecentColors } from './editor-recent-colors';
 import { buildInspectorState } from './inspector-state-builder';
 
@@ -159,6 +160,7 @@ export function createEditingChromeSync(deps: EditingChromeSyncDeps): () => void
 			canCrop: state.selectedElementIds.length === 1 && canCropElement(el),
 			cropActive: state.cropSession !== null,
 			galleryContext: buildRibbonGalleryContext(state, el, deps.getHandler?.()),
+			chartFormatTarget: chartFormatTargetOf(state),
 		});
 		ribbon?.setDrawState({
 			tool: state.drawTool,

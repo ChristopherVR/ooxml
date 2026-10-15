@@ -237,6 +237,15 @@ export interface ViewerState {
 	 * whenever the general element selection changes (see `selectionState`).
 	 */
 	chartPartSelection: ChartPartSelection | null;
+	/**
+	 * The chart element Chart Format > Current Selection and the chart Format pane
+	 * target (`chartArea`, `series:0`, ...), for the chart `elementId`. Read it
+	 * through `chartFormatTargetOf`, which falls back to the chart area once
+	 * another element is selected.
+	 */
+	chartFormat: { elementId: string; target: string } | null;
+	/** The chart Format task pane is open (only shown while a chart is selected). */
+	chartFormatPaneOpen: boolean;
 	/** Source element id while the one-shot Format Painter is armed. */
 	formatPainterSourceId: string | null;
 	/** When true, selection and element mutations target inherited template elements. */
@@ -403,6 +412,8 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		selectedTableCells: [],
 		selectedTextRange: null,
 		chartPartSelection: null,
+		chartFormat: null,
+		chartFormatPaneOpen: false,
 		formatPainterSourceId: null,
 		editTemplateMode: false,
 		dirty: false,

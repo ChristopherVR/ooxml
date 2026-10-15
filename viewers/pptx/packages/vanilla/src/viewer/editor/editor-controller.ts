@@ -39,6 +39,7 @@ import { openHyperlinkEditDialog } from '../ui/hyperlink-edit-dialog';
 import { openPasteSpecialDialog } from '../ui/paste-special-dialog';
 import type { RegionSet } from '../ui/region-set';
 import { syncAlignmentGuides } from './alignment-guide-view';
+import { createChartFormatPaneHost } from './chart-format-pane-host';
 import { createChartQuickActionsOverlay } from './chart-quick-actions-overlay';
 import type { ChartQuickActionsOverlay } from './chart-quick-actions-overlay';
 import { createConnectorEndpointOverlay } from './connector-endpoint-overlay';
@@ -431,10 +432,20 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		actions: editActions,
 	});
 
+	// The shared chart Format task pane, docked in the editor body.
+	const chartFormatPane = createChartFormatPaneHost({
+		doc,
+		store,
+		getTranslator: deps.getTranslator,
+		actions: editActions,
+		selectedElement: (state) => ops.selectedElement(state),
+	});
+
 	const syncOverlay = (): void => {
 		// The format toolbar + inspector track selection even before the overlay
 		// layer is mounted, so refresh them regardless of the overlay guard.
 		syncEditingChrome();
+		chartFormatPane.sync();
 		motionPath.sync();
 		outlineAuthoring.sync();
 		cropMode.sync();
@@ -628,6 +639,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		motionPath.detach();
 		outlineAuthoring.detach();
 		cropMode.detach();
+		chartFormatPane.detach();
 	};
 
 	// -- Store subscription: keep selection/overlay/toolbar consistent -------------
@@ -712,6 +724,7 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 			attachedWrap = chrome.stageWrap;
 			attachedRoot = chrome.root;
 			cropMode.attach(attachedRoot);
+			chartFormatPane.attach(attachedRoot);
 			detachImagePaste = attachCanvasImagePaste(attachedRoot, attachedWrap, {
 				store,
 				getHandler: deps.getHandler,

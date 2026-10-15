@@ -318,4 +318,6 @@ export interface RibbonSelectionState {
 	cropActive?: boolean;
 	/** What the shared ribbon galleries build their descriptors from. */
 	galleryContext?: RibbonGalleryContext;
+	/** Chart Format > Current Selection: the selected chart's current element. */
+	chartFormatTarget?: string;
 }
