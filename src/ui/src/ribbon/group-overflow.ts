@@ -10,7 +10,11 @@
  * the product's own listeners and state hooks keep working.
  */
 
+import { syncScrollMore } from './scroll-more';
+
 export interface RibbonGroupOverflowOptions {
+	/** Accessible name of the pinned "more" chevron shown while folded groups still overflow. */
+	moreLabel?: string;
 	/** The registered icon of a collapsed group (by element); the group's `icon` attribute wins. */
 	icon?(group: HTMLElement): string | undefined;
 	/** Below this window width nothing collapses (a product's phone layout takes over). */
@@ -55,6 +59,7 @@ export function fitRibbonGroups(
 		group.removeAttribute('data-open');
 		group.removeAttribute('data-collapsed');
 	}
+	panel.querySelector(':scope > .ribbon-scroll-more')?.remove();
 	const width = panel.ownerDocument.defaultView?.innerWidth ?? Number.POSITIVE_INFINITY;
 	if (panel.hidden || width < (options.minWidth ?? 0)) return [];
 	const overflows = () => panel.scrollWidth - panel.clientWidth > 1;
@@ -67,6 +72,7 @@ export function fitRibbonGroups(
 		collapsed.push(group.getAttribute('label') ?? '');
 		if (!overflows()) break;
 	}
+	syncScrollMore(panel, options.moreLabel);
 	return collapsed;
 }
 

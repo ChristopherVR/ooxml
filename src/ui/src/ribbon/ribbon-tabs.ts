@@ -3,6 +3,7 @@ import { ifDefined } from 'lit/directives/if-defined.js';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer, present } from '../registry';
+import { SHORT_VIEWPORT_MEDIA, resolveCollapsed } from './auto-collapse';
 import css from './ribbon-tabs.css?raw';
 
 /** Emitted when the user picks a tab; cancelable (`preventDefault()` keeps the current tab). */
@@ -153,7 +154,21 @@ export class OfficeUiRibbon extends OfficeElement {
 		});
 	}
 
+	/** The user's own collapse choice; it wins over the automatic one on short viewports. */
+	private userCollapsed: boolean | undefined;
+	private shortQuery: MediaQueryList | undefined;
+
+	/** Collapses to the tab row on a short viewport (phone landscape) unless the user chose. */
+	private applyAuto = (): void => {
+		if (!this.collapsible) return;
+		const next = resolveCollapsed(this.shortQuery?.matches ?? false, this.userCollapsed);
+		if (next === this.collapsed) return;
+		this.collapsed = next;
+		this.peek = false;
+	};
+
 	private setCollapsed(value: boolean): void {
+		this.userCollapsed = value;
 		if (value === this.collapsed) return;
 		this.collapsed = value;
 		this.peek = false;
@@ -178,6 +193,7 @@ export class OfficeUiRibbon extends OfficeElement {
 	}
 
 	protected override willUpdate(changed: Map<PropertyKey, unknown>): void {
+		if (changed.has('collapsible')) this.applyAuto();
 		if (changed.has('peek')) {
 			const doc = this.ownerDocument;
 			if (this.peek) doc.addEventListener('pointerdown', this.onOutside, true);
@@ -233,6 +249,9 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.build();
 		super.connectedCallback();
 		this.addEventListener('keydown', this.onHostKey);
+		this.shortQuery = this.ownerDocument.defaultView?.matchMedia?.(SHORT_VIEWPORT_MEDIA);
+		this.shortQuery?.addEventListener('change', this.applyAuto);
+		this.applyAuto();
 		const Observer = this.ownerDocument.defaultView?.MutationObserver;
 		this.watcher = Observer ? new Observer(() => this.build()) : undefined;
 		this.watcher?.observe(this, {
@@ -246,6 +265,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		super.disconnectedCallback();
 		this.removeEventListener('keydown', this.onHostKey);
 		this.watcher?.disconnect();
+		this.shortQuery?.removeEventListener('change', this.applyAuto);
 		this.ownerDocument.removeEventListener('pointerdown', this.onOutside, true);
 		this.watcher = undefined;
 	}
@@ -256,6 +276,15 @@ export class OfficeUiRibbon extends OfficeElement {
 		const hideAll = this.collapsed && !this.peek;
 		for (const panel of this.panels())
 			panel.hidden = hideAll || panel.dataset.ribbonTab !== selected;
+		// Keep the active tab inside the scrolling tab strip.
+		const active = this.tabButton(selected);
+		const list = active?.parentElement;
+		if (active && list && list.scrollWidth > list.clientWidth) {
+			const tab = active.getBoundingClientRect();
+			const view = list.getBoundingClientRect();
+			if (tab.left < view.left) list.scrollLeft -= view.left - tab.left;
+			else if (tab.right > view.right) list.scrollLeft += tab.right - view.right;
+		}
 	}
 
 	protected override render() {

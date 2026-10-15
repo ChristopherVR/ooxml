@@ -1,3 +1,5 @@
+import { ensureRibbonTouchStyle, syncScrollMore } from './scroll-more';
+
 /**
  * Ribbon overflow: when a panel is narrower than its groups, collapse groups from the right, each
  * into one dropdown button that shows the group's live controls in a panel under it. The panel
@@ -8,6 +10,8 @@
  * `.ribbon-group` children, each with `data-label` and optionally `data-caption`.
  */
 export interface RibbonOverflowOptions {
+	/** Accessible name of the pinned "more" chevron shown while folded groups still overflow. */
+	moreLabel?: string;
 	/** Draws the icon `name` at `size` pixels (the product's own glyph set). */
 	icon(doc: Document, name: string, size: number): Node;
 	/** Icon of a folded group's button, by the group's `data-label`. */
@@ -129,6 +133,8 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 
 	function fitPanel(panel: HTMLElement): void {
 		if (panel.hidden || !panel.clientWidth) return;
+		ensureRibbonTouchStyle(panel);
+		panel.querySelector(':scope > .ribbon-scroll-more')?.remove();
 		// Re-measuring while a folded group's panel is open would tear it down under the user's hands.
 		if (closeOpen && panel.dataset.fittedWidth === String(panel.clientWidth)) return;
 		panel.dataset.fittedWidth = String(panel.clientWidth);
@@ -156,6 +162,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			button.title = label;
 			group.setAttribute('data-collapsed', '');
 		}
+		syncScrollMore(panel, options.moreLabel);
 	}
 
 	const panelsOf = (root: HTMLElement) => root.querySelectorAll<HTMLElement>('.ribbon-panel');
@@ -168,7 +175,33 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 				for (const entry of entries) fitPanel(entry.target as HTMLElement);
 			});
 			for (const panel of panelsOf(root)) observer.observe(panel);
-			return () => observer.disconnect();
+			// Content that grows after the first fit (a gallery filling in, a locale change) refits.
+			let frame = 0;
+			const mutations = new MutationObserver(() => {
+				if (frame) return;
+				frame = requestAnimationFrame(() => {
+					frame = 0;
+					refitVisible();
+					mutations.takeRecords();
+				});
+			});
+			const refitVisible = () => {
+				for (const panel of panelsOf(root)) {
+					if (panel.hidden || panel.querySelector('[aria-expanded="true"].ribbon-overflow-button'))
+						continue;
+					const more = panel.querySelector<HTMLElement>(':scope > .ribbon-scroll-more');
+					const clipped = panel.scrollWidth - (more?.offsetWidth ?? 0) > panel.clientWidth + 1;
+					const unfolded = panel.querySelector(':scope > .ribbon-group:not([data-collapsed])');
+					if (clipped && unfolded) fitPanel(panel);
+				}
+			};
+			for (const panel of panelsOf(root))
+				mutations.observe(panel, { childList: true, subtree: true });
+			return () => {
+				observer.disconnect();
+				mutations.disconnect();
+				if (frame) cancelAnimationFrame(frame);
+			};
 		},
 		refit(root) {
 			for (const panel of panelsOf(root)) fitPanel(panel);

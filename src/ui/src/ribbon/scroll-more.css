@@ -1,0 +1,39 @@
+.ribbon-scroll-more {
+	position: sticky;
+	right: 0;
+	z-index: 2;
+	flex: none;
+	align-self: center;
+	margin-left: auto;
+	width: 28px;
+	height: 40px;
+	padding: 0;
+	border: 1px solid var(--office-border, #c8c6c4);
+	border-radius: 4px;
+	background: var(--office-background, #fff);
+	color: var(--office-foreground, #201f1e);
+	font-size: 20px;
+	line-height: 1;
+	box-shadow: -6px 0 6px -2px rgb(0 0 0 / 12%);
+	cursor: pointer;
+}
+
+@media (pointer: coarse) {
+	.ribbon-scroll-more {
+		width: var(--office-target-size-touch, 44px);
+		height: var(--office-target-size-touch, 44px);
+	}
+	/* The ribbon grows to fit 44px targets instead of clipping them. */
+	.ribbon-panel {
+		height: auto !important;
+		min-height: 104px;
+		-webkit-overflow-scrolling: touch;
+	}
+	.ribbon-panel .ribbon-group button,
+	.ribbon-panel .ribbon-group select,
+	.ribbon-panel .ribbon-group input,
+	.ribbon-panel .ribbon-group .ribbon-overflow-button {
+		min-width: var(--office-target-size-touch, 44px);
+		min-height: var(--office-target-size-touch, 44px);
+	}
+}

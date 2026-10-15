@@ -34,8 +34,16 @@
 	min-width: 0;
 	overflow-x: auto;
 	scrollbar-width: none;
+	scroll-snap-type: x proximity;
+	scroll-padding-inline: var(--office-space-4);
+	overscroll-behavior-x: contain;
+	-webkit-overflow-scrolling: touch;
+}
+[role='tablist']::-webkit-scrollbar {
+	display: none;
 }
 [role='tab'] {
+	scroll-snap-align: start;
 	position: relative;
 	flex: none;
 	min-height: var(--office-ribbon-tab-height);
@@ -137,8 +145,35 @@ slot[name='actions'] {
 	[role='tab'] {
 		min-height: var(--office-target-size-touch);
 	}
+	[role='tab'] {
+		min-width: var(--office-target-size-touch);
+	}
+}
+@media (pointer: coarse) {
+	.collapse {
+		width: var(--office-target-size-touch);
+		height: var(--office-target-size-touch);
+	}
+}
+@media (max-width: 760px), (pointer: coarse) {
 	.file {
 		min-width: var(--office-ribbon-file-min-width);
+	}
+}
+/* A phone portrait row cannot hold the tabs and the actions: the tabs keep the first row (File and a
+   scrolling tab strip) and the actions wrap under them. */
+@media (max-width: 520px) {
+	.head {
+		flex-wrap: wrap;
+	}
+	[role='tablist'] {
+		flex: 1 1 12rem;
+	}
+	slot[name='actions'] {
+		order: 2;
+	}
+	.collapse {
+		order: 3;
 	}
 }
 @media (forced-colors: active) {
