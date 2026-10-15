@@ -1,22 +1,58 @@
 import { onProfile } from './profile-state.js';
-import { suiteBase } from './product.js';
-import { choose, notify } from './ui.js';
-/** Tell the user a newer version is ready; it loads on the next reload. */
-function offerReload() {
-	notify('A new version of OOXML Office is ready.');
-	const reload = document.createElement('button');
-	reload.className = 'update-app';
-	reload.textContent = 'Reload to update';
-	reload.onclick = () => location.reload();
-	document.querySelector('#status')?.after(reload);
+import { product, suiteBase } from './product.js';
+import { $, choose, notify } from './ui.js';
+import { buildStamp, checkForUpdates, onNewVersion, registerWorker } from './updates.js';
+
+/** Reloads into the workspace (the root would ask what to open again), keeping the route. */
+function reloadWorkspace() {
+	if (product) {
+		location.reload();
+		return;
+	}
+	const url = new URL('?suite', suiteBase);
+	url.hash = location.hash;
+	location.replace(url);
 }
-export function mountPwa() {
+
+/**
+ * A newer build has taken over: reload when nothing would be lost, otherwise show a banner with
+ * the choice. The banner stays until the reload; a reload is never forced over open work.
+ * @param {() => boolean} idle whether a reload would lose nothing (no open documents)
+ */
+function offerReload(idle) {
+	if (idle()) {
+		reloadWorkspace();
+		return;
+	}
+	if ($('update-banner')) return;
+	const banner = document.createElement('div');
+	banner.id = 'update-banner';
+	banner.className = 'update-banner';
+	banner.setAttribute('role', 'status');
+	banner.innerHTML =
+		'<span>A new version of OOXML Office is ready. Save your work, then reload to use it.</span><button class="primary" data-reload>Reload now</button><button data-later>Later</button>';
+	banner.querySelector('[data-reload]').onclick = reloadWorkspace;
+	banner.querySelector('[data-later]').onclick = () => {
+		banner.remove();
+		notify('A new version is ready. Reload whenever you like.');
+	};
+	document.querySelector('.suite-body').prepend(banner);
+}
+
+/** @param {{ idle: () => boolean }} options */
+export function mountPwa({ idle }) {
 	if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
 	let prompt;
 	const install = document.createElement('button');
 	install.textContent = 'Install this app';
 	install.className = 'install-app';
-	onProfile(() => document.querySelector('#account-menu').append(install));
+	const check = document.createElement('button');
+	check.textContent = 'Check for updates';
+	check.className = 'check-updates';
+	const version = document.createElement('p');
+	version.className = 'account-version';
+	version.textContent = buildStamp ? `Version ${buildStamp}` : 'Development build';
+	onProfile(() => document.querySelector('#account-menu').append(install, check, version));
 	window.addEventListener('beforeinstallprompt', (event) => {
 		event.preventDefault();
 		prompt = event;
@@ -33,22 +69,27 @@ export function mountPwa() {
 			'Use Install app in your browser menu. On iPhone or iPad, open this page in Safari, choose Share, then Add to Home Screen. Each app can be installed from its own page in the app launcher.';
 		choose('Install app', message);
 	};
+	check.onclick = async () => {
+		document.querySelector('#account-menu').hidePopover();
+		check.disabled = true;
+		notify('Checking for updates...');
+		try {
+			const found = await checkForUpdates();
+			notify(found ? 'A new version is downloading.' : 'You have the latest version.');
+		} catch {
+			notify('Could not check for updates. Try again when you are online.');
+		} finally {
+			check.disabled = false;
+		}
+	};
 	window.addEventListener('appinstalled', () => {
 		install.hidden = true;
 	});
-	// A new worker takes over as soon as it is installed; this window keeps the code it loaded.
-	if (navigator.serviceWorker.controller)
-		navigator.serviceWorker.addEventListener('controllerchange', offerReload, { once: true });
+	onNewVersion(() => offerReload(idle));
 	const register = () =>
-		navigator.serviceWorker
-			// sw.js always comes from the network, so a deploy is noticed on the next check.
-			.register(new URL('sw.js', suiteBase), { scope: suiteBase.pathname, updateViaCache: 'none' })
-			.then((registration) =>
-				document.addEventListener('visibilitychange', () => {
-					if (document.visibilityState === 'visible') void registration.update().catch(() => {});
-				}),
-			)
-			.catch(() => notify('Offline setup is unavailable. The app remains usable online.'));
+		registerWorker().catch(() =>
+			notify('Offline setup is unavailable. The app remains usable online.'),
+		);
 	if (document.readyState === 'complete') void register();
 	else window.addEventListener('load', () => void register(), { once: true });
 }

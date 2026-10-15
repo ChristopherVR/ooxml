@@ -455,7 +455,7 @@ for (const eventName of ['pointerover', 'focusin'])
 	});
 
 mountProduct();
-mountPwa();
+mountPwa({ idle: () => sessions.sessions.size === 0 && view === 'home' });
 mountStart();
 mountResources();
 

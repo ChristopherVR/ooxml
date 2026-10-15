@@ -102,7 +102,10 @@ export async function buildPwa(out) {
 			else if (
 				entry.isFile() &&
 				/\.(js|css|html|png|svg|webmanifest)$/.test(entry.name) &&
-				entry.name !== 'sw.js'
+				entry.name !== 'sw.js' &&
+				// The not-found page is not the app shell (the worker refuses to cache one that is
+				// not), and it is only ever served by the host for a missing address.
+				!/^404\./.test(rel)
 			)
 				files.push(rel);
 		}
@@ -128,7 +131,15 @@ export async function buildPwa(out) {
 		await writeFile(
 			join(out, file),
 			file.endsWith('.html')
-				? versioned(text, /((?:src|href)=")((?:\.\.\/\.\.\/)?)([\w-]+\.(?:js|css))(")/g)
+				? versioned(
+						text,
+						/((?:src|href)=")((?:\.\.\/\.\.\/)?)([\w-]+\.(?:js|css))(")/g,
+						// The app shows this as its version (apps/office-suite/src/updates.js).
+					).replace(
+						'<meta name="ooxml-root"',
+						`<meta name="ooxml-build" content="${stamp}" />
+		<meta name="ooxml-root"`,
+					)
 				: versioned(text, /(@import url\(')(\.\/)([\w-]+\.css)('\))/g),
 		);
 	}
