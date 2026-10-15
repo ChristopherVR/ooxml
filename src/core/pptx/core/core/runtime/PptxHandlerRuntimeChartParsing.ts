@@ -5,8 +5,8 @@ import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
  * A classic chart part (`c:chartSpace`) is read by the neutral parser (`chart/parseChartSpace`),
  * and `PptxChartData` is built from that model through the adapter in
  * `utils/chart-from-neutral*.ts` (docs/agnostic-core-plan.md, steps 5 and 6). What the neutral
- * model does not carry (resolved colours and fonts, gradients, trendlines, error bars, picture
- * fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
+ * model does not carry (resolved colours and fonts, gradients, the line styles of trendlines and
+ * error bars, picture fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
  * parts, `c:clrMapOvr`, pivot source and formats, print settings, protection) is still read from
  * the part's `fast-xml-parser` tree by the existing object-tree readers. ChartEx parts stay on the
  * object tree entirely (`PptxHandlerRuntimeChartExParsing`).
@@ -145,8 +145,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			resolveTypeface: (raw) => this.resolveThemeTypeface(raw) ?? raw,
 			localName: (key) => this.compatibilityService.getXmlLocalName(key),
 			...(this.colorStyleCodec ? { colorStyleCodec: this.colorStyleCodec } : {}),
-			extractPointValues: (node, preferNumeric) =>
-				this.extractChartPointValues(node, preferNumeric),
 		};
 	}
 

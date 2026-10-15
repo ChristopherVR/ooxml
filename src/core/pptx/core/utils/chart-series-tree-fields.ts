@@ -1,9 +1,9 @@
 /**
  * The fields of a pptx chart series that the neutral chart model does not carry, read from the
  * series' `fast-xml-parser` node (`c:ser`): colours resolved through the deck theme and the
- * chart's `c:clrMapOvr`, gradients, line width and dash, trendlines, error bars, picture fills,
- * the c16 identity, and the styled halves of markers, data points and data labels (docs/
- * agnostic-core-plan.md, step 5, model gap table). `chart-from-neutral-series.ts` fills the
+ * chart's `c:clrMapOvr`, gradients, line width and dash, picture fills, the c16 identity, and the
+ * styled halves of markers, data points and data labels (docs/agnostic-core-plan.md, step 5,
+ * model gap table). `chart-from-neutral-series.ts` fills the
  * structural fields of the same objects from the neutral model.
  *
  * @module chart-series-tree-fields
@@ -11,7 +11,6 @@
 import { EMU_PER_POINT } from '../../../units/index';
 import type { IPptxXmlLookupService } from '../services/PptxXmlLookupService';
 import type { PptxChartSeries, PptxChartType, XmlObject } from '../types';
-import { parseSeriesErrBars, parseSeriesTrendlines } from './chart-advanced-parser';
 import { isLineDrawnChartType } from './chart-container-type-map';
 import { parseChartDataLabelOptions, parseSeriesDataLabels } from './chart-data-label-parser';
 import {
@@ -35,8 +34,6 @@ export interface ChartTreeReader {
 	resolveTypeface: (raw: string) => string;
 	localName: (key: string) => string;
 	colorStyleCodec?: ChartGradientCodec;
-	/** The dense cached point texts of a data source node (error-bar custom values). */
-	extractPointValues: (node: XmlObject | undefined, preferNumeric: boolean) => string[];
 }
 
 /** The series fields read from the object tree; the structural ones come from the neutral model. */
@@ -45,8 +42,6 @@ export type SeriesTreeFields = Pick<
 	| 'color'
 	| 'gradientFill'
 	| 'lineGradientFill'
-	| 'trendlines'
-	| 'errBars'
 	| 'dataPoints'
 	| 'marker'
 	| 'dataLabels'
@@ -78,8 +73,6 @@ export function readSeriesTreeFields(
 			? reader.parseColor(xml.getChildByLocalName(line, 'solidFill'))
 			: undefined);
 	const codec = reader.colorStyleCodec;
-	const trendlines = parseSeriesTrendlines(seriesNode, xml, colorAdapter);
-	const errBars = parseSeriesErrBars(seriesNode, xml, reader.extractPointValues, colorAdapter);
 	const dataPoints = parseSeriesDataPoints(
 		seriesNode,
 		xml,
@@ -110,8 +103,6 @@ export function readSeriesTreeFields(
 		color,
 		...(codec ? seriesGradientFill(spPr, xml, codec) : {}),
 		...(lineGradientFill ? { lineGradientFill } : {}),
-		...(trendlines.length > 0 ? { trendlines } : {}),
-		...(errBars.length > 0 ? { errBars } : {}),
 		...(dataPoints.length > 0 ? { dataPoints } : {}),
 		...(marker ? { marker } : {}),
 		...(dataLabels.length > 0 ? { dataLabels } : {}),

@@ -1,14 +1,16 @@
 /**
  * One pptx chart series (`PptxChartSeries`) from a neutral series (`ChartSpaceSeries`): the
  * structural fields (name, `c:idx`, value, x and bubble-size caches with their blanks, number
- * format, smoothing, invert-if-negative, explosion, 3-D shape, markers, data points and data
- * labels) come from the neutral model; the styled fields are read from the series' object-tree
- * node by `readSeriesTreeFields`.
+ * format, smoothing, invert-if-negative, explosion, 3-D shape, markers, data points, data labels,
+ * trendlines and error bars) come from the neutral model; the styled fields are read from the
+ * series' object-tree node by `readSeriesTreeFields` (and, for trendlines and error bars, by
+ * `chart-from-neutral-analysis.ts`).
  *
  * @module chart-from-neutral-series
  */
 import type { ChartSpaceSeries } from '../../../chart/index';
 import type { PptxChartSeries, PptxChartType, XmlObject } from '../types';
+import { errBarsFromNeutral, trendlinesFromNeutral } from './chart-from-neutral-analysis';
 import {
 	dataPointsFromNeutral,
 	labelOptionsFromNeutral,
@@ -69,6 +71,8 @@ export function seriesFromNeutral(
 	const shape =
 		containerChartType === 'bar3D' ? parseBar3DShapeVal(series.shape?.trim() ?? '') : undefined;
 	const name = neutralSeriesName(series.tx);
+	const trendlines = trendlinesFromNeutral(series.trendlines, place.node, reader);
+	const errBars = errBarsFromNeutral(series.errorBars, place.node, reader);
 	return {
 		name: name.trim().length > 0 ? name : `Series ${index + 1}`,
 		...(series.index !== undefined ? { idx: series.index } : {}),
@@ -84,8 +88,8 @@ export function seriesFromNeutral(
 		color: tree.color,
 		...(tree.gradientFill ? { gradientFill: tree.gradientFill } : {}),
 		...(tree.lineGradientFill ? { lineGradientFill: tree.lineGradientFill } : {}),
-		...(tree.trendlines ? { trendlines: tree.trendlines } : {}),
-		...(tree.errBars ? { errBars: tree.errBars } : {}),
+		...(trendlines.length > 0 ? { trendlines } : {}),
+		...(errBars.length > 0 ? { errBars } : {}),
 		...(dataPoints ? { dataPoints } : {}),
 		...(marker ? { marker } : {}),
 		...(dataLabels ? { dataLabels } : {}),

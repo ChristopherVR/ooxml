@@ -26,7 +26,6 @@ const STUB_READER: ChartTreeReader = {
 	parseColor: parseColorStub,
 	resolveTypeface: (raw) => raw,
 	localName: (key) => key.slice(key.lastIndexOf(':') + 1),
-	extractPointValues: () => [],
 };
 
 describe('readSeriesTreeFields colour extraction', () => {

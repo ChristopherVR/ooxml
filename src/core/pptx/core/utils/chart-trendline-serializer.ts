@@ -10,22 +10,13 @@
  * @module utils/chart-trendline-serializer
  */
 
+import { chartTrendlineType } from '../../../chart/model-analysis';
 import type { PptxChartTrendline, XmlObject } from '../types';
 import type { ResolveChartColor } from './chart-color-choice';
 import { writeChartShapeProps } from './chart-shape-props-writer';
 import { buildTrendlineLabel } from './chart-trendline-label';
 
 type GetLocalName = (key: string) => string;
-
-/** Model trendline type -> OOXML `ST_TrendlineType` value. */
-const TYPE_TO_OOXML: Record<PptxChartTrendline['trendlineType'], string> = {
-	linear: 'linear',
-	exponential: 'exp',
-	logarithmic: 'log',
-	polynomial: 'poly',
-	power: 'power',
-	movingAvg: 'movingAvg',
-};
 
 function findKey(obj: XmlObject, local: string, getLocalName: GetLocalName): string | undefined {
 	return Object.keys(obj).find((k) => getLocalName(k) === local);
@@ -108,7 +99,7 @@ function buildTrendline(
 		node['c:spPr'] = spPr;
 	}
 
-	node['c:trendlineType'] = { '@_val': TYPE_TO_OOXML[t.trendlineType] };
+	node['c:trendlineType'] = { '@_val': chartTrendlineType(t.trendlineType) };
 	if (t.trendlineType === 'polynomial') {
 		node['c:order'] = { '@_val': String(t.order ?? 2) };
 	}
