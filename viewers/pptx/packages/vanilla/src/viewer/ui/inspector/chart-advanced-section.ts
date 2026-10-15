@@ -269,6 +269,16 @@ export function createChartAdvancedSection(
 		marker.control.value = item?.marker?.symbol ?? 'none';
 		set(markerSize.control, item?.marker?.size);
 		seriesColor.control.value = item?.color ?? '#4472c4';
+		// The caption names the series it colours ("Revenue colour"). Built once
+		// with no name, it used to show the raw `{{name}}` placeholder.
+		const seriesColorText = t('pptx.chart.seriesColor', {
+			name: item?.name ?? String(seriesIndex() + 1),
+		});
+		const caption = seriesColor.label.firstChild;
+		if (caption?.nodeType === Node.TEXT_NODE) {
+			caption.textContent = seriesColorText;
+		}
+		seriesColor.control.setAttribute('aria-label', seriesColorText);
 		clearSeriesColor.hidden = !seriesColorClearState(item, editable).visible;
 		const point = item?.dataPoints?.find(({ idx }) => idx === pointIndex.selected());
 		pointColor.control.value = point?.spPr?.fillColor ?? item?.color ?? '#4472c4';

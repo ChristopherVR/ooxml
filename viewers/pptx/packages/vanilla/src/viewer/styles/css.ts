@@ -17,6 +17,7 @@ import { EDITOR_CSS } from './editor-css';
 import { EQUATION_DIALOG_CSS } from './equation-dialog-css';
 import { EXPORT_PROGRESS_CSS } from './export-progress-css';
 import { FILE_INFO_CSS } from './file-info-css';
+import { INSPECTOR_BASE_CSS } from './inspector-base-css';
 import { INSPECTOR_FORMAT_CSS } from './inspector-format-css';
 import { INSPECTOR_PANELS_CSS } from './inspector-panels-css';
 import { INSPECTOR_TABLE_CELL_CSS } from './inspector-table-cell-css';
@@ -837,6 +838,7 @@ const CHROME_CSS = `
 /** The full stylesheet text (theme-var defaults + chrome rules + editor + collab chrome). */
 export function buildViewerCss(): string {
 	return `${defaultVarsBlock()}
+${INSPECTOR_BASE_CSS}
 ${CHROME_CSS}
 ${EDITOR_CSS}
 ${RIBBON_CSS}
