@@ -218,8 +218,7 @@ describe('office-ui-options-dialog', () => {
 		pane.textContent = 'commands';
 		dialog.append(pane);
 		dialog.show();
-		const wait = () =>
-			dialog.updateComplete;
+		const wait = () => dialog.updateComplete;
 		await wait();
 		const count = root.querySelector<HTMLInputElement>('[data-key="count"] input')!;
 		expect(count.disabled).toBe(true);
