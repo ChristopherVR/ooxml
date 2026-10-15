@@ -223,7 +223,8 @@ export function docToModel(
 			sameJson(previous.dropCap ?? null, node.attrs.dropCap ?? null) &&
 			sameJson(previous.borders ?? null, node.attrs.borders ?? null) &&
 			(previous.shadingFill ?? null) === (node.attrs.shadingFill ?? null) &&
-			sameJson(previous.bookmarks ?? [], node.attrs.bookmarks ?? [])
+			sameJson(previous.bookmarks ?? [], node.attrs.bookmarks ?? []) &&
+			sameJson(previous.contentControl ?? null, node.attrs.contentControl ?? null)
 		)
 			return previous;
 		return paragraphFromAttrs(node.attrs, id, runs);

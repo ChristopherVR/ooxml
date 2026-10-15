@@ -50,6 +50,12 @@ export function marksForRun(run: TextRun, schema: Schema): Mark[] {
 				color: run.color || null,
 			}),
 		);
+	if (run.contentControl)
+		marks.push(
+			expectDefined(schema.marks.contentControl, 'contentControl mark').create({
+				data: JSON.stringify(run.contentControl),
+			}),
+		);
 	if (run.field)
 		marks.push(
 			expectDefined(schema.marks.field, 'field mark').create({

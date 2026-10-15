@@ -10,6 +10,7 @@ import { createLinkDialog, type LinkDialog } from './link-dialog';
 import { createPictureDialog, type PictureDialog } from './picture-dialog';
 import { NodeSelection } from 'prosemirror-state';
 import { followLinkAt } from './link-commands';
+import { insertContentControl } from 'ooxml-core/docx/ui';
 import { insertPicture, PICTURE_TYPES, stagePicture } from './picture-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
@@ -67,6 +68,10 @@ export class InsertController {
 		const editable = Boolean(view?.editable);
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
+		} else if (action.type === 'insertContentControl') {
+			const tr = view?.editable && insertContentControl(view.state, action.value);
+			if (view && tr) view.dispatch(tr.scrollIntoView());
+			focusView(view);
 		} else if (action.type === 'link') {
 			if (editable) this.linkDialog.open();
 		} else if (action.type === 'formatPicture') {

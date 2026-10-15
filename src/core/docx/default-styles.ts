@@ -47,6 +47,7 @@ export const DEFAULT_STYLES_XML =
 	noteStyles('Footnote', 'footnote') +
 	noteStyles('Endnote', 'endnote') +
 	'<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:basedOn w:val="DefaultParagraphFont"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style>' +
+	'<w:style w:type="character" w:styleId="PlaceholderText"><w:name w:val="Placeholder Text"/><w:basedOn w:val="DefaultParagraphFont"/><w:uiPriority w:val="99"/><w:semiHidden/><w:rPr><w:color w:val="808080"/></w:rPr></w:style>' +
 	'</w:styles>';
 
 let cached: Pick<DocumentModel, 'paragraphStyles' | 'characterStyles' | 'tableStyles'> | undefined;

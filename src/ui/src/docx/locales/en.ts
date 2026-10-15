@@ -1,3 +1,4 @@
+import { enObjects } from './objects';
 import { enOptions } from './options';
 import { enColumns } from './columns';
 import { enMultilevelList } from './multilevel-list';
@@ -26,6 +27,7 @@ export const en = {
 	...enMultilevelList,
 	...enFontAdvanced,
 	...enLigatures,
+	...enObjects,
 } as const;
 
 export type LocalizationKey = keyof typeof en;

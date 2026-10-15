@@ -1,0 +1,157 @@
+/* Content controls (w:sdt): Word's hover and selected outline, title tab and grey placeholder. */
+.dve-sdt {
+	position: relative;
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
+}
+.dve-sdt[data-sdt-placeholder],
+p[data-sdt-block] .dve-sdt[data-sdt-placeholder] {
+	color: #808080;
+}
+.dve-sdt:hover,
+.dve-sdt.dve-sdt-active,
+p[data-sdt-block]:hover,
+p[data-sdt-block].dve-sdt-active {
+	outline: 1px solid var(--dve-sdt-outline, #b6b6b6);
+	outline-offset: 1px;
+}
+.dve-sdt.dve-sdt-active,
+p[data-sdt-block].dve-sdt-active {
+	outline-color: var(--dve-sdt-active, #4472c4);
+}
+/* The title tab sits above the control while it is hovered or holds the caret. */
+.dve-sdt[data-sdt-title]:hover::before,
+.dve-sdt[data-sdt-title].dve-sdt-active::before,
+p[data-sdt-block][data-sdt-title]:hover::before,
+p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
+	content: attr(data-sdt-title);
+	position: absolute;
+	left: -1px;
+	bottom: 100%;
+	max-width: 22em;
+	padding: 0 6px;
+	overflow: hidden;
+	background: var(--dve-sdt-active, #4472c4);
+	color: #fff;
+	font:
+		11px/16px 'Segoe UI',
+		Arial,
+		sans-serif;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	pointer-events: none;
+	z-index: 2;
+}
+p[data-sdt-block] {
+	position: relative;
+}
+p[data-sdt-block][data-sdt-title]:hover::before,
+p[data-sdt-block][data-sdt-title].dve-sdt-active::before {
+	bottom: auto;
+	top: -17px;
+}
+/* A drop-down, combo box or date picker shows its arrow at the end. */
+.dve-sdt[data-sdt-kind='dropDownList'].dve-sdt-active::after,
+.dve-sdt[data-sdt-kind='comboBox'].dve-sdt-active::after,
+.dve-sdt[data-sdt-kind='date'].dve-sdt-active::after,
+.dve-sdt[data-sdt-kind='dropDownList']:hover::after,
+.dve-sdt[data-sdt-kind='comboBox']:hover::after,
+.dve-sdt[data-sdt-kind='date']:hover::after {
+	content: '\25be';
+	display: inline-block;
+	width: 16px;
+	margin-left: 4px;
+	background: var(--dve-sdt-active, #4472c4);
+	color: #fff;
+	font-size: 11px;
+	line-height: 16px;
+	text-align: center;
+	vertical-align: baseline;
+	cursor: pointer;
+}
+.dve-sdt[data-sdt-kind='date']:hover::after,
+.dve-sdt[data-sdt-kind='date'].dve-sdt-active::after {
+	content: '\25bc';
+	font-size: 8px;
+}
+.dve-sdt[data-sdt-kind='checkbox'] {
+	cursor: pointer;
+}
+.dve-sdt[data-sdt-lock='sdtLocked']:hover,
+.dve-sdt[data-sdt-lock='sdtContentLocked']:hover {
+	outline-style: solid;
+}
+
+/* The calendar and list popups of drop-down, combo box and date controls. */
+.ribbon-popover.sdt-calendar {
+	display: grid;
+	gap: 6px;
+	width: 224px;
+	padding: 8px;
+}
+.sdt-calendar-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	color: var(--ink);
+	font:
+		600 13px 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.sdt-calendar-head button,
+.sdt-calendar-foot button {
+	min-width: 26px;
+	height: 24px;
+	border: 1px solid transparent;
+	background: transparent;
+	color: var(--ink);
+	font: inherit;
+	cursor: pointer;
+}
+.sdt-calendar-head button:hover,
+.sdt-calendar-foot button:hover {
+	background: var(--accent-soft);
+}
+.sdt-calendar-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 1px;
+	text-align: center;
+}
+.sdt-calendar-grid span,
+.sdt-calendar-grid button {
+	height: 26px;
+	border: 1px solid transparent;
+	background: transparent;
+	color: var(--ink);
+	font:
+		12px 'Segoe UI',
+		Arial,
+		sans-serif;
+	line-height: 24px;
+}
+.sdt-calendar-grid span {
+	color: var(--muted);
+}
+.sdt-calendar-grid button {
+	cursor: pointer;
+}
+.sdt-calendar-grid button:hover,
+.sdt-calendar-grid button:focus-visible {
+	background: var(--accent-soft);
+}
+.sdt-calendar-grid button.outside {
+	color: var(--muted);
+}
+.sdt-calendar-grid button.today {
+	border-color: var(--blue);
+}
+.sdt-calendar-grid button.selected {
+	background: var(--blue);
+	color: #fff;
+}
+.sdt-calendar-foot {
+	display: flex;
+	justify-content: center;
+}

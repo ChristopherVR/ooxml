@@ -1,4 +1,4 @@
-import type { MarkSpec } from 'prosemirror-model';
+import type { DOMOutputSpec, MarkSpec } from 'prosemirror-model';
 import { isWordHighlightToken, type WordHighlightToken } from '../index';
 import { reviewMarks } from './review-schema';
 import { runPropertiesMark } from './run-extra-mark';
@@ -66,6 +66,29 @@ export const wordHighlightColors = {
 	darkGray: '#808080',
 	lightGray: '#c0c0c0',
 } satisfies Record<Exclude<WordHighlightToken, 'none'>, string>;
+
+/** The span a content control's text sits in; its outline, title tab and placeholder are CSS. */
+function contentControlDom(data: string): DOMOutputSpec {
+	let control: Record<string, unknown> = {};
+	try {
+		control = JSON.parse(data) as Record<string, unknown>;
+	} catch {
+		control = {};
+	}
+	return [
+		'span',
+		{
+			class: 'dve-sdt',
+			'data-sdt': data,
+			'data-sdt-id': String(control.id ?? ''),
+			'data-sdt-kind': String(control.kind ?? 'richText'),
+			...(control.alias ? { 'data-sdt-title': String(control.alias) } : {}),
+			...(control.showingPlaceholder ? { 'data-sdt-placeholder': '1' } : {}),
+			...(control.lock ? { 'data-sdt-lock': String(control.lock) } : {}),
+		},
+		0,
+	];
+}
 
 /** Run formatting marks; key order sets ProseMirror mark precedence. */
 export const markSpecs = {
@@ -195,6 +218,17 @@ export const markSpecs = {
 			},
 		],
 		toDOM: (mark) => ['span', { 'data-docx-style': mark.attrs.id }, 0],
+	},
+	/** Inline content control (`w:sdt`): the whole control as JSON, drawn with Word's outline and title tab. */
+	contentControl: {
+		attrs: { data: { default: '' } },
+		parseDOM: [
+			{
+				tag: 'span[data-sdt]',
+				getAttrs: (el) => ({ data: (el as HTMLElement).dataset.sdt || '' }),
+			},
+		],
+		toDOM: (mark) => contentControlDom(String(mark.attrs.data)),
 	},
 	/** Field result text: carries the field code so results can be recalculated and re-wrapped. */
 	field: {

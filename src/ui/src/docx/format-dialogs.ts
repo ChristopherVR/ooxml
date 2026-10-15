@@ -6,6 +6,7 @@ import { createBookmarkDialog } from './bookmark-dialog';
 import { createWatermarkDialog, type WatermarkHost } from './watermark-dialog';
 import { createPageBordersDialog, type PageBordersHost } from './page-borders-dialog';
 import { createTextBoxDialog } from './text-box-dialog';
+import { createContentControlDialog } from './content-control-dialog';
 import { createBordersDialog } from './borders-dialog';
 import { createCaptionDialog } from './caption-dialog';
 import { createCrossReferenceDialog } from './cross-reference-dialog';
@@ -33,6 +34,7 @@ export type FormatDialogKind =
 	| 'tableProperties'
 	| 'lineNumbers'
 	| 'textBox'
+	| 'contentControl'
 	| 'pageBorders'
 	| 'watermark'
 	| 'dropCap'
@@ -105,6 +107,7 @@ export class FormatDialogs {
 				restoreFocus: () => focusView(host.view()),
 			}),
 			textBox: createTextBoxDialog(() => host.view()),
+			contentControl: createContentControlDialog(() => host.view()),
 			lineNumbers: createLineNumberDialog({
 				...(host.lineNumbers ?? {
 					section: () => undefined,

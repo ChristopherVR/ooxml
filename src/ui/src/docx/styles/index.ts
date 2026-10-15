@@ -22,6 +22,7 @@ import chromeDocument from './chrome-document.css?raw';
 import pageNavigator from './page-navigator.css?raw';
 import keyboardMenu from './keyboard-menu.css?raw';
 import smartArt from './smartart.css?raw';
+import contentControls from './content-controls.css?raw';
 
 const declarations = (theme: EditorTheme, scheme: 'light' | 'dark') =>
 	Object.entries(themeToCssVars(theme))
@@ -61,4 +62,5 @@ export const editorStyleText = [
 	pageNavigator,
 	keyboardMenu,
 	smartArt,
+	contentControls,
 ].join('\n');

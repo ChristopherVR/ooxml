@@ -148,6 +148,8 @@ export const schema = new Schema({
 				tabStops: { default: null },
 				/** Read-only bookmark names starting in this paragraph; not user-editable. */
 				bookmarks: { default: [] },
+				/** Block-level content control (`w:sdt`) around this paragraph, as an object. */
+				contentControl: { default: null },
 			},
 			parseDOM: [
 				{
@@ -204,6 +206,18 @@ export const schema = new Schema({
 						: {}),
 					...(node.attrs.pageBreakBefore != null
 						? { 'data-page-break-before': String(node.attrs.pageBreakBefore) }
+						: {}),
+					...(node.attrs.contentControl
+						? {
+								'data-sdt-block': String(node.attrs.contentControl.id ?? ''),
+								'data-sdt-kind': String(node.attrs.contentControl.kind ?? 'richText'),
+								...(node.attrs.contentControl.alias
+									? { 'data-sdt-title': String(node.attrs.contentControl.alias) }
+									: {}),
+								...(node.attrs.contentControl.lock
+									? { 'data-sdt-lock': String(node.attrs.contentControl.lock) }
+									: {}),
+							}
 						: {}),
 					...(Array.isArray(node.attrs.bookmarks) && node.attrs.bookmarks.length
 						? { 'data-bookmarks': node.attrs.bookmarks.join(',') }

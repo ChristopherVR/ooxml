@@ -128,6 +128,10 @@ export type RibbonAction =
 	| { type: 'reviewDisplay'; value: ReviewDisplayMode }
 	| { type: 'comments'; key: 'toggle' | 'add' | 'delete' | 'previous' | 'next' }
 	| { type: 'insertPicture' }
+	| {
+			type: 'insertContentControl';
+			value: 'richText' | 'text' | 'checkbox' | 'dropDownList' | 'comboBox' | 'date';
+	  }
 	| { type: 'formatPicture' }
 	| { type: 'link' }
 	| { type: 'characterStyle'; value: string }

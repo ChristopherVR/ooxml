@@ -6,6 +6,7 @@ import { deLigatures } from './ligatures';
 import { deNavigation } from './navigation';
 import { deDropCap } from './drop-cap';
 import { deLineNumbers } from './line-numbers';
+import { deObjects } from './objects';
 import type { LocaleStrings } from './en';
 import { deApp } from './de-app';
 import { deTableProperties } from './table-properties';
@@ -23,4 +24,5 @@ export const de: LocaleStrings = {
 	...deMultilevelList,
 	...deFontAdvanced,
 	...deLigatures,
+	...deObjects,
 };

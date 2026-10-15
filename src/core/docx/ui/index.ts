@@ -52,3 +52,6 @@ export * from './theme/element';
 export * from './theme/types';
 export * from './word-count';
 export * from './zoom-fit';
+export * from './content-control-commands';
+export * from './content-control-guard';
+export * from './content-control-spans';

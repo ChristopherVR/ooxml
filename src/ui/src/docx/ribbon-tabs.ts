@@ -176,6 +176,24 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				{ momentary: true },
 			),
 			menuSelect(
+				'Content control',
+				'contentControl',
+				[
+					['richText', 'Rich text'],
+					['text', 'Plain text'],
+					['checkbox', 'Check box'],
+					['dropDownList', 'Drop-down list'],
+					['comboBox', 'Combo box'],
+					['date', 'Date picker'],
+					['properties', 'Properties…'],
+				],
+				(value) =>
+					value === 'properties'
+						? { type: 'formatDialog', kind: 'contentControl' }
+						: { type: 'insertContentControl', value: value as 'richText' },
+				{ momentary: true },
+			),
+			menuSelect(
 				'Date and time',
 				'dateTime',
 				[
