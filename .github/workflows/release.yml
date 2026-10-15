@@ -54,6 +54,14 @@ jobs:
       any_released: ${{ steps.tagged.outputs.any_released || 'false' }}
       release_sha: ${{ steps.tagged.outputs.release_sha || '' }}
     steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
       # This job pushes a version-bump commit straight to `main` with the workflow's own
       # GITHUB_TOKEN (the workflow has `contents: write`), so no secret is needed while `main` has
       # no ruleset or branch protection. If protection that direct pushes cannot satisfy is ever
@@ -62,11 +70,16 @@ jobs:
       # on the bypass list; it is used in place of GITHUB_TOKEN when present. A PAT push, unlike a
       # GITHUB_TOKEN one, triggers workflows, but the release commit carries `[skip ci]`, which
       # GitHub honours natively.
+      #
+      # Credentials are NOT persisted in .git/config: `bun install`, the build and the package
+      # smoke tests run third-party code, so the write token must not sit on disk while they run.
+      # The two steps that push (adopt tags, commit the release) receive it as PUSH_TOKEN and
+      # authenticate that one git command with it.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
-          persist-credentials: true
+          persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -86,13 +99,16 @@ jobs:
       # planner baselines it at the commit npm recorded (or HEAD); record that as the tag so the
       # next run finds it. No-op once the tags exist.
       - name: Adopt baseline tags for packages published by hand
+        env:
+          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: |
+          remote="https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           node -e "for (const p of Object.values(require('./release-plan.json').packages)) if (p.adopt) console.log(p.adopt.tag + ' ' + p.adopt.sha)" |
           while read -r tag sha; do
             [ -z "$tag" ] && continue
             echo "Adopting $tag at $sha"
             git tag "$tag" "$sha"
-            git push origin "refs/tags/$tag"
+            git push "$remote" "refs/tags/$tag"
           done
 
       # Publishing is switched on per repository, so a release is never tagged that cannot be
@@ -104,11 +120,15 @@ jobs:
           echo "Set the NPM_PUBLISH repository variable to 'true' (Settings > Secrets and variables > Actions > Variables)."
           exit 1
 
-      # `release-plan.mjs --write` bumped the package.json version; install without --frozen-lockfile
-      # so the lockfile is regenerated if bun records it anywhere.
+      # `release-plan.mjs --write` bumped the package.json versions, and bun.lock records every
+      # workspace's version, so `--frozen-lockfile` would refuse the install. Install normally,
+      # then fail unless the lockfile changed ONLY in workspace package versions: a new or moved
+      # third-party resolution must never ship in a release commit unreviewed.
       - name: Install dependencies
         if: steps.plan.outputs.any_changed == 'true'
-        run: bun install
+        run: |
+          bun install
+          node scripts/check-lockfile-drift.mjs
 
       # All-or-nothing: a build or smoke-test failure fails the run before anything is committed,
       # tagged or published, and the next run retries from the same baseline. Typecheck and the
@@ -155,7 +175,12 @@ jobs:
           # Presence check only, never the value; tells "no token configured" apart from "token
           # configured but still rejected" in the failure branch below.
           HAVE_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' && '1' || '' }}
+          # Authenticates the push and fetch below only; it is not stored in .git/config.
+          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: |
+          # The build and smoke tests ran since the install check; re-check before staging bun.lock.
+          node scripts/check-lockfile-drift.mjs
+          remote="https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Stage each released package's changelog and manifest (version bump) AND the lockfile,
@@ -170,12 +195,12 @@ jobs:
             # `main` can move between checkout and here; rebase onto the new tip and retry.
             pushed=false
             for attempt in 1 2 3; do
-              if git push origin HEAD:main; then
+              if git push "$remote" HEAD:main; then
                 pushed=true
                 break
               fi
               echo "Push attempt $attempt was rejected; rebasing onto origin/main"
-              git fetch origin main
+              git fetch "$remote" +refs/heads/main:refs/remotes/origin/main
               # Preserve temporary build/smoke-test changes while replaying the release commit.
               if ! git rebase --autostash origin/main; then
                 git rebase --abort || true
@@ -263,11 +288,16 @@ jobs:
   #   release commit it pushed and publishes the packages listed in the release-plan.json artifact.
   #
   # RE-PUBLISH (dispatch with a tag): skips the `release` job and publishes exactly the tag
-  #   supplied via the `tag` input. It builds the dispatched commit (the branch the run was started
-  #   on), not the tag: the tag's own tree can predate the scripts and layout this workflow runs
-  #   (an old tree once ran its own publish script in the planning job). `publish-released.mjs`
-  #   refuses a package whose manifest is not at the tag's version, so a tag that `main` has moved
-  #   past fails loudly instead of publishing something else.
+  #   supplied via the `tag` input. It builds the dispatched commit, which every job pins to
+  #   `refs/heads/main` (a dispatch from any other ref fails its first step), not the tag: the
+  #   tag's own tree can predate the scripts and layout this workflow runs (an old tree once ran
+  #   its own publish script in the planning job). The tag must be an ancestor of main, and
+  #   `publish-released.mjs` refuses a package whose manifest is not at the tag's version, so a
+  #   tag that `main` has moved past fails loudly instead of publishing something else.
+  #
+  # Build and publish are separate jobs: `build-packages` installs, builds and packs with no
+  #   `id-token`; `publish` (environment `npm`, `id-token: write`) installs nothing, builds nothing
+  #   and uploads only the tarballs `build-packages` produced.
   #
   # The packages are split into publish groups (core, ui, mcp, and one group per viewer, see
   # `publish-released.mjs --groups`) that run as parallel matrix jobs. The core is built once
@@ -292,6 +322,14 @@ jobs:
     outputs:
       groups: ${{ steps.groups.outputs.groups }}
     steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
       - name: Verify publishing is enabled
         if: vars.NPM_PUBLISH != 'true'
         run: |
@@ -304,6 +342,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.release_sha }}
+          persist-credentials: false
 
       - name: Checkout the dispatched commit (re-publish)
         if: inputs.tag != ''
@@ -311,6 +350,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Download release plan
         if: inputs.tag == ''
@@ -321,6 +361,22 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
+
+      # Re-publish builds main's current commit, so the tag must exist and be part of main's
+      # history; a tag on another branch (or a forged name) is refused before anything is built.
+      - name: Check the re-publish tag belongs to main
+        if: inputs.tag != ''
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if ! git rev-parse --verify --quiet "refs/tags/${INPUT_TAG}^{commit}" >/dev/null; then
+            echo "::error::Tag '$INPUT_TAG' does not exist."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "refs/tags/${INPUT_TAG}^{commit}" HEAD; then
+            echo "::error::Tag '$INPUT_TAG' is not an ancestor of main; refusing to re-publish it."
+            exit 1
+          fi
 
       - name: List the publish groups
         id: groups
@@ -348,12 +404,21 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
       - name: Checkout the release commit
         if: inputs.tag == ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.release_sha }}
+          persist-credentials: false
 
       - name: Checkout the dispatched commit (re-publish)
         if: inputs.tag != ''
@@ -361,6 +426,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
+          persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -382,21 +448,31 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  publish:
+  # Builds and packs each group's tarballs. This job installs dependencies and runs the package
+  # build scripts (third-party code), so it has NO `id-token` permission, no `npm` environment and
+  # no persisted credentials: nothing in it can mint a publish credential. The tarballs travel to
+  # the `publish` job as an artifact, and only that job can reach npm.
+  build-packages:
     needs: [release, publish-plan, build-core]
     if: always() && needs.build-core.result == 'success'
     runs-on: ubuntu-latest
-    environment: npm
     permissions:
       contents: read
-      id-token: write # OIDC trusted publishing and provenance
     strategy:
       # One group failing must not cancel the others: a re-run only publishes what is missing.
       fail-fast: false
       matrix:
         group: ${{ fromJSON(needs.publish-plan.outputs.groups) }}
-    name: publish (${{ matrix.group }})
+    name: build (${{ matrix.group }})
     steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
       # Auto mode: the release commit the release job pushed (so manifests carry the new versions).
       - name: Checkout the release commit
         if: inputs.tag == ''
@@ -404,14 +480,17 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.release_sha }}
+          persist-credentials: false
 
-      # Re-publish mode: the dispatched commit (the manifest check below ties it to the tag).
+      # Re-publish mode: the dispatched commit, which the guard above pins to main (the manifest
+      # check ties it to the tag, and publish-plan checked the tag is an ancestor of main).
       - name: Checkout the dispatched commit (re-publish)
         if: inputs.tag != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Download release plan
         if: inputs.tag == ''
@@ -419,22 +498,9 @@ jobs:
         with:
           name: release-plan-${{ github.run_id }}
 
-      # Node 24 plus npm >= 11.5.1 is required for trusted publishing and --provenance. Node 24
-      # bundles npm 11.5.1 or newer since 24.6, so the bundled npm is used as is (an unpinned
-      # global install would be an npm command Scorecard cannot pin) and checked below.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: Check npm supports trusted publishing
-        run: |
-          version="$(npm --version)"
-          if [ "$(printf '%s\n' 11.5.1 "$version" | sort -V | head -n 1)" != "11.5.1" ]; then
-            echo "::error::npm $version is older than 11.5.1, which trusted publishing needs."
-            exit 1
-          fi
-          echo "npm $version"
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
@@ -465,18 +531,132 @@ jobs:
             node scripts/build-released.mjs --group "$GROUP"
           fi
 
-      # A `workspace:` range on a sibling is rewritten to a caret range for the upload, and the
-      # publish waits for any sibling released in this same run to be visible on the registry.
+      # A `workspace:` range on a sibling is rewritten to a caret range inside the packed manifest.
+      # Every manifest check of publish-released.mjs runs here; the tarballs and a checksum index
+      # (`packed.json`) are all the publish job receives.
+      - name: Pack the group's tarballs
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          GROUP: ${{ matrix.group }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            node scripts/publish-released.mjs --tag "$INPUT_TAG" --group "$GROUP" --pack "$RUNNER_TEMP/packed"
+          else
+            node scripts/publish-released.mjs --plan release-plan.json --group "$GROUP" --pack "$RUNNER_TEMP/packed"
+          fi
+
+      # Artifact names cannot contain `/` (a viewer group is `viewers/docx`).
+      - name: Name the tarball artifact
+        id: artifact
+        env:
+          GROUP: ${{ matrix.group }}
+        run: echo "name=packages-${GROUP//\//-}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the tarballs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ runner.temp }}/packed
+          retention-days: 1
+          if-no-files-found: error
+
+  # The only job with `id-token: write`. It runs no `bun install` and no build: it checks out the
+  # repository for the (dependency-free) release scripts only, downloads the tarballs the
+  # `build-packages` job made, and uploads exactly those with provenance. publish-released.mjs
+  # checks each tarball against its recorded checksum and against the release target (name and
+  # version) before uploading, and still waits for a sibling released in the same run and skips
+  # a version already on npm.
+  publish:
+    needs: [release, publish-plan, build-packages]
+    # A group whose build failed has no artifact and fails alone; the other groups still publish.
+    if: |
+      always() &&
+      needs.publish-plan.result == 'success' &&
+      (needs.build-packages.result == 'success' || needs.build-packages.result == 'failure')
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing and provenance
+    strategy:
+      # One group failing must not cancel the others: a re-run only publishes what is missing.
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON(needs.publish-plan.outputs.groups) }}
+    name: publish (${{ matrix.group }})
+    steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
+      # Scripts and manifests only (nothing is installed or built). Same commits as build-packages.
+      - name: Checkout the release commit
+        if: inputs.tag == ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.release_sha }}
+          persist-credentials: false
+
+      - name: Checkout the dispatched commit (re-publish)
+        if: inputs.tag != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Download release plan
+        if: inputs.tag == ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-plan-${{ github.run_id }}
+
+      # Artifact names cannot contain `/` (a viewer group is `viewers/docx`).
+      - name: Name the tarball artifact
+        id: artifact
+        env:
+          GROUP: ${{ matrix.group }}
+        run: echo "name=packages-${GROUP//\//-}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Download the tarballs
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ runner.temp }}/packed
+
+      # Node 24 plus npm >= 11.5.1 is required for trusted publishing and --provenance. Node 24
+      # bundles npm 11.5.1 or newer since 24.6, so the bundled npm is used as is (an unpinned
+      # global install would be an npm command Scorecard cannot pin) and checked below.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Check npm supports trusted publishing
+        run: |
+          version="$(npm --version)"
+          if [ "$(printf '%s\n' 11.5.1 "$version" | sort -V | head -n 1)" != "11.5.1" ]; then
+            echo "::error::npm $version is older than 11.5.1, which trusted publishing needs."
+            exit 1
+          fi
+          echo "npm $version"
+
+      # The publish waits for any sibling released in this same run to be visible on the registry.
       - name: Publish to npm
         env:
           INPUT_TAG: ${{ inputs.tag }}
           GROUP: ${{ matrix.group }}
         run: |
-          # publish-released.mjs runs `npm publish --provenance` once per package in the group.
+          # publish-released.mjs runs `npm publish <tarball> --provenance` once per package.
           if [ -n "$INPUT_TAG" ]; then
-            node scripts/publish-released.mjs --tag "$INPUT_TAG" --group "$GROUP"
+            node scripts/publish-released.mjs --tag "$INPUT_TAG" --group "$GROUP" --from-dir "$RUNNER_TEMP/packed"
           else
-            node scripts/publish-released.mjs --plan release-plan.json --group "$GROUP"
+            node scripts/publish-released.mjs --plan release-plan.json --group "$GROUP" --from-dir "$RUNNER_TEMP/packed"
           fi
 
   # A package that was tagged but never published needs recovery. The next online planner cuts
@@ -491,6 +671,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.tag == '' && needs.release.outputs.release_sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
@@ -509,6 +690,14 @@ jobs:
       contents: write # uploads the release assets
       id-token: write # keyless sigstore signing with the workflow identity
     steps:
+      - name: Refuse to run off main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release runs only from refs/heads/main (this run is on $REF)."
+          exit 1
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.tag == '' && needs.release.outputs.release_sha || github.sha }}

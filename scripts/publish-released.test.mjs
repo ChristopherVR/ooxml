@@ -125,3 +125,13 @@ test('a workspace devDependency on a private package is dropped from the publish
 	writeUi({ lit: '^3.0.0' }, { devDependencies: { '@x/private': 'workspace:*' } });
 	assert.deepEqual(publishManifest(ui, versions, temp).devDependencies, {});
 });
+
+test('--from-dir without a packed.json index fails before uploading anything', async () => {
+	const { spawnSync } = await import('node:child_process');
+	const result = spawnSync(
+		process.execPath,
+		['scripts/publish-released.mjs', '--tag', `${meta.npm}@${version}`, '--from-dir', temp],
+		{ encoding: 'utf8' },
+	);
+	assert.notEqual(result.status, 0);
+});

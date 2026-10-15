@@ -29,6 +29,12 @@
  * whose sibling is released in the same run (ooxml-ui on ooxml-core) waits for that sibling to
  * appear on npm instead of relying on publish order.
  *
+ * `--pack <dir>` (the build job, no OIDC token) writes each selected package's publishable
+ * tarball into <dir>, from the rewritten manifest, plus `packed.json` (name, version, file,
+ * sha256). `--from-dir <dir>` (the publish job, OIDC token, no install and no build) then
+ * publishes exactly those tarballs: the checks, the sibling wait and the registry skip are the
+ * same, and the tarball's own manifest must match the release target.
+ *
  * `--manual` publishes without provenance, for the one-off first publish from a maintainer machine
  * (the manifest rewrite and every check still run).
  * `--dry-run` runs all the checks and prints the `npm publish` commands without running them.
@@ -37,8 +43,9 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -141,6 +148,53 @@ function registryState(name, version) {
 	throw new Error(`Could not query npm for ${name}@${version}: ${result.stderr || result.stdout}`);
 }
 
+const sha256 = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
+
+/**
+ * Packs `target` from its rewritten manifest into `outDir` and returns its index entry. The
+ * manifest on disk is restored afterwards, as for a publish.
+ */
+function packTarget(target, manifest, outDir) {
+	const manifestPath = join(ROOT, target.dir, 'package.json');
+	const original = readFileSync(manifestPath, 'utf8');
+	let result;
+	try {
+		writeFileSync(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`);
+		result = npm(['pack', '--pack-destination', outDir], {
+			cwd: join(ROOT, target.dir),
+			stdio: ['ignore', 'pipe', 'inherit'],
+		});
+	} finally {
+		writeFileSync(manifestPath, original);
+	}
+	if (result.status !== 0) throw new Error(`Packing ${target.npm}@${target.version} failed.`);
+	// npm prints the tarball name last (lifecycle output, if any, comes before it).
+	const file = basename(result.stdout.trim().split(/\r?\n/u).at(-1) ?? '');
+	return { npm: target.npm, version: target.version, file, sha256: sha256(join(outDir, file)) };
+}
+
+/** The `package.json` inside a packed tarball, checked against the release target. */
+function tarballManifest(target, entry, dir) {
+	const path = join(dir, entry.file);
+	if (basename(entry.file) !== entry.file || !entry.file.endsWith('.tgz')) {
+		throw new Error(`Invalid tarball name '${entry.file}' for ${target.npm}.`);
+	}
+	if (sha256(path) !== entry.sha256) throw new Error(`${entry.file} does not match its checksum.`);
+	const result = spawnSync('tar', ['-xzOf', entry.file, 'package/package.json'], {
+		cwd: dir, // a relative name: GNU tar reads a drive letter as a remote host
+		encoding: 'utf8',
+		maxBuffer: 16 * 1024 * 1024,
+	});
+	if (result.status !== 0) throw new Error(`Could not read package.json of ${entry.file}.`);
+	const manifest = JSON.parse(result.stdout);
+	if (manifest.name !== target.npm || manifest.version !== target.version) {
+		throw new Error(
+			`${entry.file} is ${manifest.name}@${manifest.version}, release is ${target.npm}@${target.version}.`,
+		);
+	}
+	return manifest;
+}
+
 /** Blocks the (synchronous) script for `ms` milliseconds. */
 function sleep(ms) {
 	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -194,11 +248,26 @@ function main() {
 		console.log(`Verified ${mine.length} release manifests.`);
 		return;
 	}
+	const packDir = argv.includes('--pack') ? resolve(value('--pack')) : null;
+	const fromDir = argv.includes('--from-dir') ? resolve(value('--from-dir')) : null;
+	if (packDir) {
+		mkdirSync(packDir, { recursive: true });
+		const index = mine.map((target) => packTarget(target, publishManifest(target), packDir));
+		writeFileSync(join(packDir, 'packed.json'), `${JSON.stringify(index, null, '\t')}\n`);
+		console.log(`Packed ${index.map((entry) => entry.file).join(', ')}`);
+		return;
+	}
+	const index = fromDir ? JSON.parse(readFileSync(join(fromDir, 'packed.json'), 'utf8')) : [];
 	// Siblings released in this same run, possibly by another job: wait for them on the registry.
 	const inRelease = new Set(targets.map((target) => `${target.npm}@${target.version}`));
 	for (const target of mine) {
 		console.log(`--- ${target.npm}@${target.version} ---`);
-		const manifest = publishManifest(target);
+		const entry = fromDir
+			? index.find((e) => e.npm === target.npm && e.version === target.version)
+			: null;
+		if (fromDir && !entry)
+			throw new Error(`No packed tarball for ${target.npm}@${target.version}.`);
+		const manifest = entry ? tarballManifest(target, entry, fromDir) : publishManifest(target);
 		if (registryState(target.npm, target.version) === 'exists') {
 			console.log('already published, skipping');
 			continue;
@@ -219,6 +288,7 @@ function main() {
 		// OIDC token of a CI run, so it is omitted. Every other check and rewrite is unchanged.
 		const args = [
 			'publish',
+			...(entry ? [join(fromDir, entry.file)] : []),
 			...(argv.includes('--manual') ? [] : ['--provenance']),
 			'--access',
 			'public',
@@ -227,6 +297,14 @@ function main() {
 		];
 		if (dryRun) {
 			console.log(`dry run: (cd ${target.dir} && npm ${args.join(' ')})`);
+			continue;
+		}
+		if (entry) {
+			// The tarball carries its rewritten manifest; nothing in the checkout is touched.
+			const uploaded = npm(args, { stdio: 'inherit' });
+			if (uploaded.status !== 0) {
+				throw new Error(`Publishing ${target.npm}@${target.version} failed.`);
+			}
 			continue;
 		}
 		// Publish from the package's own directory with the rewritten manifest, then restore it.
