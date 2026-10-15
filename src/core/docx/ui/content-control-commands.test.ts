@@ -167,6 +167,20 @@ describe('content control locks', () => {
 		expect(violatesControlLock(state.tr.delete(4, 6), state)).toBe(false);
 	});
 
+	it('a content-locked block refuses typing anywhere in it, its ends included', () => {
+		const blockControl = control({ level: 'block', lock: 'contentLocked' });
+		const doc = schema.node('doc', null, [
+			schema.node('paragraph', { contentControl: blockControl }, [schema.text('Notes')]),
+			schema.node('paragraph', null, [schema.text('After')]),
+		]);
+		const state = EditorState.create({ schema, doc });
+		for (const at of [1, 3, 6])
+			expect(violatesControlLock(state.tr.insertText('x', at), state)).toBe(true);
+		expect(violatesControlLock(state.tr.insertText('x', 9), state)).toBe(false);
+		// Deleting the whole block is not editing its content.
+		expect(violatesControlLock(state.tr.delete(0, 7), state)).toBe(false);
+	});
+
 	it('finds the control around a position', () => {
 		const state = locked(undefined);
 		const spans = controlSpans(state.doc);

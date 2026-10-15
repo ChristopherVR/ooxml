@@ -47,7 +47,9 @@ test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draw
 	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
 	const printed = editor.locator('.dve-print-pages [data-docx-chart="1"] svg');
 	await expect(printed).toHaveCount(1);
-	await expect(editor.locator('.dve-print-pages')).not.toContainText('[Equation]');
+	expect((await editor.locator('.dve-print-pages').allTextContents()).join('')).not.toContain(
+		'[Equation]',
+	);
 	const box = await printed.boundingBox();
 	expect(box!.width).toBeGreaterThan(40);
 	expect(box!.height).toBeGreaterThan(20);

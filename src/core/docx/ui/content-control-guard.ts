@@ -37,10 +37,14 @@ export function violatesControlLock(tr: Transaction, state: EditorState): boolea
 			const removesWhole = !inserts && from <= spanFrom && to >= spanTo;
 			if (isContentControlLocked(span.control, 'control') && removesWhole) return true;
 			if (!isContentControlLocked(span.control, 'content') || removesWhole) return false;
-			// A block control's own boundary tokens are not its content.
-			const innerFrom = span.level === 'block' ? spanFrom + 1 : spanFrom;
-			const innerTo = span.level === 'block' ? spanTo - 1 : spanTo;
-			return inserts ? from > innerFrom && from < innerTo : from < innerTo && to > innerFrom;
+			// A block control's own boundary tokens are not its content, and every position
+			// between them (the ends of its text included) is inside it.
+			if (span.level === 'block') {
+				const innerFrom = spanFrom + 1;
+				const innerTo = spanTo - 1;
+				return inserts ? from >= innerFrom && from <= innerTo : from < innerTo && to > innerFrom;
+			}
+			return inserts ? from > spanFrom && from < spanTo : from < spanTo && to > spanFrom;
 		});
 	});
 }
