@@ -10,7 +10,13 @@ import {
 import { forEachCellInRange, putCell, deleteCell } from '../cells';
 import type { PivotTable, PivotTableOptions, PivotTablePatch, Workbook } from '../model';
 import { pivotGrid } from '../pivot/aggregate';
-import { pivotCaption, pivotSourceData, validatePivotFields } from '../pivot/data';
+import {
+	pivotCaption,
+	pivotColumnFields,
+	pivotRowFields,
+	pivotSourceData,
+	validatePivotFields,
+} from '../pivot/data';
 import { sparklineDataRange } from './sparkline-ranges';
 import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
@@ -304,6 +310,13 @@ export function refreshPivotTable(
 	else delete next.dateFields;
 	roundDateRecords(next, dates, ctx.workbook.date1904);
 	if (next.dateFilter && !dates.includes(next.dateFilter.field)) delete next.dateFilter;
+	if (patch.fieldSubtotals === undefined && next.fieldSubtotals) {
+		// Moving a field off the axes drops the subtotal setting it had.
+		const onAxes = [...pivotRowFields(next), ...pivotColumnFields(next)];
+		const left = next.fieldSubtotals.filter((entry) => onAxes.includes(entry.field));
+		if (left.length) next.fieldSubtotals = left;
+		else delete next.fieldSubtotals;
+	}
 	const kept = pruneItemFilters(next);
 	if (kept) next.itemFilters = kept;
 	else delete next.itemFilters;

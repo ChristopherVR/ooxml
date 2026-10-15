@@ -204,12 +204,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const col = columnNames[0];
 	const moreColumns = columnNames.slice(1);
 	const columnDefinitions = columnDefs.map((field) => tableFields[Number(att(field, 'x'))]!);
-	// Column fields show the automatic subtotal columns; other settings stay in the file.
-	if (
-		fieldSubtotalsOf(columnDefinitions.slice(0, -1), columnNames.slice(0, -1)).length ||
-		columnNames.some((name) => !name)
-	)
-		throw new Error('Column subtotal settings are preserved');
+	if (columnNames.some((name) => !name)) throw new Error('Invalid pivot column fields');
+	const columnSubtotals = fieldSubtotalsOf(columnDefinitions, columnNames);
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
 	if (!row || !data || !location || (hasColumn && !col) || (realRows.length === 2 && !second))
@@ -257,6 +253,11 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		(pageFilter || dateFilter || itemFilters || slicerCacheId !== undefined)
 	)
 		throw new Error('Date groups with filters are preserved');
+	// The first row field's None is the `subtotals` flag; every other setting is an entry.
+	const fieldSubtotals = [
+		...subtotalSettings.filter((entry) => entry.field !== row || entry.functions.length),
+		...columnSubtotals,
+	];
 	const pivot: PivotTable = {
 		...(pageFilter ? { pageFilter } : {}),
 		...(itemFilters ? { itemFilters } : {}),
@@ -275,13 +276,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 			? { valuesPosition: valueIndex === 0 ? ('first' as const) : ('between' as const) }
 			: {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
-		...(subtotalSettings.some((entry) => entry.field !== row || entry.functions.length)
-			? {
-					fieldSubtotals: subtotalSettings.filter(
-						(entry) => entry.field !== row || entry.functions.length,
-					),
-				}
-			: {}),
+		...(fieldSubtotals.length ? { fieldSubtotals } : {}),
 		...(more.length ? { moreRowFields: more as string[] } : {}),
 		...(second
 			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }

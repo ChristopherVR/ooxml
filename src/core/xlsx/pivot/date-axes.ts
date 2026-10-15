@@ -68,7 +68,9 @@ export function reconcileDateAxes(
 	if (columns.length > 1) next.moreColumnFields = columns.slice(1);
 	else delete next.moreColumnFields;
 	if (next.fieldSubtotals) {
-		const kept = next.fieldSubtotals.filter((entry) => rows.includes(entry.field));
+		const kept = next.fieldSubtotals.filter(
+			(entry) => rows.includes(entry.field) || columns.includes(entry.field),
+		);
 		if (kept.length) next.fieldSubtotals = kept;
 		else delete next.fieldSubtotals;
 	}

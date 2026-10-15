@@ -1,7 +1,8 @@
-import type { CellValue, PivotTable } from '../model';
+import type { CellValue, PivotAggregate, PivotTable } from '../model';
 import { attrs } from '../write/xml-out';
 import { pivotColumnFields, pivotItemLabel, pivotItems, pivotValueKey } from './data';
 import { pivotMeasures } from './measures';
+import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 
 const SEPARATOR = '\u0001';
 const label = pivotItemLabel;
@@ -15,6 +16,8 @@ export interface ColumnEntry {
 	key: string;
 	/** The item value of each level of the path. */
 	values: CellValue[];
+	/** The function of a custom subtotal column; an automatic subtotal has none. */
+	fn?: PivotAggregate;
 }
 
 export interface PivotColumns {
@@ -47,6 +50,7 @@ export function pivotColumnEntries(pivot: PivotTable): PivotColumns {
 	const names = pivotColumnFields(pivot);
 	const items = names.map((name) => pivotItems(pivot, name));
 	const entries: ColumnEntry[] = [];
+	const functions = names.map((name) => fieldSubtotalFunctions(pivot, name));
 	if (names.length) {
 		const order = items.map(
 			(list) => new Map(list.map((item, index) => [pivotValueKey(item), index])),
@@ -87,7 +91,9 @@ export function pivotColumnEntries(pivot: PivotTable): PivotColumns {
 				if (level === names.length - 1) entries.push({ kind: 'leaf', ...entry });
 				else {
 					visit(child[1], level + 1, here.path, here.values, here.keys);
-					entries.push({ kind: 'subtotal', ...entry });
+					const own = functions[level]!;
+					if (own === 'auto') entries.push({ kind: 'subtotal', ...entry });
+					else for (const fn of own) entries.push({ kind: 'subtotal', ...entry, fn });
 				}
 			}
 		};
@@ -158,8 +164,13 @@ export function pivotColumnHeaders(
 		const row = entry.kind === 'grand' ? 1 : entry.path.length;
 		const name = entry.kind === 'grand' ? '' : String(label(entry.values.at(-1)!));
 		measures.forEach((measure, m) => {
-			grid[row]![at + m] =
-				count === 1
+			// A custom subtotal names its function, and with several measures its source field.
+			const custom = entry.fn ? PIVOT_SUBTOTALS[entry.fn].label : undefined;
+			grid[row]![at + m] = custom
+				? count === 1
+					? `${name} ${custom}`
+					: `${name} ${custom} of ${measure.field}`
+				: count === 1
 					? entry.kind === 'grand'
 						? 'Grand Total'
 						: `${name} Total`
@@ -202,7 +213,7 @@ export function pivotColumnItemsXml(
 			const prefix = sharedPrefix(path, previous);
 			const xs = path.slice(prefix).map((index) => `<x${attrs({ v: index || undefined })}/>`);
 			out.push(
-				`<i${attrs({ t: entry.kind === 'subtotal' ? 'default' : undefined, r: prefix || undefined, i: m || undefined })}>${xs.join('')}</i>`,
+				`<i${attrs({ t: entry.kind === 'subtotal' ? (entry.fn ? PIVOT_SUBTOTALS[entry.fn].item : 'default') : undefined, r: prefix || undefined, i: m || undefined })}>${xs.join('')}</i>`,
 			);
 			previous = path;
 		}

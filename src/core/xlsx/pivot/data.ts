@@ -169,7 +169,7 @@ export function validatePivotFields(
 		throw new Error('Values on rows support one column field.');
 	if (pivot.pageFilter && columns.length > 1)
 		throw new Error('Report filters support one column field.');
-	validateFieldSubtotals(pivot, rows);
+	validateFieldSubtotals(pivot, [...rows, ...columns]);
 	const axisNames = pivotAxisFieldNames(pivot);
 	if (
 		(pivot.dateGroups ?? []).some((group) =>

@@ -85,7 +85,7 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 							: (groupLabelsOf(pivot, name) ??
 								(filtered.has(name) || isDate ? pivotItems(pivot, name) : undefined));
 			const hidden = hiddenItemKeys(pivot, name);
-			const functions = at >= 0 ? fieldSubtotalFunctions(pivot, name) : 'auto';
+			const functions = at >= 0 || colAt >= 0 ? fieldSubtotalFunctions(pivot, name) : 'auto';
 			const automatic = functions === 'auto';
 			const custom = automatic ? [] : functions;
 			const repeated =

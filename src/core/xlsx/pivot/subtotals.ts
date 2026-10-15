@@ -1,4 +1,5 @@
 import type { PivotAggregate, PivotFieldSubtotals, PivotTable } from '../model';
+import { pivotColumnFields, pivotRowFields } from './axes';
 import { PIVOT_AGGREGATES } from './data';
 
 /**
@@ -54,6 +55,21 @@ export function fieldSubtotalFunctions(
 	return field === pivot.rowField && pivot.subtotals === false ? [] : 'auto';
 }
 
+/**
+ * The fields Field Settings can set subtotals for: the fields of an axis with several fields
+ * (a lone field has no groups to subtotal), rows first.
+ */
+export function pivotSubtotalFields(
+	pivot: Pick<
+		PivotTable,
+		'rowField' | 'secondRowField' | 'moreRowFields' | 'columnField' | 'moreColumnFields'
+	>,
+): string[] {
+	const rows = pivotRowFields(pivot);
+	const columns = pivotColumnFields(pivot);
+	return [...(rows.length > 1 ? rows : []), ...(columns.length > 1 ? columns : [])];
+}
+
 /** The entries to store: functions are unique and in Excel's order. */
 export function normalizedFieldSubtotals(
 	entries: readonly PivotFieldSubtotals[],
@@ -74,7 +90,7 @@ export function normalizedFieldSubtotals(
 
 export function validateFieldSubtotals(
 	pivot: Pick<PivotTable, 'fieldSubtotals' | 'valuesAxis'>,
-	rowFields: readonly string[],
+	axisFields: readonly string[],
 ): void {
 	const entries = pivot.fieldSubtotals;
 	if (entries === undefined) return;
@@ -86,7 +102,7 @@ export function validateFieldSubtotals(
 		if (
 			!entry ||
 			typeof entry !== 'object' ||
-			!rowFields.includes(entry.field) ||
+			!axisFields.includes(entry.field) ||
 			seen.has(entry.field) ||
 			!Array.isArray(entry.functions) ||
 			entry.functions.some((fn) => !PIVOT_AGGREGATES.includes(fn)) ||

@@ -99,15 +99,23 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	const indents = values.map(() => 0);
 	const rowEntries: PivotRowEntry[] = [];
 	const blanks = (): CellValue[] => Array<CellValue>(dimensions.width - labelColumns).fill(null);
-	const bands = (group: Node, run: (records: CellValue[][]) => CellValue[]): CellValue[] =>
-		columns.entries.flatMap((entry) =>
-			run(entry.kind === 'grand' ? group.records : (group.columns.get(entry.key) ?? [])),
-		);
-	const numbers = (group: Node) => bands(group, (records) => pivotNumbers(pivot, records));
-	const subtotalNumbers = (group: Node, fn: PivotAggregate) =>
-		bands(group, (records) =>
-			measures.map((measure) => aggregateValues(records, pivot.fields.indexOf(measure.field), fn)),
-		);
+	/**
+	 * The cells of a group across the column entries. A custom column subtotal summarizes with its
+	 * own function; crossed with a custom row subtotal it shows a value only where both agree.
+	 */
+	const bands = (group: Node, rowFn?: PivotAggregate): CellValue[] =>
+		columns.entries.flatMap((entry) => {
+			const records = entry.kind === 'grand' ? group.records : (group.columns.get(entry.key) ?? []);
+			const fn = rowFn ?? entry.fn;
+			if (rowFn && entry.fn && rowFn !== entry.fn) return measures.map((): CellValue => null);
+			return fn
+				? measures.map((measure) =>
+						aggregateValues(records, pivot.fields.indexOf(measure.field), fn),
+					)
+				: pivotNumbers(pivot, records);
+		});
+	const numbers = (group: Node) => bands(group);
+	const subtotalNumbers = (group: Node, fn: PivotAggregate) => bands(group, fn);
 
 	/** Label cells: the ancestors' labels (when shown) then this row's own at its column. */
 	const labelCells = (path: CellValue[], shown: boolean[], text: CellValue): CellValue[] => {
