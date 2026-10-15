@@ -151,7 +151,7 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 `state` is one immutable `TeamsState` snapshot (connection status, channels with unread counts,
 the selected channel's messages and files, people, typing, search results, the call). Actions
 include `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMessage`,
-`toggleReaction`, `search`, `openCall`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
+`toggleReaction`, `pinMessage`, `unpinMessage`, `setAvailability`, `setStatusMessage`, `search`, `openCall`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
 `toggleScreenShare` and `toggleHand`. The React demo shows both styles side by side.
 
 ## Run it from source

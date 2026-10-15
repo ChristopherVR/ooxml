@@ -69,8 +69,9 @@ manifest declares (`ooxml-core`, `ooxml-ui`, `lit` and the framework peer).
 - **Chat.** Channels live in one `Y.Map`, messages in one `Y.Map` per channel, reactions in a flat
   map keyed by message, emoji and user, so concurrent reactions never overwrite each other. Edits
   and deletes are author-only on the client (a delete is a soft tombstone).
-- **Presence** is Yjs awareness: online people, typing and availability. Advisory and
-  unauthenticated.
+- **Presence** is Yjs awareness: online people, typing, status and status message. Advisory and
+  unauthenticated. Peers also receive the legacy three-value `availability`.
+- **Pins** are one Yjs map per channel; any member can pin or unpin.
 - **Calls** are a full mesh of peer connections using the perfect-negotiation pattern; muting, the
   camera and screen share swap tracks without renegotiating. Mesh is honest up to about a dozen
   people (`maxParticipants`, default 12).

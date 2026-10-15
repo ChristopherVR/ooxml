@@ -9,7 +9,8 @@ OpenTeams is not Microsoft Teams, is not affiliated with Microsoft and makes no 
 parity. It implements:
 
 - channels, posts with replies, reactions, author-only edit and delete, search and unread counts;
-- presence: who is online, typing, and an availability you set (available, busy, away);
+- presence: who is online, typing, a status you set (available, busy, do not disturb, be right back, away, offline) with an optional reset time, a status message and automatic away when idle;
+- pinned messages shown in a bar at the top of the channel (any member can pin or unpin);
 - meetings in a channel: audio, video, screen share and raise hand, with a pre-join screen;
 - files shared in the conversation as links, with Word, Excel, PowerPoint and Visio files
   recognised by name.

@@ -7,11 +7,11 @@ devices, `RTCPeerConnection` and `WebSocket` are all injectable.
 
 The UI is split the same way as every other product:
 
-| Layer                | Where                                                        | Owns                                                                   |
-| -------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| Logic                | `src/core/teams/` (this area)                                | model, chat CRDT, signaling, calls, server config, client store        |
-| Visual primitives    | `src/ui/src/teams/` (`ooxml-ui/teams`)                       | `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`, ...    |
-| App, bindings, demos | the `teams-viewer` repository (`ChristopherVR/teams-viewer`) | `<teams-app>`, React/Vue/Solid/Svelte/Angular/vanilla bindings, server |
+| Layer                | Where                                                                                          | Owns                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Logic                | `src/core/teams/` (this area)                                                                  | model, chat CRDT, signaling, calls, server config, client store        |
+| Visual primitives    | `src/ui/src/teams/` (`ooxml-ui/teams`)                                                         | `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`, ...    |
+| App, bindings, demos | `viewers/teams` in this repository (the standalone `teams-viewer` repository only points here) | `<teams-app>`, React/Vue/Solid/Svelte/Angular/vanilla bindings, server |
 
 ## The client: one state, plain actions
 
@@ -30,12 +30,13 @@ teams.send({ text: 'hello' });
 ```
 
 `getState()` returns one immutable `TeamsState` snapshot: connection `status`, `channels` (with
-unread counts and a `live` flag), the selected channel with its `messages` and `files`, `people`
-(presence), `typing`, the composer's `replyingTo` / `editing`, `searchResults`, `allFiles` and
+unread counts and a `live` flag), the selected channel with its `messages`, `files` and `pinned`
+messages, `people` (presence), your own `presence` (chosen status, message, expiry, idleness), `typing`, the composer's `replyingTo` / `editing`, `searchResults`, `allFiles` and
 `call` (`null`, or a phase of `prejoin` / `joining` / `connected` with participants and a camera
 preview). Every button is an action: `select`, `createChannel`, `send` (with file uploads),
-`startReply`, `startEdit`, `deleteMessage`, `toggleReaction`, `notifyTyping`, `setAvailability`,
-`search`, `openCall`, `setPrejoin`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
+`startReply`, `startEdit`, `deleteMessage`, `toggleReaction`, `pinMessage`, `unpinMessage`,
+`notifyTyping`, `setAvailability` (with an optional reset-after duration), `setStatusMessage`,
+`setIdleMinutes`, `noteActivity`, `search`, `openCall`, `setPrejoin`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
 `toggleScreenShare`, `toggleHand`, `fileUrl` (async: a short-lived signed link, never the token), `destroy`. Errors a user should see arrive as
 `on('notice', ...)`.
 
@@ -80,7 +81,7 @@ throws):
 
 - **`local`**: no server. Tabs of one browser share chat and calls over `BroadcastChannel`.
 - **`server`**: your server. Any server that honours these three contracts works; the reference
-  implementation is `server/index.mjs` in `teams-viewer` (about 300 lines, Node and `ws`).
+  implementation is `viewers/teams/server/index.mjs` (about 300 lines, Node and `ws`).
 
 ### Server contract
 
@@ -115,8 +116,13 @@ clients credentials. TURN entries without credentials are rejected by `parseServ
 - **Mesh calls scale to a handful of people**, not a webinar.
 - A sync server that never compacts will grow with history; the reference server stores one
   snapshot per room.
-- Presence is advisory and unauthenticated, like any Yjs awareness.
+- Presence is advisory and unauthenticated, like any Yjs awareness. The wire carries the original
+  `availability` (available, busy, away) next to the richer `status` (also Do not disturb, Be right
+  back, Appear offline), so older clients still read presence; a status message rides along.
+- Pins are shared rows in a per-channel Yjs map; any member may pin or unpin, as in Teams. There is
+  no role model, so this is not an enforced permission.
 - No claim of Microsoft Teams feature parity beyond what the UI actually implements (channels,
-  posts with replies, reactions, files, search, presence, meetings with screen share and raise
-  hand). Not implemented: threads as separate panes, 1:1 chats, notifications, calendar, recording,
+  posts with replies and thread panes, reactions, pinned messages, files, search, presence with
+  status messages, meetings with screen share and raise hand). Not implemented: 1:1 chats,
+  notifications, calendar, recording,
   background blur, live captions.

@@ -5,7 +5,7 @@ Collaboration is what OpenTeams is: every channel, message, reaction and presenc
 ## How it works
 
 - **The shared document is a Yjs CRDT.** Channels live in one `Y.Map`, messages in one `Y.Map` per channel and reactions in a flat map keyed by message, emoji and user, so concurrent edits and reactions merge instead of overwriting each other. The logic lives in `ooxml-core/teams`, built on the format-neutral `ooxml-core/collab` area.
-- **Presence is Yjs awareness**: who is online, who is typing and an availability you set (available, busy, away). It is advisory and unauthenticated, like any Yjs awareness.
+- **Presence is Yjs awareness**: who is online, who is typing and a status you set (available, busy, do not disturb, be right back, away, offline) and a status message. It is advisory and unauthenticated, like any Yjs awareness.
 - **Calls are WebRTC.** Signaling travels through your server (or `BroadcastChannel` in local mode); media goes peer to peer in a full mesh, so calls suit a handful of people.
 - **The transport is pluggable.** Two modes exist: `server` (your server speaks the y-websocket sync protocol, relays call signaling and optionally stores files) and `local` (tabs of one browser share everything over `BroadcastChannel`).
 
