@@ -213,3 +213,21 @@
 	stroke-width: 1;
 	stroke-linejoin: round;
 }
+
+/*
+ * Touch: the drawing window owns its gestures (pinch zoom, one-finger pan, drag), so the browser
+ * must not scroll or zoom it. Only this surface is affected; the page around it still scrolls.
+ */
+.viewport,
+.viewport .paper {
+	touch-action: none;
+}
+/* Fingers need larger handles: the scale grows both the drawing and the hit area. */
+@media (pointer: coarse) {
+	.paper [data-resize-handle],
+	.paper [data-line-endpoint] {
+		transform-box: fill-box;
+		transform-origin: center;
+		transform: scale(2);
+	}
+}

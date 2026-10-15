@@ -19,6 +19,9 @@ import { createMovementPreview } from './viewer-movement-preview';
 import { hideGestureOverlays } from './viewer-gesture-overlays';
 import { pointerShapeTarget } from './viewer-shape-target';
 import { trackPointerPan } from '../pointer-gesture';
+import { ViewerTouchGestures } from './viewer-touch-gestures';
+import { TOUCH_SLOP, LONG_PRESS_MS } from './viewer-touch-math';
+import { nearbyShape } from './viewer-touch-hit';
 
 interface Gesture {
 	pointer: number;
@@ -37,6 +40,12 @@ interface Gesture {
 	preview?: ReturnType<typeof createMovementPreview>;
 	marquee?: SVGRectElement;
 	showOverlays?: () => void;
+	touch: boolean;
+	/** The shape was found within the finger's hit tolerance, not under it. */
+	nearby: boolean;
+	longPress?: number | undefined;
+	/** Set once the finger has been held still; lifting it then opens the context menu. */
+	held?: (() => void) | undefined;
 }
 const pointOptions = { snap: false, bounded: false } as const;
 /** Direct pointer movement and full-enclosure marquee; release is the only source edit. */
@@ -45,6 +54,7 @@ export class ViewerPointerGestures {
 	#request = 0;
 	#cancelClick = false;
 	#cancelPan: (() => void) | undefined;
+	readonly #touch: ViewerTouchGestures;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -55,7 +65,17 @@ export class ViewerPointerGestures {
 			snap?(page: VisioPage, ids: readonly string[], delta: VisioPagePoint): VisioPagePoint;
 			clearSnap?(): void;
 		},
-	) {}
+	) {
+		this.#touch = new ViewerTouchGestures(viewport, controller, {
+			active: () => options.active(),
+			cancelSingle: () => {
+				this.#cancelPan?.();
+				this.#cancelPan = undefined;
+				if (this.#drag) this.#cancel();
+				this.#cancelClick = true;
+			},
+		});
+	}
 	render(state: ViewerState): void {
 		this.#cancelPan?.();
 		if (this.#drag && !this.#current(this.#drag, state)) this.#cancel();
@@ -66,6 +86,8 @@ export class ViewerPointerGestures {
 				this.#cancel();
 		};
 		this.viewport.ownerDocument.addEventListener('pointerup', stopOutside);
+		// First, so a second finger reaches the pinch before the one-pointer gestures see it.
+		const disposeTouch = this.#touch.wire();
 		const dispose = wireHandleEvents(this.viewport, {
 			pointer: () => this.#drag?.pointer,
 			start: (event) => this.#start(event),
@@ -84,6 +106,7 @@ export class ViewerPointerGestures {
 			++this.#request;
 			this.viewport.ownerDocument.removeEventListener('pointerup', stopOutside);
 			dispose();
+			disposeTouch();
 		};
 	}
 	#current(drag: Gesture, state = this.controller.state): boolean {
@@ -122,9 +145,15 @@ export class ViewerPointerGestures {
 		)
 			return;
 		// Dragging inside a group moves the whole top-level group, as in Visio.
-		const group = pointerShapeTarget(node, state.selectedShapes, true);
+		let group = pointerShapeTarget(node, state.selectedShapes, true);
+		const touch = event.pointerType === 'touch';
+		let nearby = false;
+		if (!group && touch) {
+			group = nearbyShape(this.viewport, svg, event, state.selectedShapes);
+			nearby = !!group;
+		}
 		// A finger on empty paper pans; shape bodies keep their editing gesture.
-		if (!group && event.pointerType === 'touch') {
+		if (!group && touch) {
 			this.#cancelPan?.();
 			this.#cancelPan = trackPointerPan(
 				this.viewport,
@@ -161,6 +190,8 @@ export class ViewerPointerGestures {
 			clientY: event.clientY,
 			started: false,
 			additive: event.shiftKey || event.ctrlKey || event.metaKey,
+			touch,
+			nearby,
 			...(group
 				? {
 						target: {
@@ -171,7 +202,25 @@ export class ViewerPointerGestures {
 					}
 				: {}),
 		};
-		if (this.#current(drag)) this.#drag = drag;
+		if (!this.#current(drag)) return;
+		this.#drag = drag;
+		if (touch && group) this.#armLongPress(drag, group, event);
+	}
+	/** Holding a finger still on a shape, then lifting it, opens its context menu like a right-click. */
+	#armLongPress(drag: Gesture, shape: Element, event: PointerEvent): void {
+		const view = this.viewport.ownerDocument.defaultView;
+		if (!view) return;
+		const { clientX, clientY } = event;
+		drag.longPress = view.setTimeout(() => {
+			drag.longPress = undefined;
+			if (this.#drag !== drag || drag.started || !this.#current(drag)) return;
+			// Opened on release, as Windows does: a popover opened under a finger that is still down
+			// is light-dismissed by that finger's own pointerup.
+			drag.held = () =>
+				shape.dispatchEvent(
+					new view.MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX, clientY }),
+				);
+		}, LONG_PRESS_MS);
 	}
 	#begin(drag: Gesture): boolean {
 		if (drag.target) {
@@ -243,6 +292,7 @@ export class ViewerPointerGestures {
 			drag.marquee = rect;
 		}
 		drag.started = true;
+		drag.held = undefined;
 		this.viewport.focus({ preventScroll: true });
 		this.viewport.setPointerCapture?.(drag.pointer);
 		return true;
@@ -255,7 +305,8 @@ export class ViewerPointerGestures {
 			return;
 		}
 		if (!drag.started) {
-			if (Math.hypot(event.clientX - drag.clientX, event.clientY - drag.clientY) < 4) return;
+			const slop = drag.touch ? TOUCH_SLOP : 4;
+			if (Math.hypot(event.clientX - drag.clientX, event.clientY - drag.clientY) < slop) return;
 			try {
 				if (!this.#begin(drag)) {
 					this.#cancel();
@@ -298,6 +349,7 @@ export class ViewerPointerGestures {
 	#release(): () => void {
 		const drag = this.#drag;
 		this.#drag = undefined;
+		if (drag?.longPress) this.viewport.ownerDocument.defaultView?.clearTimeout(drag.longPress);
 		if (drag?.started) this.#cancelClick = true;
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
@@ -311,6 +363,21 @@ export class ViewerPointerGestures {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
+		if (drag.held && !drag.started && this.#current(drag)) {
+			const open = drag.held;
+			this.#cancel();
+			this.#cancelClick = true;
+			this.viewport.ownerDocument.defaultView?.setTimeout(open, 100);
+			return;
+		}
+		if (drag.touch && drag.nearby && !drag.started && drag.target && this.#current(drag)) {
+			// A tap beside a thin shape selects it; the browser click landed on empty paper.
+			const target = drag.target;
+			this.#cancel();
+			this.controller.selectShapes([target]);
+			this.#cancelClick = true;
+			return;
+		}
 		if (!this.#current(drag) || !drag.started) {
 			this.#cancel();
 			return;
