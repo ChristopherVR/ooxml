@@ -28,6 +28,8 @@ export * from './presence';
 export * from './presence-controller';
 export * from './server-config';
 export * from './server-file-storage';
+export * from './shared-chat';
+export * from './sync-transport';
 export * from './signaling';
 export * from './store';
 export * from './tabs';

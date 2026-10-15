@@ -3,14 +3,12 @@
 // signaling chosen the same way. This is what a viewer binding instantiates; everything above it is
 // UI. DOM-free; browser classes are injectable. New code.
 import type * as Y from 'yjs';
-import { createBroadcastTransport } from '../collab/broadcast-transport';
 import type { BroadcastChannelConstructor } from '../collab/broadcast-transport';
 import { createClientId } from '../collab/identity';
 import type { Transport } from '../collab/provider';
 import { type CollabSession, createCollabSession } from '../collab/session';
 import { transportProvider } from '../collab/transport-provider';
 import { isValidId } from '../collab/validation';
-import { createWebSocketTransport } from '../collab/websocket-transport';
 import type { WebSocketConstructor } from '../collab/websocket-transport';
 import { type CallSession, type MediaDevicesLike, createCallSession } from './call';
 import { type ChatStore, createChatStore } from './chat';
@@ -28,6 +26,7 @@ import {
 } from './presence';
 import type { PeerConnectionFactory, StreamFactory } from './peer';
 import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config';
+import { createSyncTransport } from './sync-transport';
 import {
 	type SignalingChannel,
 	createBroadcastSignaling,
@@ -117,12 +116,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 	const bcCtor = options.BroadcastChannel;
 
 	const syncTransport = (roomId: string): Transport =>
-		config.mode === 'server' && config.syncUrl
-			? createWebSocketTransport({
-					url: endpointUrl(config.syncUrl, roomId, config.token),
-					...(wsCtor ? { WebSocket: wsCtor } : {}),
-				})
-			: createBroadcastTransport({ roomId, ...(bcCtor ? { BroadcastChannel: bcCtor } : {}) });
+		createSyncTransport(config, roomId, { WebSocket: wsCtor, BroadcastChannel: bcCtor });
 
 	const signaling = (roomId: string): SignalingChannel =>
 		config.mode === 'server' && config.signalingUrl
@@ -168,13 +162,12 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		openRoom: (info, doc) => {
 			const roomId = chatRoomId(options.workspaceId, info.id);
 			const members = info.members.map((m) => m.id).join(',');
-			const transport: Transport =
-				config.mode === 'server' && config.syncUrl
-					? createWebSocketTransport({
-							url: endpointUrl(config.syncUrl, roomId, config.token, { user: user.id, members }),
-							...(wsCtor ? { WebSocket: wsCtor } : {}),
-						})
-					: createBroadcastTransport({ roomId, ...(bcCtor ? { BroadcastChannel: bcCtor } : {}) });
+			const transport = createSyncTransport(
+				config,
+				roomId,
+				{ WebSocket: wsCtor, BroadcastChannel: bcCtor },
+				{ user: user.id, members },
+			);
 			const chatSession = createCollabSession({
 				roomId,
 				doc,
