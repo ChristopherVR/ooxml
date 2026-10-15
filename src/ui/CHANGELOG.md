@@ -7,6 +7,42 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.13.0) - 2026-10-15
+
+### Features
+
+- **ui:** Fit word pages to narrow screens and trim status bars ([920e449](https://github.com/ChristopherVR/ooxml/commit/920e449c6a9c008ef9ec779bfbfd8d49056c3cbd))
+- **ui:** Add touch pinch zoom and long-press to the visio editor ([9e6acfd](https://github.com/ChristopherVR/ooxml/commit/9e6acfda8c72415bb4fb6b168243ddefb06a64ff))
+- **ui:** Add touch and narrow modes to the shared ribbon ([fa77402](https://github.com/ChristopherVR/ooxml/commit/fa77402f743242ef8c389f0ae0eccc6cd345b1e1))
+- **ui:** Add teams mobile navigation with bottom bar and list view ([b68c472](https://github.com/ChristopherVR/ooxml/commit/b68c472459da73dc2d40b3325122f84d619c3194))
+- **teams:** Pin and unpin channel messages with a pinned bar ([00a4c60](https://github.com/ChristopherVR/ooxml/commit/00a4c603e4b95be5242ec30257a64e4355bc76c4))
+- **teams:** Add do not disturb, status messages and idle away ([e0adea1](https://github.com/ChristopherVR/ooxml/commit/e0adea1e772fd89eaec14c87b4874823d62b0912))
+- **ui:** Add pptx table layout tab and review comment navigation ([325ab16](https://github.com/ChristopherVR/ooxml/commit/325ab1613592c633a6d1291ecee7d05478e40485))
+- **ui:** Lay out the shared options dialog like powerpoint's ([a999f52](https://github.com/ChristopherVR/ooxml/commit/a999f526af7aac2c4758e421e939ed0738b694f0))
+- **ui:** Show word's options in the shared options dialog ([9edec67](https://github.com/ChristopherVR/ooxml/commit/9edec67bb2f6698bccad8ed5fc79115bb9c0c583))
+- **ui:** Show excel's options in the shared options dialog ([c5db5ed](https://github.com/ChristopherVR/ooxml/commit/c5db5ed7cf41314bd2e2e5dfef5c9a8d12e1c2fe))
+
+### Bug Fixes
+
+- **ui:** Replace the stale visio position menu reason ([9a0eec3](https://github.com/ChristopherVR/ooxml/commit/9a0eec37c46167ba2fedd090a7f90d989ecedcf6))
+- **ui:** Keep the word page counter readable on narrow status bars ([0c4ba89](https://github.com/ChristopherVR/ooxml/commit/0c4ba8985fe4e5f07480baa37e87e58358cce9e2))
+- **ui:** Translate the ribbon scroll chevron label ([b894992](https://github.com/ChristopherVR/ooxml/commit/b894992014f0aa21f6922f8a55da6db2b12b122e))
+- **ui:** Regenerate the element manifest and tokenise the rail insets ([e39033e](https://github.com/ChristopherVR/ooxml/commit/e39033e5501188393e5dcafcc332338c19491a50))
+- **ui:** Place the print caret at the nearest line on any page click ([dc6d0e1](https://github.com/ChristopherVR/ooxml/commit/dc6d0e128b305de8e5b426f6aa40811d6f75b28c))
+- **ui:** Put the caret at the nearest text when the bare canvas is pressed ([5f39bad](https://github.com/ChristopherVR/ooxml/commit/5f39bad513bf0ed65581ccb488e10d66241fb674))
+- **ui:** Zoom Print Layout once and stop the post-drag scroll jump ([0dba74e](https://github.com/ChristopherVR/ooxml/commit/0dba74e2e359be7f2859ab999585c260aa8b942b))
+- **ui:** Match the options dialog footer, size and focus to powerpoint's ([fda0178](https://github.com/ChristopherVR/ooxml/commit/fda01784fd02d6df9fb7ff9b46eba5ed98763d4f))
+- **ui:** Lay out print view at once when a document is swapped ([b8df7e4](https://github.com/ChristopherVR/ooxml/commit/b8df7e4d846529bc81b9f58055111dc519ae0b09))
+
+### Refactor
+
+- **ui:** Split visio pointer gestures and test touch hit tolerance ([260da9f](https://github.com/ChristopherVR/ooxml/commit/260da9fca8d387f7a108b244086621e4b9b56701))
+- **ui:** Build visio's options categories from the shared ones ([559300d](https://github.com/ChristopherVR/ooxml/commit/559300dfcd5bb0259c0a185be3cf9174a634db58))
+
+### Testing
+
+- **ui:** Format the options dialog test ([1e49d9e](https://github.com/ChristopherVR/ooxml/commit/1e49d9ec330de11fb73e29527bbb63fd885d7873))
+
 ## [1.12.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.12.3) - 2026-10-14
 
 ### Bug Fixes

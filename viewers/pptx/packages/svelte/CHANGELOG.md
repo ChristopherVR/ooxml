@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.37.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.37.0) - 2026-10-15
+
+### Features
+
+- **ui:** Add pptx table layout tab and review comment navigation ([325ab16](https://github.com/ChristopherVR/ooxml/commit/325ab1613592c633a6d1291ecee7d05478e40485))
+
 ## [4.36.3](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.36.3) - 2026-10-14
 
 ### Bug Fixes

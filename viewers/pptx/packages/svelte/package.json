@@ -1,6 +1,6 @@
 {
 	"name": "pptx-svelte-viewer",
-	"version": "4.36.3",
+	"version": "4.37.0",
 	"description": "pptx-viewer for Svelte 5: a PowerPoint viewer and editor component to render, edit, present, and export PPTX slides in the browser.",
 	"keywords": [
 		"office",
@@ -116,8 +116,8 @@
 		"html2canvas-pro": "^2.5.2",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"ooxml-core": "^1.12.2",
-		"ooxml-ui": "^1.12.3",
+		"ooxml-core": "^1.13.0",
+		"ooxml-ui": "^1.13.0",
 		"opentype.js": "^2.0.0"
 	},
 	"devDependencies": {

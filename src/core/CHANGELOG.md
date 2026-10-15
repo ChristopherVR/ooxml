@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.13.0) - 2026-10-15
+
+### Features
+
+- **teams:** Pin and unpin channel messages with a pinned bar ([00a4c60](https://github.com/ChristopherVR/ooxml/commit/00a4c603e4b95be5242ec30257a64e4355bc76c4))
+- **teams:** Add do not disturb, status messages and idle away ([e0adea1](https://github.com/ChristopherVR/ooxml/commit/e0adea1e772fd89eaec14c87b4874823d62b0912))
+- **xlsx:** Add bessel, odd-period, pivot and dynamic functions ([19cb829](https://github.com/ChristopherVR/ooxml/commit/19cb8290a24cf1283180dc125ce07d827876d5e3))
+- **ui:** Lay out the shared options dialog like powerpoint's ([a999f52](https://github.com/ChristopherVR/ooxml/commit/a999f526af7aac2c4758e421e939ed0738b694f0))
+- **ui:** Show excel's options in the shared options dialog ([c5db5ed](https://github.com/ChristopherVR/ooxml/commit/c5db5ed7cf41314bd2e2e5dfef5c9a8d12e1c2fe))
+
+### Bug Fixes
+
+- **ui:** Translate the ribbon scroll chevron label ([b894992](https://github.com/ChristopherVR/ooxml/commit/b894992014f0aa21f6922f8a55da6db2b12b122e))
+
 ## [1.12.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.12.2) - 2026-10-14
 
 ### Bug Fixes
