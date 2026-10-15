@@ -23,10 +23,8 @@ function find(args: Value[], insensitive: boolean): number {
 		const at = haystack.indexOf(needle, from);
 		return at < 0 ? fail(ERR.VALUE) : at + 1;
 	}
-	const regex = wildcardRegex(needle);
-	const pattern = new RegExp(regex.source.slice(1, -1), 'i');
-	const match = pattern.exec(haystack.slice(from));
-	return match ? from + match.index + 1 : fail(ERR.VALUE);
+	const at = wildcardRegex(needle).search(haystack, from);
+	return at < 0 ? fail(ERR.VALUE) : at + 1;
 }
 
 /** Every value of the arguments as text, blanks included (ranges are read densely). */

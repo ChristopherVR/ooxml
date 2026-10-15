@@ -40,6 +40,24 @@ export const MAX_ARRAY_SIDE = 1_048_576;
  */
 export const MAX_ARRAY_CELLS = 16_777_216;
 
+/**
+ * The most array cells one recalculation may build in total, so many formulas that each stay under
+ * `MAX_ARRAY_CELLS` still cannot exhaust memory or time (`#NUM!` past it).
+ */
+export const MAX_TOTAL_ARRAY_CELLS = 50_000_000;
+let arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
+
+/** Starts a fresh total array-cell budget; the engine calls it at the start of a recalculation. */
+export function resetArrayBudget(): void {
+	arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
+}
+
+/** Spends `cells` of the recalculation budget; `#NUM!` when it is exhausted. */
+export function chargeArrayCells(cells: number): void {
+	arrayCellsLeft -= cells;
+	if (arrayCellsLeft < 0) fail(ERR.NUM);
+}
+
 /** `#VALUE!` past the longest side, `#NUM!` past the cell budget. */
 export function checkArraySize(rows: number, cols: number): void {
 	if (rows > MAX_ARRAY_SIDE || cols > MAX_ARRAY_SIDE) fail(ERR.VALUE);
@@ -137,6 +155,7 @@ export class Matrix {
 
 	static build(rows: number, cols: number, fill: (row: number, col: number) => Scalar): Matrix {
 		checkArraySize(rows, cols);
+		chargeArrayCells(rows * cols);
 		const data: Scalar[][] = [];
 		for (let r = 0; r < rows; r++) {
 			const line: Scalar[] = [];

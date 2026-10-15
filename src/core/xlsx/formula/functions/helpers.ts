@@ -1,3 +1,4 @@
+import { compileWildcard } from './wildcard';
 import { check, compareScalars, finite, toBool, toNumber, toText } from '../coerce';
 import type { CallContext } from '../context';
 import { parseNumberText } from '../text-number';
@@ -92,22 +93,9 @@ export function flatValues(ctx: CallContext, value: Value): Scalar[] {
 	return ctx.toMatrix(value).flat();
 }
 
-/** Builds a case-insensitive regular expression for `*`, `?` and `~` wildcards. */
-export function wildcardRegex(pattern: string): RegExp {
-	let source = '';
-	for (let i = 0; i < pattern.length; i++) {
-		const ch = pattern[i] ?? '';
-		if (ch === '~' && i + 1 < pattern.length) {
-			source += escapeRegex(pattern[i + 1] ?? '');
-			i++;
-		} else if (ch === '*') source += '[\\s\\S]*';
-		else if (ch === '?') source += '[\\s\\S]';
-		else source += escapeRegex(ch);
-	}
-	return new RegExp(`^${source}$`, 'i');
-}
+/** Builds a case-insensitive matcher for `*`, `?` and `~` wildcards (no regex backtracking). */
+export const wildcardRegex = compileWildcard;
 
-const escapeRegex = (text: string): string => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 export const hasWildcards = (text: string): boolean => /[*?~]/.test(text);
 
 /** A predicate for COUNTIF-style criteria (`">5"`, `"<>x"`, `"a*"`, 7, TRUE, `""`). */

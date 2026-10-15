@@ -10,11 +10,63 @@ const C = 'Text';
  */
 function compile(pattern: string, caseMode: number, global: boolean): RegExp {
 	if (caseMode !== 0 && caseMode !== 1) fail(ERR.VALUE);
+	if (pattern.length > MAX_PATTERN_LENGTH || hasNestedQuantifier(pattern)) fail(ERR.VALUE);
 	try {
 		return new RegExp(pattern, `${global ? 'g' : ''}${caseMode === 1 ? 'i' : ''}u`);
 	} catch {
 		return fail(ERR.VALUE);
 	}
+}
+
+const MAX_PATTERN_LENGTH = 1000;
+const MAX_INPUT_LENGTH = 100_000;
+
+/** The input is bounded too, so even a quadratic pattern stays fast. */
+function limited(text: string): string {
+	return text.length > MAX_INPUT_LENGTH ? fail(ERR.VALUE) : text;
+}
+
+const REPEAT = /^\{\d+,\d*\}/;
+
+/**
+ * Limitation: patterns run on the JavaScript backtracking matcher, so patterns that can backtrack
+ * exponentially are refused with `#VALUE!` instead of hanging a recalculation. A pattern is
+ * refused when it is longer than 1,000 characters, or when a group is repeated (`*`, `+`,
+ * `{n,}`, `{n,m}`) and holds another quantifier or an alternation, such as `(a+)+`, `(a*)*` or
+ * `(a|aa)+`. Excel (PCRE2) accepts these; rewrite them without the nesting.
+ */
+export function hasNestedQuantifier(pattern: string): boolean {
+	// One entry per open group: whether it holds a quantifier, and whether it holds a `|`.
+	const stack: { quantified: boolean; alternation: boolean }[] = [];
+	let inClass = false;
+	for (let i = 0; i < pattern.length; i++) {
+		const ch = pattern[i];
+		if (ch === '\\') {
+			i++;
+			continue;
+		}
+		if (inClass) {
+			if (ch === ']') inClass = false;
+			continue;
+		}
+		const top = stack[stack.length - 1];
+		if (ch === '[') inClass = true;
+		else if (ch === '(') stack.push({ quantified: false, alternation: false });
+		else if (ch === '|') {
+			if (top) top.alternation = true;
+		} else if (ch === ')') {
+			const group = stack.pop();
+			const next = pattern[i + 1];
+			const repeats =
+				next === '*' || next === '+' || (next === '{' && REPEAT.test(pattern.slice(i + 1)));
+			if (repeats && group && (group.quantified || group.alternation)) return true;
+			const parent = stack[stack.length - 1];
+			if (parent && (repeats || next === '?' || group?.quantified)) parent.quantified = true;
+		} else if (top && (ch === '*' || ch === '+' || (ch === '{' && REPEAT.test(pattern.slice(i))))) {
+			top.quantified = true;
+		}
+	}
+	return false;
 }
 
 const caseMode = (args: Value[], index: number): number => optNum(args, index, 0);
@@ -38,7 +90,7 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 		'Whether any part of the text matches the pattern.',
 		2,
 		3,
-		(args) => compile(str(args[1]), caseMode(args, 2), false).test(str(args[0])),
+		(args) => compile(str(args[1]), caseMode(args, 2), false).test(limited(str(args[0]))),
 	),
 	spec(
 		'REGEXEXTRACT',
@@ -51,7 +103,7 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 			const mode = optNum(args, 2, 0);
 			if (mode !== 0 && mode !== 1 && mode !== 2) fail(ERR.VALUE);
 			const regex = compile(str(args[1]), caseMode(args, 3), mode === 1);
-			const text = str(args[0]);
+			const text = limited(str(args[0]));
 			if (mode === 1) {
 				const matches: string[] = [];
 				// matchAll advances after zero-length matches, including Unicode code points.
@@ -76,7 +128,7 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 		3,
 		5,
 		(args) => {
-			const text = str(args[0]);
+			const text = limited(str(args[0]));
 			const regex = compile(str(args[1]), caseMode(args, 4), true);
 			const replacement = str(args[2]);
 			const occurrence = args.length > 3 && args[3] !== null ? int(args[3]) : 0;

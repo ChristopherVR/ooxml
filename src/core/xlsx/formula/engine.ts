@@ -13,7 +13,7 @@ import { evaluateNode } from './evaluator';
 import type { FormulaNode } from './graph';
 import { implicitIntersection, toMatrix } from './references';
 import { isSpilledCell } from './spill';
-import { type Area, ERR, ErrorSignal, LambdaValue, type Value } from './values';
+import { type Area, ERR, ErrorSignal, LambdaValue, resetArrayBudget, type Value } from './values';
 
 export {
 	type CalcEngine,
@@ -76,6 +76,7 @@ class Engine extends EngineStructure implements CalcEngine {
 	// ---- recalculation ----
 
 	recalculateAll(): void {
+		resetArrayBudget();
 		this.fresh = false;
 		this.prepared = undefined;
 		if (this.needsFull) this.releaseAllSpills();
@@ -87,6 +88,7 @@ class Engine extends EngineStructure implements CalcEngine {
 	}
 
 	recalculateFrom(changes: CellPosition[]): void {
+		resetArrayBudget();
 		const seeds = new Set<FormulaNode>();
 		if (this.fresh && !this.needsFull) {
 			// The first recalculation after opening: like Excel, trust the values the file stored and
@@ -202,6 +204,7 @@ class Engine extends EngineStructure implements CalcEngine {
 	// ---- ad hoc evaluation ----
 
 	protected evaluateAdHoc(formula: string, at: CellPosition): Value {
+		resetArrayBudget();
 		const ast = this.parse(formula);
 		if (ast instanceof FormulaError) return ERR.NAME;
 		const frame = this.frameFor(at.sheet, at.row, at.col, ast);

@@ -31,6 +31,18 @@ export interface EvalHost {
 	random(): number;
 }
 
+/** Work shared by every frame of one formula evaluation (names are evaluated once per caller). */
+export interface EvalState {
+	/** Finished defined-name results, keyed by name, sheet and the calling cell. */
+	readonly names: Map<string, Value>;
+	/** Names being evaluated right now (a name that reaches itself is an error). */
+	readonly active: Set<string>;
+	/** Defined-name evaluations left before the formula gives up. */
+	work: number;
+	/** How many volatile name evaluations have finished (a changed count marks a volatile caller). */
+	volatileHits: number;
+}
+
 /** One evaluation: where the formula lives and which LET / LAMBDA variables are in scope. */
 export interface Frame {
 	readonly host: EvalHost;
@@ -48,6 +60,8 @@ export interface Frame {
 	 * intersection. Arguments of `any` (array) parameters are evaluated without it, as in Excel.
 	 */
 	readonly legacy?: boolean;
+	/** Defined-name memo and work budget, created on the first name reference. */
+	readonly state?: EvalState | undefined;
 }
 
 /** A lazily evaluated argument (IF, IFERROR, CHOOSE, LET, LAMBDA, ...). */

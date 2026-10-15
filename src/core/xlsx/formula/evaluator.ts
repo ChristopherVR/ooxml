@@ -2,7 +2,7 @@
 import type { DefinedName } from '../model';
 import { FormulaError, type FormulaAst, normalizeLocalName } from './ast';
 import { callFunction } from './call';
-import type { EvalHost, Frame } from './context';
+import type { EvalHost, EvalState, Frame } from './context';
 import { broadcast1, broadcast2, scalarBinary, scalarUnary } from './operators';
 import {
 	implicitIntersection,
@@ -29,6 +29,10 @@ import {
 } from './values';
 
 const MAX_NAME_DEPTH = 32;
+/** Uncached defined-name evaluations one formula may start before it gives up with `#NAME?`. */
+const MAX_NAME_WORK = 100_000;
+/** Names that read the clock or a random source are not memoized (they differ per reference). */
+const VOLATILE_NAME = /\b(RAND|RANDBETWEEN|RANDARRAY|NOW|TODAY|OFFSET|INDIRECT)\s*\(/i;
 
 /** Evaluates `node`; references stay references (the caller decides how to read them). */
 export function evaluateNode(node: FormulaAst, frame: Frame): Value {
@@ -155,9 +159,35 @@ export function evaluateDefinedName(
 	const defined = findDefinedName(frame.host, name, sheet, explicitSheet);
 	if (!defined) return undefined;
 	if (frame.depth >= MAX_NAME_DEPTH) return ERR.NAME;
+	const state: EvalState = frame.state ?? {
+		names: new Map(),
+		active: new Set(),
+		work: MAX_NAME_WORK,
+		volatileHits: 0,
+	};
+	const key = `${defined.localSheet ?? ''}|${defined.name.toUpperCase()}|${frame.sheet}|${frame.row}|${frame.col}`;
+	const cached = state.names.get(key);
+	if (cached !== undefined) return cached;
+	if (state.active.has(key) || --state.work < 0) return ERR.NAME;
 	const ast = frame.host.parse(defined.formula);
 	if (ast instanceof FormulaError) return ERR.NAME;
-	return evaluateNode(ast, { ...frame, depth: frame.depth + 1, scope: undefined, root: undefined });
+	state.active.add(key);
+	const hits = state.volatileHits;
+	try {
+		const value = evaluateNode(ast, {
+			...frame,
+			depth: frame.depth + 1,
+			scope: undefined,
+			root: undefined,
+			state,
+		});
+		// A name that is volatile, or reads a volatile name, differs per reference: never memoized.
+		if (VOLATILE_NAME.test(defined.formula) || state.volatileHits !== hits) state.volatileHits++;
+		else state.names.set(key, value);
+		return value;
+	} finally {
+		state.active.delete(key);
+	}
 }
 
 function resolveName(node: Extract<FormulaAst, { type: 'name' }>, frame: Frame): Value {
