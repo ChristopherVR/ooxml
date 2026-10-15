@@ -247,11 +247,6 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	]);
 	if (dateFields.some((field) => onAxis.has(field)))
 		throw new Error('Date fields used as rows, columns or values are preserved');
-	if (
-		[...realRows, ...columnDefs].some((field) => pivotFieldIndex(field) >= databaseCount) &&
-		(pageFilter || dateFilter || itemFilters || slicerCacheId !== undefined)
-	)
-		throw new Error('Date groups with filters are preserved');
 	// The first row field's None is the `subtotals` flag; every other setting is an entry.
 	const fieldSubtotals = [
 		...subtotalSettings.filter((entry) => entry.field !== row || entry.functions.length),

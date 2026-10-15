@@ -8,6 +8,7 @@ import {
 } from '../model';
 import { pivotItems, pivotItemLabel, pivotValueKey } from './data';
 import type { PivotGrid } from './aggregate';
+import { resolveDateGroups } from './date-groups';
 import { applyPivotGroups } from './groups';
 import { applyPivotItemFilters } from './item-filters';
 
@@ -60,7 +61,11 @@ export function validatePivotPageFilter(
 }
 /** The cache remains complete; only the existing aggregation projection sees selected records. */
 export function pivotPageProjection(pivot: PivotTable): PivotTable {
-	return applyPivotGroups(applyPivotItemFilters(pagedProjection(pivot)));
+	// The cache fixes the date ranges from every record, so they are resolved before any filter.
+	const groups = pivot.dateGroups?.length
+		? { ...pivot, dateGroups: resolveDateGroups(pivot) }
+		: pivot;
+	return applyPivotGroups(applyPivotItemFilters(pagedProjection(groups)));
 }
 function pagedProjection(pivot: PivotTable): PivotTable {
 	const filter = pivot.pageFilter;

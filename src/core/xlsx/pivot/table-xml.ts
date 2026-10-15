@@ -138,12 +138,7 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 		body += `<colFields count="${fieldsOnColumns.length}">${fieldsOnColumns.map((index) => `<field x="${index}"/>`).join('')}</colFields>${pivotColumnItemsXml(grid.columnEntries, rowsAxis ? 1 : measures.length, (level, index) => columnIndicesFull[level]![index]!)}`;
 	} else if (multiple && !rowsAxis)
 		body += `<colFields count="1"><field x="-2"/></colFields>${pivotValueAxisItems(measures.length)}`;
-	else
-		body += rowsAxis
-			? '<colItems count="1"><i/></colItems>'
-			: page >= 0
-				? '<colItems count="1"><i/></colItems>'
-				: '<colItems count="1"><i><x/></i></colItems>';
+	else body += '<colItems count="1"><i/></colItems>';
 	if (page >= 0)
 		body += `<pageFields count="1"><pageField${attrs({ fld: page, hier: -1, item: pivot.pageFilter!.item !== undefined ? pageItems.findIndex((item) => pivotValueKey(item) === pivotValueKey(pivot.pageFilter!.item!)) : undefined })}/></pageFields>`;
 	body += `<dataFields count="${measures.length}">${measures.map((measure) => `<dataField${attrs({ name: encodeEscapes(measure.caption), fld: pivot.fields.indexOf(measure.field), subtotal: measure.aggregate, baseField: 0, baseItem: 0 })}/>`).join('')}</dataFields>`;
@@ -228,8 +223,10 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 /** The timeline's `filters` element: one inclusive date range on a date field. */
 function dateFilterXml(pivot: PivotTable, filter: NonNullable<PivotTable['dateFilter']>): string {
 	const x15 = 'http://schemas.microsoft.com/office/spreadsheetml/2010/11/main';
+	// Excel numbers filters across the workbook's pivot work; a loaded table keeps its number.
+	const id = Number(/<filter [^>]*\bid="(\d+)"/.exec(pivot.sourceXml ?? '')?.[1] ?? 1);
 	return (
-		`<filters count="1"><filter${attrs({ fld: pivot.fields.indexOf(filter.field), type: 'dateBetween', evalOrder: -1, id: 1, name: filter.field })}>` +
+		`<filters count="1"><filter${attrs({ fld: pivot.fields.indexOf(filter.field), type: 'dateBetween', evalOrder: -1, id, name: filter.field })}>` +
 		`<autoFilter ref="A1"><filterColumn colId="0"><customFilters and="1">` +
 		`<customFilter operator="greaterThanOrEqual" val="${Math.floor(filter.start)}"/>` +
 		`<customFilter operator="lessThanOrEqual" val="${Math.floor(filter.end)}"/>` +

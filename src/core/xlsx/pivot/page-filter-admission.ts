@@ -2,6 +2,8 @@ import { children, elements, first, NS, type XmlElement } from '../../xml/index'
 import type { CellValue, PivotTable } from '../model';
 import { pivotItems, pivotRowFields, pivotValueKey } from './data';
 import { pivotPageProjection } from './page-filter';
+import { expandDateGroups } from './date-groups';
+import { groupLabelsOf } from './groups';
 import { pivotGrid, type PivotRowEntry } from './aggregate';
 import { PIVOT_SUBTOTALS } from './subtotals';
 import { remapPivotRowEntries } from './values-axis';
@@ -35,6 +37,12 @@ export function assertPageAxisItems(
 	literals(cache);
 	literals(recordRoot);
 	const cacheFields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
+	// Date groups add derived fields after the database ones; their items are the group labels.
+	const all = expandDateGroups(pivot).fields;
+	const derived = all
+		.slice(pivot.fields.length)
+		.map((name): CellValue[] => groupLabelsOf(pivot, name) ?? []);
+	const sharedAll = [...shared, ...derived];
 	if (pivot.columnField) {
 		const column = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x)[
 			pivot.fields.indexOf(pivot.columnField)
@@ -58,8 +66,7 @@ export function assertPageAxisItems(
 			throw new Error('Repeated report column labels are preserved');
 	}
 	if (
-		integer(first(cache, 'cacheFields', NS.x)?.getAttribute('count') ?? null) !==
-			pivot.fields.length ||
+		integer(first(cache, 'cacheFields', NS.x)?.getAttribute('count') ?? null) !== all.length ||
 		integer(cache.getAttribute('recordCount')) !== pivot.records.length ||
 		integer(recordRoot.getAttribute('count')) !== pivot.records.length
 	)
@@ -67,10 +74,11 @@ export function assertPageAxisItems(
 	for (const name of [...pivotRowFields(pivot), pivot.columnField, pivot.pageFilter.field].filter(
 		Boolean,
 	)) {
-		const field = pivot.fields.indexOf(name!);
+		const field = all.indexOf(name!);
 		if (
+			field < pivot.fields.length &&
 			integer(first(cacheFields[field], 'sharedItems', NS.x)?.getAttribute('count') ?? null) !==
-			shared[field]!.length
+				shared[field]!.length
 		)
 			throw new Error('Inconsistent report shared-item counts');
 	}
@@ -82,11 +90,11 @@ export function assertPageAxisItems(
 	const projected = pivotPageProjection(pivot),
 		fields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const axisValues = (name: string, axis: string) => {
-		const f = pivot.fields.indexOf(name),
+		const f = all.indexOf(name),
 			node = fields[f]!,
 			list = first(node, 'items', NS.x),
 			items = children(list!, 'item', NS.x),
-			count = shared[f]!.length;
+			count = sharedAll[f]!.length;
 		if (node.getAttribute('axis') !== axis) throw new Error('Inconsistent report axis field');
 		const defaults = node.getAttribute('defaultSubtotal') !== '0';
 		if (
@@ -99,7 +107,7 @@ export function assertPageAxisItems(
 			const i = integer(item.getAttribute('x'));
 			if (item.hasAttribute('t') || !Number.isInteger(i) || i >= count)
 				throw new Error('Invalid page-axis cache item');
-			return shared[f]![i]!;
+			return sharedAll[f]![i]!;
 		});
 		if (
 			new Set(data.map(pivotValueKey)).size !== count ||

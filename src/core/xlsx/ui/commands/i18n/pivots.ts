@@ -329,12 +329,6 @@ export const PIVOT_STRINGS: Translations = {
 		'Solo se pueden agrupar por fecha los campos que contienen fechas.',
 		'只有包含日期的字段才能按日期组合。',
 	],
-	'Date groups cannot be combined with report filters or timelines.': [
-		'Les regroupements de dates ne peuvent pas être combinés avec des filtres de rapport ou des chronologies.',
-		'Datumsgruppen können nicht mit Berichtsfiltern oder Zeitachsen kombiniert werden.',
-		'Las agrupaciones de fechas no se pueden combinar con filtros de informe ni escalas de tiempo.',
-		'日期组合不能与报表筛选器或日程表一起使用。',
-	],
 	'The date group must end after it starts.': [
 		'Le regroupement de dates doit se terminer après son début.',
 		'Die Datumsgruppe muss nach ihrem Beginn enden.',

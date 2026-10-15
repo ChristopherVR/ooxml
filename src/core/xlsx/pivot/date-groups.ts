@@ -233,8 +233,6 @@ export function validateDateGroups(
 		seen.add(group.field);
 		if (!(pivot.dateFields ?? []).includes(group.field))
 			throw new Error('Only fields that contain dates can be grouped by date.');
-		if (pivot.pageFilter || pivot.dateFilter)
-			throw new Error('Date groups cannot be combined with report filters or timelines.');
 		const serials = pivot.records.map((record) => record[index]);
 		if (!serials.length || serials.some((v) => typeof v !== 'number' || !Number.isFinite(v)))
 			throw new Error('Only fields that contain dates can be grouped by date.');
