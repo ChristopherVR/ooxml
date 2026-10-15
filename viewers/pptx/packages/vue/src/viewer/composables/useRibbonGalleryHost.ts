@@ -51,6 +51,13 @@ export function dispatchRibbonGalleryResult(
 		case 'element':
 			sinks.updateElement(result.elementId, result.patch);
 			return;
+		case 'theme':
+			sinks.applyTheme({
+				colorScheme: result.colorScheme,
+				fontScheme: result.fontScheme,
+				name: result.name,
+			});
+			return;
 		case 'themeColorScheme':
 			sinks.applyTheme({ colorScheme: result.colorScheme });
 			return;

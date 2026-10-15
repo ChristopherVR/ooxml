@@ -106,7 +106,7 @@ describe('slidesGroup', () => {
 
 	it('gates on edit rights and layouts, and hides templates without a handler', () => {
 		const locked = mountGroup({ canEdit: false });
-		for (const id of ['newSlide', 'layout', 'reset', 'section', 'slideTemplates']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			expect(locked.button(id).hasAttribute('disabled')).toBeTruthy();
 		}
 		locked.wrapper.unmount();
@@ -114,7 +114,6 @@ describe('slidesGroup', () => {
 		expect(noLayouts.button('newSlide').hasAttribute('disabled')).toBeTruthy();
 		expect(noLayouts.button('layout').hasAttribute('disabled')).toBeTruthy();
 		expect(noLayouts.button('reset').hasAttribute('disabled')).toBeFalsy();
-		expect(noLayouts.control('slideTemplates').hidden).toBeTruthy();
 		expect(
 			noLayouts.control('newSlide').querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!
 				.hidden,

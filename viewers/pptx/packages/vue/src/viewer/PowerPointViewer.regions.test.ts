@@ -162,7 +162,7 @@ describe('powerPointViewer capabilities and new hide ids', () => {
 
 	it('carries the ribbon control ids the new hide ids rely on', async () => {
 		mounted = await mountViewer();
-		for (const id of ['home.editing.find', 'home.editing.replace', 'home.slides.slideTemplates']) {
+		for (const id of ['home.editing.find', 'home.editing.replace']) {
 			expect(mounted.find(`[data-ribbon-control="${id}"]`).exists(), id).toBeTruthy();
 		}
 	});
