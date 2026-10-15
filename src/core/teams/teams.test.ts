@@ -122,6 +122,37 @@ describe('server config', () => {
 		expect(parseServerConfig({ mode: 'server' }).config.mode).toBe('local');
 		expect(endpointUrl('wss://h/sync/', 'room 1', 't/k')).toBe('wss://h/sync/room%201?token=t%2Fk');
 	});
+	it('requires wss:// on an https page, except for loopback hosts', () => {
+		const input = {
+			mode: 'server',
+			syncUrl: 'ws://h.example/sync',
+			signalingUrl: 'wss://h.example/signal',
+		};
+		const https = parseServerConfig(input, { pageProtocol: 'https:' });
+		expect(https.config.syncUrl).toBeUndefined();
+		expect(https.config.signalingUrl).toBe('wss://h.example/signal');
+		expect(https.issues).toEqual(['syncUrl must be a wss:// URL on an https:// page']);
+		expect(parseServerConfig(input, { pageProtocol: 'http:' }).config.syncUrl).toBe(
+			'ws://h.example/sync',
+		);
+		const local = parseServerConfig(
+			{ mode: 'server', syncUrl: 'ws://localhost:8787/sync' },
+			{ pageProtocol: 'https:' },
+		);
+		expect(local.config.syncUrl).toBe('ws://localhost:8787/sync');
+		expect(local.issues).toEqual([]);
+		expect(
+			parseServerConfig({ syncUrl: 'ws://localhost.evil.example/sync' }, { pageProtocol: 'https:' })
+				.config.syncUrl,
+		).toBeUndefined();
+	});
+	it('flags a config from a URL or fragment as untrusted', () => {
+		const input = { mode: 'server', syncUrl: 'wss://h.example/sync', token: 'secret' };
+		expect(parseServerConfig(input, { source: 'fragment' }).untrusted).toBe(true);
+		expect(parseServerConfig(input, { source: 'url' }).untrusted).toBe(true);
+		expect(parseServerConfig(input, { source: 'settings' }).untrusted).toBeUndefined();
+		expect(parseServerConfig(input).untrusted).toBeUndefined();
+	});
 });
 
 // A fake connection pair: whatever one side sets as local description the other can accept.

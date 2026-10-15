@@ -23,6 +23,22 @@ export interface ServerConfigResult {
 	config: TeamsServerConfig;
 	/** Human-readable problems; the offending field is left out of `config`. */
 	issues: string[];
+	/**
+	 * True when the input came from a URL or fragment, which anyone can craft in a link: a UI should
+	 * ask the user to confirm before connecting (it can carry a token to an attacker's server).
+	 */
+	untrusted?: boolean;
+}
+
+export interface ParseServerConfigOptions {
+	/**
+	 * Protocol of the page hosting the workspace (`https:`). Defaults to `location.protocol` when a
+	 * `location` exists. On an `https:` page only `wss://` endpoints are accepted (loopback hosts
+	 * excepted), so a token is never sent in clear text.
+	 */
+	pageProtocol?: string;
+	/** Where the input came from; `url` and `fragment` mark the result `untrusted`. */
+	source?: 'settings' | 'storage' | 'file' | 'url' | 'fragment';
 }
 
 /** Public STUN only: enough on open networks, never enough behind symmetric NAT (add TURN). */
@@ -31,10 +47,21 @@ export const DEFAULT_ICE_SERVERS: readonly IceServer[] = [{ urls: 'stun:stun.l.g
 const WS_URL = /^wss?:\/\/[^\s/?#]+(?::\d+)?(?:\/[^\s?#]*)?$/iu;
 const ICE_URL = /^(stuns?|turns?):[^\s]+$/iu;
 
-function wsUrl(value: unknown, field: string, issues: string[]): string | undefined {
+const LOOPBACK_WS = /^ws:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/iu;
+
+function wsUrl(
+	value: unknown,
+	field: string,
+	issues: string[],
+	secureOnly = false,
+): string | undefined {
 	if (value === undefined || value === null || value === '') return undefined;
 	if (typeof value !== 'string' || !WS_URL.test(value.trim())) {
 		issues.push(`${field} must be a ws:// or wss:// URL without query or fragment`);
+		return undefined;
+	}
+	if (secureOnly && /^ws:/iu.test(value.trim()) && !LOOPBACK_WS.test(value.trim())) {
+		issues.push(`${field} must be a wss:// URL on an https:// page`);
 		return undefined;
 	}
 	return trimTrailingSlashes(value.trim());
@@ -66,11 +93,17 @@ function iceServer(raw: unknown, index: number, issues: string[]): IceServer | n
 }
 
 /** Validate untrusted server settings into a usable config plus a list of issues. */
-export function parseServerConfig(input: unknown): ServerConfigResult {
+export function parseServerConfig(
+	input: unknown,
+	options: ParseServerConfigOptions = {},
+): ServerConfigResult {
 	const issues: string[] = [];
 	const raw = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
-	const syncUrl = wsUrl(raw.syncUrl, 'syncUrl', issues);
-	const signalingUrl = wsUrl(raw.signalingUrl, 'signalingUrl', issues);
+	const pageProtocol =
+		options.pageProtocol ?? (globalThis as { location?: { protocol?: string } }).location?.protocol;
+	const secureOnly = pageProtocol === 'https:';
+	const syncUrl = wsUrl(raw.syncUrl, 'syncUrl', issues, secureOnly);
+	const signalingUrl = wsUrl(raw.signalingUrl, 'signalingUrl', issues, secureOnly);
 	const iceRaw = Array.isArray(raw.iceServers) ? raw.iceServers : undefined;
 	const ice = iceRaw
 		? iceRaw.map((s, i) => iceServer(s, i, issues)).filter((s): s is IceServer => s !== null)
@@ -93,7 +126,8 @@ export function parseServerConfig(input: unknown): ServerConfigResult {
 		!ice.some((s) => [s.urls].flat().some((u) => /^turns?:/iu.test(u)))
 	)
 		issues.push('iceTransportPolicy "relay" needs a TURN server, otherwise no call can connect');
-	return { config, issues };
+	const untrusted = options.source === 'url' || options.source === 'fragment';
+	return untrusted ? { config, issues, untrusted } : { config, issues };
 }
 
 /** `base/room?token=...` for a sync or signaling endpoint. The room is URL-encoded. */
