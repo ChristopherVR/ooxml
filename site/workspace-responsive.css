@@ -1,41 +1,55 @@
+/* Narrow layouts: the sidebar collapses to tiles, the search moves under the header. */
 @media (max-width: 1100px) {
 	.workspace-sidebar {
-		width: 195px;
+		width: 196px;
 	}
 	.home {
 		padding: 24px;
 	}
 	.brand {
-		min-width: 173px;
+		min-width: 170px;
 	}
 	.create-row {
-		grid-template-columns: repeat(2, minmax(120px, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.page-heading h1 {
+		font-size: 32px;
 	}
 	.section-heading > span {
 		display: none;
 	}
+	.assistant {
+		width: 300px;
+	}
+	.document-commandbar > span {
+		display: none;
+	}
 }
 @media (max-width: 700px) {
+	:root {
+		--header-h: 52px;
+	}
 	.suite-header {
-		padding: 0 12px 0 6px;
-		gap: 6px;
-		height: 56px;
+		padding: 0 10px 0 6px;
+		gap: 4px;
 	}
 	.brand {
 		min-width: 0;
-		font-size: 15px;
-		gap: 3px;
+		font-size: 14px;
+		gap: 7px;
 	}
 	.brand-symbol {
-		width: 19px;
-		height: 19px;
-		margin-right: 4px;
+		width: 18px;
+		height: 18px;
 	}
 	.search {
 		display: none;
 	}
-	#assistant-toggle {
+	#mobile-search-toggle {
+		display: inline-flex;
 		margin-left: auto;
+	}
+	#assistant-toggle {
 		padding: 7px;
 	}
 	#assistant-toggle span {
@@ -48,95 +62,100 @@
 	.suite-header > button {
 		min-width: 32px;
 	}
-	.suite-layout {
-		height: calc(100dvh - 56px);
-	}
 	.workspace-sidebar {
 		width: 56px;
-		padding: 12px 4px;
+		padding: 10px 4px;
 	}
 	.workspace-switch,
 	.sidebar-footer,
 	.nav-caption {
 		display: none;
 	}
-	.app-rail {
-		width: 100%;
-	}
-	.app-rail button {
+	.app-rail button,
+	.app-rail a {
 		flex-direction: column;
-		gap: 5px;
-		padding: 9px 0;
-		min-height: 52px;
-		font-size: 8px;
+		gap: 4px;
+		padding: 8px 0;
+		min-height: 50px;
+		font-size: 8.5px;
+		text-align: center;
+	}
+	.app-rail [data-sites] {
+		display: none;
 	}
 	.app-rail button[aria-current='true']:before {
-		height: 23px;
+		top: 10px;
+		bottom: 10px;
 	}
 	.app-rail .app-badge {
-		width: 19px;
-		height: 22px;
+		width: 20px;
+		height: 20px;
 	}
 	.home {
-		padding: 22px 16px;
+		padding: 20px 14px;
 	}
 	.workspace-breadcrumb {
-		font-size: 10px;
-		margin-bottom: 20px;
+		margin-bottom: 16px;
 		gap: 6px;
 	}
 	.page-heading {
 		gap: 8px;
-		margin-bottom: 26px;
+		margin-bottom: 24px;
 	}
+	h1,
 	.page-heading h1 {
-		font-size: 25px;
+		font-size: 26px;
+	}
+	.app-rail .app-tag {
+		display: none;
 	}
 	#welcome {
-		font-size: 11px;
-		max-width: 170px;
+		font-size: 12px;
 	}
 	.page-actions button {
-		font-size: 11px;
 		padding: 7px 9px;
+		font-size: 10px;
 	}
 	.page-actions .ui-icon {
 		display: none;
 	}
 	.section-heading h2 {
-		font-size: 13px;
+		font-size: 14px;
 	}
-	.create-row {
-		gap: 8px;
+	.create-section {
 		margin-bottom: 26px;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 	.create-row button {
-		padding: 14px 9px;
-		grid-template-columns: 23px 1fr;
-		gap: 4px 8px;
-		min-height: 79px;
+		padding: 14px 10px 16px;
+		grid-template-columns: 26px 1fr auto;
+		gap: 3px 9px;
+		min-height: 80px;
 	}
 	.create-row .app-badge {
-		width: 23px;
-		height: 28px;
-		font-size: 16px;
+		width: 26px;
+		height: 26px;
+		font-size: 13px;
 	}
 	.create-row span:not(.app-badge) {
-		font-size: 10px;
+		font-size: 12px;
 	}
 	.create-row small {
-		font-size: 9px;
+		font-size: 10.5px;
+	}
+	.create-row button::after {
+		display: none;
 	}
 	.file-heading {
-		padding: 18px 12px 6px;
+		padding: 16px 12px 4px;
 	}
 	.file-heading h2 {
 		font-size: 14px;
 	}
+	.file-heading > span {
+		display: none;
+	}
 	.file-toolbar {
-		padding: 10px 9px;
-		gap: 2px;
+		padding: 8px 8px 10px;
 	}
 	.file-toolbar button {
 		padding: 6px 8px;
@@ -149,15 +168,21 @@
 	td:first-child {
 		padding-left: 12px;
 	}
+	th,
 	td {
 		padding: 0 6px;
 	}
-	.file-name {
-		font-size: 11px;
-		gap: 8px;
+	th:nth-child(2),
+	td:nth-child(2),
+	th:nth-child(3),
+	td:nth-child(3),
+	th:nth-child(4),
+	td:nth-child(4) {
+		display: none;
 	}
-	.file-name small {
-		font-size: 9px;
+	.file-name {
+		font-size: 12px;
+		gap: 8px;
 	}
 	.file-actions button {
 		padding: 4px;
@@ -165,72 +190,50 @@
 	.file-actions button[data-download] {
 		display: none;
 	}
-	td:nth-child(4),
-	th:nth-child(4) {
-		display: none;
-	}
 	.empty {
 		padding: 34px 14px;
 	}
 	.empty h3 {
-		font-size: 13px;
+		font-size: 13.5px;
 	}
 	.empty p {
-		font-size: 11px;
+		font-size: 11.5px;
 	}
 	.workspace-note {
-		font-size: 10px;
+		font-size: 10.5px;
 		align-items: baseline;
 	}
+	.statusbar {
+		padding: 0 8px;
+	}
+	.statusbar > span:last-child {
+		display: none;
+	}
+	.assistant {
+		position: absolute;
+		inset: 0;
+		width: auto;
+		z-index: 10;
+		box-shadow: -5px 0 20px #0002;
+	}
+	.tabs {
+		padding: 4px 3px 0;
+	}
+	.tabs > button {
+		padding: 6px 8px;
+	}
+	.file-tab > button {
+		max-width: 185px;
+	}
 	.shell-popover {
-		inset: 62px 10px auto auto;
-		max-width: calc(100vw - 20px);
+		inset: calc(var(--header-h) + 6px) 8px auto auto;
+		max-width: calc(100vw - 16px);
 	}
 	.app-launcher {
-		inset: 62px auto auto 10px;
-	}
-	.profile-fields {
-		grid-template-columns: 1fr;
-	}
-	.profile-form-identity {
-		gap: 12px;
-	}
-	.photo-label input {
-		max-width: 195px;
-	}
-	.profile-form-identity .avatar-large {
-		width: 56px;
-		height: 56px;
-	}
-	.account-identity h2 {
-		font-size: 18px;
-	}
-}
-@media (prefers-reduced-motion: no-preference) {
-	.shell-popover:popover-open {
-		animation: panel-in 0.14s ease-out;
-	}
-	@keyframes panel-in {
-		from {
-			opacity: 0;
-			transform: translateY(-5px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-}
-@media (max-width: 700px) {
-	#mobile-search-toggle {
-		display: inline-flex;
-		margin-left: auto;
-	}
-	#assistant-toggle {
-		margin-left: 0;
+		inset: calc(var(--header-h) + 6px) auto auto 8px;
 	}
 	.search-expanded .suite-header {
-		height: 100px;
+		height: 96px;
 		flex-wrap: wrap;
 		padding-bottom: 8px;
 	}
@@ -243,10 +246,28 @@
 		margin: 0 4px;
 	}
 	.search-expanded .suite-layout {
-		height: calc(100dvh - 100px);
+		height: calc(100dvh - 96px);
 	}
 	.search-expanded .shell-popover {
-		top: 107px;
+		top: 104px;
 		max-height: calc(100dvh - 120px);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.shell-popover:popover-open {
+		animation: panel-in 0.16s var(--ease);
+	}
+	dialog[open] {
+		animation: panel-in 0.18s var(--ease);
+	}
+	@keyframes panel-in {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 }

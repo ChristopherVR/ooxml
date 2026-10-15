@@ -15,12 +15,15 @@
 
 The deployable Office application workspace (`ooxml-office`), shared by the integrated suite, the standalone PWAs and the desktop package. It mounts the real editors directly, with no demo iframes. Format logic stays in [`ooxml-core`](../../src/core#readme) and reusable controls in [`ooxml-ui`](../../src/ui#readme); this package only wires them together.
 
-## Two ways to open it
+## Three ways to open it
 
-The first visit asks what to open:
+The first visit asks where to start:
 
-- **OOXML Office**: every app in one workspace, with a shared library, a tab per open document, the app launcher, search and the assistant.
+- **OOXML Office**: every app in one workspace, with a shared library, a tab per open document, the app launcher, search and the assistant. It opens in dark mode; Appearance in the account menu switches it.
 - **One product on its own**: [Word](../../viewers/docx#readme), [Excel](../../viewers/xlsx#readme), [PowerPoint](../../viewers/pptx#readme), [Visio](../../viewers/visio#readme) or [Teams](../../viewers/teams#readme), each on its own site with its documentation and framework demos.
+- **Documentation**: the hub at [`/ooxml/docs/`](https://christophervr.github.io/ooxml/docs/) (`site/docs/`), one page that links every manual: the apps, `ooxml-core`, `ooxml-ui`, the MCP server, the suite and the desktop build.
+
+In the browser the sidebar's Resources group links to the documentation and reopens the chooser; an installed app hides the group, since it has no browser chrome to come back through. The look of every page on the site follows [the pages design system](../../docs/pages-design.md).
 
 ## Run it
 

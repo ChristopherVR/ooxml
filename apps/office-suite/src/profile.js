@@ -36,10 +36,7 @@ export function mountProfile({ beforeSwitch, changed }) {
 		$('profile-toggle').innerHTML = avatar(p);
 		$('profile-toggle').setAttribute('aria-label', `Account manager for ${p.name}`);
 		$('workspace-name').textContent = p.organization;
-		$('welcome').textContent =
-			p.name === 'Your profile'
-				? 'A place for everything you are working on.'
-				: `Welcome back, ${p.name.split(' ')[0]}.`;
+		$('welcome').textContent = 'Start something new, or pick up a file from your library.';
 		$('workspace-status').textContent = `${p.organization} · This device`;
 		menu.innerHTML = `<div class="account-topline"><span>OOXML Office</span><span class="local-label">Local profile</span></div>
 		<div class="account-identity">${avatar(p, true)}<div><h2>${escape(p.name)}</h2><p>${escape(p.email || 'No connected account')}</p>${p.title ? `<p>${escape(p.title)}</p>` : ''}<button class="text-link" data-profile-edit>View my profile</button></div></div>

@@ -1,23 +1,4 @@
-.shell-popover {
-	position: fixed;
-	inset: 67px 16px auto auto;
-	margin: 0;
-	border: 1px solid var(--line);
-	border-radius: 10px;
-	padding: 0;
-	background: var(--surface);
-	color: var(--text);
-	box-shadow:
-		0 12px 45px #0003,
-		0 2px 8px #0001;
-	width: 360px;
-	max-width: calc(100vw - 24px);
-	max-height: calc(100dvh - 84px);
-	overflow: auto;
-}
-.shell-popover::backdrop {
-	background: transparent;
-}
+/* The account manager, workspace switcher and storage menu. */
 .avatar {
 	display: inline-flex;
 	align-items: center;
@@ -39,41 +20,39 @@
 	object-fit: cover;
 }
 .avatar-large {
-	width: 68px;
-	height: 68px;
-	font-size: 23px;
+	width: 64px;
+	height: 64px;
+	font-size: 22px;
 }
-.suite-header .profile-button {
-	padding: 0;
-	margin-left: 4px;
-	border-radius: 50%;
+.suite-header .profile-button .avatar {
+	width: 30px;
+	height: 30px;
 }
 .account-topline {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 17px 20px;
-	font-size: 12px;
+	padding: 14px 18px;
+	border-bottom: 1px solid var(--line);
 }
 .local-label {
 	background: var(--canvas);
 	border: 1px solid var(--line);
-	border-radius: 4px;
+	border-radius: var(--radius);
 	padding: 3px 6px;
 	font-size: 10px;
-	color: var(--muted);
 }
 .account-identity {
 	display: flex;
 	gap: 16px;
 	align-items: center;
-	padding: 8px 20px 22px;
+	padding: 18px 18px 20px;
 }
 .account-identity > div {
 	min-width: 0;
 }
 .account-identity h2 {
-	font-size: 19px;
+	font-size: 18px;
 	margin: 0 0 3px;
 	overflow-wrap: anywhere;
 }
@@ -83,52 +62,43 @@
 	color: var(--muted);
 	overflow-wrap: anywhere;
 }
-.text-link {
-	color: var(--blue);
-	padding: 4px 0;
-	font-size: 12px;
-}
-.text-link:hover {
-	text-decoration: underline;
-	background: transparent;
-}
 .account-workspace {
 	display: flex;
 	gap: 12px;
 	align-items: center;
-	padding: 14px 20px;
+	padding: 12px 18px;
 	background: var(--canvas);
 	border-block: 1px solid var(--line);
 }
 .account-workspace strong {
 	display: block;
-	font-size: 12px;
+	font-size: 12.5px;
 	font-weight: 600;
 }
 .account-workspace small {
 	display: block;
 	color: var(--muted);
 	font-size: 11px;
-	margin-top: 3px;
+	margin-top: 2px;
 }
 .account-actions {
-	padding: 8px;
+	padding: 6px;
 	border-bottom: 1px solid var(--line);
 }
 .account-actions button {
 	width: 100%;
 	justify-content: start;
-	padding: 10px 12px;
-	gap: 14px;
-	font-size: 12px;
+	padding: 9px 12px;
+	gap: 12px;
+	font-size: 12.5px;
 }
 .profile-switcher {
-	padding: 15px 8px 8px;
+	padding: 12px 6px 6px;
 }
 .profile-switcher h3 {
 	font-size: 11px;
-	color: var(--muted);
 	font-weight: 500;
+	color: var(--muted);
 	margin: 0 12px 8px;
 }
 .profile-switcher button {
@@ -136,69 +106,87 @@
 	width: 100%;
 	justify-content: start;
 	text-align: left;
-	padding: 10px 12px;
+	padding: 9px 12px;
 	gap: 12px;
 }
+.profile-switcher button[aria-current='true'] {
+	background: var(--selected);
+}
 .profile-switcher button strong {
-	font-size: 12px;
+	font-size: 12.5px;
 	font-weight: 500;
 	display: block;
 }
 .profile-switcher button small {
 	display: block;
-	font-size: 10px;
-	margin-top: 3px;
+	font-size: 11px;
+	margin-top: 2px;
 	color: var(--muted);
 }
 .profile-active {
 	margin-left: auto;
-	color: var(--muted);
-	font-size: 10px;
 }
 .profile-switcher [data-profile-add] {
+	font-size: 12.5px;
+	color: var(--accent-ink);
+}
+.account-feedback {
+	color: var(--danger);
+	padding: 10px 18px;
 	font-size: 12px;
 }
 .account-footnote {
-	font-size: 10px;
+	font-size: 11px;
 	color: var(--muted);
-	padding: 12px 20px;
+	padding: 12px 18px;
 	margin: 0;
 	border-top: 1px solid var(--line);
 	background: var(--canvas);
 }
-.app-launcher {
-	inset: 67px auto auto 12px;
-	width: 350px;
-	padding: 22px;
+.workspace-menu {
+	inset: calc(var(--header-h) + 56px) auto auto 10px;
 }
-.launcher-heading {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 20px;
+.storage-menu {
+	inset: auto auto 36px 10px;
+	padding: 16px;
 }
-.launcher-heading h2 {
-	margin: 0;
+.workspace-menu-heading {
+	padding: 18px 18px 0;
 }
-.launcher-heading span {
-	font-size: 11px;
+.workspace-menu h2,
+.storage-menu h2 {
+	margin: 0 0 6px;
+	font-size: 16px;
+}
+.workspace-menu p,
+.storage-menu p {
 	color: var(--muted);
-}
-.launcher-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
-}
-.launcher-grid button {
-	flex-direction: column;
-	gap: 10px;
 	font-size: 12px;
-	padding: 16px 8px;
-	border: 1px solid var(--line);
-	border-radius: 7px;
+	margin: 0 0 12px;
 }
-.account-feedback {
-	color: #c4314b;
-	padding: 10px 20px;
-	font-size: 12px;
+.storage-menu > button {
+	margin: 0 6px 6px 0;
+}
+.storage-note {
+	margin-top: 10px;
+}
+.connected-folders {
+	margin-top: 12px;
+}
+.connected-folders > div {
+	padding: 12px 0;
+	border-top: 1px solid var(--line);
+}
+.connected-folders strong,
+.connected-folders small {
+	display: block;
+	overflow-wrap: anywhere;
+}
+.connected-folders small {
+	color: var(--muted);
+	margin: 4px 0 8px;
+}
+.connected-folders button {
+	margin-right: 4px;
+	padding: 5px 9px;
 }

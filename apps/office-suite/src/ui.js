@@ -1,14 +1,19 @@
+/** The apps, with the maturity each one declares on its own site. */
 export const apps = [
-	{ id: 'docx', name: 'Word', letter: 'W', color: '#185abd' },
-	{ id: 'xlsx', name: 'Excel', letter: 'X', color: '#107c41' },
+	{ id: 'docx', name: 'Word', letter: 'W', color: '#185abd', tag: 'Beta' },
+	{ id: 'xlsx', name: 'Excel', letter: 'X', color: '#107c41', tag: 'Beta' },
 	{ id: 'pptx', name: 'PowerPoint', letter: 'P', color: '#c43e1c' },
-	{ id: 'vsdx', name: 'Visio', letter: 'V', color: '#3955a3' },
+	{ id: 'vsdx', name: 'Visio', letter: 'V', color: '#3955a3', tag: 'Alpha' },
 ];
+export const teamsApp = { id: 'teams', name: 'Teams', letter: 'T', color: '#6264a7', tag: 'Alpha' };
+/** A maturity tag, or nothing for an app without one. */
+export const tag = (label) =>
+	label ? `<i class="app-tag" data-tone="${label.toLowerCase()}">${label}</i>` : '';
 export const $ = (id) => document.getElementById(id);
 export const escape = (value) => String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 export const badge = (kind) => {
 	const a = apps.find((a) => a.id === kind);
-	return `<span class="app-badge" style="--app:${a?.color ?? '#6264a7'}">${a?.letter ?? 'T'}</span>`;
+	return `<span class="app-badge" style="--app:${a?.color ?? teamsApp.color}">${a?.letter ?? teamsApp.letter}</span>`;
 };
 export function notify(message) {
 	$('status').textContent = message instanceof Error ? message.message : message;

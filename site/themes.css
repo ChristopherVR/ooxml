@@ -1,178 +1,112 @@
+/*
+ * The palette: the suite's neutral greys and white surfaces, with the accent (--blue) set at
+ * runtime from the appearance settings. Dark mode keeps the same surfaces reversed.
+ */
 :root {
+	--canvas: #f7f8fa;
 	--surface: #fff;
+	--sunken: #eceef2;
+	--rail: #f0f2f5;
 	--surface-alt: #fafafa;
-	--canvas: #f5f5f5;
-	--rail: #f0f0f0;
-	--hover: #ebebeb;
-	--text: #242424;
+	--ink: #242424;
+	--ink-strong: #1b1b1b;
+	--text: var(--ink);
 	--muted: #616161;
-	--line: #e0e0e0;
-	--selected: #e7edf3;
+	--faint: #8a8a8a;
 	--subtle: #777;
-	--accent-ink: #fff;
+	--line: #e3e6eb;
+	--line-strong: #c6cbd3;
+	--hover: #ebebeb;
+	--blue: #0f6cbd;
+	--accent-ink: #0f6cbd;
+	--accent-fg: #fff;
+	--selected: #e7eef8;
+	--ok: #16856a;
+	--danger: #c4314b;
+	color-scheme: light;
 }
 :root[data-theme='dark'] {
-	--surface: #202020;
-	--surface-alt: #252525;
-	--canvas: #171717;
-	--rail: #1c1c1c;
-	--hover: #333;
-	--text: #f0f0f0;
-	--muted: #bbb;
-	--line: #3a3a3a;
-	--selected: #303c49;
+	--canvas: #181a1e;
+	--surface: #202228;
+	--sunken: #121418;
+	--rail: #1c1e23;
+	--surface-alt: #252830;
+	--ink: #f0f0f0;
+	--ink-strong: #fff;
+	--muted: #b5b5b5;
+	--faint: #8d8d8d;
 	--subtle: #aaa;
-	--accent-ink: #141414;
+	--line: #34383f;
+	--line-strong: #4d535d;
+	--hover: #2e3138;
+	--blue: #479ef5;
+	--accent-ink: #7ab8ff;
+	--accent-fg: #141414;
+	--selected: #29384c;
+	--ok: #4fc08a;
+	--danger: #ff8585;
+	color-scheme: dark;
 }
-body {
-	background: var(--canvas);
-	color: var(--text);
+
+/* Appearance settings */
+fieldset:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
+	border: 0;
+	margin: 0 0 18px;
+	padding: 0;
 }
-.suite-header,
-.statusbar {
-	background: var(--surface-alt);
-}
-.search {
-	background: var(--hover);
-	border-color: var(--line);
-}
-.search input {
-	background: transparent;
-	color: var(--text);
-}
-.app-rail {
-	background: var(--rail);
-}
-.tabs {
-	background: var(--rail);
-}
-button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):hover {
-	background: var(--hover);
-}
-.app-rail button[aria-current='true'] {
-	background: var(--surface);
-	color: var(--blue);
-}
-.app-rail button[aria-current='true']:before {
-	background: var(--blue);
-}
-.tabs [aria-selected='true'] {
-	background: var(--surface);
-	border-bottom-color: var(--blue);
-}
-.create-row button,
-.file-table,
-.document-commandbar,
-.document-host,
-.assistant,
-dialog {
-	background: var(--surface);
-	color: var(--text);
-}
-.create-row button,
-.embedded-file,
-.assistant-intro button {
-	border-color: var(--line);
-}
-.create-row button:hover {
-	background: var(--surface-alt);
-	border-color: var(--blue);
-}
-.file-toolbar .selected {
-	background: var(--selected);
-	color: var(--text);
-}
-tr:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):hover td {
-	background: var(--surface-alt);
-}
-td:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)),
-th:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
-	color: var(--muted);
-	border-color: var(--line);
-}
-td:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):first-child {
-	color: var(--text);
-}
-input:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)),
-textarea:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
-	background: var(--surface);
-	color: var(--text);
-	border-color: var(--line);
-}
-.primary {
-	background: var(--blue);
-	border-color: var(--blue);
-	color: var(--accent-ink);
-}
-.primary:hover {
-	background: var(--blue);
-	filter: brightness(0.9);
-}
-.eyebrow,
-.search-hint,
-.file-heading > span,
-.file-toolbar > span,
-.empty,
-.workspace-note,
-.statusbar,
-.assistant-intro p,
-#dialog-content > p,
-#ai-state,
-.document-commandbar > span,
-.theme-hint {
-	color: var(--muted);
-}
-.ai-message,
-.assistant > header,
-#ai-form,
-dialog > header {
-	border-color: var(--line);
-}
-.ai-message.user {
-	background: var(--selected);
-}
-.ai-proposal {
-	border-color: var(--blue);
+legend:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
+	font-weight: 600;
+	margin: 0 0 12px;
+	padding: 0;
 }
 .theme-modes,
 .theme-accents {
 	display: flex;
-	gap: 14px;
+	gap: 12px;
 }
 .theme-modes label {
 	flex: 1;
 	text-align: center;
 	font-size: 12px;
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	font-weight: 400;
 }
 .theme-modes input,
 .theme-accents input {
 	position: absolute;
 	width: 1px !important;
+	height: 1px;
 	opacity: 0;
 }
 .theme-preview {
-	height: 65px;
-	border: 2px solid transparent;
-	border-radius: 6px;
-	background: #f5f5f5;
+	display: block;
+	height: 64px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-panel);
+	background: #f7f8fa;
 	box-shadow:
-		inset 12px 0 #e4e4e4,
-		inset 0 12px #eee,
-		inset 0 0 0 1px #bbb;
+		inset 14px 0 #f0f2f5,
+		inset 15px 0 #e3e6eb,
+		inset 0 10px #fff,
+		inset 0 11px #e3e6eb;
 }
 .theme-preview.dark {
-	background: #202020;
+	background: #181a1e;
 	box-shadow:
-		inset 12px 0 #303030,
-		inset 0 12px #333,
-		inset 0 0 0 1px #666;
+		inset 14px 0 #1c1e23,
+		inset 15px 0 #34383f,
+		inset 0 10px #202228,
+		inset 0 11px #34383f;
 }
 .theme-preview.system {
-	background: linear-gradient(90deg, #fafafa 50%, #242424 50%);
+	background: linear-gradient(90deg, #f7f8fa 50%, #181a1e 50%);
 	box-shadow:
-		inset 0 12px #999,
-		inset 0 0 0 1px #aaa;
+		inset 0 10px transparent,
+		inset 0 11px #8d8d8d;
 }
 .theme-modes input:checked + span {
 	outline: 2px solid var(--blue);
@@ -187,12 +121,17 @@ dialog > header {
 	align-items: center;
 	flex: 1;
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin: 0;
+	font-weight: 400;
 }
 .theme-accents span {
-	width: 34px;
-	height: 34px;
+	display: block;
+	width: 32px;
+	height: 32px;
 	border-radius: 50%;
-	border: 3px solid var(--surface);
 }
 .theme-accents input:checked + span {
 	outline: 2px solid var(--blue);
@@ -201,36 +140,12 @@ dialog > header {
 .theme-modes input:focus-visible + span,
 .theme-accents input:focus-visible + span {
 	outline: 2px solid var(--blue);
-}
-fieldset:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
-	border: 0;
-	margin: 0 0 12px;
-	padding: 0;
-}
-legend:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
-	font-weight: 600;
-	margin: 0 0 15px;
+	outline-offset: 2px;
 }
 .theme-hint {
 	font-size: 12px;
-}
-.primary:disabled {
-	filter: grayscale(1);
+	color: var(--muted);
 }
 #theme-picker {
-	font-size: 20px;
-	padding: 5px 9px;
-}
-.theme-preview,
-.theme-accents span {
-	display: block;
-}
-@media (max-width: 650px) {
-	#theme-picker {
-		padding: 5px;
-		font-size: 18px;
-	}
-	.suite-header {
-		gap: 5px;
-	}
+	padding: 7px;
 }

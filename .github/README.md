@@ -77,13 +77,14 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**OOXML Office**](https://christophervr.github.io/ooxml/) is the integrated application built from everything in this repository. It mounts the real Word, Excel, PowerPoint, Visio and OpenTeams editors (the same components the npm packages ship, not demo iframes) in one workspace with tabs, so you can move between a document, a workbook, a deck and a team conversation without losing your place.
 
 <p align="center">
-<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.webp" alt="The start chooser: open the whole suite, or Word, Excel, PowerPoint, Visio or Teams on its own" width="720"></a>
+<a href="https://christophervr.github.io/ooxml/"><img src="assets/suite-chooser.webp" alt="The start chooser: open the whole suite, Word, Excel, PowerPoint, Visio or Teams on its own, or the documentation" width="720"></a>
 </p>
 
 The first time you open it, it asks how you want to work:
 
 - **[OOXML Office](https://christophervr.github.io/ooxml/)**: every app in one workspace, with a shared file library, one tab per open document, an app launcher, search and one assistant pane.
 - **One product on its own**: [Word](../viewers/docx#readme), [Excel](../viewers/xlsx#readme), [PowerPoint](../viewers/pptx#readme), [Visio](../viewers/visio#readme) or [Teams](../viewers/teams#readme), each on its own site with its documentation and framework demos.
+- **[The documentation](https://christophervr.github.io/ooxml/docs/)**: one hub page that links every guide, from the apps to the headless library and the MCP server.
 
 What the suite gives you:
 

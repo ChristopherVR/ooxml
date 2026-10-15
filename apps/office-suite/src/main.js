@@ -3,7 +3,7 @@ import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
 import { blankDocument, preloadEditor } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
-import { $, apps, badge, escape, notify, task, download, choose } from './ui.js';
+import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
 import { mountThemes } from './themes.js';
 import { mountProfile } from './profile.js';
 import { documentDatabase } from './profile-state.js';
@@ -12,7 +12,7 @@ import { product, mountProduct } from './product.js';
 import { mountFileActions } from './file-actions.js';
 import { mountDiskSearch } from './disk-search.js';
 import { mountPwa } from './pwa.js';
-import { mountStart } from './start.js';
+import { mountResources, mountStart } from './start.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 
@@ -57,6 +57,8 @@ function chooseBlank() {
 	const content = document.createElement('div');
 	content.className = 'create-row';
 	content.innerHTML = $('create-row').innerHTML;
+	// The dialog offers the blank documents only; Teams and the file picker stay on the page.
+	for (const button of content.querySelectorAll('button:not([data-create])')) button.remove();
 	content.addEventListener('click', (event) => {
 		if (event.target.closest('[data-create]')) $('dialog').close();
 	});
@@ -215,16 +217,27 @@ async function share() {
 }
 
 $('rail').innerHTML =
-	`<button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">APPLICATIONS</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span></button>` +
+	`<span class="nav-caption">Workspace</span><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
 	apps
-		.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`)
+		.map(
+			(a) =>
+				`<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span>${tag(a.tag)}</button>`,
+		)
 		.join('');
-$('create-row').innerHTML = apps
-	.map(
-		(a) =>
-			`<button data-create="${a.id}">${badge(a.id)}<span>Blank ${blankNames[a.id].toLowerCase()}</span><small>${a.name}</small></button>`,
-	)
-	.join('');
+const blankDescriptions = {
+	docx: 'Write and format a document',
+	xlsx: 'Calculate, chart and sort a workbook',
+	pptx: 'Build and present a slide deck',
+	vsdx: 'Draw a diagram or flowchart',
+};
+$('create-row').innerHTML =
+	apps
+		.map(
+			(a) =>
+				`<button data-create="${a.id}">${badge(a.id)}<span>${blankNames[a.id]}${tag(a.tag)}</span><small>${blankDescriptions[a.id]} in ${a.name}</small></button>`,
+		)
+		.join('') +
+	`<button data-teams>${badge('teams')}<span>Teams${tag(teamsApp.tag)}</span><small>Chat, calls and shared files on your server</small></button><button data-import>${icon('upload')}<span>Open a file</span><small>Bring a .docx, .xlsx, .pptx or .vsdx from this device</small></button>`;
 document.addEventListener('click', (event) => {
 	const b = event.target.closest('button');
 	if (!b) return;
@@ -341,6 +354,19 @@ document.addEventListener('keydown', (event) => {
 		event.preventDefault();
 		$('save').click();
 	}
+	// "/" focuses the search from anywhere in the shell, as the hint beside it says.
+	if (
+		event.key === '/' &&
+		!event.ctrlKey &&
+		!event.metaKey &&
+		!event.altKey &&
+		!event.target.closest(
+			'input, textarea, [contenteditable], docx-editor, xlsx-editor, visio-viewer, teams-app, .pptxv',
+		)
+	) {
+		event.preventDefault();
+		$('search').focus();
+	}
 });
 document.addEventListener('dragover', (event) => {
 	if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
@@ -425,6 +451,7 @@ for (const eventName of ['pointerover', 'focusin'])
 mountProduct();
 mountPwa();
 mountStart();
+mountResources();
 
 disk = mountDiskSearch({ store, open, refresh });
 const fileActions = mountFileActions({

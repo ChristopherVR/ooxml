@@ -12,6 +12,8 @@ const paths = {
 	search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
 	spark: '<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',
 	upload: '<path d="M12 16V3m-5 5 5-5 5 5M3 15v6h18v-6"/>',
+	book: '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
+	external: '<path d="M14 4h6v6m0-6L10 14M20 14v6H4V4h6"/>',
 };
 export const icon = (name) =>
 	`<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] ?? paths.folder}</svg>`;

@@ -21,5 +21,6 @@ for (const name of [
 	'appearance-init.js',
 ])
 	await cp(join(root, 'site', name), join(out, name));
+await cp(join(root, 'site', 'docs'), join(out, 'docs'), { recursive: true });
 await bundleSuite(join(out, 'suite.js'));
 await buildPwa(out);
