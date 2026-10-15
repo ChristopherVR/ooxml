@@ -50,12 +50,12 @@ interface FormulaBarHost {
 const formulaBarHost = (ctx: EditorContext): FormulaBarHost | undefined =>
 	'showFormulaBar' in ctx.host ? (ctx.host as unknown as FormulaBarHost) : undefined;
 
-const viewMode = (ctx: EditorContext) => target(ctx)?.ws.view.mode;
+const viewMode = (ctx: EditorContext) => target(ctx)?.ws.view?.mode;
 
 /** Switches the active sheet's view (`sheetView/@view`); Normal is no mode. */
 export function setViewMode(ctx: EditorContext, mode: SheetViewMode | undefined): void {
 	const t = target(ctx);
-	if (!t || t.ws.view.mode === mode) return;
+	if (!t || t.ws.view?.mode === mode) return;
 	t.session.setSheetView(t.sheet, { mode });
 	ctx.requestRender();
 }

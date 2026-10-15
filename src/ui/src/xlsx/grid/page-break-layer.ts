@@ -43,7 +43,7 @@ export function installPageBreakPreview(view: GridView): () => void {
 	let cache: { key: unknown; sheet: number; preview: PageBreakPreview | undefined } | undefined;
 	let dragging = false;
 
-	const active = (): boolean => view.sheet()?.view.mode === 'pageBreakPreview';
+	const active = (): boolean => view.sheet()?.view?.mode === 'pageBreakPreview';
 	const preview = (): PageBreakPreview | undefined => {
 		const workbook = view.workbook();
 		const sheet = view.sheetIndex();

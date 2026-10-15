@@ -151,7 +151,7 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 
 	const render = () => {
 		const sheet = ctx.workbook()?.sheets[ctx.activeSheet()];
-		const mode = sheet?.view.mode;
+		const mode = sheet?.view?.mode;
 		const hasSheet = !!sheet;
 		const count = ctx.workbook()?.warnings.length ?? 0;
 		const notesText = ctx.t(

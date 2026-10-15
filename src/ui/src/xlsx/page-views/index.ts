@@ -18,7 +18,7 @@ export function mountPageViews(
 	const view = createPageLayoutView(ctx, host, fileName);
 	let shown: string | undefined;
 	const sync = () => {
-		const mode = ctx.workbook()?.sheets[ctx.activeSheet()]?.view.mode;
+		const mode = ctx.workbook()?.sheets[ctx.activeSheet()]?.view?.mode;
 		const next = mode ?? 'normal';
 		if (next !== shown) {
 			const wasLayout = shown === 'pageLayout';
