@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // What a Word chart shows: the shared chart painter's SVG, drawn from the values cached in the
 // chart part with the document theme, or a labelled frame naming a family it does not draw.
-import { chartSpaceKind, renderChartSpaceSvg } from '../chart/index';
+import { chartSpaceKind, renderChartSpaceSvg, renderChartSummarySvg } from '../chart/index';
 import type { ThemeColorScheme } from '../drawingml/theme-model';
 import type { DocxChart } from './chart';
 import type { ThemeCatalog } from './theme-model';
@@ -32,6 +32,9 @@ export function docxChartPaint(
 	theme?: ThemeCatalog,
 ): DocxChartPaint {
 	const space = chart?.chartSpace;
+	const extended = chart?.chartEx;
+	if (chart && extended) return paintExtended(chart, extended, widthPx, heightPx, theme);
+	if (chart && chart.layoutId) return { label: `Chart (${chart.layoutId})` };
 	if (!space) return { label: 'Chart' };
 	const kind = chartSpaceKind(space);
 	if (!kind.drawn) return { label: kind.type ? `Chart (${kind.type})` : 'Chart' };
@@ -51,5 +54,30 @@ export function docxChartPaint(
 		return { svg, label: chart.title ? `Chart: ${chart.title}` : 'Chart' };
 	} catch {
 		return { label: kind.type ? `Chart (${kind.type})` : 'Chart' };
+	}
+}
+
+/** An extended chart (waterfall, histogram): its summary through the shared painter. */
+function paintExtended(
+	chart: DocxChart,
+	summary: NonNullable<DocxChart['chartEx']>,
+	widthPx: number,
+	heightPx: number,
+	theme?: ThemeCatalog,
+): DocxChartPaint {
+	try {
+		const fonts = {
+			...(theme?.fonts.major.latin ? { major: theme.fonts.major.latin } : {}),
+			...(theme?.fonts.minor.latin ? { minor: theme.fonts.minor.latin } : {}),
+		};
+		const svg = renderChartSummarySvg(summary, {
+			width: Math.max(1, Math.round(widthPx)),
+			height: Math.max(1, Math.round(heightPx)),
+			theme: themeCatalogColorScheme(theme),
+			fonts,
+		});
+		return { svg, label: chart.title ? `Chart: ${chart.title}` : 'Chart' };
+	} catch {
+		return { label: `Chart (${chart.layoutId ?? 'extended'})` };
 	}
 }

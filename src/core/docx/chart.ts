@@ -6,11 +6,13 @@
 // the cached values by the shared chart painter (`chart-paint.ts`).
 import {
 	chartColorStyleId,
+	chartExSummary,
 	parseChartSpace,
 	readChartFormatting,
 	type ChartParseIssue,
 	type ChartSpace,
 	type ChartStyleDefinition,
+	type ChartSummary,
 } from '../chart/index';
 import { parseXml } from '../xml/index';
 import { parseRelationships, relationshipsPartFor, resolvePartPath } from '../opc/index';
@@ -21,8 +23,11 @@ import { getR, isElement, type XmlElement } from './xml';
 
 /** The `a:graphicData/@uri` of a chart. */
 export const CHART_GRAPHIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
+/** The `a:graphicData/@uri` of an extended chart (waterfall, histogram...). */
+export const CHARTEX_GRAPHIC_URI = 'http://schemas.microsoft.com/office/drawing/2014/chartex';
 const CHART_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart';
+const CHARTEX_RELATIONSHIP_TYPE = 'http://schemas.microsoft.com/office/2014/relationships/chartEx';
 const PACKAGE_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package';
 
@@ -39,6 +44,12 @@ export interface DocxChart {
 	partName?: string;
 	/** The parsed chart part (`c:chartSpace`); absent when the part could not be read. */
 	chartSpace?: ChartSpace;
+	/**
+	 * An extended chart (`cx:chartSpace`): `layoutId` names its family and `chartEx` is the summary
+	 * of the families the painter draws (waterfall, histogram). `chartSpace` is absent for these.
+	 */
+	layoutId?: string;
+	chartEx?: ChartSummary;
 	/** Direct formatting read from the chart part (`readChartFormatting`), for painting. */
 	formatting?: ChartStyleDefinition;
 	/** The Office colour style id of the part's `chartColorStyle` relationship, when present. */
@@ -55,7 +66,7 @@ export interface DocxChart {
 
 /** The honest status shown with every chart. */
 export const CHART_NOTICE =
-	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter and radar charts; other kinds show a labelled frame). It is not editable, and the chart part and its workbook are preserved unchanged on save.';
+	'The chart is drawn from the values cached in its part (bar, column, line, area, pie, doughnut, scatter and radar charts, bar and line combinations with a secondary axis, waterfalls and histograms; other kinds show a labelled frame). It is not editable, and the chart part and its workbook are preserved unchanged on save.';
 
 /** Reads the host side of a chart graphic. Synchronous: resolves the relationship, reads no part. */
 export function parseChartGraphic(
@@ -82,7 +93,7 @@ export function parseChartGraphic(
 			message: `Chart relationship ${relId} does not point at a part in this package.`,
 		});
 	else {
-		if (rel.type !== CHART_RELATIONSHIP_TYPE)
+		if (rel.type !== CHART_RELATIONSHIP_TYPE && rel.type !== CHARTEX_RELATIONSHIP_TYPE)
 			issues.push({
 				code: 'CHART_RELATIONSHIP_TYPE',
 				message: `Chart relationship ${relId} has type ${rel.type}, expected ${CHART_RELATIONSHIP_TYPE}.`,
@@ -118,6 +129,19 @@ export async function resolveChartPart(
 			return;
 		}
 		const root = parseXml(xml, { label: 'Chart part' }).documentElement;
+		const extended = chartExSummary(root);
+		if (extended) {
+			chart.layoutId = extended.layoutId;
+			if (extended.summary) {
+				chart.chartEx = extended.summary;
+				if (extended.summary.title) chart.title = extended.summary.title;
+			} else
+				chart.issues.push({
+					code: 'CHARTEX_FAMILY_NOT_DRAWN',
+					message: `The extended chart family ${extended.layoutId || 'unknown'} is not drawn.`,
+				});
+			return;
+		}
 		const { chartSpace, issues } = parseChartSpace(root);
 		chart.chartSpace = chartSpace;
 		chart.issues.push(...issues);
