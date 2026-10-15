@@ -213,3 +213,17 @@ blockquote strong {
 		height: var(--office-touch-target, 44px);
 	}
 }
+
+/* @mentions: the name in the brand colour; a mention of you (or of everyone) gets a chip. */
+.mention {
+	color: var(--office-teams-brand);
+	font-weight: 600;
+}
+.mention[data-self='true'] {
+	padding: 0 var(--office-space-1);
+	border-radius: var(--office-radius);
+	background: var(--office-teams-brand-subtle);
+}
+.msg[data-mentions-you='true'] .bubble {
+	box-shadow: inset var(--office-border-width-thick) 0 0 var(--office-teams-brand);
+}

@@ -1,4 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit';
+import { type Mention, mentionSegments, mentionsUser } from 'ooxml-core/teams';
 import { definer } from '../registry';
 import { TeamsElement, dayLabel, formatSize, formatTime, withStyles } from './base';
 import { icon } from './icons';
@@ -22,6 +23,8 @@ export interface ChatMessage {
 	replyTo?: string;
 	tabId?: string;
 	attachments?: ChatAttachment[];
+	/** @mentions as ranges of `text`; messages from older clients have none. */
+	mentions?: Mention[];
 	reactions?: Record<string, string[]>;
 }
 
@@ -38,7 +41,8 @@ const GROUP_MS = 5 * 60_000;
 /**
  * The conversation: messages as Teams-style bubbles with day separators, quoted replies,
  * reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`,
- * `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin).
+ * `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin). @mentions are
+ * highlighted; those that address `selfId` (or everyone) are emphasised and mark the message.
  * Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle),
  * `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` /
  * `office-chat-unpin` `{ messageId }` and
@@ -111,6 +115,7 @@ export class OfficeUiChatList extends TeamsElement {
 				data-message-id=${m.id}
 				data-own=${String(own)}
 				data-grouped=${String(grouped)}
+				data-mentions-you=${String(!m.deleted && mentionsUser(m, this.selfId) && !own)}
 			>
 				<div class="gutter">
 					${
@@ -141,7 +146,7 @@ export class OfficeUiChatList extends TeamsElement {
 						${
 							m.deleted
 								? html`<span class="deleted">This message was deleted</span>`
-								: html`<span class="text">${m.text}</span>${
+								: html`<span class="text">${this.body(m)}</span>${
 											m.editedAt ? html` <span class="edited">(edited)</span>` : nothing
 										}`
 						}
@@ -172,6 +177,19 @@ export class OfficeUiChatList extends TeamsElement {
 				</div>
 			</article>
 		`;
+	}
+
+	/** Plain runs and highlighted mentions, with no whitespace between them. */
+	private body(m: ChatMessage) {
+		return mentionSegments(m.text, m.mentions).map((segment) =>
+			segment.mention
+				? html`<span
+						class="mention"
+						data-self=${String(segment.mention.kind !== 'user' || segment.mention.id === this.selfId)}
+						>${segment.text}</span
+					>`
+				: segment.text,
+		);
 	}
 
 	private toolbar(m: ChatMessage, own: boolean) {

@@ -5,6 +5,7 @@ export * from './call';
 export * from './content';
 export type { FileOperationOptions, FileTransferProgress } from './file-transfer';
 export * from './chat';
+export * from './mentions';
 export * from './model';
 export * from './peer';
 export * from './pins';

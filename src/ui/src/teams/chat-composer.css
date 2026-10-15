@@ -158,3 +158,57 @@ textarea:focus-visible {
 		min-height: var(--office-touch-target, 44px);
 	}
 }
+
+/* The @ picker: a listbox of people above the compose box. */
+.mentions {
+	position: absolute;
+	inset-block-end: calc(100% + var(--office-space-1));
+	inset-inline: 0;
+	z-index: 3;
+	max-height: 16em;
+	margin: 0;
+	padding: var(--office-space-1);
+	overflow-y: auto;
+	list-style: none;
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-popover);
+	box-shadow: var(--office-shadow-teams);
+}
+.mentions li {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	min-height: 2.6em;
+	padding: var(--office-space-1) var(--office-space-3);
+	border-radius: var(--office-radius);
+	cursor: pointer;
+}
+.mentions li[aria-selected='true'],
+.mentions li:hover {
+	background: var(--office-selected);
+}
+.mentions .name {
+	font-weight: 600;
+}
+.mentions .hint {
+	margin-inline-start: auto;
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-xs);
+}
+.mentions .everyone {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2em;
+	height: 2em;
+	border-radius: 50%;
+	background: var(--office-teams-brand-subtle);
+	color: var(--office-teams-brand);
+	font-weight: 700;
+}
+@media (pointer: coarse) {
+	.mentions li {
+		min-height: var(--office-touch-target, 44px);
+	}
+}

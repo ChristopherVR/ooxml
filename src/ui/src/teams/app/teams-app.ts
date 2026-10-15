@@ -47,6 +47,7 @@ import { defineTeamsPinnedBar } from './pinned-bar';
 import { watchActivity } from './activity';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
+import type { ChatSendDetail } from '../chat-composer';
 import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
 
 export type { FileUploader } from 'ooxml-core/teams';
@@ -980,12 +981,13 @@ export class TeamsApp extends LitElement {
 													.value=${s.draft.text}
 													.files=${s.draft.files}
 													.missingFiles=${s.draft.missingFiles}
+													.mentionTargets=${s.mentionTargets}
 													@office-chat-draft=${(e: CustomEvent<TeamsState['draft']>) => c?.setDraft(e.detail)}
 													?disabled=${!channel}
 													placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
 													@office-chat-typing=${() => c?.notifyTyping()}
 													@office-chat-cancel=${() => c?.cancelCompose()}
-													@office-chat-send=${(e: CustomEvent<TeamsState['draft']>) => void c?.send(e.detail)}
+													@office-chat-send=${(e: CustomEvent<ChatSendDetail>) => void c?.send(e.detail)}
 													data-compose=${compose ? 'on' : 'off'}
 												></office-ui-chat-composer>`
 									}

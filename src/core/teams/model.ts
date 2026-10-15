@@ -1,6 +1,7 @@
 // Shared types and small validators for the `teams` area: channels, messages, attachments and the
 // Office-file kinds a channel can link to. Pure data, no DOM, no Yjs. New code.
 import { stripHtmlTags } from '../collab/validation';
+import type { Mention } from './mentions';
 
 export type ChannelKind = 'channel' | 'direct';
 
@@ -40,6 +41,8 @@ export interface Message {
 	/** Shared tab discussed by this root post. Replies use replyTo as usual. */
 	tabId?: string;
 	attachments: Attachment[];
+	/** People (or everyone) addressed with @, as ranges of `text`. Absent on plain messages. */
+	mentions?: Mention[];
 	/** emoji -> user ids, derived from the reaction map. */
 	reactions: Record<string, string[]>;
 }

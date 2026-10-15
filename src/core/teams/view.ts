@@ -27,10 +27,13 @@ export interface PeerLike {
 	availability?: string;
 	status?: string;
 	statusMessage?: string;
+	userId?: string;
 }
 
 export interface PersonView {
 	id: string;
+	/** The person's user id when their client publishes it (what a mention points at). */
+	userId?: string;
 	name: string;
 	color: string;
 	self: boolean;
@@ -121,6 +124,7 @@ export function peopleViews(
 		{ ...self, statusMessage: self.statusMessage ?? '', self: true },
 		...peers.map((p) => ({
 			id: `peer-${p.clientId}`,
+			...(p.userId ? { userId: p.userId } : {}),
 			name: p.userName,
 			color: p.userColor,
 			self: false,

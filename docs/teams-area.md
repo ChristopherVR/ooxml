@@ -61,6 +61,10 @@ Files are links, never inlined bytes: `send({ files })` uploads through `uploadF
 configured server's `/files` endpoint) and posts the returned URL. `detectOfficeKind` maps a name to
 `docx` / `xlsx` / `pptx` / `vsdx` so a host can open it in the matching viewer.
 
+### Mentions
+
+`mentions.ts` holds the pure rules: `resolveMentions(text, targets)` finds `@Name` runs (longest name wins, word boundaries, case-insensitive), `sanitizeMentions` re-validates stored ranges against the text, `mentionQueryAt` / `filterMentionTargets` / `insertMention` drive the composer's picker and `mentionSegments` splits text for rendering. A message row stores `mentions` beside `text`; rows from older clients simply have none. `TeamsState.mentionTargets` lists who the picker offers (people who wrote in the channel or are online, then `@channel` and `@team`) and `send({ text, mentions })` takes the picked people.
+
 ## Calls
 
 `createCallSession` is a full-mesh set of peer connections using the "perfect negotiation" pattern

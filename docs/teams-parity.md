@@ -13,7 +13,7 @@ No feature is considered equivalent solely because a control is present.
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Channels and posts              | Yjs posts and live thread panes, shared pinned messages with a pinned bar, personal followed threads, replies, reactions, author-side edit/delete checks                                                                                        | Teams hierarchy, private/shared channels, membership enforcement, cross-device follows, thread notifications, moderation                                                           |
 | Direct and group chats          | The channel model has a `direct` kind                                                                                                                                                                                                           | No participant-scoped chat workflow or server-enforced privacy                                                                                                                     |
-| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                                                                                                                                                      | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                                                                                       |
+| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                                                                                                                                                      | Indexed file contents, filters, shared read receipts                                                                                                                               |
 | Presence                        | Awareness, typing, Available / Busy / Do not disturb / Be right back / Appear away / Appear offline, reset-after durations, status messages with expiry, automatic Away after a configurable idle time (legacy `availability` kept on the wire) | Authenticated identity, scheduled or calendar-driven status, privacy controls, notification suppression for Do not disturb                                                         |
 | Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                                                                                                                                                             | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                                                                                  |
 | File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links                                                                                                                                     | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                                                                                      |
@@ -602,6 +602,19 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   full `status` and a legacy `availability` (Do not disturb as busy, the rest as away) so older
   clients still render presence. Do not disturb does not yet suppress any notification, because
   notifications are not implemented. Status is advisory and unauthenticated like all presence.
+
+## Mentions, activity and notifications
+
+- **@mentions.** Typing `@` in the composer opens a people picker (people who wrote in the
+  channel or are online, then `@channel` and `@team`) that filters as you type and is keyboard
+  navigable (Up, Down, Enter or Tab, Escape). A mention is stored next to the plain text as a range
+  (`mentions: [{ kind, id, name, start, end }]` on the message row), so older clients show the
+  message as ordinary text. Ranges are derived from the cleaned text on send and re-validated on
+  read. Names are highlighted, mentions of you (and `@channel` / `@team`) are emphasised, and
+  editing a message keeps its mentions. A typed `@Name` that matches a channel member counts as a
+  mention too, which differs from Teams (where only a picked token does). There is no team or
+  channel membership model, so `@channel` and `@team` reach the same people and the picker only
+  knows people who have written or are online.
 
 ## Microsoft reference workflows
 

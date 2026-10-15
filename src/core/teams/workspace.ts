@@ -9,6 +9,7 @@ import { createClientId } from '../collab/identity';
 import type { Transport } from '../collab/provider';
 import { type CollabSession, createCollabSession } from '../collab/session';
 import { transportProvider } from '../collab/transport-provider';
+import { isValidId } from '../collab/validation';
 import { createWebSocketTransport } from '../collab/websocket-transport';
 import type { WebSocketConstructor } from '../collab/websocket-transport';
 import { type CallSession, type MediaDevicesLike, createCallSession } from './call';
@@ -38,6 +39,8 @@ export interface TeamsPresence {
 	/** Channel the person is typing in right now. */
 	typingIn?: string;
 	callRoom?: string;
+	/** The person's user id, so others can @mention them before they have written anything. */
+	userId?: string;
 	/** The closest of the original three values, kept so older clients still read presence. */
 	availability?: LegacyAvailability;
 	/** The full status (Do not disturb, Be right back, Appear offline, ...). */
@@ -89,6 +92,7 @@ function sanitizePresence(raw: Record<string, unknown>): TeamsPresence {
 	if (channelId) out.channelId = channelId;
 	if (typingIn) out.typingIn = typingIn;
 	if (callRoom) out.callRoom = callRoom;
+	if (isValidId(raw.userId)) out.userId = raw.userId;
 	out.status = statusFromWire(raw);
 	out.availability = legacyAvailability(out.status);
 	const statusMessage = sanitizeStatusMessage(raw.statusMessage);
@@ -124,7 +128,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		...(options.doc ? { doc: options.doc } : {}),
 		provider: transportProvider({ transport: syncTransport(options.workspaceId) }),
 		user: { name: user.name, ...(options.user.color ? { color: options.user.color } : {}) },
-		initialPresence: { availability: 'available', status: 'available' },
+		initialPresence: { availability: 'available', status: 'available', userId: user.id },
 		sanitizePayload: sanitizePresence,
 		teardown: true,
 		// Any writer may seed the default channel; the fixed id makes concurrent seeds converge.

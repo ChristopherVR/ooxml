@@ -4,7 +4,22 @@ import { definer } from '../registry';
 import { TeamsElement, withStyles } from './base';
 import { icon } from './icons';
 import css from './chat-composer.css?raw';
-import { MAX_ATTACHMENTS, type ChatDraft } from 'ooxml-core/teams';
+import {
+	MAX_ATTACHMENTS,
+	type ChatDraft,
+	type MentionQuery,
+	type MentionTarget,
+	filterMentionTargets,
+	insertMention,
+	mentionQueryAt,
+} from 'ooxml-core/teams';
+
+/** The detail of `office-chat-send`: the draft plus the people picked with @. */
+export interface ChatSendDetail {
+	text: string;
+	files: ChatDraft['files'];
+	mentions?: MentionTarget[];
+}
 
 export const EMOJI = [
 	'😀',
@@ -35,9 +50,13 @@ const MAX_FILES = MAX_ATTACHMENTS;
  * typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo`
  * (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`.
  * Events: `office-chat-draft` `{ text, files, missingFiles }` after a user change,
- * `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and
+ * `office-chat-send` `{ text, files, mentions }`, `office-chat-typing` `{}` (throttled) and
  * `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here:
  * the host stores them wherever its server says and posts a link.
+ *
+ * Typing `@` opens a people picker over `mentionTargets` (people, then @channel and @team): it
+ * filters as you type, Up / Down move, Enter or Tab insert `@Name`, Escape closes it. The people
+ * picked go out as `mentions` with the text.
  */
 export class OfficeUiChatComposer extends TeamsElement {
 	static override styles = withStyles(css);
@@ -51,6 +70,9 @@ export class OfficeUiChatComposer extends TeamsElement {
 		files: { state: true },
 		missingFiles: { attribute: false },
 		emojiOpen: { state: true },
+		mentionTargets: { attribute: false },
+		picker: { state: true },
+		pickerIndex: { state: true },
 	};
 	declare typing: string[];
 	declare replyingTo: string | null;
@@ -61,6 +83,10 @@ export class OfficeUiChatComposer extends TeamsElement {
 	declare files: ChatDraft['files'];
 	declare missingFiles: string[];
 	declare emojiOpen: boolean;
+	declare mentionTargets: MentionTarget[];
+	declare picker: MentionQuery | null;
+	declare pickerIndex: number;
+	private inserted: MentionTarget[] = [];
 	private lastTyping = 0;
 
 	constructor() {
@@ -74,6 +100,9 @@ export class OfficeUiChatComposer extends TeamsElement {
 		this.files = [];
 		this.missingFiles = [];
 		this.emojiOpen = false;
+		this.mentionTargets = [];
+		this.picker = null;
+		this.pickerIndex = 0;
 	}
 
 	private focusMessage(): void {
@@ -105,16 +134,20 @@ export class OfficeUiChatComposer extends TeamsElement {
 
 	private submit(): void {
 		if (!this.canSend) return;
-		const { value: text, files } = this;
+		const { value: text, files, inserted: mentions } = this;
 		this.value = '';
 		this.files = [];
+		this.inserted = [];
 		this.emojiOpen = false;
-		this.fire('office-chat-send', { text, files });
+		this.picker = null;
+		const detail: ChatSendDetail = { text, files, ...(mentions.length ? { mentions } : {}) };
+		this.fire('office-chat-send', detail);
 		this.focusMessage();
 	}
 
 	private onInput(event: Event): void {
 		this.value = (event.target as HTMLTextAreaElement).value;
+		this.syncPicker();
 		this.saveDraft();
 		const now = Date.now();
 		if (now - this.lastTyping > 2000) {
@@ -123,7 +156,61 @@ export class OfficeUiChatComposer extends TeamsElement {
 		}
 	}
 
+	/** Open the picker while the caret sits in an `@query` that somebody matches. */
+	private syncPicker(): void {
+		const area = this.renderRoot.querySelector('textarea');
+		const query = area ? mentionQueryAt(this.value, area.selectionStart) : null;
+		if (!query || filterMentionTargets(this.mentionTargets, query.query).length === 0) {
+			this.picker = null;
+			return;
+		}
+		if (this.picker?.start !== query.start || this.picker.query !== query.query)
+			this.pickerIndex = 0;
+		this.picker = query;
+	}
+
+	private pickerOptions(): MentionTarget[] {
+		return this.picker ? filterMentionTargets(this.mentionTargets, this.picker.query) : [];
+	}
+
+	private chooseMention(target: MentionTarget): void {
+		const area = this.renderRoot.querySelector('textarea');
+		const picker = this.picker;
+		if (!area || !picker) return;
+		const next = insertMention(this.value, picker, area.selectionStart, target);
+		this.value = next.text;
+		this.inserted = [
+			...this.inserted.filter((t) => t.kind !== target.kind || t.id !== target.id),
+			target,
+		];
+		this.picker = null;
+		this.saveDraft();
+		void this.updateComplete.then(() => {
+			area.focus({ preventScroll: true });
+			area.setSelectionRange(next.caret, next.caret);
+		});
+	}
+
+	/** Picker keys; true when the key was used. */
+	private pickerKey(event: KeyboardEvent): boolean {
+		const options = this.pickerOptions();
+		if (!this.picker || options.length === 0) return false;
+		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+			const step = event.key === 'ArrowDown' ? 1 : -1;
+			this.pickerIndex = (this.pickerIndex + step + options.length) % options.length;
+		} else if (
+			(event.key === 'Enter' && !event.shiftKey && !event.isComposing) ||
+			event.key === 'Tab'
+		) {
+			this.chooseMention(options[Math.min(this.pickerIndex, options.length - 1)]!);
+		} else if (event.key === 'Escape') this.picker = null;
+		else return false;
+		event.preventDefault();
+		return true;
+	}
+
 	private onKeydown(event: KeyboardEvent): void {
+		if (this.pickerKey(event)) return;
 		if (event.key === 'Escape' && this.emojiOpen) {
 			this.emojiOpen = false;
 			this.focusMessage();
@@ -163,6 +250,40 @@ export class OfficeUiChatComposer extends TeamsElement {
 		const n = this.typing.slice(0, 3);
 		if (n.length === 0) return '';
 		return n.length === 1 ? `${n[0]} is typing…` : `${n.join(', ')} are typing…`;
+	}
+
+	private mentionList() {
+		const options = this.pickerOptions();
+		if (options.length === 0) return nothing;
+		return html`<ul
+			id="mention-list"
+			class="mentions"
+			role="listbox"
+			aria-label="People to mention"
+			@mousedown=${(event: Event) => event.preventDefault()}
+		>
+			${options.map(
+				(target, index) =>
+					html`<li
+						id=${`mention-option-${index}`}
+						role="option"
+						aria-selected=${String(index === this.pickerIndex)}
+						@click=${() => this.chooseMention(target)}
+					>
+						${
+							target.kind === 'user'
+								? html`<office-ui-avatar
+										size="sm"
+										name=${target.name}
+										seed=${target.id}
+									></office-ui-avatar>`
+								: html`<span class="everyone" aria-hidden="true">@</span>`
+						}
+						<span class="name">${target.name}</span>
+						${target.kind === 'user' ? nothing : html`<span class="hint">${target.kind === 'channel' ? 'Notify everyone in this channel' : 'Notify the whole team'}</span>`}
+					</li>`,
+			)}
+		</ul>`;
 	}
 
 	protected override render() {
@@ -227,9 +348,13 @@ export class OfficeUiChatComposer extends TeamsElement {
 							</div>`
 						: nothing
 				}
+				${this.mentionList()}
 				<textarea
 					rows="1"
 					aria-label="Message"
+					aria-haspopup="listbox"
+					aria-controls=${this.pickerOptions().length ? 'mention-list' : nothing}
+					aria-activedescendant=${this.pickerOptions().length ? `mention-option-${this.pickerIndex}` : nothing}
 					.value=${live(this.value)}
 					placeholder=${this.placeholder}
 					?disabled=${this.disabled}
@@ -241,6 +366,11 @@ export class OfficeUiChatComposer extends TeamsElement {
 						}
 					}}
 					@keydown=${this.onKeydown}
+					@keyup=${(event: KeyboardEvent) => {
+						if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') this.syncPicker();
+					}}
+					@click=${this.syncPicker}
+					@blur=${() => (this.picker = null)}
 				></textarea>
 				${
 					this.files.length

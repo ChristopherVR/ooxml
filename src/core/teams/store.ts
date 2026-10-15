@@ -10,6 +10,7 @@ import { createClientId } from '../collab/identity';
 import type { ConnectionStatus } from '../collab/provider';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call';
 import type { Attachment, Channel, Message } from './model';
+import { type MentionTarget, mentionTargetsFor } from './mentions';
 import { createFileActions } from './files';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
@@ -123,6 +124,8 @@ export interface TeamsState {
 	tabs: ChannelTab[];
 	canUploadFiles: boolean;
 	people: PersonView[];
+	/** Who the composer's @ picker offers in the selected channel (people, then @channel and @team). */
+	mentionTargets: MentionTarget[];
 	typing: string[];
 	/** The message the composer is replying to or editing, if any. */
 	replyingTo: Message | null;
@@ -167,7 +170,15 @@ export interface TeamsClient {
 		name: string,
 		options?: FileOperationOptions,
 	) => Promise<Attachment>;
-	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
+	/**
+	 * Post (or, while editing, save) the composer text. `mentions` are the people picked in the
+	 * picker; any other `@Name` that matches a channel member is a mention too.
+	 */
+	send: (input: {
+		text: string;
+		files?: (UploadableFile & Blob)[];
+		mentions?: readonly MentionTarget[];
+	}) => Promise<void>;
 	setDraft: (draft: ChatDraft) => void;
 	openDraft: (context: DraftContext) => boolean;
 	discardDraft: (context: DraftContext) => void;
@@ -325,6 +336,17 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		const threads = channelThreads(messages);
 		const thread = threads.thread(threadId);
 		const channel = channels.find((c) => c.id === selected) ?? null;
+		const people = peopleViews(
+			{
+				id: ws.user.id,
+				name: ws.user.name,
+				color: ws.session.identity.userColor,
+				availability: presenceView().effective,
+				statusMessage: presenceView().message,
+				inCall: call?.phase === 'connected',
+			},
+			p,
+		);
 		const session = call?.session ?? null;
 		const participants = session?.participants() ?? [];
 		const channelName = channels.find((c) => c.id === call?.channelId)?.name ?? '';
@@ -371,16 +393,11 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			canUploadFiles: Boolean(
 				options.uploadFile || (ws.config.mode === 'server' && ws.config.syncUrl),
 			),
-			people: peopleViews(
-				{
-					id: ws.user.id,
-					name: ws.user.name,
-					color: ws.session.identity.userColor,
-					availability: presenceView().effective,
-					statusMessage: presenceView().message,
-					inCall: call?.phase === 'connected',
-				},
-				p,
+			people,
+			mentionTargets: mentionTargetsFor(
+				messages,
+				people.flatMap((p) => (p.userId ? [{ id: p.userId, name: p.name }] : [])),
+				ws.user.id,
 			),
 			typing: selected ? typingNames(p, selected) : [],
 			replyingTo: messages.find((m) => m.id === replyId) ?? null,
@@ -625,7 +642,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				ws.setActiveChannel(channel.id);
 			}
 		}),
-		async send({ text, files = [] }) {
+		async send({ text, files = [], mentions = [] }) {
 			if (!selected) return;
 			files = [...files];
 			if (!editId && !text.trim() && !files.length) return;
@@ -642,7 +659,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			clearTimeout(typingTimer);
 			ws.setTyping(undefined);
 			if (editId) {
-				if (!ws.chat.edit(selected, editId, text)) {
+				if (!ws.chat.edit(selected, editId, text, [...mentions, ...state.mentionTargets])) {
 					drafts.restore(context, sentDraft, revision);
 					notice('The edit was not applied; the draft was retained');
 					return refresh();
@@ -656,6 +673,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 						throw new Error('The channel is no longer available');
 					const message = ws.chat.post(channelId, {
 						text,
+						mentions: [...mentions, ...state.mentionTargets],
 						...(replyingTo ? { replyTo: replyingTo } : {}),
 						attachments,
 					});

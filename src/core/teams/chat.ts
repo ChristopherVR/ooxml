@@ -5,6 +5,7 @@
 import * as Y from 'yjs';
 import { createIdGenerator } from '../collab/identity';
 import { isValidId } from '../collab/validation';
+import { type Mention, type MentionTarget, resolveMentions, sanitizeMentions } from './mentions';
 import { type PinnedMessage, createPinStore } from './pins';
 import { tabConversationId } from './tab-conversation';
 import type { ChannelTab } from './tabs';
@@ -30,6 +31,13 @@ export interface ChatUser {
 	name: string;
 }
 
+export interface ReactionEvent {
+	messageId: string;
+	emoji: string;
+	userId: string;
+	ts: number;
+}
+
 export interface ChatStore {
 	channels: () => Channel[];
 	createChannel: (input: {
@@ -43,12 +51,23 @@ export interface ChatStore {
 	/** Post a message; returns null when the text and attachments are both empty. */
 	post: (
 		channelId: string,
-		input: { text: string; replyTo?: string; attachments?: Attachment[] },
+		input: {
+			text: string;
+			replyTo?: string;
+			attachments?: Attachment[];
+			/** Who may be mentioned; the `@name` runs of the text that match are stored as mentions. */
+			mentions?: readonly MentionTarget[];
+		},
 	) => Message | null;
 	/** Idempotent root creation. Concurrent peers use one stable message id; existing rows survive. */
 	ensureTabConversation: (tab: ChannelTab) => Message | null;
 	/** Only the author can edit. Returns whether the edit applied. */
-	edit: (channelId: string, messageId: string, text: string) => boolean;
+	edit: (
+		channelId: string,
+		messageId: string,
+		text: string,
+		mentions?: readonly MentionTarget[],
+	) => boolean;
 	/** Soft delete (the row stays so threads keep their shape). Only the author can delete. */
 	remove: (channelId: string, messageId: string) => boolean;
 	/** Pin a live message of the channel; any member may. Returns whether it applied. */
@@ -56,6 +75,8 @@ export interface ChatStore {
 	unpin: (channelId: string, messageId: string) => boolean;
 	/** Pinned messages of a channel, most recently pinned first. */
 	pinned: (channelId: string) => PinnedMessage[];
+	/** Every live reaction with the time it was added (0 for rows written by older clients). */
+	reactionEvents: () => ReactionEvent[];
 	react: (messageId: string, emoji: string) => void;
 	unreact: (messageId: string, emoji: string) => void;
 	/** Fires after any channel, message or reaction change (local or remote), coalesced per tick. */
@@ -108,6 +129,8 @@ function readMessage(
 	if (typeof tabId === 'string' && !message.replyTo && tabConversationId(tabId) === id)
 		message.tabId = tabId;
 	if (editedAt > 0) message.editedAt = editedAt;
+	const mentions = sanitizeMentions(raw.get('mentions'), message.text);
+	if (mentions.length) message.mentions = mentions;
 	return message;
 }
 
@@ -120,7 +143,7 @@ const slug = (name: string): string =>
 export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 	const nextId = createIdGenerator(String(doc.clientID), 'm');
 	const channelMap = doc.getMap<Y.Map<unknown>>(CHANNELS);
-	const reactionMap = doc.getMap<boolean>(REACTIONS);
+	const reactionMap = doc.getMap<boolean | number>(REACTIONS);
 	const channelMessages = (channelId: string): Y.Map<Y.Map<unknown>> =>
 		doc.getMap<Y.Map<unknown>>(messagesMap(channelId));
 	const listeners = new Set<() => void>();
@@ -196,7 +219,7 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 			});
 			return out.sort((a, b) => a.ts - b.ts || a.id.localeCompare(b.id));
 		},
-		post(channelId, { text, replyTo, attachments }) {
+		post(channelId, { text, replyTo, attachments, mentions }) {
 			if (!isChannelId(channelId) || !channelMap.has(channelId)) return null;
 			const clean = sanitizeMessageText(text);
 			const files = sanitizeAttachments(attachments);
@@ -211,6 +234,8 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 				m.set('deleted', false);
 				if (replyTo && isValidId(replyTo)) m.set('replyTo', replyTo);
 				if (files.length) m.set('attachments', files);
+				const found = resolveMentions(clean, mentions ?? []);
+				if (found.length) m.set('mentions', found);
 				channelMessages(channelId).set(id, m);
 			});
 			return readMessage(channelId, id, channelMessages(channelId).get(id), {});
@@ -235,13 +260,18 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 			const message = readMessage(tab.channelId, id, rows.get(id), reactionsFor(id));
 			return message?.tabId === tab.id ? message : null;
 		},
-		edit(channelId, messageId, text) {
+		edit(channelId, messageId, text, mentions) {
 			if (!isChannelId(channelId)) return false;
 			const m = channelMessages(channelId).get(messageId);
 			const clean = sanitizeMessageText(text);
 			if (!m || m.get('authorId') !== user.id || m.get('deleted') === true || !clean) return false;
 			doc.transact(() => {
+				// Mentions already in the message stay addressable, so editing around one keeps it.
+				const kept = sanitizeMentions(m.get('mentions'), sanitizeMessageText(m.get('text')));
+				const found: Mention[] = resolveMentions(clean, [...(mentions ?? []), ...kept]);
 				m.set('text', clean);
+				if (found.length) m.set('mentions', found);
+				else m.delete('mentions');
 				m.set('editedAt', Date.now());
 			});
 			return true;
@@ -257,9 +287,18 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 			channelMap.get(channelId)?.get('archived') !== true && pins.pin(channelId, messageId),
 		unpin: (channelId, messageId) => pins.unpin(channelId, messageId),
 		pinned: (channelId) => pins.pinned(channelId),
+		reactionEvents() {
+			const out: ReactionEvent[] = [];
+			reactionMap.forEach((on, key) => {
+				const [messageId, emoji, userId] = key.split(SEP);
+				if (!on || !messageId || !emoji || !userId || !sanitizeEmoji(emoji)) return;
+				out.push({ messageId, emoji, userId, ts: typeof on === 'number' ? on : 0 });
+			});
+			return out;
+		},
 		react(messageId, emoji) {
 			const e = sanitizeEmoji(emoji);
-			if (e && isValidId(messageId)) reactionMap.set([messageId, e, user.id].join(SEP), true);
+			if (e && isValidId(messageId)) reactionMap.set([messageId, e, user.id].join(SEP), Date.now());
 		},
 		unreact(messageId, emoji) {
 			const e = sanitizeEmoji(emoji);
