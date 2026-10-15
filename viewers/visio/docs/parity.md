@@ -220,8 +220,15 @@ Still different or refused:
   connector inside a group, and routing styles other than right-angle,
   straight and curved (tree, organization chart, flowchart directions) are
   refused with a sentence that says so.
-- Connectors are not rerouted when an unrelated shape is moved onto them, and
-  there are no line jumps.
+- A placeable shape (ObjType 1: a stencil shape, or any shape a connector is glued
+  to) moved, resized or turned onto a right-angle connector's saved path now
+  routes that connector around it, in the same edit and the same undo step, for
+  drawn connectors and Visio's Dynamic connector instances alike (2026-10-15).
+  Connectors that cannot be laid out again (a protected end, a dependent
+  formula) stay as they were. The drag preview still redraws only the
+  connectors glued to the shapes being dragged, so the detour appears on drop.
+  A connector is not straightened again when the shape that forced a detour
+  moves away. Line jumps at crossings are in the first section above.
 - The dropped connector is not put on the Connector layer Visio adds.
 - Duplicating or copying a stencil connector is still refused.
 
