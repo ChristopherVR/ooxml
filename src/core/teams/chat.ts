@@ -89,6 +89,10 @@ export interface ChatStore {
 	destroy: () => void;
 }
 
+/** Message times from this client strictly increase, so two sends in one millisecond keep their order. */
+let lastMessageTs = 0;
+const nextMessageTs = (): number => (lastMessageTs = Math.max(Date.now(), lastMessageTs + 1));
+
 const isChannelId = (id: unknown): id is string => isValidId(id, 64) && /^[\w-]+$/u.test(id);
 
 function readChannel(id: string, raw: unknown): Channel | null {
@@ -239,7 +243,7 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 				m.set('authorId', user.id);
 				m.set('authorName', user.name);
 				m.set('text', clean);
-				m.set('ts', Date.now());
+				m.set('ts', nextMessageTs());
 				m.set('deleted', false);
 				if (system) m.set('system', true);
 				if (meetingId && /^[\w-]{1,64}$/u.test(meetingId)) m.set('meetingId', meetingId);
