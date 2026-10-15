@@ -66,6 +66,21 @@ function fireChange(input: HTMLInputElement, file: File): void {
 	input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+describe('insertTab slide templates', () => {
+	it('ends the New Slide menu with Slide Templates, even for a deck with no layouts', async () => {
+		const target = mountTab(makeEditor());
+		const menu = target.querySelector<HTMLElement>(
+			'[data-ribbon-control="insert.slides.newSlide"]',
+		)!;
+		menu.querySelector<HTMLButtonElement>('.trigger')!.click();
+		const items = [...menu.querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.at(-1)?.textContent).toBe('Slide Templates...');
+		items.at(-1)!.click();
+		await tick();
+		expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+	});
+});
+
 describe('insertTab', () => {
 	it('inserts a text box and a 3x3 table from the shared commands', () => {
 		const editor = makeEditor();

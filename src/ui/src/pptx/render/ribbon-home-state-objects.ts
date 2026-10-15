@@ -27,7 +27,11 @@ export function slidesHomeControls(input: SlidesHomeInput): RibbonHomeViewState[
 			disabled: locked || (input.newSlideNeedsLayout && !input.hasLayouts),
 			layouts: input.layouts && { ...input.layouts, current: undefined },
 		},
-		'home.slides.newSlide#caret': { disabled: locked, hidden: !input.hasLayouts },
+		// Slide Templates ends the menu, so the caret stays whenever the menu has any entry.
+		'home.slides.newSlide#caret': {
+			disabled: locked,
+			hidden: !input.hasLayouts && !input.showTemplates,
+		},
 		'home.slides.slideTemplates': { disabled: locked, hidden: !input.showTemplates },
 		'home.slides.layout': { disabled: locked || !input.hasLayouts, layouts: input.layouts },
 		'home.slides.reset': { disabled: locked || noSlide },

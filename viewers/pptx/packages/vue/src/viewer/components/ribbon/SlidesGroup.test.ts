@@ -104,6 +104,20 @@ describe('slidesGroup', () => {
 		wrapper.unmount();
 	});
 
+	it('keeps Slide Templates reachable from the New Slide menu for a deck with no layouts', () => {
+		const { wrapper, control } = mountGroup({ layoutOptions: [] });
+		const caret = control('newSlide').querySelector<HTMLElement>(
+			'[data-pptx-chrome="split-caret"]',
+		)!;
+		expect(caret.hidden).toBeFalsy();
+		caret.click();
+		expect(
+			control('newSlide').querySelector('[data-ribbon-control="home.slides.slideTemplates"]')
+				?.textContent,
+		).toBe('Slide Templates...');
+		wrapper.unmount();
+	});
+
 	it('gates on edit rights and layouts, and hides templates without a handler', () => {
 		const locked = mountGroup({ canEdit: false });
 		for (const id of ['newSlide', 'layout', 'reset', 'section']) {

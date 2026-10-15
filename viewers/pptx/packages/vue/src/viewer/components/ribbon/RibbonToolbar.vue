@@ -239,6 +239,8 @@ onBeforeUnmount(() => detachOverflow?.());
 					:layout-options="props.layoutOptions"
 					:current-layout-path="props.currentLayoutPath"
 					:on-insert-slide-from-layout="props.onInsertSlideFromLayout"
+					:on-insert-slide-from-template="props.onInsertSlideFromTemplate"
+					:template-scheme="props.templateScheme"
 					:on-toggle-comments="props.onToggleComments"
 					:is-comments-panel-open="props.isCommentsPanelOpen"
 				/>

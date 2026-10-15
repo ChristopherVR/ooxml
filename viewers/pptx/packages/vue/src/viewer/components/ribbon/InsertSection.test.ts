@@ -36,6 +36,28 @@ function button(root: Element, id: string): HTMLButtonElement {
 	return root.querySelector(`[data-ribbon-control="${id}"]`)!.shadowRoot!.querySelector('button')!;
 }
 
+describe('insert section slide templates', () => {
+	const menu = () =>
+		document.body.querySelector<HTMLElement>('[data-ribbon-control="insert.slides.newSlide"]')!;
+
+	it('ends the New Slide menu with Slide Templates, even for a deck with no layouts', async () => {
+		const { wrapper } = mountInsert({ onInsertSlideFromTemplate: vi.fn(), layoutOptions: [] });
+		menu().querySelector<HTMLButtonElement>('.trigger')!.click();
+		const items = [...menu().querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.map((item) => item.textContent)).toStrictEqual(['Slide Templates...']);
+		items[0].click();
+		await wrapper.vm.$nextTick();
+		expect(document.body.querySelector('[role="dialog"]:not([hidden])')).not.toBeNull();
+		wrapper.unmount();
+	});
+
+	it('leaves the entry out without a template handler', () => {
+		const { wrapper } = mountInsert({ layoutOptions: [] });
+		expect(menu().querySelector<HTMLButtonElement>('.trigger')!.disabled).toBeTruthy();
+		wrapper.unmount();
+	});
+});
+
 describe('insert section', () => {
 	it('routes commands to the native handlers', () => {
 		const { props, wrapper } = mountInsert({ hasSelection: true });

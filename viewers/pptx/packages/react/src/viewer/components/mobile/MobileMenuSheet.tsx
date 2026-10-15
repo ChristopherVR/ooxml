@@ -160,6 +160,8 @@ function MobileSectionBody({
 				<div className={wrap}>
 					<InsertSection
 						canEdit={p.canEdit}
+						onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
+						templateScheme={p.templateScheme}
 						newShapeType={p.newShapeType}
 						onSetNewShapeType={p.onSetNewShapeType}
 						onAddTextBox={p.onAddTextBox}

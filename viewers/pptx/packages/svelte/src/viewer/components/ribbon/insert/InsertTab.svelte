@@ -45,6 +45,7 @@
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import EquationEditorDialog from './EquationEditorDialog.svelte';
 	import HyperlinkDialog from './HyperlinkDialog.svelte';
+	import SlideTemplatesLauncher from '../home/SlideTemplatesLauncher.svelte';
 	import SmartArtDialog from './SmartArtDialog.svelte';
 
 	const {
@@ -84,6 +85,7 @@
 	let mediaInput = $state<HTMLInputElement | null>(null);
 	let equationOpen = $state(false);
 	let smartArtOpen = $state(false);
+	let templatesOpen = $state(false);
 	// eslint-disable-next-line prefer-const
 	let hyperlinkOpen = $state(false);
 	let shapeType = $state<ShapePresetType>('rect');
@@ -113,6 +115,7 @@
 		headerFooterAvailable: Boolean(onheaderfooter),
 		// Like Home, New Slide works without layouts (it adds a blank slide).
 		newSlideAvailable: true,
+		slideTemplatesAvailable: customization.isDialogAvailable('slideTemplates'),
 		commentAvailable: Boolean(chromeUi),
 		layouts: scopedLayouts.map(({ path, name }) => ({ path, name })),
 		...(currentLayoutPath ? { currentLayoutPath } : {}),
@@ -221,6 +224,7 @@
 				}
 				break;
 			}
+			case 'slideTemplates': templatesOpen = true; break;
 			case 'shapeType': shapeType = intent.value as ShapePresetType; break;
 			case 'shape': editor.insertElement(newPresetShapeElement(intent.value as ShapePresetType)); break;
 			case 'chartType': chartKind = intent.value as InsertChartKind; break;
@@ -251,6 +255,7 @@
 <input bind:this={imageInput} type="file" accept="image/*" class="pptx-svelte-inserttab-file" onchange={onImageFileChange} />
 <input bind:this={mediaInput} type="file" accept="video/*,audio/*" class="pptx-svelte-inserttab-file" onchange={onMediaFileChange} />
 
+<SlideTemplatesLauncher {editor} onnavigate={(index) => onnavigateslide?.(index)} bind:open={templatesOpen} />
 {#if smartArtOpen}<SmartArtDialog oncancel={closeSmartArt} oninsert={insertSmartArt} />{/if}
 <EquationEditorDialog {editor} {canvasSize} open={equationOpen && customization.isDialogAvailable('equation')} onclose={closeEquationDialog} />
 {#if hyperlinkOpen && customization.isDialogAvailable('hyperlink')}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}

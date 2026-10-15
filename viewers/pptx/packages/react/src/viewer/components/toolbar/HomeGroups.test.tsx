@@ -146,8 +146,18 @@ describe('home slides group', () => {
 		act(() => gallery('home.slides.newSlide')!.querySelectorAll<HTMLElement>('button')[0].click());
 		expect(props.onInsertSlideFromLayout).toHaveBeenCalledWith('/l1', 'Title');
 		mountSlides(true, []);
-		expect(caret().hidden).toBeTruthy();
+		// No layouts: the face is off, but the caret stays for Slide Templates.
+		expect(caret().hidden).toBeFalsy();
 		expect(button('home.slides.newSlide').hasAttribute('disabled')).toBeTruthy();
+		act(() => caret().click());
+		const entry = control('home.slides.newSlide').querySelector<HTMLButtonElement>(
+			'[data-ribbon-control="home.slides.slideTemplates"]',
+		);
+		expect(entry?.textContent).toBe('Slide Templates...');
+		act(() =>
+			root.render(<SlidesGroup canEdit layoutOptions={[]} onInsertSlideFromLayout={vi.fn()} />),
+		);
+		expect(caret().hidden).toBeTruthy();
 	});
 
 	it('loads previews on open and portals the host artwork into the tiles', async () => {

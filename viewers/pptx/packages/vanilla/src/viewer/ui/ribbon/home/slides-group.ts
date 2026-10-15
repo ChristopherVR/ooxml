@@ -67,7 +67,7 @@ export function createSlidesGroup(
 		editable: false,
 		hasLayouts: false,
 		hasSlides: false,
-		showTemplates: true,
+		showTemplates: handlers.isSlideTemplatesAvailable?.() ?? true,
 		newSlideNeedsLayout: false,
 		resetNeedsSlide: true,
 	};

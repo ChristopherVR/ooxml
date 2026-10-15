@@ -1,6 +1,7 @@
 import {
 	DEFAULT_INSERT_CHART_KIND,
 	FREEFORM_TOOL_IDS,
+	isDialogAvailable,
 	isDrawingToolVisible,
 	resolveInsertSlideLayout,
 } from 'ooxml-ui/pptx';
@@ -10,12 +11,14 @@ import type {
 	InsertSlideLayout,
 	PptxUiMobileInsertElement,
 	PptxUiRibbonInsertElement,
+	SlideTemplateId,
 	RibbonInsertRequestEvent,
 } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SupportedShapeType } from '../../types';
+import { SlideTemplateGalleryDialog } from '../SlideTemplateGalleryDialog';
 import { useViewerCustomizationContext } from '../viewer-customization-context';
 import { DateTimeFieldDialog } from './DateTimeFieldDialog';
 
@@ -45,6 +48,10 @@ export interface InsertSectionProps {
 	layoutOptions?: readonly InsertSlideLayout[];
 	currentLayoutPath?: string;
 	onInsertSlideFromLayout?: (path: string, name?: string) => void;
+	/** Slide Templates... ends New Slide's menu; without a handler the entry is left out. */
+	onInsertSlideFromTemplate?: (templateId: SlideTemplateId) => void;
+	/** Deck scheme map so template previews show the deck's theme colours. */
+	templateScheme?: Record<string, string>;
 	/** Comment opens the comments pane, as Review > New Comment does. */
 	onToggleComments?: () => void;
 	isCommentsPanelOpen?: boolean;
@@ -63,6 +70,9 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 	const customization = useViewerCustomizationContext();
 	const ref = useRef<PptxUiRibbonInsertElement | PptxUiMobileInsertElement>(null);
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
+	const [templatesOpen, setTemplatesOpen] = useState(false);
+	const templatesAvailable =
+		Boolean(p.onInsertSlideFromTemplate) && isDialogAvailable(customization, 'slideTemplates');
 	const [chartKind, setChartKind] = useState<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 	useEffect(() => {
 		const host = ref.current;
@@ -83,11 +93,12 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 			headerFooterAvailable: Boolean(p.onOpenHeaderFooter),
 			newSlideAvailable: Boolean(p.onInsertSlideFromLayout && p.layoutOptions?.length),
 			commentAvailable: Boolean(p.onToggleComments),
+			slideTemplatesAvailable: templatesAvailable,
 			layouts: p.layoutOptions ?? [],
 			...(p.currentLayoutPath ? { currentLayoutPath: p.currentLayoutPath } : {}),
 			translate: t,
 		};
-	}, [p, chartKind, customization, t]);
+	}, [p, chartKind, customization, t, templatesAvailable]);
 	useEffect(() => {
 		const host = ref.current;
 		if (!host) {
@@ -126,6 +137,9 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					}
 					break;
 				}
+				case 'slideTemplates':
+					setTemplatesOpen(true);
+					break;
 				case 'shapeType':
 					p.onSetNewShapeType(intent.value as SupportedShapeType);
 					break;
@@ -162,6 +176,14 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 				<pptx-ui-mobile-insert ref={ref as React.Ref<PptxUiMobileInsertElement>} />
 			) : (
 				<pptx-ui-ribbon-insert ref={ref as React.Ref<PptxUiRibbonInsertElement>} />
+			)}
+			{templatesAvailable && (
+				<SlideTemplateGalleryDialog
+					isOpen={templatesOpen}
+					onClose={() => setTemplatesOpen(false)}
+					onInsert={(templateId) => p.onInsertSlideFromTemplate?.(templateId)}
+					scheme={p.templateScheme}
+				/>
 			)}
 			{datePickerOpen && p.onInsertField && (
 				<DateTimeFieldDialog

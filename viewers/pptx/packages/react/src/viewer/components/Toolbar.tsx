@@ -250,6 +250,8 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 					{sIns && (
 						<InsertSection
 							canEdit={p.canEdit}
+							onInsertSlideFromTemplate={p.onInsertSlideFromTemplate}
+							templateScheme={p.templateScheme}
 							newShapeType={p.newShapeType}
 							onSetNewShapeType={p.onSetNewShapeType}
 							activeFreeformTool={p.activeFreeformTool}

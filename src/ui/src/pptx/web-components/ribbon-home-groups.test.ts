@@ -75,8 +75,26 @@ describe('shared Slides group', () => {
 		};
 		host.querySelector<HTMLElement>('[data-ribbon-control="home.slides.reset"]')!.click();
 		expect(read()).toHaveLength(2);
+		// No layouts: the caret stays because Slide Templates still ends the menu.
+		expect(host.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.hidden).toBeFalsy();
+	});
+
+	it('keeps Slide Templates reachable for a deck with no layouts, and hides the caret only without it', () => {
+		const noLayouts = { ...slides, hasLayouts: false, newSlideNeedsLayout: false };
+		const host = mount('slides', slidesHomeControls(noLayouts));
+		const caret = host.querySelector<HTMLButtonElement>('[data-pptx-chrome="split-caret"]')!;
+		expect(caret.hidden).toBeFalsy();
+		caret.click();
+		const entry = host.querySelector<HTMLButtonElement>(
+			'.popup [data-ribbon-control="home.slides.slideTemplates"]',
+		)!;
+		expect(entry.textContent).toBe('Slide Templates...');
+		const read = intents(host);
+		entry.click();
+		expect(read()).toStrictEqual([{ id: 'home.slides.slideTemplates' }]);
+		const bare = mount('slides', slidesHomeControls({ ...noLayouts, showTemplates: false }));
 		expect(
-			host.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.hidden,
+			bare.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!.hidden,
 		).toBeTruthy();
 	});
 

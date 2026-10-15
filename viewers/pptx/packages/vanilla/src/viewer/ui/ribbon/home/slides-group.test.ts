@@ -110,7 +110,13 @@ describe('createSlidesGroup', () => {
 		const caret = control(group, 'newSlide').querySelector<HTMLButtonElement>(
 			'[data-pptx-chrome="split-caret"]',
 		)!;
-		expect(caret.hidden).toBeTruthy();
+		// No layouts: the caret stays because Slide Templates still ends the menu.
+		expect(caret.hidden).toBeFalsy();
+		caret.click();
+		expect(
+			control(group, 'newSlide').querySelector('[data-ribbon-control="home.slides.slideTemplates"]')
+				?.textContent,
+		).toBe('Slide Templates...');
 		expect(control(group, 'newSlide').querySelector('button')!.disabled).toBeFalsy();
 		expect(
 			(control(group, 'layout').querySelector('button') as HTMLButtonElement).disabled,

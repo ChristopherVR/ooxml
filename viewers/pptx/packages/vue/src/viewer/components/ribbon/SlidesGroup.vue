@@ -62,7 +62,7 @@ const state = computed(() => ({
 		editable: props.canEdit,
 		hasLayouts: props.layoutOptions.length > 0,
 		hasSlides: true,
-		showTemplates: Boolean(props.onInsertSlideFromTemplate),
+		showTemplates: Boolean(props.onInsertSlideFromTemplate) && templatesAvailable.value,
 		newSlideNeedsLayout: true,
 		resetNeedsSlide: false,
 		layouts: layouts.value,

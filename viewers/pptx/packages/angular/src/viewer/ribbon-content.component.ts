@@ -153,6 +153,7 @@ import type { RibbonTab } from './ribbon-types';
 					(openHyperlink)="link.emit()"
 					[commentsOpen]="commentsOpen()"
 					(toggleComments)="comments.emit()"
+					(openTemplateGallery)="openTemplateGallery.emit()"
 				/>
 			}
 			@case ('text') {

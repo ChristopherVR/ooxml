@@ -5,6 +5,7 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
+	SlideTemplateId,
 	InsertChartKind,
 	InsertSlideLayout,
 	RibbonInsertRequestEvent,
@@ -13,6 +14,7 @@ import type {
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
+import { createSlideTemplateDialog } from '../home/slide-template-dialog';
 import type { RibbonInsertHandlers } from '../ribbon-types';
 import { createSmartArtDialog } from './insert/smartart-dialog';
 
@@ -47,6 +49,12 @@ export function createInsertTab(
 	onOpenHyperlink: () => void,
 	/** Insert > Comment: opens the comments pane (reopening it is harmless). */
 	onOpenComments?: () => void,
+	/** Slide Templates... at the end of the New Slide menu; omit to leave the entry out. */
+	templates?: {
+		insert(templateId: SlideTemplateId): void;
+		scheme?(): Record<string, string> | undefined;
+		available?(): boolean;
+	},
 ): InsertTab {
 	registerPptxWebControls();
 	// The pane keeps the ribbon's shared row layout (scrolling when narrow).
@@ -57,6 +65,12 @@ export function createInsertTab(
 	const smartArt = createSmartArtDialog(doc, t, (layout, defaultItems) =>
 		handlers.insertSmartArt(layout, defaultItems),
 	);
+	const templateDialog = templates
+		? createSlideTemplateDialog(doc, t, {
+				onInsert: (templateId) => templates.insert(templateId),
+				getScheme: () => templates.scheme?.(),
+			})
+		: undefined;
 	let state: RibbonInsertState = {
 		editable: true,
 		hasSelection: false,
@@ -66,6 +80,7 @@ export function createInsertTab(
 		freeformTools: handlers.armFreeformTool ? (handlers.visibleDrawingTools?.() ?? []) : [],
 		newSlideAvailable: Boolean(handlers.addSlide),
 		commentAvailable: Boolean(onOpenComments),
+		slideTemplatesAvailable: templates ? (templates.available?.() ?? true) : false,
 		layouts: [],
 		translate: t,
 	};
@@ -123,6 +138,9 @@ export function createInsertTab(
 				}
 				break;
 			}
+			case 'slideTemplates':
+				templateDialog?.open(el.closest<HTMLElement>('.pptxv') ?? doc.body);
+				break;
 			case 'shapeType':
 				state = { ...state, shapeType: intent.value };
 				sync();
@@ -155,6 +173,7 @@ export function createInsertTab(
 			state = { ...state, editable };
 			if (!editable) {
 				smartArt.close();
+				templateDialog?.close();
 			}
 			sync();
 		},

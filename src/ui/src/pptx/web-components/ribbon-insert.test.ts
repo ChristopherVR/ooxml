@@ -227,6 +227,35 @@ describe('shared Insert view', () => {
 		expect(slide.querySelector<HTMLButtonElement>('.trigger')!.disabled).toBeTruthy();
 	});
 
+	it('ends the New Slide menu with Slide Templates, which a deck with no layouts still reaches', () => {
+		const { host, requests } = mount({ slideTemplatesAvailable: true });
+		const slide = control(host, 'insert.slides.newSlide');
+		slide.querySelector<HTMLButtonElement>('.trigger')!.click();
+		const items = [...slide.querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.at(-1)!.textContent).toBe('Slide Templates...');
+		items.at(-1)!.click();
+		expect(calls(requests).at(-1)).toStrictEqual({ kind: 'slideTemplates' });
+		// No layouts and nothing to insert from them: the face is off, the menu is not.
+		host.state = {
+			...STATE,
+			layouts: [],
+			newSlideAvailable: false,
+			slideTemplatesAvailable: true,
+		};
+		expect(slide.querySelector<HTMLButtonElement>('.primary')!.disabled).toBeTruthy();
+		const caret = slide.querySelector<HTMLButtonElement>('.trigger')!;
+		expect(caret.disabled).toBeFalsy();
+		caret.click();
+		expect(
+			[...slide.querySelectorAll<HTMLButtonElement>('[data-insert-item]')].map(
+				(item) => item.textContent,
+			),
+		).toStrictEqual(['Slide Templates...']);
+		// Without the capability the menu is empty again and the caret goes.
+		host.state = { ...STATE, layouts: [], newSlideAvailable: false };
+		expect(slide.querySelector<HTMLButtonElement>('.trigger')!.disabled).toBeTruthy();
+	});
+
 	it('shows what the editor cannot do disabled, with an honest ScreenTip', () => {
 		const { host, requests } = mount();
 		for (const id of [

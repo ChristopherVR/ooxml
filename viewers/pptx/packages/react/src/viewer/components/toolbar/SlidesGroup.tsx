@@ -58,7 +58,9 @@ export function SlidesGroup(p: SlidesGroupProps): React.ReactElement {
 				editable: p.canEdit,
 				hasLayouts: layoutOptions.length > 0,
 				hasSlides: true,
-				showTemplates: Boolean(p.onInsertSlideFromTemplate),
+				showTemplates:
+					Boolean(p.onInsertSlideFromTemplate) &&
+					isDialogAvailable(customization, 'slideTemplates'),
 				newSlideNeedsLayout: true,
 				resetNeedsSlide: false,
 				layouts: {
@@ -67,7 +69,14 @@ export function SlidesGroup(p: SlidesGroupProps): React.ReactElement {
 					previews,
 				},
 			}),
-		[p.canEdit, layoutOptions, p.onInsertSlideFromTemplate, p.currentLayoutPath, previews],
+		[
+			p.canEdit,
+			layoutOptions,
+			p.onInsertSlideFromTemplate,
+			customization,
+			p.currentLayoutPath,
+			previews,
+		],
 	);
 	const request = useCallback(
 		(id: string, _part?: string, intent?: RibbonHomeIntent) => {

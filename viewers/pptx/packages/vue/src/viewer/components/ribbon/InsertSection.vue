@@ -9,6 +9,7 @@
 import {
 	DEFAULT_INSERT_CHART_KIND,
 	FREEFORM_TOOL_IDS,
+	isDialogAvailable,
 	isDrawingToolVisible,
 	resolveInsertSlideLayout,
 } from 'ooxml-ui/pptx';
@@ -17,12 +18,14 @@ import type {
 	InsertChartKind,
 	InsertSlideLayout,
 	RibbonInsertRequestEvent,
+	SlideTemplateId,
 } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { useOutlineAuthoring } from '../../composables/useOutlineAuthoring';
 import { useResolvedCustomization } from '../../composables/useViewerCustomization';
+import SlideTemplateGalleryDialog from '../SlideTemplateGalleryDialog.vue';
 import DateTimeFieldDialog from './DateTimeFieldDialog.vue';
 import type { SupportedShapeType } from './ribbon-types';
 
@@ -48,6 +51,10 @@ interface Props {
 	layoutOptions?: readonly InsertSlideLayout[];
 	currentLayoutPath?: string;
 	onInsertSlideFromLayout?: (path: string, name?: string) => void;
+	/** Slide Templates... ends New Slide's menu; without a handler the entry is left out. */
+	onInsertSlideFromTemplate?: (templateId: SlideTemplateId) => void;
+	/** Deck scheme map so template previews show the deck's theme colours. */
+	templateScheme?: Record<string, string>;
 	/** Comment opens the comments pane, as Review > New Comment does. */
 	onToggleComments?: () => void;
 	isCommentsPanelOpen?: boolean;
@@ -63,6 +70,12 @@ const outline = useOutlineAuthoring();
 const customization = useResolvedCustomization();
 const chartKind = ref<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 const datePickerOpen = ref(false);
+const templatesOpen = ref(false);
+const templatesAvailable = computed(
+	() =>
+		Boolean(props.onInsertSlideFromTemplate) &&
+		isDialogAvailable(customization.value, 'slideTemplates'),
+);
 
 const state = computed(() => ({
 	editable: props.canEdit,
@@ -79,6 +92,7 @@ const state = computed(() => ({
 	headerFooterAvailable: Boolean(props.onOpenHeaderFooter),
 	newSlideAvailable: Boolean(props.onInsertSlideFromLayout && props.layoutOptions?.length),
 	commentAvailable: Boolean(props.onToggleComments),
+	slideTemplatesAvailable: templatesAvailable.value,
 	layouts: props.layoutOptions ?? [],
 	...(props.currentLayoutPath ? { currentLayoutPath: props.currentLayoutPath } : {}),
 	translate: t,
@@ -117,6 +131,9 @@ function request(event: RibbonInsertRequestEvent): void {
 			}
 			break;
 		}
+		case 'slideTemplates':
+			templatesOpen.value = true;
+			break;
 		case 'shapeType':
 			props.onSetNewShapeType(intent.value as SupportedShapeType);
 			break;
@@ -154,6 +171,13 @@ function insertDate(formatted: string): void {
 <template>
 	<pptx-ui-mobile-insert v-if="props.phone" :state.prop="state" @insert-request="request" />
 	<pptx-ui-ribbon-insert v-else :state.prop="state" @insert-request="request" />
+	<SlideTemplateGalleryDialog
+		v-if="templatesAvailable"
+		:open="templatesOpen"
+		:scheme="props.templateScheme"
+		@insert="props.onInsertSlideFromTemplate?.($event)"
+		@close="templatesOpen = false"
+	/>
 	<DateTimeFieldDialog
 		v-if="datePickerOpen && props.onInsertField"
 		@close="datePickerOpen = false"

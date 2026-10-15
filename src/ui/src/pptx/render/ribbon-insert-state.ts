@@ -65,6 +65,8 @@ export interface RibbonInsertState {
 	 */
 	newSlideAvailable?: boolean;
 	commentAvailable?: boolean;
+	/** The host can open the Slide Templates dialog: New Slide's menu then always ends with it. */
+	slideTemplatesAvailable?: boolean;
 	/** The layouts New Slide offers; empty leaves the gallery out and inserts the host default. */
 	layouts?: readonly InsertSlideLayout[];
 	/** The active slide's layout, marked in the New Slide gallery. */
@@ -83,6 +85,8 @@ export type RibbonInsertIntent =
 	| { kind: 'field'; value: RibbonInsertField }
 	/** New Slide; the layout path, or null for the host's default (the active slide's layout). */
 	| { kind: 'newSlide'; value: string | null }
+	/** Slide Templates... at the end of New Slide's menu: the host opens its dialog. */
+	| { kind: 'slideTemplates' }
 	/** Insert Table from the grid picker: rows by columns. */
 	| { kind: 'table'; rows: number; columns: number };
 
@@ -250,6 +254,8 @@ export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertI
 				intent.columns >= 1 &&
 				intent.columns <= INSERT_TABLE_MAX.columns
 			);
+		case 'slideTemplates':
+			return state.editable && state.slideTemplatesAvailable === true;
 		case 'newSlide':
 			return (
 				state.editable &&

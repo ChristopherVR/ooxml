@@ -7,6 +7,7 @@ import {
 	INSERT_GROUPS,
 	INSERT_GROUP_CAPTIONS,
 	INSERT_GROUP_SCALING,
+	canRequestInsert,
 	SHAPE_THUMB_VIEW_BOX,
 	insertControlStatus,
 	pushRecentShape,
@@ -28,6 +29,8 @@ import { RIBBON_INSERT_ICON_PATHS } from './ribbon-insert-icons';
 
 /** Id prefix of the Recently Used Shapes row, so no id repeats inside the menu. */
 const RECENT_PREFIX = 'recent:';
+/** Menu id of the Slide Templates entry at the end of New Slide's menu. */
+const TEMPLATES_ID = '__slideTemplates__';
 const FREEFORM_ICONS: Record<string, string> = { freeformShape: 'penTool', curve: 'spline' };
 const FREEFORM_FALLBACKS: Record<string, string> = {
 	freeformShape: 'Freeform: Shape',
@@ -235,7 +238,8 @@ export function createRibbonInsertView(
 			doc,
 			spec.control,
 			spec.icon,
-			(value) => request({ kind: 'newSlide', value }),
+			(value) =>
+				request(value === TEMPLATES_ID ? { kind: 'slideTemplates' } : { kind: 'newSlide', value }),
 			{ large: true, split: { primary: () => request({ kind: 'newSlide', value: null }) } },
 		);
 		addMenu(spec, menu, (state, text) => {
@@ -245,14 +249,28 @@ export function createRibbonInsertView(
 				label: text(spec.label),
 				title: tooltip(spec, text, status.reason),
 				menuTitle: `${text(spec.label)}: ${text(['pptx.ribbon.groupLayouts', 'Layouts'])}`,
-				items: layouts.map((item) => ({
-					id: item.path,
-					label: item.name,
-					section: text(['pptx.ribbon.groupLayouts', 'Layouts']),
-					current: item.path === state.currentLayoutPath,
-				})),
-				disabled: status.disabled || layouts.length === 0,
-				primaryDisabled: status.disabled,
+				items: [
+					...layouts.map((item) => ({
+						id: item.path,
+						label: item.name,
+						section: text(['pptx.ribbon.groupLayouts', 'Layouts']),
+						current: item.path === state.currentLayoutPath,
+					})),
+					// PowerPoint has no Slide Templates button: it ends the New Slide menu.
+					...(state.slideTemplatesAvailable
+						? [
+								{
+									id: TEMPLATES_ID,
+									label: text(['pptx.home.slideTemplatesMenu', 'Slide Templates...']),
+								},
+							]
+						: []),
+				],
+				disabled:
+					status.disabled || (layouts.length === 0 && state.slideTemplatesAvailable !== true),
+				// The face adds a slide from a layout; the menu may still hold Slide Templates.
+				primaryDisabled:
+					status.disabled || !canRequestInsert(state, { kind: 'newSlide', value: null }),
 				menuLabel: text(['pptx.ribbon.groupLayouts', 'Layouts']),
 			});
 		});

@@ -63,6 +63,25 @@ function button(id: string): HTMLButtonElement {
 		.shadowRoot!.querySelector<HTMLButtonElement>('button')!;
 }
 
+describe('insertSection slide templates', () => {
+	const menu = () =>
+		container.querySelector<HTMLElement>('[data-ribbon-control="insert.slides.newSlide"]')!;
+
+	it('ends the New Slide menu with Slide Templates, even for a deck with no layouts', () => {
+		render({ onInsertSlideFromTemplate: vi.fn(), layoutOptions: [] });
+		act(() => menu().querySelector<HTMLButtonElement>('.trigger')!.click());
+		const items = [...menu().querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.map((item) => item.textContent)).toStrictEqual(['Slide Templates...']);
+		act(() => items[0].click());
+		expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+	});
+
+	it('leaves the entry out without a template handler', () => {
+		render({ layoutOptions: [] });
+		expect(menu().querySelector<HTMLButtonElement>('.trigger')!.disabled).toBeTruthy();
+	});
+});
+
 describe('insertSection', () => {
 	it('routes commands to the native handlers', () => {
 		const props = baseProps({ hasSelection: true });

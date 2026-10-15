@@ -421,7 +421,9 @@ export function insertControlStatus(
 		...(spec.intent ? [spec.intent] : []),
 		...(spec.menu ?? []).flatMap((item) => (item.intent ? [item.intent] : [])),
 		...(spec.picker ? [{ kind: 'table', rows: 1, columns: 1 } as const] : []),
-		...(spec.special === 'layouts' ? [{ kind: 'newSlide', value: null } as const] : []),
+		...(spec.special === 'layouts'
+			? [{ kind: 'newSlide', value: null } as const, { kind: 'slideTemplates' } as const]
+			: []),
 	];
 	if (actions.length === 0) {
 		return { hidden, disabled: true, reason: 'unsupported' };

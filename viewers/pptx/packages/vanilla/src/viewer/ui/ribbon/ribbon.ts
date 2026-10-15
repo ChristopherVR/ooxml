@@ -135,6 +135,11 @@ export function createRibbon(
 				() => handlers.nav.openHeaderFooter(),
 				() => handlers.nav.openHyperlink(),
 				() => handlers.nav.openComments(),
+				{
+					insert: (templateId) => handlers.edit.insertSlideFromTemplate(templateId),
+					scheme: () => handlers.edit.getTemplateScheme(),
+					available: () => isDialogAvailable(resolved(), 'slideTemplates'),
+				},
 			);
 	const drawTab: DrawTab | null = hidden('draw') ? null : createDrawTab(doc, t, handlers.draw);
 	let inspectorOpen = false;

@@ -66,6 +66,16 @@ describe('ribbonInsertSectionComponent', () => {
 		]);
 	});
 
+	it('opens the Slide Templates gallery from the New Slide menu and offers it with no layouts', () => {
+		const { section } = create();
+		const open = vi.spyOn(section.openTemplateGallery, 'emit');
+		request(section, { kind: 'slideTemplates' });
+		expect(open).toHaveBeenCalledOnce();
+		// The entry is offered whatever the deck's layouts, so the menu is never empty.
+		const view = (section as unknown as { view(): { slideTemplatesAvailable: boolean } }).view();
+		expect(view.slideTemplatesAvailable).toBe(true);
+	});
+
 	it('inserts a table of the size picked on the Table grid', () => {
 		const { section, addElement } = create();
 		request(section, { kind: 'table', rows: 4, columns: 3 });

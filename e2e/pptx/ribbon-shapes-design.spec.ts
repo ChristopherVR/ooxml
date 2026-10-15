@@ -136,6 +136,18 @@ test.describe('Home > Slides', () => {
 	});
 });
 
+test.describe('Insert > Slides', () => {
+	test('the New Slide menu ends with Slide Templates, which opens the dialog', async ({ page }) => {
+		await open(page, 'Insert');
+		const menu = page.locator('[data-ribbon-control="insert.slides.newSlide"]');
+		await menu.locator('.trigger').last().click();
+		const items = menu.locator('[data-insert-item]');
+		await expect(items.last()).toHaveText('Slide Templates...');
+		await items.last().click();
+		await expect(page.getByRole('dialog', { name: /Slide Templates/iu })).toBeVisible();
+	});
+});
+
 test.describe('Design', () => {
 	test('inline Themes gallery re-themes the deck and marks the current theme', async ({ page }) => {
 		await open(page, 'Design');

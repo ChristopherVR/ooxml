@@ -27,7 +27,11 @@ function makeHandlers(over: Partial<RibbonInsertHandlers> = {}): RibbonInsertHan
 	};
 }
 
-function make(over: Partial<RibbonInsertHandlers> = {}, spies: Record<string, () => void> = {}) {
+function make(
+	over: Partial<RibbonInsertHandlers> = {},
+	spies: Record<string, () => void> = {},
+	templates?: Parameters<typeof createInsertTab>[7],
+) {
 	const tab = createInsertTab(
 		document,
 		createTranslator(),
@@ -36,6 +40,7 @@ function make(over: Partial<RibbonInsertHandlers> = {}, spies: Record<string, ()
 		spies.headerFooter ?? vi.fn(),
 		spies.hyperlink ?? vi.fn(),
 		spies.comments,
+		templates,
 	);
 	document.body.append(tab.el);
 	return tab;
@@ -77,6 +82,28 @@ describe('createInsertTab', () => {
 		document.body.replaceChildren();
 		// A shape pick is remembered in Recently Used Shapes.
 		localStorage.removeItem(RECENT_SHAPES_KEY);
+	});
+
+	it('ends the New Slide menu with Slide Templates, even for a deck with no layouts', () => {
+		const insert = vi.fn();
+		const tab = make({}, {}, { insert, available: () => true });
+		const newSlide = tab.el.querySelector<HTMLElement>(
+			'[data-ribbon-control="insert.slides.newSlide"]',
+		)!;
+		newSlide.querySelector<HTMLButtonElement>('.trigger')!.click();
+		const items = [...newSlide.querySelectorAll<HTMLButtonElement>('[data-insert-item]')];
+		expect(items.map((item) => item.textContent)).toStrictEqual(['Slide Templates...']);
+		items[0].click();
+		expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+	});
+
+	it('leaves the entry out when the host has no templates or hides the dialog', () => {
+		for (const tab of [make(), make({}, {}, { insert: vi.fn(), available: () => false })]) {
+			const trigger = tab.el.querySelector<HTMLButtonElement>(
+				'[data-ribbon-control="insert.slides.newSlide"] .trigger',
+			)!;
+			expect(trigger.disabled).toBeTruthy();
+		}
 	});
 
 	it('offers the Freeform: Shape and Curve tools and arms / disarms them', () => {

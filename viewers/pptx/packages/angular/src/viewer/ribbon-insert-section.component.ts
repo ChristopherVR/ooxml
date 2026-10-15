@@ -30,6 +30,7 @@ import { TranslateService } from '@ngx-translate/core';
 import {
 	classifyMediaType,
 	DEFAULT_INSERT_CHART_KIND,
+	isDialogAvailable,
 	resolveInsertSlideLayout,
 } from 'ooxml-ui/pptx';
 import type {
@@ -101,6 +102,8 @@ export class RibbonInsertSectionComponent {
 	readonly openHyperlink = output<void>();
 	/** "Comment"; the host opens the comments pane, as Review > New Comment does. */
 	readonly toggleComments = output<void>();
+	/** Slide Templates... at the end of New Slide's menu; the host opens the gallery dialog. */
+	readonly openTemplateGallery = output<void>();
 	readonly chartTypeChange = output<InsertChartKind>();
 	readonly shapeTypeChange = output<ShapePresetType>();
 
@@ -115,6 +118,7 @@ export class RibbonInsertSectionComponent {
 			// Like Home, New Slide works without layouts (it adds a blank slide).
 			newSlideAvailable: true,
 			commentAvailable: true,
+			slideTemplatesAvailable: isDialogAvailable(this.customization(), 'slideTemplates'),
 			layouts: this.layouts(),
 			...this.currentLayout(),
 			translate: (key: string) => this.translate.instant(key),
@@ -158,6 +162,9 @@ export class RibbonInsertSectionComponent {
 				this.editor.addSlide(this.slideIndex(), layout?.path);
 				break;
 			}
+			case 'slideTemplates':
+				this.openTemplateGallery.emit();
+				break;
 			case 'shapeType':
 				this.shapeTypeChange.emit(intent.value as ShapePresetType);
 				break;
