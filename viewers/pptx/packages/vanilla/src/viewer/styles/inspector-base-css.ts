@@ -85,6 +85,9 @@ export const INSPECTOR_BASE_CSS = `
 	color: var(--pptx-muted-foreground);
 	font-size: 11px;
 }
+/* A field toggled off with the hidden attribute must stay off: the flex
+   display above would otherwise override the user-agent display: none. */
+.pptxv-inspector-section :where(label:not([class]), .pptxv-exhaustive-field, .pptxv-chart-filters-range-field)[hidden] { display: none; }
 .pptxv-inspector-section :where(label:not([class]), .pptxv-exhaustive-field, .pptxv-chart-filters-range-field) > :where(input, textarea, select, pptx-ui-select) {
 	flex: 0 1 60%;
 	margin-left: auto;

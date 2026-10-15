@@ -18,6 +18,7 @@ import { EQUATION_DIALOG_CSS } from './equation-dialog-css';
 import { EXPORT_PROGRESS_CSS } from './export-progress-css';
 import { FILE_INFO_CSS } from './file-info-css';
 import { INSPECTOR_BASE_CSS } from './inspector-base-css';
+import { INSPECTOR_EXTRAS_CSS } from './inspector-extras-css';
 import { INSPECTOR_FORMAT_CSS } from './inspector-format-css';
 import { INSPECTOR_PANELS_CSS } from './inspector-panels-css';
 import { INSPECTOR_TABLE_CELL_CSS } from './inspector-table-cell-css';
@@ -860,6 +861,7 @@ ${ANIMATION_AUTHORING_CSS}
 ${INSPECTOR_PANELS_CSS}
 ${INSPECTOR_FORMAT_CSS}
 ${INSPECTOR_TABLE_CELL_CSS}
+${INSPECTOR_EXTRAS_CSS}
 ${ACCOUNT_CSS}
 ${AI_CSS}
 ${AI_HISTORY_CSS}

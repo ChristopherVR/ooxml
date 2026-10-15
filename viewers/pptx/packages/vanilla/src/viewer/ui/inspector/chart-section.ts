@@ -5,6 +5,7 @@ import {
 	CHART_TYPE_LABEL_KEYS,
 	CHART_TYPE_OPTIONS,
 	collapseChartTitleRunsForEdit,
+	GROUPING_SUPPORTED_TYPES,
 	patchChartData as sharedPatchChartData,
 	resolveDisplayedChartType,
 } from 'ooxml-ui/pptx';
@@ -184,6 +185,8 @@ export function createChartSection(
 			// a chart the user picked "Pareto" for.
 			chartType.control.value = resolveDisplayedChartType(current);
 			grouping.control.value = current.grouping ?? 'clustered';
+			// Stacking applies to bar, line and area only, as in the other bindings.
+			grouping.label.hidden = !GROUPING_SUPPORTED_TYPES.has(current.chartType);
 			// Point the shared index picker at the canvas-clicked point BEFORE the
 			// advanced/exhaustive sections read it below, so their per-point fields
 			// (fill, marker, invert-if-negative, ...) reflect the pressed mark.

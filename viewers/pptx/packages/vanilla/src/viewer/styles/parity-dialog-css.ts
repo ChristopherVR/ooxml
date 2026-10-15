@@ -76,8 +76,6 @@ export const PARITY_DIALOG_CSS = `
 .pptxv-ole-edit-table input:focus { background: var(--pptx-accent); outline: none; }
 .pptxv-ole-edit-paragraphs, .pptxv-ole-edit-deck { display: flex; flex-direction: column; gap: 8px; }
 .pptxv-ole-edit-paragraphs textarea { padding: 6px 8px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-muted); color: inherit; resize: vertical; }
-.pptxv-ole-edit-deck-row { display: flex; flex-direction: column; gap: 4px; color: var(--pptx-muted-foreground); }
-.pptxv-ole-edit-deck-row input { padding: 6px 8px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-muted); color: var(--pptx-foreground); }
 /* Touch target: matches MIN_TOUCH_TARGET_PX (44) from pptx-viewer-shared's
    render/responsive module, below MOBILE_BREAKPOINT (768). The workspace
    Comments pane's "Add Comment" button (comments-panel.ts) carries no class
