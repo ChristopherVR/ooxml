@@ -27,6 +27,7 @@ export * from './pins';
 export * from './presence';
 export * from './presence-controller';
 export * from './server-config';
+export * from './server-session';
 export * from './server-file-storage';
 export * from './shared-chat';
 export * from './sync-transport';

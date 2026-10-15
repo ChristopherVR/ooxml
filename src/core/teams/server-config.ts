@@ -17,6 +17,12 @@ export interface TeamsServerConfig {
 	iceTransportPolicy?: 'all' | 'relay';
 	/** Bearer token sent as `?token=` on both sockets. Treat it as a secret. */
 	token?: string;
+	/**
+	 * Signed session from the server's `POST /auth/session` (see `requestSession`), sent as
+	 * `?session=` on both sockets. The server takes the user id from it, not from the client's claim.
+	 * Short-lived and secret: never persist it with the settings.
+	 */
+	sessionToken?: string;
 }
 
 export interface ServerConfigResult {
@@ -121,6 +127,12 @@ export function parseServerConfig(
 		config.iceTransportPolicy = raw.iceTransportPolicy;
 	if (typeof raw.token === 'string' && raw.token.length > 0 && raw.token.length <= 4096)
 		config.token = raw.token;
+	if (
+		typeof raw.sessionToken === 'string' &&
+		raw.sessionToken.length > 0 &&
+		raw.sessionToken.length <= 1024
+	)
+		config.sessionToken = raw.sessionToken;
 	if (
 		config.iceTransportPolicy === 'relay' &&
 		!ice.some((s) => [s.urls].flat().some((u) => /^turns?:/iu.test(u)))

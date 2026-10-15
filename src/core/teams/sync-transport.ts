@@ -20,9 +20,11 @@ export function createSyncTransport(
 	/** Extra query parameters for the server, such as who opens a private chat room. */
 	query?: Record<string, string>,
 ): Transport {
+	// With accounts the server reads the user from the signed session, not from a claimed id.
+	const params = config.sessionToken ? { ...query, session: config.sessionToken } : query;
 	return config.mode === 'server' && config.syncUrl
 		? createWebSocketTransport({
-				url: endpointUrl(config.syncUrl, roomId, config.token, query),
+				url: endpointUrl(config.syncUrl, roomId, config.token, params),
 				...(classes.WebSocket ? { WebSocket: classes.WebSocket } : {}),
 			})
 		: createBroadcastTransport({
