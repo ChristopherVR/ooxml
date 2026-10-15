@@ -16,6 +16,7 @@ export {
 } from './edit-shape-data-commands';
 export { visioLinkedRowNames } from './edit-data';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
+export { readVisioStencil, type VisioStencilFile } from './stencil-file';
 export {
 	visioPrintTileCount,
 	VISIO_PRINT_COUNT_LIMITS,

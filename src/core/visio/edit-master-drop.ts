@@ -2,6 +2,7 @@ import { DEFAULTS, fail } from './package-common';
 import { parseVsdx } from './parser';
 import { growAutoSizePages } from './edit-page-auto-size';
 import { ensureStencilMaster } from './edit-stencil-master';
+import { importStencilMaster } from './edit-stencil-import';
 import { visioBuiltInMaster } from './stencil-masters';
 import type { VisioMasterInstanceEdit } from './edit-master-instance';
 import type { EditVsdxOptions, EditVsdxResult, VisioEdit } from './edit';
@@ -19,7 +20,13 @@ export interface VisioStencilMasterDropEdit {
 	pageId: string;
 	/** ID of the new shape. */
 	shapeId: string;
+	/** A built-in master id, or the master's ID inside `stencil` when that is given. */
 	master: string;
+	/**
+	 * The bytes of an opened stencil file (.vssx, .vstx or a drawing) the master comes from: the
+	 * master is copied from it into the drawing's masters part the first time.
+	 */
+	stencil?: Uint8Array;
 	x: number;
 	y: number;
 }
@@ -29,6 +36,7 @@ export const isVisioMasterDrop = (edit: { type: string }): edit is Drop =>
 	edit.type === 'insert-master-instance' || edit.type === 'drop-stencil-master';
 
 const ID = /^[1-9]\d{0,9}$/;
+const MASTER_ID = /^\d{1,10}$/;
 
 /** Copy and validate the command; page admission stays with the transaction. */
 export function snapshotStencilMasterDrop(
@@ -38,7 +46,12 @@ export function snapshotStencilMasterDrop(
 		fail('INVALID_EDIT', 'Invalid edit target.');
 	if (typeof edit.shapeId !== 'string' || !ID.test(edit.shapeId) || Number(edit.shapeId) > 2 ** 31)
 		fail('INVALID_EDIT', 'Invalid edit shape target.');
-	if (typeof edit.master !== 'string' || !visioBuiltInMaster(edit.master))
+	if (edit.stencil !== undefined) {
+		if (!(edit.stencil instanceof Uint8Array) || !edit.stencil.length)
+			fail('INVALID_EDIT', 'The stencil must be package bytes.');
+		if (typeof edit.master !== 'string' || !MASTER_ID.test(edit.master))
+			fail('INVALID_EDIT', 'The stencil has no such master.');
+	} else if (typeof edit.master !== 'string' || !visioBuiltInMaster(edit.master))
 		fail('INVALID_EDIT', 'The stencil has no such master.');
 	for (const value of [edit.x, edit.y])
 		if (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > 1e6)
@@ -48,6 +61,7 @@ export function snapshotStencilMasterDrop(
 		pageId: edit.pageId,
 		shapeId: edit.shapeId,
 		master: edit.master,
+		...(edit.stencil ? { stencil: edit.stencil.slice() } : {}),
 		x: edit.x,
 		y: edit.y,
 	};
@@ -93,14 +107,17 @@ export async function editVsdxMasterDrops(
 		check();
 		let masterId: string;
 		if (drop.type === 'drop-stencil-master') {
-			const ensured = await ensureStencilMaster(
-				bytes,
-				drop.master,
-				limits,
-				maxOutput,
-				deadline,
-				check,
-			);
+			const ensured = drop.stencil
+				? await importStencilMaster(
+						bytes,
+						drop.stencil,
+						drop.master,
+						limits,
+						maxOutput,
+						deadline,
+						check,
+					)
+				: await ensureStencilMaster(bytes, drop.master, limits, maxOutput, deadline, check);
 			bytes = ensured.bytes;
 			for (const part of ensured.changedParts) changed.add(part);
 			masterId = ensured.masterId;

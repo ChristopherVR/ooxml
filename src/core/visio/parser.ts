@@ -57,7 +57,18 @@ export interface ParseVsdxOptions {
 	maxTextRuns?: number;
 	maxParagraphs?: number;
 	maxDiagnostics?: number;
+	/**
+	 * Read a stencil or template package (.vssx, .vstx) for its masters: its main part may carry
+	 * the stencil or template content type, and a missing pages part means no pages. Macro-enabled
+	 * packages stay refused.
+	 */
+	stencil?: boolean;
 }
+
+const STENCIL_MAIN_TYPES = new Set([
+	'application/vnd.ms-visio.stencil.main+xml',
+	'application/vnd.ms-visio.template.main+xml',
+]);
 function option(value: number | undefined, fallback: number): number {
 	if (value === undefined) return fallback;
 	if (!Number.isSafeInteger(value) || value <= 0)
@@ -97,7 +108,10 @@ export async function parseVsdx(
 			(node) => node.localName === 'Override' && attribute(node, 'PartName') === `/${documentPart}`,
 		)
 		?.getAttribute('ContentType');
-	if (documentType !== 'application/vnd.ms-visio.drawing.main+xml')
+	if (
+		documentType !== 'application/vnd.ms-visio.drawing.main+xml' &&
+		!(options.stencil && documentType && STENCIL_MAIN_TYPES.has(documentType))
+	)
 		throw new VisioPackageError(
 			'UNSUPPORTED_FORMAT',
 			'Only VSDX drawing packages are supported; VSD, VDX, VSDM and templates are not supported.',
@@ -244,12 +258,13 @@ export async function parseVsdx(
 		metadataBudget: createMetadataBudget(options.metadata),
 		layerBudget: createLayerBudget(),
 	});
-	const pagesPart = await related(pkg, documentPart, 'pages');
-	if (!pagesPart) throw new VisioPackageError('INVALID_DOCUMENT', 'Missing Visio pages part.');
+	const pagesPart = await related(pkg, documentPart, 'pages', !options.stencil);
+	if (!pagesPart && !options.stencil)
+		throw new VisioPackageError('INVALID_DOCUMENT', 'Missing Visio pages part.');
 	const pages: VisioPage[] = [],
 		pageIds = new Set<string>();
 	const comments: VisioComment[] = [];
-	const pageNodes = children(await visioXml(pkg, pagesPart, 'Pages'), 'Page');
+	const pageNodes = pagesPart ? children(await visioXml(pkg, pagesPart, 'Pages'), 'Page') : [];
 	const foreground = pageNodes.filter((page) => !yes(attribute(page, 'Background')));
 	const fieldProperties = await readVisioFieldProperties(pkg);
 	const now = visioWallClock(new Date());
@@ -258,7 +273,7 @@ export async function parseVsdx(
 		if (!id || pageIds.has(id))
 			throw new VisioPackageError('INVALID_PAGE_ID', 'Page IDs must be present and unique.');
 		pageIds.add(id);
-		const part = await indexedPart(pkg, pagesPart, page, 'page');
+		const part = await indexedPart(pkg, pagesPart!, page, 'page');
 		const root = await visioXml(pkg, part, 'PageContents');
 		const localReport: Report = (code, message, extra) =>
 			report(code, message, { part, pageId: id, ...extra });

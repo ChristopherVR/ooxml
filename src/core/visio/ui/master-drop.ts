@@ -134,3 +134,27 @@ export function visioStencilDropCommand(
 		y: (page.height - y) / ratio,
 	};
 }
+
+/**
+ * Drop `master` of an opened stencil file (`stencil` is the file's bytes) with its pin at `centre`
+ * (page inches, y down). The core copies the master, with its styles, into the drawing's masters
+ * the first time and drops an instance of it, which keeps the master's connection points and
+ * Shape Data through the master.
+ */
+export function visioFileMasterDropCommand(
+	page: VisioPage,
+	master: VisioMaster,
+	stencil: Uint8Array,
+	centre?: { x: number; y: number },
+): VisioStencilMasterDropEdit {
+	const drop = visioMasterDropCommand(page, master, centre);
+	return {
+		type: 'drop-stencil-master',
+		pageId: drop.pageId,
+		shapeId: drop.shapeId,
+		master: master.id,
+		stencil,
+		x: drop.x,
+		y: drop.y,
+	};
+}
