@@ -1,4 +1,11 @@
-import { CATEGORIES, INSERT_CHART_TYPES, PRESETS, SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
+import {
+	CATEGORIES,
+	INSERT_CHART_TYPES,
+	PRESETS,
+	RECENT_SHAPES_KEY,
+	SHAPE_GALLERY_ITEMS,
+	SHAPE_PRESET_DEFS,
+} from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';
@@ -66,7 +73,11 @@ function dialogButton(name: string): HTMLButtonElement | undefined {
 }
 
 describe('createInsertTab', () => {
-	afterEach(() => document.body.replaceChildren());
+	afterEach(() => {
+		document.body.replaceChildren();
+		// A shape pick is remembered in Recently Used Shapes.
+		localStorage.removeItem(RECENT_SHAPES_KEY);
+	});
 
 	it('offers the Freeform: Shape and Curve tools and arms / disarms them', () => {
 		const armFreeformTool = vi.fn();
@@ -117,7 +128,7 @@ describe('createInsertTab', () => {
 		}
 		const items = (id: string) =>
 			tab.el.querySelectorAll(`[data-ribbon-control="${id}"] [data-insert-item]`);
-		expect(items('insert.illustrations.shapes')).toHaveLength(SHAPE_PRESET_DEFS.length);
+		expect(items('insert.illustrations.shapes')).toHaveLength(SHAPE_GALLERY_ITEMS.length);
 		expect(items('insert.illustrations.chart')).toHaveLength(INSERT_CHART_TYPES.length);
 		// Shapes, Chart, Action, Table, Pictures and Video are large dropdowns, not selects beside a button.
 		expect(tab.el.querySelectorAll('select')).toHaveLength(0);

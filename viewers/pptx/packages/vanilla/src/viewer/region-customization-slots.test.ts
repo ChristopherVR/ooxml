@@ -115,7 +115,6 @@ describe('vanilla new hide ids', () => {
 		const { container } = mount({ editable: true });
 		for (const id of [
 			'insert.symbols.equation',
-			'home.slides.slideTemplates',
 			'home.editing.find',
 			'review.compare.compare',
 			'view.show.selectionPane',

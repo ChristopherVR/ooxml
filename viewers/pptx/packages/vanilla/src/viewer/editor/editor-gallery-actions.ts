@@ -51,6 +51,14 @@ export function createGalleryActions(deps: GalleryActionsDeps): GalleryActions {
 				ops.commitChange();
 				return;
 			}
+			if (result.kind === 'theme') {
+				deck.applyThemeEdit({
+					colorScheme: result.colorScheme,
+					fontScheme: result.fontScheme,
+					name: result.name,
+				});
+				return;
+			}
 			if (result.kind === 'themeColorScheme') {
 				deck.applyThemeEdit({
 					colorScheme: result.colorScheme,

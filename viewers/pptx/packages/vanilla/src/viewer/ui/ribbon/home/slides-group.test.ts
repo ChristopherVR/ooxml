@@ -27,7 +27,7 @@ describe('createSlidesGroup', () => {
 		group.update(ready);
 		expect(group.el.localName).toBe('pptx-ui-ribbon-home-slides');
 		expect(group.el.querySelector('[data-ribbon-group="home.slides"]')).toBeTruthy();
-		for (const id of ['newSlide', 'slideTemplates', 'layout', 'reset', 'section']) {
+		for (const id of ['newSlide', 'layout', 'reset', 'section']) {
 			expect(control(group, id)).toBeTruthy();
 		}
 	});
@@ -44,6 +44,22 @@ describe('createSlidesGroup', () => {
 		expect(actions.addSlide).toHaveBeenCalledOnce();
 		expect(actions.resetSlide).toHaveBeenCalledOnce();
 		expect(actions.addSection).toHaveBeenCalledOnce();
+	});
+
+	it('opens the Slide Templates dialog from the end of the New Slide menu', () => {
+		const group = createSlidesGroup(document, createTranslator(), handlers());
+		group.update(ready);
+		expect(control(group, 'slideTemplates')).toBeNull();
+		control(group, 'newSlide')
+			.querySelector<HTMLElement>('[data-pptx-chrome="split-caret"]')!
+			.click();
+		const entry = control(group, 'newSlide').querySelector<HTMLButtonElement>(
+			'[data-ribbon-control="home.slides.slideTemplates"]',
+		)!;
+		expect(entry.textContent).toBe('Slide Templates...');
+		entry.click();
+		expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+		document.body.replaceChildren();
 	});
 
 	it('opens the shared layout galleries and applies a pick', () => {
@@ -103,6 +119,5 @@ describe('createSlidesGroup', () => {
 		group.update({ ...ready, editable: false });
 		expect(control(group, 'newSlide').querySelector('button')!.disabled).toBeTruthy();
 		expect(caret.disabled).toBeTruthy();
-		expect((control(group, 'slideTemplates') as HTMLButtonElement).disabled).toBeTruthy();
 	});
 });
