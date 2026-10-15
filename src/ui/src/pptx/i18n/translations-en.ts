@@ -2653,6 +2653,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.insert.recordAudio': 'Record Audio...',
 	'pptx.insert.insertNewEquation': 'Insert New Equation',
 	'pptx.insert.options': 'Options',
+	'pptx.insert.tablePicker': 'Insert Table',
+	'pptx.insert.tableSize': '{{columns}}x{{rows}} Table',
 	'pptx.insert.unavailable': 'Not available in this viewer yet.',
 	'pptx.insert.needsSelection': 'Select an object first.',
 	'pptx.insert.tip.newSlide': 'Add a new slide to the presentation.',

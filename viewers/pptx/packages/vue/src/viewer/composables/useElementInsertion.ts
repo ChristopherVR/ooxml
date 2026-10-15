@@ -38,7 +38,7 @@ export interface UseElementInsertionResult {
 	mediaInputRef: Ref<HTMLInputElement | null>;
 	addText: () => void;
 	addShape: (preset: ShapePreset) => void;
-	addTable: () => void;
+	addTable: (rows?: number, columns?: number) => void;
 	addChart: (chartKind: InsertChartKind) => void;
 	addField: (fieldType: string, value?: string) => void;
 	openImagePicker: () => void;
@@ -96,8 +96,8 @@ export function useElementInsertion(input: UseElementInsertionInput): UseElement
 	 * so the new table gets the visible default style (header row + banded rows
 	 * + borders), consistent with the React and Angular insert defaults.
 	 */
-	function addTable(): void {
-		const el = { ...newTableElement(3, 3), id: createEditorId('table') } as PptxElement;
+	function addTable(rows = 3, columns = 3): void {
+		const el = { ...newTableElement(rows, columns), id: createEditorId('table') } as PptxElement;
 		centreNewElement(el, 600, 250);
 		ops.addElement(el);
 		selectedElementIds.value = [el.id];

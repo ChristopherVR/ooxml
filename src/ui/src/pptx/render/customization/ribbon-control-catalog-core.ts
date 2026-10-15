@@ -128,6 +128,7 @@ export const RIBBON_CATALOG_CORE_TABS = {
 				dateTime: 'Date & Time',
 				slideNumber: 'Slide Number',
 				object: 'Object',
+				field: 'Date & Time and Slide Number (deprecated alias: use dateTime and slideNumber)',
 			},
 		},
 		symbols: { label: 'Symbols', controls: { equation: 'Equation', symbol: 'Symbol' } },

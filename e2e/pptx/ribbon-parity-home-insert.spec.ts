@@ -350,6 +350,38 @@ test.describe('Insert', () => {
 	});
 });
 
+test.describe('Insert at normal widths', () => {
+	for (const width of [1280, 1440]) {
+		test(`${width}px: the working groups stay visible, nothing overflows`, async ({ page }) => {
+			await page.setViewportSize({ width, height: 900 });
+			await loadDeck(page);
+			await ribbonTab(page, 'Insert').click();
+			await settle(page, 'insert.');
+			await page.waitForTimeout(600);
+			const state = await page.evaluate(() => {
+				const groups = [
+					...document.querySelectorAll<HTMLElement>('[data-ribbon-group^="insert."]'),
+				];
+				const row = groups[0]?.closest<HTMLElement>('[data-pptx-chrome="ribbon-content"]');
+				return {
+					overflow: row ? row.scrollWidth - row.clientWidth : -1,
+					collapsed: groups
+						.filter((g) => g.hasAttribute('data-collapsed'))
+						.map((g) => g.dataset.ribbonGroup),
+				};
+			});
+			expect(state.overflow, 'the row fits').toBeLessThanOrEqual(1);
+			// Only the groups with nothing runnable become popups; the working ones stay on the ribbon.
+			for (const id of ['insert.illustrations', 'insert.text', 'insert.symbols', 'insert.media']) {
+				expect(state.collapsed, id).not.toContain(id);
+			}
+			for (const name of ['Shapes', 'Chart', 'SmartArt', 'Text Box', 'Equation', 'Video']) {
+				await expect(page.getByRole('button', { name, exact: true }).first(), name).toBeVisible();
+			}
+		});
+	}
+});
+
 test.describe('Draw', () => {
 	test('drawing tools are tall pen tiles beside a colour swatch and width control', async ({
 		page,

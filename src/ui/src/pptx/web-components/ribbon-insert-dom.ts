@@ -42,6 +42,8 @@ export interface InsertMenuOptions {
 	grid?: boolean;
 	/** Office split button: the face runs `primary`, the chevron below opens the menu. */
 	split?: { primary: () => void };
+	/** Content drawn above the entries (the Table grid). */
+	header?: HTMLElement;
 }
 
 export interface InsertMenuView {
@@ -103,7 +105,11 @@ export function createInsertMenu(
 	list.setAttribute('role', 'menu');
 	list.hidden = true;
 	el.append(...(options.split ? [primary, trigger, list] : [trigger, list]));
-	const items = () => [...list.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+	const items = () => [
+		...list.querySelectorAll<HTMLElement>(
+			'button:not(:disabled), [data-menu-stop]:not([aria-disabled])',
+		),
+	];
 	const close = () => {
 		list.hidden = true;
 		trigger.setAttribute('aria-expanded', 'false');
@@ -201,6 +207,8 @@ export function createInsertMenu(
 				trigger.setAttribute('aria-label', view.menuLabel);
 			} else {
 				trigger.title = view.title;
+				// The caption is hidden when the group shrinks to icons: keep the name.
+				trigger.setAttribute('aria-label', view.label);
 			}
 			trigger.disabled = view.disabled;
 			list.setAttribute('aria-label', view.menuLabel);
@@ -225,7 +233,7 @@ export function createInsertMenu(
 					section = item.section;
 					nodes.push(entryNode(item));
 				}
-				list.replaceChildren(...nodes);
+				list.replaceChildren(...(options.header ? [options.header] : []), ...nodes);
 			}
 		},
 	};

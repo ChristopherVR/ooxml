@@ -138,6 +138,9 @@ export class RibbonInsertSectionComponent {
 				commands[intent.value]();
 				break;
 			}
+			case 'table':
+				this.editor.addElement(this.slideIndex(), newTableElement(intent.rows, intent.columns));
+				break;
 			case 'newSlide': {
 				const layout = resolveInsertSlideLayout(
 					this.layouts(),

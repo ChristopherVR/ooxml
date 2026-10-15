@@ -66,6 +66,15 @@ describe('ribbonInsertSectionComponent', () => {
 		]);
 	});
 
+	it('inserts a table of the size picked on the Table grid', () => {
+		const { section, addElement } = create();
+		request(section, { kind: 'table', rows: 4, columns: 3 });
+		const table = addElement.mock.calls[0]![1];
+		expect(table.type).toBe('table');
+		expect(table.tableData.rows).toHaveLength(4);
+		expect(table.tableData.rows[0].cells).toHaveLength(3);
+	});
+
 	it('maps dialog commands to outputs and the dialog service', () => {
 		const { section, showHeaderFooter } = create();
 		const smartArt = vi.spyOn(section.openSmartArtDialog, 'emit');

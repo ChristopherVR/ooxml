@@ -8,7 +8,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { loadDeck, ribbon, selectElement, slideElements, widenForInsert } from './support/deck';
+import { loadDeck, ribbon, selectElement, slideElements } from './support/deck';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -28,9 +28,6 @@ async function backstage(page: Page, item: string): Promise<void> {
 }
 
 async function tab(page: Page, name: string): Promise<void> {
-	if (name === 'Insert') {
-		await widenForInsert(page);
-	}
 	await ribbon(page).getByRole('tab', { name, exact: true }).click();
 }
 

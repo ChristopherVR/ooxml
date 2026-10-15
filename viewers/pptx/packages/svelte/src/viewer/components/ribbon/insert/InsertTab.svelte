@@ -196,6 +196,9 @@
 						break;
 				}
 				break;
+			case 'table':
+				editor.insertElement(newTableElement(intent.rows, intent.columns));
+				break;
 			case 'newSlide': {
 				const layout = resolveInsertSlideLayout(scopedLayouts, intent.value, currentLayoutPath);
 				const index = layout

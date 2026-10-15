@@ -29,7 +29,7 @@ import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { resetTabSession, widenForInsert } from './support/deck';
+import { resetTabSession } from './support/deck';
 import { validatePptxIntegrity } from './support/pptx-integrity';
 
 const gifFixturePath = resolve(
@@ -44,7 +44,6 @@ const outputDir = fileURLToPath(
 
 /** Switch to the Insert ribbon tab. */
 async function switchToInsertTab(page: Page): Promise<void> {
-	await widenForInsert(page);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const insertTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
 	await insertTab.click();

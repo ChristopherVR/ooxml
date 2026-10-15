@@ -33,6 +33,9 @@ export function resolveInsertSlideLayout(
 	return layouts.find((item) => item.path === wanted) ?? layouts[0];
 }
 
+/** The Table grid's size (PowerPoint's picker is 10 columns by 8 rows). */
+export const INSERT_TABLE_MAX = { rows: 8, columns: 10 } as const;
+
 export type RibbonInsertField = 'slidenum' | 'datetime' | 'header' | 'footer';
 
 /**
@@ -78,7 +81,9 @@ export type RibbonInsertIntent =
 	| { kind: 'actionButton'; value: string }
 	| { kind: 'field'; value: RibbonInsertField }
 	/** New Slide; the layout path, or null for the host's default (the active slide's layout). */
-	| { kind: 'newSlide'; value: string | null };
+	| { kind: 'newSlide'; value: string | null }
+	/** Insert Table from the grid picker: rows by columns. */
+	| { kind: 'table'; rows: number; columns: number };
 
 export type InsertLabel = [key: string, fallback: string];
 
@@ -234,6 +239,16 @@ export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertI
 				return false;
 			}
 			return commandAvailable(state, intent.value);
+		case 'table':
+			return (
+				state.editable &&
+				Number.isInteger(intent.rows) &&
+				Number.isInteger(intent.columns) &&
+				intent.rows >= 1 &&
+				intent.rows <= INSERT_TABLE_MAX.rows &&
+				intent.columns >= 1 &&
+				intent.columns <= INSERT_TABLE_MAX.columns
+			);
 		case 'newSlide':
 			return (
 				state.editable &&

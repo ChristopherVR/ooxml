@@ -28,6 +28,28 @@ svg { width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke
 .primary:focus-visible { outline:2px solid var(--pptx-ring,#6366f1); outline-offset:2px; }
 .trigger.caret { justify-content:center; width:100%; min-height:0; height:16px; padding:0; border-radius:0 0 4px 4px; }
 .trigger.caret svg:first-child { width:8px; height:8px; margin:0; color:inherit; stroke-width:1.8; }
+/* Narrow window (Office scaling): a group steps small with labels, then small icons only. */
+pptx-ui-ribbon-group[data-scale] .trigger.large { flex-direction:row; align-items:center; justify-content:flex-start; gap:6px; min-width:0; max-width:none; height:24px; padding:0 6px; }
+pptx-ui-ribbon-group[data-scale] .trigger.large svg:first-child { width:16px; height:16px; stroke-width:1.5; }
+pptx-ui-ribbon-group[data-scale] .trigger.large svg:last-child { width:10px; height:10px; margin-inline-start:auto; }
+pptx-ui-ribbon-group[data-scale] .menu.split { flex-direction:row; align-items:center; }
+pptx-ui-ribbon-group[data-scale] .primary { flex-direction:row; align-items:center; justify-content:flex-start; gap:6px; min-width:0; max-width:none; height:24px; padding:0 6px; border-radius:4px; }
+pptx-ui-ribbon-group[data-scale] .primary svg { width:16px; height:16px; stroke-width:1.5; }
+pptx-ui-ribbon-group[data-scale] .trigger.caret { width:18px; height:24px; border-radius:4px; }
+pptx-ui-ribbon-group[data-scale="icons"] .label { display:none; }
+pptx-ui-ribbon-group[data-scale="icons"] .trigger.large svg:last-child { margin-inline-start:0; }
+/* Table grid picker: 10 columns by 8 rows, the hovered block highlighted. */
+.table-picker { padding:6px 10px 8px; }
+.table-picker-label { min-height:18px; margin-bottom:4px; font-size:12px; }
+.table-picker-grid { display:flex; flex-direction:column; gap:2px; width:max-content; outline-offset:2px; }
+.table-picker-grid:focus-visible { outline:2px solid var(--pptx-ring,#6366f1); }
+.table-picker-row { display:flex; gap:2px; }
+.table-picker-cell { box-sizing:border-box; width:18px; height:18px; border:1px solid var(--pptx-border,#374151); border-radius:2px; }
+.table-picker-cell[data-on] { background:var(--pptx-accent,#33334d); border-color:var(--pptx-primary,#6366f1); }
+.table-picker-grid[aria-disabled] { opacity:.35; pointer-events:none; }
+@media (pointer:coarse),(max-width:900px) {
+	.table-picker-cell { width:26px; height:26px; }
+}
 .list .heading { padding:4px 12px 2px; font-size:11px; opacity:.7; }
 .list.grid .heading { grid-column:1 / -1; padding:2px 2px 0; }
 .list button[aria-current] { font-weight:600; background:var(--pptx-accent,#33334d); }

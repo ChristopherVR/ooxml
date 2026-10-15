@@ -110,6 +110,8 @@ export const translations: Record<string, string> = {
 	'pptx.insert.recordAudio': 'Enregistrer un audio...',
 	'pptx.insert.insertNewEquation': 'Insérer une nouvelle équation',
 	'pptx.insert.options': 'Options',
+	'pptx.insert.tablePicker': 'Insérer un tableau',
+	'pptx.insert.tableSize': 'Tableau {{columns}}x{{rows}}',
 	'pptx.insert.unavailable': 'Pas encore disponible dans ce visualiseur.',
 	'pptx.insert.needsSelection': 'Sélectionnez d’abord un objet.',
 	'pptx.insert.tip.newSlide': 'Ajoute une nouvelle diapositive à la présentation.',

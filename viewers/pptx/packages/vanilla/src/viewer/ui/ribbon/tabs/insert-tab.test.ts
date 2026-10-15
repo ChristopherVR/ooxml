@@ -260,6 +260,15 @@ describe('createInsertTab', () => {
 		expect(insertField).toHaveBeenCalledWith('slidenum');
 	});
 
+	it('inserts a table of the size picked on the Table grid', () => {
+		const insert = vi.fn();
+		const tab = make({ insert });
+		const table = '[data-ribbon-control="insert.tables.table"]';
+		tab.el.querySelector<HTMLButtonElement>(`${table} .trigger`)!.click();
+		tab.el.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click();
+		expect(insert).toHaveBeenCalledExactlyOnceWith('table', undefined, { rows: 4, columns: 3 });
+	});
+
 	it('adds a slide on the active layout, or the chosen one, and opens the comments pane', () => {
 		const addSlide = vi.fn();
 		const insertSlideFromLayout = vi.fn();

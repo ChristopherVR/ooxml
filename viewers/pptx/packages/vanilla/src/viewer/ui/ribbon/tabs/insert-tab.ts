@@ -107,6 +107,9 @@ export function createInsertTab(
 						onOpenComments?.();
 				}
 				break;
+			case 'table':
+				handlers.insert('table', undefined, { rows: intent.rows, columns: intent.columns });
+				break;
 			case 'newSlide': {
 				const layout = resolveInsertSlideLayout(
 					state.layouts ?? [],

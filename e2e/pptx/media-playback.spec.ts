@@ -42,7 +42,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
-import { resetTabSession, widenForInsert } from './support/deck';
+import { resetTabSession } from './support/deck';
 
 const sampleDeckPath = resolve(
 	fileURLToPath(new URL('./fixtures/sample-deck.pptx', import.meta.url)),
@@ -72,7 +72,6 @@ async function loadDeck(page: Page): Promise<void> {
  * Bindings may expose the entry as either a tab or a button.
  */
 async function switchToInsertTab(page: Page): Promise<void> {
-	await widenForInsert(page);
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const semanticTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
 	const insertTab = (await semanticTab.isVisible())

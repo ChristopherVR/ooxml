@@ -144,6 +144,15 @@ describe('insert section', () => {
 		wrapper.unmount();
 	});
 
+	it('inserts a table of the size picked on the Table grid', () => {
+		const { props, wrapper } = mountInsert();
+		const table = '[data-ribbon-control="insert.tables.table"]';
+		document.body.querySelector<HTMLButtonElement>(`${table} .trigger`)!.click();
+		document.body.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click();
+		expect(props.onAddTable).toHaveBeenCalledExactlyOnceWith(4, 3);
+		wrapper.unmount();
+	});
+
 	it('adds a slide from the layout and opens the comments pane without toggling it shut', async () => {
 		const onInsertSlideFromLayout = vi.fn();
 		const onToggleComments = vi.fn();

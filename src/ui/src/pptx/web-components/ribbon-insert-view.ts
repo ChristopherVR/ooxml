@@ -6,6 +6,7 @@ import {
 	INSERT_CHART_TYPES,
 	INSERT_GROUPS,
 	INSERT_GROUP_CAPTIONS,
+	INSERT_GROUP_SCALING,
 	SHAPE_PRESET_DEFS,
 	insertControlStatus,
 	insertEntryEnabled,
@@ -18,6 +19,7 @@ import type {
 	RibbonInsertState,
 } from '../render';
 import { createInsertMenu } from './ribbon-insert-dom';
+import { createTablePicker } from './ribbon-insert-table-picker';
 import type { InsertMenu, InsertMenuItem } from './ribbon-insert-dom';
 import {
 	INSERT_SHAPE_GLYPH_PATHS,
@@ -84,6 +86,21 @@ export function createRibbonInsertView(
 	};
 	const menus: InsertMenu[] = [];
 	const built: BuiltControl[] = [];
+	/** Office scaling: a narrow window steps a group large, small with labels, small icons. */
+	type Scale = 'large' | 'small' | 'icons';
+	const scales = new Map<string, Scale>();
+	const groupOf = new Map<string, string>();
+	for (const spec of INSERT_GROUPS) {
+		for (const item of spec.items.flat()) {
+			groupOf.set((item as InsertControlSpec).control, spec.id);
+		}
+	}
+	const scaleOf = (spec: InsertControlSpec): Scale =>
+		scales.get(groupOf.get(spec.control) ?? '') ?? 'large';
+	const applyScale = (el: HTMLElement, spec: InsertControlSpec) => {
+		el.toggleAttribute('compact', !spec.large || scaleOf(spec) !== 'large');
+		el.toggleAttribute('icon-only', scaleOf(spec) === 'icons');
+	};
 	/** ScreenTip: the title, its description and, when disabled, the honest reason. */
 	const tooltip = (
 		spec: InsertControlSpec,
@@ -208,7 +225,15 @@ export function createRibbonInsertView(
 	/** Any other dropdown: its entries are listed, those without a backing feature disabled. */
 	const buildMenu = (spec: InsertControlSpec) => {
 		const entries = spec.menu ?? [];
-		const menu = createInsertMenu(
+		let menu: InsertMenu;
+		const tablePicker =
+			spec.picker === 'table'
+				? createTablePicker(doc, (rows, columns) => {
+						menu.close();
+						request({ kind: 'table', rows, columns });
+					})
+				: undefined;
+		menu = createInsertMenu(
 			doc,
 			spec.control,
 			spec.icon,
@@ -220,11 +245,22 @@ export function createRibbonInsertView(
 			},
 			{
 				large: spec.large,
+				...(tablePicker ? { header: tablePicker.el } : {}),
 				...(spec.split && spec.intent ? { split: { primary: () => request(spec.intent!) } } : {}),
 			},
 		);
 		addMenu(spec, menu, (state, text) => {
 			const status = insertControlStatus(state, spec);
+			if (tablePicker) {
+				tablePicker.disabled = !state.editable;
+				tablePicker.sync({
+					heading: text(['pptx.insert.tablePicker', 'Insert Table']),
+					size: (columns, rows) =>
+						text(['pptx.insert.tableSize', '{{columns}}x{{rows}} Table'])
+							.replace('{{columns}}', String(columns))
+							.replace('{{rows}}', String(rows)),
+				});
+			}
 			const items: InsertMenuItem[] = entries.map((item) => {
 				const enabled = insertEntryEnabled(state, item);
 				return {
@@ -262,6 +298,7 @@ export function createRibbonInsertView(
 				el.setAttribute('title', tooltip(spec, text, status.reason));
 				el.toggleAttribute('disabled', status.disabled);
 				el.hidden = status.hidden;
+				applyScale(el, spec);
 			},
 		});
 		return el;
@@ -291,11 +328,52 @@ export function createRibbonInsertView(
 	});
 	const freeformStack = stack(...freeform.map(({ el }) => el));
 
+	/** The large layout of each group, and the stacks' own children (moved while scaled). */
+	const largeLayout = new Map<string, HTMLElement[]>();
+	const stackKids = new Map<HTMLElement, HTMLElement[]>();
+	const shown = new Map<string, string>();
+	const layoutGroup = (id: string) => {
+		const el = groups.get(id)!;
+		const scale = scales.get(id) ?? 'large';
+		const items = largeLayout.get(id)!;
+		for (const [stackEl, kids] of stackKids) {
+			if (items.includes(stackEl)) {
+				stackEl.replaceChildren(...kids);
+			}
+		}
+		if (scale === 'large') {
+			el.replaceChildren(...items);
+			return;
+		}
+		// Small commands stack three high; the Freeform pair is already a column.
+		const columns: HTMLElement[] = [];
+		let pending: HTMLElement[] = [];
+		const flush = () => {
+			for (let start = 0; start < pending.length; start += 3) {
+				columns.push(stack(...pending.slice(start, start + 3)));
+			}
+			pending = [];
+		};
+		for (const item of items) {
+			if (item === freeformStack) {
+				flush();
+				columns.push(item);
+			} else if (stackKids.has(item)) {
+				pending.push(...stackKids.get(item)!.filter((kid) => !kid.hidden));
+			} else if (!item.hidden) {
+				pending.push(item);
+			}
+		}
+		flush();
+		el.replaceChildren(...columns);
+	};
 	const root = INSERT_GROUPS.map((spec) => {
 		const children: HTMLElement[] = [];
 		for (const item of spec.items) {
 			if (Array.isArray(item)) {
-				children.push(stack(...(item as readonly InsertControlSpec[]).map(build)));
+				const column = stack(...(item as readonly InsertControlSpec[]).map(build));
+				stackKids.set(column, [...column.children] as HTMLElement[]);
+				children.push(column);
 			} else {
 				const control = item as InsertControlSpec;
 				children.push(build(control));
@@ -304,7 +382,29 @@ export function createRibbonInsertView(
 				}
 			}
 		}
-		return group(spec.id, ...children);
+		const el = group(spec.id, ...children);
+		largeLayout.set(spec.id, children);
+		const scaling = INSERT_GROUP_SCALING[spec.id];
+		if (spec.items.flat().length > 1) {
+			el.dataset.ribbonScalable = '';
+		}
+		el.dataset.ribbonPriority = String(scaling?.priority ?? 0);
+		if (scaling?.lowValue) {
+			el.dataset.ribbonCollapseFirst = '';
+		}
+		(el as HTMLElement & { setRibbonScale?: (scale: Scale) => void }).setRibbonScale = (scale) => {
+			scales.set(spec.id, scale);
+			for (const control of built) {
+				if (groupOf.get(control.spec.control) === spec.id && !control.el.matches('.menu')) {
+					applyScale(control.el, control.spec);
+				}
+			}
+			for (const { el: tool } of spec.id === 'insert.illustrations' ? freeform : []) {
+				tool.toggleAttribute('icon-only', scale !== 'large');
+			}
+			layoutGroup(spec.id);
+		};
+		return el;
 	});
 	const sync = (state: RibbonInsertState) => {
 		const text = (label: InsertLabel) => insertLabel(state, label);
@@ -316,6 +416,18 @@ export function createRibbonInsertView(
 		for (const control of built) {
 			control.sync(state, text);
 			control.el.hidden = insertControlStatus(state, control.spec).hidden;
+		}
+		// A scaled group repacks its stacks when a control is hidden or shown.
+		for (const [id, scale] of scales) {
+			const signature = largeLayout
+				.get(id)!
+				.flatMap((item) => [item, ...(stackKids.get(item) ?? [])])
+				.map((item) => (item.hidden ? 'h' : 'v'))
+				.join('');
+			if (scale !== 'large' && shown.get(id) !== signature) {
+				layoutGroup(id);
+			}
+			shown.set(id, signature);
 		}
 		const visible = state.freeformTools ?? [];
 		freeformStack.hidden = visible.length === 0;

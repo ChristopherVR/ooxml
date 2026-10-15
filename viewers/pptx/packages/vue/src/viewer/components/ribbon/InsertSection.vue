@@ -35,7 +35,7 @@ interface Props {
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddTextBox: () => void;
 	onAddShape: () => void;
-	onAddTable: () => void;
+	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
@@ -99,6 +99,9 @@ function request(event: RibbonInsertRequestEvent): void {
 			commands[intent.value]?.();
 			break;
 		}
+		case 'table':
+			props.onAddTable(intent.rows, intent.columns);
+			break;
 		case 'newSlide': {
 			const layout = resolveInsertSlideLayout(
 				props.layoutOptions ?? [],

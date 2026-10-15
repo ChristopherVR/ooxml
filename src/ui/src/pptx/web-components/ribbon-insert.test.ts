@@ -168,6 +168,37 @@ describe('shared Insert view', () => {
 		expect(requests).toHaveBeenCalledTimes(5);
 	});
 
+	it('sizes a table on the Table grid: hover shows the size, a click inserts it', () => {
+		const { host, requests } = mount();
+		const table = control(host, 'insert.tables.table');
+		button(host, 'insert.tables.table').click();
+		const cells = table.querySelectorAll('.table-picker-cell');
+		expect(cells).toHaveLength(80);
+		const label = table.querySelector('.table-picker-label')!;
+		expect(label.textContent).toBe('Insert Table');
+		const cell = table.querySelector<HTMLElement>('[data-row="4"][data-column="3"]')!;
+		cell.dispatchEvent(new Event('pointerover', { bubbles: true }));
+		expect(label.textContent).toBe('3x4 Table');
+		expect(table.querySelectorAll('.table-picker-cell[data-on]')).toHaveLength(12);
+		cell.click();
+		expect(calls(requests)).toStrictEqual([{ kind: 'table', rows: 4, columns: 3 }]);
+		expect(button(host, 'insert.tables.table').getAttribute('aria-expanded')).toBe('false');
+	});
+
+	it('sizes a table from the keyboard and refuses it when read-only', () => {
+		const { host, requests } = mount();
+		const table = control(host, 'insert.tables.table');
+		button(host, 'insert.tables.table').click();
+		const grid = table.querySelector<HTMLElement>('.table-picker-grid')!;
+		grid.focus();
+		for (const key of ['ArrowRight', 'ArrowRight', 'ArrowDown', 'Enter']) {
+			grid.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+		}
+		expect(calls(requests)).toStrictEqual([{ kind: 'table', rows: 2, columns: 3 }]);
+		host.state = { ...STATE, editable: false };
+		expect(grid.hasAttribute('aria-disabled')).toBeTruthy();
+	});
+
 	it('runs Equation from its face and keeps New Slide a split button over the layouts', () => {
 		const { host, requests } = mount();
 		const equation = control(host, 'insert.symbols.equation');

@@ -8,7 +8,7 @@ import { savePptxViaBackstage } from './save-pptx';
 import { fixture, loadDeck, ribbonTab, selectElement, slideElements } from './support/deck';
 import { downloadBytes } from './support/exports';
 
-test.use({ viewport: { width: 2800, height: 900 } });
+test.use({ viewport: { width: 1440, height: 900 } });
 
 const GROUPS = [
 	'insert.slides',

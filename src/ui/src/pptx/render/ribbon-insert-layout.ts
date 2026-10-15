@@ -41,6 +41,8 @@ export interface InsertControlSpec {
 	/** Main action on top, dropdown chevron below. */
 	split?: boolean;
 	special?: InsertSpecialMenu;
+	/** A grid drawn above the entries: the Table size picker. */
+	picker?: 'table';
 	/** Hidden (not just disabled) when the host reports the capability missing. */
 	capability?: 'chart' | 'headerFooter' | 'field';
 }
@@ -123,6 +125,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 		items: [
 			fromCommand('table', {
 				intent: undefined,
+				picker: 'table',
 				menu: [
 					entry(
 						'insertTable',
@@ -367,6 +370,29 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 	},
 ];
 
+/**
+ * How a narrow window shrinks the tab. Every group steps large, then small with labels, then
+ * small icons only, and only then becomes a popup; groups give way in ascending `priority`
+ * (ties: right to left). `lowValue` groups hold nothing the editor can run today, so they
+ * become popups before any working group loses its large buttons.
+ */
+export const INSERT_GROUP_SCALING: Readonly<
+	Record<string, { priority: number; lowValue?: boolean }>
+> = {
+	'insert.camera': { priority: 1, lowValue: true },
+	'insert.forms': { priority: 1, lowValue: true },
+	'insert.addIns': { priority: 1, lowValue: true },
+	'insert.comments': { priority: 2 },
+	'insert.links': { priority: 3 },
+	'insert.slides': { priority: 4 },
+	'insert.images': { priority: 4 },
+	'insert.tables': { priority: 5 },
+	'insert.media': { priority: 6 },
+	'insert.symbols': { priority: 7 },
+	'insert.text': { priority: 8 },
+	'insert.illustrations': { priority: 9 },
+};
+
 /** What the element needs to draw one control. */
 export interface InsertControlStatus {
 	hidden: boolean;
@@ -394,6 +420,7 @@ export function insertControlStatus(
 	const actions = [
 		...(spec.intent ? [spec.intent] : []),
 		...(spec.menu ?? []).flatMap((item) => (item.intent ? [item.intent] : [])),
+		...(spec.picker ? [{ kind: 'table', rows: 1, columns: 1 } as const] : []),
 		...(spec.special === 'layouts' ? [{ kind: 'newSlide', value: null } as const] : []),
 	];
 	if (actions.length === 0) {

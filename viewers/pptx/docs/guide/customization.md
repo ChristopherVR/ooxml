@@ -978,240 +978,241 @@ unit test fails if an id is missing here.
 
 ### Ribbon controls (`ribbon.hiddenButtons`)
 
-| Id                                                | Control                             |
-| ------------------------------------------------- | ----------------------------------- |
-| `home.clipboard.paste`                            | Paste                               |
-| `home.clipboard.cut`                              | Cut                                 |
-| `home.clipboard.copy`                             | Copy                                |
-| `home.clipboard.formatPainter`                    | Format Painter                      |
-| `home.slides.newSlide`                            | New Slide                           |
-| `home.slides.layout`                              | Layout                              |
-| `home.slides.reset`                               | Reset                               |
-| `home.slides.section`                             | Section                             |
-| `home.slides.slideTemplates`                      | Slide templates                     |
-| `home.font.fontFamily`                            | Font                                |
-| `home.font.fontSize`                              | Font Size                           |
-| `home.font.increaseFontSize`                      | Increase Font Size                  |
-| `home.font.decreaseFontSize`                      | Decrease Font Size                  |
-| `home.font.clearFormatting`                       | Clear All Formatting                |
-| `home.font.bold`                                  | Bold                                |
-| `home.font.italic`                                | Italic                              |
-| `home.font.underline`                             | Underline                           |
-| `home.font.strikethrough`                         | Strikethrough                       |
-| `home.font.shadow`                                | Text Shadow                         |
-| `home.font.characterSpacing`                      | Character Spacing                   |
-| `home.font.changeCase`                            | Change Case                         |
-| `home.font.fontColor`                             | Font Color                          |
-| `home.font.highlightColor`                        | Text Highlight Color                |
-| `home.font.superscript`                           | Superscript                         |
-| `home.font.subscript`                             | Subscript                           |
-| `home.paragraph.bullets`                          | Bullets (toggle and gallery)        |
-| `home.paragraph.numbering`                        | Numbering (toggle and gallery)      |
-| `home.paragraph.decreaseIndent`                   | Decrease List Level                 |
-| `home.paragraph.increaseIndent`                   | Increase List Level                 |
-| `home.paragraph.lineSpacing`                      | Line Spacing                        |
-| `home.paragraph.alignLeft`                        | Align Left                          |
-| `home.paragraph.alignCenter`                      | Center                              |
-| `home.paragraph.alignRight`                       | Align Right                         |
-| `home.paragraph.justify`                          | Justify                             |
-| `home.paragraph.columns`                          | Columns                             |
-| `home.paragraph.textDirection`                    | Text Direction                      |
-| `home.paragraph.alignText`                        | Align Text                          |
-| `home.drawing.shapes`                             | Shapes                              |
-| `home.drawing.arrange`                            | Arrange                             |
-| `home.drawing.quickStyles`                        | Quick Styles (Shape Styles gallery) |
-| `home.drawing.shapeFill`                          | Shape Fill                          |
-| `home.drawing.shapeOutline`                       | Shape Outline                       |
-| `home.drawing.shapeEffects`                       | Shape Effects gallery               |
-| `home.arrange.bringForward`                       | Bring Forward                       |
-| `home.arrange.sendBackward`                       | Send Backward                       |
-| `home.arrange.bringToFront`                       | Bring to Front                      |
-| `home.arrange.sendToBack`                         | Send to Back                        |
-| `home.arrange.flipHorizontal`                     | Flip Horizontal                     |
-| `home.arrange.flipVertical`                       | Flip Vertical                       |
-| `home.arrange.duplicate`                          | Duplicate                           |
-| `home.arrange.delete`                             | Delete                              |
-| `home.arrange.group`                              | Group                               |
-| `home.arrange.ungroup`                            | Ungroup                             |
-| `home.arrange.align`                              | Align                               |
-| `home.arrange.mergeShapes`                        | Merge Shapes                        |
-| `home.arrange.crop`                               | Crop                                |
-| `home.arrange.outlineWidth`                       | Outline width                       |
-| `home.editing.find`                               | Find                                |
-| `home.editing.replace`                            | Replace                             |
-| `home.editing.select`                             | Select                              |
-| `insert.slides.newSlide`                          | New Slide                           |
-| `insert.slides.reuseSlides`                       | Reuse Slides                        |
-| `insert.tables.table`                             | Table                               |
-| `insert.images.pictures`                          | Pictures                            |
-| `insert.images.screenshot`                        | Screenshot                          |
-| `insert.images.photoAlbum`                        | Photo Album                         |
-| `insert.camera.cameo`                             | Cameo                               |
-| `insert.illustrations.shapes`                     | Shapes                              |
-| `insert.illustrations.icons`                      | Icons                               |
-| `insert.illustrations.threeDModels`               | 3D Models                           |
-| `insert.illustrations.smartArt`                   | SmartArt                            |
-| `insert.illustrations.chart`                      | Chart                               |
-| `insert.forms.forms`                              | Forms                               |
-| `insert.addIns.getAddIns`                         | Get Add-ins                         |
-| `insert.addIns.myAddIns`                          | My Add-ins                          |
-| `insert.links.zoom`                               | Zoom                                |
-| `insert.links.link`                               | Link                                |
-| `insert.links.action`                             | Action button                       |
-| `insert.comments.comment`                         | Comment                             |
-| `insert.text.textBox`                             | Text Box                            |
-| `insert.text.headerFooter`                        | Header & Footer                     |
-| `insert.text.wordArt`                             | WordArt                             |
-| `insert.text.dateTime`                            | Date & Time                         |
-| `insert.text.slideNumber`                         | Slide Number                        |
-| `insert.text.object`                              | Object                              |
-| `insert.symbols.equation`                         | Equation                            |
-| `insert.symbols.symbol`                           | Symbol                              |
-| `insert.media.media`                              | Video                               |
-| `insert.media.audio`                              | Audio                               |
-| `insert.media.screenRecording`                    | Screen Recording                    |
-| `draw.tools.select`                               | Select                              |
-| `draw.tools.pen`                                  | Pen                                 |
-| `draw.tools.highlighter`                          | Highlighter                         |
-| `draw.tools.freeform`                             | Freeform                            |
-| `draw.tools.eraser`                               | Eraser                              |
-| `draw.tools.penColor`                             | Pen colour                          |
-| `draw.tools.penWidth`                             | Pen width                           |
-| `draw.convert.inkToShape`                         | Ink to Shape                        |
-| `design.themes.browseThemes`                      | Themes gallery                      |
-| `design.themes.editTheme`                         | Edit theme                          |
-| `design.variants.colors`                          | Variants: Colors gallery            |
-| `design.variants.fonts`                           | Variants: Fonts gallery             |
-| `design.customize.slideSize`                      | Slide Size                          |
-| `design.customize.formatBackground`               | Format Background                   |
-| `transitions.preview.preview`                     | Preview                             |
-| `transitions.transitionToThisSlide.gallery`       | Transition gallery                  |
-| `transitions.transitionToThisSlide.effectOptions` | Effect Options                      |
-| `transitions.timing.sound`                        | Sound                               |
-| `transitions.timing.duration`                     | Duration                            |
-| `transitions.timing.applyToAll`                   | Apply To All                        |
-| `transitions.timing.advanceOnClick`               | On Mouse Click                      |
-| `transitions.timing.advanceAfter`                 | After                               |
-| `animations.preview.preview`                      | Preview                             |
-| `animations.animation.gallery`                    | Animation gallery                   |
-| `animations.animation.effectOptions`              | Effect Options                      |
-| `animations.motionPath.gallery`                   | Motion path gallery                 |
-| `animations.advancedAnimation.addAnimation`       | Add Animation                       |
-| `animations.advancedAnimation.animationPane`      | Animation Pane                      |
-| `animations.advancedAnimation.trigger`            | Trigger                             |
-| `animations.advancedAnimation.animationPainter`   | Animation Painter                   |
-| `animations.advancedAnimation.remove`             | Remove animation                    |
-| `animations.timing.start`                         | Start                               |
-| `animations.timing.duration`                      | Duration                            |
-| `animations.timing.delay`                         | Delay                               |
-| `animations.timing.reorder`                       | Reorder                             |
-| `slideShow.startSlideShow.fromBeginning`          | From Beginning                      |
-| `slideShow.startSlideShow.fromCurrent`            | From Current Slide                  |
-| `slideShow.startSlideShow.customShow`             | Custom Slide Show                   |
-| `slideShow.present.presenterView`                 | Presenter View                      |
-| `slideShow.present.broadcast`                     | Present Online                      |
-| `slideShow.setUp.setUpSlideShow`                  | Set Up Slide Show                   |
-| `slideShow.setUp.hideSlide`                       | Hide Slide                          |
-| `slideShow.setUp.rehearseTimings`                 | Rehearse Timings                    |
-| `slideShow.setUp.record`                          | Record                              |
-| `slideShow.setUp.rehearseWithCoach`               | Rehearse with Coach                 |
-| `slideShow.captions.subtitles`                    | Always Use Subtitles                |
-| `slideShow.captions.subtitleSettings`             | Subtitle Settings                   |
-| `record.camera.cameo`                             | Cameo                               |
-| `record.record.fromBeginning`                     | From Beginning                      |
-| `record.record.fromCurrent`                       | From Current Slide                  |
-| `record.manage.clear`                             | Clear                               |
-| `record.manage.reset`                             | Reset to Cameo                      |
-| `record.help.learnMore`                           | Learn more                          |
-| `review.proofing.spelling`                        | Spelling                            |
-| `review.proofing.thesaurus`                       | Thesaurus                           |
-| `review.accessibility.check`                      | Check Accessibility                 |
-| `review.language.translate`                       | Translate                           |
-| `review.language.language`                        | Language                            |
-| `review.comments.newComment`                      | New Comment                         |
-| `review.comments.delete`                          | Delete                              |
-| `review.comments.deleteSlide`                     | Delete Slide Comments               |
-| `review.comments.deleteAll`                       | Delete All Comments                 |
-| `review.comments.previous`                        | Previous                            |
-| `review.comments.next`                            | Next                                |
-| `review.comments.showComments`                    | Show Comments                       |
-| `review.compare.compare`                          | Compare                             |
-| `review.compare.markAllRead`                      | Mark all read                       |
-| `review.protect.readOnly`                         | Read-only                           |
-| `review.protect.restrictPermission`               | Restrict Permission                 |
-| `review.ink.hideInk`                              | Hide Ink                            |
-| `view.presentationViews.normal`                   | Normal                              |
-| `view.presentationViews.outline`                  | Outline View                        |
-| `view.presentationViews.slideSorter`              | Slide Sorter                        |
-| `view.presentationViews.notesPage`                | Notes Page                          |
-| `view.presentationViews.readingView`              | Reading View                        |
-| `view.masterViews.slideMaster`                    | Slide Master                        |
-| `view.masterViews.handoutMaster`                  | Handout Master                      |
-| `view.masterViews.notesMaster`                    | Notes Master                        |
-| `view.show.ruler`                                 | Ruler                               |
-| `view.show.gridlines`                             | Gridlines                           |
-| `view.show.guides`                                | Guides                              |
-| `view.show.snapToGrid`                            | Snap to Grid                        |
-| `view.show.snapToShape`                           | Snap to Shape                       |
-| `view.show.addGuide`                              | Add horizontal / vertical guide     |
-| `view.show.selectionPane`                         | Selection Pane                      |
-| `view.show.eyedropper`                            | Eyedropper                          |
-| `view.show.notes`                                 | Notes                               |
-| `view.zoom.zoom`                                  | Zoom                                |
-| `view.zoom.fitToWindow`                           | Fit to Window                       |
-| `view.window.templateEditing`                     | Edit template elements              |
-| `view.window.macros`                              | Macros                              |
-| `help.help.options`                               | Options                             |
-| `help.help.keyboardShortcuts`                     | Keyboard shortcuts                  |
-| `help.help.accessibility`                         | Accessibility checker               |
-| `shapeFormat.shapeStyles.gallery`                 | Shape Styles gallery                |
-| `shapeFormat.shapeStyles.shapeEffects`            | Shape Effects gallery               |
-| `shapeFormat.wordArtStyles.gallery`               | WordArt Styles gallery              |
-| `pictureFormat.adjust.corrections`                | Corrections gallery                 |
-| `pictureFormat.adjust.color`                      | Color gallery                       |
-| `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery            |
-| `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery              |
-| `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery             |
-| `pictureFormat.size.crop`                         | Crop                                |
-| `tableDesign.tableStyles.gallery`                 | Table Styles gallery                |
-| `tableLayout.table.select`                        | Select                              |
-| `tableLayout.table.viewGridlines`                 | View Gridlines                      |
-| `tableLayout.rowsColumns.deleteRows`              | Delete Rows                         |
-| `tableLayout.rowsColumns.deleteColumns`           | Delete Columns                      |
-| `tableLayout.rowsColumns.insertAbove`             | Insert Above                        |
-| `tableLayout.rowsColumns.insertBelow`             | Insert Below                        |
-| `tableLayout.rowsColumns.insertLeft`              | Insert Left                         |
-| `tableLayout.rowsColumns.insertRight`             | Insert Right                        |
-| `tableLayout.merge.mergeCells`                    | Merge Cells                         |
-| `tableLayout.merge.splitCells`                    | Split Cells                         |
-| `tableLayout.cellSize.distributeRows`             | Distribute Rows                     |
-| `tableLayout.cellSize.distributeColumns`          | Distribute Columns                  |
-| `tableLayout.alignment.alignLeft`                 | Align Left                          |
-| `tableLayout.alignment.alignCenter`               | Center                              |
-| `tableLayout.alignment.alignRight`                | Align Right                         |
-| `tableLayout.alignment.alignTop`                  | Align Top                           |
-| `tableLayout.alignment.alignMiddle`               | Center Vertically                   |
-| `tableLayout.alignment.alignBottom`               | Align Bottom                        |
-| `tableLayout.alignment.textDirection`             | Text Direction                      |
-| `tableLayout.alignment.cellMargins`               | Cell Margins                        |
-| `tableLayout.tableSize.size`                      | Table Size                          |
-| `tableLayout.arrange.arrange`                     | Arrange                             |
-| `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                |
-| `chartDesign.chartStyles.changeColors`            | Change Colors gallery               |
-| `chartDesign.chartStyles.gallery`                 | Chart Styles gallery                |
-| `smartArtDesign.createGraphic.addShape`           | Add Shape                           |
-| `smartArtDesign.createGraphic.addBullet`          | Add Bullet                          |
-| `smartArtDesign.createGraphic.textPane`           | Text Pane                           |
-| `smartArtDesign.createGraphic.promote`            | Promote                             |
-| `smartArtDesign.createGraphic.demote`             | Demote                              |
-| `smartArtDesign.createGraphic.rightToLeft`        | Right to Left                       |
-| `smartArtDesign.createGraphic.moveUp`             | Move Up                             |
-| `smartArtDesign.createGraphic.moveDown`           | Move Down                           |
-| `smartArtDesign.layouts.gallery`                  | Layouts gallery                     |
-| `smartArtDesign.smartArtStyles.changeColors`      | Change Colors gallery               |
-| `smartArtDesign.smartArtStyles.gallery`           | SmartArt Styles gallery             |
-| `smartArtDesign.reset.resetGraphic`               | Reset Graphic                       |
-| `smartArtDesign.reset.convert`                    | Convert                             |
+| Id                                                | Control                                                                       |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `home.clipboard.paste`                            | Paste                                                                         |
+| `home.clipboard.cut`                              | Cut                                                                           |
+| `home.clipboard.copy`                             | Copy                                                                          |
+| `home.clipboard.formatPainter`                    | Format Painter                                                                |
+| `home.slides.newSlide`                            | New Slide                                                                     |
+| `home.slides.layout`                              | Layout                                                                        |
+| `home.slides.reset`                               | Reset                                                                         |
+| `home.slides.section`                             | Section                                                                       |
+| `home.slides.slideTemplates`                      | Slide templates                                                               |
+| `home.font.fontFamily`                            | Font                                                                          |
+| `home.font.fontSize`                              | Font Size                                                                     |
+| `home.font.increaseFontSize`                      | Increase Font Size                                                            |
+| `home.font.decreaseFontSize`                      | Decrease Font Size                                                            |
+| `home.font.clearFormatting`                       | Clear All Formatting                                                          |
+| `home.font.bold`                                  | Bold                                                                          |
+| `home.font.italic`                                | Italic                                                                        |
+| `home.font.underline`                             | Underline                                                                     |
+| `home.font.strikethrough`                         | Strikethrough                                                                 |
+| `home.font.shadow`                                | Text Shadow                                                                   |
+| `home.font.characterSpacing`                      | Character Spacing                                                             |
+| `home.font.changeCase`                            | Change Case                                                                   |
+| `home.font.fontColor`                             | Font Color                                                                    |
+| `home.font.highlightColor`                        | Text Highlight Color                                                          |
+| `home.font.superscript`                           | Superscript                                                                   |
+| `home.font.subscript`                             | Subscript                                                                     |
+| `home.paragraph.bullets`                          | Bullets (toggle and gallery)                                                  |
+| `home.paragraph.numbering`                        | Numbering (toggle and gallery)                                                |
+| `home.paragraph.decreaseIndent`                   | Decrease List Level                                                           |
+| `home.paragraph.increaseIndent`                   | Increase List Level                                                           |
+| `home.paragraph.lineSpacing`                      | Line Spacing                                                                  |
+| `home.paragraph.alignLeft`                        | Align Left                                                                    |
+| `home.paragraph.alignCenter`                      | Center                                                                        |
+| `home.paragraph.alignRight`                       | Align Right                                                                   |
+| `home.paragraph.justify`                          | Justify                                                                       |
+| `home.paragraph.columns`                          | Columns                                                                       |
+| `home.paragraph.textDirection`                    | Text Direction                                                                |
+| `home.paragraph.alignText`                        | Align Text                                                                    |
+| `home.drawing.shapes`                             | Shapes                                                                        |
+| `home.drawing.arrange`                            | Arrange                                                                       |
+| `home.drawing.quickStyles`                        | Quick Styles (Shape Styles gallery)                                           |
+| `home.drawing.shapeFill`                          | Shape Fill                                                                    |
+| `home.drawing.shapeOutline`                       | Shape Outline                                                                 |
+| `home.drawing.shapeEffects`                       | Shape Effects gallery                                                         |
+| `home.arrange.bringForward`                       | Bring Forward                                                                 |
+| `home.arrange.sendBackward`                       | Send Backward                                                                 |
+| `home.arrange.bringToFront`                       | Bring to Front                                                                |
+| `home.arrange.sendToBack`                         | Send to Back                                                                  |
+| `home.arrange.flipHorizontal`                     | Flip Horizontal                                                               |
+| `home.arrange.flipVertical`                       | Flip Vertical                                                                 |
+| `home.arrange.duplicate`                          | Duplicate                                                                     |
+| `home.arrange.delete`                             | Delete                                                                        |
+| `home.arrange.group`                              | Group                                                                         |
+| `home.arrange.ungroup`                            | Ungroup                                                                       |
+| `home.arrange.align`                              | Align                                                                         |
+| `home.arrange.mergeShapes`                        | Merge Shapes                                                                  |
+| `home.arrange.crop`                               | Crop                                                                          |
+| `home.arrange.outlineWidth`                       | Outline width                                                                 |
+| `home.editing.find`                               | Find                                                                          |
+| `home.editing.replace`                            | Replace                                                                       |
+| `home.editing.select`                             | Select                                                                        |
+| `insert.slides.newSlide`                          | New Slide                                                                     |
+| `insert.slides.reuseSlides`                       | Reuse Slides                                                                  |
+| `insert.tables.table`                             | Table                                                                         |
+| `insert.images.pictures`                          | Pictures                                                                      |
+| `insert.images.screenshot`                        | Screenshot                                                                    |
+| `insert.images.photoAlbum`                        | Photo Album                                                                   |
+| `insert.camera.cameo`                             | Cameo                                                                         |
+| `insert.illustrations.shapes`                     | Shapes                                                                        |
+| `insert.illustrations.icons`                      | Icons                                                                         |
+| `insert.illustrations.threeDModels`               | 3D Models                                                                     |
+| `insert.illustrations.smartArt`                   | SmartArt                                                                      |
+| `insert.illustrations.chart`                      | Chart                                                                         |
+| `insert.forms.forms`                              | Forms                                                                         |
+| `insert.addIns.getAddIns`                         | Get Add-ins                                                                   |
+| `insert.addIns.myAddIns`                          | My Add-ins                                                                    |
+| `insert.links.zoom`                               | Zoom                                                                          |
+| `insert.links.link`                               | Link                                                                          |
+| `insert.links.action`                             | Action button                                                                 |
+| `insert.comments.comment`                         | Comment                                                                       |
+| `insert.text.textBox`                             | Text Box                                                                      |
+| `insert.text.headerFooter`                        | Header & Footer                                                               |
+| `insert.text.wordArt`                             | WordArt                                                                       |
+| `insert.text.dateTime`                            | Date & Time                                                                   |
+| `insert.text.slideNumber`                         | Slide Number                                                                  |
+| `insert.text.object`                              | Object                                                                        |
+| `insert.text.field`                               | Date & Time and Slide Number (deprecated alias: use dateTime and slideNumber) |
+| `insert.symbols.equation`                         | Equation                                                                      |
+| `insert.symbols.symbol`                           | Symbol                                                                        |
+| `insert.media.media`                              | Video                                                                         |
+| `insert.media.audio`                              | Audio                                                                         |
+| `insert.media.screenRecording`                    | Screen Recording                                                              |
+| `draw.tools.select`                               | Select                                                                        |
+| `draw.tools.pen`                                  | Pen                                                                           |
+| `draw.tools.highlighter`                          | Highlighter                                                                   |
+| `draw.tools.freeform`                             | Freeform                                                                      |
+| `draw.tools.eraser`                               | Eraser                                                                        |
+| `draw.tools.penColor`                             | Pen colour                                                                    |
+| `draw.tools.penWidth`                             | Pen width                                                                     |
+| `draw.convert.inkToShape`                         | Ink to Shape                                                                  |
+| `design.themes.browseThemes`                      | Themes gallery                                                                |
+| `design.themes.editTheme`                         | Edit theme                                                                    |
+| `design.variants.colors`                          | Variants: Colors gallery                                                      |
+| `design.variants.fonts`                           | Variants: Fonts gallery                                                       |
+| `design.customize.slideSize`                      | Slide Size                                                                    |
+| `design.customize.formatBackground`               | Format Background                                                             |
+| `transitions.preview.preview`                     | Preview                                                                       |
+| `transitions.transitionToThisSlide.gallery`       | Transition gallery                                                            |
+| `transitions.transitionToThisSlide.effectOptions` | Effect Options                                                                |
+| `transitions.timing.sound`                        | Sound                                                                         |
+| `transitions.timing.duration`                     | Duration                                                                      |
+| `transitions.timing.applyToAll`                   | Apply To All                                                                  |
+| `transitions.timing.advanceOnClick`               | On Mouse Click                                                                |
+| `transitions.timing.advanceAfter`                 | After                                                                         |
+| `animations.preview.preview`                      | Preview                                                                       |
+| `animations.animation.gallery`                    | Animation gallery                                                             |
+| `animations.animation.effectOptions`              | Effect Options                                                                |
+| `animations.motionPath.gallery`                   | Motion path gallery                                                           |
+| `animations.advancedAnimation.addAnimation`       | Add Animation                                                                 |
+| `animations.advancedAnimation.animationPane`      | Animation Pane                                                                |
+| `animations.advancedAnimation.trigger`            | Trigger                                                                       |
+| `animations.advancedAnimation.animationPainter`   | Animation Painter                                                             |
+| `animations.advancedAnimation.remove`             | Remove animation                                                              |
+| `animations.timing.start`                         | Start                                                                         |
+| `animations.timing.duration`                      | Duration                                                                      |
+| `animations.timing.delay`                         | Delay                                                                         |
+| `animations.timing.reorder`                       | Reorder                                                                       |
+| `slideShow.startSlideShow.fromBeginning`          | From Beginning                                                                |
+| `slideShow.startSlideShow.fromCurrent`            | From Current Slide                                                            |
+| `slideShow.startSlideShow.customShow`             | Custom Slide Show                                                             |
+| `slideShow.present.presenterView`                 | Presenter View                                                                |
+| `slideShow.present.broadcast`                     | Present Online                                                                |
+| `slideShow.setUp.setUpSlideShow`                  | Set Up Slide Show                                                             |
+| `slideShow.setUp.hideSlide`                       | Hide Slide                                                                    |
+| `slideShow.setUp.rehearseTimings`                 | Rehearse Timings                                                              |
+| `slideShow.setUp.record`                          | Record                                                                        |
+| `slideShow.setUp.rehearseWithCoach`               | Rehearse with Coach                                                           |
+| `slideShow.captions.subtitles`                    | Always Use Subtitles                                                          |
+| `slideShow.captions.subtitleSettings`             | Subtitle Settings                                                             |
+| `record.camera.cameo`                             | Cameo                                                                         |
+| `record.record.fromBeginning`                     | From Beginning                                                                |
+| `record.record.fromCurrent`                       | From Current Slide                                                            |
+| `record.manage.clear`                             | Clear                                                                         |
+| `record.manage.reset`                             | Reset to Cameo                                                                |
+| `record.help.learnMore`                           | Learn more                                                                    |
+| `review.proofing.spelling`                        | Spelling                                                                      |
+| `review.proofing.thesaurus`                       | Thesaurus                                                                     |
+| `review.accessibility.check`                      | Check Accessibility                                                           |
+| `review.language.translate`                       | Translate                                                                     |
+| `review.language.language`                        | Language                                                                      |
+| `review.comments.newComment`                      | New Comment                                                                   |
+| `review.comments.delete`                          | Delete                                                                        |
+| `review.comments.deleteSlide`                     | Delete Slide Comments                                                         |
+| `review.comments.deleteAll`                       | Delete All Comments                                                           |
+| `review.comments.previous`                        | Previous                                                                      |
+| `review.comments.next`                            | Next                                                                          |
+| `review.comments.showComments`                    | Show Comments                                                                 |
+| `review.compare.compare`                          | Compare                                                                       |
+| `review.compare.markAllRead`                      | Mark all read                                                                 |
+| `review.protect.readOnly`                         | Read-only                                                                     |
+| `review.protect.restrictPermission`               | Restrict Permission                                                           |
+| `review.ink.hideInk`                              | Hide Ink                                                                      |
+| `view.presentationViews.normal`                   | Normal                                                                        |
+| `view.presentationViews.outline`                  | Outline View                                                                  |
+| `view.presentationViews.slideSorter`              | Slide Sorter                                                                  |
+| `view.presentationViews.notesPage`                | Notes Page                                                                    |
+| `view.presentationViews.readingView`              | Reading View                                                                  |
+| `view.masterViews.slideMaster`                    | Slide Master                                                                  |
+| `view.masterViews.handoutMaster`                  | Handout Master                                                                |
+| `view.masterViews.notesMaster`                    | Notes Master                                                                  |
+| `view.show.ruler`                                 | Ruler                                                                         |
+| `view.show.gridlines`                             | Gridlines                                                                     |
+| `view.show.guides`                                | Guides                                                                        |
+| `view.show.snapToGrid`                            | Snap to Grid                                                                  |
+| `view.show.snapToShape`                           | Snap to Shape                                                                 |
+| `view.show.addGuide`                              | Add horizontal / vertical guide                                               |
+| `view.show.selectionPane`                         | Selection Pane                                                                |
+| `view.show.eyedropper`                            | Eyedropper                                                                    |
+| `view.show.notes`                                 | Notes                                                                         |
+| `view.zoom.zoom`                                  | Zoom                                                                          |
+| `view.zoom.fitToWindow`                           | Fit to Window                                                                 |
+| `view.window.templateEditing`                     | Edit template elements                                                        |
+| `view.window.macros`                              | Macros                                                                        |
+| `help.help.options`                               | Options                                                                       |
+| `help.help.keyboardShortcuts`                     | Keyboard shortcuts                                                            |
+| `help.help.accessibility`                         | Accessibility checker                                                         |
+| `shapeFormat.shapeStyles.gallery`                 | Shape Styles gallery                                                          |
+| `shapeFormat.shapeStyles.shapeEffects`            | Shape Effects gallery                                                         |
+| `shapeFormat.wordArtStyles.gallery`               | WordArt Styles gallery                                                        |
+| `pictureFormat.adjust.corrections`                | Corrections gallery                                                           |
+| `pictureFormat.adjust.color`                      | Color gallery                                                                 |
+| `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery                                                      |
+| `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery                                                        |
+| `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery                                                       |
+| `pictureFormat.size.crop`                         | Crop                                                                          |
+| `tableDesign.tableStyles.gallery`                 | Table Styles gallery                                                          |
+| `tableLayout.table.select`                        | Select                                                                        |
+| `tableLayout.table.viewGridlines`                 | View Gridlines                                                                |
+| `tableLayout.rowsColumns.deleteRows`              | Delete Rows                                                                   |
+| `tableLayout.rowsColumns.deleteColumns`           | Delete Columns                                                                |
+| `tableLayout.rowsColumns.insertAbove`             | Insert Above                                                                  |
+| `tableLayout.rowsColumns.insertBelow`             | Insert Below                                                                  |
+| `tableLayout.rowsColumns.insertLeft`              | Insert Left                                                                   |
+| `tableLayout.rowsColumns.insertRight`             | Insert Right                                                                  |
+| `tableLayout.merge.mergeCells`                    | Merge Cells                                                                   |
+| `tableLayout.merge.splitCells`                    | Split Cells                                                                   |
+| `tableLayout.cellSize.distributeRows`             | Distribute Rows                                                               |
+| `tableLayout.cellSize.distributeColumns`          | Distribute Columns                                                            |
+| `tableLayout.alignment.alignLeft`                 | Align Left                                                                    |
+| `tableLayout.alignment.alignCenter`               | Center                                                                        |
+| `tableLayout.alignment.alignRight`                | Align Right                                                                   |
+| `tableLayout.alignment.alignTop`                  | Align Top                                                                     |
+| `tableLayout.alignment.alignMiddle`               | Center Vertically                                                             |
+| `tableLayout.alignment.alignBottom`               | Align Bottom                                                                  |
+| `tableLayout.alignment.textDirection`             | Text Direction                                                                |
+| `tableLayout.alignment.cellMargins`               | Cell Margins                                                                  |
+| `tableLayout.tableSize.size`                      | Table Size                                                                    |
+| `tableLayout.arrange.arrange`                     | Arrange                                                                       |
+| `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                                                          |
+| `chartDesign.chartStyles.changeColors`            | Change Colors gallery                                                         |
+| `chartDesign.chartStyles.gallery`                 | Chart Styles gallery                                                          |
+| `smartArtDesign.createGraphic.addShape`           | Add Shape                                                                     |
+| `smartArtDesign.createGraphic.addBullet`          | Add Bullet                                                                    |
+| `smartArtDesign.createGraphic.textPane`           | Text Pane                                                                     |
+| `smartArtDesign.createGraphic.promote`            | Promote                                                                       |
+| `smartArtDesign.createGraphic.demote`             | Demote                                                                        |
+| `smartArtDesign.createGraphic.rightToLeft`        | Right to Left                                                                 |
+| `smartArtDesign.createGraphic.moveUp`             | Move Up                                                                       |
+| `smartArtDesign.createGraphic.moveDown`           | Move Down                                                                     |
+| `smartArtDesign.layouts.gallery`                  | Layouts gallery                                                               |
+| `smartArtDesign.smartArtStyles.changeColors`      | Change Colors gallery                                                         |
+| `smartArtDesign.smartArtStyles.gallery`           | SmartArt Styles gallery                                                       |
+| `smartArtDesign.reset.resetGraphic`               | Reset Graphic                                                                 |
+| `smartArtDesign.reset.convert`                    | Convert                                                                       |
 
 ### Toolbar buttons (`ribbon.hiddenButtons`)
 

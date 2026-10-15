@@ -28,7 +28,7 @@ export interface InsertSectionProps {
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
 	onAddShape: () => void;
-	onAddTable: () => void;
+	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;
@@ -107,6 +107,9 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					commands[intent.value]?.();
 					break;
 				}
+				case 'table':
+					p.onAddTable(intent.rows, intent.columns);
+					break;
 				case 'newSlide': {
 					const layout = resolveInsertSlideLayout(
 						p.layoutOptions ?? [],

@@ -225,22 +225,8 @@ export function ribbonTab(page: Page, name: string): Locator {
 
 /** Switch the ribbon to `name` and wait for the content row to settle. */
 export async function openRibbonTab(page: Page, name: string): Promise<void> {
-	if (name === 'Insert') {
-		await widenForInsert(page);
-	}
 	await ribbonTab(page, name).click();
 	await page.waitForTimeout(150);
-}
-
-/**
- * The Insert tab has PowerPoint's twelve groups, and a narrow window collapses the rightmost
- * ones into popups, as Office does. Specs that click an Insert command directly need them open.
- */
-export async function widenForInsert(page: Page, width = 2800): Promise<void> {
-	const size = page.viewportSize();
-	if (size && size.width < width && size.width >= 768) {
-		await page.setViewportSize({ width, height: size.height });
-	}
 }
 
 /** The properties inspector, when it is on screen. */

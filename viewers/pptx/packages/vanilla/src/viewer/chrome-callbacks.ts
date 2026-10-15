@@ -263,7 +263,8 @@ export function buildChromeCallbacks(
 		// actions, so a click after mount always hits the live editor instance.
 		edit: createLazyActions(() => deps.getEditActions()),
 		insert: {
-			insert: (kind, shapeType) => deps.getEditActions().insert(kind, shapeType),
+			insert: (kind, shapeType, tableSize) =>
+				deps.getEditActions().insert(kind, shapeType, tableSize),
 			insertImage: () => deps.getEditActions().insertImage(),
 			insertMedia: () => deps.getEditActions().insertMedia(),
 			insertChart: (chartType) => deps.getEditActions().insertChart(chartType),

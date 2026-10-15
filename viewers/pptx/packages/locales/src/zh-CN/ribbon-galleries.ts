@@ -108,6 +108,8 @@ export const translations: Record<string, string> = {
 	'pptx.insert.recordAudio': '录制音频...',
 	'pptx.insert.insertNewEquation': '插入新公式',
 	'pptx.insert.options': '选项',
+	'pptx.insert.tablePicker': '插入表格',
+	'pptx.insert.tableSize': '{{columns}}x{{rows}} 表格',
 	'pptx.insert.unavailable': '此查看器暂不支持。',
 	'pptx.insert.needsSelection': '请先选择一个对象。',
 	'pptx.insert.tip.newSlide': '向演示文稿添加一张新幻灯片。',

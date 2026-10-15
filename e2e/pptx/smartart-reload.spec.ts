@@ -6,7 +6,7 @@ import type { Locator, Page } from '@playwright/test';
 import JSZip from 'jszip';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { fixture, loadDeck, resetTabSession, thumbnail, widenForInsert } from './support/deck';
+import { fixture, loadDeck, resetTabSession, thumbnail } from './support/deck';
 
 async function renderedDiagram(diagram: Locator) {
 	return {
@@ -53,7 +53,6 @@ for (const source of ['cached', 'computed', 'powerpoint-computed', 'inserted'] a
 			);
 		}
 		if (source === 'inserted') {
-			await widenForInsert(page);
 			await page
 				.getByRole('toolbar', { name: 'Presentation toolbar' })
 				.getByRole('tab', { name: 'Insert', exact: true })

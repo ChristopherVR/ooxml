@@ -155,6 +155,17 @@ describe('insertSection', () => {
 		expect(props.onAddActionButton).toHaveBeenCalledOnce();
 	});
 
+	it('inserts a table of the size picked on the Table grid', () => {
+		const props = baseProps();
+		act(() => root.render(React.createElement(InsertSection, props)));
+		const table = '[data-ribbon-control="insert.tables.table"]';
+		act(() => container.querySelector<HTMLButtonElement>(`${table} .trigger`)!.click());
+		act(() =>
+			container.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click(),
+		);
+		expect(props.onAddTable).toHaveBeenCalledExactlyOnceWith(4, 3);
+	});
+
 	it('adds a slide from the layout and opens the comments pane without toggling it shut', () => {
 		const onInsertSlideFromLayout = vi.fn();
 		const onToggleComments = vi.fn();

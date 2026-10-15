@@ -122,7 +122,6 @@ async function loadDeck(page: Page, options: { threeD?: boolean } = {}): Promise
  * Switch to the Insert ribbon tab through either supported semantic role.
  */
 async function switchToInsertTab(page: Page): Promise<void> {
-	await page.setViewportSize({ width: 2800, height: page.viewportSize()?.height ?? 900 });
 	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 	const insertTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
 	await insertTab.click();

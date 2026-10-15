@@ -95,7 +95,7 @@ export interface ToolbarProps {
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
 	onAddShape: () => void;
-	onAddTable: () => void;
+	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	onAddSmartArt: () => void;
 	onAddEquation: () => void;

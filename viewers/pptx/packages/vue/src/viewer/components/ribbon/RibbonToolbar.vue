@@ -107,9 +107,17 @@ const launchers = homeLaunchers(
 	},
 );
 let detachOverflow: (() => void) | null = null;
+let ribbonContent: HTMLElement | null = null;
 function setRibbonContent(el: unknown): void {
+	// Vue calls a function ref on every patch. Re-attaching for the same row would reset the
+	// scaling and collapsing each render, so the row never settled.
+	const next = el instanceof HTMLElement ? el : null;
+	if (next === ribbonContent && detachOverflow) {
+		return;
+	}
 	detachOverflow?.();
-	detachOverflow = el instanceof HTMLElement ? attachRibbonOverflow(el, { launchers }) : null;
+	ribbonContent = next;
+	detachOverflow = next ? attachRibbonOverflow(next, { launchers }) : null;
 }
 onBeforeUnmount(() => detachOverflow?.());
 </script>

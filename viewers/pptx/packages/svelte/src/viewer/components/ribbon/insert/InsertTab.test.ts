@@ -206,6 +206,20 @@ describe('insertTab', () => {
 		expect(headerFooter(target).hasAttribute('hidden')).toBeTruthy();
 	});
 
+	it('inserts a table of the size picked on the Table grid', () => {
+		const editor = makeEditor();
+		const target = mountTab(editor);
+		const table = '[data-ribbon-control="insert.tables.table"]';
+		target.querySelector<HTMLButtonElement>(`${table} .trigger`)!.click();
+		target.querySelector<HTMLElement>(`${table} [data-row="4"][data-column="3"]`)!.click();
+		flushSync();
+		const inserted = editor.slides[0]?.elements[0] as
+			| { tableData?: { rows: unknown[][] } }
+			| undefined;
+		expect(inserted?.tableData?.rows).toHaveLength(4);
+		expect((inserted?.tableData?.rows[0] as { cells: unknown[] }).cells).toHaveLength(3);
+	});
+
 	it('adds a slide from the layout and opens the comments pane', async () => {
 		const editor = makeEditor();
 		const chromeUi = { commentsOpen: false, toggleComments: vi.fn() };
