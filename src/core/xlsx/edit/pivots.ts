@@ -16,8 +16,16 @@ import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
 import { styleAt } from '../styles';
 import { normalizedPivotMeasures } from '../pivot/measures';
+import { pivotDateFieldsOf } from '../pivot/dates';
 import { pruneItemFilters } from '../pivot/item-filters';
-import { markDirty, pivotHasSlicers, removeSlicers, slicerOnPivot } from '../slicer/book';
+import {
+	markDirty,
+	pivotHasSlicers,
+	removeSlicers,
+	removeTimelines,
+	slicerOnPivot,
+	timelineOnPivot,
+} from '../slicer/book';
 
 function pivotAt(ctx: EditContext, sheet: number, name: string): PivotTable {
 	const pivot = sheetAt(ctx.workbook, sheet).pivotTables?.find((entry) => entry.name === name);
@@ -196,6 +204,8 @@ export function createPivotTable(
 		location: { start: { ...destination }, end: { ...destination } },
 		...(options.columnField ? { columnField: options.columnField } : {}),
 	};
+	const dates = pivotDateFieldsOf(ctx.workbook, s, pivot);
+	if (dates.length) pivot.dateFields = dates;
 	validatePivotFields(pivot);
 	writePivot(ctx, s, pivot);
 	return name;
@@ -246,6 +256,10 @@ export function refreshPivotTable(
 		if (measures.length) next.additionalValues = measures;
 		else delete next.additionalValues;
 	}
+	const dates = pivotDateFieldsOf(ctx.workbook, s, next);
+	if (dates.length) next.dateFields = dates;
+	else delete next.dateFields;
+	if (next.dateFilter && !dates.includes(next.dateFilter.field)) delete next.dateFilter;
 	const kept = pruneItemFilters(next);
 	if (kept) next.itemFilters = kept;
 	else delete next.itemFilters;
@@ -277,6 +291,9 @@ export function deletePivotTable(ctx: EditContext, s: number, name: string): voi
 		() => {
 			removeSlicers(ctx.workbook, (slicer) =>
 				slicerOnPivot(ctx.workbook, slicer.cache, sheet.sheetId, pivot.name),
+			);
+			removeTimelines(ctx.workbook, (timeline) =>
+				timelineOnPivot(ctx.workbook, timeline.cache, sheet.sheetId, pivot.name),
 			);
 			sheet.pivotTables = sheet.pivotTables!.filter((entry) => entry !== pivot);
 			forEachCellInRange(sheet, pivot.location, (_cell, row, col) => deleteCell(sheet, row, col));

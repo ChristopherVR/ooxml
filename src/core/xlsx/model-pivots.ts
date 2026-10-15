@@ -26,6 +26,13 @@ export interface PivotItemFilter {
 	hidden: CellValue[];
 }
 
+/** A date range filter (what a timeline sets): dates from `start` to `end` inclusive, as serials. */
+export interface PivotDateFilter {
+	field: string;
+	start: number;
+	end: number;
+}
+
 /** A worksheet-range pivot with up to two row fields and sixteen measures. */
 export interface PivotTable {
 	name: string;
@@ -43,6 +50,15 @@ export interface PivotTable {
 	pageFilter?: PivotPageFilter;
 	/** Hidden items per field (slicers, filter lists); the cache keeps every record. */
 	itemFilters?: PivotItemFilter[];
+	/**
+	 * Date range from a timeline. The field is one of `dateFields`.
+	 */
+	dateFilter?: PivotDateFilter;
+	/**
+	 * Cache fields that hold dates and sit on no axis (they exist for timelines): written as
+	 * date items. Other date-valued fields stay plain numbers.
+	 */
+	dateFields?: string[];
 	/** `x14:pivotCacheDefinition/@pivotCacheId`, the identity slicers use to find the cache. */
 	slicerCacheId?: number;
 	valueField: string;

@@ -9,13 +9,20 @@ import { PIVOT_AGGREGATES } from './data';
 import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
 import { pivotKey, type SlicerRefs } from '../slicer/read';
+import { readDateFields, readDateFilter } from './date-read';
+import { isoToSerial } from './dates';
 import { readItemFilters, readSlicerCacheId } from './item-filters-read';
 import { assertPageAxisItems } from './page-filter-admission';
 import { readPivotPageFilter } from './page-filter';
 import { supportedPivotAxes, pivotFieldIndex, pivotValueIndex } from './values-axis';
 
-function value(node: XmlElement): CellValue {
+function value(node: XmlElement, date1904 = false): CellValue {
 	const v = att(node, 'v') ?? '';
+	if (node.localName === 'd') {
+		const serial = isoToSerial(v, date1904);
+		if (serial === undefined) throw new Error('Unsupported pivot date item');
+		return serial;
+	}
 	if (node.localName === 'm') return null;
 	if (node.localName === 's') return decodeEscapes(v);
 	if (node.localName === 'b') return v === '1';
@@ -62,11 +69,13 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	if (fields.some((field) => first(field, 'fieldGroup', NS.x) || field.hasAttribute('formula')))
 		throw new Error('Grouped or calculated cache field');
 	const shared = fields.map((field) =>
-		elements(first(field, 'sharedItems', NS.x) ?? parseXml('<root/>').documentElement).map(value),
+		elements(first(field, 'sharedItems', NS.x) ?? parseXml('<root/>').documentElement).map((node) =>
+			value(node, workbook.date1904),
+		),
 	);
 	const records = children(recordRoot, 'r', NS.x).map((record) =>
 		elements(record).map((node, field): CellValue => {
-			if (node.localName !== 'x') return value(node);
+			if (node.localName !== 'x') return value(node, workbook.date1904);
 			const index = Number(att(node, 'v'));
 			if (!Number.isInteger(index) || index < 0 || index >= (shared[field]?.length ?? 0))
 				throw new Error('Invalid pivot cache index');
@@ -99,7 +108,6 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
 		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
-		first(root, 'filters', NS.x) ||
 		root.getAttribute('rowGrandTotals') === '0' ||
 		root.getAttribute('colGrandTotals') === '0'
 	)
@@ -189,9 +197,22 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	}
 	const itemFilters = readItemFilters(tableFields, names, shared);
 	const slicerCacheId = readSlicerCacheId(cache);
+	const dateFields = readDateFields(fields, names);
+	const dateFilter = readDateFilter(root, names, dateFields, workbook.date1904);
+	const onAxis = new Set<string | undefined>([
+		row,
+		second,
+		col,
+		pageFilter?.field,
+		...dataFields.map((field) => names[Number(att(field, 'fld'))]),
+	]);
+	if (dateFields.some((field) => onAxis.has(field)))
+		throw new Error('Date fields used as rows, columns or values are preserved');
 	const pivot: PivotTable = {
 		...(pageFilter ? { pageFilter } : {}),
 		...(itemFilters ? { itemFilters } : {}),
+		...(dateFields.length ? { dateFields } : {}),
+		...(dateFilter ? { dateFilter } : {}),
 		...(slicerCacheId !== undefined ? { slicerCacheId } : {}),
 		name: att(root, 'name') ?? 'PivotTable',
 		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,

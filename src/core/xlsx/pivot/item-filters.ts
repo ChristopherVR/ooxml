@@ -3,6 +3,8 @@ import { pivotItems, pivotValueKey } from './data';
 
 type FilterFields = Pick<PivotTable, 'fields' | 'records'> & {
 	itemFilters?: PivotTable['itemFilters'];
+	dateFilter?: PivotTable['dateFilter'];
+	dateFields?: PivotTable['dateFields'];
 };
 
 /** The cached-item keys hidden from `field`, empty when it has no item filter. */
@@ -21,16 +23,23 @@ export function filteredFields(pivot: Pick<PivotTable, 'itemFilters'>): Set<stri
 /** The pivot restricted to the records whose filtered fields show a visible item. */
 export function applyPivotItemFilters(pivot: PivotTable): PivotTable {
 	const active = (pivot.itemFilters ?? []).filter((entry) => entry.hidden.length);
-	if (!active.length) return pivot;
+	const range = pivot.dateFilter;
+	if (!active.length && !range) return pivot;
+	const dateIndex = range ? pivot.fields.indexOf(range.field) : -1;
 	const tests = active.map((entry) => ({
 		index: pivot.fields.indexOf(entry.field),
 		hidden: new Set(entry.hidden.map(pivotValueKey)),
 	}));
 	return {
 		...pivot,
-		records: pivot.records.filter((record) =>
-			tests.every((test) => !test.hidden.has(pivotValueKey(record[test.index] ?? null))),
-		),
+		records: pivot.records.filter((record) => {
+			if (range) {
+				const value = record[dateIndex];
+				if (typeof value !== 'number' || value < range.start || value >= range.end + 1)
+					return false;
+			}
+			return tests.every((test) => !test.hidden.has(pivotValueKey(record[test.index] ?? null)));
+		}),
 	};
 }
 
@@ -42,7 +51,22 @@ export function itemsWithData(pivot: PivotTable, field: string): Set<string> {
 	return new Set(scoped.records.map((record) => pivotValueKey(record[index] ?? null)));
 }
 
+function validateDateFilter(pivot: FilterFields): void {
+	const range = pivot.dateFilter;
+	if (range === undefined) return;
+	if (
+		!range ||
+		typeof range !== 'object' ||
+		!(pivot.dateFields ?? []).includes(range.field) ||
+		!Number.isFinite(range.start) ||
+		!Number.isFinite(range.end) ||
+		range.start > range.end
+	)
+		throw new Error('Choose a valid timeline date range.');
+}
+
 export function validatePivotItemFilters(pivot: FilterFields & { pageFilter?: { field: string } }) {
+	validateDateFilter(pivot);
 	const filters = pivot.itemFilters;
 	if (filters === undefined) return;
 	if (!Array.isArray(filters)) throw new Error('Choose valid PivotTable item filters.');

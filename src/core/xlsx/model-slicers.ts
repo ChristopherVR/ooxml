@@ -86,6 +86,8 @@ export interface TimelineCache {
 	/** `state/@minimalRefreshVersion` and `lastRefreshVersion`, kept for writing. */
 	minimalRefreshVersion?: number;
 	lastRefreshVersion?: number;
+	/** The cache part as read; a save patches it so unmodelled markup survives. */
+	sourceXml?: string;
 	partName?: string;
 }
 

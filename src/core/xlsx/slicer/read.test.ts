@@ -34,7 +34,7 @@ it('reads a slicer connected to a PivotTable and the hidden item', async () => {
 	expect(wb.slicers?.caches[0]?.source).toMatchObject({ kind: 'pivot' });
 });
 
-for (const kind of ['table', 'pivot', 'timeline']) {
+for (const kind of ['table', 'pivot', 'timeline', 'timeline-range']) {
 	it(`round-trips unchanged ${kind} slicer parts byte for byte`, async () => {
 		const bytes = fixture(kind);
 		const original = await JSZip.loadAsync(bytes);
@@ -54,7 +54,28 @@ for (const kind of ['table', 'pivot', 'timeline']) {
 	});
 }
 
-it('keeps a timeline as a placeholder until its date field is supported', async () => {
-	const wb = await loadXlsx(fixture('timeline'));
-	expect(wb.sheets[0]!.drawings[0]).toMatchObject({ kind: 'unsupported', description: 'timeline' });
+it('reads a timeline on a date field with and without a selected range', async () => {
+	const all = await loadXlsx(fixture('timeline'));
+	expect(all.warnings).toEqual([]);
+	expect(all.sheets[0]!.drawings[0]).toMatchObject({ kind: 'timeline', name: 'Day' });
+	expect(all.slicers!.timelines[0]).toMatchObject({ name: 'Day', cache: 'Day', level: 2 });
+	expect(all.slicers!.timelineCaches[0]).toMatchObject({
+		sourceName: 'Day',
+		bounds: { start: '2025-01-01T00:00:00', end: '2026-01-01T00:00:00' },
+	});
+	expect(all.slicers!.timelineCaches[0]!.selection).toBeUndefined();
+	expect(all.sheets[0]!.pivotTables![0]!.dateFields).toEqual(['Day']);
+	expect(all.sheets[0]!.pivotTables![0]!.dateFilter).toBeUndefined();
+	const range = await loadXlsx(fixture('timeline-range'));
+	expect(range.warnings).toEqual([]);
+	expect(range.slicers!.timelineCaches[0]!.selection).toEqual({
+		start: '2025-02-01T00:00:00',
+		end: '2025-04-30T00:00:00',
+	});
+	// Feb 1 to Apr 30 2025 as date serials.
+	expect(range.sheets[0]!.pivotTables![0]!.dateFilter).toEqual({
+		field: 'Day',
+		start: 45689,
+		end: 45777,
+	});
 });

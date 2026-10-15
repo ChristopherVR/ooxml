@@ -1,5 +1,6 @@
 import type { DrawingAnchor, DrawingObject } from '../model';
 import { removeSlicers } from '../slicer/book';
+import { deleteTimeline } from './timelines';
 import { type EditContext, sheetAt } from './context';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
@@ -50,6 +51,10 @@ export function setDrawingAnchor(
 export function deleteDrawing(ctx: EditContext, s: number, index: number): void {
 	const doomed = drawingAt(ctx, s, index);
 	const sheet = sheetAt(ctx.workbook, s);
+	if (doomed.kind === 'timeline') {
+		deleteTimeline(ctx, doomed.name);
+		return;
+	}
 	if (doomed.kind === 'slicer') {
 		ctx.run(
 			'Delete slicer',

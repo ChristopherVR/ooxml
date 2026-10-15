@@ -31,6 +31,7 @@ import * as drawings from './drawings';
 import * as sparklines from './sparklines';
 import * as pivots from './pivots';
 import * as slicers from './slicers';
+import * as timelines from './timelines';
 import { rangesIntersect } from '../address';
 import * as cellStyle from './cell-style';
 import * as cfEdits from './conditional-formats';
@@ -277,6 +278,11 @@ export function createEditSession(
 		updateSlicer: (name, patch) => slicers.updateSlicer(ctx, name, patch),
 		insertSlicer: (s, source) => slicers.insertSlicer(ctx, s, source),
 		deleteSlicer: (name) => slicers.deleteSlicer(ctx, name),
+		setTimelineSelection: (cache, selection) =>
+			timelines.setTimelineSelection(ctx, cache, selection),
+		updateTimeline: (name, patch) => timelines.updateTimeline(ctx, name, patch),
+		insertTimeline: (s, source) => timelines.insertTimeline(ctx, s, source),
+		deleteTimeline: (name) => timelines.deleteTimeline(ctx, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
 		createSparklineGroup: (s, source, locations, patch) =>
 			sparklines.createSparklineGroup(ctx, s, source, locations, patch),

@@ -5,6 +5,7 @@ import { formatRange } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
 import { XML_HEADER, attrs, encodeEscapes } from '../write/xml-out';
 import { pivotValueKey } from './data';
+import { serialToIso } from './dates';
 
 export interface PivotCacheData {
 	items: CellValue[][];
@@ -45,6 +46,11 @@ export function pivotCacheDefinitionXml(
 	const fields = pivot.fields
 		.map((name, index) => {
 			const items = data.items[index]!;
+			if (pivot.dateFields?.includes(name) && items.every((v) => typeof v === 'number')) {
+				const serials = items as number[];
+				const iso = (serial: number) => serialToIso(serial, workbook.date1904);
+				return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 14 })}><sharedItems${attrs({ containsSemiMixedTypes: false, containsNonDate: false, containsDate: true, containsString: false, minDate: iso(Math.min(...serials)), maxDate: iso(Math.max(...serials)), count: serials.length })}>${serials.map((serial) => `<d v="${iso(serial)}"/>`).join('')}</sharedItems></cacheField>`;
+			}
 			const types = new Set(
 				items.map((value) => (value === null || value === '' ? 'blank' : typeof value)),
 			);

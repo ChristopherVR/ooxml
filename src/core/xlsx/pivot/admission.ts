@@ -9,7 +9,7 @@ const TABLE: Record<string, string> = {
 	pageFields: 'count',
 	pageField: 'fld item hier',
 	pivotFields: 'count',
-	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
+	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal numFmtId',
 	items: 'count',
 	item: 'x t h',
 	rowFields: 'count',
@@ -23,9 +23,16 @@ const TABLE: Record<string, string> = {
 	dataField: 'name fld subtotal baseField baseItem showDataAs',
 	pivotTableStyleInfo:
 		'name showRowHeaders showColHeaders showRowStripes showColStripes showLastColumn',
+	filters: 'count',
+	filter: 'fld mpFld evalOrder id type name',
+	autoFilter: 'ref',
+	filterColumn: 'colId',
+	customFilters: 'and',
+	customFilter: 'operator val',
 	extLst: '',
 	ext: 'uri',
 };
+const X15 = 'http://schemas.microsoft.com/office/spreadsheetml/2010/11/main';
 const CACHE: Record<string, string> = {
 	pivotCacheDefinition:
 		'id refreshedBy refreshedDate createdVersion refreshedVersion minRefreshableVersion recordCount',
@@ -34,11 +41,12 @@ const CACHE: Record<string, string> = {
 	cacheFields: 'count',
 	cacheField: 'name numFmtId',
 	sharedItems:
-		'count containsString containsNumber containsInteger containsBlank containsMixedTypes containsSemiMixedTypes minValue maxValue',
+		'count containsString containsNumber containsInteger containsBlank containsMixedTypes containsSemiMixedTypes minValue maxValue containsNonDate containsDate minDate maxDate',
 	s: 'v',
 	n: 'v',
 	b: 'v',
 	e: 'v',
+	d: 'v',
 	m: '',
 	extLst: '',
 	ext: 'uri',
@@ -59,11 +67,21 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 					owner?.localName === 'pivotField') ||
 				(node.namespaceURI === LAYOUT &&
 					node.localName === 'pivotTableDefinition16' &&
-					owner?.localName === 'pivotTableDefinition');
+					owner?.localName === 'pivotTableDefinition') ||
+				(node.namespaceURI === X15 &&
+					node.localName === 'pivotFilter' &&
+					owner?.localName === 'filter');
 		if (!known || elements(node).length) throw new Error('Unsupported PivotTable extension');
 		for (let i = 0; i < node.attributes.length; i++) {
 			const attr = node.attributes.item(i)!;
 			if (attr.name.startsWith('xmlns')) continue;
+			if (
+				!cache &&
+				node.namespaceURI === X15 &&
+				attr.name === 'useWholeDay' &&
+				['0', '1'].includes(attr.value)
+			)
+				continue;
 			if (
 				cache &&
 				node.namespaceURI === X14 &&
@@ -101,6 +119,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 					'{962EF5D1-5CA2-4c93-8EF4-DBF5C05439D2}',
 					'{747A6164-185A-40DC-8AA5-F01512510D54}',
 					'{2946ED86-A175-432a-8AC1-64E0C546D7DE}',
+					'{0605FD5F-26C8-4aeb-8148-2DB25E43C511}',
 				];
 		if (!uris.includes(node.getAttribute('uri') ?? ''))
 			throw new Error('Unsupported PivotTable extension identity');
@@ -127,7 +146,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 				))
 		)
 			throw new Error('Unsupported PivotTable option');
-		if (attr.localName === 'numFmtId' && attr.value !== '0')
+		if (attr.localName === 'numFmtId' && !['0', '14'].includes(attr.value))
 			throw new Error('Unsupported PivotTable field number format');
 		if (
 			node.localName === 'pivotTableDefinition' &&
@@ -170,7 +189,7 @@ export function assertPivotAdmission(table: XmlElement, cache: XmlElement): void
 export function assertPivotRecords(records: XmlElement): void {
 	inspect(
 		records,
-		{ pivotCacheRecords: 'count', r: '', x: 'v', s: 'v', n: 'v', b: 'v', e: 'v', m: '' },
+		{ pivotCacheRecords: 'count', r: '', x: 'v', s: 'v', n: 'v', b: 'v', e: 'v', d: 'v', m: '' },
 		true,
 	);
 }

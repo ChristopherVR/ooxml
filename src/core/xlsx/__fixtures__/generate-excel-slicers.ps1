@@ -1,7 +1,7 @@
-param([ValidateSet('table','pivot','timeline')][string]$Kind='table')
+param([ValidateSet('table','pivot','timeline')][string]$Kind='table', [switch]$Range)
 # Requires desktop Excel. Generates slicer and timeline references (Excel 2013+ slicer caches).
 $ErrorActionPreference = 'Stop'
-$out = Join-Path $PSScriptRoot ('excel-slicer-' + $Kind + '.xlsx')
+$out = Join-Path $PSScriptRoot ('excel-slicer-' + $Kind + $(if ($Range) { '-range' } else { '' }) + '.xlsx')
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
 $excel.DisplayAlerts = $false
@@ -45,6 +45,7 @@ try {
 			$sc.SlicerItems.Item('Veg').Selected = $false
 		} else {
 			$sc = $wb.SlicerCaches.Add2($pivot, 'Day', 'Day', 2)
+			if ($Range) { $sc.TimelineState.SetFilterDateRange([datetime]'2025-02-01', [datetime]'2025-04-30') }
 			[void]$sc.Slicers.Add($summary, $missing, 'Day', 'Day', 10, 300, 360, 120)
 		}
 	}

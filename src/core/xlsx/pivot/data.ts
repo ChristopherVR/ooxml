@@ -107,6 +107,8 @@ export function validatePivotFields(
 		| 'valuesPosition'
 		| 'pageFilter'
 		| 'itemFilters'
+		| 'dateFilter'
+		| 'dateFields'
 		| 'records'
 	>,
 ): void {

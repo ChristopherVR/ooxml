@@ -80,6 +80,7 @@ export function parseTimelineCache(xml: string, partName: string): TimelineCache
 		pivots,
 		bounds: { start, end },
 		partName,
+		sourceXml: xml,
 	};
 	const uid = root.getAttributeNS(REV10, 'uid');
 	if (uid) cache.uid = uid;

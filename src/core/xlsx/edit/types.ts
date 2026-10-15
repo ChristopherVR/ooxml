@@ -88,7 +88,9 @@ export type {
 	FindMatch,
 	FindQuery,
 } from './types-clipboard';
+import type { TimelineSelection } from '../slicer/timeline-periods';
 import type { SlicerPatch, SlicerSourceRef } from './slicers';
+import type { TimelinePatch } from './timelines';
 import type { ClipboardPayload, FindMatch, FindQuery } from './types-clipboard';
 
 export type WorkbookChangeKind =
@@ -228,6 +230,14 @@ export interface EditSession {
 	insertSlicer(sheet: number, source: SlicerSourceRef): string;
 	/** Deletes a slicer (and its cache when unused). */
 	deleteSlicer(name: string): void;
+	/** Filters a timeline's PivotTable to an ISO date range (null: every date). */
+	setTimelineSelection(cache: string, selection: TimelineSelection | null): void;
+	/** Changes a timeline's caption, time level or visible parts. */
+	updateTimeline(name: string, patch: TimelinePatch): void;
+	/** Inserts a timeline for a date field of a PivotTable; returns the timeline's name. */
+	insertTimeline(sheet: number, source: { pivot: string; field: string }): string;
+	/** Deletes a timeline (and its cache). */
+	deleteTimeline(name: string): void;
 	/** Creates a group, mapping data rows or columns to a one-dimensional location range. */
 	createSparklineGroup(
 		sheet: number,

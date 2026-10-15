@@ -18,11 +18,14 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const page = pivot.pageFilter ? pivot.fields.indexOf(pivot.pageFilter.field) : -1;
 	const pageItems = page >= 0 ? pivotItems(pivot, pivot.pageFilter!.field) : [];
 	const filtered = filteredFields(pivot);
+	const dateFiltered = pivot.dateFilter !== undefined;
 	// Report filters and hidden items keep every cached item in the field's item list.
 	const axisItems = (field: string, visible: typeof grid.rowItems) =>
-		page >= 0 || filtered.has(field) ? pivotItems(pivot, field) : visible;
+		page >= 0 || dateFiltered || filtered.has(field) ? pivotItems(pivot, field) : visible;
 	const anyFull =
-		page >= 0 || [pivot.rowField, pivot.secondRowField].some((f) => f && filtered.has(f));
+		page >= 0 ||
+		dateFiltered ||
+		[pivot.rowField, pivot.secondRowField].some((f) => f && filtered.has(f));
 	const rowItemsFull = axisItems(pivot.rowField, grid.rowItems);
 	const secondRowItemsFull = pivot.secondRowField
 		? axisItems(pivot.secondRowField, grid.secondRowItems!)
@@ -49,6 +52,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const top = (pivot.subtotalPosition ?? (outline ? 'top' : 'bottom')) === 'top';
 	const fields = pivot.fields
 		.map((_field, index) => {
+			const isDate = pivot.dateFields?.includes(pivot.fields[index]!) ?? false;
 			const items =
 				index === page
 					? pageItems
@@ -58,7 +62,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 							? secondRowItemsFull
 							: index === col
 								? columnItemsFull
-								: filtered.has(pivot.fields[index]!)
+								: filtered.has(pivot.fields[index]!) || isDate
 									? pivotItems(pivot, pivot.fields[index]!)
 									: undefined;
 			const hidden = hiddenItemKeys(pivot, pivot.fields[index]!);
@@ -67,7 +71,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 				pivot.repeatLabels && (index === row || index === second)
 					? '<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" fillDownLabels="1"/></ext></extLst>'
 					: '';
-			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''} x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
+			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''} x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
 		})
 		.join('');
 	const items = (count: number, indices?: number[]) =>
@@ -178,10 +182,34 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 		'colItems',
 		'dataFields',
 		'pageFields',
+		'filters',
 	]);
 	for (const child of elements(root)) if (replaced.has(child.localName!)) root.removeChild(child);
 	const replacement = parseXml(`<root xmlns="${NS.x}">${body}</root>`).documentElement;
 	const before = root.firstChild;
 	for (const child of elements(replacement)) root.insertBefore(doc.importNode(child, true), before);
+	if (pivot.dateFilter) {
+		// `filters` follows the table style and precedes the extension list.
+		const filters = parseXml(
+			`<root xmlns="${NS.x}">${dateFilterXml(pivot, pivot.dateFilter)}</root>`,
+		).documentElement;
+		root.insertBefore(
+			doc.importNode(elements(filters)[0]!, true),
+			first(root, 'extLst', NS.x) ?? null,
+		);
+	}
 	return XML_HEADER + buildXml(root);
+}
+
+/** The timeline's `filters` element: one inclusive date range on a date field. */
+function dateFilterXml(pivot: PivotTable, filter: NonNullable<PivotTable['dateFilter']>): string {
+	const x15 = 'http://schemas.microsoft.com/office/spreadsheetml/2010/11/main';
+	return (
+		`<filters count="1"><filter${attrs({ fld: pivot.fields.indexOf(filter.field), type: 'dateBetween', evalOrder: -1, id: 1, name: filter.field })}>` +
+		`<autoFilter ref="A1"><filterColumn colId="0"><customFilters and="1">` +
+		`<customFilter operator="greaterThanOrEqual" val="${Math.floor(filter.start)}"/>` +
+		`<customFilter operator="lessThanOrEqual" val="${Math.floor(filter.end)}"/>` +
+		`</customFilters></filterColumn></autoFilter>` +
+		`<extLst><ext uri="{0605FD5F-26C8-4aeb-8148-2DB25E43C511}" xmlns:x15="${x15}"><x15:pivotFilter useWholeDay="1"/></ext></extLst></filter></filters>`
+	);
 }
