@@ -19,6 +19,11 @@ async function fixture(math = inline) {
 	);
 	return zip.generateAsync({ type: 'uint8array' });
 }
+/** The OMML string the model holds for `math`, with its namespaces declared. */
+async function sourceOf(math: string): Promise<string> {
+	const loaded = await loadDocx(await fixture(math));
+	return paragraph(loaded).runs.find((run) => run.equation)!.equation!.omml;
+}
 const paragraph = (loaded: Awaited<ReturnType<typeof loadDocx>>) =>
 	loaded.model.blocks[0] as Paragraph;
 async function xmlOf(bytes: Uint8Array) {
@@ -68,13 +73,47 @@ describe('imported Word equations', () => {
 		expect(xml).toContain('w:author="Editor"');
 	});
 
-	it('rejects source changes and new equations instead of silently replacing them', async () => {
+	it('writes an edited equation and a new one from their OMML', async () => {
 		const loaded = await loadDocx(await fixture());
-		paragraph(loaded).runs[1]!.equation!.omml = display;
-		await expect(loaded.save()).rejects.toThrow('Equation editing or insertion is unsupported');
+		paragraph(loaded).runs[1]!.equation = { omml: await sourceOf(display), display: true };
+		const edited = await xmlOf(await loaded.save());
+		expect(edited).not.toContain(inline);
+		expect(edited).toContain('<m:oMathPara');
 		const plain = await loadDocx(await fixture(''));
-		paragraph(plain).runs.push({ text: '', equation: { omml: inline, display: false } });
-		await expect(plain.save()).rejects.toThrow('Equation editing or insertion is unsupported');
+		paragraph(plain).runs.push({
+			text: '',
+			equation: { omml: await sourceOf(inline), display: false },
+		});
+		const added = await xmlOf(await plain.save());
+		expect(added).toContain('<m:oMath ');
+		const reopened = paragraph(await loadDocx(await plain.save())).runs.find((run) => run.equation);
+		expect(reopened?.equation?.display).toBe(false);
+		expect(convertOmmlToMathMl(parseOmml(reopened!.equation!.omml))).toContain('mfrac');
+	});
+
+	it('wraps and unwraps display math to follow the display flag', async () => {
+		const plain = await loadDocx(await fixture(''));
+		const p = paragraph(plain);
+		p.runs.push({ text: '', equation: { omml: await sourceOf(inline), display: true } });
+		expect(await xmlOf(await plain.save())).toMatch(/<m:oMathPara[^>]*><m:oMath /);
+		p.runs[p.runs.length - 1] = {
+			text: '',
+			equation: { omml: await sourceOf(display), display: false },
+		};
+		const xml = await xmlOf(await plain.save());
+		expect(xml).not.toContain('<m:oMathPara');
+		expect(xml).toContain('<m:oMath');
+	});
+
+	it('refuses equation markup that is not Office Math', async () => {
+		const plain = await loadDocx(await fixture(''));
+		paragraph(plain).runs.push({ text: '', equation: { omml: '<w:p/>', display: false } });
+		await expect(plain.save()).rejects.toThrow('Equation markup');
+		paragraph(plain).runs[paragraph(plain).runs.length - 1] = {
+			text: '',
+			equation: { omml: 'not xml', display: false },
+		};
+		await expect(plain.save()).rejects.toThrow('Equation markup');
 	});
 
 	it('preserves equations in simple fields and hyperlinks instead of treating them as empty text', async () => {

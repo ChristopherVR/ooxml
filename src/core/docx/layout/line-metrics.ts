@@ -16,8 +16,11 @@ export function tokenExtent(
 	measurer: TextMeasurer,
 ): { above: number; below: number; ascent: number; descent: number } {
 	const run = paragraph.runs[token.runIndex];
-	if (token.kind === 'object' && run?.object)
-		return { above: run.object.heightPx, below: 0, ascent: run.object.heightPx, descent: 0 };
+	if (token.kind === 'object' && run?.object) {
+		const below = Math.min(run.object.descentPx ?? 0, run.object.heightPx);
+		const above = run.object.heightPx - below;
+		return { above, below, ascent: above, descent: below };
+	}
 	const { ascent, descent } = fontMetrics(measurer, fonts[token.runIndex] ?? fontOf({ text: '' }));
 	const size = ptToPx(run?.fontSizePt ?? DEFAULT_FONT_SIZE_PT);
 	const scriptShift =

@@ -50,6 +50,8 @@ export interface LayoutObject {
 	contentType: string;
 	widthPx: number;
 	heightPx: number;
+	/** How far the object extends below the baseline (an equation's descent); 0 sits on it. */
+	descentPx?: number;
 	/** A chart drawn at this size: the painted SVG markup, or only its frame label. */
 	chart?: { svg?: string; label: string };
 	/** Native note separator rule, drawn without loading a media part. */

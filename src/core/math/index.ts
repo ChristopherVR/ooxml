@@ -1,5 +1,7 @@
 export type { OmmlNode } from './omml-node';
 export { convertLatexToOmml } from './latex-to-omml';
+export { OMML_NAMESPACE, latexToOmmlXml, ommlToXml } from './omml-to-xml';
+export { drawEquation, drawOmmlTree, type EquationDrawing } from './omml-svg';
 export { convertOmmlToLatex } from './omml-to-latex';
 export { convertOmmlToMathMl, ommlToMathml } from './omml-to-mathml';
 export { getOmmlMathColor, getOmmlMathFontSize } from './omml-color';
@@ -12,3 +14,4 @@ export * from './latex-to-omml-environments';
 export * from './omml-to-latex-helpers';
 export * from './omml-to-latex-layout';
 export type { Token } from './latex-omml-siblings';
+export { EQUATION_GALLERY, type GalleryEquation } from './equation-gallery';

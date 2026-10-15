@@ -13,6 +13,8 @@ import {
 	twipsToPixels,
 } from '../index';
 import { floatsOf } from './adapt-floats';
+import { equationObject } from './equation-object';
+import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { definedProps } from '../defined-props';
 import { adaptTable } from './adapt-table';
@@ -44,10 +46,18 @@ const DROP_CAP_NOTE =
 const TEXT_BOX_NOTE =
 	'Text boxes are shown on the editing surface but are not drawn in Print Layout.';
 const EQUATION_NOTE =
-	'Equations display on the editing surface; Print Layout shows markers rather than typeset equations.';
+	'Equations that cannot be drawn show a marker in Print Layout instead of the typeset equation.';
 const NEXT_COLUMN_NOTE = 'A "next column" section break is laid out as a continuous section break.';
 
 const twipsToPx = twipsToPixels;
+
+/** A paragraph holding only a display equation (`m:oMathPara`) is centred, as in Word. */
+function isDisplayEquationParagraph(paragraph: Paragraph): boolean {
+	return (
+		paragraph.runs.some((run) => run.equation?.display) &&
+		paragraph.runs.every((run) => run.equation?.display || (!run.text && !run.image))
+	);
+}
 
 function sectionBreak(
 	type: SectionProperties['type'],
@@ -104,7 +114,10 @@ export function adaptDocumentModel(
 		if (isRunHiddenForReview(run, reviewMode))
 			return { text: run.text, hidden: true, sourceLength: reviewSourceLength(run) };
 		const { formatting, family, color } = effective(run, paragraphStyleId);
-		if (run.equation) reportOnce(EQUATION_NOTE);
+		const equation = run.equation
+			? equationObject(run.equation.omml, ptToPx(formatting.fontSize ?? DEFAULT_FONT_SIZE_PT))
+			: undefined;
+		if (run.equation && !equation) reportOnce(EQUATION_NOTE);
 		// DATE and TIME update when Word paginates for display or printing.
 		const name = run.field ? fieldName(run.field.instr) : '';
 		// Note references and a note's own number mark show the note's number, raised.
@@ -118,7 +131,9 @@ export function adaptDocumentModel(
 			(run.field && !isFieldLocked(run) && (name === 'DATE' || name === 'TIME')
 				? dateFieldResult(name, run.field.instr, now)
 				: run.equation
-					? '[Equation]'
+					? equation
+						? ''
+						: '[Equation]'
 					: run.text);
 		const script =
 			formatting.verticalAlign === 'superscript' ||
@@ -129,25 +144,27 @@ export function adaptDocumentModel(
 					: undefined;
 		const image = run.image;
 		if (image?.unsupported === 'Text box') reportOnce(TEXT_BOX_NOTE);
-		const object = run.noteSeparator
-			? {
-					partName: '',
-					contentType: '',
-					widthPx: 192,
-					heightPx: 1,
-					noteSeparator: run.noteSeparator,
-				}
-			: image && !image.anchored
+		const object =
+			equation ??
+			(run.noteSeparator
 				? {
-						partName: image.partName,
-						contentType: image.contentType,
-						widthPx: image.widthPx,
-						heightPx: image.heightPx,
-						...(image.chart
-							? { chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme) }
-							: {}),
+						partName: '',
+						contentType: '',
+						widthPx: 192,
+						heightPx: 1,
+						noteSeparator: run.noteSeparator,
 					}
-				: undefined;
+				: image && !image.anchored
+					? {
+							partName: image.partName,
+							contentType: image.contentType,
+							widthPx: image.widthPx,
+							heightPx: image.heightPx,
+							...(image.chart
+								? { chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme) }
+								: {}),
+						}
+					: undefined);
 		return {
 			sourceLength: reviewSourceLength(run),
 			// Hidden text (`w:vanish`) takes no space when printed, as in Word by default.
@@ -242,7 +259,7 @@ export function adaptDocumentModel(
 				: {}),
 			...floatsOf(visible),
 			...definedProps({
-				align: resolved.align,
+				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,
 				spacingBeforeTwips: resolved.spacingBeforeTwips,
 				spacingAfterTwips: resolved.spacingAfterTwips,

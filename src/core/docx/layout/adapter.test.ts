@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { DocumentModel, ParagraphStyleCatalog, SectionProperties } from '../index';
 import { adaptDocumentModel } from './adapter';
 import { at } from './test-helpers';
+import type { LayoutObject } from './input';
+import { latexToOmmlXml } from '../../math/index';
 
 function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 	return {
@@ -21,7 +23,53 @@ function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 }
 
 describe('adaptDocumentModel', () => {
-	it('keeps imported equations visible as print markers and reports the approximation once', () => {
+	it('draws equations as sized inline objects that sit on the text baseline', () => {
+		const omml = latexToOmmlXml('\\frac{a}{b}', false)!;
+		const input = adaptDocumentModel(
+			baseModel({
+				blocks: [
+					{
+						type: 'paragraph',
+						id: 'math',
+						runs: [{ text: 'x ' }, { text: '', equation: { omml, display: false } }],
+					},
+				],
+			}),
+		);
+		const runs = (
+			at(at(input.sections, 0).blocks, 0) as {
+				runs: Array<{ object?: LayoutObject; text: string }>;
+			}
+		).runs;
+		const object = runs[1]!.object!;
+		expect(runs[1]?.text).toBe('');
+		expect(object).toMatchObject({ chart: { label: 'Equation' } });
+		expect(object.chart?.svg).toContain('<line');
+		expect(object.heightPx).toBeGreaterThan(20);
+		expect(object.descentPx).toBeGreaterThan(5);
+		expect(object.descentPx).toBeLessThan(object.heightPx);
+	});
+
+	it('centres a paragraph that holds only a display equation', () => {
+		const omml = latexToOmmlXml('x^2', true)!;
+		const input = adaptDocumentModel(
+			baseModel({
+				blocks: [
+					{
+						type: 'paragraph',
+						id: 'math',
+						runs: [{ text: '', equation: { omml, display: true } }],
+					},
+					{ type: 'paragraph', id: 'text', runs: [{ text: 'plain' }] },
+				],
+			}),
+		);
+		const blocks = at(input.sections, 0).blocks as Array<{ align?: string }>;
+		expect(blocks[0]?.align).toBe('center');
+		expect(blocks[1]?.align).toBeUndefined();
+	});
+
+	it('keeps equations that cannot be drawn visible as print markers and reports it once', () => {
 		const notes: string[] = [];
 		const equation = { text: '', equation: { omml: '<m:oMath/>', display: false } };
 		const input = adaptDocumentModel(
@@ -32,7 +80,7 @@ describe('adaptDocumentModel', () => {
 			runs: [{ text: '[Equation]' }, { text: '[Equation]' }],
 		});
 		expect(notes).toEqual([
-			'Equations display on the editing surface; Print Layout shows markers rather than typeset equations.',
+			'Equations that cannot be drawn show a marker in Print Layout instead of the typeset equation.',
 		]);
 	});
 	it('produces a single section from model.page when no sections hint is present', () => {

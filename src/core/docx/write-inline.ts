@@ -21,7 +21,7 @@ import { inlineSourceLookup } from './inline-source';
 import { takeSimpleFieldCommentEdges } from './simple-field-comments';
 import { writeFieldFlags } from './field-flags';
 import { sameFieldFlags } from './field-lock';
-import { isEquationElement, preserveEquation } from './equation';
+import { isEquationElement, writeEquation } from './equation';
 import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
 import { isCommentReferenceRun } from './parse-revisions';
 import {
@@ -205,7 +205,7 @@ function runNodes(
 	// Comments open outside moves and close outside them, so ranges nest.
 	const nodes = opens.flatMap((edge) => rangeStartNodes(doc, edge));
 	const node = run.equation
-		? preserveEquation(run, base, old)
+		? writeEquation(doc, run, base, old)
 		: createRun(doc, run, base, old, allocator);
 	const revision = run.revision;
 	if (revision && ['insert', 'delete', 'moveFrom', 'moveTo'].includes(revision.kind)) {
