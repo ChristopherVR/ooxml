@@ -359,7 +359,7 @@ Still not at parity:
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
 - **Insert:** Cover Page galleries (one plain design exists), Shapes, Icons, 3D Models, inserting or editing SmartArt (existing SmartArt is shown read-only from its saved drawing, not recomputed),
   inserting or editing Charts (existing charts are drawn read-only from the values cached in the part for bar, column, line,
-  area, pie, doughnut, scatter and radar charts; bubble, stock, surface and chartex charts show a labelled frame naming the
+  area, pie, doughnut, scatter and radar charts, bar/line combinations, waterfalls and histograms; bubble, stock, surface and other chartex charts show a labelled frame naming the
   family, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, Equation,
   Signature Line, Object.
 - **Layout and References:** Manual Hyphenation and its options, Position

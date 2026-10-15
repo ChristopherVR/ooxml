@@ -2347,3 +2347,9 @@ Source: ChristopherVR/ooxml, commit `49b768561413d95cbfe4a1fd3d5dded9f721317c`.
 Source: ChristopherVR/ooxml, commit `963ea270bdbc76057406b7e438619f34311309bd` (module last changed in `ba4cd0dc64707ed32d4386c14b80b0ad8a50300a`).
 
 `src/ui/src/pptx/render/paragraph-geometry-overrides.ts` and its three pure tests move to `src/core/pptx/editor/render/`, changing only model imports. The five-field paragraph-own/body fallback cascade is unchanged; the UI path remains a thin compatibility export. Paragraph DOM assembly, CSS mapping, selection and history stay in shared UI and the bindings. This extraction does not resolve the existing body fallback policy or establish new native geometry semantics.
+
+## Waterfall arithmetic and combination/extended chart painting
+
+Source: ChristopherVR/ooxml, `src/ui/src/pptx/render/chart-waterfall-layout.ts` (and its test) at `origin/main` before this change.
+
+`buildWaterfallSteps` and `computeWaterfallRange` move to `src/core/chart/waterfall.ts`, built on the shared `axis-nice` scale instead of the viewer's `computeValueRange` (same algorithm); the PowerPoint waterfall view model imports them from `ooxml-core/chart`. New code (not moved): `chart/render/summary-from-chartex.ts` (a core-DOM reader of `cx:chartSpace`; the pptx cx parser stays in pptx on its own XML object model), combination-group support in the summary and view model, and the waterfall, histogram and secondary-axis painters. PowerPoint's own combo view model (`chart-combo*.ts`) still runs on `PptxChartData` and was not moved.

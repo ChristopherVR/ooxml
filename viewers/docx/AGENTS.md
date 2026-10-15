@@ -78,8 +78,8 @@ the element, forward props and options, and re-emit its events.
   `packages/web-component/src/canvas-measurer.ts` and is injected into the
   core's layout engine; it is the one piece of layout that needs a DOM.
 - Unsupported document features must be reported honestly (for example SmartArt
-  is display-only, charts paint from their cached values for the common families, and bubble, stock,
-  surface and chartex charts show a labelled frame). Never claim Word layout
+  is display-only, charts paint from their cached values for the common families, bar/line combinations, waterfalls and histograms, and bubble, stock,
+  surface and other chartex charts show a labelled frame). Never claim Word layout
   parity or lossless export.
 - Bun, TypeScript strict mode, Vitest (tests next to the code) and Playwright
   browser tests (`e2e/docx/*.spec.ts`). Keep source modules under 300 lines where
