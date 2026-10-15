@@ -2,12 +2,13 @@ import type { CellValue, PivotAggregate, PivotTable } from '../model';
 import type { PivotGrid, PivotRowEntry } from './aggregate';
 import { pivotItemLabel, pivotItems, pivotRowFields, pivotValueKey } from './data';
 import {
-	aggregateValues,
-	pivotHeaderDimensions,
-	pivotHeaders,
-	pivotMeasures,
-	pivotNumbers,
-} from './measures';
+	columnKey,
+	pivotColumnDimensions,
+	pivotColumnEntries,
+	pivotColumnHeaders,
+	recordColumnKeys,
+} from './columns';
+import { aggregateValues, pivotMeasures, pivotNumbers } from './measures';
 import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 
 const label = pivotItemLabel;
@@ -41,9 +42,9 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	const itemIndices = axisItems.map(
 		(items) => new Map(items.map((item, index) => [pivotValueKey(item), index])),
 	);
-	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
+	const columns = pivotColumnEntries(pivot);
 	const fieldIndices = names.map((name) => pivot.fields.indexOf(name));
-	const columnField = pivot.columnField ? pivot.fields.indexOf(pivot.columnField) : -1;
+	const columnFields = columns.names.map((name) => pivot.fields.indexOf(name));
 	const layout = pivot.layout ?? 'tabular';
 	const compact = layout === 'compact';
 	const tabular = layout === 'tabular';
@@ -53,7 +54,7 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 
 	const root = node(0, null);
 	for (const record of pivot.records) {
-		const column = columnField >= 0 ? pivotValueKey(record[columnField] ?? null) : '';
+		const keys = recordColumnKeys(record, columnFields);
 		let current = root;
 		for (let level = -1; level < depth; level++) {
 			if (level >= 0) {
@@ -67,15 +68,16 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 				current = child;
 			}
 			current.records.push(record);
-			if (columnField >= 0) {
-				const list = current.columns.get(column);
+			for (let width = 1; width <= keys.length; width++) {
+				const key = columnKey(keys, width);
+				const list = current.columns.get(key);
 				if (list) list.push(record);
-				else current.columns.set(column, [record]);
+				else current.columns.set(key, [record]);
 			}
 		}
 	}
 
-	const dimensions = pivotHeaderDimensions(pivot, columnItems.length, labelColumns);
+	const dimensions = pivotColumnDimensions(pivot, columns, labelColumns);
 	const functions = names.map((name) => fieldSubtotalFunctions(pivot, name));
 	let rows = 1;
 	const count = (parent: Node, level: number) => {
@@ -92,15 +94,15 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	if ((rows + dimensions.rows) * dimensions.width > MAX_CELLS)
 		throw new Error('The PivotTable result is too large.');
 
-	const values = pivotHeaders(pivot, columnItems, compact ? ['Row Labels'] : names, label);
+	const values = pivotColumnHeaders(pivot, columns, compact ? ['Row Labels'] : names);
 	const firstDataRow = values.length;
 	const indents = values.map(() => 0);
 	const rowEntries: PivotRowEntry[] = [];
 	const blanks = (): CellValue[] => Array<CellValue>(dimensions.width - labelColumns).fill(null);
-	const bands = (group: Node, run: (records: CellValue[][]) => CellValue[]): CellValue[] => [
-		...columnItems.flatMap((column) => run(group.columns.get(pivotValueKey(column)) ?? [])),
-		...run(group.records),
-	];
+	const bands = (group: Node, run: (records: CellValue[][]) => CellValue[]): CellValue[] =>
+		columns.entries.flatMap((entry) =>
+			run(entry.kind === 'grand' ? group.records : (group.columns.get(entry.key) ?? [])),
+		);
 	const numbers = (group: Node) => bands(group, (records) => pivotNumbers(pivot, records));
 	const subtotalNumbers = (group: Node, fn: PivotAggregate) =>
 		bands(group, (records) =>
@@ -189,9 +191,11 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	return {
 		values,
 		rowItems: axisItems[0]!,
-		secondRowItems: axisItems[1]!,
+		...(axisItems[1] ? { secondRowItems: axisItems[1] } : {}),
 		axisItems,
-		columnItems,
+		columnItems: columns.items[0] ?? [],
+		columnAxisItems: columns.items,
+		columnEntries: columns.entries,
 		rowEntries,
 		firstDataRow,
 		rowLabelColumns: labelColumns,

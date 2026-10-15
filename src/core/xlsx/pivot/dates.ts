@@ -75,6 +75,7 @@ export function pivotDateFieldsOf(
 		| 'secondRowField'
 		| 'moreRowFields'
 		| 'columnField'
+		| 'moreColumnFields'
 		| 'pageFilter'
 		| 'valueField'
 		| 'additionalValues'
@@ -86,6 +87,7 @@ export function pivotDateFieldsOf(
 			pivot.secondRowField,
 			...(pivot.moreRowFields ?? []),
 			pivot.columnField,
+			...(pivot.moreColumnFields ?? []),
 			pivot.pageFilter?.field,
 			pivot.valueField,
 			...(pivot.additionalValues ?? []).map((measure) => measure.field),

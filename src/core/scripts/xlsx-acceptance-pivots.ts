@@ -29,6 +29,13 @@ const REFRESHED = [
 	'group-date-time',
 	'group-date-months-custom',
 	'group-date-year-end',
+	'cols2-compact',
+	'cols2-tabular',
+	'cols3-compact',
+	'cols2-measures-compact',
+	'cols2-measures-tabular',
+	'cols2-rows2-compact-bottom',
+	'cols2-rows2-subtotals',
 ];
 
 async function refreshed(fixtures: string, name: string): Promise<Workbook> {
@@ -114,6 +121,33 @@ function created(): Workbook {
 			rowField: 'Region',
 			secondRowField: 'Date',
 			dateGroups: [{ field: 'Date', by: ['days'], days: 30 }],
+			valueField: 'Amount',
+		},
+	);
+	s.createPivotTable(
+		1,
+		{ row: 30, col: 0 },
+		{
+			source,
+			name: 'ColumnsNested',
+			layout: 'tabular',
+			rowField: 'Region',
+			columnField: 'Product',
+			moreColumnFields: ['Size'],
+			valueField: 'Amount',
+			additionalValues: [{ field: 'Amount', aggregate: 'count' }],
+		},
+	);
+	s.createPivotTable(
+		1,
+		{ row: 50, col: 0 },
+		{
+			source,
+			name: 'DateColumns',
+			layout: 'compact',
+			rowField: 'Region',
+			columnField: 'Date',
+			dateGroups: [{ field: 'Date', by: ['quarters', 'years'] }],
 			valueField: 'Amount',
 		},
 	);

@@ -1,10 +1,16 @@
 import type { PivotDateGroup, PivotTable } from '../model';
-import { pivotRowFields } from './data';
+import { pivotColumnFields, pivotRowFields } from './axes';
 import { dateGroupFieldName, dateGroupUnits } from './date-groups';
 
 type AxisPivot = Pick<
 	PivotTable,
-	'rowField' | 'secondRowField' | 'moreRowFields' | 'columnField' | 'dateGroups' | 'fieldSubtotals'
+	| 'rowField'
+	| 'secondRowField'
+	| 'moreRowFields'
+	| 'columnField'
+	| 'moreColumnFields'
+	| 'dateGroups'
+	| 'fieldSubtotals'
 >;
 
 /** The axis names a group stands for: coarsest first (`Years`, `Quarters`, `Months`). */
@@ -39,14 +45,10 @@ export function reconcileDateAxes(
 	previous?: Pick<PivotTable, 'dateGroups'>,
 ): void {
 	let rows = pivotRowFields(next);
-	let column = next.columnField;
+	let columns = pivotColumnFields(next);
 	const swap = (names: readonly string[], replacement: readonly string[]) => {
 		rows = replace(rows, names, replacement);
-		if (column && names.includes(column)) {
-			if (replacement.length > 1)
-				throw new Error('A date field grouped by several units can only be used as a row field.');
-			column = replacement[0]!;
-		}
+		columns = replace(columns, names, replacement);
 	};
 	const groups = next.dateGroups ?? [];
 	for (const old of previous?.dateGroups ?? []) {
@@ -61,7 +63,10 @@ export function reconcileDateAxes(
 	else delete next.secondRowField;
 	if (rows.length > 2) next.moreRowFields = rows.slice(2);
 	else delete next.moreRowFields;
-	if (column) next.columnField = column;
+	if (columns[0]) next.columnField = columns[0];
+	else delete next.columnField;
+	if (columns.length > 1) next.moreColumnFields = columns.slice(1);
+	else delete next.moreColumnFields;
 	if (next.fieldSubtotals) {
 		const kept = next.fieldSubtotals.filter((entry) => rows.includes(entry.field));
 		if (kept.length) next.fieldSubtotals = kept;

@@ -197,8 +197,19 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		);
 	});
 	if (repeat.some((entry) => entry !== repeat[0])) throw new Error('Mixed field label repetition');
-	const hasColumn = colFields.length > (dataFields.length > 1 && !rowsAxis ? 1 : 0);
-	const col = hasColumn ? axisNames[Number(att(colFields[0], 'x'))] : undefined;
+	// With several measures Values (-2) closes the column fields.
+	const columnDefs = dataFields.length > 1 && !rowsAxis ? colFields.slice(0, -1) : colFields;
+	const columnNames = columnDefs.map((field) => axisNames[Number(att(field, 'x'))]);
+	const hasColumn = columnDefs.length > 0;
+	const col = columnNames[0];
+	const moreColumns = columnNames.slice(1);
+	const columnDefinitions = columnDefs.map((field) => tableFields[Number(att(field, 'x'))]!);
+	// Column fields show the automatic subtotal columns; other settings stay in the file.
+	if (
+		fieldSubtotalsOf(columnDefinitions.slice(0, -1), columnNames.slice(0, -1)).length ||
+		columnNames.some((name) => !name)
+	)
+		throw new Error('Column subtotal settings are preserved');
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
 	if (!row || !data || !location || (hasColumn && !col) || (realRows.length === 2 && !second))
@@ -235,14 +246,14 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		row,
 		second,
 		...more,
-		col,
+		...columnNames,
 		pageFilter?.field,
 		...dataFields.map((field) => names[Number(att(field, 'fld'))]),
 	]);
 	if (dateFields.some((field) => onAxis.has(field)))
 		throw new Error('Date fields used as rows, columns or values are preserved');
 	if (
-		realRows.some((field) => pivotFieldIndex(field) >= databaseCount) &&
+		[...realRows, ...columnDefs].some((field) => pivotFieldIndex(field) >= databaseCount) &&
 		(pageFilter || dateFilter || itemFilters || slicerCacheId !== undefined)
 	)
 		throw new Error('Date groups with filters are preserved');
@@ -303,7 +314,9 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		cacheId,
 		sourceXml: xml,
 		...(col ? { columnField: col } : {}),
+		...(moreColumns.length ? { moreColumnFields: moreColumns as string[] } : {}),
 	};
+	if (pageFilter && moreColumns.length) throw new Error('Report filters support one column field');
 	assertPageAxisItems(root, pivot, shared, cache, recordRoot);
 	return pivot;
 }

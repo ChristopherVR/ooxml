@@ -214,6 +214,9 @@ export function createPivotTable(
 			: {}),
 		location: { start: { ...destination }, end: { ...destination } },
 		...(options.columnField ? { columnField: options.columnField } : {}),
+		...(options.columnField && options.moreColumnFields?.length
+			? { moreColumnFields: [...options.moreColumnFields] }
+			: {}),
 	};
 	if (pivot.dateGroups) reconcileDateAxes(pivot);
 	const dates = pivotDateFieldsOf(ctx.workbook, s, pivot);
@@ -251,6 +254,12 @@ export function refreshPivotTable(
 	if (patch.secondRowField !== undefined) {
 		if (patch.secondRowField) next.secondRowField = patch.secondRowField;
 		else delete next.secondRowField;
+	}
+	if (patch.columnField === '' && patch.moreColumnFields === undefined)
+		delete next.moreColumnFields;
+	if (patch.moreColumnFields !== undefined) {
+		if (patch.moreColumnFields.length) next.moreColumnFields = [...patch.moreColumnFields];
+		else delete next.moreColumnFields;
 	}
 	if (patch.secondRowField === '' && patch.moreRowFields === undefined) delete next.moreRowFields;
 	if (patch.moreRowFields !== undefined) {

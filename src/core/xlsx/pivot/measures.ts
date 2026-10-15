@@ -79,85 +79,41 @@ export const pivotMeasureNumber = (
 export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][]): CellValue[] =>
 	pivotMeasures(pivot).map((measure) => pivotMeasureNumber(pivot, records, measure));
 
-/** Allocation-free header dimensions, including one totals column for every measure. */
+/** Allocation-free header dimensions of Values on rows, with one totals column. */
 export function pivotHeaderDimensions(
-	pivot: Pick<PivotTable, 'columnField' | 'additionalValues' | 'valuesAxis' | 'pageFilter'>,
+	pivot: Pick<PivotTable, 'columnField' | 'pageFilter'>,
 	columnItems: number,
 	rowLabels: number,
 ): { rows: number; width: number } {
-	const measures = 1 + (pivot.additionalValues?.length ?? 0);
-	if (pivot.valuesAxis === 'rows')
-		return {
-			rows: (pivot.columnField ? 2 : 1) + (pivot.pageFilter ? 2 : 0),
-			width: rowLabels + (pivot.columnField ? columnItems + 1 : 1),
-		};
 	return {
-		rows: (pivot.columnField ? (measures > 1 ? 3 : 2) : 1) + (pivot.pageFilter ? 2 : 0),
-		width:
-			rowLabels +
-			(pivot.columnField
-				? measures === 1
-					? Math.max(1, columnItems) + 1
-					: (columnItems + 1) * measures
-				: measures),
+		rows: (pivot.columnField ? 2 : 1) + (pivot.pageFilter ? 2 : 0),
+		width: rowLabels + (pivot.columnField ? columnItems + 1 : 1),
 	};
 }
 
-/** Values follows the optional column field; native totals have one column per measure. */
+/** The header rows of Values on rows: the Values column, the column field and its items. */
 export function pivotHeaders(
 	pivot: PivotTable,
 	columns: readonly CellValue[],
 	labels: CellValue[],
 	label: (value: CellValue) => CellValue,
 ): CellValue[][] {
-	const measures = pivotMeasures(pivot);
-	if (pivot.valuesAxis === 'rows') {
-		const rowLabels =
-			pivot.layout === 'compact'
-				? ['Row Labels']
-				: pivot.valuesPosition === 'first'
-					? ['Values', ...labels]
-					: pivot.valuesPosition === 'between'
-						? [labels[0]!, 'Values', labels[1]!]
-						: [...labels, 'Values'];
-		return pivot.columnField
-			? [
-					[
-						...rowLabels.map(() => null),
-						pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField,
-						...columns.map(() => null),
-					],
-					[...rowLabels, ...columns.map(label), 'Grand Total'],
-				]
-			: [[...rowLabels, null]];
-	}
-	if (!pivot.columnField) return [[...labels, ...measures.map((measure) => measure.caption)]];
-	if (measures.length === 1)
-		return [
-			[
-				pivot.valueCaption,
-				...labels.slice(1).map(() => null),
-				pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField,
-				...columns.slice(1).map(() => null),
-				null,
-			],
-			[...labels, ...columns.map(label), 'Grand Total'],
-		];
-	const { width } = pivotHeaderDimensions(pivot, columns.length, labels.length);
-	const first: CellValue[] = Array(width).fill(null);
-	first[labels.length] = pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField;
-	if (pivot.layout !== 'compact') first[labels.length + 1] = 'Values';
-	return [
-		first,
-		[
-			...labels.map(() => null),
-			...columns.flatMap((column) => [label(column), ...measures.slice(1).map(() => null)]),
-			...measures.map((measure) => `Total ${measure.caption}`),
-		],
-		[
-			...labels,
-			...columns.flatMap(() => measures.map((measure) => measure.caption)),
-			...measures.map(() => null),
-		],
-	];
+	const rowLabels =
+		pivot.layout === 'compact'
+			? ['Row Labels']
+			: pivot.valuesPosition === 'first'
+				? ['Values', ...labels]
+				: pivot.valuesPosition === 'between'
+					? [labels[0]!, 'Values', labels[1]!]
+					: [...labels, 'Values'];
+	return pivot.columnField
+		? [
+				[
+					...rowLabels.map(() => null),
+					pivot.layout === 'compact' ? 'Column Labels' : pivot.columnField,
+					...columns.map(() => null),
+				],
+				[...rowLabels, ...columns.map(label), 'Grand Total'],
+			]
+		: [[...rowLabels, null]];
 }

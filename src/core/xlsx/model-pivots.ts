@@ -86,7 +86,7 @@ export interface PivotDateFilter {
 	end: number;
 }
 
-/** A worksheet-range pivot with any number of row fields and sixteen measures. */
+/** A worksheet-range pivot with any number of row and column fields and sixteen measures. */
 export interface PivotTable {
 	name: string;
 	/** Qualified A1 source range, rewritten with the workbook's other references. */
@@ -106,6 +106,8 @@ export interface PivotTable {
 	/** Repeat outer labels on detail rows. Defaults to false. */
 	repeatLabels?: boolean;
 	columnField?: string;
+	/** The second and following column fields, outermost first. Requires `columnField`. */
+	moreColumnFields?: string[];
 	pageFilter?: PivotPageFilter;
 	/** Hidden items per field (slicers, filter lists); the cache keeps every record. */
 	itemFilters?: PivotItemFilter[];
@@ -156,6 +158,7 @@ export interface PivotTableOptions {
 	dateGroups?: PivotDateGroup[];
 	repeatLabels?: boolean;
 	columnField?: string;
+	moreColumnFields?: string[];
 	pageFilter?: PivotPageFilter;
 	fieldGroups?: PivotFieldGroup[];
 	valueField: string;
@@ -184,6 +187,8 @@ export type PivotTablePatch = Partial<
 > & {
 	/** Replaces the third and following row fields (an empty list removes them). */
 	moreRowFields?: string[];
+	/** Replaces the second and following column fields (an empty list removes them). */
+	moreColumnFields?: string[];
 	/** Replaces every per-field subtotal setting (an empty list restores Automatic). */
 	fieldSubtotals?: PivotFieldSubtotals[];
 	/** Replaces every date group (an empty list ungroups the dates). */

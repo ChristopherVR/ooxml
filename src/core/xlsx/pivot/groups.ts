@@ -1,5 +1,6 @@
 import type { CellValue, PivotFieldGroup, PivotTable } from '../model';
 import { isCellError } from '../model';
+import { pivotColumnFields, pivotRowFields } from './axes';
 import { derivedDateLabels, expandDateGroups, validateDateGroups } from './date-groups';
 
 const MAX_BUCKETS = 10_000;
@@ -135,10 +136,17 @@ export function groupLabelsOf(
 export function pivotGroupableFields(
 	pivot: Pick<
 		PivotTable,
-		'fields' | 'records' | 'rowField' | 'secondRowField' | 'columnField' | 'dateFields'
+		| 'fields'
+		| 'records'
+		| 'rowField'
+		| 'secondRowField'
+		| 'moreRowFields'
+		| 'columnField'
+		| 'moreColumnFields'
+		| 'dateFields'
 	>,
 ): string[] {
-	return [pivot.rowField, pivot.secondRowField, pivot.columnField].filter(
+	return [...pivotRowFields(pivot), ...pivotColumnFields(pivot)].filter(
 		(field): field is string => {
 			if (!field || (pivot.dateFields ?? []).includes(field)) return false;
 			const index = pivot.fields.indexOf(field);
