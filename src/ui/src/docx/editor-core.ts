@@ -47,6 +47,8 @@ export interface ShellParts {
 	chrome?: EditorChrome;
 	printLayout?: PrintLayoutController;
 	printEditing?: PrintEditingBridge;
+	/** Detaches in-page header and footer editing. */
+	printStoryEditing?: () => void;
 	navigator?: PageNavigator;
 	headings?: HeadingNavigator;
 }

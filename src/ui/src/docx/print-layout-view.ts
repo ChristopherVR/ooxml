@@ -38,6 +38,11 @@ export interface PrintLayoutController {
 	approximations(): string[];
 	/** Lays out immediately (no debounce) and opens the browser print dialog for the paginated render. */
 	print(model: DocumentModel, note: (message: string) => void): void;
+	/**
+	 * Holds layout while an in-page header or footer editor is open (a relayout would replace the
+	 * page it lives in); releasing lays out the latest model.
+	 */
+	holdLayout(held: boolean): void;
 	destroy(): void;
 }
 
@@ -87,7 +92,13 @@ export function createPrintLayoutController(
 	window.addEventListener('beforeprint', beforePrint);
 	window.addEventListener('afterprint', afterPrint);
 
+	let held = false;
+	let heldModel: DocumentModel | null = null;
 	function relayout(model: DocumentModel) {
+		if (held) {
+			heldModel = model;
+			return;
+		}
 		lastModel = model;
 		const mode = getReviewMode();
 		const projected = reviewDocumentFormatting(model, mode);
@@ -196,6 +207,12 @@ export function createPrintLayoutController(
 				pendingModel = null;
 				if (latest) relayout(latest);
 			}, RELAYOUT_DELAY_MS);
+		},
+		holdLayout(value) {
+			held = value;
+			const latest = heldModel ?? lastModel;
+			heldModel = null;
+			if (!value && latest && !element.hidden) relayout(latest);
 		},
 		refreshCurrentPage,
 		pageStatus() {

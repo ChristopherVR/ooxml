@@ -119,6 +119,16 @@
 	font-size: 11pt;
 	pointer-events: none;
 }
+/* Header and footer editing in place on a page: the body dims, like Word. */
+.dve-print-story-editing .dve-print-block {
+	opacity: 0.45;
+}
+.dve-print-header.dve-header-footer-editing,
+.dve-print-footer.dve-header-footer-editing {
+	pointer-events: auto;
+	cursor: text;
+	z-index: 3;
+}
 .dve-print-header p,
 .dve-print-footer p {
 	margin: 0;

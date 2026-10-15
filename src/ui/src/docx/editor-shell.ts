@@ -12,6 +12,7 @@ import { runRibbonCommand } from './editor-commands';
 import { createSearchPanel } from './search-panel';
 import { createPrintLayoutController } from './print-layout-view';
 import { createPrintEditingBridge } from './print-editing';
+import { attachPrintStoryEditing } from './print-story-editing';
 import { moveCursorToBlock } from './print-layout-cursor';
 import { ReviewController } from './review-controller';
 import { EditorChrome } from './editor-chrome';
@@ -246,4 +247,12 @@ function attachPrintEditing(core: EditorCore): void {
 		(id, offset) => shell.printLayout?.ensureBlock(id, offset),
 	);
 	shell.printEditing.setActive(core.pages.viewMode === 'print');
+	const { printLayout } = shell;
+	shell.printStoryEditing = attachPrintStoryEditing({
+		pages: printLayout.element,
+		parts: core.parts,
+		model: () => core.model,
+		printActive: () => core.pages.viewMode === 'print',
+		holdLayout: (held) => printLayout.holdLayout(held),
+	});
 }

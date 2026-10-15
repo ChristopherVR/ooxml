@@ -390,10 +390,18 @@ Still not at parity:
   results are editable; the begin/code/separate/end structure is preserved and guarded against
   partial deletion.
 - Print Layout pages are editable: the caret, selection and IME run through the editor's ProseMirror
-  input and are painted on the pages. Limits: nested and merged table cells are read-only on pages;
-  headers, footers and footnotes are not edited by clicking on the page; floats, pictures and text
-  boxes are not selectable there; the whole document re-lays out on a short debounce after an edit;
-  caret placement at line and page boundaries is heuristic.
+  input and are painted on the pages. The caret has an explicit upstream or downstream affinity
+  (set by clicks, Home, End and the arrow keys), so a caret at a wrapped-line, column or page
+  boundary is drawn on the line meant. Ordinary table cells are editable on pages: Tab and
+  Shift+Tab move between cells (Tab in the last cell adds a row), Up and Down move between rows,
+  also across a table split over pages. Double-clicking a header or footer area (including the
+  empty top or bottom margin) edits it in place on the page, with the body dimmed and the Header &
+  Footer tab to close it (also Escape or a double-click on the body). Limits: paragraphs inside
+  nested tables, and merged cells in the layout's nested projection, are read-only on pages;
+  footnotes are not edited by clicking on the page; floats, pictures and text boxes are not
+  selectable there; the whole document re-lays out on a short debounce after an edit (held while
+  a page header or footer is open); a page header or footer editor closes if its virtualised page
+  is scrolled out of the rendered window.
 - Picture crop and effects. Print Layout draws inline pictures on their lines and floating pictures
   at their `wp:positionH`/`wp:positionV` positions, in front of or behind text. Body text wraps
   around square, tight and through pictures on their larger side (using the picture's rectangle,

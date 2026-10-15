@@ -1,10 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type HeaderFooterContent } from '../index';
+import { loadDocx, type DocumentModel, type HeaderFooterContent } from '../index';
 import { layoutDocumentModel } from './layout';
 import { createFakeMeasurer } from './measure';
+import type { LayoutPageBox } from './result';
 import {
 	headerFooterForPage,
+	headerFooterSlotForPage,
 	pageNumbers,
 	pageNumberValues,
 	sectionPageCounts,
@@ -64,5 +66,18 @@ describe('native Word page-field references', () => {
 			),
 		}));
 		expect(actual).toEqual(reference.pages);
+	});
+});
+
+describe('headerFooterSlotForPage', () => {
+	const page = (pageInSection: number) => ({ sectionIndex: 0, pageInSection }) as LayoutPageBox;
+	it('picks first, even and default slots', () => {
+		const model = { sections: [{ titlePage: true }], evenAndOddHeaders: true } as DocumentModel;
+		expect(headerFooterSlotForPage(model, page(0), 1)).toBe('first');
+		expect(headerFooterSlotForPage(model, page(1), 2)).toBe('even');
+		expect(headerFooterSlotForPage(model, page(2), 3)).toBe('default');
+		expect(headerFooterSlotForPage({ sections: [{}] } as DocumentModel, page(1), 2)).toBe(
+			'default',
+		);
 	});
 });

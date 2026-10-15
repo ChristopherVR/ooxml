@@ -79,6 +79,20 @@ export function sectionPageCounts(pages: LayoutPageBox[]): ReadonlyMap<number, n
 	return counts;
 }
 
+/** The first/even/default slot a page's header and footer come from. */
+export function headerFooterSlotForPage(
+	model: DocumentModel,
+	page: LayoutPageBox,
+	pageNumber: number,
+): keyof HeaderFooterSlots {
+	const section = model.sections?.[page.sectionIndex];
+	return page.pageInSection === 0 && section?.titlePage
+		? 'first'
+		: model.evenAndOddHeaders && pageNumber % 2 === 0
+			? 'even'
+			: 'default';
+}
+
 /** Resolve first/even/default header or footer slots, inheriting missing slots by section. */
 export function headerFooterForPage(
 	model: DocumentModel,
@@ -89,12 +103,7 @@ export function headerFooterForPage(
 	const sections = model.sections ?? [];
 	const section = sections[page.sectionIndex];
 	if (!section) return undefined;
-	const slot: keyof HeaderFooterSlots =
-		page.pageInSection === 0 && section.titlePage
-			? 'first'
-			: model.evenAndOddHeaders && pageNumber % 2 === 0
-				? 'even'
-				: 'default';
+	const slot = headerFooterSlotForPage(model, page, pageNumber);
 	for (let index = page.sectionIndex; index >= 0; index--) {
 		const content = sections[index]?.[kind]?.[slot];
 		if (content) return content;

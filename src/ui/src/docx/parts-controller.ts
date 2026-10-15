@@ -11,6 +11,7 @@ import { buildFooterElement, buildHeaderElement } from './header-footer-view';
 import { refreshStoryPreviews } from './review-story-previews';
 import {
 	attachHeaderFooterEditing,
+	openBlocksEditor,
 	type HeaderFooterSlotName,
 	type InlineEditorOptions,
 } from './header-footer-editor';
@@ -75,6 +76,47 @@ export class PartsController {
 		return this.headerContext
 			? { ...this.headerContext, index: this.shownSection }
 			: this.renderingContext;
+	}
+	/**
+	 * Edits a header or footer in place on a Print Layout page: `container` is that page's element.
+	 * The ribbon then targets it (Header & Footer tab) until it closes, which calls `closed`.
+	 */
+	editOnPage(story: {
+		container: HTMLElement;
+		kind: 'headers' | 'footers';
+		slot: HeaderFooterSlotName;
+		sectionIndex: number;
+		blocks: Block[];
+		closed(): void;
+	}): boolean {
+		if (!this.host.view()?.editable || !this.host.canEditOutsideBody()) return false;
+		this.closeActive?.();
+		this.shownSection = story.sectionIndex;
+		const base = this.editorOptions(true);
+		openBlocksEditor(
+			story.container,
+			story.container,
+			story.blocks,
+			(blocks) => this.updateHeaderFooter(story.kind, story.slot, blocks),
+			{
+				...base,
+				activate: (view) => {
+					base.activate?.(view);
+					this.headerContext = { kind: story.kind, slot: story.slot };
+					this.host.refreshControls?.();
+				},
+				deactivate: (view) => {
+					base.deactivate?.(view);
+					story.closed();
+				},
+			},
+		);
+		return true;
+	}
+	/** Closes the open header, footer or note editor, leaving the body focused. */
+	closeOpenStory(): void {
+		this.closeActive?.();
+		this.host.view()?.focus();
 	}
 	closeHeaderFooter(canvas?: HTMLElement, paper?: HTMLElement): void {
 		this.closeActive?.();

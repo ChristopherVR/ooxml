@@ -15,6 +15,7 @@ import {
 	pageNumberValues,
 	sectionPageCounts,
 	headerFooterForPage,
+	headerFooterSlotForPage,
 	fieldDisplayText,
 	type PageFieldContext,
 	type LayoutPageBox,
@@ -212,6 +213,17 @@ export function decoratePages(
 		};
 		const section = model.sections?.[page.sectionIndex];
 		const pageNumber = numericValues[index] ?? index + 1;
+		// What a double-click on the page's header or footer area needs to edit the right story.
+		Object.assign(sheet.dataset, {
+			sectionIndex: String(page.sectionIndex),
+			headerFooterSlot: headerFooterSlotForPage(model, page, pageNumber),
+			marginTop: String(page.marginTopPx),
+			marginBottom: String(page.marginBottomPx),
+			marginLeft: String(page.marginLeftPx),
+			marginRight: String(page.marginRightPx),
+			headerDistance: String((section?.headerDistanceTwips ?? 720) / 15),
+			footerDistance: String((section?.footerDistanceTwips ?? 720) / 15),
+		});
 		for (const kind of ['header', 'footer'] as const) {
 			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
 			if (!content) continue;
