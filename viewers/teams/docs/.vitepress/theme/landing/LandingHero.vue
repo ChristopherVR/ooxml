@@ -2,6 +2,7 @@
 import { withBase } from 'vitepress';
 
 import { useLandingCopy } from './copy';
+import LandingRings from './LandingRings.vue';
 
 const copy = useLandingCopy();
 </script>
@@ -27,6 +28,7 @@ const copy = useLandingCopy();
 npx openteams-server</code></pre>
 			</div>
 			<div class="ot-hero__stage ot-enter ot-enter--2">
+				<LandingRings />
 				<a class="ot-hero__frame" :href="withBase('/demo/')" target="_self">
 					<span class="ot-hero__framebar">
 						<span class="ot-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>

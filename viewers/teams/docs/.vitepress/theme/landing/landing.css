@@ -314,3 +314,71 @@
 .ot-faq__item summary:lang(zh-CN) {
 	letter-spacing: 0;
 }
+
+/* The ring motif behind the hero frame, shared with the suite's start screen. */
+.ot-hero__stage {
+	position: relative;
+	isolation: isolate;
+}
+.ot-rings {
+	position: absolute;
+	z-index: -1;
+	left: 50%;
+	top: 50%;
+	width: 118%;
+	aspect-ratio: 1;
+	transform: translate(-50%, -50%);
+	fill: none;
+	stroke: var(--ot-line);
+	stroke-width: 0.22;
+	overflow: visible;
+	pointer-events: none;
+}
+.ot-rings circle:nth-child(1) {
+	stroke: var(--ot-accent);
+	opacity: 0.45;
+	stroke-dasharray: 0.6 1.6;
+}
+.ot-rings circle:nth-child(3) {
+	stroke-dasharray: 0.4 1.2;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.ot-rings circle {
+		transform-origin: 50% 50%;
+		transform: rotate(-90deg);
+		animation: ot-ring-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.ot-rings circle:nth-child(2) {
+		animation-delay: 0.1s;
+	}
+	.ot-rings circle:nth-child(3) {
+		animation-delay: 0.2s;
+	}
+	.ot-rings circle:nth-child(1) {
+		animation:
+			ot-ring-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) both,
+			ot-ring-turn 120s linear 1.4s infinite;
+	}
+	@keyframes ot-ring-draw {
+		from {
+			opacity: 0;
+			transform: rotate(-120deg) scale(0.92);
+		}
+		to {
+			transform: rotate(-90deg);
+		}
+	}
+	@keyframes ot-ring-turn {
+		from {
+			transform: rotate(-90deg);
+		}
+		to {
+			transform: rotate(270deg);
+		}
+	}
+}
+@media (max-width: 900px) {
+	.ot-rings {
+		display: none;
+	}
+}

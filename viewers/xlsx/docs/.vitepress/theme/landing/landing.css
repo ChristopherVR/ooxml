@@ -231,3 +231,71 @@
 		transform: none;
 	}
 }
+
+/* The ring motif behind the hero frame, shared with the suite's start screen. */
+.pv-hero__stage {
+	position: relative;
+	isolation: isolate;
+}
+.pv-rings {
+	position: absolute;
+	z-index: -1;
+	left: 50%;
+	top: 50%;
+	width: 118%;
+	aspect-ratio: 1;
+	transform: translate(-50%, -50%);
+	fill: none;
+	stroke: var(--pv-line);
+	stroke-width: 0.22;
+	overflow: visible;
+	pointer-events: none;
+}
+.pv-rings circle:nth-child(1) {
+	stroke: var(--pv-accent);
+	opacity: 0.45;
+	stroke-dasharray: 0.6 1.6;
+}
+.pv-rings circle:nth-child(3) {
+	stroke-dasharray: 0.4 1.2;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.pv-rings circle {
+		transform-origin: 50% 50%;
+		transform: rotate(-90deg);
+		animation: pv-ring-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.pv-rings circle:nth-child(2) {
+		animation-delay: 0.1s;
+	}
+	.pv-rings circle:nth-child(3) {
+		animation-delay: 0.2s;
+	}
+	.pv-rings circle:nth-child(1) {
+		animation:
+			pv-ring-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) both,
+			pv-ring-turn 120s linear 1.4s infinite;
+	}
+	@keyframes pv-ring-draw {
+		from {
+			opacity: 0;
+			transform: rotate(-120deg) scale(0.92);
+		}
+		to {
+			transform: rotate(-90deg);
+		}
+	}
+	@keyframes pv-ring-turn {
+		from {
+			transform: rotate(-90deg);
+		}
+		to {
+			transform: rotate(270deg);
+		}
+	}
+}
+@media (max-width: 900px) {
+	.pv-rings {
+		display: none;
+	}
+}

@@ -3,6 +3,7 @@ import { withBase } from 'vitepress';
 
 import InstallPicker from './code/InstallPicker.vue';
 import { useLandingCopy } from './copy';
+import LandingRings from './LandingRings.vue';
 
 const copy = useLandingCopy();
 </script>
@@ -29,6 +30,7 @@ const copy = useLandingCopy();
 				</div>
 			</div>
 			<div class="pv-hero__stage pv-enter pv-enter--3">
+				<LandingRings />
 				<a class="pv-hero__frame" href="#live-demo">
 					<span class="pv-hero__framebar">
 						<span class="pv-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
