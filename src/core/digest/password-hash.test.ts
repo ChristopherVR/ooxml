@@ -1,6 +1,13 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { decodeBase64, encodeBase64 } from './base64';
-import { MAX_SPIN_COUNT, hashPassword, verifyPasswordHash, type PasswordHash } from './index';
+import {
+	DEFAULT_MAX_SPIN_COUNT,
+	MAX_SPIN_COUNT,
+	hashPassword,
+	isValidSpinCount,
+	verifyPasswordHash,
+	type PasswordHash,
+} from './index';
 
 // Written by Excel 16 for `Worksheet.Protect('open sesame')`.
 const EXCEL_SHEET: PasswordHash = {
@@ -126,5 +133,15 @@ describe('base64', () => {
 	it('rejects malformed input', () => {
 		for (const text of ['A', 'AAAAA', 'AB=C', 'AA=', 'A===', 'AA*A', '=AAA'])
 			expect(decodeBase64(text), text).toBeUndefined();
+	});
+});
+
+describe('spin count limits', () => {
+	it('refuses more than the default limit unless the caller raises it', () => {
+		const base = { algorithmName: 'SHA-1', saltValue: 'eA==' };
+		const over = { ...base, spinCount: DEFAULT_MAX_SPIN_COUNT + 1 };
+		expect(hashPassword('x', over)).toBeUndefined();
+		expect(hashPassword('x', over, { maxSpinCount: MAX_SPIN_COUNT })).toBeDefined();
+		expect(isValidSpinCount(MAX_SPIN_COUNT + 1, 2 ** 40)).toBe(false);
 	});
 });

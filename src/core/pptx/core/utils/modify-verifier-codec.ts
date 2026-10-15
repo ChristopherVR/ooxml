@@ -11,7 +11,7 @@
 
 import type { DigestAlgorithmName } from '../../../digest/algorithm-names';
 import { digestFunction } from '../../../digest/digest';
-import { spinPasswordHash } from '../../../digest/password-hash';
+import { isValidSpinCount, spinPasswordHash } from '../../../digest/password-hash';
 
 /**
  * Decode base64 string to Uint8Array.
@@ -49,16 +49,20 @@ export function base64Encode(bytes: Uint8Array): string {
 	return btoa(binary);
 }
 
-/** Random 16-byte salt (PowerPoint's own width), or an all-zero fallback where `crypto` is unavailable. */
+/**
+ * Random 16-byte salt (PowerPoint's own width).
+ *
+ * @throws Error where `crypto.getRandomValues` is unavailable: a predictable salt would defeat
+ *   the verifier, so there is no fallback.
+ */
 export function randomSalt(): Uint8Array {
 	const salt = new Uint8Array(16);
-	if (typeof globalThis.crypto !== 'undefined') {
-		globalThis.crypto.getRandomValues(salt);
-	} else {
-		for (let i = 0; i < salt.length; i++) {
-			salt[i] = Math.floor(Math.random() * 256);
-		}
+	if (typeof globalThis.crypto?.getRandomValues !== 'function') {
+		throw new Error(
+			'A secure random source (crypto.getRandomValues) is required to create a salt.',
+		);
 	}
+	globalThis.crypto.getRandomValues(salt);
 	return salt;
 }
 
@@ -88,22 +92,12 @@ export async function iteratedHash(
 ): Promise<Uint8Array> {
 	// Every algorithm a verifier can name is computed synchronously by the shared `digest` area,
 	// so the 100,000-round spin runs in one tight loop instead of awaiting each round.
+	if (!isValidSpinCount(spinCount)) {
+		throw new Error(`Unsupported verifier spin count: ${spinCount}.`);
+	}
 	const digest = digestFunction(algorithm);
 	if (!digest) {
 		throw new Error(`Unsupported digest algorithm: ${algorithm as string}`);
 	}
 	return spinPasswordHash(password, salt, spinCount, digest);
-}
-
-/** Constant-shape byte comparison (length mismatch and content mismatch both fail). */
-export function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
-	if (a.length !== b.length) {
-		return false;
-	}
-	for (let i = 0; i < a.length; i++) {
-		if (a[i] !== b[i]) {
-			return false;
-		}
-	}
-	return true;
 }

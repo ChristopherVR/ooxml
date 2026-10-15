@@ -13,15 +13,19 @@ export { md2 } from './md2';
 export { md4 } from './md4';
 export { md5 } from './md5';
 export {
+	DEFAULT_MAX_SPIN_COUNT,
 	MAX_SPIN_COUNT,
 	hashPassword,
+	isValidSpinCount,
 	spinPasswordHash,
 	verifyPasswordHash,
 	type PasswordHash,
+	type SpinLimits,
 } from './password-hash';
 export { ripemd128 } from './ripemd128';
 export { ripemd160 } from './ripemd160';
 export { sha1 } from './sha1';
 export { sha256 } from './sha256';
 export { sha384, sha512 } from './sha512';
+export { timingSafeEqual } from './timing-safe';
 export { whirlpool } from './whirlpool';

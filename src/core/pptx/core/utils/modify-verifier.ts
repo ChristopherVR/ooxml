@@ -82,13 +82,9 @@
 import type { PptxModifyVerifier } from '../types';
 import type { DigestAlgorithmName } from '../../../digest/algorithm-names';
 import { normalizeDigestAlgorithmName } from '../../../digest/algorithm-names';
-import {
-	base64Decode,
-	base64Encode,
-	bytesEqual,
-	iteratedHash,
-	randomSalt,
-} from './modify-verifier-codec';
+import { isValidSpinCount } from '../../../digest/password-hash';
+import { timingSafeEqual } from '../../../digest/timing-safe';
+import { base64Decode, base64Encode, iteratedHash, randomSalt } from './modify-verifier-codec';
 
 // ---------------------------------------------------------------------------
 // Legacy CryptoAPI algorithm identification
@@ -182,8 +178,10 @@ export async function verifyModifyPassword(
 	const expectedHash = base64Decode(verifier.hashData);
 	const spinCount = verifier.spinValue ?? 100000;
 
+	// A hostile file must not make the synchronous spin run for seconds.
+	if (!isValidSpinCount(spinCount)) return false;
 	const h = await iteratedHash(algorithm, salt, password, spinCount);
-	return bytesEqual(h, expectedHash);
+	return timingSafeEqual(h, expectedHash);
 }
 
 /**
