@@ -59,6 +59,7 @@ function recorder(): { calls: string[]; actions: ContextMenuActions } {
 			editAltText: note('editAltText'),
 			sizeAndPosition: note('sizeAndPosition'),
 			formatShape: note('formatShape'),
+			formatChartElement: note('formatChartElement'),
 			applyTable: (_op: TableCommandOp) => {
 				calls.push('applyTable');
 			},
@@ -146,6 +147,7 @@ const ELEMENT_ROUTES: [ContextMenuCommandId, string][] = [
 	['edit-alt-text', 'editAltText'],
 	['size-and-position', 'sizeAndPosition'],
 	['format-shape', 'formatShape'],
+	['format-chart-element', 'formatChartElement'],
 	['crop', 'crop'],
 	['merge-union', 'merge:union'],
 	['merge-combine', 'merge:combine'],

@@ -33,6 +33,7 @@ import {
 	beginChartMarkDrag,
 	beginChartValueDrag,
 	buildChartMarkDragGeometry,
+	chartFormatTargetFromEvent,
 	findChartPartTarget,
 	resolveChartThreeViewSpec,
 	resolveRevealedChartData,
@@ -55,6 +56,7 @@ import {
 	commitChartElementData,
 	ensureChartInteractionStyles,
 } from './chart-element-view-helpers';
+import { ChartFormatPaneService } from './chart-format-pane.service';
 import { ChartPartSelectionService } from './chart-part-selection.service';
 import { buildChartViewModel, formatAxisValue, resolveChartKind } from './chart-renderer-helpers';
 import { ChartRendererComponent } from './chart-renderer.component';
@@ -97,6 +99,8 @@ export class ChartElementViewComponent {
 	private readonly editor = inject(EditorStateService, { optional: true });
 	/** Canvas <-> inspector chart-part selection bridge (viewer-scoped). */
 	private readonly partSelection = inject(ChartPartSelectionService, { optional: true });
+	/** Chart Format pane target (clicks retarget it, a double-click opens the pane). */
+	private readonly formatPane = inject(ChartFormatPaneService, { optional: true });
 	/** The hosting canvas's slide, for resolving template (master/layout) charts. */
 	private readonly slideContext = inject(SLIDE_CONTEXT, { optional: true });
 	/** Viewer-scoped resolved 3D flags (host opt-ins ANDed with Options > Advanced). */
@@ -242,10 +246,27 @@ export class ChartElementViewComponent {
 
 	// ── Pointer interaction (event delegation over data-chart-* marks) ────────
 
+	/** The chart element a pointer event on this chart targets (shared hit-test). */
+	private formatTargetOf(event: MouseEvent): string {
+		return chartFormatTargetFromEvent(event, this.wrapper()?.nativeElement, this.element());
+	}
+
+	/**
+	 * A right-click names the chart element the context menu's format entry
+	 * targets ("Format Axis..."). It runs before the canvas selects the chart,
+	 * so it is not gated on the selection; the menu itself stays the canvas's.
+	 */
+	protected onContextMenu(event: MouseEvent): void {
+		if (this.editor) {
+			this.formatPane?.setTarget(this.element().id, this.formatTargetOf(event));
+		}
+	}
+
 	protected onPointerDown(event: PointerEvent): void {
 		if (!this.canEdit()) {
 			return;
 		}
+		this.formatPane?.setTarget(this.element().id, this.formatTargetOf(event));
 		const part = findChartPartTarget(event.target);
 		if (!part) {
 			return;
@@ -421,11 +442,10 @@ export class ChartElementViewComponent {
 			this.titleDraft.set(this.chartData()?.title ?? '');
 			return;
 		}
-		if (findChartPartTarget(event.target)) {
-			// A mark double-click is two selects; keep it from bubbling into the
-			// canvas-level inline-text-edit handler.
-			event.stopPropagation();
-		}
+		// Any other chart element opens PowerPoint's Format pane on it (a mark
+		// double-click must also stay out of the canvas inline-text-edit handler).
+		event.stopPropagation();
+		this.formatPane?.openOn(this.element().id, this.formatTargetOf(event));
 	}
 
 	protected onTitleInput(event: Event): void {

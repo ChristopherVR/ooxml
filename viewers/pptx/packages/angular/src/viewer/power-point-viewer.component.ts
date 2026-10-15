@@ -108,6 +108,7 @@ import { AutosaveRecoveryDialogComponent } from './autosave-recovery-dialog.comp
 import { AutosaveRecoveryService } from './autosave-recovery.service';
 import { AutosaveService } from './autosave.service';
 import { BroadcastDialogComponent } from './broadcast-dialog.component';
+import { ChartFormatPaneHostComponent } from './chart-format-pane-host.component';
 import { CollaborationCursorsComponent } from './collaboration-cursors.component';
 import { CollaborationService } from './collaboration.service';
 import { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';
@@ -305,6 +306,7 @@ const noopClose = (): void => undefined;
 		TitleBarComponent,
 		ThemeGalleryComponent,
 		ThemeEditorFieldsComponent,
+		ChartFormatPaneHostComponent,
 		SelectionPaneComponent,
 		CustomShowsComponent,
 		InsertSmartArtDialogComponent,
@@ -1186,6 +1188,12 @@ const noopClose = (): void => undefined;
 					(close)="themeEditorRequested.set(false)"
 				/>
 			}
+			<pptx-chart-format-pane-host
+				[element]="selectedElement()"
+				[slideIndex]="activeSlideIndex()"
+				[canEdit]="canEdit()"
+				[active]="canEdit() && !presentationMode.presenting()"
+			/>
 			<pptx-theme-gallery
 				[open]="themeGallery.showThemeGallery()"
 				[activeName]="themeGallery.activeThemeName()"

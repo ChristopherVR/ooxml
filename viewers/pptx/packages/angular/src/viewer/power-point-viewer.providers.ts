@@ -25,6 +25,7 @@ import { AccessibilityService } from './accessibility.service';
 import { AiPanelStore } from './ai/ai-panel-store';
 import { AutosaveRecoveryService } from './autosave-recovery.service';
 import { AutosaveService } from './autosave.service';
+import { ChartFormatPaneService } from './chart-format-pane.service';
 import { ChartPartSelectionService } from './chart-part-selection.service';
 import { CollaborationService } from './collaboration.service';
 import { CustomFontsService } from './custom-fonts.service';
@@ -80,6 +81,7 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	ExportService,
 	EditorStateService,
 	ChartPartSelectionService,
+	ChartFormatPaneService,
 	TableSelectionService,
 	EmbeddedFontsService,
 	GoogleWebfontsService,

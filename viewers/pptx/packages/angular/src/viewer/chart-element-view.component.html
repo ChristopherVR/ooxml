@@ -6,6 +6,7 @@
 	(pointermove)="onPointerMove($event)"
 	(pointerup)="onPointerUp()"
 	(dblclick)="onDblClick($event)"
+	(contextmenu)="onContextMenu($event)"
 >
 	@if (threeSpec(); as spec) {
 		<pptx-ng-three-view
