@@ -42,6 +42,37 @@ describe('floating picture lookup', () => {
 		expect(locateFloat(doc, 'missing', 0)).toBeUndefined();
 	});
 
+	it('counts floating shapes in the index like the layout, but selects only pictures', () => {
+		const shape: InlineImage = {
+			relId: '',
+			partName: '',
+			contentType: '',
+			widthPx: 60,
+			heightPx: 30,
+			anchored: true,
+			placement: { wrap: 'square', offsetXPx: 0 },
+			shape: { preset: 'rect', editable: true },
+		};
+		const doc = modelToDoc({
+			...createDocument(),
+			blocks: [
+				{
+					type: 'paragraph',
+					id: 'p2',
+					runs: [
+						{ text: '', image: shape },
+						{ text: '', image: picture('word/media/after.png', true) },
+					],
+				},
+			],
+		});
+		expect(locateFloat(doc, 'p2', 0)).toBeUndefined();
+		const after = locateFloat(doc, 'p2', 1)!;
+		expect(after.node.attrs.partName).toBe('word/media/after.png');
+		const state = EditorState.create({ doc, selection: NodeSelection.create(doc, after.pos) });
+		expect(selectedFloat(state)).toMatchObject({ blockId: 'p2', index: 1 });
+	});
+
 	it('reads the picture a node selection holds back as paragraph and index', () => {
 		const doc = modelToDoc(model());
 		const second = locateFloat(doc, 'p1', 1)!;
