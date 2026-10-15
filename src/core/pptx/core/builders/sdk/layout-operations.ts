@@ -10,6 +10,7 @@
  */
 
 import JSZip from 'jszip';
+import { openPptxZip } from '../../utils/zip-open';
 
 import { escAttr } from '../../ppt/pptx/xml-utils';
 import { PptxHandler } from '../../PptxHandler';
@@ -322,7 +323,7 @@ export async function createLayout(
 	const bytes = await handler.save(data.slides);
 
 	// Open the ZIP for modification
-	const zip = await JSZip.loadAsync(bytes);
+	const zip = await openPptxZip(bytes);
 
 	// Determine the next layout index
 	const existingCount = countExistingLayouts(zip);
@@ -389,7 +390,7 @@ export async function createLayouts(
 
 	// Save once
 	const bytes = await handler.save(data.slides);
-	const zip = await JSZip.loadAsync(bytes);
+	const zip = await openPptxZip(bytes);
 
 	const existingCount = countExistingLayouts(zip);
 	const layoutPaths: string[] = [];

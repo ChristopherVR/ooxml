@@ -18,6 +18,7 @@
  */
 
 import JSZip from 'jszip';
+import { openPptxZip } from '../../utils/zip-open';
 
 import { readMasterRoundTripSource, readSlideMasterPaths } from './master-roundtrip-source';
 import type { MasterRoundTripSource } from './master-roundtrip-source';
@@ -111,7 +112,7 @@ export async function buildMasterRoundTrip(
 export async function buildMasterRoundTripFromPptx(
 	pptxBytes: Uint8Array,
 ): Promise<WMasterRoundTrip> {
-	return buildMasterRoundTrip(await readMasterRoundTripSource(await JSZip.loadAsync(pptxBytes)));
+	return buildMasterRoundTrip(await readMasterRoundTripSource(await openPptxZip(pptxBytes)));
 }
 
 /** Every master the deck's slides use, and which one each slide follows. */
@@ -132,7 +133,7 @@ export interface DeckMasterRoundTrips {
 export async function buildDeckMasterRoundTripsFromPptx(
 	pptxBytes: Uint8Array,
 ): Promise<DeckMasterRoundTrips> {
-	const zip = await JSZip.loadAsync(pptxBytes);
+	const zip = await openPptxZip(pptxBytes);
 	const slidePaths = await readSlideMasterPaths(zip);
 	const masterPaths = [...new Set(slidePaths)];
 	if (masterPaths.length === 0) {

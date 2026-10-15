@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { openPptxZip } from '../../utils/zip-open';
 import { buildBlankPresentationArchive } from './PresentationBuilder';
 import { PptxHandler } from '../../PptxHandler';
 import { clonePartGraph, relativePartTarget } from '../../../../opc/clone-part-graph';
@@ -39,10 +40,7 @@ export async function importSlidePackage(
 		(!Number.isInteger(options.insertAt) || !Number.isFinite(options.insertAt))
 	)
 		throw new Error('Insertion point must be a finite integer');
-	const [zip, sourceZip] = await Promise.all([
-		JSZip.loadAsync(destination),
-		JSZip.loadAsync(source),
-	]);
+	const [zip, sourceZip] = await Promise.all([openPptxZip(destination), openPptxZip(source)]);
 	const presentationPath = 'ppt/presentation.xml';
 	const sourceDoc = parseXml(await requiredXml(sourceZip, presentationPath));
 	const destinationDoc = parseXml(await requiredXml(zip, presentationPath));
@@ -252,7 +250,7 @@ export async function createSlideClipboardPackage(
 	source: ArrayBuffer | Uint8Array,
 	slideIndices: readonly number[],
 ): Promise<Uint8Array> {
-	const sourceZip = await JSZip.loadAsync(source);
+	const sourceZip = await openPptxZip(source);
 	const root = parseXml(await requiredXml(sourceZip, 'ppt/presentation.xml')).documentElement;
 	const size = first(root, 'sldSz', root.namespaceURI ?? '');
 	const width = Number(size?.getAttribute('cx')),

@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import JSZip from 'jszip';
+import { openPptxZip } from '../core/utils/zip-open';
 
 import {
 	DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
@@ -176,7 +177,7 @@ export async function signPptxWithCertificate(
 			options.certificatePath,
 			options.certificatePassword,
 		);
-		const zip = await JSZip.loadAsync(Buffer.from(data));
+		const zip = await openPptxZip(Buffer.from(data));
 
 		for (const entryPath of Object.keys(zip.files)) {
 			if (entryPath.startsWith('_xmlsignatures/')) {

@@ -11,7 +11,7 @@
  * @module ole-sheet-xlsx-editor
  */
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
-import JSZip from 'jszip';
+import { openNestedZip } from './zip-open';
 
 import type { XmlObject } from '../types';
 import { formatCellAddress, parseCellAddress } from './chart-xlsx-cellref';
@@ -116,7 +116,7 @@ export async function readOleSheetGrid(
 	maxCols = DEFAULT_MAX_COLS,
 ): Promise<OleSheetGrid | undefined> {
 	try {
-		const zip = await JSZip.loadAsync(xlsxBytes);
+		const zip = await openNestedZip(xlsxBytes);
 		const sheetFile = zip.file(FIRST_SHEET_PATH);
 		if (!sheetFile) {
 			return undefined;
@@ -197,7 +197,7 @@ export async function writeOleSheetCellEdit(
 	edit: { row: number; col: number; value: string; forceText?: boolean },
 ): Promise<Uint8Array> {
 	try {
-		const zip = await JSZip.loadAsync(xlsxBytes);
+		const zip = await openNestedZip(xlsxBytes);
 		const sheetFile = zip.file(FIRST_SHEET_PATH);
 		if (!sheetFile) {
 			return xlsxBytes;

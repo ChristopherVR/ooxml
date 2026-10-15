@@ -18,7 +18,7 @@
  * @module ole-document-docx-editor
  */
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
-import JSZip from 'jszip';
+import { openNestedZip } from './zip-open';
 
 import type { XmlObject } from '../types';
 import { ensureXmlChildren, xmlChild, xmlChildren, xmlText } from './xml-access';
@@ -63,7 +63,7 @@ export async function readOleDocumentParagraphs(
 	docxBytes: Uint8Array,
 ): Promise<string[] | undefined> {
 	try {
-		const zip = await JSZip.loadAsync(docxBytes);
+		const zip = await openNestedZip(docxBytes);
 		const documentFile = zip.file(DOCUMENT_PART_PATH);
 		if (!documentFile) {
 			return undefined;
@@ -92,7 +92,7 @@ export async function writeOleDocumentParagraphEdit(
 	text: string,
 ): Promise<Uint8Array> {
 	try {
-		const zip = await JSZip.loadAsync(docxBytes);
+		const zip = await openNestedZip(docxBytes);
 		const documentFile = zip.file(DOCUMENT_PART_PATH);
 		if (!documentFile) {
 			return docxBytes;

@@ -11,6 +11,7 @@
  * @module sdk/master-layout-crud-xml
  */
 import JSZip from 'jszip';
+import { openPptxZip } from '../../utils/zip-open';
 
 import { escAttr } from '../../ppt/pptx/xml-utils';
 import { PptxHandler } from '../../PptxHandler';
@@ -23,7 +24,7 @@ import type { PptxData } from '../../types/presentation';
 /** Serialise the current handler state and reopen it as a mutable JSZip. */
 export async function saveToZip(handler: PptxHandler, data: PptxData): Promise<JSZip> {
 	const bytes = await handler.save(data.slides);
-	return JSZip.loadAsync(bytes);
+	return openPptxZip(bytes);
 }
 
 /** Result of a successful master/layout CRUD operation. */

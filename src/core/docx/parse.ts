@@ -1,6 +1,7 @@
 import { parseCoreProperties } from './core-properties';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import JSZip from 'jszip';
+import { declaredEntrySize, openZip } from '../opc/zip-limits';
+import { DOCX_ZIP_LIMITS, MAX_DOCUMENT_PART_BYTES } from './package-limits';
 import type { Block, DocumentModel, LoadedDocument } from './model';
 import { children, first, getW, parseXml, type XmlDocument, WORD_NS } from './xml';
 import { remember, saveDocx } from './save';
@@ -38,23 +39,13 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 }> {
 	const original =
 		input instanceof Uint8Array ? new Uint8Array(input) : new Uint8Array(input.slice(0));
-	if (original.byteLength > 50 * 1024 * 1024)
-		throw new Error('DOCX package exceeds the 50 MiB compressed input limit');
-	const zip = await JSZip.loadAsync(original);
-	const entries = Object.values(zip.files);
-	if (entries.length > 5000) throw new Error('DOCX package exceeds the 5,000 part limit');
-	const totalSize = entries.reduce(
-		(sum, entry) =>
-			sum +
-			Number((entry as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0),
-		0,
-	);
-	if (totalSize > 200 * 1024 * 1024)
-		throw new Error('DOCX package exceeds the 200 MiB uncompressed content limit');
+	const zip = await openZip(original, DOCX_ZIP_LIMITS);
 	const file = zip.file('word/document.xml');
 	if (!file) throw new Error('DOCX package has no word/document.xml part');
+	if (declaredEntrySize(file) > MAX_DOCUMENT_PART_BYTES)
+		throw new Error('word/document.xml exceeds the 25 MiB limit');
 	const sourceXml = await file.async('string');
-	if (sourceXml.length > 25 * 1024 * 1024)
+	if (sourceXml.length > MAX_DOCUMENT_PART_BYTES)
 		throw new Error('word/document.xml exceeds the 25 MiB limit');
 	const document: XmlDocument = parseXml(sourceXml);
 	const body = Array.from(document.getElementsByTagNameNS(WORD_NS, 'body'))[0];

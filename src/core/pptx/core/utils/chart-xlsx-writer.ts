@@ -30,6 +30,7 @@
 
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
+import { openNestedZip } from './zip-open';
 
 import type { IPptxXmlLookupService } from '../services';
 import type { XmlObject } from '../types';
@@ -176,7 +177,7 @@ export async function writeChartWorkbookUpdates(
 
 	let xlsxZip: JSZip;
 	try {
-		xlsxZip = await JSZip.loadAsync(xlsxBytes);
+		xlsxZip = await openNestedZip(xlsxBytes);
 	} catch {
 		if (options.atomic) {
 			throw new Error('Chart label replacement requires a readable embedded workbook.');

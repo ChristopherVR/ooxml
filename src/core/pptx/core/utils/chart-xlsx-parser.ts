@@ -12,6 +12,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
+import { openNestedZip } from './zip-open';
 
 import type { PptxEmbeddedWorkbookData } from '../types';
 import { preservesSpreadsheetXmlWhitespace } from './xml-whitespace';
@@ -270,7 +271,7 @@ export async function parseEmbeddedXlsx(
 	xlsxData: Uint8Array,
 ): Promise<PptxEmbeddedWorkbookData | undefined> {
 	try {
-		const xlsxZip = await JSZip.loadAsync(xlsxData);
+		const xlsxZip = await openNestedZip(xlsxData);
 
 		const xmlParser = new XMLParser({
 			ignoreAttributes: false,

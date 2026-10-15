@@ -10,6 +10,7 @@
 
 import { XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
+import { openPptxZip } from './zip-open';
 
 import { decodeXmlEntities } from './xml-entities';
 
@@ -99,7 +100,7 @@ export function normalisePath(p: string): string {
  */
 export async function tryOpenZip(buffer: ArrayBuffer): Promise<{ zip: JSZip } | { error: string }> {
 	try {
-		const zip = await JSZip.loadAsync(buffer);
+		const zip = await openPptxZip(buffer);
 		return { zip };
 	} catch {
 		return { error: 'Buffer is not a valid ZIP file' };

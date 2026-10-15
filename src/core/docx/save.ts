@@ -1,5 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
+import { openZip } from '../opc/zip-limits';
+import { DOCX_ZIP_LIMITS } from './package-limits';
 import type { DocumentModel, PendingMediaPart } from './model';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
@@ -88,7 +90,7 @@ export async function saveDocx(
 		throw new Error(
 			'Editing the theme catalog is not supported; source theme1.xml/settings.xml are preserved unchanged.',
 		);
-	const zip = binding ? await JSZip.loadAsync(binding.context.original) : new JSZip();
+	const zip = binding ? await openZip(binding.context.original, DOCX_ZIP_LIMITS) : new JSZip();
 	const document = binding ? parseXml(binding.context.sourceXml) : newDocument();
 	const docPrIds = new DocPrIdAllocator();
 	await docPrIds.reserveFromPackage(zip);

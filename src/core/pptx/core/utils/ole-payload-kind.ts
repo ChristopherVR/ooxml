@@ -11,7 +11,7 @@
  *
  * @module ole-payload-kind
  */
-import JSZip from 'jszip';
+import { openNestedZip } from './zip-open';
 
 import { isOle2CompoundFile } from './ole-embedded-extract';
 import { parseOle2 } from './ole2-parser-read';
@@ -47,7 +47,7 @@ export async function detectOlePayloadEditorKind(bytes: Uint8Array): Promise<Ole
 
 	if (isZipMagic(bytes)) {
 		try {
-			const zip = await JSZip.loadAsync(bytes);
+			const zip = await openNestedZip(bytes);
 			if (zip.file('xl/workbook.xml')) {
 				return 'sheet-xlsx';
 			}

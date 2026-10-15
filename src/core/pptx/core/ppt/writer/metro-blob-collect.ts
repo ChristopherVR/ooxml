@@ -9,6 +9,7 @@
  */
 
 import JSZip from 'jszip';
+import { openPptxZip } from '../../utils/zip-open';
 
 import type { PptxElement, PptxSlide } from '../../types';
 import { buildModel3dMetroInput } from './metro-blob-model3d';
@@ -101,7 +102,7 @@ export async function buildMetroBlobs(
 	pptxBytes: Uint8Array,
 	slides: PptxSlide[],
 ): Promise<Map<string, Uint8Array>> {
-	const zip = await JSZip.loadAsync(pptxBytes);
+	const zip = await openPptxZip(pptxBytes);
 	const slidePaths = await orderedSlidePaths(zip);
 	const out = new Map<string, Uint8Array>();
 	for (let i = 0; i < slides.length; i++) {

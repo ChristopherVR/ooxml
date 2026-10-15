@@ -6,7 +6,7 @@
  * and timestamp authority evaluation.
  */
 
-import JSZip from 'jszip';
+import { openPptxZip } from '../core/utils/zip-open';
 
 import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE } from '../core/utils/signature-constants';
 import {
@@ -53,7 +53,7 @@ export async function inspectPptxDigitalSignatures(
 	data: Uint8Array,
 ): Promise<DigitalSignatureReport> {
 	try {
-		const zip = await JSZip.loadAsync(Buffer.from(data));
+		const zip = await openPptxZip(Buffer.from(data));
 		const signaturePaths = Object.keys(zip.files).filter(
 			(entryPath) => entryPath.startsWith('_xmlsignatures/') && entryPath.endsWith('.xml'),
 		);
