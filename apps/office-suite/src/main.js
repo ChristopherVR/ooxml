@@ -13,6 +13,7 @@ import { mountFileActions } from './file-actions.js';
 import { mountDiskSearch } from './disk-search.js';
 import { mountPwa } from './pwa.js';
 import { mountResources, mountStart } from './start.js';
+import { mountShell } from './shell.js';
 import { icon } from './icons.js';
 import { localAttachmentId, showAttachment } from './attachments.js';
 
@@ -64,6 +65,7 @@ function chooseBlank() {
 	});
 	choose('Create something new', content);
 }
+let applyShell = () => {};
 function renderTabs() {
 	document.body.dataset.view = view;
 	$('tabs').hidden = !teamsTabOpen && !sessions.sessions.size;
@@ -104,6 +106,7 @@ function renderTabs() {
 					(view === 'editor' && button.dataset.app === sessions.sessions.get(active)?.doc.kind),
 			),
 		);
+	applyShell();
 }
 async function open(id, origin) {
 	if (origin) origins.set(id, origin);
@@ -455,6 +458,11 @@ for (const eventName of ['pointerover', 'focusin'])
 	});
 
 mountProduct();
+applyShell = mountShell(() => ({
+	view,
+	documents: sessions.sessions.size,
+	teamsOpen: teamsTabOpen,
+}));
 mountPwa({ idle: () => sessions.sessions.size === 0 && view === 'home' });
 mountStart();
 mountResources();

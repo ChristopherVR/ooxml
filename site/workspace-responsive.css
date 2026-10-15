@@ -246,11 +246,11 @@
 		margin: 0 4px;
 	}
 	.search-expanded .suite-layout {
-		height: calc(100dvh - 96px);
+		height: calc(var(--app-h, 100dvh) - 96px);
 	}
 	.search-expanded .shell-popover {
 		top: 104px;
-		max-height: calc(100dvh - 120px);
+		max-height: calc(var(--app-h, 100dvh) - 120px);
 	}
 }
 @media (prefers-reduced-motion: no-preference) {

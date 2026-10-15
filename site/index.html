@@ -6,7 +6,10 @@
 		<meta name="theme-color" content="#0f6cbd" />
 		<link rel="manifest" href="manifest.webmanifest" />
 		<link rel="apple-touch-icon" href="icons/office-192.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+		/>
 		<title>OOXML Office</title>
 		<meta
 			name="description"
@@ -184,10 +187,11 @@
 							<div class="document-commandbar">
 								<button id="back-teams" hidden>‹ Back to Teams</button
 								><button id="back-parent" hidden>‹ Parent document</button
-								><button id="save">Save</button><button id="rename">Rename</button
-								><button id="download">Download</button><button id="embedded">Embedded files</button
-								><span id="save-state"></span
-								><button id="share" class="primary">Share in Teams</button>
+								><button id="save">Save</button><button id="rename" data-menu>Rename</button
+								><button id="download" data-menu>Download</button
+								><button id="embedded" data-menu>Embedded files</button><span id="save-state"></span
+								><button id="share" class="primary" data-menu>Share in Teams</button
+								><button id="actions-more" aria-label="More actions" aria-haspopup="menu"></button>
 							</div>
 							<div id="editors"></div>
 						</section>
@@ -228,6 +232,14 @@
 				</footer>
 			</div>
 		</div>
+		<section
+			id="actions-menu"
+			class="shell-popover actions-menu"
+			popover
+			role="menu"
+			aria-label="More actions"
+		></section>
+		<button id="chrome-toggle" aria-label="Show or hide the toolbar" aria-expanded="true"></button>
 		<input id="file-input" type="file" accept=".docx,.xlsx,.pptx,.vsdx" multiple hidden />
 		<dialog id="dialog">
 			<header>

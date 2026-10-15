@@ -32,7 +32,7 @@
 }
 body {
 	margin: 0;
-	height: 100dvh;
+	height: var(--app-h, 100dvh);
 	overflow: hidden;
 	background: var(--canvas);
 	color: var(--text);
@@ -548,7 +548,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 /* Layout */
 .suite-layout {
 	display: flex;
-	height: calc(100dvh - var(--header-h));
+	height: calc(var(--app-h, 100dvh) - var(--header-h));
 }
 .workspace-sidebar {
 	flex: none;

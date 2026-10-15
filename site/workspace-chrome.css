@@ -13,7 +13,7 @@
 		0 2px 8px #0001;
 	width: 360px;
 	max-width: calc(100vw - 24px);
-	max-height: calc(100dvh - var(--header-h) - 24px);
+	max-height: calc(var(--app-h, 100dvh) - var(--header-h) - 24px);
 	overflow: auto;
 }
 .shell-popover::backdrop {

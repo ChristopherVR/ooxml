@@ -17,6 +17,7 @@ for (const name of [
 	'workspace-files.css',
 	'profile-form.css',
 	'workspace-responsive.css',
+	'workspace-mobile.css',
 	'favicon.svg',
 	'appearance-init.js',
 	'404.html',

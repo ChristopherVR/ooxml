@@ -1,0 +1,106 @@
+/* Phone behaviour of the shell: the actions bar folds into a More menu, the chrome folds away in
+   landscape and touch targets reach 44px. apps/office-suite/src/shell.js sets the data attributes
+   and --app-h (the visible viewport height, which tracks the address bar and keyboard). */
+#actions-more,
+#chrome-toggle {
+	display: none;
+}
+#actions-more {
+	margin-left: auto;
+	min-width: 32px;
+}
+.actions-menu {
+	width: auto;
+	min-width: 180px;
+	padding: 4px;
+}
+.actions-menu:popover-open {
+	display: flex;
+	flex-direction: column;
+}
+.actions-menu button {
+	justify-content: flex-start;
+	width: 100%;
+	padding: 9px 12px;
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+	.document-commandbar [data-menu],
+	.document-commandbar > span {
+		display: none;
+	}
+	#actions-more {
+		display: inline-flex;
+	}
+	.document-commandbar {
+		overflow: visible;
+	}
+}
+
+/* A single open document needs no tab strip on a phone; the brand returns home. */
+body[data-hide-tabs='true'] .tabs {
+	display: none;
+}
+
+/* Phone landscape: only the editor, plus a toggle that brings the chrome back. */
+body[data-collapsible='true'] #chrome-toggle {
+	display: inline-flex;
+	position: fixed;
+	right: 8px;
+	bottom: 8px;
+	z-index: 30;
+	width: 32px;
+	height: 32px;
+	min-width: 0;
+	padding: 0;
+	border-radius: 50%;
+	border: 1px solid var(--line);
+	background: var(--surface, #fff);
+	color: var(--text, inherit);
+	box-shadow: 0 2px 8px #0003;
+}
+body[data-collapsible='true'] #chrome-toggle[aria-expanded='true'] .ui-icon {
+	transform: rotate(180deg);
+}
+body[data-chrome='collapsed'] .suite-header,
+body[data-chrome='collapsed'] .tabs,
+body[data-chrome='collapsed'] .document-commandbar,
+body[data-chrome='collapsed'] .workspace-sidebar,
+body[data-chrome='collapsed'] .statusbar {
+	display: none;
+}
+body[data-chrome='collapsed'] .suite-layout {
+	height: var(--app-h, 100dvh);
+}
+
+@media (pointer: coarse) {
+	.brand,
+	.suite-header > button,
+	.document-commandbar button,
+	.tabs > button,
+	.file-tab > button,
+	.actions-menu button {
+		min-height: 44px;
+	}
+	.suite-header > button,
+	.document-commandbar button,
+	.file-tab > button:last-child {
+		min-width: 44px;
+	}
+	.document-commandbar {
+		height: 52px;
+	}
+	.tabs {
+		height: 48px;
+	}
+	.tabs > button,
+	.file-tab > button {
+		height: 44px;
+	}
+	body[data-collapsible='true'] #chrome-toggle {
+		width: 44px;
+		height: 44px;
+	}
+}
