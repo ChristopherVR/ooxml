@@ -137,14 +137,10 @@
 }
 .xve-status-stats {
 	margin-inline-end: 10px;
+	min-width: 0;
 	overflow: hidden;
 	color: var(--ink);
 	font-size: 11px;
+	text-overflow: ellipsis;
 	white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-	.xve-status-stats {
-		display: none;
-	}
 }

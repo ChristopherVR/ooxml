@@ -9,6 +9,7 @@ import { formatSelectionStat, selectionStats } from 'ooxml-core/xlsx';
 import { defineStatusBar, defineZoomSlider } from '../controls';
 import type { OfficeStatusBarState } from '../controls';
 import { registerIcon } from '../icons';
+import { statusLayout, watchStatusWidth, type StatusLayout } from '../chrome/status-layout';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { formatNumber, normalizeEditorLocale } from 'ooxml-core/xlsx/ui';
 import { el } from './ribbon/controls';
@@ -58,7 +59,11 @@ export interface StatusBar {
 }
 
 /** The statistics text for the current selection, or '' when Excel shows none (one cell). */
-export function statisticsText(ctx: EditorContext, shown: ReadonlySet<StatKey>): string {
+export function statisticsText(
+	ctx: EditorContext,
+	shown: ReadonlySet<StatKey>,
+	limit = Infinity,
+): string {
 	const workbook = ctx.workbook();
 	const selection = ctx.selection.get();
 	// A host may hand over any object as `workbook` before it loads; only a real sheet has stats.
@@ -87,7 +92,7 @@ export function statisticsText(ctx: EditorContext, shown: ReadonlySet<StatKey>):
 				: formatSelectionStat(workbook, stats, value);
 		parts.push(`${ctx.t(STAT_LABELS[key])}: ${text}`);
 	}
-	return parts.join('    ');
+	return parts.slice(0, limit).join('    ');
 }
 
 export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers): StatusBar {
@@ -128,6 +133,7 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 	slider.setAttribute('max', String(ZOOM_MAX));
 	element.append(stats, slider);
 
+	let layout: StatusLayout = statusLayout(0);
 	const zoom = () => ctx.grid()?.zoom() ?? 100;
 	slider.addEventListener('input', () => handlers.setZoom(slider.value));
 	element.addEventListener('office-status-activate', (event) => {
@@ -148,26 +154,28 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 			toggles: [
 				{ id: 'notes', icon: 'warning', label: notesText, text: notesText, hidden: count === 0 },
 			],
-			views: [
-				{ id: 'normal', icon: 'normalView', label: ctx.t('Normal'), pressed: true },
-				{
-					id: 'pageLayout',
-					icon: 'pageLayoutView',
-					label: ctx.t('Page Layout (not available)'),
-					disabled: true,
-				},
-				{
-					id: 'pageBreak',
-					icon: 'pageBreakView',
-					label: ctx.t('Page Break Preview (not available)'),
-					disabled: true,
-				},
-			],
+			views: !layout.views
+				? false
+				: [
+						{ id: 'normal', icon: 'normalView', label: ctx.t('Normal'), pressed: true },
+						{
+							id: 'pageLayout',
+							icon: 'pageLayoutView',
+							label: ctx.t('Page Layout (not available)'),
+							disabled: true,
+						},
+						{
+							id: 'pageBreak',
+							icon: 'pageBreakView',
+							label: ctx.t('Page Break Preview (not available)'),
+							disabled: true,
+						},
+					],
 		};
 	};
 	const refresh = () => {
 		render();
-		stats.textContent = statisticsText(ctx, shown);
+		stats.textContent = statisticsText(ctx, shown, layout.stats);
 		slider.value = zoom();
 	};
 	const relocalize = () => {
@@ -178,5 +186,9 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 		refresh();
 	};
 	relocalize();
+	watchStatusWidth(element, (width) => {
+		layout = statusLayout(width);
+		refresh();
+	});
 	return { element, refresh, relocalize };
 }

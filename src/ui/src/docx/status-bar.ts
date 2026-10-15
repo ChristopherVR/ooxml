@@ -1,6 +1,8 @@
 import { defineStatusBar, defineZoomSlider } from '../controls';
 import type { OfficeStatusBarState } from '../controls';
 import { registerIcon } from '../icons';
+import { statusLayout, watchStatusWidth, type StatusLayout } from '../chrome/status-layout';
+import { AUTO_FIT_MIN } from './auto-fit';
 import { normalizeEditorLocale, translate } from './localization';
 
 export interface StatusBarHandlers {
@@ -20,7 +22,7 @@ export interface StatusBar {
 	relocalize(): void;
 }
 
-export const ZOOM_MIN = 50;
+export const ZOOM_MIN = AUTO_FIT_MIN;
 export const ZOOM_MAX = 200;
 
 type StatusBarElement = HTMLElement & { state: OfficeStatusBarState };
@@ -52,12 +54,13 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 	element.append(slider);
 
 	const model = { page: '', words: '', language: '', notes: 0, mode: 'draft', zoom: 100 };
+	let layout: StatusLayout = statusLayout(0);
 	const locale = () => normalizeEditorLocale(element.dataset.editorLocale);
 
 	const render = () => {
 		const t = locale();
 		const noteKey = model.notes === 1 ? 'status.note' : 'status.notes';
-		const layout = (mode: 'draft' | 'print', key: 'Web Layout' | 'Print Layout') => ({
+		const view = (mode: 'draft' | 'print', key: 'Web Layout' | 'Print Layout') => ({
 			id: mode,
 			icon: mode === 'draft' ? 'webLayout' : 'printLayout',
 			label: translate(t, key),
@@ -71,8 +74,10 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 					title: translate(t, 'nav.approximate'),
 					live: true,
 				},
-				{ id: 'words', text: model.words },
-				...(model.language ? [{ id: 'language', text: model.language, narrowHide: true }] : []),
+				...(layout.words ? [{ id: 'words', text: model.words }] : []),
+				...(model.language && layout.language
+					? [{ id: 'language', text: model.language, narrowHide: true }]
+					: []),
 			],
 			toggles: [
 				{
@@ -83,7 +88,7 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 					hidden: model.notes === 0,
 				},
 			],
-			views: [layout('draft', 'Web Layout'), layout('print', 'Print Layout')],
+			views: layout.views ? [view('draft', 'Web Layout'), view('print', 'Print Layout')] : false,
 		};
 		slider.setAttribute('out-label', translate(t, 'Zoom out'));
 		slider.setAttribute('in-label', translate(t, 'Zoom in'));
@@ -99,6 +104,10 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 	slider.addEventListener('input', () => handlers.setZoom(slider.value));
 
 	render();
+	watchStatusWidth(element, (width) => {
+		layout = statusLayout(width);
+		render();
+	});
 	return {
 		element,
 		setPageAndWords(pageText, wordText) {

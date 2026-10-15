@@ -21,6 +21,8 @@ import type { RibbonAction } from './ribbon';
 import { sectionLayoutJson } from 'ooxml-core/docx';
 import { sectionPartsJson } from 'ooxml-core/docx/ui';
 import type { StatusBar } from './status-bar';
+import { ZOOM_MAX, ZOOM_MIN } from './status-bar';
+import { autoFitZoom, pinchZoom } from './auto-fit';
 import { fitZoomPercent, type ZoomFit } from 'ooxml-core/docx/ui';
 
 export interface PageControllerHost extends EditorHost {
@@ -36,6 +38,9 @@ export interface PageControllerHost extends EditorHost {
 export class PageController {
 	zoom = 1;
 	viewMode: 'draft' | 'print' = 'draft';
+	/** True once the user picked a zoom; the automatic fit to a narrow viewport then stays out. */
+	private userZoomed = false;
+	private observed?: HTMLElement;
 
 	constructor(private readonly host: PageControllerHost) {}
 
@@ -262,6 +267,7 @@ export class PageController {
 		const paper = this.host.paper();
 		if (!paper) return;
 		const model = this.host.model();
+		this.observeViewport(paper.parentElement);
 		applyPageStyles(paper, model, this.zoom);
 		const sections = model.sections ?? [];
 		const columns = sections.length === 1 ? sections[0]?.columns : undefined;
@@ -294,8 +300,75 @@ export class PageController {
 		);
 	}
 
-	/** `sideBySide` lays Print Layout's pages out two across (View > Multiple Pages). */
+	/** A zoom the user chose (slider, ribbon, dialog, pinch); it ends the automatic fit. */
 	setZoom(percent: number, sideBySide = false): void {
+		this.userZoomed = true;
+		this.applyZoom(percent, sideBySide);
+	}
+
+	/**
+	 * Fits the page to the canvas width while the user has not chosen a zoom, so a phone or a narrow
+	 * window shows the whole page width (as Word for the web and mobile do) and the zoom returns to
+	 * 100% when the window grows. Runs on resize and orientation change.
+	 */
+	autoFit(): void {
+		if (this.userZoomed) return;
+		const canvas = this.host.paper()?.parentElement;
+		if (!canvas || canvas.hasAttribute('data-multipage')) return;
+		const style = getComputedStyle(canvas);
+		const available =
+			canvas.clientWidth -
+			(parseFloat(style.paddingLeft) || 0) -
+			(parseFloat(style.paddingRight) || 0);
+		const percent = autoFitZoom(available, this.host.model().page.width);
+		if (percent !== undefined && Math.round(this.zoom * 100) !== percent) this.applyZoom(percent);
+	}
+
+	private observeViewport(canvas: HTMLElement | null): void {
+		if (!canvas || this.observed === canvas) return;
+		this.observed = canvas;
+		this.watchPinch(canvas);
+		if (typeof ResizeObserver === 'undefined') return;
+		let width = canvas.clientWidth;
+		new ResizeObserver(() => {
+			if (canvas.clientWidth === width) return;
+			width = canvas.clientWidth;
+			this.autoFit();
+		}).observe(canvas);
+		queueMicrotask(() => this.autoFit());
+	}
+
+	/** Two-finger pinch over the canvas zooms the page; one finger keeps scrolling. */
+	private watchPinch(canvas: HTMLElement): void {
+		let start: { distance: number; percent: number } | undefined;
+		const distance = (e: TouchEvent) => {
+			const [a, b] = [e.touches[0], e.touches[1]];
+			return a && b ? Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) : 0;
+		};
+		canvas.addEventListener(
+			'touchstart',
+			(e) => {
+				start =
+					e.touches.length === 2
+						? { distance: distance(e), percent: Math.round(this.zoom * 100) }
+						: undefined;
+			},
+			{ passive: true },
+		);
+		canvas.addEventListener(
+			'touchmove',
+			(e) => {
+				if (!start || e.touches.length !== 2 || start.distance <= 0) return;
+				if (e.cancelable) e.preventDefault();
+				this.setZoom(pinchZoom(start.percent, distance(e) / start.distance, ZOOM_MIN, ZOOM_MAX));
+			},
+			{ passive: false },
+		);
+		canvas.addEventListener('touchend', () => (start = undefined), { passive: true });
+	}
+
+	/** `sideBySide` lays Print Layout's pages out two across (View > Multiple Pages). */
+	private applyZoom(percent: number, sideBySide = false): void {
 		this.zoom = percent / 100;
 		this.host.paper()?.parentElement?.toggleAttribute('data-multipage', sideBySide);
 		this.refreshPageStyles();

@@ -40,11 +40,16 @@
 }
 .items {
 	display: flex;
+	flex: 0 1 auto;
 	align-items: center;
 	min-width: 0;
+	overflow: hidden;
 }
 .item {
-	flex: none;
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 .item + .item::before {
@@ -138,8 +143,8 @@
 }
 @media (pointer: coarse) {
 	.bar button {
-		min-width: var(--office-target-size-touch);
-		min-height: var(--office-target-size-touch);
+		min-width: var(--office-touch-target, 44px);
+		min-height: var(--office-touch-target, 44px);
 	}
 }
 @media (forced-colors: active) {
