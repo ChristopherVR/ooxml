@@ -39,7 +39,6 @@ test('keeps the shell available and preserves the conversation behind the settin
 	await open();
 	await page.setViewportSize({ width: 390, height: 844 });
 	await expect(more).toBeVisible();
-	await expect(rail.getByRole('button', { name: 'Files', exact: true })).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Close settings', exact: true })).toBeVisible();
 	const mobile = (await settings.boundingBox())!;
 	expect(mobile.x + mobile.width).toBeLessThanOrEqual(390);

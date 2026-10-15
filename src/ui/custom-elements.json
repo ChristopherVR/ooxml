@@ -110,7 +110,7 @@
 					"name": "OfficeUiAppRail",
 					"tagName": "office-ui-app-rail",
 					"customElement": true,
-					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files); below 56em a bottom navigation bar. Properties: `items`, `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips. Emits `office-rail-select` `{ id }`.",
+					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files); below 56em a bottom navigation bar showing the primary items plus More, which opens a sheet with the `secondary` ones (their unread badges are carried to More). Properties: `items`, `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips. Emits `office-rail-select` `{ id }`.",
 					"attributes": [
 						{
 							"name": "hide-labels"
@@ -131,6 +131,10 @@
 						{
 							"kind": "field",
 							"name": "items"
+						},
+						{
+							"kind": "field",
+							"name": "moreOpen"
 						},
 						{
 							"kind": "field",

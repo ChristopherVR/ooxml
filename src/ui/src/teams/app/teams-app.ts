@@ -98,10 +98,16 @@ const RAIL = [
 	{ id: 'chat', label: 'Chat', icon: 'message' },
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calendar', label: 'Calendar', icon: 'calendar' },
-	{ id: 'calls', label: 'Calls', icon: 'phone' },
-	{ id: 'files', label: 'Files', icon: 'folder' },
-	{ id: 'followed', label: 'Followed threads', shortLabel: 'Threads', icon: 'chat' },
-	{ id: 'drafts', label: 'Drafts', icon: 'chat' },
+	{ id: 'calls', label: 'Calls', icon: 'phone', secondary: true },
+	{ id: 'files', label: 'Files', icon: 'folder', secondary: true },
+	{
+		id: 'followed',
+		label: 'Followed threads',
+		shortLabel: 'Threads',
+		icon: 'chat',
+		secondary: true,
+	},
+	{ id: 'drafts', label: 'Drafts', icon: 'chat', secondary: true },
 ] as const;
 
 export class TeamsApp extends LitElement {

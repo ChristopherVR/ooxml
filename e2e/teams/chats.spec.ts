@@ -174,13 +174,36 @@ test('phone: chat list and conversation are full screen views with the bottom ba
 	const bar = rail(ada);
 	const box = (await bar.boundingBox())!;
 	expect(box.y + box.height).toBeGreaterThan(800);
-	// Every rail item fits in the bar without sideways scrolling.
-	expect(await ada.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
-	for (const item of await bar.getByRole('button').all()) {
+	// The phone bar shows Activity, Chat, Teams, Calendar and More; the rest sit in the More sheet.
+	const visible = bar.locator('ul').first().locator('li:not([data-secondary="true"]) button');
+	await expect(visible).toHaveCount(5);
+	await expect(visible).toHaveText([/Activity/u, /Chat/u, /Teams/u, /Calendar/u, /More/u]);
+	for (const item of await visible.all()) {
 		const b = (await item.boundingBox())!;
 		expect(b.x).toBeGreaterThanOrEqual(0);
 		expect(b.x + b.width).toBeLessThanOrEqual(375);
 	}
+	await expect(bar.getByRole('button', { name: 'Files', exact: true })).toBeHidden();
+	const more = bar.getByRole('button', { name: 'More', exact: true });
+	await more.click();
+	const sheet = ada.getByRole('dialog', { name: 'More apps' });
+	await expect(sheet).toBeVisible();
+	await expect(sheet.getByRole('button')).toHaveText([
+		/Calls/u,
+		/Files/u,
+		/Followed threads/u,
+		/Drafts/u,
+		/Close/u,
+	]);
+	await shot(ada, 'phone-375x812-more-sheet');
+	await ada.keyboard.press('Escape');
+	await expect(sheet).toBeHidden();
+	await expect(more).toBeFocused();
+	await more.click();
+	await sheet.getByRole('button', { name: 'Files', exact: true }).click();
+	await expect(sheet).toBeHidden();
+	await expect(ada.getByRole('heading', { name: 'Files', exact: true })).toBeVisible();
+	await expect(more).toHaveAttribute('aria-current', 'page');
 	await bar.getByRole('button', { name: 'Chat', exact: true }).click();
 	await expect(sidebar(ada)).toBeVisible();
 	await sidebar(ada).getByRole('button', { name: 'New chat', exact: true }).click();

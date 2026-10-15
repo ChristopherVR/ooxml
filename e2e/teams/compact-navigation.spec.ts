@@ -45,7 +45,11 @@ test('navigates compact channels and calls through the list view with a bottom b
 	await page.getByRole('textbox', { name: 'Channel name', exact: true }).fill('Planning');
 	await page.getByRole('button', { name: 'Create', exact: true }).click();
 	await expect(page.getByRole('heading', { name: '# Planning', exact: true })).toBeFocused();
-	await bar.getByRole('button', { name: 'Calls', exact: true }).click();
+	await bar.getByRole('button', { name: 'More', exact: true }).click();
+	await page
+		.getByRole('dialog', { name: 'More apps' })
+		.getByRole('button', { name: 'Calls', exact: true })
+		.click();
 	await expect(page.getByRole('button', { name: 'Meet now', exact: true })).toHaveCount(3);
 	await bar.getByRole('button', { name: 'Teams', exact: true }).click();
 	await expect(list).toBeVisible();

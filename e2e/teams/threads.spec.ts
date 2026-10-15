@@ -116,7 +116,11 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 	await page.getByRole('listbox', { name: 'Search results' }).getByRole('button').click();
 	await expect(thread.getByText('Peer review', { exact: true })).toBeVisible();
 	await thread.getByRole('button', { name: 'Unfollow thread', exact: true }).click();
-	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	await page.getByRole('button', { name: 'More', exact: true }).click();
+	await page
+		.getByRole('dialog', { name: 'More apps' })
+		.getByRole('button', { name: 'Followed threads', exact: true })
+		.click();
 	await expect(
 		followed.getByText('No followed threads yet. Open a thread and choose Follow thread.'),
 	).toBeVisible();
