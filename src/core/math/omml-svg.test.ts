@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convertOmmlToLatex, parseOmml } from './index';
+import { convertOmmlToLatex, convertOmmlToMathMl, parseOmml } from './index';
 import { latexToOmmlXml } from './omml-to-xml';
 import { drawEquation } from './omml-svg';
 
@@ -73,5 +73,33 @@ describe('equation drawing', () => {
 	it('returns undefined for markup without content or that cannot be read', () => {
 		expect(drawEquation('<m:oMath xmlns:m="x"/>', 16)).toBeUndefined();
 		expect(drawEquation('not xml', 16)).toBeUndefined();
+	});
+});
+
+describe('minus signs', () => {
+	const widthOf = (latex: string) => draw(latex)!.widthPx;
+
+	it('draws a hyphen-minus as the minus sign', () => {
+		const svg = draw('a-b')!.svg;
+		expect(svg).toContain('−');
+		expect(svg).not.toMatch(/>[^<]*-[^<]*</);
+	});
+
+	it('spaces a binary minus but not a unary one or one in a script', () => {
+		expect(widthOf('a-b')).toBeCloseTo(widthOf('a+b'), 0);
+		// "-b" has no operand to its left, so it is narrower than "a-b" by a letter and both gaps.
+		expect(widthOf('a-b') - widthOf('-b')).toBeGreaterThan(16 * 0.5 + 2 * 0.22 * 16 - 1);
+		// After a relation the sign is unary too.
+		expect(widthOf('x=-b')).toBeLessThan(widthOf('x=a-b'));
+		// In a script no operator spacing is added.
+		const minus = widthOf('x^{n-k}') - widthOf('x');
+		const plus = widthOf('x^{n+k}') - widthOf('x');
+		expect(minus).toBeCloseTo(plus, 0);
+		expect(minus).toBeLessThan(16 * 0.7 * 2.6);
+	});
+
+	it('shows the minus sign in the MathML preview too', () => {
+		const mathml = convertOmmlToMathMl(parseOmml(latexToOmmlXml('a-b', false)!));
+		expect(mathml).toContain('<mo>−</mo>');
 	});
 });

@@ -18,6 +18,16 @@ import { stripXmlOrderSuffix } from './omml-node';
 
 const isOn = (value: string) => value === '1' || value === 'on' || value === 'true';
 
+/** Whether a sign after `ch` is a prefix sign: it follows an operator, a relation or an opening bracket. */
+const isUnaryContext = (ch: string): boolean =>
+	isRelation(ch) || isBinary(ch) || /[([{,;:]/.test(ch);
+
+/** The last character of a run's text, which decides whether a sign after it is unary. */
+function lastCharOf(node: OmmlNode): string {
+	const text = readText(node);
+	return text ? (Array.from(text).at(-1) ?? '') : '';
+}
+
 /** A run of text: letters are italic unless the run asks for upright, operators get spacing. */
 function layoutRun(node: OmmlNode, style: MathStyle, atStart: boolean): Box {
 	const text = readText(node);
@@ -28,9 +38,16 @@ function layoutRun(node: OmmlNode, style: MathStyle, atStart: boolean): Box {
 	const bold = Boolean(style.bold) || sty === 'b' || sty === 'bi';
 	const boxes: Box[] = [];
 	let index = 0;
-	for (const ch of Array.from(text)) {
+	let previous = atStart ? '(' : 'x';
+	for (const raw of Array.from(text)) {
+		// Word draws the minus sign (U+2212) for a typed hyphen-minus.
+		const ch = raw === '-' ? '\u2212' : raw;
 		const italic = !plain && /[A-Za-zα-ω]/.test(ch);
-		const spaced = isRelation(ch) ? 0.28 : isBinary(ch) && !(atStart && index === 0) ? 0.22 : 0;
+		// Operators are spaced only at the text level; a sign after an operator or an opening
+		// bracket (or at the start) is unary and takes no space, and neither does one in a script.
+		const unary = index === 0 ? atStart : isUnaryContext(previous);
+		const spaced = style.level > 0 ? 0 : isRelation(ch) ? 0.28 : isBinary(ch) && !unary ? 0.22 : 0;
+		previous = ch;
 		const width = glyphEm(ch, bold) * style.size;
 		const pad = spaced * style.size;
 		const box = emptyBox();
@@ -81,11 +98,15 @@ function mergeText(box: Box): Box {
 /** The boxes of every content child of `node`, in document order. */
 export function layoutChildren(node: OmmlNode, style: MathStyle): Box {
 	const boxes: Box[] = [];
+	let last = '';
 	for (const key of Object.keys(node)) {
 		if (key.startsWith('@_') || key === '#text') continue;
 		const tag = stripXmlOrderSuffix(key);
-		for (const item of ensureArray(node[key]))
-			boxes.push(layoutElement(tag, item, style, boxes.length === 0));
+		for (const item of ensureArray(node[key])) {
+			const atStart = boxes.length === 0 || (last !== '' && isUnaryContext(last));
+			boxes.push(layoutElement(tag, item, style, atStart));
+			last = tag === 'm:r' ? lastCharOf(item) : '';
+		}
 	}
 	return row(boxes);
 }

@@ -22,7 +22,8 @@ export function convertRun(node: OmmlNode): string {
 		return '';
 	}
 
-	const escaped = escapeXml(text);
+	// A hyphen-minus in math is the minus sign; MathML spaces it as a binary or prefix operator.
+	const escaped = escapeXml(text === '-' ? '\u2212' : text);
 	const rPr = child(node, 'm:rPr');
 	const norVal = val(child(rPr, 'm:nor'));
 	const isNormal = norVal === '1' || norVal === 'on' || norVal === 'true';
