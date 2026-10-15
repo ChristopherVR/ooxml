@@ -216,7 +216,8 @@ function parseStatement(element: OrderedXmlElement, state: ParseState): LdStatem
 				rules: element.children.filter((c) => c.name === 'rule').map((c) => parseRule(c.attrs)),
 			};
 		case 'varLst': {
-			const vars: Record<string, string> = {};
+			// Null-prototype: a variable named `__proto__` or `constructor` must stay a plain key.
+			const vars: Record<string, string> = Object.create(null) as Record<string, string>;
 			for (const entry of element.children) {
 				vars[entry.name] = entry.attrs.val ?? '';
 			}

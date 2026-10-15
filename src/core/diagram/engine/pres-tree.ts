@@ -74,6 +74,8 @@ interface ExpandState {
 }
 
 const MAX_DEPTH = 96;
+/** Total presentation nodes built for one tree; stops hostile data from expanding without bound. */
+const MAX_NODES = 100_000;
 
 function lookupVariable(
 	node: PresNode,
@@ -123,6 +125,9 @@ function walk(
 				}
 				state.depth++;
 				for (const next of iteratePoints(point, forEach.iterator)) {
+					if (state.counter >= MAX_NODES) {
+						break;
+					}
 					walk(forEach.body, next, node, state);
 				}
 				state.depth--;
@@ -171,7 +176,16 @@ function walk(
  * definition's own `dgm:varLst` defaults.
  */
 function recordedVars(point: DataPoint, name: string): Record<string, string> {
-	return point.source?.presLayoutVarsByName?.[name] ?? {};
+	const byName = point.source?.presLayoutVarsByName;
+	if (!byName || !Object.prototype.hasOwnProperty.call(byName, name)) {
+		return {};
+	}
+	return byName[name] ?? {};
+}
+
+/** A fresh variable map with no prototype, so names such as `constructor` never resolve inherited. */
+function variableMap(...sources: Record<string, string>[]): Record<string, string> {
+	return Object.assign(Object.create(null) as Record<string, string>, ...sources);
 }
 
 function buildNode(
@@ -180,7 +194,7 @@ function buildNode(
 	parent: PresNode | undefined,
 	state: ExpandState,
 ): PresNode | undefined {
-	if (state.depth > MAX_DEPTH) {
+	if (state.depth > MAX_DEPTH || state.counter >= MAX_NODES) {
 		return undefined;
 	}
 	const node: PresNode = {
@@ -194,7 +208,7 @@ function buildNode(
 		presOfAnchored: false,
 		constraints: [],
 		rules: [],
-		vars: { ...recordedVars(point, def.name) },
+		vars: variableMap(recordedVars(point, def.name)),
 		children: [],
 		parent,
 		order: state.counter++,
