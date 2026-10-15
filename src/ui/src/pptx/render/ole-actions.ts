@@ -40,9 +40,11 @@ export function formatBytes(bytes?: number): string | undefined {
 
 /**
  * Whether a payload of the given MIME type can be opened directly in a browser
- * tab (PDF, images, plain text, JSON, XML, XHTML). Everything else is
- * download-only. Matching is case-insensitive and ignores any trailing
- * `; charset=...` (or other `;`-delimited) parameter.
+ * tab (PDF, raster images, plain text, JSON). Everything else is download-only.
+ * Markup types are refused on purpose: a document served from the viewer's
+ * origin as `text/html`, `image/svg+xml` or any XML/XHTML type can run script
+ * there, so any MIME containing `xml` or `html` is excluded. Matching is
+ * case-insensitive and ignores any trailing `; charset=...` parameter.
  */
 export function isBrowserOpenableMime(mime?: string): boolean {
 	if (!mime) {
@@ -52,15 +54,13 @@ export function isBrowserOpenableMime(mime?: string): boolean {
 	if (value.length === 0) {
 		return false;
 	}
+	if (/xml|html/u.test(value)) {
+		return false;
+	}
 	if (value.startsWith('image/') || value.startsWith('text/')) {
 		return true;
 	}
-	return (
-		value === 'application/pdf' ||
-		value === 'application/json' ||
-		value === 'application/xml' ||
-		value === 'application/xhtml+xml'
-	);
+	return value === 'application/pdf' || value === 'application/json';
 }
 
 /**

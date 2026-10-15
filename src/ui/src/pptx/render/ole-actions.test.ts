@@ -26,14 +26,22 @@ describe('formatBytes', () => {
 });
 
 describe('isBrowserOpenableMime', () => {
-	it('returns true for pdf, images, text, json, xml, xhtml', () => {
+	it('returns true for pdf, raster images, plain text and json', () => {
 		expect(isBrowserOpenableMime('application/pdf')).toBeTruthy();
 		expect(isBrowserOpenableMime('image/png')).toBeTruthy();
 		expect(isBrowserOpenableMime('text/plain')).toBeTruthy();
 		expect(isBrowserOpenableMime('application/json')).toBeTruthy();
-		expect(isBrowserOpenableMime('application/xml')).toBeTruthy();
-		expect(isBrowserOpenableMime('application/xhtml+xml')).toBeTruthy();
 		expect(isBrowserOpenableMime('IMAGE/JPEG')).toBeTruthy();
+	});
+
+	it('refuses markup types that can run script on the viewer origin', () => {
+		expect(isBrowserOpenableMime('image/svg+xml')).toBeFalsy();
+		expect(isBrowserOpenableMime('IMAGE/SVG+XML; charset=utf-8')).toBeFalsy();
+		expect(isBrowserOpenableMime('text/html')).toBeFalsy();
+		expect(isBrowserOpenableMime('text/xml')).toBeFalsy();
+		expect(isBrowserOpenableMime('application/xml')).toBeFalsy();
+		expect(isBrowserOpenableMime('application/xhtml+xml')).toBeFalsy();
+		expect(isBrowserOpenableMime('application/vnd.custom+xml')).toBeFalsy();
 	});
 
 	it('is case-insensitive and ignores charset parameters', () => {
