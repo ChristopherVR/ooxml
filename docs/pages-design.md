@@ -109,10 +109,9 @@ English page.
 change the article and its outline rise 12 px and fade in; sidebar and nav links, pager links and
 images answer hover; anchors scroll smoothly. All of it is off under reduced motion.
 
-**Live demo language.** A demo that accepts `?locale=` (Word does: en, fr, de, es, zh-CN) gets a
-language select in the demo frame bar on the landing page, next to the framework switcher, that
-reloads the frame with that locale. A site with translated pages (PowerPoint) passes the site
-language instead.
+**Live demo language.** The embedded demo follows the site language: a demo that accepts
+`?locale=` (Word, Excel, PowerPoint) is loaded in the locale the reader chose from the nav's
+language menu. There is no second language control beside the framework switcher.
 
 **Sidebar.** 228 px, surface background, hairline right. Group captions are 11 px semibold muted
 sentence case. The active item has the selected tint, accent text and a 3 px accent bar on the
