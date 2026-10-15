@@ -20,4 +20,4 @@ export type { LayoutReviewOptions } from './review-display';
 export { floatPosition, floatOrigin, positionFloats, FLOAT_WRAP_NOTE } from './floats';
 export { cssFontStack } from './fonts';
 export { placeTab, type TabPlacement } from './tab-stops';
-export { createLayoutSession } from './layout-session';
+export { createLayoutSession, type LayoutSessionOptions } from './layout-session';

@@ -404,7 +404,9 @@ Still not at parity:
   dragging moves it (its anchor offset is rewritten), corner handles resize with the aspect ratio
   kept, arrow keys nudge it, Delete removes it, and each gesture is one undo step. Limits: floating
   text boxes, shapes, charts and SmartArt are not drawn as floats on pages, so they are selected and
-  their text edited in Draft; the whole document re-lays out on a short debounce after an edit (held while
+  their text edited in Draft; the document re-lays out on a short debounce after an edit (plain single-section documents
+  paginate incrementally from the first changed page until the layout settles; anything with
+  tables, floats, footnotes, columns or several sections re-lays out in full; held while
   a page header, footer or note is open). An open editor keeps its page mounted when a long
   (virtualised) document is scrolled away from it.
 - Picture crop and effects. Print Layout draws inline pictures on their lines and floating pictures

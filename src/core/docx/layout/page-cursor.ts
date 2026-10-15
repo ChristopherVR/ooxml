@@ -37,11 +37,13 @@ export class PageCursor {
 		private readonly noteColumns?: LayoutColumns,
 		reflow?: ReflowFootnote,
 		private readonly legacyFootnoteColumns = false,
+		pageInSectionStart = 0,
 	) {
 		this.footnotes = legacyFootnoteColumns
 			? new LegacyFootnoteFlow(report, separator, reflow)
 			: new FootnoteFlow(report, separator, noteColumns, reflow);
 		this.sectionIndex = sectionIndex;
+		this.pageInSection = pageInSectionStart;
 		this.pages = pages;
 		this.geometry = geometry;
 		this.columns = columns;

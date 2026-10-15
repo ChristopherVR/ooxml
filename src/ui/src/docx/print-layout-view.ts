@@ -55,12 +55,12 @@ export function createPrintLayoutController(
 	getReviewMode: () => ReviewDisplayMode = () => 'all',
 	isEditing: () => boolean = () => false,
 ): PrintLayoutController {
-	let session = createLayoutSession(createCanvasMeasurer());
+	let session = createLayoutSession(createCanvasMeasurer(), { incremental: true });
 	let lastModel: DocumentModel | null = null;
 	// Widths measured before a web font loads come from a fallback font; measure again once it has.
 	const fonts = typeof document === 'undefined' ? undefined : document.fonts;
 	const onFontsLoaded = () => {
-		session = createLayoutSession(createCanvasMeasurer());
+		session = createLayoutSession(createCanvasMeasurer(), { incremental: true });
 		const model = pendingModel ?? lastModel;
 		if (model && !element.hidden) {
 			if (timer) clearTimeout(timer);

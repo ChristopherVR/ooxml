@@ -13,6 +13,16 @@ import type { LayoutFootnoteBox, LayoutLine, LayoutPageBox } from './result';
 import { lineBoxesFor, type Exclusion } from './wrap';
 import { expectDefined } from '../expect-defined';
 
+/** Resumes a section part-way and observes each placed block (incremental layout). */
+export interface SectionFlowResume {
+	/** First block to place; earlier blocks are already on the pages handed to the flow. */
+	startIndex: number;
+	/** `pageInSection` of the first new page. */
+	pageInSection: number;
+	/** Called after each block is placed; returning true stops the flow. */
+	afterBlock(index: number, cursor: PageCursor): boolean;
+}
+
 export class SectionFlow {
 	readonly cursor: PageCursor;
 	balanceValid = true;
@@ -33,6 +43,7 @@ export class SectionFlow {
 		private readonly exclusions?: ReadonlyMap<number, Exclusion[]>,
 		continueAt?: number,
 		private readonly balance?: { pageIndex: number; heightPx: number },
+		private readonly resume?: SectionFlowResume,
 	) {
 		const noteColumns =
 			section.footnoteColumns ??
@@ -167,6 +178,7 @@ export class SectionFlow {
 			noteColumns,
 			reflow,
 			section.legacyFootnoteColumns,
+			resume?.pageInSection ?? 0,
 		);
 		this.referenceFootnotes = createReferenceFootnotes(
 			() => this.cursor.footnoteWidthPx,
@@ -256,7 +268,7 @@ export class SectionFlow {
 	}
 
 	run(): void {
-		for (let index = 0; index < this.blocks.length; index++) {
+		for (let index = this.resume?.startIndex ?? 0; index < this.blocks.length; index++) {
 			const block = expectDefined(this.blocks[index], 'flow block index');
 			if (block.kind === 'table') {
 				placeTable(
@@ -274,6 +286,7 @@ export class SectionFlow {
 				);
 				if (this.balance?.pageIndex === this.cursor.page.index && !this.cursor.columnContentFits)
 					this.balanceValid = false;
+				if (this.resume?.afterBlock(index, this.cursor)) return;
 				continue;
 			}
 			if (block.afterTableSectionBreak) this.cursor.endBalance();
@@ -319,6 +332,7 @@ export class SectionFlow {
 				this.cursor.usedColumnHeightPx > this.cursor.columnHeightPx
 			)
 				this.balanceValid = false;
+			if (this.resume?.afterBlock(index, this.cursor)) return;
 		}
 		this.cursor.finishFootnotes();
 	}

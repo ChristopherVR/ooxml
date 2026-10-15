@@ -31,6 +31,7 @@ export function layoutDocumentModel(
 	model: DocumentModel,
 	measurer: TextMeasurer,
 	options: LayoutReviewOptions = {},
+	layout: (input: LayoutDocumentInput, measurer: TextMeasurer) => LayoutResult = layoutDocument,
 ): LayoutResult {
 	const projected = reviewDocumentFormatting(model, options.reviewDisplayMode ?? 'all');
 	const approximations = reviewFormattingWarnings(projected.diagnostics);
@@ -39,7 +40,7 @@ export function layoutDocumentModel(
 		(message) => approximations.push(message),
 		options,
 	);
-	const result = layoutDocument(input, measurer);
+	const result = layout(input, measurer);
 	return {
 		pages: result.pages,
 		approximations: [...new Set([...approximations, ...result.approximations])],
