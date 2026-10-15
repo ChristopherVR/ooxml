@@ -10,6 +10,7 @@
 
 import type { PptxElement } from '../core/types/elements';
 import type { PptxSlide, PptxData } from '../core/types/presentation';
+import { wrapSvgImageCrop } from './svg-image-crop';
 import { buildImageEffectsFilter } from './svg-image-effects';
 import { svgTextLines, type SvgTextMeasurer } from './svg-text-lines';
 import {
@@ -333,11 +334,12 @@ function renderImageElement(el: PptxElement, ctx: RenderContext): string {
 		ctx.defs.push(filter.defsXml);
 	}
 
-	return `<image${attrs({
+	const image = `<image${attrs({
 		width: el.width,
 		height: el.height,
 		preserveAspectRatio: 'none',
 	})} href="${escXml(imageData)}"${filterAttr} />`;
+	return wrapSvgImageCrop(el, image);
 }
 
 function registerFilter(ctx: RenderContext, el: PptxElement): string {
