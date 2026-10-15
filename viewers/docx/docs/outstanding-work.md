@@ -400,8 +400,11 @@ Still not at parity:
   tables are editable too (Tab continues through nested cells into the enclosing table); a nested
   table's grid and merged cells stay as authored and cannot be restructured. Footnotes and endnotes edit on the page too: press a note's text to open its editor over it, Escape
   or a press elsewhere returns to the body, and double-clicking a reference mark (or the number in
-  the note) jumps between the reference and the note. Limits: floats, pictures and text boxes are not
-  selectable there; the whole document re-lays out on a short debounce after an edit (held while
+  the note) jumps between the reference and the note. Floating pictures are selectable there: a press selects the picture with a frame and handles,
+  dragging moves it (its anchor offset is rewritten), corner handles resize with the aspect ratio
+  kept, arrow keys nudge it, Delete removes it, and each gesture is one undo step. Limits: floating
+  text boxes, shapes, charts and SmartArt are not drawn as floats on pages, so they are selected and
+  their text edited in Draft; the whole document re-lays out on a short debounce after an edit (held while
   a page header, footer or note is open). An open editor keeps its page mounted when a long
   (virtualised) document is scrolled away from it.
 - Picture crop and effects. Print Layout draws inline pictures on their lines and floating pictures

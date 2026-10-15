@@ -186,6 +186,8 @@ export class DocxEditorElement extends DocxEditorApi {
 		const { core } = this;
 		core.shell.printStoryEditing?.();
 		core.shell.printNoteEditing?.();
+		core.shell.printFloats?.destroy();
+		delete core.shell.printFloats;
 		core.shell.printEditing?.destroy();
 		delete core.shell.printEditing;
 		core.collab.presence?.leave();

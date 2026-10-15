@@ -27,6 +27,56 @@
 	position: absolute;
 	z-index: 1;
 }
+/* The frame and handles of a selected floating picture, as in Word. */
+.dve-print-float-frame {
+	position: absolute;
+	z-index: 4;
+	box-sizing: border-box;
+	border: 1px solid var(--word, #2b579a);
+	pointer-events: none;
+}
+.dve-print-float-handle {
+	position: absolute;
+	box-sizing: border-box;
+	width: 9px;
+	height: 9px;
+	border: 1px solid var(--word, #2b579a);
+	background: #fff;
+	pointer-events: auto;
+	touch-action: none;
+}
+.dve-print-float-handle[data-float-handle='nw'] {
+	left: -5px;
+	top: -5px;
+}
+.dve-print-float-handle[data-float-handle='n'] {
+	left: calc(50% - 5px);
+	top: -5px;
+}
+.dve-print-float-handle[data-float-handle='ne'] {
+	right: -5px;
+	top: -5px;
+}
+.dve-print-float-handle[data-float-handle='e'] {
+	right: -5px;
+	top: calc(50% - 5px);
+}
+.dve-print-float-handle[data-float-handle='se'] {
+	right: -5px;
+	bottom: -5px;
+}
+.dve-print-float-handle[data-float-handle='s'] {
+	left: calc(50% - 5px);
+	bottom: -5px;
+}
+.dve-print-float-handle[data-float-handle='sw'] {
+	left: -5px;
+	bottom: -5px;
+}
+.dve-print-float-handle[data-float-handle='w'] {
+	left: -5px;
+	top: calc(50% - 5px);
+}
 /* Floating pictures sit in front of text unless anchored behind it (wp:anchor/@behindDoc). */
 .dve-print-float {
 	z-index: 2;

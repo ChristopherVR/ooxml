@@ -14,6 +14,7 @@ import type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';
 import type { EditorLocale } from './localization';
 import { findLocalizedControl, formatPageStatus } from './localization';
 import type { PrintEditingBridge } from './print-editing';
+import type { PrintFloats } from './print-float-selection';
 import type { PrintLayoutController } from './print-layout-view';
 import { REMOTE_TRANSACTION_META } from './track-changes-mode';
 import type { ReviewDisplayMode } from './review-display';
@@ -51,6 +52,8 @@ export interface ShellParts {
 	printStoryEditing?: () => void;
 	/** Detaches in-page footnote and endnote editing. */
 	printNoteEditing?: () => void;
+	/** Selection frame and gestures for floating pictures on the pages. */
+	printFloats?: PrintFloats;
 	navigator?: PageNavigator;
 	headings?: HeadingNavigator;
 }
@@ -287,6 +290,7 @@ export class EditorCore {
 		if (this.pages.viewMode === 'print') {
 			printLayout?.refreshCurrentPage();
 			this.shell.printEditing?.refresh();
+			this.shell.printFloats?.refresh();
 		}
 		const status = refreshEditorControls(
 			toolbar,

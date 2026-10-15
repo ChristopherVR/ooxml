@@ -367,6 +367,10 @@ export function renderPrintLayout(
 			for (const float of page.floats ?? []) {
 				const picture = pictureElement(float, pictureUrl);
 				picture.classList.add('dve-print-float');
+				picture.dataset.blockId = float.blockId;
+				picture.dataset.floatIndex = String(float.index);
+				picture.dataset.originX = String(float.originXPx);
+				picture.dataset.originY = String(float.originYPx);
 				if (float.behindText) picture.classList.add('dve-print-float-behind');
 				picture.style.left = `${float.xPx}px`;
 				picture.style.top = `${float.yPx}px`;

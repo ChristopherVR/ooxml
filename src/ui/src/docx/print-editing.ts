@@ -4,7 +4,7 @@ import { PrintEditingIndex } from './print-editing-index';
 import { glyphRect, caretRect } from './print-editing-geometry';
 import { affinityOnLine, lineForCaret, type CaretAffinity } from './print-caret-affinity';
 import type { EditorView } from 'prosemirror-view';
-import { TextSelection } from 'prosemirror-state';
+import { NodeSelection, TextSelection } from 'prosemirror-state';
 
 export interface PrintEditingBridge {
 	setActive(active: boolean): void;
@@ -104,7 +104,8 @@ export function createPrintEditingBridge(
 				}
 			}
 		}
-		if (caret && view.hasFocus()) {
+		// A selected object (a floating picture) shows its own frame instead of a caret.
+		if (caret && view.hasFocus() && !(view.state.selection instanceof NodeSelection)) {
 			const marker = addBox(caret, true);
 			if (!empty) {
 				marker.style.background = 'transparent';

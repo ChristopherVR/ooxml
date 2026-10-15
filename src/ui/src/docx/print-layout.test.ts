@@ -178,9 +178,21 @@ describe('Print Layout pictures', () => {
 				object: picture,
 			});
 		page.floats = [
-			{ blockId: 'p1', xPx: 200, yPx: 150, ...picture, behindText: false },
 			{
 				blockId: 'p1',
+				index: 0,
+				originXPx: 100,
+				originYPx: 100,
+				xPx: 200,
+				yPx: 150,
+				...picture,
+				behindText: false,
+			},
+			{
+				blockId: 'p1',
+				index: 1,
+				originXPx: 0,
+				originYPx: 0,
 				xPx: 5,
 				yPx: 5,
 				...picture,
@@ -203,6 +215,14 @@ describe('Print Layout pictures', () => {
 		expect(floats).toHaveLength(2);
 		const [firstFloat, secondFloat] = [at(floats, 0), at(floats, 1)];
 		expect([firstFloat.style.left, firstFloat.style.top]).toEqual(['200px', '150px']);
+		// The anchor paragraph, picture index and frame origin let a gesture find and move the picture.
+		expect({ ...firstFloat.dataset }).toMatchObject({
+			blockId: 'p1',
+			floatIndex: '0',
+			originX: '100',
+			originY: '100',
+		});
+		expect(secondFloat.dataset.floatIndex).toBe('1');
 		expect(secondFloat.classList.contains('dve-print-float-behind')).toBe(true);
 		expect(secondFloat.classList.contains('dve-print-picture-missing')).toBe(true);
 	});

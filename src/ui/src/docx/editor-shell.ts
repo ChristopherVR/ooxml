@@ -13,6 +13,7 @@ import { createSearchPanel } from './search-panel';
 import { createPrintLayoutController } from './print-layout-view';
 import { createPrintEditingBridge } from './print-editing';
 import { attachPrintNoteEditing } from './print-note-editing';
+import { attachPrintFloatSelection } from './print-float-selection';
 import { attachPrintStoryEditing } from './print-story-editing';
 import { moveCursorToBlock } from './print-layout-cursor';
 import { ReviewController } from './review-controller';
@@ -239,6 +240,13 @@ export function applyRibbonAddIns(core: EditorCore): void {
 function attachPrintEditing(core: EditorCore): void {
 	const { shell } = core;
 	if (shell.printEditing || !shell.printLayout || !shell.paper) return;
+	// Before the bridge, so a selected picture takes the arrow keys ahead of caret navigation.
+	shell.printFloats = attachPrintFloatSelection({
+		pages: shell.printLayout.element,
+		paper: shell.paper,
+		view: () => core.view,
+		printActive: () => core.pages.viewMode === 'print',
+	});
 	shell.printEditing = createPrintEditingBridge(
 		shell.printLayout.element,
 		shell.paper,
