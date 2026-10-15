@@ -27,6 +27,7 @@
 	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';
+	import MobileSheet from '../../MobileSheet.svelte';
 	import {
 		buildActionButtonInsertElement,
 		buildChartInsertElement,
@@ -52,6 +53,9 @@
 		onheaderfooter,
 		onnavigateslide,
 		chromeUi,
+		phone = false,
+		open = true,
+		onclose,
 	}: {
 		editor: EditorState;
 		canvasSize: CanvasSize;
@@ -60,6 +64,14 @@
 		onnavigateslide?: (index: number) => void;
 		/** Comment opens the inspector's Comments pane, as Review > New Comment does. */
 		chromeUi?: ChromeUiState;
+		/**
+		 * Draw the phone Insert sheet (`pptx-ui-mobile-insert` in a bottom sheet) instead of the ribbon
+		 * group row. The dialogs below stay mounted while the sheet is closed, so a pick that opens
+		 * one (SmartArt, equation, link) can close the sheet first.
+		 */
+		phone?: boolean;
+		open?: boolean;
+		onclose?: () => void;
 	} = $props();
 	const t = useTranslator();
 	const customization = useViewerCustomization();
@@ -223,10 +235,21 @@
 			}
 			case 'field': insertField(intent.value); break;
 		}
+		if (phone) {
+			onclose?.();
+		}
 	}
 </script>
 
-<pptx-ui-ribbon-insert bind:this={host} state={insertState} oninsert-request={request}></pptx-ui-ribbon-insert>
+{#if !phone}
+	<pptx-ui-ribbon-insert bind:this={host} state={insertState} oninsert-request={request}></pptx-ui-ribbon-insert>
+{:else if open}
+	<MobileSheet title={t('pptx.mobileBar.insert')} onclose={() => onclose?.()}>
+		<div class="pptx-svelte-inserttab-sheet">
+			<pptx-ui-mobile-insert state={insertState} oninsert-request={request}></pptx-ui-mobile-insert>
+		</div>
+	</MobileSheet>
+{/if}
 <input bind:this={imageInput} type="file" accept="image/*" class="pptx-svelte-inserttab-file" onchange={onImageFileChange} />
 <input bind:this={mediaInput} type="file" accept="video/*,audio/*" class="pptx-svelte-inserttab-file" onchange={onMediaFileChange} />
 
@@ -237,5 +260,9 @@
 <style>
 	.pptx-svelte-inserttab-file {
 		display: none;
+	}
+	/* The bottom action bar overlays the sheet, so keep the last row clear of it. */
+	.pptx-svelte-inserttab-sheet {
+		padding: 12px 12px 72px;
 	}
 </style>

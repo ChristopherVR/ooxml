@@ -432,6 +432,8 @@
 			mediaDataUrls={loader.mediaDataUrls}
 			current={viewer.current}
 			onselect={(index) => viewer.goTo(index)}
+			chromeUi={vm.chromeUi}
+			onheaderfooter={() => (vm.parityUi.headerFooterOpen = true)}
 		/>
 	{/if}
 	{#if showToolbar && vm.chromeVisible && customization.isPanelVisible('statusBar')}

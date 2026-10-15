@@ -1335,7 +1335,6 @@ useTouchGestures({
 });
 const mobileChrome = useMobileChrome({
 	presenting: presentation.presenting,
-	addText: insertion.addText,
 });
 
 // -- Ribbon-facing actions (hoisted above keyboard shortcuts) ----------
@@ -2013,6 +2012,8 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					:ai-enabled="aiEnabled"
 					:is-ai-panel-open="aiPanelOpen"
 					:on-toggle-ai-panel="() => (aiPanelOpen = !aiPanelOpen)"
+					:insert-open="mobileChrome.mobileInsertOpen.value"
+					@close-insert="mobileChrome.mobileInsertOpen.value = false"
 				/>
 			</template>
 

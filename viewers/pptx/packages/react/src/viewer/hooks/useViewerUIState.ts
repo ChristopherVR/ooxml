@@ -27,6 +27,9 @@ export interface ViewerUIState {
 	setToolbarSection: React.Dispatch<React.SetStateAction<ToolbarSection>>;
 	isSlidesPaneOpen: boolean;
 	setIsSlidesPaneOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	/** The phone Insert sheet (bottom bar > Insert). */
+	isMobileInsertOpen: boolean;
+	setIsMobileInsertOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	isInspectorPaneOpen: boolean;
 	setIsInspectorPaneOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	isSlideNotesCollapsed: boolean;
@@ -120,6 +123,7 @@ export function useViewerUIState(inspectorInitiallyOpen?: boolean): ViewerUIStat
 			typeof window === 'undefined' || window.innerWidth >= 768,
 		),
 	);
+	const [isMobileInsertOpen, setIsMobileInsertOpen] = useState(false);
 	const [isSlideNotesCollapsed, setIsSlideNotesCollapsed] = useState(true);
 	const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
 	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -168,6 +172,8 @@ export function useViewerUIState(inspectorInitiallyOpen?: boolean): ViewerUIStat
 		setToolbarSection,
 		isSlidesPaneOpen,
 		setIsSlidesPaneOpen,
+		isMobileInsertOpen,
+		setIsMobileInsertOpen,
 		isInspectorPaneOpen,
 		setIsInspectorPaneOpen,
 		isSlideNotesCollapsed,

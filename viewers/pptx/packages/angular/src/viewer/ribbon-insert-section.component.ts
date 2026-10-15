@@ -64,7 +64,11 @@ import { ViewerDialogsService } from './viewer-dialogs.service';
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [RibbonInsertFieldsComponent],
 	template: `
-		<pptx-ui-ribbon-insert [state]="view()" (insert-request)="request($event)" />
+		@if (phone()) {
+			<pptx-ui-mobile-insert [state]="view()" (insert-request)="request($event)" />
+		} @else {
+			<pptx-ui-ribbon-insert [state]="view()" (insert-request)="request($event)" />
+		}
 		<pptx-ribbon-insert-fields [slideIndex]="slideIndex()" />
 	`,
 })
@@ -86,6 +90,10 @@ export class RibbonInsertSectionComponent {
 	/** The insert-chart dropdown entry ('column' is vertical, 'bar' horizontal). */
 	readonly newChartType = input<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 	readonly newShapeType = input<ShapePresetType>('rect');
+	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
+	readonly phone = input<boolean>(false);
+	/** Phone only: a request was handled, so the sheet can close. */
+	readonly handled = output<void>();
 
 	readonly openSmartArtDialog = output<void>();
 	readonly openEquationDialog = output<void>();
@@ -177,6 +185,9 @@ export class RibbonInsertSectionComponent {
 				} else {
 					this.fields()?.insertField(intent.value);
 				}
+		}
+		if (this.phone()) {
+			this.handled.emit();
 		}
 	}
 

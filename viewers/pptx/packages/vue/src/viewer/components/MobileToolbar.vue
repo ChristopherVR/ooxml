@@ -30,12 +30,17 @@ import { useI18n } from 'vue-i18n';
 
 import { useToolbarVisibility } from '../composables/useToolbarVisibility';
 import { useResolvedCustomization } from '../composables/useViewerCustomization';
+import MobileInsertSheet from './MobileInsertSheet.vue';
 import MobileMenuSheet from './MobileMenuSheet.vue';
 import type { RibbonProps } from './ribbon/ribbon-types';
 
-interface Props extends RibbonProps {}
+interface Props extends RibbonProps {
+	/** The bottom bar's Insert sheet is open. */
+	insertOpen?: boolean;
+}
 
 const props = defineProps<Props>();
+const emit = defineEmits<{ closeInsert: [] }>();
 
 const { t } = useI18n();
 const { isHidden } = useToolbarVisibility(() => props.hiddenActions);
@@ -102,5 +107,10 @@ function request(event: Event): void {
 		<pptx-ui-mobile-toolbar :state.prop="state" @mobile-toolbar-request="request" />
 		<!-- Section sheet -->
 		<MobileMenuSheet v-bind="props" :open="menuOpen" @close="menuOpen = false" />
+		<MobileInsertSheet
+			v-bind="props"
+			:open="Boolean(props.insertOpen) && !props.isThemeEditorOpen"
+			@close="emit('closeInsert')"
+		/>
 	</div>
 </template>

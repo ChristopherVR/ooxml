@@ -248,3 +248,33 @@ describe('insertSection', () => {
 		expect(hidden('.stack')).toBeTruthy();
 	});
 });
+
+describe('InsertSection phone variant', () => {
+	function tile(control: string): HTMLButtonElement {
+		const sheet = container.querySelector('pptx-ui-mobile-insert')!;
+		return sheet.shadowRoot!.querySelector<HTMLButtonElement>(
+			`[data-insert-control="${control}"]`,
+		)!;
+	}
+
+	it('draws the shared phone sheet and routes a tile to the same handler, then reports done', () => {
+		const onAddTextBox = vi.fn();
+		const onRequestHandled = vi.fn();
+		render({ phone: true, onAddTextBox, onRequestHandled });
+		expect(container.querySelector('pptx-ui-ribbon-insert')).toBeNull();
+		act(() => tile('insert.text.textBox').click());
+		expect(onAddTextBox).toHaveBeenCalledOnce();
+		expect(onRequestHandled).toHaveBeenCalledOnce();
+	});
+
+	it('routes the Table grid size to onAddTable', () => {
+		const onAddTable = vi.fn();
+		render({ phone: true, onAddTable });
+		act(() => tile('insert.tables.table').click());
+		const sheet = container.querySelector('pptx-ui-mobile-insert')!;
+		act(() =>
+			sheet.shadowRoot!.querySelector<HTMLElement>('[data-row="2"][data-column="3"]')!.click(),
+		);
+		expect(onAddTable).toHaveBeenCalledWith(2, 3);
+	});
+});

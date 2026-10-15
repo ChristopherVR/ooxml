@@ -96,7 +96,7 @@ function commit(next: Parameters<UseCommentsWiringResult['commitComments']>[0]):
 		:keyboard-inset="keyboardInset"
 		:comment-count="activeComments.length"
 		@slides="chrome.toggleMobileSheet('slides')"
-		@insert="chrome.mobileQuickInsert"
+		@insert="chrome.toggleMobileSheet('insert')"
 		@format="chrome.toggleMobileSheet('format')"
 		@comments="chrome.toggleMobileSheet('comments')"
 		@notes="chrome.toggleMobileSheet('notes')"

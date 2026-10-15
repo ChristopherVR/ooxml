@@ -134,3 +134,17 @@ describe('ribbonInsertSectionComponent', () => {
 		});
 	});
 });
+
+describe('ribbonInsertSectionComponent phone variant', () => {
+	it('reports a handled request only on the phone sheet', () => {
+		const { section, addElement } = create();
+		const handled = vi.fn();
+		section.handled.subscribe(handled);
+		request(section, { kind: 'command', value: 'textBox' });
+		expect(handled).not.toHaveBeenCalled();
+		Object.assign(section, { phone: signal(true) as unknown as InputSignal<boolean> });
+		request(section, { kind: 'command', value: 'textBox' });
+		expect(addElement).toHaveBeenCalledTimes(2);
+		expect(handled).toHaveBeenCalledOnce();
+	});
+});

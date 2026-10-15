@@ -226,6 +226,9 @@ export interface ToolbarProps {
 	onCompare?: () => void;
 	onToggleComments?: () => void;
 	isCommentsPanelOpen?: boolean;
+	/** The phone Insert sheet (opened from the bottom bar) and how it asks to close. */
+	isMobileInsertOpen?: boolean;
+	onCloseMobileInsert?: () => void;
 	spellCheckActive?: boolean;
 	slideCommentCount?: number;
 	/** Review > Comments Previous / Next / Delete: the deck's slides and how to rewrite them. */

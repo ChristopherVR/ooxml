@@ -17,6 +17,7 @@ import { toggleSheet } from './mobile-chrome-helpers';
 /** The open/close side effects for one bottom-bar tap, supplied by the caller. */
 export interface MobileBarSheetActions {
 	openSlides: () => void;
+	openInsert: () => void;
 	openInspector: () => void;
 	openComments: () => void;
 	openNotes: () => void;
@@ -40,6 +41,9 @@ export function applyMobileBarSheetTap(
 	switch (next) {
 		case 'slides':
 			actions.openSlides();
+			break;
+		case 'insert':
+			actions.openInsert();
 			break;
 		case 'inspector':
 			actions.openInspector();

@@ -51,6 +51,10 @@ interface Props {
 	/** Comment opens the comments pane, as Review > New Comment does. */
 	onToggleComments?: () => void;
 	isCommentsPanelOpen?: boolean;
+	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
+	phone?: boolean;
+	/** Phone only: called after a request is handled, so the sheet can close. */
+	onRequestHandled?: () => void;
 }
 
 const props = defineProps<Props>();
@@ -138,6 +142,7 @@ function request(event: RibbonInsertRequestEvent): void {
 				props.onInsertField?.(intent.value);
 			}
 	}
+	props.onRequestHandled?.();
 }
 
 function insertDate(formatted: string): void {
@@ -147,7 +152,8 @@ function insertDate(formatted: string): void {
 </script>
 
 <template>
-	<pptx-ui-ribbon-insert :state.prop="state" @insert-request="request" />
+	<pptx-ui-mobile-insert v-if="props.phone" :state.prop="state" @insert-request="request" />
+	<pptx-ui-ribbon-insert v-else :state.prop="state" @insert-request="request" />
 	<DateTimeFieldDialog
 		v-if="datePickerOpen && props.onInsertField"
 		@close="datePickerOpen = false"

@@ -191,3 +191,18 @@ describe('insert section', () => {
 		wrapper.unmount();
 	});
 });
+
+describe('insert section phone variant', () => {
+	it('draws the shared phone sheet, routes a tile to the same handler and reports done', () => {
+		const onRequestHandled = vi.fn();
+		const { props, wrapper } = mountInsert({ phone: true, onRequestHandled });
+		const sheet = wrapper.element.parentElement!.querySelector('pptx-ui-mobile-insert')!;
+		expect(document.body.querySelector('pptx-ui-ribbon-insert')).toBeNull();
+		sheet
+			.shadowRoot!.querySelector<HTMLButtonElement>('[data-insert-control="insert.text.textBox"]')!
+			.click();
+		expect(props.onAddTextBox).toHaveBeenCalledOnce();
+		expect(onRequestHandled).toHaveBeenCalledOnce();
+		wrapper.unmount();
+	});
+});

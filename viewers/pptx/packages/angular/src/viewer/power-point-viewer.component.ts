@@ -147,6 +147,7 @@ import { MasterViewSidebarComponent } from './master-view-sidebar.component';
 import { applyMobileBarSheetTap } from './mobile-bar-sheet-tap';
 import { MobileBottomBarComponent } from './mobile-bottom-bar.component';
 import type { MobileBarSheet } from './mobile-bottom-bar.component';
+import { MobileInsertSheetComponent } from './mobile-insert-sheet.component';
 import { MobileMenuSheetComponent } from './mobile-menu-sheet.component';
 import { MobilePresenterViewComponent } from './mobile-presenter-view.component';
 import { MobileSlidesSheetComponent } from './mobile-slides-sheet.component';
@@ -291,6 +292,7 @@ const noopClose = (): void => undefined;
 		PasteSpecialDialogComponent,
 		PasteOptionsToolbarComponent,
 		MobileBottomBarComponent,
+		MobileInsertSheetComponent,
 		MobileMenuSheetComponent,
 		MobileSlidesSheetComponent,
 		MobileToolbarComponent,
@@ -1331,6 +1333,18 @@ const noopClose = (): void => undefined;
 					(closed)="mobileSheetSvc.mobileSheet.set(null)"
 				/>
 
+				<pptx-mobile-insert-sheet
+					[open]="mobileSheetSvc.mobileSheet() === 'insert'"
+					[canEdit]="canEdit()"
+					[slideIndex]="activeSlideIndex()"
+					[commentsOpen]="inspectorPanel.activePanel() === 'comments'"
+					(closed)="mobileSheetSvc.mobileSheet.set(null)"
+					(openSmartArtDialog)="showSmartArtInsert.set(true)"
+					(openEquationDialog)="dialogs.openEquationInsert()"
+					(openHyperlink)="docProperties.showHyperlink.set(true)"
+					(toggleComments)="applyMobileSheetTap('comments')"
+				/>
+
 				<pptx-mobile-menu-sheet
 					[open]="mobileSheetSvc.mobileSheet() === 'menu'"
 					[slideCount]="slideCount()"
@@ -1409,7 +1423,7 @@ const noopClose = (): void => undefined;
 					[commentCount]="activeComments().length"
 					[activeSheet]="mobileBarSheet()"
 					(openSlides)="applyMobileSheetTap('slides')"
-					(insert)="mobileSheetSvc.onMobileInsert()"
+					(insert)="applyMobileSheetTap('insert')"
 					(openFormat)="applyMobileSheetTap('inspector')"
 					(openComments)="applyMobileSheetTap('comments')"
 					(notes)="applyMobileSheetTap('notes')"
@@ -2105,6 +2119,9 @@ export class PowerPointViewerComponent
 	protected readonly mobileBarSheet = computed<MobileBarSheet>(() => {
 		if (this.mobileSheetSvc.mobileSheet() === 'slides') {
 			return 'slides';
+		}
+		if (this.mobileSheetSvc.mobileSheet() === 'insert') {
+			return 'insert';
 		}
 		if (this.inspectorPanel.activePanel() === 'comments') {
 			return 'comments';
@@ -4007,6 +4024,7 @@ export class PowerPointViewerComponent
 	protected applyMobileSheetTap(tapped: Exclude<MobileBarSheet, null>): void {
 		applyMobileBarSheetTap(tapped, this.mobileBarSheet(), {
 			openSlides: () => this.mobileSheetSvc.mobileSheet.set('slides'),
+			openInsert: () => this.mobileSheetSvc.mobileSheet.set('insert'),
 			// Close any tool panel, clear the mobile-closed default, and undo a
 			// prior swipe-down dismissal so the format pane surfaces (with an
 			// element selected it shows the element inspector, otherwise slide

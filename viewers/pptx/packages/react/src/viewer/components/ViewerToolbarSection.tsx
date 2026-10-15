@@ -58,6 +58,8 @@ export interface ViewerToolbarSectionProps {
 		isSlidesPaneOpen: boolean;
 		setIsSlidesPaneOpen: React.Dispatch<React.SetStateAction<boolean>>;
 		isInspectorPaneOpen: boolean;
+		isMobileInsertOpen: boolean;
+		setIsMobileInsertOpen: React.Dispatch<React.SetStateAction<boolean>>;
 		setIsInspectorPaneOpen: React.Dispatch<React.SetStateAction<boolean>>;
 		isCompactToolbarOpen: boolean;
 		setIsCompactToolbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -755,6 +757,8 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 					}
 				}}
 				isCommentsPanelOpen={s.isInspectorPaneOpen}
+				isMobileInsertOpen={s.isMobileInsertOpen}
+				onCloseMobileInsert={() => s.setIsMobileInsertOpen(false)}
 				slideCommentCount={activeSlide?.comments?.length ?? 0}
 				reviewComments={createReviewCommentsHost({
 					state: s,

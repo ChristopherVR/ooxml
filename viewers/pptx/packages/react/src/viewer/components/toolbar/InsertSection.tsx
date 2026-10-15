@@ -8,6 +8,7 @@ import type {
 	FreeformToolKind,
 	InsertChartKind,
 	InsertSlideLayout,
+	PptxUiMobileInsertElement,
 	PptxUiRibbonInsertElement,
 	RibbonInsertRequestEvent,
 } from 'ooxml-ui/pptx';
@@ -47,6 +48,10 @@ export interface InsertSectionProps {
 	/** Comment opens the comments pane, as Review > New Comment does. */
 	onToggleComments?: () => void;
 	isCommentsPanelOpen?: boolean;
+	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
+	phone?: boolean;
+	/** Phone only: called after a request is handled, so the sheet can close. */
+	onRequestHandled?: () => void;
 }
 
 /**
@@ -56,7 +61,7 @@ export interface InsertSectionProps {
 export function InsertSection(p: InsertSectionProps): React.ReactElement {
 	const { t } = useTranslation();
 	const customization = useViewerCustomizationContext();
-	const ref = useRef<PptxUiRibbonInsertElement>(null);
+	const ref = useRef<PptxUiRibbonInsertElement | PptxUiMobileInsertElement>(null);
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
 	const [chartKind, setChartKind] = useState<InsertChartKind>(DEFAULT_INSERT_CHART_KIND);
 	useEffect(() => {
@@ -146,13 +151,18 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 						p.onInsertField?.(intent.value);
 					}
 			}
+			p.onRequestHandled?.();
 		};
 		host.addEventListener('insert-request', request);
 		return () => host.removeEventListener('insert-request', request);
 	}, [p]);
 	return (
 		<>
-			<pptx-ui-ribbon-insert ref={ref} />
+			{p.phone ? (
+				<pptx-ui-mobile-insert ref={ref as React.Ref<PptxUiMobileInsertElement>} />
+			) : (
+				<pptx-ui-ribbon-insert ref={ref as React.Ref<PptxUiRibbonInsertElement>} />
+			)}
 			{datePickerOpen && p.onInsertField && (
 				<DateTimeFieldDialog
 					onClose={() => setDatePickerOpen(false)}

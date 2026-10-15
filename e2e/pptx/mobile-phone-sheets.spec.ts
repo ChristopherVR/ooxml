@@ -64,6 +64,29 @@ test('the Format sheet is one column and nothing is clipped sideways', async ({ 
 	expect(scroll).toBeLessThanOrEqual(413);
 });
 
+test('Insert opens the phone sheet and a Text Box tile inserts and closes it', async ({ page }) => {
+	await load(page);
+	const elements = page.locator('[data-pptx-element="true"]');
+	const before = await elements.count();
+	await bar(page).getByRole('button', { name: 'Insert' }).tap();
+	for (const name of [
+		'Text Box',
+		'Shapes',
+		'Pictures',
+		'Table',
+		'Chart',
+		'SmartArt',
+		'Equation',
+		'Video',
+		'New Slide',
+	]) {
+		await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
+	}
+	await page.getByRole('button', { name: 'Text Box', exact: true }).tap();
+	await expect(page.getByRole('button', { name: 'Text Box', exact: true })).toHaveCount(0);
+	await expect(elements).toHaveCount(before + 1);
+});
+
 test('the comment box fills the sheet width', async ({ page }) => {
 	await load(page);
 	await bar(page).getByRole('button', { name: 'Comments' }).tap();

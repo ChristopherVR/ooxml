@@ -177,10 +177,11 @@ test.describe('mobile audit (Pixel 7 touch)', () => {
 		await shot(page, '06-notes');
 	});
 
-	test('07 bottom bar: insert adds a text box', async ({ page }) => {
+	test('07 bottom bar: insert sheet adds a text box', async ({ page }) => {
 		await load(page);
 		const before = await page.locator('[data-pptx-element="true"]').count();
 		await page.getByRole('button', { name: 'Insert' }).tap();
+		await page.getByRole('button', { name: 'Text Box', exact: true }).tap();
 		await page.waitForTimeout(400);
 		const after = await page.locator('[data-pptx-element="true"]').count();
 		await shot(page, '07-insert');
