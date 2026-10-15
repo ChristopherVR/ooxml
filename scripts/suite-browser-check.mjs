@@ -20,7 +20,10 @@ page.on('console', (message) => {
 });
 const base = process.env.SUITE_URL ?? 'http://localhost:8128';
 try {
+	// The suite opens on chat; the file home is one route away.
 	await page.goto(base);
+	await page.locator('#chat-input').waitFor();
+	await page.goto(`${base}/#/`);
 	await page.locator('[data-create="docx"]').waitFor();
 	await page.screenshot({ path: join(process.env.TEMP ?? root, 'ooxml-suite-home.png') });
 	console.log('Home loaded');
@@ -136,6 +139,7 @@ try {
 	});
 	await page.locator('#assistant-toggle').click();
 	await page.locator('#ai-settings').click();
+	await page.locator('select[name=provider]').selectOption('custom');
 	await page.locator('input[name=endpoint]').fill('https://suite-ai.test/v1/chat/completions');
 	await page.locator('input[name=model]').fill('test-model');
 	await page.getByRole('button', { name: 'Connect', exact: true }).click();

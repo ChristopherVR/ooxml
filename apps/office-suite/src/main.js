@@ -23,7 +23,10 @@ let files = [],
 	view = 'home',
 	filter = '',
 	teams,
-	teamsTabOpen = false;
+	teamsTabOpen = false,
+	chatTabOpen = false,
+	chatPage,
+	assistant;
 const origins = new Map();
 let disk;
 const sessions = new SuiteSessions(store, $('editors'), renderTabs, (command, id) =>
@@ -68,8 +71,11 @@ function chooseBlank() {
 let applyShell = () => {};
 function renderTabs() {
 	document.body.dataset.view = view;
-	$('tabs').hidden = !teamsTabOpen && !sessions.sessions.size;
+	$('tabs').hidden = !teamsTabOpen && !chatTabOpen && !sessions.sessions.size;
 	$('tabs').innerHTML =
+		(chatTabOpen
+			? `<button role="tab" aria-selected="${view === 'chat'}" data-chat>${icon('spark')}Chat</button>`
+			: '') +
 		`<button role="tab" aria-selected="${view === 'home'}" data-home>Home</button>` +
 		(teamsTabOpen
 			? `<button role="tab" aria-selected="${view === 'teams'}" data-teams>Teams</button>`
@@ -85,6 +91,7 @@ function renderTabs() {
 	for (const s of sessions.sessions.values())
 		s.node.hidden = view !== 'editor' || s.doc.id !== active;
 	$('home').hidden = view !== 'home';
+	$('chat').hidden = view !== 'chat';
 	$('teams-host').hidden = view !== 'teams';
 	$('editor-area').hidden = view !== 'editor';
 	$('back-teams').hidden = !origins.has(active);
@@ -92,9 +99,11 @@ function renderTabs() {
 	document.title =
 		active && view === 'editor'
 			? `${sessions.sessions.get(active)?.doc.name ?? 'Document'} - OOXML Office`
-			: product
-				? `OOXML ${apps.find((a) => a.id === product)?.name ?? 'Teams'}`
-				: 'OOXML Office';
+			: view === 'chat'
+				? 'Chat - OOXML Office'
+				: product
+					? `OOXML ${apps.find((a) => a.id === product)?.name ?? 'Teams'}`
+					: 'OOXML Office';
 	for (const button of $('rail').querySelectorAll('button'))
 		button.setAttribute(
 			'aria-current',
@@ -126,6 +135,48 @@ async function open(id, origin) {
 				: 'Ready',
 	);
 	history.replaceState(null, '', `#/file/${id}`);
+}
+/** The chat page; `id` reopens a conversation from the history. */
+async function showChat(id) {
+	chatTabOpen = true;
+	view = 'chat';
+	renderTabs();
+	if (!chatPage) {
+		const { mountChatPage } = await import('./ai/chat-page.js');
+		chatPage = mountChatPage({
+			host: $('chat'),
+			deps: { store, sessions, refresh, open, getTeams: () => teams },
+			onRoute: (conversation) => {
+				if (view === 'chat')
+					history.replaceState(null, '', conversation ? `#/chat/${conversation}` : '#/chat');
+			},
+		});
+	}
+	await chatPage.show(id);
+	history.replaceState(null, '', chatPage.id ? `#/chat/${chatPage.id}` : '#/chat');
+}
+const chatRoute = () => /^#\/chat(?:\/([\w-]{1,100}))?$/u.exec(location.hash);
+async function showAssistant(show = true) {
+	if (!assistant) {
+		const { mountAssistant } = await import('./assistant.js');
+		assistant = mountAssistant({
+			store,
+			sessions,
+			refresh,
+			open,
+			getActive: () => (view === 'editor' ? active : null),
+			getTeams: () => teams,
+			openChat: (id) =>
+				task(async () => {
+					await showAssistant(false);
+					await showChat(id ?? undefined);
+				}),
+		});
+	}
+	$('ai-close').onclick = () => task(() => showAssistant(false));
+	$('assistant').hidden = !show;
+	$('assistant-toggle').setAttribute('aria-expanded', String(show));
+	if (show) await assistant.opened();
 }
 async function showTeams() {
 	teamsTabOpen = true;
@@ -220,7 +271,7 @@ async function share() {
 }
 
 $('rail').innerHTML =
-	`<span class="nav-caption">Workspace</span><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
+	`<span class="nav-caption">Workspace</span><button data-chat data-view="chat">${icon('spark')}<span>Chat</span></button><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
 	apps
 		.map(
 			(a) =>
@@ -254,6 +305,7 @@ document.addEventListener('click', (event) => {
 		renderFiles();
 		history.replaceState(null, '', '#/');
 	}
+	if (b.hasAttribute('data-chat')) task(() => showChat());
 	if (b.hasAttribute('data-import')) $('file-input').click();
 	if (b.hasAttribute('data-teams')) task(showTeams);
 	if (b.dataset.app) {
@@ -338,17 +390,18 @@ $('rename').onclick = () =>
 		choose('Rename file', content);
 	});
 $('dialog-close').onclick = () => $('dialog').close();
-let assistantReady = false;
-$('assistant-toggle').onclick = () =>
+$('assistant-toggle').onclick = () => task(() => showAssistant($('assistant').hidden));
+$('ask-ai').onclick = () => task(() => showAssistant(true));
+$('home-ask').onsubmit = (event) => {
+	event.preventDefault();
+	const prompt = $('home-ask-input').value.trim();
+	if (!prompt) return;
+	$('home-ask-input').value = '';
 	task(async () => {
-		if (!assistantReady) {
-			const { mountAssistant } = await import('./assistant.js');
-			mountAssistant({ store, sessions, refresh, getActive: () => active, getTeams: () => teams });
-			assistantReady = true;
-		}
-		$('assistant').hidden = !$('assistant').hidden;
-		$('assistant-toggle').setAttribute('aria-expanded', String(!$('assistant').hidden));
+		await showChat();
+		chatPage.ask(prompt);
 	});
+};
 window.addEventListener('beforeunload', (event) => {
 	if ([...sessions.sessions.keys()].some((id) => sessions.isDirty(id))) {
 		event.preventDefault();
@@ -395,13 +448,15 @@ mountProfile({
 	changed: () => renderFiles(),
 });
 $('app-launcher').innerHTML =
-	`<div class="launcher-heading"><h2>Your apps</h2><span>OOXML Office</span></div><div class="launcher-grid">${apps.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`).join('')}<button data-teams>${badge('teams')}<span>Teams</span></button></div>`;
+	`<div class="launcher-heading"><h2>Your apps</h2><span>OOXML Office</span></div><div class="launcher-grid"><button data-chat><span class="app-badge chat-badge">${icon('spark')}</span><span>Chat</span></button>${apps.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`).join('')}<button data-teams>${badge('teams')}<span>Teams</span></button></div>`;
 $('app-launcher').addEventListener('click', (event) => {
 	if (event.target.closest('button')) $('app-launcher').hidePopover();
 });
 $('launcher-toggle').innerHTML = icon('grid');
 $('theme-picker').innerHTML = icon('settings');
 $('assistant-toggle').innerHTML = `${icon('spark')}<span>Assistant</span>`;
+$('ask-ai').innerHTML = `${icon('spark')}<span>Ask AI</span>`;
+$('home-ask-symbol').innerHTML = icon('spark');
 $('search-symbol').innerHTML = icon('search');
 $('mobile-search-toggle').innerHTML = icon('search');
 $('mobile-search-toggle').onclick = () => {
@@ -418,6 +473,7 @@ window.addEventListener('hashchange', () =>
 			await showAttachment(localAttachmentId(location.href));
 		else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 			await showTeams();
+		else if (chatRoute() || (!product && !location.hash)) await showChat(chatRoute()?.[1]);
 		else {
 			active = null;
 			view = 'home';
@@ -449,6 +505,8 @@ task(async () => {
 	else if (localAttachmentId(location.href)) await showAttachment(localAttachmentId(location.href));
 	else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 		await showTeams();
+	// The suite opens on chat; a product's own app opens on its files.
+	else if (chatRoute() || (!product && !location.hash)) await showChat(chatRoute()?.[1]);
 });
 
 for (const eventName of ['pointerover', 'focusin'])

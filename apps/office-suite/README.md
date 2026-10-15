@@ -19,7 +19,7 @@ The deployable Office application workspace (`ooxml-office`), shared by the inte
 
 The first visit asks where to start:
 
-- **OOXML Office**: every app in one workspace, with a shared library, a tab per open document, the app launcher, search and the assistant. It opens in dark mode; Appearance in the account menu switches it.
+- **OOXML Office**: every app in one workspace, opening on **Chat**: ask questions about your files, or ask for a document, workbook or deck and open what it drafts in its editor. The shared library, a tab per open document, the app launcher and search sit beside it, and **Ask AI** opens the same chat next to any open document. See [the assistant](../../docs/suite-integration.md) for providers, the offline preview and what it may change. It opens in dark mode; Appearance in the account menu switches it.
 - **One product on its own**: [Word](../../viewers/docx#readme), [Excel](../../viewers/xlsx#readme), [PowerPoint](../../viewers/pptx#readme), [Visio](../../viewers/visio#readme) or [Teams](../../viewers/teams#readme), each on its own site with its documentation and framework demos.
 - **Documentation**: the hub at [`/ooxml/docs/`](https://christophervr.github.io/ooxml/docs/) (`site/docs/`), one page that links every manual: the apps, `ooxml-core`, `ooxml-ui`, the MCP server, the suite and the desktop build.
 

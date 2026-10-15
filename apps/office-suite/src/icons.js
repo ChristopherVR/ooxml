@@ -16,6 +16,18 @@ const paths = {
 	book: '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
 	external: '<path d="M14 4h6v6m0-6L10 14M20 14v6H4V4h6"/>',
 	sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/>',
+	clip: '<path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4L14.5 7"/>',
+	send: '<path d="M12 19V5m-6 6 6-6 6 6"/>',
+	stop: '<rect x="7" y="7" width="10" height="10" rx="1.5"/>',
+	copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+	refresh: '<path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/>',
+	edit: '<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/>',
+	expand: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>',
+	close: '<path d="m6 6 12 12M18 6 6 18"/>',
+	trash: '<path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/>',
+	pin: '<path d="M9 4h6l-1 6 4 4H6l4-4zM12 14v7"/>',
+	chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+	history: '<path d="M4 6h16M4 12h16M4 18h10"/>',
 	moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
 };
 export const icon = (name) =>

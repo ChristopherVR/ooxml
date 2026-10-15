@@ -119,6 +119,7 @@
 				<div id="tabs" class="tabs" role="tablist" aria-label="Open documents"></div>
 				<div class="work-row">
 					<main class="work-main">
+						<section id="chat" class="chat-view" aria-label="Chat" hidden></section>
 						<section id="home" class="home">
 							<svg class="rings rings--home" viewBox="0 0 100 100" aria-hidden="true">
 								<circle cx="50" cy="50" r="47" />
@@ -138,6 +139,15 @@
 									><button id="upload">Upload file</button>
 								</div>
 							</div>
+							<form id="home-ask" class="home-ask" role="search" aria-label="Ask the assistant">
+								<span id="home-ask-symbol" aria-hidden="true"></span
+								><input
+									id="home-ask-input"
+									placeholder="Ask the assistant to draft, analyse or build something"
+									aria-label="Ask the assistant"
+									autocomplete="off"
+								/><button class="primary" id="home-ask-send">Ask</button>
+							</form>
 							<section id="create-section" class="create-section">
 								<div class="section-heading">
 									<h2>Start with</h2>
@@ -198,40 +208,23 @@
 								><button id="save">Save</button><button id="rename" data-menu>Rename</button
 								><button id="download" data-menu>Download</button
 								><button id="embedded" data-menu>Embedded files</button><span id="save-state"></span
+								><button id="ask-ai" class="ask-ai" aria-label="Ask AI about this file"></button
 								><button id="share" class="primary" data-menu>Share in Teams</button
 								><button id="actions-more" aria-label="More actions" aria-haspopup="menu"></button>
 							</div>
 							<div id="editors"></div>
 						</section>
 					</main>
-					<aside id="assistant" class="assistant" aria-label="Shared AI assistant" hidden>
+					<aside id="assistant" class="assistant" aria-label="Assistant" hidden>
 						<header>
 							<h2>Assistant</h2>
-							<button id="ai-settings" aria-label="Assistant settings">⚙</button>
-						</header>
-						<div class="assistant-intro">
-							<h3>Work across your files</h3>
-							<p>
-								Ask about a document, compare files or propose changes. You choose the files the
-								assistant can read.
-							</p>
-							<button id="ai-context">Choose context</button>
-							<p id="ai-scope">No files selected</p>
-						</div>
-						<div id="ai-messages" class="ai-messages" aria-live="polite"></div>
-						<form id="ai-form">
-							<label class="sr-only" for="ai-input">Message</label
-							><textarea
-								id="ai-input"
-								placeholder="Ask about your work..."
-								rows="3"
-								required
-							></textarea>
-							<div>
-								<span id="ai-state">Connect a model in settings</span
-								><button id="ai-send" class="primary">Send</button>
+							<div class="assistant-actions">
+								<button id="ai-new" aria-label="New chat" title="New chat"></button
+								><button id="ai-expand" aria-label="Open in Chat" title="Open in Chat"></button
+								><button id="ai-close" aria-label="Close the assistant" title="Close"></button>
 							</div>
-						</form>
+						</header>
+						<div id="assistant-chat" class="assistant-chat"></div>
 					</aside>
 				</div>
 				<footer class="statusbar">

@@ -107,9 +107,7 @@ body {
 .sidebar-footer small,
 .workspace-switch small,
 .app-tag,
-.form-footer small,
-#ai-state,
-.ai-proposal pre {
+.form-footer small {
 	font-size: 11px;
 	color: var(--muted);
 }
@@ -194,8 +192,6 @@ textarea:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):focus {
 .document-commandbar button,
 .file-toolbar button,
 .form-footer button,
-.assistant-intro button,
-#ai-send,
 .file-heading > button,
 .start-change,
 .install-app,
@@ -231,7 +227,6 @@ textarea:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):focus {
 .page-actions button:not(.primary),
 .document-commandbar button:not(.primary),
 .form-footer button:not(.primary),
-.assistant-intro button,
 .embedded-file,
 .storage-menu > button,
 .connected-folders button,
@@ -903,70 +898,6 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	margin: 0;
 	font-size: 15px;
 }
-.assistant-intro {
-	padding: 18px 16px 10px;
-}
-.assistant-intro p {
-	color: var(--muted);
-	font-size: 12px;
-	margin: 8px 0;
-}
-.ai-messages {
-	overflow: auto;
-	flex: 1;
-	padding: 0 16px;
-}
-.ai-message {
-	white-space: pre-wrap;
-	font-size: 13px;
-	line-height: 1.55;
-	padding: 12px 0;
-	border-bottom: 1px solid var(--line);
-	overflow-wrap: anywhere;
-}
-.ai-message.user {
-	background: var(--selected);
-	border: 0;
-	border-radius: var(--radius);
-	padding: 12px;
-	margin: 8px 0;
-}
-.ai-proposal {
-	border: 1px solid var(--blue);
-	border-radius: var(--radius);
-	padding: 12px;
-	margin: 12px 0;
-}
-.ai-proposal pre {
-	font-family: var(--font-mono);
-	font-size: 11px;
-	white-space: pre-wrap;
-	max-height: 210px;
-	overflow: auto;
-	color: var(--text);
-}
-#ai-form {
-	padding: 12px;
-	border-top: 1px solid var(--line);
-}
-#ai-form textarea {
-	width: 100%;
-	resize: vertical;
-	max-height: 180px;
-	font-size: 13px;
-}
-#ai-form > div {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 8px;
-	gap: 10px;
-}
-#ai-state {
-	max-width: 180px;
-	line-height: 1.3;
-}
-
 /* Dialogs */
 dialog {
 	border: 1px solid var(--line);
