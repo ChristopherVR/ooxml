@@ -45,7 +45,7 @@
 					"name": "OfficeUiAppRail",
 					"tagName": "office-ui-app-rail",
 					"customElement": true,
-					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files). Properties: `items`, `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips. Emits `office-rail-select` `{ id }`.",
+					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files); below 56em a bottom navigation bar. Properties: `items`, `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips. Emits `office-rail-select` `{ id }`.",
 					"attributes": [
 						{
 							"name": "hide-labels"
@@ -101,7 +101,7 @@
 					"name": "OfficeUiAvatar",
 					"tagName": "office-ui-avatar",
 					"customElement": true,
-					"description": "Round avatar with initials and an optional presence badge, like the Teams persona. Attributes: `name`, `color` (default derived from `seed`/`name`), `size` (`sm` | `md` | `lg` | `xl`), `presence` (`available` | `busy` | `away` | `offline`, absent = no badge).",
+					"description": "Round avatar with initials and an optional presence badge, like the Teams persona. Attributes: `name`, `color` (default derived from `seed`/`name`), `size` (`sm` | `md` | `lg` | `xl`), `presence` (`available` | `busy` | `dnd` | `brb` | `away` | `offline`, absent = no badge).",
 					"attributes": [
 						{
 							"name": "color"
@@ -654,7 +654,7 @@
 					"name": "OfficeUiChatList",
 					"tagName": "office-ui-chat-list",
 					"customElement": true,
-					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`. Message text is always rendered as text.",
+					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`, `pinnedIds` (messages shown with a pin and an Unpin action instead of Pin). Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` / `office-chat-pin` / `office-chat-unpin` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`. Message text is always rendered as text.",
 					"attributes": [
 						{
 							"name": "self-id"
@@ -664,6 +664,10 @@
 						{
 							"kind": "field",
 							"name": "messages"
+						},
+						{
+							"kind": "field",
+							"name": "pinnedIds"
 						},
 						{
 							"kind": "field",

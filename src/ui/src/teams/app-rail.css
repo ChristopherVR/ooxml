@@ -76,8 +76,8 @@ button[aria-current='page']::before {
 @media (max-width: 56em) {
 	:host {
 		width: auto;
-		padding-block-end: env(safe-area-inset-bottom, 0px);
-		padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+		padding-block-end: env(safe-area-inset-bottom, 0);
+		padding-inline: env(safe-area-inset-left, 0) env(safe-area-inset-right, 0);
 		border-inline-end: 0;
 		border-block-start: var(--office-border-width) solid var(--office-teams-divider);
 	}
