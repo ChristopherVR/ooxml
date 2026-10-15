@@ -17,6 +17,7 @@ import { openDataTable, openGoalSeek } from './what-if';
 import { openScenarioManager } from './scenario-manager';
 import { openCreateSparklines, openSparklineSettings } from './sparklines';
 import { openPivotTable } from './pivots';
+import { openInsertSlicer, openSlicerSettings } from './slicers';
 import { openPrintPreview } from './print-preview';
 import type { SparklineType } from 'ooxml-core/xlsx';
 
@@ -28,6 +29,8 @@ export function registerToolDialogs(ctx: EditorContext): void {
 	d.register('print-preview', (c) => openPrintPreview(c));
 	d.register('create-pivot-table', (c) => openPivotTable(c));
 	d.register('pivot-settings', (c) => openPivotTable(c, true));
+	d.register('insert-slicer', (c) => openInsertSlicer(c));
+	d.register('slicer-settings', (c) => openSlicerSettings(c));
 	d.register('create-sparklines', (c, p) =>
 		openCreateSparklines(c, props<{ type?: SparklineType }>(p).type),
 	);

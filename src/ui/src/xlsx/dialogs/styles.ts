@@ -24,6 +24,7 @@ export const DIALOG_CSS = `
 textarea.xve-input { resize: vertical; }
 .xve-input[aria-invalid="true"] { border-color: var(--xve-destructive, #c50f1f); }
 .xve-check { display: flex; align-items: center; gap: 6px; }
+.xve-checklist { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow: auto; padding: 4px 2px; }
 .xve-fieldset { border: 1px solid var(--xve-border, #e1dfdd); border-radius: var(--xve-radius, 4px);
 	padding: 8px 10px; margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .xve-fieldset legend { padding: 0 4px; font-weight: 600; }

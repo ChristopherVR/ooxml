@@ -17,6 +17,7 @@ import { registerSheetIcons } from './register-icons';
 import { insertCommands } from './insert';
 import { sparklineCommands } from './sparklines';
 import { pivotCommands } from './pivots';
+import { slicerCommands } from './slicers';
 import { numberCommands } from 'ooxml-core/xlsx/ui';
 import { pageLayoutCommands } from 'ooxml-core/xlsx/ui';
 import { pageBreakCommands } from 'ooxml-core/xlsx/ui';
@@ -40,6 +41,7 @@ export function allCommands(): Command[] {
 		...insertCommands(),
 		...sparklineCommands(),
 		...pivotCommands(),
+		...slicerCommands(),
 		...pageLayoutCommands(),
 		...pageBreakCommands(),
 		...formulaCommands(),

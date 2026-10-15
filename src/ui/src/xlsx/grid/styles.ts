@@ -115,5 +115,25 @@ export const GRID_CSS = `
 .xg-smartart-nodes .xg-smartart-child{margin-left:12px}
 .xg-smartart-notice{display:none;position:absolute;left:0;bottom:0;padding:1px 4px;font-size:10px;background:rgba(255,255,255,.9);color:#555;border-top-right-radius:3px}
 .xg-obj-sel .xg-smartart-notice,.xg-smartart-placeholder .xg-smartart-notice{display:block}
+.xg-obj.xg-slicer{background:var(--sl-bg,#fff);border:1px solid var(--sl-border,#a6a6a6);overflow:hidden;
+	font:12px/1.2 var(--xve-font,"Segoe UI",system-ui,sans-serif);color:var(--sl-un-fg,#000)}
+.xg-slicer button{font:inherit;color:inherit;margin:0;padding:0;box-sizing:border-box;cursor:pointer;touch-action:manipulation}
+.xg-sl-head{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;padding:0 4px 0 8px;
+	background:var(--sl-head-bg,#fff);color:var(--sl-head-fg,#000);border-bottom:1px solid var(--sl-head-line,#5b9bd5)}
+.xg-sl-caption{font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.xg-sl-tools{display:flex;gap:2px;flex:none}
+.xg-sl-tool{width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid transparent;border-radius:2px}
+.xg-sl-tool:hover:not([disabled]){border-color:var(--sl-sel-line,#5b9bd5);background:var(--sl-sel-bg,#deebf7)}
+.xg-sl-tool.xg-sl-on{background:var(--sl-sel-bg,#deebf7);border-color:var(--sl-sel-line,#5b9bd5)}
+.xg-sl-tool[disabled]{opacity:.4;cursor:default}
+.xg-sl-body{position:absolute;overflow-x:hidden;overflow-y:auto}
+.xg-sl-grid{position:relative;width:100%}
+.xg-sl-item{position:absolute;display:block;text-align:left;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+	background:var(--sl-un-bg,#fff);color:var(--sl-un-fg,#000);border:1px solid var(--sl-un-line,#bfbfbf)}
+.xg-sl-item:hover{border-color:var(--sl-sel-line,#5b9bd5)}
+.xg-sl-selected,.xg-sl-selectedNoData{background:var(--sl-sel-bg,#deebf7);color:var(--sl-sel-fg,#000);border-color:var(--sl-sel-line,#5b9bd5)}
+.xg-sl-unselectedNoData,.xg-sl-selectedNoData{color:var(--sl-nd-fg,#8a8a8a)}
+.xg-sl-selectedNoData{background:var(--sl-nd-bg,#f2f7fb)}
+.xg-slicer button:focus-visible{outline:2px solid var(--xve-selection-border,#217346);outline-offset:-2px}
 .xg-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 `;

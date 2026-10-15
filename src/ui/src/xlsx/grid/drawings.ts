@@ -17,6 +17,7 @@ import {
 import { h, place, svgNode, viewOf } from './dom';
 import { QUADRANTS, type Box } from 'ooxml-core/xlsx/ui';
 import type { GridView } from './grid-view';
+import { paintSlicer, slicerClickResult, slicerOf, type SlicerUiState } from './slicer';
 import { paintSmartArt } from './smartart';
 import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
 import { trackPointerGesture } from '../../pointer-gesture';
@@ -33,6 +34,7 @@ export class DrawingLayer {
 	#urls = new Map<string, string>();
 	#generation = 0;
 	#cancelDrag: (() => void) | undefined;
+	#slicerStates = new Map<string, SlicerUiState>();
 
 	constructor(view: GridView) {
 		this.#view = view;
@@ -81,6 +83,12 @@ export class DrawingLayer {
 					node = h(view.doc, 'div', 'xg-obj') as ObjectNode;
 					node.dataset.index = String(index);
 					node.addEventListener('pointerdown', (event) => this.#press(event, index));
+					// Enter or Space on a focused slicer button arrives as a click without a pointer.
+					node.addEventListener('click', (event) => {
+						const frame = view.sheet()?.drawings[index];
+						if (event.detail === 0 && frame?.kind === 'slicer')
+							this.#pressSlicer(event, index, frame, false);
+					});
 					node.addEventListener('dblclick', (event) => {
 						// Pointer capture retargets dblclick to the drawing container. Keep the
 						// actual hit from pointerdown so a background click stays distinct.
@@ -96,7 +104,8 @@ export class DrawingLayer {
 				}
 				if (node.parentNode !== parent) parent.append(node);
 				place(node, box.x, box.y, box.w, box.h);
-				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}`;
+				const multi = drawing.kind === 'slicer' && this.#slicerState(drawing.name).multi;
+				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}:${multi}`;
 				if (node.xgSig !== sig) {
 					node.xgSig = sig;
 					this.#paint(node, drawing, box);
@@ -127,6 +136,15 @@ export class DrawingLayer {
 			node.setAttribute('role', 'img');
 		} else if (drawing.kind === 'chart') {
 			this.#paintChart(node, drawing, box);
+		} else if (drawing.kind === 'slicer') {
+			paintSlicer(node, drawing, box.w, box.h, {
+				ctx: view.ctx,
+				workbook: view.workbook(),
+				state: this.#slicerState(drawing.name),
+			});
+		} else if (drawing.kind === 'timeline') {
+			node.classList.add('xg-obj-unsupported');
+			node.textContent = view.ctx.t('{name} (not shown)', { name: 'timeline' });
 		} else if (drawing.kind === 'smartArt') {
 			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme);
 		} else if (drawing.chartEx) {
@@ -197,6 +215,7 @@ export class DrawingLayer {
 		const drawing = sheet?.drawings[index];
 		if (!sheet || !drawing) return;
 		const node = event.currentTarget as ObjectNode;
+		if (drawing.kind === 'slicer' && this.#pressSlicer(event, index, drawing)) return;
 		const series = (event.target as Element).closest<SVGElement>('[data-chart-series]')?.dataset
 			.chartSeries;
 		node.xgSeriesHit = series === undefined ? undefined : Number(series);
@@ -243,6 +262,50 @@ export class DrawingLayer {
 				place(node, origin.x, origin.y, origin.w, origin.h);
 			},
 		});
+	}
+
+	#slicerState(name: string): SlicerUiState {
+		let state = this.#slicerStates.get(name);
+		if (!state) this.#slicerStates.set(name, (state = { multi: false }));
+		return state;
+	}
+
+	/** Handles a press on a slicer button; false lets the press move or resize the slicer. */
+	#pressSlicer(
+		event: MouseEvent,
+		index: number,
+		frame: Extract<DrawingObject, { kind: 'slicer' }>,
+		pointer = true,
+	): boolean {
+		const target = event.target as Element;
+		const view = this.#view;
+		const item = target.closest<HTMLElement>('[data-slicer-item]');
+		const tool = target.closest<HTMLElement>('[data-slicer-action]');
+		if (!item && !tool) return false;
+		view.ctx.selection.set({ drawing: index });
+		if (pointer) view.ctx.grid()?.focus();
+		const found = slicerOf(view.workbook(), frame);
+		const session = view.ctx.session();
+		const state = this.#slicerState(frame.name);
+		if (!found || !session || view.ctx.readOnly()) return true;
+		try {
+			if (tool?.dataset.slicerAction === 'multi') {
+				state.multi = !state.multi;
+				this.invalidate();
+				this.render();
+			} else if (tool?.dataset.slicerAction === 'clear') {
+				delete state.anchor;
+				session.setSlicerSelection(found.cache.name, null);
+			} else if (item?.dataset.slicerItem !== undefined) {
+				const key = item.dataset.slicerItem;
+				const keys = slicerClickResult(found.items, key, event, state);
+				state.anchor = key;
+				session.setSlicerSelection(found.cache.name, keys);
+			}
+		} catch (error) {
+			view.ctx.toast(view.ctx.t(error instanceof Error ? error.message : String(error)), 'warning');
+		}
+		return true;
 	}
 
 	/** Moves the selected drawing by a few pixels (arrow keys); false when nothing is selected. */

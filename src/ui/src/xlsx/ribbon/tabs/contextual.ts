@@ -1,7 +1,8 @@
 // Contextual tabs: Table Design (active cell inside a table) and Chart Design (active cell under
 // a chart).
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
-import { activeChart, activeTable } from 'ooxml-core/xlsx/ui';
+import { activeChart, activeSlicer, activeTable } from 'ooxml-core/xlsx/ui';
+import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
 import { CHART_TYPES } from '../../commands/insert';
 import { tableStyleGalleryItems } from '../../commands/styles';
 import { chartColorGalleryItems, chartColorGallerySections } from '../../commands/chart-colors';
@@ -51,6 +52,88 @@ export function tableDesignTab(): RibbonTab {
 				id: 'table-styles',
 				label: 'Table Styles',
 				controls: [{ kind: 'gallery', command: 'table.style', items: tableStyleGalleryItems }],
+			},
+		],
+	};
+}
+
+const SLICER_COLUMN_OPTIONS = Array.from({ length: 10 }, (_v, i) => ({
+	value: String(i + 1),
+	label: String(i + 1),
+}));
+const SLICER_SIZE_CHOICES = SLICER_SIZE_OPTIONS.map((value) => ({ value, label: value }));
+
+/** Slicer: shown while a slicer is the selected object, as in Excel's Slicer tab. */
+export function slicerTab(): RibbonTab {
+	return {
+		id: 'slicer',
+		label: 'Slicer',
+		contextual: (ctx) => !!activeSlicer(ctx),
+		groups: [
+			{
+				id: 'slicer',
+				label: 'Slicer',
+				controls: [{ kind: 'button', command: 'slicer.settings', size: 'large' }],
+			},
+			{
+				id: 'slicer-styles',
+				label: 'Slicer Styles',
+				controls: [{ kind: 'gallery', command: 'slicer.style', items: slicerStyleGalleryItems }],
+			},
+			{
+				id: 'buttons',
+				label: 'Buttons',
+				controls: [
+					{
+						kind: 'stack',
+						controls: [
+							{
+								kind: 'select',
+								command: 'slicer.columns',
+								options: SLICER_COLUMN_OPTIONS,
+								width: 56,
+								editable: true,
+							},
+							{
+								kind: 'select',
+								command: 'slicer.button-height',
+								options: SLICER_SIZE_CHOICES,
+								width: 64,
+								editable: true,
+							},
+						],
+					},
+				],
+			},
+			{
+				id: 'size',
+				label: 'Size',
+				controls: [
+					{
+						kind: 'stack',
+						controls: [
+							{
+								kind: 'select',
+								command: 'slicer.height',
+								options: SLICER_SIZE_CHOICES,
+								width: 64,
+								editable: true,
+							},
+							{
+								kind: 'select',
+								command: 'slicer.width',
+								options: SLICER_SIZE_CHOICES,
+								width: 64,
+								editable: true,
+							},
+						],
+					},
+				],
+			},
+			{
+				id: 'slicer-delete',
+				label: 'Delete',
+				controls: [{ kind: 'button', command: 'slicer.delete', size: 'large' }],
 			},
 		],
 	};
