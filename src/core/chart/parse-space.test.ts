@@ -126,7 +126,7 @@ describe('parseChartSpace', () => {
 	it('reports unknown children and malformed values instead of throwing', () => {
 		const { chartSpace, issues } = parseChartSpace(
 			space(
-				'<c:plotArea><c:barChart><c:gapWidth val="wide"/><c:mystery/><c:ser><c:errBars/></c:ser></c:barChart><c:dTable><c:mystery/></c:dTable></c:plotArea>',
+				'<c:plotArea><c:barChart><c:gapWidth val="wide"/><c:mystery/><c:ser><c:errBars><c:errValType val="bogus"/><c:mystery/></c:errBars></c:ser></c:barChart><c:dTable><c:mystery/></c:dTable></c:plotArea>',
 				'<c:protection/>',
 			),
 		);
@@ -134,7 +134,8 @@ describe('parseChartSpace', () => {
 		expect(issues.map((issue) => issue.message)).toEqual([
 			'c:chartSpace/c:protection is not modelled; it is kept only in the source part.',
 			'c:barChart/c:mystery is not modelled; it is kept only in the source part.',
-			'c:ser/c:errBars is not modelled; it is kept only in the source part.',
+			'c:errBars/c:mystery is not modelled; it is kept only in the source part.',
+			'c:errBars/c:errValType has an unreadable value "bogus".',
 			'c:barChart/c:gapWidth has an unreadable value "wide".',
 			'c:dTable/c:mystery is not modelled; it is kept only in the source part.',
 		]);

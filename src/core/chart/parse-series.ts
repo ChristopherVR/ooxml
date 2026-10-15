@@ -1,6 +1,7 @@
 // `c:chartSpace` parser: series (`c:ser`), their markers and data point overrides.
 import { NS, children, type XmlElement } from '../xml/index';
 import type { ChartDataPoint, ChartMarker, ChartSpaceSeries } from './model-series';
+import { parseSeriesAnalysis } from './parse-analysis';
 import { parseChartText, parseDataLabels, parseDataSource } from './parse-text';
 import {
 	assignDefined,
@@ -69,6 +70,8 @@ const SERIES = new Set([
 	'invertIfNegative',
 	'dPt',
 	'dLbls',
+	'trendline',
+	'errBars',
 	'cat',
 	'val',
 	'xVal',
@@ -82,11 +85,14 @@ const SERIES = new Set([
 	'extLst',
 ]);
 
-/** One series (`c:ser`). Trendlines, error bars and picture options are reported, not modelled. */
+/** One series (`c:ser`). Picture options are reported, not modelled. */
 export function parseSeries(context: ChartParseContext, element: XmlElement): ChartSpaceSeries {
 	reportUnmodelled(context, element, SERIES);
 	return assignDefined<ChartSpaceSeries>(
-		{ dataPoints: children(element, 'dPt', NS.c).map((point) => parseDataPoint(context, point)) },
+		{
+			dataPoints: children(element, 'dPt', NS.c).map((point) => parseDataPoint(context, point)),
+			...parseSeriesAnalysis(context, element),
+		},
 		{
 			index: cNumber(context, element, 'idx'),
 			order: cNumber(context, element, 'order'),

@@ -17,11 +17,10 @@ const xlsx = (name: string) => path.join(root, '../xlsx/__fixtures__', name);
 
 /**
  * The elements each part loses, by part: what the parser reports as not modelled. Parts not listed
- * round-trip byte-identical. Causes: trendlines and surface band formats are not in the model yet
+ * round-trip byte-identical. Cause: surface band formats are not in the model yet
  * (docs/agnostic-core-plan.md, step 5).
  */
 const UNMODELLED: Record<string, string[]> = {
-	'chart-gallery.pptx ppt/charts/chart2.xml': ['c:ser/c:trendline'],
 	'three-d-charts.pptx ppt/charts/chart16.xml': ['c:surface3DChart/c:bandFmts'],
 	'three-d-charts.pptx ppt/charts/chart17.xml': ['c:surface3DChart/c:bandFmts'],
 };

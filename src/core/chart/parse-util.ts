@@ -73,6 +73,21 @@ export function cNumber(
 	return undefined;
 }
 
+/** An enumerated `@val` child; a value outside `allowed` is reported and dropped. */
+export function cEnum<T extends string>(
+	context: ChartParseContext,
+	parent: ParentNode | null | undefined,
+	local: string,
+	allowed: readonly T[],
+): T | undefined {
+	const element = cChild(parent, local);
+	const raw = attribute(element, 'val');
+	if (!element || raw === undefined) return undefined;
+	if ((allowed as readonly string[]).includes(raw)) return raw as T;
+	malformed(context, element, raw);
+	return undefined;
+}
+
 /** Reports every child of `element` whose local name is not in `handled`. */
 export function reportUnmodelled(
 	context: ChartParseContext,

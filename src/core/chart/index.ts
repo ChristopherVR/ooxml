@@ -34,6 +34,7 @@ export * from './bar-cluster-geometry';
 export * from './manual-layout';
 export * from './write-layout-formatting';
 export * from './model';
+export * from './model-analysis';
 export * from './data-cache';
 export { parseChartSpace } from './parse-space';
 export { readDisplayNaAsBlank } from './parse-chrome';
