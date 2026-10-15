@@ -137,6 +137,18 @@ it('inserts table and PivotTable slicers that save, reload and filter', async ()
 	expect(names.filter((n) => n.includes('slicerCaches'))).toHaveLength(1);
 });
 
+it('works on workbooks built without optional model parts', async () => {
+	const { wb, edit } = await created();
+	const views = wb.sheets.map((sheet) => sheet.view);
+	for (const sheet of wb.sheets) delete (sheet as { view?: unknown }).view;
+	expect(wb.slicers).toBeUndefined();
+	expect(() => edit.setSlicerSelection('missing', null)).toThrow();
+	edit.insertSlicer(0, { kind: 'table', table: 'Table1', column: 'Region' });
+	edit.deletePivotTable(1, 'PivotTable1');
+	wb.sheets.forEach((sheet, i) => (sheet.view = views[i]!));
+	expect((await loadXlsx(await saveXlsx(wb))).slicers?.slicers).toHaveLength(1);
+});
+
 it('selects like Excel: plain click, toggle, range and emptying the selection', () => {
 	const item = (key: string, selected: boolean) => ({
 		key,

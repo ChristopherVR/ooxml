@@ -64,6 +64,7 @@ export function paintTimeline(
 	node.style.setProperty('--sl-un-bg', colors.unselectedFill);
 	node.style.setProperty('--sl-un-fg', colors.unselectedText);
 	node.style.setProperty('--sl-un-line', colors.unselectedBorder);
+	node.style.setProperty('--sl-hover', colors.hoverFill);
 	const caption = timeline.caption ?? timeline.name;
 	node.setAttribute('role', 'group');
 	node.setAttribute('aria-label', caption);

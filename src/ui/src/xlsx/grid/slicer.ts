@@ -86,6 +86,7 @@ export function paintSlicer(
 	style.setProperty('--sl-un-line', colors.unselectedBorder);
 	style.setProperty('--sl-nd-fg', colors.noDataText);
 	style.setProperty('--sl-nd-bg', colors.noDataSelectedFill);
+	style.setProperty('--sl-hover', colors.hoverFill);
 	node.setAttribute('role', 'group');
 	const caption = slicer.caption ?? slicer.name;
 	node.setAttribute('aria-label', caption);

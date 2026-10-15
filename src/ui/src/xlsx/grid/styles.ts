@@ -131,7 +131,8 @@ export const GRID_CSS = `
 .xg-sl-grid{position:relative;width:100%}
 .xg-sl-item{position:absolute;display:block;text-align:left;padding:0 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
 	background:var(--sl-un-bg,#fff);color:var(--sl-un-fg,#000);border:1px solid var(--sl-un-line,#bfbfbf)}
-.xg-sl-item:hover{border-color:var(--sl-sel-line,#5b9bd5)}
+.xg-sl-item:hover{background:var(--sl-hover,#eaf3fa);border-color:var(--sl-sel-line,#5b9bd5)}
+.xg-sl-selected:hover,.xg-sl-selectedNoData:hover{background:var(--sl-sel-bg,#deebf7)}
 .xg-sl-selected,.xg-sl-selectedNoData{background:var(--sl-sel-bg,#deebf7);color:var(--sl-sel-fg,#000);border-color:var(--sl-sel-line,#5b9bd5)}
 .xg-sl-unselectedNoData,.xg-sl-selectedNoData{color:var(--sl-nd-fg,#8a8a8a)}
 .xg-sl-selectedNoData{background:var(--sl-nd-bg,#f2f7fb)}
@@ -147,6 +148,7 @@ export const GRID_CSS = `
 .xg-tl-track{position:relative;height:100%;min-height:50px}
 .xg-tl-group{position:absolute;top:0;box-sizing:border-box;padding:2px 0;border-left:1px solid var(--sl-un-line,#bfbfbf);color:var(--sl-un-fg,#000);font-weight:600;white-space:nowrap}
 .xg-tl-group>span{position:sticky;left:0;padding:0 6px}
+.xg-tl-cell:not(.xg-tl-on):hover{background:var(--sl-hover,#eaf3fa)}
 .xg-tl-cell{position:absolute;padding:0;text-align:center;background:var(--sl-un-bg,#fff);border:1px solid var(--sl-un-line,#bfbfbf)}
 .xg-tl-cell.xg-tl-on{background:var(--sl-sel-bg,#deebf7);border-color:var(--sl-sel-line,#5b9bd5)}
 .xg-timeline button:focus-visible,.xg-timeline select:focus-visible{outline:2px solid var(--xve-selection-border,#217346);outline-offset:-2px}

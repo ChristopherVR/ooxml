@@ -27,6 +27,8 @@ export interface SlicerStyleColors {
 	/** Items without data under the other slicers keep their state but fade. */
 	noDataText: string;
 	noDataSelectedFill: string;
+	/** Fill of a hovered item: between unselected and selected. */
+	hoverFill: string;
 }
 
 const hex = (value: string) => (value.startsWith('#') ? value : `#${value}`);
@@ -40,7 +42,11 @@ export function slicerStyleColors(
 	name: string | undefined,
 	theme: ThemePalette,
 ): SlicerStyleColors {
-	const match = /^SlicerStyle(Light|Dark|Other)(\d)$/.exec(name ?? '') ?? ['', 'Light', '1'];
+	const match = /^(?:Time)?SlicerStyle(Light|Dark|Other)(\d)$/.exec(name ?? '') ?? [
+		'',
+		'Light',
+		'1',
+	];
 	const family = match[1];
 	const index = Number(match[2]);
 	const accentIndex = family === 'Other' ? (index === 1 ? 4 : 6) : 3 + index;
@@ -64,21 +70,23 @@ export function slicerStyleColors(
 			unselectedBorder: hex(applyTint(white, -0.25)),
 			noDataText: hex(applyTint(dark, 0.6)),
 			noDataSelectedFill: tint(0.4),
+			hoverFill: tint(0.4),
 		};
 	return {
 		background: hex(white),
 		border: hex(applyTint(white, -0.35)),
 		headerBackground: hex(white),
 		headerText: hex(dark),
-		headerBorder: tint(0),
-		selectedFill: tint(0.6),
+		headerBorder: tint(0.4),
+		selectedFill: tint(0.8),
 		selectedText: hex(dark),
-		selectedBorder: tint(0),
+		selectedBorder: tint(0.4),
 		unselectedFill: hex(white),
 		unselectedText: hex(dark),
 		unselectedBorder: hex(applyTint(white, -0.25)),
 		noDataText: hex(applyTint(dark, 0.6)),
-		noDataSelectedFill: tint(0.8),
+		noDataSelectedFill: tint(0.9),
+		hoverFill: tint(0.9),
 	};
 }
 
@@ -101,6 +109,6 @@ export function slicerStylePreview(name: string, theme: ThemePalette): string {
 
 /** The family and number of a built-in style (`Light 1`, `Dark 4`, `Other 2`). */
 export function slicerStyleLabel(name: string): { family: string; index: number } {
-	const match = /^SlicerStyle(Light|Dark|Other)(\d)$/.exec(name);
+	const match = /^(?:Time)?SlicerStyle(Light|Dark|Other)(\d)$/.exec(name);
 	return { family: match?.[1] ?? 'Light', index: Number(match?.[2] ?? 1) };
 }
