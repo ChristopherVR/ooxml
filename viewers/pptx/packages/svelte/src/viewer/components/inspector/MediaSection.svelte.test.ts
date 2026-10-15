@@ -82,11 +82,11 @@ function loadDuration(target: HTMLElement, seconds: number): void {
 
 function trimEndInput(target: HTMLElement): HTMLInputElement {
 	const label = Array.from(target.querySelectorAll('label')).find((node) =>
-		(node.textContent ?? '').includes('Trim end'),
+		(node.textContent ?? '').includes('Trim End'),
 	);
 	const input = label?.querySelector('input');
 	if (!input) {
-		throw new Error('missing "Trim end" field');
+		throw new Error('missing "Trim End" field');
 	}
 	return input;
 }

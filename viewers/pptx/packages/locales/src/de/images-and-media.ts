@@ -196,4 +196,17 @@ export const translations = {
 	'pptx.image.cropModeHint':
 		'Ziehen Sie die schwarzen Ziehpunkte zum Zuschneiden. Eingabetaste übernimmt, Esc bricht ab.',
 	'pptx.image.cropHint': 'Wählen Sie ein Bild aus, um es zuzuschneiden',
+	'pptx.media.captionTracks': 'Untertitelspuren',
+	'pptx.media.trackName': 'Spur',
+	'pptx.media.trackLabel': 'Bezeichnung',
+	'pptx.media.trackLanguage': 'Sprache',
+	'pptx.media.trackKind': 'Art',
+	'pptx.media.trackKind.subtitles': 'Untertitel',
+	'pptx.media.trackKind.descriptions': 'Beschreibungen',
+	'pptx.media.trackDefault': 'Standard',
+	'pptx.media.trackSource': 'Quelle',
+	'pptx.media.trackSourcePlaceholder': 'captions.vtt oder Data-URL',
+	'pptx.media.trackInlineWebVtt': 'WebVTT inline',
+	'pptx.media.removeTrack': 'Spur entfernen',
+	'pptx.media.addCaptionTrack': 'Untertitelspur hinzufügen',
 } as const;
