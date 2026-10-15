@@ -6,4 +6,4 @@ it('can be imported and registered during server rendering', async () => {
 	expect(() => module.defineXlsxEditor()).not.toThrow();
 	expect(module.normalizeEditorLocale('de-AT')).toBe('de');
 	expect(module.XLSX_EDITOR_EVENTS).toContain('file-command');
-}, 30_000);
+});

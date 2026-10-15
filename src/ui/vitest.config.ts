@@ -86,8 +86,9 @@ function project(
 			include,
 			isolate: options.isolate,
 			...(options.environment ? { environment: options.environment } : {}),
-			// Importing a whole registration entry in a fresh worker is the slow part of the SSR files.
-			...(options.isolate ? { testTimeout: 60_000 } : {}),
+			// Importing a whole registration entry in a fresh worker is the slow part of the SSR files:
+			// 15-35 s alone, and past 60 s while `verify` runs the other suites in parallel.
+			...(options.isolate ? { testTimeout: 180_000 } : {}),
 		},
 	};
 }
