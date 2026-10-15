@@ -12,7 +12,8 @@ export interface PrintNoteHost {
 	/** The body editor, which keeps the caret outside the note. */
 	view(): EditorView | undefined;
 	printActive(): boolean;
-	holdLayout(held: boolean): void;
+	/** `page` is the zero-based index of the page the open editor lives on. */
+	holdLayout(held: boolean, page?: number): void;
 	/** Mounts the page that holds a paragraph (virtualised documents). */
 	showBlock(id: string, offset: number): void;
 }
@@ -152,7 +153,8 @@ export function attachPrintNoteEditing(host: PrintNoteHost): () => void {
 		const { container, rest } = elements;
 		const mark = container.querySelector<HTMLElement>('.dve-print-line span');
 		const label = mark?.textContent ?? '';
-		host.holdLayout(true);
+		const page = Number(container.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex);
+		host.holdLayout(true, Number.isFinite(page) ? page : undefined);
 		for (const element of rest) element.style.visibility = 'hidden';
 		const opened = host.parts.editNoteOnPage({
 			container,

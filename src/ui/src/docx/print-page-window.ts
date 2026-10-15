@@ -33,14 +33,16 @@ export class PrintPageWindow {
 		this.root.dataset.renderVersion = String(++this.revision);
 	}
 
-	show(center: number, pinned?: number): void {
+	/** Mounts the pages around `center`; `pinned` pages stay mounted wherever the window is. */
+	show(center: number, pinned?: number | readonly (number | undefined)[]): void {
+		const keep = new Set([pinned].flat().filter((index): index is number => index !== undefined));
 		if (!this.virtual) return this.all();
 		const first = Math.max(0, center - 2);
 		const last = Math.min(this.pages.length - 1, center + 2);
 		for (const index of this.mounted.keys())
-			if ((index < first || index > last) && index !== pinned) this.unmount(index);
+			if ((index < first || index > last) && !keep.has(index)) this.unmount(index);
 		for (let index = first; index <= last; index++) this.mount(index);
-		if (pinned !== undefined) this.mount(pinned);
+		for (const index of keep) this.mount(index);
 	}
 
 	all(): void {

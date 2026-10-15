@@ -402,8 +402,8 @@ Still not at parity:
   or a press elsewhere returns to the body, and double-clicking a reference mark (or the number in
   the note) jumps between the reference and the note. Limits: floats, pictures and text boxes are not
   selectable there; the whole document re-lays out on a short debounce after an edit (held while
-  a page header or footer is open); a page header or footer editor closes if its virtualised page
-  is scrolled out of the rendered window.
+  a page header, footer or note is open). An open editor keeps its page mounted when a long
+  (virtualised) document is scrolled away from it.
 - Picture crop and effects. Print Layout draws inline pictures on their lines and floating pictures
   at their `wp:positionH`/`wp:positionV` positions, in front of or behind text. Body text wraps
   around square, tight and through pictures on their larger side (using the picture's rectangle,

@@ -254,7 +254,7 @@ function attachPrintEditing(core: EditorCore): void {
 		parts: core.parts,
 		model: () => core.model,
 		printActive: () => core.pages.viewMode === 'print',
-		holdLayout: (held) => printLayout.holdLayout(held),
+		holdLayout: (held, page) => printLayout.holdLayout(held, page),
 	});
 	shell.printNoteEditing = attachPrintNoteEditing({
 		pages: printLayout.element,
@@ -262,7 +262,7 @@ function attachPrintEditing(core: EditorCore): void {
 		model: () => core.model,
 		view: () => core.view,
 		printActive: () => core.pages.viewMode === 'print',
-		holdLayout: (held) => printLayout.holdLayout(held),
+		holdLayout: (held, page) => printLayout.holdLayout(held, page),
 		showBlock: (id, offset) => printLayout.ensureBlock(id, offset),
 	});
 }

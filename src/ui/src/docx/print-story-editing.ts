@@ -11,7 +11,8 @@ export interface PrintStoryHost {
 	parts: Pick<PartsController, 'editOnPage' | 'closeOpenStory'>;
 	model(): DocumentModel;
 	printActive(): boolean;
-	holdLayout(held: boolean): void;
+	/** `page` is the zero-based index of the page the open editor lives on. */
+	holdLayout(held: boolean, page?: number): void;
 }
 
 const EDITING = 'dve-print-story-editing';
@@ -86,7 +87,7 @@ export function attachPrintStoryEditing(host: PrintStoryHost): () => void {
 					`${sheet.dataset[kind === 'header' ? 'headerDistance' : 'footerDistance']}px`;
 				sheet.append(container);
 			}
-			host.holdLayout(true);
+			host.holdLayout(true, Number(sheet.dataset.pageIndex));
 			const target = container;
 			const opened = host.parts.editOnPage({
 				container: target,

@@ -39,10 +39,11 @@ export interface PrintLayoutController {
 	/** Lays out immediately (no debounce) and opens the browser print dialog for the paginated render. */
 	print(model: DocumentModel, note: (message: string) => void): void;
 	/**
-	 * Holds layout while an in-page header or footer editor is open (a relayout would replace the
-	 * page it lives in); releasing lays out the latest model.
+	 * Holds layout while an in-page header, footer or note editor is open (a relayout would replace
+	 * the page it lives in); releasing lays out the latest model. `page` (a zero-based index) stays
+	 * mounted while held, so scrolling a long document does not tear the open editor down.
 	 */
-	holdLayout(held: boolean): void;
+	holdLayout(held: boolean, page?: number): void;
 	destroy(): void;
 }
 
@@ -83,11 +84,13 @@ export function createPrintLayoutController(
 	let pageSheets: HTMLElement[] = [];
 	let pageForBlock: ReturnType<typeof printBlockPages> | undefined;
 	let pinnedPage: number | undefined;
+	let editorPage: number | undefined;
+	const pins = () => [pinnedPage, editorPage];
 	const beforePrint = () => {
 		if (element.isConnected && !element.hidden) handle?.renderAll();
 	};
 	const afterPrint = () => {
-		if (element.isConnected && !element.hidden) handle?.showPages(currentPage - 1, pinnedPage);
+		if (element.isConnected && !element.hidden) handle?.showPages(currentPage - 1, pins());
 	};
 	window.addEventListener('beforeprint', beforePrint);
 	window.addEventListener('afterprint', afterPrint);
@@ -177,7 +180,7 @@ export function createPrintLayoutController(
 			Math.abs(pages[after]!.getBoundingClientRect().top - anchor)
 				? before
 				: after) + 1;
-		handle?.showPages(currentPage - 1, pinnedPage);
+		handle?.showPages(currentPage - 1, pins());
 	}
 
 	return {
@@ -208,8 +211,9 @@ export function createPrintLayoutController(
 				if (latest) relayout(latest);
 			}, RELAYOUT_DELAY_MS);
 		},
-		holdLayout(value) {
+		holdLayout(value, page) {
 			held = value;
+			editorPage = value ? page : undefined;
 			const latest = heldModel ?? lastModel;
 			heldModel = null;
 			if (!value && latest && !element.hidden) relayout(latest);
@@ -222,14 +226,14 @@ export function createPrintLayoutController(
 		pageSnapshot: (index) => handle?.pageSnapshot(index),
 		ensureBlock(id, offset) {
 			pinnedPage = pageForBlock?.(id, offset);
-			handle?.showPages(currentPage - 1, pinnedPage);
+			handle?.showPages(currentPage - 1, pins());
 		},
 		layoutVersion: () => version,
 		scrollToPage(page) {
 			const target = pageSheets[page - 1];
 			if (!target) return;
 			currentPage = page;
-			handle?.showPages(page - 1, pinnedPage);
+			handle?.showPages(page - 1, pins());
 			target.scrollIntoView?.({ block: 'start' });
 		},
 		approximations() {
@@ -245,7 +249,7 @@ export function createPrintLayoutController(
 			try {
 				printLayoutResult(result, note);
 			} finally {
-				handle?.showPages(currentPage - 1, pinnedPage);
+				handle?.showPages(currentPage - 1, pins());
 			}
 		},
 		destroy() {

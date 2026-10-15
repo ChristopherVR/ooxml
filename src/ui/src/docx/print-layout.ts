@@ -30,7 +30,7 @@ export interface PrintLayoutHandle {
 	/** The scrollable element holding one sheet per page; mount this in the DOM. */
 	element: HTMLElement;
 	pageCount: number;
-	showPages(center: number, pinned?: number): void;
+	showPages(center: number, pinned?: number | readonly (number | undefined)[]): void;
 	renderAll(): void;
 	pageSnapshot(index: number): HTMLElement | undefined;
 	/**
