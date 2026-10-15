@@ -11,6 +11,7 @@ import {
 	renderChartSvg,
 	CHART_FILL_PARTS,
 	type ChartFillPart,
+	type ChartObject,
 	type DrawingObject,
 } from 'ooxml-core/xlsx';
 import { h, place, svgNode, viewOf } from './dom';
@@ -125,35 +126,44 @@ export class DrawingLayer {
 			node.append(img);
 			node.setAttribute('role', 'img');
 		} else if (drawing.kind === 'chart') {
-			node.classList.add('xg-chart');
-			const workbook = view.workbook();
-			if (workbook) {
-				try {
-					const evaluate = createRefEvaluator(workbook, view.ctx.session()?.calc, {
-						sheet: view.sheetIndex(),
-					});
-					const model = chartView(workbook, view.sheetIndex(), drawing, evaluate);
-					node.append(
-						svgNode(
-							doc,
-							renderChartSvg(model, Math.max(10, box.w), Math.max(10, box.h), {
-								measureText: (content, font) => view.measurer.measure(content, font),
-								measureFont: (font) => view.measurer.fontMetrics(font),
-							}),
-						),
-					);
-				} catch {
-					node.textContent = view.ctx.t('This chart could not be displayed.');
-				}
-			}
-			node.setAttribute('role', 'img');
-			node.setAttribute('aria-label', drawing.title ?? view.ctx.t('Chart'));
+			this.#paintChart(node, drawing, box);
 		} else if (drawing.kind === 'smartArt') {
 			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme);
+		} else if (drawing.chartEx) {
+			// An extended chart (waterfall, histogram) the core painter draws; the frame is read-only.
+			this.#paintChart(node, drawing.chartEx, box);
 		} else {
 			node.classList.add('xg-obj-unsupported');
 			node.textContent = view.ctx.t('{name} (not shown)', { name: drawing.description });
 		}
+	}
+
+	#paintChart(node: HTMLElement, drawing: ChartObject, box: Box): void {
+		const view = this.#view;
+		const doc = view.doc;
+		node.classList.add('xg-chart');
+		const workbook = view.workbook();
+		if (workbook) {
+			try {
+				const evaluate = createRefEvaluator(workbook, view.ctx.session()?.calc, {
+					sheet: view.sheetIndex(),
+				});
+				const model = chartView(workbook, view.sheetIndex(), drawing, evaluate);
+				node.append(
+					svgNode(
+						doc,
+						renderChartSvg(model, Math.max(10, box.w), Math.max(10, box.h), {
+							measureText: (content, font) => view.measurer.measure(content, font),
+							measureFont: (font) => view.measurer.fontMetrics(font),
+						}),
+					),
+				);
+			} catch {
+				node.textContent = view.ctx.t('This chart could not be displayed.');
+			}
+		}
+		node.setAttribute('role', 'img');
+		node.setAttribute('aria-label', drawing.title ?? view.ctx.t('Chart'));
 	}
 
 	#selection(node: HTMLElement, index: number): void {

@@ -547,6 +547,11 @@ export interface UnsupportedDrawingObject {
 	description: string;
 	/** The anchor element's XML as read, written back verbatim when the drawing is regenerated. */
 	sourceXml?: string;
+	/**
+	 * An extended chart (waterfall, histogram) the chart painter draws: its summary, read for
+	 * display only. The frame is still saved from `sourceXml`.
+	 */
+	chartEx?: ChartObject;
 }
 
 /** One content node of a SmartArt data model (for a placeholder or an outline view). */

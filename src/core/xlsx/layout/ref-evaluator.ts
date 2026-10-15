@@ -77,6 +77,15 @@ export function createRefEvaluator(
 		const sheetIndex = options.sheet ?? workbook.activeSheet;
 		const plain = plainReference(workbook, text, sheetIndex);
 		if (plain) return readRange(workbook, plain.sheet, plain.range);
+		// Excel stores an extended chart's data as hidden `_xlchart.v1.N` names that are plain
+		// ranges; they read without a calc engine.
+		const named = /^_xlchart\./i.test(text)
+			? workbook.definedNames.find(
+					(name) => name.localSheet === undefined && name.name.toLowerCase() === text.toLowerCase(),
+				)
+			: undefined;
+		const target = named && plainReference(workbook, named.formula, sheetIndex);
+		if (target) return readRange(workbook, target.sheet, target.range);
 		if (!calc) return [];
 		try {
 			return calc.evaluateArray(text, { sheet: sheetIndex, row: 0, col: 0 }).flat();

@@ -1,6 +1,7 @@
 import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../xml/index';
 import type { DrawingAnchor, DrawingObject } from '../model';
 import { parseChart } from './chart';
+import { readChartExFrame } from './chart-ex';
 import { readChartPaletteId, readChartStylePart } from './chart-colors';
 import type { SourceIndex } from './package';
 import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
@@ -152,6 +153,20 @@ export function parseDrawing(
 				),
 			);
 			continue;
+		}
+		if (content.localName === 'AlternateContent') {
+			const extended = readChartExFrame(
+				source,
+				partName,
+				content,
+				anchor,
+				selfContainedXml(anchorEl),
+				name,
+			);
+			if (extended) {
+				out.push(extended);
+				continue;
+			}
 		}
 		out.push(unsupported(describe(content)));
 	}
