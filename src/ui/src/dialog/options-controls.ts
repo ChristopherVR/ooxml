@@ -68,6 +68,7 @@ export function optionRow(host: OptionRowHost, control: OfficeOptionControl): Te
 	else if (control.kind === 'select') {
 		const current = String(value ?? control.choices[0]?.value ?? '');
 		body = html`${label}<select
+				aria-label=${control.label}
 				?disabled=${disabled}
 				@change=${(event: Event) => host.set(control.key, (event.target as HTMLSelectElement).value)}
 			>

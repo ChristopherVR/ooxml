@@ -244,6 +244,9 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 		if (hiddenOnOpen.join() !== host.hiddenActions().join())
 			host.setHiddenActions([...hiddenOnOpen]);
 	});
+	// The dialog hands focus back to the editor's host; the ribbon is where it belongs.
+	for (const name of ['office-options-change', 'office-options-cancel'])
+		element.addEventListener(name, () => setTimeout(() => host.close(), 0));
 	return {
 		element,
 		show(category = 'general') {

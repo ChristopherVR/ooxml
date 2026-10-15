@@ -181,9 +181,6 @@ input[type='checkbox'] {
 	background: var(--office-accent);
 	filter: brightness(1.08);
 }
-.actions .reset {
-	margin-inline-end: auto;
-}
 @media (max-width: 767px) {
 	.layout {
 		grid-template-columns: minmax(0, 1fr);

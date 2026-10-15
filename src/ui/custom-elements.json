@@ -1971,7 +1971,7 @@
 					"name": "OfficeUiOptionsDialog",
 					"tagName": "office-ui-options-dialog",
 					"customElement": true,
-					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them. `heading` defaults to \"Options\".",
+					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them and emit `office-options-cancel`. \"Reset all options\" (shown when `defaults` is set) puts the defaults in the draft. `heading` defaults to \"Options\"; `labels` translates the buttons.",
 					"attributes": [
 						{
 							"name": "heading"
@@ -1995,10 +1995,18 @@
 						},
 						{
 							"kind": "field",
+							"name": "defaults"
+						},
+						{
+							"kind": "field",
 							"name": "heading",
 							"type": {
 								"text": "string"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "labels"
 						},
 						{
 							"kind": "field",
@@ -2013,6 +2021,9 @@
 						}
 					],
 					"events": [
+						{
+							"name": "office-options-cancel"
+						},
 						{
 							"name": "office-options-change"
 						}

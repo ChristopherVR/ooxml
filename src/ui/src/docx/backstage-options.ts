@@ -213,6 +213,9 @@ export function createWordOptions(
 		if (hiddenOnOpen.join() !== handlers.hiddenActions().join())
 			handlers.setHiddenActions([...hiddenOnOpen]);
 	});
+	// The dialog hands focus back to the editor's host; the File button is where it belongs.
+	for (const name of ['office-options-change', 'office-options-cancel'])
+		element.addEventListener(name, () => setTimeout(() => handlers.close(), 0));
 	return {
 		element,
 		show(category = 'general') {
