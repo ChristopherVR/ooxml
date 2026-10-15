@@ -1,6 +1,7 @@
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { PrintEditingIndex } from './print-editing-index';
+import { stepVertical } from './print-vertical-step';
 import { caretRect } from './print-editing-geometry';
 import { affinityOnLine, lineForCaret, type CaretAffinity } from './print-caret-affinity';
 interface Options {
@@ -90,7 +91,7 @@ export function printKeyboardNavigation(options: Options): (event: KeyboardEvent
 		} else {
 			const base = position(line.dataset.blockId!, 0)!;
 			verticalX ??= caretRect(line, head - base).left;
-			target = index.adjacent(line, event.key === 'ArrowUp' ? -1 : 1);
+			target = stepVertical(index, line, event.key === 'ArrowUp' ? -1 : 1, verticalX);
 			offset = resolveHit(target, verticalX)?.offset ?? Number(target.dataset.sourceStart);
 		}
 		const targetBlock = index.block(target.dataset.blockId!);

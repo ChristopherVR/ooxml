@@ -93,6 +93,9 @@ export class PrintEditingIndex {
 	block(id: string): readonly HTMLElement[] {
 		return this.byBlock.get(id) ?? [];
 	}
+	has(line: HTMLElement): boolean {
+		return this.linePositions.has(line);
+	}
 	adjacent(line: HTMLElement, direction: number): HTMLElement {
 		return this.lines[(this.linePositions.get(line) ?? -1) + direction] ?? line;
 	}

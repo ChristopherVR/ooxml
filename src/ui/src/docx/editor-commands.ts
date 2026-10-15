@@ -11,6 +11,7 @@ import type { RibbonAction } from './ribbon';
 import { applyFont, clearFormatting, insertTable, updateParagraphs } from './ribbon-commands';
 import { applyHighlight, toggleVerticalAlign } from './inline-commands';
 import { executeTableCommand } from './table-commands';
+import { cellTab } from './table-navigation';
 import { insertHardBreak } from './hard-break-command';
 import { insertPageBreak, insertBreakCommand } from './page-break-command';
 import { applyMultilingualAction } from './multilingual-ribbon';
@@ -79,8 +80,8 @@ export const editorBindings: Record<string, Command> = {
 		exitListOnEmptyEnter,
 		expectDefined(baseKeymap.Enter, 'the base Enter command'),
 	),
-	Tab: indentListItem,
-	'Shift-Tab': outdentListItem,
+	Tab: chainCommands(indentListItem, cellTab(1)),
+	'Shift-Tab': chainCommands(outdentListItem, cellTab(-1)),
 	'Mod-Enter': insertPageBreak,
 	...alignBindings(),
 	'Mod-Shift-.': (_state, _dispatch, view) => runIfEditable(view, (v) => stepFontSize(v, 'grow')),

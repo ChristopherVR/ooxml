@@ -20,6 +20,11 @@ export function lineForCaret(
 	affinity: CaretAffinity,
 ): HTMLElement | undefined {
 	const candidates = candidateLines(block, offset);
+	if (!candidates.length) {
+		// The layout is a moment behind the text (relayout is debounced): the last line starting at
+		// or before the offset is where the new text will appear.
+		return block.filter((line) => start(line) <= offset).at(-1);
+	}
 	return affinity === 'upstream' ? candidates[0] : candidates.at(-1);
 }
 

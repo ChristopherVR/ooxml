@@ -15,7 +15,9 @@ it('draws a boundary offset at the end of the earlier line when upstream', () =>
 	expect(lineForCaret(block, 6, 'downstream')).toBe(block[1]);
 	expect(lineForCaret(block, 3, 'upstream')).toBe(block[0]);
 	expect(lineForCaret(block, 9, 'upstream')).toBe(block[1]);
-	expect(lineForCaret(block, 40, 'upstream')).toBeUndefined();
+	// Text typed since the last layout: the last line that starts before the offset.
+	expect(lineForCaret(block, 40, 'upstream')).toBe(block[1]);
+	expect(lineForCaret(block, -1, 'upstream')).toBeUndefined();
 });
 
 it('is upstream only at the end of a line followed by a continuation line', () => {
