@@ -9,6 +9,7 @@ import { translations as backstage } from './backstage';
 import { translations as charts } from './charts';
 import { translations as charts_2 } from './charts-2';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
+import { translations as design_galleries } from './design-galleries';
 import { translations as drawing_and_layout } from './drawing-and-layout';
 import { translations as drawing_and_layout_2 } from './drawing-and-layout-2';
 import { translations as editing_and_review } from './editing-and-review';
@@ -27,6 +28,7 @@ import { translations as ribbon_galleries_adjust } from './ribbon-galleries-adju
 import { translations as ribbon_galleries_data } from './ribbon-galleries-data';
 import { translations as ribbon_galleries_effects } from './ribbon-galleries-effects';
 import { translations as ribbon_galleries_picture } from './ribbon-galleries-picture';
+import { translations as shape_gallery } from './shape-gallery';
 import { translations as slide_templates } from './slide-templates';
 import { translations as smart_art } from './smart-art';
 import { translations as table_layout } from './table-layout';
@@ -72,4 +74,6 @@ export const translationsZhCN: Record<string, string> = {
 	...ribbon_galleries_adjust,
 	...ribbon_galleries_data,
 	...table_layout,
+	...shape_gallery,
+	...design_galleries,
 };
