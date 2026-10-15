@@ -203,10 +203,15 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 		probe.style.cssText = 'display:none;background-color:var(--office-background)';
 		this.renderRoot.append(probe);
 		const match = /\d+(\.\d+)?/g;
-		const [r = 255, g = 255, b = 255] = (getComputedStyle(probe).backgroundColor.match(match) ?? [])
-			.slice(0, 3)
-			.map(Number);
+		let background = '';
+		try {
+			background = getComputedStyle(probe).backgroundColor;
+		} catch {
+			// A host whose token chain cannot be resolved keeps the default scheme.
+		}
 		probe.remove();
+		if (!background) return;
+		const [r = 255, g = 255, b = 255] = (background.match(match) ?? []).slice(0, 3).map(Number);
 		this.style.colorScheme = 0.2126 * r + 0.7152 * g + 0.0722 * b < 128 ? 'dark' : 'light';
 	}
 
