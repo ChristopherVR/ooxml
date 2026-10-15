@@ -16,7 +16,7 @@
 	import { useTranslator } from '../../../i18n/context';
 	import type { ModalDialogProps } from './props';
 
-	const { open, title, onclose, children, footer }: ModalDialogProps = $props();
+	const { open, title, onclose, children, footer, bare = false }: ModalDialogProps = $props();
 
 	const t = useTranslator();
 
@@ -64,7 +64,7 @@
 			<div class="pptx-svelte-modal-body">
 				{@render children?.()}
 			</div>
-			{#if footer}
+			{#if footer && !bare}
 				<footer class="pptx-svelte-modal-footer">
 					{@render footer()}
 				</footer>

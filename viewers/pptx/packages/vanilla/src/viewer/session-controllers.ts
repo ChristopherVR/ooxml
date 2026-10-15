@@ -18,6 +18,7 @@ import type { Translator } from './i18n';
 import type { Store, ViewerState } from './state';
 import type { PptxViewerOptions } from './types';
 import type { ViewerChrome } from './ui';
+import type { RegionSet } from './ui/region-set';
 
 export interface SessionControllersDeps {
 	doc: Document;
@@ -36,6 +37,8 @@ export interface SessionControllersDeps {
 	getScale: () => number;
 	setEditable: (editable: boolean) => void;
 	onCollaborationReadOnlyChange?: (readOnly: boolean) => void;
+	/** The viewer's dialog regions (host-replaced Share and Broadcast bodies). */
+	getRegions?: () => RegionSet | undefined;
 	/** Navigate to a slide (follow-mode target). */
 	goToSlide: (index: number) => void;
 	/** Load bytes through the viewer's normal pipeline (recovery restore). */
@@ -215,6 +218,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			hiddenActions: deps.getHiddenActions ? deps.getHiddenActions() : options.hiddenActions,
 			showCollaborationStatus: deps.isShareAvailable?.() ?? true,
 			getUserInitials: deps.getUserInitials,
+			getRegions: deps.getRegions,
 		});
 	let collabUi = buildCollabUi();
 	notifyCollabUi = (status) => collabUi.onStatusChange(status);

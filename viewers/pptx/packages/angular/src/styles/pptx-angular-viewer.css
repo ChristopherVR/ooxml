@@ -982,3 +982,23 @@ pptx-ribbon {
 	position: relative;
 	z-index: 31;
 }
+
+/* Host-supplied regions (customization.regions): the slot keeps the built-in's
+   place in the layout, the host fills it. */
+.pptx-ng-region-slides {
+	display: block;
+	padding: 0;
+	overflow: hidden;
+	width: 14rem;
+}
+
+.pptx-ng-region-status {
+	flex: 0 0 auto;
+	min-height: 1.5rem;
+	border-top: 1px solid var(--pptx-border, #374151);
+	background: var(--pptx-card, #111827);
+}
+
+.pptx-ng-notes pptx-region-host {
+	min-height: 5rem;
+}

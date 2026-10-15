@@ -1,7 +1,9 @@
 import { activateModalFocus, defaultCssVars } from 'ooxml-ui/pptx';
+import type { ViewerDialogRegionId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
+import type { RegionHandle, RegionSet } from '../../ui/region-set';
 
 /**
  * modal-dialog.ts: a small reusable modal shell (backdrop + centered panel
@@ -25,6 +27,12 @@ export interface ModalDialogOptions {
 	 * the stylesheet/page defaults and ignores the viewer's active theme.
 	 */
 	themeHost?: () => HTMLElement | null;
+	/**
+	 * Lets the host replace the dialog body (`customization.regions`): while the
+	 * dialog is open and the region is replaced, the host's renderer fills the
+	 * panel in place of the built-in body and footer. The frame stays.
+	 */
+	region?: { regions: () => RegionSet | undefined; id: ViewerDialogRegionId };
 }
 
 export interface ModalDialog {
@@ -46,6 +54,7 @@ export function createModalDialog(
 ): ModalDialog {
 	let isOpen = false;
 	let releaseFocus: (() => void) | undefined;
+	let regionHandle: RegionHandle | null = null;
 
 	const backdrop = createEl(doc, 'div', 'pptxv-modal-backdrop');
 	backdrop.hidden = true;
@@ -87,6 +96,18 @@ export function createModalDialog(
 	}
 	applyTitle(options.title);
 
+	const mountRegion = (): void => {
+		const regions = options.region?.regions();
+		const id = options.region?.id;
+		regionHandle = (regions && id && regions.mount(id, panel, { close: options.onClose })) || null;
+		bodyEl.hidden = footerEl.hidden = regionHandle !== null;
+	};
+	const unmountRegion = (): void => {
+		regionHandle?.destroy();
+		regionHandle = null;
+		bodyEl.hidden = footerEl.hidden = false;
+	};
+
 	/** Mirror the viewer root's current `--pptx-*` vars onto the backdrop. */
 	function syncThemeVars(): void {
 		const host = options.themeHost?.();
@@ -118,13 +139,16 @@ export function createModalDialog(
 			backdrop.hidden = !open;
 			if (open) {
 				syncThemeVars();
+				mountRegion();
 				releaseFocus = activateModalFocus(panel, { onEscape: options.onClose });
 			} else {
 				releaseFocus?.();
 				releaseFocus = undefined;
+				unmountRegion();
 			}
 		},
 		destroy() {
+			unmountRegion();
 			releaseFocus?.();
 			backdrop.remove();
 		},

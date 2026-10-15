@@ -43,6 +43,7 @@ import {
 	openPptxFile,
 	overlayInlineTextSnapshot,
 	resolve3DRenderingFlags,
+	isEditingAllowed,
 	resolveAutosaveIntervalSeconds,
 	resolveExpiredAutosaveSnapshots,
 	resolveHistoryDepth,
@@ -187,6 +188,8 @@ import { useViewerApi } from './composables/useViewerApi';
 import { useViewerCustomization } from './composables/useViewerCustomization';
 import { useViewerOptionsStore } from './composables/useViewerOptionsStore';
 import { useViewerPreferences } from './composables/useViewerPreferences';
+import { ViewerRegionBaseKey } from './composables/useViewerRegions';
+import type { ViewerRegionBase } from './composables/useViewerRegions';
 import { useViewerRibbonProps } from './composables/useViewerRibbonProps';
 import { useViewerSettingsDialog } from './composables/useViewerSettingsDialog';
 import { useViewerZoom } from './composables/useViewerZoom';
@@ -363,6 +366,7 @@ const canEditEffective = computed(
 	() =>
 		editingRequested.value &&
 		props.canEdit &&
+		isEditingAllowed(customization.resolved.value) &&
 		!collaborationReadOnly.value &&
 		!protectedViewActive.value &&
 		!readOnlyRec.locked.value,
@@ -1766,7 +1770,7 @@ useCanvasImagePaste(viewerRootRef, {
 	insertElement: ops.addElement,
 });
 
-defineExpose<PowerPointViewerExpose>({
+const exposedHandle: PowerPointViewerExpose = {
 	...useViewerApi({
 		slides,
 		activeSlide,
@@ -1804,7 +1808,21 @@ defineExpose<PowerPointViewerExpose>({
 		elementOps: ops,
 	}),
 	...customization.api,
-});
+};
+defineExpose<PowerPointViewerExpose>(exposedHandle);
+// Host region renderers (`customization.regions`) read this base context.
+provide(
+	ViewerRegionBaseKey,
+	computed<ViewerRegionBase>(() => ({
+		viewer: exposedHandle,
+		mode: ribbonMode.value,
+		canEdit: canEditEffective.value,
+		activeSlideIndex: activeSlideIndex.value,
+		slideCount: slideCount.value,
+		selectedElementIds: selectedElementIds.value,
+		locale: prefs.localeCode.value,
+	})),
+);
 const slidePackageClipboard = createSlidePackageClipboard({
 	getSnapshot: () =>
 		handler.value
@@ -1879,7 +1897,9 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				     editing but the option is still blocking it; a document the host
 				     opened read-only never shows this (there is nothing to enable). -->
 				<div
-					v-if="props.canEdit && protectedViewActive"
+					v-if="
+						props.canEdit && isEditingAllowed(customization.resolved.value) && protectedViewActive
+					"
 					class="pptx-vue-protected-view-banner flex items-center gap-3 border-b border-amber-700/30 bg-amber-900/20 px-4 py-2"
 					role="status"
 				>
@@ -2005,7 +2025,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 
 			<!-- Find & replace bar -->
 			<FindReplaceBar
-				v-if="canEditEffective && findOpen"
+				v-if="canEditEffective && findOpen && panelVisible('findReplace')"
 				v-model:query="find.query.value"
 				v-model:replacement="find.replacement.value"
 				v-model:match-case="find.matchCase.value"

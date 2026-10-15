@@ -27,6 +27,7 @@ import { useCollaboration } from './collaboration';
 import { DialogFooter } from './DialogFooter';
 import { ActiveSessionView } from './ShareDialogActiveView';
 import { StartSessionForm } from './ShareDialogViews';
+import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -93,6 +94,7 @@ export function ShareDialog({
 	const collab = useCollaboration();
 	const isActive = collab !== null && collab.status !== 'disconnected' && collab.status !== 'error';
 	const { t } = useTranslation();
+	const regionRenderer = useRegionRenderer('dialog.share');
 
 	// Form state for starting a new session; all defaults come from host app
 	const [roomId, setRoomId] = useState(defaultRoomId ?? '');
@@ -193,58 +195,77 @@ export function ShareDialog({
 						</button>
 					</div>
 
-					{/* Body */}
-					<div className='px-5 py-4'>
-						{isActive ? (
-							<ActiveSessionView
-								collab={collab}
-								activeCollaboration={activeCollaboration}
-								copied={copied}
-								onCopyRoomId={handleCopyRoomId}
-								onStopCollaboration={onStopCollaboration}
+					{regionRenderer ? (
+						// The frame (backdrop, title bar, close, dismiss) stays the viewer's; the host replaces the body.
+						<div className='min-h-0 flex-1 overflow-y-auto'>
+							<ViewerRegion
+								region='dialog.share'
+								renderer={regionRenderer}
+								close={onClose}
+								style={{ width: '100%', minHeight: '8rem' }}
 							/>
-						) : (
-							<StartSessionForm
-								mode={mode}
-								invitation={invitation}
-								roomId={roomId}
-								userName={userName}
-								serverUrl={serverUrl}
-								onRoomIdChange={setRoomId}
-								onUserNameChange={setUserName}
-								onServerUrlChange={setServerUrl}
-								onModeChange={setMode}
-								onInvitationChange={setInvitation}
-								preconfigured={preconfigured}
-								connectionFailed={collab?.status === 'error'}
-								onRetry={collab?.retry}
-							/>
-						)}
-					</div>
+						</div>
+					) : (
+						<>
+							{/* Body */}
+							<div className='px-5 py-4'>
+								{isActive ? (
+									<ActiveSessionView
+										collab={collab}
+										activeCollaboration={activeCollaboration}
+										copied={copied}
+										onCopyRoomId={handleCopyRoomId}
+										onStopCollaboration={onStopCollaboration}
+									/>
+								) : (
+									<StartSessionForm
+										mode={mode}
+										invitation={invitation}
+										roomId={roomId}
+										userName={userName}
+										serverUrl={serverUrl}
+										onRoomIdChange={setRoomId}
+										onUserNameChange={setUserName}
+										onServerUrlChange={setServerUrl}
+										onModeChange={setMode}
+										onInvitationChange={setInvitation}
+										preconfigured={preconfigured}
+										connectionFailed={collab?.status === 'error'}
+										onRetry={collab?.retry}
+									/>
+								)}
+							</div>
 
-					{/* Footer */}
-					<div
-						className={`flex justify-end gap-2 px-5 py-3 border-t border-border ${stickyFooterClass}`}
-					>
-						<DialogFooter
-							actions={[
-								{ id: 'cancel', label: isActive ? t('pptx.share.close') : t('pptx.share.cancel') },
-								...(isActive
-									? []
-									: [
-											{
-												id: 'start',
-												label: t(
-													mode === 'join' ? 'pptx.share.joinSession' : 'pptx.share.startSharing',
-												),
-												variant: 'primary' as const,
-												disabled: !canStart,
-											},
-										]),
-							]}
-							onAction={(id) => (id === 'start' ? handleStartSharing() : onClose())}
-						/>
-					</div>
+							{/* Footer */}
+							<div
+								className={`flex justify-end gap-2 px-5 py-3 border-t border-border ${stickyFooterClass}`}
+							>
+								<DialogFooter
+									actions={[
+										{
+											id: 'cancel',
+											label: isActive ? t('pptx.share.close') : t('pptx.share.cancel'),
+										},
+										...(isActive
+											? []
+											: [
+													{
+														id: 'start',
+														label: t(
+															mode === 'join'
+																? 'pptx.share.joinSession'
+																: 'pptx.share.startSharing',
+														),
+														variant: 'primary' as const,
+														disabled: !canStart,
+													},
+												]),
+									]}
+									onAction={(id) => (id === 'start' ? handleStartSharing() : onClose())}
+								/>
+							</div>
+						</>
+					)}
 				</div>
 			</div>
 		</>

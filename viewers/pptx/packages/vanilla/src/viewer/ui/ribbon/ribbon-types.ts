@@ -19,6 +19,7 @@ import type {
 import type { EditActions } from '../../editor/editor-edit-ops';
 import type { FindReplaceActions } from '../../editor/editor-find-replace-actions';
 import type { DrawTool } from '../../state';
+import type { RegionSet } from '../region-set';
 
 /** Ribbon tab identifiers this wave implements (see `ribbon-tabs.ts` for the full future roster). */
 export type RibbonTabId =
@@ -95,6 +96,8 @@ export interface RibbonFileHandlers {
 	openSettings(): void;
 	/** The host's resolved UI customisation (omitted: nothing customised). */
 	getCustomization?(): ResolvedCustomization;
+	/** The chrome's region set, for replaced File tab pages and host pages. */
+	getRegionSet?(): RegionSet;
 	openShare(): void;
 	openDocumentProperties(): void;
 	openFontEmbedding(): void;

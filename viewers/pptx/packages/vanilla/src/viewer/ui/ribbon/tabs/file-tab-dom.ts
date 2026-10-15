@@ -30,11 +30,12 @@ export function iconButton(
 
 export function labeledIconButton(
 	doc: Document,
-	icon: FileTabIcon,
+	icon: FileTabIcon | undefined,
 	label: string,
 	onClick: () => void,
 ): HTMLButtonElement {
-	const result = iconButton(doc, icon, onClick);
+	// A host page has no icon: the label stands alone.
+	const result = icon ? iconButton(doc, icon, onClick) : button(doc, '', onClick);
 	const text = doc.createElement('span');
 	text.textContent = label;
 	result.appendChild(text);

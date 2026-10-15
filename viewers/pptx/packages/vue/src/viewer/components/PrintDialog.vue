@@ -151,7 +151,7 @@ function confirmPrint(): void {
 </script>
 
 <template>
-	<ModalDialog :open="open" :title="t('pptx.print.title')" @close="close">
+	<ModalDialog region="dialog.print" :open="open" :title="t('pptx.print.title')" @close="close">
 		<div class="pptx-vue-print-body flex min-w-[480px] gap-5 max-md:min-w-0 max-md:flex-col">
 			<PrintSettingsPanel
 				:print-what="printWhat"

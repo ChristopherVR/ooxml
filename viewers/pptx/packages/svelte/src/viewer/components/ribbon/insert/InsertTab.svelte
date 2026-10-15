@@ -181,8 +181,8 @@
 <input bind:this={mediaInput} type="file" accept="video/*,audio/*" class="pptx-svelte-inserttab-file" onchange={onMediaFileChange} />
 
 {#if smartArtOpen}<SmartArtDialog oncancel={closeSmartArt} oninsert={insertSmartArt} />{/if}
-<EquationEditorDialog {editor} {canvasSize} open={equationOpen} onclose={closeEquationDialog} />
-{#if hyperlinkOpen}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}
+<EquationEditorDialog {editor} {canvasSize} open={equationOpen && customization.isDialogAvailable('equation')} onclose={closeEquationDialog} />
+{#if hyperlinkOpen && customization.isDialogAvailable('hyperlink')}<HyperlinkDialog {editor} onclose={() => (hyperlinkOpen = false)} />{/if}
 
 <style>
 	.pptx-svelte-inserttab-file {

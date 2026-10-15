@@ -30,6 +30,7 @@ import { PRESENTATION_TOOLBAR_CSS } from './presentation-toolbar-css';
 import { PRESENTATION_TOUCH_CSS } from './presentation-touch-css';
 import { PRESENTER_VIEW_CSS } from './presenter-view-css';
 import { READING_VIEW_CSS } from './reading-view-css';
+import { REGION_CSS } from './region-css';
 import { RIBBON_CSS } from './ribbon-css';
 import { RIBBON_QUICK_CSS } from './ribbon-quick-css';
 import { SLIDE_TEMPLATE_DIALOG_CSS } from './slide-template-dialog-css';
@@ -865,5 +866,6 @@ ${READING_VIEW_CSS}
 ${OUTLINE_VIEW_CSS}
 ${EXPORT_PROGRESS_CSS}
 ${PARITY_BANNERS_CSS}
+${REGION_CSS}
 ${EDITOR_CHROME_CSS}`;
 }

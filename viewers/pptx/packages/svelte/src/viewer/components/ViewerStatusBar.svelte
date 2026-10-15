@@ -12,6 +12,7 @@
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 	import StatusBar from './StatusBar.svelte';
+	import ViewerRegion from './ViewerRegion.svelte';
 
 	interface ViewerStatusBarProps {
 		vm: ViewerStateBag;
@@ -25,6 +26,7 @@
 
 	const { vm, showNotes, collaboration, hiddenActions }: ViewerStatusBarProps = $props();
 	const customization = useViewerCustomization();
+	const regionRenderer = $derived(customization.regionRenderer('statusBar'));
 
 	// Stable controller references (the bag is built once and never reassigned).
 	// svelte-ignore state_referenced_locally
@@ -38,6 +40,9 @@
 		onretry={() => dialogs.retry(collaboration)}
 	/>
 {/snippet}
+{#if regionRenderer}
+	<div class="pptx-svelte-status-region" data-pptx-chrome="status-bar"><ViewerRegion region="statusBar" renderer={regionRenderer} /></div>
+{:else}
 <StatusBar
 	current={viewer.current}
 	total={viewer.slideCount}
@@ -66,3 +71,8 @@
 	onslidesorter={() => (parityUi.slideSorterOpen = true)}
 	collaborationSlot={collab.active && customization.isDialogAvailable('share') ? collabStatus : undefined}
 />
+{/if}
+
+<style>
+	.pptx-svelte-status-region { display: flex; flex: none; min-height: 24px; }
+</style>

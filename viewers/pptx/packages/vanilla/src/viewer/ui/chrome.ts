@@ -31,6 +31,8 @@ import type { ProtectedViewBanner } from './protected-view-banner';
 import { createProtectedViewBanner } from './protected-view-banner';
 import type { ModifyPasswordErrorReason, ReadOnlyBanner } from './read-only-banner';
 import { createReadOnlyBanner } from './read-only-banner';
+import type { RegionSet } from './region-set';
+import { NO_REGIONS, replaceFrameContent } from './region-set';
 import type { Ribbon } from './ribbon/ribbon';
 import { createRibbon } from './ribbon/ribbon';
 import { mountRibbonCustomizationStyle } from './ribbon/ribbon-customization-style';
@@ -59,6 +61,13 @@ export interface ChromeOptions {
 	showFormatToolbar: boolean;
 	/** Build the property inspector panel (default true; shown only when editable). */
 	showInspector: boolean;
+	/**
+	 * The region set that mounts host-replaced panels (`customization.regions`);
+	 * omitted: every built-in panel is rendered.
+	 */
+	regions?: RegionSet;
+	/** Close the inspector (the `inspector` region's `close`). */
+	closeInspector?: () => void;
 	/** Host customisation region gates (default true): see `customization-lifecycle`. */
 	showTitleBar?: boolean;
 	showStatusBar?: boolean;
@@ -143,6 +152,8 @@ export interface ViewerChrome {
 	notes: NotesPanel;
 	/** Bottom navigation and zoom bar, matching React's status-bar placement. */
 	statusBar: StatusBar | null;
+	/** Every host-replaced panel mounted in this chrome; destroyed with it. */
+	regions: RegionSet;
 	/** Compact menu/edit/save/present toolbar, visible only on phones. */
 	mobileToolbar: MobileToolbar | null;
 	mobileActionSheets: MobileActionSheets | null;
@@ -193,6 +204,7 @@ export function buildViewerChrome(
 	t: Translator,
 	options: ChromeOptions,
 ): ViewerChrome {
+	const regions = options.regions ?? NO_REGIONS;
 	const root = createEl(doc, 'div', 'pptxv');
 	root.dataset.pptxEditorChrome = '';
 	root.tabIndex = 0;
@@ -307,6 +319,7 @@ export function buildViewerChrome(
 			options.thumbnailMenu,
 		);
 		body.appendChild(thumbnails.el);
+		replaceFrameContent(thumbnails.el, regions, 'slidesPane');
 	}
 
 	const viewport = createEl(doc, 'div', 'pptxv-viewport');
@@ -318,6 +331,7 @@ export function buildViewerChrome(
 		inspector = createInspector(doc, t, options.inspectorHandlers);
 		inspector.setEditable(options.editable);
 		body.appendChild(inspector.el);
+		replaceFrameContent(inspector.el, regions, 'inspector', { close: options.closeInspector });
 	}
 
 	const stageWrap = createEl(doc, 'div', 'pptxv-stage-wrap');
@@ -334,6 +348,8 @@ export function buildViewerChrome(
 	root.appendChild(notes.el);
 	if (options.showNotes === false) {
 		notes.el.style.display = 'none';
+	} else {
+		replaceFrameContent(notes.el, regions, 'notes');
 	}
 
 	const statusBar =
@@ -355,6 +371,15 @@ export function buildViewerChrome(
 			: null;
 	if (statusBar) {
 		root.appendChild(statusBar.el);
+		// The status bar is a custom element that renders its own children, so the
+		// host's region takes its place as a sibling instead of living inside it.
+		const replacement = regions.mount('statusBar', root);
+		if (replacement) {
+			statusBar.el.style.display = 'none';
+			// Same hide rules as the built-in (presenting, phones).
+			replacement.el.classList.add('pptxv-statusbar');
+			statusBar.el.after(replacement.el);
+		}
 	}
 	mobileActionSheets = options.showToolbar
 		? createMobileActionSheets(
@@ -454,6 +479,7 @@ export function buildViewerChrome(
 		mobileActionSheets,
 		presentationTouchControls,
 		presentationToolbar,
+		regions,
 		setLoading(loading) {
 			loadingOverlay.hidden = !loading;
 			root.setAttribute('aria-busy', String(loading));

@@ -4,8 +4,10 @@ import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-co
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useRegion } from '../composables/useViewerRegions';
 import NotesToolbar from './NotesToolbar.vue';
 import { useNotesEditor } from './useNotesEditor';
+import ViewerRegion from './ViewerRegion.vue';
 
 /**
  * NotesPanel - collapsible speaker-notes panel for the Vue editor.
@@ -72,6 +74,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+// A host `regions.notes` replaces the WHOLE panel, header included (also in
+// the mobile sheet). The viewer keeps only the slot: collapsed hides it
+// (display:none) while the host stays mounted.
+const region = useRegion('notes');
+const regionContext = computed(() => region.context(() => undefined));
+const regionActive = computed(() => Boolean(region.renderer.value && regionContext.value));
+
 const hasSlide = computed<boolean>(() => props.slide !== undefined);
 
 const {
@@ -112,9 +121,16 @@ function toggle(): void {
 		data-pptx-chrome="notes"
 		class="pptx-vue-notes-panel flex flex-col border-t border-border/60 bg-background"
 		:data-collapsed="collapsed"
+		:style="regionActive ? { height: embedded ? '14rem' : '10rem' } : undefined"
+		v-show="!regionActive || embedded || !collapsed"
 	>
+		<ViewerRegion
+			v-if="region.renderer.value && regionContext"
+			:renderer="region.renderer.value"
+			:context="regionContext"
+		/>
 		<button
-			v-if="!embedded"
+			v-else-if="!embedded"
 			type="button"
 			data-pptx-chrome="notes-header"
 			class="pptx-vue-notes-header flex w-full items-center justify-between px-3 py-2 text-left text-[0.8125rem] font-semibold text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground"
@@ -129,7 +145,12 @@ function toggle(): void {
 			/>
 		</button>
 
-		<div v-show="!collapsed" id="slide-notes-content" class="pptx-vue-notes-body px-3 pb-3">
+		<div
+			v-if="!regionActive"
+			v-show="!collapsed"
+			id="slide-notes-content"
+			class="pptx-vue-notes-body px-3 pb-3"
+		>
 			<NotesToolbar
 				v-if="hasSlide"
 				:is-rich-enabled="isRichEnabled"

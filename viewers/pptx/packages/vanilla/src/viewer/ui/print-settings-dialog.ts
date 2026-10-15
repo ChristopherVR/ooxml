@@ -4,6 +4,7 @@ import { createEl } from '../render';
 import { appendDialogActions } from './dialog-footer';
 import { createInspectorSelect } from './inspector/controls-extra';
 import { appendCheckRow, createParityDialogShell } from './parity-dialog-shell';
+import type { RegionSet } from './region-set';
 
 export function openPrintSettingsDialog(
 	doc: Document,
@@ -16,8 +17,18 @@ export function openPrintSettingsDialog(
 	 * `printWhat`/`colorMode`/`frameSlides` at their hardcoded defaults below.
 	 */
 	defaultSettings?: Partial<PrintOptions>,
+	/** The viewer's dialog regions: a host can replace the body (`dialog.print`). */
+	regions?: RegionSet,
 ): void {
-	const shell = createParityDialogShell(doc, t, t('pptx.print.title'));
+	const shell = createParityDialogShell(
+		doc,
+		t,
+		t('pptx.print.title'),
+		regions && { regions, region: 'dialog.print' },
+	);
+	if (shell.replaced) {
+		return;
+	}
 	const selectRow = (
 		label: string,
 		entries: readonly (readonly [string, string])[],

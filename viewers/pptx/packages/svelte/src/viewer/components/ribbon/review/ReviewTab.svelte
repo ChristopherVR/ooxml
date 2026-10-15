@@ -31,6 +31,7 @@
 	import { onMount } from 'svelte';
 	import ReviewAccessibilityPanel from './ReviewAccessibilityPanel.svelte';
 	import ReviewCommentsPanel from './ReviewCommentsPanel.svelte';
+	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 
 	const {
 		slides,
@@ -50,6 +51,7 @@
 		onspellcheckchange?: (enabled: boolean) => void;
 	} = $props();
 	const t = useTranslator();
+	const customization = useViewerCustomization();
 
 	let activePanel = $state<'accessibility' | 'comments' | null>(null);
 
@@ -112,7 +114,7 @@
 <div class="pptx-svelte-review-shell">
 	<pptx-ui-ribbon-section {groups} oncommand-request={request}></pptx-ui-ribbon-section>
 
-	{#if activePanel}
+	{#if activePanel && (activePanel !== 'accessibility' || customization.isPanelVisible('accessibilityPane'))}
 		<!-- Named after the panel, never after the tab: the cross-binding ribbon
 		     inventory treats a `role="dialog"` carrying the ACTIVE TAB's name as a
 		     backstage overlay and reads the tab's controls out of it instead of

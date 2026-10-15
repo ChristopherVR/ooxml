@@ -21,6 +21,8 @@ export interface SlidesGroupHandlers {
 	insertSlideFromLayout(layoutPath: string, layoutName?: string): void;
 	/** Insert a pre-designed starter slide from the shared template catalog. */
 	insertSlideFromTemplate(templateId: SlideTemplateId): void;
+	/** False when the host removed the Slide Templates dialog (default: available). */
+	isSlideTemplatesAvailable?(): boolean;
 	applyLayout(layoutPath: string): void;
 	resetSlide(): void;
 	addSection(): void;
@@ -82,7 +84,9 @@ export function createSlidesGroup(
 				break;
 			}
 			case 'home.slides.slideTemplates':
-				templateDialog.open(strip.el.closest<HTMLElement>('.pptxv') ?? doc.body);
+				if (handlers.isSlideTemplatesAvailable?.() ?? true) {
+					templateDialog.open(strip.el.closest<HTMLElement>('.pptxv') ?? doc.body);
+				}
 				break;
 			case 'home.slides.layout':
 				handlers.applyLayout(String(value));

@@ -22,6 +22,7 @@ import type { CollaborationConfig } from '../hooks/collaboration/types';
 import { useModalFocus } from '../hooks/useModalFocus';
 import { useCollaboration } from './collaboration';
 import { DialogFooter } from './DialogFooter';
+import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -64,6 +65,7 @@ export function BroadcastDialog({
 	defaultServerUrl,
 }: BroadcastDialogProps): React.ReactElement | null {
 	const { t } = useTranslation();
+	const regionRenderer = useRegionRenderer('dialog.broadcast');
 	const collab = useCollaboration();
 	const isBroadcasting =
 		collab !== null &&
@@ -184,44 +186,58 @@ export function BroadcastDialog({
 						</button>
 					</div>
 
-					{/* Body */}
-					<div className='px-5 py-4'>
-						{isBroadcasting ? (
-							<ActiveBroadcastView
-								collab={collab}
-								broadcastUrl={broadcastUrl}
-								copied={copied}
-								onCopyUrl={handleCopyUrl}
-								onStopBroadcast={handleStopBroadcast}
-							/>
-						) : (
-							<StartBroadcastForm
-								roomId={roomId}
-								userName={userName}
-								serverUrl={serverUrl}
-								onRoomIdChange={setRoomId}
-								onUserNameChange={setUserName}
-								onServerUrlChange={setServerUrl}
-							/>
-						)}
-					</div>
-
-					{/* Footer */}
-					{!isBroadcasting && (
-						<div className='flex justify-end gap-2 px-5 py-3 border-t border-border'>
-							<DialogFooter
-								actions={[
-									{ id: 'close', label: t('pptx.common.close') },
-									{
-										id: 'start',
-										label: t('pptx.broadcast.startBroadcast'),
-										variant: 'primary',
-										disabled: !canStart,
-									},
-								]}
-								onAction={(id) => (id === 'start' ? handleStartBroadcast() : onClose())}
+					{regionRenderer ? (
+						// The frame (backdrop, title bar, close, dismiss) stays the viewer's; the host replaces the body.
+						<div className='min-h-0 flex-1 overflow-y-auto'>
+							<ViewerRegion
+								region='dialog.broadcast'
+								renderer={regionRenderer}
+								close={onClose}
+								style={{ width: '100%', minHeight: '8rem' }}
 							/>
 						</div>
+					) : (
+						<>
+							{/* Body */}
+							<div className='px-5 py-4'>
+								{isBroadcasting ? (
+									<ActiveBroadcastView
+										collab={collab}
+										broadcastUrl={broadcastUrl}
+										copied={copied}
+										onCopyUrl={handleCopyUrl}
+										onStopBroadcast={handleStopBroadcast}
+									/>
+								) : (
+									<StartBroadcastForm
+										roomId={roomId}
+										userName={userName}
+										serverUrl={serverUrl}
+										onRoomIdChange={setRoomId}
+										onUserNameChange={setUserName}
+										onServerUrlChange={setServerUrl}
+									/>
+								)}
+							</div>
+
+							{/* Footer */}
+							{!isBroadcasting && (
+								<div className='flex justify-end gap-2 px-5 py-3 border-t border-border'>
+									<DialogFooter
+										actions={[
+											{ id: 'close', label: t('pptx.common.close') },
+											{
+												id: 'start',
+												label: t('pptx.broadcast.startBroadcast'),
+												variant: 'primary',
+												disabled: !canStart,
+											},
+										]}
+										onAction={(id) => (id === 'start' ? handleStartBroadcast() : onClose())}
+									/>
+								</div>
+							)}
+						</>
 					)}
 				</div>
 			</div>

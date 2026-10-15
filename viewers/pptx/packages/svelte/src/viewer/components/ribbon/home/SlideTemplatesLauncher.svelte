@@ -13,6 +13,7 @@
 	import type { SlideTemplateId } from 'ooxml-ui/pptx';
 
 	import type { EditorState } from '../../../editor/editor-state.svelte';
+	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import { getRenderContextSource } from '../../../state/render-context';
 	import SlideTemplateGalleryDialog from './SlideTemplateGalleryDialog.svelte';
 
@@ -22,6 +23,7 @@
 		open = $bindable(false),
 	}: { editor: EditorState; onnavigate: (index: number) => void; open?: boolean } = $props();
 	const renderContext = getRenderContextSource();
+	const customization = useViewerCustomization();
 
 	const scheme = $derived(templateSchemeFromTheme(renderContext?.getColorScheme()));
 
@@ -38,6 +40,6 @@
 	}
 </script>
 
-{#if open}
+{#if open && customization.isDialogAvailable('slideTemplates')}
 	<SlideTemplateGalleryDialog {scheme} oncancel={() => (open = false)} oninsert={insert} />
 {/if}

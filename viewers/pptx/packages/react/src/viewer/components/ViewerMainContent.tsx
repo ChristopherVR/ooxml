@@ -14,6 +14,7 @@ import { LayoutGalleryMenu } from './toolbar/LayoutGalleryMenu';
 import type { ViewerMainContentProps } from './viewer-main-content-types';
 import { ViewerCanvasArea } from './ViewerCanvasArea';
 import { ViewerContextMenus } from './ViewerContextMenus';
+import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 import { ViewerSidePanels } from './ViewerSidePanels';
 
 export type { ViewerMainContentProps } from './viewer-main-content-types';
@@ -58,6 +59,8 @@ export function ViewerMainContent(props: ViewerMainContentProps) {
 		onApplyLayout,
 		loadLayoutPreviews,
 	} = props;
+
+	const slidesPaneRenderer = useRegionRenderer('slidesPane');
 
 	const {
 		ops,
@@ -107,42 +110,57 @@ export function ViewerMainContent(props: ViewerMainContentProps) {
 			<div data-pptx-chrome='body' className='relative z-10 flex flex-1 min-h-0'>
 				{showSlidesPane && (
 					<>
-						<SlidesPaneSidebar
-							slides={slides}
-							templateElementsBySlideId={state.templateElementsBySlideId}
-							activeSlideIndex={activeSlideIndex}
-							canvasSize={canvasSize}
-							sectionGroups={slideSectionGroups}
-							isOpen={state.isSlidesPaneOpen}
-							canEdit={canEdit}
-							onSelectSlide={state.setActiveSlideIndex}
-							onSlideContextMenu={slideOps.handleSlideContextMenu}
-							onMoveSlide={slideOps.handleMoveSlide}
-							onAddSlide={slideOps.handleAddSlide}
-							onAddSlideAfter={slideOps.handleAddSlideAfter}
-							onDuplicateSlides={slideOps.handleDuplicateSlides}
-							onDeleteSlides={slideOps.handleDeleteSlides}
-							onHideSlides={slideOps.handleToggleHideSlides}
-							onOpenLayoutForSlide={(index, x, y) => {
-								state.setActiveSlideIndex(index);
-								setLayoutGalleryAnchor({ x, y });
-							}}
-							onCollapse={() => state.setIsSlidesPaneOpen(false)}
-							onAddSection={sectionOps.addSection}
-							onRenameSection={sectionOps.renameSection}
-							onDeleteSection={sectionOps.deleteSection}
-							onMoveSectionUp={sectionOps.moveSectionUp}
-							onMoveSectionDown={sectionOps.moveSectionDown}
-							onToggleSectionCollapse={sectionOps.toggleSectionCollapse}
-							rehearsalTimings={
-								Object.keys(presentation.recordedTimings).length > 0
-									? presentation.recordedTimings
-									: undefined
-							}
-							panelWidth={leftPanelWidth}
-							fieldContext={thumbnailFieldContext}
-							tableStyleContext={thumbnailTableStyleContext}
-						/>
+						{slidesPaneRenderer ? (
+							// The rail's slot (width, collapse, resize handle) stays the viewer's.
+							<div
+								data-pptx-chrome='slides'
+								className='h-full flex-shrink-0 overflow-hidden border-r border-border bg-secondary/30'
+								style={{
+									width: leftPanelWidth ?? 220,
+									// Same collapse rule as the built-in rail; hidden, not unmounted.
+									display: state.isSlidesPaneOpen ? undefined : 'none',
+								}}
+							>
+								<ViewerRegion region='slidesPane' renderer={slidesPaneRenderer} />
+							</div>
+						) : (
+							<SlidesPaneSidebar
+								slides={slides}
+								templateElementsBySlideId={state.templateElementsBySlideId}
+								activeSlideIndex={activeSlideIndex}
+								canvasSize={canvasSize}
+								sectionGroups={slideSectionGroups}
+								isOpen={state.isSlidesPaneOpen}
+								canEdit={canEdit}
+								onSelectSlide={state.setActiveSlideIndex}
+								onSlideContextMenu={slideOps.handleSlideContextMenu}
+								onMoveSlide={slideOps.handleMoveSlide}
+								onAddSlide={slideOps.handleAddSlide}
+								onAddSlideAfter={slideOps.handleAddSlideAfter}
+								onDuplicateSlides={slideOps.handleDuplicateSlides}
+								onDeleteSlides={slideOps.handleDeleteSlides}
+								onHideSlides={slideOps.handleToggleHideSlides}
+								onOpenLayoutForSlide={(index, x, y) => {
+									state.setActiveSlideIndex(index);
+									setLayoutGalleryAnchor({ x, y });
+								}}
+								onCollapse={() => state.setIsSlidesPaneOpen(false)}
+								onAddSection={sectionOps.addSection}
+								onRenameSection={sectionOps.renameSection}
+								onDeleteSection={sectionOps.deleteSection}
+								onMoveSectionUp={sectionOps.moveSectionUp}
+								onMoveSectionDown={sectionOps.moveSectionDown}
+								onToggleSectionCollapse={sectionOps.toggleSectionCollapse}
+								rehearsalTimings={
+									Object.keys(presentation.recordedTimings).length > 0
+										? presentation.recordedTimings
+										: undefined
+								}
+								panelWidth={leftPanelWidth}
+								fieldContext={thumbnailFieldContext}
+								tableStyleContext={thumbnailTableStyleContext}
+							/>
+						)}
 						{onResizeLeft && <ResizeHandle direction='horizontal' onResize={onResizeLeft} />}
 					</>
 				)}

@@ -2,6 +2,7 @@ import {
 	armEditorKeyboard,
 	cycleSelectableElement,
 	downloadBlob,
+	isDialogAvailable,
 	mapCustomizedEditorKey,
 	mapInlineTextFormatKey,
 	moveGuide,
@@ -223,6 +224,10 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 
 	/** Ctrl+K: open the hyperlink dialog for the currently selected element. */
 	const openHyperlinkForSelection = (): void => {
+		const customization = deps.getCustomization?.();
+		if (customization && !isDialogAvailable(customization, 'hyperlink')) {
+			return;
+		}
 		const state = store.get();
 		const element = state.selectedElementId
 			? findActiveElement(state, state.selectedElementId)
@@ -549,7 +554,11 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 			}
 		},
 		onPasteSpecial: () => {
-			if (!store.get().clipboardPayload) {
+			const customization = deps.getCustomization?.();
+			if (
+				!store.get().clipboardPayload ||
+				(customization && !isDialogAvailable(customization, 'pasteSpecial'))
+			) {
 				return;
 			}
 			openPasteSpecialDialog(doc, deps.getTranslator(), {

@@ -2,14 +2,18 @@ import type {
 	AccountAuthConfig,
 	PptxUiRibbonAddInElement,
 	RibbonAddInTab,
+	ResolvedCustomization,
 	RibbonContextualTabId,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
 import {
 	attachRibbonOverflow,
+	EMPTY_RESOLVED_CUSTOMIZATION,
 	homeLaunchers,
 	filterVisibleTabs,
 	isActionHidden,
+	isDialogAvailable,
+	isPanelVisible,
 	resolveActiveRibbonAddIn,
 	resolveActiveRibbonTab,
 	visibleContextualTabs,
@@ -84,13 +88,23 @@ export function createRibbon(
 	tabBar.el.hidden = true;
 	el.appendChild(tabBar.el);
 
+	// The host can remove the Find and Equation panels outright; every path that
+	// opens them (ribbon, keyboard, context menu) goes through these guards.
+	const resolved = (): ResolvedCustomization =>
+		handlers.nav.getCustomization?.() ?? EMPTY_RESOLVED_CUSTOMIZATION;
 	const findReplace = createFindReplacePanel(doc, t, handlers.findReplace);
 	el.appendChild(findReplace.el);
+	const toggleFindReplace = (): void => {
+		if (isPanelVisible(resolved(), 'findReplace')) {
+			findReplace.toggle();
+		}
+	};
 
 	const equationPanel = createEquationPanel(doc, t, (omml, id) =>
 		id ? handlers.edit.updateEquation(id, omml) : handlers.insert.insertEquation(omml),
 	);
 	el.appendChild(equationPanel.el);
+	const equationAvailable = (): boolean => isDialogAvailable(resolved(), 'equation');
 
 	const formatBackgroundPanel = createFormatBackgroundPanel(doc, t, handlers.edit);
 	el.appendChild(formatBackgroundPanel.el);
@@ -106,7 +120,8 @@ export function createRibbon(
 		? null
 		: createHomeTab(doc, t, {
 				edit: handlers.edit,
-				onToggleFindReplace: () => findReplace.toggle(),
+				onToggleFindReplace: toggleFindReplace,
+				isSlideTemplatesAvailable: () => isDialogAvailable(resolved(), 'slideTemplates'),
 				hiddenActions,
 				galleryHub,
 			});
@@ -116,7 +131,7 @@ export function createRibbon(
 				doc,
 				t,
 				handlers.insert,
-				() => equationPanel.toggle(),
+				() => equationAvailable() && equationPanel.toggle(),
 				() => handlers.nav.openHeaderFooter(),
 				() => handlers.nav.openHyperlink(),
 			);
@@ -225,6 +240,7 @@ export function createRibbon(
 		}
 		activeTab = tab;
 		tabBar.setActive(tab);
+		fileTab?.setVisible(tab === 'file');
 		for (const id of Object.keys(panes) as AnyTabId[]) {
 			const pane = panes[id];
 			if (pane) {
@@ -373,9 +389,9 @@ export function createRibbon(
 			primary.setInspectorOpen(open);
 			syncAnimations();
 		},
-		toggleFindReplace: () => findReplace.toggle(),
-		openEquationEditor: (id, omml) => equationPanel.openEdit(id, omml),
-		toggleEquationPanel: () => equationPanel.toggle(),
+		toggleFindReplace,
+		openEquationEditor: (id, omml) => equationAvailable() && equationPanel.openEdit(id, omml),
+		toggleEquationPanel: () => equationAvailable() && equationPanel.toggle(),
 		openSmartArtDialog: () => insertTab?.openSmartArt(),
 		openSlideSize,
 		toggleThemeGallery: () => {

@@ -23,6 +23,7 @@ import type { FindReplaceActions } from './editor/editor-find-replace-actions';
 import { createLazyActions } from './editor/editor-lazy-actions';
 import type { DrawTool } from './state';
 import type { ChromeOptions } from './ui';
+import type { RegionSet } from './ui/region-set';
 
 /**
  * The subset of {@link PptxViewer} behaviour the chrome (ribbon + notes
@@ -56,6 +57,8 @@ export interface ChromeCallbackDeps {
 	openSettings(tab?: 'general' | 'shortcuts'): void;
 	/** The host's resolved UI customisation, read lazily by the ribbon builders. */
 	getCustomization?(): ResolvedCustomization;
+	/** The chrome's region set (host File tab pages and replaced page bodies). */
+	getRegionSet?(): RegionSet;
 	openHeaderFooter(): void;
 	openCompare(): void;
 	openSetUpSlideShow(): void;
@@ -218,6 +221,7 @@ export function buildChromeCallbacks(
 			createPresentation: (templateId) => deps.createPresentation(templateId),
 			openSettings: () => deps.openSettings('general'),
 			getCustomization: deps.getCustomization,
+			getRegionSet: deps.getRegionSet,
 			openShare: () => deps.openShare(),
 			openDocumentProperties: () => deps.openDocumentProperties(),
 			openFontEmbedding: () => deps.openFontEmbedding(),

@@ -1,5 +1,6 @@
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
+	isEditingAllowed,
 	buildFieldSubstitutionContext,
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
@@ -93,6 +94,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	let protectedViewDismissed = $state(false);
 	const getEditable = (): boolean =>
 		editable &&
+		isEditingAllowed(getCustomization()) &&
 		(!editorUi.optionsState.options.trust.openInProtectedView || protectedViewDismissed);
 	const isProtectedViewActive = (): boolean =>
 		editable && editorUi.optionsState.options.trust.openInProtectedView && !protectedViewDismissed;
@@ -412,7 +414,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		exportingApi,
 		deck,
 		get editable() {
-			return editable;
+			return editable && isEditingAllowed(getCustomization());
 		},
 		set editable(next: boolean) {
 			editable = next;

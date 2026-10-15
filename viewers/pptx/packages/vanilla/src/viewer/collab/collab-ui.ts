@@ -7,6 +7,7 @@ import { createEl } from '../render';
 import type { Store, ViewerState } from '../state';
 import type { ViewerChrome } from '../ui';
 import { createIcon } from '../ui';
+import type { RegionSet } from '../ui/region-set';
 import type { BroadcastConfig } from './broadcast-helpers';
 import { buildBroadcastSessionConfig } from './broadcast-helpers';
 import type { ShareDefaults } from './share-helpers';
@@ -54,6 +55,8 @@ export interface CollabUiDeps {
 	showCollaborationStatus?: boolean;
 	/** Options > General > "Initials" override for the Share dialog's local-user avatar. */
 	getUserInitials?: () => string | undefined;
+	/** The viewer's dialog regions (Share and Broadcast bodies a host can replace). */
+	getRegions?: () => RegionSet | undefined;
 }
 
 export interface CollabUiController {
@@ -105,6 +108,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 		},
 		themeHost,
 		deps.getUserInitials,
+		deps.getRegions,
 	);
 
 	const broadcastDialog = createBroadcastDialog(
@@ -128,6 +132,7 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 			},
 		},
 		themeHost,
+		deps.getRegions,
 	);
 
 	const statusPill = createCollaborationStatus(doc, t, () => {

@@ -30,6 +30,8 @@ const MAX_PREVIEW_ELEMENTS = 100;
 export interface HomeTabDeps {
 	edit: EditActions;
 	onToggleFindReplace(): void;
+	/** False when the host removed the Slide Templates dialog (default: available). */
+	isSlideTemplatesAvailable?(): boolean;
 	/** Host-hidden ribbon controls (Merge Shapes / Crop are never built when hidden). */
 	hiddenActions?: readonly ToolbarActionId[];
 	/** The ribbon's gallery hub (omitted: a private one dispatching through `edit`). */
@@ -93,6 +95,7 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 		addSlide: edit.addSlide,
 		insertSlideFromLayout: edit.insertSlideFromLayout,
 		insertSlideFromTemplate: edit.insertSlideFromTemplate,
+		isSlideTemplatesAvailable: deps.isSlideTemplatesAvailable,
 		applyLayout: edit.applyLayout,
 		resetSlide: edit.resetSlide,
 		addSection: () => edit.sections.addSection(t('pptx.sections.defaultName')),

@@ -24,6 +24,7 @@ import type {
 import { HANDOUT_OPTIONS } from './print-dialog-types';
 import { PrintSettingsPanel } from './PrintSettingsPanel';
 import { useViewerOptionsContext } from './viewer-options-context';
+import { ViewerRegion, useRegionRenderer } from './ViewerRegion';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -39,6 +40,7 @@ export function PrintDialog({
 	defaultFrameSlides,
 }: PrintDialogProps): React.ReactElement | null {
 	const { t } = useTranslation();
+	const regionRenderer = useRegionRenderer('dialog.print');
 	const { panelStyle, handlers: dragHandlers } = useModalDismissDrag(onClose);
 	const { viewportWidth } = useIsMobile();
 	const touchTargetPx = getDensePanelTouchTargetPx(viewportWidth);
@@ -182,75 +184,89 @@ export function PrintDialog({
 					</button>
 				</div>
 
-				{/* Body */}
-				<div className='flex-1 overflow-y-auto px-5 py-4 flex gap-5 max-md:flex-col'>
-					{/* Left: Settings */}
-					<PrintSettingsPanel
-						printWhat={printWhat}
-						onPrintWhatChange={setPrintWhat}
-						orientation={orientation}
-						onOrientationChange={setOrientation}
-						colorMode={colorMode}
-						onColorModeChange={setColorMode}
-						frameSlides={frameSlides}
-						onFrameSlidesChange={setFrameSlides}
-						slidesPerPage={slidesPerPage}
-						onSlidesPerPageChange={setSlidesPerPage}
-						slideRange={slideRange}
-						onSlideRangeChange={setSlideRange}
-						customFrom={customFrom}
-						onCustomFromChange={setCustomFrom}
-						customTo={customTo}
-						onCustomToChange={setCustomTo}
-						totalSlides={slides.length}
-						activeSlideIndex={activeSlideIndex}
-					/>
-
-					{/* Right: Preview */}
-					{printWhat === 'handouts' && (
-						<div className='w-[230px] shrink-0 border-l border-border pl-4 overflow-y-auto max-md:w-full max-md:border-l-0 max-md:border-t max-md:pl-0 max-md:pt-3'>
-							<PrintPreview
-								slideIndices={previewSlideIndices}
-								slidesPerPage={slidesPerPage}
-								orientation={effectiveOrientation}
-								frameSlides={frameSlides}
-							/>
-						</div>
-					)}
-					{printWhat === 'notes' && (
-						<div className='w-[230px] shrink-0 border-l border-border pl-4 overflow-y-auto max-md:w-full max-md:border-l-0 max-md:border-t max-md:pl-0 max-md:pt-3'>
-							<NotesPagePreview
-								slideIndices={previewSlideIndices}
-								slides={slides}
-								frameSlides={frameSlides}
-							/>
-						</div>
-					)}
-				</div>
-
-				{/* Footer */}
-				<div className='flex items-center justify-between px-5 py-3 border-t border-border'>
-					<span className='text-xs text-muted-foreground'>
-						{t('pptx.print.pageEstimate', {
-							pages: pageCount,
-							slides: slideCount,
-						})}
-					</span>
-					<div className='flex gap-2'>
-						<DialogFooter
-							actions={[
-								{ id: 'cancel', label: t('pptx.common.cancel') },
-								{
-									id: 'print',
-									label: t('pptx.print.printButton'),
-									variant: 'primary',
-									icon: 'print',
-								},
-							]}
-							onAction={(id) => (id === 'print' ? handlePrint() : onClose())}
+				{regionRenderer ? (
+					// The frame (backdrop, title bar, close, dismiss) stays the viewer's; the host replaces the body.
+					<div className='min-h-0 flex-1 overflow-y-auto'>
+						<ViewerRegion
+							region='dialog.print'
+							renderer={regionRenderer}
+							close={onClose}
+							style={{ width: '100%', minHeight: '8rem' }}
 						/>
 					</div>
-				</div>
+				) : (
+					<>
+						{/* Body */}
+						<div className='flex-1 overflow-y-auto px-5 py-4 flex gap-5 max-md:flex-col'>
+							{/* Left: Settings */}
+							<PrintSettingsPanel
+								printWhat={printWhat}
+								onPrintWhatChange={setPrintWhat}
+								orientation={orientation}
+								onOrientationChange={setOrientation}
+								colorMode={colorMode}
+								onColorModeChange={setColorMode}
+								frameSlides={frameSlides}
+								onFrameSlidesChange={setFrameSlides}
+								slidesPerPage={slidesPerPage}
+								onSlidesPerPageChange={setSlidesPerPage}
+								slideRange={slideRange}
+								onSlideRangeChange={setSlideRange}
+								customFrom={customFrom}
+								onCustomFromChange={setCustomFrom}
+								customTo={customTo}
+								onCustomToChange={setCustomTo}
+								totalSlides={slides.length}
+								activeSlideIndex={activeSlideIndex}
+							/>
+
+							{/* Right: Preview */}
+							{printWhat === 'handouts' && (
+								<div className='w-[230px] shrink-0 border-l border-border pl-4 overflow-y-auto max-md:w-full max-md:border-l-0 max-md:border-t max-md:pl-0 max-md:pt-3'>
+									<PrintPreview
+										slideIndices={previewSlideIndices}
+										slidesPerPage={slidesPerPage}
+										orientation={effectiveOrientation}
+										frameSlides={frameSlides}
+									/>
+								</div>
+							)}
+							{printWhat === 'notes' && (
+								<div className='w-[230px] shrink-0 border-l border-border pl-4 overflow-y-auto max-md:w-full max-md:border-l-0 max-md:border-t max-md:pl-0 max-md:pt-3'>
+									<NotesPagePreview
+										slideIndices={previewSlideIndices}
+										slides={slides}
+										frameSlides={frameSlides}
+									/>
+								</div>
+							)}
+						</div>
+
+						{/* Footer */}
+						<div className='flex items-center justify-between px-5 py-3 border-t border-border'>
+							<span className='text-xs text-muted-foreground'>
+								{t('pptx.print.pageEstimate', {
+									pages: pageCount,
+									slides: slideCount,
+								})}
+							</span>
+							<div className='flex gap-2'>
+								<DialogFooter
+									actions={[
+										{ id: 'cancel', label: t('pptx.common.cancel') },
+										{
+											id: 'print',
+											label: t('pptx.print.printButton'),
+											variant: 'primary',
+											icon: 'print',
+										},
+									]}
+									onAction={(id) => (id === 'print' ? handlePrint() : onClose())}
+								/>
+							</div>
+						</div>
+					</>
+				)}
 			</div>
 		</div>
 	);

@@ -1,6 +1,7 @@
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	createCustomizationController,
+	getRegionRenderer,
 	isDialogAvailable,
 	isFeatureEnabled,
 	isPanelVisible,
@@ -15,6 +16,8 @@ import type {
 	ViewerDialogId,
 	ViewerFeatureId,
 	ViewerPanelId,
+	ViewerRegionId,
+	ViewerRegionRenderer,
 } from 'ooxml-ui/pptx';
 import { getContext, onDestroy, setContext, untrack } from 'svelte';
 
@@ -29,6 +32,8 @@ export interface ViewerCustomizationReader {
 	isPanelVisible(panel: ViewerPanelId): boolean;
 	isFeatureEnabled(feature: ViewerFeatureId): boolean;
 	isDialogAvailable(dialog: ViewerDialogId): boolean;
+	/** The host renderer replacing `region`, or undefined for the built-in. */
+	regionRenderer(region: ViewerRegionId): ViewerRegionRenderer | undefined;
 }
 
 /**
@@ -68,6 +73,16 @@ export class ViewerCustomizationState implements ViewerCustomizationReader {
 		return isDialogAvailable(this.resolved, dialog);
 	}
 
+	/**
+	 * Set by the viewer root once it publishes the region base context. Until then (a site mounted
+	 * stand-alone) no context can be built, so the built-in renders instead of an empty body.
+	 */
+	regionContextReady = false;
+
+	regionRenderer(region: ViewerRegionId): ViewerRegionRenderer | undefined {
+		return this.regionContextReady ? getRegionRenderer(this.resolved, region) : undefined;
+	}
+
 	destroy(): void {
 		this.#unsubscribe();
 	}
@@ -105,6 +120,7 @@ const DEFAULT_READER: ViewerCustomizationReader = {
 	isPanelVisible: () => true,
 	isFeatureEnabled: () => true,
 	isDialogAvailable: () => true,
+	regionRenderer: () => undefined,
 };
 
 /** Provide a reader to the component subtree (root, or a test harness). */

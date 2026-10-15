@@ -49,6 +49,8 @@ import {
 } from './print-helpers';
 import type { PrintSettings } from './print-helpers';
 import { PrintSettingsPanelComponent } from './print-settings-panel.component';
+import { ViewerRegionHostComponent } from './viewer-region-host.component';
+import { ViewerRegionService } from './viewer-region.service';
 
 /**
  * Map the mobile flag to the print-dialog panel class list. Pure (no Angular /
@@ -63,7 +65,12 @@ export function printDialogClass(isMobile: boolean): string {
 	selector: 'pptx-print-dialog',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [DialogFooterComponent, PrintSettingsPanelComponent, TranslatePipe],
+	imports: [
+		DialogFooterComponent,
+		PrintSettingsPanelComponent,
+		TranslatePipe,
+		ViewerRegionHostComponent,
+	],
 	providers: [IsMobileService],
 	template: `
 		<div
@@ -88,27 +95,35 @@ export function printDialogClass(isMobile: boolean): string {
 					</button>
 				</div>
 
-				<!-- Body -->
-				<div class="pptx-ng-print-dialog__body">
-					<pptx-print-settings-panel
-						[settings]="settings()"
-						[totalSlides]="slides().length"
-						[activeSlideIndex]="activeSlideIndex()"
-						(settingsChange)="patch($event)"
-					/>
-				</div>
-
-				<!-- Footer -->
-				<div class="pptx-ng-print-dialog__footer">
-					<span class="pptx-ng-print-dialog__estimate">
-						{{
-							'pptx.print.pageEstimate' | translate: { pages: pageCount(), slides: slideCount() }
-						}}
-					</span>
-					<div class="pptx-ng-print-dialog__actions">
-						<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction($event)" />
+				@if (regionRenderer(); as renderer) {
+					<div class="pptx-ng-print-dialog__body">
+						@if (regionContext(); as ctx) {
+							<pptx-region-host [renderer]="renderer" [context]="ctx" />
+						}
 					</div>
-				</div>
+				} @else {
+					<!-- Body -->
+					<div class="pptx-ng-print-dialog__body">
+						<pptx-print-settings-panel
+							[settings]="settings()"
+							[totalSlides]="slides().length"
+							[activeSlideIndex]="activeSlideIndex()"
+							(settingsChange)="patch($event)"
+						/>
+					</div>
+
+					<!-- Footer -->
+					<div class="pptx-ng-print-dialog__footer">
+						<span class="pptx-ng-print-dialog__estimate">
+							{{
+								'pptx.print.pageEstimate' | translate: { pages: pageCount(), slides: slideCount() }
+							}}
+						</span>
+						<div class="pptx-ng-print-dialog__actions">
+							<pptx-dialog-footer [actions]="footerActions()" (action)="onFooterAction($event)" />
+						</div>
+					</div>
+				}
 			</div>
 		</div>
 	`,
@@ -300,6 +315,13 @@ export class PrintDialogComponent {
 
 	/** Emits when the dialog is dismissed (Cancel / Escape / backdrop). */
 	readonly cancel = output<void>();
+
+	private readonly regions = inject(ViewerRegionService, { optional: true });
+	/** The host renderer replacing the dialog body, if any. */
+	protected readonly regionRenderer = computed(() => this.regions?.renderer('dialog.print'));
+	protected readonly regionContext = computed(
+		() => this.regions?.context('dialog.print', () => this.onCancel()) ?? null,
+	);
 
 	/** Reactive viewport / pointer flags (drives the bottom-sheet layout). */
 	protected readonly mobile = inject(IsMobileService);

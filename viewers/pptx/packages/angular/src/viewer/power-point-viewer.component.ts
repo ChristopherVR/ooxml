@@ -74,6 +74,8 @@ import type {
 	ViewerCustomization,
 	ViewerMode,
 	ViewerQuickAccessOptions,
+	ViewerRegionContext,
+	ViewerRegionId,
 	ViewerSettings,
 	ViewerTheme,
 	ViewportFitPadding,
@@ -218,6 +220,8 @@ import { ViewerMobileSheetService } from './viewer-mobile-sheet.service';
 import { ViewerOptionsService } from './viewer-options.service';
 import { ViewerPresentationModeService } from './viewer-presentation-mode.service';
 import { insertPublicElement } from './viewer-public-insertion';
+import { ViewerRegionHostComponent } from './viewer-region-host.component';
+import { ViewerRegionService } from './viewer-region.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 import { ViewerTouchGesturesService } from './viewer-touch-gestures.service';
 import { ViewerZoomService } from './viewer-zoom.service';
@@ -239,6 +243,8 @@ import { ZoomTargetService } from './zoom-target.service';
  *  - React theme context / Vue provide-inject → `themeStyle` CSS vars applied to
  *    the root element (app-wide sharing via `provideViewerTheme`).
  */
+const noopClose = (): void => undefined;
+
 @Component({
 	selector: 'pptx-viewer',
 	standalone: true,
@@ -304,6 +310,7 @@ import { ZoomTargetService } from './zoom-target.service';
 		RehearseTimingsComponent,
 		AiChatPanelComponent,
 		TranslatePipe,
+		ViewerRegionHostComponent,
 	],
 	template: `
 		<div
@@ -539,6 +546,19 @@ import { ZoomTargetService } from './zoom-target.service';
 
 				<div class="pptx-ng-body" data-pptx-chrome="body">
 					@if (
+						thumbnailsVisible() && slidesRegionShown() && regions.renderer('slidesPane');
+						as slidesRenderer
+					) {
+						<aside
+							class="pptx-ng-thumbnails pptx-ng-region-slot pptx-ng-region-slides"
+							data-pptx-chrome="slides-region"
+						>
+							<pptx-region-host
+								[renderer]="slidesRenderer"
+								[context]="regionContext('slidesPane')!"
+							/>
+						</aside>
+					} @else if (
 						canEdit() &&
 						!mobile.isMobile() &&
 						!slidesPanelCollapsed() &&
@@ -707,7 +727,7 @@ import { ZoomTargetService } from './zoom-target.service';
 					-->
 					@if (
 						chromeVisible() && customizationService.panelVisible('inspector')
-							? inspectorPanel.visibleInspectorKind()
+							? visibleInspectorKind()
 							: null;
 						as kind
 					) {
@@ -745,39 +765,44 @@ import { ZoomTargetService } from './zoom-target.service';
 							>
 								<div class="pptx-ng-idrawer-handle"></div>
 							</div>
-							@switch (kind) {
-								@case ('accessibility') {
-									<pptx-accessibility-panel
-										[issues]="accessibility.issues()"
-										(selectSlide)="goTo($event)"
-									/>
+							@if (regions.renderer('inspector'); as inspectorRenderer) {
+								@if (regionContext('inspector', closeInspector); as ctx) {
+									<pptx-region-host [renderer]="inspectorRenderer" [context]="ctx" />
 								}
-								@case ('signatures') {
-									<pptx-signatures-panel [signatures]="loader.signatures()" />
-								}
-								@case ('comments') {
-									<pptx-comments-panel
-										[comments]="activeComments()"
-										[modernCommentAuthors]="loader.modernCommentAuthors()"
-										(add)="onCommentAdd($event)"
-										(remove)="onCommentRemove($event)"
-										(resolve)="onCommentResolve($event)"
-										(reply)="onCommentReply($event)"
-									/>
-								}
-								@case ('selection') {
-									<pptx-selection-pane
-										[elements]="activeSlide()?.elements ?? []"
-										[selectedIds]="editor.selectedIds()"
-										(selectElement)="editor.select([$event])"
-										(bringForward)="canvasEditing.onSelectionPaneBringForward($event)"
-										(sendBackward)="canvasEditing.onSelectionPaneSendBackward($event)"
-										(toggleHidden)="canvasEditing.onToggleElementHidden($event)"
-										(renameElement)="canvasEditing.onSelectionPaneRename($event)"
-									/>
-								}
-								@default {
-									<!--
+							} @else {
+								@switch (kind) {
+									@case ('accessibility') {
+										<pptx-accessibility-panel
+											[issues]="accessibility.issues()"
+											(selectSlide)="goTo($event)"
+										/>
+									}
+									@case ('signatures') {
+										<pptx-signatures-panel [signatures]="loader.signatures()" />
+									}
+									@case ('comments') {
+										<pptx-comments-panel
+											[comments]="activeComments()"
+											[modernCommentAuthors]="loader.modernCommentAuthors()"
+											(add)="onCommentAdd($event)"
+											(remove)="onCommentRemove($event)"
+											(resolve)="onCommentResolve($event)"
+											(reply)="onCommentReply($event)"
+										/>
+									}
+									@case ('selection') {
+										<pptx-selection-pane
+											[elements]="activeSlide()?.elements ?? []"
+											[selectedIds]="editor.selectedIds()"
+											(selectElement)="editor.select([$event])"
+											(bringForward)="canvasEditing.onSelectionPaneBringForward($event)"
+											(sendBackward)="canvasEditing.onSelectionPaneSendBackward($event)"
+											(toggleHidden)="canvasEditing.onToggleElementHidden($event)"
+											(renameElement)="canvasEditing.onSelectionPaneRename($event)"
+										/>
+									}
+									@default {
+										<!--
 										Format pane, covering BOTH the 'element' and 'slide' inspector
 										kinds with one React-parity tabbed pane (Elements | Properties |
 										Comments). Using a single @default branch (instead of one @case
@@ -787,17 +812,18 @@ import { ZoomTargetService } from './zoom-target.service';
 										(element inspector vs presentation/slide sections), exactly like
 										React's always-rendered InspectorPane.
 									-->
-									<pptx-slide-default-inspector
-										[slideIndex]="activeSlideIndex()"
-										[canEdit]="canEdit()"
-										[selectedElement]="selectedElement()"
-										[comments]="activeComments()"
-										[modernCommentAuthors]="loader.modernCommentAuthors()"
-										(commentAdd)="onCommentAdd($event)"
-										(commentRemove)="onCommentRemove($event)"
-										(commentResolve)="onCommentResolve($event)"
-										(commentReply)="onCommentReply($event)"
-									/>
+										<pptx-slide-default-inspector
+											[slideIndex]="activeSlideIndex()"
+											[canEdit]="canEdit()"
+											[selectedElement]="selectedElement()"
+											[comments]="activeComments()"
+											[modernCommentAuthors]="loader.modernCommentAuthors()"
+											(commentAdd)="onCommentAdd($event)"
+											(commentRemove)="onCommentRemove($event)"
+											(commentResolve)="onCommentResolve($event)"
+											(commentReply)="onCommentReply($event)"
+										/>
+									}
 								}
 							}
 						</aside>
@@ -837,19 +863,36 @@ import { ZoomTargetService } from './zoom-target.service';
 						#notesBar
 						class="pptx-ng-notes"
 						data-pptx-chrome="notes-host"
+						[style.display]="
+							regions.renderer('notes') && !mobileSheetSvc.showNotes() ? 'none' : null
+						"
 						[attr.aria-label]="'pptx.notes.speakerNotes' | translate"
 					>
-						<pptx-notes-panel
-							[slide]="activeSlide()"
-							[expanded]="mobileSheetSvc.showNotes()"
-							[notesStyle]="loader.notesMaster()?.notesStyle"
-							(notesCommit)="canvasEditing.onNotesUpdate($event.notes, $event.segments)"
-							(notesToggle)="mobileSheetSvc.toggleNotes()"
-						/>
+						@if (regions.renderer('notes'); as notesRenderer) {
+							<pptx-region-host [renderer]="notesRenderer" [context]="regionContext('notes')!" />
+						} @else {
+							<pptx-notes-panel
+								[slide]="activeSlide()"
+								[expanded]="mobileSheetSvc.showNotes()"
+								[notesStyle]="loader.notesMaster()?.notesStyle"
+								(notesCommit)="canvasEditing.onNotesUpdate($event.notes, $event.segments)"
+								(notesToggle)="mobileSheetSvc.toggleNotes()"
+							/>
+						}
 					</aside>
 				}
 
 				@if (
+					!mobile.isMobile() &&
+						toolbarVisible() &&
+						customizationService.panelVisible('statusBar') &&
+						regions.renderer('statusBar');
+					as statusRenderer
+				) {
+					<div class="pptx-ng-region-slot pptx-ng-region-status" data-pptx-chrome="status-region">
+						<pptx-region-host [renderer]="statusRenderer" [context]="regionContext('statusBar')!" />
+					</div>
+				} @else if (
 					!mobile.isMobile() && toolbarVisible() && customizationService.panelVisible('statusBar')
 				) {
 					<pptx-status-bar
@@ -1046,7 +1089,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				}
 			}
 
-			@if (findReplace.showFind()) {
+			@if (findReplace.showFind() && customizationService.panelVisible('findReplace')) {
 				<pptx-find-bar
 					[slides]="loader.slides()"
 					(navigate)="goTo($event)"
@@ -1054,7 +1097,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				/>
 			}
 
-			@if (findReplace.showFindReplace()) {
+			@if (findReplace.showFindReplace() && customizationService.panelVisible('findReplace')) {
 				<pptx-find-replace-bar
 					[matchCount]="findReplace.results().length"
 					[matchIndex]="findReplace.activeIndex()"
@@ -1119,7 +1162,9 @@ import { ZoomTargetService } from './zoom-target.service';
 			}
 
 			<pptx-paste-special-dialog
-				[open]="editor.isPasteSpecialDialogOpen()"
+				[open]="
+					editor.isPasteSpecialDialogOpen() && customizationService.dialogAvailable('pasteSpecial')
+				"
 				(cancel)="editor.isPasteSpecialDialogOpen.set(false)"
 				(confirm)="onPasteSpecialConfirm($event)"
 			/>
@@ -1181,7 +1226,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				(discard)="autosaveRecovery.discard()"
 			/>
 
-			@if (canEdit()) {
+			@if (canEdit() && customizationService.dialogAvailable('hyperlink')) {
 				<pptx-hyperlink-dialog
 					[open]="docProperties.showHyperlink()"
 					[element]="selectedElement()"
@@ -1190,7 +1235,7 @@ import { ZoomTargetService } from './zoom-target.service';
 				/>
 			}
 
-			@if (print.isDialogOpen()) {
+			@if (print.isDialogOpen() && customizationService.dialogAvailable('print')) {
 				<pptx-print-dialog
 					[slides]="displaySlidesMut()"
 					[activeSlideIndex]="activeSlideIndex()"
@@ -1265,7 +1310,7 @@ import { ZoomTargetService } from './zoom-target.service';
 
 				<!-- ── Slide Templates gallery dialog ─────────────────────────── -->
 				<pptx-slide-template-gallery-dialog
-					[open]="showTemplateGallery()"
+					[open]="showTemplateGallery() && customizationService.dialogAvailable('slideTemplates')"
 					[scheme]="templateScheme()"
 					(insert)="onInsertTemplateSlide($event)"
 					(close)="showTemplateGallery.set(false)"
@@ -1337,13 +1382,17 @@ import { ZoomTargetService } from './zoom-target.service';
 						>
 							<div class="pptx-ng-mnotes-handle"></div>
 						</div>
-						<pptx-notes-panel
-							[slide]="activeSlide()"
-							[expanded]="true"
-							[notesStyle]="loader.notesMaster()?.notesStyle"
-							(notesCommit)="canvasEditing.onNotesUpdate($event.notes, $event.segments)"
-							(notesToggle)="mobileSheetSvc.toggleNotes()"
-						/>
+						@if (regions.renderer('notes'); as notesRenderer) {
+							<pptx-region-host [renderer]="notesRenderer" [context]="regionContext('notes')!" />
+						} @else {
+							<pptx-notes-panel
+								[slide]="activeSlide()"
+								[expanded]="true"
+								[notesStyle]="loader.notesMaster()?.notesStyle"
+								(notesCommit)="canvasEditing.onNotesUpdate($event.notes, $event.segments)"
+								(notesToggle)="mobileSheetSvc.toggleNotes()"
+							/>
+						}
 					</div>
 				}
 
@@ -1613,6 +1662,39 @@ export class PowerPointViewerComponent
 	);
 	protected readonly customizationService = inject(ViewerCustomizationService);
 	private readonly customizationInputSync = this.customizationService.bindInput(this.customization);
+	/** Host region renderers and the context they receive (see {@link ViewerRegionService}). */
+	protected readonly regions = inject(ViewerRegionService);
+	/** Closes the inspector, for the `inspector` region context. */
+	protected readonly closeInspector = (): void => this.inspectorPanel.closeInspector();
+	/** The inspector content kind, minus the panels the host hid. */
+	protected readonly visibleInspectorKind = computed(() => {
+		const kind = this.inspectorPanel.visibleInspectorKind();
+		const service = this.customizationService;
+		if (
+			(kind === 'selection' && !service.panelVisible('selectionPane')) ||
+			(kind === 'accessibility' && !service.panelVisible('accessibilityPane')) ||
+			(kind === 'signatures' && !service.dialogAvailable('signatures'))
+		) {
+			return null;
+		}
+		return kind;
+	});
+	/** Whether the left thumbnail rail would show (a `slidesPane` region fills the same slot). */
+	protected readonly slidesRegionShown = computed(() => {
+		const visible =
+			this.thumbnailsVisible() && this.customizationService.panelVisible('slidesPane');
+		return this.canEdit()
+			? visible && !this.mobile.isMobile() && !this.slidesPanelCollapsed()
+			: visible;
+	});
+
+	/** The context for a replaced region; the template falls back to the built-in while null. */
+	protected regionContext(
+		region: ViewerRegionId,
+		close: () => void = noopClose,
+	): ViewerRegionContext | null {
+		return this.regions.context(region, close);
+	}
 
 	/** Fired when the active slide changes. */
 	readonly activeSlideChange = output<number>();
@@ -1784,6 +1866,7 @@ export class PowerPointViewerComponent
 	protected readonly hasEditPermission = computed(
 		() =>
 			this.canEditInput() &&
+			this.customizationService.editingAllowed() &&
 			(!this.viewerOpts.options().trust.openInProtectedView || this.protectedViewDismissed()) &&
 			!this.loadNotices.lockActive(),
 	);
@@ -1796,6 +1879,7 @@ export class PowerPointViewerComponent
 	protected readonly protectedViewActive = computed(
 		() =>
 			this.canEditInput() &&
+			this.customizationService.editingAllowed() &&
 			this.viewerOpts.options().trust.openInProtectedView &&
 			!this.protectedViewDismissed(),
 	);
@@ -2247,6 +2331,15 @@ export class PowerPointViewerComponent
 
 	constructor() {
 		super();
+		this.regions.attach(() => ({
+			viewer: this,
+			mode: this.getMode(),
+			canEdit: this.canEdit(),
+			activeSlideIndex: this.activeSlideIndex(),
+			slideCount: this.slideCount(),
+			selectedElementIds: this.outlineAuthoring.canvasSelectedIds(),
+			locale: this.localeCode(),
+		}));
 		let inspectorInitialized = false;
 		effect(() => {
 			const initiallyOpen = this.inspectorInitiallyOpen();

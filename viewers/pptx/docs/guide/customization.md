@@ -1,6 +1,6 @@
 ---
 title: UI Customization
-description: Hide, lock and remap any part of the viewer chrome from code - ribbon tabs and buttons, File > Options pages, sections and settings, the File tab, context menus, keyboard shortcuts, panels, features and dialogs - with one framework-neutral object that works the same in React, Vue, Angular, Svelte and Vanilla JS.
+description: Hide, lock, remap or replace any part of the viewer chrome from code - ribbon tabs and buttons, File > Options pages, sections and settings, the File tab, context menus, keyboard shortcuts, panels, features, dialogs and capabilities, or swap the Settings dialog, inspector, panels and File pages for your own UI - with one framework-neutral object that works the same in React, Vue, Angular, Svelte and Vanilla JS.
 ---
 
 # UI Customization
@@ -55,6 +55,8 @@ const customization: ViewerCustomization = {
 	disabledFeatures: ['ai'],
 	hiddenDialogs: ['broadcast'],
 	hiddenExportFormats: ['video', 'gif'],
+	capabilities: { print: false },
+	regions: { 'dialog.options': 'acme-settings' }, // your own Settings view
 };
 ```
 
@@ -63,6 +65,33 @@ in all five bindings. The logic lives once in the internal shared package, so a
 customisation that works in React works the same way in Svelte.
 
 [[toc]]
+
+## What you can configure
+
+Everything below is either a field of `customization` (this guide) or a prop of
+the viewer component (the binding's own guide). The customisation fields:
+
+| You want to                                                                                              | Field                                                                                                           |
+| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Hide ribbon tabs, groups, controls and toolbar buttons                                                   | `ribbon.hiddenTabs`, `ribbon.hiddenGroups`, `ribbon.hiddenButtons`                                              |
+| Add your own ribbon tabs                                                                                 | the `ribbonAddIns` prop ([below](#host-ribbon-tabs-ribbonaddins))                                               |
+| Hide, lock or set defaults for File > Options pages, sections and settings                               | `options.hiddenPages`, `options.hiddenSections`, `options.hiddenSettings`, `options.locked`, `options.defaults` |
+| Remove File > Options entirely                                                                           | `hiddenDialogs: ['options']`                                                                                    |
+| Replace File > Options with your own Settings view                                                       | `regions['dialog.options']`                                                                                     |
+| Hide File tab pages and cards                                                                            | `backstage.hiddenPages`, `backstage.hiddenCards`                                                                |
+| Add your own File tab pages                                                                              | `backstage.extraPages`                                                                                          |
+| Replace a File tab page                                                                                  | `regions['backstage.<page>']`                                                                                   |
+| Hide or add context-menu commands                                                                        | `contextMenu.*`                                                                                                 |
+| Disable or remap shortcuts                                                                               | `keyboard.*`                                                                                                    |
+| Hide panels (inspector, slide rail, notes, status bar, title bar, Selection Pane, Find and Replace, ...) | `hiddenPanels`                                                                                                  |
+| Replace the inspector, slide rail, notes or status bar                                                   | `regions.inspector`, `regions.slidesPane`, `regions.notes`, `regions.statusBar`                                 |
+| Hide inspector cards                                                                                     | `inspector.hiddenCards`                                                                                         |
+| Switch off AI, collaboration, comments, present mode, Edit Points                                        | `disabledFeatures`                                                                                              |
+| Remove dialogs and every entry point that opens them                                                     | `hiddenDialogs`                                                                                                 |
+| Replace the Share, Broadcast or Print dialog body                                                        | `regions['dialog.share']`, `regions['dialog.broadcast']`, `regions['dialog.print']`                             |
+| Remove export formats                                                                                    | `hiddenExportFormats`                                                                                           |
+| Remove drawing tools                                                                                     | `hiddenDrawingTools`                                                                                            |
+| Make the deck read-only, or forbid export, print, share, copy, present or comment                        | `capabilities`                                                                                                  |
 
 ## Concepts
 
@@ -104,11 +133,22 @@ resolver:
 - `disabledFeatures: ['ai']` removes the AI toggle and panel, the "Ask AI" /
   "Fix with AI" context-menu entries and the AI page of File > Options, even
   when the host passes an `ai` config.
-- `disabledFeatures: ['comments']` removes the Add Comment context-menu entry.
+- `disabledFeatures: ['comments']` removes the Add Comment context-menu entry
+  and the Comments groups of the Insert and Review tabs.
 - `disabledFeatures: ['presentMode']` removes the Slide Show ribbon tab and the
   F5 / Shift+F5 start-show shortcuts.
 - `hiddenExportFormats` removes individual File > Export cards; hiding all six
   removes the Export button and page too.
+- Hiding a panel removes the ribbon controls and shortcuts that open it:
+  `findReplace` takes Home > Find / Replace and Ctrl+F / Ctrl+H with it,
+  `selectionPane` View > Selection Pane, `accessibilityPane` Review > Check
+  Accessibility and Help > Accessibility checker, `comparePane` Review >
+  Compare, and `notes` the Notes buttons.
+- Hiding a dialog does the same for its entry points: `hyperlink` removes
+  Insert > Link, the Link menu entry and Ctrl+K; `equation` Insert > Equation;
+  `pasteSpecial` its shortcut; `slideTemplates` Home > Slide templates;
+  `passwordProtection` and `signatures` their File > Info cards.
+- `capabilities` expand into the lists above (see [Capabilities](#capabilities)).
 - An Options section that loses every control is removed; an Options page that
   loses every section is removed. Menus repair their separators when the first
   entry of a group is hidden.
@@ -249,6 +289,9 @@ template ref, Angular component instance, Svelte `bind:this`, Vanilla instance):
 | `setPanelVisible(id, visible)`                                          | Show or hide a chrome region.                                              |
 | `setFeatureEnabled(id, enabled)`                                        | Switch a feature area on or off.                                           |
 | `setDialogAvailable(id, available)`                                     | Allow or remove a dialog and its entry points.                             |
+| `setCapability(id, allowed)`                                            | Switch a capability; `undefined` returns it to the default.                |
+| `setRegion(id, renderer)`                                               | Replace a region with your UI; `undefined` restores the built-in.          |
+| `addBackstagePage(page)` / `removeBackstagePage(id)`                    | Add (or replace by id) and remove a host File tab page.                    |
 
 ### Shortcut chords
 
@@ -367,6 +410,257 @@ document.getElementById('hide-insert')!.addEventListener('click', () => {
 
 :::
 
+## Replace a region with your own UI
+
+Hiding removes a region; replacing keeps its place in the layout and hands that
+place to you. The viewer renders an empty container where the built-in UI
+would be (the inspector's column, the Options dialog's body, a File tab page)
+and you fill it, in any framework or none. Put the renderer under `regions`:
+
+```ts
+const customization: ViewerCustomization = {
+	regions: {
+		'dialog.options': 'acme-settings', // a custom element you registered
+		inspector: (container, context) => {
+			const view = new AcmeInspector(container, context.viewer);
+			view.show(context.selectedElementIds);
+			return {
+				update: (next) => view.show(next.selectedElementIds),
+				destroy: () => view.dispose(),
+			};
+		},
+	},
+};
+```
+
+### Regions
+
+| Region                                             | What you replace                                                          | What the viewer keeps                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `inspector`                                        | The inspector pane                                                        | Its column, width, resize handle, open/closed state and mobile sheet |
+| `slidesPane`                                       | The slide thumbnail rail                                                  | Its width and collapse state                                         |
+| `notes`                                            | The speaker-notes panel                                                   | Its height, resize handle and collapse state                         |
+| `statusBar`                                        | The status bar                                                            | Its row under the canvas                                             |
+| `dialog.options`                                   | The body of File > Options (the Settings dialog)                          | The dialog frame: backdrop, title, close button, Escape              |
+| `dialog.share`, `dialog.broadcast`, `dialog.print` | The body of that dialog                                                   | The dialog frame                                                     |
+| `backstage.<page>`                                 | The body of one File tab page (`backstage.info`, `backstage.export`, ...) | The File tab nav, title and back button                              |
+
+The full list is in the [reference](#replaceable-regions-regions). Hiding wins
+over replacing: a region that is also hidden (through `hiddenPanels`,
+`hiddenDialogs`, `backstage.hiddenPages` or a capability) is not rendered at
+all.
+
+### Renderer forms
+
+A region takes any of three forms. Use whichever fits your stack:
+
+- **A mount function** `(container, context) => cleanup | handle | void`. It
+  runs once when the region appears. Return a cleanup function, or a handle
+  `{ update?(context), destroy?() }` to also receive context changes.
+- **A custom element tag**, as a string (`'acme-settings'`). The viewer creates
+  the element, appends it to the container and assigns its `context` property,
+  then assigns `context` again whenever the context changes. Register the
+  element yourself before the region first appears.
+- **A custom element spec** `{ element: 'acme-settings', properties: { tenant } }`.
+  The same, with `properties` assigned once before the element is attached. An
+  equal spec passed again (same tag, same property values) keeps the element.
+
+The viewer remounts a region only when its renderer changes: a different
+function, a different tag, or different `properties`. Define mount functions
+once (outside a render function, or memoised), as you do for the rest of the
+`customization` object.
+
+A renderer that throws is caught and logged; it never takes the viewer down.
+
+### When a region is mounted
+
+A replaced region appears exactly where and when the built-in would, and the
+viewer keeps the slot's own behaviour:
+
+- **Visibility rules carry over.** A read-only deck has no inspector, so it has
+  no host inspector either; a region the built-in shows only on desktop, or
+  only while editing, follows the same rule.
+- **Collapsing hides, it does not unmount.** Collapsed notes or a closed
+  inspector keep your renderer mounted and hidden, so its state survives; it is
+  destroyed when the region stops being replaced, its renderer changes, or the
+  viewer is destroyed.
+- **Size stays with the viewer.** The inspector keeps its width and resize
+  handle, the notes panel its height, resize handle and collapse toggle. Your
+  content fills the container (`width` and `height` are 100%).
+- **Phone layouts** replace the same content inside the bottom sheets that hold
+  the inspector, notes and slide rail.
+- **`close()` on a dialog** behaves like the dialog's close (X) button: it
+  closes the dialog and keeps every change made through `setOption`.
+
+Each container carries a `data-pptx-region="<id>"` attribute, a stable hook for
+your own CSS and tests.
+
+### The context
+
+Every renderer receives a `ViewerRegionContext`:
+
+| Field                            | Meaning                                                                                                                                                                        |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `region`                         | The region id (`inspector`, `dialog.options`, `backstage.host.<id>`, ...)                                                                                                      |
+| `viewer`                         | The viewer's imperative API, the same object as the component handle: `getSlides()`, `getElementById()`, `updateElement()`, `goTo()`, `undo()`, the customisation helpers, ... |
+| `mode`                           | `'edit'`, `'preview'`, `'present'` or `'master'`                                                                                                                               |
+| `canEdit`                        | `false` when the deck is read-only (edit prop, `capabilities.edit` or protection)                                                                                              |
+| `activeSlideIndex`, `slideCount` | The active slide (zero-based) and the slide count                                                                                                                              |
+| `selectedElementIds`             | The selected elements on the active slide (empty: nothing selected)                                                                                                            |
+| `locale`                         | The active UI locale                                                                                                                                                           |
+| `close()`                        | Closes the dialog, leaves the File tab or closes the inspector; a no-op for the status bar, notes and slides pane                                                              |
+
+`dialog.options` adds the File > Options model, so a host Settings view can
+read and write the same settings the built-in dialog does:
+
+| Field                  | Meaning                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| `options`              | The current `ViewerOptions` (host locks applied)                                              |
+| `setOption(id, value)` | Change one setting by its `<group>.<key>` id (`advanced.showGrid`); locked settings ignore it |
+| `resetOptions()`       | Back to the host defaults, or the built-ins                                                   |
+
+`close`, `setOption` and `resetOptions` are stable: keeping an older context
+and calling them later is safe.
+
+### Mounting a framework component
+
+The mount function is framework-neutral, so a region can hold a component from
+any framework, including a different one from the viewer's binding:
+
+::: code-group
+
+```tsx [React]
+import type { ViewerRegionMount } from 'pptx-react-viewer';
+import { createRoot } from 'react-dom/client';
+
+const settings: ViewerRegionMount = (container, context) => {
+	const root = createRoot(container);
+	root.render(<AcmeSettings context={context} />);
+	return {
+		update: (next) => root.render(<AcmeSettings context={next} />),
+		destroy: () => root.unmount(),
+	};
+};
+
+<PowerPointViewer content={bytes} customization={{ regions: { 'dialog.options': settings } }} />;
+```
+
+```ts [Vue]
+import type { ViewerRegionContext, ViewerRegionMount } from 'pptx-vue-viewer';
+import { createApp, shallowRef } from 'vue';
+
+const settings: ViewerRegionMount = (container, context) => {
+	const current = shallowRef<ViewerRegionContext>(context);
+	const app = createApp(AcmeSettings, { context: current });
+	app.mount(container);
+	return { update: (next) => (current.value = next), destroy: () => app.unmount() };
+};
+```
+
+```ts [Angular]
+import { createComponent, type ApplicationRef, type EnvironmentInjector } from '@angular/core';
+import type { ViewerRegionMount } from 'pptx-angular-viewer';
+
+function settingsRegion(app: ApplicationRef, injector: EnvironmentInjector): ViewerRegionMount {
+	return (container, context) => {
+		const ref = createComponent(AcmeSettingsComponent, {
+			environmentInjector: injector,
+			hostElement: container.appendChild(document.createElement('acme-settings-host')),
+		});
+		ref.setInput('context', context);
+		app.attachView(ref.hostView);
+		return {
+			update: (next) => ref.setInput('context', next),
+			destroy: () => {
+				app.detachView(ref.hostView);
+				ref.destroy();
+			},
+		};
+	};
+}
+```
+
+```ts [Svelte]
+import type { ViewerRegionMount } from 'pptx-svelte-viewer';
+// settings-region.svelte.ts (runes need a .svelte.ts module)
+import { mount, unmount } from 'svelte';
+
+const settings: ViewerRegionMount = (container, context) => {
+	const props = $state({ context });
+	const component = mount(AcmeSettings, { target: container, props });
+	return { update: (next) => (props.context = next), destroy: () => unmount(component) };
+};
+```
+
+```ts [Vanilla]
+import type { ViewerRegionMount, ViewerSettingsRegionContext } from 'pptx-vanilla-viewer';
+
+const settings: ViewerRegionMount = (container, context) => {
+	// `dialog.options` receives the settings model on top of the base context.
+	const { options, setOption } = context as ViewerSettingsRegionContext;
+	const grid = document.createElement('label');
+	const box = document.createElement('input');
+	box.type = 'checkbox';
+	box.checked = options.advanced.showGrid;
+	box.addEventListener('change', () => setOption('advanced.showGrid', box.checked));
+	grid.append(box, ' Show gridlines');
+	container.append(grid);
+};
+```
+
+:::
+
+### Your own File tab pages
+
+`backstage.extraPages` adds pages to the File tab, after the built-in pages of
+their group. Each page's body is a region (`backstage.host.<id>`) and takes
+the same renderer forms:
+
+```ts
+const customization: ViewerCustomization = {
+	backstage: {
+		extraPages: [
+			{ id: 'policies', label: 'Policies', render: 'acme-policies' },
+			{ id: 'about', label: 'About Acme', group: 'footer', render: mountAbout },
+		],
+	},
+};
+```
+
+`label` is your own text and is not translated. Page ids must be unique among
+your pages; a repeated id is ignored. `addBackstagePage(page)` and
+`removeBackstagePage(id)` change them at runtime.
+
+## Capabilities
+
+`capabilities` states what the user may do, one switch per capability, and
+removes every path to what is switched off: buttons, menu entries, shortcuts,
+File pages and cards. An omitted key (or `true`) leaves the viewer's own rules
+in charge.
+
+```ts
+const portal: ViewerCustomization = {
+	capabilities: { edit: false, export: false, print: false, copy: false },
+};
+```
+
+| Capability | `false` means                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| `edit`     | The deck opens read-only, whatever the edit prop says (`canEdit`, `editable`).             |
+| `export`   | No File > Export page, Export button or export cards.                                      |
+| `print`    | No Print dialog, File > Print page or Print card.                                          |
+| `share`    | No Share or Broadcast dialogs, buttons, pages or cards.                                    |
+| `copy`     | No Copy, Cut or Save as Picture (menus, ribbon, shortcuts) and no Copy as image.           |
+| `present`  | No Slide Show tab or F5 / Shift+F5 (the `presentMode` feature).                            |
+| `comment`  | No Add Comment entry and no Comments groups in Insert and Review (the `comments` feature). |
+
+Capabilities are UI policy, not document protection. A user with the browser's
+developer tools still has the bytes you handed the viewer; if a deck must not
+be copied or exported, do not send it to the browser.
+
+`setCapability(id, allowed)` changes one at runtime; `undefined` returns it to
+the default.
+
 ## Recipes
 
 ### Kiosk: a viewer with no editing chrome
@@ -478,6 +772,46 @@ const keys: ViewerCustomization = {
 };
 ```
 
+### Your own Settings view
+
+Keep the viewer's Options dialog frame but show your own settings, reading and
+writing the same model:
+
+```ts
+customElements.define(
+	'acme-settings',
+	class extends HTMLElement {
+		set context(context: ViewerSettingsRegionContext) {
+			this.textContent = '';
+			const grid = document.createElement('input');
+			grid.type = 'checkbox';
+			grid.checked = context.options.advanced.showGrid;
+			grid.onchange = () => context.setOption('advanced.showGrid', grid.checked);
+			const done = document.createElement('button');
+			done.textContent = 'Done';
+			done.onclick = () => context.close();
+			this.append(grid, done);
+		}
+	},
+);
+
+const customization: ViewerCustomization = { regions: { 'dialog.options': 'acme-settings' } };
+```
+
+To send users to your application's own settings page instead, hide the
+dialog (`hiddenDialogs: ['options']`) and add a File tab page or a ribbon
+add-in command that navigates there.
+
+### A read-only portal
+
+```ts
+const portal: ViewerCustomization = {
+	capabilities: { edit: false, export: false, print: false, share: false, copy: false },
+	disabledFeatures: ['ai'],
+	hiddenPanels: ['inspector'],
+};
+```
+
 ### Build your own admin screen
 
 Every id list is exported as a runtime array, alongside the types:
@@ -485,8 +819,8 @@ Every id list is exported as a runtime array, alongside the types:
 `OPTIONS_SECTION_IDS`, `OPTIONS_SETTING_IDS`, `BACKSTAGE_PAGE_IDS`,
 `BACKSTAGE_CARD_IDS`, `ELEMENT_CONTEXT_MENU_COMMAND_IDS`,
 `CANVAS_CONTEXT_MENU_COMMAND_IDS`, `EDITOR_SHORTCUT_ACTION_IDS`,
-`VIEWER_PANEL_IDS`, `VIEWER_FEATURE_IDS`, `VIEWER_DIALOG_IDS` and
-`VIEWER_EXPORT_FORMAT_IDS`. Render checkboxes from them, store the resulting
+`VIEWER_PANEL_IDS`, `VIEWER_FEATURE_IDS`, `VIEWER_DIALOG_IDS`,
+`VIEWER_EXPORT_FORMAT_IDS`, `VIEWER_CAPABILITY_IDS` and `VIEWER_REGION_IDS`. Render checkboxes from them, store the resulting
 object per tenant, and feed it back through `setCustomization`.
 
 ## What is not customisable yet
@@ -502,7 +836,16 @@ object per tenant, and feed it back through `setCustomization`.
   it with `keyboard.disabled: ['toggleShortcuts']` and
   `options.hiddenSections: ['ribbon.shortcutReference']` if that matters.
 - **Inspector sections** and the slide rail's own context menu are not
-  addressable individually; hide the whole region with `hiddenPanels`.
+  addressable individually; hide the whole region with `hiddenPanels`, or
+  replace the whole inspector with `regions.inspector`.
+- **Replaceable regions** are the ones listed under
+  [Regions](#regions). The ribbon, title bar, Quick Access strip and the other
+  dialogs can be hidden but not replaced; add your own ribbon tab with
+  `ribbonAddIns` instead.
+- **Framework-native slots** (React render props, Vue slots, Angular templates,
+  Svelte snippets) are not offered; every binding takes the same mount
+  function or custom element, which can render a component of any framework
+  (see [Mounting a framework component](#mounting-a-framework-component)).
 - **Mobile layouts** honour ribbon, menu, dialog and feature customisation,
   but the mobile bottom sheets have no panel ids of their own, and some
   mobile bottom-bar buttons (Slides, Notes, Format) stay visible when their

@@ -6,7 +6,7 @@ import type {
 	RibbonHomeRequestEvent,
 	SlideTemplateId,
 } from 'ooxml-ui/pptx';
-import { homeSnapshotTranslator, slidesHomeControls } from 'ooxml-ui/pptx';
+import { homeSnapshotTranslator, isDialogAvailable, slidesHomeControls } from 'ooxml-ui/pptx';
 /**
  * SlidesGroup: New Slide split button, Slide Templates, Layout (apply to
  * current), Reset and Section. All of it, including the layout thumbnail
@@ -19,6 +19,7 @@ import type { PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
 import { computed, ref, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useResolvedCustomization } from '../../composables/useViewerCustomization';
 import SlideStage from '../SlideStage.vue';
 import SlideTemplateGalleryDialog from '../SlideTemplateGalleryDialog.vue';
 import type { LayoutOption } from './ribbon-types';
@@ -40,6 +41,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const customization = useResolvedCustomization();
+const templatesAvailable = computed(() => isDialogAvailable(customization.value, 'slideTemplates'));
 const { t, locale } = useI18n();
 
 /** Cap on artwork drawn per thumbnail; layouts never legitimately exceed this. */
@@ -166,7 +169,7 @@ function request(event: RibbonHomeRequestEvent): void {
 		/>
 	</Teleport>
 	<SlideTemplateGalleryDialog
-		v-if="props.onInsertSlideFromTemplate"
+		v-if="props.onInsertSlideFromTemplate && templatesAvailable"
 		:open="templateGalleryOpen"
 		:scheme="props.templateScheme"
 		@insert="props.onInsertSlideFromTemplate?.($event)"

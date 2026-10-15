@@ -21,12 +21,17 @@
 
 	import { useTranslator } from '../../../i18n/context';
 	import ModalDialog from './ModalDialog.svelte';
+	import ViewerRegion from '../../components/ViewerRegion.svelte';
+	import { useViewerCustomization } from '../../state/viewer-customization.svelte';
 	import type { BroadcastDialogProps } from './props';
 
 	const { open, defaults, active, viewerUrl, onstart, onstop, onclose }: BroadcastDialogProps =
 		$props();
 
 	const t = useTranslator();
+	// Host-supplied body (`regions['dialog.broadcast']`): the modal frame stays.
+	const customization = useViewerCustomization();
+	const regionRenderer = $derived(customization.regionRenderer('dialog.broadcast'));
 
 	let roomId = $state('');
 	let serverUrl = $state(DEFAULT_BROADCAST_SERVER_URL);
@@ -72,8 +77,10 @@
 	}
 </script>
 
-<ModalDialog {open} {title} {onclose}>
-	{#if active}
+<ModalDialog {open} {title} {onclose} bare={Boolean(regionRenderer)}>
+	{#if regionRenderer}
+		<ViewerRegion region="dialog.broadcast" renderer={regionRenderer} close={onclose} />
+	{:else if active}
 		<div class="pptx-svelte-broadcast">
 			<p class="pptx-svelte-broadcast-desc">{t('pptx.broadcast.liveDesc')}</p>
 			<div class="pptx-svelte-broadcast-field">

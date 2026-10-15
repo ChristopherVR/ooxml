@@ -61,6 +61,7 @@ import { ViewerKeyboardService } from './viewer-keyboard.service';
 import { ViewerMobileSheetService } from './viewer-mobile-sheet.service';
 import { ViewerOptionsService } from './viewer-options.service';
 import { ViewerPresentationModeService } from './viewer-presentation-mode.service';
+import { ViewerRegionService } from './viewer-region.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 import { ViewerTouchGesturesService } from './viewer-touch-gestures.service';
 import { ViewerZoomService } from './viewer-zoom.service';
@@ -111,6 +112,7 @@ export const POWER_POINT_VIEWER_PROVIDERS = [
 	ViewerMobileSheetService,
 	ViewerOptionsService,
 	ViewerCustomizationService,
+	ViewerRegionService,
 	ViewerPresentationModeService,
 	ViewerThemeGalleryService,
 	ViewerTouchGesturesService,

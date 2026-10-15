@@ -40,6 +40,7 @@
 	import ViewTab from './ribbon/view/ViewTab.svelte';
 	import MobileSheet from './MobileSheet.svelte';
 	import { createRibbonGalleryHost, provideRibbonGalleryHost } from './ribbon/galleries/ribbon-gallery-host';
+	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 
 	interface Props extends RibbonProps {
 		onclose: () => void;
@@ -47,6 +48,7 @@
 
 	const props: Props = $props();
 	const t = useTranslator();
+	const customization = useViewerCustomization();
 	// svelte-ignore state_referenced_locally
 	provideRibbonGalleryHost(createRibbonGalleryHost(props.editor, (next) => props.onthemechange?.(next)));
 
@@ -204,14 +206,14 @@
 		onclose={() => (fontsOpen = false)}
 	/>
 {/if}
-{#if signaturesOpen}
+{#if signaturesOpen && customization.isDialogAvailable('signatures')}
 	<DigitalSignaturesDialog
 		hasSignatures={props.hasDigitalSignatures}
 		signatureCount={props.digitalSignatureCount}
 		onclose={() => (signaturesOpen = false)}
 	/>
 {/if}
-{#if protectionOpen}
+{#if protectionOpen && customization.isDialogAvailable('passwordProtection')}
 	<PasswordProtectionDialog
 		protected={passwordProtected}
 		onset={(password) => {

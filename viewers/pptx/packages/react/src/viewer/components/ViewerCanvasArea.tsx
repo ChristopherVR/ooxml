@@ -1,4 +1,5 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import { isPanelVisible } from 'ooxml-ui/pptx';
 import {
 	buildFieldSubstitutionContext,
 	isPresentationAdvanceClick,
@@ -48,6 +49,7 @@ import type { PresentationContextMenuState } from './PresentationContextMenu';
 import { PresentationContextMenu } from './PresentationContextMenu';
 import { PresentationEndOverlay } from './PresentationEndOverlay';
 import { PresenterSlideNavigator } from './PresenterSlideNavigator';
+import { useViewerCustomizationContext } from './viewer-customization-context';
 import { useViewerOptionsContext } from './viewer-options-context';
 
 // ---------------------------------------------------------------------------
@@ -127,6 +129,7 @@ export interface ViewerCanvasAreaProps {
 // ---------------------------------------------------------------------------
 
 export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
+	const customization = useViewerCustomizationContext();
 	const {
 		mode,
 		canEdit,
@@ -394,7 +397,7 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 			onTouchEnd={swipe.onTouchEnd}
 			onContextMenu={mode === 'present' ? handlePresentationContextMenu : undefined}
 		>
-			{findReplace.findReplaceOpen && (
+			{findReplace.findReplaceOpen && isPanelVisible(customization, 'findReplace') && (
 				<FindReplacePanel
 					findQuery={findReplace.findQuery}
 					replaceQuery={findReplace.replaceQuery}

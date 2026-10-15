@@ -82,7 +82,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 	],
 	template: `
 		<pptx-equation-editor-dialog
-			[open]="svc.showEquation()"
+			[open]="svc.showEquation() && customization?.dialogAvailable('equation') !== false"
 			[existingOmml]="svc.editingEquationOmml()"
 			(insert)="onEquationInsert($event)"
 			(close)="svc.showEquation.set(false)"
@@ -98,7 +98,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 		/>
 
 		<pptx-password-protection-dialog
-			[open]="svc.showPassword()"
+			[open]="svc.showPassword() && customization?.dialogAvailable('passwordProtection') !== false"
 			[isCurrentlyProtected]="svc.isPasswordProtected()"
 			(setPassword)="onSetPassword($event)"
 			(removePassword)="onRemovePassword()"
@@ -111,7 +111,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 		/>
 
 		<pptx-compare-panel
-			[open]="svc.showCompare()"
+			[open]="svc.showCompare() && customization?.panelVisible('comparePane') !== false"
 			[compareResult]="svc.compareResult()"
 			[canvasSize]="loader.canvasSize()"
 			[mediaDataUrls]="mediaRecord()"

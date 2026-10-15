@@ -2,6 +2,7 @@ import type {
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
 	ResolvedCustomization,
+	PowerPointViewerAPI,
 	ViewerCustomizationApi,
 	ViewerMode,
 } from 'ooxml-ui/pptx';
@@ -146,6 +147,8 @@ export interface ViewerIntegrationResult {
 	recovery: UseRecoveryDetectionResult;
 	isEncryptedDialogOpen: boolean;
 	setIsEncryptedDialogOpen: Dispatch<SetStateAction<boolean>>;
+	/** Stable `PowerPointViewerAPI` view of the live handle (region `context.viewer`). */
+	viewerApi: PowerPointViewerAPI;
 	/** The loaded core handler, exposed for the AI bridge (`getHandler`). */
 	handlerRef: RefObject<PptxHandler | null>;
 	/**
@@ -324,169 +327,179 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		input.customizationApi ??
 		(fallbackCustomizationRef.current ??= createCustomizationController().api);
 
+	// The public handle, also handed to host region renderers as `context.viewer`
+	// through a stable proxy, so a re-render never counts as a context change.
+	const latestHandleRef = useRef<PowerPointViewerHandle | null>(null);
+	const viewerApiRef = useRef<PowerPointViewerAPI | null>(null);
+	viewerApiRef.current ??= new Proxy({} as PowerPointViewerAPI, {
+		get: (_target, key) =>
+			(latestHandleRef.current as unknown as Record<PropertyKey, unknown> | null)?.[key],
+	});
+
 	// ── Imperative handle ─────────────────────────────────────────
 	useImperativeHandle(
 		ref,
-		() => ({
-			...customizationApi,
-			async getContent() {
-				const data = await serializeSlides();
-				if (data && onContentChange) {
-					onContentChange(data);
-				}
-				return data ?? new Uint8Array(0);
-			},
-			goTo(index: number) {
-				if (index >= 0 && index < slides.length) {
-					state.setActiveSlideIndex(index);
-				}
-			},
-			goPrev() {
-				const next = activeSlideIndex - 1;
-				if (next >= 0) {
-					state.setActiveSlideIndex(next);
-				}
-			},
-			goNext() {
-				const next = activeSlideIndex + 1;
-				if (next < slides.length) {
-					state.setActiveSlideIndex(next);
-				}
-			},
-			undo() {
-				history.handleUndo();
-			},
-			redo() {
-				history.handleRedo();
-			},
-			canUndo() {
-				return history.canUndo;
-			},
-			canRedo() {
-				return history.canRedo;
-			},
-			getZoom() {
-				return zoom.scale;
-			},
-			setZoom(level: number) {
-				zoom.setScale(clampZoomScale(level));
-			},
-			zoomIn() {
-				zoom.handleZoomIn();
-			},
-			zoomOut() {
-				zoom.handleZoomOut();
-			},
-			zoomReset() {
-				zoom.handleResetZoom();
-			},
-			getMode() {
-				return mode;
-			},
-			setMode(newMode) {
-				state.setMode(newMode);
-			},
-			getActiveSlideIndex() {
-				return activeSlideIndex;
-			},
-			getSlideCount() {
-				return slides.length;
-			},
-			isDirty() {
-				return state.isDirty;
-			},
-			getSelectedElementIds() {
-				return state.effectiveSelectedIds;
-			},
-			selectElements(ids: string[]) {
-				state.setSelectedElementIds(ids);
-				state.setSelectedElementId(ids[0] ?? null);
-			},
-			clearSelection() {
-				state.setSelectedElementIds([]);
-				state.setSelectedElementId(null);
-			},
-			// -- Active slide (alias) --
-			setActiveSlideIndex(index: number) {
-				if (index >= 0 && index < slides.length) {
-					state.setActiveSlideIndex(index);
-				}
-			},
-			// -- Slide access --
-			getSlides() {
-				return slides;
-			},
-			getSlide(index: number) {
-				return slides[index];
-			},
-			getActiveSlide() {
-				return slides[activeSlideIndex];
-			},
-			// -- Slide manipulation --
-			addSlide(afterIndex?: number) {
-				if (afterIndex === undefined) {
-					editorOps.slideOps.handleAddSlide();
-				} else {
-					editorOps.slideOps.handleAddSlideAfter(afterIndex);
-				}
-			},
-			deleteSlides(indexes: number[]) {
-				editorOps.slideOps.handleDeleteSlides(indexes);
-			},
-			duplicateSlides(indexes: number[]) {
-				editorOps.slideOps.handleDuplicateSlides(indexes);
-			},
-			moveSlide(fromIndex: number, toIndex: number) {
-				editorOps.slideOps.handleMoveSlide(fromIndex, toIndex);
-			},
-			toggleHideSlides(indexes: number[]) {
-				editorOps.slideOps.handleToggleHideSlides(indexes);
-			},
-			// -- Element access --
-			getElements(slideIndex?: number) {
-				const idx = slideIndex ?? activeSlideIndex;
-				const s = slides[idx];
-				return s?.elements ?? [];
-			},
-			getElementById(elementId: string, slideIndex?: number) {
-				const idx = slideIndex ?? activeSlideIndex;
-				const s = slides[idx];
-				// A group member too (selected by drilling into its group), in slide
-				// space like the editor shows it.
-				return s ? (slideSpaceElement(s.elements, elementId) ?? undefined) : undefined;
-			},
-			// -- Element manipulation --
-			addElement(element: PptxElement) {
-				const inserted = prepareElementForInsertion(element, {
-					canEdit: canEdit && canInsertElement,
-					mode,
-					hasActiveSlide: !loading && !error && Boolean(activeSlide),
-					editTemplateMode: state.editTemplateMode,
-				});
-				if (!inserted) {
-					return undefined;
-				}
-				editorOps.canvasHandlers.handleInlineEditCommit();
-				editorOps.insertHandlers.addElement(inserted);
-				editorOps.ops.applySelection(inserted.id, [inserted.id]);
-				return inserted.id;
-			},
-			updateElements,
-			updateElement(elementId: string, updates: Partial<PptxElement>) {
-				editorOps.ops.updateElementById(elementId, updates);
-			},
-			deleteElements(elementIds: string[]) {
-				state.setSelectedElementIds(elementIds);
-				state.setSelectedElementId(elementIds[0] ?? null);
-				editorOps.manipulation.handleDelete();
-			},
-			duplicateElement(elementId: string) {
-				state.setSelectedElementIds([elementId]);
-				state.setSelectedElementId(elementId);
-				editorOps.manipulation.handleDuplicate();
-				return state.selectedElementIds[0];
-			},
-		}),
+		() =>
+			(latestHandleRef.current = {
+				...customizationApi,
+				async getContent() {
+					const data = await serializeSlides();
+					if (data && onContentChange) {
+						onContentChange(data);
+					}
+					return data ?? new Uint8Array(0);
+				},
+				goTo(index: number) {
+					if (index >= 0 && index < slides.length) {
+						state.setActiveSlideIndex(index);
+					}
+				},
+				goPrev() {
+					const next = activeSlideIndex - 1;
+					if (next >= 0) {
+						state.setActiveSlideIndex(next);
+					}
+				},
+				goNext() {
+					const next = activeSlideIndex + 1;
+					if (next < slides.length) {
+						state.setActiveSlideIndex(next);
+					}
+				},
+				undo() {
+					history.handleUndo();
+				},
+				redo() {
+					history.handleRedo();
+				},
+				canUndo() {
+					return history.canUndo;
+				},
+				canRedo() {
+					return history.canRedo;
+				},
+				getZoom() {
+					return zoom.scale;
+				},
+				setZoom(level: number) {
+					zoom.setScale(clampZoomScale(level));
+				},
+				zoomIn() {
+					zoom.handleZoomIn();
+				},
+				zoomOut() {
+					zoom.handleZoomOut();
+				},
+				zoomReset() {
+					zoom.handleResetZoom();
+				},
+				getMode() {
+					return mode;
+				},
+				setMode(newMode) {
+					state.setMode(newMode);
+				},
+				getActiveSlideIndex() {
+					return activeSlideIndex;
+				},
+				getSlideCount() {
+					return slides.length;
+				},
+				isDirty() {
+					return state.isDirty;
+				},
+				getSelectedElementIds() {
+					return state.effectiveSelectedIds;
+				},
+				selectElements(ids: string[]) {
+					state.setSelectedElementIds(ids);
+					state.setSelectedElementId(ids[0] ?? null);
+				},
+				clearSelection() {
+					state.setSelectedElementIds([]);
+					state.setSelectedElementId(null);
+				},
+				// -- Active slide (alias) --
+				setActiveSlideIndex(index: number) {
+					if (index >= 0 && index < slides.length) {
+						state.setActiveSlideIndex(index);
+					}
+				},
+				// -- Slide access --
+				getSlides() {
+					return slides;
+				},
+				getSlide(index: number) {
+					return slides[index];
+				},
+				getActiveSlide() {
+					return slides[activeSlideIndex];
+				},
+				// -- Slide manipulation --
+				addSlide(afterIndex?: number) {
+					if (afterIndex === undefined) {
+						editorOps.slideOps.handleAddSlide();
+					} else {
+						editorOps.slideOps.handleAddSlideAfter(afterIndex);
+					}
+				},
+				deleteSlides(indexes: number[]) {
+					editorOps.slideOps.handleDeleteSlides(indexes);
+				},
+				duplicateSlides(indexes: number[]) {
+					editorOps.slideOps.handleDuplicateSlides(indexes);
+				},
+				moveSlide(fromIndex: number, toIndex: number) {
+					editorOps.slideOps.handleMoveSlide(fromIndex, toIndex);
+				},
+				toggleHideSlides(indexes: number[]) {
+					editorOps.slideOps.handleToggleHideSlides(indexes);
+				},
+				// -- Element access --
+				getElements(slideIndex?: number) {
+					const idx = slideIndex ?? activeSlideIndex;
+					const s = slides[idx];
+					return s?.elements ?? [];
+				},
+				getElementById(elementId: string, slideIndex?: number) {
+					const idx = slideIndex ?? activeSlideIndex;
+					const s = slides[idx];
+					// A group member too (selected by drilling into its group), in slide
+					// space like the editor shows it.
+					return s ? (slideSpaceElement(s.elements, elementId) ?? undefined) : undefined;
+				},
+				// -- Element manipulation --
+				addElement(element: PptxElement) {
+					const inserted = prepareElementForInsertion(element, {
+						canEdit: canEdit && canInsertElement,
+						mode,
+						hasActiveSlide: !loading && !error && Boolean(activeSlide),
+						editTemplateMode: state.editTemplateMode,
+					});
+					if (!inserted) {
+						return undefined;
+					}
+					editorOps.canvasHandlers.handleInlineEditCommit();
+					editorOps.insertHandlers.addElement(inserted);
+					editorOps.ops.applySelection(inserted.id, [inserted.id]);
+					return inserted.id;
+				},
+				updateElements,
+				updateElement(elementId: string, updates: Partial<PptxElement>) {
+					editorOps.ops.updateElementById(elementId, updates);
+				},
+				deleteElements(elementIds: string[]) {
+					state.setSelectedElementIds(elementIds);
+					state.setSelectedElementId(elementIds[0] ?? null);
+					editorOps.manipulation.handleDelete();
+				},
+				duplicateElement(elementId: string) {
+					state.setSelectedElementIds([elementId]);
+					state.setSelectedElementId(elementId);
+					editorOps.manipulation.handleDuplicate();
+					return state.selectedElementIds[0];
+				},
+			}),
 		[
 			updateElements,
 			serializeSlides,
@@ -587,6 +600,7 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		isEncryptedDialogOpen,
 		setIsEncryptedDialogOpen,
 		handlerRef,
+		viewerApi: viewerApiRef.current,
 		loadVersion,
 	};
 }

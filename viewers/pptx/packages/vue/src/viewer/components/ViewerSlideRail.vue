@@ -18,9 +18,11 @@ import { useI18n } from 'vue-i18n';
 
 import type { UseSectionOperationsResult } from '../composables/useSectionOperations';
 import type { UseSlideOperationsResult } from '../composables/useSlideOperations';
+import { useRegion } from '../composables/useViewerRegions';
 import type { CanvasSize } from '../types';
 import SectionList from './SectionList.vue';
 import SlidesPaneSidebar from './SlidesPaneSidebar.vue';
+import ViewerRegion from './ViewerRegion.vue';
 
 /**
  * Shared preview width inside the 180px rail, leaving room for slide numbers.
@@ -64,6 +66,10 @@ function toggleHideSlides(indexes: number[]): void {
 
 const { t } = useI18n();
 
+// A host `regions.slidesPane` replaces the thumbnails; the rail keeps its width.
+const region = useRegion('slidesPane');
+const regionContext = computed(() => region.context(() => undefined));
+
 // Grouping and order still come from `sectionOps`; only the slide objects are
 // swapped for their merged equivalents.
 const mergedSlidesBySection = computed(() =>
@@ -75,8 +81,16 @@ const mergedSlidesBySection = computed(() =>
 </script>
 
 <template>
+	<aside
+		v-if="region.renderer.value && regionContext"
+		data-pptx-chrome="slides"
+		class="flex h-full shrink-0 flex-col border-r border-border bg-secondary/30"
+		:style="{ width: `${THUMB_WIDTH + 48}px` }"
+	>
+		<ViewerRegion :renderer="region.renderer.value" :context="regionContext" />
+	</aside>
 	<SlidesPaneSidebar
-		v-if="!hasSections"
+		v-else-if="!hasSections"
 		:slides="mergedSlides"
 		:active-index="activeSlideIndex"
 		:canvas-size="canvasSize"
