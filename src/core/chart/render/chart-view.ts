@@ -227,7 +227,7 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		model.xAxis = xs.length ? niceScale(Math.min(...xs), Math.max(...xs)) : niceScale(0, 1);
 	}
 	if (type === 'bubble') bubbleView(chart, model, ctx.evaluateRef);
-	if (type === 'treemap' || type === 'sunburst') hierarchyView(chart, model);
+	if (type === 'treemap' || type === 'sunburst') hierarchyView(chart, model, ctx.evaluateRef);
 	if (type === 'histogram') histogramView(chart, model);
 	if (extra.length && (type === 'column' || type === 'line' || type === 'area'))
 		chartExtraView(chart, model, ctx, total, collect);
