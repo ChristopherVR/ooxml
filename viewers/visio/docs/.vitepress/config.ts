@@ -41,49 +41,13 @@ export default defineConfig({
 	themeConfig: {
 		nav: [
 			{
-				text: 'OOXML Office',
-				link: 'https://christophervr.github.io/ooxml/',
-				target: '_self',
-				rel: '',
-			},
-			{
-				text: 'All docs',
-				link: 'https://christophervr.github.io/ooxml/docs/',
-				target: '_self',
-				rel: '',
-			},
-			{
 				text: 'Developer Guide',
 				link: '/getting-started',
 				activeMatch: '/(getting-started|architecture|bindings|api|theming)',
 			},
 			{ text: 'User Guide', link: '/collaboration', activeMatch: '/collaboration' },
 			{ text: 'Demos', link: '/demos', activeMatch: '/demos' },
-			{
-				text: 'Packages',
-				items: [
-					{ text: 'Core engine', link: '/architecture' },
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue 3', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'Vanilla JavaScript', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
-				],
-			},
 			{ text: 'Releases', link: '/releasing', activeMatch: '/releasing' },
-			{
-				text: 'Resources',
-				items: [
-					{ text: 'Live demos', link: '/demos' },
-					{ text: 'Viewer API', link: '/api' },
-					{ text: 'Theming', link: '/theming' },
-					{ text: 'Capability ledger', link: '/parity' },
-					{ text: 'Verification record', link: '/verification' },
-					{ text: 'Corpus checks', link: '/corpus' },
-					{ text: 'Release policy', link: '/releasing' },
-				],
-			},
 		],
 
 		sidebar: [

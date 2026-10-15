@@ -35,63 +35,9 @@ export default defineConfig({
 			link: '/fr/',
 			themeConfig: {
 				nav: [
-					{
-						text: 'OOXML Office',
-						link: 'https://christophervr.github.io/ooxml/',
-						target: '_self',
-						rel: '',
-					},
-					{
-						text: 'All docs',
-						link: 'https://christophervr.github.io/ooxml/docs/',
-						target: '_self',
-						rel: '',
-					},
 					{ text: 'Guide developpeur', link: '/fr/guide/', activeMatch: '/fr/guide/' },
 					{ text: 'Guide utilisateur', link: '/user/', activeMatch: '/user/' },
-					{
-						text: 'Packages',
-						items: [
-							{ text: 'Core (pptx-viewer-core)', link: '/core/' },
-							{ text: 'React (pptx-react-viewer)', link: '/react/' },
-							{ text: 'Vue 3 (pptx-vue-viewer)', link: '/vue/' },
-							{ text: 'Angular (pptx-angular-viewer)', link: '/angular/' },
-							{ text: 'Vanilla JS (pptx-vanilla-viewer)', link: '/vanilla/' },
-							{ text: 'Svelte (pptx-svelte-viewer)', link: '/svelte/' },
-							{ text: 'MCP et outils', link: '/packages/mcp' },
-						],
-					},
 					{ text: 'Versions', link: '/releases/', activeMatch: '/releases/' },
-					{
-						text: 'Ressources',
-						items: [
-							{ text: 'Notes de version', link: '/releases/' },
-							{
-								text: 'npm: pptx-viewer-core',
-								link: 'https://www.npmjs.com/package/pptx-viewer-core',
-							},
-							{
-								text: 'npm: pptx-react-viewer',
-								link: 'https://www.npmjs.com/package/pptx-react-viewer',
-							},
-							{
-								text: 'npm: pptx-vue-viewer',
-								link: 'https://www.npmjs.com/package/pptx-vue-viewer',
-							},
-							{
-								text: 'npm: pptx-angular-viewer',
-								link: 'https://www.npmjs.com/package/pptx-angular-viewer',
-							},
-							{
-								text: 'npm: pptx-vanilla-viewer',
-								link: 'https://www.npmjs.com/package/pptx-vanilla-viewer',
-							},
-							{
-								text: 'npm: pptx-svelte-viewer',
-								link: 'https://www.npmjs.com/package/pptx-svelte-viewer',
-							},
-						],
-					},
 				],
 			},
 		},
@@ -101,63 +47,9 @@ export default defineConfig({
 			link: '/es/',
 			themeConfig: {
 				nav: [
-					{
-						text: 'OOXML Office',
-						link: 'https://christophervr.github.io/ooxml/',
-						target: '_self',
-						rel: '',
-					},
-					{
-						text: 'All docs',
-						link: 'https://christophervr.github.io/ooxml/docs/',
-						target: '_self',
-						rel: '',
-					},
 					{ text: 'Guia del desarrollador', link: '/es/guide/', activeMatch: '/es/guide/' },
 					{ text: 'Guia de usuario', link: '/user/', activeMatch: '/user/' },
-					{
-						text: 'Paquetes',
-						items: [
-							{ text: 'Core (pptx-viewer-core)', link: '/core/' },
-							{ text: 'React (pptx-react-viewer)', link: '/react/' },
-							{ text: 'Vue 3 (pptx-vue-viewer)', link: '/vue/' },
-							{ text: 'Angular (pptx-angular-viewer)', link: '/angular/' },
-							{ text: 'Vanilla JS (pptx-vanilla-viewer)', link: '/vanilla/' },
-							{ text: 'Svelte (pptx-svelte-viewer)', link: '/svelte/' },
-							{ text: 'MCP y herramientas', link: '/packages/mcp' },
-						],
-					},
 					{ text: 'Versiones', link: '/releases/', activeMatch: '/releases/' },
-					{
-						text: 'Recursos',
-						items: [
-							{ text: 'Notas de version', link: '/releases/' },
-							{
-								text: 'npm: pptx-viewer-core',
-								link: 'https://www.npmjs.com/package/pptx-viewer-core',
-							},
-							{
-								text: 'npm: pptx-react-viewer',
-								link: 'https://www.npmjs.com/package/pptx-react-viewer',
-							},
-							{
-								text: 'npm: pptx-vue-viewer',
-								link: 'https://www.npmjs.com/package/pptx-vue-viewer',
-							},
-							{
-								text: 'npm: pptx-angular-viewer',
-								link: 'https://www.npmjs.com/package/pptx-angular-viewer',
-							},
-							{
-								text: 'npm: pptx-vanilla-viewer',
-								link: 'https://www.npmjs.com/package/pptx-vanilla-viewer',
-							},
-							{
-								text: 'npm: pptx-svelte-viewer',
-								link: 'https://www.npmjs.com/package/pptx-svelte-viewer',
-							},
-						],
-					},
 				],
 			},
 		},
@@ -167,63 +59,9 @@ export default defineConfig({
 			link: '/de/',
 			themeConfig: {
 				nav: [
-					{
-						text: 'OOXML Office',
-						link: 'https://christophervr.github.io/ooxml/',
-						target: '_self',
-						rel: '',
-					},
-					{
-						text: 'All docs',
-						link: 'https://christophervr.github.io/ooxml/docs/',
-						target: '_self',
-						rel: '',
-					},
 					{ text: 'Entwicklerhandbuch', link: '/de/guide/', activeMatch: '/de/guide/' },
 					{ text: 'Benutzerhandbuch', link: '/user/', activeMatch: '/user/' },
-					{
-						text: 'Pakete',
-						items: [
-							{ text: 'Core (pptx-viewer-core)', link: '/core/' },
-							{ text: 'React (pptx-react-viewer)', link: '/react/' },
-							{ text: 'Vue 3 (pptx-vue-viewer)', link: '/vue/' },
-							{ text: 'Angular (pptx-angular-viewer)', link: '/angular/' },
-							{ text: 'Vanilla JS (pptx-vanilla-viewer)', link: '/vanilla/' },
-							{ text: 'Svelte (pptx-svelte-viewer)', link: '/svelte/' },
-							{ text: 'MCP und Werkzeuge', link: '/packages/mcp' },
-						],
-					},
 					{ text: 'Versionen', link: '/releases/', activeMatch: '/releases/' },
-					{
-						text: 'Ressourcen',
-						items: [
-							{ text: 'Versionshinweise', link: '/releases/' },
-							{
-								text: 'npm: pptx-viewer-core',
-								link: 'https://www.npmjs.com/package/pptx-viewer-core',
-							},
-							{
-								text: 'npm: pptx-react-viewer',
-								link: 'https://www.npmjs.com/package/pptx-react-viewer',
-							},
-							{
-								text: 'npm: pptx-vue-viewer',
-								link: 'https://www.npmjs.com/package/pptx-vue-viewer',
-							},
-							{
-								text: 'npm: pptx-angular-viewer',
-								link: 'https://www.npmjs.com/package/pptx-angular-viewer',
-							},
-							{
-								text: 'npm: pptx-vanilla-viewer',
-								link: 'https://www.npmjs.com/package/pptx-vanilla-viewer',
-							},
-							{
-								text: 'npm: pptx-svelte-viewer',
-								link: 'https://www.npmjs.com/package/pptx-svelte-viewer',
-							},
-						],
-					},
 				],
 			},
 		},
@@ -256,60 +94,9 @@ export default defineConfig({
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
-			{
-				text: 'OOXML Office',
-				link: 'https://christophervr.github.io/ooxml/',
-				target: '_self',
-				rel: '',
-			},
-			{
-				text: 'All docs',
-				link: 'https://christophervr.github.io/ooxml/docs/',
-				target: '_self',
-				rel: '',
-			},
 			{ text: 'Developer Guide', link: '/guide/', activeMatch: '/guide/' },
 			{ text: 'User Guide', link: '/user/', activeMatch: '/user/' },
-			{
-				text: 'Packages',
-				items: [
-					{ text: 'Core (pptx-viewer-core)', link: '/core/' },
-					{ text: 'React (pptx-react-viewer)', link: '/react/' },
-					{ text: 'Vue 3 (pptx-vue-viewer)', link: '/vue/' },
-					{ text: 'Angular (pptx-angular-viewer)', link: '/angular/' },
-					{ text: 'Vanilla JS (pptx-vanilla-viewer)', link: '/vanilla/' },
-					{ text: 'Svelte (pptx-svelte-viewer)', link: '/svelte/' },
-					{ text: 'MCP & Tools', link: '/packages/mcp' },
-				],
-			},
 			{ text: 'Releases', link: '/releases/', activeMatch: '/releases/' },
-			{
-				text: 'Resources',
-				items: [
-					{
-						text: 'Release Notes',
-						link: '/releases/',
-					},
-					{ text: 'npm: pptx-viewer-core', link: 'https://www.npmjs.com/package/pptx-viewer-core' },
-					{
-						text: 'npm: pptx-react-viewer',
-						link: 'https://www.npmjs.com/package/pptx-react-viewer',
-					},
-					{ text: 'npm: pptx-vue-viewer', link: 'https://www.npmjs.com/package/pptx-vue-viewer' },
-					{
-						text: 'npm: pptx-angular-viewer',
-						link: 'https://www.npmjs.com/package/pptx-angular-viewer',
-					},
-					{
-						text: 'npm: pptx-vanilla-viewer',
-						link: 'https://www.npmjs.com/package/pptx-vanilla-viewer',
-					},
-					{
-						text: 'npm: pptx-svelte-viewer',
-						link: 'https://www.npmjs.com/package/pptx-svelte-viewer',
-					},
-				],
-			},
 		],
 
 		sidebar: {

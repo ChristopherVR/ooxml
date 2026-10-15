@@ -41,34 +41,11 @@ export default defineConfig({
 	themeConfig: {
 		nav: [
 			{
-				text: 'OOXML Office',
-				link: 'https://christophervr.github.io/ooxml/',
-				target: '_self',
-				rel: '',
-			},
-			{
-				text: 'All docs',
-				link: 'https://christophervr.github.io/ooxml/docs/',
-				target: '_self',
-				rel: '',
-			},
-			{
 				text: 'Guide',
 				link: '/getting-started',
 				activeMatch: '/(getting-started|architecture|limitations|api|theming)',
 			},
 			{ text: 'Collaboration', link: '/collaboration', activeMatch: '/collaboration' },
-			{
-				text: 'Frameworks',
-				items: [
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue 3', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
-					{ text: 'Vanilla JavaScript', link: '/frameworks/vanilla' },
-				],
-			},
 			{ text: 'Server', link: '/server', activeMatch: '/(server|deploy)' },
 			{
 				text: 'Demos',

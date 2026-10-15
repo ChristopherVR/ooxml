@@ -36,49 +36,12 @@ export default defineConfig({
 	themeConfig: {
 		nav: [
 			{
-				text: 'OOXML Office',
-				link: 'https://christophervr.github.io/ooxml/',
-				target: '_self',
-				rel: '',
-			},
-			{
-				text: 'All docs',
-				link: 'https://christophervr.github.io/ooxml/docs/',
-				target: '_self',
-				rel: '',
-			},
-			{
 				text: 'Guide',
 				link: '/getting-started',
 				activeMatch: '/(getting-started|architecture|bindings|api|theming|localization)',
 			},
 			{ text: 'Demos', link: '/demos', activeMatch: '/demos' },
-			{
-				text: 'Packages',
-				items: [
-					{ text: 'Core model', link: '/architecture' },
-					{ text: 'React', link: '/frameworks/react' },
-					{ text: 'Vue 3', link: '/frameworks/vue' },
-					{ text: 'Angular', link: '/frameworks/angular' },
-					{ text: 'Vanilla JavaScript', link: '/frameworks/vanilla' },
-					{ text: 'Svelte', link: '/frameworks/svelte' },
-					{ text: 'Solid', link: '/frameworks/solid' },
-				],
-			},
 			{ text: 'Element API', link: '/api', activeMatch: '/api' },
-			{
-				text: 'Resources',
-				items: [
-					{ text: 'Live demos', link: '/demos' },
-					{ text: 'Features and limitations', link: '/features' },
-					{ text: 'Collaboration', link: '/collaboration' },
-					{ text: 'Release policy', link: '/releasing' },
-					{
-						text: 'Changelog',
-						link: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md',
-					},
-				],
-			},
 		],
 
 		sidebar: [

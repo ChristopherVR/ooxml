@@ -31,43 +31,7 @@ export const zh = {
 		nav: [
 			{ text: '开发指南', link: '/zh/guide/' },
 			{ text: '使用指南', link: '/zh/user/' },
-			{
-				text: '组件与工具',
-				items: [
-					{ text: '核心引擎 (pptx-viewer-core)', link: '/zh/core/' },
-					{ text: 'React (pptx-react-viewer)', link: '/zh/react/' },
-					{ text: 'Vue 3 (pptx-vue-viewer)', link: '/zh/vue/' },
-					{ text: 'Angular (pptx-angular-viewer)', link: '/zh/angular/' },
-					{ text: '原生 JavaScript (pptx-vanilla-viewer)', link: '/zh/vanilla/' },
-					{ text: 'Svelte (pptx-svelte-viewer)', link: '/zh/svelte/' },
-					{ text: 'MCP 与工具', link: '/zh/packages/mcp' },
-				],
-			},
 			{ text: '版本发布', link: '/zh/releases/' },
-			{
-				text: '资源',
-				items: [
-					{ text: '更新日志', link: '/zh/releases/' },
-					{ text: 'npm: pptx-viewer-core', link: 'https://www.npmjs.com/package/pptx-viewer-core' },
-					{
-						text: 'npm: pptx-react-viewer',
-						link: 'https://www.npmjs.com/package/pptx-react-viewer',
-					},
-					{ text: 'npm: pptx-vue-viewer', link: 'https://www.npmjs.com/package/pptx-vue-viewer' },
-					{
-						text: 'npm: pptx-angular-viewer',
-						link: 'https://www.npmjs.com/package/pptx-angular-viewer',
-					},
-					{
-						text: 'npm: pptx-vanilla-viewer',
-						link: 'https://www.npmjs.com/package/pptx-vanilla-viewer',
-					},
-					{
-						text: 'npm: pptx-svelte-viewer',
-						link: 'https://www.npmjs.com/package/pptx-svelte-viewer',
-					},
-				],
-			},
 		],
 		search: {
 			provider: 'local',
