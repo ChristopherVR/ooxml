@@ -94,7 +94,7 @@ export function pivotCommands(): Command[] {
 			lock: 'objects',
 			enabled: (ctx) => {
 				const pivot = selected(ctx)?.pivot;
-				return !!pivot && pivot.valuesAxis !== 'rows' && pivotSubtotalFields(pivot).length > 0;
+				return !!pivot && pivotSubtotalFields(pivot).length > 0;
 			},
 			run: (ctx) => void ctx.dialogs.open('pivot-field-settings'),
 		}),

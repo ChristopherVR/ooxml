@@ -33,7 +33,7 @@ const FUNCTION_LABELS: Record<PivotAggregate, string> = {
 export function openPivotFieldSettings(ctx: EditorContext): Promise<boolean | undefined> {
 	const t = target(ctx);
 	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
-	if (!t || !pivot || pivot.valuesAxis === 'rows') return Promise.resolve(undefined);
+	if (!t || !pivot) return Promise.resolve(undefined);
 	const names = pivotSubtotalFields(pivot);
 	if (!names.length) return Promise.resolve(undefined);
 	const chosen = select(

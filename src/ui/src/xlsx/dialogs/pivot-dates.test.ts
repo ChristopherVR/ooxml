@@ -180,7 +180,7 @@ describe('many row fields and field settings', () => {
 			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
 				'[value=rows]',
 			)!.disabled,
-		).toBe(true);
+		).toBe(false);
 		clickButton(dialog, 'Remove Row Field');
 		clickButton(dialog, 'OK');
 		await done;
@@ -274,7 +274,8 @@ describe('translations of the new text', () => {
 		'Remove Column Field',
 		'Additional Column Field',
 		'Choose valid PivotTable column fields.',
-		'Values on rows support one column field.',
+		'After {field}',
+		'Values are listed after {field}.',
 		'Report filters support one column field.',
 		'Subtotals',
 		'Select one or more functions:',
@@ -297,9 +298,7 @@ describe('translations of the new text', () => {
 		'A date field with groups is replaced on the axes by its group fields.',
 		'A date field grouped by several units can only be used as a row field.',
 		'Choose valid PivotTable row fields.',
-		'Values on rows support at most two row fields.',
 		'Choose valid field subtotals.',
-		'Field subtotals require Values on columns.',
 	];
 	it.each(EDITOR_LOCALES)('%s has every new key', (locale) => {
 		expect(KEYS.filter((key) => !STRINGS[locale][key])).toEqual([]);

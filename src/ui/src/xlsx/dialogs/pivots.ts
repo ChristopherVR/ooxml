@@ -3,10 +3,14 @@ import {
 	formatRange,
 	parseAddress,
 	pivotAxisChoices,
+	pivotRowFields,
 	pivotSourceData,
 	pivotTableAt,
+	pivotValuesIndex,
 	type PivotAggregate,
 	type PivotLayout,
+	type PivotTable,
+	type PivotValuesPosition,
 } from 'ooxml-core/xlsx';
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, select, text, textInput } from './fields';
@@ -14,6 +18,22 @@ import { showDialog } from './frame';
 import { pivotPageControls } from './pivot-page-filter';
 import { pivotColumnControls, pivotRowControls } from './pivot-rows';
 import { pivotValueControls, PIVOT_AGGREGATE_OPTIONS } from './pivot-values';
+
+/** The Values placement choice of a report: 'first', 'last', 'between' or the fields before it. */
+function placementValue(pivot: PivotTable): string {
+	const fields = pivotRowFields(pivot).length;
+	const at = pivotValuesIndex(pivot);
+	return at < 0 || at >= fields
+		? 'last'
+		: at === 0
+			? 'first'
+			: at === 1 && fields === 2
+				? 'between'
+				: String(at);
+}
+
+const positionOf = (value: string): PivotValuesPosition =>
+	value === 'first' || value === 'last' || value === 'between' ? value : Number(value);
 
 export function openPivotTable(ctx: EditorContext, settings = false): Promise<boolean | undefined> {
 	const t = target(ctx);
@@ -73,15 +93,38 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		pivot?.valuesAxis ?? 'columns',
 	);
 	const multipleNotice = text(ctx, 'Values are listed after the row fields.');
-	const valuesPlacement = select(
-		ctx,
-		[
-			['last', 'After row fields'],
-			['between', 'Between row fields'],
-			['first', 'Before row fields'],
-		],
-		pivot?.valuesPosition ?? 'last',
-	);
+	// Where the measures sit among the row fields: one choice before, after and between them.
+	const valuesPlacement = select(ctx, [['last', 'After row fields']], 'last');
+	let placementChoices = '';
+	let placementWanted = pivot ? placementValue(pivot) : 'last';
+	const placeValues = (names: readonly string[]) => {
+		const signature = names.join('\u0001');
+		if (signature === placementChoices) return;
+		placementChoices = signature;
+		const options: (readonly [string, string])[] = [
+			['first', ctx.t('Before row fields')],
+			...names
+				.slice(0, -1)
+				.map((name, i): readonly [string, string] =>
+					names.length === 2
+						? ['between', ctx.t('Between row fields')]
+						: [String(i + 1), ctx.t('After {field}', { field: name })],
+				),
+			['last', ctx.t('After row fields')],
+		];
+		valuesPlacement.replaceChildren(
+			...options.map(([value, text]) => {
+				const option = ctx.host.ownerDocument.createElement('option');
+				option.value = value;
+				option.textContent = text;
+				return option;
+			}),
+		);
+		valuesPlacement.value = options.some(([value]) => value === placementWanted)
+			? placementWanted
+			: 'last';
+	};
+	valuesPlacement.addEventListener('change', () => (placementWanted = valuesPlacement.value));
 	const extras = pivotValueControls(
 		ctx,
 		pivot?.additionalValues ?? [],
@@ -151,38 +194,48 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 		]);
 		for (const option of second.options)
 			option.disabled = !!page.source.value && option.value === page.source.value;
-		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled =
-			!!page.source.value ||
-			(more.count() > 0 && !!second.value) ||
-			(moreColumns.count() > 0 && !!column.value);
+		axis.querySelector<HTMLOptionElement>('[value=rows]')!.disabled = !!page.source.value;
 		const rowsAxis = axis.value === 'rows';
-		valuesPlacement.disabled = !rowsAxis || !second.value;
-		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
-		multipleNotice.textContent = ctx.t(
-			valuesPlacement.value === 'first'
-				? 'Values are listed before the row fields.'
-				: valuesPlacement.value === 'between'
-					? 'Values are listed between the row fields.'
-					: 'Values are listed after the row fields.',
+		const rowNames = [row.value, second.value, ...(second.value ? more.read() : [])].filter(
+			Boolean,
 		);
+		placeValues(rowNames);
+		valuesPlacement.disabled = !rowsAxis;
+		if (valuesPlacement.disabled) valuesPlacement.value = 'last';
+		const placed = valuesPlacement.value;
+		multipleNotice.textContent =
+			placed === 'first'
+				? ctx.t('Values are listed before the row fields.')
+				: placed === 'between'
+					? ctx.t('Values are listed between the row fields.')
+					: placed === 'last'
+						? ctx.t('Values are listed after the row fields.')
+						: ctx.t('Values are listed after {field}.', {
+								field: rowNames[Number(placed) - 1] ?? '',
+							});
 		multipleNotice.hidden = !rowsAxis;
+		// Subtotals are shown above a group only for fields that come after the Values.
+		const before =
+			placed === 'first'
+				? 0
+				: placed === 'last'
+					? rowNames.length
+					: placed === 'between'
+						? 1
+						: Number(placed);
+		const valuesLate = rowsAxis && before > rowNames.length - 2;
 		subtotals.input.disabled =
 			!second.value || !!pivot?.fieldSubtotals?.some((entry) => entry.field === pivot.rowField);
 		repeat.input.disabled = (!second.value && !rowsAxis) || layout.value === 'compact';
 		position.disabled =
-			!second.value ||
-			!subtotals.input.checked ||
-			layout.value === 'tabular' ||
-			(rowsAxis && valuesPlacement.value !== 'first');
+			!second.value || !subtotals.input.checked || layout.value === 'tabular' || valuesLate;
 		tabularNotice.textContent = ctx.t(
 			rowsAxis
 				? 'Values on rows display subtotals below groups.'
 				: 'Tabular layout displays subtotals below groups.',
 		);
 		tabularNotice.hidden =
-			!second.value ||
-			!subtotals.input.checked ||
-			!(layout.value === 'tabular' || (rowsAxis && valuesPlacement.value !== 'first'));
+			!second.value || !subtotals.input.checked || !(layout.value === 'tabular' || valuesLate);
 	};
 	axis.addEventListener('change', updateRows);
 	valuesPlacement.addEventListener('change', updateRows);
@@ -224,7 +277,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 				...(pageFilter ? { pageFilter } : {}),
 				rowField: row.value,
 				valuesAxis: axis.value as 'columns' | 'rows',
-				valuesPosition: valuesPlacement.value as 'last' | 'between' | 'first',
+				valuesPosition: positionOf(valuesPlacement.value),
 				layout: layout.value as PivotLayout,
 				subtotalPosition: position.value as 'top' | 'bottom',
 				secondRowField: second.value,
@@ -243,7 +296,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					JSON.stringify(pivot.pageFilter?.item) !== JSON.stringify(pageFilter?.item) ||
 					pivot.rowField !== options.rowField ||
 					(pivot.valuesAxis ?? 'columns') !== options.valuesAxis ||
-					(pivot.valuesPosition ?? 'last') !== options.valuesPosition ||
+					placementValue(pivot) !== valuesPlacement.value ||
 					(pivot.layout ?? 'tabular') !== options.layout ||
 					(pivot.subtotalPosition ?? 'bottom') !== options.subtotalPosition ||
 					(pivot.secondRowField ?? '') !== options.secondRowField ||

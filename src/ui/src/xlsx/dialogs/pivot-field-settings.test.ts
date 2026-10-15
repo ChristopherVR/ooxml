@@ -56,6 +56,72 @@ const toggle = (input: HTMLInputElement, checked: boolean) => {
 	input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+describe('Values on rows with many fields', () => {
+	const many = () =>
+		setup({
+			rowField: 'Category',
+			secondRowField: 'Region',
+			moreRowFields: ['Year'],
+			layout: 'outline',
+			columnField: undefined as never,
+			valuesAxis: 'rows',
+			additionalValues: [{ field: 'Amount', aggregate: 'count' }],
+		});
+
+	it('offers a placement after every row field and moves the Values there', async () => {
+		const { ctx, pivot } = many();
+		const done = ctx.dialogs.open('pivot-settings');
+		const dialog = dialogEl(ctx, 'pivot-settings');
+		const placement = inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:');
+		expect(placement.disabled).toBe(false);
+		expect([...placement.options].map((option) => option.textContent)).toEqual([
+			'Before row fields',
+			'After Category',
+			'After Region',
+			'After row fields',
+		]);
+		expect(placement.value).toBe('last');
+		setValue(placement, '2');
+		expect(dialog.textContent).toContain('Values are listed after Region.');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(pivot().valuesPosition).toBe(2);
+		expect(pivotGrid(pivot()).values[0]).toEqual(['Category', 'Region', 'Values', 'Year', null]);
+	});
+
+	it('keeps the placement choice when reopened and when fields are added', async () => {
+		const { ctx, pivot } = many();
+		let done = ctx.dialogs.open('pivot-settings');
+		let dialog = dialogEl(ctx, 'pivot-settings');
+		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:'), 'first');
+		clickButton(dialog, 'OK');
+		await done;
+		expect(pivot().valuesPosition).toBe('first');
+		done = ctx.dialogs.open('pivot-settings');
+		dialog = dialogEl(ctx, 'pivot-settings');
+		const placement = inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:');
+		expect(placement.value).toBe('first');
+		clickButton(dialog, 'Add Row Field');
+		expect(placement.value).toBe('first');
+		expect(placement.options).toHaveLength(5);
+		clickButton(dialog, 'Cancel');
+		await done;
+	});
+
+	it('sets custom subtotals for row fields under Values on rows', async () => {
+		const { ctx, pivot } = many();
+		expect(command('pivot.field-settings').enabled?.(ctx)).toBe(true);
+		const done = ctx.dialogs.open('pivot-field-settings');
+		const dialog = dialogEl(ctx, 'pivot-field-settings');
+		toggle(dialog.querySelector<HTMLInputElement>('input[type=radio][value=custom]')!, true);
+		toggle(box(dialog, 'Sum'), true);
+		clickButton(dialog, 'OK');
+		await done;
+		expect(pivot().fieldSubtotals).toEqual([{ field: 'Category', functions: ['sum'] }]);
+		expect(pivotGrid(pivot()).values.map((line) => line[0])).toContain('Fruit Sum of Amount');
+	});
+});
+
 describe('Field Settings for column fields', () => {
 	it('is available once the columns nest two fields', () => {
 		expect(command('pivot.field-settings').enabled?.(setup().ctx)).toBe(true);
