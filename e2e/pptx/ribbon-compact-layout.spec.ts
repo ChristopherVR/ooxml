@@ -3,6 +3,16 @@ import { test, expect } from '@playwright/test';
 
 import { loadDeck } from './support/deck';
 
+/** The Insert commands checked, with the group that holds each. */
+const INSERT_GROUP_OF: Readonly<Record<string, string>> = {
+	'Text Box': 'insert.text',
+	Pictures: 'insert.images',
+	Video: 'insert.media',
+	Table: 'insert.tables',
+	SmartArt: 'insert.illustrations',
+	Equation: 'insert.symbols',
+};
+
 /**
  * The command's control box (a split button's face and chevron together) and whether its
  * group is scaled down (`data-scale`), crossing the shadow roots some commands render in.
@@ -20,14 +30,15 @@ function controlSize(button: Element): { height: number; scaled: boolean } {
 }
 
 // A narrow window scales the Insert groups as Office does (large, then small with labels, then
-// icons only) before any becomes a popup, so an Insert command's size follows its group's scale.
+// icons only) before any becomes a popup, so an Insert command's size follows its group's scale;
+// a popup draws its group large.
 for (const width of [1000, 1280]) {
 	test.describe(`compact ribbon at ${width}px`, () => {
 		test.use({ viewport: { width, height: 800 } });
 
 		for (const [tab, commands, large] of [
 			['Design', ['Browse Themes', 'Edit Theme', 'Slide Size', 'Format Background'], true],
-			['Insert', ['Text Box', 'Pictures', 'Video', 'Table', 'SmartArt', 'Equation'], true],
+			['Insert', Object.keys(INSERT_GROUP_OF), true],
 			['Transitions', ['Apply to All'], false],
 		] as const) {
 			test(`${tab} commands keep their Office size and alignment`, async ({ page }, testInfo) => {
@@ -35,9 +46,19 @@ for (const width of [1000, 1280]) {
 				const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
 				await toolbar.getByRole('tab', { name: tab, exact: true }).click();
 				for (const name of commands) {
+					// Near 1000px a group can become a popup (font metrics decide), as in Office: open it.
+					const group = INSERT_GROUP_OF[name];
+					const collapsed = toolbar.locator(`[data-ribbon-group="${group}"][data-collapsed]`);
+					const popup = group !== undefined && (await collapsed.count()) > 0;
+					if (popup) {
+						await collapsed.locator('[data-pptx-chrome="ribbon-collapse"]').click();
+					}
 					const command = toolbar.getByRole('button', { name, exact: true });
 					await expect(command).toBeVisible();
 					const { height, scaled } = await command.evaluate(controlSize);
+					if (popup) {
+						await page.keyboard.press('Escape');
+					}
 					// Large commands are Office's 66px glyph-over-caption tiles; the rest stay 24-36px rows.
 					const tile = large && !scaled;
 					expect(height, `${name} must not stretch to the ribbon height`).toBeLessThanOrEqual(
