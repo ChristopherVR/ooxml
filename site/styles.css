@@ -107,7 +107,6 @@ body {
 .sidebar-footer small,
 .workspace-switch small,
 .app-tag,
-.start-chooser small,
 .form-footer small,
 #ai-state,
 .ai-proposal pre {
@@ -209,16 +208,11 @@ textarea:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):focus {
 .search-issue button,
 .connected-folders button,
 .photo-label,
-.start-chooser button,
 #dialog-content > button {
 	font-size: 12px;
 	font-weight: 600;
 	padding: 8px 14px;
 	line-height: 1.2;
-}
-.start-chooser button {
-	font-weight: 400;
-	font-size: 13px;
 }
 .primary {
 	background: var(--blue);
@@ -313,6 +307,74 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	background: var(--app);
 	box-shadow: inset -5px 0 #ffffff25;
 	color: #fff;
+}
+
+/* The ring motif: three faint rings that draw in once, the outer one turning slowly. It sits
+   behind the start screen's centre, the home heading and the hub intro (and the docs heroes). */
+.rings {
+	position: absolute;
+	z-index: -1;
+	fill: none;
+	stroke: var(--line);
+	stroke-width: 0.22;
+	overflow: visible;
+	pointer-events: none;
+}
+.rings circle:nth-child(1) {
+	stroke: var(--blue);
+	opacity: 0.45;
+	stroke-dasharray: 0.6 1.6;
+}
+.rings circle:nth-child(3) {
+	stroke-dasharray: 0.4 1.2;
+}
+.rings--home {
+	width: 460px;
+	height: 460px;
+	right: -40px;
+	top: -170px;
+	opacity: 0.8;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.rings circle {
+		transform-origin: 50% 50%;
+		transform: rotate(-90deg);
+		animation: ring-draw 1.4s var(--ease) both;
+	}
+	.rings circle:nth-child(2) {
+		animation-delay: 0.1s;
+	}
+	.rings circle:nth-child(3) {
+		animation-delay: 0.2s;
+	}
+	/* The site's one ambient motion: the outer ring turns once every two minutes. */
+	.rings circle:nth-child(1) {
+		animation:
+			ring-draw 1.4s var(--ease) both,
+			ring-turn 120s linear 1.4s infinite;
+	}
+	@keyframes ring-draw {
+		from {
+			opacity: 0;
+			transform: rotate(-120deg) scale(0.92);
+		}
+		to {
+			transform: rotate(-90deg) scale(1);
+		}
+	}
+	@keyframes ring-turn {
+		from {
+			transform: rotate(-90deg);
+		}
+		to {
+			transform: rotate(270deg);
+		}
+	}
+}
+@media (max-width: 1100px) {
+	.rings--home {
+		display: none;
+	}
 }
 
 /* Maturity tags, beside an app's name wherever it appears. */
@@ -650,6 +712,35 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+}
+
+/* A newer build is ready: the banner sits above the tabs until the user reloads. */
+.update-banner {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 14px;
+	background: var(--selected);
+	border-bottom: 1px solid var(--line);
+	font-size: 12.5px;
+}
+.update-banner > span {
+	flex: 1;
+	min-width: 0;
+}
+.update-banner button {
+	padding: 5px 10px;
+	font-size: 12px;
+}
+.update-banner button:not(.primary) {
+	color: var(--muted);
+}
+.account-version {
+	margin: 0;
+	padding: 0 18px 14px;
+	font-size: 11px;
+	color: var(--muted);
 }
 
 /* Tabs */

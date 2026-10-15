@@ -1,12 +1,17 @@
 /**
- * The chooser on the suite root: open the integrated suite, or go to one product's own site
- * (its docs and framework demos under /ooxml/<product>/, built by scripts/build-pages.mjs).
- * It asks on every visit and every reload; the choice is never stored.
+ * The start screen on the suite root: open the integrated suite, the documentation, or one
+ * product's own site (its docs and framework demos under /ooxml/<product>/, built by
+ * scripts/build-pages.mjs). It asks on every visit and every reload; the choice is never stored.
  * boot.js shows it before the suite loads, and the app launcher can show it again later.
+ *
+ * The layout is a ring: the workspace in the centre, the products around it, the documentation
+ * beneath. workspace-chrome.css draws the rings and the entrance; on narrow screens the same
+ * buttons stack as a list.
  */
-import { $, apps, badge, choose, escape, tag, teamsApp } from './ui.js';
+import { $, apps, badge, escape, tag, teamsApp } from './ui.js';
 import { icon } from './icons.js';
 import { product, suiteBase } from './product.js';
+import { currentTheme, setThemeMode } from './themes.js';
 
 const sites = {
 	docx: 'docx',
@@ -16,41 +21,15 @@ const sites = {
 	teams: 'teams',
 	docs: 'docs',
 };
-/** Two groups: the suite with its documentation, and each product on its own site. */
-const groups = [
-	{
-		title: 'OOXML Office and documentation',
-		choices: [
-			{
-				id: 'office',
-				name: 'OOXML Office',
-				detail: 'Word, Excel, PowerPoint, Visio and Teams in one workspace',
-			},
-			{
-				id: 'docs',
-				name: 'Documentation',
-				detail: 'Use the apps, embed an editor, or build on the library',
-			},
-		],
-	},
-	{
-		title: 'Individual products',
-		choices: [
-			...apps.map((a) => ({
-				id: a.id,
-				name: a.name,
-				tag: a.tag,
-				detail: `The .${a.id} editor on its own site, with its guides and demos`,
-			})),
-			{
-				id: 'teams',
-				name: 'Teams',
-				tag: teamsApp.tag,
-				detail: 'The team workspace on its own site, with its guides and demos',
-			},
-		],
-	},
+/** The products around the ring, clockwise from the top. */
+const products = [
+	...apps.map((a) => ({ id: a.id, name: a.name, tag: a.tag, detail: `.${a.id}` })),
+	{ id: 'teams', name: 'Teams', tag: teamsApp.tag, detail: 'chat and calls' },
 ];
+const badges = {
+	office: '<span class="app-badge" style="--app:#0f6cbd">O</span>',
+	docs: `<span class="app-badge app-badge--docs">${icon('book')}</span>`,
+};
 /** A reload always asks again, even when the address points into the suite. */
 function reloaded() {
 	return performance.getEntriesByType('navigation')[0]?.type === 'reload';
@@ -71,44 +50,68 @@ export function needsChooser() {
 	}
 	return reloaded() || !location.hash || location.hash === '#/';
 }
-const badges = {
-	office: '<span class="app-badge" style="--app:#0f6cbd">O</span>',
-	docs: `<span class="app-badge app-badge--docs">${icon('book')}</span>`,
-};
 /**
- * @param {{ required?: boolean, onSuite?: () => void }} [options] a required chooser (before
+ * @param {{ required?: boolean, onSuite?: () => void }} [options] a required start screen (before
  * the suite loads) cannot be dismissed; onSuite runs when the suite is picked
  */
 export function showChooser({ required = false, onSuite } = {}) {
-	const content = document.createElement('div');
-	content.className = 'start-choices';
-	content.innerHTML = groups
-		.map(
-			(group) =>
-				`<h3 class="start-group">${escape(group.title)}</h3><div class="start-chooser">${group.choices
-					.map(
-						(c) =>
-							`<button data-start="${c.id}">${badges[c.id] ?? badge(c.id)}<span><strong>${escape(c.name)}${tag(c.tag)}</strong><small>${escape(c.detail)}</small></span></button>`,
-					)
-					.join('')}</div>`,
-		)
-		.join('');
-	const dialog = choose('Where would you like to start?', content);
-	$('dialog-close').hidden = required;
-	const block = (event) => event.preventDefault();
-	if (required) dialog.addEventListener('cancel', block);
-	content.addEventListener('click', (event) => {
+	$('start-screen')?.remove();
+	const screen = document.createElement('section');
+	screen.id = 'start-screen';
+	screen.className = 'start-screen';
+	screen.setAttribute('role', 'dialog');
+	screen.setAttribute('aria-modal', 'true');
+	screen.setAttribute('aria-labelledby', 'start-title');
+	const step = 360 / products.length;
+	screen.innerHTML =
+		`<div class="start-tools"><button class="start-theme" aria-label="Switch to light mode"></button>${required ? '' : '<button class="start-close" aria-label="Close">×</button>'}</div>` +
+		`<div class="start-heading"><h1 id="start-title">Where would you like to start?</h1><p>Every app in one workspace, or one product on its own site with its guides and demos.</p></div>
+		<div class="start-stage">
+			<svg class="rings rings--start" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" /><circle cx="50" cy="50" r="33" /><circle cx="50" cy="50" r="19" /></svg>
+			<button class="start-card start-center" data-start="office">${badges.office}<span><strong>OOXML Office</strong><small>Word, Excel, PowerPoint, Visio and Teams in one workspace</small></span></button>
+			${products
+				.map(
+					(c, i) =>
+						`<div class="start-orbit" style="--angle:${-90 + i * step}deg;--i:${i + 1}"><button class="start-card" data-start="${c.id}">${badge(c.id)}<span><strong>${escape(c.name)}${tag(c.tag)}</strong><small>${escape(c.detail)}</small></span></button></div>`,
+				)
+				.join('')}
+		</div>
+		<button class="start-card start-docs" data-start="docs">${badges.docs}<span><strong>Documentation</strong><small>Use the apps, embed an editor, or build on the library</small></span></button>`;
+	const close = () => {
+		screen.remove();
+		document.removeEventListener('keydown', onKey);
+	};
+	const onKey = (event) => {
+		if (event.key === 'Escape' && !required) close();
+	};
+	document.addEventListener('keydown', onKey);
+	screen.querySelector('.start-close')?.addEventListener('click', close);
+	// The appearance switch: the same preference the workspace's Appearance settings keep.
+	const theme = screen.querySelector('.start-theme');
+	const paintTheme = () => {
+		const dark = currentTheme().mode === 'dark';
+		theme.innerHTML = icon(dark ? 'sun' : 'moon');
+		theme.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+		theme.title = theme.getAttribute('aria-label');
+	};
+	theme.onclick = () => {
+		setThemeMode(currentTheme().mode === 'dark' ? 'light' : 'dark');
+		paintTheme();
+	};
+	paintTheme();
+	screen.addEventListener('click', (event) => {
 		const id = event.target.closest('[data-start]')?.dataset.start;
 		if (!id) return;
 		if (id !== 'office') {
 			location.assign(new URL(`${sites[id]}/`, suiteBase));
 			return;
 		}
-		dialog.removeEventListener('cancel', block);
-		$('dialog-close').hidden = false;
-		dialog.close();
+		close();
 		onSuite?.();
 	});
+	document.body.append(screen);
+	screen.querySelector('.start-center').focus({ preventScroll: true });
+	return screen;
 }
 export function mountStart() {
 	if (product || !/^https?:$/.test(location.protocol)) return;
@@ -121,8 +124,8 @@ export function mountStart() {
 }
 /**
  * The Resources group at the end of the sidebar: the documentation hub and, in the suite, the
- * chooser for the product sites. An installed app has no browser chrome to come back through, so
- * it shows neither; the links open in the browser from the app launcher there instead.
+ * start screen with the product sites. An installed app has no browser chrome to come back
+ * through, so it shows neither; the links open in the browser from the app launcher there instead.
  */
 export function mountResources() {
 	if (!/^https?:$/.test(location.protocol)) return;

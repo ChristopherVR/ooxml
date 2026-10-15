@@ -134,7 +134,8 @@ One easing and four durations everywhere; nothing else.
 - **Open and close.** Dialogs, popovers and menus scale from 0.98 and fade over 320 ms; closing
   takes 200 ms. Tabs and the sidebar's active bar move, they do not blink.
 - **Theme.** Changing the appearance cross-fades colours over 320 ms.
-- **Never:** parallax, continuous loops (the one scroll cue on a landing hero is the exception),
+- **Never:** parallax, continuous loops (the start screen's slow outer ring and the one scroll cue
+  on a landing hero are the exceptions),
   bounce, blur-in, or anything that moves on scroll position.
 
 The suite implements this in `site/styles.css`; the docs in `landing.css` plus a `useReveals`
@@ -142,8 +143,11 @@ composable per site; the hub in `site/docs/docs.css`.
 
 ## The pages
 
-- **Start chooser** (`site/`, before the suite loads): one joined list with a row per product, a
-  row for the whole suite and a row for the documentation hub.
+- **Start screen** (`site/`, before the suite loads): a full page, not a dialog. The workspace
+  sits in the centre of a ring with the five products around it and the documentation beneath;
+  the rings draw in, the centre settles, the products arrive one after another, and the outer
+  ring turns once every two minutes (the site's one ambient motion). Narrow or short screens show
+  the same buttons as a list.
 - **Suite home**: a headline that asks what to work on, the create tiles as tool cards (one per
   app plus "Open a file"), the library below it in a framed table. The sidebar groups Workspace,
   Apps and Resources (Documentation, Product sites and demos; hidden in an installed app, which has

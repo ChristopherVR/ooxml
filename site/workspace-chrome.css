@@ -90,9 +90,13 @@
 	border-color: transparent;
 	padding-left: 0;
 }
-.install-app {
-	margin: 0 18px 16px;
+.install-app,
+.check-updates {
+	margin: 0 18px 6px;
 	color: var(--accent-ink);
+}
+.check-updates {
+	margin-bottom: 10px;
 }
 .update-app {
 	margin-right: auto;
@@ -103,95 +107,265 @@
 	padding: 0 8px;
 }
 
-/* The start chooser: two groups, each a joined list. */
-.start-choices {
-	display: grid;
-	gap: 6px;
-}
-.start-group {
-	font-size: 11px;
-	font-weight: 600;
-	color: var(--muted);
-	margin: 10px 0 2px;
-}
-.start-group:first-child {
-	margin-top: 0;
-}
-.start-chooser {
-	display: grid;
-	gap: 1px;
-	background: var(--line);
-	border: 1px solid var(--line);
-	border-radius: var(--radius-panel);
-	overflow: hidden;
-}
-.start-chooser button {
-	display: flex;
-	align-items: center;
-	justify-content: flex-start;
-	gap: 14px;
-	padding: 12px 14px;
-	border: 0;
-	border-radius: 0;
-	background: var(--surface);
-	color: inherit;
-	text-align: start;
-	cursor: pointer;
-	position: relative;
-}
-.start-chooser button:hover,
-.start-chooser button:focus-visible {
-	background: var(--selected);
-}
-.start-chooser button:hover::after {
-	transform: translateX(3px) rotate(45deg);
-}
-.start-chooser button:focus-visible {
-	outline-offset: -2px;
-	z-index: 1;
-}
-.start-chooser .app-badge {
-	width: 34px;
-	height: 34px;
-	font-size: 17px;
-}
-.start-chooser button > span:last-of-type {
+/* The start screen: the workspace in the centre, the products on a ring, the docs beneath. */
+.start-screen {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
-	gap: 3px;
-	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 18px;
+	padding: 24px;
+	overflow: auto;
+	background: var(--canvas);
+	color: var(--text);
+	--stage: min(600px, 78vmin);
+	--radius: calc(var(--stage) * 0.4);
+}
+.start-tools {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	display: flex;
+	gap: 4px;
+}
+.start-close,
+.start-theme {
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	font-size: 22px;
+	color: var(--muted);
+}
+.start-theme .ui-icon {
+	width: 18px;
+	height: 18px;
+}
+.start-heading {
+	text-align: center;
+	max-width: 60ch;
+}
+.start-heading h1 {
+	font-size: 28px;
+}
+.start-heading p {
+	margin: 8px auto 0;
+	color: var(--muted);
+	font-size: 14px;
+}
+.start-stage {
+	position: relative;
+	width: var(--stage);
+	height: var(--stage);
+	flex: none;
+}
+.rings--start {
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+.start-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	text-align: left;
+	padding: 12px 14px;
+	border: 1px solid var(--line);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+	color: var(--text);
+	box-shadow: 0 2px 8px #0001;
+	transition:
+		background-color var(--fast) var(--ease),
+		border-color var(--fast) var(--ease),
+		transform var(--fast) var(--ease),
+		box-shadow var(--fast) var(--ease);
+}
+.start-card:hover,
+.start-card:focus-visible {
+	background: var(--surface);
+	border-color: var(--blue);
+	transform: translateY(-2px);
+	box-shadow: 0 10px 28px #0002;
+}
+.start-card:active {
+	transform: translateY(-1px) scale(0.99);
+}
+.start-card > span {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 	min-width: 0;
 }
-.start-chooser strong {
+.start-card strong {
 	font-size: 13px;
 	font-weight: 600;
+	white-space: nowrap;
 }
-.start-chooser .app-tag {
+.start-card small {
+	font-size: 11px;
+	color: var(--muted);
+}
+.start-card .app-tag {
 	font-size: 9px;
 	vertical-align: 1px;
 }
-.start-chooser small {
-	font-size: 11px;
+.start-card .app-badge {
+	width: 32px;
+	height: 32px;
+	font-size: 16px;
 }
-.start-chooser button::after {
-	content: '';
-	width: 7px;
-	height: 7px;
-	border-top: 1.5px solid var(--faint);
-	border-right: 1.5px solid var(--faint);
-	transform: rotate(45deg);
-	margin-right: 4px;
+.start-center {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: calc(var(--stage) * 0.42);
+	flex-direction: column;
+	text-align: center;
+	gap: 10px;
+	padding: 20px 18px;
+	border-color: var(--line-strong);
+}
+.start-center:hover,
+.start-center:focus-visible {
+	transform: translate(-50%, calc(-50% - 2px));
+}
+.start-center:active {
+	transform: translate(-50%, calc(-50% - 1px)) scale(0.99);
+}
+.start-center > span {
+	align-items: center;
+	text-align: center;
+}
+.start-center strong {
+	font-family: var(--font-display);
+	font-size: 17px;
+	white-space: normal;
+}
+.start-center small {
+	white-space: normal;
+}
+.start-center .app-badge {
+	width: 44px;
+	height: 44px;
+	font-size: 22px;
+}
+.start-orbit {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%) rotate(var(--angle)) translate(var(--radius))
+		rotate(calc(-1 * var(--angle)));
+}
+.start-docs {
 	flex: none;
-	transition:
-		border-color var(--fast) var(--ease),
-		transform var(--fast) var(--ease);
+	min-width: min(420px, 100%);
 }
-.start-chooser button:hover::after {
-	border-color: var(--text);
+.start-docs .app-badge {
+	width: 32px;
+	height: 32px;
 }
-/* The root asks what to open before the suite loads: show only the chooser until then. */
-body[data-start] > :not(dialog) {
+
+/* Entrance: the rings draw (styles.css), the centre settles, the products arrive one by one. */
+@media (prefers-reduced-motion: no-preference) {
+	.start-heading,
+	.start-docs {
+		animation: rise var(--enter) var(--ease) both;
+	}
+	.start-docs {
+		animation-delay: 0.6s;
+	}
+	.start-center {
+		animation: start-center var(--enter) var(--ease) 0.15s both;
+	}
+	@keyframes start-center {
+		from {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.92);
+		}
+		to {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1);
+		}
+	}
+	.start-orbit > .start-card {
+		animation: start-orbit var(--enter) var(--ease) both;
+		animation-delay: calc(0.3s + var(--i) * 0.07s);
+	}
+	@keyframes start-orbit {
+		from {
+			opacity: 0;
+			transform: translateY(10px) scale(0.94);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+}
+
+/* Narrow or short screens: the same buttons as a list. */
+@media (max-width: 860px), (max-height: 640px) {
+	.start-screen {
+		justify-content: flex-start;
+		padding: 56px 16px 32px;
+		gap: 14px;
+	}
+	.start-heading h1 {
+		font-size: 22px;
+	}
+	.start-stage {
+		width: min(100%, 420px);
+		height: auto;
+		display: grid;
+		gap: 8px;
+	}
+	.rings--start {
+		display: none;
+	}
+	.start-center,
+	.start-orbit {
+		position: static;
+		transform: none;
+		width: auto;
+	}
+	.start-center {
+		flex-direction: row;
+		text-align: left;
+		padding: 12px 14px;
+	}
+	.start-center > span {
+		align-items: flex-start;
+		text-align: left;
+	}
+	.start-center .app-badge {
+		width: 32px;
+		height: 32px;
+		font-size: 16px;
+	}
+	.start-orbit > .start-card,
+	.start-docs {
+		width: 100%;
+	}
+	.start-docs {
+		min-width: 0;
+		width: min(100%, 420px);
+	}
+	.start-center:hover,
+	.start-center:focus-visible {
+		transform: translateY(-2px);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.start-center {
+			animation: rise var(--enter) var(--ease) both;
+		}
+	}
+}
+/* The root asks what to open before the suite loads: show only the start screen until then. */
+body[data-start] > :not(dialog, .start-screen) {
 	visibility: hidden;
 }
 /* Standalone apps share the workspace without displaying the suite navigation rail. */

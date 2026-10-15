@@ -1,7 +1,10 @@
 /* Home: the heading, the create tiles and the document library. */
 .home {
+	position: relative;
+	isolation: isolate;
 	height: 100%;
-	overflow: auto;
+	/* The ring motif reaches past the right edge; it must not add a horizontal scrollbar. */
+	overflow: hidden auto;
 	padding: 28px 40px 40px;
 	max-width: 1360px;
 	margin: auto;
