@@ -95,6 +95,8 @@ export interface EditorStateDeps {
 	 * unit tests, where a single-element align is then a no-op.
 	 */
 	getCanvasSize?: () => { width: number; height: number } | undefined;
+	/** Host `authorName` prop: the comment/reply author that wins over Options > General. */
+	getAuthorName?: () => string | undefined;
 	/**
 	 * The `tableStyles`/`tableStylesDefaultId`/`tableStylesToDelete` save
 	 * options (see `pptx-viewer-shared`'s `tableStyleSaveOptions`). Table style
@@ -370,6 +372,11 @@ export class EditorState {
 	 */
 	getSlideSize(): PptxSlideSize | undefined {
 		return this.#deps.getSlideSize?.();
+	}
+
+	/** The host `authorName` prop, or undefined (see {@link EditorStateDeps.getAuthorName}). */
+	get hostAuthorName(): string | undefined {
+		return this.#deps.getAuthorName?.();
 	}
 
 	/** The slide canvas in px (see {@link EditorStateDeps.getCanvasSize}). */

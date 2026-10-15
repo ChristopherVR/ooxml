@@ -140,6 +140,8 @@ import type { SmartArtInsertEvent } from './insert-smart-art-dialog.component';
 import { IsMobileService } from './is-mobile';
 import { LoadContentService } from './load-content.service';
 import { LoadNoticesService } from './load-notices.service';
+import { createLoadNotifier } from './load-notifier';
+import type { ViewerLoadDetail } from './load-notifier';
 import { MasterViewCanvasComponent } from './master-view-canvas.component';
 import { MasterViewSidebarComponent } from './master-view-sidebar.component';
 import { applyMobileBarSheetTap } from './mobile-bar-sheet-tap';
@@ -1720,6 +1722,10 @@ export class PowerPointViewerComponent
 	readonly startCollaboration = output<CollaborationConfig>();
 	/** Fired when the collaboration/broadcast session stops. Mirrors React/Vue. */
 	readonly stopCollaboration = output<void>();
+	/** Fired each time a presentation finishes loading without an error. */
+	readonly load = output<ViewerLoadDetail>();
+	/** Fired once per distinct load failure, with a human-readable message. */
+	readonly error = output<string>();
 
 	protected readonly loader = inject(LoadContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
@@ -2620,6 +2626,24 @@ export class PowerPointViewerComponent
 		// Emit slide count changes.
 		effect(() => {
 			this.slideCountChange.emit(this.slideCount());
+		});
+
+		// `load` / `error`: the Svelte and vanilla bindings' load notifications.
+		const notifyLoad = createLoadNotifier({
+			load: (detail) => this.load.emit(detail),
+			error: (message) => this.error.emit(message),
+		});
+		effect(() => {
+			const loading = this.loader.loading();
+			const error = this.loader.error();
+			untracked(() =>
+				notifyLoad({
+					loading,
+					error,
+					slideCount: this.loader.slides().length,
+					canvasSize: this.loader.canvasSize(),
+				}),
+			);
 		});
 
 		// Keep the active index in range when the deck shrinks (slide deleted).

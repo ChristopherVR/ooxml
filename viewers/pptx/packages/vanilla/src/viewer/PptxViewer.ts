@@ -427,10 +427,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getScale: () => this.renderer.effectiveScale(),
 			getHandler: () => this.loading.getHandler(),
 			setHandler: (handler) => this.loading.setHandler(handler),
-			getUserName: () => this.optionsController?.getOptions().general.userName,
+			getUserName: () =>
+				options.authorName || this.optionsController?.getOptions().general.userName,
 			transformCommittedText: (text) =>
 				this.optionsController?.transformCommittedText(text) ?? text,
-			onChange: options.onChange,
+			onChange: () => {
+				options.onChange?.();
+				this.emitContentChange();
+			},
 			onCursorMove: (x, y) => this.sessions.setCollaborationCursor(x, y),
 			onInlineTextInput: (elementId, text) =>
 				this.sessions.publishCollaborationInlineText(elementId, text),
@@ -929,7 +933,15 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		await this.loading.load(file, 'user', options);
 	}
 
+	/**
+	 * File > Open. When the host supplied `onOpenFile` it is invoked instead of the
+	 * built-in picker, and the host loads the chosen deck itself (`loadFile`).
+	 */
 	openFile(): void {
+		if (this.options.onOpenFile) {
+			this.options.onOpenFile();
+			return;
+		}
 		void (async () => {
 			const picked = await openPptxFile();
 			if (picked) {
@@ -2017,9 +2029,26 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		}
 	}
 
+	/**
+	 * Host `onContentChange`: serialise the deck after each committed edit. Calls the editor's
+	 * `save` directly so no save side effects (recovery cleanup, success cue) run.
+	 */
+	private emitContentChange(): void {
+		const onContentChange = this.options.onContentChange;
+		if (!onContentChange) {
+			return;
+		}
+		void this.editor.save('pptx').then(onContentChange, (error: unknown) => {
+			this.options.onError?.(error instanceof Error ? error.message : String(error), error);
+		});
+	}
+
 	/** IndexedDB key for this deck's AutoRecover snapshot. */
 	private autosaveFilePath(): string {
-		return resolveAutosaveFileKey(this.options.autosaveFilePath, this.options.fileName);
+		return resolveAutosaveFileKey(
+			this.options.filePath ?? this.options.autosaveFilePath,
+			this.options.fileName,
+		);
 	}
 
 	/** File > Options > Save > "cache retention": a one-time sweep on mount. */

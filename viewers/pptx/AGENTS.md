@@ -51,6 +51,12 @@ framework-specific" means Angular change detection, Svelte 5 runes, React effect
 ordering, and the like. A wrong colour, a mis-clipped shape, an off-by-one drag
 handle, or a dialog that will not open is almost never framework-specific.
 
+The public props, inputs, options and events of the five bindings are pinned by one
+manifest, `src/ui/src/pptx/render/viewer-props-manifest.ts` (repository root). Adding a
+prop or event to a binding means adding it to the manifest and to the other four, or
+listing them under `absent` with the reason. `bun run check:viewer-props` (here; part of
+`bun run verify` and the pptx build CI job) fails on any difference.
+
 ### Rule 2: share Office logic in OOXML and view behavior in `ooxml-ui/pptx`
 
 When you touch logic in a binding, **first decide whether it is Office logic or

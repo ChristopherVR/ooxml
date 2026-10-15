@@ -24,8 +24,11 @@ export const BINDINGS = [
 	{ key: 'vanilla', label: 'Vanilla', dir: 'packages/vanilla' },
 ];
 
-const SHARED_SRC = 'packages/shared/src/';
-const EN_TRANSLATIONS = 'packages/shared/src/i18n/translations-en.ts';
+// Framework-free logic lives in the repository-root `src/ui/src/pptx` (the `packages/shared` facade
+// only re-exports it), so a change there is a shared change.
+const SHARED_SRC = ['src/ui/src/pptx/', 'packages/shared/src/'];
+const EN_TRANSLATION_RE =
+	/^(?:src\/ui\/src\/pptx|packages\/shared\/src)\/i18n\/translations-en[^/]*\.ts$/u;
 const LOCALE_RE = /^packages\/locales\/src\/(de|es|fr)\//u;
 const TEST_RE = /\.(?:test|spec)\.[cm]?[jt]sx?$/u;
 const E2E_SPEC_RE = /^e2e\/(?!capture-)[^/]+\.spec\.ts$/u;
@@ -44,13 +47,24 @@ function testedBindings(files) {
 	return BINDINGS.filter((b) => files.some((f) => f.startsWith(`${b.dir}/`) && TEST_RE.test(f)));
 }
 
-export function analyse(files) {
+/**
+ * Paths as the monorepo reports them (`viewers/pptx/packages/...`, `e2e/pptx/...`) become the
+ * viewer-relative paths the rules below are written against.
+ */
+export function normalisePath(file) {
+	return file.replace(/^viewers\/pptx\//u, '').replace(/^e2e\/pptx\//u, 'e2e/');
+}
+
+export function analyse(changed) {
+	const files = changed.map(normalisePath);
 	const touched = touchedBindings(files);
 	const tested = testedBindings(files);
 	const missing = BINDINGS.filter((b) => !touched.includes(b));
-	const sharedTouched = files.some((f) => f.startsWith(SHARED_SRC) && isSource(f));
+	const sharedTouched = files.some(
+		(f) => SHARED_SRC.some((dir) => f.startsWith(dir)) && isSource(f),
+	);
 	const e2eTouched = files.some((f) => E2E_SPEC_RE.test(f));
-	const enTouched = files.includes(EN_TRANSLATIONS);
+	const enTouched = files.some((f) => EN_TRANSLATION_RE.test(f));
 	const localesTouched = files.some((f) => LOCALE_RE.test(f));
 
 	const findings = [];

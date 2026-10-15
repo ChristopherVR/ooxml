@@ -162,6 +162,9 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	 * Show the speaker-notes panel and its toolbar toggle. Default true. The
 	 * panel is plain-text only and reads the active slide's notes; pass
 	 * `onnotesupdate` to make it editable (omitting it renders read-only).
+	 *
+	 * @deprecated Hide the notes panel with `customization.hiddenPanels: ['notes']` instead, as the
+	 * other bindings do.
 	 */
 	showNotes?: boolean;
 	/**
@@ -235,6 +238,11 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	class?: string;
 	/** Optional display name shown in the desktop title bar. */
 	fileName?: string;
+	/**
+	 * Display name used as the author for comments and as the broadcast presenter.
+	 * Falls back to Options > General > "User name", then a generic label.
+	 */
+	authorName?: string;
 	/** Fired after a presentation finishes loading. */
 	onload?: (detail: ViewerLoadDetail) => void;
 	/** Fired when a load fails (message is human-readable). */

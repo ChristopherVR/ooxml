@@ -537,6 +537,17 @@ watch(selectedElementIds, (ids) => {
 watch(slideCount, (count) => {
 	emit('slide-count-change', count);
 });
+// `load` / `error`: the Svelte and vanilla bindings' load notifications.
+watch(loading, (isLoading, wasLoading) => {
+	if (wasLoading && !isLoading && !error.value) {
+		emit('load', { slideCount: slides.value.length, canvasSize: canvasSize.value });
+	}
+});
+watch(error, (message) => {
+	if (message) {
+		emit('error', message);
+	}
+});
 
 // Rubber-band selection. Template-owned elements join the band only in
 // edit-template mode, the same rule the pointer uses for a direct click, and an

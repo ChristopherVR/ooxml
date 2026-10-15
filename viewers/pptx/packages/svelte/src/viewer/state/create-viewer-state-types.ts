@@ -60,6 +60,8 @@ export interface CreateViewerStateOptions {
 	getAutosave: () => boolean | undefined;
 	autosaveIntervalMs?: number;
 	getFilePath: () => string | undefined;
+	/** Host `authorName` prop: comment/reply author and the broadcast presenter name. */
+	getAuthorName?: () => string | undefined;
 	getInitialSlide: () => number;
 	/** Already locale-bound translator; propagated to descendants via context. */
 	t: Translator;

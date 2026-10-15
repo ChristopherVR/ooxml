@@ -127,6 +127,7 @@ import { useEditorHistory } from './hooks/useEditorHistory';
 import { useEditorOperations } from './hooks/useEditorOperations';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useLayoutSwitching } from './hooks/useLayoutSwitching';
+import { useLoadNotifications } from './hooks/useLoadNotifications';
 import { useMasterViewCrud } from './hooks/useMasterViewCrud';
 import { usePresentationSetup } from './hooks/usePresentationSetup';
 import { useReadOnlyRecommendationState } from './hooks/useReadOnlyRecommendationState';
@@ -185,6 +186,8 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			onZoomChange,
 			onSelectionChange,
 			onSlideCountChange,
+			onLoad,
+			onError,
 			onOpenFile: hostOpenFile,
 			theme,
 			defaultThemeKey,
@@ -459,6 +462,16 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			activeSlide,
 			selectedElement,
 		} = state;
+
+		// Host `onLoad` / `onError` (the Svelte and vanilla bindings' load notifications).
+		useLoadNotifications({
+			loading,
+			error,
+			slideCount: slides.length,
+			canvasSize,
+			onLoad,
+			onError,
+		});
 
 		// ── Recent colours ("Most Recently Used") ─────────────────────
 		// Shared by every colour picker in BOTH the ribbon toolbar and the

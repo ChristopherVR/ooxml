@@ -32,14 +32,20 @@ export interface InitialThemeState {
 	theme: ViewerTheme | undefined;
 }
 
-/** Resolve the theme to mount with: stored prefs > `options.theme` > catalog default. */
+/**
+ * Resolve the theme to mount with: host `defaultThemeKey` > stored prefs > `options.theme` >
+ * catalog default (the Svelte binding's order). A key the catalog does not offer is ignored.
+ */
 export function resolveInitialThemeState(
 	options: PptxViewerOptions,
 	storedThemeKey: string | undefined,
 	catalog: readonly ThemeCatalogEntry[],
 ): InitialThemeState {
-	const key =
-		storedThemeKey && catalog.some((entry) => entry.key === storedThemeKey)
+	const offered = (candidate: string | undefined): candidate is string =>
+		candidate !== undefined && catalog.some((entry) => entry.key === candidate);
+	const key = offered(options.defaultThemeKey)
+		? options.defaultThemeKey
+		: offered(storedThemeKey)
 			? storedThemeKey
 			: (findThemeCatalogKey(options.theme, catalog) ?? 'default');
 	// The 'default' entry (and an ad hoc host theme with no catalog match) maps
@@ -68,12 +74,18 @@ export function resolveAvailableLocales(options: PptxViewerOptions): readonly Lo
 	);
 }
 
-/** Resolve the locale to start with: stored prefs (if still offered) > `options.locale` > `'en'`. */
+/**
+ * Resolve the locale to start with: `defaultLocale` > stored prefs (if still offered) >
+ * `options.locale` > `'en'`.
+ */
 export function resolveInitialLocale(
 	options: PptxViewerOptions,
 	storedLocaleCode: string | undefined,
 	availableLocales: readonly LocaleCatalogEntry[],
 ): string {
+	if (options.defaultLocale) {
+		return options.defaultLocale;
+	}
 	if (storedLocaleCode && availableLocales.some((entry) => entry.code === storedLocaleCode)) {
 		return storedLocaleCode;
 	}

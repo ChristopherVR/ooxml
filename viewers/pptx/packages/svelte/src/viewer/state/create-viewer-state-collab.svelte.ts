@@ -151,7 +151,11 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		getSelectedElementId: () => editor.selectedElementId,
 		goTo: (index) => viewer.goTo(index),
 	});
-	const dialogs = new CollaborationDialogsState(collab, () => options.shareDefaults);
+	const dialogs = new CollaborationDialogsState(
+		collab,
+		() => options.shareDefaults,
+		() => options.getAuthorName?.(),
+	);
 
 	let versionHistoryOpen = $state(false);
 	let signatureWarningOpen = $state(false);

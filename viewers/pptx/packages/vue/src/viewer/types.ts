@@ -49,6 +49,12 @@ export type {
 	ViewportFitPadding,
 };
 
+/** What the `load` event reports; identical in every binding. */
+export interface ViewerLoadDetail {
+	slideCount: number;
+	canvasSize: CanvasSize;
+}
+
 /** Public viewer props: React callbacks become Vue emits. */
 export interface PowerPointViewerProps {
 	/** Per-side fit allowance in CSS pixels; omission retains the existing default. */
@@ -306,6 +312,8 @@ export interface PowerPointViewerProps {
  *  - `onZoomChange`        → `@zoom-change`
  *  - `onSelectionChange`   → `@selection-change`
  *  - `onSlideCountChange`  → `@slide-count-change`
+ *  - `onLoad`              → `@load`
+ *  - `onError`             → `@error`
  */
 export interface PowerPointViewerEmits {
 	/** Fired when the unsaved-changes flag toggles. */
@@ -325,6 +333,10 @@ export interface PowerPointViewerEmits {
 	(e: 'start-collaboration', config: CollaborationConfig): void;
 	/** Fired when the user stops a collaboration session from the Share dialog. */
 	(e: 'stop-collaboration'): void;
+	/** Fired each time a presentation finishes loading without an error. */
+	(e: 'load', detail: ViewerLoadDetail): void;
+	/** Fired once per distinct load failure, with a human-readable message. */
+	(e: 'error', message: string): void;
 }
 
 /**

@@ -118,6 +118,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 
 	const editor = new EditorState({
 		getCurrent: () => viewer.current,
+		getAuthorName: () => options.getAuthorName?.(),
 		getHandler: () => loader.handler,
 		setHandler: (handler, keepPrevious, data) => loader.adoptHandler(handler, keepPrevious, data),
 		// Design > Slide Size. The EMU state wins wherever it still agrees with

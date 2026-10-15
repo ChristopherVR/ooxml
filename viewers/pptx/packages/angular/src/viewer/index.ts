@@ -1,5 +1,6 @@
 export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 export { PowerPointViewerComponent } from './power-point-viewer.component';
+export type { ViewerLoadDetail } from './load-notifier';
 export { POWER_POINT_VIEWER_PROVIDERS } from './power-point-viewer.providers';
 export * from './ai';
 export { RibbonComponent } from './ribbon.component';

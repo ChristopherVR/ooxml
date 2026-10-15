@@ -138,7 +138,10 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		getTranslator: deps.getTranslator,
 		hostAutosave: options.autosave,
 		hostIntervalMs: options.autosaveIntervalMs,
-		filePath: resolveAutosaveFileKey(options.autosaveFilePath, options.fileName),
+		filePath: resolveAutosaveFileKey(
+			options.filePath ?? options.autosaveFilePath,
+			options.fileName,
+		),
 		fileName: options.fileName,
 		// Threaded through only so the snapshot uses the shared save decision;
 		// a recovery snapshot stays plaintext whatever the protection state is.
@@ -215,6 +218,9 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 			getConfig: () => collaboration.getConfig(),
 			followUser: (clientId) => collaboration.followUser(clientId),
 			shareDefaults: options.shareDefaults,
+			getAuthorName: () => options.authorName,
+			onStarted: (config) => options.onStartCollaboration?.(config),
+			onStopped: () => options.onStopCollaboration?.(),
 			hiddenActions: deps.getHiddenActions ? deps.getHiddenActions() : options.hiddenActions,
 			showCollaborationStatus: deps.isShareAvailable?.() ?? true,
 			getUserInitials: deps.getUserInitials,

@@ -45,8 +45,12 @@
 	} = $props();
 	const t = useTranslator();
 	const optionsState = useViewerOptions();
-	/** Options > General > "User name" wins over the generic default author label. */
-	const authorName = $derived(optionsState.options.general.userName || t('pptx.comments.defaultAuthorName'));
+	/** Host `authorName`, then Options > General > "User name", then the generic default label. */
+	const authorName = $derived(
+		editor.hostAuthorName ||
+			optionsState.options.general.userName ||
+			t('pptx.comments.defaultAuthorName'),
+	);
 	const compose = new CommentComposeState();
 	// Which comment has its reply composer open (one at a time).
 	let replyingTo = $state<string | null>(null);
