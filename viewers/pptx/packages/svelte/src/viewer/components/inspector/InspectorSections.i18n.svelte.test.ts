@@ -40,47 +40,6 @@ const german: Translator = (key, params) => {
 /** Data the components render from the document itself (names, not captions). */
 const DATA = new Set(['Commentary', 'Intro']);
 
-/**
- * Labels the shared catalogues in `ooxml-ui/pptx` hold in English: table style
- * presets, the text warp, 3D material and bevel presets. Every binding (React,
- * Vue, Angular, vanilla and Svelte) paints them unchanged, so they are not
- * Svelte literals. Translating them is a shared change that must reach all
- * five bindings together, and is tracked as a follow-up.
- */
-const SHARED_CATALOGUE_LABELS = new Set([
-	'Light 1',
-	'Light 2',
-	'Light 3',
-	'Medium 1',
-	'Medium 2',
-	'Medium 3',
-	'Dark 1',
-	'Dark 2',
-	'Dark 3',
-	'Arch Up',
-	'Arch Down',
-	'Circle',
-	'Wave 1',
-	'Wave 2',
-	'Inflate',
-	'Deflate',
-	'Fade Right',
-	'Slant Up',
-	'Triangle',
-	'Matte',
-	'Plastic',
-	'Metal',
-	'Warm Matte',
-	'Soft Edge',
-	'Flat',
-	'None',
-	'Relaxed Inset',
-	'Cool Slant',
-	'Angle',
-	'Soft Round',
-	'Convex',
-]);
-
 const MEDIA: MediaPptxElement = {
 	type: 'media',
 	id: 'm1',
@@ -246,7 +205,7 @@ function visibleStrings(target: HTMLElement): string[] {
 			}
 		}
 	}
-	return found.filter((text) => !DATA.has(text) && !SHARED_CATALOGUE_LABELS.has(text));
+	return found.filter((text) => !DATA.has(text));
 }
 
 /** The English literals these sections used to hard-code, minus the words German shares. */
@@ -345,6 +304,20 @@ const ENGLISH_LITERALS = [
 	'Select item',
 	'Slide',
 	'elements',
+	'Arch Up',
+	'Wave 1',
+	'Fade Right',
+	'Light 1',
+	'Medium 1',
+	'Dark 1',
+	'Matte',
+	'Warm Matte',
+	'Plastic',
+	'Soft Edge',
+	'Relaxed Inset',
+	'Cool Slant',
+	'Soft Round',
+	'Convex',
 ];
 
 function mountAll(translator: Translator): HTMLElement[] {

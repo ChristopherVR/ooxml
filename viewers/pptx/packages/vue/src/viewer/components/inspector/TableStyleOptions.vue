@@ -118,7 +118,7 @@ function assignStyle(styleId: string): void {
 					type="button"
 					class="h-10 overflow-hidden rounded border border-border transition-colors hover:border-primary disabled:opacity-50"
 					:disabled="!canEdit"
-					:title="preset.label"
+					:title="t(preset.labelKey)"
 					@click="applyPreset(preset)"
 				>
 					<div class="flex h-full flex-col">

@@ -1,5 +1,7 @@
 import { BEVEL_PRESETS, MATERIAL_PRESETS, TEXT_WARP_PRESETS } from 'ooxml-ui/pptx';
 
+import type { Translator } from '../../../i18n/translator';
+
 /**
  * text-effects-labels.ts: display labels for the three preset selects in
  * {@link TextEffectsSection} (warp, 3D material, 3D bevel).
@@ -8,25 +10,25 @@ import { BEVEL_PRESETS, MATERIAL_PRESETS, TEXT_WARP_PRESETS } from 'ooxml-ui/ppt
  * catalogue is keyed on the OOXML `text`-prefixed wire values (`textArchUp`),
  * while `TextStyle.textWarpPreset` stores the short form the panel already
  * writes (`archUp`). The prefixing is real logic, and it belongs beside the
- * component instead of inside the markup. Vanilla's `text-effects-controls.ts`
- * and `text-3d-section.ts` drive their equivalents off the same three shared
- * tables, so the wording cannot drift between the bindings.
+ * component instead of inside the markup. Every binding translates the same
+ * shared catalogues through its own translator (`labelKey`), so the wording
+ * cannot drift between the bindings.
  *
  * These helpers are LOOKUPS only. They never decide which values a select
  * offers, so spelling a token out cannot add or drop an option (which would
  * move the control out of parity with React).
  */
 
-/** Index a shared preset catalogue by its wire value. */
-function labelIndex(
-	presets: ReadonlyArray<{ value: string; label: string }>,
+/** Index a shared preset catalogue's translation keys by its wire value. */
+function keyIndex(
+	presets: ReadonlyArray<{ value: string; labelKey: string }>,
 ): ReadonlyMap<string, string> {
-	return new Map(presets.map((preset) => [preset.value, preset.label]));
+	return new Map(presets.map((preset) => [preset.value, preset.labelKey]));
 }
 
-const WARP_LABELS = labelIndex(TEXT_WARP_PRESETS);
-const MATERIAL_LABELS = labelIndex(MATERIAL_PRESETS);
-const BEVEL_LABELS = labelIndex(BEVEL_PRESETS);
+const WARP_KEYS = keyIndex(TEXT_WARP_PRESETS);
+const MATERIAL_KEYS = keyIndex(MATERIAL_PRESETS);
+const BEVEL_KEYS = keyIndex(BEVEL_PRESETS);
 
 /** `archUp` -> `textArchUp`, the value the shared warp catalogue is keyed on. */
 function warpSchemaValue(value: string): string {
@@ -38,24 +40,26 @@ function warpSchemaValue(value: string): string {
  * deck may carry a preset newer than the catalogue, and blanking the option
  * would make the select look broken rather than merely untranslated.
  */
-function lookup(labels: ReadonlyMap<string, string>, value: string): string {
-	return labels.get(value) ?? value;
+function lookup(keys: ReadonlyMap<string, string>, value: string, t: Translator): string {
+	const key = keys.get(value);
+	return key === undefined ? value : t(key);
 }
 
 /**
  * Display label for a `TextStyle.textWarpPreset` short value. The fallback is
  * the caller's token, not the prefixed form this looked the label up under.
  */
-export function warpPresetLabel(value: string): string {
-	return WARP_LABELS.get(warpSchemaValue(value)) ?? value;
+export function warpPresetLabel(value: string, t: Translator): string {
+	const key = WARP_KEYS.get(warpSchemaValue(value));
+	return key === undefined ? value : t(key);
 }
 
 /** Display label for a `Text3DStyle.presetMaterial` value. */
-export function materialPresetLabel(value: string): string {
-	return lookup(MATERIAL_LABELS, value);
+export function materialPresetLabel(value: string, t: Translator): string {
+	return lookup(MATERIAL_KEYS, value, t);
 }
 
 /** Display label for a `Text3DStyle.bevelTopType` value. */
-export function bevelPresetLabel(value: string): string {
-	return lookup(BEVEL_LABELS, value);
+export function bevelPresetLabel(value: string, t: Translator): string {
+	return lookup(BEVEL_KEYS, value, t);
 }

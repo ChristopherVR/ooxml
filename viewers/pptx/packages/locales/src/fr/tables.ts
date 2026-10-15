@@ -139,4 +139,13 @@ export const translations = {
 	'pptx.table.rowIndex': 'Ligne {{index}}',
 	'pptx.table.stopIndex': 'Arrêt {{index}}',
 	'pptx.tableCell.edgeBorderWidthAria': 'Épaisseur de la bordure {{edge}}',
+	'pptx.tableStylePreset.light1': 'Clair 1',
+	'pptx.tableStylePreset.light2': 'Clair 2',
+	'pptx.tableStylePreset.light3': 'Clair 3',
+	'pptx.tableStylePreset.medium1': 'Moyen 1',
+	'pptx.tableStylePreset.medium2': 'Moyen 2',
+	'pptx.tableStylePreset.medium3': 'Moyen 3',
+	'pptx.tableStylePreset.dark1': 'Foncé 1',
+	'pptx.tableStylePreset.dark2': 'Foncé 2',
+	'pptx.tableStylePreset.dark3': 'Foncé 3',
 } as const;

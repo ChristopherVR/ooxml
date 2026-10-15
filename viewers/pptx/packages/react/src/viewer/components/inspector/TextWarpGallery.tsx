@@ -37,17 +37,20 @@ export function TextWarpGallery({
 			</button>
 			{!expanded && (
 				<div className='text-[11px] text-muted-foreground'>
-					{TEXT_WARP_PRESETS.find((p) => p.value === currentPreset)?.label || currentPreset}
+					{(() => {
+						const current = TEXT_WARP_PRESETS.find((p) => p.value === currentPreset);
+						return current ? t(current.labelKey) : currentPreset;
+					})()}
 				</div>
 			)}
 			{expanded && (
 				<div className='grid grid-cols-5 gap-1'>
-					{TEXT_WARP_PRESETS.map(({ value, label }) => (
+					{TEXT_WARP_PRESETS.map(({ value, labelKey }) => (
 						<button
 							key={value}
 							type='button'
-							title={label}
-							aria-label={label}
+							title={t(labelKey)}
+							aria-label={t(labelKey)}
 							className={`flex items-center justify-center rounded p-1 ${currentPreset === value ? 'bg-primary ring-1 ring-primary' : 'bg-muted hover:bg-accent'}`}
 							onClick={() =>
 								onUpdateTextStyle({

@@ -102,8 +102,8 @@
 				<button
 					type="button"
 					class="preset-swatch"
-					title={preset.label}
-					aria-label={preset.label}
+					title={t(preset.labelKey)}
+					aria-label={t(preset.labelKey)}
 					onclick={() => patchData({ rows: applyTableStylePreset(table, preset) })}
 				>
 					<span style:background={preset.headerBg}></span>

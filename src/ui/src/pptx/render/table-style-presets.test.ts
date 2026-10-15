@@ -13,6 +13,7 @@ import { applyTableStylePreset } from './table-style-presets';
 const PRESET: TableStylePreset = {
 	id: 'light-1',
 	label: 'Light 1',
+	labelKey: 'pptx.tableStylePreset.light1',
 	headerBg: '#4472C4',
 	headerFg: '#FFFFFF',
 	bandBg: 'rgba(0,0,0,0.1)',

@@ -40,7 +40,7 @@ function createBevelBlock(
 	caption.textContent = label;
 	const type = makeSelectField(doc, {
 		label: `${label} ${t('pptx.text3d.bevelType')}`,
-		options: BEVEL_PRESETS.map(({ value, label: text }) => ({ value, label: text })),
+		options: BEVEL_PRESETS.map(({ value, labelKey }) => ({ value, label: t(labelKey) })),
 		onChange: (value) => commit({ [keys.type]: value as BevelPresetType } as Partial<Text3DStyle>),
 	});
 	const width = makeNumberField(doc, {
@@ -134,7 +134,10 @@ export function createText3DSection(
 	});
 	const material = makeSelectField(doc, {
 		label: t('pptx.text3d.material'),
-		options: MATERIAL_PRESETS.map(({ value, label }) => ({ value: value || '', label })),
+		options: MATERIAL_PRESETS.map(({ value, labelKey }) => ({
+			value: value || '',
+			label: t(labelKey),
+		})),
 		onChange: (value) =>
 			commit({ presetMaterial: value ? (value as MaterialPresetType) : undefined }),
 	});

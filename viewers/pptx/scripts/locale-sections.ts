@@ -105,6 +105,7 @@ const SECTION_DEFINITIONS = [
 		name: 'text-and-equations',
 		prefixes: [
 			'text3d',
+			'material',
 			'textEffects',
 			'textPanel',
 			'textWarp',
@@ -173,7 +174,10 @@ const SECTION_DEFINITIONS = [
 			'strokeOptions',
 		],
 	},
-	{ name: 'tables', prefixes: ['table', 'tableCell', 'tableDataEditor', 'tableStyleEditor'] },
+	{
+		name: 'tables',
+		prefixes: ['table', 'tableCell', 'tableDataEditor', 'tableStyleEditor', 'tableStylePreset'],
+	},
 	{
 		name: 'editing-and-review',
 		prefixes: [

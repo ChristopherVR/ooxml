@@ -73,7 +73,7 @@ export function createTextEffectsControls(
 	for (const preset of TEXT_WARP_PRESETS) {
 		const option = doc.createElement('option');
 		option.value = preset.value;
-		option.textContent = preset.label;
+		option.textContent = t(preset.labelKey);
 		warp.appendChild(option);
 	}
 	warp.addEventListener('change', () =>

@@ -124,7 +124,7 @@ const DEFAULT_EXTRUSION_COLOR = '#888888';
 					>
 						@for (preset of materialPresets; track preset.value) {
 							<option [value]="preset.value" [selected]="preset.value === material()">
-								{{ preset.label }}
+								{{ preset.labelKey | translate }}
 							</option>
 						}
 					</pptx-ui-select>

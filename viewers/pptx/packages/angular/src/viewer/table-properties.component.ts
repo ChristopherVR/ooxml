@@ -99,7 +99,7 @@ import { TableStyleEditorLauncherComponent } from './table-style-editor-launcher
 							type="button"
 							class="pptx-tp__preset"
 							[disabled]="!canEdit()"
-							[title]="preset.label"
+							[title]="preset.labelKey | translate"
 							(click)="onPreset(preset)"
 						>
 							<span class="pptx-tp__swatch" [style.background]="preset.headerBg"></span>

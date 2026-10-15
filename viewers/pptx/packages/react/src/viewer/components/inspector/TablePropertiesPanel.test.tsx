@@ -274,7 +274,9 @@ describe('tablePropertiesPanel', () => {
 		}
 		render(el, onUpdate);
 
-		const presetButton = host.querySelector<HTMLButtonElement>('button[title="Light 1"]');
+		const presetButton = host.querySelector<HTMLButtonElement>(
+			'button[title="pptx.tableStylePreset.light1"]',
+		);
 		if (!presetButton) {
 			throw new Error('Light 1 preset swatch not found');
 		}

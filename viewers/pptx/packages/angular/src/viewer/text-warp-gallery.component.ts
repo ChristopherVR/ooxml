@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TEXT_WARP_PRESETS, warpPreviewPath } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxTextWarpPreset, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
@@ -19,20 +20,21 @@ export function textWarpPatch(
 @Component({
 	selector: 'pptx-text-warp-gallery',
 	standalone: true,
+	imports: [TranslatePipe],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		@if (supported()) {
 			<details class="panel">
 				<summary>
-					Text transform <span>{{ currentLabel() }}</span>
+					{{ 'pptx.textWarp.title' | translate }} <span>{{ currentLabel() | translate }}</span>
 				</summary>
 				<div class="gallery">
 					@for (preset of presets; track preset.value) {
 						<button
 							type="button"
 							[class.active]="preset.value === current()"
-							[title]="preset.label"
-							[attr.aria-label]="preset.label"
+							[title]="preset.labelKey | translate"
+							[attr.aria-label]="preset.labelKey | translate"
 							(click)="select(preset.value)"
 						>
 							<svg viewBox="0 0 40 20" aria-hidden="true">
@@ -105,7 +107,8 @@ export class TextWarpGalleryComponent {
 			: 'textNoShape',
 	);
 	protected readonly currentLabel = computed(
-		() => this.presets.find((preset) => preset.value === this.current())?.label ?? this.current(),
+		() =>
+			this.presets.find((preset) => preset.value === this.current())?.labelKey ?? this.current(),
 	);
 
 	protected preview(value: PptxTextWarpPreset): string {

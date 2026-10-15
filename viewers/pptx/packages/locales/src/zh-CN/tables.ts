@@ -136,4 +136,13 @@ export const translations = {
 	'pptx.table.rowIndex': '第 {{index}} 行',
 	'pptx.table.stopIndex': '色标 {{index}}',
 	'pptx.tableCell.edgeBorderWidthAria': '{{edge}} 边框宽度',
+	'pptx.tableStylePreset.light1': '浅色 1',
+	'pptx.tableStylePreset.light2': '浅色 2',
+	'pptx.tableStylePreset.light3': '浅色 3',
+	'pptx.tableStylePreset.medium1': '中等 1',
+	'pptx.tableStylePreset.medium2': '中等 2',
+	'pptx.tableStylePreset.medium3': '中等 3',
+	'pptx.tableStylePreset.dark1': '深色 1',
+	'pptx.tableStylePreset.dark2': '深色 2',
+	'pptx.tableStylePreset.dark3': '深色 3',
 } as const;
