@@ -99,6 +99,7 @@ const SECTION_DEFINITIONS = [
 		name: 'animations',
 		prefixes: ['animations', 'animation', 'animationPanel', 'ribbonAnimations', 'undoAction'],
 	},
+	{ name: 'chart-format', prefixes: ['chartFormat'] },
 	{ name: 'charts', prefixes: ['chart'] },
 	{ name: 'smart-art', prefixes: ['smartArt', 'smartart', 'insertSmartArt'] },
 	{

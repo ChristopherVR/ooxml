@@ -6,6 +6,7 @@ import { translations as animations_2 } from './animations-2';
 import { translations as animations_3 } from './animations-3';
 import { translations as application_shell } from './application-shell';
 import { translations as backstage } from './backstage';
+import { translations as chart_format } from './chart-format';
 import { translations as charts } from './charts';
 import { translations as charts_2 } from './charts-2';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
@@ -76,4 +77,5 @@ export const translationsZhCN: Record<string, string> = {
 	...table_layout,
 	...shape_gallery,
 	...design_galleries,
+	...chart_format,
 };

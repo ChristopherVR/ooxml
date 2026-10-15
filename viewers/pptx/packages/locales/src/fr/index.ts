@@ -4,6 +4,7 @@ import { translations as animation_presets } from './animation-presets';
 import { translations as animations } from './animations';
 import { translations as application_shell } from './application-shell';
 import { translations as backstage } from './backstage';
+import { translations as chart_format } from './chart-format';
 import { translations as charts } from './charts';
 import { translations as collaboration_and_sharing } from './collaboration-and-sharing';
 import { translations as design_galleries } from './design-galleries';
@@ -60,4 +61,5 @@ export const translationsFr: Record<string, string> = {
 	...table_layout,
 	...shape_gallery,
 	...design_galleries,
+	...chart_format,
 };
