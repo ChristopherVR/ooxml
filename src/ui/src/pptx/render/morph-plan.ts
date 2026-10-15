@@ -525,9 +525,27 @@ function keyframesBlockOf(name: string, keyframes: string): string | undefined {
 	return undefined;
 }
 
-/** Escape a value for use inside a double-quoted CSS attribute selector. */
+/**
+ * Characters that must never appear raw in a CSS string: the quote and
+ * backslash that end or escape it, the angle brackets that would let a value
+ * close the enclosing `<style>` element when the stylesheet is injected as
+ * markup, `&`, the apostrophe, and control characters (a newline is invalid
+ * inside a CSS string).
+ */
+const CSS_UNSAFE_CHAR = /["\\<>&'\u0000-\u001f\u007f]/u;
+
+/**
+ * Escape a value for use inside a double-quoted CSS attribute selector.
+ * Unsafe characters become CSS hex escapes (`\3c `), which the stylesheet
+ * parser reads back as the same character while keeping the text free of
+ * markup. Element ids come from slide part paths, so they are not trusted.
+ */
 function cssAttributeValue(value: string): string {
-	return value.replace(/\\/gu, '\\\\').replace(/"/gu, '\\"');
+	let out = '';
+	for (const ch of value) {
+		out += CSS_UNSAFE_CHAR.test(ch) ? `\\${(ch.codePointAt(0) ?? 0).toString(16)} ` : ch;
+	}
+	return out;
 }
 
 /**

@@ -1,7 +1,13 @@
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { buildMorphScopedCss, buildMorphTransitionPlan, morphOptionToMode } from './morph-plan';
+import {
+	buildMorphAnimationRules,
+	buildMorphScopedCss,
+	buildMorphTransitionPlan,
+	morphOptionToMode,
+	type MorphTransitionPlan,
+} from './morph-plan';
 
 function shape(id: string, name: string, x: number, y: number): PptxElement {
 	return {
@@ -18,6 +24,38 @@ function shape(id: string, name: string, x: number, y: number): PptxElement {
 function slide(id: string, elements: PptxElement[]): PptxSlide {
 	return { id, slideNumber: 1, elements } as unknown as PptxSlide;
 }
+
+describe('morph CSS attribute escaping', () => {
+	it('keeps a hostile element id from closing the style element or adding markup', () => {
+		const evil = '</style><img src=x onerror=alert(1)>';
+		const plan = {
+			incomingAnimations: new Map([[evil, 'pptx-morph-fadein-x 1s']]),
+			incomingImageAnimations: new Map(),
+		} as unknown as MorphTransitionPlan;
+
+		const css = buildMorphAnimationRules(plan, 'data-pptx-morph-incoming', 'incoming');
+
+		expect(css).not.toContain('<');
+		expect(css).not.toContain('>');
+		expect(css).not.toContain('</style>');
+		// `<` and `>` survive as CSS hex escapes, so the selector still names the id.
+		expect(css).toContain(
+			'[data-element-id="\\3c /style\\3e \\3c img src=x onerror=alert(1)\\3e "]',
+		);
+		expect(css).toContain('{ animation: pptx-morph-fadein-x 1s; }');
+	});
+
+	it('escapes quotes, backslashes and newlines inside the selector value', () => {
+		const plan = {
+			incomingAnimations: new Map([['a"b\\c\nd', 'spin 1s']]),
+			incomingImageAnimations: new Map(),
+		} as unknown as MorphTransitionPlan;
+
+		const css = buildMorphAnimationRules(plan, '', 'incoming');
+
+		expect(css).toBe('[data-element-id="a\\22 b\\5c c\\a d"] { animation: spin 1s; }');
+	});
+});
 
 describe('morphOptionToMode', () => {
 	it('maps the OOXML option token onto the engine mode', () => {
