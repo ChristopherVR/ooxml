@@ -1,16 +1,6 @@
-import { VIEWER_OPTIONS_TABS } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { resolveOptionsTab } from './settings-dialog.component';
 import { ViewerOptionsService } from './viewer-options.service';
-
-describe('resolveOptionsTab', () => {
-	it('resolves every category id to its definition', () => {
-		for (const tab of VIEWER_OPTIONS_TABS) {
-			expect(resolveOptionsTab(tab.id).id).toBe(tab.id);
-		}
-	});
-});
 
 describe('viewerOptionsService', () => {
 	beforeEach(() => localStorage.clear());

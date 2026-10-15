@@ -71,8 +71,27 @@ function dialogProps(overrides: Partial<SettingsDialogProps> = {}): SettingsDial
 	};
 }
 
+type OptionsDialogElement = HTMLElement & {
+	categories: readonly {
+		id: string;
+		label: string;
+		sections: readonly { controls: readonly { key: string; disabled?: string }[] }[];
+	}[];
+	category: string;
+};
+
+function optionsDialog(): OptionsDialogElement {
+	return container.querySelector<OptionsDialogElement>('pptx-ui-options-dialog')!;
+}
+
 function navLabels(): string[] {
-	return Array.from(container.querySelectorAll('nav button')).map((b) => b.textContent ?? '');
+	return optionsDialog().categories.map((entry) => entry.label);
+}
+
+function allControls() {
+	return optionsDialog().categories.flatMap((entry) =>
+		entry.sections.flatMap((section) => section.controls),
+	);
 }
 
 describe('file > Options customisation', () => {
@@ -83,8 +102,7 @@ describe('file > Options customisation', () => {
 		);
 		expect(navLabels()).not.toContain('pptx.settings.general');
 		expect(navLabels()).toContain('pptx.options.advanced.label');
-		const current = container.querySelector('nav button[aria-current="true"]');
-		expect(current?.textContent).toBe(navLabels()[0]);
+		expect(optionsDialog().category).toBe(optionsDialog().categories[0]?.id);
 	});
 
 	it('hides the AI page when the host hid it, even with an assistant configured', () => {
@@ -108,20 +126,18 @@ describe('file > Options customisation', () => {
 			},
 			<SettingsDialog {...props} />,
 		);
-		expect(
-			container.querySelector('input[aria-label="pptx.options.general.userInitials"]'),
-		).toBeNull();
-		const userName = container.querySelector<HTMLInputElement>(
-			'input[aria-label="pptx.options.general.userName"]',
+		const controls = allControls();
+		expect(controls.some((control) => control.key === 'general.userInitials')).toBe(false);
+		const userName = controls.find((control) => control.key === 'general.userName');
+		expect(userName?.disabled).toBe('pptx.options.lockedByHost');
+		const field = optionsDialog().shadowRoot!.querySelector<HTMLInputElement>(
+			'[data-key="general.userName"] input',
 		);
-		expect(userName).not.toBeNull();
-		expect(userName?.disabled).toBeTruthy();
-		expect(userName?.title).toBe('pptx.options.lockedByHost');
+		expect(field?.disabled).toBe(true);
 		// An unlocked sibling stays enabled.
-		const select = container.querySelector(
-			'pptx-ui-select[aria-label="pptx.options.general.displayOptimization"]',
-		);
-		expect(select?.hasAttribute('disabled')).toBeFalsy();
+		expect(
+			controls.find((control) => control.key === 'general.displayOptimization')?.disabled,
+		).toBeUndefined();
 		expect(props.onOptionChange).not.toHaveBeenCalled();
 	});
 });

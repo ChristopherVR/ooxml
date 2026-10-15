@@ -44,14 +44,6 @@ async function openFile(page: Page): Promise<Locator> {
 	return backstage;
 }
 
-async function openOptions(page: Page): Promise<Locator> {
-	const backstage = await openFile(page);
-	await backstage.locator('aside nav button').last().click();
-	const dialog = page.getByRole('dialog', { name: 'Options' }).first();
-	await dialog.waitFor();
-	return dialog;
-}
-
 test('search fields share one field treatment: a single host border, radius and focus colour', async ({
 	page,
 }) => {
@@ -92,40 +84,24 @@ test('search fields share one field treatment: a single host border, radius and 
 	expect(focused.height, 'focus does not shift layout').toBe(recentLook.height);
 });
 
-test('Options and inspector selects and checkboxes share size, shape and accent', async ({
-	page,
-}) => {
+test('inspector selects and checkboxes keep one size, shape and accent', async ({ page }) => {
 	await loadDeck(page);
-	const dialog = await openOptions(page);
-	const optionSelect = dialog.locator('pptx-ui-select').first();
-	const optionCheckbox = dialog.locator('pptx-ui-checkbox[checked]').first();
-	await expect(optionSelect).toBeVisible();
-	await expect(optionCheckbox).toBeVisible();
-	const optionCheckboxLook = await look(optionCheckbox);
-	const optionTrigger = await look(optionSelect.locator('[role="combobox"]'));
-
-	await page.keyboard.press('Escape');
-	await expect(dialog).toBeHidden();
 	const panel = inspector(page);
-	const inspectorCheckbox = panel.locator('pptx-ui-checkbox[checked]').first();
-	await expect(inspectorCheckbox).toBeVisible();
-	const inspectorTrigger = panel.locator('pptx-ui-select [role="combobox"]').first();
-	await expect(inspectorTrigger).toBeVisible();
-
-	expect(await look(inspectorCheckbox), 'checked checkbox look').toEqual(optionCheckboxLook);
-	const inspectorLook = await look(inspectorTrigger);
-	expect(inspectorLook.radius, 'select radius').toBe(optionTrigger.radius);
-	expect(inspectorLook.border, 'select border').toBe(optionTrigger.border);
-	expect(inspectorLook.borderWidth).toBe(optionTrigger.borderWidth);
-	expect(inspectorLook.height, 'select trigger height').toBe(optionTrigger.height);
-	expect(optionCheckboxLook.height).toBe(16);
-	expect(optionCheckboxLook.border).toBe(optionCheckboxLook.background);
+	const checkbox = panel.locator('pptx-ui-checkbox[checked]').first();
+	await expect(checkbox).toBeVisible();
+	const trigger = panel.locator('pptx-ui-select [role="combobox"]').first();
+	await expect(trigger).toBeVisible();
+	const checkboxLook = await look(checkbox);
+	const triggerLook = await look(trigger);
+	expect(checkboxLook.height).toBe(16);
+	expect(checkboxLook.border).toBe(checkboxLook.background);
+	expect(Number.parseFloat(triggerLook.radius)).toBeGreaterThanOrEqual(4);
+	expect(triggerLook.borderWidth).toBe('1px');
 });
 
 test('select is a keyboard-operable listbox whose popup is owned by the app', async ({ page }) => {
 	await loadDeck(page);
-	const dialog = await openOptions(page);
-	const select = dialog.locator('pptx-ui-select').first();
+	const select = inspector(page).locator('pptx-ui-select').first();
 	const trigger = select.locator('[role="combobox"]');
 	await trigger.focus();
 	await page.keyboard.press('ArrowDown');
@@ -173,8 +149,7 @@ test('select pages through long lists with PageDown and PageUp', async ({ page }
 
 test('checkbox keyboard focus uses the shared ring, including forced colors', async ({ page }) => {
 	await loadDeck(page);
-	const dialog = await openOptions(page);
-	const checkbox = dialog.locator('pptx-ui-checkbox').first();
+	const checkbox = inspector(page).locator('pptx-ui-checkbox').first();
 	await checkbox.focus();
 	await page.keyboard.press('Shift+Tab');
 	await page.keyboard.press('Tab');

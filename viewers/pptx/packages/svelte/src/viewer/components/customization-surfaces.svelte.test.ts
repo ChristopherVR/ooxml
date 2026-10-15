@@ -58,8 +58,15 @@ function settingsProps(): Record<string, unknown> {
 	};
 }
 
+/** The shared options dialog draws its rail and rows in its own shadow tree. */
+function shadowOf(target: HTMLElement): ShadowRoot {
+	return target.querySelector('pptx-ui-options-dialog')!.shadowRoot!;
+}
+
 function navLabels(target: HTMLElement): string[] {
-	return Array.from(target.querySelectorAll('nav button')).map((b) => (b.textContent ?? '').trim());
+	return Array.from(shadowOf(target).querySelectorAll('nav [role="tab"]')).map((b) =>
+		(b.textContent ?? '').trim(),
+	);
 }
 
 describe('settingsDialog customization', () => {
@@ -74,10 +81,15 @@ describe('settingsDialog customization', () => {
 			{},
 		);
 		await Promise.resolve();
-		expect(target.querySelector('[role="dialog"]')?.contains(document.activeElement)).toBeTruthy();
-		document.activeElement!.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
-		);
+		const dialog = target.querySelector('pptx-ui-options-dialog')!;
+		expect(
+			dialog.contains(document.activeElement) || document.activeElement === dialog,
+		).toBeTruthy();
+		shadowOf(target)
+			.querySelector('nav [role="tab"]')!
+			.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true }),
+			);
 		expect(props.onclose).toHaveBeenCalledOnce();
 		cleanup?.();
 		cleanup = undefined;
@@ -106,11 +118,13 @@ describe('settingsDialog customization', () => {
 				},
 			},
 		);
-		const userName = target.querySelector<HTMLInputElement>('input[aria-label="User name"]');
+		const userName = shadowOf(target).querySelector<HTMLInputElement>(
+			'input[aria-label="User name"]',
+		);
 		expect(userName).not.toBeNull();
 		expect(userName?.disabled).toBeTruthy();
-		expect(userName?.title).toBe('This setting is managed by your organization');
-		expect(target.querySelector('input[aria-label="Initials"]')).toBeNull();
+		expect(userName?.closest('label')?.title).toBe('This setting is managed by your organization');
+		expect(shadowOf(target).querySelector('input[aria-label="Initials"]')).toBeNull();
 	});
 
 	it('falls back to the first visible page when the active page is hidden live', () => {
@@ -122,7 +136,7 @@ describe('settingsDialog customization', () => {
 		const before = navLabels(target);
 		state.api.hideOptionsPage('general');
 		flushSync();
-		const active = target.querySelector('nav button.active');
+		const active = shadowOf(target).querySelector('nav [aria-selected="true"]');
 		expect(active?.textContent?.trim()).toBe(before[1]);
 	});
 });

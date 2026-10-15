@@ -47,7 +47,17 @@ export async function openOptionsDialog(page: Page, titles: readonly string[]): 
 
 /** A category button in the dialog's left-hand nav rail, by visible label. */
 export function optionsCategory(dialog: Locator, label: string): Locator {
-	return dialog.locator('nav button').filter({ hasText: label }).first();
+	// The rail lives in the shared options dialog's shadow tree, beside the role=dialog box.
+	return dialog
+		.page()
+		.locator('pptx-ui-options-dialog nav [role="tab"]')
+		.filter({ hasText: label })
+		.first();
+}
+
+/** A footer button (OK, Cancel, Reset) of the shared options dialog, by its visible name. */
+export function optionsAction(dialog: Locator, name: string): Locator {
+	return dialog.page().locator('pptx-ui-options-dialog').getByRole('button', { name, exact: true });
 }
 
 /**
@@ -58,7 +68,13 @@ export function optionsCategory(dialog: Locator, label: string): Locator {
  * whichever control wraps it.
  */
 export async function pickOptionsEntry(dialog: Locator, label: string): Promise<void> {
-	await dialog.getByText(label, { exact: true }).first().click();
+	// The panes are slotted into the shared dialog, outside the role=dialog box.
+	await dialog
+		.page()
+		.locator('pptx-ui-options-dialog')
+		.getByText(label, { exact: true })
+		.first()
+		.click();
 }
 
 /** The chrome theme tokens every binding paints from (set via `themeToCssVars`). */

@@ -1,4 +1,4 @@
-export { appendControlRow, appendOptionsAction, appendOptionsSection } from './options-controls';
+export { appendOptionsAction } from './options-controls';
 export { renderAddInsPane, createAddinsPaneState } from './options-pane-addins';
 export type { AddinsPaneState } from './options-pane-addins';
 export { appendShortcutReference, renderRibbonPane } from './options-pane-ribbon';

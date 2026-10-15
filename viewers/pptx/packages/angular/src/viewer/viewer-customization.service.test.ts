@@ -9,18 +9,17 @@
  * an injector that provides the viewer's `ViewerCustomizationService`.
  */
 import { ElementRef, Injector, runInInjectionContext, signal } from '@angular/core';
-import type { OutputEmitterRef, Provider, StaticProvider } from '@angular/core';
+import type { Provider, StaticProvider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { filterVisibleTabs, TOOLBAR_TABS } from 'ooxml-ui/pptx';
-import type { ViewerCustomization, ViewerOptionsToggleControl } from 'ooxml-ui/pptx';
+import type { ResolvedCustomization, ViewerCustomization } from 'ooxml-ui/pptx';
+import { Subject } from 'rxjs';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EditorContextMenuComponent } from './editor-context-menu.component';
 import { EditorStateService } from './editor-state.service';
-import { OptionsPaneComponent } from './options-pane.component';
-import type { OptionValueChange } from './options-pane.component';
 import { PrintService } from './print.service';
 import { RibbonFileSectionComponent } from './ribbon-file-section.component';
 import { SettingsDialogComponent } from './settings-dialog.component';
@@ -147,7 +146,20 @@ afterEach(() => TestBed.resetTestingModule());
 
 /** A TestBed injector (effects need its scheduler) with the viewer's two services. */
 function testBedService(): ViewerCustomizationService {
-	TestBed.configureTestingModule({ providers: [ViewerOptionsService, ViewerCustomizationService] });
+	TestBed.configureTestingModule({
+		providers: [
+			ViewerOptionsService,
+			ViewerCustomizationService,
+			{
+				provide: TranslateService,
+				useValue: {
+					instant: (key: string) => key,
+					onLangChange: new Subject(),
+					onTranslationChange: new Subject(),
+				},
+			},
+		],
+	});
 	return TestBed.inject(ViewerCustomizationService);
 }
 
@@ -179,69 +191,17 @@ describe('customization input binding', () => {
 });
 
 describe('settings dialog under customisation', () => {
-	it('drops hidden pages and falls back from a hidden active page', () => {
+	it('reads the live customisation the shared options dialog renders from', () => {
 		const { service, dialog } = mountSettingsDialog();
-		const view = dialog as unknown as {
-			tabs: () => readonly { id: string }[];
-			activeTabId: { set: (id: string) => void };
-			shownTabId: () => string;
-			aiTabVisible: () => boolean;
-		};
-		view.activeTabId.set('proofing');
-		expect(view.shownTabId()).toBe('proofing');
+		const input = () =>
+			(dialog as unknown as { customization: () => ResolvedCustomization }).customization();
+		expect(input().hiddenOptionsPages.has('proofing')).toBeFalsy();
 		service.api.hideOptionsPage('proofing');
-		expect(view.tabs().map((tab) => tab.id)).not.toContain('proofing');
-		expect(view.shownTabId()).toBe('general');
-		service.api.hideOptionsPage('general');
-		expect(view.shownTabId()).toBe(view.tabs()[0]?.id);
-		expect(view.aiTabVisible()).toBeFalsy();
-	});
-
-	it('removes a hidden setting and marks a locked one read-only', () => {
-		const { service, dialog } = mountSettingsDialog();
-		const controls = (): { group: string; key: string; readOnly?: boolean }[] =>
-			(
-				dialog as unknown as {
-					tabs: () => readonly {
-						sections: readonly { controls: readonly { group: string; key: string }[] }[];
-					}[];
-				}
-			)
-				.tabs()
-				.flatMap((tab) => tab.sections.flatMap((section) => section.controls));
-		const find = (key: string) => controls().find((control) => control.key === key);
-		expect(find('userName')).toBeDefined();
+		expect(input().hiddenOptionsPages.has('proofing')).toBeTruthy();
 		service.api.hideSetting('general.userName');
-		expect(find('userName')).toBeUndefined();
+		expect(input().hiddenSettings.has('general.userName')).toBeTruthy();
 		service.api.lockSetting('advanced.showGrid', true);
-		expect(find('showGrid')?.readOnly).toBeTruthy();
-	});
-});
-
-describe('options pane read-only controls', () => {
-	it('never emits a change for a locked control', () => {
-		const pane = construct(Injector.create({ providers: [] }), () => new OptionsPaneComponent());
-		const emitted: OptionValueChange[] = [];
-		vi.spyOn(pane.valueChange as OutputEmitterRef<OptionValueChange>, 'emit').mockImplementation(
-			(value) => emitted.push(value),
-		);
-		const control: ViewerOptionsToggleControl = {
-			kind: 'toggle',
-			group: 'advanced',
-			key: 'showGrid',
-			labelKey: 'pptx.options.advanced.showGrid',
-		};
-		const box = document.createElement('input');
-		box.type = 'checkbox';
-		box.checked = true;
-		const toggle = (target: ViewerOptionsToggleControl) =>
-			(
-				pane as unknown as { emitToggle: (c: ViewerOptionsToggleControl, e: Event) => void }
-			).emitToggle(target, { target: box } as unknown as Event);
-		toggle({ ...control, readOnly: true });
-		expect(emitted).toStrictEqual([]);
-		toggle(control);
-		expect(emitted).toStrictEqual([{ group: 'advanced', key: 'showGrid', value: true }]);
+		expect(Object.hasOwn(input().lockedSettings, 'advanced.showGrid')).toBeTruthy();
 	});
 });
 

@@ -107,10 +107,10 @@ describe('vanilla UI customisation', () => {
 	it('makes openSettings a no-op when the host removes the Options dialog', () => {
 		const { viewer } = mount({ customization: { hiddenDialogs: ['options'] } });
 		(viewer as unknown as { openSettings(): void }).openSettings();
-		expect(document.querySelector('.pptxv-options-dialog')).toBeNull();
+		expect(document.querySelector('pptx-ui-options-dialog')).toBeNull();
 		viewer.setDialogAvailable('options', true);
 		(viewer as unknown as { openSettings(): void }).openSettings();
-		expect(document.querySelector('.pptxv-options-dialog')).not.toBeNull();
+		expect(document.querySelector('pptx-ui-options-dialog')).not.toBeNull();
 	});
 });
 
@@ -125,18 +125,20 @@ describe('file > Options dialog customisation', () => {
 			customization: resolveCustomization(customization),
 		});
 	}
+	const shadow = (): ShadowRoot => document.querySelector('pptx-ui-options-dialog')!.shadowRoot!;
+	function tabs(): HTMLButtonElement[] {
+		return Array.from(shadow().querySelectorAll<HTMLButtonElement>('nav [role="tab"]'));
+	}
 	function navLabels(): string[] {
-		return Array.from(document.querySelectorAll('.pptxv-options-nav button')).map((button) =>
-			(button.textContent ?? '').trim(),
-		);
+		return tabs().map((button) => (button.textContent ?? '').trim());
 	}
 	function row(label: string): HTMLElement | undefined {
-		return Array.from(document.querySelectorAll<HTMLElement>('.pptxv-options-row')).find(
+		return Array.from(shadow().querySelectorAll<HTMLElement>('label.row')).find(
 			(candidate) => candidate.textContent?.trim() === label,
 		);
 	}
 	function openTab(label: string): void {
-		Array.from(document.querySelectorAll<HTMLButtonElement>('.pptxv-options-nav button'))
+		tabs()
 			.find((button) => button.textContent === label)
 			?.click();
 	}
@@ -156,18 +158,18 @@ describe('file > Options dialog customisation', () => {
 		const store = createViewerOptionsStore();
 		open({ options: { locked: { 'advanced.snapToGrid': true } } }, store);
 		openTab('Advanced');
-		const checkbox = row('Snap to grid')?.querySelector<HTMLElement>('pptx-ui-checkbox');
-		expect(checkbox?.hasAttribute('disabled')).toBeTruthy();
-		expect(checkbox?.title).toBe('This setting is managed by your organization');
-		const free = row('Show grid')?.querySelector<HTMLElement>('pptx-ui-checkbox');
-		expect(free?.hasAttribute('disabled')).toBeFalsy();
+		const checkbox = row('Snap to grid')?.querySelector<HTMLInputElement>('input');
+		expect(checkbox?.disabled).toBeTruthy();
+		expect(row('Snap to grid')?.title).toBe('This setting is managed by your organization');
+		const free = row('Show grid')?.querySelector<HTMLInputElement>('input');
+		expect(free?.disabled).toBeFalsy();
 	});
 
 	it('falls back to the first visible page when the requested one is hidden', () => {
 		localStorage.clear();
 		open({ options: { hiddenPages: ['general'] } });
 		expect(navLabels()).not.toContain('General');
-		expect(document.querySelector('.pptxv-options-nav button.is-active')).not.toBeNull();
+		expect(shadow().querySelector('nav [aria-selected="true"]')).not.toBeNull();
 	});
 });
 

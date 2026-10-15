@@ -1,19 +1,19 @@
 import type {
+	PptxOptionsDialogElement,
 	ResolvedCustomization,
 	ThemeCatalogEntry,
 	ViewerAddinStatus,
-	ViewerOptionsSection,
 	ViewerOptionsStore,
-	ViewerOptionsTabDefinition,
 	ViewerOptionsTabId,
 	ViewerTheme,
 } from 'ooxml-ui/pptx';
 import {
-	cloneViewerOptions,
-	customizeOptionsTabs,
+	AI_OPTIONS_CATEGORY,
+	bindPptxOptionsDialog,
 	EMPTY_RESOLVED_CUSTOMIZATION,
-	isOptionsPageVisible,
-	VIEWER_OPTIONS_TABS,
+	optionsBlockSlot,
+	optionsPaneSlot,
+	registerPptxWebControls,
 } from 'ooxml-ui/pptx';
 import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
@@ -21,19 +21,14 @@ import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { createAiSettingsSection } from '../ai/ai-settings-section';
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
-import { appendOptionsAction, appendOptionsSection } from './options/options-controls';
+import { appendOptionsAction } from './options/options-controls';
 import { createAddinsPaneState, renderAddInsPane } from './options/options-pane-addins';
 import {
 	createQuickAccessPaneState,
 	renderQuickAccessPane,
 } from './options/options-pane-quick-access';
-import { appendShortcutReference, renderRibbonPane } from './options/options-pane-ribbon';
-import {
-	appendDialogButton,
-	appendRadioRow,
-	appendSwatchRow,
-	createParityDialogShell,
-} from './parity-dialog-shell';
+import { renderRibbonPane } from './options/options-pane-ribbon';
+import { appendRadioRow, appendSwatchRow } from './parity-dialog-shell';
 import { appendCustomFontsPane } from './settings-custom-fonts';
 
 /** File > Options > General appearance wiring: theme catalog + active key + selection sink. */
@@ -79,220 +74,164 @@ export interface ViewerOptionsDialogDeps {
 }
 
 /**
- * The PowerPoint "File > Options" parity dialog: the ten shared categories in
- * a left rail with schema-driven panes on the right (vanilla counterpart of
- * React's `SettingsDialog`). Changes apply to the store live; Cancel restores
- * the snapshot taken when the dialog opened; OK (and Escape/backdrop) confirm.
+ * The PowerPoint "File > Options" dialog: the shared `office-ui-options-dialog` driven by
+ * `bindPptxOptionsDialog` (vanilla counterpart of React's `SettingsDialog`). The categories,
+ * settings, live apply, Cancel and Reset are the shared layer's; this only fills the slots of the
+ * panes PowerPoint has on top of the generic rows (themes, fonts, languages, Customize Ribbon,
+ * Quick Access Toolbar, Add-ins, AI) for the open category.
  *
  * `t` must be a LIVE translator (the caller passes a delegating wrapper, see
- * `parity-workflows`): picking a language on the Language pane re-renders the
- * whole open dialog (title, nav rail, footer, pane) under the new locale, as
- * the other four bindings' reactive dialogs already do.
+ * `parity-workflows`): picking a language on the Language pane re-labels the whole open dialog
+ * (title, category rail, footer, pane) under the new locale, as the other bindings' dialogs do.
  */
 export function openSettingsDialog(
 	doc: Document,
 	t: Translator,
 	deps: ViewerOptionsDialogDeps,
 ): void {
+	registerPptxWebControls();
 	const { store } = deps;
-	const shell = createParityDialogShell(doc, t, t('pptx.options.title'));
-	shell.dialog.classList.add('pptxv-options-dialog');
-	const body = createEl(doc, 'div', 'pptxv-options-body');
-	const nav = createEl(doc, 'nav', 'pptxv-options-nav');
-	nav.setAttribute('aria-label', t('pptx.options.title'));
-	const pane = createEl(doc, 'div', 'pptxv-options-pane');
-	body.append(nav, pane);
-	shell.body.appendChild(body);
-
-	const snapshot = cloneViewerOptions(store.getOptions());
+	const dialog = doc.createElement('pptx-ui-options-dialog') as PptxOptionsDialogElement;
 	const customization = deps.customization ?? EMPTY_RESOLVED_CUSTOMIZATION;
-	const tabs = customizeOptionsTabs(VIEWER_OPTIONS_TABS, customization);
-	const showAiTab = deps.aiEnabled === true && isOptionsPageVisible(customization, 'ai');
-	let activeTabId: ViewerOptionsTabId = deps.initialTab ?? 'general';
-	// The AI export lives in a synthetic tab appended after the schema tabs.
-	let aiActive = false;
-	let aiNavButton: HTMLButtonElement | null = null;
+	let category: string = deps.initialTab ?? 'general';
 	let selectedThemeKey = deps.themeOptions.currentKey;
 	let selectedLocaleCode = deps.localeOptions.currentCode;
 	const quickAccessState = createQuickAccessPaneState();
 	const addinsState = createAddinsPaneState();
 
-	const renderSpecial = (section: ViewerOptionsSection, host: HTMLElement): void => {
-		if (section.special === 'themePicker') {
-			appendSwatchRow(
-				doc,
-				host,
-				deps.themeOptions.catalog.map((entry) => ({
-					key: entry.key,
-					label: t(entry.labelKey),
-					previewColor: entry.theme?.colors?.primary ?? '#6b7280',
-				})),
-				selectedThemeKey,
-				(key) => {
-					const entry = deps.themeOptions.catalog.find((candidate) => candidate.key === key);
-					if (entry) {
-						selectedThemeKey = key;
-						deps.themeOptions.onSelect(entry.theme, key);
-						renderPane();
-					}
-				},
-			);
-		} else if (section.special === 'clearCache') {
-			const description = createEl(doc, 'p', 'pptxv-options-section-desc');
-			description.textContent = t('pptx.options.save.clearCacheDescription');
-			host.appendChild(description);
-			appendOptionsAction(doc, host, t('pptx.options.save.clearCacheNow'), deps.onClearCache);
-		} else if (section.special === 'customFonts') {
-			appendCustomFontsPane(doc, t, host, {
-				enabled: deps.store.getOptions().general.enableCustomFontUpload,
-				families: deps.customFonts?.list() ?? [],
-				onRegistered: (family) => deps.customFonts?.register(family),
-				onRefresh: renderPane,
-			});
-		} else if (section.special === 'shortcutReference') {
-			appendShortcutReference(doc, t, host);
-		}
+	const slot = (name: string): HTMLElement => {
+		const host = createEl(doc, 'div');
+		host.slot = name;
+		dialog.appendChild(host);
+		return host;
 	};
 
-	const renderLanguagePane = (): void => {
-		const section = createEl(doc, 'section', 'pptxv-options-section');
-		const title = createEl(doc, 'h3');
-		title.textContent = t('pptx.options.language.displayLanguage');
-		const description = createEl(doc, 'p', 'pptxv-options-section-desc');
-		description.textContent = t('pptx.options.language.displayLanguageDescription');
-		section.append(title, description);
-		appendRadioRow(
-			doc,
-			section,
-			'pptxv-options-locale',
-			deps.localeOptions.catalog.map((entry) => ({
-				value: entry.code,
-				label: entry.nativeLabel,
-			})),
-			selectedLocaleCode,
-			(code) => {
-				selectedLocaleCode = code;
-				deps.localeOptions.onSelect(code);
-				// The locale just changed under the open dialog: every label in it
-				// (title, nav rail, footer, pane) is stale, not only the pane.
-				renderChrome();
-			},
-		);
-		pane.appendChild(section);
-	};
-
-	const renderGenericSections = (tab: ViewerOptionsTabDefinition): void => {
-		for (const section of tab.sections) {
-			appendOptionsSection(doc, t, pane, section, store, renderSpecial);
-		}
-	};
-
-	const renderAiPane = (): void => {
-		for (const button of nav.querySelectorAll('button')) {
-			button.classList.remove('is-active');
-			button.setAttribute('aria-current', 'false');
-		}
-		aiNavButton?.classList.add('is-active');
-		aiNavButton?.setAttribute('aria-current', 'true');
-		pane.replaceChildren();
-		const headline = createEl(doc, 'p', 'pptxv-options-headline');
-		headline.textContent = t('pptx.ai.exportLogsHint');
-		pane.append(headline, createAiSettingsSection({ doc, t, store: deps.aiChatStore }));
-	};
-
-	function renderPane(): void {
-		if (aiActive) {
-			renderAiPane();
-			return;
-		}
-		// A hidden active tab falls back to the first visible one.
-		const tab = tabs.find((entry) => entry.id === activeTabId) ?? tabs[0];
-		if (!tab) {
-			return;
-		}
-		for (const button of nav.querySelectorAll('button')) {
-			const active = button.getAttribute('data-tab') === tab.id;
-			button.classList.toggle('is-active', active);
-			button.setAttribute('aria-current', String(active));
-		}
-		pane.replaceChildren();
-		const headline = createEl(doc, 'p', 'pptxv-options-headline');
-		headline.textContent = t(tab.descriptionKey);
-		pane.appendChild(headline);
-		if (tab.custom === 'language') {
-			renderLanguagePane();
-		} else if (tab.custom === 'ribbon') {
-			renderRibbonPane(doc, t, pane, store);
-		} else if (tab.custom === 'addIns') {
-			renderAddInsPane(doc, t, pane, deps.addinStatus, addinsState, renderPane);
-		} else {
-			renderGenericSections(tab);
-			if (tab.custom === 'quickAccess') {
-				renderQuickAccessPane(doc, t, pane, store, quickAccessState, renderPane);
+	/** Rebuild the product panes of the open category inside their slots. */
+	const renderSlots = (): void => {
+		dialog.replaceChildren();
+		switch (category) {
+			case 'general': {
+				appendSwatchRow(
+					doc,
+					slot(optionsBlockSlot('themePicker')),
+					deps.themeOptions.catalog.map((entry) => ({
+						key: entry.key,
+						label: t(entry.labelKey),
+						previewColor: entry.theme?.colors?.primary ?? '#6b7280',
+					})),
+					selectedThemeKey,
+					(key) => {
+						const entry = deps.themeOptions.catalog.find((candidate) => candidate.key === key);
+						if (entry) {
+							selectedThemeKey = key;
+							deps.themeOptions.onSelect(entry.theme, key);
+							renderSlots();
+						}
+					},
+				);
+				appendCustomFontsPane(doc, t, slot(optionsBlockSlot('customFonts')), {
+					enabled: store.getOptions().general.enableCustomFontUpload,
+					families: deps.customFonts?.list() ?? [],
+					onRegistered: (family) => deps.customFonts?.register(family),
+					onRefresh: renderSlots,
+				});
+				break;
 			}
+			case 'save': {
+				const host = slot(optionsBlockSlot('clearCache'));
+				const description = createEl(doc, 'p', 'pptxv-options-section-desc');
+				description.textContent = t('pptx.options.save.clearCacheDescription');
+				host.appendChild(description);
+				appendOptionsAction(doc, host, t('pptx.options.save.clearCacheNow'), deps.onClearCache);
+				break;
+			}
+			case 'language':
+				appendRadioRow(
+					doc,
+					slot(optionsBlockSlot('language')),
+					'pptxv-options-locale',
+					deps.localeOptions.catalog.map((entry) => ({
+						value: entry.code,
+						label: entry.nativeLabel,
+					})),
+					selectedLocaleCode,
+					(code) => {
+						selectedLocaleCode = code;
+						deps.localeOptions.onSelect(code);
+						// The locale just changed under the open dialog: every label in it is stale.
+						sync();
+						renderSlots();
+					},
+				);
+				break;
+			case 'ribbon':
+				renderRibbonPane(doc, t, slot(optionsPaneSlot('ribbon')), store);
+				break;
+			case 'quickAccess':
+				renderQuickAccessPane(
+					doc,
+					t,
+					slot(optionsPaneSlot('quickAccess')),
+					store,
+					quickAccessState,
+					renderSlots,
+				);
+				break;
+			case 'addIns':
+				renderAddInsPane(
+					doc,
+					t,
+					slot(optionsPaneSlot('addIns')),
+					deps.addinStatus,
+					addinsState,
+					renderSlots,
+				);
+				break;
+			case AI_OPTIONS_CATEGORY:
+				slot(optionsPaneSlot(AI_OPTIONS_CATEGORY)).appendChild(
+					createAiSettingsSection({ doc, t, store: deps.aiChatStore }),
+				);
+				break;
+			default:
+				break;
 		}
-	}
-
-	const selectTab = (tabId: ViewerOptionsTabId): void => {
-		activeTabId = tabId;
-		aiActive = false;
-		renderPane();
 	};
-	const renderNav = (): void => {
-		nav.replaceChildren();
-		nav.setAttribute('aria-label', t('pptx.options.title'));
-		for (const tab of tabs) {
-			const button = appendDialogButton(doc, nav, t(tab.labelKey), () => selectTab(tab.id));
-			button.dataset.tab = tab.id;
-		}
-		aiNavButton = null;
-		if (showAiTab) {
-			aiNavButton = appendDialogButton(doc, nav, t('pptx.ai.settingsSectionTitle'), () => {
-				aiActive = true;
-				renderPane();
-			});
-			aiNavButton.dataset.tab = 'ai';
-		}
-	};
 
-	// Live re-render on any store commit (a control edit, reset, or an external
-	// change); self-detaches once the dialog leaves the document.
+	const binding = bindPptxOptionsDialog(
+		dialog,
+		{
+			setOption: (group, key, value) => store.setValue(group, key, value),
+			restoreOptions: (snapshot) => store.setOptions(snapshot),
+			resetOptions: () => store.reset(),
+			close: () => {
+				unsubscribe();
+				binding.dispose();
+				dialog.remove();
+			},
+			categoryChanged: (id) => {
+				category = id;
+				renderSlots();
+			},
+		},
+		category,
+	);
+	const sync = (): void =>
+		binding.sync({
+			options: store.getOptions(),
+			t,
+			languageKey: selectedLocaleCode,
+			customization,
+			aiEnabled: deps.aiEnabled === true,
+		});
+	// Live re-render on any store commit (a control edit, reset, or an external change).
 	const unsubscribe = store.subscribe(() => {
-		if (!shell.dialog.isConnected) {
+		if (!dialog.isConnected) {
 			unsubscribe();
 			return;
 		}
-		renderPane();
+		sync();
+		renderSlots();
 	});
-
-	const resetButton = appendDialogButton(doc, shell.footer, t('pptx.options.resetAll'), () => {
-		store.reset();
-	});
-	const cancelButton = appendDialogButton(doc, shell.footer, t('pptx.common.cancel'), () => {
-		store.setOptions(snapshot);
-		shell.close();
-		unsubscribe();
-	});
-	const okButton = appendDialogButton(
-		doc,
-		shell.footer,
-		t('pptx.common.ok'),
-		() => {
-			shell.close();
-			unsubscribe();
-		},
-		true,
-	);
-
-	/** (Re)paint every translated label in the dialog under the CURRENT locale. */
-	function renderChrome(): void {
-		shell.heading.textContent = t('pptx.options.title');
-		renderNav();
-		resetButton.textContent = t('pptx.options.resetAll');
-		cancelButton.textContent = t('pptx.common.cancel');
-		okButton.textContent = t('pptx.common.ok');
-		renderPane();
-	}
-
-	renderChrome();
+	doc.body.appendChild(dialog);
+	sync();
 }

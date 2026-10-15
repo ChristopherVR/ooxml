@@ -9,7 +9,12 @@ import {
 	translationsZhCN,
 } from '../../viewers/pptx/packages/locales/src';
 import { loadDeck } from './support/deck';
-import { openOptionsDialog, optionsCategory, pickOptionsEntry } from './support/settings-dialog';
+import {
+	openOptionsDialog,
+	optionsAction,
+	optionsCategory,
+	pickOptionsEntry,
+} from './support/settings-dialog';
 
 // Wide enough that the Home Arrange extras (alignment) have not collapsed into a popup.
 test.use({ viewport: { width: 3200, height: 1080 } });
@@ -30,7 +35,7 @@ for (const { dictionary, nativeLabel } of [
 		]);
 		await optionsCategory(dialog, translationsEn['pptx.settings.language']).click();
 		await pickOptionsEntry(dialog, nativeLabel);
-		await dialog.getByRole('button', { name: dictionary['pptx.common.ok'], exact: true }).click();
+		await optionsAction(dialog, dictionary['pptx.common.ok']).click();
 		await expect(
 			page.getByRole('tab', { name: dictionary['pptx.ribbon.tab.home'], exact: true }).first(),
 		).toBeVisible();

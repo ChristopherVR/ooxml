@@ -82,28 +82,27 @@ test.describe('UI customization', () => {
 		await expect(card('theme')).toBeVisible();
 		await expect(card('slideSize')).toBeVisible();
 	});
-	test('File > Options checkboxes expose one accessible Space-key contract', async ({ page }) => {
+	test('File > Options checkboxes toggle with the Space key and persist on OK', async ({
+		page,
+	}) => {
 		await loadDeck(page);
 		let dialog = await openOptionsDialog(page, OPTIONS_TITLES);
+		// The shared options dialog draws its rows in its shadow tree.
+		const host = page.locator('pptx-ui-options-dialog');
 		await optionsCategory(dialog, 'General').click();
-		let checkbox = dialog.getByRole('checkbox', {
-			name: 'Show Mini Toolbar on selection',
-		});
+		let checkbox = host.getByRole('checkbox', { name: 'Show Mini Toolbar on selection' });
 		await expect(checkbox).toBeVisible();
-		await expect(checkbox).toHaveAttribute('role', 'checkbox');
-		await expect(checkbox).toHaveAttribute('checked', '');
+		await expect(checkbox).toBeChecked();
 		await checkbox.focus();
 		await page.keyboard.press('Space');
-		await expect(checkbox).not.toHaveAttribute('checked');
+		await expect(checkbox).not.toBeChecked();
 
-		await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+		await host.getByRole('button', { name: 'OK', exact: true }).click();
 		await expect(dialog).not.toBeVisible();
 		dialog = await openOptionsDialog(page, OPTIONS_TITLES);
 		await optionsCategory(dialog, 'General').click();
-		checkbox = dialog.getByRole('checkbox', {
-			name: 'Show Mini Toolbar on selection',
-		});
-		await expect(checkbox).not.toHaveAttribute('checked');
+		checkbox = host.getByRole('checkbox', { name: 'Show Mini Toolbar on selection' });
+		await expect(checkbox).not.toBeChecked();
 	});
 
 	test('a ribbon tab hidden through the customization prop never renders', async ({ page }) => {
@@ -134,7 +133,9 @@ test.describe('UI customization', () => {
 		const dialog = await openOptionsDialog(page, OPTIONS_TITLES);
 		await expect(optionsCategory(dialog, 'General')).toBeVisible();
 		await expect(optionsCategory(dialog, 'Trust Center')).toHaveCount(0);
-		const userName = dialog.getByLabel('User name', { exact: true });
+		const userName = page
+			.locator('pptx-ui-options-dialog')
+			.getByLabel('User name', { exact: true });
 		await expect(userName).toBeDisabled();
 		await expect(userName).toHaveValue('Kiosk User');
 	});

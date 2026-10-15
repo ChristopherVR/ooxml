@@ -2,67 +2,67 @@
  * settings-dialog.component.ts: the File > Options dialog (Angular port of
  * React's `SettingsDialog.tsx`).
  *
- * A PowerPoint Options-style dialog: the ten shared categories from
- * {@link VIEWER_OPTIONS_TABS} in a left rail, schema-driven panes on the right
- * ({@link OptionsPaneComponent}), and bespoke panes for Language (locale list),
- * Customize Ribbon, Quick Access Toolbar, and Add-ins. Changes apply live
- * through the host's options store; Cancel restores the snapshot taken when
- * the dialog opened, while OK / Escape / backdrop keep the edits.
- *
- * Built as its own overlay + panel (not `pptx-modal-dialog`) because the
- * two-column rail layout needs the wide footprint the shared modal shell does
- * not provide, mirroring how `insert-smart-art-dialog` sizes itself.
+ * The shared `office-ui-options-dialog`, driven by `bindPptxOptionsDialog`: the ten categories,
+ * their settings, live apply, Cancel and Reset all live in `ooxml-ui/pptx`. This component only
+ * slots the panes PowerPoint has on top of the generic rows (themes, fonts, languages, Customize
+ * Ribbon, Quick Access Toolbar, Add-ins, AI) while their category is open.
  */
 import {
 	ChangeDetectionStrategy,
 	Component,
-	computed,
+	CUSTOM_ELEMENTS_SCHEMA,
+	DestroyRef,
 	effect,
-	HostListener,
+	inject,
 	input,
 	output,
 	signal,
 	untracked,
+	viewChild,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
-import { customizeOptionsTabs, isOptionsPageVisible, THEME_CATALOG } from 'ooxml-ui/pptx';
+import type { ElementRef } from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { bindPptxOptionsDialog, THEME_CATALOG } from 'ooxml-ui/pptx';
 import type {
+	PptxOptionsDialogBinding,
+	PptxOptionsDialogElement,
+	PptxOptionsDialogInput,
 	ThemeCatalogEntry,
 	ViewerAddinStatus,
+	ViewerOptionPrimitive,
 	ViewerOptions,
 	ViewerOptionsGroupId,
-	ViewerOptionsTabId,
 } from 'ooxml-ui/pptx';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 import { AiSettingsSectionComponent } from './ai/ai-settings-section.component';
 import { OptionsAddInsPaneComponent } from './options-add-ins-pane.component';
-import { OptionsPaneComponent } from './options-pane.component';
-import type { OptionValueChange } from './options-pane.component';
 import { OptionsQuickAccessPaneComponent } from './options-quick-access-pane.component';
 import { OptionsRibbonPaneComponent } from './options-ribbon-pane.component';
 import type { RibbonTabHiddenChange } from './options-ribbon-pane.component';
 import { SettingsAppearanceTabComponent } from './settings-appearance-tab.component';
 import { SettingsCustomFontsComponent } from './settings-custom-fonts.component';
-import {
-	OPTIONS_DIALOG_TABS,
-	resolveOptionsTab,
-	resolveVisibleOptionsTabId,
-} from './settings-dialog-tabs';
 import { SettingsLanguageTabComponent } from './settings-language-tab.component';
+import { translationsSignal } from './translations-signal';
 import { injectResolvedCustomization } from './viewer-customization.service';
 
 export type { ViewerSettings } from 'ooxml-ui/pptx';
-export { OPTIONS_DIALOG_TABS, resolveOptionsTab } from './settings-dialog-tabs';
+
+/** One dialog-level option edit (group + key + new primitive value). */
+export interface OptionValueChange {
+	group: ViewerOptionsGroupId;
+	key: string;
+	value: ViewerOptionPrimitive;
+}
 
 @Component({
 	selector: 'pptx-settings-dialog',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [
 		TranslatePipe,
-		OptionsPaneComponent,
 		OptionsRibbonPaneComponent,
 		OptionsQuickAccessPaneComponent,
 		OptionsAddInsPaneComponent,
@@ -73,149 +73,90 @@ export { OPTIONS_DIALOG_TABS, resolveOptionsTab } from './settings-dialog-tabs';
 	],
 	template: `
 		@if (open()) {
-			<button
-				type="button"
-				class="pptx-ng-options-backdrop"
-				[attr.aria-label]="'pptx.settings.closeSettings' | translate"
-				(click)="close.emit()"
-			></button>
-			<div
-				class="pptx-ng-options-modal"
-				role="dialog"
-				aria-modal="true"
-				[attr.aria-label]="'pptx.options.title' | translate"
-			>
-				<div class="pptx-ng-options-header">
-					<h2>{{ 'pptx.options.title' | translate }}</h2>
-					<button
-						type="button"
-						class="pptx-ng-options-x"
-						[attr.aria-label]="'pptx.settings.close' | translate"
-						(click)="close.emit()"
-					>
-						&#10005;
-					</button>
-				</div>
-
-				<div class="pptx-ng-options-layout">
-					<nav [attr.aria-label]="'pptx.options.title' | translate">
-						@for (tab of tabs(); track tab.id) {
-							<button
-								type="button"
-								[attr.aria-current]="shownTabId() === tab.id"
-								[class.is-active]="shownTabId() === tab.id"
-								(click)="activeTabId.set(tab.id)"
-							>
-								{{ tab.labelKey | translate }}
+			<pptx-ui-options-dialog #dialog>
+				@switch (category()) {
+					@case ('general') {
+						<div slot="block-themePicker">
+							<pptx-settings-appearance-tab
+								[themes]="availableThemes()"
+								[activeKey]="themeKey()"
+								(select)="themeKeySelect.emit($event)"
+							/>
+						</div>
+						<div slot="block-customFonts">
+							<pptx-settings-custom-fonts
+								[enabled]="options().general.enableCustomFontUpload"
+								[families]="customFontFamilies()"
+								(registered)="customFontRegistered.emit($event)"
+							/>
+						</div>
+					}
+					@case ('save') {
+						<div slot="block-clearCache" class="pptx-ng-options-clear-cache">
+							<p>{{ 'pptx.options.save.clearCacheDescription' | translate }}</p>
+							<button type="button" (click)="clearCache.emit()">
+								{{ 'pptx.options.save.clearCacheNow' | translate }}
 							</button>
-						}
-						@if (aiTabVisible()) {
-							<button
-								type="button"
-								[attr.aria-current]="shownTabId() === 'ai'"
-								[class.is-active]="shownTabId() === 'ai'"
-								(click)="activeTabId.set('ai')"
-							>
-								{{ 'pptx.ai.settingsSectionTitle' | translate }}
-							</button>
-						}
-					</nav>
-
-					<div class="pptx-ng-options-content">
-						@if (shownTabId() === 'ai') {
-							<p class="pptx-ng-options-headline">
-								{{ 'pptx.ai.settingsSectionTitle' | translate }}
-							</p>
+						</div>
+					}
+					@case ('language') {
+						<div slot="block-language">
+							<pptx-settings-language-tab
+								[locales]="availableLocales()"
+								[activeCode]="localeCode()"
+								(select)="localeSelect.emit($event)"
+							/>
+						</div>
+					}
+					@case ('ribbon') {
+						<div slot="pane-ribbon">
+							<pptx-options-ribbon-pane
+								[options]="options()"
+								(tabHiddenChange)="ribbonTabHiddenChange.emit($event)"
+								(resetRibbon)="resetOptions.emit('ribbon')"
+							/>
+						</div>
+					}
+					@case ('quickAccess') {
+						<div slot="pane-quickAccess">
+							<pptx-options-quick-access-pane
+								[options]="options()"
+								(commandsChange)="quickAccessCommandsChange.emit($event)"
+							/>
+						</div>
+					}
+					@case ('addIns') {
+						<div slot="pane-addIns">
+							<pptx-options-add-ins-pane [addinStatus]="addinStatus()" />
+						</div>
+					}
+					@case ('ai') {
+						<div slot="pane-ai">
 							<pptx-ai-settings-section />
-						} @else {
-							@switch (activeTab().custom) {
-								@case ('language') {
-									<p class="pptx-ng-options-headline">
-										{{ activeTab().descriptionKey | translate }}
-									</p>
-									<h3 class="pptx-ng-options-subhead">
-										{{ 'pptx.options.language.displayLanguage' | translate }}
-									</h3>
-									<p class="pptx-ng-options-note">
-										{{ 'pptx.options.language.displayLanguageDescription' | translate }}
-									</p>
-									<pptx-settings-language-tab
-										[locales]="availableLocales()"
-										[activeCode]="localeCode()"
-										(select)="localeSelect.emit($event)"
-									/>
-								}
-								@case ('ribbon') {
-									<p class="pptx-ng-options-headline">
-										{{ activeTab().descriptionKey | translate }}
-									</p>
-									<pptx-options-ribbon-pane
-										[options]="options()"
-										(tabHiddenChange)="ribbonTabHiddenChange.emit($event)"
-										(resetRibbon)="resetOptions.emit('ribbon')"
-									/>
-								}
-								@case ('addIns') {
-									<p class="pptx-ng-options-headline">
-										{{ activeTab().descriptionKey | translate }}
-									</p>
-									<pptx-options-add-ins-pane [addinStatus]="addinStatus()" />
-								}
-								@default {
-									<pptx-options-pane
-										[tab]="activeTab()"
-										[options]="options()"
-										(valueChange)="optionChange.emit($event)"
-										(clearCache)="clearCache.emit()"
-									>
-										<div themePicker>
-											<pptx-settings-appearance-tab
-												[themes]="availableThemes()"
-												[activeKey]="themeKey()"
-												(select)="themeKeySelect.emit($event)"
-											/>
-										</div>
-										<div customFonts>
-											<pptx-settings-custom-fonts
-												[enabled]="options().general.enableCustomFontUpload"
-												[families]="customFontFamilies()"
-												(registered)="customFontRegistered.emit($event)"
-											/>
-										</div>
-										@if (activeTab().custom === 'quickAccess') {
-											<pptx-options-quick-access-pane
-												[options]="options()"
-												(commandsChange)="quickAccessCommandsChange.emit($event)"
-											/>
-										}
-									</pptx-options-pane>
-								}
-							}
-						}
-					</div>
-				</div>
-
-				<div class="pptx-ng-options-footer">
-					<button
-						type="button"
-						class="pptx-ng-options-ghost"
-						(click)="resetOptions.emit(undefined)"
-					>
-						{{ 'pptx.options.resetAll' | translate }}
-					</button>
-					<span class="pptx-ng-options-footer-end">
-						<button type="button" class="pptx-ng-options-ghost" (click)="cancel()">
-							{{ 'pptx.common.cancel' | translate }}
-						</button>
-						<button type="button" class="pptx-ng-options-ok" (click)="close.emit()">
-							{{ 'pptx.common.ok' | translate }}
-						</button>
-					</span>
-				</div>
-			</div>
+						</div>
+					}
+				}
+			</pptx-ui-options-dialog>
 		}
 	`,
-	styleUrl: './settings-dialog.component.css',
+	styles: [
+		`
+			.pptx-ng-options-clear-cache p {
+				margin: 0 0 8px;
+				color: var(--pptx-muted-foreground);
+				font-size: 11px;
+			}
+			.pptx-ng-options-clear-cache button {
+				padding: 6px 14px;
+				border: 1px solid var(--pptx-border);
+				border-radius: 6px;
+				background: transparent;
+				color: var(--pptx-foreground);
+				font-size: 12px;
+				cursor: pointer;
+			}
+		`,
+	],
 })
 export class SettingsDialogComponent {
 	readonly open = input(false);
@@ -251,52 +192,57 @@ export class SettingsDialogComponent {
 	readonly localeSelect = output<string>();
 	readonly close = output<void>();
 
+	private readonly translate = inject(TranslateService);
+	private readonly translations = translationsSignal(this.translate);
 	private readonly customization = injectResolvedCustomization();
-	/** The categories after the host's customisation (hidden pages/sections/settings dropped). */
-	protected readonly tabs = computed(() =>
-		customizeOptionsTabs(OPTIONS_DIALOG_TABS, this.customization()),
-	);
-	protected readonly aiTabVisible = computed(
-		() => this.aiExportVisible() && isOptionsPageVisible(this.customization(), 'ai'),
-	);
-	/** Requested category id, or the bespoke `'ai'` sentinel for the AI export pane. */
-	protected readonly activeTabId = signal<ViewerOptionsTabId | 'ai'>('general');
-	/** The requested category, or the first visible one when the host hid it. */
-	protected readonly shownTabId = computed(() =>
-		resolveVisibleOptionsTabId(this.activeTabId(), this.tabs(), this.aiTabVisible()),
-	);
-	protected readonly activeTab = computed(() => {
-		const id = this.shownTabId();
-		return resolveOptionsTab(id === 'ai' ? 'general' : id, this.tabs());
-	});
-
-	/** Snapshot taken when the dialog opens, restored by Cancel. */
-	private snapshot: ViewerOptions | null = null;
-	private wasOpen = false;
+	private readonly dialog = viewChild<ElementRef<PptxOptionsDialogElement>>('dialog');
+	private binding: PptxOptionsDialogBinding | null = null;
+	private readonly t = (key: string): string => this.translate.instant(key);
+	/** The open category, for the panes slotted into the shared dialog. */
+	protected readonly category = signal('general');
 
 	constructor() {
+		// The element exists only while the dialog is open: bind it when it appears.
 		effect(() => {
-			const isOpen = this.open();
-			if (isOpen && !this.wasOpen) {
-				this.snapshot = untracked(() => this.options());
-			}
-			this.wasOpen = isOpen;
+			const element = this.dialog()?.nativeElement;
+			untracked(() => {
+				this.unbind();
+				if (element) this.bind(element);
+			});
 		});
+		// Follow every option, language, customisation and AI change.
+		effect(() => {
+			this.dialog();
+			const input = this.dialogInput();
+			untracked(() => this.binding?.sync(input));
+		});
+		inject(DestroyRef).onDestroy(() => this.unbind());
 	}
 
-	/** Cancel: restore the on-open snapshot, then close. */
-	protected cancel(): void {
-		if (this.snapshot) {
-			this.restoreOptions.emit(this.snapshot);
-		}
-		this.close.emit();
+	/** What the shared dialog renders from, read off this component's inputs. */
+	private dialogInput(): PptxOptionsDialogInput {
+		return {
+			options: this.options(),
+			t: this.t,
+			languageKey: String(this.translations()),
+			customization: this.customization(),
+			aiEnabled: this.aiExportVisible(),
+		};
 	}
 
-	/** Escape confirms (keeps edits), mirroring React's dialog. */
-	@HostListener('document:keydown.escape')
-	protected onEscape(): void {
-		if (this.open()) {
-			this.close.emit();
-		}
+	private bind(element: PptxOptionsDialogElement): void {
+		this.binding = bindPptxOptionsDialog(element, {
+			setOption: (group, key, value) => this.optionChange.emit({ group, key, value }),
+			restoreOptions: (snapshot) => this.restoreOptions.emit(snapshot),
+			resetOptions: () => this.resetOptions.emit(undefined),
+			close: () => this.close.emit(),
+			categoryChanged: (id) => this.category.set(id),
+		});
+		this.binding.sync(untracked(() => this.dialogInput()));
+	}
+
+	private unbind(): void {
+		this.binding?.dispose();
+		this.binding = null;
 	}
 }

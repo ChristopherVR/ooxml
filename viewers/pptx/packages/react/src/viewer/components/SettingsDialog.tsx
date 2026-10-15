@@ -1,30 +1,25 @@
 import type {
+	PptxOptionsDialogBinding,
+	PptxOptionsDialogElement,
 	ThemeCatalogEntry,
 	ToolbarTabId,
 	ViewerAddinStatus,
 	ViewerOptions,
 	ViewerOptionsGroupId,
-	ViewerOptionsTabId,
 } from 'ooxml-ui/pptx';
 import {
+	AI_OPTIONS_CATEGORY,
 	DEFAULT_QUICK_ACCESS_COMMAND_IDS,
-	VIEWER_OPTIONS_TABS,
-	customizeOptionsTabs,
-	getDensePanelTouchTargetPx,
-	isOptionsPageVisible,
-	shouldStickyActionRow,
+	bindPptxOptionsDialog,
+	optionsBlockSlot,
+	optionsPaneSlot,
 } from 'ooxml-ui/pptx';
 import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LuSettings, LuX } from 'react-icons/lu';
 
-import { useModalDismissDrag } from '../hooks';
-import { useIsMobile } from '../hooks/useIsMobile';
-import { cn } from '../utils';
 import { OptionsAddInsPane } from './settings/OptionsAddInsPane';
-import { OptionsPane } from './settings/OptionsPane';
 import { OptionsQuickAccessPane } from './settings/OptionsQuickAccessPane';
 import { OptionsRibbonPane } from './settings/OptionsRibbonPane';
 import { SettingsAiTab } from './SettingsAiTab';
@@ -33,20 +28,12 @@ import { SettingsCustomFontsSection } from './SettingsCustomFontsSection';
 import { SettingsLanguageTab } from './SettingsLanguageTab';
 import { useViewerCustomizationContext } from './viewer-customization-context';
 
-/** Synthetic tab id for the AI section (appended only when `aiEnabled`). */
-const AI_TAB_ID = 'ai';
-
 /**
  * Stable empty default for `customFontFamilies`. A fresh `[]` in the parameter
  * list is a new reference every render, which breaks referential equality for
  * anything downstream that memoises on it.
  */
 const NO_CUSTOM_FONT_FAMILIES: readonly string[] = [];
-type SettingsTabId = ViewerOptionsTabId | typeof AI_TAB_ID;
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export interface SettingsDialogProps {
 	isOpen: boolean;
@@ -85,17 +72,18 @@ export interface SettingsDialogProps {
 	chatStore?: PptxAiChatStore;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 /**
- * File > Options: a PowerPoint Options-style dialog with the ten shared
- * categories in a left rail and schema-driven panes on the right. Changes
- * apply live; Cancel restores the snapshot taken when the dialog opened.
+ * File > Options: the shared `office-ui-options-dialog` driven by
+ * `bindPptxOptionsDialog` (categories, settings, live apply, Cancel and Reset all live in
+ * `ooxml-ui/pptx`). This binding only supplies the panes PowerPoint has on top of the generic
+ * rows (themes, fonts, languages, Customize Ribbon, Quick Access Toolbar, Add-ins, AI), slotted
+ * into the element while their category is open.
  */
-export function SettingsDialog({
-	isOpen,
+export function SettingsDialog(props: SettingsDialogProps): React.ReactElement | null {
+	return props.isOpen ? <OpenSettingsDialog {...props} /> : null;
+}
+
+function OpenSettingsDialog({
 	onClose,
 	options,
 	onOptionChange,
@@ -115,289 +103,112 @@ export function SettingsDialog({
 	chatStore,
 	customFontFamilies = NO_CUSTOM_FONT_FAMILIES,
 	onCustomFontRegistered,
-}: SettingsDialogProps): React.ReactElement | null {
-	const [activeTabId, setActiveTabId] = useState<SettingsTabId>('general');
+}: SettingsDialogProps): React.ReactElement {
 	const { t } = useTranslation();
 	const customization = useViewerCustomizationContext();
-	const { panelStyle, handlers: dragHandlers } = useModalDismissDrag(onClose);
-	const { viewportWidth, viewportHeight } = useIsMobile();
-	const touchTargetPx = getDensePanelTouchTargetPx(viewportWidth);
-	const navBtnStyle = { minHeight: touchTargetPx, minWidth: touchTargetPx };
-	const closeBtnStyle = { minWidth: touchTargetPx, minHeight: touchTargetPx };
-	const footerBtnStyle = { minHeight: touchTargetPx };
-	const stickyFooterClass = shouldStickyActionRow(viewportWidth, viewportHeight)
-		? 'sticky bottom-0 bg-popover'
-		: '';
-	const snapshotRef = useRef<ViewerOptions | null>(null);
-	const wasOpenRef = useRef(false);
+	const dialogRef = useRef<PptxOptionsDialogElement>(null);
+	const bindingRef = useRef<PptxOptionsDialogBinding | null>(null);
+	const [category, setCategory] = useState('general');
+	// The element outlives renders; its listeners always call the latest callbacks.
+	const latest = useRef({ onClose, onOptionChange, onRestoreOptions, onResetOptions });
+	latest.current = { onClose, onOptionChange, onRestoreOptions, onResetOptions };
 
-	// Snapshot on open for Cancel semantics.
-	useEffect(() => {
-		if (isOpen && !wasOpenRef.current) {
-			snapshotRef.current = options;
-		}
-		wasOpenRef.current = isOpen;
-	}, [isOpen, options]);
-
-	const handleCancel = useCallback(() => {
-		if (snapshotRef.current) {
-			onRestoreOptions(snapshotRef.current);
-		}
-		onClose();
-	}, [onClose, onRestoreOptions]);
-
-	// Close (confirming) on Escape.
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				onClose();
-			}
-		},
-		[onClose],
-	);
-
-	useEffect(() => {
-		if (isOpen) {
-			document.addEventListener('keydown', handleKeyDown);
-			return () => document.removeEventListener('keydown', handleKeyDown);
-		}
-	}, [isOpen, handleKeyDown]);
-
-	if (!isOpen) {
-		return null;
-	}
-
-	// Host customisation: hidden pages/sections/settings dropped, locked
-	// settings marked read-only. A hidden active tab falls back to the first.
-	const tabs = customizeOptionsTabs(VIEWER_OPTIONS_TABS, customization);
-	const showAiTab = Boolean(aiEnabled) && isOptionsPageVisible(customization, AI_TAB_ID);
-	const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? tabs[0];
-	const aiActive = activeTabId === AI_TAB_ID && showAiTab;
-	if (!activeTab) {
-		return null;
-	}
-	const currentTabId: SettingsTabId = aiActive ? AI_TAB_ID : activeTab.id;
+	useLayoutEffect(() => {
+		const binding = bindPptxOptionsDialog(dialogRef.current!, {
+			setOption: (group, key, value) => latest.current.onOptionChange(group, key, value),
+			restoreOptions: (snapshot) => latest.current.onRestoreOptions(snapshot),
+			resetOptions: () => latest.current.onResetOptions(),
+			close: () => latest.current.onClose(),
+			categoryChanged: setCategory,
+		});
+		bindingRef.current = binding;
+		return () => {
+			binding.dispose();
+			bindingRef.current = null;
+		};
+	}, []);
+	useLayoutEffect(() => {
+		bindingRef.current?.sync({
+			options,
+			t,
+			customization,
+			aiEnabled: Boolean(aiEnabled),
+		});
+	}, [options, t, customization, aiEnabled]);
 
 	return (
-		<>
-			{/* Backdrop */}
-			<button
-				type='button'
-				style={{ zIndex: 1200 }}
-				className='fixed inset-0 bg-black/60'
-				aria-label={t('pptx.settings.closeSettings')}
-				onClick={onClose}
-			/>
-			{/* Dialog */}
-			<div
-				style={{ zIndex: 1201 }}
-				className='fixed inset-0 flex items-center justify-center pointer-events-none'
-			>
-				<div
-					style={panelStyle}
-					role='dialog'
-					aria-modal='true'
-					aria-label={t('pptx.options.title')}
-					className='pointer-events-auto flex max-h-[85vh] w-[min(56rem,calc(100%-2rem))] flex-col rounded-xl border border-border bg-popover shadow-2xl backdrop-blur-xl max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:max-h-[88dvh] max-md:w-full max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:pb-[max(env(safe-area-inset-bottom),0px)]'
-				>
-					{/* Header - also a swipe-down-to-dismiss grab region on touch. */}
-					<div
-						{...dragHandlers}
-						className='flex items-center justify-between border-b border-border/60 px-5 py-4 touch-none'
+		<pptx-ui-options-dialog ref={dialogRef}>
+			{category === 'general' && (
+				<>
+					<div slot={optionsBlockSlot('themePicker')} className='mt-2'>
+						<SettingsAppearanceTab
+							activeThemeKey={themeKey}
+							themes={availableThemes}
+							onSelectTheme={onSelectTheme}
+						/>
+					</div>
+					<div slot={optionsBlockSlot('customFonts')}>
+						<SettingsCustomFontsSection
+							enabled={options.general.enableCustomFontUpload}
+							families={customFontFamilies}
+							onRegistered={(family) => onCustomFontRegistered?.(family)}
+						/>
+					</div>
+				</>
+			)}
+			{category === 'save' && (
+				<div slot={optionsBlockSlot('clearCache')} className='mt-2'>
+					<p className='mb-2 text-xs text-muted-foreground'>
+						{t('pptx.options.save.clearCacheDescription')}
+					</p>
+					<button
+						type='button'
+						onClick={onClearCache}
+						className='rounded border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent'
 					>
-						<div className='flex items-center gap-2'>
-							<LuSettings className='h-5 w-5 text-primary' />
-							<h2 className='text-sm font-semibold text-foreground'>{t('pptx.options.title')}</h2>
-						</div>
-						<button
-							type='button'
-							onClick={onClose}
-							style={closeBtnStyle}
-							className='rounded p-1 transition-colors hover:bg-accent inline-flex items-center justify-center'
-							aria-label={t('pptx.settings.close')}
-						>
-							<LuX className='h-4 w-4 text-muted-foreground' />
-						</button>
-					</div>
-
-					{/* Body: category rail + pane */}
-					<div className='flex min-h-0 flex-1 max-md:flex-col'>
-						<nav
-							aria-label={t('pptx.options.title')}
-							className='w-44 shrink-0 space-y-0.5 overflow-y-auto border-r border-border/60 p-2 max-md:flex max-md:w-full max-md:space-y-0 max-md:gap-1 max-md:overflow-x-auto max-md:border-b max-md:border-r-0'
-						>
-							{tabs.map((tab) => (
-								<button
-									key={tab.id}
-									type='button'
-									onClick={() => setActiveTabId(tab.id)}
-									aria-current={currentTabId === tab.id}
-									style={navBtnStyle}
-									className={cn(
-										'flex w-full items-center whitespace-nowrap rounded px-3 py-2 text-left text-sm transition-colors max-md:w-auto',
-										currentTabId === tab.id
-											? 'bg-primary/10 font-medium text-primary'
-											: 'text-foreground hover:bg-accent',
-									)}
-								>
-									{t(tab.labelKey)}
-								</button>
-							))}
-							{showAiTab && (
-								<button
-									type='button'
-									onClick={() => setActiveTabId(AI_TAB_ID)}
-									aria-current={aiActive}
-									style={navBtnStyle}
-									className={cn(
-										'flex w-full items-center whitespace-nowrap rounded px-3 py-2 text-left text-sm transition-colors max-md:w-auto',
-										aiActive
-											? 'bg-primary/10 font-medium text-primary'
-											: 'text-foreground hover:bg-accent',
-									)}
-								>
-									{t('pptx.ai.settingsSectionTitle')}
-								</button>
-							)}
-						</nav>
-
-						<div className='min-h-0 flex-1 overflow-y-auto px-5 py-4'>
-							{aiActive ? (
-								<div className='space-y-4'>
-									<p className='text-sm font-medium text-foreground'>
-										{t('pptx.ai.settingsSectionTitle')}
-									</p>
-									<SettingsAiTab store={chatStore} />
-								</div>
-							) : activeTab.custom === 'language' ? (
-								<div className='space-y-4'>
-									<p className='text-sm font-medium text-foreground'>
-										{t(activeTab.descriptionKey)}
-									</p>
-									<section>
-										<h3 className='mb-1 border-b border-border/60 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
-											{t('pptx.options.language.displayLanguage')}
-										</h3>
-										<p className='mb-2 text-xs text-muted-foreground'>
-											{t('pptx.options.language.displayLanguageDescription')}
-										</p>
-										<SettingsLanguageTab
-											activeLocale={localeCode}
-											locales={availableLocales}
-											onSelectLocale={onSelectLocale}
-										/>
-									</section>
-								</div>
-							) : activeTab.custom === 'ribbon' ? (
-								<div className='space-y-4'>
-									<p className='text-sm font-medium text-foreground'>
-										{t(activeTab.descriptionKey)}
-									</p>
-									<OptionsRibbonPane
-										options={options}
-										onRibbonTabHiddenChange={onRibbonTabHiddenChange}
-										onResetRibbon={() => onResetOptions('ribbon')}
-									/>
-								</div>
-							) : activeTab.custom === 'addIns' ? (
-								<div className='space-y-4'>
-									<p className='text-sm font-medium text-foreground'>
-										{t(activeTab.descriptionKey)}
-									</p>
-									<OptionsAddInsPane addinStatus={addinStatus} />
-								</div>
-							) : (
-								<OptionsPane
-									tab={activeTab}
-									options={options}
-									onOptionChange={onOptionChange}
-									renderSpecial={(section) => {
-										if (section.special === 'themePicker') {
-											return (
-												<div className='mt-2'>
-													<SettingsAppearanceTab
-														activeThemeKey={themeKey}
-														themes={availableThemes}
-														onSelectTheme={onSelectTheme}
-													/>
-												</div>
-											);
-										}
-										if (section.special === 'customFonts') {
-											return (
-												<SettingsCustomFontsSection
-													enabled={options.general.enableCustomFontUpload}
-													families={customFontFamilies}
-													onRegistered={(family) => onCustomFontRegistered?.(family)}
-												/>
-											);
-										}
-										if (section.special === 'clearCache') {
-											return (
-												<div className='mt-2'>
-													<p className='mb-2 text-xs text-muted-foreground'>
-														{t('pptx.options.save.clearCacheDescription')}
-													</p>
-													<button
-														type='button'
-														onClick={onClearCache}
-														className='rounded border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent'
-													>
-														{t('pptx.options.save.clearCacheNow')}
-													</button>
-												</div>
-											);
-										}
-										return null;
-									}}
-								>
-									{activeTab.custom === 'quickAccess' && (
-										<OptionsQuickAccessPane
-											options={options}
-											onQuickAccessCommandsChange={onQuickAccessCommandsChange}
-											onResetQuickAccess={() =>
-												onQuickAccessCommandsChange([...DEFAULT_QUICK_ACCESS_COMMAND_IDS])
-											}
-										/>
-									)}
-								</OptionsPane>
-							)}
-						</div>
-					</div>
-
-					{/* Footer */}
-					<div
-						className={`flex items-center justify-between gap-2 border-t border-border/60 px-5 py-3 ${stickyFooterClass}`}
-					>
-						<button
-							type='button'
-							onClick={() => onResetOptions()}
-							style={footerBtnStyle}
-							className='rounded border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
-						>
-							{t('pptx.options.resetAll')}
-						</button>
-						<div className='flex items-center gap-2'>
-							<button
-								type='button'
-								onClick={handleCancel}
-								style={footerBtnStyle}
-								className='rounded border border-border px-4 py-1.5 text-xs text-foreground transition-colors hover:bg-accent'
-							>
-								{t('pptx.common.cancel')}
-							</button>
-							<button
-								type='button'
-								onClick={onClose}
-								style={footerBtnStyle}
-								className='rounded bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90'
-							>
-								{t('pptx.common.ok')}
-							</button>
-						</div>
-					</div>
+						{t('pptx.options.save.clearCacheNow')}
+					</button>
 				</div>
-			</div>
-		</>
+			)}
+			{category === 'language' && (
+				<div slot={optionsBlockSlot('language')}>
+					<SettingsLanguageTab
+						activeLocale={localeCode}
+						locales={availableLocales}
+						onSelectLocale={onSelectLocale}
+					/>
+				</div>
+			)}
+			{category === 'ribbon' && (
+				<div slot={optionsPaneSlot('ribbon')}>
+					<OptionsRibbonPane
+						options={options}
+						onRibbonTabHiddenChange={onRibbonTabHiddenChange}
+						onResetRibbon={() => onResetOptions('ribbon')}
+					/>
+				</div>
+			)}
+			{category === 'quickAccess' && (
+				<div slot={optionsPaneSlot('quickAccess')}>
+					<OptionsQuickAccessPane
+						options={options}
+						onQuickAccessCommandsChange={onQuickAccessCommandsChange}
+						onResetQuickAccess={() =>
+							onQuickAccessCommandsChange([...DEFAULT_QUICK_ACCESS_COMMAND_IDS])
+						}
+					/>
+				</div>
+			)}
+			{category === 'addIns' && (
+				<div slot={optionsPaneSlot('addIns')}>
+					<OptionsAddInsPane addinStatus={addinStatus} />
+				</div>
+			)}
+			{category === AI_OPTIONS_CATEGORY && (
+				<div slot={optionsPaneSlot(AI_OPTIONS_CATEGORY)}>
+					<SettingsAiTab store={chatStore} />
+				</div>
+			)}
+		</pptx-ui-options-dialog>
 	);
 }

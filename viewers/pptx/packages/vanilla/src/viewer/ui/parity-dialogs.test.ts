@@ -35,12 +35,11 @@ describe('remaining parity dialogs', () => {
 		});
 		// The Customize Ribbon pane carries the keyboard-shortcut reference.
 		expect(document.body.textContent).toContain('Ctrl/Cmd+C');
-		const advanced = allButtons(document).find((button) => button.textContent === 'Advanced')!;
-		advanced.click();
-		const grid = Array.from(document.querySelectorAll('label'))
-			.find((label) => label.textContent === 'Show grid')!
-			.querySelector<HTMLElement>('pptx-ui-checkbox')!;
-		grid.click();
+		const shadow = document.querySelector('pptx-ui-options-dialog')!.shadowRoot!;
+		Array.from(shadow.querySelectorAll<HTMLButtonElement>('nav [role="tab"]'))
+			.find((button) => button.textContent === 'Advanced')!
+			.click();
+		shadow.querySelector<HTMLInputElement>('[data-key="advanced.showGrid"] input')!.click();
 		expect(store.getOptions().advanced.showGrid).toBeTruthy();
 	});
 

@@ -3,6 +3,7 @@ import {
 	acceptsPresentationInput,
 	createPresentationKeyBuffer,
 	createWheelStepBuffer,
+	isEditorControlTarget,
 	mapPresentationKey,
 	mapPresentationWheel,
 	mapSlideShowStartKey,
@@ -235,7 +236,10 @@ export function createViewportHandlers(deps: ViewportHandlersDeps): ViewportHand
 			if (deps.viewer.isFullscreen && handleShowKey(event, deps)) {
 				return;
 			}
-			if (deps.viewer.handleNavigationKey(event.key)) {
+			// A focused control owns Space (it toggles a checkbox in File > Options); the paging
+			// keys still reach the slide list.
+			const spaceOnControl = event.key === ' ' && isEditorControlTarget(event.target);
+			if (!spaceOnControl && deps.viewer.handleNavigationKey(event.key)) {
 				event.preventDefault();
 			}
 		},

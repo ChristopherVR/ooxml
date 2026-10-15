@@ -1,22 +1,11 @@
 /**
- * Styles for the PowerPoint "File > Options" parity dialog (category rail +
- * schema-driven panes), the title-bar Quick Access strip, the end-of-slide-show
+ * Styles for the panes the PowerPoint "File > Options" dialog supplies on top of the shared
+ * options dialog (fonts, Customize Ribbon, Quick Access, Add-ins), the title-bar Quick Access strip, the end-of-slide-show
  * black slide, the in-show context menu, and the option-driven viewer root
  * classes (`pptxv-no-hw-accel`, `pptxv-compat-display`, `pptxv-reduced-motion`,
  * `pptxv-no-show-popup`).
  */
 export const OPTIONS_DIALOG_CSS = `
-/* ── Dialog shell override: the Options dialog is wider than parity dialogs ── */
-.pptxv-options-dialog { width: min(56rem, calc(100vw - 32px)); height: min(620px, 88vh); }
-.pptxv-options-dialog .pptxv-parity-body { flex: 1; min-height: 0; padding: 0; gap: 0; }
-.pptxv-options-body { display: flex; flex: 1; min-height: 0; }
-.pptxv-options-nav { display: flex; flex-direction: column; gap: 2px; flex: none; width: 172px; overflow-y: auto; padding: 8px; border-right: 1px solid var(--pptx-border); }
-.pptxv-options-nav button { padding: 8px 10px; border: 0; border-radius: 4px; background: transparent; color: var(--pptx-foreground); font: inherit; font-size: 12px; text-align: left; cursor: pointer; white-space: nowrap; }
-.pptxv-options-nav button:hover { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
-.pptxv-options-nav button.is-active { background: color-mix(in srgb, var(--pptx-primary) 14%, transparent); color: var(--pptx-primary); font-weight: 600; }
-.pptxv-options-pane { flex: 1; min-width: 0; overflow-y: auto; padding: 14px 18px; font-size: 12px; }
-.pptxv-options-headline { margin: 0 0 12px; font-size: 12px; font-weight: 600; }
-
 /* ── Sections + control rows ── */
 .pptxv-options-section { margin: 0 0 16px; }
 .pptxv-options-section > h3 { margin: 0 0 4px; padding-bottom: 3px; border-bottom: 1px solid var(--pptx-border); color: var(--pptx-muted-foreground); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
@@ -31,17 +20,6 @@ export const OPTIONS_DIALOG_CSS = `
 	gap: 2px;
 	font-size: 12px;
 }
-.pptxv-options-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 28px; padding: 2px 0; }
-.pptxv-options-row.is-indent { padding-left: 22px; }
-label.pptxv-options-row { cursor: pointer; }
-.pptxv-options-row-label { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
-.pptxv-options-info { display: inline-grid; place-items: center; width: 13px; height: 13px; flex: none; border: 1px solid currentcolor; border-radius: 50%; color: var(--pptx-primary); font-size: 9px; font-style: normal; cursor: help; opacity: .75; }
-.pptxv-options-row select, .pptxv-options-row input[type='text'], .pptxv-options-row input[type='number'] { max-width: 55%; padding: 5px 7px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-muted); color: inherit; font: inherit; font-size: 12px; }
-.pptxv-options-row input[type='number'] { width: 72px; text-align: right; }
-.pptxv-options-row input[type='text'] { width: 180px; }
-.pptxv-options-row pptx-ui-checkbox { flex: none; }
-.pptxv-options-unit { color: var(--pptx-muted-foreground); font-size: 11px; }
-.pptxv-options-number { display: inline-flex; align-items: center; gap: 6px; }
 .pptxv-options-action { padding: 6px 11px; border: 1px solid var(--pptx-border); border-radius: 4px; background: var(--pptx-muted); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
 .pptxv-options-action:hover:not(:disabled) { background: var(--pptx-accent); color: var(--pptx-accent-foreground); }
 .pptxv-options-action:disabled { opacity: .45; cursor: default; }
@@ -90,21 +68,4 @@ label.pptxv-options-row { cursor: pointer; }
    opacity/pointer-events on mousemove; !important here is required to win
    over that inline style regardless of the JS auto-show timer. */
 .pptxv.pptxv-no-show-popup .pptxv-present-toolbar-wrap { opacity: 0 !important; pointer-events: none !important; }
-@media (max-width: 767px) {
-	.pptxv-options-body { flex-direction: column; }
-	.pptxv-options-nav { flex-direction: row; width: 100%; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--pptx-border); }
-	/* Matches isDensePanelCompact()/MOBILE_BREAKPOINT (768) in
-	   pptx-viewer-shared: getDensePanelTouchTargetPx(width) returns
-	   MIN_TOUCH_TARGET_PX (44). Every schema-driven control row (toggle /
-	   select / number / text, across every tab) gets a touch-sized hit area:
-	   the row itself (a <label> for a toggle, so enlarging it is enough there)
-	   and each select/text/number control. */
-	.pptxv-options-row { min-height: 44px; }
-	.pptxv-options-row select, .pptxv-options-row input[type='text'], .pptxv-options-row input[type='number'] { min-height: 44px; }
-	/* The category rail's own tab buttons are discrete one-per-row controls
-	   too, so they get the same touch target as everything else in this
-	   dialog below the breakpoint - CLAUDE.md Rule 1 (React's SettingsDialog
-	   navBtnStyle already covers its own nav for the same reason). */
-	.pptxv-options-nav button { min-height: 44px; }
-}
 `;

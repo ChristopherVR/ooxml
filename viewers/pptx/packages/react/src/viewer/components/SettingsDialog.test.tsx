@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { ViewerOptions } from 'ooxml-ui/pptx';
+import type { OfficeOptionCategory, ViewerOptions } from 'ooxml-ui/pptx';
 import { cloneViewerOptions, DEFAULT_VIEWER_OPTIONS, VIEWER_OPTIONS_TABS } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -12,6 +12,12 @@ vi.mock(import('react-i18next'), () => ({
 
 const { SettingsDialog } = await import('./SettingsDialog');
 type SettingsDialogProps = import('./SettingsDialog').SettingsDialogProps;
+
+type OptionsDialogElement = HTMLElement & {
+	categories: readonly OfficeOptionCategory[];
+	category: string;
+	updateComplete: Promise<unknown>;
+};
 
 let container: HTMLDivElement;
 let root: Root;
@@ -56,14 +62,14 @@ function renderDialog(props: SettingsDialogProps): void {
 	});
 }
 
-function navButton(labelKey: string): HTMLButtonElement {
-	const nav = container.querySelector('nav');
-	expect(nav).not.toBeNull();
-	const button = Array.from(nav!.querySelectorAll('button')).find(
-		(candidate) => candidate.textContent === labelKey,
-	);
-	expect(button).toBeDefined();
-	return button as HTMLButtonElement;
+function dialog(): OptionsDialogElement {
+	const element = container.querySelector<OptionsDialogElement>('pptx-ui-options-dialog');
+	expect(element).not.toBeNull();
+	return element!;
+}
+
+function shadowButton(action: string): HTMLButtonElement {
+	return dialog().shadowRoot!.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!;
 }
 
 describe('settingsDialog', () => {
@@ -72,69 +78,72 @@ describe('settingsDialog', () => {
 		expect(container.innerHTML).toBe('');
 	});
 
-	it('renders all ten categories from VIEWER_OPTIONS_TABS', () => {
+	it('hands all ten categories from VIEWER_OPTIONS_TABS to the shared dialog', () => {
 		renderDialog(createProps());
 		expect(VIEWER_OPTIONS_TABS).toHaveLength(10);
-		for (const tab of VIEWER_OPTIONS_TABS) {
-			expect(navButton(tab.labelKey)).toBeDefined();
-		}
+		expect(dialog().categories.map((entry) => entry.id)).toEqual(
+			VIEWER_OPTIONS_TABS.map((tab) => tab.id),
+		);
+		expect(dialog().categories[0]?.label).toBe('pptx.settings.general');
 	});
 
-	it('switches panes when a category is clicked', () => {
+	it('slots the product panes of the open category only', () => {
 		renderDialog(createProps());
-		// General is active initially.
-		expect(navButton('pptx.settings.general').getAttribute('aria-current')).toBe('true');
-		expect(container.textContent).toContain('pptx.options.general.description');
-
+		expect(container.querySelector('[slot="block-themePicker"]')).not.toBeNull();
+		expect(container.querySelector('[slot="pane-ribbon"]')).toBeNull();
 		act(() => {
-			navButton('pptx.options.advanced.label').click();
+			dialog().category = 'ribbon';
 		});
-		expect(navButton('pptx.options.advanced.label').getAttribute('aria-current')).toBe('true');
-		expect(navButton('pptx.settings.general').getAttribute('aria-current')).toBe('false');
-		expect(container.textContent).toContain('pptx.options.advanced.description');
+		expect(container.querySelector('[slot="pane-ribbon"]')).not.toBeNull();
+		expect(container.querySelector('[slot="block-themePicker"]')).toBeNull();
 	});
 
 	it('reports a toggle change through onOptionChange', () => {
 		const props = createProps();
 		renderDialog(props);
-		const checkbox = container.querySelector<HTMLElement>('pptx-ui-checkbox');
+		const checkbox = dialog().shadowRoot!.querySelector<HTMLInputElement>(
+			'[data-key="general.showMiniToolbar"] input',
+		);
 		expect(checkbox).not.toBeNull();
 		act(() => {
 			checkbox!.click();
 		});
-		expect(props.onOptionChange).toHaveBeenCalledOnce();
-		const [group, key, value] = vi.mocked(props.onOptionChange).mock.calls[0];
-		expect(group).toBe('general');
-		expect(key).toBeTypeOf('string');
-		expect(value).toBeTypeOf('boolean');
+		expect(props.onOptionChange).toHaveBeenCalledWith('general', 'showMiniToolbar', false);
 	});
 
 	it('shows the AI section only when aiEnabled is set', () => {
 		renderDialog(createProps());
-		const aiNav = Array.from(container.querySelectorAll('nav button')).find(
-			(b) => b.textContent === 'pptx.ai.settingsSectionTitle',
-		);
-		expect(aiNav).toBeUndefined();
-
+		expect(dialog().categories.some((entry) => entry.id === 'ai')).toBe(false);
 		renderDialog(createProps({ aiEnabled: true }));
-		const aiButton = navButton('pptx.ai.settingsSectionTitle');
-		act(() => aiButton.click());
-		expect(aiButton.getAttribute('aria-current')).toBe('true');
-		expect(container.textContent).toContain('pptx.ai.exportLogsJson');
+		expect(dialog().categories.at(-1)?.id).toBe('ai');
+		act(() => {
+			dialog().category = 'ai';
+		});
+		expect(container.querySelector('[slot="pane-ai"]')).not.toBeNull();
 	});
 
 	it('cancel restores the snapshot taken when the dialog opened', () => {
 		const props = createProps();
 		renderDialog(props);
-		const cancel = Array.from(container.querySelectorAll('button')).find(
-			(candidate) => candidate.textContent === 'pptx.common.cancel',
-		);
-		expect(cancel).toBeDefined();
 		act(() => {
-			cancel!.click();
+			shadowButton('cancel').click();
 		});
 		expect(props.onRestoreOptions).toHaveBeenCalledOnce();
-		expect(vi.mocked(props.onRestoreOptions).mock.calls[0][0]).toBe(props.options);
+		expect(vi.mocked(props.onRestoreOptions).mock.calls[0][0]).toStrictEqual(props.options);
 		expect(props.onClose).toHaveBeenCalledOnce();
+	});
+
+	it('OK keeps the edits and closes; Reset goes through onResetOptions', () => {
+		const props = createProps();
+		renderDialog(props);
+		act(() => {
+			shadowButton('reset').click();
+		});
+		expect(props.onResetOptions).toHaveBeenCalledOnce();
+		act(() => {
+			shadowButton('ok').click();
+		});
+		expect(props.onClose).toHaveBeenCalledOnce();
+		expect(props.onRestoreOptions).not.toHaveBeenCalled();
 	});
 });
