@@ -155,8 +155,9 @@
 
 <div class="pptx-svelte-transition-overlay" data-pptx-transition-overlay>
 	{#if morphPlan}
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -- generated keyframes, no user input -->
-		{@html `<style>${morphCss}</style>`}
+		<!-- Text content, not {@html}: element ids in the morph CSS come from slide
+		     part paths, so the stylesheet must never be parsed as markup. -->
+		<svelte:element this="style">{morphCss}</svelte:element>
 	{/if}
 	{#if !morphPlan && fragmented?.outgoing}
 		<FragmentedTransitionLayer

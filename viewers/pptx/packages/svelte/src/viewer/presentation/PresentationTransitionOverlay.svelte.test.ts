@@ -235,6 +235,32 @@ describe('presentationTransitionOverlay', () => {
 		}
 	});
 
+	it('renders the morph stylesheet as text, so a hostile element id injects no markup', () => {
+		// Element ids come from slide part paths. A closing `</style>` plus an
+		// `<img onerror>` in the id must stay inert text, not become DOM.
+		const evil = '</style><img src=x onerror=alert(1)>';
+		const shape = (id: string, x: number) => ({
+			id,
+			type: 'shape',
+			name: 'Rectangle 1',
+			x,
+			y: 10,
+			width: 100,
+			height: 50,
+			shapeType: 'rect',
+		});
+		const target = mountOverlay({ type: 'morph', durationMs: 800 } as PptxSlideTransition, {
+			from: makeSlide('out', [shape(evil, 10)]),
+			to: makeSlide('in', [shape(evil, 400)]),
+		});
+
+		expect(target.querySelector('img')).toBeNull();
+		const styles = [...target.querySelectorAll('style')];
+		const css = styles.map((node) => node.textContent).join('\n');
+		expect(css).toContain('[data-element-id="\\3c /style\\3e');
+		expect(css).not.toContain('<img');
+	});
+
 	// Regression (issue #146): the wheel deck's centre disc is identical on both
 	// slides, so its opaque ghost sat over the title, body and button dissolving
 	// in inside it - they were invisible until the overlay came down. The plan
