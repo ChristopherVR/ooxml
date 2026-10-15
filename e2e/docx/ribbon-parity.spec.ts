@@ -96,7 +96,8 @@ test.describe('Word-style ribbon', () => {
 	});
 
 	test('Insert, Review, View and Layout commands act on the document', async ({ page }) => {
-		// The Insert tab is wide (Text Box, Symbols...); this test is not about overflow folding.
+		// The Insert tab is wider than 1500px (Text Box, Symbols...), so its rightmost groups can fold;
+		// this test is not about overflow folding, so it opens whichever group holds the control.
 		await page.setViewportSize({ width: 1500, height: 800 });
 		const editor = page.locator('docx-editor');
 		const surface = editor.locator('.ProseMirror');
@@ -104,11 +105,15 @@ test.describe('Word-style ribbon', () => {
 		await page.keyboard.type('one two three');
 
 		await editor.locator('[role="tab"][data-tab="insert"]').click();
-		await editor.getByRole('combobox', { name: 'Symbol' }).selectOption('©');
+		const symbol = editor.getByRole('combobox', { name: 'Symbol' });
+		await reveal(editor, symbol);
+		await symbol.selectOption('©');
 		await expect(surface).toContainText('one two three©');
 
 		await editor.locator('[role="tab"][data-tab="review"]').click();
-		await editor.getByRole('button', { name: 'Word count', exact: true }).click();
+		const wordCount = editor.getByRole('button', { name: 'Word count', exact: true });
+		await reveal(editor, wordCount);
+		await wordCount.click();
 		await expect(editor.locator('.dve-word-count')).toContainText('3');
 		await page.keyboard.press('Escape');
 		await expect(editor.locator('.dve-word-count')).toHaveCount(0);
