@@ -3,6 +3,7 @@ import { formatAddress, formatRange, type CellAddress } from '../address';
 import { usedRange } from '../cells';
 import type { AutoFilterColumn, ColumnInfo, Worksheet } from '../model';
 import {
+	defaultSheetView,
 	readAutoFilter,
 	readFitToPage,
 	readProtection,
@@ -67,7 +68,8 @@ export function sheetViewsXml(sheet: Worksheet, tabSelected: boolean): string {
 		}
 		return outerXml(source);
 	}
-	const view = sheet.view;
+	// Workbooks built in code may omit the view; write the defaults then.
+	const view = sheet.view ?? defaultSheetView();
 	let inner = '';
 	let pane: string | undefined;
 	if (view.freeze && (view.freeze.rows > 0 || view.freeze.cols > 0)) {
