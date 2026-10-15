@@ -5,6 +5,8 @@
 //   http POST|GET /files/<id>/<name>   plain file storage for attachments
 //   http POST /files/link/<id>/<name>  short-lived signed download link (token in Authorization)
 //   http POST /auth/session            exchange a credential for a signed session bound to one user id
+//   http POST /auth/check|signout      is a session still valid / end every session of its user
+//   http POST /auth/revoke             operator only (TEAMS_ADMIN_TOKEN): end every session of a user
 // Nothing here understands Office formats or chat: it moves bytes, so any other server that speaks
 // the same three contracts (see docs/server-contract.md) works just as well.
 // Security model: see the README. One shared token opens every room; room members trust each other.
@@ -36,8 +38,10 @@ import {
 	authenticateFromUsers,
 	createSessionSigner,
 	isUserId,
+	plainTextUsers,
 	sameSecret as sameCredential,
 } from './auth.mjs';
+import { createSlidingLimiter } from './rate-limit.mjs';
 import { authorizeChatJoin, isChatRoom, roomMembers } from './chat-access.mjs';
 import {
 	createBucket,
@@ -68,7 +72,8 @@ const unlinkQuiet = (path) => {
  * @param {{ port?: number, host?: string, token?: string, origins?: string[], dataDir?: string,
  *   insecure?: boolean, authenticate?: (request: { user: string, credential?: string,
  *   headers: Record<string, string | string[] | undefined> }) => unknown, users?: Record<string, string>,
- *   sessionSecret?: string, sessionTtlMs?: number, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
+ *   sessionSecret?: string, sessionTtlMs?: number, adminToken?: string,
+ *   sessionRate?: { windowMs?: number, perIp?: number, perUser?: number }, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
  *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number,
  *   log?: (m: string) => void }} [options]
@@ -85,6 +90,7 @@ export function createTeamsServer(options = {}) {
 		users,
 		sessionSecret = process.env.TEAMS_SESSION_SECRET || '',
 		sessionTtlMs,
+		adminToken = process.env.TEAMS_ADMIN_TOKEN || '',
 		maxFileBytes = 25 * 1024 * 1024,
 		maxSyncBytes = 32 * 1024 * 1024,
 		maxSignalBytes = 256 * 1024,
@@ -93,10 +99,50 @@ export function createTeamsServer(options = {}) {
 	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
 	// Real accounts exist: sockets must carry a session. Otherwise identity is a claim (dev default).
 	const authRequired = typeof authenticate === 'function';
+	if (users) {
+		const plain = plainTextUsers(users).length;
+		if (plain > 0)
+			log(
+				`WARNING: ${plain} user credential(s) are stored as plain text; hash them with openteams-hash-password`,
+			);
+	}
+	// Session revocation: a per-user generation that tokens carry, persisted next to the data so a
+	// revocation survives a restart that keeps the same session secret.
+	const revocationsFile = join(dataDir, 'session-revocations.json');
+	const loadGenerations = () => {
+		try {
+			const parsed = JSON.parse(readFileSync(revocationsFile, 'utf8'));
+			return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+		} catch {
+			return {};
+		}
+	};
 	const signer = createSessionSigner({
 		secret: sessionSecret,
 		...(sessionTtlMs ? { ttlMs: sessionTtlMs } : {}),
+		generations: loadGenerations(),
+		onRevoke: (user, _generation, all) => {
+			try {
+				writeFileSync(revocationsFile, JSON.stringify(all));
+			} catch (error) {
+				log(`could not persist session revocations (${error.message})`);
+			}
+		},
 	});
+	const envInt = (name) => Number(process.env[name]) || undefined;
+	const rate = {
+		windowMs: options.sessionRate?.windowMs ?? envInt('TEAMS_AUTH_RATE_WINDOW_MS') ?? 60_000,
+		perIp: options.sessionRate?.perIp ?? envInt('TEAMS_AUTH_RATE_PER_IP') ?? 30,
+		perUser: options.sessionRate?.perUser ?? envInt('TEAMS_AUTH_RATE_PER_USER') ?? 10,
+	};
+	const ipLimiter = createSlidingLimiter({ limit: rate.perIp, windowMs: rate.windowMs });
+	const userLimiter = createSlidingLimiter({ limit: rate.perUser, windowMs: rate.windowMs });
+	/** Open sockets that were admitted with a session, so a revocation can drop them. */
+	const sessionSockets = new Map();
+	const revokeSessions = (user) => {
+		signer.revoke(user);
+		for (const [ws, owner] of sessionSockets) if (owner === user) ws.close(1008, 'session revoked');
+	};
 	const limits = resolveLimits(options);
 	const roomsDir = join(dataDir, 'rooms');
 	const filesDir = join(dataDir, 'files');
@@ -387,6 +433,7 @@ export function createTeamsServer(options = {}) {
 		}
 		res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+		res.setHeader('Access-Control-Expose-Headers', 'Retry-After');
 	};
 	/** The stored file name, or null for bad percent-encoding and names made only of dots. */
 	const cleanName = (n) => {
@@ -494,27 +541,14 @@ export function createTeamsServer(options = {}) {
 		if (!originAllowed(req.headers.origin ?? '')) return plain(res, 403);
 		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
 		if (token && (bearer === undefined || !sameSecret(bearer, token))) return plain(res, 401);
-		const chunks = [];
-		let size = 0;
-		req.on('data', (chunk) => {
-			size += chunk.length;
-			if (size > 4096) {
-				req.destroy();
-				return;
-			}
-			chunks.push(chunk);
-		});
-		req.on('error', () => {});
-		req.on('end', async () => {
-			let body;
-			try {
-				body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-			} catch {
-				return plain(res, 400);
-			}
+		const ipVerdict = ipLimiter.check(req.socket.remoteAddress ?? '');
+		if (!ipVerdict.ok) return tooMany(res, ipVerdict);
+		readSmallJson(req, res, async (body) => {
 			const user = body?.user;
 			const credential = typeof body?.credential === 'string' ? body.credential : undefined;
 			if (!isUserId(user)) return plain(res, 400);
+			const userVerdict = userLimiter.check(user);
+			if (!userVerdict.ok) return tooMany(res, userVerdict);
 			try {
 				// Dev default (no hook): the claimed id is accepted. Not secure, see the README.
 				const verdict = authRequired
@@ -536,6 +570,73 @@ export function createTeamsServer(options = {}) {
 		});
 	}
 
+	const tooMany = (res, verdict) =>
+		plain(res, 429, { 'Retry-After': String(verdict.retryAfterSec), 'Cache-Control': 'no-store' });
+
+	/** Read a small JSON body (at most 4 KiB), then call `done(body)`; 400 when it is not JSON. */
+	function readSmallJson(req, res, done) {
+		const chunks = [];
+		let size = 0;
+		req.on('data', (chunk) => {
+			size += chunk.length;
+			if (size > 4096) {
+				req.destroy();
+				return;
+			}
+			chunks.push(chunk);
+		});
+		req.on('error', () => {});
+		req.on('end', async () => {
+			let body;
+			try {
+				body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+			} catch {
+				return plain(res, 400);
+			}
+			done(body);
+		});
+	}
+
+	/** POST /auth/signout {session}: revoke every session of the user the token belongs to. */
+	function signoutRequest(req, res) {
+		if (req.method !== 'POST') return plain(res, 405);
+		if (!originAllowed(req.headers.origin ?? '')) return plain(res, 403);
+		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
+		if (token && (bearer === undefined || !sameSecret(bearer, token))) return plain(res, 401);
+		readSmallJson(req, res, (body) => {
+			const user = signer.verify(body?.session);
+			if (user === null) return plain(res, 401);
+			revokeSessions(user);
+			plain(res, 204);
+		});
+	}
+
+	/** POST /auth/check {session}: 204 while the session is valid, 401 when it is not. */
+	function checkRequest(req, res) {
+		if (req.method !== 'POST') return plain(res, 405);
+		if (!originAllowed(req.headers.origin ?? '')) return plain(res, 403);
+		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
+		if (token && (bearer === undefined || !sameSecret(bearer, token))) return plain(res, 401);
+		readSmallJson(req, res, (body) =>
+			plain(res, signer.verify(body?.session) === null ? 401 : 204),
+		);
+	}
+
+	/** POST /auth/revoke {user}: admin only (TEAMS_ADMIN_TOKEN as the Bearer token). */
+	function revokeRequest(req, res) {
+		if (!adminToken) return plain(res, 404);
+		if (req.method !== 'POST') return plain(res, 405);
+		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
+		if (bearer === undefined || !sameSecret(bearer, adminToken)) return plain(res, 401);
+		const ipVerdict = ipLimiter.check(req.socket.remoteAddress ?? '');
+		if (!ipVerdict.ok) return tooMany(res, ipVerdict);
+		readSmallJson(req, res, (body) => {
+			if (!isUserId(body?.user)) return plain(res, 400);
+			revokeSessions(body.user);
+			plain(res, 204);
+		});
+	}
+
 	function onRequest(req, res) {
 		cors(res, req);
 		const url = new URL(req.url ?? '/', 'http://localhost');
@@ -552,6 +653,9 @@ export function createTeamsServer(options = {}) {
 			);
 		}
 		if (url.pathname === '/auth/session') return void sessionRequest(req, res);
+		if (url.pathname === '/auth/check') return void checkRequest(req, res);
+		if (url.pathname === '/auth/signout') return void signoutRequest(req, res);
+		if (url.pathname === '/auth/revoke') return void revokeRequest(req, res);
 		const link = /^\/files\/link\/([\w-]{1,64})\/([^/]{1,200})$/u.exec(url.pathname);
 		const m = link ?? /^\/files\/([\w-]{1,64})\/([^/]{1,200})$/u.exec(url.pathname);
 		if (!m) return plain(res, 404);
@@ -633,6 +737,10 @@ export function createTeamsServer(options = {}) {
 		perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
 		const wss = m[1] === 'sync' ? syncWss : signalWss;
 		wss.handleUpgrade(req, socket, head, (ws) => {
+			if (sessionUser !== null) {
+				sessionSockets.set(ws, sessionUser);
+				ws.on('close', () => sessionSockets.delete(ws));
+			}
 			ws.on('close', () => {
 				const left = (perIp.get(ip) ?? 1) - 1;
 				if (left <= 0) perIp.delete(ip);
@@ -660,6 +768,8 @@ export function createTeamsServer(options = {}) {
 	return {
 		http,
 		accounts: authRequired,
+		/** Invalidate every session issued for `user` and drop their open sockets. */
+		revokeSessions,
 		listen: (port = Number(process.env.PORT) || 8787, host = process.env.HOST || '127.0.0.1') => {
 			if (!token && !isLoopbackHost(host)) {
 				if (!insecure)

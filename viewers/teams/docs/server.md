@@ -127,4 +127,5 @@ Be clear about these before you put people on it:
 - **One snapshot per room, no compaction.** The document grows with history and is never pruned.
 - **Plain file storage.** No listing, no deletion, no per-workspace quota; uploading a file with an
   existing name replaces it. Files are capped at 25 MB each.
-- **No rate limiting** and no media server: calls are peer to peer (mesh).
+- **Rate limiting covers only `/auth/session`** (per address and user, in memory); sockets and
+  messages have the abuse limits in the README, and there is no media server: calls are peer to peer (mesh).

@@ -27,6 +27,7 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                          |
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
 | `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                       |
+| `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                             |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
 | `TEAMS_INSECURE`                                        | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
@@ -80,9 +81,50 @@ configured, sockets without a valid session get 401. Set `TEAMS_SESSION_SECRET` 
 `sessionSecret`) to keep sessions across restarts and across processes; without it a random secret
 is used per process. The server never logs credentials, sessions or the secret.
 
-Limits: no password hashing or rate limiting on `/auth/session` (use your proxy's limiter), the
-`users` table holds credentials in plain text in a file you must protect, and sessions cannot be
-revoked before they expire.
+### Hardening
+
+- **Hashed credentials.** A `users` value is either plain text or an scrypt hash
+  (`scrypt$N$r$p$salt$hash`, node:crypto, random salt, constant-time check). Make one with the
+  bundled command, which reads the password from a hidden prompt or from standard input (never from
+  the command line):
+
+  ```bash
+  npx openteams-hash-password            # prompts, prints the hash
+  printf '%s' "$PASSWORD" | npx openteams-hash-password
+  ```
+
+  Plain text is still accepted so existing files keep working, but the server logs a startup
+  warning with the number (not the names or values) of plain text credentials. An unknown user id
+  costs one hash check, so timing does not reveal which ids exist. Hashing protects the file at
+  rest; the credential still travels to the server in the request body, so use TLS.
+
+- **Rate limiting `/auth/session`.** A sliding window counts every attempt per remote address and
+  per user id; over the limit the server answers `429` with `Retry-After` (seconds). Defaults: 60 s
+  window, 30 attempts per address, 10 per user. Configure with `sessionRate: { windowMs, perIp,
+  perUser }` or `TEAMS_AUTH_RATE_WINDOW_MS`, `TEAMS_AUTH_RATE_PER_IP`, `TEAMS_AUTH_RATE_PER_USER`.
+  The address is the socket peer: behind a reverse proxy every client shares the proxy's address, so
+  also rate limit at the proxy. The per-user limit stops guessing but also lets someone who hammers a
+  known id keep that person from signing in for the rest of the window (a lockout, not a bypass).
+  State is in memory and per process.
+
+- **Checking a session.** `POST /auth/check` with `{ session }` answers `204` while the session is
+  valid and `401` when it expired, was revoked or is forged; the Teams UI uses it to tell a rejected
+  session (sign in again) from a server that is merely unreachable.
+
+- **Revoking sessions.** Each user has a session generation that tokens carry. `POST /auth/signout`
+  with `{ session }` (and the workspace token as `Authorization: Bearer`, if set) bumps it, which
+  invalidates every session of that user, on all devices, and closes their open sockets. An
+  operator can do the same with `server.revokeSessions(user)` or, when `TEAMS_ADMIN_TOKEN`
+  (`adminToken`) is set, `POST /auth/revoke` with `{ user }` and `Authorization: Bearer <admin
+  token>`; without an admin token that route is a 404. Generations are saved to
+  `session-revocations.json` in the data directory, so a revocation survives a restart as long as
+  `TEAMS_SESSION_SECRET` is fixed (with a random per-process secret, restarting already ends every
+  session).
+
+Remaining limits: the `users` table is a file you must protect, there is no password reset or
+account management, a revocation applies to the whole user rather than one device, and sessions
+travel in the socket query string. Plug an identity provider into `authenticate` for anything
+larger than a small closed team.
 
 **The dev default is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
 claimed id, so it adds nothing over the old behaviour.

@@ -23,12 +23,16 @@
 		"directory": "viewers/teams/server"
 	},
 	"bin": {
+		"openteams-hash-password": "hash-password.mjs",
 		"openteams-server": "bin.mjs"
 	},
 	"files": [
 		"index.mjs",
 		"guards.mjs",
 		"auth.mjs",
+		"passwords.mjs",
+		"rate-limit.mjs",
+		"hash-password.mjs",
 		"chat-access.mjs",
 		"bin.mjs",
 		"README.md",
