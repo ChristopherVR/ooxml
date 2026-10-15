@@ -38,10 +38,16 @@ export default defineConfig({
 			{
 				text: 'Guide',
 				link: '/getting-started',
-				activeMatch: '/(getting-started|architecture|bindings|api|theming|localization)',
+				activeMatch:
+					'/(getting-started|architecture|bindings|api|theming|localization|demos|features|collaboration|frameworks)',
 			},
-			{ text: 'Demos', link: '/demos', activeMatch: '/demos' },
-			{ text: 'Element API', link: '/api', activeMatch: '/api' },
+			{
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
+			{ text: 'Releases', link: '/releasing', activeMatch: '/releasing' },
 		],
 
 		sidebar: [

@@ -44,7 +44,7 @@ const columns = [
 </script>
 
 <template>
-	<section class="ot-section ot-finale">
+	<section class="ot-section ot-finale" data-reveal>
 		<h2 class="ot-h2">Your workspace, your server.</h2>
 		<p class="ot-copy">
 			Install a binding, start the reference server with <code>npx openteams-server</code>, and try

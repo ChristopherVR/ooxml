@@ -27,10 +27,20 @@
 	--vp-c-text-2: #616161;
 	--vp-sidebar-bg-color: #ffffff;
 
+	/* Code sits on a dark card in both modes, so its chrome uses light text in both */
 	--vp-code-block-bg: #181a1e;
+	--vp-code-block-divider-color: rgba(240, 240, 240, 0.14);
+	--vp-code-tab-bg: #181a1e;
 	--vp-code-tab-divider: rgba(240, 240, 240, 0.14);
+	--vp-code-tab-text-color: rgba(240, 240, 240, 0.6);
+	--vp-code-tab-hover-text-color: #f0f0f0;
+	--vp-code-tab-active-text-color: #f0f0f0;
+	--vp-code-lang-color: rgba(240, 240, 240, 0.55);
 	--vp-code-copy-code-bg: rgba(240, 240, 240, 0.1);
 	--vp-code-copy-code-hover-bg: rgba(240, 240, 240, 0.2);
+	--vp-code-copy-code-border-color: rgba(240, 240, 240, 0.14);
+	--vp-code-copy-code-hover-border-color: rgba(240, 240, 240, 0.28);
+	--vp-code-copy-code-active-text: rgba(240, 240, 240, 0.85);
 
 	--pvd-display: 'Bricolage Grotesque', var(--vp-font-family-base);
 	--pvd-mono: var(--vp-font-family-mono);
@@ -300,7 +310,7 @@
 
 .VPDocFooter .pager-link {
 	border-radius: 8px;
-	transition: border-color 0.18s ease;
+	transition: border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .VPDocFooter .pager-link:hover {

@@ -35,8 +35,13 @@ export default defineConfig({
 			link: '/fr/',
 			themeConfig: {
 				nav: [
-					{ text: 'Guide developpeur', link: '/fr/guide/', activeMatch: '/fr/guide/' },
-					{ text: 'Guide utilisateur', link: '/user/', activeMatch: '/user/' },
+					{ text: 'Guide', link: '/fr/guide/', activeMatch: '/(fr/guide|fr/user|user)/' },
+					{
+						text: 'OOXML Office',
+						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Versions', link: '/releases/', activeMatch: '/releases/' },
 				],
 			},
@@ -47,8 +52,13 @@ export default defineConfig({
 			link: '/es/',
 			themeConfig: {
 				nav: [
-					{ text: 'Guia del desarrollador', link: '/es/guide/', activeMatch: '/es/guide/' },
-					{ text: 'Guia de usuario', link: '/user/', activeMatch: '/user/' },
+					{ text: 'Guía', link: '/es/guide/', activeMatch: '/(es/guide|user)/' },
+					{
+						text: 'OOXML Office',
+						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Versiones', link: '/releases/', activeMatch: '/releases/' },
 				],
 			},
@@ -59,8 +69,13 @@ export default defineConfig({
 			link: '/de/',
 			themeConfig: {
 				nav: [
-					{ text: 'Entwicklerhandbuch', link: '/de/guide/', activeMatch: '/de/guide/' },
-					{ text: 'Benutzerhandbuch', link: '/user/', activeMatch: '/user/' },
+					{ text: 'Leitfaden', link: '/de/guide/', activeMatch: '/(de/guide|user)/' },
+					{
+						text: 'OOXML Office',
+						link: 'https://christophervr.github.io/ooxml/',
+						target: '_self',
+						rel: '',
+					},
 					{ text: 'Versionen', link: '/releases/', activeMatch: '/releases/' },
 				],
 			},
@@ -94,8 +109,13 @@ export default defineConfig({
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
-			{ text: 'Developer Guide', link: '/guide/', activeMatch: '/guide/' },
-			{ text: 'User Guide', link: '/user/', activeMatch: '/user/' },
+			{ text: 'Guide', link: '/guide/', activeMatch: '/(guide|user)/' },
+			{
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
 			{ text: 'Releases', link: '/releases/', activeMatch: '/releases/' },
 		],
 
@@ -108,6 +128,8 @@ export default defineConfig({
 						{ text: 'What is pptx-viewer?', link: '/guide/introduction' },
 						{ text: 'Installation', link: '/guide/installation' },
 						{ text: 'Quick Start', link: '/guide/quick-start' },
+						{ text: 'User Guide', link: '/user/' },
+						{ text: 'Releases', link: '/releases/' },
 					],
 				},
 				{

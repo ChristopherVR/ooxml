@@ -21,6 +21,15 @@ export const DEMO_FRAMEWORKS: DemoFramework[] = [
 	{ key: 'vanilla', label: 'Vanilla JS', route: 'demo-vanilla' },
 ];
 
+/** Languages the Word demo accepts through its `?locale=` parameter. */
+export const DEMO_LOCALES: { id: string; label: string }[] = [
+	{ id: 'en', label: 'English' },
+	{ id: 'fr', label: 'Français' },
+	{ id: 'de', label: 'Deutsch' },
+	{ id: 'es', label: 'Español' },
+	{ id: 'zh-CN', label: '简体中文' },
+];
+
 export type LiveDemoMode = 'solo' | 'collab';
 
 export interface LiveDemoState {
@@ -28,6 +37,7 @@ export interface LiveDemoState {
 	mode: Ref<LiveDemoMode>;
 	activeKey: Ref<string>;
 	guestKey: Ref<string>;
+	locale: Ref<string>;
 	src: ComputedRef<string>;
 	guestSrc: ComputedRef<string>;
 	guestLabel: ComputedRef<string>;
@@ -35,6 +45,7 @@ export interface LiveDemoState {
 	start: () => void;
 	selectFramework: (key: string) => void;
 	selectGuest: (key: string) => void;
+	setLocale: (id: string) => void;
 	setMode: (mode: LiveDemoMode) => void;
 }
 
@@ -61,6 +72,7 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 	const mode = ref<LiveDemoMode>('solo');
 	const activeKey = ref('react');
 	const guestKey = ref('vue');
+	const locale = ref('en');
 
 	/** The session name both windows join. A new one for every sharing session. */
 	const room = ref(randomRoom());
@@ -71,12 +83,14 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 		const { route } = frameworkByKey(activeKey.value);
 		return withBase(
 			mode.value === 'collab'
-				? `/${route}/?sample=1&room=${room.value}&name=Ada`
-				: `/${route}/?sample=1`,
+				? `/${route}/?sample=1&room=${room.value}&name=Ada&locale=${locale.value}`
+				: `/${route}/?sample=1&locale=${locale.value}`,
 		);
 	});
 	const guestSrc = computed(() =>
-		withBase(`/${frameworkByKey(guestKey.value).route}/?room=${room.value}&name=Grace`),
+		withBase(
+			`/${frameworkByKey(guestKey.value).route}/?room=${room.value}&name=Grace&locale=${locale.value}`,
+		),
 	);
 	const guestLabel = computed(() => frameworkByKey(guestKey.value).label);
 	const activeLabel = computed(() => frameworkByKey(activeKey.value).label);
@@ -92,6 +106,11 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 
 	function selectGuest(key: string): void {
 		guestKey.value = key;
+	}
+
+	function setLocale(id: string): void {
+		locale.value = id;
+		started.value = true;
 	}
 
 	function setMode(next: LiveDemoMode): void {
@@ -127,6 +146,7 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 		mode,
 		activeKey,
 		guestKey,
+		locale,
 		src,
 		guestSrc,
 		guestLabel,
@@ -134,6 +154,7 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 		start,
 		selectFramework,
 		selectGuest,
+		setLocale,
 		setMode,
 	};
 }

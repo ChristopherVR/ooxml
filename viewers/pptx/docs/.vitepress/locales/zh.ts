@@ -29,9 +29,14 @@ export const zh = {
 		},
 		sidebar,
 		nav: [
-			{ text: '开发指南', link: '/zh/guide/' },
-			{ text: '使用指南', link: '/zh/user/' },
-			{ text: '版本发布', link: '/zh/releases/' },
+			{ text: '指南', link: '/zh/guide/', activeMatch: '/zh/(guide|user)/' },
+			{
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
+			{ text: '版本发布', link: '/zh/releases/', activeMatch: '/zh/releases/' },
 		],
 		search: {
 			provider: 'local',

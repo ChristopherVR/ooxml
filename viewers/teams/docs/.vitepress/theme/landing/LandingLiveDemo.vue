@@ -71,7 +71,7 @@ onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
-	<section id="live-demo" ref="section" class="ot-section ot-live">
+	<section id="live-demo" ref="section" class="ot-section ot-live" data-reveal>
 		<div class="ot-bar">
 			<h2 class="ot-h2">Try it right here</h2>
 			<p class="ot-bar__note">Live demo</p>

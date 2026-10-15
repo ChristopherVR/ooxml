@@ -17,6 +17,9 @@
 	--pv-accent-edge: rgba(57, 85, 163, 0.42);
 	--pv-on-accent: #ffffff;
 
+	--pv-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--pv-ease-out: cubic-bezier(0.65, 0, 0.35, 1);
+
 	--pv-display: 'Bricolage Grotesque', var(--vp-font-family-base);
 	--pv-ui: var(--vp-font-family-base);
 	--pv-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
@@ -107,7 +110,7 @@
 	color: var(--pv-accent);
 	text-decoration: underline transparent;
 	text-underline-offset: 3px;
-	transition: text-decoration-color 0.18s ease;
+	transition: text-decoration-color 200ms var(--pv-ease);
 }
 
 .pv-link:hover {
@@ -125,9 +128,14 @@
 	border-radius: 4px;
 	cursor: pointer;
 	transition:
-		background-color 0.18s ease,
-		border-color 0.18s ease,
-		color 0.18s ease;
+		background-color 200ms var(--pv-ease),
+		border-color 200ms var(--pv-ease),
+		color 200ms var(--pv-ease),
+		transform 120ms var(--pv-ease);
+}
+
+.pv-btn:active {
+	transform: scale(0.985);
 }
 
 .pv-btn--solid {
@@ -155,26 +163,55 @@
 
 .pv-enter {
 	opacity: 0;
-	transform: translateY(26px);
-	animation: pv-enter 0.9s cubic-bezier(0.25, 0.4, 0.25, 1) forwards;
+	transform: translateY(16px);
+	animation: pv-enter 650ms var(--pv-ease) forwards;
 }
 
 .pv-enter--2 {
-	animation-delay: 0.12s;
+	animation-delay: 80ms;
 }
 
 .pv-enter--3 {
-	animation-delay: 0.24s;
+	animation-delay: 160ms;
 }
 
 .pv-enter--4 {
-	animation-delay: 0.36s;
+	animation-delay: 240ms;
 }
 
 @keyframes pv-enter {
 	to {
 		opacity: 1;
 		transform: none;
+	}
+}
+
+/* ---- Scroll reveals (useReveals.ts adds .pv-reveals, then .is-revealed once) ---- */
+
+@keyframes pv-reveal {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.pv-landing.pv-reveals [data-reveal]:not(.is-revealed) {
+		opacity: 0;
+	}
+
+	.pv-landing [data-reveal].is-revealed {
+		animation: pv-reveal 650ms var(--pv-ease) backwards;
+	}
+
+	/* A grid reveals cell by cell: the wrapper itself does not move */
+	.pv-landing [data-reveal='grid'].is-revealed {
+		animation: none;
+	}
+
+	.pv-landing [data-reveal='grid'].is-revealed > * {
+		animation: pv-reveal 650ms var(--pv-ease) backwards;
+		animation-delay: calc(var(--i, 0) * 60ms);
 	}
 }
 
@@ -188,5 +225,9 @@
 
 	.pv-btn {
 		transition: none;
+	}
+
+	.pv-btn:active {
+		transform: none;
 	}
 }

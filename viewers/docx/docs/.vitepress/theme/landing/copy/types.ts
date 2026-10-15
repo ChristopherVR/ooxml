@@ -34,6 +34,7 @@ export interface LandingLiveDemoCopy {
 	copy: string;
 	/** aria-label for the framework tablist. */
 	frameworkLabel: string;
+	languageLabel: string;
 	soloTab: string;
 	collabTab: string;
 	/** Label for the guest-framework picker in collaboration mode. */

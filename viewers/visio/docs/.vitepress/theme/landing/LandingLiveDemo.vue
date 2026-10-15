@@ -144,8 +144,8 @@ const {
 	padding: 0.5rem 0.9rem;
 	border-radius: 4px;
 	transition:
-		color 0.18s ease,
-		background-color 0.18s ease;
+		color 200ms var(--pv-ease),
+		background-color 200ms var(--pv-ease);
 }
 
 .pv-live__tab:hover {

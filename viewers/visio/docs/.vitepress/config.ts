@@ -41,12 +41,17 @@ export default defineConfig({
 	themeConfig: {
 		nav: [
 			{
-				text: 'Developer Guide',
+				text: 'Guide',
 				link: '/getting-started',
-				activeMatch: '/(getting-started|architecture|bindings|api|theming)',
+				activeMatch:
+					'/(getting-started|architecture|bindings|api|theming|collaboration|demos|frameworks)',
 			},
-			{ text: 'User Guide', link: '/collaboration', activeMatch: '/collaboration' },
-			{ text: 'Demos', link: '/demos', activeMatch: '/demos' },
+			{
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
+			},
 			{ text: 'Releases', link: '/releasing', activeMatch: '/releasing' },
 		],
 

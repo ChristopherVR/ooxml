@@ -43,22 +43,14 @@ export default defineConfig({
 			{
 				text: 'Guide',
 				link: '/getting-started',
-				activeMatch: '/(getting-started|architecture|limitations|api|theming)',
+				activeMatch:
+					'/(getting-started|architecture|limitations|api|theming|collaboration|server|deploy)',
 			},
-			{ text: 'Collaboration', link: '/collaboration', activeMatch: '/collaboration' },
-			{ text: 'Server', link: '/server', activeMatch: '/(server|deploy)' },
 			{
-				text: 'Demos',
-				items: [
-					// `target` keeps the VitePress router from handling these as missing pages.
-					{ text: 'Vanilla demo', link: '/demo/', target: '_self' },
-					{ text: 'React demo', link: '/demo-react/', target: '_self' },
-					{ text: 'Vue demo', link: '/demo-vue/', target: '_self' },
-					{ text: 'Angular demo', link: '/demo-angular/', target: '_self' },
-					{ text: 'Svelte demo', link: '/demo-svelte/', target: '_self' },
-					{ text: 'Solid demo', link: '/demo-solid/', target: '_self' },
-					{ text: 'About the demos', link: '/demos' },
-				],
+				text: 'OOXML Office',
+				link: 'https://christophervr.github.io/ooxml/',
+				target: '_self',
+				rel: '',
 			},
 			{ text: 'Releases', link: '/releasing', activeMatch: '/releasing' },
 		],
@@ -98,6 +90,19 @@ export default defineConfig({
 				items: [
 					{ text: 'Bring your own server', link: '/server' },
 					{ text: 'Deploying the reference server', link: '/deploy' },
+				],
+			},
+			{
+				text: 'Demos',
+				items: [
+					// `target` keeps the VitePress router from handling these as missing pages.
+					{ text: 'Vanilla demo', link: '/demo/', target: '_self' },
+					{ text: 'React demo', link: '/demo-react/', target: '_self' },
+					{ text: 'Vue demo', link: '/demo-vue/', target: '_self' },
+					{ text: 'Angular demo', link: '/demo-angular/', target: '_self' },
+					{ text: 'Svelte demo', link: '/demo-svelte/', target: '_self' },
+					{ text: 'Solid demo', link: '/demo-solid/', target: '_self' },
+					{ text: 'About the demos', link: '/demos' },
 				],
 			},
 			{

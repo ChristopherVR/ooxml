@@ -116,11 +116,19 @@ const copy = useLandingCopy();
 	border: 1px solid var(--pv-line);
 	border-radius: 8px;
 	overflow: hidden;
-	transition: border-color 0.2s ease;
+	transition:
+		border-color 200ms var(--pv-ease),
+		transform 200ms var(--pv-ease);
 }
 
 .pv-hero__frame:hover {
 	border-color: var(--pv-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.pv-hero__frame:hover {
+		transform: translateY(-2px);
+	}
 }
 
 .pv-hero__framebar {

@@ -15,6 +15,8 @@ export const sidebar: DefaultTheme.Sidebar = {
 				{ text: '什么是 pptx-viewer', link: '/zh/guide/introduction' },
 				{ text: '安装', link: '/zh/guide/installation' },
 				{ text: '快速开始', link: '/zh/guide/quick-start' },
+				{ text: '使用指南', link: '/zh/user/' },
+				{ text: '版本发布', link: '/zh/releases/' },
 			],
 		},
 		{

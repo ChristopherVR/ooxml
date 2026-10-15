@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { useLandingCopy } from './copy';
 import LiveDemoPane from './LiveDemoPane.vue';
-import { DEMO_FRAMEWORKS, useLiveDemo } from './useLiveDemo';
+import { DEMO_FRAMEWORKS, DEMO_LOCALES, useLiveDemo } from './useLiveDemo';
 
 /**
  * Live, embedded demo section: the demo apps built from this repository run
@@ -17,6 +17,7 @@ const {
 	mode,
 	activeKey,
 	guestKey,
+	locale,
 	src,
 	guestSrc,
 	activeLabel,
@@ -24,6 +25,7 @@ const {
 	start,
 	selectFramework,
 	selectGuest,
+	setLocale,
 	setMode,
 } = useLiveDemo(section);
 </script>
@@ -50,6 +52,12 @@ const {
 					{{ f.label }}
 				</button>
 			</div>
+			<label class="pv-live__lang">
+				<span>{{ copy.demos.languageLabel }}</span>
+				<select :value="locale" @change="setLocale(($event.target as HTMLSelectElement).value)">
+					<option v-for="l in DEMO_LOCALES" :key="l.id" :value="l.id">{{ l.label }}</option>
+				</select>
+			</label>
 			<div class="pv-live__modes">
 				<button
 					type="button"
@@ -146,8 +154,8 @@ const {
 	padding: 0.5rem 0.9rem;
 	border-radius: 4px;
 	transition:
-		color 0.18s ease,
-		background-color 0.18s ease;
+		color 200ms var(--pv-ease),
+		background-color 200ms var(--pv-ease);
 }
 
 .pv-live__tab:hover {
@@ -157,6 +165,31 @@ const {
 .pv-live__tab.is-active {
 	background: var(--pv-accent-soft);
 	color: var(--pv-accent);
+}
+
+.pv-live__lang {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.3rem 0.3rem 0.3rem 0.8rem;
+	background: var(--pv-surface);
+	border: 1px solid var(--pv-line);
+	border-radius: 6px;
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
+	color: var(--pv-ink-soft);
+}
+
+.pv-live__lang select {
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--pv-accent);
+	background: var(--pv-accent-soft);
+	border: none;
+	border-radius: 4px;
+	padding: 0.5rem 0.6rem;
+	cursor: pointer;
 }
 
 .pv-live__guestpick {

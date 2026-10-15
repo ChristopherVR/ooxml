@@ -75,8 +75,8 @@ async function copyCommand(): Promise<void> {
 	padding: 0.45em 0.85em;
 	cursor: pointer;
 	transition:
-		color 0.2s ease,
-		background-color 0.2s ease;
+		color 200ms var(--pv-ease),
+		background-color 200ms var(--pv-ease);
 }
 
 .pv-install__tab:hover {

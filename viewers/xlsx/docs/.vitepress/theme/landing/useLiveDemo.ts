@@ -21,14 +21,25 @@ export const DEMO_FRAMEWORKS: DemoFramework[] = [
 	{ key: 'vanilla', label: 'Vanilla JS', route: 'demo-vanilla' },
 ];
 
+/** Languages the Excel demo accepts through its `?locale=` parameter. */
+export const DEMO_LOCALES: { id: string; label: string }[] = [
+	{ id: 'en', label: 'English' },
+	{ id: 'fr', label: 'Français' },
+	{ id: 'de', label: 'Deutsch' },
+	{ id: 'es', label: 'Español' },
+	{ id: 'zh-CN', label: '简体中文' },
+];
+
 export interface LiveDemoState {
 	started: Ref<boolean>;
 	activeKey: Ref<string>;
+	locale: Ref<string>;
 	src: ComputedRef<string>;
 	fullSrc: ComputedRef<string>;
 	activeLabel: ComputedRef<string>;
 	start: () => void;
 	selectFramework: (key: string) => void;
+	setLocale: (id: string) => void;
 }
 
 function frameworkByKey(key: string): DemoFramework {
@@ -47,9 +58,14 @@ function frameworkByKey(key: string): DemoFramework {
 export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 	const started = ref(false);
 	const activeKey = ref('react');
+	const locale = ref('en');
 
-	const src = computed(() => withBase(`/${frameworkByKey(activeKey.value).route}/?sample=1`));
-	const fullSrc = computed(() => withBase(`/${frameworkByKey(activeKey.value).route}/`));
+	const src = computed(() =>
+		withBase(`/${frameworkByKey(activeKey.value).route}/?sample=1&locale=${locale.value}`),
+	);
+	const fullSrc = computed(() =>
+		withBase(`/${frameworkByKey(activeKey.value).route}/?locale=${locale.value}`),
+	);
 	const activeLabel = computed(() => frameworkByKey(activeKey.value).label);
 
 	function start(): void {
@@ -58,6 +74,11 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 
 	function selectFramework(key: string): void {
 		activeKey.value = key;
+		started.value = true;
+	}
+
+	function setLocale(id: string): void {
+		locale.value = id;
 		started.value = true;
 	}
 
@@ -83,5 +104,15 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 		observer = null;
 	});
 
-	return { started, activeKey, src, fullSrc, activeLabel, start, selectFramework };
+	return {
+		started,
+		activeKey,
+		locale,
+		src,
+		fullSrc,
+		activeLabel,
+		start,
+		selectFramework,
+		setLocale,
+	};
 }

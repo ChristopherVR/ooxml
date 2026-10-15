@@ -34,6 +34,7 @@ export interface LandingLiveDemoCopy {
 	copy: string;
 	/** aria-label for the framework tablist. */
 	frameworkLabel: string;
+	languageLabel: string;
 	load: string;
 	loading: string;
 	openFull: string;

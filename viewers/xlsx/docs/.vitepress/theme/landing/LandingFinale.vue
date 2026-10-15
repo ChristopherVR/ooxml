@@ -12,7 +12,7 @@ function resolve(href: string, external?: boolean): string {
 
 <template>
 	<section class="pv-finale">
-		<div class="pv-finale__inner">
+		<div class="pv-finale__inner" data-reveal>
 			<span class="pv-finale__mark" aria-hidden="true"><i></i></span>
 			<h2 class="pv-finale__title">{{ copy.finale.title }}</h2>
 			<p class="pv-finale__sub">{{ copy.finale.sub }}</p>
@@ -158,7 +158,7 @@ function resolve(href: string, external?: boolean): string {
 .pv-finale__column a {
 	font-size: 0.88rem;
 	color: rgba(240, 240, 240, 0.72);
-	transition: color 0.2s ease;
+	transition: color 200ms var(--pv-ease);
 	width: fit-content;
 }
 

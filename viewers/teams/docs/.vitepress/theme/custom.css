@@ -25,6 +25,15 @@
 	--vp-c-gutter: #e3e6eb;
 
 	--vp-code-block-bg: #181a1e;
+	--vp-code-tab-text-color: rgba(240, 239, 236, 0.66);
+	--vp-code-tab-hover-text-color: #f0efec;
+	--vp-code-tab-active-text-color: #ffffff;
+	--vp-code-tab-bg: #181a1e;
+	--vp-code-tab-active-bar-color: #9a9cf0;
+	--vp-code-lang-color: rgba(240, 239, 236, 0.66);
+	--vp-code-block-color: #e6e4df;
+	--vp-code-copy-code-active-text: #f0efec;
+	--vp-code-copy-code-border-color: rgba(240, 239, 236, 0.18);
 	--vp-code-tab-divider: rgba(240, 239, 236, 0.14);
 	--vp-code-copy-code-bg: rgba(240, 239, 236, 0.1);
 	--vp-code-copy-code-hover-bg: rgba(240, 239, 236, 0.2);
@@ -123,7 +132,7 @@
 
 .vp-doc [class*='language-'] > span.lang {
 	font-size: 0.75rem;
-	color: rgba(240, 240, 240, 0.6);
+	color: rgba(240, 239, 236, 0.66);
 }
 
 .vp-doc [class*='language-'] pre {
@@ -293,4 +302,22 @@
 
 .VPNavBarSearchButton {
 	border-radius: 6px;
+}
+
+/* Code bars stay dark in both modes, so their text is always light. */
+.vp-code-group .tabs label {
+	color: rgba(240, 239, 236, 0.66);
+}
+
+.vp-code-group .tabs label:hover {
+	color: #f0efec;
+}
+
+.vp-code-group input:checked + label {
+	color: #ffffff;
+}
+
+.vp-doc [class*='language-'] > button.copy {
+	color: #f0efec;
+	filter: brightness(1.9);
 }

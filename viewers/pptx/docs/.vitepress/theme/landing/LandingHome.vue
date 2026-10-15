@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+
 import LandingAgents from './LandingAgents.vue';
 import LandingFaq from './LandingFaq.vue';
 import LandingFeatures from './LandingFeatures.vue';
@@ -6,16 +8,20 @@ import LandingFinale from './LandingFinale.vue';
 import LandingHero from './LandingHero.vue';
 import LandingLiveDemo from './LandingLiveDemo.vue';
 import LandingQuickstart from './LandingQuickstart.vue';
+import { useReveals } from './useReveals';
+
+const root = ref<HTMLElement | null>(null);
+useReveals(root);
 </script>
 
 <template>
-	<div class="pv-landing">
+	<div ref="root" class="pv-landing">
 		<LandingHero />
-		<LandingLiveDemo />
+		<LandingLiveDemo data-reveal />
 		<LandingFeatures />
-		<LandingAgents />
-		<LandingQuickstart />
-		<LandingFaq />
+		<LandingAgents data-reveal />
+		<LandingQuickstart data-reveal />
+		<LandingFaq data-reveal />
 		<LandingFinale />
 	</div>
 </template>

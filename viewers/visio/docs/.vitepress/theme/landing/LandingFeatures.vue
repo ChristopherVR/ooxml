@@ -9,14 +9,15 @@ const copy = useLandingCopy();
 
 <template>
 	<section class="pv-section pv-features">
-		<header class="pv-sectionbar">
+		<header class="pv-sectionbar" data-reveal>
 			<h2 class="pv-h2">{{ copy.features.title }}</h2>
 		</header>
-		<div class="pv-features__grid">
+		<div class="pv-features__grid" data-reveal="grid">
 			<article
 				v-for="(item, index) in copy.features.items"
 				:key="item.title"
 				class="pv-features__card"
+				:style="{ '--i': Math.min(index, 7) }"
 			>
 				<span class="pv-features__icon" aria-hidden="true">
 					<svg
@@ -67,11 +68,20 @@ const copy = useLandingCopy();
 	gap: 0.7rem;
 	background: var(--pv-surface);
 	padding: 1.2rem 1.2rem 1.4rem;
-	transition: background-color 0.18s ease;
+	transition:
+		background-color 200ms var(--pv-ease),
+		transform 200ms var(--pv-ease);
 }
 
 .pv-features__card:hover {
 	background: var(--pv-accent-soft);
+	z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.pv-features__card:hover {
+		transform: translateY(-2px);
+	}
 }
 
 .pv-features__icon {
@@ -103,8 +113,8 @@ const copy = useLandingCopy();
 	border-radius: 4px;
 	color: var(--pv-ink-soft);
 	transition:
-		color 0.18s ease,
-		border-color 0.18s ease;
+		color 200ms var(--pv-ease),
+		border-color 200ms var(--pv-ease);
 }
 
 .pv-features__go svg {
@@ -141,7 +151,7 @@ const copy = useLandingCopy();
 	color: var(--pv-accent);
 	text-decoration: underline transparent;
 	text-underline-offset: 3px;
-	transition: text-decoration-color 0.18s ease;
+	transition: text-decoration-color 200ms var(--pv-ease);
 }
 
 .pv-features__link:hover {

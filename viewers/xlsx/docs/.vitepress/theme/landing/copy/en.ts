@@ -89,6 +89,7 @@ export const en: LandingCopy = {
 		title: 'Try it right here.',
 		copy: 'This is the editor running in your browser: the demo app built from this repository for each framework adapter, embedded live with the sample workbook open.',
 		frameworkLabel: 'Framework',
+		languageLabel: 'Language',
 		load: 'Load the live demo',
 		loading: 'Loading the live editor',
 		openFull: 'Open full app',

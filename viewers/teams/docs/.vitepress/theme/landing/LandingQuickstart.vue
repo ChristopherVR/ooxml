@@ -56,7 +56,7 @@ const active = ref(frameworks[0]);
 </script>
 
 <template>
-	<section class="ot-section ot-quick">
+	<section class="ot-section ot-quick" data-reveal>
 		<div class="ot-bar">
 			<h2 class="ot-h2">A workspace in a few lines</h2>
 			<p class="ot-bar__note">Quickstart</p>

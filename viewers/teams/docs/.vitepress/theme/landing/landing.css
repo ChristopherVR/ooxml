@@ -136,7 +136,8 @@
 }
 
 .ot-card:hover {
-	background: var(--ot-accent-soft);
+	background-color: var(--ot-surface);
+	background-image: linear-gradient(var(--ot-accent-soft), var(--ot-accent-soft));
 }
 
 .ot-card h3 {
@@ -211,24 +212,76 @@
 	border-color: var(--ot-accent);
 }
 
-.ot-enter {
-	opacity: 0;
-	transform: translateY(20px);
-	animation: ot-enter 0.8s cubic-bezier(0.25, 0.4, 0.25, 1) forwards;
+/* Motion (docs/pages-design.md): one easing, durations 120/200/320/650 ms */
+.ot-landing {
+	--ot-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ot-btn:active {
+	transform: scale(0.985);
+	transition-duration: 0.12s;
 }
 
 .ot-enter--2 {
-	animation-delay: 0.12s;
+	animation-delay: 80ms;
 }
 
 .ot-enter--3 {
-	animation-delay: 0.24s;
+	animation-delay: 160ms;
 }
 
 @keyframes ot-enter {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
 	to {
 		opacity: 1;
 		transform: none;
+	}
+}
+
+@keyframes ot-reveal {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.ot-enter {
+		animation: ot-enter 650ms var(--ot-ease) backwards;
+	}
+
+	.ot-landing.is-reveal [data-reveal]:not(.is-in) {
+		opacity: 0;
+	}
+
+	.ot-landing.is-reveal [data-reveal].is-in {
+		animation: ot-reveal 650ms var(--ot-ease) backwards;
+		animation-delay: calc(var(--i, 0) * 60ms);
+	}
+
+	.ot-btn {
+		transition:
+			background-color 0.2s var(--ot-ease),
+			color 0.2s var(--ot-ease),
+			border-color 0.2s var(--ot-ease),
+			transform 0.12s var(--ot-ease);
+	}
+
+	.ot-card {
+		position: relative;
+		transition:
+			background-color 0.2s var(--ot-ease),
+			box-shadow 0.2s var(--ot-ease),
+			transform 0.2s var(--ot-ease);
+	}
+
+	.ot-card:hover {
+		transform: translateY(-2px);
+		box-shadow: inset 0 0 0 1px var(--ot-accent-edge);
+		z-index: 1;
 	}
 }
 
@@ -241,13 +294,5 @@
 @media (max-width: 600px) {
 	.ot-grid {
 		grid-template-columns: minmax(0, 1fr);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.ot-enter {
-		opacity: 1;
-		transform: none;
-		animation: none;
 	}
 }

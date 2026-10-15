@@ -63,7 +63,39 @@ const copy = useLandingCopy();
 	font-style: normal;
 	font-family: var(--pv-mono);
 	color: var(--pv-accent);
-	transition: transform 0.18s ease;
+	transition: transform 200ms var(--pv-ease);
+}
+
+/* Open and close over 320 ms: the answer's box animates where the browser can
+   (::details-content), and the text fades in everywhere else. */
+@media (prefers-reduced-motion: no-preference) {
+	.pv-faq__item p {
+		animation: pv-faq-in 320ms var(--pv-ease);
+	}
+
+	@supports selector(::details-content) {
+		.pv-faq__list {
+			interpolate-size: allow-keywords;
+		}
+
+		.pv-faq__item::details-content {
+			block-size: 0;
+			overflow: clip;
+			transition:
+				block-size 320ms var(--pv-ease),
+				content-visibility 320ms var(--pv-ease) allow-discrete;
+		}
+
+		.pv-faq__item[open]::details-content {
+			block-size: auto;
+		}
+	}
+}
+
+@keyframes pv-faq-in {
+	from {
+		opacity: 0;
+	}
 }
 
 .pv-faq__item[open] summary i {

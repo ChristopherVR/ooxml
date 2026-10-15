@@ -89,6 +89,7 @@ export const en: LandingCopy = {
 		title: 'Try it right here.',
 		copy: 'This is the real editor running in your browser: the demo app built from this repository for each framework adapter, embedded live. Open the sample document, or split the view to see two local peers share one document.',
 		frameworkLabel: 'Framework',
+		languageLabel: 'Language',
 		soloTab: 'Editor',
 		collabTab: 'Collaboration',
 		guestPicker: 'Window B framework',

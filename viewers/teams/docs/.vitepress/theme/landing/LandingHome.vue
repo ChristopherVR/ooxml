@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { withBase } from 'vitepress';
 
 import { icons } from './icons';
@@ -8,6 +9,10 @@ import LandingFinale from './LandingFinale.vue';
 import LandingHero from './LandingHero.vue';
 import LandingLiveDemo from './LandingLiveDemo.vue';
 import LandingQuickstart from './LandingQuickstart.vue';
+import { useReveals } from './useReveals';
+
+const root = ref<HTMLElement | null>(null);
+useReveals(root);
 
 const demos = [
 	{
@@ -77,18 +82,24 @@ const limits = [
 </script>
 
 <template>
-	<div class="ot-landing">
+	<div ref="root" class="ot-landing">
 		<LandingHero />
 
 		<LandingLiveDemo />
 
-		<section class="ot-section">
+		<section class="ot-section" data-reveal>
 			<div class="ot-bar">
 				<h2 class="ot-h2">Two ways to embed it</h2>
 				<p class="ot-bar__note">Demo apps</p>
 			</div>
 			<div class="ot-grid ot-grid--two">
-				<article v-for="demo in demos" :key="demo.href" class="ot-card">
+				<article
+					v-for="(demo, i) in demos"
+					:key="demo.href"
+					class="ot-card"
+					data-reveal
+					:style="{ '--i': i }"
+				>
 					<h3>{{ demo.title }}</h3>
 					<p>{{ demo.copy }}</p>
 					<a class="ot-more" :href="withBase(demo.href)" target="_self">Open the demo</a>
@@ -96,16 +107,18 @@ const limits = [
 			</div>
 		</section>
 
-		<section class="ot-section">
+		<section class="ot-section" data-reveal>
 			<div class="ot-bar">
 				<h2 class="ot-h2">A workspace you can host</h2>
 				<p class="ot-bar__note">What it does</p>
 			</div>
 			<div class="ot-grid">
 				<a
-					v-for="item in features"
+					v-for="(item, i) in features"
 					:key="item.title"
 					class="ot-card ot-tool"
+					data-reveal
+					:style="{ '--i': i }"
 					:href="withBase(item.href)"
 					:aria-label="`${item.title}: ${item.link}`"
 				>
@@ -117,7 +130,7 @@ const limits = [
 			</div>
 		</section>
 
-		<section class="ot-section ot-limits">
+		<section class="ot-section ot-limits" data-reveal>
 			<div class="ot-bar">
 				<h2 class="ot-h2">What it is not</h2>
 				<p class="ot-bar__note">Honest limits</p>
@@ -148,6 +161,7 @@ const limits = [
 .ot-limits ul {
 	margin: 0 0 2rem;
 	padding-left: 1.2rem;
+	list-style: disc;
 	max-width: 46rem;
 	color: var(--ot-ink-soft);
 	line-height: 1.8;

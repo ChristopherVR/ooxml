@@ -70,8 +70,8 @@ function select(id: string): void {
 	padding: 0.55em 1em;
 	cursor: pointer;
 	transition:
-		color 0.2s ease,
-		border-color 0.2s ease;
+		color 200ms var(--pv-ease),
+		border-color 200ms var(--pv-ease);
 }
 
 .pv-quickstart__tab:hover {
@@ -80,7 +80,7 @@ function select(id: string): void {
 }
 
 .pv-quickstart__tab.is-active {
-	color: #fff;
+	color: var(--pv-on-accent);
 	background: var(--pv-accent);
 	border-color: var(--pv-accent);
 }
