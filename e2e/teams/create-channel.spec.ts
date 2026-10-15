@@ -11,8 +11,8 @@ test('creates standard channels through a dialog with descriptions and cancel re
 	for (const width of [1280, 390]) {
 		await page.setViewportSize({ width, height: 844 });
 		const open = async () => {
-			if (width === 390)
-				await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
+			const back = page.getByRole('button', { name: 'Back to channels', exact: true });
+			if (width === 390 && (await back.isVisible())) await back.click();
 			await page.getByRole('button', { name: 'Add channel', exact: true }).click();
 		};
 		await open();
@@ -25,9 +25,6 @@ test('creates standard channels through a dialog with descriptions and cancel re
 		await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
 		await expect(dialog).not.toBeVisible();
 		await expect(page.getByRole('button', { name: 'Add channel', exact: true })).toBeFocused();
-		// The navigation drawer stays open after cancelling its child dialog.
-		if (width === 390)
-			await page.getByRole('button', { name: 'Close navigation', exact: true }).click();
 		await open();
 		await expect(name).toHaveValue('');
 		const channelName = `Planning ${width}`;
@@ -40,9 +37,6 @@ test('creates standard channels through a dialog with descriptions and cancel re
 		await expect(
 			page.getByRole('heading', { name: `# ${channelName}`, exact: true }),
 		).toBeFocused();
-		await expect(
-			page.getByRole('dialog', { name: 'Workspace navigation', exact: true }),
-		).not.toBeVisible();
 		expect(
 			await page
 				.locator('teams-app')

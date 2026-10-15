@@ -41,7 +41,6 @@ import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
-import { defineTeamsNavigationDrawer } from './navigation-drawer';
 import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
 
 export type { FileUploader } from 'ooxml-core/teams';
@@ -72,7 +71,7 @@ const RAIL = [
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
 	{ id: 'files', label: 'Files', icon: 'folder' },
-	{ id: 'followed', label: 'Followed threads', icon: 'chat' },
+	{ id: 'followed', label: 'Followed threads', shortLabel: 'Threads', icon: 'chat' },
 	{ id: 'drafts', label: 'Drafts', icon: 'chat' },
 ] as const;
 
@@ -95,7 +94,7 @@ export class TeamsApp extends LitElement {
 		panel: { state: true },
 		meeting: { state: true },
 		settingsOpen: { state: true },
-		navigationOpen: { state: true },
+		mobileView: { state: true },
 		toast: { state: true },
 		identity: { state: true },
 		followedUnreadOnly: { state: true },
@@ -124,7 +123,8 @@ export class TeamsApp extends LitElement {
 	declare panel: Panel;
 	declare meeting: boolean;
 	declare settingsOpen: boolean;
-	declare navigationOpen: boolean;
+	/** Compact shell only: the channel list or the conversation (and other content). */
+	declare mobileView: 'list' | 'conversation';
 	declare toast: string;
 	declare identity: Identity | null;
 	declare followedUnreadOnly: boolean;
@@ -165,7 +165,7 @@ export class TeamsApp extends LitElement {
 		this.panel = '';
 		this.meeting = false;
 		this.settingsOpen = false;
-		this.navigationOpen = false;
+		this.mobileView = 'conversation';
 		this.toast = '';
 		this.identity = null;
 		this.followedUnreadOnly = false;
@@ -191,7 +191,6 @@ export class TeamsApp extends LitElement {
 		defineTeamsFilesPanel();
 		defineTeamsProfileMenu();
 		defineTeamsAddTabDialog();
-		defineTeamsNavigationDrawer();
 		defineTeamsCreateChannelDialog();
 		super.connectedCallback();
 	}
@@ -224,7 +223,6 @@ export class TeamsApp extends LitElement {
 		this.tab = 'posts';
 		this.addingTab = false;
 		this.creatingChannel = false;
-		this.navigationOpen = false;
 		this.settingsOpen = false;
 		this.openRequest++;
 		const named = this.userName
@@ -381,7 +379,7 @@ export class TeamsApp extends LitElement {
 		this.tab = 'posts';
 		this.rail = 'teams';
 		this.meeting = false;
-		void this.closeNavigation(true);
+		this.mobileView = 'conversation';
 		void this.focusCreatedChannel();
 		return true;
 	}
@@ -412,7 +410,7 @@ export class TeamsApp extends LitElement {
 	private startMeeting(channelId?: string): void {
 		if (!this.closePreview()) return;
 		void this.teams.client?.openCall(channelId);
-		void this.closeNavigation(true);
+		this.mobileView = 'conversation';
 		this.meeting = true;
 		this.rail = 'teams';
 	}
@@ -427,30 +425,11 @@ export class TeamsApp extends LitElement {
 		this.meeting = false;
 		this.tab = 'posts';
 		this.rail = 'teams';
-		void this.closeNavigation(true);
+		this.mobileView = 'conversation';
 		return true;
 	}
 
-	private async closeNavigation(navigated = false): Promise<void> {
-		if (!this.navigationOpen) return;
-		this.navigationOpen = false;
-		await this.updateComplete;
-		const drawer = this.renderRoot.querySelector<LitElement>('teams-navigation-drawer');
-		await drawer?.updateComplete;
-		if (this.navigationOpen || !this.isConnected) return;
-		const trigger = this.renderRoot.querySelector<HTMLButtonElement>('[data-open-navigation]');
-		const heading =
-			this.renderRoot.querySelector<HTMLElement>('main h1') ??
-			this.renderRoot.querySelector<HTMLElement>('main');
-		if (!navigated && trigger?.getClientRects().length) trigger.focus();
-		else if (heading) {
-			heading.tabIndex = -1;
-			heading.focus();
-		}
-	}
-
 	private askSettings(): void {
-		this.navigationOpen = false;
 		this.settingsOpen = true;
 	}
 
@@ -469,6 +448,12 @@ export class TeamsApp extends LitElement {
 		else this.setAttribute('data-office-theme', this.theme);
 	}
 
+	/** Which screen the compact shell shows: the channel or call list, or the content itself. */
+	private mobileScreen(s: TeamsState): 'list' | 'content' {
+		const listed = this.rail === 'teams' || this.rail === 'calls';
+		return listed && this.mobileView === 'list' && !(this.meeting && s.call) ? 'list' : 'content';
+	}
+
 	// ---- template ---------------------------------------------------------------------------
 	protected override render() {
 		if (this.popoutRequested)
@@ -485,6 +470,7 @@ export class TeamsApp extends LitElement {
 		return html`
 			<div
 				class="shell"
+				data-mobile-view=${this.mobileScreen(s)}
 				@office-chat-open-tab=${(event: CustomEvent<{ tabId: string }>) => {
 					if (this.teams.state?.tabs.some((entry) => entry.id === event.detail.tabId))
 						this.selectTab(event.detail.tabId);
@@ -502,6 +488,7 @@ export class TeamsApp extends LitElement {
 							this.settingsOpen = false;
 							this.rail = e.detail.id;
 							this.meeting = false;
+							this.mobileView = 'list';
 						}}
 					></office-ui-app-rail>
 					<aside class="side" ?inert=${this.settingsOpen}>${this.sidebar(s)}</aside>
@@ -570,13 +557,6 @@ export class TeamsApp extends LitElement {
 					.create=${(name: string, description: string) => this.commitChannel(name, description, this.client)}
 					@teams-create-channel-close=${() => (this.creatingChannel = false)}
 				></teams-create-channel-dialog>
-				<teams-navigation-drawer
-					.heading=${this.rail === 'calls' ? 'Calls' : 'Teams and channels'}
-					?open=${this.navigationOpen}
-					@teams-navigation-close=${() => void this.closeNavigation()}
-				>
-					${this.navigationOpen ? this.sidebar(s) : nothing}
-				</teams-navigation-drawer>
 				${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
 
 				<teams-add-tab-dialog
@@ -643,21 +623,7 @@ export class TeamsApp extends LitElement {
 	private topbar(s: TeamsState) {
 		return html`
 			<header class="topbar">
-				<div class="brand">
-					<button
-						type="button"
-						class="navigation-toggle"
-						data-open-navigation
-						aria-label="Open navigation"
-						title="Open navigation"
-						aria-haspopup="dialog"
-						aria-expanded=${String(this.navigationOpen)}
-						@click=${() => (this.navigationOpen = true)}
-					>
-						${icon('navigation')}
-					</button>
-					<span class="logo">T</span><span>Teams</span>
-				</div>
+				<div class="brand"><span class="logo">T</span><span>Teams</span></div>
 				<div class="search">
 					<input
 						type="search"
@@ -814,6 +780,15 @@ export class TeamsApp extends LitElement {
 				compact
 					? nothing
 					: html`<header class="channel-head">
+							<button
+								type="button"
+								class="back"
+								aria-label="Back to channels"
+								title="Back to channels"
+								@click=${() => (this.mobileView = 'list')}
+							>
+								${icon('back')}
+							</button>
 							<h1><span class="hash">#</span> ${channel?.name ?? 'No channel yet'}</h1>
 							<nav class="tabs" role="tablist">
 								${(['posts', 'files'] as const).map(

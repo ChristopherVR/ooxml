@@ -16,68 +16,42 @@ async function seedChannels(page: import('@playwright/test').Page) {
 	await page.setViewportSize({ width: 390, height: 844 });
 }
 
-test('opens compact channel and call navigation with drafts, keyboard focus and resize handling', async ({
+test('navigates compact channels and calls through the list view with a bottom bar', async ({
 	page,
 }) => {
 	await seedChannels(page);
-	const trigger = page.getByRole('button', { name: 'Open navigation', exact: true });
-	const drawer = page.getByRole('dialog', { name: 'Workspace navigation', exact: true });
-	const navigation = page.locator('teams-navigation-drawer');
+	const back = page.getByRole('button', { name: 'Back to channels', exact: true });
+	const bar = page.getByRole('navigation', { name: 'App bar', exact: true });
+	const list = page.locator('teams-app office-ui-channel-list');
 	const message = page.getByRole('textbox', { name: 'Message', exact: true });
+	// The rail is a bottom bar, not a left column.
+	const barBox = (await bar.boundingBox())!;
+	expect(barBox.width).toBeGreaterThan(380);
+	expect(barBox.y + barBox.height).toBeGreaterThan(830);
 	await message.fill('Keep the General draft');
-	await trigger.click();
-	await expect(drawer).toBeVisible();
-	await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-	const close = drawer.getByRole('button', { name: 'Close navigation', exact: true });
-	await expect(close).toBeFocused();
-	await navigation.getByRole('button', { name: 'Channels', exact: true }).click();
-	await close.focus();
-	await close.press('Shift+Tab');
-	await expect(navigation.getByRole('button', { name: 'Add channel', exact: true })).toBeFocused();
-	await navigation.getByRole('button', { name: 'Channels', exact: true }).click();
-	await close.focus();
-	await close.press('Shift+Tab');
-	await expect(navigation.getByRole('button', { name: 'Design', exact: true })).toBeFocused();
-	await page.keyboard.press('Escape');
-	await expect(drawer).not.toBeVisible();
-	await expect(trigger).toBeFocused();
-	await expect(message).toHaveValue('Keep the General draft');
-	await trigger.click();
-	await page.mouse.click(385, 300);
-	await expect(drawer).not.toBeVisible();
-	await expect(trigger).toBeFocused();
-	await trigger.click();
-	await page.screenshot({ path: test.info().outputPath('compact-channel-navigation.png') });
-	await navigation.getByRole('button', { name: 'Design', exact: true }).click();
-	await expect(page.getByRole('heading', { name: '# Design', exact: true })).toBeFocused();
-	await expect(drawer).not.toBeVisible();
+	await back.click();
+	await expect(list).toBeVisible();
+	await expect(message).toBeHidden();
+	await page.screenshot({ path: test.info().outputPath('compact-channel-list.png') });
+	await list.getByRole('button', { name: 'Design', exact: true }).click();
+	await expect(page.getByRole('heading', { name: '# Design', exact: true })).toBeVisible();
+	await expect(list).toBeHidden();
 	await message.fill('Keep the Design draft');
-	await trigger.click();
-	await navigation.getByRole('button', { name: 'General', exact: true }).click();
+	await back.click();
+	await list.getByRole('button', { name: 'General', exact: true }).click();
 	await expect(message).toHaveValue('Keep the General draft');
-	await trigger.click();
-	await navigation.getByRole('button', { name: 'Add channel', exact: true }).click();
+	await back.click();
+	await list.getByRole('button', { name: 'Add channel', exact: true }).click();
 	await page.getByRole('textbox', { name: 'Channel name', exact: true }).fill('Planning');
 	await page.getByRole('button', { name: 'Create', exact: true }).click();
 	await expect(page.getByRole('heading', { name: '# Planning', exact: true })).toBeFocused();
-	await expect(drawer).not.toBeVisible();
-	await page
-		.getByRole('navigation', { name: 'App bar', exact: true })
-		.getByRole('button', { name: 'Calls', exact: true })
-		.click();
-	await trigger.click();
-	await expect(navigation.getByRole('button', { name: 'Meet now', exact: true })).toHaveCount(3);
-	await close.click();
-	await expect(trigger).toBeFocused();
-	await page
-		.getByRole('navigation', { name: 'App bar', exact: true })
-		.getByRole('button', { name: 'Teams', exact: true })
-		.click();
-	await trigger.click();
+	await bar.getByRole('button', { name: 'Calls', exact: true }).click();
+	await expect(page.getByRole('button', { name: 'Meet now', exact: true })).toHaveCount(3);
+	await bar.getByRole('button', { name: 'Teams', exact: true }).click();
+	await expect(list).toBeVisible();
 	await page.setViewportSize({ width: 1280, height: 844 });
-	await expect(drawer).not.toBeVisible();
-	await expect(trigger).toBeHidden();
-	await expect(page.getByRole('heading', { name: '# Planning', exact: true })).toBeFocused();
+	await expect(back).toBeHidden();
+	await expect(page.getByRole('heading', { name: '# Planning', exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Design', exact: true }).click();
 	await expect(message).toHaveValue('Keep the Design draft');
 });
@@ -109,46 +83,20 @@ test('keeps an edited workbook mounted when compact navigation is cancelled', as
 	const nameBox = page.getByRole('combobox', { name: 'Name Box', exact: true });
 	await nameBox.fill('A1');
 	await nameBox.press('Enter');
-	const trigger = page.getByRole('button', { name: 'Open navigation', exact: true });
-	const drawer = page.getByRole('dialog', { name: 'Workspace navigation', exact: true });
-	const navigation = page.locator('teams-navigation-drawer');
-	await trigger.click();
-	await navigation.getByRole('button', { name: 'Add channel', exact: true }).click();
-	const creation = page.getByRole('dialog', { name: 'Create a channel', exact: true });
-	await creation
-		.getByRole('textbox', { name: 'Channel name', exact: true })
-		.fill('Keep these details');
-	await creation
-		.getByRole('textbox', { name: 'Description (optional)', exact: true })
-		.fill('Keep this description');
+	const teamsTab = page
+		.getByRole('navigation', { name: 'App bar', exact: true })
+		.getByRole('button', { name: 'Teams', exact: true });
+	const list = page.locator('teams-app office-ui-channel-list');
 	page.once('dialog', (dialog) => dialog.dismiss());
-	await creation.getByRole('button', { name: 'Create', exact: true }).click();
-	await expect(creation).toBeVisible();
-	await expect(creation.getByRole('textbox', { name: 'Channel name', exact: true })).toHaveValue(
-		'Keep these details',
-	);
-	await expect(
-		creation.getByRole('textbox', { name: 'Description (optional)', exact: true }),
-	).toHaveValue('Keep this description');
+	await teamsTab.click();
+	await expect(list).toBeHidden();
 	await expect(formula).toHaveValue('Keep this workbook edit');
-	await creation.getByRole('button', { name: 'Cancel', exact: true }).click();
-	page.once('dialog', (dialog) => dialog.dismiss());
-	await navigation.getByRole('button', { name: 'Design', exact: true }).click();
-	await expect(drawer).toBeVisible();
-	await expect(formula).toHaveValue('Keep this workbook edit');
-	await drawer.getByRole('button', { name: 'Close navigation', exact: true }).click();
+	await page.setViewportSize({ width: 1280, height: 844 });
 	await expect(formula).toBeVisible();
 	await expect(formula).toHaveValue('Keep this workbook edit');
-	await trigger.click();
-	await page.setViewportSize({ width: 1280, height: 844 });
-	await expect(drawer).not.toBeVisible();
-	await expect(page.getByRole('main')).toBeFocused();
-	await expect(formula).toHaveValue('Keep this workbook edit');
 	await page.setViewportSize({ width: 390, height: 844 });
-	await trigger.click();
 	page.once('dialog', (dialog) => dialog.accept());
-	await navigation.getByRole('button', { name: 'Design', exact: true }).click();
-	await expect(drawer).not.toBeVisible();
-	await expect(page.getByRole('heading', { name: '# Design', exact: true })).toBeFocused();
+	await teamsTab.click();
+	await expect(list).toBeVisible();
 	await expect(formula).not.toBeVisible();
 });

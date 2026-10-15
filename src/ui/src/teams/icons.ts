@@ -4,7 +4,8 @@ import { html, svg, type TemplateResult } from 'lit';
 import { getIcon, registerIcon } from '../icons';
 
 const GLYPHS: Record<string, string> = {
-	navigation: 'M3 5h14M3 10h14M3 15h14',
+	back: 'M12.5 4 6.5 10l6 6',
+	pin: 'M7 3h6l-1 5 3 3H5l3-3ZM10 11v6',
 	send: 'M3 10 17 3l-4 14-3-6Zm7 1 7-8',
 	paperclip:
 		'M15 9.5l-5.5 5.5a3.5 3.5 0 0 1-5-5l6-6a2.3 2.3 0 0 1 3.3 3.3l-6 6a1.2 1.2 0 0 1-1.7-1.7L11 6',

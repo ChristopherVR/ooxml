@@ -55,24 +55,6 @@ button {
 	background: var(--office-teams-rail);
 	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
 }
-.navigation-toggle {
-	display: none;
-	padding: var(--office-space-2);
-	border: 0;
-	border-radius: var(--office-radius-md);
-	background: transparent;
-}
-.navigation-toggle:hover {
-	background: var(--office-selected);
-}
-.navigation-toggle svg {
-	width: 1.3em;
-	height: 1.3em;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: var(--office-icon-stroke);
-	stroke-linecap: round;
-}
 .brand {
 	display: flex;
 	align-items: center;
@@ -559,13 +541,31 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	flex: 1 1 16em;
 }
 
-@media (max-width: 56.25em) {
-	.navigation-toggle {
-		display: inline-flex;
-	}
-	.brand > .logo,
-	.brand > span:last-child {
+.channel-head > .back {
+	display: none;
+}
+
+/* ---- compact shell ---------------------------------------------------------------------- */
+/* Below 56em the app rail is a bottom bar, the channel list is its own full-screen view and the
+   conversation (or any other content) fills the width with a back button to the list. */
+@media (max-width: 56em) {
+	.brand {
 		display: none;
+	}
+	.topbar {
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: var(--office-space-2);
+	}
+	.search {
+		width: 100%;
+	}
+	.channel-head {
+		gap: var(--office-space-2);
+		padding-inline: var(--office-space-3);
+	}
+	.channel-head > .back {
+		display: inline-flex;
+		border-color: transparent;
 	}
 	.channel-head .topic,
 	.channel-head .people {
@@ -573,18 +573,57 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	}
 	.channel-head .tabs {
 		flex-basis: 100%;
+		order: 1;
 	}
 	.body {
-		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr) auto;
 	}
-	.body > .main {
-		grid-column: 2;
+	.body > office-ui-app-rail {
+		grid-column: 1;
+		grid-row: 2;
+	}
+	.body > .side,
+	.body > .main,
+	.body > teams-settings {
+		grid-column: 1;
+		grid-row: 1;
 	}
 	.side {
+		border-inline-end: 0;
+	}
+	.shell[data-mobile-view='list'] .main,
+	.shell[data-mobile-view='content'] .side {
 		display: none;
 	}
+}
+/* Phone landscape has little height: keep the chrome to one thin row each. */
+@media (max-width: 56em) and (max-height: 30em) {
 	.topbar {
-		grid-template-columns: auto minmax(0, 1fr) auto;
+		padding-block: var(--office-space-1);
+	}
+	.channel-head {
+		flex-wrap: nowrap;
+		padding-block: var(--office-space-1);
+	}
+	.channel-head .tabs {
+		flex: 1 1 0;
+		order: 0;
+	}
+	.channel-head h1 {
+		font-size: var(--office-font-size);
+	}
+}
+/* Touch: every control in the shell reaches the minimum hit target. */
+@media (pointer: coarse) {
+	.channel-head > button,
+	.meet,
+	.tabs button,
+	.join,
+	.thread-head button,
+	.callbar button {
+		min-width: var(--office-touch-target, 44px);
+		min-height: var(--office-touch-target, 44px);
 	}
 }
 

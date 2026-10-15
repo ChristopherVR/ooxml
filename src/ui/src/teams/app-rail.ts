@@ -1,4 +1,4 @@
-import { html } from 'lit';
+import { html, nothing } from 'lit';
 import { definer } from '../registry';
 import { TeamsElement, withStyles } from './base';
 import { icon } from './icons';
@@ -10,10 +10,12 @@ export interface RailItem {
 	/** An icon name from the ooxml-ui icon registry (`chat`, `users`, `phone`, `folder`, ...). */
 	icon: string;
 	badge?: number;
+	/** Label for the compact bottom bar, where space is tight. */
+	shortLabel?: string;
 }
 
 /**
- * The narrow app bar on the far left (Chat, Teams, Calls, Files). Properties: `items`,
+ * The narrow app bar on the far left (Chat, Teams, Calls, Files); below 56em a bottom navigation bar. Properties: `items`,
  * `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips.
  * Emits `office-rail-select` `{ id }`.
  */
@@ -58,7 +60,8 @@ export class OfficeUiAppRail extends TeamsElement {
 									${icon(item.icon)}
 									${item.badge ? html`<span class="badge">${item.badge > 99 ? '99+' : item.badge}</span>` : ''}
 								</span>
-								<span class="label">${item.label}</span>
+								<span class=${item.shortLabel ? 'label has-short' : 'label'}>${item.label}</span>
+								${item.shortLabel ? html`<span class="short" aria-hidden="true">${item.shortLabel}</span>` : nothing}
 							</button>
 						</li>
 					`,

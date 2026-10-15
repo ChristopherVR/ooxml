@@ -109,3 +109,12 @@ ul[hidden] {
 	line-height: 1.6;
 	text-align: center;
 }
+
+@media (pointer: coarse) {
+	.toggle,
+	.add,
+	.row {
+		min-width: var(--office-touch-target, 44px);
+		min-height: var(--office-touch-target, 44px);
+	}
+}

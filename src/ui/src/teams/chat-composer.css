@@ -148,8 +148,13 @@ textarea:focus-visible {
 		font-size: var(--office-font-size-touch);
 		min-height: 3em;
 	}
-	.bar button {
-		min-width: var(--office-touch-target);
-		height: var(--office-touch-target);
+}
+@media (pointer: coarse) {
+	.bar button,
+	.banner button,
+	.pending button,
+	.picker button {
+		min-width: var(--office-touch-target, 44px);
+		min-height: var(--office-touch-target, 44px);
 	}
 }

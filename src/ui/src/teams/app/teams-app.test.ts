@@ -138,6 +138,37 @@ describe('<teams-app>', () => {
 		el.remove();
 	});
 
+	it('switches the compact shell between the channel list and the conversation', async () => {
+		const el = await mount({
+			'workspace-id': 'ta-mobile',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
+		const shell = q<HTMLElement>(el.shadowRoot, '.shell');
+		expect(shell.dataset.mobileView).toBe('content');
+		q<HTMLButtonElement>(el.shadowRoot, '.channel-head .back').click();
+		await el.updateComplete;
+		expect(shell.dataset.mobileView).toBe('list');
+		const list = q<HTMLElement>(el.shadowRoot, 'office-ui-channel-list');
+		list.dispatchEvent(
+			new CustomEvent('office-channel-select', { detail: { id: 'general' }, bubbles: true }),
+		);
+		await el.updateComplete;
+		expect(shell.dataset.mobileView).toBe('content');
+		q<HTMLElement>(el.shadowRoot, 'office-ui-app-rail').dispatchEvent(
+			new CustomEvent('office-rail-select', { detail: { id: 'calls' } }),
+		);
+		await el.updateComplete;
+		expect(shell.dataset.mobileView).toBe('list');
+		q<HTMLElement>(el.shadowRoot, 'office-ui-app-rail').dispatchEvent(
+			new CustomEvent('office-rail-select', { detail: { id: 'files' } }),
+		);
+		await el.updateComplete;
+		expect(shell.dataset.mobileView).toBe('content');
+		el.remove();
+	});
+
 	it('restarts the client when the workspace changes', async () => {
 		const el = await mount({
 			'workspace-id': 'ta-one',

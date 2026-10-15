@@ -67,3 +67,61 @@ button[aria-current='page']::before {
 	line-height: 1.6;
 	text-align: center;
 }
+
+.short {
+	display: none;
+}
+
+/* Compact shell: the rail becomes a bottom navigation bar with short labels. */
+@media (max-width: 56em) {
+	:host {
+		width: auto;
+		padding-block-end: env(safe-area-inset-bottom, 0px);
+		padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+		border-inline-end: 0;
+		border-block-start: var(--office-border-width) solid var(--office-teams-divider);
+	}
+	ul {
+		flex-direction: row;
+		justify-content: space-around;
+		align-items: stretch;
+		gap: 0;
+		padding: var(--office-space-1) var(--office-space-1);
+	}
+	li {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+	button {
+		width: 100%;
+		min-height: var(--office-touch-target, 44px);
+		padding: var(--office-space-1) 0;
+		justify-content: center;
+	}
+	button[aria-current='page']::before {
+		inset-inline: 25%;
+		inset-block: 0 auto;
+		width: auto;
+		height: var(--office-space-1);
+	}
+	.label.has-short {
+		display: none;
+	}
+	.short {
+		display: inline;
+		font-size: var(--office-font-size-2xs);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 100%;
+	}
+}
+@media (max-width: 56em) and (max-height: 30em) {
+	.label,
+	.short {
+		display: none;
+	}
+	button {
+		min-height: 2.4em;
+	}
+}
