@@ -1,6 +1,6 @@
 import type { ComputedRef, Ref } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { withBase } from 'vitepress';
+import { useData, withBase } from 'vitepress';
 
 /**
  * One embeddable framework demo, built by scripts/build-pages.mjs and placed
@@ -20,6 +20,19 @@ export const DEMO_FRAMEWORKS: DemoFramework[] = [
 	{ key: 'solid', label: 'Solid', route: 'demo-solid' },
 	{ key: 'vanilla', label: 'Vanilla JS', route: 'demo-vanilla' },
 ];
+
+const LOCALE_BY_LANG: Record<string, string> = {
+	'en-US': 'en',
+	'fr-FR': 'fr',
+	'de-DE': 'de',
+	'es-ES': 'es',
+	'zh-CN': 'zh-CN',
+};
+
+/** Maps the VitePress site language (e.g. `'fr-FR'`) to a demo locale id. */
+export function resolveDemoLocale(lang: string): string {
+	return LOCALE_BY_LANG[lang] ?? 'en';
+}
 
 /** Languages the Excel demo accepts through its `?locale=` parameter. */
 export const DEMO_LOCALES: { id: string; label: string }[] = [
@@ -58,7 +71,9 @@ function frameworkByKey(key: string): DemoFramework {
 export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 	const started = ref(false);
 	const activeKey = ref('react');
-	const locale = ref('en');
+	// Defaults to the site language; the visitor can still change it.
+	const { lang } = useData();
+	const locale = ref(resolveDemoLocale(lang.value));
 
 	const src = computed(() =>
 		withBase(`/${frameworkByKey(activeKey.value).route}/?sample=1&locale=${locale.value}`),

@@ -1,0 +1,103 @@
+# Aporta tu propio servidor
+
+OpenTeams no tiene un servicio alojado. El espacio de trabajo funciona **sin servidor** (`mode: 'local'`, solo pestañas de un mismo navegador) o contra **un servidor que tú ejecutas** y que cumpla tres contratos pequeños. La implementación de referencia, `openteams-server`, cumple los tres en un único proceso de Node de unas 300 líneas; cualquier otro servidor que hable los mismos contratos funciona igual de bien.
+
+::: danger Sin cifrado de extremo a extremo
+El chat viaja como actualizaciones de Yjs a través de tu servidor, que almacena en claro el documento de la sala y todos los archivos subidos y puede leerlos. El contenido multimedia de las llamadas va cifrado entre pares (DTLS-SRTP) y un relé TURN no puede descifrarlo, pero la señalización pasa por el servidor.
+:::
+
+## Ejecuta el servidor de referencia
+
+Requiere Node 22 o posterior.
+
+```bash
+npx openteams-server                    # listens on 127.0.0.1:8787
+TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+```
+
+Se configura únicamente mediante el entorno; el comando no admite indicadores.
+
+| Variable        | Valor por defecto    | Significado                                                                                                    |
+| --------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `PORT`          | `8787`               | Puerto de escucha.                                                                                             |
+| `HOST`          | `127.0.0.1`          | Dirección de escucha. Enlaza `0.0.0.0` solo detrás de TLS.                                                     |
+| `TEAMS_TOKEN`   | ninguno              | Si se define, los sockets lo reciben como `?token=` y las peticiones de archivos como `Authorization: Bearer`. |
+| `TEAMS_ORIGINS` | ninguno (cualquiera) | `Origin` permitidos, separados por comas, para sockets y archivos.                                             |
+| `TEAMS_DATA`    | `./data`             | Directorio de datos: instantáneas `rooms/<room>.bin` y `files/<workspace>/`.                                   |
+
+O incrústalo:
+
+```js
+import { createTeamsServer } from 'openteams-server';
+
+const server = createTeamsServer({
+	token: process.env.TEAMS_TOKEN,
+	origins: ['https://app.example.com'],
+	dataDir: '/var/lib/openteams',
+	maxFileBytes: 25 * 1024 * 1024, // default
+	log: console.log,
+});
+await server.listen(8787, '127.0.0.1');
+// server.http is the node:http server; server.close() flushes every room to disk.
+```
+
+Después apunta el cliente hacia él:
+
+```ts
+const config = {
+	mode: 'server',
+	syncUrl: 'wss://teams.example.com/sync',
+	signalingUrl: 'wss://teams.example.com/signal',
+	iceServers: [{ urls: 'stun:stun.example.com:3478' }],
+	token: 'change-me', // only if TEAMS_TOKEN is set
+};
+```
+
+[Despliegue del servidor de referencia](/es/deploy) cubre TLS, el token, TURN, Docker y un ejemplo con Caddy.
+
+## Endpoints
+
+| Endpoint                              | Qué hace                                                                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ws /sync/<room>`                     | Sincronización compatible con y-websocket: un `Y.Doc` y su awareness por sala, persistido en `rooms/<room>.bin`. Mensajes de hasta 32 MB.  |
+| `ws /signal/<room>`                   | Relé JSON para la señalización de llamadas: reenvía cada mensaje de texto a los demás sockets de la sala. Mensajes de hasta 256 KB.        |
+| `POST /files/<workspace>/<name>`      | Almacena un adjunto (límite de 25 MB) y responde `201 { url, size }`.                                                                      |
+| `GET /files/<workspace>/<name>`       | Lo descarga como adjunto (`Content-Disposition: attachment`, `Referrer-Policy: no-referrer`, `nosniff`).                                   |
+| `POST /files/link/<workspace>/<name>` | Devuelve `{ url }`: un enlace firmado para ese único archivo, válido durante cinco minutos, de modo que el token nunca aparece en una URL. |
+| `GET /health`                         | `{ ok, rooms, calls, auth }`.                                                                                                              |
+
+Los nombres de sala deben cumplir `^[\w-]{1,128}$` y los ids de espacio de trabajo en las rutas de archivos `^[\w-]{1,64}$`; los nombres de archivo se depuran a letras, dígitos, `.`, `-`, `_`, espacios y paréntesis, y se limitan a 120 caracteres.
+
+## Los contratos
+
+Cualquier servidor que haga estas tres cosas funciona con todos los bindings.
+
+### Sincronización
+
+`ws(s)://host/<base>/<room>` habla el formato de transmisión de y-websocket (sync step 1 y 2, actualizaciones, awareness, query awareness). Un servidor y-websocket estándar sirve. Un servidor que mantenga un `Y.Doc` por sala y lo persista ofrece el historial a quienes se unan más tarde.
+
+### Señalización
+
+`ws(s)://host/<base>/<room>` reenvía cada mensaje de texto JSON a los **demás** sockets de la sala y les envía `{ "type": "bye", "from": <id> }` cuando se cierra un socket. Un socket habla en nombre de un único id de par (el primer `from` que usa). El servidor no necesita entender los mensajes.
+
+### Archivos
+
+Opcional. `POST|GET <origin>/files/<workspace>/<name>` con el token en una cabecera `Authorization: Bearer`, más `POST <origin>/files/link/<workspace>/<name>`, que devuelve un `{ url }` firmado de corta duración para abrir un archivo en una pestaña del navegador. El origen se toma de `syncUrl`. Sin servidor de archivos, entrega al elemento una función `uploadFile` (para guardar los adjuntos en tu propio almacén de objetos); de lo contrario, los adjuntos se comparten solo por nombre.
+
+Ambos sockets reciben `?token=<token>` cuando hay un token configurado, porque un navegador no puede establecer cabeceras en un WebSocket. Aplícalo, junto con una lista de orígenes permitidos, en el servidor.
+
+## Llamadas: STUN y TURN
+
+`iceServers` contiene las URL de STUN y TURN. El STUN público basta en redes abiertas y nunca basta detrás de un NAT simétrico o de cortafuegos estrictos: ejecuta tu propio TURN (por ejemplo coturn) y da credenciales a los clientes. El `parseServerConfig` del núcleo rechaza las entradas TURN sin credenciales. Las credenciales TURN estáticas son visibles para cualquiera que pueda abrir la aplicación; para cualquier uso público, emite credenciales de corta duración. La [guía de despliegue](/es/deploy#llamadas-a-traves-de-nat-turn) incluye un ejemplo de coturn.
+
+## Lo que el servidor de referencia no hace
+
+Ten esto claro antes de poner personas en él:
+
+- **Sin cifrado de extremo a extremo.** Almacena y puede leer todos los mensajes y archivos.
+- **Sin cuentas de usuario.** `TEAMS_TOKEN` es un único secreto compartido para todos, almacenado en el navegador. Mantiene fuera a los extraños del servidor de un equipo pequeño; no es autenticación por usuario. Las comprobaciones de autor y de rol en el cliente pueden ser eludidas por un cliente hostil, así que el servidor es la frontera de confianza: para un uso real, coloca delante tu propia autenticación (un proxy que compruebe una sesión).
+- **Sin TLS propio.** Ejecútalo detrás de un proxy inverso que termine TLS y actualice las conexiones a WebSocket; los navegadores rechazan `ws://` desde una página `https://`.
+- **Un proceso, salas en memoria.** No escala horizontalmente. Una sala se descarga 30 segundos después de que se cierre su último socket.
+- **Una instantánea por sala, sin compactación.** El documento crece con el historial y nunca se poda.
+- **Almacenamiento de archivos simple.** Sin listado, sin borrado, sin cuota por espacio de trabajo; subir un archivo con un nombre existente lo reemplaza. Los archivos están limitados a 25 MB cada uno.
+- **Sin limitación de tasa** y sin servidor multimedia: las llamadas son de par a par (malla).

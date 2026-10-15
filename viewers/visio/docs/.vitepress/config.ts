@@ -1,5 +1,10 @@
 import { defineConfig } from 'vitepress';
 
+import { de } from './locales/de';
+import { es } from './locales/es';
+import { fr } from './locales/fr';
+import { zh } from './locales/zh';
+
 // DOCS_BASE and DOCS_OUT exist for the browser-test build, which serves the site from "/" in its own
 // output folder. The published site always uses the defaults.
 export default defineConfig({
@@ -7,6 +12,14 @@ export default defineConfig({
 	description:
 		'A browser Visio diagram viewer with one shared web component, one SVG renderer and thin adapters for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript.',
 	lang: 'en-US',
+
+	locales: {
+		root: { label: 'English', lang: 'en-US' },
+		fr,
+		es,
+		de,
+		zh,
+	},
 
 	// Deployed to https://christophervr.github.io/ooxml/visio/
 	base: process.env.DOCS_BASE ?? '/ooxml/visio/',

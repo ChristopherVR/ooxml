@@ -321,3 +321,92 @@
 	color: #f0efec;
 	filter: brightness(1.9);
 }
+
+/* ---- Motion on documentation pages (docs/pages-design.md, Motion) ------- */
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+
+	/* The article and the outline rise in on every page change (PageMotion.vue). */
+	.pv-page-enter {
+		animation: pv-page-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.VPDocAside.pv-page-enter {
+		animation-delay: 0.08s;
+	}
+
+	@keyframes pv-page-enter {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.VPSidebarItem .link,
+	.VPNavBarMenuLink,
+	.VPDocAsideOutline .outline-link,
+	.vp-doc a,
+	.VPDocFooter .pager-link,
+	.vp-doc .custom-block,
+	.VPNavBarSearchButton,
+	.VPSocialLink,
+	.VPSwitch {
+		transition:
+			color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+			background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+			border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+			transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.VPDocFooter .pager-link:hover {
+		transform: translateY(-2px);
+	}
+
+	.VPSidebarItem .link:hover .text {
+		transform: translateX(2px);
+		transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.VPSidebarItem .link .text {
+		display: inline-block;
+		transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.VPDocAsideOutline .outline-marker {
+		transition:
+			top 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+			opacity 0.32s;
+	}
+
+	.vp-doc div[class*='language-'] button.copy,
+	.vp-code-group .tabs label {
+		transition:
+			color 0.2s,
+			background-color 0.2s,
+			border-color 0.2s,
+			opacity 0.2s;
+	}
+
+	.vp-doc img {
+		transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.vp-doc img:hover {
+		transform: translateY(-2px);
+	}
+
+	.VPNavBarMenuLink:active,
+	.VPDocFooter .pager-link:active,
+	.VPSidebarItem .link:active {
+		transform: scale(0.985);
+		transition-duration: 0.12s;
+	}
+}

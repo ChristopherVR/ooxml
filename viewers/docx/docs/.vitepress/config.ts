@@ -1,5 +1,11 @@
 import { defineConfig } from 'vitepress';
 
+import { de } from './locales/de';
+import { es } from './locales/es';
+import { fr } from './locales/fr';
+import { zh } from './locales/zh';
+import { localizeChineseMarkdown } from './locales/zh-markdown';
+
 export default defineConfig({
 	title: 'docx-viewer',
 	description:
@@ -11,7 +17,17 @@ export default defineConfig({
 	cleanUrls: true,
 	lastUpdated: true,
 	ignoreDeadLinks: true,
-	markdown: { theme: { light: 'vitesse-dark', dark: 'vitesse-dark' } },
+	markdown: {
+		theme: { light: 'vitesse-dark', dark: 'vitesse-dark' },
+		config: localizeChineseMarkdown,
+	},
+	locales: {
+		root: { label: 'English', lang: 'en-US' },
+		fr,
+		es,
+		de,
+		zh,
+	},
 	head: [
 		['meta', { name: 'theme-color', content: '#185abd' }],
 		['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],

@@ -2,6 +2,10 @@
 import { withBase } from 'vitepress';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
+import { useLandingCopy } from './copy';
+
+const copy = useLandingCopy();
+
 /**
  * Embedded live demo. The demo apps are built next to the docs and run in the
  * core's local mode: chat, presence and calls travel between tabs and frames of
@@ -73,19 +77,17 @@ onBeforeUnmount(() => observer?.disconnect());
 <template>
 	<section id="live-demo" ref="section" class="ot-section ot-live" data-reveal>
 		<div class="ot-bar">
-			<h2 class="ot-h2">Try it right here</h2>
-			<p class="ot-bar__note">Live demo</p>
+			<h2 class="ot-h2">{{ copy.liveDemo.title }}</h2>
+			<p class="ot-bar__note">{{ copy.liveDemo.note }}</p>
 		</div>
 		<p class="ot-copy">
-			This is the real app running in your browser, with no server behind it: chat, presence and
-			calls travel only between frames and tabs of this browser (BroadcastChannel). Switch to two
-			people to put Ada and Bob in one room, each in the framework you choose (for example React for
-			Ada and Vue for Bob), and watch a message cross from one pane to the other. Real use needs a
-			server; see <a :href="withBase('/server')">bring your own server</a>.
+			{{ copy.liveDemo.introBefore
+			}}<a :href="withBase(copy.liveDemo.introLink.href)">{{ copy.liveDemo.introLink.text }}</a
+			>{{ copy.liveDemo.introAfter }}
 		</p>
 
 		<div class="ot-live__controls">
-			<div class="ot-live__tabs" role="tablist" aria-label="Ada's framework">
+			<div class="ot-live__tabs" role="tablist" :aria-label="copy.liveDemo.frameworkLabel">
 				<button
 					v-for="d in demos"
 					:key="d.key"
@@ -106,7 +108,7 @@ onBeforeUnmount(() => observer?.disconnect());
 					:class="{ 'is-active': mode === 'solo' }"
 					@click="setMode('solo')"
 				>
-					One person
+					{{ copy.liveDemo.soloTab }}
 				</button>
 				<button
 					type="button"
@@ -114,11 +116,11 @@ onBeforeUnmount(() => observer?.disconnect());
 					:class="{ 'is-active': mode === 'duo' }"
 					@click="setMode('duo')"
 				>
-					Two people
+					{{ copy.liveDemo.duoTab }}
 				</button>
 			</div>
 			<label v-if="mode === 'duo'" class="ot-live__guestpick">
-				<span>Bob's framework</span>
+				<span>{{ copy.liveDemo.guestPicker }}</span>
 				<select :value="guestKey" @change="selectGuest(($event.target as HTMLSelectElement).value)">
 					<option v-for="d in demos" :key="d.key" :value="d.key">{{ d.label }}</option>
 				</select>
@@ -127,19 +129,19 @@ onBeforeUnmount(() => observer?.disconnect());
 
 		<div v-if="!started" class="ot-live__poster">
 			<button type="button" class="ot-btn ot-btn--solid" @click="started = true">
-				Load the live demo
+				{{ copy.liveDemo.load }}
 			</button>
 		</div>
 		<div v-else-if="mode === 'solo'" class="ot-live__stage">
 			<figure class="ot-live__pane">
 				<figcaption>
 					<span>{{ active.label }} &middot; Ada</span>
-					<a :href="soloSrc" target="_blank" rel="noopener">Open full app</a>
+					<a :href="soloSrc" target="_blank" rel="noopener">{{ copy.liveDemo.openFull }}</a>
 				</figcaption>
 				<iframe
 					:key="soloSrc"
 					:src="soloSrc"
-					:title="`${active.label} OpenTeams demo`"
+					:title="copy.liveDemo.frameTitle.replace('{framework}', active.label)"
 					allow="clipboard-read; clipboard-write; fullscreen; camera; microphone; display-capture"
 				></iframe>
 			</figure>
@@ -148,7 +150,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			<figure class="ot-live__pane">
 				<figcaption>
 					<span>{{ active.label }} &middot; Ada</span>
-					<a :href="adaSrc" target="_blank" rel="noopener">Open full app</a>
+					<a :href="adaSrc" target="_blank" rel="noopener">{{ copy.liveDemo.openFull }}</a>
 				</figcaption>
 				<iframe
 					:key="adaSrc"
@@ -160,7 +162,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			<figure class="ot-live__pane">
 				<figcaption>
 					<span>{{ guest.label }} &middot; Bob</span>
-					<a :href="bobSrc" target="_blank" rel="noopener">Open full app</a>
+					<a :href="bobSrc" target="_blank" rel="noopener">{{ copy.liveDemo.openFull }}</a>
 				</figcaption>
 				<iframe
 					:key="bobSrc"
@@ -171,11 +173,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			</figure>
 		</div>
 		<p v-if="started" class="ot-live__hint">
-			{{
-				mode === 'duo'
-					? 'Two separate apps, each built from its own framework binding, join one room by its name and share it through BroadcastChannel. The framework does not matter: they speak the same core protocol. This is the local mode of the core, not a hosted service: with your own server, the same two people can be on different machines.'
-					: 'Everything runs client-side and stays in this browser. Open the full app, or switch to two people to see presence and chat between two users.'
-			}}
+			{{ mode === 'duo' ? copy.liveDemo.hintDuo : copy.liveDemo.hintSolo }}
 		</p>
 	</section>
 </template>

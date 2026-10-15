@@ -2,6 +2,10 @@
 import { withBase } from 'vitepress';
 import { ref } from 'vue';
 
+import { useLandingCopy } from './copy';
+
+const copy = useLandingCopy();
+
 /** Snippets mirror docs/frameworks/*.md; keep them in sync with those pages. */
 const frameworks = [
 	{
@@ -58,13 +62,11 @@ const active = ref(frameworks[0]);
 <template>
 	<section class="ot-section ot-quick" data-reveal>
 		<div class="ot-bar">
-			<h2 class="ot-h2">A workspace in a few lines</h2>
-			<p class="ot-bar__note">Quickstart</p>
+			<h2 class="ot-h2">{{ copy.quickstart.title }}</h2>
+			<p class="ot-bar__note">{{ copy.quickstart.note }}</p>
 		</div>
 		<p class="ot-copy">
-			Install the binding for your framework and render the component. Local mode needs no server;
-			for real use point <code>config</code> at your own sync and signaling endpoints (the reference
-			server does both). Angular, Svelte and Solid have the same options.
+			{{ copy.quickstart.introBefore }}<code>config</code>{{ copy.quickstart.introAfter }}
 		</p>
 		<div class="ot-quick__panel">
 			<div class="ot-quick__tabs" role="tablist">
@@ -82,7 +84,9 @@ const active = ref(frameworks[0]);
 			</div>
 			<pre class="ot-quick__install"><code>{{ active.install }}</code></pre>
 			<pre class="ot-quick__code"><code>{{ active.code }}</code></pre>
-			<a class="ot-quick__link" :href="withBase(active.href)">Full guide: {{ active.label }}</a>
+			<a class="ot-quick__link" :href="withBase(active.href)">{{
+				copy.quickstart.fullGuide.replace('{framework}', active.label)
+			}}</a>
 		</div>
 	</section>
 </template>

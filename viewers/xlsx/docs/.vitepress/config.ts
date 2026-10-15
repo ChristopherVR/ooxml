@@ -1,5 +1,10 @@
 import { defineConfig } from 'vitepress';
 
+import { de } from './locales/de';
+import { es } from './locales/es';
+import { fr } from './locales/fr';
+import { zh } from './locales/zh';
+
 export default defineConfig({
 	title: 'xlsx-viewer',
 	description:
@@ -11,6 +16,7 @@ export default defineConfig({
 	cleanUrls: true,
 	lastUpdated: true,
 	ignoreDeadLinks: true,
+	locales: { root: { label: 'English', lang: 'en-US' }, fr, es, de, zh },
 	markdown: { theme: { light: 'vitesse-dark', dark: 'vitesse-dark' } },
 	head: [
 		['meta', { name: 'theme-color', content: '#107c41' }],
@@ -84,7 +90,7 @@ export default defineConfig({
 				text: 'Project Status',
 				items: [
 					{ text: 'Features and limitations', link: '/features' },
-					{ text: 'Collaboration (not supported)', link: '/collaboration' },
+					{ text: 'Collaboration', link: '/collaboration' },
 					{ text: 'Package releases', link: '/releasing' },
 					{
 						text: 'Changelog',

@@ -1,6 +1,8 @@
 import type { ComputedRef, Ref } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { withBase } from 'vitepress';
+import { useData, withBase } from 'vitepress';
+
+import { resolveViewerLocale } from './viewer-locale';
 
 /**
  * One embeddable framework demo, built by scripts/build-pages.mjs and placed
@@ -72,7 +74,9 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 	const mode = ref<LiveDemoMode>('solo');
 	const activeKey = ref('react');
 	const guestKey = ref('vue');
-	const locale = ref('en');
+	// Starts in the site language (nav language menu); the visitor can still change it.
+	const { lang } = useData();
+	const locale = ref<string>(resolveViewerLocale(lang.value));
 
 	/** The session name both windows join. A new one for every sharing session. */
 	const room = ref(randomRoom());

@@ -1,70 +1,34 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress';
 
-const columns = [
-	{
-		title: 'Product',
-		links: [
-			{ text: 'Live demo', href: '/demo/', external: false },
-			{ text: 'Bring your own server', href: '/server', external: false },
-			{ text: 'Collaboration', href: '/collaboration', external: false },
-			{ text: 'Releases', href: '/releasing', external: false },
-		],
-	},
-	{
-		title: 'Docs',
-		links: [
-			{ text: 'Getting started', href: '/getting-started', external: false },
-			{ text: 'Architecture', href: '/architecture', external: false },
-			{ text: 'Element API', href: '/api', external: false },
-			{ text: 'Limitations', href: '/limitations', external: false },
-		],
-	},
-	{
-		title: 'Community',
-		links: [
-			{
-				text: 'GitHub',
-				href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams',
-				external: true,
-			},
-			{
-				text: 'Issues',
-				href: 'https://github.com/ChristopherVR/ooxml/issues',
-				external: true,
-			},
-			{
-				text: 'License',
-				href: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE',
-				external: true,
-			},
-		],
-	},
-];
+import { useLandingCopy } from './copy';
+
+const copy = useLandingCopy();
 </script>
 
 <template>
 	<section class="ot-section ot-finale" data-reveal>
-		<h2 class="ot-h2">Your workspace, your server.</h2>
+		<h2 class="ot-h2">{{ copy.finale.title }}</h2>
 		<p class="ot-copy">
-			Install a binding, start the reference server with <code>npx openteams-server</code>, and try
-			the demo with two tabs. Apache-2.0 licensed, strict TypeScript, and honest about the gaps.
+			{{ copy.finale.introBefore }}<code>npx openteams-server</code>{{ copy.finale.introAfter }}
 		</p>
 		<div class="ot-finale__actions">
-			<a class="ot-btn ot-btn--solid" :href="withBase('/getting-started')">Get started</a>
+			<a class="ot-btn ot-btn--solid" :href="withBase(copy.finale.start.href)">{{
+				copy.finale.start.text
+			}}</a>
 			<a
 				class="ot-btn ot-btn--ghost"
 				href="https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams"
 				target="_blank"
 				rel="noopener"
-				>View on GitHub</a
+				>{{ copy.finale.github }}</a
 			>
 		</div>
 		<div class="ot-finale__cols">
-			<nav v-for="col in columns" :key="col.title" :aria-label="col.title">
+			<nav v-for="col in copy.finale.columns" :key="col.title" :aria-label="col.title">
 				<h3>{{ col.title }}</h3>
 				<ul>
-					<li v-for="link in col.links" :key="link.text">
+					<li v-for="link in col.links" :key="link.href">
 						<a
 							:href="link.external ? link.href : withBase(link.href)"
 							:target="link.external ? '_blank' : link.href === '/demo/' ? '_self' : undefined"
@@ -76,8 +40,8 @@ const columns = [
 			</nav>
 		</div>
 		<p class="ot-finale__bottom">
-			<span>&copy; 2026 ChristopherVR &middot; Apache-2.0</span>
-			<span>OpenTeams &middot; not Microsoft Teams, not affiliated with Microsoft</span>
+			<span>{{ copy.finale.license }}</span>
+			<span>{{ copy.finale.disclaimer }}</span>
 		</p>
 	</section>
 </template>

@@ -1,5 +1,10 @@
 import { defineConfig } from 'vitepress';
 
+import { de } from './locales/de';
+import { es } from './locales/es';
+import { fr } from './locales/fr';
+import { zh } from './locales/zh';
+
 // Adapted from ChristopherVR/ooxml/tree/main/viewers/docx docs/.vitepress/config.ts. The accent is a neutral teal on
 // purpose: OpenTeams is not Microsoft Teams and does not borrow its brand colours.
 export default defineConfig({
@@ -16,6 +21,13 @@ export default defineConfig({
 	// not pages VitePress knows about.
 	ignoreDeadLinks: [/^\/demo/],
 	srcExclude: ['**/node_modules/**', 'README.md'],
+	locales: {
+		root: { label: 'English', lang: 'en-US' },
+		fr,
+		es,
+		de,
+		zh,
+	},
 	markdown: { theme: { light: 'vitesse-dark', dark: 'vitesse-dark' } },
 	head: [
 		['meta', { name: 'theme-color', content: '#6264a7' }],

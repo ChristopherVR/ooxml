@@ -59,7 +59,9 @@ describe('documentation site build', () => {
 		});
 		it(`${page}: internal links resolve`, () => {
 			const { document } = new JSDOM(html(page)).window;
+			// The language menu offers every locale on every page; untranslated pages have no counterpart.
 			for (const element of document.querySelectorAll('a[href], iframe[src]')) {
+				if (element.closest('.VPNavBarTranslations, .VPNavScreenTranslations')) continue;
 				const value = element.getAttribute('href') ?? element.getAttribute('src');
 				if (!value.startsWith(BASE)) continue;
 				const path = decodeURIComponent(value.slice(BASE.length).split(/[?#]/)[0]);
@@ -144,4 +146,50 @@ describe('capability ledger', () => {
 		for (const row of rows.slice(1))
 			assert.ok(row[2].length > 0 && row[3].length > 0 && row[4].length > 0, row[0]);
 	});
+});
+
+describe('translated locales', () => {
+	const locales = { fr: 'fr-FR', es: 'es-ES', de: 'de-DE', zh: 'zh-CN' };
+	const translated = ['index', 'getting-started', 'collaboration', 'architecture', 'api'];
+	const emDash = String.fromCharCode(0x2014);
+	for (const [code, lang] of Object.entries(locales)) {
+		for (const page of translated) {
+			const file = `${code}/${page}`;
+			it(`${file}: renders in ${lang} with resolving links and no em dash`, () => {
+				const { document } = new JSDOM(html(file)).window;
+				assert.equal(document.documentElement.lang, lang);
+				if (page !== 'index') assert.equal(document.querySelectorAll('.vp-doc h1').length, 1);
+				const ids = [...document.querySelectorAll('[id]')].map((node) => node.id);
+				assert.equal(ids.length, new Set(ids).size, 'IDs must be unique');
+				assert.ok(!read(`docs/${file}.md`).includes(emDash), `${file}.md contains an em dash`);
+				for (const element of document.querySelectorAll('a[href]')) {
+					const value = element.getAttribute('href');
+					if (!value.startsWith(BASE)) continue;
+					const path = decodeURIComponent(value.slice(BASE.length).split(/[?#]/)[0]);
+					if (/^demo(-[a-z]+)?\//.test(path)) continue;
+					const candidates = [path, `${path}.html`, join(path, 'index.html')];
+					assert.ok(
+						candidates.some((c) => existsSync(join(out, c)) && statSync(join(out, c)).isFile()),
+						`${file}: missing target ${value}`,
+					);
+				}
+			});
+		}
+		it(`${code}: nav is Guide, OOXML Office, Releases and the language menu lists every locale`, () => {
+			const { document } = new JSDOM(html(`${code}/index`)).window;
+			const links = [...document.querySelectorAll('.VPNavBarMenu a.VPLink')];
+			assert.equal(links.length, 3, links.map((a) => a.textContent).join(','));
+			assert.equal(links[1].getAttribute('href'), 'https://christophervr.github.io/ooxml/');
+			for (const other of ['fr', 'es', 'de', 'zh'])
+				assert.ok(
+					html(`${code}/index`).includes(`/ooxml/visio/${other}/`),
+					`menu link to ${other}`,
+				);
+		});
+		it(`${code}: landing copy is translated`, () => {
+			const home = text(`${code}/index`);
+			assert.doesNotMatch(home, /Honest about what is not done/);
+			assert.match(home, /visio-react-viewer/);
+		});
+	}
 });

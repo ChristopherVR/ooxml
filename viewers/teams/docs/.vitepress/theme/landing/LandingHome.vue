@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { withBase } from 'vitepress';
 
+import { useLandingCopy } from './copy';
 import { icons } from './icons';
 
 import LandingFaq from './LandingFaq.vue';
@@ -11,74 +12,9 @@ import LandingLiveDemo from './LandingLiveDemo.vue';
 import LandingQuickstart from './LandingQuickstart.vue';
 import { useReveals } from './useReveals';
 
+const copy = useLandingCopy();
 const root = ref<HTMLElement | null>(null);
 useReveals(root);
-
-const demos = [
-	{
-		title: 'Vanilla: the whole app',
-		copy: 'One <teams-app> element: channels, posts with replies and reactions, files, search, presence and meetings. Open it in two tabs to see two people talk.',
-		href: '/demo/',
-	},
-	{
-		title: 'React: component and hook',
-		copy: 'The <Teams /> component on the left and a hand-written panel over the useTeams() hook on the right, both on one workspace.',
-		href: '/demo-react/',
-	},
-];
-
-const features = [
-	{
-		title: 'Channels and chat',
-		copy: 'Channels, posts with replies, reactions, author-only edit and delete, search and unread counts, all in one Yjs document that merges concurrent edits.',
-		href: '/getting-started',
-		link: 'Getting started',
-		icon: 'chat',
-	},
-	{
-		title: 'Presence',
-		copy: 'Who is online, typing indicators and an availability you set yourself (available, busy, away). Presence is advisory, like any Yjs awareness.',
-		href: '/architecture',
-		link: 'Architecture',
-		icon: 'people',
-	},
-	{
-		title: 'Meetings over WebRTC',
-		copy: 'Audio, video, screen share and raise hand in a full-mesh call: no media server, honest up to about a dozen people. TURN is yours to run.',
-		href: '/server#calls-stun-and-turn',
-		link: 'Calls and TURN',
-		icon: 'video',
-	},
-	{
-		title: 'Files in the conversation',
-		copy: 'Attachments are uploaded to your server (or your own uploader) and posted as links. Word, Excel, PowerPoint and Visio files are recognised so a host can open them.',
-		href: '/server#files',
-		link: 'File storage',
-		icon: 'file',
-	},
-	{
-		title: 'Bring your own server',
-		copy: 'Three small contracts: y-websocket sync, a JSON signaling relay and optional file storage. openteams-server does all three in one Node process.',
-		href: '/server',
-		link: 'Server guide',
-		icon: 'server',
-	},
-	{
-		title: 'Six frameworks',
-		copy: 'React, Vue, Angular, Svelte, Solid and vanilla bindings. Each gives you the full component and a raw hook over the same client store.',
-		href: '/frameworks/react',
-		link: 'Framework guides',
-		icon: 'code',
-	},
-];
-
-const limits = [
-	'No end-to-end encryption: your server stores and can read every message and file.',
-	'Authorization is the server’s job; the reference server has one shared token, not user accounts.',
-	'Mesh calls suit a handful of people, not a webinar.',
-	'No 1:1 chats, notifications, calendar, recording, background blur or live captions.',
-	'Not Microsoft Teams, not affiliated with Microsoft, and no claim of feature parity.',
-];
 </script>
 
 <template>
@@ -89,12 +25,12 @@ const limits = [
 
 		<section class="ot-section" data-reveal>
 			<div class="ot-bar">
-				<h2 class="ot-h2">Two ways to embed it</h2>
-				<p class="ot-bar__note">Demo apps</p>
+				<h2 class="ot-h2">{{ copy.embed.title }}</h2>
+				<p class="ot-bar__note">{{ copy.embed.note }}</p>
 			</div>
 			<div class="ot-grid ot-grid--two">
 				<article
-					v-for="(demo, i) in demos"
+					v-for="(demo, i) in copy.embed.demos"
 					:key="demo.href"
 					class="ot-card"
 					data-reveal
@@ -102,19 +38,21 @@ const limits = [
 				>
 					<h3>{{ demo.title }}</h3>
 					<p>{{ demo.copy }}</p>
-					<a class="ot-more" :href="withBase(demo.href)" target="_self">Open the demo</a>
+					<a class="ot-more" :href="withBase(demo.href)" target="_self">{{
+						copy.embed.openDemo
+					}}</a>
 				</article>
 			</div>
 		</section>
 
 		<section class="ot-section" data-reveal>
 			<div class="ot-bar">
-				<h2 class="ot-h2">A workspace you can host</h2>
-				<p class="ot-bar__note">What it does</p>
+				<h2 class="ot-h2">{{ copy.features.title }}</h2>
+				<p class="ot-bar__note">{{ copy.features.note }}</p>
 			</div>
 			<div class="ot-grid">
 				<a
-					v-for="(item, i) in features"
+					v-for="(item, i) in copy.features.items"
 					:key="item.title"
 					class="ot-card ot-tool"
 					data-reveal
@@ -122,7 +60,7 @@ const limits = [
 					:href="withBase(item.href)"
 					:aria-label="`${item.title}: ${item.link}`"
 				>
-					<span class="ot-tool__icon" aria-hidden="true" v-html="icons[item.icon]"></span>
+					<span class="ot-tool__icon" aria-hidden="true" v-html="icons[item.icon ?? 'chat']"></span>
 					<span class="ot-tool__arrow" aria-hidden="true" v-html="icons.arrow"></span>
 					<h3>{{ item.title }}</h3>
 					<p>{{ item.copy }}</p>
@@ -132,13 +70,15 @@ const limits = [
 
 		<section class="ot-section ot-limits" data-reveal>
 			<div class="ot-bar">
-				<h2 class="ot-h2">What it is not</h2>
-				<p class="ot-bar__note">Honest limits</p>
+				<h2 class="ot-h2">{{ copy.limits.title }}</h2>
+				<p class="ot-bar__note">{{ copy.limits.note }}</p>
 			</div>
 			<ul>
-				<li v-for="item in limits" :key="item">{{ item }}</li>
+				<li v-for="item in copy.limits.items" :key="item">{{ item }}</li>
 			</ul>
-			<a class="ot-btn ot-btn--ghost" :href="withBase('/limitations')">All limitations</a>
+			<a class="ot-btn ot-btn--ghost" :href="withBase(copy.limits.all.href)">{{
+				copy.limits.all.text
+			}}</a>
 		</section>
 
 		<LandingQuickstart />

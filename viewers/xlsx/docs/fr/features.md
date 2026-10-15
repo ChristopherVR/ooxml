@@ -1,0 +1,123 @@
+# Fonctionnalités et limites
+
+Il s’agit d’une implémentation précoce. Elle n’atteint **pas la parité avec Microsoft Excel** et l’enregistrement n’est pas sans perte pour les fonctionnalités que le modèle ne couvre pas. Cette page énumère ce que l’éditeur est conçu pour gérer et ce qu’il ne gère pas ; quand un classeur contient un élément non pris en charge, l’éditeur le signale (`workbook-warning`) au lieu de le masquer.
+
+L’[état actuel de la parité et ses preuves](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)
+résument le travail réalisé, les comparaisons avec Excel natif et les écarts restants.
+
+::: warning Version précoce
+Le moteur de classeur de `ooxml-core` et le composant `<xlsx-editor>` sont jeunes. Les tests de navigateur (`e2e/xlsx/*.spec.ts`) couvrent l’ouverture de `.xlsx`, `.xls` et `.csv`, la saisie de valeurs et de formules, le recalcul, la mise en forme du ruban, l’insertion et la suppression de lignes, les onglets de feuille, annuler et rétablir, Rechercher et remplacer, Format de cellule, la sélection d’un graphique, l’enregistrement et la réouverture, le mode lecture seule, les langues et les six liaisons de frameworks. Tout le reste ci-dessous est implémenté mais moins exercé ; attendez-vous à des aspérités.
+:::
+
+## Formats de fichier
+
+| Format                   | Ouvrir | Enregistrer | Remarques                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.xlsx`, `.xltx`         | oui    | oui         | Le format principal.                                                                                                                                                                                                                                                                                       |
+| `.xlsm`                  | oui    | oui         | Le projet VBA est conservé tel quel ; les macros ne s’exécutent jamais.                                                                                                                                                                                                                                    |
+| `.xls` (97-2003)         | oui    | en `.xlsx`  | Lu via les codecs ole2 partagés : valeurs, formules lorsqu’elles se décodent, mise en forme de base, fusions, largeurs de colonne, hauteurs de ligne, volets figés.                                                                                                                                        |
+| `.csv`                   | oui    | oui         | RFC 4180, séparateur détecté automatiquement ; les champs commençant par = restent du texte à l’import. L’export écrit les valeurs affichées de la feuille active et protège contre l’injection de formules.                                                                                               |
+| Protégé par mot de passe | oui    | oui         | Les fichiers .xlsx/.xlsm chiffrés demandent un mot de passe. Fichier > Informations > Chiffrer le classeur définit un mot de passe pour les enregistrements Excel suivants. L’ouverture d’un fichier chiffré ne conserve pas son mot de passe pour l’enregistrement ; redéfinissez-le avant d’enregistrer. |
+| `.xlsb`, `.ods`          | non    | non         |                                                                                                                                                                                                                                                                                                            |
+
+## Grille et mise en forme
+
+- Valeurs de cellule, chaînes partagées avec segments de texte enrichi, booléens, erreurs et dates (systèmes de dates 1900 et 1904).
+- Polices, remplissages (uni, motif, dégradé approximé), bordures, alignement, retour à la ligne, retrait, rotation.
+- Formats numériques : sections, conditions, couleurs, dates et heures, fractions, scientifique, texte. Un nombre Standard qui ne tient pas dans sa colonne perd ses décimales ou passe en notation scientifique, et les autres nombres affichent `###`, mesurés avec les polices du navigateur.
+- Les hauteurs de ligne suivent le texte renvoyé à la ligne ou agrandi après une modification, sauf si la ligne a une hauteur personnalisée.
+- Cellules fusionnées, largeurs de colonne et hauteurs de ligne, lignes et colonnes masquées, volets figés, zoom, quadrillage.
+- Mise en forme conditionnelle : règles de cellule, règles de texte, « Une date se produisant » (aujourd’hui, les 7 derniers jours, ce mois-ci, ...), valeurs hautes et basses, supérieur à la moyenne, doublons, échelles de couleurs, barres de données, jeux d’icônes, avec un Gestionnaire de règles qui modifie, réordonne et supprime les règles.
+- Validation des données, avec la liste déroulante proposée dans la grille.
+- Commentaires (affichés, modifiés ; les réponses en fil s’affichent comme des notes), liens hypertexte.
+
+## Formules
+
+Le moteur de calcul vit dans `ooxml-core` et recalcule les cellules dépendantes après chaque modification. Son catalogue compte 481 fonctions (comptées à partir de `FUNCTION_CATALOG` le 2026-10-08) réparties entre mathématiques et trigonométrie, statistiques (y compris les lois inverses et la famille `LINEST`, `LOGEST`, `TREND` et `GROWTH`), logique, texte (y compris `REGEXTEST`, `REGEXEXTRACT` et `REGEXREPLACE`), dates, recherche (y compris `XLOOKUP` et les tableaux dynamiques tels que `FILTER`, `SORT`, `UNIQUE` et `SEQUENCE`), information, finance (y compris les fonctions d’obligations, de coupons, de titres escomptés et de bons du Trésor, `VDB` et `XIRR`), ingénierie (y compris `COMPLEX`, les fonctions `IM` et `CONVERT`) et base de données (`DSUM`, `DCOUNT`, `DGET` et les autres). Insérer une fonction les liste par catégorie.
+
+Toutes les fonctions d’Excel n’existent pas : une fonction inconnue affiche `#NAME?`. Ne sont pas implémentées : `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE`, `ODDLYIELD`, `AMORDEGRC`, `BESSELI`, `BESSELJ`, `BESSELK`, `BESSELY`, `FORECAST.ETS`, `ASC`, `DBCS`, `JIS`, `PHONETIC`, `BAHTTEXT`, `INFO`, `GETPIVOTDATA`, `ISOMITTED` et `WEBSERVICE`. Les références à des classeurs externes sont conservées mais non résolues.
+
+Les références circulaires sont signalées et laissées à 0 sauf si le calcul itératif est activé. Activez-le dans Fichier > Options > Formules (Activer le calcul itératif, avec Nombre maximal d’itérations et Variation maximale) ; le paramètre est enregistré avec le classeur (`calcPr iterate`, `iterateCount`, `iterateDelta`). Un groupe circulaire est alors recalculé jusqu’au nombre maximal d’itérations et s’arrête dès qu’aucune cellule ne varie de plus que la variation maximale. L’activer ou le désactiver n’est pas une étape d’annulation.
+
+Le calcul peut passer d’Automatique à Manuel (Formules > Options de calcul, ou Fichier > Options) ; le mode est enregistré avec le classeur. Calculer maintenant (F9) et Calculer la feuille (Maj+F9) recalculent à la demande. Afficher les formules (Ctrl+\`) affiche le texte des formules au lieu des résultats.
+
+## Édition
+
+Saisie dans les cellules (valeurs et formules), barre de formule et zone Nom, Ctrl+; et Ctrl+Maj+; pour la date et l’heure courantes, recopie, copier-coller (avec le presse-papiers système en texte et en HTML), insertion et suppression de lignes, de colonnes et de cellules, tri, filtre, suppression des doublons, rechercher et remplacer, gestion des feuilles (ajout, renommage, déplacement, masquage, couleur ; les nouvelles feuilles sont nommées dans la langue de l’interface, par exemple `Tabelle2` en allemand), styles de cellule intégrés, tableaux (options de style, lignes d’en-tête et de total, redimensionnement, conversion en plage), groupes de plan de lignes et de colonnes, mise en page et options d’impression (quadrillage, en-têtes, centrage), annuler et rétablir avec des noms d’étape explicites. Les références de formule suivent les modifications de structure.
+
+La protection de feuille et de structure du classeur peut porter un mot de passe. Elle empêche les modifications accidentelles ; ce n’est pas de la sécurité. L’éditeur lit et vérifie à la fois l’ancien hachage 16 bits d’Excel et son hachage SHA-512 plus récent (ainsi que SHA-1, SHA-256 et SHA-384), de sorte que Ôter la protection de la feuille et Ôter la protection du classeur demandent le mot de passe quel que soit le hachage du fichier. Un mot de passe défini dans l’éditeur est écrit avec l’ancien hachage. Une protection dont le hachage utilise un condensat que le cœur ne sait pas calculer n’est jamais déverrouillée par un mot de passe.
+
+Les images et les graphiques se sélectionnent en cliquant dessus : ils se déplacent et se redimensionnent à la souris, se décalent avec les touches fléchées et se suppriment avec Suppr ; un graphique sélectionné affiche l’onglet Création de graphique.
+
+## Graphiques et SmartArt
+
+Les familles de graphiques courantes (colonnes, barres, courbes, aires, secteurs, anneau, nuage de points et radar)
+sont rendues en SVG à partir des valeurs en direct. L’insertion de graphiques, le type et le regroupement, le titre, la légende et
+les changements de couleur utilisent le cœur partagé et les contrôles de galerie Office. Des volets de mise en forme ancrés
+permettent de régler les remplissages de série, l’espacement des barres pris en charge, et les remplissages de la zone de graphique,
+de la zone de traçage, du titre et de la légende. Les types de dégradé pris en charge, les points d’arrêt, la transparence,
+la luminosité, les aperçus de direction et les préréglages natifs partagent les mêmes contrôles de remplissage.
+
+Les styles de graphique importés, les ombres et dégradés pris en charge, la visibilité des axes, les polices héritées,
+les segments de titre à mise en forme mixte, le retour automatique à la ligne des titres et l’espacement des paragraphes de titre de points/pourcentages
+bénéficient d’un rendu et d’une conservation. Les positions manuelles de titre importées et
+les superpositions de titre sont rendues ; le XML de disposition du titre, de la zone de traçage et de la légende est conservé lors
+des changements de type de graphique. Les rectangles manuels de légende importés et leurs superpositions sont rendus,
+y compris les arrangements horizontaux et verticaux des entrées testés. Les dimensions manuelles du titre, le placement complet de la zone de traçage,
+la géométrie automatique de la légende, le regroupement des légendes sur plusieurs lignes ou colonnes et
+les contrôles de création de position restent incomplets.
+Les graphiques à bulles, boursiers et en surface ne sont pas dessinés : ils s’affichent sous la forme d’un cadre
+étiqueté et sont conservés à l’enregistrement (`src/core/xlsx/layout/chart-svg.ts`,
+`chart.test.ts`). La création de styles de graphique n’est pas prise en charge : les définitions
+de style importées sont conservées et rendues, mais ne peuvent être ni créées ni modifiées
+(`src/core/xlsx/model.ts`, `styleDefinition`). Le rendu et la mise en forme
+ci-dessus sont couverts par les tests de graphiques du cœur et par `docs/xlsx-parity-review.md`
+dans le dépôt ooxml.
+Les comparaisons avec Excel natif vérifient des chemins précis de modification et d’export. La mesure exacte du texte des graphiques, le retour à la ligne, le placement et la fidélité matricielle restent incomplets, tout comme
+de nombreux contrôles d’axes, d’étiquettes et d’effets, les familles de graphiques avancées et l’interface native complète.
+
+SmartArt utilise le moteur de rendu partagé de dessin en cache avec les polices et les couleurs du thème du classeur. Il reste en affichage seul : l’insertion, la modification du texte, la remise en forme et les galeries complètes de dispositions, de couleurs et de styles ne sont pas implémentées. Un dessin en cache manquant produit un texte de remplacement.
+
+## Graphiques sparkline
+
+Les graphiques sparkline d’Excel 2010 sont dessinés dans leurs cellules hôtes, derrière le texte de la cellule :
+courbe (avec marqueurs et points haut, bas, premier, dernier et négatifs), colonnes et
+gain/perte. Le dessin suit les paramètres du groupe pour les cellules vides (trou, zéro ou
+reliées), l’axe vertical (chaque sparkline, le groupe entier ou des limites personnalisées),
+l’axe horizontal à zéro, l’axe des dates, le tracé de droite à gauche, les cellules masquées
+et les couleurs de thème ou RVB. Un sparkline est redessiné quand une cellule de sa plage de données
+change et se redimensionne avec sa cellule. Le XML des sparklines est enregistré exactement tel que chargé,
+et les lignes et colonnes insérées ou supprimées le déplacent avec ses cellules.
+
+Insertion > Sparklines crée des groupes courbe, colonnes et gain/perte à partir d’une plage de données
+et d’une plage d’emplacement. Une plage d’emplacement verticale associe les lignes de données à des
+sparklines individuels ; une plage d’emplacement horizontale associe les colonnes de données. Sélectionnez une cellule hôte
+et choisissez Paramètres du sparkline pour modifier le type de tout le groupe, les marqueurs,
+les couleurs de série et des valeurs négatives, l’épaisseur de ligne, la gestion des cellules vides et masquées, la visibilité des axes,
+la direction et les limites verticales individuelles, partagées ou personnalisées.
+Effacer les sparklines sélectionnés supprime les hôtes sélectionnés ; Effacer les groupes de sparklines
+supprime leurs groupes entiers. Ces modifications prennent en charge l’annulation et l’enregistrement/chargement.
+
+Les galeries de styles, le regroupement/dissociation et la création d’axes de dates ne sont pas disponibles.
+Les axes de dates existants sont conservés. Le rendu au pixel près d’Excel (taille des marqueurs, espacement des colonnes et
+anticrénelage des lignes) n’est pas reproduit, et les cellules non numériques d’une plage de données sont
+traitées comme vides.
+
+## Non pris en charge (conservé dans la mesure du possible)
+
+| Fonctionnalité                              | Comportement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tableaux croisés dynamiques et leurs caches | Conservés à l’enregistrement ; non affichés comme tableaux croisés et non actualisés.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Segments, chronologies                      | Conservés à l’enregistrement ; non dessinés.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Création de sparklines                      | La création, les paramètres de groupe et l’effacement sont pris en charge (voir ci-dessus) ; les galeries de styles, le regroupement/dissociation et la création d’axes de dates ne sont pas implémentés.                                                                                                                                                                                                                                                                                                                 |
+| Graphiques avancés et options de graphique  | Les familles courantes et la mise en forme prise en charge sont décrites ci-dessus. Les familles avancées, la création complète des axes, étiquettes et effets, et la disposition native exacte restent incomplètes.                                                                                                                                                                                                                                                                                                      |
+| Formes, SmartArt, contrôles de formulaire   | Les images s’affichent. SmartArt utilise le dessin en cache via le moteur de rendu partagé (affichage seul) ; sans dessin en cache, son texte est listé. Les autres dessins apparaissent sous forme d’espaces réservés.                                                                                                                                                                                                                                                                                                   |
+| Macros (VBA), compléments, Power Query      | Jamais exécutés ; le projet VBA est conservé.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Liaisons externes et connexions de données  | Conservées ; les valeurs sont celles du cache.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Collaboration en temps réel                 | Les valeurs de cellule, formules, formats, feuilles, tailles de lignes et de colonnes, fusions et noms sont partagés via `ooxml-core/collab` (Fichier > Partager ou la propriété `collaboration`) ; les sélections distantes s’affichent dans la grille et l’annulation est propre à chaque personne. Les graphiques, dessins, commentaires, mises en forme conditionnelles, validations, tableaux et mises en page restent locaux ; l’hôte gère le serveur et l’enregistrement. Voir [collaboration](/fr/collaboration). |
+| Impression                                  | L’impression du navigateur de la zone utilisée ou de la zone d’impression ; pas de mode Mise en page ni d’aperçu des sauts de page.                                                                                                                                                                                                                                                                                                                                                                                       |
+| Propriétés du document                      | Les propriétés standard, la société, le responsable et les propriétés personnalisées sont modifiables dans Fichier > Informations avec annulation. Les types de propriétés personnalisées inconnus sont conservés et affichés en lecture seule.                                                                                                                                                                                                                                                                           |
+
+Les tests d’aller-retour du cœur et les vérifications d’acceptation avec Excel se trouvent dans le dépôt `ooxml`. Signalez un classeur qui s’affiche ou s’enregistre mal sous forme de ticket, avec le fichier en pièce jointe si vous pouvez le partager.
+
+Les signatures numériques sont signalées à l’ouverture d’un classeur et supprimées à l’enregistrement. L’éditeur ne signe pas les fichiers. Les liens hypertexte suivent la politique du cœur partagé ; seuls les liens web et e-mail s’ouvrent à l’extérieur.

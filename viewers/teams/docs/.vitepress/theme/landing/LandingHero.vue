@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress';
+
+import { useLandingCopy } from './copy';
+
+const copy = useLandingCopy();
 </script>
 
 <template>
@@ -7,18 +11,17 @@ import { withBase } from 'vitepress';
 		<div class="ot-hero__inner">
 			<div class="ot-hero__copy">
 				<h1 class="ot-hero__title ot-enter">
-					Team chat and calls,<br />
-					<em>on a server you run.</em>
+					{{ copy.hero.titleTop }}<br />
+					<em>{{ copy.hero.titleAccent }}</em>
 				</h1>
-				<p class="ot-hero__sub ot-enter ot-enter--3">
-					OpenTeams is a team workspace for the web: channels and chat, presence, WebRTC meetings
-					and Office files shared in the conversation. One web component, thin bindings for six
-					frameworks, and a small reference server. An early implementation: not Microsoft Teams,
-					and no end-to-end encryption.
-				</p>
+				<p class="ot-hero__sub ot-enter ot-enter--3">{{ copy.hero.sub }}</p>
 				<div class="ot-hero__actions ot-enter ot-enter--3">
-					<a class="ot-btn ot-btn--solid" :href="withBase('/getting-started')">Get started</a>
-					<a class="ot-btn ot-btn--ghost" :href="withBase('/demo/')" target="_self">Try the demo</a>
+					<a class="ot-btn ot-btn--solid" :href="withBase(copy.hero.start.href)">{{
+						copy.hero.start.text
+					}}</a>
+					<a class="ot-btn ot-btn--ghost" :href="withBase(copy.hero.demo.href)" target="_self">{{
+						copy.hero.demo.text
+					}}</a>
 				</div>
 				<pre class="ot-hero__install ot-enter ot-enter--3"><code>npm install openteams-react-viewer
 npx openteams-server</code></pre>
@@ -27,12 +30,12 @@ npx openteams-server</code></pre>
 				<a class="ot-hero__frame" :href="withBase('/demo/')" target="_self">
 					<span class="ot-hero__framebar">
 						<span class="ot-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-						<span>&lt;teams-app&gt; in local mode</span>
-						<span class="ot-hero__try">Open the demo</span>
+						<span>{{ copy.hero.frameLabel }}</span>
+						<span class="ot-hero__try">{{ copy.hero.tryLabel }}</span>
 					</span>
 					<img
 						:src="withBase('/hero-workspace.png')"
-						alt="The OpenTeams demo: a channel list, a conversation with replies and reactions, and the composer"
+						:alt="copy.hero.imageAlt"
 						width="1280"
 						height="800"
 						fetchpriority="high"

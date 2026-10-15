@@ -1,0 +1,127 @@
+# Funktionen und Einschränkungen
+
+Dies ist eine frühe Implementierung. Sie ist **kein Microsoft-Excel-Ersatz mit voller Funktionsgleichheit**, und das Speichern ist für Funktionen, die das Modell nicht abdeckt, nicht verlustfrei. Diese Seite listet auf, was der Editor verarbeiten kann und was nicht; enthält eine Arbeitsmappe etwas Nicht-Unterstütztes, meldet der Editor es (`workbook-warning`), statt es zu verbergen.
+
+Der [aktuelle Stand der Funktionsgleichheit samt Belegen](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)
+fasst die umgesetzten Arbeiten, die Vergleiche mit nativem Excel und die verbleibenden Lücken zusammen.
+
+::: warning Frühe Version
+Die Arbeitsmappen-Engine in `ooxml-core` und die Komponente `<xlsx-editor>` sind jung. Die Browsertests (`e2e/xlsx/*.spec.ts`) decken das Öffnen von `.xlsx`, `.xls` und `.csv`, die Eingabe von Werten und Formeln, die Neuberechnung, die Formatierung im Menüband, das Einfügen und Löschen von Zeilen, Blattregister, Rückgängig und Wiederherstellen, Suchen und Ersetzen, Zellen formatieren, die Diagrammauswahl, Speichern und erneutes Öffnen, den Schreibschutzmodus, Sprachen und alle sechs Framework-Bindings ab. Alles Weitere unten ist implementiert, aber weniger intensiv getestet; rechnen Sie mit Ecken und Kanten.
+:::
+
+## Dateiformate
+
+| Format            | Öffnen | Speichern   | Hinweise                                                                                                                                                                                                                                                                                                                      |
+| ----------------- | ------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.xlsx`, `.xltx`  | ja     | ja          | Das Hauptformat.                                                                                                                                                                                                                                                                                                              |
+| `.xlsm`           | ja     | ja          | Das VBA-Projekt wird unverändert durchgereicht; Makros werden nie ausgeführt.                                                                                                                                                                                                                                                 |
+| `.xls` (97-2003)  | ja     | als `.xlsx` | Gelesen über die gemeinsamen ole2-Codecs: Werte, Formeln, soweit sie sich dekodieren lassen, einfache Formatierung, verbundene Zellen, Spaltenbreiten, Zeilenhöhen, fixierte Bereiche.                                                                                                                                        |
+| `.csv`            | ja     | ja          | RFC 4180, Trennzeichen automatisch erkannt; Felder, die mit = beginnen, bleiben beim Import Text. Der Export schreibt die angezeigten Werte des aktiven Blatts und schützt vor Formelinjektion.                                                                                                                               |
+| Kennwortgeschützt | ja     | ja          | Verschlüsselte .xlsx/.xlsm-Dateien fordern zur Eingabe eines Kennworts auf. Datei > Info > Arbeitsmappe verschlüsseln legt ein Kennwort für nachfolgende Excel-Speichervorgänge fest. Beim Öffnen einer verschlüsselten Datei wird ihr Kennwort nicht für das Speichern behalten; legen Sie es vor dem Speichern erneut fest. |
+| `.xlsb`, `.ods`   | nein   | nein        |                                                                                                                                                                                                                                                                                                                               |
+
+## Raster und Formatierung
+
+- Zellwerte, gemeinsame Zeichenfolgen mit Rich-Text-Abschnitten, Wahrheitswerte, Fehler und Datumsangaben (Datumssysteme 1900 und 1904).
+- Schriftarten, Füllungen (einfarbig, Muster, Farbverlauf näherungsweise), Rahmen, Ausrichtung, Textumbruch, Einzug, Drehung.
+- Zahlenformate: Abschnitte, Bedingungen, Farben, Datum und Uhrzeit, Brüche, wissenschaftlich, Text. Eine Standardzahl (General), die nicht in ihre Spalte passt, verliert Dezimalstellen oder wechselt zur wissenschaftlichen Schreibweise, andere Zahlen zeigen `###`; gemessen wird mit den Schriftarten des Browsers.
+- Zeilenhöhen folgen nach einer Änderung umbrochenem oder vergrößertem Text, sofern die Zeile keine benutzerdefinierte Höhe hat.
+- Verbundene Zellen, Spaltenbreiten und Zeilenhöhen, ausgeblendete Zeilen und Spalten, fixierte Bereiche, Zoom, Gitternetzlinien.
+- Bedingte Formatierung: Zellregeln, Textregeln, „Ein Datum, das eintritt“ (heute, letzte 7 Tage, dieser Monat, ...), Oberste und Unterste, über dem Durchschnitt, Duplikate, Farbskalen, Datenbalken, Symbolsätze, mit einem Regel-Manager, der Regeln bearbeitet, neu ordnet und löscht.
+- Datenüberprüfung, wobei die Dropdown-Liste im Raster angeboten wird.
+- Kommentare (angezeigt, bearbeitet; Antworten in Unterhaltungen werden als Notizen angezeigt), Hyperlinks.
+
+## Formeln
+
+Die Berechnungs-Engine liegt in `ooxml-core` und berechnet abhängige Zellen nach jeder Änderung neu. Ihr Katalog umfasst 481 Funktionen (am 08.10.2026 aus `FUNCTION_CATALOG` gezählt) aus den Bereichen Mathematik und Trigonometrie, Statistik (einschließlich der inversen Verteilungen und der Familie `LINEST`, `LOGEST`, `TREND` und `GROWTH`), Logik, Text (einschließlich `REGEXTEST`, `REGEXEXTRACT` und `REGEXREPLACE`), Datum, Nachschlagen (einschließlich `XLOOKUP` und dynamischer Arrays wie `FILTER`, `SORT`, `UNIQUE` und `SEQUENCE`), Information, Finanzmathematik (einschließlich der Anleihe-, Kupon-, Diskontpapier- und Schatzwechsel-Funktionen, `VDB` und `XIRR`), Technik (einschließlich `COMPLEX`, der `IM`-Funktionen und `CONVERT`) und Datenbank (`DSUM`, `DCOUNT`, `DGET` und die übrigen). Funktion einfügen listet sie nach Kategorie auf.
+
+Nicht jede Excel-Funktion existiert: Eine unbekannte zeigt `#NAME?`. Nicht implementiert sind: `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE`, `ODDLYIELD`, `AMORDEGRC`, `BESSELI`, `BESSELJ`, `BESSELK`, `BESSELY`, `FORECAST.ETS`, `ASC`, `DBCS`, `JIS`, `PHONETIC`, `BAHTTEXT`, `INFO`, `GETPIVOTDATA`, `ISOMITTED` und `WEBSERVICE`. Bezüge auf externe Arbeitsmappen bleiben erhalten, werden aber nicht aufgelöst.
+
+Zirkelbezüge werden gemeldet und bleiben bei 0, sofern die iterative Berechnung nicht eingeschaltet ist. Schalten Sie sie unter Datei > Optionen > Formeln ein (Iterative Berechnung aktivieren, mit Maximale Iterationszahl und Maximale Änderung); die Einstellung wird mit der Arbeitsmappe gespeichert (`calcPr iterate`, `iterateCount`, `iterateDelta`). Eine zirkuläre Gruppe wird dann bis zur maximalen Iterationszahl neu berechnet und stoppt, sobald sich keine Zelle um mehr als die maximale Änderung verändert. Das Ein- oder Ausschalten ist kein Rückgängig-Schritt.
+
+Die Berechnung lässt sich zwischen Automatisch und Manuell umschalten (Formeln > Berechnungsoptionen oder Datei > Optionen); der Modus wird mit der Arbeitsmappe gespeichert. Neu berechnen (F9) und Blatt berechnen (Umschalt+F9) berechnen auf Abruf neu. Formeln anzeigen (Strg+\`) zeigt statt der Ergebnisse den Formeltext.
+
+## Bearbeiten
+
+Eingabe in Zellen (Werte und Formeln), die Bearbeitungsleiste und das Namenfeld, Strg+; und Strg+Umschalt+; für aktuelles Datum und aktuelle Uhrzeit, Ausfüllen, Kopieren und Einfügen (mit der System-Zwischenablage als Text und HTML), Einfügen und Löschen von Zeilen, Spalten und Zellen, Sortieren, Filtern, Duplikate entfernen, Suchen und Ersetzen, Blattverwaltung (hinzufügen, umbenennen, verschieben, ausblenden, einfärben; neue Blätter werden in der Oberflächensprache benannt, zum Beispiel `Tabelle2` auf Deutsch), die eingebauten Zellenformatvorlagen, Tabellen (Formatoptionen, Kopf- und Ergebniszeilen, Größe ändern, in Bereich umwandeln), Gliederungsgruppen für Zeilen und Spalten, Seiteneinrichtung und Druckoptionen (Gitternetzlinien, Überschriften, Zentrierung), Rückgängig und Wiederherstellen mit aussagekräftigen Schrittnamen. Formelbezüge folgen strukturellen Änderungen.
+
+Der Schutz von Blättern und der Arbeitsmappenstruktur kann ein Kennwort tragen. Er verhindert versehentliche Änderungen; er ist keine Sicherheit. Der Editor liest und prüft sowohl den älteren 16-Bit-Hash von Excel als auch den neueren SHA-512-Hash (ebenso SHA-1, SHA-256 und SHA-384), sodass Blattschutz aufheben und Arbeitsmappenschutz aufheben nach dem Kennwort fragen, unabhängig davon, welchen Hash die Datei enthält. Ein im Editor festgelegtes Kennwort wird als älterer Hash geschrieben. Ein Schutz, dessen Hash einen Digest verwendet, den der Core nicht berechnen kann, wird durch ein Kennwort nie entsperrt.
+
+Bilder und Diagramme werden per Klick ausgewählt: Sie lassen sich mit der Maus verschieben und in der Größe ändern, mit den Pfeiltasten feinjustieren und mit Entf entfernen; ein ausgewähltes Diagramm zeigt die Registerkarte Diagrammentwurf.
+
+## Diagramme und SmartArt
+
+Gängige Diagrammfamilien (Säulen, Balken, Linien, Flächen, Kreis, Ring, Punkt (XY) und Netz)
+werden aus Live-Werten als SVG gezeichnet. Das Einfügen von Diagrammen, Typ und Gruppierung, Titel, Legende und
+Farbänderungen nutzen den gemeinsamen Core und die Office-Katalogsteuerelemente. Andockbare Formatierungsbereiche
+bieten Datenreihenfüllungen, unterstützte Balkenabstände sowie Füllungen für Diagrammbereich,
+Zeichnungsfläche, Titel und Legende. Unterstützte Farbverlaufstypen, Stopps, Transparenz,
+Helligkeit, Richtungsvorschauen und native Vorgaben verwenden dieselben Füllungs-Steuerelemente.
+
+Importierte Diagrammformatvorlagen, unterstützte Schatten und Farbverläufe, Achsensichtbarkeit, geerbte
+Schriftarten, Titelabschnitte mit gemischter Formatierung, automatischer Titelumbruch und Absatzabstände von Titeln mit Datenpunkt- oder Prozentangaben
+werden gerendert und beim Speichern erhalten. Importierte manuelle Titelpositionen und
+Titelüberlagerungen werden gerendert; das Layout-XML für Titel, Zeichnungsfläche und Legende bleibt bei
+Änderungen des Diagrammtyps erhalten. Importierte manuelle Legendenrechtecke und Überlagerungen werden gerendert,
+einschließlich der getesteten horizontalen und vertikalen Eintragsanordnungen. Manuelle Titelabmessungen,
+die vollständige Platzierung der Zeichnungsfläche, die automatische Legendengeometrie, das Packen der Legende in mehrere Zeilen und Spalten sowie
+Steuerelemente zur Positionierung sind weiterhin unvollständig.
+Blasen-, Kurs- und Oberflächendiagramme werden nicht gezeichnet: Sie erscheinen als beschrifteter
+Rahmen und werden beim Speichern erhalten (`src/core/xlsx/layout/chart-svg.ts`,
+`chart.test.ts`). Das Erstellen von Diagrammformatvorlagen wird nicht unterstützt: Importierte Formatdefinitionen
+werden beibehalten und gerendert, können aber nicht erstellt oder bearbeitet werden
+(`src/core/xlsx/model.ts`, `styleDefinition`). Das oben beschriebene Rendering und die Formatierung
+sind durch die Diagrammtests des Cores und durch `docs/xlsx-parity-review.md`
+im Repository ooxml abgedeckt.
+Vergleiche mit nativem Excel prüfen bestimmte Bearbeitungs- und Exportpfade. Die exakte Textmessung in Diagrammen,
+der Umbruch, die Platzierung und die Rastertreue sind weiterhin unvollständig, ebenso viele
+Steuerelemente für Achsen, Beschriftungen und Effekte, erweiterte Diagrammfamilien und die vollständige native Oberfläche.
+
+SmartArt verwendet den gemeinsamen Renderer für zwischengespeicherte Zeichnungen mit den Designschriftarten und
+-farben der Arbeitsmappe. Es bleibt reine Anzeige: Einfügen, Textbearbeitung, Neuanordnung und vollständige
+Kataloge für Layout, Farbe und Formatvorlagen sind nicht implementiert. Fehlt eine zwischengespeicherte Zeichnung,
+erscheint ein Textplatzhalter.
+
+## Sparklines
+
+Sparklines von Excel 2010 werden in ihren Hostzellen hinter dem Zellentext gezeichnet:
+Linie (mit Markierungen und höchstem, niedrigstem, erstem, letztem und negativem Punkt), Säule und
+Gewinn/Verlust. Die Darstellung folgt den Einstellungen der Gruppe für leere Zellen (Lücke, Null oder
+verbunden), die vertikale Achse (jede Sparkline, die ganze Gruppe oder benutzerdefinierte Grenzen),
+die horizontale Achse bei Null, die Datumsachse, das Zeichnen von rechts nach links, ausgeblendete Zellen
+und Design- oder RGB-Farben. Eine Sparkline wird neu gezeichnet, wenn sich eine Zelle in ihrem Datenbereich
+ändert, und passt ihre Größe an ihre Zelle an. Das Sparkline-XML wird genau so gespeichert, wie es geladen wurde,
+und eingefügte oder gelöschte Zeilen und Spalten verschieben es mit seinen Zellen.
+
+Einfügen > Sparklines erstellt Linien-, Säulen- und Gewinn/Verlust-Gruppen aus einem Datenbereich
+und einem Positionsbereich. Ein vertikaler Positionsbereich ordnet Datenzeilen einzelnen
+Sparklines zu; ein horizontaler Positionsbereich ordnet Datenspalten zu. Wählen Sie eine Hostzelle aus
+und wählen Sie Sparkline-Einstellungen, um Typ, Markierungen,
+Datenreihen- und Negativfarben, Linienstärke, Behandlung leerer und ausgeblendeter Zellen, Achsensichtbarkeit,
+Richtung sowie einzelne, gemeinsame oder benutzerdefinierte vertikale Grenzen der gesamten Gruppe zu ändern.
+Ausgewählte Sparklines löschen entfernt die ausgewählten Hosts; Sparkline-Gruppen löschen
+entfernt deren gesamte Gruppen. Diese Änderungen unterstützen Rückgängig sowie Speichern und Laden.
+
+Formatvorlagenkataloge, Gruppieren und Gruppierung aufheben sowie die Bearbeitung von Datumsachsen sind nicht verfügbar.
+Vorhandene Datumsachsen bleiben erhalten. Die pixelgenaue Ausgabe von Excel (Markierungsgröße, Säulenabstand und
+Kantenglättung der Linien) wird nicht erreicht, und nicht numerische Zellen in einem Datenbereich werden
+als leer behandelt.
+
+## Nicht unterstützt (wenn möglich erhalten)
+
+| Funktion                                    | Verhalten                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PivotTables und Pivot-Caches                | Werden beim Speichern beibehalten; nicht als PivotTables angezeigt und nicht aktualisiert.                                                                                                                                                                                                                                                                                                                                                                                            |
+| Datenschnitte, Zeitachsen                   | Werden beim Speichern beibehalten; nicht gezeichnet.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Sparklines bearbeiten                       | Erstellen, Gruppeneinstellungen und Löschen werden unterstützt (siehe oben); Formatvorlagenkataloge, Gruppieren und Gruppierung aufheben sowie die Bearbeitung von Datumsachsen sind nicht implementiert.                                                                                                                                                                                                                                                                             |
+| Erweiterte Diagramme und Diagrammoptionen   | Gängige Familien und unterstützte Formatierung sind oben beschrieben. Erweiterte Familien, die vollständige Bearbeitung von Achsen, Beschriftungen und Effekten sowie das exakte native Layout sind weiterhin unvollständig.                                                                                                                                                                                                                                                          |
+| Formen, SmartArt, Formularsteuerelemente    | Bilder werden angezeigt. SmartArt nutzt die zwischengespeicherte Zeichnung über den gemeinsamen Renderer (nur Anzeige); ohne zwischengespeicherte Zeichnung wird sein Text aufgelistet. Andere Zeichnungen erscheinen als Platzhalter.                                                                                                                                                                                                                                                |
+| Makros (VBA), Add-Ins, Power Query          | Werden nie ausgeführt; das VBA-Projekt wird durchgereicht.                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Externe Verknüpfungen und Datenverbindungen | Bleiben erhalten; die Werte sind die zwischengespeicherten.                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Zusammenarbeit in Echtzeit                  | Zellwerte, Formeln, Formate, Blätter, Zeilen- und Spaltengrößen, verbundene Zellen und Namen werden über `ooxml-core/collab` geteilt (Datei > Freigeben oder die Eigenschaft `collaboration`); entfernte Auswahlen erscheinen im Raster, und Rückgängig gilt pro Person. Diagramme, Zeichnungen, Kommentare, bedingte Formate, Datenüberprüfung, Tabellen und Seiteneinrichtung bleiben lokal; der Host verantwortet Server und Speichern. Siehe [Zusammenarbeit](/de/collaboration). |
+| Drucken                                     | Der Browserdruck des verwendeten Bereichs oder Druckbereichs; keine Seitenlayoutansicht und keine Seitenumbruchvorschau.                                                                                                                                                                                                                                                                                                                                                              |
+| Dokumenteigenschaften                       | Kern-, Firmen-, Manager- und benutzerdefinierte Eigenschaften sind unter Datei > Info mit Rückgängig bearbeitbar. Benutzerdefinierte Eigenschaften unbekannten Typs bleiben erhalten und werden schreibgeschützt angezeigt.                                                                                                                                                                                                                                                           |
+
+Die Round-Trip-Tests des Cores und die Excel-Abnahmeprüfungen liegen im Repository `ooxml`. Melden Sie eine Arbeitsmappe, die falsch dargestellt oder gespeichert wird, als Issue und hängen Sie die Datei an, wenn Sie sie teilen können.
+
+Digitale Signaturen werden beim Öffnen einer Arbeitsmappe gemeldet und beim Speichern entfernt. Der Editor signiert keine Dateien. Hyperlinks folgen der gemeinsamen Richtlinie des Cores; nur Web- und E-Mail-Links werden extern geöffnet.
