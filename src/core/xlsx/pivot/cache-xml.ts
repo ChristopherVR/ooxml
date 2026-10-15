@@ -96,7 +96,7 @@ function derivedFields(pivot: PivotTable, date1904: boolean): DerivedCacheField[
 function derivedFieldXml(pivot: PivotTable, entry: DerivedCacheField, date1904: boolean): string {
 	const range = { start: entry.group.start!, end: entry.group.end! };
 	const days = dateGroupDays(entry.group);
-	const labels = dateUnitLabels(entry.unit, range, days, date1904);
+	const labels = dateUnitLabels(entry.unit, range, days, date1904, entry.group);
 	const base = pivot.fields.indexOf(entry.group.field);
 	return `<cacheField${attrs({ name: encodeEscapes(entry.name), numFmtId: 0, databaseField: false })}><fieldGroup base="${base}"><rangePr${attrs({ autoStart: entry.autoStart ? undefined : false, autoEnd: entry.autoEnd ? undefined : false, groupBy: entry.unit, startDate: serialToIso(range.start, date1904), endDate: serialToIso(range.end, date1904), groupInterval: days > 1 ? days : undefined })}/><groupItems count="${labels.length}">${labels.map((label) => `<s v="${escapeAttr(label)}"/>`).join('')}</groupItems></fieldGroup></cacheField>`;
 }

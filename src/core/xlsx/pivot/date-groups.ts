@@ -35,9 +35,12 @@ type DateGroupPivot = Pick<PivotTable, 'fields' | 'records'> & {
 export const dateGroupUnits = (group: Pick<PivotDateGroup, 'by'>): PivotDateUnit[] =>
 	PIVOT_DATE_UNITS.filter((unit) => group.by.includes(unit));
 
-/** The cache field of a unit: `Years (Date)`. */
-export const dateGroupFieldName = (unit: PivotDateUnit, field: string): string =>
-	`${UNIT_TITLES[unit]} (${field})`;
+/** The cache field of a unit: `Years (Date)`, or the name the file gave it in its language. */
+export const dateGroupFieldName = (
+	unit: PivotDateUnit,
+	field: string,
+	group?: Pick<PivotDateGroup, 'localized'>,
+): string => group?.localized?.[unit]?.name ?? `${UNIT_TITLES[unit]} (${field})`;
 
 /** Days per group when grouping by days alone; every other grouping counts single days. */
 export const dateGroupDays = (group: Pick<PivotDateGroup, 'by' | 'days'>): number =>
@@ -81,7 +84,7 @@ function dayBuckets(range: DateRange, days: number): number {
 }
 
 /** The items of one unit in Excel's order: `<start`, the unit's items, `>end`. */
-export function dateUnitLabels(
+export function englishDateUnitLabels(
 	unit: PivotDateUnit,
 	range: DateRange,
 	days: number,
@@ -114,6 +117,22 @@ export function dateUnitLabels(
 	}
 	labels.push(`>${isoDay(range.end, date1904)}`);
 	return labels;
+}
+
+/**
+ * The items of one unit as the file shows them: the labels a group read from another language
+ * gave them when its range is still the one they were read for, else the English ones.
+ */
+export function dateUnitLabels(
+	unit: PivotDateUnit,
+	range: DateRange,
+	days: number,
+	date1904: boolean,
+	group?: Pick<PivotDateGroup, 'localized'>,
+): string[] {
+	const english = englishDateUnitLabels(unit, range, days, date1904);
+	const localized = group?.localized?.[unit]?.labels;
+	return localized?.length === english.length ? localized : english;
 }
 
 /** The index in `dateUnitLabels` of a date: 0 before the range, the last item after it. */
@@ -158,7 +177,7 @@ export function derivedDateFields(pivot: DateGroupPivot): DerivedDateField[] {
 	for (const group of pivot.dateGroups ?? [])
 		for (const unit of dateGroupUnits(group))
 			derived.push({
-				name: dateGroupFieldName(unit, group.field),
+				name: dateGroupFieldName(unit, group.field, group),
 				unit,
 				group,
 				index: databaseFields + derived.length,
@@ -169,7 +188,7 @@ function countDerived(pivot: DateGroupPivot): number {
 	let count = 0;
 	for (const group of pivot.dateGroups ?? [])
 		for (const unit of dateGroupUnits(group))
-			if (pivot.fields.includes(dateGroupFieldName(unit, group.field))) count++;
+			if (pivot.fields.includes(dateGroupFieldName(unit, group.field, group))) count++;
 	return count;
 }
 
@@ -199,7 +218,7 @@ export function derivedDateLabels(pivot: DateGroupPivot, name: string): string[]
 	if (!entry) return undefined;
 	const [group] = resolveDateGroups({ ...pivot, dateGroups: [entry.group] });
 	const range = { start: group!.start!, end: group!.end! };
-	return dateUnitLabels(entry.unit, range, dateGroupDays(group!), pivot.date1904 ?? false);
+	return dateUnitLabels(entry.unit, range, dateGroupDays(group!), pivot.date1904 ?? false, group);
 }
 
 /** Checks the groups against the cached dates and the axes; throws a user-facing message. */
@@ -239,11 +258,11 @@ export function validateDateGroups(
 		const range = dateGroupRange(group, serials as number[]);
 		if (range.start >= range.end) throw new Error('The date group must end after it starts.');
 		for (const unit of dateGroupUnits(group)) {
-			const name = dateGroupFieldName(unit, group.field);
+			const name = dateGroupFieldName(unit, group.field, group);
 			if (pivot.fields.includes(name))
 				throw new Error('A source field already has the name of a date group field.');
 			if (
-				dateUnitLabels(unit, range, dateGroupDays(group), pivot.date1904 ?? false).length >
+				dateUnitLabels(unit, range, dateGroupDays(group), pivot.date1904 ?? false, group).length >
 				MAX_ITEMS
 			)
 				throw new Error('The date group has too many items.');
@@ -264,7 +283,7 @@ export function expandDateGroups(pivot: PivotTable): PivotTable {
 	const tables = derived.map((entry) => {
 		const range = { start: entry.group.start!, end: entry.group.end! };
 		const days = dateGroupDays(entry.group);
-		const labels = dateUnitLabels(entry.unit, range, days, date1904);
+		const labels = dateUnitLabels(entry.unit, range, days, date1904, entry.group);
 		return {
 			base: pivot.fields.indexOf(entry.group.field),
 			labels,

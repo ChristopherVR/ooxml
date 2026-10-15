@@ -6,7 +6,7 @@ import {
 	dateGroupDays,
 	dateGroupFieldName,
 	dateGroupRange,
-	dateUnitLabels,
+	englishDateUnitLabels,
 } from './date-groups';
 import { isoToSerial } from './dates';
 
@@ -129,20 +129,25 @@ export function readDateGroups(
 		const expected = dateGroupRange(group, serials as number[]);
 		if (!close(expected.start, start) || !close(expected.end, end))
 			throw unsupported('stale range');
+		// The structure of the items is the same in every language; only their text differs.
+		const localized: NonNullable<PivotDateGroup['localized']> = {};
 		for (const entry of list) {
-			const labels = dateUnitLabels(entry.unit, expected, dateGroupDays(group), date1904);
+			const labels = englishDateUnitLabels(entry.unit, expected, dateGroupDays(group), date1904);
 			const node = first(first(entry.node, 'fieldGroup', NS.x), 'groupItems', NS.x)!;
 			const actual = children(node, 's', NS.x).map((item) => decodeEscapes(att(item, 'v') ?? ''));
+			const name = decodeEscapes(att(entry.node, 'name') ?? '');
 			if (
-				att(entry.node, 'name') === undefined ||
-				decodeEscapes(att(entry.node, 'name')!) !== dateGroupFieldName(entry.unit, field) ||
+				!name ||
 				elements(node).length !== actual.length ||
 				actual.length !== labels.length ||
-				actual.some((label, i) => label !== labels[i])
+				actual.some((label) => !label) ||
+				new Set(actual).size !== actual.length
 			)
 				throw unsupported('group items');
+			if (name !== dateGroupFieldName(entry.unit, field) || actual.some((l, i) => l !== labels[i]))
+				localized[entry.unit] = { name, labels: actual };
 		}
-		groups.push(group);
+		groups.push(Object.keys(localized).length ? { ...group, localized } : group);
 	}
 	return groups;
 }

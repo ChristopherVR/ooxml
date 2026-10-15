@@ -14,10 +14,12 @@ type AxisPivot = Pick<
 >;
 
 /** The axis names a group stands for: coarsest first (`Years`, `Quarters`, `Months`). */
-export const dateGroupAxisNames = (group: Pick<PivotDateGroup, 'field' | 'by'>): string[] =>
+export const dateGroupAxisNames = (
+	group: Pick<PivotDateGroup, 'field' | 'by' | 'localized'>,
+): string[] =>
 	dateGroupUnits(group)
 		.reverse()
-		.map((unit) => dateGroupFieldName(unit, group.field));
+		.map((unit) => dateGroupFieldName(unit, group.field, group));
 
 function replace(
 	list: string[],

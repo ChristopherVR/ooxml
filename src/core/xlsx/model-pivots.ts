@@ -46,6 +46,12 @@ export interface PivotDateGroup {
 	start?: number;
 	end?: number;
 	days?: number;
+	/**
+	 * What a file written by Excel in another language (or with renamed group items) calls the
+	 * group fields and their items, per unit: the field name and the item labels in item order,
+	 * including the `<start` and `>end` items. Units that use the English names have no entry.
+	 */
+	localized?: Partial<Record<PivotDateUnit, { name: string; labels: string[] }>>;
 }
 export type PivotValuesPosition = 'last' | 'between' | 'first' | number;
 export type PivotLayout = 'tabular' | 'compact' | 'outline';
