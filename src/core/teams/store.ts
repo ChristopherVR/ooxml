@@ -13,6 +13,7 @@ import type { Attachment, Channel, Message } from './model';
 import type { ActivityItem } from './activity';
 import { createActivityFeed } from './activity-feed';
 import { type MentionTarget, mentionTargetsFor } from './mentions';
+import { mentionDisplayText, promoteMentions } from './mention-text';
 import type { NotificationSettings } from './notifications';
 import { createFileActions } from './files';
 import { createMessageTransfers, type MessageTransfer } from './message-transfer';
@@ -422,7 +423,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			messageTransfers: transfers?.list() ?? [],
 			draft: drafts.read(
 				draftContext(),
-				messages.find((message) => message.id === editId)?.text ?? '',
+				mentionDisplayText(messages.find((message) => message.id === editId) ?? { text: '' }),
 			),
 			drafts: drafts
 				.list()
@@ -697,10 +698,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			const revision = drafts.clear(context);
 			const channelId = selected;
 			const replyingTo = replyId;
+			// The composer shows names; the stored text carries the "@" for older clients.
+			const picks = [...mentions, ...(state.editing?.mentions ?? [])];
+			const stored = promoteMentions(text, picks);
 			clearTimeout(typingTimer);
 			ws.setTyping(undefined);
 			if (editId) {
-				if (!ws.chat.edit(selected, editId, text, [...mentions, ...state.mentionTargets])) {
+				if (!ws.chat.edit(selected, editId, stored, [...picks, ...state.mentionTargets])) {
 					drafts.restore(context, sentDraft, revision);
 					notice('The edit was not applied; the draft was retained');
 					return refresh();
@@ -713,8 +717,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 					if (destroyed || !visibleChannels().some((channel) => channel.id === channelId))
 						throw new Error('The channel is no longer available');
 					const message = ws.chat.post(channelId, {
-						text,
-						mentions: [...mentions, ...state.mentionTargets],
+						text: stored,
+						mentions: [...picks, ...state.mentionTargets],
 						...(replyingTo ? { replyTo: replyingTo } : {}),
 						attachments,
 					});

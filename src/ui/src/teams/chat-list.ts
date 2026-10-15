@@ -184,14 +184,14 @@ export class OfficeUiChatList extends TeamsElement {
 		`;
 	}
 
-	/** Plain runs and highlighted mentions, with no whitespace between them. */
+	/** Plain runs and highlighted mentions (the name without its `@`, as in Teams), with no whitespace between them. */
 	private body(m: ChatMessage) {
 		return mentionSegments(m.text, m.mentions).map((segment) =>
 			segment.mention
 				? html`<span
 						class="mention"
 						data-self=${String(segment.mention.kind !== 'user' || segment.mention.id === this.selfId)}
-						>${segment.text}</span
+						>${segment.text.slice(1)}</span
 					>`
 				: segment.text,
 		);

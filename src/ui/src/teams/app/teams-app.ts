@@ -108,7 +108,7 @@ export class TeamsApp extends LitElement {
 		settingsOpen: { state: true },
 		mobileView: { state: true },
 		toast: { state: true },
-		activityToast: { state: true },
+		activityToasts: { state: true },
 		activityFilter: { state: true },
 		highlightId: { state: true },
 		identity: { state: true },
@@ -142,7 +142,7 @@ export class TeamsApp extends LitElement {
 	declare mobileView: 'list' | 'conversation';
 	declare toast: string;
 	/** The newest activity item announced while the tab is visible. */
-	declare activityToast: ActivityItem | null;
+	declare activityToasts: ActivityItem[];
 	declare activityFilter: ActivityFilter;
 	/** A message briefly highlighted after opening it from Activity or the pinned bar. */
 	declare highlightId: string;
@@ -159,7 +159,7 @@ export class TeamsApp extends LitElement {
 		(item) => this.announce(item),
 	);
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
-	private activityToastTimer: ReturnType<typeof setTimeout> | undefined;
+	private readonly activityToastTimers = new Map<string, ReturnType<typeof setTimeout>>();
 	private highlightTimer: ReturnType<typeof setTimeout> | undefined;
 	private stopActivity: (() => void) | undefined;
 	private openRequest = 0;
@@ -194,7 +194,7 @@ export class TeamsApp extends LitElement {
 		this.settingsOpen = false;
 		this.mobileView = 'conversation';
 		this.toast = '';
-		this.activityToast = null;
+		this.activityToasts = [];
 		this.activityFilter = 'all';
 		this.highlightId = '';
 		this.identity = null;
@@ -318,9 +318,16 @@ export class TeamsApp extends LitElement {
 		if (!settings) return;
 		deliverNotification(item, settings, browserDeliveryEnv(), {
 			toast: (entry) => {
-				this.activityToast = entry;
-				clearTimeout(this.activityToastTimer);
-				this.activityToastTimer = setTimeout(() => (this.activityToast = null), 6000);
+				// Newest first, at most three on screen, each leaves on its own timer.
+				this.activityToasts = [
+					entry,
+					...this.activityToasts.filter((t) => t.id !== entry.id),
+				].slice(0, 3);
+				clearTimeout(this.activityToastTimers.get(entry.id));
+				this.activityToastTimers.set(
+					entry.id,
+					setTimeout(() => this.dismissToast(entry.id), 6000),
+				);
 			},
 			open: (entry) => void this.openActivity(entry.id),
 		});
@@ -411,7 +418,8 @@ export class TeamsApp extends LitElement {
 		this.openRequest++;
 		this.preview = null;
 		clearTimeout(this.toastTimer);
-		clearTimeout(this.activityToastTimer);
+		for (const timer of this.activityToastTimers.values()) clearTimeout(timer);
+		this.activityToastTimers.clear();
 		clearTimeout(this.highlightTimer);
 		this.stopActivity?.();
 		this.stopActivity = undefined;
@@ -611,7 +619,7 @@ export class TeamsApp extends LitElement {
 					@teams-create-channel-close=${() => (this.creatingChannel = false)}
 				></teams-create-channel-dialog>
 				${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
-				${this.activityToast ? this.activityToastView(this.activityToast) : nothing}
+				${this.activityToasts.length ? html`<div class="activity-toasts">${this.activityToasts.map((t) => this.activityToastView(t))}</div>` : nothing}
 
 				<teams-add-tab-dialog
 					.open=${this.addingTab}
@@ -753,8 +761,14 @@ export class TeamsApp extends LitElement {
 		`;
 	}
 
+	private dismissToast(id: string): void {
+		clearTimeout(this.activityToastTimers.get(id));
+		this.activityToastTimers.delete(id);
+		this.activityToasts = this.activityToasts.filter((t) => t.id !== id);
+	}
+
 	private activityToastView(item: ActivityItem) {
-		return html`<div class="toast activity-toast" role="status" data-kind=${item.kind}>
+		return html`<div class="activity-toast" role="status" data-kind=${item.kind}>
 			<span class="toast-text"
 				><strong>${describeActivity(item)}</strong
 				><span class="toast-preview">${item.preview}</span></span
@@ -762,13 +776,13 @@ export class TeamsApp extends LitElement {
 			<button
 				type="button"
 				@click=${() => {
-					this.activityToast = null;
+					this.dismissToast(item.id);
 					void this.openActivity(item.id);
 				}}
 			>
 				View
 			</button>
-			<button type="button" aria-label="Dismiss" @click=${() => (this.activityToast = null)}>
+			<button type="button" aria-label="Dismiss" @click=${() => this.dismissToast(item.id)}>
 				${icon('close')}
 			</button>
 		</div>`;

@@ -610,9 +610,13 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   navigable (Up, Down, Enter or Tab, Escape). A mention is stored next to the plain text as a range
   (`mentions: [{ kind, id, name, start, end }]` on the message row), so older clients show the
   message as ordinary text. Ranges are derived from the cleaned text on send and re-validated on
-  read. Names are highlighted, mentions of you (and `@channel` / `@team`) are emphasised, and
-  editing a message keeps its mentions. A typed `@Name` that matches a channel member counts as a
-  mention too, which differs from Teams (where only a picked token does). There is no team or
+  read. As in Teams, a mention is shown as the person's name without the `@` (highlighted; mentions
+  of you and `@channel` / `@team` are emphasised) and the picker inserts the name without the `@`
+  too; the `@` stays in the stored text, which keeps the format backward compatible. Because the
+  composer is a plain text box, each picked name claims the first matching occurrence in the text
+  when the message is stored, so deleting a picked name and typing the same word elsewhere can
+  still promote it. Editing a message keeps its mentions. A typed `@Name` that matches a channel
+  member counts as a mention too, which differs from Teams. There is no team or
   channel membership model, so `@channel` and `@team` reach the same people and the picker only
   knows people who have written or are online.
 - **Activity feed.** Activity is the first item of the app rail (bottom bar on phones) with an
@@ -626,8 +630,10 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
   device (a watermark plus per-item overrides), so it does not follow you to another device; a
   first run starts at "now" so existing history is not a wall of unread items. Pins by you and
   your own actions never appear, and there is no per-channel "notify me" setting.
-- **Notifications.** New activity is announced while the app is open: a toast with a View action
-  when the tab is visible, and a browser `Notification` (click focuses the tab and opens the item)
+- **Notifications.** New activity is announced while the app is open: a toast with View and
+  Dismiss actions when the tab is visible (toasts stack at the top right below the channel header,
+  up to three, never over the compose box; on phones they are full-width banners below the
+  header), and a browser `Notification` (click focuses the tab and opens the item)
   when the tab is hidden and the person granted permission. An optional two-note chime plays with
   either. Settings > Notifications and activity chooses All activity, Mentions only or Off, the
   sound, and requests the browser permission. Do not disturb suppresses the toast, the desktop

@@ -179,10 +179,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 		if (!area || !picker) return;
 		const next = insertMention(this.value, picker, area.selectionStart, target);
 		this.value = next.text;
-		this.inserted = [
-			...this.inserted.filter((t) => t.kind !== target.kind || t.id !== target.id),
-			target,
-		];
+		this.inserted = [...this.inserted, target];
 		this.picker = null;
 		this.saveDraft();
 		void this.updateComplete.then(() => {

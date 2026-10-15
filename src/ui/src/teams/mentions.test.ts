@@ -70,10 +70,10 @@ describe('the @ picker in office-ui-chat-composer', () => {
 		expect(area.getAttribute('aria-activedescendant')).toBe('mention-option-1');
 		await key('Enter');
 		expect(sent).toHaveLength(0);
-		expect(el.value).toBe('hi @Bob ');
+		expect(el.value).toBe('hi Bob ');
 		expect(el.shadowRoot!.querySelector('.mentions')).toBeNull();
 		await key('Enter');
-		expect(sent).toEqual([{ text: 'hi @Bob ', files: [], mentions: [bob] }]);
+		expect(sent).toEqual([{ text: 'hi Bob ', files: [], mentions: [bob] }]);
 	});
 
 	it('closes with Escape without cancelling the compose and inserts on click', async () => {
@@ -87,7 +87,7 @@ describe('the @ picker in office-ui-chat-composer', () => {
 		await type('@Ad');
 		qa<HTMLElement>(el, '.mentions [role="option"]')[0]!.click();
 		await el.updateComplete;
-		expect(el.value).toBe('@Ada Lovelace ');
+		expect(el.value).toBe('Ada Lovelace ');
 	});
 
 	it('offers @channel with a hint', async () => {
@@ -110,10 +110,10 @@ describe('mentions in office-ui-chat-list', () => {
 		});
 		const marks = qa<HTMLElement>(el, '.mention');
 		expect(marks.map((m) => [m.textContent, m.dataset.self])).toEqual([
-			['@Ada Lovelace', 'true'],
-			['@Bob', 'false'],
+			['Ada Lovelace', 'true'],
+			['Bob', 'false'],
 		]);
-		expect(q(el, '.text').textContent).toBe('hi @Ada Lovelace and @Bob!');
+		expect(q(el, '.text').textContent).toBe('hi Ada Lovelace and Bob!');
 		expect(q<HTMLElement>(el, '.msg').dataset.mentionsYou).toBe('true');
 	});
 

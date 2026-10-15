@@ -42,15 +42,15 @@ test('mentions: picker, highlighting, emphasis for you, and edits keep them', as
 	await expect(picker.getByRole('option', { name: /Ada/u })).toBeVisible();
 	await bob.screenshot({ path: test.info().outputPath('mention-picker.png') });
 	await composer(bob).press('Enter');
-	await expect(composer(bob)).toHaveValue('hey @Ada ');
+	await expect(composer(bob)).toHaveValue('hey Ada ');
 	await expect(picker).toBeHidden();
 	await composer(bob).pressSequentially('please look');
 	await composer(bob).press('Enter');
 
 	const forAda = ada.locator('office-ui-chat-list .mention[data-self="true"]');
-	await expect(forAda).toHaveText('@Ada');
+	await expect(forAda).toHaveText('Ada');
 	await expect(ada.locator('office-ui-chat-list .msg[data-mentions-you="true"]')).toHaveCount(1);
-	await expect(bob.locator('office-ui-chat-list .mention[data-self="false"]')).toHaveText('@Ada');
+	await expect(bob.locator('office-ui-chat-list .mention[data-self="false"]')).toHaveText('Ada');
 	await ada.screenshot({ path: test.info().outputPath('mention-you.png') });
 
 	// @channel is offered, and editing the message keeps the mention.
@@ -63,10 +63,10 @@ test('mentions: picker, highlighting, emphasis for you, and edits keep them', as
 	await mine.hover();
 	await mine.getByRole('button', { name: 'Edit', exact: true }).click();
 	const edit = composer(bob);
-	await expect(edit).toHaveValue('hey @Ada please look');
-	await edit.fill('hey @Ada please look now');
+	await expect(edit).toHaveValue('hey Ada please look');
+	await edit.fill('hey Ada please look now');
 	await edit.press('Enter');
-	await expect(ada.locator('office-ui-chat-list .mention[data-self="true"]')).toHaveText('@Ada');
+	await expect(ada.locator('office-ui-chat-list .mention[data-self="true"]')).toHaveText('Ada');
 	await expect(row(ada, 'please look now')).toContainText('(edited)');
 	await context.close();
 });
@@ -120,7 +120,7 @@ test('activity: feed, filters, read state and opening an item', async ({ browser
 	// The mention opens the post itself, scrolled into view.
 	await ada.getByRole('button', { name: /^All$/u }).click();
 	await feed.getByRole('button', { name: /mentioned you in # General/u }).click();
-	await expect(row(ada, 'FYI @Ada')).toBeInViewport();
+	await expect(row(ada, 'FYI Ada')).toBeInViewport();
 
 	// Phone layout: the feed fills the screen and an item opens the conversation.
 	await ada.setViewportSize({ width: 375, height: 812 });
@@ -128,8 +128,16 @@ test('activity: feed, filters, read state and opening an item', async ({ browser
 	await expect(feed).toBeVisible();
 	await ada.screenshot({ path: test.info().outputPath('activity-375.png') });
 	await feed.getByRole('button', { name: /mentioned you in # General/u }).click();
-	await expect(row(ada, 'FYI @Ada')).toBeInViewport();
+	await expect(row(ada, 'FYI Ada')).toBeInViewport();
 	await ada.screenshot({ path: test.info().outputPath('activity-open-375.png') });
+	// A toast on a phone is a full-width banner below the header.
+	await post(bob, 'ping @Ada on the phone');
+	const phoneToast = ada.locator('.activity-toast').first();
+	await expect(phoneToast).toContainText('ping Ada on the phone');
+	const banner = (await phoneToast.boundingBox())!;
+	expect(banner.width).toBeGreaterThan(340);
+	expect(banner.y).toBeGreaterThan(50);
+	await ada.screenshot({ path: test.info().outputPath('activity-toast-375.png') });
 	await context.close();
 });
 
@@ -185,9 +193,19 @@ test('notifications: Do not disturb suppresses them and settings choose the leve
 	await ada.keyboard.press('Escape');
 	await post(bob, 'again @Ada please');
 	await expect(toast).toContainText('Bob mentioned you in # General');
-	await expect(toast).toContainText('again @Ada please');
+	await expect(toast).toContainText('again Ada please');
 	await ada.screenshot({ path: test.info().outputPath('notification-toast.png') });
-	await toast.getByRole('button', { name: 'View' }).click();
+	// Several toasts stack, and none covers the compose box.
+	await post(bob, 'and @Ada once more');
+	await expect(toast).toHaveCount(2);
+	const toastBox = (await toast.first().boundingBox())!;
+	const lastBox = (await toast.last().boundingBox())!;
+	const composerBox = (await composer(ada).boundingBox())!;
+	expect(toastBox.y + toastBox.height).toBeLessThan(lastBox.y + 1);
+	expect(lastBox.y + lastBox.height).toBeLessThan(composerBox.y);
+	await ada.screenshot({ path: test.info().outputPath('notification-toasts-stacked.png') });
+	await toast.first().getByRole('button', { name: 'Dismiss' }).click();
+	await toast.first().getByRole('button', { name: 'View' }).click();
 	await expect(toast).toHaveCount(0);
 
 	// A hidden tab gets a desktop notification instead of a toast.
@@ -225,7 +243,7 @@ test('notifications: Do not disturb suppresses them and settings choose the leve
 	const theirs = row(bob, 'My own post');
 	await theirs.hover();
 	await theirs.getByRole('button', { name: 'React 👍', exact: true }).click();
-	await expect(activityButton(ada)).toContainText('3');
+	await expect(activityButton(ada)).toContainText('4');
 	await ada.waitForTimeout(1000);
 	await expect(toast).toHaveCount(0);
 	await context.close();

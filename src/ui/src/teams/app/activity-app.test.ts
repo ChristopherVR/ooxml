@@ -87,7 +87,7 @@ describe('Activity in <teams-app>', () => {
 		await ada.updateComplete;
 		const toast = ada.shadowRoot!.querySelector('.activity-toast');
 		expect(toast?.textContent).toContain('Bob mentioned you in # General');
-		expect(toast?.textContent).toContain('loud @Ada');
+		expect(toast?.textContent).toContain('loud Ada');
 	});
 
 	it('changes the notification level from Settings', async () => {

@@ -109,11 +109,11 @@ describe('the picker rules', () => {
 	it('inserts the token and moves the caret past it', () => {
 		const query = mentionQueryAt('hi @Ad there', 6)!;
 		expect(insertMention('hi @Ad there', query, 6, ada)).toEqual({
-			text: 'hi @Ada there',
-			caret: 8,
+			text: 'hi Ada there',
+			caret: 7,
 		});
 		const end = mentionQueryAt('hi @', 4)!;
-		expect(insertMention('hi @', end, 4, ada)).toEqual({ text: 'hi @Ada ', caret: 8 });
+		expect(insertMention('hi @', end, 4, ada)).toEqual({ text: 'hi Ada ', caret: 7 });
 	});
 
 	it('offers people who wrote or are online, never yourself, then the groups', () => {

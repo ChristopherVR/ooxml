@@ -47,4 +47,27 @@ describe('mentions through the client', () => {
 		expect(edited.mentions).toHaveLength(1);
 		expect(edited.editedAt).toBeGreaterThan(0);
 	});
+
+	it('stores picked names with the @ and shows them without it while editing', async () => {
+		const ada = make('ada', 'mention-plain');
+		const bob = make('bob', 'mention-plain');
+		ada.createChannel('Ops');
+		await tick(150);
+		await bob.send({ text: 'hi' });
+		await tick(150);
+		await ada.send({
+			text: 'hello bob, the channel is quiet',
+			mentions: [{ kind: 'user', id: 'bob', name: 'bob' }],
+		});
+		await tick(100);
+		const message = ada.getState().messages.at(-1)!;
+		expect(message.text).toBe('hello @bob, the channel is quiet');
+		expect(message.mentions).toHaveLength(1);
+		ada.startEdit(message.id);
+		await tick(50);
+		expect(ada.getState().draft.text).toBe('hello bob, the channel is quiet');
+		await ada.send({ text: 'hello bob, all quiet' });
+		await tick(100);
+		expect(ada.getState().messages.at(-1)!.text).toBe('hello @bob, all quiet');
+	});
 });

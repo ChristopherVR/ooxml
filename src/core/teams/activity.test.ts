@@ -63,8 +63,8 @@ describe('deriveActivity', () => {
 			bob.post(ops.id, { text: 'hey @Bob', mentions: [{ kind: 'user', id: 'bob', name: 'Bob' }] });
 			const items = derive();
 			expect(items.map((i) => [i.kind, i.preview])).toEqual([
-				['mention', 'hello @team'],
-				['mention', 'hi @Ada'],
+				['mention', 'hello team'],
+				['mention', 'hi Ada'],
 			]);
 			expect(items[0]).toMatchObject({ actorId: 'bob', actorName: 'Bob', channelName: 'Ops' });
 		} finally {

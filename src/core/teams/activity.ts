@@ -3,6 +3,7 @@
 // feed is a projection (nothing is stored in Yjs for it), so every client computes the same items
 // from the same document, and read state is a personal overlay (`activity-state.ts`). DOM-free.
 import type { Channel, Message } from './model';
+import { mentionDisplayText } from './mention-text';
 import { mentionsUser } from './mentions';
 import type { PinnedMessage } from './pins';
 import { channelThreads } from './threads';
@@ -51,8 +52,10 @@ export interface ActivityInput {
 export const MAX_ACTIVITY_ITEMS = 200;
 const PREVIEW_CHARS = 140;
 
-export const activityPreview = (message: Pick<Message, 'text' | 'attachments'>): string => {
-	const text = message.text.replace(/\s+/gu, ' ').trim();
+export const activityPreview = (
+	message: Pick<Message, 'text' | 'attachments' | 'mentions'>,
+): string => {
+	const text = mentionDisplayText(message).replace(/\s+/gu, ' ').trim();
 	if (text) return text.length > PREVIEW_CHARS ? `${text.slice(0, PREVIEW_CHARS)}...` : text;
 	return message.attachments[0]?.name ?? 'Attachment';
 };

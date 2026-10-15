@@ -177,14 +177,18 @@ export function filterMentionTargets(
 		.map((entry) => entry.target);
 }
 
-/** Replace the open query with the mention token (and a trailing space) and place the caret. */
+/**
+ * Replace the open `@query` with the person's name (and a trailing space) and place the caret.
+ * The `@` is only there while the picker is open, as in Teams; `promoteMentions` adds it back
+ * when the message is stored, so older clients still read `@Name`.
+ */
 export function insertMention(
 	text: string,
 	query: MentionQuery,
 	caret: number,
 	target: MentionTarget,
 ): { text: string; caret: number } {
-	const token = `@${target.name} `;
+	const token = `${target.name} `;
 	const rest = text.slice(caret);
 	const tail = rest.startsWith(' ') ? rest.slice(1) : rest;
 	return { text: text.slice(0, query.start) + token + tail, caret: query.start + token.length };
