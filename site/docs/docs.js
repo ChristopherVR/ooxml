@@ -37,3 +37,23 @@ window.addEventListener('storage', (event) => {
 });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', apply);
 apply();
+requestAnimationFrame(() => root.classList.add('theme-anim'));
+
+// Each section settles in once as it scrolls into view; its cards stagger after it (docs.css).
+const sections = [...document.querySelectorAll('.hub-section')];
+for (const section of sections)
+	for (const [i, card] of [...section.querySelectorAll('.hub-card')].entries())
+		card.style.setProperty('--i', i);
+if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+	const observer = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries)
+				if (entry.isIntersecting) {
+					entry.target.classList.add('is-revealed');
+					observer.unobserve(entry.target);
+				}
+		},
+		{ threshold: 0.15 },
+	);
+	for (const section of sections) observer.observe(section);
+} else for (const section of sections) section.classList.add('is-revealed');

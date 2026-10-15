@@ -16,8 +16,8 @@ rather than one stylesheet.
 - **Text is sentence case.** Labels, buttons, table headers, kickers and tags are set in the UI
   face in sentence case. Monospace is for code, file paths and commands only. No label is set in
   tracked-out capitals, and no arrow glyph is appended to link or button text.
-- **Motion answers an action.** Hover and open states transition in 140 to 220 ms. Pages do not
-  animate on scroll. `prefers-reduced-motion` turns transitions off.
+- **Motion is fluid and purposeful.** One easing, four durations, entrances that settle once and
+  hover states that lift; see Motion below. `prefers-reduced-motion` turns it all off.
 - **Dark first in the app, system in the docs.** The suite opens in dark mode on a first visit
   (light stays one click away in Appearance). The docs follow the reader's system setting.
 
@@ -89,12 +89,45 @@ semibold, 8 px 14 px padding, 4 px radius. Secondary: transparent with a `line-s
 Text link: accent colour, underline on hover.
 
 **Header bar.** 52 px, canvas background, hairline below. Brand left, search centred (sunken field,
-`/` focuses it), actions right. The docs keep the VitePress nav and add two links: "OOXML Office"
-(the suite) and "All docs" (the hub).
+`/` focuses it), actions right.
+
+**Docs nav.** Every docs site has the same three entries and nothing else: `Guide` (the site's
+getting-started page, or `/guide/` on PowerPoint), `OOXML Office` (the suite, opened in the same
+tab) and `Releases`. Everything else (user guide, demos, packages, API, theming, roadmap) lives in
+the sidebar. Locales translate the labels but keep the three entries. The appearance switch and
+the GitHub link stay visible at 1280 px; nothing falls into the overflow menu.
+
+**Live demo language.** A demo that accepts `?locale=` (Word does: en, fr, de, es, zh-CN) gets a
+language select in the demo frame bar on the landing page, next to the framework switcher, that
+reloads the frame with that locale. A site with translated pages (PowerPoint) passes the site
+language instead.
 
 **Sidebar.** 228 px, surface background, hairline right. Group captions are 11 px semibold muted
 sentence case. The active item has the selected tint, accent text and a 3 px accent bar on the
 left. Items that are previews carry a tag.
+
+## Motion
+
+One easing and four durations everywhere; nothing else.
+
+- **Easing:** `cubic-bezier(0.22, 1, 0.36, 1)` (a fast start that settles) for everything that
+  enters, opens or moves; `cubic-bezier(0.65, 0, 0.35, 1)` only for things that leave.
+- **Durations:** 120 ms press, 200 ms hover and toggles, 320 ms open, close, tab change and theme
+  cross-fade, 650 ms entrances and reveals.
+- **Entrances.** Above the fold, the headline, copy, actions and frame rise 16 px and fade in,
+  staggered 80 ms apart. Below the fold, each section reveals once as it enters the viewport
+  (IntersectionObserver, threshold 0.15): 24 px rise and fade over 650 ms, and the cells of a
+  joined grid stagger 60 ms apart. Nothing re-animates when scrolling back up.
+- **Hover.** Cards and tiles lift 2 px (`translateY(-2px)`) and take the accent on their border
+  or corner box; links underline; primary buttons brighten. Pressing scales to 0.985 for 120 ms.
+- **Open and close.** Dialogs, popovers and menus scale from 0.98 and fade over 320 ms; closing
+  takes 200 ms. Tabs and the sidebar's active bar move, they do not blink.
+- **Theme.** Changing the appearance cross-fades colours over 320 ms.
+- **Never:** parallax, continuous loops (the one scroll cue on a landing hero is the exception),
+  bounce, blur-in, or anything that moves on scroll position.
+
+The suite implements this in `site/styles.css`; the docs in `landing.css` plus a `useReveals`
+composable per site; the hub in `site/docs/docs.css`.
 
 ## The pages
 
@@ -106,8 +139,10 @@ left. Items that are previews carry a tag.
   no browser chrome to come back through).
 - **Documentation hub** (`site/docs/`): one page that links every manual: the core library, the UI
   package, the MCP server, the suite, the desktop build and each product site, as tool cards.
-- **Product docs landing**: hero with the product frame, features as tool cards, status, quick
-  start, FAQ, finale. The accent is the product colour.
+- **Product docs landing**: hero with the product frame, the live demo (with its language select
+  where the demo supports one), features as tool cards, status, quick start, FAQ, finale. The
+  accent is the product colour. Every site keeps this order so the five landings read as one
+  family.
 
 ## Do not
 

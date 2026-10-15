@@ -61,6 +61,7 @@
 .launcher-grid button:hover,
 .launcher-grid a:hover {
 	background: var(--selected);
+	transform: translateY(-2px);
 }
 .launcher-grid .app-badge {
 	width: 32px;
@@ -137,6 +138,9 @@
 .start-chooser button:focus-visible {
 	background: var(--selected);
 }
+.start-chooser button:hover::after {
+	transform: translateX(3px) rotate(45deg);
+}
 .start-chooser button:focus-visible {
 	outline-offset: -2px;
 	z-index: 1;
@@ -174,7 +178,9 @@
 	transform: rotate(45deg);
 	margin-right: 4px;
 	flex: none;
-	transition: border-color var(--fast);
+	transition:
+		border-color var(--fast) var(--ease),
+		transform var(--fast) var(--ease);
 }
 .start-chooser button:hover::after {
 	border-color: var(--text);

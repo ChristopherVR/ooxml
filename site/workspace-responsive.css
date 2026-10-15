@@ -254,20 +254,42 @@
 	}
 }
 @media (prefers-reduced-motion: no-preference) {
-	.shell-popover:popover-open {
-		animation: panel-in 0.16s var(--ease);
+	.shell-popover:popover-open,
+	.workspace-context-menu[open] {
+		animation: panel-in var(--open) var(--ease);
 	}
-	dialog[open] {
-		animation: panel-in 0.18s var(--ease);
+	dialog[open]:not(.workspace-context-menu) {
+		animation: dialog-in var(--open) var(--ease);
+	}
+	dialog[open]::backdrop {
+		animation: fade-in var(--open) var(--ease);
 	}
 	@keyframes panel-in {
 		from {
 			opacity: 0;
-			transform: translateY(-4px);
+			transform: translateY(-6px) scale(0.98);
 		}
 		to {
 			opacity: 1;
-			transform: translateY(0);
+			transform: none;
+		}
+	}
+	@keyframes dialog-in {
+		from {
+			opacity: 0;
+			transform: scale(0.98);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
 		}
 	}
 }

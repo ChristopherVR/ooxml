@@ -5,7 +5,11 @@
 	--font-mono: ui-monospace, 'Cascadia Mono', Consolas, Menlo, monospace;
 	--radius: 4px;
 	--radius-panel: 8px;
-	--fast: 0.14s;
+	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--press: 0.12s;
+	--fast: 0.2s;
+	--open: 0.32s;
+	--enter: 0.65s;
 	font-family: var(--font-ui);
 	font-size: 15px;
 	line-height: 1.55;
@@ -204,10 +208,17 @@ code {
 	color: var(--text);
 	text-decoration: none;
 	min-height: 150px;
-	transition: background-color var(--fast);
+	transition:
+		background-color var(--fast) var(--ease),
+		transform var(--fast) var(--ease);
 }
 .hub-card:hover {
 	background: var(--selected);
+	transform: translateY(-2px);
+	z-index: 1;
+}
+.hub-card:active {
+	transform: translateY(-1px) scale(0.99);
 }
 .hub-card > .app-badge {
 	grid-row: span 3;
@@ -302,15 +313,20 @@ code {
 	--tone: #e0a94a;
 }
 .hub-footer {
-	max-width: 1180px;
-	margin: 0 auto;
-	padding: 24px clamp(16px, 4vw, 40px) 48px;
+	max-width: calc(1180px - 2 * clamp(16px, 4vw, 40px));
+	margin: 0 clamp(16px, 4vw, 40px);
+	padding: 24px 0 48px;
 	display: flex;
 	justify-content: space-between;
 	gap: 16px;
 	font-size: 12px;
 	color: var(--muted);
 	border-top: 1px solid var(--line);
+}
+@media (min-width: 1260px) {
+	.hub-footer {
+		margin: 0 auto;
+	}
 }
 @media (max-width: 1000px) {
 	.hub-grid {
@@ -334,6 +350,57 @@ code {
 	}
 	.hub-primary {
 		padding: 0 10px;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	/* The intro rises on load; each section once as it enters the viewport (docs.js). */
+	.hub-intro > * {
+		animation: rise var(--enter) var(--ease) both;
+	}
+	.hub-intro > :nth-child(2) {
+		animation-delay: 0.08s;
+	}
+	.hub-section {
+		opacity: 0;
+		transform: translateY(24px);
+		transition:
+			opacity var(--enter) var(--ease),
+			transform var(--enter) var(--ease);
+	}
+	.hub-section.is-revealed {
+		opacity: 1;
+		transform: none;
+	}
+	.hub-section .hub-card {
+		opacity: 0;
+	}
+	.hub-section.is-revealed .hub-card {
+		animation: rise var(--enter) var(--ease) both;
+		animation-delay: calc(0.1s + var(--i, 0) * 0.06s);
+	}
+	html.theme-anim body,
+	html.theme-anim .hub-header,
+	html.theme-anim .hub-card,
+	html.theme-anim .hub-grid {
+		transition:
+			background-color var(--open) var(--ease),
+			color var(--open) var(--ease),
+			border-color var(--open) var(--ease);
+	}
+	.hub-icon:active,
+	.hub-primary:active {
+		transform: scale(0.985);
+		transition: transform var(--press) var(--ease);
+	}
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
 	}
 }
 @media (prefers-reduced-motion: reduce) {

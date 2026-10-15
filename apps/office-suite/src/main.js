@@ -238,6 +238,9 @@ $('create-row').innerHTML =
 		)
 		.join('') +
 	`<button data-teams>${badge('teams')}<span>Teams${tag(teamsApp.tag)}</span><small>Chat, calls and shared files on your server</small></button><button data-import>${icon('upload')}<span>Open a file</span><small>Bring a .docx, .xlsx, .pptx or .vsdx from this device</small></button>`;
+// Each tile's place in the entrance stagger (styles.css).
+for (const [i, button] of [...$('create-row').children].entries())
+	button.style.setProperty('--i', i);
 document.addEventListener('click', (event) => {
 	const b = event.target.closest('button');
 	if (!b) return;
@@ -377,6 +380,9 @@ document.addEventListener('drop', (event) => {
 		task(() => importFiles([...event.dataTransfer.files]));
 	}
 });
+// The home rises into place once; after that, switching back to it is instant (styles.css).
+document.body.classList.add('entering');
+setTimeout(() => document.body.classList.remove('entering'), 1200);
 mountThemes();
 mountProfile({
 	beforeSwitch: async () => {

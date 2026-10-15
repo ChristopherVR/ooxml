@@ -75,12 +75,16 @@ legend:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	margin: 0;
 	font-weight: 400;
 }
+/* The radio covers its preview invisibly, so the preview is the hit target. */
 .theme-modes input,
 .theme-accents input {
 	position: absolute;
-	width: 1px !important;
-	height: 1px;
+	inset: 0;
+	width: 100% !important;
+	height: 100%;
+	margin: 0;
 	opacity: 0;
+	cursor: pointer;
 }
 .theme-preview {
 	display: block;

@@ -84,7 +84,9 @@
 	gap: 4px 14px;
 	min-height: 104px;
 	position: relative;
-	transition: background-color var(--fast);
+	transition:
+		background-color var(--fast) var(--ease),
+		transform var(--fast) var(--ease);
 }
 .create-row > button > .ui-icon {
 	grid-row: span 2;
@@ -97,6 +99,11 @@
 }
 .create-row button:hover {
 	background: var(--selected);
+	transform: translateY(-2px);
+	z-index: 1;
+}
+.create-row button:active {
+	transform: translateY(-1px) scale(0.99);
 }
 .create-row button:focus-visible {
 	outline-offset: -2px;

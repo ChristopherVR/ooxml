@@ -11,8 +11,13 @@
 	--radius: 4px;
 	--radius-panel: 8px;
 	--header-h: 52px;
+	/* Motion: one easing, four durations (docs/pages-design.md). */
 	--ease: cubic-bezier(0.22, 1, 0.36, 1);
-	--fast: 0.14s;
+	--ease-exit: cubic-bezier(0.65, 0, 0.35, 1);
+	--press: 0.12s;
+	--fast: 0.2s;
+	--open: 0.32s;
+	--enter: 0.65s;
 	font-family: var(--font-ui);
 	font-size: 13px;
 	line-height: 1.5;
@@ -36,11 +41,50 @@ body {
 	html.theme-anim body,
 	html.theme-anim .suite-header,
 	html.theme-anim .workspace-sidebar,
-	html.theme-anim .library-section {
+	html.theme-anim .tabs,
+	html.theme-anim .statusbar,
+	html.theme-anim .library-section,
+	html.theme-anim .create-row,
+	html.theme-anim .create-row button,
+	html.theme-anim .assistant,
+	html.theme-anim .document-commandbar,
+	html.theme-anim .search,
+	html.theme-anim th,
+	html.theme-anim td {
 		transition:
-			background-color 0.3s,
-			color 0.3s,
-			border-color 0.3s;
+			background-color var(--open) var(--ease),
+			color var(--open) var(--ease),
+			border-color var(--open) var(--ease);
+	}
+	/* The home settles in once, on the first paint of the workspace. */
+	body.entering .home > * {
+		animation: rise var(--enter) var(--ease) both;
+	}
+	body.entering .home > :nth-child(2) {
+		animation-delay: 0.08s;
+	}
+	body.entering .home > :nth-child(3) {
+		animation-delay: 0.16s;
+	}
+	body.entering .home > :nth-child(4) {
+		animation-delay: 0.24s;
+	}
+	body.entering .home > :nth-child(5) {
+		animation-delay: 0.32s;
+	}
+	body.entering .create-row > button {
+		animation: rise var(--enter) var(--ease) both;
+		animation-delay: calc(0.2s + var(--i, 0) * 0.06s);
+	}
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
 	}
 }
 
@@ -90,12 +134,31 @@ button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	justify-content: center;
 	gap: 8px;
 	transition:
-		background-color var(--fast),
-		border-color var(--fast),
-		color var(--fast);
+		background-color var(--fast) var(--ease),
+		border-color var(--fast) var(--ease),
+		color var(--fast) var(--ease),
+		transform var(--fast) var(--ease);
 }
 button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):hover {
 	background: var(--hover);
+}
+@media (prefers-reduced-motion: no-preference) {
+	button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):active {
+		transform: scale(0.985);
+		transition-duration: var(--press);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):active {
+		transform: scale(0.985);
+		transition-duration: var(--press);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):active {
+		transform: scale(0.985);
+		transition-duration: var(--press);
+	}
 }
 button:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)):focus-visible,
 a:focus-visible,
@@ -281,6 +344,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	--app: var(--muted);
 	background: var(--sunken);
 	box-shadow: none;
+	border: 1px solid var(--line-strong);
 	color: var(--text);
 }
 .app-badge--docs .ui-icon {
