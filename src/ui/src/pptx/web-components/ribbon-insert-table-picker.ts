@@ -2,6 +2,22 @@
 export const TABLE_PICKER_COLUMNS = 10;
 export const TABLE_PICKER_ROWS = 8;
 
+/** The grid's styling; the Insert tab and the phone Insert sheet both draw the picker. */
+export const TABLE_PICKER_CSS = `
+/* Table grid picker: 10 columns by 8 rows, the hovered block highlighted. */
+.table-picker { padding:6px 10px 8px; }
+.table-picker-label { min-height:18px; margin-bottom:4px; font-size:12px; }
+.table-picker-grid { display:flex; flex-direction:column; gap:2px; width:max-content; outline-offset:2px; }
+.table-picker-grid:focus-visible { outline:2px solid var(--pptx-ring,#6366f1); }
+.table-picker-row { display:flex; gap:2px; }
+.table-picker-cell { box-sizing:border-box; width:18px; height:18px; border:1px solid var(--pptx-border,#374151); border-radius:2px; }
+.table-picker-cell[data-on] { background:var(--pptx-accent,#33334d); border-color:var(--pptx-primary,#6366f1); }
+.table-picker-grid[aria-disabled] { opacity:.35; pointer-events:none; }
+@media (pointer:coarse),(max-width:900px) {
+	.table-picker-cell { width:26px; height:26px; }
+}
+`;
+
 export interface TablePicker {
 	el: HTMLElement;
 	/** The text labels; `size` formats the hovered dimensions. */

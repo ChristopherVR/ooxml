@@ -3,6 +3,7 @@ export { slideClipboardLabels } from './slide-clipboard';
 export type { PptxUiSlideClipboardElement } from './slide-clipboard';
 import { HOST_STYLES } from './host-styles';
 import { definePptxMobileBar } from './mobile-bar';
+import { definePptxMobileInsert } from './mobile-insert';
 import { definePptxMobileToolbar } from './mobile-toolbar';
 import { definePptxNotesToolbar } from './notes-toolbar';
 import {
@@ -60,6 +61,7 @@ export type { PptxUiThemeEditorElement, ThemeEditorApplyEvent } from './theme-ed
 export type { CompatToastsRequestEvent, PptxUiCompatToastsElement } from './office-alias-types';
 export type { DialogFooterRequestEvent, PptxUiDialogFooterElement } from './office-alias-types';
 export type { MobileBarRequestEvent, PptxUiMobileBarElement } from './mobile-bar';
+export type { MobileInsertRequestEvent, PptxUiMobileInsertElement } from './mobile-insert';
 export type { MobileToolbarRequestEvent, PptxUiMobileToolbarElement } from './mobile-toolbar';
 export type { PasteOptionsRequestEvent, PptxUiPasteOptionsElement } from './office-alias-types';
 export type { PptxUiPresentToolbarElement, PresentToolbarRequestEvent } from './present-toolbar';
@@ -139,6 +141,7 @@ const controls = [
 	['pptx-ui-compat-toasts', definePptxCompatToasts],
 	['pptx-ui-dialog-footer', definePptxDialogFooter],
 	['pptx-ui-mobile-bar', definePptxMobileBar],
+	['pptx-ui-mobile-insert', definePptxMobileInsert],
 	['pptx-ui-mobile-toolbar', definePptxMobileToolbar],
 	['pptx-ui-paste-options', definePptxPasteOptions],
 	['pptx-ui-present-toolbar', definePptxPresentToolbar],

@@ -1,4 +1,5 @@
 import { attachScopedRibbonStyles } from './ribbon-scoped-styles';
+import { TABLE_PICKER_CSS } from './ribbon-insert-table-picker';
 
 const RIBBON_INSERT_STYLES = `
 :host { display:inline-flex; align-items:stretch; flex:none; color:var(--pptx-foreground,#f8fafc); font:inherit; }
@@ -38,18 +39,7 @@ pptx-ui-ribbon-group[data-scale] .primary svg { width:16px; height:16px; stroke-
 pptx-ui-ribbon-group[data-scale] .trigger.caret { width:18px; height:24px; border-radius:4px; }
 pptx-ui-ribbon-group[data-scale="icons"] .label { display:none; }
 pptx-ui-ribbon-group[data-scale="icons"] .trigger.large svg:last-child { margin-inline-start:0; }
-/* Table grid picker: 10 columns by 8 rows, the hovered block highlighted. */
-.table-picker { padding:6px 10px 8px; }
-.table-picker-label { min-height:18px; margin-bottom:4px; font-size:12px; }
-.table-picker-grid { display:flex; flex-direction:column; gap:2px; width:max-content; outline-offset:2px; }
-.table-picker-grid:focus-visible { outline:2px solid var(--pptx-ring,#6366f1); }
-.table-picker-row { display:flex; gap:2px; }
-.table-picker-cell { box-sizing:border-box; width:18px; height:18px; border:1px solid var(--pptx-border,#374151); border-radius:2px; }
-.table-picker-cell[data-on] { background:var(--pptx-accent,#33334d); border-color:var(--pptx-primary,#6366f1); }
-.table-picker-grid[aria-disabled] { opacity:.35; pointer-events:none; }
-@media (pointer:coarse),(max-width:900px) {
-	.table-picker-cell { width:26px; height:26px; }
-}
+${TABLE_PICKER_CSS}
 .list .heading { padding:4px 12px 2px; font-size:11px; opacity:.7; }
 .list.grid .heading { grid-column:1 / -1; padding:2px 2px 0; }
 .list button[aria-current] { font-weight:600; background:var(--pptx-accent,#33334d); }
