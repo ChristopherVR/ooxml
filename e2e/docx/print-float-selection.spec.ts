@@ -63,8 +63,17 @@ const front = (editor: Locator) =>
 	editor.locator('.dve-print-float[data-block-id]:not(.dve-print-float-behind)');
 const frame = (editor: Locator) => editor.locator('.dve-print-float-frame');
 
+/**
+ * The element's box. A relayout swaps the page DOM in one step, so a locator resolved just before
+ * it can find its element detached; read again until the new element answers.
+ */
 async function rect(locator: Locator) {
-	return (await locator.boundingBox())!;
+	let box = await locator.boundingBox();
+	for (let attempt = 0; !box && attempt < 20; attempt++) {
+		await locator.page().waitForTimeout(25);
+		box = await locator.boundingBox();
+	}
+	return box!;
 }
 
 async function savedXml(editor: Locator): Promise<string> {
