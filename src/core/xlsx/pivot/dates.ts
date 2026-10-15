@@ -52,7 +52,6 @@ export function pivotDateColumns(
 			const cell = getCell(ws, row, col);
 			if (
 				typeof cell?.value !== 'number' ||
-				!Number.isInteger(cell.value) ||
 				cell.value < 1 ||
 				!isDateFormat(styleAt(workbook, cell.styleId).numFmt ?? 'General')
 			)
@@ -74,6 +73,7 @@ export function pivotDateFieldsOf(
 		| 'fields'
 		| 'rowField'
 		| 'secondRowField'
+		| 'moreRowFields'
 		| 'columnField'
 		| 'pageFilter'
 		| 'valueField'
@@ -84,6 +84,7 @@ export function pivotDateFieldsOf(
 		[
 			pivot.rowField,
 			pivot.secondRowField,
+			...(pivot.moreRowFields ?? []),
 			pivot.columnField,
 			pivot.pageFilter?.field,
 			pivot.valueField,
@@ -91,4 +92,39 @@ export function pivotDateFieldsOf(
 		].filter((name): name is string => !!name),
 	);
 	return pivotDateColumns(workbook, sheet, pivot.source, pivot.fields, used);
+}
+
+/** The dates of the given fields rounded to the second, which is all the pivot cache keeps. */
+export function roundDateRecords(
+	pivot: Pick<PivotTable, 'fields' | 'records'>,
+	dateFields: readonly string[],
+	date1904: boolean,
+): void {
+	const indices = dateFields.map((name) => pivot.fields.indexOf(name)).filter((i) => i >= 0);
+	if (!indices.length) return;
+	pivot.records = pivot.records.map((record) => {
+		const next = [...record];
+		for (const index of indices) {
+			const value = next[index];
+			if (typeof value === 'number' && !Number.isInteger(value))
+				next[index] = isoToSerial(serialToIso(value, date1904), date1904) ?? value;
+		}
+		return next;
+	});
+}
+
+/** Date columns of the source that a date group can use: every date field but the measures. */
+export function pivotGroupableDateFields(
+	workbook: Workbook,
+	sheet: number,
+	pivot: Pick<PivotTable, 'source' | 'fields' | 'pageFilter' | 'valueField' | 'additionalValues'>,
+): string[] {
+	const skip = new Set<string>(
+		[
+			pivot.pageFilter?.field,
+			pivot.valueField,
+			...(pivot.additionalValues ?? []).map((measure) => measure.field),
+		].filter((name): name is string => !!name),
+	);
+	return pivotDateColumns(workbook, sheet, pivot.source, pivot.fields, skip);
 }

@@ -11,6 +11,8 @@ import { assertPivotAdmission, assertPivotRecords } from './admission';
 import { pivotKey, type SlicerRefs } from '../slicer/read';
 import { readDateFields, readDateFilter } from './date-read';
 import { readFieldGroups } from './group-read';
+import { databaseFieldCount, readDateGroups } from './date-group-read';
+import { fieldSubtotalsOf } from './subtotal-read';
 import { isoToSerial } from './dates';
 import { readItemFilters, readSlicerCacheId } from './item-filters-read';
 import { assertPageAxisItems } from './page-filter-admission';
@@ -66,9 +68,12 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		throw new Error('Unsupported pivot source');
 	const recordRoot = parseXml(source.text(recordPart)!).documentElement;
 	assertPivotRecords(recordRoot);
-	const fields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
-	if (fields.some((field) => field.hasAttribute('formula')))
+	const allFields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
+	if (allFields.some((field) => field.hasAttribute('formula')))
 		throw new Error('Calculated cache field');
+	// Date groups append derived cache fields that have no records.
+	const databaseCount = databaseFieldCount(allFields);
+	const fields = allFields.slice(0, databaseCount);
 	const shared = fields.map((field) =>
 		elements(first(field, 'sharedItems', NS.x) ?? parseXml('<root/>').documentElement).map((node) =>
 			value(node, workbook.date1904),
@@ -105,7 +110,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	);
 	if (
 		rowFields.length < 1 ||
-		rowFields.length > (rowsAxis ? 3 : 2) ||
+		(rowsAxis && rowFields.length > 3) ||
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
 		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
@@ -147,11 +152,13 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	)
 		throw new Error('Unsupported pivot aggregate');
 	const names = fields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
+	const axisNames = allFields.map((field) => decodeEscapes(att(field, 'name') ?? ''));
 	const realRows = rowsAxis
 		? rowFields.filter((field) => pivotFieldIndex(field) !== -2)
 		: rowFields;
-	const row = names[pivotFieldIndex(realRows[0])];
-	const second = realRows[1] ? names[Number(att(realRows[1], 'x'))] : undefined;
+	const row = axisNames[pivotFieldIndex(realRows[0])];
+	const second = realRows[1] ? axisNames[Number(att(realRows[1], 'x'))] : undefined;
+	const more = realRows.slice(2).map((field) => axisNames[Number(att(field, 'x'))]);
 	const pageFilter = readPivotPageFilter(root, names, shared);
 	const tableFields = children(first(root, 'pivotFields', NS.x)!, 'pivotField', NS.x);
 	const outer = tableFields[pivotFieldIndex(realRows[0])];
@@ -170,7 +177,11 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		(layout === 'compact' && att(root, 'indent') !== '0')
 	)
 		throw new Error('Mixed field layouts or custom compact indentation are preserved');
-	const subtotal = att(outer, 'defaultSubtotal') !== '0';
+	const rowDefinitions = realRows.map((field) => tableFields[Number(att(field, 'x'))]!);
+	const subtotalSettings = fieldSubtotalsOf(rowDefinitions, [row!, second, ...more]);
+	const subtotal = !subtotalSettings.some(
+		(entry) => entry.field === row && entry.functions.length === 0,
+	);
 	const repeat = realRows.map((field) => {
 		const node = tableFields[Number(att(field, 'x'))];
 		const extension = first(first(node, 'extLst', NS.x), 'ext', NS.x);
@@ -187,7 +198,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	});
 	if (repeat.some((entry) => entry !== repeat[0])) throw new Error('Mixed field label repetition');
 	const hasColumn = colFields.length > (dataFields.length > 1 && !rowsAxis ? 1 : 0);
-	const col = hasColumn ? names[Number(att(colFields[0], 'x'))] : undefined;
+	const col = hasColumn ? axisNames[Number(att(colFields[0], 'x'))] : undefined;
 	const data = names[Number(att(measure, 'fld'))];
 	const location = parseRange(att(first(root, 'location', NS.x), 'ref') ?? '');
 	if (!row || !data || !location || (hasColumn && !col) || (realRows.length === 2 && !second))
@@ -200,6 +211,19 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const slicerCacheId = readSlicerCacheId(cache);
 	const fieldGroups = readFieldGroups(fields, names);
 	const dateFields = readDateFields(fields, names);
+	tableFields.forEach((field, index) => {
+		const format = att(field, 'numFmtId');
+		if (format !== undefined && format !== '0' && !dateFields.includes(names[index] ?? ''))
+			throw new Error('Unsupported pivot field number format');
+	});
+	const dateGroups = readDateGroups(
+		allFields,
+		databaseCount,
+		names,
+		dateFields,
+		records,
+		workbook.date1904,
+	);
 	if (
 		fieldGroups.some(
 			(group) => group.field === pageFilter?.field || dateFields.includes(group.field),
@@ -210,17 +234,25 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const onAxis = new Set<string | undefined>([
 		row,
 		second,
+		...more,
 		col,
 		pageFilter?.field,
 		...dataFields.map((field) => names[Number(att(field, 'fld'))]),
 	]);
 	if (dateFields.some((field) => onAxis.has(field)))
 		throw new Error('Date fields used as rows, columns or values are preserved');
+	if (
+		realRows.some((field) => pivotFieldIndex(field) >= databaseCount) &&
+		(pageFilter || dateFilter || itemFilters || slicerCacheId !== undefined)
+	)
+		throw new Error('Date groups with filters are preserved');
 	const pivot: PivotTable = {
 		...(pageFilter ? { pageFilter } : {}),
 		...(itemFilters ? { itemFilters } : {}),
 		...(fieldGroups.length ? { fieldGroups } : {}),
 		...(dateFields.length ? { dateFields } : {}),
+		...(dateGroups.length ? { dateGroups } : {}),
+		...(dateGroups.length && workbook.date1904 ? { date1904: true } : {}),
 		...(dateFilter ? { dateFilter } : {}),
 		...(slicerCacheId !== undefined ? { slicerCacheId } : {}),
 		name: att(root, 'name') ?? 'PivotTable',
@@ -232,6 +264,14 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 			? { valuesPosition: valueIndex === 0 ? ('first' as const) : ('between' as const) }
 			: {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
+		...(subtotalSettings.some((entry) => entry.field !== row || entry.functions.length)
+			? {
+					fieldSubtotals: subtotalSettings.filter(
+						(entry) => entry.field !== row || entry.functions.length,
+					),
+				}
+			: {}),
+		...(more.length ? { moreRowFields: more as string[] } : {}),
 		...(second
 			? { secondRowField: second, subtotals: subtotal, repeatLabels: repeat[0] ?? false }
 			: {

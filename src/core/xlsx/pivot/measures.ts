@@ -34,8 +34,19 @@ export function normalizedPivotMeasures(
 	});
 }
 
+const DIV0: CellValue = { error: '#DIV/0!' };
+
+/** Sample (n - 1) or population (n) variance of at least one number, two-pass for accuracy. */
+function variance(numbers: readonly number[], sample: boolean): CellValue {
+	const n = numbers.length;
+	if (n < (sample ? 2 : 1)) return DIV0;
+	const mean = numbers.reduce((total, value) => total + value, 0) / n;
+	const squares = numbers.reduce((total, value) => total + (value - mean) ** 2, 0);
+	return squares / (sample ? n - 1 : n);
+}
+
 /** Every measure uses its own source values, including errors and missing intersections. */
-function aggregate(
+export function aggregateValues(
 	records: readonly CellValue[][],
 	field: number,
 	type: PivotAggregate,
@@ -43,12 +54,20 @@ function aggregate(
 	if (!records.length) return null;
 	const values = records.map((record) => record[field] ?? null);
 	if (type === 'count') return values.filter((value) => value !== null && value !== '').length;
+	if (type === 'countNums') return values.filter((value) => typeof value === 'number').length;
 	const error = values.find(isCellError);
 	if (error) return error;
 	const numbers = values.filter((value): value is number => typeof value === 'number');
-	if (!numbers.length) return type === 'average' ? { error: '#DIV/0!' } : 0;
+	if (type === 'var' || type === 'varp' || type === 'stdDev' || type === 'stdDevp') {
+		const result = variance(numbers, type === 'var' || type === 'stdDev');
+		return typeof result === 'number' && (type === 'stdDev' || type === 'stdDevp')
+			? Math.sqrt(result)
+			: result;
+	}
+	if (!numbers.length) return type === 'average' ? DIV0 : 0;
 	if (type === 'min') return numbers.reduce((a, b) => Math.min(a, b));
 	if (type === 'max') return numbers.reduce((a, b) => Math.max(a, b));
+	if (type === 'product') return numbers.reduce((total, value) => total * value, 1);
 	const sum = numbers.reduce((total, value) => total + value, 0);
 	return type === 'average' ? sum / numbers.length : sum;
 }
@@ -56,7 +75,7 @@ export const pivotMeasureNumber = (
 	pivot: Pick<PivotTable, 'fields'>,
 	records: readonly CellValue[][],
 	measure: PivotValueField,
-): CellValue => aggregate(records, pivot.fields.indexOf(measure.field), measure.aggregate);
+): CellValue => aggregateValues(records, pivot.fields.indexOf(measure.field), measure.aggregate);
 export const pivotNumbers = (pivot: PivotTable, records: readonly CellValue[][]): CellValue[] =>
 	pivotMeasures(pivot).map((measure) => pivotMeasureNumber(pivot, records, measure));
 

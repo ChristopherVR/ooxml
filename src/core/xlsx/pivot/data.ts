@@ -3,11 +3,25 @@ import { isCellError, type CellValue, type PivotTable, type Workbook } from '../
 import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
 import { parseXml } from '../../xml/index';
-import { groupOf, groupRank, validateFieldGroups } from './groups';
+import { pivotAxisFieldNames } from './date-groups';
+import { groupLabelsOf, groupRank, validateFieldGroups } from './groups';
+import { validateFieldSubtotals } from './subtotals';
 import { validatePivotItemFilters } from './item-filters';
 import { validatePivotPageFilter } from './page-filter';
 
-export const PIVOT_AGGREGATES = ['sum', 'count', 'average', 'min', 'max'] as const;
+export const PIVOT_AGGREGATES = [
+	'sum',
+	'count',
+	'average',
+	'min',
+	'max',
+	'product',
+	'countNums',
+	'stdDev',
+	'stdDevp',
+	'var',
+	'varp',
+] as const;
 
 /** Reads a rectangular, header-led source, retaining blanks and cached formula values. */
 export function pivotSourceData(
@@ -49,10 +63,14 @@ export function pivotValueKey(value: CellValue): string {
 }
 
 export function pivotItems(
-	pivot: Pick<PivotTable, 'fields' | 'records'> & { fieldGroups?: PivotTable['fieldGroups'] },
+	pivot: Pick<PivotTable, 'fields' | 'records'> & {
+		fieldGroups?: PivotTable['fieldGroups'];
+		dateGroups?: PivotTable['dateGroups'];
+		date1904?: boolean | undefined;
+	},
 	field: string,
 ): CellValue[] {
-	const group = groupOf(pivot, field);
+	const group = groupLabelsOf(pivot, field);
 	const index = pivot.fields.indexOf(field);
 	const items = new Map<string, CellValue>();
 	for (const record of pivot.records) {
@@ -98,7 +116,11 @@ export function validatePivotFields(
 		| 'layout'
 		| 'subtotalPosition'
 		| 'secondRowField'
+		| 'moreRowFields'
 		| 'subtotals'
+		| 'fieldSubtotals'
+		| 'dateGroups'
+		| 'date1904'
 		| 'repeatLabels'
 		| 'columnField'
 		| 'valueField'
@@ -119,12 +141,25 @@ export function validatePivotFields(
 	validatePivotPageFilter(pivot);
 	validatePivotItemFilters(pivot);
 	validateFieldGroups(pivot);
-	const used = [
-		pivot.rowField,
-		...(pivot.secondRowField ? [pivot.secondRowField] : []),
-		...(pivot.columnField ? [pivot.columnField] : []),
-		pivot.valueField,
-	];
+	const rows = pivotRowFields(pivot);
+	if (
+		pivot.moreRowFields !== undefined &&
+		(!Array.isArray(pivot.moreRowFields) ||
+			(pivot.moreRowFields.length > 0 && !pivot.secondRowField) ||
+			pivot.moreRowFields.length > 62 ||
+			pivot.moreRowFields.some((name) => typeof name !== 'string'))
+	)
+		throw new Error('Choose valid PivotTable row fields.');
+	if (pivot.valuesAxis === 'rows' && rows.length > 2)
+		throw new Error('Values on rows support at most two row fields.');
+	validateFieldSubtotals(pivot, rows);
+	const axisNames = pivotAxisFieldNames(pivot);
+	if (
+		(pivot.dateGroups ?? []).some((group) =>
+			[...rows, pivot.columnField].some((name) => name === group.field),
+		)
+	)
+		throw new Error('A date field with groups is replaced on the axes by its group fields.');
 	const extras = pivot.additionalValues ?? [];
 	if (pivot.valuesAxis !== undefined && !['columns', 'rows'].includes(pivot.valuesAxis))
 		throw new Error('Choose a valid Values axis.');
@@ -171,9 +206,12 @@ export function validatePivotFields(
 		(pivot.layout !== undefined && !['tabular', 'compact', 'outline'].includes(pivot.layout)) ||
 		(pivot.subtotalPosition !== undefined && !['top', 'bottom'].includes(pivot.subtotalPosition)) ||
 		!PIVOT_AGGREGATES.includes(pivot.aggregate) ||
-		used.some((field) => !pivot.fields.includes(field)) ||
-		new Set([pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean)).size !==
-			[pivot.rowField, pivot.secondRowField, pivot.columnField].filter(Boolean).length ||
+		!pivot.fields.includes(pivot.valueField) ||
+		[...rows, ...(pivot.columnField ? [pivot.columnField] : [])].some(
+			(field) => !axisNames.includes(field),
+		) ||
+		new Set([...rows, pivot.columnField].filter(Boolean)).size !==
+			[...rows, pivot.columnField].filter(Boolean).length ||
 		(pivot.subtotals !== undefined && typeof pivot.subtotals !== 'boolean') ||
 		(pivot.repeatLabels !== undefined && typeof pivot.repeatLabels !== 'boolean')
 	)
@@ -183,3 +221,12 @@ export function validatePivotFields(
 export function pivotCaption(aggregate: PivotTable['aggregate'], field: string): string {
 	return `${aggregate[0]!.toUpperCase()}${aggregate.slice(1)} of ${field}`;
 }
+
+/** The row fields, outermost first: the first, second and any further ones. */
+export const pivotRowFields = (
+	pivot: Pick<PivotTable, 'rowField' | 'secondRowField' | 'moreRowFields'>,
+): string[] => [
+	pivot.rowField,
+	...(pivot.secondRowField ? [pivot.secondRowField] : []),
+	...(pivot.secondRowField ? (pivot.moreRowFields ?? []) : []),
+];

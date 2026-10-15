@@ -1,7 +1,52 @@
 import type { CellRange } from './address';
 import type { CellValue } from './model';
 
-export type PivotAggregate = 'sum' | 'count' | 'average' | 'min' | 'max';
+/**
+ * A summary function: the Summarize Values By choices and the per-field subtotal functions.
+ * `count` counts non-empty values, `countNums` only numbers (Excel's COUNTA and COUNT).
+ */
+export type PivotAggregate =
+	| 'sum'
+	| 'count'
+	| 'average'
+	| 'min'
+	| 'max'
+	| 'product'
+	| 'countNums'
+	| 'stdDev'
+	| 'stdDevp'
+	| 'var'
+	| 'varp';
+/**
+ * The subtotals of one row field. Without an entry the field shows the automatic subtotal (a
+ * Total row, or the group row's value when subtotals sit above); an empty list shows none; a
+ * list shows one subtotal row per function, below the group, computed from the source values.
+ */
+export interface PivotFieldSubtotals {
+	field: string;
+	functions: PivotAggregate[];
+}
+/** The units a date field can be grouped by, finest first (Excel's Group dialog order). */
+export type PivotDateUnit =
+	| 'seconds'
+	| 'minutes'
+	| 'hours'
+	| 'days'
+	| 'months'
+	| 'quarters'
+	| 'years';
+/**
+ * A date group on a date field (Group Selection): one derived field per unit, named
+ * `Years (Date)`, replacing the date field on the axes. `start` and `end` (serials) are
+ * automatic when omitted; `days` is the number of days per group when grouping by days only.
+ */
+export interface PivotDateGroup {
+	field: string;
+	by: PivotDateUnit[];
+	start?: number;
+	end?: number;
+	days?: number;
+}
 export type PivotLayout = 'tabular' | 'compact' | 'outline';
 export interface PivotPageFilter {
 	field: string;
@@ -41,7 +86,7 @@ export interface PivotDateFilter {
 	end: number;
 }
 
-/** A worksheet-range pivot with up to two row fields and sixteen measures. */
+/** A worksheet-range pivot with any number of row fields and sixteen measures. */
 export interface PivotTable {
 	name: string;
 	/** Qualified A1 source range, rewritten with the workbook's other references. */
@@ -50,8 +95,14 @@ export interface PivotTable {
 	layout?: PivotLayout;
 	subtotalPosition?: 'top' | 'bottom';
 	secondRowField?: string;
+	/** The third and following row fields, outermost first. Requires `secondRowField`. */
+	moreRowFields?: string[];
 	/** Automatic outer-field totals below each group. Defaults to true. */
 	subtotals?: boolean;
+	/** Per-field subtotal functions; overrides `subtotals` for the fields it names. */
+	fieldSubtotals?: PivotFieldSubtotals[];
+	/** Date groups: each adds derived fields (`Years (Date)`) usable as row fields. */
+	dateGroups?: PivotDateGroup[];
 	/** Repeat outer labels on detail rows. Defaults to false. */
 	repeatLabels?: boolean;
 	columnField?: string;
@@ -69,6 +120,8 @@ export interface PivotTable {
 	 * date items. Other date-valued fields stay plain numbers.
 	 */
 	dateFields?: string[];
+	/** The workbook uses the 1904 date system (date groups need it to read serials). */
+	date1904?: boolean;
 	/** `x14:pivotCacheDefinition/@pivotCacheId`, the identity slicers use to find the cache. */
 	slicerCacheId?: number;
 	valueField: string;
@@ -97,7 +150,10 @@ export interface PivotTableOptions {
 	layout?: PivotLayout;
 	subtotalPosition?: 'top' | 'bottom';
 	secondRowField?: string;
+	moreRowFields?: string[];
 	subtotals?: boolean;
+	fieldSubtotals?: PivotFieldSubtotals[];
+	dateGroups?: PivotDateGroup[];
 	repeatLabels?: boolean;
 	columnField?: string;
 	pageFilter?: PivotPageFilter;
@@ -126,6 +182,12 @@ export type PivotTablePatch = Partial<
 		| 'valuesPosition'
 	>
 > & {
+	/** Replaces the third and following row fields (an empty list removes them). */
+	moreRowFields?: string[];
+	/** Replaces every per-field subtotal setting (an empty list restores Automatic). */
+	fieldSubtotals?: PivotFieldSubtotals[];
+	/** Replaces every date group (an empty list ungroups the dates). */
+	dateGroups?: PivotDateGroup[];
 	additionalValues?: PivotValueFieldOptions[];
 	pageFilter?: PivotPageFilter | null;
 	/** Replaces every number group (an empty list ungroups). */

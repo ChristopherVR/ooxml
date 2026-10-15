@@ -1,4 +1,5 @@
 import { NS, elements, type XmlElement } from '../../xml/index';
+import { PIVOT_SUBTOTALS, PIVOT_SUBTOTAL_ORDER } from './subtotals';
 
 const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
@@ -9,7 +10,8 @@ const TABLE: Record<string, string> = {
 	pageFields: 'count',
 	pageField: 'fld item hier',
 	pivotFields: 'count',
-	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal numFmtId',
+	pivotField:
+		'axis dataField compact outline showAll subtotalTop defaultSubtotal numFmtId sumSubtotal countASubtotal avgSubtotal maxSubtotal minSubtotal productSubtotal countSubtotal stdDevSubtotal stdDevPSubtotal varSubtotal varPSubtotal',
 	items: 'count',
 	item: 'x t h',
 	rowFields: 'count',
@@ -39,7 +41,7 @@ const CACHE: Record<string, string> = {
 	cacheSource: 'type',
 	worksheetSource: 'ref sheet',
 	cacheFields: 'count',
-	cacheField: 'name numFmtId',
+	cacheField: 'name numFmtId databaseField',
 	sharedItems:
 		'count containsString containsNumber containsInteger containsBlank containsMixedTypes containsSemiMixedTypes minValue maxValue containsNonDate containsDate minDate maxDate',
 	s: 'v',
@@ -149,8 +151,10 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 				))
 		)
 			throw new Error('Unsupported PivotTable option');
-		if (attr.localName === 'numFmtId' && !['0', '14'].includes(attr.value))
+		if (attr.localName === 'numFmtId' && !/^\d+$/.test(attr.value))
 			throw new Error('Unsupported PivotTable field number format');
+		if (attr.localName === 'databaseField' && attr.value !== '0')
+			throw new Error('Unsupported PivotTable cache field');
 		if (
 			node.localName === 'pivotTableDefinition' &&
 			['compact', 'compactData', 'outline', 'outlineData', 'dataOnRows'].includes(
@@ -162,14 +166,17 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 		if (
 			node.localName === 'item' &&
 			attr.localName === 't' &&
-			!['default', 'data'].includes(attr.value)
+			!['default', 'data', ...PIVOT_SUBTOTAL_ORDER.map((fn) => PIVOT_SUBTOTALS[fn].item)].includes(
+				attr.value,
+			)
 		)
 			throw new Error('Unsupported PivotTable subtotal');
 		if (node.localName === 'item' && attr.localName === 'h' && !['0', '1'].includes(attr.value))
 			throw new Error('Unsupported PivotTable item visibility');
 		if (
 			node.localName === 'pivotField' &&
-			['subtotalTop', 'defaultSubtotal'].includes(attr.localName!) &&
+			(['subtotalTop', 'defaultSubtotal'].includes(attr.localName!) ||
+				attr.localName!.endsWith('Subtotal')) &&
 			!['0', '1'].includes(attr.value)
 		)
 			throw new Error('Unsupported PivotTable subtotal option');

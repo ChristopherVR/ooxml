@@ -1,10 +1,17 @@
 import { rangeContains, type CellAddress } from '../address';
-import { type CellValue, type PivotTable, type Worksheet } from '../model';
+import { type CellValue, type PivotAggregate, type PivotTable, type Worksheet } from '../model';
 import { pivotItemLabel, pivotItems, pivotValueKey, validatePivotFields } from './data';
 import { pivotPageProjection, prependPivotPage } from './page-filter';
 import { hierarchicalPivotGrid } from './hierarchy';
+import { nestedPivotGrid } from './nested';
 import { pivotHeaderDimensions, pivotHeaders, pivotNumbers, pivotMeasures } from './measures';
 
+/** One row of `rowItems`: the item path, and `type` for a subtotal or grand total row. */
+export interface PivotRowEntry {
+	indices: number[];
+	type?: 'default' | 'grand' | PivotAggregate;
+	measure?: number;
+}
 export interface PivotGrid {
 	values: CellValue[][];
 	rowItems: CellValue[];
@@ -13,7 +20,9 @@ export interface PivotGrid {
 	rowLabelColumns?: number;
 	indents?: number[];
 	secondRowItems?: CellValue[];
-	rowEntries?: { indices: number[]; type?: 'default' | 'grand'; measure?: number }[];
+	/** The visible items of every row field, outermost first (two or more row fields). */
+	axisItems?: CellValue[][];
+	rowEntries?: PivotRowEntry[];
 	firstHeaderRow?: number;
 }
 
@@ -23,7 +32,8 @@ export function pivotGrid(pivot: PivotTable): PivotGrid {
 	return prependPivotPage(pivotDataGrid(pivotPageProjection(pivot)), pivot);
 }
 function pivotDataGrid(pivot: PivotTable): PivotGrid {
-	if (pivot.secondRowField) return hierarchicalPivotGrid(pivot);
+	if (pivot.secondRowField)
+		return pivot.valuesAxis === 'rows' ? hierarchicalPivotGrid(pivot) : nestedPivotGrid(pivot);
 	const rowItems = pivotItems(pivot, pivot.rowField);
 	const columnItems = pivot.columnField ? pivotItems(pivot, pivot.columnField) : [];
 	const rowsAxis = pivot.valuesAxis === 'rows';

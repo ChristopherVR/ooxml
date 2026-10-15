@@ -16,7 +16,9 @@ import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
 import { styleAt } from '../styles';
 import { normalizedPivotMeasures } from '../pivot/measures';
-import { pivotDateFieldsOf } from '../pivot/dates';
+import { pivotDateFieldsOf, roundDateRecords } from '../pivot/dates';
+import { reconcileDateAxes } from '../pivot/date-axes';
+import { normalizedFieldSubtotals } from '../pivot/subtotals';
 import { pruneItemFilters } from '../pivot/item-filters';
 import {
 	markDirty,
@@ -188,6 +190,14 @@ export function createPivotTable(
 			options.subtotalPosition ??
 			(options.layout && options.layout !== 'tabular' ? 'top' : 'bottom'),
 		...(options.secondRowField ? { secondRowField: options.secondRowField } : {}),
+		...(options.secondRowField && options.moreRowFields?.length
+			? { moreRowFields: [...options.moreRowFields] }
+			: {}),
+		...(options.fieldSubtotals?.length
+			? { fieldSubtotals: normalizedFieldSubtotals(options.fieldSubtotals) }
+			: {}),
+		...(options.dateGroups?.length ? { dateGroups: structuredClone(options.dateGroups) } : {}),
+		...(ctx.workbook.date1904 ? { date1904: true } : {}),
 		...(options.subtotals !== undefined ? { subtotals: options.subtotals } : {}),
 		...(options.repeatLabels !== undefined ? { repeatLabels: options.repeatLabels } : {}),
 		valueField: options.valueField,
@@ -205,8 +215,10 @@ export function createPivotTable(
 		location: { start: { ...destination }, end: { ...destination } },
 		...(options.columnField ? { columnField: options.columnField } : {}),
 	};
+	if (pivot.dateGroups) reconcileDateAxes(pivot);
 	const dates = pivotDateFieldsOf(ctx.workbook, s, pivot);
 	if (dates.length) pivot.dateFields = dates;
+	roundDateRecords(pivot, dates, ctx.workbook.date1904);
 	validatePivotFields(pivot);
 	writePivot(ctx, s, pivot);
 	return name;
@@ -240,6 +252,23 @@ export function refreshPivotTable(
 		if (patch.secondRowField) next.secondRowField = patch.secondRowField;
 		else delete next.secondRowField;
 	}
+	if (patch.secondRowField === '' && patch.moreRowFields === undefined) delete next.moreRowFields;
+	if (patch.moreRowFields !== undefined) {
+		if (patch.moreRowFields.length) next.moreRowFields = [...patch.moreRowFields];
+		else delete next.moreRowFields;
+	}
+	if (patch.fieldSubtotals !== undefined) {
+		if (patch.fieldSubtotals.length)
+			next.fieldSubtotals = normalizedFieldSubtotals(patch.fieldSubtotals);
+		else delete next.fieldSubtotals;
+	}
+	if (patch.dateGroups !== undefined) {
+		if (patch.dateGroups.length) next.dateGroups = structuredClone(patch.dateGroups);
+		else delete next.dateGroups;
+	}
+	if (ctx.workbook.date1904) next.date1904 = true;
+	else delete next.date1904;
+	if (patch.dateGroups !== undefined || next.dateGroups) reconcileDateAxes(next, old);
 	if (patch.subtotals !== undefined) next.subtotals = patch.subtotals;
 	if (patch.repeatLabels !== undefined) next.repeatLabels = patch.repeatLabels;
 	if (patch.layout !== undefined) next.layout = patch.layout;
@@ -264,6 +293,7 @@ export function refreshPivotTable(
 	const dates = pivotDateFieldsOf(ctx.workbook, s, next);
 	if (dates.length) next.dateFields = dates;
 	else delete next.dateFields;
+	roundDateRecords(next, dates, ctx.workbook.date1904);
 	if (next.dateFilter && !dates.includes(next.dateFilter.field)) delete next.dateFilter;
 	const kept = pruneItemFilters(next);
 	if (kept) next.itemFilters = kept;

@@ -1,8 +1,9 @@
 import { children, elements, first, NS, type XmlElement } from '../../xml/index';
 import type { CellValue, PivotTable } from '../model';
-import { pivotItems, pivotValueKey } from './data';
+import { pivotItems, pivotRowFields, pivotValueKey } from './data';
 import { pivotPageProjection } from './page-filter';
-import { pivotGrid } from './aggregate';
+import { pivotGrid, type PivotRowEntry } from './aggregate';
+import { PIVOT_SUBTOTALS } from './subtotals';
 import { remapPivotRowEntries } from './values-axis';
 import { booleanAttribute } from '../../drawingml/dom';
 const integer = (value: string | null, fallback?: number) =>
@@ -63,12 +64,9 @@ export function assertPageAxisItems(
 		integer(recordRoot.getAttribute('count')) !== pivot.records.length
 	)
 		throw new Error('Inconsistent report cache counts');
-	for (const name of [
-		pivot.rowField,
-		pivot.secondRowField,
-		pivot.columnField,
-		pivot.pageFilter.field,
-	].filter(Boolean)) {
+	for (const name of [...pivotRowFields(pivot), pivot.columnField, pivot.pageFilter.field].filter(
+		Boolean,
+	)) {
 		const field = pivot.fields.indexOf(name!);
 		if (
 			integer(first(cacheFields[field], 'sharedItems', NS.x)?.getAttribute('count') ?? null) !==
@@ -119,17 +117,14 @@ export function assertPageAxisItems(
 			throw new Error('Invalid page-axis item count');
 		return items;
 	};
-	const rows = axisValues(pivot.rowField, 'axisRow'),
+	const rowAxes = pivotRowFields(pivot).map((name) => axisValues(name, 'axisRow')),
 		rowItems = read('rowItems');
 	const grid = pivotGrid(pivot);
-	const entries = grid.rowEntries
-		? remapPivotRowEntries(grid.rowEntries, [
-				rows,
-				pivot.secondRowField ? axisValues(pivot.secondRowField, 'axisRow') : [],
-			])
+	const entries: PivotRowEntry[] = grid.rowEntries
+		? remapPivotRowEntries(grid.rowEntries, rowAxes)
 		: [
-				...rows.map((index) => ({ indices: [index], type: undefined })),
-				{ indices: [0], type: 'grand' },
+				...rowAxes[0]!.map((index) => ({ indices: [index] })),
+				{ indices: [0], type: 'grand' as const },
 			];
 	if (rowItems.length !== entries.length) throw new Error('Invalid page row items');
 	let previousRow: number[] = [];
@@ -137,18 +132,22 @@ export function assertPageAxisItems(
 		const expected = entries[i]!;
 		const xs = children(item, 'x', NS.x).map((x) => integer(x.getAttribute('v'), 0)),
 			prefix = integer(item.getAttribute('r'), 0);
+		const type =
+			expected.type === undefined || expected.type === 'default' || expected.type === 'grand'
+				? expected.type
+				: PIVOT_SUBTOTALS[expected.type].item;
 		if (
-			item.getAttribute('t') !== (expected.type ?? null) ||
+			item.getAttribute('t') !== (type ?? null) ||
 			!Number.isInteger(prefix) ||
 			prefix < 0 ||
 			prefix > previousRow.length ||
 			prefix >= expected.indices.length ||
-			(expected.type && prefix !== 0) ||
+			(expected.type === 'grand' && prefix !== 0) ||
 			integer(item.getAttribute('i'), 0) !== 0 ||
 			JSON.stringify([...previousRow.slice(0, prefix), ...xs]) !== JSON.stringify(expected.indices)
 		)
 			throw new Error('Unmodeled page row item');
-		previousRow = expected.type ? [] : expected.indices;
+		previousRow = expected.type === 'grand' ? [] : expected.indices;
 	});
 	const measures = 1 + (pivot.additionalValues?.length ?? 0),
 		columns = pivot.columnField ? axisValues(pivot.columnField, 'axisCol') : undefined,
