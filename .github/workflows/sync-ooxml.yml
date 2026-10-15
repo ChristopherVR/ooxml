@@ -57,6 +57,9 @@ jobs:
         with:
           ref: main
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
+          # Not persisted: the caller's install and verify commands run third-party code. Only
+          # the push step below gets the token, through PUSH_TOKEN.
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ChristopherVR/ooxml
@@ -64,6 +67,7 @@ jobs:
           path: .ooxml-tooling
           sparse-checkout: scripts/sync-ooxml-deps.mjs
           sparse-checkout-cone-mode: false
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ inputs.node-version }}
@@ -98,13 +102,16 @@ jobs:
         if: steps.bump.outputs.changed == 'true' && steps.verify.outcome == 'success'
         env:
           SUMMARY: ${{ steps.bump.outputs.summary }}
+          # Authenticates the pull and push below only; it is not stored in .git/config.
+          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: |
+          remote="https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A -- ':!.ooxml-tooling'
           git commit -m "build(deps): adopt $SUMMARY"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          git pull --rebase "$remote" main
+          git push "$remote" HEAD:main
 
       - name: Close resolved adoption issues
         if: steps.bump.outputs.changed == 'true' && steps.verify.outcome == 'success'
@@ -147,7 +154,8 @@ jobs:
             "<details><summary>Last lines of the $log_stage output</summary>" "" \
             '```text' "$tail_text" '```' "" "</details>" "" \
             "$hint")
-          existing=$(gh issue list --state open --search "in:title Adopting" --json number,title \
-            --jq "map(select(.title == \"$title\"))[0].number // empty")
+          # The title reaches jq as data (--arg), never inside the filter text.
+          existing=$(gh issue list --state open --search "in:title Adopting" --json number,title |
+            jq -r --arg title "$title" 'map(select(.title == $title))[0].number // empty')
           if [ -n "$existing" ]; then gh issue comment "$existing" --body "$body"
           else gh issue create --title "$title" --body "$body"; fi
