@@ -1,5 +1,6 @@
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import { pivotColumnFields, pivotItems, pivotRowFields, pivotValueKey } from './data';
+import { pivotValuesIndex } from './axes';
 import { pivotColumnItemsXml, sharedPrefix } from './columns';
 import { expandDateGroups } from './date-groups';
 import { groupLabelsOf } from './groups';
@@ -22,8 +23,6 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	const pivot = expandDateGroups(source);
 	const rowNames = pivotRowFields(pivot);
 	const rowIdx = rowNames.map((name) => pivot.fields.indexOf(name));
-	const row = rowIdx[0]!;
-	const second = rowIdx[1] ?? -1;
 	const page = pivot.pageFilter ? pivot.fields.indexOf(pivot.pageFilter.field) : -1;
 	const pageItems = page >= 0 ? pivotItems(pivot, pivot.pageFilter!.field) : [];
 	const filtered = filteredFields(pivot);
@@ -58,10 +57,12 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	const columnIndicesFull = columnNames.map((_name, k) =>
 		itemIndices(visibleColumns[k]!, columnItemsFull[k]!),
 	);
+	// Values on rows add a level (holding measure indexes) among the row fields.
+	const valuesAt = pivotValuesIndex(pivot);
+	const levelAxes: (number[] | null)[] = [...rowIndicesFull];
+	if (valuesAt >= 0) levelAxes.splice(valuesAt, 0, null);
 	const rowEntries =
-		anyFull && grid.rowEntries
-			? remapPivotRowEntries(grid.rowEntries, rowIndicesFull)
-			: grid.rowEntries;
+		anyFull && grid.rowEntries ? remapPivotRowEntries(grid.rowEntries, levelAxes) : grid.rowEntries;
 	const pageOffset = page >= 0 ? 2 : 0;
 	const col = columnIdx[0] ?? -1;
 	const measures = pivotMeasures(pivot);
@@ -110,12 +111,8 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 			: col >= 0
 				? 1
 				: grid.firstDataRow - pageOffset - 1;
-	const rowIndices =
-		rowsAxis && pivot.valuesPosition === 'first'
-			? [-2, row, second]
-			: rowsAxis && pivot.valuesPosition === 'between'
-				? [row, -2, second]
-				: [...rowIdx, ...(rowsAxis ? [-2] : [])];
+	const rowIndices = [...rowIdx];
+	if (valuesAt >= 0) rowIndices.splice(valuesAt, 0, -2);
 	let previous: number[] = [];
 	const rowItems =
 		rowEntries
@@ -125,21 +122,10 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 					entry.type === undefined || entry.type === 'default' || entry.type === 'grand'
 						? entry.type
 						: PIVOT_SUBTOTALS[entry.type].item;
-				if (rowsAxis) {
-					if (entry.type === 'default' && pivot.valuesPosition === 'first') prefix = 1;
-					else if (!entry.type)
-						while (prefix < entry.indices.length - 1 && entry.indices[prefix] === previous[prefix])
-							prefix++;
-					previous =
-						entry.type && !(entry.type === 'default' && pivot.valuesPosition === 'first')
-							? []
-							: entry.indices;
-				} else {
-					// Values on columns: each item repeats the leading indices it shares with the
-					// previous one, whatever its type (a subtotal repeats its group's path).
-					if (entry.type !== 'grand') prefix = sharedPrefix(entry.indices, previous);
-					previous = entry.type === 'grand' ? [] : entry.indices;
-				}
+				// Each item repeats the leading indices it shares with the previous one, whatever
+				// its type (a subtotal repeats its group's path).
+				if (entry.type !== 'grand') prefix = sharedPrefix(entry.indices, previous);
+				previous = entry.type === 'grand' ? [] : entry.indices;
 				return `<i${attrs({ t: type, r: prefix || undefined, i: entry.measure || undefined })}>${entry.indices
 					.slice(prefix)
 					.map((index) => `<x${attrs({ v: index || undefined })}/>`)
@@ -147,13 +133,11 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 			})
 			.join('') ?? items(grid.rowItems.length, rowIndicesFull[0]);
 	let body = `<location${attrs({ ref: formatRange({ ...pivot.location, start: { ...pivot.location.start, row: pivot.location.start.row + pageOffset } }), firstHeaderRow: header, firstDataRow: grid.firstDataRow - pageOffset, rowPageCount: page >= 0 ? 1 : undefined, colPageCount: page >= 0 ? 1 : undefined, firstDataCol: grid.rowLabelColumns ?? 1 })}/><pivotFields count="${pivot.fields.length}">${fields}</pivotFields><rowFields count="${rowIndices.length}">${rowIndices.map((index) => `<field x="${index}"/>`).join('')}</rowFields><rowItems count="${grid.rowEntries?.length ?? grid.rowItems.length + 1}">${rowItems}</rowItems>`;
-	if (!rowsAxis && col >= 0 && grid.columnEntries) {
-		const fieldsOnColumns = [...columnIdx, ...(multiple ? [-2] : [])];
-		body += `<colFields count="${fieldsOnColumns.length}">${fieldsOnColumns.map((index) => `<field x="${index}"/>`).join('')}</colFields>${pivotColumnItemsXml(grid.columnEntries, measures.length, (level, index) => columnIndicesFull[level]![index]!)}`;
+	if (col >= 0 && grid.columnEntries) {
+		const fieldsOnColumns = [...columnIdx, ...(multiple && !rowsAxis ? [-2] : [])];
+		body += `<colFields count="${fieldsOnColumns.length}">${fieldsOnColumns.map((index) => `<field x="${index}"/>`).join('')}</colFields>${pivotColumnItemsXml(grid.columnEntries, rowsAxis ? 1 : measures.length, (level, index) => columnIndicesFull[level]![index]!)}`;
 	} else if (multiple && !rowsAxis)
 		body += `<colFields count="1"><field x="-2"/></colFields>${pivotValueAxisItems(measures.length)}`;
-	else if (col >= 0)
-		body += `<colFields count="1"><field x="${col}"/></colFields><colItems count="${grid.columnItems.length + 1}">${items(grid.columnItems.length, columnIndicesFull[0])}</colItems>`;
 	else
 		body += rowsAxis
 			? '<colItems count="1"><i/></colItems>'
@@ -171,8 +155,7 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	root.setAttribute('name', pivot.name);
 	root.setAttribute('cacheId', String(cacheId));
 	root.setAttribute('dataOnRows', rowsAxis ? '1' : '0');
-	if (rowsAxis && (pivot.valuesPosition === 'between' || pivot.valuesPosition === 'first'))
-		root.setAttribute('dataPosition', pivot.valuesPosition === 'first' ? '0' : '1');
+	if (rowsAxis && valuesAt < rowIdx.length) root.setAttribute('dataPosition', String(valuesAt));
 	else root.removeAttribute('dataPosition');
 	root.setAttribute('compact', compact ? '1' : '0');
 	root.setAttribute('compactData', compact ? '1' : '0');

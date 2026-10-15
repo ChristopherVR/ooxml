@@ -178,12 +178,13 @@ describe('custom subtotals', () => {
 		expect(create({ fieldSubtotals: [{ field: 'G', functions: ['median'] }] })).toThrow(
 			'Choose valid field subtotals',
 		);
+		// Values on rows take field subtotals too.
 		expect(
 			create({
 				fieldSubtotals: [{ field: 'G', functions: ['sum'] }],
 				valuesAxis: 'rows',
-				additionalValues: [{ field: 'N' }],
+				additionalValues: [{ field: 'N', aggregate: 'count' }],
 			}),
-		).toThrow('Field subtotals require Values on columns');
+		).not.toThrow();
 	});
 });

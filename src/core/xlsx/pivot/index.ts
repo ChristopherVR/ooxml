@@ -13,6 +13,7 @@ export {
 } from './groups';
 
 export { pivotRowFields } from './data';
+export { pivotValuesIndex } from './axes';
 export {
 	PIVOT_DATE_UNITS,
 	dateGroupDays,

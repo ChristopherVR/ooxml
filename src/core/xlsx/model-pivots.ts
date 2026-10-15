@@ -47,6 +47,7 @@ export interface PivotDateGroup {
 	end?: number;
 	days?: number;
 }
+export type PivotValuesPosition = 'last' | 'between' | 'first' | number;
 export type PivotLayout = 'tabular' | 'compact' | 'outline';
 export interface PivotPageFilter {
 	field: string;
@@ -131,10 +132,13 @@ export interface PivotTable {
 	valueCaption: string;
 	/** Extra measures in Values axis order. The existing value fields remain the primary measure. */
 	additionalValues?: PivotValueField[];
-	/** Values on rows require multiple measures and one or two real row fields. */
+	/** Values on rows require multiple measures; any number of row and column fields. */
 	valuesAxis?: 'columns' | 'rows';
-	/** Row Values follow both real fields by default, or sit between/before two real fields. */
-	valuesPosition?: 'last' | 'between' | 'first';
+	/**
+	 * Where the row Values sit among the row fields: after them by default, `'first'` before
+	 * them, `'between'` after the first one, or the number of row fields that precede them.
+	 */
+	valuesPosition?: PivotValuesPosition;
 	/** Cached source fields and records. Refresh replaces these together with the output cells. */
 	fields: string[];
 	records: CellValue[][];
@@ -164,7 +168,7 @@ export interface PivotTableOptions {
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
-	valuesPosition?: 'last' | 'between' | 'first';
+	valuesPosition?: PivotValuesPosition;
 	aggregate?: PivotAggregate;
 	name?: string;
 }

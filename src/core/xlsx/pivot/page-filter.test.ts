@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { expect, it, vi } from 'vitest';
 import { createWorkbook, createEditSession, loadXlsx, saveXlsx, getCell } from '../index';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 import { children, first, parseXml, NS } from '../../xml/index';
 const profiles = [
 	'tabular-all',
@@ -142,7 +142,7 @@ it('includes the two report rows in the output budget before allocating headers'
 		aggregate: 'sum',
 		caption: 'Measure ' + i,
 	}));
-	const headers = vi.spyOn(measures, 'pivotHeaders');
+	const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 	try {
 		expect(() => pivotGrid(pivot)).toThrow('too large');
 		expect(headers).not.toHaveBeenCalled();

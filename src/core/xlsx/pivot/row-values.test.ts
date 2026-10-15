@@ -5,6 +5,7 @@ import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import { pivotGrid } from './aggregate';
+import * as columns from './columns';
 import * as measures from './measures';
 import type { PivotTable } from '../model';
 import { parseXml, elements } from '../../xml/index';
@@ -116,7 +117,7 @@ it('rejects a large Values row result before allocating headers or measure bands
 		location: { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } },
 		records: Array.from({ length: 21000 }, (_, i) => [`Group ${i % 2}`, i, 1]),
 	};
-	const headers = vi.spyOn(measures, 'pivotHeaders');
+	const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 	const numbers = vi.spyOn(measures, 'pivotNumbers');
 	try {
 		expect(() => pivotGrid(pivot)).toThrow('too large');

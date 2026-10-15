@@ -163,10 +163,6 @@ export function validatePivotFields(
 			pivot.moreColumnFields.some((name) => typeof name !== 'string'))
 	)
 		throw new Error('Choose valid PivotTable column fields.');
-	if (pivot.valuesAxis === 'rows' && rows.length > 2)
-		throw new Error('Values on rows support at most two row fields.');
-	if (pivot.valuesAxis === 'rows' && columns.length > 1)
-		throw new Error('Values on rows support one column field.');
 	if (pivot.pageFilter && columns.length > 1)
 		throw new Error('Report filters support one column field.');
 	validateFieldSubtotals(pivot, [...rows, ...columns]);
@@ -180,14 +176,19 @@ export function validatePivotFields(
 	const extras = pivot.additionalValues ?? [];
 	if (pivot.valuesAxis !== undefined && !['columns', 'rows'].includes(pivot.valuesAxis))
 		throw new Error('Choose a valid Values axis.');
+	const position = pivot.valuesPosition;
 	if (
-		pivot.valuesPosition !== undefined &&
-		!['last', 'between', 'first'].includes(pivot.valuesPosition)
+		position !== undefined &&
+		!['last', 'between', 'first'].includes(position as string) &&
+		!(typeof position === 'number' && Number.isInteger(position) && position >= 0)
 	)
 		throw new Error('Choose a valid Values position.');
 	if (
-		(pivot.valuesPosition === 'between' || pivot.valuesPosition === 'first') &&
-		(pivot.valuesAxis !== 'rows' || !pivot.secondRowField)
+		position !== undefined &&
+		position !== 'last' &&
+		(pivot.valuesAxis !== 'rows' ||
+			(position === 'between' && !pivot.secondRowField) ||
+			(typeof position === 'number' && position > rows.length))
 	)
 		throw new Error('Values before or between fields require two row fields and Values on rows.');
 	if (pivot.valuesAxis === 'rows' && (!Array.isArray(extras) || !extras.length))

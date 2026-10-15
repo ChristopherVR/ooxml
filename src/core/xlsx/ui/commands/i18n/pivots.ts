@@ -39,6 +39,13 @@ export const PIVOT_STRINGS: Translations = {
 		'Después de los campos de fila',
 		'行字段之后',
 	],
+	'After {field}': ['Après {field}', 'Nach {field}', 'Después de {field}', '{field} 之后'],
+	'Values are listed after {field}.': [
+		'Les valeurs sont affichées après {field}.',
+		'Werte werden nach {field} aufgeführt.',
+		'Los valores aparecen después de {field}.',
+		'值列在 {field} 之后。',
+	],
 	'Between row fields': [
 		'Entre les champs de ligne',
 		'Zwischen den Zeilenfeldern',
@@ -262,12 +269,6 @@ export const PIVOT_STRINGS: Translations = {
 		'Elija campos de columna de tabla dinámica válidos.',
 		'请选择有效的数据透视表列字段。',
 	],
-	'Values on rows support one column field.': [
-		'Les valeurs en lignes prennent en charge un seul champ de colonne.',
-		'Werte in Zeilen unterstützen nur ein Spaltenfeld.',
-		'Los valores en filas admiten un solo campo de columna.',
-		'行上的值仅支持一个列字段。',
-	],
 	'Report filters support one column field.': [
 		'Les filtres de rapport prennent en charge un seul champ de colonne.',
 		'Berichtsfilter unterstützen nur ein Spaltenfeld.',
@@ -370,22 +371,10 @@ export const PIVOT_STRINGS: Translations = {
 		'Elija campos de fila de tabla dinámica válidos.',
 		'请选择有效的数据透视表行字段。',
 	],
-	'Values on rows support at most two row fields.': [
-		'Les valeurs en lignes prennent en charge deux champs de ligne au maximum.',
-		'Werte in Zeilen unterstützen höchstens zwei Zeilenfelder.',
-		'Los valores en filas admiten como máximo dos campos de fila.',
-		'行上的值最多支持两个行字段。',
-	],
 	'Choose valid field subtotals.': [
 		'Choisissez des sous-totaux de champ valides.',
 		'Wählen Sie gültige Feldteilergebnisse.',
 		'Elija subtotales de campo válidos.',
 		'请选择有效的字段分类汇总。',
-	],
-	'Field subtotals require Values on columns.': [
-		'Les sous-totaux de champ nécessitent des valeurs en colonnes.',
-		'Feldteilergebnisse erfordern Werte in Spalten.',
-		'Los subtotales de campo requieren valores en columnas.',
-		'字段分类汇总要求值显示在列上。',
 	],
 };

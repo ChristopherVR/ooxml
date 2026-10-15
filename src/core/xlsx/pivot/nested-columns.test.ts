@@ -160,14 +160,15 @@ describe('several column fields', () => {
 		expect(create({ columnField: 'B', moreColumnFields: ['A'] })).toThrow(
 			'row and column fields must differ',
 		);
+		// Values on rows take any number of column fields.
 		expect(
 			create({
 				columnField: 'B',
 				moreColumnFields: ['N'],
 				valuesAxis: 'rows',
-				additionalValues: [{ field: 'N' }],
+				additionalValues: [{ field: 'N', aggregate: 'count' }],
 			}),
-		).toThrow('Values on rows support one column field');
+		).not.toThrow();
 		expect(
 			create({ pageFilter: { field: 'N' }, columnField: 'B', moreColumnFields: ['N'] }),
 		).toThrow();

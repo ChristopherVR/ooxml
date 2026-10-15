@@ -111,8 +111,10 @@ export function pivotColumnDimensions(
 	>,
 	columns: PivotColumns,
 	labelColumns: number,
+	/** Values on rows put one value in every column. */
+	valuesOnRows = false,
 ): { rows: number; width: number } {
-	const measures = 1 + (pivot.additionalValues?.length ?? 0);
+	const measures = valuesOnRows ? 1 : 1 + (pivot.additionalValues?.length ?? 0);
 	const levels = columns.names.length;
 	return {
 		rows: (levels ? levels + 1 + Number(measures > 1) : 1) + (pivot.pageFilter ? 2 : 0),
@@ -130,17 +132,22 @@ export function pivotColumnHeaders(
 	pivot: PivotTable,
 	columns: PivotColumns,
 	rowLabels: CellValue[],
+	/** Values on rows: one value per column, no value caption or measure row. */
+	valuesOnRows = false,
 ): CellValue[][] {
-	const measures = pivotMeasures(pivot);
+	const measures = valuesOnRows ? pivotMeasures(pivot).slice(0, 1) : pivotMeasures(pivot);
 	const count = measures.length;
 	const levels = columns.names.length;
-	if (!levels) return [[...rowLabels, ...measures.map((measure) => measure.caption)]];
+	if (!levels)
+		return [
+			[...rowLabels, ...(valuesOnRows ? [null] : measures.map((measure) => measure.caption))],
+		];
 	const compact = pivot.layout === 'compact';
 	const labelColumns = rowLabels.length;
 	const width = labelColumns + columns.entries.length * count;
 	const rows = levels + 1 + Number(count > 1);
 	const grid = Array.from({ length: rows }, () => Array<CellValue>(width).fill(null));
-	if (count === 1) grid[0]![0] = pivot.valueCaption;
+	if (count === 1 && !valuesOnRows) grid[0]![0] = pivot.valueCaption;
 	const titles = compact ? ['Column Labels'] : [...columns.names, ...(count > 1 ? ['Values'] : [])];
 	titles.forEach((title, i) => {
 		grid[0]![labelColumns + i] = title;

@@ -89,14 +89,12 @@ export function normalizedFieldSubtotals(
 }
 
 export function validateFieldSubtotals(
-	pivot: Pick<PivotTable, 'fieldSubtotals' | 'valuesAxis'>,
+	pivot: Pick<PivotTable, 'fieldSubtotals'>,
 	axisFields: readonly string[],
 ): void {
 	const entries = pivot.fieldSubtotals;
 	if (entries === undefined) return;
 	if (!Array.isArray(entries)) throw new Error('Choose valid field subtotals.');
-	if (entries.length && pivot.valuesAxis === 'rows')
-		throw new Error('Field subtotals require Values on columns.');
 	const seen = new Set<string>();
 	for (const entry of entries) {
 		if (

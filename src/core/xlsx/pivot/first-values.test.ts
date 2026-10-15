@@ -5,7 +5,7 @@ import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 import { elements, first, parseXml, NS } from '../../xml/index';
 
 const file = (profile: string) =>
@@ -75,7 +75,7 @@ it.each([
 	expect(wb.sheets[0]!.pivotTables![0]?.valuesPosition).toBe('first');
 });
 
-it.each(['unsupported', '', null, 1, false])(
+it.each(['unsupported', '', null, -1, 1.5, false])(
 	'refuses malformed public Values position %s atomically',
 	async (position) => {
 		const wb = await loadXlsx(native()),
@@ -89,11 +89,8 @@ it.each(['unsupported', '', null, 1, false])(
 	},
 );
 
-it.each([
-	{ valuesAxis: 'columns' as const, valuesPosition: 'first' as const },
-	{ secondRowField: '', valuesPosition: 'first' as const },
-])(
-	'refuses incompatible explicit first options $valuesAxis $secondRowField without history',
+it.each([{ valuesAxis: 'columns' as const, valuesPosition: 'first' as const }])(
+	'refuses incompatible explicit first options $valuesAxis without history',
 	async (patch) => {
 		const wb = await loadXlsx(native()),
 			edit = createEditSession(wb),
@@ -117,7 +114,7 @@ it.each(['tabular', 'compact', 'outline'] as const)(
 			caption: `Measure ${i}`,
 		}));
 		pivot.records = Array.from({ length: 35_000 }, (_, i) => [i, 'East', 1, 2, 2025]);
-		const headers = vi.spyOn(measures, 'pivotHeaders');
+		const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 		try {
 			expect(() => pivotGrid(pivot)).toThrow('too large');
 			expect(headers).not.toHaveBeenCalled();

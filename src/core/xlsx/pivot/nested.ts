@@ -1,6 +1,7 @@
 import type { CellValue, PivotAggregate, PivotTable } from '../model';
 import type { PivotGrid, PivotRowEntry } from './aggregate';
 import { pivotItemLabel, pivotItems, pivotRowFields, pivotValueKey } from './data';
+import { pivotValuesIndex } from './axes';
 import {
 	columnKey,
 	pivotColumnDimensions,
@@ -8,7 +9,7 @@ import {
 	pivotColumnHeaders,
 	recordColumnKeys,
 } from './columns';
-import { aggregateValues, pivotMeasures, pivotNumbers } from './measures';
+import { aggregateValues, pivotMeasureNumber, pivotMeasures } from './measures';
 import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 
 const label = pivotItemLabel;
@@ -31,13 +32,28 @@ const node = (index: number, value: CellValue): Node => ({
 	children: new Map(),
 });
 
+/** What the walk carries down: the labels, item indices and first-child flags of every level. */
+interface Path {
+	labels: CellValue[];
+	indices: number[];
+	firsts: boolean[];
+}
+
 /**
- * Values on columns with any number of row fields. Every group is a node holding its records, so
- * the group's row, its automatic subtotal and each custom subtotal read the same source values.
+ * Any number of row and column fields, with Values on the columns or at any place among the row
+ * fields. Every group is a node holding its records, so the group's row, its automatic subtotal
+ * and each custom subtotal read the same source values. The axis is a list of levels: the row
+ * fields and, with Values on rows, one level whose items are the measures.
  */
 export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	const names = pivotRowFields(pivot);
 	const depth = names.length;
+	const valuesAt = pivotValuesIndex(pivot);
+	const onRows = valuesAt >= 0;
+	const levels = depth + (onRows ? 1 : 0);
+	/** The row field of a level, or -1 for the Values level. */
+	const fieldOf = (level: number) =>
+		!onRows || level < valuesAt ? level : level === valuesAt ? -1 : level - 1;
 	const axisItems = names.map((name) => pivotItems(pivot, name));
 	const itemIndices = axisItems.map(
 		(items) => new Map(items.map((item, index) => [pivotValueKey(item), index])),
@@ -49,20 +65,21 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 	const compact = layout === 'compact';
 	const tabular = layout === 'tabular';
 	const above = !tabular && (pivot.subtotalPosition ?? 'top') === 'top';
-	const labelColumns = compact ? 1 : depth;
+	const labelColumns = compact ? 1 : levels;
 	const measures = pivotMeasures(pivot);
+	const functions = names.map((name) => fieldSubtotalFunctions(pivot, name));
 
 	const root = node(0, null);
 	for (const record of pivot.records) {
 		const keys = recordColumnKeys(record, columnFields);
 		let current = root;
-		for (let level = -1; level < depth; level++) {
-			if (level >= 0) {
-				const value = record[fieldIndices[level]!] ?? null;
+		for (let field = -1; field < depth; field++) {
+			if (field >= 0) {
+				const value = record[fieldIndices[field]!] ?? null;
 				const key = pivotValueKey(value);
 				let child = current.children.get(key);
 				if (!child) {
-					child = node(itemIndices[level]!.get(key)!, value);
+					child = node(itemIndices[field]!.get(key)!, value);
 					current.children.set(key, child);
 				}
 				current = child;
@@ -77,125 +94,165 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 		}
 	}
 
-	const dimensions = pivotColumnDimensions(pivot, columns, labelColumns);
-	const functions = names.map((name) => fieldSubtotalFunctions(pivot, name));
-	let rows = 1;
-	const count = (parent: Node, level: number) => {
-		for (const child of parent.children.values()) {
-			rows++;
-			if (level < depth - 1) {
-				const f = functions[level]!;
-				rows += f === 'auto' ? 1 : f.length;
-				count(child, level + 1);
-			}
-		}
-	};
-	count(root, 0);
-	if ((rows + dimensions.rows) * dimensions.width > MAX_CELLS)
-		throw new Error('The PivotTable result is too large.');
-
-	const values = pivotColumnHeaders(pivot, columns, compact ? ['Row Labels'] : names);
-	const firstDataRow = values.length;
-	const indents = values.map(() => 0);
+	const dimensions = pivotColumnDimensions(pivot, columns, labelColumns, onRows);
+	const rowTitles = names.map((name): CellValue => name);
+	if (onRows) rowTitles.splice(valuesAt, 0, 'Values');
+	let values: CellValue[][] = [];
+	let indents: number[] = [];
 	const rowEntries: PivotRowEntry[] = [];
-	const blanks = (): CellValue[] => Array<CellValue>(dimensions.width - labelColumns).fill(null);
+	// A first pass only counts the rows, so a report that is too large is refused before any
+	// header or cell is built.
+	let counting = true;
+	let rowCount = 0;
+	const width = dimensions.width - labelColumns;
+	const blanks = (): CellValue[] => Array<CellValue>(width).fill(null);
+
 	/**
-	 * The cells of a group across the column entries. A custom column subtotal summarizes with its
-	 * own function; crossed with a custom row subtotal it shows a value only where both agree.
+	 * The cells of a group across the column entries, for one measure (Values on rows) or all of
+	 * them. A custom column subtotal summarizes with its own function; crossed with a custom row
+	 * subtotal it shows a value only where both agree.
 	 */
-	const bands = (group: Node, rowFn?: PivotAggregate): CellValue[] =>
+	const cells = (group: Node, rowFn?: PivotAggregate, measure?: number): CellValue[] =>
 		columns.entries.flatMap((entry) => {
 			const records = entry.kind === 'grand' ? group.records : (group.columns.get(entry.key) ?? []);
+			const picked = measure === undefined ? measures : [measures[measure]!];
+			if (rowFn && entry.fn && rowFn !== entry.fn) return picked.map((): CellValue => null);
 			const fn = rowFn ?? entry.fn;
-			if (rowFn && entry.fn && rowFn !== entry.fn) return measures.map((): CellValue => null);
-			return fn
-				? measures.map((measure) =>
-						aggregateValues(records, pivot.fields.indexOf(measure.field), fn),
-					)
-				: pivotNumbers(pivot, records);
+			return picked.map((one) =>
+				fn
+					? aggregateValues(records, pivot.fields.indexOf(one.field), fn)
+					: pivotMeasureNumber(pivot, records, one),
+			);
 		});
-	const numbers = (group: Node) => bands(group);
-	const subtotalNumbers = (group: Node, fn: PivotAggregate) => bands(group, fn);
 
 	/** Label cells: the ancestors' labels (when shown) then this row's own at its column. */
-	const labelCells = (path: CellValue[], shown: boolean[], text: CellValue): CellValue[] => {
+	const labelCells = (path: Path, shown: boolean[], level: number, text: CellValue) => {
 		if (compact) return [text];
-		const cells: CellValue[] = Array(depth).fill(null);
-		path.forEach((value, level) => {
-			if (shown[level]) cells[level] = label(value);
+		const row: CellValue[] = Array(levels).fill(null);
+		path.labels.forEach((value, at) => {
+			if (shown[at]) row[at] = value;
 		});
-		cells[path.length] = text;
-		return cells;
+		row[level] = text;
+		return row;
 	};
-	const push = (
-		cells: CellValue[],
-		numbersOnRow: CellValue[],
-		entry: PivotRowEntry,
-		indent: number,
-	) => {
-		values.push([...cells, ...numbersOnRow]);
+	type Row = [labels: CellValue[], numbers: CellValue[], entry: PivotRowEntry];
+	const push = (indent: number, build: () => Row) => {
+		if (counting) {
+			if ((++rowCount + dimensions.rows) * dimensions.width > MAX_CELLS)
+				throw new Error('The PivotTable result is too large.');
+			return;
+		}
+		const [cells, numbers, entry] = build();
+		values.push([...cells, ...numbers]);
 		rowEntries.push(entry);
 		indents.push(compact ? indent : 0);
 	};
+	const entryOf = (indices: number[], measure?: number, type?: PivotRowEntry['type']) => ({
+		indices,
+		...(measure !== undefined ? { measure } : {}),
+		...(type ? { type } : {}),
+	});
 
-	const emit = (
-		parent: Node,
-		level: number,
-		path: CellValue[],
-		indices: number[],
-		firsts: boolean[],
-	) => {
-		const last = level === depth - 1;
-		const own = functions[level]!;
-		const children = [...parent.children.values()].sort((a, b) => a.index - b.index);
+	/** Walks one level: the Values level lists the measures, a field level its items. */
+	const walk = (level: number, group: Node, measure: number | undefined, path: Path) => {
+		const field = fieldOf(level);
+		const last = level === levels - 1;
+		// Only a repeat shows ancestors on header and subtotal rows; tabular detail rows show
+		// an ancestor on the first row of its group.
+		// The Values level is not an item label and is never repeated.
+		const repeated = Array.from(
+			{ length: level },
+			(_v, k) => !!pivot.repeatLabels && fieldOf(k) >= 0,
+		);
+		const leafShown = (firsts: boolean[]) =>
+			repeated.map((repeat, k) => repeat || (tabular && firsts.slice(k + 1).every(Boolean)));
+		if (field < 0) {
+			measures.forEach((one, m) => {
+				const here: Path = {
+					labels: [...path.labels, one.caption],
+					indices: [...path.indices, m],
+					firsts: [...path.firsts, m === 0],
+				};
+				if (last)
+					return push(level, () => [
+						labelCells(path, leafShown(here.firsts), level, one.caption),
+						cells(group, undefined, m),
+						entryOf(here.indices, m),
+					]);
+				if (!tabular)
+					push(level, () => [
+						labelCells(path, repeated, level, one.caption),
+						blanks(),
+						entryOf(here.indices, m),
+					]);
+				walk(level + 1, group, m, here);
+			});
+			return;
+		}
+		const own = functions[field]!;
+		// With Values above (or on columns) the measure is known, so a header row can show the
+		// group's value; below it the group's subtotals expand into one row per measure.
+		const valuesAbove = !onRows || valuesAt < level;
+		const showsValue = above && own === 'auto' && valuesAbove;
+		const children = [...group.children.values()].sort((a, b) => a.index - b.index);
 		children.forEach((child, position) => {
-			const here = [...path, child.value];
-			const at = [...indices, child.index];
-			const firstHere = [...firsts, position === 0];
-			// Only a repeat shows ancestors on header and subtotal rows; tabular detail rows show
-			// an ancestor on the first row of its group.
-			const repeated = Array<boolean>(level).fill(!!pivot.repeatLabels);
-			if (last) {
-				const shown = repeated.map(
-					(repeat, k) => repeat || (tabular && firstHere.slice(k + 1).every(Boolean)),
-				);
-				push(labelCells(path, shown, label(child.value)), numbers(child), { indices: at }, level);
-				return;
-			}
+			const here: Path = {
+				labels: [...path.labels, label(child.value)],
+				indices: [...path.indices, child.index],
+				firsts: [...path.firsts, position === 0],
+			};
+			const text = label(child.value);
+			if (last)
+				return push(level, () => [
+					labelCells(path, leafShown(here.firsts), level, text),
+					cells(child, undefined, measure),
+					entryOf(here.indices, measure),
+				]);
 			if (!tabular)
-				push(
-					labelCells(path, repeated, label(child.value)),
-					own === 'auto' && above ? numbers(child) : blanks(),
-					{ indices: at },
-					level,
-				);
-			emit(child, level + 1, here, at, firstHere);
-			const caption = String(label(child.value));
+				push(level, () => [
+					labelCells(path, repeated, level, text),
+					showsValue ? cells(child, undefined, measure) : blanks(),
+					entryOf(here.indices, measure),
+				]);
+			walk(level + 1, child, measure, here);
+			if (field === depth - 1) return;
+			const caption = String(text);
+			const subtotal = (title: string, fn: PivotAggregate | undefined, one?: number) =>
+				push(level, () => [
+					labelCells(path, repeated, level, title),
+					cells(child, fn, one),
+					entryOf(here.indices, one, fn ?? 'default'),
+				]);
 			if (own === 'auto') {
-				if (!above)
-					push(
-						labelCells(path, repeated, `${caption} Total`),
-						numbers(child),
-						{ indices: at, type: 'default' },
-						level,
-					);
+				if (showsValue) return;
+				if (valuesAbove) subtotal(`${caption} Total`, undefined, measure);
+				else measures.forEach((one, m) => subtotal(`${caption} ${one.caption}`, undefined, m));
 			} else
 				for (const fn of own)
-					push(
-						labelCells(path, repeated, `${caption} ${PIVOT_SUBTOTALS[fn].label}`),
-						subtotalNumbers(child, fn),
-						{ indices: at, type: fn },
-						level,
-					);
+					if (valuesAbove) subtotal(`${caption} ${PIVOT_SUBTOTALS[fn].label}`, fn, measure);
+					else
+						measures.forEach((one, m) =>
+							subtotal(`${caption} ${PIVOT_SUBTOTALS[fn].label} of ${one.field}`, fn, m),
+						);
 		});
 	};
-	emit(root, 0, [], [], []);
-	push(
-		compact ? ['Grand Total'] : ['Grand Total', ...Array<CellValue>(depth - 1).fill(null)],
-		numbers(root),
-		{ indices: [0], type: 'grand' },
-		0,
-	);
+	const grand = (text: CellValue, measure?: number) =>
+		push(0, () => [
+			compact ? [text] : [text, ...Array<CellValue>(levels - 1).fill(null)],
+			cells(root, undefined, measure),
+			entryOf([0], measure, 'grand'),
+		]);
+	const build = () => {
+		walk(0, root, undefined, { labels: [], indices: [], firsts: [] });
+		if (onRows) measures.forEach((one, m) => grand(`Total ${one.caption}`, m));
+		else grand('Grand Total');
+	};
+	build();
+	counting = false;
+	values = pivotColumnHeaders(pivot, columns, compact ? ['Row Labels'] : rowTitles, onRows);
+	const firstDataRow = values.length;
+	indents = values.map(() => 0);
+	build();
 	return {
 		values,
 		rowItems: axisItems[0]!,
@@ -208,5 +265,6 @@ export function nestedPivotGrid(pivot: PivotTable): PivotGrid {
 		firstDataRow,
 		rowLabelColumns: labelColumns,
 		indents,
+		...(onRows ? { firstHeaderRow: 1 } : {}),
 	};
 }

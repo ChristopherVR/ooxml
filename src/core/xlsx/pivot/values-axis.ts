@@ -2,10 +2,13 @@ import type { XmlElement } from '../../xml/index';
 import { attrs } from '../write/xml-out';
 import type { PivotGrid } from './aggregate';
 
-/** Selected reports retain the full cache axis lists; hierarchy tuples use their item indexes. */
+/**
+ * Selected reports retain the full cache axis lists; hierarchy tuples use their item indexes.
+ * The Values level (`null`) holds measure indexes and keeps them.
+ */
 export function remapPivotRowEntries(
 	entries: NonNullable<PivotGrid['rowEntries']>,
-	axes: readonly (readonly number[])[],
+	axes: readonly (readonly number[] | null)[],
 ): NonNullable<PivotGrid['rowEntries']> {
 	return entries.map((entry) =>
 		entry.type === 'grand'
@@ -13,6 +16,7 @@ export function remapPivotRowEntries(
 			: {
 					...entry,
 					indices: entry.indices.map((item, axis) => {
+						if (axes[axis] === null) return item;
 						const index = axes[axis]?.[item];
 						if (index === undefined) throw new Error('Invalid report row axis item');
 						return index;
@@ -27,13 +31,13 @@ export function pivotFieldIndex(field: XmlElement | undefined): number {
 	return Number.isSafeInteger(value) ? value : NaN;
 }
 
-/** Native leading or between-field row Values carry an explicit position matching their axis slot. */
+/** Native row Values before the last field carry an explicit position matching their axis slot. */
 export function pivotValueIndex(root: XmlElement, axis: readonly XmlElement[]): number {
 	const index = axis.findIndex((field) => pivotFieldIndex(field) === -2);
 	const position = root.getAttribute('dataPosition');
 	if (position !== null && (!/^\d+$/.test(position.trim()) || Number(position) !== index))
 		throw new Error('Inconsistent Values axis position');
-	if (axis.length === 3 && index >= 0 && index < 2 && position === null)
+	if (index >= 0 && index < axis.length - 1 && position === null)
 		throw new Error('Missing leading or between-field Values position');
 	return index;
 }
@@ -47,7 +51,7 @@ export function pivotValueAxisItems(measures: number): string {
 	return `<colItems count="${entries.length}">${entries.join('')}</colItems>`;
 }
 
-/** Values follow the column field, or sit last/between/before two real row fields. */
+/** Values follow the column fields, or sit anywhere among the real row fields. */
 export function supportedPivotAxes(
 	rows: readonly XmlElement[],
 	columns: readonly XmlElement[],
@@ -58,12 +62,10 @@ export function supportedPivotAxes(
 	if (valuesOnRows)
 		return (
 			measures > 1 &&
-			(rows.length === 2 || rows.length === 3) &&
-			(index(rows[0]) >= 0 || rows.length === 3) &&
+			rows.length > 1 &&
 			rows.filter((field) => index(field) === -2).length === 1 &&
 			rows.filter((field) => index(field) !== -2).every((field) => index(field) >= 0) &&
-			columns.length <= 1 &&
-			(!columns.length || index(columns[0]) >= 0)
+			columns.every((field) => index(field) >= 0)
 		);
 	if (rows.some((field) => !Number.isInteger(index(field)) || index(field) < 0)) return false;
 	// Several measures put Values last on the columns, after any number of column fields.

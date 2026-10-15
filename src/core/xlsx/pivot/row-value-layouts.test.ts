@@ -5,7 +5,7 @@ import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 
 for (const profile of [
 	'compact',
@@ -97,7 +97,7 @@ it('counts blank group headings before allocating compact Values-row output', as
 		i,
 	]);
 	// 52 rows (including two headings, two headers and 16 totals) * 19,231 columns.
-	const headers = vi.spyOn(measures, 'pivotHeaders');
+	const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 	try {
 		expect(() => pivotGrid(pivot)).toThrow('too large');
 		expect(headers).not.toHaveBeenCalled();

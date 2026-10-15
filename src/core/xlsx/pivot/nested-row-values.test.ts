@@ -5,7 +5,7 @@ import { loadXlsx } from '../read/index';
 import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 
 const native = () =>
 	readFileSync(
@@ -88,7 +88,7 @@ it.each(['tabular', 'compact', 'outline'] as const)(
 			caption: `Measure ${i}`,
 		}));
 		pivot.records = Array.from({ length: 35_000 }, (_, i) => ['Fruit', i, 10, 2, 2025]);
-		const headers = vi.spyOn(measures, 'pivotHeaders');
+		const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 		try {
 			expect(() => pivotGrid(pivot)).toThrow('too large');
 			expect(headers).not.toHaveBeenCalled();

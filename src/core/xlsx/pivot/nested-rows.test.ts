@@ -198,12 +198,18 @@ describe('creating and editing many row fields', () => {
 		expect(create({ moreRowFields: ['C', 'C'] })).toThrow('row and column fields must differ');
 		expect(create({ moreRowFields: ['A'] })).toThrow('row and column fields must differ');
 		expect(create({ moreRowFields: ['Nope'] })).toThrow('Choose valid PivotTable fields');
-		expect(
-			create({
-				moreRowFields: ['C'],
-				valuesAxis: 'rows',
-				additionalValues: [{ field: 'N' }],
-			}),
-		).toThrow('Values on rows support at most two row fields');
+		// Values on rows take any number of row fields.
+		expect(() =>
+			edit.createPivotTable(
+				1,
+				{ row: 60, col: 0 },
+				{
+					...options,
+					moreRowFields: ['C'],
+					valuesAxis: 'rows',
+					additionalValues: [{ field: 'N', aggregate: 'count' }],
+				},
+			),
+		).not.toThrow();
 	});
 });

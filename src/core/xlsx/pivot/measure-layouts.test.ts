@@ -6,7 +6,7 @@ import { saveXlsx } from '../write/index';
 import { createEditSession } from '../edit/session';
 import type { PivotTable } from '../model';
 import { pivotGrid } from './aggregate';
-import * as measures from './measures';
+import * as columns from './columns';
 
 for (const [suffix, layout] of [
 	['compact', 'compact'],
@@ -71,7 +71,7 @@ it.each([false, true])(
 			]),
 			...(hierarchy ? { secondRowField: 'Inner' } : {}),
 		};
-		const headers = vi.spyOn(measures, 'pivotHeaders');
+		const headers = vi.spyOn(columns, 'pivotColumnHeaders');
 		try {
 			expect(() => pivotGrid(pivot)).toThrow('too large');
 			expect(headers).not.toHaveBeenCalled();

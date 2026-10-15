@@ -110,7 +110,6 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	);
 	if (
 		rowFields.length < 1 ||
-		(rowsAxis && rowFields.length > 3) ||
 		dataFields.length < 1 ||
 		dataFields.length > 16 ||
 		!supportedPivotAxes(rowFields, colFields, dataFields.length, rowsAxis) ||
@@ -272,8 +271,15 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		rowField: row,
 		layout,
 		...(rowsAxis ? { valuesAxis: 'rows' as const } : {}),
-		...(rowsAxis && realRows.length === 2 && valueIndex < 2
-			? { valuesPosition: valueIndex === 0 ? ('first' as const) : ('between' as const) }
+		...(rowsAxis && valueIndex < realRows.length
+			? {
+					valuesPosition:
+						valueIndex === 0
+							? ('first' as const)
+							: valueIndex === 1 && realRows.length === 2
+								? ('between' as const)
+								: valueIndex,
+				}
 			: {}),
 		subtotalPosition: att(outer, 'subtotalTop') === '0' ? 'bottom' : 'top',
 		...(fieldSubtotals.length ? { fieldSubtotals } : {}),
