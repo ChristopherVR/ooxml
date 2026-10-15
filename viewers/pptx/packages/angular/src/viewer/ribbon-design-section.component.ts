@@ -6,7 +6,12 @@ import {
 	output,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DESIGN_RIBBON_COMMANDS, DESIGN_RIBBON_GROUPS, designCommandState } from 'ooxml-ui/pptx';
+import {
+	DESIGN_RIBBON_COMMANDS,
+	DESIGN_RIBBON_GROUPS,
+	FIXED_TAB_GALLERIES,
+	designCommandState,
+} from 'ooxml-ui/pptx';
 import type { RibbonControlId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
@@ -25,6 +30,16 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 				[attr.label]="group.labelKey | translate"
 				[attr.data-ribbon-group]="group.id"
 			>
+				@for (placement of galleriesFor(group.id); track placement.control) {
+					<pptx-ribbon-gallery
+						[gallery]="placement.gallery"
+						[control]="placement.control"
+						[mode]="placement.mode"
+						[element]="selectedElement()"
+						[slideIndex]="slideIndex()"
+						[canEdit]="canEdit()"
+					/>
+				}
 				@for (command of commands; track command.id) {
 					@if (command.id.startsWith(group.id + '.')) {
 						<pptx-ui-ribbon-command
@@ -38,22 +53,6 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 							(command-request)="request(command.id)"
 						/>
 					}
-				}
-				@if (group.id === 'design.variants') {
-					<pptx-ribbon-gallery
-						gallery="themeColors"
-						control="design.variants.colors"
-						[element]="selectedElement()"
-						[slideIndex]="slideIndex()"
-						[canEdit]="canEdit()"
-					/>
-					<pptx-ribbon-gallery
-						gallery="themeFonts"
-						control="design.variants.fonts"
-						[element]="selectedElement()"
-						[slideIndex]="slideIndex()"
-						[canEdit]="canEdit()"
-					/>
 				}
 			</pptx-ui-ribbon-group>
 		}
@@ -70,6 +69,9 @@ export class RibbonDesignSectionComponent {
 	readonly editTheme = output<void>();
 	readonly openSlideSize = output<void>();
 	readonly toggleInspector = output<void>();
+	protected galleriesFor(groupId: string) {
+		return FIXED_TAB_GALLERIES.filter((placement) => placement.control.startsWith(`${groupId}.`));
+	}
 	protected view(id: RibbonControlId) {
 		return designCommandState(id, {
 			editable: this.canEdit(),

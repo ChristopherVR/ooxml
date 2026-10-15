@@ -7,13 +7,14 @@ import {
 	input,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent, ShapePresetType } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
 	homeGalleryApply,
 	homeGalleryControls,
 	SHAPE_PRESET_DEFS,
 	shapeFillChange,
+	shapeGalleryItemForValue,
 	shapeOutlineChange,
 	withHomeGalleries,
 } from 'ooxml-ui/pptx';
@@ -163,9 +164,15 @@ export class RibbonDrawingGroupComponent {
 
 	/** Insert the picked preset immediately (selects it and records history). */
 	protected onShapeSelect(type: string): void {
-		const shape = SHAPE_PRESET_DEFS.find((preset) => preset.type === type);
-		if (shape) {
-			this.editor.addElement(this.slideIndex(), newPresetShapeElement(shape.type, shape.label));
+		// The legacy catalogue names its presets; the categorised gallery offers every other preset.
+		const legacy = SHAPE_PRESET_DEFS.find((preset) => preset.type === type);
+		const item = shapeGalleryItemForValue(type);
+		const name = legacy?.label ?? item?.fallback;
+		if (name && (legacy || item?.action.kind === 'shape' || item?.action.kind === 'actionButton')) {
+			this.editor.addElement(
+				this.slideIndex(),
+				newPresetShapeElement(type as ShapePresetType, name),
+			);
 		}
 	}
 

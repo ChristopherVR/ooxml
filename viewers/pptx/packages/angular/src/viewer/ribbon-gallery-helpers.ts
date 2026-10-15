@@ -76,7 +76,12 @@ export function dispatchGalleryResult(
 	if (!targets.themes) {
 		return false;
 	}
-	if (result.kind === 'themeColorScheme') {
+	if (result.kind === 'theme') {
+		targets.themes.applyThemeVariant(
+			{ colorScheme: result.colorScheme, fontScheme: result.fontScheme },
+			result.name,
+		);
+	} else if (result.kind === 'themeColorScheme') {
 		targets.themes.applyThemeVariant({ colorScheme: result.colorScheme }, result.name);
 	} else {
 		targets.themes.applyThemeVariant({ fontScheme: result.fontScheme }, result.name);
