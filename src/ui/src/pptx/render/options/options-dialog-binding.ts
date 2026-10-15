@@ -12,12 +12,14 @@ import {
 	AI_OPTIONS_CATEGORY,
 	buildPptxOptionCategories,
 	flattenViewerOptions,
+	optionValueKey,
 	parseOptionValueKey,
 	pptxOptionsLabels,
 	type OptionsTranslate,
 } from './options-dialog-model';
 import { cloneViewerOptions, DEFAULT_VIEWER_OPTIONS } from './viewer-options';
 import type { ViewerOptionPrimitive, ViewerOptions, ViewerOptionsGroupId } from './viewer-options';
+import type { ViewerOptionsTabDefinition } from './viewer-options-controls';
 import { VIEWER_OPTIONS_TABS } from './viewer-options-schema';
 
 /** The members of `<office-ui-options-dialog>` the binding drives. */
@@ -62,6 +64,15 @@ export interface PptxOptionsDialogBinding {
 	dispose(): void;
 }
 
+function lockedOptionKeys(tabs: readonly ViewerOptionsTabDefinition[]): ReadonlySet<string> {
+	const keys = new Set<string>();
+	for (const tab of tabs)
+		for (const section of tab.sections)
+			for (const control of section.controls)
+				if (control.readOnly) keys.add(optionValueKey(control.group, control.key));
+	return keys;
+}
+
 const DEFAULT_VALUES = flattenViewerOptions(DEFAULT_VIEWER_OPTIONS);
 
 /**
@@ -79,6 +90,8 @@ export function bindPptxOptionsDialog(
 	let snapshot: ViewerOptions | null = null;
 	let last: { tabs: unknown; t: OptionsTranslate; languageKey?: string; ai: boolean } | null = null;
 	let opened = false;
+	let lockedKeys: ReadonlySet<string> = new Set();
+	let shown: OfficeOptionValues = {};
 	// Whatever had focus when File > Options opened gets it back when the dialog goes away.
 	const active = dialog.ownerDocument.activeElement;
 	const opener =
@@ -94,7 +107,10 @@ export function bindPptxOptionsDialog(
 	listen('office-option-input', (event) => {
 		const { key, value } = event.detail as { key: string; value: ViewerOptionPrimitive };
 		const parsed = parseOptionValueKey(key);
-		if (parsed) host.setOption(parsed.group, parsed.key, value);
+		if (!parsed) return;
+		// A setting the host locked never changes, whatever the control reports.
+		if (lockedKeys.has(key)) dialog.values = shown;
+		else host.setOption(parsed.group, parsed.key, value);
 	});
 	listen('office-options-reset', () => host.resetOptions());
 	listen('office-options-category', (event) =>
@@ -131,7 +147,9 @@ export function bindPptxOptionsDialog(
 				dialog.labels = pptxOptionsLabels(input.t);
 				dialog.categories = buildPptxOptionCategories(tabs, input.t, ai);
 			}
-			dialog.values = flattenViewerOptions(input.options);
+			lockedKeys = lockedOptionKeys(tabs);
+			shown = flattenViewerOptions(input.options);
+			dialog.values = shown;
 			if (!opened) {
 				opened = true;
 				dialog.category = initialCategory;

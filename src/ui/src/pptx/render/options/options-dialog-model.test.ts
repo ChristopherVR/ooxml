@@ -168,6 +168,28 @@ describe('bindPptxOptionsDialog', () => {
 		expect(dialog.heading).toBe('[pptx.options.title]');
 	});
 
+	it('ignores edits to a setting the host locked and keeps the shown value', async () => {
+		const { dialog, host, binding, input } = mount();
+		binding.sync({
+			...input,
+			customization: resolveCustomization({
+				options: { locked: { 'general.userName': 'Kiosk' } },
+			} as never),
+			options: {
+				...DEFAULT_VIEWER_OPTIONS,
+				general: { ...DEFAULT_VIEWER_OPTIONS.general, userName: 'Kiosk' },
+			},
+		});
+		await (dialog as unknown as { updateComplete: Promise<unknown> }).updateComplete;
+		const field = dialog.shadowRoot!.querySelector<HTMLInputElement>(
+			'[data-key="general.userName"] input',
+		)!;
+		field.value = 'Someone else';
+		field.dispatchEvent(new Event('input'));
+		expect(host.setOption).not.toHaveBeenCalled();
+		expect(dialog.values['general.userName']).toBe('Kiosk');
+	});
+
 	it('stops listening once disposed', async () => {
 		const { dialog, host, binding } = mount();
 		await (dialog as unknown as { updateComplete: Promise<unknown> }).updateComplete;
