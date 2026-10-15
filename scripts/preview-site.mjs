@@ -32,6 +32,16 @@ const server = createServer(async (req, res) => {
 		res.writeHead(200, { 'content-type': type });
 		res.end(body);
 	} catch {
+		// Like GitHub Pages, answer a missing path with the site's own 404.html: the one at the
+		// served root, or at the first path segment when the root mirrors a project site (/ooxml/).
+		const [first] = path.split('/').filter(Boolean);
+		for (const dir of [first ? resolve(SITE, first) : SITE, SITE]) {
+			try {
+				const body = await readFile(resolve(dir, '404.html'));
+				res.writeHead(404, { 'content-type': TYPES['.html'] });
+				return res.end(body);
+			} catch {}
+		}
 		res.writeHead(404).end('Not found');
 	}
 });

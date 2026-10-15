@@ -97,6 +97,18 @@ tab) and `Releases`. Everything else (user guide, demos, packages, API, theming,
 the sidebar. Locales translate the labels but keep the three entries. The appearance switch and
 the GitHub link stay visible at 1280 px; nothing falls into the overflow menu.
 
+**Languages.** Every docs site has the same five languages (English, French, Spanish, German,
+Simplified Chinese) in the nav's language menu. Each locale translates the landing copy, the nav,
+the sidebar and the site strings, plus the core pages (getting started, the user-facing guide,
+collaboration, architecture, API); the other pages stay English and the locale sidebar links to
+them. A language-menu link from an untranslated page leads to a missing locale URL, which the
+site's one `404.html` (`site/404.html`, served by GitHub Pages for every missing path) sends to the
+English page.
+
+**Docs pages move too.** Each docs site mounts `Layout.vue` with `PageMotion.vue`: on every page
+change the article and its outline rise 12 px and fade in; sidebar and nav links, pager links and
+images answer hover; anchors scroll smoothly. All of it is off under reduced motion.
+
 **Live demo language.** A demo that accepts `?locale=` (Word does: en, fr, de, es, zh-CN) gets a
 language select in the demo frame bar on the landing page, next to the framework switcher, that
 reloads the frame with that locale. A site with translated pages (PowerPoint) passes the site

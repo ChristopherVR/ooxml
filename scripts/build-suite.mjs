@@ -19,6 +19,8 @@ for (const name of [
 	'workspace-responsive.css',
 	'favicon.svg',
 	'appearance-init.js',
+	'404.html',
+	'404.js',
 ])
 	await cp(join(root, 'site', name), join(out, name));
 await cp(join(root, 'site', 'docs'), join(out, 'docs'), { recursive: true });
