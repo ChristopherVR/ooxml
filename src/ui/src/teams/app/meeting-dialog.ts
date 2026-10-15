@@ -2,19 +2,39 @@ import { html, nothing, type PropertyValues } from 'lit';
 import {
 	type ContactView,
 	type MeetingFormInput,
-	type MeetingRepeat,
 	type MeetingView,
 	MAX_MEETING_DESCRIPTION,
 	MAX_MEETING_TITLE,
 	MINUTE_MS,
 	MAX_RECURRENCE_COUNT,
+	localZone,
 	occurrenceAt,
 } from 'ooxml-core/teams';
 import { dialogStyles, TeamsDialog } from './dialog-base';
 import css from './meeting-dialog.css?raw';
+import {
+	NO_REPEAT,
+	type RepeatSelection,
+	parseRepeatValue,
+	repeatOptions,
+	repeatValue,
+} from './repeat-text';
 
 const SLOT = 30 * MINUTE_MS;
 const NOT_SAVED = 'The meeting was not saved. Your details are kept here.';
+
+const repeatOption = (o: { value: string; label: string }, current: string) =>
+	html`<option value=${o.value} ?selected=${o.value === current}>${o.label}</option>`;
+
+/** The repeat fields of a stored meeting: a weekday rule carries its ordinal. */
+function repeatFields(
+	r: RepeatSelection,
+): Pick<MeetingFormInput, 'repeat' | 'monthlyBy' | 'ordinal'> {
+	if (r.repeat !== 'monthly') return { repeat: r.repeat };
+	return r.monthlyBy === 'weekday'
+		? { repeat: 'monthly', monthlyBy: 'weekday', ordinal: r.ordinal }
+		: { repeat: 'monthly', monthlyBy: 'date' };
+}
 
 /** `2026-10-15T14:30`, the value of a datetime-local input, in this device's zone. */
 export function toLocalInput(ms: number): string {
@@ -44,7 +64,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		description: { state: true },
 		startText: { state: true },
 		endText: { state: true },
-		repeat: { state: true },
+		repeatChoice: { state: true },
 		endMode: { state: true },
 		untilText: { state: true },
 		countText: { state: true },
@@ -62,7 +82,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 	declare description: string;
 	declare startText: string;
 	declare endText: string;
-	declare repeat: MeetingRepeat;
+	declare repeatChoice: RepeatSelection;
 	declare endMode: 'never' | 'date' | 'count';
 	declare untilText: string;
 	declare countText: string;
@@ -82,7 +102,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		this.description = '';
 		this.startText = '';
 		this.endText = '';
-		this.repeat = 'none';
+		this.repeatChoice = NO_REPEAT;
 		this.endMode = 'never';
 		this.untilText = '';
 		this.countText = '10';
@@ -100,7 +120,9 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		this.description = one?.description ?? m?.description ?? '';
 		this.startText = toLocalInput(begin);
 		this.endText = toLocalInput(one?.end ?? m?.end ?? begin + SLOT);
-		this.repeat = m?.repeat ?? 'none';
+		this.repeatChoice = m
+			? { repeat: m.repeat, monthlyBy: m.monthlyBy ?? 'date', ordinal: m.ordinal ?? 1 }
+			: NO_REPEAT;
 		this.endMode = m?.count !== undefined ? 'count' : m?.until !== undefined ? 'date' : 'never';
 		this.countText = String(m?.count ?? 10);
 		this.untilText = toLocalInput(m?.until ?? begin + 28 * 86_400_000).slice(0, 10);
@@ -120,6 +142,24 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		this.issue = '';
 	}
 
+	/** The zone the series is defined in: the organizer's for an existing meeting, else this device's. */
+	private zone(): string {
+		return this.meeting?.zone ?? localZone();
+	}
+
+	/**
+	 * The repeat to store. A weekday ordinal that no longer fits the start date (the start moved)
+	 * becomes the first one that does.
+	 */
+	private repeatToStore(start: number): RepeatSelection {
+		const choice = this.repeatChoice;
+		if (choice.repeat !== 'monthly' || choice.monthlyBy !== 'weekday') return choice;
+		const fits = repeatOptions(start, this.zone()).map((o) => o.value);
+		return fits.includes(repeatValue(choice))
+			? choice
+			: parseRepeatValue(fits.find((v) => v.startsWith('monthly-') && v !== 'monthly-date') ?? '');
+	}
+
 	private validCount(): boolean {
 		const n = Number(this.countText);
 		return Number.isInteger(n) && n >= 1 && n <= MAX_RECURRENCE_COUNT;
@@ -136,7 +176,8 @@ export class TeamsMeetingDialog extends TeamsDialog {
 
 	/** The end of the repeat to store: a count, the end of a day, or none (null clears an old end). */
 	private recurrenceEnd(): { count: number | null; until: number | null } {
-		if (this.repeat === 'none' || this.endMode === 'never') return { count: null, until: null };
+		if (this.repeatChoice.repeat === 'none' || this.endMode === 'never')
+			return { count: null, until: null };
 		return this.endMode === 'count'
 			? { count: Number(this.countText), until: null }
 			: { count: null, until: this.untilTime() };
@@ -153,9 +194,17 @@ export class TeamsMeetingDialog extends TeamsDialog {
 		else if (this.occurrence) {
 			const one = { title: this.meetingTitle, description: this.description, start, end };
 			if (!this.save?.(one, this.meeting?.id, this.occurrence)) this.issue = NOT_SAVED;
-		} else if (this.repeat !== 'none' && this.endMode === 'count' && !this.validCount())
+		} else if (
+			this.repeatChoice.repeat !== 'none' &&
+			this.endMode === 'count' &&
+			!this.validCount()
+		)
 			this.issue = `Enter a number of events from 1 to ${MAX_RECURRENCE_COUNT}.`;
-		else if (this.repeat !== 'none' && this.endMode === 'date' && !this.validUntil(start))
+		else if (
+			this.repeatChoice.repeat !== 'none' &&
+			this.endMode === 'date' &&
+			!this.validUntil(start)
+		)
 			this.issue = 'The series must end on or after its first event.';
 		else if (
 			!this.save?.(
@@ -164,7 +213,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 					description: this.description,
 					start,
 					end,
-					repeat: this.repeat,
+					...repeatFields(this.repeatToStore(start)),
 					...this.recurrenceEnd(),
 					attendeeIds: this.channelId ? [] : this.attendees,
 					...(this.channelId ? { channelId: this.channelId } : {}),
@@ -178,6 +227,7 @@ export class TeamsMeetingDialog extends TeamsDialog {
 	protected override render() {
 		const editing = this.meeting !== null;
 		const single = this.occurrence !== 0;
+		const current = repeatValue(this.repeatToStore(new Date(this.startText).getTime()));
 		return this.frame(
 			single ? 'Edit this event' : editing ? 'Edit meeting' : 'New meeting',
 			html`<form @submit=${this.submit}>
@@ -214,16 +264,16 @@ export class TeamsMeetingDialog extends TeamsDialog {
 						: html`
 								<label
 									>Repeat<select
-										.value=${this.repeat}
-										@change=${(e: Event) => (this.repeat = (e.target as HTMLSelectElement).value as MeetingRepeat)}
+										@change=${(e: Event) => (this.repeatChoice = parseRepeatValue((e.target as HTMLSelectElement).value))}
 									>
-										<option value="none">Does not repeat</option>
-										<option value="daily">Every day</option>
-										<option value="weekly">Every week</option>
+										${repeatOptions(
+											new Date(this.startText).getTime() || Date.now(),
+											this.zone(),
+										).map((o) => repeatOption(o, current))}
 									</select></label
 								>
 								${
-									this.repeat === 'none'
+									this.repeatChoice.repeat === 'none'
 										? nothing
 										: html`<label
 													>Ends<select

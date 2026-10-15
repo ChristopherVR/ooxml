@@ -4,8 +4,7 @@ import { formatWhen } from '../base';
 import { icon } from '../icons';
 import { dialogStyles, TeamsDialog } from './dialog-base';
 import css from './meeting-details.css?raw';
-
-const REPEAT_TEXT = { none: '', daily: 'Repeats every day', weekly: 'Repeats every week' } as const;
+import { repeatText } from './repeat-text';
 
 /** What an edit or cancel applies to in a repeating meeting. */
 export type MeetingScope = 'occurrence' | 'series';
@@ -147,7 +146,7 @@ export class TeamsMeetingDetails extends TeamsDialog {
 			occurrence?.title ?? m.title,
 			html`<div class="body">
 				<p class="when">${icon('calendar')} ${formatWhen(start, end)}</p>
-				${m.repeat !== 'none' ? html`<p>${REPEAT_TEXT[m.repeat]}${this.endText(m)}</p>` : nothing}
+				${m.repeat !== 'none' ? html`<p>${repeatText(m)}${this.endText(m)}</p>` : nothing}
 				${
 					m.zone !== this.zone
 						? html`<p>Scheduled in the organizer's time zone, ${m.zone.replaceAll('_', ' ')}.</p>`
