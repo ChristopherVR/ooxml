@@ -21,6 +21,8 @@ export interface PrintLayoutController {
 	setActive(active: boolean): void;
 	resolveClick(target: Element, clientX: number): { blockId: string; offset: number } | null;
 	scheduleRelayout(model: DocumentModel): void;
+	/** Lays out now, dropping a pending debounced layout (a document swap must not show stale pages). */
+	relayoutNow(model: DocumentModel): void;
 	/** Recomputes which page is most visible; call on the scroll container's `scroll` event. */
 	refreshCurrentPage(): void;
 	pageStatus(): { current: number; total: number } | null;
@@ -177,6 +179,12 @@ export function createPrintLayoutController(
 				timer = undefined;
 				pendingModel = null;
 			}
+		},
+		relayoutNow(model) {
+			if (timer) clearTimeout(timer);
+			timer = undefined;
+			pendingModel = null;
+			relayout(model);
 		},
 		scheduleRelayout(model) {
 			pendingModel = model;

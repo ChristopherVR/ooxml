@@ -381,6 +381,7 @@ export class PageController {
 
 	/** Switches between continuous and paginated presentations of the existing editor. */
 	setViewMode(mode: 'draft' | 'print'): void {
+		const wasPrint = this.viewMode === 'print';
 		this.viewMode = mode;
 		const printLayout = this.host.printLayout();
 		printLayout?.setActive(mode === 'print');
@@ -392,14 +393,18 @@ export class PageController {
 		const toolbar = this.host.toolbar();
 		const select = toolbar && findLocalizedControl<HTMLSelectElement>(toolbar, 'Layout view');
 		if (select) select.value = mode;
-		if (mode === 'print') printLayout?.scheduleRelayout(this.host.model());
+		// Print Layout is kept current while active; relaying it out again would swap the pages twice.
+		if (mode === 'print' && !wasPrint) printLayout?.scheduleRelayout(this.host.model());
 		this.host.statusBar()?.setViewMode(mode);
 		this.host.refreshControls();
 	}
 
-	/** Re-lays out Print Layout after a model change (coalesced by the layout view). */
-	relayout(): void {
-		if (this.viewMode === 'print') this.host.printLayout()?.scheduleRelayout(this.host.model());
+	/** Re-lays out Print Layout after a model change (coalesced unless `immediate`, for a swapped document). */
+	relayout(immediate = false): void {
+		if (this.viewMode !== 'print') return;
+		const printLayout = this.host.printLayout();
+		if (immediate) printLayout?.relayoutNow(this.host.model());
+		else printLayout?.scheduleRelayout(this.host.model());
 	}
 
 	print(): void {

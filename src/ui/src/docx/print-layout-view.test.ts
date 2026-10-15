@@ -66,6 +66,22 @@ describe('createPrintLayoutController', () => {
 		}
 	});
 
+	it('relayoutNow lays out at once and cancels the pending debounced layout', () => {
+		vi.useFakeTimers();
+		try {
+			const controller = createPrintLayoutController(document.createElement('div'), () => {});
+			controller.setActive(true);
+			controller.scheduleRelayout(model());
+			controller.relayoutNow(model());
+			expect(controller.layoutVersion()).toBe(1);
+			vi.runAllTimers();
+			expect(controller.layoutVersion()).toBe(1);
+			controller.destroy();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('invokes the cursor callback with a blockId/offset when a rendered line is clicked', () => {
 		vi.useFakeTimers();
 		try {

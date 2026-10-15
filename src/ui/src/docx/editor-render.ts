@@ -90,7 +90,7 @@ export function renderDocument(core: EditorCore): void {
 	core.detachedState = undefined;
 	core.inserts.syncPaper();
 	core.parts.render(canvas, paper);
-	core.pages.relayout();
+	core.pages.relayout(true);
 	core.refreshControls();
 	core.scheduleCollaborationSend();
 }
