@@ -2,15 +2,14 @@
  * OCSP (Online Certificate Status Protocol) revocation checking for OOXML
  * digital signature certificates.
  *
- * Node-only — depends on `node:crypto`, `node:http`, `node:https`, and `node-forge`.
+ * Node-only: depends on `node:crypto`, `node:dns`, `fetch`, and `node-forge`.
  */
 
 import crypto from 'node:crypto';
-import http from 'node:http';
-import https from 'node:https';
 
 import forge from 'node-forge';
 
+import { httpPost, type OcspNetworkOptions } from './ocsp-network';
 import type { CertificateRevocationStatus } from '../core/utils/signature-types';
 
 // ---------------------------------------------------------------------------
@@ -47,55 +46,6 @@ export function extractOcspUrls(certPem: string): string[] {
 	} catch {
 		return [];
 	}
-}
-
-// ---------------------------------------------------------------------------
-// Internal: HTTP POST with timeout
-// ---------------------------------------------------------------------------
-
-const HTTP_TIMEOUT_MS = 10_000;
-
-function httpPost(url: string, body: Buffer, contentType: string): Promise<Buffer> {
-	return new Promise((resolve, reject) => {
-		let parsed: URL;
-		try {
-			parsed = new URL(url);
-		} catch {
-			reject(new Error('Invalid URL'));
-			return;
-		}
-		if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-			reject(new Error('Unsupported protocol'));
-			return;
-		}
-		const transport = parsed.protocol === 'https:' ? https : http;
-		const req = transport.request(
-			{
-				hostname: parsed.hostname,
-				port: parsed.port || undefined,
-				path: parsed.pathname + parsed.search,
-				method: 'POST',
-				headers: {
-					'Content-Type': contentType,
-					'Content-Length': body.length,
-				},
-				timeout: HTTP_TIMEOUT_MS,
-			},
-			(res) => {
-				const chunks: Buffer[] = [];
-				res.on('data', (chunk: Buffer) => chunks.push(chunk));
-				res.on('end', () => resolve(Buffer.concat(chunks)));
-				res.on('error', reject);
-			},
-		);
-		req.on('error', reject);
-		req.on('timeout', () => {
-			req.destroy();
-			reject(new Error('Timeout'));
-		});
-		req.write(body);
-		req.end();
-	});
 }
 
 // ---------------------------------------------------------------------------
@@ -231,6 +181,7 @@ export function parseOcspResponseStatus(data: Buffer): CertificateRevocationStat
 export async function evaluateCertificateRevocation(
 	leafCertPem: string,
 	issuerCertPem: string | undefined,
+	options: OcspNetworkOptions = {},
 ): Promise<{
 	status: CertificateRevocationStatus;
 	error?: string;
@@ -247,7 +198,7 @@ export async function evaluateCertificateRevocation(
 			for (const url of ocspUrls) {
 				checkedOcspUrls.push(url);
 				try {
-					const resp = await httpPost(url, reqDer, 'application/ocsp-request');
+					const resp = await httpPost(url, reqDer, 'application/ocsp-request', options);
 					const status = parseOcspResponseStatus(resp);
 					if (status === 'good' || status === 'revoked') {
 						return { status, checkedOcspUrls, checkedCrlUrls };
