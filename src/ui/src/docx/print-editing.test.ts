@@ -52,6 +52,22 @@ function setup(count = 1) {
 	return { bridge, paper, pages, view };
 }
 describe('ProseMirror print input bridge', () => {
+	it('places the caret on the nearest line when the pointer is off any text', () => {
+		const { bridge, pages, view } = setup(1);
+		const event = new MouseEvent('pointerdown', {
+			bubbles: true,
+			cancelable: true,
+			button: 0,
+			clientX: 400,
+			clientY: 300,
+		});
+		pages.querySelector('.dve-print-page')!.dispatchEvent(event);
+		expect(event.defaultPrevented).toBe(true);
+		expect(view.state.selection.head).toBe(2);
+		bridge.destroy();
+		view.destroy();
+	});
+
 	it('uses the existing editor selection and rejects unknown stories', () => {
 		const { bridge, view } = setup();
 		expect(bridge.select('body', 2)).toBe(true);

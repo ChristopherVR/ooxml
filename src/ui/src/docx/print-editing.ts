@@ -157,13 +157,29 @@ export function createPrintEditingBridge(
 		refresh();
 		return true;
 	}
+	/**
+	 * Resolve a pointer to a text position. A pointer over a line uses it directly; anywhere else on
+	 * the pages (margins, the gap between paragraphs, blank space below the text) falls back to the
+	 * nearest line, the way Word places the caret.
+	 */
 	function hit(event: PointerEvent) {
 		const root = pages.getRootNode() as Document | ShadowRoot;
 		const target = root.elementFromPoint?.(event.clientX, event.clientY);
 		const line = target?.closest<HTMLElement>('.dve-print-line[data-block-id]');
-		if (!line || !pages.contains(line)) return undefined;
-		preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
-		return resolveHit(target!, event.clientX) ?? undefined;
+		if (line && pages.contains(line)) {
+			preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
+			return resolveHit(target!, event.clientX) ?? undefined;
+		}
+		if (target && !pages.contains(target) && target !== pages) return undefined;
+		if (target?.closest('button, a, input, textarea, select, [contenteditable="true"]'))
+			return undefined;
+		const view = getView();
+		if (!view || view.isDestroyed) return undefined;
+		index.update(view.state.doc);
+		const nearest = index.nearest(event.clientX, event.clientY);
+		if (!nearest) return undefined;
+		preferredPage = nearest.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
+		return resolveHit(nearest, event.clientX) ?? undefined;
 	}
 
 	function extendAt(x: number, y: number) {
