@@ -53,9 +53,10 @@ Pictures and charts are selected by clicking them: they move and resize with the
 
 ## Charts and SmartArt
 
-Common chart families (column, bar, line, area, pie, doughnut, scatter and radar),
-bar/line combinations with a secondary axis, and waterfall and histogram charts
-(read-only, from their ChartEx parts) render as SVG from live values. Chart insertion, type/grouping, title, legend and
+Common chart families (column, bar, line, area, pie, doughnut, scatter, bubble, stock
+(high-low-close and open-high-low-close) and radar), bar/line combinations with a secondary
+axis, and waterfall, histogram, treemap and sunburst charts (read-only, from their ChartEx parts)
+render as SVG from live values. Volume-stock combinations and surface charts show a labelled frame. Chart insertion, type/grouping, title, legend and
 color changes use the shared core and Office gallery controls. Docked formatting
 panes provide series fills, supported bar spacing, and fills for chart area,
 plot area, title and legend. Supported gradient types, stops, transparency,
