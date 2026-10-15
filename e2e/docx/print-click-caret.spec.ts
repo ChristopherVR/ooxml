@@ -78,7 +78,9 @@ async function openMultiPage(page: Page, view: 'print' | 'draft' = 'print') {
 	const editor = page.locator('docx-editor');
 	await expect(editor.locator('.ProseMirror').first()).toContainText('Page one intro');
 	await editor.getByRole('tab', { name: 'View', exact: true }).click();
-	await editor.getByRole('combobox', { name: 'Layout view', exact: true }).selectOption(view);
+	await editor
+		.getByRole('combobox', { name: 'Layout view', exact: true })
+		.selectOption(view, { force: true });
 	if (view === 'print') await expect(editor.locator('.dve-print-line').first()).toBeVisible();
 	return editor;
 }
@@ -161,6 +163,9 @@ test.describe('150% zoom at 1366x768', () => {
 		await dialog.getByLabel('Percent', { exact: true }).fill('150');
 		await dialog.getByRole('button', { name: 'OK' }).click();
 		await expect(dialog).toBeHidden();
+		// 816px at 100%: zoom applies once, not once per nested pages container.
+		const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+		expect(sheet.width).toBeCloseTo(1224, 0);
 		const line = (await editor.locator('.dve-print-line').first().boundingBox())!;
 		for (const [x, y] of [
 			[line.x + 5, line.y + 5],
@@ -177,6 +182,10 @@ test.describe('touch at 375x812 with the fit-to-width zoom', () => {
 	test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
 	test('taps on text, below it and in the gutter keep a caret and focus', async ({ page }) => {
 		const editor = await openMultiPage(page);
+		const sheet = (await editor.locator('.dve-print-page').first().boundingBox())!;
+		// The fit-to-width zoom fills the phone width instead of shrinking the page twice.
+		expect(sheet.width).toBeGreaterThan(300);
+		expect(sheet.width).toBeLessThanOrEqual(375);
 		const line = (await editor.locator('.dve-print-line').first().boundingBox())!;
 		for (const [x, y] of [
 			[line.x + 10, line.y + 5],

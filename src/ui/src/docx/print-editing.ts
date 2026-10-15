@@ -31,6 +31,8 @@ export function createPrintEditingBridge(
 	let nativeX = 0;
 	let nativeY = 0;
 	let dragging = false;
+	// The drag already scrolled to the pointer; releasing it must not scroll again.
+	let skipScroll = false;
 	let previousDoc: EditorView['state']['doc'] | undefined;
 	let previousHead = -1;
 	let preferredPage: string | undefined;
@@ -115,7 +117,14 @@ export function createPrintEditingBridge(
 				marker.style.background = 'transparent';
 				marker.style.animation = 'none';
 			}
-			if (!dragging && !view.composing && (previousDoc !== view.state.doc || previousHead !== head))
+			const settle = skipScroll;
+			skipScroll = false;
+			if (
+				!dragging &&
+				!settle &&
+				!view.composing &&
+				(previousDoc !== view.state.doc || previousHead !== head)
+			)
 				marker.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 			previousDoc = view.state.doc;
 			previousHead = head;
@@ -213,6 +222,7 @@ export function createPrintEditingBridge(
 	}
 
 	function up() {
+		if (dragging) skipScroll = true;
 		dragging = false;
 		dragScroll.stop();
 		window.removeEventListener('pointermove', move);

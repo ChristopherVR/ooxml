@@ -6,6 +6,10 @@
 	margin: 0 auto;
 	zoom: var(--dve-zoom, 1);
 }
+/* The view wraps the layout's own pages container; zoom the pair once, not twice. */
+.dve-print-pages > .dve-print-pages {
+	zoom: 1;
+}
 .dve-print-pages[hidden] {
 	display: none;
 }
