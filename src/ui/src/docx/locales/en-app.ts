@@ -192,6 +192,7 @@ export const enApp = {
 	'Theme Colors': 'Theme Colors',
 	'Standard Colors': 'Standard Colors',
 	'More Colors…': 'More Colors…',
+	More: 'More',
 	'No Color': 'No Color',
 	'Dark Red': 'Dark Red',
 	'Light Green': 'Light Green',

@@ -10,11 +10,15 @@
  * the product's own listeners and state hooks keep working.
  */
 
-import { syncScrollMore } from './scroll-more';
+import { syncScrollMore, type ScrollMoreLabel } from './scroll-more';
 
 export interface RibbonGroupOverflowOptions {
-	/** Accessible name of the pinned "more" chevron shown while folded groups still overflow. */
-	moreLabel?: string;
+	/**
+	 * Accessible name of the pinned "more" chevron shown while folded groups still overflow: a
+	 * string, or a function of the panel that is re-read on every sync (so a locale change applies).
+	 * Default `'More'`.
+	 */
+	moreLabel?: ScrollMoreLabel;
 	/** The registered icon of a collapsed group (by element); the group's `icon` attribute wins. */
 	icon?(group: HTMLElement): string | undefined;
 	/** Below this window width nothing collapses (a product's phone layout takes over). */

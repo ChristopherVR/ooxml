@@ -203,6 +203,7 @@ export const esApp: AppStrings = {
 	'Theme Colors': 'Colores del tema',
 	'Standard Colors': 'Colores estándar',
 	'More Colors…': 'Más colores…',
+	More: 'Más',
 	'No Color': 'Sin color',
 	'Dark Red': 'Rojo oscuro',
 	'Light Green': 'Verde claro',

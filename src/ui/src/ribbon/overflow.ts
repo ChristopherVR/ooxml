@@ -1,4 +1,4 @@
-import { ensureRibbonTouchStyle, syncScrollMore } from './scroll-more';
+import { ensureRibbonTouchStyle, syncScrollMore, type ScrollMoreLabel } from './scroll-more';
 
 /**
  * Ribbon overflow: when a panel is narrower than its groups, collapse groups from the right, each
@@ -10,8 +10,12 @@ import { ensureRibbonTouchStyle, syncScrollMore } from './scroll-more';
  * `.ribbon-group` children, each with `data-label` and optionally `data-caption`.
  */
 export interface RibbonOverflowOptions {
-	/** Accessible name of the pinned "more" chevron shown while folded groups still overflow. */
-	moreLabel?: string;
+	/**
+	 * Accessible name of the pinned "more" chevron shown while folded groups still overflow: a
+	 * string, or a function of the panel that is re-read on every sync (so a locale change applies).
+	 * Default `'More'`.
+	 */
+	moreLabel?: ScrollMoreLabel;
 	/** Draws the icon `name` at `size` pixels (the product's own glyph set). */
 	icon(doc: Document, name: string, size: number): Node;
 	/** Icon of a folded group's button, by the group's `data-label`. */

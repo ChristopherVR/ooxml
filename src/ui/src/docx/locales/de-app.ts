@@ -204,6 +204,7 @@ export const deApp: AppStrings = {
 	'Theme Colors': 'Designfarben',
 	'Standard Colors': 'Standardfarben',
 	'More Colors…': 'Weitere Farben…',
+	More: 'Mehr',
 	'No Color': 'Keine Farbe',
 	'Dark Red': 'Dunkelrot',
 	'Light Green': 'Hellgrün',

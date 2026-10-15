@@ -4,7 +4,7 @@
  * row, File button, collapse and peek belong to the shared `office-ui-ribbon`. Structure and look follow docx-viewer's ribbon.ts.
  */
 import { syncRibbonAddIns, type RibbonAddInTab } from '../../ribbon/add-in-tabs';
-import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { normalizeEditorLocale, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { defineRibbon } from '../../controls';
 import { commandButton, el, renderControl, type RenderScope } from './controls';
 import { ribbonIcon } from './icons';
@@ -170,6 +170,8 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		closeRibbonPopover();
 		scope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
 		tabs = [...ribbonTabs()];
+		// The overflow chevron reads its label from here, so a locale change reaches it on rebuild.
+		root.dataset.editorLocale = normalizeEditorLocale(ctx.locale());
 		root.setAttribute('aria-label', ctx.t('Ribbon'));
 		root.setAttribute('label', ctx.t('Ribbon tabs'));
 		root.setAttribute('file-label', ctx.t('File'));

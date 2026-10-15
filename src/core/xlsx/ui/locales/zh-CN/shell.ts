@@ -32,6 +32,7 @@ export const shell: Record<string, string> = {
 	'Theme Colors': '主题颜色',
 	'Standard Colors': '标准色',
 	'More Colors...': '其他颜色...',
+	More: '更多',
 	Automatic: '自动',
 	'No Fill': '无填充',
 	'Lighter {percent}%': '淡色 {percent}%',

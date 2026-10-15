@@ -1,4 +1,5 @@
 import { createRibbonOverflow } from '../controls';
+import { localeOf, translate } from './localization';
 import { ribbonIcon, type RibbonIcon } from './ribbon-icons';
 
 /** The icon shown on a collapsed group's button, by the group's English name. */
@@ -41,6 +42,8 @@ const GROUP_ICONS: Record<string, RibbonIcon> = {
  */
 const overflow = createRibbonOverflow({
 	icon: (_doc, name, size) => ribbonIcon(name as RibbonIcon, size),
+	// Read per sync from the panel's own locale, so a language change reaches the chevron.
+	moreLabel: (panel) => translate(localeOf(panel), 'More'),
 	groupIcons: GROUP_ICONS,
 	fallbackIcon: 'moreStyles',
 	ribbon: '.dve-ribbon',

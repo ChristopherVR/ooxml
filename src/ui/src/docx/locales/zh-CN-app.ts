@@ -192,6 +192,7 @@ export const zhCNApp: AppStrings = {
 	'Theme Colors': '主题颜色',
 	'Standard Colors': '标准色',
 	'More Colors…': '其他颜色…',
+	More: '更多',
 	'No Color': '无颜色',
 	'Dark Red': '深红',
 	'Light Green': '浅绿',

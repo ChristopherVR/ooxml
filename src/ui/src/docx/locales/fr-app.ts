@@ -195,6 +195,7 @@ export const frApp: AppStrings = {
 	'Theme Colors': 'Couleurs du thème',
 	'Standard Colors': 'Couleurs standard',
 	'More Colors…': 'Autres couleurs…',
+	More: 'Plus',
 	'No Color': 'Aucune couleur',
 	'Dark Red': 'Rouge foncé',
 	'Light Green': 'Vert clair',
