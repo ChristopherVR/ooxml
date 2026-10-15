@@ -14,7 +14,7 @@ test('a host that stops rendering ends Presentation Mode, so nothing paints over
 	const overlay = viewer.locator('.presentation');
 	await expect(overlay).toBeVisible();
 	// The suite hides an inactive editor's host; the overlay (fixed, full screen) must go with it.
-	await viewer.evaluate((node) => {
+	await viewer.evaluate((node: HTMLElement) => {
 		node.hidden = true;
 		node.style.display = 'none';
 	});
