@@ -196,6 +196,7 @@ export function createPivotTable(
 		...(options.pageFilter !== undefined
 			? { pageFilter: structuredClone(options.pageFilter) }
 			: {}),
+		...(options.fieldGroups?.length ? { fieldGroups: structuredClone(options.fieldGroups) } : {}),
 		...(options.valuesAxis !== undefined ? { valuesAxis: options.valuesAxis } : {}),
 		...(options.valuesPosition !== undefined ? { valuesPosition: options.valuesPosition } : {}),
 		...(options.additionalValues
@@ -247,6 +248,10 @@ export function refreshPivotTable(
 	if (patch.pageFilter !== undefined) {
 		if (patch.pageFilter === null) delete next.pageFilter;
 		else next.pageFilter = structuredClone(patch.pageFilter);
+	}
+	if (patch.fieldGroups !== undefined) {
+		if (patch.fieldGroups.length) next.fieldGroups = structuredClone(patch.fieldGroups);
+		else delete next.fieldGroups;
 	}
 	if (patch.valuesPosition !== undefined) next.valuesPosition = patch.valuesPosition;
 	else if (patch.valuesAxis === 'columns' || patch.secondRowField === '')

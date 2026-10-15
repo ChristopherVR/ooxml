@@ -1,8 +1,9 @@
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import { pivotItems } from './data';
+import { groupOf, numberGroupLabels } from './groups';
 import { filteredFields, hiddenItemKeys } from './item-filters';
 import { formatRange } from '../address';
-import type { PivotTable } from '../model';
+import type { CellValue, PivotTable } from '../model';
 import { XML_HEADER, attrs, encodeEscapes } from '../write/xml-out';
 import { pivotGrid } from './aggregate';
 import { pivotValueKey } from './data';
@@ -21,11 +22,22 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const dateFiltered = pivot.dateFilter !== undefined;
 	// Report filters and hidden items keep every cached item in the field's item list.
 	const axisItems = (field: string, visible: typeof grid.rowItems) =>
-		page >= 0 || dateFiltered || filtered.has(field) ? pivotItems(pivot, field) : visible;
+		groupOf(pivot, field)
+			? numberGroupLabels(groupOf(pivot, field)!)
+			: page >= 0 || dateFiltered || filtered.has(field)
+				? pivotItems(pivot, field)
+				: visible;
 	const anyFull =
 		page >= 0 ||
 		dateFiltered ||
-		[pivot.rowField, pivot.secondRowField].some((f) => f && filtered.has(f));
+		[pivot.rowField, pivot.secondRowField].some((f) => f && (filtered.has(f) || groupOf(pivot, f)));
+	// The item index of a cached value, or of a group label for a grouped field.
+	const itemX = (index: number, item: CellValue) => {
+		const group = groupOf(pivot, pivot.fields[index]!);
+		return group
+			? numberGroupLabels(group).indexOf(String(item))
+			: cache.indices[index]!.get(pivotValueKey(item));
+	};
 	const rowItemsFull = axisItems(pivot.rowField, grid.rowItems);
 	const secondRowItemsFull = pivot.secondRowField
 		? axisItems(pivot.secondRowField, grid.secondRowItems!)
@@ -62,16 +74,18 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 							? secondRowItemsFull
 							: index === col
 								? columnItemsFull
-								: filtered.has(pivot.fields[index]!) || isDate
-									? pivotItems(pivot, pivot.fields[index]!)
-									: undefined;
+								: groupOf(pivot, pivot.fields[index]!)
+									? numberGroupLabels(groupOf(pivot, pivot.fields[index]!)!)
+									: filtered.has(pivot.fields[index]!) || isDate
+										? pivotItems(pivot, pivot.fields[index]!)
+										: undefined;
 			const hidden = hiddenItemKeys(pivot, pivot.fields[index]!);
 			const subtotal = !(index === row && pivot.subtotals === false);
 			const repeated =
 				pivot.repeatLabels && (index === row || index === second)
 					? '<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" fillDownLabels="1"/></ext></extLst>'
 					: '';
-			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''} x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
+			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, numFmtId: isDate ? 14 : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''} x="${itemX(index, item)}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
 		})
 		.join('');
 	const items = (count: number, indices?: number[]) =>

@@ -1,4 +1,4 @@
-import { pivotTableAt } from 'ooxml-core/xlsx';
+import { pivotGroupableFields, pivotTableAt } from 'ooxml-core/xlsx';
 import { editing, icon, target, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 
 function selected(ctx: EditorContext) {
@@ -34,6 +34,31 @@ export function pivotCommands(): Command[] {
 				const selection = selected(ctx);
 				if (selection)
 					selection.t.session.refreshPivotTable(selection.t.sheet, selection.pivot.name);
+			},
+		}),
+		editing({
+			id: 'pivot.group',
+			label: 'Group Field',
+			icon: icon('table'),
+			lock: 'objects',
+			enabled: (ctx) => {
+				const selection = selected(ctx);
+				return !!selection && pivotGroupableFields(selection.pivot).length > 0;
+			},
+			run: (ctx) => void ctx.dialogs.open('pivot-group'),
+		}),
+		editing({
+			id: 'pivot.ungroup',
+			label: 'Ungroup',
+			icon: icon('table'),
+			lock: 'objects',
+			enabled: (ctx) => !!selected(ctx)?.pivot.fieldGroups?.length,
+			run: (ctx) => {
+				const selection = selected(ctx);
+				if (selection)
+					selection.t.session.refreshPivotTable(selection.t.sheet, selection.pivot.name, {
+						fieldGroups: [],
+					});
 			},
 		}),
 		editing({

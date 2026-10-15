@@ -26,6 +26,14 @@ export interface PivotItemFilter {
 	hidden: CellValue[];
 }
 
+/** A number group on a field (Group Field: starting at, ending at, by); integers only. */
+export interface PivotFieldGroup {
+	field: string;
+	start: number;
+	end: number;
+	by: number;
+}
+
 /** A date range filter (what a timeline sets): dates from `start` to `end` inclusive, as serials. */
 export interface PivotDateFilter {
 	field: string;
@@ -50,6 +58,8 @@ export interface PivotTable {
 	pageFilter?: PivotPageFilter;
 	/** Hidden items per field (slicers, filter lists); the cache keeps every record. */
 	itemFilters?: PivotItemFilter[];
+	/** Number groups: the field shows buckets (`0-9`, `10-19`) instead of its values. */
+	fieldGroups?: PivotFieldGroup[];
 	/**
 	 * Date range from a timeline. The field is one of `dateFields`.
 	 */
@@ -91,6 +101,7 @@ export interface PivotTableOptions {
 	repeatLabels?: boolean;
 	columnField?: string;
 	pageFilter?: PivotPageFilter;
+	fieldGroups?: PivotFieldGroup[];
 	valueField: string;
 	additionalValues?: PivotValueFieldOptions[];
 	valuesAxis?: 'columns' | 'rows';
@@ -114,4 +125,9 @@ export type PivotTablePatch = Partial<
 		| 'valuesAxis'
 		| 'valuesPosition'
 	>
-> & { additionalValues?: PivotValueFieldOptions[]; pageFilter?: PivotPageFilter | null };
+> & {
+	additionalValues?: PivotValueFieldOptions[];
+	pageFilter?: PivotPageFilter | null;
+	/** Replaces every number group (an empty list ungroups). */
+	fieldGroups?: PivotFieldGroup[];
+};

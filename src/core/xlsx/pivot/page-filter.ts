@@ -8,6 +8,7 @@ import {
 } from '../model';
 import { pivotItems, pivotItemLabel, pivotValueKey } from './data';
 import type { PivotGrid } from './aggregate';
+import { applyPivotGroups } from './groups';
 import { applyPivotItemFilters } from './item-filters';
 
 export function validatePivotPageFilter(
@@ -59,7 +60,7 @@ export function validatePivotPageFilter(
 }
 /** The cache remains complete; only the existing aggregation projection sees selected records. */
 export function pivotPageProjection(pivot: PivotTable): PivotTable {
-	return applyPivotItemFilters(pagedProjection(pivot));
+	return applyPivotGroups(applyPivotItemFilters(pagedProjection(pivot)));
 }
 function pagedProjection(pivot: PivotTable): PivotTable {
 	const filter = pivot.pageFilter;

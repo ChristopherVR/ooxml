@@ -224,4 +224,28 @@ export const SLICER_STRINGS: Translations = {
 		'Elija una tabla dinámica con un campo de fecha.',
 		'请选择包含日期字段的数据透视表。',
 	],
+	'Group Field': ['Grouper le champ', 'Feld gruppieren', 'Agrupar campo', '组合字段'],
+	Ungroup: ['Dissocier', 'Gruppierung aufheben', 'Desagrupar', '取消组合'],
+	'Field:': ['Champ :', 'Feld:', 'Campo:', '字段：'],
+	'Starting at:': ['Début :', 'Beginnen bei:', 'Comenzar en:', '起始于：'],
+	'Ending at:': ['Fin :', 'Enden bei:', 'Terminar en:', '终止于：'],
+	'By:': ['Par :', 'Nach:', 'Por:', '步长：'],
+	'Choose a valid number group.': [
+		'Choisissez un groupe numérique valide.',
+		'Wählen Sie eine gültige Zahlengruppe.',
+		'Elija un grupo numérico válido.',
+		'请选择有效的数字组合。',
+	],
+	'A grouped field cannot also be a filter, date field or value field.': [
+		'Un champ groupé ne peut pas être aussi un filtre, un champ de date ou un champ de valeurs.',
+		'Ein gruppiertes Feld kann nicht gleichzeitig Filter-, Datums- oder Wertefeld sein.',
+		'Un campo agrupado no puede ser también un filtro, un campo de fecha o un campo de valores.',
+		'已组合的字段不能同时用作筛选器、日期字段或值字段。',
+	],
+	'Only fields that contain numbers can be grouped.': [
+		'Seuls les champs contenant des nombres peuvent être groupés.',
+		'Nur Felder mit Zahlen können gruppiert werden.',
+		'Solo se pueden agrupar campos que contienen números.',
+		'只有包含数字的字段才能组合。',
+	],
 };

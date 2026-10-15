@@ -48,6 +48,9 @@ const CACHE: Record<string, string> = {
 	e: 'v',
 	d: 'v',
 	m: '',
+	fieldGroup: 'base par',
+	rangePr: 'autoStart autoEnd startNum endNum groupInterval groupBy startDate endDate',
+	groupItems: 'count',
 	extLst: '',
 	ext: 'uri',
 };

@@ -10,6 +10,7 @@ import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
 import { pivotKey, type SlicerRefs } from '../slicer/read';
 import { readDateFields, readDateFilter } from './date-read';
+import { readFieldGroups } from './group-read';
 import { isoToSerial } from './dates';
 import { readItemFilters, readSlicerCacheId } from './item-filters-read';
 import { assertPageAxisItems } from './page-filter-admission';
@@ -66,8 +67,8 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const recordRoot = parseXml(source.text(recordPart)!).documentElement;
 	assertPivotRecords(recordRoot);
 	const fields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
-	if (fields.some((field) => first(field, 'fieldGroup', NS.x) || field.hasAttribute('formula')))
-		throw new Error('Grouped or calculated cache field');
+	if (fields.some((field) => field.hasAttribute('formula')))
+		throw new Error('Calculated cache field');
 	const shared = fields.map((field) =>
 		elements(first(field, 'sharedItems', NS.x) ?? parseXml('<root/>').documentElement).map((node) =>
 			value(node, workbook.date1904),
@@ -197,7 +198,14 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	}
 	const itemFilters = readItemFilters(tableFields, names, shared);
 	const slicerCacheId = readSlicerCacheId(cache);
+	const fieldGroups = readFieldGroups(fields, names);
 	const dateFields = readDateFields(fields, names);
+	if (
+		fieldGroups.some(
+			(group) => group.field === pageFilter?.field || dateFields.includes(group.field),
+		)
+	)
+		throw new Error('A grouped field cannot be a report filter or date field');
 	const dateFilter = readDateFilter(root, names, dateFields, workbook.date1904);
 	const onAxis = new Set<string | undefined>([
 		row,
@@ -211,6 +219,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const pivot: PivotTable = {
 		...(pageFilter ? { pageFilter } : {}),
 		...(itemFilters ? { itemFilters } : {}),
+		...(fieldGroups.length ? { fieldGroups } : {}),
 		...(dateFields.length ? { dateFields } : {}),
 		...(dateFilter ? { dateFilter } : {}),
 		...(slicerCacheId !== undefined ? { slicerCacheId } : {}),

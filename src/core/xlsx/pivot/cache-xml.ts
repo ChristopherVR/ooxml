@@ -3,9 +3,10 @@ import type { CellValue, PivotTable, Workbook } from '../model';
 import { isCellError } from '../model';
 import { formatRange } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
-import { XML_HEADER, attrs, encodeEscapes } from '../write/xml-out';
+import { XML_HEADER, attrs, encodeEscapes, escapeAttr } from '../write/xml-out';
 import { pivotValueKey } from './data';
 import { serialToIso } from './dates';
+import { groupOf, numberGroupLabels } from './groups';
 
 export interface PivotCacheData {
 	items: CellValue[][];
@@ -57,10 +58,18 @@ export function pivotCacheDefinitionXml(
 			const nums = items.filter((value): value is number => typeof value === 'number');
 			// Excel classifies boolean/error items with strings, and blanks are not a mixed type.
 			const text = items.some((item) => item !== null && item !== '' && typeof item !== 'number');
-			return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 0 })}><sharedItems${attrs({ count: items.length, containsString: !nums.length || text, containsNumber: !!nums.length, containsInteger: nums.length > 0 && nums.every(Number.isInteger), containsBlank: types.has('blank'), containsMixedTypes: nums.length > 0 && text, containsSemiMixedTypes: !nums.length || types.size > 1 })}>${items.map(valueXml).join('')}</sharedItems></cacheField>`;
+			return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 0 })}><sharedItems${attrs({ count: items.length, containsString: !nums.length || text, containsNumber: !!nums.length, containsInteger: nums.length > 0 && nums.every(Number.isInteger), containsBlank: types.has('blank'), containsMixedTypes: nums.length > 0 && text, containsSemiMixedTypes: !nums.length || types.size > 1 })}>${items.map(valueXml).join('')}</sharedItems>${groupXml(pivot, name, index)}</cacheField>`;
 		})
 		.join('');
 	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs({ ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name })}/></cacheSource><cacheFields count="${pivot.fields.length}">${fields}</cacheFields>${slicerExt(pivot)}</pivotCacheDefinition>`;
+}
+
+/** `fieldGroup` of a number-grouped field: the range and the bucket labels. */
+function groupXml(pivot: PivotTable, name: string, index: number): string {
+	const group = groupOf(pivot, name);
+	if (!group) return '';
+	const labels = numberGroupLabels(group);
+	return `<fieldGroup base="${index}"><rangePr autoStart="0" autoEnd="0" startNum="${group.start}" endNum="${group.end}" groupInterval="${group.by}"/><groupItems count="${labels.length}">${labels.map((label) => `<s v="${escapeAttr(label)}"/>`).join('')}</groupItems></fieldGroup>`;
 }
 
 /** The identity slicers find a cache by (`x14:pivotCacheDefinition/@pivotCacheId`). */

@@ -23,6 +23,8 @@ export function insertTab(): RibbonTab {
 						items: [
 							{ command: 'pivot.settings' },
 							{ command: 'pivot.refresh' },
+							{ command: 'pivot.group' },
+							{ command: 'pivot.ungroup' },
 							{ command: 'pivot.delete' },
 						],
 					},

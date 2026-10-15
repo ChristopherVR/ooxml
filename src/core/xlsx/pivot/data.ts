@@ -3,6 +3,7 @@ import { isCellError, type CellValue, type PivotTable, type Workbook } from '../
 import { formatRange, quoteSheetName } from '../address';
 import { sparklineDataRange } from '../edit/sparkline-ranges';
 import { parseXml } from '../../xml/index';
+import { groupOf, groupRank, validateFieldGroups } from './groups';
 import { validatePivotItemFilters } from './item-filters';
 import { validatePivotPageFilter } from './page-filter';
 
@@ -48,9 +49,10 @@ export function pivotValueKey(value: CellValue): string {
 }
 
 export function pivotItems(
-	pivot: Pick<PivotTable, 'fields' | 'records'>,
+	pivot: Pick<PivotTable, 'fields' | 'records'> & { fieldGroups?: PivotTable['fieldGroups'] },
 	field: string,
 ): CellValue[] {
+	const group = groupOf(pivot, field);
 	const index = pivot.fields.indexOf(field);
 	const items = new Map<string, CellValue>();
 	for (const record of pivot.records) {
@@ -70,6 +72,7 @@ export function pivotItems(
 						: 0;
 	return [...items.values()].sort(
 		(a, b) =>
+			(group ? groupRank(group, a) - groupRank(group, b) : 0) ||
 			rank(a) - rank(b) ||
 			(typeof a === 'number' && typeof b === 'number'
 				? a - b
@@ -109,11 +112,13 @@ export function validatePivotFields(
 		| 'itemFilters'
 		| 'dateFilter'
 		| 'dateFields'
+		| 'fieldGroups'
 		| 'records'
 	>,
 ): void {
 	validatePivotPageFilter(pivot);
 	validatePivotItemFilters(pivot);
+	validateFieldGroups(pivot);
 	const used = [
 		pivot.rowField,
 		...(pivot.secondRowField ? [pivot.secondRowField] : []),
