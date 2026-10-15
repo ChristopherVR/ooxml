@@ -134,19 +134,89 @@ const escapeXmlText = (text: string): string =>
 	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escapeXmlAttr = (text: string): string => escapeXmlText(text).replace(/"/g, '&quot;');
 
-/** Every `<prefix:f ...>formula</prefix:f>` in a chart or chartEx part (`c:f`, `c15:f`, `cx:f`). */
-const CHART_FORMULA = /<([A-Za-z][\w.-]*:)?f(\s[^>]*)?>([^<]*)<\/\1?f>/g;
-
-function patchChartFormulas(xml: string, edits: CarriedRefEdits): string {
-	return xml.replace(CHART_FORMULA, (whole, prefix = '', attrs = '', text: string) => {
-		const formula = unescapeXml(text);
-		const next = patchCarriedFormula(formula, '', edits);
-		if (next === formula) return whole;
-		return `<${prefix}f${attrs}>${escapeXmlText(next)}</${prefix}f>`;
-	});
+/** The index of the next `char` at or after `from`, remembering the last hit so scans stay linear. */
+function indexFinder(xml: string, char: string): (from: number) => number {
+	let hit = -2;
+	let searchedFrom = 0;
+	return (from) => {
+		if (hit === -1 && from >= searchedFrom) return -1;
+		if (hit >= from && from >= searchedFrom) return hit;
+		searchedFrom = from;
+		hit = xml.indexOf(char, from);
+		return hit;
+	};
 }
 
-const WORKSHEET_SOURCE = /<((?:[A-Za-z][\w.-]*:)?worksheetSource)(\s[^>]*?)(\/?)>/;
+const FORMULA_OPEN = /([A-Za-z][\w.-]*:)?f(?=[\s>])/y;
+
+/**
+ * Every `<prefix:f ...>formula</prefix:f>` in a chart or chartEx part (`c:f`, `c15:f`, `cx:f`),
+ * found by a single left-to-right scan (a lazy regex goes quadratic on many unclosed tags).
+ */
+function patchChartFormulas(xml: string, edits: CarriedRefEdits): string {
+	const nextGt = indexFinder(xml, '>');
+	let out = '';
+	let copied = 0;
+	let at = xml.indexOf('<');
+	while (at !== -1) {
+		FORMULA_OPEN.lastIndex = at + 1;
+		const open = FORMULA_OPEN.exec(xml);
+		const gt = open ? nextGt(FORMULA_OPEN.lastIndex) : -1;
+		if (open && gt === -1) break;
+		if (open) {
+			const prefix = open[1] ?? '';
+			const attrs = xml.slice(FORMULA_OPEN.lastIndex, gt);
+			const lt = xml.indexOf('<', gt + 1);
+			const close = [`</${prefix}f>`, '</f>'].find((c) => lt !== -1 && xml.startsWith(c, lt));
+			if (lt !== -1 && close !== undefined) {
+				const formula = unescapeXml(xml.slice(gt + 1, lt));
+				const next = patchCarriedFormula(formula, '', edits);
+				const end = lt + close.length;
+				if (next !== formula) {
+					out += `${xml.slice(copied, at)}<${prefix}f${attrs}>${escapeXmlText(next)}</${prefix}f>`;
+					copied = end;
+				}
+				at = xml.indexOf('<', end);
+				continue;
+			}
+		}
+		at = xml.indexOf('<', at + 1);
+	}
+	return out + xml.slice(copied);
+}
+
+/** The first `<prefix:worksheetSource ...>` start tag, found by a linear scan. */
+function findWorksheetSource(xml: string): [string, string, string, string] | undefined {
+	const nextGt = indexFinder(xml, '>');
+	let name = xml.indexOf('worksheetSource');
+	while (name !== -1) {
+		const after = name + 'worksheetSource'.length;
+		let start = name;
+		while (start > 0 && /[\w.:-]/.test(xml[start - 1] ?? '')) start--;
+		const prefix = xml.slice(start, name);
+		if (
+			start > 0 &&
+			xml[start - 1] === '<' &&
+			(prefix === '' || /^[A-Za-z][\w.-]*:$/.test(prefix))
+		) {
+			if (/\s/.test(xml[after] ?? '')) {
+				const gt = nextGt(after);
+				if (gt === -1) return undefined;
+				const selfClose = xml[gt - 1] === '/' && gt - 1 > after;
+				const attrs = xml.slice(after, selfClose ? gt - 1 : gt);
+				return [
+					xml.slice(start - 1, gt + 1),
+					`${prefix}worksheetSource`,
+					attrs,
+					selfClose ? '/' : '',
+				];
+			}
+		}
+		name = xml.indexOf('worksheetSource', after);
+	}
+	return undefined;
+}
+
 const attrPattern = (name: string): RegExp => new RegExp(`(\\s${name}\\s*=\\s*)(["'])(.*?)\\2`);
 
 /**
@@ -155,7 +225,7 @@ const attrPattern = (name: string): RegExp => new RegExp(`(\\s${name}\\s*=\\s*)(
  * as Excel does; a ref whose rows or columns were all deleted is kept (the cache keeps its data).
  */
 function patchWorksheetSource(xml: string, edits: CarriedRefEdits): string {
-	const match = WORKSHEET_SOURCE.exec(xml);
+	const match = findWorksheetSource(xml);
 	if (!match) return xml;
 	const [whole, tag, attrs = '', close] = match;
 	if (/\sr:id\s*=/.test(attrs)) return xml;
