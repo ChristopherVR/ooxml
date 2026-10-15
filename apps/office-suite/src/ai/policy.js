@@ -3,12 +3,15 @@
  * an `ai-config.json` beside the app (or a host such as the desktop shell sets
  * `globalThis.ooxmlAiConfig` before the app loads) to choose the providers and models, hold the
  * keys behind its own gateway, turn features off, cap context and set the instructions every
- * request carries. The UI only offers what the policy leaves to the user. Without a file the
- * defaults below apply, so the app works out of the box. See docs/suite-ai-config.md.
+ * request carries. The UI only offers what the policy leaves to the user. Without a configuration
+ * the assistant is off: no chat, no Ask AI, no assistant pane. The suite demo ships a configuration
+ * that turns it on. See docs/suite-ai-config.md.
  */
 import { providers } from './provider-catalog.js';
 
 const defaults = {
+	/** Whether the assistant exists at all. Off unless a configuration is provided. */
+	enabled: false,
 	/** Connections the deployment provides; users pick among them. See normalizeConnection. */
 	connections: [],
 	/** The connection selected for a user who has not picked one ('offline' or a connection id). */
@@ -25,7 +28,13 @@ const defaults = {
 		teamsContext: true,
 		history: true,
 		versions: true,
+		sharedChats: true,
 	},
+	/**
+	 * Where shared chats sync. Without a `syncUrl` they use the Teams server the user connected,
+	 * or, with none, the other tabs of this browser. The token is sent as `?token=` on the socket.
+	 */
+	collaboration: { syncUrl: '', token: '' },
 	limits: { maxContextChars: 150000, historyMessages: 20, maxOutputTokens: 8192 },
 	/** Request settings; `instructions` is added to the suite's own system prompt. */
 	behaviour: { instructions: '', style: 'balanced', language: '', temperature: null },
@@ -76,9 +85,11 @@ function normalizeConnection(raw) {
 }
 
 /** Merges a deployment's configuration over the defaults, ignoring anything malformed. */
-export function normalizePolicy(raw = {}) {
+export function normalizePolicy(raw) {
 	const p = structuredClone(defaults);
 	if (!raw || typeof raw !== 'object') return p;
+	// Providing a configuration turns the assistant on, unless it says `"enabled": false`.
+	p.enabled = bool(raw.enabled, true);
 	p.connections = (Array.isArray(raw.connections) ? raw.connections : [])
 		.map(normalizeConnection)
 		.filter(Boolean)
@@ -111,6 +122,11 @@ export function normalizePolicy(raw = {}) {
 	for (const key of Object.keys(p.userControls))
 		p.userControls[key] = bool(raw.userControls?.[key], p.userControls[key]);
 	p.notice = text(raw.notice, 300);
+	const sync = text(raw.collaboration?.syncUrl, 500);
+	if (/^wss?:\/\/[^\s]+$/iu.test(sync)) {
+		p.collaboration.syncUrl = sync;
+		p.collaboration.token = text(raw.collaboration?.token, 4096);
+	}
 	const ids = ['offline', ...p.connections.map((c) => c.id)];
 	p.defaultConnection = ids.includes(raw.defaultConnection)
 		? raw.defaultConnection
@@ -145,4 +161,6 @@ export function loadPolicy() {
 export const currentPolicy = () => policy;
 /** Whether an organisation configured the assistant (so the UI can say who manages it). */
 export const isManaged = () => source !== 'default';
-export const feature = (name) => policy.features[name] !== false;
+export const feature = (name) => policy.enabled && policy.features[name] !== false;
+/** Whether the assistant is on in this deployment. */
+export const assistantEnabled = () => policy.enabled;

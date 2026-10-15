@@ -27,6 +27,9 @@ const paths = {
 	trash: '<path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/>',
 	pin: '<path d="M9 4h6l-1 6 4 4H6l4-4zM12 14v7"/>',
 	chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+	people:
+		'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1"/><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6.5 6.5 0 0 1 3.5 5.8V20"/>',
+	doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
 	history: '<path d="M4 6h16M4 12h16M4 18h10"/>',
 	moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
 };

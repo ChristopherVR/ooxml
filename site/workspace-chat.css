@@ -1177,3 +1177,123 @@
 	font-size: 10px;
 	flex: none;
 }
+
+/* The assistant exists only when the deployment configures it (ai-config.json). */
+body:not([data-ai='on']) .ai-only {
+	display: none !important;
+}
+
+/* Shared chats: the join and share buttons, the history mark, and who is here. */
+.chat-history-top {
+	grid-template-columns: 1fr auto;
+}
+.chat-history-top .chat-search {
+	grid-column: 1 / -1;
+}
+.chat-join,
+.chat-share {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	padding: 6px 10px;
+}
+.chat-share {
+	margin-left: auto;
+	flex: none;
+}
+.chat-list-shared {
+	display: inline-flex;
+	vertical-align: -3px;
+	margin-right: 4px;
+	color: var(--accent-ink);
+}
+.chat-list-shared .ui-icon {
+	width: 14px;
+	height: 14px;
+}
+.chat-people {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0 max(16px, calc((100% - var(--chat-width)) / 2)) 6px;
+	font-size: 12px;
+	color: var(--muted);
+	min-width: 0;
+}
+.chat-people[hidden] {
+	display: none;
+}
+.chat-shared-mark {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 600;
+	color: var(--accent-ink);
+}
+.chat-shared-mark .ui-icon {
+	width: 14px;
+	height: 14px;
+}
+.chat-person {
+	display: inline-grid;
+	place-items: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--person);
+	color: #fff;
+	font-size: 10px;
+	font-weight: 700;
+	flex: none;
+}
+.chat-people-state {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.chat-author {
+	display: block;
+	text-align: right;
+	font-size: 11px;
+	color: var(--muted);
+	margin: 0 4px 2px;
+	order: -1;
+}
+.chat-share-form input[readonly] {
+	font-family: var(--mono, ui-monospace, monospace);
+	font-size: 12px;
+}
+.chat-share-reach {
+	font-size: 12px;
+	color: var(--muted);
+}
+
+/* Dropping a tab or a file on a chat attaches it. */
+.chat.drop-target .chat-composer {
+	border-color: var(--blue);
+	box-shadow: 0 0 0 2px var(--blue);
+}
+.chat.drop-target .chat-composer::after {
+	content: 'Drop to attach';
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	border-radius: inherit;
+	background: color-mix(in srgb, var(--surface) 88%, transparent);
+	color: var(--blue);
+	font-weight: 600;
+	pointer-events: none;
+}
+
+/* Reordering tabs: the dragged tab fades and a bar marks where it will land. */
+.file-tab.dragging {
+	opacity: 0.45;
+}
+.file-tab.drop-before {
+	box-shadow: inset 2px 0 0 var(--blue);
+}
+.file-tab.drop-after {
+	box-shadow: inset -2px 0 0 var(--blue);
+}

@@ -1,5 +1,6 @@
 {
 	"managed": false,
+	"enabled": true,
 	"connections": [],
 	"defaultConnection": "offline",
 	"allowUserConnections": true,
@@ -10,8 +11,10 @@
 		"attachFiles": true,
 		"teamsContext": true,
 		"history": true,
-		"versions": true
+		"versions": true,
+		"sharedChats": true
 	},
+	"collaboration": { "syncUrl": "" },
 	"limits": { "maxContextChars": 150000, "historyMessages": 20, "maxOutputTokens": 8192 },
 	"behaviour": { "instructions": "", "style": "balanced", "language": "" },
 	"userControls": { "style": true, "language": true, "instructions": true, "temperature": false },

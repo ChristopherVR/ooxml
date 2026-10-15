@@ -55,7 +55,12 @@
 				aria-label="Search workspace"
 				aria-expanded="false"
 			></button>
-			<button id="assistant-toggle" aria-expanded="false" aria-controls="assistant"></button>
+			<button
+				id="assistant-toggle"
+				class="ai-only"
+				aria-expanded="false"
+				aria-controls="assistant"
+			></button>
 			<button id="theme-picker" aria-label="Appearance" title="Settings"></button>
 			<button
 				id="profile-toggle"
@@ -139,7 +144,12 @@
 									><button id="upload">Upload file</button>
 								</div>
 							</div>
-							<form id="home-ask" class="home-ask" role="search" aria-label="Ask the assistant">
+							<form
+								id="home-ask"
+								class="home-ask ai-only"
+								role="search"
+								aria-label="Ask the assistant"
+							>
 								<span id="home-ask-symbol" aria-hidden="true"></span
 								><input
 									id="home-ask-input"
@@ -209,7 +219,7 @@
 								><button id="download" data-menu>Download</button
 								><button id="embedded" data-menu>Embedded files</button
 								><button id="versions" data-menu>Versions</button><span id="save-state"></span
-								><button id="ask-ai" class="ask-ai" aria-label="Ask AI about this file"></button
+								><button id="ask-ai" class="ask-ai ai-only" aria-label="Ask AI about this file"></button
 								><button id="share" class="primary" data-menu>Share in Teams</button
 								><button id="actions-more" aria-label="More actions" aria-haspopup="menu"></button>
 							</div>

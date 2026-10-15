@@ -2,10 +2,14 @@
  * One chat: a thread, a composer and the conversation behind them. The full chat page and the
  * side pane beside an open document each mount one, with their own element ids (`prefix`), and
  * share the history store, so a conversation started in either continues in the other. What a
- * request may do comes from the deployment's policy (policy.js), not from this UI.
+ * request may do comes from the deployment's policy (policy.js), not from this UI. A shared
+ * conversation mirrors a collaboration room (shared-room.js): everyone in it sees each request
+ * and watches the asker's reply stream in.
  */
 import { $, badge, escape, task } from '../ui.js';
 import { icon } from '../icons.js';
+import { contextMenu } from '../context-menu.js';
+import { currentProfile } from '../profile-state.js';
 import { gatherContext } from './context.js';
 import { conversations, newId, titleFor } from './conversations.js';
 import {
@@ -23,21 +27,27 @@ import { askForKey, chooseContext, openModelMenu } from './settings.js';
 import { mountMentions } from './mentions.js';
 import { describeChanges } from './diff.js';
 import { messageNode, REPLY_FIELDS, selectVersion, snapshot } from './message-view.js';
+import { acceptDrops, importForChat, noteBadge, pickFiles } from './attach.js';
+import { joinRoom, newRoomId, toShared } from './shared.js';
+import { followRoom } from './shared-room.js';
 
 export function createChat({ root, prefix, deps, empty, placeholder, onChange }) {
 	const { store, sessions, refresh, open, getTeams, openIds, showVersions } = deps;
 	let conversation = null,
 		attached = new Set(),
+		notes = [],
 		includeChat = false,
-		abort = null;
+		abort = null,
+		room = null;
 	root.classList.add('chat');
 	root.innerHTML = `<div class="chat-thread" id="${prefix}-messages" aria-live="polite"></div>
+<div class="chat-people" id="${prefix}-people" hidden></div>
 <form class="chat-composer" id="${prefix}-form">
 	<div class="chat-attachments" id="${prefix}-scope"></div>
 	<label class="sr-only" for="${prefix}-input">Message</label>
 	<textarea id="${prefix}-input" rows="1" placeholder="${escape(placeholder)}" required></textarea>
 	<div class="chat-composer-bar">
-		<button type="button" class="chat-tool" id="${prefix}-context" title="Attach files, or type @ in your message">${icon('clip')}<span>Attach</span></button>
+		<button type="button" class="chat-tool" id="${prefix}-context" title="Attach files, drop a tab here, or type @ in your message" aria-haspopup="menu">${icon('clip')}<span>Attach</span></button>
 		<button type="button" class="chat-tool chat-model" id="${prefix}-settings" title="Choose the model" aria-haspopup="menu">${icon('spark')}<span id="${prefix}-state"></span>${icon('chevron')}</button>
 		<button type="button" class="chat-stop" id="${prefix}-stop" hidden>${icon('stop')}<span>Stop</span></button>
 		<button class="primary chat-send" id="${prefix}-send" aria-label="Send" title="Send (Enter)">${icon('send')}</button>
@@ -53,20 +63,41 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		$(`${prefix}-context`).hidden = !feature('attachFiles');
 	});
 	$(`${prefix}-settings`).onclick = openModelMenu;
-	$(`${prefix}-context`).onclick = () =>
-		task(() =>
-			chooseContext({
-				store,
-				selected: attached,
-				includeChat,
-				openIds: openIds(),
-				onDone: (next, chat) => {
-					attached = next;
-					includeChat = chat;
-					void renderAttachments();
-				},
-			}),
+	const chooseFiles = () =>
+		chooseContext({
+			store,
+			selected: attached,
+			includeChat,
+			openIds: openIds(),
+			onDone: (next, chat) => {
+				attached = next;
+				includeChat = chat;
+				void renderAttachments();
+			},
+		});
+	/** Uploads files from the device (or dropped ones) and attaches them to the next request. */
+	async function upload(files) {
+		if (!files.length || !feature('attachFiles')) return;
+		const added = await importForChat(files, store);
+		for (const id of added.ids) attached.add(id);
+		notes.push(...added.notes);
+		if (added.ids.length) await refresh();
+		await renderAttachments();
+		input.focus();
+	}
+	$(`${prefix}-context`).onclick = (event) =>
+		contextMenu(
+			event,
+			[
+				{ label: 'Upload from this device...', run: async () => upload(await pickFiles()) },
+				{ label: 'Choose files and open tabs...', run: chooseFiles },
+			].map((item) => ({ ...item, error: (e) => task(() => Promise.reject(e)) })),
 		);
+	acceptDrops(root, {
+		enabled: () => feature('attachFiles'),
+		onTab: (id) => task(() => chat.attach([id])),
+		onFiles: (files) => task(() => upload(files)),
+	});
 	mountMentions({
 		input,
 		items: async () => {
@@ -85,6 +116,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	});
 	$(`${prefix}-stop`).onclick = () => abort?.abort();
 	input.addEventListener('input', () => {
+		room?.typing();
 		input.style.height = 'auto';
 		input.style.height = `${Math.min(input.scrollHeight, 220)}px`;
 		input.style.overflowY = input.scrollHeight > 220 ? 'auto' : 'hidden';
@@ -107,13 +139,14 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	async function renderAttachments() {
 		const docs = new Map((await store.list()).map((d) => [d.id, d]));
 		for (const id of attached) if (!docs.has(id)) attached.delete(id);
-		const chips = [...attached].map((id) => [id, docs.get(id).kind, docs.get(id).name]);
-		if (includeChat) chips.push(['teams', 'teams', 'Teams channel']);
+		const chips = [...attached].map((id) => [id, badge(docs.get(id).kind), docs.get(id).name]);
+		notes.forEach((note, i) => chips.push([`note:${i}`, noteBadge(), note.name]));
+		if (includeChat) chips.push(['teams', badge('teams'), 'Teams channel']);
 		const scope = $(`${prefix}-scope`);
 		scope.innerHTML = chips
 			.map(
-				([id, kind, name]) =>
-					`<span class="chat-chip">${badge(kind)}<span>${escape(name)}</span><button type="button" data-detach="${escape(id)}" aria-label="Remove ${escape(name)}">×</button></span>`,
+				([id, mark, name]) =>
+					`<span class="chat-chip">${mark}<span>${escape(name)}</span><button type="button" data-detach="${escape(id)}" aria-label="Remove ${escape(name)}">×</button></span>`,
 			)
 			.join('');
 		scope.hidden = !chips.length;
@@ -122,22 +155,53 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		const id = event.target.closest('[data-detach]')?.dataset.detach;
 		if (!id) return;
 		if (id === 'teams') includeChat = false;
+		else if (id.startsWith('note:')) notes.splice(Number(id.slice(5)), 1);
 		else attached.delete(id);
 		void renderAttachments();
 	});
 
-	/** Saves a conversation, unless the policy keeps chats out of history. */
+	/** Saves a conversation (to its room too, when shared), unless the policy keeps no history. */
 	const persist = async (target = conversation) => {
 		target.updated = Date.now();
+		if (target.shared && feature('sharedChats')) {
+			const shared = await joinRoom(target.shared.room);
+			shared.store.setTitle(target.title);
+			for (const m of target.messages) shared.store.put(toShared(m));
+		}
 		if (feature('history')) await conversations.put(target);
 	};
+	const me = () => currentProfile().userId;
+	/** Follows the room of a shared conversation, or leaves the current one. */
+	async function connect(convo) {
+		room?.leave();
+		room = null;
+		if (convo?.shared && feature('sharedChats')) {
+			const next = await followRoom({
+				convo,
+				people: $(`${prefix}-people`),
+				current: () => conversation === convo,
+				busy: () => Boolean(abort),
+				changed: () => {
+					render();
+					onChange?.(convo);
+				},
+			});
+			// The user moved on while the room was connecting.
+			if (conversation === convo) room = next;
+			else next.leave();
+		}
+		$(`${prefix}-people`).hidden = !room;
+	}
 	const view = {
 		cardDeps: { store, sessions, refresh, open, showVersions },
 		settings: effectiveSettings,
 		persist: () => void persist(),
 		isLast: (message) => message === conversation?.messages.at(-1),
+		me,
+		shared: () => Boolean(room),
 		async edit(message) {
 			if (abort) return;
+			room?.chat.store.truncateFrom(message.id);
 			conversation.messages.splice(conversation.messages.indexOf(message));
 			await persist();
 			render();
@@ -186,20 +250,28 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			pinned: false,
 			messages: [],
 		});
+		const shared =
+			convo.shared && feature('sharedChats') ? await joinRoom(convo.shared.room) : null;
 		const listed = (await store.list()).filter((d) => attached.has(d.id));
+		const author = { id: me(), name: currentProfile().name };
 		if (!again)
 			convo.messages.push({
 				id: newId(),
 				role: 'user',
 				content: prompt,
-				files: listed.map((d) => ({ name: d.name, kind: d.kind })),
+				author,
+				files: [
+					...listed.map((d) => ({ name: d.name, kind: d.kind })),
+					...notes.map((n) => ({ name: n.name, kind: 'note' })),
+				],
 			});
 		const message = again ?? { id: newId(), role: 'assistant' };
 		if (again) {
 			again.versions ??= [snapshot(again)];
 			for (const key of REPLY_FIELDS) delete again[key];
 		}
-		Object.assign(message, { content: '', model: connectionLabel(connection) });
+		// Only the person who asked can apply the reply's edits: they are edits to their files.
+		Object.assign(message, { content: '', model: connectionLabel(connection), askedBy: author.id });
 		render();
 		const node = again ? thread.lastElementChild : thread.appendChild(messageNode(message, view));
 		node.classList.add('streaming');
@@ -210,9 +282,20 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		$(`${prefix}-send`).hidden = true;
 		$(`${prefix}-stop`).hidden = false;
 		let partial = '',
-			frame = 0;
+			frame = 0,
+			sent = 0;
+		// The others in a shared chat see the request at once and the reply as it is written.
+		const stream = () => {
+			if (!shared || Date.now() - sent < 250) return;
+			sent = Date.now();
+			for (const m of convo.messages) if (m !== message) shared.store.put(toShared(m));
+			shared.store.put(toShared({ ...message, content: visibleText(partial), streaming: true }));
+		};
+		shared?.setActivity('asking');
+		stream();
 		const paint = () => {
 			frame = 0;
+			stream();
 			const stick = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 80;
 			content.replaceChildren(renderMarkdown(visibleText(partial)));
 			if (stick) thread.scrollTop = thread.scrollHeight;
@@ -222,6 +305,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			const { docs, context, source } = await gatherContext({
 				sessions,
 				ids: feature('attachFiles') ? attached : [],
+				notes: feature('attachFiles') ? notes : [],
 				teams: includeChat && feature('teamsContext') ? getTeams()?.client : null,
 				maxChars: settings.maxContextChars,
 			});
@@ -266,6 +350,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			else message.error = error.message;
 		} finally {
 			cancelAnimationFrame(frame);
+			shared?.setActivity('idle');
 			abort = null;
 			$(`${prefix}-send`).hidden = false;
 			$(`${prefix}-stop`).hidden = true;
@@ -276,25 +361,67 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			again.selected = again.versions.length - 1;
 		} else convo.messages.push(message);
 		await persist(convo);
-		if (conversation === convo) {
+		// Requests the others sent while this reply was written show up now.
+		if (conversation === convo && room) room.pull();
+		else if (conversation === convo) {
 			render();
 			onChange?.(convo);
 		}
 	}
 
-	return {
+	const chat = {
 		get id() {
 			return conversation?.id ?? null;
+		},
+		get conversation() {
+			return conversation;
 		},
 		async load(id) {
 			if (abort) abort.abort();
 			conversation = id ? ((await conversations.get(id)) ?? null) : null;
 			render();
 			onChange?.(conversation);
+			await connect(conversation);
+		},
+		/** Opens the shared chat in `roomId`: the one in the history, or a new one to fill from it. */
+		async join(roomId) {
+			if (!feature('sharedChats'))
+				throw new Error('Shared chats are turned off in this workspace.');
+			if (abort) abort.abort();
+			const known = (await conversations.list()).find((c) => c.shared?.room === roomId);
+			const now = Date.now();
+			conversation = known ?? {
+				id: newId(),
+				title: 'Shared chat',
+				created: now,
+				updated: now,
+				pinned: false,
+				messages: [],
+				shared: { room: roomId },
+			};
+			if (!known && feature('history')) await conversations.put(conversation);
+			render();
+			onChange?.(conversation);
+			await connect(conversation);
+		},
+		/** Shares this conversation: it moves into a new room, whose id is returned. */
+		async share() {
+			if (!feature('sharedChats'))
+				throw new Error('Shared chats are turned off in this workspace.');
+			if (!conversation?.messages.length)
+				throw new Error('Send a message first, then share the chat.');
+			if (!conversation.shared) {
+				conversation.shared = { room: await newRoomId() };
+				await persist();
+				await connect(conversation);
+				onChange?.(conversation);
+			}
+			return conversation.shared.room;
 		},
 		reset() {
 			if (abort) abort.abort();
 			conversation = null;
+			void connect(null);
 			render();
 			onChange?.(conversation);
 		},
@@ -304,8 +431,9 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			for (const id of ids) attached.add(id);
 			return renderAttachments();
 		},
-		hasAttachments: () => attached.size > 0,
+		hasAttachments: () => attached.size > 0 || notes.length > 0,
 		focus: () => input.focus(),
 		render,
 	};
+	return chat;
 }

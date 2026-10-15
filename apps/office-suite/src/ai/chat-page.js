@@ -8,6 +8,7 @@ import { currentProfile } from '../profile-state.js';
 import { conversations, groupByDate } from './conversations.js';
 import { createChat } from './chat.js';
 import { feature, loadPolicy } from './policy.js';
+import { collaborationTarget, inviteLink, roomFromInvite } from './shared.js';
 
 const starters = [
 	{
@@ -45,6 +46,7 @@ export function mountChatPage({ host, deps, onRoute }) {
 	host.innerHTML = `<aside class="chat-history" aria-label="Chat history">
 	<div class="chat-history-top">
 		<button type="button" class="primary chat-new" data-chat-new>${icon('add')}<span>New chat</span></button>
+		<button type="button" class="chat-join" data-chat-join title="Join a chat someone shared with you">${icon('people')}<span>Join</span></button>
 		<label class="chat-search">${icon('search')}<input type="search" placeholder="Search chats" aria-label="Search chats" /></label>
 	</div>
 	<nav class="chat-list"></nav>
@@ -53,6 +55,7 @@ export function mountChatPage({ host, deps, onRoute }) {
 	<header class="chat-header">
 		<button type="button" class="chat-history-toggle" aria-label="Show chat history" aria-expanded="false">${icon('history')}</button>
 		<h2 class="chat-title">New chat</h2>
+		<button type="button" class="chat-share" data-chat-share hidden>${icon('people')}<span>Share</span></button>
 	</header>
 	<div class="chat-page-chat"></div>
 </div>`;
@@ -60,6 +63,7 @@ export function mountChatPage({ host, deps, onRoute }) {
 	const search = host.querySelector('.chat-search input');
 	const title = host.querySelector('.chat-title');
 	const toggle = host.querySelector('.chat-history-toggle');
+	const shareButton = host.querySelector('[data-chat-share]');
 	const hero = document.createElement('div');
 	hero.className = 'chat-hero';
 	const chat = createChat({
@@ -70,6 +74,8 @@ export function mountChatPage({ host, deps, onRoute }) {
 		placeholder: 'Ask anything, or ask for a document, workbook or deck',
 		onChange: (conversation) => {
 			title.textContent = conversation?.title ?? 'New chat';
+			shareButton.hidden = !feature('sharedChats') || !conversation?.messages.length;
+			shareButton.querySelector('span').textContent = conversation?.shared ? 'Invite' : 'Share';
 			onRoute(conversation?.id);
 			void renderList();
 		},
@@ -114,7 +120,7 @@ export function mountChatPage({ host, deps, onRoute }) {
 							group.items
 								.map(
 									(c) =>
-										`<div class="chat-list-item" aria-current="${c.id === chat.id}"><button type="button" data-chat-open="${c.id}" title="${escape(c.title)}">${escape(c.title)}</button><span class="chat-item-actions"><button type="button" data-chat-pin="${c.id}" aria-label="${c.pinned ? 'Unpin' : 'Pin'} ${escape(c.title)}" title="${c.pinned ? 'Unpin' : 'Pin'}">${icon('pin')}</button><button type="button" data-chat-rename="${c.id}" aria-label="Rename ${escape(c.title)}" title="Rename">${icon('edit')}</button><button type="button" data-chat-delete="${c.id}" aria-label="Delete ${escape(c.title)}" title="Delete">${icon('trash')}</button></span></div>`,
+										`<div class="chat-list-item" aria-current="${c.id === chat.id}"><button type="button" data-chat-open="${c.id}" title="${escape(c.title)}${c.shared ? ' (shared)' : ''}">${c.shared ? `<span class="chat-list-shared" aria-label="Shared">${icon('people')}</span>` : ''}${escape(c.title)}</button><span class="chat-item-actions"><button type="button" data-chat-pin="${c.id}" aria-label="${c.pinned ? 'Unpin' : 'Pin'} ${escape(c.title)}" title="${c.pinned ? 'Unpin' : 'Pin'}">${icon('pin')}</button><button type="button" data-chat-rename="${c.id}" aria-label="Rename ${escape(c.title)}" title="Rename">${icon('edit')}</button><button type="button" data-chat-delete="${c.id}" aria-label="Delete ${escape(c.title)}" title="Delete">${icon('trash')}</button></span></div>`,
 								)
 								.join(''),
 					)
@@ -136,6 +142,8 @@ export function mountChatPage({ host, deps, onRoute }) {
 			setHistory(false);
 			chat.focus();
 		}
+		if (b.hasAttribute('data-chat-share')) task(share);
+		if (b.hasAttribute('data-chat-join')) joinDialog();
 		if (b.dataset.chatOpen) {
 			setHistory(false);
 			task(() => chat.load(b.dataset.chatOpen));
@@ -177,11 +185,48 @@ export function mountChatPage({ host, deps, onRoute }) {
 				choose('Delete chat', form);
 			});
 	});
+	/** Shares the open chat and shows the link that brings others into it. */
+	async function share() {
+		const room = await chat.share();
+		const target = await collaborationTarget();
+		const link = inviteLink(room);
+		const form = document.createElement('form');
+		form.className = 'chat-share-form';
+		form.innerHTML = `<p>Everyone in this chat sees each request and the replies as they are written. Each person's files stay on their own device unless they attach them.</p>
+<label>Invite link<input name="link" readonly value="${escape(link)}" /></label>
+<p class="chat-share-reach">${escape(target.reach)}</p>
+<button class="primary">Copy link</button>`;
+		form.onsubmit = (event) => {
+			event.preventDefault();
+			task(async () => {
+				await navigator.clipboard.writeText(link);
+				form.querySelector('button').textContent = 'Copied';
+			});
+		};
+		choose('Share this chat', form);
+		form.elements.namedItem('link').select();
+	}
+	function joinDialog() {
+		const form = document.createElement('form');
+		form.innerHTML = `<label>Invite link<input name="link" required placeholder="Paste the link someone shared" /></label><button class="primary">Join chat</button>`;
+		form.onsubmit = (event) => {
+			event.preventDefault();
+			task(async () => {
+				const room = roomFromInvite(new FormData(form).get('link'));
+				if (!room) throw new Error('That is not a shared chat link.');
+				$('dialog').close();
+				setHistory(false);
+				await chat.join(room);
+			});
+		};
+		choose('Join a shared chat', form);
+	}
 	chat.render();
 	void renderList();
 	// A workspace whose policy keeps no history shows no history list.
 	void loadPolicy().then(() => {
 		host.querySelector('.chat-history').hidden = !feature('history');
+		host.querySelector('[data-chat-join]').hidden = !feature('sharedChats');
 	});
 	return {
 		show(id) {
@@ -189,6 +234,7 @@ export function mountChatPage({ host, deps, onRoute }) {
 			if (id && id !== chat.id) return chat.load(id);
 			if (!chat.id) chat.render();
 		},
+		join: (room) => chat.join(room),
 		ask(prompt, ids = []) {
 			chat.reset();
 			void chat.attach(ids);

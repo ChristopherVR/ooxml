@@ -119,6 +119,15 @@ export class SuiteSessions {
 			s.loading = false;
 		}
 	}
+	/** Moves a tab to `index` among the open documents; tab order is the map's order. */
+	move(id, index) {
+		const s = this.sessions.get(id);
+		if (!s) return;
+		const order = [...this.sessions.keys()].filter((key) => key !== id);
+		order.splice(Math.max(0, Math.min(index, order.length)), 0, id);
+		this.sessions = new Map(order.map((key) => [key, key === id ? s : this.sessions.get(key)]));
+		this.update();
+	}
 	close(id) {
 		const s = this.sessions.get(id);
 		if (!s) return;

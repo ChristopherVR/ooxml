@@ -6,6 +6,7 @@ import { badge, escape, notify, task } from '../ui.js';
 import { icon } from '../icons.js';
 import { renderMarkdown } from './markdown.js';
 import { creationCards, proposalCard } from './cards.js';
+import { noteBadge } from './attach.js';
 
 /** The fields that make up one version of a reply. */
 export const REPLY_FIELDS = [
@@ -18,6 +19,7 @@ export const REPLY_FIELDS = [
 	'error',
 	'applied',
 	'created',
+	'askedBy',
 ];
 export const snapshot = (message) =>
 	Object.fromEntries(
@@ -43,7 +45,15 @@ function cards(message, ctx) {
 	};
 	try {
 		const { changes = [], create = [] } = message.actions ?? {};
-		if (changes.length && message.applied) {
+		const mine = !message.askedBy || message.askedBy === ctx.me();
+		if (changes.length && !mine && !message.applied)
+			out.push(
+				note(
+					'chat-note',
+					`${changes.length} edit${changes.length === 1 ? ' was' : 's were'} proposed for the files of the person who asked. Only they can review and apply ${changes.length === 1 ? 'it' : 'them'}.`,
+				),
+			);
+		else if (changes.length && message.applied) {
 			const count = Array.isArray(message.applied)
 				? message.applied.filter(Boolean).length
 				: changes.length;
@@ -62,7 +72,10 @@ function cards(message, ctx) {
 			out.push(
 				...creationCards({
 					items: create,
-					created: (message.created ??= {}),
+					// In a shared chat each person creates their own copy of a new file.
+					created: ctx.shared()
+						? ((message.createdBy ??= {})[ctx.me()] ??= {})
+						: (message.created ??= {}),
 					save,
 					openCreated: ctx.settings().openCreatedFiles,
 					store: ctx.cardDeps.store,
@@ -101,7 +114,8 @@ function actionsBar(message, ctx) {
 		await navigator.clipboard.writeText(message.content);
 		notify('Copied to the clipboard');
 	});
-	if (message.role === 'user') add('edit', 'Edit and resend', () => ctx.edit(message));
+	const own = !message.author || message.author.id === ctx.me();
+	if (message.role === 'user' && own) add('edit', 'Edit and resend', () => ctx.edit(message));
 	else if (ctx.isLast(message)) add('refresh', 'Regenerate', () => ctx.regenerate(message));
 	return bar;
 }
@@ -117,10 +131,19 @@ export function messageNode(message, ctx) {
 			const files = document.createElement('div');
 			files.className = 'chat-msg-files';
 			files.innerHTML = message.files
-				.map((f) => `<span>${badge(f.kind)}${escape(f.name)}</span>`)
+				.map(
+					(f) => `<span>${f.kind === 'note' ? noteBadge() : badge(f.kind)}${escape(f.name)}</span>`,
+				)
 				.join('');
 			bubble.prepend(files);
 		}
+		if (ctx.shared() && message.author && message.author.id !== ctx.me())
+			node.append(
+				Object.assign(document.createElement('span'), {
+					className: 'chat-author',
+					textContent: message.author.name,
+				}),
+			);
 		node.append(bubble, actionsBar(message, ctx));
 		return node;
 	}
@@ -129,15 +152,26 @@ export function messageNode(message, ctx) {
 	body.className = 'chat-body';
 	const meta = document.createElement('div');
 	meta.className = 'chat-meta';
-	meta.textContent = message.model ?? 'Assistant';
+	meta.textContent =
+		ctx.shared() && message.author && message.author.id !== ctx.me()
+			? `${message.model ?? 'Assistant'} · asked by ${message.author.name}`
+			: (message.model ?? 'Assistant');
 	const content = document.createElement('div');
 	content.className = 'md';
 	if (message.error) {
 		content.classList.add('chat-error');
 		content.textContent = message.error;
-	} else content.append(renderMarkdown(message.content));
-	body.append(meta, content, ...cards(message, ctx));
-	if (message.content || message.error) body.append(actionsBar(message, ctx));
+	} else if (message.streaming && !message.content)
+		content.innerHTML = '<span class="chat-typing"><i></i><i></i><i></i></span>';
+	else content.append(renderMarkdown(message.content));
+	// A reply someone else is still writing has no cards or actions yet.
+	if (message.streaming) {
+		node.classList.add('streaming');
+		body.append(meta, content);
+	} else {
+		body.append(meta, content, ...cards(message, ctx));
+		if (message.content || message.error) body.append(actionsBar(message, ctx));
+	}
 	node.append(body);
 	return node;
 }

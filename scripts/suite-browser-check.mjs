@@ -145,6 +145,7 @@ try {
 	await page.locator('input[name=model]').fill('test-model');
 	await page.getByRole('button', { name: 'Connect', exact: true }).click();
 	await page.locator('#ai-context').click();
+	await page.getByRole('menuitem', { name: 'Choose files and open tabs...' }).click();
 	const contextInputs = page.locator('input[name=document]');
 	for (const input of await contextInputs.all()) await input.uncheck();
 	await page

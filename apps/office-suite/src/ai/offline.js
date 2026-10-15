@@ -187,6 +187,10 @@ function reply(prompt, context, canCreate, canEdit) {
 				? 'docx'
 				: null;
 	const parts = [note];
+	for (const attached of context?.notes ?? [])
+		parts.push(
+			`**${attached.name}** (text): ${attached.text.split('\n').length} lines, ${attached.text.length} characters.\n\n> ${attached.text.trim().split('\n')[0].slice(0, 160)}`,
+		);
 	if (files.length)
 		parts.push(
 			`Here is what I can see in the attached file${files.length === 1 ? '' : 's'}:`,
@@ -201,7 +205,7 @@ function reply(prompt, context, canCreate, canEdit) {
 			`I drafted **${item.name}** as a starting point. Review it below, then create it to open it in its editor.`,
 			'```' + ACTIONS_FENCE + '\n' + JSON.stringify({ changes: [], create: [item] }) + '\n```',
 		);
-	} else if (!files.length)
+	} else if (!files.length && !context?.notes?.length)
 		parts.push(
 			'With a model connected I can answer questions, summarize and compare files, and propose edits you review. In this preview, try:',
 			'- *Create a presentation about our product launch*\n- Attach a document and ask me to *title-case* it\n- *Make a budget workbook for a team offsite*\n- *Draft a project brief for the new website*\n- Attach files and ask me to describe them',

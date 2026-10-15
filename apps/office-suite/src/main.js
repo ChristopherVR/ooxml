@@ -2,7 +2,8 @@ import { SuiteDocumentStore } from 'ooxml-ui/suite';
 import { listEmbeddedPackages } from 'ooxml-core/opc';
 import { SuiteSessions } from './session.js';
 import { showVersions, withVersions } from './versions.js';
-import { currentPolicy } from './ai/policy.js';
+import { assistantEnabled, currentPolicy, loadPolicy } from './ai/policy.js';
+import { mountTabOrder } from './tabs.js';
 import { blankDocument, preloadEditor } from './editors.js';
 import { mountTeams, shareDocument, localDocumentId } from './teams.js';
 import { $, apps, badge, escape, notify, task, download, choose, tag, teamsApp } from './ui.js';
@@ -89,7 +90,7 @@ function renderTabs() {
 		[...sessions.sessions.values()]
 			.map(
 				(s) =>
-					`<span class="file-tab"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}${escape(s.doc.name)}${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
+					`<span class="file-tab" draggable="true" data-tab="${s.doc.id}" title="Drag to reorder, or onto a chat to attach it"><button role="tab" aria-selected="${s.doc.id === active && view === 'editor'}" data-open="${s.doc.id}">${badge(s.doc.kind)}${escape(s.doc.name)}${sessions.isDirty(s.doc.id) ? ' •' : ''}</button><button data-close="${s.doc.id}" aria-label="Close ${escape(s.doc.name)}">×</button></span>`,
 			)
 			.join('');
 	$('save-state').textContent =
@@ -152,8 +153,9 @@ const aiDeps = {
 	openIds: () => [...sessions.sessions.keys()],
 	showVersions: (id) => task(() => showVersions({ id, store, sessions, refresh })),
 };
-/** The chat page; `id` reopens a conversation from the history. */
-async function showChat(id) {
+/** The chat page; `id` reopens a conversation from the history, `room` joins a shared chat. */
+async function showChat(id, room) {
+	if (!assistantEnabled()) return goHome();
 	chatTabOpen = true;
 	view = 'chat';
 	renderTabs();
@@ -168,10 +170,20 @@ async function showChat(id) {
 			},
 		});
 	}
-	await chatPage.show(id);
+	if (room) await chatPage.join(room);
+	else await chatPage.show(id);
 	history.replaceState(null, '', chatPage.id ? `#/chat/${chatPage.id}` : '#/chat');
 }
 const chatRoute = () => /^#\/chat(?:\/([\w-]{1,100}))?$/u.exec(location.hash);
+const joinRoute = () => /^#\/chat\/join\/(chat-[0-9a-f]{32})$/u.exec(location.hash)?.[1];
+function goHome() {
+	active = null;
+	view = 'home';
+	filter = '';
+	renderTabs();
+	renderFiles();
+	history.replaceState(null, '', '#/');
+}
 async function showAssistant(show = true) {
 	if (!assistant) {
 		const { mountAssistant } = await import('./assistant.js');
@@ -283,7 +295,7 @@ async function share() {
 }
 
 $('rail').innerHTML =
-	`<span class="nav-caption">Workspace</span><button data-chat data-view="chat">${icon('spark')}<span>Chat</span></button><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
+	`<span class="nav-caption">Workspace</span><button class="ai-only" data-chat data-view="chat">${icon('spark')}<span>Chat</span></button><button data-home data-view="home" aria-current="true">${icon('home')}<span>Home</span></button><button data-library="files">${icon('folder')}<span>My files</span></button><button data-library="favourites">${icon('star')}<span>Favourites</span></button><span class="nav-caption">Apps</span><button data-teams data-view="teams">${badge('teams')}<span>Teams</span>${tag(teamsApp.tag)}</button>` +
 	apps
 		.map(
 			(a) =>
@@ -461,7 +473,7 @@ mountProfile({
 	changed: () => renderFiles(),
 });
 $('app-launcher').innerHTML =
-	`<div class="launcher-heading"><h2>Your apps</h2><span>OOXML Office</span></div><div class="launcher-grid"><button data-chat><span class="app-badge chat-badge">${icon('spark')}</span><span>Chat</span></button>${apps.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`).join('')}<button data-teams>${badge('teams')}<span>Teams</span></button></div>`;
+	`<div class="launcher-heading"><h2>Your apps</h2><span>OOXML Office</span></div><div class="launcher-grid"><button class="ai-only" data-chat><span class="app-badge chat-badge">${icon('spark')}</span><span>Chat</span></button>${apps.map((a) => `<button data-app="${a.id}">${badge(a.id)}<span>${a.name}</span></button>`).join('')}<button data-teams>${badge('teams')}<span>Teams</span></button></div>`;
 $('app-launcher').addEventListener('click', (event) => {
 	if (event.target.closest('button')) $('app-launcher').hidePopover();
 });
@@ -486,18 +498,16 @@ window.addEventListener('hashchange', () =>
 			await showAttachment(localAttachmentId(location.href));
 		else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 			await showTeams();
-		else if (chatRoute() || (!product && !location.hash)) await showChat(chatRoute()?.[1]);
-		else {
-			active = null;
-			view = 'home';
-			filter = '';
-			renderTabs();
-			renderFiles();
-		}
+		else if (joinRoute()) await showChat(undefined, joinRoute());
+		else if (assistantEnabled() && (chatRoute() || (!product && !location.hash)))
+			await showChat(chatRoute()?.[1]);
+		else goHome();
 	}),
 );
+mountTabOrder({ strip: $('tabs'), sessions });
 $('tabs').addEventListener('keydown', (event) => {
 	if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+	if (event.ctrlKey || event.metaKey || event.altKey) return;
 	const tabs = [...$('tabs').querySelectorAll('[role=tab]')];
 	const index = tabs.indexOf(document.activeElement);
 	if (index < 0) return;
@@ -513,13 +523,19 @@ $('tabs').addEventListener('keydown', (event) => {
 });
 task(async () => {
 	await refresh();
+	// The assistant is off unless the deployment configures it (ai/policy.js).
+	await loadPolicy();
+	document.body.dataset.ai = assistantEnabled() ? 'on' : 'off';
 	const id = localDocumentId(location.href);
 	if (id) await open(id);
 	else if (localAttachmentId(location.href)) await showAttachment(localAttachmentId(location.href));
 	else if (location.hash === '#/teams' || (product === 'teams' && !location.hash))
 		await showTeams();
-	// The suite opens on chat; a product's own app opens on its files.
-	else if (chatRoute() || (!product && !location.hash)) await showChat(chatRoute()?.[1]);
+	else if (joinRoute()) await showChat(undefined, joinRoute());
+	// With the assistant on, the suite opens on chat; a product's own app opens on its files.
+	else if (assistantEnabled() && (chatRoute() || (!product && !location.hash)))
+		await showChat(chatRoute()?.[1]);
+	else if (chatRoute()) goHome();
 });
 
 for (const eventName of ['pointerover', 'focusin'])
