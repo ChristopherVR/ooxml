@@ -19,6 +19,10 @@ export function printHtml(doc: Document, html: string): void {
 	const frame = doc.createElement('iframe');
 	frame.setAttribute('aria-hidden', 'true');
 	frame.tabIndex = -1;
+	// The print document needs no script. The parent still reaches the frame's
+	// window and document (focus, print, afterprint), so it stays same-origin;
+	// allow-modals lets the frame's print dialog open.
+	frame.setAttribute('sandbox', 'allow-same-origin allow-modals');
 	frame.style.cssText =
 		'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
 	doc.body.append(frame);
