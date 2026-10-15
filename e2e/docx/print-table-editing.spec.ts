@@ -120,7 +120,7 @@ test('a table split across two pages keeps editing and arrowing', async ({ page 
 	await page.keyboard.press('ArrowUp');
 	await page.keyboard.type('Y');
 	const texts = (await cellsText(editor)).map((t) => t.trim());
-	expect(texts).toContain('Z' + 'B13');
+	expect(texts).toContain('ZB13');
 	expect(texts.some((t) => t.includes('Y') && t.includes('12'))).toBe(true);
 	// Up across the page break reaches earlier rows.
 	for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowUp');
