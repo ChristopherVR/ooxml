@@ -90,7 +90,7 @@ core only decides and emits; showing a toast, a browser `Notification` or a soun
 ## Shared assistant chats
 
 `createSharedChat({ roomId, user, config })` joins one assistant conversation that lives in its own
-room (`sharedChatRoomId()` makes an unguessable `chat-<32 hex>` id), over the same sync transport
+room (`sharedChatRoomId()` makes an unguessable `aiaichat-<32 hex>` id), over the same sync transport
 the workspace uses (`createSyncTransport`). `store.put` adds or replaces a message by id (unchanged
 rows are not written again), `store.truncateFrom` removes a message and everything after it, and
 `store.messages()` re-validates every row: role, length caps, author name and a JSON-only `data`

@@ -107,7 +107,7 @@ try {
 	await page.locator('.chat-msg.from-assistant .ai-create-card').waitFor();
 	await page.locator('[data-chat-share]').click();
 	const link = await page.locator('input[name=link]').inputValue();
-	assert.match(link, /#\/chat\/join\/chat-[0-9a-f]{32}$/u);
+	assert.match(link, /#\/chat\/join\/aichat-[0-9a-f]{32}$/u);
 	await page.locator('#dialog-close').click();
 	await page.locator('#chat-people').waitFor();
 

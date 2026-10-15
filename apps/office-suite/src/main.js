@@ -175,7 +175,7 @@ async function showChat(id, room) {
 	history.replaceState(null, '', chatPage.id ? `#/chat/${chatPage.id}` : '#/chat');
 }
 const chatRoute = () => /^#\/chat(?:\/([\w-]{1,100}))?$/u.exec(location.hash);
-const joinRoute = () => /^#\/chat\/join\/(chat-[0-9a-f]{32})$/u.exec(location.hash)?.[1];
+const joinRoute = () => /^#\/chat\/join\/(aichat-[0-9a-f]{32})$/u.exec(location.hash)?.[1];
 function goHome() {
 	active = null;
 	view = 'home';

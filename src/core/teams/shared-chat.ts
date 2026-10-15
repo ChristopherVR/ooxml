@@ -53,12 +53,12 @@ const META = 'chat:meta';
 /** A new, unguessable room id: whoever holds it can join, so it carries 128 random bits. */
 export function sharedChatRoomId(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(16));
-	return `chat-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+	return `aichat-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
 /** True for a room id made by {@link sharedChatRoomId}. */
 export const isSharedChatRoomId = (value: unknown): value is string =>
-	isValidRoomId(value) && /^chat-[0-9a-f]{32}$/u.test(value);
+	isValidRoomId(value) && /^aichat-[0-9a-f]{32}$/u.test(value);
 
 function plainData(raw: unknown): Record<string, unknown> {
 	if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};

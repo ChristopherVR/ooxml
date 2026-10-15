@@ -69,7 +69,7 @@ export const inviteLink = (room) => {
 };
 /** A room id from a pasted link or the bare id. */
 export function roomFromInvite(text) {
-	return /(chat-[0-9a-f]{32})\s*$/u.exec(String(text).trim())?.[1] ?? null;
+	return /(aichat-[0-9a-f]{32})\s*$/u.exec(String(text).trim())?.[1] ?? null;
 }
 
 const OWN = ['id', 'role', 'content', 'author', 'streaming'];

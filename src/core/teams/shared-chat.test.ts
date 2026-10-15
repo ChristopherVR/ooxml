@@ -91,7 +91,7 @@ describe('shared chat rooms', () => {
 		expect(isSharedChatRoomId(id)).toBe(true);
 		expect(id).not.toBe(sharedChatRoomId());
 		expect(isSharedChatRoomId('general')).toBe(false);
-		expect(isSharedChatRoomId('chat-../../x')).toBe(false);
+		expect(isSharedChatRoomId('aichat-../../x')).toBe(false);
 	});
 
 	it('syncs messages between two people in one room', async () => {

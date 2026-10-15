@@ -186,7 +186,7 @@ ${own.length || keyed.length ? '<h3>Models</h3>' : ''}
 }
 
 /** Lets the user pick the files (and optionally the Teams channel) sent with the next request. */
-export async function chooseContext({ store, selected, includeChat, openIds, onDone }) {
+export async function chooseContext({ store, selected, teamsChannel, channel, openIds, onDone }) {
 	const docs = (await store.list()).filter((d) => !d.parent);
 	const open = docs.filter((d) => openIds.includes(d.id));
 	const rest = docs.filter((d) => !openIds.includes(d.id));
@@ -195,18 +195,22 @@ export async function chooseContext({ store, selected, includeChat, openIds, onD
 	const form = document.createElement('form');
 	form.className = 'ai-context-form';
 	form.innerHTML =
-		'<p>Only the files you select are sent with your requests in this chat. Type @ in your message to add one quickly.</p>' +
+		'<p>Only the files you select are sent with your requests in this chat. Teams messages are sent only for the channel ticked here, and only while it is still the selected channel. Type @ in your message to add a file quickly.</p>' +
 		(docs.length ? '' : '<p>Your library is empty. Create or upload a file first.</p>') +
 		(open.length ? `<span class="nav-caption">Open tabs</span>${open.map(option).join('')}` : '') +
 		(rest.length ? `<span class="nav-caption">Library</span>${rest.map(option).join('')}` : '') +
 		(feature('teamsContext')
-			? `<span class="nav-caption">Teams</span><label class="context-option"><input name="chat" type="checkbox" ${includeChat ? 'checked' : ''} />${badge('teams')}<span>Current Teams channel (last 50 messages)</span></label>`
+			? `<span class="nav-caption">Teams</span>${
+					channel
+						? `<label class="context-option"><input name="chat" type="checkbox" ${teamsChannel?.id === channel.id ? 'checked' : ''} />${badge('teams')}<span>Messages from #${escape(channel.name)} (last 50, off unless ticked)</span></label>`
+						: '<p>Open a Teams channel to include its messages.</p>'
+				}`
 			: '') +
 		'<button class="primary">Use selected context</button>';
 	form.onsubmit = (event) => {
 		event.preventDefault();
 		const data = new FormData(form);
-		onDone(new Set(data.getAll('document')), data.has('chat'));
+		onDone(new Set(data.getAll('document')), channel && data.has('chat') ? channel : null);
 		$('dialog').close();
 	};
 	choose('Attach files', form);

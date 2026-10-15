@@ -13,7 +13,7 @@ const editHelp = `"changes" edit attached files. Each has documentId and one of:
 {"type":"cells","sheetIndex":0,"cells":[{"address":"B2","input":"value or =formula"}]}
 {"type":"slide_run","slideIndex":0,"elementId":"id","runIndex":0,"text":"replacement"}
 {"type":"shape_text","pageId":"id","shapeId":"id","text":"replacement"}
-Use only ids and indexes present in the supplied source data, and preserve existing structure.`;
+Use only ids and indexes present in the supplied source data, and preserve existing structure. Formulas may only use ordinary calculation functions: never WEBSERVICE, FILTERXML, HYPERLINK, IMAGE, RTD, CALL or REGISTER, and no links, file paths, external workbook references or DDE pipes.`;
 
 const createHelp = `"create" makes new files (at most 5):
 {"type":"docx","name":"Brief.docx","blocks":[{"type":"title","text":""},{"type":"heading","level":1,"text":""},{"type":"paragraph","text":""},{"type":"bullets","items":[""]},{"type":"numbered","items":[""]}]}

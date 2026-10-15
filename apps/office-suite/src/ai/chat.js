@@ -37,7 +37,9 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	let conversation = null,
 		attached = new Set(),
 		notes = [],
-		includeChat = false,
+		// The Teams channel whose recent messages the user opted into: one channel, and only while
+		// it is still the selected channel when a request is sent.
+		teamsChannel = null,
 		abort = null,
 		room = null;
 	root.classList.add('chat');
@@ -68,11 +70,12 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		chooseContext({
 			store,
 			selected: attached,
-			includeChat,
+			teamsChannel,
+			channel: currentChannel(),
 			openIds: openIds(),
-			onDone: (next, chat) => {
+			onDone: (next, channel) => {
 				attached = next;
-				includeChat = chat;
+				teamsChannel = channel;
 				void renderAttachments();
 			},
 		});
@@ -142,7 +145,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		for (const id of attached) if (!docs.has(id)) attached.delete(id);
 		const chips = [...attached].map((id) => [id, badge(docs.get(id).kind), docs.get(id).name]);
 		notes.forEach((note, i) => chips.push([`note:${i}`, noteBadge(), note.name]));
-		if (includeChat) chips.push(['teams', badge('teams'), 'Teams channel']);
+		if (teamsChannel) chips.push(['teams', badge('teams'), `#${teamsChannel.name} messages`]);
 		const scope = $(`${prefix}-scope`);
 		scope.innerHTML = chips
 			.map(
@@ -155,7 +158,7 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 	$(`${prefix}-scope`).addEventListener('click', (event) => {
 		const id = event.target.closest('[data-detach]')?.dataset.detach;
 		if (!id) return;
-		if (id === 'teams') includeChat = false;
+		if (id === 'teams') teamsChannel = null;
 		else if (id.startsWith('note:')) notes.splice(Number(id.slice(5)), 1);
 		else attached.delete(id);
 		void renderAttachments();
@@ -172,6 +175,13 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 		if (feature('history')) await conversations.put(target);
 	};
 	const me = () => currentProfile().userId;
+	/** The channel open in Teams now, if any. */
+	function currentChannel() {
+		const state = getTeams()?.client?.getState();
+		if (!state?.selectedChannelId) return null;
+		const view = state.channels.find((c) => c.id === state.selectedChannelId);
+		return { id: state.selectedChannelId, name: view?.name ?? state.selectedChannelId };
+	}
 	/** Follows the room of a shared conversation, or leaves the current one. */
 	async function connect(convo) {
 		room?.leave();
@@ -314,7 +324,10 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 				sessions,
 				ids: feature('attachFiles') ? attached : [],
 				notes: feature('attachFiles') ? notes : [],
-				teams: includeChat && feature('teamsContext') ? getTeams()?.client : null,
+				teams:
+					teamsChannel && feature('teamsContext') && currentChannel()?.id === teamsChannel.id
+						? getTeams()?.client
+						: null,
 				maxChars: settings.maxContextChars,
 			});
 			state.textContent = 'Writing...';

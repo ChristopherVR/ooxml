@@ -120,7 +120,7 @@ Providers without a browser-callable API (for example services that need request
 
 ## Shared chats
 
-A shared chat is a conversation that lives in its own collaboration room (`createSharedChat` in `ooxml-core/teams`), so people in other workspaces, profiles and sessions work in the same chat. **Share** on the chat page moves the conversation into a new room and shows an invite link (`#/chat/join/chat-<32 hex>`); **Join** in the history opens a pasted link.
+A shared chat is a conversation that lives in its own collaboration room (`createSharedChat` in `ooxml-core/teams`), so people in other workspaces, profiles and sessions work in the same chat. **Share** on the chat page moves the conversation into a new room and shows an invite link (`#/chat/join/aichat-<32 hex>`); **Join** in the history opens a pasted link.
 
 - The room syncs through `collaboration.syncUrl` when the policy sets one, otherwise through the sync server of the Teams connection the user configured, otherwise only between the tabs of one browser (BroadcastChannel). The share dialog says which applies.
 - Whoever asks runs the request with their own model connection and streams the reply into the room; the others watch it arrive and see who is typing or asking.
