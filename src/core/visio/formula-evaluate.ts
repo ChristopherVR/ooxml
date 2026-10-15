@@ -11,6 +11,7 @@ import {
 	numericFormulaFunctions,
 	evaluateNumericFormulaFunction,
 } from './formula-numeric-functions';
+import { mathFormulaFunctions, evaluateMathFormulaFunction } from './formula-math-functions';
 import { formulaFailure, formulaLimit, parseVisioFormula } from './formula';
 import type {
 	VisioFormulaAst,
@@ -36,6 +37,7 @@ const supported = new Set([
 	'PAGENUMBER',
 	'PAGECOUNT',
 	...numericFormulaFunctions,
+	...mathFormulaFunctions,
 ]);
 // Known pure functions may be independent of an edit even when evaluation is unsupported.
 const staticUnsupported = new Set([
@@ -67,18 +69,8 @@ const staticUnsupported = new Set([
 	// NURBS likewise carries explicit control points (curved connectors write literal ones).
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/nurbs-function
 	'NURBS',
-	'ROUND',
-	'INT',
 	'MOD',
-	'POW',
-	'EXP',
-	'LN',
 	'LOG',
-	'LOG10',
-	'ASIN',
-	'ACOS',
-	'ATAN',
-	'TRUNC',
 	'AND',
 	'OR',
 	'NOT',
@@ -286,6 +278,11 @@ export function evaluateVisioFormula(
 		}
 		if (numericFormulaFunctions.has(name))
 			return evaluateNumericFormulaFunction(
+				name,
+				node.args.map((_, index) => arg(index)),
+			);
+		if (mathFormulaFunctions.has(name))
+			return evaluateMathFormulaFunction(
 				name,
 				node.args.map((_, index) => arg(index)),
 			);

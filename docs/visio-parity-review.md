@@ -40,6 +40,29 @@ connectors. Shape 825 agrees with native exported radii. Shape 149 is recalculat
 by Visio when opened and remains a live-routing gap. See
 [connector evidence](visio-connector-rounding.md) for provenance and reproduction.
 
+## Round three: stencils, obstacle routing, formula functions (2026-10-15)
+
+- Stencil files: `readVisioStencil` reads `.vssx`, `.vstx` and `.vsdx` masters (connection
+  points and Shape Data ride on the master shapes); `drop-stencil-master` carries the stencil bytes
+  and copies the master, with its style sheets, into the drawing's masters part before saving an
+  instance that references it (reused by UniqueID). The Shapes pane opens stencils from More
+  Shapes > Open Stencil and collects My Shapes for the session. Open limits: legacy `.vss` and macro
+  packages are refused, masters that own pictures are refused, stencil line and connector masters
+  are listed disabled, nothing persists between sessions, and master icons are redrawn from shapes
+  rather than read from the `<Icon>` element.
+- Routing: a placeable shape moved, resized or turned onto a right-angle connector's saved path
+  makes the core route that connector around it (`edit-connector-follow.ts`), for drawn connectors
+  and Dynamic connector instances. Not done: reroute preview during the drag for connectors that are
+  not glued to the dragged shape, straightening when the obstacle leaves, non-Dynamic connector
+  masters, and any comparison against fresh Visio captures (the existing recordings cover the
+  glued-end cases only).
+- Recalculation: ROUND, INT, TRUNC, POW, EXP, LN, LOG10, ASIN, ACOS, ATAN and the TRUE/FALSE
+  constants are evaluated, so formulas that use them no longer refuse a resize or move. Still
+  refused: SUM, DEG, RAD, string and document-property functions, INDIRECT and the other
+  reference-building functions, `ThePage!` / `TheDoc!` references, and dependencies on inherited
+  or grouped cells. ROUND's two-argument form is read as decimal places, which is not yet checked
+  against Visio.
+
 ## Implementation order toward parity
 
 | Order | Work                                                                                                             | Acceptance evidence                                                                                                   |

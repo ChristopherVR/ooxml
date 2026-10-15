@@ -560,6 +560,21 @@ Add to My Shapes collects it into a My Shapes section for the session.
   pictures) apply too.
 - The Shapes pane strings are English only, as before.
 
+## ShapeSheet functions evaluated on edit, 2026-10-15
+
+A resize or move now recalculates cells whose formulas use `ROUND` (digits as
+decimal places, half away from zero), `INT` (floor), `TRUNC`, `POW`, `EXP`,
+`LN`, `LOG10`, `ASIN`, `ACOS`, `ATAN`, and the constants `TRUE` and `FALSE`,
+in addition to the arithmetic, `IF`, `AND`/`OR`/`NOT`, `MIN`/`MAX`, `ABS`,
+`SQRT`, trigonometry, `BOUND`, `MODULUS`, `CEILING` and `FLOOR` it handled
+before. Before this, any affected cell using one of them refused the edit
+(`EDIT_UNSUPPORTED_FORMULA`). Units follow the argument (a rounded length stays
+a length; `ASIN`/`ACOS`/`ATAN` return angles). Still refused: `SUM`, `DEG`,
+`RAD`, string, field and document-property functions, reference-building
+functions (`INDIRECT`, `SETATREF`), `ThePage!` references and dependencies on
+inherited or grouped cells. The `ROUND` digits meaning is from the function's
+documentation and is not yet checked against Visio.
+
 ## Right-angle connectors route around placeable shapes, 2026-10-10
 
 Right-angle connectors drawn here now avoid other shapes the way Visio's do.

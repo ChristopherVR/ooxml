@@ -10,6 +10,7 @@ import {
 import {
 	key,
 	bound,
+	isBooleanLiteral,
 	type IndexedCell,
 	type VisioRecalculationOptions,
 } from './edit-recalculate-index';
@@ -62,9 +63,11 @@ export function createVisioCellEvaluator(
 			result = evaluateVisioFormula(
 				item.formula,
 				(ref) =>
-					evaluate(
-						key({ pageId: item.pageId, shapeId: ref.shapeId ?? item.shapeId, cell: ref.cell }),
-					),
+					isBooleanLiteral(ref)
+						? { value: /^true$/i.test(ref.cell) ? 1 : 0, unit: 'scalar' }
+						: evaluate(
+								key({ pageId: item.pageId, shapeId: ref.shapeId ?? item.shapeId, cell: ref.cell }),
+							),
 				{
 					...options.pageContext?.get(item.pageId),
 					onStep: () => {

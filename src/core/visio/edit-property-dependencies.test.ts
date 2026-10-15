@@ -59,7 +59,7 @@ describe('native Property section dependency names', () => {
 		const page = root();
 		Array.from(page.getElementsByTagNameNS(VISIO_NS, 'Cell'))
 			.find((c) => c.getAttribute('N') === 'Value')!
-			.setAttribute('F', 'ROUND(Width/1IN,0)');
+			.setAttribute('F', 'SUM(Width/1IN,0)');
 		const before = buildXml(page.ownerDocument!);
 		expect(() => recalculateVisioCells(new Map([['0', page]]), changed)).toThrow(
 			/unsupported functions/,

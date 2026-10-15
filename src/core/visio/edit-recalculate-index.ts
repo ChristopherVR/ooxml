@@ -58,6 +58,10 @@ function cellUnit(name: string, relative: boolean): VisioFormulaValue['unit'] {
 	return !relative && /\.[XY]\d+$/i.test(name) ? 'length' : 'scalar';
 }
 /** All local sheets participate, including sections, named rows, and static Sheet.ID references. */
+/** `TRUE` and `FALSE` parse as names; they are the ShapeSheet's constants 1 and 0, not cells. */
+export const isBooleanLiteral = (ref: { shapeId?: string; cell: string }): boolean =>
+	ref.shapeId === undefined && /^(true|false)$/i.test(ref.cell);
+
 export function indexCells(
 	roots: ReadonlyMap<string, Element>,
 	options: VisioRecalculationOptions,
@@ -163,9 +167,9 @@ export function indexCells(
 								'EDIT_DYNAMIC_DEPENDENCY',
 								'Dynamic ShapeSheet dependencies cannot be safely edited.',
 							);
-						item.dependencies = analysis.references.map((ref) =>
-							key({ pageId, shapeId: ref.shapeId ?? sheet.shapeId, cell: ref.cell }),
-						);
+						item.dependencies = analysis.references
+							.filter((ref) => !isBooleanLiteral(ref))
+							.map((ref) => key({ pageId, shapeId: ref.shapeId ?? sheet.shapeId, cell: ref.cell }));
 					} catch (error) {
 						fail(
 							'EDIT_UNKNOWN_DEPENDENCY',
