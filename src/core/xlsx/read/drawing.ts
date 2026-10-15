@@ -4,6 +4,7 @@ import { parseChart } from './chart';
 import { readChartExFrame } from './chart-ex';
 import { readChartPaletteId, readChartStylePart } from './chart-colors';
 import type { SourceIndex } from './package';
+import { readSlicerFrame } from '../slicer/frame';
 import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
 import { att, selfContainedXml } from './xml-util';
 
@@ -155,6 +156,11 @@ export function parseDrawing(
 			continue;
 		}
 		if (content.localName === 'AlternateContent') {
+			const frame = readSlicerFrame(content, anchor, selfContainedXml(anchorEl));
+			if (frame) {
+				out.push(frame);
+				continue;
+			}
 			const extended = readChartExFrame(
 				source,
 				partName,

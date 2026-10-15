@@ -107,6 +107,7 @@ export function writeWorksheet(
 			)
 				continue;
 			if (rel.type === RELATIONSHIP_TYPES.drawing && id === ids.drawing) sourceDrawing = target;
+			if (target && ctx.workbook.slicers?.removedParts?.includes(target)) continue;
 			if (
 				REGENERATED.has(rel.type) ||
 				(rel.type === RELATIONSHIP_TYPES.vmlDrawing && id === ids.legacy)
@@ -165,9 +166,18 @@ export function writeWorksheet(
 	blocks.set('legacyDrawing', writeComments(ctx, sheet, index, partName, rels));
 	blocks.set('tableParts', tableParts);
 	ctx.pivots?.writeSheet(writer, sheet, partName, rels);
-	blocks.set('extLst', conditionalExtensionsXml(sheet));
+	const extensions = conditionalExtensionsXml(sheet);
+	blocks.set(
+		'extLst',
+		ctx.slicers?.active ? ctx.slicers.writeSheet(sheet, partName, rels, extensions) : extensions,
+	);
 	for (const [key, list] of sheet.preserved) {
-		if (key.startsWith('source:') || !ORDER.includes(key) || (blocks.get(key) ?? '') !== '')
+		if (
+			key.startsWith('source:') ||
+			!ORDER.includes(key) ||
+			(blocks.get(key) ?? '') !== '' ||
+			(key === 'extLst' && ctx.slicers?.active)
+		)
 			continue;
 		const valid = list.filter((xml) =>
 			[...xml.matchAll(/\br:(?:id|embed|link|pict)="([^"]*)"/g)].every((m) =>

@@ -54,7 +54,14 @@ export function pivotCacheDefinitionXml(
 			return `<cacheField${attrs({ name: encodeEscapes(name), numFmtId: 0 })}><sharedItems${attrs({ count: items.length, containsString: !nums.length || text, containsNumber: !!nums.length, containsInteger: nums.length > 0 && nums.every(Number.isInteger), containsBlank: types.has('blank'), containsMixedTypes: nums.length > 0 && text, containsSemiMixedTypes: !nums.length || types.size > 1 })}>${items.map(valueXml).join('')}</sharedItems></cacheField>`;
 		})
 		.join('');
-	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs({ ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name })}/></cacheSource><cacheFields count="${pivot.fields.length}">${fields}</cacheFields></pivotCacheDefinition>`;
+	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs({ ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name })}/></cacheSource><cacheFields count="${pivot.fields.length}">${fields}</cacheFields>${slicerExt(pivot)}</pivotCacheDefinition>`;
+}
+
+/** The identity slicers find a cache by (`x14:pivotCacheDefinition/@pivotCacheId`). */
+function slicerExt(pivot: PivotTable): string {
+	if (pivot.slicerCacheId === undefined) return '';
+	const x14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
+	return `<extLst><ext uri="{725AE2AE-9491-48be-B2B4-4EB974FC3084}" xmlns:x14="${x14}"><x14:pivotCacheDefinition pivotCacheId="${pivot.slicerCacheId}"/></ext></extLst>`;
 }
 
 export function pivotCacheRecordsXml(pivot: PivotTable, data: PivotCacheData): string {

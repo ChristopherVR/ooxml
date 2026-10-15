@@ -56,7 +56,12 @@ type Snapshot =
 /** Workbook-level settings `meta` and `workbook` snapshots also record. */
 type BookSettings = Pick<
 	Workbook,
-	'structureLocked' | 'workbookPasswordHash' | 'workbookModernHash' | 'calcMode' | 'properties'
+	| 'structureLocked'
+	| 'workbookPasswordHash'
+	| 'workbookModernHash'
+	| 'calcMode'
+	| 'properties'
+	| 'slicers'
 >;
 const SETTING_KEYS = [
 	'structureLocked',
@@ -65,6 +70,8 @@ const SETTING_KEYS = [
 	'calcMode',
 	// Replaced, never mutated, by `setDocumentProperties`, so the reference is the snapshot.
 	'properties',
+	// Replaced, never mutated, by the slicer edits.
+	'slicers',
 ] as const;
 
 function captureSettings(workbook: Workbook): BookSettings {

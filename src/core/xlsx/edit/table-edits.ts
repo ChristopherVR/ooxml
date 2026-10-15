@@ -226,6 +226,8 @@ export function updateTable(ctx: EditContext, s: number, ref: TableRef, patch: T
 				for (const [index, column] of table.columns.entries()) {
 					const sourceId = before[index]?.sourceId;
 					if (column.sourceId === undefined && sourceId !== undefined) column.sourceId = sourceId;
+					const filter = before[index]?.filter;
+					if (column.filter === undefined && filter) column.filter = structuredClone(filter);
 				}
 			}
 			if (patch.headerRow !== undefined) setHeaderRow(workbook, sheet, id, patch.headerRow);

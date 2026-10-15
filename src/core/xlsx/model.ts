@@ -1,6 +1,7 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
 import type { DiagramDrawing, DiagramIssue } from '../diagram/types';
 import type { CellAddress, CellRange } from './address';
+import type { SlicerBook, SlicerFrameObject, TableColumnFilter } from './model-slicers';
 import type {
 	ChartSummary,
 	ChartSummarySeries,
@@ -485,6 +486,11 @@ export interface TableColumn {
 	totalsRowFunction?: string;
 	totalsRowLabel?: string;
 	calculatedColumnFormula?: string;
+	/**
+	 * Value-list filter (what a slicer or the filter list sets); other criteria stay in the
+	 * table part. Absent means no value-list filter.
+	 */
+	filter?: TableColumnFilter;
 }
 
 /** An Excel table (ListObject). */
@@ -503,6 +509,8 @@ export interface Table {
 	showLastColumn?: boolean;
 	/** Package part the table was read from, reused on save. */
 	partName?: string;
+	/** The table part filters columns by criteria the model does not hold (custom, top 10, ...). */
+	filterNotModeled?: boolean;
 }
 
 /** Where a drawing object sits on the grid (two-cell anchor, offsets in EMU). */
@@ -590,7 +598,12 @@ export interface SmartArtObject {
 	sourceXml: string;
 }
 
-export type DrawingObject = ImageObject | ChartObject | SmartArtObject | UnsupportedDrawingObject;
+export type DrawingObject =
+	| ImageObject
+	| ChartObject
+	| SmartArtObject
+	| SlicerFrameObject
+	| UnsupportedDrawingObject;
 
 /** `sheetView/@view`: absent means Normal. */
 export type SheetViewMode = 'pageLayout' | 'pageBreakPreview';
@@ -808,6 +821,8 @@ export interface Workbook {
 	 * are not verified, and `saveXlsx` never writes them: a regenerated package invalidates them.
 	 */
 	signatures?: WorkbookSignatures;
+	/** Slicers and timelines (caches, widgets); their frames are drawing objects of the sheets. */
+	slicers?: SlicerBook;
 }
 
 /** The digital signatures found in a loaded package. */
@@ -832,4 +847,5 @@ export type {
 } from '../opc/properties/types';
 export type * from './model-sparklines';
 export type * from './model-pivots';
+export type * from './model-slicers';
 export type * from './model-whatif';

@@ -1,4 +1,4 @@
-import { parseXml } from '../../xml/index';
+import { elements, parseXml, type XmlElement } from '../../xml/index';
 import { parseRange } from '../address';
 import type { Table, TableColumn } from '../model';
 import { stripFuturePrefixes } from './formula-text';
@@ -34,6 +34,7 @@ export function parseTable(xml: string, partName: string): Table | undefined {
 		columns,
 		partName,
 	};
+	readColumnFilters(root, table);
 	const info = xFirst(root, 'tableStyleInfo');
 	if (info) {
 		const style = att(info, 'name');
@@ -44,4 +45,38 @@ export function parseTable(xml: string, partName: string): Table | undefined {
 		table.showLastColumn = boolAttr(info, 'showLastColumn', false);
 	}
 	return table;
+}
+
+/** Value-list column filters become `TableColumn.filter`; any other criteria stay in the part. */
+function readColumnFilters(root: XmlElement, table: Table): void {
+	const filter = xFirst(root, 'autoFilter');
+	for (const node of filter ? xChildren(filter, 'filterColumn') : []) {
+		const column = table.columns[numAttr(node, 'colId') ?? -1];
+		const filters = xChildren(node, 'filters');
+		const simple = column && isValueListFilterColumn(node);
+		if (!simple) {
+			table.filterNotModeled = true;
+			continue;
+		}
+		const values = xChildren(filters[0]!, 'filter').map((child) => att(child, 'val') ?? '');
+		column.filter = {
+			values,
+			...(boolAttr(filters[0], 'blank', false) ? { blank: true } : {}),
+		};
+	}
+}
+
+/** A `filterColumn` holding only `<filters>` with plain `val` entries (what a slicer writes). */
+export function isValueListFilterColumn(node: XmlElement): boolean {
+	const filters = xChildren(node, 'filters');
+	return (
+		filters.length === 1 &&
+		elements(node).length === 1 &&
+		!att(node, 'hiddenButton') &&
+		att(filters[0], 'calendarType') === undefined &&
+		elements(filters[0]!).every(
+			(child) =>
+				child.localName === 'filter' && child.attributes.length === 1 && child.hasAttribute('val'),
+		)
+	);
 }

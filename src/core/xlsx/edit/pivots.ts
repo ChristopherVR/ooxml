@@ -16,6 +16,8 @@ import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
 import { styleAt } from '../styles';
 import { normalizedPivotMeasures } from '../pivot/measures';
+import { pruneItemFilters } from '../pivot/item-filters';
+import { markDirty, pivotHasSlicers, removeSlicers, slicerOnPivot } from '../slicer/book';
 
 function pivotAt(ctx: EditContext, sheet: number, name: string): PivotTable {
 	const pivot = sheetAt(ctx.workbook, sheet).pivotTables?.find((entry) => entry.name === name);
@@ -88,16 +90,24 @@ function plan(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable) 
 	return { grid, location };
 }
 
-function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable): void {
+export function writePivot(
+	ctx: EditContext,
+	s: number,
+	pivot: PivotTable,
+	old?: PivotTable,
+	label?: string,
+	inside?: () => void,
+): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const { grid, location } = plan(ctx, s, pivot, old);
 	const ranges = [...(old ? [old.location] : []), location];
 	ctx.run(
-		old ? 'Refresh PivotTable' : 'Create PivotTable',
+		label ?? (old ? 'Refresh PivotTable' : 'Create PivotTable'),
 		'annotations',
 		[
 			{ kind: 'parts', sheet: s, parts: ['pivotTables'] },
 			{ kind: 'cells', sheet: s, ranges },
+			...(inside ? [{ kind: 'meta' as const }] : []),
 		],
 		() => {
 			const compact = pivot.layout === 'compact';
@@ -122,6 +132,7 @@ function write(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable)
 						putCell(sheet, row, col, { value: null, styleId: cell.styleId });
 					else deleteCell(sheet, row, col);
 				});
+			inside?.();
 			const next = { ...pivot, location, dirty: true };
 			const list = sheet.pivotTables ?? [];
 			sheet.pivotTables = old
@@ -186,7 +197,7 @@ export function createPivotTable(
 		...(options.columnField ? { columnField: options.columnField } : {}),
 	};
 	validatePivotFields(pivot);
-	write(ctx, s, pivot);
+	writePivot(ctx, s, pivot);
 	return name;
 }
 
@@ -235,8 +246,19 @@ export function refreshPivotTable(
 		if (measures.length) next.additionalValues = measures;
 		else delete next.additionalValues;
 	}
+	const kept = pruneItemFilters(next);
+	if (kept) next.itemFilters = kept;
+	else delete next.itemFilters;
 	validatePivotFields(next);
-	write(ctx, s, next, old);
+	const sheetId = sheetAt(ctx.workbook, s).sheetId;
+	writePivot(
+		ctx,
+		s,
+		next,
+		old,
+		undefined,
+		pivotHasSlicers(ctx.workbook, sheetId, old.name) ? () => markDirty(ctx.workbook) : undefined,
+	);
 }
 
 export function deletePivotTable(ctx: EditContext, s: number, name: string): void {
@@ -248,8 +270,14 @@ export function deletePivotTable(ctx: EditContext, s: number, name: string): voi
 		[
 			{ kind: 'parts', sheet: s, parts: ['pivotTables'] },
 			{ kind: 'cells', sheet: s, ranges: [pivot.location] },
+			...(pivotHasSlicers(ctx.workbook, sheet.sheetId, pivot.name)
+				? [{ kind: 'workbook' as const }]
+				: []),
 		],
 		() => {
+			removeSlicers(ctx.workbook, (slicer) =>
+				slicerOnPivot(ctx.workbook, slicer.cache, sheet.sheetId, pivot.name),
+			);
 			sheet.pivotTables = sheet.pivotTables!.filter((entry) => entry !== pivot);
 			forEachCellInRange(sheet, pivot.location, (_cell, row, col) => deleteCell(sheet, row, col));
 		},

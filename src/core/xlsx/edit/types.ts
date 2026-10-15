@@ -88,6 +88,7 @@ export type {
 	FindMatch,
 	FindQuery,
 } from './types-clipboard';
+import type { SlicerPatch, SlicerSourceRef } from './slicers';
 import type { ClipboardPayload, FindMatch, FindQuery } from './types-clipboard';
 
 export type WorkbookChangeKind =
@@ -219,6 +220,14 @@ export interface EditSession {
 	refreshPivotTable(sheet: number, name: string, patch?: PivotTablePatch): void;
 	/** Removes the PivotTable and its output cells as one undo step. */
 	deletePivotTable(sheet: number, name: string): void;
+	/** Filters a slicer's table column or PivotTable field to the item keys (null: all items). */
+	setSlicerSelection(cache: string, keys: readonly string[] | null): void;
+	/** Changes a slicer's caption, style, columns, button height or sort order. */
+	updateSlicer(name: string, patch: SlicerPatch): void;
+	/** Inserts a slicer for a table column or PivotTable field; returns the slicer's name. */
+	insertSlicer(sheet: number, source: SlicerSourceRef): string;
+	/** Deletes a slicer (and its cache when unused). */
+	deleteSlicer(name: string): void;
 	/** Creates a group, mapping data rows or columns to a one-dimensional location range. */
 	createSparklineGroup(
 		sheet: number,

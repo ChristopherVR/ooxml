@@ -1,4 +1,5 @@
 import type { DrawingAnchor, DrawingObject } from '../model';
+import { removeSlicers } from '../slicer/book';
 import { type EditContext, sheetAt } from './context';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
@@ -47,8 +48,18 @@ export function setDrawingAnchor(
 
 /** Deletes a picture, chart or shape (one undo step). */
 export function deleteDrawing(ctx: EditContext, s: number, index: number): void {
-	drawingAt(ctx, s, index);
+	const doomed = drawingAt(ctx, s, index);
 	const sheet = sheetAt(ctx.workbook, s);
+	if (doomed.kind === 'slicer') {
+		ctx.run(
+			'Delete slicer',
+			'annotations',
+			[{ kind: 'workbook' }],
+			() => removeSlicers(ctx.workbook, (slicer) => slicer.name === doomed.name),
+			{ sheet: s },
+		);
+		return;
+	}
 	ctx.run(
 		'Delete object',
 		'annotations',

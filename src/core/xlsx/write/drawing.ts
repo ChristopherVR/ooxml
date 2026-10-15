@@ -116,7 +116,10 @@ export const savedDrawingShape = (objects: readonly DrawingObject[]): unknown[] 
 	objects.map((o) =>
 		o.kind === 'smartArt'
 			? { kind: o.kind, anchor: o.anchor, name: o.name, sourceXml: o.sourceXml }
-			: o,
+			: o.kind === 'slicer' || o.kind === 'timeline'
+				? // A frame whose slicer is not modelled is the same kept anchor as the placeholder.
+					{ kind: 'unsupported', anchor: o.anchor, description: o.kind, sourceXml: o.sourceXml }
+				: o,
 	);
 
 /**
@@ -139,9 +142,7 @@ export function writeDrawing(
 				writer.carry(target);
 		}
 	}
-	const kept = objects.flatMap((o) =>
-		(o.kind === 'unsupported' || o.kind === 'smartArt') && o.sourceXml ? [o.sourceXml] : [],
-	);
+	const kept = objects.flatMap((o) => ('sourceXml' in o && o.sourceXml ? [o.sourceXml] : []));
 	let nextId =
 		Math.max(
 			1,
@@ -154,7 +155,12 @@ export function writeDrawing(
 		) + 1;
 	let body = '';
 	for (const object of objects) {
-		if (object.kind === 'unsupported' || object.kind === 'smartArt') {
+		if (
+			object.kind === 'unsupported' ||
+			object.kind === 'smartArt' ||
+			object.kind === 'slicer' ||
+			object.kind === 'timeline'
+		) {
 			// SmartArt and unsupported objects are kept verbatim (their parts are carried with the
 			// source drawing's relationships); only the anchor position comes from the model.
 			// Without the source drawing's relationships, ids inside the kept XML would dangle.

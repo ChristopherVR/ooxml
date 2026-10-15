@@ -1,5 +1,6 @@
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import { pivotItems } from './data';
+import { filteredFields, hiddenItemKeys } from './item-filters';
 import { formatRange } from '../address';
 import type { PivotTable } from '../model';
 import { XML_HEADER, attrs, encodeEscapes } from '../write/xml-out';
@@ -16,8 +17,12 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 	const second = pivot.secondRowField ? pivot.fields.indexOf(pivot.secondRowField) : -1;
 	const page = pivot.pageFilter ? pivot.fields.indexOf(pivot.pageFilter.field) : -1;
 	const pageItems = page >= 0 ? pivotItems(pivot, pivot.pageFilter!.field) : [];
+	const filtered = filteredFields(pivot);
+	// Report filters and hidden items keep every cached item in the field's item list.
 	const axisItems = (field: string, visible: typeof grid.rowItems) =>
-		page >= 0 ? pivotItems(pivot, field) : visible;
+		page >= 0 || filtered.has(field) ? pivotItems(pivot, field) : visible;
+	const anyFull =
+		page >= 0 || [pivot.rowField, pivot.secondRowField].some((f) => f && filtered.has(f));
 	const rowItemsFull = axisItems(pivot.rowField, grid.rowItems);
 	const secondRowItemsFull = pivot.secondRowField
 		? axisItems(pivot.secondRowField, grid.secondRowItems!)
@@ -31,7 +36,7 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 		secondRowIndicesFull = itemIndices(grid.secondRowItems ?? [], secondRowItemsFull),
 		columnIndicesFull = itemIndices(grid.columnItems, columnItemsFull);
 	const rowEntries =
-		page >= 0 && grid.rowEntries
+		anyFull && grid.rowEntries
 			? remapPivotRowEntries(grid.rowEntries, [rowIndicesFull, secondRowIndicesFull])
 			: grid.rowEntries;
 	const pageOffset = page >= 0 ? 2 : 0;
@@ -53,13 +58,16 @@ export function pivotTableXml(pivot: PivotTable, cacheId: number, cache: PivotCa
 							? secondRowItemsFull
 							: index === col
 								? columnItemsFull
-								: undefined;
+								: filtered.has(pivot.fields[index]!)
+									? pivotItems(pivot, pivot.fields[index]!)
+									: undefined;
+			const hidden = hiddenItemKeys(pivot, pivot.fields[index]!);
 			const subtotal = !(index === row && pivot.subtotals === false);
 			const repeated =
 				pivot.repeatLabels && (index === row || index === second)
 					? '<extLst><ext uri="{2946ED86-A175-432a-8AC1-64E0C546D7DE}"><x14:pivotField xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" fillDownLabels="1"/></ext></extLst>'
 					: '';
-			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
+			return `<pivotField${attrs({ axis: index === page ? 'axisPage' : index === row || index === second ? 'axisRow' : index === col ? 'axisCol' : undefined, dataField: measures.some((measure) => pivot.fields.indexOf(measure.field) === index) ? true : undefined, compact, outline, showAll: false, subtotalTop: index === row ? top : undefined, defaultSubtotal: subtotal ? undefined : false })}>${items ? `<items count="${items.length + Number(subtotal)}">${items.map((item) => `<item${hidden.has(pivotValueKey(item)) ? ' h="1"' : ''} x="${cache.indices[index]!.get(pivotValueKey(item))}"/>`).join('')}${subtotal ? '<item t="default"/>' : ''}</items>` : ''}${repeated}</pivotField>`;
 		})
 		.join('');
 	const items = (count: number, indices?: number[]) =>

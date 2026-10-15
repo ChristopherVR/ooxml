@@ -11,7 +11,7 @@ const TABLE: Record<string, string> = {
 	pivotFields: 'count',
 	pivotField: 'axis dataField compact outline showAll subtotalTop defaultSubtotal',
 	items: 'count',
-	item: 'x t',
+	item: 'x t h',
 	rowFields: 'count',
 	colFields: 'count',
 	field: 'x',
@@ -64,6 +64,14 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 		for (let i = 0; i < node.attributes.length; i++) {
 			const attr = node.attributes.item(i)!;
 			if (attr.name.startsWith('xmlns')) continue;
+			if (
+				cache &&
+				node.namespaceURI === X14 &&
+				node.localName === 'pivotCacheDefinition' &&
+				attr.name === 'pivotCacheId' &&
+				/^\d+$/.test(attr.value)
+			)
+				continue;
 			if (
 				!cache &&
 				node.namespaceURI === X14 &&
@@ -135,6 +143,8 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 			!['default', 'data'].includes(attr.value)
 		)
 			throw new Error('Unsupported PivotTable subtotal');
+		if (node.localName === 'item' && attr.localName === 'h' && !['0', '1'].includes(attr.value))
+			throw new Error('Unsupported PivotTable item visibility');
 		if (
 			node.localName === 'pivotField' &&
 			['subtotalTop', 'defaultSubtotal'].includes(attr.localName!) &&

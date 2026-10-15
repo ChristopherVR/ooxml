@@ -2,6 +2,7 @@ import { NS } from '../../xml/index';
 import { formatRange } from '../address';
 import type { Table, Worksheet } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
+import { filterColumnXml } from '../slicer/table-filter';
 import { XML_HEADER, attrs, escapeText } from './xml-out';
 
 /** Excel's own text for a header cell value. */
@@ -47,12 +48,15 @@ export function resolveTableColumns(
 export function tableXml(table: Table, id: number, names: readonly string[]): string {
 	const range = formatRange(table.range);
 	const filterEnd = { ...table.range.end, row: table.range.end.row - (table.totalsRow ? 1 : 0) };
-	const filter =
-		table.headerRow && !table.totalsRow
-			? `<autoFilter ref="${range}"/>`
-			: table.headerRow
-				? `<autoFilter ref="${formatRange({ start: table.range.start, end: filterEnd })}"/>`
-				: '';
+	const criteria = table.columns
+		.map((column, index) => (column.filter ? filterColumnXml(index, column.filter) : ''))
+		.join('');
+	const filterRef = formatRange({ start: table.range.start, end: filterEnd });
+	const filter = table.headerRow
+		? criteria
+			? `<autoFilter ref="${filterRef}">${criteria}</autoFilter>`
+			: `<autoFilter ref="${filterRef}"/>`
+		: '';
 	const columns = names
 		.map((name, index) => {
 			const column = table.columns[index];

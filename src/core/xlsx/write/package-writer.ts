@@ -62,6 +62,11 @@ export class PackageWriter {
 		return this.parts.has(partName);
 	}
 
+	/** The content written so far for a part, if any. */
+	peek(partName: string): Uint8Array | string | undefined {
+		return this.parts.get(partName);
+	}
+
 	add(partName: string, data: Uint8Array | string, contentType?: string): void {
 		this.verbatim.delete(partName);
 		this.parts.set(partName, data);

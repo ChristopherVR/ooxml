@@ -30,6 +30,7 @@ import * as docProps from './doc-properties';
 import * as drawings from './drawings';
 import * as sparklines from './sparklines';
 import * as pivots from './pivots';
+import * as slicers from './slicers';
 import { rangesIntersect } from '../address';
 import * as cellStyle from './cell-style';
 import * as cfEdits from './conditional-formats';
@@ -272,6 +273,10 @@ export function createEditSession(
 			pivots.createPivotTable(ctx, s, destination, options),
 		refreshPivotTable: (s, name, patch) => pivots.refreshPivotTable(ctx, s, name, patch),
 		deletePivotTable: (s, name) => pivots.deletePivotTable(ctx, s, name),
+		setSlicerSelection: (cache, keys) => slicers.setSlicerSelection(ctx, cache, keys),
+		updateSlicer: (name, patch) => slicers.updateSlicer(ctx, name, patch),
+		insertSlicer: (s, source) => slicers.insertSlicer(ctx, s, source),
+		deleteSlicer: (name) => slicers.deleteSlicer(ctx, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
 		createSparklineGroup: (s, source, locations, patch) =>
 			sparklines.createSparklineGroup(ctx, s, source, locations, patch),

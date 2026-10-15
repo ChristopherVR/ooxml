@@ -19,6 +19,13 @@ export interface PivotValueFieldOptions {
 	caption?: string;
 }
 
+/** Items hidden from one field (what a slicer or the item filter list sets). */
+export interface PivotItemFilter {
+	field: string;
+	/** Cached items that are not shown. At least one item stays visible. */
+	hidden: CellValue[];
+}
+
 /** A worksheet-range pivot with up to two row fields and sixteen measures. */
 export interface PivotTable {
 	name: string;
@@ -34,6 +41,10 @@ export interface PivotTable {
 	repeatLabels?: boolean;
 	columnField?: string;
 	pageFilter?: PivotPageFilter;
+	/** Hidden items per field (slicers, filter lists); the cache keeps every record. */
+	itemFilters?: PivotItemFilter[];
+	/** `x14:pivotCacheDefinition/@pivotCacheId`, the identity slicers use to find the cache. */
+	slicerCacheId?: number;
 	valueField: string;
 	aggregate: PivotAggregate;
 	valueCaption: string;

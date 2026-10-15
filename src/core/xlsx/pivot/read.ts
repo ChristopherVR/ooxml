@@ -8,6 +8,8 @@ import { att, decodeEscapes } from '../read/xml-util';
 import { PIVOT_AGGREGATES } from './data';
 import { pivotGrid } from './aggregate';
 import { assertPivotAdmission, assertPivotRecords } from './admission';
+import { pivotKey, type SlicerRefs } from '../slicer/read';
+import { readItemFilters, readSlicerCacheId } from './item-filters-read';
 import { assertPageAxisItems } from './page-filter-admission';
 import { readPivotPageFilter } from './page-filter';
 import { supportedPivotAxes, pivotFieldIndex, pivotValueIndex } from './values-axis';
@@ -185,8 +187,12 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		if (location.start.row < 2) throw new Error('Invalid report filter location');
 		location.start.row -= 2;
 	}
+	const itemFilters = readItemFilters(tableFields, names, shared);
+	const slicerCacheId = readSlicerCacheId(cache);
 	const pivot: PivotTable = {
 		...(pageFilter ? { pageFilter } : {}),
+		...(itemFilters ? { itemFilters } : {}),
+		...(slicerCacheId !== undefined ? { slicerCacheId } : {}),
 		name: att(root, 'name') ?? 'PivotTable',
 		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,
 		rowField: row,
@@ -237,6 +243,7 @@ export function readPivotTables(
 	workbook: Workbook,
 	source: SourceIndex,
 	warn: (message: string) => void,
+	slicers: SlicerRefs,
 ): void {
 	const caches = new Map<string, number>();
 	for (const sheet of workbook.sheets)
@@ -247,7 +254,6 @@ export function readPivotTables(
 				const cache = part && source.targetOfType(part, RELATIONSHIP_TYPES.pivotCacheDefinition);
 				if (cache) caches.set(cache, (caches.get(cache) ?? 0) + 1);
 			}
-	const slicers = [...workbook.source!.parts.keys()].some((part) => /slicer/i.test(part));
 	for (const sheet of workbook.sheets)
 		if (sheet.partName) {
 			const pivots: PivotTable[] = [];
@@ -257,8 +263,12 @@ export function readPivotTables(
 				if (!part) continue;
 				try {
 					const cache = source.targetOfType(part, RELATIONSHIP_TYPES.pivotCacheDefinition);
-					if (slicers || (cache && (caches.get(cache) ?? 0) > 1))
-						throw new Error('Shared or slicer-connected pivot cache');
+					const name = att(parseXml(source.text(part) ?? '<x/>').documentElement, 'name') ?? '';
+					if (
+						slicers.blocked.has(pivotKey(sheet.sheetId, name)) ||
+						(cache && (caches.get(cache) ?? 0) > 1)
+					)
+						throw new Error('Shared pivot cache or unsupported slicer connection');
 					const pivot = readOne(workbook, source, part);
 					const grid = pivotGrid(pivot);
 					if (

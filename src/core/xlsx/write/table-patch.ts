@@ -2,6 +2,8 @@ import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/ind
 import { formatRange, parseRange, type CellRange } from '../address';
 import type { Table, Worksheet } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
+import { isValueListFilterColumn } from '../read/tables';
+import { filterColumnXml } from '../slicer/table-filter';
 import { num } from './xml-out';
 
 const xKids = (parent: XmlElement, local: string): XmlElement[] =>
@@ -76,6 +78,32 @@ function sourceColumnsForPatch(
 	});
 }
 
+/** Writes the value-list filters of the model; other criteria stay as read. */
+function syncColumnFilters(doc: Document, filter: XmlElement, table: Table): void {
+	table.columns.forEach((column, index) => {
+		const node = xKids(filter, 'filterColumn').find(
+			(n) => Number(n.getAttribute('colId')) === index,
+		);
+		const simple = node !== undefined && isValueListFilterColumn(node);
+		if (!column.filter) {
+			if (node && simple) filter.removeChild(node);
+			return;
+		}
+		if (node && !simple) return;
+		const fresh = parseXml(`<root xmlns="${NS.x}">${filterColumnXml(index, column.filter)}</root>`)
+			.documentElement.firstChild as XmlElement;
+		const imported = doc.importNode(fresh, true) as XmlElement;
+		if (node) filter.replaceChild(imported, node);
+		else {
+			const next = xKids(filter, 'filterColumn').find(
+				(n) => Number(n.getAttribute('colId')) > index,
+			);
+			if (next) filter.insertBefore(imported, next);
+			else insertBefore(filter, imported, ['sortState', 'extLst']);
+		}
+	});
+}
+
 /** Moves criteria with their source columns while preserving unmodelled filter markup. */
 function patchAutoFilter(
 	doc: Document,
@@ -101,6 +129,7 @@ function patchAutoFilter(
 		if (index === undefined) filter.removeChild(column);
 		else column.setAttribute('colId', num(index));
 	}
+	syncColumnFilters(doc, filter, table);
 	if (!existing) insertBefore(root, filter, ['sortState', 'tableColumns']);
 	const sort = xKid(filter, 'sortState') ?? xKid(root, 'sortState');
 	if (!sort) return;

@@ -24,6 +24,7 @@ import { resolveTableColumns, resolveTableNames, tableXml, totalsRowFormulas } f
 /** Worksheet dependents: comments (+ VML, threads), tables and the drawing part. */
 export interface SaveContext {
 	pivots?: import('../pivot/write').PivotWritePlan;
+	slicers?: import('../slicer/write-plan').SlicerWritePlan;
 	writer: PackageWriter;
 	workbook: Workbook;
 	source: SourceIndex | undefined;
@@ -220,11 +221,15 @@ export function writeSheetDrawing(
 		sourceDrawing && !writer.has(sourceDrawing)
 			? sourceDrawing
 			: writer.uniqueName((n) => `xl/drawings/drawing${n}.xml`, ctx.reserved);
-	const drawings = sheet.drawings.map((object) =>
-		object.kind === 'chart' && (!object.partName || !source?.has(object.partName))
-			? chartWithCurrentCaches(ctx.workbook, sheet, object)
-			: object,
-	);
+	const drawings = sheet.drawings
+		.filter((object) =>
+			ctx.slicers?.keepsFrame(object.kind, 'name' in object ? (object.name ?? '') : ''),
+		)
+		.map((object) =>
+			object.kind === 'chart' && (!object.partName || !source?.has(object.partName))
+				? chartWithCurrentCaches(ctx.workbook, sheet, object)
+				: object,
+		);
 	if (!writeDrawing(writer, target, drawings, sourceDrawing)) return '';
 	return `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`;
 }

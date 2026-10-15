@@ -5,6 +5,7 @@ import { readFilteredRows } from '../filter-rows';
 import type { Workbook, WorkbookProperties, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
 import { readPivotTables } from '../pivot/read';
+import { readSlicers, settleSlicers } from '../slicer/read';
 import { parsePersons } from './comments';
 import { CONTENT_TYPES, SourceIndex, readZipParts } from './package';
 import { parseDynamicArrayMetadata } from './metadata';
@@ -127,7 +128,9 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	await resolveSmartArt(sheets, source, warn);
 	liftPrintAreas(workbook);
 	readFilteredRows(workbook);
-	readPivotTables(workbook, source, warn);
+	const slicerRefs = readSlicers(workbook, source);
+	readPivotTables(workbook, source, warn, slicerRefs);
+	settleSlicers(workbook, warn);
 	return workbook;
 }
 
