@@ -27,6 +27,9 @@ import type { OmmlNode } from './omml-to-mathml';
 
 export { convertOmmlToLatex } from './omml-to-latex';
 
+/** Deepest brace or script nesting accepted; real equations stay far below this. */
+const MAX_NESTING_DEPTH = 512;
+
 // ── Parser ───────────────────────────────────────────────────────────────────
 
 class LatexParser implements LatexParserContext {
@@ -34,9 +37,22 @@ class LatexParser implements LatexParserContext {
 	private pos = 0;
 	/** Set for one `parseAtom` call: the atom is a bare script argument and takes no scripts of its own. */
 	private bare = false;
+	/** Current group nesting; bounded so hostile input cannot exhaust the call stack. */
+	private depth = 0;
 
 	constructor(tokens: Token[]) {
 		this.tokens = tokens;
+	}
+
+	private nest<T>(parse: () => T): T {
+		if (++this.depth > MAX_NESTING_DEPTH) {
+			throw new Error(`LaTeX nesting exceeds ${MAX_NESTING_DEPTH} levels`);
+		}
+		try {
+			return parse();
+		} finally {
+			this.depth--;
+		}
 	}
 
 	public peek(): Token | undefined {
@@ -56,6 +72,10 @@ class LatexParser implements LatexParserContext {
 	}
 
 	public parseGroup(): OmmlNode[] {
+		return this.nest(() => this.readGroup());
+	}
+
+	private readGroup(): OmmlNode[] {
 		this.expect('group_start');
 		const nodes: OmmlNode[] = [];
 		while (this.peek() && this.peek()!.type !== 'group_end') {
@@ -82,6 +102,10 @@ class LatexParser implements LatexParserContext {
 
 	/** Parse atoms up to and including the closing brace of the current group. */
 	private parseGroupRest(): OmmlNode[] {
+		return this.nest(() => this.readGroupRest());
+	}
+
+	private readGroupRest(): OmmlNode[] {
 		const nodes: OmmlNode[] = [];
 		while (this.peek() && this.peek()!.type !== 'group_end') {
 			const node = this.parseAtom();
@@ -101,10 +125,12 @@ class LatexParser implements LatexParserContext {
 		if (this.peek()?.type === 'group_start') {
 			return this.parseGroup();
 		}
-		this.bare = true;
-		const atom = this.parseAtom();
-		this.bare = false;
-		return atom ? [atom] : [];
+		return this.nest(() => {
+			this.bare = true;
+			const atom = this.parseAtom();
+			this.bare = false;
+			return atom ? [atom] : [];
+		});
 	}
 
 	public wrapE(nodes: OmmlNode[]): OmmlNode {
@@ -132,7 +158,8 @@ class LatexParser implements LatexParserContext {
 		}
 
 		if (tok.type === 'whitespace') {
-			this.next();
+			// Iterative so a long run of spaces does not recurse once per character.
+			while (this.peek()?.type === 'whitespace') this.next();
 			return this.parseAtom();
 		}
 

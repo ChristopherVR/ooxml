@@ -119,14 +119,15 @@ export function mergeSiblings(nodes: OmmlNode[]): OmmlNode {
 		for (const [key] of entries) {
 			counts.set(key, (counts.get(key) ?? 0) + 1);
 		}
-		const ordered: OmmlNode = {};
+		// Null-prototype objects: a tag named `__proto__` or `constructor` must not hit Object.prototype.
+		const ordered: OmmlNode = Object.create(null);
 		for (const [position, [key, value]] of entries.entries()) {
 			ordered[(counts.get(key) ?? 0) > 1 ? orderedXmlKey(key, position) : key] = value;
 		}
 		return ordered;
 	}
 
-	const result: OmmlNode = {};
+	const result: OmmlNode = Object.create(null);
 	for (const [key, value] of entries) {
 		if (result[key]) {
 			const existing = result[key];
