@@ -1,3 +1,4 @@
+import { homeShapeGalleryItems } from './shape-gallery-home';
 import type { RibbonHomeLayoutModel, RibbonHomeViewState } from './ribbon-home-spec';
 import type { HomeColourInput } from './ribbon-home-state';
 import { homeColourState } from './ribbon-home-state';
@@ -48,7 +49,11 @@ export interface DrawingHomeInput {
 export function drawingHomeControls(input: DrawingHomeInput): RibbonHomeViewState['controls'] {
 	const noTarget = !input.editable || !input.hasSelection;
 	return {
-		'home.drawing.shapes': { disabled: !input.editable, value: input.shapeType },
+		'home.drawing.shapes': {
+			disabled: !input.editable,
+			value: input.shapeType,
+			items: homeShapeGalleryItems(),
+		},
 		'home.drawing.arrange': { disabled: noTarget },
 		'home.drawing.shapeFill': input.fill
 			? homeColourState(noTarget, input.fill)

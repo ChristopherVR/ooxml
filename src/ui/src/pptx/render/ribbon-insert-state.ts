@@ -1,5 +1,6 @@
 import { ACTION_BUTTON_PRESETS } from './action-buttons';
 import { INSERT_CHART_TYPES } from './insert-chart';
+import { shapeGalleryItemForValue } from './shape-gallery';
 import { SHAPE_PRESET_DEFS } from './shape-preset-catalog';
 
 export type RibbonInsertCommand =
@@ -257,7 +258,11 @@ export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertI
 			);
 		case 'shapeType':
 		case 'shape':
-			return state.editable && SHAPE_PRESET_DEFS.some((item) => item.type === intent.value);
+			return (
+				state.editable &&
+				(SHAPE_PRESET_DEFS.some((item) => item.type === intent.value) ||
+					shapeGalleryItemForValue(intent.value)?.action.kind === 'shape')
+			);
 		case 'chartType':
 		case 'chart':
 			return (

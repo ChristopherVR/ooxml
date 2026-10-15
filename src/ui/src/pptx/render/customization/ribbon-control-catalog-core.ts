@@ -18,7 +18,7 @@ export const RIBBON_CATALOG_CORE_TABS = {
 				layout: 'Layout',
 				reset: 'Reset',
 				section: 'Section',
-				slideTemplates: 'Slide templates',
+				slideTemplates: 'Slide templates (New Slide menu entry)',
 			},
 		},
 		font: {
@@ -155,15 +155,26 @@ export const RIBBON_CATALOG_CORE_TABS = {
 	design: {
 		themes: {
 			label: 'Themes',
-			controls: { browseThemes: 'Themes gallery', editTheme: 'Edit theme' },
+			controls: {
+				gallery: 'Themes (inline gallery)',
+				browseThemes: 'Themes gallery',
+				editTheme: 'Edit theme',
+			},
 		},
 		variants: {
 			label: 'Variants',
-			controls: { colors: 'Variants: Colors gallery', fonts: 'Variants: Fonts gallery' },
+			controls: {
+				gallery: 'Variants (inline gallery)',
+				colors: 'Variants: Colors gallery',
+				fonts: 'Variants: Fonts gallery',
+				effects: 'Variants: Effects gallery',
+				backgroundStyles: 'Variants: Background Styles gallery',
+			},
 		},
 		customize: {
 			label: 'Customize',
 			controls: { slideSize: 'Slide Size', formatBackground: 'Format Background' },
 		},
+		designer: { label: 'Designer', controls: { designIdeas: 'Design Ideas' } },
 	},
 } as const satisfies Readonly<Record<string, TabEntry>>;

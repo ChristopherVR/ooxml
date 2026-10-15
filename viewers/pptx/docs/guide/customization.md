@@ -146,7 +146,7 @@ resolver:
   Compare, and `notes` the Notes buttons.
 - Hiding a dialog does the same for its entry points: `hyperlink` removes
   Insert > Link, the Link menu entry and Ctrl+K; `equation` Insert > Equation;
-  `pasteSpecial` its shortcut; `slideTemplates` Home > Slide templates;
+  `pasteSpecial` its shortcut; `slideTemplates` the Slide Templates entry of Home > New Slide;
   `passwordProtection` and `signatures` their File > Info cards.
 - `capabilities` expand into the lists above (see [Capabilities](#capabilities)).
 - An Options section that loses every control is removed; an Options page that
@@ -927,6 +927,7 @@ unit test fails if an id is missing here.
 | `design.themes`                     | Themes                   |
 | `design.variants`                   | Variants                 |
 | `design.customize`                  | Customize                |
+| `design.designer`                   | Designer                 |
 | `transitions.preview`               | Preview                  |
 | `transitions.transitionToThisSlide` | Transition to This Slide |
 | `transitions.timing`                | Timing                   |
@@ -988,7 +989,7 @@ unit test fails if an id is missing here.
 | `home.slides.layout`                              | Layout                                                                        |
 | `home.slides.reset`                               | Reset                                                                         |
 | `home.slides.section`                             | Section                                                                       |
-| `home.slides.slideTemplates`                      | Slide templates                                                               |
+| `home.slides.slideTemplates`                      | Slide templates (New Slide menu entry)                                        |
 | `home.font.fontFamily`                            | Font                                                                          |
 | `home.font.fontSize`                              | Font Size                                                                     |
 | `home.font.increaseFontSize`                      | Increase Font Size                                                            |
@@ -1079,12 +1080,17 @@ unit test fails if an id is missing here.
 | `draw.tools.penColor`                             | Pen colour                                                                    |
 | `draw.tools.penWidth`                             | Pen width                                                                     |
 | `draw.convert.inkToShape`                         | Ink to Shape                                                                  |
+| `design.themes.gallery`                           | Themes (inline gallery)                                                       |
 | `design.themes.browseThemes`                      | Themes gallery                                                                |
 | `design.themes.editTheme`                         | Edit theme                                                                    |
+| `design.variants.gallery`                         | Variants (inline gallery)                                                     |
 | `design.variants.colors`                          | Variants: Colors gallery                                                      |
 | `design.variants.fonts`                           | Variants: Fonts gallery                                                       |
+| `design.variants.effects`                         | Variants: Effects gallery                                                     |
+| `design.variants.backgroundStyles`                | Variants: Background Styles gallery                                           |
 | `design.customize.slideSize`                      | Slide Size                                                                    |
 | `design.customize.formatBackground`               | Format Background                                                             |
+| `design.designer.designIdeas`                     | Design Ideas                                                                  |
 | `transitions.preview.preview`                     | Preview                                                                       |
 | `transitions.transitionToThisSlide.gallery`       | Transition gallery                                                            |
 | `transitions.transitionToThisSlide.effectOptions` | Effect Options                                                                |
@@ -1561,7 +1567,7 @@ Use the customization prop/input/option or `setCustomization` / `updateCustomiza
 | `hyperlink`          | The Insert Hyperlink dialog: Insert > Link, the Link menu entry and its shortcut. |
 | `equation`           | The Equation editor and Insert > Equation.                                        |
 | `pasteSpecial`       | The Paste Special dialog and its shortcut.                                        |
-| `slideTemplates`     | The slide template gallery and Home > Slide templates.                            |
+| `slideTemplates`     | The slide template gallery and its entry at the end of the Home > New Slide menu. |
 | `passwordProtection` | The password protection dialog and the File > Info Protect card.                  |
 | `signatures`         | The digital signatures dialog and the File > Info Signatures card.                |
 

@@ -7,8 +7,11 @@ import {
 	INSERT_GROUPS,
 	INSERT_GROUP_CAPTIONS,
 	INSERT_GROUP_SCALING,
-	SHAPE_PRESET_DEFS,
+	SHAPE_THUMB_VIEW_BOX,
 	insertControlStatus,
+	pushRecentShape,
+	shapeGalleryItem,
+	shapeGallerySections,
 	insertEntryEnabled,
 	insertLabel,
 } from '../render';
@@ -21,12 +24,10 @@ import type {
 import { createInsertMenu } from './ribbon-insert-dom';
 import { createTablePicker } from './ribbon-insert-table-picker';
 import type { InsertMenu, InsertMenuItem } from './ribbon-insert-dom';
-import {
-	INSERT_SHAPE_GLYPH_PATHS,
-	RIBBON_INSERT_ICON_PATHS,
-	insertGlyphTransform,
-} from './ribbon-insert-icons';
+import { RIBBON_INSERT_ICON_PATHS } from './ribbon-insert-icons';
 
+/** Id prefix of the Recently Used Shapes row, so no id repeats inside the menu. */
+const RECENT_PREFIX = 'recent:';
 const FREEFORM_ICONS: Record<string, string> = { freeformShape: 'penTool', curve: 'spline' };
 const FREEFORM_FALLBACKS: Record<string, string> = {
 	freeformShape: 'Freeform: Shape',
@@ -120,28 +121,63 @@ export function createRibbonInsertView(
 		built.push({ spec, el: menu.el, sync });
 	};
 
+	/** The Shapes gallery: Recently Used Shapes, then PowerPoint's categories. */
 	const buildShapes = (spec: InsertControlSpec) => {
+		let repaint = () => {};
 		const menu = createInsertMenu(
 			doc,
 			spec.control,
 			'shapes',
-			(value) => stageThenInsert({ kind: 'shapeType', value }, { kind: 'shape', value }),
+			(id) => {
+				const item = shapeGalleryItem(id.replace(RECENT_PREFIX, ''));
+				if (!item) {
+					return;
+				}
+				const action = item.action;
+				if (action.kind === 'shape') {
+					stageThenInsert(
+						{ kind: 'shapeType', value: action.value },
+						{ kind: 'shape', value: action.value },
+					);
+				} else if (action.kind === 'actionButton') {
+					request({ kind: 'actionButton', value: action.value });
+				} else if (action.kind === 'freeform') {
+					request({ kind: 'freeform', value: action.value });
+				} else {
+					return;
+				}
+				pushRecentShape(item.id);
+				repaint();
+			},
 			{ large: true, grid: true },
 		);
 		addMenu(spec, menu, (state, text) => {
-			menu.sync({
-				label: text(spec.label),
-				title: tooltip(spec, text, null),
-				items: SHAPE_PRESET_DEFS.map((item) => ({
-					id: item.type,
-					label: text([item.i18nKey, item.label]),
-					glyph: INSERT_SHAPE_GLYPH_PATHS[item.glyph],
-					viewBox: '0 0 16 16',
-					transform: insertGlyphTransform(item.glyphClass),
-				})),
-				disabled: !state.editable,
-				menuLabel: text(['pptx.insert.shapeType', 'Shape type']),
-			});
+			repaint = () => {
+				const items: InsertMenuItem[] = [];
+				for (const section of shapeGallerySections()) {
+					const heading = text([section.headingKey, section.heading]);
+					for (const item of section.items) {
+						const name = text([item.labelKey, item.fallback]);
+						const unsupported = item.action.kind === 'unsupported';
+						items.push({
+							id: section.id === 'recent' ? `${RECENT_PREFIX}${item.id}` : item.id,
+							label: name,
+							glyph: item.path,
+							viewBox: SHAPE_THUMB_VIEW_BOX,
+							section: heading,
+							...(unsupported ? { disabled: true, title: `${name}\n${text(UNSUPPORTED)}` } : {}),
+						});
+					}
+				}
+				menu.sync({
+					label: text(spec.label),
+					title: tooltip(spec, text, null),
+					items,
+					disabled: !state.editable,
+					menuLabel: text(['pptx.insert.shapeType', 'Shape type']),
+				});
+			};
+			repaint();
 		});
 		return menu.el;
 	};

@@ -83,6 +83,10 @@ input.num:focus-visible { outline:2px solid var(--pptx-ring,#818cf8); outline-of
 .popup { box-sizing:border-box; position:fixed; z-index:1200; max-width:calc(100vw - 16px); max-height:min(70vh,520px); overflow:auto; padding:4px 0; border:1px solid var(--pptx-border,#475569); border-radius:8px; background:var(--pptx-popover,#111827); color:var(--pptx-popover-foreground,#f8fafc); box-shadow:0 8px 24px #0006; font-size:12px; }
 .popup[hidden] { display:none; }
 .popup[role=dialog] { padding:8px; }
+.popup.grid:not([hidden]) { display:grid; grid-template-columns:repeat(8,30px); gap:2px; padding:6px; max-height:min(70vh,520px); }
+.popup.grid .heading { grid-column:1 / -1; padding:6px 2px 2px; }
+.popup.grid button.item.cell { width:30px; min-width:0; height:30px; padding:0; justify-content:center; border-radius:4px; }
+.popup.grid button.item.cell svg { width:20px; height:20px; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
 .popup .heading { padding:6px 12px 2px; font-size:10px; font-weight:600; color:var(--pptx-muted-foreground,#94a3b8); }
 .popup[role=dialog] .heading { padding:4px 0 2px; }
 .popup hr { margin:4px 0; border:0; height:1px; background:var(--pptx-border,#475569); }
@@ -105,6 +109,7 @@ input.num:focus-visible { outline:2px solid var(--pptx-ring,#818cf8); outline-of
 .popup .custom-input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
 .popup[data-testid=layout-gallery-menu] { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; width:620px; padding:12px; }
 .popup[data-testid=layout-gallery-menu][hidden] { display:none; }
+.popup[data-testid=layout-gallery-menu] button.item.templates { grid-column:1 / -1; width:auto; border-top:1px solid var(--pptx-border,#475569); border-radius:0; margin-top:4px; }
 .popup .empty { grid-column:1 / -1; margin:0; padding:12px 8px; color:var(--pptx-muted-foreground,#94a3b8); }
 .popup button.tile { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; padding:4px; border:2px solid transparent; border-radius:4px; background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .popup button.tile:hover { background:var(--pptx-accent,#33334d); }

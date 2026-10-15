@@ -59,16 +59,6 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 					kind: 'layout',
 					caret: { labelKey: 'pptx.home.chooseLayout', fallback: 'Choose layout' },
 				}),
-				control(
-					'home.slides.slideTemplates',
-					'pptx.home.slideTemplates',
-					'Slide templates',
-					undefined,
-					{
-						text: text('pptx.home.slideTemplates', 'Slide templates'),
-						large: true,
-					},
-				),
 				control('home.slides.layout', 'pptx.master.layout', 'Layout', undefined, {
 					text: text('pptx.master.layout', 'Layout'),
 					large: true,
@@ -95,6 +85,7 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 					large: true,
 					kind: 'menu',
 					items: HOME_SHAPE_ITEMS,
+					grid: true,
 					popup: true,
 				}),
 				control('home.drawing.arrange', 'pptx.ribbon.arrange', 'Arrange', undefined, {

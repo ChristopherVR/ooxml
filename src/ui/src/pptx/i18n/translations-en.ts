@@ -4,6 +4,7 @@ import { galleryAdjustTranslationsEn } from './translations-en-galleries-adjust'
 import { galleryDataTranslationsEn } from './translations-en-galleries-data';
 import { galleryEffectsTranslationsEn } from './translations-en-galleries-effects';
 import { galleryPictureTranslationsEn } from './translations-en-galleries-picture';
+import { shapeGalleryTranslationsEn } from './translations-en-shape-gallery';
 import { tableLayoutTranslationsEn } from './translations-en-table-layout';
 
 /**
@@ -25,6 +26,7 @@ export const translationsEn: Record<string, string> = {
 	...galleryPictureTranslationsEn,
 	...galleryAdjustTranslationsEn,
 	...tableLayoutTranslationsEn,
+	...shapeGalleryTranslationsEn,
 
 	// Status bar
 	'pptx.statusBar.allSaved': 'All saved',

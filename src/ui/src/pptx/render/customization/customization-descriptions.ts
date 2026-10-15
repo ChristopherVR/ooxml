@@ -66,7 +66,8 @@ export const VIEWER_DIALOG_DESCRIPTIONS: Record<ViewerDialogId, string> = {
 	hyperlink: 'The Insert Hyperlink dialog: Insert > Link, the Link menu entry and its shortcut.',
 	equation: 'The Equation editor and Insert > Equation.',
 	pasteSpecial: 'The Paste Special dialog and its shortcut.',
-	slideTemplates: 'The slide template gallery and Home > Slide templates.',
+	slideTemplates:
+		'The slide template gallery and its entry at the end of the Home > New Slide menu.',
 	passwordProtection: 'The password protection dialog and the File > Info Protect card.',
 	signatures: 'The digital signatures dialog and the File > Info Signatures card.',
 };

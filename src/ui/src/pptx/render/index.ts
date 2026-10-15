@@ -1484,6 +1484,8 @@ export * from './preview-elements';
 // Insert > Shape picker catalogue: preset geometry types + labels/i18n keys +
 // framework-neutral glyph descriptors; each binding maps glyphs to its icons.
 export * from './shape-preset-catalog';
+export * from './shape-gallery';
+export * from './shape-gallery-home';
 // Home-tab text formatting presets: font family/size dropdown lists,
 // character/line-spacing presets, and the change-case options + transforms.
 export * from './text-format-presets';
