@@ -26,7 +26,9 @@ export function treemapSvg(model: ChartViewModel, area: Rect): string {
 	const series = model.series.map((s) => ({
 		name: s.name,
 		values: s.values.map((v) => v ?? 0),
-		parentLabelLayout: hierarchy?.parentLabelLayout,
+		// Without data labels Office draws no parent banners either, so no space is reserved.
+		parentLabelLayout:
+			hierarchy?.labels === false ? ('none' as const) : hierarchy?.parentLabelLayout,
 	}));
 	const roots = buildHierarchyRoots(
 		series,
@@ -36,17 +38,18 @@ export function treemapSvg(model: ChartViewModel, area: Rect): string {
 	const cells = layoutTreemap(roots, { x: area.x, y: area.y, w: area.w, h: area.h });
 	for (const cell of cells) {
 		if (cell.kind === 'parent') {
-			out.push(text(cell.x, cell.y, cell.label, { size: 10, weight: 'bold', fill: '#303030' }));
+			if (hierarchy?.labels !== false)
+				out.push(text(cell.x, cell.y, cell.label, { size: 10, weight: 'bold', fill: '#303030' }));
 			continue;
 		}
 		out.push(`<g data-chart-series="${cell.seriesIndex}" data-chart-point="${cell.pointIndex}">`);
 		out.push(
 			rect(cell.x, cell.y, cell.w, cell.h, colorAt(model, cell.colorIndex)).replace(
 				'/>',
-				' rx="2" fill-opacity="0.85"/>',
+				' rx="2"/>',
 			),
 		);
-		if (cell.labelFits)
+		if (cell.labelFits && hierarchy?.labels !== false)
 			out.push(
 				text(
 					cell.x + cell.w / 2,
@@ -84,11 +87,11 @@ export function sunburstSvg(model: ChartViewModel, area: Rect): string {
 				);
 	for (const arc of arcs)
 		out.push(
-			`<path d="${arc.d}" fill="${colorAt(model, arc.colorIndex)}" fill-opacity="${n(arc.opacity)}" stroke="#FFFFFF" stroke-width="1"${arc.pointIndex === undefined ? '' : ` data-chart-series="0" data-chart-point="${arc.pointIndex}"`}/>`,
+			`<path d="${arc.d}" fill="${colorAt(model, arc.colorIndex)}" stroke="#FFFFFF" stroke-width="1.5"${arc.pointIndex === undefined ? '' : ` data-chart-series="0" data-chart-point="${arc.pointIndex}"`}/>`,
 		);
 	// A flat sunburst labels its wedges with the categories of its only ring.
 	const flatLabels = levels.length > 1 || model.series.length !== 1 ? undefined : model.categories;
-	for (const arc of arcs) {
+	for (const arc of model.hierarchy?.labels === false ? [] : arcs) {
 		const label =
 			arc.label ?? (arc.pointIndex === undefined ? undefined : flatLabels?.[arc.pointIndex]);
 		if (!label) continue;

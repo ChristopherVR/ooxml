@@ -98,6 +98,8 @@ export interface BubbleSummaryOptions extends BubbleRadiusOptions {
 export interface HierarchySummaryOptions {
 	levels: string[][];
 	parentLabelLayout?: ParentLabelLayout | undefined;
+	/** Whether the series writes `cx:dataLabels`; Office draws no labels without them. Default true. */
+	dataLabels?: boolean | undefined;
 }
 
 export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries> {

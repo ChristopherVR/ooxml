@@ -151,10 +151,11 @@ const points = (values: (string | number)[]) =>
 const hierarchyXml = (
 	layoutId: string,
 	layoutPr = '',
+	labels = '<cx:dataLabels pos="ctr"><cx:visibility seriesName="0" categoryName="1" value="0"/></cx:dataLabels>',
 ) => `<cx:chartSpace ${CX}><cx:chartData><cx:data id="0">
 <cx:strDim type="cat"><cx:f>S!$A$2:$B$6</cx:f>${points(['Apple', 'Pear', 'Leek', 'Kale', 'Almond'])}${points(['Fruit', '', 'Veg', '', 'Nuts'])}</cx:strDim>
 <cx:numDim type="size"><cx:f>S!$C$2:$C$6</cx:f>${points([30, 20, 10, 5, 8])}</cx:numDim></cx:data></cx:chartData>
-<cx:chart><cx:title pos="t" align="ctr" overlay="0"><cx:tx><cx:txData><cx:v>Produce</cx:v></cx:txData></cx:tx></cx:title><cx:plotArea><cx:plotAreaRegion><cx:series layoutId="${layoutId}"><cx:tx><cx:txData><cx:v>Weight</cx:v></cx:txData></cx:tx><cx:dataId val="0"/>${layoutPr}</cx:series></cx:plotAreaRegion></cx:plotArea><cx:legend pos="b" align="ctr" overlay="0"/></cx:chart></cx:chartSpace>`;
+<cx:chart><cx:title pos="t" align="ctr" overlay="0"><cx:tx><cx:txData><cx:v>Produce</cx:v></cx:txData></cx:tx></cx:title><cx:plotArea><cx:plotAreaRegion><cx:series layoutId="${layoutId}"><cx:tx><cx:txData><cx:v>Weight</cx:v></cx:txData></cx:tx>${labels}<cx:dataId val="0"/>${layoutPr}</cx:series></cx:plotAreaRegion></cx:plotArea><cx:legend pos="b" align="ctr" overlay="0"/></cx:chart></cx:chartSpace>`;
 
 describe('treemap charts', () => {
 	it('reads the category levels and the parent label layout', () => {
@@ -208,6 +209,30 @@ describe('treemap charts', () => {
 		const summary = chartExSummary(flat)!.summary!;
 		const svg = renderChartSummarySvg(summary, { width: 480, height: 300 });
 		expect(svg.match(/<g data-chart-series="0" data-chart-point="\d"/g)).toHaveLength(5);
+	});
+});
+
+describe('hierarchy charts without data labels', () => {
+	it('draws no cell, parent or wedge text, as Office does, but keeps the legend', () => {
+		for (const id of ['treemap', 'sunburst']) {
+			const summary = chartExSummary(hierarchyXml(id, '', ''))!.summary!;
+			expect(summary.hierarchy?.dataLabels).toBe(false);
+			const svg = renderChartSummarySvg(summary, { width: 480, height: 300 });
+			for (const label of ['Apple', 'Pear', 'Almond']) expect(svg).not.toContain(`>${label}<`);
+			expect(svg).not.toContain('rotate(');
+			expect(svg).toContain('>Fruit<');
+			expect(svg).toContain('>Produce<');
+		}
+	});
+
+	it('uses the classic grey regular title, not the large bold default', () => {
+		const svg = renderChartSummarySvg(chartExSummary(hierarchyXml('treemap'))!.summary!, {
+			width: 480,
+			height: 300,
+		});
+		expect(/<text [^>]*>Produce<\/text>/.exec(svg)![0]).toMatch(
+			/fill="#595959"[^>]*font-weight="normal"/,
+		);
 	});
 });
 

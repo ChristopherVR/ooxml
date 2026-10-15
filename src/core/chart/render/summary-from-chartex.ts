@@ -163,6 +163,27 @@ export function chartExSummary(source: string | XmlElement): ChartExSummary | un
 	const layoutPr = cx(primary, 'layoutPr');
 	const legend = cx(chart, 'legend');
 	const summary: ChartSummary = { chartType, series: [series], showLegend: legend !== undefined };
+	// An extended chart has no c:style: Office draws it with the classic default text (grey, regular),
+	// not the larger bold text of the newly authored style.
+	summary.formatting = {
+		builtInStyle: 2,
+		sourceXml: '',
+		entries: {
+			title: {
+				fontSize: 14,
+				bold: false,
+				textColor: {
+					kind: 'scheme',
+					value: 'tx1',
+					transforms: [
+						{ name: 'lumMod', value: '65000' },
+						{ name: 'lumOff', value: '35000' },
+					],
+				},
+				sourceXml: '',
+			},
+		},
+	};
 	const title = titleOf(chart);
 	if (title) summary.title = title;
 	const position = legend?.getAttribute('pos');
@@ -185,6 +206,7 @@ export function chartExSummary(source: string | XmlElement): ChartExSummary | un
 		const layout = cx(layoutPr, 'parentLabelLayout')?.getAttribute('val');
 		summary.hierarchy = {
 			levels: categoryLevels(data),
+			dataLabels: cx(primary, 'dataLabels') !== undefined,
 			...(layout === 'none' || layout === 'banner' || layout === 'overlapping'
 				? { parentLabelLayout: layout }
 				: {}),

@@ -80,7 +80,7 @@ describe('Word treemap and sunburst charts', () => {
 		const result = paint('Produce sunburst');
 		expect(result.label).toBe('Chart: Produce sunburst');
 		expect(result.svg!.match(/<path d="M [^"]*" fill="/g)).toHaveLength(8);
-		for (const label of ['Fruit', 'Apple', 'Almond'])
-			expect(result.svg).toContain(`>${label}</text>`);
+		// The part writes no cx:dataLabels, so Word draws no wedge text.
+		expect(result.svg).not.toContain('>Apple</text>');
 	});
 });

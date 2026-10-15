@@ -67,6 +67,7 @@ export function hierarchyView<S extends ChartSummarySeries>(
 	model.hierarchy = {
 		levels,
 		parentLabelLayout: chart.hierarchy?.parentLabelLayout ?? 'banner',
+		labels: chart.hierarchy?.dataLabels !== false,
 		branches: hierarchyBranchLabels(
 			model.series.map((s) => ({ name: s.name, values: s.values.map((v) => v ?? 0) })),
 			model.categories,

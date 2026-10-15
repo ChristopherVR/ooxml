@@ -105,6 +105,8 @@ export interface ChartViewModel {
 	hierarchy?: {
 		levels: string[][];
 		parentLabelLayout: ParentLabelLayout;
+		/** Whether cells and wedges carry their labels. */
+		labels: boolean;
 		branches: string[];
 	};
 	/** Scatter and bubble X axis. */
