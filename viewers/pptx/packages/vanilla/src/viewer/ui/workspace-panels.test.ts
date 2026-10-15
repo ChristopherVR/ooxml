@@ -258,6 +258,7 @@ describe('workspace parity panels', () => {
 				editComment: vi.fn(),
 				deleteComment: vi.fn(),
 				toggleCommentResolved: vi.fn(),
+				applyChanges: vi.fn(),
 			},
 		);
 		const draft = document.querySelector('textarea')!;
@@ -294,6 +295,7 @@ describe('workspace parity panels', () => {
 				editComment: vi.fn(),
 				deleteComment: vi.fn(),
 				toggleCommentResolved: vi.fn(),
+				applyChanges: vi.fn(),
 			},
 		);
 		// The pane renders the SAME threaded view as the inspector Comments tab
@@ -327,6 +329,7 @@ describe('workspace parity panels', () => {
 				editComment: vi.fn(),
 				deleteComment: vi.fn(),
 				toggleCommentResolved: vi.fn(),
+				applyChanges: vi.fn(),
 			},
 		);
 		// `pptx.comments.reply` (open the composer) and `pptx.comments.addReply`
