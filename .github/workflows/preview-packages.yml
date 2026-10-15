@@ -71,6 +71,8 @@ jobs:
       # Until the app is installed the upload is refused with "is not installed on or does not have
       # access to"; that is a missing setup step, not a broken change, so it warns instead of failing
       # the pull request. Any other error still fails.
+      # TODO(supply-chain): pkg-pr-new is pinned by version only; `bunx` records no integrity hash.
+      # Make it a root devDependency (so bun.lock holds its integrity) and run it from there.
       - name: Publish to pkg.pr.new
         run: |
           set +e

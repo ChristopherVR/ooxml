@@ -10,6 +10,7 @@ on:
       - '.github/workflows/**'
       - '.github/actions/**'
       - '.github/zizmor.yml'
+      - '.github/workflow-lint/**'
       - '.github/dependabot.yml'
   push:
     branches: [main]
@@ -17,6 +18,7 @@ on:
       - '.github/workflows/**'
       - '.github/actions/**'
       - '.github/zizmor.yml'
+      - '.github/workflow-lint/**'
       - '.github/dependabot.yml'
   schedule:
     - cron: '23 5 * * 1' # weekly: zizmor's online audits learn about newly vulnerable actions
@@ -31,7 +33,6 @@ concurrency:
 
 env:
   ACTIONLINT_VERSION: 1.7.12.25
-  ZIZMOR_VERSION: 1.30.1
 
 jobs:
   actionlint:
@@ -43,6 +44,10 @@ jobs:
           persist-credentials: false
       # Info and style notes from shellcheck are left out; deliberate word splitting is marked
       # with `# shellcheck disable=...` where it happens.
+      # TODO(supply-chain): pinned by version only. actionlint-py is published as an sdist alone
+      # (its build downloads the actionlint binary), so `pip --require-hashes` cannot cover it
+      # honestly; replace it with a hash-pinned actionlint release binary or a pinned container
+      # image when one is chosen. Hashes are never typed by hand.
       - name: Lint the workflows
         env:
           SHELLCHECK_OPTS: --severity=warning
@@ -61,9 +66,14 @@ jobs:
         with:
           persist-credentials: false
       # The token lets the online audits look up action tags, commits and advisories (read only).
+      - name: Install zizmor (pinned by hash)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zizmor-venv"
+          "$RUNNER_TEMP/zizmor-venv/bin/pip" install --require-hashes --no-deps \
+            -r .github/workflow-lint/zizmor-requirements.txt
       - name: Audit the workflows
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          pipx run "zizmor==$ZIZMOR_VERSION" --format=github --min-severity=medium \
+          "$RUNNER_TEMP/zizmor-venv/bin/zizmor" --format=github --min-severity=medium \
             --config .github/zizmor.yml .github
