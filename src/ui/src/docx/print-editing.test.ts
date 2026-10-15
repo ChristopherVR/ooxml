@@ -52,6 +52,15 @@ function setup(count = 1) {
 	return { bridge, paper, pages, view };
 }
 describe('ProseMirror print input bridge', () => {
+	it('selects the nearest line for a point in the gutter beside the pages', () => {
+		const { bridge, view } = setup(1);
+		expect(bridge.selectNearest(5, 300)).toBe(true);
+		expect(view.state.selection.head).toBe(2);
+		bridge.setActive(false);
+		expect(bridge.selectNearest(5, 300)).toBe(false);
+		bridge.destroy();
+		view.destroy();
+	});
 	it('places the caret on the nearest line when the pointer is off any text', () => {
 		const { bridge, pages, view } = setup(1);
 		const event = new MouseEvent('pointerdown', {

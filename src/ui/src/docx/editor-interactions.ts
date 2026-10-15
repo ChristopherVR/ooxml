@@ -6,6 +6,7 @@
 import type { RibbonElement } from './ribbon-tab-api';
 import type { EditorCore } from './editor-core';
 import { emit } from './events';
+import { attachCanvasClick } from './canvas-click';
 import { focusView } from './focus-view';
 import { createContextMenu, type ContextMenu } from './context-menu';
 import {
@@ -34,6 +35,7 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 	const activeElement = () => element.shadowRoot?.activeElement ?? null;
 	// A read-only ProseMirror surface cannot take focus, so the canvas stands in for it.
 	shell.canvas!.tabIndex = -1;
+	attachCanvasClick(core);
 	const toDocument = () => {
 		const view = core.targetView();
 		if (view?.editable) focusView(view);

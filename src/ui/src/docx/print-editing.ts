@@ -10,6 +10,8 @@ export interface PrintEditingBridge {
 	refresh(): void;
 	destroy(): void;
 	select(blockId: string, offset: number, extend?: boolean): boolean;
+	/** Place the caret on the line nearest a viewport point (the gutter beside the pages). */
+	selectNearest(clientX: number, clientY: number): boolean;
 }
 
 /** Keep native ProseMirror input, composition, clipboard and history behind the page projection. */
@@ -170,8 +172,8 @@ export function createPrintEditingBridge(
 			preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
 			return resolveHit(target!, event.clientX) ?? undefined;
 		}
-		if (target && !pages.contains(target) && target !== pages) return undefined;
-		if (target?.closest('button, a, input, textarea, select, [contenteditable="true"]'))
+		const origin = event.target instanceof Element ? event.target : target;
+		if (origin?.closest('button, a, input, textarea, select, [contenteditable="true"]'))
 			return undefined;
 		const view = getView();
 		if (!view || view.isDestroyed) return undefined;
@@ -180,6 +182,17 @@ export function createPrintEditingBridge(
 		if (!nearest) return undefined;
 		preferredPage = nearest.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
 		return resolveHit(nearest, event.clientX) ?? undefined;
+	}
+
+	function selectNearest(x: number, y: number): boolean {
+		const view = getView();
+		if (!active || !view || view.isDestroyed) return false;
+		index.update(view.state.doc);
+		const line = index.nearest(x, y);
+		const target = line && resolveHit(line, x);
+		if (!line || !target) return false;
+		preferredPage = line.closest<HTMLElement>('.dve-print-page')?.dataset.pageIndex;
+		return select(target.blockId, target.offset);
 	}
 
 	function extendAt(x: number, y: number) {
@@ -312,5 +325,6 @@ export function createPrintEditingBridge(
 		},
 		refresh,
 		select,
+		selectNearest,
 	};
 }
