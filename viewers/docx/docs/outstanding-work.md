@@ -1,6 +1,7 @@
 # Outstanding parity work
 
-Status reviewed on 2026-10-03. The original six workstreams below are historical
+Status reviewed on 2026-10-03. Reviewed 2026-10-15 for footnote continuation, nested-table layout,
+Update Fields, chart painting and editable Print Layout pages. The original six workstreams below are historical
 foundations; later sections record the subsequent features and their limits. The
 [parity roadmap](/parity-roadmap) gives the current baseline, next priorities and
 evidence required for Word equivalence. No full Word parity is claimed; model
@@ -8,14 +9,14 @@ warnings identify unsupported imported content.
 
 ## Merged workstreams
 
-| Workstream                               | What landed                                                                                                                                                                                                                                                        |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Numbering and lists                      | `numbering.xml` catalog, style-inherited `numPr`, computed labels (decimal, Roman, letter, ordinal, cardinal/ordinal text, bullet, legal, multilevel `lvlText`), list commands, Enter-on-empty exits a list, Tab/Shift+Tab levels, numbering part surgery on save. |
-| Sections, breaks, headers/footers, notes | `DocumentModel.sections`; editable page/column breaks and `pageBreakBefore` (Ctrl+Enter); read-only headers/footers and footnotes/endnotes.                                                                                                                        |
-| Pagination / Print Layout                | `ooxml-core/docx/layout` engine (line breaking, spacing, indents, widow/orphan, keep rules, table row splitting, columns) and a read-only paginated Print Layout view with printing, driven by the section model.                                                  |
-| Tracked changes and comments             | Revisions on runs and paragraph marks, markup display modes, accept/reject (one/all), next/previous, Track Changes mode, comments pane with replies and resolve, `comments.xml` writing.                                                                           |
-| Theme, character styles, tables          | Theme colors/fonts, character styles with toggle-property inheritance, extra run properties (caps, small caps, double strike, underline style/color, spacing, shading, hidden text), table grid/widths/merges/borders/shading/table styles.                        |
-| Pictures, hyperlinks, bookmarks          | Inline pictures rendered from package media, floating/unsupported drawings as placeholders, hyperlink targets (relationships, anchors, simple `HYPERLINK` fields), read-only bookmarks preserved across edits.                                                     |
+| Workstream                               | What landed                                                                                                                                                                                                                                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Numbering and lists                      | `numbering.xml` catalog, style-inherited `numPr`, computed labels (decimal, Roman, letter, ordinal, cardinal/ordinal text, bullet, legal, multilevel `lvlText`), list commands, Enter-on-empty exits a list, Tab/Shift+Tab levels, numbering part surgery on save.                         |
+| Sections, breaks, headers/footers, notes | `DocumentModel.sections`; editable page/column breaks and `pageBreakBefore` (Ctrl+Enter); read-only headers/footers and footnotes/endnotes.                                                                                                                                                |
+| Pagination / Print Layout                | `ooxml-core/docx/layout` engine (line breaking, spacing, indents, widow/orphan, keep rules, table row splitting, columns) and an editable paginated Print Layout view (typing, selection and IME on the pages, with the limits under Fidelity) with printing, driven by the section model. |
+| Tracked changes and comments             | Revisions on runs and paragraph marks, markup display modes, accept/reject (one/all), next/previous, Track Changes mode, comments pane with replies and resolve, `comments.xml` writing.                                                                                                   |
+| Theme, character styles, tables          | Theme colors/fonts, character styles with toggle-property inheritance, extra run properties (caps, small caps, double strike, underline style/color, spacing, shading, hidden text), table grid/widths/merges/borders/shading/table styles.                                                |
+| Pictures, hyperlinks, bookmarks          | Inline pictures rendered from package media, floating/unsupported drawings as placeholders, hyperlink targets (relationships, anchors, simple `HYPERLINK` fields), read-only bookmarks preserved across edits.                                                                             |
 
 ### Fixes made during integration
 
@@ -383,9 +384,16 @@ Still not at parity:
 
 ### Fidelity
 
-- Print Layout recalculates PAGE, NUMPAGES, SECTIONPAGES, DATE and TIME (with `\@` pictures); TOC,
-  cross-references and other fields show Word's saved result. Field results are editable; the
-  begin/code/separate/end structure is preserved and guarded against partial deletion.
+- Print Layout recalculates PAGE, NUMPAGES, SECTIONPAGES, DATE and TIME (with `\@` pictures). TOC,
+  cross-references and other fields show Word's saved result until Update Fields refreshes them: captions and REF/PAGEREF results first, then the tables of
+  contents and figures. Inserting a caption also refreshes the REF results that quote it. Field
+  results are editable; the begin/code/separate/end structure is preserved and guarded against
+  partial deletion.
+- Print Layout pages are editable: the caret, selection and IME run through the editor's ProseMirror
+  input and are painted on the pages. Limits: nested and merged table cells are read-only on pages;
+  headers, footers and footnotes are not edited by clicking on the page; floats, pictures and text
+  boxes are not selectable there; the whole document re-lays out on a short debounce after an edit;
+  caret placement at line and page boundaries is heuristic.
 - Picture crop and effects. Print Layout draws inline pictures on their lines and floating pictures
   at their `wp:positionH`/`wp:positionV` positions, in front of or behind text. Body text wraps
   around square, tight and through pictures on their larger side (using the picture's rectangle,
@@ -412,8 +420,9 @@ Still not at parity:
   complex-script faces) and comparisons against Word-rendered references are still missing.
 - Print Layout places footnotes at the bottom of the page where their reference lands (reserving
   the space, under Word's separator rule) and endnotes after the last paragraph; note references
-  and marks print as superscript numbers. Footnotes that do not fit are not continued onto the
-  next page, and multi-column pages put notes below the whole page, not under each column.
+  and marks print as superscript numbers. A footnote that does not fit is split at a line boundary
+  and continued on the next page, with its reference kept in order. Multi-column pages put each
+  column's notes under that column (section `footnoteColumns`).
 - New documents carry Word's modern defaults (Calibri 11pt, 8pt after, 1.08 lines; Normal,
   Heading 1–3, Title, TOC 1–3 and Hyperlink styles) and save them in `styles.xml`, so they open in
   Word as edited. The editing surface and Print Layout apply the same spacing and line heights.

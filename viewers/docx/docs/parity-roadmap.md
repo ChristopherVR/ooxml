@@ -1,7 +1,8 @@
 # Word parity milestones
 
 Status reviewed against the current model, shared editor and regression tests on
-2026-10-03. Microsoft Word equivalence is the target, not a capability claim for
+2026-10-03. Reviewed 2026-10-15 for footnote continuation, nested tables, Update Fields,
+chart painting and editable Print Layout pages. Microsoft Word equivalence is the target, not a capability claim for
 this release. Import, visual layout, editing, export, preservation and accessibility
 must each be demonstrated independently. Keeping XML does not prove that it renders
 or recalculates correctly.
@@ -42,10 +43,12 @@ it does not typeset the equation or reproduce Word's equation layout.
 Print Layout already paginates through `ooxml-core/docx/layout`, including
 sections/columns, keep rules, table row fragmentation, repeating table headers,
 footnotes, headers/footers, page fields and supported floating pictures. The main
-editing surface remains continuous. Print Layout is a read-only paginated render;
-clicks use fragment source ranges and measured glyph boundaries to move the cursor
-back into the editing surface (`print-cursor.spec.ts`). It is not a second Word-like
-editable page surface, and its pagination is approximate.
+editing surface remains continuous, and Print Layout pages are editable too: the caret,
+selection and IME run through the editor's ProseMirror input and are painted on the pages
+(`print-editing.spec.ts`, `print-cursor.spec.ts`). Nested and merged table cells are read-only
+on pages; headers, footers and footnotes are not edited by clicking on the page; floats,
+pictures and text boxes are not selectable there; and caret placement at line and page
+boundaries is heuristic. Pagination is approximate.
 
 Selected-cell vertical alignment is editable with save/reopen and undo coverage
 (`table-cell-alignment.spec.ts`). Toolbar/context-menu clipboard commands retain
