@@ -1,4 +1,11 @@
-import { activeSlicer, slicerSourceAt, target, type EditorContext } from 'ooxml-core/xlsx/ui';
+import {
+	activeSlicer,
+	activeTimeline,
+	slicerSourceAt,
+	target,
+	timelineSourceAt,
+	type EditorContext,
+} from 'ooxml-core/xlsx/ui';
 import { checkbox, el, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 
@@ -78,6 +85,90 @@ export function openSlicerSettings(ctx: EditorContext): Promise<boolean | undefi
 				showCaption: header.input.checked,
 				sortOrder: order.value as 'ascending' | 'descending',
 				hideNoData: hide.input.checked,
+			});
+			return true;
+		},
+	});
+}
+
+/** Insert Timelines: one check box per date field of the PivotTable. */
+export function openInsertTimeline(ctx: EditorContext): Promise<boolean | undefined> {
+	const t = target(ctx);
+	const source = timelineSourceAt(ctx);
+	if (!t || !source) return Promise.resolve(undefined);
+	const list = el(ctx, 'div', 'xve-checklist');
+	list.setAttribute('role', 'group');
+	list.setAttribute('aria-label', ctx.t('Fields'));
+	const boxes = source.fields.map((name) => {
+		const box = checkbox(ctx, name);
+		box.wrapper.querySelector('span')!.textContent = name;
+		box.input.setAttribute('aria-label', name);
+		list.append(box.wrapper);
+		return { name, input: box.input };
+	});
+	return showDialog(ctx, {
+		name: 'insert-timeline',
+		heading: 'Insert Timelines',
+		body: [text(ctx, 'Choose the date fields you want to filter with timelines.'), list],
+		opened: () => boxes[0]?.input.focus(),
+		submit: () => {
+			const chosen = boxes.filter((box) => box.input.checked);
+			if (!chosen.length) throw new Error('Choose at least one field.');
+			let last: string | undefined;
+			for (const box of chosen)
+				last = t.session.insertTimeline(t.sheet, { pivot: source.pivot.name, field: box.name });
+			const index = t.ws.drawings.findIndex((d) => d.kind === 'timeline' && d.name === last);
+			if (index >= 0) ctx.selection.set({ drawing: index });
+			return true;
+		},
+	});
+}
+
+/** Timeline Settings: caption, visible parts and time level. */
+export function openTimelineSettings(ctx: EditorContext): Promise<boolean | undefined> {
+	const t = target(ctx);
+	const found = activeTimeline(ctx);
+	if (!t || !found) return Promise.resolve(undefined);
+	const { timeline } = found;
+	const caption = textInput(ctx, timeline.caption ?? timeline.name);
+	const header = checkbox(ctx, 'Display header', timeline.showHeader !== false);
+	const label = checkbox(ctx, 'Show selection label', timeline.showSelectionLabel !== false);
+	const levels = checkbox(ctx, 'Show time level', timeline.showTimeLevel !== false);
+	const scroll = checkbox(
+		ctx,
+		'Show horizontal scrollbar',
+		timeline.showHorizontalScrollbar !== false,
+	);
+	const level = select(
+		ctx,
+		[
+			['0', 'Years'],
+			['1', 'Quarters'],
+			['2', 'Months'],
+			['3', 'Days'],
+		],
+		String(timeline.level),
+	);
+	return showDialog(ctx, {
+		name: 'timeline-settings',
+		heading: 'Timeline Settings',
+		body: [
+			field(ctx, 'Caption:', caption),
+			header.wrapper,
+			label.wrapper,
+			levels.wrapper,
+			scroll.wrapper,
+			field(ctx, 'Time Level', level),
+		],
+		opened: () => caption.focus(),
+		submit: () => {
+			t.session.updateTimeline(timeline.name, {
+				caption: caption.value,
+				showHeader: header.input.checked,
+				showSelectionLabel: label.input.checked,
+				showTimeLevel: levels.input.checked,
+				showHorizontalScrollbar: scroll.input.checked,
+				level: Number(level.value),
 			});
 			return true;
 		},

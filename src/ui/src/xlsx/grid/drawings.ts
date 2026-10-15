@@ -17,8 +17,10 @@ import {
 import { h, place, svgNode, viewOf } from './dom';
 import { QUADRANTS, type Box } from 'ooxml-core/xlsx/ui';
 import type { GridView } from './grid-view';
+import { paintTimeline, periodAt, timelineOf } from './timeline';
 import { paintSlicer, slicerClickResult, slicerOf, type SlicerUiState } from './slicer';
 import { paintSmartArt } from './smartart';
+import { selectionOfPeriods } from 'ooxml-core/xlsx';
 import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
 import { trackPointerGesture } from '../../pointer-gesture';
 
@@ -83,6 +85,15 @@ export class DrawingLayer {
 					node = h(view.doc, 'div', 'xg-obj') as ObjectNode;
 					node.dataset.index = String(index);
 					node.addEventListener('pointerdown', (event) => this.#press(event, index));
+					node.addEventListener('change', (event) => {
+						const frame = view.sheet()?.drawings[index];
+						const list = (event.target as Element).closest<HTMLSelectElement>(
+							'[data-timeline-action=level]',
+						);
+						const session = view.ctx.session();
+						if (list && frame?.kind === 'timeline' && session && !view.ctx.readOnly())
+							this.#guard(() => session.updateTimeline(frame.name, { level: Number(list.value) }));
+					});
 					// Enter or Space on a focused slicer button arrives as a click without a pointer.
 					node.addEventListener('click', (event) => {
 						const frame = view.sheet()?.drawings[index];
@@ -143,8 +154,7 @@ export class DrawingLayer {
 				state: this.#slicerState(drawing.name),
 			});
 		} else if (drawing.kind === 'timeline') {
-			node.classList.add('xg-obj-unsupported');
-			node.textContent = view.ctx.t('{name} (not shown)', { name: 'timeline' });
+			paintTimeline(node, drawing, box.w, box.h, view.ctx, view.workbook());
 		} else if (drawing.kind === 'smartArt') {
 			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme);
 		} else if (drawing.chartEx) {
@@ -210,12 +220,14 @@ export class DrawingLayer {
 		event.stopPropagation();
 		if (event.button !== 0) return;
 		this.#cancelDrag?.();
-		event.preventDefault();
+		// The timeline's level list must keep its native pointer behaviour (it opens on mousedown).
+		if (!(event.target as Element).closest?.('select')) event.preventDefault();
 		const sheet = view.sheet();
 		const drawing = sheet?.drawings[index];
 		if (!sheet || !drawing) return;
 		const node = event.currentTarget as ObjectNode;
 		if (drawing.kind === 'slicer' && this.#pressSlicer(event, index, drawing)) return;
+		if (drawing.kind === 'timeline' && this.#pressTimeline(event, index, drawing, node)) return;
 		const series = (event.target as Element).closest<SVGElement>('[data-chart-series]')?.dataset
 			.chartSeries;
 		node.xgSeriesHit = series === undefined ? undefined : Number(series);
@@ -262,6 +274,78 @@ export class DrawingLayer {
 				place(node, origin.x, origin.y, origin.w, origin.h);
 			},
 		});
+	}
+
+	/** Runs an edit from a timeline or slicer control and reports a refusal as a toast. */
+	#guard(run: () => void): void {
+		try {
+			run();
+		} catch (error) {
+			this.#view.ctx.toast(
+				this.#view.ctx.t(error instanceof Error ? error.message : String(error)),
+				'warning',
+			);
+		}
+	}
+
+	/** Handles a press on a timeline control; false lets the press move or resize the frame. */
+	#pressTimeline(
+		event: PointerEvent,
+		index: number,
+		frame: Extract<DrawingObject, { kind: 'timeline' }>,
+		node: ObjectNode,
+	): boolean {
+		const target = event.target as Element;
+		const view = this.#view;
+		const list = target.closest('[data-timeline-action=level]');
+		const clear = target.closest('[data-timeline-action=clear]');
+		const cell = target.closest<HTMLElement>('[data-period]');
+		if (!list && !clear && !cell) return false;
+		view.ctx.selection.set({ drawing: index });
+		if (list) return true;
+		view.ctx.grid()?.focus();
+		const found = timelineOf(view.workbook(), frame, view.ctx.locale());
+		const session = view.ctx.session();
+		if (!found || !session || view.ctx.readOnly()) return true;
+		if (clear) {
+			this.#guard(() => session.setTimelineSelection(found.cache.name, null));
+			return true;
+		}
+		const track = cell!.closest<HTMLElement>('.xg-tl-track');
+		if (!track) return true;
+		const last = found.view.periods.length - 1;
+		const start = Number(cell!.dataset.period);
+		const anchor = event.shiftKey && found.view.selected ? found.view.selected[0] : start;
+		let current = start;
+		const cells = [...track.querySelectorAll<HTMLElement>('[data-period]')];
+		const preview = () => {
+			const [from, to] = [Math.min(anchor, current), Math.max(anchor, current)];
+			for (const el of cells) {
+				const i = Number(el.dataset.period);
+				el.classList.toggle('xg-tl-on', i >= from && i <= to);
+			}
+		};
+		preview();
+		node.setPointerCapture?.(event.pointerId);
+		trackPointerGesture(node, event.pointerId, {
+			move: (move) => {
+				current = Math.max(0, Math.min(last, periodAt(track, move.clientX)));
+				preview();
+			},
+			commit: () => {
+				const only = found.view.selected;
+				const same = only && only[0] === start && only[1] === start && anchor === current;
+				const selection = same ? null : selectionOfPeriods(found.view.periods, anchor, current);
+				this.#guard(() => session.setTimelineSelection(found.cache.name, selection ?? null));
+				this.invalidate();
+				this.render();
+			},
+			cancel: () => {
+				this.invalidate();
+				this.render();
+			},
+		});
+		return true;
 	}
 
 	#slicerState(name: string): SlicerUiState {

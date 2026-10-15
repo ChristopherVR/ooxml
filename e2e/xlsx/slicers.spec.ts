@@ -114,6 +114,70 @@ test('a PivotTable slicer filters the report and the Slicer tab styles it', asyn
 	await page.screenshot({ path: info.outputPath('pivot-slicer.png') });
 });
 
+const timeline = (page: Page) => editor(page).locator('.xg-timeline');
+const pivotTotal = (page: Page) =>
+	editor(page).evaluate((node) => {
+		const sheet = (
+			node as unknown as {
+				workbook: { sheets: { rows: Map<number, Map<number, { value: unknown }>> }[] };
+			}
+		).workbook.sheets[0]!;
+		for (let row = 2; row < 12; row++)
+			if (sheet.rows.get(row)?.get(0)?.value === 'Grand Total')
+				return sheet.rows.get(row)?.get(1)?.value;
+		return undefined;
+	});
+
+test('a timeline filters a PivotTable by dragging over months, saves and reinserts', async ({
+	page,
+}, info) => {
+	await open(page, 'excel-slicer-timeline.xlsx');
+	await expect(timeline(page)).toBeVisible();
+	expect(await pivotTotal(page)).toBe(66);
+	const feb = timeline(page).locator('.xg-tl-cell', { hasText: /^Feb$/ });
+	const apr = timeline(page).locator('.xg-tl-cell', { hasText: /^Apr$/ });
+	const from = (await feb.boundingBox())!;
+	const to = (await apr.boundingBox())!;
+	await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 4 });
+	await page.mouse.up();
+	await expect(timeline(page).locator('.xg-tl-selection')).toHaveText('Feb 2025 - Apr 2025');
+	expect(await pivotTotal(page)).toBe(40);
+	await timeline(page).locator('.xg-tl-level').selectOption('1');
+	await expect(timeline(page).locator('.xg-tl-cell').first()).toHaveText('Q1');
+	await page.screenshot({ path: info.outputPath('timeline.png') });
+	const bytes = await editor(page).evaluate(async (node) => [
+		...new Uint8Array(
+			await (await (node as unknown as { save(): Promise<Blob> }).save()).arrayBuffer(),
+		),
+	]);
+	await editor(page).evaluate(
+		async (node, data) =>
+			(node as unknown as { load(bytes: Uint8Array, name: string): Promise<void> }).load(
+				new Uint8Array(data),
+				'timeline-reopened.xlsx',
+			),
+		bytes,
+	);
+	await expect(timeline(page).locator('.xg-tl-selection')).toHaveText('Q1 2025 - Q2 2025');
+	expect(await pivotTotal(page)).toBe(40);
+	// Delete the timeline, then insert it again from the ribbon.
+	await timeline(page).locator('.xg-tl-caption').click();
+	await ribbon(page).getByRole('tab', { name: 'Timeline', exact: true }).click();
+	await ribbon(page).locator('[data-command="timeline.delete"]').click();
+	await expect(timeline(page)).toHaveCount(0);
+	expect(await pivotTotal(page)).toBe(66);
+	await goToCell(page, 'A4');
+	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
+	await ribbon(page).locator('[data-command="insert.timeline"]').click();
+	const dialog = editor(page).locator('[data-dialog="insert-timeline"]');
+	await dialog.getByLabel('Day', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await expect(timeline(page)).toBeVisible();
+	await expect(timeline(page).locator('.xg-tl-selection')).toHaveText('All Periods');
+});
+
 test('Insert > Slicer adds a slicer for a table column and the Slicer tab formats it', async ({
 	page,
 }, info) => {

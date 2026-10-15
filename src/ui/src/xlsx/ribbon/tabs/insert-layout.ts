@@ -58,7 +58,10 @@ export function insertTab(): RibbonTab {
 			{
 				id: 'filters',
 				label: 'Filters',
-				controls: [{ kind: 'button', command: 'insert.slicer', size: 'large' }],
+				controls: [
+					{ kind: 'button', command: 'insert.slicer', size: 'large' },
+					{ kind: 'button', command: 'insert.timeline', size: 'large' },
+				],
 			},
 			{
 				id: 'links',

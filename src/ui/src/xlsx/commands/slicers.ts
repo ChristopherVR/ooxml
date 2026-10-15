@@ -9,6 +9,8 @@ import {
 } from 'ooxml-core/xlsx';
 import {
 	activeSlicer,
+	activeTimeline,
+	timelineSourceAt,
 	editing,
 	icon,
 	slicerSourceAt,
@@ -66,6 +68,20 @@ export const slicerStyleGalleryItems = (ctx: EditorContext) =>
 		};
 	});
 
+function updateTimeline(
+	ctx: EditorContext,
+	patch: Parameters<NonNullable<ReturnType<typeof target>>['session']['updateTimeline']>[1],
+): void {
+	const t = target(ctx);
+	const found = activeTimeline(ctx);
+	if (!t || !found) return;
+	try {
+		t.session.updateTimeline(found.timeline.name, patch);
+	} catch (error) {
+		ctx.toast(ctx.t(error instanceof Error ? error.message : String(error)), 'warning');
+	}
+}
+
 export function slicerCommands(): Command[] {
 	const slicerCmd = (command: Omit<Command, 'editing'>): Command =>
 		editing({
@@ -73,7 +89,44 @@ export function slicerCommands(): Command[] {
 			lock: 'objects',
 			enabled: (ctx) => !!activeSlicer(ctx) && (command.enabled?.(ctx) ?? true),
 		});
+	const timelineCmd = (command: Omit<Command, 'editing'>): Command =>
+		editing({
+			...command,
+			lock: 'objects',
+			enabled: (ctx) => !!activeTimeline(ctx) && (command.enabled?.(ctx) ?? true),
+		});
 	return [
+		editing({
+			id: 'insert.timeline',
+			label: 'Timeline',
+			icon: icon('slicer'),
+			lock: 'objects',
+			enabled: (ctx) => !!timelineSourceAt(ctx),
+			run: (ctx) => void ctx.dialogs.open('insert-timeline'),
+		}),
+		timelineCmd({
+			id: 'timeline.settings',
+			label: 'Timeline Settings',
+			icon: icon('slicer'),
+			run: (ctx) => void ctx.dialogs.open('timeline-settings'),
+		}),
+		timelineCmd({
+			id: 'timeline.level',
+			label: 'Time Level',
+			icon: icon('slicer'),
+			value: (ctx) => String(activeTimeline(ctx)?.timeline.level ?? 2),
+			run: (ctx, arg) => updateTimeline(ctx, { level: Math.round(Number(arg)) }),
+		}),
+		timelineCmd({
+			id: 'timeline.delete',
+			label: 'Delete Timeline',
+			icon: icon('clear'),
+			run: (ctx) => {
+				const t = target(ctx);
+				const found = activeTimeline(ctx);
+				if (t && found) t.session.deleteTimeline(found.timeline.name);
+			},
+		}),
 		editing({
 			id: 'insert.slicer',
 			label: 'Slicer',

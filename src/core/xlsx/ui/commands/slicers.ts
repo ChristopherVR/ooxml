@@ -6,6 +6,8 @@ import {
 	type Slicer,
 	type SlicerCache,
 	type SlicerFrameObject,
+	type Timeline,
+	type TimelineCache,
 	type Table,
 } from '../../index';
 import type { EditorContext } from '../context';
@@ -51,4 +53,33 @@ export function slicerSourceAt(ctx: EditorContext): SlicerSourceAt | undefined {
 	if (table?.headerRow && !table.filterNotModeled)
 		return { kind: 'table', table, fields: table.columns.map((column) => column.name) };
 	return undefined;
+}
+
+export interface ActiveTimeline {
+	frame: SlicerFrameObject;
+	timeline: Timeline;
+	cache: TimelineCache;
+	/** Index in the sheet's drawings. */
+	index: number;
+}
+
+/** The selected timeline, resolved against the workbook's slicer book. */
+export function activeTimeline(ctx: EditorContext): ActiveTimeline | undefined {
+	const t = target(ctx);
+	const index = ctx.selection.get().drawing;
+	if (!t || index === undefined) return undefined;
+	const frame = t.ws.drawings[index];
+	if (frame?.kind !== 'timeline') return undefined;
+	const timeline = t.workbook.slicers?.timelines.find((entry) => entry.name === frame.name);
+	const cache = t.workbook.slicers?.timelineCaches.find((entry) => entry.name === timeline?.cache);
+	return timeline && cache ? { frame, timeline, cache, index } : undefined;
+}
+
+/** What Insert > Timeline filters: the PivotTable under the active cell and its date fields. */
+export function timelineSourceAt(
+	ctx: EditorContext,
+): { pivot: PivotTable; fields: string[] } | undefined {
+	const t = target(ctx);
+	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
+	return pivot?.dateFields?.length ? { pivot, fields: [...pivot.dateFields] } : undefined;
 }

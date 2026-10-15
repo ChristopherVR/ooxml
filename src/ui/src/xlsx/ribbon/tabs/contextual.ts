@@ -1,7 +1,7 @@
 // Contextual tabs: Table Design (active cell inside a table) and Chart Design (active cell under
 // a chart).
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
-import { activeChart, activeSlicer, activeTable } from 'ooxml-core/xlsx/ui';
+import { activeChart, activeSlicer, activeTable, activeTimeline } from 'ooxml-core/xlsx/ui';
 import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
 import { CHART_TYPES } from '../../commands/insert';
 import { tableStyleGalleryItems } from '../../commands/styles';
@@ -134,6 +134,46 @@ export function slicerTab(): RibbonTab {
 				id: 'slicer-delete',
 				label: 'Delete',
 				controls: [{ kind: 'button', command: 'slicer.delete', size: 'large' }],
+			},
+		],
+	};
+}
+
+const TIMELINE_LEVEL_OPTIONS = [
+	{ value: '0', label: 'Years' },
+	{ value: '1', label: 'Quarters' },
+	{ value: '2', label: 'Months' },
+	{ value: '3', label: 'Days' },
+];
+
+/** Timeline: shown while a timeline is the selected object. */
+export function timelineTab(): RibbonTab {
+	return {
+		id: 'timeline',
+		label: 'Timeline',
+		contextual: (ctx) => !!activeTimeline(ctx),
+		groups: [
+			{
+				id: 'timeline',
+				label: 'Timeline',
+				controls: [{ kind: 'button', command: 'timeline.settings', size: 'large' }],
+			},
+			{
+				id: 'time-level',
+				label: 'Show',
+				controls: [
+					{
+						kind: 'select',
+						command: 'timeline.level',
+						options: TIMELINE_LEVEL_OPTIONS,
+						width: 96,
+					},
+				],
+			},
+			{
+				id: 'timeline-delete',
+				label: 'Delete',
+				controls: [{ kind: 'button', command: 'timeline.delete', size: 'large' }],
 			},
 		],
 	};
