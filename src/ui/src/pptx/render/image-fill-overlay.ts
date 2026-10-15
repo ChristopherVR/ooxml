@@ -178,7 +178,7 @@ function buildImageFillOverlayFilterMarkup(
 	let paintMarkup: string | undefined;
 	if (overlay.resolvedColor) {
 		const opacity = typeof overlay.resolvedOpacity === 'number' ? overlay.resolvedOpacity : 1;
-		paintMarkup = `<feFlood flood-color="${overlay.resolvedColor}" flood-opacity="${opacity}" result="fillOverlayFlood"/>`;
+		paintMarkup = `<feFlood flood-color="${escapeXmlAttr(overlay.resolvedColor)}" flood-opacity="${opacity}" result="fillOverlayFlood"/>`;
 	} else if (overlay.resolvedGradient) {
 		const dataUri = buildGradientOverlayDataUri(overlay.resolvedGradient, w, h);
 		const uriAttr = dataUri ? escapeXmlAttr(dataUri) : '';

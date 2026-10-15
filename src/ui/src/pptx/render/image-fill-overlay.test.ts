@@ -121,6 +121,16 @@ describe('getImageFillOverlayFilter', () => {
 		expect(f?.filterMarkup).toContain(`mode="${mode}"`);
 	});
 
+	it('escapes a hostile resolved colour so it cannot break out of flood-color', () => {
+		const f = getImageFillOverlayFilter(
+			image({
+				fillOverlay: { blend: 'darken', resolvedColor: '#000"/><script>alert(1)</script>' },
+			}),
+		);
+		expect(f?.filterMarkup).not.toContain('<script>');
+		expect(f?.filterMarkup).toContain('flood-color="#000&quot;/&gt;&lt;script&gt;');
+	});
+
 	it('defaults resolvedOpacity to fully opaque (1) when unset', () => {
 		const f = getImageFillOverlayFilter(
 			image({ fillOverlay: { blend: 'over', resolvedColor: '#000000' } }),
