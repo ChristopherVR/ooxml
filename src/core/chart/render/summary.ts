@@ -2,7 +2,10 @@
 // cached data and DrawingML paint, plus the legend, title and formatting metadata. Spreadsheet
 // charts extend it with their anchor and legacy colours; Word and PowerPoint build it from a
 // `ChartSpace` (`chartSummaryFromSpace`).
-import type { DrawingColor, DrawingFill } from '../../drawingml/types';
+import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
+import type { ChartErrorAmountOptions } from '../error-bar-amount';
+import type { ChartErrorBarDirection, ChartErrorBarType } from '../model-analysis';
+import type { ChartTrendlineFitOptions } from '../trendline-fit';
 import type { BubbleRadiusOptions } from '../bubble-radius';
 import type { ParentLabelLayout } from '../hierarchy';
 import type { ChartShapeProperties } from '../model-series';
@@ -51,6 +54,24 @@ export interface ChartSummarySeries {
 	pointFills?: Record<number, DrawingFill>;
 	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
 	effectsXml?: string;
+	/** Trendlines the painter fits and draws over the series (`c:trendline`). */
+	trendlines?: ChartSummaryTrendline[];
+	/** Error bars the painter draws at each point (`c:errBars`). */
+	errorBars?: ChartSummaryErrorBars[];
+}
+
+/** A trendline of a summary series: its fit and its outline (`c:trendline/c:spPr/a:ln`). */
+export interface ChartSummaryTrendline extends ChartTrendlineFitOptions {
+	name?: string;
+	line?: DrawingLine;
+}
+
+/** Error bars of a summary series, with their amounts resolved to numbers. */
+export interface ChartSummaryErrorBars extends ChartErrorAmountOptions {
+	direction: ChartErrorBarDirection;
+	barType: ChartErrorBarType;
+	noEndCap?: boolean;
+	line?: DrawingLine;
 }
 
 /** Chart families a combination chart can layer over its first group. */
