@@ -1,6 +1,7 @@
 # Visio parity review, 2026-10-07
 
-Reviewed baseline: `f6e9b730a` (ooxml-core 0.23.0, ooxml-ui 0.30.1).
+Reviewed baseline: `f6e9b730a` (ooxml-core 0.23.0, ooxml-ui 0.30.1). Reviewed 2026-10-15 for the
+state of the Home tab commands.
 The original working directory was detached at `7364222cc`, so this work uses
 an isolated checkout of the current remote main. The current architecture places
 VSDX semantics in `src/core/visio`, browser rendering and controls in
@@ -12,9 +13,11 @@ The capability ledger remains `viewers/visio/docs/parity.md`.
 The viewer is a substantial beta, with local VSDX loading, master/style inheritance,
 cached geometry, rich-run text rendering, layers, search, shared ribbon controls,
 page navigation, zoom, source-backed history and bounded editing/save operations.
-These are implemented subsets. The visible ribbon includes disabled commands:
-clipboard, rich-text formatting, style changes, connector tools and several shape
-tools still require core commands. Six bindings share one controller and renderer.
+These are implemented subsets. The Home tab's clipboard, font, paragraph, Shape Styles,
+Change Shape, Arrange and connector commands are enabled (`src/ui/src/visio/ribbon-home.ts`,
+ledger in `viewers/visio/docs/parity.md`). The disabled commands that remain are on the other
+tabs (for example Insert chart and object, Data Graphics and Link Data) and the 3-D effects in
+Shape Styles, each with its reason in the tooltip. Six bindings share one controller and renderer.
 
 The broad blockers are formula/master recalculation, live connector routing and
 glue, accurate text measurement, complete line/fill/theme/foreign-object support,
