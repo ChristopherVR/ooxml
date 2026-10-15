@@ -1,4 +1,6 @@
 import { attachRibbonGroupOverflow, type RibbonGroupOverflow } from '../ribbon/group-overflow';
+import { ribbonLocale } from './ribbon-localize';
+import { translateRibbonText } from './ribbon-locale';
 
 /** The icon on a collapsed group's button, by the group's name. */
 const GROUP_ICONS: Readonly<Record<string, string>> = {
@@ -41,9 +43,6 @@ const GROUP_ICONS: Readonly<Record<string, string>> = {
 	Help: 'help',
 };
 
-/** Below this width the phone layout folds Home into its Tools disclosure instead. */
-const PHONE_MAX_WIDTH = 760;
-
 /**
  * Visio collapses ribbon groups into buttons, from the right, when the window is too narrow for
  * them (on Home: Editing first, Clipboard last). The folding is ooxml-ui's shared
@@ -51,7 +50,7 @@ const PHONE_MAX_WIDTH = 760;
  */
 export function wireRibbonOverflow(ribbon: HTMLElement): RibbonGroupOverflow {
 	return attachRibbonGroupOverflow(ribbon, {
+		moreLabel: () => translateRibbonText(ribbonLocale(ribbon), 'More'),
 		icon: (group) => GROUP_ICONS[group.getAttribute('label') ?? ''],
-		minWidth: PHONE_MAX_WIDTH + 1,
 	});
 }

@@ -25,7 +25,7 @@ function paintMenu(doc: Document, target: Exclude<ColorTarget, 'font'>, label: s
 /**
  * Microsoft Visio's Home tab, group for group: Clipboard, Font, Paragraph, Tools, Shape
  * Styles, Arrange and Editing. Commands the core cannot perform yet are shown disabled with the
- * missing capability in their tooltip. On phones every group folds into the Tools disclosure.
+ * missing capability in their tooltip. On narrow windows the groups fold into dropdown buttons (ribbon-overflow.ts).
  */
 export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 	const [clipboard, font, paragraph] = textGroups(doc);
@@ -335,17 +335,7 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			}),
 		]),
 	]);
-	const tools0 = doc.createElement('details');
-	tools0.className = 'ribbon-tools';
-	tools0.open = true;
-	const summary = doc.createElement('summary');
-	const caret = doc.createElement('span');
-	caret.setAttribute('aria-hidden', 'true');
-	caret.textContent = '⌄';
-	summary.append('Tools ', caret);
-	const content = doc.createElement('div');
-	content.className = 'tools-content';
-	content.append(clipboard, font, paragraph, tools, styles, arrange, editing);
-	tools0.append(summary, content);
-	panel.append(commandRow(doc, 'Home commands', [tools0]));
+	panel.append(
+		commandRow(doc, 'Home commands', [clipboard, font, paragraph, tools, styles, arrange, editing]),
+	);
 }

@@ -28,7 +28,6 @@ export class ViewerChrome {
 	#document: VisioDocument | null | undefined;
 	#pageTabs: HTMLElement & { tabs: OfficeTab[]; selected: string };
 	#allPages: HTMLElement & { disabled: boolean };
-	#tools: HTMLDetailsElement;
 	#inspector: HTMLElement;
 	#panes: Record<TaskPane, HTMLElement>;
 	#view: PaneView = 'selection';
@@ -41,7 +40,6 @@ export class ViewerChrome {
 		this.#controller = controller;
 		this.#pageTabs = root.querySelector('office-ui-tab-strip')!;
 		this.#allPages = root.querySelector('[data-menu="all-pages"]')!;
-		this.#tools = root.querySelector('.ribbon-tools')!;
 		this.#inspector = root.querySelector('.inspector-pane')!;
 		this.#panes = { shapes: root.querySelector('.shapes-pane')!, inspector: this.#inspector };
 	}
@@ -53,24 +51,6 @@ export class ViewerChrome {
 		this.#responsive = view?.matchMedia?.('(max-width: 980px)');
 		const compact = view?.matchMedia?.('(max-width: 760px)');
 		this.#compact = compact;
-		const tools = this.#tools;
-		const toolLayout = () => {
-			tools.open = !compact?.matches;
-		};
-		toolLayout();
-		compact?.addEventListener('change', toolLayout, options);
-		this.#root.addEventListener(
-			'keydown',
-			(event) => {
-				if ((event as KeyboardEvent).key === 'Escape' && compact?.matches && tools.open) {
-					event.preventDefault();
-					event.stopPropagation();
-					tools.open = false;
-					tools.querySelector<HTMLElement>('summary')!.focus();
-				}
-			},
-			{ ...options, capture: true },
-		);
 		const responsive = () => {
 			// Visio's default: the Shapes window on wide screens; task panes open on request.
 			if (!this.#manual.has('shapes')) this.#setPane('shapes', !this.#responsive?.matches);
@@ -118,21 +98,21 @@ export class ViewerChrome {
 			},
 			options,
 		);
-		// The shared ribbon selects tabs itself; phones close the Tools sheet as Visio does.
-		this.#root.addEventListener('office-ribbon-select', () => this.closeCompactTools(), options);
+		// The shared ribbon selects tabs itself; a tab change closes a folded group's popup.
+		this.#root.addEventListener('office-ribbon-select', () => this.closeRibbonPopups(), options);
 		return () => events.abort();
 	}
 	showTab(tab: string): void {
 		const ribbon = this.#root.querySelector<HTMLElement & { selected: string }>('office-ui-ribbon');
 		if (ribbon) ribbon.selected = tab;
 	}
-	/** On phones, close the Tools sheet once a command runs. */
-	closeCompactTools(): void {
-		if (this.#compact?.matches) this.#tools.open = false;
+	/** Close the popup of a folded ribbon group (a command ran or the tab changed). */
+	closeRibbonPopups(): void {
+		this.#root.querySelector('office-ui-ribbon-group[data-open]')?.removeAttribute('data-open');
 	}
-	/** Show or hide a task pane; compact layouts close the Tools menu afterwards. */
+	/** Show or hide a task pane; compact layouts close a folded group's popup afterwards. */
 	togglePane(pane: TaskPane): void {
-		if (this.#compact?.matches) this.#tools.open = false;
+		if (this.#compact?.matches) this.closeRibbonPopups();
 		this.#manual.add(pane);
 		this.#setPane(pane, Boolean(this.#panes[pane].hidden));
 	}
@@ -162,7 +142,7 @@ export class ViewerChrome {
 	}
 	/** Show a task pane view (Shape Data, Format Shape) and move focus into it. */
 	reveal(kind: PaneView): void {
-		if (this.#compact?.matches) this.#tools.open = false;
+		if (this.#compact?.matches) this.closeRibbonPopups();
 		this.#view = kind;
 		for (const view of this.#inspector.querySelectorAll<HTMLElement>('[data-pane-view]'))
 			view.toggleAttribute('data-active', view.dataset.paneView === kind);

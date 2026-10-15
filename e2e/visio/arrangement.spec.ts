@@ -52,8 +52,6 @@ async function expectSelection(viewer: Locator): Promise<void> {
 
 async function selectAll(viewer: Locator): Promise<void> {
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
-	const tools = viewer.locator('.ribbon-tools');
-	if ((await tools.getAttribute('open')) === null) await tools.locator('summary').click();
 	await ribbonGroup(viewer, 'Editing');
 	await viewer.locator('[data-menu="select"] button').first().click();
 	await viewer.locator('[command="select-all"]').click();

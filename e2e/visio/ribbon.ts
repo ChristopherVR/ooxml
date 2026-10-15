@@ -6,6 +6,7 @@ export async function taskPane(
 	name: 'Shapes' | 'Shape Data' | 'Layers' | 'Pan & Zoom' | 'Size & Position',
 ): Promise<void> {
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
+	await ribbonGroup(viewer, 'Show');
 	await viewer.getByRole('button', { name: 'Task Panes', exact: true }).click();
 	await viewer
 		.locator(`office-ui-menu-button[data-menu="task-panes"] office-ui-menu-item[label="${name}"]`)
@@ -14,7 +15,11 @@ export async function taskPane(
 
 export async function zoomPreset(viewer: Locator, percent: number): Promise<void> {
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
-	await viewer.getByRole('button', { name: 'Zoom', exact: true }).click();
+	await ribbonGroup(viewer, 'Zoom');
+	await viewer
+		.locator('office-ui-menu-button[data-menu="zoom"]')
+		.getByRole('button', { name: 'Zoom', exact: true })
+		.click();
 	await viewer
 		.locator(`office-ui-menu-button[data-menu="zoom"] office-ui-menu-item[label="${percent}%"]`)
 		.click();
@@ -41,8 +46,6 @@ export async function ribbonGroup(viewer: Locator, label: string): Promise<void>
 /** Home > Editing > Find > Find... opens the find bar, as Ctrl+F does. */
 export async function openFind(viewer: Locator): Promise<Locator> {
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
-	const tools = viewer.locator('.ribbon-tools');
-	if ((await tools.getAttribute('open')) === null) await tools.locator('summary').click();
 	await ribbonGroup(viewer, 'Editing');
 	await viewer.getByRole('button', { name: 'Find', exact: true }).click();
 	await viewer.locator('office-ui-menu-item[label="Find..."]').click();

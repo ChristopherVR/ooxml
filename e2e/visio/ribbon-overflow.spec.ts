@@ -1,5 +1,6 @@
 import { test, expect, type Locator } from '@playwright/test';
 import { openDemo } from './demo-page';
+import { ribbonGroup } from './ribbon';
 
 const collapsed = (viewer: Locator) =>
 	viewer
@@ -107,11 +108,30 @@ test('a host add-in tab collapses like the built-in ones', async ({ page }) => {
 	expect(await panel.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
 });
 
-test('the phone layout keeps its Tools disclosure and collapses nothing', async ({ page }) => {
-	await page.setViewportSize({ width: 390, height: 844 });
+test('the phone layout folds every Home group into a button and pins a more chevron', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 375, height: 812 });
 	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg.paper')).toHaveCount(1);
-	await expect(viewer.locator('.ribbon-tools > summary')).toBeVisible();
-	await expect(viewer.locator('office-ui-ribbon-group[data-collapsed]')).toHaveCount(0);
+	await expect(viewer.locator('.ribbon-tools')).toHaveCount(0);
+	const home = viewer.locator('#home-panel');
+	await expect.poll(() => collapsed(viewer)).toContain('Clipboard');
+	await expect(home.locator('.ribbon-scroll-more')).toBeVisible();
+	await ribbonGroup(viewer, 'Editing');
+	for (const name of ['Find', 'Layers'])
+		await expect(viewer.getByRole('button', { name, exact: true })).toBeVisible();
+});
+
+test('the tab strip shows that more tabs exist and pages through them', async ({ page }) => {
+	await page.setViewportSize({ width: 375, height: 812 });
+	await openDemo(page);
+	const viewer = page.locator('visio-viewer');
+	const ribbon = viewer.locator('office-ui-ribbon');
+	await expect(ribbon).toHaveAttribute('data-tabs-end', '');
+	const more = viewer.getByRole('button', { name: 'More tabs', exact: true });
+	await expect(more).toBeVisible();
+	await more.click();
+	await expect(ribbon).toHaveAttribute('data-tabs-start', '');
 });

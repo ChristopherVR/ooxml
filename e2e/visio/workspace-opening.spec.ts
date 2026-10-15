@@ -1,21 +1,21 @@
 import { test, expect } from '@playwright/test';
-import { loadSampleTemplate, openFind, taskPane } from './ribbon';
+import { loadSampleTemplate, openFind, ribbonGroup, taskPane } from './ribbon';
 import { createVsdxFixture } from './fixture.mjs';
 import { openDemo } from './demo-page';
 
-test('mobile Tools exposes Visio groups, opens Find and edits text with F2', async ({ page }) => {
+test('mobile Home groups fold into buttons that expose Visio commands, opens Find and edits text with F2', async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
 	await viewer.locator('[data-shape-id="1"]').click();
-	const tools = viewer.locator('.ribbon-tools>summary');
-	await tools.click();
-	for (const name of ['Pointer Tool', 'Find', 'Layers'])
-		await expect(viewer.getByRole('button', { name, exact: true })).toBeVisible();
+	await ribbonGroup(viewer, 'Tools');
+	await expect(viewer.getByRole('button', { name: 'Pointer Tool', exact: true })).toBeVisible();
 	await page.keyboard.press('Escape');
-	await expect(tools).toBeFocused();
+	await expect(viewer.locator('office-ui-ribbon-group[data-open]')).toHaveCount(0);
 	const search = await openFind(viewer);
-	await expect(viewer.locator('.ribbon-tools')).not.toHaveAttribute('open');
+	await expect(viewer.locator('office-ui-ribbon-group[data-open]')).toHaveCount(0);
 	await expect(search).toBeFocused();
 	await search.fill('idea');
 	await page.keyboard.press('Escape');

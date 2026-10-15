@@ -1,0 +1,43 @@
+/*
+ * The tab strip scrolls when the tabs do not fit (a phone): the edge with more tabs fades out
+ * and a chevron after the strip pages through them (ribbon-tab-cue.ts).
+ */
+office-ui-ribbon[data-tabs-end]::part(tabs) {
+	mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+office-ui-ribbon[data-tabs-start]::part(tabs) {
+	mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+office-ui-ribbon[data-tabs-start][data-tabs-end]::part(tabs) {
+	mask-image: linear-gradient(
+		to right,
+		transparent,
+		#000 28px,
+		#000 calc(100% - 28px),
+		transparent
+	);
+}
+.tab-scroll-more {
+	flex: none;
+	align-self: center;
+	width: 28px;
+	height: 28px;
+	margin: 0 2px;
+	padding: 0;
+	border: 1px solid var(--office-border, #c8c6c4);
+	border-radius: 4px;
+	background: var(--office-background, #fff);
+	color: var(--office-foreground, #201f1e);
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+}
+.tab-scroll-more[hidden] {
+	display: none;
+}
+@media (pointer: coarse) {
+	.tab-scroll-more {
+		width: 36px;
+		height: 36px;
+	}
+}

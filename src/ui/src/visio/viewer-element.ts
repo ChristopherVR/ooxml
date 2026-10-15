@@ -16,7 +16,9 @@ import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
 import { createTitleBar, renderTitleBar } from './title-bar';
+import { localizeRibbon } from './ribbon-localize';
 import { wireRibbonOverflow } from './ribbon-overflow';
+import { wireRibbonTabCue } from './ribbon-tab-cue';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
 import { ViewerReplace } from './viewer-replace';
 import { fitZoom } from './viewer-fit';
@@ -60,6 +62,8 @@ const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
 ) as typeof HTMLElement;
 export class VisioViewerElement extends BaseElement {
+	static observedAttributes = ['lang', 'locale'];
+	#overflow: { refit(): void } | undefined;
 	readonly controller = new ViewerController(createWorkerParser());
 	#root: ShadowRoot;
 	#disposeInputs: () => void;
@@ -170,11 +174,11 @@ export class VisioViewerElement extends BaseElement {
 			presenting: () => this.#presentation.active,
 			toggleSizePosition: () => this.#sizePosition.toggle(),
 			focusSearch: () => {
-				this.#chrome.closeCompactTools();
+				this.#chrome.closeRibbonPopups();
 				this.#replace.showFind();
 			},
 			focusReplace: () => {
-				this.#chrome.closeCompactTools();
+				this.#chrome.closeRibbonPopups();
 				this.#replace.showReplace();
 			},
 			announce: (message) => {
@@ -545,6 +549,21 @@ export class VisioViewerElement extends BaseElement {
 		this.controller.destroy();
 		this.#root.replaceChildren();
 	}
+	attributeChangedCallback(): void {
+		this.#localizeRibbon();
+	}
+	/** The ribbon speaks the `locale` attribute, else `lang`, else the page's, else the browser's. */
+	#localizeRibbon(): void {
+		if (this.#disposed || !this.#overflow) return;
+		localizeRibbon(
+			this.#toolbar,
+			this.getAttribute('locale') ||
+				this.lang ||
+				this.ownerDocument.documentElement.lang ||
+				navigator.language,
+		);
+		this.#overflow.refit();
+	}
 	connectedCallback(): void {
 		if (this.#disposed) return;
 		// Office Theme: the host's status-bar attribute wins; otherwise the choice saved in Options.
@@ -608,6 +627,9 @@ export class VisioViewerElement extends BaseElement {
 		);
 		// Narrow windows collapse ribbon groups into buttons; add-in tabs are refitted as they change.
 		const overflow = wireRibbonOverflow(this.#toolbar);
+		const disposeTabCue = wireRibbonTabCue(this.#toolbar);
+		this.#overflow = overflow;
+		this.#localizeRibbon();
 		const disposeReplace = this.#replace.wire();
 		const disposeEdit = this.#edit.wire();
 		const disposeInputs = wireViewerInputs(
@@ -645,6 +667,8 @@ export class VisioViewerElement extends BaseElement {
 			disposeStencil();
 			disposeFind();
 			overflow.destroy();
+			disposeTabCue();
+			this.#overflow = undefined;
 			disposeReplace();
 			disposeInputs();
 			disposeEdit();

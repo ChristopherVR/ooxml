@@ -78,25 +78,12 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
  .status-message { display:none; }
 }
 .toolbar { position:relative; }
-.ribbon-tools { display:flex; flex:none; order:0; }
-.tools-content { display:flex; align-items:stretch; }
-.ribbon-tools>summary { display:none; }
 .ribbon-command { font-size:12px; min-width:88px; }
 .ribbon-hint { font-size:12px; line-height:20px; flex:1; }
 .group-label { font-size:11px; line-height:14px; }
 .pane-heading { font-size:12px; }
 .status-message { flex:1; }
 @media(max-width:760px) {
- #home-panel { overflow:visible; min-height:54px; padding:4px; }
- .ribbon-tools { display:block; flex:0 0 84px; width:84px; order:1; }
- .ribbon-tools>summary { display:flex; min-height:44px; align-items:center; justify-content:center; gap:6px; padding:0 10px; border:1px solid var(--_vv-border); background:var(--_vv-surface); border-radius:4px; font-size:12px; cursor:pointer; list-style:none; }
- .ribbon-tools>summary::-webkit-details-marker { display:none; }
- .ribbon-tools .tools-content { display:flex; position:absolute; top:100%; left:4px; right:4px; z-index:6; flex-direction:column; padding:12px; gap:12px; border:1px solid var(--_vv-border); border-radius:4px; background:var(--_vv-surface); box-shadow:0 12px 28px #0003; max-height:60vh; overflow:auto; }
- .ribbon-tools:not([open])>.tools-content { display:none; }
- .ribbon-tools .ribbon-group { display:flex; width:100%; min-height:64px; border:0; padding:0; }
- .ribbon-tools .ribbon-actions { justify-content:space-between; }
- .ribbon-tools .ribbon-command { min-width:88px; font-size:12px; }
- .ribbon-tools .search-feedback { display:block; }
  .status { flex-wrap:nowrap; gap:4px; min-height:48px; }
 }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }

@@ -43,8 +43,6 @@ async function open(page: Page): Promise<Locator> {
 }
 async function home(viewer: Locator): Promise<void> {
 	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
-	const tools = viewer.locator('.ribbon-tools');
-	if ((await tools.getAttribute('open')) === null) await tools.locator('summary').click();
 }
 async function selectAll(viewer: Locator): Promise<void> {
 	await home(viewer);

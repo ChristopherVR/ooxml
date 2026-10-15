@@ -45,8 +45,7 @@
 	border: 0;
 	background: transparent;
 }
-.ribbon-row office-ui-ribbon-group,
-.tools-content office-ui-ribbon-group {
+.ribbon-row office-ui-ribbon-group {
 	min-width: 0;
 }
 office-ui-ribbon-group office-ui-button,
@@ -257,9 +256,6 @@ path.draw-preview {
 	.ribbon-row {
 		flex: 1;
 		min-width: 0;
-	}
-	.ribbon-tools .tools-content office-ui-ribbon-group {
-		width: 100%;
 	}
 	office-ui-status-bar.status {
 		gap: 4px;
