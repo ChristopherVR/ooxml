@@ -113,7 +113,7 @@ export function parseVisioFormula(
 		const char = source[offset];
 		if (char === '+' || char === '-') {
 			offset++;
-			left = node({ kind: 'unary', operator: char, operand: expression(3, depth + 1) });
+			left = node({ kind: 'unary', operator: char, operand: expression(4, depth + 1) });
 		} else if (char === '(') {
 			offset++;
 			left = expression(0, depth + 1);
@@ -195,15 +195,17 @@ export function parseVisioFormula(
 		}
 		for (;;) {
 			whitespace();
-			const operator = /^(?:<=|>=|<>|!=|=|<|>|\+|-|\*|\/|\^)/.exec(source.slice(offset))?.[0];
+			const operator = /^(?:<=|>=|<>|!=|=|<|>|&|\+|-|\*|\/|\^)/.exec(source.slice(offset))?.[0];
 			if (!operator) break;
 			const rank = ['=', '<>', '!=', '<', '>', '<=', '>='].includes(operator)
 				? 1
-				: ['+', '-'].includes(operator)
+				: operator === '&'
 					? 2
-					: ['*', '/'].includes(operator)
+					: ['+', '-'].includes(operator)
 						? 3
-						: 4;
+						: ['*', '/'].includes(operator)
+							? 4
+							: 5;
 			if (rank <= precedence) break;
 			offset += operator.length;
 			left = node({

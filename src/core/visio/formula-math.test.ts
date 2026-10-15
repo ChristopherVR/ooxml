@@ -58,9 +58,9 @@ describe('ShapeSheet rounding, power, logarithm and inverse trigonometric functi
 		expect(() => run('ASIN(2)')).toThrow(/-1 to 1/);
 	});
 
-	it('no longer reports them as unsupported, and still reports SUM', () => {
+	it('no longer reports them as unsupported, and still reports MOD', () => {
 		expect(analyzeVisioFormula('ROUND(INT(Width),POW(2,1))').unsupportedFunctions).toEqual([]);
-		expect(analyzeVisioFormula('SUM(Width,Height)').unsupportedFunctions).toEqual(['SUM']);
+		expect(analyzeVisioFormula('MOD(Width,Height)').unsupportedFunctions).toEqual(['MOD']);
 	});
 });
 

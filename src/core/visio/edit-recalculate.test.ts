@@ -107,12 +107,12 @@ describe('dependency-aware ShapeSheet cache writeback', () => {
 				cell('Width', '8') +
 					cell('Height', '2') +
 					cell('PinX', '1', 'Width*0.5') +
-					cell('PinY', '2', 'SUM(Height,0)'),
+					cell('PinY', '2', 'MOD(Height,0)'),
 			),
 		);
 		recalculateVisioCells(new Map([['0', root]]), widthChange);
 		expect(getCell(root, 'PinY').getAttribute('V')).toBe('2');
-		getCell(root, 'PinY').setAttribute('F', 'SUM(Width,0)');
+		getCell(root, 'PinY').setAttribute('F', 'MOD(Width,0)');
 		getCell(root, 'PinX').setAttribute('V', '1');
 		const before = buildXml(root.ownerDocument!);
 		expect(() => recalculateVisioCells(new Map([['0', root]]), widthChange)).toThrow(

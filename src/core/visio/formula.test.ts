@@ -58,15 +58,15 @@ describe('bounded Visio ShapeSheet formulas', () => {
 		expect(evaluateVisioFormula('1e-3+2E-3', resolve)).toEqual(scalar(0.003));
 	});
 	it('analyzes unsupported static calls and flags redirection/dynamic references', () => {
-		const analysis = analyzeVisioFormula('GUARD(SUM(Width,Height))');
+		const analysis = analyzeVisioFormula('GUARD(MOD(Width,Height))');
 		expect(analysis.guarded).toBe(true);
-		expect(analysis.unsupportedFunctions).toEqual(['SUM']);
+		expect(analysis.unsupportedFunctions).toEqual(['MOD']);
 		expect(analysis.references).toHaveLength(2);
 		expect(analysis.dynamic).toBe(false);
 		expect(analyzeVisioFormula('SETATREF(Width)').dynamic).toBe(true);
 		expect(analyzeVisioFormula('INDIRECT(Width)').dynamic).toBe(true);
 		expect(analyzeVisioFormula('UNKNOWN(Width)').dynamic).toBe(true);
-		expect(() => evaluateVisioFormula('SUM(Width,Height)', resolve)).toThrow(
+		expect(() => evaluateVisioFormula('MOD(Width,Height)', resolve)).toThrow(
 			/Unsupported function/,
 		);
 	});

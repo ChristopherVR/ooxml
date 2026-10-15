@@ -11,8 +11,13 @@ import {
 	numericFormulaFunctions,
 	evaluateNumericFormulaFunction,
 } from './formula-numeric-functions';
+import {
+	evaluateTextNumberFunction,
+	textNumberFunctions,
+	textResultFunctions,
+} from './formula-text-functions';
 import { mathFormulaFunctions, evaluateMathFormulaFunction } from './formula-math-functions';
-import { formulaFailure, formulaLimit, parseVisioFormula } from './formula';
+import { formulaFailure, formulaLimit, parseVisioFormula, VisioFormulaError } from './formula';
 import type {
 	VisioFormulaAst,
 	VisioFormulaLimits,
@@ -36,6 +41,13 @@ const supported = new Set([
 	'PI',
 	'PAGENUMBER',
 	'PAGECOUNT',
+	'PNT',
+	'PNTX',
+	'PNTY',
+	'ISERROR',
+	'IFERROR',
+	...textNumberFunctions,
+	...textResultFunctions,
 	...numericFormulaFunctions,
 	...mathFormulaFunctions,
 ]);
@@ -74,7 +86,6 @@ const staticUnsupported = new Set([
 	'AND',
 	'OR',
 	'NOT',
-	'SUM',
 	'RGB',
 	'HSL',
 	'THEMEGUARD',
@@ -276,6 +287,41 @@ export function evaluateVisioFormula(
 				return formulaFailure('context', `${name} requires a valid document context`);
 			return { value, unit: 'scalar' };
 		}
+		if (textNumberFunctions.has(name))
+			return evaluateTextNumberFunction(name, node.args, {
+				number: (child) => evaluate(child, depth + 1),
+				tick: () => {
+					if (++steps > maxSteps) formulaFailure('limit', 'Formula evaluation limit');
+				},
+			});
+		if (textResultFunctions.has(name) || name === 'PNT')
+			return formulaFailure('unsupported', `${name} does not return a number`);
+		if (name === 'PNTX' || name === 'PNTY') {
+			// PNT(x, y) builds a point; its coordinates are read straight back with PNTX / PNTY.
+			arity(1);
+			const point = node.args[0]!;
+			if (point.kind !== 'call' || point.name !== 'PNT')
+				return formulaFailure('unsupported', `${name} of something other than PNT(x,y)`);
+			if (point.args.length !== 2) return formulaFailure('arity', 'Invalid PNT argument count');
+			const [x, y] = point.args.map((coordinate) => evaluate(coordinate, depth + 2));
+			const picked = name === 'PNTX' ? x! : y!;
+			for (const item of [x!, y!])
+				if (item.unit !== 'scalar' && item.unit !== 'length')
+					return formulaFailure('unit', 'PNT requires lengths');
+			return finite({ value: picked.value, unit: 'length' });
+		}
+		if (name === 'ISERROR' || name === 'IFERROR') {
+			arity(name === 'ISERROR' ? 1 : 2);
+			try {
+				const result = arg(0);
+				return name === 'ISERROR' ? { value: 0, unit: 'scalar' } : result;
+			} catch (error) {
+				// Only a value error (#VALUE!, #DIV/0!) is an error to the sheet; a function this
+				// evaluator cannot run, or a limit, must still refuse the formula.
+				if (!(error instanceof VisioFormulaError) || error.code !== 'value') throw error;
+				return name === 'ISERROR' ? { value: 1, unit: 'scalar' } : arg(1);
+			}
+		}
 		if (numericFormulaFunctions.has(name))
 			return evaluateNumericFormulaFunction(
 				name,
@@ -323,9 +369,33 @@ export function evaluateVisioFormula(
 				return formulaFailure('arity', 'Invalid BOUND argument count');
 			const value = arg(0),
 				type = arg(1);
-			if (type.unit !== 'scalar' || (type.value !== 0 && type.value !== 2))
-				return formulaFailure('unsupported', 'Exclusive BOUND ranges are not evaluated');
+			if (type.unit !== 'scalar' || ![0, 1, 2].includes(type.value))
+				return formulaFailure('value', 'BOUND type must be 0, 1 or 2');
 			if (type.value === 2) return value;
+			if (type.value === 1) {
+				// Excluded ranges: a value strictly inside one moves to its nearest edge (the upper
+				// one halfway), and may then fall inside another, so repeat.
+				let current = value.value,
+					unit = value.unit;
+				for (let pass = 0; pass <= (node.args.length - 2) / 3; pass++) {
+					let moved = false;
+					for (let index = 2; index < node.args.length; index += 3) {
+						if (arg(index).value !== 0) continue;
+						const a = arg(index + 1),
+							b = arg(index + 2);
+						unit = compatible({ value: current, unit }, a);
+						unit = compatible({ value: current, unit }, b);
+						const low = Math.min(a.value, b.value),
+							high = Math.max(a.value, b.value);
+						if (current > low && current < high) {
+							current = current - low < high - current ? low : high;
+							moved = true;
+						}
+					}
+					if (!moved) break;
+				}
+				return finite({ value: current, unit });
+			}
 			let nearest: number | undefined;
 			let unit = value.unit;
 			for (let index = 2; index < node.args.length; index += 3) {

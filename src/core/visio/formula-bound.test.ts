@@ -20,7 +20,14 @@ describe('BOUND, percentages and bare inch constants', () => {
 		expect(evaluate('BOUND(1.4 in,0,FALSE,0 in,1 in,FALSE,2 in,3 in)').value).toBe(1);
 		expect(evaluate('BOUND(1.4 in,0,TRUE,0 in,1 in,FALSE,2 in,3 in)').value).toBe(2);
 		expect(evaluate('BOUND(5 in,2,FALSE,0 in,1 in)').value).toBe(5);
-		expect(() => evaluate('BOUND(5 in,1,FALSE,0 in,1 in)')).toThrow(/Exclusive/);
+		// Excluded ranges (type 1) push a value inside one to its nearest edge, recorded from Visio 16.
+		expect(evaluate('BOUND(5 in,1,FALSE,0 in,1 in)').value).toBe(5);
+		expect(evaluate('BOUND(1.5,1,FALSE,1,3)').value).toBe(1);
+		expect(evaluate('BOUND(2.5,1,FALSE,1,3)').value).toBe(3);
+		expect(evaluate('BOUND(2,1,FALSE,1,3)').value).toBe(3);
+		expect(evaluate('BOUND(2,1,TRUE,1,3)').value).toBe(2);
+		expect(evaluate('BOUND(15,1,FALSE,1,3,FALSE,10,20)').value).toBe(20);
+		expect(() => evaluate('BOUND(2,3,FALSE,1,3)')).toThrow(/type/);
 		expect(() => evaluate('BOUND(5 in,0,FALSE,0 in)')).toThrow(/argument count/);
 	});
 

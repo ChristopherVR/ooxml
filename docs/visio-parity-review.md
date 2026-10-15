@@ -63,6 +63,20 @@ by Visio when opened and remains a live-routing gap. See
   or grouped cells. ROUND's two-argument form is read as decimal places, which is not yet checked
   against Visio.
 
+## Round four: string, angle and point functions (2026-10-15)
+
+- Recalculation: LEN, FIND, STRSAME, LOOKUP, INDEX, MID, LEFT, RIGHT, UPPER, LOWER, TRIM,
+  SUBSTITUTE, REPLACE, CHAR and the `&` join evaluate on text written in the formula itself;
+  SUM, DEG, RAD, ANG360, PNTX/PNTY of `PNT(x,y)`, ISERROR, IFERROR and BOUND's excluded-range type
+  evaluate as numbers. Edge behaviour (FIND of a missing string is #VALUE!, LOOKUP is zero-based and
+  returns -1, INDEX out of range is empty, DEG only labels its argument as an angle) was recorded
+  from Visio 16 with `scripts/record-visio-formula-functions.ps1`.
+- Still refused: a cell's own text (`TheText`, `Prop.x` strings), so LEN(Prop.Name) refuses;
+  string results at the top of a formula; STRSAMEEX, ANGLETOLOC, LOCTOPAR, LOCTOLOC, ANGLETOPAR,
+  PATHLENGTH and the other path functions, FORMAT and the date and time functions, point results
+  and arithmetic on points, INDIRECT and the other reference-building functions. MAGNITUDE is not a
+  ShapeSheet function (Visio reports a formula error for it).
+
 ## Implementation order toward parity
 
 | Order | Work                                                                                                             | Acceptance evidence                                                                                                   |
