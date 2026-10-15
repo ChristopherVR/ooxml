@@ -14,7 +14,7 @@ import type { PptxChartSeries } from 'ooxml-core/pptx';
 
 import { axisTargetIntervals, niceValueAxisBounds } from './chart-axis-nice';
 import { DEFAULT_CHART_PALETTE } from './chart-helpers';
-import { formatChartNumber } from './chart-number-format';
+import { formatChartNumber } from 'ooxml-core/chart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Palette

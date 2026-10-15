@@ -16,7 +16,7 @@
  * rather than to a wrong number. The numeric-placeholder pattern engine itself
  * lives in `chart-number-format-pattern.ts`.
  */
-import { applyPattern, parsePattern } from './chart-number-format-pattern';
+import { applyPattern, parsePattern } from './number-format-pattern';
 
 /** Format codes that mean "no explicit format"; the caller's default wins. */
 const GENERAL = new Set(['', 'general', '@']);
@@ -52,23 +52,23 @@ function sections(code: string): string[] {
 /** Pick the section that applies to `value` (positive / negative / zero). */
 function sectionFor(value: number, parts: string[]): { code: string; forcePositive: boolean } {
 	if (parts.length === 1) {
-		return { code: parts[0], forcePositive: false };
+		return { code: parts[0] ?? '', forcePositive: false };
 	}
 	if (value < 0 && parts[1] !== undefined) {
 		// A dedicated negative section supplies its own sign (often none, or
 		// parentheses), so the magnitude is formatted unsigned.
-		return { code: parts[1], forcePositive: true };
+		return { code: parts[1] ?? '', forcePositive: true };
 	}
 	if (value === 0 && parts[2] !== undefined) {
-		return { code: parts[2], forcePositive: false };
+		return { code: parts[2] ?? '', forcePositive: false };
 	}
-	return { code: parts[0], forcePositive: false };
+	return { code: parts[0] ?? '', forcePositive: false };
 }
 
 /** A formatted number, plus a colour from its section's `[Red]`/`[Blue]`/etc. token, when present. */
 export interface FormattedChartNumber {
 	text: string;
-	color?: string;
+	color?: string | undefined;
 }
 
 /**

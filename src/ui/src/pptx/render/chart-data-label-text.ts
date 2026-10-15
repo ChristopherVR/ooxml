@@ -26,7 +26,7 @@
 import type { PptxChartData, PptxChartLegendTextStyle, PptxChartSeries } from 'ooxml-core/pptx';
 
 import { chartFontPx, chartTextFontFamily } from './chart-font';
-import { formatChartNumberWithColor } from './chart-number-format';
+import { formatChartNumberWithColor } from 'ooxml-core/chart';
 import { resolveChartTextStyle } from './chart-text-defaults';
 import type { SvgText } from './chart-view-model';
 import { formatAxisValue } from './chart-view-model';
@@ -170,7 +170,7 @@ export interface DataLabelTextResult {
 	text: string;
 	/**
 	 * A colour from the resolved number-format's `[Red]`/`[Blue]`/etc. section
-	 * (see `chart-number-format.ts`). Only set when the label renders AS the
+	 * (see the number-format module of ooxml-core/chart). Only set when the label renders AS the
 	 * formatted value with no other combined component: a joined "Category,
 	 * -42" label has no way to tint just the number in one flat `<text>`
 	 * element, so the caller's own default colour applies there instead.

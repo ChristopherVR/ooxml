@@ -118,7 +118,6 @@ export * from './chart-label-measure';
 export * from './chart-style-defaults';
 export * from './chart-title-style';
 export * from './chart-title-band';
-export * from './chart-number-format';
 export * from './chart-trendlines';
 export * from './chart-axis';
 export * from './chart-palette';

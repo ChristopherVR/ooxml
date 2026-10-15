@@ -8,7 +8,7 @@ import type {
 import { axisTargetIntervals, niceValueAxisBounds } from './chart-axis-nice';
 import { chartFontPx } from './chart-font';
 import { reserveLegendSpace } from './chart-legend-placement';
-import { formatChartNumber } from './chart-number-format';
+import { formatCompactAxisValue } from 'ooxml-core/chart';
 import { getChartStylePalette } from './chart-style-palette';
 import { chartTitleBand } from './chart-title-band';
 
@@ -136,31 +136,8 @@ export function valueToY(val: number, range: ValueRange, topY: number, bottomY: 
 	return range.reverseOrder ? topY + ratio * usable : bottomY - ratio * usable;
 }
 
-/**
- * Compact axis-value formatting (1.2K / 3.4M / integer / one-decimal).
- *
- * `formatCode` is the chart's own `c:numFmt/@formatCode`. When the source
- * declares one - `0%`, `#,##0`, `$#,##0.00` - it WINS: the cached values behind
- * a percentage chart are fractions, and the compact fallback renders them as
- * `0.5` where PowerPoint shows `50%`. Codes outside the supported subset fall
- * through to the compact form, which is what every caller did before.
- */
-export function formatAxisValue(val: number, formatCode?: string): string {
-	const formatted = formatChartNumber(val, formatCode);
-	if (formatted !== undefined) {
-		return formatted;
-	}
-	if (Math.abs(val) >= 1_000_000) {
-		return `${(val / 1_000_000).toFixed(1)}M`;
-	}
-	if (Math.abs(val) >= 1_000) {
-		return `${(val / 1_000).toFixed(1)}K`;
-	}
-	if (Number.isInteger(val)) {
-		return String(val);
-	}
-	return val.toFixed(1);
-}
+/** Compact axis-value formatting; the implementation is `formatCompactAxisValue` in `ooxml-core/chart`. */
+export const formatAxisValue = formatCompactAxisValue;
 
 // ── Layout ───────────────────────────────────────────────────────
 

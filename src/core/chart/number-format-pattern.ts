@@ -39,7 +39,7 @@ export interface Pattern {
 	/** `0.00E+00` scientific notation. */
 	scientific: boolean;
 	/** Colour from a recognised `[Red]`/`[Blue]`/etc. token in this section. */
-	color?: string;
+	color?: string | undefined;
 }
 
 const PLACEHOLDER = /[0#?]/u;
@@ -56,7 +56,7 @@ export function parsePattern(code: string): Pattern | undefined {
 
 	let inQuotes = false;
 	for (let i = 0; i < code.length; i += 1) {
-		const ch = code[i];
+		const ch = code[i] ?? '';
 		if (ch === '"') {
 			inQuotes = !inQuotes;
 			continue;
@@ -109,7 +109,11 @@ export function parsePattern(code: string): Pattern | undefined {
 	let lastDigit = firstDigit;
 	for (let i = chars.length - 1; i >= firstDigit; i -= 1) {
 		const c = chars[i];
-		if (!c.literal && (PLACEHOLDER.test(c.ch) || c.ch === '.' || c.ch === ',' || c.ch === 'E')) {
+		if (
+			c &&
+			!c.literal &&
+			(PLACEHOLDER.test(c.ch) || c.ch === '.' || c.ch === ',' || c.ch === 'E')
+		) {
 			lastDigit = i;
 			break;
 		}
@@ -134,7 +138,7 @@ export function parsePattern(code: string): Pattern | undefined {
 	let afterPoint = false;
 	let inExponent = false;
 	for (let i = 0; i < numeric.length; i += 1) {
-		const { ch, literal } = numeric[i];
+		const { ch, literal } = numeric[i] ?? { ch: '', literal: true };
 		if (literal) {
 			continue;
 		}
@@ -197,7 +201,7 @@ export function applyPattern(value: number, pattern: Pattern, forcePositive: boo
 	if (pattern.scientific) {
 		const digits = pattern.decimals.required + pattern.decimals.optional;
 		const exponential = magnitude.toExponential(digits);
-		const [mantissa, exponent] = exponential.split('e');
+		const [mantissa = '', exponent = '0'] = exponential.split('e');
 		const sign = exponent.startsWith('-') ? '-' : '+';
 		const power = Math.abs(Number(exponent)).toString().padStart(2, '0');
 		return `${pattern.prefix}${mantissa}E${sign}${power}${pattern.suffix}`;
@@ -214,7 +218,7 @@ export function applyPattern(value: number, pattern: Pattern, forcePositive: boo
 		}
 	}
 
-	const [rawIntPart, fracPart] = body.split('.');
+	const [rawIntPart = '', fracPart] = body.split('.');
 	let intPart = rawIntPart;
 	// A magnitude that rounds to zero at this pattern's precision (a genuinely
 	// tiny negative value, e.g. a -1e-13 floating-point residue from axis-tick

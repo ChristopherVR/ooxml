@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { formatChartNumber, formatChartNumberWithColor } from './chart-number-format';
+import { formatChartNumber, formatChartNumberWithColor } from './number-format';
 
 describe('formatChartNumber', () => {
 	it('renders a percentage format against the cached fraction', () => {
