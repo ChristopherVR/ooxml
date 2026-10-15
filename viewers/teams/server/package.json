@@ -28,6 +28,7 @@
 	"files": [
 		"index.mjs",
 		"guards.mjs",
+		"auth.mjs",
 		"chat-access.mjs",
 		"bin.mjs",
 		"README.md",

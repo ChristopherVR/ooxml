@@ -26,6 +26,7 @@ TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `PORT`, `HOST`                                          | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                          |
 | `TEAMS_TOKEN`                                           | If set, sockets take it as `?token=` and file requests as `Authorization: Bearer`.                                                                                       |
+| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`              | Path to a JSON object of user id to credential (enables accounts); the secret that signs sessions.                                                                       |
 | `TEAMS_ORIGINS`                                         | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
 | `TEAMS_INSECURE`                                        | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
 | `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP` | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
@@ -51,6 +52,41 @@ Put it behind TLS (browsers refuse `ws://` from an `https://` page), and add a T
 across NATs. The full deployment guide is
 [docs/deploy.md](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md).
 
+## Accounts and sessions
+
+By default there are **no accounts**: user ids are claims and the server says so at startup. To bind
+ids to real people, give the server a way to check a credential:
+
+```js
+import { createTeamsServer } from 'openteams-server';
+
+// A closed team: user id -> credential (or TEAMS_USERS_FILE=users.json, a JSON object)
+createTeamsServer({
+	users: { alice: 'long-random-secret' },
+	sessionSecret: process.env.TEAMS_SESSION_SECRET,
+});
+
+// Or plug in your identity provider. Return { id }, a string id, or null to refuse.
+createTeamsServer({
+	authenticate: async ({ user, credential, headers }) =>
+		(await myIdp.check(headers, credential)) ? { id: user } : null,
+});
+```
+
+Clients call `POST /auth/session` with `{ user, credential }` (core: `requestTeamsSession`) and get
+a signed session (HMAC-SHA-256, 12 hours by default, `sessionTtlMs`). Sockets then pass
+`?session=`; the server takes the user id from it and ignores the claimed `?user=`. With accounts
+configured, sockets without a valid session get 401. Set `TEAMS_SESSION_SECRET` (or
+`sessionSecret`) to keep sessions across restarts and across processes; without it a random secret
+is used per process. The server never logs credentials, sessions or the secret.
+
+Limits: no password hashing or rate limiting on `/auth/session` (use your proxy's limiter), the
+`users` table holds credentials in plain text in a file you must protect, and sessions cannot be
+revoked before they expire.
+
+**The dev default is not secure.** With no `users` and no `authenticate`, `/auth/session` signs any
+claimed id, so it adds nothing over the old behaviour.
+
 ## Security model
 
 - **One shared token opens every room and every file.** There are no per-user or per-room
@@ -61,8 +97,9 @@ across NATs. The full deployment guide is
   only when its `?user=<id>` is listed in the room's `teams:chat-members` map; the first socket of a
   new room lists the members in `?members=<id>,<id>` (a 1:1 `dm-` room must list exactly the two
   people its id was derived from), and sockets of people removed from the map are closed. This keeps
-  workspace members who are not on the list out of the room. It is not authentication: the `user` is
-  a claim, so anyone holding the token can claim another person's id.
+  workspace members who are not on the list out of the room. Without accounts the `user` is a claim,
+  so anyone holding the token can claim another person's id; with accounts (above) it comes from
+  the signed session.
 - **The token travels in the WebSocket query string** (`?token=`), which proxies and access logs can
   record and browsers can keep in history. Run the server behind TLS and do not log query strings.
   Files never take the token in a URL: they use the `Authorization` header or a signed link.
@@ -80,7 +117,7 @@ across NATs. The full deployment guide is
 
 This is not Microsoft Teams and is not affiliated with Microsoft. There is **no end-to-end
 encryption**: this server stores and can read every chat message and file. The token is a shared
-secret that keeps strangers out of a small team's server, not per-user authentication; put your own
-auth in front for real accounts.
+secret that keeps strangers out of a small team's server. Per-user authentication exists only when
+you enable accounts; it is a small session layer, not a full identity system.
 
 Licence: Apache-2.0.

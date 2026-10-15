@@ -4,9 +4,12 @@
 //   ws  /signal/<room>    WebRTC signaling relay (forwards JSON to the other sockets of the room)
 //   http POST|GET /files/<id>/<name>   plain file storage for attachments
 //   http POST /files/link/<id>/<name>  short-lived signed download link (token in Authorization)
+//   http POST /auth/session            exchange a credential for a signed session bound to one user id
 // Nothing here understands Office formats or chat: it moves bytes, so any other server that speaks
 // the same three contracts (see docs/server-contract.md) works just as well.
 // Security model: see the README. One shared token opens every room; room members trust each other.
+// With `authenticate` or `users`, sockets must also present a session and the user id is the one
+// the session binds, never the claimed `user` parameter.
 import { createServer } from 'node:http';
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
@@ -29,6 +32,12 @@ import * as syncProtocol from 'y-protocols/sync';
 import * as awarenessProtocol from 'y-protocols/awareness';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
+import {
+	authenticateFromUsers,
+	createSessionSigner,
+	isUserId,
+	sameSecret as sameCredential,
+} from './auth.mjs';
 import { authorizeChatJoin, isChatRoom, roomMembers } from './chat-access.mjs';
 import {
 	createBucket,
@@ -47,11 +56,7 @@ const ROOM = /^[\w-]{1,128}$/u;
 const WS_OPEN = 1;
 const SERVER_OWNER = Symbol('server');
 
-const sameSecret = (a, b) => {
-	const ha = createHash('sha256').update(String(a)).digest();
-	const hb = createHash('sha256').update(String(b)).digest();
-	return timingSafeEqual(ha, hb);
-};
+const sameSecret = sameCredential;
 
 const unlinkQuiet = (path) => {
 	try {
@@ -61,7 +66,9 @@ const unlinkQuiet = (path) => {
 
 /**
  * @param {{ port?: number, host?: string, token?: string, origins?: string[], dataDir?: string,
- *   insecure?: boolean, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
+ *   insecure?: boolean, authenticate?: (request: { user: string, credential?: string,
+ *   headers: Record<string, string | string[] | undefined> }) => unknown, users?: Record<string, string>,
+ *   sessionSecret?: string, sessionTtlMs?: number, maxFileBytes?: number, maxSyncBytes?: number, maxSignalBytes?: number,
  *   maxConnections?: number, maxConnectionsPerIp?: number, maxRooms?: number, maxDocBytes?: number,
  *   messageRate?: number, messageBurst?: number, filesQuotaBytes?: number,
  *   log?: (m: string) => void }} [options]
@@ -75,11 +82,21 @@ export function createTeamsServer(options = {}) {
 			.filter(Boolean),
 		dataDir = resolve(process.env.TEAMS_DATA || './data'),
 		insecure = process.env.TEAMS_INSECURE === '1',
+		users,
+		sessionSecret = process.env.TEAMS_SESSION_SECRET || '',
+		sessionTtlMs,
 		maxFileBytes = 25 * 1024 * 1024,
 		maxSyncBytes = 32 * 1024 * 1024,
 		maxSignalBytes = 256 * 1024,
 		log = () => {},
 	} = options;
+	const authenticate = options.authenticate ?? (users ? authenticateFromUsers(users) : undefined);
+	// Real accounts exist: sockets must carry a session. Otherwise identity is a claim (dev default).
+	const authRequired = typeof authenticate === 'function';
+	const signer = createSessionSigner({
+		secret: sessionSecret,
+		...(sessionTtlMs ? { ttlMs: sessionTtlMs } : {}),
+	});
 	const limits = resolveLimits(options);
 	const roomsDir = join(dataDir, 'rooms');
 	const filesDir = join(dataDir, 'files');
@@ -465,6 +482,60 @@ export function createTeamsServer(options = {}) {
 		});
 	}
 
+	// ---- sessions ---------------------------------------------------------------------------
+	const json = (res, status, body) =>
+		void res
+			.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+			.end(JSON.stringify(body));
+
+	/** POST /auth/session {user, credential}: the workspace token (if any) in Authorization. */
+	function sessionRequest(req, res) {
+		if (req.method !== 'POST') return plain(res, 405);
+		if (!originAllowed(req.headers.origin ?? '')) return plain(res, 403);
+		const bearer = /^Bearer (.+)$/u.exec(req.headers.authorization ?? '')?.[1];
+		if (token && (bearer === undefined || !sameSecret(bearer, token))) return plain(res, 401);
+		const chunks = [];
+		let size = 0;
+		req.on('data', (chunk) => {
+			size += chunk.length;
+			if (size > 4096) {
+				req.destroy();
+				return;
+			}
+			chunks.push(chunk);
+		});
+		req.on('error', () => {});
+		req.on('end', async () => {
+			let body;
+			try {
+				body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+			} catch {
+				return plain(res, 400);
+			}
+			const user = body?.user;
+			const credential = typeof body?.credential === 'string' ? body.credential : undefined;
+			if (!isUserId(user)) return plain(res, 400);
+			try {
+				// Dev default (no hook): the claimed id is accepted. Not secure, see the README.
+				const verdict = authRequired
+					? await authenticate({
+							user,
+							...(credential === undefined ? {} : { credential }),
+							headers: req.headers,
+						})
+					: { id: user };
+				const id = typeof verdict === 'string' ? verdict : verdict?.id;
+				if (!isUserId(id)) return plain(res, 401);
+				const issued = signer.issue(id);
+				json(res, 200, { session: issued.token, user: id, expiresAt: issued.expiresAt });
+			} catch (error) {
+				// Never log the credential or the hook's input, only the failure.
+				log(`authenticate failed (${error?.message ?? 'error'})`);
+				plain(res, 500);
+			}
+		});
+	}
+
 	function onRequest(req, res) {
 		cors(res, req);
 		const url = new URL(req.url ?? '/', 'http://localhost');
@@ -476,9 +547,11 @@ export function createTeamsServer(options = {}) {
 					rooms: syncRooms.size,
 					calls: signalRooms.size,
 					auth: Boolean(token),
+					accounts: authRequired,
 				}),
 			);
 		}
+		if (url.pathname === '/auth/session') return void sessionRequest(req, res);
 		const link = /^\/files\/link\/([\w-]{1,64})\/([^/]{1,200})$/u.exec(url.pathname);
 		const m = link ?? /^\/files\/([\w-]{1,64})\/([^/]{1,200})$/u.exec(url.pathname);
 		if (!m) return plain(res, 404);
@@ -530,10 +603,15 @@ export function createTeamsServer(options = {}) {
 		if (name === null || !ROOM.test(name)) return reject(socket, '400 Bad Request');
 		if (!originAllowed(req.headers.origin ?? '')) return reject(socket, '403 Forbidden');
 		if (!tokenOk(url)) return reject(socket, '401 Unauthorized');
+		// Identity: with accounts the session decides who this is; without, the claim stands (dev).
+		const sessionUser = signer.verify(url.searchParams.get('session'));
+		if (url.searchParams.has('session') && sessionUser === null)
+			return reject(socket, '401 Unauthorized');
+		if (authRequired && sessionUser === null) return reject(socket, '401 Unauthorized');
 		// Private chats: only the people listed in the room's member map may join.
 		let admission = null;
 		if (m[1] === 'sync' && isChatRoom(name)) {
-			const user = url.searchParams.get('user') ?? '';
+			const user = sessionUser ?? url.searchParams.get('user') ?? '';
 			const verdict = authorizeChatJoin({
 				name,
 				user,
@@ -581,6 +659,7 @@ export function createTeamsServer(options = {}) {
 
 	return {
 		http,
+		accounts: authRequired,
 		listen: (port = Number(process.env.PORT) || 8787, host = process.env.HOST || '127.0.0.1') => {
 			if (!token && !isLoopbackHost(host)) {
 				if (!insecure)
@@ -620,12 +699,32 @@ export function createTeamsServer(options = {}) {
 /** Start a server configured from the environment and log where it listens (the CLI entry). */
 export async function runTeamsServer() {
 	const insecure = process.env.TEAMS_INSECURE === '1' || process.argv.includes('--insecure');
-	const server = createTeamsServer({ insecure, log: (m) => console.log(m) });
+	// TEAMS_USERS_FILE: a JSON object of user id -> credential (see the README).
+	const usersFile = process.env.TEAMS_USERS_FILE;
+	let users;
+	if (usersFile) {
+		try {
+			users = JSON.parse(readFileSync(usersFile, 'utf8'));
+		} catch {
+			// The parser's message can quote the file, which holds credentials: say nothing of it.
+			throw new Error('TEAMS_USERS_FILE could not be read as a JSON object');
+		}
+		if (!users || typeof users !== 'object' || Array.isArray(users))
+			throw new Error('TEAMS_USERS_FILE could not be read as a JSON object');
+	}
+	const server = createTeamsServer({
+		insecure,
+		...(users ? { users } : {}),
+		log: (m) => console.log(m),
+	});
 	const addr = await server.listen();
 	const auth = process.env.TEAMS_TOKEN
 		? 'token required'
 		: 'no token (loopback only unless TEAMS_INSECURE=1)';
-	console.log(`teams server on http://${addr.address}:${addr.port}  [${auth}]`);
+	const accounts = server.accounts
+		? 'accounts required'
+		: 'NO ACCOUNTS: user ids are claims (dev default, not secure)';
+	console.log(`teams server on http://${addr.address}:${addr.port}  [${auth}; ${accounts}]`);
 	console.log(
 		'  ws://%s:%d/sync/<room>   ws://%s:%d/signal/<room>   /files/<id>/<name>',
 		addr.address,

@@ -112,7 +112,7 @@ surface. `iceTransportPolicy: 'relay'` forces TURN.
 throws):
 
 ```ts
-{ mode: 'local' | 'server', syncUrl?, signalingUrl?, iceServers: [...], iceTransportPolicy?, token? }
+{ mode: 'local' | 'server', syncUrl?, signalingUrl?, iceServers: [...], iceTransportPolicy?, token?, sessionToken? }
 ```
 
 - **`local`**: no server. Tabs of one browser share chat and calls over `BroadcastChannel`.
@@ -134,10 +134,28 @@ throws):
    signed for that one file, valid for a few minutes (`?sig=...&exp=...`), so the token never
    appears in a URL.
 
-Private chats add one rule to the sync contract: a room named `chat-<16 hex>-<chat id>` admits a socket only when its `?user=<id>` is in the room's `teams:chat-members` map (a Yjs map of user id to `true`). A room that has no members yet is created by its first socket, which passes `?members=<id>,<id>` and must be one of them; a 1:1 room (`dm-<hash>`) must list exactly the two people the id was derived from. The server closes the sockets of people removed from the map. Identity is a claim, not an authenticated user.
+Private chats add one rule to the sync contract: a room named `chat-<16 hex>-<chat id>` admits a socket only when its `?user=<id>` is in the room's `teams:chat-members` map (a Yjs map of user id to `true`). A room that has no members yet is created by its first socket, which passes `?members=<id>,<id>` and must be one of them; a 1:1 room (`dm-<hash>`) must list exactly the two people the id was derived from. The server closes the sockets of people removed from the map. Identity is a claim unless the server has accounts (see Authentication below).
 
 Both sockets receive `?token=<token>` when a token is configured (a browser cannot set headers on
 a WebSocket); enforce it, and an origin allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
+
+### Authentication
+
+Optional, and off by default. A server with accounts exposes `POST <origin>/auth/session` (body
+`{ user, credential }`, the workspace token in `Authorization` when one is set) and answers
+`{ session, user, expiresAt }`: a signed, expiring token that binds one user id.
+`requestTeamsSession(config, { userId, credential })` calls it; pass the result as
+`config.sessionToken` and both sockets send `?session=<token>`. The server then takes the user id
+from the session and ignores the claimed `?user=`, so holding the shared token no longer lets a
+client join another person's chats. With accounts the server refuses sockets that have no valid
+session (401).
+
+A server without accounts (the zero-config dev default) signs a session for any claimed id and keeps
+trusting the claim: that is **not secure**. The reference server's `authenticate` hook, `users`
+table and `TEAMS_USERS_FILE` are described in its README. Not covered: the session rides in the
+WebSocket query string like the token, presence and awareness remain advisory, sessions cannot be
+revoked before they expire, and the UI has no sign-in form yet (a host calls `requestTeamsSession`
+itself).
 
 ### STUN and TURN
 
@@ -157,7 +175,7 @@ clients credentials. TURN entries without credentials are rejected by `parseServ
 - Presence is advisory and unauthenticated, like any Yjs awareness. The wire carries the original
   `availability` (available, busy, away) next to the richer `status` (also Do not disturb, Be right
   back, Appear offline), so older clients still read presence; a status message rides along.
-- Private chat rooms keep non-members from receiving a chat, but identity is the `user` the client claims: anyone with the shared token can claim another person's id, and the chat directory (who talks to whom) and attachments are visible to the workspace. Meeting rows are in the shared document too: the attendee list scopes a calendar, not who could read the row.
+- Private chat rooms keep non-members from receiving a chat, and with accounts enabled identity comes from the signed session; without them it is the `user` the client claims, so anyone with the shared token can claim another person's id. In both cases the chat directory (who talks to whom) and attachments are visible to the workspace. Meeting rows are in the shared document too: the attendee list scopes a calendar, not who could read the row.
 - Pins are shared rows in a per-channel Yjs map; any member may pin or unpin, as in Teams. There is
   no role model, so this is not an enforced permission.
 - No claim of Microsoft Teams feature parity beyond what the UI actually implements (channels,
