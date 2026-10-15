@@ -77,6 +77,17 @@ try {
 			);
 			assert.deepEqual(clipped, [], `${label}: tabs shrunk below their label`);
 
+			// The collapse toggle (phone landscape) never covers the editor.
+			const overlap = await page.evaluate(() => {
+				const t = document.querySelector('#chrome-toggle');
+				const e = document.querySelector('#editors');
+				if (!t || !e || getComputedStyle(t).display === 'none') return false;
+				const a = t.getBoundingClientRect();
+				const b = e.getBoundingClientRect();
+				return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+			});
+			assert.equal(overlap, false, `${label}: the chrome toggle covers the editor`);
+
 			// The command bar's assistant button is not an outlined box on a narrow screen.
 			if (width <= 700) {
 				const border = await page.evaluate(() => {
