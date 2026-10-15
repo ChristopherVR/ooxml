@@ -2,16 +2,10 @@
 // weekly repeats keep the organiser's wall-clock time), the days a work week / week / day view
 // shows in the viewer's zone, how overlapping meetings share a day column and which reminders are
 // due. No clock and no storage: callers pass `now`. DOM-free. New code.
+import type { MeetingException } from './meeting-exceptions';
 import type { Meeting } from './meetings';
-import {
-	DAY_MS,
-	MINUTE_MS,
-	addDays,
-	minuteOfDay,
-	startOfDay,
-	zonedParts,
-	zonedToUtc,
-} from './time-zone';
+import { seriesBetween, seriesIndexOf } from './recurrence';
+import { MINUTE_MS, addDays, minuteOfDay, startOfDay, zonedParts } from './time-zone';
 
 export interface Occurrence {
 	/** `<meeting id>@<start>`: stable per occurrence, what reminders remember. */
@@ -21,35 +15,58 @@ export interface Occurrence {
 	end: number;
 	/** 0 for the first occurrence. */
 	index: number;
+	/** The start this occurrence had in the series (iCalendar RECURRENCE-ID), when it repeats. */
+	recurrenceId?: number;
+	/** This occurrence was changed on its own; the overrides below are set for what changed. */
+	changed?: boolean;
+	title?: string;
+	description?: string;
 }
 
 const MAX_OCCURRENCES = 400;
 
-/** Occurrences that overlap `[from, to)`, in start order. Cancelled meetings have none. */
+/**
+ * Occurrences that overlap `[from, to)`, in start order. Cancelled meetings have none; a repeat
+ * stops at its end (count or date), skips cancelled occurrences and applies changed ones.
+ */
 export function occurrencesBetween(meeting: Meeting, from: number, to: number): Occurrence[] {
 	if (meeting.cancelled || to <= from) return [];
 	const span = meeting.end - meeting.start;
-	const make = (index: number, start: number): Occurrence => ({
-		key: `${meeting.id}@${start}`,
-		meetingId: meeting.id,
-		start,
-		end: start + span,
-		index,
-	});
-	if (meeting.repeat === 'none')
-		return meeting.start < to && meeting.end > from ? [make(0, meeting.start)] : [];
-	const step = meeting.repeat === 'daily' ? 1 : 7;
-	const anchor = zonedParts(meeting.start, meeting.zone);
-	const first = Math.max(0, Math.floor((from - meeting.end) / (step * DAY_MS)) - 1);
-	const last = Math.ceil((to - meeting.start) / (step * DAY_MS)) + 1;
+	const repeats = meeting.repeat !== 'none';
+	const exceptions = new Map((meeting.exceptions ?? []).map((e) => [e.originalStart, e]));
+	const make = (index: number, original: number, e?: MeetingException): Occurrence => {
+		const start = e?.start ?? original;
+		return {
+			key: `${meeting.id}@${start}`,
+			meetingId: meeting.id,
+			start,
+			end: e?.end ?? start + span,
+			index,
+			...(repeats ? { recurrenceId: original } : {}),
+			...(e ? { changed: true } : {}),
+			...(e?.title ? { title: e.title } : {}),
+			...(e?.description !== undefined ? { description: e.description } : {}),
+		};
+	};
 	const out: Occurrence[] = [];
-	for (let k = first; k <= last && out.length < MAX_OCCURRENCES; k++) {
-		const start =
-			k === 0 ? meeting.start : zonedToUtc({ ...anchor, day: anchor.day + k * step }, meeting.zone);
-		if (start < to && start + span > from) out.push(make(k, start));
+	for (const slot of seriesBetween(meeting, from, to, MAX_OCCURRENCES)) {
+		const e = exceptions.get(slot.start);
+		if (!e) out.push(make(slot.index, slot.start));
 	}
-	return out;
+	// Changed occurrences may have moved into the range from outside it (or out of it).
+	for (const e of exceptions.values()) {
+		if (e.cancelled) continue;
+		const index = seriesIndexOf(meeting, e.originalStart);
+		if (index === null) continue;
+		const o = make(index, e.originalStart, e);
+		if (o.start < to && o.end > from) out.push(o);
+	}
+	return out.sort((a, b) => a.start - b.start || a.index - b.index).slice(0, MAX_OCCURRENCES);
 }
+
+/** The occurrence that starts exactly at `start` (as shown), or null. */
+export const occurrenceAt = (meeting: Meeting, start: number): Occurrence | null =>
+	occurrencesBetween(meeting, start, start + 1).find((o) => o.start === start) ?? null;
 
 export type CalendarMode = 'workweek' | 'week' | 'day';
 

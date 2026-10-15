@@ -7,7 +7,18 @@ import * as Y from 'yjs';
 import { createIdGenerator } from '../collab/identity';
 import { type ChatMember, isChatUserId, sanitizeMembers } from './chats';
 import { sanitizeChannelName, sanitizeMessageText } from './model';
+import {
+	type MeetingException,
+	type OccurrencePatch,
+	exceptionAt,
+	exceptionMap,
+	exceptionValue,
+	readExceptions,
+} from './meeting-exceptions';
+import { MAX_RECURRENCE_COUNT, seriesIndexOf } from './recurrence';
 import { isValidZone, localZone } from './time-zone';
+
+export type { MeetingException, OccurrencePatch } from './meeting-exceptions';
 
 export type MeetingRepeat = 'none' | 'daily' | 'weekly';
 export const MEETING_REPEATS: readonly MeetingRepeat[] = ['none', 'daily', 'weekly'];
@@ -24,6 +35,12 @@ export interface Meeting {
 	start: number;
 	end: number;
 	repeat: MeetingRepeat;
+	/** The series ends once an occurrence would start after this instant. Never with `count`. */
+	until?: number;
+	/** The series has this many occurrences in all. Never with `until`. */
+	count?: number;
+	/** Single occurrences that were cancelled or changed. */
+	exceptions?: MeetingException[];
 	attendees: ChatMember[];
 	/** A channel meeting: the channel it was scheduled in (its chat is the channel). */
 	channelId?: string;
@@ -39,6 +56,10 @@ export interface MeetingInput {
 	start: number;
 	end: number;
 	repeat?: MeetingRepeat;
+	/** Last instant a repeat may start at; null clears the end. */
+	until?: number | null;
+	/** Total occurrences of a repeat; null clears the end. */
+	count?: number | null;
 	attendees?: readonly ChatMember[];
 	channelId?: string;
 	chatId?: string;
@@ -61,6 +82,10 @@ export interface MeetingStore {
 	update: (id: string, patch: Partial<MeetingInput>) => Meeting | null;
 	/** Organiser only. The row stays so cards and reminders show it as cancelled. */
 	cancel: (id: string) => boolean;
+	/** Organiser only. Cancels one occurrence of a repeating meeting, keyed by its original start. */
+	cancelOccurrence: (id: string, originalStart: number) => boolean;
+	/** Organiser only. Changes one occurrence; the rest of the series is untouched. */
+	editOccurrence: (id: string, originalStart: number, patch: OccurrencePatch) => Meeting | null;
 }
 
 const finiteTime = (v: unknown): number | null =>
@@ -79,6 +104,16 @@ function readMeeting(id: string, raw: unknown): Meeting | null {
 	const repeat = raw.get('repeat');
 	const channelId = raw.get('channelId');
 	const chatId = raw.get('chatId');
+	const kind = MEETING_REPEATS.includes(repeat as MeetingRepeat)
+		? (repeat as MeetingRepeat)
+		: 'none';
+	const count = raw.get('count');
+	const until = finiteTime(raw.get('until'));
+	const total =
+		typeof count === 'number' && Number.isInteger(count) && count >= 1
+			? Math.min(count, MAX_RECURRENCE_COUNT)
+			: null;
+	const exceptions = kind === 'none' ? [] : readExceptions(raw.get('exceptions'));
 	return {
 		id,
 		title,
@@ -88,7 +123,9 @@ function readMeeting(id: string, raw: unknown): Meeting | null {
 		zone: isValidZone(zone) ? zone : 'UTC',
 		start,
 		end,
-		repeat: MEETING_REPEATS.includes(repeat as MeetingRepeat) ? (repeat as MeetingRepeat) : 'none',
+		repeat: kind,
+		...(kind === 'none' ? {} : total !== null ? { count: total } : until !== null ? { until } : {}),
+		...(exceptions.length ? { exceptions } : {}),
 		attendees: sanitizeMembers(raw.get('attendees')),
 		createdAt: Number(raw.get('createdAt')) || 0,
 		cancelled: raw.get('cancelled') === true,
@@ -120,6 +157,21 @@ export function createMeetingStore(
 		if (input.end !== undefined) row.set('end', input.end);
 		if (input.repeat !== undefined && MEETING_REPEATS.includes(input.repeat))
 			row.set('repeat', input.repeat);
+		if (input.count !== undefined) {
+			if (input.count === null) row.delete('count');
+			else {
+				row.set('count', Math.min(Math.max(1, Math.floor(input.count)), MAX_RECURRENCE_COUNT));
+				row.delete('until');
+			}
+		}
+		if (input.until !== undefined) {
+			const until = input.until === null ? null : finiteTime(input.until);
+			if (until === null) row.delete('until');
+			else {
+				row.set('until', until);
+				row.delete('count');
+			}
+		}
 		if (input.attendees !== undefined)
 			row.set(
 				'attendees',
@@ -170,7 +222,18 @@ export function createMeetingStore(
 			const end = patch.end ?? current.end;
 			if (end <= start || end - start > MAX_MEETING_HOURS * 3_600_000) return null;
 			if (patch.title !== undefined && !sanitizeChannelName(patch.title)) return null;
-			doc.transact(() => apply(row, patch));
+			const repeat = patch.repeat ?? current.repeat;
+			if (typeof patch.until === 'number' && repeat !== 'none' && patch.until < start) return null;
+			doc.transact(() => {
+				apply(row, patch);
+				// Exceptions are keyed by the original start, so a new schedule voids them.
+				if (repeat === 'none' || start !== current.start || repeat !== current.repeat)
+					row.delete('exceptions');
+				if (repeat === 'none') {
+					row.delete('until');
+					row.delete('count');
+				}
+			});
 			return get(id);
 		},
 		cancel(id) {
@@ -179,6 +242,35 @@ export function createMeetingStore(
 			if (!row || !current || current.organizerId !== user.id) return false;
 			row.set('cancelled', true);
 			return true;
+		},
+		cancelOccurrence(id, originalStart) {
+			const row = map.get(id);
+			const current = get(id);
+			if (!row || !current || current.organizerId !== user.id || current.cancelled) return false;
+			if (seriesIndexOf(current, originalStart) === null || current.repeat === 'none') return false;
+			doc.transact(() => exceptionMap(row).set(String(originalStart), { cancelled: true }));
+			return true;
+		},
+		editOccurrence(id, originalStart, patch) {
+			const row = map.get(id);
+			const current = get(id);
+			if (!row || !current || current.organizerId !== user.id || current.cancelled) return null;
+			if (seriesIndexOf(current, originalStart) === null || current.repeat === 'none') return null;
+			if (patch.title !== undefined && !sanitizeChannelName(patch.title)) return null;
+			const previous = exceptionAt(current.exceptions, originalStart);
+			const start = patch.start ?? previous?.start;
+			const end = patch.end ?? previous?.end;
+			if ((start === undefined) !== (end === undefined)) return null;
+			if (start !== undefined && end !== undefined) {
+				const finite = finiteTime(start) !== null && finiteTime(end) !== null;
+				if (!finite || end <= start || end - start > MAX_MEETING_HOURS * 3_600_000) return null;
+			}
+			const value = exceptionValue(
+				{ ...patch, ...(start !== undefined && end !== undefined ? { start, end } : {}) },
+				previous,
+			);
+			doc.transact(() => exceptionMap(row).set(String(originalStart), value));
+			return get(id);
 		},
 	};
 }

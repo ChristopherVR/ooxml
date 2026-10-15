@@ -156,8 +156,10 @@ describe('ics', () => {
 			expect.arrayContaining([
 				'BEGIN:VCALENDAR',
 				'UID:m1@openteams',
-				'DTSTART:20260305T140000Z',
-				'DTEND:20260305T143000Z',
+				'BEGIN:VTIMEZONE',
+				'TZID:America/New_York',
+				'DTSTART;TZID=America/New_York:20260305T090000',
+				'DTEND;TZID=America/New_York:20260305T093000',
 				'SUMMARY:Stand-up',
 				'RRULE:FREQ=WEEKLY',
 				'TRIGGER:-PT5M',
