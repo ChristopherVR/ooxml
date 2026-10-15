@@ -10,7 +10,12 @@ export interface Located {
 	index: number;
 }
 
-/** A floating picture, as the layout counts them: anchored with media bytes. */
+/** A float as the layout counts them (`paragraphFloats`): anchored with media bytes or a shape. */
+const countsAsFloat = (node: ProseMirrorNode): boolean =>
+	node.type.name === 'image' &&
+	Boolean(node.attrs.anchored && (node.attrs.partName || node.attrs.shape));
+
+/** A floating picture the page can select: anchored with media bytes (shapes are not yet). */
 export const isFloat = (node: ProseMirrorNode): boolean =>
 	node.type.name === 'image' && Boolean(node.attrs.anchored && node.attrs.partName);
 
@@ -27,8 +32,9 @@ export function locateFloat(
 		if (String(node.attrs.id) !== blockId) return false;
 		let count = 0;
 		node.forEach((child, offset) => {
-			if (!isFloat(child)) return;
-			if (count++ === index) found = { pos: pos + 1 + offset, node: child, blockId, index };
+			if (!countsAsFloat(child)) return;
+			if (count++ === index && isFloat(child))
+				found = { pos: pos + 1 + offset, node: child, blockId, index };
 		});
 		return false;
 	});
@@ -44,7 +50,7 @@ export function selectedFloat(state: EditorState): Located | undefined {
 	if (paragraph.type.name !== 'paragraph') return undefined;
 	let index = 0;
 	paragraph.forEach((child, offset) => {
-		if ($pos.start() + offset < selection.from && isFloat(child)) index++;
+		if ($pos.start() + offset < selection.from && countsAsFloat(child)) index++;
 	});
 	return {
 		pos: selection.from,

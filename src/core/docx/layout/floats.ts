@@ -136,6 +136,7 @@ export function positionFloats(input: LayoutDocumentInput, pages: LayoutPageBox[
 						heightPx: float.heightPx,
 						partName: float.partName,
 						contentType: float.contentType,
+						...(float.chart ? { chart: float.chart } : {}),
 						behindText: Boolean(float.behindText),
 						...(float.wrap ? { wrap: float.wrap } : {}),
 					});

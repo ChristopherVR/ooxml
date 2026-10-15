@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import JSZip from 'jszip';
+import { savedDocument } from './saved-document';
 import { fileInput, newDocument } from './helpers';
 
 const fixture = new URL('./support/content-controls.docx', import.meta.url);
@@ -18,15 +18,6 @@ async function openFixture(page: import('@playwright/test').Page) {
 	await expect(editor.locator('.ProseMirror .dve-sdt')).toHaveCount(5);
 	return editor;
 }
-const savedDocument = async (page: import('@playwright/test').Page) => {
-	const bytes = await page
-		.locator('docx-editor')
-		.evaluate(async (element) =>
-			Array.from(await (element as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
-		);
-	const zip = await JSZip.loadAsync(new Uint8Array(bytes));
-	return zip.file('word/document.xml')!.async('string');
-};
 
 test('check box, drop-down list and date picker controls are operated and saved', async ({
 	page,
@@ -52,7 +43,7 @@ test('check box, drop-down list and date picker controls are operated and saved'
 	await expect(date).not.toHaveAttribute('data-sdt-placeholder', '1');
 	await expect(date).toHaveText(/^\d{2} \w+ \d{4}$/);
 
-	const xml = await savedDocument(page);
+	const { xml } = await savedDocument(page, 'ui-content-controls.docx');
 	expect(xml).toContain('<w14:checked w14:val="0"/>');
 	expect(xml).toContain('<w:t>Blue</w:t>');
 	expect(xml).toMatch(/w:fullDate="\d{4}-\d{2}-15T00:00:00Z"/);
@@ -86,7 +77,7 @@ test('Insert > Content control adds a placeholder control that typing replaces',
 	await page.keyboard.type('Ada');
 	await expect(control).toHaveText('Ada');
 	await expect(control).not.toHaveAttribute('data-sdt-placeholder', '1');
-	const xml = await savedDocument(page);
+	const { xml } = await savedDocument(page, 'ui-content-control-new.docx');
 	expect(xml).toMatch(/<w:sdt><w:sdtPr><w:id w:val="\d+"\/><w:text\/><\/w:sdtPr>/);
 	expect(xml).toContain('<w:t>Ada</w:t>');
 });

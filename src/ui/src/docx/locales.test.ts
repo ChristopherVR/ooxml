@@ -220,9 +220,13 @@ describe('localized rendering', () => {
 		} as const;
 		for (const locale of EDITOR_LOCALES) {
 			const ribbon = createRibbon(locale);
-			// Header & Footer is contextual: its tab shows only inside a header or footer.
+			// Header & Footer and Shape Format are contextual: they show only inside a header or footer, or on a shape.
 			const names = panelsOf(ribbon).map((panel) => panel.dataset.label);
-			expect(names, locale).toEqual([...expected[locale], strings[locale]['tab.header-footer']]);
+			expect(names, locale).toEqual([
+				...expected[locale],
+				strings[locale]['tab.header-footer'],
+				strings[locale]['tab.shape-format'],
+			]);
 		}
 		expect(strings.fr['tab.insert']).toBe('Insertion');
 		expect(strings.fr.Insert).toBe('Insérer');

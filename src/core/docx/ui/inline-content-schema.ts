@@ -78,6 +78,8 @@ export const imageNodeSpec: NodeSpec = {
 		diagram: { default: null },
 		/** A chart (`DocxChart`) as JSON; painted read-only from its cached values (`chart-spec.ts`). */
 		chart: { default: null },
+		/** A drawing shape (`ShapeSpec`) as JSON; drawn as SVG by the shape node view. */
+		shape: { default: null },
 	},
 	parseDOM: [
 		{

@@ -3,6 +3,7 @@ import type { EditorView, NodeView } from 'prosemirror-view';
 import { schema } from './schema';
 import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
+import { shapeNodeView } from './shape-node-view';
 import type { ThemeCatalog } from 'ooxml-core/docx';
 
 /**
@@ -78,6 +79,7 @@ function renderSpec(node: ProseMirrorNode): HTMLElement {
  */
 export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOptions = {}) {
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
+		if (node.attrs.shape) return shapeNodeView(node, view, getPos, () => options.theme?.());
 		const diagram = parseDiagram(node.attrs.diagram);
 		if (diagram) return smartArtNodeView(node, diagram, options.theme?.());
 		if (node.attrs.chart) {

@@ -5,6 +5,7 @@ import { loadDocx, saveDocx } from './index';
 import type { DocumentModel, InlineImage, Paragraph } from './model';
 import { expectParagraph } from './test-support/access';
 import { newShape } from './shape-model';
+import { SHAPE_PALETTE } from './shape-palette';
 import { shapeSvg } from './shape-svg';
 import { createDocument } from './model';
 
@@ -154,6 +155,24 @@ describe('new shapes', () => {
 		expect(xml).toMatch(/<a:ln w="28575"><a:noFill\/><\/a:ln>/);
 		// Text on a light explicit fill is black so it stays readable.
 		expect(xml).toContain('<w:color w:val="000000"/>');
+	});
+});
+
+describe('shape palette', () => {
+	it('offers only presets that can be drawn, each once', () => {
+		const presets = SHAPE_PALETTE.flatMap((group) => group.shapes.map((item) => item.preset));
+		expect(new Set(presets).size).toBe(presets.length);
+		for (const preset of presets)
+			expect(shapeSvg(newShape(preset), 60, 40), preset).toContain('<path');
+		expect(SHAPE_PALETTE.map((group) => group.name)).toEqual([
+			'Lines',
+			'Rectangles',
+			'Basic Shapes',
+			'Block Arrows',
+			'Flowchart',
+			'Callouts',
+			'Stars and Banners',
+		]);
 	});
 });
 

@@ -7,6 +7,7 @@ import { esNavigation } from './navigation';
 import { esDropCap } from './drop-cap';
 import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
+import { esShapes } from './shapes';
 import type { LocaleStrings } from './en';
 import { esApp } from './es-app';
 import { esTableProperties } from './table-properties';
@@ -25,4 +26,5 @@ export const es: LocaleStrings = {
 	...esFontAdvanced,
 	...esLigatures,
 	...esObjects,
+	...esShapes,
 };

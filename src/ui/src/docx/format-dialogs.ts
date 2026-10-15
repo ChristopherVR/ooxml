@@ -8,6 +8,7 @@ import { createPageBordersDialog, type PageBordersHost } from './page-borders-di
 import { createTextBoxDialog } from './text-box-dialog';
 import { createContentControlDialog } from './content-control-dialog';
 import { createEquationDialog } from './equation-dialog';
+import { createShapeTextDialog } from './shape-text-dialog';
 import { createBordersDialog } from './borders-dialog';
 import { createCaptionDialog } from './caption-dialog';
 import { createCrossReferenceDialog } from './cross-reference-dialog';
@@ -37,6 +38,7 @@ export type FormatDialogKind =
 	| 'textBox'
 	| 'contentControl'
 	| 'equation'
+	| 'shapeText'
 	| 'pageBorders'
 	| 'watermark'
 	| 'dropCap'
@@ -111,6 +113,7 @@ export class FormatDialogs {
 			textBox: createTextBoxDialog(() => host.view()),
 			contentControl: createContentControlDialog(() => host.view()),
 			equation: createEquationDialog(() => host.view()),
+			shapeText: createShapeTextDialog(() => host.view()),
 			lineNumbers: createLineNumberDialog({
 				...(host.lineNumbers ?? {
 					section: () => undefined,

@@ -1,0 +1,85 @@
+/* Drawing shapes on the editing surface, the draw tool and the Insert > Shapes gallery. */
+.ProseMirror p {
+	position: relative;
+}
+.dve-shape {
+	display: inline-block;
+	position: relative;
+	vertical-align: bottom;
+	line-height: 0;
+}
+.dve-shape svg {
+	display: block;
+}
+.dve-shape-floating {
+	position: absolute;
+	z-index: 2;
+}
+.dve-shape-floating.dve-shape-behind {
+	z-index: 0;
+}
+.dve-shape-selected {
+	outline: 2px solid var(--blue, #2b579a);
+	outline-offset: 2px;
+}
+.dve-shape-handle {
+	display: none;
+	position: absolute;
+	right: -6px;
+	bottom: -6px;
+	width: 9px;
+	height: 9px;
+	border: 1px solid var(--blue, #2b579a);
+	background: #fff;
+	cursor: nwse-resize;
+}
+.dve-shape-selected .dve-shape-handle {
+	display: block;
+}
+.dve-drawing-shape,
+.dve-drawing-shape * {
+	cursor: crosshair !important;
+}
+.dve-shape-rubber {
+	position: fixed;
+	z-index: 1000;
+	border: 1px dashed var(--blue, #2b579a);
+	background: rgba(68, 114, 196, 0.12);
+	pointer-events: none;
+}
+
+.ribbon-popover.shape-picker {
+	width: 244px;
+	max-height: 420px;
+	padding: 6px 8px 8px;
+	overflow-y: auto;
+}
+.shape-picker h4 {
+	margin: 6px 0 4px;
+	color: var(--muted);
+	font:
+		600 11px 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.shape-picker-grid {
+	display: grid;
+	grid-template-columns: repeat(8, 26px);
+	gap: 2px;
+}
+.shape-picker-grid button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 1px solid transparent;
+	background: transparent;
+	cursor: pointer;
+}
+.shape-picker-grid button:hover,
+.shape-picker-grid button:focus-visible {
+	border-color: var(--blue, #2b579a);
+	background: var(--accent-soft);
+}

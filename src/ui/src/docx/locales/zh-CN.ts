@@ -7,6 +7,7 @@ import { zhNavigation } from './navigation';
 import { zhLineNumbers } from './line-numbers';
 import { zhDropCap } from './drop-cap';
 import { zhObjects } from './objects';
+import { zhShapes } from './shapes';
 import type { LocaleStrings } from './en';
 import { zhCNApp } from './zh-CN-app';
 import { zhTableProperties } from './table-properties';
@@ -25,4 +26,5 @@ export const zhCN: LocaleStrings = {
 	...zhFontAdvanced,
 	...zhLigatures,
 	...zhObjects,
+	...zhShapes,
 };

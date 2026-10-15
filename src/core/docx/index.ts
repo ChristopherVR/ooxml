@@ -100,3 +100,6 @@ export * from './page-size';
 export * from './section-edit';
 export * from './content-control-edit';
 export { parseContentControl } from './content-control';
+export * from './shape-model';
+export * from './shape-palette';
+export { shapeSvg, shapeAppearance, shapeColorCss, shapeTextColor } from './shape-svg';

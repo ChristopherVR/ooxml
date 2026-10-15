@@ -13,6 +13,15 @@ import { followLinkAt } from './link-commands';
 import { insertContentControl } from 'ooxml-core/docx/ui';
 import { EQUATION_GALLERY } from 'ooxml-core/math';
 import { insertEquation } from './equation-commands';
+import { ShapeTool, shapeDrawPlugin } from './shape-draw';
+import {
+	setShapeFill,
+	setShapeOutline,
+	setShapeSize,
+	setShapeWeight,
+	setShapeWrap,
+	type ShapeWrap,
+} from './shape-commands';
 import { insertPicture, PICTURE_TYPES, stagePicture } from './picture-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
@@ -45,6 +54,8 @@ export class InsertController {
 	readonly pictureInput: HTMLInputElement;
 	/** Bytes for pictures inserted since the document was loaded; passed to save. */
 	readonly pendingMedia = new Map<string, PendingMediaPart>();
+	/** The shape Insert > Shapes armed for the next drag on the page. */
+	readonly shapeTool = new ShapeTool();
 	private showHidden = false;
 	private showMarks = false;
 	private showGridlines = false;
@@ -73,6 +84,11 @@ export class InsertController {
 		} else if (action.type === 'insertContentControl') {
 			const tr = view?.editable && insertContentControl(view.state, action.value);
 			if (view && tr) view.dispatch(tr.scrollIntoView());
+			focusView(view);
+		} else if (action.type === 'drawShape') {
+			if (editable) this.shapeTool.arm(action.preset);
+		} else if (action.type === 'shape') {
+			if (view) this.runShapeAction(view, action);
 			focusView(view);
 		} else if (action.type === 'insertEquation') {
 			const entry = EQUATION_GALLERY.find((item) => item.id === action.id);
@@ -135,6 +151,7 @@ export class InsertController {
 	/** Ctrl+K opens the link dialog; Ctrl/Cmd+Click follows a link like Word. */
 	plugins(): Plugin[] {
 		return [
+			shapeDrawPlugin(this.shapeTool),
 			keymap({
 				'Mod-k': (_state, _dispatch, view) => {
 					if (view?.editable) this.linkDialog.open();
@@ -142,6 +159,16 @@ export class InsertController {
 				},
 			}),
 		];
+	}
+
+	private runShapeAction(view: EditorView, action: Extract<RibbonAction, { type: 'shape' }>): void {
+		const { key, value } = action;
+		if (key === 'fill') setShapeFill(view, String(value));
+		else if (key === 'outline') setShapeOutline(view, String(value));
+		else if (key === 'weight') setShapeWeight(view, Number(value));
+		else if (key === 'width') setShapeSize(view, Number(value) * 96, undefined);
+		else if (key === 'height') setShapeSize(view, undefined, Number(value) * 96);
+		else if (key === 'wrap') setShapeWrap(view, String(value) as ShapeWrap);
 	}
 
 	handleClick(view: EditorView, pos: number, event: MouseEvent): boolean {
@@ -154,6 +181,7 @@ export class InsertController {
 	}
 
 	reset(): void {
+		this.shapeTool.disarm();
 		this.pendingMedia.clear();
 		if (this.linkDialog.isOpen) this.linkDialog.close();
 		if (this.pictureDialog.isOpen) this.pictureDialog.close();

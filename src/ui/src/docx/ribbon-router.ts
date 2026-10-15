@@ -8,6 +8,7 @@ import { translate } from './localization';
 import { emit } from './events';
 import { insertCoverPage } from './cover-page';
 import { openTablePicker } from './table-picker';
+import { openShapePicker } from './shape-picker';
 import { openGoToPanel } from './go-to-panel';
 import { selectNextObject } from './go-to';
 import { closeRibbonPopover } from './ribbon-popover';
@@ -104,6 +105,19 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 			title?.id,
 		);
 		focusView(target);
+	} else if (action.type === 'shapePicker' && target) {
+		const anchor = shell.toolbar?.querySelector<HTMLElement>(
+			'[aria-label="Shapes"], [data-localearialabel="Shapes"]',
+		);
+		if (anchor)
+			openShapePicker(
+				anchor,
+				(preset) => {
+					inserts.shapeTool.arm(preset);
+					focusView(target);
+				},
+				closeRibbonPopover,
+			);
 	} else if (action.type === 'tablePicker' && target) {
 		const anchor = shell.toolbar?.querySelector<HTMLElement>(
 			'[aria-label="Insert table"], [data-localearialabel="Insert table"]',

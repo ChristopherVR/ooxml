@@ -28,15 +28,61 @@ warnings identify unsupported imported content.
 
 ## Remaining gaps
 
-### Imported equations
+### Equations
 
-Inline and display OMML equations render as read-only MathML in the editing
-surface and story previews, with accessible equation labels. Conversion lives in
-the shared `ooxml-core/math` area. Unsupported previews show a notice rather than
-silently disappearing. Source OMML stays intact while neighboring text changes;
-save/reopen browser contracts cover all six bindings. Equation insertion and editing
-are not supported. Print Layout shows `[Equation]` and an approximation warning;
-native MathML display does not establish Word layout parity.
+Inline and display OMML equations render as MathML in the editing surface and story
+previews, with accessible equation labels, and are drawn on Print Layout pages as
+SVG from the shared `ooxml-core/math` box model (fractions, scripts, radicals,
+n-ary operators, delimiters, matrices, accents and limits), sized and baseline
+aligned on the line; a paragraph holding only a display equation is centred. The
+estimate of Cambria Math metrics does not establish Word layout parity. Insert >
+Equation opens a LaTeX box with live preview (and edits the selected equation, also on
+double-click), plus a gallery of area of a circle, the quadratic formula, the
+Pythagorean theorem and the binomial theorem; edited and new equations are written as
+`m:oMath` (inline) or `m:oMathPara` (display), and an unchanged imported equation
+keeps its source subtree. Not supported: Word's linear format as input (LaTeX
+commands only), equation styles and the Equation Tools tab, and OMML constructs the
+box model lays out as their children (`m:phant` and `m:groupChr` are approximated).
+Equations that cannot be drawn show an `[Equation]` marker and a warning.
+
+### Content controls
+
+Structured document tags are read, edited and written. Inline, block, row and cell
+`w:sdt` elements keep their properties (title, tag, lock, placeholder state, check box
+state and glyphs, list entries, date format, `w:dataBinding` kept verbatim). The editor
+draws Word's hover and selected outline with the title tab and grey placeholder text,
+toggles check boxes on click, lists drop-down and combo box entries, opens a calendar for
+date pickers, replaces a placeholder when typing and restores it when the text is
+deleted, and enforces `contentLocked` and `sdtLocked`. Insert > Content control adds
+rich text, plain text, check box, drop-down list, combo box and date picker controls
+and a properties dialog edits title, tag, locks, list entries and the date format.
+Row and cell controls are read and preserved but not drawn or edited. A data-bound
+control is edited in the document only: its custom XML part is not updated, so Word
+shows the bound value again on open. Repeating sections, picture, citation,
+bibliography and building-block controls are preserved without special editing, and a
+control whose content is deleted entirely through code (rather than Delete) is not
+re-created.
+
+### Drawing shapes
+
+A `wps:wsp` with a preset geometry is a shape (a text box, `txBox="1"`, stays a text
+box). Reading covers the preset and its adjustments, solid or no fill, outline colour,
+weight and dash, rotation and flips, text, size and floating placement and wrapping, using
+the shared DrawingML readers; the shared preset geometry tables draw it as SVG on the
+editing surface and in Print Layout (inline and floating, and the Word fixtures'
+rectangles, ovals, arrows and lines). A shape whose `spPr` holds only that is editable;
+anything else (gradient, picture or pattern fill, effects, custom geometry, groups,
+WordArt, ink, SmartArt) is preserved and drawn when it has a preset geometry. Insert >
+Shapes offers 54 shapes in seven families; choosing one and dragging on the page draws a
+floating shape in front of text anchored to the paragraph under the pointer (a click
+gives Word's 1 by 0.67 inch box). The Shape Format tab sets fill, outline colour and
+weight, text, wrapping (in line, square, tight, through, top and bottom, behind and in front
+of text) and size; a corner handle resizes. Editing a shape rewrites its drawing from the
+model while keeping its identity, style and body properties, and drops a VML fallback
+(`mc:AlternateContent`), so Word 2007 would not show the edited shape. Moving a floating
+shape by dragging, rotating, adjusting the yellow handles, gradient and picture fills, shape
+effects, grouping, aligning and text formatting inside a shape are not supported, and
+Print Layout selection and moving belong to the Print Layout editing work.
 
 ### Editor commands and UI
 
@@ -357,10 +403,10 @@ Still not at parity:
   its apply-to/list-style options. (Add tab stop at: a level's `w:tab w:val="num"` is read, written and
   honoured by the marker's tab suffix in the editor and Print Layout.) Text Highlight keeps the 17-colour list (Word's is a short
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
-- **Insert:** Cover Page galleries (one plain design exists), Shapes, Icons, 3D Models, inserting or editing SmartArt (existing SmartArt is shown read-only from its saved drawing, not recomputed),
+- **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, inserting or editing SmartArt (existing SmartArt is shown read-only from its saved drawing, not recomputed),
   inserting or editing Charts (existing charts are drawn read-only from the values cached in the part for bar, column, line,
   area, pie, doughnut, scatter and radar charts, bar/line combinations, waterfalls and histograms; bubble, stock, surface and other chartex charts show a labelled frame naming the
-  family, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, Equation,
+  family, and floating charts are not placed in Print Layout), Screenshot, floating or formatted Text Boxes, WordArt, equation styles and the Equation Tools tab,
   Signature Line, Object.
 - **Layout and References:** Manual Hyphenation and its options, Position
   and Wrap Text, Citations, Bibliography, Index and Table of Authorities, and

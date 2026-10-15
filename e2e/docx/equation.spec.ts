@@ -59,7 +59,13 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(equations.nth(1).locator('msup')).toHaveCount(1);
 		if (framework === 'vanilla') {
 			await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
-			await expect(editor.locator('.dve-print-page').first()).toContainText('[Equation]');
+			// Print Layout draws each equation (inline and display) as a sized SVG object.
+			await expect(
+				editor.locator('.dve-print-pages [data-docx-chart="1"] svg').first(),
+			).toBeVisible();
+			expect((await editor.locator('.dve-print-pages').allTextContents()).join('')).not.toContain(
+				'[Equation]',
+			);
 		}
 		expect(errors).toEqual([]);
 	});

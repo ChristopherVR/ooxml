@@ -71,6 +71,7 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				{ type: 'insertPicture' },
 				{ large: true, caption: 'Pictures' },
 			),
+			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
 			tool(
 				'Format picture',
 				'formatPicture',

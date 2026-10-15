@@ -115,6 +115,15 @@ describe('pictures in pagination', () => {
 		expect(first!.xPx - first!.originXPx).toBe(40);
 	});
 
+	it('keeps the painted drawing of a floating shape that has no media part', () => {
+		const chart = { svg: '<svg xmlns="http://www.w3.org/2000/svg"/>', label: 'Shape' };
+		const result = layoutDocument(
+			input([anchoredIn('shape', { partName: '', contentType: '', chart, offsetXPx: 10 })]),
+			measurer,
+		);
+		expect(at(result.pages, 0).floats?.[0]).toMatchObject({ blockId: 'shape', chart });
+	});
+
 	it('places a float on the page where its paragraph starts', () => {
 		const filler: LayoutParagraph = {
 			kind: 'paragraph',

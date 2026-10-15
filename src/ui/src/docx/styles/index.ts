@@ -23,6 +23,7 @@ import pageNavigator from './page-navigator.css?raw';
 import keyboardMenu from './keyboard-menu.css?raw';
 import smartArt from './smartart.css?raw';
 import contentControls from './content-controls.css?raw';
+import shapesCss from './shapes.css?raw';
 
 const declarations = (theme: EditorTheme, scheme: 'light' | 'dark') =>
 	Object.entries(themeToCssVars(theme))
@@ -63,4 +64,5 @@ export const editorStyleText = [
 	keyboardMenu,
 	smartArt,
 	contentControls,
+	shapesCss,
 ].join('\n');

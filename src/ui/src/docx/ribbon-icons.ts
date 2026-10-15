@@ -122,6 +122,7 @@ const paths = {
 	watermark: 'M5 18L19 6 M7 8h4 M13 16h4',
 	pageBorders: 'M4 4h16v16H4z M7 7h10v10H7z',
 	textBox: 'M4 5h16v14H4z M8 10h8 M8 14h5',
+	shapes: 'M4 14h8v6H4z M17 7.5a4 4 0 1 0 0 .01 M10 11l4-8 4 8z',
 	equation: 'M18 5H7l6 7-6 7h11',
 	contentControl: 'M4 7h16v12H4z M4 7V4h7v3 M8 12h8 M8 15h5',
 	pageColor: 'M6 3h9l3 3v15H6z M9 11h6v6H9z',

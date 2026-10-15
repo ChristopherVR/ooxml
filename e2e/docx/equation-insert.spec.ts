@@ -1,15 +1,6 @@
 import { expect, test } from '@playwright/test';
-import JSZip from 'jszip';
+import { savedDocument } from './saved-document';
 import { dialogByHeading, newDocument } from './helpers';
-
-const savedXml = async (page: import('@playwright/test').Page) => {
-	const bytes = await page
-		.locator('docx-editor')
-		.evaluate(async (element) =>
-			Array.from(await (element as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
-		);
-	return (await JSZip.loadAsync(new Uint8Array(bytes))).file('word/document.xml')!.async('string');
-};
 
 test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draws it on the page', async ({
 	page,
@@ -54,7 +45,7 @@ test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draw
 	expect(box!.width).toBeGreaterThan(40);
 	expect(box!.height).toBeGreaterThan(20);
 
-	const xml = await savedXml(page);
+	const { xml } = await savedDocument(page, 'ui-equation.docx');
 	expect(xml).toContain('<m:oMathPara');
 	expect(xml).toContain('<m:nary>');
 	expect(xml).toContain('<m:f>');

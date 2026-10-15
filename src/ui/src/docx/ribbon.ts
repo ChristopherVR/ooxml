@@ -15,6 +15,7 @@ import { attachRibbonBehavior } from './ribbon-behavior';
 import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
 import { buildHeaderFooterPanel } from './header-footer-ribbon';
+import { buildShapeFormatPanel } from './shape-format-ribbon';
 import { panelsOf, setTabHidden } from './ribbon-tab-api';
 
 export type { RibbonAction } from './ribbon-action';
@@ -42,8 +43,10 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'Help',
 		'Table',
 		'Header & Footer',
+		'Shape Format',
 	]) {
-		const key = name === 'Header & Footer' ? 'header-footer' : name.toLowerCase();
+		const key =
+			name === 'Header & Footer' ? 'header-footer' : name.toLowerCase().replace(/ /g, '-');
 		const panel = document.createElement('div');
 		panel.className = 'ribbon-panel';
 		panel.dataset.ribbonTab = key;
@@ -51,16 +54,19 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		panel.dataset.panel = name;
 		panel.id = `dve-panel-${key}`;
 		panel.tabIndex = 0;
-		if (name === 'Table' || name === 'Header & Footer') panel.dataset.contextual = '';
+		if (name === 'Table' || name === 'Header & Footer' || name === 'Shape Format')
+			panel.dataset.contextual = '';
 		panels.set(name, panel);
 	}
 	buildHomePanel(panels);
 	buildOtherPanels(panels);
 	buildNativeTabs(panels);
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
+	buildShapeFormatPanel(panels.get('Shape Format')!);
 	for (const panel of panels.values()) root.append(panel);
 	// Table tools are contextual: the tab appears only while the selection is in a table.
-	for (const key of ['table', 'header-footer']) setTabHidden(root, key, 'contextual', true);
+	for (const key of ['table', 'header-footer', 'shape-format'])
+		setTabHidden(root, key, 'contextual', true);
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font family"]')!, 'Calibri');
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font size"]')!, '11');
 	root.querySelector<HTMLSelectElement>('[aria-label="Zoom"]')!.value = '100';
