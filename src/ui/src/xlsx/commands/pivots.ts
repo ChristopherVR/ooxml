@@ -1,7 +1,7 @@
 import {
 	pivotGroupableDateFields,
 	pivotGroupableFields,
-	pivotRowFields,
+	pivotSubtotalFields,
 	pivotTableAt,
 } from 'ooxml-core/xlsx';
 import { editing, icon, target, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
@@ -94,7 +94,7 @@ export function pivotCommands(): Command[] {
 			lock: 'objects',
 			enabled: (ctx) => {
 				const pivot = selected(ctx)?.pivot;
-				return !!pivot && pivot.valuesAxis !== 'rows' && pivotRowFields(pivot).length > 1;
+				return !!pivot && pivot.valuesAxis !== 'rows' && pivotSubtotalFields(pivot).length > 0;
 			},
 			run: (ctx) => void ctx.dialogs.open('pivot-field-settings'),
 		}),

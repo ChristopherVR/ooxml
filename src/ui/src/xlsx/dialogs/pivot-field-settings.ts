@@ -1,7 +1,7 @@
 import {
 	PIVOT_SUBTOTAL_ORDER,
 	fieldSubtotalFunctions,
-	pivotRowFields,
+	pivotSubtotalFields,
 	pivotTableAt,
 	type PivotAggregate,
 	type PivotFieldSubtotals,
@@ -26,16 +26,16 @@ const FUNCTION_LABELS: Record<PivotAggregate, string> = {
 };
 
 /**
- * Field Settings: the subtotals of one row field. Automatic shows a Total row (or the group's
- * value when subtotals sit above), None shows no subtotal, and Custom shows a row for each chosen
- * function, below the group.
+ * Field Settings: the subtotals of one row or column field. Automatic shows a Total row or
+ * column (or the group's value when subtotals sit above), None shows no subtotal, and Custom
+ * shows a row or column for each chosen function.
  */
 export function openPivotFieldSettings(ctx: EditorContext): Promise<boolean | undefined> {
 	const t = target(ctx);
 	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
 	if (!t || !pivot || pivot.valuesAxis === 'rows') return Promise.resolve(undefined);
-	const names = pivotRowFields(pivot);
-	if (names.length < 2) return Promise.resolve(undefined);
+	const names = pivotSubtotalFields(pivot);
+	if (!names.length) return Promise.resolve(undefined);
 	const chosen = select(
 		ctx,
 		names.map((name) => [name, name] as const),
