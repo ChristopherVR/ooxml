@@ -273,19 +273,36 @@ export function parseSignatureXml(
 }
 
 /**
- * Verify a signature's digest references against actual document content.
+ * Outcome of {@link verifySignatureDigests}. Deliberately distinct from
+ * {@link SignatureStatus} so a digest check cannot be mistaken for trust.
  *
- * Uses the Web Crypto API (SubtleCrypto) to compute SHA-256/SHA-1 digests
- * of referenced parts and compare against the signed digest values.
+ * - `digestsMatch`: every reference was checked and its digest matched.
+ * - `invalid`: a digest mismatched, or a referenced part is missing.
+ * - `unverified`: nothing could be (fully) checked: no references, no Web
+ *   Crypto, or a reference was skipped (missing URI or digest value, unknown
+ *   digest algorithm).
+ */
+export type SignatureDigestStatus = 'digestsMatch' | 'invalid' | 'unverified';
+
+/**
+ * Check a signature's digest references against actual document content.
  *
- * @param signature - The parsed signature to verify.
+ * This is an integrity check of the referenced parts only. It does NOT verify
+ * `ds:SignatureValue`, the signed-info canonicalization, the certificate chain,
+ * validity dates or revocation, so a `digestsMatch` result says nothing about
+ * who signed the package. Never present it as "signature valid".
+ *
+ * Every reference must be checked: a reference without URI or digest value, or
+ * with an unknown digest algorithm, makes the result `unverified`; a referenced
+ * part that cannot be found makes it `invalid` (the signed content is gone).
+ *
+ * @param signature - The parsed signature to check.
  * @param getPartContent - Function that retrieves part content by URI.
- * @returns The updated signature status after digest verification.
  */
 export async function verifySignatureDigests(
 	signature: ParsedSignature,
 	getPartContent: (uri: string) => Promise<ArrayBuffer | undefined>,
-): Promise<SignatureStatus> {
+): Promise<SignatureDigestStatus> {
 	if (!signature.references.length) {
 		return 'unverified';
 	}
@@ -293,12 +310,14 @@ export async function verifySignatureDigests(
 		return 'unverified';
 	}
 
+	let checked = 0;
+	let skipped = false;
 	for (const ref of signature.references) {
 		if (!ref.digestValue || !ref.uri) {
+			skipped = true;
 			continue;
 		}
 
-		// Determine hash algorithm from digest method URI
 		const algo = ref.digestMethod?.toLowerCase() || '';
 		let hashAlgo: AlgorithmIdentifier;
 		if (algo.includes('sha256') || algo.includes('sha-256')) {
@@ -308,28 +327,27 @@ export async function verifySignatureDigests(
 		} else if (algo.includes('sha1') || algo.includes('sha-1')) {
 			hashAlgo = 'SHA-1';
 		} else {
-			// Unknown digest algorithm - can't verify
+			skipped = true;
 			continue;
 		}
 
 		const content = await getPartContent(ref.uri);
 		if (!content) {
-			continue;
+			return 'invalid';
 		}
 
 		try {
 			const digest = await crypto.subtle.digest(hashAlgo, content);
-			const digestBase64 = arrayBufferToBase64(digest);
-
-			if (digestBase64 !== ref.digestValue) {
+			if (arrayBufferToBase64(digest) !== ref.digestValue) {
 				return 'invalid';
 			}
+			checked++;
 		} catch {
 			return 'unverified';
 		}
 	}
 
-	return signature.certificate ? 'valid' : 'unknownCA';
+	return checked > 0 && !skipped ? 'digestsMatch' : 'unverified';
 }
 
 /**

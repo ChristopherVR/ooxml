@@ -294,6 +294,50 @@ describe('verifySignatureDigests', () => {
 			'_xmlsignatures/sig1.xml',
 		);
 		const status = await verifySignatureDigests(sig, async () => new ArrayBuffer(0));
-		expect(['unverified', 'unknownCA']).toContain(status);
+		expect(status).toBe('unverified');
+	});
+
+	const sha256Of = async (text: string) =>
+		Buffer.from(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))).toString(
+			'base64',
+		);
+	const sigWith = (refs: Record<string, unknown>[]) =>
+		parseSignatureXml(
+			{ 'ds:Signature': { 'ds:SignedInfo': { 'ds:Reference': refs } } },
+			'_xmlsignatures/sig1.xml',
+		);
+	const ref = (uri: string, digest: string, alg = 'http://www.w3.org/2001/04/xmlenc#sha256') => ({
+		'@_URI': uri,
+		'ds:DigestMethod': { '@_Algorithm': alg },
+		'ds:DigestValue': digest,
+	});
+	const bytes = (t: string) => new TextEncoder().encode(t).buffer as ArrayBuffer;
+
+	it('returns digestsMatch (not valid) when all digests match', async () => {
+		const sig = sigWith([ref('/a.xml', await sha256Of('a'))]);
+		expect(await verifySignatureDigests(sig, async () => bytes('a'))).toBe('digestsMatch');
+	});
+
+	it('is unverified when any reference is skipped', async () => {
+		const sig = sigWith([
+			ref('/a.xml', await sha256Of('a')),
+			ref('/b.xml', 'abc==', 'http://unknown/algorithm'),
+		]);
+		expect(await verifySignatureDigests(sig, async () => bytes('a'))).toBe('unverified');
+	});
+
+	it('is unverified when a reference has no digest value', async () => {
+		const sig = sigWith([ref('/a.xml', await sha256Of('a')), { '@_URI': '/b.xml' }]);
+		expect(await verifySignatureDigests(sig, async () => bytes('a'))).toBe('unverified');
+	});
+
+	it('is invalid when a referenced part is missing', async () => {
+		const sig = sigWith([ref('/a.xml', await sha256Of('a'))]);
+		expect(await verifySignatureDigests(sig, async () => undefined)).toBe('invalid');
+	});
+
+	it('is invalid on a digest mismatch', async () => {
+		const sig = sigWith([ref('/a.xml', await sha256Of('a'))]);
+		expect(await verifySignatureDigests(sig, async () => bytes('tampered'))).toBe('invalid');
 	});
 });

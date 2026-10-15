@@ -15,6 +15,7 @@ export {
 	type SignatureCertificateInfo,
 	type SignatureDetectionResult,
 	type SignatureReference,
+	type SignatureDigestStatus,
 	type SignatureStatus,
 } from './detection';
 export {

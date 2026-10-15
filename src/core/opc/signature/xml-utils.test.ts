@@ -142,3 +142,20 @@ describe('extractAllTagText', () => {
 		expect(extractAllTagText('', 'Tag')).toStrictEqual([]);
 	});
 });
+
+describe('tag text extraction on hostile input', () => {
+	it('completes quickly with many unclosed tags', () => {
+		const xml = '<ds:X509Certificate>'.repeat(50_000);
+		const start = Date.now();
+		expect(extractFirstTagText(xml, 'X509Certificate')).toBeUndefined();
+		expect(extractAllTagText(xml, 'X509Certificate')).toEqual([]);
+		expect(Date.now() - start).toBeLessThan(1000);
+	});
+
+	it('keeps prefix, case and sibling-name behaviour', () => {
+		const xml =
+			'<ds:X509Certificate2>no</ds:X509Certificate2><a:x509certificate> AB\n C </b:X509Certificate>';
+		expect(extractFirstTagText(xml, 'X509Certificate')).toBe('ABC');
+		expect(extractAllTagText('<A>1</A><p:A>2 </p:A><AB>3</AB>', 'A')).toEqual(['1', '2']);
+	});
+});
