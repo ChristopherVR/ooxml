@@ -151,12 +151,20 @@ export function docToModel(
 		if (previousParagraphs.has(paragraph.id)) duplicateIds.add(paragraph.id);
 		previousParagraphs.set(paragraph.id, paragraph);
 	};
+	const rememberTable = (table: Table): void => {
+		for (const row of table.rows)
+			for (const cell of row) {
+				cell.paragraphs.forEach(remember);
+				for (const block of cell.sourceBlocks ?? [])
+					if (block.type === 'table') rememberTable(block);
+			}
+	};
 	for (const block of prior.blocks) {
 		if (block.type === 'paragraph') remember(block);
 		else {
 			if (priorTables.has(block.id)) duplicateIds.add(block.id);
 			priorTables.set(block.id, block);
-			for (const row of block.rows) for (const cell of row) cell.paragraphs.forEach(remember);
+			rememberTable(block);
 		}
 	}
 

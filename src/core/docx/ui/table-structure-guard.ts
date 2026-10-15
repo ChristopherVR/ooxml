@@ -33,6 +33,9 @@ export function tableStructureGuardPlugin(): Plugin {
 					if (child.type !== other.type) return false;
 					if (child.type.name === 'paragraph') {
 						if (child.attrs.id !== other.attrs.id) return false;
+					} else if (child.type.name === 'table') {
+						// A nested table keeps its grid and merges; only the text in its cells may change.
+						if (!child.sameMarkup(other) || !sameStructure(child, other)) return false;
 					} else if (!child.eq(other)) return false;
 				}
 			}

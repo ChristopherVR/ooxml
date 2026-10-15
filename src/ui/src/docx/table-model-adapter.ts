@@ -3,6 +3,7 @@
 // id, because vertical-merge continuation cells and nested-table previews have no 1:1 visible
 // ProseMirror node to rebuild from; simple tables keep the existing rebuild-from-doc path.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
+import { cellSourceBlocks } from 'ooxml-core/docx';
 import type { Paragraph, Table, TableCell, TableStyleCatalog } from 'ooxml-core/docx';
 import { schema } from './schema';
 import { resolveCellVisuals } from 'ooxml-core/docx/ui';
@@ -15,6 +16,7 @@ export function tableNode(
 	block: Table,
 	paragraphNode: (paragraph: Paragraph) => ProseMirrorNode,
 	tableStyles?: TableStyleCatalog,
+	nested = false,
 ): ProseMirrorNode {
 	const columnCount = Math.max(
 		1,
@@ -48,11 +50,18 @@ export function tableNode(
 				},
 				tableStyles,
 			);
-			const children = cell.paragraphs.map(paragraphNode);
-			for (const preview of cell.nestedTables ?? [])
-				children.push(
-					schema.nodes.nestedTablePreview.create({ rowsJson: JSON.stringify(preview.rows) }),
-				);
+			const children = cell.sourceBlocks
+				? cellSourceBlocks(cell).map((child) =>
+						child.type === 'paragraph'
+							? paragraphNode(child)
+							: tableNode(child, paragraphNode, tableStyles, true),
+					)
+				: [
+						...cell.paragraphs.map(paragraphNode),
+						...(cell.nestedTables ?? []).map((preview) =>
+							schema.nodes.nestedTablePreview.create({ rowsJson: JSON.stringify(preview.rows) }),
+						),
+					];
 			cells.push(
 				schema.node(
 					'tableCell',
@@ -86,7 +95,8 @@ export function tableNode(
 		'table',
 		{
 			id: block.id,
-			structureEditable: block.structureEditable !== false,
+			// Nested tables edit their text on the page; their grid and merges stay as authored.
+			structureEditable: !nested && block.structureEditable !== false,
 			widthTwips: block.widthTwips ?? null,
 			alignment: block.alignment ?? null,
 			indentTwips: block.indentTwips ?? null,
@@ -179,10 +189,20 @@ export function convertMergedTable(
 			const target = cellByKey.get(String(cellNode.attrs.sourceCellKey || ''));
 			if (!target) return;
 			const paragraphs: Paragraph[] = [];
+			const nested: ProseMirrorNode[] = [];
 			cellNode.forEach((child) => {
 				if (child.type.name === 'paragraph') paragraphs.push(convertParagraph(child));
+				else if (child.type.name === 'table') nested.push(child);
 			});
 			if (paragraphs.length) target.paragraphs = paragraphs;
+			let index = 0;
+			if (target.sourceBlocks)
+				target.sourceBlocks = target.sourceBlocks.map((block) => {
+					const node = block.type === 'table' ? nested[index++] : undefined;
+					return node && block.type === 'table'
+						? convertMergedTable(node, block, convertParagraph)
+						: block;
+				});
 		}),
 	);
 	return updated;

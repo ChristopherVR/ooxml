@@ -85,3 +85,36 @@ describe('complex table transaction boundary', () => {
 		expect(simple.applyTransaction(simple.tr.split(6)).transactions).toHaveLength(1);
 	});
 });
+
+describe('nested table transaction boundary', () => {
+	const nested = () =>
+		schema.node('table', { id: 'n0' }, [
+			schema.node('tableRow', null, [
+				schema.node('tableCell', { sourceCellKey: 'n1' }, [paragraph('n1', 'Inner')]),
+				schema.node('tableCell', { sourceCellKey: 'n2' }, [paragraph('n2', 'Other')]),
+			]),
+		]);
+	const start = () =>
+		EditorState.create({
+			doc: schema.node('doc', null, [
+				schema.node('table', null, [
+					schema.node('tableRow', null, [
+						schema.node('tableCell', null, [paragraph('p0', 'Outer'), nested()]),
+					]),
+				]),
+			]),
+			plugins: [history(), tableStructureGuardPlugin()],
+		});
+	it('allows text edits inside a nested cell and rejects splitting its paragraphs', () => {
+		const state = start();
+		let pos = -1;
+		state.doc.descendants((node, at) => {
+			if (node.isText && node.text === 'Inner') pos = at + 5;
+		});
+		const edited = state.applyTransaction(state.tr.insertText('!', pos));
+		expect(edited.transactions).toHaveLength(1);
+		expect(edited.state.doc.textContent).toContain('Inner!');
+		const split = state.applyTransaction(state.tr.split(pos));
+		expect(split.transactions).toEqual([]);
+	});
+});

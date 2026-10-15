@@ -106,7 +106,7 @@ describe('nested table source stories', () => {
 				p.columns.flatMap((c) =>
 					c.blocks.flatMap((b) =>
 						b.kind === 'table'
-							? b.rows.flatMap((r) => r.cells.flatMap((cell) => cell.filter((p) => p.readOnly)))
+							? b.rows.flatMap((r) => r.cells.flatMap((cell) => cell.filter((p) => p.nested)))
 							: [],
 					),
 				),

@@ -188,9 +188,10 @@ function renderBlock(
 		el.style.height = `${box.heightPx}px`;
 		if (box.xPx !== undefined) el.style.left = `${box.xPx}px`;
 		if (box.widthPx !== undefined) el.style.width = `${box.widthPx}px`;
+		if (box.nested) el.dataset.nested = 'true';
 		if (box.readOnly) {
 			el.dataset.readOnly = 'true';
-			el.title = 'Read-only nested table content';
+			el.title = 'Read-only content';
 		}
 		if (box.frame) el.append(paragraphFrame(box.frame, box.heightPx));
 		for (const line of box.lines) el.append(renderLine(line, box.blockId, hitboxes, pictureUrl));

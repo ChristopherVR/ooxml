@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileInput } from './helpers';
 for (const name of ['nested-table-reference', 'nested-split-late', 'nested-second-cell-late'])
-	test(`nested footnote ${name} renders read-only source through outer editing and reopen`, async ({
+	test(`nested footnote ${name} renders nested source through nested and outer editing and reopen`, async ({
 		page,
 	}) => {
 		await page.goto('/?framework=vanilla');
@@ -31,13 +31,15 @@ for (const name of ['nested-table-reference', 'nested-split-late', 'nested-secon
 		await expect(editor.locator('.dve-print-page')).toHaveCount(
 			name === 'nested-table-reference' ? 1 : 2,
 		);
-		const nested = editor.locator('.dve-print-block[data-read-only="true"]').first();
+		const nested = editor.locator('.dve-print-block[data-nested="true"]').first();
 		await expect(nested).toContainText('T1R0C0L00');
 		await expect(editor.locator('.dve-print-footnote').first()).toContainText('N0L00');
 		await expect(editor.locator('.dve-print-footnote').last()).toContainText('N0L02');
 		await nested.click();
-		await page.keyboard.type('Oops');
-		await expect(input).not.toContainText('Oops');
+		await page.keyboard.type('Nest');
+		await expect(input).toContainText('Nest');
+		await page.keyboard.press('Control+z');
+		await expect(input).not.toContainText('Nest');
 		const outer = editor
 			.locator('.dve-print-block:not(.dve-print-table)')
 			.filter({ hasText: 'Outer cell' })
@@ -80,7 +82,7 @@ for (const name of ['nested-table-reference', 'nested-split-late', 'nested-secon
 		});
 		await expect(input).toContainText('Edit');
 		await print();
-		await expect(editor.locator('.dve-print-block[data-read-only="true"]').first()).toContainText(
+		await expect(editor.locator('.dve-print-block[data-nested="true"]').first()).toContainText(
 			'T1R0C0L00',
 		);
 		await expect(editor.locator('.dve-print-footnote').last()).toContainText('N0L02');
@@ -88,7 +90,7 @@ for (const name of ['nested-table-reference', 'nested-split-late', 'nested-secon
 			const continued = editor
 				.locator('.dve-print-page')
 				.nth(1)
-				.locator('.dve-print-block[data-read-only="true"]');
+				.locator('.dve-print-block[data-nested="true"]');
 			await expect(continued.first()).toHaveCSS('left', '0px');
 			await expect(continued.nth(1)).toHaveCSS('left', '106.667px');
 			// Reflow can replace this block between resolving the locator and reading its style.

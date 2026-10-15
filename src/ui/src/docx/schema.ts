@@ -247,7 +247,7 @@ export const schema = new Schema({
 			],
 		},
 		tableCell: {
-			content: '(paragraph | nestedTablePreview)+',
+			content: '(paragraph | table | nestedTablePreview)+',
 			attrs: {
 				/** First paragraph id in the source cell; reconciles edits back without relying on colspan/rowspan. */
 				sourceCellKey: { default: '' },
@@ -275,7 +275,7 @@ export const schema = new Schema({
 				0,
 			],
 		},
-		/** A nested table's read-only text preview; edit the source document for nested table content. */
+		/** Text-only preview for a nested table with no parsed source blocks (hand-built models). */
 		nestedTablePreview: {
 			atom: true,
 			selectable: false,

@@ -78,8 +78,29 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 		const nested = at(at(table.rows, 1), 1).nestedTables;
 		expect(nested).toHaveLength(1);
 		expect(at(nested, 0).rows).toEqual([[{ text: 'Nested' }]]);
-		expect(loaded.model.warnings.join(' ')).toContain(
-			'Nested tables render as a read-only text preview',
+		expect(loaded.model.warnings.join(' ')).toContain('Text in nested tables is editable');
+	});
+
+	it('saves an edit to nested table text into the nested cell and keeps the rest', async () => {
+		const { table, loaded } = await loadTable();
+		const cell = at(at(table.rows, 1), 1);
+		const nested = cell.sourceBlocks!.find((block) => block.type === 'table')!;
+		expect(nested.type).toBe('table');
+		if (nested.type !== 'table') return;
+		at(at(nested.rows, 0), 0).paragraphs[0]!.runs[0]!.text = 'Edited';
+		const xml = await (
+			await JSZip.loadAsync(await loaded.save())
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(xml).toContain('<w:t>Edited</w:t>');
+		expect(xml).not.toContain('Nested');
+		expect(xml).toContain('<w:t>D</w:t>');
+		const again = await loadDocx(await loaded.save());
+		const reread = at(at(expectTable(again.model.blocks[0]).rows, 1), 1);
+		const inner = reread.sourceBlocks!.find((block) => block.type === 'table');
+		expect(inner?.type === 'table' && inner.rows[0]![0]!.paragraphs[0]!.runs[0]!.text).toBe(
+			'Edited',
 		);
 	});
 

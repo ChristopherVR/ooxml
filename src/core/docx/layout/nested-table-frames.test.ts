@@ -97,7 +97,7 @@ it('aligns projected nested ink with the shared fixed-height cell geometry', asy
 		if (!table || table.kind !== 'table') throw new Error('Expected table');
 		const row = table.rows[0]!,
 			frame = row.cellTables![0]![0]!;
-		const paragraph = row.cells[0]!.find((box) => box.readOnly)!;
+		const paragraph = row.cells[0]!.find((box) => box.nested)!;
 		expect(frame.rows[0]!.heightPx).toBeCloseTo(124 / 3);
 		expect(frame.rows[0]!.geometry![0]!.verticalAlign ?? 'top').toBe(alignment);
 		positions.push(paragraph.yPx - frame.yPx);
@@ -172,7 +172,7 @@ it.each([
 	if (!table || table.kind !== 'table') throw new Error('Expected table');
 	const row = table.rows[0]!,
 		frame = row.cellTables![0]![0]!,
-		ink = row.cells[0]!.find((box) => box.readOnly)!;
+		ink = row.cells[0]!.find((box) => box.nested)!;
 	const native = JSON.parse(
 		readFileSync(
 			new URL('../__fixtures__/nested-table-frames/native-measurements.json', import.meta.url),
@@ -234,7 +234,7 @@ it('matches native bordered continuation bands and reference-line pagination', a
 		if (!table || table.kind !== 'table') throw new Error('Expected table');
 		const row = table.rows[0]!,
 			frame = row.cellTables![0]![0]!,
-			ink = row.cells[0]!.find((box) => box.readOnly)!;
+			ink = row.cells[0]!.find((box) => box.nested)!;
 		const evidence = pages[index]!;
 		const top = Math.min(...evidence.borders.map((b) => b.rectPt[1]!)),
 			bottom = Math.max(...evidence.borders.map((b) => b.rectPt[3]!));
@@ -266,7 +266,7 @@ it('keeps unequal native nested continuations and their note inside the row band
 	const table = layout.pages[1]!.columns[0]!.blocks.find((block) => block.kind === 'table');
 	if (!table || table.kind !== 'table') throw new Error('Expected table');
 	const row = table.rows[0]!;
-	const paragraphs = row.cells[0]!.filter((box) => box.readOnly);
+	const paragraphs = row.cells[0]!.filter((box) => box.nested);
 	expect(paragraphs.map((box) => box.lines.length)).toEqual([4, 2]);
 	const bottom = Math.max(
 		...paragraphs.map((box) => box.yPx + box.heightPx + (box.tableFrameInsets?.bottom ?? 0)),

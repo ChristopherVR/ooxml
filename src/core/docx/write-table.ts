@@ -1,5 +1,5 @@
 import { expectDefined } from './expect-defined';
-import type { Paragraph, Table, TableCell } from './model';
+import type { Block, Paragraph, Table, TableCell } from './model';
 import {
 	patchCellBorders,
 	patchCellShading,
@@ -113,6 +113,27 @@ function assertNoDescriptorEdits(table: Table, base: Table | undefined): void {
 		}
 }
 
+/** Patch edited paragraphs of tables nested in a cell back into their untouched source XML. */
+function writeNestedTables(
+	doc: XmlDocument,
+	tc: XmlElement,
+	cell: TableCell,
+	base: TableCell | undefined,
+	writeParagraph: ParagraphWriter,
+	replaceSlots: SlotsWriter,
+): void {
+	const tables = (blocks: Block[] | undefined) =>
+		(blocks ?? []).filter((block): block is Table => block.type === 'table');
+	const next = tables(cell.sourceBlocks);
+	const before = tables(base?.sourceBlocks);
+	const nodes = children(tc, 'tbl');
+	next.forEach((table, index) => {
+		const node = nodes[index];
+		if (node && before[index])
+			writeTable(doc, table, node, before[index], writeParagraph, replaceSlots);
+	});
+}
+
 export function writeTable(
 	doc: XmlDocument,
 	table: Table,
@@ -214,6 +235,7 @@ export function writeTable(
 				);
 			});
 			replaceSlots(doc, tc, oldParagraphs, nextParagraphs);
+			writeNestedTables(doc, tc, cell, source?.model, writeParagraph, replaceSlots);
 			return tc;
 		});
 		replaceSlots(doc, tr, oldCells, nextCells);

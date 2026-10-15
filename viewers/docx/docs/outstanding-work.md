@@ -396,8 +396,9 @@ Still not at parity:
   Shift+Tab move between cells (Tab in the last cell adds a row), Up and Down move between rows,
   also across a table split over pages. Double-clicking a header or footer area (including the
   empty top or bottom margin) edits it in place on the page, with the body dimmed and the Header &
-  Footer tab to close it (also Escape or a double-click on the body). Limits: paragraphs inside
-  nested tables, and merged cells in the layout's nested projection, are read-only on pages;
+  Footer tab to close it (also Escape or a double-click on the body). Paragraphs in nested
+  tables are editable too (Tab continues through nested cells into the enclosing table); a nested
+  table's grid and merged cells stay as authored and cannot be restructured. Limits:
   footnotes are not edited by clicking on the page; floats, pictures and text boxes are not
   selectable there; the whole document re-lays out on a short debounce after an edit (held while
   a page header or footer is open); a page header or footer editor closes if its virtualised page

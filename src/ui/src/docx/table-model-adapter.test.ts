@@ -81,6 +81,33 @@ describe('merged table rendering and structure-preserving edits', () => {
 		expect(at(at(cellAt(1, 1).paragraphs, 0).runs, 0).text).toBe('D-edited');
 	});
 
+	it('edits a paragraph inside a real nested table and saves it', async () => {
+		const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const xml = `<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid>
+<w:tr><w:tc><w:p><w:r><w:t>Outer</w:t></w:r></w:p><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="1000"/><w:gridCol w:w="1000"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>N1</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>N2</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p><w:r><w:t>After</w:t></w:r></w:p></w:tc></w:tr>
+</w:tbl><w:sectPr/></w:body></w:document>`;
+		const zip = new JSZip();
+		zip.file('word/document.xml', xml);
+		const loaded = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const doc = modelToDoc(loaded.model);
+		const cell = doc.firstChild!.child(0).child(0);
+		expect(cell.childCount).toBe(3);
+		expect(cell.child(1).type.name).toBe('table');
+		expect(cell.child(1).attrs.structureEditable).toBe(false);
+		const state = EditorState.create({ doc });
+		let pos = -1;
+		state.doc.descendants((node, at) => {
+			if (node.isText && node.text === 'N2') pos = at + 2;
+		});
+		const next = docToModel(state.tr.insertText('!', pos).doc, loaded.model);
+		const saved = await JSZip.loadAsync(await loaded.save(next));
+		const savedXml = (await saved.file('word/document.xml')?.async('string')) ?? '';
+		expect(savedXml).toContain('N2!');
+		expect(savedXml).toContain('Outer');
+		expect(savedXml).toContain('After');
+		expect(savedXml.match(/<w:tbl>/g)).toHaveLength(2);
+	});
+
 	it('round-trips a real merged-table DOCX package end to end through save', async () => {
 		const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 		const xml = `<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="1000"/><w:gridCol w:w="1000"/></w:tblGrid>

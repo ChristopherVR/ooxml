@@ -104,7 +104,7 @@ for (const name of [
 			if (name === 'mixed' && evidenceDirectory) {
 				mkdirSync(evidenceDirectory, { recursive: true });
 				const ink = await editor
-					.locator('.dve-print-block[data-read-only="true"]')
+					.locator('.dve-print-block[data-nested="true"]')
 					.filter({ hasText: 'T1R0C0L00' })
 					.boundingBox();
 				await page.screenshot({ path: join(evidenceDirectory, 'word-mixed-frame.png') });
@@ -138,7 +138,7 @@ for (const name of [
 
 			if (name === 'mixed-outer-border' || name === 'mixed-deep') {
 				const paragraph = editor
-					.locator('.dve-print-block[data-read-only="true"]')
+					.locator('.dve-print-block[data-nested="true"]')
 					.filter({ hasText: 'T1R0C0L00' });
 				const ink = await paragraph.boundingBox();
 				expect(ink!.x - frameBounds!.x).toBeCloseTo(4 / 3, 1);
@@ -149,7 +149,7 @@ for (const name of [
 				if (name === 'mixed-deep') {
 					const deepFrame = await frames.nth(1).boundingBox();
 					const deepInk = await editor
-						.locator('.dve-print-block[data-read-only="true"]')
+						.locator('.dve-print-block[data-nested="true"]')
 						.filter({ hasText: 'D0' })
 						.boundingBox();
 					expect(deepFrame!.x - frameBounds!.x).toBeCloseTo(4 / 3, 1);
@@ -187,7 +187,7 @@ for (const name of [
 				await expect(continued).toContainText('T1R0C1L17');
 				await expect(continued).not.toContainText('T1R0C1L18');
 				const long = continued
-					.locator('.dve-print-block[data-read-only="true"]')
+					.locator('.dve-print-block[data-nested="true"]')
 					.filter({ hasText: 'T1R0C0L19' });
 				const box = await long.boundingBox();
 				const cell = await continued.locator('.dve-print-cell').first().boundingBox();
@@ -197,7 +197,7 @@ for (const name of [
 
 			if (name.startsWith('align-')) {
 				const paragraph = editor
-					.locator('.dve-print-block[data-read-only="true"]')
+					.locator('.dve-print-block[data-nested="true"]')
 					.filter({ hasText: 'T1R0C0L00' });
 				const paragraphY = await paragraph.evaluate((node) =>
 					parseFloat((node as HTMLElement).style.top),
@@ -212,7 +212,7 @@ for (const name of [
 			}
 
 			await expect(
-				editor.locator('.dve-print-block[data-read-only="true"]').filter({ hasText: 'T1R0C0L00' }),
+				editor.locator('.dve-print-block[data-nested="true"]').filter({ hasText: 'T1R0C0L00' }),
 			).toHaveCount(1);
 		};
 		await check();

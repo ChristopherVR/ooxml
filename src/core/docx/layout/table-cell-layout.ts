@@ -115,7 +115,7 @@ export function stackCellBlocks(
 						widthPx:
 							paragraph.widthPx ??
 							Math.max(1, geometry.widthPx - geometry.paddingLeftPx - geometry.paddingRightPx),
-						readOnly: true,
+						nested: true,
 						...(edges ? { tableFragmentBottomPx: edges.bottom[index]!.widthPx } : {}),
 						tableFrameInsets: {
 							top:

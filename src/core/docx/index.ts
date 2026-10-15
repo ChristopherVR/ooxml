@@ -22,6 +22,7 @@ export {
 	isThemeColorToken,
 } from './theme-color';
 export { loadDocx } from './parse';
+export { cellSourceBlocks } from './cell-blocks';
 export {
 	DIAGRAM_GRAPHIC_URI,
 	type DocxDiagram,

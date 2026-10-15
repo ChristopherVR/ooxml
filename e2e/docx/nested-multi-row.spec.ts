@@ -82,7 +82,7 @@ for (const { native, root } of [
 						pages.nth(index).evaluate((node) => {
 							const frames = node.querySelectorAll<HTMLElement>('.dve-print-nested-table');
 							const frame = frames[0],
-								ink = node.querySelector<HTMLElement>('.dve-print-block[data-read-only="true"]');
+								ink = node.querySelector<HTMLElement>('.dve-print-block[data-nested="true"]');
 							if (!node.isConnected || frames.length !== 1 || !frame || !ink) return null;
 							const bounds = frame.getBoundingClientRect(),
 								inkBounds = ink.getBoundingClientRect();
@@ -139,10 +139,8 @@ for (const { native, root } of [
 			expect(await unchanged.file('word/document.xml')!.async('string')).toBe(
 				await zip.file('word/document.xml')!.async('string'),
 			);
-			const readonly = editor.locator('.dve-print-block[data-read-only="true"]').first();
-			await readonly.click();
-			await page.keyboard.type('Oops');
-			await expect(input).not.toContainText('Oops');
+			// Nested paragraphs take the caret too; clicking one changes nothing in the package.
+			await editor.locator('.dve-print-block[data-nested="true"]').first().click();
 			const outer = editor
 				.locator('.dve-print-block:not(.dve-print-table)')
 				.filter({ hasText: 'T2R0C0L00' })

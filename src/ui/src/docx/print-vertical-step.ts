@@ -38,6 +38,33 @@ function lineInRow(
 }
 
 /**
+ * Within a cell that holds nested tables the lines of side-by-side nested cells interleave in
+ * reading order, so a vertical step picks the nearest line that lies fully above or below, and
+ * under `x` among equals.
+ */
+function nestedStep(
+	index: PrintEditingIndex,
+	cell: Element,
+	line: HTMLElement,
+	direction: number,
+	x: number,
+): HTMLElement | undefined {
+	if (!cell.querySelector('[data-nested="true"]')) return undefined;
+	const from = line.getBoundingClientRect();
+	let best: { line: HTMLElement; dy: number; dx: number } | undefined;
+	for (const candidate of cellLines(index, cell)) {
+		if (candidate === line || candidate.closest('[data-repeated="true"]')) continue;
+		const rect = candidate.getBoundingClientRect();
+		const dy = direction < 0 ? from.top - rect.bottom : rect.top - from.bottom;
+		if (dy < -1) continue;
+		const dx = Math.max(rect.left - x, x - rect.right, 0);
+		if (!best || dy < best.dy - 1 || (Math.abs(dy - best.dy) <= 1 && dx < best.dx))
+			best = { line: candidate, dy, dx };
+	}
+	return best?.line;
+}
+
+/**
  * The line one step up or down from `line`. Outside tables that is the next rendered line; inside a
  * table it stays in the cell, then moves to the cell of the next row under the same x, and leaves
  * the table past its last or first row. Entering a table lands in the cell under `x`.
@@ -51,6 +78,8 @@ export function stepVertical(
 	const cell = line.closest(CELL);
 	let target = index.adjacent(line, direction);
 	if (cell) {
+		const inside = nestedStep(index, cell, line, direction, x);
+		if (inside) return inside;
 		if (target !== line && target.closest(CELL) === cell) return target;
 		const row = cell.closest(ROW);
 		const sibling = row && rowSibling(row, direction);

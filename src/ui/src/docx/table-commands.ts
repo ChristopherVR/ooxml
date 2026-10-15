@@ -87,9 +87,13 @@ function replaceWithParagraph(view: EditorView, ctx: Context): void {
 /** Reports whether the current selection can receive the requested table edit. */
 export function canExecuteTableCommand(view: EditorView, action: TableCommand): boolean {
 	const ctx = context(view);
+	// A nested table keeps the grid it was authored with; only its text is editable.
+	const nested =
+		ctx && view.state.selection.$from.node(ctx.tableDepth - 1).type.name === 'tableCell';
 	return Boolean(
 		view.editable &&
 		ctx &&
+		!nested &&
 		(action === 'deleteTable' || ctx.table.attrs.structureEditable !== false),
 	);
 }

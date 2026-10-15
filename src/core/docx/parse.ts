@@ -176,7 +176,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		)
 	)
 		model.warnings.push(
-			'Nested tables render as a read-only text preview; edit their content from the original document.',
+			'Text in nested tables is editable; the grid, merges and formatting of a nested table are preserved but cannot be changed.',
 		);
 	// Every block that can hold a drawing: body, headers, footers, footnotes and endnotes.
 	const pictureBlocks = [

@@ -60,7 +60,7 @@ it.each(['mixed', 'mixed-margin', 'mixed-centered', 'mixed-two-rows', 'mixed-spl
 				expect(Math.abs(left * 0.75 - (fill.rectPt[0]! - nativeLeft))).toBeLessThan(0.2);
 				expect(Math.abs(right * 0.75 - (fill.rectPt[2]! - nativeLeft))).toBeLessThan(0.2);
 			}
-			const ink = table.rows[0]!.cells[0]!.filter((box) => box.readOnly);
+			const ink = table.rows[0]!.cells[0]!.filter((box) => box.nested);
 			expect(ink[1]!.xPx! - ink[0]!.xPx!).toBeCloseTo(
 				((name === 'mixed-centered' ? 60 : 80) * 4) / 3 + (name === 'mixed-margin' ? 0 : 2 / 3),
 				1,
