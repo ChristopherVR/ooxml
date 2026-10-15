@@ -84,6 +84,27 @@ describe('Group Selection on a date field', () => {
 		expect(pivot().dateGroups).toBeUndefined();
 	});
 
+	it('groups the dates of a report that has a report filter', async () => {
+		const { ctx, pivot } = setup({ pageFilter: { field: 'Product', item: 'Pear' } });
+		const done = ctx.dialogs.open('pivot-group-dates');
+		const dialog = dialogEl(ctx, 'pivot-group-dates');
+		toggle(box(dialog, 'Years'), true);
+		clickButton(dialog, 'OK');
+		await done;
+		expect(pivot().pageFilter).toEqual({ field: 'Product', item: 'Pear' });
+		expect(pivot().dateGroups).toEqual([{ field: 'Date', by: ['months', 'years'] }]);
+		// The group range still comes from all the dates, so the pages of only Pear stay in place.
+		expect(pivotGrid(pivot()).values.map((line) => line[0])).toEqual([
+			'Product',
+			null,
+			'Row Labels',
+			'2024',
+			'May',
+			'Dec',
+			'Grand Total',
+		]);
+	});
+
 	it('takes a chosen range and a number of days when grouping by days alone', async () => {
 		const { ctx, pivot } = setup();
 		const done = ctx.dialogs.open('pivot-group-dates');
@@ -291,7 +312,6 @@ describe('translations of the new text', () => {
 		'Choose at least one function.',
 		'Choose a valid date group.',
 		'Only fields that contain dates can be grouped by date.',
-		'Date groups cannot be combined with report filters or timelines.',
 		'The date group must end after it starts.',
 		'A source field already has the name of a date group field.',
 		'The date group has too many items.',
