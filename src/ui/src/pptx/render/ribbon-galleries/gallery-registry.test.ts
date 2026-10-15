@@ -131,16 +131,17 @@ describe('contextual tabs', () => {
 		expect(contextualTabsForElement(shape())).toStrictEqual(['shapeFormat']);
 		expect(contextualTabsForElement({ ...shape(), type: 'table' } as PptxElement)).toStrictEqual([
 			'tableDesign',
+			'tableLayout',
 		]);
 		expect(contextualTabsForElement(null)).toStrictEqual([]);
 	});
 
-	it('brings up exactly one contextual tab per object type', () => {
+	it('brings up the contextual tab(s) of the object type', () => {
 		const of = (type: string) =>
 			contextualTabsForElement({ ...shape(), type } as unknown as PptxElement);
 		expect(of('image')).toStrictEqual(['pictureFormat']);
 		expect(of('picture')).toStrictEqual(['pictureFormat']);
-		expect(of('table')).toStrictEqual(['tableDesign']);
+		expect(of('table')).toStrictEqual(['tableDesign', 'tableLayout']);
 		expect(of('chart')).toStrictEqual(['chartDesign']);
 		expect(of('smartArt')).toStrictEqual(['smartArtDesign']);
 	});

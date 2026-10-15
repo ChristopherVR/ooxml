@@ -1,3 +1,4 @@
+import type { ReviewCommentsHost } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';
@@ -140,5 +141,30 @@ describe('createRecordTab', () => {
 		}
 		expect(button(el, t('pptx.record.cameo')).disabled).toBeTruthy();
 		expect(button(el, t('pptx.slideShow.fromBeginning')).disabled).toBeFalsy();
+	});
+
+	it('walks the deck comments and deletes the current one through the host', () => {
+		const slides = [{ comments: [{ id: 'a', text: 'a' }] }, { comments: [{ id: 'b', text: 'b' }] }];
+		const log: string[] = [];
+		const reviewComments: ReviewCommentsHost = {
+			slides: () => slides,
+			currentSlide: () => 0,
+			goToSlide: (index) => log.push(`go:${index}`),
+			ensureCommentsOpen: () => log.push('open'),
+			applyComments: (changes) => log.push(`apply:${changes.length}`),
+		};
+		const t = createTranslator();
+		const tab = createReviewTab(document, t, navHandlers({ reviewComments }));
+		tab.setEditable(true);
+		document.body.append(tab.el);
+		expect(button(tab.el, t('pptx.common.delete')).disabled).toBeTruthy();
+		button(tab.el, t('pptx.common.next')).click();
+		button(tab.el, t('pptx.common.next')).click();
+		expect(log).toStrictEqual(['open', 'open', 'go:1']);
+		expect(button(tab.el, t('pptx.common.delete')).disabled).toBeFalsy();
+		button(tab.el, t('pptx.common.delete')).click();
+		expect(log.at(-1)).toBe('apply:1');
+		tab.destroy();
+		tab.el.remove();
 	});
 });

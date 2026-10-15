@@ -66,6 +66,7 @@ export function buildRibbonPropsState(input: UseRibbonPropsInput) {
 		isThemeGalleryOpen: input.themeGalleryOpen.value,
 		isCommentsPanelOpen: input.showComments.value,
 		slideCommentCount: input.activeComments.value.length,
+		reviewComments: input.reviewComments,
 		formatPainterActive: input.formatPainterActive.value,
 		canActivateFormatPainter: input.canActivateFormatPainter.value,
 		isSelectionPaneOpen: input.showSelectionPane.value,

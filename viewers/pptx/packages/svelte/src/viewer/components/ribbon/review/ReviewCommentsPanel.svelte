@@ -209,7 +209,7 @@
 	{:else}
 		<div class="pptx-svelte-comments-list" aria-label={t('pptx.comments.slideComments')}>
 			{#each comments as comment (comment.id)}
-				<article class:resolved={comment.resolved} class="pptx-svelte-comment-card">
+				<article class:resolved={comment.resolved} class="pptx-svelte-comment-card" data-comment-id={comment.id}>
 					<div class="pptx-svelte-comment-meta">
 						<strong>{comment.author ?? t('pptx.comments.unknownAuthor')}</strong>
 						{#if comment.resolved}<span>{t('pptx.comments.resolved')}</span>{/if}

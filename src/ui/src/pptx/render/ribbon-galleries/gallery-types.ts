@@ -35,6 +35,28 @@ export type RibbonGalleryId =
 	| 'bullets'
 	| 'numbering'
 	| 'tableStyles'
+	| 'tableSelect'
+	| 'tableViewGridlines'
+	| 'tableDeleteRows'
+	| 'tableDeleteColumns'
+	| 'tableInsertAbove'
+	| 'tableInsertBelow'
+	| 'tableInsertLeft'
+	| 'tableInsertRight'
+	| 'tableMergeCells'
+	| 'tableSplitCells'
+	| 'tableDistributeRows'
+	| 'tableDistributeColumns'
+	| 'tableAlignLeft'
+	| 'tableAlignCenter'
+	| 'tableAlignRight'
+	| 'tableAlignTop'
+	| 'tableAlignMiddle'
+	| 'tableAlignBottom'
+	| 'tableTextDirection'
+	| 'tableCellMargins'
+	| 'tableSize'
+	| 'tableArrange'
 	| 'chartStyles'
 	| 'chartColors'
 	| 'chartQuickLayout'
@@ -149,6 +171,11 @@ export interface RibbonGalleryContext {
 	 * fall back to an approximation from `themeColorMap`.
 	 */
 	resolveStyleMatrix?: (styleXml: XmlObject) => ResolvedStyleMatrix;
+	/**
+	 * The table cells the selection covers (`row` and `column` are zero-based), for the Table
+	 * Layout commands. Omitted or empty when the table frame itself is selected.
+	 */
+	selectedTableCells?: ReadonlyArray<{ row: number; column: number }>;
 }
 
 /** What a pick asks the binding to do. */

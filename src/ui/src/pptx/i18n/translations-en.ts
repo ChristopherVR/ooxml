@@ -4,6 +4,7 @@ import { galleryAdjustTranslationsEn } from './translations-en-galleries-adjust'
 import { galleryDataTranslationsEn } from './translations-en-galleries-data';
 import { galleryEffectsTranslationsEn } from './translations-en-galleries-effects';
 import { galleryPictureTranslationsEn } from './translations-en-galleries-picture';
+import { tableLayoutTranslationsEn } from './translations-en-table-layout';
 
 /**
  * The canonical English UI-string dictionary for pptx-viewer. None of the
@@ -23,6 +24,7 @@ export const translationsEn: Record<string, string> = {
 	...galleryDataTranslationsEn,
 	...galleryPictureTranslationsEn,
 	...galleryAdjustTranslationsEn,
+	...tableLayoutTranslationsEn,
 
 	// Status bar
 	'pptx.statusBar.allSaved': 'All saved',

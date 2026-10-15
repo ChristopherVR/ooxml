@@ -545,6 +545,7 @@ unit test fails if an id is missing here.
 | `shapeFormat`    | Shape Format    |
 | `pictureFormat`  | Picture Format  |
 | `tableDesign`    | Table Design    |
+| `tableLayout`    | Table Layout    |
 | `chartDesign`    | Chart Design    |
 | `smartArtDesign` | SmartArt Design |
 
@@ -608,6 +609,13 @@ unit test fails if an id is missing here.
 | `pictureFormat.pictureStyles`       | Picture Styles           |
 | `pictureFormat.size`                | Size                     |
 | `tableDesign.tableStyles`           | Table Styles             |
+| `tableLayout.table`                 | Table                    |
+| `tableLayout.rowsColumns`           | Rows & Columns           |
+| `tableLayout.merge`                 | Merge                    |
+| `tableLayout.cellSize`              | Cell Size                |
+| `tableLayout.alignment`             | Alignment                |
+| `tableLayout.tableSize`             | Table Size               |
+| `tableLayout.arrange`               | Arrange                  |
 | `chartDesign.chartLayouts`          | Chart Layouts            |
 | `chartDesign.chartStyles`           | Chart Styles             |
 | `smartArtDesign.createGraphic`      | Create Graphic           |
@@ -753,6 +761,8 @@ unit test fails if an id is missing here.
 | `review.language.language`                        | Language                            |
 | `review.comments.newComment`                      | New Comment                         |
 | `review.comments.delete`                          | Delete                              |
+| `review.comments.deleteSlide`                     | Delete Slide Comments               |
+| `review.comments.deleteAll`                       | Delete All Comments                 |
 | `review.comments.previous`                        | Previous                            |
 | `review.comments.next`                            | Next                                |
 | `review.comments.showComments`                    | Show Comments                       |
@@ -795,6 +805,28 @@ unit test fails if an id is missing here.
 | `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery             |
 | `pictureFormat.size.crop`                         | Crop                                |
 | `tableDesign.tableStyles.gallery`                 | Table Styles gallery                |
+| `tableLayout.table.select`                        | Select                              |
+| `tableLayout.table.viewGridlines`                 | View Gridlines                      |
+| `tableLayout.rowsColumns.deleteRows`              | Delete Rows                         |
+| `tableLayout.rowsColumns.deleteColumns`           | Delete Columns                      |
+| `tableLayout.rowsColumns.insertAbove`             | Insert Above                        |
+| `tableLayout.rowsColumns.insertBelow`             | Insert Below                        |
+| `tableLayout.rowsColumns.insertLeft`              | Insert Left                         |
+| `tableLayout.rowsColumns.insertRight`             | Insert Right                        |
+| `tableLayout.merge.mergeCells`                    | Merge Cells                         |
+| `tableLayout.merge.splitCells`                    | Split Cells                         |
+| `tableLayout.cellSize.distributeRows`             | Distribute Rows                     |
+| `tableLayout.cellSize.distributeColumns`          | Distribute Columns                  |
+| `tableLayout.alignment.alignLeft`                 | Align Left                          |
+| `tableLayout.alignment.alignCenter`               | Center                              |
+| `tableLayout.alignment.alignRight`                | Align Right                         |
+| `tableLayout.alignment.alignTop`                  | Align Top                           |
+| `tableLayout.alignment.alignMiddle`               | Center Vertically                   |
+| `tableLayout.alignment.alignBottom`               | Align Bottom                        |
+| `tableLayout.alignment.textDirection`             | Text Direction                      |
+| `tableLayout.alignment.cellMargins`               | Cell Margins                        |
+| `tableLayout.tableSize.size`                      | Table Size                          |
+| `tableLayout.arrange.arrange`                     | Arrange                             |
 | `chartDesign.chartLayouts.quickLayout`            | Quick Layout gallery                |
 | `chartDesign.chartStyles.changeColors`            | Change Colors gallery               |
 | `chartDesign.chartStyles.gallery`                 | Chart Styles gallery                |

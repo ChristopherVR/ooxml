@@ -1,6 +1,6 @@
 const host = 'pptx-ui-ribbon-gallery';
 const FORMAT_GROUPS =
-	'pptx-ui-ribbon-group:is([data-ribbon-group^="shapeFormat."],[data-ribbon-group^="pictureFormat."],[data-ribbon-group^="tableDesign."],[data-ribbon-group^="chartDesign."],[data-ribbon-group^="smartArtDesign."])';
+	'pptx-ui-ribbon-group:is([data-ribbon-group^="shapeFormat."],[data-ribbon-group^="pictureFormat."],[data-ribbon-group^="tableDesign."],[data-ribbon-group^="tableLayout."],[data-ribbon-group^="chartDesign."],[data-ribbon-group^="smartArtDesign."])';
 
 /**
  * pptx-only gallery rules on top of the shared `office-ui-gallery` styles: dropdown galleries in

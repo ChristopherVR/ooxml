@@ -247,6 +247,7 @@ const WRAP = 'flex flex-wrap items-center gap-2';
 						:on-toggle-comments="props.onToggleComments"
 						:is-comments-panel-open="props.isCommentsPanelOpen"
 						:slide-comment-count="props.slideCommentCount"
+						:comments-host="props.reviewComments"
 						:on-compare="props.onCompare"
 						:on-set-language="props.onOpenSettings"
 						:on-open-accessibility-check="props.onRunAccessibilityCheck"

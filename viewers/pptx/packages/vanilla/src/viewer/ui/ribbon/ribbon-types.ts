@@ -1,6 +1,7 @@
 import type {
 	FreeformToolKind,
 	ResolvedCustomization,
+	ReviewCommentsHost,
 	RibbonGalleryContext,
 	RibbonTransitionDraft,
 	ViewerOptionsStore,
@@ -58,6 +59,8 @@ export interface RibbonNavHandlers {
 	/** Open PowerPoint's Outline view (the deck as editable indented text). */
 	openOutlineView(): void;
 	openComments(): void;
+	/** Review > Comments Previous / Next / Delete over the whole deck (omitted: those stay disabled). */
+	reviewComments?: ReviewCommentsHost;
 	openHyperlink(): void;
 	toggleTemplateEditing?(): void;
 	toggleMasterView?(): void;

@@ -205,6 +205,7 @@ export function useViewerRibbonProps(o: UseViewerRibbonPropsOptions): ComputedRe
 		eyedropperActive: o.ui.eyedropperActive,
 		showComments: o.comments.showComments,
 		activeComments: o.comments.activeComments,
+		reviewComments: o.comments.reviewHost,
 		formatPainterActive: o.editing.formatPainterActive,
 		canActivateFormatPainter: o.editing.canActivateFormatPainter,
 		showSelectionPane: o.selectionPane.showSelectionPane,

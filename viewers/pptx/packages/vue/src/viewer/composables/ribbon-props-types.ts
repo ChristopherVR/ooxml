@@ -1,4 +1,5 @@
 import type { AlignEdge, DistributeAxis, InsertChartKind, SlideTemplateId } from 'ooxml-ui/pptx';
+import type { ReviewCommentsHost } from 'ooxml-ui/pptx';
 import type {
 	PptxComment,
 	PptxCustomShow,
@@ -74,6 +75,8 @@ export interface UseRibbonPropsStateInput {
 	eyedropperActive: Ref<boolean>;
 	showComments: Ref<boolean>;
 	activeComments: ComputedRef<PptxComment[]>;
+	/** Review > Comments Previous / Next / Delete over the whole deck. */
+	reviewComments?: ReviewCommentsHost;
 	formatPainterActive: Ref<boolean>;
 	canActivateFormatPainter: ComputedRef<boolean>;
 	showSelectionPane: Ref<boolean>;

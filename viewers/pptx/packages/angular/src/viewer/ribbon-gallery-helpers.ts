@@ -1,3 +1,4 @@
+import { tableLayoutCells } from 'ooxml-ui/pptx';
 import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 /**
  * ribbon-gallery-helpers.ts: the Angular glue between `pptx-viewer-shared`'s
@@ -23,10 +24,19 @@ export interface GalleryDeckSource {
 	getHandler: () => PptxHandler | undefined;
 }
 
+/** The slice of `TableSelectionService.selection()` a gallery context reads. */
+export interface GalleryTableSelection {
+	elementId: string;
+	rowIndex: number;
+	columnIndex: number;
+	selectedCells?: ReadonlyArray<{ row: number; col: number }> | undefined;
+}
+
 /** The context every gallery descriptor is built from. */
 export function galleryContextFor(
 	element: PptxElement | null,
 	deck: GalleryDeckSource | null,
+	tableSelection?: GalleryTableSelection | null,
 ): RibbonGalleryContext {
 	const handler = deck?.getHandler();
 	return {
@@ -34,6 +44,10 @@ export function galleryContextFor(
 		themeColorMap: deck?.themeColorMap(),
 		theme: deck?.theme(),
 		resolveStyleMatrix: handler ? (xml) => handler.resolveStyleMatrixReferences(xml) : undefined,
+		// Only a selection on the selected table counts (a stale one from another table is ignored).
+		selectedTableCells: tableLayoutCells(
+			tableSelection && tableSelection.elementId === element?.id ? tableSelection : null,
+		),
 	};
 }
 

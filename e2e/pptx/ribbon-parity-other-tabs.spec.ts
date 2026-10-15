@@ -140,9 +140,7 @@ test.describe('fixed tabs match the PowerPoint ribbon structure', () => {
 		}
 	});
 
-	test('Review: Proofing to Ink, with New Comment, Delete, Previous, Next, Show Comments large', async ({
-		page,
-	}) => {
+	test('Review: Proofing to Ink, with the Comments commands large', async ({ page }) => {
 		const groups = await openTab(page, 'Review');
 		expect(labels(groups)).toEqual([
 			'Proofing',
@@ -157,6 +155,8 @@ test.describe('fixed tabs match the PowerPoint ribbon structure', () => {
 		expect(Object.keys(comments.commands)).toEqual([
 			'review.comments.newComment',
 			'review.comments.delete',
+			'review.comments.deleteSlide',
+			'review.comments.deleteAll',
 			'review.comments.previous',
 			'review.comments.next',
 			'review.comments.showComments',
@@ -228,6 +228,13 @@ const CONTEXTUAL: {
 		fixture: 'ribbon-galleries.pptx',
 		tab: 'tableDesign',
 		groups: ['Table Styles'],
+		pick: (page) => elementWithText(page, '2B'),
+	},
+	{
+		label: 'Table Layout',
+		fixture: 'ribbon-galleries.pptx',
+		tab: 'tableLayout',
+		groups: ['Table', 'Rows & Columns', 'Merge', 'Cell Size', 'Alignment', 'Table Size', 'Arrange'],
 		pick: (page) => elementWithText(page, '2B'),
 	},
 	{

@@ -1587,6 +1587,7 @@ provideRibbonGalleryHost({
 	theme: pptxTheme,
 	themeColorMap,
 	handler,
+	tableSelection: () => tableSelection.value,
 	updateElement: (id, patch) => ops.updateElement(id, patch),
 	applyTheme: applyAiTheme,
 });

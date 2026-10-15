@@ -1,4 +1,9 @@
-import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
+import { tableLayoutCells } from 'ooxml-ui/pptx';
+import type {
+	RibbonGalleryApplyResult,
+	RibbonGalleryContext,
+	TableCursorState,
+} from 'ooxml-ui/pptx';
 /**
  * useRibbonGalleryHost: the viewer-side half of the ribbon style galleries.
  *
@@ -61,6 +66,8 @@ export interface UseRibbonGalleryHostInput extends RibbonGallerySinks {
 	theme: Ref<PptxTheme | undefined>;
 	themeColorMap: Ref<Record<string, string> | undefined>;
 	handler: ShallowRef<PptxHandler | null>;
+	/** The table cell cursor / range (Table Layout commands act on it). */
+	tableSelection?: () => TableCursorState | null;
 }
 
 /** Build and provide the gallery host for the viewer's ribbon. */
@@ -72,6 +79,7 @@ export function provideRibbonGalleryHost(input: UseRibbonGalleryHostInput): Ribb
 			theme: input.theme.value,
 			themeColorMap: input.themeColorMap.value,
 			resolveStyleMatrix: handler ? (xml) => handler.resolveStyleMatrixReferences(xml) : undefined,
+			selectedTableCells: tableLayoutCells(input.tableSelection?.()),
 		};
 	});
 	const host: RibbonGalleryHost = {

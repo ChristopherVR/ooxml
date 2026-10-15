@@ -41,6 +41,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { dispatchGalleryResult, galleryContextFor } from './ribbon-gallery-helpers';
+import { TableSelectionService } from './table-selection.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 
 interface GalleryInputs {
@@ -85,6 +86,7 @@ export class RibbonGalleryComponent {
 	private readonly editor = inject(EditorStateService);
 	private readonly loader = inject(LoadContentService, { optional: true });
 	private readonly themes = inject(ViewerThemeGalleryService, { optional: true });
+	private readonly tableSelection = inject(TableSelectionService, { optional: true });
 	private readonly translateService = inject(TranslateService, { optional: true });
 	protected readonly hostEl: HTMLElement = inject(ElementRef<HTMLElement>).nativeElement;
 
@@ -149,7 +151,10 @@ export class RibbonGalleryComponent {
 	}
 
 	readonly descriptor = computed<RibbonGalleryDescriptor>(() =>
-		buildRibbonGallery(this.gallery, galleryContextFor(this.element, this.loader)),
+		buildRibbonGallery(
+			this.gallery,
+			galleryContextFor(this.element, this.loader, this.tableSelection?.selection()),
+		),
 	);
 	readonly isDisabled = computed(
 		() => !this.canEdit || this.descriptor().disabled || !galleryHasItems(this.descriptor()),
@@ -173,7 +178,7 @@ export class RibbonGalleryComponent {
 		if (this.isDisabled()) {
 			return;
 		}
-		const ctx = galleryContextFor(this.element, this.loader);
+		const ctx = galleryContextFor(this.element, this.loader, this.tableSelection?.selection());
 		dispatchGalleryResult(applyRibbonGalleryItem(this.gallery, itemId, ctx), {
 			editor: this.editor,
 			slideIndex: this.slideIndex,

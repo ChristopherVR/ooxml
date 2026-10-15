@@ -147,4 +147,34 @@ describe('reviewTab', () => {
 
 		expect(target.textContent).toContain('No issues found');
 	});
+
+	it('walks the deck comments and deletes the current one', () => {
+		const target = document.createElement('div');
+		const onnavigate = vi.fn();
+		const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
+		editor.editable = true;
+		editor.slides = [
+			{ id: 's1', elements: [], comments: [{ id: 'a', text: 'a' }] },
+			{ id: 's2', elements: [], comments: [{ id: 'b', text: 'b' }] },
+		] as PptxSlide[];
+		const instance = mount(ReviewTab, {
+			target,
+			props: { slides: editor.slides, onnavigate, editor },
+		});
+		cleanup = () => unmount(instance);
+		const named = (label: string) =>
+			allButtons(target).find(
+				(button) => button.textContent?.trim() === label,
+			) as HTMLButtonElement;
+		expect(named('Delete').disabled).toBeTruthy();
+		named('Next').click();
+		flushSync();
+		named('Next').click();
+		flushSync();
+		expect(onnavigate).toHaveBeenCalledExactlyOnceWith(1);
+		expect(named('Delete').disabled).toBeFalsy();
+		named('Delete').click();
+		flushSync();
+		expect(editor.slides[1]?.comments).toStrictEqual([]);
+	});
 });

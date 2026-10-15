@@ -327,6 +327,7 @@ export function createRibbon(
 			for (const detach of detachOverflow.splice(0)) {
 				detach();
 			}
+			reviewTab?.destroy();
 		},
 		update() {},
 		setSpellCheck(enabled) {

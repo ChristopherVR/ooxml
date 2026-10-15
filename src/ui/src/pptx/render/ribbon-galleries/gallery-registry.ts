@@ -26,7 +26,9 @@ import { SMARTART_COLORS_GALLERY } from './smartart-colors-gallery';
 import { SMARTART_COMMAND_MODULES } from './smartart-commands';
 import { SMARTART_LAYOUTS_GALLERY } from './smartart-layouts-gallery';
 import { SMARTART_STYLES_GALLERY } from './smartart-styles-gallery';
+import { TABLE_LAYOUT_COMMAND_MODULES } from './table-layout-commands';
 import { TABLE_STYLES_GALLERY } from './table-styles-gallery';
+import { TABLE_TEXT_DIRECTION_GALLERY } from './table-text-direction-gallery';
 import { THEME_COLORS_GALLERY } from './theme-colors-gallery';
 import { THEME_FONTS_GALLERY } from './theme-fonts-gallery';
 import { WORDART_STYLES_GALLERY } from './wordart-styles-gallery';
@@ -42,6 +44,8 @@ const MODULES: Record<RibbonGalleryId, RibbonGalleryModule> = {
 	bullets: BULLETS_GALLERY,
 	numbering: NUMBERING_GALLERY,
 	tableStyles: TABLE_STYLES_GALLERY,
+	...TABLE_LAYOUT_COMMAND_MODULES,
+	tableTextDirection: TABLE_TEXT_DIRECTION_GALLERY,
 	chartStyles: CHART_STYLES_GALLERY,
 	chartColors: CHART_COLORS_GALLERY,
 	chartQuickLayout: CHART_QUICK_LAYOUT_GALLERY,

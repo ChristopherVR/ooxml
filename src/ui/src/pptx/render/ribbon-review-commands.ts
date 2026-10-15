@@ -11,7 +11,14 @@ export interface ReviewRibbonState {
 	canCompare?: boolean;
 	canComments?: boolean;
 	commentsOpen?: boolean;
+	/** Comments on the current slide (the New Comment badge and Delete Slide Comments). */
 	commentCount?: number;
+	/** Comments in the whole presentation (Previous / Next / Delete All). */
+	totalCommentCount?: number;
+	/** The binding wires Previous / Next / Delete to its slides. */
+	canNavigateComments?: boolean;
+	/** A comment is current (reached with Previous / Next, or picked in the panel). */
+	hasActiveComment?: boolean;
 }
 
 type Translate = (key: string) => string;
@@ -68,6 +75,10 @@ export function buildReviewRibbon(t: Translate, state: ReviewRibbonState): Ribbo
 		group('review.compare', 'pptx.review.changes', 'Changes', [
 			command('review.compare.markAllRead', 'pptx.review.markAllRead', 'Mark All as Read', 'copy', {
 				disabled: true,
+				title: label(
+					'pptx.review.markAllReadHint',
+					'Comments in this viewer keep no read state, so there is nothing to mark',
+				),
 			}),
 			command('review.compare.compare', 'pptx.ribbon.compare', 'Compare', 'compare', {
 				disabled: !state.editable || !state.canCompare,
@@ -90,13 +101,43 @@ export function buildReviewRibbon(t: Translate, state: ReviewRibbonState): Ribbo
 				},
 			),
 			command('review.comments.delete', 'pptx.common.delete', 'Delete', 'trash', {
-				disabled: true,
+				disabled: !state.editable || !state.canNavigateComments || !state.hasActiveComment,
+				title: state.hasActiveComment
+					? label('pptx.review.deleteCommentTitle', 'Delete the selected comment')
+					: label(
+							'pptx.review.noSelectedCommentHint',
+							'Use Previous or Next to select a comment first',
+						),
 			}),
+			command(
+				'review.comments.deleteSlide',
+				'pptx.review.deleteSlideComments',
+				'Delete Slide Comments',
+				'trash',
+				{
+					disabled: !state.editable || !state.canNavigateComments || !state.commentCount,
+				},
+			),
+			command(
+				'review.comments.deleteAll',
+				'pptx.review.deleteAllComments',
+				'Delete All Comments',
+				'trash',
+				{
+					disabled: !state.editable || !state.canNavigateComments || !state.totalCommentCount,
+				},
+			),
 			command('review.comments.previous', 'pptx.common.previous', 'Previous', 'chevronLeft', {
-				disabled: true,
+				disabled: !state.canNavigateComments || !state.totalCommentCount,
+				title: state.totalCommentCount
+					? label('pptx.review.previousCommentTitle', 'Go to the previous comment')
+					: label('pptx.review.noCommentsHint', 'This presentation has no comments'),
 			}),
 			command('review.comments.next', 'pptx.common.next', 'Next', 'chevronRight', {
-				disabled: true,
+				disabled: !state.canNavigateComments || !state.totalCommentCount,
+				title: state.totalCommentCount
+					? label('pptx.review.nextCommentTitle', 'Go to the next comment')
+					: label('pptx.review.noCommentsHint', 'This presentation has no comments'),
 			}),
 			command(
 				'review.comments.showComments',

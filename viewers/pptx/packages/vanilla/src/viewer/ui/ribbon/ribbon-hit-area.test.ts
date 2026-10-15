@@ -46,6 +46,10 @@ function fakeActions<T extends object>(): T {
 			if (typeof prop !== 'string') {
 				return undefined;
 			}
+			// Optional data host, not a command: a stub function would read as a comments host.
+			if (prop === 'reviewComments') {
+				return undefined;
+			}
 			let fn = cache.get(prop);
 			if (!fn) {
 				fn = vi.fn();

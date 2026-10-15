@@ -1021,6 +1021,7 @@ export const PowerPointViewer = forwardRef<PowerPointViewerHandle, PowerPointVie
 			themeColorMap: themeColorMapValue,
 			handlerRef,
 			editable: canEdit && (mode === 'edit' || mode === 'master'),
+			tableEditorState: state.tableEditorState,
 			updateElementById: editorOps.ops.updateElementById,
 			updateThemeColorScheme: themeHandlers.handleUpdateThemeColorScheme,
 			updateThemeFontScheme: themeHandlers.handleUpdateThemeFontScheme,

@@ -1,3 +1,4 @@
+import { tableLayoutCells } from 'ooxml-ui/pptx';
 import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 /**
  * useRibbonGalleryCommands: builds the {@link RibbonGalleryCommands} value
@@ -20,6 +21,7 @@ import { useCallback, useMemo } from 'react';
 import type { RefObject } from 'react';
 
 import type { RibbonGalleryCommands } from '../components/ribbon-gallery-context';
+import type { TableCellEditorState } from '../types';
 
 export interface UseRibbonGalleryCommandsInput {
 	selectedElement: PptxElement | null | undefined;
@@ -27,6 +29,8 @@ export interface UseRibbonGalleryCommandsInput {
 	themeColorMap: Readonly<Record<string, string>> | undefined;
 	handlerRef: RefObject<PptxHandler | null>;
 	editable: boolean;
+	/** The table cell cursor / range (Table Layout commands act on it). */
+	tableEditorState?: TableCellEditorState | null;
 	updateElementById: (elementId: string, updates: Partial<PptxElement>) => void;
 	updateThemeColorScheme: (colorScheme: PptxThemeColorScheme) => Promise<void>;
 	updateThemeFontScheme: (fontScheme: PptxThemeFontScheme) => Promise<void>;
@@ -41,6 +45,7 @@ export function useRibbonGalleryCommands(
 		themeColorMap,
 		handlerRef,
 		editable,
+		tableEditorState,
 		updateElementById,
 		updateThemeColorScheme,
 		updateThemeFontScheme,
@@ -56,8 +61,9 @@ export function useRibbonGalleryCommands(
 			resolveStyleMatrix: handler
 				? (styleXml) => handler.resolveStyleMatrixReferences(styleXml)
 				: undefined,
+			selectedTableCells: tableLayoutCells(tableEditorState),
 		}),
-		[selectedElement, themeColorMap, theme, handler],
+		[selectedElement, themeColorMap, theme, handler, tableEditorState],
 	);
 	const dispatch = useCallback(
 		(result: RibbonGalleryApplyResult) => {

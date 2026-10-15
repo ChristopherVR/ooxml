@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { ReviewCommentsHost } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import ReviewSection from './ReviewSection.vue';
@@ -100,5 +101,28 @@ describe('review shared commands', () => {
 		]) {
 			expect(view.button(id).disabled).toBeTruthy();
 		}
+	});
+
+	it('drives Previous, Next and Delete through the comments host', async () => {
+		const slides = [{ comments: [{ id: 'a', text: 'a' }] }, { comments: [{ id: 'b', text: 'b' }] }];
+		const log: string[] = [];
+		const commentsHost: ReviewCommentsHost = {
+			slides: () => slides,
+			currentSlide: () => 0,
+			goToSlide: (index) => log.push(`go:${index}`),
+			ensureCommentsOpen: () => log.push('open'),
+			applyComments: (changes) => log.push(`apply:${changes.length}`),
+		};
+		const view = mountReview({ commentsHost });
+		expect(view.button('comments.next').disabled).toBeFalsy();
+		expect(view.button('comments.delete').disabled).toBeTruthy();
+		view.button('comments.next').click();
+		await view.wrapper.vm.$nextTick();
+		view.button('comments.next').click();
+		await view.wrapper.vm.$nextTick();
+		expect(log).toStrictEqual(['open', 'open', 'go:1']);
+		expect(view.button('comments.delete').disabled).toBeFalsy();
+		view.button('comments.delete').click();
+		expect(log.at(-1)).toBe('apply:1');
 	});
 });

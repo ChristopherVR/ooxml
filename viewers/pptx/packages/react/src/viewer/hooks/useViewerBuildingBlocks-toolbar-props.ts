@@ -5,6 +5,7 @@ import type { PptxElement, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core
 import type { ToolbarProps } from '../components/toolbar/toolbar-types';
 import type { ViewerMode } from '../types';
 import { hasCopyableFormat } from '../utils/format-painter';
+import { createReviewCommentsHost } from './createReviewCommentsHost';
 import type { AutosaveStatus } from './useAutosave';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { ElementManipulationHandlers } from './useElementManipulation';
@@ -309,6 +310,12 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		},
 		isCommentsPanelOpen: s.isInspectorPaneOpen,
 		slideCommentCount: activeSlide?.comments?.length ?? 0,
+		reviewComments: createReviewCommentsHost({
+			state: s,
+			activeSlideIndex,
+			updateSlides: ops.updateSlides,
+			markDirty: history.markDirty,
+		}),
 		formatPainterActive: s.formatPainterActive,
 		canActivateFormatPainter: hasCopyableFormat(selectedElement),
 		onToggleFormatPainter: () => s.setFormatPainterActive((p) => !p),

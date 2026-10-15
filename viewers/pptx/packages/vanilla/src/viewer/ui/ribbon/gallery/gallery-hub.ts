@@ -61,6 +61,8 @@ export function createRibbonGalleryHub(
 				resolved.theme?.fontScheme,
 				resolved.theme?.name,
 				resolved.resolveStyleMatrix !== undefined,
+				// By value: the context builds a fresh array on every sync (Table Layout reads it).
+				resolved.selectedTableCells?.map((cell) => `${cell.row}:${cell.column}`).join(','),
 				nextEditable,
 			];
 			ctx = resolved;

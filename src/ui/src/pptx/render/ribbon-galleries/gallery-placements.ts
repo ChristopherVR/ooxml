@@ -115,6 +115,139 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 			],
 		},
 	],
+	tableLayout: [
+		{
+			group: 'tableLayout.table',
+			labelKey: 'pptx.ribbon.groupTable',
+			label: 'Table',
+			galleries: [
+				{ gallery: 'tableSelect', control: 'tableLayout.table.select', mode: 'dropdown' },
+				{
+					gallery: 'tableViewGridlines',
+					control: 'tableLayout.table.viewGridlines',
+					mode: 'dropdown',
+				},
+			],
+		},
+		{
+			group: 'tableLayout.rowsColumns',
+			labelKey: 'pptx.ribbon.groupRowsColumns',
+			label: 'Rows & Columns',
+			galleries: [
+				{
+					gallery: 'tableDeleteRows',
+					control: 'tableLayout.rowsColumns.deleteRows',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableDeleteColumns',
+					control: 'tableLayout.rowsColumns.deleteColumns',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableInsertAbove',
+					control: 'tableLayout.rowsColumns.insertAbove',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableInsertBelow',
+					control: 'tableLayout.rowsColumns.insertBelow',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableInsertLeft',
+					control: 'tableLayout.rowsColumns.insertLeft',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableInsertRight',
+					control: 'tableLayout.rowsColumns.insertRight',
+					mode: 'dropdown',
+				},
+			],
+		},
+		{
+			group: 'tableLayout.merge',
+			labelKey: 'pptx.ribbon.groupMerge',
+			label: 'Merge',
+			galleries: [
+				{ gallery: 'tableMergeCells', control: 'tableLayout.merge.mergeCells', mode: 'dropdown' },
+				{ gallery: 'tableSplitCells', control: 'tableLayout.merge.splitCells', mode: 'dropdown' },
+			],
+		},
+		{
+			group: 'tableLayout.cellSize',
+			labelKey: 'pptx.ribbon.groupCellSize',
+			label: 'Cell Size',
+			galleries: [
+				{
+					gallery: 'tableDistributeRows',
+					control: 'tableLayout.cellSize.distributeRows',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableDistributeColumns',
+					control: 'tableLayout.cellSize.distributeColumns',
+					mode: 'dropdown',
+				},
+			],
+		},
+		{
+			group: 'tableLayout.alignment',
+			labelKey: 'pptx.ribbon.groupAlignment',
+			label: 'Alignment',
+			galleries: [
+				{ gallery: 'tableAlignLeft', control: 'tableLayout.alignment.alignLeft', mode: 'dropdown' },
+				{
+					gallery: 'tableAlignCenter',
+					control: 'tableLayout.alignment.alignCenter',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableAlignRight',
+					control: 'tableLayout.alignment.alignRight',
+					mode: 'dropdown',
+				},
+				{ gallery: 'tableAlignTop', control: 'tableLayout.alignment.alignTop', mode: 'dropdown' },
+				{
+					gallery: 'tableAlignMiddle',
+					control: 'tableLayout.alignment.alignMiddle',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableAlignBottom',
+					control: 'tableLayout.alignment.alignBottom',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableTextDirection',
+					control: 'tableLayout.alignment.textDirection',
+					mode: 'dropdown',
+				},
+				{
+					gallery: 'tableCellMargins',
+					control: 'tableLayout.alignment.cellMargins',
+					mode: 'dropdown',
+				},
+			],
+		},
+		{
+			group: 'tableLayout.tableSize',
+			labelKey: 'pptx.ribbon.groupTableSize',
+			label: 'Table Size',
+			galleries: [
+				{ gallery: 'tableSize', control: 'tableLayout.tableSize.size', mode: 'dropdown' },
+			],
+		},
+		{
+			group: 'tableLayout.arrange',
+			labelKey: 'pptx.ribbon.groupArrange',
+			label: 'Arrange',
+			galleries: [
+				{ gallery: 'tableArrange', control: 'tableLayout.arrange.arrange', mode: 'dropdown' },
+			],
+		},
+	],
 	chartDesign: [
 		{
 			group: 'chartDesign.chartLayouts',
@@ -257,7 +390,7 @@ export function contextualTabsForElement(element: PptxElement | null): RibbonCon
 		case 'picture':
 			return ['pictureFormat'];
 		case 'table':
-			return ['tableDesign'];
+			return ['tableDesign', 'tableLayout'];
 		case 'chart':
 			return ['chartDesign'];
 		case 'smartArt':

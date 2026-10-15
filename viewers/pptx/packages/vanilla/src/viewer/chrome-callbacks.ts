@@ -13,6 +13,7 @@ import type {
 	ParsedTableStyleMap,
 	PptxPresentationProperties,
 	PptxSaveFormat,
+	PptxSlide,
 	PptxSlideTransition,
 	TextSegment,
 } from 'pptx-viewer-core';
@@ -69,6 +70,9 @@ export interface ChromeCallbackDeps {
 	/** Open Outline view (the deck as editable indented text). */
 	openOutlineView(): void;
 	openComments(): void;
+	/** The deck's slides and active slide, read straight from the store (the editor is built after the chrome). */
+	getSlides?(): readonly PptxSlide[];
+	getCurrentSlide?(): number;
 	openHyperlink(): void;
 	openCustomShows(): void;
 	openDocumentProperties(): void;
@@ -181,6 +185,18 @@ export function buildChromeCallbacks(
 			openReadingView: () => deps.openReadingView(),
 			openOutlineView: () => deps.openOutlineView(),
 			openComments: () => deps.openComments(),
+			reviewComments: {
+				slides: () => deps.getSlides?.() ?? [],
+				currentSlide: () => deps.getCurrentSlide?.() ?? 0,
+				goToSlide: (index) => deps.goToSlide(index),
+				// The pane renders its own rows; only open one when no comment rows are on screen.
+				ensureCommentsOpen: () => {
+					if (!document.querySelector('[data-comment-id]')) {
+						deps.openComments();
+					}
+				},
+				applyComments: (changes) => deps.getEditActions().comments.applyChanges(changes),
+			},
 			openHyperlink: () => deps.openHyperlink(),
 			toggleTemplateEditing: () => deps.toggleTemplateEditing(),
 			toggleMasterView: () => deps.toggleMasterNavigation(),

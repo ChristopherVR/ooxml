@@ -206,6 +206,7 @@ export function createCommentThreadView(
 
 	function renderComment(comment: PptxComment, rowEditable: boolean, depth: number): HTMLElement {
 		const row = createEl(doc, 'div', 'pptxv-inspector-comment');
+		row.dataset.commentId = comment.id;
 		row.classList.toggle('is-resolved', comment.resolved === true);
 		row.classList.toggle('is-reply', depth > 0);
 		const meta = createEl(doc, 'div', 'pptxv-inspector-comment-meta');

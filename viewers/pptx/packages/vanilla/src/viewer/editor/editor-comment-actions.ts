@@ -2,6 +2,7 @@
 // other binding (including the nested-reply tree traversal for edit/delete/
 // resolve, which used to be reimplemented here); this module only wires them
 // to the editor store's history-aware commit path.
+import type { SlideCommentsChange } from 'ooxml-ui/pptx';
 import {
 	addCommentToList,
 	editCommentInList,
@@ -29,6 +30,8 @@ export interface CommentActions {
 	editComment(id: string, text: string): void;
 	deleteComment(id: string): void;
 	toggleCommentResolved(id: string): void;
+	/** Rewrite the comments of several slides as ONE history entry (Review > Delete Slide / All Comments). */
+	applyChanges(changes: readonly SlideCommentsChange[]): void;
 }
 
 export function updateSlideComments(
@@ -147,6 +150,19 @@ export function createCommentActions(deps: {
 		},
 		toggleCommentResolved(id) {
 			applyToActiveComments((comments) => toggleCommentResolvedInList(comments, id));
+		},
+		applyChanges(changes) {
+			const state = deps.store.get();
+			if (!state.editable || changes.length === 0) {
+				return;
+			}
+			const slides = state.slides.map((slide, index) => {
+				const change = changes.find((candidate) => candidate.slideIndex === index);
+				return change ? { ...slide, comments: change.comments } : slide;
+			});
+			deps.ops.pushHistory();
+			deps.store.set({ slides });
+			deps.ops.commitChange();
 		},
 	};
 }

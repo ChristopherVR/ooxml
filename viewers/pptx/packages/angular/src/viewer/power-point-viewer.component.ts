@@ -168,6 +168,7 @@ import { RecentColorsService } from './recent-colors.service';
 import { RehearseTimingsComponent } from './rehearse-timings.component';
 import { RemoteSelectionOverlayComponent } from './remote-selection-overlay.component';
 import { Rendering3DService } from './rendering-3d.service';
+import { ReviewCommentsNavigationService } from './review-comments-navigation.service';
 import { RibbonAddInsService } from './ribbon-add-ins.service';
 import {
 	nextRibbonScope,
@@ -1708,6 +1709,7 @@ export class PowerPointViewerComponent
 	protected readonly presentationMode = inject(ViewerPresentationModeService);
 	protected readonly mobileSheetSvc = inject(ViewerMobileSheetService);
 	protected readonly inspectorPanel = inject(ViewerInspectorPanelService);
+	private readonly reviewNav = inject(ReviewCommentsNavigationService);
 	protected readonly fileIO = inject(ViewerFileIOService);
 	protected readonly themeGallery = inject(ViewerThemeGalleryService);
 	protected readonly canvasEditing = inject(ViewerCanvasEditingService);
@@ -2253,6 +2255,9 @@ export class PowerPointViewerComponent
 				this.inspectorPanel.initializeVisibility(initiallyOpen);
 			}
 		});
+		// Review > Comments Previous / Next / Delete read the active slide from this service.
+		this.reviewNav.attach((index) => this.activeSlideIndex.set(index));
+		effect(() => this.reviewNav.currentSlide.set(this.activeSlideIndex()));
 		// Wire the AI panel store to the live canvas selection so its
 		// follow-selection focus (and the bridge's getFocusedTargets) stay current.
 		this.aiPanelStore.bind({

@@ -27,6 +27,7 @@ import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Toolbar, SignatureStatusBadge } from '.';
+import { createReviewCommentsHost } from '../hooks/createReviewCommentsHost';
 import type { AutosaveStatus } from '../hooks/useAutosave';
 import type { EditorHistoryResult } from '../hooks/useEditorHistory';
 import type { ElementManipulationHandlers } from '../hooks/useElementManipulation';
@@ -62,6 +63,7 @@ export interface ViewerToolbarSectionProps {
 		setIsCompactToolbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 		toolbarSection: ToolbarSection;
 		setToolbarSection: React.Dispatch<React.SetStateAction<ToolbarSection>>;
+		slides: PptxSlide[];
 		setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 		setActiveSlideIndex: React.Dispatch<React.SetStateAction<number>>;
 		setSelectedElementId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -754,6 +756,12 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				}}
 				isCommentsPanelOpen={s.isInspectorPaneOpen}
 				slideCommentCount={activeSlide?.comments?.length ?? 0}
+				reviewComments={createReviewCommentsHost({
+					state: s,
+					activeSlideIndex,
+					updateSlides: ops.updateSlides,
+					markDirty: history.markDirty,
+				})}
 				formatPainterActive={s.formatPainterActive}
 				canActivateFormatPainter={hasCopyableFormat(selectedElement)}
 				onToggleFormatPainter={

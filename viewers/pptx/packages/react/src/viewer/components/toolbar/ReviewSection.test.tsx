@@ -1,4 +1,5 @@
 import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { ReviewCommentsHost } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -107,5 +108,27 @@ describe('review shared commands', () => {
 		}
 		first.update({ slideCommentCount: 0 });
 		expect(first.host('comments.newComment').hasAttribute('badge')).toBeFalsy();
+	});
+
+	it('drives Previous, Next and Delete through the comments host', () => {
+		const slides = [{ comments: [{ id: 'a', text: 'a' }] }, { comments: [{ id: 'b', text: 'b' }] }];
+		const log: string[] = [];
+		const commentsHost: ReviewCommentsHost = {
+			slides: () => slides,
+			currentSlide: () => 0,
+			goToSlide: (index) => log.push(`go:${index}`),
+			ensureCommentsOpen: () => log.push('open'),
+			applyComments: (changes) => log.push(`apply:${changes.length}`),
+		};
+		const view = mount({ commentsHost });
+		expect(view.button('comments.next').disabled).toBeFalsy();
+		// Nothing is current yet.
+		expect(view.button('comments.delete').disabled).toBeTruthy();
+		act(() => view.button('comments.next').click());
+		act(() => view.button('comments.next').click());
+		expect(log).toStrictEqual(['open', 'open', 'go:1']);
+		expect(view.button('comments.delete').disabled).toBeFalsy();
+		act(() => view.button('comments.delete').click());
+		expect(log.at(-1)).toBe('apply:1');
 	});
 });

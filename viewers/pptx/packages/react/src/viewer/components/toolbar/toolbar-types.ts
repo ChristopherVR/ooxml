@@ -2,6 +2,7 @@ import type {
 	AnimationApplyGroup,
 	FreeformToolKind,
 	InsertChartKind,
+	ReviewCommentsHost,
 	SlideTemplateId,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
@@ -227,6 +228,8 @@ export interface ToolbarProps {
 	isCommentsPanelOpen?: boolean;
 	spellCheckActive?: boolean;
 	slideCommentCount?: number;
+	/** Review > Comments Previous / Next / Delete: the deck's slides and how to rewrite them. */
+	reviewComments?: ReviewCommentsHost;
 	formatPainterActive?: boolean;
 	onToggleFormatPainter?: () => void;
 	canActivateFormatPainter?: boolean;

@@ -1,3 +1,4 @@
+import type { ReviewCommentsHost } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxSlide } from 'pptx-viewer-core';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
@@ -19,6 +20,8 @@ export interface UseCommentsWiringResult {
 	commentsApi: UseCommentsResult;
 	onCommentMarkerClick: (id: string) => void;
 	commitComments: (next: PptxComment[] | null) => void;
+	/** Review > Comments Previous / Next / Delete over the whole deck. */
+	reviewHost: ReviewCommentsHost;
 }
 
 /**
@@ -57,5 +60,34 @@ export function useCommentsWiring(input: UseCommentsWiringInput): UseCommentsWir
 		slides.value = nextSlides;
 	}
 
-	return { showComments, activeComments, commentsApi, onCommentMarkerClick, commitComments };
+	const reviewHost: ReviewCommentsHost = {
+		slides: () => slides.value,
+		currentSlide: () => activeSlideIndex.value,
+		goToSlide: (index) => {
+			activeSlideIndex.value = index;
+		},
+		ensureCommentsOpen: () => {
+			showComments.value = true;
+		},
+		applyComments: (changes) => {
+			const nextSlides = slides.value.slice();
+			for (const { slideIndex, comments } of changes) {
+				const slide = nextSlides[slideIndex];
+				if (slide) {
+					nextSlides[slideIndex] = { ...slide, comments };
+				}
+			}
+			pushHistory();
+			slides.value = nextSlides;
+		},
+	};
+
+	return {
+		showComments,
+		activeComments,
+		commentsApi,
+		onCommentMarkerClick,
+		commitComments,
+		reviewHost,
+	};
 }

@@ -60,6 +60,7 @@ export type RibbonContextualTabId =
 	| 'shapeFormat'
 	| 'pictureFormat'
 	| 'tableDesign'
+	| 'tableLayout'
 	| 'chartDesign'
 	| 'smartArtDesign';
 
@@ -73,6 +74,7 @@ export const RIBBON_CONTEXTUAL_TABS: readonly RibbonContextualTabDefinition[] = 
 	{ id: 'shapeFormat', labelKey: 'pptx.ribbon.tab.shapeFormat' },
 	{ id: 'pictureFormat', labelKey: 'pptx.ribbon.tab.pictureFormat' },
 	{ id: 'tableDesign', labelKey: 'pptx.ribbon.tab.tableDesign' },
+	{ id: 'tableLayout', labelKey: 'pptx.ribbon.tab.tableLayout' },
 	{ id: 'chartDesign', labelKey: 'pptx.ribbon.tab.chartDesign' },
 	{ id: 'smartArtDesign', labelKey: 'pptx.ribbon.tab.smartArtDesign' },
 ];

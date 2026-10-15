@@ -13,3 +13,5 @@ export * from './picture-artistic-gallery';
 export * from './picture-color-gallery';
 export * from './picture-corrections-gallery';
 export { smartArtLayoutSwitchPatch, switchSmartArtLayoutData } from './smartart-gallery-patch';
+export { tableLayoutCells } from './table-layout-ops';
+export type { TableCursorState, TableLayoutCell } from './table-layout-ops';

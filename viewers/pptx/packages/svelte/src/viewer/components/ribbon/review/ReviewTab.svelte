@@ -9,9 +9,9 @@
 	 * `ReviewCommentsPanel.svelte`. Both open in the same docked popover, so
 	 * only one panel is on screen at a time.
 	 *
-	 * Thesaurus, Translate, Mark All Read, Delete/Previous/Next comment, Read
-	 * Only, Restrict Permission and Hide Ink are disabled placeholders in every
-	 * binding including React. They are rendered rather than dropped so a user
+	 * Thesaurus, Translate, Mark All Read, Read Only, Restrict Permission and
+	 * Hide Ink are disabled placeholders in every binding including React.
+	 * Previous / Next / Delete walk the deck's comments (shared runner). They are rendered rather than dropped so a user
 	 * on Svelte sees the same tab a user on React does; see `RecordTab.svelte`
 	 * for why the placeholder labels resolve through `keyToLabel`.
 	 */
@@ -19,8 +19,16 @@
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
-	import { buildReviewRibbon } from 'ooxml-ui/pptx';
-	import type { RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
+	import {
+		buildReviewRibbon,
+		commentCounts,
+		findCommentLocation,
+		isReviewCommentCommand,
+		runReviewCommentCommand,
+		trackActiveComment,
+	} from 'ooxml-ui/pptx';
+	import type { ReviewCommentsHost, RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
+	import { onMount } from 'svelte';
 	import ReviewAccessibilityPanel from './ReviewAccessibilityPanel.svelte';
 	import ReviewCommentsPanel from './ReviewCommentsPanel.svelte';
 
@@ -48,14 +56,48 @@
 	function setPanel(panel: 'accessibility' | 'comments' | null): void {
 		activePanel = panel;
 	}
+	// Previous / Next / Delete walk the whole deck; the cursor follows the user's own picks too.
+	let activeCommentId = $state<string | null>(null);
+	onMount(() => trackActiveComment(document, (id) => { activeCommentId = id; }));
+	const commentsHost: ReviewCommentsHost | null = $derived.by(() => {
+		if (!editor) {
+			return null;
+		}
+		return {
+			slides: () => editor.slides,
+			currentSlide: () => editor.currentSlideIndex,
+			goToSlide: (index) => onnavigate(index),
+			ensureCommentsOpen: () => setPanel('comments'),
+			applyComments: (changes) => {
+				const next = editor.slides.map((slide, index) => {
+					const change = changes.find((candidate) => candidate.slideIndex === index);
+					return change ? { ...slide, comments: change.comments } : slide;
+				});
+				editor.commitSlides(next);
+			},
+		};
+	});
+	const commentTotals = $derived(commentCounts(editor?.slides ?? [], editor?.currentSlideIndex ?? 0));
  const groups = $derived(buildReviewRibbon(t, {
   editable: editor?.editable ?? false, spellCheck,
   canSpellCheck: Boolean(onspellcheckchange), canAccessibility: true, accessibilityOpen: activePanel === 'accessibility',
   canLanguage: Boolean(onlanguage), canCompare: Boolean(oncompare), canComments: Boolean(editor),
   commentsOpen: activePanel === 'comments',
+  commentCount: commentTotals.slide, totalCommentCount: commentTotals.total,
+  canNavigateComments: commentsHost !== null,
+  hasActiveComment: findCommentLocation(editor?.slides ?? [], activeCommentId) !== null,
  }));
  function request(event: Event): void {
-  switch ((event as RibbonCommandRequestEvent).detail.id) {
+  const id = (event as RibbonCommandRequestEvent).detail.id;
+  if (isReviewCommentCommand(id)) {
+   const navigation = id === 'review.comments.previous' || id === 'review.comments.next';
+   if (commentsHost && (navigation || editor?.editable)) {
+    const next = runReviewCommentCommand(id, commentsHost, activeCommentId);
+    if (next !== undefined) {activeCommentId = next;}
+   }
+   return;
+  }
+  switch (id) {
    case 'review.proofing.spelling': onspellcheckchange?.(!spellCheck); break;
    case 'review.accessibility.check': setPanel(activePanel === 'accessibility' ? null : 'accessibility'); break;
    case 'review.language.language': onlanguage?.(); break;

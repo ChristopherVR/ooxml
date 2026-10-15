@@ -1,6 +1,13 @@
-import { buildReviewRibbon } from 'ooxml-ui/pptx';
-import type { RibbonControlId } from 'ooxml-ui/pptx';
-import React from 'react';
+import {
+	buildReviewRibbon,
+	commentCounts,
+	findCommentLocation,
+	isReviewCommentCommand,
+	runReviewCommentCommand,
+	trackActiveComment,
+} from 'ooxml-ui/pptx';
+import type { ReviewCommentsHost, RibbonControlId } from 'ooxml-ui/pptx';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { WebRibbonSection } from './WebRibbonSection';
@@ -12,6 +19,8 @@ export interface ReviewSectionProps {
 	onToggleComments?: () => void;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
+	/** Previous / Next / Delete on the deck's comments (absent: those stay disabled). */
+	commentsHost?: ReviewCommentsHost;
 	onCompare?: () => void;
 	onOpenAccessibilityCheck?: () => void;
 	onSetLanguage?: () => void;
@@ -19,6 +28,13 @@ export interface ReviewSectionProps {
 
 export function ReviewSection(p: ReviewSectionProps): React.ReactElement {
 	const { t } = useTranslation();
+	const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
+	useEffect(() => trackActiveComment(document, setActiveCommentId), []);
+	const host = p.commentsHost;
+	const slides = host?.slides() ?? [];
+	const counts = commentCounts(slides, host?.currentSlide() ?? 0);
+	// A comment that was deleted elsewhere is no longer current.
+	const hasActiveComment = findCommentLocation(slides, activeCommentId) !== null;
 	const groups = buildReviewRibbon(t, {
 		editable: p.canEdit,
 		spellCheck: p.spellCheckEnabled,
@@ -28,8 +44,21 @@ export function ReviewSection(p: ReviewSectionProps): React.ReactElement {
 		canComments: Boolean(p.onToggleComments),
 		commentsOpen: p.isCommentsPanelOpen,
 		commentCount: p.slideCommentCount,
+		totalCommentCount: counts.total,
+		canNavigateComments: Boolean(host),
+		hasActiveComment,
 	});
 	const request = (id: RibbonControlId) => {
+		if (isReviewCommentCommand(id)) {
+			const navigation = id === 'review.comments.previous' || id === 'review.comments.next';
+			if (host && (navigation || p.canEdit)) {
+				const next = runReviewCommentCommand(id, host, activeCommentId);
+				if (next !== undefined) {
+					setActiveCommentId(next);
+				}
+			}
+			return;
+		}
 		switch (id) {
 			case 'review.proofing.spelling':
 				p.onSetSpellCheckEnabled(!p.spellCheckEnabled);

@@ -55,6 +55,10 @@ export function createRibbonGalleryHost(
 			resolveStyleMatrix: handler
 				? (xml: XmlObject) => handler.resolveStyleMatrixReferences(xml)
 				: undefined,
+			// The marquee'd range (a plain click is a one-cell range); Table Layout acts on it.
+			selectedTableCells: editor.tableCells
+				.cellsFor(editor.selectedElement?.id)
+				.map(({ row, col }) => ({ row, column: col })),
 		};
 	};
 

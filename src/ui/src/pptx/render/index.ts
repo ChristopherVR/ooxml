@@ -1398,6 +1398,8 @@ export * from './inspector-reset-actions';
 export * from './table-inspector';
 // Active-slide comment-array transforms (add/remove/toggle-resolved/reply).
 export * from './comments-list';
+export * from './comment-navigation';
+export * from './review-comment-commands';
 // `@`-mention segmentation (display) + `@`-typeahead insertion (authoring)
 // for a comment body. Bindings only map `CommentTextSegment[]` onto spans.
 export * from './comment-mentions';

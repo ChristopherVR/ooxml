@@ -82,6 +82,7 @@ export function ToolbarLateTabs({
 					onToggleComments={p.onToggleComments}
 					isCommentsPanelOpen={p.isCommentsPanelOpen}
 					slideCommentCount={p.slideCommentCount}
+					commentsHost={p.reviewComments}
 					onCompare={p.onCompare}
 					onOpenAccessibilityCheck={p.onRunAccessibilityCheck}
 					onSetLanguage={p.onOpenSettings}

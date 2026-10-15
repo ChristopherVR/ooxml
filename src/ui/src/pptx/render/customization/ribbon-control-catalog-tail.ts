@@ -91,6 +91,8 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 			controls: {
 				newComment: 'New Comment',
 				delete: 'Delete',
+				deleteSlide: 'Delete Slide Comments',
+				deleteAll: 'Delete All Comments',
 				previous: 'Previous',
 				next: 'Next',
 				showComments: 'Show Comments',
@@ -176,6 +178,40 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 	},
 	tableDesign: {
 		tableStyles: { label: 'Table Styles', controls: { gallery: 'Table Styles gallery' } },
+	},
+	tableLayout: {
+		table: { label: 'Table', controls: { select: 'Select', viewGridlines: 'View Gridlines' } },
+		rowsColumns: {
+			label: 'Rows & Columns',
+			controls: {
+				deleteRows: 'Delete Rows',
+				deleteColumns: 'Delete Columns',
+				insertAbove: 'Insert Above',
+				insertBelow: 'Insert Below',
+				insertLeft: 'Insert Left',
+				insertRight: 'Insert Right',
+			},
+		},
+		merge: { label: 'Merge', controls: { mergeCells: 'Merge Cells', splitCells: 'Split Cells' } },
+		cellSize: {
+			label: 'Cell Size',
+			controls: { distributeRows: 'Distribute Rows', distributeColumns: 'Distribute Columns' },
+		},
+		alignment: {
+			label: 'Alignment',
+			controls: {
+				alignLeft: 'Align Left',
+				alignCenter: 'Center',
+				alignRight: 'Align Right',
+				alignTop: 'Align Top',
+				alignMiddle: 'Center Vertically',
+				alignBottom: 'Align Bottom',
+				textDirection: 'Text Direction',
+				cellMargins: 'Cell Margins',
+			},
+		},
+		tableSize: { label: 'Table Size', controls: { size: 'Table Size' } },
+		arrange: { label: 'Arrange', controls: { arrange: 'Arrange' } },
 	},
 	chartDesign: {
 		chartLayouts: { label: 'Chart Layouts', controls: { quickLayout: 'Quick Layout gallery' } },

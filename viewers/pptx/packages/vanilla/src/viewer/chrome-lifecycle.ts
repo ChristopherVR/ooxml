@@ -828,6 +828,8 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		getRecentPresentationsCount: () => host.getRecentPresentationsCount(),
 		getTableStyleMap: () => host.getTableStyleMap(),
 		getThemeColorMap: () => host.getThemeColorMap(),
+		getSlides: () => host.store.get().slides,
+		getCurrentSlide: () => host.store.get().currentSlide,
 		toggleTemplateEditing: () => host.toggleTemplateEditing(),
 		toggleMasterNavigation: () => host.toggleMasterNavigation(),
 		toggleInspector: () => host.store.set({ inspectorOpen: !host.store.get().inspectorOpen }),

@@ -1,9 +1,13 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { EditorStateService } from './editor-state.service';
+import { ReviewCommentsNavigationService } from './review-comments-navigation.service';
 import { RibbonReviewSectionComponent } from './ribbon-review-section.component';
 
 registerPptxWebControls();
@@ -75,5 +79,41 @@ describe('review shared command adapter', () => {
 		expect(button('proofing.spelling')).toBe(focused);
 		expect(focused.getAttribute('aria-pressed')).toBe('true');
 		expect(button('compare.compare').disabled).toBeTruthy();
+	});
+
+	it('walks the deck comments and deletes the current one', async () => {
+		const slides = signal([
+			{ id: 's1', elements: [], comments: [{ id: 'a', text: 'a' }] },
+			{ id: 's2', elements: [], comments: [{ id: 'b', text: 'b' }] },
+		] as unknown as readonly PptxSlide[]);
+		const applyReplacement = vi.fn((next: readonly PptxSlide[]) => slides.set(next));
+		TestBed.configureTestingModule({
+			imports: [RibbonReviewSectionComponent],
+			providers: [
+				{ provide: TranslateService, useValue: { instant: (key: string) => key } },
+				{ provide: EditorStateService, useValue: { slides, applyReplacement } },
+				ReviewCommentsNavigationService,
+			],
+		});
+		const nav = TestBed.inject(ReviewCommentsNavigationService);
+		const goTo = vi.fn();
+		nav.attach(goTo);
+		const fixture = TestBed.createComponent(RibbonReviewSectionComponent);
+		fixture.componentRef.setInput('canEdit', true);
+		fixture.detectChanges();
+		const button = (id: string) =>
+			(fixture.nativeElement as HTMLElement)
+				.querySelector(`[data-ribbon-control="review.${id}"]`)!
+				.shadowRoot!.querySelector<HTMLButtonElement>('button')!;
+		expect(button('comments.delete').disabled).toBeTruthy();
+		button('comments.next').click();
+		fixture.detectChanges();
+		button('comments.next').click();
+		fixture.detectChanges();
+		expect(goTo).toHaveBeenCalledExactlyOnceWith(1);
+		expect(button('comments.delete').disabled).toBeFalsy();
+		button('comments.delete').click();
+		expect(applyReplacement).toHaveBeenCalledOnce();
+		expect(slides()[1]?.comments).toStrictEqual([]);
 	});
 });

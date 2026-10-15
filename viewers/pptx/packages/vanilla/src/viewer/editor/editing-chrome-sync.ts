@@ -72,6 +72,12 @@ export function buildRibbonGalleryContext(
 		themeColorMap: state.colorScheme ? buildThemeColorMap(state.colorScheme) : undefined,
 		theme: { name: state.themeName, colorScheme: state.colorScheme, fontScheme: state.fontScheme },
 		resolveStyleMatrix: handler ? (xml) => handler.resolveStyleMatrixReferences(xml) : undefined,
+		selectedTableCells:
+			state.selectedTableCells.length > 0
+				? state.selectedTableCells
+				: state.selectedTableCell
+					? [state.selectedTableCell]
+					: [],
 	};
 }
 

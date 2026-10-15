@@ -100,6 +100,7 @@ export function InspectorCommentRow({
 				'rounded border border-border bg-card p-2',
 				depth > 0 && 'ml-3 border-l-2 border-l-primary/40',
 			)}
+			data-comment-id={comment.id}
 		>
 			{/* Header */}
 			<div className='flex items-center justify-between gap-2'>

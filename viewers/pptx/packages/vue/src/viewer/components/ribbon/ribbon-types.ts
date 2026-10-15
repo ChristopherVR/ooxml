@@ -2,6 +2,7 @@ import type {
 	AnimationApplyGroup,
 	ChangeCaseMode,
 	InsertChartKind,
+	ReviewCommentsHost,
 	RibbonContextualTabId,
 	SlideTemplateId,
 	ToolbarActionId,
@@ -186,6 +187,8 @@ export interface RibbonProps {
 	isThemeGalleryOpen: boolean;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
+	/** Review > Comments Previous / Next / Delete over the whole deck. */
+	reviewComments?: ReviewCommentsHost;
 	formatPainterActive?: boolean;
 	canActivateFormatPainter?: boolean;
 	isSelectionPaneOpen?: boolean;
