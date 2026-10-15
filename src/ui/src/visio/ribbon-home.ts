@@ -5,7 +5,7 @@ import { effectsOptions, quickStyleGallery } from './ribbon-shape-styles';
 import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 import { changeShapeGallery } from './ribbon-change-shape';
 
-const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
+const ARRANGE = 'Select shapes to align, distribute, rotate or flip them.';
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
 
