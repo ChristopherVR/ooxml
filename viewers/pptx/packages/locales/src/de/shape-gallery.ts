@@ -47,7 +47,7 @@ const NAMES: ReadonlyArray<readonly [string, string]> = [
 	['cube', 'Würfel'],
 	['bevel', 'Abschrägung'],
 	['donut', 'Ring'],
-	['noSmoking', '"Nein"-Symbol'],
+	['noSmoking', 'Verbotszeichen'],
 	['blockArc', 'Blockbogen'],
 	['foldedCorner', 'Umgeknickte Ecke'],
 	['smileyFace', 'Smiley'],

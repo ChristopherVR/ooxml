@@ -112,7 +112,7 @@ export const translations: Record<string, string> = {
 	'pptx.insert.options': 'Options',
 	'pptx.insert.tablePicker': 'Insérer un tableau',
 	'pptx.insert.tableSize': 'Tableau {{columns}}x{{rows}}',
-	'pptx.insert.unavailable': 'Pas encore disponible dans ce visualiseur.',
+	'pptx.insert.unavailable': 'Pas encore disponible dans cette visionneuse.',
 	'pptx.insert.needsSelection': 'Sélectionnez d’abord un objet.',
 	'pptx.insert.tip.newSlide': 'Ajoute une nouvelle diapositive à la présentation.',
 	'pptx.insert.tip.reuseSlides': 'Insère des diapositives d’une autre présentation.',

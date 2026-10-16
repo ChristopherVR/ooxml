@@ -91,7 +91,7 @@ const NAMES: ReadonlyArray<readonly [string, string]> = [
 	['stripedRightArrow', 'Flecha: a rayas hacia la derecha'],
 	['notchedRightArrow', 'Flecha: con muesca hacia la derecha'],
 	['homePlate', 'Flecha: pentágono'],
-	['chevron', 'Flecha: cheurón'],
+	['chevron', 'Flecha: chevron'],
 	['rightArrowCallout', 'Llamada: flecha a la derecha'],
 	['downArrowCallout', 'Llamada: flecha hacia abajo'],
 	['leftArrowCallout', 'Llamada: flecha a la izquierda'],
