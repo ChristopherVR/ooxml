@@ -2,6 +2,7 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
 	input,
 	output,
 } from '@angular/core';
@@ -16,6 +17,7 @@ import type { RibbonControlId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { RibbonGalleryComponent } from './ribbon-gallery.component';
+import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 
 @Component({
 	selector: 'pptx-ribbon-design-section',
@@ -38,7 +40,7 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 						[element]="selectedElement()"
 						[slideIndex]="slideIndex()"
 						[canEdit]="canEdit()"
-						(command)="toggleInspector.emit()"
+						(command)="openInspector()"
 					/>
 				}
 				@for (command of commands; track command.id) {
@@ -60,6 +62,7 @@ import { RibbonGalleryComponent } from './ribbon-gallery.component';
 	`,
 })
 export class RibbonDesignSectionComponent {
+	private readonly inspectorPanel = inject(ViewerInspectorPanelService, { optional: true });
 	readonly groups = DESIGN_RIBBON_GROUPS;
 	readonly commands = DESIGN_RIBBON_COMMANDS;
 	readonly themeGalleryOpen = input(false);
@@ -72,6 +75,14 @@ export class RibbonDesignSectionComponent {
 	readonly toggleInspector = output<void>();
 	protected galleriesFor(groupId: string) {
 		return FIXED_TAB_GALLERIES.filter((placement) => placement.control.startsWith(`${groupId}.`));
+	}
+	/** "Format Background..." in a gallery footer opens the pane; it never closes an open one. */
+	protected openInspector(): void {
+		if (this.inspectorPanel) {
+			this.inspectorPanel.openFormatPanel();
+		} else {
+			this.toggleInspector.emit();
+		}
 	}
 	protected view(id: RibbonControlId) {
 		return designCommandState(id, {
