@@ -1960,6 +1960,12 @@
 					"events": [
 						{
 							"name": "office-gallery-pick"
+						},
+						{
+							"name": "office-gallery-preview"
+						},
+						{
+							"name": "office-gallery-preview-end"
 						}
 					]
 				}
